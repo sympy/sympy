@@ -23,7 +23,8 @@ from .transforms import (mellin_transform, inverse_mellin_transform,
                         cosine_transform, inverse_cosine_transform,
                         CosineTransform, InverseCosineTransform,
                         hankel_transform, inverse_hankel_transform,
-                        HankelTransform, InverseHankelTransform)
+                        HankelTransform, InverseHankelTransform,
+                        convolution_integral, Convolution)
 from .singularityfunctions import singularityintegrate
 
 __all__ = [
@@ -40,6 +41,8 @@ __all__ = [
     'inverse_cosine_transform', 'CosineTransform', 'InverseCosineTransform',
     'hankel_transform', 'inverse_hankel_transform', 'HankelTransform',
     'InverseHankelTransform',
+    
+    'convolution_integral', 'Convolution',
 
     'singularityintegrate',
 ]

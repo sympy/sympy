@@ -222,7 +222,8 @@ from .integrals import (integrate, Integral, line_integrate, mellin_transform,
         inverse_sine_transform, SineTransform, InverseSineTransform,
         cosine_transform, inverse_cosine_transform, CosineTransform,
         InverseCosineTransform, hankel_transform, inverse_hankel_transform,
-        HankelTransform, InverseHankelTransform, singularityintegrate)
+        HankelTransform, InverseHankelTransform, singularityintegrate,
+        convolution_integral, Convolution)
 
 from .tensor import (IndexedBase, Idx, Indexed, get_contraction_structure,
         get_indices, shape, MutableDenseNDimArray, ImmutableDenseNDimArray,

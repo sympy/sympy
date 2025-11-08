@@ -1588,3 +1588,214 @@ laplace_correspondence = _laplace.laplace_correspondence
 laplace_initial_conds = _laplace.laplace_initial_conds
 InverseLaplaceTransform = _laplace.InverseLaplaceTransform
 inverse_laplace_transform = _laplace.inverse_laplace_transform
+
+
+##########################################################################
+# Convolution
+##########################################################################
+
+def _convolution_transform(f, g, t, s_, lower_limit, upper_limit, simplify=True):
+    """
+    Backend function to compute convolution.
+    
+    Computes the convolution integral:
+    (f * g)(t) = ∫ f(τ) g(t - τ) dτ
+    """
+    tau = Dummy('tau', real=True)
+    
+    # Replace the variable in g with (t - tau)
+    g_shifted = g.subs(s_, t - tau)
+    f_tau = f.subs(s_, tau)
+    
+    # Compute the convolution integral
+    result = integrate(f_tau * g_shifted, (tau, lower_limit, upper_limit))
+    
+    return _simplify(result, simplify), S.true
+
+
+class Convolution(Function):
+    """
+    Class representing unevaluated convolutions.
+    
+    Explanation
+    ===========
+    
+    The convolution of two functions `f` and `g` is defined as:
+    
+    .. math:: (f * g)(t) = \\int_{-\\infty}^{\\infty} f(\\tau) g(t - \\tau) \\mathrm{d}\\tau
+    
+    For functions with specific support (e.g., causal functions that are zero
+    for t < 0), the integration limits can be adjusted accordingly.
+    
+    This class represents the unevaluated form of convolution. Use `.doit()`
+    to attempt to evaluate it symbolically.
+    
+    Examples
+    ========
+    
+    >>> from sympy import symbols, exp, Heaviside, Convolution
+    >>> t = symbols('t', real=True, positive=True)
+    >>> f = exp(-t)*Heaviside(t)
+    >>> g = exp(-2*t)*Heaviside(t)
+    >>> conv = Convolution(f, g, t, 0, t)
+    >>> conv
+    Convolution(exp(-t)*Heaviside(t), exp(-2*t)*Heaviside(t), t, 0, t)
+    >>> conv.doit()
+    (exp(t) - 1)*exp(-2*t)
+    
+    Parameters
+    ==========
+    
+    f : Expr
+        The first function to convolve
+    g : Expr
+        The second function to convolve
+    t : Symbol
+        The variable of convolution
+    lower_limit : Expr, optional
+        Lower integration limit (default: -oo)
+    upper_limit : Expr, optional
+        Upper integration limit (default: +oo)
+    """
+    
+    @property
+    def function_f(self):
+        """The first function to be convolved."""
+        return self.args[0]
+    
+    @property
+    def function_g(self):
+        """The second function to be convolved."""
+        return self.args[1]
+    
+    @property
+    def variable(self):
+        """The convolution variable."""
+        return self.args[2]
+    
+    @property
+    def lower_limit(self):
+        """Lower limit of integration."""
+        if len(self.args) > 3:
+            return self.args[3]
+        return S.NegativeInfinity
+    
+    @property
+    def upper_limit(self):
+        """Upper limit of integration."""
+        if len(self.args) > 4:
+            return self.args[4]
+        return S.Infinity
+    
+    @property
+    def free_symbols(self):
+        """
+        Return the free symbols in the convolution.
+        """
+        f_syms = self.function_f.free_symbols
+        g_syms = self.function_g.free_symbols
+        return (f_syms | g_syms | {self.variable}) - {self.variable}
+    
+    def doit(self, **hints):
+        """
+        Attempt to evaluate the convolution in closed form.
+        
+        Parameters
+        ==========
+        
+        simplify : bool, optional
+            If True, simplify the result (default: True)
+        noconds : bool, optional
+            If True, don't return convergence conditions (default: True)
+        """
+        simplify = hints.get('simplify', True)
+        noconds = hints.get('noconds', True)
+        
+        f = self.function_f
+        g = self.function_g
+        t = self.variable
+        lower = self.lower_limit
+        upper = self.upper_limit
+        
+        result, cond = _convolution_transform(f, g, t, t, lower, upper, simplify)
+        
+        if noconds:
+            return result
+        else:
+            return result, cond
+    
+    def _eval_rewrite_as_Integral(self, *args, **kwargs):
+        """Rewrite the convolution as an integral."""
+        tau = Dummy('tau', real=True)
+        f = self.function_f
+        g = self.function_g
+        t = self.variable
+        lower = self.lower_limit
+        upper = self.upper_limit
+        
+        return Integral(f.subs(t, tau) * g.subs(t, t - tau), (tau, lower, upper))
+
+
+def convolution_integral(f, g, t, lower_limit=S.NegativeInfinity, 
+                         upper_limit=S.Infinity, **hints):
+    r"""
+    Compute the convolution of two functions `f` and `g`.
+    
+    Explanation
+    ===========
+    
+    The convolution is defined as:
+    
+    .. math:: (f * g)(t) = \int_{-\infty}^{\infty} f(\tau) g(t - \tau) \mathrm{d}\tau
+    
+    For causal functions (functions that are zero for t < 0), the convolution
+    becomes:
+    
+    .. math:: (f * g)(t) = \int_{0}^{t} f(\tau) g(t - \tau) \mathrm{d}\tau
+    
+    This function returns the result of the convolution integral. If the
+    integral cannot be computed in closed form, it returns an unevaluated
+    :class:`Convolution` object.
+    
+    Parameters
+    ==========
+    
+    f : Expr
+        The first function
+    g : Expr
+        The second function
+    t : Symbol
+        The variable of convolution
+    lower_limit : Expr, optional
+        Lower integration limit (default: -oo)
+    upper_limit : Expr, optional
+        Upper integration limit (default: +oo)
+    **hints :
+        Additional hints for evaluation
+        
+        - ``simplify`` : bool (default True) - simplify the result
+        - ``noconds`` : bool (default True) - don't return conditions
+    
+    Examples
+    ========
+
+    >>> from sympy import symbols, exp, Heaviside, convolution_integral
+    >>> from sympy.abc import t, a, b
+    >>> convolution_integral(Heaviside(t), Heaviside(t), t, 0, t)
+    t*Heaviside(t)**2
+    
+    >>> convolution_integral(exp(-a*t)*Heaviside(t), Heaviside(t), t, 0, t)
+    (1 - exp(-a*t))*Heaviside(t)/a
+
+    See Also
+    ========
+
+    laplace_transform, fourier_transform
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Convolution
+    .. [2] https://mathworld.wolfram.com/Convolution.html
+    """
+    return Convolution(f, g, t, lower_limit, upper_limit).doit(**hints)

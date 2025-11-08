@@ -99,6 +99,17 @@ SymPy has special support for definite integrals, and integral transforms.
 .. autofunction:: inverse_hankel_transform
 .. autoclass:: InverseHankelTransform
    :members:
+
+Convolution
+-----------
+
+.. autofunction:: convolution_integral
+.. autoclass:: Convolution
+   :members:
+
+Base Classes
+------------
+
 .. autoclass:: IntegralTransform
    :members:
 .. autoexception:: IntegralTransformError
