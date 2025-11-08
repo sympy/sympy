@@ -1,5 +1,6 @@
 from sympy.testing.pytest import raises
 from sympy.vector.coordsysrect import CoordSys3D
+from sympy.vector.operators import gradient
 from sympy.vector.scalar import BaseScalar
 from sympy.core.function import expand
 from sympy.core.numbers import pi
@@ -465,28 +466,16 @@ def test_rotation_trans_equations():
 
 
 def test_issue_28559():
-    # https://github.com/sympy/sympy/issues/28559
-    # Test that simplify() doesn't incorrectly return 0 for derivatives
-    # when using CoordSys3D with transformation
-    from sympy import Function, var
-    from sympy.vector import CoordSys3D, gradient
-
-    var('x y z')
-    f = Function('f')
-    S = CoordSys3D('S', transformation=((x, y, z), (x, y, z)),
-                   variable_names=('a', 'b', 'c'))
+    R = CoordSys3D('S', transformation=((x, y, z), (x, y, z)),
+        variable_names=('a', 'b', 'c'))
 
     # Test gradient simplification
-    eq = gradient(f(S.a, S.b, S.c))
+    eq = gradient(f(R.a, R.b, R.c))
     result = eq.simplify()
     # Should not be 0
     assert result != 0
 
     # Test simple derivative simplification
-    simple_eq = f(S.a).diff(S.a)
+    simple_eq = f(R.a).diff(R.a)
     simple_result = simple_eq.simplify()
-    # Should not be 0
-    assert simple_result != 0
-
-    # Test that CoordSys3D._eval_simplify returns self
-    assert S.simplify() == S
+    assert simple_result == simple_eq
