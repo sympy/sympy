@@ -462,3 +462,31 @@ def test_rotation_trans_equations():
            (-sin(q0) * c.y + cos(q0) * c.x, sin(q0) * c.x + cos(q0) * c.y, c.z)
     assert c._rotation_trans_equations(c._inverse_rotation_matrix(), c.base_scalars()) == \
            (sin(q0) * c.y + cos(q0) * c.x, -sin(q0) * c.x + cos(q0) * c.y, c.z)
+
+
+def test_issue_28559():
+    # https://github.com/sympy/sympy/issues/28559
+    # Test that simplify() doesn't incorrectly return 0 for derivatives
+    # when using CoordSys3D with transformation
+    from sympy import Function, var
+    from sympy.vector import CoordSys3D, gradient
+
+    var('x y z')
+    f = Function('f')
+    S = CoordSys3D('S', transformation=((x, y, z), (x, y, z)),
+                   variable_names=('a', 'b', 'c'))
+
+    # Test gradient simplification
+    eq = gradient(f(S.a, S.b, S.c))
+    result = eq.simplify()
+    # Should not be 0
+    assert result != 0
+
+    # Test simple derivative simplification
+    simple_eq = f(S.a).diff(S.a)
+    simple_result = simple_eq.simplify()
+    # Should not be 0
+    assert simple_result != 0
+
+    # Test that CoordSys3D._eval_simplify returns self
+    assert S.simplify() == S
