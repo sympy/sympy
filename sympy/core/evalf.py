@@ -1561,7 +1561,7 @@ class EvalfMixin:
 
     __slots__: tuple[str, ...] = ()
 
-    def evalf(self, n=15, subs=None, maxn=100, chop=False, strict=False, quad=None, verbose=False):
+    def evalf(self, n=15, subs=None, maxn=100, chop=False, strict=False, quad=None, verbose=False, **kwargs):
         """
         Evaluate the given formula to an accuracy of *n* digits.
 
@@ -1626,6 +1626,18 @@ class EvalfMixin:
         >>> (x + y - z).evalf(subs=values)
         1.00000000000000
         """
+
+        # Optional preprocessing for better numerical stability
+        allowed_kwargs = {"optimize_for_precision"}
+        for key in kwargs:
+            if key not in allowed_kwargs:
+                raise TypeError(f"evalf() got an unexpected keyword argument '{key}'")
+
+        optimize_for_precision = kwargs.pop("optimize_for_precision", False)
+        if optimize_for_precision:
+            from sympy.simplify.precision_optimize import algebraic_rewrite
+            self = algebraic_rewrite(self)
+
         from .numbers import Float, Number
         n = n if n is not None else 15
 
