@@ -352,6 +352,8 @@ class EllipticCurvePoint:
         return self * n
 
     def __neg__(self):
+        if self.z == 0:
+            return self
         return EllipticCurvePoint(self.x, -self.y - self._curve._a1*self.x - self._curve._a3, self.z, self._curve)
 
     def __repr__(self):
