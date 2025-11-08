@@ -2,7 +2,7 @@ from sympy.testing.pytest import raises
 from sympy.vector.coordsysrect import CoordSys3D
 from sympy.vector.operators import gradient
 from sympy.vector.scalar import BaseScalar
-from sympy.core.function import expand
+from sympy.core.function import expand, Function
 from sympy.core.numbers import pi
 from sympy.core.symbol import symbols
 from sympy.functions.elementary.hyperbolic import (cosh, sinh)
