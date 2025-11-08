@@ -435,3 +435,23 @@ def test_to_euler_options():
                     q = Quaternion(e1, e2, e3, e4)
                     if not q.is_zero_quaternion():
                         test_one_case(q)
+
+
+def test_issue_28556():
+    """Test that Quaternion.log handles purely real quaternions correctly."""
+    # Test positive real quaternion
+    q1 = Quaternion(1, 0, 0, 0)
+    result1 = q1.log()
+    assert result1 == Quaternion(0, 0, 0, 0)  # log(1) = 0
+    
+    # Test another positive real quaternion
+    q2 = Quaternion(E, 0, 0, 0)
+    result2 = q2.log()
+    assert result2 == Quaternion(1, 0, 0, 0)  # log(e) = 1
+    
+    # Test symbolic real quaternion
+    from sympy import Symbol, log as ln
+    r = Symbol('r', positive=True)
+    q3 = Quaternion(r, 0, 0, 0)
+    result3 = q3.log()
+    assert result3 == Quaternion(ln(r), 0, 0, 0)

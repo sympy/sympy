@@ -1037,9 +1037,15 @@ class Quaternion(Expr):
         vector_norm = sqrt(q.b**2 + q.c**2 + q.d**2)
         q_norm = q.norm()
         a = ln(q_norm)
-        b = q.b * acos(q.a / q_norm) / vector_norm
-        c = q.c * acos(q.a / q_norm) / vector_norm
-        d = q.d * acos(q.a / q_norm) / vector_norm
+
+        # Handle purely real quaternions to avoid division by zero
+        if vector_norm.is_zero or vector_norm == 0:
+            return Quaternion(a, 0, 0, 0)
+
+        angle_over_norm = acos(q.a / q_norm) / vector_norm
+        b = q.b * angle_over_norm
+        c = q.c * angle_over_norm
+        d = q.d * angle_over_norm
 
         return Quaternion(a, b, c, d)
 
