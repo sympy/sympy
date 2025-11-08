@@ -443,12 +443,12 @@ def test_issue_28556():
     q1 = Quaternion(1, 0, 0, 0)
     result1 = q1.log()
     assert result1 == Quaternion(0, 0, 0, 0)  # log(1) = 0
-    
+
     # Test another positive real quaternion
     q2 = Quaternion(E, 0, 0, 0)
     result2 = q2.log()
     assert result2 == Quaternion(1, 0, 0, 0)  # log(e) = 1
-    
+
     # Test symbolic real quaternion
     from sympy import Symbol, log as ln
     r = Symbol('r', positive=True)
