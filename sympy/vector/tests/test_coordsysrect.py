@@ -469,6 +469,8 @@ def test_issue_28559():
     R = CoordSys3D('S', transformation=((x, y, z), (x, y, z)),
         variable_names=('a', 'b', 'c'))
 
+    f = Function('f')
+
     # Test gradient simplification
     eq = gradient(f(R.a, R.b, R.c))
     result = eq.simplify()
