@@ -6,4 +6,3 @@ def algebraic_rewrite(expr):
     if simplified != expr:
         print(f"Rewritten {expr} → {simplified}")
     return simplified
-
