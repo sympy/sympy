@@ -118,7 +118,7 @@ def test_is_monotonic():
     assert is_monotonic(x**2 + y + 1, Interval(1, 2), x)
     raises(NotImplementedError, lambda: is_monotonic(x**2 + y + 1))
 
-    # Test cases for functions with derivative = 0 at isolated points (THE MAIN FIX)
+    # Test cases for functions with derivative = 0 at isolated points.
     # x**3: derivative is 3*x**2, which is >= 0 everywhere (zero at x=0)
     assert is_monotonic(x**3, Interval(-10, 10))
     assert is_monotonic(x**3, S.Reals)
@@ -151,10 +151,10 @@ def test_is_monotonic():
     assert not is_monotonic(x**4, S.Reals)  # Has minimum at x=0
 
     # Test monotonic on restricted intervals
-    assert is_monotonic(x**2, Interval(0, oo))  # Increasing on [0, ∞)
+    assert is_monotonic(x**2, Interval(0, oo))  # Increasing on [0, oo)
     assert is_monotonic(x**2, Interval.Lopen(0, oo))
     assert is_monotonic(x**2, Interval(1, 10))
-    assert is_monotonic(-x**2, Interval(-oo, 0))  # Increasing on (-∞, 0]
+    assert is_monotonic(-x**2, Interval(-oo, 0))  # Increasing on (-oo, 0]
     assert not is_monotonic(x**2, Interval(-1, 1))  # Not monotonic on [-1, 1]
 
     # Test constant functions (monotonic both ways)
@@ -163,8 +163,8 @@ def test_is_monotonic():
     assert is_monotonic(0, S.Reals)
 
     # Test rational functions on appropriate intervals
-    assert is_monotonic(1/x, Interval.open(0, oo))  # Decreasing on (0, ∞)
-    assert is_monotonic(1/x, Interval.open(-oo, 0))  # Decreasing on (-∞, 0)
+    assert is_monotonic(1/x, Interval.open(0, oo))  # Decreasing on (0, oo)
+    assert is_monotonic(1/x, Interval.open(-oo, 0))  # Decreasing on (-oo, 0)
     assert is_monotonic(1/x, Interval(1, 10))
     assert is_monotonic(1/x, Interval(-10, -1))
 
@@ -174,9 +174,9 @@ def test_is_monotonic():
     assert is_monotonic((x - 1)**5, S.Reals)
 
     # Test with specified symbol (multivariate)
-    assert is_monotonic(x**2 + y, Interval(-oo, 0), x)  # Decreasing in x on (-∞, 0]
-    assert is_monotonic(x**2 + y, Interval(0, oo), x)  # Increasing in x on [0, ∞)
-    assert is_monotonic(x + y**2, Interval(0, oo), y)  # Increasing in y on [0, ∞)
+    assert is_monotonic(x**2 + y, Interval(-oo, 0), x)  # Decreasing in x on (-oo, 0]
+    assert is_monotonic(x**2 + y, Interval(0, oo), x)  # Increasing in x on [0, oo)
+    assert is_monotonic(x + y**2, Interval(0, oo), y)  # Increasing in y on [0, oo)
 
     # Edge cases with single point intervals
     assert is_monotonic(x**2, Interval(5, 5))  # Single point
