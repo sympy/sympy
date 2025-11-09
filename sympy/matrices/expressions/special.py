@@ -20,6 +20,11 @@ class ZeroMatrix(MatrixExpr):
     A
     >>> Z*A.T
     0
+    >>> Z.as_explicit()
+    Matrix([
+    [0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0]])
     """
     is_ZeroMatrix = True
 
@@ -112,6 +117,11 @@ class Identity(MatrixExpr):
     >>> I = Identity(3)
     >>> I*A
     A
+    >>> I.as_explicit()
+    Matrix([
+    [1, 0, 0],
+    [0, 1, 0],
+    [0, 0, 1]])
     """
 
     is_Identity = True
@@ -213,6 +223,23 @@ class GenericIdentity(Identity):
 class OneMatrix(MatrixExpr):
     """
     Matrix whose all entries are ones.
+
+    Also called "matrix of ones" or "all-ones matrix".
+
+    https://en.wikipedia.org/wiki/Matrix_of_ones
+
+    Examples
+    ========
+
+    >>> from sympy.matrices.expressions import OneMatrix
+    >>> O = OneMatrix(3, 4)
+    >>> O.shape
+    (3, 4)
+    >>> O.as_explicit()
+    Matrix([
+    [1, 1, 1, 1],
+    [1, 1, 1, 1],
+    [1, 1, 1, 1]])
     """
     def __new__(cls, m, n, evaluate=False):
         m, n = _sympify(m), _sympify(n)
@@ -290,10 +317,107 @@ class OneMatrix(MatrixExpr):
             return Inverse(self)
 
     def _eval_as_real_imag(self):
-        return (self, ZeroMatrix(*self.shape))
+        return self, ZeroMatrix(*self.shape)
 
     def _eval_conjugate(self):
         return self
 
     def _entry(self, i, j, **kwargs):
         return S.One
+
+
+class MatrixUnit(MatrixExpr):
+    """
+    Matrix with only one nonzero entry with value 1.
+
+    https://en.wikipedia.org/wiki/Matrix_unit
+
+    Examples
+    ========
+
+    Create a matrix unit of shape `(3, 4)` with unit entry at the second row
+    and third column, i.e. at `(1, 2)`
+
+    >>> from sympy.matrices.expressions.special import MatrixUnit
+    >>> E = MatrixUnit(3, 4, 1, 2)
+    >>> E.shape
+    (3, 4)
+    >>> E.as_explicit()
+    Matrix([
+    [0, 0, 0, 0],
+    [0, 0, 1, 0],
+    [0, 0, 0, 0]])
+    >>> E[1, 2]
+    1
+    >>> E[1, 1]
+    0
+
+    The transposition of a matrix unit is a different matrix unit:
+
+    >>> E.T
+    MatrixUnit(4, 3, 2, 1)
+    >>> E.T.as_explicit()
+    Matrix([
+    [0, 0, 0],
+    [0, 0, 0],
+    [0, 1, 0],
+    [0, 0, 0]])
+
+    Both shape and position of unit entry may be symbolic
+
+    >>> from sympy import symbols
+    >>> a, b, i, j, x, y = symbols("a b i j x y")
+    >>> M = MatrixUnit(a, b, i, j)
+    >>> M.shape
+    (a, b)
+    >>> M[x, y]
+    KroneckerDelta(i, x, (0, a - 1))*KroneckerDelta(j, y, (0, b - 1))
+
+    """
+    def __new__(cls, rows, cols, i, j):
+        obj = MatrixExpr.__new__(cls, rows, cols, i, j)
+        obj._i = i
+        obj._j = j
+        return obj
+
+    @property
+    def shape(self):
+        return self._args[0], self._args[1]
+
+    @property
+    def rows(self):
+        return self._args[0]
+
+    @property
+    def cols(self):
+        return self._args[1]
+
+    @property
+    def is_square(self):
+        return Eq(self.rows, self.cols)
+
+    def _eval_transpose(self):
+        return MatrixUnit(self.cols, self.rows, self._j, self._i)
+
+    def _eval_trace(self):
+        if (self.rows == self.cols) == True:
+            if self.shape == (1, 1):
+                return S.One
+            return S.Zero
+
+    def _eval_inverse(self):
+        if self.shape == (1, 1):
+            return self
+        raise NonInvertibleMatrixError("Cannot invert this MatrixUnit")
+
+    def _eval_as_real_imag(self):
+        return self, ZeroMatrix(*self.shape)
+
+    def _eval_conjugate(self):
+        return self
+
+    def _eval_adjoint(self):
+        return self._eval_conjugate()._eval_transpose()
+
+    def _entry(self, i, j, **kwargs):
+        return KroneckerDelta(i, self._i, (0, self.rows-1)) * KroneckerDelta(j, self._j, (0, self.cols-1))

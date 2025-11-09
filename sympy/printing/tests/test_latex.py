@@ -2222,6 +2222,12 @@ def test_ElementwiseApplyFunction():
     assert latex(expr) == r'{\left( x \mapsto \frac{1}{x} \right)}_{\circ}\left({X}\right)'
 
 
+def test_MatrixUnit():
+    from sympy.matrices.expressions.special import MatrixUnit
+    assert latex(MatrixUnit(3, 3, 1, 2), mat_symbol_style='plain') == 'E_{1,2}'
+    assert latex(MatrixUnit(3, 3, 1, 2), mat_symbol_style='bold') == r'\mathcal{E}_{1,2}'
+
+
 def test_ZeroMatrix():
     from sympy.matrices.expressions.special import ZeroMatrix
     assert latex(ZeroMatrix(1, 1), mat_symbol_style='plain') == r"0"

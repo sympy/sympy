@@ -577,8 +577,12 @@ class Piecewise(DefinedFunction):
                     return Undefined
                 # TODO simplify hi <= upto
                 return Piecewise((sum, hi <= upto), (Undefined, True))
-            sum += abei[i][-2]._eval_interval(x, a, b)
-            upto = b
+            k = abei[i][-2]._eval_interval(x, a, b)
+            if k is Undefined:
+                return Piecewise((sum, hi <= upto), (Undefined, True))
+            else:
+                sum += k
+                upto = b
         return sum
 
     def _intervals(self, sym, err_on_Eq=False):

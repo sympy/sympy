@@ -7825,12 +7825,15 @@ def test_imaginary_unit():
 
 def test_str_special_matrices():
     from sympy.matrices import Identity, ZeroMatrix, OneMatrix
+    from sympy.matrices.expressions.special import MatrixUnit
     assert pretty(Identity(4)) == 'I'
     assert upretty(Identity(4)) == '𝕀'
     assert pretty(ZeroMatrix(2, 2)) == '0'
     assert upretty(ZeroMatrix(2, 2)) == '𝟘'
     assert pretty(OneMatrix(2, 2)) == '1'
     assert upretty(OneMatrix(2, 2)) == '𝟙'
+    assert pretty(MatrixUnit(3, 3, 1, 2)) == 'E_12'
+    assert upretty(MatrixUnit(3, 3, 1, 2)) == '𝔼₁₂'
 
 
 def test_pretty_misc_functions():

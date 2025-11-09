@@ -10,7 +10,7 @@ from sympy.matrices.immutable import ImmutableDenseMatrix
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.matrices.expressions.matadd import MatAdd
 from sympy.matrices.expressions.special import (
-    ZeroMatrix, GenericZeroMatrix, Identity, GenericIdentity, OneMatrix)
+    ZeroMatrix, GenericZeroMatrix, Identity, GenericIdentity, OneMatrix, MatrixUnit)
 from sympy.matrices.expressions.matmul import MatMul
 from sympy.testing.pytest import raises
 
@@ -176,6 +176,25 @@ def test_OneMatrix_mul():
     assert OneMatrix(n, m) * OneMatrix(m, k) == OneMatrix(n, k) * m
     assert w * OneMatrix(1, 1) == w
     assert OneMatrix(1, 1) * w.T == w.T
+
+
+def test_MatrixUnit():
+    mu = MatrixUnit(3, 3, 1, 2)
+
+    assert mu.as_explicit() == ImmutableDenseMatrix([[0, 0, 0], [0, 0, 1], [0, 0, 0]])
+    assert mu.T == MatrixUnit(3, 3, 2, 1)
+    assert mu.free_symbols == set()
+    assert mu.shape == (3, 3)
+    assert mu.rows == 3
+    assert mu.cols == 3
+
+    ma = MatrixUnit(3, 4, 1, 2)
+    assert ma.transpose() == ma.T == MatrixUnit(4, 3, 2, 1)
+    assert ma.adjoint() == MatrixUnit(4, 3, 2, 1)
+    assert ma.conjugate() == ma
+    assert ma.shape == (3, 4)
+    assert ma.rows == 3
+    assert ma.cols == 4
 
 
 def test_Identity():

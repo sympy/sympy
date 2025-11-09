@@ -691,26 +691,33 @@ class ComplexRootOf(RootOf):
         """
         Reset all intervals
         """
-        self._all_roots(self.poly, use_cache=False)
+        factors = _pure_factors(self.poly)
+        self._get_reals(factors, use_cache=False)
+        self._get_complexes(factors, use_cache=False)
 
     @classmethod
     def _all_roots(cls, poly, use_cache=True):
         """Get real and complex roots of a composite polynomial. """
         factors = _pure_factors(poly)
 
-        reals = cls._get_reals(factors, use_cache=use_cache)
-        reals_count = cls._count_roots(reals)
-
         roots = []
 
-        for index in range(0, reals_count):
-            roots.append(cls._reals_index(reals, index))
+        if len(factors) == 1:
+            f, multiplicity = factors[0]
+            deg = f.degree()
+            roots.extend((f, i) for i in range(deg) for _ in range(multiplicity))
+        else:
+            reals = cls._get_reals(factors, use_cache=use_cache)
+            reals_count = cls._count_roots(reals)
 
-        complexes = cls._get_complexes(factors, use_cache=use_cache)
-        complexes_count = cls._count_roots(complexes)
+            for index in range(0, reals_count):
+                roots.append(cls._reals_index(reals, index))
 
-        for index in range(0, complexes_count):
-            roots.append(cls._complexes_index(complexes, index))
+            complexes = cls._get_complexes(factors, use_cache=use_cache)
+            complexes_count = cls._count_roots(complexes)
+
+            for index in range(0, complexes_count):
+                roots.append(cls._complexes_index(complexes, index))
 
         return roots
 
