@@ -1101,7 +1101,7 @@ class TensorIndexType(Basic):
                     metric_symmetry = 1
 
         auto_convert_indices = sympify(auto_convert_indices)
-        
+
         obj = Basic.__new__(cls, name, dummy_name, dim, eps_dim,
                             metric_symmetry, metric_name, auto_convert_indices)
 
