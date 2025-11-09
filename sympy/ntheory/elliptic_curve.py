@@ -432,10 +432,14 @@ class EllipticCurvePoint:
         if not isinstance(other, EllipticCurvePoint):
             return NotImplemented
 
-        # Points must be on the same curve
-        if self._curve is not other._curve:
-            return NotImplemented
-
+        # points must have all values equal 
+        if (self._curve._a1 != other._curve._a1 or
+            self._curve._a2 != other._curve._a2 or
+            self._curve._a3 != other._curve._a3 or
+            self._curve._a4 != other._curve._a4 or
+            self._curve._a6 != other._curve._a6 or
+            self._curve.modulus != other._curve.modulus):
+            return False
         # Both points at infinity are equal
         if self.z == 0 and other.z == 0:
             return True
