@@ -413,5 +413,13 @@ def is_monotonic(expression, interval=S.Reals, symbol=None):
         )
 
     variable = symbol or (free.pop() if free else Symbol('x'))
-    turning_points = solveset(expression.diff(variable), variable, interval)
-    return interval.intersection(turning_points) is S.EmptySet
+    derivative = expression.diff(variable)
+
+    # Check if function is non-decreasing (derivative >= 0) throughout interval
+    increasing_interval = solveset(derivative >= 0, variable, interval)
+
+    # Check if function is non-increasing (derivative <= 0) throughout interval
+    decreasing_interval = solveset(derivative <= 0, variable, interval)
+
+    # Monotonic if either condition holds for the entire interval
+    return interval.is_subset(increasing_interval) or interval.is_subset(decreasing_interval)
