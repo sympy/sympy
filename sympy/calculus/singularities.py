@@ -401,25 +401,4 @@ def is_monotonic(expression, interval=S.Reals, symbol=None):
     True
 
     """
-    from sympy.solvers.solveset import solveset
-
-    expression = sympify(expression)
-
-    free = expression.free_symbols
-    if symbol is None and len(free) > 1:
-        raise NotImplementedError(
-            'is_monotonic has not yet been implemented'
-            ' for all multivariate expressions.'
-        )
-
-    variable = symbol or (free.pop() if free else Symbol('x'))
-    derivative = expression.diff(variable)
-
-    # Check if function is non-decreasing (derivative >= 0) throughout interval
-    increasing_interval = solveset(derivative >= 0, variable, interval)
-
-    # Check if function is non-increasing (derivative <= 0) throughout interval
-    decreasing_interval = solveset(derivative <= 0, variable, interval)
-
-    # Monotonic if either condition holds for the entire interval
-    return interval.is_subset(increasing_interval) or interval.is_subset(decreasing_interval)
+    return is_increasing(expression, interval, symbol) or is_decreasing(expression, interval, symbol)
