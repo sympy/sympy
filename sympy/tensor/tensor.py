@@ -1123,7 +1123,7 @@ class TensorIndexType(Basic):
     @property
     def eps_dim(self):
         return self.args[3]
-    
+
     @property
     def auto_convert_indices(self):
         return self.args[6]
@@ -3561,7 +3561,7 @@ class TensMul(TensExpr, AssocOp):
         #_index_order = all(_has_index_order(arg) for arg in args)
 
         args_indices = [get_indices(arg) for arg in args]
-        
+
         # Pre-process for auto_convert_indices: flip repeated same-sign indices
         for pos1, arg_indices in enumerate(args_indices):
             for pos_in_arg, index in enumerate(arg_indices):
@@ -3586,7 +3586,7 @@ class TensMul(TensExpr, AssocOp):
                                 break
                         if found_earlier:
                             break
-        
+
         # Apply auto-convert replacements
         if any(repl for repl in replacements):
             args = [
@@ -3595,7 +3595,7 @@ class TensMul(TensExpr, AssocOp):
                 for arg, repl in zip(args, replacements)]
             args_indices = [get_indices(arg) for arg in args]
             replacements = [{} for _ in args]
-        
+
         indices, free, free_names, dummy_data = TensMul._indices_to_free_dum(args_indices)
 
         cdt = defaultdict(int)
