@@ -432,7 +432,7 @@ class EllipticCurvePoint:
         if not isinstance(other, EllipticCurvePoint):
             return NotImplemented
 
-        # points must have all values equal 
+        # points must have all values equal
         if (self._curve._a1 != other._curve._a1 or
             self._curve._a2 != other._curve._a2 or
             self._curve._a3 != other._curve._a3 or
