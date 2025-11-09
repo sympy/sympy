@@ -1039,7 +1039,8 @@ class TensorIndexType(Basic):
     """
 
     def __new__(cls, name, dummy_name=None, dim=None, eps_dim=None,
-                metric_symmetry=1, metric_name='metric', auto_convert_indices=False, **kwargs):
+                metric_symmetry=1, metric_name='metric',
+                auto_convert_indices=False, **kwargs):
         if 'dummy_fmt' in kwargs:
             dummy_fmt = kwargs['dummy_fmt']
             sympy_deprecation_warning(
@@ -3567,16 +3568,19 @@ class TensMul(TensExpr, AssocOp):
                 if not isinstance(index, TensorIndex):
                     continue
                 # Check if this index appears earlier with the same sign
-                if hasattr(index.tensor_index_type, 'auto_convert_indices') and index.tensor_index_type.auto_convert_indices:
+                idx_type = index.tensor_index_type
+                if (hasattr(idx_type, 'auto_convert_indices') and
+                        idx_type.auto_convert_indices):
                     found_earlier = False
                     for earlier_pos1 in range(pos1 + 1):
                         earlier_indices = args_indices[earlier_pos1]
                         start_pos = 0 if earlier_pos1 < pos1 else 0
-                        end_pos = len(earlier_indices) if earlier_pos1 < pos1 else pos_in_arg
+                        end_pos = (len(earlier_indices) if earlier_pos1 < pos1
+                                   else pos_in_arg)
                         for earlier_pos_in_arg in range(start_pos, end_pos):
                             earlier_index = earlier_indices[earlier_pos_in_arg]
                             if earlier_index == index:
-                                # Found a repeated index with same sign - flip current one
+                                # Flip current index
                                 replacements[pos1][index] = -index
                                 found_earlier = True
                                 break
@@ -3586,7 +3590,8 @@ class TensMul(TensExpr, AssocOp):
         # Apply auto-convert replacements
         if any(repl for repl in replacements):
             args = [
-                arg._replace_indices(repl) if isinstance(arg, TensExpr) and repl else arg
+                (arg._replace_indices(repl)
+                 if isinstance(arg, TensExpr) and repl else arg)
                 for arg, repl in zip(args, replacements)]
             args_indices = [get_indices(arg) for arg in args]
             replacements = [{} for _ in args]
