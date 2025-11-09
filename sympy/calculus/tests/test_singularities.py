@@ -3,7 +3,7 @@ from sympy.core.singleton import S
 from sympy.core.symbol import Symbol, Dummy
 from sympy.core.function import Lambda
 from sympy.functions.elementary.exponential import (exp, log)
-from sympy.functions.elementary.trigonometric import sec, csc, sin, cos
+from sympy.functions.elementary.trigonometric import sec, csc
 from sympy.functions.elementary.hyperbolic import (coth, sech,
                                                    atanh, asech, acoth, acsch)
 from sympy.functions.elementary.miscellaneous import sqrt
