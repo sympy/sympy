@@ -26,6 +26,9 @@ from timeit import default_timer as clock
 import doctest as pdoctest  # avoid clashing with our doctest() function
 from doctest import DocTestFinder, DocTestRunner
 import random
+
+# Register custom doctest option flag for floating point comparison
+FLOAT_CMP = pdoctest.register_optionflag('FLOAT_CMP')
 import subprocess
 import shutil
 import signal
@@ -1921,30 +1924,31 @@ class SymPyOutputChecker(pdoctest.OutputChecker):
         if got == want:
             return True
 
-        # TODO parse integers as well ?
-        # Parse floats and compare them. If some of the parsed floats contain
-        # ellipses, skip the comparison.
-        matches = self.num_got_rgx.finditer(got)
-        numbers_got = [match.group(1) for match in matches] # list of strs
-        matches = self.num_want_rgx.finditer(want)
-        numbers_want = [match.group(1) for match in matches] # list of strs
-        if len(numbers_got) != len(numbers_want):
-            return False
+        # FLOAT_CMP: Parse floats and compare them numerically
+        # If some of the parsed floats contain ellipses, skip the comparison.
+        if optionflags & FLOAT_CMP:
+            matches = self.num_got_rgx.finditer(got)
+            numbers_got = [match.group(1) for match in matches] # list of strs
+            matches = self.num_want_rgx.finditer(want)
+            numbers_want = [match.group(1) for match in matches] # list of strs
 
-        if len(numbers_got) > 0:
-            nw_  = []
-            for ng, nw in zip(numbers_got, numbers_want):
-                if '...' in nw:
-                    nw_.append(ng)
-                    continue
-                else:
-                    nw_.append(nw)
+            if len(numbers_got) == len(numbers_want) and len(numbers_got) > 0:
+                nw_  = []
+                floats_match = True
+                for ng, nw in zip(numbers_got, numbers_want):
+                    if '...' in nw:
+                        nw_.append(ng)
+                        continue
+                    else:
+                        nw_.append(nw)
 
-                if abs(float(ng)-float(nw)) > 1e-5:
-                    return False
+                    if abs(float(ng)-float(nw)) > 1e-5:
+                        floats_match = False
+                        break
 
-            got = self.num_got_rgx.sub(r'%s', got)
-            got = got % tuple(nw_)
+                if floats_match:
+                    got = self.num_got_rgx.sub(r'%s', got)
+                    got = got % tuple(nw_)
 
         # <BLANKLINE> can be used as a special sequence to signify a
         # blank line, unless the DONT_ACCEPT_BLANKLINE flag is used.
