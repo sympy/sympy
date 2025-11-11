@@ -118,7 +118,8 @@ def per(matexpr):
     >>> per(M)
     8
     """
-    if Permanent(matexpr).arg.shape[0]==0 or Permanent.arg.shape[1] == 0:
+    pm = Permanent(matexpr)
+    if pm.arg.shape[0]==0 or pm.arg.shape[1] == 0:
         return S.One
     else:
         return Permanent(matexpr).doit()
