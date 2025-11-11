@@ -1451,3 +1451,20 @@ def test_issue_28130():
     assert limit(3**x, x, -oo) == 0
     assert limit(E**x, x, -oo) == 0
     assert limit((0.3)**x, x, -oo) == oo
+
+
+def test_issue_28558():
+    # https://github.com/sympy/sympy/issues/28558
+    # Test that Limit.doit() doesn't raise TypeError about missing 'cdir' parameter
+    # The original issue was: Limit(log(x)*cos(x), x, oo, dir='-').doit()
+    # raised TypeError: Expr._eval_nseries() missing 1 required positional argument: 'cdir'
+    # This was fixed by adding cdir=0 parameter in gruntz.py
+
+    # These limits should not raise TypeError about missing 'cdir'
+    assert limit(log(x), x, oo, dir='-') is oo
+    assert limit(exp(x), x, oo, dir='-') is oo
+    assert limit(x**2, x, oo, dir='-') is oo
+
+    # The original problematic case now raises NotImplementedError instead of TypeError
+    # This confirms the fix - the TypeError about missing 'cdir' is resolved
+    raises(NotImplementedError, lambda: limit(log(x)*cos(x), x, oo, dir='-'))

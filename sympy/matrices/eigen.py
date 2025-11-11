@@ -315,9 +315,8 @@ def _eigenvals_dict(
 
             degree = int(factor.degree())
             if sum(eigs.values()) != degree:
-                degree = int(factor.degree())
                 try:
-                    eigs = dict(charpoly.all_roots(multiple=False))
+                    eigs = dict(factor.all_roots(multiple=False))
                 except NotImplementedError:
                     if error_when_incomplete:
                         raise MatrixError(eigenvals_error_message)

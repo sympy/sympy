@@ -510,7 +510,7 @@ def group_isomorphism(G, H, isomorphism=True):
 
     # Match the generators of `G` with subsets of `_H`
     gens = list(G.generators)
-    for subset in itertools.permutations(_H, len(gens)):
+    for subset in itertools.permutations(_H.generate(), len(gens)):
         images = list(subset)
         images.extend([_H.identity]*(len(G.generators)-len(images)))
         _images = dict(zip(gens,images))

@@ -928,6 +928,13 @@ class PrettyPrinter(Printer):
         else:
             return prettyForm('1')
 
+    def _print_MatrixUnit(self, expr):
+        if self._use_unicode:
+            s = self._print(Symbol(f'{pretty_atom("MatrixUnit")}_{expr._i}{expr._j}'))
+        else:
+            s = self._print(Symbol(f'E_{expr._i}{expr._j}'))
+        return s
+
     def _print_DotProduct(self, expr):
         args = list(expr.args)
 

@@ -257,6 +257,9 @@ class CoordSys3D(Basic):
     def __iter__(self):
         return iter(self.base_vectors())
 
+    def _eval_simplify(self, **kwargs):
+        return self
+
     @staticmethod
     def _check_orthogonality(equations):
         """
