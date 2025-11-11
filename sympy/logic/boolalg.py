@@ -158,7 +158,7 @@ class Boolean(Basic):
         return self.atoms() == other.atoms() and \
             not satisfiable(Not(Equivalent(self, other)))
 
-    def to_nnf(self, simplify=True):
+    def to_nnf(self, simplify=True, form=None):
         # override where necessary
         return self
 
@@ -513,8 +513,8 @@ class BooleanFunction(Application, Boolean):
     def binary_check_and_simplify(self, *args):
         return [as_Boolean(i) for i in args]
 
-    def to_nnf(self, simplify=True):
-        return self._to_nnf(*self.args, simplify=simplify)
+    def to_nnf(self, simplify=True, form=None):
+        return self._to_nnf(*self.args, simplify=simplify, form=form)
 
     def to_anf(self, deep=True):
         return self._to_anf(*self.args, deep=deep)
@@ -522,10 +522,11 @@ class BooleanFunction(Application, Boolean):
     @classmethod
     def _to_nnf(cls, *args, **kwargs):
         simplify = kwargs.get('simplify', True)
+        form = kwargs.get('form', None)
         argset = set()
         for arg in args:
             if not is_literal(arg):
-                arg = arg.to_nnf(simplify)
+                arg = arg.to_nnf(simplify, form=form)
             if simplify:
                 if isinstance(arg, cls):
                     arg = arg.args
@@ -938,7 +939,7 @@ class Not(BooleanFunction):
         """
         return self.args[0].as_set().complement(S.Reals)
 
-    def to_nnf(self, simplify=True):
+    def to_nnf(self, simplify=True, form=None):
         if is_literal(self):
             return self
 
@@ -947,18 +948,18 @@ class Not(BooleanFunction):
         func, args = expr.func, expr.args
 
         if func == And:
-            return Or._to_nnf(*[Not(arg) for arg in args], simplify=simplify)
+            return Or._to_nnf(*[Not(arg) for arg in args], simplify=simplify, form=form)
 
         if func == Or:
-            return And._to_nnf(*[Not(arg) for arg in args], simplify=simplify)
+            return And._to_nnf(*[Not(arg) for arg in args], simplify=simplify, form=form)
 
         if func == Implies:
             a, b = args
-            return And._to_nnf(a, Not(b), simplify=simplify)
+            return And._to_nnf(a, Not(b), simplify=simplify, form=form)
 
         if func == Equivalent:
             return And._to_nnf(Or(*args), Or(*[Not(arg) for arg in args]),
-                               simplify=simplify)
+                               simplify=simplify, form=form)
 
         if func == Xor:
             result = []
@@ -966,11 +967,11 @@ class Not(BooleanFunction):
                 for neg in combinations(args, i):
                     clause = [Not(s) if s in neg else s for s in args]
                     result.append(Or(*clause))
-            return And._to_nnf(*result, simplify=simplify)
+            return And._to_nnf(*result, simplify=simplify, form=form)
 
         if func == ITE:
             a, b, c = args
-            return And._to_nnf(Or(a, Not(c)), Or(Not(a), Not(b)), simplify=simplify)
+            return And._to_nnf(Or(a, Not(c)), Or(Not(a), Not(b)), simplify=simplify, form=form)
 
         raise ValueError("Illegal operator %s in expression" % func)
 
@@ -1067,13 +1068,21 @@ class Xor(BooleanFunction):
             return Not(Xor(*argset))
         return super().__new__(cls, *ordered(argset))
 
-    def to_nnf(self, simplify=True):
-        args = []
-        for i in range(0, len(self.args)+1, 2):
-            for neg in combinations(self.args, i):
-                clause = [Not(s) if s in neg else s for s in self.args]
-                args.append(Or(*clause))
-        return And._to_nnf(*args, simplify=simplify)
+    def to_nnf(self, simplify=True, form=None):
+        if form == 'dnf':
+            terms = []
+            for mask in _get_odd_parity_terms(len(self.args)):
+                conj = [self.args[i] if mask[i] == 1 else Not(self.args[i])
+                        for i in range(len(self.args))]
+                terms.append(And(*conj))
+            return Or._to_nnf(*terms, simplify=simplify)
+        else:
+            args = []
+            for i in range(0, len(self.args)+1, 2):
+                for neg in combinations(self.args, i):
+                    clause = [Not(s) if s in neg else s for s in self.args]
+                    args.append(Or(*clause))
+            return And._to_nnf(*args, simplify=simplify)
 
     def _eval_rewrite_as_Or(self, *args, **kwargs):
         a = self.args
@@ -1277,9 +1286,9 @@ class Implies(BooleanFunction):
         else:
             return Basic.__new__(cls, *args)
 
-    def to_nnf(self, simplify=True):
+    def to_nnf(self, simplify=True, form=None):
         a, b = self.args
-        return Or._to_nnf(Not(a), b, simplify=simplify)
+        return Or._to_nnf(Not(a), b, simplify=simplify, form=form)
 
     def to_anf(self, deep=True):
         a, b = self.args
@@ -1351,12 +1360,12 @@ class Equivalent(BooleanFunction):
             return And(*[Not(arg) for arg in argset])
         return super().__new__(cls, *ordered(argset))
 
-    def to_nnf(self, simplify=True):
+    def to_nnf(self, simplify=True, form=None):
         args = []
         for a, b in zip(self.args, self.args[1:]):
             args.append(Or(Not(a), b))
         args.append(Or(Not(self.args[-1]), self.args[0]))
-        return And._to_nnf(*args, simplify=simplify)
+        return And._to_nnf(*args, simplify=simplify, form=form)
 
     def to_anf(self, deep=True):
         a = And(*self.args)
@@ -1470,9 +1479,9 @@ class ITE(BooleanFunction):
         if [a, b, c] != args:
             return cls(a, b, c, evaluate=False)
 
-    def to_nnf(self, simplify=True):
+    def to_nnf(self, simplify=True, form=None):
         a, b, c = self.args
-        return And._to_nnf(Or(Not(a), b), Or(a, c), simplify=simplify)
+        return And._to_nnf(Or(Not(a), b), Or(a, c), simplify=simplify, form=form)
 
     def _eval_as_set(self):
         return self.to_nnf().as_set()
@@ -1670,7 +1679,7 @@ def to_anf(expr, deep=True):
     return expr.to_anf(deep=deep)
 
 
-def to_nnf(expr, simplify=True):
+def to_nnf(expr, simplify=True, form=None):
     """
     Converts ``expr`` to Negation Normal Form (NNF).
 
@@ -1678,6 +1687,18 @@ def to_nnf(expr, simplify=True):
     contains only :py:class:`~.And`, :py:class:`~.Or` and :py:class:`~.Not`,
     and :py:class:`~.Not` is applied only to literals.
     If ``simplify`` is ``True``, the result contains no redundant clauses.
+
+    Parameters
+    ==========
+
+    expr : boolean expression
+        The expression to convert to NNF.
+    simplify : bool, optional
+        If True, simplify the result. Default is True.
+    form : str, optional
+        Target form hint: 'cnf' for conjunctive normal form bias,
+        'dnf' for disjunctive normal form bias, or None (default).
+        This hint optimizes XOR conversions.
 
     Examples
     ========
@@ -1692,7 +1713,7 @@ def to_nnf(expr, simplify=True):
     """
     if is_nnf(expr, simplify):
         return expr
-    return expr.to_nnf(simplify)
+    return expr.to_nnf(simplify, form=form)
 
 
 def to_cnf(expr, simplify=False, force=False):
@@ -1731,7 +1752,7 @@ def to_cnf(expr, simplify=False, force=False):
     if is_cnf(expr):
         return expr
 
-    expr = eliminate_implications(expr)
+    expr = eliminate_implications(expr, form='cnf')
     res = distribute_and_over_or(expr)
 
     return res
@@ -1773,7 +1794,7 @@ def to_dnf(expr, simplify=False, force=False):
     if is_dnf(expr):
         return expr
 
-    expr = eliminate_implications(expr)
+    expr = eliminate_implications(expr, form='dnf')
     return distribute_or_over_and(expr)
 
 
@@ -1944,13 +1965,21 @@ def _is_form(expr, function1, function2):
     return True
 
 
-def eliminate_implications(expr):
+def eliminate_implications(expr, form=None):
     """
     Change :py:class:`~.Implies` and :py:class:`~.Equivalent` into
     :py:class:`~.And`, :py:class:`~.Or`, and :py:class:`~.Not`.
     That is, return an expression that is equivalent to ``expr``, but has only
     ``&``, ``|``, and ``~`` as logical
     operators.
+
+    Parameters
+    ==========
+
+    expr : boolean expression
+        The expression to eliminate implications from.
+    form : str, optional
+        Target form hint: 'cnf' or 'dnf'. Passed to to_nnf for optimization.
 
     Examples
     ========
@@ -1966,7 +1995,7 @@ def eliminate_implications(expr):
     (A | ~C) & (B | ~A) & (C | ~B)
 
     """
-    return to_nnf(expr, simplify=False)
+    return to_nnf(expr, simplify=False, form=form)
 
 
 def is_literal(expr):
@@ -2186,7 +2215,8 @@ def _get_odd_parity_terms(n):
     Returns a list of lists, with all possible combinations of n zeros and ones
     with an odd number of ones.
     """
-    return [e for e in [ibin(i, n) for i in range(2**n)] if sum(e) % 2 == 1]
+    return [[1 if (mask >> i) & 1 else 0 for i in range(n)]
+            for mask in range(1 << n) if mask.bit_count() % 2 == 1]
 
 
 def _get_even_parity_terms(n):
@@ -2194,7 +2224,8 @@ def _get_even_parity_terms(n):
     Returns a list of lists, with all possible combinations of n zeros and ones
     with an even number of ones.
     """
-    return [e for e in [ibin(i, n) for i in range(2**n)] if sum(e) % 2 == 0]
+    return [[1 if (mask >> i) & 1 else 0 for i in range(n)]
+            for mask in range(1 << n) if mask.bit_count() % 2 == 0]
 
 
 def _simplified_pairs(terms):
