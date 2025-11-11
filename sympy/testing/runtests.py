@@ -893,7 +893,7 @@ def _doctest(*paths, **kwargs):
             out = sympytestfile(
                 rst_file, module_relative=False, encoding='utf-8',
                 optionflags=pdoctest.ELLIPSIS | pdoctest.NORMALIZE_WHITESPACE |
-                pdoctest.IGNORE_EXCEPTION_DETAIL)
+                pdoctest.IGNORE_EXCEPTION_DETAIL | FLOAT_CMP)
         finally:
             # make sure we return to the original displayhook in case some
             # doctest has changed that
@@ -1460,7 +1460,8 @@ class SymPyDocTests:
             runner = SymPyDocTestRunner(verbose=self._reporter._verbose==2,
                     optionflags=pdoctest.ELLIPSIS |
                     pdoctest.NORMALIZE_WHITESPACE |
-                    pdoctest.IGNORE_EXCEPTION_DETAIL)
+                    pdoctest.IGNORE_EXCEPTION_DETAIL |
+                    FLOAT_CMP)
             runner._checker = SymPyOutputChecker()
             old = sys.stdout
             new = old if self._reporter._verbose==2 else StringIO()
