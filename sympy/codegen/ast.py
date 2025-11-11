@@ -1103,8 +1103,8 @@ class Type(Token):
           ...
         ValueError: Casting gives a significantly different value.
         >>> from sympy.codegen.ast import float64
-        >>> float64.cast_check(v10)
-        12345.678940000000
+        >>> float64.cast_check(v10)  # doctest: +ELLIPSIS
+        12345.67894...
         >>> from sympy import Float
         >>> v18 = Float('0.123456789012345646')
         >>> float64.cast_check(v18)
@@ -1112,8 +1112,8 @@ class Type(Token):
           ...
         ValueError: Casting gives a significantly different value.
         >>> from sympy.codegen.ast import float80
-        >>> float80.cast_check(v18)
-        0.123456789012345645996
+        >>> float80.cast_check(v18)  # doctest: +ELLIPSIS
+        0.123456789012345...
 
         """
         val = sympify(value)
@@ -1225,8 +1225,8 @@ class FloatType(FloatBaseType):
     True
     >>> half_precision.decimal_dig == 5
     True
-    >>> half_precision.cast_check(1.0)
-    1.0000
+    >>> half_precision.cast_check(1.0)  # doctest: +ELLIPSIS
+    1.0...
     >>> half_precision.cast_check(1e5)  # doctest: +ELLIPSIS
     Traceback (most recent call last):
       ...

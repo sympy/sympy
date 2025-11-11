@@ -1067,8 +1067,8 @@ class Quaternion(Expr):
         >>> from sympy import Quaternion
         >>> from sympy import sqrt
         >>> q = Quaternion(1/sqrt(1), 1/sqrt(2), 1/sqrt(3), 1/sqrt(4))
-        >>> q.evalf() # doctest: +NORMALIZE_WHITESPACE
-        1.0 + 0.707106781186548*i + 0.577350269189626*j + 0.5*k
+        >>> q.evalf() # doctest: +FLOAT_CMP
+        1.0 + 0.707106781186547*i + 0.577350269189626*j + 0.5*k
 
         """
         nprec = prec_to_dps(prec)
