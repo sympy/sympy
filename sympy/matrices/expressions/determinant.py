@@ -118,8 +118,10 @@ def per(matexpr):
     >>> per(M)
     8
     """
-
-    return Permanent(matexpr).doit()
+    if Permanent(matexpr).arg.shape[0]==0 or Permanent.arg.shape[1] == 0:
+        return S.One
+    else:
+        return Permanent(matexpr).doit()
 
 from sympy.assumptions.ask import ask, Q
 from sympy.assumptions.refine import handlers_dict
