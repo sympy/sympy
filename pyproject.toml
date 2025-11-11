@@ -17,8 +17,7 @@ testpaths = [
 doctest_optionflags = [
     "NORMALIZE_WHITESPACE",
     "IGNORE_EXCEPTION_DETAIL",
-    "ELLIPSIS",
-    "FLOAT_CMP",
+    "ELLIPSIS"
 ]
 
 norecursedirs = [
