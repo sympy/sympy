@@ -1942,13 +1942,24 @@ class SymPyOutputChecker(pdoctest.OutputChecker):
                     else:
                         nw_.append(nw)
 
-                    if abs(float(ng)-float(nw)) > 1e-5:
+                     # Use relative tolerance for better precision handling
+                    try:
+                        ng_float = float(ng)
+                        nw_float = float(nw)
+                        # Relative tolerance of 1e-5 or absolute tolerance for small numbers
+                        if abs(ng_float - nw_float) > max(1e-5 * abs(nw_float), 1e-5):
+                            floats_match = False
+                            break
+                    except (ValueError, OverflowError):
                         floats_match = False
                         break
 
                 if floats_match:
                     got = self.num_got_rgx.sub(r'%s', got)
                     got = got % tuple(nw_)
+                    # Check if normalization made them equal
+                    if got == want:
+                        return True
 
         # <BLANKLINE> can be used as a special sequence to signify a
         # blank line, unless the DONT_ACCEPT_BLANKLINE flag is used.

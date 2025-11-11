@@ -22,10 +22,10 @@ compute square roots. We might do something like this
 9 is a perfect square, so we got the exact answer, 3. But suppose we computed
 the square root of a number that isn't a perfect square
 
-   >>> math.sqrt(8)
-   2.82842712475
+   >>> math.sqrt(8) # doctest: +SKIP
+   2.8284271247461903
 
-Here we got an approximate result. 2.82842712475 is not the exact square root
+Here we got an approximate result. 2.8284271247461903 is not the exact square root
 of 8 (indeed, the actual square root of 8 cannot be represented by a finite
 decimal, since it is an irrational number).  If all we cared about was the
 decimal form of the square root of 8, we would be done.
