@@ -160,6 +160,7 @@ def monotonicity_helper(expression, predicate, interval=S.Reals, symbol=None):
 
     """
     from sympy.solvers.solveset import solveset
+    from sympy.calculus.util import continuous_domain
 
     expression = sympify(expression)
     free = expression.free_symbols
@@ -172,6 +173,12 @@ def monotonicity_helper(expression, predicate, interval=S.Reals, symbol=None):
             )
 
     variable = symbol or (free.pop() if free else Symbol('x'))
+    
+    # Check if the function is continuous on the interval
+    cont_domain = continuous_domain(expression, variable, interval)
+    if not interval.is_subset(cont_domain):
+        return False
+    
     derivative = expression.diff(variable)
     predicate_interval = solveset(predicate(derivative), variable, S.Reals)
     return interval.is_subset(predicate_interval)
@@ -402,6 +409,7 @@ def is_monotonic(expression, interval=S.Reals, symbol=None):
 
     """
     from sympy.solvers.solveset import solveset
+    from sympy.calculus.util import continuous_domain
 
     expression = sympify(expression)
 
@@ -413,5 +421,11 @@ def is_monotonic(expression, interval=S.Reals, symbol=None):
         )
 
     variable = symbol or (free.pop() if free else Symbol('x'))
+    
+    # Check if the function is continuous on the interval
+    cont_domain = continuous_domain(expression, variable, interval)
+    if not interval.is_subset(cont_domain):
+        return False
+    
     turning_points = solveset(expression.diff(variable), variable, interval)
     return interval.intersection(turning_points) is S.EmptySet
