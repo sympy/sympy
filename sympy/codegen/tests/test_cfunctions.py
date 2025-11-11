@@ -117,6 +117,11 @@ def test_fma():
     assert expr.diff(y) - 17*42*x == 0
     assert expr.diff(z) - 101 == 0
 
+    # Numeric evaluation (gh-28582)
+    assert fma(2, 3, 4) == 10
+    assert fma(5, 6, 7) == 37
+    assert fma(0, 0, 0) == 0
+
 
 def test_log10():
     x = Symbol('x')
@@ -139,6 +144,11 @@ def test_Cbrt():
     assert Cbrt(42*x).diff(x) - 42*(42*x)**(Rational(1, 3) - 1)/3 == 0
     assert Cbrt(42*x).diff(x) - Cbrt(42*x).expand(func=True).diff(x) == 0
 
+    # Numeric evaluation (gh-28582)
+    assert Cbrt(8) == 2
+    assert Cbrt(27) == 3
+    assert Cbrt(64) == 4
+
 
 def test_Sqrt():
     x = Symbol('x')
@@ -150,6 +160,11 @@ def test_Sqrt():
     assert Sqrt(42*x).diff(x) - 42*(42*x)**(S.Half - 1)/2 == 0
     assert Sqrt(42*x).diff(x) - Sqrt(42*x).expand(func=True).diff(x) == 0
 
+    # Numeric evaluation (gh-28582)
+    assert Sqrt(4) == 2
+    assert Sqrt(9) == 3
+    assert Sqrt(16) == 4
+
 
 def test_hypot():
     x, y = symbols('x y')
@@ -160,6 +175,11 @@ def test_hypot():
     # Diff
     assert hypot(17*x, 42*y).diff(x).expand(func=True) - hypot(17*x, 42*y).expand(func=True).diff(x) == 0
     assert hypot(17*x, 42*y).diff(y).expand(func=True) - hypot(17*x, 42*y).expand(func=True).diff(y) == 0
+
+    # Numeric evaluation (gh-28582)
+    assert hypot(3, 4) == 5
+    assert hypot(5, 12) == 13
+    assert hypot(0, 0) == 0
 
     assert hypot(17*x, 42*y).diff(x).expand(func=True) - 2*17*17*x*((17*x)**2 + (42*y)**2)**Rational(-1, 2)/2 == 0
     assert hypot(17*x, 42*y).diff(y).expand(func=True) - 2*42*42*y*((17*x)**2 + (42*y)**2)**Rational(-1, 2)/2 == 0
