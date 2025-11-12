@@ -1,4 +1,3 @@
-
 from sympy.printing.pycode import AbstractPythonCodePrinter, ArrayPrinter
 from sympy.matrices.expressions import MatrixExpr
 from sympy.core.mul import Mul
@@ -14,7 +13,6 @@ torch = import_module('torch')
 
 
 class TorchPrinter(ArrayPrinter, AbstractPythonCodePrinter):
-
     printmethod = "_torchcode"
 
     mapping = {
@@ -115,6 +113,15 @@ class TorchPrinter(ArrayPrinter, AbstractPythonCodePrinter):
     _print_HadamardProduct = _print_Function
     _print_Trace = _print_Function
     _print_Determinant = _print_Function
+
+    def _print_Float(self, expr):
+        return f"torch.tensor({super()._print_Float(expr)}, dtype={self.dtype})"
+
+    def _print_Integer(self, expr):
+        return f"torch.tensor({super()._print_Integer(expr)}, dtype={torch.int64})"
+
+    def _print_Rational(self, expr):
+        return f"torch.tensor({super()._print_Rational(expr)}, dtype={self.dtype})"
 
     def _print_Inverse(self, expr):
         return '{}({})'.format(self._module_format("torch.linalg.inv"),
@@ -218,7 +225,7 @@ class TorchPrinter(ArrayPrinter, AbstractPythonCodePrinter):
             return self._expand_fold_binary_op("torch.matmul", mat_args)
 
     def _print_MatPow(self, expr):
-        return self._expand_fold_binary_op("torch.mm", [expr.base]*expr.exp)
+        return self._expand_fold_binary_op("torch.mm", [expr.base] * expr.exp)
 
     def _print_MatrixBase(self, expr):
         data = "[" + ", ".join(["[" + ", ".join([self._print(j) for j in i]) + "]" for i in expr.tolist()]) + "]"
@@ -291,6 +298,7 @@ class TorchPrinter(ArrayPrinter, AbstractPythonCodePrinter):
     _transpose = "t"
     _ones = "ones"
     _zeros = "zeros"
+
 
 def torch_code(expr, requires_grad=False, dtype="torch.float64", **settings):
     printer = TorchPrinter(settings={'requires_grad': requires_grad, 'dtype': dtype})
