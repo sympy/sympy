@@ -98,7 +98,10 @@ class Permanent(Expr):
 
     def doit(self, expand=False, **hints):
         if isinstance(self.arg, MatrixBase):
-            return self.arg.per()
+            if self.arg.shape[0] == 0 or self.arg.shape[1] == 0:
+                return S.One
+            else:
+                return self.arg.per()
         else:
             return self
 
@@ -118,11 +121,8 @@ def per(matexpr):
     >>> per(M)
     8
     """
-    pm = Permanent(matexpr)
-    if pm.arg.shape[0]==0 or pm.arg.shape[1] == 0:
-        return S.One
-    else:
-        return Permanent(matexpr).doit()
+
+    return Permanent(matexpr).doit()
 
 from sympy.assumptions.ask import ask, Q
 from sympy.assumptions.refine import handlers_dict
