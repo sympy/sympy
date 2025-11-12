@@ -516,17 +516,26 @@ def group_isomorphism(G, H, isomorphism=True):
         _images = dict(zip(gens,images))
         if _check_homomorphism(G, _H, _images):
             if isinstance(H, FpGroup):
-                images = h_isomorphism.invert(images)
-            T =  homomorphism(G, H, G.generators, images, check=False)
-            if T.is_isomorphism():
-                # It is a valid isomorphism
-                if not isomorphism:
-                    return True
-                return (True, T)
+                image=PermutationGroup(images)
+                if image.order()== h_order:
+                # thats enough to say that we have a bijective function
+                    if not isomorphism:
+                        return True
+                    images = h_isomorphism.invert(images)
+                    T =  homomorphism(G, H, G.generators, images, check=False)
+                    return (True, T)
+            else:
+                T =  homomorphism(G, H, G.generators, images, check=False)
+                if T.is_isomorphism():
+                    # It is a valid isomorphism
+                    if not isomorphism:
+                        return True
+                    return (True, T)
 
     if not isomorphism:
         return False
     return (False, None)
+
 
 def is_isomorphic(G, H):
     '''
