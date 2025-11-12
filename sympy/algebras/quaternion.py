@@ -1039,7 +1039,7 @@ class Quaternion(Expr):
         a = ln(q_norm)
 
         # Handle purely real quaternions to avoid division by zero
-        if vector_norm.is_zero or vector_norm == 0:
+        if vector_norm.is_zero:
             return Quaternion(a, 0, 0, 0)
 
         angle_over_norm = acos(q.a / q_norm) / vector_norm

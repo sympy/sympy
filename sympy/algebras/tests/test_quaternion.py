@@ -450,8 +450,7 @@ def test_issue_28556():
     assert result2 == Quaternion(1, 0, 0, 0)  # log(e) = 1
 
     # Test symbolic real quaternion
-    from sympy import Symbol, log as ln
     r = Symbol('r', positive=True)
     q3 = Quaternion(r, 0, 0, 0)
     result3 = q3.log()
-    assert result3 == Quaternion(ln(r), 0, 0, 0)
+    assert result3 == Quaternion(log(r), 0, 0, 0)
