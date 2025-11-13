@@ -13,12 +13,16 @@ testpaths = [
     "doc/src",
 ]
 
+# Enable pytest-doctestplus for enhanced doctest support
+doctest_plus = "enabled"
+
 # Normalise output of doctests.
+# FLOAT_CMP enables approximate floating-point comparison in doctests
 doctest_optionflags = [
     "NORMALIZE_WHITESPACE",
     "IGNORE_EXCEPTION_DETAIL",
     "ELLIPSIS",
-    "FLOAT_CMP",
+    "FLOAT_CMP"
 ]
 
 norecursedirs = [
