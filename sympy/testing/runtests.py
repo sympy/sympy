@@ -31,12 +31,13 @@ import random
 # This allows us to use pytest-doctestplus's implementation when available
 # and fall back to our own for the standalone runner when not installed
 try:
-    from pytest_doctestplus import FLOAT_CMP
-    from pytest_doctestplus.output_checker import OutputChecker as DoctestPlusOutputChecker
+    from pytest_doctestplus import FLOAT_CMP  # type: ignore[import-not-found]
+    from pytest_doctestplus.output_checker import OutputChecker as DoctestPlusOutputChecker  # type: ignore[import-not-found]
     _use_doctestplus = True
 except ImportError:
     FLOAT_CMP = pdoctest.register_optionflag('FLOAT_CMP')
     _use_doctestplus = False
+    DoctestPlusOutputChecker = None  # type: ignore[assignment]
 
 import subprocess
 import shutil
@@ -1895,7 +1896,7 @@ for method in monkeypatched_methods:
 # Use pytest-doctestplus's OutputChecker if available, otherwise define our own
 if _use_doctestplus:
     # When pytest-doctestplus is available, use its OutputChecker directly
-    SymPyOutputChecker = DoctestPlusOutputChecker
+    SymPyOutputChecker = DoctestPlusOutputChecker  # type: ignore[misc,assignment]
 else:
     # Fallback implementation for standalone runner when pytest-doctestplus is not installed
     class SymPyOutputChecker(pdoctest.OutputChecker):
