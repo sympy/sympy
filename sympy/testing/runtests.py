@@ -1899,7 +1899,7 @@ if _use_doctestplus:
     SymPyOutputChecker = DoctestPlusOutputChecker  # type: ignore[misc,assignment]
 else:
     # Fallback implementation for standalone runner when pytest-doctestplus is not installed
-    class SymPyOutputChecker(pdoctest.OutputChecker):
+    class SymPyOutputChecker(pdoctest.OutputChecker):  # type: ignore[no-redef]
         """
         Compared to the OutputChecker from the stdlib our OutputChecker class
         supports numerical comparison of floats occurring in the output of the
