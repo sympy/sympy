@@ -2,7 +2,6 @@
 
 from __future__ import print_function, division, absolute_import
 
-import doctest
 import os
 from itertools import chain
 import json
@@ -10,11 +9,7 @@ import sys
 import warnings
 import pytest
 
-# Register custom doctest option flag BEFORE any other imports
-# This ensures FLOAT_CMP is in doctest.OPTIONFLAGS_BY_NAME before pytest uses it
-FLOAT_CMP = doctest.register_optionflag('FLOAT_CMP')
-
-from sympy.testing.runtests import setup_pprint, _get_doctest_blacklist, SymPyOutputChecker
+from sympy.testing.runtests import setup_pprint, _get_doctest_blacklist
 
 durations_path = os.path.join(os.path.dirname(__file__), '.ci', 'durations.json')
 blacklist_path = os.path.join(os.path.dirname(__file__), '.ci', 'blacklisted.json')
@@ -60,20 +55,6 @@ def pytest_configure(config):
     config.addinivalue_line("markers", "slow: manually marked test as slow (use .ci/durations.json instead)")
     config.addinivalue_line("markers", "quickcheck: skip very slow tests")
     config.addinivalue_line("markers", "veryquickcheck: skip slow & very slow tests")
-
-    # Install custom doctest OutputChecker for floating-point comparison
-    import _pytest.doctest
-    _pytest.doctest.CHECKER_CLASS = SymPyOutputChecker
-
-    # Monkey-patch pytest's _get_flag_lookup to include FLOAT_CMP
-    _orig_get_flag_lookup = _pytest.doctest._get_flag_lookup
-
-    def _get_flag_lookup():
-        flags = _orig_get_flag_lookup()
-        flags['FLOAT_CMP'] = FLOAT_CMP
-        return flags
-
-    _pytest.doctest._get_flag_lookup = _get_flag_lookup
 
 
 def pytest_runtest_setup(item):
