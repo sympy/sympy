@@ -332,7 +332,7 @@ class SqrtQuadraticDenomRule(AtomicRule):
         # coeffs are coefficients of the polynomial.
         # Let I_n = x**n/sqrt(a+b*x+c*x**2), then
         # I_n = A * x**(n-1)*sqrt(a+b*x+c*x**2) - B * I_{n-1} - C * I_{n-2}
-        # where A = 1/(n*c), B = (2*n-1)*b/(2*n*c), C = (n-1)*a/(n*c)
+        # were A = 1/(n*c), B = (2*n-1)*b/(2*n*c), C = (n-1)*a/(n*c)
         # See https://github.com/sympy/sympy/pull/23608 for proof.
         result_coeffs = []
         coeffs = coeffs.copy()
@@ -662,13 +662,21 @@ class ErfRule(AtomicRule):
         a, b, c, x = self.a, self.b, self.c, self.variable
         if a.is_extended_real:
             return Piecewise(
-                (sqrt(S.Pi)/sqrt(-a)/2 * exp(c - b**2/(4*a)) *
-                    erf((-2*a*x - b)/(2*sqrt(-a))), a < 0),
-                (sqrt(S.Pi)/sqrt(a)/2 * exp(c - b**2/(4*a)) *
-                    erfi((2*a*x + b)/(2*sqrt(a))), True))
-        return sqrt(S.Pi)/sqrt(a)/2 * exp(c - b**2/(4*a)) * \
-                erfi((2*a*x + b)/(2*sqrt(a)))
-
+                (
+                    sqrt(S.Pi) / sqrt(-a) / 2 * exp(c - b**2 / (4 * a)) *
+                    erf((-2 * a * x - b) / (2 * sqrt(-a))),
+                    a < 0
+                ),
+                (
+                    sqrt(S.Pi) / sqrt(a) / 2 * exp(c - b**2 / (4 * a)) *
+                    erfi((2 * a * x + b) / (2 * sqrt(a))),
+                    True
+                )
+            )
+        return (
+            sqrt(S.Pi) / sqrt(a) / 2 * exp(c - b**2 / (4 * a)) *
+            erfi((2 * a * x + b) / (2 * sqrt(a)))
+        )
 
 @dataclass
 class FresnelCRule(AtomicRule):
@@ -1140,7 +1148,7 @@ def nested_pow_rule(integral: IntegralInfo):
 
 def inverse_trig_rule(integral: IntegralInfo, degenerate=True):
     """
-    Set degenerate=False on recursive call where coefficient of quadratic term
+    Set degenerate=False on recursive call were coefficient of quadratic term
     is assumed non-zero.
     """
     integrand, symbol = integral
@@ -1474,8 +1482,24 @@ def quadratic_denom_rule(integral):
     b = Wild('b', exclude=[symbol])
     c = Wild('c', exclude=[symbol])
 
-    match = integrand.match(a / (b * symbol ** 2 + c))
+    # ---- Special case: 1 / (A + x**2)
+    from sympy import Piecewise, sqrt, atan, log, Abs
+    from sympy.integrals.manualintegrate import RewriteRule, DontKnowRule
 
+    A = Wild('A', exclude=[symbol])
+    match_special = integrand.match(1 / (A + symbol**2))
+
+    if match_special:
+        A_ = match_special[A]
+        expr = Piecewise(
+            (atan(symbol/sqrt(A_))/sqrt(A_), A_ > 0),
+            (log(Abs((symbol - sqrt(-A_))/(symbol + sqrt(-A_))))/(2*sqrt(-A_)), A_ < 0),
+            (-1/symbol, True)
+        )
+        return RewriteRule(integrand, symbol, expr, DontKnowRule(expr, symbol))
+
+    # ---- General form: a / (b*x**2 + c)
+    match = integrand.match(a / (b * symbol ** 2 + c))
     if match:
         a, b, c = match[a], match[b], match[c]
         general_rule = ArctanRule(integrand, symbol, a, b, c)
@@ -1487,8 +1511,10 @@ def quadratic_denom_rule(integral):
             constant = sqrt(-c/b)
             r1 = 1/(symbol-constant)
             r2 = 1/(symbol+constant)
-            log_steps = [ReciprocalRule(r1, symbol, symbol-constant),
-                         ConstantTimesRule(-r2, symbol, -1, r2, ReciprocalRule(r2, symbol, symbol+constant))]
+            log_steps = [
+                ReciprocalRule(r1, symbol, symbol-constant),
+                ConstantTimesRule(-r2, symbol, -1, r2, ReciprocalRule(r2, symbol, symbol+constant))
+            ]
             rewritten = sub = r1 - r2
             negative_step = AddRule(sub, symbol, log_steps)
             if coeff != 1:
@@ -1502,13 +1528,13 @@ def quadratic_denom_rule(integral):
         power = PowerRule(integrand, symbol, symbol, -2)
         if b != 1:
             power = ConstantTimesRule(integrand, symbol, 1/b, symbol**-2, power)
-
         return PiecewiseRule(integrand, symbol, [(general_rule, Ne(c, 0)), (power, True)])
 
+    # ---- Handle shifted quadratic denominator a / (b*x**2 + c*x + d)
     d = Wild('d', exclude=[symbol])
     match2 = integrand.match(a / (b * symbol ** 2 + c * symbol + d))
     if match2:
-        b, c =  match2[b], match2[c]
+        b, c = match2[b], match2[c]
         if b.is_zero:
             return
         u = Dummy('u')
@@ -1519,19 +1545,20 @@ def quadratic_denom_rule(integral):
             return URule(integrand2, symbol, u, u_func, next_step)
         else:
             return
+
+    # ---- Handle linear numerator (a*x + b) / (c*x**2 + d*x + e)
     e = Wild('e', exclude=[symbol])
-    match3 = integrand.match((a* symbol + b) / (c * symbol ** 2 + d * symbol + e))
+    match3 = integrand.match((a*symbol + b) / (c * symbol ** 2 + d * symbol + e))
     if match3:
         a, b, c, d, e = match3[a], match3[b], match3[c], match3[d], match3[e]
         if c.is_zero:
             return
         denominator = c * symbol**2 + d * symbol + e
-        const =  a/(2*c)
-        numer1 =  (2*c*symbol+d)
-        numer2 = - const*d + b
+        const = a/(2*c)
+        numer1 = (2*c*symbol + d)
+        numer2 = -const*d + b
         u = Dummy('u')
-        step1 = URule(integrand, symbol,
-                      u, denominator, integral_steps(u**(-1), u))
+        step1 = URule(integrand, symbol, u, denominator, integral_steps(u**(-1), u))
         if const != 1:
             step1 = ConstantTimesRule(const*numer1/denominator, symbol,
                                       const, numer1/denominator, step1)
@@ -1539,8 +1566,8 @@ def quadratic_denom_rule(integral):
             return step1
         step2 = integral_steps(numer2/denominator, symbol)
         substeps = AddRule(integrand, symbol, [step1, step2])
-        rewriten = const*numer1/denominator+numer2/denominator
-        return RewriteRule(integrand, symbol, rewriten, substeps)
+        rewritten = const*numer1/denominator + numer2/denominator
+        return RewriteRule(integrand, symbol, rewritten, substeps)
 
     return
 
@@ -2140,8 +2167,8 @@ def integral_steps(integrand, symbol, **options):
             Symbol: power_rule,
             exp: exp_rule,
             Add: add_rule,
-            Mul: do_one(null_safe(mul_rule), null_safe(trig_product_rule),
-                        null_safe(heaviside_rule), null_safe(quadratic_denom_rule),
+            Mul: do_one(null_safe(quadratic_denom_rule), null_safe(mul_rule),
+                        null_safe(trig_product_rule), null_safe(heaviside_rule),
                         null_safe(sqrt_linear_rule),
                         null_safe(sqrt_quadratic_rule),
                         null_safe(powsimp_rule),
