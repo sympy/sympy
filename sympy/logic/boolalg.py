@@ -1081,7 +1081,7 @@ class Xor(BooleanFunction):
             for i in range(0, len(self.args)+1, 2):
                 for neg in combinations(self.args, i):
                     clause = [Not(s) if s in neg else s for s in self.args]
-                    args.append(Or(*clause))
+                    args.append(Or(*clause, evaluate=False))
             return And._to_nnf(*args, simplify=simplify)
 
     def _eval_rewrite_as_Or(self, *args, **kwargs):
