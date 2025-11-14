@@ -209,6 +209,9 @@ class GeometricDistribution(SingleDiscreteDistribution):
     def pdf(self, k):
         return (1 - self.p)**(k - 1) * self.p
 
+    def _cdf(self, x):
+        return Piecewise((1 - (1 - self.p)**floor(x), x >= 1), (0, True))
+
     def _characteristic_function(self, t):
         p = self.p
         return p * exp(I*t) / (1 - (1 - p)*exp(I*t))
