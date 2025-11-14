@@ -1029,6 +1029,15 @@ def test_acos():
     assert acos(p + n*I).conjugate() == acos(p - n*I)
     assert acos(z).conjugate() != acos(conjugate(z))
 
+    assert acos(2).is_imaginary is True
+    assert acos(-2).is_imaginary is True
+    assert acos(Rational(3, 2), evaluate=False).is_imaginary is True
+    assert acos(Rational(2, 3), evaluate=False).is_imaginary is False
+
+    assert acos(p + 2).is_imaginary is True
+    assert acos(1/(p + 1)).is_imaginary is False
+    assert acos(r).is_imaginary is None
+
 
 def test_acos_leading_term():
     assert acos(x).as_leading_term(x) == pi/2
