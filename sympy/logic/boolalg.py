@@ -1074,7 +1074,7 @@ class Xor(BooleanFunction):
             for mask in _get_odd_parity_terms(len(self.args)):
                 conj = [self.args[i] if mask[i] == 1 else Not(self.args[i])
                         for i in range(len(self.args))]
-                terms.append(And(*conj))
+                terms.append(And(*conj, evaluate=False))
             return Or._to_nnf(*terms, simplify=simplify)
         else:
             args = []
