@@ -174,8 +174,21 @@ class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
             return Sum(expr * self.pdf(var),
                          (var, self.set.inf, self.set.sup), **kwargs)
 
-    def __call__(self, *args):
-        return self.pdf(*args)
+    def __call__(self, arg):
+        from sympy.stats.rv import RandomSymbol, random_symbols
+        # For symbolic computation or when arg contains random symbols, return pdf directly
+        if isinstance(arg, RandomSymbol) or random_symbols(arg) or getattr(arg, 'is_Symbol', False):
+            return self.pdf(arg)
+
+        # Check if argument is in the domain
+        in_domain = self.set.contains(arg)
+        if in_domain == False:
+            return S.Zero
+        elif in_domain == True:
+            return self.pdf(arg)
+        else:
+            # Use the set's relational form instead of Contains for Piecewise
+            return Piecewise((self.pdf(arg), self.set.as_relational(arg)), (S.Zero, True))
 
 
 class DiscreteDomain(RandomDomain):
