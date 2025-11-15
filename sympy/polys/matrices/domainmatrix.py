@@ -39,11 +39,10 @@ from .domainscalar import DomainScalar
 
 from sympy.polys.domains import ZZ, EXRAW, QQ
 
-from sympy.polys.densearith import dup_mul
+from sympy.polys.densearith import dup_mul, dup_exquo_ground
 from sympy.polys.densebasic import dup_convert
 from sympy.polys.densetools import (
     dup_mul_ground,
-    dup_quo_ground,
     dup_content,
     dup_clear_denoms,
     dup_primitive,
@@ -2014,7 +2013,7 @@ class DomainMatrix:
             common = K.gcd(content, denom)
 
             if not K.is_one(common):
-                elements = dup_quo_ground(elements, common, K)
+                elements = dup_exquo_ground(elements, common, K)
                 denom = K.quo(denom, common)
 
         if not K.is_one(u):

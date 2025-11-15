@@ -1633,7 +1633,7 @@ class DMP_Python(DMP[Er]):
 
     def _half_gcdex(f, g: Self) -> tuple[Self, Self]:
         """Half extended Euclidean algorithm, if univariate. """
-        s, h = dup_half_gcdex(f._rep, g._rep, f.dom)
+        s, h = dup_half_gcdex(f._rep, g._rep, f.dom) # type: ignore
         return f.per(s), f.per(h)
 
     def _gcdex(f, g: Self) -> tuple[Self, Self, Self]:
