@@ -325,6 +325,14 @@ class fma(Function):
     def _eval_rewrite_as_tractable(self, arg, limitvar=None, **kwargs):
         return _fma(arg)
 
+    @classmethod
+    def eval(cls, x, y, z):
+        # Only fold when all arguments are atomic and the result is a Number
+        if x.is_Atom and y.is_Atom and z.is_Atom:
+            value = _fma(x, y, z)
+            if value.is_Number:
+                return value
+
 
 _Ten = S(10)
 
@@ -431,6 +439,14 @@ class Sqrt(Function):  # 'sqrt' already defined in sympy.functions.elementary.mi
 
     _eval_rewrite_as_tractable = _eval_rewrite_as_Pow
 
+    @classmethod
+    def eval(cls, arg):
+        # Only fold nonnegative atomic arguments; keep e.g. Sqrt(-2) unevaluated
+        if arg.is_Atom and arg.is_nonnegative:
+            value = _Sqrt(arg)
+            if value.is_Number:
+                return value
+
 
 def _Cbrt(x):
     return Pow(x, Rational(1, 3))
@@ -482,6 +498,14 @@ class Cbrt(Function):  # 'cbrt' already defined in sympy.functions.elementary.mi
 
     _eval_rewrite_as_tractable = _eval_rewrite_as_Pow
 
+    @classmethod
+    def eval(cls, arg):
+        # Only fold atomic arguments and when the result is a Number
+        if arg.is_Atom:
+            value = _Cbrt(arg)
+            if value.is_Number:
+                return value
+
 
 def _hypot(x, y):
     return sqrt(Pow(x, 2) + Pow(y, 2))
@@ -530,6 +554,14 @@ class hypot(Function):
         return _hypot(arg)
 
     _eval_rewrite_as_tractable = _eval_rewrite_as_Pow
+
+    @classmethod
+    def eval(cls, x, y):
+        # Only fold atomic arguments and when the result is a Number
+        if x.is_Atom and y.is_Atom:
+            value = _hypot(x, y)
+            if value.is_Number:
+                return value
 
 
 class isnan(BooleanFunction):
