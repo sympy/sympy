@@ -121,6 +121,14 @@ def test_fma():
     assert fma(2, 3, 4) == 10
     assert fma(5, 6, 7) == 37
     assert fma(0, 0, 0) == 0
+    # Ensure non-atomic numeric expressions are not folded
+    assert fma(pi, 2, 3) != 2*pi + 3
+
+
+def test_fma_evaluate_false():
+    from sympy import pi
+    assert fma(2, 3, 4, evaluate=False) != 10
+    assert fma(pi, 2, 3, evaluate=False) != 2*pi + 3
 
 
 def test_log10():
@@ -148,6 +156,14 @@ def test_Cbrt():
     assert Cbrt(8) == 2
     assert Cbrt(27) == 3
     assert Cbrt(64) == 4
+    # Ensure non-atomic numeric expressions are not folded
+    assert Cbrt(pi) != pi**Rational(1, 3)
+
+
+def test_Cbrt_evaluate_false():
+    from sympy import pi
+    assert Cbrt(8, evaluate=False) != 2
+    assert Cbrt(pi, evaluate=False) != pi**(1/3)
 
 
 def test_Sqrt():
@@ -164,6 +180,16 @@ def test_Sqrt():
     assert Sqrt(4) == 2
     assert Sqrt(9) == 3
     assert Sqrt(16) == 4
+    # Ensure non-atomic numeric expressions are not folded
+    assert Sqrt(pi) != pi**S.Half
+
+
+def test_Sqrt_evaluate_false():
+    from sympy import pi
+    assert Sqrt(4, evaluate=False) != 2
+    assert Sqrt(pi, evaluate=False) != pi**(1/2)
+    # Negative argument should remain unevaluated
+    assert Sqrt(-2) == Sqrt(-2)
 
 
 def test_hypot():
@@ -183,6 +209,15 @@ def test_hypot():
 
     assert hypot(17*x, 42*y).diff(x).expand(func=True) - 2*17*17*x*((17*x)**2 + (42*y)**2)**Rational(-1, 2)/2 == 0
     assert hypot(17*x, 42*y).diff(y).expand(func=True) - 2*42*42*y*((17*x)**2 + (42*y)**2)**Rational(-1, 2)/2 == 0
+
+    # Ensure non-atomic numeric expressions are not folded
+    assert hypot(pi, 4) != (pi**2 + 16)**S.Half
+
+
+def test_hypot_evaluate_false():
+    from sympy import pi
+    assert hypot(3, 4, evaluate=False) != 5
+    assert hypot(pi, 4, evaluate=False) != (pi**2 + 16)**(1/2)
 
 
 def test_isnan_isinf():

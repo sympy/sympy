@@ -327,8 +327,11 @@ class fma(Function):
 
     @classmethod
     def eval(cls, x, y, z):
-        if x.is_number and y.is_number and z.is_number:
-            return _fma(x, y, z)
+        # Only fold when all arguments are atomic and the result is a Number
+        if x.is_Atom and y.is_Atom and z.is_Atom:
+            value = _fma(x, y, z)
+            if value.is_Number:
+                return value
 
 
 _Ten = S(10)
@@ -438,8 +441,11 @@ class Sqrt(Function):  # 'sqrt' already defined in sympy.functions.elementary.mi
 
     @classmethod
     def eval(cls, arg):
-        if arg.is_number:
-            return _Sqrt(arg)
+        # Only fold nonnegative atomic arguments; keep e.g. Sqrt(-2) unevaluated
+        if arg.is_Atom and arg.is_nonnegative:
+            value = _Sqrt(arg)
+            if value.is_Number:
+                return value
 
 
 def _Cbrt(x):
@@ -494,8 +500,11 @@ class Cbrt(Function):  # 'cbrt' already defined in sympy.functions.elementary.mi
 
     @classmethod
     def eval(cls, arg):
-        if arg.is_number:
-            return _Cbrt(arg)
+        # Only fold atomic arguments and when the result is a Number
+        if arg.is_Atom:
+            value = _Cbrt(arg)
+            if value.is_Number:
+                return value
 
 
 def _hypot(x, y):
@@ -548,8 +557,11 @@ class hypot(Function):
 
     @classmethod
     def eval(cls, x, y):
-        if x.is_number and y.is_number:
-            return _hypot(x, y)
+        # Only fold atomic arguments and when the result is a Number
+        if x.is_Atom and y.is_Atom:
+            value = _hypot(x, y)
+            if value.is_Number:
+                return value
 
 
 class isnan(BooleanFunction):
