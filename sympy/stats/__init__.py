@@ -200,3 +200,6 @@ from .symbolic_probability import (Probability, Expectation, Variance,
 
 from .symbolic_multivariate_probability import (ExpectationMatrix, VarianceMatrix,
         CrossCovarianceMatrix)
+
+
+from .stable import AlphaStable, AlphaStableDistribution
