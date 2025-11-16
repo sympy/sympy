@@ -947,7 +947,9 @@ def test_issue_4671_4463_4467():
     assert solve(sqrt(x**2 - 1) - 2) in ([sqrt(5), -sqrt(5)],
                                            [-sqrt(5), sqrt(5)])
     assert solve((2**exp(y**2/x) + 2)/(x**2 + 15), y) == [
-        -sqrt(x*log(1 + I*pi/log(2))), sqrt(x*log(1 + I*pi/log(2)))]
+        -I*sqrt(x*(log(log(2)) - log(log(2) + I*pi))),
+        I*sqrt(x*(log(log(2)) - log(log(2) + I*pi)))
+    ]
 
     C1, C2 = symbols('C1 C2')
     f = Function('f')
@@ -956,14 +958,19 @@ def test_issue_4671_4463_4467():
     E = S.Exp1
     assert solve(1 - log(a + 4*x**2), x) in (
         [-sqrt(-a + E)/2, sqrt(-a + E)/2],
-        [sqrt(-a + E)/2, -sqrt(-a + E)/2]
+        [sqrt(-a + E)/2, -sqrt(-a + E)/2],
+        [-I*sqrt(a - E)/2, I*sqrt(a - E)/2],
     )
     assert solve(log(a**(-3) - x**2)/a, x) in (
         [-sqrt(-1 + a**(-3)), sqrt(-1 + a**(-3))],
-        [sqrt(-1 + a**(-3)), -sqrt(-1 + a**(-3))],)
+        [sqrt(-1 + a**(-3)), -sqrt(-1 + a**(-3))],
+        [-I*sqrt(a**3 - 1)/sqrt(a**3), I*sqrt(a**3 - 1)/sqrt(a**3)],
+    )
     assert solve(1 - log(a + 4*x**2), x) in (
         [-sqrt(-a + E)/2, sqrt(-a + E)/2],
-        [sqrt(-a + E)/2, -sqrt(-a + E)/2],)
+        [sqrt(-a + E)/2, -sqrt(-a + E)/2],
+        [-I*sqrt(a - E)/2, I*sqrt(a - E)/2],
+    )
     assert solve((a**2 + 1)*(sin(a*x) + cos(a*x)), x) == [-pi/(4*a)]
     assert solve(3 - (sinh(a*x) + cosh(a*x)), x) == [log(3)/a]
     assert set(solve(3 - (sinh(a*x) + cosh(a*x)**2), x)) == \
@@ -975,9 +982,9 @@ def test_issue_4671_4463_4467():
 def test_issue_5132():
     r, t = symbols('r,t')
     assert set(solve([r - x**2 - y**2, tan(t) - y/x], [x, y])) == \
-        {(
-            -sqrt(r*cos(t)**2), -1*sqrt(r*cos(t)**2)*tan(t)),
-            (sqrt(r*cos(t)**2), sqrt(r*cos(t)**2)*tan(t))}
+        {(-sqrt(r)/sqrt(cos(t)**(-2)), -sqrt(r)*tan(t)/sqrt(cos(t)**(-2))),
+         (sqrt(r)/sqrt(cos(t)**(-2)), sqrt(r)*tan(t)/sqrt(cos(t)**(-2)))}
+
     assert solve([exp(x) - sin(y), 1/y - 3], [x, y]) == \
         [(log(sin(Rational(1, 3))), Rational(1, 3))]
     assert solve([exp(x) - sin(y), 1/exp(y) - 3], [x, y]) == \
@@ -1599,9 +1606,8 @@ def test_issue_5901():
     assert solve(-f(a)**2*g(a)**2 + f(a)**2*h(a)**2 + g(a).diff(a),
                 h(a), g(a), set=True) == \
         ([h(a), g(a)], {
-        (-sqrt(f(a)**2*g(a)**2 - G)/f(a), g(a)),
-        (sqrt(f(a)**2*g(a)**2 - G)/f(a), g(a))}), solve(-f(a)**2*g(a)**2 + f(a)**2*h(a)**2 + g(a).diff(a),
-                h(a), g(a), set=True)
+        (I*sqrt(-f(a)**2*g(a)**2 + G)/f(a), g(a)),
+        (-I*sqrt(-f(a)**2*g(a)**2 + G)/f(a), g(a))})
     args = [[f(x).diff(x, 2)*(f(x) + g(x)), 2 - g(x)**2], f(x), g(x)]
     assert solve(*args, set=True)[1] == \
         {(-sqrt(2), sqrt(2)), (sqrt(2), -sqrt(2))}
@@ -1637,7 +1643,7 @@ def test_issue_5901():
         (x, 2/(y + 1))
 
     assert set(solve(x + exp(x)**2, exp(x))) == \
-        {-sqrt(-x), sqrt(-x)}
+        {-I*sqrt(x), I*sqrt(x)}
     assert solve(x + exp(x), x, implicit=True) == \
         [-exp(x)]
     assert solve(cos(x) - sin(x), x, implicit=True) == []
@@ -2152,7 +2158,7 @@ def test_det_quick():
 def test_real_imag_splitting():
     a, b = symbols('a b', real=True)
     assert solve(sqrt(a**2 + b**2) - 3, a) == \
-        [-sqrt(-b**2 + 9), sqrt(-b**2 + 9)]
+        [-I*sqrt(b**2 - 9), I*sqrt(b**2 - 9)]
     a, b = symbols('a b', imaginary=True)
     assert solve(sqrt(a**2 + b**2) - 3, a) == []
 
@@ -2396,13 +2402,19 @@ def test_issue_14860():
 
 
 def test_issue_14721():
-    k, h, a, b = symbols(':4')
-    assert solve([
+    k, h, a, b = symbols('k, h, a, b')
+
+    eqs = [
         -1 + (-k + 1)**2/b**2 + (-h - 1)**2/a**2,
         -1 + (-k + 1)**2/b**2 + (-h + 1)**2/a**2,
-        h, k + 2], h, k, a, b) == [
-        (0, -2, -b*sqrt(1/(b**2 - 9)), b),
-        (0, -2, b*sqrt(1/(b**2 - 9)), b)]
+        h,
+        k + 2
+    ]
+    assert solve(eqs, h, k, a, b) == [
+        (0, -2, -b/sqrt(b**2 - 9), b),
+        (0, -2, b/sqrt(b**2 - 9), b)
+    ]
+
     assert solve([
         h, h/a + 1/b**2 - 2, -h/2 + 1/b**2 - 2], a, h, b) == [
         (a, 0, -sqrt(2)/2), (a, 0, sqrt(2)/2)]

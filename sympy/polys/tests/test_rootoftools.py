@@ -503,7 +503,7 @@ def test_RootSum_doit():
     rs = RootSum(x**2 + a, exp, x)
 
     assert isinstance(rs, RootSum) is True
-    assert rs.doit() == exp(-sqrt(-a)) + exp(sqrt(-a))
+    assert rs.doit() == exp(I*sqrt(a)) + exp(-I*sqrt(a))
 
 
 def test_RootSum_evalf():

@@ -904,7 +904,7 @@ def test_solveset_real_exp():
 def test_solve_complex_log():
     assert solveset_complex(log(x), x) == FiniteSet(1)
     assert solveset_complex(1 - log(a + 4*x**2), x) == \
-        FiniteSet(-sqrt(-a + E)/2, sqrt(-a + E)/2)
+        FiniteSet(-I*sqrt(a/4 - E/4), I*sqrt(a/4 - E/4))
 
 
 def test_solve_complex_sqrt():
@@ -2264,10 +2264,10 @@ def test_issue_5132_2():
     assert dumeq(nonlinsolve(eqs, [x, z]), soln)
 
     system = [r - x**2 - y**2, tan(t) - y/x]
-    s_x = sqrt(r/(tan(t)**2 + 1))
-    s_y = sqrt(r/(tan(t)**2 + 1))*tan(t)
-    soln = FiniteSet((s_x, s_y), (-s_x, -s_y))
-    assert nonlinsolve(system, [x, y]) == soln
+    assert nonlinsolve(system, [x, y]) == FiniteSet(
+        (-sqrt(r)/sqrt(tan(t)**2 + 1), -sqrt(r)*tan(t)/sqrt(tan(t)**2 + 1)),
+        (sqrt(r)/sqrt(tan(t)**2 + 1), sqrt(r)*tan(t)/sqrt(tan(t)**2 + 1))
+    )
 
 
 def test_issue_6752():

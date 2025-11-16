@@ -1,3 +1,4 @@
+from sympy import I
 from sympy.concrete.products import (Product, product)
 from sympy.concrete.summations import Sum
 from sympy.core.function import (Derivative, Function, diff)
@@ -229,7 +230,7 @@ def test_special_products():
 
     # Euler's product formula for sin
     assert product(1 + a/k**2, (k, 1, n)) == \
-        rf(1 - sqrt(-a), n)*rf(1 + sqrt(-a), n)/factorial(n)**2
+        rf(1 - I*sqrt(a), n)*rf(1 + I*sqrt(a), n)/factorial(n)**2
 
 
 def test__eval_product():
