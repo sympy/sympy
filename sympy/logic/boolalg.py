@@ -2216,7 +2216,7 @@ def _get_odd_parity_terms(n):
     with an odd number of ones.
     """
     return [[1 if (mask >> i) & 1 else 0 for i in range(n)]
-            for mask in range(1 << n) if mask.bit_count() % 2 == 1]
+            for mask in range(1 << n) if bin(mask).count("1") % 2 == 1]
 
 
 def _get_even_parity_terms(n):
@@ -2225,7 +2225,7 @@ def _get_even_parity_terms(n):
     with an even number of ones.
     """
     return [[1 if (mask >> i) & 1 else 0 for i in range(n)]
-            for mask in range(1 << n) if mask.bit_count() % 2 == 0]
+            for mask in range(1 << n) if bin(mask).count("1") % 2 == 0]
 
 
 def _simplified_pairs(terms):
