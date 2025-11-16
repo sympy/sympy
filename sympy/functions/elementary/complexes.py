@@ -707,6 +707,29 @@ class Abs(DefinedFunction):
     def _eval_rewrite_as_conjugate(self, arg, **kwargs):
         return sqrt(arg*conjugate(arg))
 
+    def _eval_evalf(self, prec):
+        """
+        Evaluate Abs numerically by evaluating constants in the argument.
+
+        This fixes issue #25765 where Abs.n() wasn't evaluating constants
+        like sqrt(2) to their decimal forms.
+        """
+        arg = self.args[0]
+
+        # If argument has no free symbols, let default evaluation handle it
+        if not arg.free_symbols:
+            return None
+
+        # Evaluate the argument to convert constants to numerical values
+        evaluated_arg = arg.evalf(prec, maxn=1)
+
+        # If nothing changed, return None to use default behavior
+        if evaluated_arg == arg:
+            return None
+
+        # Return Abs with the evaluated argument
+        # Use evaluate=False to preserve the exact structure of the evaluated expression
+        return self.func(evaluated_arg, evaluate=False)
 
 class arg(DefinedFunction):
     r"""
