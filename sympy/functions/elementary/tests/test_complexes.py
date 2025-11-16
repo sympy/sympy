@@ -1,5 +1,5 @@
 from sympy.core.function import (Derivative, Function, Lambda, expand, PoleError)
-from sympy.core.numbers import (E, I, Rational, comp, nan, oo, pi, zoo)
+from sympy.core.numbers import (E, I, Rational, comp, nan, oo, pi, zoo, Float)
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
@@ -1023,3 +1023,39 @@ def test_issue_15893():
     x = Symbol('x', real=True)
     eq = Derivative(Abs(f(x)), f(x))
     assert eq.doit() == sign(f(x))
+
+
+def test_issue_25765():
+    t, x = symbols('t x')
+
+    # Test 1: Simple case with sqrt and symbolic variable
+    expr1 = Abs(sqrt(2) + t)
+    result1 = expr1.n()
+    assert 'sqrt' not in str(result1)
+    assert result1.has(t)
+    assert abs(result1.subs(t, 0).n() - 1.41421356237310) < 1e-10
+
+    # Test 2: Issue from GitHub #25765
+    expr2 = Abs(-sqrt(2)*t - t + 2/(sqrt(2) + 2) + 2*sqrt(2)/(sqrt(2) + 2) + 1)
+    result2 = expr2.n()
+    assert 'sqrt' not in str(result2)
+    assert abs(result2.subs(t, 0).n() - 2.41421356237309) < 1e-10
+    assert abs(result2.subs(t, 1).n()) < 1e-10
+
+    # Test 3: Multiple symbolic variables
+    expr3 = Abs(sqrt(2)*t + sqrt(3)*x + sqrt(5))
+    result3 = expr3.n()
+    assert 'sqrt' not in str(result3)
+    assert result3.has(t) and result3.has(x)
+
+    # Test 4: Pure numeric case should still work
+    expr4 = Abs(sqrt(2) + sqrt(3))
+    result4 = expr4.n()
+    assert isinstance(result4, Float)
+    assert abs(result4 - 3.14626436994197) < 1e-10
+
+    # Test 5: Verify behavior matches sqrt (both should evaluate constants)
+    sqrt_result = sqrt(x + pi).n()
+    abs_result = Abs(x + pi).n()
+    assert 'pi' not in str(sqrt_result).lower()
+    assert 'pi' not in str(abs_result).lower()
