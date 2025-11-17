@@ -144,7 +144,7 @@ def monotonicity_helper(expression, predicate, interval=S.Reals, symbol=None):
         # A function is trivially non-increasing/non-decreasing on a single point [a, a].
         return S.true
     # --- END OF FIX ---
-    
+
     if symbol is None:
         if len(free) > 1:
             raise NotImplementedError(
