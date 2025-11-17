@@ -166,4 +166,4 @@ def test_monotonicity_single_point_interval_regression():
     # 3. Test at zero where the derivative is zero: x**3 on [0, 0]. Should be True.
     assert is_increasing(x**3, Interval(0, 0), x) is S.true
     assert is_decreasing(x**3, Interval(0, 0), x) is S.true
-    
+
