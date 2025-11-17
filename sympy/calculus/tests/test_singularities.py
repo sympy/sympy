@@ -123,3 +123,27 @@ def test_issue_23401():
     x = Symbol('x')
     expr = (x + 1)/(-1.0e-3*x**2 + 0.1*x + 0.1)
     assert is_increasing(expr, Interval(1,2), x)
+    
+def test_monotonicity_single_point_interval_regression():
+    """
+    Tests monotonicity helpers with a single-point interval to prevent
+    the ValueError caused by substitution into the symbolic derivative.
+    Related to Issue #28577 (or similar).
+    """
+    from sympy import log, Abs
+    
+    # 1. Test case from bug report: log(|x|) on [1, 1]. Should be True.
+    # is_decreasing uses the predicate lambda x: x <= 0.
+    expr_log = log(Abs(x))
+    interval_1 = Interval(1, 1)
+    assert is_decreasing(expr_log, interval_1, x) is S.true
+    
+    # 2. Test a quadratic function at a point. Should be True for any monotonicity check.
+    # is_increasing uses the predicate lambda x: x >= 0.
+    expr_quad = x**2
+    interval_5 = Interval(5, 5)
+    assert is_increasing(expr_quad, interval_5, x) is S.true
+
+    # 3. Test at zero where the derivative is zero: x**3 on [0, 0]. Should be True.
+    assert is_increasing(x**3, Interval(0, 0), x) is S.true
+    assert is_decreasing(x**3, Interval(0, 0), x) is S.true
