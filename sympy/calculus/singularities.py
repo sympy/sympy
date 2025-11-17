@@ -22,16 +22,7 @@ from sympy.core.sympify import sympify
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.trigonometric import sec, csc, cot, tan, cos
 from sympy.functions.elementary.hyperbolic import (
-    sech,
-    csch,
-    coth,
-    tanh,
-    cosh,
-    asech,
-    acsch,
-    atanh,
-    acoth,
-)
+    sech, csch, coth, tanh, cosh, asech, acsch, atanh, acoth)
 from sympy.utilities.misc import filldedent
 
 
@@ -127,13 +118,9 @@ def singularities(expression, symbol, domain=None):
             sings += solveset(i.args[0] + 1, symbol, domain)
         return sings
     except NotImplementedError:
-        raise NotImplementedError(
-            filldedent(
-                """
+        raise NotImplementedError(filldedent('''
             Methods for determining the singularities
-            of this function have not been developed."""
-            )
-        )
+            of this function have not been developed.'''))
 
 
 ###########################################################################
@@ -146,26 +133,23 @@ def monotonicity_helper(expression, predicate, interval=S.Reals, symbol=None):
     Helper function for functions checking function monotonicity.
     ...
     """
-    from sympy.solvers.solveset import solveset
-
     # Need to import Interval for the type check below
-    from sympy.sets.sets import Interval
+    from sympy.sets.sets import Interval 
 
     expression = sympify(expression)
     free = expression.free_symbols
 
-    # --- START OF FIX ---
+    # --- START OF FIX (This block is missing from your diff) ---
     if isinstance(interval, Interval) and interval.is_single_point:
         # A function is trivially non-increasing/non-decreasing on a single point [a, a].
-        # Return S.true to bypass the complex derivative check that fails on substitution.
         return S.true
     # --- END OF FIX ---
-
+    
     if symbol is None:
         if len(free) > 1:
             raise NotImplementedError(
-                "The function has not yet been implemented"
-                " for all multivariate expressions."
+                'The function has not yet been implemented'
+                ' for all multivariate expressions.'
             )
 
     # ... rest of the function remains the same ...
@@ -207,11 +191,11 @@ def monotonicity_helper(expression, predicate, interval=S.Reals, symbol=None):
     if symbol is None:
         if len(free) > 1:
             raise NotImplementedError(
-                "The function has not yet been implemented"
-                " for all multivariate expressions."
+                'The function has not yet been implemented'
+                ' for all multivariate expressions.'
             )
 
-    variable = symbol or (free.pop() if free else Symbol("x"))
+    variable = symbol or (free.pop() if free else Symbol('x'))
     derivative = expression.diff(variable)
     predicate_interval = solveset(predicate(derivative), variable, S.Reals)
     return interval.is_subset(predicate_interval)
@@ -448,10 +432,10 @@ def is_monotonic(expression, interval=S.Reals, symbol=None):
     free = expression.free_symbols
     if symbol is None and len(free) > 1:
         raise NotImplementedError(
-            "is_monotonic has not yet been implemented"
-            " for all multivariate expressions."
+            'is_monotonic has not yet been implemented'
+            ' for all multivariate expressions.'
         )
 
-    variable = symbol or (free.pop() if free else Symbol("x"))
+    variable = symbol or (free.pop() if free else Symbol('x'))
     turning_points = solveset(expression.diff(variable), variable, interval)
     return interval.intersection(turning_points) is S.EmptySet
