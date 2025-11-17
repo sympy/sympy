@@ -134,7 +134,7 @@ def monotonicity_helper(expression, predicate, interval=S.Reals, symbol=None):
     ...
     """
     # Need to import Interval for the type check below
-    from sympy.sets.sets import Interval 
+    from sympy.sets.sets import Interval
 
     expression = sympify(expression)
     free = expression.free_symbols
