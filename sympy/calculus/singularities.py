@@ -24,6 +24,9 @@ from sympy.functions.elementary.trigonometric import sec, csc, cot, tan, cos
 from sympy.functions.elementary.hyperbolic import (
     sech, csch, coth, tanh, cosh, asech, acsch, atanh, acoth)
 from sympy.utilities.misc import filldedent
+from sympy.solvers.solveset import solveset
+from sympy.sets.sets import Interval
+
 
 
 def singularities(expression, symbol, domain=None):
@@ -89,8 +92,6 @@ def singularities(expression, symbol, domain=None):
     Interval.open(-oo, 0)
 
     """
-    from sympy.solvers.solveset import solveset
-    from sympy.sets.sets import Interval
 
     if domain is None:
         domain = S.Reals if symbol.is_real else S.Complexes
@@ -128,17 +129,12 @@ def singularities(expression, symbol, domain=None):
 ###########################################################################
 
 
-def monotonicity_helper(expression, predicate, interval=S.Reals, symbol=None):
+def monotonicity_helper(expression, predicate, interval, symbol=None):
     """
     Helper function for functions checking function monotonicity.
     ...
     """
-    # Need to import Interval for the type check below
-    from sympy.sets.sets import Interval
-
-    expression = sympify(expression)
-    free = expression.free_symbols
-
+    
     # --- START OF FIX (This block is missing from your diff) ---
     # Check if the interval is a single point, which is vacuously monotonic.
     if isinstance(interval, Interval) and interval.start == interval.end and not interval.is_open:
