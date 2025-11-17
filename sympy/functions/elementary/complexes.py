@@ -713,6 +713,15 @@ class Abs(DefinedFunction):
 
         This fixes issue #25765 where Abs.n() wasn't evaluating constants
         like sqrt(2) to their decimal forms.
+
+        Examples
+        ========
+        >>> from sympy import Abs, sqrt, symbols
+        >>> t = symbols('t')
+        >>> Abs(sqrt(2) + t).n()  # doctest: +ELLIPSIS
+        Abs(t + 1.41421356237310...)
+        >>> Abs(-sqrt(2)*t - t + sqrt(2) + 1).n()  # doctest: +ELLIPSIS
+        Abs(2.41421356237310... - 2.41421356237310...*t)
         """
         arg = self.args[0]
 
