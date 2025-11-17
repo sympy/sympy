@@ -131,6 +131,32 @@ def singularities(expression, symbol, domain=None):
 def monotonicity_helper(expression, predicate, interval=S.Reals, symbol=None):
     """
     Helper function for functions checking function monotonicity.
+    ...
+    """
+    from sympy.solvers.solveset import solveset
+    # Need to import Interval for the type check below
+    from sympy.sets.sets import Interval 
+
+    expression = sympify(expression)
+    free = expression.free_symbols
+
+    # --- START OF FIX ---
+    if isinstance(interval, Interval) and interval.is_single_point:
+        # A function is trivially non-increasing/non-decreasing on a single point [a, a].
+        # Return S.true to bypass the complex derivative check that fails on substitution.
+        return S.true
+    # --- END OF FIX ---
+    
+    if symbol is None:
+        if len(free) > 1:
+            raise NotImplementedError(
+                'The function has not yet been implemented'
+                ' for all multivariate expressions.'
+            )
+
+    # ... rest of the function remains the same ...
+    """
+    Helper function for functions checking function monotonicity.
 
     Parameters
     ==========
