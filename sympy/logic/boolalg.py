@@ -27,10 +27,10 @@ from sympy.utilities.iterables import sift, ibin
 from sympy.utilities.misc import filldedent
 
 
-def _bit_count:
+def _bit_count(i):
     if sys.version_info > (3, 9):
-      return int.bit_count
-    return lambda i: bin(i).count("1")
+        return int.bit_count(i)
+    return bin(i).count("1")
 
 
 def as_Boolean(e):
