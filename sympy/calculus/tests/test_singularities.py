@@ -144,7 +144,7 @@ def test_issue_23401():
 
 
 def test_monotonicity_single_point_interval_regression():
-   
+
     from sympy import log, Abs
 
     expr_log = log(Abs(x))
