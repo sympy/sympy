@@ -5,6 +5,7 @@ Boolean algebra module for SymPy
 from __future__ import annotations
 from typing import TYPE_CHECKING, overload, Any
 from collections.abc import Iterable, Mapping
+import sys
 
 from collections import defaultdict
 from itertools import chain, combinations, product, permutations
@@ -23,6 +24,12 @@ from sympy.core.sorting import ordered
 from sympy.core.sympify import _sympy_converter, _sympify, sympify
 from sympy.utilities.iterables import sift, ibin
 from sympy.utilities.misc import filldedent
+
+
+if sys.version_info > (3, 9):
+    _bit_count = int.bit_count
+else:
+    _bit_count = lambda i: bin(i).count("1")
 
 
 def as_Boolean(e):
@@ -2216,7 +2223,7 @@ def _get_odd_parity_terms(n):
     with an odd number of ones.
     """
     return [[1 if (mask >> i) & 1 else 0 for i in range(n)]
-            for mask in range(1 << n) if mask.bit_count() % 2 == 1]
+            for mask in range(1 << n) if _bit_count(mask) % 2 == 1]
 
 
 def _get_even_parity_terms(n):
@@ -2225,7 +2232,7 @@ def _get_even_parity_terms(n):
     with an even number of ones.
     """
     return [[1 if (mask >> i) & 1 else 0 for i in range(n)]
-            for mask in range(1 << n) if mask.bit_count() % 2 == 0]
+            for mask in range(1 << n) if _bit_count(mask) % 2 == 0]
 
 
 def _simplified_pairs(terms):
