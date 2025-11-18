@@ -12,7 +12,7 @@ from sympy.calculus.singularities import (
     is_strictly_increasing,
     is_decreasing,
     is_strictly_decreasing,
-    is_monotonic,
+    is_monotonic
 )
 from sympy.sets import Interval, FiniteSet, Union, ImageSet
 from sympy.testing.pytest import raises
@@ -20,7 +20,7 @@ from sympy.abc import x, y
 
 
 def test_singularities():
-    x = Symbol("x")
+    x = Symbol('x')
     assert singularities(x**2, x) == S.EmptySet
     assert singularities(x / (x**2 + 3 * x + 2), x) == FiniteSet(-2, -1)
     assert singularities(1 / (x**2 + 1), x) == FiniteSet(I, -I)
@@ -30,7 +30,7 @@ def test_singularities():
     assert singularities(1 / (y**2 + 2 * I * y + 1), y) == FiniteSet(
         -I + sqrt(2) * I, -I - sqrt(2) * I
     )
-    _n = Dummy("n")
+    _n = Dummy('n')
     assert singularities(sech(x), x).dummy_eq(
         Union(
             ImageSet(Lambda(_n, 2 * _n * I * pi + I * pi / 2), S.Integers),
@@ -48,7 +48,7 @@ def test_singularities():
     assert singularities(asech(x), x) == FiniteSet(0)
     assert singularities(acsch(x), x) == FiniteSet(0)
 
-    x = Symbol("x", real=True)
+    x = Symbol('x', real=True)
     assert singularities(1 / (x**2 + 1), x) == S.EmptySet
     assert singularities(exp(1 / x), x, S.Reals) == FiniteSet(0)
     assert singularities(exp(1 / x), x, Interval(1, 2)) == S.EmptySet
@@ -69,7 +69,7 @@ def test_singularities():
 
 def test_is_increasing():
     """Test whether is_increasing returns correct value."""
-    a = Symbol("a", negative=True)
+    a = Symbol('a', negative=True)
 
     assert is_increasing(x**3 - 3 * x**2 + 4 * x, S.Reals)
     assert is_increasing(-(x**2), Interval(-oo, 0))
@@ -104,7 +104,7 @@ def test_is_strictly_increasing():
 
 def test_is_decreasing():
     """Test whether is_decreasing returns correct value."""
-    b = Symbol("b", positive=True)
+    b = Symbol('b', positive=True)
 
     assert is_decreasing(1 / (x**2 - 3 * x), Interval.open(Rational(3, 2), 3))
     assert is_decreasing(1 / (x**2 - 3 * x), Interval.open(1.5, 3))
@@ -138,31 +138,22 @@ def test_is_monotonic():
 
 
 def test_issue_23401():
-    x = Symbol("x")
+    x = Symbol('x')
     expr = (x + 1) / (-1.0e-3 * x**2 + 0.1 * x + 0.1)
     assert is_increasing(expr, Interval(1, 2), x)
 
 
 def test_monotonicity_single_point_interval_regression():
-    """
-    Tests monotonicity helpers with a single-point interval to prevent
-    the ValueError caused by substitution into the symbolic derivative.
-    Related to Issue #28577 (or similar).
-    """
+   
     from sympy import log, Abs
 
-    # 1. Test case from bug report: log(|x|) on [1, 1]. Should be True.
-    # is_decreasing uses the predicate lambda x: x <= 0.
     expr_log = log(Abs(x))
     interval_1 = Interval(1, 1)
     assert is_decreasing(expr_log, interval_1, x) is S.true
 
-    # 2. Test a quadratic function at a point. Should be True for any monotonicity check.
-    # is_increasing uses the predicate lambda x: x >= 0.
     expr_quad = x**2
     interval_5 = Interval(5, 5)
     assert is_increasing(expr_quad, interval_5, x) is S.true
 
-    # 3. Test at zero where the derivative is zero: x**3 on [0, 0]. Should be True.
     assert is_increasing(x**3, Interval(0, 0), x) is S.true
     assert is_decreasing(x**3, Interval(0, 0), x) is S.true
