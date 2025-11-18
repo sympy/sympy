@@ -3,9 +3,8 @@ Boolean algebra module for SymPy
 """
 
 from __future__ import annotations
-from typing import TYPE_CHECKING, overload, Any
+from typing import TYPE_CHECKING, overload, Any, Callable
 from collections.abc import Iterable, Mapping
-import sys
 
 from collections import defaultdict
 from itertools import chain, combinations, product, permutations
@@ -26,9 +25,9 @@ from sympy.utilities.iterables import sift, ibin
 from sympy.utilities.misc import filldedent
 
 
-if sys.version_info > (3, 9):
-    _bit_count = int.bit_count
-else:
+try:  # sys.version_info >= (3, 10)
+    _bit_count: Callable[[int], int] = int.bit_count
+except AttributeError:
     _bit_count = lambda i: bin(i).count("1")
 
 
