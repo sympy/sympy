@@ -23,7 +23,14 @@ from sympy.core.sorting import ordered
 from sympy.core.sympify import _sympy_converter, _sympify, sympify
 from sympy.utilities.iterables import sift, ibin
 from sympy.utilities.misc import filldedent
+import sys
 
+if sys.version_info >= (3, 10):
+    _bit_count = int.bit_count
+else:
+    def _bit_count(n):
+        """Replacement for int.bit_count for Python < 3.10."""
+        return bin(n).count("1")
 
 def as_Boolean(e):
     """Like ``bool``, return the Boolean value of an expression, e,
