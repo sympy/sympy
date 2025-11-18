@@ -2,11 +2,10 @@
 Boolean algebra module for SymPy
 """
 
-import sys
-
 from __future__ import annotations
 from typing import TYPE_CHECKING, overload, Any
 from collections.abc import Iterable, Mapping
+import sys
 
 from collections import defaultdict
 from itertools import chain, combinations, product, permutations
@@ -28,7 +27,7 @@ from sympy.utilities.misc import filldedent
 
 
 if sys.version_info > (3, 9):
-     _bit_count = int.bit_count
+    _bit_count = int.bit_count
 else:
     _bit_count = lambda i: bin(i).count("1")
 
