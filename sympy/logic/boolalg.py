@@ -5,7 +5,6 @@ Boolean algebra module for SymPy
 from __future__ import annotations
 from typing import TYPE_CHECKING, overload, Any
 from collections.abc import Iterable, Mapping
-
 from collections import defaultdict
 from itertools import chain, combinations, product, permutations
 from sympy.core.add import Add
