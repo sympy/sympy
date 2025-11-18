@@ -12,6 +12,8 @@ from sympy.integrals.rationaltools import ratint, ratint_logpart, log_to_atan
 
 from sympy.abc import a, b, x, t
 
+from sympy.integrals.manualintegrate import manualintegrate
+
 half = S.Half
 
 
@@ -201,3 +203,19 @@ def test_issue_28186():
     )
     assert integrate(f, x) == F
     assert (F.diff(x) - f).ratsimp() == 0
+
+
+def test_issue_28596():
+    x = symbols('x')
+
+    # Case 1: 1/(x^2 - 1)
+    f1 = 1/(x**2 - 1)
+    res1 = manualintegrate(f1, x)
+    expected1 = log(x - 1)/2 - log(x + 1)/2
+    assert (res1.diff(x) - f1).simplify() == 0
+
+    # Case 2: 1/(x*sqrt(x+1))
+    f2 = 1/(x*sqrt(x + 1))
+    res2 = manualintegrate(f2, x)
+    expected2 = log(sqrt(x + 1) - 1) - log(sqrt(x + 1) + 1)
+    assert (res2.diff(x) - f2).simplify() == 0

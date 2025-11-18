@@ -1470,6 +1470,21 @@ def trig_cmplx_exp_rule(integral: IntegralInfo):
 
 def quadratic_denom_rule(integral):
     integrand, symbol = integral
+
+    A = Wild('A', exclude=[symbol])
+    match_special = integrand.match(1 / (A + symbol**2))
+    if match_special:
+        A_ = match_special[A]
+
+        expr = Piecewise(
+            (atan(symbol/sqrt(A_)) / sqrt(A_), A_ > 0),
+            (log((symbol - sqrt(-A_)) / (symbol + sqrt(-A_))) / (2*sqrt(-A_)),
+     A_ < 0),
+            (-1/symbol, True)
+        )
+
+        return QuadraticDenomSpecialCaseRule(integrand, symbol, expr)
+
     a = Wild('a', exclude=[symbol])
     b = Wild('b', exclude=[symbol])
     c = Wild('c', exclude=[symbol])
@@ -1489,7 +1504,7 @@ def quadratic_denom_rule(integral):
             r2 = 1/(symbol+constant)
             log_steps = [ReciprocalRule(r1, symbol, symbol-constant),
                          ConstantTimesRule(-r2, symbol, -1, r2, ReciprocalRule(r2, symbol, symbol+constant))]
-            rewritten = sub = r1 - r2
+            rewritten = (log(symbol - constant) / (1)) - (log(symbol + constant) / (1))
             negative_step = AddRule(sub, symbol, log_steps)
             if coeff != 1:
                 rewritten = Mul(coeff, sub, evaluate=False)
@@ -1539,10 +1554,20 @@ def quadratic_denom_rule(integral):
             return step1
         step2 = integral_steps(numer2/denominator, symbol)
         substeps = AddRule(integrand, symbol, [step1, step2])
-        rewriten = const*numer1/denominator+numer2/denominator
-        return RewriteRule(integrand, symbol, rewriten, substeps)
+        rewritten = const*numer1/denominator + numer2/denominator
+        return RewriteRule(integrand, symbol, rewritten,
+                AddRule(integrand, symbol, [step1, step2]))
+
 
     return
+
+
+@dataclass
+class QuadraticDenomSpecialCaseRule(AtomicRule):
+    expr: Expr
+
+    def eval(self) -> Expr:
+        return self.expr
 
 
 def sqrt_linear_rule(integral: IntegralInfo):
