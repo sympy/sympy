@@ -141,7 +141,7 @@ def monotonicity_helper(expression, predicate, interval=S.Reals, symbol=None):
     simple_interval=interval.simplify()
     # --- START OF FIX (This block is missing from your diff) ---
     # Check if the interval is a single point, which is vacuously monotonic.
-    if isinstance(simple_interval, FiniteSet) and simple_interval.size == 1:
+    if isinstance(simple_interval, FiniteSet) and len(simple_interval) == 1:
         # A function is trivially non-increasing/non-decreasing on a single point [a, a].
         return S.true
     # --- END OF FIX ---
