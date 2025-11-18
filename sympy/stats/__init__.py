@@ -112,7 +112,7 @@ __all__ = [
     'BetaBinomial', 'Hypergeometric', 'Rademacher', 'IdealSoliton', 'RobustSoliton',
     'FiniteDistributionHandmade',
 
-    'ContinuousRV', 'Arcsin', 'Benini', 'Beta', 'BetaNoncentral', 'BetaPrime',
+    'ContinuousRV', 'AlphaStable', 'AlphaStableDistribution' ,'Arcsin', 'Benini', 'Beta', 'BetaNoncentral', 'BetaPrime',
     'BoundedPareto', 'Cauchy', 'Chi', 'ChiNoncentral', 'ChiSquared', 'Dagum', 'Davis', 'Erlang',
     'ExGaussian', 'Exponential', 'ExponentialPower', 'FDistribution',
     'FisherZ', 'Frechet', 'Gamma', 'GammaInverse', 'Gompertz', 'Gumbel',
@@ -161,7 +161,7 @@ from .frv_types import (FiniteRV, DiscreteUniform, Die, Bernoulli, Coin,
         Binomial, BetaBinomial, Hypergeometric, Rademacher,
         FiniteDistributionHandmade, IdealSoliton, RobustSoliton)
 
-from .crv_types import (ContinuousRV, Arcsin, Benini, Beta, BetaNoncentral,
+from .crv_types import (ContinuousRV, AlphaStable,AlphaStableDistribution, Arcsin, Benini, Beta, BetaNoncentral,
         BetaPrime, BoundedPareto, Cauchy, Chi, ChiNoncentral, ChiSquared,
         Dagum, Davis, Erlang, ExGaussian, Exponential, ExponentialPower,
         FDistribution, FisherZ, Frechet, Gamma, GammaInverse, GaussianInverse,
@@ -202,4 +202,6 @@ from .symbolic_multivariate_probability import (ExpectationMatrix, VarianceMatri
         CrossCovarianceMatrix)
 
 
-from .stable import AlphaStable, AlphaStableDistribution
+
+
+

@@ -90,6 +90,8 @@ from sympy.matrices import MatrixBase
 from sympy.stats.crv import SingleContinuousPSpace, SingleContinuousDistribution
 from sympy.stats.rv import _value_check, is_random
 
+
+from sympy.stats.rv import RandomSymbol
 oo = S.Infinity
 
 __all__ = ['ContinuousRV',
@@ -4733,138 +4735,71 @@ def WignerSemicircle(name, R):
 
 
 #-------------------------------------------------------------------------------
-# Alpha-Stable distribution ------------------------------------------------
+# Alpha-Stable Distribution
 #-------------------------------------------------------------------------------
-
 class AlphaStableDistribution(SingleContinuousDistribution):
-    r"""
-    Represents an alpha-stable distribution.
-
-    Parameters
-    ==========
-
-    alpha : Real number, 0 < alpha <= 2
-        Stability parameter (controls tail heaviness).
-        When alpha < 2, the distribution has heavy tails.
-    beta : Real number, -1 <= beta <= 1
-        Skewness parameter. beta = 0 gives a symmetric distribution,
-        beta > 0 skews right, beta < 0 skews left.
-    scale : Positive real number
-        Scale parameter (analogous to standard deviation for normal distribution).
-    location : Real number
-        Location parameter (analogous to mean for normal distribution).
-
-    Examples
-    ========
-
-    >>> from sympy.stats import AlphaStable, density
-    >>> from sympy import Symbol
-    >>> x = Symbol('x', real=True)
-    >>> X = AlphaStable('X', 1, 0, 1, 0)
-    >>> density(X)(x)
-    1/(pi*(x**2 + 1))
-
-    References
-    ==========
-
-    .. [1] https://en.wikipedia.org/wiki/Stable_distribution
-    .. [2] Nolan, J. P. (2020). Univariate stable distributions.
-
-    """
-
     _argnames = ('alpha', 'beta', 'scale', 'location')
 
-    @staticmethod
-    def check(alpha, beta, scale, location):
-        _value_check(alpha > 0, "Alpha must be positive")
-        _value_check(alpha <= 2, "Alpha must be less than or equal to 2")
-        _value_check(beta >= -1, "Beta must be >= -1")
-        _value_check(beta <= 1, "Beta must be <= 1")
-        _value_check(scale > 0, "Scale must be positive")
-
-    @property
-    def set(self):
-        return Interval(-oo, oo)
+    def check(self, alpha, beta, scale, location):
+        if alpha.is_number and (alpha <= 0 or alpha > 2):
+            raise ValueError("alpha must be in (0, 2]")
+        if beta.is_number and (beta < -1 or beta > 1):
+            raise ValueError("beta must be in [-1, 1]")
+        if scale.is_number and scale <= 0:
+            raise ValueError("scale must be positive")
 
     def pdf(self, x):
         alpha, beta, scale, location = self.alpha, self.beta, self.scale, self.location
-        z = (x - location) / scale
 
-        # Special case: alpha = 2 (Gaussian)
-        if alpha == 2:
-            return exp(-z**2 / 2) / (scale * sqrt(2*pi))
-
-        # Special case: alpha = 1, beta = 0 (Cauchy)
+        # Cauchy case
         if alpha == 1 and beta == 0:
-            return 1 / (pi * scale * (1 + z**2))
+            return 1 / (pi * scale * (1 + ((x - location)/scale)**2))
 
-        # Special case: alpha = 0.5, beta = 1 (Levy)
-        if alpha == Rational(1, 2) and beta == 1:
-            return Piecewise(
-                (sqrt(scale / (2*pi)) * exp(-scale / (2*z)) / z**Rational(3, 2), z > 0),
-                (0, True)
-            )
+        # Gaussian case
+        if alpha == 2:
+            return sqrt(2)*exp(-(x-location)**2/(2*scale**2)) / (2*scale*sqrt(pi))
 
-        raise NotImplementedError(
-            "No closed-form PDF for alpha=%s, beta=%s. "
-            "Available special cases: alpha=2, (alpha=1, beta=0), (alpha=0.5, beta=1)." % (alpha, beta)
-        )
+        # Levy case
+        if alpha == Rational(1,2) and beta == 1:
+            return sqrt(scale/(2*pi)) * exp(-scale/(2*(x-location))) / (x-location)**Rational(3,2)
 
-    def _characteristic_function(self, t):
+        raise NotImplementedError("PDF not implemented for general Alpha-Stable.")
+
+    def compute_characteristic_function(self, **kwargs):
+        t = Dummy('t', real=True)
         alpha, beta, scale, location = self.alpha, self.beta, self.scale, self.location
+        phi = exp(I * location * t - scale * Abs(t)**alpha * (1 - I*beta*sign(t)*tan(pi*alpha/2)))
+        return Lambda(t, phi)
 
-        sign_t = Piecewise((1, t > 0), (-1, t < 0), (0, True))
-
-        if alpha == 1:
-            return exp(
-                I*t*location
-                - scale * Abs(t) * (1 + I*beta * (2/pi) * sign_t * log(Abs(t)))
-            )
-
-        return exp(
-            I*t*location
-            - (scale * Abs(t))**alpha * (1 - I*beta * sign_t * tan(pi*alpha/2))
-        )
-
-
-def AlphaStable(name, alpha, beta=0, scale=1, location=0):
-    r"""
-    Create an alpha-stable random variable.
+    @property
+    def support(self):
+        return S.Reals
+def AlphaStable(name, alpha, beta, scale, location):
+    """
+    Create an Alpha-Stable random variable.
 
     Parameters
     ==========
+    name : str
+        Name of the random variable
+    alpha : float or expression
+        Stability parameter, must be in (0, 2]
+    beta : float or expression
+        Skewness parameter, must be in [-1, 1]
+    scale : float or expression
+        Scale parameter, must be positive
+    location : float or expression
+        Location parameter
 
-    name : Symbol or string
-        Name of the random variable.
-    alpha : Real number, 0 < alpha <= 2
-        Stability parameter.
-    beta : Real number, -1 <= beta <= 1
-        Skewness parameter (default: 0).
-    scale : Positive real number
-        Scale parameter (default: 1).
-    location : Real number
-        Location parameter (default: 0).
+    Returns
+    =======
+    RandomSymbol
+        An alpha-stable random variable
 
     Examples
     ========
-
     >>> from sympy.stats import AlphaStable, density
-    >>> from sympy import Symbol
-    >>> x = Symbol('x', real=True)
-    >>> X = AlphaStable('X', 1, 0, 1, 0)
-    >>> density(X)(x)
-    1/(pi*(x**2 + 1))
-
-    See Also
-    ========
-
-    sympy.stats.Normal
-    sympy.stats.Cauchy
-
-    References
-    ==========
-
-    .. [1] https://en.wikipedia.org/wiki/Stable_distribution
-
+    >>> X = AlphaStable('X', 1, 0, 1, 0)  # Cauchy distribution
+    >>> density(X)
     """
     return rv(name, AlphaStableDistribution, (alpha, beta, scale, location))
