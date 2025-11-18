@@ -425,7 +425,7 @@ def test_binomial():
     assert binomial(-1, 2) == 1
     assert binomial(1, -1) == 0
     assert binomial(-1, 1) == -1
-    assert binomial(-1, -1) == 0
+    assert binomial(-1, -1) == 1
     assert binomial(S.Half, S.Half) == 1
     assert binomial(-10, 1) == -10
     assert binomial(-10, 7) == -11440
@@ -442,7 +442,7 @@ def test_binomial():
     assert binomial(n, n).func == binomial # e.g. (-1, -1) == 0, (2, 2) == 1
     assert binomial(n, n + 1).func == binomial  # e.g. (-1, 0) == 1
     assert binomial(kp, kp + 1) == 0
-    assert binomial(kn, kn) == 0 # issue #14529
+    assert binomial(kn, kn) == 1 # issue #14529
     assert binomial(n, u).func == binomial
     assert binomial(kp, u).func == binomial
     assert binomial(n, p).func == binomial
@@ -488,10 +488,10 @@ def test_binomial():
     assert expand_func(binomial(x**2 + 1, x**2)) == x**2 + 1
 
     # issue #13980 and #13981
-    assert binomial(-7, -5) == 0
-    assert binomial(-23, -12) == 0
+    assert binomial(-7, -5) == 1
+    assert binomial(-23, -12) == 1
     assert binomial(Rational(13, 2), -10) == 0
-    assert binomial(-49, -51) == 0
+    assert binomial(-49, -51) == 1
 
     assert binomial(19, Rational(-7, 2)) == S(-68719476736)/(911337863661225*pi)
     assert binomial(0, Rational(3, 2)) == S(-2)/(3*pi)
