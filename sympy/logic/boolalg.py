@@ -33,6 +33,12 @@ if sys.version_info >= (3, 10):
 else:
     _bit_count = _bit_count_fallback
 
+if sys.version_info > (3, 9):
+    _bit_count = int.bit_count
+else:
+    _bit_count = lambda i: bin(i).count("1")
+
+
 def as_Boolean(e):
     """Like ``bool``, return the Boolean value of an expression, e,
     which can be any instance of :py:class:`~.Boolean` or ``bool``.
@@ -2224,7 +2230,7 @@ def _get_odd_parity_terms(n):
     with an odd number of ones.
     """
     return [[1 if (mask >> i) & 1 else 0 for i in range(n)]
-            for mask in range(1 << n) if mask.bit_count() % 2 == 1]
+            for mask in range(1 << n) if _bit_count(mask) % 2 == 1]
 
 
 def _get_even_parity_terms(n):
@@ -2233,7 +2239,7 @@ def _get_even_parity_terms(n):
     with an even number of ones.
     """
     return [[1 if (mask >> i) & 1 else 0 for i in range(n)]
-            for mask in range(1 << n) if mask.bit_count() % 2 == 0]
+            for mask in range(1 << n) if _bit_count(mask) % 2 == 0]
 
 
 def _simplified_pairs(terms):
