@@ -134,18 +134,20 @@ def monotonicity_helper(expression, predicate, interval=S.Reals, symbol=None):
     ...
     """
     # Need to import Interval for the type check below
-    from sympy.sets.sets import Interval
+    from sympy.sets.sets import Interval,FiniteSet
 
     expression = sympify(expression)
     free = expression.free_symbols
-
+    simple_interval=interval.simplify()
     # --- START OF FIX (This block is missing from your diff) ---
     # Check if the interval is a single point, which is vacuously monotonic.
-    if isinstance(interval, Interval) and interval.start == interval.end and not interval.is_open:
+    if isinstance(simple_interval, FiniteSet) and simple_interval.size == 1:
         # A function is trivially non-increasing/non-decreasing on a single point [a, a].
         return S.true
     # --- END OF FIX ---
-
+    if isinstance(interval, Interval) and interval.start == interval.end and not interval.is_open:
+        return S.true
+    # --- END OF FIX ---
     if symbol is None:
         if len(free) > 1:
             raise NotImplementedError(
