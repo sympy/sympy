@@ -143,7 +143,7 @@ def monotonicity_helper(expression, predicate, interval=S.Reals, symbol=None):
         return S.true
     if isinstance(interval, Interval) and interval.start == interval.end and not interval.is_open:
         return S.true
-    
+
     if symbol is None:
         if len(free) > 1:
             raise NotImplementedError(
