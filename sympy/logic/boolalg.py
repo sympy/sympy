@@ -33,12 +33,6 @@ if sys.version_info >= (3, 10):
 else:
     _bit_count = _bit_count_fallback
 
-if sys.version_info > (3, 9):
-    _bit_count = int.bit_count
-else:
-    _bit_count = lambda i: bin(i).count("1")
-
-
 def as_Boolean(e):
     """Like ``bool``, return the Boolean value of an expression, e,
     which can be any instance of :py:class:`~.Boolean` or ``bool``.
