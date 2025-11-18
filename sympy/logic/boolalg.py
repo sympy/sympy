@@ -26,9 +26,9 @@ from sympy.utilities.iterables import sift, ibin
 from sympy.utilities.misc import filldedent
 
 
-if sys.version_info > (3, 9):
+try:  # sys.version_info >= (3, 10)
     _bit_count = int.bit_count
-else:
+except AttributeError:
     _bit_count = lambda i: bin(i).count("1")
 
 
