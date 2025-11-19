@@ -87,8 +87,8 @@ def test_arrayexpr_convert_matrix_to_array():
     assert convert_matrix_to_array(expr) == result
 
     expr = 3*Trace(M)**2
-    result = ArrayContraction(ArrayTensorProduct(3, M, M), (0, 1), (2, 3))
-    assert convert_matrix_to_array(expr).dummy_eq(ArrayTensorProduct(3, ArrayElementwiseApplyFunc(lambda x: x**2, ArrayContraction(M, (0, 1)))))
+    result = ArrayTensorProduct(3, ArrayElementwiseApplyFunc(lambda x: x**2, ArrayContraction(M, (0, 1))))
+    assert convert_matrix_to_array(expr).dummy_eq(result)
 
     expr = Trace(M) + Trace(N)
     result = ArrayAdd(ArrayContraction(M, (0, 1)), ArrayContraction(N, (0, 1)))
