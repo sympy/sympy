@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """
 Examples of using the alpha-stable distribution in SymPy.
 
@@ -6,7 +5,7 @@ The alpha-stable distribution is a generalization of the normal distribution
 that allows for heavy tails and skewness.
 """
 
-from sympy import Symbol, pprint, simplify
+from sympy import Symbol, pprint
 from sympy.stats import AlphaStable, density, characteristic_function
 
 # Define symbolic variable
@@ -24,7 +23,7 @@ X_cauchy = AlphaStable('X', 1, 0, 1, 0)
 pdf_cauchy = density(X_cauchy)(x)
 print("PDF:")
 pprint(pdf_cauchy)
-print(f"\nSimplified: {simplify(pdf_cauchy)}")
+print("\nSimplified: {simplify(pdf_cauchy)}")
 
 # Example 2: Normal Distribution (alpha=2)
 print("\n2. Normal Distribution (alpha=2, beta=0)")
@@ -56,10 +55,10 @@ print("\n5. Skewed Stable Distribution (alpha=1.5, beta=0.5)")
 print("-" * 70)
 W_skewed = AlphaStable('W', 1.5, 0.5, 2, 1)
 print("Parameters:")
-print(f"  alpha (stability) = 1.5")
-print(f"  alpha (skewness) = 0.5 (right-skewed)")
-print(f"  scale = 2")
-print(f"  location = 1")
+print("  alpha (stability) = 1.5")
+print("  alpha (skewness) = 0.5 (right-skewed)")
+print("  scale = 2")
+print("  location = 1")
 
 # Example 6: Scaled and Shifted Cauchy
 print("\n6. Scaled and Shifted Cauchy")

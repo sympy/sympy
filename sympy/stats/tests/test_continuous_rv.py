@@ -47,7 +47,7 @@ from sympy.stats.compound_rv import CompoundPSpace
 from sympy.stats.symbolic_probability import Probability
 from sympy.testing.pytest import raises, XFAIL, slow, ignore_warnings
 from sympy.core.random import verify_numerically as tn
-from sympy.stats import AlphaStable
+
 oo = S.Infinity
 
 x, y, z = map(Symbol, 'xyz')
@@ -1585,7 +1585,6 @@ def test_compute_density():
 
 def test_AlphaStable():
     from sympy.stats import AlphaStable, density, characteristic_function
-    from sympy import Symbol, sqrt, pi, exp, I, Abs, sign, tan, Rational
 
     alpha = Symbol('alpha', positive=True, real=True)
     beta = Symbol('beta', real=True)
@@ -1722,7 +1721,7 @@ def test_AlphaStable_parameter_validation():
 
 def test_AlphaStable_symbolic_parameters():
     """Test that symbolic parameters work correctly"""
-    from sympy.stats import AlphaStable, density
+    from sympy.stats import AlphaStable
     from sympy import Symbol
 
     alpha = Symbol('alpha', positive=True, real=True)

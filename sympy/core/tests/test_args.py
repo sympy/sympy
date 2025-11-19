@@ -18,7 +18,6 @@ from sympy.core.symbol import symbols
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import sin
-from sympy.plotting.plot import check_arguments
 
 from sympy.testing.pytest import SKIP, warns_deprecated_sympy
 

@@ -32,7 +32,6 @@ from sympy.solvers.inequalities import reduce_rational_inequalities
 from sympy.stats.rv import (RandomDomain, SingleDomain, ConditionalDomain, is_random,
         ProductDomain, PSpace, SinglePSpace, random_symbols, NamedArgsMixin, Distribution)
 
-from sympy.stats.rv import RandomSymbol
 
 # --- Compatibility shim for legacy imports ---
 # New SymPy versions removed ContinuousRV, but older tests still reference it.
