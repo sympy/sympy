@@ -7,7 +7,7 @@ that allows for heavy tails and skewness.
 """
 
 from sympy import Symbol, pprint, simplify
-from sympy.stats import AlphaStable, density, characteristic_function, E, variance
+from sympy.stats import AlphaStable, density, characteristic_function
 
 # Define symbolic variable
 x = Symbol('x', real=True)
@@ -18,7 +18,7 @@ print("Alpha-Stable Distribution Examples")
 print("=" * 70)
 
 # Example 1: Cauchy Distribution (alpha=1, beta=0)
-print("\n1. Cauchy Distribution (α=1, β=0)")
+print("\n1. Cauchy Distribution (alpha=1, beta=0)")
 print("-" * 70)
 X_cauchy = AlphaStable('X', 1, 0, 1, 0)
 pdf_cauchy = density(X_cauchy)(x)
@@ -27,7 +27,7 @@ pprint(pdf_cauchy)
 print(f"\nSimplified: {simplify(pdf_cauchy)}")
 
 # Example 2: Normal Distribution (alpha=2)
-print("\n2. Normal Distribution (α=2, β=0)")
+print("\n2. Normal Distribution (alpha=2, beta=0)")
 print("-" * 70)
 Y_normal = AlphaStable('Y', 2, 0, 1, 0)
 pdf_normal = density(Y_normal)(x)
@@ -35,24 +35,24 @@ print("PDF:")
 pprint(pdf_normal)
 
 # Example 3: Levy Distribution (alpha=0.5, beta=1)
-print("\n3. Levy Distribution (α=0.5, β=1)")
+print("\n3. Levy Distribution (alpha=0.5, beta=1)")
 print("-" * 70)
 from sympy import Rational
 L_levy = AlphaStable('L', Rational(1, 2), 1, 1, 0)
 print("Levy distribution created (PDF defined piecewise for x > 0)")
 
 # Example 4: General Stable Distribution with Heavy Tails
-print("\n4. Heavy-Tailed Stable Distribution (α=1.5, β=0)")
+print("\n4. Heavy-Tailed Stable Distribution (alpha=1.5, beta=0)")
 print("-" * 70)
 Z_heavy = AlphaStable('Z', 1.5, 0, 1, 0)
-print("Distribution created with α=1.5 (heavier tails than normal)")
+print("Distribution created with alpha=1.5 (heavier tails than normal)")
 print("No closed-form PDF, but characteristic function available:")
 cf = characteristic_function(Z_heavy)(t)
-print("\nCharacteristic function φ(t):")
+print("\nCharacteristic function phi(t):")
 pprint(cf)
 
 # Example 5: Skewed Stable Distribution
-print("\n5. Skewed Stable Distribution (α=1.5, β=0.5)")
+print("\n5. Skewed Stable Distribution (alpha=1.5, beta=0.5)")
 print("-" * 70)
 W_skewed = AlphaStable('W', 1.5, 0.5, 2, 1)
 print("Parameters:")
@@ -85,4 +85,3 @@ Special cases:
 - alpha=2: Normal distribution (finite variance)
 - alpha=1, beta=0: Cauchy distribution (no moments)
 - alpha=0.5, beta=1: Levy distribution (used in Levy flights""")
-

@@ -1653,8 +1653,7 @@ def test_AlphaStable_with_location_scale():
 def test_AlphaStable_characteristic_function():
     """Test characteristic function"""
     from sympy.stats import AlphaStable, characteristic_function
-    from sympy import I, Abs, sign, tan, pi, exp, Symbol, Rational
-
+    from sympy import  Abs, exp, Symbol
     t = Symbol('t', real=True)
 
     # Test Gaussian case (alpha=2) which doesn't have tan(pi*alpha/2) issues

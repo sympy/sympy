@@ -4803,4 +4803,3 @@ def AlphaStable(name, alpha, beta, scale, location):
     >>> density(X)
     """
     return rv(name, AlphaStableDistribution, (alpha, beta, scale, location))
-

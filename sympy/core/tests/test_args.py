@@ -5557,31 +5557,20 @@ def test_sympy__combinatorics__perm_groups__Coset():
 
 
 from sympy import Symbol
-# Assuming you are inside the sympy codebase or have added this class
 from sympy.stats.crv_types import AlphaStableDistribution
 
 
 def test_sympy__stats__crv_types__AlphaStableDistribution():
-
     alpha = Symbol('alpha', positive=True, real=True)
-
     beta = Symbol('beta', real=True)
-
     scale = Symbol('scale', positive=True, real=True)
     location = Symbol('location', real=True)
 
-
     dist = AlphaStableDistribution(alpha, beta, scale, location)
-
 
     assert dist.alpha == alpha
     assert dist.beta == beta
     assert dist.scale == scale
     assert dist.location == location
 
-
     assert dist.args == (alpha, beta, scale, location)
-
-
-
-

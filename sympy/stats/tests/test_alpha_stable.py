@@ -1,13 +1,10 @@
-from sympy import Symbol, sqrt, pi, exp, Rational, oo, I, simplify
-from sympy.testing.pytest import raises, skip
-from sympy.stats.crv_types import ContinuousRV
+from sympy import Symbol, sqrt, pi, exp, Rational, oo, simplify
+from sympy.testing.pytest import raises
 from sympy.stats import AlphaStable, density, characteristic_function
 def test_alpha_stable_cauchy():
     """Test Cauchy special case (alpha=1, beta=0)"""
     x = Symbol('x', real=True)
     X = AlphaStable('X', 1, 0, 1, 0)
-
-    # Check PDF
     assert density(X)(x) == 1 / (pi * (x ** 2 + 1))
 
 
