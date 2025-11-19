@@ -1,9 +1,7 @@
 from sympy import Symbol, sqrt, pi, exp, Rational, oo, I, simplify
-from sympy.stats import AlphaStable, density, E, variance, characteristic_function
 from sympy.testing.pytest import raises, skip
 from sympy.stats.crv_types import ContinuousRV
-
-
+from sympy.stats import AlphaStable, density, characteristic_function
 def test_alpha_stable_cauchy():
     """Test Cauchy special case (alpha=1, beta=0)"""
     x = Symbol('x', real=True)
@@ -25,7 +23,7 @@ def test_alpha_stable_normal():
 
 
 def test_alpha_stable_levy():
-    """Test Lévy special case (alpha=0.5, beta=1)"""
+    """Test Levy special case (alpha=0.5, beta=1)"""
     x = Symbol('x', real=True, positive=True)
     L = AlphaStable('L', Rational(1, 2), 1, 1, 0)
 
