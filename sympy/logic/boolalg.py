@@ -27,7 +27,7 @@ from sympy.utilities.misc import filldedent
 try:  # sys.version_info >= (3, 10)
     _bit_count: Callable[[int], int] = int.bit_count
 except AttributeError:
-    _bit_count: Callable[[int], int] = lambda i: bin(i).count("1")
+    _bit_count = lambda i: bin(i).count("1")
 
 def as_Boolean(e):
     """Like ``bool``, return the Boolean value of an expression, e,
