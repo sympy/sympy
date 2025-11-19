@@ -165,6 +165,19 @@ equivalent to the derivative is made, dropping possible trivial dimensions.  If
 no such matrix expression has been found, the array expression will be
 returned.
 
+Symbolic derivation algorithm finds a tensor expression that is equivalent to the derivative,
+it does not perform the derivative in a way other platforms do with the chain rule.
+
+Array expression to matrix expression conversion
+------------------------------------------------
+
+The core complexity of the algorithm of matrix derivation lies in the conversion back to matrix expression of the derivative.
+The array derivative returns the derivative as an array expression with axes properly contracted, diagonalized and permuted.
+In order to rewrite the output of a matrix expression, you need to identify the equivalent matrix operations on top of these expressions.
+The most common of these operations in the matrix multiplication, but other operations such as traces, diag-expansion, hadamard products are also common.
+
+The first limitation is that matrix derivatives.
+
 References
 ----------
 
