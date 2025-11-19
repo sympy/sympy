@@ -3,8 +3,9 @@ Boolean algebra module for SymPy
 """
 
 from __future__ import annotations
-from typing import TYPE_CHECKING, overload, Any
+from typing import TYPE_CHECKING, overload, Any, Callable
 from collections.abc import Iterable, Mapping
+
 from collections import defaultdict
 from itertools import chain, combinations, product, permutations
 from sympy.core.add import Add
@@ -32,6 +33,11 @@ if sys.version_info >= (3, 10):
     _bit_count = int.bit_count
 else:
     _bit_count = _bit_count_fallback
+try:  # sys.version_info >= (3, 10)
+    _bit_count: Callable[[int], int] = int.bit_count
+except AttributeError:
+    _bit_count = lambda i: bin(i).count("1")
+
 
 def as_Boolean(e):
     """Like ``bool``, return the Boolean value of an expression, e,
