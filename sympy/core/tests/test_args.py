@@ -18,6 +18,7 @@ from sympy.core.symbol import symbols
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import sin
+from sympy.plotting.plot import check_arguments
 
 from sympy.testing.pytest import SKIP, warns_deprecated_sympy
 
@@ -5553,3 +5554,19 @@ def test_sympy__combinatorics__perm_groups__Coset():
     b = Permutation(0, 1)
     G = PermutationGroup([a, b])
     assert _test_args(Coset(a, G))
+
+
+# Tests for test_args.py
+
+def test_sympy__stats__crv_types__AlphaStableDistribution():
+    from sympy.stats.crv_types import AlphaStableDistribution
+    from sympy import Symbol
+
+    alpha = Symbol('alpha', positive=True, real=True)
+    beta = Symbol('beta', real=True)
+    scale = Symbol('scale', positive=True, real=True)
+    location = Symbol('location', real=True)
+
+    assert _test_args(AlphaStableDistribution('X', alpha, beta, scale, location))
+
+
