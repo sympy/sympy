@@ -255,8 +255,8 @@ def test_dimension_normalization():
     assert Plane((1, 2, 1), (2, 1, 0), (3, 1, 2)
         ).intersection((2, 1)) == [Point(2, 1, 0)]
 
-    p = Plane(Point3D(0, 0, 0), normal_vector=(1, 10**10, 1))
-    pt = Point3D(1, 1, 1)
+    p = Plane(Point3D(0, 0, 0), normal_vector=(10**-7, 0, 1))
+    pt = Point3D(1, 0, 0)
     proj = p.projection(pt)
     assert proj in p
     assert isinstance(proj, Point3D)
