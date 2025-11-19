@@ -4,7 +4,6 @@ Boolean algebra module for SymPy
 
 from __future__ import annotations
 from typing import TYPE_CHECKING, overload, Any, Callable
-from typing import TYPE_CHECKING, overload, Any, Callable
 from collections.abc import Iterable, Mapping
 
 from collections import defaultdict
@@ -24,7 +23,6 @@ from sympy.core.sorting import ordered
 from sympy.core.sympify import _sympy_converter, _sympify, sympify
 from sympy.utilities.iterables import sift, ibin
 from sympy.utilities.misc import filldedent
-import sys
 
 try:  # sys.version_info >= (3, 10)
     _bit_count: Callable[[int], int] = int.bit_count
