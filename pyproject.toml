@@ -1,6 +1,6 @@
 [tool.pytest.ini_options]
 # Don't run the tests marked as slow by default.
-addopts = "-m 'not slow and not tooslow' --doctest-plus"
+addopts = "-m 'not slow and not tooslow' --doctest-modules --doctest-plus"
 filterwarnings = [
     'ignore:More than 20 figures have been opened.*:RuntimeWarning',
     'ignore:FigureCanvasAgg is non-interactive, and thus cannot be shown:UserWarning',
@@ -18,6 +18,7 @@ doctest_plus = "enabled"
 
 # Normalise output of doctests.
 # FLOAT_CMP enables approximate floating-point comparison in doctests
+# (requires pytest-doctestplus)
 doctest_optionflags = [
     "NORMALIZE_WHITESPACE",
     "IGNORE_EXCEPTION_DETAIL",
