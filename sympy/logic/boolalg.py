@@ -26,19 +26,10 @@ from sympy.utilities.iterables import sift, ibin
 from sympy.utilities.misc import filldedent
 import sys
 
-if sys.version_info >= (3, 10):
-    _bit_count: Callable[[int], int] = int.bit_count
-else:
-    def _bit_count_fallback(i: int) -> int:
-        return bin(i).count('1')
-
-    _bit_count: Callable[[int], int] = _bit_count_fallback
-    _bit_count = _bit_count_fallback
 try:  # sys.version_info >= (3, 10)
     _bit_count: Callable[[int], int] = int.bit_count
 except AttributeError:
-    _bit_count = lambda i: bin(i).count("1")
-
+    _bit_count: Callable[[int], int] = lambda i: bin(i).count("1")
 
 def as_Boolean(e):
     """Like ``bool``, return the Boolean value of an expression, e,
