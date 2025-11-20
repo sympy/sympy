@@ -183,8 +183,8 @@ class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
             return self.pdf(arg)
         else:
             # For symbolic expressions that can't be determined to be in/out of domain,
-            # return pdf directly for backward compatibility and cleaner symbolic manipulation
-            return self.pdf(arg)
+            # return a Piecewise that evaluates correctly based on the support
+            return Piecewise((self.pdf(arg), self.set.as_relational(arg)), (S.Zero, True))
 
 
 class DiscreteDomain(RandomDomain):
@@ -322,7 +322,7 @@ class SingleDiscretePSpace(DiscretePSpace, SinglePSpace):
             return self.distribution.expectation(expr, x, evaluate=evaluate,
                     **kwargs)
         except NotImplementedError:
-            return Sum(expr * self.pdf, (x, self.set.inf, self.set.sup),
+            return Sum(expr * self.distribution.pdf(x), (x, self.set.inf, self.set.sup),
                     **kwargs)
 
     def compute_cdf(self, expr, **kwargs):

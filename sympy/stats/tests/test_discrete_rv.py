@@ -73,7 +73,7 @@ def test_FlorySchulz():
     x = FlorySchulz('x', a)
     assert E(x) == (2 - a)/a
     assert (variance(x) - 2*(1 - a)/a**2).simplify() == S(0)
-    assert density(x)(z) == a**2*z*(1 - a)**(z - 1)
+    assert density(x).pdf(z) == a**2*z*(1 - a)**(z - 1)
 
 
 @slow
@@ -156,7 +156,7 @@ def test_skellam():
     z = Symbol('z')
     X = Skellam('x', mu1, mu2)
 
-    assert density(X)(z) == (mu1/mu2)**(z/2) * \
+    assert density(X).pdf(z) == (mu1/mu2)**(z/2) * \
         exp(-mu1 - mu2)*besseli(z, 2*sqrt(mu1*mu2))
     assert skewness(X).expand() == mu1/(mu1*sqrt(mu1 + mu2) + mu2 *
                 sqrt(mu1 + mu2)) - mu2/(mu1*sqrt(mu1 + mu2) + mu2*sqrt(mu1 + mu2))
