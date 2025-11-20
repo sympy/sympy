@@ -570,7 +570,7 @@ class Function(Application, Expr):
                         new_args.append(arg)
                     else:
                         new_args.append(new_arg)
-                except (TypeError, ValueError):
+                except (TypeError, ValueError, AttributeError):
                     new_args.append(arg) # Use original args even in case of exception.
             return self.func(*new_args)
         # Convert all args to mpf or mpc
