@@ -78,6 +78,8 @@ matrices, with the free index order properly permuted.
 
 This matrix derivative returns a 4-dimensional array expression if computed in SymPy
 
+>>> from sympy import MatrixSymbol
+>>> X = MatrixSymbol("X", 3, 3)
 >>> X.diff(X)
 PermuteDims(ArrayTensorProduct(I, I), (3)(1 2))
 
@@ -152,6 +154,8 @@ Creating these objects itself does not resort the order, but it can be achieved 
 
 For example, nested contractions can be flattened:
 
+>>> from sympy import symbols
+>>> from sympy.tensor.array.expressions import ArraySymbol, ArrayContraction, PermuteDims
 >>> k = symbols("k")
 >>> A = ArraySymbol("A", (k, k, k, k, k, k, k, k))
 >>> expr = ArrayContraction(ArrayContraction(A, (1, 6), (2, 5)), (0, 3))
