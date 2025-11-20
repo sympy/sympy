@@ -561,7 +561,7 @@ class Function(Application, Expr):
                 return Float(imp(*[i.evalf(prec) for i in self.args]), prec)
             except (TypeError, ValueError):
                 return None
-        elif not all(_.is_number for _ in args): # mpmath will not handle symbols
+        elif any(arg.free_symbols for arg in args): # mpmath will not handle symbols
             new_args = []
             for arg in args:
                 try:
