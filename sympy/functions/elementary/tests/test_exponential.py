@@ -428,6 +428,31 @@ def test_exp_assumptions():
 
 
 @_both_exp_pow
+def test_exp_sign_assumptions():
+    r = Symbol('r', real=True)
+    er = Symbol('er', extended_real=True)
+    enn = Symbol('enn', extended_nonnegative=True)
+
+    # https://github.com/sympy/sympy/issues/28141
+    assert exp(x).is_positive is None
+    assert exp(r).is_positive is True
+    assert exp(er).is_positive is None
+    assert exp(enn).is_positive is None
+    assert exp(x).is_extended_positive is None
+    assert exp(r).is_extended_positive is True
+    assert exp(er).is_extended_positive is None
+    assert exp(enn).is_extended_positive is True
+    assert exp(x).is_zero is None
+    assert exp(r).is_zero is False
+    assert exp(er).is_zero is None
+    assert exp(enn).is_zero is False
+    assert sign(exp(x)) == sign(exp(x), evaluate=False)
+    assert sign(exp(r)) == 1
+    assert sign(exp(er)) == sign(exp(er), evaluate=False)
+    assert sign(exp(enn)) == 1
+
+
+@_both_exp_pow
 def test_exp_AccumBounds():
     assert exp(AccumBounds(1, 2)) == AccumBounds(E, E**2)
 
