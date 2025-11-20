@@ -4,79 +4,99 @@ Matrix derivatives
 Matrix and array expressions in SymPy
 -------------------------------------
 
-SymPy supports matrices and N-dimensional arrays.  Matrices and N-dimensional
-arrays have their basic component-explicit modules, i.e. ``sympy.matrices`` and
-``sympy.tensor.array`` respectively.  By component-explicit it is meant that
-the object contains the values of all components.
+SymPy provides matrices and general N-dimensional arrays through the
+sub-packages ``sympy.matrices`` and ``sympy.tensor.array``, respectively. Each
+of these two modules is component-explicit, meaning that every element is stored and directly
+accessible, so the object explicitly contains the full set of component values
+rather than representing them implicitly.
 
-Besides, SymPy has support for matrix expressions and array expressions, these
-are modules that define matrices and arrays as symbols, with only their
-identifying name (such as the string `X` or `M`) and their shape tuple (in case
-of matrices always a tuple of two elements).  The types of the shape tuples are
-either integers, in case the shape is determined, or any kind mathematical
-expression, whose integer value is not known yet.  Matrix symbols can undergo
-the usual arithmetic operations, but unlike component-explicit matrices,
-where operations happen elementwise to produce a resulting matrix, matrix
-symbols will be stored in expression trees freezing their operations.  Matrix
-symbols is the convention commonly used in mathematics textbooks.  In this case
-expressions such as ``M*N.T*P`` (or `\mathbf{M} \mathbf{N}' \mathbf{P}`)
-represent a matrix multiplication.
+SymPy also supports symbolic matrix expressions and array expressions through
+dedicated modules. These represent matrices and arrays abstractly as symbols,
+defined solely by an identifying name (such as $X$ or $M$) and a shape tuple. For
+matrices, the shape is always a 2-element tuple. The dimensions within this
+tuple can be either fixed integers (for known sizes) or arbitrary symbolic
+expressions (when dimensions are undetermined).
 
-A further approach is to explicitly show indices after the symbol, in SymPy
-both matrix symbols and array symbols support overloading for the ``[ ]``
-operator to create matrix elements and array elements, respectively.  So you
-can define ``M[i, j]`` to represent the value at the $(i+1)$-th row and
-$(j+1)$-th column (SymPy index offset starts at zero, not at unit as commonly
-assumed in mathematics).  Given that $i$ and $j$ are undefined variables, this
-matrix element convention can be used to represent the whole span of
-matrix/array values, and henceforth the whole matrix.  Still notice that SymPy
-supports any kind of expression as index, no restrictions to numbers.
+Unlike component-explicit matrices, which perform elementwise calculations
+immediately, symbolic matrix expressions retain operations unevaluated in
+expression trees. Arithmetic operations (addition, multiplication, transpose,
+etc.) are formally applied but frozen as symbolic representations rather than
+computed results. This aligns with conventional mathematical notation in
+textbooks, where expressions like ``M*N.T*P`` (also written as
+$\mathbf{M}\mathbf{N}^\top \mathbf{P}$) represent abstract matrix multiplication rather
+than explicit numerical results.
+
+Array expressions follow analogous principles, with the distinction that their
+shape tuples support arbitrary sizes ($N$ dimensions) rather than only two.
+
+In SymPy both matrix
+symbols and array symbols support Python's ``[ ]`` operator to reference individual
+elements. For example:
+
+* ``M[i, j]`` denotes the element at row $i$ (0-indexed) and column $j$ of matrix symbol ``M``,
+* ``A[k, l, m]`` accesses an element of a 3D array symbol ``A``.
+
+SymPy uses zero-based indexing (starting at 0) for all positions, contrasting
+with the one-based indexing (starting at 1) common in mathematical literature.
+The indices themselves can be arbitrary symbolic expressions, not limited to
+integers—allowing representations like ``M[2*i, j+1]``.  When combined with
+symbolic indices (e.g., undefined variables $i$ and $j$), these element
+references collectively span the entire matrix/array, facilitating
+component-wise operations while preserving the abstract nature of the symbolic
+expression.
 
 Matrix derivatives
 ------------------
 
-A matrix derived by another matrix is a 4-dimensional array, combining the
-components of the derivative of a matrix expression elements by the elements of
-the matrix symbol.
+Derivatives extend naturally through index notation.  Differentiating a matrix
+expression $A_{ij}$ by matrix $X_{mn}$ produces a four-dimensional array
+representing:
 
-The most intuitive understanding of matrix derivatives can be shown using
-index-notation, if you have a matrix expression $A_{ij}$ derived by matrix
-$X_{mn}$, the resulting derivative will be
+$$\mathbf{D}_{mnij} = \frac{\partial}{\partial X_{mn}} \Big (A_{ij} \Big ).$$
 
-$$\frac{\partial}{\partial X_{mn}} \Big ( A_{ij} \Big ) $$.
+SymPy adopts a denominator-first index ordering for derivatives, positioning
+differentiation variable indices ($mn$) before derivand indices ($ij$).  This
+${}_{\{mnij\}}$ convention aligns with Wolfram Mathematica but differs from
+PyTorch/NumPy.  This structure applies universally: scalar-by-matrix
+derivatives produce matrices, matrix-by-scalar derivatives produce matrices,
+and matrix-by-matrix derivatives yield rank-4 arrays reflecting the
+relationship between all component pairs.
 
-In SymPy, we use the convention of putting the derivation dimensions in front
-of the derivand dimensions, convention in common with Wolfram Mathematica but
-unlike most libraries such as PyTorch and NumPy. Therefore, when indices are
-not explicitly stated, the derivative of $A_{ij}$ by matrix $X_{mn}$ will be in
-the order ${}_{\{mnij\}}$.
+To explicitly track index reading order, which controls axis transpositions in
+multi-dimensional representations, we will use the convention of mapping the index
+sequence to the full expression. For example:
 
-In order to keep track of the index reading order (which may determine
-transpositions of axes), we will use the convention of writing the index order
-mapping to the full expression, so:
+$${}_{\{mnij\}} \Longrightarrow\frac{\partial}{\partial X_{mn}} \Big ( A_{ij} \Big )$$
 
-$${}_{\{mnij\}} \Longrightarrow \frac{\partial}{\partial X_{mn}} \Big ( A_{ij} \Big ) .$$
+this shows that
+differentiation indices ($mn$) precede derivand indices ($ij$).  Crucially,
+this notation inherently captures index permutations without explicit
+operators. For example:
 
-Notice that in this convention some expressions have multiple representations,
-for example we can even write transpositions without using the operator,
+$${}_{\{ij\}} \Longrightarrow \Big(M^T\Big)_{ij} = M_{ji}$$
 
-$${}_{\{ij\}} \Longrightarrow \Big(M'\Big)_{ij} = M_{ji},$$
+demonstrates how transposition is encoded solely through index-order
+reversal, the ${}_{\{ij\}}$ mapping of $M_{ji}$ directly yields the
+component expression of the transposition.
 
-as transposition is indeed just the swapping of index reading order of two
-indices.
+Derive matrix by itself
+~~~~~~~~~~~~~~~~~~~~~~~
 
-As an example, the derivative of matrix $X$ by itself is given by
+As an example, the derivative of matrix $X$ by itself is given by identity
+relationships between indices:
 
 $${}_{\{mnij\}} \Longrightarrow \frac{\partial}{\partial X_{mn}} \Big ( X_{ij} \Big ) = \delta_{mi} \delta_{nj} = \Big( \mathbf{I} \otimes \mathbf{I} \Big)_{minj}, $$
 
-where $\delta$ is the Kronecker delta symbol. Indeed, matrix $\mathbf{X}$ is
-made of element variables that are to be considered different from one another,
-so $X_{mn}$ is the same variable as $X_{ij}$ if and only if $m=i$ and $n=j$.
-The previous expression also shows how the product of two Kronecker deltas on
-four different free indices may be viewed as the tensor product of two identity
+where $\delta$ is the Kronecker delta, which satisfies $\delta_{ab} = 1$ if $a
+= b$ and $\delta_{ab} = 0$ otherwise.  Indeed, matrix $\mathbf{X}$ is made of
+element variables that are to be considered different from one another, so
+$X_{mn}$ is the same variable as $X_{ij}$ if and only if $m=i$ and $n=j$.  The
+previous expression also shows how the product of two Kronecker deltas on four
+different free indices may be viewed as the tensor product of two identity
 matrices, with the free index order properly permuted.
 
-This matrix derivative returns a 4-dimensional array expression if computed in SymPy
+This matrix derivative returns a 4-dimensional array expression if computed in
+SymPy
 
 >>> from sympy import MatrixSymbol
 >>> X = MatrixSymbol("X", 3, 3)
@@ -204,7 +224,7 @@ Symbolic derivation algorithm finds a tensor expression that is equivalent to th
 it does not perform the derivative in a way other platforms do with the chain rule.
 
 Chain rule
-----------
+~~~~~~~~~~
 
 The idea is to apply the chain rule sequentially, but with a caveat on where
 
@@ -271,7 +291,7 @@ As a last step, we need to take the 2-nd and 3-rd axes of the contracted express
 as they are the axes referring to the deriving variable $\mathbf{X}$.
 
 Array expression to matrix expression conversion
-------------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The core complexity of the algorithm of matrix derivation lies in the conversion back to matrix expression of the derivative.
 The array derivative returns the derivative as an array expression with axes properly contracted, diagonalized and permuted.
