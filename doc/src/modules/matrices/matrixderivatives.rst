@@ -83,10 +83,21 @@ PermuteDims(ArrayTensorProduct(I, I), (3)(1 2))
 
 The permutation `(3)(1 2)` maps ${}_{\{mnij\}}$ into ${}_{\{minj\}}$. Remember
 that SymPy uses zero offset and the trivial cycle `(3)` is just a trick to
-display the maximum size of the permutation.
+display the maximum size of the permutation. The object ``PermuteDims`` in SymPy
+takes the convention of its permutation mapping the new index order into the old index order
+(the old index order of the wrapped expression), this convention is compatible with most of
+the scientific python libraries, but is the opposite of the one used by Wolfram Mathematica.
 
 Derivative is a matrix
 ----------------------
+
+In general, you can derive a matrix by a scalar, which means that you construct a new matrix whose
+entry corresponds to the original entry derived by the scalar. You can derive a scalar by a matrix,
+which means that the scalar is derived by each element of the matrix, creating a derivative matrix with corresponding positions.
+Traces and determinants are scalars, but their matrix derivatives may produce complex expressions as they may contain the deriving variable.
+
+Finally, you can derive a matrix $\mathbf{Y}$ by another matrix $\mathbf{X}$, resulting in a 4-dimensional array containing all combinations of
+derivatives of all the elements of $\mathbf{X}$ and $\mathbf{Y}$.
 
 In SymPy, if you derive a matrix expression by a matrix symbol you will
 generally get an array expression, as this has dimension 4.  In some cases, the
