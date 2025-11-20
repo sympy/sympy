@@ -5027,7 +5027,6 @@ class PermutationGroup(Basic):
                     relative_order.insert(0, G1 // G2)
 
         return PolycyclicGroup(pc_sequence, pc_series, relative_order, collector=None)
-    
 
     def quotient_group(self,N):
         """
@@ -5036,8 +5035,8 @@ class PermutationGroup(Basic):
         Explanation
         ===========
 
-        The method constructs the quotient group G/N by determining 
-        its faithful permutation representation induced by the 
+        The method constructs the quotient group G/N by determining
+        its faithful permutation representation induced by the
         action of G's generators on the set of N's cosets.
 
         Example
@@ -5065,7 +5064,7 @@ class PermutationGroup(Basic):
             gen.append(Permutation(p))
 
         return PermutationGroup(gen)
-    
+
 
 def _orbit(degree, generators, alpha, action='tuples'):
     r"""Compute the orbit of alpha `\{g(\alpha) | g \in G\}` as a set.
