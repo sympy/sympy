@@ -89,7 +89,6 @@ from sympy.sets.sets import Interval
 from sympy.matrices import MatrixBase
 from sympy.stats.crv import SingleContinuousPSpace, SingleContinuousDistribution
 from sympy.stats.rv import _value_check, is_random
-from sympy.stats.rv import RandomSymbol
 oo = S.Infinity
 
 __all__ = ['ContinuousRV',

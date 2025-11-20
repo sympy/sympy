@@ -1584,7 +1584,7 @@ def test_compute_density():
 
 
 def test_AlphaStable():
-    from sympy.stats import AlphaStable, density, characteristic_function
+    from sympy.stats import AlphaStable
 
     alpha = Symbol('alpha', positive=True, real=True)
     beta = Symbol('beta', real=True)
@@ -1672,7 +1672,7 @@ def test_AlphaStable_characteristic_function():
 
 def test_AlphaStable_characteristic_function_general():
     """Test characteristic function with general parameters"""
-    from sympy.stats import AlphaStable, characteristic_function
+    from sympy.stats import AlphaStable
     from sympy import I, Abs, sign, tan, pi, exp, Symbol, Rational
 
     t = Symbol('t', real=True)
