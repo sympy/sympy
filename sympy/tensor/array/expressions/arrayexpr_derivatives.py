@@ -2,7 +2,7 @@ import operator
 from functools import reduce, singledispatch
 
 from sympy.core.singleton import S
-from sympy import MatrixBase, derive_by_array, Integer, Determinant, trace, Function, MatPow, Dummy, Sum
+from sympy import MatrixBase, derive_by_array, Integer, Determinant, Function
 from sympy.tensor.array import NDimArray
 from sympy.core.expr import Expr
 from sympy.matrices.expressions.hadamard import HadamardProduct
