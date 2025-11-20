@@ -38,10 +38,61 @@ class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
 
     Serves as superclass for PoissonDistribution etc....
 
-    Provides methods for pdf, cdf, and sampling
+    Provides methods for pdf, cdf, and sampling.
 
-    See Also:
-        sympy.stats.crv_types.*
+    Explanation
+    ===========
+
+    The distribution object can be called in two ways to evaluate the
+    probability density:
+
+    1. ``distribution(x)`` or ``distribution.__call__(x)``:
+       Returns the probability density at x, with support checking enforced
+       via Piecewise. For symbolic arguments where support membership cannot
+       be determined, this returns a Piecewise expression that evaluates to
+       the pdf formula when x is in the support, and 0 otherwise.
+
+    2. ``distribution.pdf(x)``:
+       Returns the raw probability density formula without support checking.
+       This is useful for symbolic manipulation and integration where the
+       Piecewise wrapper would be cumbersome.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import Geometric, density
+    >>> from sympy import Symbol, Rational
+    >>> X = Geometric('X', Rational(1, 5))
+    >>> z = Symbol('z')
+
+    Using __call__ with symbolic argument returns Piecewise:
+
+    >>> density(X)(z)  # doctest: +SKIP
+    Piecewise(((4/5)**(z - 1)/5, (z >= 1) & (z < oo) & Eq(z, floor(z))), (0, True))
+
+    Using .pdf() returns the raw formula:
+
+    >>> density(X).pdf(z)
+    (4/5)**(z - 1)/5
+
+    For concrete values, both give the same result:
+
+    >>> density(X)(3)
+    16/125
+    >>> density(X).pdf(3)
+    16/125
+
+    Support checking with __call__ for values outside support:
+
+    >>> density(X)(0)  # zero is not in the support
+    0
+    >>> density(X)(1/2)  # non-integer is not in the support
+    0
+
+    See Also
+    ========
+
+    sympy.stats.crv_types
     """
 
     set = S.Integers
