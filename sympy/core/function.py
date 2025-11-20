@@ -561,7 +561,18 @@ class Function(Application, Expr):
                 return Float(imp(*[i.evalf(prec) for i in self.args]), prec)
             except (TypeError, ValueError):
                 return None
-
+        elif not all(_.is_number for _ in args): # mpmath will not handle symbols
+            new_args = []
+            for arg in args:
+                try:
+                    new_arg = arg.evalf(prec, maxn=1)
+                    if new_arg is None or new_arg == arg: # could not evalf hence fallback to original
+                        new_args.append(arg)
+                    else:
+                        new_args.append(new_arg)
+                except Exception:
+                    new_args.append(arg) # Use original args even in case of exception.
+            return self.func(*new_args)
         # Convert all args to mpf or mpc
         # Convert the arguments to *higher* precision than requested for the
         # final result.
