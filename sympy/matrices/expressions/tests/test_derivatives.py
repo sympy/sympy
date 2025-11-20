@@ -383,6 +383,10 @@ def test_derivatives_matrix_norms():
     expr = d.T*x*(a.T*X*b)**S.Half*y.T*c
     assert expr.diff(X) == a/(2*sqrt(a.T*X*b))*x.T*d*y.T*c*b.T
 
+    # Fixes issue https://github.com/sympy/sympy/issues/28615
+    expr = sqrt(Trace(X.T*X))
+    assert expr.diff(X) == X / sqrt(Trace(X*X.T))
+
 
 def test_derivatives_elementwise_applyfunc():
 

@@ -56,7 +56,11 @@ def convert_matrix_to_array(expr: Basic) -> Basic:
     elif isinstance(expr, Pow):
         base = convert_matrix_to_array(expr.base)
         if (expr.exp > 0) == True:
-            return _array_tensor_product(*[base for i in range(expr.exp)])
+            base_conv = convert_matrix_to_array(base)
+            if get_shape(base_conv) == ():
+                return ArrayElementwiseApplyFunc(lambda x: x**expr.exp, base_conv)
+            else:
+                return _array_tensor_product(*[base_conv for i in range(expr.exp)])
         elif get_shape(base) == ():
             d = Dummy("d")
             return ArrayElementwiseApplyFunc(Lambda(d, d**expr.exp), base)

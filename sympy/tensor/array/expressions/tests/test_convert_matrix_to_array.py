@@ -1,4 +1,4 @@
-from sympy import Lambda, KroneckerProduct
+from sympy import Lambda, KroneckerProduct, sqrt
 from sympy.core.symbol import symbols, Dummy
 from sympy.matrices.expressions.hadamard import (HadamardPower, HadamardProduct)
 from sympy.matrices.expressions.inverse import Inverse
@@ -87,8 +87,8 @@ def test_arrayexpr_convert_matrix_to_array():
     assert convert_matrix_to_array(expr) == result
 
     expr = 3*Trace(M)**2
-    result = ArrayContraction(ArrayTensorProduct(3, M, M), (0, 1), (2, 3))
-    assert convert_matrix_to_array(expr) == result
+    result = ArrayTensorProduct(3, ArrayElementwiseApplyFunc(lambda x: x**2, ArrayContraction(M, (0, 1))))
+    assert convert_matrix_to_array(expr).dummy_eq(result)
 
     expr = Trace(M) + Trace(N)
     result = ArrayAdd(ArrayContraction(M, (0, 1)), ArrayContraction(N, (0, 1)))
@@ -135,3 +135,8 @@ def test_arrayexpr_convert_matrix_to_array():
     expr = 1/Trace(A)
     cg = convert_matrix_to_array(expr)
     assert cg.dummy_eq(ArrayElementwiseApplyFunc(Lambda(m, 1/m), ArrayContraction(A, (0, 1))))
+
+    # Fixes issue https://github.com/sympy/sympy/issues/28615
+    expr = sqrt(Trace(X.T*X))
+    cg = convert_matrix_to_array(expr)
+    assert cg.dummy_eq(ArrayElementwiseApplyFunc(sqrt, ArrayContraction(ArrayTensorProduct(X, X), (0, 2), (1, 3))))
