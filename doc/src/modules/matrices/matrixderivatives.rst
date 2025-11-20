@@ -135,6 +135,26 @@ These operators on array expressions are handled in SymPy by expression tree
 nodes ``ArrayTensorProduct``, ``ArrayContraction``, ``ArrayDiagonal``,
 ``PermuteDims``.
 
+There is a canonical form for these three operators: where all these four occur, they should be nested
+in these sequence (from outermost to innermost): permutation, diagonalization, contraction, tensor product.
+Creating these objects itself does not resort the order, but it can be achieved by calling ``.doit()``.
+
+For example, nested contractions can be flattened:
+
+>>> k = symbols("k")
+>>> A = ArraySymbol("A", (k, k, k, k, k, k, k, k))
+>>> expr = ArrayContraction(ArrayContraction(A, (1, 6), (2, 5)), (0, 3))
+>>> expr
+ArrayContraction(ArrayContraction(A, (1, 6), (2, 5)), (0, 3))
+>>> expr.doit()
+ArrayContraction(A, (0, 7), (1, 6), (2, 5))
+
+>>> expr = ArrayContraction(PermuteDims(A, [6, 3, 0, 7, 1, 5, 4, 2]), (2, 4), (1, 7))
+>>> expr
+ArrayContraction(PermuteDims(A, (0 6 4 1 3 7 2)), (1, 7), (2, 4))
+>>> expr.doit()
+PermuteDims(ArrayContraction(A, (0, 1), (2, 3)), (0 2 1 3))
+
 Matrix expressions can be represented by array expressions using these
 operator, but the converse is not always true.
 
@@ -168,6 +188,73 @@ returned.
 Symbolic derivation algorithm finds a tensor expression that is equivalent to the derivative,
 it does not perform the derivative in a way other platforms do with the chain rule.
 
+Chain rule
+----------
+
+The idea is to apply the chain rule sequentially, but with a caveat on where
+
+Given $\mathbf{Y}$ (or $\mathbf{Z}$) as a generic matrix expression, and its
+derivative $\partial \mathbf{Y}$,
+expressions containing $\mathbf{Y}$ can be expanded through the chain rule in terms of $\partial \mathbf{Y}$.
+If you are deriving by a scalar, $\partial \mathbf{Y}$ will be a matrix and the standard matrix expression
+rules apply. Remember that $\partial \mathbf{Y}$ does not commute with $\mathbf{Y}$.
+
+In case you are deriving by a matrix, $\partial \mathbf{Y}$ is a 4-dimensional array,
+the indices coming from $\mathbf{Y}$ will be connected to the chain rule expression, while the deriving
+indices need to be brought in front of all others (remember, we use the convention that the indices of
+the deriving variable precede the indices of the expression to be derived).
+
++---------------------------+---------------------------------+-------------------------------------------------------------------------------------+
+| operation                 | expression                      | chain rule                                                                          |
++===========================+=================================+=====================================================================================+
+| matrix addition           | $\mathbf{Y} + \mathbf{Z}$       | $\partial \mathbf{Y} + \partial\mathbf{Z}$                                          |
++---------------------------+---------------------------------+-------------------------------------------------------------------------------------+
+| matrix multiplication     | $\mathbf{Y}\mathbf{Z}$          | $(\partial \mathbf{Y})\mathbf{Z} + \mathbf{Y} (\partial\mathbf{Z})$                 |
++---------------------------+---------------------------------+-------------------------------------------------------------------------------------+
+| Hadamard product          | $\mathbf{Y} \circ \mathbf{Z}$   | $(\partial \mathbf{Y})\circ\mathbf{Z} + \mathbf{Y}\circ(\partial\mathbf{Z})$        |
++---------------------------+---------------------------------+-------------------------------------------------------------------------------------+
+| tensor product            | $\mathbf{Y}\otimes\mathbf{Z}$   | $(\partial \mathbf{Y})\otimes\mathbf{Z} + \mathbf{Y}\otimes(\partial\mathbf{Z})$    |
++---------------------------+---------------------------------+-------------------------------------------------------------------------------------+
+| inverse                   | $\mathbf{Y}^{-1}$               | $-\mathbf{Y}^{-1} (\partial \mathbf{Y}) \mathbf{Y}^{-1}$                            |
++---------------------------+---------------------------------+-------------------------------------------------------------------------------------+
+| trace                     | $\mbox{Tr}(\mathbf{Y})$         | $\mbox{Tr}(\partial\mathbf{Y})$                                                     |
++---------------------------+---------------------------------+-------------------------------------------------------------------------------------+
+| determinant               | $\mbox{det}(\mathbf{Y})$        | $\mbox{det}(\mathbf{Y}) \mbox{Tr}(\mathbf{Y}^{-1}\partial\mathbf{Y})$               |
++---------------------------+---------------------------------+-------------------------------------------------------------------------------------+
+| transposition             | $\mathbf{Y}'$                   | $(\partial\mathbf{Y})'$                                                             |
++---------------------------+---------------------------------+-------------------------------------------------------------------------------------+
+
+in general, while deriving by a matrix $\mathbf{X}$, the expression $\partial \mathbf{Y}$ should be seen as a 4-dimensional array,
+with our convention of the indices of the deriving variable to be in front. This means that the final expression indices
+need to be permuted.
+
+For example, when **deriving the inverse** of matrix expression $\mathbf{Y}$ is
+
+$$\frac{\partial \mathbf{Y}_{ij}^{-1}}{\partial \mathbf{X}_{mn}} = \left( {}_{\{mnij\}} \Rightarrow - \sum_{kl} \mathbf{Y}^{-1}_{ik} \frac{\partial \mathbf{Y}_{kl}}{\partial \mathbf{X}_{mn}} \mathbf{Y}^{-1}_{lj} \right)$$
+
+using our array expression syntax, this can be represented as
+
+|  PermuteDims(
+|     ArrayTensorContraction(
+|        ArrayTensorProduct(
+|           -Inverse(Y), array_derive(Y, X), Inverse(Y)
+|        ),
+|        (1, 4),
+|        (5, 6)
+|     ),
+|     index_order_old="imnj",
+|     index_order_new="mnij"
+|  )
+
+here, ``array_derive(Y, X)`` returns a 4-dimensional array expression, we then proceed to create an 8-dimensional
+array expression,
+$$-\mathbf{Y}^{-1} \otimes \frac{\partial\mathbf{Y}}{\partial\mathbf{X}} \otimes \mathbf{Y}^{-1}$$
+which is then contracted on the 2-nd and 5-th axes, i.e. (1, 4), and on the 6-th and 7-th axes, i.e. (5, 6).
+$$-\frac{1}{\partial\mathbf{X}} \Big( \mathbf{Y}^{-1} (\partial\mathbf{Y}) \mathbf{Y}^{-1} \Big)$$
+The contraction reproduce the structure of the matrix multiplication of the chain rule for the inverse.
+As a last step, we need to take the 2-nd and 3-rd axes of the contracted expression in front of the other ones,
+as they are the axes referring to the deriving variable $\mathbf{X}$.
+
 Array expression to matrix expression conversion
 ------------------------------------------------
 
@@ -176,7 +263,34 @@ The array derivative returns the derivative as an array expression with axes pro
 In order to rewrite the output of a matrix expression, you need to identify the equivalent matrix operations on top of these expressions.
 The most common of these operations in the matrix multiplication, but other operations such as traces, diag-expansion, hadamard products are also common.
 
-The first limitation is that matrix derivatives.
+Matrix derivation may produce array expressions that have no correspondence to closed-form matrix expressions,
+therefore it will not be always possible to re-express the result as a matrix expression.
+
+Sometimes a clear sequence of paired contractions corresponding to a matrix multiplication line will be identified,
+in these cases the identification of a matrix expression is straightforward.
+
+Otherwise, some tricks are used:
+
+* tensor product of two matrix vectors $\mathbf{a} \otimes \mathbf{b}$, of shape (k, 1) both, can be turned into a matrix multiplication over their trivial dimension: $\mathbf{a} \cdot \mathbf{b}'$.
+* identity matrices in a tensor product may be removed. Indeed they increase the dimensions of the array expression by filling the space with null values off the diagonals identified by their axes, they can thus be generally neglected.
+* the triple contraction of two matrices and a matrix-vector may be reinterpreted in terms of matrix multiplication: $\sum \mathbf{A}_{ij} \mathbf{b}_{j0} \mathbf{C}_{jk} \Longrightarrow \mathbf{A} \mbox{diag}(\mathbf{b}) \mathbf{C}$.
+* repeated indices without summation can be identified as Hadamard products $\mathbf{A}_{ij} \mathbf{B}_{ij} \Longrightarrow \mathbf{A} \circ \mathbf{B}$. This is often the case with ``ArrayDiagonal`` operators.
+* some other expressions may be identified as Hadamard product [TODO: complete]
+* generally, open two-paired contraction lines are matrix multiplications:
+
+$$\sum_{j} \mathbf{A}_{ij} \mathbf{B}_{ij} \Longrightarrow \mathbf{A} \mathbf{B}' $$
+
+* while closed two-paired contraction lines are traces:
+
+$$\sum_{ij} \mathbf{A}_{ij} \mathbf{B}_{ij} \Longrightarrow \mbox{Tr}\Big(\mathbf{A} \mathbf{B}'\Big) $$
+
+* diagonalization of matrix and matrix-vector can be turned into matrix multiplications
+
+$$A_{ij} b_{j0} \Longrightarrow \mathbf{A} \, \mbox{diag}(\mathbf{b})$$
+
+* diagonalization of two matrix-vectors may be turned into a multiplication by an all-one matrix:
+
+$$a_{i0} b_{j0} \Longrightarrow \mathbf{a}' \cdot \mathbf{1} \cdot \mathbf{b}$$
 
 References
 ----------
