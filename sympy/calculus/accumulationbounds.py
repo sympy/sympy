@@ -679,7 +679,7 @@ class AccumulationBounds(Expr):
                 return other
 
         if other.min <= self.min:
-            if other.max < self.max:
+            if other.max <= self.max:
                 return AccumBounds(self.min, other.max)
             if other.max > self.max:
                 return self
