@@ -69,8 +69,10 @@ def convert_matrix_to_array(expr: Basic) -> Basic:
     elif isinstance(expr, MatPow):
         base = convert_matrix_to_array(expr.base)
         if expr.exp.is_Integer != True:
-            b = symbols("b", cls=Dummy)
-            return ArrayElementwiseApplyFunc(Lambda(b, b**expr.exp), convert_matrix_to_array(base))
+            if get_shape(expr) == (1, 1):
+                b = symbols("b", cls=Dummy)
+                return ArrayElementwiseApplyFunc(Lambda(b, b ** expr.exp), convert_matrix_to_array(base))
+            return expr
         elif (expr.exp > 0) == True:
             return convert_matrix_to_array(MatMul.fromiter(base for i in range(expr.exp)))
         else:
