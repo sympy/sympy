@@ -966,8 +966,6 @@ or tuple for the function arguments.
     global _lambdify_generated_counter
     filename = '<lambdifygenerated-%s>' % _lambdify_generated_counter
     _lambdify_generated_counter += 1
-    # add a regex-based fix right before the compile(funcstr, filename, 'exec') call in lambdify to remove the stray dot and any whitespace
-    funcstr = re.sub(r'\)\s*\.\s*\(', ')(', funcstr)
     c = compile(funcstr, filename, 'exec')
     # single
     exec(c, namespace, funclocals)
@@ -1255,8 +1253,9 @@ class _EvaluatorPrinter:
 
         funclines = [funcsig]
         funclines.extend(['    ' + line for line in funcbody])
-
-        return '\n'.join(funclines) + '\n'
+        
+        #add a regex-based fix to remove the stray dot and any whitespace without tampering inside lambdify
+        return re.sub(r'\)\s*\.\s*\(', ')(', '\n'.join(funclines) + '\n')
 
     @classmethod
     def _is_safe_ident(cls, ident):
