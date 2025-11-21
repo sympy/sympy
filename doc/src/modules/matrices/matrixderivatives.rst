@@ -48,11 +48,26 @@ expression.
 Matrix derivatives
 ------------------
 
+You can differentiate a matrix with respect to a scalar by differentiating each
+element individually. Similarly, differentiating a scalar with respect to a
+matrix yields a matrix of the same shape, where each entry is the derivative of
+the scalar with respect to the corresponding matrix element.
+
+While the trace and determinant of a matrix are scalars, their derivatives with
+respect to a matrix variable can yield nontrivial expressions involving the
+matrix itself.
+
+Differentiating a matrix $\mathbf{Y}$ with respect to another matrix
+$\mathbf{X}$ results in a 4-dimensional array (sometimes also called a tensor,
+though tensors refer to differential geometry in SymPy), where each entry is
+the partial derivative of an element of $\mathbf{Y}$ with respect to an element
+of $\mathbf{X}$.
+
 Derivatives extend naturally through index notation.  Differentiating a matrix
 expression $A_{ij}$ by matrix $X_{mn}$ produces a four-dimensional array
 representing:
 
-$$\mathbf{D}_{mnij} = \frac{\partial}{\partial X_{mn}} \Big (A_{ij} \Big ).$$
+$$D_{mnij} = \frac{\partial}{\partial X_{mn}} \Big (A_{ij} \Big ).$$
 
 SymPy adopts a denominator-first index ordering for derivatives, positioning
 differentiation variable indices ($mn$) before derivand indices ($ij$).  This
@@ -79,13 +94,38 @@ demonstrates how transposition is encoded solely through index-order
 reversal, the ${}_{\{ij\}}$ mapping of $M_{ji}$ directly yields the
 component expression of the transposition.
 
+Reconstructing a matrix expression
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In SymPy, differentiating a matrix expression with respect to a matrix symbol
+normally yields a rank-4 array.  When one or more of its axes happen to be
+singleton (dimension 1), the tensor collapses to a lower-rank object; SymPy
+automatically detects this and returns the simplest equivalent matrix
+expression instead of keeping the full 4-D form.
+
+For example, let $\mathbf{x}$ be a matrix-vector of shape $[k \times 1]$, that is a
+column-vector disguised as a matrix.  The derivative of $\mathbf{x}$ with
+respect to $\mathbf{x}$ is then the 4-D identity array, but because the second
+axis of both the numerator and the denominator has length 1, the result
+collapses to the $k \times k$ identity matrix $\mathbf{I}_{[k]}$ instead of
+keeping the full tensor form.
+
+$$\left[{}_{\{mnij\}} \Longrightarrow \frac{\partial}{\partial x_{mn}}x_{ij} = \delta_{mi} \delta_{nj} = \big( \mathbf{I}_{[k]} \otimes \mathbf{I}_{[1]} \big)_{minj}\right] \rightarrow \Big[ {}_{\{mi\}}\Longrightarrow \big(\mathbf{I}_{[k]}\big)_{mi}\Big]$$
+
+The second and fourth axes are singletons, appearing in the derivative as
+scalar identity matrix $\mathbf{I}_{[1]}$, equivalent to scalar unit.  In index
+notation they only survive in a Kronecker $\delta_{nj}$.
+
+Likewise, $\frac{\partial}{\partial \mathbf{x}}\mathbf{x}'$ has shape
+$[k \times 1 \times 1 \times k]$, and collapses again to the same $[k \times k]$ identity matrix $\mathbf{I}_{[k]}$.
+
 Derive matrix by itself
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-As an example, the derivative of matrix $X$ by itself is given by identity
+As an example, the derivative of $[k \times l]$ matrix $\mathbf{X}$ by itself is given by identity
 relationships between indices:
 
-$${}_{\{mnij\}} \Longrightarrow \frac{\partial}{\partial X_{mn}} \Big ( X_{ij} \Big ) = \delta_{mi} \delta_{nj} = \Big( \mathbf{I} \otimes \mathbf{I} \Big)_{minj}, $$
+$${}_{\{mnij\}} \Longrightarrow \frac{\partial}{\partial X_{mn}} \Big ( X_{ij} \Big ) = \delta_{mi} \delta_{nj} = \Big( \mathbf{I}_{[k]} \otimes \mathbf{I}_{[l]} \Big)_{minj}, $$
 
 where $\delta$ is the Kronecker delta, which satisfies $\delta_{ab} = 1$ if $a
 = b$ and $\delta_{ab} = 0$ otherwise.  Indeed, matrix $\mathbf{X}$ is made of
@@ -109,33 +149,6 @@ display the maximum size of the permutation. The object ``PermuteDims`` in SymPy
 takes the convention of its permutation mapping the new index order into the old index order
 (the old index order of the wrapped expression), this convention is compatible with most of
 the scientific python libraries, but is the opposite of the one used by Wolfram Mathematica.
-
-Derivative is a matrix
-----------------------
-
-In general, you can derive a matrix by a scalar, which means that you construct a new matrix whose
-entry corresponds to the original entry derived by the scalar. You can derive a scalar by a matrix,
-which means that the scalar is derived by each element of the matrix, creating a derivative matrix with corresponding positions.
-Traces and determinants are scalars, but their matrix derivatives may produce complex expressions as they may contain the deriving variable.
-
-Finally, you can derive a matrix $\mathbf{Y}$ by another matrix $\mathbf{X}$, resulting in a 4-dimensional array containing all combinations of
-derivatives of all the elements of $\mathbf{X}$ and $\mathbf{Y}$.
-
-In SymPy, if you derive a matrix expression by a matrix symbol you will
-generally get an array expression, as this has dimension 4.  In some cases, the
-presence of trivial dimensions (i.e. axes of unit size) allows 4-dimensional
-arrays to be represented as an equivalent matrix expression.
-
-For example, if `x` is a matrix of shape `(k, 1)`, that is a vector-shaped
-matrix, the derivative of $x$ by $x$, that is
-
-$${}_{\{mnij\}} \Longrightarrow \frac{\partial}{\partial x_{mn}}x_{ij} = \delta_{mi} \delta_{nj} = \big( \mathbf{I}_{[k]} \otimes \mathbf{I}_{[1]} \big) \delta_{mi} = \big(\mathbf{I}_{[k]}\big)_{mi}$$
-
-is an array of shape `(k, 1, k, 1)` that is equivalent to the identity matrix
-$\mathbf{I}_{[k]}$ of size $k$. Indeed, in the index representation, we notice
-that $\delta_{nj}$ is the scalar unit if trivial dimensions are dropped.
-Similarly $\frac{\partial}{\partial \mathbf{x}}\mathbf{x}'$ has shape
-`(k, 1, 1, k)`, as is still equivalent to the identity matrix $I_k$ of shape (k, k).
 
 Matrix expressions and array expressions
 ----------------------------------------
@@ -226,18 +239,24 @@ it does not perform the derivative in a way other platforms do with the chain ru
 Chain rule
 ~~~~~~~~~~
 
-The idea is to apply the chain rule sequentially, but with a caveat on where
+Chain-rule for matrix derivatives is applied in a similar manner to the
+standard derivative chain rule, but in case the dimension of the intermediate
+gradient increases, the axes have to properly rearranged to the right order.
 
-Given $\mathbf{Y}$ (or $\mathbf{Z}$) as a generic matrix expression, and its
-derivative $\partial \mathbf{Y}$,
-expressions containing $\mathbf{Y}$ can be expanded through the chain rule in terms of $\partial \mathbf{Y}$.
-If you are deriving by a scalar, $\partial \mathbf{Y}$ will be a matrix and the standard matrix expression
-rules apply. Remember that $\partial \mathbf{Y}$ does not commute with $\mathbf{Y}$.
+Given $\mathbf{Y}$ (or $\mathbf{Z}$) as a generic matrix expression, the
+derivative of a function $\partial f(\mathbf{Y})$ can be expanded with the
+chain rule of $f$ to the intermediate expression in terms of $\partial
+\mathbf{Y}$.  The usual non-commuting principle holds for matrices, so the
+relative order of $\partial \mathbf{Y}$ and $\mathbf{Y}$ cannot be changed.
 
-In case you are deriving by a matrix, $\partial \mathbf{Y}$ is a 4-dimensional array,
-the indices coming from $\mathbf{Y}$ will be connected to the chain rule expression, while the deriving
-indices need to be brought in front of all others (remember, we use the convention that the indices of
-the deriving variable precede the indices of the expression to be derived).
+If you are deriving by a scalar, $\partial \mathbf{Y}$ will not increase the
+number of dimensions, so no permutations of axes will be required.
+
+In case you are deriving by a matrix, $\partial \mathbf{Y}$ will be a
+4-dimensional array, the indices coming from $\mathbf{Y}$ will be connected to
+the chain rule expression, while the deriving indices need to be brought in
+front of all others (remember, we use the convention that the indices of the
+deriving variable precede the indices of the expression to be derived).
 
 +---------------------------+---------------------------------+-------------------------------------------------------------------------------------+
 | operation                 | expression                      | chain rule                                                                          |
@@ -252,16 +271,36 @@ the deriving variable precede the indices of the expression to be derived).
 +---------------------------+---------------------------------+-------------------------------------------------------------------------------------+
 | inverse                   | $\mathbf{Y}^{-1}$               | $-\mathbf{Y}^{-1} (\partial \mathbf{Y}) \mathbf{Y}^{-1}$                            |
 +---------------------------+---------------------------------+-------------------------------------------------------------------------------------+
-| trace                     | $\mbox{Tr}(\mathbf{Y})$         | $\mbox{Tr}(\partial\mathbf{Y})$                                                     |
+| trace                     | $\mbox{tr}(\mathbf{Y})$         | $\mbox{tr}(\partial\mathbf{Y})$                                                     |
 +---------------------------+---------------------------------+-------------------------------------------------------------------------------------+
-| determinant               | $\mbox{det}(\mathbf{Y})$        | $\mbox{det}(\mathbf{Y}) \mbox{Tr}(\mathbf{Y}^{-1}\partial\mathbf{Y})$               |
+| determinant               | $\mbox{det}(\mathbf{Y})$        | $\mbox{det}(\mathbf{Y}) \mbox{tr}(\mathbf{Y}^{-1}\partial\mathbf{Y})$               |
 +---------------------------+---------------------------------+-------------------------------------------------------------------------------------+
 | transposition             | $\mathbf{Y}'$                   | $(\partial\mathbf{Y})'$                                                             |
 +---------------------------+---------------------------------+-------------------------------------------------------------------------------------+
 
-in general, while deriving by a matrix $\mathbf{X}$, the expression $\partial \mathbf{Y}$ should be seen as a 4-dimensional array,
-with our convention of the indices of the deriving variable to be in front. This means that the final expression indices
-need to be permuted.
+When differentiating with respect to a matrix $\mathbf{X}$, we treat the
+gradient $\partial \mathbf{Y}$ as a 4-dimensional array whose first two axes
+are the indices of $\mathbf{X}$ (row, column).  After the chain rule step for
+the derivative is computed, these leading axes have to be permuted so that the
+final tensor carries the indices in the order expected by the downstream matrix
+or array expression.
+
+Chain rule in array expressions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When the operands are N-dimensional arrays, matrix multiplication has to be
+rewritten as a tensor product followed by a contraction along the appropriate
+axes.  The chain rule for the tensor product is the familiar one, but
+contractions and diagonal extractions need extra care: their chain rules have
+to shuffle the axes they act on so that the summation or diagonalization
+indices still line up correctly after the derivative.
+
+SymPy computes a matrix derivative by first lifting the whole expression to the
+array level, differentiating there, and then folding the result back into the
+simplest matrix form that respects the original axis structure.
+
+Example: Derivative of the inverse matrix
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 For example, when **deriving the inverse** of matrix expression $\mathbf{Y}$ is
 
@@ -306,18 +345,17 @@ in these cases the identification of a matrix expression is straightforward.
 
 Otherwise, some tricks are used:
 
-* tensor product of two matrix vectors $\mathbf{a} \otimes \mathbf{b}$, of shape (k, 1) both, can be turned into a matrix multiplication over their trivial dimension: $\mathbf{a} \cdot \mathbf{b}'$.
+* tensor product of two matrix vectors $\mathbf{a} \otimes \mathbf{b}$, of shape $[k \times 1]$ both, can be turned into a matrix multiplication over their trivial dimension: $\mathbf{a} \cdot \mathbf{b}'$.
 * identity matrices in a tensor product may be removed. Indeed they increase the dimensions of the array expression by filling the space with null values off the diagonals identified by their axes, they can thus be generally neglected.
-* the triple contraction of two matrices and a matrix-vector may be reinterpreted in terms of matrix multiplication: $\sum \mathbf{A}_{ij} \mathbf{b}_{j0} \mathbf{C}_{jk} \Longrightarrow \mathbf{A} \mbox{diag}(\mathbf{b}) \mathbf{C}$.
+* the triple contraction of two matrices and a matrix-vector may be reinterpreted in terms of matrix multiplication: $\sum \mathbf{A}_{ij} \mathbf{b}_{j0} \mathbf{C}_{jk} \Longrightarrow \mathbf{A}\, \mbox{diag}(\mathbf{b}) \, \mathbf{C}$.
 * repeated indices without summation can be identified as Hadamard products $\mathbf{A}_{ij} \mathbf{B}_{ij} \Longrightarrow \mathbf{A} \circ \mathbf{B}$. This is often the case with ``ArrayDiagonal`` operators.
-* some other expressions may be identified as Hadamard product [TODO: complete]
 * generally, open two-paired contraction lines are matrix multiplications:
 
 $$\sum_{j} \mathbf{A}_{ij} \mathbf{B}_{ij} \Longrightarrow \mathbf{A} \mathbf{B}' $$
 
 * while closed two-paired contraction lines are traces:
 
-$$\sum_{ij} \mathbf{A}_{ij} \mathbf{B}_{ij} \Longrightarrow \mbox{Tr}\Big(\mathbf{A} \mathbf{B}'\Big) $$
+$$\sum_{ij} \mathbf{A}_{ij} \mathbf{B}_{ij} \Longrightarrow \mbox{tr}\Big(\mathbf{A} \mathbf{B}'\Big) $$
 
 * diagonalization of matrix and matrix-vector can be turned into matrix multiplications
 
