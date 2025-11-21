@@ -12,8 +12,6 @@ import keyword
 import textwrap
 import linecache
 import weakref
-
-# import inspect
 import re
 
 # Required despite static analysis claiming it is not used
@@ -968,10 +966,8 @@ or tuple for the function arguments.
     global _lambdify_generated_counter
     filename = '<lambdifygenerated-%s>' % _lambdify_generated_counter
     _lambdify_generated_counter += 1
-    # add a regex-based fix right before the compile(funcstr, filename, 'exec') call in lambdify.
-    # remove the stray dot and any whitespace
+    # add a regex-based fix right before the compile(funcstr, filename, 'exec') call in lambdify to remove the stray dot and any whitespace
     funcstr = re.sub(r'\)\s*\.\s*\(', ')(', funcstr)
-
     c = compile(funcstr, filename, 'exec')
     # single
     exec(c, namespace, funclocals)
@@ -1636,4 +1632,3 @@ def _too_large_for_docstring(expr, limit):
         if i > limit:
             return True
     return False
-
