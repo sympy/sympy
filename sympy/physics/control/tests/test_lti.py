@@ -348,8 +348,9 @@ def test_TransferFunction_functions():
         -s**(S(1)/3)/(2*a1**(S(1)/3)) - sqrt(3)*I*s**(S(1)/3)/(2*a1**(S(1)/3)),
         -s**(S(1)/3)/(2*a1**(S(1)/3)) + sqrt(3)*I*s**(S(1)/3)/(2*a1**(S(1)/3))
     ]
-    assert str(expect3.zeros()) == str([0.125 - 1.11102430216445*sqrt(-0.405063291139241*p**3 - 1.0),
-        1.11102430216445*sqrt(-0.405063291139241*p**3 - 1.0) + 0.125])
+    assert str(expect3.zeros()) == \
+        '[0.125 - 0.125*sqrt(-32.0*p**3 - 79.0), 0.125*sqrt(-32.0*p**3 - 79.0) + 0.125]'
+
     assert tf_.zeros() == [k**(Rational(1, 3)), -k**(Rational(1, 3))/2 - sqrt(3)*I*k**(Rational(1, 3))/2,
         -k**(Rational(1, 3))/2 + sqrt(3)*I*k**(Rational(1, 3))/2]
     assert _TF.zeros() == [CRootOf(x**9 + x + 1, 0), 0, CRootOf(x**9 + x + 1, 1), CRootOf(x**9 + x + 1, 2),
@@ -886,8 +887,7 @@ def test_DiscreteTransferFunction_functions():
     ]
 
     assert str(expect3.zeros()) == \
-        str([0.125 - 1.11102430216445*sqrt(-0.405063291139241*p**3 - 1.0),
-            1.11102430216445*sqrt(-0.405063291139241*p**3 - 1.0) + 0.125])
+        '[0.125 - 0.125*sqrt(-32.0*p**3 - 79.0), 0.125*sqrt(-32.0*p**3 - 79.0) + 0.125]'
 
     assert tf_.zeros() == [
         k**(Rational(1, 3)),
