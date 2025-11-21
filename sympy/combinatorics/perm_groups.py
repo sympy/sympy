@@ -5042,7 +5042,6 @@ class PermutationGroup(Basic):
         Example
         ========
 
-        >>> from sympy.combinatorics import PermutationGroup
         >>> from sympy.combinatorics.homomorphisms import is_isomorphic
         >>> from sympy.combinatorics.named_groups import SymmetricGroup, AlternatingGroup, CyclicGroup
         >>> G = SymmetricGroup(4)
