@@ -26,7 +26,7 @@ from sympy.stats.drv_types import (PoissonDistribution, GeometricDistribution,
                                     DiscreteRV)
 from sympy.testing.pytest import slow, nocache_fail, raises, skip
 from sympy.stats.symbolic_probability import Expectation
-from sympy.functions.combinatorial.factorials import FallingFactorial
+from sympy.functions.combinatorial.factorials import FallingFactorial, factorial
 
 x = Symbol('x')
 
@@ -73,7 +73,7 @@ def test_FlorySchulz():
     x = FlorySchulz('x', a)
     assert E(x) == (2 - a)/a
     assert (variance(x) - 2*(1 - a)/a**2).simplify() == S(0)
-    assert density(x)(z) == a**2*z*(1 - a)**(z - 1)
+    assert density(x).pdf(z) == a**2*z*(1 - a)**(z - 1)
 
 
 @slow
@@ -90,6 +90,65 @@ def test_GeometricDistribution():
     X = Geometric('X', Rational(1, 5))
     Y = Geometric('Y', Rational(3, 10))
     assert coskewness(X, X + Y, X + 2*Y).simplify() == sqrt(230)*Rational(81, 1150)
+
+    # Test that density returns 0 for values outside the support (issue #20031)
+    # The support for Geometric is positive integers {1, 2, 3, ...}
+    assert density(X)(0) == 0  # zero is not in support
+    assert density(X)(-1) == 0  # negative integers not in support
+    assert density(X)(-5) == 0  # negative integers not in support
+    assert density(X)(S(1)/2) == 0  # non-integer not in support
+    assert density(X)(S(5)/2) == 0  # non-integer not in support
+    # Test that density is correct for values inside the support
+    assert density(X)(1) == Rational(1, 5)
+    assert density(X)(2) == Rational(4, 25)
+    assert density(X)(3) == Rational(16, 125)
+
+
+def test_discrete_distribution_call_vs_pdf():
+    """
+    Test the difference between __call__ and .pdf() methods.
+
+    __call__() should return Piecewise for symbolic arguments to enforce
+    support checking, while .pdf() should return the raw formula.
+    """
+    from sympy.functions.elementary.piecewise import Piecewise
+
+    # Test with Geometric distribution
+    X = Geometric('X', Rational(1, 5))
+    z = Symbol('z')  # symbolic variable without assumptions
+
+    # __call__ should return Piecewise for symbolic argument
+    call_result = density(X)(z)
+    assert isinstance(call_result, Piecewise)
+
+    # .pdf() should return the simple formula without Piecewise
+    pdf_result = density(X).pdf(z)
+    assert not isinstance(pdf_result, Piecewise)
+    assert pdf_result == (Rational(4, 5))**(z - 1) / 5
+
+    # Test with Poisson distribution
+    Y = Poisson('Y', 3)
+    k = Symbol('k')
+
+    # __call__ should return Piecewise for symbolic argument
+    call_result_poisson = density(Y)(k)
+    assert isinstance(call_result_poisson, Piecewise)
+
+    # .pdf() should return the simple formula
+    pdf_result_poisson = density(Y).pdf(k)
+    assert not isinstance(pdf_result_poisson, Piecewise)
+    assert pdf_result_poisson == 3**k * exp(-3) / factorial(k)
+
+    # Test with symbolic argument that has assumptions
+    z_pos_int = Symbol('z', positive=True, integer=True)
+    # With assumptions, __call__ can determine support membership and simplifies
+    call_result_assumed = density(X)(z_pos_int)
+    # Should simplify to the formula since z is known to be in support
+    assert call_result_assumed == (Rational(4, 5))**(z_pos_int - 1) / 5
+
+    # .pdf() should always return the simple formula regardless of assumptions
+    pdf_result_assumed = density(X).pdf(z_pos_int)
+    assert pdf_result_assumed == (Rational(4, 5))**(z_pos_int - 1) / 5
 
 
 def test_Hermite():
@@ -144,7 +203,7 @@ def test_skellam():
     z = Symbol('z')
     X = Skellam('x', mu1, mu2)
 
-    assert density(X)(z) == (mu1/mu2)**(z/2) * \
+    assert density(X).pdf(z) == (mu1/mu2)**(z/2) * \
         exp(-mu1 - mu2)*besseli(z, 2*sqrt(mu1*mu2))
     assert skewness(X).expand() == mu1/(mu1*sqrt(mu1 + mu2) + mu2 *
                 sqrt(mu1 + mu2)) - mu2/(mu1*sqrt(mu1 + mu2) + mu2*sqrt(mu1 + mu2))
