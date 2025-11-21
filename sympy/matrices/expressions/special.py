@@ -328,7 +328,7 @@ class OneMatrix(MatrixExpr):
 
 class MatrixUnit(MatrixExpr):
     """
-    Matrix with only one nonzero entry with value 1.
+    Matrix with only one nonzero entry with value 1. Also called single-entry matrix.
 
     https://en.wikipedia.org/wiki/Matrix_unit
 

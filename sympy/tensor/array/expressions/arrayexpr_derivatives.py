@@ -2,7 +2,7 @@ import operator
 from functools import reduce, singledispatch
 
 from sympy.core.singleton import S
-from sympy import MatrixBase, derive_by_array, Integer
+from sympy import MatrixBase, derive_by_array, Integer, Determinant, Function
 from sympy.tensor.array import NDimArray
 from sympy.core.expr import Expr
 from sympy.matrices.expressions.hadamard import HadamardProduct
@@ -35,6 +35,14 @@ def _(expr: Expr, x: _ArrayExpr):
             return MatrixUnit(x.shape[0], x.shape[1], expr.i, expr.j)
         raise NotImplementedError("algorithm not implemented for this case")
     return ZeroArray(*x.shape)
+
+
+@array_derive.register(Function)
+def _(expr: Function, x: _ArrayExpr):
+    if len(expr.args) != 1:
+        raise NotImplementedError("only 1-parameter functions are supported")
+    dexpr = array_derive(expr.args[0], x)
+    return _array_tensor_product(expr.fdiff(), dexpr)
 
 
 @array_derive.register(ArrayTensorProduct)
@@ -86,6 +94,16 @@ def _(expr: MatrixSymbol, x: _ArrayExpr):
             [0, 2, 1, 3]
         )
     return ZeroArray(*(x.shape + expr.shape))
+
+
+@array_derive.register(Determinant)
+def _(expr: Determinant, x: Expr):
+    arg = expr.arg
+    arg_inverse = arg.inv()
+    darg = array_derive(arg, x)
+    tp = _array_tensor_product(expr, arg_inverse, darg)
+    tc = _array_contraction(tp, (0, 5), (1, 4))
+    return tc
 
 
 @array_derive.register(Identity)
@@ -150,6 +168,9 @@ def _(expr: ArrayElementwiseApplyFunc, x: Expr):
 @array_derive.register(MatrixExpr)
 def _(expr: MatrixExpr, x: Expr):
     cg = convert_matrix_to_array(expr)
+    if cg == expr:
+        # Avoid infinite looping:
+        raise NotImplementedError()
     return array_derive(cg, x)
 
 
