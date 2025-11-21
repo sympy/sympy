@@ -103,6 +103,15 @@ def test_log2():
 def test_fma():
     x, y, z = symbols('x y z')
 
+    # Eval - numeric evaluation
+    assert fma(2, 3, 4) == 10
+
+    # Eval - evaluate=False should not auto-simplify
+    assert fma(2, 3, 4, evaluate=False) == fma(2, 3, 4, evaluate=False)
+
+    # Eval - symbolic constants should not auto-simplify
+    assert fma(pi, 2, 3) == fma(pi, 2, 3)
+
     # Expand
     assert fma(x, y, z).expand(func=True) - x*y - z == 0
 
@@ -145,6 +154,15 @@ def test_log10():
 def test_Cbrt():
     x = Symbol('x')
 
+    # Eval - numeric evaluation
+    assert Cbrt(8) == 2
+
+    # Eval - evaluate=False should not auto-simplify
+    assert Cbrt(8, evaluate=False) == Cbrt(8, evaluate=False)
+
+    # Eval - symbolic constants should not auto-simplify
+    assert Cbrt(pi) == Cbrt(pi)
+
     # Expand
     assert Cbrt(x).expand(func=True) - x**Rational(1, 3) == 0
 
@@ -168,6 +186,18 @@ def test_Cbrt_evaluate_false():
 
 def test_Sqrt():
     x = Symbol('x')
+
+    # Eval - numeric evaluation for nonnegative numbers
+    assert Sqrt(4) == 2
+
+    # Eval - negative numbers should remain unevaluated
+    assert Sqrt(-2) == Sqrt(-2)
+
+    # Eval - evaluate=False should not auto-simplify
+    assert Sqrt(4, evaluate=False) == Sqrt(4, evaluate=False)
+
+    # Eval - symbolic constants should not auto-simplify
+    assert Sqrt(pi) == Sqrt(pi)
 
     # Expand
     assert Sqrt(x).expand(func=True) - x**S.Half == 0
@@ -194,6 +224,15 @@ def test_Sqrt_evaluate_false():
 
 def test_hypot():
     x, y = symbols('x y')
+
+    # Eval - numeric evaluation
+    assert hypot(3, 4) == 5
+
+    # Eval - evaluate=False should not auto-simplify
+    assert hypot(3, 4, evaluate=False) == hypot(3, 4, evaluate=False)
+
+    # Eval - symbolic constants should not auto-simplify
+    assert hypot(pi, 4) == hypot(pi, 4)
 
     # Expand
     assert hypot(x, y).expand(func=True) - (x**2 + y**2)**S.Half == 0
