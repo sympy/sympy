@@ -67,7 +67,7 @@ from sympy.functions.special.hyper import hyper, meijerg
 from sympy.functions.special.singularity_functions import SingularityFunction
 from .integrals import Integral
 from sympy.logic.boolalg import And, Or, BooleanAtom, Not, BooleanFunction
-from sympy.polys import cancel, factor
+from sympy.polys import cancel, factor, Poly
 from sympy.utilities.iterables import multiset_partitions
 from sympy.utilities.misc import debug as _debug
 from sympy.utilities.misc import debugf as _debugf
@@ -418,6 +418,13 @@ def _find_splitting_points(expr, x):
             return
         if expr.is_Atom:
             return
+        if expr.is_Add and expr.is_polynomial(x):
+            poly = Poly(expr, x)
+            if poly.degree() == 2:
+                a_coeff, b_coeff = poly.all_coeffs()[:2]
+                if a_coeff != 0 and b_coeff != 0:
+                    res.add(-b_coeff/(2*a_coeff))
+                    return
         for argument in expr.args:
             compute_innermost(argument, res)
     innermost = set()
