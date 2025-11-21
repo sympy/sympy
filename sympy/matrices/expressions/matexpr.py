@@ -471,6 +471,9 @@ class MatrixExpr(Expr):
         from .applyfunc import ElementwiseApplyFunction
         return ElementwiseApplyFunction(func, self)
 
+    def _eval_subs(self, old, new):
+        return None
+
 
 @dispatch(MatrixExpr, Expr)
 def _eval_is_eq(lhs, rhs): # noqa:F811
