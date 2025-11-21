@@ -1253,8 +1253,7 @@ class _EvaluatorPrinter:
 
         funclines = [funcsig]
         funclines.extend(['    ' + line for line in funcbody])
-        
-        #add a regex-based fix to remove the stray dot and any whitespace without tampering inside lambdify
+        #add a regex-based fix to remove the stray dot and any whitespace without tampering inside lambdiff
         return re.sub(r'\)\s*\.\s*\(', ')(', '\n'.join(funclines) + '\n')
 
     @classmethod
