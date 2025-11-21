@@ -204,6 +204,8 @@ class BasisDependentAdd(BasisDependent, Add):
                 continue
             # Else, update components accordingly
             for x in arg.components:
+                if not hasattr(x, '_base_instance'):
+                    continue
                 components[x] = components.get(x, 0) + arg.components[x]
 
         temp = list(components.keys())
