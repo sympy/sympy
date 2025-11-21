@@ -13,6 +13,9 @@ import textwrap
 import linecache
 import weakref
 
+# import inspect
+import re
+
 # Required despite static analysis claiming it is not used
 from sympy.external import import_module # noqa:F401
 from sympy.utilities.exceptions import sympy_deprecation_warning
@@ -965,7 +968,12 @@ or tuple for the function arguments.
     global _lambdify_generated_counter
     filename = '<lambdifygenerated-%s>' % _lambdify_generated_counter
     _lambdify_generated_counter += 1
+    # add a regex-based fix right before the compile(funcstr, filename, 'exec') call in lambdify.
+    # remove the stray dot and any whitespace
+    funcstr = re.sub(r'\)\s*\.\s*\(', ')(', funcstr)
+
     c = compile(funcstr, filename, 'exec')
+    # single
     exec(c, namespace, funclocals)
     # mtime has to be None or else linecache.checkcache will remove it
     linecache.cache[filename] = (len(funcstr), None, funcstr.splitlines(True), filename) # type: ignore
@@ -1628,3 +1636,4 @@ def _too_large_for_docstring(expr, limit):
         if i > limit:
             return True
     return False
+
