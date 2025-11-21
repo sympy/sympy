@@ -4771,6 +4771,8 @@ class AlphaStableDistribution(SingleContinuousDistribution):
     @property
     def support(self):
         return S.Reals
+
+
 def AlphaStable(name, alpha, beta, scale, location):
     """
     Create an Alpha-Stable random variable.
@@ -4795,8 +4797,30 @@ def AlphaStable(name, alpha, beta, scale, location):
 
     Examples
     ========
+
     >>> from sympy.stats import AlphaStable, density
-    >>> X = AlphaStable('X', 1, 0, 1, 0)  # Cauchy distribution
-    >>> density(X)
+    >>> from sympy import Symbol
+
+    # Cauchy distribution (alpha=1, beta=0)
+    >>> X = AlphaStable('X', 1, 0, 1, 0)
+    >>> density(X).set
+    Interval(-oo, oo)
+
+    # Gaussian case (alpha=2)
+    >>> Y = AlphaStable('Y', 2, 0, 1, 0)
+    >>> density(Y)(0)
+    sqrt(2)/(2*sqrt(pi))
+
+    # For general parameters, PDF may not have closed form
+    >>> from sympy import Rational
+    >>> Z = AlphaStable('Z', Rational(3,2), 0, 1, 0)
+    >>> density(Z)
+    AlphaStableDistribution(3/2, 0, 1, 0)
+
+    References
+    ==========
+
+     [1] https://en.wikipedia.org/wiki/Stable_distribution
+
     """
     return rv(name, AlphaStableDistribution, (alpha, beta, scale, location))
