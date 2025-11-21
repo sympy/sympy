@@ -561,18 +561,7 @@ class Function(Application, Expr):
                 return Float(imp(*[i.evalf(prec) for i in self.args]), prec)
             except (TypeError, ValueError):
                 return None
-        elif any(arg.free_symbols for arg in args): # mpmath will not handle symbols
-            new_args = []
-            for arg in args:
-                try:
-                    new_arg = arg.evalf(prec, maxn=1)
-                    if new_arg is None or new_arg == arg: # could not evalf hence fallback to original
-                        new_args.append(arg)
-                    else:
-                        new_args.append(new_arg)
-                except (TypeError, ValueError, AttributeError):
-                    new_args.append(arg) # Use original args even in case of exception.
-            return self.func(*new_args)
+
         # Convert all args to mpf or mpc
         # Convert the arguments to *higher* precision than requested for the
         # final result.
@@ -601,7 +590,23 @@ class Function(Application, Expr):
             if any(bad(a) for a in args):
                 raise ValueError  # one or more args failed to compute with significance
         except ValueError:
-            return
+            from sympy.functions.elementary.trigonometric import TrigonometricFunction
+            if isinstance(self, TrigonometricFunction):
+                return # If trig function is encountered, leave as it is to preserve structure.
+            if all(isinstance(arg, Expr) for arg in self.args): # mpmath will not handle symbols
+                dps = prec_to_dps(prec) # Needed to match evalf behavior (May lead to precision mismatch without it.)
+                new_args = []
+                for arg in args:
+                    try:
+                        new_arg = arg.evalf(dps, maxn=1)
+                        if new_arg is None or new_arg == arg: # could not evalf hence fallback to original
+                            new_args.append(arg)
+                        else:
+                            new_args.append(new_arg)
+                    except (TypeError, ValueError, AttributeError):
+                        new_args.append(arg) # Use original args even in case of exception.
+                return self.func(*new_args)
+            return  # Not all args are Expr (might be tuples, etc.), so just return from here.
 
         with mpmath.workprec(prec):
             v = func(*args)
