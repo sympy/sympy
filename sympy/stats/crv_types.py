@@ -4799,7 +4799,7 @@ def AlphaStable(name, alpha, beta, scale, location):
     ========
 
     >>> from sympy.stats import AlphaStable, density
-    >>> from sympy import Symbol
+
 
     # Cauchy distribution (alpha=1, beta=0)
     >>> X = AlphaStable('X', 1, 0, 1, 0)
