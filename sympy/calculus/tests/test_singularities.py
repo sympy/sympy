@@ -3,7 +3,7 @@ from sympy.core.singleton import S
 from sympy.core.symbol import Symbol, Dummy
 from sympy.core.function import Lambda
 from sympy.functions.elementary.exponential import (exp, log)
-from sympy.functions.elementary.trigonometric import sec, csc
+from sympy.functions.elementary.trigonometric import sec, csc, tan
 from sympy.functions.elementary.hyperbolic import (coth, sech,
                                                    atanh, asech, acoth, acsch)
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -120,6 +120,33 @@ def test_is_monotonic():
 
 
 def test_issue_23401():
+    """Test monotonicity with poles - issue #23401."""
     x = Symbol('x')
     expr = (x + 1)/(-1.0e-3*x**2 + 0.1*x + 0.1)
     assert is_increasing(expr, Interval(1,2), x)
+
+
+def test_monotonicity_with_interior_singularities():
+    """Test that functions with interior singularities are not monotonic.
+
+    This tests the fix for issue #28578 where is_monotonic incorrectly
+    returned True for functions with poles inside the interval.
+    """
+    # Issue #28578: tan(x) has poles at pi/2 and 3*pi/2 inside [0, 5]
+    assert is_monotonic(tan(x), Interval(0, 5), x) is False
+    assert is_increasing(tan(x), Interval(0, 5), x) is False
+
+    # 1/x has a pole at x=0 inside [-1, 1]
+    assert is_monotonic(1/x, Interval(-1, 1), x) is False
+    assert is_increasing(1/x, Interval(-1, 1), x) is False
+    assert is_decreasing(1/x, Interval(-1, 1), x) is False
+
+    # But tan(x) is monotonic on intervals without interior singularities
+    assert is_increasing(tan(x), Interval(0, 1), x) is True
+    assert is_increasing(tan(x), Interval.open(-pi/2, pi/2), x) is True
+
+    # 1/x is monotonic on intervals that don't contain the pole
+    assert is_decreasing(1/x, Interval.open(0, 1), x) is True
+    assert is_decreasing(1/x, Interval(-1, Rational(-1, 10)), x) is True
+    assert not is_decreasing(1/x, Interval(-1, 1), x)
+    assert not is_increasing(1/x, Interval(-1, 1), x)
