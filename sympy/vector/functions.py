@@ -424,6 +424,11 @@ def matrix_to_vector(matrix, system):
     outvec = Vector.zero
     vects = system.base_vectors()
     for i, x in enumerate(matrix):
+        # --- FIX for Issue #28627 ---
+        # Float(0.0) may turn into special Zero() object.
+        # Convert any "zero-like" element to Python int 0.
+        if hasattr(x, "is_zero") and x.is_zero:
+            x = 0
         outvec += x * vects[i]
     return outvec
 
