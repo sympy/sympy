@@ -5,7 +5,7 @@ Matrix and array expressions in SymPy
 -------------------------------------
 
 SymPy provides matrices and general N-dimensional arrays through the
-sub-packages ``sympy.matrices`` and ``sympy.tensor.array``, respectively. Each
+modules ``sympy.matrices`` and ``sympy.tensor.array``, respectively. Each
 of these two modules is component-explicit, meaning that every element is stored and directly
 accessible, so the object explicitly contains the full set of component values
 rather than representing them implicitly.
@@ -13,7 +13,7 @@ rather than representing them implicitly.
 SymPy also supports symbolic matrix expressions and array expressions through
 dedicated modules. These represent matrices and arrays abstractly as symbols,
 defined solely by an identifying name (such as $X$ or $M$) and a shape tuple. For
-matrices, the shape is always a 2-element tuple. The dimensions within this
+matrices, the shape is always a 2-element tuple, representing the number of rows and columns. The dimensions within this
 tuple can be either fixed integers (for known sizes) or arbitrary symbolic
 expressions (when dimensions are undetermined).
 
@@ -23,7 +23,7 @@ expression trees. Arithmetic operations (addition, multiplication, transpose,
 etc.) are formally applied but frozen as symbolic representations rather than
 computed results. This aligns with conventional mathematical notation in
 textbooks, where expressions like ``M*N.T*P`` (also written as
-$\mathbf{M}\mathbf{N}^\top \mathbf{P}$) represent abstract matrix multiplication rather
+$\mathbf{M}\mathbf{N}^{T} \mathbf{P}$) represent abstract matrix multiplication rather
 than explicit numerical results.
 
 Array expressions follow analogous principles, with the distinction that their
@@ -45,137 +45,52 @@ references collectively span the entire matrix/array, facilitating
 component-wise operations while preserving the abstract nature of the symbolic
 expression.
 
-Matrix derivatives
-------------------
+Using SymPy code:
 
-You can differentiate a matrix with respect to a scalar by differentiating each
-element individually. Similarly, differentiating a scalar with respect to a
-matrix yields a matrix of the same shape, where each entry is the derivative of
-the scalar with respect to the corresponding matrix element.
+>>> from sympy import symbols, MatrixSymbol
+>>> from sympy.tensor.array.expressions import ArraySymbol
+>>> i, j, k, l, m = symbols("i j k l m")
+>>> d = symbols("d")
+>>> M = MatrixSymbol("M", d, d)
+>>> M.shape
+(d, d)
+>>> M[i, j]
+M[i, j]
+>>> A = ArraySymbol("A", (d, d, d))
+>>> A.shape
+(d, d, d)
+>>> A[k, l, m]
+A[k, l, m]
 
-While the trace and determinant of a matrix are scalars, their derivatives with
-respect to a matrix variable can yield nontrivial expressions involving the
-matrix itself.
-
-Differentiating a matrix $\mathbf{Y}$ with respect to another matrix
-$\mathbf{X}$ results in a 4-dimensional array (sometimes also called a tensor,
-though tensors refer to differential geometry in SymPy), where each entry is
-the partial derivative of an element of $\mathbf{Y}$ with respect to an element
-of $\mathbf{X}$.
-
-Derivatives extend naturally through index notation.  Differentiating a matrix
-expression $A_{ij}$ by matrix $X_{mn}$ produces a four-dimensional array
-representing:
-
-$$D_{mnij} = \frac{\partial}{\partial X_{mn}} \Big (A_{ij} \Big ).$$
-
-SymPy adopts a denominator-first index ordering for derivatives, positioning
-differentiation variable indices ($mn$) before derivand indices ($ij$).  This
-${}_{\{mnij\}}$ convention aligns with Wolfram Mathematica but differs from
-PyTorch/NumPy.  This structure applies universally: scalar-by-matrix
-derivatives produce matrices, matrix-by-scalar derivatives produce matrices,
-and matrix-by-matrix derivatives yield rank-4 arrays reflecting the
-relationship between all component pairs.
-
-To explicitly track index reading order, which controls axis transpositions in
-multi-dimensional representations, we will use the convention of mapping the index
-sequence to the full expression. For example:
-
-$${}_{\{mnij\}} \Longrightarrow\frac{\partial}{\partial X_{mn}} \Big ( A_{ij} \Big )$$
-
-this shows that
-differentiation indices ($mn$) precede derivand indices ($ij$).  Crucially,
-this notation inherently captures index permutations without explicit
-operators. For example:
-
-$${}_{\{ij\}} \Longrightarrow \Big(M^T\Big)_{ij} = M_{ji}$$
-
-demonstrates how transposition is encoded solely through index-order
-reversal, the ${}_{\{ij\}}$ mapping of $M_{ji}$ directly yields the
-component expression of the transposition.
-
-Reconstructing a matrix expression
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-In SymPy, differentiating a matrix expression with respect to a matrix symbol
-normally yields a rank-4 array.  When one or more of its axes happen to be
-singleton (dimension 1), the tensor collapses to a lower-rank object; SymPy
-automatically detects this and returns the simplest equivalent matrix
-expression instead of keeping the full 4-D form.
-
-For example, let $\mathbf{x}$ be a matrix-vector of shape $[k \times 1]$, that is a
-column-vector disguised as a matrix.  The derivative of $\mathbf{x}$ with
-respect to $\mathbf{x}$ is then the 4-D identity array, but because the second
-axis of both the numerator and the denominator has length 1, the result
-collapses to the $k \times k$ identity matrix $\mathbf{I}_{[k]}$ instead of
-keeping the full tensor form.
-
-$$\left[{}_{\{mnij\}} \Longrightarrow \frac{\partial}{\partial x_{mn}}x_{ij} = \delta_{mi} \delta_{nj} = \big( \mathbf{I}_{[k]} \otimes \mathbf{I}_{[1]} \big)_{minj}\right] \rightarrow \Big[ {}_{\{mi\}}\Longrightarrow \big(\mathbf{I}_{[k]}\big)_{mi}\Big]$$
-
-The second and fourth axes are singletons, appearing in the derivative as
-scalar identity matrix $\mathbf{I}_{[1]}$, equivalent to scalar unit.  In index
-notation they only survive in a Kronecker $\delta_{nj}$.
-
-Likewise, $\frac{\partial}{\partial \mathbf{x}}\mathbf{x}'$ has shape
-$[k \times 1 \times 1 \times k]$, and collapses again to the same $[k \times k]$ identity matrix $\mathbf{I}_{[k]}$.
-
-Derive matrix by itself
-~~~~~~~~~~~~~~~~~~~~~~~
-
-As an example, the derivative of $[k \times l]$ matrix $\mathbf{X}$ by itself is given by identity
-relationships between indices:
-
-$${}_{\{mnij\}} \Longrightarrow \frac{\partial}{\partial X_{mn}} \Big ( X_{ij} \Big ) = \delta_{mi} \delta_{nj} = \Big( \mathbf{I}_{[k]} \otimes \mathbf{I}_{[l]} \Big)_{minj}, $$
-
-where $\delta$ is the Kronecker delta, which satisfies $\delta_{ab} = 1$ if $a
-= b$ and $\delta_{ab} = 0$ otherwise.  Indeed, matrix $\mathbf{X}$ is made of
-element variables that are to be considered different from one another, so
-$X_{mn}$ is the same variable as $X_{ij}$ if and only if $m=i$ and $n=j$.  The
-previous expression also shows how the product of two Kronecker deltas on four
-different free indices may be viewed as the tensor product of two identity
-matrices, with the free index order properly permuted.
-
-This matrix derivative returns a 4-dimensional array expression if computed in
-SymPy
-
->>> from sympy import MatrixSymbol
->>> X = MatrixSymbol("X", 3, 3)
->>> X.diff(X)
-PermuteDims(ArrayTensorProduct(I, I), (3)(1 2))
-
-The permutation `(3)(1 2)` maps ${}_{\{mnij\}}$ into ${}_{\{minj\}}$. Remember
-that SymPy uses zero offset and the trivial cycle `(3)` is just a trick to
-display the maximum size of the permutation. The object ``PermuteDims`` in SymPy
-takes the convention of its permutation mapping the new index order into the old index order
-(the old index order of the wrapped expression), this convention is compatible with most of
-the scientific python libraries, but is the opposite of the one used by Wolfram Mathematica.
-
-Matrix expressions and array expressions
-----------------------------------------
+Operations on matrix and array expressions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The matrix expression module in SymPy reflects the common convention used in
 mathematics to represent matrices when indices are not explicit. Therefore,
 ``M*N`` or `\mathbf{M}\cdot\mathbf{N}` is the matrix multiplication, or in
-index-explicit form $\sum_j M_{ij} N_{jk}$ with final free indices $ik$.
-Common operators such as determinant, trace, hadamard product and hadamard
+index-explicit form $\sum_j M_{ij} N_{jk}$ with final free indices ${}_{\{ik\}}$.
+Common operators such as determinant, trace, Hadamard product and Hadamard
 power are provided.  Applying a function to a matrix is meant in a mathematical
-way, not elementwise.  Matrix expressions has the ``.applyfunc`` method for
-element-wise functions acting on their components.
+way, not elementwise. Therefore ``exp(M)`` or `\exp(\mathbf{M})` represents the matrix
+exponential of matrix $\mathbf{M}$. For the elementwise function application, matrix expressions have the ``.applyfunc`` method for
+element-wise functions acting on their components, so applying the exponential
+to every element of matrix $\mathbf{M}$ is achieved by calling ``M.applyfunc(exp)``,
+commonly represented as $\exp_{\circ}(\mathbf{M})$ to distinguish it from the matrix function.
 
 The array expressions module on the other hand is meant to represent general
 operations on arrays.
 
-+---------------------------+-------------------------------------------+-----------------------------------------------------------------------------------------------------------+
-| operation name            | representation                            | index-explicit equivalent                                                                                 |
-+===========================+===========================================+===========================================================================================================+
-| tensor product            | $A \otimes B$                             | $A_{ij} B_{kl}$                                                                                           |
-+---------------------------+-------------------------------------------+-----------------------------------------------------------------------------------------------------------+
-| contraction               | $A$ on axes $a$, $b$                      | $A_{i_{1} i_{2} \ldots i_{a} \ldots i_{b} \ldots } \Rightarrow \sum_j A_{i_{1} \ldots j \ldots j \ldots}$ |
-+---------------------------+-------------------------------------------+-----------------------------------------------------------------------------------------------------------+
-| diagonal                  | $A$ on axes $a$, $b$                      | $A_{i_{1} i_{2} \ldots i_{a} \ldots i_{b} \ldots } \Rightarrow A_{i_{1} \ldots j \ldots j \ldots}$        |
-+---------------------------+-------------------------------------------+-----------------------------------------------------------------------------------------------------------+
-| permutation of dimensions | permutation $\sigma$ on axes of $A$       | $A_{i_{1} i_{2} \ldots} \Rightarrow A_{i_{\sigma(1)} i_{\sigma(2) \ldots}}$                               |
-+---------------------------+-------------------------------------------+-----------------------------------------------------------------------------------------------------------+
++---------------------------+-------------------------+-------------------------------------------+-----------------------------------------------------------------------------------------------------------+
+| operation name            | SymPy object            | representation                            | index-explicit equivalent                                                                                 |
++===========================+=========================+===========================================+===========================================================================================================+
+| tensor product            | ``ArrayTensorProduct``  | $A \otimes B$                             | $A_{ij} B_{kl}$                                                                                           |
++---------------------------+-------------------------+-------------------------------------------+-----------------------------------------------------------------------------------------------------------+
+| contraction               | ``ArrayContraction``    | $A$ on axes $a$, $b$                      | $A_{i_{1} i_{2} \ldots i_{a} \ldots i_{b} \ldots } \Rightarrow \sum_j A_{i_{1} \ldots j \ldots j \ldots}$ |
++---------------------------+-------------------------+-------------------------------------------+-----------------------------------------------------------------------------------------------------------+
+| diagonal                  | ``ArrayDiagonal``       | $A$ on axes $a$, $b$                      | $A_{i_{1} i_{2} \ldots i_{a} \ldots i_{b} \ldots } \Rightarrow A_{i_{1} \ldots j \ldots j \ldots}$        |
++---------------------------+-------------------------+-------------------------------------------+-----------------------------------------------------------------------------------------------------------+
+| permutation of dimensions | ``PermuteDims``         | permutation $\sigma$ on axes of $A$       | $A_{i_{1} i_{2} \ldots} \Rightarrow A_{i_{\sigma(1)} i_{\sigma(2) \ldots}}$                               |
++---------------------------+-------------------------+-------------------------------------------+-----------------------------------------------------------------------------------------------------------+
 
 These operators on array expressions are handled in SymPy by expression tree
 nodes ``ArrayTensorProduct``, ``ArrayContraction``, ``ArrayDiagonal``,
@@ -206,19 +121,190 @@ PermuteDims(ArrayContraction(A, (0, 1), (2, 3)), (0 2 1 3))
 Matrix expressions can be represented by array expressions using these
 operator, but the converse is not always true.
 
-+---------------------------+-------------------------------------------+------------------------------------------------+----------------------------------------------------------------------------------+
-| matrix operation          | matrix expression form                    | index form                                     | array expression form                                                            |
-+===========================+===========================================+================================================+==================================================================================+
-| matrix multiplication     | $\mathbf{M} \mathbf{N}$                   | ${}_{\{ij\}} \Rightarrow \sum_k M_{ik} N_{kj}$ | contraction: $M \otimes N$ on 2nd and 3rd axes                                   |
-+---------------------------+-------------------------------------------+------------------------------------------------+----------------------------------------------------------------------------------+
-| trace                     | $\mbox{tr}(\mathbf{M})$                   | ${}_{\{\}} \Rightarrow \sum_i M_{ii}$          | contraction: $M$ on 1nd and 2rd axes                                             |
-+---------------------------+-------------------------------------------+------------------------------------------------+----------------------------------------------------------------------------------+
-| diagonal                  | $\mbox{diag}(\mathbf{M})$                 | ${}_{\{i\}} \Rightarrow  M_{ii}$               | diagonalize: $M$ on 1nd and 2rd axes                                             |
-+---------------------------+-------------------------------------------+------------------------------------------------+----------------------------------------------------------------------------------+
-| transposition             | $\mathbf{M}'$                             | ${}_{\{ij\}} \Rightarrow M_{ji}$               | permutation: $M$ on 1nd and 2rd axes                                             |
-+---------------------------+-------------------------------------------+------------------------------------------------+----------------------------------------------------------------------------------+
-| Hadamard product          | $\mathbf{M} \circ \mathbf{N}$             | ${}_{\{ij\}} \Rightarrow M_{ij} N_{ij}$        | diagonalize: $M \otimes N$ on 1st-3rd axes and 2nd-4th axes                      |
-+---------------------------+-------------------------------------------+------------------------------------------------+----------------------------------------------------------------------------------+
++---------------------------+-------------------------------------------+------------------------------------------------------------+----------------------------------------------------------------------------------+
+| matrix operation          | matrix expression form                    | index form                                                 | array expression form                                                            |
++===========================+===========================================+============================================================+==================================================================================+
+| matrix multiplication     | $\mathbf{M} \mathbf{N}$                   | ${}_{\{ij\}} \Rightarrow \sum_k M_{ik} N_{kj}$             | contraction: $M \otimes N$ on 2nd and 3rd axes                                   |
++---------------------------+-------------------------------------------+------------------------------------------------------------+----------------------------------------------------------------------------------+
+| trace                     | $\mbox{tr}(\mathbf{M})$                   | ${}_{\{\}} \Rightarrow \sum_i M_{ii}$                      | contraction: $M$ on 1st and 2nd axes                                             |
++---------------------------+-------------------------------------------+------------------------------------------------------------+----------------------------------------------------------------------------------+
+| diagonal                  | $\mbox{diag}(\mathbf{M})$                 | ${}_{\{i\}} \Rightarrow  M_{ii}$                           | diagonalize: $M$ on 1st and 2nd axes                                             |
++---------------------------+-------------------------------------------+------------------------------------------------------------+----------------------------------------------------------------------------------+
+| transposition             | $\mathbf{M}'$                             | ${}_{\{ij\}} \Rightarrow M_{ji}$                           | permutation: $M$ on 1st and 2nd axes                                             |
++---------------------------+-------------------------------------------+------------------------------------------------------------+----------------------------------------------------------------------------------+
+| Hadamard product          | $\mathbf{M} \circ \mathbf{N}$             | ${}_{\{ij\}} \Rightarrow M_{ij} N_{ij}$                    | diagonalize: $M \otimes N$ on 1st-3rd axes and 2nd-4th axes                      |
++---------------------------+-------------------------------------------+------------------------------------------------------------+----------------------------------------------------------------------------------+
+| Kronecker product         | $\mathbf{M} \boxtimes \mathbf{N}$         | ${}_{\{m=id_1+k,n=jd_2+l\}} \Longrightarrow A_{ij} B_{kl}$ | permute $M \otimes N$ on 2nd and 3rd axes, then reshape                          |
++---------------------------+-------------------------------------------+------------------------------------------------------------+----------------------------------------------------------------------------------+
+
+Kronecker product versus tensor product
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In SymPy, the Kronecker product $\boxtimes$ and tensor product $\otimes$ are two ways of seeing the same underlying operation.
+Given matrices $\mathbf{A}$ and $\mathbf{B}$, their elements can be combined as
+
+$$\mathbf{A} \otimes \mathbf{B} \Longrightarrow A_{ij} B_{kl} $$
+
+When representing this expression as an array, there are different approaches depending on the index-order and whether to reshape the 4-dimensional
+array as a 2-dimensional array by joining dimensions.
+
+The array tensor product as implemented by ``ArrayTensorProduct`` and ``tensorproduct`` simply nests the arrays,
+maintaining the index-order ${}_{\{ijkl\}}$, and produces:
+
+$$\left[
+\begin{matrix}\left[\begin{matrix}{A}_{0,0} {B}_{0,0} & {A}_{0,0} {B}_{0,1}\\{A}_{0,0} {B}_{1,0} & {A}_{0,0} {B}_{1,1}\end{matrix}\right] & \left[\begin{matrix}{A}_{0,1} {B}_{0,0} & {A}_{0,1} {B}_{0,1}\\{A}_{0,1} {B}_{1,0} & {A}_{0,1} {B}_{1,1}\end{matrix}\right]\\\left[\begin{matrix}{A}_{1,0} {B}_{0,0} & {A}_{1,0} {B}_{0,1}\\{A}_{1,0} {B}_{1,0} & {A}_{1,0} {B}_{1,1}\end{matrix}\right] & \left[\begin{matrix}{A}_{1,1} {B}_{0,0} & {A}_{1,1} {B}_{0,1}\\{A}_{1,1} {B}_{1,0} & {A}_{1,1} {B}_{1,1}\end{matrix}\right]\end{matrix}
+\right] $$
+
+The Kronecker product can be defined in terms of indices ${}_{\{mn\}}$ where $m$ spans over rows of both $\mathbf{A}$
+and $\mathbf{B}$, while $n$ spans over their columns:
+$$A \boxtimes B = \Big[ {}_{\{mn\}} = {}_{\{m=id_1+k,n=jd_2+l\}} \Longrightarrow A_{ij} B_{kl} \Big]$$
+where $[d_1 \times d_2]$ is the shape of $\mathbf{A}$.
+
+The Kronecker product, implemented by ``KroneckerProduct`` and ``kronecker_product``, combines the rows and columns of $\mathbf{A}$ and $\mathbf{B}$
+
+$$\left[
+\begin{matrix}{A}_{0,0} {B}_{0,0} & {A}_{0,0} {B}_{0,1} & {A}_{0,1} {B}_{0,0} & {A}_{0,1} {B}_{0,1}\\{A}_{0,0} {B}_{1,0} & {A}_{0,0} {B}_{1,1} & {A}_{0,1} {B}_{1,0} & {A}_{0,1} {B}_{1,1}\\{A}_{1,0} {B}_{0,0} & {A}_{1,0} {B}_{0,1} & {A}_{1,1} {B}_{0,0} & {A}_{1,1} {B}_{0,1}\\{A}_{1,0} {B}_{1,0} & {A}_{1,0} {B}_{1,1} & {A}_{1,1} {B}_{1,0} & {A}_{1,1} {B}_{1,1}\end{matrix}
+\right]$$
+
+In these visual representations of components, the Kronecker product and tensor product look very similar, apart from nesting.
+However, using the ``Reshape`` operator to convert shape $[2 \times 2 \times 2 \times 2]$ into an array of shape $[4 \times 4]$
+will preserve the inner-outer index order, therefore the inner matrices will be converted into rows display a different order
+from the Kronecker product.
+To convert a tensor product to a Kronecker product by reshaping
+requires permuting the $j$ and $k$ indices first:
+
+$$\left[
+\begin{matrix}\left[\begin{matrix}{A}_{0,0} {B}_{0,0} & {A}_{0,0} {B}_{0,1}\\{A}_{0,1} {B}_{0,0} & {A}_{0,1} {B}_{0,1}\end{matrix}\right] & \left[\begin{matrix}{A}_{0,0} {B}_{1,0} & {A}_{0,0} {B}_{1,1}\\{A}_{0,1} {B}_{1,0} & {A}_{0,1} {B}_{1,1}\end{matrix}\right]\\\left[\begin{matrix}{A}_{1,0} {B}_{0,0} & {A}_{1,0} {B}_{0,1}\\{A}_{1,1} {B}_{0,0} & {A}_{1,1} {B}_{0,1}\end{matrix}\right] & \left[\begin{matrix}{A}_{1,0} {B}_{1,0} & {A}_{1,0} {B}_{1,1}\\{A}_{1,1} {B}_{1,0} & {A}_{1,1} {B}_{1,1}\end{matrix}\right]\end{matrix}
+\right]
+$$
+
+This array can be reshaped as a $[4 \times 4]$ Kronecker product of $\mathbf{A}$ and $\mathbf{B}$, the element order of the inner matrices
+is indeed equivalent to the rows of the Kronecker product.
+
+>>> from sympy import MatrixSymbol, kronecker_product
+>>> A = MatrixSymbol("A", 2, 2).as_explicit()
+>>> B = MatrixSymbol("B", 2, 2).as_explicit()
+>>> kronecker_product(A, B)
+Matrix([
+[A[0, 0]*B[0, 0], A[0, 0]*B[0, 1], A[0, 1]*B[0, 0], A[0, 1]*B[0, 1]],
+[A[0, 0]*B[1, 0], A[0, 0]*B[1, 1], A[0, 1]*B[1, 0], A[0, 1]*B[1, 1]],
+[A[1, 0]*B[0, 0], A[1, 0]*B[0, 1], A[1, 1]*B[0, 0], A[1, 1]*B[0, 1]],
+[A[1, 0]*B[1, 0], A[1, 0]*B[1, 1], A[1, 1]*B[1, 0], A[1, 1]*B[1, 1]]])
+>>> tensorproduct(A, B)
+[[[[A[0, 0]*B[0, 0], A[0, 0]*B[0, 1]], [A[0, 0]*B[1, 0], A[0, 0]*B[1, 1]]], [[A[0, 1]*B[0, 0], A[0, 1]*B[0, 1]], [A[0, 1]*B[1, 0], A[0, 1]*B[1, 1]]]], [[[A[1, 0]*B[0, 0], A[1, 0]*B[0, 1]], [A[1, 0]*B[1, 0], A[1, 0]*B[1, 1]]], [[A[1, 1]*B[0, 0], A[1, 1]*B[0, 1]], [A[1, 1]*B[1, 0], A[1, 1]*B[1, 1]]]]]
+
+Matrix derivatives
+------------------
+
+You can differentiate a matrix with respect to a scalar by differentiating each
+element individually. Similarly, differentiating a scalar with respect to a
+matrix yields a matrix of the same shape, where each entry is the derivative of
+the scalar with respect to the corresponding matrix element.
+
+While the trace and determinant of a matrix are scalars, their derivatives with
+respect to a matrix variable can yield nontrivial expressions involving the
+matrix itself.
+
+Differentiating a matrix $\mathbf{Y}$ with respect to another matrix
+$\mathbf{X}$ results in a 4-dimensional array (sometimes also called a tensor,
+though tensors refer to differential geometry in SymPy), where each entry is
+the partial derivative of an element of $\mathbf{Y}$ with respect to an element
+of $\mathbf{X}$.
+
+Derivatives extend naturally through index notation.  Differentiating a matrix
+expression $A_{ij}$ by matrix $X_{mn}$ produces a four-dimensional array
+representing:
+
+$$D_{mnij} = \frac{\partial}{\partial X_{mn}} \Big (A_{ij} \Big ).$$
+
+SymPy adopts a denominator-first index ordering for derivatives, positioning
+differentiation variable indices ${}_{\{mn\}}$ before derivand indices ${}_{\{ij\}}$.  This
+${}_{\{mnij\}}$ convention aligns with Wolfram Mathematica but differs from
+PyTorch/NumPy, which prefer the ${}_{\{ijmn\}}$ index-order convention.
+This structure applies universally: scalar-by-matrix
+derivatives produce matrices, matrix-by-scalar derivatives produce matrices,
+and matrix-by-matrix derivatives yield 4-dimensional arrays reflecting the
+relationship between all component pairs.
+
+To explicitly track index reading order, which controls axis transpositions in
+multi-dimensional representations, we will use the convention of mapping the index
+sequence to the full expression. For example:
+
+$${}_{\{mnij\}} \Longrightarrow\frac{\partial}{\partial X_{mn}} \Big ( A_{ij} \Big )$$
+
+this shows that
+differentiation indices ($mn$) precede derivand indices ($ij$).  Crucially,
+this notation inherently captures index permutations without explicit
+operators. For example:
+
+$${}_{\{ij\}} \Longrightarrow \Big(M^T\Big)_{ij} = M_{ji}$$
+
+demonstrates how transposition is encoded solely through index-order
+reversal, the ${}_{\{ij\}}$ mapping of $M_{ji}$ directly yields the
+component expression of the transposition.
+
+Reconstructing a matrix expression
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In SymPy, differentiating a matrix expression with respect to a matrix symbol
+normally yields a 4-dimensional array.  When one or more of its axes happen to be
+singleton (dimension 1), the tensor collapses to a lower-rank object; SymPy
+automatically detects this and returns the simplest equivalent matrix
+expression instead of keeping the full 4-dimensional form.
+
+For example, let $\mathbf{x}$ be a matrix-vector of shape $[k \times 1]$, that is a
+vector of size $[k]$ disguised as a single column matrix by adding a singleton dimension to its shape.  The derivative of $\mathbf{x}$ with
+respect to $\mathbf{x}$ is then the 4-D identity array of shape $[k \times 1 \times k \times 1]$, but because the second
+axis of both the numerator and the denominator has length 1, the result can be
+collapsed to the $[k \times k]$ identity matrix $\mathbf{I}_{[k]}$ instead of
+keeping the full tensor form. Explicitly:
+
+$$\left[{}_{\{mnij\}} \Longrightarrow \frac{\partial}{\partial x_{mn}}x_{ij} = \delta_{mi} \delta_{nj} = \big( \mathbf{I}_{[k]} \otimes \mathbf{I}_{[1]} \big)_{minj}\right] \rightarrow \Big[ {}_{\{mi\}}\Longrightarrow \big(\mathbf{I}_{[k]}\big)_{mi}\Big]$$
+
+Here, the second and fourth axes are singletons, appearing in the derivative as
+scalar identity matrix $\mathbf{I}_{[1]}$, equivalent to scalar unit.  In index
+notation they only survive in a Kronecker $\delta_{nj}$.
+
+Likewise, $\frac{\partial}{\partial \mathbf{x}}\mathbf{x}'$ has shape
+$[k \times 1 \times 1 \times k]$, and collapses again to the same $[k \times k]$ identity matrix $\mathbf{I}_{[k]}$.
+
+Derive matrix by itself
+~~~~~~~~~~~~~~~~~~~~~~~
+
+As an example, the derivative of $[k \times l]$ matrix $\mathbf{X}$ by itself is given by identity
+relationships between indices:
+
+$${}_{\{mnij\}} \Longrightarrow \frac{\partial}{\partial X_{mn}} \Big ( X_{ij} \Big ) = \delta_{mi} \delta_{nj} = \Big( \mathbf{I}_{[k]} \otimes \mathbf{I}_{[l]} \Big)_{minj}, $$
+
+where $\delta$ is the Kronecker delta, which satisfies $\delta_{ab} = 1$ if
+$a = b$ and $\delta_{ab} = 0$ otherwise.  Indeed, matrix $\mathbf{X}$ is made of
+element variables that are to be considered different from one another, so
+$X_{mn}$ is the same variable as $X_{ij}$ if and only if $m=i$ and $n=j$.  The
+previous expression also shows how the product of two Kronecker deltas on four
+different free indices may be viewed as the tensor product of two identity
+matrices, with the free index order properly permuted.
+
+This matrix derivative returns a 4-dimensional array expression if computed in
+SymPy
+
+>>> from sympy import MatrixSymbol
+>>> X = MatrixSymbol("X", 3, 3)
+>>> X.diff(X)
+PermuteDims(ArrayTensorProduct(I, I), (3)(1 2))
+
+The permutation `(3)(1 2)` maps ${}_{\{mnij\}}$ into ${}_{\{minj\}}$. Remember
+that SymPy uses zero offset and the trivial cycle `(3)` is just a trick to
+display the maximum size of the permutation. The object ``PermuteDims`` in SymPy
+takes the convention of its permutation mapping the new index order into the old index order
+(the old index order of the wrapped expression). This convention is compatible with most of
+the scientific python libraries, but is the opposite of the one used by Wolfram Mathematica.
+
+Notice that the same result, ``X.diff(X)`` can be expressed as
+
+``Reshape(KroneckerProduct(I, I), (k, l, k, l))``,
+
+indeed some authors represent $\frac{\partial}{\partial \mathbf{X}}\mathbf{X} = \mathbf{I}_{[k]} \bar\boxtimes \mathbf{I}_{[l]}$,
+where $\bar\boxtimes$ represents the 4-dimensionally reshaped Kronecker product.
 
 How matrix derivatives work
 ---------------------------
@@ -335,7 +421,7 @@ Array expression to matrix expression conversion
 The core complexity of the algorithm of matrix derivation lies in the conversion back to matrix expression of the derivative.
 The array derivative returns the derivative as an array expression with axes properly contracted, diagonalized and permuted.
 In order to rewrite the output of a matrix expression, you need to identify the equivalent matrix operations on top of these expressions.
-The most common of these operations in the matrix multiplication, but other operations such as traces, diag-expansion, hadamard products are also common.
+The most common of these operations in the matrix multiplication, but other operations such as traces, diag-expansion, Hadamard products are also common.
 
 Matrix derivation may produce array expressions that have no correspondence to closed-form matrix expressions,
 therefore it will not be always possible to re-express the result as a matrix expression.
