@@ -652,12 +652,12 @@ def test_matexpr_derivative_by_matrix_element():
 def test_issue_28617():
     X = MatrixSymbol("X", 3, 3)
     a = MatrixSymbol("a", 3, 1)
-    
+
     expr = sqrt(a.T*a)
     result = expr.diff(X)
     assert isinstance(result, ZeroMatrix)
     assert result.shape == (3, 3)
-    
+
     expr = a.T*a
     result = expr.diff(X)
     assert isinstance(result, ZeroMatrix)
