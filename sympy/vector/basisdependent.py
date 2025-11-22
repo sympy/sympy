@@ -204,6 +204,8 @@ class BasisDependentAdd(BasisDependent, Add):
                 continue
             # Else, update components accordingly
             for x in arg.components:
+                if not hasattr(x, '_base_instance'):
+                    continue
                 components[x] = components.get(x, 0) + arg.components[x]
 
         temp = list(components.keys())
@@ -258,7 +260,7 @@ class BasisDependentMul(BasisDependent, Mul):
             if isinstance(arg, cls._zero_func):
                 count += 1
                 zeroflag = True
-            elif arg == S.Zero or arg == 0.0:
+            elif arg == S.Zero or arg == 0.0 or (hasattr(arg, 'is_zero') and arg.is_zero):
                 zeroflag = True
             elif isinstance(arg, (cls._base_func, cls._mul_func)):
                 count += 1

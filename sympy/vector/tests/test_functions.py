@@ -163,6 +163,12 @@ def test_matrix_to_vector():
            Vector.zero
     m = Matrix([[q1], [q2], [q3]])
     assert matrix_to_vector(m, N) == q1*N.i + q2*N.j + q3*N.k
+    m = Matrix([[0.0], [2], [3]])
+    v = matrix_to_vector(m, C)
+    assert v == 2*C.j + 3*C.k
+    assert v.to_matrix(C) == Matrix([[0], [2], [3]])
+    assert C.i * 0.0 == Vector.zero
+    assert 0.0 * C.i == Vector.zero
 
 
 def test_orthogonalize():
