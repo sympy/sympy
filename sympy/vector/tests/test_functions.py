@@ -167,6 +167,8 @@ def test_matrix_to_vector():
     v = matrix_to_vector(m, C)
     assert v == 2*C.j + 3*C.k
     assert v.to_matrix(C) == Matrix([[0], [2], [3]])
+    assert C.i * 0.0 == Vector.zero
+    assert 0.0 * C.i == Vector.zero
 
 
 def test_orthogonalize():
