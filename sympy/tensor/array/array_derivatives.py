@@ -76,6 +76,9 @@ class ArrayDerivative(Derivative):
         if expr.has(v):
             return _matrix_derivative(expr, v)
         else:
+            if isinstance(expr, MatrixExpr) and expr.shape == (1, 1):
+                if isinstance(v, MatrixExpr):
+                    return ZeroMatrix(*v.shape)
             return None
 
     @classmethod
