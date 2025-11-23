@@ -1032,6 +1032,35 @@ class SDM(dict):
         """
         return A.to_dfm_or_ddm().inv().to_sdm()
 
+    def rank(self):
+        """
+        Returns the rank of the matrix.
+
+        Examples
+        ========
+
+        >>> from sympy import QQ, ZZ
+        >>> from sympy.polys.matrices.sdm import SDM
+        >>> A = SDM({0: {0: QQ(1), 1: QQ(2)}, 1: {0: QQ(2), 1: QQ(4)}}, (2, 2), QQ)
+        >>> A.rank()
+        1
+        >>> B = SDM({0: {0: ZZ(1), 1: ZZ(2)}, 1: {0: ZZ(2), 1: ZZ(4)}}, (2, 2), ZZ)
+        >>> B.rank()
+        1
+
+        See Also
+        ========
+
+        rref
+        fflu
+        """
+        if self.domain.is_Field:
+            rref, pivots = self.rref()
+            return len(pivots)
+        else:
+            rref_sdm, _, pivots = sdm_rref_den(self, self.domain)
+            return len(pivots)
+
     def det(A):
         """
         Returns determinant of A
