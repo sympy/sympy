@@ -590,9 +590,6 @@ class Function(Application, Expr):
             if any(bad(a) for a in args):
                 raise ValueError  # one or more args failed to compute with significance
         except ValueError:
-            from sympy.functions.elementary.trigonometric import TrigonometricFunction
-            if isinstance(self, TrigonometricFunction):
-                return # If trig function is encountered, leave as it is to preserve structure.
             if all(isinstance(arg, Expr) for arg in self.args): # mpmath will not handle symbols
                 dps = prec_to_dps(prec) # Needed to match evalf behavior (May lead to precision mismatch without it.)
                 new_args = []
