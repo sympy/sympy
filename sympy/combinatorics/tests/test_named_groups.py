@@ -58,6 +58,8 @@ def test_AlternatingGroup():
     assert H.order() == 1
     L = AlternatingGroup(2)
     assert L.order() == 1
+    assert L.degree == 2
+    assert SymmetricGroup(2).index(L) == 2
 
 
 def test_AbelianGroup():
