@@ -76,9 +76,6 @@ class ArrayDerivative(Derivative):
         if expr.has(v):
             return _matrix_derivative(expr, v)
         else:
-            if isinstance(expr, MatrixExpr) and expr.shape == (1, 1):
-                if isinstance(v, MatrixExpr):
-                    return ZeroMatrix(*v.shape)
             return None
 
     @classmethod
@@ -92,7 +89,8 @@ class ArrayDerivative(Derivative):
             return None
 
         # TODO: this could be done with multiple-dispatching:
-        if expr.is_scalar:
+        expr_is_scalar = expr.is_scalar or (isinstance(expr, MatrixExpr) and expr.shape == (1, 1))
+        if expr_is_scalar:
             if isinstance(v, MatrixBase):
                 result = cls._call_derive_scalar_by_matrix(expr, v)
             elif isinstance(v, MatrixExpr):

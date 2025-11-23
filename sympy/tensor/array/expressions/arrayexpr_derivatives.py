@@ -134,6 +134,10 @@ def _(expr: ElementwiseApplyFunction, x: Expr):
 
 @array_derive.register(ArrayElementwiseApplyFunc)
 def _(expr: ArrayElementwiseApplyFunc, x: Expr):
+    if not expr.has(x):
+        if get_shape(expr) == (1, 1):
+            return ZeroArray(*x.shape)
+        return ZeroArray(*(x.shape + expr.shape))
     fdiff = expr._get_function_fdiff()
     subexpr = expr.expr
     dsubexpr = array_derive(subexpr, x)
@@ -160,6 +164,10 @@ def _(expr: HadamardProduct, x: Expr):
 
 @array_derive.register(ArrayContraction)
 def _(expr: ArrayContraction, x: Expr):
+    if not expr.has(x):
+        if get_shape(expr) == (1, 1):
+            return ZeroArray(*x.shape)
+        return ZeroArray(*(x.shape + expr.shape))
     fd = array_derive(expr.expr, x)
     rank_x = len(get_shape(x))
     contraction_indices = expr.contraction_indices
