@@ -1,4 +1,3 @@
-import pytest
 from sympy import symbols, Rational, oo
 from sympy.physics.control.lti import TransferFunction
 
