@@ -46,7 +46,7 @@ class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
     The distribution object can be called in two ways to evaluate the
     probability density:
 
-    1. ``distribution(x)`` or ``distribution.__call__(x)``:
+    1. ``distribution(x)``:
        Returns the probability density at x, with support checking enforced
        via Piecewise. For symbolic arguments where support membership cannot
        be determined, this returns a Piecewise expression that evaluates to
@@ -65,9 +65,9 @@ class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
     >>> X = Geometric('X', Rational(1, 5))
     >>> z = Symbol('z')
 
-    Using __call__ with symbolic argument returns Piecewise:
+    Using distribution call with symbolic argument returns Piecewise:
 
-    >>> density(X)(z)  # doctest: +SKIP
+    >>> density(X)(z)
     Piecewise(((4/5)**(z - 1)/5, (z >= 1) & (z < oo) & Eq(z, floor(z))), (0, True))
 
     Using .pdf() returns the raw formula:
@@ -82,11 +82,11 @@ class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
     >>> density(X).pdf(3)
     16/125
 
-    Support checking with __call__ for values outside support:
+    Support checking for values outside support:
 
-    >>> density(X)(0)  # zero is not in the support
+    >>> density(X)(0)
     0
-    >>> density(X)(1/2)  # non-integer is not in the support
+    >>> density(X)(1/2)
     0
 
     See Also

@@ -105,23 +105,12 @@ def test_GeometricDistribution():
 
 
 def test_discrete_distribution_call_vs_pdf():
-    """
-    Test the difference between __call__ and .pdf() methods.
-
-    __call__() should return Piecewise for symbolic arguments to enforce
-    support checking, while .pdf() should return the raw formula.
-    """
-    from sympy.functions.elementary.piecewise import Piecewise
-
-    # Test with Geometric distribution
     X = Geometric('X', Rational(1, 5))
-    z = Symbol('z')  # symbolic variable without assumptions
+    z = Symbol('z')
 
-    # __call__ should return Piecewise for symbolic argument
     call_result = density(X)(z)
     assert isinstance(call_result, Piecewise)
 
-    # .pdf() should return the simple formula without Piecewise
     pdf_result = density(X).pdf(z)
     assert not isinstance(pdf_result, Piecewise)
     assert pdf_result == (Rational(4, 5))**(z - 1) / 5
