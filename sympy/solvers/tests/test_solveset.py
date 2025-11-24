@@ -1950,6 +1950,9 @@ def test_nonlinsolve_polysys():
     system = [-x**2*z**2 + x*y*z + y**4, -2*x*z**2 + y*z, x*z + 4*y**3, -2*x**2*z + x*y]
     assert nonlinsolve(system, [x, y, z]) == FiniteSet((0, 0, z), (x, 0, 0))
 
+    lst = [x**2*(y-0.508793242825092)**2-sin(pi/8)*sqrt(0.508793242825092**2), (x-1)**2*y**2-0.508793242825092**2]
+    assert nonlinsolve(lst, x, y) == S.EmptySet
+
 
 def test_nonlinsolve_using_substitution():
     x, y, z, n = symbols('x, y, z, n', real = True)

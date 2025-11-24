@@ -3871,11 +3871,15 @@ def _handle_poly(polys, symbols):
             poly_sol = no_information
             poly_eqs = list(basis)
         else:
-            # Success! We have a finite solution set and solve_poly_system has
-            # succeeded in finding all solutions. Return the solutions and also
-            # an empty list of remaining equations to be solved.
-            poly_sol = [dict(zip(symbols, res)) for res in result]
-            poly_eqs = no_equations
+            if result is None:
+                poly_sol = no_solutions
+                poly_eqs = no_equations
+            else:
+                # Success! We have a finite solution set and solve_poly_system has
+                # succeeded in finding all solutions. Return the solutions and also
+                # an empty list of remaining equations to be solved.
+                poly_sol = [dict(zip(symbols, res)) for res in result]
+                poly_eqs = no_equations
 
     #
     # Infinite families of solutions (positive-dimensional case)
