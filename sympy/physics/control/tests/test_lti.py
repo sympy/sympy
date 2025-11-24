@@ -27,6 +27,9 @@ from sympy.physics.control.lti import (
     backward_diff, phase_margin, gain_margin)
 from sympy.testing.pytest import raises
 from sympy.logic.boolalg import false, true
+import pytest
+from sympy import symbols, exp, simplify, Heaviside
+from sympy.physics.control.lti import TransferFunction, ImproperTransferFunction
 
 from math import isclose
 
@@ -4909,3 +4912,55 @@ def test_DiscreteStateSpace_stability():
     ss2 = DiscreteStateSpace(A2, B, C, D)
     ineq = ss2.get_asymptotic_stability_conditions()
     assert ineq == [False]
+def test_dc_gain_constant_num_den():
+    s = symbols('s')
+    G = TransferFunction(5, s + 2, s)
+    assert G.dc_gain() == Rational(5, 2)
+
+
+def test_dc_gain_polynomial_num_den():
+    s = symbols('s')
+    G = TransferFunction(s**2 + 3*s + 2, (s + 1)*(s + 2), s)
+    assert G.dc_gain() == 1
+
+
+def test_dc_gain_zero_numerator():
+    s = symbols('s')
+    G = TransferFunction(0, s + 5, s)
+    assert G.dc_gain() == 0
+
+
+def test_dc_gain_den_zero_at_zero_returns_infinity():
+    s = symbols('s')
+    G = TransferFunction(1, s, s)
+    assert G.dc_gain() == oo
+
+
+def test_dc_gain_negative_power_gives_infinity():
+    s = symbols('s')
+    G = TransferFunction(1/s, 1, s)
+    assert G.dc_gain() == oo
+
+def test_step_response_first_order():
+    s, t = symbols('s t')
+    G = TransferFunction(1, s + 1, s)
+    resp = G.step_response()
+    assert simplify(resp - (1 - exp(-t))) == 0
+
+def test_step_response_zero_numerator():
+    s, t = symbols('s t')
+    G = TransferFunction(0, s + 1, s)
+    resp = G.step_response()
+    assert resp == 0
+
+def test_step_response_constant_gain():
+    s, t = symbols('s t')
+    G = TransferFunction(5, 1, s)
+    resp = G.step_response()
+    assert simplify(resp - 5*Heaviside(t)) == 0
+
+def test_step_response_improper_tf():
+    s = symbols('s')
+    G = TransferFunction(s**2 + 1, s + 1, s)
+    with pytest.raises(ImproperTransferFunction):
+        G.step_response()
