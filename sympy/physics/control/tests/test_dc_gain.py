@@ -1,3 +1,4 @@
+"""Tests for TransferFunction.dc_gain."""
 from sympy import symbols, Rational, oo
 from sympy.physics.control.lti import TransferFunction
 
