@@ -4937,4 +4937,4 @@ def test_dc_gain_negative_power_gives_infinity():
     s = symbols('s')
     G = TransferFunction(1/s, 1, s)
     assert G.dc_gain() == oo
-    
+
