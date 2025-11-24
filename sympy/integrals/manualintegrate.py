@@ -1504,7 +1504,7 @@ def quadratic_denom_rule(integral):
             r2 = 1/(symbol+constant)
             log_steps = [ReciprocalRule(r1, symbol, symbol-constant),
                          ConstantTimesRule(-r2, symbol, -1, r2, ReciprocalRule(r2, symbol, symbol+constant))]
-            rewritten = (log(symbol - constant) / (1)) - (log(symbol + constant) / (1))
+            rewritten = log(symbol - constant) - log(symbol + constant)
             negative_step = AddRule(sub, symbol, log_steps)
             if coeff != 1:
                 rewritten = Mul(coeff, sub, evaluate=False)
