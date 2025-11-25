@@ -1726,7 +1726,7 @@ class TransferFunction(TransferFunctionBase):
                 "Improper transfer function - numerator degree exceeds denominator degree."
             )
 
-        # Zero numerator → zero output
+        # Zero numerator : zero output
         if num == 0:
             return 0
 
