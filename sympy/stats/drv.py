@@ -226,15 +226,12 @@ class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
                          (var, self.set.inf, self.set.sup), **kwargs)
 
     def __call__(self, arg):
-        # Check if argument is in the domain
         in_domain = self.set.contains(arg)
         if in_domain == False:
             return S.Zero
         elif in_domain == True:
             return self.pdf(arg)
         else:
-            # For symbolic expressions that can't be determined to be in/out of domain,
-            # return a Piecewise that evaluates correctly based on the support
             return Piecewise((self.pdf(arg), self.set.as_relational(arg)), (S.Zero, True))
 
 

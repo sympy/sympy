@@ -109,33 +109,30 @@ def test_discrete_distribution_call_vs_pdf():
     z = Symbol('z')
 
     call_result = density(X)(z)
-    assert isinstance(call_result, Piecewise)
+    assert call_result == Piecewise(
+        ((Rational(4, 5))**(z - 1) / 5, (z >= 1) & (z < oo) & Eq(z, floor(z))),
+        (0, True)
+    )
 
     pdf_result = density(X).pdf(z)
-    assert not isinstance(pdf_result, Piecewise)
     assert pdf_result == (Rational(4, 5))**(z - 1) / 5
 
-    # Test with Poisson distribution
     Y = Poisson('Y', 3)
     k = Symbol('k')
 
-    # __call__ should return Piecewise for symbolic argument
     call_result_poisson = density(Y)(k)
-    assert isinstance(call_result_poisson, Piecewise)
+    assert call_result_poisson == Piecewise(
+        (3**k * exp(-3) / factorial(k), (k >= 0) & (k < oo) & Eq(k, floor(k))),
+        (0, True)
+    )
 
-    # .pdf() should return the simple formula
     pdf_result_poisson = density(Y).pdf(k)
-    assert not isinstance(pdf_result_poisson, Piecewise)
     assert pdf_result_poisson == 3**k * exp(-3) / factorial(k)
 
-    # Test with symbolic argument that has assumptions
     z_pos_int = Symbol('z', positive=True, integer=True)
-    # With assumptions, __call__ can determine support membership and simplifies
     call_result_assumed = density(X)(z_pos_int)
-    # Should simplify to the formula since z is known to be in support
     assert call_result_assumed == (Rational(4, 5))**(z_pos_int - 1) / 5
 
-    # .pdf() should always return the simple formula regardless of assumptions
     pdf_result_assumed = density(X).pdf(z_pos_int)
     assert pdf_result_assumed == (Rational(4, 5))**(z_pos_int - 1) / 5
 
