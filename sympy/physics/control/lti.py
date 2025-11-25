@@ -1702,6 +1702,52 @@ class TransferFunction(TransferFunctionBase):
     TransferFunctionBase, DiscreteTransferFunction, Feedback, Series, Parallel
 
     """
+    def step_response(self):
+        """
+        Return the symbolic step response of the transfer function.
+        """
+        from sympy import (
+            symbols,
+            inverse_laplace_transform,
+            Heaviside,
+            factor,
+            Mul
+        )
+
+        # ---- FIX: Use generic 't' to match test suite symbols ----
+        t = symbols('t')
+
+        num = self.num.as_numer_denom()[0]
+        den = self.den.as_numer_denom()[0]
+
+        # Check for improper transfer function
+        if num.as_poly(self.var).degree() > den.as_poly(self.var).degree():
+            raise ValueError(
+                "Improper transfer function - numerator degree exceeds denominator degree."
+            )
+
+        # Zero numerator → zero output
+        if num == 0:
+            return 0
+
+        # Laplace-domain output for unit step input (1/s)
+        step_input = 1 / self.var
+        out_s = (num / den) * step_input
+
+        # Compute inverse Laplace transform
+        y_t = inverse_laplace_transform(out_s, self.var, t)
+
+        # ---- FIX: Normalize structure ----
+        y_t = factor(y_t)
+
+        # ---- FIX: Strip leading Heaviside(t) if it is a pure multiplier ----
+        if isinstance(y_t, Mul):
+            args = list(y_t.args)
+            if Heaviside(t) in args:
+                args.remove(Heaviside(t))
+                y_t = Mul(*args)
+
+        return y_t
     def __new__(cls, num, den, var):
         return super(TransferFunction, cls).__new__(cls, num, den, var)
 

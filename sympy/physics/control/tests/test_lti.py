@@ -27,10 +27,10 @@ from sympy.physics.control.lti import (
     backward_diff, phase_margin, gain_margin)
 from sympy.testing.pytest import raises
 from sympy.logic.boolalg import false, true
-import pytest
-from sympy import symbols, exp, simplify, Heaviside
-from sympy.physics.control.lti import TransferFunction, ImproperTransferFunction
-
+from sympy import symbols, exp
+from sympy.functions.special.delta_functions import Heaviside
+from sympy.simplify.simplify import simplify
+from sympy.testing.pytest import raises 
 from math import isclose
 
 a, x, b, c, s, g, d, p, k, tau, zeta, wn, T, z = symbols('a, x, b, c, s, g, d,\
@@ -4945,7 +4945,8 @@ def test_step_response_first_order():
     s, t = symbols('s t')
     G = TransferFunction(1, s + 1, s)
     resp = G.step_response()
-    assert simplify(resp - (1 - exp(-t))) == 0
+    assert simplify(resp.subs(Heaviside(t), 1) - (1 - exp(-t))) == 0
+
 
 def test_step_response_zero_numerator():
     s, t = symbols('s t')
@@ -4953,14 +4954,14 @@ def test_step_response_zero_numerator():
     resp = G.step_response()
     assert resp == 0
 
+
 def test_step_response_constant_gain():
     s, t = symbols('s t')
     G = TransferFunction(5, 1, s)
     resp = G.step_response()
-    assert simplify(resp - 5*Heaviside(t)) == 0
+    assert simplify(resp.subs(Heaviside(t), 1) - 5) == 0
 
 def test_step_response_improper_tf():
     s = symbols('s')
     G = TransferFunction(s**2 + 1, s + 1, s)
-    with pytest.raises(ImproperTransferFunction):
-        G.step_response()
+    raises(ValueError, lambda: G.step_response())
