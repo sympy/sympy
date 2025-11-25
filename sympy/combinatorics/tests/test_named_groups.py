@@ -65,6 +65,12 @@ def test_AbelianGroup():
     assert A.order() == 27
     assert A.is_abelian is True
 
+    B = AbelianGroup(1)
+    assert B.order() == 1
+    assert B.degree == 1
+    r = B.random()
+    assert r == B.identity
+
 
 def test_RubikGroup():
     raises(ValueError, lambda: RubikGroup(1))
