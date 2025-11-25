@@ -1,4 +1,5 @@
 import itertools
+import re
 
 from sympy.core import S
 from sympy.core.add import Add
@@ -2802,6 +2803,28 @@ class PrettyPrinter(Printer):
 
     def _print_QuotientModule(self, M):
         return self._print(M.base) / self._print(M.killed_module)
+
+    def _print_Quaternion(self, expr):
+        a, b, c, d = expr.args
+        if self._use_unicode:
+            i_symbol = Symbol('\U0001D456')
+            j_symbol = Symbol('\U0001D457')
+            k_symbol = Symbol('\U0001D458')
+        else:
+            i_symbol = Symbol('i')
+            j_symbol = Symbol('j')
+            k_symbol = Symbol('k')
+        terms = [t for t in [a, b*i_symbol, c*j_symbol, d*k_symbol] if t != 0]
+        if not terms:
+            return self._print(S.Zero)
+        add_expr = Add(*terms, evaluate=False)
+        if isinstance(add_expr, Add):
+            result = self._print_Add(add_expr, order="none")
+        else:
+            result = self._print(add_expr)
+        result_str = str(result).replace('*', '').replace('⋅', '')
+        result_str = re.sub(r'(?<![\w])1([ijk𝑖𝑗𝑘])', r'\1', result_str)
+        return prettyForm(result_str)
 
     def _print_MatrixHomomorphism(self, h):
         matrix = self._print(h._sympy_matrix())
