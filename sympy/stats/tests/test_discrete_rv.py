@@ -108,33 +108,27 @@ def test_discrete_distribution_call_vs_pdf():
     X = Geometric('X', Rational(1, 5))
     z = Symbol('z')
 
-    call_result = density(X)(z)
-    assert call_result == Piecewise(
+    assert density(X)(z) == Piecewise(
         ((Rational(4, 5))**(z - 1) / 5, (z >= 1) & (z < oo) & Eq(z, floor(z))),
         (0, True)
     )
 
-    pdf_result = density(X).pdf(z)
-    assert pdf_result == (Rational(4, 5))**(z - 1) / 5
+    assert density(X).pdf(z) == (Rational(4, 5))**(z - 1) / 5
 
     Y = Poisson('Y', 3)
     k = Symbol('k')
 
-    call_result_poisson = density(Y)(k)
-    assert call_result_poisson == Piecewise(
+    assert density(Y)(k) == Piecewise(
         (3**k * exp(-3) / factorial(k), (k >= 0) & (k < oo) & Eq(k, floor(k))),
         (0, True)
     )
 
-    pdf_result_poisson = density(Y).pdf(k)
-    assert pdf_result_poisson == 3**k * exp(-3) / factorial(k)
+    assert density(Y).pdf(k) == 3**k * exp(-3) / factorial(k)
 
     z_pos_int = Symbol('z', positive=True, integer=True)
-    call_result_assumed = density(X)(z_pos_int)
-    assert call_result_assumed == (Rational(4, 5))**(z_pos_int - 1) / 5
+    assert density(X)(z_pos_int) == (Rational(4, 5))**(z_pos_int - 1) / 5
 
-    pdf_result_assumed = density(X).pdf(z_pos_int)
-    assert pdf_result_assumed == (Rational(4, 5))**(z_pos_int - 1) / 5
+    assert density(X).pdf(z_pos_int) == (Rational(4, 5))**(z_pos_int - 1) / 5
 
 
 def test_Hermite():
