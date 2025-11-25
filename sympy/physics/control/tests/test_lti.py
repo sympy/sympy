@@ -27,10 +27,6 @@ from sympy.physics.control.lti import (
     backward_diff, phase_margin, gain_margin)
 from sympy.testing.pytest import raises
 from sympy.logic.boolalg import false, true
-from sympy import symbols, exp
-from sympy.functions.special.delta_functions import Heaviside
-from sympy.simplify.simplify import simplify
-from sympy.testing.pytest import raises
 from math import isclose
 
 a, x, b, c, s, g, d, p, k, tau, zeta, wn, T, z = symbols('a, x, b, c, s, g, d,\
