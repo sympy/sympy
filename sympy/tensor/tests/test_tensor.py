@@ -2292,3 +2292,38 @@ def test_TensMul_nocoeff():
 
     expr = TensMul(2, K(i), P(j))
     assert expr.coeff * expr.nocoeff == expr
+
+
+def test_euclidean_contraction():
+    """
+    Test Euclidean-style tensor contractions (Issue #28461).
+    With auto_convert_indices=True, repeated indices with the same sign
+    are automatically converted to opposite signs for Einstein summation.
+    """
+    X = TensorIndexType('X', auto_convert_indices=True)
+    A = TensorHead('A', [X] * 2)
+    B = TensorHead('B', [X] * 1)
+    C = TensorHead('C', [X] * 2)
+    i, j, k = tensor_indices('i j k', X)
+
+    # Basic contraction: A(i, j) * B(j) should work without ValueError
+    result = A(i, j) * B(j)
+    assert len(result.free) == 1
+    assert len(result.dum) == 1
+
+    # Multiple contractions
+    result2 = A(i, j) * B(j) * C(i, k)
+    assert len(result2.free) == 1
+    assert len(result2.dum) == 2
+
+    # Standard contraction with explicit opposite signs still works
+    result3 = A(i, j) * B(-j)
+    assert len(result3.free) == 1
+    assert len(result3.dum) == 1
+
+    # Without auto_convert_indices, repeated indices should raise ValueError
+    Y = TensorIndexType('Y', auto_convert_indices=False)
+    D = TensorHead('D', [Y] * 2)
+    E = TensorHead('E', [Y] * 1)
+    m, n = tensor_indices('m n', Y)
+    raises(ValueError, lambda: D(m, n) * E(n))
