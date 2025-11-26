@@ -1398,7 +1398,7 @@ def test_random_parameters():
     assert isinstance(pspace(meas), CompoundPSpace)
     X = Normal('x', [1, 2], [[1, 0], [0, 1]])
     assert isinstance(pspace(X).distribution, MultivariateNormalDistribution)
-    assert density(meas).pdf(z).simplify() == sqrt(5)*exp(-z**2/20 + z/5 - S(1)/5)/(10*sqrt(pi))
+    assert density(meas)(z).simplify() == sqrt(5)*exp(-z**2/20 + z/5 - S(1)/5)/(10*sqrt(pi))
 
 
 def test_random_parameters_given():
