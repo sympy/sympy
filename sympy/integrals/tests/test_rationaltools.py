@@ -1,4 +1,4 @@
-from sympy.core.numbers import (I, Rational)
+from sympy.core.numbers import (I, Rational, pi)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, symbols)
 from sympy.functions.elementary.exponential import log
@@ -201,3 +201,9 @@ def test_issue_28186():
     )
     assert integrate(f, x) == F
     assert (F.diff(x) - f).ratsimp() == 0
+
+    # https://github.com/sympy/sympy/issues/28657
+    p = 400*pi**2*x**2/(1600*pi**4*x**4 - 796*pi**2*x**2 + 100)
+    P = ratint(p, x)
+    res = P.evalf(subs={x:1e100}) - P.evalf(subs={x:0})
+    assert abs(res - 2.5) < 1e-10
