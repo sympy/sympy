@@ -127,7 +127,8 @@ def test_NormalGamma():
     assert marginal_distribution(ng, 0)(1) == \
         3*sqrt(10)*gamma(Rational(7, 4))/(10*sqrt(pi)*gamma(Rational(5, 4)))
     assert marginal_distribution(ng, y)(1) == exp(Rational(-1, 4))/128
-    assert marginal_distribution(ng,[0,1])(x) == x**2*exp(-x/4)/128
+    z = symbols('z', positive=True)
+    assert marginal_distribution(ng,[0,1])(z) == z**2*exp(-z/4)/128
 
 
 def test_GeneralizedMultivariateLogGammaDistribution():

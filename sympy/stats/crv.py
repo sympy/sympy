@@ -551,7 +551,8 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
     def compute_density(self, expr, **kwargs):
         # https://en.wikipedia.org/wiki/Random_variable#Functions_of_random_variables
         if expr == self.value:
-            return self.density
+            # Return a Lambda that uses the pdf method to get the raw formula
+            return Lambda(expr.symbol, self.density.pdf(expr.symbol))
         y = Dummy('y', real=True)
 
         gs = solveset(expr - y, self.value, S.Reals)

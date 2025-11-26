@@ -1344,7 +1344,7 @@ def ExGaussian(name, mean, std, rate):
     >>> z = Symbol("z")
     >>> X = ExGaussian("x", mean, std, rate)
 
-    >>> pprint(density(X)(z), use_unicode=False)
+    >>> pprint(density(X).pdf(z), use_unicode=False)
                  /           2             \
            lamda*\lamda*sigma  + 2*mu - 2*z/
            ---------------------------------     /  ___ /           2         \\
@@ -1551,7 +1551,7 @@ def ExponentialPower(name, mu, alpha, beta):
     >>> alpha = Symbol("alpha", positive=True)
     >>> beta = Symbol("beta", positive=True)
     >>> X = ExponentialPower("x", mu, alpha, beta)
-    >>> pprint(density(X)(z), use_unicode=False)
+    >>> pprint(density(X).pdf(z), use_unicode=False)
                      beta
            /|mu - z|\
           -|--------|
@@ -4158,7 +4158,7 @@ def Trapezoidal(name, a, b, c, d):
 
     >>> X = Trapezoidal("x", a,b,c,d)
 
-    >>> pprint(density(X)(z), use_unicode=False)
+    >>> pprint(density(X).pdf(z), use_unicode=False)
     /        -2*a + 2*z
     |-------------------------  for And(a <= z, b > z)
     |(-a + b)*(-a - b + c + d)
@@ -4259,7 +4259,7 @@ def Triangular(name, a, b, c):
 
     >>> X = Triangular("x", a,b,c)
 
-    >>> pprint(density(X)(z), use_unicode=False)
+    >>> pprint(density(X).pdf(z), use_unicode=False)
     /    -2*a + 2*z
     |-----------------  for And(a <= z, c > z)
     |(-a + b)*(-a + c)
