@@ -674,7 +674,7 @@ class Collector(DefaultPrinting):
         >>> gens = [G[0], G[1]]
         >>> ipcgs = collector.induced_pcgs(gens)
         >>> [gen.order() for gen in ipcgs]
-        [3]
+        [3, 3]
 
         """
         z = [1]*len(self.pcgs)
@@ -683,7 +683,7 @@ class Collector(DefaultPrinting):
             g = G.pop(0)
             h = self._sift(z, g)
             d = self.depth(h)
-            if d < len(self.pcgs):
+            if d <= len(self.pcgs) and z[d-1] == 1:
                 for gen in z:
                     if gen != 1:
                         G.append(h**-1*gen**-1*h*gen)
@@ -705,6 +705,6 @@ class Collector(DefaultPrinting):
                 h = gen**(-f)*h
                 e[i] = f
                 d = self.depth(h)
-        if h == 1:
+        if h.is_identity:
             return e
         return False
