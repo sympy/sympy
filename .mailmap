@@ -10,181 +10,121 @@
 # correctly record their name and email address so this file is used to be
 # explicit about who has contributed to SymPy and what name and email address
 # they would like to be known by.
-#
-#
 # New contributors quick description
 # ==================================
-#
 # 1. Before committing make sure that git config records your name and email
 # address correctly as you would like it to be recorded in the AUTHORS file.
-#
 # 2. After committing run the bin/mailmap_check.py script. It will check the
 # commits and look for your name and email address in this file. You should see
 # an error message like "This author is not included ...":
-#
 #   $ python bin/mailmap_check.py
 #   This author is not included in the .mailmap file:
 #   Joe Bloggs <joe@bloggs.com>
-#
 #   The .mailmap file needs to be updated because there are commits with
 #   unrecognised author/email metadata.
-#
 #   For instructions on updating the .mailmap file see:
 #   https://docs.sympy.org/dev/contributing/new-contributors-guide/workflow-process.html#add-your-name-and-email-address-to-the-mailmap-file
-#
 #   ...
-#
 # If it fails, you may need to replace `python` by `python3`, here and below, if
 # you're on a system that still uses python2 by default.
-#
 # 3. Add a line to this file with that same name and email address like:
-#
-#   Joe Bloggs <joe@bloggs.com>
-#
 # 4. Run the bin/mailmap_check.py script. This time it will find your name and
 # address and it will also reorder the lines in this file to be in alphabetical
 # order and it will say "the mailmap file was reordered".
-#
-#   $ python bin/mailmap_check.py
 #   The mailmap file was reordered
-#
-#   For instructions on updating the .mailmap file see:
-#   https://docs.sympy.org/dev/contributing/new-contributors-guide/workflow-process.html#add-your-name-and-email-address-to-the-mailmap-file
-#
-#   ...
-#
 # 5. You should be ready now but just to be sure run the bin/mailmap_check.py
 # script one last time and it should say "No changes needed in .mailmap". The
 # output will show that your name and email address is included in the list of
 # names and email addresses that will be added to the AUTHORS file later (make
 # sure that your name only appears once):
-#
-#   $ python bin/mailmap_check.py
 #   No changes needed in .mailmap
-#
 #   The following authors will be added to the AUTHORS file at the time of
 #   the next SymPy release.
-#
-#   Joe Bloggs <joe@bloggs.com>
 #   Other Author <other@author.com>
-#   ...
-#
 # 6. All done. Commit the change to the .mailmap file. When you open a pull
 # request the AUTHORS check will run in CI and it will run the
 # bin/mailmap_check.py script to check that no changes are needed in .mailmap.
 # If the script succeeded locally then it should also succeed in CI.
-#
 # 7. Once you have been added to the .mailmap file it is not necessary to do
 # these steps in any future pull requests unless you change the name and email
 # address you use to make your commits (see Associating different commits
 # below) or want to be recorded under a different name in the AUTHORS file.
-#
-#
 # Configuring git
 # ===============
-#
 # If you are contributing to SymPy for the first time then first make sure that
 # you have configured your name and email address in your local git install.
 # You can check this using the git config command:
-#
 #   $ git config --global user.name
 #   Joe Bloggs
 #   $ git config --global user.email
 #   joe@bloggs.com
-#
 # This name and email address is what will be recorded in any commits that you
 # make with the git commit command. If you want to change the name and or email
 # address that will be used in your commits then you can do also that with the
 # git config command e.g. you can change the name with:
-#
 #   $ git config --global user.name "Jane Doe"
-#   $ git config --global user.name
 #   Jane Doe
-#
 # You can use the git log command to see what name and email address were used
 # in any commits that you have made. Note that changing your name with git
 # config will not change the name that is *already* recorded in any commits
 # that you have made: you have to amend or redo the commits to change that.
-#
-#
 # Associating different names and emails
 # ======================================
-#
 # Entries in this file can also be used to associate commits made under a
 # different name and email address with your own name and email as you would
 # like it to be recorded in the AUTHORS file. This is useful because for
 # example the GitHub web UI will usually record commits under a different name
 # and email address from the one that you use with git locally. To associate
 # that other name and email address with your own add a line like:
-#
 #   Proper Name <Proper@email> commit name <commit@email>
 #   \-----------+------------/ \----------+-------------/
 #               |                         |
 #            replace                     find
-#
 # For example if Joe Bloggs made a commit through the GitHub web UI then it
 # might be recorded with name/email "joeb <12345+joeb@users.noreply.github.com>".
 # In this case Joe should add the following line to .mailmap:
-#
 #   # DO THIS:
 #   Joe Bloggs <joe@bloggs.com> joeb <12345+joeb@users.noreply.github.com>
-#
 # That tells the .mailmap script that any commits with the second name and
 # email are from the same author as the first name and email. This means that
 # only one entry will be added to the AUTHORS file using the first name and
 # email. You can add multiple lines like this all using the same name and email
 # as the first entry but having different second entries e.g.:
-#
-#   # DO THIS:
-#   Joe Bloggs <joe@bloggs.com> joeb <12345+joeb@users.noreply.github.com>
 #   Joe Bloggs <joe@bloggs.com> Joe <joe@gmail.com>
-#
 # It is important to make sure that each author is listed only once in the
 # AUTHORS file so do *NOT* add separate entries that begin with different names
 # or email addresses:
-#
 #   # DO NOT DO THIS (it will be treated as two unrelated authors):
-#   Joe Bloggs <joe@bloggs.com>
 #   joeb <12345+joeb@users.noreply.github.com>
-#
 # If you are unsure what name and email address has been used in your commits
 # then make sure that your local branch is up to date and run git log. It is
 # also possible to see this on GitHub if you click on a commit and then add
 # ".patch" to the end of the page URL.
-#
 # The email (or name and email) in the "find" part of the entry will
 # be used in a case-insensitive way to identify a git author and
 # replace it with whatever is included in the "replace" part:
-#
 #     author                           author
 #     before    .mailmap entry         after
 #     --------- ---------------------- -----------
 #               Foo <Email>
 #     A <Email> ---------------------> Foo <Email>
 #     B <eMAIL> ---------------------> Foo <eMAIL>
-#
 #               <Email> <email>
 #     A <Email> ---------------------> A <Email>
 #     B <eMAIL> ---------------------> B <Email>
-#
 #               Foo <Email> <email>
-#     A <Email> ---------------------> Foo <Email>
 #     B <eMAIL> ---------------------> Foo <Email>
-#
 #               Foo <EMAIL> b <email>
 #     A <Email> ---------------------> same
 #     B <Email> ---------------------> Foo <EMAIL>
 #     b <eMAIL> ---------------------> Foo <EMAIL>
-#
 #               Foo <Email> b <email>
 #               Foo <Email> <liame>
 #     A <Liame> ---------------------> Foo <Email>
 #     B <Email> ---------------------> Foo <Email>
 #     b <eMAIL> ---------------------> Foo <Email>
 #     c <eMAIL> ---------------------> same
-#
 # See also: 'git shortlog --help' and 'git check-mailmap --help'.
-#
 *Chu-Ching Huang <cchuang@mail.cgu.edu.tw>
 *Dan <coolg49964@gmail.com>
 *Marc-Etienne M.Leveille <protonyc@gmail.com>
@@ -750,7 +690,6 @@ Ilya Pchelintsev <ilya.pchelintsev@outlook.com> ILLIA PCHALINTSAU <ilya.pchelint
 Imran Ahmed Manzoor <imran.manzoor31@gmail.com>
 Ishan Joshi <ishanaj98@gmail.com>
 Ishan Pandhare <91841626+Ishanned@users.noreply.github.com>
-Ishan Pandhare <91841626+Ishanned@users.noreply.github.com>
 Ishan Pandhare <ishan9096137017@gmail.com>
 Isidora Araya <iarayaday@gmail.com>
 Islam Mansour <is3mansour@gmail.com>
@@ -888,7 +827,6 @@ Ka Yi <chua.kayi@yahoo.com.sg>
 Kaifeng Zhu <cafeeee@gmail.com>
 Kalevi Suominen <jksuom@gmail.com> <kalevi.suominen@helsinki.fi>
 Kamlesh Joshi <72374645+kamleshjoshi8102@users.noreply.github.com>
-Karan <grgkaran03@gmail.com>
 Karan <grgkaran03@gmail.com>
 Karan Anand <anandkarancompsci@gmail.com> Karan Anand <119553199+anandkaranubc@users.noreply.github.com>
 Karan Sharma <karan1276@gmail.com>
@@ -1821,7 +1759,5 @@ zzj <29055749+zjzh@users.noreply.github.com>
 Łukasz Pankowski <lukpank@o2.pl>
 彭于斌 <1931127624@qq.com>
 袁野 (Yuan Ye) <yuanyelele@tutanota.com>
-Sushma Kumari <sushmakg006@gmail.com> <sushma.kumari@example.com>
-Sushma Kumari <sushmakg006@gmail.com> <sushmakumari@sushmas-MacBook-Air.local>
 Sushma Kumari <sushmakg006@gmail.com> <sushma.kumari@example.com>
 Sushma Kumari <sushmakg006@gmail.com> <sushmakumari@sushmas-MacBook-Air.local>
