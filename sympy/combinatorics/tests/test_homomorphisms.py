@@ -61,7 +61,6 @@ def test_homomorphism():
     T = homomorphism(D3, D3, D3.generators, D3.generators)
     assert T.is_isomorphism()
 
-
 def test_isomorphisms():
 
     F, a, b = free_group("a, b")
@@ -111,9 +110,60 @@ def test_isomorphisms():
     H=PermutationGroup([a, b])
     assert is_isomorphic(SymmetricGroup(3),H)==True
 
-
 def test_check_homomorphism():
     a = Permutation(1,2,3,4)
     b = Permutation(1,3)
     G = PermutationGroup([a, b])
     raises(ValueError, lambda: homomorphism(G, G, [a], [a]))
+
+def test_fpgroup_isomorphism():
+
+    # S3
+    F, r, s = free_group("r, s")
+    G = FpGroup(F, [r**3, s**2, s*r*s*r])
+    F, a, b = free_group("a, b")
+    H = FpGroup(F, [a**2, b**2, (a*b)**3])
+    assert is_isomorphic(G, H)
+
+    # D4
+    n = 4
+    F, r, s = free_group("r, s")
+    G = FpGroup(F, [r**n, s**2, s*r*s*r])
+    F, a, b = free_group("a, b")
+    H = FpGroup(F, [a**2, b**2, (a*b)**n])
+    assert is_isomorphic(G, H)
+
+    # Q8
+    F, i, j = free_group("i, j")
+    G = FpGroup(F, [i**4, i**2 * j**-2, j**-1 * i * j * i])
+    F, x, y = free_group("x, y")
+    H = FpGroup(F, [x**4, x**2 * y**-2, y**-1 * x * y * x])
+    assert is_isomorphic(G, H)
+
+    # S4
+    F, a, b = free_group("a, b")
+    G = FpGroup(F, [a**4, b**2, (a*b)**3])
+    F, s, t, u = free_group("s, t, u")
+    H = FpGroup(F, [s**2, t**2, u**2, (s*t)**3, (t*u)**3, (s*u)**2])
+    assert is_isomorphic(G, H)
+
+    # C2^3 vs C4xC2
+    F, a, b, c = free_group("a, b, c")
+    G = FpGroup(F, [a**2, b**2, c**2, a*b*a**-1*b**-1, a*c*a**-1*c**-1, b*c*b**-1*c**-1])
+    F, x, y = free_group("x, y")
+    H = FpGroup(F, [x**4, y**4, x**2*y**-2, x*y*(y*x)**-1])
+    assert not is_isomorphic(G, H)
+
+    # Q8 vs D4
+    F, i, j = free_group("i, j")
+    G = FpGroup(F, [i**4, i**2 * j**-2, j**-1 * i * j * i])
+    F, r, s = free_group("r, s")
+    H = FpGroup(F, [r**4, s**2, (r*s)**2])
+    assert not is_isomorphic(G, H)
+
+    # A4
+    F, s, t = free_group("s, t")
+    G = FpGroup(F, [s**2, t**3, (s*t)**3])
+    F, x, y = free_group("x, y")
+    H = FpGroup(F, [x**2, y**3, (x*y)**3])
+    assert is_isomorphic(G, H)

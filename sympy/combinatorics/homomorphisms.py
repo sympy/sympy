@@ -1,4 +1,5 @@
 import itertools
+from sympy.combinatorics.coset_table import modified_coset_enumeration_r
 from sympy.combinatorics.fp_groups import FpGroup, FpSubgroup, simplify_presentation
 from sympy.combinatorics.free_groups import FreeGroup
 from sympy.combinatorics.perm_groups import PermutationGroup
@@ -85,24 +86,44 @@ class GroupHomomorphism:
             image = self.image()
             w = self.domain.identity
             if isinstance(self.codomain, PermutationGroup):
+                if g not in image:
+                    raise ValueError("Given element is not in the image of the homomorphism.")
                 gens = image.generator_product(g)[::-1]
+                for i in range(len(gens)):
+                    s = gens[i]
+                    if s.is_identity:
+                        continue
+                    if s in self._inverses:
+                        w = w*self._inverses[s]
+                    else:
+                        w = w*self._inverses[s**-1]**-1
+                return w
+
             else:
-                gens = g
-            # the following can't be "for s in gens:"
-            # because that would be equivalent to
-            # "for s in gens.array_form:" when g is
-            # a FreeGroupElement. On the other hand,
-            # when you call gens by index, the generator
-            # (or inverse) at position i is returned.
-            for i in range(len(gens)):
-                s = gens[i]
-                if s.is_identity:
-                    continue
-                if s in self._inverses:
-                    w = w*self._inverses[s]
-                else:
-                    w = w*self._inverses[s**-1]**-1
-            return w
+                current_coset = 0
+                im_gens = list(self._inverses)
+                C = modified_coset_enumeration_r(self.codomain, im_gens)
+                total_word = w
+                preimages = list(self._inverses.values())
+                temp_symbols = [gen.array_form[0][0] for gen in C._grp.generators]
+                transl_map = dict(zip(temp_symbols, preimages))
+                symbol_to_group_gen = {gen.array_form[0][0]: gen for gen in self.codomain.generators}
+                for s,exp in g.array_form:
+                    t=symbol_to_group_gen[s]
+                    if exp<0:
+                        j = C.A_dict[t**-1]
+                    else:
+                        j = C.A_dict[t]
+                    for _ in range(abs(exp)):
+                        word_intermediate = C.P[current_coset][j]
+                        if word_intermediate is not None:
+                            for s,exp in word_intermediate.array_form:
+                                total_word = total_word * transl_map[s]**exp
+                        current_coset = C.table[current_coset][j]
+                if current_coset != 0:
+                    raise ValueError("Given element is not in the image of the homomorphism.")
+                return total_word
+
         elif isinstance(g, list):
             return [self.invert(e) for e in g]
 
