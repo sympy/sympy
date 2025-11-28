@@ -150,17 +150,16 @@ def ratsimpmodprime(expr, G, *gens, quick=True, polynomial=False, **args):
             Cs = symbols("c:%d" % len(M1), cls=Dummy)
             Ds = symbols("d:%d" % len(M2), cls=Dummy)
             ng = Cs + Ds
+            g_ng = opt.gens + ng
 
-            c_hat = Poly(
-                sum(Cs[i] * M1[i] for i in range(len(M1))), opt.gens + ng)
-            d_hat = Poly(
-                sum(Ds[i] * M2[i] for i in range(len(M2))), opt.gens + ng)
+            c_hat = Poly(sum(Cs[i] * M1[i] for i in range(len(M1))), g_ng)
+            d_hat = Poly(sum(Ds[i] * M2[i] for i in range(len(M2))), g_ng)
 
-            r = reduced(a * d_hat - b * c_hat, G, opt.gens + ng,
+            r = reduced(a * d_hat - b * c_hat, G, g_ng,
                         order=opt.order, polys=True)[1]
 
             S = Poly(r, gens=opt.gens).coeffs()
-            sol = solve(S, Cs + Ds, particular=True, quick=True)
+            sol = solve(S, ng, particular=True, quick=True)
 
             if sol and not all(s == 0 for s in sol.values()):
                 c = c_hat.subs(sol)
@@ -169,15 +168,15 @@ def ratsimpmodprime(expr, G, *gens, quick=True, polynomial=False, **args):
                 # The "free" variables occurring before as parameters
                 # might still be in the substituted c, d, so set them
                 # to the value chosen before:
-                c = c.subs(dict(list(zip(Cs + Ds, [1] * (len(Cs) + len(Ds))))))
-                d = d.subs(dict(list(zip(Cs + Ds, [1] * (len(Cs) + len(Ds))))))
+                c = c.subs(dict(list(zip(ng, [1] * (len(Cs) + len(Ds))))))
+                d = d.subs(dict(list(zip(ng, [1] * (len(Cs) + len(Ds))))))
 
                 c = Poly(c, opt.gens)
                 d = Poly(d, opt.gens)
                 if d == 0:
                     raise ValueError('Ideal not prime?')
 
-                allsol.append((c_hat, d_hat, S, Cs + Ds))
+                allsol.append((c_hat, d_hat, S, ng))
                 if N + D != maxdeg:
                     allsol = [allsol[-1]]
 
