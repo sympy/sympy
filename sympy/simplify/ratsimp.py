@@ -137,9 +137,7 @@ def ratsimpmodprime(expr, G, *gens, quick=True, polynomial=False, **args):
             bound = maxdeg - 1
         else:
             bound = maxdeg
-        while N + D <= bound:
-            if (N, D) in tested:
-                break
+        while N + D <= bound and (N, D) not in tested:
             tested.add((N, D))
 
             M1 = staircase(N)
