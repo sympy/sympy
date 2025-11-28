@@ -5,6 +5,7 @@ from sympy.core.singleton import S
 from sympy.polys import cancel, ComputationFailed, parallel_poly_from_expr, reduced, Poly
 from sympy.polys.monomials import Monomial, monomial_div
 from sympy.polys.polyerrors import DomainError, PolificationFailed
+from sympy.utilities.memoization import recurrence_memo
 from sympy.utilities.misc import debug, debugf
 
 def ratsimp(expr):
@@ -84,23 +85,20 @@ def ratsimpmodprime(expr, G, *gens, quick=True, polynomial=False, **args):
     leading_monomials = [g.LM(opt.order) for g in polys[2:]]
     tested = set()
 
-    def staircase(n):
+    @recurrence_memo([[S.One]])
+    def staircase(n, prev):
         """
         Compute all monomials with degree less than ``n`` that are
         not divisible by any element of ``leading_monomials``.
         """
-        if n == 0:
-            return [1]
-        s = []
+        result = []
         for mi in combinations_with_replacement(range(len(opt.gens)), n):
             m = [0]*len(opt.gens)
             for i in mi:
                 m[i] += 1
-            if all(monomial_div(m, lmg) is None for lmg in
-                   leading_monomials):
-                s.append(m)
-
-        return [Monomial(_s).as_expr(*opt.gens) for _s in s] + staircase(n - 1)
+            if all(monomial_div(m, lmg) is None for lmg in leading_monomials):
+                result.append(Monomial(m).as_expr(*opt.gens))
+        return result + prev[-1]
 
     def _ratsimpmodprime(a, b, allsol, N=0, D=0):
         r"""
