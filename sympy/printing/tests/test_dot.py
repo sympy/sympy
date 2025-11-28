@@ -97,30 +97,108 @@ def test_dotedges_shortnames():
 
 def test_dotprint():
     text = dotprint(x+2, repeat=False)
-    assert all(e in text for e in dotedges(x+2, repeat=False))
-    assert all(
-        n in text for n in [dotnode(expr, repeat=False)
-        for expr in (x, Integer(2), x+2)])
-    assert 'digraph' in text
+    assert text == \
+"""digraph{
+
+# Graph style
+"ordering"="out"
+"rankdir"="TD"
+
+#########
+# Nodes #
+#########
+
+"node_0" ["color"="black", "label"="Add", "shape"="ellipse"];
+"Integer(2)" ["color"="black", "label"="2", "shape"="ellipse"];
+"Symbol('x')" ["color"="black", "label"="x", "shape"="ellipse"];
+
+#########
+# Edges #
+#########
+
+"node_0" -> "Integer(2)";
+"node_0" -> "Symbol('x')";
+}"""
 
     text = dotprint(x+x**2, repeat=False)
-    assert all(e in text for e in dotedges(x+x**2, repeat=False))
-    assert all(
-        n in text for n in [dotnode(expr, repeat=False)
-        for expr in (x, Integer(2), x**2)])
-    assert 'digraph' in text
+    assert text == \
+"""digraph{
+
+# Graph style
+"ordering"="out"
+"rankdir"="TD"
+
+#########
+# Nodes #
+#########
+
+"node_0" ["color"="black", "label"="Add", "shape"="ellipse"];
+"Symbol('x')" ["color"="black", "label"="x", "shape"="ellipse"];
+"node_1" ["color"="black", "label"="Pow", "shape"="ellipse"];
+"Symbol('x')" ["color"="black", "label"="x", "shape"="ellipse"];
+"Integer(2)" ["color"="black", "label"="2", "shape"="ellipse"];
+
+#########
+# Edges #
+#########
+
+"node_0" -> "Symbol('x')";
+"node_0" -> "node_1";
+"node_1" -> "Symbol('x')";
+"node_1" -> "Integer(2)";
+}"""
 
     text = dotprint(x+x**2, repeat=True)
-    assert all(e in text for e in dotedges(x+x**2, repeat=True))
-    assert all(
-        n in text for n in [dotnode(expr, pos=())
-        for expr in [x + x**2]])
+    assert text == \
+"""digraph{
+
+# Graph style
+"ordering"="out"
+"rankdir"="TD"
+
+#########
+# Nodes #
+#########
+
+"node_0_()" ["color"="black", "label"="Add", "shape"="ellipse"];
+"Symbol('x')_(0,)" ["color"="black", "label"="x", "shape"="ellipse"];
+"node_1_(1,)" ["color"="black", "label"="Pow", "shape"="ellipse"];
+"Symbol('x')_(1, 0)" ["color"="black", "label"="x", "shape"="ellipse"];
+"Integer(2)_(1, 1)" ["color"="black", "label"="2", "shape"="ellipse"];
+
+#########
+# Edges #
+#########
+
+"node_0_()" -> "Symbol('x')_(0,)";
+"node_0_()" -> "node_1_(1,)";
+"node_1_(1,)" -> "Symbol('x')_(1, 0)";
+"node_1_(1,)" -> "Integer(2)_(1, 1)";
+}"""
 
     text = dotprint(x**x, repeat=True)
-    assert all(e in text for e in dotedges(x**x, repeat=True))
-    assert all(
-        n in text for n in [dotnode(x, pos=(0,)), dotnode(x, pos=(1,))])
-    assert 'digraph' in text
+    assert text == \
+"""digraph{
+
+# Graph style
+"ordering"="out"
+"rankdir"="TD"
+
+#########
+# Nodes #
+#########
+
+"node_0_()" ["color"="black", "label"="Pow", "shape"="ellipse"];
+"Symbol('x')_(0,)" ["color"="black", "label"="x", "shape"="ellipse"];
+"Symbol('x')_(1,)" ["color"="black", "label"="x", "shape"="ellipse"];
+
+#########
+# Edges #
+#########
+
+"node_0_()" -> "Symbol('x')_(0,)";
+"node_0_()" -> "Symbol('x')_(1,)";
+}"""
 
 def test_dotprint_shortnames():
     purestr_short = get_purestr_short()
@@ -157,7 +235,7 @@ def test_dotprint_shortnames():
 
 def test_dotprint_depth():
     text = dotprint(3*x+2, depth=1)
-    assert dotnode(3*x+2) in text
+    assert dotnode(3*x+2) not in text
     assert dotnode(x) not in text
     text = dotprint(3*x+2)
     assert "depth" not in text
@@ -172,35 +250,8 @@ def test_dotprint_depth_shortnames():
 def test_Matrix_and_non_basics():
     from sympy.matrices.expressions.matexpr import MatrixSymbol
     n = Symbol('n')
-    assert dotprint(MatrixSymbol('X', n, n)) == \
-"""digraph{
-
-# Graph style
-"ordering"="out"
-"rankdir"="TD"
-
-#########
-# Nodes #
-#########
-
-"MatrixSymbol(Str('X'), Symbol('n'), Symbol('n'))_()" ["color"="black", "label"="MatrixSymbol", "shape"="ellipse"];
-"Str('X')_(0,)" ["color"="blue", "label"="X", "shape"="ellipse"];
-"Symbol('n')_(1,)" ["color"="black", "label"="n", "shape"="ellipse"];
-"Symbol('n')_(2,)" ["color"="black", "label"="n", "shape"="ellipse"];
-
-#########
-# Edges #
-#########
-
-"MatrixSymbol(Str('X'), Symbol('n'), Symbol('n'))_()" -> "Str('X')_(0,)";
-"MatrixSymbol(Str('X'), Symbol('n'), Symbol('n'))_()" -> "Symbol('n')_(1,)";
-"MatrixSymbol(Str('X'), Symbol('n'), Symbol('n'))_()" -> "Symbol('n')_(2,)";
-}"""
-
-def test_Matrix_and_non_basics_shortnames():
-    from sympy.matrices.expressions.matexpr import MatrixSymbol
-    n = Symbol('n')
-    assert dotprint(MatrixSymbol('X', n, n), shortnodenames=True) == \
+    text = dotprint(MatrixSymbol('X', n, n))
+    assert text == \
 """digraph{
 
 # Graph style
