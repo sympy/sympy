@@ -48,6 +48,8 @@ def test_log1p():
     # Precision
     assert not abs(log(1e-99 + 1).evalf() - 1e-99) < 1e-100  # for comparison
     assert abs(expand_log(log1p(1e-99)).evalf() - 1e-99) < 1e-100
+    # Test direct evalf with very small numbers (gh-28579)
+    assert abs(log1p(1.3e-45).evalf(n=3) - 1.3e-45) < 1e-46
 
     # Properties
     assert log1p(-2**Rational(-1, 2)).is_real
