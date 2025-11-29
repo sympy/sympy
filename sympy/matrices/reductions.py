@@ -379,7 +379,7 @@ def _rref(
         A function used to determine whether an entry should be treated
         as zero when selecting pivots. It should return ``True`` if the
         value is zero, ``False`` if it is nonzero, or ``None`` if the
-        zero-ness cannot be determined. By default, SymPy’s internal
+        zero-ness cannot be determined. By default, SymPy's internal
         ``_iszero`` function is used.
 
     simplify : bool or callable, optional
