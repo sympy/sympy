@@ -268,6 +268,11 @@ class QExpr(Expr):
             self.label, self._label_separator, printer, *args
         )
 
+    def _print_label_typst(self, printer, *args):
+        return self._print_sequence(
+            self.label, self._label_separator, printer, *args
+        )
+
     # Printing of contents (default to label)
 
     def _print_contents(self, printer, *args):
@@ -285,6 +290,9 @@ class QExpr(Expr):
 
     def _print_contents_latex(self, printer, *args):
         return self._print_label_latex(printer, *args)
+
+    def _print_contents_typst(self, printer, *args):
+        return self._print_label_typst(printer, *args)
 
     # Main printing methods
 
@@ -311,6 +319,9 @@ class QExpr(Expr):
 
     def _latex(self, printer, *args):
         return self._print_contents_latex(printer, *args)
+
+    def _typst(self, printer, *args):
+        return self._print_contents_typst(printer, *args)
 
     #-------------------------------------------------------------------------
     # Represent
