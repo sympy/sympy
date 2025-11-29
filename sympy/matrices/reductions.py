@@ -375,13 +375,19 @@ def _rref(
     Parameters
     ==========
 
-    iszerofunc : Function
-        A function used for detecting whether an element can
-        act as a pivot.  ``lambda x: x.is_zero`` is used by default.
+    iszerofunc : callable, optional
+        A function used to determine whether an entry should be treated
+        as zero when selecting pivots. It should return True if the
+        value is zero, False if it is nonzero, or None if the zero-ness
+        cannot be determined. By default, SymPy's internal _iszero
+        function is used.
 
-    simplify : Function
-        A function used to simplify elements when looking for a pivot.
-        By default SymPy's ``simplify`` is used.
+    simplify : bool or callable, optional
+        Controls simplification of elements before zero testing.
+        If False (default), no user-specified simplification is applied.
+        If True, SymPy's default _simplify function is used.
+        If a callable is provided, it will be used as a custom
+        simplification function.
 
     pivots : True or False
         If ``True``, a tuple containing the row-reduced matrix and a tuple
