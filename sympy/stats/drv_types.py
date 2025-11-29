@@ -174,7 +174,7 @@ def FlorySchulz(name, a):
     >>> from sympy import Symbol, S
 
     >>> a = S.One / 5
-    >>> z = Symbol("z")
+    >>> z = Symbol("z", positive=True, integer=True)
 
     >>> X = FlorySchulz("x", a)
 
@@ -208,6 +208,9 @@ class GeometricDistribution(SingleDiscreteDistribution):
 
     def pdf(self, k):
         return (1 - self.p)**(k - 1) * self.p
+
+    def _cdf(self, x):
+        return Piecewise((1 - (1 - self.p)**floor(x), x >= 1), (0, True))
 
     def _characteristic_function(self, t):
         p = self.p
@@ -247,7 +250,7 @@ def Geometric(name, p):
     >>> from sympy import Symbol, S
 
     >>> p = S.One / 5
-    >>> z = Symbol("z")
+    >>> z = Symbol("z", positive=True, integer=True)
 
     >>> X = Geometric("x", p)
 
@@ -412,7 +415,7 @@ def Logarithmic(name, p):
     >>> from sympy import Symbol, S
 
     >>> p = S.One / 5
-    >>> z = Symbol("z")
+    >>> z = Symbol("z", positive=True, integer=True)
 
     >>> X = Logarithmic("x", p)
 
@@ -498,7 +501,7 @@ def NegativeBinomial(name, r, p):
 
     >>> r = 5
     >>> p = S.One / 3
-    >>> z = Symbol("z")
+    >>> z = Symbol("z", nonnegative=True, integer=True)
 
     >>> X = NegativeBinomial("x", r, p)
 
@@ -584,7 +587,7 @@ def Poisson(name, lamda):
     >>> from sympy import Symbol, simplify
 
     >>> rate = Symbol("lambda", positive=True)
-    >>> z = Symbol("z")
+    >>> z = Symbol("z", nonnegative=True, integer=True)
 
     >>> X = Poisson("x", rate)
 
@@ -754,7 +757,7 @@ def YuleSimon(name, rho):
     >>> from sympy import Symbol, simplify
 
     >>> p = 5
-    >>> z = Symbol("z")
+    >>> z = Symbol("z", positive=True, integer=True)
 
     >>> X = YuleSimon("x", p)
 
@@ -827,7 +830,7 @@ def Zeta(name, s):
     >>> from sympy import Symbol
 
     >>> s = 5
-    >>> z = Symbol("z")
+    >>> z = Symbol("z", positive=True, integer=True)
 
     >>> X = Zeta("x", s)
 

@@ -191,6 +191,23 @@ class ConditionalFiniteDomain(ConditionalDomain, ProductFiniteDomain):
 
 
 class SingleFiniteDistribution(Distribution, NamedArgsMixin):
+    """Finite distribution of a single variable.
+
+    The distribution object can be called in two ways to evaluate the
+    probability mass:
+
+    1. ``distribution(x)``:
+       Returns the probability mass at x, with support checking enforced
+       via Piecewise. For symbolic arguments where support membership cannot
+       be determined, this returns a Piecewise expression that evaluates to
+       the pmf formula when x is in the support, and 0 otherwise.
+
+    2. ``distribution.pmf(x)``:
+       Returns the raw probability mass formula without support checking.
+       This is useful for symbolic manipulation where the Piecewise wrapper
+       would be cumbersome.
+    """
+
     def __new__(cls, *args):
         args = list(map(sympify, args))
         return Basic.__new__(cls, *args)
@@ -219,8 +236,15 @@ class SingleFiniteDistribution(Distribution, NamedArgsMixin):
     __iter__ = property(lambda self: self.dict.__iter__)
     __getitem__ = property(lambda self: self.dict.__getitem__)
 
-    def __call__(self, *args):
-        return self.pmf(*args)
+    def __call__(self, arg):
+        from sympy.sets.contains import Contains
+        in_domain = Contains(arg, self.set)
+        if in_domain == False:
+            return S.Zero
+        elif in_domain == True:
+            return self.pmf(arg)
+        else:
+            return Piecewise((self.pmf(arg), in_domain), (S.Zero, True))
 
     def __contains__(self, other):
         return other in self.set
