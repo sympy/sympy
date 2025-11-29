@@ -171,7 +171,7 @@ github https://github.com/<your-github-username>/sympy (push)
 
 ## Virtual Environment Setup
 
-You may want to take advantage of using virtual environments to isolate your development version of SymPy from any system wide installed versions, e.g. from `apt-get install python-sympy`.
+You may want to take advantage of using virtual environments to isolate your development version of SymPy from any system wide installed versions, e.g. from `apt-get install python3-sympy`.
 
 If you use `conda`, you can use it to create a virtual environment:
 
