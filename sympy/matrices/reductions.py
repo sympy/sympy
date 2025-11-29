@@ -385,7 +385,7 @@ def _rref(
     simplify : bool or callable, optional
         Controls simplification of elements before zero testing.
         If ``False`` (default), no user-specified simplification is applied.
-        If ``True``, SymPy’s default ``_simplify`` function is used.
+        If ``True``, SymPy's default ``_simplify`` function is used.
         If a callable is provided, it will be used as a custom
         simplification function.
 
