@@ -3828,7 +3828,7 @@ def _handle_poly(polys, symbols):
         # The use of Groebner over RR is likely to result incorrectly in an
         # inconsistent Groebner basis. So, convert any float coefficients to
         # Rational before computing the Groebner basis.
-        polys = [poly(nsimplify(p, rational=True)) for p in polys]
+        polys = [poly(nsimplify(p.as_expr().evalf(), rational=True)) for p in polys]
 
     # Compute a Groebner basis in grevlex order wrt the ordering given. We will
     # try to convert this to lex order later. Usually it seems to be more
