@@ -677,8 +677,7 @@ class LatexPrinter(Printer):
                     if expr.base.is_Symbol:
                         base = self.parenthesize_super(base)
                     exp = self._print(expr.exp)
-                    return f"{base}^{{{exp}}}"
-                
+                    return f"{base}^{{{exp}}}"                
                 # special case for 1^(-x), issue 9216
                 if expr.base == 1:
                     return r"%s^{%s}" % (expr.base, expr.exp)
