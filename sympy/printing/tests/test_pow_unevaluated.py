@@ -8,7 +8,8 @@ def _one_of(actual: str, choices):
 def test_latex_unevaluated_pow_simple():
     expr = Pow(I, -4, evaluate=False)
     # For I**-4 some printers may evaluate to 1; the important thing is
-    # there is no recursion and output is sensible. Accept either form.
+    # there is no recursion and output is sensible
+    # Accept either form
     out = latex(expr)
     acceptable = [r"i^{-4}", r"\frac{1}{i^{4}}", r"1"]
     assert out in acceptable or "RecursionError" not in out
@@ -17,7 +18,7 @@ def test_latex_unevaluated_pow_symbol_base():
     x = Symbol('x')
     expr = Pow(x, -3, evaluate=False)
     out = latex(expr)
-    # Accept either the explicit negative exponent or a fraction form.
+    # Accept either the explicit negative exponent or a fraction form
     acceptable = [r"x^{-3}", r"\frac{1}{x^{3}}"]
     assert _one_of(out, acceptable)
 
@@ -37,8 +38,8 @@ def test_latex_unevaluated_pow_function_base():
     assert _one_of(out, acceptable)
 
 def test_latex_unevaluated_pow_does_not_rewrite_as_mul():
-    # Ensure the case that previously recursed does not recurse.
+    # Ensure the case that previously recursed does not recurse
     expr = Pow(I, -4, evaluate=False)
     out = latex(expr)
-    # It should return a string and not blow up with RecursionError.
+    # It should return a string and not blow up with RecursionError
     assert isinstance(out, str)

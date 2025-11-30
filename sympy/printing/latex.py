@@ -671,7 +671,7 @@ class LatexPrinter(Printer):
                     return self._print(expr.base, exp="%s/%s" % (p, q))
                 return r"%s^{%s/%s}" % (base, p, q)
             elif expr.exp.is_negative and expr.base.is_commutative:
-                # FIRST → detect unevaluated pow before anything else
+                # FIRST detect unevaluated pow before anything else
                 if Pow(expr.base, expr.exp, evaluate=True) != expr:
                     base = self.parenthesize(expr.base, PRECEDENCE["Pow"])
                     if expr.base.is_Symbol:
