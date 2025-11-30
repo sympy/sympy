@@ -428,37 +428,15 @@ class Relational(Boolean, EvalfMixin):
     def _eval_simplify(self, **kwargs):
         from .add import Add
         from .expr import Expr
-        from sympy.polys.polytools import gcd
         r = self
         r = r.func(*[i.simplify(**kwargs) for i in r.args])
         if r.is_Relational:
             if not isinstance(r.lhs, Expr) or not isinstance(r.rhs, Expr):
                 return r
-            # Remove additive common terms first.
-            terms_lhs = set(Add.make_args(r.lhs))
-            terms_rhs = set(Add.make_args(r.rhs))
-            common = terms_lhs.intersection(terms_rhs)
-
-            if common:
-                # Subtract the sum of common terms from both sides
-                common_term = Add(*common)
-                r = r.func(r.lhs - common_term, r.rhs - common_term)
-
-            # Remove multiplicative common terms.
-            c1, p1 = r.lhs.as_content_primitive()
-            c2, p2 = r.rhs.as_content_primitive()
-
-            if c1.is_Number and c2.is_Number and (c1 != 1 or c2 != 1):
-                try:
-                    common_factor = gcd(c1, c2)
-                except (TypeError, ValueError):
-                    common_factor = S.One
-
-                # Divide if we found a valid common factor
-                if common_factor is not S.One and common_factor is not S.Zero:
-                    # For inequalities, only divide by positive factors to preserve direction
-                    if r.is_Equality:
-                        r = r.func(r.lhs / common_factor, r.rhs / common_factor)
+            lhs_c, lhs_t = r.lhs.as_coeff_Add()
+            rhs_c, rhs_t = r.rhs.as_coeff_Add()
+            if lhs_c != 0 and lhs_c == rhs_c:
+                r = r.func(r.lhs - lhs_c, r.rhs - rhs_c)
             dif = r.lhs - r.rhs
             # replace dif with a valid Number that will
             # allow a definitive comparison with 0
