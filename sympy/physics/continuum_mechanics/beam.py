@@ -9,7 +9,7 @@ from sympy.core.function import (Derivative, Function)
 from sympy.core.mul import Mul
 from sympy.core.relational import Eq
 from sympy.core.sympify import sympify
-from sympy.solvers import linsolve, solveset
+from sympy.solvers import linsolve, solveset, linear_eq_to_matrix
 from sympy.solvers.ode.ode import dsolve
 from sympy.solvers.solvers import solve
 from sympy.printing import sstr
@@ -1026,8 +1026,35 @@ class Beam:
             eqs = deflection_curve.subs(x, position) - value
             deflection_eqs.append(eqs)
         total_supports = tuple(set(applied_supports + reactions))
-        solution = list((linsolve([shear_curve, moment_curve] + shear_force_eqs + bending_moment_eqs + slope_eqs
-                            + deflection_eqs, (C3, C4) + total_supports + rotation_jumps + deflection_jumps).args)[0])
+
+        equations = [shear_curve, moment_curve] + shear_force_eqs + bending_moment_eqs + slope_eqs + deflection_eqs
+        unknowns = (C3, C4) + total_supports + rotation_jumps + deflection_jumps
+
+        A, b = linear_eq_to_matrix(equations, unknowns)
+
+        rref_A, rref_b = A.rref_rhs(b)
+        for i in range(rref_A.rows):
+            row_sum = sum(rref_A[i, :])
+            rhs = rref_b[i]
+
+            if row_sum == 0 and rhs != 0:
+                if not rhs.is_number:
+                    raise ValueError(
+                            f"The system is only solvable with symbolic constraint"
+                            f" {rhs} = 0.substitute to proceed"
+                    )
+                else:
+                    eqs_str = "\n".join(f"  {equation}" for equation in equations)
+                    unks_str = ", ".join(str(unknown) for unknown in unknowns)
+                    raise ValueError(
+                        f" Inconsistent system detected!\n"
+                        f"   Equations ({len(equations)}):\n{eqs_str}\n"
+                        f"   Unknowns ({len(unknowns)}): {unks_str}\n\n"
+                        "The boundary conditions, supports, or hinges impose contradictory constraints, such as conflicting reaction forces or incompatible hinge conditions."
+                        )
+
+        solution = list((linsolve(equations, unknowns).args)[0])
+
         reaction_index = 2+len(total_supports)
         rotation_index = reaction_index + len(rotation_jumps)
         reaction_solution = solution[2:reaction_index]
