@@ -433,6 +433,10 @@ class Relational(Boolean, EvalfMixin):
         if r.is_Relational:
             if not isinstance(r.lhs, Expr) or not isinstance(r.rhs, Expr):
                 return r
+            lhs_c, lhs_t = r.lhs.as_coeff_Add()
+            rhs_c, rhs_t = r.rhs.as_coeff_Add()
+            if lhs_c != 0 and lhs_c == rhs_c:
+                r = r.func(r.lhs - lhs_c, r.rhs - rhs_c)
             dif = r.lhs - r.rhs
             # replace dif with a valid Number that will
             # allow a definitive comparison with 0
