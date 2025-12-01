@@ -14,6 +14,9 @@ from sympy.functions.elementary.miscellaneous import (sqrt, cbrt, root, Min,
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.functions.special.delta_functions import Heaviside
 
+from sympy.sets.sets import FiniteSet
+from sympy.sets.fancysets import Range
+
 from sympy.utilities.lambdify import lambdify
 from sympy.testing.pytest import raises, skip, ignore_warnings
 
@@ -449,6 +452,7 @@ def test_rewrite_as_Abs():
     test(Min(x, y, z))
     test(Min(Max(w, x), Max(y, z)))
 
+
 def test_issue_14000():
     assert isinstance(sqrt(4, evaluate=False), Pow) == True
     assert isinstance(cbrt(3.5, evaluate=False), Pow) == True
@@ -461,11 +465,26 @@ def test_issue_14000():
     assert root(16, 4, 2, evaluate=False).has(Pow) == True
     assert real_root(-8, 3, evaluate=False).has(Pow) == True
 
+
 def test_issue_6899():
     from sympy.core.function import Lambda
     x = Symbol('x')
     eqn = Lambda(x, x)
     assert eqn.func(*eqn.args) == eqn
+
+
+def test_MinMax_with_Sets():
+    assert Max(Range(3)) == 2
+    assert Max(FiniteSet(-1, 1, 2)) == 2
+    assert Max(Range(3), FiniteSet(-1, 1, 2)) == 2
+    assert Max(Range(3), FiniteSet(-1, 1, 2), 3) == 3
+    assert Min(Range(3)) == 0
+    assert Min(FiniteSet(-1, 1, 2)) == -1
+    assert Min(Range(3), FiniteSet(-1, 1, 2)) == -1
+    assert Min(Range(3), FiniteSet(-1, 1, 2), -2) == -2
+    J = Symbol('J', integer=True, positive=True)
+    assert Max(Range(J)) == J - 1
+
 
 def test_Rem():
     from sympy.abc import x, y
