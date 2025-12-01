@@ -80,3 +80,4 @@ def test_latex_unevaluated_pow_complex_but_not_I():
     out = latex(expr)
     # Should NOT match the special-case for I
     assert out != "i^{-4}" and out != "I^{-4}"
+    
