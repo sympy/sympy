@@ -5367,7 +5367,17 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
         # For MIMO systems, convert each transfer function to state space
         # and create a block-diagonal state space representation
         tf_list = self._flat()
-        ss_list = [tf.rewrite(StateSpace) for tf in tf_list]
+        ss_list = []
+        for tf in tf_list:
+            # Normalize Series/Parallel/Feedback to TransferFunction first
+            tf_norm = tf.doit()
+            ss = tf_norm.rewrite(StateSpace)
+            if not isinstance(ss, StateSpace):
+                raise TypeError(
+                    "Each element of TransferFunctionMatrix must rewrite to a "
+                    "SISO StateSpace when converting to StateSpace. "
+                    f"Got {type(ss).__name__} instead.")
+            ss_list.append(ss)
         
         # Calculate dimensions
         total_states = sum(ss.num_states for ss in ss_list)
@@ -5475,7 +5485,17 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
         # For MIMO systems, convert each transfer function to state space
         # and create a block-diagonal state space representation
         tf_list = self._flat()
-        ss_list = [tf.rewrite(DiscreteStateSpace) for tf in tf_list]
+        ss_list = []
+        for tf in tf_list:
+            # Normalize Series/Parallel/Feedback to DiscreteTransferFunction first
+            tf_norm = tf.doit()
+            ss = tf_norm.rewrite(DiscreteStateSpace)
+            if not isinstance(ss, DiscreteStateSpace):
+                raise TypeError(
+                    "Each element of TransferFunctionMatrix must rewrite to a "
+                    "SISO DiscreteStateSpace when converting to DiscreteStateSpace. "
+                    f"Got {type(ss).__name__} instead.")
+            ss_list.append(ss)
         
         # Calculate dimensions
         total_states = sum(ss.num_states for ss in ss_list)
