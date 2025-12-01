@@ -4909,3 +4909,50 @@ def test_DiscreteStateSpace_stability():
     ss2 = DiscreteStateSpace(A2, B, C, D)
     ineq = ss2.get_asymptotic_stability_conditions()
     assert ineq == [False]
+
+def test_TransferFunctionMatrix_to_StateSpace():
+    # Test continuous-time TFM to StateSpace conversion
+    tf1 = TransferFunction(2, s + 1, s)
+    tf2 = TransferFunction(1, 2*s + 1, s)
+    G_tf = TransferFunctionMatrix([[tf1], [tf2]])
+    
+    # Should not raise AttributeError anymore
+    ss = G_tf.rewrite(StateSpace)
+    
+    # Verify it returns a StateSpace object
+    assert isinstance(ss, StateSpace)
+    
+    # Check dimensions
+    assert ss.num_inputs == 1
+    assert ss.num_outputs == 2
+    assert ss.num_states == 2  # One state per transfer function
+    
+    # Test with multiple inputs and outputs
+    tf3 = TransferFunction(3, s + 2, s)
+    tf4 = TransferFunction(1, s + 3, s)
+    G_tf2 = TransferFunctionMatrix([[tf1, tf3], [tf2, tf4]])
+    
+    ss2 = G_tf2.rewrite(StateSpace)
+    assert isinstance(ss2, StateSpace)
+    assert ss2.num_inputs == 2
+    assert ss2.num_outputs == 2
+    assert ss2.num_states == 4  # Four transfer functions, each with one state
+    
+    # Test discrete-time TFM to DiscreteStateSpace conversion
+    dtf1 = DiscreteTransferFunction(2, z + 1, z, 0.1)
+    dtf2 = DiscreteTransferFunction(1, 2*z + 1, z, 0.1)
+    G_dtf = TransferFunctionMatrix([[dtf1], [dtf2]])
+    
+    dss = G_dtf.rewrite(DiscreteStateSpace)
+    assert isinstance(dss, DiscreteStateSpace)
+    assert dss.num_inputs == 1
+    assert dss.num_outputs == 2
+    assert dss.num_states == 2
+    assert dss.sampling_time == 0.1
+    
+    # Test error when trying to convert continuous TFM to DiscreteStateSpace
+    raises(TypeError, lambda: G_tf.rewrite(DiscreteStateSpace))
+    
+    # Test error when trying to convert discrete TFM to continuous StateSpace
+    raises(TypeError, lambda: G_dtf.rewrite(StateSpace))
+

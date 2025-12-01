@@ -5310,6 +5310,218 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
         expand_mat = self._expr_mat.expand(**hints)
         return _to_TFM(expand_mat, self.var, self.sampling_time)
 
+    def _eval_rewrite_as_StateSpace(self, *args):
+        """
+        Converts a continuous-time MIMO transfer function matrix to an 
+        equivalent state-space model.
+
+        This method converts each transfer function in the matrix to its
+        state-space representation and combines them into a single MIMO
+        state-space system.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s
+        >>> from sympy.physics.control import TransferFunction, TransferFunctionMatrix, StateSpace
+        >>> tf1 = TransferFunction(2, s + 1, s)
+        >>> tf2 = TransferFunction(1, 2*s + 1, s)
+        >>> G_tf = TransferFunctionMatrix([[tf1], [tf2]])
+        >>> ss = G_tf.rewrite(StateSpace)
+        >>> ss
+        StateSpace(Matrix([
+        [-1,    0],
+        [ 0, -1/2]]), Matrix([
+        [1],
+        [1]]), Matrix([
+        [2, 0],
+        [0, 1]]), Matrix([
+        [0],
+        [0]]))
+        >>> ss.num_states
+        2
+        >>> ss.num_inputs
+        1
+        >>> ss.num_outputs
+        2
+
+        For a MIMO (Multiple Input Multiple Output) system:
+
+        >>> tf3 = TransferFunction(3, s + 2, s)
+        >>> tf4 = TransferFunction(1, s + 3, s)
+        >>> G_mimo = TransferFunctionMatrix([[tf1, tf3], [tf2, tf4]])
+        >>> ss_mimo = G_mimo.rewrite(StateSpace)
+        >>> ss_mimo.num_states
+        4
+        >>> ss_mimo.num_inputs
+        2
+        >>> ss_mimo.num_outputs
+        2
+
+        """
+        if not self._is_continuous:
+            raise TypeError(
+                "Cannot rewrite a discrete-time TransferFunctionMatrix as a "
+                "continuous-time StateSpace model.")
+        
+        # For MIMO systems, convert each transfer function to state space
+        # and create a block-diagonal state space representation
+        tf_list = self._flat()
+        ss_list = [tf.rewrite(StateSpace) for tf in tf_list]
+        
+        # Calculate dimensions
+        total_states = sum(ss.num_states for ss in ss_list)
+        num_inputs = self.num_inputs
+        num_outputs = self.num_outputs
+        
+        # Build block diagonal A matrix
+        A = zeros(total_states, total_states)
+        state_offset = 0
+        for ss in ss_list:
+            n = ss.num_states
+            A[state_offset:state_offset+n, state_offset:state_offset+n] = ss.A
+            state_offset += n
+        
+        # Build B matrix - each input affects its corresponding transfer functions
+        B = zeros(total_states, num_inputs)
+        state_offset = 0
+        for out_idx in range(num_outputs):
+            for in_idx in range(num_inputs):
+                ss_idx = out_idx * num_inputs + in_idx
+                ss = ss_list[ss_idx]
+                n = ss.num_states
+                B[state_offset:state_offset+n, in_idx:in_idx+1] = ss.B
+                state_offset += n
+        
+        # Build C matrix - each output comes from its corresponding transfer functions
+        C = zeros(num_outputs, total_states)
+        state_offset = 0
+        for out_idx in range(num_outputs):
+            for in_idx in range(num_inputs):
+                ss_idx = out_idx * num_inputs + in_idx
+                ss = ss_list[ss_idx]
+                n = ss.num_states
+                C[out_idx:out_idx+1, state_offset:state_offset+n] = ss.C
+                state_offset += n
+        
+        # Build D matrix - direct feedthrough from inputs to outputs
+        D = zeros(num_outputs, num_inputs)
+        for out_idx in range(num_outputs):
+            for in_idx in range(num_inputs):
+                ss_idx = out_idx * num_inputs + in_idx
+                ss = ss_list[ss_idx]
+                D[out_idx, in_idx] = ss.D[0, 0]
+        
+        return StateSpace(A, B, C, D)
+
+    def _eval_rewrite_as_DiscreteStateSpace(self, *args):
+        """
+        Converts a discrete-time MIMO transfer function matrix to an 
+        equivalent discrete state-space model.
+
+        This method converts each transfer function in the matrix to its
+        state-space representation and combines them into a single MIMO
+        discrete state-space system.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import z
+        >>> from sympy.physics.control import DiscreteTransferFunction, TransferFunctionMatrix, DiscreteStateSpace
+        >>> dtf1 = DiscreteTransferFunction(2, z + 1, z, 0.1)
+        >>> dtf2 = DiscreteTransferFunction(1, 2*z + 1, z, 0.1)
+        >>> G_dtf = TransferFunctionMatrix([[dtf1], [dtf2]])
+        >>> dss = G_dtf.rewrite(DiscreteStateSpace)
+        >>> dss
+        DiscreteStateSpace(Matrix([
+        [-1,    0],
+        [ 0, -1/2]]), Matrix([
+        [1],
+        [1]]), Matrix([
+        [2, 0],
+        [0, 1]]), Matrix([
+        [0],
+        [0]]), 0.1)
+        >>> dss.num_states
+        2
+        >>> dss.num_inputs
+        1
+        >>> dss.num_outputs
+        2
+        >>> dss.sampling_time
+        0.1
+
+        For a MIMO (Multiple Input Multiple Output) discrete system:
+
+        >>> dtf3 = DiscreteTransferFunction(3, z + 2, z, 0.1)
+        >>> dtf4 = DiscreteTransferFunction(1, z + 3, z, 0.1)
+        >>> G_mimo = TransferFunctionMatrix([[dtf1, dtf3], [dtf2, dtf4]])
+        >>> dss_mimo = G_mimo.rewrite(DiscreteStateSpace)
+        >>> dss_mimo.num_states
+        4
+        >>> dss_mimo.num_inputs
+        2
+        >>> dss_mimo.num_outputs
+        2
+        >>> dss_mimo.sampling_time
+        0.1
+
+        """
+        if self._is_continuous:
+            raise TypeError(
+                "Cannot rewrite a continuous-time TransferFunctionMatrix as a "
+                "discrete-time DiscreteStateSpace model.")
+        
+        # For MIMO systems, convert each transfer function to state space
+        # and create a block-diagonal state space representation
+        tf_list = self._flat()
+        ss_list = [tf.rewrite(DiscreteStateSpace) for tf in tf_list]
+        
+        # Calculate dimensions
+        total_states = sum(ss.num_states for ss in ss_list)
+        num_inputs = self.num_inputs
+        num_outputs = self.num_outputs
+        
+        # Build block diagonal A matrix
+        A = zeros(total_states, total_states)
+        state_offset = 0
+        for ss in ss_list:
+            n = ss.num_states
+            A[state_offset:state_offset+n, state_offset:state_offset+n] = ss.A
+            state_offset += n
+        
+        # Build B matrix - each input affects its corresponding transfer functions
+        B = zeros(total_states, num_inputs)
+        state_offset = 0
+        for out_idx in range(num_outputs):
+            for in_idx in range(num_inputs):
+                ss_idx = out_idx * num_inputs + in_idx
+                ss = ss_list[ss_idx]
+                n = ss.num_states
+                B[state_offset:state_offset+n, in_idx:in_idx+1] = ss.B
+                state_offset += n
+        
+        # Build C matrix - each output comes from its corresponding transfer functions
+        C = zeros(num_outputs, total_states)
+        state_offset = 0
+        for out_idx in range(num_outputs):
+            for in_idx in range(num_inputs):
+                ss_idx = out_idx * num_inputs + in_idx
+                ss = ss_list[ss_idx]
+                n = ss.num_states
+                C[out_idx:out_idx+1, state_offset:state_offset+n] = ss.C
+                state_offset += n
+        
+        # Build D matrix - direct feedthrough from inputs to outputs
+        D = zeros(num_outputs, num_inputs)
+        for out_idx in range(num_outputs):
+            for in_idx in range(num_inputs):
+                ss_idx = out_idx * num_inputs + in_idx
+                ss = ss_list[ss_idx]
+                D[out_idx, in_idx] = ss.D[0, 0]
+        
+        return DiscreteStateSpace(A, B, C, D, self.sampling_time)
+
     @property
     def sampling_time(self):
         return self.args[0][0][0].sampling_time
