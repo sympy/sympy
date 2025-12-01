@@ -1297,7 +1297,7 @@ class PermutationGroup(Basic):
         coset_factor
 
         """
-        if len(self._base) == 0:
+        if len(self.base) == 0:
             if self.contains(g):
                 return 0
             else:
