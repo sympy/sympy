@@ -2030,6 +2030,28 @@ def test_nonlinsolve_inexact():
     assert all(abs(res.args[i][j] - sol[i][j]) < 1e-9
                for i in range(5) for j in range(2))
 
+def test_nonlinsolve_issue_28646():
+    # Issue #28646
+    x, y = symbols('x, y')
+    lst = [
+        x**2*(y - 0.508793242825092)**2 - sin(pi/8)*sqrt(0.508793242825092**2),
+        (x - 1)**2*y**2 - 0.508793242825092**2
+    ]
+    sol = [
+        (-1.46090514484456, 0.206750448667629),
+        (-0.523599958428888, -0.333941491669343),
+        (0.343659735308009, -0.775197363617209),
+        (0.593645451108387, 1.25209190893042),
+        (1.65634026469208, 0.77519736361721),
+        (2.52359995842889, 0.333941491669342),
+        (0.433629846868413 - 0.82415098716298*I, 0.28816530685116 - 0.419322453336153*I),
+        (0.433629846868413 + 0.82415098716298*I, 0.28816530685116 + 0.419322453336153*I),
+    ]
+    res = nonlinsolve(lst, x, y)
+    assert len(res) == 8
+    assert all(abs(res.args[i][j] - sol[i][j]) < 1e-9
+               for i in range(8) for j in range(2))
+
 @XFAIL
 def test_solve_nonlinear_trans():
     # After the transcendental equation solver these will work
