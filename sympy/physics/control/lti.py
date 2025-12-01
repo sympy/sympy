@@ -5312,7 +5312,7 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
 
     def _eval_rewrite_as_StateSpace(self, *args):
         """
-        Converts a continuous-time MIMO transfer function matrix to an 
+        Converts a continuous-time MIMO transfer function matrix to an
         equivalent state-space model.
 
         This method converts each transfer function in the matrix to its
@@ -5363,7 +5363,7 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
             raise TypeError(
                 "Cannot rewrite a discrete-time TransferFunctionMatrix as a "
                 "continuous-time StateSpace model.")
-        
+
         # For MIMO systems, convert each transfer function to state space
         # and create a block-diagonal state space representation
         tf_list = self._flat()
@@ -5378,12 +5378,12 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
                     "SISO StateSpace when converting to StateSpace. "
                     f"Got {type(ss).__name__} instead.")
             ss_list.append(ss)
-        
+
         # Calculate dimensions
         total_states = sum(ss.num_states for ss in ss_list)
         num_inputs = self.num_inputs
         num_outputs = self.num_outputs
-        
+
         # Build block diagonal A matrix
         A = zeros(total_states, total_states)
         state_offset = 0
@@ -5391,7 +5391,7 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
             n = ss.num_states
             A[state_offset:state_offset+n, state_offset:state_offset+n] = ss.A
             state_offset += n
-        
+
         # Build B matrix - each input affects its corresponding transfer functions
         B = zeros(total_states, num_inputs)
         state_offset = 0
@@ -5402,7 +5402,7 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
                 n = ss.num_states
                 B[state_offset:state_offset+n, in_idx:in_idx+1] = ss.B
                 state_offset += n
-        
+
         # Build C matrix - each output comes from its corresponding transfer functions
         C = zeros(num_outputs, total_states)
         state_offset = 0
@@ -5413,7 +5413,7 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
                 n = ss.num_states
                 C[out_idx:out_idx+1, state_offset:state_offset+n] = ss.C
                 state_offset += n
-        
+
         # Build D matrix - direct feedthrough from inputs to outputs
         D = zeros(num_outputs, num_inputs)
         for out_idx in range(num_outputs):
@@ -5421,12 +5421,12 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
                 ss_idx = out_idx * num_inputs + in_idx
                 ss = ss_list[ss_idx]
                 D[out_idx, in_idx] = ss.D[0, 0]
-        
+
         return StateSpace(A, B, C, D)
 
     def _eval_rewrite_as_DiscreteStateSpace(self, *args):
         """
-        Converts a discrete-time MIMO transfer function matrix to an 
+        Converts a discrete-time MIMO transfer function matrix to an
         equivalent discrete state-space model.
 
         This method converts each transfer function in the matrix to its
@@ -5481,7 +5481,7 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
             raise TypeError(
                 "Cannot rewrite a continuous-time TransferFunctionMatrix as a "
                 "discrete-time DiscreteStateSpace model.")
-        
+
         # For MIMO systems, convert each transfer function to state space
         # and create a block-diagonal state space representation
         tf_list = self._flat()
@@ -5496,12 +5496,12 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
                     "SISO DiscreteStateSpace when converting to DiscreteStateSpace. "
                     f"Got {type(ss).__name__} instead.")
             ss_list.append(ss)
-        
+
         # Calculate dimensions
         total_states = sum(ss.num_states for ss in ss_list)
         num_inputs = self.num_inputs
         num_outputs = self.num_outputs
-        
+
         # Build block diagonal A matrix
         A = zeros(total_states, total_states)
         state_offset = 0
@@ -5509,7 +5509,7 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
             n = ss.num_states
             A[state_offset:state_offset+n, state_offset:state_offset+n] = ss.A
             state_offset += n
-        
+
         # Build B matrix - each input affects its corresponding transfer functions
         B = zeros(total_states, num_inputs)
         state_offset = 0
@@ -5520,7 +5520,7 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
                 n = ss.num_states
                 B[state_offset:state_offset+n, in_idx:in_idx+1] = ss.B
                 state_offset += n
-        
+
         # Build C matrix - each output comes from its corresponding transfer functions
         C = zeros(num_outputs, total_states)
         state_offset = 0
@@ -5531,7 +5531,7 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
                 n = ss.num_states
                 C[out_idx:out_idx+1, state_offset:state_offset+n] = ss.C
                 state_offset += n
-        
+
         # Build D matrix - direct feedthrough from inputs to outputs
         D = zeros(num_outputs, num_inputs)
         for out_idx in range(num_outputs):
@@ -5539,7 +5539,7 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
                 ss_idx = out_idx * num_inputs + in_idx
                 ss = ss_list[ss_idx]
                 D[out_idx, in_idx] = ss.D[0, 0]
-        
+
         return DiscreteStateSpace(A, B, C, D, self.sampling_time)
 
     @property

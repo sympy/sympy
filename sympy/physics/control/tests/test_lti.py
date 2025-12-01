@@ -17,7 +17,7 @@ from sympy.polys.polytools import factor
 from sympy.polys.rootoftools import CRootOf
 from sympy.simplify.simplify import simplify
 from sympy.core.containers import Tuple
-from sympy.matrices import ImmutableMatrix, Matrix, ShapeError
+from sympy.matrices import ImmutableMatrix, Matrix, ShapeError, zeros
 from sympy.functions.elementary.trigonometric import sin, cos
 from sympy.physics.control.lti import (
     create_transfer_function, TransferFunctionBase, TransferFunction,
@@ -4915,69 +4915,82 @@ def test_TransferFunctionMatrix_to_StateSpace():
     tf1 = TransferFunction(2, s + 1, s)
     tf2 = TransferFunction(1, 2*s + 1, s)
     G_tf = TransferFunctionMatrix([[tf1], [tf2]])
-    
+
     # Should not raise AttributeError anymore
     ss = G_tf.rewrite(StateSpace)
-    
+
     # Verify it returns a StateSpace object
     assert isinstance(ss, StateSpace)
-    
+
     # Check dimensions
     assert ss.num_inputs == 1
     assert ss.num_outputs == 2
     assert ss.num_states == 2  # One state per transfer function
-    
+
     # Verify actual matrix values for the simple SIMO case
-    # Block-diagonal state-space representation:
-    # tf1 = 2/(s+1) -> A1=[-1], B1=[1], C1=[2], D1=[0]
-    # tf2 = 1/(2s+1) -> A2=[-1/2], B2=[1], C2=[1], D2=[0]
-    expected_A = Matrix([[-1, 0], [0, Rational(-1, 2)]])
-    expected_B = Matrix([[1], [1]])
-    expected_C = Matrix([[2, 0], [0, 1]])
-    expected_D = Matrix([[0], [0]])
+    # Derive expected matrices from individual TF realizations
+    # This validates the block-diagonal assembly without hardcoding canonical forms
+    ss1 = tf1.rewrite(StateSpace)
+    ss2 = tf2.rewrite(StateSpace)
+
+    # For a SIMO system [[tf1], [tf2]], the block-diagonal form should be:
+    # A = block_diag(A1, A2)
+    # B = vstack(B1, B2)
+    # C = [[C1, 0], [0, C2]]
+    # D = vstack(D1, D2)
+    expected_A = ss1.A.row_join(zeros(1, 1)).col_join(zeros(1, 1).row_join(ss2.A))
+    expected_B = ss1.B.col_join(ss2.B)
+    expected_C = ss1.C.row_join(zeros(1, 1)).col_join(zeros(1, 1).row_join(ss2.C))
+    expected_D = ss1.D.col_join(ss2.D)
+
     assert ss.A == expected_A
     assert ss.B == expected_B
     assert ss.C == expected_C
     assert ss.D == expected_D
-    
+
     # Test with multiple inputs and outputs (MIMO)
     tf3 = TransferFunction(3, s + 2, s)
     tf4 = TransferFunction(1, s + 3, s)
     G_tf2 = TransferFunctionMatrix([[tf1, tf3], [tf2, tf4]])
-    
+
     ss2 = G_tf2.rewrite(StateSpace)
     assert isinstance(ss2, StateSpace)
     assert ss2.num_inputs == 2
     assert ss2.num_outputs == 2
     assert ss2.num_states == 4  # Four transfer functions, each with one state
-    
+
     # Verify block-diagonal structure for MIMO
-    expected_A_mimo = Matrix([[-1, 0, 0, 0], [0, -2, 0, 0], 
+    expected_A_mimo = Matrix([[-1, 0, 0, 0], [0, -2, 0, 0],
                               [0, 0, Rational(-1, 2), 0], [0, 0, 0, -3]])
     assert ss2.A == expected_A_mimo
-    
+
     # Test discrete-time TFM to DiscreteStateSpace conversion
     dtf1 = DiscreteTransferFunction(2, z + 1, z, 0.1)
     dtf2 = DiscreteTransferFunction(1, 2*z + 1, z, 0.1)
     G_dtf = TransferFunctionMatrix([[dtf1], [dtf2]])
-    
+
     dss = G_dtf.rewrite(DiscreteStateSpace)
     assert isinstance(dss, DiscreteStateSpace)
     assert dss.num_inputs == 1
     assert dss.num_outputs == 2
     assert dss.num_states == 2
     assert dss.sampling_time == 0.1
-    
+
     # Verify matrix values for discrete case
-    expected_A_discrete = Matrix([[-1, 0], [0, Rational(-1, 2)]])
-    expected_B_discrete = Matrix([[1], [1]])
-    expected_C_discrete = Matrix([[2, 0], [0, 1]])
-    expected_D_discrete = Matrix([[0], [0]])
+    # Derive expected matrices from individual DTF realizations
+    dss1 = dtf1.rewrite(DiscreteStateSpace)
+    dss2 = dtf2.rewrite(DiscreteStateSpace)
+
+    expected_A_discrete = dss1.A.row_join(zeros(1, 1)).col_join(zeros(1, 1).row_join(dss2.A))
+    expected_B_discrete = dss1.B.col_join(dss2.B)
+    expected_C_discrete = dss1.C.row_join(zeros(1, 1)).col_join(zeros(1, 1).row_join(dss2.C))
+    expected_D_discrete = dss1.D.col_join(dss2.D)
+
     assert dss.A == expected_A_discrete
     assert dss.B == expected_B_discrete
     assert dss.C == expected_C_discrete
     assert dss.D == expected_D_discrete
-    
+
     # Test single-element TFM (1x1 case)
     G_single = TransferFunctionMatrix([[tf1]])
     ss_single = G_single.rewrite(StateSpace)
@@ -4988,7 +5001,7 @@ def test_TransferFunctionMatrix_to_StateSpace():
     assert ss_single.B == Matrix([[1]])
     assert ss_single.C == Matrix([[2]])
     assert ss_single.D == Matrix([[0]])
-    
+
     # Test TF with different state dimensions (first-order and second-order)
     tf_first = TransferFunction(1, s + 1, s)  # First-order: 1 state
     tf_second = TransferFunction(1, s**2 + 2*s + 1, s)  # Second-order: 2 states
@@ -5000,7 +5013,7 @@ def test_TransferFunctionMatrix_to_StateSpace():
     # Verify block-diagonal structure exists
     assert ss_mixed.A[0, 1] == 0  # Block-diagonal should have zeros in off-diagonal blocks
     assert ss_mixed.A[0, 2] == 0
-    
+
     # Test TF with non-zero feedforward (D matrix)
     # TF = (s + 2)/(s + 1) = 1 + 1/(s + 1), so D = [1]
     tf_feedforward = TransferFunction(s + 2, s + 1, s)
@@ -5010,21 +5023,21 @@ def test_TransferFunctionMatrix_to_StateSpace():
     assert ss_feedforward.A == Matrix([[-1]])
     assert ss_feedforward.B == Matrix([[1]])
     assert ss_feedforward.C == Matrix([[1]])
-    
+
     # Test error when trying to convert continuous TFM to DiscreteStateSpace
     raises(TypeError, lambda: G_tf.rewrite(DiscreteStateSpace))
-    
+
     # Test error when trying to convert discrete TFM to continuous StateSpace
     raises(TypeError, lambda: G_dtf.rewrite(StateSpace))
-    
+
     # Test with Series/Parallel/Feedback elements (should work via doit())
     from sympy.physics.control.lti import Series, Parallel
-    
+
     # Series of two transfer functions
     tf_a = TransferFunction(1, s + 1, s)
     tf_b = TransferFunction(2, s + 2, s)
     series_elem = Series(tf_a, tf_b)
-    
+
     # Create TFM with Series element
     G_series = TransferFunctionMatrix([[series_elem]])
     ss_series = G_series.rewrite(StateSpace)
@@ -5034,7 +5047,7 @@ def test_TransferFunctionMatrix_to_StateSpace():
     assert ss_series.num_states == 2
     assert ss_series.num_inputs == 1
     assert ss_series.num_outputs == 1
-    
+
     # Parallel of two transfer functions
     parallel_elem = Parallel(tf_a, tf_b)
     G_parallel = TransferFunctionMatrix([[parallel_elem]])
@@ -5043,7 +5056,7 @@ def test_TransferFunctionMatrix_to_StateSpace():
     # Parallel should also work
     assert ss_parallel.num_inputs == 1
     assert ss_parallel.num_outputs == 1
-    
+
     # Mixed matrix with regular TF and Series
     G_mixed_types = TransferFunctionMatrix([[tf1, series_elem], [tf2, parallel_elem]])
     ss_mixed_types = G_mixed_types.rewrite(StateSpace)
@@ -5058,35 +5071,35 @@ def test_TransferFunctionMatrix_to_StateSpace_edge_cases():
     tf_single = TransferFunction(1, s + 1, s)
     G_single = TransferFunctionMatrix([[tf_single]])
     ss_single = G_single.rewrite(StateSpace)
-    
+
     assert isinstance(ss_single, StateSpace)
     assert ss_single.num_inputs == 1
     assert ss_single.num_outputs == 1
     assert ss_single.num_states == 1
-    
+
     # Test with higher order transfer functions (multiple states per TF)
     tf_high_order = TransferFunction(s + 2, s**2 + 3*s + 2, s)
     G_high = TransferFunctionMatrix([[tf_high_order]])
     ss_high = G_high.rewrite(StateSpace)
-    
+
     assert isinstance(ss_high, StateSpace)
     assert ss_high.num_states == 2  # Second order system has 2 states
-    
+
     # Test with rectangular matrices (more outputs than inputs)
     tf1 = TransferFunction(1, s + 1, s)
     tf2 = TransferFunction(2, s + 2, s)
     tf3 = TransferFunction(3, s + 3, s)
     G_rect1 = TransferFunctionMatrix([[tf1], [tf2], [tf3]])
     ss_rect1 = G_rect1.rewrite(StateSpace)
-    
+
     assert ss_rect1.num_inputs == 1
     assert ss_rect1.num_outputs == 3
     assert ss_rect1.num_states == 3
-    
+
     # Test with rectangular matrices (more inputs than outputs)
     G_rect2 = TransferFunctionMatrix([[tf1, tf2, tf3]])
     ss_rect2 = G_rect2.rewrite(StateSpace)
-    
+
     assert ss_rect2.num_inputs == 3
     assert ss_rect2.num_outputs == 1
     assert ss_rect2.num_states == 3
@@ -5099,15 +5112,15 @@ def test_TransferFunctionMatrix_to_StateSpace_matrix_structure():
     tf3 = TransferFunction(3, s + 3, s)
     tf4 = TransferFunction(4, s + 4, s)
     G = TransferFunctionMatrix([[tf1, tf2], [tf3, tf4]])
-    
+
     ss = G.rewrite(StateSpace)
-    
+
     # Verify dimensions
     assert ss.A.shape == (4, 4)
     assert ss.B.shape == (4, 2)
     assert ss.C.shape == (2, 4)
     assert ss.D.shape == (2, 2)
-    
+
     # A matrix should be block diagonal for this type of conversion
     # Check that off-diagonal blocks are zero
     assert ss.A[0, 1] == 0
@@ -5116,7 +5129,7 @@ def test_TransferFunctionMatrix_to_StateSpace_matrix_structure():
     assert ss.A[1, 0] == 0
     assert ss.A[1, 2] == 0
     assert ss.A[1, 3] == 0
-    
+
     # D matrix should be zero for strictly proper transfer functions
     assert ss.D[0, 0] == 0
     assert ss.D[0, 1] == 0
@@ -5130,17 +5143,17 @@ def test_TransferFunctionMatrix_to_StateSpace_with_direct_feedthrough():
     tf_feedthrough = TransferFunction(s + 1, s + 2, s)
     G = TransferFunctionMatrix([[tf_feedthrough]])
     ss = G.rewrite(StateSpace)
-    
+
     assert isinstance(ss, StateSpace)
     # Should have non-zero D matrix
     assert ss.D[0, 0] != 0
-    
+
     # Test with multiple transfer functions having feedthrough
     tf1 = TransferFunction(2*s + 1, s + 3, s)
     tf2 = TransferFunction(s + 4, s + 5, s)
     G_multi = TransferFunctionMatrix([[tf1, tf2]])
     ss_multi = G_multi.rewrite(StateSpace)
-    
+
     assert ss_multi.D[0, 0] != 0
     assert ss_multi.D[0, 1] != 0
 
@@ -5148,18 +5161,18 @@ def test_TransferFunctionMatrix_to_StateSpace_symbolic_coefficients():
     """Test conversion with symbolic coefficients"""
     from sympy import symbols
     a, b, c, d = symbols('a b c d', real=True, positive=True)
-    
+
     # Create transfer functions with symbolic coefficients
     tf1 = TransferFunction(a, s + b, s)
     tf2 = TransferFunction(c, s + d, s)
     G = TransferFunctionMatrix([[tf1], [tf2]])
-    
+
     ss = G.rewrite(StateSpace)
-    
+
     assert isinstance(ss, StateSpace)
     assert ss.num_inputs == 1
     assert ss.num_outputs == 2
-    
+
     # Check that symbolic coefficients are preserved
     assert ss.C[0, 0] == a
     assert ss.C[1, 1] == c
@@ -5173,28 +5186,28 @@ def test_DiscreteTransferFunctionMatrix_to_DiscreteStateSpace_edge_cases():
     dtf_single = DiscreteTransferFunction(1, z + 1, z, 0.1)
     G_single = TransferFunctionMatrix([[dtf_single]])
     dss_single = G_single.rewrite(DiscreteStateSpace)
-    
+
     assert isinstance(dss_single, DiscreteStateSpace)
     assert dss_single.num_inputs == 1
     assert dss_single.num_outputs == 1
     assert dss_single.num_states == 1
     assert dss_single.sampling_time == 0.1
-    
+
     # Test with higher order discrete transfer function
     dtf_high = DiscreteTransferFunction(z + 2, z**2 + 3*z + 2, z, 0.05)
     G_high = TransferFunctionMatrix([[dtf_high]])
     dss_high = G_high.rewrite(DiscreteStateSpace)
-    
+
     assert isinstance(dss_high, DiscreteStateSpace)
     assert dss_high.num_states == 2
     assert dss_high.sampling_time == 0.05
-    
+
     # Test with different sampling time
     dtf1 = DiscreteTransferFunction(1, z - 0.5, z, 0.01)
     dtf2 = DiscreteTransferFunction(2, z - 0.3, z, 0.01)
     G_dt = TransferFunctionMatrix([[dtf1, dtf2]])
     dss_dt = G_dt.rewrite(DiscreteStateSpace)
-    
+
     assert dss_dt.sampling_time == 0.01
     assert dss_dt.num_inputs == 2
     assert dss_dt.num_outputs == 1
@@ -5207,15 +5220,15 @@ def test_DiscreteTransferFunctionMatrix_to_DiscreteStateSpace_matrix_structure()
     dtf3 = DiscreteTransferFunction(3, z + 3, z, 0.1)
     dtf4 = DiscreteTransferFunction(4, z + 4, z, 0.1)
     G = TransferFunctionMatrix([[dtf1, dtf2], [dtf3, dtf4]])
-    
+
     dss = G.rewrite(DiscreteStateSpace)
-    
+
     # Verify dimensions
     assert dss.A.shape == (4, 4)
     assert dss.B.shape == (4, 2)
     assert dss.C.shape == (2, 4)
     assert dss.D.shape == (2, 2)
-    
+
     # A matrix should be block diagonal
     assert dss.A[0, 1] == 0
     assert dss.A[1, 0] == 0
@@ -5228,15 +5241,15 @@ def test_TransferFunctionMatrix_rewrite_type_errors():
     # Continuous TFM cannot be converted to DiscreteStateSpace
     tf_cont = TransferFunction(1, s + 1, s)
     G_cont = TransferFunctionMatrix([[tf_cont]])
-    
+
     raises(TypeError, lambda: G_cont.rewrite(DiscreteStateSpace))
-    
+
     # Discrete TFM cannot be converted to continuous StateSpace
     dtf_disc = DiscreteTransferFunction(1, z + 1, z, 0.1)
     G_disc = TransferFunctionMatrix([[dtf_disc]])
-    
+
     raises(TypeError, lambda: G_disc.rewrite(StateSpace))
-    
+
     # Test with mixed matrix (should fail at TFM creation, but test anyway)
     # The error should be caught during the rewrite operation
 
@@ -5251,15 +5264,15 @@ def test_TransferFunctionMatrix_to_StateSpace_large_system():
             tf = TransferFunction(i + j + 1, s + i + j + 1, s)
             row.append(tf)
         tf_list.append(row)
-    
+
     G_large = TransferFunctionMatrix(tf_list)
     ss_large = G_large.rewrite(StateSpace)
-    
+
     assert isinstance(ss_large, StateSpace)
     assert ss_large.num_inputs == 3
     assert ss_large.num_outputs == 3
     assert ss_large.num_states == 9  # 3x3 = 9 transfer functions, each 1 state
-    
+
     # Verify matrix dimensions
     assert ss_large.A.shape == (9, 9)
     assert ss_large.B.shape == (9, 3)
@@ -5270,17 +5283,17 @@ def test_TransferFunctionMatrix_to_StateSpace_large_system():
 def test_TransferFunctionMatrix_to_StateSpace_complex_poles():
     """Test conversion with transfer functions having complex poles"""
     from sympy import I
-    
+
     # Transfer function with complex poles: 1/(s^2 + 2s + 2)
     tf_complex = TransferFunction(1, s**2 + 2*s + 2, s)
     G = TransferFunctionMatrix([[tf_complex]])
     ss = G.rewrite(StateSpace)
-    
+
     assert isinstance(ss, StateSpace)
     assert ss.num_states == 2  # Second order system
-    
+
     # The A matrix should represent the complex dynamics
-    # Eigenvalues of A should be -1 ± i
+    # Eigenvalues of A should be -1 +/- i
 
 
 def test_TransferFunctionMatrix_to_StateSpace_repeated_poles():
@@ -5289,16 +5302,16 @@ def test_TransferFunctionMatrix_to_StateSpace_repeated_poles():
     tf_repeated = TransferFunction(1, (s + 1)**2, s)
     G = TransferFunctionMatrix([[tf_repeated]])
     ss = G.rewrite(StateSpace)
-    
+
     assert isinstance(ss, StateSpace)
     assert ss.num_states == 2
-    
+
     # Test with multiple transfer functions with repeated poles
     tf1 = TransferFunction(s, (s + 2)**2, s)
     tf2 = TransferFunction(1, (s + 3)**3, s)
     G_multi = TransferFunctionMatrix([[tf1], [tf2]])
     ss_multi = G_multi.rewrite(StateSpace)
-    
+
     assert ss_multi.num_states == 5  # 2 + 3 states
 
 
@@ -5308,17 +5321,17 @@ def test_DiscreteTransferFunctionMatrix_to_DiscreteStateSpace_with_delay():
     dtf_predictor = DiscreteTransferFunction(z, z + 0.5, z, 0.1)
     G_pred = TransferFunctionMatrix([[dtf_predictor]])
     dss_pred = G_pred.rewrite(DiscreteStateSpace)
-    
+
     assert isinstance(dss_pred, DiscreteStateSpace)
     # Should have feedthrough term
     assert dss_pred.D[0, 0] != 0
-    
+
     # Test with multiple delays
     dtf1 = DiscreteTransferFunction(1, z**2 - 0.5*z + 0.1, z, 0.1)
     dtf2 = DiscreteTransferFunction(z, z**2 + 0.3*z + 0.2, z, 0.1)
     G_delays = TransferFunctionMatrix([[dtf1, dtf2]])
     dss_delays = G_delays.rewrite(DiscreteStateSpace)
-    
+
     assert dss_delays.num_states == 4  # 2 states per TF
     assert dss_delays.sampling_time == 0.1
 
@@ -5329,15 +5342,15 @@ def test_TransferFunctionMatrix_to_StateSpace_stability_preservation():
     tf_stable = TransferFunction(1, s + 5, s)
     G_stable = TransferFunctionMatrix([[tf_stable]])
     ss_stable = G_stable.rewrite(StateSpace)
-    
+
     # Check that A matrix eigenvalue has negative real part
     assert ss_stable.A[0, 0] == -5
-    
+
     # Unstable continuous system (pole in right half plane)
     tf_unstable = TransferFunction(1, s - 2, s)
     G_unstable = TransferFunctionMatrix([[tf_unstable]])
     ss_unstable = G_unstable.rewrite(StateSpace)
-    
+
     assert ss_unstable.A[0, 0] == 2  # Positive eigenvalue
 
 
@@ -5347,15 +5360,15 @@ def test_DiscreteTransferFunctionMatrix_to_DiscreteStateSpace_stability():
     dtf_stable = DiscreteTransferFunction(1, z - 0.5, z, 0.1)
     G_stable = TransferFunctionMatrix([[dtf_stable]])
     dss_stable = G_stable.rewrite(DiscreteStateSpace)
-    
+
     # |eigenvalue| < 1 for stability
     assert abs(dss_stable.A[0, 0]) < 1
-    
+
     # Unstable discrete system (pole outside unit circle)
     dtf_unstable = DiscreteTransferFunction(1, z - 1.5, z, 0.1)
     G_unstable = TransferFunctionMatrix([[dtf_unstable]])
     dss_unstable = G_unstable.rewrite(DiscreteStateSpace)
-    
+
     assert abs(dss_unstable.A[0, 0]) > 1
 
 
@@ -5365,14 +5378,14 @@ def test_TransferFunctionMatrix_to_StateSpace_proper_improper():
     tf_proper = TransferFunction(1, s**2 + 2*s + 1, s)
     G_proper = TransferFunctionMatrix([[tf_proper]])
     ss_proper = G_proper.rewrite(StateSpace)
-    
+
     assert ss_proper.D[0, 0] == 0  # No direct feedthrough
-    
+
     # Proper (degree of num = degree of den)
     tf_biproper = TransferFunction(s**2 + 1, s**2 + 2*s + 1, s)
     G_biproper = TransferFunctionMatrix([[tf_biproper]])
     ss_biproper = G_biproper.rewrite(StateSpace)
-    
+
     assert ss_biproper.D[0, 0] != 0  # Has direct feedthrough
 
 
@@ -5382,18 +5395,18 @@ def test_TransferFunctionMatrix_to_StateSpace_numerical_values():
     tf1 = TransferFunction(2, s + 1, s)
     G = TransferFunctionMatrix([[tf1]])
     ss = G.rewrite(StateSpace)
-    
+
     # Verify specific matrix values
     assert ss.A[0, 0] == -1
     assert ss.B[0, 0] == 1
     assert ss.C[0, 0] == 2
     assert ss.D[0, 0] == 0
-    
+
     # Test 2x2 system with known structure
     tf2 = TransferFunction(3, s + 4, s)
     G2 = TransferFunctionMatrix([[tf1, tf2]])
     ss2 = G2.rewrite(StateSpace)
-    
+
     assert ss2.A[0, 0] == -1
     assert ss2.A[1, 1] == -4
     assert ss2.C[0, 0] == 2
@@ -5406,15 +5419,15 @@ def test_TransferFunctionMatrix_to_StateSpace_empty_like_cases():
     tf = TransferFunction(1, s, s)
     G = TransferFunctionMatrix([[tf]])
     ss = G.rewrite(StateSpace)
-    
+
     assert isinstance(ss, StateSpace)
     assert ss.num_states == 1
-    
+
     # Transfer function with constant numerator
     tf_const = TransferFunction(5, s + 2, s)
     G_const = TransferFunctionMatrix([[tf_const]])
     ss_const = G_const.rewrite(StateSpace)
-    
+
     assert ss_const.C[0, 0] == 5
 
 
@@ -5422,12 +5435,12 @@ def test_DiscreteTransferFunctionMatrix_sampling_time_consistency():
     """Test that sampling time is consistent across conversion"""
     # Test various sampling times
     sampling_times = [0.001, 0.01, 0.1, 1.0]
-    
+
     for dt in sampling_times:
         dtf = DiscreteTransferFunction(1, z - 0.5, z, dt)
         G = TransferFunctionMatrix([[dtf]])
         dss = G.rewrite(DiscreteStateSpace)
-        
+
         assert dss.sampling_time == dt
 
 
@@ -5437,15 +5450,15 @@ def test_TransferFunctionMatrix_to_StateSpace_non_monic_denominators():
     tf_non_monic = TransferFunction(1, 2*s + 4, s)
     G = TransferFunctionMatrix([[tf_non_monic]])
     ss = G.rewrite(StateSpace)
-    
+
     assert isinstance(ss, StateSpace)
     # The conversion should handle normalization
-    
+
     # Multiple non-monic transfer functions
     tf1 = TransferFunction(3, 5*s + 10, s)
     tf2 = TransferFunction(2, 3*s + 6, s)
     G_multi = TransferFunctionMatrix([[tf1, tf2]])
     ss_multi = G_multi.rewrite(StateSpace)
-    
+
     assert ss_multi.num_inputs == 2
     assert ss_multi.num_outputs == 1
