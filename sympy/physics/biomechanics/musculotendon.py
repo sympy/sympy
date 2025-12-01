@@ -33,11 +33,13 @@ from sympy.physics.biomechanics._mixin import _NamedMixin
 from sympy.physics.mechanics.actuator import ForceActuator
 from sympy.physics.vector.functions import dynamicsymbols
 
+from sympy import symbols, Function, cos, exp, tanh
 
 __all__ = [
     'MusculotendonBase',
     'MusculotendonDeGroote2016',
     'MusculotendonFormulation',
+    'HillTypeMuscle'
 ]
 
 
@@ -1422,3 +1424,72 @@ class MusculotendonDeGroote2016(MusculotendonBase):
         fiber_force_velocity=FiberForceVelocityDeGroote2016,
         fiber_force_velocity_inverse=FiberForceVelocityInverseDeGroote2016,
     )
+
+
+class HillTypeMuscle(MusculotendonBase):
+    def __init__(self, name, f_0, f_l, f_v, f_p, f_t, max_isometric_force):
+        """
+        Initialize a Hill-type muscle model.
+        
+        Parameters:
+        name (str): The name of the muscle.
+        f_0 (Function): Symbolic function representing the maximum isometric force.
+        f_l (Function): Symbolic function representing the force-length relationship.
+        f_v (Function): Symbolic function representing the force-velocity relationship.
+        f_p (Function): Symbolic function representing the passive force-length relationship.
+        f_t (Function): Symbolic function representing the tendon force-length relationship.
+        max_isometric_force (float | sympy.Expr): The maximum isometric force value.
+        """
+        super().__init__(name)
+        # Symbols for the muscle's state
+        self.a = symbols(f'a_{name}')    # Activation level
+        self.l_m = symbols(f'l_m_{name}')  # Muscle length
+        self.l_t = symbols(f'l_t_{name}')  # Tendon length
+        self.v_m = symbols(f'v_m_{name}')  # Contraction velocity
+
+        # Functions representing the relationships of force components
+        self.F_0 = f_0
+        self.f_l = f_l
+        self.f_v = f_v
+        self.f_p = f_p
+        self.f_t = f_t
+
+        # Constant for maximum isometric force
+        self.max_isometric_force = max_isometric_force
+
+    def contractile_force(self):
+        """Calculate the contractile force of the muscle."""
+        return self.a * self.F_0 * self.f_l(self.l_m) * self.f_v(self.v_m)
+
+    def passive_parallel_force(self):
+        """Calculate the passive parallel force of the muscle."""
+        return self.F_0 * self.f_p(self.l_m)
+
+    def tendon_force(self):
+        """Calculate the tendon force."""
+        return self.F_0 * self.f_t(self.l_t)
+
+    def equilibrium_equation(self, alpha):
+        """
+        Calculate the muscle-tendon force equilibrium equation.
+
+        Parameters:
+        alpha (sympy.Expr): The pennation angle.
+        """
+        # Calculate forces for the contractile element (CE), passive element (PE), and series element (SE)
+        F_CE = self.contractile_force()
+        F_PE = self.passive_parallel_force()
+        F_SE = self.tendon_force()
+
+        # The equilibrium equation
+        F_equilibrium = (F_CE + F_PE) * cos(alpha)
+        return F_equilibrium
+    
+    def __repr__(self):
+        return (f"HillTypeMuscle(name='{self.name}', f_0={self.F_0}, "
+                f"f_l={self.f_l}, f_v={self.f_v}, f_p={self.f_p}, "
+                f"f_t={self.f_t}, max_isometric_force={self.max_isometric_force})")
+    
+    def __str__(self):
+        return (f"HillTypeMuscle with activation level {self.a}, muscle length {self.l_m}, "
+                f"tendon length {self.l_t}, and muscle contraction velocity {self.v_m}.")
