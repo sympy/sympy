@@ -671,7 +671,6 @@ class LatexPrinter(Printer):
                     return self._print(expr.base, exp="%s/%s" % (p, q))
                 return r"%s^{%s/%s}" % (base, p, q)
             elif expr.exp.is_negative and expr.base.is_commutative:
-                # FIRST detect unevaluated pow before anything else
                 if Pow(expr.base, expr.exp, evaluate=True) != expr:
                     base = self.parenthesize(expr.base, PRECEDENCE["Pow"])
                     if expr.base.is_Symbol:
@@ -681,18 +680,16 @@ class LatexPrinter(Printer):
                 # special case for 1^(-x), issue 9216
                 if expr.base == 1:
                     return r"%s^{%s}" % (expr.base, expr.exp)
-
-                # special case for rational bases
+                # special case for (1/x)^(-y) and (-1/-x)^(-y), issue 20252
                 if expr.base.is_Rational:
-                    base_p = expr.base.p
-                    base_q = expr.base.q
+                    base_p: int = expr.base.p  # type: ignore
+                    base_q: int = expr.base.q  # type: ignore
                     if base_p * base_q == abs(base_q):
                         if expr.exp == -1:
                             return r"\frac{1}{\frac{%s}{%s}}" % (base_p, base_q)
                         else:
                             return r"\frac{1}{(\frac{%s}{%s})^{%s}}" % (base_p, base_q, abs(expr.exp))
-
-                # default behavior
+                # things like 1/x
                 return self._print_Mul(expr)
         if expr.base.is_Function:
             return self._print(expr.base, exp=self._print(expr.exp))
