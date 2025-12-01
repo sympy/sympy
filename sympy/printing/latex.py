@@ -646,6 +646,7 @@ class LatexPrinter(Printer):
         return rf'\left({p}, {alpha}\right)'
 
     def _print_Pow(self, expr: Pow):
+        from sympy import I
         # Treat x**Rational(1,n) as special case
         if expr.exp.is_Rational:
             p: int = expr.exp.p  # type: ignore
@@ -670,13 +671,12 @@ class LatexPrinter(Printer):
                 if expr.base.is_Function:
                     return self._print(expr.base, exp="%s/%s" % (p, q))
                 return r"%s^{%s/%s}" % (base, p, q)
+            if expr.base == I and expr.exp.is_Integer and expr.exp < 0:
+                # Print as 1 / I^n
+                base = self._print(expr.base)
+                exp = self._print(-expr.exp)  # make exponent positive
+                return r"\frac{1}{%s^{%s}}" % (base, exp)
             elif expr.exp.is_negative and expr.base.is_commutative:
-                if Pow(expr.base, expr.exp, evaluate=True) != expr:
-                    base = self.parenthesize(expr.base, PRECEDENCE["Pow"])
-                    if expr.base.is_Symbol:
-                        base = self.parenthesize_super(base)
-                    exp = self._print(expr.exp)
-                    return f"{base}^{{{exp}}}"
                 # special case for 1^(-x), issue 9216
                 if expr.base == 1:
                     return r"%s^{%s}" % (expr.base, expr.exp)

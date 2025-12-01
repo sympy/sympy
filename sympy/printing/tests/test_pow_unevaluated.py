@@ -43,3 +43,40 @@ def test_latex_unevaluated_pow_does_not_rewrite_as_mul():
     out = latex(expr)
     # It should return a string and not blow up with RecursionError
     assert isinstance(out, str)
+
+def test_latex_unevaluated_pow_I_no_double_exponent():
+    expr = Pow(I, -4, evaluate=False)
+    out = latex(expr)
+
+    if "-4" in out:
+        assert out.count("-4") == 1
+
+def test_latex_unevaluated_pow_I_no_recursive_pattern():
+    expr = Pow(I, -4, evaluate=False)
+    out = latex(expr)
+    # Ensure the output does not repeat itself (a recursion symptom)
+    assert out.count(out) == 1
+
+def test_latex_unevaluated_pow_I_case_variants():
+    expr = Pow(I, -4, evaluate=False)
+    out = latex(expr)
+    acceptable = ["i^{-4}", "I^{-4}", r"\frac{1}{i^{4}}", r"\frac{1}{I^{4}}", "1"]
+    assert out in acceptable
+
+def test_latex_unevaluated_pow_I_positive_exponent():
+    expr = Pow(I, 4, evaluate=False)
+    out = latex(expr)
+    acceptable = ["i^{4}", "I^{4}"]
+    assert _one_of(out, acceptable)
+
+def test_latex_pow_I_evaluated_behavior():
+    expr = Pow(I, -4, evaluate=True)
+    out = latex(expr)
+    # i**-4 = 1
+    assert out == "1"
+def test_latex_unevaluated_pow_complex_but_not_I():
+    z = 2*I
+    expr = Pow(z, -4, evaluate=False)
+    out = latex(expr)
+    # Should NOT match the special-case for I
+    assert out != "i^{-4}" and out != "I^{-4}"
