@@ -686,7 +686,7 @@ class LatexPrinter(Printer):
                             return r"\frac{1}{(\frac{%s}{%s})^{%s}}" % (base_p, base_q, abs(expr.exp))
                 else:
                     if expr.exp.is_integer:
-                        # Avoids Pow→Mul→Pow recursion for unevaluated negative integer powers (#28675):
+                        # Avoids Pow->Mul->Pow recursion for unevaluated negative integer powers (#28675):
                         # When the evaluated form differs and the base is non-Rational, print as 1/(base^n).
                         evaluated = Pow(expr.base, expr.exp, evaluate=True)
                         if evaluated != expr:
