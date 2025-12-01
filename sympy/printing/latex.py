@@ -646,7 +646,7 @@ class LatexPrinter(Printer):
         return rf'\left({p}, {alpha}\right)'
 
     def _print_Pow(self, expr: Pow):
-        from sympy import I
+        from sympy import Pow
         # Treat x**Rational(1,n) as special case
         if expr.exp.is_Rational:
             p: int = expr.exp.p  # type: ignore
@@ -671,11 +671,6 @@ class LatexPrinter(Printer):
                 if expr.base.is_Function:
                     return self._print(expr.base, exp="%s/%s" % (p, q))
                 return r"%s^{%s/%s}" % (base, p, q)
-            if expr.base == I and expr.exp.is_Integer and expr.exp < 0:
-                # Print as 1 / I^n
-                base = self._print(expr.base)
-                exp = self._print(-expr.exp)  # make exponent positive
-                return r"\frac{1}{%s^{%s}}" % (base, exp)
             elif expr.exp.is_negative and expr.base.is_commutative:
                 # special case for 1^(-x), issue 9216
                 if expr.base == 1:
@@ -689,6 +684,15 @@ class LatexPrinter(Printer):
                             return r"\frac{1}{\frac{%s}{%s}}" % (base_p, base_q)
                         else:
                             return r"\frac{1}{(\frac{%s}{%s})^{%s}}" % (base_p, base_q, abs(expr.exp))
+                else:
+                    if expr.exp.is_integer:
+                        # Avoids Pow→Mul→Pow recursion for unevaluated negative integer powers (#28675):
+                        # When the evaluated form differs and the base is non-Rational, print as 1/(base^n).
+                        evaluated = Pow(expr.base, expr.exp, evaluate=True)
+                        if evaluated != expr:
+                            base_tex = self._print(expr.base)
+                            exp_tex = str(abs(int(expr.exp)))
+                            return rf"\frac{{1}}{{{base_tex}^{{{exp_tex}}}}}"
                 # things like 1/x
                 return self._print_Mul(expr)
         if expr.base.is_Function:
