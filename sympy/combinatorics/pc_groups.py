@@ -352,15 +352,18 @@ class Collector(DefaultPrinting):
                 key = free_group.dtype(key)
                 if self.pc_presentation[key]:
                     presentation = self.pc_presentation[key].array_form
-                    sym, exp = presentation[0]
-                    word_ = ((w[0][0], r), (sym, q*exp))
+                    word_list = []
+                    for sym, exp in presentation:
+                        scaled_exp = q * exp
+                        if scaled_exp != 0:
+                            word_list.append((sym, scaled_exp))
+                    if r != 0 or not word_list:
+                        word_list.insert(0, (w[0][0], r))
+                    word_ = tuple(word_list)
                     word_ = free_group.dtype(word_)
                 else:
-                    if r != 0:
-                        word_ = ((w[0][0], r), )
-                        word_ = free_group.dtype(word_)
-                    else:
-                        word_ = None
+                    word_ = ((w[0][0], r), )
+                    word_ = free_group.dtype(word_)
                 word = word.eliminate_word(free_group.dtype(w), word_)
 
             if len(w) == 2 and w[1][1] > 0:

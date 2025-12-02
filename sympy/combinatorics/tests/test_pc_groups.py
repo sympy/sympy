@@ -85,3 +85,63 @@ def test_induced_pcgs():
         for i in ipcgs:
             m.append(collector.exponent_vector(i))
         assert Matrix(m).is_upper
+
+
+def test_collected_word_issue_28637():
+    """Test that collected_word preserves permutation information for negative exponents."""
+    from sympy.combinatorics import free_group
+
+    def perm_from_word(pcgs, word):
+        perm = Permutation()
+        for sym, exp in word.array_form:
+            idx = int(str(sym)[1:])
+            perm *= pcgs[idx] ** exp
+        return perm
+
+    G = SymmetricGroup(4)
+    pc_group = G.polycyclic_group()
+    collector = pc_group.collector
+    pcgs = collector.pcgs
+    F, *gens = free_group(','.join([f'x{i}' for i in range(len(pcgs))]))
+
+    word = gens[2] ** -2
+    collected = collector.collected_word(word)
+    word_perm = perm_from_word(pcgs, word)
+    collected_perm = perm_from_word(pcgs, collected)
+    assert word_perm == collected_perm, \
+        f"collected_word dropped permutation info: {word_perm} != {collected_perm}"
+
+    for i in range(len(pcgs)):
+        for exp in [-4, -3, -2, -1]:
+            word = gens[i] ** exp
+            collected = collector.collected_word(word)
+            word_perm = perm_from_word(pcgs, word)
+            collected_perm = perm_from_word(pcgs, collected)
+            assert word_perm == collected_perm, \
+                f"x{i}^{exp}: collected_word changed permutation: {word_perm} != {collected_perm}"
+
+    test_words = [
+        gens[0] ** -1 * gens[2] ** -2,
+        gens[1] ** -3 * gens[3] ** -1,
+        gens[2] * gens[2] ** -3,
+    ]
+
+    for word in test_words:
+        collected = collector.collected_word(word)
+        word_perm = perm_from_word(pcgs, word)
+        collected_perm = perm_from_word(pcgs, collected)
+        assert word_perm == collected_perm, \
+            f"collected_word changed permutation for {word}: {word_perm} != {collected_perm}"
+
+    for G in [SymmetricGroup(3), SymmetricGroup(4), DihedralGroup(8)]:
+        pc_group = G.polycyclic_group()
+        collector = pc_group.collector
+        pcgs = collector.pcgs
+        F, *gens = free_group(','.join([f'x{i}' for i in range(len(pcgs))]))
+
+        for i in range(len(pcgs)):
+            word = gens[i] ** -2
+            collected = collector.collected_word(word)
+            word_perm = perm_from_word(pcgs, word)
+            collected_perm = perm_from_word(pcgs, collected)
+            assert word_perm == collected_perm
