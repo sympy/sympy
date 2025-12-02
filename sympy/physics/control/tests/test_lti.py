@@ -4982,7 +4982,7 @@ def test_tf_to_ss_constant():
     # D should be [[K]]
     assert Gss.D == Matrix([[K]])
 
-    # And SS → TF should return the same constant TF
+    # And SS -> TF should return the same constant TF
     G_back = Gss.rewrite(TransferFunction)[0][0]
 
     assert G_back.num == K
