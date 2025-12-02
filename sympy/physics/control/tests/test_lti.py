@@ -4961,3 +4961,29 @@ def test_step_response_improper_tf():
     s = symbols('s')
     G = TransferFunction(s**2 + 1, s + 1, s)
     raises(ValueError, lambda: G.step_response())
+def test_tf_to_ss_constant():
+    s, K = symbols('s, K')
+
+    # Constant transfer function
+    G = TransferFunction(K, 1, s)
+
+    # Convert TF → SS
+    Gss = G.rewrite(StateSpace)
+
+    # A should be 0x0
+    assert Gss.A.shape == (0, 0)
+
+    # B should be 0x1
+    assert Gss.B.shape == (0, 1)
+
+    # C should be 1x0
+    assert Gss.C.shape == (1, 0)
+
+    # D should be [[K]]
+    assert Gss.D == Matrix([[K]])
+
+    # And SS → TF should return the same constant TF
+    G_back = Gss.rewrite(TransferFunction)[0][0]
+
+    assert G_back.num == K
+    assert G_back.den == 1
