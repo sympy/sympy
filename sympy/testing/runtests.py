@@ -708,11 +708,11 @@ def _get_doctest_blacklist():
     if ON_CI or import_module('pyglet') is None:
         blacklist.extend(["sympy/plotting/pygletplot"])
 
-    if import_module('aesara') is None:
-        blacklist.extend([
-            "sympy/printing/aesaracode.py",
-            "doc/src/modules/numeric-computation.rst",
-        ])
+    #if import_module('aesara') is None:
+    #    blacklist.extend([
+    #        "sympy/printing/aesaracode.py",
+    #        "doc/src/modules/numeric-computation.rst",
+    #    ])
 
     if import_module('cupy') is None:
         blacklist.extend([
