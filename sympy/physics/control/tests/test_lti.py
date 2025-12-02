@@ -4967,7 +4967,7 @@ def test_tf_to_ss_constant():
     # Constant transfer function
     G = TransferFunction(K, 1, s)
 
-    # Convert TF → SS
+    # Convert TF -> SS
     Gss = G.rewrite(StateSpace)
 
     # A should be 0x0
