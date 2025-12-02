@@ -1,10 +1,14 @@
 from sympy.combinatorics.permutations import Permutation
-from sympy.combinatorics.named_groups import SymmetricGroup, AlternatingGroup, DihedralGroup
+from sympy.combinatorics.named_groups import (SymmetricGroup,
+    AlternatingGroup, DihedralGroup)
 from sympy.matrices import Matrix
+from sympy.combinatorics import free_group
 
 def test_pc_presentation():
-    Groups = [SymmetricGroup(3), SymmetricGroup(4), SymmetricGroup(9).sylow_subgroup(3),
-         SymmetricGroup(9).sylow_subgroup(2), SymmetricGroup(8).sylow_subgroup(2), DihedralGroup(10)]
+    Groups = [SymmetricGroup(3), SymmetricGroup(4),
+         SymmetricGroup(9).sylow_subgroup(3),
+         SymmetricGroup(9).sylow_subgroup(2),
+         SymmetricGroup(8).sylow_subgroup(2), DihedralGroup(10)]
 
     S = SymmetricGroup(125).sylow_subgroup(5)
     G = S.derived_series()[2]
@@ -54,15 +58,16 @@ def test_pc_presentation():
 
 def test_exponent_vector():
 
-    Groups = [SymmetricGroup(3), SymmetricGroup(4), SymmetricGroup(9).sylow_subgroup(3),
-         SymmetricGroup(9).sylow_subgroup(2), SymmetricGroup(8).sylow_subgroup(2)]
+    Groups = [SymmetricGroup(3), SymmetricGroup(4),
+         SymmetricGroup(9).sylow_subgroup(3),
+         SymmetricGroup(9).sylow_subgroup(2),
+         SymmetricGroup(8).sylow_subgroup(2)]
 
     for G in Groups:
         PcGroup = G.polycyclic_group()
         collector = PcGroup.collector
 
         pcgs = PcGroup.pcgs
-        # free_group = collector.free_group
 
         for gen in G.generators:
             exp = collector.exponent_vector(gen)
@@ -73,8 +78,10 @@ def test_exponent_vector():
 
 
 def test_induced_pcgs():
-    G = [SymmetricGroup(9).sylow_subgroup(3), SymmetricGroup(20).sylow_subgroup(2), AlternatingGroup(4),
-    DihedralGroup(4), DihedralGroup(10), DihedralGroup(9), SymmetricGroup(3), SymmetricGroup(4)]
+    G = [SymmetricGroup(9).sylow_subgroup(3),
+    SymmetricGroup(20).sylow_subgroup(2), AlternatingGroup(4),
+    DihedralGroup(4), DihedralGroup(10), DihedralGroup(9),
+    SymmetricGroup(3), SymmetricGroup(4)]
 
     for g in G:
         PcGroup = g.polycyclic_group()
@@ -85,3 +92,82 @@ def test_induced_pcgs():
         for i in ipcgs:
             m.append(collector.exponent_vector(i))
         assert Matrix(m).is_upper
+
+
+def test_collected_word_issue_28637():
+    """
+    Test that collected_word preserves permutation information
+    for negative exponents.
+    
+    This addresses issue #28637 where collector.collected_word
+    was dropping permutation data for certain words with negative
+    exponents.
+    
+    References
+    ==========
+    
+    .. [1] https://github.com/sympy/sympy/issues/28637
+    """
+    
+    def perm_from_word(pcgs, word):
+        """Convert a free group word to a permutation."""
+        if pcgs:
+            perm = Permutation(pcgs[0].size - 1)
+        else:
+            perm = Permutation()
+        
+        for sym, exp in word.array_form:
+            idx = int(str(sym)[1:])
+            perm *= pcgs[idx] ** exp
+        return perm
+    
+    G = SymmetricGroup(4)
+    pc_group = G.polycyclic_group()
+    collector = pc_group.collector
+    pcgs = collector.pcgs
+    F, *gens = free_group(','.join([f'x{i}' for i in range(len(pcgs))]))
+    
+    word = gens[2] ** -2
+    collected = collector.collected_word(word)
+    word_perm = perm_from_word(pcgs, word)
+    collected_perm = perm_from_word(pcgs, collected)
+    assert word_perm == collected_perm, (
+        f"collected_word dropped permutation info: "
+        f"{word_perm} != {collected_perm}")
+    
+    for i in range(len(pcgs)):
+        for exp in [-4, -3, -2, -1]:
+            word = gens[i] ** exp
+            collected = collector.collected_word(word)
+            word_perm = perm_from_word(pcgs, word)
+            collected_perm = perm_from_word(pcgs, collected)
+            assert word_perm == collected_perm, (
+                f"x{i}^{exp}: collected_word changed permutation: "
+                f"{word_perm} != {collected_perm}")
+    
+    test_words = [
+        gens[0] ** -1 * gens[2] ** -2,
+        gens[1] ** -3 * gens[3] ** -1,
+        gens[2] * gens[2] ** -3,
+    ]
+    
+    for word in test_words:
+        collected = collector.collected_word(word)
+        word_perm = perm_from_word(pcgs, word)
+        collected_perm = perm_from_word(pcgs, collected)
+        assert word_perm == collected_perm, (
+            f"collected_word changed permutation for {word}: "
+            f"{word_perm} != {collected_perm}")
+    
+    for G in [SymmetricGroup(3), SymmetricGroup(4), DihedralGroup(8)]:
+        pc_group = G.polycyclic_group()
+        collector = pc_group.collector
+        pcgs = collector.pcgs
+        F, *gens = free_group(','.join([f'x{i}' for i in range(len(pcgs))]))
+        
+        for i in range(len(pcgs)):
+            word = gens[i] ** -2
+            collected = collector.collected_word(word)
+            word_perm = perm_from_word(pcgs, word)
+            collected_perm = perm_from_word(pcgs, collected)
+            assert word_perm == collected_perm

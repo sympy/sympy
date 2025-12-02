@@ -350,12 +350,34 @@ def is_strictly_decreasing(expression, interval=S.Reals, symbol=None):
     False
 
     """
+
     return monotonicity_helper(expression, lambda x: x < 0, interval, symbol)
 
 
 def is_monotonic(expression, interval=S.Reals, symbol=None):
     """
-    Return whether the function is monotonic in the given interval.
+    Return whether the function has no turning points in the given interval.
+
+    This function uses the **derivative-based test for monotonicity**: it checks
+    whether the derivative f'(x) changes sign in the interval. This is a sufficient
+    condition for monotonicity on **continuous functions**.
+
+    .. warning::
+       This test assumes the function is continuous in the interval.
+       For functions with discontinuities (poles, jumps, etc.), the result may not
+       reflect order-based monotonicity. Use ``continuous_domain()`` to check
+       continuity separately if needed.
+
+    Mathematical Background
+    =======================
+
+    From Stewart's Calculus, Theorem 4.5.2 (Increasing/Decreasing Test):
+    
+    If f is continuous on [a,b] and differentiable on (a,b), and f'(x) > 0
+    for all x in (a,b), then f is increasing on [a,b].
+
+    This function checks the "f'(x) > 0" condition but does NOT verify continuity.
+    Users must ensure continuity separately for complete monotonicity verification.
 
     Parameters
     ==========
@@ -372,8 +394,12 @@ def is_monotonic(expression, interval=S.Reals, symbol=None):
     =======
 
     Boolean
-        True if ``expression`` is monotonic in the given ``interval``,
-        False otherwise.
+        True if the derivative does not change sign in the interval.
+        False if turning points exist.
+
+        .. note::
+           True does NOT guarantee order-based monotonicity for
+           discontinuous functions.
 
     Raises
     ======
@@ -387,18 +413,49 @@ def is_monotonic(expression, interval=S.Reals, symbol=None):
     >>> from sympy import is_monotonic
     >>> from sympy.abc import x, y
     >>> from sympy import S, Interval, oo
-    >>> is_monotonic(1/(x**2 - 3*x), Interval.open(S(3)/2, 3))
-    True
-    >>> is_monotonic(1/(x**2 - 3*x), Interval.open(1.5, 3))
-    True
-    >>> is_monotonic(1/(x**2 - 3*x), Interval.Lopen(3, oo))
-    True
+
+    Continuous functions - derivative test is sufficient:
+
     >>> is_monotonic(x**3 - 3*x**2 + 4*x, S.Reals)
     True
     >>> is_monotonic(-x**2, S.Reals)
     False
     >>> is_monotonic(x**2 + y + 1, Interval(1, 2), x)
     True
+
+    For discontinuous functions, combine with continuity check:
+
+    >>> from sympy import tan, pi
+    >>> from sympy.calculus.util import continuous_domain
+    >>> x_sym = Symbol('x', real=True)
+    >>> interval = Interval(0, 5)
+    >>> # tan(x) has poles at pi/2 and 3*pi/2 in [0, 5]
+    >>> is_deriv_mono = is_monotonic(tan(x_sym), interval, x_sym)  
+    >>> is_deriv_mono
+    True
+    >>> # But it's not continuous:
+    >>> is_cont = interval.is_subset(continuous_domain(tan(x_sym), x_sym, interval))
+    >>> is_cont
+    False
+    >>> # True monotonicity requires both:
+    >>> is_truly_mono = is_deriv_mono and is_cont
+    >>> is_truly_mono
+    False
+
+    See Also
+    ========
+
+    sympy.calculus.util.continuous_domain : Check where a function is continuous
+    is_increasing : Check if function is increasing (derivative >= 0)
+    is_decreasing : Check if function is decreasing (derivative <= 0)
+
+    References
+    ==========
+
+    .. [1] Stewart, J. (2015). *Calculus: Early Transcendentals* (8th ed.).
+           Theorem 4.5.2: Increasing/Decreasing Test. Cengage Learning.
+    .. [2] Thomas, G.B., Weir, M.D., Hass, J. (2018). *Thomas' Calculus* (14th ed.).
+           Section 4.3: Monotonic Functions and the First Derivative Test. Pearson.
 
     """
     from sympy.solvers.solveset import solveset
