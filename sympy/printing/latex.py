@@ -584,9 +584,17 @@ class LatexPrinter(Printer):
         numer, denom = fraction(expr, exact=True)
 
         if denom is S.One and Pow(1, -1, evaluate=False) not in expr.args:
-            # use the original expression here, since fraction() may have
-            # altered it when producing numer and denom
-            tex += convert(expr)
+            if isinstance(expr, Pow) and expr.exp.is_negative and expr.base.is_commutative:
+                base = self.parenthesize(expr.base, PRECEDENCE['Pow'])
+                if expr.base.is_Symbol:
+                    base = self.parenthesize_super(base)
+                pos_exp = -expr.exp
+                exp_str = self._print(pos_exp)
+                tex += r"\frac{1}{%s^{%s}}" % (base, exp_str)
+            else:
+                # use the original expression here, since fraction() may have
+                # altered it when producing numer and denom
+                tex += convert(expr)
 
         else:
             snumer = convert(numer)
