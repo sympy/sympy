@@ -1128,21 +1128,31 @@ class polar_lift(DefinedFunction):
 
 class periodic_argument(DefinedFunction):
     r"""
-    Represent the argument on a quotient of the Riemann surface of the
-    logarithm. That is, given a period $P$, always return a value in
-    $(-P/2, P/2]$, by using $\exp(PI) = 1$.
+    Return the argument of a complex number modulo a given period.
+
+    This represents the argument (angle) of a complex number on a quotient
+    of the Riemann surface of the logarithm. Given a period `P`, the result
+    is always in the interval `(-P/2, P/2]`.
+
+    Formally, for a complex number `z` and period `P`:
+
+        periodic_argument(z, P) = arg(z) mod P, mapped to (-P/2, P/2]
+
+    Notes
+    -----
+    - `arg(z)` is the usual argument (angle) of a complex number.
+    - When `P = oo` (infinity), this gives the unbranched argument.
+    - Examples of "wrapping" into the interval:
+        - `periodic_argument(exp_polar(5*I*pi), 3*pi) = -pi`
+          because 5π modulo 3π = 2π, which is outside (-3π/2, 3π/2], so we subtract 3π → -π.
 
     Examples
     ========
-
-    >>> from sympy import exp_polar, periodic_argument
-    >>> from sympy import I, pi
+    >>> from sympy import exp_polar, periodic_argument, I, pi
     >>> periodic_argument(exp_polar(10*I*pi), 2*pi)
     0
     >>> periodic_argument(exp_polar(5*I*pi), 4*pi)
     pi
-    >>> from sympy import exp_polar, periodic_argument
-    >>> from sympy import I, pi
     >>> periodic_argument(exp_polar(5*I*pi), 2*pi)
     pi
     >>> periodic_argument(exp_polar(5*I*pi), 3*pi)
@@ -1152,19 +1162,16 @@ class periodic_argument(DefinedFunction):
 
     Parameters
     ==========
-
     ar : Expr
-        A polar number.
-
+        A polar number (complex number in polar form).
     period : Expr
-        The period $P$.
+        The period `P`.
 
     See Also
     ========
-
     sympy.functions.elementary.exponential.exp_polar
-    polar_lift : Lift argument to the Riemann surface of the logarithm
-    principal_branch
+    polar_lift : Lift argument to the Riemann surface of the logarithm.
+    principal_branch : Return the principal branch of a function.
     """
 
     @classmethod
