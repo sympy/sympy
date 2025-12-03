@@ -286,7 +286,8 @@ def test_issue_24978():
     # (factor of -1 is extracted), before being stored as CRootOf.poly.
     f = -x**2 + 2
     r = CRootOf(f, 0)
-    assert r.poly.as_expr() == x**2 - 2
+    _x = r.poly.gen
+    assert r.poly.as_expr() == _x**2 - 2
     # An action that prompts calculation of an interval puts r.poly in
     # the cache.
     r.n()
@@ -690,8 +691,8 @@ def test_issue_15920():
 def test_issue_19113():
     eq = y**3 - y + 1
     # generator is a canonical x in RootOf
-    assert str(Poly(eq).real_roots()) == '[CRootOf(x**3 - x + 1, 0)]'
+    assert str(Poly(eq).real_roots()) == '[CRootOf(_x**3 - _x + 1, 0)]'
     assert str(Poly(eq.subs(y, tan(y))).real_roots()
-        ) == '[CRootOf(x**3 - x + 1, 0)]'
+        ) == '[CRootOf(_x**3 - _x + 1, 0)]'
     assert str(Poly(eq.subs(y, tan(x))).real_roots()
-        ) == '[CRootOf(x**3 - x + 1, 0)]'
+        ) == '[CRootOf(_x**3 - _x + 1, 0)]'

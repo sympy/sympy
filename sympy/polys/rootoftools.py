@@ -106,6 +106,7 @@ class _pure_key_dict:
 
 _reals_cache = _pure_key_dict()
 _complexes_cache = _pure_key_dict()
+_rootof_dummy = Dummy('x')
 
 
 def _pure_factors(poly):
@@ -197,7 +198,7 @@ class ComplexRootOf(RootOf):
     set to True with rootof):
 
     >>> CRootOf(x**2 - 3, 0)
-    CRootOf(x**2 - 3, 0)
+    CRootOf(_x**2 - 3, 0)
     >>> CRootOf(x**2 - 3, 0, radicals=True)
     -sqrt(3)
     >>> rootof(x**2 - 3, 0)
@@ -206,7 +207,7 @@ class ComplexRootOf(RootOf):
     The following cannot be expressed in terms of radicals:
 
     >>> r = rootof(4*x**5 + 16*x**3 + 12*x**2 + 7, 0); r
-    CRootOf(4*x**5 + 16*x**3 + 12*x**2 + 7, 0)
+    CRootOf(4*_x**5 + 16*_x**3 + 12*_x**2 + 7, 0)
 
     The root bounds can be seen, however, and they are used by the
     evaluation methods to get numerical approximations for the root.
@@ -366,6 +367,7 @@ class ComplexRootOf(RootOf):
         """Construct new ``CRootOf`` object from raw data. """
         obj = Expr.__new__(cls)
 
+        poly = poly.replace(poly.gen, _rootof_dummy)
         obj.poly = PurePoly(poly)
         obj.index = index
 

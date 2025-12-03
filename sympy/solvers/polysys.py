@@ -399,8 +399,8 @@ def solve_triangulated(polys, *gens, **args):
 
     >>> solve_triangulated(F, x, y, z, extension=True) #doctest: +NORMALIZE_WHITESPACE
     [(0, 0, 1), (0, 1, 0), (1, 0, 0),
-     (CRootOf(x**2 + 2*x - 1, 0), CRootOf(x**2 + 2*x - 1, 0), CRootOf(x**2 + 2*x - 1, 0)),
-     (CRootOf(x**2 + 2*x - 1, 1), CRootOf(x**2 + 2*x - 1, 1), CRootOf(x**2 + 2*x - 1, 1))]
+     (CRootOf(_x**2 + 2*_x - 1, 0), CRootOf(_x**2 + 2*_x - 1, 0), CRootOf(_x**2 + 2*_x - 1, 0)),
+     (CRootOf(_x**2 + 2*_x - 1, 1), CRootOf(_x**2 + 2*_x - 1, 1), CRootOf(_x**2 + 2*_x - 1, 1))]
 
     References
     ==========
