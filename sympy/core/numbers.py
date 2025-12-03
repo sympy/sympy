@@ -1711,8 +1711,9 @@ class Rational(Number):
         """
         Returns the numerator of the Rational number.
         
-        Examples 
+        Examples
         ========
+
         from sympy import Rational
         >>> r = Rational(3, 4)
         >>> r.numerator
@@ -1725,8 +1726,9 @@ class Rational(Number):
         """
         Returns the denominator of the Rational number.
         
-        Examples 
+        Examples
         ========
+        
         from sympy import Rational
         >>> r = Rational(3, 4)
         >>> r.denominator
