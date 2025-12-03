@@ -20,5 +20,5 @@ O = Order
 __all__ = ['Order', 'O', 'limit', 'Limit', 'gruntz', 'series', 'approximants',
         'pade_approximant', 'residue', 'EmptySequence', 'SeqPer', 'SeqFormula',
         'sequence', 'SeqAdd', 'SeqMul', 'fourier_series', 'fps', 'difference_delta',
-        'limit_seq'
+        'limit_seq','TaylorTwovariable'
         ]

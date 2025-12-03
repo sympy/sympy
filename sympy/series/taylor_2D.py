@@ -69,8 +69,43 @@ def diffDict(exp,upto,a,b):
     return ValueDict
 
 def RemoveCoefficientSplit(Custom):
+    """
+    Remove the numeric coefficient from each monomial term.
+
+    Given a list of monomials (as SymPy expressions), this helper function
+    separates out the numeric coefficient and returns only the pure symbolic
+    monomial part for comparison. This is used internally to match the terms
+    generated from `(X + Y)**n` with the mixed partial derivatives produced
+    during the Taylor expansion.
+
+    Parameters
+    ==========
+    Custom : list
+        A list of SymPy expressions, typically monomials obtained from
+        expanding `(X + Y)**n`.
+
+    Returns
+    =======
+    list
+        A list of strings where each entry is the monomial part of the term
+        with coefficients removed. For example, ``3*X**2*Y`` becomes
+        ``"X**2*Y"``.
+
+    Notes
+    =====
+    This function is an internal utility used by `TaylorTwovariable` for
+    matching like terms. It does not modify the input and assumes that
+    each entry in ``Custom`` is a valid SymPy expression with a single
+    numeric coefficient.
+
+    Examples
+    ========
+    >>> from sympy import symbols
+    >>> X, Y = symbols('X Y')
+    >>> RemoveCoefficientSplit([3*X**2*Y, -5*X*Y**3])
+    ['X**2*Y', 'X*Y**3']
+    """
     removed = []
-    X,Y = symbols('X'),symbols('Y')
     for express in Custom:
         new = ""
         check = 1
@@ -138,7 +173,6 @@ def TaylorTwovariable(real_eq,a,b,upto):
         except SympifyError:
             raise SympifyError("Write a correct equation")
     diffs = diffDict(real_eq, upto, a, b)
-    diff_Dict_keys = list(diffs.keys())
     diff_Dict_values = list(diffs.values())
     equations = []
     for i in range(1,upto+1):
