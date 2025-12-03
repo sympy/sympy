@@ -10,6 +10,7 @@ from .sequences import SeqPer, SeqFormula, sequence, SeqAdd, SeqMul
 from .fourier import fourier_series
 from .formal import fps
 from .limitseq import difference_delta, limit_seq
+from .taylor_2D import TaylorTwovariable
 
 from sympy.core.singleton import S
 EmptySequence = S.EmptySequence
