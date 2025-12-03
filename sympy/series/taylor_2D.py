@@ -164,5 +164,3 @@ def TaylorTwovariable(real_eq,a,b,upto):
     for x in range(0,len(equations)):
         Taylor += (equations[x])/factorial(x+1)
     return expand(Taylor)
-
-
