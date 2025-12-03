@@ -1,4 +1,8 @@
-from sympy import *
+from sympy.core.sympify import sympify, SympifyError
+from sympy.core.function import expand
+from sympy.core.symbol import symbols
+from sympy import diff
+from sympy.functions.combinatorial.factorials import factorial
 
 def diffDict(exp,upto,a,b):
     """
@@ -123,7 +127,7 @@ def TaylorTwovariable(real_eq,a,b,upto):
     >>> TaylorTwovariable("exp(X + Y)", 0, 0, 3)
     1 + (X + Y) + (X + Y)**2/2 + (X + Y)**3/6
     """
-    X,Y = Symbol('X'), Symbol('Y')
+    X,Y = symbols('X'), symbols('Y')
     a, b = sympify(a), sympify(b)
     while True:
         eq = real_eq
