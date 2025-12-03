@@ -3203,3 +3203,8 @@ def test_latex_disable_split_super_sub():
     assert latex(Symbol('u^a_b')) == 'u^{a}_{b}'
     assert latex(Symbol('u^a_b'), disable_split_super_sub=False) == 'u^{a}_{b}'
     assert latex(Symbol('u^a_b'), disable_split_super_sub=True) == 'u\\^a\\_b'
+
+def test_latex_unevaluated_pow_negative():
+    from sympy import Pow, I
+    from sympy.printing.latex import latex
+    assert latex(Pow(I, -4, evaluate=True)) == "1"
