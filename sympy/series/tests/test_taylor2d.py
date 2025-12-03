@@ -1,6 +1,8 @@
-import pytest
-from sympy import symbols, simplify, expand, log, sin, cos
-from sympy.series import TaylorTwovariable
+from sympy.core.symbol import symbols
+from sympy.simplify.simplify import simplify
+from sympy.core.function import expand
+from sympy.functions.elementary.trigonometric import sin, cos
+from Taylor_2D import TaylorTwovariable
 
 X, Y = symbols("X Y")
 
