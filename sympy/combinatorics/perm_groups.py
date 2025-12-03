@@ -1325,6 +1325,12 @@ class PermutationGroup(Basic):
         transversals = self.basic_transversals
         basic_orbits = self.basic_orbits
         m = len(base)
+        if m == 0:
+            h = list(range(self._degree))
+            if af:
+                return h
+            else:
+                return _af_new(h)
         v = [0]*m
         for i in range(m):
             rank, c = divmod(rank, len(transversals[i]))

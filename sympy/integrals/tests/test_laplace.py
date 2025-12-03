@@ -72,8 +72,10 @@ def test_laplace_transform():
              0, True))
     assert (LT(1/(a*sqrt(t) + t**(3/2)), t, s) ==
             (pi*sqrt(a)*exp(a*s)*erfc(sqrt(a)*sqrt(s)), 0, True))
-    assert (LT((t+a)**b, t, s) ==
-            (s**(-b - 1)*exp(-a*s)*uppergamma(b + 1, a*s), 0, True))
+    assert (
+        (LT((t+a)**b, t, s) ==
+            (s**(-b - 1)*exp(a*s)*uppergamma(b + 1, a*s), 0, True))
+        )
     assert LT(t**5/(t+a), t, s) == (120*a**5*uppergamma(-5, a*s), 0, True)
     assert LT(exp(t), t, s) == (1/(s - 1), 1, True)
     assert LT(exp(2*t), t, s) == (1/(s - 2), 2, True)
@@ -402,6 +404,8 @@ def test_laplace_transform():
     assert (
         LT((1/(t-1))*sin(4*pi*(t-1))*DiracDelta(t-1) *
            (Heaviside(t-1/4) - Heaviside(t-2)), t, s)[0] == 4*pi*exp(-s))
+    # Issue #28686
+    assert (LT((t + 4)*a, t, s) == (a*(4*s + 1)/s**2, 0, True))
     # additional basic tests from wikipedia
     assert (LT((t - a)**b*exp(-c*(t - a))*Heaviside(t - a), t, s) ==
             ((c + s)**(-b - 1)*exp(-a*s)*gamma(b + 1), -c, True))

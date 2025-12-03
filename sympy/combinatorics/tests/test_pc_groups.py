@@ -85,6 +85,27 @@ def test_induced_pcgs():
         for i in ipcgs:
             m.append(collector.exponent_vector(i))
         assert Matrix(m).is_upper
+def test_induced_pcgs_final_depth():
+    G = SymmetricGroup(3)
+    H = G.sylow_subgroup(2)
+    pc_group = H.polycyclic_group()
+    collector = pc_group.collector
+
+    ipcgs = collector.induced_pcgs(H.generators[:])
+    assert len(ipcgs) > 0
+
+    for gen in H.generators:
+        e = collector.constructive_membership_test(ipcgs, gen)
+        assert e != False
+
+        reconstructed = H.identity
+        for i, exp in enumerate(e):
+            reconstructed = reconstructed * ipcgs[i]**exp
+        assert reconstructed == gen
+
+    identity = H.identity
+    e_identity = collector.constructive_membership_test(ipcgs, identity)
+    assert e_identity == [0]
 
 
 def test_collected_word_with_order_multiples():

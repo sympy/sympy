@@ -340,16 +340,20 @@ def _roots_real_complex(poly):
     reals = {}
     complexes = {}
 
-    for r, m in list(rs.items()):
+    remaining = list(rs)
+
+    while remaining:
+        r = remaining.pop()
         r_c = r.conjugate()
         if r != r_c and r_c in rs:
-            assert rs.pop(r_c) == m
+            assert rs[r_c] == rs[r]
+            remaining.remove(r_c)
             r_re, r_im = r.as_real_imag()
             _, r_im = ordered([r_im, -r_im])
-            complexes[(r_re, r_im)] = m
+            complexes[(r_re, r_im)] = rs[r]
         else:
             # If we didn't find a conjugate just treat as real
-            reals[r] = m
+            reals[r] = rs[r]
 
     return reals, complexes
 

@@ -1,9 +1,11 @@
 from itertools import combinations_with_replacement
 from sympy.core import symbols, Add, Dummy
 from sympy.core.numbers import Rational
+from sympy.core.singleton import S
 from sympy.polys import cancel, ComputationFailed, parallel_poly_from_expr, reduced, Poly
 from sympy.polys.monomials import Monomial, monomial_div
 from sympy.polys.polyerrors import DomainError, PolificationFailed
+from sympy.utilities.memoization import recurrence_memo
 from sympy.utilities.misc import debug, debugf
 
 def ratsimp(expr):
@@ -83,23 +85,20 @@ def ratsimpmodprime(expr, G, *gens, quick=True, polynomial=False, **args):
     leading_monomials = [g.LM(opt.order) for g in polys[2:]]
     tested = set()
 
-    def staircase(n):
+    @recurrence_memo([[S.One]])
+    def staircase(n, prev):
         """
         Compute all monomials with degree less than ``n`` that are
         not divisible by any element of ``leading_monomials``.
         """
-        if n == 0:
-            return [1]
-        S = []
+        result = []
         for mi in combinations_with_replacement(range(len(opt.gens)), n):
             m = [0]*len(opt.gens)
             for i in mi:
                 m[i] += 1
-            if all(monomial_div(m, lmg) is None for lmg in
-                   leading_monomials):
-                S.append(m)
-
-        return [Monomial(s).as_expr(*opt.gens) for s in S] + staircase(n - 1)
+            if all(monomial_div(m, lmg) is None for lmg in leading_monomials):
+                result.append(Monomial(m).as_expr(*opt.gens))
+        return result + prev[-1]
 
     def _ratsimpmodprime(a, b, allsol, N=0, D=0):
         r"""
@@ -138,9 +137,7 @@ def ratsimpmodprime(expr, G, *gens, quick=True, polynomial=False, **args):
             bound = maxdeg - 1
         else:
             bound = maxdeg
-        while N + D <= bound:
-            if (N, D) in tested:
-                break
+        while N + D <= bound and (N, D) not in tested:
             tested.add((N, D))
 
             M1 = staircase(N)
@@ -150,34 +147,34 @@ def ratsimpmodprime(expr, G, *gens, quick=True, polynomial=False, **args):
             Cs = symbols("c:%d" % len(M1), cls=Dummy)
             Ds = symbols("d:%d" % len(M2), cls=Dummy)
             ng = Cs + Ds
+            g_ng = opt.gens + ng
 
-            c_hat = Poly(
-                sum(Cs[i] * M1[i] for i in range(len(M1))), opt.gens + ng)
-            d_hat = Poly(
-                sum(Ds[i] * M2[i] for i in range(len(M2))), opt.gens + ng)
+            c_hat = Poly(sum(Cs[i] * M1[i] for i in range(len(M1))), g_ng)
+            d_hat = Poly(sum(Ds[i] * M2[i] for i in range(len(M2))), g_ng)
 
-            r = reduced(a * d_hat - b * c_hat, G, opt.gens + ng,
+            r = reduced(a * d_hat - b * c_hat, G, g_ng,
                         order=opt.order, polys=True)[1]
 
-            S = Poly(r, gens=opt.gens).coeffs()
-            sol = solve(S, Cs + Ds, particular=True, quick=True)
+            s = Poly(r, gens=opt.gens).coeffs()
+            sol = solve(s, ng, particular=True, quick=True)
 
-            if sol and not all(s == 0 for s in sol.values()):
+            if sol and not all(_s == 0 for _s in sol.values()):
                 c = c_hat.subs(sol)
                 d = d_hat.subs(sol)
 
                 # The "free" variables occurring before as parameters
                 # might still be in the substituted c, d, so set them
                 # to the value chosen before:
-                c = c.subs(dict(list(zip(Cs + Ds, [1] * (len(Cs) + len(Ds))))))
-                d = d.subs(dict(list(zip(Cs + Ds, [1] * (len(Cs) + len(Ds))))))
+                subs_dic = dict.fromkeys(ng, S.One)
+                c = c.subs(subs_dic)
+                d = d.subs(subs_dic)
 
                 c = Poly(c, opt.gens)
                 d = Poly(d, opt.gens)
                 if d == 0:
                     raise ValueError('Ideal not prime?')
 
-                allsol.append((c_hat, d_hat, S, Cs + Ds))
+                allsol.append((c_hat, d_hat, s, ng))
                 if N + D != maxdeg:
                     allsol = [allsol[-1]]
 
@@ -206,8 +203,8 @@ def ratsimpmodprime(expr, G, *gens, quick=True, polynomial=False, **args):
     if not quick and allsol:
         debugf('Looking for best minimal solution. Got: %s', len(allsol))
         newsol = []
-        for c_hat, d_hat, S, ng in allsol:
-            sol = solve(S, ng, particular=True, quick=False)
+        for c_hat, d_hat, s, ng in allsol:
+            sol = solve(s, ng, particular=True, quick=False)
             # all values of sol should be numbers; if not, solve is broken
             newsol.append((c_hat.subs(sol), d_hat.subs(sol)))
         c, d = min(newsol, key=lambda x: len(x[0].terms()) + len(x[1].terms()))
@@ -217,6 +214,6 @@ def ratsimpmodprime(expr, G, *gens, quick=True, polynomial=False, **args):
         dn, d = d.clear_denoms(convert=True)
         r = Rational(cn, dn)
     else:
-        r = Rational(1)
+        r = S.One
 
     return (c*r.q)/(d*r.p)

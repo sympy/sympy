@@ -1148,7 +1148,7 @@ class PrettyPrinter(Printer):
         C = expr._C
         D = expr._D
         mat = BlockMatrix([[A, B], [C, D]])
-        mat: stringPict = self._print(mat)
+        mat = self._print(mat)
         return prettyForm(*mat.below(f"\n[st: {expr.sampling_time}]"))
 
     def _print_BasisDependent(self, expr):
