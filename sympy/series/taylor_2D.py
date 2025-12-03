@@ -4,6 +4,14 @@ from sympy.core.symbol import symbols
 from sympy import diff
 from sympy.functions.combinatorial.factorials import factorial
 
+X,Y = symbols('X'),symbols('Y')
+
+__all__ = [
+    "diffDict",
+    "RemoveCoefficientSplit",
+    "TaylorTwovariable"
+]
+
 def diffDict(exp,upto,a,b):
     """
     Generate all partial derivatives of a two-variable expression
@@ -43,7 +51,7 @@ def diffDict(exp,upto,a,b):
     >>> diffDict("X**2 + Y**2", 2, 0, 0)
     {1: {X: 0, Y: 0}, 2: {X*X: 2, X*Y: 0, Y*Y: 2}}
     """
-    X,Y = symbols('X'),symbols('Y')
+    
     a, b = sympify(a), sympify(b)
     exp = sympify(exp)
     expDict = {1 : {sympify('X') : diff(exp , X), sympify('Y') : diff(exp ,Y)}}
@@ -162,7 +170,6 @@ def TaylorTwovariable(real_eq,a,b,upto):
     >>> TaylorTwovariable("exp(X + Y)", 0, 0, 3)
     1 + (X + Y) + (X + Y)**2/2 + (X + Y)**3/6
     """
-    X,Y = symbols('X'), symbols('Y')
     a, b = sympify(a), sympify(b)
     while True:
         eq = real_eq
