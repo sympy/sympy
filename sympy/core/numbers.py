@@ -1710,7 +1710,7 @@ class Rational(Number):
     def numerator(self):
         """
         Returns the numerator of the Rational number.
-        
+
         Examples
         ========
 
@@ -1725,10 +1725,10 @@ class Rational(Number):
     def denominator(self):
         """
         Returns the denominator of the Rational number.
-        
+
         Examples
         ========
-        
+
         from sympy import Rational
         >>> r = Rational(3, 4)
         >>> r.denominator
