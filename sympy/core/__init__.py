@@ -7,6 +7,8 @@ from .assumptions import assumptions, check_assumptions, failing_assumptions, co
 from .basic import Basic, Atom
 from .singleton import S
 from .expr import Expr, AtomicExpr, UnevaluatedExpr
+from .equation import Equation
+Eqn = Equation
 from .symbol import Symbol, Wild, Dummy, symbols, var
 from .numbers import Number, Float, Rational, Integer, NumberSymbol, \
     RealNumber, igcd, ilcm, seterr, E, I, nan, oo, pi, zoo, \
@@ -51,7 +53,7 @@ __all__ = [
 
     'S',
 
-    'Expr', 'AtomicExpr', 'UnevaluatedExpr',
+    'Expr', 'AtomicExpr', 'UnevaluatedExpr', 'Equation', 'Eqn',
 
     'Symbol', 'Wild', 'Dummy', 'symbols', 'var',
 
