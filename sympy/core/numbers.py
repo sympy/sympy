@@ -1728,7 +1728,7 @@ class Rational(Number):
         
         Examples
         ========
-
+        
         from sympy import Rational
         >>> r = Rational(3, 4)
         >>> r.denominator
