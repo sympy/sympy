@@ -2,7 +2,7 @@ from sympy.core.symbol import symbols
 from sympy.simplify.simplify import simplify
 from sympy.core.function import expand
 from sympy.functions.elementary.trigonometric import sin, cos
-from Taylor_2D import TaylorTwovariable
+from sympy.series.taylor_2D import TaylorTwovariable
 
 X, Y = symbols("X Y")
 
