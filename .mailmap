@@ -185,6 +185,7 @@
 #
 # See also: 'git shortlog --help' and 'git check-mailmap --help'.
 #
+
 *Chu-Ching Huang <cchuang@mail.cgu.edu.tw>
 *Dan <coolg49964@gmail.com>
 *Marc-Etienne M.Leveille <protonyc@gmail.com>
@@ -702,7 +703,7 @@ Guo Xingjian <Seeker1995@gmail.com>
 Gurpartap Singh <dhaliwal.gurpartap@gmail.com> Gurpartap Singh <36311440+gurpartap0306@users.noreply.github.com>
 Gurpartap Singh <dhaliwal.gurpartap@gmail.com> gurpartap0306 <dhaliwal.gurpartap@gmail.com>
 Guru Devanla <grdvnl@gmail.com>
-Guy34 <guy34@sympy.org> <hg0880366@gmail.com> <108204866+guy34@users.noreply.github.com>
+Guy34 <hg0880366@gmail.com>
 Haimo Zhang <zh.hammer.dev@gmail.com>
 Hamish Dickson <hamish.dickson@gmail.com>
 Hampus Malmberg <hampus.malmberg88@gmail.com>
@@ -1819,4 +1820,3 @@ zzj <29055749+zjzh@users.noreply.github.com>
 Łukasz Pankowski <lukpank@o2.pl>
 彭于斌 <1931127624@qq.com>
 袁野 (Yuan Ye) <yuanyelele@tutanota.com>
-
