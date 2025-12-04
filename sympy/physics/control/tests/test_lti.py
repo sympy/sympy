@@ -27,7 +27,6 @@ from sympy.physics.control.lti import (
     backward_diff, phase_margin, gain_margin)
 from sympy.testing.pytest import raises
 from sympy.logic.boolalg import false, true
-
 from math import isclose
 
 a, x, b, c, s, g, d, p, k, tau, zeta, wn, T, z = symbols('a, x, b, c, s, g, d,\
@@ -4909,3 +4908,82 @@ def test_DiscreteStateSpace_stability():
     ss2 = DiscreteStateSpace(A2, B, C, D)
     ineq = ss2.get_asymptotic_stability_conditions()
     assert ineq == [False]
+def test_dc_gain_constant_num_den():
+    s = symbols('s')
+    G = TransferFunction(5, s + 2, s)
+    assert G.dc_gain() == Rational(5, 2)
+
+
+def test_dc_gain_polynomial_num_den():
+    s = symbols('s')
+    G = TransferFunction(s**2 + 3*s + 2, (s + 1)*(s + 2), s)
+    assert G.dc_gain() == 1
+
+
+def test_dc_gain_zero_numerator():
+    s = symbols('s')
+    G = TransferFunction(0, s + 5, s)
+    assert G.dc_gain() == 0
+
+
+def test_dc_gain_den_zero_at_zero_returns_infinity():
+    s = symbols('s')
+    G = TransferFunction(1, s, s)
+    assert G.dc_gain() == oo
+
+
+def test_dc_gain_negative_power_gives_infinity():
+    s = symbols('s')
+    G = TransferFunction(1/s, 1, s)
+    assert G.dc_gain() == oo
+
+def test_step_response_first_order():
+    s, t = symbols('s t')
+    G = TransferFunction(1, s + 1, s)
+    resp = G.step_response()
+    assert simplify(resp.subs(Heaviside(t), 1) - (1 - exp(-t))) == 0
+
+
+def test_step_response_zero_numerator():
+    s, t = symbols('s t')
+    G = TransferFunction(0, s + 1, s)
+    resp = G.step_response()
+    assert resp == 0
+
+
+def test_step_response_constant_gain():
+    s, t = symbols('s t')
+    G = TransferFunction(5, 1, s)
+    resp = G.step_response()
+    assert simplify(resp.subs(Heaviside(t), 1) - 5) == 0
+
+def test_step_response_improper_tf():
+    s = symbols('s')
+    G = TransferFunction(s**2 + 1, s + 1, s)
+    raises(ValueError, lambda: G.step_response())
+def test_tf_to_ss_constant():
+    s, K = symbols('s, K')
+
+    # Constant transfer function
+    G = TransferFunction(K, 1, s)
+
+    # Convert TF -> SS
+    Gss = G.rewrite(StateSpace)
+
+    # A should be 0x0
+    assert Gss.A.shape == (0, 0)
+
+    # B should be 0x1
+    assert Gss.B.shape == (0, 1)
+
+    # C should be 1x0
+    assert Gss.C.shape == (1, 0)
+
+    # D should be [[K]]
+    assert Gss.D == Matrix([[K]])
+
+    # And SS -> TF should return the same constant TF
+    G_back = Gss.rewrite(TransferFunction)[0][0]
+
+    assert G_back.num == K
+    assert G_back.den == 1
