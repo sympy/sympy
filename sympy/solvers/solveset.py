@@ -1038,35 +1038,45 @@ def _solve_as_poly(f, symbol, domain=S.Complexes):
             else:
                 result = ConditionSet(symbol, Eq(f, 0), domain)
     else:
-        poly = Poly(f)
+        poly = f.as_poly()
         if poly is None:
-            result = ConditionSet(symbol, Eq(f, 0), domain)
-        gens = [g for g in poly.gens if g.has(symbol)]
-
-        if len(gens) == 1:
-            poly = Poly(poly, gens[0])
-            gen = poly.gen
-            deg = poly.degree()
-            poly = Poly(poly.as_expr(), poly.gen, composite=True)
-            poly_solns = FiniteSet(*roots(poly, cubics=True, quartics=True,
-                                          quintics=True).keys())
-
-            if len(poly_solns) < deg:
-                result = ConditionSet(symbol, Eq(f, 0), domain)
-
-            if gen != symbol:
-                y = Dummy('y')
-                inverter = invert_real if domain.is_subset(S.Reals) else invert_complex
-                lhs, rhs_s = inverter(gen, y, symbol)
-                if lhs == symbol:
-                    result = Union(*[rhs_s.subs(y, s) for s in poly_solns])
-                    if isinstance(result, FiniteSet) and isinstance(gen, Pow
-                            ) and gen.base.is_Rational:
-                        result = FiniteSet(*[expand_log(i) for i in result])
+            if f.is_zero:
+                result = domain
+            elif f.is_number:
+                result = S.EmptySet
+            else:
+                n, d = f.as_numer_denom()
+                if n.is_number and n != 0:
+                    result = S.EmptySet
                 else:
                     result = ConditionSet(symbol, Eq(f, 0), domain)
         else:
-            result = ConditionSet(symbol, Eq(f, 0), domain)
+            gens = [g for g in poly.gens if g.has(symbol)]
+
+            if len(gens) == 1:
+                poly = Poly(poly, gens[0])
+                gen = poly.gen
+                deg = poly.degree()
+                poly = Poly(poly.as_expr(), poly.gen, composite=True)
+                poly_solns = FiniteSet(*roots(poly, cubics=True, quartics=True,
+                                              quintics=True).keys())
+
+                if len(poly_solns) < deg:
+                    result = ConditionSet(symbol, Eq(f, 0), domain)
+
+                if gen != symbol:
+                    y = Dummy('y')
+                    inverter = invert_real if domain.is_subset(S.Reals) else invert_complex
+                    lhs, rhs_s = inverter(gen, y, symbol)
+                    if lhs == symbol:
+                        result = Union(*[rhs_s.subs(y, s) for s in poly_solns])
+                        if isinstance(result, FiniteSet) and isinstance(gen, Pow
+                                ) and gen.base.is_Rational:
+                            result = FiniteSet(*[expand_log(i) for i in result])
+                    else:
+                        result = ConditionSet(symbol, Eq(f, 0), domain)
+            else:
+                result = ConditionSet(symbol, Eq(f, 0), domain)
 
     if result is not None:
         if isinstance(result, FiniteSet):
