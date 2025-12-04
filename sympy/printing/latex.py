@@ -683,8 +683,26 @@ class LatexPrinter(Printer):
                             return r"\frac{1}{\frac{%s}{%s}}" % (base_p, base_q)
                         else:
                             return r"\frac{1}{(\frac{%s}{%s})^{%s}}" % (base_p, base_q, abs(expr.exp))
-                # things like 1/x
-                return self._print_Mul(expr)
+                # things like 1/x^y
+                abs_exp = -expr.exp
+                base_expr = expr.base
+                if (base_expr.is_Integer or base_expr.is_Float) and abs_exp.is_Integer:
+                    return r"\frac{1}{%s}" % self._print(base_expr**abs_exp)
+                if base_expr.is_Rational:
+                    base_tex = self._print(base_expr)
+                else:
+                    if self._needs_mul_brackets(base_expr, first=False, last=True) and abs_exp != 1:
+                        base_tex = r"\left(%s\right)" % self._print(base_expr)
+                    else:
+                        base_tex = self._print(base_expr)
+                if abs_exp == 1:
+                    if self._settings.get('fold_short_frac', False):
+                        return r"1 / %s" % base_tex
+                    else:
+                        return r"\frac{1}{%s}" % base_tex
+                exp_tex = self._print(abs_exp)
+                return r"\frac{1}{%s^{%s}}" % (base_tex, exp_tex)
+
         if expr.base.is_Function:
             return self._print(expr.base, exp=self._print(expr.exp))
         tex = r"%s^{%s}"
