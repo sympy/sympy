@@ -1,5 +1,6 @@
 from sympy.core.sympify import sympify, SympifyError
 from sympy.core.symbol import symbols
+from sympy.core.function import expand
 from sympy import diff
 from sympy.functions.combinatorial.factorials import factorial
 
@@ -202,4 +203,5 @@ def TaylorTwovariable(real_eq,a,b,upto):
     Taylor = real_eq.subs({X: a, Y: b})
     for x in range(0,len(equations)):
         Taylor += (equations[x])/factorial(x+1)
-    return expand(Taylor)
+        return expand(Taylor)
+    
