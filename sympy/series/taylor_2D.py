@@ -1,5 +1,4 @@
 from sympy.core.sympify import sympify, SympifyError
-from sympy.core.function import expand
 from sympy.core.symbol import symbols
 from sympy import diff
 from sympy.functions.combinatorial.factorials import factorial
@@ -51,7 +50,6 @@ def diffDict(exp,upto,a,b):
     >>> diffDict("X**2 + Y**2", 2, 0, 0)
     {1: {X: 0, Y: 0}, 2: {X*X: 2, X*Y: 0, Y*Y: 2}}
     """
-    
     a, b = sympify(a), sympify(b)
     exp = sympify(exp)
     expDict = {1 : {sympify('X') : diff(exp , X), sympify('Y') : diff(exp ,Y)}}
