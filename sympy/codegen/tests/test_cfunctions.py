@@ -36,7 +36,8 @@ def test_log1p():
     # Eval
     assert log1p(0) == 0
     d = S(10)
-    assert expand_log(log1p(d**-1000) - log(d**1000 + 1) + log(d**1000)) == 0
+    # First expand log1p to log, then expand_log to combine terms
+    assert expand_log((log1p(d**-1000) - log(d**1000 + 1) + log(d**1000)).expand(func=True)) == 0
 
     x = Symbol('x', real=True)
 
@@ -50,6 +51,8 @@ def test_log1p():
     assert abs(expand_log(log1p(1e-99)).evalf() - 1e-99) < 1e-100
     # Test direct evalf with very small numbers (gh-28579)
     assert abs(log1p(1.3e-45).evalf(n=3) - 1.3e-45) < 1e-46
+    # Test with Rational inputs (bjodah's counter-example)
+    assert abs(log1p(Rational(1.3e-45)).evalf(n=3) - 1.3e-45) < 1e-46
 
     # Properties
     assert log1p(-2**Rational(-1, 2)).is_real
