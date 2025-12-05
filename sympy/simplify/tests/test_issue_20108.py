@@ -14,3 +14,4 @@ def test_issue_20108():
     # (Complex numbers cannot simplify this way)
     z = Symbol('z') # z is complex by default
     assert simplify(z**2 / Abs(z)) != Abs(z)
+    
