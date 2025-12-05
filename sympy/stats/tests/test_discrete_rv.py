@@ -1,7 +1,7 @@
 from sympy.concrete.summations import Sum
 from sympy.core.numbers import (I, Rational, oo, pi)
 from sympy.core.singleton import S
-from sympy.core.symbol import Symbol
+from sympy.core.symbol import Symbol, symbols
 from sympy.functions.elementary.complexes import (im, re)
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.integers import floor
@@ -20,6 +20,7 @@ from sympy.sets.fancysets import Range
 from sympy.stats import (P, E, variance, density, characteristic_function,
                          where, moment_generating_function, skewness, cdf,
                          kurtosis, coskewness)
+from sympy.stats.compound_rv import CompoundDistribution
 from sympy.stats.drv_types import (PoissonDistribution, GeometricDistribution,
                                    FlorySchulz, Poisson, Geometric, Hermite, Logarithmic,
                                     NegativeBinomial, Skellam, YuleSimon, Zeta,
@@ -195,7 +196,7 @@ def test_discrete_probability():
     assert P(X < S.Infinity) is S.One
     assert P(X > S.Infinity) is S.Zero
     assert P(G < 3) == x*(2-x)
-    assert P(Eq(G, 3)) == x*(-x + 1)**2
+    assert P(Eq(G, 3)).equals(x*(-x + 1)**2)
 
 
 def test_DiscreteRV():
@@ -309,4 +310,53 @@ def test_product_spaces():
     assert str(P(X1 + X2 > 3).rewrite(Sum)) == (
         'Sum(Piecewise((2**(X2 - n - 2)*(2/3)**(X2 - 1)/6, '
         'X2 - n <= 2), (0, True)), (X2, 1, oo), (n, 1, oo))')
-    assert P(Eq(X1 + X2, 3)) == Rational(1, 12)
+    assert P(Eq(X1 + X2, 3)) == Rational(7, 36)
+
+
+
+def test_geometric_compound_distribution_edge_cases():
+    p = S(1)/4
+    G = GeometricDistribution(p)
+    C = CompoundDistribution(G)
+
+    k = symbols('k', positive=True, integer=True)
+    expected_pdf = (1 - p)**(k - 1) * p
+    assert C.pdf(k).simplify() == expected_pdf.simplify()
+    assert C.pdf(1) == p
+    assert C.pdf(2) == (1 - p) * p
+    assert C.pdf(3) == (1 - p)**2 * p
+    for val in [-10, -2, -1, 0]:
+        res = C.pdf(val)
+        assert res == 0
+    for val in [0.5, 1.5, 2.5, -0.5, S(1)/2, S(3)/2, sqrt(2)]:
+        res = C.pdf(val)
+        assert res == 0
+
+    leaked_cases = {
+        0: S(1)/3,
+        -1: S(4)/9,
+        -2: S(16)/27,
+        S(1)/2: sqrt(3)/6,
+        S(3)/2: sqrt(3)/8,
+    }
+    for val, bad_val in leaked_cases.items():
+        res = C.pdf(val)
+        assert res != bad_val, f"Leak detected: pdf({val}) produced {res}, expected 0"
+
+    # invalid domain
+    k_invalid = symbols('k_invalid', integer=True, negative=True)
+    res = C.pdf(k_invalid)
+    assert res == 0 or res.has(k_invalid), "Symbolic invalid domain leakage detected"
+    assert C.pdf(S('0.9999')) == 0
+    assert C.pdf(S('1.0001')).is_number
+
+def test_geometric_sum_probability():
+    """Verify probability for sums of independent Geometric RVs is computed correctly."""
+    p = Rational(3, 4)
+    g1 = Geometric('G1', p)
+    g2 = Geometric('G2', p)
+    assert P(Eq(g1-1 , 0)) == p
+    assert P(Eq(g2-1 , 0)) == p
+    expected = p**2
+    result = P(Eq((g1-1) + (g2-1) , 0))
+    assert result == expected
