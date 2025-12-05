@@ -793,3 +793,11 @@ def test_mul_pow_derivative():
     assert_is_integral_of(x**3*Derivative(f(x), (x, 4)),
                           x**3*Derivative(f(x), (x, 3)) - 3*x**2*Derivative(f(x), (x, 2)) +
                           6*x*Derivative(f(x), x) - 6*f(x))
+
+
+def test_issue_26587():
+    from sympy import sec, cos, tan, log, sin, csc, cot
+    # Test that 1/cos(x) is rewritten as sec(x) and solved
+    assert manualintegrate(1/cos(x), x) == log(tan(x) + sec(x))
+    # Test that 1/sin(x) is rewritten as cosec(x) and solved
+    assert manualintegrate(1/sin(x), x) == -log(cot(x) + csc(x))

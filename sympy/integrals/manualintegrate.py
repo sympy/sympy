@@ -2040,8 +2040,12 @@ def derivative_rule(integral):
 def rewrites_rule(integral):
     integrand, symbol = integral
 
-    if integrand.match(1/cos(symbol)):
+    if integrand.match(1/cos(symbol)) is not None:
         rewritten = integrand.subs(1/cos(symbol), sec(symbol))
+        return RewriteRule(integrand, symbol, rewritten, integral_steps(rewritten, symbol))
+
+    if integrand.match(1/sin(symbol)) is not None:
+        rewritten = integrand.subs(1/sin(symbol), csc(symbol))
         return RewriteRule(integrand, symbol, rewritten, integral_steps(rewritten, symbol))
 
 def fallback_rule(integral):
