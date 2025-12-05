@@ -6,7 +6,6 @@ from collections import defaultdict
 
 from sympy.concrete.products import Product
 from sympy.concrete.summations import Sum
-from sympy import Abs
 from sympy.core import (Basic, S, Add, Mul, Pow, Symbol, sympify,
                         expand_func, Function, Dummy, Expr, factor_terms,
                         expand_power_exp, Eq)
