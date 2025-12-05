@@ -124,6 +124,14 @@ class LLVMJitCallbackPrinter(LLVMJitPrinter):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+    """Printer for JIT-compiled callback functions.
+
+    This variant of the LLVMJitPrinter handles the case where parameters are
+    passed by array (for example when used as callbacks for integration
+    routines). It knows how to load values from LLVM pointer arguments and
+    supports indexed parameters.
+    """
+
     def _print_Indexed(self, expr):
         array, idx = self.func_arg_map[expr.base]
         offset = int(expr.indices[0].evalf())
@@ -166,6 +174,14 @@ class LLVMJitCode:
         self.llvm_ret_type = self.fp_type
         self.param_dict = {}  # map symbol name to LLVM function argument
         self.link_name = ''
+
+    """Helper for generating and compiling LLVM functions from SymPy expressions.
+
+    The LLVMJitCode class encapsulates the machinery required to transform a
+    SymPy expression into LLVM IR, compile it with llvmlite and obtain a
+    callable function pointer. It supports converting expressions, creating
+    function signatures and wrapping return values for Python interoperability.
+    """
 
     def _from_ctype(self, ctype):
         if ctype == ctypes.c_int:
@@ -308,6 +324,14 @@ class LLVMJitCodeCallback(LLVMJitCode):
     def __init__(self, signature):
         super().__init__(signature)
 
+    """Specialized LLVMJitCode for functions used as callbacks.
+
+    This class adjusts how function arguments are mapped so that callbacks
+    (for example those required by SciPy or cubature) can receive input and
+    write output via pointer/array arguments rather than standard return
+    values.
+    """
+
     def _create_param_dict(self, func_args):
         for i, a in enumerate(func_args):
             if isinstance(a, IndexedBase):
@@ -353,6 +377,22 @@ class CodeSignature:
         # For the case output value is referenced through a parameter rather
         # than the return value
         self.ret_arg = None
+
+    """Describes the C-level signature used for generated functions.
+
+    Attributes
+    ----------
+    ret_type : ctypes type
+        The C type used for the return value (e.g., ctypes.py_object or
+        ctypes.c_double).
+    arg_ctypes : list
+        A list of ctypes types for function arguments.
+    input_arg : int
+        Index of the input argument when parameters are passed via an array.
+    ret_arg : int or None
+        If not None, this specifies which argument index is used to write the
+        return value (used for some callback signatures).
+    """
 
 
 def _llvm_jit_code(args, expr, signature, callback_type):
