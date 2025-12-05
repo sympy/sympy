@@ -1582,12 +1582,8 @@ def test_compute_density():
     X = Normal('X', 0, Symbol("sigma")**2)
     raises(ValueError, lambda: density(X**5 + X))
 
-
-from sympy import Symbol, S, erf, sqrt, oo, Integral, Dummy
-from sympy.stats import AlphaStable, P, E, cdf, density
-
-
 def test_alpha_stable_statistics():
+    from sympy.stats import AlphaStable
     x = Symbol('x', real=True)
 
     # 1. Standard Normal Case: Alpha=2, Beta=0, Scale=1, Location=0
