@@ -17,7 +17,7 @@ from sympy.core.containers import Tuple
 from sympy.core.function import (Lambda, expand_complex, AppliedUndef,
                                 expand_log, _mexpand, expand_trig, nfloat)
 from sympy.core.mod import Mod
-from sympy.core.numbers import I, Number, Rational, oo
+from sympy.core.numbers import I, Number, Rational, oo, Float
 from sympy.core.intfunc import integer_log
 from sympy.core.relational import Eq, Ne, Relational
 from sympy.core.sorting import default_sort_key, ordered
@@ -1038,7 +1038,7 @@ def _solve_as_poly(f, symbol, domain=S.Complexes):
             else:
                 result = ConditionSet(symbol, Eq(f, 0), domain)
     else:
-        poly = Poly(f)
+        poly = f.as_poly()
         if poly is None:
             result = ConditionSet(symbol, Eq(f, 0), domain)
         gens = [g for g in poly.gens if g.has(symbol)]
@@ -3548,6 +3548,8 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                     assert not isinstance(v, FiniteSet)  # if so, internal error
                 # update eq with everything that is known so far
                 eq2 = eq.subs(res).expand()
+                if eq2.has(log) and not eq2.has(Float):
+                    eq2 = simplify(eq2)
                 if imgset_yes and not eq2.has(imgset_yes[0]):
                     # The substituted equation simplified in such a way that
                     # it's no longer necessary to encapsulate a potential new

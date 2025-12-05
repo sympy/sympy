@@ -3576,3 +3576,14 @@ def test_issue_26077():
         Complement(S.Reals, excluded_points)
     )
     assert solution.as_dummy() == critical_points.as_dummy()
+
+def test_issue_28659():
+    system = [
+        (-2 * y - 4 * z + (2 * x + y) * (3 * t - 2 * log(2 * x / 3 + y / 3) - 2 - log(Integer(4) / 9))) / (
+                3 * (2 * x + y)),
+        (-y - 2 * z + (2 * x + y) * (3 * t - 2 * log(2 * x + y) - 1 + 5 * log(3))) / (3 * (2 * x + y)),
+        t - 2 * log(2 * x + y) / 3 - 2 * log(2) / 3 + 4 * log(3) / 3,
+        x + y + z - 1
+    ]
+
+    assert nonlinsolve(system,x,y,z,t) == S.EmptySet
