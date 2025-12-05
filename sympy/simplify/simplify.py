@@ -6,6 +6,7 @@ from collections import defaultdict
 
 from sympy.concrete.products import Product
 from sympy.concrete.summations import Sum
+from sympy import Abs
 from sympy.core import (Basic, S, Add, Mul, Pow, Symbol, sympify,
                         expand_func, Function, Dummy, Expr, factor_terms,
                         expand_power_exp, Eq)
@@ -767,6 +768,11 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
         n, d = fraction(expr)
         if d != 0:
             expr = signsimp(-n/(-d))
+
+    if expr.has(Abs):
+        for s in expr.free_symbols:
+            if s.is_real:
+                expr = expr.replace(s**2 / Abs(s), Abs(s))
 
     if measure(expr) > ratio*measure(original_expr):
         expr = original_expr
