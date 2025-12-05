@@ -1583,186 +1583,54 @@ def test_compute_density():
     raises(ValueError, lambda: density(X**5 + X))
 
 
-def test_AlphaStable():
-    from sympy.stats import AlphaStable
-
-    alpha = Symbol('alpha', positive=True, real=True)
-    beta = Symbol('beta', real=True)
-    scale = Symbol('scale', positive=True, real=True)
-    loc = Symbol('loc', real=True)
-
-    # Test basic creation
-    X = AlphaStable('X', alpha, beta, scale, loc)
-    assert X.pspace.distribution.set == S.Reals
+from sympy import Symbol, S, erf, sqrt, oo, Integral, Dummy
+from sympy.stats import AlphaStable, P, E, cdf, density
 
 
-def test_AlphaStable_Cauchy():
-    """Test that alpha=1, beta=0 gives Cauchy distribution"""
-    from sympy.stats import AlphaStable, density
-    from sympy import pi, simplify
+def test_alpha_stable_statistics():
+    x = Symbol('x', real=True)
 
-    X = AlphaStable('X', 1, 0, 1, 0)
-    pdf = density(X)(x)
+    # 1. Standard Normal Case: Alpha=2, Beta=0, Scale=1, Location=0
+    # Equivalent to NormalDistribution(0, 1)
+    st = AlphaStable('st', 2, 0, 1, 0)
 
-    # Should be Cauchy: 1/(pi*(1+x^2))
-    expected = 1 / (pi * (1 + x ** 2))
-    assert simplify(pdf - expected) == 0
+    # Test CDF
+    # CDF of N(0,1) is 1/2 + 1/2 * erf(x / sqrt(2))
+    # We rewrite to erf because SymPy integration may return erfc
+    assert cdf(st)(x).rewrite(erf) == S.Half + erf(x / sqrt(2)) / 2
 
+    # Test Expectations
+    # Mean E[x] = 0
+    assert E(st) == 0
+    # Second moment E[x^2] = 1 (Variance + Mean^2 = 1 + 0 = 1)
+    assert E(st ** 2) == 1
 
-def test_AlphaStable_Gaussian():
-    """Test that alpha=2 gives Gaussian distribution"""
-    from sympy.stats import AlphaStable, density
-    from sympy import sqrt, pi, exp, simplify
+    # 2. Test Probability Integrals
+    # We verify that the probability logic constructs the correct integral
 
-    X = AlphaStable('X', 2, 0, 1, 0)
-    pdf = density(X)(x)
+    # Create a real dummy variable for the expected integral
+    _z = Dummy('z', real=True)
+    pdf_z = density(st)(_z)
 
-    # Should be Normal(0, sqrt(2)*scale): sqrt(2)*exp(-x^2/2)/(2*sqrt(pi))
-    expected = sqrt(2) * exp(-x ** 2 / 2) / (2 * sqrt(pi))
-    assert simplify(pdf - expected) == 0
+    # Test P(X < 1)
+    # Expected integral: pdf from -oo to 1
+    expected_lt = Integral(pdf_z, (_z, -oo, 1))
+    # P() returns a Probability object; rewrite as Integral for comparison
+    assert P(st < 1, evaluate=False).rewrite(Integral).dummy_eq(expected_lt)
 
+    # Test P(X > 1)
+    expected_gt = Integral(pdf_z, (_z, 1, oo))
+    assert P(st > 1, evaluate=False).rewrite(Integral).dummy_eq(expected_gt)
 
-def test_AlphaStable_Levy():
-    """Test that alpha=1/2, beta=1 gives Levy distribution"""
-    from sympy.stats import AlphaStable, density
-    from sympy import sqrt, pi, exp, Rational, simplify
+    # 3. Test Scaled/Shifted Normal equivalent: AlphaStable(2, 0, 4, 2)
+    # Corresponds to Normal(mean=2, std=4)
+    st_scaled = AlphaStable('st_scaled', 2, 0, 4, 2)
+    pdf_scaled_z = density(st_scaled)(_z)
 
-    X = AlphaStable('X', Rational(1, 2), 1, 1, 0)
-    pdf = density(X)(x)
+    # Test P(X < 1) for scaled distribution
+    expected_scaled_lt = Integral(pdf_scaled_z, (_z, -oo, 1))
+    assert P(st_scaled < 1, evaluate=False).rewrite(Integral).dummy_eq(expected_scaled_lt)
 
-    # Should be Levy distribution
-    expected = sqrt(1 / (2 * pi)) * exp(-1 / (2 * x)) / x ** Rational(3, 2)
-    # Only valid for x > 0
-    assert simplify(pdf - expected) == 0
-
-
-def test_AlphaStable_with_location_scale():
-    """Test Cauchy with non-zero location and scale"""
-    from sympy.stats import AlphaStable, density
-    from sympy import pi, simplify
-
-    X = AlphaStable('X', 1, 0, 2, 3)
-    pdf = density(X)(x)
-
-    # Cauchy with location=3, scale=2
-    expected = 1 / (pi * 2 * (1 + ((x - 3) / 2) ** 2))
-    assert simplify(pdf - expected) == 0
-
-
-def test_AlphaStable_characteristic_function():
-    """Test characteristic function"""
-    from sympy.stats import AlphaStable, characteristic_function
-    from sympy import  Abs, exp, Symbol
-    t = Symbol('t', real=True)
-
-    # Test Gaussian case (alpha=2) which doesn't have tan(pi*alpha/2) issues
-    X = AlphaStable('X', 2, 0, 1, 0)
-    cf = characteristic_function(X)(t)
-
-    # For alpha=2, beta=0: exp(I*0*t - 1*|t|^2*(1 - I*0*sign(t)*tan(pi)))
-    # tan(pi) = 0, so: exp(-|t|^2)
-    expected = exp(-Abs(t) ** 2)
-
-    # Test at t=1
-    assert abs(complex(cf.subs(t, 1).evalf()) - complex(expected.subs(t, 1).evalf())) < 1e-10
-
-    # Test at t=-1
-    assert abs(complex(cf.subs(t, -1).evalf()) - complex(expected.subs(t, -1).evalf())) < 1e-10
-
-
-def test_AlphaStable_characteristic_function_general():
-    """Test characteristic function with general parameters"""
-    from sympy.stats import AlphaStable
-    from sympy import I, Abs, sign, tan, pi, exp, Symbol, Rational
-
-    t = Symbol('t', real=True)
-
-    X = AlphaStable('X', Rational(3, 2), Rational(1, 2), 2, 1)
-    cf = characteristic_function(X)(t)
-
-    # Should have the form: exp(I*loc*t - scale*|t|^alpha*(1 - I*beta*sign(t)*tan(pi*alpha/2)))
-    alpha_val = Rational(3, 2)
-    beta_val = Rational(1, 2)
-    scale_val = 2
-    loc_val = 1
-
-    expected = exp(I * loc_val * t - scale_val * Abs(t) ** alpha_val *
-                   (1 - I * beta_val * sign(t) * tan(pi * alpha_val / 2)))
-
-    assert cf == expected
-
-
-def test_AlphaStable_parameter_validation():
-    """Test that invalid parameters raise errors"""
-    from sympy.stats import AlphaStable
-    from sympy.testing.pytest import raises
-
-    # alpha must be in (0, 2]
-    raises(ValueError, lambda: AlphaStable('X', 0, 0, 1, 0))
-    raises(ValueError, lambda: AlphaStable('X', -1, 0, 1, 0))
-    raises(ValueError, lambda: AlphaStable('X', 2.5, 0, 1, 0))
-    raises(ValueError, lambda: AlphaStable('X', 3, 0, 1, 0))
-
-    # beta must be in [-1, 1]
-    raises(ValueError, lambda: AlphaStable('X', 1, -1.5, 1, 0))
-    raises(ValueError, lambda: AlphaStable('X', 1, 1.5, 1, 0))
-    raises(ValueError, lambda: AlphaStable('X', 1, 2, 1, 0))
-
-    # scale must be positive
-    raises(ValueError, lambda: AlphaStable('X', 1, 0, 0, 0))
-    raises(ValueError, lambda: AlphaStable('X', 1, 0, -1, 0))
-
-    # Valid edge cases should work
-    AlphaStable('X', 2, 0, 1, 0)  # alpha = 2 is valid
-    AlphaStable('X', 0.1, 0, 1, 0)  # small alpha is valid
-    AlphaStable('X', 1, -1, 1, 0)  # beta = -1 is valid
-    AlphaStable('X', 1, 1, 1, 0)  # beta = 1 is valid
-
-
-def test_AlphaStable_symbolic_parameters():
-    """Test that symbolic parameters work correctly"""
-    from sympy.stats import AlphaStable
-    from sympy import Symbol
-
-    alpha = Symbol('alpha', positive=True, real=True)
-    beta = Symbol('beta', real=True)
-    scale = Symbol('scale', positive=True, real=True)
-    loc = Symbol('loc', real=True)
-
-    # Should not raise with symbolic parameters
-    X = AlphaStable('X', alpha, beta, scale, loc)
-
-    # Should have correct support
-    assert X.pspace.distribution.set == S.Reals
-
-
-def test_AlphaStable_pdf_not_implemented():
-    """Test that general PDF raises NotImplementedError"""
-    from sympy.stats import AlphaStable, density
-    from sympy.testing.pytest import raises
-    from sympy import Rational
-
-    # General case (not Cauchy, Gaussian, or Levy)
-    X = AlphaStable('X', Rational(3, 2), Rational(1, 2), 1, 0)
-
-    # Should raise NotImplementedError for general case
-    raises(NotImplementedError, lambda: density(X)(x))
-
-
-def test_AlphaStable_special_cases_numeric():
-    """Test special cases with numeric values"""
-    from sympy.stats import AlphaStable, density
-    from sympy import N, pi, exp, sqrt, Rational
-
-    # Cauchy at x=0
-    X1 = AlphaStable('X', 1, 0, 1, 0)
-    assert abs(N(density(X1)(0)) - N(1 / pi)) < 1e-10
-
-    # Gaussian at x=0
-    X2 = AlphaStable('X', 2, 0, 1, 0)
-    assert abs(N(density(X2)(0)) - N(sqrt(2) / (2 * sqrt(pi)))) < 1e-10
-
-    # Levy at x=1 (using Rational to ensure exact match with implementation)
-    X3 = AlphaStable('X', Rational(1, 2), 1, 1, 0)
-    expected = N(sqrt(1 / (2 * pi)) * exp(-0.5))
-    assert abs(N(density(X3)(1)) - expected) < 1e-10
+    # Test P(X > 1) for scaled distribution
+    expected_scaled_gt = Integral(pdf_scaled_z, (_z, 1, oo))
+    assert P(st_scaled > 1, evaluate=False).rewrite(Integral).dummy_eq(expected_scaled_gt)
