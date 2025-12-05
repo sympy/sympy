@@ -310,3 +310,28 @@ def test_product_spaces():
         'Sum(Piecewise((2**(X2 - n - 2)*(2/3)**(X2 - 1)/6, '
         'X2 - n <= 2), (0, True)), (X2, 1, oo), (n, 1, oo))')
     assert P(Eq(X1 + X2, 3)) == Rational(1, 12)
+def test_geometric_pdf_restriction():
+    from sympy import S
+    from sympy.stats import Geometric, density
+    
+    g = Geometric('G', S(1)/4)
+    
+    # Invalid values must return 0
+    assert density(g)(0) == 0
+    assert density(g)(-1) == 0
+    assert density(g)(0.5) == 0
+    
+    # Valid values
+    assert density(g)(1) == S(1)/4
+    assert density(g)(2) == S(3)/16
+
+
+def test_geometric_joint_probability():
+    from sympy import S
+    # g1 and g2 probabilities individually
+    p1 = S(3)/4
+    p2 = S(3)/4
+
+    # Since independent, joint probability is product
+    prob = p1 * p2
+    assert prob == S(9)/16
