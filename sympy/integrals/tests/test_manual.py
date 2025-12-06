@@ -210,11 +210,11 @@ def test_manualintegrate_inversetrig():
     # acsc
     assert manualintegrate(acsc(x), x) == x*acsc(x) + acosh(x)
     assert manualintegrate(acsc(a*x), x) == Piecewise((x*acsc(a*x) + acosh(a*x)/a, Ne(a, 0)))
-    assert manualintegrate(x*acsc(a*x), x) == Piecewise((x**2*acsc(a*x)/2 + (a*x*sqrt(a**2*x**2 - 1) - acosh(a*x))/(2*a**2), Ne(a**2, 0)))
+    assert manualintegrate(x*acsc(a*x), x) == Piecewise((x**2*acsc(a*x)/2 + sqrt(a**2*x**2 - 1)/(2*a**2), Ne(a**2, 0)))
     # asec
     assert manualintegrate(asec(x), x) == x*asec(x) - acosh(x)
     assert manualintegrate(asec(a*x), x) == Piecewise((x*asec(a*x) - acosh(a*x)/a, Ne(a, 0)))
-    assert manualintegrate(x*asec(a*x), x) == Piecewise((x**2*asec(a*x)/2 - (a*x*sqrt(a**2*x**2 - 1) - acosh(a*x))/(2*a**2), Ne(a**2, 0)))
+    assert manualintegrate(x*asec(a*x), x) == Piecewise((x**2*asec(a*x)/2 - sqrt(a**2*x**2 - 1)/(2*a**2), Ne(a**2, 0)))
     # acot
     assert manualintegrate(acot(x), x) == x*acot(x) + log(x**2 + 1)/2
     assert manualintegrate(acot(a*x), x) == Piecewise( ((a*x*acot(a*x) + log(a**2*x**2 + 1)/2)/a, Ne(a, 0)), (pi*x/2, True))
