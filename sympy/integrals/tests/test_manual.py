@@ -219,8 +219,9 @@ def test_manualintegrate_inversetrig():
 
     res_x_acsc = manualintegrate(x*acsc(a*x), x)
     assert not res_x_acsc.has(Integral)
+
     # asec
-    # improved in PR #26587: previously returned un-evaluated Integral
+    # improved in PR #26587
     res_asec = manualintegrate(asec(x), x)
     assert not res_asec.has(Integral)
     assert (res_asec.diff(x) - asec(x)).simplify() == 0
