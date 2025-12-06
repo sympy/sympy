@@ -1094,3 +1094,12 @@ def test_nc_recursion_coeff():
     X = symbols("X", commutative = False)
     assert (2 * cos(pi/3) * X).simplify() == X
     assert (2.0 * cos(pi/3) * X).simplify() == X
+
+def test_issue_20108():
+    x = Symbol('x', real=True)
+    y = Symbol('y', real=True)
+    z = Symbol('z')
+
+    assert simplify(x**2 / Abs(x)) == Abs(x)
+    assert simplify(y**2 / Abs(y)) == Abs(y)
+    assert simplify(z**2 / Abs(z)) != Abs(z)

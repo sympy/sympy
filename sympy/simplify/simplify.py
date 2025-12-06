@@ -768,6 +768,11 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
         if d != 0:
             expr = signsimp(-n/(-d))
 
+    if expr.has(Abs):
+        for s in expr.free_symbols:
+            if s.is_real:
+                expr = expr.replace(s**2 / Abs(s), Abs(s))
+
     if measure(expr) > ratio*measure(original_expr):
         expr = original_expr
 
