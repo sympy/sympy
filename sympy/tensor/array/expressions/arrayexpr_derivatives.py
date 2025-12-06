@@ -101,7 +101,7 @@ def _(expr: MatrixSymbol, x: _ArrayExpr):
 def _(expr: MatPow, x: Expr):
     # For MatPow with symbolic exponents, we use the Fréchet derivative formula:
     # d(A**j) = j * A**(j-1) dA  (where dA is the differential of A)
-    # 
+    #
     # This is tricky in array form when j is symbolic, so we handle specific cases:
     base = expr.base
     exponent = expr.exp
