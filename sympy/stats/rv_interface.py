@@ -142,6 +142,10 @@ def entropy(expr, condition=None, **kwargs):
     base = kwargs.get('b', exp(1))
     if isinstance(pdf, dict):
             return sum(-prob*log(prob, base) for prob in pdf.values())
+    if hasattr(pdf, 'pdf'):
+        return expectation(-log(pdf.pdf(expr), base))
+    elif hasattr(pdf, 'pmf'):
+        return expectation(-log(pdf.pmf(expr), base))
     return expectation(-log(pdf(expr), base))
 
 def covariance(X, Y, condition=None, **kwargs):
