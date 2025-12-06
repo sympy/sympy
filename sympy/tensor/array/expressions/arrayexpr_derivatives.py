@@ -8,6 +8,7 @@ from sympy.core.expr import Expr
 from sympy.matrices.expressions.hadamard import HadamardProduct
 from sympy.matrices.expressions.inverse import Inverse
 from sympy.matrices.expressions.matexpr import (MatrixExpr, MatrixSymbol, MatrixElement)
+from sympy.matrices.expressions.matpow import MatPow
 from sympy.matrices.expressions.special import Identity, OneMatrix, MatrixUnit
 from sympy.matrices.expressions.transpose import Transpose
 from sympy.combinatorics.permutations import _af_invert
@@ -96,9 +97,65 @@ def _(expr: MatrixSymbol, x: _ArrayExpr):
     return ZeroArray(*(x.shape + expr.shape))
 
 
+@array_derive.register(MatPow)
+def _(expr: MatPow, x: Expr):
+    # For MatPow with symbolic exponents, we use the Fréchet derivative formula:
+    # d(A**j) = j * A**(j-1) dA  (where dA is the differential of A)
+    # 
+    # This is tricky in array form when j is symbolic, so we handle specific cases:
+    base = expr.base
+    exponent = expr.exp
+    
+    # Try to convert to array form first (works for integer exponents)
+    base_pow_array = convert_matrix_to_array(expr)
+    if base_pow_array != expr:
+        # Successfully converted, use array derivative
+        return array_derive(base_pow_array, x)
+    
+    # If we reach here, the MatPow couldn't be converted (e.g., symbolic exponent)
+    # For now, raise NotImplementedError as we'll handle specific cases elsewhere
+    raise NotImplementedError(
+        f"array_derive not implemented for MatPow({base}, {exponent}) with non-integer or symbolic exponent"
+    )
+
+
 @array_derive.register(Determinant)
 def _(expr: Determinant, x: Expr):
     arg = expr.arg
+    
+    # Special case: Determinant(A**j) where j is potentially symbolic
+    if isinstance(arg, MatPow):
+        base = arg.base
+        exponent = arg.exp
+        
+        # For Determinant(A**j), the derivative is:
+        # d/dA Determinant(A**j) = j * Determinant(A**j) * A^{-T}
+        # (Note: A^{-T}, not (A^j)^{-T})
+        #
+        # We handle this by computing the coefficient j separately
+        # and using the inverse of the base (not the base**j)
+        
+        if base == x or (hasattr(base, 'free_symbols') and hasattr(x, 'free_symbols') and base.free_symbols & x.free_symbols):
+            # The base appears in x, so we can differentiate
+            dbase = array_derive(base, x)
+            base_inverse = base.inv()
+            
+            # Build tensor product: exponent * Determinant(A**j) * base_inverse * dbase
+            # The exponent is included as a scalar factor (0-rank tensor)
+            tp_with_exp = _array_tensor_product(exponent, expr, base_inverse, dbase)
+            
+            # Contract indices to compute the final derivative
+            # Indices after tensor product: exponent (none), expr (none), base_inv (0,1), dbase (2,3,4,5)
+            # Contract: (0,5) matches base_inv first index with dbase second diff index
+            #          (1,4) matches base_inv second index with dbase first diff index
+            tc_with_exp = _array_contraction(tp_with_exp, (0, 5), (1, 4))
+            
+            return tc_with_exp
+        else:
+            # arg.base doesn't depend on x, so Determinant(A**j) is constant w.r.t. x
+            return ZeroArray(*x.shape)
+    
+    # General case for other determinant arguments
     arg_inverse = arg.inv()
     darg = array_derive(arg, x)
     tp = _array_tensor_product(expr, arg_inverse, darg)
