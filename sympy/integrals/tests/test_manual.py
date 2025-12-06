@@ -208,29 +208,16 @@ def test_manualintegrate_inversetrig():
     assert manualintegrate(atan(a*x), x) == Piecewise(((a*x*atan(a*x) - log(a**2*x**2 + 1)/2)/a, Ne(a, 0)), (0, True))
     assert manualintegrate(x*atan(a*x), x) == -a*(x/a**2 - atan(x/sqrt(a**(-2)))/(a**4*sqrt(a**(-2))))/2 + x**2*atan(a*x)/2
     # acsc
-    # improved in PR #26587: previously returned un-evaluated Integral
-    res_acsc = manualintegrate(acsc(x), x)
-    assert not res_acsc.has(Integral)
-
-    res_acsc_a = manualintegrate(acsc(a*x), x)
-    assert not res_acsc_a.has(Integral)
-
-    res_x_acsc = manualintegrate(x*acsc(a*x), x)
-    assert not res_x_acsc.has(Integral)
-
+    assert manualintegrate(acsc(x), x) == x*acsc(x) + log(x + sqrt(x**2 - 1))
+    assert manualintegrate(acsc(a*x), x) == Piecewise( (x*acsc(a*x) + log(a*x + sqrt(a**2*x**2 - 1))/a, Ne(a, 0)),(pi*x/2, True))
+    assert manualintegrate(x*acsc(a*x), x) == Piecewise( (x**2*acsc(a*x)/2 + ( -a*x*sqrt(a**2*x**2 - 1) + log(a*x + sqrt(a**2*x**2 - 1)) )/(2*a**2), Ne(a**2, 0)), (x**3/3, True))
     # asec
-    # improved in PR #26587
-    res_asec = manualintegrate(asec(x), x)
-    assert not res_asec.has(Integral)
-
-    res_asec_a = manualintegrate(asec(a*x), x)
-    assert not res_asec_a.has(Integral)
-
-    res_x_asec = manualintegrate(x*asec(a*x), x)
-    assert not res_x_asec.has(Integral)
+    assert manualintegrate(asec(x), x) == x*asec(x) - log(x + sqrt(x**2 - 1))
+    assert manualintegrate(asec(a*x), x) == Piecewise( (x*asec(a*x) - log(a*x + sqrt(a**2*x**2 - 1))/a, Ne(a, 0)),(pi*x/2, True))
+    assert manualintegrate(x*asec(a*x), x) == Piecewise( (x**2*asec(a*x)/2 - ( -a*x*sqrt(a**2*x**2 - 1) + log(a*x + sqrt(a**2*x**2 - 1)) )/(2*a**2),Ne(a**2, 0)),(x**3/3, True))
     # acot
     assert manualintegrate(acot(x), x) == x*acot(x) + log(x**2 + 1)/2
-    assert manualintegrate(acot(a*x), x) == Piecewise(((a*x*acot(a*x) + log(a**2*x**2 + 1)/2)/a, Ne(a, 0)), (pi*x/2, True))
+    assert manualintegrate(acot(a*x), x) == Piecewise( ((a*x*acot(a*x) + log(a**2*x**2 + 1)/2)/a, Ne(a, 0)), (pi*x/2, True))
     assert manualintegrate(x*acot(a*x), x) == a*(x/a**2 - atan(x/sqrt(a**(-2)))/(a**4*sqrt(a**(-2))))/2 + x**2*acot(a*x)/2
 
     # piecewise
