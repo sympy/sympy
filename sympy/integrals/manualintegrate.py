@@ -2236,10 +2236,28 @@ def manualintegrate(f, var):
     sympy.integrals.integrals.Integral.doit
     sympy.integrals.integrals.Integral
     """
-    if isinstance(f, acsc) and f.args[0] == var:
-        return var * acsc(var) + acosh(var)
-    if isinstance(f, asec) and f.args[0] == var:
-        return var * asec(var) - acosh(var)
+    if isinstance(f, (acsc, asec)):
+        arg = f.args[0]
+        # Split argument into (coefficient, variable_part)
+        # e.g., if arg is 'a*x', coeff='a', dep='x'
+        coeff, dep = arg.as_independent(var, as_Add=False)
+
+        # Ensure the dependent part is exactly the variable (linear argument)
+        if dep == var:
+            # Calculate the acosh term (positive for acsc, negative for asec)
+            term = acosh(arg)
+            if isinstance(f, asec):
+                term = -term
+
+            # The standard integration formula: x*f(x) + term/coeff
+            result = var * f + term / coeff
+
+            # If coeff is just 1 (e.g. acsc(x)), return simple result
+            if coeff == 1:
+                return result
+
+            # If coeff is a symbol (e.g. acsc(a*x)), return Piecewise safety
+            return Piecewise((result, Ne(coeff, 0)))
 
     result = integral_steps(f, var).eval()
     # Clear the cache of u-parts
