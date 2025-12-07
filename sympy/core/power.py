@@ -1721,7 +1721,7 @@ class Pow(Expr):
                 cosine, sine = cos(S.Pi*coeff), sin(S.Pi*coeff)
                 if not isinstance(cosine, cos) and not isinstance (sine, sin):
                     return cosine + S.ImaginaryUnit*sine
-                
+
     def _eval_rewrite_as_Abs(self, base, exp, **kwargs):
         from sympy.functions.elementary.complexes import Abs
         if exp.is_even and base.is_extended_real:
