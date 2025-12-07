@@ -716,6 +716,29 @@ class Equality(Relational):
         from .expr import Expr
         if not isinstance(e.lhs, Expr) or not isinstance(e.rhs, Expr):
             return e
+      # Try to simplify by canceling common terms
+        from .add import Add
+        lhs_args = Add.make_args(e.lhs)
+        rhs_args = Add.make_args(e.rhs)
+        # Find common terms on both sides
+        common_terms = []
+        remaining_lhs = []
+        remaining_rhs = list(rhs_args)
+        for lhs_term in lhs_args:
+            if lhs_term in remaining_rhs:
+                common_terms.append(lhs_term)
+                remaining_rhs.remove(lhs_term)
+            else:
+                remaining_lhs.append(lhs_term)
+        # If we found common terms, it create simplified equation
+        if common_terms:
+            if remaining_lhs and remaining_rhs:
+                new_lhs = Add(*remaining_lhs) if remaining_lhs else S.Zero
+                new_rhs = Add(*remaining_rhs) if remaining_rhs else S.Zero
+                e = e.func(new_lhs, new_rhs)
+            elif not remaining_lhs and not remaining_rhs:
+                # All terms cancelled, equation is true
+                return S.true
         free = self.free_symbols
         if len(free) == 1:
             try:
