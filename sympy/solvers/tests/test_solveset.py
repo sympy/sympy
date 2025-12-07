@@ -1852,6 +1852,10 @@ def test_nonlinsolve_basic():
     assert nonlinsolve([x**2 -1], sin(x)) == FiniteSet((S.EmptySet,))
     assert nonlinsolve([x**2 -1], 1) == FiniteSet((x**2,))
     assert nonlinsolve([x**2 -1], x + y) == FiniteSet((S.EmptySet,))
+    assert nonlinsolve([0], [x, y]) == FiniteSet((x, y))
+    assert nonlinsolve([0, 0], [x, y]) == FiniteSet((x, y))
+    assert nonlinsolve([S.Zero], [x, y]) == FiniteSet((x, y))
+    assert nonlinsolve([0], [x, y, z]) == FiniteSet((x, y, z))
     assert nonlinsolve([Eq(1, x + y), Eq(1, -x + y - 1), Eq(1, -x + y - 1)], x, y) == FiniteSet(
         (-S.Half, 3*S.Half))
 
