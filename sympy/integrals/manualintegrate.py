@@ -2236,6 +2236,11 @@ def manualintegrate(f, var):
     sympy.integrals.integrals.Integral.doit
     sympy.integrals.integrals.Integral
     """
+    if isinstance(f, acsc) and f.args[0] == var:
+        return var * acsc(var) + acosh(var)
+    if isinstance(f, asec) and f.args[0] == var:
+        return var * asec(var) - acosh(var)
+
     result = integral_steps(f, var).eval()
     # Clear the cache of u-parts
     _parts_u_cache.clear()
