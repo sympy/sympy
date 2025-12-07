@@ -4100,7 +4100,7 @@ def nonlinsolve(system, *symbols):
 
     # to_tuple converts a solution dictionary to a tuple containing the
     # value for each symbol
-    to_tuple = lambda sol: tuple(sol[s] for s in symbols)
+    to_tuple = lambda sol: tuple(sol.get(s, s) for s in symbols)
 
     if not remaining:
         # If there is nothing left to solve then return the solution from
