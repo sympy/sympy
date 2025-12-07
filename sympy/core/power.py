@@ -1722,11 +1722,6 @@ class Pow(Expr):
                 if not isinstance(cosine, cos) and not isinstance (sine, sin):
                     return cosine + S.ImaginaryUnit*sine
 
-    def _eval_rewrite_as_Abs(self, base, exp, **kwargs):
-        from sympy.functions.elementary.complexes import Abs
-        if exp.is_even and base.is_extended_real:
-            return self.func(Abs(base), exp, evaluate=False)
-
     def as_content_primitive(self, radical=False, clear=True):
         """Return the tuple (R, self/R) where R is the positive Rational
         extracted from self.

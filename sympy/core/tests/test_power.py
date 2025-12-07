@@ -668,22 +668,3 @@ def test_issue_25165():
     e1 = (1/sqrt(( - x + 1)**2 + (x - 0.23)**4)).series(x, 0, 2)
     e2 = 0.998603724830355 + 1.02004923189934*x + O(x**2)
     assert all_close(e1, e2)
-
-def test_pow_rewrite_Abs():
-    from sympy import Symbol, Abs, Pow
-    x = Symbol('x', real=True)
-    k = Symbol('k', integer=True)
-
-    # Issue 2: x**(2k) -> Abs(x)**(2k)
-    expr = x**(2*k)
-    rewritten = expr.rewrite(Abs)
-
-    # We must check the structure because Abs(x)**(2*k) auto-simplifies
-    # back to x**(2*k) if we just type it out normally.
-    assert rewritten.func == Pow
-    assert rewritten.base.func == Abs
-    assert rewritten.exp == 2*k
-
-    # Control case: Odd powers should NOT change
-    odd_expr = x**(2*k + 1)
-    assert odd_expr.rewrite(Abs) == odd_expr
