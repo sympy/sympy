@@ -22,6 +22,24 @@ def symmetric_residue(a, m):
 
 
 def crt(m, v, symmetric=False, check=True):
+    # Check if we are given vectors (lists) instead of numbers
+    if isinstance(v[0], (list, tuple)):
+        results = []
+        mm = None
+        
+        # Loop through each dimension of the vector (Column 0, Column 1...)
+        for i in range(len(v[0])):
+            # Extract the i-th number from each remainder list
+            column_v = [row[i] for row in v]
+            
+            # recursive call: Solve CRT for this specific column
+            res, modulus = crt(m, column_v, symmetric, check)
+            
+            results.append(res)
+            mm = modulus
+            
+        return results, mm
+    
     r"""Chinese Remainder Theorem.
 
     The moduli in m are assumed to be pairwise coprime.  The output
