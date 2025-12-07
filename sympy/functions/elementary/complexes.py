@@ -452,6 +452,8 @@ class sign(DefinedFunction):
             return Heaviside(arg) * 2 - 1
 
     def _eval_rewrite_as_Abs(self, arg, **kwargs):
+        if arg.is_nonzero:
+            return arg / Abs(arg)
         return Piecewise((0, Eq(arg, 0)), (arg / Abs(arg), True))
 
     def _eval_simplify(self, **kwargs):

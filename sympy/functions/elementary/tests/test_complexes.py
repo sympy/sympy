@@ -1023,3 +1023,14 @@ def test_issue_15893():
     x = Symbol('x', real=True)
     eq = Derivative(Abs(f(x)), f(x))
     assert eq.doit() == sign(f(x))
+
+def test_sign_rewrite_Abs():
+    from sympy import Symbol, sign, Abs, Piecewise, Eq
+    x = Symbol('x', real=True)
+    y = Symbol('y', nonzero=True)
+    
+    # Issue 1: Generic x should return Piecewise safety wrapper
+    assert sign(x).rewrite(Abs) == Piecewise((0, Eq(x, 0)), (x/Abs(x), True))
+    
+    # Issue 1: Nonzero y should simplify directly
+    assert sign(y).rewrite(Abs) == y/Abs(y)
