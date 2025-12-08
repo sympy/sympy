@@ -3731,6 +3731,8 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
 
 def _solveset_work(system, symbols):
     soln = solveset(system[0], symbols[0])
+    if soln == S.EmptySet:
+        return S.EmptySet
     if isinstance(soln, FiniteSet):
         _soln = FiniteSet(*[(s,) for s in soln])
         return _soln
@@ -3794,7 +3796,7 @@ def _separate_poly_nonpoly(system, symbols):
         if isinstance(eq, Expr):
             eq = eq.as_numer_denom()[0]
             poly = eq.as_poly(*symbols, extension=True)
-        elif simplify(eq).is_number:
+        elif eq == 0:
             continue
         if poly is not None:
             polys.append(poly)
@@ -4068,6 +4070,7 @@ def nonlinsolve(system, *symbols):
         raise IndexError(filldedent(msg))
 
     symbols = list(map(_sympify, symbols))
+    system = [_sympify(eq) for eq in system]
     system, symbols, swap = recast_to_symbols(system, symbols)
     if swap:
         soln = nonlinsolve(system, symbols)

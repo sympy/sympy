@@ -1848,10 +1848,15 @@ def test_nonlinsolve_basic():
     assert nonlinsolve([f(x), 0], f(x), f(y)) == FiniteSet((0, f(y)))
     A = Indexed('A', x)
     assert nonlinsolve([A, 0], A, y) == FiniteSet((0, y))
-    assert nonlinsolve([x**2 -1], [sin(x)]) == FiniteSet((S.EmptySet,))
-    assert nonlinsolve([x**2 -1], sin(x)) == FiniteSet((S.EmptySet,))
+    assert nonlinsolve([x**2 -1], [sin(x)]) == S.EmptySet
+    assert nonlinsolve([x**2 -1], sin(x)) == S.EmptySet
     assert nonlinsolve([x**2 -1], 1) == FiniteSet((x**2,))
-    assert nonlinsolve([x**2 -1], x + y) == FiniteSet((S.EmptySet,))
+    assert nonlinsolve([x**2 -1], x + y) == S.EmptySet
+    assert nonlinsolve([1], [x]) == S.EmptySet
+    assert nonlinsolve([5], [x, y]) == S.EmptySet
+    assert nonlinsolve([-1], [x, y]) == S.EmptySet
+    assert nonlinsolve([Rational(1, 2)], [x]) == S.EmptySet
+    assert nonlinsolve([sqrt(2)], [x]) == S.EmptySet
     assert nonlinsolve([0], [x, y]) == FiniteSet((x, y))
     assert nonlinsolve([0, 0], [x, y]) == FiniteSet((x, y))
     assert nonlinsolve([S.Zero], [x, y]) == FiniteSet((x, y))
@@ -3498,7 +3503,7 @@ def test_issue_19144():
     soln_eq2 = nonlinsolve(eq2, [x, y])
     assert soln_eq2 == soln_expr2 == soln2
     # denominators that cancel in expression
-    assert nonlinsolve([Eq(x + 1/x, 1/x)], [x]) == FiniteSet((S.EmptySet,))
+    assert nonlinsolve([Eq(x + 1/x, 1/x)], [x]) == S.EmptySet
 
 
 def test_issue_22413():
