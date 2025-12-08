@@ -8,6 +8,7 @@ from itertools import accumulate
 
 import typing
 
+from sympy import Sum
 from sympy.core.numbers import Integer
 from sympy.core.relational import Equality
 from sympy.functions.special.tensor_functions import KroneckerDelta
@@ -157,6 +158,33 @@ class ZeroArray(_ArrayExpr):
         return S.Zero
 
 
+class ArraySum(Sum, _ArrayExpr):
+
+    is_zero = False  # ArraySum has ZeroArray (not S.Zero) as addition identity element.
+
+    def __new__(cls, function, *limits):
+        obj = Sum.__new__(cls, function, *limits)
+        return obj
+
+    def doit(self, **hints):
+        done = super().doit(**hints)
+        if (done == 0) == True:
+            return ZeroArray(*self.shape)
+        return done
+
+    def _eval_simplify(self, **kwargs):
+        ret = super()._eval_simplify(**kwargs)
+        if (ret == 0) == True:
+            return ZeroArray(*self.shape)
+        if isinstance(ret, Sum) and not isinstance(ret, ArraySum):
+            ret = ArraySum(ret.function, *ret.limits)
+        return ret
+
+    @property
+    def shape(self):
+        return self.function.shape
+
+
 class OneArray(_ArrayExpr):
     """
     Symbolic array of ones.
@@ -182,7 +210,9 @@ class OneArray(_ArrayExpr):
         return S.One
 
 
-class _CodegenArrayAbstract(Basic):
+class _CodegenArrayAbstract(Expr):
+
+    is_Atom = True
 
     @property
     def subranks(self):
@@ -229,6 +259,7 @@ class _CodegenArrayAbstract(Basic):
         else:
             return self._canonicalize()
 
+
 class ArrayTensorProduct(_CodegenArrayAbstract):
     r"""
     Class to represent the tensor product of array-like objects.
@@ -258,6 +289,26 @@ class ArrayTensorProduct(_CodegenArrayAbstract):
         args = self._flatten(args)
 
         ranks = [get_rank(arg) for arg in args]
+
+        # Check if there are nested ArraySum objects:
+        array_sums_i = []
+        for i, arg in enumerate(args):
+            if isinstance(arg, ArraySum):
+                array_sums_i.append(i)
+
+        if len(array_sums_i) > 0:
+            new_limits = []
+            new_args = []
+            last_i = 0
+            for i in array_sums_i:
+                array_sum = args[i]
+                new_args.extend(args[last_i:i])
+                replacements = {j: Dummy(str(j)) for j, jlow, jupp in array_sum.limits}
+                new_limits.extend([(replacements[j], jlow, jupp) for j, jlow, jupp in array_sum.limits])
+                new_args.append(array_sum.function.subs(replacements))
+                last_i = i + 1
+            new_args.extend(args[last_i:])
+            return ArraySum(_array_tensor_product(*new_args), *new_limits)
 
         # Check if there are nested permutation and lift them up:
         permutation_cycles = []
@@ -1004,6 +1055,9 @@ class ArrayContraction(_CodegenArrayAbstract):
 
         if len(contraction_indices) == 0:
             return expr
+
+        if isinstance(expr, ArraySum):
+            return expr.func(_array_contraction(expr.function, *contraction_indices), expr.limits)
 
         if isinstance(expr, ArrayContraction):
             return self._ArrayContraction_denest_ArrayContraction(expr, *contraction_indices)

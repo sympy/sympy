@@ -2,7 +2,7 @@ import operator
 from functools import reduce, singledispatch
 
 from sympy.core.singleton import S
-from sympy import MatrixBase, derive_by_array, Integer, Determinant, Function
+from sympy import MatrixBase, derive_by_array, Integer, Determinant, Function, MatPow, Dummy
 from sympy.tensor.array import NDimArray
 from sympy.core.expr import Expr
 from sympy.matrices.expressions.hadamard import HadamardProduct
@@ -16,7 +16,7 @@ from sympy.tensor.array.expressions.array_expressions import (
     _ArrayExpr, ZeroArray, ArraySymbol, ArrayTensorProduct, ArrayAdd,
     PermuteDims, ArrayDiagonal, ArrayElementwiseApplyFunc, get_rank,
     get_shape, ArrayContraction, _array_tensor_product, _array_contraction,
-    _array_diagonal, _array_add, _permute_dims, Reshape)
+    _array_diagonal, _array_add, _permute_dims, Reshape, ArraySum)
 from sympy.tensor.array.expressions.from_matrix_to_array import convert_matrix_to_array
 
 
@@ -172,6 +172,21 @@ def _(expr: MatrixExpr, x: Expr):
         # Avoid infinite looping:
         raise NotImplementedError()
     return array_derive(cg, x)
+
+
+@array_derive.register(MatPow)
+def _(expr: MatPow, x: Expr):
+    base = expr.base
+    exponent = expr.exp
+    dbase = array_derive(base, x)
+    dexponent = array_derive(exponent, x)
+    if not isinstance(dexponent, ZeroArray) or (dexponent == 0) == True:
+        raise NotImplementedError()
+    d = Dummy("d")
+    tp = _array_tensor_product(base**d, dbase, base**(exponent-d-1))
+    tc = _array_contraction(tp, (1, 4), (5, 6))
+    pd = _permute_dims(tc, [1, 2, 0, 3])
+    return ArraySum(pd,(d, 0, exponent-1))
 
 
 @array_derive.register(HadamardProduct)
