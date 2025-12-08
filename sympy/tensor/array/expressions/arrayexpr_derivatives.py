@@ -30,6 +30,30 @@ def array_derive(expr, x):
 
 @array_derive.register(Expr)
 def _(expr: Expr, x: _ArrayExpr):
+    from sympy.matrices.expressions.determinant import Determinant
+
+    if isinstance(expr, Determinant):
+        mat = expr.arg
+
+        if not (mat.free_symbols & x.free_symbols):
+            return ZeroArray(*x.shape)
+
+        dmat = array_derive(mat, x)
+
+        if isinstance(dmat, ZeroArray):
+            return ZeroArray(*x.shape)
+
+        inv_mat = convert_matrix_to_array(Inverse(mat).doit())
+        inv_mat_T = _permute_dims(inv_mat, [1, 0])
+
+        tp = _array_tensor_product(expr, inv_mat_T, dmat)
+
+        rank_x = len(x.shape)
+
+        result = _array_contraction(tp, (0, 2+rank_x+1), (1, 2+rank_x))
+
+        return result
+
     if expr.free_symbols & x.free_symbols:
         if isinstance(expr, MatrixElement) and isinstance(x, MatrixSymbol):
             return MatrixUnit(x.shape[0], x.shape[1], expr.i, expr.j)

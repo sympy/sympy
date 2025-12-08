@@ -7,6 +7,7 @@ from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, symbols)
 from sympy.matrices.expressions.hadamard import (HadamardPower, HadamardProduct)
+from sympy.matrices.expressions.inverse import Inverse
 from sympy.matrices.expressions.matadd import MatAdd
 from sympy.matrices.expressions.matmul import MatMul
 from sympy.matrices.expressions.matpow import MatPow
@@ -66,6 +67,8 @@ def convert_matrix_to_array(expr: Basic) -> Basic:
             return ArrayElementwiseApplyFunc(Lambda(d, d**expr.exp), base)
         else:
             return expr
+    elif isinstance(expr, Inverse):
+        return expr
     elif isinstance(expr, MatPow):
         base = convert_matrix_to_array(expr.base)
         if expr.exp.is_Integer != True:
@@ -75,6 +78,13 @@ def convert_matrix_to_array(expr: Basic) -> Basic:
             return expr
         elif (expr.exp > 0) == True:
             return convert_matrix_to_array(MatMul.fromiter(base for i in range(expr.exp)))
+        elif (expr.exp == 0) == True:
+            from sympy.matrices.expressions.special import Identity
+            return Identity(expr.base.shape[0])
+        elif (expr.exp == -1) == True:
+            return convert_matrix_to_array(Inverse(expr.base))
+        elif (expr.exp < 0) == True:
+            return convert_matrix_to_array(MatMul.fromiter(Inverse(expr.base) for i in range(-expr.exp)))
         else:
             return expr
     elif isinstance(expr, HadamardProduct):

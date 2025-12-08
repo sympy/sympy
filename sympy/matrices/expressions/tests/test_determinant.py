@@ -63,3 +63,36 @@ def test_permanent():
     assert per(Matrix(3, 3, [1, 3, 2, 4, 1, 3, 2, 5, 2])) == 103
     raises(TypeError, lambda: Permanent(S.One))
     assert Permanent(A).arg is A
+
+
+def test_determinant_matpow_diff():
+    from sympy import Symbol
+    from sympy.matrices.expressions.inverse import Inverse
+    A2 = MatrixSymbol('A', 2, 2)
+    j = Symbol('j')
+
+    expr1 = Determinant(A2**0)
+    deriv1 = expr1.diff(A2)
+    assert deriv1 == ZeroMatrix(2, 2)
+
+    expr2 = Determinant((A2**j).subs(j, 0))
+    deriv2 = expr2.diff(A2)
+    assert deriv2.doit() == ZeroMatrix(2, 2)
+
+    expr3 = Determinant(A2**-1)
+    deriv3 = expr3.diff(A2)
+    expected3 = -Determinant(Inverse(A2)) * Transpose(Inverse(A2))
+    assert deriv3 == expected3
+
+    expr4 = Determinant((A2**j).subs(j, -1))
+    deriv4 = expr4.diff(A2)
+    expected4 = -Determinant(Inverse(A2)) * Transpose(Inverse(A2))
+    assert deriv4 == expected4
+
+    expr5 = Determinant(A2)
+    deriv5 = expr5.diff(A2)
+    expected5 = Determinant(A2) * Transpose(Inverse(A2))
+    assert deriv5 == expected5
+    assert deriv5 != Determinant(A2) * A2**-1
+    assert deriv5 != Transpose(A2**-1)
+    assert deriv5 != Determinant(A2)
