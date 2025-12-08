@@ -1751,3 +1751,22 @@ def test_issue_9855():
     s1 = Interval(1, x) & Interval(y, 2)
     s2 = Interval(1, 2)
     assert s1.is_subset(s2) == None
+
+
+def test_issue_28711():
+    from sympy.core.function import Function
+
+    class SetWrapper(Function):
+        is_commutative = True
+        @classmethod
+        def eval(cls, s): ...
+
+    reals = SetWrapper(S.Reals)
+    fin1 = SetWrapper(FiniteSet(1, 2, 3))
+    fin2 = SetWrapper(FiniteSet(.5, 1.5, 2.5))
+    nats = SetWrapper(S.Naturals)
+
+    assert (fin1 + fin2) == (fin2 + fin1)
+    assert (nats + reals) == (reals + nats)
+    assert (nats + fin1) == (fin1 + nats)
+    assert (reals + fin1) == (fin1 + reals)
