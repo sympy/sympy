@@ -1697,7 +1697,7 @@ def test_issue_23952():
 def test_issue_28721():
     from sympy import MatrixSymbol, Sum, ZeroMatrix
     from sympy.abc import i
-    
+
     M = MatrixSymbol("M", 3, 3)
     expr = Sum(M, (i, 0, -1))
     
