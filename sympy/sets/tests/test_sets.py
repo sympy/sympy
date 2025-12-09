@@ -27,6 +27,7 @@ from sympy.testing.pytest import raises, XFAIL, warns_deprecated_sympy
 from sympy.utilities.iterables import cartes
 
 from sympy.abc import x, y, z, m, n
+from sympy import ImageSet, Lambda, S, symbols
 
 EmptySet = S.EmptySet
 
@@ -1770,3 +1771,9 @@ def test_issue_28711():
     assert (nats + reals) == (reals + nats)
     assert (nats + fin1) == (fin1 + nats)
     assert (reals + fin1) == (fin1 + reals)
+
+# regression test for Issue 16878
+def test_issue_16878():
+    A = ImageSet(Lambda(x, (x, x)), S.Reals)
+    B = S.Reals ** 2
+    assert A.is_subset(B) is not False
