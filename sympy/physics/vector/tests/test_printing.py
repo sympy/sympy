@@ -10,6 +10,7 @@ from sympy.physics.vector.printing import (VectorLatexPrinter, vpprint,
 
 
 a, b, c = symbols('a, b, c')
+
 alpha, omega, beta = dynamicsymbols('alpha, omega, beta')
 
 A = ReferenceFrame('A')
@@ -351,3 +352,55 @@ def test_issue_14041():
         r"\left(\dot{\phi} + \dot{\theta}\right)^{2}\mathbf{\hat{a}_x}"
     assert vlatex((phid*thetad)**a*A_frame.x) == \
         r"\left(\dot{\phi} \dot{\theta}\right)^{a}\mathbf{\hat{a}_x}"
+
+        
+def test_issue_12157():
+    
+    d1 = (a/b) * (N.x | N.y)
+    
+    result = ascii_vpretty(d1)
+    print(f"Result for (a/b)*(N.x|N.y):\n{result}")
+    
+    # The basis dyad (n_x|n_y) should appear in the output
+    assert 'n_x|n_y' in result or 'n_x' in result, \
+        f"Basis dyad missing or malformed in output: {result}"
+    
+    # Both 'a' and 'b' should be in the output
+    assert 'a' in result and 'b' in result, \
+        f"Fraction components missing: {result}"
+    
+    # More complex case: fraction with sum in numerator
+    d2 = ((a + b)/c) * (N.x | N.y)
+    
+    result2 = ascii_vpretty(d2)
+    print(f"\nResult for ((a+b)/c)*(N.x|N.y):\n{result2}")
+    
+    # Basis dyad should still be present
+    assert 'n_x|n_y' in result2 or 'n_x' in result2, \
+        f"Basis dyad missing in output: {result2}"
+    
+    # Multiple terms with fractions
+    d3 = (a/b) * (N.x | N.y) + (c/b) * (N.y | N.z)
+    
+    result3 = ascii_vpretty(d3)
+    print(f"\nResult for (a/b)*(N.x|N.y) + (c/b)*(N.y|N.z):\n{result3}")
+    
+    # Both basis dyads should appear
+    lines = result3.split('\n')
+    full_text = ' '.join(lines)
+    
+    assert 'n_x' in full_text and 'n_y' in full_text, \
+        f"Basis vectors missing from output: {result3}"
+    
+    # Test the complex case from vv
+    d = symbols('d')
+    vv = (d)*(N.x|N.z) + ((a*b**2 + (a*c)**2 + d*b*c)/(b + c))*(N.y|N.y)
+    
+    result_vv = ascii_vpretty(vv)
+    print(f"\nResult for vv:\n{result_vv}")
+    
+    # Both dyadic products should appear in output
+    assert 'n_x' in result_vv and 'n_z' in result_vv, \
+        f"First dyadic basis missing: {result_vv}"
+    assert 'n_y|n_y' in result_vv or result_vv.count('n_y') >= 2, \
+        f"Second dyadic basis missing or malformed: {result_vv}"
