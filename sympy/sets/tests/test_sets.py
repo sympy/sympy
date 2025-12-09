@@ -27,7 +27,6 @@ from sympy.testing.pytest import raises, XFAIL, warns_deprecated_sympy
 from sympy.utilities.iterables import cartes
 
 from sympy.abc import x, y, z, m, n
-from sympy import ImageSet, Lambda, S, symbols
 
 EmptySet = S.EmptySet
 
