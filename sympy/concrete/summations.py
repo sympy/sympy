@@ -343,7 +343,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         return Sum(f, (k, upper + 1, new_upper)).doit()
 
     def _eval_simplify(self, **kwargs):
-        
+
         if (self.has_empty_sequence and self.function.is_Matrix):
             from sympy.matrices.expressions import ZeroMatrix
             return ZeroMatrix(*self.function.shape)
