@@ -1,5 +1,9 @@
-from sympy.tensor.array import (ImmutableDenseNDimArray,
-        ImmutableSparseNDimArray, MutableDenseNDimArray, MutableSparseNDimArray)
+from sympy.tensor.array import (
+    ImmutableDenseNDimArray,
+    ImmutableSparseNDimArray,
+    MutableDenseNDimArray,
+    MutableSparseNDimArray,
+)
 from sympy.abc import x, y, z
 
 

@@ -1,7 +1,8 @@
-#sympy.vector.kind
+# sympy.vector.kind
 
 from sympy.core.kind import Kind, _NumberKind, NumberKind
 from sympy.core.mul import Mul
+
 
 class VectorKind(Kind):
     """
@@ -47,6 +48,7 @@ class VectorKind(Kind):
     sympy.matrices.kind.MatrixKind
 
     """
+
     def __new__(cls, element_kind=NumberKind):
         obj = super().__new__(cls, element_kind)
         obj.element_kind = element_kind
@@ -54,6 +56,7 @@ class VectorKind(Kind):
 
     def __repr__(self):
         return "VectorKind(%s)" % self.element_kind
+
 
 @Mul._kind_dispatcher.register(_NumberKind, VectorKind)
 def num_vec_mul(k1, k2):

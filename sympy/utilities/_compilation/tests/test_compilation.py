@@ -5,13 +5,20 @@ import tempfile
 from sympy.external import import_module
 from sympy.testing.pytest import skip, skip_under_pyodide
 
-from sympy.utilities._compilation.compilation import compile_link_import_py_ext, compile_link_import_strings, compile_sources, get_abspath
+from sympy.utilities._compilation.compilation import (
+    compile_link_import_py_ext,
+    compile_link_import_strings,
+    compile_sources,
+    get_abspath,
+)
 
-numpy = import_module('numpy')
-cython = import_module('cython')
+numpy = import_module("numpy")
+cython = import_module("cython")
 
 _sources1 = [
-    ('sigmoid.c', r"""
+    (
+        "sigmoid.c",
+        r"""
 #include <math.h>
 
 void sigmoid(int n, const double * const restrict in,
@@ -21,8 +28,11 @@ void sigmoid(int n, const double * const restrict in,
         out[i] = x*pow(pow(x/lim, 8)+1, -1./8.);
     }
 }
-"""),
-    ('_sigmoid.pyx', r"""
+""",
+    ),
+    (
+        "_sigmoid.pyx",
+        r"""
 import numpy as np
 cimport numpy as cnp
 
@@ -34,12 +44,13 @@ def sigmoid(double [:] inp, double lim=350.0):
         inp.size, dtype=np.float64)
     c_sigmoid(inp.size, &inp[0], &out[0], lim)
     return out
-""")
+""",
+    ),
 ]
 
 
 def npy(data, lim=350.0):
-    return data/((data/lim)**8+1)**(1/8.)
+    return data / ((data / lim) ** 8 + 1) ** (1 / 8.0)
 
 
 def test_compile_link_import_strings():
@@ -49,20 +60,21 @@ def test_compile_link_import_strings():
         skip("cython not installed.")
 
     from sympy.utilities._compilation import has_c
+
     if not has_c():
         skip("No C compiler found.")
 
-    compile_kw = {"std": 'c99', "include_dirs": [numpy.get_include()]}
+    compile_kw = {"std": "c99", "include_dirs": [numpy.get_include()]}
     info = None
     try:
         mod, info = compile_link_import_strings(_sources1, compile_kwargs=compile_kw)
-        data = numpy.random.random(1024*1024*8)  # 64 MB of RAM needed..
+        data = numpy.random.random(1024 * 1024 * 8)  # 64 MB of RAM needed..
         res_mod = mod.sigmoid(data)
         res_npy = npy(data)
         assert numpy.allclose(res_mod, res_npy)
     finally:
-        if info and info['build_dir']:
-            shutil.rmtree(info['build_dir'])
+        if info and info["build_dir"]:
+            shutil.rmtree(info["build_dir"])
 
 
 @skip_under_pyodide("Emscripten does not support subprocesses")
@@ -70,18 +82,21 @@ def test_compile_sources():
     tmpdir = tempfile.mkdtemp()
 
     from sympy.utilities._compilation import has_c
+
     if not has_c():
         skip("No C compiler found.")
 
     build_dir = str(tmpdir)
-    _handle, file_path = tempfile.mkstemp('.c', dir=build_dir)
-    with open(file_path, 'wt') as ofh:
-        ofh.write("""
+    _handle, file_path = tempfile.mkstemp(".c", dir=build_dir)
+    with open(file_path, "wt") as ofh:
+        ofh.write(
+            """
         int foo(int bar) {
             return 2*bar;
         }
-        """)
-    obj, = compile_sources([file_path], cwd=build_dir)
+        """
+        )
+    (obj,) = compile_sources([file_path], cwd=build_dir)
     obj_path = get_abspath(obj, cwd=build_dir)
     assert os.path.exists(obj_path)
     try:
@@ -90,15 +105,17 @@ def test_compile_sources():
         pass  # we cannot test contents of object file
     else:
         nm_out = subprocess.check_output(["nm", obj_path])
-        assert 'foo' in nm_out.decode('utf-8')
+        assert "foo" in nm_out.decode("utf-8")
 
     if not cython:
         return  # the final (optional) part of the test below requires Cython.
 
-    _handle, pyx_path = tempfile.mkstemp('.pyx', dir=build_dir)
-    with open(pyx_path, 'wt') as ofh:
-        ofh.write(("cdef extern int foo(int)\n"
-                   "def _foo(arg):\n"
-                   "    return foo(arg)"))
-    mod = compile_link_import_py_ext([pyx_path], extra_objs=[obj_path], build_dir=build_dir)
+    _handle, pyx_path = tempfile.mkstemp(".pyx", dir=build_dir)
+    with open(pyx_path, "wt") as ofh:
+        ofh.write(
+            ("cdef extern int foo(int)\n" "def _foo(arg):\n" "    return foo(arg)")
+        )
+    mod = compile_link_import_py_ext(
+        [pyx_path], extra_objs=[obj_path], build_dir=build_dir
+    )
     assert mod._foo(21) == 42

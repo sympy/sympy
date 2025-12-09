@@ -1,5 +1,11 @@
-from sympy.tensor.tensor import (Tensor, TensorIndexType, TensorSymmetry,
-        tensor_indices, TensorHead, TensorElement)
+from sympy.tensor.tensor import (
+    Tensor,
+    TensorIndexType,
+    TensorSymmetry,
+    tensor_indices,
+    TensorHead,
+    TensorElement,
+)
 from sympy.tensor import Array
 from sympy.core.symbol import Symbol
 

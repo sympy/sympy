@@ -12,6 +12,7 @@ class TensorProduct(Expr):
     """
     Generic class for tensor products.
     """
+
     is_number = False
 
     def __new__(cls, *args, **kwargs):
@@ -38,7 +39,7 @@ class TensorProduct(Expr):
             else:
                 scalar *= arg
 
-        coeff = scalar*tensorproduct(*arrays)
+        coeff = scalar * tensorproduct(*arrays)
         if len(other) == 0:
             return coeff
         if coeff != 1:
@@ -53,6 +54,7 @@ class TensorProduct(Expr):
 
     def _get_args_shapes(self):
         from sympy.tensor.array import Array
+
         return [i.shape if hasattr(i, "shape") else Array(i).shape for i in self.args]
 
     @property
@@ -132,7 +134,8 @@ def shape(expr):
     if hasattr(expr, "shape"):
         return expr.shape
     raise NoShapeError(
-        f"{expr} does not have shape, or its type is not registered to shape().")
+        f"{expr} does not have shape, or its type is not registered to shape()."
+    )
 
 
 class NoShapeError(Exception):
@@ -151,4 +154,5 @@ class NoShapeError(Exception):
       ...
     sympy.tensor.functions.NoShapeError: shape() called on non-array object: x
     """
+
     pass

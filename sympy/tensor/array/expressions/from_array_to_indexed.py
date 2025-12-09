@@ -3,9 +3,21 @@ import operator
 from itertools import accumulate
 
 from sympy import Mul, Sum, Dummy, Add
-from sympy.tensor.array.expressions import PermuteDims, ArrayAdd, ArrayElementwiseApplyFunc, Reshape
-from sympy.tensor.array.expressions.array_expressions import ArrayTensorProduct, get_rank, ArrayContraction, \
-    ArrayDiagonal, get_shape, _get_array_element_or_slice, _ArrayExpr
+from sympy.tensor.array.expressions import (
+    PermuteDims,
+    ArrayAdd,
+    ArrayElementwiseApplyFunc,
+    Reshape,
+)
+from sympy.tensor.array.expressions.array_expressions import (
+    ArrayTensorProduct,
+    get_rank,
+    ArrayContraction,
+    ArrayDiagonal,
+    get_shape,
+    _get_array_element_or_slice,
+    _ArrayExpr,
+)
 from sympy.tensor.array.expressions.utils import _apply_permutation_to_list
 
 
@@ -21,8 +33,12 @@ class _ConvertArrayToIndexed:
     def do_convert(self, expr, indices):
         if isinstance(expr, ArrayTensorProduct):
             cumul = list(accumulate([0] + [get_rank(arg) for arg in expr.args]))
-            indices_grp = [indices[cumul[i]:cumul[i+1]] for i in range(len(expr.args))]
-            return Mul.fromiter(self.do_convert(arg, ind) for arg, ind in zip(expr.args, indices_grp))
+            indices_grp = [
+                indices[cumul[i] : cumul[i + 1]] for i in range(len(expr.args))
+            ]
+            return Mul.fromiter(
+                self.do_convert(arg, ind) for arg, ind in zip(expr.args, indices_grp)
+            )
         if isinstance(expr, ArrayContraction):
             new_indices = [None for i in range(get_rank(expr.expr))]
             limits = []
@@ -31,7 +47,7 @@ class _ConvertArrayToIndexed:
                 d = Dummy(f"d{self.count_dummies}")
                 self.count_dummies += 1
                 dim = bottom_shape[contraction_index_grp[0]]
-                limits.append((d, 0, dim-1))
+                limits.append((d, 0, dim - 1))
                 for i in contraction_index_grp:
                     new_indices[i] = d
             j = 0
@@ -43,7 +59,9 @@ class _ConvertArrayToIndexed:
             return Sum(newexpr, *limits)
         if isinstance(expr, ArrayDiagonal):
             new_indices = [None for i in range(get_rank(expr.expr))]
-            ind_pos = expr._push_indices_down(expr.diagonal_indices, list(range(len(indices))), get_rank(expr))
+            ind_pos = expr._push_indices_down(
+                expr.diagonal_indices, list(range(len(indices))), get_rank(expr)
+            )
             for i, index in zip(ind_pos, indices):
                 if isinstance(i, collections.abc.Iterable):
                     for j in i:
@@ -65,7 +83,7 @@ class _ConvertArrayToIndexed:
             shape_up = expr.shape
             shape_down = get_shape(expr.expr)
             cumul = list(accumulate([1] + list(reversed(shape_up)), operator.mul))
-            one_index = Add.fromiter(i*s for i, s in zip(reversed(indices), cumul))
+            one_index = Add.fromiter(i * s for i, s in zip(reversed(indices), cumul))
             dest_indices = [None for _ in shape_down]
             c = 1
             for i, e in enumerate(reversed(shape_down)):

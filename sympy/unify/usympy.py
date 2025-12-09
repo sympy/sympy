@@ -1,7 +1,7 @@
-""" SymPy interface to Unification engine
+"""SymPy interface to Unification engine
 
 See sympy.unify for module level docstring
-See sympy.unify.core for algorithmic docstring """
+See sympy.unify.core for algorithmic docstring"""
 
 from sympy.core import Basic, Add, Mul, Pow
 from sympy.core.operations import AssocOp, LatticeOp
@@ -14,16 +14,20 @@ basic_new_legal = [MatrixExpr]
 eval_false_legal = [AssocOp, Pow, FiniteSet]
 illegal = [LatticeOp]
 
+
 def sympy_associative(op):
     assoc_ops = (AssocOp, MatAdd, MatMul, Union, Intersection, FiniteSet)
     return any(issubclass(op, aop) for aop in assoc_ops)
+
 
 def sympy_commutative(op):
     comm_ops = (Add, MatAdd, Union, Intersection, FiniteSet)
     return any(issubclass(op, cop) for cop in comm_ops)
 
+
 def is_associative(x):
     return isinstance(x, Compound) and sympy_associative(x.op)
+
 
 def is_commutative(x):
     if not isinstance(x, Compound):
@@ -33,25 +37,27 @@ def is_commutative(x):
     if issubclass(x.op, Mul):
         return all(construct(arg).is_commutative for arg in x.args)
 
+
 def mk_matchtype(typ):
     def matchtype(x):
-        return (isinstance(x, typ) or
-                isinstance(x, Compound) and issubclass(x.op, typ))
+        return isinstance(x, typ) or isinstance(x, Compound) and issubclass(x.op, typ)
+
     return matchtype
 
+
 def deconstruct(s, variables=()):
-    """ Turn a SymPy object into a Compound """
+    """Turn a SymPy object into a Compound"""
     if s in variables:
         return Variable(s)
     if isinstance(s, (Variable, CondVariable)):
         return s
     if not isinstance(s, Basic) or s.is_Atom:
         return s
-    return Compound(s.__class__,
-                    tuple(deconstruct(arg, variables) for arg in s.args))
+    return Compound(s.__class__, tuple(deconstruct(arg, variables) for arg in s.args))
+
 
 def construct(t):
-    """ Turn a Compound into a SymPy object """
+    """Turn a Compound into a SymPy object"""
     if isinstance(t, (Variable, CondVariable)):
         return t.arg
     if not isinstance(t, Compound):
@@ -63,15 +69,17 @@ def construct(t):
     else:
         return t.op(*map(construct, t.args))
 
+
 def rebuild(s):
-    """ Rebuild a SymPy expression.
+    """Rebuild a SymPy expression.
 
     This removes harm caused by Expr-Rules interactions.
     """
     return construct(deconstruct(s))
 
+
 def unify(x, y, s=None, variables=(), **kwargs):
-    """ Structural unification of two expressions/patterns.
+    """Structural unification of two expressions/patterns.
 
     Examples
     ========
@@ -116,9 +124,13 @@ def unify(x, y, s=None, variables=(), **kwargs):
     s = s or {}
     s = {decons(k): decons(v) for k, v in s.items()}
 
-    ds = core.unify(decons(x), decons(y), s,
-                                     is_associative=is_associative,
-                                     is_commutative=is_commutative,
-                                     **kwargs)
+    ds = core.unify(
+        decons(x),
+        decons(y),
+        s,
+        is_associative=is_associative,
+        is_commutative=is_commutative,
+        **kwargs
+    )
     for d in ds:
         yield {construct(k): construct(v) for k, v in d.items()}

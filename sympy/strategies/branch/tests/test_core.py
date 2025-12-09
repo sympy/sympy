@@ -1,6 +1,16 @@
 from sympy.strategies.branch.core import (
-    exhaust, debug, multiplex, condition, notempty, chain, onaction, sfilter,
-    yieldify, do_one, identity)
+    exhaust,
+    debug,
+    multiplex,
+    condition,
+    notempty,
+    chain,
+    onaction,
+    sfilter,
+    yieldify,
+    do_one,
+    identity,
+)
 
 
 def posdec(x):
@@ -43,6 +53,7 @@ def test_exhaust():
 
 def test_debug():
     from io import StringIO
+
     file = StringIO()
     rl = debug(posdec, file)
     list(rl(5))
@@ -50,8 +61,8 @@ def test_debug():
     file.close()
 
     assert posdec.__name__ in log
-    assert '5' in log
-    assert '4' in log
+    assert "5" in log
+    assert "4" in log
 
 
 def test_multiplex():

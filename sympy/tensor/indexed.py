@@ -139,6 +139,7 @@ class Indexed(Expr):
     True
 
     """
+
     is_Indexed = True
     is_symbol = True
     is_Atom = True
@@ -151,14 +152,20 @@ class Indexed(Expr):
             raise IndexException("Indexed needs at least one index.")
         if isinstance(base, (str, Symbol)):
             base = IndexedBase(base)
-        elif not hasattr(base, '__getitem__') and not isinstance(base, IndexedBase):
-            raise TypeError(filldedent("""
+        elif not hasattr(base, "__getitem__") and not isinstance(base, IndexedBase):
+            raise TypeError(
+                filldedent(
+                    """
                 The base can only be replaced with a string, Symbol,
                 IndexedBase or an object with a method for getting
                 items (i.e. an object with a `__getitem__` method).
-                """))
+                """
+                )
+            )
         args = list(map(sympify, args))
-        if isinstance(base, (NDimArray, Iterable, Tuple, MatrixBase)) and all(i.is_number for i in args):
+        if isinstance(base, (NDimArray, Iterable, Tuple, MatrixBase)) and all(
+            i.is_number for i in args
+        ):
             if len(args) == 1:
                 return base[args[0]]
             else:
@@ -189,8 +196,7 @@ class Indexed(Expr):
 
         if isinstance(wrt, Indexed) and wrt.base == self.base:
             if len(self.indices) != len(wrt.indices):
-                msg = "Different # of indices: d({!s})/d({!s})".format(self,
-                                                                       wrt)
+                msg = "Different # of indices: d({!s})/d({!s})".format(self, wrt)
                 raise IndexException(msg)
             result = S.One
             for index1, index2 in zip(self.indices, wrt.indices):
@@ -198,6 +204,7 @@ class Indexed(Expr):
             return result
         elif isinstance(self.base, NDimArray):
             from sympy.tensor.array import derive_by_array
+
             return Indexed(derive_by_array(self.base, wrt), *self.args[1:])
         else:
             if Tuple(self.indices).has(wrt):
@@ -287,17 +294,25 @@ class Indexed(Expr):
             return self.base.shape
         sizes = []
         for i in self.indices:
-            upper = getattr(i, 'upper', None)
-            lower = getattr(i, 'lower', None)
+            upper = getattr(i, "upper", None)
+            lower = getattr(i, "lower", None)
             if None in (upper, lower):
-                raise IndexException(filldedent(f"""
-                    Range is not defined for all indices in: {self}"""))
+                raise IndexException(
+                    filldedent(
+                        f"""
+                    Range is not defined for all indices in: {self}"""
+                    )
+                )
             try:
                 size = upper - lower + 1
             except TypeError:
-                raise IndexException(filldedent(f"""
+                raise IndexException(
+                    filldedent(
+                        f"""
                     Shape cannot be inferred from Idx with
-                    undefined range: {self}"""))
+                    undefined range: {self}"""
+                    )
+                )
             sizes.append(size)
         return Tuple(*sizes)
 
@@ -324,8 +339,8 @@ class Indexed(Expr):
         ranges = []
         sentinel = object()
         for i in self.indices:
-            upper = getattr(i, 'upper', sentinel)
-            lower = getattr(i, 'lower', sentinel)
+            upper = getattr(i, "upper", sentinel)
+            lower = getattr(i, "lower", sentinel)
             if sentinel not in (upper, lower):
                 ranges.append((lower, upper))
             else:
@@ -339,8 +354,7 @@ class Indexed(Expr):
     @property
     def free_symbols(self):
         base_free_symbols = self.base.free_symbols
-        indices_free_symbols = {
-            fs for i in self.indices for fs in i.free_symbols}
+        indices_free_symbols = {fs for i in self.indices for fs in i.free_symbols}
         if base_free_symbols:
             return {self} | base_free_symbols | indices_free_symbols
         else:
@@ -349,12 +363,15 @@ class Indexed(Expr):
     @property
     def expr_free_symbols(self):
         from sympy.utilities.exceptions import sympy_deprecation_warning
-        sympy_deprecation_warning("""
+
+        sympy_deprecation_warning(
+            """
         The expr_free_symbols property is deprecated. Use free_symbols to get
         the free symbols of an expression.
         """,
             deprecated_since_version="1.9",
-            active_deprecations_target="deprecated-expr-free-symbols")
+            active_deprecations_target="deprecated-expr-free-symbols",
+        )
 
         return {self}
 
@@ -425,6 +442,7 @@ class IndexedBase(Expr, NotIterable):
     >>> C_inherit == C_explicit
     True
     """
+
     is_symbol = True
     is_Atom = True
 
@@ -432,8 +450,8 @@ class IndexedBase(Expr, NotIterable):
     def _set_assumptions(obj, assumptions):
         """Set assumptions on obj, making sure to apply consistent values."""
         tmp_asm_copy = assumptions.copy()
-        is_commutative = fuzzy_bool(assumptions.get('commutative', True))
-        assumptions['commutative'] = is_commutative
+        is_commutative = fuzzy_bool(assumptions.get("commutative", True))
+        assumptions["commutative"] = is_commutative
         obj._assumptions = StdFactKB(assumptions)
         obj._assumptions._generator = tmp_asm_copy  # Issue #8873
 
@@ -657,11 +675,18 @@ class Idx(Expr):
 
         elif is_sequence(range):
             if len(range) != 2:
-                raise ValueError(filldedent(f"""
-                    Idx range tuple must have length 2, but got {len(range)}"""))
+                raise ValueError(
+                    filldedent(
+                        f"""
+                    Idx range tuple must have length 2, but got {len(range)}"""
+                    )
+                )
             for bound in range:
-                if (bound.is_integer is False and bound is not S.Infinity
-                        and bound is not S.NegativeInfinity):
+                if (
+                    bound.is_integer is False
+                    and bound is not S.Infinity
+                    and bound is not S.NegativeInfinity
+                ):
                     raise TypeError("Idx object requires integer bounds.")
             args = label, Tuple(*range)
         elif isinstance(range, Expr):
@@ -669,11 +694,15 @@ class Idx(Expr):
                 raise TypeError("Idx object requires an integer dimension.")
             args = label, Tuple(0, range - 1)
         elif range:
-            raise TypeError(filldedent("""
+            raise TypeError(
+                filldedent(
+                    """
                 The range must be an ordered iterable or
-                integer SymPy expression."""))
+                integer SymPy expression."""
+                )
+            )
         else:
-            args = label,
+            args = (label,)
 
         obj = Expr.__new__(cls, *args, **kw_args)
         obj._assumptions["finite"] = True
@@ -755,7 +784,7 @@ class Idx(Expr):
 
 
 @dispatch(Idx, Idx)
-def _eval_is_ge(lhs, rhs): # noqa:F811
+def _eval_is_ge(lhs, rhs):  # noqa:F811
 
     other_upper = rhs if rhs.upper is None else rhs.upper
     other_lower = rhs if rhs.lower is None else rhs.lower
@@ -768,7 +797,7 @@ def _eval_is_ge(lhs, rhs): # noqa:F811
 
 
 @dispatch(Idx, Number)  # type:ignore
-def _eval_is_ge(lhs, rhs): # noqa:F811
+def _eval_is_ge(lhs, rhs):  # noqa:F811
 
     other_upper = rhs
     other_lower = rhs
@@ -781,7 +810,7 @@ def _eval_is_ge(lhs, rhs): # noqa:F811
 
 
 @dispatch(Number, Idx)  # type:ignore
-def _eval_is_ge(lhs, rhs): # noqa:F811
+def _eval_is_ge(lhs, rhs):  # noqa:F811
 
     other_upper = lhs
     other_lower = lhs

@@ -3,24 +3,66 @@ from sympy.core.numbers import Rational
 from sympy.core.relational import Eq
 from sympy.core.symbol import Dummy
 from sympy.functions.combinatorial.factorials import FallingFactorial
-from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import piecewise_fold
 from sympy.integrals.integrals import Integral
 from sympy.solvers.solveset import solveset
-from .rv import (probability, expectation, density, where, given, pspace, cdf, PSpace,
-                 characteristic_function, sample, sample_iter, random_symbols, independent, dependent,
-                 sampling_density, moment_generating_function, quantile, is_random,
-                 sample_stochastic_process)
+from .rv import (
+    probability,
+    expectation,
+    density,
+    where,
+    given,
+    pspace,
+    cdf,
+    PSpace,
+    characteristic_function,
+    sample,
+    sample_iter,
+    random_symbols,
+    independent,
+    dependent,
+    sampling_density,
+    moment_generating_function,
+    quantile,
+    is_random,
+    sample_stochastic_process,
+)
 
 
-__all__ = ['P', 'E', 'H', 'density', 'where', 'given', 'sample', 'cdf',
-        'characteristic_function', 'pspace', 'sample_iter', 'variance', 'std',
-        'skewness', 'kurtosis', 'covariance', 'dependent', 'entropy', 'median',
-        'independent', 'random_symbols', 'correlation', 'factorial_moment',
-        'moment', 'cmoment', 'sampling_density', 'moment_generating_function',
-        'smoment', 'quantile', 'sample_stochastic_process']
-
+__all__ = [
+    "P",
+    "E",
+    "H",
+    "density",
+    "where",
+    "given",
+    "sample",
+    "cdf",
+    "characteristic_function",
+    "pspace",
+    "sample_iter",
+    "variance",
+    "std",
+    "skewness",
+    "kurtosis",
+    "covariance",
+    "dependent",
+    "entropy",
+    "median",
+    "independent",
+    "random_symbols",
+    "correlation",
+    "factorial_moment",
+    "moment",
+    "cmoment",
+    "sampling_density",
+    "moment_generating_function",
+    "smoment",
+    "quantile",
+    "sample_stochastic_process",
+]
 
 
 def moment(X, n, c=0, condition=None, *, evaluate=True, **kwargs):
@@ -45,6 +87,7 @@ def moment(X, n, c=0, condition=None, *, evaluate=True, **kwargs):
     True
     """
     from sympy.stats.symbolic_probability import Moment
+
     if evaluate:
         return Moment(X, n, c, condition).doit()
     return Moment(X, n, c, condition).rewrite(Integral)
@@ -75,6 +118,7 @@ def variance(X, condition=None, **kwargs):
     """
     if is_random(X) and pspace(X) == PSpace():
         from sympy.stats.symbolic_probability import Variance
+
         return Variance(X, condition)
 
     return cmoment(X, 2, condition, **kwargs)
@@ -100,7 +144,10 @@ def standard_deviation(X, condition=None, **kwargs):
     sqrt(p*(1 - p))
     """
     return sqrt(variance(X, condition, **kwargs))
+
+
 std = standard_deviation
+
 
 def entropy(expr, condition=None, **kwargs):
     """
@@ -139,10 +186,11 @@ def entropy(expr, condition=None, **kwargs):
     .. [3] https://kconrad.math.uconn.edu/blurbs/analysis/entropypost.pdf
     """
     pdf = density(expr, condition, **kwargs)
-    base = kwargs.get('b', exp(1))
+    base = kwargs.get("b", exp(1))
     if isinstance(pdf, dict):
-            return sum(-prob*log(prob, base) for prob in pdf.values())
+        return sum(-prob * log(prob, base) for prob in pdf.values())
     return expectation(-log(pdf(expr), base))
+
 
 def covariance(X, Y, condition=None, **kwargs):
     """
@@ -173,14 +221,19 @@ def covariance(X, Y, condition=None, **kwargs):
     >>> covariance(X, Y + rate*X)
     1/lambda
     """
-    if (is_random(X) and pspace(X) == PSpace()) or (is_random(Y) and pspace(Y) == PSpace()):
+    if (is_random(X) and pspace(X) == PSpace()) or (
+        is_random(Y) and pspace(Y) == PSpace()
+    ):
         from sympy.stats.symbolic_probability import Covariance
+
         return Covariance(X, Y, condition)
 
     return expectation(
-        (X - expectation(X, condition, **kwargs)) *
-        (Y - expectation(Y, condition, **kwargs)),
-        condition, **kwargs)
+        (X - expectation(X, condition, **kwargs))
+        * (Y - expectation(Y, condition, **kwargs)),
+        condition,
+        **kwargs
+    )
 
 
 def correlation(X, Y, condition=None, **kwargs):
@@ -214,8 +267,9 @@ def correlation(X, Y, condition=None, **kwargs):
     >>> correlation(X, Y + rate*X)
     1/sqrt(1 + lambda**(-2))
     """
-    return covariance(X, Y, condition, **kwargs)/(std(X, condition, **kwargs)
-     * std(Y, condition, **kwargs))
+    return covariance(X, Y, condition, **kwargs) / (
+        std(X, condition, **kwargs) * std(Y, condition, **kwargs)
+    )
 
 
 def cmoment(X, n, condition=None, *, evaluate=True, **kwargs):
@@ -238,6 +292,7 @@ def cmoment(X, n, condition=None, *, evaluate=True, **kwargs):
     True
     """
     from sympy.stats.symbolic_probability import CentralMoment
+
     if evaluate:
         return CentralMoment(X, n, condition).doit()
     return CentralMoment(X, n, condition).rewrite(Integral)
@@ -265,7 +320,8 @@ def smoment(X, n, condition=None, **kwargs):
     True
     """
     sigma = std(X, condition, **kwargs)
-    return (1/sigma)**n*cmoment(X, n, condition, **kwargs)
+    return (1 / sigma) ** n * cmoment(X, n, condition, **kwargs)
+
 
 def skewness(X, condition=None, **kwargs):
     r"""
@@ -303,6 +359,7 @@ def skewness(X, condition=None, **kwargs):
     2
     """
     return smoment(X, 3, condition=condition, **kwargs)
+
 
 def kurtosis(X, condition=None, **kwargs):
     r"""
@@ -388,6 +445,7 @@ def factorial_moment(X, n, condition=None, **kwargs):
     """
     return expectation(FallingFactorial(X, n), condition=condition, **kwargs)
 
+
 def median(X, evaluate=True, **kwargs):
     r"""
     Calculates the median of the probability distribution.
@@ -440,16 +498,17 @@ def median(X, evaluate=True, **kwargs):
         cdf = pspace(X).compute_cdf(X)
         result = []
         for key, value in cdf.items():
-            if value>= Rational(1, 2) and (1 - value) + \
-            pspace(X).probability(Eq(X, key)) >= Rational(1, 2):
+            if value >= Rational(1, 2) and (1 - value) + pspace(X).probability(
+                Eq(X, key)
+            ) >= Rational(1, 2):
                 result.append(key)
         return FiniteSet(*result)
     if isinstance(pspace(X), (ContinuousPSpace, DiscretePSpace)):
         cdf = pspace(X).compute_cdf(X)
-        x = Dummy('x')
+        x = Dummy("x")
         result = solveset(piecewise_fold(cdf(x) - Rational(1, 2)), x, pspace(X).set)
         return result
-    raise NotImplementedError("The median of %s is not implemented."%str(pspace(X)))
+    raise NotImplementedError("The median of %s is not implemented." % str(pspace(X)))
 
 
 def coskewness(X, Y, Z, condition=None, **kwargs):
@@ -506,12 +565,19 @@ def coskewness(X, Y, Z, condition=None, **kwargs):
     .. [1] https://en.wikipedia.org/wiki/Coskewness
 
     """
-    num = expectation((X - expectation(X, condition, **kwargs)) \
-         * (Y - expectation(Y, condition, **kwargs)) \
-         * (Z - expectation(Z, condition, **kwargs)), condition, **kwargs)
-    den = std(X, condition, **kwargs) * std(Y, condition, **kwargs) \
-         * std(Z, condition, **kwargs)
-    return num/den
+    num = expectation(
+        (X - expectation(X, condition, **kwargs))
+        * (Y - expectation(Y, condition, **kwargs))
+        * (Z - expectation(Z, condition, **kwargs)),
+        condition,
+        **kwargs
+    )
+    den = (
+        std(X, condition, **kwargs)
+        * std(Y, condition, **kwargs)
+        * std(Z, condition, **kwargs)
+    )
+    return num / den
 
 
 P = probability

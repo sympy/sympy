@@ -36,12 +36,14 @@ def test_treeapply_leaf():
     assert treeapply(3, {}, leaf=lambda x: x**2) == 9
     tree = ([3, 3], [4, 1], 2)
     treep1 = ([4, 4], [5, 2], 3)
-    assert treeapply(tree, {list: min, tuple: max}, leaf=lambda x: x + 1) == \
-           treeapply(treep1, {list: min, tuple: max})
+    assert treeapply(tree, {list: min, tuple: max}, leaf=lambda x: x + 1) == treeapply(
+        treep1, {list: min, tuple: max}
+    )
 
 
 def test_treeapply_strategies():
     from sympy.strategies import chain, minimize
+
     join = {list: chain, tuple: minimize}
 
     assert treeapply(inc, join) == inc
@@ -86,7 +88,7 @@ def test_brute():
     tree = ([inc, dec], square)
     fn = brute(tree, lambda x: -x)
 
-    assert fn(2) == (2 + 1)**2
-    assert fn(-2) == (-2 - 1)**2
+    assert fn(2) == (2 + 1) ** 2
+    assert fn(-2) == (-2 - 1) ** 2
 
     assert brute(inc)(1) == 2

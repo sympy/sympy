@@ -4,17 +4,26 @@ from typing import TYPE_CHECKING
 
 from collections import Counter, defaultdict, OrderedDict
 from itertools import (
-    chain, combinations, combinations_with_replacement, cycle, islice,
-    permutations, product, groupby
+    chain,
+    combinations,
+    combinations_with_replacement,
+    cycle,
+    islice,
+    permutations,
+    product,
+    groupby,
 )
 
 # For backwards compatibility
-from itertools import product as cartes # noqa: F401
+from itertools import product as cartes  # noqa: F401
 from operator import gt
 
 # this is the logical location of these functions
 from sympy.utilities.enumerative import (
-    multiset_partitions_taocp, list_visitor, MultisetPartitionTraverser)
+    multiset_partitions_taocp,
+    list_visitor,
+    MultisetPartitionTraverser,
+)
 
 from sympy.utilities.misc import as_int
 from sympy.utilities.decorator import deprecated
@@ -22,7 +31,8 @@ from sympy.utilities.decorator import deprecated
 
 if TYPE_CHECKING:
     from typing import TypeVar, Iterable, Callable
-    T = TypeVar('T')
+
+    T = TypeVar("T")
 
 
 def is_palindromic(s, i=0, j=None):
@@ -57,7 +67,7 @@ def is_palindromic(s, i=0, j=None):
 
     """
     i, j, _ = slice(i, j).indices(len(s))
-    m = (j - i)//2
+    m = (j - i) // 2
     # if length is odd, middle element will be ignored
     return all(s[i + k] == s[j - 1 - k] for k in range(m))
 
@@ -99,19 +109,22 @@ def flatten(iterable, levels=None, cls=None):  # noqa: F811
     adapted from https://kogs-www.informatik.uni-hamburg.de/~meine/python_tricks
     """
     from sympy.tensor.array import NDimArray
+
     if levels is not None:
         if not levels:
             return iterable
         elif levels > 0:
             levels -= 1
         else:
-            raise ValueError(
-                "expected non-negative number of levels, got %s" % levels)
+            raise ValueError("expected non-negative number of levels, got %s" % levels)
 
     if cls is None:
+
         def reducible(x):
             return is_sequence(x, set)
+
     else:
+
         def reducible(x):
             return isinstance(x, cls)
 
@@ -119,7 +132,7 @@ def flatten(iterable, levels=None, cls=None):  # noqa: F811
 
     for el in iterable:
         if reducible(el):
-            if hasattr(el, 'args') and not isinstance(el, NDimArray):
+            if hasattr(el, "args") and not isinstance(el, NDimArray):
                 el = el.args
             result.extend(flatten(el, levels=levels, cls=cls))
         else:
@@ -133,7 +146,7 @@ def unflatten(iter, n=2):
     the length of ``iter`` is not a multiple of ``n``.
     """
     if n < 1 or len(iter) % n:
-        raise ValueError('iter length is not a multiple of %i' % n)
+        raise ValueError("iter length is not a multiple of %i" % n)
     return list(zip(*(iter[i::n] for i in range(n))))
 
 
@@ -177,21 +190,23 @@ def reshape(seq, how):
     m = sum(flatten(how))
     n, rem = divmod(len(seq), m)
     if m < 0 or rem:
-        raise ValueError('template must sum to positive number '
-        'that divides the length of the sequence')
+        raise ValueError(
+            "template must sum to positive number "
+            "that divides the length of the sequence"
+        )
     i = 0
     container = type(how)
-    rv = [None]*n
+    rv = [None] * n
     for k in range(len(rv)):
         _rv = []
         for hi in how:
             if isinstance(hi, int):
-                _rv.extend(seq[i: i + hi])
+                _rv.extend(seq[i : i + hi])
                 i += hi
             else:
                 n = sum(flatten(hi))
                 hi_type = type(hi)
-                _rv.append(hi_type(reshape(seq[i: i + n], hi)[0]))
+                _rv.append(hi_type(reshape(seq[i : i + n], hi)[0]))
                 i += n
         rv[k] = container(_rv)
     return type(seq)(rv)
@@ -225,7 +240,7 @@ def group(seq, multiple=True):
 
 
 def _iproduct2(iterable1, iterable2):
-    '''Cartesian product of two possibly infinite iterables'''
+    """Cartesian product of two possibly infinite iterables"""
 
     it1 = iter(iterable1)
     it2 = iter(iterable2)
@@ -234,6 +249,7 @@ def _iproduct2(iterable1, iterable2):
     elems2 = []
 
     sentinel = object()
+
     def append(it, elems):
         e = next(it, sentinel)
         if e is not sentinel:
@@ -244,15 +260,15 @@ def _iproduct2(iterable1, iterable2):
     append(it2, elems2)
 
     while n <= len(elems1) + len(elems2):
-        for m in range(n-len(elems1)+1, len(elems2)):
-            yield (elems1[n-m], elems2[m])
+        for m in range(n - len(elems1) + 1, len(elems2)):
+            yield (elems1[n - m], elems2[m])
         n += 1
         append(it1, elems1)
         append(it2, elems2)
 
 
 def iproduct(*iterables):
-    '''
+    """
     Cartesian product of iterables.
 
     Generator of the Cartesian product of iterables. This is analogous to
@@ -278,7 +294,7 @@ def iproduct(*iterables):
 
        `itertools.product
        <https://docs.python.org/3/library/itertools.html#itertools.product>`_
-    '''
+    """
     if len(iterables) == 0:
         yield ()
         return
@@ -311,8 +327,6 @@ def multiset(seq):
 
     """
     return dict(Counter(seq).items())
-
-
 
 
 def ibin(n, bits=None, str=False):
@@ -372,19 +386,18 @@ def ibin(n, bits=None, str=False):
             bits = -1
         else:
             if n.bit_length() > bits:
-                raise ValueError(
-                    "`bits` must be >= {}".format(n.bit_length()))
+                raise ValueError("`bits` must be >= {}".format(n.bit_length()))
 
     if not str:
         if bits >= 0:
-            return [1 if i == "1" else 0 for i in f'{n:b}'.rjust(bits, "0")]
+            return [1 if i == "1" else 0 for i in f"{n:b}".rjust(bits, "0")]
         else:
             return variations(range(2), n, repetition=True)
     else:
         if bits >= 0:
-            return f'{n:b}'.rjust(bits, "0")
+            return f"{n:b}".rjust(bits, "0")
         else:
-            return (f'{i:b}'.rjust(n, "0") for i in range(2**n))
+            return (f"{i:b}".rjust(n, "0") for i in range(2**n))
 
 
 def variations(seq, n, repetition=False):
@@ -478,11 +491,13 @@ def subsets(seq, k=None, repetition=False):
     """
     if k is None:
         if not repetition:
-            return chain.from_iterable((combinations(seq, k)
-                                        for k in range(len(seq) + 1)))
+            return chain.from_iterable(
+                (combinations(seq, k) for k in range(len(seq) + 1))
+            )
         else:
-            return chain.from_iterable((combinations_with_replacement(seq, k)
-                                        for k in range(len(seq) + 1)))
+            return chain.from_iterable(
+                (combinations_with_replacement(seq, k) for k in range(len(seq) + 1))
+            )
     else:
         if not repetition:
             return combinations(seq, k)
@@ -514,7 +529,8 @@ def filter_symbols(iterator, exclude):
         if s not in exclude:
             yield s
 
-def numbered_symbols(prefix='x', cls=None, start=0, exclude=(), *args, **assumptions):
+
+def numbered_symbols(prefix="x", cls=None, start=0, exclude=(), *args, **assumptions):
     """
     Generate an infinite stream of Symbols consisting of a prefix and
     increasing subscripts provided that they do not occur in ``exclude``.
@@ -550,10 +566,11 @@ def numbered_symbols(prefix='x', cls=None, start=0, exclude=(), *args, **assumpt
         # We can't just make the default cls=Symbol because it isn't
         # imported yet.
         from sympy.core import Symbol
+
         cls = Symbol
 
     while True:
-        name = '%s%s' % (prefix, start)
+        name = "%s%s" % (prefix, start)
         s = cls(name, *args, **assumptions)
         if s not in exclude:
             yield s
@@ -673,11 +690,13 @@ def sift(seq, keyfunc, binary=False):
         try:
             sift[keyfunc(i)].append(i)
         except (IndexError, TypeError):
-            raise ValueError('keyfunc gave non-binary output')
+            raise ValueError("keyfunc gave non-binary output")
     return T, F
 
 
-def _sift_true_false(seq: Iterable[T], keyfunc: Callable[[T], bool]) -> tuple[list[T], list[T]]:
+def _sift_true_false(
+    seq: Iterable[T], keyfunc: Callable[[T], bool]
+) -> tuple[list[T], list[T]]:
     """Sift iterable for items with keyfunc(item) = True/False."""
     true: list[T] = []
     false: list[T] = []
@@ -690,12 +709,12 @@ def _sift_true_false(seq: Iterable[T], keyfunc: Callable[[T], bool]) -> tuple[li
 
 
 def take(iter, n):
-    """Return ``n`` items from ``iter`` iterator. """
-    return [ value for _, value in zip(range(n), iter) ]
+    """Return ``n`` items from ``iter`` iterator."""
+    return [value for _, value in zip(range(n), iter)]
 
 
 def dict_merge(*dicts):
-    """Merge dictionaries into a single dictionary. """
+    """Merge dictionaries into a single dictionary."""
     merged = {}
 
     for dict in dicts:
@@ -757,7 +776,7 @@ def common_suffix(*seqs):
     if i == -1:
         return []
     else:
-        return seqs[0][i + 1:]
+        return seqs[0][i + 1 :]
 
 
 def prefixes(seq):
@@ -776,7 +795,7 @@ def prefixes(seq):
     n = len(seq)
 
     for i in range(n):
-        yield seq[:i + 1]
+        yield seq[: i + 1]
 
 
 def postfixes(seq):
@@ -795,7 +814,7 @@ def postfixes(seq):
     n = len(seq)
 
     for i in range(n):
-        yield seq[n - i - 1:]
+        yield seq[n - i - 1 :]
 
 
 def topological_sort(graph, key=None):
@@ -878,6 +897,7 @@ def topological_sort(graph, key=None):
     S.difference_update(u for v, u in E)
 
     if key is None:
+
         def key(value):
             return value
 
@@ -1183,7 +1203,7 @@ def rotate_right(x, y):
 
 
 def least_rotation(x, key=None):
-    '''
+    """
     Returns the number of steps of left rotation required to
     obtain lexicographically minimal string/list/tuple, etc.
 
@@ -1202,25 +1222,27 @@ def least_rotation(x, key=None):
 
     .. [1] https://en.wikipedia.org/wiki/Lexicographically_minimal_string_rotation
 
-    '''
+    """
     from sympy.functions.elementary.miscellaneous import Id
-    if key is None: key = Id
-    S = x + x      # Concatenate string to it self to avoid modular arithmetic
-    f = [-1] * len(S)     # Failure function
-    k = 0       # Least rotation of string found so far
-    for j in range(1,len(S)):
+
+    if key is None:
+        key = Id
+    S = x + x  # Concatenate string to it self to avoid modular arithmetic
+    f = [-1] * len(S)  # Failure function
+    k = 0  # Least rotation of string found so far
+    for j in range(1, len(S)):
         sj = S[j]
-        i = f[j-k-1]
-        while i != -1 and sj != S[k+i+1]:
-            if key(sj) < key(S[k+i+1]):
-                k = j-i-1
+        i = f[j - k - 1]
+        while i != -1 and sj != S[k + i + 1]:
+            if key(sj) < key(S[k + i + 1]):
+                k = j - i - 1
             i = f[i]
-        if sj != S[k+i+1]:
+        if sj != S[k + i + 1]:
             if key(sj) < key(S[k]):
                 k = j
-            f[j-k] = -1
+            f[j - k] = -1
         else:
-            f[j-k] = i+1
+            f[j - k] = i + 1
     return k
 
 
@@ -1251,10 +1273,11 @@ def multiset_combinations(m, n, g=None):
 
     """
     from sympy.core.sorting import ordered
+
     if g is None:
         if isinstance(m, dict):
             if any(as_int(v) < 0 for v in m.values()):
-                raise ValueError('counts cannot be negative')
+                raise ValueError("counts cannot be negative")
             N = sum(m.values())
             if n > N:
                 return
@@ -1279,13 +1302,14 @@ def multiset_combinations(m, n, g=None):
     else:
         for i, (k, v) in enumerate(g):
             if v >= n:
-                yield [k]*n
+                yield [k] * n
                 v = n - 1
             for v in range(min(n, v), 0, -1):
-                for j in multiset_combinations(None, n - v, g[i + 1:]):
-                    rv = [k]*v + j
+                for j in multiset_combinations(None, n - v, g[i + 1 :]):
+                    rv = [k] * v + j
                     if len(rv) == n:
                         yield rv
+
 
 def multiset_permutations(m, size=None, g=None):
     """
@@ -1304,10 +1328,11 @@ def multiset_permutations(m, size=None, g=None):
     60
     """
     from sympy.core.sorting import ordered
+
     if g is None:
         if isinstance(m, dict):
             if any(as_int(v) < 0 for v in m.values()):
-                raise ValueError('counts cannot be negative')
+                raise ValueError("counts cannot be negative")
             g = [[k, m[k]] for k in ordered(m)]
         else:
             m = list(ordered(m))
@@ -1431,8 +1456,8 @@ def _set_partitions(n):
         November 17, 2012).
 
     """
-    p = [0]*n
-    q = [0]*n
+    p = [0] * n
+    q = [0] * n
     nc = 1
     yield nc, q
     while nc != n:
@@ -1574,10 +1599,11 @@ def multiset_partitions(multiset, m=None):
             if m is None or size == m:
                 rv = []
                 for k in sorted(p):
-                    rv.extend([x*k]*p[k])
+                    rv.extend([x * k] * p[k])
                 yield rv
     else:
         from sympy.core.sorting import ordered
+
         multiset = list(ordered(multiset))
         n = len(multiset)
         if m and m > n:
@@ -1596,7 +1622,7 @@ def multiset_partitions(multiset, m=None):
             # and at least one element repeated more than once.
             if m:
                 mpt = MultisetPartitionTraverser()
-                for state in mpt.enum_range(multiplicities, m-1, m):
+                for state in mpt.enum_range(multiplicities, m - 1, m):
                     yield list_visitor(state, elements)
             else:
                 for state in multiset_partitions_taocp(multiplicities):
@@ -1673,10 +1699,16 @@ def partitions(n, m=None, k=None, size=False):
     sympy.combinatorics.partitions.IntegerPartition
 
     """
-    if (n <= 0 or
-        m is not None and m < 1 or
-        k is not None and k < 1 or
-        m and k and m*k < n):
+    if (
+        n <= 0
+        or m is not None
+        and m < 1
+        or k is not None
+        and k < 1
+        or m
+        and k
+        and m * k < n
+    ):
         # the empty set is the only way to handle these inputs
         # and returning {} to represent it is consistent with
         # the counting convention, e.g. nT(0) == 1.
@@ -1836,7 +1868,7 @@ def ordered_partitions(n, m=None, sort=True):
         # y is the biggest element and x is either the same as y or the
         # 2nd largest element; v and w are adjacent element indices
         # to which x and y are being assigned, respectively.
-        a = [1]*n
+        a = [1] * n
         y = -1
         v = n
         while v > 0:
@@ -1850,7 +1882,7 @@ def ordered_partitions(n, m=None, sort=True):
             while x <= y:
                 a[v] = x
                 a[w] = y
-                yield a[:w + 1]
+                yield a[: w + 1]
                 x += 1
                 y -= 1
             a[v] = x + y
@@ -1859,12 +1891,12 @@ def ordered_partitions(n, m=None, sort=True):
     elif m == 1:
         yield [n]
     elif n == m:
-        yield [1]*n
+        yield [1] * n
     else:
         # recursively generate partitions of size m
-        for b in range(1, n//m + 1):
-            a = [b]*m
-            x = n - b*m
+        for b in range(1, n // m + 1):
+            a = [b] * m
+            x = n - b * m
             if not x:
                 if sort:
                     yield a
@@ -1873,13 +1905,13 @@ def ordered_partitions(n, m=None, sort=True):
                     mi = len(ax)
                     a[-mi:] = [i + b for i in ax]
                     yield a
-                    a[-mi:] = [b]*mi
+                    a[-mi:] = [b] * mi
             else:
                 for mi in range(1, m):
                     for ax in ordered_partitions(x, mi, sort=True):
                         a[-mi:] = [i + b for i in ax]
                         yield a
-                        a[-mi:] = [b]*mi
+                        a[-mi:] = [b] * mi
 
 
 def binary_partitions(n):
@@ -1909,7 +1941,8 @@ def binary_partitions(n):
 
     """
     from math import ceil, log2
-    power = int(2**(ceil(log2(n))))
+
+    power = int(2 ** (ceil(log2(n))))
     acc = 0
     partition = []
     while power:
@@ -1932,12 +1965,12 @@ def binary_partitions(n):
         last_num += 1
         while x > 1:
             if x <= len(partition) - last_num - 1:
-                del partition[-x + 1:]
+                del partition[-x + 1 :]
                 last_num += 1
                 partition[last_num] = x
             else:
                 x >>= 1
-    yield [1]*n
+    yield [1] * n
 
 
 def has_dups(seq):
@@ -1956,6 +1989,7 @@ def has_dups(seq):
     """
     from sympy.core.containers import Dict
     from sympy.sets.sets import Set
+
     if isinstance(seq, (dict, set, Dict, Set)):
         return False
     unique = set()
@@ -2017,12 +2051,14 @@ def uniq(seq, result=None):
         n = len(seq)
     except TypeError:
         n = None
+
     def check():
         # check that size of seq did not change during iteration;
         # if n == None the object won't support size changing, e.g.
         # an iterator can't be changed
         if n is not None and len(seq) != n:
-            raise RuntimeError('sequence changed size during iteration')
+            raise RuntimeError("sequence changed size during iteration")
+
     try:
         seen = set()
         result = result or []
@@ -2035,8 +2071,8 @@ def uniq(seq, result=None):
             yield s
             check()
             result.append(s)
-        if hasattr(seq, '__getitem__'):
-            yield from uniq(seq[i + 1:], result)
+        if hasattr(seq, "__getitem__"):
+            yield from uniq(seq[i + 1 :], result)
         else:
             yield from uniq(seq, result)
 
@@ -2108,7 +2144,7 @@ def generate_bell(n):
     """
     n = as_int(n)
     if n < 1:
-        raise ValueError('n must be a positive integer')
+        raise ValueError("n must be a positive integer")
     if n == 1:
         yield (0,)
     elif n == 2:
@@ -2118,7 +2154,7 @@ def generate_bell(n):
         yield from [(0, 1, 2), (0, 2, 1), (2, 0, 1), (2, 1, 0), (1, 2, 0), (1, 0, 2)]
     else:
         m = n - 1
-        op = [0] + [-1]*m
+        op = [0] + [-1] * m
         l = list(range(n))
         while True:
             yield tuple(l)
@@ -2205,6 +2241,7 @@ def multiset_derangements(s):
     ['3312', '3321']
     """
     from sympy.core.sorting import ordered
+
     # create multiset dictionary of hashable elements or else
     # remap elements to integers
     try:
@@ -2229,7 +2266,7 @@ def multiset_derangements(s):
 
     # 1) one element has more than half the total cardinality of s: no
     # derangements are possible.
-    if mx*2 > n:
+    if mx * 2 > n:
         return
 
     # 2) all elements appear once: singletons
@@ -2247,10 +2284,10 @@ def multiset_derangements(s):
 
     inonM = [i for i in range(n) if s[i] != M]  # location of non-M
     iM = [i for i in range(n) if s[i] == M]  # locations of M
-    rv = [None]*n
+    rv = [None] * n
 
     # 3) half are the same
-    if 2*mx == n:
+    if 2 * mx == n:
         # M goes into non-M locations
         for i in inonM:
             rv[i] = M
@@ -2260,16 +2297,16 @@ def multiset_derangements(s):
                 rv[i] = pi
             yield rv
         # clean-up (and encourages proper use of routine)
-        rv[:] = [None]*n
+        rv[:] = [None] * n
         return
 
     # 4) single repeat covers all but 1 of the non-repeats:
     # if there is one repeat then the multiset of the values
     # of ms would be {mx: 1, 1: n - mx}, i.e. there would
     # be n - mx + 1 values with the condition that n - 2*mx = 1
-    if n - 2*mx == 1 and len(ms.values()) == n - mx + 1:
+    if n - 2 * mx == 1 and len(ms.values()) == n - mx + 1:
         for i, i1 in enumerate(inonM):
-            ifill = inonM[:i] + inonM[i+1:]
+            ifill = inonM[:i] + inonM[i + 1 :]
             for j in ifill:
                 rv[j] = M
             for p in permutations([s[j] for j in ifill]):
@@ -2282,7 +2319,7 @@ def multiset_derangements(s):
                     yield rv
                     k = j
         # clean-up (and encourages proper use of routine)
-        rv[:] = [None]*n
+        rv[:] = [None] * n
         return
 
     ## general case is handled with 3 helpers:
@@ -2369,9 +2406,9 @@ def multiset_derangements(s):
                     rv[ii] = None
 
     # process elements in order of canonically decreasing multiplicity
-    take = sorted(ms.items(), key=lambda x:(x[1], x[0]))
+    take = sorted(ms.items(), key=lambda x: (x[1], x[0]))
     yield from do(len(take) - 1)
-    rv[:] = [None]*n
+    rv[:] = [None] * n
 
 
 def random_derangement(t, choice=None, strict=True):
@@ -2408,30 +2445,33 @@ def random_derangement(t, choice=None, strict=True):
     """
     if choice is None:
         import secrets
+
         choice = secrets.choice
+
     def shuffle(rv):
-        '''Knuth shuffle'''
+        """Knuth shuffle"""
         for i in range(len(rv) - 1, 0, -1):
-            x = choice(rv[:i + 1])
+            x = choice(rv[: i + 1])
             j = rv.index(x)
             rv[i], rv[j] = rv[j], rv[i]
+
     def pick(rv, n):
-        '''shuffle rv and return the first n values
-        '''
+        """shuffle rv and return the first n values"""
         shuffle(rv)
         return rv[:n]
+
     ms = multiset(t)
     tot = len(t)
     ms = sorted(ms.items(), key=lambda x: x[1])
-  # if there are not enough spaces for the most
-  # plentiful element to move to then some of them
-  # will have to stay in place
+    # if there are not enough spaces for the most
+    # plentiful element to move to then some of them
+    # will have to stay in place
     M, mx = ms[-1]
     n = len(t)
-    xs = 2*mx - tot
+    xs = 2 * mx - tot
     if xs > 0:
         if strict:
-            raise ValueError('no derangement possible')
+            raise ValueError("no derangement possible")
         opts = [i for (i, c) in enumerate(t) if c == ms[-1][0]]
         pick(opts, xs)
         stay = sorted(opts[:xs])
@@ -2441,18 +2481,18 @@ def random_derangement(t, choice=None, strict=True):
         rv = random_derangement(rv, choice)
         for i in stay:
             rv.insert(i, ms[-1][0])
-        return ''.join(rv) if type(t) is str else rv
-  # the normal derangement calculated from here
+        return "".join(rv) if type(t) is str else rv
+    # the normal derangement calculated from here
     if n == len(ms):
-      # approx 1/3 will succeed
+        # approx 1/3 will succeed
         rv = list(t)
         while True:
             shuffle(rv)
-            if all(i != j for i,j in zip(rv, t)):
+            if all(i != j for i, j in zip(rv, t)):
                 break
     else:
-      # general case
-        rv = [None]*n
+        # general case
+        rv = [None] * n
         while True:
             j = 0
             while j > -len(ms):  # do most numerous first
@@ -2462,7 +2502,7 @@ def random_derangement(t, choice=None, strict=True):
                 if len(opts) < c:
                     for i in range(n):
                         rv[i] = None
-                    break # try again
+                    break  # try again
                 pick(opts, c)
                 for i in range(c):
                     rv[opts[i]] = e
@@ -2566,7 +2606,7 @@ def necklaces(n, k, free=False):
     # The FKM algorithm
     if k == 0 and n > 0:
         return
-    a = [0]*n
+    a = [0] * n
     yield tuple(a)
     if n == 0:
         return
@@ -2579,7 +2619,9 @@ def necklaces(n, k, free=False):
         a[i] += 1
         for j in range(n - i - 1):
             a[j + i + 1] = a[j]
-        if n % (i + 1) == 0 and (not free or all(a <= a[j::-1] + a[-1:j:-1] for j in range(n - 1))):
+        if n % (i + 1) == 0 and (
+            not free or all(a <= a[j::-1] + a[-1:j:-1] for j in range(n - 1))
+        ):
             # No need to test j = n - 1.
             yield tuple(a)
 
@@ -2671,7 +2713,9 @@ def minlex(seq, directed=True, key=None):
 
     """
     from sympy.functions.elementary.miscellaneous import Id
-    if key is None: key = Id
+
+    if key is None:
+        key = Id
     best = rotate_left(seq, least_rotation(seq, key=key))
     if not directed:
         rseq = seq[::-1]
@@ -2947,12 +2991,11 @@ def kbins(l, k, ordered=None):
                 for size, multiplicity in sorted(p.items()):
                     for m in range(multiplicity):
                         j = i + size
-                        rv.append(li[i: j])
+                        rv.append(li[i:j])
                         i = j
                 yield rv
     else:
-        raise ValueError(
-            'ordered must be one of 00, 01, 10 or 11, not %s' % ordered)
+        raise ValueError("ordered must be one of 00, 01, 10 or 11, not %s" % ordered)
 
 
 def permute_signs(t):
@@ -2966,9 +3009,9 @@ def permute_signs(t):
     >>> list(permute_signs((0, 1, 2)))
     [(0, 1, 2), (0, -1, 2), (0, 1, -2), (0, -1, -2)]
     """
-    for signs in product(*[(1, -1)]*(len(t) - t.count(0))):
+    for signs in product(*[(1, -1)] * (len(t) - t.count(0))):
         signs = list(signs)
-        yield type(t)([i*signs.pop() if i else i for i in t])
+        yield type(t)([i * signs.pop() if i else i for i in t])
 
 
 def signed_permutations(t):
@@ -2987,8 +3030,7 @@ def signed_permutations(t):
     (-1, -2, 0), (2, 0, 1), (-2, 0, 1), (2, 0, -1), (-2, 0, -1),
     (2, 1, 0), (-2, 1, 0), (2, -1, 0), (-2, -1, 0)]
     """
-    return (type(t)(i) for j in multiset_permutations(t)
-        for i in permute_signs(j))
+    return (type(t)(i) for j in multiset_permutations(t) for i in permute_signs(j))
 
 
 def rotations(s, dir=1):
@@ -3031,7 +3073,6 @@ def roundrobin(*iterables):
             nexts = cycle(islice(nexts, pending))
 
 
-
 class NotIterable:
     """
     Use this as mixin when creating a class which is not supposed to
@@ -3039,6 +3080,7 @@ class NotIterable:
     calling list() on the instance, for example, would result in
     an infinite loop.
     """
+
     pass
 
 
@@ -3089,7 +3131,7 @@ def iterable(i, exclude=(str, dict, NotIterable)):
     False
 
     """
-    if hasattr(i, '_iterable'):
+    if hasattr(i, "_iterable"):
         return i._iterable
     try:
         iter(i)
@@ -3134,10 +3176,12 @@ def is_sequence(i, include=None):
     True
 
     """
-    return (hasattr(i, '__getitem__') and
-            iterable(i) or
-            bool(include) and
-            isinstance(i, include))
+    return (
+        hasattr(i, "__getitem__")
+        and iterable(i)
+        or bool(include)
+        and isinstance(i, include)
+    )
 
 
 @deprecated(
@@ -3150,9 +3194,11 @@ def is_sequence(i, include=None):
         sympy.postorder_traversal
     """,
     deprecated_since_version="1.10",
-    active_deprecations_target="deprecated-traversal-functions-moved")
+    active_deprecations_target="deprecated-traversal-functions-moved",
+)
 def postorder_traversal(node, keys=None):
     from sympy.core.traversal import postorder_traversal as _postorder_traversal
+
     return _postorder_traversal(node, keys=keys)
 
 
@@ -3167,9 +3213,13 @@ def postorder_traversal(node, keys=None):
         sympy.interactive_traversal
     """,
     deprecated_since_version="1.10",
-    active_deprecations_target="deprecated-traversal-functions-moved")
+    active_deprecations_target="deprecated-traversal-functions-moved",
+)
 def interactive_traversal(expr):
-    from sympy.interactive.traversal import interactive_traversal as _interactive_traversal
+    from sympy.interactive.traversal import (
+        interactive_traversal as _interactive_traversal,
+    )
+
     return _interactive_traversal(expr)
 
 
@@ -3179,10 +3229,11 @@ def interactive_traversal(expr):
     Use from sympy import default_sort_key instead.
     """,
     deprecated_since_version="1.10",
-active_deprecations_target="deprecated-sympy-core-compatibility",
+    active_deprecations_target="deprecated-sympy-core-compatibility",
 )
 def default_sort_key(*args, **kwargs):
     from sympy import default_sort_key as _default_sort_key
+
     return _default_sort_key(*args, **kwargs)
 
 
@@ -3192,8 +3243,9 @@ def default_sort_key(*args, **kwargs):
     Use from sympy import default_sort_key instead.
     """,
     deprecated_since_version="1.10",
-active_deprecations_target="deprecated-sympy-core-compatibility",
+    active_deprecations_target="deprecated-sympy-core-compatibility",
 )
 def ordered(*args, **kwargs):
     from sympy import ordered as _ordered
+
     return _ordered(*args, **kwargs)

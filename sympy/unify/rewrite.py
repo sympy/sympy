@@ -1,12 +1,13 @@
-""" Functions to support rewriting of SymPy expressions """
+"""Functions to support rewriting of SymPy expressions"""
 
 from sympy.core.expr import Expr
 from sympy.assumptions import ask
 from sympy.strategies.tools import subs
 from sympy.unify.usympy import rebuild, unify
 
+
 def rewriterule(source, target, variables=(), condition=None, assume=None):
-    """ Rewrite rule.
+    """Rewrite rule.
 
     Transform expressions that match source into expressions that match target
     treating all ``variables`` as wilds.
@@ -43,13 +44,13 @@ def rewriterule(source, target, variables=(), condition=None, assume=None):
 
     def rewrite_rl(expr, assumptions=True):
         for match in unify(source, expr, {}, variables=variables):
-            if (condition and
-                not condition(*[match.get(var, var) for var in variables])):
+            if condition and not condition(*[match.get(var, var) for var in variables]):
                 continue
-            if (assume and not ask(assume.xreplace(match), assumptions)):
+            if assume and not ask(assume.xreplace(match), assumptions):
                 continue
             expr2 = subs(match)(target)
             if isinstance(expr2, Expr):
                 expr2 = rebuild(expr2)
             yield expr2
+
     return rewrite_rl

@@ -1,7 +1,11 @@
 from __future__ import annotations
 
-from sympy.vector.basisdependent import (BasisDependent, BasisDependentAdd,
-                                         BasisDependentMul, BasisDependentZero)
+from sympy.vector.basisdependent import (
+    BasisDependent,
+    BasisDependentAdd,
+    BasisDependentMul,
+    BasisDependentZero,
+)
 from sympy.core import S, Pow
 from sympy.core.expr import AtomicExpr
 from sympy.matrices.immutable import ImmutableDenseMatrix as Matrix
@@ -87,8 +91,9 @@ class Dyadic(BasisDependent):
                     outdyad += vect_dot * v1 * v2 * outer_product
             return outdyad
         else:
-            raise TypeError("Inner product is not defined for " +
-                            str(type(other)) + " and Dyadics.")
+            raise TypeError(
+                "Inner product is not defined for " + str(type(other)) + " and Dyadics."
+            )
 
     def __and__(self, other):
         return self.dot(other)
@@ -128,8 +133,9 @@ class Dyadic(BasisDependent):
                 outdyad += v * outer
             return outdyad
         else:
-            raise TypeError(str(type(other)) + " not supported for " +
-                            "cross with dyadics")
+            raise TypeError(
+                str(type(other)) + " not supported for " + "cross with dyadics"
+            )
 
     def __xor__(self, other):
         return self.cross(other)
@@ -178,11 +184,12 @@ class Dyadic(BasisDependent):
         if second_system is None:
             second_system = system
 
-        return Matrix([i.dot(self).dot(j) for i in system for j in
-                       second_system]).reshape(3, 3)
+        return Matrix(
+            [i.dot(self).dot(j) for i in system for j in second_system]
+        ).reshape(3, 3)
 
     def _div_helper(one, other):
-        """ Helper for division involving dyadics """
+        """Helper for division involving dyadics"""
         if isinstance(one, Dyadic) and isinstance(other, Dyadic):
             raise TypeError("Cannot divide two dyadics")
         elif isinstance(one, Dyadic):
@@ -201,10 +208,10 @@ class BaseDyadic(Dyadic, AtomicExpr):
         BaseVector = sympy.vector.BaseVector
         VectorZero = sympy.vector.VectorZero
         # Verify arguments
-        if not isinstance(vector1, (BaseVector, VectorZero)) or \
-                not isinstance(vector2, (BaseVector, VectorZero)):
-            raise TypeError("BaseDyadic cannot be composed of non-base " +
-                            "vectors")
+        if not isinstance(vector1, (BaseVector, VectorZero)) or not isinstance(
+            vector2, (BaseVector, VectorZero)
+        ):
+            raise TypeError("BaseDyadic cannot be composed of non-base " + "vectors")
         # Handle special case of zero vector
         elif vector1 == Vector.zero or vector2 == Vector.zero:
             return Dyadic.zero
@@ -214,24 +221,30 @@ class BaseDyadic(Dyadic, AtomicExpr):
         obj._measure_number = 1
         obj._components = {obj: S.One}
         obj._sys = vector1._sys
-        obj._pretty_form = ('(' + vector1._pretty_form + '|' +
-                             vector2._pretty_form + ')')
-        obj._latex_form = (r'\left(' + vector1._latex_form + r"{\middle|}" +
-                           vector2._latex_form + r'\right)')
+        obj._pretty_form = "(" + vector1._pretty_form + "|" + vector2._pretty_form + ")"
+        obj._latex_form = (
+            r"\left("
+            + vector1._latex_form
+            + r"{\middle|}"
+            + vector2._latex_form
+            + r"\right)"
+        )
 
         return obj
 
     def _sympystr(self, printer):
         return "({}|{})".format(
-            printer._print(self.args[0]), printer._print(self.args[1]))
+            printer._print(self.args[0]), printer._print(self.args[1])
+        )
 
     def _sympyrepr(self, printer):
         return "BaseDyadic({}, {})".format(
-            printer._print(self.args[0]), printer._print(self.args[1]))
+            printer._print(self.args[0]), printer._print(self.args[1])
+        )
 
 
 class DyadicMul(BasisDependentMul, Dyadic):
-    """ Products of scalars and BaseDyadics """
+    """Products of scalars and BaseDyadics"""
 
     def __new__(cls, *args, **options):
         obj = BasisDependentMul.__new__(cls, *args, **options)
@@ -239,19 +252,19 @@ class DyadicMul(BasisDependentMul, Dyadic):
 
     @property
     def base_dyadic(self):
-        """ The BaseDyadic involved in the product. """
+        """The BaseDyadic involved in the product."""
         return self._base_instance
 
     @property
     def measure_number(self):
-        """ The scalar expression involved in the definition of
+        """The scalar expression involved in the definition of
         this DyadicMul.
         """
         return self._measure_number
 
 
 class DyadicAdd(BasisDependentAdd, Dyadic):
-    """ Class to hold dyadic sums """
+    """Class to hold dyadic sums"""
 
     def __new__(cls, *args, **options):
         obj = BasisDependentAdd.__new__(cls, *args, **options)
@@ -269,8 +282,8 @@ class DyadicZero(BasisDependentZero, Dyadic):
     """
 
     _op_priority = 13.1
-    _pretty_form = '(0|0)'
-    _latex_form = r'(\mathbf{\hat{0}}|\mathbf{\hat{0}})'
+    _pretty_form = "(0|0)"
+    _latex_form = r"(\mathbf{\hat{0}}|\mathbf{\hat{0}})"
 
     def __new__(cls):
         obj = BasisDependentZero.__new__(cls)

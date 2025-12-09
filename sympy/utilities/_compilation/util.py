@@ -9,7 +9,7 @@ from sympy.testing.pytest import XFAIL
 
 
 def may_xfail(func):
-    if sys.platform.lower() == 'darwin' or os.name == 'nt':
+    if sys.platform.lower() == "darwin" or os.name == "nt":
         # sympy.utilities._compilation needs more testing on Windows and macOS
         # once those two platforms are reliably supported this xfail decorator
         # may be removed.
@@ -22,12 +22,12 @@ class CompilerNotFoundError(FileNotFoundError):
     pass
 
 
-class CompileError (Exception):
+class CompileError(Exception):
     """Failure to compile one or more C/C++ source files."""
 
 
-def get_abspath(path, cwd='.'):
-    """ Returns the absolute path.
+def get_abspath(path, cwd="."):
+    """Returns the absolute path.
 
     Parameters
     ==========
@@ -42,14 +42,12 @@ def get_abspath(path, cwd='.'):
     else:
         if not os.path.isabs(cwd):
             cwd = os.path.abspath(cwd)
-        return os.path.abspath(
-            os.path.join(cwd, path)
-        )
+        return os.path.abspath(os.path.join(cwd, path))
 
 
 def make_dirs(path):
-    """ Create directories (equivalent of ``mkdir -p``). """
-    if path[-1] == '/':
+    """Create directories (equivalent of ``mkdir -p``)."""
+    if path[-1] == "/":
         parent = os.path.dirname(path[:-1])
     else:
         parent = os.path.dirname(path)
@@ -62,6 +60,7 @@ def make_dirs(path):
         os.mkdir(path, 0o777)
     else:
         assert os.path.isdir(path)
+
 
 def missing_or_other_newer(path, other_path, cwd=None):
     """
@@ -81,7 +80,7 @@ def missing_or_other_newer(path, other_path, cwd=None):
     =======
     True if path is older or missing.
     """
-    cwd = cwd or '.'
+    cwd = cwd or "."
     path = get_abspath(path, cwd=cwd)
     other_path = get_abspath(other_path, cwd=cwd)
     if not os.path.exists(path):
@@ -91,9 +90,17 @@ def missing_or_other_newer(path, other_path, cwd=None):
         return True
     return False
 
-def copy(src, dst, only_update=False, copystat=True, cwd=None,
-         dest_is_dir=False, create_dest_dirs=False):
-    """ Variation of ``shutil.copy`` with extra options.
+
+def copy(
+    src,
+    dst,
+    only_update=False,
+    copystat=True,
+    cwd=None,
+    dest_is_dir=False,
+    create_dest_dirs=False,
+):
+    """Variation of ``shutil.copy`` with extra options.
 
     Parameters
     ==========
@@ -132,8 +139,8 @@ def copy(src, dst, only_update=False, copystat=True, cwd=None,
     # We accept both (re)naming destination file _or_
     # passing a (possible non-existent) destination directory
     if dest_is_dir:
-        if not dst[-1] == '/':
-            dst = dst+'/'
+        if not dst[-1] == "/":
+            dst = dst + "/"
     else:
         if os.path.exists(dst) and os.path.isdir(dst):
             dest_is_dir = True
@@ -164,12 +171,14 @@ def copy(src, dst, only_update=False, copystat=True, cwd=None,
 
     return dst
 
-Glob = namedtuple('Glob', 'pathname')
-ArbitraryDepthGlob = namedtuple('ArbitraryDepthGlob', 'filename')
+
+Glob = namedtuple("Glob", "pathname")
+ArbitraryDepthGlob = namedtuple("ArbitraryDepthGlob", "filename")
+
 
 def glob_at_depth(filename_glob, cwd=None):
     if cwd is not None:
-        cwd = '.'
+        cwd = "."
     globbed = []
     for root, dirs, filenames in os.walk(cwd):
         for fn in filenames:
@@ -178,8 +187,9 @@ def glob_at_depth(filename_glob, cwd=None):
                 globbed.append(os.path.join(root, fn))
     return globbed
 
+
 def sha256_of_file(path, nblocks=128):
-    """ Computes the SHA256 hash of a file.
+    """Computes the SHA256 hash of a file.
 
     Parameters
     ==========
@@ -196,14 +206,14 @@ def sha256_of_file(path, nblocks=128):
     on returned object to get binary or hex encoded string.
     """
     sh = sha256()
-    with open(path, 'rb') as f:
-        for chunk in iter(lambda: f.read(nblocks*sh.block_size), b''):
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(nblocks * sh.block_size), b""):
             sh.update(chunk)
     return sh
 
 
 def sha256_of_string(string):
-    """ Computes the SHA256 hash of a string. """
+    """Computes the SHA256 hash of a string."""
     sh = sha256()
     sh.update(string)
     return sh
@@ -219,18 +229,21 @@ def pyx_is_cplus(path):
     """
     with open(path) as fh:
         for line in fh:
-            if line.startswith('#') and '=' in line:
-                splitted = line.split('=')
+            if line.startswith("#") and "=" in line:
+                splitted = line.split("=")
                 if len(splitted) != 2:
                     continue
                 lhs, rhs = splitted
-                if lhs.strip().split()[-1].lower() == 'language' and \
-                       rhs.strip().split()[0].lower() == 'c++':
-                            return True
+                if (
+                    lhs.strip().split()[-1].lower() == "language"
+                    and rhs.strip().split()[0].lower() == "c++"
+                ):
+                    return True
     return False
 
+
 def import_module_from_file(filename, only_if_newer_than=None):
-    """ Imports Python extension (from shared object file)
+    """Imports Python extension (from shared object file)
 
     Provide a list of paths in `only_if_newer_than` to check
     timestamps of dependencies. import_ raises an ImportError
@@ -258,9 +271,10 @@ def import_module_from_file(filename, only_if_newer_than=None):
     """
     path, name = os.path.split(filename)
     name, ext = os.path.splitext(name)
-    name = name.split('.')[0]
+    name = name.split(".")[0]
     if sys.version_info[0] == 2:
         from imp import find_module, load_module
+
         fobj, filename, data = find_module(name, [path])
         if only_if_newer_than:
             for dep in only_if_newer_than:
@@ -269,6 +283,7 @@ def import_module_from_file(filename, only_if_newer_than=None):
         mod = load_module(name, fobj, filename, data)
     else:
         import importlib.util
+
         spec = importlib.util.spec_from_file_location(name, filename)
         if spec is None:
             raise ImportError("Failed to import: '%s'" % filename)
@@ -278,7 +293,7 @@ def import_module_from_file(filename, only_if_newer_than=None):
 
 
 def find_binary_of_command(candidates):
-    """ Finds binary first matching name among candidates.
+    """Finds binary first matching name among candidates.
 
     Calls ``which`` from shutils for provided candidates and returns
     first hit.
@@ -295,16 +310,19 @@ def find_binary_of_command(candidates):
     CompilerNotFoundError if no candidates match.
     """
     from shutil import which
+
     for c in candidates:
         binary_path = which(c)
         if c and binary_path:
             return c, binary_path
 
-    raise CompilerNotFoundError('No binary located for candidates: {}'.format(candidates))
+    raise CompilerNotFoundError(
+        "No binary located for candidates: {}".format(candidates)
+    )
 
 
 def unique_list(l):
-    """ Uniquify a list (skip duplicate items). """
+    """Uniquify a list (skip duplicate items)."""
     result = []
     for x in l:
         if x not in result:

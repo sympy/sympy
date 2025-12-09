@@ -1,4 +1,4 @@
-""" Unification in SymPy
+"""Unification in SymPy
 
 See sympy.unify.core docstring for algorithmic details
 
@@ -9,7 +9,7 @@ from .usympy import unify, rebuild
 from .rewrite import rewriterule
 
 __all__ = [
-    'unify', 'rebuild',
-
-    'rewriterule',
+    "unify",
+    "rebuild",
+    "rewriterule",
 ]

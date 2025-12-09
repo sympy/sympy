@@ -17,6 +17,7 @@ class BaseScalar(AtomicExpr):
 
     def __new__(cls, index, system, pretty_str=None, latex_str=None):
         from sympy.vector.coordsysrect import CoordSys3D
+
         if pretty_str is None:
             pretty_str = "x{}".format(index)
         elif isinstance(pretty_str, Symbol):
@@ -35,8 +36,8 @@ class BaseScalar(AtomicExpr):
             raise ValueError("Invalid index specified.")
         # The _id is used for equating purposes, and for hashing
         obj._id = (index, system)
-        obj._name = obj.name = system._name + '.' + system._variable_names[index]
-        obj._pretty_form = '' + pretty_str
+        obj._name = obj.name = system._name + "." + system._variable_names[index]
+        obj._pretty_form = "" + pretty_str
         obj._latex_form = latex_str
         obj._system = system
 
@@ -62,7 +63,7 @@ class BaseScalar(AtomicExpr):
     def _pretty(self, printer=None):
         return prettyForm(self._pretty_form)
 
-    precedence = PRECEDENCE['Atom']
+    precedence = PRECEDENCE["Atom"]
 
     @property
     def system(self):

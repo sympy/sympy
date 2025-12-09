@@ -10,16 +10,17 @@ class TmpFileManager:
     """
     A class to track record of every temporary files created by the tests.
     """
-    tmp_files = set('')
-    tmp_folders = set('')
+
+    tmp_files = set("")
+    tmp_folders = set("")
 
     @classmethod
-    def tmp_file(cls, name=''):
+    def tmp_file(cls, name=""):
         cls.tmp_files.add(name)
         return name
 
     @classmethod
-    def tmp_folder(cls, name=''):
+    def tmp_folder(cls, name=""):
         cls.tmp_folders.add(name)
         return name
 
@@ -33,10 +34,12 @@ class TmpFileManager:
             folder = cls.tmp_folders.pop()
             shutil.rmtree(folder)
 
+
 def cleanup_tmp_files(test_func):
     """
     A decorator to help test codes remove temporary files after the tests.
     """
+
     def wrapper_function():
         try:
             test_func()

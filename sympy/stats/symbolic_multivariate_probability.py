@@ -53,6 +53,7 @@ class ExpectationMatrix(Expectation, MatrixExpr):
     [24, 26]])
 
     """
+
     def __new__(cls, expr, condition=None):
         expr = _sympify(expr)
         if condition is None:
@@ -78,13 +79,15 @@ class ExpectationMatrix(Expectation, MatrixExpr):
             return expr
 
         if isinstance(expr, Add):
-            return Add.fromiter(Expectation(a, condition=condition).expand()
-                    for a in expr.args)
+            return Add.fromiter(
+                Expectation(a, condition=condition).expand() for a in expr.args
+            )
 
         expand_expr = _expand(expr)
         if isinstance(expand_expr, Add):
-            return Add.fromiter(Expectation(a, condition=condition).expand()
-                    for a in expand_expr.args)
+            return Add.fromiter(
+                Expectation(a, condition=condition).expand() for a in expand_expr.args
+            )
 
         elif isinstance(expr, (Mul, MatMul)):
             rv = []
@@ -108,10 +111,14 @@ class ExpectationMatrix(Expectation, MatrixExpr):
             # do not rebuild
             if len(nonrv) == 0:
                 return self
-            return Mul.fromiter(nonrv)*Expectation(Mul.fromiter(rv),
-                    condition=condition)*Mul.fromiter(postnon)
+            return (
+                Mul.fromiter(nonrv)
+                * Expectation(Mul.fromiter(rv), condition=condition)
+                * Mul.fromiter(postnon)
+            )
 
         return self
+
 
 class VarianceMatrix(Variance, MatrixExpr):
     """
@@ -140,13 +147,18 @@ class VarianceMatrix(Variance, MatrixExpr):
     >>> VarianceMatrix(A*X + B*Y).expand()
     2*A*CrossCovarianceMatrix(X, Y)*B.T + A*VarianceMatrix(X)*A.T + B*VarianceMatrix(Y)*B.T
     """
+
     def __new__(cls, arg, condition=None):
         arg = _sympify(arg)
 
         if 1 not in arg.shape:
             raise ShapeError("Expression is not a vector")
 
-        shape = (arg.shape[0], arg.shape[0]) if arg.shape[1] == 1 else (arg.shape[1], arg.shape[1])
+        shape = (
+            (arg.shape[0], arg.shape[0])
+            if arg.shape[1] == 1
+            else (arg.shape[1], arg.shape[1])
+        )
 
         if condition:
             obj = Expr.__new__(cls, arg, condition)
@@ -176,7 +188,7 @@ class VarianceMatrix(Variance, MatrixExpr):
                 if is_random(a):
                     rv.append(a)
             variances = Add(*(Variance(xv, condition).expand() for xv in rv))
-            map_to_covar = lambda x: 2*Covariance(*x, condition=condition).expand()
+            map_to_covar = lambda x: 2 * Covariance(*x, condition=condition).expand()
             covariances = Add(*map(map_to_covar, itertools.combinations(rv, 2)))
             return variances + covariances
         elif isinstance(arg, (Mul, MatMul)):
@@ -195,11 +207,15 @@ class VarianceMatrix(Variance, MatrixExpr):
             # Variance of many multiple matrix products is not implemented:
             if len(rv) > 1:
                 return self
-            return Mul.fromiter(nonrv)*Variance(Mul.fromiter(rv),
-                            condition)*(Mul.fromiter(nonrv)).transpose()
+            return (
+                Mul.fromiter(nonrv)
+                * Variance(Mul.fromiter(rv), condition)
+                * (Mul.fromiter(nonrv)).transpose()
+            )
 
         # this expression contains a RandomSymbol somehow:
         return self
+
 
 class CrossCovarianceMatrix(Covariance, MatrixExpr):
     """
@@ -233,15 +249,23 @@ class CrossCovarianceMatrix(Covariance, MatrixExpr):
     A*CrossCovarianceMatrix(X, W)*D + A*CrossCovarianceMatrix(X, Z)*C + B*CrossCovarianceMatrix(Y, W)*D + B*CrossCovarianceMatrix(Y, Z)*C
 
     """
+
     def __new__(cls, arg1, arg2, condition=None):
         arg1 = _sympify(arg1)
         arg2 = _sympify(arg2)
 
-        if (1 not in arg1.shape) or (1 not in arg2.shape) or (arg1.shape[1] != arg2.shape[1]):
+        if (
+            (1 not in arg1.shape)
+            or (1 not in arg2.shape)
+            or (arg1.shape[1] != arg2.shape[1])
+        ):
             raise ShapeError("Expression is not a vector")
 
-        shape = (arg1.shape[0], arg2.shape[0]) if arg1.shape[1] == 1 and arg2.shape[1] == 1 \
-                    else (1, 1)
+        shape = (
+            (arg1.shape[0], arg2.shape[0])
+            if arg1.shape[1] == 1 and arg2.shape[1] == 1
+            else (1, 1)
+        )
 
         if condition:
             obj = Expr.__new__(cls, arg1, arg2, condition)
@@ -273,8 +297,11 @@ class CrossCovarianceMatrix(Covariance, MatrixExpr):
         coeff_rv_list1 = self._expand_single_argument(arg1.expand())
         coeff_rv_list2 = self._expand_single_argument(arg2.expand())
 
-        addends = [a*CrossCovarianceMatrix(r1, r2, condition=condition)*b.transpose()
-                   for (a, r1) in coeff_rv_list1 for (b, r2) in coeff_rv_list2]
+        addends = [
+            a * CrossCovarianceMatrix(r1, r2, condition=condition) * b.transpose()
+            for (a, r1) in coeff_rv_list1
+            for (b, r2) in coeff_rv_list2
+        ]
         return Add.fromiter(addends)
 
     @classmethod

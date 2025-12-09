@@ -8,10 +8,18 @@ from io import StringIO
 from pathlib import Path
 
 from sympy.core import symbols, Eq
-from sympy.utilities.autowrap import (autowrap, binary_function,
-            CythonCodeWrapper, UfuncifyCodeWrapper, CodeWrapper)
+from sympy.utilities.autowrap import (
+    autowrap,
+    binary_function,
+    CythonCodeWrapper,
+    UfuncifyCodeWrapper,
+    CodeWrapper,
+)
 from sympy.utilities.codegen import (
-    CCodeGen, C99CodeGen, CodeGenArgumentListError, make_routine
+    CCodeGen,
+    C99CodeGen,
+    CodeGenArgumentListError,
+    make_routine,
 )
 from sympy.testing.pytest import raises
 from sympy.testing.tmpfiles import TmpFileManager
@@ -19,11 +27,11 @@ from sympy.testing.tmpfiles import TmpFileManager
 
 def get_string(dump_fn, routines, prefix="file", **kwargs):
     """Wrapper for dump_fn. dump_fn writes its results to a stream object and
-       this wrapper returns the contents of that stream as a string. This
-       auxiliary function is used by many tests below.
+    this wrapper returns the contents of that stream as a string. This
+    auxiliary function is used by many tests below.
 
-       The header and the empty lines are not generator to facilitate the
-       testing of the output.
+    The header and the empty lines are not generator to facilitate the
+    testing of the output.
     """
     output = StringIO()
     dump_fn(routines, output, prefix, **kwargs)
@@ -33,8 +41,8 @@ def get_string(dump_fn, routines, prefix="file", **kwargs):
 
 
 def test_cython_wrapper_scalar_function():
-    x, y, z = symbols('x,y,z')
-    expr = (x + y)*z
+    x, y, z = symbols("x,y,z")
+    expr = (x + y) * z
     routine = make_routine("test", expr)
     code_gen = CythonCodeWrapper(CCodeGen())
     source = get_string(code_gen.dump_pyx, [routine])
@@ -45,13 +53,15 @@ def test_cython_wrapper_scalar_function():
         "\n"
         "def test_c(double x, double y, double z):\n"
         "\n"
-        "    return test(x, y, z)")
+        "    return test(x, y, z)"
+    )
     assert source == expected
 
 
 def test_cython_wrapper_outarg():
     from sympy.core.relational import Equality
-    x, y, z = symbols('x,y,z')
+
+    x, y, z = symbols("x,y,z")
     code_gen = CythonCodeWrapper(C99CodeGen())
 
     routine = make_routine("test", Equality(z, x + y))
@@ -64,13 +74,15 @@ def test_cython_wrapper_outarg():
         "\n"
         "    cdef double z = 0\n"
         "    test(x, y, &z)\n"
-        "    return z")
+        "    return z"
+    )
     assert source == expected
 
 
 def test_cython_wrapper_inoutarg():
     from sympy.core.relational import Equality
-    x, y, z = symbols('x,y,z')
+
+    x, y, z = symbols("x,y,z")
     code_gen = CythonCodeWrapper(C99CodeGen())
     routine = make_routine("test", Equality(z, x + y + z))
     source = get_string(code_gen.dump_pyx, [routine])
@@ -81,13 +93,15 @@ def test_cython_wrapper_inoutarg():
         "def test_c(double x, double y, double z):\n"
         "\n"
         "    test(x, y, &z)\n"
-        "    return z")
+        "    return z"
+    )
     assert source == expected
 
 
 def test_cython_wrapper_compile_flags():
     from sympy.core.relational import Equality
-    x, y, z = symbols('x,y,z')
+
+    x, y, z = symbols("x,y,z")
     routine = make_routine("test", Equality(z, x + y))
 
     code_gen = CythonCodeWrapper(CCodeGen())
@@ -107,24 +121,27 @@ ext_mods = [Extension(
     extra_link_args=[]
 )]
 setup(ext_modules=cythonize(ext_mods, **cy_opts))
-""" % {'num': CodeWrapper._module_counter}
+""" % {
+        "num": CodeWrapper._module_counter
+    }
 
     temp_dir = tempfile.mkdtemp()
     TmpFileManager.tmp_folder(temp_dir)
-    setup_file_path = os.path.join(temp_dir, 'setup.py')
+    setup_file_path = os.path.join(temp_dir, "setup.py")
 
     code_gen._prepare_files(routine, build_dir=temp_dir)
     setup_text = Path(setup_file_path).read_text()
     assert setup_text == expected
 
-    code_gen = CythonCodeWrapper(CCodeGen(),
-                                 include_dirs=['/usr/local/include', '/opt/booger/include'],
-                                 library_dirs=['/user/local/lib'],
-                                 libraries=['thelib', 'nilib'],
-                                 extra_compile_args=['-slow-math'],
-                                 extra_link_args=['-lswamp', '-ltrident'],
-                                 cythonize_options={'compiler_directives': {'boundscheck': False}}
-                                 )
+    code_gen = CythonCodeWrapper(
+        CCodeGen(),
+        include_dirs=["/usr/local/include", "/opt/booger/include"],
+        library_dirs=["/user/local/lib"],
+        libraries=["thelib", "nilib"],
+        extra_compile_args=["-slow-math"],
+        extra_link_args=["-lswamp", "-ltrident"],
+        cythonize_options={"compiler_directives": {"boundscheck": False}},
+    )
     expected = """\
 from setuptools import setup
 from setuptools import Extension
@@ -140,7 +157,9 @@ ext_mods = [Extension(
     extra_link_args=['-lswamp', '-ltrident']
 )]
 setup(ext_modules=cythonize(ext_mods, **cy_opts))
-""" % {'num': CodeWrapper._module_counter}
+""" % {
+        "num": CodeWrapper._module_counter
+    }
 
     code_gen._prepare_files(routine, build_dir=temp_dir)
     setup_text = Path(setup_file_path).read_text()
@@ -162,7 +181,9 @@ ext_mods = [Extension(
     extra_link_args=['-lswamp', '-ltrident']
 )]
 setup(ext_modules=cythonize(ext_mods, **cy_opts))
-""" % {'num': CodeWrapper._module_counter}
+""" % {
+        "num": CodeWrapper._module_counter
+    }
 
     code_gen._need_numpy = True
     code_gen._prepare_files(routine, build_dir=temp_dir)
@@ -171,10 +192,12 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
 
     TmpFileManager.cleanup()
 
+
 def test_cython_wrapper_unique_dummyvars():
     from sympy.core.relational import Equality
     from sympy.core.symbol import Dummy
-    x, y, z = Dummy('x'), Dummy('y'), Dummy('z')
+
+    x, y, z = Dummy("x"), Dummy("y"), Dummy("z")
     x_id, y_id, z_id = [str(d.dummy_index) for d in [x, y, z]]
     expr = Equality(z, x + y)
     routine = make_routine("test", expr)
@@ -188,70 +211,78 @@ def test_cython_wrapper_unique_dummyvars():
         "\n"
         "    cdef double z_{z_id} = 0\n"
         "    test(x_{x_id}, y_{y_id}, &z_{z_id})\n"
-        "    return z_{z_id}")
+        "    return z_{z_id}"
+    )
     expected = expected_template.format(x_id=x_id, y_id=y_id, z_id=z_id)
     assert source == expected
 
+
 def test_autowrap_dummy():
-    x, y, z = symbols('x y z')
+    x, y, z = symbols("x y z")
 
     # Uses DummyWrapper to test that codegen works as expected
 
-    f = autowrap(x + y, backend='dummy')
+    f = autowrap(x + y, backend="dummy")
     assert f() == str(x + y)
     assert f.args == "x, y"
     assert f.returns == "nameless"
-    f = autowrap(Eq(z, x + y), backend='dummy')
+    f = autowrap(Eq(z, x + y), backend="dummy")
     assert f() == str(x + y)
     assert f.args == "x, y"
     assert f.returns == "z"
-    f = autowrap(Eq(z, x + y + z), backend='dummy')
+    f = autowrap(Eq(z, x + y + z), backend="dummy")
     assert f() == str(x + y + z)
     assert f.args == "x, y, z"
     assert f.returns == "z"
 
 
 def test_autowrap_args():
-    x, y, z = symbols('x y z')
+    x, y, z = symbols("x y z")
 
-    raises(CodeGenArgumentListError, lambda: autowrap(Eq(z, x + y),
-           backend='dummy', args=[x]))
-    f = autowrap(Eq(z, x + y), backend='dummy', args=[y, x])
+    raises(
+        CodeGenArgumentListError,
+        lambda: autowrap(Eq(z, x + y), backend="dummy", args=[x]),
+    )
+    f = autowrap(Eq(z, x + y), backend="dummy", args=[y, x])
     assert f() == str(x + y)
     assert f.args == "y, x"
     assert f.returns == "z"
 
-    raises(CodeGenArgumentListError, lambda: autowrap(Eq(z, x + y + z),
-           backend='dummy', args=[x, y]))
-    f = autowrap(Eq(z, x + y + z), backend='dummy', args=[y, x, z])
+    raises(
+        CodeGenArgumentListError,
+        lambda: autowrap(Eq(z, x + y + z), backend="dummy", args=[x, y]),
+    )
+    f = autowrap(Eq(z, x + y + z), backend="dummy", args=[y, x, z])
     assert f() == str(x + y + z)
     assert f.args == "y, x, z"
     assert f.returns == "z"
 
-    f = autowrap(Eq(z, x + y + z), backend='dummy', args=(y, x, z))
+    f = autowrap(Eq(z, x + y + z), backend="dummy", args=(y, x, z))
     assert f() == str(x + y + z)
     assert f.args == "y, x, z"
     assert f.returns == "z"
+
 
 def test_autowrap_store_files():
-    x, y = symbols('x y')
+    x, y = symbols("x y")
     tmp = tempfile.mkdtemp()
     TmpFileManager.tmp_folder(tmp)
 
-    f = autowrap(x + y, backend='dummy', tempdir=tmp)
+    f = autowrap(x + y, backend="dummy", tempdir=tmp)
     assert f() == str(x + y)
     assert os.access(tmp, os.F_OK)
 
     TmpFileManager.cleanup()
 
+
 def test_autowrap_store_files_issue_gh12939():
-    x, y = symbols('x y')
-    tmp = './tmp'
+    x, y = symbols("x y")
+    tmp = "./tmp"
     saved_cwd = os.getcwd()
     temp_cwd = tempfile.mkdtemp()
     try:
         os.chdir(temp_cwd)
-        f = autowrap(x + y, backend='dummy', tempdir=tmp)
+        f = autowrap(x + y, backend="dummy", tempdir=tmp)
         assert f() == str(x + y)
         assert os.access(tmp, os.F_OK)
     finally:
@@ -260,13 +291,13 @@ def test_autowrap_store_files_issue_gh12939():
 
 
 def test_binary_function():
-    x, y = symbols('x y')
-    f = binary_function('f', x + y, backend='dummy')
+    x, y = symbols("x y")
+    f = binary_function("f", x + y, backend="dummy")
     assert f._imp_() == str(x + y)
 
 
 def test_ufuncify_source():
-    x, y, z = symbols('x,y,z')
+    x, y, z = symbols("x,y,z")
     code_wrapper = UfuncifyCodeWrapper(C99CodeGen("ufuncify"))
     routine = make_routine("test", x + y + z)
     source = get_string(code_wrapper.dump_c, [routine])
@@ -357,17 +388,22 @@ PyMODINIT_FUNC initwrapper_module_%(num)s(void)
     PyDict_SetItemString(d, "test", ufunc0);
     Py_DECREF(ufunc0);
 }
-#endif""" % {'num': CodeWrapper._module_counter}
+#endif""" % {
+        "num": CodeWrapper._module_counter
+    }
     assert source == expected
 
 
 def test_ufuncify_source_multioutput():
-    x, y, z = symbols('x,y,z')
+    x, y, z = symbols("x,y,z")
     var_symbols = (x, y, z)
-    expr = x + y**3 + 10*z**2
+    expr = x + y**3 + 10 * z**2
     code_wrapper = UfuncifyCodeWrapper(C99CodeGen("ufuncify"))
-    routines = [make_routine("func{}".format(i), expr.diff(var_symbols[i]), var_symbols) for i in range(len(var_symbols))]
-    source = get_string(code_wrapper.dump_c, routines, funcname='multitest')
+    routines = [
+        make_routine("func{}".format(i), expr.diff(var_symbols[i]), var_symbols)
+        for i in range(len(var_symbols))
+    ]
+    source = get_string(code_wrapper.dump_c, routines, funcname="multitest")
     expected = """\
 #include "Python.h"
 #include "math.h"
@@ -463,5 +499,7 @@ PyMODINIT_FUNC initwrapper_module_%(num)s(void)
     PyDict_SetItemString(d, "multitest", ufunc0);
     Py_DECREF(ufunc0);
 }
-#endif""" % {'num': CodeWrapper._module_counter}
+#endif""" % {
+        "num": CodeWrapper._module_counter
+    }
     assert source == expected

@@ -1,5 +1,5 @@
 from sympy.core.basic import Basic
-from sympy.core.containers import (Dict, Tuple)
+from sympy.core.containers import Dict, Tuple
 from sympy.core.expr import Expr
 from sympy.core.kind import Kind, NumberKind, UndefinedKind
 from sympy.core.numbers import Integer
@@ -65,6 +65,7 @@ class ArrayKind(Kind):
     shape : Function to return the shape of objects with ``MatrixKind``.
 
     """
+
     def __new__(cls, element_kind=NumberKind):
         obj = super().__new__(cls, element_kind)
         obj.element_kind = element_kind
@@ -74,10 +75,10 @@ class ArrayKind(Kind):
         return f"ArrayKind({self.element_kind})"
 
     @classmethod
-    def _union(cls, kinds) -> 'ArrayKind':
+    def _union(cls, kinds) -> "ArrayKind":
         elem_kinds = {e.kind for e in kinds}
         if len(elem_kinds) == 1:
-            elemkind, = elem_kinds
+            (elemkind,) = elem_kinds
         else:
             elemkind = UndefinedKind
         return ArrayKind(elemkind)
@@ -141,10 +142,13 @@ class NDimArray(Printable):
 
     def __new__(cls, iterable, shape=None, **kwargs):
         from sympy.tensor.array import ImmutableDenseNDimArray
+
         return ImmutableDenseNDimArray(iterable, shape, **kwargs)
 
     def __getitem__(self, index):
-        raise NotImplementedError("A subclass of NDimArray should implement __getitem__")
+        raise NotImplementedError(
+            "A subclass of NDimArray should implement __getitem__"
+        )
 
     def _parse_index(self, index):
         if isinstance(index, (SYMPY_INTS, Integer)):
@@ -156,16 +160,16 @@ class NDimArray(Printable):
             raise ValueError("Index not valid with an empty array")
 
         if len(index) != self._rank:
-            raise ValueError('Wrong number of array axes')
+            raise ValueError("Wrong number of array axes")
 
         real_index = 0
         # check if input index can exist in current indexing
         for i in range(self._rank):
             if (index[i] >= self.shape[i]) or (index[i] < -self.shape[i]):
-                raise ValueError('Index ' + str(index) + ' out of border')
+                raise ValueError("Index " + str(index) + " out of border")
             if index[i] < 0:
                 real_index += 1
-            real_index = real_index*self.shape[i] + index[i]
+            real_index = real_index * self.shape[i] + index[i]
 
         return real_index
 
@@ -179,17 +183,19 @@ class NDimArray(Printable):
 
     def _check_symbolic_index(self, index):
         # Check if any index is symbolic:
-        tuple_index = (index if isinstance(index, tuple) else (index,))
+        tuple_index = index if isinstance(index, tuple) else (index,)
         if any((isinstance(i, Expr) and (not i.is_number)) for i in tuple_index):
             for i, nth_dim in zip(tuple_index, self.shape):
                 if ((i < 0) == True) or ((i >= nth_dim) == True):
                     raise ValueError("index out of range")
             from sympy.tensor import Indexed
+
             return Indexed(self, *tuple_index)
         return None
 
     def _setter_iterable_check(self, value):
         from sympy.matrices.matrixbase import MatrixBase
+
         if isinstance(value, (Iterable, MatrixBase, NDimArray)):
             raise NotImplementedError
 
@@ -208,7 +214,7 @@ class NDimArray(Printable):
                 raise ValueError("could not determine shape unambiguously")
             for i in elems:
                 result.extend(i)
-            return result, (len(shapes),)+shapes[0]
+            return result, (len(shapes),) + shapes[0]
 
         return f(iterable)
 
@@ -321,7 +327,8 @@ class NDimArray(Printable):
 
         """
         from sympy.tensor.array.array_derivatives import ArrayDerivative
-        kwargs.setdefault('evaluate', True)
+
+        kwargs.setdefault("evaluate", True)
         return ArrayDerivative(self.as_immutable(), *args, **kwargs)
 
     def _eval_derivative(self, base):
@@ -348,17 +355,38 @@ class NDimArray(Printable):
         from sympy.tensor.array.arrayop import Flatten
 
         if isinstance(self, SparseNDimArray) and f(S.Zero) == 0:
-            return type(self)({k: f(v) for k, v in self._sparse_array.items() if f(v) != 0}, self.shape)
+            return type(self)(
+                {k: f(v) for k, v in self._sparse_array.items() if f(v) != 0},
+                self.shape,
+            )
 
         return type(self)(map(f, Flatten(self)), self.shape)
 
     def _sympystr(self, printer):
         def f(sh, shape_left, i, j):
             if len(shape_left) == 1:
-                return "["+", ".join([printer._print(self[self._get_tuple_index(e)]) for e in range(i, j)])+"]"
+                return (
+                    "["
+                    + ", ".join(
+                        [
+                            printer._print(self[self._get_tuple_index(e)])
+                            for e in range(i, j)
+                        ]
+                    )
+                    + "]"
+                )
 
             sh //= shape_left[0]
-            return "[" + ", ".join([f(sh, shape_left[1:], i+e*sh, i+(e+1)*sh) for e in range(shape_left[0])]) + "]" # + "\n"*len(shape_left)
+            return (
+                "["
+                + ", ".join(
+                    [
+                        f(sh, shape_left[1:], i + e * sh, i + (e + 1) * sh)
+                        for e in range(shape_left[0])
+                    ]
+                )
+                + "]"
+            )  # + "\n"*len(shape_left)
 
         if self.rank() == 0:
             return printer._print(self[()])
@@ -388,7 +416,7 @@ class NDimArray(Printable):
             result = []
             sh //= shape_left[0]
             for e in range(shape_left[0]):
-                result.append(f(sh, shape_left[1:], i+e*sh, i+(e+1)*sh))
+                result.append(f(sh, shape_left[1:], i + e * sh, i + (e + 1) * sh))
             return result
 
         return f(self._loop_size, self.shape, 0, self._loop_size)
@@ -401,7 +429,7 @@ class NDimArray(Printable):
 
         if self.shape != other.shape:
             raise ValueError("array shape mismatch")
-        result_list = [i+j for i,j in zip(Flatten(self), Flatten(other))]
+        result_list = [i + j for i, j in zip(Flatten(self), Flatten(other))]
 
         return type(self)(result_list, self.shape)
 
@@ -413,7 +441,7 @@ class NDimArray(Printable):
 
         if self.shape != other.shape:
             raise ValueError("array shape mismatch")
-        result_list = [i-j for i,j in zip(Flatten(self), Flatten(other))]
+        result_list = [i - j for i, j in zip(Flatten(self), Flatten(other))]
 
         return type(self)(result_list, self.shape)
 
@@ -423,15 +451,19 @@ class NDimArray(Printable):
         from sympy.tensor.array.arrayop import Flatten
 
         if isinstance(other, (Iterable, NDimArray, MatrixBase)):
-            raise ValueError("scalar expected, use tensorproduct(...) for tensorial product")
+            raise ValueError(
+                "scalar expected, use tensorproduct(...) for tensorial product"
+            )
 
         other = sympify(other)
         if isinstance(self, SparseNDimArray):
             if other.is_zero:
                 return type(self)({}, self.shape)
-            return type(self)({k: other*v for (k, v) in self._sparse_array.items()}, self.shape)
+            return type(self)(
+                {k: other * v for (k, v) in self._sparse_array.items()}, self.shape
+            )
 
-        result_list = [i*other for i in Flatten(self)]
+        result_list = [i * other for i in Flatten(self)]
         return type(self)(result_list, self.shape)
 
     def __rmul__(self, other):
@@ -440,15 +472,19 @@ class NDimArray(Printable):
         from sympy.tensor.array.arrayop import Flatten
 
         if isinstance(other, (Iterable, NDimArray, MatrixBase)):
-            raise ValueError("scalar expected, use tensorproduct(...) for tensorial product")
+            raise ValueError(
+                "scalar expected, use tensorproduct(...) for tensorial product"
+            )
 
         other = sympify(other)
         if isinstance(self, SparseNDimArray):
             if other.is_zero:
                 return type(self)({}, self.shape)
-            return type(self)({k: other*v for (k, v) in self._sparse_array.items()}, self.shape)
+            return type(self)(
+                {k: other * v for (k, v) in self._sparse_array.items()}, self.shape
+            )
 
-        result_list = [other*i for i in Flatten(self)]
+        result_list = [other * i for i in Flatten(self)]
         return type(self)(result_list, self.shape)
 
     def __truediv__(self, other):
@@ -461,20 +497,24 @@ class NDimArray(Printable):
 
         other = sympify(other)
         if isinstance(self, SparseNDimArray) and other != S.Zero:
-            return type(self)({k: v/other for (k, v) in self._sparse_array.items()}, self.shape)
+            return type(self)(
+                {k: v / other for (k, v) in self._sparse_array.items()}, self.shape
+            )
 
-        result_list = [i/other for i in Flatten(self)]
+        result_list = [i / other for i in Flatten(self)]
         return type(self)(result_list, self.shape)
 
     def __rtruediv__(self, other):
-        raise NotImplementedError('unsupported operation on NDimArray')
+        raise NotImplementedError("unsupported operation on NDimArray")
 
     def __neg__(self):
         from sympy.tensor.array import SparseNDimArray
         from sympy.tensor.array.arrayop import Flatten
 
         if isinstance(self, SparseNDimArray):
-            return type(self)({k: -v for (k, v) in self._sparse_array.items()}, self.shape)
+            return type(self)(
+                {k: -v for (k, v) in self._sparse_array.items()}, self.shape
+            )
 
         result_list = [-i for i in Flatten(self)]
         return type(self)(result_list, self.shape)
@@ -511,6 +551,7 @@ class NDimArray(Printable):
         False
         """
         from sympy.tensor.array import SparseNDimArray
+
         if not isinstance(other, NDimArray):
             return False
 
@@ -529,6 +570,7 @@ class NDimArray(Printable):
         if self.rank() != 2:
             raise ValueError("array rank not 2")
         from .arrayop import permutedims
+
         return permutedims(self, (1, 0))
 
     def transpose(self):
@@ -550,9 +592,9 @@ class NDimArray(Printable):
 
     def _slice_expand(self, s, dim):
         if not isinstance(s, slice):
-                return (s,)
+            return (s,)
         start, stop, step = s.indices(dim)
-        return [start + i*step for i in range((stop-start)//step)]
+        return [start + i * step for i in range((stop - start) // step)]
 
     def _get_slice_data_for_array_access(self, index):
         sl_factors = [self._slice_expand(i, dim) for (i, dim) in zip(index, self.shape)]
@@ -579,11 +621,12 @@ class NDimArray(Printable):
             index = (index,)
 
         if len(index) < self.rank():
-            index = tuple(index) + \
-                          tuple(slice(None) for i in range(len(index), self.rank()))
+            index = tuple(index) + tuple(
+                slice(None) for i in range(len(index), self.rank())
+            )
 
         if len(index) > self.rank():
-            raise ValueError('Dimension of index greater than rank of array')
+            raise ValueError("Dimension of index greater than rank of array")
 
         return index
 

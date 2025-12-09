@@ -50,17 +50,23 @@ class SymPyDeprecationWarning(DeprecationWarning):
     sympy.testing.pytest.warns_deprecated_sympy
 
     """
-    def __init__(self, message, *, deprecated_since_version, active_deprecations_target):
 
-        super().__init__(message, deprecated_since_version,
-                     active_deprecations_target)
+    def __init__(
+        self, message, *, deprecated_since_version, active_deprecations_target
+    ):
+
+        super().__init__(message, deprecated_since_version, active_deprecations_target)
         self.message = message
         if not isinstance(deprecated_since_version, str):
-            raise TypeError(f"'deprecated_since_version' should be a string, got {deprecated_since_version!r}")
+            raise TypeError(
+                f"'deprecated_since_version' should be a string, got {deprecated_since_version!r}"
+            )
         self.deprecated_since_version = deprecated_since_version
         self.active_deprecations_target = active_deprecations_target
-        if any(i in active_deprecations_target for i in '()='):
-            raise ValueError("active_deprecations_target be the part inside of the '(...)='")
+        if any(i in active_deprecations_target for i in "()="):
+            raise ValueError(
+                "active_deprecations_target be the part inside of the '(...)='"
+            )
 
         self.full_message = f"""
 
@@ -86,18 +92,31 @@ will be removed in a future version of SymPy.
     # from its args, but this doesn't work because of our keyword-only
     # arguments.
     @classmethod
-    def _new(cls, message, deprecated_since_version,
-              active_deprecations_target):
-        return cls(message, deprecated_since_version=deprecated_since_version, active_deprecations_target=active_deprecations_target)
+    def _new(cls, message, deprecated_since_version, active_deprecations_target):
+        return cls(
+            message,
+            deprecated_since_version=deprecated_since_version,
+            active_deprecations_target=active_deprecations_target,
+        )
 
     def __reduce__(self):
-        return (self._new, (self.message, self.deprecated_since_version, self.active_deprecations_target))
+        return (
+            self._new,
+            (
+                self.message,
+                self.deprecated_since_version,
+                self.active_deprecations_target,
+            ),
+        )
+
 
 # Python by default hides DeprecationWarnings, which we do not want.
 warnings.simplefilter("once", SymPyDeprecationWarning)
 
-def sympy_deprecation_warning(message, *, deprecated_since_version,
-                              active_deprecations_target, stacklevel=3):
+
+def sympy_deprecation_warning(
+    message, *, deprecated_since_version, active_deprecations_target, stacklevel=3
+):
     r'''
     Warn that a feature is deprecated in SymPy.
 
@@ -201,15 +220,17 @@ def sympy_deprecation_warning(message, *, deprecated_since_version,
     sympy.testing.pytest.warns_deprecated_sympy
 
     '''
-    w = SymPyDeprecationWarning(message,
-                            deprecated_since_version=deprecated_since_version,
-                                active_deprecations_target=active_deprecations_target)
+    w = SymPyDeprecationWarning(
+        message,
+        deprecated_since_version=deprecated_since_version,
+        active_deprecations_target=active_deprecations_target,
+    )
     warnings.warn(w, stacklevel=stacklevel)
 
 
 @contextlib.contextmanager
 def ignore_warnings(warningcls):
-    '''
+    """
     Context manager to suppress warnings during tests.
 
     .. note::
@@ -257,7 +278,7 @@ def ignore_warnings(warningcls):
     sympy.utilities.decorator.deprecated
     sympy.testing.pytest.warns_deprecated_sympy
 
-    '''
+    """
     # Absorbs all warnings in warnrec
     with warnings.catch_warnings(record=True) as warnrec:
         # Make sure our warning doesn't get filtered

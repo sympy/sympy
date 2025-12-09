@@ -1,13 +1,13 @@
 """Module with functions operating on IndexedBase, Indexed and Idx objects
 
-    - Check shape conformance
-    - Determine indices in resulting expression
+- Check shape conformance
+- Determine indices in resulting expression
 
-    etc.
+etc.
 
-    Methods in this module could be implemented by calling methods on Expr
-    objects instead.  When things stabilize this could be a useful
-    refactoring.
+Methods in this module could be implemented by calling methods on Expr
+objects instead.  When things stabilize this could be a useful
+refactoring.
 """
 
 from functools import reduce
@@ -19,8 +19,10 @@ from sympy.utilities import sift
 
 from collections import OrderedDict
 
+
 class IndexConformanceException(Exception):
     pass
+
 
 def _unique_and_repeated(inds):
     """
@@ -41,6 +43,7 @@ def _unique_and_repeated(inds):
         else:
             uniq[i] = 1
     return sift(uniq, lambda x: uniq[x], binary=True)
+
 
 def _remove_repeated(inds):
     """
@@ -265,7 +268,6 @@ def get_indices(expr):
     elif expr.is_Atom:
         return set(), {}
 
-
     # recurse via specialized functions
     else:
         if expr.is_Mul:
@@ -292,7 +294,8 @@ def get_indices(expr):
         elif not expr.has(Indexed):
             return set(), {}
         raise NotImplementedError(
-            f"FIXME: No specialized handling of type {type(expr)}")
+            f"FIXME: No specialized handling of type {type(expr)}"
+        )
 
 
 def get_contraction_structure(expr):
@@ -465,5 +468,4 @@ def get_contraction_structure(expr):
     # this test is expensive, so it should be at the end
     elif not expr.has(Indexed):
         return {None: {expr}}
-    raise NotImplementedError(
-        f"FIXME: No specialized handling of type {type(expr)}")
+    raise NotImplementedError(f"FIXME: No specialized handling of type {type(expr)}")

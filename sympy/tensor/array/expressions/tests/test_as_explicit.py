@@ -1,16 +1,31 @@
 from sympy.core.symbol import Symbol
 from sympy.matrices.expressions.matexpr import MatrixSymbol
-from sympy.tensor.array.arrayop import (permutedims, tensorcontraction, tensordiagonal, tensorproduct)
+from sympy.tensor.array.arrayop import (
+    permutedims,
+    tensorcontraction,
+    tensordiagonal,
+    tensorproduct,
+)
 from sympy.tensor.array.dense_ndim_array import ImmutableDenseNDimArray
-from sympy.tensor.array.expressions.array_expressions import ZeroArray, OneArray, ArraySymbol, \
-    ArrayTensorProduct, PermuteDims, ArrayDiagonal, ArrayContraction, ArrayAdd
+from sympy.tensor.array.expressions.array_expressions import (
+    ZeroArray,
+    OneArray,
+    ArraySymbol,
+    ArrayTensorProduct,
+    PermuteDims,
+    ArrayDiagonal,
+    ArrayContraction,
+    ArrayAdd,
+)
 from sympy.testing.pytest import raises
 
 
 def test_array_as_explicit_call():
 
     assert ZeroArray(3, 2, 4).as_explicit() == ImmutableDenseNDimArray.zeros(3, 2, 4)
-    assert OneArray(3, 2, 4).as_explicit() == ImmutableDenseNDimArray([1 for i in range(3*2*4)]).reshape(3, 2, 4)
+    assert OneArray(3, 2, 4).as_explicit() == ImmutableDenseNDimArray(
+        [1 for i in range(3 * 2 * 4)]
+    ).reshape(3, 2, 4)
 
     k = Symbol("k")
     X = ArraySymbol("X", (k, 3, 2))

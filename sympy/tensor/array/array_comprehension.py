@@ -33,10 +33,13 @@ class ArrayComprehension(Basic):
     >>> b.doit()
     ArrayComprehension(10*i + j, (i, 1, 4), (j, 1, k))
     """
+
     def __new__(cls, function, *symbols, **assumptions):
         if any(len(l) != 3 or None for l in symbols):
-            raise ValueError('ArrayComprehension requires values lower and upper bound'
-                              ' for the expression')
+            raise ValueError(
+                "ArrayComprehension requires values lower and upper bound"
+                " for the expression"
+            )
         arglist = [sympify(function)]
         arglist.extend(cls._check_limits_validity(function, symbols))
         obj = Basic.__new__(cls, *arglist, **assumptions)
@@ -220,30 +223,34 @@ class ArrayComprehension(Basic):
         12
         """
         if self._loop_size.free_symbols:
-            raise ValueError('Symbolic length is not supported')
+            raise ValueError("Symbolic length is not supported")
         return self._loop_size
 
     @classmethod
     def _check_limits_validity(cls, function, limits):
-        #limits = sympify(limits)
+        # limits = sympify(limits)
         new_limits = []
         for var, inf, sup in limits:
             var = _sympify(var)
             inf = _sympify(inf)
-            #since this is stored as an argument, it should be
-            #a Tuple
+            # since this is stored as an argument, it should be
+            # a Tuple
             if isinstance(sup, list):
                 sup = Tuple(*sup)
             else:
                 sup = _sympify(sup)
             new_limits.append(Tuple(var, inf, sup))
-            if any((not isinstance(i, Expr)) or i.atoms(Symbol, Integer) != i.atoms()
-                                                                for i in [inf, sup]):
-                raise TypeError('Bounds should be an Expression(combination of Integer and Symbol)')
+            if any(
+                (not isinstance(i, Expr)) or i.atoms(Symbol, Integer) != i.atoms()
+                for i in [inf, sup]
+            ):
+                raise TypeError(
+                    "Bounds should be an Expression(combination of Integer and Symbol)"
+                )
             if (inf > sup) == True:
-                raise ValueError('Lower bound should be inferior to upper bound')
+                raise ValueError("Lower bound should be inferior to upper bound")
             if var in inf.free_symbols or var in sup.free_symbols:
-                raise ValueError('Variable should not be part of its bounds')
+                raise ValueError("Variable should not be part of its bounds")
         return new_limits
 
     @classmethod
@@ -268,9 +275,9 @@ class ArrayComprehension(Basic):
 
     def _expand_array(self):
         res = []
-        for values in itertools.product(*[range(inf, sup+1)
-                                        for var, inf, sup
-                                        in self._limits]):
+        for values in itertools.product(
+            *[range(inf, sup + 1) for var, inf, sup in self._limits]
+        ):
             res.append(self._get_element(values))
 
         return ImmutableDenseNDimArray(res, self.shape)
@@ -332,7 +339,7 @@ class ArrayComprehension(Basic):
         if not self.is_shape_numeric:
             raise ValueError("A symbolic array cannot be expanded to a matrix")
         if self._rank != 2:
-            raise ValueError('Dimensions must be of size of 2')
+            raise ValueError("Dimensions must be of size of 2")
 
         return Matrix(self._expand_array().tomatrix())
 
@@ -341,8 +348,9 @@ def isLambda(v):
     LAMBDA = lambda: 0
     return isinstance(v, type(LAMBDA)) and v.__name__ == LAMBDA.__name__
 
+
 class ArrayComprehensionMap(ArrayComprehension):
-    '''
+    """
     A subclass of ArrayComprehension dedicated to map external function lambda.
 
     Notes
@@ -365,14 +373,17 @@ class ArrayComprehensionMap(ArrayComprehension):
     >>> b.doit()
     [2, 3, 4, 5]
 
-    '''
+    """
+
     def __new__(cls, function, *symbols, **assumptions):
         if any(len(l) != 3 or None for l in symbols):
-            raise ValueError('ArrayComprehension requires values lower and upper bound'
-                              ' for the expression')
+            raise ValueError(
+                "ArrayComprehension requires values lower and upper bound"
+                " for the expression"
+            )
 
         if not isLambda(function):
-            raise ValueError('Data type not supported')
+            raise ValueError("Data type not supported")
 
         arglist = cls._check_limits_validity(function, symbols)
         obj = Basic.__new__(cls, *arglist, **assumptions)
@@ -388,6 +399,7 @@ class ArrayComprehensionMap(ArrayComprehension):
         class _(ArrayComprehensionMap):
             def __new__(cls, *args, **kwargs):
                 return ArrayComprehensionMap(self._lambda, *args, **kwargs)
+
         return _
 
     def _get_element(self, values):
@@ -395,5 +407,5 @@ class ArrayComprehensionMap(ArrayComprehension):
         if self._lambda.__code__.co_argcount == 0:
             temp = temp()
         elif self._lambda.__code__.co_argcount == 1:
-            temp = temp(functools.reduce(lambda a, b: a*b, values))
+            temp = temp(functools.reduce(lambda a, b: a * b, values))
         return temp

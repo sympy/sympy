@@ -8,29 +8,40 @@ import warnings
 from pathlib import Path
 from sysconfig import get_config_var, get_config_vars, get_path
 
-from .runners import (
-    CCompilerRunner,
-    CppCompilerRunner,
-    FortranCompilerRunner
-)
+from .runners import CCompilerRunner, CppCompilerRunner, FortranCompilerRunner
 from .util import (
-    get_abspath, make_dirs, copy, Glob, ArbitraryDepthGlob,
-    glob_at_depth, import_module_from_file, pyx_is_cplus,
-    sha256_of_string, sha256_of_file, CompileError
+    get_abspath,
+    make_dirs,
+    copy,
+    Glob,
+    ArbitraryDepthGlob,
+    glob_at_depth,
+    import_module_from_file,
+    pyx_is_cplus,
+    sha256_of_string,
+    sha256_of_file,
+    CompileError,
 )
 
-if os.name == 'posix':
-    objext = '.o'
-elif os.name == 'nt':
-    objext = '.obj'
+if os.name == "posix":
+    objext = ".o"
+elif os.name == "nt":
+    objext = ".obj"
 else:
     warnings.warn("Unknown os.name: {}".format(os.name))
-    objext = '.o'
+    objext = ".o"
 
 
-def compile_sources(files, Runner=None, destdir=None, cwd=None, keep_dir_struct=False,
-                    per_file_kwargs=None, **kwargs):
-    """ Compile source code files to object files.
+def compile_sources(
+    files,
+    Runner=None,
+    destdir=None,
+    cwd=None,
+    keep_dir_struct=False,
+    per_file_kwargs=None,
+    **kwargs
+):
+    """Compile source code files to object files.
 
     Parameters
     ==========
@@ -70,14 +81,14 @@ def compile_sources(files, Runner=None, destdir=None, cwd=None, keep_dir_struct=
                 _per_file_kwargs[k] = v
 
     # Set up destination directory
-    destdir = destdir or '.'
+    destdir = destdir or "."
     if not os.path.isdir(destdir):
         if os.path.exists(destdir):
             raise OSError("{} is not a directory".format(destdir))
         else:
             make_dirs(destdir)
     if cwd is None:
-        cwd = '.'
+        cwd = "."
         for f in files:
             copy(f, destdir, only_update=True, dest_is_dir=True)
 
@@ -95,29 +106,38 @@ def compile_sources(files, Runner=None, destdir=None, cwd=None, keep_dir_struct=
 
 
 def get_mixed_fort_c_linker(vendor=None, cplus=False, cwd=None):
-    vendor = vendor or os.environ.get('SYMPY_COMPILER_VENDOR', 'gnu')
+    vendor = vendor or os.environ.get("SYMPY_COMPILER_VENDOR", "gnu")
 
-    if vendor.lower() == 'intel':
+    if vendor.lower() == "intel":
         if cplus:
-            return (FortranCompilerRunner,
-                    {'flags': ['-nofor_main', '-cxxlib']}, vendor)
+            return (
+                FortranCompilerRunner,
+                {"flags": ["-nofor_main", "-cxxlib"]},
+                vendor,
+            )
         else:
-            return (FortranCompilerRunner,
-                    {'flags': ['-nofor_main']}, vendor)
-    elif vendor.lower() == 'gnu' or 'llvm':
+            return (FortranCompilerRunner, {"flags": ["-nofor_main"]}, vendor)
+    elif vendor.lower() == "gnu" or "llvm":
         if cplus:
-            return (CppCompilerRunner,
-                    {'lib_options': ['fortran']}, vendor)
+            return (CppCompilerRunner, {"lib_options": ["fortran"]}, vendor)
         else:
-            return (FortranCompilerRunner,
-                    {}, vendor)
+            return (FortranCompilerRunner, {}, vendor)
     else:
         raise ValueError("No vendor found.")
 
 
-def link(obj_files, out_file=None, shared=False, Runner=None,
-         cwd=None, cplus=False, fort=False, extra_objs=None, **kwargs):
-    """ Link object files.
+def link(
+    obj_files,
+    out_file=None,
+    shared=False,
+    Runner=None,
+    cwd=None,
+    cplus=False,
+    fort=False,
+    extra_objs=None,
+    **kwargs
+):
+    """Link object files.
 
     Parameters
     ==========
@@ -152,16 +172,15 @@ def link(obj_files, out_file=None, shared=False, Runner=None,
     if out_file is None:
         out_file, ext = os.path.splitext(os.path.basename(obj_files[-1]))
         if shared:
-            out_file += get_config_var('EXT_SUFFIX')
+            out_file += get_config_var("EXT_SUFFIX")
 
     if not Runner:
         if fort:
-            Runner, extra_kwargs, vendor = \
-                get_mixed_fort_c_linker(
-                    vendor=kwargs.get('vendor', None),
-                    cplus=cplus,
-                    cwd=cwd,
-                )
+            Runner, extra_kwargs, vendor = get_mixed_fort_c_linker(
+                vendor=kwargs.get("vendor", None),
+                cplus=cplus,
+                cwd=cwd,
+            )
             for k, v in extra_kwargs.items():
                 if k in kwargs:
                     kwargs[k].expand(v)
@@ -173,23 +192,31 @@ def link(obj_files, out_file=None, shared=False, Runner=None,
             else:
                 Runner = CCompilerRunner
 
-    flags = kwargs.pop('flags', [])
+    flags = kwargs.pop("flags", [])
     if shared:
-        if '-shared' not in flags:
-            flags.append('-shared')
-    run_linker = kwargs.pop('run_linker', True)
+        if "-shared" not in flags:
+            flags.append("-shared")
+    run_linker = kwargs.pop("run_linker", True)
     if not run_linker:
         raise ValueError("run_linker was set to False (nonsensical).")
 
     out_file = get_abspath(out_file, cwd=cwd)
-    runner = Runner(obj_files+(extra_objs or []), out_file, flags, cwd=cwd, **kwargs)
+    runner = Runner(obj_files + (extra_objs or []), out_file, flags, cwd=cwd, **kwargs)
     runner.run()
     return out_file
 
 
-def link_py_so(obj_files, so_file=None, cwd=None, libraries=None,
-               cplus=False, fort=False, extra_objs=None, **kwargs):
-    """ Link Python extension module (shared object) for importing
+def link_py_so(
+    obj_files,
+    so_file=None,
+    cwd=None,
+    libraries=None,
+    cplus=False,
+    fort=False,
+    extra_objs=None,
+    **kwargs
+):
+    """Link Python extension module (shared object) for importing
 
     Parameters
     ==========
@@ -220,62 +247,72 @@ def link_py_so(obj_files, so_file=None, cwd=None, libraries=None,
     """
     libraries = libraries or []
 
-    include_dirs = kwargs.pop('include_dirs', [])
-    library_dirs = kwargs.pop('library_dirs', [])
+    include_dirs = kwargs.pop("include_dirs", [])
+    library_dirs = kwargs.pop("library_dirs", [])
 
     # Add Python include and library directories
     # PY_LDFLAGS does not available on all python implementations
     # e.g. when with pypy, so it's LDFLAGS we need to use
     if sys.platform == "win32":
         warnings.warn("Windows not yet supported.")
-    elif sys.platform == 'darwin':
+    elif sys.platform == "darwin":
         cfgDict = get_config_vars()
-        kwargs['linkline'] = kwargs.get('linkline', []) + [cfgDict['LDFLAGS']]
-        library_dirs += [cfgDict['LIBDIR']]
+        kwargs["linkline"] = kwargs.get("linkline", []) + [cfgDict["LDFLAGS"]]
+        library_dirs += [cfgDict["LIBDIR"]]
 
         # In macOS, linker needs to compile frameworks
         # e.g. "-framework CoreFoundation"
         is_framework = False
-        for opt in cfgDict['LIBS'].split():
+        for opt in cfgDict["LIBS"].split():
             if is_framework:
-                kwargs['linkline'] = kwargs.get('linkline', []) + ['-framework', opt]
+                kwargs["linkline"] = kwargs.get("linkline", []) + ["-framework", opt]
                 is_framework = False
-            elif opt.startswith('-l'):
+            elif opt.startswith("-l"):
                 libraries.append(opt[2:])
-            elif opt.startswith('-framework'):
+            elif opt.startswith("-framework"):
                 is_framework = True
         # The python library is not included in LIBS
-        libfile = cfgDict['LIBRARY']
-        libname = ".".join(libfile.split('.')[:-1])[3:]
+        libfile = cfgDict["LIBRARY"]
+        libname = ".".join(libfile.split(".")[:-1])[3:]
         libraries.append(libname)
 
-    elif sys.platform[:3] == 'aix':
+    elif sys.platform[:3] == "aix":
         # Don't use the default code below
         pass
     else:
-        if get_config_var('Py_ENABLE_SHARED'):
+        if get_config_var("Py_ENABLE_SHARED"):
             cfgDict = get_config_vars()
-            kwargs['linkline'] = kwargs.get('linkline', []) + [cfgDict['LDFLAGS']]
-            library_dirs += [cfgDict['LIBDIR']]
-            for opt in cfgDict['BLDLIBRARY'].split():
-                if opt.startswith('-l'):
+            kwargs["linkline"] = kwargs.get("linkline", []) + [cfgDict["LDFLAGS"]]
+            library_dirs += [cfgDict["LIBDIR"]]
+            for opt in cfgDict["BLDLIBRARY"].split():
+                if opt.startswith("-l"):
                     libraries += [opt[2:]]
         else:
             pass
 
-    flags = kwargs.pop('flags', [])
-    needed_flags = ('-pthread',)
+    flags = kwargs.pop("flags", [])
+    needed_flags = ("-pthread",)
     for flag in needed_flags:
         if flag not in flags:
             flags.append(flag)
 
-    return link(obj_files, shared=True, flags=flags, cwd=cwd, cplus=cplus, fort=fort,
-                include_dirs=include_dirs, libraries=libraries,
-                library_dirs=library_dirs, extra_objs=extra_objs, **kwargs)
+    return link(
+        obj_files,
+        shared=True,
+        flags=flags,
+        cwd=cwd,
+        cplus=cplus,
+        fort=fort,
+        include_dirs=include_dirs,
+        libraries=libraries,
+        library_dirs=library_dirs,
+        extra_objs=extra_objs,
+        **kwargs
+    )
 
 
 def simple_cythonize(src, destdir=None, cwd=None, **cy_kwargs):
-    """ Generates a C file from a Cython source file.
+    """Generates a C file from a Cython source file.
 
     Parameters
     ==========
@@ -290,16 +327,14 @@ def simple_cythonize(src, destdir=None, cwd=None, **cy_kwargs):
         Second argument passed to cy_compile. Generates a .cpp file if ``cplus=True`` in ``cy_kwargs``,
         else a .c file.
     """
-    from Cython.Compiler.Main import (
-        default_options, CompilationOptions
-    )
+    from Cython.Compiler.Main import default_options, CompilationOptions
     from Cython.Compiler.Main import compile as cy_compile
 
-    assert src.lower().endswith('.pyx') or src.lower().endswith('.py')
-    cwd = cwd or '.'
-    destdir = destdir or '.'
+    assert src.lower().endswith(".pyx") or src.lower().endswith(".py")
+    cwd = cwd or "."
+    destdir = destdir or "."
 
-    ext = '.cpp' if cy_kwargs.get('cplus', False) else '.c'
+    ext = ".cpp" if cy_kwargs.get("cplus", False) else ".c"
     c_name = os.path.splitext(os.path.basename(src))[0] + ext
 
     dstfile = os.path.join(destdir, c_name)
@@ -307,15 +342,15 @@ def simple_cythonize(src, destdir=None, cwd=None, **cy_kwargs):
     if cwd:
         ori_dir = os.getcwd()
     else:
-        ori_dir = '.'
+        ori_dir = "."
     os.chdir(cwd)
     try:
         cy_options = CompilationOptions(default_options)
         cy_options.__dict__.update(cy_kwargs)
         # Set language_level if not set by cy_kwargs
         # as not setting it is deprecated
-        if 'language_level' not in cy_kwargs:
-            cy_options.__dict__['language_level'] = 3
+        if "language_level" not in cy_kwargs:
+            cy_options.__dict__["language_level"] = 3
         cy_result = cy_compile([src], cy_options)
         if cy_result.num_errors > 0:
             raise ValueError("Cython compilation failed.")
@@ -333,21 +368,21 @@ def simple_cythonize(src, destdir=None, cwd=None, **cy_kwargs):
 
 
 extension_mapping = {
-    '.c': (CCompilerRunner, None),
-    '.cpp': (CppCompilerRunner, None),
-    '.cxx': (CppCompilerRunner, None),
-    '.f': (FortranCompilerRunner, None),
-    '.for': (FortranCompilerRunner, None),
-    '.ftn': (FortranCompilerRunner, None),
-    '.f90': (FortranCompilerRunner, None),  # ifort only knows about .f90
-    '.f95': (FortranCompilerRunner, 'f95'),
-    '.f03': (FortranCompilerRunner, 'f2003'),
-    '.f08': (FortranCompilerRunner, 'f2008'),
+    ".c": (CCompilerRunner, None),
+    ".cpp": (CppCompilerRunner, None),
+    ".cxx": (CppCompilerRunner, None),
+    ".f": (FortranCompilerRunner, None),
+    ".for": (FortranCompilerRunner, None),
+    ".ftn": (FortranCompilerRunner, None),
+    ".f90": (FortranCompilerRunner, None),  # ifort only knows about .f90
+    ".f95": (FortranCompilerRunner, "f95"),
+    ".f03": (FortranCompilerRunner, "f2003"),
+    ".f08": (FortranCompilerRunner, "f2008"),
 }
 
 
 def src2obj(srcpath, Runner=None, objpath=None, cwd=None, inc_py=False, **kwargs):
-    """ Compiles a source code file to an object file.
+    """Compiles a source code file to an object file.
 
     Files ending with '.pyx' assumed to be cython files and
     are dispatched to pyx2obj.
@@ -372,48 +407,64 @@ def src2obj(srcpath, Runner=None, objpath=None, cwd=None, inc_py=False, **kwargs
     name, ext = os.path.splitext(os.path.basename(srcpath))
     if objpath is None:
         if os.path.isabs(srcpath):
-            objpath = '.'
+            objpath = "."
         else:
             objpath = os.path.dirname(srcpath)
-            objpath = objpath or '.'  # avoid objpath == ''
+            objpath = objpath or "."  # avoid objpath == ''
 
     if os.path.isdir(objpath):
         objpath = os.path.join(objpath, name + objext)
 
-    include_dirs = kwargs.pop('include_dirs', [])
+    include_dirs = kwargs.pop("include_dirs", [])
     if inc_py:
-        py_inc_dir = get_path('include')
+        py_inc_dir = get_path("include")
         if py_inc_dir not in include_dirs:
             include_dirs.append(py_inc_dir)
 
-    if ext.lower() == '.pyx':
-        return pyx2obj(srcpath, objpath=objpath, include_dirs=include_dirs, cwd=cwd,
-                       **kwargs)
+    if ext.lower() == ".pyx":
+        return pyx2obj(
+            srcpath, objpath=objpath, include_dirs=include_dirs, cwd=cwd, **kwargs
+        )
 
     if Runner is None:
         Runner, std = extension_mapping[ext.lower()]
-        if 'std' not in kwargs:
-            kwargs['std'] = std
+        if "std" not in kwargs:
+            kwargs["std"] = std
 
-    flags = kwargs.pop('flags', [])
-    needed_flags = ('-fPIC',)
+    flags = kwargs.pop("flags", [])
+    needed_flags = ("-fPIC",)
     for flag in needed_flags:
         if flag not in flags:
             flags.append(flag)
 
     # src2obj implies not running the linker...
-    run_linker = kwargs.pop('run_linker', False)
+    run_linker = kwargs.pop("run_linker", False)
     if run_linker:
         raise CompileError("src2obj called with run_linker=True")
 
-    runner = Runner([srcpath], objpath, include_dirs=include_dirs,
-                    run_linker=run_linker, cwd=cwd, flags=flags, **kwargs)
+    runner = Runner(
+        [srcpath],
+        objpath,
+        include_dirs=include_dirs,
+        run_linker=run_linker,
+        cwd=cwd,
+        flags=flags,
+        **kwargs
+    )
     runner.run()
     return objpath
 
 
-def pyx2obj(pyxpath, objpath=None, destdir=None, cwd=None,
-            include_dirs=None, cy_kwargs=None, cplus=None, **kwargs):
+def pyx2obj(
+    pyxpath,
+    objpath=None,
+    destdir=None,
+    cwd=None,
+    include_dirs=None,
+    cy_kwargs=None,
+    cplus=None,
+    **kwargs
+):
     """
     Convenience function
 
@@ -449,9 +500,9 @@ def pyx2obj(pyxpath, objpath=None, destdir=None, cwd=None,
     Absolute path of generated object file.
 
     """
-    assert pyxpath.endswith('.pyx')
-    cwd = cwd or '.'
-    objpath = objpath or '.'
+    assert pyxpath.endswith(".pyx")
+    cwd = cwd or "."
+    objpath = objpath or "."
     destdir = destdir or os.path.dirname(objpath)
 
     abs_objpath = get_abspath(objpath, cwd=cwd)
@@ -462,35 +513,43 @@ def pyx2obj(pyxpath, objpath=None, destdir=None, cwd=None,
         objpath = os.path.join(objpath, name + objext)
 
     cy_kwargs = cy_kwargs or {}
-    cy_kwargs['output_dir'] = cwd
+    cy_kwargs["output_dir"] = cwd
     if cplus is None:
         cplus = pyx_is_cplus(pyxpath)
-    cy_kwargs['cplus'] = cplus
+    cy_kwargs["cplus"] = cplus
 
     interm_c_file = simple_cythonize(pyxpath, destdir=destdir, cwd=cwd, **cy_kwargs)
 
     include_dirs = include_dirs or []
-    flags = kwargs.pop('flags', [])
-    needed_flags = ('-fwrapv', '-pthread', '-fPIC')
+    flags = kwargs.pop("flags", [])
+    needed_flags = ("-fwrapv", "-pthread", "-fPIC")
     for flag in needed_flags:
         if flag not in flags:
             flags.append(flag)
 
-    options = kwargs.pop('options', [])
+    options = kwargs.pop("options", [])
 
-    if kwargs.pop('strict_aliasing', False):
+    if kwargs.pop("strict_aliasing", False):
         raise CompileError("Cython requires strict aliasing to be disabled.")
 
     # Let's be explicit about standard
     if cplus:
-        std = kwargs.pop('std', 'c++98')
+        std = kwargs.pop("std", "c++98")
     else:
-        std = kwargs.pop('std', 'c99')
+        std = kwargs.pop("std", "c99")
 
-    return src2obj(interm_c_file, objpath=objpath, cwd=cwd,
-                   include_dirs=include_dirs, flags=flags, std=std,
-                   options=options, inc_py=True, strict_aliasing=False,
-                   **kwargs)
+    return src2obj(
+        interm_c_file,
+        objpath=objpath,
+        cwd=cwd,
+        include_dirs=include_dirs,
+        flags=flags,
+        std=std,
+        options=options,
+        inc_py=True,
+        strict_aliasing=False,
+        **kwargs
+    )
 
 
 def _any_X(srcs, cls):
@@ -511,9 +570,15 @@ def any_cplus_src(srcs):
     return _any_X(srcs, CppCompilerRunner)
 
 
-def compile_link_import_py_ext(sources, extname=None, build_dir='.', compile_kwargs=None,
-                               link_kwargs=None, extra_objs=None):
-    """ Compiles sources to a shared object (Python extension) and imports it
+def compile_link_import_py_ext(
+    sources,
+    extname=None,
+    build_dir=".",
+    compile_kwargs=None,
+    link_kwargs=None,
+    extra_objs=None,
+):
+    """Compiles sources to a shared object (Python extension) and imports it
 
     Sources in ``sources`` which is imported. If shared object is newer than the sources, they
     are not recompiled but instead it is imported.
@@ -549,10 +614,20 @@ def compile_link_import_py_ext(sources, extname=None, build_dir='.', compile_kwa
     try:
         mod = import_module_from_file(os.path.join(build_dir, extname), sources)
     except ImportError:
-        objs = compile_sources(list(map(get_abspath, sources)), destdir=build_dir,
-                               cwd=build_dir, **compile_kwargs)
-        so = link_py_so(objs, cwd=build_dir, fort=any_fortran_src(sources),
-                        cplus=any_cplus_src(sources), extra_objs=extra_objs, **link_kwargs)
+        objs = compile_sources(
+            list(map(get_abspath, sources)),
+            destdir=build_dir,
+            cwd=build_dir,
+            **compile_kwargs
+        )
+        so = link_py_so(
+            objs,
+            cwd=build_dir,
+            fort=any_fortran_src(sources),
+            cplus=any_cplus_src(sources),
+            extra_objs=extra_objs,
+            **link_kwargs
+        )
         mod = import_module_from_file(so)
     return mod
 
@@ -566,25 +641,25 @@ def _write_sources_to_build_dir(sources, build_dir):
     for name, src in sources:
         dest = os.path.join(build_dir, name)
         differs = True
-        sha256_in_mem = sha256_of_string(src.encode('utf-8')).hexdigest()
+        sha256_in_mem = sha256_of_string(src.encode("utf-8")).hexdigest()
         if os.path.exists(dest):
-            if os.path.exists(dest + '.sha256'):
-                sha256_on_disk = Path(dest + '.sha256').read_text()
+            if os.path.exists(dest + ".sha256"):
+                sha256_on_disk = Path(dest + ".sha256").read_text()
             else:
                 sha256_on_disk = sha256_of_file(dest).hexdigest()
 
             differs = sha256_on_disk != sha256_in_mem
         if differs:
-            with open(dest, 'wt') as fh:
+            with open(dest, "wt") as fh:
                 fh.write(src)
-            with open(dest + '.sha256', 'wt') as fh:
+            with open(dest + ".sha256", "wt") as fh:
                 fh.write(sha256_in_mem)
         source_files.append(dest)
     return source_files, build_dir
 
 
 def compile_link_import_strings(sources, build_dir=None, **kwargs):
-    """ Compiles, links and imports extension module from source.
+    """Compiles, links and imports extension module from source.
 
     Parameters
     ==========
@@ -610,8 +685,10 @@ def compile_link_import_strings(sources, build_dir=None, **kwargs):
     return mod, info
 
 
-def compile_run_strings(sources, build_dir=None, clean=False, compile_kwargs=None, link_kwargs=None):
-    """ Compiles, links and runs a program built from sources.
+def compile_run_strings(
+    sources, build_dir=None, clean=False, compile_kwargs=None, link_kwargs=None
+):
+    """Compiles, links and runs a program built from sources.
 
     Parameters
     ==========
@@ -638,17 +715,27 @@ def compile_run_strings(sources, build_dir=None, clean=False, compile_kwargs=Non
 
     """
     if clean and build_dir is not None:
-        raise ValueError("Automatic removal of build_dir is only available for temporary directory.")
+        raise ValueError(
+            "Automatic removal of build_dir is only available for temporary directory."
+        )
     try:
         source_files, build_dir = _write_sources_to_build_dir(sources, build_dir)
-        objs = compile_sources(list(map(get_abspath, source_files)), destdir=build_dir,
-                               cwd=build_dir, **(compile_kwargs or {}))
-        prog = link(objs, cwd=build_dir,
-                    fort=any_fortran_src(source_files),
-                    cplus=any_cplus_src(source_files), **(link_kwargs or {}))
+        objs = compile_sources(
+            list(map(get_abspath, source_files)),
+            destdir=build_dir,
+            cwd=build_dir,
+            **(compile_kwargs or {})
+        )
+        prog = link(
+            objs,
+            cwd=build_dir,
+            fort=any_fortran_src(source_files),
+            cplus=any_cplus_src(source_files),
+            **(link_kwargs or {})
+        )
         p = subprocess.Popen([prog], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         exit_status = p.wait()
-        stdout, stderr = [txt.decode('utf-8') for txt in p.communicate()]
+        stdout, stderr = [txt.decode("utf-8") for txt in p.communicate()]
     finally:
         if clean and os.path.isdir(build_dir):
             shutil.rmtree(build_dir)

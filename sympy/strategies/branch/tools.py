@@ -3,7 +3,7 @@ from .traverse import top_down
 
 
 def canon(*rules):
-    """ Strategy for canonicalization
+    """Strategy for canonicalization
 
     Apply each branching rule in a top-down fashion through the tree.
     Multiplex through all branching rule traversals

@@ -94,16 +94,22 @@ from sympy.core.function import Lambda
 from sympy.core.relational import Eq
 from sympy.core.symbol import Dummy, Symbol
 from sympy.tensor.indexed import Idx, IndexedBase
-from sympy.utilities.codegen import (make_routine, get_code_generator,
-                                     OutputArgument, InOutArgument,
-                                     InputArgument, CodeGenArgumentListError,
-                                     Result, ResultBase, C99CodeGen)
+from sympy.utilities.codegen import (
+    make_routine,
+    get_code_generator,
+    OutputArgument,
+    InOutArgument,
+    InputArgument,
+    CodeGenArgumentListError,
+    Result,
+    ResultBase,
+    C99CodeGen,
+)
 from sympy.utilities.iterables import iterable
 from sympy.utilities.lambdify import implemented_function
 from sympy.utilities.decorator import doctest_depends_on
 
-_doctest_depends_on = {'exe': ('f2py', 'gfortran', 'gcc'),
-                       'modules': ('numpy',)}
+_doctest_depends_on = {"exe": ("f2py", "gfortran", "gcc"), "modules": ("numpy",)}
 
 
 class CodeWrapError(Exception):
@@ -112,6 +118,7 @@ class CodeWrapError(Exception):
 
 class CodeWrapper:
     """Base Class for code wrappers"""
+
     _filename = "wrapped_code"
     _module_basename = "wrapper_module"
     _module_counter = 0
@@ -144,8 +151,8 @@ class CodeWrapper:
     def _generate_code(self, main_routine, routines):
         routines.append(main_routine)
         self.generator.write(
-            routines, self.filename, True, self.include_header,
-            self.include_empty)
+            routines, self.filename, True, self.include_header, self.include_empty
+        )
 
     def wrap_code(self, routine, helpers=None):
         helpers = helpers or []
@@ -183,14 +190,15 @@ class CodeWrapper:
             retoutput = check_output(command, stderr=STDOUT)
         except CalledProcessError as e:
             raise CodeWrapError(
-                "Error while executing command: %s. Command output is:\n%s" % (
-                    " ".join(command), e.output.decode('utf-8')))
+                "Error while executing command: %s. Command output is:\n%s"
+                % (" ".join(command), e.output.decode("utf-8"))
+            )
         if not self.quiet:
             print(retoutput)
 
 
 class DummyWrapper(CodeWrapper):
-    """Class used for testing independent of backends """
+    """Class used for testing independent of backends"""
 
     template = """# dummy module for testing of SymPy
 def %(name)s():
@@ -203,25 +211,30 @@ def %(name)s():
         return
 
     def _generate_code(self, routine, helpers):
-        with open('%s.py' % self.module_name, 'w') as f:
-            printed = ", ".join(
-                [str(res.expr) for res in routine.result_variables])
+        with open("%s.py" % self.module_name, "w") as f:
+            printed = ", ".join([str(res.expr) for res in routine.result_variables])
             # convert OutputArguments to return value like f2py
-            args = filter(lambda x: not isinstance(
-                x, OutputArgument), routine.arguments)
+            args = filter(
+                lambda x: not isinstance(x, OutputArgument), routine.arguments
+            )
             retvals = []
             for val in routine.result_variables:
                 if isinstance(val, Result):
-                    retvals.append('nameless')
+                    retvals.append("nameless")
                 else:
                     retvals.append(val.result_var)
 
-            print(DummyWrapper.template % {
-                'name': routine.name,
-                'expr': printed,
-                'args': ", ".join([str(a.name) for a in args]),
-                'retvals': ", ".join([str(val) for val in retvals])
-            }, end="", file=f)
+            print(
+                DummyWrapper.template
+                % {
+                    "name": routine.name,
+                    "expr": printed,
+                    "args": ", ".join([str(a.name) for a in args]),
+                    "retvals": ", ".join([str(val) for val in retvals]),
+                },
+                end="",
+                file=f,
+            )
 
     def _process_files(self, routine):
         return
@@ -251,23 +264,15 @@ ext_mods = [Extension(
 setup(ext_modules=cythonize(ext_mods, **cy_opts))
 """
 
-    _cythonize_options = {'compiler_directives':{'language_level' : "3"}}
+    _cythonize_options = {"compiler_directives": {"language_level": "3"}}
 
-    pyx_imports = (
-        "import numpy as np\n"
-        "cimport numpy as np\n\n")
+    pyx_imports = "import numpy as np\n" "cimport numpy as np\n\n"
 
-    pyx_header = (
-        "cdef extern from '{header_file}.h':\n"
-        "    {prototype}\n\n")
+    pyx_header = "cdef extern from '{header_file}.h':\n" "    {prototype}\n\n"
 
-    pyx_func = (
-        "def {name}_c({arg_string}):\n"
-        "\n"
-        "{declarations}"
-        "{body}")
+    pyx_func = "def {name}_c({arg_string}):\n" "\n" "{declarations}" "{body}"
 
-    std_compile_flag = '-std=c99'
+    std_compile_flag = "-std=c99"
 
     def __init__(self, *args, **kwargs):
         """Instantiates a Cython code wrapper.
@@ -302,13 +307,15 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
 
         """
 
-        self._include_dirs = kwargs.pop('include_dirs', [])
-        self._library_dirs = kwargs.pop('library_dirs', [])
-        self._libraries = kwargs.pop('libraries', [])
-        self._extra_compile_args = kwargs.pop('extra_compile_args', [])
+        self._include_dirs = kwargs.pop("include_dirs", [])
+        self._library_dirs = kwargs.pop("library_dirs", [])
+        self._libraries = kwargs.pop("libraries", [])
+        self._extra_compile_args = kwargs.pop("extra_compile_args", [])
         self._extra_compile_args.append(self.std_compile_flag)
-        self._extra_link_args = kwargs.pop('extra_link_args', [])
-        self._cythonize_options = kwargs.pop('cythonize_options', self._cythonize_options)
+        self._extra_link_args = kwargs.pop("extra_link_args", [])
+        self._cythonize_options = kwargs.pop(
+            "cythonize_options", self._cythonize_options
+        )
 
         self._need_numpy = False
 
@@ -321,37 +328,39 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
 
     def _prepare_files(self, routine, build_dir=os.curdir):
         # NOTE : build_dir is used for testing purposes.
-        pyxfilename = self.module_name + '.pyx'
+        pyxfilename = self.module_name + ".pyx"
         codefilename = "%s.%s" % (self.filename, self.generator.code_extension)
 
         # pyx
-        with open(os.path.join(build_dir, pyxfilename), 'w') as f:
+        with open(os.path.join(build_dir, pyxfilename), "w") as f:
             self.dump_pyx([routine], f, self.filename)
 
         # setup.py
         ext_args = [repr(self.module_name), repr([pyxfilename, codefilename])]
         if self._need_numpy:
-            np_import = 'import numpy as np\n'
-            self._include_dirs.append('np.get_include()')
+            np_import = "import numpy as np\n"
+            self._include_dirs.append("np.get_include()")
         else:
-            np_import = ''
+            np_import = ""
 
-        includes = str(self._include_dirs).replace("'np.get_include()'",
-                                                    'np.get_include()')
+        includes = str(self._include_dirs).replace(
+            "'np.get_include()'", "np.get_include()"
+        )
         code = self.setup_template.format(
-                ext_args=", ".join(ext_args),
-                np_import=np_import,
-                include_dirs=includes,
-                library_dirs=self._library_dirs,
-                libraries=self._libraries,
-                extra_compile_args=self._extra_compile_args,
-                extra_link_args=self._extra_link_args,
-                cythonize_options=self._cythonize_options)
-        Path(os.path.join(build_dir, 'setup.py')).write_text(code)
+            ext_args=", ".join(ext_args),
+            np_import=np_import,
+            include_dirs=includes,
+            library_dirs=self._library_dirs,
+            libraries=self._libraries,
+            extra_compile_args=self._extra_compile_args,
+            extra_link_args=self._extra_link_args,
+            cythonize_options=self._cythonize_options,
+        )
+        Path(os.path.join(build_dir, "setup.py")).write_text(code)
 
     @classmethod
     def _get_wrapped_function(cls, mod, name):
-        return getattr(mod, name + '_c')
+        return getattr(mod, name + "_c")
 
     def dump_pyx(self, routines, f, prefix):
         """Write a Cython file with Python wrappers
@@ -375,8 +384,9 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
             prototype = self.generator.get_prototype(routine)
 
             # C Function Header Import
-            headers.append(self.pyx_header.format(header_file=prefix,
-                                                  prototype=prototype))
+            headers.append(
+                self.pyx_header.format(header_file=prefix, prototype=prototype)
+            )
 
             # Partition the C function arguments into categories
             py_rets, py_args, py_loc, py_inf = self._partition_args(routine.arguments)
@@ -391,7 +401,9 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
                 proto = self._prototype_arg(arg)
                 mat, ind = [self._string_var(v) for v in val]
                 local_decs.append("    cdef {} = {}.shape[{}]".format(proto, mat, ind))
-            local_decs.extend(["    cdef {}".format(self._declare_arg(a)) for a in py_loc])
+            local_decs.extend(
+                ["    cdef {}".format(self._declare_arg(a)) for a in py_loc]
+            )
             declarations = "\n".join(local_decs)
             if declarations:
                 declarations = declarations + "\n"
@@ -400,22 +412,28 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
             args_c = ", ".join([self._call_arg(a) for a in routine.arguments])
             rets = ", ".join([self._string_var(r.name) for r in py_rets])
             if routine.results:
-                body = '    return %s(%s)' % (routine.name, args_c)
+                body = "    return %s(%s)" % (routine.name, args_c)
                 if rets:
-                    body = body + ', ' + rets
+                    body = body + ", " + rets
             else:
-                body = '    %s(%s)\n' % (routine.name, args_c)
-                body = body + '    return ' + rets
+                body = "    %s(%s)\n" % (routine.name, args_c)
+                body = body + "    return " + rets
 
-            functions.append(self.pyx_func.format(name=name, arg_string=arg_string,
-                    declarations=declarations, body=body))
+            functions.append(
+                self.pyx_func.format(
+                    name=name,
+                    arg_string=arg_string,
+                    declarations=declarations,
+                    body=body,
+                )
+            )
 
         # Write text to file
         if self._need_numpy:
             # Only import numpy if required
             f.write(self.pyx_imports)
-        f.write('\n'.join(headers))
-        f.write('\n'.join(functions))
+        f.write("\n".join(headers))
+        f.write("\n".join(functions))
 
     def _partition_args(self, args):
         """Group function arguments into categories."""
@@ -432,13 +450,14 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
                 py_args.append(arg)
             else:
                 py_args.append(arg)
-        # Find arguments that are array dimensions. These can be inferred
-        # locally in the Cython code.
+            # Find arguments that are array dimensions. These can be inferred
+            # locally in the Cython code.
             if isinstance(arg, (InputArgument, InOutArgument)) and arg.dimensions:
                 dims = [d[1] + 1 for d in arg.dimensions]
-                sym_dims = [(i, d) for (i, d) in enumerate(dims) if
-                            isinstance(d, Symbol)]
-                for (i, d) in sym_dims:
+                sym_dims = [
+                    (i, d) for (i, d) in enumerate(dims) if isinstance(d, Symbol)
+                ]
+                for i, d in sym_dims:
                     py_inferred[d] = (arg.name, i)
         for arg in args:
             if arg.name in py_inferred:
@@ -449,28 +468,31 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
 
     def _prototype_arg(self, arg):
         mat_dec = "np.ndarray[{mtype}, ndim={ndim}] {name}"
-        np_types = {'double': 'np.double_t',
-                    'int': 'np.int_t'}
-        t = arg.get_datatype('c')
+        np_types = {"double": "np.double_t", "int": "np.int_t"}
+        t = arg.get_datatype("c")
         if arg.dimensions:
             self._need_numpy = True
             ndim = len(arg.dimensions)
             mtype = np_types[t]
-            return mat_dec.format(mtype=mtype, ndim=ndim, name=self._string_var(arg.name))
+            return mat_dec.format(
+                mtype=mtype, ndim=ndim, name=self._string_var(arg.name)
+            )
         else:
             return "%s %s" % (t, self._string_var(arg.name))
 
     def _declare_arg(self, arg):
         proto = self._prototype_arg(arg)
         if arg.dimensions:
-            shape = '(' + ','.join(self._string_var(i[1] + 1) for i in arg.dimensions) + ')'
+            shape = (
+                "(" + ",".join(self._string_var(i[1] + 1) for i in arg.dimensions) + ")"
+            )
             return proto + " = np.empty({shape})".format(shape=shape)
         else:
             return proto + " = 0"
 
     def _call_arg(self, arg):
         if arg.dimensions:
-            t = arg.get_datatype('c')
+            t = arg.get_datatype("c")
             return "<{}*> {}.data".format(t, self._string_var(arg.name))
         elif isinstance(arg, ResultBase):
             return "&{}".format(self._string_var(arg.name))
@@ -487,10 +509,16 @@ class F2PyCodeWrapper(CodeWrapper):
 
     def __init__(self, *args, **kwargs):
 
-        ext_keys = ['include_dirs', 'library_dirs', 'libraries',
-                    'extra_compile_args', 'extra_link_args']
-        msg = ('The compilation option kwarg {} is not supported with the f2py '
-               'backend.')
+        ext_keys = [
+            "include_dirs",
+            "library_dirs",
+            "libraries",
+            "extra_compile_args",
+            "extra_link_args",
+        ]
+        msg = (
+            "The compilation option kwarg {} is not supported with the f2py " "backend."
+        )
 
         for k in ext_keys:
             if k in kwargs.keys():
@@ -501,9 +529,13 @@ class F2PyCodeWrapper(CodeWrapper):
 
     @property
     def command(self):
-        filename = self.filename + '.' + self.generator.code_extension
-        args = ['-c', '-m', self.module_name, filename]
-        command = [sys.executable, "-c", "import numpy.f2py as f2py2e;f2py2e.main()"]+args
+        filename = self.filename + "." + self.generator.code_extension
+        args = ["-c", "-m", self.module_name, filename]
+        command = [
+            sys.executable,
+            "-c",
+            "import numpy.f2py as f2py2e;f2py2e.main()",
+        ] + args
         return command
 
     def _prepare_files(self, routine):
@@ -517,10 +549,12 @@ class F2PyCodeWrapper(CodeWrapper):
 # Here we define a lookup of backends -> tuples of languages. For now, each
 # tuple is of length 1, but if a backend supports more than one language,
 # the most preferable language is listed first.
-_lang_lookup = {'CYTHON': ('C99', 'C89', 'C'),
-                'F2PY': ('F95',),
-                'NUMPY': ('C99', 'C89', 'C'),
-                'DUMMY': ('F95',)}     # Dummy here just for testing
+_lang_lookup = {
+    "CYTHON": ("C99", "C89", "C"),
+    "F2PY": ("F95",),
+    "NUMPY": ("C99", "C89", "C"),
+    "DUMMY": ("F95",),
+}  # Dummy here just for testing
 
 
 def _infer_language(backend):
@@ -537,14 +571,25 @@ def _validate_backend_language(backend, language):
     if not langs:
         raise ValueError("Unrecognized backend: " + backend)
     if language.upper() not in langs:
-        raise ValueError(("Backend {} and language {} are "
-                          "incompatible").format(backend, language))
+        raise ValueError(
+            ("Backend {} and language {} are " "incompatible").format(backend, language)
+        )
 
 
 @cacheit
-@doctest_depends_on(exe=('f2py', 'gfortran'), modules=('numpy',))
-def autowrap(expr, language=None, backend='f2py', tempdir=None, args=None,
-             flags=None, verbose=False, helpers=None, code_gen=None, **kwargs):
+@doctest_depends_on(exe=("f2py", "gfortran"), modules=("numpy",))
+def autowrap(
+    expr,
+    language=None,
+    backend="f2py",
+    tempdir=None,
+    args=None,
+    flags=None,
+    verbose=False,
+    helpers=None,
+    code_gen=None,
+    **kwargs
+):
     """Generates Python callable binaries based on the math expression.
 
     Parameters
@@ -659,12 +704,13 @@ def autowrap(expr, language=None, backend='f2py', tempdir=None, args=None,
         code_gen = get_code_generator(language, "autowrap")
 
     CodeWrapperClass = {
-        'F2PY': F2PyCodeWrapper,
-        'CYTHON': CythonCodeWrapper,
-        'DUMMY': DummyWrapper
+        "F2PY": F2PyCodeWrapper,
+        "CYTHON": CythonCodeWrapper,
+        "DUMMY": DummyWrapper,
     }[backend.upper()]
-    code_wrapper = CodeWrapperClass(code_gen, tempdir, flags if flags else (),
-                                    verbose, **kwargs)
+    code_wrapper = CodeWrapperClass(
+        code_gen, tempdir, flags if flags else (), verbose, **kwargs
+    )
 
     helps = []
     for name_h, expr_h, args_h in helpers:
@@ -672,10 +718,10 @@ def autowrap(expr, language=None, backend='f2py', tempdir=None, args=None,
 
     for name_h, expr_h, args_h in helpers:
         if expr.has(expr_h):
-            name_h = binary_function(name_h, expr_h, backend='dummy')
+            name_h = binary_function(name_h, expr_h, backend="dummy")
             expr = expr.subs(expr_h, name_h(*args_h))
     try:
-        routine = code_gen.routine('autofunc', expr, args)
+        routine = code_gen.routine("autofunc", expr, args)
     except CodeGenArgumentListError as e:
         # if all missing arguments are for pure output, we simply attach them
         # at the end and try again, because the wrappers will silently convert
@@ -685,12 +731,12 @@ def autowrap(expr, language=None, backend='f2py', tempdir=None, args=None,
             if not isinstance(missing, OutputArgument):
                 raise
             new_args.append(missing.name)
-        routine = code_gen.routine('autofunc', expr, args + new_args)
+        routine = code_gen.routine("autofunc", expr, args + new_args)
 
     return code_wrapper.wrap_code(routine, helpers=helps)
 
 
-@doctest_depends_on(exe=('f2py', 'gfortran'), modules=('numpy',))
+@doctest_depends_on(exe=("f2py", "gfortran"), modules=("numpy",))
 def binary_function(symfunc, expr, **kwargs):
     """Returns a SymPy function with expr as binary implementation
 
@@ -726,11 +772,13 @@ def binary_function(symfunc, expr, **kwargs):
     binary = autowrap(expr, **kwargs)
     return implemented_function(symfunc, binary)
 
+
 #################################################################
 #                           UFUNCIFY                            #
 #################################################################
 
-_ufunc_top = Template("""\
+_ufunc_top = Template(
+    """\
 #include "Python.h"
 #include "math.h"
 #include "numpy/ndarraytypes.h"
@@ -740,11 +788,13 @@ _ufunc_top = Template("""\
 
 static PyMethodDef ${module}Methods[] = {
         {NULL, NULL, 0, NULL}
-};""")
+};"""
+)
 
 _ufunc_outcalls = Template("*((double *)out${outnum}) = ${funcname}(${call_args});")
 
-_ufunc_body = Template("""\
+_ufunc_body = Template(
+    """\
 #ifdef NPY_1_19_API_VERSION
 static void ${funcname}_ufunc(char **args, const npy_intp *dimensions, const npy_intp* steps, void* data)
 #else
@@ -762,9 +812,11 @@ static void ${funcname}_ufunc(char **args, npy_intp *dimensions, npy_intp* steps
 }
 PyUFuncGenericFunction ${funcname}_funcs[1] = {&${funcname}_ufunc};
 static char ${funcname}_types[${n_types}] = ${types}
-static void *${funcname}_data[1] = {NULL};""")
+static void *${funcname}_data[1] = {NULL};"""
+)
 
-_ufunc_bottom = Template("""\
+_ufunc_bottom = Template(
+    """\
 #if PY_VERSION_HEX >= 0x03000000
 static struct PyModuleDef moduledef = {
     PyModuleDef_HEAD_INIT,
@@ -807,15 +859,19 @@ PyMODINIT_FUNC init${module}(void)
     ${ufunc_init}
 }
 #endif\
-""")
+"""
+)
 
-_ufunc_init_form = Template("""\
+_ufunc_init_form = Template(
+    """\
 ufunc${ind} = PyUFunc_FromFuncAndData(${funcname}_funcs, ${funcname}_data, ${funcname}_types, 1, ${n_in}, ${n_out},
             PyUFunc_None, "${module}", ${docstring}, 0);
     PyDict_SetItemString(d, "${funcname}", ufunc${ind});
-    Py_DECREF(ufunc${ind});""")
+    Py_DECREF(ufunc${ind});"""
+)
 
-_ufunc_setup = Template("""\
+_ufunc_setup = Template(
+    """\
 from setuptools.extension import Extension
 from setuptools import setup
 
@@ -826,7 +882,8 @@ if __name__ == "__main__":
         Extension('${module}',
                   sources=['${module}.c', '${filename}.c'],
                   include_dirs=[get_include()])])
-""")
+"""
+)
 
 
 class UfuncifyCodeWrapper(CodeWrapper):
@@ -834,10 +891,17 @@ class UfuncifyCodeWrapper(CodeWrapper):
 
     def __init__(self, *args, **kwargs):
 
-        ext_keys = ['include_dirs', 'library_dirs', 'libraries',
-                    'extra_compile_args', 'extra_link_args']
-        msg = ('The compilation option kwarg {} is not supported with the numpy'
-               ' backend.')
+        ext_keys = [
+            "include_dirs",
+            "library_dirs",
+            "libraries",
+            "extra_compile_args",
+            "extra_link_args",
+        ]
+        msg = (
+            "The compilation option kwarg {} is not supported with the numpy"
+            " backend."
+        )
 
         for k in ext_keys:
             if k in kwargs.keys():
@@ -858,7 +922,7 @@ class UfuncifyCodeWrapper(CodeWrapper):
         # the other autowrap backends, so we limit this change to ufuncify.
         helpers = helpers if helpers is not None else []
         # We just need a consistent name
-        funcname = 'wrapped_' + str(id(routines) + id(helpers))
+        funcname = "wrapped_" + str(id(routines) + id(helpers))
 
         workdir = self.filepath or tempfile.mkdtemp("_sympy_compile")
         if not os.access(workdir, os.F_OK):
@@ -887,18 +951,18 @@ class UfuncifyCodeWrapper(CodeWrapper):
     def _generate_code(self, main_routines, helper_routines):
         all_routines = main_routines + helper_routines
         self.generator.write(
-            all_routines, self.filename, True, self.include_header,
-            self.include_empty)
+            all_routines, self.filename, True, self.include_header, self.include_empty
+        )
 
     def _prepare_files(self, routines, funcname):
 
         # C
-        codefilename = self.module_name + '.c'
-        with open(codefilename, 'w') as f:
+        codefilename = self.module_name + ".c"
+        with open(codefilename, "w") as f:
             self.dump_c(routines, f, self.filename, funcname=funcname)
 
         # setup.py
-        with open('setup.py', 'w') as f:
+        with open("setup.py", "w") as f:
             self.dump_setup(f)
 
     @classmethod
@@ -906,8 +970,7 @@ class UfuncifyCodeWrapper(CodeWrapper):
         return getattr(mod, name)
 
     def dump_setup(self, f):
-        setup = _ufunc_setup.substitute(module=self.module_name,
-                                        filename=self.filename)
+        setup = _ufunc_setup.substitute(module=self.module_name, filename=self.filename)
         f.write(setup)
 
     def dump_c(self, routines, f, prefix, funcname=None):
@@ -930,13 +993,13 @@ class UfuncifyCodeWrapper(CodeWrapper):
             if len(routines) == 1:
                 funcname = routines[0].name
             else:
-                msg = 'funcname must be specified for multiple output routines'
+                msg = "funcname must be specified for multiple output routines"
                 raise ValueError(msg)
         functions = []
         function_creation = []
         ufunc_init = []
         module = self.module_name
-        include_file = "\"{}.h\"".format(prefix)
+        include_file = '"{}.h"'.format(prefix)
         top = _ufunc_top.substitute(include_file=include_file, module=module)
 
         name = funcname
@@ -950,29 +1013,29 @@ class UfuncifyCodeWrapper(CodeWrapper):
 
         # Declare Args
         form = "char *{0}{1} = args[{2}];"
-        arg_decs = [form.format('in', i, i) for i in range(n_in)]
-        arg_decs.extend([form.format('out', i, i+n_in) for i in range(n_out)])
-        declare_args = '\n    '.join(arg_decs)
+        arg_decs = [form.format("in", i, i) for i in range(n_in)]
+        arg_decs.extend([form.format("out", i, i + n_in) for i in range(n_out)])
+        declare_args = "\n    ".join(arg_decs)
 
         # Declare Steps
         form = "npy_intp {0}{1}_step = steps[{2}];"
-        step_decs = [form.format('in', i, i) for i in range(n_in)]
-        step_decs.extend([form.format('out', i, i+n_in) for i in range(n_out)])
-        declare_steps = '\n    '.join(step_decs)
+        step_decs = [form.format("in", i, i) for i in range(n_in)]
+        step_decs.extend([form.format("out", i, i + n_in) for i in range(n_out)])
+        declare_steps = "\n    ".join(step_decs)
 
         # Call Args
         form = "*(double *)in{0}"
-        call_args = ', '.join([form.format(a) for a in range(n_in)])
+        call_args = ", ".join([form.format(a) for a in range(n_in)])
 
         # Step Increments
         form = "{0}{1} += {0}{1}_step;"
-        step_incs = [form.format('in', i) for i in range(n_in)]
-        step_incs.extend([form.format('out', i, i) for i in range(n_out)])
-        step_increments = '\n        '.join(step_incs)
+        step_incs = [form.format("in", i) for i in range(n_in)]
+        step_incs.extend([form.format("out", i, i) for i in range(n_out)])
+        step_increments = "\n        ".join(step_incs)
 
         # Types
         n_types = n_in + n_out
-        types = "{" + ', '.join(["NPY_DOUBLE"]*n_types) + "};"
+        types = "{" + ", ".join(["NPY_DOUBLE"] * n_types) + "};"
 
         # Docstring
         docstring = '"Created in SymPy with Ufuncify"'
@@ -981,34 +1044,44 @@ class UfuncifyCodeWrapper(CodeWrapper):
         function_creation.append("PyObject *ufunc{};".format(r_index))
 
         # Ufunc initialization
-        init_form = _ufunc_init_form.substitute(module=module,
-                                                funcname=name,
-                                                docstring=docstring,
-                                                n_in=n_in, n_out=n_out,
-                                                ind=r_index)
+        init_form = _ufunc_init_form.substitute(
+            module=module,
+            funcname=name,
+            docstring=docstring,
+            n_in=n_in,
+            n_out=n_out,
+            ind=r_index,
+        )
         ufunc_init.append(init_form)
 
-        outcalls = [_ufunc_outcalls.substitute(
-            outnum=i, call_args=call_args, funcname=routines[i].name) for i in
-            range(n_out)]
+        outcalls = [
+            _ufunc_outcalls.substitute(
+                outnum=i, call_args=call_args, funcname=routines[i].name
+            )
+            for i in range(n_out)
+        ]
 
-        body = _ufunc_body.substitute(module=module, funcname=name,
-                                      declare_args=declare_args,
-                                      declare_steps=declare_steps,
-                                      call_args=call_args,
-                                      step_increments=step_increments,
-                                      n_types=n_types, types=types,
-                                      outcalls='\n        '.join(outcalls))
+        body = _ufunc_body.substitute(
+            module=module,
+            funcname=name,
+            declare_args=declare_args,
+            declare_steps=declare_steps,
+            call_args=call_args,
+            step_increments=step_increments,
+            n_types=n_types,
+            types=types,
+            outcalls="\n        ".join(outcalls),
+        )
         functions.append(body)
 
-        body = '\n\n'.join(functions)
-        ufunc_init = '\n    '.join(ufunc_init)
-        function_creation = '\n    '.join(function_creation)
-        bottom = _ufunc_bottom.substitute(module=module,
-                                          ufunc_init=ufunc_init,
-                                          function_creation=function_creation)
+        body = "\n\n".join(functions)
+        ufunc_init = "\n    ".join(ufunc_init)
+        function_creation = "\n    ".join(function_creation)
+        bottom = _ufunc_bottom.substitute(
+            module=module, ufunc_init=ufunc_init, function_creation=function_creation
+        )
         text = [top, body, bottom]
-        f.write('\n\n'.join(text))
+        f.write("\n\n".join(text))
 
     def _partition_args(self, args):
         """Group function arguments into categories."""
@@ -1025,9 +1098,18 @@ class UfuncifyCodeWrapper(CodeWrapper):
 
 
 @cacheit
-@doctest_depends_on(exe=('f2py', 'gfortran', 'gcc'), modules=('numpy',))
-def ufuncify(args, expr, language=None, backend='numpy', tempdir=None,
-             flags=None, verbose=False, helpers=None, **kwargs):
+@doctest_depends_on(exe=("f2py", "gfortran", "gcc"), modules=("numpy",))
+def ufuncify(
+    args,
+    expr,
+    language=None,
+    backend="numpy",
+    tempdir=None,
+    flags=None,
+    verbose=False,
+    helpers=None,
+    **kwargs
+):
     """Generates a binary function that supports broadcasting on numpy arrays.
 
     Parameters
@@ -1140,7 +1222,7 @@ def ufuncify(args, expr, language=None, backend='numpy', tempdir=None,
     helpers = helpers if helpers else ()
     flags = flags if flags else ()
 
-    if backend.upper() == 'NUMPY':
+    if backend.upper() == "NUMPY":
         # maxargs is set by numpy compile-time constant NPY_MAXARGS
         # If a future version of numpy modifies or removes this restriction
         # this variable should be changed or removed
@@ -1148,31 +1230,47 @@ def ufuncify(args, expr, language=None, backend='numpy', tempdir=None,
         helps = []
         for name, expr, args in helpers:
             helps.append(make_routine(name, expr, args))
-        code_wrapper = UfuncifyCodeWrapper(C99CodeGen("ufuncify"), tempdir,
-                                           flags, verbose)
+        code_wrapper = UfuncifyCodeWrapper(
+            C99CodeGen("ufuncify"), tempdir, flags, verbose
+        )
         if not isinstance(expr, (list, tuple)):
             expr = [expr]
         if len(expr) == 0:
-            raise ValueError('Expression iterable has zero length')
+            raise ValueError("Expression iterable has zero length")
         if len(expr) + len(args) > maxargs:
-            msg = ('Cannot create ufunc with more than {0} total arguments: '
-                   'got {1} in, {2} out')
+            msg = (
+                "Cannot create ufunc with more than {0} total arguments: "
+                "got {1} in, {2} out"
+            )
             raise ValueError(msg.format(maxargs, len(args), len(expr)))
-        routines = [make_routine('autofunc{}'.format(idx), exprx, args) for
-                    idx, exprx in enumerate(expr)]
+        routines = [
+            make_routine("autofunc{}".format(idx), exprx, args)
+            for idx, exprx in enumerate(expr)
+        ]
         return code_wrapper.wrap_code(routines, helpers=helps)
     else:
         # Dummies are used for all added expressions to prevent name clashes
         # within the original expression.
-        y = IndexedBase(Dummy('y'))
-        m = Dummy('m', integer=True)
-        i = Idx(Dummy('i', integer=True), m)
-        f_dummy = Dummy('f')
-        f = implemented_function('%s_%d' % (f_dummy.name, f_dummy.dummy_index), Lambda(args, expr))
+        y = IndexedBase(Dummy("y"))
+        m = Dummy("m", integer=True)
+        i = Idx(Dummy("i", integer=True), m)
+        f_dummy = Dummy("f")
+        f = implemented_function(
+            "%s_%d" % (f_dummy.name, f_dummy.dummy_index), Lambda(args, expr)
+        )
         # For each of the args create an indexed version.
         indexed_args = [IndexedBase(Dummy(str(a))) for a in args]
         # Order the arguments (out, args, dim)
         args = [y] + indexed_args + [m]
         args_with_indices = [a[i] for a in indexed_args]
-        return autowrap(Eq(y[i], f(*args_with_indices)), language, backend,
-                        tempdir, args, flags, verbose, helpers, **kwargs)
+        return autowrap(
+            Eq(y[i], f(*args_with_indices)),
+            language,
+            backend,
+            tempdir,
+            args,
+            flags,
+            verbose,
+            helpers,
+            **kwargs
+        )

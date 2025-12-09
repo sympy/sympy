@@ -7,16 +7,30 @@ from sympy.tensor.array import NDimArray
 from sympy.core.expr import Expr
 from sympy.matrices.expressions.hadamard import HadamardProduct
 from sympy.matrices.expressions.inverse import Inverse
-from sympy.matrices.expressions.matexpr import (MatrixExpr, MatrixSymbol, MatrixElement)
+from sympy.matrices.expressions.matexpr import MatrixExpr, MatrixSymbol, MatrixElement
 from sympy.matrices.expressions.special import Identity, OneMatrix, MatrixUnit
 from sympy.matrices.expressions.transpose import Transpose
 from sympy.combinatorics.permutations import _af_invert
 from sympy.matrices.expressions.applyfunc import ElementwiseApplyFunction
 from sympy.tensor.array.expressions.array_expressions import (
-    _ArrayExpr, ZeroArray, ArraySymbol, ArrayTensorProduct, ArrayAdd,
-    PermuteDims, ArrayDiagonal, ArrayElementwiseApplyFunc, get_rank,
-    get_shape, ArrayContraction, _array_tensor_product, _array_contraction,
-    _array_diagonal, _array_add, _permute_dims, Reshape)
+    _ArrayExpr,
+    ZeroArray,
+    ArraySymbol,
+    ArrayTensorProduct,
+    ArrayAdd,
+    PermuteDims,
+    ArrayDiagonal,
+    ArrayElementwiseApplyFunc,
+    get_rank,
+    get_shape,
+    ArrayContraction,
+    _array_tensor_product,
+    _array_contraction,
+    _array_diagonal,
+    _array_add,
+    _permute_dims,
+    Reshape,
+)
 from sympy.tensor.array.expressions.from_matrix_to_array import convert_matrix_to_array
 
 
@@ -54,7 +68,7 @@ def _(expr: ArrayTensorProduct, x: Expr):
         if darg == 0:
             continue
         args_prev = args[:i]
-        args_succ = args[i+1:]
+        args_succ = args[i + 1 :]
         shape_prev = reduce(operator.add, map(get_shape, args_prev), ())
         shape_succ = reduce(operator.add, map(get_shape, args_succ), ())
         addend = _array_tensor_product(*args_prev, darg, *args_succ)
@@ -62,9 +76,12 @@ def _(expr: ArrayTensorProduct, x: Expr):
         tot2 = tot1 + len(shape_prev)
         tot3 = tot2 + len(get_shape(arg))
         tot4 = tot3 + len(shape_succ)
-        perm = list(range(tot1, tot2)) + \
-               list(range(tot1)) + list(range(tot2, tot3)) + \
-               list(range(tot3, tot4))
+        perm = (
+            list(range(tot1, tot2))
+            + list(range(tot1))
+            + list(range(tot2, tot3))
+            + list(range(tot3, tot4))
+        )
         addend = _permute_dims(addend, _af_invert(perm))
         addend_list.append(addend)
     if len(addend_list) == 1:
@@ -80,7 +97,8 @@ def _(expr: ArraySymbol, x: _ArrayExpr):
     if expr == x:
         return _permute_dims(
             ArrayTensorProduct.fromiter(Identity(i) for i in expr.shape),
-            [2*i for i in range(len(expr.shape))] + [2*i+1 for i in range(len(expr.shape))]
+            [2 * i for i in range(len(expr.shape))]
+            + [2 * i + 1 for i in range(len(expr.shape))],
         )
     return ZeroArray(*(x.shape + expr.shape))
 
@@ -90,8 +108,7 @@ def _(expr: MatrixSymbol, x: _ArrayExpr):
     m, n = expr.shape
     if expr == x:
         return _permute_dims(
-            _array_tensor_product(Identity(m), Identity(n)),
-            [0, 2, 1, 3]
+            _array_tensor_product(Identity(m), Identity(n)), [0, 2, 1, 3]
         )
     return ZeroArray(*(x.shape + expr.shape))
 
@@ -140,13 +157,8 @@ def _(expr: ElementwiseApplyFunction, x: Expr):
     assert get_rank(x) == 2
     fdiff = expr._get_function_fdiff()
     dexpr = array_derive(expr.expr, x)
-    tp = _array_tensor_product(
-        ElementwiseApplyFunction(fdiff, expr.expr),
-        dexpr
-    )
-    td = _array_diagonal(
-        tp, (0, 4), (1, 5)
-    )
+    tp = _array_tensor_product(ElementwiseApplyFunction(fdiff, expr.expr), dexpr)
+    td = _array_diagonal(tp, (0, 4), (1, 5))
     return td
 
 
@@ -155,10 +167,7 @@ def _(expr: ArrayElementwiseApplyFunc, x: Expr):
     fdiff = expr._get_function_fdiff()
     subexpr = expr.expr
     dsubexpr = array_derive(subexpr, x)
-    tp = _array_tensor_product(
-        dsubexpr,
-        ArrayElementwiseApplyFunc(fdiff, subexpr)
-    )
+    tp = _array_tensor_product(dsubexpr, ArrayElementwiseApplyFunc(fdiff, subexpr))
     b = get_rank(x)
     c = get_rank(expr)
     diag_indices = [(b + i, b + c + i) for i in range(c)]
@@ -184,7 +193,9 @@ def _(expr: ArrayContraction, x: Expr):
     fd = array_derive(expr.expr, x)
     rank_x = len(get_shape(x))
     contraction_indices = expr.contraction_indices
-    new_contraction_indices = [tuple(j + rank_x for j in i) for i in contraction_indices]
+    new_contraction_indices = [
+        tuple(j + rank_x for j in i) for i in contraction_indices
+    ]
     return _array_contraction(fd, *new_contraction_indices)
 
 
@@ -218,7 +229,9 @@ def _(expr: Reshape, x: Expr):
 def _(expr: MatrixBase, x):
     if not set.intersection(expr.free_symbols, x.free_symbols):
         return ZeroArray(*x.shape, *expr.shape)
-    if isinstance(x, MatrixExpr) and all(isinstance(i, (int, Integer)) for i in x.shape):
+    if isinstance(x, MatrixExpr) and all(
+        isinstance(i, (int, Integer)) for i in x.shape
+    ):
         x = x.as_explicit()
     if isinstance(x, MatrixBase):
         return derive_by_array(expr, x)
@@ -231,7 +244,10 @@ def _(expr: NDimArray, x):
 
 
 def matrix_derive(expr, x):
-    from sympy.tensor.array.expressions.from_array_to_matrix import convert_array_to_matrix
+    from sympy.tensor.array.expressions.from_array_to_matrix import (
+        convert_array_to_matrix,
+    )
+
     ce = convert_matrix_to_array(expr)
     dce = array_derive(ce, x)
     return convert_array_to_matrix(dce).doit()

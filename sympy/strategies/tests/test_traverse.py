@@ -1,5 +1,11 @@
 from sympy.strategies.traverse import (
-    top_down, bottom_up, sall, top_down_once, bottom_up_once, basic_fns)
+    top_down,
+    bottom_up,
+    sall,
+    top_down_once,
+    bottom_up_once,
+    basic_fns,
+)
 from sympy.strategies.rl import rebuild
 from sympy.strategies.util import expr_fns
 from sympy.core.add import Add
@@ -17,8 +23,7 @@ def zero_symbols(expression):
 def test_sall():
     zero_onelevel = sall(zero_symbols)
 
-    assert zero_onelevel(Basic(x, y, Basic(x, z))) == \
-        Basic(S(0), S(0), Basic(x, z))
+    assert zero_onelevel(Basic(x, y, Basic(x, z))) == Basic(S(0), S(0), Basic(x, z))
 
 
 def test_bottom_up():
@@ -34,8 +39,9 @@ def test_top_down():
 def _test_global_traversal(trav):
     zero_all_symbols = trav(zero_symbols)
 
-    assert zero_all_symbols(Basic(x, y, Basic(x, z))) == \
-        Basic(S(0), S(0), Basic(S(0), S(0)))
+    assert zero_all_symbols(Basic(x, y, Basic(x, z))) == Basic(
+        S(0), S(0), Basic(S(0), S(0))
+    )
 
 
 def _test_stop_on_non_basics(trav):
@@ -45,8 +51,8 @@ def _test_stop_on_non_basics(trav):
         except TypeError:
             return expr
 
-    expr = Basic(S(1), Str('a'), Basic(S(2), Str('b')))
-    expected = Basic(S(2), Str('a'), Basic(S(3), Str('b')))
+    expr = Basic(S(1), Str("a"), Basic(S(2), Str("b")))
+    expected = Basic(S(2), Str("a"), Basic(S(3), Str("b")))
     rl = trav(add_one_if_can)
 
     assert rl(expr) == expected
@@ -65,15 +71,17 @@ def rl(x):
 def test_top_down_once():
     top_rl = top_down_once(rl)
 
-    assert top_rl(Basic(S(1.0), S(2.0), Basic(S(3), S(4)))) == \
-        Basic2(S(1.0), S(2.0), Basic(S(3), S(4)))
+    assert top_rl(Basic(S(1.0), S(2.0), Basic(S(3), S(4)))) == Basic2(
+        S(1.0), S(2.0), Basic(S(3), S(4))
+    )
 
 
 def test_bottom_up_once():
     bottom_rl = bottom_up_once(rl)
 
-    assert bottom_rl(Basic(S(1), S(2), Basic(S(3.0), S(4.0)))) == \
-        Basic(S(1), S(2), Basic2(S(3.0), S(4.0)))
+    assert bottom_rl(Basic(S(1), S(2), Basic(S(3.0), S(4.0)))) == Basic(
+        S(1), S(2), Basic2(S(3.0), S(4.0))
+    )
 
 
 def test_expr_fns():

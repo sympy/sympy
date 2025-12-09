@@ -8,12 +8,13 @@ sympy.stats.frv
 sympy.stats.crv
 sympy.stats.drv
 """
+
 from math import prod
 
 from sympy.core.basic import Basic
 from sympy.core.function import Lambda
 from sympy.core.singleton import S
-from sympy.core.symbol import (Dummy, Symbol)
+from sympy.core.symbol import Dummy, Symbol
 from sympy.core.sympify import sympify
 from sympy.sets.sets import ProductSet
 from sympy.tensor.indexed import Indexed
@@ -24,20 +25,29 @@ from sympy.integrals.integrals import Integral, integrate
 from sympy.matrices import ImmutableMatrix, matrix2numpy, list2numpy
 from sympy.stats.crv import SingleContinuousDistribution, SingleContinuousPSpace
 from sympy.stats.drv import SingleDiscreteDistribution, SingleDiscretePSpace
-from sympy.stats.rv import (ProductPSpace, NamedArgsMixin, Distribution,
-                            ProductDomain, RandomSymbol, random_symbols,
-                            SingleDomain, _symbol_converter)
+from sympy.stats.rv import (
+    ProductPSpace,
+    NamedArgsMixin,
+    Distribution,
+    ProductDomain,
+    RandomSymbol,
+    random_symbols,
+    SingleDomain,
+    _symbol_converter,
+)
 from sympy.utilities.iterables import iterable
 from sympy.utilities.misc import filldedent
 from sympy.external import import_module
 
 # __all__ = ['marginal_distribution']
 
+
 class JointPSpace(ProductPSpace):
     """
     Represents a joint probability space. Represented using symbols for
     each component and a distribution.
     """
+
     def __new__(cls, sym, dist):
         if isinstance(dist, SingleContinuousDistribution):
             return SingleContinuousPSpace(sym, dist)
@@ -89,13 +99,21 @@ class JointPSpace(ProductPSpace):
     def marginal_distribution(self, *indices):
         count = self.component_count
         if count.atoms(Symbol):
-            raise ValueError("Marginal distributions cannot be computed "
-                                "for symbolic dimensions. It is a work under progress.")
+            raise ValueError(
+                "Marginal distributions cannot be computed "
+                "for symbolic dimensions. It is a work under progress."
+            )
         orig = [Indexed(self.symbol, i) for i in range(count)]
         all_syms = [Symbol(str(i)) for i in orig]
         replace_dict = dict(zip(all_syms, orig))
         sym = tuple(Symbol(str(Indexed(self.symbol, i))) for i in indices)
-        limits = [[i,] for i in all_syms if i not in sym]
+        limits = [
+            [
+                i,
+            ]
+            for i in all_syms
+            if i not in sym
+        ]
         index = 0
         for i in range(count):
             if i not in indices:
@@ -113,18 +131,24 @@ class JointPSpace(ProductPSpace):
         rvs = rvs or syms
         if not any(i in rvs for i in syms):
             return expr
-        expr = expr*self.pdf
+        expr = expr * self.pdf
         for rv in rvs:
             if isinstance(rv, Indexed):
                 expr = expr.xreplace({rv: Indexed(str(rv.base), rv.args[1])})
             elif isinstance(rv, RandomSymbol):
                 expr = expr.xreplace({rv: rv.symbol})
         if self.value in random_symbols(expr):
-            raise NotImplementedError(filldedent('''
+            raise NotImplementedError(
+                filldedent(
+                    """
             Expectations of expression with unindexed joint random symbols
-            cannot be calculated yet.'''))
-        limits = tuple((Indexed(str(rv.base),rv.args[1]),
-            self.distribution.set.args[rv.args[1]]) for rv in syms)
+            cannot be calculated yet."""
+                )
+            )
+        limits = tuple(
+            (Indexed(str(rv.base), rv.args[1]), self.distribution.set.args[rv.args[1]])
+            for rv in syms
+        )
         return Integral(expr, *limits)
 
     def where(self, condition):
@@ -133,14 +157,17 @@ class JointPSpace(ProductPSpace):
     def compute_density(self, expr):
         raise NotImplementedError()
 
-    def sample(self, size=(), library='scipy', seed=None):
+    def sample(self, size=(), library="scipy", seed=None):
         """
         Internal sample method
 
         Returns dictionary mapping RandomSymbol to realization value.
         """
-        return {RandomSymbol(self.symbol, self): self.distribution.sample(size,
-                    library=library, seed=seed)}
+        return {
+            RandomSymbol(self.symbol, self): self.distribution.sample(
+                size, library=library, seed=seed
+            )
+        }
 
     def probability(self, condition):
         raise NotImplementedError()
@@ -148,6 +175,7 @@ class JointPSpace(ProductPSpace):
 
 class SampleJointScipy:
     """Returns the sample from scipy of the given distribution"""
+
     def __new__(cls, dist, size, seed=None):
         return cls._sample_scipy(dist, size, seed)
 
@@ -156,25 +184,41 @@ class SampleJointScipy:
         """Sample from SciPy."""
 
         import numpy
+
         if seed is None or isinstance(seed, int):
             rand_state = numpy.random.default_rng(seed=seed)
         else:
             rand_state = seed
         from scipy import stats as scipy_stats
+
         scipy_rv_map = {
-            'MultivariateNormalDistribution': lambda dist, size: scipy_stats.multivariate_normal.rvs(
+            "MultivariateNormalDistribution": lambda dist, size: scipy_stats.multivariate_normal.rvs(
                 mean=matrix2numpy(dist.mu).flatten(),
-                cov=matrix2numpy(dist.sigma), size=size, random_state=rand_state),
-            'MultivariateBetaDistribution': lambda dist, size: scipy_stats.dirichlet.rvs(
-                alpha=list2numpy(dist.alpha, float).flatten(), size=size, random_state=rand_state),
-            'MultinomialDistribution': lambda dist, size: scipy_stats.multinomial.rvs(
-                n=int(dist.n), p=list2numpy(dist.p, float).flatten(), size=size, random_state=rand_state)
+                cov=matrix2numpy(dist.sigma),
+                size=size,
+                random_state=rand_state,
+            ),
+            "MultivariateBetaDistribution": lambda dist, size: scipy_stats.dirichlet.rvs(
+                alpha=list2numpy(dist.alpha, float).flatten(),
+                size=size,
+                random_state=rand_state,
+            ),
+            "MultinomialDistribution": lambda dist, size: scipy_stats.multinomial.rvs(
+                n=int(dist.n),
+                p=list2numpy(dist.p, float).flatten(),
+                size=size,
+                random_state=rand_state,
+            ),
         }
 
         sample_shape = {
-            'MultivariateNormalDistribution': lambda dist: matrix2numpy(dist.mu).flatten().shape,
-            'MultivariateBetaDistribution': lambda dist: list2numpy(dist.alpha).flatten().shape,
-            'MultinomialDistribution': lambda dist: list2numpy(dist.p).flatten().shape
+            "MultivariateNormalDistribution": lambda dist: matrix2numpy(dist.mu)
+            .flatten()
+            .shape,
+            "MultivariateBetaDistribution": lambda dist: list2numpy(dist.alpha)
+            .flatten()
+            .shape,
+            "MultinomialDistribution": lambda dist: list2numpy(dist.p).flatten().shape,
         }
 
         dist_list = scipy_rv_map.keys()
@@ -184,6 +228,7 @@ class SampleJointScipy:
 
         samples = scipy_rv_map[dist.__class__.__name__](dist, size)
         return samples.reshape(size + sample_shape[dist.__class__.__name__](dist))
+
 
 class SampleJointNumpy:
     """Returns the sample from numpy of the given distribution"""
@@ -196,24 +241,33 @@ class SampleJointNumpy:
         """Sample from NumPy."""
 
         import numpy
+
         if seed is None or isinstance(seed, int):
             rand_state = numpy.random.default_rng(seed=seed)
         else:
             rand_state = seed
         numpy_rv_map = {
-            'MultivariateNormalDistribution': lambda dist, size: rand_state.multivariate_normal(
+            "MultivariateNormalDistribution": lambda dist, size: rand_state.multivariate_normal(
                 mean=matrix2numpy(dist.mu, float).flatten(),
-                cov=matrix2numpy(dist.sigma, float), size=size),
-            'MultivariateBetaDistribution': lambda dist, size: rand_state.dirichlet(
-                alpha=list2numpy(dist.alpha, float).flatten(), size=size),
-            'MultinomialDistribution': lambda dist, size: rand_state.multinomial(
-                n=int(dist.n), pvals=list2numpy(dist.p, float).flatten(), size=size)
+                cov=matrix2numpy(dist.sigma, float),
+                size=size,
+            ),
+            "MultivariateBetaDistribution": lambda dist, size: rand_state.dirichlet(
+                alpha=list2numpy(dist.alpha, float).flatten(), size=size
+            ),
+            "MultinomialDistribution": lambda dist, size: rand_state.multinomial(
+                n=int(dist.n), pvals=list2numpy(dist.p, float).flatten(), size=size
+            ),
         }
 
         sample_shape = {
-            'MultivariateNormalDistribution': lambda dist: matrix2numpy(dist.mu).flatten().shape,
-            'MultivariateBetaDistribution': lambda dist: list2numpy(dist.alpha).flatten().shape,
-            'MultinomialDistribution': lambda dist: list2numpy(dist.p).flatten().shape
+            "MultivariateNormalDistribution": lambda dist: matrix2numpy(dist.mu)
+            .flatten()
+            .shape,
+            "MultivariateBetaDistribution": lambda dist: list2numpy(dist.alpha)
+            .flatten()
+            .shape,
+            "MultinomialDistribution": lambda dist: list2numpy(dist.p).flatten().shape,
         }
 
         dist_list = numpy_rv_map.keys()
@@ -223,6 +277,7 @@ class SampleJointNumpy:
 
         samples = numpy_rv_map[dist.__class__.__name__](dist, prod(size))
         return samples.reshape(size + sample_shape[dist.__class__.__name__](dist))
+
 
 class SampleJointPymc:
     """Returns the sample from pymc of the given distribution"""
@@ -239,20 +294,31 @@ class SampleJointPymc:
         except ImportError:
             import pymc3 as pymc
         pymc_rv_map = {
-            'MultivariateNormalDistribution': lambda dist:
-                pymc.MvNormal('X', mu=matrix2numpy(dist.mu, float).flatten(),
-                cov=matrix2numpy(dist.sigma, float), shape=(1, dist.mu.shape[0])),
-            'MultivariateBetaDistribution': lambda dist:
-                pymc.Dirichlet('X', a=list2numpy(dist.alpha, float).flatten()),
-            'MultinomialDistribution': lambda dist:
-                pymc.Multinomial('X', n=int(dist.n),
-                p=list2numpy(dist.p, float).flatten(), shape=(1, len(dist.p)))
+            "MultivariateNormalDistribution": lambda dist: pymc.MvNormal(
+                "X",
+                mu=matrix2numpy(dist.mu, float).flatten(),
+                cov=matrix2numpy(dist.sigma, float),
+                shape=(1, dist.mu.shape[0]),
+            ),
+            "MultivariateBetaDistribution": lambda dist: pymc.Dirichlet(
+                "X", a=list2numpy(dist.alpha, float).flatten()
+            ),
+            "MultinomialDistribution": lambda dist: pymc.Multinomial(
+                "X",
+                n=int(dist.n),
+                p=list2numpy(dist.p, float).flatten(),
+                shape=(1, len(dist.p)),
+            ),
         }
 
         sample_shape = {
-            'MultivariateNormalDistribution': lambda dist: matrix2numpy(dist.mu).flatten().shape,
-            'MultivariateBetaDistribution': lambda dist: list2numpy(dist.alpha).flatten().shape,
-            'MultinomialDistribution': lambda dist: list2numpy(dist.p).flatten().shape
+            "MultivariateNormalDistribution": lambda dist: matrix2numpy(dist.mu)
+            .flatten()
+            .shape,
+            "MultivariateBetaDistribution": lambda dist: list2numpy(dist.alpha)
+            .flatten()
+            .shape,
+            "MultinomialDistribution": lambda dist: list2numpy(dist.p).flatten().shape,
         }
 
         dist_list = pymc_rv_map.keys()
@@ -261,19 +327,28 @@ class SampleJointPymc:
             return None
 
         import logging
+
         logging.getLogger("pymc3").setLevel(logging.ERROR)
         with pymc.Model():
             pymc_rv_map[dist.__class__.__name__](dist)
-            samples = pymc.sample(draws=prod(size), chains=1, progressbar=False, random_seed=seed, return_inferencedata=False, compute_convergence_checks=False)[:]['X']
+            samples = pymc.sample(
+                draws=prod(size),
+                chains=1,
+                progressbar=False,
+                random_seed=seed,
+                return_inferencedata=False,
+                compute_convergence_checks=False,
+            )[:]["X"]
         return samples.reshape(size + sample_shape[dist.__class__.__name__](dist))
 
 
 _get_sample_class_jrv = {
-    'scipy': SampleJointScipy,
-    'pymc3': SampleJointPymc,
-    'pymc': SampleJointPymc,
-    'numpy': SampleJointNumpy
+    "scipy": SampleJointScipy,
+    "pymc3": SampleJointPymc,
+    "pymc": SampleJointPymc,
+    "numpy": SampleJointNumpy,
 }
+
 
 class JointDistribution(Distribution, NamedArgsMixin):
     """
@@ -281,7 +356,7 @@ class JointDistribution(Distribution, NamedArgsMixin):
     Contains methods for PDF, CDF, sampling, marginal densities, etc.
     """
 
-    _argnames = ('pdf', )
+    _argnames = ("pdf",)
 
     def __new__(cls, *args):
         args = list(map(sympify, args))
@@ -300,26 +375,25 @@ class JointDistribution(Distribution, NamedArgsMixin):
 
     def cdf(self, other):
         if not isinstance(other, dict):
-            raise ValueError("%s should be of type dict, got %s"%(other, type(other)))
+            raise ValueError("%s should be of type dict, got %s" % (other, type(other)))
         rvs = other.keys()
         _set = self.domain.set.sets
         expr = self.pdf(tuple(i.args[0] for i in self.symbols))
         for i in range(len(other)):
             if rvs[i].is_Continuous:
-                density = Integral(expr, (rvs[i], _set[i].inf,
-                    other[rvs[i]]))
+                density = Integral(expr, (rvs[i], _set[i].inf, other[rvs[i]]))
             elif rvs[i].is_Discrete:
-                density = Sum(expr, (rvs[i], _set[i].inf,
-                    other[rvs[i]]))
+                density = Sum(expr, (rvs[i], _set[i].inf, other[rvs[i]]))
         return density
 
-    def sample(self, size=(), library='scipy', seed=None):
-        """ A random realization from the distribution """
+    def sample(self, size=(), library="scipy", seed=None):
+        """A random realization from the distribution"""
 
-        libraries = ('scipy', 'numpy', 'pymc3', 'pymc')
+        libraries = ("scipy", "numpy", "pymc3", "pymc")
         if library not in libraries:
-            raise NotImplementedError("Sampling from %s is not supported yet."
-                                        % str(library))
+            raise NotImplementedError(
+                "Sampling from %s is not supported yet." % str(library)
+            )
         if not import_module(library):
             raise ValueError("Failed to import %s" % library)
 
@@ -328,25 +402,28 @@ class JointDistribution(Distribution, NamedArgsMixin):
         if samps is not None:
             return samps
         raise NotImplementedError(
-                "Sampling for %s is not currently implemented from %s"
-                % (self.__class__.__name__, library)
-                )
+            "Sampling for %s is not currently implemented from %s"
+            % (self.__class__.__name__, library)
+        )
 
     def __call__(self, *args):
         return self.pdf(*args)
+
 
 class JointRandomSymbol(RandomSymbol):
     """
     Representation of random symbols with joint probability distributions
     to allow indexing."
     """
+
     def __getitem__(self, key):
         if isinstance(self.pspace, JointPSpace):
             if (self.pspace.component_count <= key) == True:
-                raise ValueError("Index keys for %s can only up to %s." %
-                    (self.name, self.pspace.component_count - 1))
+                raise ValueError(
+                    "Index keys for %s can only up to %s."
+                    % (self.name, self.pspace.component_count - 1)
+                )
             return Indexed(self, key)
-
 
 
 class MarginalDistribution(Distribution):
@@ -362,9 +439,13 @@ class MarginalDistribution(Distribution):
         if len(rvs) == 1 and iterable(rvs[0]):
             rvs = tuple(rvs[0])
         if not all(isinstance(rv, (Indexed, RandomSymbol)) for rv in rvs):
-            raise ValueError(filldedent('''Marginal distribution can be
+            raise ValueError(
+                filldedent(
+                    """Marginal distribution can be
              intitialised only in terms of random variables or indexed random
-             variables'''))
+             variables"""
+                )
+            )
         rvs = Tuple.fromiter(rv for rv in rvs)
         if not isinstance(dist, JointDistribution) and len(random_symbols(dist)) == 0:
             return dist
@@ -388,11 +469,14 @@ class MarginalDistribution(Distribution):
         marginalise_out = [i for i in random_symbols(expr) if i not in rvs]
         if isinstance(expr, JointDistribution):
             count = len(expr.domain.args)
-            x = Dummy('x', real=True)
+            x = Dummy("x", real=True)
             syms = tuple(Indexed(x, i) for i in count)
             expr = expr.pdf(syms)
         else:
-            syms = tuple(rv.pspace.symbol if isinstance(rv, RandomSymbol) else rv.args[0] for rv in rvs)
+            syms = tuple(
+                rv.pspace.symbol if isinstance(rv, RandomSymbol) else rv.args[0]
+                for rv in rvs
+            )
         return Lambda(syms, self.compute_pdf(expr, marginalise_out))(*x)
 
     def compute_pdf(self, expr, rvs):
@@ -400,23 +484,23 @@ class MarginalDistribution(Distribution):
             lpdf = 1
             if isinstance(rv, RandomSymbol):
                 lpdf = rv.pspace.pdf
-            expr = self.marginalise_out(expr*lpdf, rv)
+            expr = self.marginalise_out(expr * lpdf, rv)
         return expr
 
     def marginalise_out(self, expr, rv):
         from sympy.concrete.summations import Sum
+
         if isinstance(rv, RandomSymbol):
             dom = rv.pspace.set
         elif isinstance(rv, Indexed):
-            dom = rv.base.component_domain(
-                rv.pspace.component_domain(rv.args[1]))
+            dom = rv.base.component_domain(rv.pspace.component_domain(rv.args[1]))
         expr = expr.xreplace({rv: rv.pspace.symbol})
         if rv.pspace.is_Continuous:
-            #TODO: Modify to support integration
-            #for all kinds of sets.
+            # TODO: Modify to support integration
+            # for all kinds of sets.
             expr = Integral(expr, (rv.pspace.symbol, dom))
         elif rv.pspace.is_Discrete:
-            #incorporate this into `Sum`/`summation`
+            # incorporate this into `Sum`/`summation`
             if dom in (S.Integers, S.Naturals, S.Naturals0):
                 dom = (dom.inf, dom.sup)
             expr = Sum(expr, (rv.pspace.symbol, dom))

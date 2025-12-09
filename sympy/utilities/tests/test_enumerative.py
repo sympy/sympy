@@ -4,14 +4,15 @@ from itertools import zip_longest
 from sympy.utilities.enumerative import (
     list_visitor,
     MultisetPartitionTraverser,
-    multiset_partitions_taocp
-    )
+    multiset_partitions_taocp,
+)
 from sympy.utilities.iterables import _set_partitions
 
 # first some functions only useful as test scaffolding - these provide
 # straightforward, but slow reference implementations against which to
 # compare the real versions, and also a comparison to verify that
 # different versions are giving identical results.
+
 
 def part_range_filter(partition_iterator, lb, ub):
     """
@@ -30,6 +31,7 @@ def part_range_filter(partition_iterator, lb, ub):
         f, lpart, pstack = state
         if lpart >= lb and lpart < ub:
             yield state
+
 
 def multiset_partitions_baseline(multiplicities, components):
     """Enumerates partitions of a multiset
@@ -63,9 +65,9 @@ def multiset_partitions_baseline(multiplicities, components):
     production implementation.)
     """
 
-    canon = []                  # list of components with repeats
+    canon = []  # list of components with repeats
     for ct, elem in zip(multiplicities, components):
-        canon.extend([elem]*ct)
+        canon.extend([elem] * ct)
 
     # accumulate the multiset partitions in a set to eliminate dups
     cache = set()
@@ -74,8 +76,7 @@ def multiset_partitions_baseline(multiplicities, components):
         rv = [[] for i in range(nc)]
         for i in range(n):
             rv[q[i]].append(canon[i])
-        canonical = tuple(
-            sorted([tuple(p) for p in rv]))
+        canonical = tuple(sorted([tuple(p) for p in rv]))
         cache.add(canonical)
     return cache
 
@@ -95,11 +96,11 @@ def compare_multiset_w_baseline(multiplicities):
 
     aocp_partitions = set()
     for state in multiset_partitions_taocp(multiplicities):
-        p1 = tuple(sorted(
-                [tuple(p) for p in list_visitor(state, letters)]))
+        p1 = tuple(sorted([tuple(p) for p in list_visitor(state, letters)]))
         aocp_partitions.add(p1)
 
     assert bl_partitions == aocp_partitions
+
 
 def compare_multiset_states(s1, s2):
     """compare for equality two instances of multiset partition states
@@ -111,10 +112,11 @@ def compare_multiset_states(s1, s2):
     f1, lpart1, pstack1 = s1
     f2, lpart2, pstack2 = s2
 
-    if (lpart1 == lpart2) and (f1[0:lpart1+1] == f2[0:lpart2+1]):
-        if pstack1[0:f1[lpart1+1]] == pstack2[0:f2[lpart2+1]]:
+    if (lpart1 == lpart2) and (f1[0 : lpart1 + 1] == f2[0 : lpart2 + 1]):
+        if pstack1[0 : f1[lpart1 + 1]] == pstack2[0 : f2[lpart2 + 1]]:
             return True
     return False
+
 
 def test_multiset_partitions_taocp():
     """Compares the output of multiset_partitions_taocp with a baseline
@@ -122,19 +124,22 @@ def test_multiset_partitions_taocp():
 
     # Test cases should not be too large, since the baseline
     # implementation is fairly slow.
-    multiplicities = [2,2]
+    multiplicities = [2, 2]
     compare_multiset_w_baseline(multiplicities)
 
-    multiplicities = [4,3,1]
+    multiplicities = [4, 3, 1]
     compare_multiset_w_baseline(multiplicities)
+
 
 def test_multiset_partitions_versions():
     """Compares Knuth-based versions of multiset_partitions"""
-    multiplicities = [5,2,2,1]
+    multiplicities = [5, 2, 2, 1]
     m = MultisetPartitionTraverser()
-    for s1, s2 in zip_longest(m.enum_all(multiplicities),
-                              multiset_partitions_taocp(multiplicities)):
+    for s1, s2 in zip_longest(
+        m.enum_all(multiplicities), multiset_partitions_taocp(multiplicities)
+    ):
         assert compare_multiset_states(s1, s2)
+
 
 def subrange_exercise(mult, lb, ub):
     """Compare filter-based and more optimized subrange implementations
@@ -142,8 +147,7 @@ def subrange_exercise(mult, lb, ub):
     Helper for tests, called with both small and larger multisets.
     """
     m = MultisetPartitionTraverser()
-    assert m.count_partitions(mult) == \
-        m.count_partitions_slow(mult)
+    assert m.count_partitions(mult) == m.count_partitions_slow(mult)
 
     # Note - multiple traversals from the same
     # MultisetPartitionTraverser object cannot execute at the same
@@ -163,9 +167,10 @@ def subrange_exercise(mult, lb, ub):
         assert compare_multiset_states(sa, sc)
         assert compare_multiset_states(sa, sd)
 
+
 def test_subrange():
     # Quick, but doesn't hit some of the corner cases
-    mult = [4,4,2,1] # mississippi
+    mult = [4, 4, 2, 1]  # mississippi
     lb = 1
     ub = 2
     subrange_exercise(mult, lb, ub)
@@ -173,7 +178,7 @@ def test_subrange():
 
 def test_subrange_large():
     # takes a second or so, depending on cpu, Python version, etc.
-    mult = [6,3,2,1]
+    mult = [6, 3, 2, 1]
     lb = 4
     ub = 7
     subrange_exercise(mult, lb, ub)

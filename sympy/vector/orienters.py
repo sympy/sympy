@@ -1,7 +1,7 @@
 from sympy.core.basic import Basic
 from sympy.core.sympify import sympify
-from sympy.functions.elementary.trigonometric import (cos, sin)
-from sympy.matrices.dense import (eye, rot_axis1, rot_axis2, rot_axis3)
+from sympy.functions.elementary.trigonometric import cos, sin
+from sympy.matrices.dense import eye, rot_axis1, rot_axis2, rot_axis3
 from sympy.matrices.immutable import ImmutableDenseMatrix as Matrix
 from sympy.core.cache import cacheit
 from sympy.core.symbol import Str
@@ -84,11 +84,14 @@ class AxisOrienter(Orienter):
         axis = sympy.vector.express(self.axis, system).normalize()
         axis = axis.to_matrix(system)
         theta = self.angle
-        parent_orient = ((eye(3) - axis * axis.T) * cos(theta) +
-                         Matrix([[0, -axis[2], axis[1]],
-                                 [axis[2], 0, -axis[0]],
-                                 [-axis[1], axis[0], 0]]) * sin(theta) +
-                         axis * axis.T)
+        parent_orient = (
+            (eye(3) - axis * axis.T) * cos(theta)
+            + Matrix(
+                [[0, -axis[2], axis[1]], [axis[2], 0, -axis[0]], [-axis[1], axis[0], 0]]
+            )
+            * sin(theta)
+            + axis * axis.T
+        )
         parent_orient = parent_orient.T
         return parent_orient
 
@@ -110,19 +113,31 @@ class ThreeAngleOrienter(Orienter):
         if isinstance(rot_order, Str):
             rot_order = rot_order.name
 
-        approved_orders = ('123', '231', '312', '132', '213',
-                           '321', '121', '131', '212', '232',
-                           '313', '323', '')
+        approved_orders = (
+            "123",
+            "231",
+            "312",
+            "132",
+            "213",
+            "321",
+            "121",
+            "131",
+            "212",
+            "232",
+            "313",
+            "323",
+            "",
+        )
         original_rot_order = rot_order
         rot_order = str(rot_order).upper()
         if not (len(rot_order) == 3):
-            raise TypeError('rot_order should be a str of length 3')
-        rot_order = [i.replace('X', '1') for i in rot_order]
-        rot_order = [i.replace('Y', '2') for i in rot_order]
-        rot_order = [i.replace('Z', '3') for i in rot_order]
-        rot_order = ''.join(rot_order)
+            raise TypeError("rot_order should be a str of length 3")
+        rot_order = [i.replace("X", "1") for i in rot_order]
+        rot_order = [i.replace("Y", "2") for i in rot_order]
+        rot_order = [i.replace("Z", "3") for i in rot_order]
+        rot_order = "".join(rot_order)
         if rot_order not in approved_orders:
-            raise TypeError('Invalid rot_type parameter')
+            raise TypeError("Invalid rot_type parameter")
         a1 = int(rot_order[0])
         a2 = int(rot_order[1])
         a3 = int(rot_order[2])
@@ -130,17 +145,12 @@ class ThreeAngleOrienter(Orienter):
         angle2 = sympify(angle2)
         angle3 = sympify(angle3)
         if cls._in_order:
-            parent_orient = (_rot(a1, angle1) *
-                             _rot(a2, angle2) *
-                             _rot(a3, angle3))
+            parent_orient = _rot(a1, angle1) * _rot(a2, angle2) * _rot(a3, angle3)
         else:
-            parent_orient = (_rot(a3, angle3) *
-                             _rot(a2, angle2) *
-                             _rot(a1, angle1))
+            parent_orient = _rot(a3, angle3) * _rot(a2, angle2) * _rot(a1, angle1)
         parent_orient = parent_orient.T
 
-        obj = super().__new__(
-            cls, angle1, angle2, angle3, Str(rot_order))
+        obj = super().__new__(cls, angle1, angle2, angle3, Str(rot_order))
         obj._angle1 = angle1
         obj._angle2 = angle2
         obj._angle3 = angle3
@@ -174,8 +184,7 @@ class BodyOrienter(ThreeAngleOrienter):
     _in_order = True
 
     def __new__(cls, angle1, angle2, angle3, rot_order):
-        obj = ThreeAngleOrienter.__new__(cls, angle1, angle2, angle3,
-                                         rot_order)
+        obj = ThreeAngleOrienter.__new__(cls, angle1, angle2, angle3, rot_order)
         return obj
 
     def __init__(self, angle1, angle2, angle3, rot_order):
@@ -244,8 +253,7 @@ class SpaceOrienter(ThreeAngleOrienter):
     _in_order = False
 
     def __new__(cls, angle1, angle2, angle3, rot_order):
-        obj = ThreeAngleOrienter.__new__(cls, angle1, angle2, angle3,
-                                         rot_order)
+        obj = ThreeAngleOrienter.__new__(cls, angle1, angle2, angle3, rot_order)
         return obj
 
     def __init__(self, angle1, angle2, angle3, rot_order):
@@ -309,18 +317,25 @@ class QuaternionOrienter(Orienter):
         q1 = sympify(q1)
         q2 = sympify(q2)
         q3 = sympify(q3)
-        parent_orient = (Matrix([[q0 ** 2 + q1 ** 2 - q2 ** 2 -
-                                  q3 ** 2,
-                                  2 * (q1 * q2 - q0 * q3),
-                                  2 * (q0 * q2 + q1 * q3)],
-                                 [2 * (q1 * q2 + q0 * q3),
-                                  q0 ** 2 - q1 ** 2 +
-                                  q2 ** 2 - q3 ** 2,
-                                  2 * (q2 * q3 - q0 * q1)],
-                                 [2 * (q1 * q3 - q0 * q2),
-                                  2 * (q0 * q1 + q2 * q3),
-                                  q0 ** 2 - q1 ** 2 -
-                                  q2 ** 2 + q3 ** 2]]))
+        parent_orient = Matrix(
+            [
+                [
+                    q0**2 + q1**2 - q2**2 - q3**2,
+                    2 * (q1 * q2 - q0 * q3),
+                    2 * (q0 * q2 + q1 * q3),
+                ],
+                [
+                    2 * (q1 * q2 + q0 * q3),
+                    q0**2 - q1**2 + q2**2 - q3**2,
+                    2 * (q2 * q3 - q0 * q1),
+                ],
+                [
+                    2 * (q1 * q3 - q0 * q2),
+                    2 * (q0 * q1 + q2 * q3),
+                    q0**2 - q1**2 - q2**2 + q3**2,
+                ],
+            ]
+        )
         parent_orient = parent_orient.T
 
         obj = super().__new__(cls, q0, q1, q2, q3)
@@ -389,7 +404,7 @@ class QuaternionOrienter(Orienter):
 
 
 def _rot(axis, angle):
-    """DCM for simple axis 1, 2 or 3 rotations. """
+    """DCM for simple axis 1, 2 or 3 rotations."""
     if axis == 1:
         return Matrix(rot_axis1(angle).T)
     elif axis == 2:

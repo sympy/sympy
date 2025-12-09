@@ -8,7 +8,7 @@ from sympy.testing.pytest import XFAIL
 import sympy
 
 
-x, y, z = symbols('x,y,z')
+x, y, z = symbols("x,y,z")
 
 
 def test_empty_rust_code():
@@ -20,8 +20,8 @@ def test_empty_rust_code():
 
 
 def test_simple_rust_code():
-    name_expr = ("test", (x + y)*z)
-    result, = codegen(name_expr, "Rust", header=False, empty=False)
+    name_expr = ("test", (x + y) * z)
+    (result,) = codegen(name_expr, "Rust", header=False, empty=False)
     assert result[0] == "test.rs"
     source = result[1]
     expected = (
@@ -34,8 +34,8 @@ def test_simple_rust_code():
 
 
 def test_simple_code_with_header():
-    name_expr = ("test", (x + y)*z)
-    result, = codegen(name_expr, "Rust", header=True, empty=False)
+    name_expr = ("test", (x + y) * z)
+    (result,) = codegen(name_expr, "Rust", header=True, empty=False)
     assert result[0] == "test.rs"
     source = result[1]
     version_str = "Code generated with SymPy %s" % sympy.__version__
@@ -52,27 +52,24 @@ def test_simple_code_with_header():
         "    let out1 = z*(x + y);\n"
         "    out1\n"
         "}\n"
-    ) % {'version_line': version_line}
+    ) % {"version_line": version_line}
     assert source == expected
 
 
 def test_simple_code_nameout():
     expr = Equality(z, (x + y))
     name_expr = ("test", expr)
-    result, = codegen(name_expr, "Rust", header=False, empty=False)
+    (result,) = codegen(name_expr, "Rust", header=False, empty=False)
     source = result[1]
     expected = (
-        "fn test(x: f64, y: f64) -> f64 {\n"
-        "    let z = x + y;\n"
-        "    z\n"
-        "}\n"
+        "fn test(x: f64, y: f64) -> f64 {\n" "    let z = x + y;\n" "    z\n" "}\n"
     )
     assert source == expected
 
 
 def test_numbersymbol():
     name_expr = ("test", pi**Catalan)
-    result, = codegen(name_expr, "Rust", header=False, empty=False)
+    (result,) = codegen(name_expr, "Rust", header=False, empty=False)
     source = result[1]
     expected = (
         "fn test() -> f64 {\n"
@@ -88,8 +85,7 @@ def test_numbersymbol():
 def test_numbersymbol_inline():
     # FIXME: how to pass inline to the RustCodePrinter?
     name_expr = ("test", [pi**Catalan, EulerGamma])
-    result, = codegen(name_expr, "Rust", header=False,
-                      empty=False, inline=True)
+    (result,) = codegen(name_expr, "Rust", header=False, empty=False, inline=True)
     source = result[1]
     expected = (
         "fn test() -> (f64, f64) {\n"
@@ -121,10 +117,10 @@ def test_argument_order():
 
 def test_multiple_results_rust():
     # Here the output order is the input order
-    expr1 = (x + y)*z
-    expr2 = (x - y)*z
+    expr1 = (x + y) * z
+    expr2 = (x - y) * z
     name_expr = ("test", [expr1, expr2])
-    result, = codegen(name_expr, "Rust", header=False, empty=False)
+    (result,) = codegen(name_expr, "Rust", header=False, empty=False)
     source = result[1]
     expected = (
         "fn test(x: f64, y: f64, z: f64) -> (f64, f64) {\n"
@@ -138,12 +134,12 @@ def test_multiple_results_rust():
 
 def test_results_named_unordered():
     # Here output order is based on name_expr
-    A, B, C = symbols('A,B,C')
-    expr1 = Equality(C, (x + y)*z)
-    expr2 = Equality(A, (x - y)*z)
-    expr3 = Equality(B, 2*x)
+    A, B, C = symbols("A,B,C")
+    expr1 = Equality(C, (x + y) * z)
+    expr2 = Equality(A, (x - y) * z)
+    expr3 = Equality(B, 2 * x)
     name_expr = ("test", [expr1, expr2, expr3])
-    result, = codegen(name_expr, "Rust", header=False, empty=False)
+    (result,) = codegen(name_expr, "Rust", header=False, empty=False)
     source = result[1]
     expected = (
         "fn test(x: f64, y: f64, z: f64) -> (f64, f64, f64) {\n"
@@ -157,13 +153,14 @@ def test_results_named_unordered():
 
 
 def test_results_named_ordered():
-    A, B, C = symbols('A,B,C')
-    expr1 = Equality(C, (x + y)*z)
-    expr2 = Equality(A, (x - y)*z)
-    expr3 = Equality(B, 2*x)
+    A, B, C = symbols("A,B,C")
+    expr1 = Equality(C, (x + y) * z)
+    expr2 = Equality(A, (x - y) * z)
+    expr3 = Equality(B, 2 * x)
     name_expr = ("test", [expr1, expr2, expr3])
-    result = codegen(name_expr, "Rust", header=False, empty=False,
-                     argument_sequence=(x, z, y))
+    result = codegen(
+        name_expr, "Rust", header=False, empty=False, argument_sequence=(x, z, y)
+    )
     assert result[0][0] == "test.rs"
     source = result[0][1]
     expected = (
@@ -178,11 +175,15 @@ def test_results_named_ordered():
 
 
 def test_complicated_rs_codegen():
-    from sympy.functions.elementary.trigonometric import (cos, sin, tan)
-    name_expr = ("testlong",
-            [ ((sin(x) + cos(y) + tan(z))**3).expand(),
-            cos(cos(cos(cos(cos(cos(cos(cos(x + y + z))))))))
-    ])
+    from sympy.functions.elementary.trigonometric import cos, sin, tan
+
+    name_expr = (
+        "testlong",
+        [
+            ((sin(x) + cos(y) + tan(z)) ** 3).expand(),
+            cos(cos(cos(cos(cos(cos(cos(cos(x + y + z)))))))),
+        ],
+    )
     result = codegen(name_expr, "Rust", header=False, empty=False)
     assert result[0][0] == "testlong.rs"
     source = result[0][1]
@@ -203,10 +204,14 @@ def test_complicated_rs_codegen():
 
 def test_output_arg_mixed_unordered():
     # named outputs are alphabetical, unnamed output appear in the given order
-    from sympy.functions.elementary.trigonometric import (cos, sin)
+    from sympy.functions.elementary.trigonometric import cos, sin
+
     a = symbols("a")
-    name_expr = ("foo", [cos(2*x), Equality(y, sin(x)), cos(x), Equality(a, sin(2*x))])
-    result, = codegen(name_expr, "Rust", header=False, empty=False)
+    name_expr = (
+        "foo",
+        [cos(2 * x), Equality(y, sin(x)), cos(x), Equality(a, sin(2 * x))],
+    )
+    (result,) = codegen(name_expr, "Rust", header=False, empty=False)
     assert result[0] == "foo.rs"
     source = result[1]
     expected = (
@@ -222,9 +227,11 @@ def test_output_arg_mixed_unordered():
 
 
 def test_piecewise_():
-    pw = Piecewise((0, x < -1), (x**2, x <= 1), (-x+2, x > 1), (1, True), evaluate=False)
+    pw = Piecewise(
+        (0, x < -1), (x**2, x <= 1), (-x + 2, x > 1), (1, True), evaluate=False
+    )
     name_expr = ("pwtest", pw)
-    result, = codegen(name_expr, "Rust", header=False, empty=False)
+    (result,) = codegen(name_expr, "Rust", header=False, empty=False)
     source = result[1]
     expected = (
         "fn pwtest(x: f64) -> f64 {\n"
@@ -246,10 +253,9 @@ def test_piecewise_():
 @XFAIL
 def test_piecewise_inline():
     # FIXME: how to pass inline to the RustCodePrinter?
-    pw = Piecewise((0, x < -1), (x**2, x <= 1), (-x+2, x > 1), (1, True))
+    pw = Piecewise((0, x < -1), (x**2, x <= 1), (-x + 2, x > 1), (1, True))
     name_expr = ("pwtest", pw)
-    result, = codegen(name_expr, "Rust", header=False, empty=False,
-                      inline=True)
+    (result,) = codegen(name_expr, "Rust", header=False, empty=False, inline=True)
     source = result[1]
     expected = (
         "fn pwtest(x: f64) -> f64 {\n"
@@ -262,7 +268,7 @@ def test_piecewise_inline():
 
 
 def test_multifcns_per_file():
-    name_expr = [ ("foo", [2*x, 3*y]), ("bar", [y**2, 4*y]) ]
+    name_expr = [("foo", [2 * x, 3 * y]), ("bar", [y**2, 4 * y])]
     result = codegen(name_expr, "Rust", header=False, empty=False)
     assert result[0][0] == "foo.rs"
     source = result[0][1]
@@ -282,7 +288,7 @@ def test_multifcns_per_file():
 
 
 def test_multifcns_per_file_w_header():
-    name_expr = [ ("foo", [2*x, 3*y]), ("bar", [y**2, 4*y]) ]
+    name_expr = [("foo", [2 * x, 3 * y]), ("bar", [y**2, 4 * y])]
     result = codegen(name_expr, "Rust", header=True, empty=False)
     assert result[0][0] == "foo.rs"
     source = result[0][1]
@@ -306,28 +312,22 @@ def test_multifcns_per_file_w_header():
         "    let out2 = 4*y;\n"
         "    (out1, out2)\n"
         "}\n"
-    ) % {'version_line': version_line}
+    ) % {"version_line": version_line}
     assert source == expected
 
 
 def test_filename_match_prefix():
-    name_expr = [ ("foo", [2*x, 3*y]), ("bar", [y**2, 4*y]) ]
-    result, = codegen(name_expr, "Rust", prefix="baz", header=False,
-                     empty=False)
+    name_expr = [("foo", [2 * x, 3 * y]), ("bar", [y**2, 4 * y])]
+    (result,) = codegen(name_expr, "Rust", prefix="baz", header=False, empty=False)
     assert result[0] == "baz.rs"
 
 
 def test_InOutArgument():
     expr = Equality(x, x**2)
     name_expr = ("mysqr", expr)
-    result, = codegen(name_expr, "Rust", header=False, empty=False)
+    (result,) = codegen(name_expr, "Rust", header=False, empty=False)
     source = result[1]
-    expected = (
-        "fn mysqr(x: f64) -> f64 {\n"
-        "    let x = x.powi(2);\n"
-        "    x\n"
-        "}\n"
-    )
+    expected = "fn mysqr(x: f64) -> f64 {\n" "    let x = x.powi(2);\n" "    x\n" "}\n"
     assert source == expected
 
 
@@ -335,8 +335,9 @@ def test_InOutArgument_order():
     # can specify the order as (x, y)
     expr = Equality(x, x**2 + y)
     name_expr = ("test", expr)
-    result, = codegen(name_expr, "Rust", header=False,
-                      empty=False, argument_sequence=(x,y))
+    (result,) = codegen(
+        name_expr, "Rust", header=False, empty=False, argument_sequence=(x, y)
+    )
     source = result[1]
     expected = (
         "fn test(x: f64, y: f64) -> f64 {\n"
@@ -348,7 +349,7 @@ def test_InOutArgument_order():
     # make sure it gives (x, y) not (y, x)
     expr = Equality(x, x**2 + y)
     name_expr = ("test", expr)
-    result, = codegen(name_expr, "Rust", header=False, empty=False)
+    (result,) = codegen(name_expr, "Rust", header=False, empty=False)
     source = result[1]
     expected = (
         "fn test(x: f64, y: f64) -> f64 {\n"
@@ -360,9 +361,9 @@ def test_InOutArgument_order():
 
 
 def test_not_supported():
-    f = Function('f')
+    f = Function("f")
     name_expr = ("test", [f(x).diff(x), S.ComplexInfinity])
-    result, = codegen(name_expr, "Rust", header=False, empty=False)
+    (result,) = codegen(name_expr, "Rust", header=False, empty=False)
     source = result[1]
     expected = (
         "fn test(x: f64) -> (f64, f64) {\n"
@@ -378,24 +379,21 @@ def test_not_supported():
 
 def test_global_vars_rust():
     x, y, z, t = symbols("x y z t")
-    result = codegen(('f', x*y), "Rust", header=False, empty=False,
-                     global_vars=(y,))
+    result = codegen(("f", x * y), "Rust", header=False, empty=False, global_vars=(y,))
     source = result[0][1]
-    expected = (
-        "fn f(x: f64) -> f64 {\n"
-        "    let out1 = x*y;\n"
-        "    out1\n"
-        "}\n"
-        )
+    expected = "fn f(x: f64) -> f64 {\n" "    let out1 = x*y;\n" "    out1\n" "}\n"
     assert source == expected
 
-    result = codegen(('f', x*y+z), "Rust", header=False, empty=False,
-                     argument_sequence=(x, y), global_vars=(z, t))
+    result = codegen(
+        ("f", x * y + z),
+        "Rust",
+        header=False,
+        empty=False,
+        argument_sequence=(x, y),
+        global_vars=(z, t),
+    )
     source = result[0][1]
     expected = (
-        "fn f(x: f64, y: f64) -> f64 {\n"
-        "    let out1 = x*y + z;\n"
-        "    out1\n"
-        "}\n"
+        "fn f(x: f64, y: f64) -> f64 {\n" "    let out1 = x*y + z;\n" "    out1\n" "}\n"
     )
     assert source == expected

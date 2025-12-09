@@ -24,45 +24,54 @@ class BasisDependent(Expr):
 
     zero: BasisDependentZero
 
-    @call_highest_priority('__radd__')
+    @call_highest_priority("__radd__")
     def __add__(self, other):
         return self._add_func(self, other)
 
-    @call_highest_priority('__add__')
+    @call_highest_priority("__add__")
     def __radd__(self, other):
         return self._add_func(other, self)
 
-    @call_highest_priority('__rsub__')
+    @call_highest_priority("__rsub__")
     def __sub__(self, other):
         return self._add_func(self, -other)
 
-    @call_highest_priority('__sub__')
+    @call_highest_priority("__sub__")
     def __rsub__(self, other):
         return self._add_func(other, -self)
 
-    @_sympifyit('other', NotImplemented)
-    @call_highest_priority('__rmul__')
+    @_sympifyit("other", NotImplemented)
+    @call_highest_priority("__rmul__")
     def __mul__(self, other):
         return self._mul_func(self, other)
 
-    @_sympifyit('other', NotImplemented)
-    @call_highest_priority('__mul__')
+    @_sympifyit("other", NotImplemented)
+    @call_highest_priority("__mul__")
     def __rmul__(self, other):
         return self._mul_func(other, self)
 
     def __neg__(self):
         return self._mul_func(S.NegativeOne, self)
 
-    @_sympifyit('other', NotImplemented)
-    @call_highest_priority('__rtruediv__')
+    @_sympifyit("other", NotImplemented)
+    @call_highest_priority("__rtruediv__")
     def __truediv__(self, other):
         return self._div_helper(other)
 
-    @call_highest_priority('__truediv__')
+    @call_highest_priority("__truediv__")
     def __rtruediv__(self, other):
         return TypeError("Invalid divisor for division")
 
-    def evalf(self, n=15, subs=None, maxn=100, chop=False, strict=False, quad=None, verbose=False):
+    def evalf(
+        self,
+        n=15,
+        subs=None,
+        maxn=100,
+        chop=False,
+        strict=False,
+        quad=None,
+        verbose=False,
+    ):
         """
         Implements the SymPy evalf routine for this quantity.
 
@@ -70,8 +79,14 @@ class BasisDependent(Expr):
         =====================
 
         """
-        options = {'subs':subs, 'maxn':maxn, 'chop':chop, 'strict':strict,
-                'quad':quad, 'verbose':verbose}
+        options = {
+            "subs": subs,
+            "maxn": maxn,
+            "chop": chop,
+            "strict": strict,
+            "quad": quad,
+            "verbose": verbose,
+        }
         vec = self.zero
         for k, v in self.components.items():
             vec += v.evalf(n, **options) * k
@@ -79,7 +94,7 @@ class BasisDependent(Expr):
 
     evalf.__doc__ += Expr.evalf.__doc__  # type: ignore
 
-    n = evalf # type: ignore
+    n = evalf  # type: ignore
 
     def simplify(self, **kwargs):
         """
@@ -89,8 +104,7 @@ class BasisDependent(Expr):
         ========================
 
         """
-        simp_components = [simp(v, **kwargs) * k for
-                           k, v in self.components.items()]
+        simp_components = [simp(v, **kwargs) * k for k, v in self.components.items()]
         return self._add_func(*simp_components)
 
     simplify.__doc__ += simp.__doc__  # type: ignore
@@ -103,8 +117,7 @@ class BasisDependent(Expr):
         ========================
 
         """
-        trig_components = [tsimp(v, **opts) * k for
-                           k, v in self.components.items()]
+        trig_components = [tsimp(v, **opts) * k for k, v in self.components.items()]
         return self._add_func(*trig_components)
 
     trigsimp.__doc__ += tsimp.__doc__  # type: ignore
@@ -119,8 +132,9 @@ class BasisDependent(Expr):
         return self.diff(wrt)
 
     def _eval_Integral(self, *symbols, **assumptions):
-        integral_components = [Integral(v, *symbols, **assumptions) * k
-                               for k, v in self.components.items()]
+        integral_components = [
+            Integral(v, *symbols, **assumptions) * k for k, v in self.components.items()
+        ]
         return self._add_func(*integral_components)
 
     def as_numer_denom(self):
@@ -142,8 +156,9 @@ class BasisDependent(Expr):
         ========================
 
         """
-        fctr_components = [fctr(v, *args, **kwargs) * k for
-                           k, v in self.components.items()]
+        fctr_components = [
+            fctr(v, *args, **kwargs) * k for k, v in self.components.items()
+        ]
         return self._add_func(*fctr_components)
 
     factor.__doc__ += fctr.__doc__  # type: ignore
@@ -167,16 +182,18 @@ class BasisDependent(Expr):
         for x in args:
             if isinstance(x, BasisDependent):
                 raise TypeError("Invalid arg for differentiation")
-        diff_components = [df(v, *args, **kwargs) * k for
-                           k, v in self.components.items()]
+        diff_components = [
+            df(v, *args, **kwargs) * k for k, v in self.components.items()
+        ]
         return self._add_func(*diff_components)
 
     diff.__doc__ += df.__doc__  # type: ignore
 
     def doit(self, **hints):
         """Calls .doit() on each term in the Dyadic"""
-        doit_components = [self.components[x].doit(**hints) * x
-                           for x in self.components]
+        doit_components = [
+            self.components[x].doit(**hints) * x for x in self.components
+        ]
         return self._add_func(*doit_components)
 
 
@@ -197,8 +214,7 @@ class BasisDependentAdd(BasisDependent, Add):
                 elif isinstance(arg, Add):
                     arg = cls._add_func(*(arg.args))
                 else:
-                    raise TypeError(str(arg) +
-                                    " cannot be interpreted correctly")
+                    raise TypeError(str(arg) + " cannot be interpreted correctly")
             # If argument is zero, ignore
             if arg == cls.zero:
                 continue
@@ -220,7 +236,7 @@ class BasisDependentAdd(BasisDependent, Add):
         obj = super().__new__(cls, *newargs, **options)
         if isinstance(obj, Mul):
             return cls._mul_func(*obj.args)
-        assumptions = {'commutative': True}
+        assumptions = {"commutative": True}
         obj._assumptions = StdFactKB(assumptions)
         obj._components = components
         obj._sys = (list(components.keys()))[0]._sys
@@ -246,6 +262,7 @@ class BasisDependentMul(BasisDependent, Mul):
     @classmethod
     def _new(cls, *args, **options):
         from sympy.vector import Cross, Dot, Curl, Gradient
+
         count = 0
         measure_number = S.One
         zeroflag = False
@@ -283,19 +300,17 @@ class BasisDependentMul(BasisDependent, Mul):
         # If one of the args was a VectorAdd, return an
         # appropriate VectorAdd instance
         if isinstance(expr, cls._add_func):
-            newargs = [cls._mul_func(measure_number, x) for
-                       x in expr.args]
+            newargs = [cls._mul_func(measure_number, x) for x in expr.args]
             return cls._add_func(*newargs)
 
-        obj = super().__new__(cls, measure_number,
-                              expr._base_instance,
-                              *extra_args,
-                              **options)
+        obj = super().__new__(
+            cls, measure_number, expr._base_instance, *extra_args, **options
+        )
         if isinstance(obj, Add):
             return cls._add_func(*obj.args)
         obj._base_instance = expr._base_instance
         obj._measure_number = measure_number
-        assumptions = {'commutative': True}
+        assumptions = {"commutative": True}
         obj._assumptions = StdFactKB(assumptions)
         obj._components = {expr._base_instance: measure_number}
         obj._sys = expr._base_instance._sys
@@ -304,17 +319,17 @@ class BasisDependentMul(BasisDependent, Mul):
 
     def _sympystr(self, printer):
         measure_str = printer._print(self._measure_number)
-        if ('(' in measure_str or '-' in measure_str or
-                '+' in measure_str):
-            measure_str = '(' + measure_str + ')'
-        return measure_str + '*' + printer._print(self._base_instance)
+        if "(" in measure_str or "-" in measure_str or "+" in measure_str:
+            measure_str = "(" + measure_str + ")"
+        return measure_str + "*" + printer._print(self._base_instance)
 
 
 class BasisDependentZero(BasisDependent):
     """
     Class to denote a zero basis dependent instance.
     """
-    components: dict['BaseVector', Expr] = {}
+
+    components: dict["BaseVector", Expr] = {}
     _latex_form: str
 
     def __new__(cls):
@@ -327,34 +342,34 @@ class BasisDependentZero(BasisDependent):
     def __hash__(self):
         return self._hash
 
-    @call_highest_priority('__req__')
+    @call_highest_priority("__req__")
     def __eq__(self, other):
         return isinstance(other, self._zero_func)
 
     __req__ = __eq__
 
-    @call_highest_priority('__radd__')
+    @call_highest_priority("__radd__")
     def __add__(self, other):
         if isinstance(other, self._expr_type):
             return other
         else:
             raise TypeError("Invalid argument types for addition")
 
-    @call_highest_priority('__add__')
+    @call_highest_priority("__add__")
     def __radd__(self, other):
         if isinstance(other, self._expr_type):
             return other
         else:
             raise TypeError("Invalid argument types for addition")
 
-    @call_highest_priority('__rsub__')
+    @call_highest_priority("__rsub__")
     def __sub__(self, other):
         if isinstance(other, self._expr_type):
             return -other
         else:
             raise TypeError("Invalid argument types for subtraction")
 
-    @call_highest_priority('__sub__')
+    @call_highest_priority("__sub__")
     def __rsub__(self, other):
         if isinstance(other, self._expr_type):
             return other
@@ -371,4 +386,4 @@ class BasisDependentZero(BasisDependent):
         return self
 
     def _sympystr(self, printer):
-        return '0'
+        return "0"

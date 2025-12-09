@@ -101,7 +101,8 @@ class PartialDerivative(TensExpr):
             expr = expr.expr
 
         args, indices, free, dum = cls._contract_indices_for_derivative(
-            S(expr), variables)
+            S(expr), variables
+        )
 
         obj = TensExpr.__new__(cls, *args)
 
@@ -126,12 +127,14 @@ class PartialDerivative(TensExpr):
             if isinstance(i, Tensor):
                 i_free_indices = i.get_free_indices()
                 variables_opposite_valence.append(
-                        i.xreplace({k: -k for k in i_free_indices}))
+                    i.xreplace({k: -k for k in i_free_indices})
+                )
             elif isinstance(i, Symbol):
                 variables_opposite_valence.append(i)
 
         args, indices, free, dum = TensMul._tensMul_contract_indices(
-            [expr] + variables_opposite_valence, replace_indices=True)
+            [expr] + variables_opposite_valence, replace_indices=True
+        )
 
         for i in range(1, len(args)):
             args_i = args[i]
@@ -142,7 +145,9 @@ class PartialDerivative(TensExpr):
         return args, indices, free, dum
 
     def doit(self, **hints):
-        args, indices, free, dum = self._contract_indices_for_derivative(self.expr, self.variables)
+        args, indices, free, dum = self._contract_indices_for_derivative(
+            self.expr, self.variables
+        )
 
         obj = self.func(*args)
         obj._indices = indices
@@ -152,7 +157,9 @@ class PartialDerivative(TensExpr):
         return obj
 
     def _expand_partial_derivative(self):
-        args, indices, free, dum = self._contract_indices_for_derivative(self.expr, self.variables)
+        args, indices, free, dum = self._contract_indices_for_derivative(
+            self.expr, self.variables
+        )
 
         obj = self.func(*args)
         obj._indices = indices
@@ -165,9 +172,12 @@ class PartialDerivative(TensExpr):
             return S.Zero
         elif isinstance(obj.expr, TensAdd):
             # take care of sums of multi PDs
-            result = obj.expr.func(*[
+            result = obj.expr.func(
+                *[
                     self.func(a, *obj.variables)._expand_partial_derivative()
-                    for a in result.expr.args])
+                    for a in result.expr.args
+                ]
+            )
         elif isinstance(obj.expr, TensMul):
             # take care of products of multi PDs
             if len(obj.variables) == 1:
@@ -178,10 +188,12 @@ class PartialDerivative(TensExpr):
                     if not isinstance(sympify(mulargs[ind]), Number):
                         # a number coefficient is not considered for
                         # expansion of PartialDerivative
-                        d = self.func(mulargs[ind], *obj.variables)._expand_partial_derivative()
-                        terms.append(TensMul(*(mulargs[:ind]
-                                               + [d]
-                                               + mulargs[(ind + 1):])))
+                        d = self.func(
+                            mulargs[ind], *obj.variables
+                        )._expand_partial_derivative()
+                        terms.append(
+                            TensMul(*(mulargs[:ind] + [d] + mulargs[(ind + 1) :]))
+                        )
                 result = TensAdd.fromiter(terms)
             else:
                 # derivative with respect to multiple variables
@@ -230,6 +242,7 @@ class PartialDerivative(TensExpr):
 
     def _extract_data(self, replacement_dict):
         from .array import derive_by_array, tensorcontraction
+
         indices, array = self.expr._extract_data(replacement_dict)
         for variable in self.variables:
             var_indices, var_array = variable._extract_data(replacement_dict)
@@ -239,7 +252,11 @@ class PartialDerivative(TensExpr):
             array = derive_by_array(array, var_array)
             dim_after = len(array.shape)
             dim_increase = dim_after - dim_before
-            array = permutedims(array, [i + dim_increase for i in range(dim_before)] + list(range(dim_increase)))
+            array = permutedims(
+                array,
+                [i + dim_increase for i in range(dim_before)]
+                + list(range(dim_increase)),
+            )
             array = array.as_mutable()
             varindex = var_indices[0]
             # Remove coefficients of base vector:
@@ -249,7 +266,7 @@ class PartialDerivative(TensExpr):
                 array[tuple(coeff_index)] /= coeff
             if -varindex in indices:
                 pos = indices.index(-varindex)
-                array = tensorcontraction(array, (0, pos+1))
+                array = tensorcontraction(array, (0, pos + 1))
                 indices.pop(pos)
             else:
                 indices.append(varindex)

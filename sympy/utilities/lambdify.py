@@ -14,21 +14,20 @@ import linecache
 import weakref
 
 # Required despite static analysis claiming it is not used
-from sympy.external import import_module # noqa:F401
+from sympy.external import import_module  # noqa:F401
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.decorator import doctest_depends_on
-from sympy.utilities.iterables import (is_sequence, iterable,
-    NotIterable, flatten)
+from sympy.utilities.iterables import is_sequence, iterable, NotIterable, flatten
 from sympy.utilities.misc import filldedent
 
 
-__doctest_requires__ = {('lambdify',): ['numpy', 'tensorflow']}
+__doctest_requires__ = {("lambdify",): ["numpy", "tensorflow"]}
 
 
 # Default namespaces, letting us define translations that can't be defined
 # by simple variable maps, like I => 1j
 MATH_DEFAULT: dict[str, Any] = {}
-CMATH_DEFAULT: dict[str,Any] = {}
+CMATH_DEFAULT: dict[str, Any] = {}
 MPMATH_DEFAULT: dict[str, Any] = {}
 UMATH_DEFAULT: dict[str, Any] = {}
 NUMPY_DEFAULT: dict[str, Any] = {"I": 1j}
@@ -84,9 +83,9 @@ MPMATH_TRANSLATIONS = {
     "E": "e",
     "I": "j",
     "ln": "log",
-    #"lowergamma":"lower_gamma",
+    # "lowergamma":"lower_gamma",
     "oo": "inf",
-    #"uppergamma":"upper_gamma",
+    # "uppergamma":"upper_gamma",
     "LambertW": "lambertw",
     "MutableDenseMatrix": "matrix",
     "ImmutableDenseMatrix": "matrix",
@@ -114,10 +113,7 @@ NUMPY_TRANSLATIONS: dict[str, str] = {
 
 UNUMPY_TRANSLATIONS: dict[str, str] = {}
 
-SCIPY_TRANSLATIONS: dict[str, str] = {
-    "jn" : "spherical_jn",
-    "yn" : "spherical_yn"
-}
+SCIPY_TRANSLATIONS: dict[str, str] = {"jn": "spherical_jn", "yn": "spherical_yn"}
 CUPY_TRANSLATIONS: dict[str, str] = {}
 JAX_TRANSLATIONS: dict[str, str] = {}
 
@@ -129,22 +125,64 @@ NUMEXPR_TRANSLATIONS: dict[str, str] = {}
 # Available modules:
 MODULES = {
     "math": (MATH, MATH_DEFAULT, MATH_TRANSLATIONS, ("from math import *",)),
-    "cmath": (CMATH, CMATH_DEFAULT, CMATH_TRANSLATIONS, ("import cmath; from cmath import *",)),
+    "cmath": (
+        CMATH,
+        CMATH_DEFAULT,
+        CMATH_TRANSLATIONS,
+        ("import cmath; from cmath import *",),
+    ),
     "mpmath": (MPMATH, MPMATH_DEFAULT, MPMATH_TRANSLATIONS, ("from mpmath import *",)),
-    "umath": (UMATH, UMATH_DEFAULT, UMATH_TRANSLATIONS, ("from math import pi, e, tau, inf, nan; from uncertainties.umath import *",)),
-    "numpy": (NUMPY, NUMPY_DEFAULT, NUMPY_TRANSLATIONS, ("import numpy; from numpy import *; from numpy.linalg import *",)),
-    "unumpy": (UNUMPY, UNUMPY_DEFAULT, UNUMPY_TRANSLATIONS, ("import uncertainties.unumpy; from uncertainties.unumpy import *; from uncertainties.unumpy.ulinalg import *",)),
-    "scipy": (SCIPY, SCIPY_DEFAULT, SCIPY_TRANSLATIONS, ("import scipy; import numpy; from scipy.special import *",)),
+    "umath": (
+        UMATH,
+        UMATH_DEFAULT,
+        UMATH_TRANSLATIONS,
+        ("from math import pi, e, tau, inf, nan; from uncertainties.umath import *",),
+    ),
+    "numpy": (
+        NUMPY,
+        NUMPY_DEFAULT,
+        NUMPY_TRANSLATIONS,
+        ("import numpy; from numpy import *; from numpy.linalg import *",),
+    ),
+    "unumpy": (
+        UNUMPY,
+        UNUMPY_DEFAULT,
+        UNUMPY_TRANSLATIONS,
+        (
+            "import uncertainties.unumpy; from uncertainties.unumpy import *; from uncertainties.unumpy.ulinalg import *",
+        ),
+    ),
+    "scipy": (
+        SCIPY,
+        SCIPY_DEFAULT,
+        SCIPY_TRANSLATIONS,
+        ("import scipy; import numpy; from scipy.special import *",),
+    ),
     "cupy": (CUPY, CUPY_DEFAULT, CUPY_TRANSLATIONS, ("import cupy",)),
     "jax": (JAX, JAX_DEFAULT, JAX_TRANSLATIONS, ("import jax",)),
-    "tensorflow": (TENSORFLOW, TENSORFLOW_DEFAULT, TENSORFLOW_TRANSLATIONS, ("import tensorflow",)),
+    "tensorflow": (
+        TENSORFLOW,
+        TENSORFLOW_DEFAULT,
+        TENSORFLOW_TRANSLATIONS,
+        ("import tensorflow",),
+    ),
     "torch": (TORCH, TORCH_DEFAULT, TORCH_TRANSLATIONS, ("import torch",)),
-    "sympy": (SYMPY, SYMPY_DEFAULT, {}, (
-        "from sympy.functions import *",
-        "from sympy.matrices import *",
-        "from sympy import Integral, pi, oo, nan, zoo, E, I",)),
-    "numexpr" : (NUMEXPR, NUMEXPR_DEFAULT, NUMEXPR_TRANSLATIONS,
-                 ("import_module('numexpr')", )),
+    "sympy": (
+        SYMPY,
+        SYMPY_DEFAULT,
+        {},
+        (
+            "from sympy.functions import *",
+            "from sympy.matrices import *",
+            "from sympy import Integral, pi, oo, nan, zoo, E, I",
+        ),
+    ),
+    "numexpr": (
+        NUMEXPR,
+        NUMEXPR_DEFAULT,
+        NUMEXPR_TRANSLATIONS,
+        ("import_module('numexpr')",),
+    ),
 }
 
 
@@ -158,11 +196,9 @@ def _import(module, reload=False):
     other modules.
     """
     try:
-        namespace, namespace_default, translations, import_commands = MODULES[
-            module]
+        namespace, namespace_default, translations, import_commands = MODULES[module]
     except KeyError:
-        raise NameError(
-            "'%s' module cannot be used for lambdification" % module)
+        raise NameError("'%s' module cannot be used for lambdification" % module)
 
     # Clear namespace or exit
     if namespace != namespace_default:
@@ -174,7 +210,7 @@ def _import(module, reload=False):
             return
 
     for import_command in import_commands:
-        if import_command.startswith('import_module'):
+        if import_command.startswith("import_module"):
             module = eval(import_command)
 
             if module is not None:
@@ -188,7 +224,8 @@ def _import(module, reload=False):
                 pass
 
         raise ImportError(
-            "Cannot import '%s' with '%s' command" % (module, import_command))
+            "Cannot import '%s' with '%s' command" % (module, import_command)
+        )
 
     # Add translated names to namespace
     for sympyname, translation in translations.items():
@@ -201,17 +238,28 @@ def _import(module, reload=False):
     # only exception, where we don't use the builtin abs function is the
     # mpmath translation module, because mpmath.fabs returns mpf objects in
     # contrast to abs().
-    if 'Abs' not in namespace:
-        namespace['Abs'] = abs
+    if "Abs" not in namespace:
+        namespace["Abs"] = abs
+
 
 # Used for dynamically generated filenames that are inserted into the
 # linecache.
 _lambdify_generated_counter = 1
 
 
-@doctest_depends_on(modules=('numpy', 'scipy', 'tensorflow', 'uncertainties'), python_version=(3,))
-def lambdify(args, expr, modules=None, printer=None, use_imps=True,
-             dummify=False, cse=False, docstring_limit=1000):
+@doctest_depends_on(
+    modules=("numpy", "scipy", "tensorflow", "uncertainties"), python_version=(3,)
+)
+def lambdify(
+    args,
+    expr,
+    modules=None,
+    printer=None,
+    use_imps=True,
+    dummify=False,
+    cse=False,
+    docstring_limit=1000,
+):
     """Convert a SymPy expression into a function that allows for fast
     numeric evaluation.
 
@@ -842,11 +890,11 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     if use_imps:
         namespaces.append(_imp_namespace(expr))
     # Check for dict before iterating
-    if isinstance(modules, (dict, str)) or not hasattr(modules, '__iter__'):
+    if isinstance(modules, (dict, str)) or not hasattr(modules, "__iter__"):
         namespaces.append(modules)
     else:
         # consistency check
-        if _module_present('numexpr', modules) and len(modules) > 1:
+        if _module_present("numexpr", modules) and len(modules) > 1:
             raise TypeError("numexpr must be the only item in 'modules'")
         namespaces += list(modules)
     # fill namespace with first having highest priority
@@ -856,45 +904,50 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         namespace.update(buf)
 
     if hasattr(expr, "atoms"):
-        #Try if you can extract symbols from the expression.
-        #Move on if expr.atoms in not implemented.
+        # Try if you can extract symbols from the expression.
+        # Move on if expr.atoms in not implemented.
         syms = expr.atoms(Symbol)
         for term in syms:
             namespace.update({str(term): term})
 
     if printer is None:
-        if _module_present('mpmath', namespaces):
-            from sympy.printing.pycode import MpmathPrinter as Printer # type: ignore
-        elif _module_present('scipy', namespaces):
-            from sympy.printing.numpy import SciPyPrinter as Printer # type: ignore
-        elif _module_present('numpy', namespaces):
-            from sympy.printing.numpy import NumPyPrinter as Printer # type: ignore
-        elif _module_present('unumpy', namespaces):
-            from sympy.printing.numpy import NumPyPrinter as Printer # type: ignore
-        elif _module_present('cupy', namespaces):
-            from sympy.printing.numpy import CuPyPrinter as Printer # type: ignore
-        elif _module_present('jax', namespaces):
-            from sympy.printing.numpy import JaxPrinter as Printer # type: ignore
-        elif _module_present('numexpr', namespaces):
-            from sympy.printing.lambdarepr import NumExprPrinter as Printer # type: ignore
-        elif _module_present('tensorflow', namespaces):
-            from sympy.printing.tensorflow import TensorflowPrinter as Printer # type: ignore
-        elif _module_present('torch', namespaces):
+        if _module_present("mpmath", namespaces):
+            from sympy.printing.pycode import MpmathPrinter as Printer  # type: ignore
+        elif _module_present("scipy", namespaces):
+            from sympy.printing.numpy import SciPyPrinter as Printer  # type: ignore
+        elif _module_present("numpy", namespaces):
+            from sympy.printing.numpy import NumPyPrinter as Printer  # type: ignore
+        elif _module_present("unumpy", namespaces):
+            from sympy.printing.numpy import NumPyPrinter as Printer  # type: ignore
+        elif _module_present("cupy", namespaces):
+            from sympy.printing.numpy import CuPyPrinter as Printer  # type: ignore
+        elif _module_present("jax", namespaces):
+            from sympy.printing.numpy import JaxPrinter as Printer  # type: ignore
+        elif _module_present("numexpr", namespaces):
+            from sympy.printing.lambdarepr import NumExprPrinter as Printer  # type: ignore
+        elif _module_present("tensorflow", namespaces):
+            from sympy.printing.tensorflow import TensorflowPrinter as Printer  # type: ignore
+        elif _module_present("torch", namespaces):
             from sympy.printing.pytorch import TorchPrinter as Printer  # type: ignore
-        elif _module_present('sympy', namespaces):
-            from sympy.printing.pycode import SymPyPrinter as Printer # type: ignore
-        elif _module_present('cmath', namespaces):
-            from sympy.printing.pycode import CmathPrinter as Printer # type: ignore
+        elif _module_present("sympy", namespaces):
+            from sympy.printing.pycode import SymPyPrinter as Printer  # type: ignore
+        elif _module_present("cmath", namespaces):
+            from sympy.printing.pycode import CmathPrinter as Printer  # type: ignore
         else:
-            from sympy.printing.pycode import PythonCodePrinter as Printer # type: ignore
+            from sympy.printing.pycode import PythonCodePrinter as Printer  # type: ignore
         user_functions = {}
         for m in namespaces[::-1]:
             if isinstance(m, dict):
                 for k in m:
                     user_functions[k] = k
-        printer = Printer({'fully_qualified_modules': False, 'inline': True,
-                           'allow_unknown_functions': True,
-                           'user_functions': user_functions})
+        printer = Printer(
+            {
+                "fully_qualified_modules": False,
+                "inline": True,
+                "allow_unknown_functions": True,
+                "user_functions": user_functions,
+            }
+        )
 
     if isinstance(args, set):
         sympy_deprecation_warning(
@@ -905,36 +958,38 @@ or tuple for the function arguments.
             """,
             deprecated_since_version="1.6.3",
             active_deprecations_target="deprecated-lambdify-arguments-set",
-                )
+        )
 
     # Get the names of the args, for creating a docstring
     iterable_args = (args,) if isinstance(args, Expr) else args
     names = []
 
     # Grab the callers frame, for getting the names by inspection (if needed)
-    callers_local_vars = inspect.currentframe().f_back.f_locals.items() # type: ignore
+    callers_local_vars = inspect.currentframe().f_back.f_locals.items()  # type: ignore
     for n, var in enumerate(iterable_args):
-        if hasattr(var, 'name'):
+        if hasattr(var, "name"):
             names.append(var.name)
         else:
             # It's an iterable. Try to get name by inspection of calling frame.
-            name_list = [var_name for var_name, var_val in callers_local_vars
-                    if var_val is var]
+            name_list = [
+                var_name for var_name, var_val in callers_local_vars if var_val is var
+            ]
             if len(name_list) == 1:
                 names.append(name_list[0])
             else:
                 # Cannot infer name with certainty. arg_# will have to do.
-                names.append('arg_' + str(n))
+                names.append("arg_" + str(n))
 
     # Create the function definition code and execute it
-    funcname = '_lambdifygenerated'
-    if _module_present('tensorflow', namespaces):
+    funcname = "_lambdifygenerated"
+    if _module_present("tensorflow", namespaces):
         funcprinter = _TensorflowEvaluatorPrinter(printer, dummify)
     else:
         funcprinter = _EvaluatorPrinter(printer, dummify)
 
     if cse == True:
         from sympy.simplify.cse_main import cse as _cse
+
         cses, _expr = _cse(expr, list=False)
     elif callable(cse):
         cses, _expr = cse(expr)
@@ -944,7 +999,7 @@ or tuple for the function arguments.
 
     # Collect the module imports from the code printers.
     imp_mod_lines = []
-    for mod, keys in (getattr(printer, 'module_imports', None) or {}).items():
+    for mod, keys in (getattr(printer, "module_imports", None) or {}).items():
         for k in keys:
             if k not in namespace:
                 ln = "from %s import %s" % (mod, k)
@@ -959,22 +1014,23 @@ or tuple for the function arguments.
                 imp_mod_lines.append(ln)
 
     # Provide lambda expression with builtins, and compatible implementation of range
-    namespace.update({'builtins':builtins, 'range':range})
+    namespace.update({"builtins": builtins, "range": range})
 
     funclocals = {}
     global _lambdify_generated_counter
-    filename = '<lambdifygenerated-%s>' % _lambdify_generated_counter
+    filename = "<lambdifygenerated-%s>" % _lambdify_generated_counter
     _lambdify_generated_counter += 1
-    c = compile(funcstr, filename, 'exec')
+    c = compile(funcstr, filename, "exec")
     exec(c, namespace, funclocals)
     # mtime has to be None or else linecache.checkcache will remove it
-    linecache.cache[filename] = (len(funcstr), None, funcstr.splitlines(True), filename) # type: ignore
+    linecache.cache[filename] = (len(funcstr), None, funcstr.splitlines(True), filename)  # type: ignore
 
     # Remove the entry from the linecache when the object is garbage collected
     def cleanup_linecache(filename):
         def _cleanup():
             if filename in linecache.cache:
                 del linecache.cache[filename]
+
         return _cleanup
 
     func = funclocals[funcname]
@@ -983,14 +1039,18 @@ or tuple for the function arguments.
 
     # Apply the docstring
     sig = "func({})".format(", ".join(str(i) for i in names))
-    sig = textwrap.fill(sig, subsequent_indent=' '*8)
+    sig = textwrap.fill(sig, subsequent_indent=" " * 8)
     if _too_large_for_docstring(expr, docstring_limit):
-        expr_str = "EXPRESSION REDACTED DUE TO LENGTH, (see lambdify's `docstring_limit`)"
-        src_str = "SOURCE CODE REDACTED DUE TO LENGTH, (see lambdify's `docstring_limit`)"
+        expr_str = (
+            "EXPRESSION REDACTED DUE TO LENGTH, (see lambdify's `docstring_limit`)"
+        )
+        src_str = (
+            "SOURCE CODE REDACTED DUE TO LENGTH, (see lambdify's `docstring_limit`)"
+        )
     else:
         expr_str = str(expr)
         if len(expr_str) > 78:
-            expr_str = textwrap.wrap(expr_str, 75)[0] + '...'
+            expr_str = textwrap.wrap(expr_str, 75)[0] + "..."
         src_str = funcstr
     func.__doc__ = (
         "Created with lambdify. Signature:\n\n"
@@ -1001,16 +1061,18 @@ or tuple for the function arguments.
         "{src}\n\n"
         "Imported modules:\n\n"
         "{imp_mods}"
-        ).format(sig=sig, expr=expr_str, src=src_str, imp_mods='\n'.join(imp_mod_lines))
+    ).format(sig=sig, expr=expr_str, src=src_str, imp_mods="\n".join(imp_mod_lines))
     return func
+
 
 def _module_present(modname, modlist):
     if modname in modlist:
         return True
     for m in modlist:
-        if hasattr(m, '__name__') and m.__name__ == modname:
+        if hasattr(m, "__name__") and m.__name__ == modname:
             return True
     return False
+
 
 def _get_namespace(m):
     """
@@ -1024,7 +1086,9 @@ def _get_namespace(m):
     elif hasattr(m, "__dict__"):
         return m.__dict__
     else:
-        raise TypeError("Argument must be either a string, dict or module but it is: %s" % m)
+        raise TypeError(
+            "Argument must be either a string, dict or module but it is: %s" % m
+        )
 
 
 def _recursive_to_string(doprint, arg):
@@ -1045,7 +1109,7 @@ def _recursive_to_string(doprint, arg):
                 return "()"
         else:
             raise NotImplementedError("unhandled type: %s, %s" % (type(arg), arg))
-        return left +', '.join(_recursive_to_string(doprint, e) for e in arg) + right
+        return left + ", ".join(_recursive_to_string(doprint, e) for e in arg) + right
     elif isinstance(arg, str):
         return arg
     else:
@@ -1076,8 +1140,8 @@ def lambdastr(args, expr, printer=None, dummify=None):
     # Transforming everything to strings.
     from sympy.matrices import DeferredVector
     from sympy.core.basic import Basic
-    from sympy.core.function import (Derivative, Function)
-    from sympy.core.symbol import (Dummy, Symbol)
+    from sympy.core.function import Derivative, Function
+    from sympy.core.symbol import Dummy, Symbol
     from sympy.core.sympify import sympify
 
     if printer is not None:
@@ -1089,7 +1153,7 @@ def lambdastr(args, expr, printer=None, dummify=None):
             else:
                 lambdarepr = lambda expr: printer.doprint(expr)
     else:
-        #XXX: This has to be done here because of circular imports
+        # XXX: This has to be done here because of circular imports
         from sympy.printing.lambdarepr import lambdarepr
 
     def sub_args(args, dummies_dict):
@@ -1104,7 +1168,7 @@ def lambdastr(args, expr, printer=None, dummify=None):
             # replace these with Dummy symbols
             if isinstance(args, (Function, Symbol, Derivative)):
                 dummies = Dummy()
-                dummies_dict.update({args : dummies})
+                dummies_dict.update({args: dummies})
                 return str(dummies)
             else:
                 return str(args)
@@ -1132,20 +1196,24 @@ def lambdastr(args, expr, printer=None, dummify=None):
                 yield (n,)
 
     if dummify is None:
-        dummify = any(isinstance(a, Basic) and
-            a.atoms(Function, Derivative) for a in (
-            args if isiter(args) else [args]))
+        dummify = any(
+            isinstance(a, Basic) and a.atoms(Function, Derivative)
+            for a in (args if isiter(args) else [args])
+        )
 
     if isiter(args) and any(isiter(i) for i in args):
         dum_args = [str(Dummy(str(i))) for i in range(len(args))]
 
-        indexed_args = ','.join([
-            dum_args[ind[0]] + ''.join(["[%s]" % k for k in ind[1:]])
-                    for ind in flat_indexes(args)])
+        indexed_args = ",".join(
+            [
+                dum_args[ind[0]] + "".join(["[%s]" % k for k in ind[1:]])
+                for ind in flat_indexes(args)
+            ]
+        )
 
         lstr = lambdastr(flatten(args), expr, printer=printer, dummify=dummify)
 
-        return 'lambda %s: (%s)(%s)' % (','.join(dum_args), lstr, indexed_args)
+        return "lambda %s: (%s)(%s)" % (",".join(dum_args), lstr, indexed_args)
 
     dummies_dict = {}
     if dummify:
@@ -1165,11 +1233,12 @@ def lambdastr(args, expr, printer=None, dummify=None):
     expr = _recursive_to_string(lambdarepr, expr)
     return "lambda %s: (%s)" % (args, expr)
 
+
 class _EvaluatorPrinter:
     def __init__(self, printer=None, dummify=False):
         self._dummify = dummify
 
-        #XXX: This has to be done here because of circular imports
+        # XXX: This has to be done here because of circular imports
         from sympy.printing.lambdarepr import LambdaPrinter
 
         if printer is None:
@@ -1183,10 +1252,10 @@ class _EvaluatorPrinter:
 
             self._exprrepr = printer.doprint
 
-            #if hasattr(printer, '_print_Symbol'):
+            # if hasattr(printer, '_print_Symbol'):
             #    symbolrepr = printer._print_Symbol
 
-            #if hasattr(printer, '_print_Dummy'):
+            # if hasattr(printer, '_print_Dummy'):
             #    dummyrepr = printer._print_Dummy
 
         # Used to print the generated function arguments in a standard way
@@ -1224,7 +1293,7 @@ class _EvaluatorPrinter:
             else:
                 funcargs.append(argstr)
 
-        funcsig = 'def {}({}):'.format(funcname, ', '.join(funcargs))
+        funcsig = "def {}({}):".format(funcname, ", ".join(funcargs))
 
         # Wrap input arguments before unpacking
         funcbody.extend(self._print_funcargwrapping(funcargs))
@@ -1233,31 +1302,34 @@ class _EvaluatorPrinter:
 
         for s, e in cses:
             if e is None:
-                funcbody.append('del {}'.format(self._exprrepr(s)))
+                funcbody.append("del {}".format(self._exprrepr(s)))
             else:
-                funcbody.append('{} = {}'.format(self._exprrepr(s), self._exprrepr(e)))
+                funcbody.append("{} = {}".format(self._exprrepr(s), self._exprrepr(e)))
 
         # Subs may appear in expressions generated by .diff()
         subs_assignments = []
         expr = self._handle_Subs(expr, out=subs_assignments)
         for lhs, rhs in subs_assignments:
-            funcbody.append('{} = {}'.format(self._exprrepr(lhs), self._exprrepr(rhs)))
+            funcbody.append("{} = {}".format(self._exprrepr(lhs), self._exprrepr(rhs)))
 
         str_expr = _recursive_to_string(self._exprrepr, expr)
 
-        if '\n' in str_expr:
-            str_expr = '({})'.format(str_expr)
-        funcbody.append('return {}'.format(str_expr))
+        if "\n" in str_expr:
+            str_expr = "({})".format(str_expr)
+        funcbody.append("return {}".format(str_expr))
 
         funclines = [funcsig]
-        funclines.extend(['    ' + line for line in funcbody])
+        funclines.extend(["    " + line for line in funcbody])
 
-        return '\n'.join(funclines) + '\n'
+        return "\n".join(funclines) + "\n"
 
     @classmethod
     def _is_safe_ident(cls, ident):
-        return isinstance(ident, str) and ident.isidentifier() \
-                and not keyword.iskeyword(ident)
+        return (
+            isinstance(ident, str)
+            and ident.isidentifier()
+            and not keyword.iskeyword(ident)
+        )
 
     def _preprocess(self, args, expr, cses=(), _dummies_dict=None):
         """Preprocess args, expr to replace arguments that do not map
@@ -1267,7 +1339,7 @@ class _EvaluatorPrinter:
         """
         from sympy.core.basic import Basic
         from sympy.core.sorting import ordered
-        from sympy.core.function import (Derivative, Function)
+        from sympy.core.function import Derivative, Function
         from sympy.core.symbol import Dummy, uniquely_named_symbol
         from sympy.matrices import DeferredVector
         from sympy.core.expr import Expr
@@ -1275,10 +1347,9 @@ class _EvaluatorPrinter:
         # Args of type Dummy can cause name collisions with args
         # of type Symbol.  Force dummify of everything in this
         # situation.
-        dummify = self._dummify or any(
-            isinstance(arg, Dummy) for arg in flatten(args))
+        dummify = self._dummify or any(isinstance(arg, Dummy) for arg in flatten(args))
 
-        argstrs = [None]*len(args)
+        argstrs = [None] * len(args)
         if _dummies_dict is None:
             _dummies_dict = {}
 
@@ -1290,7 +1361,9 @@ class _EvaluatorPrinter:
 
         for arg, i in reversed(list(ordered(zip(args, range(len(args)))))):
             if iterable(arg):
-                s, expr = self._preprocess(arg, expr, cses=cses, _dummies_dict=_dummies_dict)
+                s, expr = self._preprocess(
+                    arg, expr, cses=cses, _dummies_dict=_dummies_dict
+                )
             elif isinstance(arg, DeferredVector):
                 s = str(arg)
             elif isinstance(arg, Basic) and arg.is_symbol:
@@ -1299,7 +1372,8 @@ class _EvaluatorPrinter:
                     dummy = Dummy()
                     if isinstance(expr, Expr):
                         dummy = uniquely_named_symbol(
-                            dummy.name, expr, modify=lambda s: '_' + s)
+                            dummy.name, expr, modify=lambda s: "_" + s
+                        )
                     s = self._argrepr(dummy)
                     update_dummies(arg, dummy)
                     expr = self._subexpr(expr, _dummies_dict)
@@ -1318,7 +1392,7 @@ class _EvaluatorPrinter:
         from sympy.core.sympify import sympify
 
         expr = sympify(expr)
-        xreplace = getattr(expr, 'xreplace', None)
+        xreplace = getattr(expr, "xreplace", None)
         if xreplace is not None:
             expr = xreplace(dummies_dict)
         else:
@@ -1351,11 +1425,13 @@ class _EvaluatorPrinter:
         unpackto is a list or nested lists of the variable names (strings) to
         unpack to.
         """
-        def unpack_lhs(lvalues):
-            return '[{}]'.format(', '.join(
-                unpack_lhs(val) if iterable(val) else val for val in lvalues))
 
-        return ['{} = {}'.format(unpack_lhs(unpackto), arg)]
+        def unpack_lhs(lvalues):
+            return "[{}]".format(
+                ", ".join(unpack_lhs(val) if iterable(val) else val for val in lvalues)
+            )
+
+        return ["{} = {}".format(unpack_lhs(unpackto), arg)]
 
     def _handle_Subs(self, expr, out):
         """Any instance of Subs is extracted and returned as assignment pairs."""
@@ -1378,6 +1454,7 @@ class _EvaluatorPrinter:
             expr = type(expr)([self._handle_Subs(e, out) for e in expr])
         return expr
 
+
 class _TensorflowEvaluatorPrinter(_EvaluatorPrinter):
     def _print_unpacking(self, lvalues, rvalue):
         """Generate argument unpacking code.
@@ -1394,13 +1471,16 @@ class _TensorflowEvaluatorPrinter(_EvaluatorPrinter):
                 else:
                     yield (n,)
 
-        indexed = ', '.join('{}[{}]'.format(rvalue, ']['.join(map(str, ind)))
-                                for ind in flat_indexes(lvalues))
+        indexed = ", ".join(
+            "{}[{}]".format(rvalue, "][".join(map(str, ind)))
+            for ind in flat_indexes(lvalues)
+        )
 
-        return ['[{}] = [{}]'.format(', '.join(flatten(lvalues)), indexed)]
+        return ["[{}] = [{}]".format(", ".join(flatten(lvalues)), indexed)]
+
 
 def _imp_namespace(expr, namespace=None):
-    """ Return namespace dict with function implementations
+    """Return namespace dict with function implementations
 
     We need to search for functions in anything that can be thrown at
     us - that is - anything that could be passed as ``expr``.  Examples
@@ -1436,6 +1516,7 @@ def _imp_namespace(expr, namespace=None):
     """
     # Delayed import to avoid circular imports
     from sympy.core.function import FunctionClass
+
     if namespace is None:
         namespace = {}
     # tuples, lists, dicts are valid expressions
@@ -1450,25 +1531,25 @@ def _imp_namespace(expr, namespace=None):
             _imp_namespace(val, namespace)
         return namespace
     # SymPy expressions may be Functions themselves
-    func = getattr(expr, 'func', None)
+    func = getattr(expr, "func", None)
     if isinstance(func, FunctionClass):
-        imp = getattr(func, '_imp_', None)
+        imp = getattr(func, "_imp_", None)
         if imp is not None:
             name = expr.func.__name__
             if name in namespace and namespace[name] != imp:
-                raise ValueError('We found more than one '
-                                 'implementation with name '
-                                 '"%s"' % name)
+                raise ValueError(
+                    "We found more than one " "implementation with name " '"%s"' % name
+                )
             namespace[name] = imp
     # and / or they may take Functions as arguments
-    if hasattr(expr, 'args'):
+    if hasattr(expr, "args"):
         for arg in expr.args:
             _imp_namespace(arg, namespace)
     return namespace
 
 
 def implemented_function(symfunc, implementation):
-    """ Add numerical ``implementation`` to function ``symfunc``.
+    """Add numerical ``implementation`` to function ``symfunc``.
 
     ``symfunc`` can be an ``UndefinedFunction`` instance, or a name string.
     In the latter case we create an ``UndefinedFunction`` instance with that
@@ -1506,6 +1587,7 @@ def implemented_function(symfunc, implementation):
     """
     # Delayed import to avoid circular imports
     from sympy.core.function import UndefinedFunction
+
     # if name, create function to hold implementation
     kwargs = {}
     if isinstance(symfunc, UndefinedFunction):
@@ -1515,11 +1597,16 @@ def implemented_function(symfunc, implementation):
         # Keyword arguments to UndefinedFunction are added as attributes to
         # the created class.
         symfunc = UndefinedFunction(
-            symfunc, _imp_=staticmethod(implementation), **kwargs)
+            symfunc, _imp_=staticmethod(implementation), **kwargs
+        )
     elif not isinstance(symfunc, UndefinedFunction):
-        raise ValueError(filldedent('''
+        raise ValueError(
+            filldedent(
+                """
             symfunc should be either a string or
-            an UndefinedFunction instance.'''))
+            an UndefinedFunction instance."""
+            )
+        )
     return symfunc
 
 

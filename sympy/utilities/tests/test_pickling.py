@@ -9,15 +9,37 @@ from sympy.testing.pytest import XFAIL, raises, ignore_warnings
 from sympy.core.basic import Atom, Basic
 from sympy.core.singleton import SingletonRegistry
 from sympy.core.symbol import Str, Dummy, Symbol, Wild
-from sympy.core.numbers import (E, I, pi, oo, zoo, nan, Integer,
-        Rational, Float, AlgebraicNumber)
-from sympy.core.relational import (Equality, GreaterThan, LessThan, Relational,
-        StrictGreaterThan, StrictLessThan, Unequality)
+from sympy.core.numbers import (
+    E,
+    I,
+    pi,
+    oo,
+    zoo,
+    nan,
+    Integer,
+    Rational,
+    Float,
+    AlgebraicNumber,
+)
+from sympy.core.relational import (
+    Equality,
+    GreaterThan,
+    LessThan,
+    Relational,
+    StrictGreaterThan,
+    StrictLessThan,
+    Unequality,
+)
 from sympy.core.add import Add
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
-from sympy.core.function import Derivative, Function, FunctionClass, Lambda, \
-    WildFunction
+from sympy.core.function import (
+    Derivative,
+    Function,
+    FunctionClass,
+    Lambda,
+    WildFunction,
+)
 from sympy.sets.sets import Interval
 from sympy.core.multidimensional import vectorize
 
@@ -28,28 +50,28 @@ from sympy.core.singleton import S
 from sympy.core.symbol import symbols
 
 from sympy.external import import_module
-cloudpickle = import_module('cloudpickle')
+
+cloudpickle = import_module("cloudpickle")
 
 
 not_equal_attrs = {
-    '_assumptions',  # This is a local cache that isn't automatically filled on creation
-    '_mhash',   # Cached after __hash__ is called but set to None after creation
+    "_assumptions",  # This is a local cache that isn't automatically filled on creation
+    "_mhash",  # Cached after __hash__ is called but set to None after creation
 }
 
 
 deprecated_attrs = {
-    'is_EmptySet',  # Deprecated from SymPy 1.5. This can be removed when is_EmptySet is removed.
-    'expr_free_symbols',  # Deprecated from SymPy 1.9. This can be removed when exr_free_symbols is removed.
+    "is_EmptySet",  # Deprecated from SymPy 1.5. This can be removed when is_EmptySet is removed.
+    "expr_free_symbols",  # Deprecated from SymPy 1.9. This can be removed when exr_free_symbols is removed.
 }
 
 dont_check_attrs = {
-    '_sage_',  # Fails because Sage is not installed
+    "_sage_",  # Fails because Sage is not installed
 }
 
 
 def check(a, exclude=[], check_attr=True, deprecated=()):
-    """ Check that pickling and copying round-trips.
-    """
+    """Check that pickling and copying round-trips."""
     # Pickling with protocols 0 and 1 is disabled for Basic instances:
     if isinstance(a, Basic):
         for protocol in [0, 1]:
@@ -96,29 +118,40 @@ def check(a, exclude=[], check_attr=True, deprecated=()):
                     attr = getattr(a, i)
                     if not hasattr(attr, "__call__"):
                         assert hasattr(b, i), i
-                        assert getattr(b, i) == attr, "%s != %s, protocol: %s" % (getattr(b, i), attr, protocol)
+                        assert getattr(b, i) == attr, "%s != %s, protocol: %s" % (
+                            getattr(b, i),
+                            attr,
+                            protocol,
+                        )
 
         c(a, b, d1)
         c(b, a, d2)
 
 
-
-#================== core =========================
+# ================== core =========================
 
 
 def test_core_basic():
     for c in (Atom, Atom(), Basic, Basic(), SingletonRegistry, S):
         check(c)
 
+
 def test_core_Str():
-    check(Str('x'))
+    check(Str("x"))
+
 
 def test_core_symbol():
     # make the Symbol a unique name that doesn't class with any other
     # testing variable in this file since after this test the symbol
     # having the same name will be cached as noncommutative
-    for c in (Dummy, Dummy("x", commutative=False), Symbol,
-            Symbol("_issue_3130", commutative=False), Wild, Wild("x")):
+    for c in (
+        Dummy,
+        Dummy("x", commutative=False),
+        Symbol,
+        Symbol("_issue_3130", commutative=False),
+        Wild,
+        Wild("x"),
+    ):
         check(c)
 
 
@@ -138,10 +171,22 @@ def test_core_float_copy():
 def test_core_relational():
     x = Symbol("x")
     y = Symbol("y")
-    for c in (Equality, Equality(x, y), GreaterThan, GreaterThan(x, y),
-              LessThan, LessThan(x, y), Relational, Relational(x, y),
-              StrictGreaterThan, StrictGreaterThan(x, y), StrictLessThan,
-              StrictLessThan(x, y), Unequality, Unequality(x, y)):
+    for c in (
+        Equality,
+        Equality(x, y),
+        GreaterThan,
+        GreaterThan(x, y),
+        LessThan,
+        LessThan(x, y),
+        Relational,
+        Relational(x, y),
+        StrictGreaterThan,
+        StrictGreaterThan(x, y),
+        StrictLessThan,
+        StrictLessThan(x, y),
+        Unequality,
+        Unequality(x, y),
+    ):
         check(c)
 
 
@@ -165,8 +210,7 @@ def test_core_power():
 
 def test_core_function():
     x = Symbol("x")
-    for f in (Derivative, Derivative(x), Function, FunctionClass, Lambda,
-              WildFunction):
+    for f in (Derivative, Derivative(x), Function, FunctionClass, Lambda, WildFunction):
         check(f)
 
 
@@ -194,46 +238,172 @@ def test_core_multidimensional():
 def test_Singletons():
     protocols = [0, 1, 2, 3, 4]
     copiers = [copy.copy, copy.deepcopy]
-    copiers += [lambda x: pickle.loads(pickle.dumps(x, proto))
-            for proto in protocols]
+    copiers += [lambda x: pickle.loads(pickle.dumps(x, proto)) for proto in protocols]
     if cloudpickle:
         copiers += [lambda x: cloudpickle.loads(cloudpickle.dumps(x))]
 
-    for obj in (Integer(-1), Integer(0), Integer(1), Rational(1, 2), pi, E, I,
-            oo, -oo, zoo, nan, S.GoldenRatio, S.TribonacciConstant,
-            S.EulerGamma, S.Catalan, S.EmptySet, S.IdentityFunction):
+    for obj in (
+        Integer(-1),
+        Integer(0),
+        Integer(1),
+        Rational(1, 2),
+        pi,
+        E,
+        I,
+        oo,
+        -oo,
+        zoo,
+        nan,
+        S.GoldenRatio,
+        S.TribonacciConstant,
+        S.EulerGamma,
+        S.Catalan,
+        S.EmptySet,
+        S.IdentityFunction,
+    ):
         for func in copiers:
             assert func(obj) is obj
 
-#================== combinatorics ===================
+
+# ================== combinatorics ===================
 from sympy.combinatorics.free_groups import FreeGroup
+
 
 def test_free_group():
     check(FreeGroup("x, y, z"), check_attr=False)
 
-#================== functions ===================
-from sympy.functions import (Piecewise, lowergamma, acosh, chebyshevu,
-        chebyshevt, ln, chebyshevt_root, legendre, Heaviside, bernoulli, coth,
-        tanh, assoc_legendre, sign, arg, asin, DiracDelta, re, rf, Abs,
-        uppergamma, binomial, sinh, cos, cot, acos, acot, gamma, bell,
-        hermite, harmonic, LambertW, zeta, log, factorial, asinh, acoth, cosh,
-        dirichlet_eta, Eijk, loggamma, erf, ceiling, im, fibonacci,
-        tribonacci, conjugate, tan, chebyshevu_root, floor, atanh, sqrt, sin,
-        atan, ff, lucas, atan2, polygamma, exp)
+
+# ================== functions ===================
+from sympy.functions import (
+    Piecewise,
+    lowergamma,
+    acosh,
+    chebyshevu,
+    chebyshevt,
+    ln,
+    chebyshevt_root,
+    legendre,
+    Heaviside,
+    bernoulli,
+    coth,
+    tanh,
+    assoc_legendre,
+    sign,
+    arg,
+    asin,
+    DiracDelta,
+    re,
+    rf,
+    Abs,
+    uppergamma,
+    binomial,
+    sinh,
+    cos,
+    cot,
+    acos,
+    acot,
+    gamma,
+    bell,
+    hermite,
+    harmonic,
+    LambertW,
+    zeta,
+    log,
+    factorial,
+    asinh,
+    acoth,
+    cosh,
+    dirichlet_eta,
+    Eijk,
+    loggamma,
+    erf,
+    ceiling,
+    im,
+    fibonacci,
+    tribonacci,
+    conjugate,
+    tan,
+    chebyshevu_root,
+    floor,
+    atanh,
+    sqrt,
+    sin,
+    atan,
+    ff,
+    lucas,
+    atan2,
+    polygamma,
+    exp,
+)
 
 
 def test_functions():
-    one_var = (acosh, ln, Heaviside, factorial, bernoulli, coth, tanh,
-            sign, arg, asin, DiracDelta, re, Abs, sinh, cos, cot, acos, acot,
-            gamma, bell, harmonic, LambertW, zeta, log, factorial, asinh,
-            acoth, cosh, dirichlet_eta, loggamma, erf, ceiling, im, fibonacci,
-            tribonacci, conjugate, tan, floor, atanh, sin, atan, lucas, exp)
-    two_var = (rf, ff, lowergamma, chebyshevu, chebyshevt, binomial,
-            atan2, polygamma, hermite, legendre, uppergamma)
+    one_var = (
+        acosh,
+        ln,
+        Heaviside,
+        factorial,
+        bernoulli,
+        coth,
+        tanh,
+        sign,
+        arg,
+        asin,
+        DiracDelta,
+        re,
+        Abs,
+        sinh,
+        cos,
+        cot,
+        acos,
+        acot,
+        gamma,
+        bell,
+        harmonic,
+        LambertW,
+        zeta,
+        log,
+        factorial,
+        asinh,
+        acoth,
+        cosh,
+        dirichlet_eta,
+        loggamma,
+        erf,
+        ceiling,
+        im,
+        fibonacci,
+        tribonacci,
+        conjugate,
+        tan,
+        floor,
+        atanh,
+        sin,
+        atan,
+        lucas,
+        exp,
+    )
+    two_var = (
+        rf,
+        ff,
+        lowergamma,
+        chebyshevu,
+        chebyshevt,
+        binomial,
+        atan2,
+        polygamma,
+        hermite,
+        legendre,
+        uppergamma,
+    )
     x, y, z = symbols("x,y,z")
-    others = (chebyshevt_root, chebyshevu_root, Eijk(x, y, z),
-            Piecewise( (0, x < -1), (x**2, x <= 1), (x**3, True)),
-            assoc_legendre)
+    others = (
+        chebyshevt_root,
+        chebyshevu_root,
+        Eijk(x, y, z),
+        Piecewise((0, x < -1), (x**2, x <= 1), (x**3, True)),
+        assoc_legendre,
+    )
     for cls in one_var:
         check(cls)
         c = cls(x)
@@ -245,7 +415,8 @@ def test_functions():
     for cls in others:
         check(cls)
 
-#================== geometry ====================
+
+# ================== geometry ====================
 from sympy.geometry.entity import GeometryEntity
 from sympy.geometry.point import Point
 from sympy.geometry.ellipse import Circle, Ellipse
@@ -259,14 +430,33 @@ def test_geometry():
     p3 = Point(0, 0)
     p4 = Point(0, 1)
     for c in (
-        GeometryEntity, GeometryEntity(), Point, p1, Circle, Circle(p1, 2),
-        Ellipse, Ellipse(p1, 3, 4), Line, Line(p1, p2), LinearEntity,
-        LinearEntity(p1, p2), Ray, Ray(p1, p2), Segment, Segment(p1, p2),
-        Polygon, Polygon(p1, p2, p3, p4), RegularPolygon,
-            RegularPolygon(p1, 4, 5), Triangle, Triangle(p1, p2, p3)):
+        GeometryEntity,
+        GeometryEntity(),
+        Point,
+        p1,
+        Circle,
+        Circle(p1, 2),
+        Ellipse,
+        Ellipse(p1, 3, 4),
+        Line,
+        Line(p1, p2),
+        LinearEntity,
+        LinearEntity(p1, p2),
+        Ray,
+        Ray(p1, p2),
+        Segment,
+        Segment(p1, p2),
+        Polygon,
+        Polygon(p1, p2, p3, p4),
+        RegularPolygon,
+        RegularPolygon(p1, 4, 5),
+        Triangle,
+        Triangle(p1, p2, p3),
+    ):
         check(c, check_attr=False)
 
-#================== integrals ====================
+
+# ================== integrals ====================
 from sympy.integrals.integrals import Integral
 
 
@@ -275,7 +465,8 @@ def test_integrals():
     for c in (Integral, Integral(x)):
         check(c)
 
-#==================== logic =====================
+
+# ==================== logic =====================
 from sympy.core.logic import Logic
 
 
@@ -283,15 +474,17 @@ def test_logic():
     for c in (Logic, Logic(1)):
         check(c)
 
-#================== matrices ====================
+
+# ================== matrices ====================
 from sympy.matrices import Matrix, SparseMatrix
 
 
 def test_matrices():
     for c in (Matrix, Matrix([1, 2, 3]), SparseMatrix, SparseMatrix([[1, 2], [3, 4]])):
-        check(c, deprecated=['_smat', '_mat'])
+        check(c, deprecated=["_smat", "_mat"])
 
-#================== ntheory =====================
+
+# ================== ntheory =====================
 from sympy.ntheory.generate import Sieve
 
 
@@ -299,7 +492,8 @@ def test_ntheory():
     for c in (Sieve, Sieve()):
         check(c)
 
-#================== physics =====================
+
+# ================== physics =====================
 from sympy.physics.paulialgebra import Pauli
 from sympy.physics.units import Unit
 
@@ -308,7 +502,8 @@ def test_physics():
     for c in (Unit, meter, Pauli, Pauli(1)):
         check(c)
 
-#================== plotting ====================
+
+# ================== plotting ====================
 # XXX: These tests are not complete, so XFAIL them
 
 
@@ -317,61 +512,102 @@ def test_plotting():
     from sympy.plotting.pygletplot.color_scheme import ColorGradient, ColorScheme
     from sympy.plotting.pygletplot.managed_window import ManagedWindow
     from sympy.plotting.plot import Plot, ScreenShot
-    from sympy.plotting.pygletplot.plot_axes import PlotAxes, PlotAxesBase, PlotAxesFrame, PlotAxesOrdinate
+    from sympy.plotting.pygletplot.plot_axes import (
+        PlotAxes,
+        PlotAxesBase,
+        PlotAxesFrame,
+        PlotAxesOrdinate,
+    )
     from sympy.plotting.pygletplot.plot_camera import PlotCamera
     from sympy.plotting.pygletplot.plot_controller import PlotController
     from sympy.plotting.pygletplot.plot_curve import PlotCurve
     from sympy.plotting.pygletplot.plot_interval import PlotInterval
     from sympy.plotting.pygletplot.plot_mode import PlotMode
-    from sympy.plotting.pygletplot.plot_modes import Cartesian2D, Cartesian3D, Cylindrical, \
-        ParametricCurve2D, ParametricCurve3D, ParametricSurface, Polar, Spherical
+    from sympy.plotting.pygletplot.plot_modes import (
+        Cartesian2D,
+        Cartesian3D,
+        Cylindrical,
+        ParametricCurve2D,
+        ParametricCurve3D,
+        ParametricSurface,
+        Polar,
+        Spherical,
+    )
     from sympy.plotting.pygletplot.plot_object import PlotObject
     from sympy.plotting.pygletplot.plot_surface import PlotSurface
     from sympy.plotting.pygletplot.plot_window import PlotWindow
+
     for c in (
-        ColorGradient, ColorGradient(0.2, 0.4), ColorScheme, ManagedWindow,
-        ManagedWindow, Plot, ScreenShot, PlotAxes, PlotAxesBase,
-        PlotAxesFrame, PlotAxesOrdinate, PlotCamera, PlotController,
-        PlotCurve, PlotInterval, PlotMode, Cartesian2D, Cartesian3D,
-        Cylindrical, ParametricCurve2D, ParametricCurve3D,
-        ParametricSurface, Polar, Spherical, PlotObject, PlotSurface,
-            PlotWindow):
+        ColorGradient,
+        ColorGradient(0.2, 0.4),
+        ColorScheme,
+        ManagedWindow,
+        ManagedWindow,
+        Plot,
+        ScreenShot,
+        PlotAxes,
+        PlotAxesBase,
+        PlotAxesFrame,
+        PlotAxesOrdinate,
+        PlotCamera,
+        PlotController,
+        PlotCurve,
+        PlotInterval,
+        PlotMode,
+        Cartesian2D,
+        Cartesian3D,
+        Cylindrical,
+        ParametricCurve2D,
+        ParametricCurve3D,
+        ParametricSurface,
+        Polar,
+        Spherical,
+        PlotObject,
+        PlotSurface,
+        PlotWindow,
+    ):
         check(c)
 
 
 @XFAIL
 def test_plotting2():
-    #from sympy.plotting.color_scheme import ColorGradient
+    # from sympy.plotting.color_scheme import ColorGradient
     from sympy.plotting.pygletplot.color_scheme import ColorScheme
-    #from sympy.plotting.managed_window import ManagedWindow
+
+    # from sympy.plotting.managed_window import ManagedWindow
     from sympy.plotting.plot import Plot
-    #from sympy.plotting.plot import ScreenShot
+
+    # from sympy.plotting.plot import ScreenShot
     from sympy.plotting.pygletplot.plot_axes import PlotAxes
-    #from sympy.plotting.plot_axes import PlotAxesBase, PlotAxesFrame, PlotAxesOrdinate
-    #from sympy.plotting.plot_camera import PlotCamera
-    #from sympy.plotting.plot_controller import PlotController
-    #from sympy.plotting.plot_curve import PlotCurve
-    #from sympy.plotting.plot_interval import PlotInterval
-    #from sympy.plotting.plot_mode import PlotMode
-    #from sympy.plotting.plot_modes import Cartesian2D, Cartesian3D, Cylindrical, \
+
+    # from sympy.plotting.plot_axes import PlotAxesBase, PlotAxesFrame, PlotAxesOrdinate
+    # from sympy.plotting.plot_camera import PlotCamera
+    # from sympy.plotting.plot_controller import PlotController
+    # from sympy.plotting.plot_curve import PlotCurve
+    # from sympy.plotting.plot_interval import PlotInterval
+    # from sympy.plotting.plot_mode import PlotMode
+    # from sympy.plotting.plot_modes import Cartesian2D, Cartesian3D, Cylindrical, \
     #    ParametricCurve2D, ParametricCurve3D, ParametricSurface, Polar, Spherical
-    #from sympy.plotting.plot_object import PlotObject
-    #from sympy.plotting.plot_surface import PlotSurface
+    # from sympy.plotting.plot_object import PlotObject
+    # from sympy.plotting.plot_surface import PlotSurface
     # from sympy.plotting.plot_window import PlotWindow
     check(ColorScheme("rainbow"))
     check(Plot(1, visible=False))
     check(PlotAxes())
 
-#================== polys =======================
+
+# ================== polys =======================
 from sympy.polys.domains.integerring import ZZ
 from sympy.polys.domains.rationalfield import QQ
 from sympy.polys.orderings import lex
 from sympy.polys.polytools import Poly
 
+
 def test_pickling_polys_polytools():
     from sympy.polys.polytools import PurePoly
+
     # from sympy.polys.polytools import GroebnerBasis
-    x = Symbol('x')
+    x = Symbol("x")
 
     for c in (Poly, Poly(x, x)):
         check(c)
@@ -383,15 +619,17 @@ def test_pickling_polys_polytools():
     # for c in (GroebnerBasis, GroebnerBasis([x**2 - 1], x, order=lex)):
     #     check(c)
 
+
 def test_pickling_polys_polyclasses():
     from sympy.polys.polyclasses import DMP, DMF, ANP
 
     for c in (DMP, DMP([[ZZ(1)], [ZZ(2)], [ZZ(3)]], ZZ)):
-        check(c, deprecated=['rep'])
+        check(c, deprecated=["rep"])
     for c in (DMF, DMF(([ZZ(1), ZZ(2)], [ZZ(1), ZZ(3)]), ZZ)):
         check(c)
     for c in (ANP, ANP([QQ(1), QQ(2)], [QQ(1), QQ(2), QQ(3)], QQ)):
         check(c)
+
 
 @XFAIL
 def test_pickling_polys_rings():
@@ -406,7 +644,8 @@ def test_pickling_polys_rings():
         check(c, exclude=[0, 1])
 
     for c in (ring.dtype, ring.one):
-        check(c, exclude=[0, 1], check_attr=False) # TODO: Py3k
+        check(c, exclude=[0, 1], check_attr=False)  # TODO: Py3k
+
 
 def test_pickling_polys_fields():
     pass
@@ -425,21 +664,23 @@ def test_pickling_polys_fields():
     # for c in (field.dtype, field.one):
     #     check(c, exclude=[0, 1])
 
+
 def test_pickling_polys_elements():
     from sympy.polys.domains.pythonrational import PythonRational
-    #from sympy.polys.domains.pythonfinitefield import PythonFiniteField
-    #from sympy.polys.domains.mpelements import MPContext
+
+    # from sympy.polys.domains.pythonfinitefield import PythonFiniteField
+    # from sympy.polys.domains.mpelements import MPContext
 
     for c in (PythonRational, PythonRational(1, 7)):
         check(c)
 
-    #gf = PythonFiniteField(17)
+    # gf = PythonFiniteField(17)
 
     # TODO: fix pickling of ModularInteger
     # for c in (gf.dtype, gf(5)):
     #     check(c)
 
-    #mp = MPContext()
+    # mp = MPContext()
 
     # TODO: fix pickling of RealElement
     # for c in (mp.mpf, mp.mpf(1.0)):
@@ -448,6 +689,7 @@ def test_pickling_polys_elements():
     # TODO: fix pickling of ComplexElement
     # for c in (mp.mpc, mp.mpc(1.0, -1.5)):
     #     check(c)
+
 
 def test_pickling_polys_domains():
     # from sympy.polys.domains.pythonfinitefield import PythonFiniteField
@@ -479,11 +721,12 @@ def test_pickling_polys_domains():
         for c in (GMPYRationalField, GMPYRationalField()):
             check(c, check_attr=False)
 
-    #from sympy.polys.domains.realfield import RealField
-    #from sympy.polys.domains.complexfield import ComplexField
+    # from sympy.polys.domains.realfield import RealField
+    # from sympy.polys.domains.complexfield import ComplexField
     from sympy.polys.domains.algebraicfield import AlgebraicField
-    #from sympy.polys.domains.polynomialring import PolynomialRing
-    #from sympy.polys.domains.fractionfield import FractionField
+
+    # from sympy.polys.domains.polynomialring import PolynomialRing
+    # from sympy.polys.domains.fractionfield import FractionField
     from sympy.polys.domains.expressiondomain import ExpressionDomain
 
     # TODO: fix pickling of RealElement
@@ -510,8 +753,13 @@ def test_pickling_polys_domains():
 
 
 def test_pickling_polys_orderings():
-    from sympy.polys.orderings import (LexOrder, GradedLexOrder,
-        ReversedGradedLexOrder, InverseOrder)
+    from sympy.polys.orderings import (
+        LexOrder,
+        GradedLexOrder,
+        ReversedGradedLexOrder,
+        InverseOrder,
+    )
+
     # from sympy.polys.orderings import ProductOrder
 
     for c in (LexOrder, LexOrder()):
@@ -533,8 +781,10 @@ def test_pickling_polys_orderings():
     for c in (InverseOrder, InverseOrder(LexOrder())):
         check(c)
 
+
 def test_pickling_polys_monomials():
     from sympy.polys.monomials import MonomialOps, Monomial
+
     x, y, z = symbols("x,y,z")
 
     for c in (MonomialOps, MonomialOps(3)):
@@ -543,14 +793,30 @@ def test_pickling_polys_monomials():
     for c in (Monomial, Monomial((1, 2, 3), (x, y, z))):
         check(c)
 
+
 def test_pickling_polys_errors():
-    from sympy.polys.polyerrors import (HeuristicGCDFailed,
-        HomomorphismFailed, IsomorphismFailed, ExtraneousFactors,
-        EvaluationFailed, RefinementFailed, CoercionFailed, NotInvertible,
-        NotReversible, NotAlgebraic, DomainError, PolynomialError,
-        UnificationFailed, GeneratorsError, GeneratorsNeeded,
-        UnivariatePolynomialError, MultivariatePolynomialError, OptionError,
-        FlagError)
+    from sympy.polys.polyerrors import (
+        HeuristicGCDFailed,
+        HomomorphismFailed,
+        IsomorphismFailed,
+        ExtraneousFactors,
+        EvaluationFailed,
+        RefinementFailed,
+        CoercionFailed,
+        NotInvertible,
+        NotReversible,
+        NotAlgebraic,
+        DomainError,
+        PolynomialError,
+        UnificationFailed,
+        GeneratorsError,
+        GeneratorsNeeded,
+        UnivariatePolynomialError,
+        MultivariatePolynomialError,
+        OptionError,
+        FlagError,
+    )
+
     # from sympy.polys.polyerrors import (ExactQuotientFailed,
     #         OperationNotSupported, ComputationFailed, PolificationFailed)
 
@@ -629,21 +895,23 @@ def test_pickling_polys_errors():
     for c in (FlagError, FlagError()):
         check(c)
 
-#def test_pickling_polys_options():
-    #from sympy.polys.polyoptions import Options
 
-    # TODO: fix pickling of `symbols' flag
-    # for c in (Options, Options((), dict(domain='ZZ', polys=False))):
-    #    check(c)
+# def test_pickling_polys_options():
+# from sympy.polys.polyoptions import Options
+
+# TODO: fix pickling of `symbols' flag
+# for c in (Options, Options((), dict(domain='ZZ', polys=False))):
+#    check(c)
 
 # TODO: def test_pickling_polys_rootisolation():
 #    RealInterval
 #    ComplexInterval
 
+
 def test_pickling_polys_rootoftools():
     from sympy.polys.rootoftools import CRootOf, RootSum
 
-    x = Symbol('x')
+    x = Symbol("x")
     f = x**3 + x + 3
 
     for c in (CRootOf, CRootOf(f, 0)):
@@ -652,7 +920,8 @@ def test_pickling_polys_rootoftools():
     for c in (RootSum, RootSum(f, exp)):
         check(c)
 
-#================== printing ====================
+
+# ================== printing ====================
 from sympy.printing.latex import LatexPrinter
 from sympy.printing.mathml import MathMLContentPrinter, MathMLPresentationPrinter
 from sympy.printing.pretty.pretty import PrettyPrinter
@@ -662,10 +931,20 @@ from sympy.printing.python import PythonPrinter
 
 
 def test_printing():
-    for c in (LatexPrinter, LatexPrinter(), MathMLContentPrinter,
-              MathMLPresentationPrinter, PrettyPrinter, prettyForm, stringPict,
-              stringPict("a"), Printer, Printer(), PythonPrinter,
-              PythonPrinter()):
+    for c in (
+        LatexPrinter,
+        LatexPrinter(),
+        MathMLContentPrinter,
+        MathMLPresentationPrinter,
+        PrettyPrinter,
+        prettyForm,
+        stringPict,
+        stringPict("a"),
+        Printer,
+        Printer(),
+        PythonPrinter,
+        PythonPrinter(),
+    ):
         check(c)
 
 
@@ -682,7 +961,8 @@ def test_printing2():
 def test_printing3():
     check(PrettyPrinter())
 
-#================== series ======================
+
+# ================== series ======================
 from sympy.series.limits import Limit
 from sympy.series.order import Order
 
@@ -693,7 +973,8 @@ def test_series():
     for c in (Limit, Limit(e, x, 1), Order, Order(e)):
         check(c)
 
-#================== concrete ==================
+
+# ================== concrete ==================
 from sympy.concrete.products import Product
 from sympy.concrete.summations import Sum
 
@@ -703,20 +984,26 @@ def test_concrete():
     for c in (Product, Product(x, (x, 2, 4)), Sum, Sum(x, (x, 2, 4))):
         check(c)
 
+
 def test_deprecation_warning():
-    w = SymPyDeprecationWarning("message", deprecated_since_version='1.0', active_deprecations_target="active-deprecations")
+    w = SymPyDeprecationWarning(
+        "message",
+        deprecated_since_version="1.0",
+        active_deprecations_target="active-deprecations",
+    )
     check(w)
+
 
 def test_issue_18438():
     assert pickle.loads(pickle.dumps(S.Half)) == S.Half
 
 
-#================= old pickles =================
+# ================= old pickles =================
 def test_unpickle_from_older_versions():
     data = (
-        b'\x80\x04\x95^\x00\x00\x00\x00\x00\x00\x00\x8c\x10sympy.core.power'
-        b'\x94\x8c\x03Pow\x94\x93\x94\x8c\x12sympy.core.numbers\x94\x8c'
-        b'\x07Integer\x94\x93\x94K\x02\x85\x94R\x94}\x94bh\x03\x8c\x04Half'
-        b'\x94\x93\x94)R\x94}\x94b\x86\x94R\x94}\x94b.'
+        b"\x80\x04\x95^\x00\x00\x00\x00\x00\x00\x00\x8c\x10sympy.core.power"
+        b"\x94\x8c\x03Pow\x94\x93\x94\x8c\x12sympy.core.numbers\x94\x8c"
+        b"\x07Integer\x94\x93\x94K\x02\x85\x94R\x94}\x94bh\x03\x8c\x04Half"
+        b"\x94\x93\x94)R\x94}\x94b\x86\x94R\x94}\x94b."
     )
     assert pickle.loads(data) == sqrt(2)

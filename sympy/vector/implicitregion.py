@@ -54,6 +54,7 @@ class ImplicitRegion(Basic):
     equation : An expression or Eq denoting the implicit equation of the region.
 
     """
+
     def __new__(cls, variables, equation):
         if not isinstance(variables, Tuple):
             variables = Tuple(*variables)
@@ -111,7 +112,7 @@ class ImplicitRegion(Basic):
             if self.degree == 2:
                 coeffs = a, b, c, d, e, f = conic_coeff(self.variables, equation)
 
-                if b**2 == 4*a*c:
+                if b**2 == 4 * a * c:
                     x_reg, y_reg = self._regular_point_parabola(*coeffs)
                 else:
                     x_reg, y_reg = self._regular_point_ellipse(*coeffs)
@@ -122,8 +123,16 @@ class ImplicitRegion(Basic):
 
             for x_reg in range(-10, 10):
                 for y_reg in range(-10, 10):
-                    if not solveset(equation.subs({x: x_reg, y: y_reg}), self.variables[2], domain=S.Reals).is_empty:
-                        return (x_reg, y_reg, list(solveset(equation.subs({x: x_reg, y: y_reg})))[0])
+                    if not solveset(
+                        equation.subs({x: x_reg, y: y_reg}),
+                        self.variables[2],
+                        domain=S.Reals,
+                    ).is_empty:
+                        return (
+                            x_reg,
+                            y_reg,
+                            list(solveset(equation.subs({x: x_reg, y: y_reg})))[0],
+                        )
 
         if len(self.singular_points()) != 0:
             return list[self.singular_points()][0]
@@ -131,154 +140,169 @@ class ImplicitRegion(Basic):
         raise NotImplementedError()
 
     def _regular_point_parabola(self, a, b, c, d, e, f):
-            ok = (a, d) != (0, 0) and (c, e) != (0, 0) and b**2 == 4*a*c and (a, c) != (0, 0)
+        ok = (
+            (a, d) != (0, 0)
+            and (c, e) != (0, 0)
+            and b**2 == 4 * a * c
+            and (a, c) != (0, 0)
+        )
 
-            if not ok:
-                raise ValueError("Rational Point on the conic does not exist")
+        if not ok:
+            raise ValueError("Rational Point on the conic does not exist")
 
-            if a != 0:
-                d_dash, f_dash = (4*a*e - 2*b*d, 4*a*f - d**2)
-                if d_dash != 0:
-                    y_reg = -f_dash/d_dash
-                    x_reg = -(d + b*y_reg)/(2*a)
-                else:
-                    ok = False
-            elif c != 0:
-                d_dash, f_dash = (4*c*d - 2*b*e, 4*c*f - e**2)
-                if d_dash != 0:
-                    x_reg = -f_dash/d_dash
-                    y_reg = -(e + b*x_reg)/(2*c)
-                else:
-                    ok = False
-
-            if ok:
-                return x_reg, y_reg
+        if a != 0:
+            d_dash, f_dash = (4 * a * e - 2 * b * d, 4 * a * f - d**2)
+            if d_dash != 0:
+                y_reg = -f_dash / d_dash
+                x_reg = -(d + b * y_reg) / (2 * a)
             else:
-                raise ValueError("Rational Point on the conic does not exist")
+                ok = False
+        elif c != 0:
+            d_dash, f_dash = (4 * c * d - 2 * b * e, 4 * c * f - e**2)
+            if d_dash != 0:
+                x_reg = -f_dash / d_dash
+                y_reg = -(e + b * x_reg) / (2 * c)
+            else:
+                ok = False
+
+        if ok:
+            return x_reg, y_reg
+        else:
+            raise ValueError("Rational Point on the conic does not exist")
 
     def _regular_point_ellipse(self, a, b, c, d, e, f):
-            D = 4*a*c - b**2
-            ok = D
+        D = 4 * a * c - b**2
+        ok = D
 
-            if not ok:
-                raise ValueError("Rational Point on the conic does not exist")
+        if not ok:
+            raise ValueError("Rational Point on the conic does not exist")
 
-            if a == 0 and c == 0:
-                K = -1
-                L = 4*(d*e - b*f)
-            elif c != 0:
-                K = D
-                L = 4*c**2*d**2 - 4*b*c*d*e + 4*a*c*e**2 + 4*b**2*c*f - 16*a*c**2*f
-            else:
-                K = D
-                L = 4*a**2*e**2 - 4*b*a*d*e + 4*b**2*a*f
+        if a == 0 and c == 0:
+            K = -1
+            L = 4 * (d * e - b * f)
+        elif c != 0:
+            K = D
+            L = (
+                4 * c**2 * d**2
+                - 4 * b * c * d * e
+                + 4 * a * c * e**2
+                + 4 * b**2 * c * f
+                - 16 * a * c**2 * f
+            )
+        else:
+            K = D
+            L = 4 * a**2 * e**2 - 4 * b * a * d * e + 4 * b**2 * a * f
 
-            ok = L != 0 and not(K > 0 and L < 0)
-            if not ok:
-                raise ValueError("Rational Point on the conic does not exist")
+        ok = L != 0 and not (K > 0 and L < 0)
+        if not ok:
+            raise ValueError("Rational Point on the conic does not exist")
 
-            K = Rational(K).limit_denominator(10**12)
-            L = Rational(L).limit_denominator(10**12)
+        K = Rational(K).limit_denominator(10**12)
+        L = Rational(L).limit_denominator(10**12)
 
-            k1, k2 = K.p, K.q
-            l1, l2 = L.p, L.q
-            g = gcd(k2, l2)
+        k1, k2 = K.p, K.q
+        l1, l2 = L.p, L.q
+        g = gcd(k2, l2)
 
-            a1 = (l2*k2)/g
-            b1 = (k1*l2)/g
-            c1 = -(l1*k2)/g
-            a2 = sign(a1)*core(abs(a1), 2)
-            r1 = sqrt(a1/a2)
-            b2 = sign(b1)*core(abs(b1), 2)
-            r2 = sqrt(b1/b2)
-            c2 = sign(c1)*core(abs(c1), 2)
-            r3 = sqrt(c1/c2)
+        a1 = (l2 * k2) / g
+        b1 = (k1 * l2) / g
+        c1 = -(l1 * k2) / g
+        a2 = sign(a1) * core(abs(a1), 2)
+        r1 = sqrt(a1 / a2)
+        b2 = sign(b1) * core(abs(b1), 2)
+        r2 = sqrt(b1 / b2)
+        c2 = sign(c1) * core(abs(c1), 2)
+        r3 = sqrt(c1 / c2)
 
-            g = gcd(gcd(a2, b2), c2)
-            a2 = a2/g
-            b2 = b2/g
-            c2 = c2/g
+        g = gcd(gcd(a2, b2), c2)
+        a2 = a2 / g
+        b2 = b2 / g
+        c2 = c2 / g
 
-            g1 = gcd(a2, b2)
-            a2 = a2/g1
-            b2 = b2/g1
-            c2 = c2*g1
+        g1 = gcd(a2, b2)
+        a2 = a2 / g1
+        b2 = b2 / g1
+        c2 = c2 * g1
 
-            g2 = gcd(a2,c2)
-            a2 = a2/g2
-            b2 = b2*g2
-            c2 = c2/g2
+        g2 = gcd(a2, c2)
+        a2 = a2 / g2
+        b2 = b2 * g2
+        c2 = c2 / g2
 
-            g3 = gcd(b2, c2)
-            a2 = a2*g3
-            b2 = b2/g3
-            c2 = c2/g3
+        g3 = gcd(b2, c2)
+        a2 = a2 * g3
+        b2 = b2 / g3
+        c2 = c2 / g3
 
-            x, y, z = symbols("x y z")
-            eq = a2*x**2 + b2*y**2 + c2*z**2
+        x, y, z = symbols("x y z")
+        eq = a2 * x**2 + b2 * y**2 + c2 * z**2
 
-            solutions = diophantine(eq)
+        solutions = diophantine(eq)
 
-            if len(solutions) == 0:
-                raise ValueError("Rational Point on the conic does not exist")
+        if len(solutions) == 0:
+            raise ValueError("Rational Point on the conic does not exist")
 
-            flag = False
-            for sol in solutions:
-                syms = Tuple(*sol).free_symbols
-                rep = dict.fromkeys(syms, 3)
-                sol_z = sol[2]
+        flag = False
+        for sol in solutions:
+            syms = Tuple(*sol).free_symbols
+            rep = dict.fromkeys(syms, 3)
+            sol_z = sol[2]
 
-                if sol_z == 0:
-                    flag = True
-                    continue
+            if sol_z == 0:
+                flag = True
+                continue
 
-                if not isinstance(sol_z, (int, Integer)):
-                    syms_z = sol_z.free_symbols
+            if not isinstance(sol_z, (int, Integer)):
+                syms_z = sol_z.free_symbols
 
-                    if len(syms_z) == 1:
-                        p = next(iter(syms_z))
-                        p_values = Complement(S.Integers, solveset(Eq(sol_z, 0), p, S.Integers))
-                        rep[p] = next(iter(p_values))
+                if len(syms_z) == 1:
+                    p = next(iter(syms_z))
+                    p_values = Complement(
+                        S.Integers, solveset(Eq(sol_z, 0), p, S.Integers)
+                    )
+                    rep[p] = next(iter(p_values))
 
-                    if len(syms_z) == 2:
-                        p, q = list(ordered(syms_z))
+                if len(syms_z) == 2:
+                    p, q = list(ordered(syms_z))
 
-                        for i in S.Integers:
-                            subs_sol_z = sol_z.subs(p, i)
-                            q_values = Complement(S.Integers, solveset(Eq(subs_sol_z, 0), q, S.Integers))
+                    for i in S.Integers:
+                        subs_sol_z = sol_z.subs(p, i)
+                        q_values = Complement(
+                            S.Integers, solveset(Eq(subs_sol_z, 0), q, S.Integers)
+                        )
 
-                            if not q_values.is_empty:
-                                rep[p] = i
-                                rep[q] = next(iter(q_values))
-                                break
+                        if not q_values.is_empty:
+                            rep[p] = i
+                            rep[q] = next(iter(q_values))
+                            break
 
-                    if len(syms) != 0:
-                        x, y, z = tuple(s.subs(rep) for s in sol)
-                    else:
-                        x, y, z =   sol
-                    flag = False
-                    break
+                if len(syms) != 0:
+                    x, y, z = tuple(s.subs(rep) for s in sol)
+                else:
+                    x, y, z = sol
+                flag = False
+                break
 
-            if flag:
-                raise ValueError("Rational Point on the conic does not exist")
+        if flag:
+            raise ValueError("Rational Point on the conic does not exist")
 
-            x = (x*g3)/r1
-            y = (y*g2)/r2
-            z = (z*g1)/r3
-            x = x/z
-            y = y/z
+        x = (x * g3) / r1
+        y = (y * g2) / r2
+        z = (z * g1) / r3
+        x = x / z
+        y = y / z
 
-            if a == 0 and c == 0:
-                x_reg = (x + y - 2*e)/(2*b)
-                y_reg = (x - y - 2*d)/(2*b)
-            elif c != 0:
-                x_reg = (x - 2*d*c + b*e)/K
-                y_reg = (y - b*x_reg - e)/(2*c)
-            else:
-                y_reg = (x - 2*e*a + b*d)/K
-                x_reg = (y - b*y_reg - d)/(2*a)
+        if a == 0 and c == 0:
+            x_reg = (x + y - 2 * e) / (2 * b)
+            y_reg = (x - y - 2 * d) / (2 * b)
+        elif c != 0:
+            x_reg = (x - 2 * d * c + b * e) / K
+            y_reg = (y - b * x_reg - e) / (2 * c)
+        else:
+            y_reg = (x - 2 * e * a + b * d) / K
+            x_reg = (y - b * y_reg - d) / (2 * a)
 
-            return x_reg, y_reg
+        return x_reg, y_reg
 
     def singular_points(self):
         """
@@ -340,7 +364,7 @@ class ImplicitRegion(Basic):
 
         return m
 
-    def rational_parametrization(self, parameters=('t', 's'), reg_point=None):
+    def rational_parametrization(self, parameters=("t", "s"), reg_point=None):
         """
         Returns the rational parametrization of implicit region.
 
@@ -445,7 +469,7 @@ class ImplicitRegion(Basic):
             else:
                 hn_1 += term
 
-        hn_1 = -1*hn_1
+        hn_1 = -1 * hn_1
 
         if not isinstance(parameters, tuple):
             parameters = (parameters,)
@@ -453,42 +477,47 @@ class ImplicitRegion(Basic):
         if len(self.variables) == 2:
 
             parameter1 = parameters[0]
-            if parameter1 == 's':
+            if parameter1 == "s":
                 # To avoid name conflict between parameters
-                s = _symbol('s_', real=True)
+                s = _symbol("s_", real=True)
             else:
-                s = _symbol('s', real=True)
+                s = _symbol("s", real=True)
             t = _symbol(parameter1, real=True)
 
             hn = hn.subs({self.variables[0]: s, self.variables[1]: t})
             hn_1 = hn_1.subs({self.variables[0]: s, self.variables[1]: t})
 
-            x_par = (s*(hn_1/hn)).subs(s, 1) + point[0]
-            y_par = (t*(hn_1/hn)).subs(s, 1) + point[1]
+            x_par = (s * (hn_1 / hn)).subs(s, 1) + point[0]
+            y_par = (t * (hn_1 / hn)).subs(s, 1) + point[1]
 
             return x_par, y_par
 
         elif len(self.variables) == 3:
 
             parameter1, parameter2 = parameters
-            if 'r' in parameters:
+            if "r" in parameters:
                 # To avoid name conflict between parameters
-                r = _symbol('r_', real=True)
+                r = _symbol("r_", real=True)
             else:
-                r = _symbol('r', real=True)
+                r = _symbol("r", real=True)
             s = _symbol(parameter2, real=True)
             t = _symbol(parameter1, real=True)
 
-            hn = hn.subs({self.variables[0]: r, self.variables[1]: s, self.variables[2]: t})
-            hn_1 = hn_1.subs({self.variables[0]: r, self.variables[1]: s, self.variables[2]: t})
+            hn = hn.subs(
+                {self.variables[0]: r, self.variables[1]: s, self.variables[2]: t}
+            )
+            hn_1 = hn_1.subs(
+                {self.variables[0]: r, self.variables[1]: s, self.variables[2]: t}
+            )
 
-            x_par = (r*(hn_1/hn)).subs(r, 1) + point[0]
-            y_par = (s*(hn_1/hn)).subs(r, 1) + point[1]
-            z_par = (t*(hn_1/hn)).subs(r, 1) + point[2]
+            x_par = (r * (hn_1 / hn)).subs(r, 1) + point[0]
+            y_par = (s * (hn_1 / hn)).subs(r, 1) + point[1]
+            z_par = (t * (hn_1 / hn)).subs(r, 1) + point[2]
 
             return x_par, y_par, z_par
 
         raise NotImplementedError()
+
 
 def conic_coeff(variables, equation):
     if total_degree(equation) != 2:
@@ -498,7 +527,7 @@ def conic_coeff(variables, equation):
 
     equation = expand(equation)
     a = equation.coeff(x**2)
-    b = equation.coeff(x*y)
+    b = equation.coeff(x * y)
     c = equation.coeff(y**2)
     d = equation.coeff(x, 1).coeff(y, 0)
     e = equation.coeff(y, 1).coeff(x, 0)

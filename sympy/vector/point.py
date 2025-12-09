@@ -16,13 +16,13 @@ class Point(Basic):
         # Check the args first
         if not isinstance(position, Vector):
             raise TypeError(
-                "position should be an instance of Vector, not %s" % type(
-                    position))
-        if (not isinstance(parent_point, Point) and
-                parent_point is not None):
+                "position should be an instance of Vector, not %s" % type(position)
+            )
+        if not isinstance(parent_point, Point) and parent_point is not None:
             raise TypeError(
-                "parent_point should be an instance of Point, not %s" % type(
-                    parent_point))
+                "parent_point should be an instance of Point, not %s"
+                % type(parent_point)
+            )
         # Super class construction
         if parent_point is None:
             obj = super().__new__(cls, Str(name), position)
@@ -65,10 +65,8 @@ class Point(Basic):
 
         """
 
-        if (not isinstance(other, Point) and
-                not isinstance(other, CoordSys3D)):
-            raise TypeError(str(other) +
-                            "is not a Point or CoordSys3D")
+        if not isinstance(other, Point) and not isinstance(other, CoordSys3D):
+            raise TypeError(str(other) + "is not a Point or CoordSys3D")
         if isinstance(other, CoordSys3D):
             other = other.origin
         # Handle special cases

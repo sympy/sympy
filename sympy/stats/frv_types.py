@@ -16,13 +16,12 @@ IdealSoliton
 RobustSoliton
 """
 
-
 from sympy.core.cache import cacheit
 from sympy.core.function import Lambda
-from sympy.core.numbers import (Integer, Rational)
-from sympy.core.relational import (Eq, Ge, Gt, Le, Lt)
+from sympy.core.numbers import Integer, Rational
+from sympy.core.relational import Eq, Ge, Gt, Le, Lt
 from sympy.core.singleton import S
-from sympy.core.symbol import (Dummy, Symbol)
+from sympy.core.symbol import Dummy, Symbol
 from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.factorials import binomial
 from sympy.functions.elementary.exponential import log
@@ -30,38 +29,41 @@ from sympy.functions.elementary.piecewise import Piecewise
 from sympy.logic.boolalg import Or
 from sympy.sets.contains import Contains
 from sympy.sets.fancysets import Range
-from sympy.sets.sets import (Intersection, Interval)
+from sympy.sets.sets import Intersection, Interval
 from sympy.functions.special.beta_functions import beta as beta_fn
-from sympy.stats.frv import (SingleFiniteDistribution,
-                             SingleFinitePSpace)
+from sympy.stats.frv import SingleFiniteDistribution, SingleFinitePSpace
 from sympy.stats.rv import _value_check, Density, is_random
 from sympy.utilities.iterables import multiset
 from sympy.utilities.misc import filldedent
 
 
-__all__ = ['FiniteRV',
-'DiscreteUniform',
-'Die',
-'Bernoulli',
-'Coin',
-'Binomial',
-'BetaBinomial',
-'Hypergeometric',
-'Rademacher',
-'IdealSoliton',
-'RobustSoliton',
+__all__ = [
+    "FiniteRV",
+    "DiscreteUniform",
+    "Die",
+    "Bernoulli",
+    "Coin",
+    "Binomial",
+    "BetaBinomial",
+    "Hypergeometric",
+    "Rademacher",
+    "IdealSoliton",
+    "RobustSoliton",
 ]
+
 
 def rv(name, cls, *args, **kwargs):
     args = list(map(sympify, args))
     dist = cls(*args)
-    if kwargs.pop('check', True):
+    if kwargs.pop("check", True):
         dist.check(*args)
     pspace = SingleFinitePSpace(name, dist)
     if any(is_random(arg) for arg in args):
         from sympy.stats.compound_rv import CompoundPSpace, CompoundDistribution
+
         pspace = CompoundPSpace(name, CompoundDistribution(dist))
     return pspace.value
+
 
 class FiniteDistributionHandmade(SingleFiniteDistribution):
 
@@ -70,9 +72,13 @@ class FiniteDistributionHandmade(SingleFiniteDistribution):
         return self.args[0]
 
     def pmf(self, x):
-        x = Symbol('x')
-        return Lambda(x, Piecewise(*(
-            [(v, Eq(k, x)) for k, v in self.dict.items()] + [(S.Zero, True)])))
+        x = Symbol("x")
+        return Lambda(
+            x,
+            Piecewise(
+                *([(v, Eq(k, x)) for k, v in self.dict.items()] + [(S.Zero, True)])
+            ),
+        )
 
     @property
     def set(self):
@@ -81,10 +87,12 @@ class FiniteDistributionHandmade(SingleFiniteDistribution):
     @staticmethod
     def check(density):
         for p in density.values():
-            _value_check((p >= 0, p <= 1),
-                        "Probability at a point must be between 0 and 1.")
+            _value_check(
+                (p >= 0, p <= 1), "Probability at a point must be between 0 and 1."
+            )
         val = sum(density.values())
         _value_check(Eq(val, 1) != S.false, "Total Probability must be 1.")
+
 
 def FiniteRV(name, density, **kwargs):
     r"""
@@ -122,8 +130,9 @@ def FiniteRV(name, density, **kwargs):
 
     """
     # have a default of False while `rv` should have a default of True
-    kwargs['check'] = kwargs.pop('check', False)
+    kwargs["check"] = kwargs.pop("check", False)
     return rv(name, FiniteDistributionHandmade, density, **kwargs)
+
 
 class DiscreteUniformDistribution(SingleFiniteDistribution):
 
@@ -136,11 +145,15 @@ class DiscreteUniformDistribution(SingleFiniteDistribution):
             n = Integer(len(args))
             for k in weights:
                 weights[k] /= n
-            raise ValueError(filldedent("""
+            raise ValueError(
+                filldedent(
+                    """
                 Repeated args detected but set expected. For a
                 distribution having different weights for each
-                item use the following:""") + (
-                '\nS("FiniteRV(%s, %s)")' % ("'X'", weights)))
+                item use the following:"""
+                )
+                + ('\nS("FiniteRV(%s, %s)")' % ("'X'", weights))
+            )
 
     @property
     def p(self):
@@ -203,12 +216,14 @@ def DiscreteUniform(name, items):
 
 
 class DieDistribution(SingleFiniteDistribution):
-    _argnames = ('sides',)
+    _argnames = ("sides",)
 
     @staticmethod
     def check(sides):
-        _value_check((sides.is_positive, sides.is_integer),
-                    "number of sides must be a positive integer.")
+        _value_check(
+            (sides.is_positive, sides.is_integer),
+            "number of sides must be a positive integer.",
+        )
 
     @property
     def is_symbolic(self):
@@ -231,10 +246,13 @@ class DieDistribution(SingleFiniteDistribution):
     def pmf(self, x):
         x = sympify(x)
         if not (x.is_number or x.is_Symbol or is_random(x)):
-            raise ValueError("'x' expected as an argument of type 'number', 'Symbol', or "
-                        "'RandomSymbol' not %s" % (type(x)))
+            raise ValueError(
+                "'x' expected as an argument of type 'number', 'Symbol', or "
+                "'RandomSymbol' not %s" % (type(x))
+            )
         cond = Ge(x, 1) & Le(x, self.sides) & Contains(x, S.Integers)
-        return Piecewise((S.One/self.sides, cond), (S.Zero, True))
+        return Piecewise((S.One / self.sides, cond), (S.Zero, True))
+
 
 def Die(name, sides=6):
     r"""
@@ -277,12 +295,11 @@ def Die(name, sides=6):
 
 
 class BernoulliDistribution(SingleFiniteDistribution):
-    _argnames = ('p', 'succ', 'fail')
+    _argnames = ("p", "succ", "fail")
 
     @staticmethod
     def check(p, succ, fail):
-        _value_check((p >= 0, p <= 1),
-                    "p should be in range [0, 1].")
+        _value_check((p >= 0, p <= 1), "p should be in range [0, 1].")
 
     @property
     def set(self):
@@ -290,12 +307,12 @@ class BernoulliDistribution(SingleFiniteDistribution):
 
     def pmf(self, x):
         if isinstance(self.succ, Symbol) and isinstance(self.fail, Symbol):
-            return Piecewise((self.p, x == self.succ),
-                             (1 - self.p, x == self.fail),
-                             (S.Zero, True))
-        return Piecewise((self.p, Eq(x, self.succ)),
-                         (1 - self.p, Eq(x, self.fail)),
-                         (S.Zero, True))
+            return Piecewise(
+                (self.p, x == self.succ), (1 - self.p, x == self.fail), (S.Zero, True)
+            )
+        return Piecewise(
+            (self.p, Eq(x, self.succ)), (1 - self.p, Eq(x, self.fail)), (S.Zero, True)
+        )
 
 
 def Bernoulli(name, p, succ=1, fail=0):
@@ -385,18 +402,18 @@ def Coin(name, p=S.Half):
     .. [1] https://en.wikipedia.org/wiki/Coin_flipping
 
     """
-    return rv(name, BernoulliDistribution, p, 'H', 'T')
+    return rv(name, BernoulliDistribution, p, "H", "T")
 
 
 class BinomialDistribution(SingleFiniteDistribution):
-    _argnames = ('n', 'p', 'succ', 'fail')
+    _argnames = ("n", "p", "succ", "fail")
 
     @staticmethod
     def check(n, p, succ, fail):
-        _value_check((n.is_integer, n.is_nonnegative),
-                    "'n' must be nonnegative integer.")
-        _value_check((p <= 1, p >= 0),
-                    "p should be in range [0, 1].")
+        _value_check(
+            (n.is_integer, n.is_nonnegative), "'n' must be nonnegative integer."
+        )
+        _value_check((p <= 1, p >= 0), "p should be in range [0, 1].")
 
     @property
     def high(self):
@@ -420,18 +437,24 @@ class BinomialDistribution(SingleFiniteDistribution):
         n, p = self.n, self.p
         x = sympify(x)
         if not (x.is_number or x.is_Symbol or is_random(x)):
-            raise ValueError("'x' expected as an argument of type 'number', 'Symbol', or "
-                        "'RandomSymbol' not %s" % (type(x)))
+            raise ValueError(
+                "'x' expected as an argument of type 'number', 'Symbol', or "
+                "'RandomSymbol' not %s" % (type(x))
+            )
         cond = Ge(x, 0) & Le(x, n) & Contains(x, S.Integers)
-        return Piecewise((binomial(n, x) * p**x * (1 - p)**(n - x), cond), (S.Zero, True))
+        return Piecewise(
+            (binomial(n, x) * p**x * (1 - p) ** (n - x), cond), (S.Zero, True)
+        )
 
     @property  # type: ignore
     @cacheit
     def dict(self):
         if self.is_symbolic:
             return Density(self)
-        return {k*self.succ + (self.n-k)*self.fail: self.pmf(k)
-                    for k in range(0, self.n + 1)}
+        return {
+            k * self.succ + (self.n - k) * self.fail: self.pmf(k)
+            for k in range(0, self.n + 1)
+        }
 
 
 def Binomial(name, n, p, succ=1, fail=0):
@@ -483,20 +506,24 @@ def Binomial(name, n, p, succ=1, fail=0):
 
     return rv(name, BinomialDistribution, n, p, succ, fail)
 
-#-------------------------------------------------------------------------------
+
+# -------------------------------------------------------------------------------
 # Beta-binomial distribution ----------------------------------------------------------
 
+
 class BetaBinomialDistribution(SingleFiniteDistribution):
-    _argnames = ('n', 'alpha', 'beta')
+    _argnames = ("n", "alpha", "beta")
 
     @staticmethod
     def check(n, alpha, beta):
-        _value_check((n.is_integer, n.is_nonnegative),
-        "'n' must be nonnegative integer. n = %s." % str(n))
-        _value_check((alpha > 0),
-        "'alpha' must be: alpha > 0 . alpha = %s" % str(alpha))
-        _value_check((beta > 0),
-        "'beta' must be: beta > 0 . beta = %s" % str(beta))
+        _value_check(
+            (n.is_integer, n.is_nonnegative),
+            "'n' must be nonnegative integer. n = %s." % str(n),
+        )
+        _value_check(
+            (alpha > 0), "'alpha' must be: alpha > 0 . alpha = %s" % str(alpha)
+        )
+        _value_check((beta > 0), "'beta' must be: beta > 0 . beta = %s" % str(beta))
 
     @property
     def high(self):
@@ -559,16 +586,22 @@ def BetaBinomial(name, n, alpha, beta):
 
 
 class HypergeometricDistribution(SingleFiniteDistribution):
-    _argnames = ('N', 'm', 'n')
+    _argnames = ("N", "m", "n")
 
     @staticmethod
     def check(n, N, m):
-        _value_check((N.is_integer, N.is_nonnegative),
-                     "'N' must be nonnegative integer. N = %s." % str(N))
-        _value_check((n.is_integer, n.is_nonnegative),
-                     "'n' must be nonnegative integer. n = %s." % str(n))
-        _value_check((m.is_integer, m.is_nonnegative),
-                     "'m' must be nonnegative integer. m = %s." % str(m))
+        _value_check(
+            (N.is_integer, N.is_nonnegative),
+            "'N' must be nonnegative integer. N = %s." % str(N),
+        )
+        _value_check(
+            (n.is_integer, n.is_nonnegative),
+            "'n' must be nonnegative integer. n = %s." % str(n),
+        )
+        _value_check(
+            (m.is_integer, m.is_nonnegative),
+            "'m' must be nonnegative integer. m = %s." % str(m),
+        )
 
     @property
     def is_symbolic(self):
@@ -580,7 +613,10 @@ class HypergeometricDistribution(SingleFiniteDistribution):
 
     @property
     def low(self):
-        return Piecewise((0, Gt(0, self.n + self.m - self.N) != False), (self.n + self.m - self.N, True))
+        return Piecewise(
+            (0, Gt(0, self.n + self.m - self.N) != False),
+            (self.n + self.m - self.N, True),
+        )
 
     @property
     def set(self):
@@ -591,7 +627,7 @@ class HypergeometricDistribution(SingleFiniteDistribution):
 
     def pmf(self, k):
         N, m, n = self.N, self.m, self.n
-        return S(binomial(m, k) * binomial(N - m, n - k))/binomial(N, n)
+        return S(binomial(m, k) * binomial(N - m, n - k)) / binomial(N, n)
 
 
 def Hypergeometric(name, N, m, n):
@@ -641,8 +677,9 @@ class RademacherDistribution(SingleFiniteDistribution):
 
     @property
     def pmf(self):
-        k = Dummy('k')
+        k = Dummy("k")
         return Lambda(k, Piecewise((S.Half, Or(Eq(k, -1), Eq(k, 1))), (S.Zero, True)))
+
 
 def Rademacher(name):
     r"""
@@ -675,13 +712,13 @@ def Rademacher(name):
     """
     return rv(name, RademacherDistribution)
 
+
 class IdealSolitonDistribution(SingleFiniteDistribution):
-    _argnames = ('k',)
+    _argnames = ("k",)
 
     @staticmethod
     def check(k):
-        _value_check(k.is_integer and k.is_positive,
-                    "'k' must be a positive integer.")
+        _value_check(k.is_integer and k.is_positive, "'k' must be a positive integer.")
 
     @property
     def low(self):
@@ -695,23 +732,28 @@ class IdealSolitonDistribution(SingleFiniteDistribution):
     def set(self):
         return set(map(Integer, range(1, self.k + 1)))
 
-    @property # type: ignore
+    @property  # type: ignore
     @cacheit
     def dict(self):
         if self.k.is_Symbol:
             return Density(self)
         d = {1: Rational(1, self.k)}
-        d.update({i: Rational(1, i*(i - 1)) for i in range(2, self.k + 1)})
+        d.update({i: Rational(1, i * (i - 1)) for i in range(2, self.k + 1)})
         return d
 
     def pmf(self, x):
         x = sympify(x)
         if not (x.is_number or x.is_Symbol or is_random(x)):
-            raise ValueError("'x' expected as an argument of type 'number', 'Symbol', or "
-                        "'RandomSymbol' not %s" % (type(x)))
+            raise ValueError(
+                "'x' expected as an argument of type 'number', 'Symbol', or "
+                "'RandomSymbol' not %s" % (type(x))
+            )
         cond1 = Eq(x, 1) & x.is_integer
         cond2 = Ge(x, 1) & Le(x, self.k) & x.is_integer
-        return Piecewise((1/self.k, cond1), (1/(x*(x - 1)), cond2), (S.Zero, True))
+        return Piecewise(
+            (1 / self.k, cond1), (1 / (x * (x - 1)), cond2), (S.Zero, True)
+        )
+
 
 def IdealSoliton(name, k):
     r"""
@@ -761,29 +803,30 @@ def IdealSoliton(name, k):
     """
     return rv(name, IdealSolitonDistribution, k)
 
+
 class RobustSolitonDistribution(SingleFiniteDistribution):
-    _argnames= ('k', 'delta', 'c')
+    _argnames = ("k", "delta", "c")
 
     @staticmethod
     def check(k, delta, c):
-        _value_check(k.is_integer and k.is_positive,
-                    "'k' must be a positive integer")
-        _value_check(Gt(delta, 0) and Le(delta, 1),
-                    "'delta' must be a real number in the interval (0,1)")
-        _value_check(c.is_positive,
-                    "'c' must be a positive real number.")
+        _value_check(k.is_integer and k.is_positive, "'k' must be a positive integer")
+        _value_check(
+            Gt(delta, 0) and Le(delta, 1),
+            "'delta' must be a real number in the interval (0,1)",
+        )
+        _value_check(c.is_positive, "'c' must be a positive real number.")
 
     @property
     def R(self):
-        return self.c * log(self.k/self.delta) * self.k**0.5
+        return self.c * log(self.k / self.delta) * self.k**0.5
 
     @property
     def Z(self):
         z = 0
-        for i in Range(1, round(self.k/self.R)):
-            z += (1/i)
-        z += log(self.R/self.delta)
-        return 1 + z * self.R/self.k
+        for i in Range(1, round(self.k / self.R)):
+            z += 1 / i
+        z += log(self.R / self.delta)
+        return 1 + z * self.R / self.k
 
     @property
     def low(self):
@@ -804,21 +847,32 @@ class RobustSolitonDistribution(SingleFiniteDistribution):
     def pmf(self, x):
         x = sympify(x)
         if not (x.is_number or x.is_Symbol or is_random(x)):
-            raise ValueError("'x' expected as an argument of type 'number', 'Symbol', or "
-                        "'RandomSymbol' not %s" % (type(x)))
+            raise ValueError(
+                "'x' expected as an argument of type 'number', 'Symbol', or "
+                "'RandomSymbol' not %s" % (type(x))
+            )
 
         cond1 = Eq(x, 1) & x.is_integer
         cond2 = Ge(x, 1) & Le(x, self.k) & x.is_integer
-        rho = Piecewise((Rational(1, self.k), cond1), (Rational(1, x*(x-1)), cond2), (S.Zero, True))
+        rho = Piecewise(
+            (Rational(1, self.k), cond1),
+            (Rational(1, x * (x - 1)), cond2),
+            (S.Zero, True),
+        )
 
-        cond1 = Ge(x, 1) & Le(x, round(self.k/self.R)-1)
-        cond2 = Eq(x, round(self.k/self.R))
-        tau = Piecewise((self.R/(self.k * x), cond1), (self.R * log(self.R/self.delta)/self.k, cond2), (S.Zero, True))
+        cond1 = Ge(x, 1) & Le(x, round(self.k / self.R) - 1)
+        cond2 = Eq(x, round(self.k / self.R))
+        tau = Piecewise(
+            (self.R / (self.k * x), cond1),
+            (self.R * log(self.R / self.delta) / self.k, cond2),
+            (S.Zero, True),
+        )
 
-        return (rho + tau)/self.Z
+        return (rho + tau) / self.Z
+
 
 def RobustSoliton(name, k, delta, c):
-    r'''
+    r"""
     Create a Finite Random Variable of Robust Soliton Distribution
 
     Parameters
@@ -869,5 +923,5 @@ def RobustSoliton(name, k, delta, c):
     .. [2] https://www.inference.org.uk/mackay/itprnn/ps/588.596.pdf
     .. [3] https://pages.cs.wisc.edu/~suman/courses/740/papers/luby02lt.pdf
 
-    '''
+    """
     return rv(name, RobustSolitonDistribution, k, delta, c)

@@ -10,8 +10,12 @@ from sympy.core.sorting import default_sort_key
 from sympy.core.sympify import sympify
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.matrices.immutable import ImmutableDenseMatrix as Matrix
-from sympy.vector.basisdependent import (BasisDependentZero,
-    BasisDependent, BasisDependentMul, BasisDependentAdd)
+from sympy.vector.basisdependent import (
+    BasisDependentZero,
+    BasisDependent,
+    BasisDependentMul,
+    BasisDependentAdd,
+)
 from sympy.vector.coordsysrect import CoordSys3D
 from sympy.vector.dyadic import Dyadic, BaseDyadic, DyadicAdd
 from sympy.vector.kind import VectorKind
@@ -186,15 +190,20 @@ class Vector(BasisDependent):
                 outvec += vect_dot * v * k.args[1]
             return outvec
         from sympy.vector.deloperator import Del
+
         if not isinstance(other, (Del, Vector)):
-            raise TypeError(str(other) + " is not a vector, dyadic or " +
-                            "del operator")
+            raise TypeError(
+                str(other) + " is not a vector, dyadic or " + "del operator"
+            )
 
         # Check if the other is a del operator
         if isinstance(other, Del):
+
             def directional_derivative(field):
                 from sympy.vector.functions import directional_derivative
+
                 return directional_derivative(field, self)
+
             return directional_derivative
 
         return dot(self, other)
@@ -278,14 +287,17 @@ class Vector(BasisDependent):
         # Handle the special cases
         if not isinstance(other, Vector):
             raise TypeError("Invalid operand for outer product")
-        elif (isinstance(self, VectorZero) or
-                isinstance(other, VectorZero)):
+        elif isinstance(self, VectorZero) or isinstance(other, VectorZero):
             return Dyadic.zero
 
         # Iterate over components of both the vectors to generate
         # the required Dyadic instance
-        args = [(v1 * v2) * BaseDyadic(k1, k2) for (k1, v1), (k2, v2)
-                in product(self.components.items(), other.components.items())]
+        args = [
+            (v1 * v2) * BaseDyadic(k1, k2)
+            for (k1, v1), (k2, v2) in product(
+                self.components.items(), other.components.items()
+            )
+        ]
 
         return DyadicAdd(*args)
 
@@ -338,6 +350,7 @@ class Vector(BasisDependent):
         """
 
         from sympy.vector.operators import _get_coord_systems
+
         if isinstance(self, VectorZero):
             return (S.Zero, S.Zero, S.Zero)
         base_vec = next(iter(_get_coord_systems(self))).base_vectors()
@@ -374,8 +387,7 @@ class Vector(BasisDependent):
 
         """
 
-        return Matrix([self.dot(unit_vec) for unit_vec in
-                       system.base_vectors()])
+        return Matrix([self.dot(unit_vec) for unit_vec in system.base_vectors()])
 
     def separate(self):
         """
@@ -399,12 +411,11 @@ class Vector(BasisDependent):
 
         parts = {}
         for vect, measure in self.components.items():
-            parts[vect.system] = (parts.get(vect.system, Vector.zero) +
-                                  vect * measure)
+            parts[vect.system] = parts.get(vect.system, Vector.zero) + vect * measure
         return parts
 
     def _div_helper(one, other):
-        """ Helper for division involving vectors. """
+        """Helper for division involving vectors."""
         if isinstance(one, Vector) and isinstance(other, Vector):
             raise TypeError("Cannot divide two vectors")
         elif isinstance(one, Vector):
@@ -414,7 +425,9 @@ class Vector(BasisDependent):
         else:
             raise TypeError("Invalid division involving a vector")
 
+
 # The following is adapted from the matrices.expressions.matexpr file
+
 
 def get_postprocessor(cls):
     def _postprocessor(expr):
@@ -426,12 +439,14 @@ def get_postprocessor(cls):
 
         if vec_class == VectorAdd:
             return VectorAdd(*vectors).doit(deep=False)
+
     return _postprocessor
 
 
 Basic._constructor_postprocessor_mapping[Vector] = {
     "Add": [get_postprocessor(Add)],
 }
+
 
 class BaseVector(Vector, AtomicExpr):
     """
@@ -458,13 +473,13 @@ class BaseVector(Vector, AtomicExpr):
         obj._base_instance = obj
         obj._components = {obj: S.One}
         obj._measure_number = S.One
-        obj._name = system._name + '.' + name
-        obj._pretty_form = '' + pretty_str
+        obj._name = system._name + "." + name
+        obj._pretty_form = "" + pretty_str
         obj._latex_form = latex_str
         obj._system = system
         # The _id is used for printing purposes
         obj._id = (index, system)
-        assumptions = {'commutative': True}
+        assumptions = {"commutative": True}
         obj._assumptions = StdFactKB(assumptions)
 
         # This attr is used for re-expression to one of the systems
@@ -483,7 +498,7 @@ class BaseVector(Vector, AtomicExpr):
 
     def _sympyrepr(self, printer):
         index, system = self._id
-        return printer._print(system) + '.' + system._vector_names[index]
+        return printer._print(system) + "." + system._vector_names[index]
 
     @property
     def free_symbols(self):
@@ -503,7 +518,7 @@ class VectorAdd(BasisDependentAdd, Vector):
         return obj
 
     def _sympystr(self, printer):
-        ret_str = ''
+        ret_str = ""
         items = list(self.separate().items())
         items.sort(key=lambda x: x[0].__str__())
         for system, vect in items:
@@ -526,12 +541,12 @@ class VectorMul(BasisDependentMul, Vector):
 
     @property
     def base_vector(self):
-        """ The BaseVector involved in the product. """
+        """The BaseVector involved in the product."""
         return self._base_instance
 
     @property
     def measure_number(self):
-        """ The scalar expression involved in the definition of
+        """The scalar expression involved in the definition of
         this VectorMul.
         """
         return self._measure_number
@@ -543,8 +558,8 @@ class VectorZero(BasisDependentZero, Vector):
     """
 
     _op_priority = 12.1
-    _pretty_form = '0'
-    _latex_form = r'\mathbf{\hat{0}}'
+    _pretty_form = "0"
+    _latex_form = r"\mathbf{\hat{0}}"
 
     def __new__(cls):
         obj = BasisDependentZero.__new__(cls)
@@ -642,10 +657,11 @@ def cross(vect1, vect2):
             n2 = vect2.args[0]
             if n1 == n2:
                 return Vector.zero
-            n3 = ({0,1,2}.difference({n1, n2})).pop()
+            n3 = ({0, 1, 2}.difference({n1, n2})).pop()
             sign = 1 if ((n1 + 1) % 3 == n2) else -1
-            return sign*vect1._sys.base_vectors()[n3]
+            return sign * vect1._sys.base_vectors()[n3]
         from .functions import express
+
         try:
             v = express(vect1, vect2._sys)
         except ValueError:
@@ -656,10 +672,10 @@ def cross(vect1, vect2):
         return Vector.zero
     if isinstance(vect1, VectorMul):
         v1, m1 = next(iter(vect1.components.items()))
-        return m1*cross(v1, vect2)
+        return m1 * cross(v1, vect2)
     if isinstance(vect2, VectorMul):
         v2, m2 = next(iter(vect2.components.items()))
-        return m2*cross(vect1, v2)
+        return m2 * cross(vect1, v2)
 
     return Cross(vect1, vect2)
 
@@ -688,6 +704,7 @@ def dot(vect1, vect2):
         if vect1._sys == vect2._sys:
             return S.One if vect1 == vect2 else S.Zero
         from .functions import express
+
         try:
             v = express(vect2, vect1._sys)
         except ValueError:
@@ -698,10 +715,10 @@ def dot(vect1, vect2):
         return S.Zero
     if isinstance(vect1, VectorMul):
         v1, m1 = next(iter(vect1.components.items()))
-        return m1*dot(v1, vect2)
+        return m1 * dot(v1, vect2)
     if isinstance(vect2, VectorMul):
         v2, m2 = next(iter(vect2.components.items()))
-        return m2*dot(vect1, v2)
+        return m2 * dot(vect1, v2)
 
     return Dot(vect1, vect2)
 

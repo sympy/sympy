@@ -1,4 +1,5 @@
 """Strategies to Traverse a Tree."""
+
 from sympy.strategies.util import basic_fns
 from sympy.strategies.core import chain, do_one
 
@@ -25,7 +26,7 @@ def bottom_up_once(rule, fns=basic_fns):
 
 def sall(rule, fns=basic_fns):
     """Strategic all - apply rule to args."""
-    op, new, children, leaf = map(fns.get, ('op', 'new', 'children', 'leaf'))
+    op, new, children, leaf = map(fns.get, ("op", "new", "children", "leaf"))
 
     def all_rl(expr):
         if leaf(expr):

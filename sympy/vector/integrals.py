@@ -6,8 +6,13 @@ from sympy.integrals import Integral, integrate
 from sympy.geometry.entity import GeometryEntity
 from sympy.simplify.simplify import simplify
 from sympy.utilities.iterables import topological_sort
-from sympy.vector import (CoordSys3D, Vector, ParametricRegion,
-                        parametric_region_list, ImplicitRegion)
+from sympy.vector import (
+    CoordSys3D,
+    Vector,
+    ParametricRegion,
+    parametric_region_list,
+    ImplicitRegion,
+)
 from sympy.vector.operators import _get_coord_systems
 
 
@@ -45,7 +50,7 @@ class ParametricIntegral(Basic):
         coord_set = _get_coord_systems(field)
 
         if len(coord_set) == 0:
-            coord_sys = CoordSys3D('C')
+            coord_sys = CoordSys3D("C")
         elif len(coord_set) > 1:
             raise ValueError
         else:
@@ -61,27 +66,34 @@ class ParametricIntegral(Basic):
 
         r = Vector.zero
         for i in range(len(parametricregion.definition)):
-            r += base_vectors[i]*parametricregion.definition[i]
+            r += base_vectors[i] * parametricregion.definition[i]
 
         if len(coord_set) != 0:
             for i in range(len(parametricregion.definition)):
-                parametricfield = parametricfield.subs(base_scalars[i], parametricregion.definition[i])
+                parametricfield = parametricfield.subs(
+                    base_scalars[i], parametricregion.definition[i]
+                )
 
         if parametricregion.dimensions == 1:
             parameter = parametricregion.parameters[0]
 
             r_diff = diff(r, parameter)
-            lower, upper = parametricregion.limits[parameter][0], parametricregion.limits[parameter][1]
+            lower, upper = (
+                parametricregion.limits[parameter][0],
+                parametricregion.limits[parameter][1],
+            )
 
             if isinstance(parametricfield, Vector):
                 integrand = simplify(r_diff.dot(parametricfield))
             else:
-                integrand = simplify(r_diff.magnitude()*parametricfield)
+                integrand = simplify(r_diff.magnitude() * parametricfield)
 
             result = integrate(integrand, (parameter, lower, upper))
 
         elif parametricregion.dimensions == 2:
-            u, v = cls._bounds_case(parametricregion.parameters, parametricregion.limits)
+            u, v = cls._bounds_case(
+                parametricregion.parameters, parametricregion.limits
+            )
 
             r_u = diff(r, u)
             r_v = diff(r, v)
@@ -90,21 +102,32 @@ class ParametricIntegral(Basic):
             if isinstance(parametricfield, Vector):
                 integrand = parametricfield.dot(normal_vector)
             else:
-                integrand = parametricfield*normal_vector.magnitude()
+                integrand = parametricfield * normal_vector.magnitude()
 
             integrand = simplify(integrand)
 
-            lower_u, upper_u = parametricregion.limits[u][0], parametricregion.limits[u][1]
-            lower_v, upper_v = parametricregion.limits[v][0], parametricregion.limits[v][1]
+            lower_u, upper_u = (
+                parametricregion.limits[u][0],
+                parametricregion.limits[u][1],
+            )
+            lower_v, upper_v = (
+                parametricregion.limits[v][0],
+                parametricregion.limits[v][1],
+            )
 
             result = integrate(integrand, (u, lower_u, upper_u), (v, lower_v, upper_v))
 
         else:
-            variables = cls._bounds_case(parametricregion.parameters, parametricregion.limits)
+            variables = cls._bounds_case(
+                parametricregion.parameters, parametricregion.limits
+            )
             coeff = Matrix(parametricregion.definition).jacobian(variables).det()
-            integrand = simplify(parametricfield*coeff)
+            integrand = simplify(parametricfield * coeff)
 
-            l = [(var, parametricregion.limits[var][0], parametricregion.limits[var][1]) for var in variables]
+            l = [
+                (var, parametricregion.limits[var][0], parametricregion.limits[var][1])
+                for var in variables
+            ]
             result = integrate(integrand, *l)
 
         if not isinstance(result, Integral):
@@ -124,8 +147,11 @@ class ParametricIntegral(Basic):
 
             lower_p = lower_p.atoms()
             upper_p = upper_p.atoms()
-            E.extend((p, q) for q in V if p != q and
-                     (lower_p.issuperset({q}) or upper_p.issuperset({q})))
+            E.extend(
+                (p, q)
+                for q in V
+                if p != q and (lower_p.issuperset({q}) or upper_p.issuperset({q}))
+            )
 
         if not E:
             return parameters

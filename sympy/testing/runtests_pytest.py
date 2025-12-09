@@ -41,28 +41,28 @@ except ImportError:
 
         @staticmethod
         def main(*args, **kwargs):
-            msg = 'pytest must be installed to run tests via this function'
+            msg = "pytest must be installed to run tests via this function"
             raise NoPytestError(msg)
+
 
 from sympy.testing.runtests import test as test_sympy
 
 
 TESTPATHS_DEFAULT = (
-    pathlib.Path('sympy'),
-    pathlib.Path('doc', 'src'),
+    pathlib.Path("sympy"),
+    pathlib.Path("doc", "src"),
 )
-BLACKLIST_DEFAULT = (
-    'sympy/integrals/rubi/rubi_tests/tests',
-)
+BLACKLIST_DEFAULT = ("sympy/integrals/rubi/rubi_tests/tests",)
 
 
 class PytestPluginManager:
     """Module names for pytest plugins used by SymPy."""
-    PYTEST: str = 'pytest'
-    RANDOMLY: str = 'pytest_randomly'
-    SPLIT: str = 'pytest_split'
-    TIMEOUT: str = 'pytest_timeout'
-    XDIST: str = 'xdist'
+
+    PYTEST: str = "pytest"
+    RANDOMLY: str = "pytest_randomly"
+    SPLIT: str = "pytest_split"
+    TIMEOUT: str = "pytest_timeout"
+    XDIST: str = "xdist"
 
     @functools.cached_property
     def has_pytest(self) -> bool:
@@ -85,7 +85,7 @@ class PytestPluginManager:
         return bool(importlib.util.find_spec(self.XDIST))
 
 
-split_pattern = re.compile(r'([1-9][0-9]*)/([1-9][0-9]*)')
+split_pattern = re.compile(r"([1-9][0-9]*)/([1-9][0-9]*)")
 
 
 @functools.lru_cache
@@ -120,28 +120,28 @@ def update_args_with_paths(
         partial_path_file_patterns = []
         for partial_path in partial_paths:
             if len(partial_path) >= 4:
-                has_test_prefix = partial_path[:4] == 'test'
-                has_py_suffix = partial_path[-3:] == '.py'
+                has_test_prefix = partial_path[:4] == "test"
+                has_py_suffix = partial_path[-3:] == ".py"
             elif len(partial_path) >= 3:
                 has_test_prefix = False
-                has_py_suffix = partial_path[-3:] == '.py'
+                has_py_suffix = partial_path[-3:] == ".py"
             else:
                 has_test_prefix = False
                 has_py_suffix = False
             if has_test_prefix and has_py_suffix:
                 partial_path_file_patterns.append(partial_path)
             elif has_test_prefix:
-                partial_path_file_patterns.append(f'{partial_path}*.py')
+                partial_path_file_patterns.append(f"{partial_path}*.py")
             elif has_py_suffix:
-                partial_path_file_patterns.append(f'test*{partial_path}')
+                partial_path_file_patterns.append(f"test*{partial_path}")
             else:
-                partial_path_file_patterns.append(f'test*{partial_path}*.py')
+                partial_path_file_patterns.append(f"test*{partial_path}*.py")
         matches = []
         for testpath in valid_testpaths_default:
             for path, dirs, files in os.walk(testpath, topdown=True):
                 zipped = zip(partial_paths, partial_path_file_patterns)
-                for (partial_path, partial_path_file) in zipped:
-                    if fnmatch(path, f'*{partial_path}*'):
+                for partial_path, partial_path_file in zipped:
+                    if fnmatch(path, f"*{partial_path}*"):
                         matches.append(str(pathlib.Path(path)))
                         dirs[:] = []
                     else:
@@ -154,21 +154,21 @@ def update_args_with_paths(
         path = pathlib.Path(filepath)
         if not path.is_file():
             return False
-        if not path.parts[-1].startswith('test_'):
+        if not path.parts[-1].startswith("test_"):
             return False
-        if not path.suffix == '.py':
+        if not path.suffix == ".py":
             return False
         return True
 
     def find_tests_matching_keywords(keywords, filepath):
         matches = []
-        source = pathlib.Path(filepath).read_text(encoding='utf-8')
+        source = pathlib.Path(filepath).read_text(encoding="utf-8")
         for line in source.splitlines():
-            if line.lstrip().startswith('def '):
+            if line.lstrip().startswith("def "):
                 for kw in keywords:
                     if line.lower().find(kw.lower()) != -1:
-                        test_name = line.split(' ')[1].split('(')[0]
-                        full_test_path = filepath + '::' + test_name
+                        test_name = line.split(" ")[1].split("(")[0]
+                        full_test_path = filepath + "::" + test_name
                         matches.append(full_test_path)
         return matches
 
@@ -230,12 +230,12 @@ def make_absolute_path(partial_path: str) -> str:
 
     def is_valid_partial_path(partial_path: str) -> bool:
         """Assumption that partial paths are defined from the `sympy` root."""
-        return pathlib.Path(partial_path).parts[0] == 'sympy'
+        return pathlib.Path(partial_path).parts[0] == "sympy"
 
     if not is_valid_partial_path(partial_path):
         msg = (
-            f'Partial path {dir(partial_path)} is invalid, partial paths are '
-            f'expected to be defined with the `sympy` directory as the root.'
+            f"Partial path {dir(partial_path)} is invalid, partial paths are "
+            f"expected to be defined with the `sympy` directory as the root."
         )
         raise ValueError(msg)
 
@@ -363,12 +363,12 @@ def test(*paths, subprocess=True, rerun=0, **kwargs):
 
     """
     # NOTE: to be removed alongside SymPy test runner
-    if kwargs.get('use_sympy_runner', False):
-        kwargs.pop('parallel', False)
-        kwargs.pop('store_durations', False)
-        kwargs.pop('use_sympy_runner', True)
-        if kwargs.get('slow') is None:
-            kwargs['slow'] = False
+    if kwargs.get("use_sympy_runner", False):
+        kwargs.pop("parallel", False)
+        kwargs.pop("store_durations", False)
+        kwargs.pop("use_sympy_runner", True)
+        if kwargs.get("slow") is None:
+            kwargs["slow"] = False
         return test_sympy(*paths, subprocess=True, rerun=0, **kwargs)
 
     pytest_plugin_manager = PytestPluginManager()
@@ -377,75 +377,76 @@ def test(*paths, subprocess=True, rerun=0, **kwargs):
 
     args = []
 
-    if kwargs.get('verbose', False):
-        args.append('--verbose')
+    if kwargs.get("verbose", False):
+        args.append("--verbose")
 
-    if tb := kwargs.get('tb'):
-        args.extend(['--tb', tb])
+    if tb := kwargs.get("tb"):
+        args.extend(["--tb", tb])
 
-    if kwargs.get('pdb'):
-        args.append('--pdb')
+    if kwargs.get("pdb"):
+        args.append("--pdb")
 
-    if not kwargs.get('colors', True):
-        args.extend(['--color', 'no'])
+    if not kwargs.get("colors", True):
+        args.extend(["--color", "no"])
 
-    if seed := kwargs.get('seed'):
+    if seed := kwargs.get("seed"):
         if not pytest_plugin_manager.has_randomly:
-            msg = '`pytest-randomly` plugin required to control random seed.'
+            msg = "`pytest-randomly` plugin required to control random seed."
             raise ModuleNotFoundError(msg)
-        args.extend(['--randomly-seed', str(seed)])
+        args.extend(["--randomly-seed", str(seed)])
 
-    if kwargs.get('sort', True) and pytest_plugin_manager.has_randomly:
-        args.append('--randomly-dont-reorganize')
-    elif not kwargs.get('sort', True) and not pytest_plugin_manager.has_randomly:
-        msg = '`pytest-randomly` plugin required to randomize test order.'
+    if kwargs.get("sort", True) and pytest_plugin_manager.has_randomly:
+        args.append("--randomly-dont-reorganize")
+    elif not kwargs.get("sort", True) and not pytest_plugin_manager.has_randomly:
+        msg = "`pytest-randomly` plugin required to randomize test order."
         raise ModuleNotFoundError(msg)
 
-    if timeout := kwargs.get('timeout', None):
+    if timeout := kwargs.get("timeout", None):
         if not pytest_plugin_manager.has_timeout:
-            msg = '`pytest-timeout` plugin required to apply timeout to tests.'
+            msg = "`pytest-timeout` plugin required to apply timeout to tests."
             raise ModuleNotFoundError(msg)
-        args.extend(['--timeout', str(int(timeout))])
+        args.extend(["--timeout", str(int(timeout))])
 
     # Skip slow tests by default and always skip tooslow tests
-    if kwargs.get('slow', False):
-        args.extend(['-m', 'slow and not tooslow'])
+    if kwargs.get("slow", False):
+        args.extend(["-m", "slow and not tooslow"])
     else:
-        args.extend(['-m', 'not slow and not tooslow'])
+        args.extend(["-m", "not slow and not tooslow"])
 
-    if (split := kwargs.get('split')) is not None:
+    if (split := kwargs.get("split")) is not None:
         if not pytest_plugin_manager.has_split:
-            msg = '`pytest-split` plugin required to run tests as groups.'
+            msg = "`pytest-split` plugin required to run tests as groups."
             raise ModuleNotFoundError(msg)
         match = split_pattern.match(split)
         if not match:
-            msg = ('split must be a string of the form a/b where a and b are '
-                   'positive nonzero ints')
+            msg = (
+                "split must be a string of the form a/b where a and b are "
+                "positive nonzero ints"
+            )
             raise ValueError(msg)
         group, splits = map(str, match.groups())
-        args.extend(['--group', group, '--splits', splits])
+        args.extend(["--group", group, "--splits", splits])
         if group > splits:
-            msg = (f'cannot have a group number {group} with only {splits} '
-                   'splits')
+            msg = f"cannot have a group number {group} with only {splits} " "splits"
             raise ValueError(msg)
 
-    if blacklist := kwargs.get('blacklist', BLACKLIST_DEFAULT):
+    if blacklist := kwargs.get("blacklist", BLACKLIST_DEFAULT):
         for path in blacklist:
-            args.extend(['--ignore', make_absolute_path(path)])
+            args.extend(["--ignore", make_absolute_path(path)])
 
-    if kwargs.get('parallel', False):
+    if kwargs.get("parallel", False):
         if not pytest_plugin_manager.has_xdist:
-            msg = '`pytest-xdist` plugin required to run tests in parallel.'
+            msg = "`pytest-xdist` plugin required to run tests in parallel."
             raise ModuleNotFoundError(msg)
-        args.extend(['-n', 'auto'])
+        args.extend(["-n", "auto"])
 
-    if kwargs.get('store_durations', False):
+    if kwargs.get("store_durations", False):
         if not pytest_plugin_manager.has_split:
-            msg = '`pytest-split` plugin required to store test durations.'
+            msg = "`pytest-split` plugin required to store test durations."
             raise ModuleNotFoundError(msg)
-        args.append('--store-durations')
+        args.append("--store-durations")
 
-    if (keywords := kwargs.get('kw')) is not None:
+    if (keywords := kwargs.get("kw")) is not None:
         keywords = tuple(str(kw) for kw in keywords)
     else:
         keywords = ()
@@ -456,6 +457,5 @@ def test(*paths, subprocess=True, rerun=0, **kwargs):
 
 
 def doctest():
-    """Interface to run doctests via pytest compatible with SymPy's test runner.
-    """
+    """Interface to run doctests via pytest compatible with SymPy's test runner."""
     raise NotImplementedError

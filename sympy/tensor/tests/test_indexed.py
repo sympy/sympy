@@ -6,8 +6,12 @@ from sympy.utilities.iterables import iterable
 # import test:
 from sympy.concrete.summations import Sum
 from sympy.core.function import Function, Subs, Derivative
-from sympy.core.relational import (StrictLessThan, GreaterThan,
-    StrictGreaterThan, LessThan)
+from sympy.core.relational import (
+    StrictLessThan,
+    GreaterThan,
+    StrictGreaterThan,
+    LessThan,
+)
 from sympy.core.singleton import S
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.trigonometric import cos, sin
@@ -18,12 +22,12 @@ from sympy.tensor.indexed import IndexedBase, Idx, Indexed
 
 
 def test_Idx_construction():
-    i, a, b = symbols('i a b', integer=True)
+    i, a, b = symbols("i a b", integer=True)
     assert Idx(i) != Idx(i, 1)
     assert Idx(i, a) == Idx(i, (0, a - 1))
     assert Idx(i, oo) == Idx(i, (0, oo))
 
-    x = symbols('x', integer=False)
+    x = symbols("x", integer=False)
     raises(TypeError, lambda: Idx(x))
     raises(TypeError, lambda: Idx(0.5))
     raises(TypeError, lambda: Idx(i, x))
@@ -34,15 +38,15 @@ def test_Idx_construction():
 
 
 def test_Idx_properties():
-    i, a, b = symbols('i a b', integer=True)
+    i, a, b = symbols("i a b", integer=True)
     assert Idx(i).is_integer
-    assert Idx(i).name == 'i'
-    assert Idx(i + 2).name == 'i + 2'
-    assert Idx('foo').name == 'foo'
+    assert Idx(i).name == "i"
+    assert Idx(i + 2).name == "i + 2"
+    assert Idx("foo").name == "foo"
 
 
 def test_Idx_bounds():
-    i, a, b = symbols('i a b', integer=True)
+    i, a, b = symbols("i a b", integer=True)
     assert Idx(i).lower is None
     assert Idx(i).upper is None
     assert Idx(i, a).lower == 0
@@ -60,7 +64,7 @@ def test_Idx_bounds():
 
 
 def test_Idx_fixed_bounds():
-    i, a, b, x = symbols('i a b x', integer=True)
+    i, a, b, x = symbols("i a b x", integer=True)
     assert Idx(x).lower is None
     assert Idx(x).upper is None
     assert Idx(x, a).lower == 0
@@ -154,7 +158,7 @@ def test_Idx_inequalities_current_fails():
 
 
 def test_Idx_func_args():
-    i, a, b = symbols('i a b', integer=True)
+    i, a, b = symbols("i a b", integer=True)
     ii = Idx(i)
     assert ii.func(*ii.args) == ii
     ii = Idx(i, a)
@@ -164,7 +168,7 @@ def test_Idx_func_args():
 
 
 def test_Idx_subs():
-    i, a, b = symbols('i a b', integer=True)
+    i, a, b = symbols("i a b", integer=True)
     assert Idx(i, a).subs(a, b) == Idx(i, b)
     assert Idx(i, a).subs(i, b) == Idx(b, a)
 
@@ -174,8 +178,8 @@ def test_Idx_subs():
 
 
 def test_IndexedBase_sugar():
-    i, j = symbols('i j', integer=True)
-    a = symbols('a')
+    i, j = symbols("i j", integer=True)
+    a = symbols("a")
     A1 = Indexed(a, i, j)
     A2 = IndexedBase(a)
     assert A1 == A2[i, j]
@@ -186,8 +190,8 @@ def test_IndexedBase_sugar():
 
 
 def test_IndexedBase_subs():
-    i = symbols('i', integer=True)
-    a, b = symbols('a b')
+    i = symbols("i", integer=True)
+    a, b = symbols("a b")
     A = IndexedBase(a)
     B = IndexedBase(b)
     assert A[i] == B[i].subs(b, a)
@@ -196,9 +200,9 @@ def test_IndexedBase_subs():
 
 
 def test_IndexedBase_shape():
-    i, j, m, n = symbols('i j m n', integer=True)
-    a = IndexedBase('a', shape=(m, m))
-    b = IndexedBase('a', shape=(m, n))
+    i, j, m, n = symbols("i j m n", integer=True)
+    a = IndexedBase("a", shape=(m, m))
+    b = IndexedBase("a", shape=(m, n))
     assert b.shape == Tuple(m, n)
     assert a[i, j] != b[i, j]
     assert a[i, j] == b[i, j].subs(n, m)
@@ -213,8 +217,8 @@ def test_IndexedBase_shape():
 
 
 def test_IndexedBase_assumptions():
-    i = Symbol('i', integer=True)
-    a = Symbol('a')
+    i = Symbol("i", integer=True)
+    a = Symbol("a")
     A = IndexedBase(a, positive=True)
     for c in (A, A[i]):
         assert c.is_real
@@ -231,9 +235,9 @@ def test_IndexedBase_assumptions():
 
 
 def test_IndexedBase_assumptions_inheritance():
-    I = Symbol('I', integer=True)
+    I = Symbol("I", integer=True)
     I_inherit = IndexedBase(I)
-    I_explicit = IndexedBase('I', integer=True)
+    I_explicit = IndexedBase("I", integer=True)
 
     assert I_inherit.is_integer
     assert I_explicit.is_integer
@@ -247,10 +251,11 @@ def test_issue_17652():
 
     IndexedBase.label should not upcast subclasses of Symbol
     """
+
     class SubClass(Symbol):
         pass
 
-    x = SubClass('X')
+    x = SubClass("X")
     assert type(x) == SubClass
     base = IndexedBase(x)
     assert type(x) == SubClass
@@ -258,25 +263,25 @@ def test_issue_17652():
 
 
 def test_Indexed_constructor():
-    i, j = symbols('i j', integer=True)
-    A = Indexed('A', i, j)
-    assert A == Indexed(Symbol('A'), i, j)
-    assert A == Indexed(IndexedBase('A'), i, j)
+    i, j = symbols("i j", integer=True)
+    A = Indexed("A", i, j)
+    assert A == Indexed(Symbol("A"), i, j)
+    assert A == Indexed(IndexedBase("A"), i, j)
     raises(TypeError, lambda: Indexed(A, i, j))
     raises(IndexException, lambda: Indexed("A"))
     assert A.free_symbols == {A, A.base.label, i, j}
 
 
 def test_Indexed_func_args():
-    i, j = symbols('i j', integer=True)
-    a = symbols('a')
+    i, j = symbols("i j", integer=True)
+    a = symbols("a")
     A = Indexed(a, i, j)
     assert A == A.func(*A.args)
 
 
 def test_Indexed_subs():
-    i, j, k = symbols('i j k', integer=True)
-    a, b = symbols('a b')
+    i, j, k = symbols("i j k", integer=True)
+    a, b = symbols("a b")
     A = IndexedBase(a)
     B = IndexedBase(b)
     assert A[i, j] == B[i, j].subs(b, a)
@@ -284,66 +289,67 @@ def test_Indexed_subs():
 
 
 def test_Indexed_properties():
-    i, j = symbols('i j', integer=True)
-    A = Indexed('A', i, j)
-    assert A.name == 'A[i, j]'
+    i, j = symbols("i j", integer=True)
+    A = Indexed("A", i, j)
+    assert A.name == "A[i, j]"
     assert A.rank == 2
     assert A.indices == (i, j)
-    assert A.base == IndexedBase('A')
+    assert A.base == IndexedBase("A")
     assert A.ranges == [None, None]
     raises(IndexException, lambda: A.shape)
 
-    n, m = symbols('n m', integer=True)
-    assert Indexed('A', Idx(
-        i, m), Idx(j, n)).ranges == [Tuple(0, m - 1), Tuple(0, n - 1)]
-    assert Indexed('A', Idx(i, m), Idx(j, n)).shape == Tuple(m, n)
+    n, m = symbols("n m", integer=True)
+    assert Indexed("A", Idx(i, m), Idx(j, n)).ranges == [
+        Tuple(0, m - 1),
+        Tuple(0, n - 1),
+    ]
+    assert Indexed("A", Idx(i, m), Idx(j, n)).shape == Tuple(m, n)
     raises(IndexException, lambda: Indexed("A", Idx(i, m), Idx(j)).shape)
 
 
 def test_Indexed_shape_precedence():
-    i, j = symbols('i j', integer=True)
-    o, p = symbols('o p', integer=True)
-    n, m = symbols('n m', integer=True)
-    a = IndexedBase('a', shape=(o, p))
+    i, j = symbols("i j", integer=True)
+    o, p = symbols("o p", integer=True)
+    n, m = symbols("n m", integer=True)
+    a = IndexedBase("a", shape=(o, p))
     assert a.shape == Tuple(o, p)
-    assert Indexed(
-        a, Idx(i, m), Idx(j, n)).ranges == [Tuple(0, m - 1), Tuple(0, n - 1)]
+    assert Indexed(a, Idx(i, m), Idx(j, n)).ranges == [Tuple(0, m - 1), Tuple(0, n - 1)]
     assert Indexed(a, Idx(i, m), Idx(j, n)).shape == Tuple(o, p)
-    assert Indexed(
-        a, Idx(i, m), Idx(j)).ranges == [Tuple(0, m - 1), (None, None)]
+    assert Indexed(a, Idx(i, m), Idx(j)).ranges == [Tuple(0, m - 1), (None, None)]
     assert Indexed(a, Idx(i, m), Idx(j)).shape == Tuple(o, p)
 
 
 def test_complex_indices():
-    i, j = symbols('i j', integer=True)
-    A = Indexed('A', i, i + j)
+    i, j = symbols("i j", integer=True)
+    A = Indexed("A", i, i + j)
     assert A.rank == 2
     assert A.indices == (i, i + j)
 
 
 def test_not_interable():
-    i, j = symbols('i j', integer=True)
-    A = Indexed('A', i, i + j)
+    i, j = symbols("i j", integer=True)
+    A = Indexed("A", i, i + j)
     assert not iterable(A)
 
 
 def test_Indexed_coeff():
-    N = Symbol('N', integer=True)
+    N = Symbol("N", integer=True)
     len_y = N
-    i = Idx('i', len_y-1)
-    y = IndexedBase('y', shape=(len_y,))
-    a = (1/y[i+1]*y[i]).coeff(y[i])
-    b = (y[i]/y[i+1]).coeff(y[i])
+    i = Idx("i", len_y - 1)
+    y = IndexedBase("y", shape=(len_y,))
+    a = (1 / y[i + 1] * y[i]).coeff(y[i])
+    b = (y[i] / y[i + 1]).coeff(y[i])
     assert a == b
 
 
 def test_differentiation():
     from sympy.functions.special.tensor_functions import KroneckerDelta
-    i, j, k, l = symbols('i j k l', cls=Idx)
-    a = symbols('a')
+
+    i, j, k, l = symbols("i j k l", cls=Idx)
+    a = symbols("a")
     m, n = symbols("m, n", integer=True, finite=True)
     assert m.is_real
-    h, L = symbols('h L', cls=IndexedBase)
+    h, L = symbols("h L", cls=IndexedBase)
     hi, hj = h[i], h[j]
 
     expr = hi
@@ -355,8 +361,12 @@ def test_differentiation():
     assert expr.diff(hi) == S(2) * KroneckerDelta(i, i)
     assert expr.diff(a) is S.Zero
 
-    assert Sum(expr, (i, -oo, oo)).diff(hj) == Sum(2*KroneckerDelta(i, j), (i, -oo, oo))
-    assert Sum(expr.diff(hj), (i, -oo, oo)) == Sum(2*KroneckerDelta(i, j), (i, -oo, oo))
+    assert Sum(expr, (i, -oo, oo)).diff(hj) == Sum(
+        2 * KroneckerDelta(i, j), (i, -oo, oo)
+    )
+    assert Sum(expr.diff(hj), (i, -oo, oo)) == Sum(
+        2 * KroneckerDelta(i, j), (i, -oo, oo)
+    )
     assert Sum(expr, (i, -oo, oo)).diff(hj).doit() == 2
 
     assert Sum(expr.diff(hi), (i, -oo, oo)).doit() == Sum(2, (i, -oo, oo)).doit()
@@ -367,40 +377,58 @@ def test_differentiation():
     assert expr.diff(a) == hj * hj / S(2)
     assert expr.diff(a, 2) is S.Zero
 
-    assert Sum(expr, (i, -oo, oo)).diff(hi) == Sum(a*KroneckerDelta(i, j)*h[j], (i, -oo, oo))
-    assert Sum(expr.diff(hi), (i, -oo, oo)) == Sum(a*KroneckerDelta(i, j)*h[j], (i, -oo, oo))
-    assert Sum(expr, (i, -oo, oo)).diff(hi).doit() == a*h[j]
+    assert Sum(expr, (i, -oo, oo)).diff(hi) == Sum(
+        a * KroneckerDelta(i, j) * h[j], (i, -oo, oo)
+    )
+    assert Sum(expr.diff(hi), (i, -oo, oo)) == Sum(
+        a * KroneckerDelta(i, j) * h[j], (i, -oo, oo)
+    )
+    assert Sum(expr, (i, -oo, oo)).diff(hi).doit() == a * h[j]
 
-    assert Sum(expr, (j, -oo, oo)).diff(hi) == Sum(a*KroneckerDelta(i, j)*h[j], (j, -oo, oo))
-    assert Sum(expr.diff(hi), (j, -oo, oo)) == Sum(a*KroneckerDelta(i, j)*h[j], (j, -oo, oo))
-    assert Sum(expr, (j, -oo, oo)).diff(hi).doit() == a*h[i]
+    assert Sum(expr, (j, -oo, oo)).diff(hi) == Sum(
+        a * KroneckerDelta(i, j) * h[j], (j, -oo, oo)
+    )
+    assert Sum(expr.diff(hi), (j, -oo, oo)) == Sum(
+        a * KroneckerDelta(i, j) * h[j], (j, -oo, oo)
+    )
+    assert Sum(expr, (j, -oo, oo)).diff(hi).doit() == a * h[i]
 
     expr = a * sin(hj * hj)
-    assert expr.diff(hi) == 2*a*cos(hj * hj) * hj * KroneckerDelta(i, j)
-    assert expr.diff(hj) == 2*a*cos(hj * hj) * hj
+    assert expr.diff(hi) == 2 * a * cos(hj * hj) * hj * KroneckerDelta(i, j)
+    assert expr.diff(hj) == 2 * a * cos(hj * hj) * hj
 
     expr = a * L[i, j] * h[j]
-    assert expr.diff(hi) == a*L[i, j]*KroneckerDelta(i, j)
-    assert expr.diff(hj) == a*L[i, j]
-    assert expr.diff(L[i, j]) == a*h[j]
-    assert expr.diff(L[k, l]) == a*KroneckerDelta(i, k)*KroneckerDelta(j, l)*h[j]
-    assert expr.diff(L[i, l]) == a*KroneckerDelta(j, l)*h[j]
+    assert expr.diff(hi) == a * L[i, j] * KroneckerDelta(i, j)
+    assert expr.diff(hj) == a * L[i, j]
+    assert expr.diff(L[i, j]) == a * h[j]
+    assert expr.diff(L[k, l]) == a * KroneckerDelta(i, k) * KroneckerDelta(j, l) * h[j]
+    assert expr.diff(L[i, l]) == a * KroneckerDelta(j, l) * h[j]
 
-    assert Sum(expr, (j, -oo, oo)).diff(L[k, l]) == Sum(a * KroneckerDelta(i, k) * KroneckerDelta(j, l) * h[j], (j, -oo, oo))
-    assert Sum(expr, (j, -oo, oo)).diff(L[k, l]).doit() == a * KroneckerDelta(i, k) * h[l]
+    assert Sum(expr, (j, -oo, oo)).diff(L[k, l]) == Sum(
+        a * KroneckerDelta(i, k) * KroneckerDelta(j, l) * h[j], (j, -oo, oo)
+    )
+    assert (
+        Sum(expr, (j, -oo, oo)).diff(L[k, l]).doit() == a * KroneckerDelta(i, k) * h[l]
+    )
 
     assert h[m].diff(h[m]) == 1
     assert h[m].diff(h[n]) == KroneckerDelta(m, n)
-    assert Sum(a*h[m], (m, -oo, oo)).diff(h[n]) == Sum(a*KroneckerDelta(m, n), (m, -oo, oo))
-    assert Sum(a*h[m], (m, -oo, oo)).diff(h[n]).doit() == a
-    assert Sum(a*h[m], (n, -oo, oo)).diff(h[n]) == Sum(a*KroneckerDelta(m, n), (n, -oo, oo))
-    assert Sum(a*h[m], (m, -oo, oo)).diff(h[m]).doit() == oo*a
+    assert Sum(a * h[m], (m, -oo, oo)).diff(h[n]) == Sum(
+        a * KroneckerDelta(m, n), (m, -oo, oo)
+    )
+    assert Sum(a * h[m], (m, -oo, oo)).diff(h[n]).doit() == a
+    assert Sum(a * h[m], (n, -oo, oo)).diff(h[n]) == Sum(
+        a * KroneckerDelta(m, n), (n, -oo, oo)
+    )
+    assert Sum(a * h[m], (m, -oo, oo)).diff(h[m]).doit() == oo * a
 
 
 def test_indexed_series():
     A = IndexedBase("A")
     i = symbols("i", integer=True)
-    assert sin(A[i]).series(A[i]) == A[i] - A[i]**3/6 + A[i]**5/120 + Order(A[i]**6, A[i])
+    assert sin(A[i]).series(A[i]) == A[i] - A[i] ** 3 / 6 + A[i] ** 5 / 120 + Order(
+        A[i] ** 6, A[i]
+    )
 
 
 def test_indexed_is_constant():
@@ -408,14 +436,14 @@ def test_indexed_is_constant():
     i, j, k = symbols("i,j,k")
     assert not A[i].is_constant()
     assert A[i].is_constant(j)
-    assert not A[1+2*i, k].is_constant()
-    assert not A[1+2*i, k].is_constant(i)
-    assert A[1+2*i, k].is_constant(j)
-    assert not A[1+2*i, k].is_constant(k)
+    assert not A[1 + 2 * i, k].is_constant()
+    assert not A[1 + 2 * i, k].is_constant(i)
+    assert A[1 + 2 * i, k].is_constant(j)
+    assert not A[1 + 2 * i, k].is_constant(k)
 
 
 def test_issue_12533():
-    d = IndexedBase('d')
+    d = IndexedBase("d")
     assert IndexedBase(range(5)) == Range(0, 5, 1)
     assert d[0].subs(Symbol("d"), range(5)) == 0
     assert d[0].subs(d, range(5)) == 0
@@ -431,11 +459,12 @@ def test_issue_12780():
 
 def test_issue_18604():
     m = symbols("m")
-    assert Idx("i", m).name == 'i'
+    assert Idx("i", m).name == "i"
     assert Idx("i", m).lower == 0
     assert Idx("i", m).upper == m - 1
     m = symbols("m", real=False)
     raises(TypeError, lambda: Idx("i", m))
+
 
 def test_Subs_with_Indexed():
     A = IndexedBase("A")
@@ -451,61 +480,72 @@ def test_Subs_with_Indexed():
     assert Subs(A[i], A[i], A[j]).diff(A[k]) == KroneckerDelta(j, k)
     assert Subs(x, x, A[i]).diff(A[j]) == KroneckerDelta(i, j)
     assert Subs(f(A[i]), A[i], x).diff(A[j]) == 0
-    assert Subs(f(A[i]), A[i], A[k]).diff(A[j]) == Derivative(f(A[k]), A[k])*KroneckerDelta(j, k)
-    assert Subs(x, x, A[i]**2).diff(A[j]) == 2*KroneckerDelta(i, j)*A[i]
-    assert Subs(A[i], A[i], A[j]**2).diff(A[k]) == 2*KroneckerDelta(j, k)*A[j]
+    assert Subs(f(A[i]), A[i], A[k]).diff(A[j]) == Derivative(
+        f(A[k]), A[k]
+    ) * KroneckerDelta(j, k)
+    assert Subs(x, x, A[i] ** 2).diff(A[j]) == 2 * KroneckerDelta(i, j) * A[i]
+    assert Subs(A[i], A[i], A[j] ** 2).diff(A[k]) == 2 * KroneckerDelta(j, k) * A[j]
 
-    assert Subs(A[i]*x, x, A[i]).diff(A[i]) == 2*A[i]
-    assert Subs(A[i]*x, x, A[i]).diff(A[j]) == 2*A[i]*KroneckerDelta(i, j)
-    assert Subs(A[i]*x, x, A[j]).diff(A[i]) == A[j] + A[i]*KroneckerDelta(i, j)
-    assert Subs(A[i]*x, x, A[j]).diff(A[j]) == A[i] + A[j]*KroneckerDelta(i, j)
-    assert Subs(A[i]*x, x, A[i]).diff(A[k]) == 2*A[i]*KroneckerDelta(i, k)
-    assert Subs(A[i]*x, x, A[j]).diff(A[k]) == KroneckerDelta(i, k)*A[j] + KroneckerDelta(j, k)*A[i]
+    assert Subs(A[i] * x, x, A[i]).diff(A[i]) == 2 * A[i]
+    assert Subs(A[i] * x, x, A[i]).diff(A[j]) == 2 * A[i] * KroneckerDelta(i, j)
+    assert Subs(A[i] * x, x, A[j]).diff(A[i]) == A[j] + A[i] * KroneckerDelta(i, j)
+    assert Subs(A[i] * x, x, A[j]).diff(A[j]) == A[i] + A[j] * KroneckerDelta(i, j)
+    assert Subs(A[i] * x, x, A[i]).diff(A[k]) == 2 * A[i] * KroneckerDelta(i, k)
+    assert (
+        Subs(A[i] * x, x, A[j]).diff(A[k])
+        == KroneckerDelta(i, k) * A[j] + KroneckerDelta(j, k) * A[i]
+    )
 
-    assert Subs(A[i]*x, A[i], x).diff(A[i]) == 0
-    assert Subs(A[i]*x, A[i], x).diff(A[j]) == 0
-    assert Subs(A[i]*x, A[j], x).diff(A[i]) == x
-    assert Subs(A[i]*x, A[j], x).diff(A[j]) == x*KroneckerDelta(i, j)
-    assert Subs(A[i]*x, A[i], x).diff(A[k]) == 0
-    assert Subs(A[i]*x, A[j], x).diff(A[k]) == x*KroneckerDelta(i, k)
+    assert Subs(A[i] * x, A[i], x).diff(A[i]) == 0
+    assert Subs(A[i] * x, A[i], x).diff(A[j]) == 0
+    assert Subs(A[i] * x, A[j], x).diff(A[i]) == x
+    assert Subs(A[i] * x, A[j], x).diff(A[j]) == x * KroneckerDelta(i, j)
+    assert Subs(A[i] * x, A[i], x).diff(A[k]) == 0
+    assert Subs(A[i] * x, A[j], x).diff(A[k]) == x * KroneckerDelta(i, k)
 
 
 def test_complicated_derivative_with_Indexed():
     x, y = symbols("x,y", cls=IndexedBase)
     sigma = symbols("sigma")
     i, j, k = symbols("i,j,k")
-    m0,m1,m2,m3,m4,m5 = symbols("m0:6")
+    m0, m1, m2, m3, m4, m5 = symbols("m0:6")
     f = Function("f")
 
-    expr = f((x[i] - y[i])**2/sigma)
+    expr = f((x[i] - y[i]) ** 2 / sigma)
     _xi_1 = symbols("xi_1", cls=Dummy)
     assert expr.diff(x[m0]).dummy_eq(
-        (x[i] - y[i])*KroneckerDelta(i, m0)*\
-        2*Subs(
-            Derivative(f(_xi_1), _xi_1),
-            (_xi_1,),
-            ((x[i] - y[i])**2/sigma,)
-        )/sigma
+        (x[i] - y[i])
+        * KroneckerDelta(i, m0)
+        * 2
+        * Subs(Derivative(f(_xi_1), _xi_1), (_xi_1,), ((x[i] - y[i]) ** 2 / sigma,))
+        / sigma
     )
-    assert expr.diff(x[m0]).diff(x[m1]).dummy_eq(
-        2*KroneckerDelta(i, m0)*\
-        KroneckerDelta(i, m1)*Subs(
-            Derivative(f(_xi_1), _xi_1),
-            (_xi_1,),
-            ((x[i] - y[i])**2/sigma,)
-         )/sigma + \
-        4*(x[i] - y[i])**2*KroneckerDelta(i, m0)*KroneckerDelta(i, m1)*\
-        Subs(
-            Derivative(f(_xi_1), _xi_1, _xi_1),
-            (_xi_1,),
-            ((x[i] - y[i])**2/sigma,)
-        )/sigma**2
+    assert (
+        expr.diff(x[m0])
+        .diff(x[m1])
+        .dummy_eq(
+            2
+            * KroneckerDelta(i, m0)
+            * KroneckerDelta(i, m1)
+            * Subs(Derivative(f(_xi_1), _xi_1), (_xi_1,), ((x[i] - y[i]) ** 2 / sigma,))
+            / sigma
+            + 4
+            * (x[i] - y[i]) ** 2
+            * KroneckerDelta(i, m0)
+            * KroneckerDelta(i, m1)
+            * Subs(
+                Derivative(f(_xi_1), _xi_1, _xi_1),
+                (_xi_1,),
+                ((x[i] - y[i]) ** 2 / sigma,),
+            )
+            / sigma**2
+        )
     )
 
 
 def test_IndexedBase_commutative():
-    t = IndexedBase('t', commutative=False)
-    u = IndexedBase('u', commutative=False)
-    v = IndexedBase('v')
-    assert t[0]*v[0] == v[0]*t[0]
-    assert t[0]*u[0] != u[0]*t[0]
+    t = IndexedBase("t", commutative=False)
+    u = IndexedBase("u", commutative=False)
+    v = IndexedBase("v")
+    assert t[0] * v[0] == v[0] * t[0]
+    assert t[0] * u[0] != u[0] * t[0]

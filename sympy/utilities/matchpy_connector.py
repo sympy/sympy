@@ -2,13 +2,27 @@
 The objects in this module allow the usage of the MatchPy pattern matching
 library on SymPy expressions.
 """
+
 import re
 from typing import List, Callable, NamedTuple, Any, Dict
 
 from sympy.core.sympify import _sympify
 from sympy.external import import_module
-from sympy.functions import (log, sin, cos, tan, cot, csc, sec, erf, gamma, uppergamma)
-from sympy.functions.elementary.hyperbolic import acosh, asinh, atanh, acoth, acsch, asech, cosh, sinh, tanh, coth, sech, csch
+from sympy.functions import log, sin, cos, tan, cot, csc, sec, erf, gamma, uppergamma
+from sympy.functions.elementary.hyperbolic import (
+    acosh,
+    asinh,
+    atanh,
+    acoth,
+    acsch,
+    asech,
+    cosh,
+    sinh,
+    tanh,
+    coth,
+    sech,
+    csch,
+)
 from sympy.functions.elementary.trigonometric import atan, acsc, asin, acot, acos, asec
 from sympy.functions.special.error_functions import fresnelc, fresnels, erfc, erfi, Ei
 from sympy.core.add import Add
@@ -16,7 +30,7 @@ from sympy.core.basic import Basic
 from sympy.core.expr import Expr
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
-from sympy.core.relational import (Equality, Unequality)
+from sympy.core.relational import Equality, Unequality
 from sympy.core.symbol import Symbol
 from sympy.functions.elementary.exponential import exp
 from sympy.integrals.integrals import Integral
@@ -27,12 +41,21 @@ from sympy.utilities.decorator import doctest_depends_on
 matchpy = import_module("matchpy")
 
 
-__doctest_requires__ = {('*',): ['matchpy']}
+__doctest_requires__ = {("*",): ["matchpy"]}
 
 
 if matchpy:
-    from matchpy import Operation, CommutativeOperation, AssociativeOperation, OneIdentityOperation
-    from matchpy.expressions.functions import op_iter, create_operation_expression, op_len
+    from matchpy import (
+        Operation,
+        CommutativeOperation,
+        AssociativeOperation,
+        OneIdentityOperation,
+    )
+    from matchpy.expressions.functions import (
+        op_iter,
+        create_operation_expression,
+        op_len,
+    )
 
     Operation.register(Integral)
     Operation.register(Pow)
@@ -112,7 +135,8 @@ if matchpy:
 if matchpy:
     from matchpy import Wildcard
 else:
-    class Wildcard: # type: ignore
+
+    class Wildcard:  # type: ignore
         def __init__(self, min_length, fixed_size, variable_name, optional):
             self.min_count = min_length
             self.fixed_size = fixed_size
@@ -120,7 +144,7 @@ else:
             self.optional = optional
 
 
-@doctest_depends_on(modules=('matchpy',))
+@doctest_depends_on(modules=("matchpy",))
 class _WildAbstract(Wildcard, Symbol):
     min_length: int  # abstract field required in subclasses
     fixed_size: bool  # abstract field required in subclasses
@@ -155,11 +179,20 @@ class _WildAbstract(Wildcard, Symbol):
 
     def _hashable_content(self):
         if self.optional:
-            return super()._hashable_content() + (self.min_count, self.fixed_size, self.variable_name, self.optional)
+            return super()._hashable_content() + (
+                self.min_count,
+                self.fixed_size,
+                self.variable_name,
+                self.optional,
+            )
         else:
-            return super()._hashable_content() + (self.min_count, self.fixed_size, self.variable_name)
+            return super()._hashable_content() + (
+                self.min_count,
+                self.fixed_size,
+                self.variable_name,
+            )
 
-    def __copy__(self) -> '_WildAbstract':
+    def __copy__(self) -> "_WildAbstract":
         return type(self)(variable_name=self.variable_name, optional=self.optional)
 
     def __repr__(self):
@@ -169,19 +202,19 @@ class _WildAbstract(Wildcard, Symbol):
         return self.name
 
 
-@doctest_depends_on(modules=('matchpy',))
+@doctest_depends_on(modules=("matchpy",))
 class WildDot(_WildAbstract):
     min_length = 1
     fixed_size = True
 
 
-@doctest_depends_on(modules=('matchpy',))
+@doctest_depends_on(modules=("matchpy",))
 class WildPlus(_WildAbstract):
     min_length = 1
     fixed_size = False
 
 
-@doctest_depends_on(modules=('matchpy',))
+@doctest_depends_on(modules=("matchpy",))
 class WildStar(_WildAbstract):
     min_length = 0
     fixed_size = False
@@ -200,7 +233,7 @@ class ReplacementInfo(NamedTuple):
     info: Any
 
 
-@doctest_depends_on(modules=('matchpy',))
+@doctest_depends_on(modules=("matchpy",))
 class Replacer:
     """
     Replacer object to perform multiple pattern matching and subexpression
@@ -258,7 +291,9 @@ class Replacer:
     4/3
     """
 
-    def __init__(self, common_constraints: list = [], lambdify: bool = False, info: bool = False):
+    def __init__(
+        self, common_constraints: list = [], lambdify: bool = False, info: bool = False
+    ):
         self._matcher = matchpy.ManyToOneMatcher()
         self._common_constraint = common_constraints
         self._lambdify = lambdify
@@ -269,29 +304,42 @@ class Replacer:
         exec("from sympy import *")
         return eval(lambda_str, locals())
 
-    def _get_custom_constraint(self, constraint_expr: Expr, condition_template: str) -> Callable[..., Expr]:
+    def _get_custom_constraint(
+        self, constraint_expr: Expr, condition_template: str
+    ) -> Callable[..., Expr]:
         wilds = [x.name for x in constraint_expr.atoms(_WildAbstract)]
-        lambdaargs = ', '.join(wilds)
+        lambdaargs = ", ".join(wilds)
         fullexpr = _get_srepr(constraint_expr)
         condition = condition_template.format(fullexpr)
         return matchpy.CustomConstraint(
-            self._get_lambda(f"lambda {lambdaargs}: ({condition})"))
+            self._get_lambda(f"lambda {lambdaargs}: ({condition})")
+        )
 
-    def _get_custom_constraint_nonfalse(self, constraint_expr: Expr) -> Callable[..., Expr]:
+    def _get_custom_constraint_nonfalse(
+        self, constraint_expr: Expr
+    ) -> Callable[..., Expr]:
         return self._get_custom_constraint(constraint_expr, "({}) != False")
 
     def _get_custom_constraint_true(self, constraint_expr: Expr) -> Callable[..., Expr]:
         return self._get_custom_constraint(constraint_expr, "({}) == True")
 
-    def add(self, expr: Expr, replacement, conditions_true: List[Expr] = [],
-            conditions_nonfalse: List[Expr] = [], info: Any = None) -> None:
+    def add(
+        self,
+        expr: Expr,
+        replacement,
+        conditions_true: List[Expr] = [],
+        conditions_nonfalse: List[Expr] = [],
+        info: Any = None,
+    ) -> None:
         expr = _sympify(expr)
         replacement = _sympify(replacement)
         constraints = self._common_constraint[:]
         constraint_conditions_true = [
-            self._get_custom_constraint_true(cond) for cond in conditions_true]
+            self._get_custom_constraint_true(cond) for cond in conditions_true
+        ]
         constraint_conditions_nonfalse = [
-            self._get_custom_constraint_nonfalse(cond) for cond in conditions_nonfalse]
+            self._get_custom_constraint_nonfalse(cond) for cond in conditions_nonfalse
+        ]
         constraints.extend(constraint_conditions_true)
         constraints.extend(constraint_conditions_nonfalse)
         pattern = matchpy.Pattern(expr, *constraints)
@@ -326,7 +374,9 @@ class Replacer:
                     if self._lambdify:
                         result = replacement(**subst)
                     else:
-                        result = replacement.xreplace({self._wildcards[k]: v for k, v in subst.items()})
+                        result = replacement.xreplace(
+                            {self._wildcards[k]: v for k, v in subst.items()}
+                        )
 
                     expression = matchpy.functions.replace(expression, pos, result)
                     replaced = True

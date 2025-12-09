@@ -62,18 +62,24 @@ def express(expr, system, system2=None, variables=False):
         return expr
 
     if not isinstance(system, CoordSys3D):
-        raise TypeError("system should be a CoordSys3D \
-                        instance")
+        raise TypeError(
+            "system should be a CoordSys3D \
+                        instance"
+        )
 
     if isinstance(expr, Vector):
         if system2 is not None:
-            raise ValueError("system2 should not be provided for \
-                                Vectors")
+            raise ValueError(
+                "system2 should not be provided for \
+                                Vectors"
+            )
         # Given expr is a Vector
         if variables:
             # If variables attribute is True, substitute
             # the coordinate variables in the Vector
-            system_list = {x.system for x in expr.atoms(BaseScalar, BaseVector)} - {system}
+            system_list = {x.system for x in expr.atoms(BaseScalar, BaseVector)} - {
+                system
+            }
             subs_dict = {}
             for f in system_list:
                 subs_dict.update(f.scalar_map(system))
@@ -93,21 +99,26 @@ def express(expr, system, system2=None, variables=False):
         if system2 is None:
             system2 = system
         if not isinstance(system2, CoordSys3D):
-            raise TypeError("system2 should be a CoordSys3D \
-                            instance")
+            raise TypeError(
+                "system2 should be a CoordSys3D \
+                            instance"
+            )
         outdyad = Dyadic.zero
         var = variables
         for k, v in expr.components.items():
-            outdyad += (express(v, system, variables=var) *
-                        (express(k.args[0], system, variables=var) |
-                         express(k.args[1], system2, variables=var)))
+            outdyad += express(v, system, variables=var) * (
+                express(k.args[0], system, variables=var)
+                | express(k.args[1], system2, variables=var)
+            )
 
         return outdyad
 
     else:
         if system2 is not None:
-            raise ValueError("system2 should not be provided for \
-                                Vectors")
+            raise ValueError(
+                "system2 should not be provided for \
+                                Vectors"
+            )
         if variables:
             # Given expr is a scalar field
             system_set = set()
@@ -153,6 +164,7 @@ def directional_derivative(field, direction_vector):
 
     """
     from sympy.vector.operators import _get_coord_systems
+
     coord_sys = _get_coord_systems(field)
     if len(coord_sys) > 0:
         # TODO: This gets a random coordinate system in case of multiple ones:
@@ -375,10 +387,8 @@ def scalar_potential_difference(field, coord_sys, point1, point2):
         scalar_fn = field
     # Express positions in required coordinate system
     origin = coord_sys.origin
-    position1 = express(point1.position_wrt(origin), coord_sys,
-                        variables=True)
-    position2 = express(point2.position_wrt(origin), coord_sys,
-                        variables=True)
+    position1 = express(point1.position_wrt(origin), coord_sys, variables=True)
+    position2 = express(point2.position_wrt(origin), coord_sys, variables=True)
     # Get the two positions as substitution dicts for coordinate variables
     subs_dict1 = {}
     subs_dict2 = {}
@@ -438,8 +448,12 @@ def _path(from_object, to_object):
     """
 
     if from_object._root != to_object._root:
-        raise ValueError("No connecting path found between " +
-                         str(from_object) + " and " + str(to_object))
+        raise ValueError(
+            "No connecting path found between "
+            + str(from_object)
+            + " and "
+            + str(to_object)
+        )
 
     other_path = []
     obj = to_object
@@ -454,7 +468,7 @@ def _path(from_object, to_object):
         from_path.append(obj)
         obj = obj._parent
     index = len(from_path)
-    from_path.extend(other_path[other_path.index(obj)::-1])
+    from_path.extend(other_path[other_path.index(obj) :: -1])
     return index, from_path
 
 
@@ -494,7 +508,7 @@ def orthogonalize(*vlist, orthonormal=False):
     """
 
     if not all(isinstance(vec, Vector) for vec in vlist):
-        raise TypeError('Each element must be of Type Vector')
+        raise TypeError("Each element must be of Type Vector")
 
     ortho_vlist = []
     for i, term in enumerate(vlist):

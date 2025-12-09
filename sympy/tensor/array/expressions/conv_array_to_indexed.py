@@ -9,4 +9,6 @@ _conv_to_from_decorator = deprecated(
 )
 
 
-convert_array_to_indexed = _conv_to_from_decorator(from_array_to_indexed.convert_array_to_indexed)
+convert_array_to_indexed = _conv_to_from_decorator(
+    from_array_to_indexed.convert_array_to_indexed
+)

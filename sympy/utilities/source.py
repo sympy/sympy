@@ -12,12 +12,12 @@ def get_class(lookup_view):
     """
     if isinstance(lookup_view, str):
         mod_name, func_name = get_mod_func(lookup_view)
-        if func_name != '':
-            lookup_view = getattr(
-                __import__(mod_name, {}, {}, ['*']), func_name)
+        if func_name != "":
+            lookup_view = getattr(__import__(mod_name, {}, {}, ["*"]), func_name)
             if not callable(lookup_view):
                 raise AttributeError(
-                    "'%s.%s' is not a callable." % (mod_name, func_name))
+                    "'%s.%s' is not a callable." % (mod_name, func_name)
+                )
     return lookup_view
 
 
@@ -34,7 +34,7 @@ def get_mod_func(callback):
     ('sympy.core.basic', 'Basic')
 
     """
-    dot = callback.rfind('.')
+    dot = callback.rfind(".")
     if dot == -1:
-        return callback, ''
-    return callback[:dot], callback[dot + 1:]
+        return callback, ""
+    return callback[:dot], callback[dot + 1 :]

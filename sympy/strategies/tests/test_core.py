@@ -2,8 +2,17 @@ from __future__ import annotations
 from sympy.core.singleton import S
 from sympy.core.basic import Basic
 from sympy.strategies.core import (
-    null_safe, exhaust, memoize, condition,
-    chain, tryit, do_one, debug, switch, minimize)
+    null_safe,
+    exhaust,
+    memoize,
+    condition,
+    chain,
+    tryit,
+    do_one,
+    debug,
+    switch,
+    minimize,
+)
 from io import StringIO
 
 
@@ -93,8 +102,8 @@ def test_debug():
     file.close()
 
     assert posdec.__name__ in log
-    assert '5' in log
-    assert '4' in log
+    assert "5" in log
+    assert "4" in log
 
 
 def test_switch():

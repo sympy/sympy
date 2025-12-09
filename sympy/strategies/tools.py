@@ -4,7 +4,7 @@ from .traverse import top_down
 
 
 def subs(d, **kwargs):
-    """ Full simultaneous exact substitution.
+    """Full simultaneous exact substitution.
 
     Examples
     ========
@@ -23,7 +23,7 @@ def subs(d, **kwargs):
 
 
 def canon(*rules, **kwargs):
-    """ Strategy for canonicalization.
+    """Strategy for canonicalization.
 
     Explanation
     ===========
@@ -36,7 +36,7 @@ def canon(*rules, **kwargs):
 
 
 def typed(ruletypes):
-    """ Apply rules based on the expression type
+    """Apply rules based on the expression type
 
     inputs:
         ruletypes -- a dict mapping {Type: rule}

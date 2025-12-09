@@ -6,22 +6,38 @@ from sympy.core.singleton import S
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.special.gamma_functions import multigamma
 from sympy.core.sympify import sympify, _sympify
-from sympy.matrices import (ImmutableMatrix, Inverse, Trace, Determinant,
-                            MatrixSymbol, MatrixBase, Transpose, MatrixSet,
-                            matrix2numpy)
-from sympy.stats.rv import (_value_check, RandomMatrixSymbol, NamedArgsMixin, PSpace,
-                            _symbol_converter, MatrixDomain, Distribution)
+from sympy.matrices import (
+    ImmutableMatrix,
+    Inverse,
+    Trace,
+    Determinant,
+    MatrixSymbol,
+    MatrixBase,
+    Transpose,
+    MatrixSet,
+    matrix2numpy,
+)
+from sympy.stats.rv import (
+    _value_check,
+    RandomMatrixSymbol,
+    NamedArgsMixin,
+    PSpace,
+    _symbol_converter,
+    MatrixDomain,
+    Distribution,
+)
 from sympy.external import import_module
 
 
 ################################################################################
-#------------------------Matrix Probability Space------------------------------#
+# ------------------------Matrix Probability Space------------------------------#
 ################################################################################
 class MatrixPSpace(PSpace):
     """
     Represents probability space for
     Matrix Distributions.
     """
+
     def __new__(cls, sym, distribution, dim_n, dim_m):
         sym = _symbol_converter(sym)
         dim_n, dim_m = _sympify(dim_n), _sympify(dim_m)
@@ -47,12 +63,14 @@ class MatrixPSpace(PSpace):
     def compute_density(self, expr, *args):
         rms = expr.atoms(RandomMatrixSymbol)
         if len(rms) > 1 or (not isinstance(expr, RandomMatrixSymbol)):
-            raise NotImplementedError("Currently, no algorithm has been "
-                    "implemented to handle general expressions containing "
-                    "multiple matrix distributions.")
+            raise NotImplementedError(
+                "Currently, no algorithm has been "
+                "implemented to handle general expressions containing "
+                "multiple matrix distributions."
+            )
         return self.distribution.pdf(expr)
 
-    def sample(self, size=(), library='scipy', seed=None):
+    def sample(self, size=(), library="scipy", seed=None):
         """
         Internal sample method
 
@@ -72,6 +90,7 @@ def rv(symbol, cls, args):
 
 class SampleMatrixScipy:
     """Returns the sample from scipy of the given distribution"""
+
     def __new__(cls, dist, size, seed=None):
         return cls._sample_scipy(dist, size, seed)
 
@@ -81,18 +100,23 @@ class SampleMatrixScipy:
 
         from scipy import stats as scipy_stats
         import numpy
+
         scipy_rv_map = {
-            'WishartDistribution': lambda dist, size, rand_state: scipy_stats.wishart.rvs(
-                df=int(dist.n), scale=matrix2numpy(dist.scale_matrix, float), size=size),
-            'MatrixNormalDistribution': lambda dist, size, rand_state: scipy_stats.matrix_normal.rvs(
+            "WishartDistribution": lambda dist, size, rand_state: scipy_stats.wishart.rvs(
+                df=int(dist.n), scale=matrix2numpy(dist.scale_matrix, float), size=size
+            ),
+            "MatrixNormalDistribution": lambda dist, size, rand_state: scipy_stats.matrix_normal.rvs(
                 mean=matrix2numpy(dist.location_matrix, float),
                 rowcov=matrix2numpy(dist.scale_matrix_1, float),
-                colcov=matrix2numpy(dist.scale_matrix_2, float), size=size, random_state=rand_state)
+                colcov=matrix2numpy(dist.scale_matrix_2, float),
+                size=size,
+                random_state=rand_state,
+            ),
         }
 
         sample_shape = {
-            'WishartDistribution': lambda dist: dist.scale_matrix.shape,
-            'MatrixNormalDistribution' : lambda dist: dist.location_matrix.shape
+            "WishartDistribution": lambda dist: dist.scale_matrix.shape,
+            "MatrixNormalDistribution": lambda dist: dist.location_matrix.shape,
         }
 
         dist_list = scipy_rv_map.keys()
@@ -119,11 +143,9 @@ class SampleMatrixNumpy:
     def _sample_numpy(cls, dist, size, seed):
         """Sample from NumPy."""
 
-        numpy_rv_map = {
-        }
+        numpy_rv_map = {}
 
-        sample_shape = {
-        }
+        sample_shape = {}
 
         dist_list = numpy_rv_map.keys()
 
@@ -131,6 +153,7 @@ class SampleMatrixNumpy:
             return None
 
         import numpy
+
         if seed is None or isinstance(seed, int):
             rand_state = numpy.random.default_rng(seed=seed)
         else:
@@ -154,18 +177,21 @@ class SampleMatrixPymc:
         except ImportError:
             import pymc3 as pymc
         pymc_rv_map = {
-            'MatrixNormalDistribution': lambda dist: pymc.MatrixNormal('X',
+            "MatrixNormalDistribution": lambda dist: pymc.MatrixNormal(
+                "X",
                 mu=matrix2numpy(dist.location_matrix, float),
                 rowcov=matrix2numpy(dist.scale_matrix_1, float),
                 colcov=matrix2numpy(dist.scale_matrix_2, float),
-                shape=dist.location_matrix.shape),
-            'WishartDistribution': lambda dist: pymc.WishartBartlett('X',
-                nu=int(dist.n), S=matrix2numpy(dist.scale_matrix, float))
+                shape=dist.location_matrix.shape,
+            ),
+            "WishartDistribution": lambda dist: pymc.WishartBartlett(
+                "X", nu=int(dist.n), S=matrix2numpy(dist.scale_matrix, float)
+            ),
         }
 
         sample_shape = {
-            'WishartDistribution': lambda dist: dist.scale_matrix.shape,
-            'MatrixNormalDistribution' : lambda dist: dist.location_matrix.shape
+            "WishartDistribution": lambda dist: dist.scale_matrix.shape,
+            "MatrixNormalDistribution": lambda dist: dist.location_matrix.shape,
         }
 
         dist_list = pymc_rv_map.keys()
@@ -173,30 +199,43 @@ class SampleMatrixPymc:
         if dist.__class__.__name__ not in dist_list:
             return None
         import logging
+
         logging.getLogger("pymc").setLevel(logging.ERROR)
         with pymc.Model():
             pymc_rv_map[dist.__class__.__name__](dist)
-            samps = pymc.sample(draws=prod(size), chains=1, progressbar=False, random_seed=seed, return_inferencedata=False, compute_convergence_checks=False)['X']
+            samps = pymc.sample(
+                draws=prod(size),
+                chains=1,
+                progressbar=False,
+                random_seed=seed,
+                return_inferencedata=False,
+                compute_convergence_checks=False,
+            )["X"]
         return samps.reshape(size + sample_shape[dist.__class__.__name__](dist))
 
+
 _get_sample_class_matrixrv = {
-    'scipy': SampleMatrixScipy,
-    'pymc3': SampleMatrixPymc,
-    'pymc': SampleMatrixPymc,
-    'numpy': SampleMatrixNumpy
+    "scipy": SampleMatrixScipy,
+    "pymc3": SampleMatrixPymc,
+    "pymc": SampleMatrixPymc,
+    "numpy": SampleMatrixNumpy,
 }
 
 ################################################################################
-#-------------------------Matrix Distribution----------------------------------#
+# -------------------------Matrix Distribution----------------------------------#
 ################################################################################
+
 
 class MatrixDistribution(Distribution, NamedArgsMixin):
     """
     Abstract class for Matrix Distribution.
     """
+
     def __new__(cls, *args):
-        args = [ImmutableMatrix(arg) if isinstance(arg, list)
-                else _sympify(arg) for arg in args]
+        args = [
+            ImmutableMatrix(arg) if isinstance(arg, list) else _sympify(arg)
+            for arg in args
+        ]
         return Basic.__new__(cls, *args)
 
     @staticmethod
@@ -208,17 +247,18 @@ class MatrixDistribution(Distribution, NamedArgsMixin):
             expr = ImmutableMatrix(expr)
         return self.pdf(expr)
 
-    def sample(self, size=(), library='scipy', seed=None):
+    def sample(self, size=(), library="scipy", seed=None):
         """
         Internal sample method
 
         Returns dictionary mapping RandomSymbol to realization value.
         """
 
-        libraries = ['scipy', 'numpy', 'pymc3', 'pymc']
+        libraries = ["scipy", "numpy", "pymc3", "pymc"]
         if library not in libraries:
-            raise NotImplementedError("Sampling from %s is not supported yet."
-                                        % str(library))
+            raise NotImplementedError(
+                "Sampling from %s is not supported yet." % str(library)
+            )
         if not import_module(library):
             raise ValueError("Failed to import %s" % library)
 
@@ -227,28 +267,31 @@ class MatrixDistribution(Distribution, NamedArgsMixin):
         if samps is not None:
             return samps
         raise NotImplementedError(
-                "Sampling for %s is not currently implemented from %s"
-                % (self.__class__.__name__, library)
-                )
+            "Sampling for %s is not currently implemented from %s"
+            % (self.__class__.__name__, library)
+        )
+
 
 ################################################################################
-#------------------------Matrix Distribution Types-----------------------------#
+# ------------------------Matrix Distribution Types-----------------------------#
 ################################################################################
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 # Matrix Gamma distribution ----------------------------------------------------
+
 
 class MatrixGammaDistribution(MatrixDistribution):
 
-    _argnames = ('alpha', 'beta', 'scale_matrix')
+    _argnames = ("alpha", "beta", "scale_matrix")
 
     @staticmethod
     def check(alpha, beta, scale_matrix):
         if not isinstance(scale_matrix, MatrixSymbol):
-            _value_check(scale_matrix.is_positive_definite, "The shape "
-                "matrix must be positive definite.")
-        _value_check(scale_matrix.is_square, "Should "
-        "be square matrix")
+            _value_check(
+                scale_matrix.is_positive_definite,
+                "The shape " "matrix must be positive definite.",
+            )
+        _value_check(scale_matrix.is_square, "Should " "be square matrix")
         _value_check(alpha.is_positive, "Shape parameter should be positive.")
         _value_check(beta.is_positive, "Scale parameter should be positive.")
 
@@ -267,13 +310,15 @@ class MatrixGammaDistribution(MatrixDistribution):
         if isinstance(x, list):
             x = ImmutableMatrix(x)
         if not isinstance(x, (MatrixBase, MatrixSymbol)):
-            raise ValueError("%s should be an isinstance of Matrix "
-                    "or MatrixSymbol" % str(x))
-        sigma_inv_x = - Inverse(scale_matrix)*x / beta
-        term1 = exp(Trace(sigma_inv_x))/((beta**(p*alpha)) * multigamma(alpha, p))
-        term2 = (Determinant(scale_matrix))**(-alpha)
-        term3 = (Determinant(x))**(alpha - S(p + 1)/2)
+            raise ValueError(
+                "%s should be an isinstance of Matrix " "or MatrixSymbol" % str(x)
+            )
+        sigma_inv_x = -Inverse(scale_matrix) * x / beta
+        term1 = exp(Trace(sigma_inv_x)) / ((beta ** (p * alpha)) * multigamma(alpha, p))
+        term2 = (Determinant(scale_matrix)) ** (-alpha)
+        term3 = (Determinant(x)) ** (alpha - S(p + 1) / 2)
         return term1 * term2 * term3
+
 
 def MatrixGamma(symbol, alpha, beta, scale_matrix):
     """
@@ -322,20 +367,23 @@ def MatrixGamma(symbol, alpha, beta, scale_matrix):
         scale_matrix = ImmutableMatrix(scale_matrix)
     return rv(symbol, MatrixGammaDistribution, (alpha, beta, scale_matrix))
 
-#-------------------------------------------------------------------------------
+
+# -------------------------------------------------------------------------------
 # Wishart Distribution ---------------------------------------------------------
+
 
 class WishartDistribution(MatrixDistribution):
 
-    _argnames = ('n', 'scale_matrix')
+    _argnames = ("n", "scale_matrix")
 
     @staticmethod
     def check(n, scale_matrix):
         if not isinstance(scale_matrix, MatrixSymbol):
-            _value_check(scale_matrix.is_positive_definite, "The shape "
-                "matrix must be positive definite.")
-        _value_check(scale_matrix.is_square, "Should "
-        "be square matrix")
+            _value_check(
+                scale_matrix.is_positive_definite,
+                "The shape " "matrix must be positive definite.",
+            )
+        _value_check(scale_matrix.is_square, "Should " "be square matrix")
         _value_check(n.is_positive, "Shape parameter should be positive.")
 
     @property
@@ -353,13 +401,17 @@ class WishartDistribution(MatrixDistribution):
         if isinstance(x, list):
             x = ImmutableMatrix(x)
         if not isinstance(x, (MatrixBase, MatrixSymbol)):
-            raise ValueError("%s should be an isinstance of Matrix "
-                    "or MatrixSymbol" % str(x))
-        sigma_inv_x = - Inverse(scale_matrix)*x / S(2)
-        term1 = exp(Trace(sigma_inv_x))/((2**(p*n/S(2))) * multigamma(n/S(2), p))
-        term2 = (Determinant(scale_matrix))**(-n/S(2))
-        term3 = (Determinant(x))**(S(n - p - 1)/2)
+            raise ValueError(
+                "%s should be an isinstance of Matrix " "or MatrixSymbol" % str(x)
+            )
+        sigma_inv_x = -Inverse(scale_matrix) * x / S(2)
+        term1 = exp(Trace(sigma_inv_x)) / (
+            (2 ** (p * n / S(2))) * multigamma(n / S(2), p)
+        )
+        term2 = (Determinant(scale_matrix)) ** (-n / S(2))
+        term3 = (Determinant(x)) ** (S(n - p - 1) / 2)
         return term1 * term2 * term3
+
 
 def Wishart(symbol, n, scale_matrix):
     """
@@ -405,31 +457,43 @@ def Wishart(symbol, n, scale_matrix):
         scale_matrix = ImmutableMatrix(scale_matrix)
     return rv(symbol, WishartDistribution, (n, scale_matrix))
 
-#-------------------------------------------------------------------------------
+
+# -------------------------------------------------------------------------------
 # Matrix Normal distribution ---------------------------------------------------
+
 
 class MatrixNormalDistribution(MatrixDistribution):
 
-    _argnames = ('location_matrix', 'scale_matrix_1', 'scale_matrix_2')
+    _argnames = ("location_matrix", "scale_matrix_1", "scale_matrix_2")
 
     @staticmethod
     def check(location_matrix, scale_matrix_1, scale_matrix_2):
         if not isinstance(scale_matrix_1, MatrixSymbol):
-            _value_check(scale_matrix_1.is_positive_definite, "The shape "
-                "matrix must be positive definite.")
+            _value_check(
+                scale_matrix_1.is_positive_definite,
+                "The shape " "matrix must be positive definite.",
+            )
         if not isinstance(scale_matrix_2, MatrixSymbol):
-            _value_check(scale_matrix_2.is_positive_definite, "The shape "
-                "matrix must be positive definite.")
-        _value_check(scale_matrix_1.is_square, "Scale matrix 1 should be "
-        "be square matrix")
-        _value_check(scale_matrix_2.is_square, "Scale matrix 2 should be "
-        "be square matrix")
+            _value_check(
+                scale_matrix_2.is_positive_definite,
+                "The shape " "matrix must be positive definite.",
+            )
+        _value_check(
+            scale_matrix_1.is_square, "Scale matrix 1 should be " "be square matrix"
+        )
+        _value_check(
+            scale_matrix_2.is_square, "Scale matrix 2 should be " "be square matrix"
+        )
         n = location_matrix.shape[0]
         p = location_matrix.shape[1]
-        _value_check(scale_matrix_1.shape[0] == n, "Scale matrix 1 should be"
-        " of shape %s x %s"% (str(n), str(n)))
-        _value_check(scale_matrix_2.shape[0] == p, "Scale matrix 2 should be"
-        " of shape %s x %s"% (str(p), str(p)))
+        _value_check(
+            scale_matrix_1.shape[0] == n,
+            "Scale matrix 1 should be" " of shape %s x %s" % (str(n), str(n)),
+        )
+        _value_check(
+            scale_matrix_2.shape[0] == p,
+            "Scale matrix 2 should be" " of shape %s x %s" % (str(p), str(p)),
+        )
 
     @property
     def set(self):
@@ -446,12 +510,18 @@ class MatrixNormalDistribution(MatrixDistribution):
         if isinstance(x, list):
             x = ImmutableMatrix(x)
         if not isinstance(x, (MatrixBase, MatrixSymbol)):
-            raise ValueError("%s should be an isinstance of Matrix "
-                    "or MatrixSymbol" % str(x))
-        term1 = Inverse(V)*Transpose(x - M)*Inverse(U)*(x - M)
-        num = exp(-Trace(term1)/S(2))
-        den = (2*pi)**(S(n*p)/2) * Determinant(U)**(S(p)/2) * Determinant(V)**(S(n)/2)
-        return num/den
+            raise ValueError(
+                "%s should be an isinstance of Matrix " "or MatrixSymbol" % str(x)
+            )
+        term1 = Inverse(V) * Transpose(x - M) * Inverse(U) * (x - M)
+        num = exp(-Trace(term1) / S(2))
+        den = (
+            (2 * pi) ** (S(n * p) / 2)
+            * Determinant(U) ** (S(p) / 2)
+            * Determinant(V) ** (S(n) / 2)
+        )
+        return num / den
+
 
 def MatrixNormal(symbol, location_matrix, scale_matrix_1, scale_matrix_2):
     """
@@ -503,31 +573,45 @@ def MatrixNormal(symbol, location_matrix, scale_matrix_1, scale_matrix_2):
     args = (location_matrix, scale_matrix_1, scale_matrix_2)
     return rv(symbol, MatrixNormalDistribution, args)
 
-#-------------------------------------------------------------------------------
+
+# -------------------------------------------------------------------------------
 # Matrix Student's T distribution ---------------------------------------------------
+
 
 class MatrixStudentTDistribution(MatrixDistribution):
 
-    _argnames = ('nu', 'location_matrix', 'scale_matrix_1', 'scale_matrix_2')
+    _argnames = ("nu", "location_matrix", "scale_matrix_1", "scale_matrix_2")
 
     @staticmethod
     def check(nu, location_matrix, scale_matrix_1, scale_matrix_2):
         if not isinstance(scale_matrix_1, MatrixSymbol):
-            _value_check(scale_matrix_1.is_positive_definite != False, "The shape "
-                                                              "matrix must be positive definite.")
+            _value_check(
+                scale_matrix_1.is_positive_definite != False,
+                "The shape " "matrix must be positive definite.",
+            )
         if not isinstance(scale_matrix_2, MatrixSymbol):
-            _value_check(scale_matrix_2.is_positive_definite != False, "The shape "
-                                                              "matrix must be positive definite.")
-        _value_check(scale_matrix_1.is_square != False, "Scale matrix 1 should be "
-                                               "be square matrix")
-        _value_check(scale_matrix_2.is_square != False, "Scale matrix 2 should be "
-                                               "be square matrix")
+            _value_check(
+                scale_matrix_2.is_positive_definite != False,
+                "The shape " "matrix must be positive definite.",
+            )
+        _value_check(
+            scale_matrix_1.is_square != False,
+            "Scale matrix 1 should be " "be square matrix",
+        )
+        _value_check(
+            scale_matrix_2.is_square != False,
+            "Scale matrix 2 should be " "be square matrix",
+        )
         n = location_matrix.shape[0]
         p = location_matrix.shape[1]
-        _value_check(scale_matrix_1.shape[0] == p, "Scale matrix 1 should be"
-                                                   " of shape %s x %s" % (str(p), str(p)))
-        _value_check(scale_matrix_2.shape[0] == n, "Scale matrix 2 should be"
-                                                   " of shape %s x %s" % (str(n), str(n)))
+        _value_check(
+            scale_matrix_1.shape[0] == p,
+            "Scale matrix 1 should be" " of shape %s x %s" % (str(p), str(p)),
+        )
+        _value_check(
+            scale_matrix_2.shape[0] == n,
+            "Scale matrix 2 should be" " of shape %s x %s" % (str(n), str(n)),
+        )
         _value_check(nu.is_positive != False, "Degrees of freedom must be positive")
 
     @property
@@ -541,19 +625,32 @@ class MatrixStudentTDistribution(MatrixDistribution):
 
     def pdf(self, x):
         from sympy.matrices.dense import eye
+
         if isinstance(x, list):
             x = ImmutableMatrix(x)
         if not isinstance(x, (MatrixBase, MatrixSymbol)):
-            raise ValueError("%s should be an isinstance of Matrix "
-                             "or MatrixSymbol" % str(x))
-        nu, M, Omega, Sigma = self.nu, self.location_matrix, self.scale_matrix_1, self.scale_matrix_2
+            raise ValueError(
+                "%s should be an isinstance of Matrix " "or MatrixSymbol" % str(x)
+            )
+        nu, M, Omega, Sigma = (
+            self.nu,
+            self.location_matrix,
+            self.scale_matrix_1,
+            self.scale_matrix_2,
+        )
         n, p = M.shape
 
-        K = multigamma((nu + n + p - 1)/2, p) * Determinant(Omega)**(-n/2) * Determinant(Sigma)**(-p/2) \
-            / ((pi)**(n*p/2) * multigamma((nu + p - 1)/2, p))
-        return K * (Determinant(eye(n) + Inverse(Sigma)*(x - M)*Inverse(Omega)*Transpose(x - M))) \
-               **(-(nu + n + p -1)/2)
-
+        K = (
+            multigamma((nu + n + p - 1) / 2, p)
+            * Determinant(Omega) ** (-n / 2)
+            * Determinant(Sigma) ** (-p / 2)
+            / ((pi) ** (n * p / 2) * multigamma((nu + p - 1) / 2, p))
+        )
+        return K * (
+            Determinant(
+                eye(n) + Inverse(Sigma) * (x - M) * Inverse(Omega) * Transpose(x - M)
+            )
+        ) ** (-(nu + n + p - 1) / 2)
 
 
 def MatrixStudentT(symbol, nu, location_matrix, scale_matrix_1, scale_matrix_2):

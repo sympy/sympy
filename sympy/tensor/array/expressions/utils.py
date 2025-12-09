@@ -67,7 +67,9 @@ def _apply_recursively_over_nested_lists(func, arr):
     if isinstance(arr, (tuple, list, Tuple)):
         return tuple(_apply_recursively_over_nested_lists(func, i) for i in arr)
     elif isinstance(arr, Tuple):
-        return Tuple.fromiter(_apply_recursively_over_nested_lists(func, i) for i in arr)
+        return Tuple.fromiter(
+            _apply_recursively_over_nested_lists(func, i) for i in arr
+        )
     else:
         return func(arr)
 
@@ -78,8 +80,11 @@ def _build_push_indices_up_func_transformation(flattened_contraction_indices):
     cumulative = 0
     while i < len(flattened_contraction_indices):
         j = 1
-        while i+j < len(flattened_contraction_indices):
-            if flattened_contraction_indices[i] + j != flattened_contraction_indices[i+j]:
+        while i + j < len(flattened_contraction_indices):
+            if (
+                flattened_contraction_indices[i] + j
+                != flattened_contraction_indices[i + j]
+            ):
                 break
             j += 1
         cumulative += j
@@ -88,7 +93,7 @@ def _build_push_indices_up_func_transformation(flattened_contraction_indices):
     shift_keys = sorted(shifts.keys())
 
     def func(idx):
-        return shifts[shift_keys[bisect.bisect_right(shift_keys, idx)-1]]
+        return shifts[shift_keys[bisect.bisect_right(shift_keys, idx) - 1]]
 
     def transform(j):
         if j in flattened_contraction_indices:
@@ -100,7 +105,7 @@ def _build_push_indices_up_func_transformation(flattened_contraction_indices):
 
 
 def _build_push_indices_down_func_transformation(flattened_contraction_indices):
-    N = flattened_contraction_indices[-1]+2
+    N = flattened_contraction_indices[-1] + 2
 
     shifts = [i for i in range(N) if i not in flattened_contraction_indices]
 

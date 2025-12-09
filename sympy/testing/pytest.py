@@ -14,10 +14,11 @@ import pathlib
 from typing import Any, Callable, TYPE_CHECKING, Protocol, overload
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
+
 # Imported here for backwards compatibility. Note: do not import this from
 # here in library code (importing sympy.pytest in library code will break the
 # pytest integration).
-from sympy.utilities.exceptions import ignore_warnings # noqa:F401
+from sympy.utilities.exceptions import ignore_warnings  # noqa:F401
 
 
 if TYPE_CHECKING:
@@ -36,15 +37,19 @@ if TYPE_CHECKING:
         ) -> AbstractContextManager | object: ...
 
 
-ON_CI = os.getenv('CI', None) == "true"
+ON_CI = os.getenv("CI", None) == "true"
 
 try:
     import pytest
-    USE_PYTEST = getattr(sys, '_running_pytest', False)
+
+    USE_PYTEST = getattr(sys, "_running_pytest", False)
 except ImportError:
     USE_PYTEST = False
 
-IS_WASM: bool = sys.platform == 'emscripten' or platform.machine() in ["wasm32", "wasm64"]
+IS_WASM: bool = sys.platform == "emscripten" or platform.machine() in [
+    "wasm32",
+    "wasm64",
+]
 
 raises: _RaisesType
 XFAIL: Callable[[Any], Any]
@@ -90,15 +95,15 @@ else:
             return issubclass(exc_type, self.expectedException)
 
     @overload
-    def _raises(exc: type[Exception], /) -> RaisesContext:
-        ...
+    def _raises(exc: type[Exception], /) -> RaisesContext: ...
     @overload
-    def _raises(exc: type[Exception], func: Callable[[], object], /) -> ExceptionInfo:
-        ...
+    def _raises(
+        exc: type[Exception], func: Callable[[], object], /
+    ) -> ExceptionInfo: ...
 
-    def _raises(expectedException: type[Exception],
-                code: Callable[[], Any] | None = None, /
-                ) -> RaisesContext | ExceptionInfo:
+    def _raises(
+        expectedException: type[Exception], code: Callable[[], Any] | None = None, /
+    ) -> RaisesContext | ExceptionInfo:
         """
         Tests that ``code`` raises the exception ``expectedException``.
 
@@ -162,14 +167,14 @@ else:
             raise Failed("DID NOT RAISE")
         elif isinstance(code, str):
             raise TypeError(
-                '\'raises(xxx, "code")\' has been phased out; '
-                'change \'raises(xxx, "expression")\' '
-                'to \'raises(xxx, lambda: expression)\', '
-                '\'raises(xxx, "statement")\' '
-                'to \'with raises(xxx): statement\'')
+                "'raises(xxx, \"code\")' has been phased out; "
+                "change 'raises(xxx, \"expression\")' "
+                "to 'raises(xxx, lambda: expression)', "
+                "'raises(xxx, \"statement\")' "
+                "to 'with raises(xxx): statement'"
+            )
         else:
-            raise TypeError(
-                'raises() expects a callable for the 2nd argument.')
+            raise TypeError("raises() expects a callable for the 2nd argument.")
 
     raises = _raises
 
@@ -189,7 +194,7 @@ else:
         def wrapper():
             try:
                 func()
-            except Exception as e: # noqa: BLE001
+            except Exception as e:  # noqa: BLE001
                 message = str(e)
                 if message != "Timeout":
                     raise XFail(func.__name__)
@@ -204,7 +209,8 @@ else:
         raise Skipped(str)
 
     def SKIP(reason):
-        """Similar to ``skip()``, but this is a decorator. """
+        """Similar to ``skip()``, but this is a decorator."""
+
         def wrapper(func):
             def func_wrapper():
                 raise Skipped(reason)
@@ -239,9 +245,10 @@ else:
         "Dummy decorator for marking tests that fail when cache is disabled"
         return func
 
+
 @contextlib.contextmanager
-def warns(warningcls, *, match='', test_stacklevel=True):
-    '''
+def warns(warningcls, *, match="", test_stacklevel=True):
+    """
     Like raises but tests that warnings are emitted.
 
     >>> from sympy.testing.pytest import warns
@@ -267,7 +274,7 @@ def warns(warningcls, *, match='', test_stacklevel=True):
     that the ``active_deprecations_target`` is a real target in the
     ``active-deprecations.md`` file.
 
-    '''
+    """
     # Absorbs all warnings in warnrec
     with warnings.catch_warnings(record=True) as warnrec:
         # Any warning other than the one we are looking for is an error
@@ -278,10 +285,11 @@ def warns(warningcls, *, match='', test_stacklevel=True):
 
     # Raise if expected warning not found
     if not any(issubclass(w.category, warningcls) for w in warnrec):
-        msg = ('Failed: DID NOT WARN.'
-               ' No warnings of type %s was emitted.'
-               ' The list of emitted warnings is: %s.'
-               ) % (warningcls, [w.message for w in warnrec])
+        msg = (
+            "Failed: DID NOT WARN."
+            " No warnings of type %s was emitted."
+            " The list of emitted warnings is: %s."
+        ) % (warningcls, [w.message for w in warnrec])
         raise Failed(msg)
 
     # We don't include the match in the filter above because it would then
@@ -291,34 +299,44 @@ def warns(warningcls, *, match='', test_stacklevel=True):
         # Should always be true due to the filters above
         assert issubclass(w.category, warningcls)
         if not re.compile(match, re.IGNORECASE).match(str(w.message)):
-            raise Failed(f"Failed: WRONG MESSAGE. A warning with of the correct category ({warningcls.__name__}) was issued, but it did not match the given match regex ({match!r})")
+            raise Failed(
+                f"Failed: WRONG MESSAGE. A warning with of the correct category ({warningcls.__name__}) was issued, but it did not match the given match regex ({match!r})"
+            )
 
     if test_stacklevel:
         for f in inspect.stack():
             thisfile = f.filename
             file = os.path.split(thisfile)[1]
-            if file.startswith('test_'):
+            if file.startswith("test_"):
                 break
-            elif file == 'doctest.py':
+            elif file == "doctest.py":
                 # skip the stacklevel testing in the doctests of this
                 # function
                 return
         else:
-            raise RuntimeError("Could not find the file for the given warning to test the stacklevel")
+            raise RuntimeError(
+                "Could not find the file for the given warning to test the stacklevel"
+            )
         for w in warnrec:
             if w.filename != thisfile:
-                msg = f'''\
+                msg = f"""\
 Failed: Warning has the wrong stacklevel. The warning stacklevel needs to be
 set so that the line of code shown in the warning message is user code that
 calls the deprecated code (the current stacklevel is showing code from
-{w.filename} (line {w.lineno}), expected {thisfile})'''.replace('\n', ' ')
+{w.filename} (line {w.lineno}), expected {thisfile})""".replace(
+                    "\n", " "
+                )
                 raise Failed(msg)
 
     if warningcls == SymPyDeprecationWarning:
         this_file = pathlib.Path(__file__)
-        active_deprecations_file = (this_file.parent.parent.parent / 'doc' /
-                                    'src' / 'explanation' /
-                                    'active-deprecations.md')
+        active_deprecations_file = (
+            this_file.parent.parent.parent
+            / "doc"
+            / "src"
+            / "explanation"
+            / "active-deprecations.md"
+        )
         if not active_deprecations_file.exists():
             # We can only test that the active_deprecations_target works if we are
             # in the git repo.
@@ -328,8 +346,11 @@ calls the deprecated code (the current stacklevel is showing code from
             targets.append(w.message.active_deprecations_target)
         text = pathlib.Path(active_deprecations_file).read_text(encoding="utf-8")
         for target in targets:
-            if f'({target})=' not in text:
-                raise Failed(f"The active deprecations target {target!r} does not appear to be a valid target in the active-deprecations.md file ({active_deprecations_file}).")
+            if f"({target})=" not in text:
+                raise Failed(
+                    f"The active deprecations target {target!r} does not appear to be a valid target in the active-deprecations.md file ({active_deprecations_file})."
+                )
+
 
 def _both_exp_pow(func):
     """
@@ -354,7 +375,7 @@ def _both_exp_pow(func):
 
 @contextlib.contextmanager
 def warns_deprecated_sympy():
-    '''
+    """
     Shorthand for ``warns(SymPyDeprecationWarning)``
 
     This is the recommended way to test that ``SymPyDeprecationWarning`` is
@@ -404,18 +425,21 @@ def warns_deprecated_sympy():
     sympy.utilities.exceptions.sympy_deprecation_warning
     sympy.utilities.decorator.deprecated
 
-    '''
+    """
     with warns(SymPyDeprecationWarning):
         yield
 
 
 def skip_under_pyodide(message):
     """Decorator to skip a test if running under Pyodide/WASM."""
+
     def decorator(test_func):
         @functools.wraps(test_func)
         def test_wrapper():
             if IS_WASM:
                 skip(message)
             return test_func()
+
         return test_wrapper
+
     return decorator

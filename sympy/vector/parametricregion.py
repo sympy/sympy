@@ -51,6 +51,7 @@ class ParametricRegion(Basic):
     bounds : Parameter or a tuple of length 3 to define parameter and corresponding lower and upper bound.
 
     """
+
     def __new__(cls, definition, *bounds):
         parameters = ()
         limits = {}
@@ -61,7 +62,9 @@ class ParametricRegion(Basic):
         for bound in bounds:
             if isinstance(bound, (tuple, Tuple)):
                 if len(bound) != 3:
-                    raise ValueError("Tuple should be in the form (parameter, lowerbound, upperbound)")
+                    raise ValueError(
+                        "Tuple should be in the form (parameter, lowerbound, upperbound)"
+                    )
                 parameters += (bound[0],)
                 limits[bound[0]] = (bound[1], bound[2])
             else:
@@ -143,16 +146,16 @@ def _(obj):
     return [ParametricRegion(definition, bounds)]
 
 
-@parametric_region_list.register(Ellipse) # type: ignore
-def _(obj, parameter='t'):
+@parametric_region_list.register(Ellipse)  # type: ignore
+def _(obj, parameter="t"):
     definition = obj.arbitrary_point(parameter).args
     t = _symbol(parameter, real=True)
-    bounds = (t, 0, 2*pi)
+    bounds = (t, 0, 2 * pi)
     return [ParametricRegion(definition, bounds)]
 
 
-@parametric_region_list.register(Segment) # type: ignore
-def _(obj, parameter='t'):
+@parametric_region_list.register(Segment)  # type: ignore
+def _(obj, parameter="t"):
     t = _symbol(parameter, real=True)
     definition = obj.arbitrary_point(t).args
 
@@ -168,22 +171,26 @@ def _(obj, parameter='t'):
     return [ParametricRegion(definition_tuple, bounds)]
 
 
-@parametric_region_list.register(Polygon) # type: ignore
-def _(obj, parameter='t'):
+@parametric_region_list.register(Polygon)  # type: ignore
+def _(obj, parameter="t"):
     l = [parametric_region_list(side, parameter)[0] for side in obj.sides]
     return l
 
 
-@parametric_region_list.register(ImplicitRegion) # type: ignore
-def _(obj, parameters=('t', 's')):
+@parametric_region_list.register(ImplicitRegion)  # type: ignore
+def _(obj, parameters=("t", "s")):
     definition = obj.rational_parametrization(parameters)
     bounds = []
 
     for i in range(len(obj.variables) - 1):
         # Each parameter is replaced by its tangent to simplify integration
         parameter = _symbol(parameters[i], real=True)
-        definition = [trigsimp(elem.subs(parameter, tan(parameter/2))) for elem in definition]
-        bounds.append((parameter, 0, 2*pi),)
+        definition = [
+            trigsimp(elem.subs(parameter, tan(parameter / 2))) for elem in definition
+        ]
+        bounds.append(
+            (parameter, 0, 2 * pi),
+        )
 
     definition = Tuple(*definition)
     return [ParametricRegion(definition, *bounds)]
