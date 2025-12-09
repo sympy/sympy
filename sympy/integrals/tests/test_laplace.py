@@ -512,7 +512,7 @@ def test_laplace_transform_exp_2t2():
 @slow
 def test_inverse_laplace_transform():
     s = symbols('s')
-    k, n, t = symbols('k, n, t', real=True)
+    k, n, t, x = symbols('k, n, t, x', real=True)
     a, b, c, d = symbols('a, b, c, d', positive=True)
     f = Function('f')
     F = Function('F')
@@ -526,6 +526,14 @@ def test_inverse_laplace_transform():
     def ILTF(g):
         return laplace_correspondence(
             inverse_laplace_transform(g, s, t), {f: F})
+
+    # Tests for the inverse Laplace transform of a Laplace transform
+    assert (inverse_laplace_transform(LaplaceTransform(f(t), t, s), s, t) ==
+            f(t)*Heaviside(t))
+    assert (inverse_laplace_transform(LaplaceTransform(f(t), t, s), s, x) ==
+            f(x)*Heaviside(x))
+    assert (inverse_laplace_transform(LaplaceTransform(f(t), t, s), x, t) ==
+            LaplaceTransform(f(t), t, s)*DiracDelta(t))
 
     # Tests for the rules in Bateman54.
 
