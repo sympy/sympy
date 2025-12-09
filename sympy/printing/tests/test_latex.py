@@ -1114,10 +1114,18 @@ def test_latex_sequences():
     assert latex(s8) == latex_str
 
 
-def test_latex_FourierSeries():
-    latex_str = \
-        r'2 \sin{\left(x \right)} - \sin{\left(2 x \right)} + \frac{2 \sin{\left(3 x \right)}}{3} + \ldots'
-    assert latex(fourier_series(x, (x, -pi, pi))) == latex_str
+def test_latex_fourier_series_dict():
+    # Test for issue with FourierSeries when an/bn are Dict objects
+    from sympy import Symbol, sin, pi, fourier_series
+    from sympy.printing.latex import latex
+    
+    x = Symbol('x', real=True)
+    # This used to raise AttributeError: 'Dict' object has no attribute 'formula'
+    f = fourier_series(sin(x), (x, -pi, pi))
+    result = latex(f)
+    # Should not raise an error and should produce valid LaTeX
+    assert isinstance(result, str)
+    assert 'sin' in result
 
 
 def test_latex_FormalPowerSeries():

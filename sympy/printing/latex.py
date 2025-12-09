@@ -2403,7 +2403,19 @@ class LatexPrinter(Printer):
         return r"%s \in %s" % tuple(self._print(a) for a in e.args)
 
     def _print_FourierSeries(self, s):
-        if s.an.formula is S.Zero and s.bn.formula is S.Zero:
+        # Handle both SeqFormula (with .formula) and Dict objects
+        if hasattr(s.an, 'formula'):
+            an_is_zero = s.an.formula is S.Zero
+        else:
+            # For Dict or other types, check if all values are zero
+            an_is_zero = all(v is S.Zero or v == 0 for v in s.an.values()) if s.an else True
+        
+        if hasattr(s.bn, 'formula'):
+            bn_is_zero = s.bn.formula is S.Zero
+        else:
+            bn_is_zero = all(v is S.Zero or v == 0 for v in s.bn.values()) if s.bn else True
+        
+        if an_is_zero and bn_is_zero:
             return self._print(s.a0)
         return self._print_Add(s.truncate()) + r' + \ldots'
 
