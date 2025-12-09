@@ -189,7 +189,12 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         # cancel out. This only answers whether the summand is zero; if
         # not then None is returned since we don't analyze whether all
         # terms cancel out.
-        if self.function.is_zero or self.has_empty_sequence:
+        if self.function.is_zero:
+            return True
+        # Seperated the checks due to it being skipping simplify function.
+        if self.has_empty_sequence:
+            if self.function.is_Matrix:
+                return None
             return True
 
     def _eval_is_extended_real(self):
@@ -338,6 +343,10 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         return Sum(f, (k, upper + 1, new_upper)).doit()
 
     def _eval_simplify(self, **kwargs):
+        
+        if (self.has_empty_sequence and self.function.is_Matrix):
+            from sympy.matrices.expressions import ZeroMatrix
+            return ZeroMatrix(*self.function.shape)
 
         function = self.function
 
@@ -1667,6 +1676,10 @@ def _eval_matrix_sum(expression):
         i, a, b = limit
         dif = b - a
         if dif.is_Integer:
+            if (dif == -1):
+                from sympy.matrices.expressions import ZeroMatrix
+                return ZeroMatrix(*f.shape)
+
             if (dif < 0) == True:
                 a, b = b + 1, a - 1
                 f = -f

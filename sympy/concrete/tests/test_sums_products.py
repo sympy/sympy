@@ -1693,3 +1693,16 @@ def test_issue_23952():
     expr = Sum(abs(k1 - k2)*p**k1 *(1 - q)**(n - k2),
         (k1, 0, n), (k2, 0, n))
     assert expr.subs(p,0).subs(q,1).subs(n, 3).doit() == 3
+
+def test_issue_28721():
+    from sympy import MatrixSymbol, Sum, ZeroMatrix
+    from sympy.abc import i
+    
+    M = MatrixSymbol("M", 3, 3)
+    expr = Sum(M, (i, 0, -1))
+    
+    # Test doit()
+    assert expr.doit() == ZeroMatrix(3, 3)
+    
+    # Test simplify()
+    assert expr.simplify() == ZeroMatrix(3, 3)
