@@ -162,6 +162,7 @@ def test_latex_basic():
 
     assert latex(1/x) == r"\frac{1}{x}"
     assert latex(1/x, fold_short_frac=True) == r"1 / x"
+    assert latex((x + y)**-1, fold_short_frac=True) == r"1 / \left(x + y\right)"
     assert latex(-S(3)/2) == r"- \frac{3}{2}"
     assert latex(-S(3)/2, fold_short_frac=True) == r"- 3 / 2"
     assert latex(1/x**2) == r"\frac{1}{x^{2}}"
@@ -262,6 +263,7 @@ def test_latex_basic():
     assert latex(Pow(Rational(1, 3), -1, evaluate=False)) == r"\frac{1}{\frac{1}{3}}"
     assert latex(Pow(Rational(1, 3), -2, evaluate=False)) == r"\frac{1}{(\frac{1}{3})^{2}}"
     assert latex(Pow(Integer(1)/100, -1, evaluate=False)) == r"\frac{1}{\frac{1}{100}}"
+    assert latex(Pow(I, -4, evaluate=False)) == r"\frac{1}{i^{4}}"
 
     p = Symbol('p', positive=True)
     assert latex(exp(-p)*log(p)) == r"e^{- p} \log{\left(p \right)}"
@@ -2762,7 +2764,7 @@ def test_issue_9216():
     assert latex(expr_2) == r"1^{1^{-1}}"
 
     expr_3 = Pow(3, -2, evaluate=False)
-    assert latex(expr_3) == r"\frac{1}{9}"
+    assert latex(expr_3) == r"\frac{1}{3^{2}}"
 
     expr_4 = Pow(1, -2, evaluate=False)
     assert latex(expr_4) == r"1^{-2}"

@@ -15,7 +15,6 @@ from sympy.polys.densearith import (
     dup_series_pow,
     dup_rem, dmp_rem,
     dup_mul_ground, dmp_mul_ground,
-    dup_quo_ground, dmp_quo_ground,
     dup_exquo_ground, dmp_exquo_ground,
 )
 from sympy.polys.densebasic import (
@@ -112,7 +111,7 @@ def dmp_integrate(f: dmp[Ef], m: int, u: int, K: Field[Ef]) -> dmp[Ef]:
         for j in range(1, m):
             n *= i + j + 1
 
-        g.insert(0, dmp_quo_ground(c, K(n), v, K))
+        g.insert(0, dmp_exquo_ground(c, K(n), v, K))
 
     return g
 
@@ -704,7 +703,7 @@ def dup_primitive(f: dup[Er], K: Domain[Er]) -> tuple[Er, dup[Er]]:
     if K.is_one(cont):
         return cont, f
     else:
-        return cont, dup_quo_ground(f, cont, K)
+        return cont, dup_exquo_ground(f, cont, K)
 
 
 def dmp_ground_primitive(f: dmp[Er], u: int, K: Domain[Er]) -> tuple[Er, dmp[Er]]:
@@ -741,7 +740,7 @@ def dmp_ground_primitive(f: dmp[Er], u: int, K: Domain[Er]) -> tuple[Er, dmp[Er]
     if K.is_one(cont):
         return cont, f
     else:
-        return cont, dmp_quo_ground(f, cont, u, K)
+        return cont, dmp_exquo_ground(f, cont, u, K)
 
 
 def dup_extract(f: dup[Er], g: dup[Er], K: Domain[Er]) -> tuple[Er, dup[Er], dup[Er]]:
@@ -764,8 +763,8 @@ def dup_extract(f: dup[Er], g: dup[Er], K: Domain[Er]) -> tuple[Er, dup[Er], dup
     gcd = K.gcd(fc, gc)
 
     if not K.is_one(gcd):
-        f = dup_quo_ground(f, gcd, K)
-        g = dup_quo_ground(g, gcd, K)
+        f = dup_exquo_ground(f, gcd, K)
+        g = dup_exquo_ground(g, gcd, K)
 
     return gcd, f, g
 
@@ -792,8 +791,8 @@ def dmp_ground_extract(
     gcd = K.gcd(fc, gc)
 
     if not K.is_one(gcd):
-        f = dmp_quo_ground(f, gcd, u, K)
-        g = dmp_quo_ground(g, gcd, u, K)
+        f = dmp_exquo_ground(f, gcd, u, K)
+        g = dmp_exquo_ground(g, gcd, u, K)
 
     return gcd, f, g
 

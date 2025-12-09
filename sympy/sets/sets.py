@@ -2144,9 +2144,6 @@ class FiniteSet(Set):
         """Rewrite a FiniteSet in terms of equalities and logic operators. """
         return Or(*[Eq(symbol, elem) for elem in self])
 
-    def compare(self, other):
-        return (hash(self) - hash(other))
-
     def _eval_evalf(self, prec):
         dps = prec_to_dps(prec)
         return FiniteSet(*[elem.evalf(n=dps) for elem in self])
