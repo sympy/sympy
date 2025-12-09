@@ -2031,11 +2031,27 @@ def _inverse_laplace_irrational(fn, s, t, plane):
 
 
 @DEBUG_WRAP
+def _inverse_laplace_laplace(fn, s, t, plane):
+    """
+    Helper function for the class InverseLaplaceTransform.
+    """
+
+    if not fn.func == LaplaceTransform:
+        return None
+    _f, _t, _s = fn.args
+    if _s == s:
+        return _f.subs(_t, t)*Heaviside(t), S.true
+    else:
+        return None
+
+
+@DEBUG_WRAP
 def _inverse_laplace_early_prog_rules(F, s, t, plane):
     """
     Helper function for the class InverseLaplaceTransform.
     """
-    prog_rules = [_inverse_laplace_irrational]
+    prog_rules = [
+        _inverse_laplace_laplace, _inverse_laplace_irrational]
 
     for p_rule in prog_rules:
         if (r := p_rule(F, s, t, plane)) is not None:
