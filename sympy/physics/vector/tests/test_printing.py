@@ -365,7 +365,7 @@ def test_issue_12157():
 /a\\          \n\
 |-| (n_x|n_y)\n\
 \\b/          \
-'''    
+'''
     uexpected = '''\
 ⎛a⎞          \n\
 |-| (n_x⊗n_y)\n\
@@ -387,7 +387,7 @@ def test_issue_12157():
 |-----| (n_x⊗n_y)\n\
 ⎝  c  ⎠          \
 '''
-    
+
     assert ascii_vpretty(second_test) == expected
     assert unicode_vpretty(second_test) == uexpected
 
@@ -427,5 +427,3 @@ def test_issue_12157():
 
     assert ascii_vpretty(fourth_test) == expected
     assert unicode_vpretty(fourth_test) == uexpected
-    
-    
