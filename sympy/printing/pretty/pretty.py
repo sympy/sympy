@@ -2347,8 +2347,6 @@ class PrettyPrinter(Printer):
             return prettyForm(sstr(e))
 
     def _print_FourierSeries(self, s):
-        if s.an.formula is S.Zero and s.bn.formula is S.Zero:
-            return self._print(s.a0)
         if self._use_unicode:
             dots = pretty_atom('Dots')
         else:

@@ -4952,6 +4952,7 @@ def test_pretty_FourierSeries():
 
     assert pretty(f) == ascii_str
     assert upretty(f) == ucode_str
+    assert pretty(fourier_series(sin(x), (x, -pi, pi))) == 'sin(x) + ...'
 
 
 def test_pretty_FormalPowerSeries():
