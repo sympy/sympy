@@ -188,12 +188,12 @@ def test_vector_latex_with_functions():
 def test_dyadic_pretty_print():
 
     expected = """\
- 2
+ 2                                           \n\
 a  n_x|n_y + b n_y|n_y + c*sin(alpha) n_z|n_y\
 """
 
     uexpected = """\
- 2
+ 2                                       \n\
 a  n_x⊗n_y + b n_y⊗n_y + c⋅sin(α) n_z⊗n_y\
 """
     assert ascii_vpretty(y) == expected
@@ -362,15 +362,15 @@ def test_issue_12157():
     first_test = (a/b) * (N.x | N.y)
 
     expected = '''\
-/a\\          \n\
-|-| (n_x|n_y)\n\
-\\b/          \
+a        \n\
+- n_x|n_y\n\
+b        \
 '''
     uexpected = '''\
-⎛a⎞          \n\
-|-| (n_x⊗n_y)\n\
-⎝b⎠          \
-    '''
+a        \n\
+─ n_x⊗n_y\n\
+b        \
+'''
 
     assert ascii_vpretty(first_test) == expected
     assert unicode_vpretty(first_test) == uexpected
@@ -378,14 +378,14 @@ def test_issue_12157():
     second_test = ((a + b)/c) * (N.x | N.y)
 
     expected = '''\
-/a + b\\          \n\
-|-----| (n_x|n_y)\n\
-\\  c  /           \
+a + b        \n\
+----- n_x|n_y\n\
+  c          \
 '''
     uexpected = '''\
-⎛a + b⎞          \n\
-|-----| (n_x⊗n_y)\n\
-⎝  c  ⎠          \
+a + b        \n\
+───── n_x⊗n_y\n\
+  c          \
 '''
 
     assert ascii_vpretty(second_test) == expected
@@ -395,14 +395,14 @@ def test_issue_12157():
     third_test = (a/b) * (N.x | N.y) + (c/b) * (N.y | N.z)
 
     expected ='''\
-/a\\             /c\\          \n\
-|-| (n_x|n_y) + |-| (n_y|n_z)\n\
-\\b/             \\b/          \
+a           c        \n\
+- n_x|n_y + - n_y|n_z\n\
+b           b        \
 '''
     uexpected ='''\
-⎛a⎞             ⎛c⎞          \n\
-|-| (n_x⊗n_y) + |-| (n_y⊗n_z)\n\
-⎝b⎠             ⎝b⎠          \
+a           c        \n\
+─ n_x⊗n_y + ─ n_y⊗n_z\n\
+b           b        \
 '''
 
     assert ascii_vpretty(third_test) == expected
@@ -412,18 +412,18 @@ def test_issue_12157():
     # This case comes from the correct output example provided by @faze-geek in the issue
     fourth_test = (d)*(N.x|N.z) + ((a*b**2 + (a*c)**2 + d*b*c)/(b + c))*(N.y|N.y)
 
-    expected = """\
-                / 2  2      2       \\          \n\
-(d) (n_x|n_z) + |a *c  + a*b + b*c*d| (n_y|n_y)\n\
-                |-------------------|          \n\
-                \\       b + c       /          \
-"""
-    uexpected = """\
-                ⎛ 2  2      2       ⎞          \n\
-(d) (n_x⊗n_z) + |a *c  + a*b + b*c*d| (n_y⊗n_y)\n\
-                |-------------------|          \n\
-                ⎝       b + c       ⎠          \
-"""
+    expected = '''\
+             2  2      2                \n\
+            a *c  + a*b  + b*c*d        \n\
+d n_x|n_z + -------------------- n_y|n_y\n\
+                   b + c                \
+'''
+    uexpected = '''\
+             2  2      2                \n\
+            a ⋅c  + a⋅b  + b⋅c⋅d        \n\
+d n_x⊗n_z + ──────────────────── n_y⊗n_y\n\
+                   b + c                \
+'''
 
     assert ascii_vpretty(fourth_test) == expected
     assert unicode_vpretty(fourth_test) == uexpected
