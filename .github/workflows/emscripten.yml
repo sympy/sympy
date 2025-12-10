@@ -80,7 +80,7 @@ jobs:
           pip install .
 
           # Install dependencies and optional test dependencies
-          pip install pytest pytest-split hypothesis
+          pip install -r requirements-dev.txt
           pip install matplotlib numpy scipy
 
           # Trigger test suite (slow and tooslow tests are skipped by default)

@@ -24,6 +24,7 @@ jobs:
       - run: python -m pip install --upgrade pip setuptools
 
       - run: pip install -r requirements-dev.txt
+      # We can't add ruff to requirements-dev.txt because it doesn't support Pyodide.
       - run: pip install ruff
 
       - name: Basic code quality tests
@@ -41,7 +42,7 @@ jobs:
       - name: Test all modules are listed in setup.py
         run: bin/test_setup.py
 
-      - run: pip install slotscheck .
+      - run: pip install .
 
       - name: Check for incorrect use of ``__slots__`` using slotscheck
         run: python -m slotscheck --no-strict-imports --exclude-modules "(sympy.parsing.autolev._antlr.*|sympy.parsing.latex._antlr.*|sympy.galgebra|sympy.plotting.pygletplot.*)" sympy
@@ -69,7 +70,7 @@ jobs:
         with:
           python-version: '3.13'
       - run: python -m pip install --upgrade pip
-      - run: pip install mpmath mypy hypothesis
+      - run: pip install -r requirements-dev.txt
 
       - name: Run mypy on the sympy package
         run: mypy sympy
@@ -86,7 +87,7 @@ jobs:
         with:
           python-version: '3.13'
       - run: python -m pip install --upgrade pip
-      - run: pip install sphinx-lint
+      - run: pip install -r requirements-dev.txt
 
       - name: Run sphinx-lint on the sympy documentation
         run: sphinx-lint doc/
@@ -105,7 +106,7 @@ jobs:
         with:
           python-version: '3.13'
       - run: python -m pip install --upgrade pip
-      - run: pip install mpmath
+      - run: pip install -r requirements-dev.txt
       - run: bin/mailmap_check.py
 
   # -------------------- Doctests latest Python -------------------- #
@@ -120,7 +121,7 @@ jobs:
         with:
           python-version: '3.13'
       - run: python -m pip install --upgrade pip
-      - run: pip install mpmath
+      - run: pip install -r requirements-dev.txt
       - run: bin/doctest --force-colors
 
   # ------------------------- Test latest Python ------------------- #
