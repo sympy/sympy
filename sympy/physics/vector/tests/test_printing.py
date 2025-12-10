@@ -359,31 +359,73 @@ def test_issue_12157():
     Test for proper pretty printing of vectors with fractions involved.
     """
 
-    d1 = (a/b) * (N.x | N.y)
+    first_test = (a/b) * (N.x | N.y)
 
-    result = ascii_vpretty(d1)
+    expected = '''\
+/a\\          \n\
+|-| (n_x|n_y)\n\
+\\b/          \
+'''    
+    uexpected = '''\
+⎛a⎞          \n\
+|-| (n_x⊗n_y)\n\
+⎝b⎠          \
+    '''
 
-    # a, b, and the basis dyad (n_x|n_y) should appear in the output
-    assert result == "a\n-\nb n_x|n_y"
+    assert ascii_vpretty(first_test) == expected
+    assert unicode_vpretty(first_test) == uexpected
 
-    # More complex case: fraction with sum in numerator
-    d2 = ((a + b)/c) * (N.x | N.y)
+    second_test = ((a + b)/c) * (N.x | N.y)
 
-    result2 = ascii_vpretty(d2)
+    expected = '''\
+/a + b\\          \n\
+|-----| (n_x|n_y)\n\
+\\  c  /           \
+'''
+    uexpected = '''\
+⎛a + b⎞          \n\
+|-----| (n_x⊗n_y)\n\
+⎝  c  ⎠          \
+'''
+    
+    assert ascii_vpretty(second_test) == expected
+    assert unicode_vpretty(second_test) == uexpected
 
-    # Basis dyad should still be present
-    assert result2 == "a + b\n-----\n  c   n_x|n_y"
 
-    # Multiple terms with fractions
-    d3 = (a/b) * (N.x | N.y) + (c/b) * (N.y | N.z)
+    third_test = (a/b) * (N.x | N.y) + (c/b) * (N.y | N.z)
 
-    result3 = ascii_vpretty(d3)
+    expected ='''\
+/a\\             /c\\          \n\
+|-| (n_x|n_y) + |-| (n_y|n_z)\n\
+\\b/             \\b/          \
+'''
+    uexpected ='''\
+⎛a⎞             ⎛c⎞          \n\
+|-| (n_x⊗n_y) + |-| (n_y⊗n_z)\n\
+⎝b⎠             ⎝b⎠          \
+'''
 
-    assert result3 == "a\n-\nb n_x|n_y + c\n-\nb n_y|n_z"
+    assert ascii_vpretty(third_test) == expected
+    assert unicode_vpretty(third_test) == uexpected
 
-    # Test More complex case
     d = symbols('d')
-    vv = (d)*(N.x|N.z) + ((a*b**2 + (a*c)**2 + d*b*c)/(b + c))*(N.y|N.y)
+    # This case comes from the correct output example provided by @faze-geek in the issue
+    fourth_test = (d)*(N.x|N.z) + ((a*b**2 + (a*c)**2 + d*b*c)/(b + c))*(N.y|N.y)
 
-    result_vv = ascii_vpretty(vv)
-    assert result_vv =="d n_x|n_z +  2  2      2        \na *c  + a*b  + b*c*d\n--------------------\n       b + c         n_y|n_y"
+    expected = """\
+                / 2  2      2       \\          \n\
+(d) (n_x|n_z) + |a *c  + a*b + b*c*d| (n_y|n_y)\n\
+                |-------------------|          \n\
+                \\       b + c       /          \
+"""
+    uexpected = """\
+                ⎛ 2  2      2       ⎞          \n\
+(d) (n_x⊗n_z) + |a *c  + a*b + b*c*d| (n_y⊗n_y)\n\
+                |-------------------|          \n\
+                ⎝       b + c       ⎠          \
+"""
+
+    assert ascii_vpretty(fourth_test) == expected
+    assert unicode_vpretty(fourth_test) == uexpected
+    
+    
