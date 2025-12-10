@@ -1,4 +1,6 @@
 mpmath
+mypy
+sphinx-lint
 pytest
 pytest-xdist
 pytest-timeout
@@ -8,3 +10,4 @@ hypothesis
 flake8
 flake8-comprehensions
 ruff
+slotscheck
