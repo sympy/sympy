@@ -1,6 +1,7 @@
 from sympy import sympify, Add, ImmutableMatrix as Matrix
 from sympy.core.evalf import EvalfMixin
 from sympy.printing.defaults import Printable
+from sympy.printing.pretty.stringpict import prettyForm
 
 from mpmath.libmp.libmpf import prec_to_dps
 
