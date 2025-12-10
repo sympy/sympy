@@ -427,3 +427,4 @@ d n_x⊗n_z + ──────────────────── n_y�
 
     assert ascii_vpretty(fourth_test) == expected
     assert unicode_vpretty(fourth_test) == uexpected
+
