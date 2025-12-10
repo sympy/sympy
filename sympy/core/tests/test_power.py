@@ -278,15 +278,13 @@ def test_zero():
 def test_zero_power_with_relational_in_function():
     """Regression test for issue where substituting a function containing
     a relational expression into a power expression with base 0 incorrectly
-    evaluated to nan instead of maintaining symbolic form.
-    
+    evaluated to nan instead of maintaining symbolic form.    
     See: https://github.com/sympy/sympy/issues/28729
     """
     from sympy import Function
-    
     y, z = symbols('y z')
     F = Function('F')
-    
+    git remote add upstream https://github.com/sympy/sympy.git
     # Test substitution with relational in function
     result = (S.Zero**(1 - y)).subs(y, F(z < 1))
     assert result is not S.NaN, "Substitution should not return NaN"

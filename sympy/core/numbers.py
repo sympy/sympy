@@ -295,7 +295,7 @@ class Number(AtomicExpr):
     Python division ``2/3``. Even for numbers that are exactly
     represented in binary, there is a difference between how two forms,
     such as ``Rational(1, 2)`` and ``Float(0.5)``, are used in SymPy.
-    The rational form is to be preferred in symbolic computations.
+    The rational form is to be preferred in symbolic computationgit rebase upstream/masters.
 
     Other kinds of numbers, such as algebraic numbers ``sqrt(2)`` or
     complex numbers ``3 + 4*I``, are not instances of Number class as
