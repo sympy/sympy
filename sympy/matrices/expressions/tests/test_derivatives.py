@@ -135,11 +135,19 @@ def test_matrix_derivative_of_determinant():
     assert expr.diff(X) == X.T.inv()
 
     # Cookbook example 58:
-    # Not yet supported with symbolic exponent:
-    # expr = Determinant(X**j)
-    # assert expr.diff(X) == j*Determinant(X**j)*X.inv().T
+    expr = Determinant(X**j)
+    assert expr.diff(X).doit() == j*Determinant(X**j)*X.inv().T
     expr = Determinant(X**5)
     assert expr.diff(X) == 5*Determinant(X**5)*X.inv().T
+
+
+def test_issue_28708():
+    # This is a variant of cookbook example 58 with null exponent:
+    expr = Determinant((X**j).subs(j, 0))
+    assert expr.diff(X) == ZeroMatrix(k, k)
+
+    expr = Determinant((X**j).subs(j, -1))
+    assert expr.diff(X) == - X.T.inv()/Determinant(X)
 
 
 def test_matrix_derivative_with_inverse():

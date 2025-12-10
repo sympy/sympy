@@ -238,7 +238,9 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             expanded = self.expand()
             if self != expanded:
                 return expanded.doit()
-            return _eval_matrix_sum(self)
+            expr = _eval_matrix_sum(self)
+            if expr is not None:
+                return expr
 
         for n, limit in enumerate(self.limits):
             i, a, b = limit
