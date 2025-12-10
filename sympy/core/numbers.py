@@ -2827,8 +2827,6 @@ class Zero(IntegerConstant, metaclass=Singleton):
             return self
         if expt.is_extended_negative:
             return S.ComplexInfinity
-        if expt.is_extended_real is False:
-            return S.NaN
         if expt.is_zero:
             return S.One
 

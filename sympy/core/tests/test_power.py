@@ -275,6 +275,38 @@ def test_zero():
     assert power(0, -oo) is zoo
     assert Float(0)**-oo is zoo
 
+def test_zero_power_with_relational_in_function():
+    """Regression test for issue where substituting a function containing
+    a relational expression into a power expression with base 0 incorrectly
+    evaluated to nan instead of maintaining symbolic form.
+    
+    See: https://github.com/sympy/sympy/issues/28729
+    """
+    from sympy import Function
+    
+    y, z = symbols('y z')
+    F = Function('F')
+    
+    # Test substitution with relational in function
+    result = (S.Zero**(1 - y)).subs(y, F(z < 1))
+    assert result is not S.NaN, "Substitution should not return NaN"
+    assert result == S.Zero**(1 - F(z < 1)), f"Expected symbolic form, got {result}"
+    
+    # Test direct construction with relational in function
+    result_direct = S.Zero**(1 - F(x < 1))
+    assert result_direct is not S.NaN, "Direct construction should not return NaN"
+    assert result_direct == S.Zero**(1 - F(x < 1)), f"Expected symbolic form, got {result_direct}"
+    
+    # Test various relational operators
+    for rel_expr in [z < 1, z > 1, z <= 1, z >= 1, z == 1, z != 1]:
+        result = (S.Zero**(1 - y)).subs(y, F(rel_expr))
+        assert result is not S.NaN, f"Failed for relational: {rel_expr}"
+    
+    # Test nested functions
+    G = Function('G')
+    result_nested = (S.Zero**(1 - y)).subs(y, F(G(z < 1)))
+    assert result_nested is not S.NaN, "Nested functions should not return NaN"
+
 def test_pow_as_base_exp():
     assert (S.Infinity**(2 - x)).as_base_exp() == (S.Infinity, 2 - x)
     assert (S.Infinity**(x - 2)).as_base_exp() == (S.Infinity, x - 2)
