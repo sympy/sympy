@@ -247,8 +247,7 @@ class Dyadic(Printable, EvalfMixin):
                         outstr = prettyForm(*p_term.left(sign))
                     else:
                         outstr = prettyForm(*outstr.right(sign, p_term))
-
-                return outstr
+                return outstr.__str__()
         return Fake()
 
     def __rsub__(self, other):
