@@ -181,6 +181,15 @@ def attrprint(d, delimiter=', '):
 def dotnode(expr, styles=default_styles, labelfunc=str, pos=(), repeat=True, nodenamefunc=purestr):
     """ String defining a node
 
+    nodenamefunc : function, optional
+        A function to create a node name for a given expression.
+
+        The default is ``purestr``, which returns the full expression as a string.
+
+        When called from ``dotprint``, ``purestr_short`` is used instead which provides short node names like `node_0`, `node_1`, ...
+        for all nodes that are not of type basic or do not have args themselves.
+
+
     Examples
     ========
 
@@ -206,6 +215,8 @@ def dotedges(expr, atom=lambda x: not isinstance(x, Basic), pos=(), repeat=True,
     """ List of strings for all expr->expr.arg pairs
 
     See the docstring of dotprint for explanations of the options.
+
+    nodenamefunc : See the docstring of dotnode.
 
     Examples
     ========
@@ -250,7 +261,7 @@ _graphstyle = {'rankdir': 'TD', 'ordering': 'out'}
 
 def dotprint(expr,
     styles=default_styles, atom=lambda x: not isinstance(x, Basic),
-    maxdepth=None, repeat=True, labelfunc=str, nodenamefunc=None, **kwargs):
+    maxdepth=None, repeat=True, labelfunc=str, **kwargs):
     """DOT description of a SymPy expression tree
 
     Parameters
@@ -305,14 +316,6 @@ def dotprint(expr,
         For example with ``str``, the leaf nodes of ``x + 1`` are labeled,
         ``x`` and ``1``.  With ``srepr``, they are labeled ``Symbol('x')``
         and ``Integer(1)``.
-
-    nodenamefunc : function, optional
-        A function to create a node name for a given expression.
-
-        The default is `None`, which means short node names like `node_0`, `node_1`, ...
-        are used for all nodes that are not of type basic or do not have args themselves.
-
-        In functions dotnodes and dotedges, the default is ``purestr``, which returns the full expression as a string.
 
     **kwargs : optional
         Additional keyword arguments are included as styles for the graph.
