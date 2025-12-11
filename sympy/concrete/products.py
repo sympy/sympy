@@ -32,43 +32,36 @@ class Product(ExprWithIntLimits):
     ===============
 
     For finite products (and products with symbolic limits assumed to be finite)
-    we follow the analogue of the summation convention described by Karr [1],
-    especially definition 3 of section 1.4. The product:
+    we follow a convention inspired by Karr [1], especially definition 3 of
+    section 1.4. The product:
 
     .. math::
 
-        \prod_{m \leq i < n} f(i)
+        \prod_{i = m}^{n} f(i)
 
-    has *the obvious meaning* for `m < n`, namely:
-
-    .. math::
-
-        \prod_{m \leq i < n} f(i) = f(m) f(m+1) \cdot \ldots \cdot f(n-2) f(n-1)
-
-    with the upper limit value `f(n)` excluded. The product over an empty set is
-    one if and only if `m = n`:
+    has *the obvious meaning* for `m <= n`, namely:
 
     .. math::
 
-        \prod_{m \leq i < n} f(i) = 1  \quad \mathrm{for} \quad  m = n
+        \prod_{i = m}^{n} f(i) = f(m) f(m+1) \cdot \ldots \cdot f(n-1) f(n)
 
-    Finally, for all other products over empty sets we assume the following
-    definition:
-
-    .. math::
-
-        \prod_{m \leq i < n} f(i) = \frac{1}{\prod_{n \leq i < m} f(i)}  \quad \mathrm{for} \quad  m > n
-
-    It is important to note that above we define all products with the upper
-    limit being exclusive. This is in contrast to the usual mathematical notation,
-    but does not affect the product convention. Indeed we have:
+    with both the lower and upper limit values included. The product over an
+    empty set is one if and only if `m = n + 1`:
 
     .. math::
 
-        \prod_{m \leq i < n} f(i) = \prod_{i = m}^{n - 1} f(i)
+        \prod_{i = m}^{n} f(i) = 1  \quad \mathrm{for} \quad  m = n + 1
 
-    where the difference in notation is intentional to emphasize the meaning,
-    with limits typeset on the top being inclusive.
+    For decreasing ranges where `m > n + 1`, the product is inverted and the
+    bounds are exclusive:
+
+    .. math::
+
+        \prod_{i = m}^{n} f(i) = \frac{1}{\prod_{i = n+1}^{m-1} f(i)}  \quad \mathrm{for} \quad  m > n + 1
+
+    Note that while Karr defines all products with the upper limit being
+    exclusive, SymPy uses the more common mathematical notation where
+    both limits are inclusive for increasing ranges.
 
     Examples
     ========

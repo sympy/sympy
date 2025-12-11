@@ -56,43 +56,36 @@ class Sum(AddWithLimits, ExprWithIntLimits):
     ===========
 
     For finite sums (and sums with symbolic limits assumed to be finite) we
-    follow the summation convention described by Karr [1], especially
+    follow a summation convention inspired by Karr [1], especially
     definition 3 of section 1.4. The sum:
 
     .. math::
 
-        \sum_{m \leq i < n} f(i)
+        \sum_{i = m}^{n} f(i)
 
-    has *the obvious meaning* for `m < n`, namely:
-
-    .. math::
-
-        \sum_{m \leq i < n} f(i) = f(m) + f(m+1) + \ldots + f(n-2) + f(n-1)
-
-    with the upper limit value `f(n)` excluded. The sum over an empty set is
-    zero if and only if `m = n`:
+    has *the obvious meaning* for `m <= n`, namely:
 
     .. math::
 
-        \sum_{m \leq i < n} f(i) = 0  \quad \mathrm{for} \quad  m = n
+        \sum_{i = m}^{n} f(i) = f(m) + f(m+1) + \ldots + f(n-1) + f(n)
 
-    Finally, for all other sums over empty sets we assume the following
-    definition:
-
-    .. math::
-
-        \sum_{m \leq i < n} f(i) = - \sum_{n \leq i < m} f(i)  \quad \mathrm{for} \quad  m > n
-
-    It is important to note that Karr defines all sums with the upper
-    limit being exclusive. This is in contrast to the usual mathematical notation,
-    but does not affect the summation convention. Indeed we have:
+    with both the lower and upper limit values included. The sum over an
+    empty set is zero if and only if `m = n + 1`:
 
     .. math::
 
-        \sum_{m \leq i < n} f(i) = \sum_{i = m}^{n - 1} f(i)
+        \sum_{i = m}^{n} f(i) = 0  \quad \mathrm{for} \quad  m = n + 1
 
-    where the difference in notation is intentional to emphasize the meaning,
-    with limits typeset on the top being inclusive.
+    For decreasing ranges where `m > n + 1`, the sum is negated and the
+    bounds are exclusive:
+
+    .. math::
+
+        \sum_{i = m}^{n} f(i) = - \sum_{i = n+1}^{m-1} f(i)  \quad \mathrm{for} \quad  m > n + 1
+
+    Note that while Karr defines all sums with the upper limit being
+    exclusive, SymPy uses the more common mathematical notation where
+    both limits are inclusive for increasing ranges.
 
     Examples
     ========
