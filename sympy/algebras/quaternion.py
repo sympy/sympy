@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, overload
 
-from sympy.core.numbers import Rational
+from sympy.core.numbers import Rational, pi, Number
 from sympy.core.singleton import S
 from sympy.core.relational import is_eq
 from sympy.functions.elementary.complexes import (conjugate, im, re, sign)
@@ -24,6 +24,11 @@ if TYPE_CHECKING:
     from typing import Iterable, Sequence
     from sympy.integrals.integrals import SymbolLimits
     SExpr = Expr | complex
+
+def wrap_angle(angle):
+    if isinstance(angle, (Number, Expr)) and getattr(angle, 'is_number', True):
+        return (angle + pi) % (2*pi) - pi
+    return angle
 
 def _check_norm(elements: Iterable[Expr], norm: Expr | None) -> None:
     """validate if input norm is consistent"""
@@ -518,8 +523,8 @@ class Quaternion(Expr):
         >>> euler = Quaternion(a, b, c, d).to_euler('zyz')
         >>> euler
         (-atan2(-b, c) + atan2(d, a),
-         2*atan2(sqrt(b**2 + c**2), sqrt(a**2 + d**2)),
-         atan2(-b, c) + atan2(d, a))
+        2*atan2(sqrt(b**2 + c**2), sqrt(a**2 + d**2)),
+        atan2(-b, c) + atan2(d, a))
 
 
         References
@@ -606,9 +611,9 @@ class Quaternion(Expr):
             angles0 *= sign
 
         if extrinsic:
-            return (angles2, angles1, angles0)
+            return (wrap_angle(angles2), angles1, wrap_angle(angles0))
         else:
-            return (angles0, angles1, angles2)
+            return (wrap_angle(angles0), angles1, wrap_angle(angles2))
 
     @classmethod
     def from_axis_angle(cls, vector: tuple[SExpr, SExpr, SExpr], angle: SExpr) -> Quaternion:
