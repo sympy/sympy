@@ -1770,3 +1770,8 @@ def test_issue_28711():
     assert (nats + reals) == (reals + nats)
     assert (nats + fin1) == (fin1 + nats)
     assert (reals + fin1) == (fin1 + reals)
+
+def test_16878():
+    A = ImageSet(Lambda(x, (x, x)), S.Reals)
+    B = S.Reals ** 2
+    assert A.is_subset(B) is not False
