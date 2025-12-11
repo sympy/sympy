@@ -1,7 +1,7 @@
 from __future__ import annotations
 from itertools import product
 
-from sympy.core import Add, Basic
+from sympy.core import Add, Mul, Basic
 from sympy.core.assumptions import StdFactKB
 from sympy.core.expr import AtomicExpr, Expr
 from sympy.core.power import Pow
@@ -418,7 +418,7 @@ class Vector(BasisDependent):
 
 def get_postprocessor(cls):
     def _postprocessor(expr):
-        vec_class = {Add: VectorAdd}[cls]
+        vec_class = {Add: VectorAdd, Mul: VectorMul}[cls]
         vectors = []
         for term in expr.args:
             if isinstance(term.kind, VectorKind):
@@ -426,11 +426,14 @@ def get_postprocessor(cls):
 
         if vec_class == VectorAdd:
             return VectorAdd(*vectors).doit(deep=False)
+        if vec_class == VectorMul:
+            return VectorMul(*expr.args).doit(deep=False)
     return _postprocessor
 
 
 Basic._constructor_postprocessor_mapping[Vector] = {
     "Add": [get_postprocessor(Add)],
+    "Mul": [get_postprocessor(Mul)],
 }
 
 class BaseVector(Vector, AtomicExpr):

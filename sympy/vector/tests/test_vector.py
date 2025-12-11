@@ -219,6 +219,36 @@ def test_vector_simplify():
     assert simplify(Vector.zero) == Vector.zero
 
 
+def test_vector_mul_postprocessor():
+    """
+    Test that Mul postprocessor correctly handles vector multiplication.
+    
+    Regression test for the bug where Mul(scalar, vector) would return
+    a plain Mul instead of VectorMul, causing TypeError during simplification
+    of vector expressions involving spherical coordinates.
+    """
+    # Test basic Mul postprocessor functionality
+    assert isinstance(Mul(2, C.i), VectorMul)
+    assert Mul(2, C.i) == 2*C.i
+    
+    # Test the original bug - spherical coordinate simplification
+    # This used to raise: TypeError: location should be a Vector
+    C1 = CoordSys3D("C1")
+    C2 = C1.locate_new("C2", 2 * C1.i)
+    S = C2.create_new("S", transformation="spherical")
+    
+    expr = S.r**2*sin(S.phi)**2*sin(S.theta)**2 + S.r**2*sin(S.theta)**2*cos(S.phi)**2
+    
+    # This should not raise TypeError
+    result = expr.simplify()
+    
+    # Verify the result simplifies correctly
+    # sin²θ·sin²φ + sin²θ·cos²φ = sin²θ·(sin²φ + cos²φ) = sin²θ
+    expected = S.r**2 * sin(S.theta)**2
+    assert simplify(result - expected) == 0
+
+
+
 def test_vector_equals():
     assert (2*i).equals(j) is False
     assert i.equals(i) is True
