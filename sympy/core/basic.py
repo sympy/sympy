@@ -1166,9 +1166,22 @@ class Basic(Printable):
         else:
             rv = self
             for old, new in sequence:
-                rv = rv._subs(old, new, **kwargs)
-                if not isinstance(rv, Basic):
-                    break
+                try:
+                    contains_old = isinstance(new, Basic) and new.has(old)
+                except Exception:
+                    contains_old = False
+
+                if contains_old:
+                    d = Dummy()  # unique temporary placeholder
+                    temp_new = new.xreplace({old: d})
+                    rv = rv._subs(old, temp_new, **kwargs)
+                    if not isinstance(rv, Basic):
+                        break
+                    rv = rv.xreplace({d: new})
+                else:
+                    rv = rv._subs(old, new, **kwargs)
+                    if not isinstance(rv, Basic):
+                        break
             return rv
 
     @cacheit
