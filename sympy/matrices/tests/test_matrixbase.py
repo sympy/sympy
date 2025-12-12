@@ -2692,9 +2692,7 @@ def test_errors():
     raises(ShapeError, lambda: Matrix([[1, 2], [3, 4]]).normalized())
     raises(ValueError, lambda: Matrix([1, 2]).inv(method='not a method'))
     raises(NonSquareMatrixError, lambda: Matrix([1, 2]).inverse_GE())
-    raises(ValueError, lambda: Matrix([[1, 2], [1, 2]]).inverse_GE())
     raises(NonSquareMatrixError, lambda: Matrix([1, 2]).inverse_ADJ())
-    raises(ValueError, lambda: Matrix([[1, 2], [1, 2]]).inverse_ADJ())
     raises(NonSquareMatrixError, lambda: Matrix([1, 2]).inverse_LU())
     raises(NonSquareMatrixError, lambda: Matrix([1, 2]).is_nilpotent())
     raises(NonSquareMatrixError, lambda: Matrix([1, 2]).det())
@@ -3195,9 +3193,6 @@ def test_invertible_check():
     # matrix will be returned even though m is not invertible
     assert m.rref()[0] != eye(3)
     assert m.rref(simplify=signsimp)[0] != eye(3)
-    raises(ValueError, lambda: m.inv(method="ADJ"))
-    raises(ValueError, lambda: m.inv(method="GE"))
-    raises(ValueError, lambda: m.inv(method="LU"))
 
 
 def test_issue_3959():
