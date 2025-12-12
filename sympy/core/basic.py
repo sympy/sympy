@@ -1168,7 +1168,7 @@ class Basic(Printable):
             for old, new in sequence:
                 try:
                     contains_old = isinstance(new, Basic) and new.has(old)
-                except Exception:
+                except (AttributeError, TypeError, SympifyError):
                     contains_old = False
 
                 if contains_old:
