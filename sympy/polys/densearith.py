@@ -323,10 +323,7 @@ def dup_quo_ground(f: dup[Er], c: Er, K: Domain[Er]) -> dup[Er]:
     if not f:
         return f
 
-    if K.is_Field:
-        return [ K.quo(cf, c) for cf in f ]
-    else:
-        return [ cf // c for cf in f ] # type: ignore
+    return [ K.quo(cf, c) for cf in f ]
 
 
 def dmp_quo_ground(

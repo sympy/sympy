@@ -15,7 +15,7 @@ from sympy.matrices.expressions.diagonal import DiagMatrix, DiagonalMatrix
 from sympy.matrices import Trace, MatMul, Transpose
 from sympy.tensor.array.expressions.array_expressions import ZeroArray, OneArray, \
     ArrayElement, ArraySymbol, ArrayElementwiseApplyFunc, _array_tensor_product, _array_contraction, \
-    _array_diagonal, _permute_dims, PermuteDims, ArrayAdd, ArrayDiagonal, ArrayContraction, ArrayTensorProduct
+    _array_diagonal, _permute_dims, PermuteDims, ArrayAdd, ArrayDiagonal, ArrayContraction, ArrayTensorProduct, ArraySum
 from sympy.testing.pytest import raises
 
 
@@ -699,3 +699,11 @@ def test_recognize_broadcasting():
     # Always prefer matrix multiplication to Kronecker product, if possible:
     expr = ArrayTensorProduct(a, b, x.T*x)
     assert _remove_trivial_dims(expr) == (a*x.T*x*b.T, [1, 3, 4, 5])
+
+
+def test_array_sum_conversion():
+    expr = ArraySum(ArrayTensorProduct(X, Y), (k, 0, 10))
+    assert convert_array_to_matrix(expr) == expr
+
+    expr = ArraySum(X, (i, 1, 10))
+    assert convert_array_to_matrix(expr) == 10*X

@@ -22,7 +22,7 @@ from sympy.matrices.expressions.matexpr import MatrixElement
 from sympy.tensor.array.expressions.array_expressions import PermuteDims, ArrayDiagonal, \
     ArrayTensorProduct, OneArray, get_rank, _get_subrank, ZeroArray, ArrayContraction, \
     ArrayAdd, _CodegenArrayAbstract, get_shape, ArrayElementwiseApplyFunc, _ArrayExpr, _EditArrayContraction, _ArgE, \
-    ArrayElement, _array_tensor_product, _array_contraction, _array_diagonal, _array_add, _permute_dims
+    ArrayElement, _array_tensor_product, _array_contraction, _array_diagonal, _array_add, _permute_dims, ArraySum
 from sympy.tensor.array.expressions.utils import _get_mapping_from_subranks
 
 
@@ -207,6 +207,15 @@ def _(expr: ZeroArray):
 @_array2matrix.register(ArrayTensorProduct)
 def _(expr: ArrayTensorProduct):
     return _a2m_tensor_product(*[_array2matrix(arg) for arg in expr.args])
+
+
+@_array2matrix.register(ArraySum)
+def _(expr: ArraySum):
+    new_function = _array2matrix(expr.function)
+    output = expr.func(new_function, *expr.limits).simplify()
+    if isinstance(output, ZeroArray) and get_rank(output) == 2:
+        return ZeroMatrix(*output.shape)
+    return output
 
 
 @_array2matrix.register(ArrayContraction)
