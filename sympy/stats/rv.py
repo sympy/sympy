@@ -935,7 +935,7 @@ def density(expr, condition=None, evaluate=True, numsamples=None, **kwargs):
     {1: 1/6, 2: 1/6, 3: 1/6, 4: 1/6, 5: 1/6, 6: 1/6}
     >>> density(2*D).dict
     {2: 1/6, 4: 1/6, 6: 1/6, 8: 1/6, 10: 1/6, 12: 1/6}
-    >>> density(X)(x)
+    >>> density(X).pdf(x)
     sqrt(2)*exp(-x**2/2)/(2*sqrt(pi))
     """
 
