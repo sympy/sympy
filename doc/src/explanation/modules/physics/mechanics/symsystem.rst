@@ -23,6 +23,7 @@ spot the variables q1 and q2 are used in place of x and y and the reference
 frame is rotated 90 degrees.
 
 .. _examples: https://docs.sympy.org/latest/tutorials/physics/mechanics/lin_pend_nonmin_example.html
+
 ::
 
     >>> from sympy import atan, symbols, Matrix
