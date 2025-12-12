@@ -24,7 +24,7 @@ def fourier_cos_seq(func, limits, n):
     x, L = limits[0], limits[2] - limits[1]
     cos_term = cos(2*n*pi*x / L)
     formula = 2 * cos_term * integrate(func * cos_term, limits) / L
-    a0 = formula.subs(n, S.Zero) / 2
+    a0 = formula.subs(n, S.Zero)
     return a0, SeqFormula(2 * cos_term * integrate(func * cos_term, limits)
                           / L, (n, 1, oo))
 
@@ -334,7 +334,7 @@ class FourierSeries(SeriesBase):
         if x in s.free_symbols:
             raise ValueError("'%s' should be independent of %s" % (s, x))
 
-        a0 = self.a0 + s
+        a0 = self.a0 + 2*s
         sfunc = self.function + s
 
         return self.func(sfunc, self.args[1], (a0, self.an, self.bn))
@@ -443,7 +443,7 @@ class FourierSeries(SeriesBase):
 
     def _eval_term(self, pt):
         if pt == 0:
-            return self.a0
+            return self.a0 / 2
         return self.an.coeff(pt) + self.bn.coeff(pt)
 
     def __neg__(self):
