@@ -34,7 +34,7 @@ def test_density():
     N1 = Normal('N1', 0, 1)
     N2 = Normal('N2', N1, 2)
     assert density(N2)(0).doit() == sqrt(10)/(10*sqrt(pi))
-    assert simplify(density(N2, Eq(N1, 1))(x)) == \
+    assert simplify(density(N2, Eq(N1, 1)).pdf(x)) == \
         sqrt(2)*exp(-(x - 1)**2/8)/(4*sqrt(pi))
     assert simplify(density(N2)(x)) == sqrt(10)*exp(-x**2/10)/(10*sqrt(pi))
 

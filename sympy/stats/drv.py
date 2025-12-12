@@ -38,10 +38,61 @@ class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
 
     Serves as superclass for PoissonDistribution etc....
 
-    Provides methods for pdf, cdf, and sampling
+    Provides methods for pdf, cdf, and sampling.
 
-    See Also:
-        sympy.stats.crv_types.*
+    Explanation
+    ===========
+
+    The distribution object can be called in two ways to evaluate the
+    probability mass function:
+
+    1. ``distribution(x)``:
+       Returns the probability mass at x, with support checking enforced
+       via Piecewise. For symbolic arguments where support membership cannot
+       be determined, this returns a Piecewise expression that evaluates to
+       the pmf formula when x is in the support, and 0 otherwise.
+
+    2. ``distribution.pdf(x)``:
+       Returns the raw probability mass formula without support checking.
+       This is useful for symbolic manipulation and summation where the
+       Piecewise wrapper would be cumbersome.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import Geometric, density
+    >>> from sympy import Symbol, Rational
+    >>> X = Geometric('X', Rational(1, 5))
+    >>> z = Symbol('z')
+
+    Using distribution call with symbolic argument returns Piecewise:
+
+    >>> density(X)(z)
+    Piecewise(((4/5)**(z - 1)/5, (z >= 1) & (z < oo) & Eq(z, floor(z))), (0, True))
+
+    Using .pdf() returns the raw formula:
+
+    >>> density(X).pdf(z)
+    (4/5)**(z - 1)/5
+
+    For concrete values, both give the same result:
+
+    >>> density(X)(3)
+    16/125
+    >>> density(X).pdf(3)
+    16/125
+
+    Support checking for values outside support:
+
+    >>> density(X)(0)
+    0
+    >>> density(X)(1/2)
+    0
+
+    See Also
+    ========
+
+    sympy.stats.crv_types
     """
 
     set = S.Integers
@@ -174,8 +225,14 @@ class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
             return Sum(expr * self.pdf(var),
                          (var, self.set.inf, self.set.sup), **kwargs)
 
-    def __call__(self, *args):
-        return self.pdf(*args)
+    def __call__(self, arg):
+        in_domain = self.set.contains(arg)
+        if in_domain == False:
+            return S.Zero
+        elif in_domain == True:
+            return self.pdf(arg)
+        else:
+            return Piecewise((self.pdf(arg), self.set.as_relational(arg)), (S.Zero, True))
 
 
 class DiscreteDomain(RandomDomain):
@@ -313,7 +370,7 @@ class SingleDiscretePSpace(DiscretePSpace, SinglePSpace):
             return self.distribution.expectation(expr, x, evaluate=evaluate,
                     **kwargs)
         except NotImplementedError:
-            return Sum(expr * self.pdf, (x, self.set.inf, self.set.sup),
+            return Sum(expr * self.distribution.pdf(x), (x, self.set.inf, self.set.sup),
                     **kwargs)
 
     def compute_cdf(self, expr, **kwargs):

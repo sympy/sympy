@@ -167,6 +167,20 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
 
     Provides methods for pdf, cdf, and sampling.
 
+    The distribution object can be called in two ways to evaluate the
+    probability density:
+
+    1. ``distribution(x)``:
+       Returns the probability density at x, with support checking enforced
+       via Piecewise. For symbolic arguments where support membership cannot
+       be determined, this returns a Piecewise expression that evaluates to
+       the pdf formula when x is in the support, and 0 otherwise.
+
+    2. ``distribution.pdf(x)``:
+       Returns the raw probability density formula without support checking.
+       This is useful for symbolic manipulation and integration where the
+       Piecewise wrapper would be cumbersome.
+
     See Also
     ========
 
@@ -300,6 +314,15 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
             if quantile is not None:
                 return quantile
         return self.compute_quantile(**kwargs)(x)
+
+    def __call__(self, arg):
+        in_domain = self.set.contains(arg)
+        if in_domain == False:
+            return S.Zero
+        elif in_domain == True:
+            return self.pdf(arg)
+        else:
+            return Piecewise((self.pdf(arg), self.set.as_relational(arg)), (S.Zero, True))
 
 
 class ContinuousPSpace(PSpace):
@@ -477,6 +500,10 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
         return self.distribution.set
 
     @property
+    def pdf(self):
+        return self.distribution.pdf(self.symbol)
+
+    @property
     def domain(self):
         return SingleContinuousDomain(sympify(self.symbol), self.set)
 
@@ -526,7 +553,8 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
     def compute_density(self, expr, **kwargs):
         # https://en.wikipedia.org/wiki/Random_variable#Functions_of_random_variables
         if expr == self.value:
-            return self.density
+            # Return a Lambda that uses the pdf method to get the raw formula
+            return Lambda(expr.symbol, self.density.pdf(expr.symbol))
         y = Dummy('y', real=True)
 
         gs = solveset(expr - y, self.value, S.Reals)
