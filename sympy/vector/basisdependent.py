@@ -316,6 +316,7 @@ class BasisDependentZero(BasisDependent):
     """
     components: dict['BaseVector', Expr] = {}
     _latex_form: str
+    _typst_form: str
 
     def __new__(cls):
         obj = super().__new__(cls)
