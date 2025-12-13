@@ -8,8 +8,7 @@ def _generate_doc():
     from sympy.core.function import AppliedUndef, Function
 
     FUNCTION_LINKS = {
-        # Special functions 
-        # gamma family
+        # Special functions - gamma family
         'gamma': ':func:`~sympy.functions.special.gamma_functions.gamma`',
         'lowergamma': ':func:`~sympy.functions.special.gamma_functions.lowergamma`',
         'uppergamma': ':func:`~sympy.functions.special.gamma_functions.uppergamma`',
