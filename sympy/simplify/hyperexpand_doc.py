@@ -7,7 +7,6 @@ def _generate_doc():
     from sympy.simplify.hyperexpand import FormulaCollection
     from sympy.core.function import AppliedUndef, Function
 
-    
     FUNCTION_LINKS = {
         # Special functions 
         # gamma family
@@ -43,7 +42,7 @@ def _generate_doc():
         'sqrt': ':func:`~sympy.functions.elementary.miscellaneous.sqrt`',
         'root': ':func:`~sympy.functions.elementary.miscellaneous.root`',
 
-        # trignometric 
+        # trigonometric 
         'cos': ':func:`~sympy.functions.elementary.trigonometric.cos`',
         'sin': ':func:`~sympy.functions.elementary.trigonometric.sin`',
 
@@ -52,7 +51,7 @@ def _generate_doc():
         'sinh': ':func:`~sympy.functions.elementary.hyperbolic.sinh`',
 
         # Combinatorial functions
-        'rf': ':func:`~sympy.functions.combinatorial.factorials.RisingFactorial`',
+        'RisingFactorial': ':func:`~sympy.functions.combinatorial.factorials.RisingFactorial`',
         'factorial': ':func:`~sympy.functions.combinatorial.factorials.factorial`',
 
         # Other special functions
@@ -61,7 +60,7 @@ def _generate_doc():
     }
 
     def get_special_functions_used(expr):
-        '''Extract special function names from an expression'''
+        """Extract special function names from an expression"""
         func_names = set()
         for atom in expr.atoms(Function):
             if not isinstance(atom, AppliedUndef):
