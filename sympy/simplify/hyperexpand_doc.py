@@ -32,8 +32,7 @@ def _generate_doc():
         'elliptic_k': ':func:`~sympy.functions.special.elliptic_integrals.elliptic_k`',
         'elliptic_e': ':func:`~sympy.functions.special.elliptic_integrals.elliptic_e`',
 
-        # Elementary functions 
-        # exponential
+        # Elementary functions - exponential
         'exp': ':func:`~sympy.functions.elementary.exponential.exp`',
         'log': ':func:`~sympy.functions.elementary.exponential.log`',
 
@@ -76,7 +75,6 @@ def _generate_doc():
         obj = Eq(hyper(f.func.ap, f.func.bq, f.z),
                 f.closed_form.rewrite('nonrepsmall'))
         doc += ".. math::\n  %s\n" % latex(obj)
-
         # Add links to special functions used
         special_funcs = get_special_functions_used(f.closed_form)
         if special_funcs:
