@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from sympy.calculus.singularities import is_decreasing
+from sympy.calculus.util import continuous_domain
 from sympy.calculus.accumulationbounds import AccumulationBounds
 from .expr_with_intlimits import ExprWithIntLimits
 from .expr_with_limits import AddWithLimits
@@ -585,8 +586,13 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
         ### ------------- alternating series test ----------- ###
         dict_val = sequence_term.match(S.NegativeOne**(sym + p)*q)
-        if not dict_val[p].has(sym) and is_decreasing(dict_val[q], interval):
-            return S.true
+        if not dict_val[p].has(sym):
+            try:
+                cont_dom = continuous_domain(dict_val[q], sym, interval)
+                if interval.is_subset(cont_dom) and is_decreasing(dict_val[q], interval):
+                    return S.true
+            except NotImplementedError:
+                pass
 
         ### ------------- integral test -------------- ###
         check_interval = None
@@ -596,17 +602,22 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             check_interval = interval
         elif isinstance(maxima, FiniteSet) and maxima.sup.is_number:
             check_interval = Interval(maxima.sup, interval.sup)
-        if (check_interval is not None and
-            (is_decreasing(sequence_term, check_interval) or
-            is_decreasing(-sequence_term, check_interval))):
-                integral_val = Integral(
-                    sequence_term, (sym, lower_limit, upper_limit))
-                try:
-                    integral_val_evaluated = integral_val.doit()
-                    if integral_val_evaluated.is_number:
-                        return S(integral_val_evaluated.is_finite)
-                except NotImplementedError:
-                    pass
+        if check_interval is not None:
+            try:
+                cont_dom = continuous_domain(sequence_term, sym, check_interval)
+                if (check_interval.is_subset(cont_dom) and
+                    (is_decreasing(sequence_term, check_interval) or
+                    is_decreasing(-sequence_term, check_interval))):
+                        integral_val = Integral(
+                            sequence_term, (sym, lower_limit, upper_limit))
+                        try:
+                            integral_val_evaluated = integral_val.doit()
+                            if integral_val_evaluated.is_number:
+                                return S(integral_val_evaluated.is_finite)
+                        except NotImplementedError:
+                            pass
+            except NotImplementedError:
+                pass
 
         ### ----- Dirichlet and bounded times convergent tests ----- ###
         # TODO
@@ -660,10 +671,15 @@ class Sum(AddWithLimits, ExprWithIntLimits):
                     a_n = Mul(*a_tuple)
                     b_n = Mul(*b_set)
 
-                    if is_decreasing(a_n, interval):
-                        dirich = _dirichlet_test(b_n)
-                        if dirich is not None:
-                            return dirich
+                    try:
+                        cont_dom = continuous_domain(a_n, sym, interval)
+                        if interval.is_subset(cont_dom): # Defensive: ensure continuity even though is_decreasing now checks singularities
+                            if is_decreasing(a_n, interval):
+                                dirich = _dirichlet_test(b_n)
+                                if dirich is not None:
+                                    return dirich
+                    except NotImplementedError:
+                        pass
 
                     bc_test = _bounded_convergent_test(a_n, b_n)
                     if bc_test is not None:
