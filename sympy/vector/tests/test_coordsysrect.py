@@ -481,3 +481,14 @@ def test_issue_28559():
     simple_eq = f(R.a).diff(R.a)
     simple_result = simple_eq.simplify()
     assert simple_result == simple_eq
+
+
+def test_issue_28727():
+    C1 = CoordSys3D("C1")
+    C2 = C1.locate_new("C2", 2 * C1.i)
+    S = C2.create_new("S", transformation="spherical")
+
+    expr = S.r**2*sin(S.phi)**2*sin(S.theta)**2 + S.r**2*sin(S.theta)**2*cos(S.phi)**2
+    result = expr.simplify()
+    expected = S.r**2*sin(S.theta)**2
+    assert simplify(result - expected) == 0
