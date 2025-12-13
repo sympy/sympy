@@ -1129,26 +1129,42 @@ class polar_lift(DefinedFunction):
 class periodic_argument(DefinedFunction):
     r"""
     Return the argument of a complex number modulo a given period.
-    =============================================================
 
     This represents the argument (angle) of a complex number on a quotient of
-    the Riemann surface of the logarithm. Given a period ``P``, the value
-    returned is always in the interval ``(-P/2, P/2]``.
+    the Riemann surface of the logarithm. Given a period :math:`P`, the value
+    returned is always in the interval :math:`(-P/2, P/2]`.
 
-    Formally, for a complex number ``z`` and period ``P``:
+    Formally, for a complex number :math:`z` and period :math:`P`:
 
-        periodic_argument(z, P) = arg(z) \bmod P, mapped to ``(-P/2, P/2]``
+    .. math::
+
+        \operatorname{periodic\_argument}(z, P) = \arg(z) \bmod P,
+        \text{ mapped to } (-P/2, P/2].
+
+    Parameters
+    ==========
+
+    ar : Expr
+        A polar number (complex number in polar form).
+
+    period : Expr
+        The period :math:`P`. Typically a positive real expression or
+        :math:`\infty` for the unbranched argument. Behaviour for
+        non-positive or non-real periods is undefined.
 
     Notes
     =====
-    - ``arg(z)`` is the usual argument (angle) of a complex number.
-    - When ``P = oo`` this gives the unbranched argument.
-    - Example of the "wrapping" behavior::
 
-        >>> from sympy import exp_polar, I, pi
-        >>> from sympy.functions.elementary.complexes import periodic_argument
-        >>> periodic_argument(exp_polar(5*I*pi), 3*pi)
-        -pi
+    - :math:`\arg(z)` is the usual argument (angle) of a complex number.
+    - When :math:`P = \infty` this gives the unbranched argument.
+    - Example of the "wrapping" behavior:
+
+      .. code-block:: python
+
+          >>> from sympy import exp_polar, I, pi
+          >>> from sympy.functions.elementary.complexes import periodic_argument
+          >>> periodic_argument(exp_polar(5*I*pi), 3*pi)
+          -pi
 
       because :math:`5\pi \bmod 3\pi = 2\pi`, which lies outside
       :math:`(-3\pi/2, 3\pi/2]`, and subtracting :math:`3\pi` maps it to
@@ -1156,6 +1172,7 @@ class periodic_argument(DefinedFunction):
 
     Examples
     ========
+
     >>> from sympy import exp_polar, I, pi
     >>> from sympy.functions.elementary.complexes import periodic_argument
     >>> periodic_argument(exp_polar(10*I*pi), 2*pi)
@@ -1167,19 +1184,12 @@ class periodic_argument(DefinedFunction):
     >>> periodic_argument(exp_polar(5*I*pi), 3*pi)
     -pi
 
-    Parameters
-    ==========
-    ar : Expr
-        A polar number (complex number in polar form).
-    period : Expr
-        The period ``P``. Typically a positive real expression or ``oo`` for
-        the unbranched argument. Behaviour for non-positive or non-real
-        periods is undefined.
-
     See Also
     ========
-    polar_lift : Lift argument to the Riemann surface of the logarithm.
-    principal_branch : Return the principal branch of a function.
+
+    polar_lift : Lift argument to the Riemann surface of the logarithm
+    principal_branch : Return the principal branch of a function
+
     """
 
     @classmethod
