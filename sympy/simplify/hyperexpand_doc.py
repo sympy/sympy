@@ -40,7 +40,7 @@ def _generate_doc():
         'sqrt': ':func:`~sympy.functions.elementary.miscellaneous.sqrt`',
         'root': ':func:`~sympy.functions.elementary.miscellaneous.root`',
 
-        # trigonometric 
+        # trigonometric
         'cos': ':func:`~sympy.functions.elementary.trigonometric.cos`',
         'sin': ':func:`~sympy.functions.elementary.trigonometric.sin`',
 
