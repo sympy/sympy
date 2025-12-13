@@ -507,3 +507,23 @@ def test_symbolic_conditions():
     assert Z == \
     Piecewise((Rational(1, 4), n < 1), (0, True)) + Piecewise((S.Half, n < 2), (0, True)) + \
     Piecewise((Rational(3, 4), n < 3), (0, True)) + Piecewise((S.One, n < 4), (0, True))
+
+def test_finite_distribution_call_vs_pmf():
+    from sympy.sets.contains import Contains
+    X = Bernoulli('X', Rational(1, 4))
+    z = Symbol('z')
+
+    result = density(X)(z)
+    assert isinstance(result, Piecewise)
+    assert result == Piecewise(
+        (Piecewise((Rational(1, 4), Eq(z, 1)), (Rational(3, 4), Eq(z, 0)), (0, True)), Contains(z, FiniteSet(0, 1))),
+        (0, True)
+    )
+
+    assert density(X).pmf(z) == Piecewise((Rational(1, 4), Eq(z, 1)), (Rational(3, 4), Eq(z, 0)), (0, True))
+
+    assert density(X)(0) == Rational(3, 4)
+    assert density(X).pmf(0) == Rational(3, 4)
+
+    assert density(X)(1) == Rational(1, 4)
+    assert density(X).pmf(1) == Rational(1, 4)
