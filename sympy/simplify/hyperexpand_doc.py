@@ -58,7 +58,7 @@ def _generate_doc():
     }
 
     def get_special_functions_used(expr):
-        """Extract special function names from an expression"""
+        """Extract special function names from an expression."""
         func_names = set()
         for atom in expr.atoms(Function):
             if not isinstance(atom, AppliedUndef):
@@ -69,22 +69,33 @@ def _generate_doc():
 
     c = FormulaCollection()
 
-    doc = ""
+    lines = []
 
     for f in c.formulae:
         obj = Eq(hyper(f.func.ap, f.func.bq, f.z),
                 f.closed_form.rewrite('nonrepsmall'))
-        doc += ".. math::\n  %s\n" % latex(obj)
+        lines.append(".. math::")
+        lines.append("")
+        lines.append("    %s" % latex(obj))
+        lines.append("")
         # Add links to special functions used
         special_funcs = get_special_functions_used(f.closed_form)
         if special_funcs:
-            doc += "\n"
-            if len(special_funcs) == 1:
-                doc += "This formula uses %s.\n" % FUNCTION_LINKS[special_funcs[0]]
+            lines.append("")
+            n = len(special_funcs)
+            if n == 1:
+                lines.append("This formula involves %s." % FUNCTION_LINKS[special_funcs[0]])
+            elif n == 2:
+                lines.append("This formula involves %s and %s." % (
+                    FUNCTION_LINKS[special_funcs[0]],
+                    FUNCTION_LINKS[special_funcs[1]]
+                ))
             else:
-                func_links = ', '.join(FUNCTION_LINKS[fn] for fn in special_funcs[:-1])
-                doc += "This formula uses %s and %s.\n" % (func_links, FUNCTION_LINKS[special_funcs[-1]])
-            doc += "\n"
-    return doc
+                raise NotImplementedError(
+                    "Expected at most 2 special functions, got %d: %s. "
+                    % (n, special_funcs)
+                )
+            lines.append("")
+    return '\n'.join(lines)
 
 __doc__ = _generate_doc()
