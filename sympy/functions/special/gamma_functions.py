@@ -18,7 +18,7 @@ from sympy.functions.combinatorial.factorials import factorial, rf, RisingFactor
 from sympy.utilities.misc import as_int
 
 from mpmath import mp, workprec
-from mpmath.libmp.libmpf import prec_to_dps
+from sympy.external.mpmath import prec_to_dps
 
 def intlike(n):
     try:

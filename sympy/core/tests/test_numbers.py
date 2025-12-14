@@ -31,12 +31,13 @@ from sympy.simplify import simplify
 from sympy.polys.domains.groundtypes import PythonRational
 from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.utilities.iterables import permutations
-from sympy.testing.pytest import (XFAIL, raises, _both_exp_pow,
+from sympy.testing.pytest import (raises, _both_exp_pow,
                                   warns_deprecated_sympy)
 from sympy import Add
 
 from mpmath import mpf
 import mpmath
+from sympy.external.mpmath import finf, fninf
 from sympy.core import numbers
 t = Symbol('t', real=False)
 
@@ -1832,22 +1833,6 @@ def test_rounding_issue_4172():
         734833795660954410469466
 
 
-@XFAIL
-def test_mpmath_issues():
-    from mpmath.libmp.libmpf import _normalize
-    import mpmath.libmp as mlib
-    rnd = mlib.round_nearest
-    mpf = (0, int(0), -123, -1, 53, rnd)  # nan
-    assert _normalize(mpf, 53) != (0, int(0), 0, 0)
-    mpf = (0, int(0), -456, -2, 53, rnd)  # +inf
-    assert _normalize(mpf, 53) != (0, int(0), 0, 0)
-    mpf = (1, int(0), -789, -3, 53, rnd)  # -inf
-    assert _normalize(mpf, 53) != (0, int(0), 0, 0)
-
-    from mpmath.libmp.libmpf import fnan
-    assert mlib.mpf_eq(fnan, fnan)
-
-
 def test_Catalan_EulerGamma_prec():
     n = GoldenRatio
     f = Float(n.n(), 5)
@@ -1921,7 +1906,6 @@ def test_Float_eq():
 
 
 def test_issue_6640():
-    from mpmath.libmp.libmpf import finf, fninf
     # fnan is not included because Float no longer returns fnan,
     # but otherwise, the same sort of test could apply
     assert Float(finf).is_zero is False

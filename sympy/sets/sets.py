@@ -34,7 +34,7 @@ from sympy.utilities.misc import func_name, filldedent
 
 from mpmath import mpi, mpf
 
-from mpmath.libmp.libmpf import prec_to_dps
+from sympy.external.mpmath import prec_to_dps
 
 
 tfn: dict[bool | Boolean | None, Boolean | None] = defaultdict(lambda: None, {

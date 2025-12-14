@@ -7,18 +7,18 @@ from typing import Callable, TYPE_CHECKING, Any, overload, Type
 
 import math
 
-import mpmath.libmp as libmp
 from mpmath import (
     make_mpc, make_mpf, mp, mpc, mpf, nsum, quadts, quadosc, workprec)
 from mpmath import inf as mpmath_inf
-from mpmath.libmp import (from_int, from_man_exp, from_rational, fhalf,
-                          fnan, finf, fninf, fnone, fone, fzero, mpf_abs, mpf_add,
-                          mpf_atan, mpf_atan2, mpf_cmp, mpf_cos, mpf_e, mpf_exp, mpf_log, mpf_lt,
-                          mpf_mul, mpf_neg, mpf_pi, mpf_pow, mpf_pow_int, mpf_shift, mpf_sin,
-                          mpf_sqrt, normalize, round_nearest, to_int, to_str, mpf_tan)
-from mpmath.libmp.backend import MPZ
-from mpmath.libmp.libmpc import _infs_nan
-from mpmath.libmp.libmpf import dps_to_prec, prec_to_dps
+
+from sympy.external.mpmath import (
+    MPZ, from_int, from_man_exp, from_rational, fhalf, fnan, finf, fninf,
+    fnone, fone, fzero, mpf_abs, mpf_add, mpf_atan, mpf_atan2, mpf_cmp,
+    mpf_cos, mpf_e, mpf_exp, mpf_log, mpf_lt, mpf_mul, mpf_neg, mpf_pi,
+    mpf_pow, mpf_pow_int, mpf_shift, mpf_sin, mpf_sqrt, normalize,
+    round_nearest, to_int, to_str, mpf_tan, mpc_abs, mpc_pow, mpc_pow_mpf,
+    mpc_pow_int, mpc_sqrt, mpc_exp, dps_to_prec, prec_to_dps
+)
 
 from .sympify import sympify
 from .singleton import S
@@ -56,6 +56,7 @@ def bitcount(n):
 # passing these to mpmath functions or returning them in final results.
 INF = float(mpmath_inf)
 MINUS_INF = float(-mpmath_inf)
+_infs_nan = (finf, fninf, fnan)
 
 # ~= 100 digits. Real men set this to INF.
 DEFAULT_MAXPREC = 333
@@ -274,7 +275,7 @@ def get_abs(expr: Expr, prec: int, options: OPT_DICT) -> TMP_RES:
             return abs_expr, None, acc, None
         else:
             if 'subs' in options:
-                return libmp.mpc_abs((re, im), prec), None, re_acc, None
+                return mpc_abs((re, im), prec), None, re_acc, None
             return abs(expr), None, prec, None
     elif re:
         return mpf_abs(re), None, re_acc, None
@@ -800,7 +801,7 @@ def evalf_pow(v: 'Pow', prec: int, options) -> TMP_RES:
                 return S.ComplexInfinity
             return None, None, None, None
         # General complex number to arbitrary integer power
-        re, im = libmp.mpc_pow_int((re, im), p, prec)
+        re, im = mpc_pow_int((re, im), p, prec)
         # Assumes full accuracy in input
         return finalize_complex(re, im, target_prec)
 
@@ -817,7 +818,7 @@ def evalf_pow(v: 'Pow', prec: int, options) -> TMP_RES:
         xre, xim, _, _ = result
         # General complex square root
         if xim:
-            re, im = libmp.mpc_sqrt((xre or fzero, xim), prec)
+            re, im = mpc_sqrt((xre or fzero, xim), prec)
             return finalize_complex(re, im, prec)
         if not xre:
             return None, None, None, None
@@ -848,7 +849,7 @@ def evalf_pow(v: 'Pow', prec: int, options) -> TMP_RES:
     # Pure exponential function; no need to evalf the base
     if base is S.Exp1:
         if yim:
-            re, im = libmp.mpc_exp((yre or fzero, yim), prec)
+            re, im = mpc_exp((yre or fzero, yim), prec)
             return finalize_complex(re, im, target_prec)
         return mpf_exp(yre, target_prec), None, target_prec, None
 
@@ -863,17 +864,17 @@ def evalf_pow(v: 'Pow', prec: int, options) -> TMP_RES:
 
     # (real ** complex) or (complex ** complex)
     if yim:
-        re, im = libmp.mpc_pow(
+        re, im = mpc_pow(
             (xre or fzero, xim or fzero), (yre or fzero, yim),
             target_prec)
         return finalize_complex(re, im, target_prec)
     # complex ** real
     if xim:
-        re, im = libmp.mpc_pow_mpf((xre or fzero, xim), yre, target_prec)
+        re, im = mpc_pow_mpf((xre or fzero, xim), yre, target_prec)
         return finalize_complex(re, im, target_prec)
     # negative ** real
     elif mpf_lt(xre, fzero):
-        re, im = libmp.mpc_pow_mpf((xre, fzero), yre, target_prec)
+        re, im = mpc_pow_mpf((xre, fzero), yre, target_prec)
         return finalize_complex(re, im, target_prec)
     # positive ** real
     else:
