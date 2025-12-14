@@ -5,6 +5,7 @@ Generating and counting primes.
 
 from bisect import bisect, bisect_left
 from itertools import count
+from threading import RLock as _Lock
 # Using arrays for sieving instead of lists greatly reduces
 # memory consumption
 from array import array as _array
@@ -61,36 +62,39 @@ class Sieve:
         self._list = _array('L', [2, 3, 5, 7, 11, 13]) # primes
         self._tlist = _array('L', [0, 1, 1, 2, 2, 4]) # totient
         self._mlist = _array('i', [0, 1, -1, -1, 0, -1]) # mobius
+        self._lock = _Lock()
         if sieve_interval <= 0:
             raise ValueError("sieve_interval should be a positive integer")
         self.sieve_interval = sieve_interval
         assert all(len(i) == self._n for i in (self._list, self._tlist, self._mlist))
 
     def __repr__(self):
-        return ("<%s sieve (%i): %i, %i, %i, ... %i, %i\n"
-             "%s sieve (%i): %i, %i, %i, ... %i, %i\n"
-             "%s sieve (%i): %i, %i, %i, ... %i, %i>") % (
-             'prime', len(self._list),
-                 self._list[0], self._list[1], self._list[2],
-                 self._list[-2], self._list[-1],
-             'totient', len(self._tlist),
-                 self._tlist[0], self._tlist[1],
-                 self._tlist[2], self._tlist[-2], self._tlist[-1],
-             'mobius', len(self._mlist),
-                 self._mlist[0], self._mlist[1],
-                 self._mlist[2], self._mlist[-2], self._mlist[-1])
+        with self._lock:
+            return ("<%s sieve (%i): %i, %i, %i, ... %i, %i\n"
+                 "%s sieve (%i): %i, %i, %i, ... %i, %i\n"
+                 "%s sieve (%i): %i, %i, %i, ... %i, %i>") % (
+                 'prime', len(self._list),
+                     self._list[0], self._list[1], self._list[2],
+                     self._list[-2], self._list[-1],
+                 'totient', len(self._tlist),
+                     self._tlist[0], self._tlist[1],
+                     self._tlist[2], self._tlist[-2], self._tlist[-1],
+                 'mobius', len(self._mlist),
+                     self._mlist[0], self._mlist[1],
+                     self._mlist[2], self._mlist[-2], self._mlist[-1])
 
     def _reset(self, prime=None, totient=None, mobius=None):
         """Reset all caches (default). To reset one or more set the
             desired keyword to True."""
-        if all(i is None for i in (prime, totient, mobius)):
-            prime = totient = mobius = True
-        if prime:
-            self._list = self._list[:self._n]
-        if totient:
-            self._tlist = self._tlist[:self._n]
-        if mobius:
-            self._mlist = self._mlist[:self._n]
+        with self._lock:
+            if all(i is None for i in (prime, totient, mobius)):
+                prime = totient = mobius = True
+            if prime:
+                self._list = self._list[:self._n]
+            if totient:
+                self._tlist = self._tlist[:self._n]
+            if mobius:
+                self._mlist = self._mlist[:self._n]
 
     def extend(self, n):
         """Grow the sieve to cover all primes <= n.
@@ -111,11 +115,12 @@ class Sieve:
         if n < num:
             return
         num2 = num**2
-        while num2 <= n:
-            self._list += _array('L', self._primerange(num, num2))
-            num, num2 = num2, num2**2
-        # Merge the sieves
-        self._list += _array('L', self._primerange(num, n + 1))
+        with self._lock:
+            while num2 <= n:
+                self._list += _array('L', self._primerange(num, num2))
+                num, num2 = num2, num2**2
+            # Merge the sieves
+            self._list += _array('L', self._primerange(num, n + 1))
 
     def _primerange(self, a, b):
         """ Generate all prime numbers in the range (a, b).
@@ -182,8 +187,9 @@ class Sieve:
         likely that it will be longer than requested.
         """
         i = as_int(i)
-        while len(self._list) < i:
-            self.extend(int(self._list[-1] * 1.5))
+        with self._lock:
+            while len(self._list) < i:
+                self.extend(int(self._list[-1] * 1.5))
 
     def primerange(self, a, b=None):
         """Generate all prime numbers in the range [2, a) or [a, b).
@@ -217,8 +223,9 @@ class Sieve:
             b = _as_int_ceiling(b)
         if a >= b:
             return
-        self.extend(b)
-        yield from self._list[bisect_left(self._list, a):
+        with self._lock:
+            self.extend(b)
+            yield from self._list[bisect_left(self._list, a):
                               bisect_left(self._list, b)]
 
     def totientrange(self, a, b):
@@ -229,6 +236,21 @@ class Sieve:
 
         >>> from sympy import sieve
         >>> print([i for i in sieve.totientrange(7, 18)])
+        [6, 4, 6, 4, 10, 4, 12, 6, 8, 8, 16]
+        """
+        with self._lock:
+            return self._totientrange(a, b)
+
+    def _totientrange(self, a, b):
+        """Generate all totient numbers for the range [a, b).
+
+        Not thread-safe, use totientrange for thread-safe use.
+
+        Examples
+        ========
+
+        >>> from sympy import sieve
+        >>> print([i for i in sieve._totientrange(7, 18)])
         [6, 4, 6, 4, 10, 4, 12, 6, 8, 8, 16]
         """
         a = max(1, _as_int_ceiling(a))
@@ -260,6 +282,30 @@ class Sieve:
 
     def mobiusrange(self, a, b):
         """Generate all mobius numbers for the range [a, b).
+
+        Parameters
+        ==========
+
+        a : integer
+            First number in range
+
+        b : integer
+            First number outside of range
+
+        Examples
+        ========
+
+        >>> from sympy import sieve
+        >>> print([i for i in sieve.mobiusrange(7, 18)])
+        [-1, 0, 0, 1, -1, 0, -1, 1, 1, 0, -1]
+        """
+        with self._lock:
+            return self._mobiusrange(a, b)
+
+    def _mobiusrange(self, a, b):
+        """Generate all mobius numbers for the range [a, b).
+
+        Not thread-safe, use totientrange for thread-safe use.
 
         Parameters
         ==========
@@ -323,13 +369,14 @@ class Sieve:
         n = as_int(n)
         if n < 2:
             raise ValueError(f"n should be >= 2 but got: {n}")
-        if n > self._list[-1]:
-            self.extend(n)
-        b = bisect(self._list, n)
-        if self._list[b - 1] == test:
-            return b, b
-        else:
-            return b, b + 1
+        with self._lock:
+            if n > self._list[-1]:
+                self.extend(n)
+            b = bisect(self._list, n)
+            if self._list[b - 1] == test:
+                return b, b
+            else:
+                return b, b + 1
 
     def __contains__(self, n):
         try:
@@ -349,19 +396,20 @@ class Sieve:
     def __getitem__(self, n):
         """Return the nth prime number"""
         if isinstance(n, slice):
-            self.extend_to_no(n.stop)
-            start = n.start if n.start is not None else 0
-            if start < 1:
-                # sieve[:5] would be empty (starting at -1), let's
-                # just be explicit and raise.
-                raise IndexError("Sieve indices start at 1.")
-            return self._list[start - 1:n.stop - 1:n.step]
-        else:
-            if n < 1:
-                # offset is one, so forbid explicit access to sieve[0]
-                # (would surprisingly return the last one).
-                raise IndexError("Sieve indices start at 1.")
-            n = as_int(n)
+            with self._lock:
+                self.extend_to_no(n.stop)
+                start = n.start if n.start is not None else 0
+                if start < 1:
+                    # sieve[:5] would be empty (starting at -1), let's
+                    # just be explicit and raise.
+                    raise IndexError("Sieve indices start at 1.")
+                return self._list[start - 1:n.stop - 1:n.step]
+        if n < 1:
+            # offset is one, so forbid explicit access to sieve[0]
+            # (would surprisingly return the last one).
+            raise IndexError("Sieve indices start at 1.")
+        n = as_int(n)
+        with self._lock:
             self.extend_to_no(n)
             return self._list[n - 1]
 
@@ -415,16 +463,17 @@ def prime(nth):
         raise ValueError("nth must be a positive integer; prime(1) == 2")
 
     # Check if n is within the sieve range
-    if n <= len(sieve._list):
-        return sieve[n]
+    with sieve._lock:
+        if n <= len(sieve._list):
+            return sieve[n]
 
-    from sympy.functions.elementary.exponential import log
-    from sympy.functions.special.error_functions import li
+        from sympy.functions.elementary.exponential import log
+        from sympy.functions.special.error_functions import li
 
-    if n < 1000:
-        # Extend sieve up to 8*n as this is empirically sufficient
-        sieve.extend(8 * n)
-        return sieve[n]
+        if n < 1000:
+            # Extend sieve up to 8*n as this is empirically sufficient
+            sieve.extend(8 * n)
+            return sieve[n]
 
     a = 2
     # Estimate an upper bound for the nth prime using the prime number theorem
@@ -595,8 +644,9 @@ def _primepi(n:int) -> int:
     """
     if n < 2:
         return 0
-    if n <= sieve._list[-1]:
-        return sieve.search(n)[0]
+    with sieve._lock:
+        if n <= sieve._list[-1]:
+            return sieve.search(n)[0]
     lim = int(sqrt(n))
     arr1 = [(i + 1) >> 1 for i in range(lim + 1)]
     arr2 = [0] + [(n//i + 1) >> 1 for i in range(1, lim + 1)]
@@ -678,12 +728,13 @@ def nextprime(n, ith=1):
     if n < 2:
         n = 2
         i -= 1
-    if n <= sieve._list[-2]:
-        l, _ = sieve.search(n)
-        if l + i - 1 < len(sieve._list):
-            return sieve._list[l + i - 1]
-        n = sieve._list[-1]
-        i += l - len(sieve._list)
+    with sieve._lock:
+        if n <= sieve._list[-2]:
+            l, _ = sieve.search(n)
+            if l + i - 1 < len(sieve._list):
+                return sieve._list[l + i - 1]
+            n = sieve._list[-1]
+            i += l - len(sieve._list)
     nn = 6*(n//6)
     if nn == n:
         n += 1
@@ -738,12 +789,13 @@ def prevprime(n):
         raise ValueError("no preceding primes")
     if n < 8:
         return {3: 2, 4: 3, 5: 3, 6: 5, 7: 5}[n]
-    if n <= sieve._list[-1]:
-        l, u = sieve.search(n)
-        if l == u:
-            return sieve[l-1]
-        else:
-            return sieve[l]
+    with sieve._lock:
+        if n <= sieve._list[-1]:
+            l, u = sieve.search(n)
+            if l == u:
+                return sieve[l-1]
+            else:
+                return sieve[l]
     nn = 6*(n//6)
     if n - nn <= 1:
         n = nn - 1
@@ -835,6 +887,15 @@ def primerange(a, b=None):
 
         .. [1] https://en.wikipedia.org/wiki/Prime_number
         .. [2] https://primes.utm.edu/notes/gaps.html
+    """
+    with sieve._lock:
+        return _primerange(a, b)
+
+
+def _primerange(a, b=None):
+    """ Thread-unsage private version of primerange.
+
+    See the primerange docs for details
     """
     if b is None:
         a, b = 2, a
@@ -1094,18 +1155,18 @@ def composite(nth):
     composite_arr = [4, 6, 8, 9, 10, 12, 14, 15, 16, 18]
     if n <= 10:
         return composite_arr[n - 1]
-
-    a, b = 4, sieve._list[-1]
-    if n <= b - _primepi(b) - 1:
-        while a < b - 1:
-            mid = (a + b) >> 1
-            if mid - _primepi(mid) - 1 > n:
-                b = mid
-            else:
-                a = mid
-        if isprime(a):
-            a -= 1
-        return a
+    with sieve._lock:
+        a, b = 4, sieve._list[-1]
+        if n <= b - _primepi(b) - 1:
+            while a < b - 1:
+                mid = (a + b) >> 1
+                if mid - _primepi(mid) - 1 > n:
+                    b = mid
+                else:
+                    a = mid
+            if isprime(a):
+                a -= 1
+            return a
 
     from sympy.functions.elementary.exponential import log
     from sympy.functions.special.error_functions import li

@@ -1,5 +1,7 @@
 from bisect import bisect, bisect_left
 
+import pytest
+
 from sympy.functions.combinatorial.numbers import mobius, totient
 from sympy.ntheory.generate import (sieve, Sieve)
 
@@ -49,6 +51,7 @@ def test__primepi():
     assert _primepi(2000) == 303
 
 
+@pytest.mark.thread_unsafe(reason="resets the global sieve state")
 def test_composite():
     from sympy.ntheory.generate import sieve
     sieve._reset()
@@ -89,6 +92,7 @@ def test_compositepi():
     assert compositepi(2321) == 1976
 
 
+@pytest.mark.thread_unsafe(reason="resets the global sieve state")
 def test_generate():
     from sympy.ntheory.generate import sieve
     sieve._reset()
