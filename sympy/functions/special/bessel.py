@@ -364,21 +364,25 @@ class bessely(BesselBase):
         c, e = arg.as_coeff_exponent(x)
 
         if e.is_positive:
-            term_one = ((2/pi)*log(z/2)*besselj(nu, z))
-            term_two = -(z/2)**(-nu)*factorial(nu - 1)/pi if (nu).is_positive else S.Zero
-            term_three = -(z/2)**nu/(pi*factorial(nu))*(digamma(nu + 1) - S.EulerGamma)
-            arg = Add(*[term_one, term_two, term_three]).as_leading_term(x, logx=logx)
-            return arg
+            # Refer https://functions.wolfram.com/Bessel-TypeFunctions/BesselY/06/01/04/01/03/
+            if nu.is_zero:
+                term = 2*(log(z/2) + S.EulerGamma)/pi
+            elif nu.is_nonzero:
+                term = -gamma(Abs(nu))*(z/2)**(-Abs(nu))/pi
+            else:
+                raise NotImplementedError(f"Cannot proceed without knowing if {nu} is zero or not.")
+
+            return term.as_leading_term(x, logx=logx)
         elif e.is_negative:
             cdir = 1 if cdir == 0 else cdir
             sign = c*cdir**e
             if not sign.is_negative:
                 # Refer Abramowitz and Stegun 1965, p. 364 for more information on
                 # asymptotic approximation of bessely function.
-                return sqrt(2)*(-sin(pi*nu/2 - z + pi/4) + 3*cos(pi*nu/2 - z + pi/4)/(8*z))*sqrt(1/z)/sqrt(pi)
+               return sqrt(2)*(-sin(pi*nu/2 - z + pi/4) + 3*cos(pi*nu/2 - z + pi/4)/(8*z))*sqrt(1/z)/sqrt(pi)
             return self
-
-        return super(bessely, self)._eval_as_leading_term(x, logx=logx, cdir=cdir)
+        else:
+            return self.func(nu, arg)
 
     def _eval_is_extended_real(self):
         nu, z = self.args
@@ -398,39 +402,49 @@ class bessely(BesselBase):
         except (ValueError, NotImplementedError):
             return self
 
-        if exp.is_positive and nu.is_integer:
-            newn = ceiling(n/exp)
-            bn = besselj(nu, z)
-            a = ((2/pi)*log(z/2)*bn)._eval_nseries(x, n, logx, cdir)
-
-            b, c = [], []
-            o = Order(x**n, x)
+        if exp.is_positive:
             r = (z/2)._eval_nseries(x, n, logx, cdir).removeO()
             if r is S.Zero:
-                return o
-            t = (_mexpand(r**2) + o).removeO()
+                return Order(z**(-nu) + z**nu, x)
 
-            if nu > S.Zero:
-                term = r**(-nu)*factorial(nu - 1)/pi
-                b.append(term)
-                for k in range(1, nu):
-                    denom = (nu - k)*k
-                    if denom == S.Zero:
-                        term *= t/k
-                    else:
-                        term *= t/denom
-                    term = (_mexpand(term) + o).removeO()
+            o = Order(x**n, x)
+            if nu.is_integer:
+                # Reference: https://functions.wolfram.com/Bessel-TypeFunctions/BesselY/06/01/04/01/02/0008/ (only for integer order)
+                newn = ceiling(n/exp)
+                bn = besselj(nu, z)
+                a = ((2/pi)*log(z/2)*bn)._eval_nseries(x, n, logx, cdir)
+                b, c = [], []
+                t = (_mexpand(r**2) + o).removeO()
+
+                if nu > S.Zero:
+                    term = r**(-nu)*factorial(nu - 1)/pi
                     b.append(term)
+                    for k in range(1, nu):
+                        term *= t/((nu - k)*k)
+                        term = (_mexpand(term) + o).removeO()
+                        b.append(term)
 
-            p = r**nu/(pi*factorial(nu))
-            term = p*(digamma(nu + 1) - S.EulerGamma)
-            c.append(term)
-            for k in range(1, (newn + 1)//2):
-                p *= -t/(k*(k + nu))
-                p = (_mexpand(p) + o).removeO()
-                term = p*(digamma(k + nu + 1) + digamma(k + 1))
+                p = r**nu/(pi*factorial(nu))
+                term = p*(digamma(nu + 1) - S.EulerGamma)
                 c.append(term)
-            return a - Add(*b) - Add(*c) # Order term comes from a
+                for k in range(1, (newn + 1)//2):
+                    p *= -t/(k*(k + nu))
+                    p = (_mexpand(p) + o).removeO()
+                    term = p*(digamma(k + nu + 1) + digamma(k + 1))
+                    c.append(term)
+                return a - Add(*b) - Add(*c)  # Order term comes from a
+            elif nu.is_noninteger:
+                # Reference - https://functions.wolfram.com/Bessel-TypeFunctions/BesselY/06/01/04/01/01/0003/
+                newn_a = ceiling((n + nu)/exp)
+                newn_b = ceiling((n - nu)/exp)
+
+                a = [_mexpand(-gamma(nu)*(-1)**k*r**(2*k - nu)/(pi*RisingFactorial(1 - nu, k)*\
+                    factorial(k))) for k in range((newn_a + 1)//2)]
+                b = [_mexpand(-gamma(-nu)*cos(nu*pi)*(-1)**k*r**(2*k + nu)/(pi*RisingFactorial(nu + 1, k)*\
+                    factorial(k))) for k in range((newn_b + 1)//2)]
+                return Add(*a) + Add(*b) + o
+            else:
+                raise NotImplementedError("bessely expansion is only implemented for real order")
 
         return super(bessely, self)._eval_nseries(x, n, logx, cdir)
 
