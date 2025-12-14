@@ -1,4 +1,5 @@
 from sympy.core.symbol import Dummy
+from sympy.external.mpmath import sqrt
 from sympy.ntheory import nextprime
 from sympy.ntheory.modular import crt
 from sympy.polys.domains import PolynomialRing
@@ -6,7 +7,6 @@ from sympy.polys.galoistools import (
     gf_gcd, gf_from_dict, gf_gcdex, gf_div, gf_lcm)
 from sympy.polys.polyerrors import ModularGCDFailed
 
-from mpmath import sqrt
 import random
 
 

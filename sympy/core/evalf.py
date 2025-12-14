@@ -7,17 +7,15 @@ from typing import Callable, TYPE_CHECKING, Any, overload, Type
 
 import math
 
-from mpmath import (
-    make_mpc, make_mpf, mp, mpc, mpf, nsum, quadts, quadosc, workprec)
-from mpmath import inf as mpmath_inf
-
 from sympy.external.mpmath import (
+    inf as mpmath_inf, make_mpf, make_mpc, mpc, mpf,
     MPZ, from_int, from_man_exp, from_rational, fhalf, fnan, finf, fninf,
     fnone, fone, fzero, mpf_abs, mpf_add, mpf_atan, mpf_atan2, mpf_cmp,
     mpf_cos, mpf_e, mpf_exp, mpf_log, mpf_lt, mpf_mul, mpf_neg, mpf_pi,
     mpf_pow, mpf_pow_int, mpf_shift, mpf_sin, mpf_sqrt, normalize,
     round_nearest, to_int, to_str, mpf_tan, mpc_abs, mpc_pow, mpc_pow_mpf,
-    mpc_pow_int, mpc_sqrt, mpc_exp, dps_to_prec, prec_to_dps
+    mpc_pow_int, mpc_sqrt, mpc_exp, dps_to_prec, prec_to_dps,
+    local_workprec,
 )
 
 from .sympify import sympify
@@ -36,6 +34,7 @@ if TYPE_CHECKING:
     from sympy.integrals.integrals import Integral
     from sympy.concrete.summations import Sum
     from sympy.concrete.products import Product
+    from sympy.external.mpmath import MPContext
     from sympy.functions.elementary.exponential import exp, log
     from sympy.functions.elementary.complexes import Abs, re, im
     from sympy.functions.elementary.integers import ceiling, floor
@@ -1059,7 +1058,9 @@ def evalf_alg_num(a: 'AlgebraicNumber', prec: int, options: OPT_DICT) -> TMP_RES
 #----------------------------------------------------------------------------#
 
 
-def as_mpmath(x: Any, prec: int, options: OPT_DICT) -> mpc | mpf:
+def as_mpmath(
+    x: Any, prec: int, options: OPT_DICT, ctx: MPContext | None = None
+) -> mpc | mpf:
     from .numbers import Infinity, NegativeInfinity, Zero
     x = sympify(x)
     if isinstance(x, Zero) or x == 0.0:
@@ -1070,7 +1071,7 @@ def as_mpmath(x: Any, prec: int, options: OPT_DICT) -> mpc | mpf:
         return mpf('-inf')
     # XXX
     result = evalf(x, prec, options)
-    return quad_to_mpmath(result)
+    return quad_to_mpmath(result, ctx)
 
 
 def do_integral(expr: 'Integral', prec: int, options: OPT_DICT) -> TMP_RES:
@@ -1091,9 +1092,9 @@ def do_integral(expr: 'Integral', prec: int, options: OPT_DICT) -> TMP_RES:
     oldmaxprec = options.get('maxprec', DEFAULT_MAXPREC)
     options['maxprec'] = min(oldmaxprec, 2*prec)
 
-    with workprec(prec + 5):
-        xlow = as_mpmath(xlow, prec + 15, options)
-        xhigh = as_mpmath(xhigh, prec + 15, options)
+    with local_workprec(prec + 5) as ctx:
+        xlow = as_mpmath(xlow, prec + 15, options, ctx)
+        xhigh = as_mpmath(xhigh, prec + 15, options, ctx)
 
         # Integration is like summation, and we can phone home from
         # the integrand function to update accuracy summation style
@@ -1110,7 +1111,7 @@ def do_integral(expr: 'Integral', prec: int, options: OPT_DICT) -> TMP_RES:
 
         def f(t: Expr) -> mpc | mpf:
             nonlocal max_real_term, max_imag_term
-            re, im, re_acc, im_acc = evalf(func, mp.prec, {'subs': {x: t}})
+            re, im, re_acc, im_acc = evalf(func, ctx.prec, {'subs': {x: t}})
 
             have_part[0] = re or have_part[0]
             have_part[1] = im or have_part[1]
@@ -1119,8 +1120,8 @@ def do_integral(expr: 'Integral', prec: int, options: OPT_DICT) -> TMP_RES:
             max_imag_term = max(max_imag_term, fastlog(im))
 
             if im:
-                return mpc(re or fzero, im)
-            return mpf(re or fzero)
+                return ctx.mpc(re or fzero, im)
+            return ctx.mpf(re or fzero)
 
         if options.get('quad') == 'osc':
             A = Wild('A', exclude=[x])
@@ -1132,12 +1133,12 @@ def do_integral(expr: 'Integral', prec: int, options: OPT_DICT) -> TMP_RES:
             if not m:
                 raise ValueError("An integrand of the form sin(A*x+B)*f(x) "
                   "or cos(A*x+B)*f(x) is required for oscillatory quadrature")
-            period = as_mpmath(2*S.Pi/m[A], prec + 15, options)
-            result = quadosc(f, [xlow, xhigh], period=period)
+            period = as_mpmath(2*S.Pi/m[A], prec + 15, options, ctx)
+            result = ctx.quadosc(f, [xlow, xhigh], period=period)
             # XXX: quadosc does not do error detection yet
             quadrature_error = MINUS_INF
         else:
-            result, quadrature_err = quadts(f, [xlow, xhigh], error=1)
+            result, quadrature_err = ctx.quadts(f, [xlow, xhigh], error=1)
             quadrature_error = fastlog(quadrature_err._mpf_)
 
     options['maxprec'] = oldmaxprec
@@ -1256,61 +1257,63 @@ def hypsum(expr: Expr, n: Symbol, start: int, prec: int) -> mpf:
         raise NotImplementedError("a hypergeometric series is required")
     num, den = hs.as_numer_denom()
 
-    func1 = lambdify(n, num)
-    func2 = lambdify(n, den)
+    with local_workprec(prec) as ctx:
 
-    h, g, p = check_convergence(num, den, n)
+        func1 = lambdify(n, num, modules=ctx)
+        func2 = lambdify(n, den, modules=ctx)
 
-    if h < 0:
-        raise ValueError("Sum diverges like (n!)^%i" % (-h))
+        h, g, p = check_convergence(num, den, n)
 
-    eterm = expr.subs(n, 0)
-    if not eterm.is_Rational:
-        raise NotImplementedError("Non rational term functionality is not implemented.")
+        if h < 0:
+            raise ValueError("Sum diverges like (n!)^%i" % (-h))
 
-    term: Rational = eterm # type: ignore
+        eterm = expr.subs(n, 0)
+        if not eterm.is_Rational:
+            raise NotImplementedError("Non rational term functionality is not implemented.")
 
-    # Direct summation if geometric or faster
-    if h > 0 or (h == 0 and abs(g) > 1):
-        term = (MPZ(term.p) << prec) // term.q
-        s = term
-        k = 1
-        while abs(term) > 5:
-            term *= MPZ(func1(k - 1))
-            term //= MPZ(func2(k - 1))
-            s += term
-            k += 1
-        return from_man_exp(s, -prec)
-    else:
-        alt = g < 0
-        if abs(g) < 1:
-            raise ValueError("Sum diverges like (%i)^n" % abs(1/g))
-        if p < 1 or (equal_valued(p, 1) and not alt):
-            raise ValueError("Sum diverges like n^%i" % (-p))
-        # We have polynomial convergence: use Richardson extrapolation
-        vold = None
-        ndig = prec_to_dps(prec)
-        while True:
-            # Need to use at least quad precision because a lot of cancellation
-            # might occur in the extrapolation process; we check the answer to
-            # make sure that the desired precision has been reached, too.
-            prec2 = 4*prec
-            term0 = (MPZ(term.p) << prec2) // term.q
+        term: Rational = eterm # type: ignore
 
-            def summand(k, _term=[term0]):
-                if k:
-                    k = int(k)
-                    _term[0] *= MPZ(func1(k - 1))
-                    _term[0] //= MPZ(func2(k - 1))
-                return make_mpf(from_man_exp(_term[0], -prec2))
+        # Direct summation if geometric or faster
+        if h > 0 or (h == 0 and abs(g) > 1):
+            term = (MPZ(term.p) << prec) // term.q
+            s = term
+            k = 1
+            while abs(term) > 5:
+                term *= MPZ(func1(k - 1))
+                term //= MPZ(func2(k - 1))
+                s += term
+                k += 1
+            return from_man_exp(s, -prec)
+        else:
+            alt = g < 0
+            if abs(g) < 1:
+                raise ValueError("Sum diverges like (%i)^n" % abs(1/g))
+            if p < 1 or (equal_valued(p, 1) and not alt):
+                raise ValueError("Sum diverges like n^%i" % (-p))
+            # We have polynomial convergence: use Richardson extrapolation
+            vold = None
+            ndig = prec_to_dps(prec)
+            while True:
+                # Need to use at least quad precision because a lot of cancellation
+                # might occur in the extrapolation process; we check the answer to
+                # make sure that the desired precision has been reached, too.
+                prec2 = 4*prec
+                term0 = (MPZ(term.p) << prec2) // term.q
 
-            with workprec(prec):
-                v = nsum(summand, [0, mpmath_inf], method='richardson')
-            vf = Float(v, ndig)
-            if vold is not None and vold == vf:
-                break
-            prec += prec  # double precision each time
-            vold = vf
+                def summand(k, _term=[term0]):
+                    if k:
+                        k = int(k)
+                        _term[0] *= MPZ(func1(k - 1))
+                        _term[0] //= MPZ(func2(k - 1))
+                    return ctx.make_mpf(from_man_exp(_term[0], -prec2))
+
+                ctx.prec = prec
+                v = ctx.nsum(summand, [0, mpmath_inf], method='richardson')
+                vf = Float(v, ndig)
+                if vold is not None and vold == vf:
+                    break
+                prec += prec  # double precision each time
+                vold = vf
 
         return v._mpf_
 
