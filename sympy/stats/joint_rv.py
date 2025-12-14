@@ -389,7 +389,7 @@ class MarginalDistribution(Distribution):
         if isinstance(expr, JointDistribution):
             count = len(expr.domain.args)
             x = Dummy('x', real=True)
-            syms = tuple(Indexed(x, i) for i in count)
+            syms = tuple(Indexed(x, i) for i in range(count))
             expr = expr.pdf(syms)
         else:
             syms = tuple(rv.pspace.symbol if isinstance(rv, RandomSymbol) else rv.args[0] for rv in rvs)
