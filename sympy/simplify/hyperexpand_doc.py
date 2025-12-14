@@ -91,10 +91,12 @@ def _generate_doc():
                     FUNCTION_LINKS[special_funcs[1]]
                 ))
             else:
-                raise NotImplementedError(
-                    "Expected at most 2 special functions, got %d: %s. "
-                    % (n, special_funcs)
-                )
+                # Handle 3+ functions 
+                func_links = ', '.join(FUNCTION_LINKS[fn] for fn in special_funcs[:-1])
+                lines.append("This formula involves %s, and %s."% (
+                    func_links,
+                    FUNCTION_LINKS[special_funcs[-1]]
+                ))
             lines.append("")
     return '\n'.join(lines)
 
