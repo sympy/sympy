@@ -2397,6 +2397,9 @@ class LatexPrinter(Printer):
             return self._print(s.a0)
         return self._print_Add(s.truncate()) + r' + \ldots'
 
+    def _print_FiniteFourierSeries(self, s):
+        return self._print(s.as_expr())
+
     def _print_FormalPowerSeries(self, s):
         return self._print_Add(s.infinite)
 

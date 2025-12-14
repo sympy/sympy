@@ -598,6 +598,74 @@ class FiniteFourierSeries(FourierSeries):
                 + self.bn.get(pt, S.Zero) * sin(pt * (pi / self.L) * self.x)
         return _term
 
+    def as_expr(self):
+        """
+        Return the Fourier series as a single expression.
+
+        Builds the complete series directly from the a0, an, and bn
+        coefficients.
+
+        Returns
+        =======
+
+        Expr
+            The complete Fourier series as an expression.
+
+        Examples
+        ========
+
+        >>> from sympy import fourier_series, pi, sin
+        >>> from sympy.abc import x
+        >>> s = fourier_series(sin(x), (x, -pi, pi))
+        >>> s.as_expr()
+        sin(x)
+
+        """
+        return Add(*self.as_terms_list())
+
+    def as_terms_list(self):
+        """
+        Return all terms of the Fourier series as a list.
+
+        Builds the list of terms directly from the a0, an, and bn
+        coefficients. Sin and cos terms are mixed together in order
+        of increasing frequency.
+
+        Returns
+        =======
+
+        list
+            List of all non-zero terms in the Fourier series.
+
+        Examples
+        ========
+
+        >>> from sympy import fourier_series, pi, sin
+        >>> from sympy.abc import x
+        >>> s = fourier_series(sin(x) + sin(2*x), (x, -pi, pi))
+        >>> s.as_terms_list()
+        [sin(x), sin(2*x)]
+
+        """
+        terms = []
+
+        if self.a0 != S.Zero:
+            terms.append(self.a0)
+
+        all_n = sorted(set(self.an.keys()) | set(self.bn.keys()))
+
+        for n in all_n:
+            if n in self.an:
+                term = self.an[n] * cos(n * (pi / self.L) * self.x)
+                if term != S.Zero:
+                    terms.append(term)
+            if n in self.bn:
+                term = self.bn[n] * sin(n * (pi / self.L) * self.x)
+                if term != S.Zero:
+                    terms.append(term)
+
+        return terms
+
     def __add__(self, other):
         if isinstance(other, FourierSeries):
             return other.__add__(fourier_series(self.function, self.args[1],\
