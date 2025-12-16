@@ -27,7 +27,6 @@ from sympy.core.relational import (Relational, Equality, Unequality,
                                    StrictLessThan, Rel, Eq, Lt, Le,
                                    Gt, Ge, Ne, is_le, is_gt, is_ge, is_lt, is_eq, is_neq)
 from sympy.sets.sets import Interval, FiniteSet
-from sympy import Matrix
 from itertools import combinations
 
 x, y, z, t = symbols('x,y,z,t')
