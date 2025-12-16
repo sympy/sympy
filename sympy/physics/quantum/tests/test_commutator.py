@@ -86,9 +86,9 @@ def test_issue_28740():
     A2 = Operator('A2')
     B1 = Operator('B1')
     B2 = Operator('B2')
-
     # This used to fail (return 2 terms instead of 4)
     comm = Comm(A1 + A2, B1 + B2)
     assert comm.expand(commutator=True) == \
         Comm(A1, B1) + Comm(A1, B2) + \
         Comm(A2, B1) + Comm(A2, B2)
+    
