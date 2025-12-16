@@ -481,3 +481,19 @@ def test_issue_28559():
     simple_eq = f(R.a).diff(R.a)
     simple_result = simple_eq.simplify()
     assert simple_result == simple_eq
+
+
+def test_cartesian_rotation_transformation_equations():
+    alpha = symbols("alpha")
+    A = CoordSys3D("A")
+    B = A.orient_new_axis("B", alpha, A.k)
+    xa, ya, za = A.base_scalars()
+    xb, yb, zb = B.base_scalars()
+    assert B.transformation_from_parent() == Matrix([
+        xa * cos(alpha) + ya * sin(alpha),
+        -xa * sin(alpha) + ya * cos(alpha),
+        za])
+    assert B.transformation_to_parent() == (
+        xb * cos(alpha) - yb * sin(alpha),
+        xb * sin(alpha) + yb * cos(alpha),
+        zb)
