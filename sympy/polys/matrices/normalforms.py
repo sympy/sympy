@@ -213,8 +213,8 @@ def _smith_normal_decomp(m, domain, shape, full):
                     row[0], row[ind[0]] = row[ind[0]], row[0]
 
     # make the first row and column except m[0,0] zero
-    while (any(m[0][i] != zero for i in range(1, cols)) or
-           any(m[i][0] != zero for i in range(1, rows))):
+    while (any(m[0][i] != zero for i in range(1,cols)) or
+           any(m[i][0] != zero for i in range(1,rows))):
         clear_column()
         clear_row()
 
@@ -235,7 +235,7 @@ def _smith_normal_decomp(m, domain, shape, full):
     else:
         lower_right = [r[1:] for r in m[1:]]
         ret = _smith_normal_decomp(lower_right, domain,
-                                   shape=(rows - 1, cols - 1), full=full)
+                shape=(rows - 1, cols - 1), full=full)
         if full:
             invs, s_small, t_small = ret
             s2 = [[1] + [0]*(rows-1)] + [[0] + row for row in s_small]
@@ -606,8 +606,7 @@ def _hermite_normal_form_modulo_D(A, D):
 
     m, n = A.shape
     if n < m:
-        raise DMShapeError(
-            'Matrix must have at least as many columns as rows.')
+        raise DMShapeError('Matrix must have at least as many columns as rows.')
     A = A.to_list()
     k = n
     R = D
