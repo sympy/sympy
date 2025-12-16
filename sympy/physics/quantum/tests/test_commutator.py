@@ -92,3 +92,4 @@ def test_issue_28740():
         Comm(A1, B1) + Comm(A1, B2) + \
         Comm(A2, B1) + Comm(A2, B2)
     
+    
