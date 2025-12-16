@@ -153,3 +153,4 @@ def test_hermite_normal():
     raises(DMDomainError, lambda: hermite_normal_form(m))
     raises(DMDomainError, lambda: _hermite_normal_form(m))
     raises(DMDomainError, lambda: _hermite_normal_form_modulo_D(m, ZZ(1)))
+    

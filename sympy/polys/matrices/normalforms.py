@@ -697,3 +697,4 @@ def hermite_normal_form(A, *, D=None, check_rank=False):
         return _hermite_normal_form_modulo_D(A, D)
     else:
         return _hermite_normal_form(A)
+    
