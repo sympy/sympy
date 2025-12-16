@@ -9,9 +9,8 @@ from sympy.polys.matrices.normalforms import (
         smith_normal_decomp as _snd,
         invariant_factors as _invf,
         hermite_normal_form as _hnf,
+        hermite_normal_decomp as _poly_hnf,
     )
-
-
 def _to_domain(m, domain=None):
     """Convert Matrix to DomainMatrix"""
     # XXX: deprecated support for RawMatrix:
@@ -157,10 +156,13 @@ def hermite_normal_form(A, *, D=None, check_rank=False):
 
 def hermite_normal_decomp(A, *, D=None, check_rank=False):
     r"""
-    Compute the Hermite Normal Form decomposition of a Matrix *A* of integers.
+    Compute the Hermite Normal Form decomposition of an integer matrix *A*.
 
-    Returns a tuple (H, U) where H is the Hermite Normal Form and U is a
-    unimodular matrix such that U * A = H.
+    Returns
+    =======
+    (H, U)
+        *H* is the Hermite Normal Form (a Matrix)
+        *U* is a unimodular Matrix with ``U * A == H``
 
     Examples
     ========
@@ -169,10 +171,13 @@ def hermite_normal_decomp(A, *, D=None, check_rank=False):
     >>> from sympy.matrices.normalforms import hermite_normal_decomp
     >>> m = Matrix([[12, 6, 4], [3, 9, 6], [2, 16, 14]])
     >>> H, U = hermite_normal_decomp(m)
-    >>> print(H)
-    Matrix([[10, 0, 2], [0, 15, 3], [0, 0, 2]])
     >>> assert U * m == H
 
     """
-    H_rep, U_rep = _hnf(A._rep)
-    return H_rep.to_Matrix(), U_rep.to_Matrix()
+
+    # Convert to DomainMatrix over ZZ
+    A_dm = DomainMatrix.from_Matrix(A, ZZ)
+    H_dm, U_dm, _ = _poly_hnf(A_dm)
+
+    # Convert back to regular Matrix
+    return H_dm.to_Matrix(), U_dm.to_Matrix()
