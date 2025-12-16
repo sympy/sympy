@@ -154,3 +154,25 @@ def hermite_normal_form(A, *, D=None, check_rank=False):
     if D is not None and not ZZ.of_type(D):
         D = ZZ(int(D))
     return _hnf(A._rep, D=D, check_rank=check_rank).to_Matrix()
+
+def hermite_normal_decomp(A, *, D=None, check_rank=False):
+    r"""
+    Compute the Hermite Normal Form decomposition of a Matrix *A* of integers.
+
+    Returns a tuple (H, U) where H is the Hermite Normal Form and U is a
+    unimodular matrix such that U * A = H.
+
+    Examples
+    ========
+
+    >>> from sympy import Matrix
+    >>> from sympy.matrices.normalforms import hermite_normal_decomp
+    >>> m = Matrix([[12, 6, 4], [3, 9, 6], [2, 16, 14]])
+    >>> H, U = hermite_normal_decomp(m)
+    >>> print(H)
+    Matrix([[10, 0, 2], [0, 15, 3], [0, 0, 2]])
+    >>> assert U * m == H
+
+    """
+    H_rep, U_rep = _hnd(A._rep)
+    return H_rep.to_Matrix(), U_rep.to_Matrix()

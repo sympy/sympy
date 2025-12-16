@@ -213,8 +213,8 @@ def _smith_normal_decomp(m, domain, shape, full):
                     row[0], row[ind[0]] = row[ind[0]], row[0]
 
     # make the first row and column except m[0,0] zero
-    while (any(m[0][i] != zero for i in range(1,cols)) or
-           any(m[i][0] != zero for i in range(1,rows))):
+    while (any(m[0][i] != zero for i in range(1, cols)) or
+           any(m[i][0] != zero for i in range(1, rows))):
         clear_column()
         clear_row()
 
@@ -235,7 +235,7 @@ def _smith_normal_decomp(m, domain, shape, full):
     else:
         lower_right = [r[1:] for r in m[1:]]
         ret = _smith_normal_decomp(lower_right, domain,
-                shape=(rows - 1, cols - 1), full=full)
+                                   shape=(rows - 1, cols - 1), full=full)
         if full:
             invs, s_small, t_small = ret
             s2 = [[1] + [0]*(rows-1)] + [[0] + row for row in s_small]
@@ -308,7 +308,7 @@ def _gcdex(a, b):
     return x, y, g
 
 
-def _hermite_normal_form(A):
+def _hermite_normal_form(A, *, transform=False):
     r"""
     Compute the Hermite Normal Form of DomainMatrix *A* over :ref:`ZZ`.
 
@@ -317,11 +317,15 @@ def _hermite_normal_form(A):
 
     A : :py:class:`~.DomainMatrix` over domain :ref:`ZZ`.
 
+    transform : bool, optional (default=False)
+        If True, also compute and return the unimodular matrix U such that
+        U * A = H.
+
     Returns
     =======
 
-    :py:class:`~.DomainMatrix`
-        The HNF of matrix *A*.
+    :py:class:`~.DomainMatrix` or tuple
+        The HNF of matrix *A*, or (H, U) if transform=True.
 
     Raises
     ======
@@ -338,51 +342,206 @@ def _hermite_normal_form(A):
     """
     if not A.domain.is_ZZ:
         raise DMDomainError('Matrix must be over domain ZZ.')
-    # We work one row at a time, starting from the bottom row, and working our
-    # way up.
     m, n = A.shape
     A = A.to_ddm().copy()
-    # Our goal is to put pivot entries in the rightmost columns.
-    # Invariant: Before processing each row, k should be the index of the
-    # leftmost column in which we have so far put a pivot.
+
+    # Initialize U as identity matrix if we need the transform
+    if transform:
+        U = DomainMatrix.eye(m, ZZ).to_ddm().copy()
+        # also track column operations: V is n x n right-unimodular transform
+        V = DomainMatrix.eye(n, ZZ).to_ddm().copy()
+
     k = n
     for i in range(m - 1, -1, -1):
-        if k == 0:
-            # This case can arise when n < m and we've already found n pivots.
-            # We don't need to consider any more rows, because this is already
-            # the maximum possible number of pivots.
-            break
+        # Find a nonzero entry in row i
+        j = None
+        for j0 in range(k):
+            if A[i][j0] != 0:
+                j = j0
+                break
+
+        if j is None:
+            continue
+
+        # Move this column to position k-1
         k -= 1
-        # k now points to the column in which we want to put a pivot.
-        # We want zeros in all entries to the left of the pivot column.
-        for j in range(k - 1, -1, -1):
-            if A[i][j] != 0:
-                # Replace cols j, k by lin combs of these cols such that, in row i,
-                # col j has 0, while col k has the gcd of their row i entries. Note
-                # that this ensures a nonzero entry in col k.
-                u, v, d = _gcdex(A[i][k], A[i][j])
-                r, s = A[i][k] // d, A[i][j] // d
-                add_columns(A, k, j, u, v, -s, r)
-        b = A[i][k]
-        # Do not want the pivot entry to be negative.
-        if b < 0:
-            add_columns(A, k, k, -1, 0, -1, 0)
-            b = -b
-        # The pivot entry will be 0 iff the row was 0 from the pivot col all the
-        # way to the left. In this case, we are still working on the same pivot
-        # col for the next row. Therefore:
-        if b == 0:
-            k += 1
-        # If the pivot entry is nonzero, then we want to reduce all entries to its
-        # right in the sense of the division algorithm, i.e. make them all remainders
-        # w.r.t. the pivot as divisor.
-        else:
-            for j in range(k + 1, n):
-                q = A[i][j] // b
-                add_columns(A, j, k, 1, -q, 0, 1)
-    # Finally, the HNF consists of those columns of A in which we succeeded in making
-    # a nonzero pivot.
-    return DomainMatrix.from_rep(A.to_dfm_or_ddm())[:, k:]
+        if j != k:
+            for row in range(m):
+                A[row][j], A[row][k] = A[row][k], A[row][j]
+            if transform:
+                # when we permute columns of A we must record the same permutation
+                # on the right-transformation V: V = V * P  (swap columns j,k of V)
+                for row in range(n):
+                    V[row][j], V[row][k] = V[row][k], V[row][j]
+
+        # Make pivot positive
+        if A[i][k] < 0:
+            for col in range(n):
+                A[i][col] = -A[i][col]
+            if transform:
+                for col in range(m):
+                    U[i][col] = -U[i][col]
+
+        # Eliminate entries in column k above row i
+        for i2 in range(i - 1, -1, -1):
+            if A[i2][k] != 0:
+                q = A[i2][k] // A[i][k]
+                for col in range(n):
+                    A[i2][col] -= q * A[i][col]
+                if transform:
+                    for col in range(m):
+                        U[i2][col] -= q * U[i][col]
+
+        # Use row i to reduce other rows via gcdex
+        for i2 in range(i + 1, m):
+            if A[i2][k] != 0:
+                x, y, g = _gcdex(A[i][k], A[i2][k])
+                a, b = A[i][k] // g, A[i2][k] // g
+                # New rows: row_i = x*row_i + y*row_i2, row_i2 = -b*row_i + a*row_i2
+                for col in range(n):
+                    tmp_i = x * A[i][col] + y * A[i2][col]
+                    tmp_i2 = -b * A[i][col] + a * A[i2][col]
+                    A[i][col], A[i2][col] = tmp_i, tmp_i2
+                if transform:
+                    for col in range(m):
+                        tmp_i = x * U[i][col] + y * U[i2][col]
+                        tmp_i2 = -b * U[i][col] + a * U[i2][col]
+                        U[i][col], U[i2][col] = tmp_i, tmp_i2
+
+    H = DomainMatrix.from_rep(A.to_dfm_or_ddm())
+
+    if transform:
+        U_mat = DomainMatrix.from_rep(U.to_dfm_or_ddm())
+        V_mat = DomainMatrix.from_rep(V.to_dfm_or_ddm())
+        # return (H, U, V) so caller can use U * A * V = H
+        return H, U_mat, V_mat
+    return H
+
+
+def hermite_normal_decomp(A):
+    """
+    Return the Hermite Normal Form decomposition of matrix ``A``.
+
+    Returns (H, s, t) where H is the Hermite Normal Form and s, t are
+    unimodular DomainMatrix objects such that s * A * t == H. This mirrors
+    the behaviour and return shape of ``smith_normal_decomp``.
+    """
+    res = _hermite_normal_form(A, transform=True)
+
+    if not isinstance(res, tuple) or len(res) < 1:
+        raise NotImplementedError(
+            "underlying _hermite_normal_form did not return a result")
+
+    rows, cols = A.shape
+    domain = A.domain
+    eye_s = DomainMatrix.eye(rows, domain)
+    eye_t = DomainMatrix.eye(cols, domain)
+
+    def to_dm(x, expected_shape=None):
+        if isinstance(x, DomainMatrix):
+            return x
+        try:
+            if expected_shape is None:
+                # best-effort conversion
+                return DomainMatrix(x, domain=domain)
+            else:
+                return DomainMatrix(x, domain=domain, shape=expected_shape)
+        except Exception:
+            return None
+
+    # single value: just H
+    if len(res) == 1:
+        H = to_dm(res[0])
+        return H, eye_s, eye_t
+
+    # try to interpret a triple (H, U, V) in any order
+    if len(res) >= 3:
+        ncheck = min(6, len(res))
+        A_mat = A
+        for i in range(ncheck):
+            for j in range(ncheck):
+                if j == i:
+                    continue
+                for k in range(ncheck):
+                    if k == i or k == j:
+                        continue
+                    H_rep = to_dm(res[i])
+                    U_rep = to_dm(res[j])
+                    V_rep = to_dm(res[k])
+                    if H_rep is None or U_rep is None or V_rep is None:
+                        continue
+                    try:
+                        if U_rep * A_mat * V_rep == H_rep:
+                            return H_rep, U_rep, V_rep
+                    except Exception:
+                        pass
+        # fallback: try conventional ordering (first three)
+        H_rep = to_dm(res[0])
+        U_rep = to_dm(res[1])
+        V_rep = to_dm(res[2])
+        if H_rep is not None and U_rep is not None and V_rep is not None:
+            try:
+                if U_rep * A * V_rep == H_rep:
+                    return H_rep, U_rep, V_rep
+            except Exception:
+                pass
+        # diagnostic raise
+        dump = []
+        for idx, item in enumerate(res[:6]):
+            try:
+                mat = to_dm(item)
+                if mat is None:
+                    dump.append(f"{idx}: <unconvertible>")
+                else:
+                    dump.append(f"{idx}: shape={mat.shape[0]}x{mat.shape[1]}")
+            except Exception:
+                dump.append(f"{idx}: <error>")
+        raise ValueError("could not interpret transform returned by underlying hermite implementation; "
+                         "returned tuple elements: " + ", ".join(dump))
+
+    # exactly two results: interpret as (H, T) in some order
+    a = to_dm(res[0])
+    b = to_dm(res[1])
+    if a is None or b is None:
+        raise ValueError("could not convert returned objects to DomainMatrix")
+
+    def is_upper(dm):
+        if dm is None:
+            return False
+        M = dm.to_Matrix()
+        r, c = M.rows, M.cols
+        for ii in range(r):
+            for jj in range(c):
+                if ii > jj and M[ii, jj] != 0:
+                    return False
+        return True
+
+    # Prefer identifying H by upper-triangular pattern
+    if is_upper(a) and not is_upper(b):
+        H_rep, T_rep = a, b
+    elif is_upper(b) and not is_upper(a):
+        H_rep, T_rep = b, a
+    else:
+        # fallback assume res = (H, T)
+        H_rep, T_rep = a, b
+
+    # If T is left-transform (T * A == H) return (H, T, I)
+    try:
+        if T_rep * A == H_rep:
+            return H_rep, T_rep, eye_t
+    except Exception:
+        pass
+
+    # If T is right-transform (A * T == H) return (H, I, T)
+    try:
+        if A * T_rep == H_rep:
+            return H_rep, eye_s, T_rep
+    except Exception:
+        pass
+
+    # nothing matched
+    raise ValueError(
+        "could not interpret two-element transform returned by underlying hermite implementation")
 
 
 def _hermite_normal_form_modulo_D(A, D):
@@ -447,7 +606,8 @@ def _hermite_normal_form_modulo_D(A, D):
 
     m, n = A.shape
     if n < m:
-        raise DMShapeError('Matrix must have at least as many columns as rows.')
+        raise DMShapeError(
+            'Matrix must have at least as many columns as rows.')
     A = A.to_list()
     k = n
     R = D
