@@ -174,5 +174,5 @@ def hermite_normal_decomp(A, *, D=None, check_rank=False):
     >>> assert U * m == H
 
     """
-    H_rep, U_rep = _hnd(A._rep)
+    H_rep, U_rep = _hnf(A._rep)
     return H_rep.to_Matrix(), U_rep.to_Matrix()
