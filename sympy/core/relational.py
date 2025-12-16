@@ -428,15 +428,112 @@ class Relational(Boolean, EvalfMixin):
     def _eval_simplify(self, **kwargs):
         from .add import Add
         from .expr import Expr
+        from .symbol import Dummy
+        from .mul import Mul
+        def _dummy_mask_relational(rel):
+            lhs, rhs = rel.lhs, rel.rhs
+
+            if not isinstance(lhs, Expr) or not isinstance(rhs, Expr):
+                return None, None
+
+
+            if lhs.func != rhs.func or not (lhs.is_Add or lhs.is_Mul):
+                return None, None
+
+            mapping = {}
+
+            def mask_single_arg(arg):
+                """Mask a single argument, handling Mul specially"""
+                if arg.is_number:
+                    return arg
+
+                if arg.is_Mul:
+                    # For Mul, mask each non-numeric factor separately
+                    new_factors = []
+                    for factor in arg.args:
+                        if factor.is_number:
+                            new_factors.append(factor)
+                        else:
+                            # Check if we already have a dummy for this factor
+                            found = False
+                            for d, orig in mapping.items():
+                                if orig == factor:
+                                    new_factors.append(d)
+                                    found = True
+                                    break
+                            if not found:
+                                d = Dummy()
+                                mapping[d] = factor
+                                new_factors.append(d)
+                    return Mul(*new_factors)
+                else:
+                    # For non-Mul, mask the whole expression
+                    found = False
+                    for d, orig in mapping.items():
+                        if orig == arg:
+                            return d
+                    if not found:
+                        d = Dummy()
+                        mapping[d] = arg
+                        return d
+
+            def mask(expr):
+                if expr.is_Add:
+                    new_args = []
+                    for a in expr.args:
+                        new_args.append(mask_single_arg(a))
+                    return Add(*new_args) if new_args else S.Zero
+                elif expr.is_Mul:
+                    new_args = []
+                    for a in expr.args:
+                        if a.is_number:
+                            new_args.append(a)
+                        else:
+                            # Check if we already have a dummy for this factor
+                            found = False
+                            for d, orig in mapping.items():
+                                if orig == a:
+                                    new_args.append(d)
+                                    found = True
+                                    break
+                            if not found:
+                                d = Dummy()
+                                mapping[d] = a
+                                new_args.append(d)
+                    return Mul(*new_args) if new_args else S.One
+                return expr
+
+            masked_lhs = mask(lhs)
+            masked_rhs = mask(rhs)
+            masked_rel = rel.func(masked_lhs, masked_rhs)
+
+            def unmask(rel2):
+                if rel2 is S.true or rel2 is S.false:
+                    return rel2
+                if not isinstance(rel2, Relational):
+                    return None
+                lhs2 = rel2.lhs
+                rhs2 = rel2.rhs
+                for d, orig in mapping.items():
+                    lhs2 = lhs2.subs(d, orig)
+                    rhs2 = rhs2.subs(d, orig)
+                return rel2.func(lhs2, rhs2)
+
+            return masked_rel, unmask
         r = self
         r = r.func(*[i.simplify(**kwargs) for i in r.args])
+        masked_rel = None
+        unmask_func = None
         if r.is_Relational:
+            masked_rel, unmask_func = _dummy_mask_relational(r)
+            if masked_rel is not None:
+                r = masked_rel
             if not isinstance(r.lhs, Expr) or not isinstance(r.rhs, Expr):
+                if unmask_func is not None:
+                    result = unmask_func(r)
+                    if result is not None:
+                        return result
                 return r
-            lhs_c, lhs_t = r.lhs.as_coeff_Add()
-            rhs_c, rhs_t = r.rhs.as_coeff_Add()
-            if lhs_c != 0 and lhs_c == rhs_c:
-                r = r.func(r.lhs - lhs_c, r.rhs - rhs_c)
             dif = r.lhs - r.rhs
             # replace dif with a valid Number that will
             # allow a definitive comparison with 0
@@ -511,7 +608,33 @@ class Relational(Boolean, EvalfMixin):
                         r = r.func(constant, S.Zero)
                 except ValueError:
                     pass
-        # Did we get a simplified result?
+        if unmask_func is not None:
+            result = unmask_func(r)
+            if result is not None:
+                r = result
+                # After unmasking, we may need to simplify again
+                # For example: Ge(y, -y) should become Ge(y, 0)
+                if r.is_Relational and isinstance(r.lhs, Expr) and isinstance(r.rhs, Expr):
+                    # Don't mask again, just do the regular simplification
+                    dif = r.lhs - r.rhs
+                    r = r.canonical
+                    # Check if we can simplify further
+                    free = list(filter(lambda x: x.is_real is not False, r.free_symbols))
+                    if len(free) == 1:
+                        try:
+                            from sympy.solvers.solveset import linear_coeffs
+                            x_var = free.pop()
+                            dif = r.lhs - r.rhs
+                            m, b = linear_coeffs(dif, x_var)
+                            if m.is_zero is False:
+                                if m.is_negative:
+                                    r = r.func(-b / m, x_var)
+                                else:
+                                    r = r.func(x_var, -b / m)
+                            else:
+                                r = r.func(b, S.Zero)
+                        except ValueError:
+                            pass
         r = r.canonical
         measure = kwargs['measure']
         if measure(r) < kwargs['ratio'] * measure(self):

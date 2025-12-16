@@ -27,7 +27,7 @@ from sympy.core.relational import (Relational, Equality, Unequality,
                                    StrictLessThan, Rel, Eq, Lt, Le,
                                    Gt, Ge, Ne, is_le, is_gt, is_ge, is_lt, is_eq, is_neq)
 from sympy.sets.sets import Interval, FiniteSet
-
+from sympy import Matrix
 from itertools import combinations
 
 x, y, z, t = symbols('x,y,z,t')
@@ -807,6 +807,10 @@ def test_simplify_relational():
     assert simplify(m*x + 2*m*y > 1) is S.false
     assert simplify(m*x + y > 1 + y) is S.false
 
+    # Test simplification of equations/inequalities involving equations other than linear polynomials.
+    assert simplify(Eq(91*sin(x) + 40, 91*sin(y) + 40)) == Eq(sin(x), sin(y))
+    assert simplify(Lt(-2*sin(x),-2*sin(y))) == Gt(sin(x), sin(y))
+    assert simplify(Eq(x**9 + pi, y**9 + pi)) == Eq(x**9, y**9)
 
 def test_equals():
     w, x, y, z = symbols('w:z')
