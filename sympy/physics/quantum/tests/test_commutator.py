@@ -79,3 +79,16 @@ def test_eval_commutator():
     assert Comm(F, T**2).expand(commutator=True).doit() == -2*T
     assert Comm(T**2, F).expand(commutator=True).doit() == 2*T
     assert Comm(T**2, F**3).expand(commutator=True).doit() == 2*F*T*F + 2*F**2*T + 2*T*F**2
+
+
+def test_issue_28740():
+    A1 = Operator('A1')
+    A2 = Operator('A2')
+    B1 = Operator('B1')
+    B2 = Operator('B2')
+
+    # This used to fail (return 2 terms instead of 4)
+    comm = Comm(A1 + A2, B1 + B2)
+    assert comm.expand(commutator=True) == \
+        Comm(A1, B1) + Comm(A1, B2) + \
+        Comm(A2, B1) + Comm(A2, B2)
