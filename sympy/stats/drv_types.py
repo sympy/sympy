@@ -212,9 +212,12 @@ class GeometricDistribution(SingleDiscreteDistribution):
         _value_check((0 < p, p <= 1), "p must be between 0 and 1")
 
     def pdf(self, k):
-        return Piecewise(
-            ((1 - self.p) ** (k - 1) * self.p, self.set.contains(k)), (0, True)
-        )
+        p = self.p
+        return (1 - p) ** (k - 1) * p
+
+    def __call__(self, *args):
+        (k,) = args
+        return Piecewise((self.pdf(k), self.set.as_relational(k)), (0, True))
 
     def _characteristic_function(self, t):
         p = self.p
@@ -254,7 +257,7 @@ def Geometric(name, p):
     >>> from sympy import Symbol, S
 
     >>> p = S.One / 5
-    >>> z = Symbol("z")
+    >>> z = Symbol("z", integer=True, positive=True)
 
     >>> X = Geometric("x", p)
 
