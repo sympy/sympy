@@ -7,18 +7,16 @@ from typing import Callable, TYPE_CHECKING, Any, overload, Type
 
 import math
 
-import mpmath.libmp as libmp
-from mpmath import (
-    make_mpc, make_mpf, mp, mpc, mpf, nsum, quadts, quadosc, workprec)
-from mpmath import inf as mpmath_inf
-from mpmath.libmp import (from_int, from_man_exp, from_rational, fhalf,
-                          fnan, finf, fninf, fnone, fone, fzero, mpf_abs, mpf_add,
-                          mpf_atan, mpf_atan2, mpf_cmp, mpf_cos, mpf_e, mpf_exp, mpf_log, mpf_lt,
-                          mpf_mul, mpf_neg, mpf_pi, mpf_pow, mpf_pow_int, mpf_shift, mpf_sin,
-                          mpf_sqrt, normalize, round_nearest, to_int, to_str, mpf_tan)
-from mpmath.libmp.backend import MPZ
-from mpmath.libmp.libmpc import _infs_nan
-from mpmath.libmp.libmpf import dps_to_prec, prec_to_dps
+from sympy.external.mpmath import (
+    inf as mpmath_inf, make_mpf, make_mpc, mpc, mpf,
+    MPZ, from_int, from_man_exp, from_rational, fhalf, fnan, finf, fninf,
+    fnone, fone, fzero, mpf_abs, mpf_add, mpf_atan, mpf_atan2, mpf_cmp,
+    mpf_cos, mpf_e, mpf_exp, mpf_log, mpf_lt, mpf_mul, mpf_neg, mpf_pi,
+    mpf_pow, mpf_pow_int, mpf_shift, mpf_sin, mpf_sqrt, normalize,
+    round_nearest, to_int, to_str, mpf_tan, mpc_abs, mpc_pow, mpc_pow_mpf,
+    mpc_pow_int, mpc_sqrt, mpc_exp, dps_to_prec, prec_to_dps,
+    local_workprec,
+)
 
 from .sympify import sympify
 from .singleton import S
@@ -36,6 +34,7 @@ if TYPE_CHECKING:
     from sympy.integrals.integrals import Integral
     from sympy.concrete.summations import Sum
     from sympy.concrete.products import Product
+    from sympy.external.mpmath import MPContext
     from sympy.functions.elementary.exponential import exp, log
     from sympy.functions.elementary.complexes import Abs, re, im
     from sympy.functions.elementary.integers import ceiling, floor
@@ -56,6 +55,7 @@ def bitcount(n):
 # passing these to mpmath functions or returning them in final results.
 INF = float(mpmath_inf)
 MINUS_INF = float(-mpmath_inf)
+_infs_nan = (finf, fninf, fnan)
 
 # ~= 100 digits. Real men set this to INF.
 DEFAULT_MAXPREC = 333
@@ -274,7 +274,7 @@ def get_abs(expr: Expr, prec: int, options: OPT_DICT) -> TMP_RES:
             return abs_expr, None, acc, None
         else:
             if 'subs' in options:
-                return libmp.mpc_abs((re, im), prec), None, re_acc, None
+                return mpc_abs((re, im), prec), None, re_acc, None
             return abs(expr), None, prec, None
     elif re:
         return mpf_abs(re), None, re_acc, None
@@ -800,7 +800,7 @@ def evalf_pow(v: 'Pow', prec: int, options) -> TMP_RES:
                 return S.ComplexInfinity
             return None, None, None, None
         # General complex number to arbitrary integer power
-        re, im = libmp.mpc_pow_int((re, im), p, prec)
+        re, im = mpc_pow_int((re, im), p, prec)
         # Assumes full accuracy in input
         return finalize_complex(re, im, target_prec)
 
@@ -817,7 +817,7 @@ def evalf_pow(v: 'Pow', prec: int, options) -> TMP_RES:
         xre, xim, _, _ = result
         # General complex square root
         if xim:
-            re, im = libmp.mpc_sqrt((xre or fzero, xim), prec)
+            re, im = mpc_sqrt((xre or fzero, xim), prec)
             return finalize_complex(re, im, prec)
         if not xre:
             return None, None, None, None
@@ -848,7 +848,7 @@ def evalf_pow(v: 'Pow', prec: int, options) -> TMP_RES:
     # Pure exponential function; no need to evalf the base
     if base is S.Exp1:
         if yim:
-            re, im = libmp.mpc_exp((yre or fzero, yim), prec)
+            re, im = mpc_exp((yre or fzero, yim), prec)
             return finalize_complex(re, im, target_prec)
         return mpf_exp(yre, target_prec), None, target_prec, None
 
@@ -863,17 +863,17 @@ def evalf_pow(v: 'Pow', prec: int, options) -> TMP_RES:
 
     # (real ** complex) or (complex ** complex)
     if yim:
-        re, im = libmp.mpc_pow(
+        re, im = mpc_pow(
             (xre or fzero, xim or fzero), (yre or fzero, yim),
             target_prec)
         return finalize_complex(re, im, target_prec)
     # complex ** real
     if xim:
-        re, im = libmp.mpc_pow_mpf((xre or fzero, xim), yre, target_prec)
+        re, im = mpc_pow_mpf((xre or fzero, xim), yre, target_prec)
         return finalize_complex(re, im, target_prec)
     # negative ** real
     elif mpf_lt(xre, fzero):
-        re, im = libmp.mpc_pow_mpf((xre, fzero), yre, target_prec)
+        re, im = mpc_pow_mpf((xre, fzero), yre, target_prec)
         return finalize_complex(re, im, target_prec)
     # positive ** real
     else:
@@ -1058,7 +1058,9 @@ def evalf_alg_num(a: 'AlgebraicNumber', prec: int, options: OPT_DICT) -> TMP_RES
 #----------------------------------------------------------------------------#
 
 
-def as_mpmath(x: Any, prec: int, options: OPT_DICT) -> mpc | mpf:
+def as_mpmath(
+    x: Any, prec: int, options: OPT_DICT, ctx: MPContext | None = None
+) -> mpc | mpf:
     from .numbers import Infinity, NegativeInfinity, Zero
     x = sympify(x)
     if isinstance(x, Zero) or x == 0.0:
@@ -1069,7 +1071,7 @@ def as_mpmath(x: Any, prec: int, options: OPT_DICT) -> mpc | mpf:
         return mpf('-inf')
     # XXX
     result = evalf(x, prec, options)
-    return quad_to_mpmath(result)
+    return quad_to_mpmath(result, ctx)
 
 
 def do_integral(expr: 'Integral', prec: int, options: OPT_DICT) -> TMP_RES:
@@ -1090,9 +1092,9 @@ def do_integral(expr: 'Integral', prec: int, options: OPT_DICT) -> TMP_RES:
     oldmaxprec = options.get('maxprec', DEFAULT_MAXPREC)
     options['maxprec'] = min(oldmaxprec, 2*prec)
 
-    with workprec(prec + 5):
-        xlow = as_mpmath(xlow, prec + 15, options)
-        xhigh = as_mpmath(xhigh, prec + 15, options)
+    with local_workprec(prec + 5) as ctx:
+        xlow = as_mpmath(xlow, prec + 15, options, ctx)
+        xhigh = as_mpmath(xhigh, prec + 15, options, ctx)
 
         # Integration is like summation, and we can phone home from
         # the integrand function to update accuracy summation style
@@ -1109,7 +1111,7 @@ def do_integral(expr: 'Integral', prec: int, options: OPT_DICT) -> TMP_RES:
 
         def f(t: Expr) -> mpc | mpf:
             nonlocal max_real_term, max_imag_term
-            re, im, re_acc, im_acc = evalf(func, mp.prec, {'subs': {x: t}})
+            re, im, re_acc, im_acc = evalf(func, ctx.prec, {'subs': {x: t}})
 
             have_part[0] = re or have_part[0]
             have_part[1] = im or have_part[1]
@@ -1118,8 +1120,8 @@ def do_integral(expr: 'Integral', prec: int, options: OPT_DICT) -> TMP_RES:
             max_imag_term = max(max_imag_term, fastlog(im))
 
             if im:
-                return mpc(re or fzero, im)
-            return mpf(re or fzero)
+                return ctx.mpc(re or fzero, im)
+            return ctx.mpf(re or fzero)
 
         if options.get('quad') == 'osc':
             A = Wild('A', exclude=[x])
@@ -1131,12 +1133,12 @@ def do_integral(expr: 'Integral', prec: int, options: OPT_DICT) -> TMP_RES:
             if not m:
                 raise ValueError("An integrand of the form sin(A*x+B)*f(x) "
                   "or cos(A*x+B)*f(x) is required for oscillatory quadrature")
-            period = as_mpmath(2*S.Pi/m[A], prec + 15, options)
-            result = quadosc(f, [xlow, xhigh], period=period)
+            period = as_mpmath(2*S.Pi/m[A], prec + 15, options, ctx)
+            result = ctx.quadosc(f, [xlow, xhigh], period=period)
             # XXX: quadosc does not do error detection yet
             quadrature_error = MINUS_INF
         else:
-            result, quadrature_err = quadts(f, [xlow, xhigh], error=1)
+            result, quadrature_err = ctx.quadts(f, [xlow, xhigh], error=1)
             quadrature_error = fastlog(quadrature_err._mpf_)
 
     options['maxprec'] = oldmaxprec
@@ -1255,61 +1257,63 @@ def hypsum(expr: Expr, n: Symbol, start: int, prec: int) -> mpf:
         raise NotImplementedError("a hypergeometric series is required")
     num, den = hs.as_numer_denom()
 
-    func1 = lambdify(n, num)
-    func2 = lambdify(n, den)
+    with local_workprec(prec) as ctx:
 
-    h, g, p = check_convergence(num, den, n)
+        func1 = lambdify(n, num, modules=ctx)
+        func2 = lambdify(n, den, modules=ctx)
 
-    if h < 0:
-        raise ValueError("Sum diverges like (n!)^%i" % (-h))
+        h, g, p = check_convergence(num, den, n)
 
-    eterm = expr.subs(n, 0)
-    if not eterm.is_Rational:
-        raise NotImplementedError("Non rational term functionality is not implemented.")
+        if h < 0:
+            raise ValueError("Sum diverges like (n!)^%i" % (-h))
 
-    term: Rational = eterm # type: ignore
+        eterm = expr.subs(n, 0)
+        if not eterm.is_Rational:
+            raise NotImplementedError("Non rational term functionality is not implemented.")
 
-    # Direct summation if geometric or faster
-    if h > 0 or (h == 0 and abs(g) > 1):
-        term = (MPZ(term.p) << prec) // term.q
-        s = term
-        k = 1
-        while abs(term) > 5:
-            term *= MPZ(func1(k - 1))
-            term //= MPZ(func2(k - 1))
-            s += term
-            k += 1
-        return from_man_exp(s, -prec)
-    else:
-        alt = g < 0
-        if abs(g) < 1:
-            raise ValueError("Sum diverges like (%i)^n" % abs(1/g))
-        if p < 1 or (equal_valued(p, 1) and not alt):
-            raise ValueError("Sum diverges like n^%i" % (-p))
-        # We have polynomial convergence: use Richardson extrapolation
-        vold = None
-        ndig = prec_to_dps(prec)
-        while True:
-            # Need to use at least quad precision because a lot of cancellation
-            # might occur in the extrapolation process; we check the answer to
-            # make sure that the desired precision has been reached, too.
-            prec2 = 4*prec
-            term0 = (MPZ(term.p) << prec2) // term.q
+        term: Rational = eterm # type: ignore
 
-            def summand(k, _term=[term0]):
-                if k:
-                    k = int(k)
-                    _term[0] *= MPZ(func1(k - 1))
-                    _term[0] //= MPZ(func2(k - 1))
-                return make_mpf(from_man_exp(_term[0], -prec2))
+        # Direct summation if geometric or faster
+        if h > 0 or (h == 0 and abs(g) > 1):
+            term = (MPZ(term.p) << prec) // term.q
+            s = term
+            k = 1
+            while abs(term) > 5:
+                term *= MPZ(func1(k - 1))
+                term //= MPZ(func2(k - 1))
+                s += term
+                k += 1
+            return from_man_exp(s, -prec)
+        else:
+            alt = g < 0
+            if abs(g) < 1:
+                raise ValueError("Sum diverges like (%i)^n" % abs(1/g))
+            if p < 1 or (equal_valued(p, 1) and not alt):
+                raise ValueError("Sum diverges like n^%i" % (-p))
+            # We have polynomial convergence: use Richardson extrapolation
+            vold = None
+            ndig = prec_to_dps(prec)
+            while True:
+                # Need to use at least quad precision because a lot of cancellation
+                # might occur in the extrapolation process; we check the answer to
+                # make sure that the desired precision has been reached, too.
+                prec2 = 4*prec
+                term0 = (MPZ(term.p) << prec2) // term.q
 
-            with workprec(prec):
-                v = nsum(summand, [0, mpmath_inf], method='richardson')
-            vf = Float(v, ndig)
-            if vold is not None and vold == vf:
-                break
-            prec += prec  # double precision each time
-            vold = vf
+                def summand(k, _term=[term0]):
+                    if k:
+                        k = int(k)
+                        _term[0] *= MPZ(func1(k - 1))
+                        _term[0] //= MPZ(func2(k - 1))
+                    return ctx.make_mpf(from_man_exp(_term[0], -prec2))
+
+                ctx.prec = prec
+                v = ctx.nsum(summand, [0, mpmath_inf], method='richardson')
+                vf = Float(v, ndig)
+                if vold is not None and vold == vf:
+                    break
+                prec += prec  # double precision each time
+                vold = vf
 
         return v._mpf_
 

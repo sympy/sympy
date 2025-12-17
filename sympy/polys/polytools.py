@@ -63,9 +63,7 @@ from sympy.utilities.iterables import iterable, sift
 
 # Required to avoid errors
 import sympy.polys
-
-import mpmath
-from mpmath.libmp.libhyper import NoConvergence
+from sympy.external.mpmath import local_workdps, NoConvergence
 
 
 if TYPE_CHECKING:
@@ -3739,42 +3737,31 @@ class Poly(Basic):
             fac = ilcm(*denoms)
             coeffs = [int(coeff*fac) for coeff in f.all_coeffs()]
         else:
-            coeffs = [coeff.evalf(n=n).as_real_imag()
-                    for coeff in f.all_coeffs()]
-            with mpmath.workdps(n):
+            coeffs = [coeff.evalf(n=n).as_real_imag() for coeff in f.all_coeffs()]
+            with local_workdps(n) as ctx:
                 try:
-                    coeffs = [mpmath.mpc(*coeff) for coeff in coeffs]
+                    coeffs = [ctx.mpc(*coeff) for coeff in coeffs]
                 except TypeError:
-                    raise DomainError("Numerical domain expected, got %s" % \
-                            f.rep.dom)
-
-        dps = mpmath.mp.dps
-        mpmath.mp.dps = n
+                    raise DomainError("Numerical domain expected, got %s" % f.rep.dom)
 
         from sympy.functions.elementary.complexes import sign
-        try:
-            # We need to add extra precision to guard against losing accuracy.
-            # 10 times the degree of the polynomial seems to work well.
-            roots = mpmath.polyroots(coeffs, maxsteps=maxsteps,
-                    cleanup=cleanup, error=False, extraprec=f.degree()*10)
-
-            # Mpmath puts real roots first, then complex ones (as does all_roots)
-            # so we make sure this convention holds here, too.
-            roots = list(map(sympify,
-                sorted(roots, key=lambda r: (1 if r.imag else 0, r.real, abs(r.imag), sign(r.imag)))))
-        except NoConvergence:
+        opts = {'maxsteps': maxsteps, 'cleanup': cleanup, 'error': False}
+        for prec in [f.degree()*10, f.degree()*15]:
             try:
-                # If roots did not converge try again with more extra precision.
-                roots = mpmath.polyroots(coeffs, maxsteps=maxsteps,
-                    cleanup=cleanup, error=False, extraprec=f.degree()*15)
-                roots = list(map(sympify,
-                    sorted(roots, key=lambda r: (1 if r.imag else 0, r.real, abs(r.imag), sign(r.imag)))))
+                with local_workdps(n) as ctx:
+                    roots = ctx.polyroots(coeffs, **opts, extraprec=prec)
+                    # Mpmath puts real roots first, then complex ones (as does
+                    # all_roots) so we make sure this convention holds here,
+                    # too.
+                    key = lambda r: (1 if r.imag else 0, r.real, abs(r.imag), sign(r.imag))
+                    roots = [sympify(r) for r in sorted(roots, key=key)]
+                    break
             except NoConvergence:
-                raise NoConvergence(
-                    'convergence to root failed; try n < %s or maxsteps > %s' % (
-                    n, maxsteps))
-        finally:
-            mpmath.mp.dps = dps
+                continue
+        else:
+            msg = 'convergence to root failed; try n < %s or maxsteps > %s'
+            raise NoConvergence(msg % (n, maxsteps))
+
 
         return roots
 

@@ -18,6 +18,7 @@ technical implementation details, and opinionated recommendations.
    gotchas.rst
    solve_output.rst
    modules/physics/index.rst
+   modules/matrices/matrixderivatives.rst
    special_topics/index.rst
    active-deprecations.md
    glossary.md

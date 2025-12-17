@@ -21,6 +21,7 @@ from .ntheory import (
     gcdext as python_gcdext,
     is_square as python_is_square,
     invert as python_invert,
+    fibonacci as python_fibonacci,
     legendre as python_legendre,
     jacobi as python_jacobi,
     kronecker as python_kronecker,
@@ -72,6 +73,7 @@ __all__ = [
     'lcm',
     'gcdext',
     'invert',
+    'fibonacci',
     'legendre',
     'jacobi',
     'kronecker',
@@ -310,6 +312,7 @@ if TYPE_CHECKING:
     def remove(x: MPZ | int, y: MPZ | int) -> tuple[MPZ, MPZ]: ...
     def iroot(x: MPZ | int, n: int) -> tuple[MPZ, bool]: ...
 
+    def fibonacci(x: MPZ | int) -> MPZ: ...
     def jacobi(x: MPZ | int, y: MPZ | int) -> int: ...
     def legendre(x: MPZ | int, y: MPZ | int) -> int: ...
     def kronecker(x: MPZ | int, y: MPZ | int) -> int: ...
@@ -351,6 +354,7 @@ elif _SYMPY_GROUND_TYPES == 'gmpy':
     lcm = gmpy.lcm
     gcdext = gmpy.gcdext
     invert = gmpy.invert
+    fibonacci = gmpy.fib
     legendre = gmpy.legendre
     jacobi = gmpy.jacobi
     kronecker = gmpy.kronecker
@@ -389,6 +393,7 @@ elif _SYMPY_GROUND_TYPES == 'flint':
     bit_scan1 = python_bit_scan1
     bit_scan0 = python_bit_scan0
     remove = python_remove
+    fibonacci = flint.fmpz.fib_ui
     factorial = python_factorial
 
     def sqrt(x):
@@ -458,6 +463,7 @@ elif _SYMPY_GROUND_TYPES == 'python':
     lcm = python_lcm
     gcdext = python_gcdext
     invert = python_invert
+    fibonacci = python_fibonacci
     legendre = python_legendre
     jacobi = python_jacobi
     kronecker = python_kronecker

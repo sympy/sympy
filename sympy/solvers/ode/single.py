@@ -2677,7 +2677,7 @@ class SecondLinearBessel(SingleODESolver):
     References
     ==========
 
-    https://math24.net/bessel-differential-equation.html
+    https://web.archive.org/web/20250516234946/https://math24.net/bessel-differential-equation.html
 
     """
     hint = "2nd_linear_bessel"
