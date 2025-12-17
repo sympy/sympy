@@ -196,3 +196,12 @@ def test_check_dimensions_error_message():
     with raises(ValueError) as excinfo:
         check_dimensions(meter + second)
     assert str(excinfo.value) == "addends have incompatible dimensions: (((Dimension(length, L), 1),), ((Dimension(time, T), 1),))"
+
+def test_convert_to_roundtrip():
+    # Test round-trip consistency: converting to another unit and back should return original
+    assert convert_to(convert_to(5*meter, centimeter), meter) == 5*meter
+    assert convert_to(convert_to(10*kilometer, meter), kilometer) == 10*kilometer
+    assert convert_to(convert_to(2*hour, second), hour) == 2*hour
+    assert convert_to(convert_to(mile, kilometer), mile) == mile
+    assert convert_to(convert_to(3*kilogram, gram), kilogram) == 3*kilogram
+    assert convert_to(convert_to(speed_of_light, meter/second), speed_of_light) == speed_of_light
