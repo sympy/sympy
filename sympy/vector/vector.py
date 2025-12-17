@@ -554,7 +554,7 @@ class VectorZero(BasisDependentZero, Vector):
         return obj
 
 
-class Cross(Expr):
+class Cross(Vector):
     """
     Represents unevaluated Cross product.
 
