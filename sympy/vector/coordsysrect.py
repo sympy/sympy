@@ -248,6 +248,30 @@ class CoordSys3D(Basic):
         obj._parent_rotation_matrix = rotation_matrix
         obj._origin = origin
 
+        # compute the transformation matrix from this coordinate system
+        # to the parent
+        if parent is not None:
+            u = (x1, x2, x3)
+            X = Matrix(obj._transformation_lambda(*u))
+            h = obj._lame_coefficients
+            J = X.jacobian(u)
+
+            # detects coordinate systems like spherical/cylindrical,
+            # where the Jacobian depends on the position
+            is_curvilinear = len(J.atoms(BaseScalar)) > 0
+            if is_curvilinear:
+                # normalized jacobian
+                J = Matrix([(J.col(i) / h[i]).T for i in range(3)]).T
+
+            T_to_parent = J
+        else:
+            is_curvilinear = False
+            T_to_parent = eye(3)
+
+        obj._transformation_matrix_to_parent = T_to_parent
+        obj._is_cartesian = (obj._lame_coefficients == (S.One, S.One, S.One))
+        obj._is_curvilinear = is_curvilinear
+
         # Return the instance
         return obj
 
@@ -485,11 +509,21 @@ class CoordSys3D(Basic):
 
         A SymPy Matrix is returned.
 
+        Note that rotation_matrix only consider pure rotations between
+        Cartesian systems. It doesn't account for changes in base vectors,
+        like curvilinear to Cartesian. Use transformation_matrix if those
+        are important.
+
         Parameters
         ==========
 
         other : CoordSys3D
             The system which the DCM is generated to.
+
+        See Also
+        ========
+
+        CoordSys3D.transformation_matrix
 
         Examples
         ========
@@ -524,6 +558,91 @@ class CoordSys3D(Basic):
             result *= path[i]._parent_rotation_matrix
         for i in range(rootindex + 1, len(path)):
             result *= path[i]._parent_rotation_matrix.T
+        return result
+
+    def transformation_matrix(self, other):
+        """
+        Returns the transformation matrix of this coordinate system with
+        respect to another system, which takes into account rotation
+        and scaling.
+
+        If v_a is a vector defined in system 'A' (in matrix format)
+        and v_b is the same vector defined in system 'B', then
+        v_a = A.transformation_matrix(B) * v_b.
+
+        A SymPy Matrix is returned.
+
+        Parameters
+        ==========
+
+        other : CoordSys3D
+            The system which the DCM is generated to.
+
+        See Also
+        ========
+
+        CoordSys3D.rotation_matrix
+
+        Examples
+        ========
+
+        >>> from sympy.vector import CoordSys3D
+        >>> from sympy import symbols
+
+        For Cartesian systems connected by rotations, the transformation
+        matrix is equal to the rotation matrix:
+
+        >>> q1 = symbols('q1')
+        >>> N = CoordSys3D('N')
+        >>> A = N.orient_new_axis('A', q1, N.i)
+        >>> N.transformation_matrix(A)
+        Matrix([
+        [1,       0,        0],
+        [0, cos(q1), -sin(q1)],
+        [0, sin(q1),  cos(q1)]])
+        >>> N.transformation_matrix(A) == N.rotation_matrix(A)
+        True
+
+        Transformation matrix from spherical to Cartesian coordinates:
+
+        >>> Cart = CoordSys3D("Cart")
+        >>> S = Cart.create_new("S", transformation="spherical")
+        >>> C = Cart.create_new("C", transformation="cylindrical")
+        >>> Cart.transformation_matrix(S)
+        Matrix([
+        [sin(S.theta)*cos(S.phi), cos(S.phi)*cos(S.theta), -sin(S.phi)],
+        [sin(S.phi)*sin(S.theta), sin(S.phi)*cos(S.theta), cos(S.phi)],
+        [cos(S.theta), -sin(S.theta), 0]])
+
+        Transformation matrix from spherical to cylindrical coordinates
+        (note that the azimuthal angle of S and C are the same):
+
+        >>> r_s, theta_s, phi_s = S.base_scalars()
+        >>> r_c, theta_c, z_c = C.base_scalars()
+        >>> C.transformation_matrix(S).subs(phi_s, theta_c).simplify()
+        Matrix([
+        [sin(S.theta), cos(S.theta), 0],
+        [0, 0, 1],
+        [cos(S.theta), -sin(S.theta), 0]])
+
+        """
+        from sympy.vector.functions import _path
+        if not isinstance(other, CoordSys3D):
+            raise TypeError(str(other) + " is not a CoordSys3D")
+        if self == other:
+            return eye(3)
+
+        # Else, use tree to calculate position
+        rootindex, path = _path(self, other)
+        result = eye(3)
+        for i in range(rootindex):
+            if path[i]._is_cartesian or path[i]._is_curvilinear:
+                result *= path[i]._transformation_matrix_to_parent.T
+            else:
+                result *= path[i]._transformation_matrix_to_parent.inv()
+        for i in range(rootindex + 1, len(path)):
+            result *= path[i]._transformation_matrix_to_parent
+
         return result
 
     @cacheit

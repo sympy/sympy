@@ -497,3 +497,163 @@ def test_cartesian_rotation_transformation_equations():
         xb * cos(alpha) - yb * sin(alpha),
         xb * sin(alpha) + yb * cos(alpha),
         zb)
+
+
+def test_transformation_matrix_spherical_to_cartesian():
+    C = CoordSys3D("C")
+    S = C.create_new("S", transformation="spherical")
+    r, theta, phi = S.base_scalars()
+    T_fromS_toC = C.transformation_matrix(S)
+    assert T_fromS_toC == Matrix([
+        [sin(theta)*cos(phi), cos(theta)*cos(phi), -sin(phi)],
+        [sin(theta)*sin(phi), cos(theta)*sin(phi), cos(phi)],
+        [cos(theta), -sin(theta), 0]
+    ])
+    assert S.transformation_matrix(C) == T_fromS_toC.T
+
+
+def test_transformation_matrix_cylindrical_to_cartesian():
+    Cart = CoordSys3D("Cart")
+    C = Cart.create_new("C", transformation="cylindrical")
+    r, theta, z = C.base_scalars()
+    T_fromC_toCart = Cart.transformation_matrix(C)
+    assert T_fromC_toCart == Matrix([
+        [cos(theta), -sin(theta), 0],
+        [sin(theta), cos(theta), 0],
+        [0, 0, 1]
+    ])
+    assert C.transformation_matrix(Cart) == T_fromC_toCart.T
+
+
+def test_transformation_matrix_spherical_to_cylindrical():
+    # The following tests uses simplify in order to show `theta_c - phis_s`,
+    # which is a reminder to the user that the azimuthal angle
+    # of S and C are the same, phi_s=theta_c, [0, 2*pi[
+    Cart = CoordSys3D("Cart")
+    S = Cart.create_new("S", transformation="spherical")
+    C = Cart.create_new("C", transformation="cylindrical")
+    r_s, theta_s, phi_s = S.base_scalars()
+    r_c, theta_c, z_c = C.base_scalars()
+    T_fromS_toC = C.transformation_matrix(S)
+    T_fromS_toC = T_fromS_toC.simplify().subs(theta_c - phi_s, 0)
+    assert T_fromS_toC == Matrix([
+        [sin(theta_s), cos(theta_s), 0],
+        [0, 0, 1],
+        [cos(theta_s), -sin(theta_s), 0]
+    ])
+    T_fromC_toS = S.transformation_matrix(C).simplify()
+    T_fromC_toS = T_fromC_toS.subs(theta_c - phi_s, 0)
+    assert T_fromC_toS == T_fromS_toC.T
+
+
+def test_transformation_matrix_simple_rotation():
+    alpha = symbols("alpha")
+    A = CoordSys3D("A")
+    B = A.orient_new_axis("B", alpha, A.k)
+    T_fromB_toA = A.transformation_matrix(B)
+    assert T_fromB_toA == Matrix([
+        [cos(alpha), -sin(alpha), 0],
+        [sin(alpha), cos(alpha), 0],
+        [0, 0, 1]
+    ])
+    assert B.transformation_matrix(A) == T_fromB_toA.T
+    assert T_fromB_toA == A.rotation_matrix(B)
+
+
+def test_transformation_matrix_three_rotations():
+    a, b, g = symbols("alpha, beta, gamma")
+    bo = BodyOrienter(a, b, g, "123")
+    A = CoordSys3D("A")
+    B = A.orient_new("B", bo)
+    T_fromB_toA = A.transformation_matrix(B)
+    assert T_fromB_toA == Matrix([
+        [cos(b) * cos(g), -sin(g) * cos(b), sin(b)],
+        [
+            sin(a) * sin(b) * cos(g) + sin(g) * cos(a),
+            -sin(a) * sin(b) * sin(g) + cos(a) * cos(g),
+            -sin(a) * cos(b)
+        ],
+        [
+            sin(a) * sin(g) - sin(b) * cos(a) * cos(g),
+            sin(a) * cos(g) + sin(b) * sin(g) * cos(a),
+            cos(a) * cos(b)
+        ]
+    ])
+    assert B.transformation_matrix(A) == T_fromB_toA.T
+    assert A.rotation_matrix(B) == T_fromB_toA
+
+
+def test_transformation_matrix_reflection_to_cartesian():
+    A = CoordSys3D("A")
+    B = A.create_new("B", transformation=lambda x,y,z: (y, x, z))
+    T_fromB_toA = A.transformation_matrix(B)
+    assert T_fromB_toA == Matrix([
+        [0, 1, 0],
+        [1, 0, 0],
+        [0, 0, 1]
+    ])
+    assert B.transformation_matrix(A) == T_fromB_toA.T
+
+    # a chain of systems
+    A = CoordSys3D("A")
+    B = A.create_new("B", transformation=lambda x,y,z: (y, x, z))
+    C = B.create_new("C", transformation=lambda x,y,z: (z, y, x))
+    T_fromB_toA = A.transformation_matrix(B)
+    T_fromC_toA = A.transformation_matrix(C)
+    T_fromC_toB = B.transformation_matrix(C)
+    assert T_fromB_toA == Matrix([
+        [0, 1, 0],
+        [1, 0, 0],
+        [0, 0, 1]
+    ])
+    assert B.transformation_matrix(A) == T_fromB_toA.T
+    assert T_fromC_toB == Matrix([
+        [0, 0, 1],
+        [0, 1, 0],
+        [1, 0, 0]
+    ])
+    assert C.transformation_matrix(B) == T_fromC_toB.T
+    assert T_fromC_toA == Matrix([
+        [0, 1, 0],
+        [0, 0, 1],
+        [1, 0, 0]
+    ])
+    assert C.transformation_matrix(A) == T_fromC_toA.T
+
+    # same systems, but linked in a different way
+    A = CoordSys3D("A")
+    B = A.create_new("B", transformation=lambda x,y,z: (y, x, z))
+    C = A.create_new("C", transformation=lambda x,y,z: (z, y, x))
+    T_fromB_toA = A.transformation_matrix(B)
+    T_fromC_toA = A.transformation_matrix(C)
+    T_fromC_toB = B.transformation_matrix(C)
+    assert T_fromB_toA == Matrix([
+        [0, 1, 0],
+        [1, 0, 0],
+        [0, 0, 1]
+    ])
+    assert B.transformation_matrix(A) == T_fromB_toA.T
+    assert T_fromC_toA == Matrix([
+        [0, 0, 1],
+        [0, 1, 0],
+        [1, 0, 0]
+    ])
+    assert C.transformation_matrix(A) == T_fromC_toA.T
+    assert T_fromC_toB == Matrix([
+        [0, 1, 0],
+        [0, 0, 1],
+        [1, 0, 0]
+    ])
+    assert C.transformation_matrix(B) == T_fromC_toB.T
+
+
+def test_transformation_matrix_reflection_stretch_to_cartesian():
+    A = CoordSys3D("A")
+    B = A.create_new("B", transformation=lambda x,y,z: (y, 2*x, z))
+    T_fromB_toA = A.transformation_matrix(B)
+    assert T_fromB_toA == Matrix([
+        [0, 1, 0],
+        [2, 0, 0],
+        [0, 0, 1]
+    ])
+    assert B.transformation_matrix(A) == T_fromB_toA.inv()
