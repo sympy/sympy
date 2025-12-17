@@ -2224,7 +2224,7 @@ def test_issue_15566():
 
     expr = (S(1) / sqrt(2 * pi * s**2)) * (t + m) * exp(-t**2 / (2 * s**2))
     result = integrate(expr, (t, a - m, oo))
-    
+
     assert isinstance(result, Piecewise)
-    
+
     assert result.has(erf)
