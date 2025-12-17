@@ -2215,3 +2215,16 @@ def test_integration_of_piecewise_with_simbolic_boundaries():
 
     assert integrate( Piecewise( (2,t2<1) , (nan , True)) , (t2,0,t1) ) == \
         Piecewise((2*t1, t1 < 0), (2*Min(1, t1), t1 <= Min(1, t1)), (nan, True))
+
+
+
+def test_issue_15566():
+    a, m, s = symbols('a m s', real=True)
+    t = symbols('t')
+
+    expr = (S(1) / sqrt(2 * pi * s**2)) * (t + m) * exp(-t**2 / (2 * s**2))
+    result = integrate(expr, (t, a - m, oo))
+    
+    assert isinstance(result, Piecewise)
+    
+    assert result.has(erf)
