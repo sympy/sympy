@@ -43,6 +43,11 @@ def test_dim_simplify_rec():
     assert (L + L) * T == L*T
 
 
+def test_inverse_consistency():
+    expr = 5*kilometer/hour
+    assert convert_to(convert_to(expr, meter / second), kilometer / hour) == expr
+
+
 def test_convert_to_quantities():
     assert convert_to(3, meter) == 3
 
