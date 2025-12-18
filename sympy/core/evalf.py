@@ -992,7 +992,7 @@ def evalf_log(expr: 'log', prec: int, options: OPT_DICT) -> TMP_RES:
     size = fastlog(re)
     if prec - size > workprec:
         from .add import Add
-        # We actually need to compute 1+x accurately, not x
+        # We actually need to compute x-1 accurately, not x
         add = Add(S.NegativeOne, arg, evaluate=False)
         xre, xim, xre_acc, _ = evalf_add(add, prec, options)
         if xre != fzero and (xre_acc is None or xre_acc > 1):
