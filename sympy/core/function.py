@@ -1716,6 +1716,7 @@ class Derivative(Expr):
         return self.args[0].kind
 
     def _eval_subs(self, old, new):
+        from sympy.matrices.expressions.matexpr import MatrixExpr
         # The substitution (old, new) cannot be done inside
         # Derivative(expr, vars) for a variety of reasons
         # as handled below.
@@ -1769,7 +1770,16 @@ class Derivative(Expr):
             syms = {vi: Dummy() for vi in self._wrt_variables
                 if not vi.is_Symbol}
             wrt = {syms.get(vi, vi) for vi in self._wrt_variables}
-            forbidden = args[0].xreplace(syms).free_symbols & wrt
+
+            
+            expr = args[0]
+
+            if isinstance(expr, MatrixExpr):
+                # Safe path for matrix expressions
+                new_expr = expr.subs(old, new)
+                return self.func(new_expr, *self.variables)
+
+            forbidden = expr.xreplace(syms).free_symbols & wrt
             nfree = new.xreplace(syms).free_symbols
             ofree = old.xreplace(syms).free_symbols
             if (nfree - ofree) & forbidden:
