@@ -611,8 +611,8 @@ class CoordSys3D(Basic):
         >>> Cart.transformation_matrix(S)
         Matrix([
         [sin(S.theta)*cos(S.phi), cos(S.phi)*cos(S.theta), -sin(S.phi)],
-        [sin(S.phi)*sin(S.theta), sin(S.phi)*cos(S.theta), cos(S.phi)],
-        [cos(S.theta), -sin(S.theta), 0]])
+        [sin(S.phi)*sin(S.theta), sin(S.phi)*cos(S.theta),  cos(S.phi)],
+        [           cos(S.theta),           -sin(S.theta),           0]])
 
         Transformation matrix from spherical to cylindrical coordinates
         (note that the azimuthal angle of S and C are the same):
