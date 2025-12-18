@@ -693,3 +693,10 @@ dotprint
 --------
 
 .. autofunction:: sympy.printing.dot.dotprint
+
+
+   LLVM
+----
+
+.. automodule:: sympy.printing.llvmjitcode
+   :members:
