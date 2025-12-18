@@ -657,3 +657,41 @@ def test_transformation_matrix_reflection_stretch_to_cartesian():
         [0, 0, 1]
     ])
     assert B.transformation_matrix(A) == T_fromB_toA.inv()
+
+
+def test_spherical_cartesian_scalar_map():
+    C = CoordSys3D("C")
+    S = C.create_new("S", transformation="spherical")
+    assert S.scalar_map(C) == {
+        S.r: (
+            C.x * sin(S.theta) * cos(S.phi) +
+            C.y * sin(S.phi) * sin(S.theta) +
+            C.z * cos(S.theta)),
+        S.theta: (
+            C.x * cos(S.phi) * cos(S.theta) +
+            C.y * sin(S.phi) * cos(S.theta) -
+            C.z * sin(S.theta)),
+        S.phi: -C.x * sin(S.phi) + C.y * cos(S.phi)}
+    assert C.scalar_map(S) == {
+        C.x: (
+            -S.phi * sin(S.phi) +
+            S.r * sin(S.theta) * cos(S.phi) +
+            S.theta * cos(S.phi) * cos(S.theta)),
+        C.y: (
+            S.phi * cos(S.phi) +
+            S.r * sin(S.phi) * sin(S.theta) +
+            S.theta * sin(S.phi) * cos(S.theta)),
+        C.z: S.r * cos(S.theta) - S.theta * sin(S.theta)}
+
+
+def test_cylindrical_cartesian_scalar_map():
+    Cart = CoordSys3D("Cart")
+    C = Cart.create_new("C", transformation="cylindrical")
+    assert C.scalar_map(Cart) == {
+        C.r: Cart.x*cos(C.theta) + Cart.y*sin(C.theta),
+        C.theta: -Cart.x*sin(C.theta) + Cart.y*cos(C.theta),
+        C.z: Cart.z}
+    assert Cart.scalar_map(C) == {
+        Cart.x: C.r*cos(C.theta) - C.theta*sin(C.theta),
+        Cart.y: C.r*sin(C.theta) + C.theta*cos(C.theta),
+        Cart.z: C.z}

@@ -700,7 +700,7 @@ class CoordSys3D(Basic):
         relocated_scalars = [x - origin_coords[i]
                              for i, x in enumerate(other.base_scalars())]
 
-        vars_matrix = (self.rotation_matrix(other) *
+        vars_matrix = (self.transformation_matrix(other) *
                        Matrix(relocated_scalars))
         return {x: trigsimp(vars_matrix[i])
                 for i, x in enumerate(self.base_scalars())}
