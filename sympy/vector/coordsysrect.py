@@ -621,8 +621,8 @@ class CoordSys3D(Basic):
         >>> r_c, theta_c, z_c = C.base_scalars()
         >>> C.transformation_matrix(S).subs(phi_s, theta_c).simplify()
         Matrix([
-        [sin(S.theta), cos(S.theta), 0],
-        [0, 0, 1],
+        [sin(S.theta),  cos(S.theta), 0],
+        [           0,             0, 1],
         [cos(S.theta), -sin(S.theta), 0]])
 
         """
