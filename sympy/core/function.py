@@ -1716,7 +1716,6 @@ class Derivative(Expr):
         return self.args[0].kind
 
     def _eval_subs(self, old, new):
-        from sympy.matrices.expressions.matexpr import MatrixExpr
         # The substitution (old, new) cannot be done inside
         # Derivative(expr, vars) for a variety of reasons
         # as handled below.
