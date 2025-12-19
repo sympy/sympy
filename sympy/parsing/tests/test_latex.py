@@ -19,7 +19,7 @@ from sympy.functions.elementary.trigonometric import (asin, cos, csc, sec, sin, 
 from sympy.integrals.integrals import Integral
 from sympy.series.limits import Limit
 from sympy.parsing.latex import parse_latex
-from sympy import log, symbols, simplify
+from sympy import symbols, simplify
 
 from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
 from sympy.physics.quantum.state import Bra, Ket
