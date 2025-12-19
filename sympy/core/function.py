@@ -1771,15 +1771,15 @@ class Derivative(Expr):
                 if not vi.is_Symbol}
             wrt = {syms.get(vi, vi) for vi in self._wrt_variables}
             expr = args[0]
+            def _renamed_free_symbols(obj, syms):
+                fs = obj.free_symbols
+                if not syms:
+                    return fs
+                return {syms.get(s, s) for s in fs}
 
-            if isinstance(expr, MatrixExpr):
-                # Safe path for matrix expressions
-                new_expr = expr.subs(old, new)
-                return self.func(new_expr, *self.variables)
-
-            forbidden = expr.xreplace(syms).free_symbols & wrt
-            nfree = new.xreplace(syms).free_symbols
-            ofree = old.xreplace(syms).free_symbols
+            forbidden = _renamed_free_symbols(expr, syms) & wrt
+            nfree = _renamed_free_symbols(new, syms)
+            ofree = _renamed_free_symbols(old, syms)
             if (nfree - ofree) & forbidden:
                 return Subs(self, old, new)
 
