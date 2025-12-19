@@ -782,12 +782,12 @@ class ArrayDiagonal(_CodegenArrayAbstract):
     In a 2-dimensional array it returns the diagonal, this looks like the
     operation:
 
-    `A_{ij} \rightarrow A_{ii}`
+    `A_{ij} \Longrightarrow A_{ii}`
 
     The diagonal over axes 1 and 2 (the second and third) of the tensor product
     of two 2-dimensional arrays `A \otimes B` is
 
-    `\Big[ A_{ab} B_{cd} \Big]_{abcd} \rightarrow \Big[ A_{ai} B_{id} \Big]_{adi}`
+    `\Big[ A_{ab} B_{cd} \Big]_{abcd} \Longrightarrow \Big[ A_{ai} B_{id} \Big]_{adi}`
 
     In this last example the array expression has been reduced from
     4-dimensional to 3-dimensional. Notice that no contraction has occurred,
@@ -1023,8 +1023,41 @@ class ArrayElementwiseApplyFunc(_CodegenArrayAbstract):
 
 class ArrayContraction(_CodegenArrayAbstract):
     r"""
-    This class is meant to represent contractions of arrays in a form easily
-    processable by the code printers.
+    Contraction operation of array axes.
+
+    Explanation
+    ===========
+
+    In a 2-dimensional array it returns the trace, this looks like the
+    operation:
+
+    `A_{ij} \Longrightarrow \sum_{i} A_{ii}`
+
+    Examples
+    ========
+
+    >>> from sympy import MatrixSymbol
+    >>> from sympy.tensor.array.expressions import ArrayContraction, ArrayTensorProduct
+    >>> M = MatrixSymbol('M', 3, 3)
+    >>> N = MatrixSymbol('N', 3, 3)
+    >>> ArrayContraction(M, (0, 1))
+    ArrayContraction(M, (0, 1))
+
+    We can define a matrix multiplication equivalent operation:
+
+    >>> expr = ArrayContraction(ArrayTensorProduct(M, N), (1, 2))
+    >>> expr
+    ArrayContraction(ArrayTensorProduct(M, N), (1, 2))
+
+    Indeed, given two matrices `M` and `N`, the contraction of the second axis of `M`
+    with the first of `N`, here represented as the tuple (1, 2), is equivalent to the matrix multiplication between `M` and `N`.
+
+    This can be verified with the proper conversion function:
+
+    >>> from sympy.tensor.array.expressions import convert_array_to_matrix
+    >>> convert_array_to_matrix(expr)
+    M*N
+
     """
 
     def __new__(cls, expr, *contraction_indices, **kwargs):
