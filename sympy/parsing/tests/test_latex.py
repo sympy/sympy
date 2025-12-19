@@ -371,4 +371,3 @@ def test_log_division_precedence():
     latex = r"""\log_2{4} / (x +1 )"""
     expr = parse_latex(latex)
     assert simplify(expr-log(4,2)/(x+1))==0
-
