@@ -18,6 +18,8 @@ from sympy.functions.elementary.miscellaneous import (root, sqrt)
 from sympy.functions.elementary.trigonometric import (asin, cos, csc, sec, sin, tan)
 from sympy.integrals.integrals import Integral
 from sympy.series.limits import Limit
+from sympy.parsing.latex import parse_latex
+from sympy import log, symbols, simplify
 
 from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
 from sympy.physics.quantum.state import Bra, Ket
@@ -363,3 +365,10 @@ def test_latex_cases_environment_error():
     latex_string = r"\begin{cases} x=1 \\ y=2 \end{cases}"
     with raises(LaTeXParsingError, match="The 'cases' environment is not currently supported"):
         parse_latex(latex_string)
+
+def test_log_division_precedence():
+    x=symbols('x')
+    latex = r"""\log_2{4} / (x +1 )"""
+    expr = parse_latex(latex)
+    assert simplify(expr-log(4,2)/(x+1))==0
+
