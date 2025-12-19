@@ -26,6 +26,7 @@ from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.functions.special.zeta_functions import zeta
 from sympy.integrals.integrals import Integral
 from sympy.logic.boolalg import And, Not
+from sympy.matrices.expressions.special import ZeroMatrix
 from sympy.polys.partfrac import apart
 from sympy.polys.polyerrors import PolynomialError, PolificationFailed
 from sympy.polys.polytools import parallel_poly_from_expr, Poly, factor
@@ -189,7 +190,10 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         # cancel out. This only answers whether the summand is zero; if
         # not then None is returned since we don't analyze whether all
         # terms cancel out.
-        if self.function.is_zero or self.has_empty_sequence:
+        if self.function.is_zero:
+            return True
+
+        if self.has_empty_sequence and not self.function.is_Matrix:
             return True
 
     def _eval_is_extended_real(self):
@@ -238,7 +242,9 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             expanded = self.expand()
             if self != expanded:
                 return expanded.doit()
-            return _eval_matrix_sum(self)
+            expr = _eval_matrix_sum(self)
+            if expr is not None:
+                return expr
 
         for n, limit in enumerate(self.limits):
             i, a, b = limit
@@ -1666,8 +1672,10 @@ def _eval_matrix_sum(expression):
     for limit in expression.limits:
         i, a, b = limit
         dif = b - a
+        if dif == -1:
+            return ZeroMatrix(*f.shape)
         if dif.is_Integer:
-            if (dif < 0) == True:
+            if dif.is_negative:
                 a, b = b + 1, a - 1
                 f = -f
 

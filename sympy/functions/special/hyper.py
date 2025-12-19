@@ -15,6 +15,7 @@ from sympy.core.sorting import default_sort_key
 from sympy.core.symbol import Dummy
 
 from sympy.external.gmpy import lcm
+from sympy.external.mpmath import local_workprec
 from sympy.functions import (sqrt, exp, log, sin, cos, asin, atan,
         sinh, cosh, asinh, acosh, atanh, acoth)
 from sympy.functions import factorial, RisingFactorial
@@ -699,7 +700,6 @@ class meijerg(TupleParametersBase):
         # less than (say) n*pi, we put r=1/n, compute z' = root(z, n)
         # (carefully so as not to loose the branch information), and evaluate
         # G(z'**(1/r)) = G(z'**n) = G(z).
-        import mpmath
         znum = self.argument._eval_evalf(prec)
         if znum.has(exp_polar):
             znum, branch = znum.as_coeff_mul(exp_polar)
@@ -718,10 +718,11 @@ class meijerg(TupleParametersBase):
         except ValueError:
             return
 
-        with mpmath.workprec(prec):
-            v = mpmath.meijerg(ap, bq, z, r)
+        with local_workprec(prec) as ctx:
+            v = ctx.meijerg(ap, bq, z, r)
+            v_expr = Expr._from_mpmath(v, prec)
 
-        return Expr._from_mpmath(v, prec)
+        return v_expr
 
     def _eval_as_leading_term(self, x, logx, cdir):
         from sympy.simplify.hyperexpand import hyperexpand

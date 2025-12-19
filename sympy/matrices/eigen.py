@@ -5,15 +5,14 @@ from typing import TYPE_CHECKING, overload
 from types import FunctionType
 from collections import Counter
 
-from mpmath import mp, workprec
-from mpmath.libmp.libmpf import prec_to_dps
-
+from sympy.core.expr import Expr
 from sympy.core.sorting import default_sort_key
 from sympy.core.evalf import DEFAULT_MAXPREC, PrecisionExhausted
 from sympy.core.logic import fuzzy_and, fuzzy_or
 from sympy.core.numbers import AlgebraicNumber, Float
 from sympy.core.symbol import Dummy
 from sympy.core.sympify import _sympify
+from sympy.external.mpmath import prec_to_dps, local_workprec
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.polys import roots, CRootOf, ZZ, QQ, EX
 from sympy.polys.matrices import DomainMatrix
@@ -29,7 +28,6 @@ from .utilities import _iszero, _simplify
 
 if TYPE_CHECKING:
     from typing import TypeVar, Callable, Any, Literal
-    from sympy.core.expr import Expr
     from sympy.matrices.matrixbase import MatrixBase
     Tmat = TypeVar('Tmat', bound=MatrixBase)
 
@@ -47,15 +45,21 @@ def _eigenvals_eigenvects_mpmath(M):
     norm2 = lambda v: mp.sqrt(sum(i**2 for i in v))
 
     v1 = None
-    prec = max(x._prec for x in M.atoms(Float))
-    eps = 2**-prec
+    prec_orig = max(x._prec for x in M.atoms(Float))
+    eps = 2**-prec_orig
+
+    prec = prec_orig
+
+    to_expr = lambda e: Expr._from_mpmath(e, prec_orig)
 
     while prec < DEFAULT_MAXPREC:
-        with workprec(prec):
+        with local_workprec(prec) as mp:
             A = mp.matrix(M.evalf(n=prec_to_dps(prec)))
             E, ER = mp.eig(A)
             v2 = norm2([i for e in E for i in (mp.re(e), mp.im(e))])
             if v1 is not None and mp.fabs(v1 - v2) < eps:
+                E = [to_expr(e) for e in E]
+                ER = [[to_expr(e) for e in row] for row in ER.transpose().tolist()]
                 return E, ER
             v1 = v2
         prec *= 2
@@ -71,19 +75,19 @@ def _eigenvals_eigenvects_mpmath(M):
 
 def _eigenvals_mpmath(M, multiple=False):
     """Compute eigenvalues using mpmath"""
-    E, _ = _eigenvals_eigenvects_mpmath(M)
-    result = [_sympify(x) for x in E]
+    result, _ = _eigenvals_eigenvects_mpmath(M)
     if multiple:
         return result
     return dict(Counter(result))
 
 
 def _eigenvects_mpmath(M):
+    from sympy import ImmutableMatrix
     E, ER = _eigenvals_eigenvects_mpmath(M)
     result = []
     for i in range(M.rows):
         eigenval = _sympify(E[i])
-        eigenvect = _sympify(ER[:, i])
+        eigenvect = ImmutableMatrix(ER[i])
         result.append((eigenval, 1, [eigenvect]))
 
     return result

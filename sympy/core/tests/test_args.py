@@ -5182,6 +5182,12 @@ def test_sympy__tensor__array__expressions__array_expressions__Reshape():
     assert _test_args(Reshape(A, (2, 2)))
 
 
+def test_sympy__tensor__array__expressions__array_expressions__ArraySum():
+    from sympy.tensor.array.expressions.array_expressions import ArraySum, ArraySymbol
+    A = ArraySymbol("A", (3, 3))
+    assert _test_args(ArraySum(A*sin(a), (a, 1, b)))
+
+
 def test_sympy__codegen__ast__Assignment():
     from sympy.codegen.ast import Assignment
     assert _test_args(Assignment(x, y))
