@@ -684,6 +684,49 @@ least squares estimator:
 
 $$\boldsymbol{\beta} = \left(\mathbf{X}' \mathbf{X}\right)^{-1} \mathbf{X}' \mathbf{y}$$
 
+Ridge regression
+~~~~~~~~~~~~~~~~
+
+Ridge regression is a variation of linear regression in which the objective
+function includes an additional term proportional to the squared norm of
+$\boldsymbol{\beta}$:
+
+$$\min_{\boldsymbol{\beta}} \Big( \big \Vert \mathbf{X} \boldsymbol{\beta} - \mathbf{y} \big \Vert^2 + \lambda \big \Vert \boldsymbol{\beta} \big \Vert^2 \Big)$$
+
+This approach causes the components of $\boldsymbol{\beta}$ to remain small and
+provides better behavior in the presence of multicollinearity, that is, when
+the columns of $\mathbf{X}$ are correlated, which is a well-known weakness of
+ordinary linear regression.
+
+Using SymPy, the objective function can be written as:
+
+>>> from sympy import symbols
+>>> lamda = symbols("lambda")
+>>> residual = y - X*beta
+>>> obj = residual.T * residual + lamda * beta.T * beta
+>>> obj
+lambda*beta.T*beta + (-beta.T*X.T + y.T)*(-X*beta + y)
+
+which corresponds to $\lambda \boldsymbol{\beta}' \boldsymbol{\beta} + \left( \mathbf{y}' - \boldsymbol{\beta}' \mathbf{X}' \right) \left( \mathbf{y} -
+\mathbf{X} \boldsymbol{\beta} \right)$.
+
+Taking the derivative of the objective function with respect to
+$\boldsymbol{\beta}$ yields:
+
+>>> obj.diff(beta)
+(2*lambda)*beta - 2*X.T*(-X*beta + y)
+
+which is $2 \lambda \boldsymbol{\beta} - 2 \mathbf{X}' \left( \mathbf{y} - \mathbf{X} \boldsymbol{\beta} \right)$.
+Regrouping the terms by $\boldsymbol{\beta}$ and dropping the constant factor
+of 2, we obtain:
+
+$$\left(\lambda \mathbf{I} + \mathbf{X}' \mathbf{X}\right  ) \boldsymbol{\beta} - \mathbf{X}' \mathbf{y}$$
+
+Solving for the stationary point by setting this derivative equal to zero gives
+the normal equations for ridge regression:
+
+$$\boldsymbol{\beta} = \left(\lambda \mathbf{I} + \mathbf{X}' \mathbf{X}\right)^{-1} \mathbf{X}' \mathbf{y}$$
+
 Principal component analysis
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
