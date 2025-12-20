@@ -37,7 +37,7 @@ class LLVMJitPrinter(Printer):
     """
     A printer to convert SymPy expressions to LLVM IR.
 
-    This printer requires the ``llvmlite`` package to be installed. It 
+    This printer requires the ``llvmlite`` package to be installed. It
     converts SymPy math functions into their equivalent LLVM IR
     instructions for high-performance numerical evaluation.
     """
