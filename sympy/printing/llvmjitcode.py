@@ -34,7 +34,13 @@ __doctest_requires__ = {('llvm_callable'): ['llvmlite']}
 
 
 class LLVMJitPrinter(Printer):
-    '''Convert expressions to LLVM IR'''
+    """
+    A printer to convert SymPy expressions to LLVM IR.
+
+    This printer requires the ``llvmlite`` package to be installed. It 
+    converts SymPy math functions into their equivalent LLVM IR 
+    instructions for high-performance numerical evaluation.
+    """
     def __init__(self, module, builder, fn, *args, **kwargs):
         self.func_arg_map = kwargs.pop("func_arg_map", {})
         if not llvmlite:
@@ -157,6 +163,7 @@ current_link_suffix = 0
 
 
 class LLVMJitCode:
+    """Base class for managing the LLVM JIT compilation process."""
     def __init__(self, signature):
         self.signature = signature
         self.fp_type = ll.DoubleType()
@@ -305,6 +312,7 @@ class LLVMJitCode:
 
 
 class LLVMJitCodeCallback(LLVMJitCode):
+    """A printer to convert SymPy expressions to LLVM IR."""
     def __init__(self, signature):
         super().__init__(signature)
 
