@@ -1,3 +1,4 @@
+from collections import defaultdict
 import itertools
 from sympy.combinatorics.coset_table import modified_coset_enumeration_r
 from sympy.combinatorics.fp_groups import FpGroup, FpSubgroup, simplify_presentation
@@ -487,6 +488,7 @@ def group_isomorphism(G, H, isomorphism=True):
     Uses the approach suggested by Robert Tarjan to compute the isomorphism between two groups.
     First, the generators of ``G`` are mapped to the elements of ``H`` and
     we check if the mapping induces an isomorphism.
+    If G is a permutation group only mappings between elements of the same order are checked.
 
     '''
     if not isinstance(G, (PermutationGroup, FpGroup)):
@@ -531,23 +533,62 @@ def group_isomorphism(G, H, isomorphism=True):
 
     # Match the generators of `G` with subsets of `_H`
     gens = list(G.generators)
-    for subset in itertools.permutations(_H.generate(), len(gens)):
-        images = list(subset)
-        images.extend([_H.identity]*(len(G.generators)-len(images)))
-        _images = dict(zip(gens,images))
-        if _check_homomorphism(G, _H, _images):
-            if isinstance(H, FpGroup):
-                images = h_isomorphism.invert(images)
-            T =  homomorphism(G, H, G.generators, images, check=False)
-            if T.is_isomorphism():
-                # It is a valid isomorphism
-                if not isomorphism:
-                    return True
-                return (True, T)
+    if isinstance(G, PermutationGroup):
+        diz_gen = defaultdict(list)
+        diz_imm = defaultdict(list)
+        for g in gens:
+            diz_gen[g.order()].append(g)
+        for el in _H.generate():
+            j = el.order()
+            if j in diz_gen:
+                diz_imm[j].append(el)
 
-    if not isomorphism:
-        return False
-    return (False, None)
+        # creating a list with inside lists that contain all possible permutations of elements of an order
+        lista = []
+        for key,g in diz_gen.items():
+            sublist = list(itertools.permutations(diz_imm[key], len(g)))
+            lista.append(sublist)
+
+        # creating cartesian product of all permutations sorted by order
+        all_matches = itertools.product(*lista)
+        for m in all_matches:
+            images = []
+            # this is flattening out the product
+            for i in range(len(diz_gen)):
+                images.extend(m[i])
+            _images = dict(zip(gens,images))
+            if _check_homomorphism(G, _H, _images):
+                if isinstance(H, FpGroup):
+                    images = h_isomorphism.invert(images)
+                T =  homomorphism(G, H, G.generators, images, check=False)
+                if T.is_isomorphism():
+                    # It is a valid isomorphism
+                    if not isomorphism:
+                        return True
+                    return (True, T)
+
+        if not isomorphism:
+            return False
+        return (False, None)
+
+    else:
+        for subset in itertools.permutations(_H.generate(), len(gens)):
+            images = list(subset)
+            images.extend([_H.identity]*(len(G.generators)-len(images)))
+            _images = dict(zip(gens,images))
+            if _check_homomorphism(G, _H, _images):
+                if isinstance(H, FpGroup):
+                    images = h_isomorphism.invert(images)
+                T =  homomorphism(G, H, G.generators, images, check=False)
+                if T.is_isomorphism():
+                    # It is a valid isomorphism
+                    if not isomorphism:
+                        return True
+                    return (True, T)
+
+        if not isomorphism:
+            return False
+        return (False, None)
 
 def is_isomorphic(G, H):
     '''
