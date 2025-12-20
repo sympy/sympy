@@ -586,22 +586,67 @@ class CoordSys3D(Basic):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSys3D
+        >>> from sympy.vector import CoordSys3D, express
         >>> from sympy import symbols
 
-        For Cartesian systems connected by rotations, the transformation
-        matrix is equal to the rotation matrix:
+        Let's consider two Cartesian systems connected by rotations:
 
         >>> q1 = symbols('q1')
         >>> N = CoordSys3D('N')
         >>> A = N.orient_new_axis('A', q1, N.i)
-        >>> N.transformation_matrix(A)
+
+        The transformation matrix from A to N is:
+
+        >>> T_fromA_toN = N.transformation_matrix(A)
+        >>> T_fromA_toN
         Matrix([
         [1,       0,        0],
         [0, cos(q1), -sin(q1)],
         [0, sin(q1),  cos(q1)]])
+
+        Because the two systems are Cartesians and connected by pure rotation,
+        the transformation matrix is equal to the rotation matrix:
+
         >>> N.transformation_matrix(A) == N.rotation_matrix(A)
         True
+
+        This is generally not true. Specifically if a non-Cartesian coordinate
+        system (like curvilinear system, or a scaled system, or a
+        reflected system, etc.) is in the path of two connected systems,
+        then the matrix computed by transformation_matrix is correct,
+        whereas the one computed by rotation_matrix is wrong. For example:
+
+        >>> B = A.create_new("B", transformation=lambda x,y,z: (2*x, z, y))
+        >>> C = B.orient_new_axis("C", q1, B.i)
+        >>> R_fromC_toN = N.rotation_matrix(C).simplify()
+        >>> R_fromC_toN
+        Matrix([
+        [1,         0,          0],
+        [0, cos(2*q1), -sin(2*q1)],
+        [0, sin(2*q1),  cos(2*q1)]])
+        >>> T_fromC_toN = N.transformation_matrix(C).simplify()
+        >>> T_fromC_toN
+        Matrix([
+        [2, 0, 0],
+        [0, 0, 1],
+        [0, 1, 0]])
+
+        The transformation matrix allows to express vectors defined
+        in one system into a different system. In fact, the transformation
+        matrix is internally used by the ``express`` function. The following
+        example shows a direct comparison between working with matrices
+        and the vector module:
+
+        >>> vA_matrix = Matrix([1, 2, 3])
+        >>> vN_matrix = T_fromA_toN * vA_matrix
+        >>> vN_matrix
+        Matrix([
+        [                     1],
+        [-3*sin(q1) + 2*cos(q1)],
+        [2*sin(q1) + 3*cos(q1)]])
+        >>> vA = A.i + 2 * A.j + 3 * A.k
+        >>> express(vA, N)
+        N.i + (-3*sin(q1) + 2*cos(q1))*N.j + (2*sin(q1) + 3*cos(q1))*N.k
 
         Transformation matrix from spherical to Cartesian coordinates:
 
