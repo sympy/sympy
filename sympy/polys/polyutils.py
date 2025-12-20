@@ -173,6 +173,8 @@ def _sort_factors(factors, **args):
     def order_key(factor):
         if isinstance(factor, _GF_types):
             return int(factor)
+        elif isinstance(factor, Expr):
+            return factor.sort_key()
         elif isinstance(factor, list):
             return [order_key(f) for f in factor]
         else:

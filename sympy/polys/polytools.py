@@ -3668,7 +3668,18 @@ class Poly(Basic):
         else:
             return group(reals, multiple=False)
 
-    def all_roots(f, multiple=True, radicals=True):
+    @overload
+    def all_roots(
+        f, multiple: Literal[True] = True, radicals: bool = True
+    ) -> list[Expr]: ...
+    @overload
+    def all_roots(
+        f, multiple: Literal[False], *, radicals: bool = True
+    ) -> list[tuple[Expr, int]]: ...
+
+    def all_roots(
+        f, multiple: bool = True, radicals: bool = True
+    ) -> list[Expr] | list[tuple[Expr, int]]:
         """
         Return a list of real and complex roots with multiplicities.
 
