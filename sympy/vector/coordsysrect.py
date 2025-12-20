@@ -258,7 +258,7 @@ class CoordSys3D(Basic):
 
             # detects coordinate systems like spherical/cylindrical,
             # where the Jacobian depends on the position
-            is_curvilinear = len(J.atoms(BaseScalar)) > 0
+            is_curvilinear = J.has(BaseScalar)
             if is_curvilinear:
                 # normalized jacobian
                 J = Matrix([(J.col(i) / h[i]).T for i in range(3)]).T
