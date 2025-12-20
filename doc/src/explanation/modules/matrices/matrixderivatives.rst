@@ -684,6 +684,62 @@ least squares estimator:
 
 $$\boldsymbol{\beta} = \left(\mathbf{X}' \mathbf{X}\right)^{-1} \mathbf{X}' \mathbf{y}$$
 
+Principal component analysis
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Given a matrix $\mathbf{X}$ whose columns are zero-mean, we seek a column
+vector $\mathbf{w}$ such that the projection $\mathbf{X}\mathbf{w}$ has maximum
+variance.
+
+Since the columns of $\mathbf{X}$ have zero mean, the vector
+$\mathbf{X}\mathbf{w}$ will also have zero mean, as it is simply a weighted
+linear combination of the columns of $\mathbf{X}$. Consequently, the variance
+of $\mathbf{X}\mathbf{w}$ is proportional to its squared norm. This observation
+leads to the following optimization problem:
+
+$$\underset{\mathbf{w}}{\operatorname{arg\,max}} \, \Big\Vert \mathbf{X} \mathbf{w} \Big\Vert^2 \\ \mbox{with } \big \Vert \mathbf{w} \big \Vert = 1$$
+
+Expressing the norms in terms of matrix products, the problem can be written as
+
+$$\underset{\mathbf{w}}{\operatorname{arg\,max}} \left( \mathbf{w}' \mathbf{X}' \mathbf{X} \mathbf{w} \right) \\ \mbox{with } \mathbf{w}'\mathbf{w} = 1$$
+
+To solve this constrained optimization problem, we introduce a Lagrange
+multiplier and define the Lagrangian
+
+$$\mathcal{L} = \mathbf{w}' \mathbf{X}' \mathbf{X} \mathbf{w} + \lambda ( \mathbf{w}'\mathbf{w} - 1 )$$
+
+In SymPy, this setup can be expressed as follows:
+
+>>> from sympy import Identity
+>>> lamda, n, p = symbols("lambda n p")
+>>> X = MatrixSymbol("X", n, p)
+>>> w = MatrixSymbol("w", p, 1)
+>>> target = X*w
+>>> lagr_mult = target.T*target + lamda*(w.T*w - Identity(1))
+>>> lagr_mult
+lambda*(-I + w.T*w) + w.T*X.T*X*w
+
+We now proceed by computing the partial derivatives of the Lagrangian with
+respect to $\mathbf{w}$ and $\lambda$:
+
+>>> d_w = lagr_mult.diff(w)
+>>> d_w
+(2*lambda)*w + 2*X.T*X*w
+>>> d_lambda = lagr_mult.diff(lamda)
+>>> d_lambda
+-I + w.T*w
+
+and setting them equal to zero in order to obtain the stationary conditions for
+this optimization problem.  That is, we are required to solve the following two
+equations:
+
+$$\frac{\partial \mathcal{L}}{\partial \mathbf{w}} = 2 \lambda \mathbf{w} + 2 \mathbf{X}' \mathbf{X} \mathbf{w} = 0$$
+
+$$\frac{\partial \mathcal{L}}{\partial \lambda} = \mathbf{w}' \mathbf{w} - \mathbb{I} = 0$$
+
+The first equation corresponds to the eigenvalue equation of the matrix
+$\mathbf{X}' \mathbf{X}$. Therefore, we conclude that $\mathbf{w}$ must be an
+eigenvector of $\mathbf{X}' \mathbf{X}$.
 
 References
 ----------
