@@ -643,7 +643,7 @@ class CoordSys3D(Basic):
         Matrix([
         [                     1],
         [-3*sin(q1) + 2*cos(q1)],
-        [2*sin(q1) + 3*cos(q1)]])
+        [ 2*sin(q1) + 3*cos(q1)]])
         >>> vA = A.i + 2 * A.j + 3 * A.k
         >>> vN = express(vA, N)
         >>> vN
