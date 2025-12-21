@@ -1950,7 +1950,6 @@ def _derivative_dispatch(expr, *variables, **kwargs):
     from sympy.matrices.matrixbase import MatrixBase
     from sympy.matrices.expressions.matexpr import MatrixExpr
     from sympy.tensor.array import NDimArray
-    from sympy.matrices.expressions.matexpr import MatrixExpr
     from sympy.core.function import Derivative
 
     if (
