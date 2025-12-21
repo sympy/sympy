@@ -1,6 +1,6 @@
 from sympy.concrete.summations import Sum
 from sympy.core.expr import Expr
-from sympy.core.function import (Derivative, Function, diff, Subs)
+from sympy.core.function import (Derivative, diff, Subs)
 from sympy.core.numbers import (I, Rational, pi)
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
