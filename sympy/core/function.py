@@ -32,6 +32,7 @@ There are three types of functions implemented in SymPy:
 
 from __future__ import annotations
 
+from ast import expr
 from typing import Any
 from collections.abc import Iterable
 import copyreg
@@ -941,6 +942,12 @@ class UndefinedFunction(FunctionClass):
         return not self == other
 
     @property
+    def diff(self, *symbols, **assumptions):
+        raise TypeError(
+            "Cannot differentiate an unapplied function. "
+            "Apply the function to an argument first."
+        )
+
     def _diff_wrt(self):
         return False
 
@@ -1943,6 +1950,16 @@ def _derivative_dispatch(expr, *variables, **kwargs):
     from sympy.matrices.matrixbase import MatrixBase
     from sympy.matrices.expressions.matexpr import MatrixExpr
     from sympy.tensor.array import NDimArray
+    from sympy.matrices.expressions.matexpr import MatrixExpr
+    from sympy.core.function import Derivative
+
+    if (
+        isinstance(expr, AppliedUndef)
+        and len(variables) == 1
+        and isinstance(variables[0], MatrixExpr)
+    ):
+        v = variables[0]
+        return v.applyfunc(lambda x: Derivative(expr, x))
     array_types = (MatrixBase, MatrixExpr, NDimArray, list, tuple, Tuple)
     if isinstance(expr, array_types) or any(isinstance(i[0], array_types) if isinstance(i, (tuple, list, Tuple)) else isinstance(i, array_types) for i in variables):
         from sympy.tensor.array.array_derivatives import ArrayDerivative

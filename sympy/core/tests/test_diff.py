@@ -14,6 +14,8 @@ from sympy.functions.elementary.trigonometric import (cos, cot, sin, tan)
 from sympy.tensor.array.ndim_array import NDimArray
 from sympy.testing.pytest import raises
 from sympy.abc import a, b, c, x, y, z
+from sympy import Function, MatrixSymbol
+from sympy.matrices.expressions.applyfunc import ElementwiseApplyFunction
 
 def test_diff():
     assert Rational(1, 3).diff(x) is S.Zero
@@ -99,6 +101,14 @@ def test_diff_no_eval_derivative():
     # it doesn't have y so it shouldn't need a method for this case
     assert My(x).diff(y) == 0
 
+def test_scalar_function_diff_matrix():
+    L = Function("L")
+    X = MatrixSymbol("X", 3, 3)
+
+    d = L(X).diff(X)
+
+    assert isinstance(d, ElementwiseApplyFunction)
+    assert d.shape == X.shape
 
 def test_speed():
     # this should return in 0.0s. If it takes forever, it's wrong.
