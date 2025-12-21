@@ -32,7 +32,6 @@ There are three types of functions implemented in SymPy:
 
 from __future__ import annotations
 
-from ast import expr
 from typing import Any
 from collections.abc import Iterable
 import copyreg
