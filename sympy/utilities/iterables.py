@@ -21,11 +21,11 @@ from sympy.utilities.decorator import deprecated
 
 
 if TYPE_CHECKING:
-    from typing import TypeVar, Iterable, Callable
+    from typing import TypeVar, Iterable, Callable, Sequence
     T = TypeVar('T')
 
 
-def is_palindromic(s, i=0, j=None):
+def is_palindromic(s: Sequence[T], i: int = 0, j: int | None = None) -> bool:
     """
     Return True if the sequence is the same from left to right as it
     is from right to left in the whole sequence (default) or in the
@@ -293,7 +293,7 @@ def iproduct(*iterables):
             yield (ef,) + eo
 
 
-def multiset(seq):
+def multiset(seq: Sequence[T]) -> dict[T, int]:
     """Return the hashable sequence in multiset form with values being the
     multiplicity of the item in the sequence.
 
