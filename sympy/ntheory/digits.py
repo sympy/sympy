@@ -113,6 +113,8 @@ def count_digits(n: SupportsIndex, b: SupportsIndex = 10) -> defaultdict[int, in
     ========
     sympy.core.intfunc.num_digits, digits
     """
+    n = as_int(n)
+    b = as_int(b)
     rv = defaultdict(int, multiset(digits(n, b)).items())
     rv.pop(b) if b in rv else rv.pop(-b)  # b or -b is there
     return rv
