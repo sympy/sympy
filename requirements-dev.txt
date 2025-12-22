@@ -7,3 +7,4 @@ pytest-doctestplus
 hypothesis
 flake8
 flake8-comprehensions
+ruff
