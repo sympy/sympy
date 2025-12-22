@@ -16,24 +16,34 @@ def recurrence_memo(
     initial: List[T],
 ) -> Callable[[Callable[[int, List[T]], T]], RecurrenceMemoFunc[T]]:
     """
-    Memo decorator for sequences defined by recurrence
+    Memo decorator for sequences defined by recurrence.
+
+    Parameters
+    ==========
+    initial : list
+        The initial values of the sequence.
+
+    Returns
+    =======
+    function
+        The decorated recurrence function as a callable object.
 
     Examples
     ========
-
     >>> from sympy.utilities.memoization import recurrence_memo
-    >>> @recurrence_memo([1])  # 0! = 1
+    >>> @recurrence_memo([1])
     ... def factorial(n, prev):
     ...     return n * prev[-1]
     >>> factorial(4)
     24
-    >>> factorial(3)  # use cache values
+    >>> factorial(3)
     6
-    >>> factorial.cache_length()  # cache length can be obtained
+    >>> factorial.cache_length()
     5
     >>> factorial.fetch_item(slice(2, 4))
     [2, 6]
     """
+
     cache: List[T] = initial
 
     def decorator(f: Callable[[int, List[T]], T]) -> RecurrenceMemoFunc[T]:
@@ -57,13 +67,25 @@ def assoc_recurrence_memo(
     base_seq: Callable[[int], T],
 ) -> Callable[[Callable[[int, int, List[List[T]]], T]], Callable[[int, int], T]]:
     """
-    Memo decorator for associated sequences defined by recurrence starting from base
+    Memo decorator for associated sequences defined by recurrence starting from base.
 
-    base_seq(n) -- callable to get base sequence elements
+    Parameters
+    ==========
+    base_seq : callable
+        Callable to get base sequence elements.
 
-    XXX works only for Pn0 = base_seq(0) cases
-    XXX works only for m <= n cases
+    Returns
+    =======
+    function
+        The decorated associated recurrence function as a callable object.
+
+    Notes
+    =====
+    - Works only for Pn0 = base_seq(0) cases
+    - Works only for m <= n cases
     """
+
+
     cache: List[List[T]] = []
 
     def decorator(f: Callable[[int, int, List[List[T]]], T]) -> Callable[[int, int], T]:
