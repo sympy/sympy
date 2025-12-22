@@ -2,6 +2,7 @@
 Iterables
 =========
 
+.. py:class:: T
 
 .. automodule:: sympy.utilities.iterables
    :members:

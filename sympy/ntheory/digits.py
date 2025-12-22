@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections import defaultdict
 from typing import SupportsIndex
 
@@ -5,7 +7,7 @@ from sympy.utilities.iterables import multiset, is_palindromic as _palindromic
 from sympy.utilities.misc import as_int
 
 
-def digits(n: SupportsIndex, b: int = 10, digits: int | None = None) -> list[int]:
+def digits(n: SupportsIndex, b: SupportsIndex = 10, digits: int | None = None) -> list[int]:
     """
     Return a list of the digits of ``n`` in base ``b``. The first
     element in the list is ``b`` (or ``-b`` if ``n`` is negative).
@@ -72,7 +74,7 @@ def digits(n: SupportsIndex, b: int = 10, digits: int | None = None) -> list[int
         return y
 
 
-def count_digits(n: SupportsIndex, b: int = 10) -> defaultdict[int, int]:
+def count_digits(n: SupportsIndex, b: SupportsIndex = 10) -> defaultdict[int, int]:
     """
     Return a dictionary whose keys are the digits of ``n`` in the
     given base, ``b``, with keys indicating the digits appearing in the
@@ -116,7 +118,7 @@ def count_digits(n: SupportsIndex, b: int = 10) -> defaultdict[int, int]:
     return rv
 
 
-def is_palindromic(n: SupportsIndex, b: int = 10) -> bool:
+def is_palindromic(n: SupportsIndex, b: SupportsIndex = 10) -> bool:
     """return True if ``n`` is the same when read from left to right
     or right to left in the given base, ``b``.
 
