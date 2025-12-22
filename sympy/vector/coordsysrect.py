@@ -2,9 +2,10 @@ from collections.abc import Callable
 
 from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
-from sympy.core import S, Dummy, Lambda
+from sympy.core import S, Dummy, Lambda, factor_terms
 from sympy.core.symbol import Str
 from sympy.core.symbol import symbols
+from sympy.functions.elementary.trigonometric import TrigonometricFunction
 from sympy.matrices.immutable import ImmutableDenseMatrix as Matrix
 from sympy.matrices.matrixbase import MatrixBase
 from sympy.solvers import solve
@@ -16,6 +17,7 @@ from sympy.functions.elementary.trigonometric import (acos, atan2, cos, sin)
 from sympy.matrices.dense import eye
 from sympy.matrices.immutable import ImmutableDenseMatrix
 from sympy.simplify.simplify import simplify
+from sympy.simplify.fu import TR5
 from sympy.simplify.trigsimp import trigsimp
 import sympy.vector
 from sympy.vector.orienters import (Orienter, AxisOrienter, BodyOrienter,
@@ -689,7 +691,8 @@ class CoordSys3D(Basic):
         for i in range(rootindex + 1, len(path)):
             result *= path[i]._transformation_matrix_to_parent
 
-        result = trigsimp(result)
+        # attempts to cancel out opposite rotations
+        result = TR5(result)
         return result
 
     @cacheit
@@ -773,7 +776,20 @@ class CoordSys3D(Basic):
             sx, sy, sz = system.base_scalars()
             current = {sx: xs, sy: ys, sz: zs}
 
-        current = {k: trigsimp(v) for k, v in current.items()}
+        def post_process(expr):
+            # attempts to cancel out opposite rotations
+            def pattern(t):
+                return (
+                    t.is_Mul
+                    and any(isinstance(a, TrigonometricFunction) for a in t.args)
+                    and any(a.is_Add and a.has(TrigonometricFunction) for a in t.args)
+                )
+
+            if not expr.find(pattern):
+                return expr
+            return TR5(factor_terms(expr.expand()))
+
+        current = {k: post_process(v) for k, v in current.items()}
         return current
 
     def locate_new(self, name, position, vector_names=None,

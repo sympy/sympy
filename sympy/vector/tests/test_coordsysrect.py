@@ -135,7 +135,7 @@ def test_coordinate_vars():
                                A.x: E.x*cos(a) - E.y*sin(a) + a,
                                A.y: E.x*sin(a) + E.y*cos(a) + b}
     assert E.scalar_map(A) == {E.x: (A.x - a)*cos(a) + (A.y - b)*sin(a),
-                               E.y: (-A.x + a)*sin(a) + (A.y - b)*cos(a),
+                               E.y: (A.x - a)*sin(a)*-1 + (A.y - b)*cos(a),
                                E.z: A.z - c}
     F = A.locate_new('F', Vector.zero)
     assert A.scalar_map(F) == {A.z: F.z, A.x: F.x, A.y: F.y}
@@ -718,7 +718,7 @@ def test_scalar_map_for_sequence_of_systems():
         B.z: C.z}
     assert C.scalar_map(A) == {
         C.x: (A.x - a) * cos(alpha) + (A.y - b) * sin(alpha),
-        C.y: (-A.x + a) * sin(alpha) + (A.y - b) * cos(alpha),
+        C.y: (A.x - a) * sin(alpha) * -1 + (A.y - b) * cos(alpha),
         C.z: A.z - c}
     assert A.scalar_map(C) == {
         A.x: C.x * cos(alpha) - C.y * sin(alpha) + a,
@@ -732,7 +732,7 @@ def test_scalar_map_for_sequence_of_systems():
     assert D.scalar_map(A) == {
         xd: (A.x - a) * cos(alpha) / 2 + (A.y - b) * sin(alpha) / 2,
         yd: A.z - c,
-        zd: (-A.x + a) * sin(alpha) + (A.y - b) * cos(alpha)}
+        zd: (A.x - a) * sin(alpha) * -1 + (A.y - b) * cos(alpha)}
     assert A.scalar_map(D) == {
         A.x: 2 * xd * cos(alpha) - zd * sin(alpha) + a,
         A.y: 2 * xd * sin(alpha) + zd * cos(alpha) + b,
@@ -742,12 +742,12 @@ def test_scalar_map_for_sequence_of_systems():
             ((A.x - a) * cos(alpha) + (A.y - b) * sin(alpha))**2 +
             (-(A.x - a) * sin(alpha) + (A.y - b) * cos(alpha))**2))
     assert res[E.theta] == atan2(
-            (-A.x + a) * sin(alpha) + (A.y - b) * cos(alpha),
+            (A.x - a) * sin(alpha) * -1 + (A.y - b) * cos(alpha),
             (A.x - a) * cos(alpha) + (A.y - b) * sin(alpha))
     assert res[E.z] == A.z - c
     assert A.scalar_map(E) == {
-        A.x: a + E.r * cos(E.theta + alpha),
-        A.y: b + E.r * sin(E.theta + alpha),
+        A.x: a - E.r * sin(E.theta) * sin(alpha) + E.r * cos(E.theta) * cos(alpha),
+        A.y: b + E.r * sin(E.theta) * cos(alpha)  + E.r * cos(E.theta) * sin(alpha),
         A.z: c + E.z}
 
     # walk up and down the path of systems
