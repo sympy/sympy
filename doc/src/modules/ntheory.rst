@@ -9,6 +9,8 @@ Number Theory
 Ntheory Class Reference
 =======================
 
+.. py:class:: array.array
+
 .. autoclass:: sympy.ntheory.generate.Sieve
    :members:
 
