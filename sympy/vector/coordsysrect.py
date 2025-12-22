@@ -749,28 +749,28 @@ class CoordSys3D(Basic):
         fx, fy, fz = self.base_scalars()
         current = {fx: fx, fy: fy, fz: fz}
 
-        for S in systems[:root_idx]:
-            px, py, pz = S.transformation_to_parent()
-            parent = S._parent
+        for system in systems[:root_idx]:
+            px, py, pz = system.transformation_to_parent()
+            parent = system._parent
             px, py, pz = px.subs(current), py.subs(current), pz.subs(current)
             pxs, pys, pzs = parent.base_scalars()
             current = {pxs: px, pys: py, pzs: pz}
 
-        for S in systems[root_idx + 1:]:
-            if S._transformation_from_parent_lambda is None:
+        for system in systems[root_idx + 1:]:
+            if system._transformation_from_parent_lambda is None:
                 # for coordinate systems created with transformation=lambda...
                 # attempt to compute the transformation from parent
-                xp, yp, zp = S._parent.base_scalars()
+                xp, yp, zp = system._parent.base_scalars()
                 equations = [bs - t for bs, t in zip(
-                    S._parent.base_scalars(),
-                    S.transformation_to_parent())]
-                xs, ys, zs = S.base_scalars()
-                sol = solve(equations, S.base_scalars(), dict=True)[0]
-                xs, ys, zs = [sol[k] for k in S.base_scalars()]
+                    system._parent.base_scalars(),
+                    system.transformation_to_parent())]
+                xs, ys, zs = system.base_scalars()
+                sol = solve(equations, system.base_scalars(), dict=True)[0]
+                xs, ys, zs = [sol[k] for k in system.base_scalars()]
             else:
-                xs, ys, zs = S.transformation_from_parent()
+                xs, ys, zs = system.transformation_from_parent()
             xs, ys, zs = [t.subs(current) for t in [xs, ys, zs]]
-            sx, sy, sz = S.base_scalars()
+            sx, sy, sz = system.base_scalars()
             current = {sx: xs, sy: ys, sz: zs}
 
         current = {k: trigsimp(v) for k, v in current.items()}
