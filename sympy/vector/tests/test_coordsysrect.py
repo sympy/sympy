@@ -8,7 +8,7 @@ from sympy.core.symbol import symbols
 from sympy.functions.elementary.hyperbolic import (cosh, sinh)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (acos, atan2, cos, sin)
-from sympy.matrices.dense import zeros
+from sympy.matrices.dense import zeros, eye
 from sympy.matrices.immutable import ImmutableDenseMatrix as Matrix
 from sympy.simplify.simplify import simplify
 from sympy.vector.functions import express
@@ -659,39 +659,103 @@ def test_transformation_matrix_reflection_stretch_to_cartesian():
     assert B.transformation_matrix(A) == T_fromB_toA.inv()
 
 
+def test_transformation_matrix_trigsimp():
+    A = CoordSys3D("A")
+    B = A.orient_new_axis('B', q, A.k)
+    N = B.orient_new_axis('N', -q, B.k)
+    assert N.transformation_matrix(A) == eye(3)
+    assert A.transformation_matrix(N) == eye(3)
+
+
 def test_spherical_cartesian_scalar_map():
     C = CoordSys3D("C")
     S = C.create_new("S", transformation="spherical")
+    x, y, z = C.base_scalars()
+    r, theta, phi = S.base_scalars()
     assert S.scalar_map(C) == {
-        S.r: (
-            C.x * sin(S.theta) * cos(S.phi) +
-            C.y * sin(S.phi) * sin(S.theta) +
-            C.z * cos(S.theta)),
-        S.theta: (
-            C.x * cos(S.phi) * cos(S.theta) +
-            C.y * sin(S.phi) * cos(S.theta) -
-            C.z * sin(S.theta)),
-        S.phi: -C.x * sin(S.phi) + C.y * cos(S.phi)}
+        r: sqrt(x**2 + y**2 + z**2),
+        theta: acos(z / sqrt(x**2 + y**2 + z**2)),
+        phi: atan2(y, x)}
     assert C.scalar_map(S) == {
-        C.x: (
-            -S.phi * sin(S.phi) +
-            S.r * sin(S.theta) * cos(S.phi) +
-            S.theta * cos(S.phi) * cos(S.theta)),
-        C.y: (
-            S.phi * cos(S.phi) +
-            S.r * sin(S.phi) * sin(S.theta) +
-            S.theta * sin(S.phi) * cos(S.theta)),
-        C.z: S.r * cos(S.theta) - S.theta * sin(S.theta)}
+        x: r * sin(theta) * cos(phi),
+        y: r * sin(theta) * sin(phi),
+        z: r * cos(theta)}
 
 
 def test_cylindrical_cartesian_scalar_map():
     Cart = CoordSys3D("Cart")
     C = Cart.create_new("C", transformation="cylindrical")
+    x, y, z = Cart.base_scalars()
+    rc, thetac, zc = C.base_scalars()
     assert C.scalar_map(Cart) == {
-        C.r: Cart.x*cos(C.theta) + Cart.y*sin(C.theta),
-        C.theta: -Cart.x*sin(C.theta) + Cart.y*cos(C.theta),
-        C.z: Cart.z}
+        rc: sqrt(x**2 + y**2),
+        thetac: atan2(y, x),
+        zc: z}
     assert Cart.scalar_map(C) == {
-        Cart.x: C.r*cos(C.theta) - C.theta*sin(C.theta),
-        Cart.y: C.r*sin(C.theta) + C.theta*cos(C.theta),
-        Cart.z: C.z}
+        x: rc * cos(thetac),
+        y: rc * sin(thetac),
+        z: zc}
+
+
+def test_scalar_map_for_sequence_of_systems():
+    alpha = symbols("alpha")
+    a, b, c = symbols("a b c")
+    A = CoordSys3D('A')
+    B = A.locate_new("B", a * A.i + b * A.j + c * A.k)
+    C = B.orient_new_axis("C", alpha, B.k)
+    D = C.create_new("D", transformation=lambda x,y,z: (2*x, z, y))
+    E = C.create_new("E", transformation="cylindrical")
+
+    assert B.scalar_map(A) == {B.x: A.x - a, B.y: A.y - b, B.z: A.z - c}
+    assert A.scalar_map(B) == {A.x: B.x + a, A.y: B.y + b, A.z: B.z + c}
+    assert C.scalar_map(B) == {
+        C.x: B.x * cos(alpha) + B.y * sin(alpha),
+        C.y: -B.x * sin(alpha) + B.y * cos(alpha),
+        C.z: B.z}
+    assert B.scalar_map(C) == {
+        B.x: C.x * cos(alpha) - C.y * sin(alpha),
+        B.y: C.x * sin(alpha) + C.y * cos(alpha),
+        B.z: C.z}
+    assert C.scalar_map(A) == {
+        C.x: (A.x - a) * cos(alpha) + (A.y - b) * sin(alpha),
+        C.y: (-A.x + a) * sin(alpha) + (A.y - b) * cos(alpha),
+        C.z: A.z - c}
+    assert A.scalar_map(C) == {
+        A.x: C.x * cos(alpha) - C.y * sin(alpha) + a,
+        A.y: C.x * sin(alpha) + C.y * cos(alpha) + b,
+        A.z: C.z + c}
+    xd, yd, zd = D.base_scalars()
+    assert D.scalar_map(C) == {
+        xd: C.x / 2, yd: C.z, zd: C.y}
+    assert C.scalar_map(D) == {
+        C.x: 2 * xd, C.y: zd, C.z: yd}
+    assert D.scalar_map(A) == {
+        xd: (A.x - a) * cos(alpha) / 2 + (A.y - b) * sin(alpha) / 2,
+        yd: A.z - c,
+        zd: (-A.x + a) * sin(alpha) + (A.y - b) * cos(alpha)}
+    assert A.scalar_map(D) == {
+        A.x: 2 * xd * cos(alpha) - zd * sin(alpha) + a,
+        A.y: 2 * xd * sin(alpha) + zd * cos(alpha) + b,
+        A.z: yd + c}
+    res = E.scalar_map(A)
+    assert res[E.r].equals(sqrt(
+            ((A.x - a) * cos(alpha) + (A.y - b) * sin(alpha))**2 +
+            (-(A.x - a) * sin(alpha) + (A.y - b) * cos(alpha))**2))
+    assert res[E.theta] == atan2(
+            (-A.x + a) * sin(alpha) + (A.y - b) * cos(alpha),
+            (A.x - a) * cos(alpha) + (A.y - b) * sin(alpha))
+    assert res[E.z] == A.z - c
+    assert A.scalar_map(E) == {
+        A.x: a + E.r * cos(E.theta + alpha),
+        A.y: b + E.r * sin(E.theta + alpha),
+        A.z: c + E.z}
+
+    # walk up and down the path of systems
+    assert E.scalar_map(D) == {
+        E.r: sqrt(4 * xd**2 + zd**2),
+        E.theta: atan2(zd, 2*xd),
+        E.z: yd}
+    assert D.scalar_map(E) == {
+        xd: E.r * cos(E.theta) / 2,
+        yd: E.z,
+        zd: E.r * sin(E.theta)}

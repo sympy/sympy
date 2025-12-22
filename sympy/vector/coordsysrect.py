@@ -689,6 +689,7 @@ class CoordSys3D(Basic):
         for i in range(rootindex + 1, len(path)):
             result *= path[i]._transformation_matrix_to_parent
 
+        result = trigsimp(result)
         return result
 
     @cacheit
@@ -742,14 +743,38 @@ class CoordSys3D(Basic):
 
         """
 
-        origin_coords = tuple(self.position_wrt(other).to_matrix(other))
-        relocated_scalars = [x - origin_coords[i]
-                             for i, x in enumerate(other.base_scalars())]
+        from sympy.vector.functions import _path
 
-        vars_matrix = (self.transformation_matrix(other) *
-                       Matrix(relocated_scalars))
-        return {x: trigsimp(vars_matrix[i])
-                for i, x in enumerate(self.base_scalars())}
+        root_idx, systems = _path(other, self)
+        fx, fy, fz = self.base_scalars()
+        current = {fx: fx, fy: fy, fz: fz}
+
+        for S in systems[:root_idx]:
+            px, py, pz = S.transformation_to_parent()
+            parent = S._parent
+            px, py, pz = px.subs(current), py.subs(current), pz.subs(current)
+            pxs, pys, pzs = parent.base_scalars()
+            current = {pxs: px, pys: py, pzs: pz}
+
+        for S in systems[root_idx + 1:]:
+            if S._transformation_from_parent_lambda is None:
+                # for coordinate systems created with transformation=lambda...
+                # attempt to compute the transformation from parent
+                xp, yp, zp = S._parent.base_scalars()
+                equations = [bs - t for bs, t in zip(
+                    S._parent.base_scalars(),
+                    S.transformation_to_parent())]
+                xs, ys, zs = S.base_scalars()
+                sol = solve(equations, S.base_scalars(), dict=True)[0]
+                xs, ys, zs = [sol[k] for k in S.base_scalars()]
+            else:
+                xs, ys, zs = S.transformation_from_parent()
+            xs, ys, zs = [t.subs(current) for t in [xs, ys, zs]]
+            sx, sy, sz = S.base_scalars()
+            current = {sx: xs, sy: ys, sz: zs}
+
+        current = {k: trigsimp(v) for k, v in current.items()}
+        return current
 
     def locate_new(self, name, position, vector_names=None,
                    variable_names=None):
