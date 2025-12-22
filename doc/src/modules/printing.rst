@@ -128,9 +128,9 @@ Usage::
 LLVM JIT Code Printing
 ----------------------
 
-The ``llvmjitcode`` module provides a way to compile SymPy expressions into 
-executable functions using ``llvmlite``. This is designed to significantly 
-accelerate the numerical evaluation of expressions, making it ideal for 
+The ``llvmjitcode`` module provides a way to compile SymPy expressions into
+executable functions using ``llvmlite``. This is designed to significantly
+accelerate the numerical evaluation of expressions, making it ideal for
 repetitive calls in numerical integration or optimization.
 
 .. module:: sympy.printing.llvmjitcode
