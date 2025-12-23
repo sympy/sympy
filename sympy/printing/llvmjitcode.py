@@ -312,7 +312,7 @@ class LLVMJitCode:
 
 
 class LLVMJitCodeCallback(LLVMJitCode):
-    """A printer to convert SymPy expressions to LLVM IR."""
+    """Handles LLVM JIT compilation for callback-style functions where parameters are passed by array."""
     def __init__(self, signature):
         super().__init__(signature)
 
