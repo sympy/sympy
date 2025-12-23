@@ -73,6 +73,12 @@ number. That *assumption* can make it possible to simplify expressions or
 might allow other manipulations to work. It is usually a good idea to be as
 precise as possible about the assumptions on a symbol when creating it.
 
+.. note:: SymPy does not attempt to infer all mathematical properties automatically.
+          Only explicitly stated assumptions or those that follow from simple logical
+          rules are used. A result of ``None`` from an assumptions query indicates that
+          the value is unknown, not that the query is incorrect.
+
+
 
 The (old) assumptions system
 ============================
