@@ -60,7 +60,7 @@ git_whitelist = {
     'MANIFEST.in',
     'banner.svg',
     # GitHub Codespace
-    '.devcontainer/devcontainer.json'
+    '.devcontainer/devcontainer.json',
     # Code of conduct
     'CODE_OF_CONDUCT.md',
     # Contributing guide
