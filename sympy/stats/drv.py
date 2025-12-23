@@ -4,7 +4,6 @@ from sympy.core.cache import cacheit
 from sympy.core.function import Lambda
 from sympy.core.numbers import I
 from sympy.core.relational import (Eq, Ne)
-from sympy.core.relational import Gt, Ge, Lt, Le
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, symbols)
 from sympy.core.sympify import sympify
