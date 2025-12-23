@@ -27,6 +27,13 @@ from sympy.plotting.series import (
 from sympy.testing.pytest import skip, skip_under_pyodide, warns, raises, warns_deprecated_sympy
 from sympy.utilities import lambdify as lambdify_
 from sympy.utilities.exceptions import ignore_warnings
+import warnings
+
+warnings.filterwarnings(
+    "ignore",
+    category=DeprecationWarning,
+    message=r"'parseString' deprecated - use 'parse_string'",
+)
 
 unset_show()
 
