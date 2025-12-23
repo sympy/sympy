@@ -5,7 +5,7 @@ Walsh Hadamard Transform, Mobius Transform
 
 from __future__ import annotations
 
-from typing import Sequence, SupportsInt, TypeAlias
+from typing import Sequence, SupportsIndex, TypeAlias
 
 from sympy.core import S, Symbol, Expr, sympify
 from sympy.core.function import expand_mul
@@ -17,7 +17,7 @@ from sympy.utilities.misc import as_int
 
 _NumericExpr: TypeAlias = Expr | float | complex | int
 _NumericSequence: TypeAlias = Sequence[_NumericExpr]
-_IntLike: TypeAlias = int | SupportsInt
+_IntLike: TypeAlias = int | SupportsIndex
 _IntSequence: TypeAlias = Sequence[_IntLike]
 
 
