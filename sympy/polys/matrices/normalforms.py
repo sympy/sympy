@@ -213,8 +213,8 @@ def _smith_normal_decomp(m, domain, shape, full):
                     row[0], row[ind[0]] = row[ind[0]], row[0]
 
     # make the first row and column except m[0,0] zero
-    while (any(m[0][i] != zero for i in range(1,cols)) or
-           any(m[i][0] != zero for i in range(1,rows))):
+    while (any(m[0][i] != zero for i in range(1, cols)) or
+           any(m[i][0] != zero for i in range(1, rows))):
         clear_column()
         clear_row()
 
@@ -235,7 +235,7 @@ def _smith_normal_decomp(m, domain, shape, full):
     else:
         lower_right = [r[1:] for r in m[1:]]
         ret = _smith_normal_decomp(lower_right, domain,
-                shape=(rows - 1, cols - 1), full=full)
+                                   shape=(rows - 1, cols - 1), full=full)
         if full:
             invs, s_small, t_small = ret
             s2 = [[1] + [0]*(rows-1)] + [[0] + row for row in s_small]
@@ -422,126 +422,53 @@ def hermite_normal_decomp(A):
     """
     Return the Hermite Normal Form decomposition of matrix ``A``.
 
-    Returns (H, s, t) where H is the Hermite Normal Form and s, t are
-    unimodular DomainMatrix objects such that s * A * t == H. This mirrors
-    the behaviour and return shape of ``smith_normal_decomp``.
+    Returns (U, H) where H is the Hermite Normal Form and U is a
+    unimodular DomainMatrix such that U * A == H.
     """
     res = _hermite_normal_form(A, transform=True)
 
-    if not isinstance(res, tuple) or len(res) < 1:
+    if not isinstance(res, tuple):
         raise NotImplementedError(
-            "underlying _hermite_normal_form did not return a result")
+            "underlying _hermite_normal_form did not return transforms"
+        )
 
-    rows, cols = A.shape
     domain = A.domain
-    eye_s = DomainMatrix.eye(rows, domain)
-    eye_t = DomainMatrix.eye(cols, domain)
 
-    def to_dm(x, expected_shape=None):
+    def to_dm(x, shape=None):
         if isinstance(x, DomainMatrix):
             return x
-        try:
-            if expected_shape is None:
-                # best-effort conversion
-                return DomainMatrix(x, domain=domain)
-            else:
-                return DomainMatrix(x, domain=domain, shape=expected_shape)
-        except Exception:
-            return None
+        return DomainMatrix(x, domain=domain, shape=shape)
 
-    # single value: just H
+    # Handle the 3-value case: (H, U, V) where U * A * V = H
+    if len(res) == 3:
+        H_hnf, U, V = map(to_dm, res)
+        # Since U * A * V = H_hnf, we compute the actual HNF without column operations
+        # by using H = U * A (applying only the row transforms)
+        H = U * A
+        return U, H
+
+    # Handle 2-value case
+    if len(res) == 2:
+        a, b = map(to_dm, res)
+
+        # Check which one is H by testing if a * A == b or b * A == a
+        try:
+            if a * A == b:
+                return a, b
+            if b * A == a:
+                return b, a
+        except Exception:
+            pass
+
+    # Single return → no transform
     if len(res) == 1:
         H = to_dm(res[0])
-        return H, eye_s, eye_t
+        U = DomainMatrix.eye(A.shape[0], domain)
+        return U, H
 
-    # try to interpret a triple (H, U, V) in any order
-    if len(res) >= 3:
-        ncheck = min(6, len(res))
-        A_mat = A
-        for i in range(ncheck):
-            for j in range(ncheck):
-                if j == i:
-                    continue
-                for k in range(ncheck):
-                    if k == i or k == j:
-                        continue
-                    H_rep = to_dm(res[i])
-                    U_rep = to_dm(res[j])
-                    V_rep = to_dm(res[k])
-                    if H_rep is None or U_rep is None or V_rep is None:
-                        continue
-                    try:
-                        if U_rep * A_mat * V_rep == H_rep:
-                            return H_rep, U_rep, V_rep
-                    except Exception:
-                        pass
-        # fallback: try conventional ordering (first three)
-        H_rep = to_dm(res[0])
-        U_rep = to_dm(res[1])
-        V_rep = to_dm(res[2])
-        if H_rep is not None and U_rep is not None and V_rep is not None:
-            try:
-                if U_rep * A * V_rep == H_rep:
-                    return H_rep, U_rep, V_rep
-            except Exception:
-                pass
-        # diagnostic raise
-        dump = []
-        for idx, item in enumerate(res[:6]):
-            try:
-                mat = to_dm(item)
-                if mat is None:
-                    dump.append(f"{idx}: <unconvertible>")
-                else:
-                    dump.append(f"{idx}: shape={mat.shape[0]}x{mat.shape[1]}")
-            except Exception:
-                dump.append(f"{idx}: <error>")
-        raise ValueError("could not interpret transform returned by underlying hermite implementation; "
-                         "returned tuple elements: " + ", ".join(dump))
-
-    # exactly two results: interpret as (H, T) in some order
-    a = to_dm(res[0])
-    b = to_dm(res[1])
-    if a is None or b is None:
-        raise ValueError("could not convert returned objects to DomainMatrix")
-
-    def is_upper(dm):
-        if dm is None:
-            return False
-        M = dm.to_Matrix()
-        r, c = M.rows, M.cols
-        for ii in range(r):
-            for jj in range(c):
-                if ii > jj and M[ii, jj] != 0:
-                    return False
-        return True
-
-    # Prefer identifying H by upper-triangular pattern
-    if is_upper(a) and not is_upper(b):
-        H_rep, T_rep = a, b
-    elif is_upper(b) and not is_upper(a):
-        H_rep, T_rep = b, a
-    else:
-        # fallback assume res = (H, T)
-        H_rep, T_rep = a, b
-
-    # If T is left-transform (T * A == H) return (H, T, I)
-    try:
-        if T_rep * A == H_rep:
-            return H_rep, T_rep, eye_t
-    except Exception:
-        pass
-
-    # If T is right-transform (A * T == H) return (H, I, T)
-    try:
-        if A * T_rep == H_rep:
-            return H_rep, eye_s, T_rep
-    except Exception:
-        pass
-
-    # nothing matched
     raise ValueError(
-        "could not interpret two-element transform returned by underlying hermite implementation")
+        "could not interpret hermite transform output"
+    )
 
 
 def _hermite_normal_form_modulo_D(A, D):
@@ -606,7 +533,8 @@ def _hermite_normal_form_modulo_D(A, D):
 
     m, n = A.shape
     if n < m:
-        raise DMShapeError('Matrix must have at least as many columns as rows.')
+        raise DMShapeError(
+            'Matrix must have at least as many columns as rows.')
     A = A.to_list()
     k = n
     R = D
@@ -697,4 +625,3 @@ def hermite_normal_form(A, *, D=None, check_rank=False):
         return _hermite_normal_form_modulo_D(A, D)
     else:
         return _hermite_normal_form(A)
-    
