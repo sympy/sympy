@@ -46,7 +46,7 @@ def recurrence_memo(
 
     cache: List[T] = initial
 
-    def decorator(f: Callable[[int, List[T]], T]) -> RecurrenceMemoFunc[T]:
+    def decorator(f: Callable[[int, List[T]], T]) -> RecurrenceMemoFunc[Any]:  # type: ignore[return-type]
         @wraps(f)
         def g(n: int) -> T:
             L = len(cache)
@@ -88,7 +88,7 @@ def assoc_recurrence_memo(
 
     cache: List[List[T]] = []
 
-    def decorator(f: Callable[[int, int, List[List[T]]], T]) -> Callable[[int, int], T]:
+    def decorator(f: Callable[[int, int, List[List[T]]], T]) -> Callable[[int, int], Any]:  # type: ignore[return-type]
         @wraps(f)
         def g(n: int, m: int) -> T:
             L = len(cache)
