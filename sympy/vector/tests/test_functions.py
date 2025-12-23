@@ -562,3 +562,34 @@ def test_express_path_of_systems():
     assert express(v3, C3) == (
         -sin(phi) * C3.i +
         cos(phi) * C3.j)
+
+
+def test_express_with_variables():
+    A = CoordSys3D("A")
+    C = A.create_new('C', transformation='cylindrical')
+
+    assert express(A.x, C, variables=False) == A.x
+    assert express(A.x, C, variables=True) == C.r * cos(C.theta)
+    assert express(A.x*A.j, C, variables=False) == (
+        A.x * sin(C.theta) * C.i + A.x * cos(C.theta) * C.j)
+    res = express(A.x*A.j, C, variables=True)
+    assert res == (
+        C.r * sin(C.theta) * cos(C.theta) * C.i +
+        C.r * cos(C.theta)**2 * C.j)
+    assert express(res, A, variables=False) == (
+        (C.r * sin(C.theta)**2 * cos(C.theta) + C.r * cos(C.theta)**3) * A.j)
+    assert express(res, A, variables=True) == (
+        (A.x**3 / (A.x**2 + A.y**2) + A.x * A.y**2 / (A.x**2 + A.y**2)) * A.j)
+
+    assert express(C.r, A, variables=False) == C.r
+    assert express(C.r, A, variables=True) == sqrt(A.x**2 + A.y**2)
+    assert express(C.r * C.i, A, variables=False) == (
+        C.r * cos(C.theta) * A.i + C.r * sin(C.theta) * A.j)
+    res = express(C.r * C.i, A, variables=True)
+    assert res == A.x * A.i + A.y * A.j
+    assert express(res, C, variables=False) == (
+        (A.x * cos(C.theta) + A.y * sin(C.theta)) * C.i +
+        (-A.x * sin(C.theta) + A.y * cos(C.theta)) * C.j)
+    assert express(res, C, variables=True) == (
+        (C.r * sin(C.theta)**2 + C.r * cos(C.theta)**2) * C.i)
+    assert express(res, C, variables=True).simplify() == C.r * C.i

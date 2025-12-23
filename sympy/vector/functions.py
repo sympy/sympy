@@ -70,11 +70,11 @@ def express(expr, system, system2=None, variables=False):
             raise ValueError("system2 should not be provided for \
                                 Vectors")
         # Given expr is a Vector
+        subs_dict = {}
         if variables:
             # If variables attribute is True, substitute
             # the coordinate variables in the Vector
             system_list = {x.system for x in expr.atoms(BaseScalar, BaseVector)} - {system}
-            subs_dict = {}
             for f in system_list:
                 subs_dict.update(f.scalar_map(system))
             expr = expr.subs(subs_dict)
@@ -87,6 +87,7 @@ def express(expr, system, system2=None, variables=False):
                 outvec += matrix_to_vector(temp, system)
             else:
                 outvec += parts[x]
+        outvec = outvec.subs(subs_dict)
         return outvec
 
     elif isinstance(expr, Dyadic):
