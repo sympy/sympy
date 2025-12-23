@@ -1,20 +1,11 @@
 from __future__ import annotations
 from functools import wraps
-from typing import Callable, List, TypeVar, Protocol, Any
-
-T = TypeVar("T")
-T_co = TypeVar("T_co", covariant=True)
-
-
-class RecurrenceMemoFunc(Protocol[T_co]):
-    def __call__(self, n: int) -> T_co: ...
-    def cache_length(self) -> int: ...
-    def fetch_item(self, x: Any): ...
+from typing import Callable, List, Any
 
 
 def recurrence_memo(
-    initial: List[T],
-) -> Callable[..., Any]:  # type: ignore[return-type]
+    initial: List[Any],
+) -> Callable[..., Any]:
     """
     Memo decorator for sequences defined by recurrence.
 
@@ -26,7 +17,7 @@ def recurrence_memo(
     Returns
     =======
     function
-        The decorated recurrence function as a callable object.
+        The decorated recurrence function.
 
     Examples
     ========
@@ -43,12 +34,11 @@ def recurrence_memo(
     >>> factorial.fetch_item(slice(2, 4))
     [2, 6]
     """
+    cache: List[Any] = initial
 
-    cache: List[T] = initial
-
-    def decorator(f: Callable[[int, List[T]], T]) -> RecurrenceMemoFunc[Any]:  # type: ignore[return-type]
+    def decorator(f: Callable[[int, List[Any]], Any]) -> Callable[..., Any]:
         @wraps(f)
-        def g(n: int) -> T:
+        def g(n: int) -> Any:
             L = len(cache)
             if n < L:
                 return cache[n]
@@ -58,14 +48,14 @@ def recurrence_memo(
 
         g.cache_length = lambda: len(cache)  # type: ignore[attr-defined]
         g.fetch_item = lambda x: cache[x]    # type: ignore[attr-defined]
-        return g  # type: ignore[return-value]
+        return g
 
     return decorator
 
 
 def assoc_recurrence_memo(
-    base_seq: Callable[[int], T],
-) -> Callable[..., Any]:  # type: ignore[return-type]
+    base_seq: Callable[[int], Any],
+) -> Callable[..., Any]:
     """
     Memo decorator for associated sequences defined by recurrence starting from base.
 
@@ -77,20 +67,18 @@ def assoc_recurrence_memo(
     Returns
     =======
     function
-        The decorated associated recurrence function as a callable object.
+        The decorated associated recurrence function.
 
     Notes
     =====
     - Works only for Pn0 = base_seq(0) cases
     - Works only for m <= n cases
     """
+    cache: List[List[Any]] = []
 
-
-    cache: List[List[T]] = []
-
-    def decorator(f: Callable[[int, int, List[List[T]]], T]) -> Callable[[int, int], Any]:  # type: ignore[return-type]
+    def decorator(f: Callable[[int, int, List[List[Any]]], Any]) -> Callable[[int, int], Any]:
         @wraps(f)
-        def g(n: int, m: int) -> T:
+        def g(n: int, m: int) -> Any:
             L = len(cache)
             if n < L:
                 return cache[n][m]
