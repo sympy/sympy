@@ -185,6 +185,11 @@ def test_CRootOf_subs():
     assert rootof(x**3 + x + 1, 0).subs(x, y) == rootof(y**3 + y + 1, 0)
 
 
+def test_CRootOf_xreplace():
+    r = CRootOf(x**2 + 2*x - 1, 0)
+    assert (x - r).xreplace({x: r}) == 0
+
+
 def test_CRootOf_diff():
     assert rootof(x**3 + x + 1, 0).diff(x) == 0
     assert rootof(x**3 + x + 1, 0).diff(y) == 0
@@ -695,3 +700,9 @@ def test_issue_19113():
         ) == '[CRootOf(x**3 - x + 1, 0)]'
     assert str(Poly(eq.subs(y, tan(x))).real_roots()
         ) == '[CRootOf(x**3 - x + 1, 0)]'
+
+
+def test_Poly_with_CRootOf():
+    r = RootOf(x**3 + x + 1, 0)
+    p = Poly(r, x)
+    assert p.as_expr() == CRootOf(x**3 + x + 1, 0)
