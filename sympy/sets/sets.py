@@ -2175,27 +2175,27 @@ class FiniteSet(Set):
                 return None
         return PowerSet(biggest)
 
-    def __ge__(self, other):
+    def __ge__(self, other: Set) -> bool | None:
         if not isinstance(other, Set):
-            raise TypeError("Invalid comparison of set with %s" % func_name(other))
+            raise NotImplemented
         return other.is_subset(self)
 
-    def __gt__(self, other):
+    def __gt__(self, other: Set) -> bool | None:
         if not isinstance(other, Set):
-            raise TypeError("Invalid comparison of set with %s" % func_name(other))
+            raise NotImplemented
         return self.is_proper_superset(other)
 
-    def __le__(self, other):
+    def __le__(self, other: Set) -> bool | None:
         if not isinstance(other, Set):
-            raise TypeError("Invalid comparison of set with %s" % func_name(other))
+            raise NotImplemented
         return self.is_subset(other)
 
-    def __lt__(self, other):
+    def __lt__(self, other: Set) -> bool | None:
         if not isinstance(other, Set):
-            raise TypeError("Invalid comparison of set with %s" % func_name(other))
+            raise NotImplemented
         return self.is_proper_subset(other)
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         if isinstance(other, (set, frozenset)):
             return self._args_set == other
         return super().__eq__(other)
