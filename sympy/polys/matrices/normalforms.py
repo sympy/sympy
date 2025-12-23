@@ -468,6 +468,7 @@ def hermite_normal_decomp(A):
         "could not interpret hermite transform output"
     )
 
+
 def _hermite_normal_form_modulo_D(A, D):
     r"""
     Perform the mod *D* Hermite Normal Form reduction algorithm on
