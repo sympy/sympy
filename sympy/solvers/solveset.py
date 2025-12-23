@@ -3574,7 +3574,9 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                 if (depen1.has(Abs) or depen2.has(Abs)) and solver == solveset_complex:
                     # Absolute values cannot be inverted in the
                     # complex domain
-                    continue
+                    raise NotImplementedError(
+                        "nonlinsolve cannot solve equations with Abs in the complex domain"
+                    )
                 soln_imageset = {}
                 for sym in unsolved_syms:
                     not_solvable = False

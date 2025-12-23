@@ -1240,3 +1240,10 @@ def test_symmetricpermutationgroup():
     assert a.degree == 5
     assert a.order() == 120
     assert a.identity() == Permutation(4)
+
+def test_quotient_group():
+    G = SymmetricGroup(4)
+    N = AlternatingGroup(4)
+    Q = G.quotient_group(N)
+    Q_expected = CyclicGroup(2)
+    assert(is_isomorphic(Q, Q_expected) == True)

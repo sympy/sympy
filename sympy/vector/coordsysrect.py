@@ -131,14 +131,14 @@ class CoordSys3D(Basic):
 
         if isinstance(transformation, Tuple):
             lambda_transformation = CoordSys3D._compose_rotation_and_translation(
-                transformation[0],
+                transformation[0].T,
                 transformation[1],
                 parent
             )
             r, l = transformation
             l = l._projections
             lambda_lame = CoordSys3D._get_lame_coeff('cartesian')
-            lambda_inverse = lambda x, y, z: r.inv()*Matrix(
+            lambda_inverse = lambda x, y, z: r*Matrix(
                 [x-l[0], y-l[1], z-l[2]])
         elif isinstance(transformation, Str):
             trname = transformation.name
