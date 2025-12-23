@@ -531,7 +531,7 @@ class CoordSys3D(Basic):
         ========
 
         >>> from sympy.vector import CoordSys3D
-        >>> from sympy import symbols, Matrix
+        >>> from sympy import symbols
 
         Let's consider two Cartesian systems connected by rotations:
 
