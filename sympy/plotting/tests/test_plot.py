@@ -455,7 +455,8 @@ def test_plot_and_save_6(adaptive):
             test_stacklevel=False,
         ):
             p = plot(expr, (x, 1e-6, 1e-2), adaptive=adaptive, n=10)
-            p.save(os.path.join(tmpdir, filename))
+            with ignore_warnings(DeprecationWarning):
+                p.save(os.path.join(tmpdir, filename))
 
 
 @pytest.mark.parametrize("adaptive", [True, False])
