@@ -94,18 +94,22 @@ operations on arrays of any dimension.
 +---------------------------+-------------------------+-------------------------------------------+-----------------------------------------------------------------------------------------------------------+
 | permutation of dimensions | ``PermuteDims``         | permutation $\sigma$ on axes of $A$       | $A_{i_{1} i_{2} \ldots} \Rightarrow A_{i_{\sigma(1)} i_{\sigma(2) \ldots}}$                               |
 +---------------------------+-------------------------+-------------------------------------------+-----------------------------------------------------------------------------------------------------------+
+| addition                  | ``ArrayAdd``            | elementwise $A + B$                       | $A_{ij} + B_{ij}$                                                                                         |
++---------------------------+-------------------------+-------------------------------------------+-----------------------------------------------------------------------------------------------------------+
+| summation                 | ``ArraySum``            | summation $\sum_{x} A^{x}$                | $\sum_{x} A^{x}_{ij}$                                                                                     |
++---------------------------+-------------------------+-------------------------------------------+-----------------------------------------------------------------------------------------------------------+
 
 In SymPy, array expressions are built from four primitive nodes
 ``ArrayTensorProduct``, ``ArrayContraction``, ``ArrayDiagonal``,
 ``PermuteDims`` that compose and manipulate arrays of arbitrary dimension.
 
-These three operators have a canonical form where, when all four are present,
+These four operators have a canonical form where, when all four are present,
 they must be nested in the following sequence (from outermost to innermost):
 permutation, diagonalization, contraction, then tensor product.
 
-The fixed relative order must be respected regardless of which operators are
-present. This canonical form is applied by calling .doit(), as object creation
-itself does not sort the operators.
+Furthermore, to reduce ambiguity among mathematically identical expressions,
+the contraction and diagonalization index-tuples in the canonical form are
+sorted in ascending order according to the minimum index in each tuple.
 
 The canonical order is not automatically applied upon object creation, but can
 be attained by explicitly calling ``.doit()``.
@@ -185,12 +189,14 @@ $$\left[
 In these visual representations of components, the Kronecker product and tensor
 product appear very similar, differing only in their nesting structure.
 However, when using a ``Reshape`` operation to convert an array of shape
-$[2 \times 2 \times 2 \times 2]$ into one of shape $[4 \times 4]$, the
-inner-outer index ordering is preserved. As a result, the inner $[2\times 2]$
-blocks are rearranged into rows in an order that does not match the layout
-produced by the Kronecker product.  Converting a tensor product into a
-Kronecker product by reshaping requires first permuting the $j$ and $k$
-indices:
+$[2 \times 2 \times 2 \times 2]$ into one of shape $[4 \times 4]$, the inner-outer
+index ordering is preserved.  SymPy arrays use a row-major ordering. That is,
+an $N$-dimensional array is internally stored as a one-dimensional array, and a
+multi-index is mapped to a single internal index by traversing the rows first.
+As a result, the inner $[2\times 2]$ blocks are rearranged into rows in an
+order that does not match the layout produced by the Kronecker product.
+Converting a tensor product into a Kronecker product by reshaping requires
+first permuting the $j$ and $k$ indices:
 
 $$\left[
 \begin{matrix}\left[\begin{matrix}{A}_{0,0} {B}_{0,0} & {A}_{0,0} {B}_{0,1}\\{A}_{0,1} {B}_{0,0} & {A}_{0,1} {B}_{0,1}\end{matrix}\right] & \left[\begin{matrix}{A}_{0,0} {B}_{1,0} & {A}_{0,0} {B}_{1,1}\\{A}_{0,1} {B}_{1,0} & {A}_{0,1} {B}_{1,1}\end{matrix}\right]\\\left[\begin{matrix}{A}_{1,0} {B}_{0,0} & {A}_{1,0} {B}_{0,1}\\{A}_{1,1} {B}_{0,0} & {A}_{1,1} {B}_{0,1}\end{matrix}\right] & \left[\begin{matrix}{A}_{1,0} {B}_{1,0} & {A}_{1,0} {B}_{1,1}\\{A}_{1,1} {B}_{1,0} & {A}_{1,1} {B}_{1,1}\end{matrix}\right]\end{matrix}
@@ -410,25 +416,25 @@ the chain rule expression, while the deriving indices need to be brought in
 front of all others (remember, we use the convention that the indices of the
 deriving variable precede the indices of the expression to be derived).
 
-+---------------------------+---------------------------------+-------------------------------------------------------------------------------------+
-| operation                 | expression                      | chain rule                                                                          |
-+===========================+=================================+=====================================================================================+
-| matrix addition           | $\mathbf{Y} + \mathbf{Z}$       | $\partial \mathbf{Y} + \partial\mathbf{Z}$                                          |
-+---------------------------+---------------------------------+-------------------------------------------------------------------------------------+
-| matrix multiplication     | $\mathbf{Y}\mathbf{Z}$          | $(\partial \mathbf{Y})\mathbf{Z} + \mathbf{Y} (\partial\mathbf{Z})$                 |
-+---------------------------+---------------------------------+-------------------------------------------------------------------------------------+
-| Hadamard product          | $\mathbf{Y} \circ \mathbf{Z}$   | $(\partial \mathbf{Y})\circ\mathbf{Z} + \mathbf{Y}\circ(\partial\mathbf{Z})$        |
-+---------------------------+---------------------------------+-------------------------------------------------------------------------------------+
-| tensor product            | $\mathbf{Y}\otimes\mathbf{Z}$   | $(\partial \mathbf{Y})\otimes\mathbf{Z} + \mathbf{Y}\otimes(\partial\mathbf{Z})$    |
-+---------------------------+---------------------------------+-------------------------------------------------------------------------------------+
-| inverse                   | $\mathbf{Y}^{-1}$               | $-\mathbf{Y}^{-1} (\partial \mathbf{Y}) \mathbf{Y}^{-1}$                            |
-+---------------------------+---------------------------------+-------------------------------------------------------------------------------------+
-| trace                     | $\mbox{tr}(\mathbf{Y})$         | $\mbox{tr}(\partial\mathbf{Y})$                                                     |
-+---------------------------+---------------------------------+-------------------------------------------------------------------------------------+
-| determinant               | $\mbox{det}(\mathbf{Y})$        | $\mbox{det}(\mathbf{Y}) \mbox{tr}(\mathbf{Y}^{-1}\partial\mathbf{Y})$               |
-+---------------------------+---------------------------------+-------------------------------------------------------------------------------------+
-| transposition             | $\mathbf{Y}'$                   | $(\partial\mathbf{Y})'$                                                             |
-+---------------------------+---------------------------------+-------------------------------------------------------------------------------------+
++--------------------------------+---------------------------------+-------------------------------------------------------------------------------------+
+| operation                      | expression                      | chain rule                                                                          |
++================================+=================================+=====================================================================================+
+| matrix addition                | $\mathbf{Y} + \mathbf{Z}$       | $\partial \mathbf{Y} + \partial\mathbf{Z}$                                          |
++--------------------------------+---------------------------------+-------------------------------------------------------------------------------------+
+| matrix multiplication          | $\mathbf{Y}\mathbf{Z}$          | $(\partial \mathbf{Y})\mathbf{Z} + \mathbf{Y} (\partial\mathbf{Z})$                 |
++--------------------------------+---------------------------------+-------------------------------------------------------------------------------------+
+| Hadamard (elementwise) product | $\mathbf{Y} \circ \mathbf{Z}$   | $(\partial \mathbf{Y})\circ\mathbf{Z} + \mathbf{Y}\circ(\partial\mathbf{Z})$        |
++--------------------------------+---------------------------------+-------------------------------------------------------------------------------------+
+| tensor product                 | $\mathbf{Y}\otimes\mathbf{Z}$   | $(\partial \mathbf{Y})\otimes\mathbf{Z} + \mathbf{Y}\otimes(\partial\mathbf{Z})$    |
++--------------------------------+---------------------------------+-------------------------------------------------------------------------------------+
+| inverse                        | $\mathbf{Y}^{-1}$               | $-\mathbf{Y}^{-1} (\partial \mathbf{Y}) \mathbf{Y}^{-1}$                            |
++--------------------------------+---------------------------------+-------------------------------------------------------------------------------------+
+| trace                          | $\mbox{tr}(\mathbf{Y})$         | $\mbox{tr}(\partial\mathbf{Y})$                                                     |
++--------------------------------+---------------------------------+-------------------------------------------------------------------------------------+
+| determinant                    | $\mbox{det}(\mathbf{Y})$        | $\mbox{det}(\mathbf{Y}) \mbox{tr}(\mathbf{Y}^{-1}\partial\mathbf{Y})$               |
++--------------------------------+---------------------------------+-------------------------------------------------------------------------------------+
+| transposition                  | $\mathbf{Y}'$                   | $(\partial\mathbf{Y})'$                                                             |
++--------------------------------+---------------------------------+-------------------------------------------------------------------------------------+
 
 When differentiating with respect to a matrix $\mathbf{X}$, we treat the
 gradient $\partial \mathbf{Y}$ as a 4-dimensional array whose first two axes
@@ -481,9 +487,70 @@ The contraction reproduce the structure of the matrix multiplication of the chai
 As a last step, we need to take the 2-nd and 3-rd axes of the contracted expression in front of the other ones,
 as they are the axes referring to the deriving variable $\mathbf{X}$.
 
-A **concrete example** involving the inverse matrix:
+A **concrete example** involving the inverse matrix taken from [MatrixCookbook]_ (number 124):
 
 $$\frac{\partial}{\partial \mathbf{X}} \operatorname{tr}\left(\mathbf{A} \mathbf{X}^{-1} \mathbf{B} \right) = - \left(\mathbf{X}'\right)^{-1} \mathbf{A}' \mathbf{B}' \left(\mathbf{X}'\right)^{-1} $$
+
+>>> from sympy import MatrixSymbol, Trace, Inverse
+>>> from sympy.abc import k
+>>> A = MatrixSymbol("A", k, k)
+>>> B = MatrixSymbol("B", k, k)
+>>> X = MatrixSymbol("X", k, k)
+>>> expr = Trace(A*X**(-1)*B)
+>>> expr.diff(X)
+-X.T**(-1)*A.T*B.T*X.T**(-1)
+
+
+Example derivatives of the determinant
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Some examples of the derivative of the determinant:
+
+[MatrixCookbook]_ example 49:
+
+$$\frac{\partial}{\partial \mathbf{X}} \mbox{det}(\mathbf{X}) = \mbox{det}(\mathbf{X}) \left(\mathbf{X}'\right)^{-1}$$
+
+>>> from sympy import Determinant
+>>> expr = Determinant(X)
+>>> expr.diff(X)
+Determinant(X)*X.T**(-1)
+
+[MatrixCookbook]_ example 51:
+
+$$\frac{\partial}{\partial \mathbf{X}} \mbox{det}(\mathbf{A}\mathbf{X}\mathbf{B}) = \mbox{det}(\mathbf{A}\mathbf{X}\mathbf{B}) \left(\mathbf{X}'\right)^{-1}$$
+
+>>> expr = Determinant(A*X*B)
+>>> expr.diff(X)
+(Determinant(A)*Determinant(B)*Determinant(X))*X.T**(-1)
+
+[MatrixCookbook]_ example 55:
+
+$$\frac{\partial}{\partial \mathbf{X}} \log\,\mbox{det}(\mathbf{X}) = 2 \left(\mathbf{X}'\right)^{-1}$$
+
+>>> from sympy import log
+>>> expr = log(Determinant(X.T*X))
+>>> expr.diff(X)
+2*X.T**(-1)
+
+
+Example derivatives of the trace
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[MatrixCookbook]_ example 107:
+
+$$\frac{\partial}{\partial \mathbf{X}} \mbox{tr}(\mathbf{X}^2\mathbf{B}) = \left( \mathbf{X} \mathbf{B} + \mathbf{B}\mathbf{X}\right)'$$
+
+>>> expr = Trace(X**2*B)
+>>> expr.diff(X)
+B.T*X.T + X.T*B.T
+
+[MatrixCookbook]_ example 108:
+
+$$\frac{\partial}{\partial \mathbf{X}} \mbox{tr}(\mathbf{X}'\mathbf{B}\mathbf{X}) = \mathbf{B} \mathbf{X} + \mathbf{B}' \mathbf{X}$$
+
+>>> expr = Trace(X.T*B*X)
+>>> expr.diff(X)
+B*X + B.T*X
 
 Array expression to matrix expression conversion
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -556,7 +623,168 @@ A handful of tricks is used to collapse the array dimensions:
   so the expression is nonzero only when $j = k$.
   One of those axes can therefore be dropped without loss of information.
 
+Applications
+------------
+
+Linear regression
+~~~~~~~~~~~~~~~~~
+
+In linear regression, we observe a vector of responses $\mathbf{y}$ of length
+$n$ and, for each of these $n$ observations, $p$ covariates (also called
+predictors) whose values are assumed to explain or predict the responses.  The
+covariates are collected in a design matrix $\mathbf{X}$ of size $n \times p$.
+
+An intercept term is often included in the model, this can be represented by
+adding a column of ones to the matrix $\mathbf{X}$.
+
+The goal is to find a vector of regression coefficients $\boldsymbol{\beta}$ of
+length $p$ such that the linear predictor $\mathbf{X}\boldsymbol{\beta}$
+approximates the observed responses $\mathbf{y}$ as closely as possible.
+
+In ordinary least squares (OLS) regression, the coefficients
+$\boldsymbol{\beta}$ are chosen to minimize the objective function, in this
+case the squared Euclidean $\ell_2$ norm of the residual vector:
+
+$$\min_{\boldsymbol{\beta}} \Big\Vert \mathbf{y} - \mathbf{X} \boldsymbol{\beta} \Big\Vert^2$$
+
+>>> from sympy.abc import n, p
+>>> X = MatrixSymbol("X", n, p)
+>>> y = MatrixSymbol("y", n, 1)
+>>> beta = MatrixSymbol("beta", p, 1)
+>>> obj = (y - X*beta).T * (y - X*beta)
+
+The variable ``obj`` is the objective function to be minimized, here
+represented as a dot-product,
+
+$$\left(\mathbf{y} - \mathbf{X}\boldsymbol{\beta}\right)' \left(\mathbf{y} - \mathbf{X}\boldsymbol{\beta}\right).$$
+
+A standard way to find the minimizer is to differentiate this objective
+function with respect to $\boldsymbol{\beta}$ and set the resulting gradient
+equal to zero:
+
+>>> obj.diff(beta)
+-2*X.T*(-X*beta + y)
+
+that is, computing the derivative of the objective function with respect to
+$\boldsymbol{\beta}$ yields
+
+$$- 2 \mathbf{X}' \left(\mathbf{y} - \mathbf{X}\boldsymbol{\beta}\right).$$
+
+Setting this derivative equal to zero gives the normal equations, which can
+then be solved to obtain the ordinary least squares estimator.  We can
+rearrange:
+
+>>> ((X.T*X).inv() * obj.diff(beta)).expand()
+-2*(X.T*X)**(-1)*X.T*y + 2*beta
+
+that is, $- 2 \left(\mathbf{X}' \mathbf{X}\right)^{-1} \mathbf{X}' \mathbf{y} + 2 \boldsymbol{\beta}$.
+
+This leads immediately to the well-known closed-form solution for the ordinary
+least squares estimator:
+
+$$\boldsymbol{\beta} = \left(\mathbf{X}' \mathbf{X}\right)^{-1} \mathbf{X}' \mathbf{y}$$
+
+Ridge regression
+~~~~~~~~~~~~~~~~
+
+Ridge regression is a variation of linear regression in which the objective
+function includes an additional term proportional to the squared norm of
+$\boldsymbol{\beta}$:
+
+$$\min_{\boldsymbol{\beta}} \Big( \big \Vert \mathbf{X} \boldsymbol{\beta} - \mathbf{y} \big \Vert^2 + \lambda \big \Vert \boldsymbol{\beta} \big \Vert^2 \Big)$$
+
+This approach causes the components of $\boldsymbol{\beta}$ to remain small and
+provides better behavior in the presence of multicollinearity, that is, when
+the columns of $\mathbf{X}$ are correlated, which is a well-known weakness of
+ordinary linear regression.
+
+Using SymPy, the objective function can be written as:
+
+>>> from sympy import symbols
+>>> lamda = symbols("lambda")
+>>> residual = y - X*beta
+>>> obj = residual.T * residual + lamda * beta.T * beta
+>>> obj
+lambda*beta.T*beta + (-beta.T*X.T + y.T)*(-X*beta + y)
+
+which corresponds to $\lambda \boldsymbol{\beta}' \boldsymbol{\beta} + \left( \mathbf{y}' - \boldsymbol{\beta}' \mathbf{X}' \right) \left( \mathbf{y} -
+\mathbf{X} \boldsymbol{\beta} \right)$.
+
+Taking the derivative of the objective function with respect to
+$\boldsymbol{\beta}$ yields:
+
+>>> obj.diff(beta)
+(2*lambda)*beta - 2*X.T*(-X*beta + y)
+
+which is $2 \lambda \boldsymbol{\beta} - 2 \mathbf{X}' \left( \mathbf{y} - \mathbf{X} \boldsymbol{\beta} \right)$.
+Regrouping the terms by $\boldsymbol{\beta}$ and dropping the constant factor
+of 2, we obtain:
+
+$$\left(\lambda \mathbf{I} + \mathbf{X}' \mathbf{X}\right  ) \boldsymbol{\beta} - \mathbf{X}' \mathbf{y}$$
+
+Solving for the stationary point by setting this derivative equal to zero gives
+the normal equations for ridge regression:
+
+$$\boldsymbol{\beta} = \left(\lambda \mathbf{I} + \mathbf{X}' \mathbf{X}\right)^{-1} \mathbf{X}' \mathbf{y}$$
+
+Principal component analysis
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Given a matrix $\mathbf{X}$ whose columns are zero-mean, we seek a column
+vector $\mathbf{w}$ such that the projection $\mathbf{X}\mathbf{w}$ has maximum
+variance.
+
+Since the columns of $\mathbf{X}$ have zero mean, the vector
+$\mathbf{X}\mathbf{w}$ will also have zero mean, as it is simply a weighted
+linear combination of the columns of $\mathbf{X}$. Consequently, the variance
+of $\mathbf{X}\mathbf{w}$ is proportional to its squared norm. This observation
+leads to the following optimization problem:
+
+$$\underset{\mathbf{w}}{\operatorname{arg\,max}} \, \Big\Vert \mathbf{X} \mathbf{w} \Big\Vert^2 \\ \mbox{with } \big \Vert \mathbf{w} \big \Vert = 1$$
+
+Expressing the norms in terms of matrix products, the problem can be written as
+
+$$\underset{\mathbf{w}}{\operatorname{arg\,max}} \left( \mathbf{w}' \mathbf{X}' \mathbf{X} \mathbf{w} \right) \\ \mbox{with } \mathbf{w}'\mathbf{w} = 1$$
+
+To solve this constrained optimization problem, we introduce a Lagrange
+multiplier and define the Lagrangian
+
+$$\mathcal{L} = \mathbf{w}' \mathbf{X}' \mathbf{X} \mathbf{w} + \lambda ( \mathbf{w}'\mathbf{w} - 1 )$$
+
+In SymPy, this setup can be expressed as follows:
+
+>>> from sympy import Identity
+>>> lamda, n, p = symbols("lambda n p")
+>>> X = MatrixSymbol("X", n, p)
+>>> w = MatrixSymbol("w", p, 1)
+>>> target = X*w
+>>> lagr_mult = target.T*target + lamda*(w.T*w - Identity(1))
+>>> lagr_mult
+lambda*(-I + w.T*w) + w.T*X.T*X*w
+
+We now proceed by computing the partial derivatives of the Lagrangian with
+respect to $\mathbf{w}$ and $\lambda$:
+
+>>> d_w = lagr_mult.diff(w)
+>>> d_w
+(2*lambda)*w + 2*X.T*X*w
+>>> d_lambda = lagr_mult.diff(lamda)
+>>> d_lambda
+-I + w.T*w
+
+and setting them equal to zero in order to obtain the stationary conditions for
+this optimization problem.  That is, we are required to solve the following two
+equations:
+
+$$\frac{\partial \mathcal{L}}{\partial \mathbf{w}} = 2 \lambda \mathbf{w} + 2 \mathbf{X}' \mathbf{X} \mathbf{w} = 0$$
+
+$$\frac{\partial \mathcal{L}}{\partial \lambda} = \mathbf{w}' \mathbf{w} - \mathbb{I} = 0$$
+
+The first equation corresponds to the eigenvalue equation of the matrix
+$\mathbf{X}' \mathbf{X}$. Therefore, we conclude that $\mathbf{w}$ must be an
+eigenvector of $\mathbf{X}' \mathbf{X}$.
+
 References
 ----------
 
-* The Matrix Cookbook, by Kaare Brandt Petersen and Michael Syskind Pedersen, https://www.math.uwaterloo.ca/~hwolkowi/matrixcookbook.pdf
+.. [MatrixCookbook] The Matrix Cookbook, by Kaare Brandt Petersen and Michael Syskind Pedersen, https://www.math.uwaterloo.ca/~hwolkowi/matrixcookbook.pdf

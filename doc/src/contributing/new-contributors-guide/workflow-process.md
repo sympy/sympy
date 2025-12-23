@@ -23,6 +23,7 @@ pull request, or even before committing a change.
   ```bash
   python bin/test quality
   flake8 sympy/
+  ruff check sympy
   ```
 
 - [ ] **[Add tests](workflow-process-add-tests).** All new functionality
