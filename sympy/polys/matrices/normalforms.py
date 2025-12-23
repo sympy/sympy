@@ -429,7 +429,7 @@ def hermite_normal_decomp(A):
 
     if not isinstance(res, tuple):
         raise NotImplementedError(
-            "underlying _hermite_normal_form did not return transforms"
+            "Underlying _hermite_normal_form did not return transforms"
         )
 
     domain = A.domain
@@ -442,8 +442,6 @@ def hermite_normal_decomp(A):
     # Handle the 3-value case: (H, U, V) where U * A * V = H
     if len(res) == 3:
         H_hnf, U, V = map(to_dm, res)
-        # Since U * A * V = H_hnf, we compute the actual HNF without column operations
-        # by using H = U * A (applying only the row transforms)
         H = U * A
         return U, H
 
@@ -469,7 +467,6 @@ def hermite_normal_decomp(A):
     raise ValueError(
         "could not interpret hermite transform output"
     )
-
 
 def _hermite_normal_form_modulo_D(A, D):
     r"""
