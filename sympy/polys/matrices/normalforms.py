@@ -458,7 +458,7 @@ def hermite_normal_decomp(A):
         except Exception:
             pass
 
-    # Single return → no transform
+    # Single return: no transform
     if len(res) == 1:
         H = to_dm(res[0])
         U = DomainMatrix.eye(A.shape[0], domain)
