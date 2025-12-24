@@ -23,9 +23,10 @@ from sympy.utilities.decorator import deprecated
 
 if TYPE_CHECKING:
     from typing import (
-        TypeVar, Iterable, Callable, Sequence,
+        Any, TypeVar, Iterable, Callable, Sequence,
         Literal, SupportsIndex,
     )
+    from typing_extensions import TypeGuard
     T = TypeVar('T')
 
 
@@ -3080,9 +3081,9 @@ class NotIterable:
 
 
 def iterable(
-    i: object,
+    i: Any,
     exclude: tuple[type, ...] | type | None = (str, dict, NotIterable),
-) -> bool:
+) -> TypeGuard[Iterable[Any]]:
     """
     Return a boolean indicating whether ``i`` is SymPy iterable.
     True also indicates that the iterator is finite, e.g. you can
