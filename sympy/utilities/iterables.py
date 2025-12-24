@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import builtins
-from typing import TYPE_CHECKING, Any, overload
+from typing import TYPE_CHECKING, overload
 
 from collections import Counter, defaultdict, OrderedDict
 from itertools import (
@@ -3080,7 +3080,7 @@ class NotIterable:
 
 
 def iterable(
-    i: Any,
+    i: object,
     exclude: tuple[type, ...] | type | None = (str, dict, NotIterable),
 ) -> bool:
     """
