@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, overload
+from typing import TYPE_CHECKING, overload
 
-import builtins
 from collections import Counter, defaultdict, OrderedDict
 from itertools import (
     chain, combinations, combinations_with_replacement, cycle, islice,
@@ -403,29 +402,30 @@ def ibin(
     ['000', '001', '010', '011', '100', '101', '110', '111']
 
     """
-    n = as_int(n)
     if n < 0:
         raise ValueError("negative numbers are not allowed")
+    n = as_int(n)
 
-    bits_int: int
     if bits is None:
-        bits_int = 0
-    elif isinstance(bits, builtins.str):
-        bits_int = -1
+        bits = 0
     else:
-        bits_int = as_int(bits)
-        if n.bit_length() > bits_int:
-            raise ValueError(
-                "`bits` must be >= {}".format(n.bit_length()))
+        try:
+            bits = as_int(bits)
+        except ValueError:
+            bits = -1
+        else:
+            if n.bit_length() > bits:
+                raise ValueError(
+                    "`bits` must be >= {}".format(n.bit_length()))
 
     if not str:
-        if bits_int >= 0:
-            return [1 if i == "1" else 0 for i in f'{n:b}'.rjust(bits_int, "0")]
+        if bits >= 0:
+            return [1 if i == "1" else 0 for i in f'{n:b}'.rjust(bits, "0")]
         else:
             return variations(range(2), n, repetition=True)
     else:
-        if bits_int >= 0:
-            return f'{n:b}'.rjust(bits_int, "0")
+        if bits >= 0:
+            return f'{n:b}'.rjust(bits, "0")
         else:
             return (f'{i:b}'.rjust(n, "0") for i in range(2**n))
 
@@ -3086,7 +3086,7 @@ class NotIterable:
 
 
 def iterable(
-    i: Any,
+    i: object,
     exclude: tuple[type, ...] | type | None = (str, dict, NotIterable),
 ) -> bool:
     """
