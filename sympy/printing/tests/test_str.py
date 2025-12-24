@@ -1204,3 +1204,9 @@ def test_printing_stats():
     assert z2._eval_is_commutative() == False
     assert z3._eval_is_commutative() == False
     assert z4._eval_is_commutative() == False
+
+def test_Piecewise_Matrix():
+    from sympy import Piecewise, Matrix, symbols
+    x = symbols('x')
+    p = Piecewise((Matrix([[1, 0], [0, 1]]), x > 0), (Matrix([[0, 0], [0, 0]]), True))
+    assert str(p) == "Piecewise((Matrix([[1, 0],[0, 1]]), x > 0), (Matrix([[0, 0],[0, 0]]), True))"

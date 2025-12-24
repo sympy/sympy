@@ -970,6 +970,16 @@ class StrPrinter(Printer):
                                self._print(expr.lhs),
                                self._print(expr.rhs))
 
+    def _print_Piecewise(self, expr):
+        ecpairs = []
+        for e, c in expr.args:
+            estr = self.doprint(e)
+            cstr = self.doprint(c)
+            if '\n' in estr:
+                estr = estr.replace('\n', '')
+            ecpairs.append((estr, cstr))
+        args = [f"({e}, {c})" for e, c in ecpairs]
+        return "Piecewise(%s)" % ", ".join(args)
 
 @print_function(StrPrinter)
 def sstr(expr, **settings):
