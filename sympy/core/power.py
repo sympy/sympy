@@ -182,9 +182,10 @@ class Pow(Expr):
             elif exp == -1 and not base:
                 return S.ComplexInfinity
             elif exp.__class__.__name__ == "AccumulationBounds":
-                if base == S.Exp1:
-                    from sympy.calculus.accumulationbounds import AccumBounds
-                    return AccumBounds(Pow(base, exp.min), Pow(base, exp.max))
+                from sympy.calculus.accumulationbounds import AccumBounds
+                if isinstance(exp, AccumBounds):
+                    if base == S.Exp1:
+                        return AccumBounds(Pow(base, exp.min), Pow(base, exp.max))
             # autosimplification if base is a number and exp odd/even
             # if base is Number then the base will end up positive; we
             # do not do this with arbitrary expressions since symbolic

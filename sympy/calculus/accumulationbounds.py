@@ -1,3 +1,4 @@
+from typing import TYPE_CHECKING
 from sympy.core import Add, Mul, Pow, S
 from sympy.core.basic import Basic
 from sympy.core.expr import Expr
@@ -181,10 +182,15 @@ class AccumulationBounds(Expr):
     calculations, use ``mpmath.iv`` instead.
     """
 
+    if TYPE_CHECKING:
+        @property
+        def args(self) -> tuple[Expr, Expr]:
+            ...
+
     is_extended_real = True
     is_number = False
 
-    def __new__(cls, min, max) -> Expr: # type: ignore
+    def __new__(cls, min: Expr | complex, max: Expr | complex) -> Expr: # type: ignore
 
         min = _sympify(min)
         max = _sympify(max)

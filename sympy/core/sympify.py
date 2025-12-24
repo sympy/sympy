@@ -20,6 +20,7 @@ if TYPE_CHECKING:
     from sympy.core.basic import Basic
     from sympy.core.expr import Expr
     from sympy.core.numbers import Integer, Float
+    from sympy.logic.boolalg import BooleanFalse, BooleanTrue
 
     Tbasic = TypeVar('Tbasic', bound=Basic)
 
@@ -111,7 +112,9 @@ def _convert_numpy_types(a, **sympify_args):
 
 
 @overload
-def sympify(a: int, *, strict: bool = False) -> Integer: ... # type: ignore
+def sympify(a: bool, *, strict: bool = False) -> BooleanFalse | BooleanTrue: ... # type: ignore
+@overload
+def sympify(a: int, *, strict: bool = False) -> Integer: ...
 @overload
 def sympify(a: float, *, strict: bool = False) -> Float: ...
 @overload
@@ -511,7 +514,20 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     return expr
 
 
-def _sympify(a):
+@overload
+def _sympify(a: bool) -> BooleanFalse | BooleanTrue: ... # type: ignore
+@overload
+def _sympify(a: int) -> Integer: ...
+@overload
+def _sympify(a: float) -> Float: ...
+@overload
+def _sympify(a: Expr | complex) -> Expr: ...
+@overload
+def _sympify(a: Tbasic) -> Tbasic: ...
+@overload
+def _sympify(a: Any) -> Basic: ...
+
+def _sympify(a: Any) -> Basic:
     """
     Short version of :func:`~.sympify` for internal usage for ``__add__`` and
     ``__eq__`` methods where it is ok to allow some things (like Python

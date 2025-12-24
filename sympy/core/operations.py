@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import overload, TYPE_CHECKING
+from typing import overload, TYPE_CHECKING, Callable
 
 from operator import attrgetter
 from collections import defaultdict
@@ -13,7 +13,7 @@ from .cache import cacheit
 from .sorting import ordered
 from .logic import fuzzy_and
 from .parameters import global_parameters
-from sympy.utilities.iterables import sift
+from sympy.utilities.iterables import _sift_true_false
 from sympy.multipledispatch.dispatcher import (Dispatcher,
     ambiguity_register_error_ignore_dup,
     str_signature, RaiseNotImplementedError)
@@ -258,9 +258,8 @@ this object, use the * or + operator instead.
         # eliminate exact part from pattern: (2+a+w1+w2).matches(expr) -> (w1+w2).matches(expr-a-2)
         from .function import WildFunction
         from .symbol import Wild
-        wild_part, exact_part = sift(self.args, lambda p:
-            p.has(Wild, WildFunction) and not expr.has(p),
-            binary=True)
+        is_wild_part = lambda p: p.has(Wild, WildFunction) and not expr.has(p)
+        wild_part, exact_part = _sift_true_false(self.args, is_wild_part)
         if not exact_part:
             wild_part = list(ordered(wild_part))
             if self.is_Add:
@@ -352,24 +351,24 @@ this object, use the * or + operator instead.
 
         return
 
-    def _has_matcher(self):
+    def _has_matcher(self) -> Callable[[Basic], bool]:
         """Helper for .has() that checks for containment of
         subexpressions within an expr by using sets of args
         of similar nodes, e.g. x + 1 in x + y + 1 checks
         to see that {x, 1} & {x, y, 1} == {x, 1}
         """
-        def _ncsplit(expr):
+        def _ncsplit(expr: Basic) -> tuple[set[Basic], list[Basic]]:
             # this is not the same as args_cnc because here
             # we don't assume expr is a Mul -- hence deal with args --
             # and always return a set.
-            cpart, ncpart = sift(expr.args,
-                lambda arg: arg.is_commutative is True, binary=True)
+            is_commutative = lambda arg: arg.is_commutative is True
+            cpart, ncpart = _sift_true_false(expr.args, is_commutative)
             return set(cpart), ncpart
 
         c, nc = _ncsplit(self)
         cls = self.__class__
 
-        def is_in(expr):
+        def is_in(expr: Basic) -> bool:
             if isinstance(expr, cls):
                 if expr == self:
                     return True
@@ -382,6 +381,7 @@ this object, use the * or + operator instead.
                             if _nc[i:i + len(nc)] == nc:
                                 return True
             return False
+
         return is_in
 
     def _eval_evalf(self, prec):

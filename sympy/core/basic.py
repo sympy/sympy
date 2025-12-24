@@ -5,7 +5,7 @@ from collections import Counter
 from collections.abc import Mapping, Iterable
 from itertools import zip_longest
 from functools import cmp_to_key
-from typing import TYPE_CHECKING, overload
+from typing import TYPE_CHECKING, overload, Callable
 
 from .assumptions import _prepare_class_assumptions
 from .cache import cacheit
@@ -1382,7 +1382,7 @@ class Basic(Printable):
         return self, False
 
     @cacheit
-    def has(self, *patterns):
+    def has(self, *patterns: Basic | complex | type[Basic]) -> bool:
         """
         Test whether any subexpression matches any of the patterns.
 
@@ -1430,7 +1430,7 @@ class Basic(Printable):
         """
         return self._has(iterargs, *patterns)
 
-    def has_xfree(self, s: set[Basic]):
+    def has_xfree(self, s: set[Tbasic]) -> bool:
         """Return True if self has any of the patterns in s as a
         free argument, else False. This is like `Basic.has_free`
         but this will only report exact argument matches.
@@ -1458,7 +1458,7 @@ class Basic(Printable):
         return any(a in s for a in iterfreeargs(self))
 
     @cacheit
-    def has_free(self, *patterns):
+    def has_free(self, *patterns: Basic | complex | type[Basic]) -> bool:
         """Return True if self has object(s) ``x`` as a free expression
         else False.
 
@@ -1486,6 +1486,7 @@ class Basic(Printable):
         """
         if not patterns:
             return False
+
         p0 = patterns[0]
         if len(patterns) == 1 and iterable(p0) and not isinstance(p0, Basic):
             # Basic can contain iterables (though not non-Basic, ideally)
@@ -1494,18 +1495,26 @@ class Basic(Printable):
                 Expecting 1 or more Basic args, not a single
                 non-Basic iterable. Don't forget to unpack
                 iterables: `eq.has_free(*patterns)`'''))
+
         # try quick test first
-        s = set(patterns)
+        s = {p for p in patterns if isinstance(p, Basic)}
         rv = self.has_xfree(s)
         if rv:
             return rv
+
         # now try matching through slower _has
         return self._has(iterfreeargs, *patterns)
 
-    def _has(self, iterargs, *patterns):
+    def _has(
+        self,
+        iterargs: Callable[[Basic], Iterable[Basic]],
+        *patterns: Basic | complex | type[Basic],
+    ) -> bool:
+
         # separate out types and unhashable objects
-        type_set = set()  # only types
-        p_set = set()  # hashable non-types
+        type_set: set[type[Basic]] = set()  # only types
+        p_set: set[Basic] = set()  # hashable non-types
+
         for p in patterns:
             if isinstance(p, type) and issubclass(p, Basic):
                 type_set.add(p)
@@ -1515,11 +1524,11 @@ class Basic(Printable):
                     p = _sympify(p)
                 except SympifyError:
                     continue  # Basic won't have this in it
-            p_set.add(p)  # fails if object defines __eq__ but
-                          # doesn't define __hash__
-        types = tuple(type_set)   #
-        for i in iterargs(self):  #
-            if i in p_set:        # <--- here, too
+            p_set.add(p)
+
+        types = tuple(type_set)
+        for i in iterargs(self):
+            if i in p_set:
                 return True
             if isinstance(i, types):
                 return True
@@ -1527,12 +1536,11 @@ class Basic(Printable):
         # use matcher if defined, e.g. operations defines
         # matcher that checks for exact subset containment,
         # (x + y + 1).has(x + 1) -> True
-        for i in p_set - type_set:  # types don't have matchers
-            if not hasattr(i, '_has_matcher'):
-                continue
-            match = i._has_matcher()
-            if any(match(arg) for arg in iterargs(self)):
-                return True
+        for i in p_set:
+            match: Callable[[Basic], bool] | None = getattr(i, '_has_matcher', None)
+            if match is not None:
+                if any(match(arg) for arg in iterargs(self)):
+                    return True
 
         # no success
         return False

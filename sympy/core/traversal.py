@@ -9,7 +9,7 @@ from sympy.utilities.iterables import iterable
 
 
 
-def iterargs(expr):
+def iterargs(expr: Basic) -> Iterator[Basic]:
     """Yield the args of a Basic object in a breadth-first traversal.
     Depth-traversal stops if `arg.args` is either empty or is not
     an iterable.
@@ -34,7 +34,7 @@ def iterargs(expr):
         args.extend(i.args)
 
 
-def iterfreeargs(expr, _first=True):
+def iterfreeargs(expr: Basic, _first: bool = True) -> Iterator[Basic]:
     """Yield the args of a Basic object in a breadth-first traversal.
     Depth-traversal stops if `arg.args` is either empty or is not
     an iterable. The bound objects of an expression will be returned
