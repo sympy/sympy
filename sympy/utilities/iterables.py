@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import builtins
-from typing import TYPE_CHECKING, overload
+from typing import TYPE_CHECKING, Any, overload
 
 from collections import Counter, defaultdict, OrderedDict
 from itertools import (
@@ -322,26 +322,14 @@ def multiset(seq: Sequence[T]) -> dict[T, int]:
 @overload
 def ibin(
     n: SupportsIndex,
-    bits: None = None,
+    bits: SupportsIndex | None = None,
     str: Literal[False] = False,
 ) -> list[int]: ...
 @overload
 def ibin(
     n: SupportsIndex,
-    bits: int,
-    str: Literal[False] = False,
-) -> list[int]: ...
-@overload
-def ibin(
-    n: SupportsIndex,
-    bits: None = None,
+    bits: SupportsIndex | None = None,
     str: Literal[True] = True,
-) -> str: ...
-@overload
-def ibin(
-    n: SupportsIndex,
-    bits: int,
-    str: Literal[True],
 ) -> str: ...
 @overload
 def ibin(
@@ -3090,7 +3078,7 @@ class NotIterable:
 
 
 def iterable(
-    i: object,
+    i: Any,
     exclude: tuple[type, ...] | type | None = (str, dict, NotIterable),
 ) -> bool:
     """
@@ -3142,7 +3130,7 @@ def iterable(
     if hasattr(i, '_iterable'):
         return i._iterable
     try:
-        iter(i)  # type: ignore[arg-type]
+        iter(i)
     except TypeError:
         return False
     if exclude:
