@@ -2,11 +2,8 @@
 Memoization
 ===========
 
-.. py:data:: T
-   :no-index:
-
-.. py:data:: T_co
-   :no-index:
+.. py:class:: T
+.. py:class:: T_co
 
 .. automodule:: sympy.utilities.memoization
    :members:
