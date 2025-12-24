@@ -10,7 +10,11 @@ class RecurrenceMemoFunc(Protocol[T_co]):
     def cache_length(self) -> int: ...
     def fetch_item(self, x): ...
 
-def recurrence_memo(initial: List[T]) -> Callable[[Callable[[int, List[T]], T]], RecurrenceMemoFunc[T]]:
+def recurrence_memo(
+        initial: List[T]
+        ) -> Callable[
+            [Callable[[int, List[T]], T]],RecurrenceMemoFunc[T]
+            ]:
     """
     Memo decorator for sequences defined by recurrence
 
@@ -50,7 +54,11 @@ def recurrence_memo(initial: List[T]) -> Callable[[Callable[[int, List[T]], T]],
     return decorator
 
 
-def assoc_recurrence_memo(base_seq: Callable[[int], T]) -> Callable[[Callable[[int, int, List[List[T]]], T]], Callable[[int, int], T]]:
+def assoc_recurrence_memo(
+        base_seq: Callable[[int], T]
+        ) -> Callable[
+            [Callable[[int, int, List[List[T]]], T]],Callable[[int, int], T]
+              ]:
     """
     Memo decorator for associated sequences defined by recurrence starting from base
 
