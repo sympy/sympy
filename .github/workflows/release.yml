@@ -32,7 +32,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       # Check out with full git history for authors check:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -45,7 +45,7 @@ jobs:
         run: release/ci_release_script.sh ${{ env.release_version }} ${{ env.previous_version }}
 
       - name: Store release files
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: release_files
           path: release-${{ env.release_version }}
@@ -69,7 +69,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Retrieve release files
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v7
         with:
           name: release_files
 
@@ -101,7 +101,7 @@ jobs:
 
     steps:
       - name: Download release artifacts
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v7
         with:
           name: release_files
           path: dist.all
@@ -130,7 +130,7 @@ jobs:
 
     steps:
       - name: Download release artifacts
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v7
         with:
           name: release_files
           path: dist.all
@@ -167,10 +167,10 @@ jobs:
 
     steps:
       - name: Checkout sympy
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Download release artifacts
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v7
         with:
           name: release_files
           path: dist
@@ -207,10 +207,10 @@ jobs:
 
     steps:
       - name: Checkout sympy
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Checkout sympy_doc
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: sympy/sympy_doc
           ref: gh-pages
@@ -220,7 +220,7 @@ jobs:
       - run: git config --global user.name "SymPy GitHub Actions release bot"
       - run: git config --global user.email "<>"
 
-      - uses: actions/download-artifact@v5
+      - uses: actions/download-artifact@v7
         with:
           name: release_files
           path: dist
