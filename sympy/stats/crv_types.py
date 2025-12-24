@@ -293,7 +293,7 @@ def Arcsin(name, a=0, b=1):
 
     >>> X = Arcsin("x", a, b)
 
-    >>> density(X)(z)
+    >>> density(X).pdf(z)
     1/(pi*sqrt((-a + z)*(b - z)))
 
     >>> cdf(X)(z)
@@ -376,7 +376,7 @@ def Benini(name, alpha, beta, sigma):
 
     >>> X = Benini("x", alpha, beta, sigma)
 
-    >>> D = density(X)(z)
+    >>> D = density(X).pdf(z)
     >>> pprint(D, use_unicode=False)
     /                  /  z  \\             /  z  \            2/  z  \
     |        2*beta*log|-----||  - alpha*log|-----| - beta*log  |-----|
@@ -458,7 +458,7 @@ def Beta(name, alpha, beta):
 
     >>> X = Beta("x", alpha, beta)
 
-    >>> D = density(X)(z)
+    >>> D = density(X).pdf(z)
     >>> pprint(D, use_unicode=False)
      alpha - 1        beta - 1
     z         *(1 - z)
@@ -539,7 +539,7 @@ def BetaNoncentral(name, alpha, beta, lamda):
 
     >>> X = BetaNoncentral("x", alpha, beta, lamda)
 
-    >>> D = density(X)(z)
+    >>> D = density(X).pdf(z)
     >>> pprint(D, use_unicode=False)
       oo
     _____
@@ -625,7 +625,7 @@ def BetaPrime(name, alpha, beta):
 
     >>> X = BetaPrime("x", alpha, beta)
 
-    >>> D = density(X)(z)
+    >>> D = density(X).pdf(z)
     >>> pprint(D, use_unicode=False)
      alpha - 1        -alpha - beta
     z         *(z + 1)
@@ -690,7 +690,7 @@ def BoundedPareto(name, alpha, left, right):
     >>> L, H = symbols('L, H', positive=True)
     >>> X = BoundedPareto('X', 2, L, H)
     >>> x = symbols('x')
-    >>> density(X)(x)
+    >>> density(X).pdf(x)
     2*L**2/(x**3*(1 - L**2/H**2))
     >>> cdf(X)(x)
     Piecewise((-H**2*L**2/(x**2*(H**2 - L**2)) + H**2/(H**2 - L**2), L <= x), (0, True))
@@ -772,7 +772,7 @@ def Cauchy(name, x0, gamma):
 
     >>> X = Cauchy("x", x0, gamma)
 
-    >>> density(X)(z)
+    >>> density(X).pdf(z)
     1/(pi*gamma*(1 + (-x0 + z)**2/gamma**2))
 
     References
@@ -850,7 +850,7 @@ def Chi(name, k):
 
     >>> X = Chi("x", k)
 
-    >>> density(X)(z)
+    >>> density(X).pdf(z)
     2**(1 - k/2)*z**(k - 1)*exp(-z**2/2)/gamma(k/2)
 
     >>> simplify(E(X))
@@ -926,7 +926,7 @@ def ChiNoncentral(name, k, l):
 
     >>> X = ChiNoncentral("x", k, l)
 
-    >>> density(X)(z)
+    >>> density(X).pdf(z)
     l*z**k*exp(-l**2/2 - z**2/2)*besseli(k/2 - 1, l*z)/(l*z)**(k/2)
 
     References
@@ -1006,7 +1006,7 @@ def ChiSquared(name, k):
 
     >>> X = ChiSquared("x", k)
 
-    >>> density(X)(z)
+    >>> density(X).pdf(z)
     z**(k/2 - 1)*exp(-z/2)/(2**(k/2)*gamma(k/2))
 
     >>> E(X)
@@ -1094,7 +1094,7 @@ def Dagum(name, p, a, b):
 
     >>> X = Dagum("x", p, a, b)
 
-    >>> density(X)(z)
+    >>> density(X).pdf(z)
     a*p*(z/b)**(a*p)*((z/b)**a + 1)**(-p - 1)/z
 
     >>> cdf(X)(z)
@@ -1169,7 +1169,7 @@ def Davis(name, b, n, mu):
     >>> mu = Symbol("mu", positive=True)
     >>> z = Symbol("z")
     >>> X = Davis("x", b, n, mu)
-    >>> density(X)(z)
+    >>> density(X).pdf(z)
     b**n*(-mu + z)**(-n - 1)/((exp(b/(-mu + z)) - 1)*gamma(n)*zeta(n))
 
     References
@@ -1223,7 +1223,7 @@ def Erlang(name, k, l):
 
     >>> X = Erlang("x", k, l)
 
-    >>> D = density(X)(z)
+    >>> D = density(X).pdf(z)
     >>> pprint(D, use_unicode=False)
      k  k - 1  -l*z
     l *z     *e
@@ -1344,7 +1344,7 @@ def ExGaussian(name, mean, std, rate):
     >>> z = Symbol("z")
     >>> X = ExGaussian("x", mean, std, rate)
 
-    >>> pprint(density(X)(z), use_unicode=False)
+    >>> pprint(density(X).pdf(z), use_unicode=False)
                  /           2             \
            lamda*\lamda*sigma  + 2*mu - 2*z/
            ---------------------------------     /  ___ /           2         \\
@@ -1443,7 +1443,7 @@ def Exponential(name, rate):
     >>> p = Symbol("p")
     >>> X = Exponential("x", l)
 
-    >>> density(X)(z)
+    >>> density(X).pdf(z)
     lambda*exp(-lambda*z)
 
     >>> cdf(X)(z)
@@ -1463,7 +1463,7 @@ def Exponential(name, rate):
 
     >>> X = Exponential('x', 10)
 
-    >>> density(X)(z)
+    >>> density(X).pdf(z)
     10*exp(-10*z)
 
     >>> E(X)
@@ -1551,7 +1551,7 @@ def ExponentialPower(name, mu, alpha, beta):
     >>> alpha = Symbol("alpha", positive=True)
     >>> beta = Symbol("beta", positive=True)
     >>> X = ExponentialPower("x", mu, alpha, beta)
-    >>> pprint(density(X)(z), use_unicode=False)
+    >>> pprint(density(X).pdf(z), use_unicode=False)
                      beta
            /|mu - z|\
           -|--------|
@@ -1638,7 +1638,7 @@ def FDistribution(name, d1, d2):
 
     >>> X = FDistribution("x", d1, d2)
 
-    >>> D = density(X)(z)
+    >>> D = density(X).pdf(z)
     >>> pprint(D, use_unicode=False)
       d2
       --    ______________________________
@@ -1718,7 +1718,7 @@ def FisherZ(name, d1, d2):
 
     >>> X = FisherZ("x", d1, d2)
 
-    >>> D = density(X)(z)
+    >>> D = density(X).pdf(z)
     >>> pprint(D, use_unicode=False)
                                 d1   d2
         d1   d2               - -- - --
@@ -1806,7 +1806,7 @@ def Frechet(name, a, s=1, m=0):
 
     >>> X = Frechet("x", a, s, m)
 
-    >>> density(X)(z)
+    >>> density(X).pdf(z)
     a*((-m + z)/s)**(-a - 1)*exp(-1/((-m + z)/s)**a)/s
 
     >>> cdf(X)(z)
@@ -1889,7 +1889,7 @@ def Gamma(name, k, theta):
 
     >>> X = Gamma("x", k, theta)
 
-    >>> D = density(X)(z)
+    >>> D = density(X).pdf(z)
     >>> pprint(D, use_unicode=False)
                       -z
                     -----
@@ -1996,7 +1996,7 @@ def GammaInverse(name, a, b):
 
     >>> X = GammaInverse("x", a, b)
 
-    >>> D = density(X)(z)
+    >>> D = density(X).pdf(z)
     >>> pprint(D, use_unicode=False)
                 -b
                 ---
@@ -2101,7 +2101,7 @@ def Gumbel(name, beta, mu, minimum=False):
     >>> mu = Symbol("mu")
     >>> beta = Symbol("beta", positive=True)
     >>> X = Gumbel("x", beta, mu)
-    >>> density(X)(x)
+    >>> density(X).pdf(x)
     exp(-exp(-(-mu + x)/beta) - (-mu + x)/beta)/beta
     >>> cdf(X)(x)
     exp(-exp(-(-mu + x)/beta))
@@ -2179,7 +2179,7 @@ def Gompertz(name, b, eta):
 
     >>> X = Gompertz("x", b, eta)
 
-    >>> density(X)(z)
+    >>> density(X).pdf(z)
     b*eta*exp(eta)*exp(b*z)*exp(-eta*exp(b*z))
 
     References
@@ -2252,7 +2252,7 @@ def Kumaraswamy(name, a, b):
 
     >>> X = Kumaraswamy("x", a, b)
 
-    >>> D = density(X)(z)
+    >>> D = density(X).pdf(z)
     >>> pprint(D, use_unicode=False)
                        b - 1
          a - 1 /     a\
@@ -2338,7 +2338,7 @@ def Laplace(name, mu, b):
 
     >>> X = Laplace("x", mu, b)
 
-    >>> density(X)(z)
+    >>> density(X).pdf(z)
     exp(-Abs(mu - z)/b)/(2*b)
 
     >>> cdf(X)(z)
@@ -2431,7 +2431,7 @@ def Levy(name, mu, c):
 
     >>> X = Levy("x", mu, c)
 
-    >>> density(X)(z)
+    >>> density(X).pdf(z)
     sqrt(2)*sqrt(c)*exp(-c/(-2*mu + 2*z))/(2*sqrt(pi)*(-mu + z)**(3/2))
 
     >>> cdf(X)(z)
@@ -2507,7 +2507,7 @@ def LogCauchy(name, mu, sigma):
 
     >>> X = LogCauchy("x", mu, sigma)
 
-    >>> density(X)(z)
+    >>> density(X).pdf(z)
     1/(5*pi*z*((log(z) - 2)**2 + 1/25))
 
     >>> cdf(X)(z)
@@ -2587,7 +2587,7 @@ def Logistic(name, mu, s):
 
     >>> X = Logistic("x", mu, s)
 
-    >>> density(X)(z)
+    >>> density(X).pdf(z)
     exp((mu - z)/s)/(s*(exp((mu - z)/s) + 1)**2)
 
     >>> cdf(X)(z)
@@ -2671,7 +2671,7 @@ def LogLogistic(name, alpha, beta):
 
     >>> X = LogLogistic("x", alpha, beta)
 
-    >>> D = density(X)(z)
+    >>> D = density(X).pdf(z)
     >>> pprint(D, use_unicode=False)
                   beta - 1
            /  z  \
@@ -2754,7 +2754,7 @@ def LogitNormal(name, mu, s):
     >>> z = Symbol("z")
     >>> X = LogitNormal("x",mu,s)
 
-    >>> D = density(X)(z)
+    >>> D = density(X).pdf(z)
     >>> pprint(D, use_unicode=False)
                               2
             /         /  z  \\
@@ -2768,7 +2768,7 @@ def LogitNormal(name, mu, s):
             ____
         2*\/ pi *s*z*(1 - z)
 
-    >>> density(X)(z)
+    >>> density(X).pdf(z)
     sqrt(2)*exp(-(-mu + log(z/(1 - z)))**2/(2*s**2))/(2*sqrt(pi)*s*z*(1 - z))
 
     >>> cdf(X)(z)
@@ -2852,7 +2852,7 @@ def LogNormal(name, mean, std):
 
     >>> X = LogNormal("x", mu, sigma)
 
-    >>> D = density(X)(z)
+    >>> D = density(X).pdf(z)
     >>> pprint(D, use_unicode=False)
                           2
            -(-mu + log(z))
@@ -2867,7 +2867,7 @@ def LogNormal(name, mean, std):
 
     >>> X = LogNormal('x', 0, 1) # Mean 0, standard deviation 1
 
-    >>> density(X)(z)
+    >>> density(X).pdf(z)
     sqrt(2)*exp(-log(z)**2/2)/(2*sqrt(pi)*z)
 
     References
@@ -2926,7 +2926,7 @@ def Lomax(name, alpha, lamda):
     >>> a, l = symbols('a, l', positive=True)
     >>> X = Lomax('X', a, l)
     >>> x = symbols('x')
-    >>> density(X)(x)
+    >>> density(X).pdf(x)
     a*(1 + x/l)**(-a - 1)/l
     >>> cdf(X)(x)
     Piecewise((1 - 1/(1 + x/l)**a, x >= 0), (0, True))
@@ -3006,7 +3006,7 @@ def Maxwell(name, a):
 
     >>> X = Maxwell("x", a)
 
-    >>> density(X)(z)
+    >>> density(X).pdf(z)
     sqrt(2)*z**2*exp(-z**2/(2*a**2))/(sqrt(pi)*a**3)
 
     >>> E(X)
@@ -3090,7 +3090,7 @@ def Moyal(name, mu, sigma):
     >>> sigma = Symbol("sigma", positive=True, real=True)
     >>> z = Symbol("z")
     >>> X = Moyal("x", mu, sigma)
-    >>> density(X)(z)
+    >>> density(X).pdf(z)
     sqrt(2)*exp(-exp((mu - z)/sigma)/2 - (-mu + z)/(2*sigma))/(2*sqrt(pi)*sigma)
     >>> simplify(cdf(X)(z))
     1 - erf(sqrt(2)*exp((mu - z)/(2*sigma))/2)
@@ -3167,7 +3167,7 @@ def Nakagami(name, mu, omega):
 
     >>> X = Nakagami("x", mu, omega)
 
-    >>> D = density(X)(z)
+    >>> D = density(X).pdf(z)
     >>> pprint(D, use_unicode=False)
                                     2
                                -mu*z
@@ -3269,7 +3269,7 @@ def Normal(name, mean, std):
     >>> p = Symbol("p")
     >>> X = Normal("x", mu, sigma)
 
-    >>> density(X)(z)
+    >>> density(X).pdf(z)
     sqrt(2)*exp(-(-mu + z)**2/(2*sigma**2))/(2*sqrt(pi)*sigma)
 
     >>> C = simplify(cdf(X))(z) # it needs a little more help...
@@ -3288,7 +3288,7 @@ def Normal(name, mean, std):
     0
 
     >>> X = Normal("x", 0, 1) # Mean 0, standard deviation 1
-    >>> density(X)(z)
+    >>> density(X).pdf(z)
     sqrt(2)*exp(-z**2/2)/(2*sqrt(pi))
 
     >>> E(2*X + 1)
@@ -3402,7 +3402,7 @@ def GaussianInverse(name, mean, shape):
     >>> z = Symbol("z", positive=True)
     >>> X = GaussianInverse("x", mu, lamda)
 
-    >>> D = density(X)(z)
+    >>> D = density(X).pdf(z)
     >>> pprint(D, use_unicode=False)
                                        2
                       -lambda*(-mu + z)
@@ -3508,7 +3508,7 @@ def Pareto(name, xm, alpha):
 
     >>> X = Pareto("x", xm, beta)
 
-    >>> density(X)(z)
+    >>> density(X).pdf(z)
     beta*xm**beta*z**(-beta - 1)
 
     References
@@ -3583,7 +3583,7 @@ def PowerFunction(name, alpha, a, b):
 
     >>> X = PowerFunction("X", 2, a, b)
 
-    >>> density(X)(z)
+    >>> density(X).pdf(z)
     (-2*a + 2*z)/(-a + b)**2
 
     >>> cdf(X)(z)
@@ -3680,7 +3680,7 @@ def QuadraticU(name, a, b):
 
     >>> X = QuadraticU("x", a, b)
 
-    >>> D = density(X)(z)
+    >>> D = density(X).pdf(z)
     >>> pprint(D, use_unicode=False)
     /                2
     |   /  a   b    \
@@ -3769,7 +3769,7 @@ def RaisedCosine(name, mu, s):
 
     >>> X = RaisedCosine("x", mu, s)
 
-    >>> D = density(X)(z)
+    >>> D = density(X).pdf(z)
     >>> pprint(D, use_unicode=False)
     /   /pi*(-mu + z)\
     |cos|------------| + 1
@@ -3853,7 +3853,7 @@ def Rayleigh(name, sigma):
 
     >>> X = Rayleigh("x", sigma)
 
-    >>> density(X)(z)
+    >>> density(X).pdf(z)
     z*exp(-z**2/(2*sigma**2))/sigma**2
 
     >>> E(X)
@@ -3916,7 +3916,7 @@ def Reciprocal(name, a, b):
     >>> a, b, x = symbols('a, b, x', positive=True)
     >>> R = Reciprocal('R', a, b)
 
-    >>> density(R)(x)
+    >>> density(R).pdf(x)
     1/(x*(-log(a) + log(b)))
     >>> cdf(R)(x)
     Piecewise((log(a)/(log(a) - log(b)) - log(x)/(log(a) - log(b)), a <= x), (0, True))
@@ -3984,7 +3984,7 @@ def ShiftedGompertz(name, b, eta):
 
     >>> X = ShiftedGompertz("x", b, eta)
 
-    >>> density(X)(x)
+    >>> density(X).pdf(x)
     b*(eta*(1 - exp(-b*x)) + 1)*exp(-b*x)*exp(-eta*exp(-b*x))
 
     References
@@ -4056,7 +4056,7 @@ def StudentT(name, nu):
 
     >>> X = StudentT("x", nu)
 
-    >>> D = density(X)(z)
+    >>> D = density(X).pdf(z)
     >>> pprint(D, use_unicode=False)
                nu   1
              - -- - -
@@ -4158,7 +4158,7 @@ def Trapezoidal(name, a, b, c, d):
 
     >>> X = Trapezoidal("x", a,b,c,d)
 
-    >>> pprint(density(X)(z), use_unicode=False)
+    >>> pprint(density(X).pdf(z), use_unicode=False)
     /        -2*a + 2*z
     |-------------------------  for And(a <= z, b > z)
     |(-a + b)*(-a - b + c + d)
@@ -4259,7 +4259,7 @@ def Triangular(name, a, b, c):
 
     >>> X = Triangular("x", a,b,c)
 
-    >>> pprint(density(X)(z), use_unicode=False)
+    >>> pprint(density(X).pdf(z), use_unicode=False)
     /    -2*a + 2*z
     |-----------------  for And(a <= z, c > z)
     |(-a + b)*(-a + c)
@@ -4372,7 +4372,7 @@ def Uniform(name, left, right):
 
     >>> X = Uniform("x", a, b)
 
-    >>> density(X)(z)
+    >>> density(X).pdf(z)
     Piecewise((1/(-a + b), (b >= z) & (a <= z)), (0, True))
 
     >>> cdf(X)(z)
@@ -4467,7 +4467,7 @@ def UniformSum(name, n):
 
     >>> X = UniformSum("x", n)
 
-    >>> D = density(X)(z)
+    >>> D = density(X).pdf(z)
     >>> pprint(D, use_unicode=False)
     floor(z)
       ___
@@ -4558,7 +4558,7 @@ def VonMises(name, mu, k):
 
     >>> X = VonMises("x", mu, k)
 
-    >>> D = density(X)(z)
+    >>> D = density(X).pdf(z)
     >>> pprint(D, use_unicode=False)
          k*cos(mu - z)
         e
@@ -4634,7 +4634,7 @@ def Weibull(name, alpha, beta):
 
     >>> X = Weibull("x", l, k)
 
-    >>> density(X)(z)
+    >>> density(X).pdf(z)
     k*(z/lambda)**(k - 1)*exp(-(z/lambda)**k)/lambda
 
     >>> simplify(E(X))
@@ -4715,7 +4715,7 @@ def WignerSemicircle(name, R):
 
     >>> X = WignerSemicircle("x", R)
 
-    >>> density(X)(z)
+    >>> density(X).pdf(z)
     2*sqrt(R**2 - z**2)/(pi*R**2)
 
     >>> E(X)
