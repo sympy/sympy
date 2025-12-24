@@ -22,7 +22,7 @@ from sympy.utilities.decorator import deprecated
 
 if TYPE_CHECKING:
     from typing import (
-        TypeVar, Iterable, Iterator, Generator, Callable, Sequence,
+        TypeVar, Iterable, Callable, Sequence,
         Literal, SupportsIndex, SupportsInt,
     )
     T = TypeVar('T')
