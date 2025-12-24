@@ -10,7 +10,13 @@ class RecurrenceMemoFunc(Protocol[T_co]):
     def cache_length(self) -> int: ...
     def fetch_item(self, x) -> Any: ...
 
-__all__ = ["recurrence_memo", "assoc_recurrence_memo", "RecurrenceMemoFunc"]
+__all__ = [
+    "T",
+    "T_co",
+    "recurrence_memo",
+    "assoc_recurrence_memo",
+    "RecurrenceMemoFunc",
+]
 
 def recurrence_memo(
         initial: List[T]
