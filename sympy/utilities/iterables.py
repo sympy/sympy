@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import builtins
 from typing import TYPE_CHECKING, overload
 
 from collections import Counter, defaultdict, OrderedDict
@@ -23,7 +24,7 @@ from sympy.utilities.decorator import deprecated
 if TYPE_CHECKING:
     from typing import (
         TypeVar, Iterable, Callable, Sequence,
-        Literal, SupportsIndex, SupportsInt,
+        Literal, SupportsIndex,
     )
     T = TypeVar('T')
 
@@ -320,43 +321,43 @@ def multiset(seq: Sequence[T]) -> dict[T, int]:
 
 @overload
 def ibin(
-    n: SupportsIndex | SupportsInt,
+    n: SupportsIndex,
     bits: None = None,
     str: Literal[False] = False,
 ) -> list[int]: ...
 @overload
 def ibin(
-    n: SupportsIndex | SupportsInt,
+    n: SupportsIndex,
     bits: int,
     str: Literal[False] = False,
 ) -> list[int]: ...
 @overload
 def ibin(
-    n: SupportsIndex | SupportsInt,
+    n: SupportsIndex,
     bits: None = None,
     str: Literal[True] = True,
 ) -> str: ...
 @overload
 def ibin(
-    n: SupportsIndex | SupportsInt,
+    n: SupportsIndex,
     bits: int,
     str: Literal[True],
 ) -> str: ...
 @overload
 def ibin(
-    n: SupportsIndex | SupportsInt,
+    n: SupportsIndex,
     bits: str,
     str: Literal[False] = False,
 ) -> Iterable[tuple[int, ...]]: ...
 @overload
 def ibin(
-    n: SupportsIndex | SupportsInt,
+    n: SupportsIndex,
     bits: str,
     str: Literal[True],
 ) -> Iterable[str]: ...
 def ibin(
-    n: SupportsIndex | SupportsInt,
-    bits: int | str | None = None,
+    n: SupportsIndex,
+    bits: SupportsIndex | str | None = None,
     str: bool = False,
 ) -> list[int] | str | Iterable[tuple[int, ...]] | Iterable[str]:
     """Return a list of length ``bits`` corresponding to the binary value
@@ -402,30 +403,33 @@ def ibin(
     ['000', '001', '010', '011', '100', '101', '110', '111']
 
     """
+    n = as_int(n)
     if n < 0:
         raise ValueError("negative numbers are not allowed")
-    n = as_int(n)
 
+    bits_int: int
     if bits is None:
-        bits = 0
+        bits_int = 0
+    elif isinstance(bits, builtins.str):
+        bits_int = -1
     else:
         try:
-            bits = as_int(bits)
+            bits_int = as_int(bits)
         except ValueError:
-            bits = -1
+            bits_int = -1
         else:
-            if n.bit_length() > bits:
+            if n.bit_length() > bits_int:
                 raise ValueError(
                     "`bits` must be >= {}".format(n.bit_length()))
 
     if not str:
-        if bits >= 0:
-            return [1 if i == "1" else 0 for i in f'{n:b}'.rjust(bits, "0")]
+        if bits_int >= 0:
+            return [1 if i == "1" else 0 for i in f'{n:b}'.rjust(bits_int, "0")]
         else:
             return variations(range(2), n, repetition=True)
     else:
-        if bits >= 0:
-            return f'{n:b}'.rjust(bits, "0")
+        if bits_int >= 0:
+            return f'{n:b}'.rjust(bits_int, "0")
         else:
             return (f'{i:b}'.rjust(n, "0") for i in range(2**n))
 
@@ -3138,7 +3142,7 @@ def iterable(
     if hasattr(i, '_iterable'):
         return i._iterable
     try:
-        iter(i)
+        iter(i)  # type: ignore[arg-type]
     except TypeError:
         return False
     if exclude:

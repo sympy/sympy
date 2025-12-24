@@ -333,6 +333,7 @@ def primitive_root(p: SupportsIndex, smallest: bool = True) -> int | None:
     for i in range(g + 1, p):
         if i % q and is_primitive_root(i, p):
             return i
+    return None
 
 
 def is_primitive_root(a, p):
