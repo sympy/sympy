@@ -2,10 +2,10 @@
 Memoization
 ===========
 
-.. py:class:: T
+.. py:data:: T
    :no-index:
 
-.. py:class:: T_co
+.. py:data:: T_co
    :no-index:
 
 .. automodule:: sympy.utilities.memoization
