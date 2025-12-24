@@ -343,6 +343,8 @@ def ibin(
     bits: str,
     str: Literal[True],
 ) -> Iterable[str]: ...
+
+
 def ibin(
     n: SupportsIndex,
     bits: SupportsIndex | str | None = None,
