@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, overload
 
 from collections import Counter, defaultdict, OrderedDict
 from itertools import (
@@ -21,7 +21,10 @@ from sympy.utilities.decorator import deprecated
 
 
 if TYPE_CHECKING:
-    from typing import TypeVar, Iterable, Callable, Sequence
+    from typing import (
+        TypeVar, Iterable, Iterator, Generator, Callable, Sequence,
+        Literal, SupportsIndex, SupportsInt,
+    )
     T = TypeVar('T')
 
 
@@ -315,7 +318,47 @@ def multiset(seq: Sequence[T]) -> dict[T, int]:
 
 
 
-def ibin(n, bits=None, str=False):
+@overload
+def ibin(
+    n: SupportsIndex | SupportsInt,
+    bits: None = None,
+    str: Literal[False] = False,
+) -> list[int]: ...
+@overload
+def ibin(
+    n: SupportsIndex | SupportsInt,
+    bits: int,
+    str: Literal[False] = False,
+) -> list[int]: ...
+@overload
+def ibin(
+    n: SupportsIndex | SupportsInt,
+    bits: None = None,
+    str: Literal[True] = True,
+) -> str: ...
+@overload
+def ibin(
+    n: SupportsIndex | SupportsInt,
+    bits: int,
+    str: Literal[True],
+) -> str: ...
+@overload
+def ibin(
+    n: SupportsIndex | SupportsInt,
+    bits: str,
+    str: Literal[False] = False,
+) -> Iterable[tuple[int, ...]]: ...
+@overload
+def ibin(
+    n: SupportsIndex | SupportsInt,
+    bits: str,
+    str: Literal[True],
+) -> Iterable[str]: ...
+def ibin(
+    n: SupportsIndex | SupportsInt,
+    bits: int | str | None = None,
+    str: bool = False,
+) -> list[int] | str | Iterable[tuple[int, ...]] | Iterable[str]:
     """Return a list of length ``bits`` corresponding to the binary value
     of ``n`` with small bits to the right (last). If bits is omitted, the
     length will be the number required to represent ``n``. If the bits are
@@ -3042,7 +3085,10 @@ class NotIterable:
     pass
 
 
-def iterable(i, exclude=(str, dict, NotIterable)):
+def iterable(
+    i: object,
+    exclude: tuple[type, ...] | type | None = (str, dict, NotIterable),
+) -> bool:
     """
     Return a boolean indicating whether ``i`` is SymPy iterable.
     True also indicates that the iterator is finite, e.g. you can

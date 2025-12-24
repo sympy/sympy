@@ -236,7 +236,7 @@ def _primitive_root_prime_power2_iter(p, e):
             yield g + p**e
 
 
-def primitive_root(p, smallest=True):
+def primitive_root(p: SupportsIndex, smallest: bool = True) -> int | None:
     r""" Returns a primitive root of ``p`` or None.
 
     Explanation

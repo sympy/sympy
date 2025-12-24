@@ -169,6 +169,8 @@ def _number_theoretic_transform(
             a[i], a[j] = a[j], a[i]
 
     pr = primitive_root(p)
+    if pr is None:
+        raise ValueError("Expected prime modulus to have a primitive root")
 
     rt = pow(pr, (p - 1) // n, p)
     if inverse:
