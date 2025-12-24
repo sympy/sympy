@@ -238,52 +238,16 @@ eigenvals_error_message = \
 
 
 def _eigenvals_list(
-        M: MatrixBase,
-        error_when_incomplete: bool = True,
-        simplify: Callable[[Expr], Expr] | bool = False,
-        **flags
-    ) -> list[Expr]:
-    iblocks = M.strongly_connected_components()
-    all_eigs = []
-    is_dom = M._rep.domain in (ZZ, QQ) # type: ignore
-    for b in iblocks:
-
-        # Fast path for a 1x1 block:
-        if is_dom and len(b) == 1:
-            index = b[0]
-            val = M[index, index]
-            all_eigs.append(val)
-            continue
-
-        block = M[b, b]
-
-        if isinstance(simplify, FunctionType):
-            charpoly = block.charpoly(simplify=simplify)
-        else:
-            charpoly = block.charpoly()
-
-        factors = charpoly.factor_list()[1]
-
-        for factor, multiplicity in factors:
-            eigs = roots(factor, multiple=True, **flags)
-
-            degree = int(factor.degree())
-            if len(eigs) != degree:
-                try:
-                    eigs = factor.all_roots(multiple=True)
-                except NotImplementedError:
-                    if error_when_incomplete:
-                        raise MatrixError(eigenvals_error_message)
-                    else:
-                        eigs = []
-
-            all_eigs += eigs * multiplicity
-
-    if not simplify:
-        return all_eigs
-    if not isinstance(simplify, FunctionType):
-        simplify = _simplify
-    return [simplify(value) for value in all_eigs]
+    M: MatrixBase,
+    error_when_incomplete: bool = True,
+    simplify: Callable[[Expr], Expr] | bool = False,
+    **flags,
+) -> list[Expr]:
+    vals_dict = _eigenvals_dict(M, error_when_incomplete, simplify, **flags)
+    vals = []
+    for val, mult in vals_dict.items():
+        vals.extend([val] * mult)
+    return vals
 
 
 def _eigenvals_dict(
@@ -292,8 +256,11 @@ def _eigenvals_dict(
         simplify: Callable[[Expr], Expr] | bool = False,
         **flags: Any,
     ) -> dict[Expr, int]:
+
     iblocks = M.strongly_connected_components()
     all_eigs: dict[Expr, int] = {}
+    expanded_eigs: dict[Expr, Expr] = {}
+
     # XXX: Only RepMatrix has _rep ...
     is_dom = M._rep.domain in (ZZ, QQ) # type: ignore
     for b in iblocks:
@@ -328,6 +295,16 @@ def _eigenvals_dict(
                         eigs = {}
 
             for k, v in eigs.items():
+                # Try a bit to canonicalize the eigenvalue expressions to get
+                # the multiplicity correct. This is not robust enough in general
+                # if different subroutines in roots can return different forms
+                # for the same root.
+                k_expanded = k.expand()
+                if k_expanded in expanded_eigs:
+                    k = expanded_eigs[k_expanded]
+                else:
+                    expanded_eigs[k_expanded] = k
+
                 v_total = v * multiplicity
                 if k in all_eigs:
                     all_eigs[k] += v_total
