@@ -2,20 +2,20 @@ from __future__ import annotations
 from functools import wraps
 from typing import Any, Callable, List, TypeVar, Protocol, cast
 
-_T = TypeVar("_T")
-_T_co = TypeVar("_T_co", covariant=True)
+T = TypeVar("T")
+T_co = TypeVar("T_co", covariant=True)
 
-class RecurrenceMemoFunc(Protocol[_T_co]):
-    def __call__(self, n: int) -> _T_co: ...
+class RecurrenceMemoFunc(Protocol[T_co]):
+    def __call__(self, n: int) -> T_co: ...
     def cache_length(self) -> int: ...
     def fetch_item(self, x) -> Any: ...
 
 __all__ = ["recurrence_memo", "assoc_recurrence_memo", "RecurrenceMemoFunc"]
 
 def recurrence_memo(
-        initial: List[_T]
+        initial: List[T]
         ) -> Callable[
-            [Callable[[int, List[_T]], _T]],RecurrenceMemoFunc[_T]
+            [Callable[[int, List[T]], T]],RecurrenceMemoFunc[T]
             ]:
     """
     Memo decorator for sequences defined by recurrence
@@ -37,11 +37,11 @@ def recurrence_memo(
     [2, 6]
 
     """
-    cache: List[_T] = initial
+    cache: List[T] = initial
 
-    def decorator(f: Callable[[int, List[_T]], _T]) -> RecurrenceMemoFunc[_T]:
+    def decorator(f: Callable[[int, List[T]], T]) -> RecurrenceMemoFunc[T]:
         @wraps(f)
-        def g(n: int) -> _T:
+        def g(n: int) -> T:
             L = len(cache)
             if n < L:
                 return cache[n]
@@ -51,15 +51,15 @@ def recurrence_memo(
 
         g.cache_length = lambda: len(cache)  # type: ignore[attr-defined]
         g.fetch_item = lambda x: cache[x]    # type: ignore[attr-defined]
-        return cast(RecurrenceMemoFunc[_T], g)
+        return cast(RecurrenceMemoFunc[T], g)
 
     return decorator
 
 
 def assoc_recurrence_memo(
-        base_seq: Callable[[int], _T]
+        base_seq: Callable[[int], T]
         ) -> Callable[
-            [Callable[[int, int, List[List[_T]]], _T]],Callable[[int, int], _T]
+            [Callable[[int, int, List[List[T]]], T]],Callable[[int, int], T]
               ]:
     """
     Memo decorator for associated sequences defined by recurrence starting from base
@@ -69,11 +69,11 @@ def assoc_recurrence_memo(
     XXX works only for Pn0 = base_seq(0) cases
     XXX works only for m <= n cases
     """
-    cache: List[List[_T]] = []
+    cache: List[List[T]] = []
 
-    def decorator(f: Callable[[int, int, List[List[_T]]], _T]) -> Callable[[int, int], _T]:
+    def decorator(f: Callable[[int, int, List[List[T]]], T]) -> Callable[[int, int], T]:
         @wraps(f)
-        def g(n: int, m: int) -> _T:
+        def g(n: int, m: int) -> T:
             L = len(cache)
             if n < L:
                 return cache[n][m]
