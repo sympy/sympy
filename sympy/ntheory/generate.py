@@ -3,6 +3,7 @@ Generating and counting primes.
 
 """
 from __future__ import annotations
+from typing import Iterator
 from bisect import bisect, bisect_left
 from itertools import count
 # Using arrays for sieving instead of lists greatly reduces
@@ -368,7 +369,7 @@ class Sieve:
 # Generate a global object for repeated use in trial division etc
 sieve = Sieve()
 
-def prime(nth):
+def prime(nth: int) -> int:
     r"""
     Return the nth prime number, where primes are indexed starting from 1:
     prime(1) = 2, prime(2) = 3, etc.
@@ -445,7 +446,7 @@ def prime(nth):
 The `sympy.ntheory.generate.primepi` has been moved to `sympy.functions.combinatorial.numbers.primepi`.""",
 deprecated_since_version="1.13",
 active_deprecations_target='deprecated-ntheory-symbolic-functions')
-def primepi(n):
+def primepi(n: int) -> int:
     r""" Represents the prime counting function pi(n) = the number
         of prime numbers less than or equal to n.
 
@@ -533,7 +534,7 @@ def primepi(n):
     return func_primepi(n)
 
 
-def _primepi(n:int) -> int:
+def _primepi(n: int) -> int:
     r""" Represents the prime counting function pi(n) = the number
     of prime numbers less than or equal to n.
 
@@ -631,7 +632,7 @@ def _primepi(n:int) -> int:
     return arr2[1]
 
 
-def nextprime(n, ith=1):
+def nextprime(n: int, ith: int = 1) -> int:
     """ Return the ith prime greater than n.
 
         Parameters
@@ -714,7 +715,7 @@ def nextprime(n, ith=1):
         n += 4
 
 
-def prevprime(n):
+def prevprime(n: int) -> int:
     """ Return the largest prime smaller than n.
 
         Notes
@@ -761,7 +762,7 @@ def prevprime(n):
         n -= 4
 
 
-def primerange(a, b=None):
+def primerange(a: int, b: int | None = None) -> Iterator[int]:
     """ Generate a list of all prime numbers in the range [2, a),
         or [a, b).
 
@@ -866,7 +867,7 @@ def primerange(a, b=None):
             return
 
 
-def randprime(a, b):
+def randprime(a: int, b: int) -> int | None:
     """ Return a random prime number in the range [a, b).
 
         Bertrand's postulate assures that
@@ -910,7 +911,7 @@ def randprime(a, b):
     return p
 
 
-def primorial(n, nth=True):
+def primorial(n: int, nth: bool = True) -> int:
     """
     Returns the product of the first n primes (default) or
     the primes less than or equal to n (when ``nth=False``).
@@ -976,7 +977,7 @@ def primorial(n, nth=True):
     return p
 
 
-def cycle_length(f, x0, nmax=None, values=False):
+def cycle_length(f, x0: int, nmax: int | None = None, values: bool = False) -> int | tuple[int, list[int]]:
     """For a given iterated sequence, return a generator that gives
     the length of the iterated cycle (lambda) and the length of terms
     before the cycle begins (mu); if ``values`` is True then the
@@ -1064,7 +1065,7 @@ def cycle_length(f, x0, nmax=None, values=False):
         yield lam, mu
 
 
-def composite(nth):
+def composite(nth: int) -> int:
     """ Return the nth composite number, with the composite numbers indexed as
         composite(1) = 4, composite(2) = 6, etc....
 
@@ -1129,7 +1130,7 @@ def composite(nth):
     return a
 
 
-def compositepi(n):
+def compositepi(n: int) -> int:
     """ Return the number of positive composite numbers less than or equal to n.
         The first positive composite is 4, i.e. compositepi(4) = 1.
 
