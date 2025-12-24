@@ -3,7 +3,7 @@ Generating and counting primes.
 
 """
 from __future__ import annotations
-from typing import Iterator
+from typing import Iterator, Callable, overload, SupportsIndex, Literal
 from bisect import bisect, bisect_left
 from itertools import count
 # Using arrays for sieving instead of lists greatly reduces
@@ -369,7 +369,7 @@ class Sieve:
 # Generate a global object for repeated use in trial division etc
 sieve = Sieve()
 
-def prime(nth: int) -> int:
+def prime(nth: SupportsIndex) -> int:
     r"""
     Return the nth prime number, where primes are indexed starting from 1:
     prime(1) = 2, prime(2) = 3, etc.
@@ -446,7 +446,7 @@ def prime(nth: int) -> int:
 The `sympy.ntheory.generate.primepi` has been moved to `sympy.functions.combinatorial.numbers.primepi`.""",
 deprecated_since_version="1.13",
 active_deprecations_target='deprecated-ntheory-symbolic-functions')
-def primepi(n: int) -> int:
+def primepi(n: SupportsIndex) -> int:
     r""" Represents the prime counting function pi(n) = the number
         of prime numbers less than or equal to n.
 
@@ -531,10 +531,10 @@ def primepi(n: int) -> int:
         prime : Return the nth prime
     """
     from sympy.functions.combinatorial.numbers import primepi as func_primepi
-    return func_primepi(n)
+    return func_primepi(as_int(n))
 
 
-def _primepi(n: int) -> int:
+def _primepi(n: SupportsIndex) -> int:
     r""" Represents the prime counting function pi(n) = the number
     of prime numbers less than or equal to n.
 
@@ -594,6 +594,7 @@ def _primepi(n: int) -> int:
     n : int
 
     """
+    n = as_int(n)
     if n < 2:
         return 0
     if n <= sieve._list[-1]:
@@ -632,7 +633,7 @@ def _primepi(n: int) -> int:
     return arr2[1]
 
 
-def nextprime(n: int, ith: int = 1) -> int:
+def nextprime(n: SupportsIndex, ith: SupportsIndex = 1) -> int:
     """ Return the ith prime greater than n.
 
         Parameters
@@ -672,50 +673,50 @@ def nextprime(n: int, ith: int = 1) -> int:
         primerange : Generate all primes in a given range
 
     """
-    n = int(n)
-    i = as_int(ith)
+    n_int = int(as_int(n))
+    i = int(as_int(ith))
     if i <= 0:
         raise ValueError("ith should be positive")
-    if n < 2:
-        n = 2
+    if n_int < 2:
+        n_int = 2
         i -= 1
-    if n <= sieve._list[-2]:
-        l, _ = sieve.search(n)
+    if n_int <= sieve._list[-2]:
+        l, _ = sieve.search(n_int)
         if l + i - 1 < len(sieve._list):
             return sieve._list[l + i - 1]
-        n = sieve._list[-1]
+        n_int = sieve._list[-1]
         i += l - len(sieve._list)
-    nn = 6*(n//6)
-    if nn == n:
-        n += 1
-        if isprime(n):
+    nn = 6*(n_int//6)
+    if nn == n_int:
+        n_int += 1
+        if isprime(n_int):
             i -= 1
             if not i:
-                return n
-        n += 4
-    elif n - nn == 5:
-        n += 2
-        if isprime(n):
+                return n_int
+        n_int += 4
+    elif n_int - nn == 5:
+        n_int += 2
+        if isprime(n_int):
             i -= 1
             if not i:
-                return n
-        n += 4
+                return n_int
+        n_int += 4
     else:
-        n = nn + 5
+        n_int = nn + 5
     while 1:
-        if isprime(n):
+        if isprime(n_int):
             i -= 1
             if not i:
-                return n
-        n += 2
-        if isprime(n):
+                return n_int
+        n_int += 2
+        if isprime(n_int):
             i -= 1
             if not i:
-                return n
-        n += 4
+                return n_int
+        n_int += 4
 
 
-def prevprime(n: int) -> int:
+def prevprime(n: SupportsIndex) -> int:
     """ Return the largest prime smaller than n.
 
         Notes
@@ -734,7 +735,7 @@ def prevprime(n: int) -> int:
         nextprime : Return the ith prime greater than n
         primerange : Generates all primes in a given range
     """
-    n = _as_int_ceiling(n)
+    n = int( _as_int_ceiling(n))
     if n < 3:
         raise ValueError("no preceding primes")
     if n < 8:
@@ -762,7 +763,7 @@ def prevprime(n: int) -> int:
         n -= 4
 
 
-def primerange(a: int, b: int | None = None) -> Iterator[int]:
+def primerange(a: SupportsIndex, b: SupportsIndex | None = None) -> Iterator[int]:
     """ Generate a list of all prime numbers in the range [2, a),
         or [a, b).
 
@@ -837,37 +838,40 @@ def primerange(a: int, b: int | None = None) -> Iterator[int]:
         .. [1] https://en.wikipedia.org/wiki/Prime_number
         .. [2] https://primes.utm.edu/notes/gaps.html
     """
+    a_int = int(as_int(a))
+    b_int: int
     if b is None:
-        a, b = 2, a
-    if a >= b:
+        a_int, b_int = 2, a_int
+    else:
+        b_int = int(as_int(b))
+    if a_int >= b_int:
         return
     # If we already have the range, return it.
     largest_known_prime = sieve._list[-1]
-    if b <= largest_known_prime:
-        yield from sieve.primerange(a, b)
+    if b_int <= largest_known_prime:
+        yield from sieve.primerange(a_int, b_int)
         return
     # If we know some of it, return it.
-    if a <= largest_known_prime:
-        yield from sieve._list[bisect_left(sieve._list, a):]
-        a = largest_known_prime + 1
-    elif a % 2:
-        a -= 1
-    tail = min(b, (largest_known_prime)**2)
-    if a < tail:
-        yield from sieve._primerange(a, tail)
-        a = tail
-    if b <= a:
+    if a_int <= largest_known_prime:
+        yield from sieve._list[bisect_left(sieve._list, a_int):]
+        a_int = largest_known_prime + 1
+    elif a_int % 2:
+        a_int -= 1
+    tail = min(b_int, (largest_known_prime)**2)
+    if a_int < tail:
+        yield from sieve._primerange(a_int, tail)
+        a_int = tail
+    if b_int <= a_int:
         return
     # otherwise compute, without storing, the desired range.
-    while 1:
-        a = nextprime(a)
-        if a < b:
-            yield a
+    while True:
+        a_int = nextprime(a_int)
+        if a_int < b_int:
+            yield a_int
         else:
             return
 
-
-def randprime(a: int, b: int) -> int | None:
+def randprime(a: SupportsIndex, b: SupportsIndex) -> int | None:
     """ Return a random prime number in the range [a, b).
 
         Bertrand's postulate assures that
@@ -899,8 +903,10 @@ def randprime(a: int, b: int) -> int | None:
         .. [1] https://en.wikipedia.org/wiki/Bertrand's_postulate
 
     """
+    a = as_int(a)
+    b = as_int(b)
     if a >= b:
-        return
+        return None
     a, b = map(int, (a, b))
     n = randint(a - 1, b)
     p = nextprime(n)
@@ -911,7 +917,7 @@ def randprime(a: int, b: int) -> int | None:
     return p
 
 
-def primorial(n: int, nth: bool = True) -> int:
+def primorial(n: SupportsIndex, nth: bool = True) -> int:
     """
     Returns the product of the first n primes (default) or
     the primes less than or equal to n (when ``nth=False``).
@@ -977,7 +983,32 @@ def primorial(n: int, nth: bool = True) -> int:
     return p
 
 
-def cycle_length(f, x0: int, nmax: int | None = None, values: bool = False) -> int | tuple[int, list[int]]:
+@overload
+def cycle_length(
+    f: Callable[[int], int],
+    x0: int,
+    nmax: SupportsIndex | None = None,
+    *,
+    values: Literal[False] = False,
+) -> Iterator[tuple[int, int | None]]:
+    ...
+
+@overload
+def cycle_length(
+    f: Callable[[int], int],
+    x0: int,
+    nmax: SupportsIndex | None = None,
+    *,
+    values: Literal[True],
+) -> Iterator[int]:
+    ...
+
+def cycle_length(
+    f: Callable[[int], int],
+    x0: int,
+    nmax: SupportsIndex | None = None,
+    values: bool = False,
+) -> Iterator[int] | Iterator[tuple[int, int | None]]:
     """For a given iterated sequence, return a generator that gives
     the length of the iterated cycle (lambda) and the length of terms
     before the cycle begins (mu); if ``values`` is True then the
@@ -1065,7 +1096,7 @@ def cycle_length(f, x0: int, nmax: int | None = None, values: bool = False) -> i
         yield lam, mu
 
 
-def composite(nth: int) -> int:
+def composite(nth: SupportsIndex) -> int:
     """ Return the nth composite number, with the composite numbers indexed as
         composite(1) = 4, composite(2) = 6, etc....
 
@@ -1130,7 +1161,7 @@ def composite(nth: int) -> int:
     return a
 
 
-def compositepi(n: int) -> int:
+def compositepi(n: SupportsIndex) -> int:
     """ Return the number of positive composite numbers less than or equal to n.
         The first positive composite is 4, i.e. compositepi(4) = 1.
 
