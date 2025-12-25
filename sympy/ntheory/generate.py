@@ -534,7 +534,7 @@ def primepi(n: SupportsIndex) -> int:
     return func_primepi(as_int(n))
 
 
-def _primepi(n: SupportsIndex) -> int:
+def _primepi(n: int) -> int:
     r""" Represents the prime counting function pi(n) = the number
     of prime numbers less than or equal to n.
 
@@ -594,7 +594,6 @@ def _primepi(n: SupportsIndex) -> int:
     n : int
 
     """
-    n = as_int(n)
     if n < 2:
         return 0
     if n <= sieve._list[-1]:
@@ -673,47 +672,50 @@ def nextprime(n: SupportsIndex, ith: SupportsIndex = 1) -> int:
         primerange : Generate all primes in a given range
 
     """
-    n_int = int(as_int(n))
-    i = int(as_int(ith))
+    return _nextprime(as_int(n), as_int(ith))
+
+def _nextprime(n: int, ith: int = 1) -> int:
+    """ Internal implementation of nextprime. """
+    i = ith
     if i <= 0:
         raise ValueError("ith should be positive")
-    if n_int < 2:
-        n_int = 2
+    if n < 2:
+        n = 2
         i -= 1
-    if n_int <= sieve._list[-2]:
-        l, _ = sieve.search(n_int)
+    if n <= sieve._list[-2]:
+        l, _ = sieve.search(n)
         if l + i - 1 < len(sieve._list):
             return sieve._list[l + i - 1]
-        n_int = sieve._list[-1]
+        n = sieve._list[-1]
         i += l - len(sieve._list)
-    nn = 6*(n_int//6)
-    if nn == n_int:
-        n_int += 1
-        if isprime(n_int):
+    nn = 6*(n//6)
+    if nn == n:
+        n += 1
+        if isprime(n):
             i -= 1
             if not i:
-                return n_int
-        n_int += 4
-    elif n_int - nn == 5:
-        n_int += 2
-        if isprime(n_int):
+                return n
+        n += 4
+    elif n - nn == 5:
+        n += 2
+        if isprime(n):
             i -= 1
             if not i:
-                return n_int
-        n_int += 4
+                return n
+        n += 4
     else:
-        n_int = nn + 5
+        n = nn + 5
     while 1:
-        if isprime(n_int):
+        if isprime(n):
             i -= 1
             if not i:
-                return n_int
-        n_int += 2
-        if isprime(n_int):
+                return n
+        n += 2
+        if isprime(n):
             i -= 1
             if not i:
-                return n_int
-        n_int += 4
+                return n
+        n += 4
 
 
 def prevprime(n: SupportsIndex) -> int:
@@ -735,7 +737,7 @@ def prevprime(n: SupportsIndex) -> int:
         nextprime : Return the ith prime greater than n
         primerange : Generates all primes in a given range
     """
-    n = int( _as_int_ceiling(n))
+    n = int(_as_int_ceiling(n))
     if n < 3:
         raise ValueError("no preceding primes")
     if n < 8:
@@ -838,38 +840,41 @@ def primerange(a: SupportsIndex, b: SupportsIndex | None = None) -> Iterator[int
         .. [1] https://en.wikipedia.org/wiki/Prime_number
         .. [2] https://primes.utm.edu/notes/gaps.html
     """
-    a_int = int(as_int(a))
-    b_int: int
+    a = as_int(a)
+    b = as_int(b) if b is not None else None
+    yield from _primerange(a, b)
+
+def _primerange(a: int, b: int | None = None) -> Iterator[int]:
+    """ Internal implementation of primerange. """   
     if b is None:
-        a_int, b_int = 2, a_int
-    else:
-        b_int = int(as_int(b))
-    if a_int >= b_int:
+        a, b = 2, a
+    if a >= b:
         return
     # If we already have the range, return it.
     largest_known_prime = sieve._list[-1]
-    if b_int <= largest_known_prime:
-        yield from sieve.primerange(a_int, b_int)
+    if b <= largest_known_prime:
+        yield from sieve.primerange(a, b)
         return
     # If we know some of it, return it.
-    if a_int <= largest_known_prime:
-        yield from sieve._list[bisect_left(sieve._list, a_int):]
-        a_int = largest_known_prime + 1
-    elif a_int % 2:
-        a_int -= 1
-    tail = min(b_int, (largest_known_prime)**2)
-    if a_int < tail:
-        yield from sieve._primerange(a_int, tail)
-        a_int = tail
-    if b_int <= a_int:
+    if a <= largest_known_prime:
+        yield from sieve._list[bisect_left(sieve._list, a):]
+        a = largest_known_prime + 1
+    elif a % 2:
+        a -= 1
+    tail = min(b, (largest_known_prime)**2)
+    if a < tail:
+        yield from sieve._primerange(a, tail)
+        a = tail
+    if b <= a:
         return
     # otherwise compute, without storing, the desired range.
-    while True:
-        a_int = nextprime(a_int)
-        if a_int < b_int:
-            yield a_int
+    while 1:
+        a = nextprime(a)
+        if a < b:
+            yield a
         else:
             return
+
 
 def randprime(a: SupportsIndex, b: SupportsIndex) -> int | None:
     """ Return a random prime number in the range [a, b).
@@ -917,7 +922,7 @@ def randprime(a: SupportsIndex, b: SupportsIndex) -> int | None:
     return p
 
 
-def primorial(n: SupportsIndex, nth: bool = True) -> int:
+def primorial(n: int, nth: bool = True) -> int:
     """
     Returns the product of the first n primes (default) or
     the primes less than or equal to n (when ``nth=False``).
