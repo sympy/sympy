@@ -845,7 +845,7 @@ def primerange(a: SupportsIndex, b: SupportsIndex | None = None) -> Iterator[int
     yield from _primerange(a, b)
 
 def _primerange(a: int, b: int | None = None) -> Iterator[int]:
-    """ Internal implementation of primerange. """   
+    """ Internal implementation of primerange. """
     if b is None:
         a, b = 2, a
     if a >= b:
