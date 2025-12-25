@@ -571,18 +571,18 @@ def _per(M):
         subsets += list(map(list, itertools.combinations(s, i)))
 
     perm = 0
-    if m==0 or n==0:
+    
+    if m == 0 or n == 0:
         return S.One
-    else:
-        
-        for subset in subsets:
-            prod = 1
-            sub_len = len(subset)
-            for i in range(m):
-                prod *= sum(M[i, j] for j in subset)
-            perm += prod * S.NegativeOne**sub_len * nC(n - sub_len, m - sub_len)
-            perm *= S.NegativeOne**m
-            return perm.simplify()
+    
+    for subset in subsets:
+        prod = 1
+        sub_len = len(subset)
+        for i in range(m):
+            prod *= sum(M[i, j] for j in subset)
+        perm += prod * S.NegativeOne**sub_len * nC(n - sub_len, m - sub_len)
+    perm *= S.NegativeOne**m
+    return perm.simplify()
 
 def _det_DOM(M):
     DOM = DomainMatrix.from_Matrix(M, field=True, extension=True)
