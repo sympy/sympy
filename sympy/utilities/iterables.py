@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, overload
 
 from collections import Counter, defaultdict, OrderedDict
 from itertools import (
@@ -21,7 +21,7 @@ from sympy.utilities.decorator import deprecated
 
 
 if TYPE_CHECKING:
-    from typing import TypeVar, Iterable, Callable, Sequence
+    from typing import TypeVar, Iterable, Callable, Literal, Sequence
     T = TypeVar('T')
 
 
@@ -197,7 +197,14 @@ def reshape(seq, how):
     return type(seq)(rv)
 
 
-def group(seq, multiple=True):
+@overload
+def group(seq: Iterable[T], multiple: Literal[True] = True) -> list[list[T]]: ...
+@overload
+def group(seq: Iterable[T], multiple: Literal[False]) -> list[tuple[T, int]]: ...
+
+def group(
+    seq: Iterable[T], multiple: bool = True
+) -> list[list[T]] | list[tuple[T, int]]:
     """
     Splits a sequence into a list of lists of equal, adjacent elements.
 
