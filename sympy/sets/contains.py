@@ -1,11 +1,16 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
 from sympy.core import S
+from sympy.core.basic import Basic
 from sympy.core.sympify import sympify
 from sympy.core.relational import Eq, Ne
 from sympy.core.parameters import global_parameters
 from sympy.logic.boolalg import Boolean
 from sympy.utilities.misc import func_name
-from .sets import Set
 
+if TYPE_CHECKING:
+    from sympy.sets.sets import Set
 
 class Contains(Boolean):
     """
@@ -28,12 +33,14 @@ class Contains(Boolean):
 
     .. [1] https://en.wikipedia.org/wiki/Element_%28mathematics%29
     """
-    def __new__(cls, x, s, evaluate=None):
+    def __new__(cls, x: Basic, s: Set, evaluate: bool | None = None) -> Boolean:
         x = sympify(x)
         s = sympify(s)
 
         if evaluate is None:
             evaluate = global_parameters.evaluate
+
+        from sympy.sets.sets import Set
 
         if not isinstance(s, Set):
             raise TypeError('expecting Set, not %s' % func_name(s))
@@ -53,11 +60,11 @@ class Contains(Boolean):
         return super().__new__(cls, x, s)
 
     @property
-    def binary_symbols(self):
+    def binary_symbols(self) -> set[Basic]:
         return set().union(*[i.binary_symbols
             for i in self.args[1].args
             if i.is_Boolean or i.is_Symbol or
             isinstance(i, (Eq, Ne))])
 
-    def as_set(self):
+    def as_set(self) -> Set:
         return self.args[1]
