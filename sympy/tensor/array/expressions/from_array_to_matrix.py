@@ -408,7 +408,7 @@ def _(expr: ArrayTensorProduct):
         elif 1 in arg.shape:
             k = [i for i in arg.shape if i != 1][0]
             if pending is None:
-                pending = k
+                pending = k  # type: ignore
                 prev_i = i
                 newargs.append(arg)
             elif pending == 1:
@@ -417,8 +417,8 @@ def _(expr: ArrayTensorProduct):
                     newargs[-1] = prev*arg
                 else:  # case args.shape[1] == 1
                     newargs[-1] = arg*prev
-                removed.extend([cumul[prev_i], cumul[prev_i] + 1])
-                pending = k
+                removed.extend([cumul[prev_i], cumul[prev_i] + 1])  # type: ignore
+                pending = k  # type: ignore
                 prev_i = i
             elif pending == k:
                 prev = newargs[-1]
@@ -437,7 +437,7 @@ def _(expr: ArrayTensorProduct):
                 removed.extend([d1, d2])
             else:
                 newargs.append(arg)
-                pending = k
+                pending = k  # type: ignore
                 prev_i = i
         else:
             newargs.append(arg)
