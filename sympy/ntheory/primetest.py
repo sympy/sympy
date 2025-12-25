@@ -22,7 +22,6 @@ MERSENNE_PRIME_EXPONENTS = (2, 3, 5, 7, 13, 17, 19, 31, 61, 89, 107, 127, 521, 6
  25964951, 30402457, 32582657, 37156667, 42643801, 43112609, 57885161, 74207281, 77232917, 82589933,
  136279841)
 
-
 def is_fermat_pseudoprime(n, a):
     r"""Returns True if ``n`` is prime or is an odd composite integer that
     is coprime to ``a`` and satisfy the modular arithmetic congruence relation:
@@ -303,6 +302,8 @@ def _lucas_extrastrong_params(n):
             return (D, P, 1)
         elif j == 0 and D % n:
             return (0, 0, 0)
+    
+    raise ValueError("Found no Lucas parameters")
 
 
 def is_lucas_prp(n):
