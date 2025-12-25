@@ -12,6 +12,7 @@ from sympy.utilities.misc import func_name
 if TYPE_CHECKING:
     from sympy.sets.sets import Set
 
+
 class Contains(Boolean):
     """
     Asserts that x is an element of the set S.
@@ -33,7 +34,7 @@ class Contains(Boolean):
 
     .. [1] https://en.wikipedia.org/wiki/Element_%28mathematics%29
     """
-    def __new__(cls, x: Basic, s: Set, evaluate: bool | None = None) -> Boolean:
+    def __new__(cls, x: Basic, s: Set, evaluate: bool | None = None) -> Boolean:  # type: ignore[misc]
         x = sympify(x)
         s = sympify(s)
 
@@ -41,7 +42,6 @@ class Contains(Boolean):
             evaluate = global_parameters.evaluate
 
         from sympy.sets.sets import Set
-
         if not isinstance(s, Set):
             raise TypeError('expecting Set, not %s' % func_name(s))
 
@@ -61,10 +61,10 @@ class Contains(Boolean):
 
     @property
     def binary_symbols(self) -> set[Basic]:
-        return set().union(*[i.binary_symbols
+        return set().union(*[i.binary_symbols  # type: ignore[attr-defined]
             for i in self.args[1].args
             if i.is_Boolean or i.is_Symbol or
             isinstance(i, (Eq, Ne))])
 
     def as_set(self) -> Set:
-        return self.args[1]
+        return self.args[1]  # type: ignore[return-value]
