@@ -302,7 +302,6 @@ def _lucas_extrastrong_params(n):
             return (D, P, 1)
         elif j == 0 and D % n:
             return (0, 0, 0)
-    
     raise ValueError("Found no Lucas parameters")
 
 
