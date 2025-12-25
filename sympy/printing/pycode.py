@@ -339,7 +339,7 @@ class AbstractPythonCodePrinter(CodePrinter):
                 self._print(prnt.format_string),
                 print_args
             )
-        if prnt.file != None: # Must be '!= None', cannot be 'is not None'
+        if prnt.file != None:  # noqa: E711 # Must be '!= None', cannot be 'is not None'
             print_args += ', file=%s' % self._print(prnt.file)
         return 'print(%s)' % print_args
 

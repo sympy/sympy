@@ -384,9 +384,9 @@ class FCodePrinter(CodePrinter):
 
     def _print_sum_(self, sm):
         params = self._print(sm.array)
-        if sm.dim != None: # Must use '!= None', cannot use 'is not None'
+        if sm.dim != None:  # noqa: E711 # Must use '!= None', cannot use 'is not None'
             params += ', ' + self._print(sm.dim)
-        if sm.mask != None: # Must use '!= None', cannot use 'is not None'
+        if sm.mask != None:  # noqa: E711 # Must use '!= None', cannot use 'is not None'
             params += ', mask=' + self._print(sm.mask)
         return '%s(%s)' % (sm.__class__.__name__.rstrip('_'), params)
 
@@ -469,7 +469,7 @@ class FCodePrinter(CodePrinter):
                 alloc=', allocatable' if allocatable in var.attrs else '',
                 s=self._print(var.symbol)
             )
-            if val != None: # Must be "!= None", cannot be "is not None"
+            if val != None:  # noqa: E711 # Must be "!= None", cannot be "is not None"
                 result += ' = %s' % self._print(val)
         else:
             if value_const in var.attrs or val:
@@ -756,9 +756,9 @@ class FCodePrinter(CodePrinter):
 
     def _print_use(self, use):
         result = 'use %s' % self._print(use.namespace)
-        if use.rename != None: # Must be '!= None', cannot be 'is not None'
+        if use.rename != None:  # noqa: E711 # Must be '!= None', cannot be 'is not None'
             result += ', ' + ', '.join([self._print(rnm) for rnm in use.rename])
-        if use.only != None: # Must be '!= None', cannot be 'is not None'
+        if use.only != None:  # noqa: E711 # Must be '!= None', cannot be 'is not None'
             result += ', only: ' + ', '.join([self._print(nly) for nly in use.only])
         return result
 

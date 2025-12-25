@@ -78,9 +78,9 @@ def test_manualintegrate_parts():
 
     # Make sure _parts_rule doesn't pick u = constant but can pick dv =
     # constant if necessary, e.g. for integrate(atan(x))
-    assert _parts_rule(cos(x), x) == None
-    assert _parts_rule(exp(x), x) == None
-    assert _parts_rule(x**2, x) == None
+    assert _parts_rule(cos(x), x) is None
+    assert _parts_rule(exp(x), x) is None
+    assert _parts_rule(x**2, x) is None
     result = _parts_rule(atan(x), x)
     assert result[0] == atan(x) and result[1] == 1
 
