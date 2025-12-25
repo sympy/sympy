@@ -45,6 +45,9 @@ d = MatrixSymbol("d", k, 1)
 x = MatrixSymbol("x", k, 1)
 y = MatrixSymbol("y", k, 1)
 
+X1 = MatrixSymbol("X1", 1, 1)
+X4 = MatrixSymbol("X4", 4, 1)
+
 
 def test_arrayexpr_convert_array_to_matrix():
 
@@ -423,6 +426,30 @@ def test_arrayexpr_convert_array_to_matrix_remove_trivial_dims():
     expr = _array_diagonal(_array_tensor_product(x, I, y), (0, 2), (3, 4))
     assert _remove_trivial_dims(expr) == (expr, [])
 
+    expr = ArrayTensorProduct(X1, X4)
+    assert _remove_trivial_dims(expr) == (X4*X1, [0, 1])
+
+    expr = ArrayTensorProduct(X4, X1)
+    assert _remove_trivial_dims(expr) == (X4*X1, [2, 3])
+
+    expr = ArrayTensorProduct(X1, X4.T)
+    assert _remove_trivial_dims(expr) == (X1*X4.T, [0, 1])
+
+    expr = ArrayTensorProduct(X4.T, X1)
+    assert _remove_trivial_dims(expr) == (X1*X4.T, [2, 3])
+
+    expr = ArrayTensorProduct(X1, X4, X1)
+    assert _remove_trivial_dims(expr) == (X4*X1**2, [0, 1, 4, 5])
+
+    expr = ArrayTensorProduct(X1, X4, X4)
+    assert _remove_trivial_dims(expr) == (X4*X1*X4.T, [0, 1, 3, 5])
+
+    expr = ArrayTensorProduct(X1, X4, X4, X1)
+    assert _remove_trivial_dims(expr) == (X4*X1**2*X4.T, [0, 1, 3, 5, 6, 7])
+
+    expr = ArrayTensorProduct(X4, ArrayAdd(ArrayTensorProduct(X4, I1), PermuteDims(ArrayTensorProduct(I1, X4), [2, 3, 0, 1])))
+    assert _remove_trivial_dims(expr) == (2*X4*X4.T, [1, 3, 4, 5])
+
 
 def test_arrayexpr_convert_array_to_matrix_diag2contraction_diagmatrix():
     cg = _array_diagonal(_array_tensor_product(M, a), (1, 2))
@@ -588,6 +615,12 @@ def test_convert_array_to_hadamard_products():
 
     cg = _array_diagonal(_array_tensor_product(I, I1, x), (1, 4), (3, 5))
     assert convert_array_to_matrix(cg) == DiagMatrix(x)
+
+    cg = _array_tensor_product(X1, X4)
+    assert convert_array_to_matrix(cg) == X4*X1
+
+    cg = ArrayTensorProduct(X4, ArrayAdd(ArrayTensorProduct(X4, I1), PermuteDims(ArrayTensorProduct(I1, X4), [2, 3, 0, 1])))
+    assert convert_array_to_matrix(cg) == 2*X4*X4.T
 
 
 def test_identify_removable_identity_matrices():
