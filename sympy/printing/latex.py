@@ -14,6 +14,7 @@ from sympy.core.operations import AssocOp
 from sympy.core.power import Pow
 from sympy.core.sorting import default_sort_key
 from sympy.core.sympify import SympifyError
+from sympy.external.mpmath import prec_to_dps, to_str as mlib_to_str
 from sympy.logic.boolalg import true, BooleanTrue, BooleanFalse
 
 
@@ -22,8 +23,6 @@ from sympy.printing.precedence import precedence_traditional
 from sympy.printing.printer import Printer, print_function
 from sympy.printing.conventions import split_super_sub, requires_partial
 from sympy.printing.precedence import precedence, PRECEDENCE
-
-from mpmath.libmp.libmpf import prec_to_dps, to_str as mlib_to_str
 
 from sympy.utilities.iterables import has_variety, sift
 
@@ -683,8 +682,18 @@ class LatexPrinter(Printer):
                             return r"\frac{1}{\frac{%s}{%s}}" % (base_p, base_q)
                         else:
                             return r"\frac{1}{(\frac{%s}{%s})^{%s}}" % (base_p, base_q, abs(expr.exp))
-                # things like 1/x
-                return self._print_Mul(expr)
+                # things like 1/x^y
+                if expr.exp == -1:
+                    if self._settings.get('fold_short_frac', False):
+                        tex = self.parenthesize(expr.base, PRECEDENCE["Pow"])
+                        return r"1 / %s" % tex
+                    else:
+                        base_tex = self._print(expr.base)
+                        return r"\frac{1}{%s}" % base_tex
+                pos_pow = Pow(expr.base, abs(expr.exp), evaluate=False)
+                tex = self._helper_print_standard_power(pos_pow, r"%s^{%s}")
+                return r"\frac{1}{%s}" % tex
+
         if expr.base.is_Function:
             return self._print(expr.base, exp=self._print(expr.exp))
         tex = r"%s^{%s}"

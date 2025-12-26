@@ -2129,9 +2129,9 @@ def test_tensor_matching():
 
     assert a.matches(q) == {a:q}
     assert a.matches(-q) == {a:-q}
-    assert g.matches(-q) == None
+    assert g.matches(-q) is None
     assert g.matches(q) == {g:q}
-    assert eps(p,-a,a).matches( eps(p,q,r) ) == None
+    assert eps(p,-a,a).matches( eps(p,q,r) ) is None
     assert eps(p,-b,a).matches( eps(p,q,r) ) == {a: r, -b: q}
     assert eps(p,-q,r).replace(eps(a,b,c), 1) == 1
     assert W().matches( K(p)*V(q) ) == {W(): K(p)*V(q)}
@@ -2139,7 +2139,7 @@ def test_tensor_matching():
     assert W(a,p).matches( K(p)*V(q) ) == {a:q, W(a,p).head: _WildTensExpr(K(p)*V(q))}
     assert W(p,q).matches( K(p)*V(q) ) == {W(p,q).head: _WildTensExpr(K(p)*V(q))}
     assert W(p,q).matches( A(q,p) ) == {W(p,q).head: _WildTensExpr(A(q, p))}
-    assert U(p,q).matches( A(q,p) ) == None
+    assert U(p,q).matches( A(q,p) ) is None
     assert ( K(q)*K(p) ).replace( W(q,p), 1) == 1
 
     #Some tests for matching without Wild

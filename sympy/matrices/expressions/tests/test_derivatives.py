@@ -106,6 +106,50 @@ def test_matrix_derivative_trivial_cases():
     assert X.diff(A) == ArrayDerivative(X, A)
 
 
+def test_matrix_derivative_of_determinant():
+
+    # Cookbook example 49:
+    expr = Determinant(X)
+    assert expr.diff(X) == Determinant(X)*X.T.inv()
+
+    # Cookbook example 51:
+    expr = Determinant(A*X*B)
+    assert expr.diff(X) == Determinant(A*X*B)*X.T.inv()
+
+    # Cookbook example 52:
+    expr = Determinant(X.T*A*X)
+    # assert expr.diff(X) == 2*Determinant(X.T*A*X)*X.T.inv()  # equivalent to:
+    assert expr.diff(X) == 2*Determinant(X)**2*Determinant(A)*X.T.inv()
+
+    # Cookbook example 54 (and 53...):
+    Z = MatrixSymbol("Z", k, j)
+    expr = Determinant(Z.T*A*Z)
+    assert expr.diff(Z) == (Determinant(Z.T*A*Z)*(A*Z*(Z.T*A*Z).inv() + A.T*Z*(Z.T*A.T*Z).inv())).expand()
+
+    # Cookbook example 55:
+    expr = log(Determinant(X.T*X))
+    assert expr.diff(X) == 2*X.T.inv()  # can be pseudo-inverse
+
+    # Cookbook example 57:
+    expr = log(Determinant(X))
+    assert expr.diff(X) == X.T.inv()
+
+    # Cookbook example 58:
+    expr = Determinant(X**j)
+    assert expr.diff(X).doit() == j*Determinant(X**j)*X.inv().T
+    expr = Determinant(X**5)
+    assert expr.diff(X) == 5*Determinant(X**5)*X.inv().T
+
+
+def test_issue_28708():
+    # This is a variant of cookbook example 58 with null exponent:
+    expr = Determinant((X**j).subs(j, 0))
+    assert expr.diff(X) == ZeroMatrix(k, k)
+
+    expr = Determinant((X**j).subs(j, -1))
+    assert expr.diff(X) == - X.T.inv()/Determinant(X)
+
+
 def test_matrix_derivative_with_inverse():
 
     # Cookbook example 61:
@@ -114,8 +158,7 @@ def test_matrix_derivative_with_inverse():
 
     # Cookbook example 62:
     expr = Determinant(Inverse(X))
-    # Not implemented yet:
-    # assert expr.diff(X) == -Determinant(X.inv())*(X.inv()).T
+    assert expr.diff(X) == -Determinant(X.inv())*(X.inv()).T
 
     # Cookbook example 63:
     expr = Trace(A*Inverse(X)*B)
@@ -381,7 +424,11 @@ def test_derivatives_matrix_norms():
     assert expr.diff(X) == a/(2*sqrt(a.T*X*b))*b.T
 
     expr = d.T*x*(a.T*X*b)**S.Half*y.T*c
-    assert expr.diff(X) == a/(2*sqrt(a.T*X*b))*x.T*d*y.T*c*b.T
+    assert expr.diff(X) == a*x.T*d*y.T*c/(2*sqrt(b.T*X.T*a))*b.T
+
+    # Fixes issue https://github.com/sympy/sympy/issues/28615
+    expr = sqrt(Trace(X.T*X))
+    assert expr.diff(X) == X / sqrt(Trace(X*X.T))
 
 
 def test_derivatives_elementwise_applyfunc():

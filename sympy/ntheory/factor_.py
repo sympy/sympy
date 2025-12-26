@@ -1536,7 +1536,6 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
                                  verbose=verbose)
                 for k, v in facs.items():
                     factors[k] = factors.get(k, 0) + v
-                factor_cache.add(n, facs)
             if verbose:
                 print(complete_msg)
             return factors

@@ -1325,6 +1325,12 @@ class PermutationGroup(Basic):
         transversals = self.basic_transversals
         basic_orbits = self.basic_orbits
         m = len(base)
+        if m == 0:
+            h = list(range(self._degree))
+            if af:
+                return h
+            else:
+                return _af_new(h)
         v = [0]*m
         for i in range(m):
             rank, c = divmod(rank, len(transversals[i]))
@@ -5027,6 +5033,42 @@ class PermutationGroup(Basic):
                     relative_order.insert(0, G1 // G2)
 
         return PolycyclicGroup(pc_sequence, pc_series, relative_order, collector=None)
+
+    def quotient_group(self,N):
+        """
+        Returns a permutation group isomorphic to the quotient group of G/N .
+
+        Explanation
+        ===========
+
+        The method constructs the quotient group G/N by determining
+        its faithful permutation representation induced by the
+        action of G's generators on the set of N's cosets.
+
+        Example
+        ========
+
+        >>> from sympy.combinatorics.homomorphisms import is_isomorphic
+        >>> from sympy.combinatorics.named_groups import SymmetricGroup, AlternatingGroup, CyclicGroup
+        >>> G = SymmetricGroup(4)
+        >>> N = AlternatingGroup(4)
+        >>> Q = G.quotient_group(N)
+        >>> Q_expected = CyclicGroup(2)
+        >>> is_isomorphic(Q, Q_expected)
+        True
+
+        """
+        if not N.is_normal(self):
+            raise ValueError("N must be a normal subgroup of G")
+        else:
+            t = self.coset_table(N)
+
+        gen = []
+        for j in range(len(t[0])):
+            p = [t[i][j] for i in range(len(t))]
+            gen.append(Permutation(p))
+
+        return PermutationGroup(gen)
 
 
 def _orbit(degree, generators, alpha, action='tuples'):

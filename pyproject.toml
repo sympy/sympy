@@ -64,7 +64,6 @@ lint.ignore = [
     "E501",  # Line too long (<LENGTH> > 88 characters)
     "E701",  # Multiple statements on one line (colon)
     "E702",  # Multiple statements on one line (semicolon)
-    "E711",  # Comparison to `None` should be `cond is not None`
     "E712",  # Comparison to `<BOOL>` should be `cond is <BOOL>`
     "E713",  # Test for membership should be `not in`
     "E714",  # Test for object identity should be `is not`

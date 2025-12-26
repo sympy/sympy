@@ -25,6 +25,7 @@ from sympy.core.relational import Eq, Ne, Le, Lt, LessThan
 from sympy.logic import And, Or, Xor
 from sympy.testing.pytest import raises, XFAIL, warns_deprecated_sympy
 from sympy.utilities.iterables import cartes
+from sympy import solveset, Integers
 
 from sympy.abc import x, y, z, m, n
 
@@ -39,7 +40,7 @@ def test_imageset():
     assert imageset(x, abs(x), S.Integers) is S.Naturals0
     # issue 16878a
     r = symbols('r', real=True)
-    assert imageset(x, (x, x), S.Reals)._contains((1, r)) == None
+    assert imageset(x, (x, x), S.Reals)._contains((1, r)) is None
     assert imageset(x, (x, x), S.Reals)._contains((1, 2)) == False
     assert (r, r) in imageset(x, (x, x), S.Reals)
     assert 1 + I in imageset(x, x + I, S.Reals)
@@ -171,17 +172,17 @@ def test_interval_is_empty():
     assert Interval(1, oo).is_empty == False
     assert Interval(-oo, oo).is_empty == False
     assert Interval(-oo, 1).is_empty == False
-    assert Interval(x, y).is_empty == None
+    assert Interval(x, y).is_empty is None
     assert Interval(r, oo).is_empty == False  # real implies finite
     assert Interval(n, 0).is_empty == False
     assert Interval(n, 0, left_open=True).is_empty == False
     assert Interval(p, 0).is_empty == True  # EmptySet
-    assert Interval(nn, 0).is_empty == None
+    assert Interval(nn, 0).is_empty is None
     assert Interval(n, p).is_empty == False
     assert Interval(0, p, left_open=True).is_empty == False
     assert Interval(0, p, right_open=True).is_empty == False
-    assert Interval(0, nn, left_open=True).is_empty == None
-    assert Interval(0, nn, right_open=True).is_empty == None
+    assert Interval(0, nn, left_open=True).is_empty is None
+    assert Interval(0, nn, right_open=True).is_empty is None
 
 
 def test_union():
@@ -270,7 +271,7 @@ def test_union_iter():
 
 def test_union_is_empty():
     assert (Interval(x, y) + FiniteSet(1)).is_empty == False
-    assert (Interval(x, y) + Interval(-x, y)).is_empty == None
+    assert (Interval(x, y) + Interval(-x, y)).is_empty is None
 
 
 def test_difference():
@@ -679,7 +680,7 @@ def test_ProductSet_of_single_arg_is_not_arg():
 
 def test_ProductSet_is_empty():
     assert ProductSet(S.Integers, S.Reals).is_empty == False
-    assert ProductSet(Interval(x, 1), S.Reals).is_empty == None
+    assert ProductSet(Interval(x, 1), S.Reals).is_empty is None
 
 
 def test_interval_subs():
@@ -1750,4 +1751,52 @@ def test_issue_9855():
     x, y, z = symbols('x, y, z', real=True)
     s1 = Interval(1, x) & Interval(y, 2)
     s2 = Interval(1, 2)
-    assert s1.is_subset(s2) == None
+    assert s1.is_subset(s2) is None
+
+
+def test_issue_28711():
+    from sympy.core.function import Function
+
+    class SetWrapper(Function):
+        is_commutative = True
+        @classmethod
+        def eval(cls, s): ...
+
+    reals = SetWrapper(S.Reals)
+    fin1 = SetWrapper(FiniteSet(1, 2, 3))
+    fin2 = SetWrapper(FiniteSet(.5, 1.5, 2.5))
+    nats = SetWrapper(S.Naturals)
+
+    assert (fin1 + fin2) == (fin2 + fin1)
+    assert (nats + reals) == (reals + nats)
+    assert (nats + fin1) == (fin1 + nats)
+    assert (reals + fin1) == (fin1 + reals)
+
+def test_16878():
+    A = ImageSet(Lambda(x, (x, x)), S.Reals)
+    B = S.Reals ** 2
+    assert A.is_subset(B) is not False
+
+def test_issue_24726():
+    t, n = symbols('t, n')
+    sin_zeros = solveset(sin(t), t, domain=S.Reals)
+
+    assert sin_zeros.intersect(Interval(-10, 10)) == {-3*pi, -2*pi, -pi, 0, pi, 2*pi, 3*pi}
+
+    assert sin_zeros.intersect(Interval(-oo, oo)) == sin_zeros
+
+    odd_integers = ImageSet(Lambda(n, 2*n + 1), Integers)
+    res = odd_integers.intersect(Interval(-10, oo))
+    assert res == ImageSet(Lambda(n, 2*n - 9), Range(0, oo, 1))
+
+    expected_case_4 = Union(ImageSet(Lambda(n, 2*n*pi - 3*pi), Range(0, oo, 1)),
+                            ImageSet(Lambda(n, 2*n*pi - 2*pi), Range(0, oo, 1)))
+    assert sin_zeros.intersect(Interval(-10, oo)).dummy_eq(expected_case_4)
+
+    expected_case_5 = Union(ImageSet(Lambda(n, -2*n*pi + 2*pi), Range(0, oo, 1)),
+                            ImageSet(Lambda(n, -2*n*pi + 3*pi), Range(0, oo, 1)))
+    assert sin_zeros.intersect(Interval(-oo, 10)).dummy_eq(expected_case_5)
+
+    expected_case_6 = Union(ImageSet(Lambda(n, 2*n*pi + 4*pi), Range(0, oo, 1)),
+                            ImageSet(Lambda(n, 2*n*pi + 5*pi), Range(0, oo, 1)))
+    assert sin_zeros.intersect(Interval(10, oo)).dummy_eq(expected_case_6)
