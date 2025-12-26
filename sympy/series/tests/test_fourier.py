@@ -163,3 +163,34 @@ def test_FourierSeries_finite():
     assert fourier_series(cos(pi*x), (x, -1, 1)).truncate(oo) == cos(pi*x)
     assert fourier_series(cos(3*pi*x + 4) - sin(4*pi*x)*log(pi*y), (x, -1, 1)).truncate(oo) == -log(pi*y)*sin(4*pi*x)\
            - sin(4)*sin(3*pi*x) + cos(4)*cos(3*pi*x)
+
+
+def test_FiniteFourierSeries_as_expr():
+    s1 = fourier_series(sin(x), (x, -pi, pi))
+    assert s1.as_expr() == sin(x)
+
+    s2 = fourier_series(sin(x)**2, (x, -pi, pi))
+    assert s2.as_expr() == Rational(1, 2) - cos(2*x)/2
+
+    s3 = fourier_series(sin(x) + sin(2*x) + sin(3*x) + sin(4*x), (x, -pi, pi))
+    assert s3.as_expr() == sin(x) + sin(2*x) + sin(3*x) + sin(4*x)
+
+    s4 = fourier_series(sin(x) + cos(x), (x, -pi, pi))
+    assert s4.as_expr() == sin(x) + cos(x)
+
+    s5 = fourier_series(S(5), (x, -pi, pi))
+    assert s5 == 5
+
+
+def test_FiniteFourierSeries_as_terms_list():
+    s1 = fourier_series(sin(x), (x, -pi, pi))
+    assert s1.as_terms_list() == [sin(x)]
+
+    s2 = fourier_series(sin(x) + sin(2*x), (x, -pi, pi))
+    assert s2.as_terms_list() == [sin(x), sin(2*x)]
+
+    s3 = fourier_series(sin(x) + cos(x) + sin(2*x) + cos(2*x), (x, -pi, pi))
+    assert s3.as_terms_list() == [cos(x), sin(x), cos(2*x), sin(2*x)]
+
+    s4 = fourier_series(sin(x)**2, (x, -pi, pi))
+    assert s4.as_terms_list() == [Rational(1, 2), -cos(2*x)/2]

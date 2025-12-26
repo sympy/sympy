@@ -2355,6 +2355,9 @@ class PrettyPrinter(Printer):
             dots = '...'
         return self._print_Add(s.truncate()) + self._print(dots)
 
+    def _print_FiniteFourierSeries(self, s):
+        return self._print(s.as_expr())
+
     def _print_FormalPowerSeries(self, s):
         return self._print_Add(s.infinite)
 
