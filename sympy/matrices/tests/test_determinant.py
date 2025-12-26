@@ -180,11 +180,13 @@ def test_permanent():
 
     M = Matrix.zeros(0,0)
     assert M.per() == 1
+
     M = Matrix.zeros(0,1)
     assert M.per() == 1
+
     M = Matrix.zeros(1,0)
     assert M.per() == 1
-    
+
 def test_adjugate():
     x = Symbol('x')
     e = Matrix(4, 4,
