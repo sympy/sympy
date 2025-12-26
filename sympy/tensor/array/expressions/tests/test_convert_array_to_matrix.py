@@ -1,4 +1,4 @@
-from sympy import Lambda, S, Dummy, KroneckerProduct, Array
+from sympy import Lambda, S, Dummy, KroneckerProduct, Array, exp
 from sympy.core.symbol import symbols
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import cos, sin
@@ -621,6 +621,9 @@ def test_convert_array_to_hadamard_products():
 
     cg = ArrayTensorProduct(X4, ArrayAdd(ArrayTensorProduct(X4, I1), PermuteDims(ArrayTensorProduct(I1, X4), [2, 3, 0, 1])))
     assert convert_array_to_matrix(cg) == 2*X4*X4.T
+
+    cg = ArrayDiagonal(ArrayTensorProduct(X1.applyfunc(exp), X1, X4, X1), (0, 2, 6), (1, 3, 7))
+    assert convert_array_to_matrix(cg).dummy_eq(X4*X1.applyfunc(exp)*X1**2)
 
 
 def test_identify_removable_identity_matrices():
