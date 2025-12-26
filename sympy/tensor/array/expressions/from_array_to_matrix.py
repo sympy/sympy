@@ -377,10 +377,15 @@ def _(expr: ArrayTensorProduct):
             continue
         if not isinstance(arg, (MatrixExpr, MatrixBase)):
             rarg, rem = _remove_trivial_dims(arg)
-            removed.extend(rem)
-            newargs.append(rarg)
-            continue
-        elif getattr(arg, "is_Identity", False) and arg.shape == (1, 1):
+            rem_dims = [current_range[j] for j in rem]
+            removed.extend(rem_dims)
+            if not isinstance(rarg, MatrixExpr) or 1 not in rarg.shape:
+                newargs.append(rarg)
+                continue
+            else:
+                current_range = [j for j in current_range if j not in rem_dims]
+                arg = rarg
+        if getattr(arg, "is_Identity", False) and arg.shape == (1, 1):
             if arg.shape == (1, 1):
                 # Ignore identity matrices of shape (1, 1) - they are equivalent to scalar 1.
                 removed.extend(current_range)
@@ -398,12 +403,23 @@ def _(expr: ArrayTensorProduct):
                 removed.extend(current_range)
             else:
                 newargs.append(arg)
+            pending = 1
+            prev_i = i
         elif 1 in arg.shape:
             k = [i for i in arg.shape if i != 1][0]
             if pending is None:
-                pending = k
+                pending = k  # type: ignore
                 prev_i = i
                 newargs.append(arg)
+            elif pending == 1:
+                prev = newargs[-1]
+                if arg.shape[0] == 1:
+                    newargs[-1] = prev*arg
+                else:  # case args.shape[1] == 1
+                    newargs[-1] = arg*prev
+                removed.extend([cumul[prev_i], cumul[prev_i] + 1])  # type: ignore
+                pending = k  # type: ignore
+                prev_i = i
             elif pending == k:
                 prev = newargs[-1]
                 if prev.shape[0] == 1:
@@ -421,7 +437,7 @@ def _(expr: ArrayTensorProduct):
                 removed.extend([d1, d2])
             else:
                 newargs.append(arg)
-                pending = k
+                pending = k  # type: ignore
                 prev_i = i
         else:
             newargs.append(arg)
