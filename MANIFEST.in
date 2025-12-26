@@ -17,4 +17,6 @@ include TODO
 include AUTHORS
 include README.md
 include bin/isympy
+include PR_RELEASE_NOTES.md
+recursive-include scripts *.py
 exclude MANIFEST.in
