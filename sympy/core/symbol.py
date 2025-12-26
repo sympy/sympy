@@ -8,7 +8,7 @@ from .cache import cacheit
 from .containers import Tuple
 from .expr import Expr, AtomicExpr
 from .function import AppliedUndef, FunctionClass
-from .kind import NumberKind, UndefinedKind
+from .kind import NumberKind, UndefinedKind , Kind
 from .logic import fuzzy_bool
 from .singleton import S
 from .sorting import ordered
@@ -288,8 +288,11 @@ class Symbol(AtomicExpr, Boolean): # type: ignore
     is_Symbol = True
     is_symbol = True
 
+    #just for type checkers added kind property
+    # with reference to issue : #28806
+
     @property
-    def kind(self):
+    def kind(self) -> Kind:
         if self.is_commutative:
             return NumberKind
         return UndefinedKind
