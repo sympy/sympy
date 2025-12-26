@@ -156,7 +156,7 @@ def test_issues_8246_12050_13501_14080():
 def test_issue_6308():
     k, a0 = symbols('k a0', real=True)
     assert integrate((x**2 + 1 - k**2)/(x**2 + 1 + a0**2), x) == \
-        x - (a0**2 + k**2)*atan(x/sqrt(a0**2 + 1))/sqrt(a0**2 + 1)
+        x - 2*((a0**2/2 + k**2/2)*atan(x/sqrt(a0**2 + 1))/sqrt(a0**2 + 1))
 
 
 def test_issue_5907():
@@ -196,8 +196,8 @@ def test_issue_28186():
     f = 1 / (a*x**2 + b*x + c)
     d = 4*a*c - b**2
     F = (
-        - sqrt(-1/d)*log(x + (-4*a*c*sqrt(-1/d) + b**2*sqrt(-1/d) + b)/(2*a))
-        + sqrt(-1/d)*log(x + (4*a*c*sqrt(-1/d) - b**2*sqrt(-1/d) + b)/(2*a))
+        - I/sqrt(d)*log(x + (-4*a*c*I/sqrt(d) + b**2*I/sqrt(d) + b)/(2*a))
+        + I/sqrt(d)*log(x + (4*a*c*I/sqrt(d) - b**2*I/sqrt(d) + b)/(2*a))
     )
     assert integrate(f, x) == F
     assert (F.diff(x) - f).ratsimp() == 0
