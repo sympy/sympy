@@ -822,7 +822,14 @@ def identify_hadamard_products(expr: ArrayContraction | ArrayDiagonal):
 
         # This is a Hadamard product:
 
-        hp = hadamard_product(*[i.element if check_transpose(i.indices) else Transpose(i.element) for i in hadamard_factors])
+        elems = [i.element if check_transpose(i.indices) else Transpose(i.element) for i in hadamard_factors]
+
+        if elems[0].shape == (1, 1):
+            # In this case, the Hadamard product is equivalent to the matrix multiplication:
+            hp = MatMul(*elems).doit()
+        else:
+            hp = hadamard_product(*elems)
+
         hp_indices = v[0].indices
         if not check_transpose(hadamard_factors[0].indices):
             hp_indices = list(reversed(hp_indices))
