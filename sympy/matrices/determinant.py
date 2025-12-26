@@ -561,6 +561,8 @@ def _per(M):
     import itertools
 
     m, n = M.shape
+    if m == 0 or n == 0:
+        return S
     if m > n:
         M = M.T
         m, n = n, m
@@ -571,10 +573,6 @@ def _per(M):
         subsets += list(map(list, itertools.combinations(s, i)))
 
     perm = 0
-    
-    if m == 0 or n == 0:
-        return S.One
-    
     for subset in subsets:
         prod = 1
         sub_len = len(subset)
