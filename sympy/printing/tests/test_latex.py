@@ -17,7 +17,7 @@ from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, Wild, symbols)
 from sympy.functions.combinatorial.factorials import (FallingFactorial, RisingFactorial, binomial, factorial, factorial2, subfactorial)
 from sympy.functions.combinatorial.numbers import (bernoulli, bell, catalan, euler, genocchi,
-                                                   lucas, fibonacci, tribonacci, divisor_sigma, udivisor_sigma,
+                                                   lucas, fibonacci, tribonacci, divisor_sigma, Dummy, udivisor_sigma,
                                                    mobius, primenu, primeomega,
                                                    totient, reduced_totient)
 from sympy.functions.elementary.complexes import (Abs, arg, conjugate, im, polar_lift, re)
@@ -3205,3 +3205,8 @@ def test_latex_disable_split_super_sub():
     assert latex(Symbol('u^a_b')) == 'u^{a}_{b}'
     assert latex(Symbol('u^a_b'), disable_split_super_sub=False) == 'u^{a}_{b}'
     assert latex(Symbol('u^a_b'), disable_split_super_sub=True) == 'u\\^a\\_b'
+
+def test_dummy_underscores():
+    a = Dummy('a')
+    assert latex(a) == "\\_a"
+    assert latex(a + x) == "\\_a + x"
