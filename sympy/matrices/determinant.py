@@ -562,7 +562,7 @@ def _per(M):
 
     m, n = M.shape
     if m == 0 or n == 0:
-        return S
+        return S.One
     if m > n:
         M = M.T
         m, n = n, m

@@ -178,6 +178,9 @@ def test_permanent():
     M = Matrix([a1, a2, a3, a4, a5])
     assert M.per() == M.T.per() == a1 + a2 + a3 + a4 + a5
 
+    M = Matrix.zeros(0,0)
+    assert M.per() == 1
+
 def test_adjugate():
     x = Symbol('x')
     e = Matrix(4, 4,
