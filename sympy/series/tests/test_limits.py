@@ -19,7 +19,7 @@ from sympy.functions.elementary.trigonometric import (acos, acot, acsc, asec, as
                                                       atan, cos, cot, csc, sec, sin, tan)
 from sympy.functions.special.bessel import (besseli, bessely, besselj, besselk)
 from sympy.functions.special.error_functions import (Ei, erf, erfc, erfi, fresnelc, fresnels)
-from sympy.functions.special.gamma_functions import (digamma, gamma, uppergamma)
+from sympy.functions.special.gamma_functions import (digamma, gamma, lowergamma, uppergamma)
 from sympy.functions.special.hyper import meijerg
 from sympy.integrals.integrals import (Integral, integrate)
 from sympy.series.limits import (Limit, limit)
@@ -394,6 +394,16 @@ def test_bessel_functions_at_infinity():
     assert limit(besselk(0, x), x, oo) == 0
 
 
+def test_lowergamma_at_origin():
+    a, x = symbols('a x')
+    assert limit(lowergamma(a, x), a, 0) == oo
+    assert limit(lowergamma(a, x), a, 0, '-') == -oo
+    assert limit(lowergamma(I*a, x), a, 0) == -oo*I
+    assert limit(lowergamma(I*a, x), a, 0, '-') == oo*I
+    assert limit(lowergamma(a, 1), a, 0) == oo
+    assert limit(x*lowergamma(x, 1)/gamma(x + 1), x, 0) == 1
+
+
 @XFAIL
 def test_doit2():
     f = Integral(2 * x, x)
@@ -572,7 +582,7 @@ def test_factorial():
     # see Stirling's approximation:
     # https://en.wikipedia.org/wiki/Stirling's_approximation
     assert limit(f/(sqrt(2*pi*x)*(x/E)**x), x, oo) == 1
-    assert limit(f, x, -oo) == gamma(-oo)
+    assert limit(f, x, -oo) == S.Zero
 
 
 def test_issue_6560():
