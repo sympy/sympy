@@ -346,21 +346,30 @@ class Collector(DefaultPrinting):
             if len(w) == 1:
                 re = self.relative_order[self.index[s1]]
                 q = e1 // re
-                r = e1-q*re
+                r = e1 - q*re
 
                 key = ((w[0][0], re), )
                 key = free_group.dtype(key)
+
                 if self.pc_presentation[key]:
                     presentation = self.pc_presentation[key].array_form
                     sym, exp = presentation[0]
-                    word_ = ((w[0][0], r), (sym, q*exp))
-                    word_ = free_group.dtype(word_)
+
+                    if r != 0:
+                        word_ = ((w[0][0], r), (sym, q*exp))
+                        word_ = free_group.dtype(word_)
+                    elif q != 0:
+                        word_ = ((sym, q*exp), )
+                        word_ = free_group.dtype(word_)
+                    else:
+                        word_ = free_group.identity
                 else:
                     if r != 0:
                         word_ = ((w[0][0], r), )
                         word_ = free_group.dtype(word_)
                     else:
-                        word_ = None
+                        word_ = free_group.identity
+
                 word = word.eliminate_word(free_group.dtype(w), word_)
 
             if len(w) == 2 and w[1][1] > 0:
