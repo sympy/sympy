@@ -170,7 +170,7 @@ from .simplify import (simplify, hypersimp, hypersimilar, logcombine,
 
 from .sets import (Set, Interval, Union, EmptySet, FiniteSet, ProductSet,
         Intersection, DisjointUnion, imageset, Complement, SymmetricDifference, ImageSet,
-        Range, ComplexRegion, Complexes, Reals, Contains, ConditionSet, Ordinal,
+        Range, ComplexRegion, Complexes, Reals, Contains, Subset, ConditionSet, Ordinal,
         OmegaPower, ord0, PowerSet, Naturals, Naturals0, UniversalSet,
         Integers, Rationals)
 
@@ -406,7 +406,7 @@ __all__ = [
     # sympy.sets
     'Set', 'Interval', 'Union', 'EmptySet', 'FiniteSet', 'ProductSet',
     'Intersection', 'imageset', 'DisjointUnion', 'Complement', 'SymmetricDifference',
-    'ImageSet', 'Range', 'ComplexRegion', 'Reals', 'Contains', 'ConditionSet',
+    'ImageSet', 'Range', 'ComplexRegion', 'Reals', 'Contains', 'Subset', 'ConditionSet',
     'Ordinal', 'OmegaPower', 'ord0', 'PowerSet', 'Naturals',
     'Naturals0', 'UniversalSet', 'Integers', 'Rationals', 'Complexes',
 
