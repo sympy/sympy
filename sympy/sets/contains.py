@@ -10,7 +10,6 @@ from sympy.utilities.misc import func_name
 from sympy.sets.sets import Set
 
 
-
 class Contains(Boolean):
     """
     Asserts that x is an element of the set S.
