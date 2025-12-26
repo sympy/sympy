@@ -53,7 +53,7 @@ def _(f, x):
             if p_cond is true:
                 intrvl = domain_set
             else:
-                intrvl = p_cond.as_set()
+                intrvl = p_cond.as_set(var)
                 intrvl = Intersection(domain_set, intrvl)
 
             if p_expr.is_Number:

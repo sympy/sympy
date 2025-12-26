@@ -441,21 +441,23 @@ def test_relational_logic_symbols():
 
 
 def test_univariate_relational_as_set():
-    assert (x > 0).as_set() == Interval(0, oo, True, True)
-    assert (x >= 0).as_set() == Interval(0, oo)
-    assert (x < 0).as_set() == Interval(-oo, 0, True, True)
-    assert (x <= 0).as_set() == Interval(-oo, 0)
-    assert Eq(x, 0).as_set() == FiniteSet(0)
-    assert Ne(x, 0).as_set() == Interval(-oo, 0, True, True) + \
+    assert (x > 0).as_set(x) == Interval(0, oo, True, True)
+    assert (x >= 0).as_set(x) == Interval(0, oo)
+    assert (x < 0).as_set(x) == Interval(-oo, 0, True, True)
+    assert (x <= 0).as_set(x) == Interval(-oo, 0)
+    assert Eq(x, 0).as_set(x) == FiniteSet(0)
+    assert Ne(x, 0).as_set(x) == Interval(-oo, 0, True, True) + \
         Interval(0, oo, True, True)
 
-    assert (x**2 >= 4).as_set() == Interval(-oo, -2) + Interval(2, oo)
+    assert (x**2 >= 4).as_set(x) == Interval(-oo, -2) + Interval(2, oo)
 
 
 @XFAIL
 def test_multivariate_relational_as_set():
-    assert (x*y >= 0).as_set() == Interval(0, oo)*Interval(0, oo) + \
-        Interval(-oo, 0)*Interval(-oo, 0)
+    from sympy.sets.sets import ConditionSet
+
+    assert (x*y >= 0).as_set(x) == ConditionSet(x, x * y >= 0, S.Reals)
+    assert (x*y >= 0).as_set(y) == ConditionSet(y, x * y >= 0, S.Reals)
 
 
 def test_Not():
@@ -1003,10 +1005,10 @@ def test_issues_13081_12583_12534():
 def test_issue_18188():
     from sympy.sets.conditionset import ConditionSet
     result1 = Eq(x*cos(x) - 3*sin(x), 0)
-    assert result1.as_set() == ConditionSet(x, Eq(x*cos(x) - 3*sin(x), 0), Reals)
+    assert result1.as_set(x) == ConditionSet(x, Eq(x*cos(x) - 3*sin(x), 0), Reals)
 
     result2 = Eq(x**2 + sqrt(x*2) + sin(x), 0)
-    assert result2.as_set() == ConditionSet(x, Eq(sqrt(2)*sqrt(x) + x**2 + sin(x), 0), Reals)
+    assert result2.as_set(x) == ConditionSet(x, Eq(sqrt(2)*sqrt(x) + x**2 + sin(x), 0), Reals)
 
 def test_binary_symbols():
     ans = {x}
@@ -1269,3 +1271,12 @@ def test_rewrite_Add():
     from sympy.testing.pytest import warns_deprecated_sympy
     with warns_deprecated_sympy():
         assert Eq(x, y).rewrite(Add) == x - y
+
+
+def test_issue_27755():
+    x = Symbol("x", real=True, negative=False)
+    y = Symbol("y", real=True, negative=False)
+
+    assert Eq(x, -x).simplify() == Eq(x, 0)
+    assert Eq(x, -y).simplify() == Eq(x, 0) & Eq(y, 0)
+    assert (Eq(x, -y) & ~(Eq(x, 0) & Eq(y, 0))).simplify() == False

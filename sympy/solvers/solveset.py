@@ -1293,7 +1293,11 @@ def _solveset(f, symbol, domain, _check=False):
         expr_set_pairs = f.as_expr_set_pairs(domain)
         for (expr, in_set) in expr_set_pairs:
             if in_set.is_Relational:
-                in_set = in_set.as_set()
+                free = in_set.free_symbols
+                if len(free) > 1:
+                    raise NotImplementedError("multivariate piecewise conditions are not supported in solveset yet")
+
+                in_set = in_set.as_set(free.pop())
             solns = solver(expr, symbol, in_set)
             result += solns
     elif isinstance(f, Eq):
@@ -2447,7 +2451,7 @@ def solveset(f, symbol=None, domain=S.Complexes):
     if not isinstance(f, (Expr, Relational, Number)):
         raise ValueError("%s is not a valid SymPy expression" % f)
 
-    if not isinstance(symbol, (Expr, Relational)) and  symbol is not None:
+    if not isinstance(symbol, (Expr, Relational)) and symbol is not None:
         raise ValueError("%s is not a valid SymPy symbol" % (symbol,))
 
     if not isinstance(domain, Set):

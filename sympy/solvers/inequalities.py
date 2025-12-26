@@ -1,6 +1,7 @@
 """Tools for solving inequalities and systems of inequalities. """
 import itertools
 
+from sympy.assumptions.wrapper import assumption_domain
 from sympy.calculus.util import (continuous_domain, periodicity,
     function_range)
 from sympy.core import sympify
@@ -380,7 +381,7 @@ def reduce_abs_inequalities(exprs, gen):
         for expr, rel in exprs ])
 
 
-def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, continuous=False):
+def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, continuous=False, _exclude=frozenset()):
     """Solves a real univariate inequality.
 
     Parameters
@@ -439,6 +440,8 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
     """
     from sympy.solvers.solvers import denoms
 
+    domain = domain.intersect(assumption_domain(gen, _exclude=_exclude | {expr}))
+
     if domain.is_subset(S.Reals) is False:
         raise NotImplementedError(filldedent('''
         Inequalities in the complex domain are
@@ -490,7 +493,7 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
             elif const is S.false:
                 rv = S.EmptySet
         elif period is not None:
-            frange = function_range(e, gen, domain)
+            frange = function_range(e, gen, domain, _exclude=_exclude | {expr})
 
             rel = expr.rel_op
             if rel in ('<', '<='):
@@ -561,7 +564,7 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
             for d in denoms(expr, gen):
                 singularities.extend(solvify(d, gen, domain))
             if not continuous:
-                domain = continuous_domain(expanded_e, gen, domain)
+                domain = continuous_domain(expanded_e, gen, domain, _exclude=_exclude | {expr})
 
             include_x = '=' in expr.rel_op and expr.rel_op != '!='
 
