@@ -450,6 +450,9 @@ def test_arrayexpr_convert_array_to_matrix_remove_trivial_dims():
     expr = ArrayTensorProduct(X4, ArrayAdd(ArrayTensorProduct(X4, I1), PermuteDims(ArrayTensorProduct(I1, X4), [2, 3, 0, 1])))
     assert _remove_trivial_dims(expr) == (2*X4*X4.T, [1, 3, 4, 5])
 
+    expr = ArrayDiagonal(ArrayTensorProduct(X1.applyfunc(exp), X1, X4, X1), (0, 2, 6), (1, 3, 7))
+    assert _remove_trivial_dims(expr) == (exp(X1[0, 0])*X4*X1**2, [2, 3])
+
 
 def test_arrayexpr_convert_array_to_matrix_diag2contraction_diagmatrix():
     cg = _array_diagonal(_array_tensor_product(M, a), (1, 2))
@@ -691,7 +694,7 @@ def test_convert_array_elementwise_function_to_matrix():
     d = Dummy("d")
 
     expr = ArrayElementwiseApplyFunc(Lambda(d, sin(d)), x.T*y)
-    assert convert_array_to_matrix(expr) == sin(x.T*y)
+    assert convert_array_to_matrix(expr).dummy_eq(sin((x.T*y)[0, 0]))
 
     expr = ArrayElementwiseApplyFunc(Lambda(d, d**2), x.T*y)
     assert convert_array_to_matrix(expr) == (x.T*y)**2
