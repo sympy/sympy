@@ -802,8 +802,8 @@ class Float(Number):
     is_irrational = None
     is_number = True
 
-    is_real = True
-    is_extended_real = True
+    # is_real = True
+    # is_extended_real = True
 
     is_Float = True
 
@@ -1009,8 +1009,8 @@ class Float(Number):
         return False
 
     def _eval_is_integer(self):
-        if self._mpf_ == fzero:
-            return True
+        # if self._mpf_ == fzero:
+        #     return True
         if not int_valued(self):
             return False
 
@@ -1038,8 +1038,8 @@ class Float(Number):
             return False
         return self.num > 0
 
-    def _eval_is_zero(self):
-        return self._mpf_ == fzero
+    # def _eval_is_zero(self):
+    #     return self._mpf_ == fzero
 
     def __bool__(self):
         return self._mpf_ != fzero
