@@ -8,21 +8,16 @@ T_co = TypeVar("T_co", covariant=True)
 class RecurrenceMemoFunc(Protocol[T_co]):
     def __call__(self, n: int) -> T_co: ...
     def cache_length(self) -> int: ...
-    def fetch_item(self, x) -> Any: ...
+    def fetch_item(self, x: Any) -> Any: ...
 
 __all__ = [
-    "T",
-    "T_co",
     "recurrence_memo",
     "assoc_recurrence_memo",
-    "RecurrenceMemoFunc",
 ]
 
 def recurrence_memo(
         initial: List[T]
-        ) -> Callable[
-            [Callable[[int, List[T]], T]],RecurrenceMemoFunc[T]
-            ]:
+        ) -> "Callable[[Callable[[int, List[T]], T]], RecurrenceMemoFunc[T]]":
     """
     Memo decorator for sequences defined by recurrence
 
@@ -64,9 +59,7 @@ def recurrence_memo(
 
 def assoc_recurrence_memo(
         base_seq: Callable[[int], T]
-        ) -> Callable[
-            [Callable[[int, int, List[List[T]]], T]],Callable[[int, int], T]
-              ]:
+        ) -> "Callable[[Callable[[int, int, List[List[T]]], T]], Callable[[int, int], T]]":
     """
     Memo decorator for associated sequences defined by recurrence starting from base
 
