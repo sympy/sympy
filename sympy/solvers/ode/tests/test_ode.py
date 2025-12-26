@@ -847,13 +847,13 @@ def test_homogeneous_function():
     eq5 = exp((2*x**2)/(3*f(x)**2))
     eq6 = log((3*x + 4*f(x))/(5*f(x) + 7*x) + exp((2*x**2)/(3*f(x)**2)))
     eq7 = sin((3*x)/(5*f(x) + x**2))
-    assert homogeneous_order(eq1, x, f(x)) == None
+    assert homogeneous_order(eq1, x, f(x)) is None
     assert homogeneous_order(eq2, x, f(x)) == 0
-    assert homogeneous_order(eq3, x, f(x)) == None
+    assert homogeneous_order(eq3, x, f(x)) is None
     assert homogeneous_order(eq4, x, f(x)) == 0
     assert homogeneous_order(eq5, x, f(x)) == 0
     assert homogeneous_order(eq6, x, f(x)) == 0
-    assert homogeneous_order(eq7, x, f(x)) == None
+    assert homogeneous_order(eq7, x, f(x)) is None
 
 
 def test_linear_coeff_match():
