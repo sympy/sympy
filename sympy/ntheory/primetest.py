@@ -5,6 +5,7 @@ Primality testing
 
 from itertools import count
 
+from sympy.core.intfunc import integer_log
 from sympy.core.sympify import sympify
 from sympy.external.gmpy import (gmpy as _gmpy, gcd, jacobi,
                                  is_square as gmpy_is_square,
@@ -828,3 +829,37 @@ def is_gaussian_prime(num):
         a = abs(a)
         return isprime(a) and a % 4 == 3
     return isprime(a**2 + b**2)
+
+
+def is_fermat_prime(num):
+    r"""
+    Test if num is a Fermat prime number (True) or not (False).
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory import is_fermat_prime
+    >>> is_fermat_prime(3)
+    True
+    >>> is_fermat_prime(15)
+    False
+    References
+    ==========
+    .. [1] https://oeis.org/A019434
+    .. [2] https://mathworld.wolfram.com/FermatPrime.html
+    .. [3] https://mathworld.wolfram.com/FermatNumber.html
+    """
+
+    num = as_int(num)
+    FERMAT_PRIMES = (3, 5, 17, 257, 65537)
+    if num in FERMAT_PRIMES:
+        return True
+    if num < 65537:
+        return False
+
+    e = num - 1
+    for do in range(2):
+        e, ok = integer_log(e, 2)
+        if not ok:
+            return False
+    return False if (e < 31) else None  # *unlikely* that more will be found
