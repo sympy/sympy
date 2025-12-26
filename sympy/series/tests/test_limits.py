@@ -451,20 +451,13 @@ def test_issue_5183():
                          ['-', '+']))
     results = (oo, oo, -oo, oo, -oo*I, oo, -oo*(-1)**Rational(1, 3), oo,
                0, 0, 0, 0, 0, 0, 0, 0,
-               oo, oo, oo, -oo, oo, -oo*I, oo, -oo*(-1)**Rational(1, 3),
+               oo, oo, oo, -oo, oo, -oo*I, oo, -oo*sign((-1)**Rational(1, 3)),
                0, 0, 0, 0, 0, 0, 0, 0)
     assert len(tests) == len(results)
     for i, (args, res) in enumerate(zip(tests, results)):
         y, s, e, d = args
         eq = y**(s*e)
-        try:
-            assert limit(eq, x, 0, dir=d) == res
-        except AssertionError:
-            if 0:  # change to 1 if you want to see the failing tests
-                print()
-                print(i, res, eq, d, limit(eq, x, 0, dir=d))
-            else:
-                assert None
+        assert limit(eq, x, 0, dir=d) == res
 
 
 def test_issue_5184():
