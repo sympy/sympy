@@ -1457,3 +1457,28 @@ def test_eval_classmethod_check():
 def test_issue_27163():
     # https://github.com/sympy/sympy/issues/27163
     raises(TypeError, lambda: Derivative(f, t))
+
+
+def test_Lambda_curry():
+    """
+    Lambda((x, y), x + y) -> Lambda(x, Lambda(y, x + y))
+    Lambda(x, Lambda(y, x + y)) is already curried.
+    Lambda(x, x**2) should return itself.
+    Lambda((x, (y, z)), x*y*z) -> Lambda(x, Lambda(y, Lambda(z, x*y*z)))
+    Lambda((x, y, z), x*y + z) ==> Lambda(x, Lambda(y, Lambda(z, x*y+z)))
+    """
+    f = Lambda((x, y), x + y)
+    fc = f.curry()
+    assert fc == Lambda(x, Lambda(y, x + y))
+    c = Lambda(x, Lambda(y, x + y))
+    out = c.curry()
+    assert out == c
+    f = Lambda(x, x**2)
+    out = f.curry()
+    assert out == f
+    f = Lambda((x, (y, z)), x*y*z)
+    fc = f.curry()
+    assert fc == Lambda(x, Lambda(y, Lambda(z, x*y*z)))
+    f = Lambda((x, y, z), x*y+z)
+    fc = f.curry()
+    assert fc == Lambda(x, Lambda(y, Lambda(z, x*y+z)))
