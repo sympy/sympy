@@ -3972,19 +3972,23 @@ class Poly(Basic):
         return f._which_roots(candidates, f.degree())
 
     def _which_roots(f, candidates, num_roots):
+        fe = f.as_expr()
+        x = f.gens[0]
         prec = 10
-        # using Counter bc its like an ordered set
-        root_counts = Counter(candidates)
-        while len(root_counts) > num_roots:
-            for r in list(root_counts.keys()):
-                # If f(r) != 0 then f(r).evalf() gives a float/complex with precision.
-                f_r = f(r).evalf(prec, maxn=2*prec)
-                if abs(f_r)._prec >= 2:
-                    root_counts.pop(r)
+        candidates = list(Counter(candidates).keys())
 
+        while len(candidates) > num_roots:
+            potential_candidates = []
+            for r in candidates:
+                # If f(r) != 0 then f(r).evalf() gives a float/complex with precision.
+                f_r = fe.xreplace({x: r}).evalf(prec, maxn=2*prec)
+                if abs(f_r)._prec < 2:
+                    potential_candidates.append(r)
+
+            candidates = potential_candidates
             prec *= 2
 
-        return list(root_counts.keys())
+        return candidates
 
     def same_root(f, a, b):
         """
