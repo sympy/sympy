@@ -391,7 +391,10 @@ def _(expr: ArrayTensorProduct):
                 removed.extend(current_range)
             continue
         elif arg.shape == (1, 1):
-            arg, _ = _remove_trivial_dims(arg)
+            arg, rem = _remove_trivial_dims(arg)
+            if rem:
+                rem_dims = [current_range[j] for j in rem]
+                removed.extend(rem_dims)
             # Matrix is equivalent to scalar:
             if len(newargs) == 0:
                 newargs.append(arg)
@@ -442,7 +445,7 @@ def _(expr: ArrayTensorProduct):
         else:
             newargs.append(arg)
             pending = None
-    newexpr, newremoved = _a2m_tensor_product(*newargs), sorted(removed)
+    newexpr, newremoved = _a2m_tensor_product(*newargs), sorted(set(removed))
     if isinstance(newexpr, ArrayTensorProduct):
         newexpr, newremoved2 = _find_trivial_matrices_rewrite(newexpr)
         newremoved = _combine_removed(-1, newremoved, newremoved2)
@@ -565,9 +568,9 @@ def _(expr: ArrayDiagonal):
 @_remove_trivial_dims.register(ElementwiseApplyFunction)
 def _(expr: ElementwiseApplyFunction):
     subexpr, removed = _remove_trivial_dims(expr.expr)
-    if subexpr.shape == (1, 1):
+    if subexpr.shape == (1, 1) and isinstance(subexpr, MatrixExpr):
         # TODO: move this to ElementwiseApplyFunction
-        return expr.function(subexpr), removed + [0, 1]
+        return expr.function(subexpr[0, 0]), removed + [0, 1]
     return ElementwiseApplyFunction(expr.function, subexpr), []
 
 
@@ -822,7 +825,14 @@ def identify_hadamard_products(expr: ArrayContraction | ArrayDiagonal):
 
         # This is a Hadamard product:
 
-        hp = hadamard_product(*[i.element if check_transpose(i.indices) else Transpose(i.element) for i in hadamard_factors])
+        elems = [i.element if check_transpose(i.indices) else Transpose(i.element) for i in hadamard_factors]
+
+        if elems[0].shape == (1, 1):
+            # In this case, the Hadamard product is equivalent to the matrix multiplication:
+            hp = MatMul(*elems).doit()
+        else:
+            hp = hadamard_product(*elems)
+
         hp_indices = v[0].indices
         if not check_transpose(hadamard_factors[0].indices):
             hp_indices = list(reversed(hp_indices))
