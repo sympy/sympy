@@ -239,7 +239,7 @@ Here is an example of the raw output of the ``dotprint()`` function
     # Nodes #
     #########
     <BLANKLINE>
-    "Add(Integer(2), Symbol('x'))_()" ["color"="black", "label"="Add", "shape"="ellipse"];
+    "node_0_()" ["color"="black", "label"="Add", "shape"="ellipse"];
     "Integer(2)_(0,)" ["color"="black", "label"="2", "shape"="ellipse"];
     "Symbol('x')_(1,)" ["color"="black", "label"="x", "shape"="ellipse"];
     <BLANKLINE>
@@ -247,8 +247,8 @@ Here is an example of the raw output of the ``dotprint()`` function
     # Edges #
     #########
     <BLANKLINE>
-    "Add(Integer(2), Symbol('x'))_()" -> "Integer(2)_(0,)";
-    "Add(Integer(2), Symbol('x'))_()" -> "Symbol('x')_(1,)";
+    "node_0_()" -> "Integer(2)_(0,)";
+    "node_0_()" -> "Symbol('x')_(1,)";
     }
 
 .. rubric:: Footnotes
