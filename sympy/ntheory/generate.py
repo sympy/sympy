@@ -17,7 +17,7 @@ from sympy.utilities.decorator import deprecated
 from sympy.utilities.misc import as_int
 
 
-def _as_int_ceiling(a):
+def _as_int_ceiling(a) -> int:
     """ Wrapping ceiling in as_int will raise an error if there was a problem
         determining whether the expression was exactly an integer or not."""
     from sympy.functions.elementary.integers import ceiling
@@ -41,9 +41,14 @@ class Sieve:
     >>> sieve._list
     array('L', [2, 3, 5, 7, 11, 13, 17, 19, 23])
     """
+    _n: int
+    _list: _array[int]
+    _tlist: _array[int]
+    _mlist: _array[int]
+    sieve_interval: int
 
     # data shared (and updated) by all Sieve instances
-    def __init__(self, sieve_interval=1_000_000):
+    def __init__(self, sieve_interval: int = 1_000_000) -> None:
         """ Initial parameters for the Sieve class.
 
         Parameters
@@ -67,7 +72,7 @@ class Sieve:
         self.sieve_interval = sieve_interval
         assert all(len(i) == self._n for i in (self._list, self._tlist, self._mlist))
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return ("<%s sieve (%i): %i, %i, %i, ... %i, %i\n"
              "%s sieve (%i): %i, %i, %i, ... %i, %i\n"
              "%s sieve (%i): %i, %i, %i, ... %i, %i>") % (
@@ -81,7 +86,12 @@ class Sieve:
                  self._mlist[0], self._mlist[1],
                  self._mlist[2], self._mlist[-2], self._mlist[-1])
 
-    def _reset(self, prime=None, totient=None, mobius=None):
+    def _reset(
+        self,
+        prime: bool | None = None,
+        totient: bool | None = None,
+        mobius: bool | None = None,
+    ) -> None:
         """Reset all caches (default). To reset one or more set the
             desired keyword to True."""
         if all(i is None for i in (prime, totient, mobius)):
@@ -93,7 +103,7 @@ class Sieve:
         if mobius:
             self._mlist = self._mlist[:self._n]
 
-    def extend(self, n):
+    def extend(self, n: int) -> None:
         """Grow the sieve to cover all primes <= n.
 
         Examples
@@ -118,7 +128,7 @@ class Sieve:
         # Merge the sieves
         self._list += _array('L', self._primerange(num, n + 1))
 
-    def _primerange(self, a, b):
+    def _primerange(self, a: int, b: int) -> Iterator[int]:
         """ Generate all prime numbers in the range (a, b).
 
         Parameters
@@ -159,7 +169,7 @@ class Sieve:
                     yield a + 2 * idx + 1
             a += 2 * block_size
 
-    def extend_to_no(self, i):
+    def extend_to_no(self, i: int) -> None:
         """Extend to include the ith prime number.
 
         Parameters
@@ -186,7 +196,7 @@ class Sieve:
         while len(self._list) < i:
             self.extend(int(self._list[-1] * 1.5))
 
-    def primerange(self, a, b=None):
+    def primerange(self, a: int, b: int | None = None) -> Iterator[int]:
         """Generate all prime numbers in the range [2, a) or [a, b).
 
         Examples
@@ -222,7 +232,7 @@ class Sieve:
         yield from self._list[bisect_left(self._list, a):
                               bisect_left(self._list, b)]
 
-    def totientrange(self, a, b):
+    def totientrange(self, a: int, b: int) -> Iterator[int]:
         """Generate all totient numbers for the range [a, b).
 
         Examples
@@ -259,7 +269,7 @@ class Sieve:
                 if i >= a:
                     yield self._tlist[i]
 
-    def mobiusrange(self, a, b):
+    def mobiusrange(self, a: int, b: int) -> Iterator[int]:
         """Generate all mobius numbers for the range [a, b).
 
         Parameters
@@ -303,7 +313,7 @@ class Sieve:
                 if i >= a:
                     yield mi
 
-    def search(self, n):
+    def search(self, n: int) -> tuple[int, int]:
         """Return the indices i, j of the primes that bound n.
 
         If n is prime then i == j.
@@ -332,7 +342,7 @@ class Sieve:
         else:
             return b, b + 1
 
-    def __contains__(self, n):
+    def __contains__(self, n: int) -> bool:
         try:
             n = as_int(n)
             assert n >= 2
@@ -343,11 +353,19 @@ class Sieve:
         a, b = self.search(n)
         return a == b
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[int]:
         for n in count(1):
             yield self[n]
 
-    def __getitem__(self, n):
+    @overload
+    def __getitem__(self, n: int) -> int:
+        ...
+
+    @overload
+    def __getitem__(self, n: slice) -> _array[int]:
+        ...
+
+    def __getitem__(self, n: int | slice) -> int | _array[int]:
         """Return the nth prime number"""
         if isinstance(n, slice):
             self.extend_to_no(n.stop)
