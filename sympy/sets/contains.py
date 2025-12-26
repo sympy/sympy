@@ -7,9 +7,8 @@ from sympy.core.sympify import sympify
 from sympy.core.parameters import global_parameters
 from sympy.logic.boolalg import Boolean
 from sympy.utilities.misc import func_name
+from sympy.sets.sets import Set
 
-if TYPE_CHECKING:
-    from sympy.sets.sets import Set
 
 
 class Contains(Boolean):
@@ -45,7 +44,6 @@ class Contains(Boolean):
         if evaluate is None:
             evaluate = global_parameters.evaluate
 
-        from sympy.sets.sets import Set
         if not isinstance(s, Set):
             raise TypeError('expecting Set, not %s' % func_name(s))
 
