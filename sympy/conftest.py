@@ -9,6 +9,7 @@ from sympy.external.gmpy import GROUND_TYPES
 from sympy.utilities.misc import ARCH
 import re
 
+
 try:
     import hypothesis
 
