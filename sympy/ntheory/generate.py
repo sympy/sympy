@@ -841,13 +841,14 @@ def primerange(a: SupportsIndex, b: SupportsIndex | None = None) -> Iterator[int
         .. [2] https://primes.utm.edu/notes/gaps.html
     """
     a = as_int(a)
-    b = as_int(b) if b is not None else None
-    yield from _primerange(a, b)
-
-def _primerange(a: int, b: int | None = None) -> Iterator[int]:
-    """ Internal implementation of primerange. """
     if b is None:
         a, b = 2, a
+    else:
+        b = as_int(b)
+    yield from _primerange(a, b)
+
+def _primerange(a: int, b: int) -> Iterator[int]:
+    """ Internal implementation of primerange. """
     if a >= b:
         return
     # If we already have the range, return it.
