@@ -149,25 +149,27 @@ class Commutator(Expr):
     def _eval_expand_commutator(self, **hints):
         A = self.args[0]
         B = self.args[1]
-
         if isinstance(A, Add):
             # [A + B, C]  ->  [A, C] + [B, C]
             sargs = []
             for term in A.args:
                 comm = Commutator(term, B)
-                if isinstance(comm, Commutator):
-                    comm = comm._eval_expand_commutator()
+                if hasattr(comm, 'expand'):
+                    comm = comm.expand(commutator=True)
                 sargs.append(comm)
             return Add(*sargs)
+
         elif isinstance(B, Add):
             # [A, B + C]  ->  [A, B] + [A, C]
             sargs = []
             for term in B.args:
                 comm = Commutator(A, term)
-                if isinstance(comm, Commutator):
-                    comm = comm._eval_expand_commutator()
+                # FIX APPLIED HERE:
+                if hasattr(comm, 'expand'):
+                    comm = comm.expand(commutator=True)
                 sargs.append(comm)
             return Add(*sargs)
+
         elif isinstance(A, Mul):
             # [A*B, C] -> A*[B, C] + [A, C]*B
             a = A.args[0]
@@ -191,8 +193,10 @@ class Commutator(Expr):
             comm2 = Commutator(a, c)
             if isinstance(comm1, Commutator):
                 comm1 = comm1._eval_expand_commutator()
+
             if isinstance(comm2, Commutator):
                 comm2 = comm2._eval_expand_commutator()
+
             first = Mul(comm1, c)
             second = Mul(b, comm2)
             return Add(first, second)
@@ -202,8 +206,6 @@ class Commutator(Expr):
         elif isinstance(B, Pow):
             # [A, C**n] -> C**(n - 1)*[C, A] + C**(n - 2)*[C, A]*C + ... + [C, A]*C**(n-1)
             return self._expand_pow(B, A, -1)
-
-        # No changes, so return self
         return self
 
     def doit(self, **hints):
