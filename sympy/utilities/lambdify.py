@@ -1439,7 +1439,7 @@ def _imp_namespace(expr, namespace=None):
     if namespace is None:
         namespace = {}
     # tuples, lists, dicts are valid expressions
-    if is_sequence(expr):
+    if isinstance(expr, (list, tuple)):
         for arg in expr:
             _imp_namespace(arg, namespace)
         return namespace
