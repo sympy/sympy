@@ -2608,7 +2608,14 @@ def test_DotProduct_printing():
 def test_KroneckerProduct_printing():
     A = MatrixSymbol('A', 3, 3)
     B = MatrixSymbol('B', 2, 2)
-    assert latex(KroneckerProduct(A, B)) == r'A \otimes B'
+    assert latex(KroneckerProduct(A, B)) == r'A \boxtimes B'
+
+
+def test_ArrayTensorProduct_printing():
+    from sympy.tensor.array.expressions import ArrayTensorProduct, ArraySymbol
+    M = ArraySymbol('M', (2, 2))
+    N = ArraySymbol('N', (2, 2))
+    assert latex(ArrayTensorProduct(M, N)) == r'M \otimes N'
 
 
 def test_Series_printing():
