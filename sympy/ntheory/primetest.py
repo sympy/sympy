@@ -4,6 +4,7 @@ Primality testing
 """
 
 from itertools import count
+from typing import SupportsIndex, Iterable
 
 from sympy.core.sympify import sympify
 from sympy.external.gmpy import (gmpy as _gmpy, gcd, jacobi,
@@ -22,7 +23,7 @@ MERSENNE_PRIME_EXPONENTS = (2, 3, 5, 7, 13, 17, 19, 31, 61, 89, 107, 127, 521, 6
  25964951, 30402457, 32582657, 37156667, 42643801, 43112609, 57885161, 74207281, 77232917, 82589933,
  136279841)
 
-def is_fermat_pseudoprime(n, a):
+def is_fermat_pseudoprime(n: SupportsIndex, a: SupportsIndex) -> bool:
     r"""Returns True if ``n`` is prime or is an odd composite integer that
     is coprime to ``a`` and satisfy the modular arithmetic congruence relation:
 
@@ -69,7 +70,7 @@ def is_fermat_pseudoprime(n, a):
     return is_fermat_prp(n, a)
 
 
-def is_euler_pseudoprime(n, a):
+def is_euler_pseudoprime(n: SupportsIndex, a: SupportsIndex) -> bool:
     r"""Returns True if ``n`` is prime or is an odd composite integer that
     is coprime to ``a`` and satisfy the modular arithmetic congruence relation:
 
@@ -125,7 +126,7 @@ def is_euler_pseudoprime(n, a):
     return pow(a, (n - 1) // 2, n) in [1, n - 1]
 
 
-def is_euler_jacobi_pseudoprime(n, a):
+def is_euler_jacobi_pseudoprime(n: SupportsIndex, a: SupportsIndex) -> bool:
     r"""Returns True if ``n`` is prime or is an odd composite integer that
     is coprime to ``a`` and satisfy the modular arithmetic congruence relation:
 
@@ -170,7 +171,7 @@ def is_euler_jacobi_pseudoprime(n, a):
     return is_euler_prp(n, a)
 
 
-def is_square(n, prep=True):
+def is_square(n: SupportsIndex, prep: bool=True) -> bool:
     """Return True if n == a * a for some integer a, else False.
     If n is suspected of *not* being a square then this is a
     quick method of confirming that it is not.
@@ -199,10 +200,10 @@ def is_square(n, prep=True):
             return False
         if n in (0, 1):
             return True
-    return gmpy_is_square(n)
+    return gmpy_is_square(as_int(n))
 
 
-def _test(n, base, s, t):
+def _test(n: int, base: int, s: int, t: int) -> bool:
     """Miller-Rabin strong pseudoprime test for one base.
     Return False if n is definitely composite, True if n is
     probably prime, with a probability greater than 3/4.
@@ -222,7 +223,7 @@ def _test(n, base, s, t):
     return False
 
 
-def mr(n, bases):
+def mr(n: SupportsIndex, bases: Iterable[SupportsIndex]) -> bool:
     """Perform a Miller-Rabin strong pseudoprime test on n using a
     given list of bases/witnesses.
 
@@ -258,13 +259,13 @@ def mr(n, bases):
         if base >= n:
             base %= n
         if base >= 2:
-            base = ZZ(base)
+            base = as_int(ZZ(base))
             if not _test(n, base, s, t):
                 return False
     return True
 
 
-def _lucas_extrastrong_params(n):
+def _lucas_extrastrong_params(n: int) -> tuple[int, int, int]:
     """Calculates the "extra strong" parameters (D, P, Q) for n.
 
     Parameters
@@ -302,10 +303,9 @@ def _lucas_extrastrong_params(n):
             return (D, P, 1)
         elif j == 0 and D % n:
             return (0, 0, 0)
-    raise ValueError("Found no Lucas parameters")
+    return (0, 0, 0)
 
-
-def is_lucas_prp(n):
+def is_lucas_prp(n: SupportsIndex) -> bool:
     """Standard Lucas compositeness test with Selfridge parameters.  Returns
     False if n is definitely composite, and True if n is a Lucas probable
     prime.
@@ -345,7 +345,7 @@ def is_lucas_prp(n):
     return is_selfridge_prp(n)
 
 
-def is_strong_lucas_prp(n):
+def is_strong_lucas_prp(n: SupportsIndex) -> bool:
     """Strong Lucas compositeness test with Selfridge parameters.  Returns
     False if n is definitely composite, and True if n is a strong Lucas
     probable prime.
@@ -383,7 +383,7 @@ def is_strong_lucas_prp(n):
     return is_strong_selfridge_prp(n)
 
 
-def is_extra_strong_lucas_prp(n):
+def is_extra_strong_lucas_prp(n: SupportsIndex) -> bool:
     """Extra Strong Lucas compositeness test.  Returns False if n is
     definitely composite, and True if n is an "extra strong" Lucas probable
     prime.
@@ -455,7 +455,7 @@ def is_extra_strong_lucas_prp(n):
     return False
 
 
-def proth_test(n):
+def proth_test(n: SupportsIndex) -> bool:
     r""" Test if the Proth number `n = k2^m + 1` is prime. where k is a positive odd number and `2^m > k`.
 
     Parameters
@@ -512,9 +512,10 @@ def proth_test(n):
             return pow(a, n >> 1, n) == n - 1
         if j == 0:
             return False
+    return False
 
 
-def _lucas_lehmer_primality_test(p):
+def _lucas_lehmer_primality_test(p: int) -> bool:
     r""" Test if the Mersenne number `M_p = 2^p-1` is prime.
 
     Parameters
@@ -555,7 +556,7 @@ def _lucas_lehmer_primality_test(p):
     return v == 0
 
 
-def is_mersenne_prime(n):
+def is_mersenne_prime(n: SupportsIndex) -> bool:
     """Returns True if  ``n`` is a Mersenne prime, else False.
 
     A Mersenne prime is a prime number having the form `2^i - 1`.
@@ -624,7 +625,7 @@ _MR_BASES_32 = [15591, 2018, 166, 7429, 8064, 16045, 10503, 4399, 1949, 1295,
                 2663, 4708, 418, 1621, 1171, 3471, 88, 11345, 412, 1559, 194]
 
 
-def isprime(n):
+def isprime(n: SupportsIndex) -> bool:
     """
     Test if n is a prime number (True) or not (False). For n < 2^64 the
     answer is definitive; larger n values have a small probability of actually
@@ -808,7 +809,7 @@ def isprime(n):
     #return mr(n, [2, random.randint(3, n-1)]) and is_strong_lucas_prp(n)
 
 
-def is_gaussian_prime(num):
+def is_gaussian_prime(num) -> bool:
     r"""Test if num is a Gaussian prime number.
 
     References
