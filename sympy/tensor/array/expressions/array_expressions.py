@@ -2031,6 +2031,8 @@ def nest_permutation(expr):
 
 
 def _array_tensor_product(*args, **kwargs):
+    if all(not isinstance(i, (_ArrayExpr, _CodegenArrayAbstract)) and get_shape(i) == () for i in args):
+        return Mul.fromiter(args)
     return ArrayTensorProduct(*args, canonicalize=True, **kwargs)
 
 

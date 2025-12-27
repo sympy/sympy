@@ -839,7 +839,7 @@ def test_array_sum():
     assert expr.doit().dummy_eq(ArraySum(ArrayTensorProduct(X**sin(i), Y), (i, 1, j)))
 
     expr = ArrayTensorProduct(ArraySum(X**sin(i), (i, 1, j)), i*Y)
-    assert expr.doit().dummy_eq(ArraySum(ArrayTensorProduct(X**sin(m), i*Y), (m, 1, j)))
+    assert expr.doit().dummy_eq(ArraySum(X**sin(m)*i*Y, (m, 1, j)))
 
     expr = ArrayContraction(ArraySum(X, (i, 0, j)), (0, 1))
     # assert expr.doit() == ArrayContraction(j*T, (0, 1))  # TODO: Not working!

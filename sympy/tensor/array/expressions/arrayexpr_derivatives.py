@@ -2,7 +2,7 @@ import operator
 from functools import reduce, singledispatch
 
 from sympy.core.singleton import S
-from sympy import MatrixBase, derive_by_array, Integer, Determinant, Function, MatPow, Dummy
+from sympy import MatrixBase, derive_by_array, Integer, Determinant, Function, MatPow, Dummy, Pow, Mul
 from sympy.tensor.array import NDimArray
 from sympy.core.expr import Expr
 from sympy.matrices.expressions.hadamard import HadamardProduct
@@ -35,6 +35,20 @@ def _(expr: Expr, x: _ArrayExpr):
             return MatrixUnit(x.shape[0], x.shape[1], expr.i, expr.j)
         raise NotImplementedError("algorithm not implemented for this case")
     return ZeroArray(*x.shape)
+
+
+@array_derive.register(Mul)
+def _(expr: Mul, x: _ArrayExpr):
+    args = expr.args
+    return ArrayAdd.fromiter([
+        _array_tensor_product(Mul.fromiter(args[:i]), array_derive(arg, x), Mul.fromiter(args[(i+1):]))
+        for i, arg in enumerate(args)
+    ])
+
+
+@array_derive.register(Pow)
+def _(expr: Pow, x: _ArrayExpr):
+    return Pow._eval_derivative(expr, x)
 
 
 @array_derive.register(Function)
