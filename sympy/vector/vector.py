@@ -419,17 +419,11 @@ class Vector(BasisDependent):
 def get_postprocessor(cls):
     def _postprocessor(expr):
         vec_class = {Add: VectorAdd, Mul: VectorMul}[cls]
-        
+
         if vec_class == VectorAdd:
-            # Pass all args to VectorAdd - let it handle validation
             return VectorAdd(*expr.args).doit(deep=False)
         if vec_class == VectorMul:
-            # VectorMul needs filtering since it's scalar × vector
-            vectors = []
-            for term in expr.args:
-                if isinstance(term.kind, VectorKind):
-                    vectors.append(term)
-            return VectorMul(*vectors).doit(deep=False)
+            return VectorMul(*expr.args).doit(deep=False)
     return _postprocessor
 
 
