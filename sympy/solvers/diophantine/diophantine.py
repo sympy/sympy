@@ -709,6 +709,9 @@ class HomogeneousTernaryQuadraticNormal(DiophantineEquationType):
     name = 'homogeneous_ternary_quadratic_normal'
 
     def matches(self):
+        if self.total_degree > 2 and self.dimension == 3:
+            raise ValueError(filldedent('''
+            No integer solution exists for ternary equation with degree > 2 '''))
         if not (self.total_degree == 2 and self.dimension == 3):
             return False
         if not self.homogeneous:
