@@ -1769,9 +1769,16 @@ class Derivative(Expr):
             syms = {vi: Dummy() for vi in self._wrt_variables
                 if not vi.is_Symbol}
             wrt = {syms.get(vi, vi) for vi in self._wrt_variables}
-            forbidden = args[0].xreplace(syms).free_symbols & wrt
-            nfree = new.xreplace(syms).free_symbols
-            ofree = old.xreplace(syms).free_symbols
+            expr = args[0]
+            def _renamed_free_symbols(obj, syms):
+                fs = obj.free_symbols
+                if not syms:
+                    return fs
+                return {syms.get(s, s) for s in fs}
+
+            forbidden = _renamed_free_symbols(expr, syms) & wrt
+            nfree = _renamed_free_symbols(new, syms)
+            ofree = _renamed_free_symbols(old, syms)
             if (nfree - ofree) & forbidden:
                 return Subs(self, old, new)
 
