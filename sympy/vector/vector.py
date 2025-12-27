@@ -1,7 +1,7 @@
 from __future__ import annotations
 from itertools import product
 
-from sympy.core import Add, Basic
+from sympy.core import Add, Mul, Basic
 from sympy.core.assumptions import StdFactKB
 from sympy.core.expr import AtomicExpr, Expr
 from sympy.core.power import Pow
@@ -418,19 +418,18 @@ class Vector(BasisDependent):
 
 def get_postprocessor(cls):
     def _postprocessor(expr):
-        vec_class = {Add: VectorAdd}[cls]
-        vectors = []
-        for term in expr.args:
-            if isinstance(term.kind, VectorKind):
-                vectors.append(term)
+        vec_class = {Add: VectorAdd, Mul: VectorMul}[cls]
 
         if vec_class == VectorAdd:
-            return VectorAdd(*vectors).doit(deep=False)
+            return VectorAdd(*expr.args).doit(deep=False)
+        if vec_class == VectorMul:
+            return VectorMul(*expr.args).doit(deep=False)
     return _postprocessor
 
 
 Basic._constructor_postprocessor_mapping[Vector] = {
     "Add": [get_postprocessor(Add)],
+    "Mul": [get_postprocessor(Mul)],
 }
 
 class BaseVector(Vector, AtomicExpr):
@@ -499,6 +498,9 @@ class VectorAdd(BasisDependentAdd, Vector):
     """
 
     def __new__(cls, *args, **options):
+        for arg in args:
+            if not isinstance(arg, Vector):
+                raise TypeError("VectorAdd expects all arguments to be Vector instances")
         obj = BasisDependentAdd.__new__(cls, *args, **options)
         return obj
 
@@ -551,7 +553,7 @@ class VectorZero(BasisDependentZero, Vector):
         return obj
 
 
-class Cross(Vector):
+class Cross(Expr):
     """
     Represents unevaluated Cross product.
 
