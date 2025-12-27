@@ -888,7 +888,7 @@ class ArrayDiagonal(_CodegenArrayAbstract):
     @staticmethod
     def _flatten(expr: ArrayDiagonal, *outer_diagonal_indices):
         inddown = ArrayDiagonal._push_indices_down(outer_diagonal_indices, list(range(get_rank(expr))), get_rank(expr))
-        inddown = tuple(i for i in inddown if i)
+        inddown = tuple(i for i in inddown if i is not None)
         inddow2 = ArrayDiagonal._push_indices_down(expr.diagonal_indices, inddown, get_rank(expr.expr))
         new_diag_indices = []
         for i in inddow2:
