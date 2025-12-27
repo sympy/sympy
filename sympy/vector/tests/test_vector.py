@@ -341,3 +341,10 @@ def test_scalar():
     assert v1.is_scalar is False
     assert (v1.dot(v2)).is_scalar is True
     assert (v1.cross(v2)).is_scalar is False
+
+
+def test_postprocessor_for_vector():
+    from sympy.vector import CoordSys3D
+    C1 = CoordSys3D("C1")
+    assert Mul(2, C1.i).is_Vector is True
+    assert Add(2, C1.i).is_Vector is True
