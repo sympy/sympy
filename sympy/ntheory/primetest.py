@@ -255,6 +255,7 @@ def mr(n: SupportsIndex, bases: Iterable[SupportsIndex]) -> bool:
     s = bit_scan1(n - 1)
     t = n >> s
     for base in bases:
+        base = as_int(base)
         # Bases >= n are wrapped, bases < 2 are invalid
         if base >= n:
             base %= n
