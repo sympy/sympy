@@ -105,6 +105,7 @@ class _pure_key_dict:
 
 _reals_cache = _pure_key_dict()
 _complexes_cache = _pure_key_dict()
+_rootof_dummy = Dummy('x')
 
 
 def _pure_factors(poly):
@@ -365,6 +366,7 @@ class ComplexRootOf(RootOf):
         """Construct new ``CRootOf`` object from raw data. """
         obj = Expr.__new__(cls)
 
+        poly = poly.replace(poly.gen, _rootof_dummy)
         obj.poly = PurePoly(poly)
         obj.index = index
 
