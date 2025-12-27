@@ -419,14 +419,16 @@ class Vector(BasisDependent):
 def get_postprocessor(cls):
     def _postprocessor(expr):
         vec_class = {Add: VectorAdd, Mul: VectorMul}[cls]
-        vectors = []
-        for term in expr.args:
-            if isinstance(term.kind, VectorKind):
-                vectors.append(term)
-
+        
         if vec_class == VectorAdd:
-            return VectorAdd(*vectors).doit(deep=False)
+            # Pass all args to VectorAdd - let it handle validation
+            return VectorAdd(*expr.args).doit(deep=False)
         if vec_class == VectorMul:
+            # VectorMul needs filtering since it's scalar × vector
+            vectors = []
+            for term in expr.args:
+                if isinstance(term.kind, VectorKind):
+                    vectors.append(term)
             return VectorMul(*vectors).doit(deep=False)
     return _postprocessor
 
@@ -502,6 +504,9 @@ class VectorAdd(BasisDependentAdd, Vector):
     """
 
     def __new__(cls, *args, **options):
+        for arg in args:
+            if not isinstance(arg, Vector):
+                raise TypeError("VectorAdd expects all arguments to be Vector instances")
         obj = BasisDependentAdd.__new__(cls, *args, **options)
         return obj
 
