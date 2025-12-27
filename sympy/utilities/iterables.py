@@ -107,15 +107,21 @@ def flatten(iterable, levels=None, cls=None):  # noqa: F811
         else:
             raise ValueError(
                 "expected non-negative number of levels, got %s" % levels)
+         
+        from typing import Any, Optional, Type, Callable, List
+
+        cls: Optional[Type[Any]]
+
+        reducible: Callable[[Any], bool]
 
     if cls is None:
-        def reducible(x):
+        def reducible(x: Any) -> bool:
             return is_sequence(x, set)
     else:
-        def reducible(x):
+        def reducible(x: Any) -> bool:
             return isinstance(x, cls)
 
-    result = []
+    result: list[Any] = []
 
     for el in iterable:
         if reducible(el):
