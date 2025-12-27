@@ -2328,4 +2328,4 @@ def test_issue_28803_jointrandonsymbol_recursion():
     a = symbols("a")
 
     # Should not raise RecursionError
-    f = lambdify(a, z * a)
+    lambdify(a, z * a)
