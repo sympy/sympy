@@ -1852,14 +1852,14 @@ class LatexPrinter(Printer):
         prec = PRECEDENCE['Pow']
         parens = self.parenthesize
 
-        return r' \circ '.join(
+        return r' \odot '.join(
             (parens(arg, prec, strict=True) for arg in args))
 
     def _print_HadamardPower(self, expr):
         if precedence_traditional(expr.exp) < PRECEDENCE["Mul"]:
-            template = r"%s^{\circ \left({%s}\right)}"
+            template = r"%s^{\odot \left({%s}\right)}"
         else:
-            template = r"%s^{\circ {%s}}"
+            template = r"%s^{\odot {%s}}"
         return self._helper_print_standard_power(expr, template)
 
     def _print_KroneckerProduct(self, expr):
