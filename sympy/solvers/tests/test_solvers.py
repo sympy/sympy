@@ -2733,3 +2733,22 @@ def test_solve_maxmin():
     assert solve(system, variables) == [(5 - sqrt(42), 67 - 10*sqrt(42)), (5 + sqrt(42), 10*sqrt(42) + 67)]
     system = [Eq(y, Max(3*x, -(S(1)/3)*x)), Eq(y, -(x**2)+10)]
     assert solve(system, variables) == [(-3, 1), (2, 6)]
+
+
+def test_issue_28804():
+    a, b = symbols('a b')
+    # CASE: Arm fully stretched out (x=2, y=0) with lengths l1=1, l2=1.
+    # The only solution is a=0, b=0.
+    # This avoids complex numbers in the intermediate steps,
+    # making it fast enough for pure Python environments.
+    eqs = [
+        cos(a) + cos(a + b) - 2,
+        sin(a) + sin(a + b)
+    ]
+
+    sol = solve(eqs, [a, b])
+    # We should find the solution a=0, b=0 (and potentially periodic repetitions)
+    # Just checking we got a result confirms the crash is fixed.
+    assert len(sol) > 0
+    # Check that one solution is indeed the trivial one
+    assert any(s == (0, 0) or s == (0.0, 0.0) for s in sol)
