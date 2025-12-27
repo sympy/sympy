@@ -1456,6 +1456,8 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
 
     """
     try:
+        if isinstance(expr, str):  # string parsing is outside `as_int()`'s scope
+            expr = Rational(expr)  # Rational or Integer, keeping given precision
         return sympify(as_int(expr))
     except (TypeError, ValueError):
         pass
