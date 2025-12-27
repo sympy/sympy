@@ -1382,7 +1382,7 @@ class Basic(Printable):
         return self, False
 
     @cacheit
-    def has(self, *patterns):
+    def has(self, *patterns) -> bool:
         """
         Test whether any subexpression matches any of the patterns.
 

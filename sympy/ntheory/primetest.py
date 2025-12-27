@@ -3,6 +3,8 @@ Primality testing
 
 """
 
+from typing import SupportsIndex
+
 from itertools import count
 
 from sympy.core.sympify import sympify
@@ -624,7 +626,7 @@ _MR_BASES_32 = [15591, 2018, 166, 7429, 8064, 16045, 10503, 4399, 1949, 1295,
                 2663, 4708, 418, 1621, 1171, 3471, 88, 11345, 412, 1559, 194]
 
 
-def isprime(n):
+def isprime(n: SupportsIndex) -> bool:
     """
     Test if n is a prime number (True) or not (False). For n < 2^64 the
     answer is definitive; larger n values have a small probability of actually
