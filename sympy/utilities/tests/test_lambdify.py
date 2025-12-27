@@ -2321,11 +2321,11 @@ def test_array_symbol():
 
 def test_issue_28803_jointrandonsymbol_recursion():
     """Test that JointRandomSymbol doesn't cause infinite recursion in lambdify."""
-    
+
     # Used to cause infinite recursion
     K = MatrixSymbol("K", 4, 4)
     z = MultivariateNormal("z", [0] * 4, K)
     a = symbols("a")
-    
+
     # Should not raise RecursionError
     f = lambdify(a, z * a)
