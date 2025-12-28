@@ -33,7 +33,7 @@ from sympy.core.numbers import comp
 from sympy.core.evalf import (complex_accuracy, PrecisionExhausted,
                               scaled_zero, get_integer_part, as_mpmath, evalf, _evalf_with_bounded_error)
 from mpmath import inf, ninf, make_mpc
-from mpmath.libmp.libmpf import from_float, fzero
+from sympy.external.mpmath import from_float, fzero, finf
 from sympy.core.expr import unchanged
 from sympy.testing.pytest import raises, XFAIL
 from sympy.abc import n, x, y
@@ -44,7 +44,6 @@ def NS(e, n=15, **options):
 
 
 def test_evalf_helpers():
-    from mpmath.libmp import finf
     assert complex_accuracy((from_float(2.0), None, 35, None)) == 35
     assert complex_accuracy((from_float(2.0), from_float(10.0), 35, 100)) == 37
     assert complex_accuracy(
@@ -736,3 +735,15 @@ def test_issue_20733():
     assert srepr(expr.evalf(2, subs={x: 1})) == "Float('4.0271e+2561', precision=10)"
     assert srepr(expr.evalf(10, subs={x: 1})) == "Float('4.02790050126e+2561', precision=37)"
     assert srepr(expr.evalf(53, subs={x: 1})) == "Float('4.0279005012722099453824067459760158730668154575647110393e+2561', precision=179)"
+
+
+def test_issue_28280():
+    # This test demonstrates why `evalf_log` needs to specially handle
+    # arguments close to 1.If the argument is evaluated directly
+    # as `1 + 10**-10` at default precision,it loses the small
+    # term and becomes exactly 1. This results in `log(1) -> 0`
+    # causing `x > 20` to incorrectly evaluate to False.
+    x = 20 + log(1 + S(10)**-10)
+    assert x > 20
+    y = 20 + log(1 + S(10)**-9)
+    assert y > 20

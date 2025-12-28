@@ -2008,6 +2008,19 @@ def test_Mod():
     assert Mod(3*xi, 2) == Mod(xi, 2)
     assert unchanged(Mod, 3*x, 2)
 
+    # issue 28744
+    x0 = Symbol('x0')
+    x0_int = Symbol('x0', integer=True)
+    expr = Mod(2*Mod(x0, 3), 5)
+    expr_int = Mod(2*Mod(x0_int, 3), 5).xreplace({x0_int: x0})
+    assert expr == expr_int
+
+    x1 = Symbol('x1')
+    x1_int = Symbol('x1', integer=True)
+    expr = 8*Mod(floor(x1/64), 4)
+    expr_int = 8*Mod(floor(x1_int/64), 4).xreplace({x1_int: x1})
+    assert expr == expr_int
+
 
 def test_Mod_Pow():
     # modular exponentiation

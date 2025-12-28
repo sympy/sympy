@@ -3,7 +3,7 @@
 from sympy.core.numbers import NumberSymbol
 from sympy.core.singleton import Singleton
 from sympy.printing.pretty.stringpict import prettyForm
-import mpmath.libmp as mlib
+from sympy.external.mpmath import from_float
 
 #-----------------------------------------------------------------------------
 # Constants
@@ -39,7 +39,7 @@ class HBar(NumberSymbol, metaclass=Singleton):
     __slots__ = ()
 
     def _as_mpf_val(self, prec):
-        return mlib.from_float(1.05457162e-34, prec)
+        return from_float(1.05457162e-34, prec)
 
     def _sympyrepr(self, printer, *args):
         return 'HBar()'
