@@ -1,6 +1,5 @@
 from __future__ import annotations
 from typing import Any, Iterator, Iterable, Sized, cast
-from sympy.core.basic import Basic
 from sympy.core.kind import Kind
 from sympy.core.decorators import _sympifyit
 from sympy.core.parameters import global_parameters
