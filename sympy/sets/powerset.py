@@ -1,6 +1,4 @@
-from __future__ import annotations
-from typing import TYPE_CHECKING, Any, Iterator, cast
-from sympy.core.kind import Kind
+from typing import TYPE_CHECKING, Iterator
 from sympy.core.decorators import _sympifyit
 from sympy.core.parameters import global_parameters
 from sympy.core.logic import fuzzy_bool
@@ -75,55 +73,63 @@ class PowerSet(Set):
         def args(self) -> tuple[Set]:
             ...
 
-    def __new__(cls, arg: Set, evaluate: bool | None = None) -> PowerSet:  # type: ignore[misc]
+    def __new__(cls, arg, evaluate=None):
         if evaluate is None:
-            evaluate = global_parameters.evaluate
+            evaluate=global_parameters.evaluate
 
         arg = _sympify(arg)
 
         if not isinstance(arg, Set):
             raise ValueError('{} must be a set.'.format(arg))
 
-        return cast(PowerSet, super().__new__(cls, arg))
+        return super().__new__(cls, arg)
 
     @property
-    def arg(self) -> Set:
+    def arg(self):
         return self.args[0]
 
-    def _eval_rewrite_as_FiniteSet(self, *args: Any, **kwargs: Any) -> Set | None:
+    def _eval_rewrite_as_FiniteSet(self, *args, **kwargs):
         arg = self.arg
         if arg.is_FiniteSet:
             return arg.powerset()
         return None
 
     @_sympifyit('other', NotImplemented)
-    def _contains(self, other: Any) -> bool | None:
+    def _contains(self, other):
         if not isinstance(other, Set):
             return None
 
         return fuzzy_bool(self.arg.is_superset(other))
 
-    def _eval_is_subset(self, other: Set) -> bool | None:
+    def _eval_is_subset(self, other):
         if isinstance(other, PowerSet):
             return self.arg.is_subset(other.arg)
         return None
 
     def __len__(self) -> int:
-        return 2 ** len(self.arg)  # type: ignore[arg-type]
+        arg = self.arg
+        if isinstance(arg, FiniteSet):
+            return 2 ** len(arg)
+        else:
+            raise NotImplementedError("len(PowerSet) only works for FiniteSet")
 
     def __iter__(self) -> Iterator[Set]:
-        found: list[Set] = [S.EmptySet]
+        arg = self.arg
+        if not isinstance(arg, FiniteSet):
+            raise NotImplementedError("PowerSet iteration only works for FiniteSet")
+        
+        found = [S.EmptySet]
         yield S.EmptySet
 
-        for x in self.arg:  # type: ignore[attr-defined]
-            temp: list[Set] = []
+        for x in arg:
+            temp = []
             x = FiniteSet(x)
             for y in found:
-                new: Set = x + y  # type: ignore[operator]
+                new = x + y
                 yield new
                 temp.append(new)
             found.extend(temp)
 
     @property
-    def kind(self) -> Kind:  # type: ignore[override]
+    def kind(self):
         return SetKind(self.arg.kind)
