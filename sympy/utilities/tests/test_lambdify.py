@@ -2319,6 +2319,7 @@ def test_array_symbol():
     f = lambdify((a), a)
     assert numpy.all(f(numpy.array([1,2,3])) == numpy.array([1,2,3]))
 
+
 def test_issue_28803_jointrandonsymbol_recursion():
     """Test that JointRandomSymbol doesn't cause infinite recursion in lambdify."""
 
