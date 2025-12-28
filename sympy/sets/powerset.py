@@ -117,7 +117,6 @@ class PowerSet(Set):
         arg = self.arg
         if not isinstance(arg, FiniteSet):
             raise NotImplementedError("PowerSet iteration only works for FiniteSet")
-        
         found = [S.EmptySet]
         yield S.EmptySet
 
