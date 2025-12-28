@@ -51,26 +51,33 @@ class _pure_key_dict:
 
     >>> P = _pure_key_dict()
 
-    2) assignment for a PurePoly or univariate polynomial
+    2) assignment for a Poly or univariate polynomial
 
     >>> P[x] = 1
     >>> P[PurePoly(x - y, x)] = 2
 
-    3) retrieval based on PurePoly key comparison (use this
-       instead of the get method)
+    3) retrieval based on Poly key comparison
 
-    >>> P[y]
+    >>> P[x]
     1
 
-    4) KeyError when trying to retrieve a nonexisting key
+    4) KeyError when trying to retrieve with different symbol or nonexisting key
 
+    >>> P[y]  # Different symbol, not found
+    Traceback (most recent call last):
+    ...
+    KeyError: Poly(y, y, domain='ZZ')
     >>> P[y + 1]
     Traceback (most recent call last):
     ...
-    KeyError: PurePoly(y + 1, y, domain='ZZ')
+    KeyError: Poly(y + 1, y, domain='ZZ')
 
     5) ability to query with ``in``
 
+    >>> x in P
+    True
+    >>> y in P  # Different symbol
+    False
     >>> x + 1 in P
     False
 
