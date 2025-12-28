@@ -19,7 +19,7 @@ from sympy.functions.elementary.hyperbolic import (sinh, cosh, tanh, coth,
     sech, csch, asinh, acosh, atanh, acoth, asech, acsch)
 from sympy.polys.polytools import degree, lcm_list
 from sympy.sets.sets import (Interval, Intersection, FiniteSet, Union,
-                             Complement)
+                             Complement, Set)
 from sympy.sets.fancysets import ImageSet
 from sympy.sets.conditionset import ConditionSet
 from sympy.utilities import filldedent
@@ -285,7 +285,7 @@ def function_range(f, symbol, domain):
     return range_int
 
 
-def not_empty_in(finset_intersection, *syms):
+def not_empty_in(finset_intersection: Set, *syms: Symbol) -> Set | None:
     """
     Finds the domain of the functions in ``finset_intersection`` in which the
     ``finite_set`` is not-empty.
@@ -333,17 +333,39 @@ def not_empty_in(finset_intersection, *syms):
     if finset_intersection is S.EmptySet:
         return S.EmptySet
 
+    # XXX: It is not really clear what this function is supposed to do in
+    # general. The original code assumed that an intersection or union would
+    # always have two arguments with args[1] being a FiniteSet, but it is not
+    # clear why that should be the case. As written below it will at least
+    # fail with an exception if the inputs are not as expected.
+
     if isinstance(finset_intersection, Union):
-        elm_in_sets = finset_intersection.args[0]
-        return Union(not_empty_in(finset_intersection.args[1], *syms),
-                     elm_in_sets)
+        arg1, arg2 = finset_intersection.args
+        if isinstance(arg1, FiniteSet):
+            elm_in_sets = arg2
+            finite_set = arg1
+        elif isinstance(arg2, FiniteSet):
+            elm_in_sets = arg1
+            finite_set = arg2
+        else:
+            raise NotImplementedError
+        return Union(not_empty_in(finite_set, *syms), elm_in_sets)
 
     if isinstance(finset_intersection, FiniteSet):
         finite_set = finset_intersection
         _sets = S.Reals
+    elif isinstance(finset_intersection, Intersection):
+        arg1, arg2 = finset_intersection.args
+        if isinstance(arg1, FiniteSet):
+            finite_set = arg1
+            _sets = arg2
+        elif isinstance(arg2, FiniteSet):
+            finite_set = arg2
+            _sets = arg1
+        else:
+            raise NotImplementedError
     else:
-        finite_set = finset_intersection.args[1]
-        _sets = finset_intersection.args[0]
+        raise NotImplementedError
 
     if not isinstance(finite_set, FiniteSet):
         raise ValueError('A FiniteSet must be given, not %s: %s' %

@@ -119,20 +119,6 @@ class Set(Basic, EvalfMixin):
 
         n = evalf
 
-    @staticmethod
-    def _infimum_key(expr):
-        """
-        Return infimum (if possible) else S.Infinity.
-        """
-        try:
-            infimum = expr.inf
-            assert infimum.is_comparable
-            infimum = infimum.evalf()  # issue #18505
-        except (NotImplementedError,
-                AttributeError, AssertionError, ValueError):
-            infimum = S.Infinity
-        return infimum
-
     def union(self, other):
         """
         Returns the union of ``self`` and ``other``.
@@ -1347,6 +1333,11 @@ class Union(Set, LatticeOp):
     """
     is_Union = True
 
+    if TYPE_CHECKING:
+        @property
+        def args(self) -> tuple[Set, ...]:
+            ...
+
     @property
     def identity(self):
         return S.EmptySet
@@ -1366,15 +1357,11 @@ class Union(Set, LatticeOp):
             args = list(cls._new_args_filter(args))
             return simplify_union(args)
 
-        args = list(ordered(args, Set._infimum_key))
+        args = list(ordered(args))
 
         obj = Basic.__new__(cls, *args)
         obj._argset = frozenset(args)
         return obj
-
-    @property
-    def args(self):
-        return self._args
 
     def _complement(self, universe):
         # DeMorgan's Law
@@ -1556,7 +1543,7 @@ class Intersection(Set, LatticeOp):
             args = list(cls._new_args_filter(args))
             return simplify_intersection(args)
 
-        args = list(ordered(args, Set._infimum_key))
+        args = list(ordered(args))
 
         obj = Basic.__new__(cls, *args)
         obj._argset = frozenset(args)
@@ -2021,7 +2008,7 @@ class FiniteSet(Set):
                     # e.g. i = class without args like `Interval`
                     dargs[i] = i
         _args_set = set(dargs.values())
-        args = list(ordered(_args_set, Set._infimum_key))
+        args = list(ordered(_args_set))
         obj = Basic.__new__(cls, *args)
         obj._args_set = _args_set
         return obj

@@ -192,7 +192,7 @@ def test_not_empty_in():
     assert not_empty_in(FiniteSet(x**2/(x + 2)).intersect(Interval(1, oo)), x) == \
         Union(Interval(-2, -1, True, False), Interval(2, oo))
     raises(ValueError, lambda: not_empty_in(x))
-    raises(ValueError, lambda: not_empty_in(Interval(0, 1), x))
+    raises(NotImplementedError, lambda: not_empty_in(Interval(0, 1), x))
     raises(NotImplementedError,
            lambda: not_empty_in(FiniteSet(x).intersect(S.Reals), x, a))
 

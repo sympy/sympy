@@ -215,7 +215,7 @@ def test_union():
     x = Symbol('x')
     assert Union(Interval(0, 1), FiniteSet(1, x)) == Union(
         Interval(0, 1), FiniteSet(x))
-    assert unchanged(Union, Interval(0, 1), FiniteSet(2, x))
+    assert unchanged(Union, FiniteSet(2, x), Interval(0, 1))
 
     assert Interval(1, 2).union(Interval(2, 3)) == \
         Interval(1, 2) + Interval(2, 3)
@@ -1487,7 +1487,7 @@ def test_issue_10931():
 
 
 def test_issue_11174():
-    soln = Intersection(Interval(-oo, oo), FiniteSet(-x), evaluate=False)
+    soln = Intersection(S.Reals, FiniteSet(-x), evaluate=False)
     assert Intersection(FiniteSet(-x), S.Reals) == soln
 
     soln = Intersection(S.Reals, FiniteSet(x), evaluate=False)
