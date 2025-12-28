@@ -107,20 +107,13 @@ class PowerSet(Set):
         return None
 
     def __len__(self) -> int:
-        arg = self.arg
-        if isinstance(arg, FiniteSet):
-            return 2 ** len(arg)
-        else:
-            raise NotImplementedError("len(PowerSet) only works for FiniteSet")
+        return 2 ** len(self.arg)
 
     def __iter__(self) -> Iterator[Set]:
-        arg = self.arg
-        if not isinstance(arg, FiniteSet):
-            raise NotImplementedError("PowerSet iteration only works for FiniteSet")
         found = [S.EmptySet]
         yield S.EmptySet
 
-        for x in arg:
+        for x in self.arg:
             temp = []
             x = FiniteSet(x)
             for y in found:
@@ -128,7 +121,6 @@ class PowerSet(Set):
                 yield new
                 temp.append(new)
             found.extend(temp)
-
     @property
     def kind(self):
         return SetKind(self.arg.kind)
