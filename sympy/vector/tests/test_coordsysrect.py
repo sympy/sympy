@@ -498,6 +498,7 @@ def test_cartesian_rotation_transformation_equations():
         xb * sin(alpha) + yb * cos(alpha),
         zb)
 
+
 def test_issue_28727():
     C1 = CoordSys3D("C1")
     C2 = C1.locate_new("C2", 2 * C1.i)
