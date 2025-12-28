@@ -13,7 +13,7 @@ from sympy.core.exprtools import factor_nc
 from sympy.core.parameters import global_parameters
 from sympy.core.function import (expand_log, count_ops, _mexpand,
     nfloat, expand_mul, expand)
-from sympy.core.numbers import Float, I, pi, Rational, equal_valued
+from sympy.core.numbers import Float, I, Integer, pi, Rational, equal_valued
 from sympy.core.relational import Relational
 from sympy.core.rules import Transform
 from sympy.core.sorting import ordered
@@ -47,7 +47,6 @@ from sympy.simplify.sqrtdenest import sqrtdenest
 from sympy.simplify.trigsimp import trigsimp, exptrigsimp
 from sympy.utilities.decorator import deprecated
 from sympy.utilities.iterables import has_variety, sift, subsets, iterable
-from sympy.utilities.misc import as_int
 
 from sympy.external.mpmath import (
     prec_to_dps,
@@ -1455,14 +1454,13 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
     sympy.core.function.nfloat
 
     """
-    try:
-        return sympify(as_int(expr))
-    except (TypeError, ValueError):
-        pass
-    expr = sympify(expr).xreplace({
+    expr = sympify(expr)
+    if isinstance(expr, Integer):
+        return expr
+    expr = expr.xreplace({
         Float('inf'): S.Infinity,
         Float('-inf'): S.NegativeInfinity,
-        })
+    })
     if expr is S.Infinity or expr is S.NegativeInfinity:
         return expr
     if rational or expr.free_symbols:
