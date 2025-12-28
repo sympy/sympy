@@ -114,6 +114,6 @@ class PowerSet(Set):
                 temp.append(new)
             found.extend(temp)
 
-    @property
+    @property # type: ignore[override]
     def kind(self):
         return SetKind(self.arg.kind)
