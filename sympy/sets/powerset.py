@@ -1,3 +1,7 @@
+from __future__ import annotations
+from typing import Any, Iterator, Iterable, Sized, cast
+from sympy.core.basic import Basic
+from sympy.core.kind import Kind
 from sympy.core.decorators import _sympifyit
 from sympy.core.parameters import global_parameters
 from sympy.core.logic import fuzzy_bool
@@ -66,42 +70,45 @@ class PowerSet(Set):
 
     .. [2] https://en.wikipedia.org/wiki/Axiom_of_power_set
     """
-    def __new__(cls, arg, evaluate=None):
+
+    def __new__(cls, arg: Set, evaluate: bool | None = None) -> "PowerSet":
         if evaluate is None:
-            evaluate=global_parameters.evaluate
+            evaluate = global_parameters.evaluate
 
         arg = _sympify(arg)
 
         if not isinstance(arg, Set):
-            raise ValueError('{} must be a set.'.format(arg))
+            raise ValueError(f"{arg} must be a set.")
 
-        return super().__new__(cls, arg)
+        return cast("PowerSet", super().__new__(cls, arg))
 
     @property
-    def arg(self):
+    def arg(self) -> Set:
         return self.args[0]
 
-    def _eval_rewrite_as_FiniteSet(self, *args, **kwargs):
+    def _eval_rewrite_as_FiniteSet( self, *args: Any, **kwargs: Any) -> Basic | None:
         arg = self.arg
         if arg.is_FiniteSet:
             return arg.powerset()
         return None
 
-    @_sympifyit('other', NotImplemented)
-    def _contains(self, other):
+    @_sympifyit("other", NotImplemented)
+    def _contains(self, other: Any) -> bool | None:
         if not isinstance(other, Set):
             return None
-
         return fuzzy_bool(self.arg.is_superset(other))
 
-    def _eval_is_subset(self, other):
+    def _eval_is_subset(self, other: Set) -> bool | None:
         if isinstance(other, PowerSet):
             return self.arg.is_subset(other.arg)
+        return None
 
-    def __len__(self):
-        return 2 ** len(self.arg)
+    def __len__(self) -> int:
+        return 2 ** len(cast(Sized, self.arg))
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Set]:
+        assert isinstance(self.arg, Iterable)
+
         found = [S.EmptySet]
         yield S.EmptySet
 
@@ -114,6 +121,6 @@ class PowerSet(Set):
                 temp.append(new)
             found.extend(temp)
 
-    @property # type: ignore[override]
-    def kind(self):
+    @property
+    def kind(self) -> Kind:
         return SetKind(self.arg.kind)
