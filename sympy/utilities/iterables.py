@@ -107,7 +107,6 @@ def flatten(iterable, levels=None, cls=None):  # noqa: F811
         else:
             raise ValueError(
                 "expected non-negative number of levels, got %s" % levels)
-         
         from typing import Any, Optional, Type, Callable, List
 
         cls: Optional[Type[Any]]
