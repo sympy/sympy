@@ -83,17 +83,19 @@ class _pure_key_dict:
         self._dict = {}
 
     def __getitem__(self, k):
-        if not isinstance(k, PurePoly):
-            if not (isinstance(k, Expr) and len(k.free_symbols) == 1):
+        if not isinstance(k, Poly):
+            try:
+                k = Poly(k, expand=False)
+            except (GeneratorsNeeded, PolynomialError):
                 raise KeyError
-            k = PurePoly(k, expand=False)
         return self._dict[k]
 
     def __setitem__(self, k, v):
-        if not isinstance(k, PurePoly):
-            if not (isinstance(k, Expr) and len(k.free_symbols) == 1):
+        if not isinstance(k, Poly):
+            try:
+                k = Poly(k, expand=False)
+            except (GeneratorsNeeded, PolynomialError):
                 raise ValueError('expecting univariate expression')
-            k = PurePoly(k, expand=False)
         self._dict[k] = v
 
     def __contains__(self, k):
@@ -110,7 +112,7 @@ _rootof_dummy = Dummy('x')
 
 def _pure_factors(poly):
     _, factors = poly.factor_list()
-    return [(PurePoly(f, expand=False), m) for f, m in factors]
+    return [(Poly(f, expand=False), m) for f, m in factors]
 
 
 def _imag_count_of_factor(f):
@@ -321,7 +323,7 @@ class ComplexRootOf(RootOf):
         else:
             raise ValueError("expected an integer root index, got %s" % index)
 
-        poly = PurePoly(f, x, greedy=False, expand=expand)
+        poly = Poly(f, x, greedy=False, expand=expand)
 
         if not poly.is_univariate:
             raise PolynomialError("only univariate polynomials are allowed")
@@ -358,6 +360,7 @@ class ComplexRootOf(RootOf):
         if not dom.is_ZZ:
             raise NotImplementedError("CRootOf is not supported over %s" % dom)
 
+        poly = Poly(poly.replace(poly.gen, _rootof_dummy))
         root = cls._indexed_root(poly, index, lazy=True)
         return coeff * cls._postprocess_root(root, radicals)
 
@@ -367,7 +370,7 @@ class ComplexRootOf(RootOf):
         obj = Expr.__new__(cls)
 
         poly = poly.replace(poly.gen, _rootof_dummy)
-        obj.poly = PurePoly(poly)
+        obj.poly = Poly(poly)
         obj.index = index
 
         try:
@@ -1168,7 +1171,9 @@ class RootSum(Expr):
         func = Lambda(var, expr)
 
         rational = cls._is_func_rational(poly, func)
-        factors, terms = _pure_factors(poly), []
+        _, factors = poly.factor_list()
+        factors = [(PurePoly(f, expand=False), m) for f, m in factors]
+        terms = []
 
         for poly, k in factors:
             if poly.is_linear:
