@@ -1,10 +1,11 @@
+# pyright: strict
 """
 Primality testing
 
 """
 
 from itertools import count
-from typing import SupportsIndex, Iterable
+from typing import SupportsIndex, Iterable, Any
 
 from sympy.core.sympify import sympify
 from sympy.external.gmpy import (gmpy as _gmpy, gcd, jacobi,
@@ -246,7 +247,6 @@ def mr(n: SupportsIndex, bases: Iterable[SupportsIndex]) -> bool:
     True
 
     """
-    from sympy.polys.domains import ZZ
 
     n = as_int(n)
     if n < 2 or (n > 2 and n % 2 == 0):
@@ -260,7 +260,6 @@ def mr(n: SupportsIndex, bases: Iterable[SupportsIndex]) -> bool:
         if base >= n:
             base %= n
         if base >= 2:
-            base = as_int(ZZ(base))
             if not _test(n, base, s, t):
                 return False
     return True
@@ -810,7 +809,7 @@ def isprime(n: SupportsIndex) -> bool:
     #return mr(n, [2, random.randint(3, n-1)]) and is_strong_lucas_prp(n)
 
 
-def is_gaussian_prime(num) -> bool:
+def is_gaussian_prime(num: Any) -> bool:
     r"""Test if num is a Gaussian prime number.
 
     References
