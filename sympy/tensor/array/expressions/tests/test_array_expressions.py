@@ -819,6 +819,9 @@ def test_array_expr_as_explicit_with_explicit_component_arrays():
 
 
 def test_array_sum():
+    X = MatrixSymbol("X", k, k)
+    Y = MatrixSymbol("Y", k, k)
+
     expr = ArraySum(X, (i, 1, j))
     assert isinstance(expr, Sum)
     assert expr.doit() == j*X
@@ -839,10 +842,10 @@ def test_array_sum():
     assert expr.doit().dummy_eq(ArraySum(ArrayTensorProduct(X**sin(i), Y), (i, 1, j)))
 
     expr = ArrayTensorProduct(ArraySum(X**sin(i), (i, 1, j)), i*Y)
-    assert expr.doit().dummy_eq(ArraySum(X**sin(m)*i*Y, (m, 1, j)))
+    assert expr.doit().dummy_eq(ArraySum(ArrayTensorProduct(X**sin(m), i*Y), (m, 1, j)))
 
     expr = ArrayContraction(ArraySum(X, (i, 0, j)), (0, 1))
-    # assert expr.doit() == ArrayContraction(j*T, (0, 1))  # TODO: Not working!
+    assert expr.doit() == ArrayContraction((j + 1)*X, (0, 1))
 
     T = MatrixSymbol("T", 3, 3)
     expr = ArrayContraction(ArraySum(T, (i, 1, j)), (0, 1))

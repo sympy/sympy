@@ -850,7 +850,7 @@ class ArrayDiagonal(_CodegenArrayAbstract):
         if isinstance(expr, ArrayAdd):
             return self._ArrayDiagonal_denest_ArrayAdd(expr, *diagonal_indices)
         if isinstance(expr, ArrayDiagonal):
-            return self._ArrayDiagonal_denest_ArrayDiagonal(expr, *diagonal_indices)
+            return self._ArrayDiagonal_denest_ArrayDiagonal(expr, get_rank(self), *diagonal_indices)
         if isinstance(expr, PermuteDims):
             return self._ArrayDiagonal_denest_PermuteDims(expr, *diagonal_indices)
         if isinstance(expr, (ZeroArray, ZeroMatrix)):
@@ -886,9 +886,9 @@ class ArrayDiagonal(_CodegenArrayAbstract):
         return self.args[1:]
 
     @staticmethod
-    def _flatten(expr: ArrayDiagonal, *outer_diagonal_indices):
-        inddown = ArrayDiagonal._push_indices_down(outer_diagonal_indices, list(range(get_rank(expr))), get_rank(expr))
-        inddown = tuple(i for i in inddown if i)
+    def _flatten(expr: ArrayDiagonal, outer_dims, *outer_diagonal_indices):
+        inddown = ArrayDiagonal._push_indices_down(outer_diagonal_indices, list(range(outer_dims)), get_rank(expr))
+        inddown = tuple(i for i in inddown)
         inddow2 = ArrayDiagonal._push_indices_down(expr.diagonal_indices, inddown, get_rank(expr.expr))
         new_diag_indices = []
         for i in inddow2:
