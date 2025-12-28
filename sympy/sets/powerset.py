@@ -86,7 +86,7 @@ class PowerSet(Set):
     def arg(self) -> Set:
         return self.args[0]
 
-    def _eval_rewrite_as_FiniteSet( self, *args: Any, **kwargs: Any) -> Basic | None:
+    def _eval_rewrite_as_FiniteSet( self, *args: Any, **kwargs: Any) -> Set  | None:
         arg = self.arg
         if arg.is_FiniteSet:
             return arg.powerset()
@@ -121,6 +121,6 @@ class PowerSet(Set):
                 temp.append(new)
             found.extend(temp)
 
-    @property
+    @property # type: ignore[override]
     def kind(self) -> Kind:
         return SetKind(self.arg.kind)
