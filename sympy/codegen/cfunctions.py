@@ -325,6 +325,11 @@ class fma(Function):
     def _eval_rewrite_as_tractable(self, arg, limitvar=None, **kwargs):
         return _fma(arg)
 
+    @classmethod
+    def eval(cls, x, y, z):
+        if all(arg.is_Number for arg in [x, y, z]):
+            return x*y + z
+
 
 _Ten = S(10)
 
@@ -431,6 +436,11 @@ class Sqrt(Function):  # 'sqrt' already defined in sympy.functions.elementary.mi
 
     _eval_rewrite_as_tractable = _eval_rewrite_as_Pow
 
+    @classmethod
+    def eval(cls, arg):
+        if arg.is_Number and arg.is_nonnegative:
+            return _Sqrt(arg)
+
 
 def _Cbrt(x):
     return Pow(x, Rational(1, 3))
@@ -482,6 +492,11 @@ class Cbrt(Function):  # 'cbrt' already defined in sympy.functions.elementary.mi
 
     _eval_rewrite_as_tractable = _eval_rewrite_as_Pow
 
+    @classmethod
+    def eval(cls, arg):
+        if arg.is_Number:
+            return _Cbrt(arg)
+
 
 def _hypot(x, y):
     return sqrt(Pow(x, 2) + Pow(y, 2))
@@ -530,6 +545,11 @@ class hypot(Function):
         return _hypot(arg)
 
     _eval_rewrite_as_tractable = _eval_rewrite_as_Pow
+
+    @classmethod
+    def eval(cls, x, y):
+        if x.is_Number and y.is_Number:
+            return _hypot(x, y)
 
 
 class isnan(BooleanFunction):
