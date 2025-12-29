@@ -513,7 +513,7 @@ class CoordSys3D(Basic):
 
         Note that rotation_matrix only consider pure rotations between
         Cartesian systems. It doesn't account for changes in base vectors,
-        like curvilinear to Cartesian. Use transformation_matrix_from if
+        like curvilinear to Cartesian. Use change_of_basis_matrix_from if
         those are important.
 
         Parameters
@@ -525,7 +525,7 @@ class CoordSys3D(Basic):
         See Also
         ========
 
-        CoordSys3D.transformation_matrix_from
+        CoordSys3D.change_of_basis_matrix_from
 
         Examples
         ========
@@ -549,16 +549,16 @@ class CoordSys3D(Basic):
         [0, sin(q1),  cos(q1)]])
 
         Because the two systems are Cartesians and connected by pure rotation,
-        the rotation matrix is equal to the transformation matrix:
+        the rotation matrix is equal to the change-of-basis matrix:
 
-        >>> R_fromA_toN == N.transformation_matrix_from(A)
+        >>> R_fromA_toN == N.change_of_basis_matrix_from(A)
         True
 
         This is generally not true. Specifically if a non-Cartesian coordinate
         system (like curvilinear system, or a scaled system, or a
         reflected system, etc.) is in the path of two connected systems,
         then the two matrices are different, because the one computed by
-        transformation_matrix_from considers both the change in base vectors
+        change_of_basis_matrix_from considers both the change in base vectors
         and the orientation between the systems, whereas the one computed by
         rotation_matrix only consider the orientation between Cartesian
         systems. For example:
@@ -571,14 +571,14 @@ class CoordSys3D(Basic):
         [1,         0,          0],
         [0, cos(2*q1), -sin(2*q1)],
         [0, sin(2*q1),  cos(2*q1)]])
-        >>> T_fromC_toN = N.transformation_matrix_from(C).simplify()
+        >>> T_fromC_toN = N.change_of_basis_matrix_from(C).simplify()
         >>> T_fromC_toN
         Matrix([
         [2, 0, 0],
         [0, 0, 1],
         [0, 1, 0]])
 
-        Hence, the use of transformation_matrix_from is recommended.
+        Hence, the use of change_of_basis_matrix_from is recommended.
 
         """
         from sympy.vector.functions import _path
@@ -601,15 +601,18 @@ class CoordSys3D(Basic):
             result *= path[i]._parent_rotation_matrix.T
         return result
 
-    def transformation_matrix_from(self, other):
+    def change_of_basis_matrix_from(self, other):
         """
-        Returns the transformation matrix of this coordinate system with
-        respect to another system, which takes into account rotation
-        and scaling.
+        Returns the change-of-basis matrix from the ``other`` coordinate system
+        to this coordinate system. This matrix transforms the components of a
+        vector defined in ``other`` to componenets of a vector defined in
+        this system. The columns of this matrix represent the base vectors of
+        the ``other`` system in terms of base vectors of this
+        coordinate system.
 
         If v_a is a vector defined in system 'A' (in matrix format)
         and v_b is the same vector defined in system 'B', then
-        v_a = A.transformation_matrix_from(B) * v_b.
+        v_a = A.change_of_basis_matrix_from(B) * v_b.
 
         A SymPy Matrix is returned.
 
@@ -617,7 +620,7 @@ class CoordSys3D(Basic):
         ==========
 
         other : CoordSys3D
-            The system which the DCM is generated to.
+            The system from which the change-of-basis matrix is generated.
 
         See Also
         ========
@@ -636,17 +639,17 @@ class CoordSys3D(Basic):
         >>> N = CoordSys3D('N')
         >>> A = N.orient_new_axis('A', q1, N.i)
 
-        The transformation matrix from A to N is:
+        The change-of-basis matrix (or transformation matrix) from A to N is:
 
-        >>> T_fromA_toN = N.transformation_matrix_from(A)
+        >>> T_fromA_toN = N.change_of_basis_matrix_from(A)
         >>> T_fromA_toN
         Matrix([
         [1,       0,        0],
         [0, cos(q1), -sin(q1)],
         [0, sin(q1),  cos(q1)]])
 
-        The transformation matrix allows to express vectors defined
-        in one system into a different system. In fact, the transformation
+        The change-of-basis matrix allows to express vectors defined
+        in one system into a different system. In fact, the change-of-basis
         matrix is internally used by the ``express`` function. The following
         example shows a direct comparison between working with matrices
         and the vector module:
@@ -663,23 +666,23 @@ class CoordSys3D(Basic):
         >>> vN
         N.i + (-3*sin(q1) + 2*cos(q1))*N.j + (2*sin(q1) + 3*cos(q1))*N.k
 
-        Transformation matrix from spherical to Cartesian coordinates:
+        Change-of-basis matrix from spherical to Cartesian coordinates:
 
         >>> Cart = CoordSys3D("Cart")
         >>> S = Cart.create_new("S", transformation="spherical")
         >>> C = Cart.create_new("C", transformation="cylindrical")
-        >>> Cart.transformation_matrix_from(S)
+        >>> Cart.change_of_basis_matrix_from(S)
         Matrix([
         [sin(S.theta)*cos(S.phi), cos(S.phi)*cos(S.theta), -sin(S.phi)],
         [sin(S.phi)*sin(S.theta), sin(S.phi)*cos(S.theta),  cos(S.phi)],
         [           cos(S.theta),           -sin(S.theta),           0]])
 
-        Transformation matrix from spherical to cylindrical coordinates
+        Change-of-basis matrix from spherical to cylindrical coordinates
         (note that the azimuthal angle of S and C are the same):
 
         >>> r_s, theta_s, phi_s = S.base_scalars()
         >>> r_c, theta_c, z_c = C.base_scalars()
-        >>> C.transformation_matrix_from(S).subs(phi_s, theta_c).simplify()
+        >>> C.change_of_basis_matrix_from(S).subs(phi_s, theta_c).simplify()
         Matrix([
         [sin(S.theta),  cos(S.theta), 0],
         [           0,             0, 1],
