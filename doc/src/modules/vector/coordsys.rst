@@ -135,15 +135,15 @@ coincides with the origin of the 'parent' system.
   0
 
 To compute the rotation matrix of any coordinate system with respect
-to another one, use the ``transformation_matrix`` method.
+to another one, use the ``transformation_matrix_from`` method.
 
   >>> B = A.orient_new_axis('B', a, A.k)
-  >>> B.transformation_matrix(A)
+  >>> B.transformation_matrix_from(A)
   Matrix([
   [ cos(a), sin(a), 0],
   [-sin(a), cos(a), 0],
   [      0,      0, 1]])
-  >>> B.transformation_matrix(B)
+  >>> B.transformation_matrix_from(B)
   Matrix([
   [1, 0, 0],
   [0, 1, 0],
@@ -200,10 +200,10 @@ similarly to methods like ``locate_new``, ``orient_new_axis`` etc.
   >>> B = A.create_new('B', transformation='spherical')
 
 To compute the transformation matrix of any coordinate system with respect
-to another one, use the ``transformation_matrix`` method. For example,
+to another one, use the ``transformation_matrix_from`` method. For example,
 the transformation matrix from spherical coordinates to Cartesian is:
 
-  >>> A.transformation_matrix(B)
+  >>> A.transformation_matrix_from(B)
   Matrix([
   [sin(B.theta)*cos(B.phi), cos(B.phi)*cos(B.theta), -sin(B.phi)],
   [sin(B.phi)*sin(B.theta), sin(B.phi)*cos(B.theta),  cos(B.phi)],
