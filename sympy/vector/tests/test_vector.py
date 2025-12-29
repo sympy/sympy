@@ -1,4 +1,4 @@
-from sympy.core import Rational, S, Add, Mul, I
+from sympy.core import Rational, S, Add, Mul, Pow, I
 from sympy.simplify import simplify, trigsimp
 from sympy.core.function import (Derivative, Function, diff)
 from sympy.core.numbers import pi
@@ -408,3 +408,19 @@ def test_postprocessor_add_vector_vector():
 
     result_same = Add(C.i, C.i)
     assert result_same == 2*C.i
+
+def test_postprocessor_pow_vector():
+    raises(ValueError, lambda: C.i**2)
+    raises(ValueError, lambda: C.j**3)
+    raises(ValueError, lambda: (C.i + C.j)**2)
+    raises(ValueError, lambda: Mul(C.i, C.i))
+    raises(ValueError, lambda: Mul(C.j, C.j))
+    raises(ValueError, lambda: Pow(C.i, 2))
+    raises(ValueError, lambda: Pow(C.j, S.Half))
+    raises(ValueError, lambda: Pow(C.k, -1))
+    v1 = C.i + C.j
+    v2 = 2*C.k
+    raises(ValueError, lambda: v1**2)
+    raises(ValueError, lambda: v2**3)
+    raises(ValueError, lambda: Pow(v1, 2))
+    raises(ValueError, lambda: Pow(v2, a))
