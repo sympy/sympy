@@ -8,7 +8,7 @@ import os
 import re as _re
 import struct
 from textwrap import fill, dedent
-from typing import TypeVar, Callable, Literal, SupportsIndex, SupportsInt, overload
+from typing import TypeVar, Callable, Literal, SupportsIndex, SupportsInt, overload, Any
 
 _CallableT = TypeVar("_CallableT", bound=Callable)
 
@@ -19,7 +19,7 @@ class Undecidable(ValueError):
     pass
 
 
-def filldedent(s, w=70, **kwargs):
+def filldedent(s: str, w: int = 70, **kwargs: Any) -> str:
     """
     Strips leading and trailing empty lines from a copy of ``s``, then dedents,
     fills and returns it.
