@@ -83,7 +83,7 @@ def express(expr, system, system2=None, variables=False):
         parts = expr.separate()
         for x in parts:
             if x != system:
-                temp = system.transformation_matrix(x) * parts[x].to_matrix(x)
+                temp = system.transformation_matrix_from(x) * parts[x].to_matrix(x)
                 outvec += matrix_to_vector(temp, system)
             else:
                 outvec += parts[x]
