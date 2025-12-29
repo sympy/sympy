@@ -171,14 +171,21 @@ class MultivariateNormalDistribution(JointDistribution):
     def pdf(self, *args):
         mu, sigma = self.mu, self.sigma
         k = mu.shape[0]
-        if len(args) == 1 and args[0].is_Matrix:
-            args = args[0]
+        if len(args) == 1 and getattr(args[0], "is_Matrix", False):
+            arg = args[0]
+            if getattr(arg, "shape", None) == (1, 1):
+                args = ImmutableMatrix([arg[0, 0]])
+            else:
+                args = arg
         else:
             args = ImmutableMatrix(args)
         x = args - mu
-        density = S.One/sqrt((2*pi)**(k)*det(sigma))*exp(
-            Rational(-1, 2)*x.transpose()*(sigma.inv()*x))
+        density = S.One/sqrt((2*pi)**k * det(sigma)) * exp(
+            Rational(-1, 2) * x.transpose() * (sigma.inv() * x)
+        )
         return MatrixElement(density, 0, 0)
+
+
 
     def _marginal_distribution(self, indices, sym):
         sym = ImmutableMatrix([Indexed(sym, i) for i in indices])
