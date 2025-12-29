@@ -4078,6 +4078,20 @@ def nonlinsolve(system, *symbols):
         soln = nonlinsolve(system, symbols)
         return FiniteSet(*[tuple(i.xreplace(swap) for i in s) for s in soln])
 
+    from sympy import re, im
+
+# Guard ONLY the ambiguous case:
+# single symbol + explicit re/im usage
+    if len(symbols) == 1:
+        sym = symbols[0]
+        if any(eq.has(re(sym)) or eq.has(im(sym)) for eq in system):
+            raise ValueError(
+                "nonlinsolve does not support re(x)/im(x) with a single complex symbol. "
+                "Introduce explicit real variables, e.g. x = a + b*I, and solve for [a, b]."
+            )
+
+
+
     if len(system) == 1 and len(symbols) == 1:
         return _solveset_work(system, symbols)
 

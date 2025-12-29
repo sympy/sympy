@@ -1877,6 +1877,17 @@ def test_raise_exception_nonlinsolve():
     raises(ValueError, lambda: nonlinsolve([x**2 -1]))
 
 
+def test_nonlinsolve_re_im_single_symbol_raises():
+    from sympy import symbols, re, im
+    from sympy.solvers.solveset import nonlinsolve
+    from pytest import raises
+
+    x = symbols('x')
+    with raises(ValueError):
+        nonlinsolve([re(x) - 1, im(x) - 2], [x])
+
+
+
 def test_trig_system():
     # TODO: add more simple testcases when solveset returns
     # simplified soln for Trig eq
