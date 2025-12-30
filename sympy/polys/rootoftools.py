@@ -1150,11 +1150,7 @@ class RootSum(Expr):
             is_func = getattr(func, 'is_Function', False)
 
             if is_func and 1 in func.nargs:
-                if not isinstance(func, Lambda):
-                    func = Lambda(poly.gen, func(poly.gen))
-                else:
-                    old_var = func.variables[0]
-                    func = Lambda(poly.gen, func.expr.subs(old_var, poly.gen))
+                func = Lambda(poly.gen, func(poly.gen))
             else:
                 raise ValueError(
                     "expected a univariate function, got %s" % func)

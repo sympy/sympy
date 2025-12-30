@@ -6,6 +6,7 @@ from __future__ import annotations
 from typing import Any
 
 from sympy.core import S, Rational, Pow, Basic, Mul, Number
+from sympy.core.function import Lambda
 from sympy.core.mul import _keep_coeff
 from sympy.core.numbers import Integer
 from sympy.core.relational import Relational
@@ -785,10 +786,11 @@ class StrPrinter(Printer):
         return "CRootOf(%s, %d)" % (self._print_Add(poly_expr, order='lex'), expr.index)
 
     def _print_RootSum(self, expr):
-        args = [self._print_Add(expr.expr, order='lex')]
+        args = [self._print_Add(expr.poly(_rootof_x), order='lex')]
 
         if expr.fun is not S.IdentityFunction:
-            args.append(self._print(expr.fun))
+            func = Lambda(_rootof_x, expr.fun(_rootof_x))
+            args.append(self._print(func))
 
         return "RootSum(%s)" % ", ".join(args)
 
