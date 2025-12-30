@@ -69,10 +69,10 @@ def test_imageset():
         Add(x, y), Interval(1, 2), Interval(2, 3)).dummy_eq(
         ImageSet(Lambda((x1, x2), x1 + x2),
         Interval(1, 2), Interval(2, 3)))
-        
+
 def test_imageset_integer_intersection_irrational():
     # Regression Test: Issue # 18081
-    # #Imageset (Lambda (n, n * log (2)), S.Integer)&S.Integer should be {0}
+    # Imageset (Lambda (n, n * log (2)), S.Integer)&S.Integer should be {0}
     ints = S.Integers
     A = imageset(n, n*log(2), ints)
     assert A.intersection(ints) == FiniteSet(0)
