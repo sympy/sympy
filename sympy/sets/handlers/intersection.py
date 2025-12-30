@@ -278,6 +278,34 @@ def _(self, other):
         except (TypeError, NotImplementedError):
             # TypeError if equation not polynomial with rational coeff.
             # NotImplementedError if correct format but no solver.
+
+            # Fallback：handel issue #18081
+            # ImageSet(Lambda(n, f(n)), Integers).intersection(S.Integers)
+            # f(n) is linear in n（f(n) = a*n + b），
+            # Moreover, diophantine failed due to non-rational coefficients.
+            if other is S.Integers and gm == m:
+                # f(n) = self.lamda.expr
+                f = fn
+                # Enable only when f is a linear function of n: f''(n) == 0 and f'(n) is a constant
+                fprime = f.diff(n)
+                if fprime.is_constant() and f.diff(n, 2) == 0:
+                    a = fprime
+                    value0 = f.subs(n, 0)
+
+                    # a == 0: f (n) is a constant mapping {value0}
+                    if a.is_zero:
+                        if value0.is_integer:
+                            return FiniteSet(value0)
+                        elif value0.is_rational:
+                            return S.EmptySet
+                    else:
+                        # a != 0，f(n) = a*n + b， If there is an integer solution at this point,
+                        # It can only be n=0, and the corresponding value is f (0)=b.
+                        if value0.is_integer:
+                            return FiniteSet(value0)
+                        elif value0.is_rational:
+                            return S.EmptySet
+
             return
         # 3 cases are possible for solns:
         # - empty set,
