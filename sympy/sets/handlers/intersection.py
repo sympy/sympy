@@ -281,7 +281,7 @@ def _(self, other):
 
             # Fallback: handel issue #18081
             # ImageSet(Lambda(n, f(n)), Integers).intersection(S.Integers)
-            # f(n) is linear in n (f(n) = a*n + b), a != 0, 
+            # f(n) is linear in n (f(n) = a*n + b), a != 0,
             # Moreover, diophantine failed due to non-rational coefficients
             if other is S.Integers and gm == m:
                 # f(n) = self.lamda.expr
