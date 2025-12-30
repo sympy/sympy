@@ -498,9 +498,6 @@ class VectorAdd(BasisDependentAdd, Vector):
     """
 
     def __new__(cls, *args, **options):
-        for arg in args:
-            if not isinstance(arg, Vector):
-                raise TypeError("VectorAdd expects all arguments to be Vector instances")
         obj = BasisDependentAdd.__new__(cls, *args, **options)
         return obj
 
