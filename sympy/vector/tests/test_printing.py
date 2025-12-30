@@ -148,16 +148,16 @@ def test_latex_printing():
                            ' db\\right)\\mathbf{\\hat{k}_{N}}')
     assert latex(s) == '3 \\mathbf{{y}_{C}} \\mathbf{{x}_{N}}^{2}'
     assert latex(d[0]) == '(\\mathbf{\\hat{0}}|\\mathbf{\\hat{0}})'
-    assert latex(d[4]) == ('\\left(a\\right)\\left(\\mathbf{\\hat{i}_{N}}{\\middle|}' +
+    assert latex(d[4]) == ('\\left(a\\right)\\left(\\mathbf{\\hat{i}_{N}}\\middle|' +
                            '\\mathbf{\\hat{k}_{N}}\\right)')
-    assert latex(d[9]) == ('\\left(\\mathbf{\\hat{k}_{C}}{\\middle|}' +
+    assert latex(d[9]) == ('\\left(\\mathbf{\\hat{k}_{C}}\\middle|' +
                            '\\mathbf{\\hat{k}_{N}}\\right) + \\left(' +
-                           '\\mathbf{\\hat{i}_{N}}{\\middle|}\\mathbf{' +
+                           '\\mathbf{\\hat{i}_{N}}\\middle|\\mathbf{' +
                            '\\hat{k}_{N}}\\right)')
     assert latex(d[11]) == ('\\left(a^{2} + b\\right)\\left(\\mathbf{\\hat{i}_{N}}' +
-                            '{\\middle|}\\mathbf{\\hat{k}_{N}}\\right) + ' +
+                            '\\middle|\\mathbf{\\hat{k}_{N}}\\right) + ' +
                             '\\left(\\int f{\\left(b \\right)}\\, db\\right)\\left(' +
-                            '\\mathbf{\\hat{k}_{N}}{\\middle|}\\mathbf{' +
+                            '\\mathbf{\\hat{k}_{N}}\\middle|\\mathbf{' +
                             '\\hat{k}_{N}}\\right)')
 
 def test_issue_23058():
