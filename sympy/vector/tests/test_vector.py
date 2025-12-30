@@ -424,3 +424,6 @@ def test_postprocessor_pow_vector():
     raises(TypeError, lambda: v2**3)
     raises(TypeError, lambda: Pow(v1, 2))
     raises(TypeError, lambda: Pow(v2, a))
+    raises(TypeError, lambda: 2**C.i)
+    raises(TypeError, lambda: a**C.j)
+    raises(TypeError, lambda: Pow(2, C.k))
