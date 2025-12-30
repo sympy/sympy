@@ -423,9 +423,7 @@ def _mul_vector_postprocessor(expr: Mul) -> Vector:
     return VectorMul(*expr.args).doit(deep=False)
 
 def _pow_vector_postprocessor(expr: Pow):
-    if isinstance(expr.args[0], Vector):
-        raise TypeError("Power operation is not supported for vectors")
-    return expr
+    raise TypeError("Power operation is not supported for vectors")
 
 
 Basic._constructor_postprocessor_mapping[Vector] = {
