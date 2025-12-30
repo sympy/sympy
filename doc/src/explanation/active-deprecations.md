@@ -139,13 +139,15 @@ is umaintained and cannot be installed on Python 3.13.
 (rename-rank-to-ndim)=
 ### Rename `get_rank` to `get_ndim` in array expressions
 
-In the array expressions subsystem, the function `get_rank(expr)` used the term
-*rank* to refer to the number of dimensions of an array, which is confusing
-because “rank” usually means matrix rank.
+In the array expressions subsystem, the function `get_rank(expr)` historically
+used the term *rank* to refer to the number of dimensions of an array. This is
+confusing, because “rank” is widely understood to mean the linear-algebraic
+matrix rank, which is a different concept.
 
-`get_rank(expr)` is deprecated and replaced by `get_ndim(expr)`.
+To avoid this ambiguity, `get_rank(expr)` is deprecated and replaced by
+`get_ndim(expr)`.
 
-Replace:
+#### Deprecated usage
 
 ```python
 get_rank(expr)
