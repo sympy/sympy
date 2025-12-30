@@ -121,6 +121,7 @@ class PowerSet(Set):
                 yield new
                 temp.append(new)
             found.extend(temp)
+
     @property
     def kind(self):
         return SetKind(self.arg.kind)
