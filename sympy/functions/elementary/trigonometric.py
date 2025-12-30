@@ -2578,6 +2578,10 @@ class acos(InverseTrigonometricFunction):
         x = self.args[0]
         return x.is_extended_real and (1 - abs(x)).is_nonnegative
 
+    def _eval_is_imaginary(self):
+        x = self.args[0]
+        return (x - 1).is_positive
+
     def _eval_is_nonnegative(self):
         return self._eval_is_extended_real()
 
