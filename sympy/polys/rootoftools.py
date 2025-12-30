@@ -19,7 +19,7 @@ from sympy.polys.polyfuncs import symmetrize, viete
 from sympy.polys.polyroots import (
     roots_linear, roots_quadratic, roots_binomial,
     preprocess_roots, roots)
-from sympy.polys.polytools import Poly, PurePoly, factor
+from sympy.polys.polytools import Poly, factor
 from sympy.polys.rationaltools import together
 from sympy.polys.rootisolation import (
     dup_isolate_complex_roots_sqf,
