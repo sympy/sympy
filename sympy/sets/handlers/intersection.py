@@ -279,10 +279,10 @@ def _(self, other):
             # TypeError if equation not polynomial with rational coeff.
             # NotImplementedError if correct format but no solver.
 
-            # Fallback：handel issue #18081
+            # Fallback: handel issue #18081
             # ImageSet(Lambda(n, f(n)), Integers).intersection(S.Integers)
-            # f(n) is linear in n（f(n) = a*n + b），
-            # Moreover, diophantine failed due to non-rational coefficients.
+            # f(n) is linear in n (f(n) = a*n + b), a != 0, 
+            # Moreover, diophantine failed due to non-rational coefficients
             if other is S.Integers and gm == m:
                 # f(n) = self.lamda.expr
                 f = fn
@@ -299,13 +299,14 @@ def _(self, other):
                         elif value0.is_rational:
                             return S.EmptySet
                     else:
-                        # a != 0，f(n) = a*n + b， If there is an integer solution at this point,
+                        # f(n) = a*n + b. If there is an integer solution in this case,
                         # It can only be n=0, and the corresponding value is f (0)=b.
                         if value0.is_integer:
                             return FiniteSet(value0)
                         elif value0.is_rational:
                             return S.EmptySet
 
+            #Leave other more complex situations to the default logic for processing
             return
         # 3 cases are possible for solns:
         # - empty set,
