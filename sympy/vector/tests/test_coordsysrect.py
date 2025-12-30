@@ -759,3 +759,14 @@ def test_scalar_map_for_sequence_of_systems():
         xd: E.r * cos(E.theta) / 2,
         yd: E.z,
         zd: E.r * sin(E.theta)}
+
+
+def test_issue_28727():
+    C1 = CoordSys3D("C1")
+    C2 = C1.locate_new("C2", 2 * C1.i)
+    S = C2.create_new("S", transformation="spherical")
+
+    expr = S.r**2*sin(S.phi)**2*sin(S.theta)**2 + S.r**2*sin(S.theta)**2*cos(S.phi)**2
+    result = expr.simplify()
+    expected = S.r**2*sin(S.theta)**2
+    assert simplify(result - expected) == 0
