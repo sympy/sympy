@@ -426,7 +426,7 @@ def get_postprocessor(cls):
             return VectorMul(*expr.args).doit(deep=False)
         elif vec_class is None:
             if isinstance(expr.args[0], Vector):
-                raise ValueError("Power operation is not supported for vectors")
+                raise TypeError("Power operation is not supported for vectors")
     return _postprocessor
 
 

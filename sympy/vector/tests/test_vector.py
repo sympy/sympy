@@ -410,17 +410,17 @@ def test_postprocessor_add_vector_vector():
     assert result_same == 2*C.i
 
 def test_postprocessor_pow_vector():
-    raises(ValueError, lambda: C.i**2)
-    raises(ValueError, lambda: C.j**3)
-    raises(ValueError, lambda: (C.i + C.j)**2)
-    raises(ValueError, lambda: Mul(C.i, C.i))
-    raises(ValueError, lambda: Mul(C.j, C.j))
-    raises(ValueError, lambda: Pow(C.i, 2))
-    raises(ValueError, lambda: Pow(C.j, S.Half))
-    raises(ValueError, lambda: Pow(C.k, -1))
+    raises(TypeError, lambda: C.i**2)
+    raises(TypeError, lambda: C.j**3)
+    raises(TypeError, lambda: (C.i + C.j)**2)
+    raises(TypeError, lambda: Mul(C.i, C.i))
+    raises(TypeError, lambda: Mul(C.j, C.j))
+    raises(TypeError, lambda: Pow(C.i, 2))
+    raises(TypeError, lambda: Pow(C.j, S.Half))
+    raises(TypeError, lambda: Pow(C.k, -1))
     v1 = C.i + C.j
     v2 = 2*C.k
-    raises(ValueError, lambda: v1**2)
-    raises(ValueError, lambda: v2**3)
-    raises(ValueError, lambda: Pow(v1, 2))
-    raises(ValueError, lambda: Pow(v2, a))
+    raises(TypeError, lambda: v1**2)
+    raises(TypeError, lambda: v2**3)
+    raises(TypeError, lambda: Pow(v1, 2))
+    raises(TypeError, lambda: Pow(v2, a))
