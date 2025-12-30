@@ -416,24 +416,22 @@ class Vector(BasisDependent):
 
 # The following is adapted from the matrices.expressions.matexpr file
 
-def get_postprocessor(cls):
-    def _postprocessor(expr):
-        vec_class = {Add: VectorAdd, Mul: VectorMul, Pow: None}[cls]
+def _add_vector_postprocessor(expr: Add) -> Vector:
+    return VectorAdd(*expr.args).doit(deep=False)
 
-        if vec_class == VectorAdd:
-            return VectorAdd(*expr.args).doit(deep=False)
-        elif vec_class == VectorMul:
-            return VectorMul(*expr.args).doit(deep=False)
-        elif vec_class is None:
-            if isinstance(expr.args[0], Vector):
-                raise TypeError("Power operation is not supported for vectors")
-    return _postprocessor
+def _mul_vector_postprocessor(expr: Mul) -> Vector:
+    return VectorMul(*expr.args).doit(deep=False)
+
+def _pow_vector_postprocessor(expr: Pow):
+    if isinstance(expr.args[0], Vector):
+        raise TypeError("Power operation is not supported for vectors")
+    return expr
 
 
 Basic._constructor_postprocessor_mapping[Vector] = {
-    "Add": [get_postprocessor(Add)],
-    "Mul": [get_postprocessor(Mul)],
-    "Pow": [get_postprocessor(Pow)],
+    "Add": [_add_vector_postprocessor],
+    "Mul": [_mul_vector_postprocessor],
+    "Pow": [_pow_vector_postprocessor],
 }
 
 class BaseVector(Vector, AtomicExpr):
