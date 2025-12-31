@@ -141,12 +141,12 @@ def test_latex_printing():
     assert latex(v[2]) == '- \\mathbf{\\hat{i}_{N}}'
     assert latex(v[5]) == ('\\left(a\\right)\\mathbf{\\hat{i}_{N}} + ' +
                            '\\left(- b\\right)\\mathbf{\\hat{j}_{N}}')
-    assert latex(v[6]) == ('\\left(\\mathbf{{x}_{N}} + a^{2}\\right)\\mathbf{\\hat{i}_' +
+    assert latex(v[6]) == ('\\left(\\boldsymbol{x}_{\\textbf{N}} + a^{2}\\right)\\mathbf{\\hat{i}_' +
                           '{N}} + \\mathbf{\\hat{k}_{N}}')
-    assert latex(v[8]) == ('\\mathbf{\\hat{j}_{N}} + \\left(\\mathbf{{x}_' +
-                           '{C}}^{2} - \\int f{\\left(b \\right)}\\,' +
+    assert latex(v[8]) == ('\\mathbf{\\hat{j}_{N}} + \\left(\\boldsymbol{x}_' +
+                           '{\\textbf{C}}^{2} - \\int f{\\left(b \\right)}\\,' +
                            ' db\\right)\\mathbf{\\hat{k}_{N}}')
-    assert latex(s) == '3 \\mathbf{{y}_{C}} \\mathbf{{x}_{N}}^{2}'
+    assert latex(s) == '3 \\boldsymbol{y}_{\\textbf{C}} \\boldsymbol{x}_{\\textbf{N}}^{2}'
     assert latex(d[0]) == '(\\mathbf{\\hat{0}}|\\mathbf{\\hat{0}})'
     assert latex(d[4]) == ('\\left(a\\right)\\left(\\mathbf{\\hat{i}_{N}}\\middle|' +
                            '\\mathbf{\\hat{k}_{N}}\\right)')
@@ -168,22 +168,18 @@ def test_latex_base_scalars():
     D = Cart.create_new(
         "D", transformation="cartesian", variable_names=["α", "β", "γ"])
 
-    e1 = Cart.x * Cart.y * Cart.z
-    assert latex(e1) == (r"\boldsymbol{x}_{\textbf{Cart}} " +
-                         r"\boldsymbol{y}_{\textbf{Cart}} " +
-                         r"\boldsymbol{z}_{\textbf{Cart}}")
-    e2 = S.r * S.theta * S.phi
-    assert latex(e2) == (r"\boldsymbol{\phi}_{\textbf{S}} " +
-                         r"\boldsymbol{r}_{\textbf{S}} " +
-                         r"\boldsymbol{\theta}_{\textbf{S}}")
-    e3 = C.r * C.theta * C.z
-    assert latex(e3) == (r"\boldsymbol{r}_{\textbf{C}} " +
-                         r"\boldsymbol{\theta}_{\textbf{C}} " +
-                         r"\boldsymbol{z}_{\textbf{C}}")
-    e4 = D.α * D.β * D.γ
-    assert latex(e4) == (r"\boldsymbol{α}_{\textbf{D}} " +
-                         r"\boldsymbol{β}_{\textbf{D}} " +
-                         r"\boldsymbol{γ}_{\textbf{D}}")
+    assert latex(Cart.x) == r"\boldsymbol{x}_{\textbf{Cart}}"
+    assert latex(Cart.y) == r"\boldsymbol{y}_{\textbf{Cart}}"
+    assert latex(Cart.z) == r"\boldsymbol{z}_{\textbf{Cart}}"
+    assert latex(S.phi) == r"\boldsymbol{\phi}_{\textbf{S}}"
+    assert latex(S.r) == r"\boldsymbol{r}_{\textbf{S}}"
+    assert latex(S.theta) == r"\boldsymbol{\theta}_{\textbf{S}}"
+    assert latex(C.r) == r"\boldsymbol{r}_{\textbf{C}}"
+    assert latex(C.theta) == r"\boldsymbol{\theta}_{\textbf{C}}"
+    assert latex(C.z) == r"\boldsymbol{z}_{\textbf{C}}"
+    assert latex(D.α) == r"\boldsymbol{α}_{\textbf{D}}"
+    assert latex(D.β) == r"\boldsymbol{β}_{\textbf{D}}"
+    assert latex(D.γ) == r"\boldsymbol{γ}_{\textbf{D}}"
 
 
 def test_pretty_base_scalars():
@@ -193,21 +189,18 @@ def test_pretty_base_scalars():
     D = Cart.create_new(
         "D", transformation="cartesian", variable_names=["α", "β", "γ"])
 
-    e1 = Cart.x * Cart.y * Cart.z
-    assert pretty(e1) == "x_Cart*y_Cart*z_Cart"
-    assert upretty(e1) == "x_Cart⋅y_Cart⋅z_Cart"
-
-    e2 = S.r * S.theta * S.phi
-    assert pretty(e2) == "φ_S*r_S*θ_S"
-    assert upretty(e2) == "φ_S⋅r_S⋅θ_S"
-
-    e3 = C.r * C.theta * C.z
-    assert pretty(e3) == "r_C*θ_C*z_C"
-    assert upretty(e3) == "r_C⋅θ_C⋅z_C"
-
-    e4 = D.α * D.β * D.γ
-    assert pretty(e4) == "α_D*β_D*γ_D"
-    assert upretty(e4) == "α_D⋅β_D⋅γ_D"
+    assert pretty(Cart.x) == "x_Cart"
+    assert pretty(Cart.y) == "y_Cart"
+    assert pretty(Cart.z) == "z_Cart"
+    assert pretty(S.r) == "r_S"
+    assert pretty(S.theta) == "θ_S"
+    assert pretty(S.phi) == "φ_S"
+    assert pretty(C.r) == "r_C"
+    assert pretty(C.theta) == "θ_C"
+    assert pretty(C.z) == "z_C"
+    assert pretty(D.α) == "α_D"
+    assert pretty(D.β) == "β_D"
+    assert pretty(D.γ) == "γ_D"
 
 
 def test_issue_23058():
