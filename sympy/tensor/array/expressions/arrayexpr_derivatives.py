@@ -14,7 +14,7 @@ from sympy.combinatorics.permutations import _af_invert
 from sympy.matrices.expressions.applyfunc import ElementwiseApplyFunction
 from sympy.tensor.array.expressions.array_expressions import (
     _ArrayExpr, ZeroArray, ArraySymbol, ArrayTensorProduct, ArrayAdd,
-    PermuteDims, ArrayDiagonal, ArrayElementwiseApplyFunc, get_rank,
+    PermuteDims, ArrayDiagonal, ArrayElementwiseApplyFunc, get_ndim,
     get_shape, ArrayContraction, _array_tensor_product, _array_contraction,
     _array_diagonal, _array_add, _permute_dims, Reshape, ArraySum)
 from sympy.tensor.array.expressions.from_matrix_to_array import convert_matrix_to_array
@@ -136,8 +136,8 @@ def _(expr: Inverse, x: Expr):
 
 @array_derive.register(ElementwiseApplyFunction)
 def _(expr: ElementwiseApplyFunction, x: Expr):
-    assert get_rank(expr) == 2
-    assert get_rank(x) == 2
+    assert get_ndim(expr) == 2
+    assert get_ndim(x) == 2
     fdiff = expr._get_function_fdiff()
     dexpr = array_derive(expr.expr, x)
     tp = _array_tensor_product(
@@ -159,8 +159,8 @@ def _(expr: ArrayElementwiseApplyFunc, x: Expr):
         dsubexpr,
         ArrayElementwiseApplyFunc(fdiff, subexpr)
     )
-    b = get_rank(x)
-    c = get_rank(expr)
+    b = get_ndim(x)
+    c = get_ndim(expr)
     diag_indices = [(b + i, b + c + i) for i in range(c)]
     return _array_diagonal(tp, *diag_indices)
 
@@ -197,17 +197,17 @@ def _(expr: HadamardProduct, x: Expr):
 @array_derive.register(ArrayContraction)
 def _(expr: ArrayContraction, x: Expr):
     fd = array_derive(expr.expr, x)
-    rank_x = len(get_shape(x))
+    ndim_x = len(get_shape(x))
     contraction_indices = expr.contraction_indices
-    new_contraction_indices = [tuple(j + rank_x for j in i) for i in contraction_indices]
+    new_contraction_indices = [tuple(j + ndim_x for j in i) for i in contraction_indices]
     return _array_contraction(fd, *new_contraction_indices)
 
 
 @array_derive.register(ArrayDiagonal)
 def _(expr: ArrayDiagonal, x: Expr):
     dsubexpr = array_derive(expr.expr, x)
-    rank_x = len(get_shape(x))
-    diag_indices = [[j + rank_x for j in i] for i in expr.diagonal_indices]
+    ndim_x = len(get_shape(x))
+    diag_indices = [[j + ndim_x for j in i] for i in expr.diagonal_indices]
     return _array_diagonal(dsubexpr, *diag_indices)
 
 

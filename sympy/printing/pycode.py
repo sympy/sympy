@@ -431,13 +431,13 @@ class ArrayPrinter:
         except Exception: # noqa: BLE001
             return indexed
 
-    def _get_einsum_string(self, subranks, contraction_indices):
+    def _get_einsum_string(self, ndims, contraction_indices):
         letters = self._get_letter_generator_for_einsum()
         contraction_string = ""
         counter = 0
         d = {j: min(i) for i in contraction_indices for j in i}
         indices = []
-        for rank_arg in subranks:
+        for rank_arg in ndims:
             lindices = []
             for i in range(rank_arg):
                 if counter in d:
@@ -475,7 +475,7 @@ class ArrayPrinter:
 
     def _print_ArrayTensorProduct(self, expr):
         letters = self._get_letter_generator_for_einsum()
-        contraction_string = ",".join(["".join([next(letters) for j in range(i)]) for i in expr.subranks])
+        contraction_string = ",".join(["".join([next(letters) for j in range(i)]) for i in expr.ndims])
         return '%s("%s", %s)' % (
                 self._module_format(self._module + "." + self._einsum),
                 contraction_string,
@@ -489,7 +489,7 @@ class ArrayPrinter:
 
         if isinstance(base, ArrayTensorProduct):
             elems = ",".join(["%s" % (self._print(arg)) for arg in base.args])
-            ranks = base.subranks
+            ranks = base.ndims
         else:
             elems = self._print(base)
             ranks = [len(base.shape)]
@@ -512,12 +512,12 @@ class ArrayPrinter:
         from sympy.tensor.array.expressions.array_expressions import ArrayTensorProduct
         diagonal_indices = list(expr.diagonal_indices)
         if isinstance(expr.expr, ArrayTensorProduct):
-            subranks = expr.expr.subranks
+            ndims = expr.expr.ndims
             elems = expr.expr.args
         else:
-            subranks = expr.subranks
+            ndims = expr.ndims
             elems = [expr.expr]
-        diagonal_string, letters_free, letters_dum = self._get_einsum_string(subranks, diagonal_indices)
+        diagonal_string, letters_free, letters_dum = self._get_einsum_string(ndims, diagonal_indices)
         elems = [self._print(i) for i in elems]
         return '%s("%s", %s)' % (
             self._module_format(self._module + "." + self._einsum),
