@@ -160,6 +160,56 @@ def test_latex_printing():
                             '\\mathbf{\\hat{k}_{N}}\\middle|\\mathbf{' +
                             '\\hat{k}_{N}}\\right)')
 
+
+def test_latex_base_scalars():
+    Cart = CoordSys3D("Cart")
+    S = Cart.create_new("S", transformation="spherical")
+    C = Cart.create_new("C", transformation="cylindrical")
+    D = Cart.create_new(
+        "D", transformation="cartesian", variable_names=["α", "β", "γ"])
+
+    e1 = Cart.x * Cart.y * Cart.z
+    assert latex(e1) == (r"\boldsymbol{x}_{\textbf{Cart}} " +
+                         r"\boldsymbol{y}_{\textbf{Cart}} " +
+                         r"\boldsymbol{z}_{\textbf{Cart}}")
+    e2 = S.r * S.theta * S.phi
+    assert latex(e2) == (r"\boldsymbol{\phi}_{\textbf{S}} " +
+                         r"\boldsymbol{r}_{\textbf{S}} " +
+                         r"\boldsymbol{\theta}_{\textbf{S}}")
+    e3 = C.r * C.theta * C.z
+    assert latex(e3) == (r"\boldsymbol{r}_{\textbf{C}} " +
+                         r"\boldsymbol{\theta}_{\textbf{C}} " +
+                         r"\boldsymbol{z}_{\textbf{C}}")
+    e4 = D.α * D.β * D.γ
+    assert latex(e4) == (r"\boldsymbol{α}_{\textbf{D}} " +
+                         r"\boldsymbol{β}_{\textbf{D}} " +
+                         r"\boldsymbol{γ}_{\textbf{D}}")
+
+
+def test_pretty_base_scalars():
+    Cart = CoordSys3D("Cart")
+    S = Cart.create_new("S", transformation="spherical")
+    C = Cart.create_new("C", transformation="cylindrical")
+    D = Cart.create_new(
+        "D", transformation="cartesian", variable_names=["α", "β", "γ"])
+
+    e1 = Cart.x * Cart.y * Cart.z
+    assert pretty(e1) == "x_Cart*y_Cart*z_Cart"
+    assert upretty(e1) == "x_Cart⋅y_Cart⋅z_Cart"
+
+    e2 = S.r * S.theta * S.phi
+    assert pretty(e2) == "φ_S*r_S*θ_S"
+    assert upretty(e2) == "φ_S⋅r_S⋅θ_S"
+
+    e3 = C.r * C.theta * C.z
+    assert pretty(e3) == "r_C*θ_C*z_C"
+    assert upretty(e3) == "r_C⋅θ_C⋅z_C"
+
+    e4 = D.α * D.β * D.γ
+    assert pretty(e4) == "α_D*β_D*γ_D"
+    assert upretty(e4) == "α_D⋅β_D⋅γ_D"
+
+
 def test_issue_23058():
     from sympy import symbols, sin, cos, pi, UnevaluatedExpr
 
@@ -209,6 +259,7 @@ def test_issue_23058():
 ⎝2⋅10  ⋅cos⎝t⋅10 ⎠⋅sin⎝y_C⋅10  ⎠⎠ i_C \
 """
     assert upretty(vecB) == vecB_str
+
 
 def test_custom_names():
     A = CoordSys3D('A', vector_names=['x', 'y', 'z'],
