@@ -415,7 +415,7 @@ class Expr(Basic, EvalfMixin):
         from .relational import StrictLessThan
         return StrictLessThan(self, other)
 
-    def __trunc__(self):
+    def __trunc__(self): -> Integer:
         if not self.is_number:
             raise TypeError("Cannot truncate symbols and expressions")
         else:
