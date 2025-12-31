@@ -19,15 +19,31 @@ from get_sympy import path_hack
 
 def test():
     t = run("python bin/test_import.py", cwd=path_hack())
-    t = float(t)
-    return t
+    print(t)
+    if not t or t.strip() == b'':
+        print("Warning: Empty response from subprocess, skipping this run")
+        return None
+    try:
+        t = float(t)
+        return t
+    except ValueError as e:
+        print(f"Error converting '{t}' to float: {e}")
+        return None
 
-
-tests = [test() for x in range(n_tests + 1)]
+print("Start to Run Test:")
+all_tests = [test() for x in range(n_tests + 1)]
+# Filter out None values (failed runs)
+tests = [t for t in all_tests if t is not None]
 print("Note: the first run (warm up) was not included in the average + std dev")
 print("All runs (including warm up):")
 print(tests)
-# skip the first run (warm up):
-tests = tests[1:]
-print("Number of tests: %d" % (n_tests))
-print('The speed of "import sympy" is: %f +- %f' % (mean(tests), std(tests)))
+# skip the first run (warm up) if it exists:
+if tests:
+    tests = tests[1:]
+    print("Number of successful tests: %d" % (len(tests)))
+    if tests:
+        print('The speed of "import sympy" is: %f +- %f' % (mean(tests), std(tests)))
+    else:
+        print("No successful tests after warm up")
+else:
+    print("No successful tests at all")
