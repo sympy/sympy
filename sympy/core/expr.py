@@ -4,6 +4,8 @@ from typing import TYPE_CHECKING, overload, Literal
 from collections.abc import Iterable, Mapping
 from functools import reduce
 import re
+from sympy.core.numbers import Integers
+
 
 from .sympify import sympify, _sympify
 from .basic import Basic, Atom
@@ -415,7 +417,7 @@ class Expr(Basic, EvalfMixin):
         from .relational import StrictLessThan
         return StrictLessThan(self, other)
 
-    def __trunc__(self): -> Integer:
+ def __trunc__(self) -> Integer:
         if not self.is_number:
             raise TypeError("Cannot truncate symbols and expressions")
         else:
