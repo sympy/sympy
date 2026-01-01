@@ -304,7 +304,7 @@ def find_executable(executable, path=None):
     return None
 
 
-def func_name(x, short=False):
+def func_name(x: Any, short: bool = False) -> str:
     """Return function name of `x` (if defined) else the `type(x)`.
     If short is True and there is a shorter alias for the result,
     return the alias.
@@ -330,11 +330,11 @@ def func_name(x, short=False):
     'Equality': 'Eq',
     'Unequality': 'Ne',
     }
-    typ = type(x)
-    if str(typ).startswith("<type '"):
-        typ = str(typ).split("'")[1].split("'")[0]
-    elif str(typ).startswith("<class '"):
-        typ = str(typ).split("'")[1].split("'")[0]
+    typ = str(type(x))
+    if typ.startswith("<type '"):
+        typ = typ.split("'")[1].split("'")[0]
+    elif typ.startswith("<class '"):
+        typ = typ.split("'")[1].split("'")[0]
     rv = getattr(getattr(x, 'func', x), '__name__', typ)
     if '.' in rv:
         rv = rv.split('.')[-1]
