@@ -172,7 +172,7 @@ def curl(vect, doit=True):
         elif isinstance(vect, (Cross, Curl, Gradient)):
             return Curl(vect)
         else:
-            raise Curl(vect)
+            raise ValueError("Invalid argument for curl")
 
 
 def divergence(vect, doit=True):
@@ -239,7 +239,7 @@ def divergence(vect, doit=True):
         elif isinstance(vect, (Cross, Curl, Gradient)):
             return Divergence(vect)
         else:
-            raise Divergence(vect)
+            raise ValueError("Invalid argument for divergence")
 
 
 def gradient(scalar_field, doit=True):

@@ -24,7 +24,8 @@ from sympy.core.add import Add
 from sympy.core.containers import Tuple
 from sympy.core.numbers import Float
 from sympy.core.parameters import global_parameters
-from sympy.simplify import nsimplify, simplify
+from sympy.external.mpmath import prec_to_dps
+from sympy.simplify.simplify import nsimplify, simplify
 from sympy.geometry.exceptions import GeometryError
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.complexes import im
@@ -36,7 +37,6 @@ from sympy.utilities.misc import filldedent, func_name, Undecidable
 
 from .entity import GeometryEntity
 
-from mpmath.libmp.libmpf import prec_to_dps
 
 
 class Point(GeometryEntity):

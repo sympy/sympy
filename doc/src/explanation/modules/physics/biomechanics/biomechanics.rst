@@ -372,7 +372,7 @@ ZerothOrderActivation('zeroth')
 
 The argument passed to `name` tries to help ensures that the
 automatically-created :obj:`~sympy.physics.vector.dynamicsymbols` for
-:math:`e(t)` and :math:`a(t)` are unique betweem instances.
+:math:`e(t)` and :math:`a(t)` are unique between instances.
 
 >>> actz.excitation
 e_zeroth(t)
@@ -555,7 +555,7 @@ method allows the equation of the curve to be accessed.
 >>> fl_T2.doit()
 c0*exp(c3*(-c1 + l_T(t)/l_T_slack)) - c2
 
-The class provides an alternate constructor that allows it to be constucted
+The class provides an alternate constructor that allows it to be constructed
 prepopulated with the values for the constants recommended in [DeGroote2016]_.
 This takes a single argument, again corresponding to :math:`\tilde{l}^T`, which
 can against either be a symbol or expression.
@@ -749,7 +749,7 @@ FiberForceLengthPassiveInverseDeGroote2016(fl_M_pas(t), 0.6, 4.0)
 Fiber Active Force-Length
 -------------------------
 
-When a muscle is activated, it contracts to produce a force. This phenomenom is
+When a muscle is activated, it contracts to produce a force. This phenomenon is
 modeled by the contractile element in the parallel fiber component of the
 musculotendon model. The amount of force that the fibers can produce is a
 function of the instantaneous length of the fibers. The characteristic curve
@@ -1088,7 +1088,7 @@ available as a know value due to it being a state variable.
 
 Using :math:`\tilde{l}^T` and the tendon force-length curve
 (:math:`fl^T\left(\tilde{l}^T\right)`), we can write an equation for the
-normalized and absolte tendon force:
+normalized and absolute tendon force:
 
 .. math::
 

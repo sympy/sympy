@@ -3,7 +3,7 @@ from functools import reduce
 
 from sympy.core import S, sympify, Dummy, Mod
 from sympy.core.cache import cacheit
-from sympy.core.function import Function, ArgumentIndexError, PoleError
+from sympy.core.function import DefinedFunction, ArgumentIndexError, PoleError
 from sympy.core.logic import fuzzy_and
 from sympy.core.numbers import Integer, pi, I
 from sympy.core.relational import Eq
@@ -14,7 +14,7 @@ from sympy.polys.polytools import Poly
 
 from math import factorial as _factorial, prod, sqrt as _sqrt
 
-class CombinatorialFunction(Function):
+class CombinatorialFunction(DefinedFunction):
     """Base class for combinatorial functions. """
 
     def _eval_simplify(self, **kwargs):
@@ -598,9 +598,7 @@ class RisingFactorial(CombinatorialFunction):
                                           range(int(k)), 1)
 
                 else:
-                    if x is S.Infinity:
-                        return S.Infinity
-                    elif x is S.NegativeInfinity:
+                    if x is S.Infinity or x is S.NegativeInfinity:
                         return S.Infinity
                     else:
                         if isinstance(x, Poly):
@@ -759,9 +757,7 @@ class FallingFactorial(CombinatorialFunction):
                             return reduce(lambda r, i: r*(x - i),
                                           range(int(k)), 1)
                 else:
-                    if x is S.Infinity:
-                        return S.Infinity
-                    elif x is S.NegativeInfinity:
+                    if x is S.Infinity or x is S.NegativeInfinity:
                         return S.Infinity
                     else:
                         if isinstance(x, Poly):

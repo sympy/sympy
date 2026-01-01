@@ -195,7 +195,7 @@ def _invert(f_x, y, x, domain=S.Complexes):
     # "Fancier" solution sets like those obtained by inversion of trigonometric
     # functions already include general validity conditions (i.e. conditions on
     # the domain of the respective inverse functions), so we should avoid adding
-    # blanket intesections with S.Reals. But subsets of R (or C) must still be
+    # blanket intersections with S.Reals. But subsets of R (or C) must still be
     # accounted for.
     if domain is S.Reals:
         return x1, s
@@ -321,7 +321,7 @@ def _invert_real(f, g_ys, symbol):
                     return (expo, S.EmptySet)
 
     if isinstance(f, (TrigonometricFunction, HyperbolicFunction)):
-         return _invert_trig_hyp_real(f, g_ys, symbol)
+        return _invert_trig_hyp_real(f, g_ys, symbol)
 
     return (f, g_ys)
 
@@ -575,7 +575,7 @@ def _invert_complex(f, g_ys, symbol):
             return _invert_complex(f.exp, exp_invs, symbol)
 
     if isinstance(f, (TrigonometricFunction, HyperbolicFunction)):
-         return _invert_trig_hyp_complex(f, g_ys, symbol)
+        return _invert_trig_hyp_complex(f, g_ys, symbol)
 
     return (f, g_ys)
 
@@ -3574,7 +3574,9 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                 if (depen1.has(Abs) or depen2.has(Abs)) and solver == solveset_complex:
                     # Absolute values cannot be inverted in the
                     # complex domain
-                    continue
+                    raise NotImplementedError(
+                        "nonlinsolve cannot solve equations with Abs in the complex domain"
+                    )
                 soln_imageset = {}
                 for sym in unsolved_syms:
                     not_solvable = False
@@ -3731,6 +3733,8 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
 
 def _solveset_work(system, symbols):
     soln = solveset(system[0], symbols[0])
+    if soln == S.EmptySet:
+        return S.EmptySet
     if isinstance(soln, FiniteSet):
         _soln = FiniteSet(*[(s,) for s in soln])
         return _soln
@@ -3794,7 +3798,7 @@ def _separate_poly_nonpoly(system, symbols):
         if isinstance(eq, Expr):
             eq = eq.as_numer_denom()[0]
             poly = eq.as_poly(*symbols, extension=True)
-        elif simplify(eq).is_number:
+        elif eq == 0:
             continue
         if poly is not None:
             polys.append(poly)
@@ -3828,7 +3832,7 @@ def _handle_poly(polys, symbols):
         # The use of Groebner over RR is likely to result incorrectly in an
         # inconsistent Groebner basis. So, convert any float coefficients to
         # Rational before computing the Groebner basis.
-        polys = [poly(nsimplify(p, rational=True)) for p in polys]
+        polys = [poly(nsimplify(p.as_expr().evalf(), rational=True)) for p in polys]
 
     # Compute a Groebner basis in grevlex order wrt the ordering given. We will
     # try to convert this to lex order later. Usually it seems to be more
@@ -4068,6 +4072,7 @@ def nonlinsolve(system, *symbols):
         raise IndexError(filldedent(msg))
 
     symbols = list(map(_sympify, symbols))
+    system = [_sympify(eq) for eq in system]
     system, symbols, swap = recast_to_symbols(system, symbols)
     if swap:
         soln = nonlinsolve(system, symbols)
@@ -4100,7 +4105,7 @@ def nonlinsolve(system, *symbols):
 
     # to_tuple converts a solution dictionary to a tuple containing the
     # value for each symbol
-    to_tuple = lambda sol: tuple(sol[s] for s in symbols)
+    to_tuple = lambda sol: tuple(sol.get(s, s) for s in symbols)
 
     if not remaining:
         # If there is nothing left to solve then return the solution from

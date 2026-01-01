@@ -1,5 +1,5 @@
 from sympy.core.expr import Expr
-from sympy.core.function import Function, ArgumentIndexError
+from sympy.core.function import DefinedFunction, ArgumentIndexError
 from sympy.core.numbers import I, pi
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy
@@ -9,10 +9,11 @@ from sympy.functions.elementary.complexes import Abs, conjugate
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import sin, cos, cot
+from sympy.external.mpmath import local_workprec
 
 _x = Dummy("x")
 
-class Ynm(Function):
+class Ynm(DefinedFunction):
     r"""
     Spherical harmonics defined as
 
@@ -122,7 +123,7 @@ class Ynm(Function):
     See Also
     ========
 
-    Ynm_c, Znm
+    Ynm_c, Znm, sympy.physics.hydrogen.Y_lm, sympy.physics.hydrogen.Z_lm
 
     References
     ==========
@@ -211,13 +212,12 @@ class Ynm(Function):
         # Note: works without this function by just calling
         #       mpmath for Legendre polynomials. But using
         #       the dedicated function directly is cleaner.
-        from mpmath import mp, workprec
         n = self.args[0]._to_mpmath(prec)
         m = self.args[1]._to_mpmath(prec)
         theta = self.args[2]._to_mpmath(prec)
         phi = self.args[3]._to_mpmath(prec)
-        with workprec(prec):
-            res = mp.spherharm(n, m, theta, phi)
+        with local_workprec(prec) as ctx:
+            res = ctx.spherharm(n, m, theta, phi)
         return Expr._from_mpmath(res, prec)
 
 
@@ -251,7 +251,7 @@ def Ynm_c(n, m, theta, phi):
     See Also
     ========
 
-    Ynm, Znm
+    Ynm, Znm, sympy.physics.hydrogen.Y_lm, sympy.physics.hydrogen.Z_lm
 
     References
     ==========
@@ -264,7 +264,7 @@ def Ynm_c(n, m, theta, phi):
     return conjugate(Ynm(n, m, theta, phi))
 
 
-class Znm(Function):
+class Znm(DefinedFunction):
     r"""
     Real spherical harmonics defined as
 
@@ -311,7 +311,7 @@ class Znm(Function):
     See Also
     ========
 
-    Ynm, Ynm_c
+    Ynm, Ynm_c, sympy.physics.hydrogen.Y_lm, sympy.physics.hydrogen.Z_lm
 
     References
     ==========

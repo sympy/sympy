@@ -59,16 +59,6 @@ class SeriesBase(Expr):
                                   % self.func)
 
     def _ith_point(self, i):
-        """
-        Returns the i'th point of a series
-        If start point is negative infinity, point is returned from the end.
-        Assumes the first point to be indexed zero.
-
-        Examples
-        ========
-
-        TODO
-        """
         if self.start is S.NegativeInfinity:
             initial = self.stop
             step = -1

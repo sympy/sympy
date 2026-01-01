@@ -158,10 +158,9 @@ class Ordinal(Basic):
 
     def __str__(self):
         net_str = ""
-        plus_count = 0
         if self == ord0:
             return 'ord0'
-        for i in self.terms:
+        for plus_count, i in enumerate(self.terms):
             if plus_count:
                 net_str += " + "
 
@@ -176,8 +175,6 @@ class Ordinal(Basic):
 
             if not i.mult == 1 and not i.exp == ord0:
                 net_str += '*%s'%i.mult
-
-            plus_count += 1
         return(net_str)
 
     __repr__ = __str__

@@ -1,10 +1,8 @@
-import sys
 import re
 import inspect
 import textwrap
 import pydoc
 import sphinx
-import collections
 
 from docscrape import NumpyDocString, FunctionDoc, ClassDoc
 
@@ -201,7 +199,7 @@ class SphinxDocString(NumpyDocString):
                 out += ['.. latexonly::', '']
             items = []
             for line in self['References']:
-                m = re.match(r'.. \[([a-z0-9._-]+)\]', line, re.I)
+                m = re.match(r'.. \[([a-z0-9._-]+)\]', line, re.IGNORECASE)
                 if m:
                     items.append(m.group(1))
             out += ['   ' + ", ".join(["[%s]_" % item for item in items]), '']

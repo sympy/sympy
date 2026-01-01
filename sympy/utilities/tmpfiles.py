@@ -9,4 +9,4 @@ sympy_deprecation_warning("The sympy.utilities.tmpfiles submodule is deprecated.
     deprecated_since_version="1.6",
     active_deprecations_target="deprecated-sympy-utilities-submodules")
 
-from sympy.testing.tmpfiles import *  # noqa:F401
+from sympy.testing.tmpfiles import *  # noqa:F401,F403

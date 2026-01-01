@@ -296,10 +296,8 @@ class Partition(FiniteSet):
             raise ValueError('mismatch in rgs and element lengths')
         max_elem = max(rgs) + 1
         partition = [[] for i in range(max_elem)]
-        j = 0
-        for i in rgs:
+        for j, i in enumerate(rgs):
             partition[i].append(elements[j])
-            j += 1
         if not all(p for p in partition):
             raise ValueError('some blocks of the partition were empty.')
         return Partition(*partition)

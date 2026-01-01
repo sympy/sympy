@@ -71,7 +71,7 @@ class ArrayKind(Kind):
         return obj
 
     def __repr__(self):
-        return "ArrayKind(%s)" % self.element_kind
+        return f"ArrayKind({self.element_kind})"
 
     @classmethod
     def _union(cls, kinds) -> 'ArrayKind':
@@ -362,7 +362,8 @@ class NDimArray(Printable):
 
         if self.rank() == 0:
             return printer._print(self[()])
-
+        if 0 in self.shape:
+            return f"{self.__class__.__name__}([], {self.shape})"
         return f(self._loop_size, self.shape, 0, self._loop_size)
 
     def tolist(self):

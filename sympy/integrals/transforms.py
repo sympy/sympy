@@ -436,8 +436,8 @@ def _rewrite_sin(m_n, s, a, b):
     # (This is a separate function because it is moderately complicated,
     #  and I want to doctest it.)
     # We want to use pi/sin(pi*x) = gamma(x)*gamma(1-x).
-    # But there is one comlication: the gamma functions determine the
-    # inegration contour in the definition of the G-function. Usually
+    # But there is one complication: the gamma functions determine the
+    # integration contour in the definition of the G-function. Usually
     # it would not matter if this is slightly shifted, unless this way
     # we create an undefined function!
     # So we try to write this in such a way that the gammas are

@@ -46,6 +46,7 @@ from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, \
 from sympy.core import Basic, Expr, sympify, Add, Mul, S
 from sympy.core.cache import clear_cache
 from sympy.core.containers import Tuple, Dict
+from sympy.core.decorators import call_highest_priority
 from sympy.core.function import WildFunction
 from sympy.core.sorting import default_sort_key
 from sympy.core.symbol import Symbol, symbols, Wild
@@ -189,7 +190,7 @@ class _IndexStructure(CantSympify):
                 # check consistency and update free
                 if is_contr:
                     if contr:
-                        raise ValueError('two equal contravariant indices in slots %d and %d' %(pos, i))
+                        raise ValueError(f"two equal contravariant indices in slots {pos} and {i}")
                     else:
                         free[pos] = False
                         free[i] = False
@@ -198,7 +199,7 @@ class _IndexStructure(CantSympify):
                         free[pos] = False
                         free[i] = False
                     else:
-                        raise ValueError('two equal covariant indices in slots %d and %d' %(pos, i))
+                        raise ValueError(f"two equal covariant indices in slots {pos} and {i}")
                 if contr:
                     dum.append((i, pos))
                 else:
@@ -1347,7 +1348,7 @@ class TensorIndex(Basic):
     def _print(self):
         s = self.name
         if not self.is_up:
-            s = '-%s' % s
+            s = f'-{s}'
         return s
 
     def __lt__(self, other):
@@ -1636,7 +1637,7 @@ class TensorType(Basic):
         return sorted(set(self.index_types), key=lambda x: x.name)
 
     def __str__(self):
-        return 'TensorType(%s)' % ([str(x) for x in self.index_types])
+        return f"TensorType({[str(x) for x in self.index_types]})"
 
     def __call__(self, s, comm=0):
         """
@@ -1855,7 +1856,7 @@ class TensorHead(Basic):
         return r
 
     def _print(self):
-        return '%s(%s)' %(self.name, ','.join([str(x) for x in self.index_types]))
+        return f"{self.name}({','.join([str(x) for x in self.index_types])})"
 
     def __call__(self, *indices, **kw_args):
         """
@@ -2014,18 +2015,23 @@ class TensExpr(Expr, ABC):
     def __abs__(self):
         raise NotImplementedError
 
+    @call_highest_priority('__radd__')
     def __add__(self, other):
         return TensAdd(self, other).doit(deep=False)
 
+    @call_highest_priority('__add__')
     def __radd__(self, other):
         return TensAdd(other, self).doit(deep=False)
 
+    @call_highest_priority('__rsub__')
     def __sub__(self, other):
         return TensAdd(self, -other).doit(deep=False)
 
+    @call_highest_priority('__sub__')
     def __rsub__(self, other):
         return TensAdd(other, -self).doit(deep=False)
 
+    @call_highest_priority('__rmul__')
     def __mul__(self, other):
         """
         Multiply two tensors using Einstein summation convention.
@@ -2051,9 +2057,11 @@ class TensExpr(Expr, ABC):
         """
         return TensMul(self, other).doit(deep=False)
 
+    @call_highest_priority('__mul__')
     def __rmul__(self, other):
         return TensMul(other, self).doit(deep=False)
 
+    @call_highest_priority('__rtruediv__')
     def __truediv__(self, other):
         other = _sympify(other)
         if isinstance(other, TensExpr):
@@ -2143,12 +2151,6 @@ class TensExpr(Expr, ABC):
     def _get_indices_permutation(indices1, indices2):
         return [indices1.index(i) for i in indices2]
 
-    def expand(self, **hints):
-        return _expand(self, **hints).doit()
-
-    def _expand(self, **kwargs):
-        return self
-
     def _get_free_indices_set(self):
         indset = set()
         for arg in self.args:
@@ -2216,7 +2218,7 @@ class TensExpr(Expr, ABC):
 
         array = tensorcontraction(tensorproduct(metric, array), (1, 2+pos))
         permu = list(range(dim))
-        permu[0], permu[pos] = permu[pos], permu[0]
+        permu.insert(pos, permu.pop(0))
         return permutedims(array, permu)
 
     @staticmethod
@@ -2245,7 +2247,7 @@ class TensExpr(Expr, ABC):
             else:
                 index2 = free2remaining[pos1]
                 if index2 is None:
-                    raise ValueError("incompatible indices: %s and %s" % (free_ind1, free_ind2))
+                    raise ValueError(f"incompatible indices: {free_ind1} and {free_ind2}")
                 free2remaining[pos1] = None
                 free_ind2[pos1] = index1
                 if index1.is_up ^ index2.is_up:
@@ -2255,8 +2257,7 @@ class TensExpr(Expr, ABC):
                         pos2down.append(pos1)
 
         if len(set(free_ind1) & set(free_ind2)) < len(free_ind1):
-            raise ValueError("incompatible indices: %s and %s" % (free_ind1, free_ind2))
-
+            raise ValueError(f"incompatible indices: {free_ind1} and {free_ind2}")
         # Raise indices:
         for pos in pos2up:
             index_type_pos = index_types1[pos]
@@ -2370,9 +2371,8 @@ class TensExpr(Expr, ABC):
             if len(expected_shape) != array.rank() or (not all(dim1 == dim2 if
                 dim1.is_number else True for dim1, dim2 in zip(expected_shape,
                 array.shape))):
-                raise ValueError("shapes for tensor %s expected to be %s, "\
-                    "replacement array shape is %s" % (tensor, expected_shape,
-                    array.shape))
+                raise ValueError(f"shapes for tensor {tensor} expected to be {expected_shape}, "\
+                    "replacement array shape is {array.shape}")
 
         ret_indices, array = self._extract_data(replacement_dict)
 
@@ -2509,12 +2509,12 @@ class TensAdd(TensExpr, AssocOp):
         else:
             return set()
 
-    def doit(self, **hints):
+    def doit(self, **hints) -> Expr:
         deep = hints.get('deep', True)
         if deep:
             args = [arg.doit(**hints) for arg in self.args]
         else:
-            args = self.args
+            args = self.args # type: ignore
 
         # if any of the args are zero (after doit), drop them. Otherwise, _tensAdd_check will complain about non-matching indices, even though the TensAdd is correctly formed.
         args = [arg for arg in args if arg != S.Zero]
@@ -2610,8 +2610,6 @@ class TensAdd(TensExpr, AssocOp):
             indices.extend([i for i in get_indices(arg) if i not in indices])
         return indices
 
-    def _expand(self, **hints):
-        return TensAdd(*[_expand(i, **hints) for i in self.args])
 
     def __call__(self, *indices):
         deprecate_call()
@@ -2888,7 +2886,7 @@ class Tensor(TensExpr):
 
     is_commutative = False
 
-    _index_structure = None  # type: _IndexStructure
+    _index_structure: _IndexStructure
     args: tuple[TensorHead, Tuple]
 
     def __new__(cls, tensor_head, indices, *, is_canon_bp=False, **kw_args):
@@ -2970,7 +2968,7 @@ class Tensor(TensExpr):
     @staticmethod
     def _parse_indices(tensor_head, indices):
         if not isinstance(indices, (tuple, list, Tuple)):
-            raise TypeError("indices should be an array, got %s" % type(indices))
+            raise TypeError(f"indices should be an array, got {type(indices)}")
         indices = list(indices)
         for i, index in enumerate(indices):
             if isinstance(index, Symbol):
@@ -2980,9 +2978,9 @@ class Tensor(TensExpr):
                 if c == -1 and isinstance(e, Symbol):
                     indices[i] = TensorIndex(e, tensor_head.index_types[i], False)
                 else:
-                    raise ValueError("index not understood: %s" % index)
+                    raise ValueError(f"index not understood: {index}")
             elif not isinstance(index, TensorIndex):
-                raise TypeError("wrong type for index: %s is %s" % (index, type(index)))
+                raise TypeError(f"wrong type for index: {index} is {type(index)}")
         return indices
 
     def _set_new_index_structure(self, im, is_canon_bp=False):
@@ -3052,9 +3050,6 @@ class Tensor(TensExpr):
 
     def split(self):
         return [self]
-
-    def _expand(self, **kwargs):
-        return self
 
     def sorted_components(self):
         return self
@@ -3231,7 +3226,7 @@ class Tensor(TensExpr):
                 array = v
                 break
         else:
-            raise ValueError("%s not found in %s" % (self, replacement_dict))
+            raise ValueError(f"{self} not found in {replacement_dict}")
 
         # TODO: inefficient, this should be done at root level only:
         replacement_dict = {k: Array(v) for k, v in replacement_dict.items()}
@@ -3244,7 +3239,7 @@ class Tensor(TensExpr):
             for pair in dum2:
                 # allow `dum2` if the contained values are also in `dum1`.
                 if pair not in dum1:
-                    raise NotImplementedError("%s with contractions is not implemented" % other)
+                    raise NotImplementedError(f"{other} with contractions is not implemented")
             # Remove elements in `dum2` from `dum1`:
             dum1 = [pair for pair in dum1 if pair not in dum2]
         if len(dum1) > 0:
@@ -3293,9 +3288,9 @@ class Tensor(TensExpr):
         indices = [str(ind) for ind in self.indices]
         component = self.component
         if component.rank > 0:
-            return ('%s(%s)' % (component.name, ', '.join(indices)))
+            return (f"{component.name}({', '.join(indices)})")
         else:
-            return ('%s' % component.name)
+            return (f"{component.name}")
 
     def equals(self, other):
         if other == 0:
@@ -3357,7 +3352,7 @@ class Tensor(TensExpr):
         expr = Indexed(tens.args[0], *index_symbols)
         return self._check_add_Sum(expr, index_symbols)
 
-    def _eval_partial_derivative(self, s):  # type: (Tensor) -> Expr
+    def _eval_partial_derivative(self, s: Tensor) -> Expr:
 
         if not isinstance(s, Tensor):
             return S.Zero
@@ -3443,7 +3438,7 @@ class TensMul(TensExpr, AssocOp):
     """
     identity = S.One
 
-    _index_structure = None  # type: _IndexStructure
+    _index_structure: _IndexStructure
 
     def __new__(cls, *args, **kw_args):
         is_canon_bp = kw_args.get('is_canon_bp', False)
@@ -3481,7 +3476,7 @@ class TensMul(TensExpr, AssocOp):
 
         obj = TensExpr.__new__(cls, *args)
         obj._indices = indices
-        obj._index_types = index_types[:]
+        obj._index_types = index_types.copy()
         obj._index_structure = index_structure
         obj._free = index_structure.free[:]
         obj._dum = index_structure.dum[:]
@@ -3533,7 +3528,7 @@ class TensMul(TensExpr, AssocOp):
                         dummy_data.append((-index, other_pos1, pos1, other_pos2, pos2))
                     indices.append(index)
                 elif index in free2pos1:
-                    raise ValueError("Repeated index: %s" % index)
+                    raise ValueError(f"Repeated index: {index}")
                 else:
                     free2pos1[index] = pos1
                     free2pos2[index] = pos2
@@ -3844,13 +3839,10 @@ class TensMul(TensExpr, AssocOp):
                 res *= arg
         return splitp
 
-    def _expand(self, **hints):
-        # TODO: temporary solution, in the future this should be linked to
-        # `Expr.expand`.
-        args = [_expand(arg, **hints) for arg in self.args]
-        args1 = [arg.args if isinstance(arg, (Add, TensAdd)) else (arg,) for arg in args]
+    def _eval_expand_mul(self, **hints):
+        args1 = [arg.args if isinstance(arg, (Add, TensAdd)) else (arg,) for arg in self.args]
         return TensAdd(*[
-            TensMul(*i) for i in itertools.product(*args1)]
+            TensMul(*i).doit(deep=False) for i in itertools.product(*args1)]
         )
 
     def __neg__(self):
@@ -3947,6 +3939,7 @@ class TensMul(TensExpr, AssocOp):
             return expr.canon_bp()
         if not expr.components:
             return expr
+        expr = expr.doit(deep=False) #make sure self.coeff is populated correctly
         t = expr.sorted_components()
         g, dummies, msym = t._index_structure.indices_canon_args()
         v = components_canon_args(t.components)
@@ -4003,7 +3996,7 @@ class TensMul(TensExpr, AssocOp):
         >>> t.contract_metric(g).canon_bp()
         p(L_0)*q(-L_0)
         """
-        expr = self.expand()
+        expr = self.expand().doit(deep=False)
         if self != expr:
             expr = canon_bp(expr)
             return contract_metric(expr, g)
@@ -4146,7 +4139,7 @@ class TensMul(TensExpr, AssocOp):
     def _set_indices(self, *indices, is_canon_bp=False, **kw_args):
         if len(indices) != self.ext_rank:
             raise ValueError("indices length mismatch")
-        args = list(self.args)[:]
+        args = list(self.args)
         pos = 0
         for i, arg in enumerate(args):
             if not isinstance(arg, TensExpr):
@@ -4530,7 +4523,7 @@ class TensorElement(TensExpr):
         if not isinstance(expr, Tensor):
             # remap
             if not isinstance(expr, TensExpr):
-                raise TypeError("%s is not a tensor expression" % expr)
+                raise TypeError(f"{expr} is not a tensor expression")
             return expr.func(*[TensorElement(arg, index_map) for arg in expr.args])
         expr_free_indices = expr.get_free_indices()
         name_translation = {i.args[0]: i for i in expr_free_indices}
@@ -5138,7 +5131,7 @@ def get_lines(ex, index_type):
             if index_types[i] is index_type:
                 a.append(i)
         if len(a) > 2:
-            raise ValueError('at most two indices of type %s allowed' % index_type)
+            raise ValueError(f"at most two indices of type {index_type} allowed")
         if len(a) == 2:
             dt[c] = a
     #dum = ex.dum
@@ -5167,7 +5160,7 @@ def get_lines(ex, index_type):
         # if p0 == ta0[0] then G in pos c1 is mult on the right by G in c0
         ta0 = dt[arguments[c0]]
         b0, b1 = (c0, c1) if p0 == ta0[1]  else (c1, c0)
-        lines1 = lines[:]
+        lines1 = lines.copy()
         for line in lines:
             if line[-1] == b0:
                 if line[0] == b1:
@@ -5257,13 +5250,6 @@ def substitute_indices(t, *index_tuples):
     if not isinstance(t, TensExpr):
         return t
     return t.substitute_indices(*index_tuples)
-
-
-def _expand(expr, **kwargs):
-    if isinstance(expr, TensExpr):
-        return expr._expand(**kwargs)
-    else:
-        return expr.expand(**kwargs)
 
 
 def _get_wilds(expr):

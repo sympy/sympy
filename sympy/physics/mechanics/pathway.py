@@ -268,7 +268,7 @@ class ObstacleSetPathway(PathwayBase):
     ===========
 
     An obstacle-set pathway forms a series of straight-line segment between
-    pairs of consecutive points in a set of points. It is similiar to multiple
+    pairs of consecutive points in a set of points. It is similar to multiple
     linear pathways joined end-to-end. It will not interact with any other
     objects in the system, i.e. an ``ObstacleSetPathway`` will intersect other
     objects to ensure that the path between its pairs of points (its
@@ -322,7 +322,7 @@ class ObstacleSetPathway(PathwayBase):
     Parameters
     ==========
 
-    attachments : tuple[Point, Point]
+    attachments : tuple[Point, ...]
         The set of ``Point`` objects that define the segmented obstacle-set
         pathway.
 

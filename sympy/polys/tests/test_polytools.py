@@ -29,7 +29,8 @@ from sympy.polys.polytools import (
     cancel, reduced, groebner,
     GroebnerBasis, is_zero_dimensional,
     _torational_factor_list,
-    to_rational_coeffs)
+    to_rational_coeffs,
+    gcdex_steps)
 
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
@@ -49,7 +50,7 @@ from sympy.polys.polyerrors import (
 from sympy.polys.polyclasses import DMP
 
 from sympy.polys.fields import field
-from sympy.polys.domains import FF, ZZ, QQ, ZZ_I, QQ_I, RR, EX
+from sympy.polys.domains import FF, ZZ, QQ, ZZ_I, QQ_I, RR, EX, EXRAW
 from sympy.polys.domains.realfield import RealField
 from sympy.polys.domains.complexfield import ComplexField
 from sympy.polys.orderings import lex, grlex, grevlex
@@ -65,7 +66,7 @@ from sympy.core.numbers import (Float, I, Integer, Rational, oo, pi)
 from sympy.core.power import Pow
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
-from sympy.core.symbol import Symbol
+from sympy.core.symbol import Symbol, symbols
 from sympy.functions.elementary.complexes import (im, re)
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.hyperbolic import tanh
@@ -83,7 +84,7 @@ from sympy.testing.pytest import (
     raises, warns_deprecated_sympy, warns, tooslow, XFAIL
 )
 
-from sympy.abc import a, b, c, d, p, q, t, w, x, y, z
+from sympy.abc import a, b, c, d, p, q, t, w, x, y, z, s
 
 
 def _epsilon_eq(a, b):
@@ -1928,6 +1929,99 @@ def test_issue_7864():
     assert r == 0
 
 
+def test_gcdex_steps():
+    # on polynomials
+    f = Poly(x**5 + 2*x**4 - x**2 + 1, x)
+    g = Poly(x**4 - 1, x)
+
+    eea_result = list(gcdex_steps(f, g))
+    assert(len(eea_result) == 4)
+
+    r_degree = 5
+    s, t, r = Poly(0, x), Poly(0, x), Poly(0, x)
+    for si, ti, ri in eea_result:
+        assert type(si)==type(ti)==type(ri)==Poly
+        assert si*f + ti*g == ri
+        assert ri.degree() < r_degree
+        r_degree = ri.degree()
+
+        s, t, r = si, ti, ri
+
+    leading_coef = r.LC()
+    s, t, r = s.mul(1/leading_coef), t.mul(1/leading_coef), r.mul(1/leading_coef)
+
+    assert gcdex(f, g) == (s, t, r)
+
+    # on polynomials in Expr form
+    f = x*(x-1)*(x-2)
+    g = (I*x-1)*(x+1)
+
+    eea_result = list(gcdex_steps(f, g))
+    assert(len(eea_result)==3)
+
+    r_degree = 4
+    s, t, r = 0, 0, 0
+    for si, ti, ri in eea_result:
+        assert (si*f + ti*g).equals(ri)
+        ri_poly = Poly(ri, gens=x)
+        assert ri_poly.degree() < r_degree
+        r_degree = ri_poly.degree()
+
+        s, t, r = si, ti, ri
+
+    s, t, r = Poly(s, x), Poly(t, x), Poly(r, x)
+    leading_coef = r.LC()
+
+    s2, t2, r2 = gcdex(f, g)
+    s2, t2, r2 = Poly(s2 * leading_coef, x), Poly(t2* leading_coef, x), Poly(r2 * leading_coef, x)
+
+    assert (s2, t2, r2) == (s, t, r)
+
+    # on polynomials with variable coefficients
+    f = x**4 - y
+    g = x*(x**2 - y)
+
+    # must specifiy the generator for mutivariate polynomials
+    raises(ValueError, lambda: next(gcdex_steps(f, g)))
+
+    eea_result = list(gcdex_steps(f, g, gens=x))
+    assert(len(eea_result)==4)
+
+    r_degree = 4
+    s, t, r = 0, 0, 0
+    for si, ti, ri in eea_result:
+        assert (si*f + ti*g).equals(ri)
+        ri_poly = Poly(ri, gens=x)
+        assert ri_poly.degree() < r_degree
+        r_degree = ri_poly.degree()
+
+        s, t, r = si, ti, ri
+
+    s, t, r = Poly(s, x), Poly(t, x), Poly(r, x)
+    leading_coef = r.LC()
+
+    s2, t2, r2 = gcdex(f, g, gens=x)
+    s2, t2, r2 = Poly(s2 * leading_coef, x), Poly(t2* leading_coef, x), Poly(r2 * leading_coef, x)
+
+    assert (s2, t2, r2) == (s, t, r)
+
+    # on elements which are not convertible to polynomials
+    a = 101
+    b = 62
+
+    eea_result = list(gcdex_steps(a, b))
+    assert(len(eea_result)==7)
+
+    s, t, r = 0, 0, 101
+    for si, ti, ri in eea_result:
+        assert si*a + ti*b == ri
+        assert ri < r
+
+        s, t, r = si, ti, ri
+
+    assert gcdex(a, b) == (s, t, r)
+
+
 def test_gcdex():
     f, g = 2*x, x**2 - 16
     s, t, h = x/32, Rational(-1, 16), 1
@@ -2792,6 +2886,14 @@ def test_factor():
     )
     assert factor(e) == -(y - I)**3*(y + I)*(x**2 + 2*x + y**2 + 2)/(y**2 + 1)
 
+    # issue 27506
+    e = (I*t*x*y - 3*I*t - I*x*y*z - 6*x*y + 3*I*z + 18)
+    assert factor(e) == -I*(x*y - 3)*(-t + z - 6*I)
+
+    e = (8*x**2*z**2 - 32*x**2*z*t + 24*x**2*t**2 - 4*I*x*y*z**2 + 16*I*x*y*z*t -
+         12*I*x*y*t**2 + z**4 - 8*z**3*t + 22*z**2*t**2 - 24*z*t**3 + 9*t**4)
+    assert factor(e) == (-3*t + z)*(-t + z)*(3*t**2 - 4*t*z + 8*x**2 - 4*I*x*y + z**2)
+
 
 def test_factor_large():
     f = (x**2 + 4*x + 4)**10000000*(x**2 + 1)*(x**2 + 2*x + 1)**1234567
@@ -3194,6 +3296,12 @@ def test_nroots():
         '1.7 + 2.5*I]')
     assert str(Poly(1e-15*x**2 -1).nroots()) == ('[-31622776.6016838, 31622776.6016838]')
 
+    # https://github.com/sympy/sympy/issues/23861
+
+    i = Float('3.000000000000000000000000000000000000000000000000001')
+    [r] = nroots(x + I*i, n=300)
+    assert abs(r + I*i) < 1e-300
+
 
 def test_ground_roots():
     f = x**6 - 4*x**4 + 4*x**3 - x**2
@@ -3559,6 +3667,33 @@ def test_reduced():
 
     assert reduced(1, [1], x) == ([1], 0)
     raises(ComputationFailed, lambda: reduced(1, [1]))
+
+    f_poly = Poly(2*x**3 + y**3 + 3*y)
+    G_poly = groebner([Poly(x**2 + y**2 - 1), Poly(x*y - 2)])
+
+    Q_poly = [Poly(x**2 - 1/2*x*y**3 + 1/2*x*y + 1/4*y**6 - 1/2*y**4 + 1/4*y**2, x, y, domain='QQ'),
+              Poly(-1/4*y**5 + 1/2*y**3 + 3/4*y, x, y, domain='QQ')]
+    r_poly = Poly(0, x, y, domain='QQ')
+
+    assert G_poly.reduce(f_poly) == (Q_poly, r_poly)
+
+    Q, r = G_poly.reduce(f)
+    assert all(isinstance(q, Poly) for q in Q)
+    assert isinstance(r, Poly)
+
+    f_wrong_gens = Poly(2*x**3 + y**3 + 3*y, x, y, z)
+    raises(ValueError, lambda: G_poly.reduce(f_wrong_gens))
+
+    zero_poly = Poly(0, x, y)
+    Q, r = G_poly.reduce(zero_poly)
+    assert all(q.is_zero for q in Q)
+    assert r.is_zero
+
+    const_poly = Poly(1, x, y)
+    Q, r = G_poly.reduce(const_poly)
+    assert isinstance(r, Poly)
+    assert r.as_expr() == 1
+    assert all(q.is_zero for q in Q)
 
 
 def test_groebner():
@@ -3933,3 +4068,199 @@ def test_issue_20985():
     w, R = symbols('w R')
     poly = Poly(1.0 + I*w/R, w, 1/R)
     assert poly.degree() == S(1)
+
+
+def test_issue_28156():
+    from sympy.core.symbol import symbols
+
+    ax = symbols("a")
+    field = FF(340282366762482138434845932244680310783)
+    rhs = Poly(
+        ax**3 + field(3) * ax + field(5),
+        ax,
+        domain=field,
+    )
+    roots = rhs.ground_roots()
+    assert roots
+
+
+def test_hurwitz_conditions():
+    raises(ValueError, lambda: Poly(0, x).hurwitz_conditions())
+    raises(NotImplementedError, lambda: Poly(x**2 + (1+I)).hurwitz_conditions())
+    assert Poly(1,x).hurwitz_conditions() == []
+
+    b0, b1, b2, b3, b4 = symbols('b_0 b_1 b_2 b_3 b_4')
+
+    assert Poly(b1 * x + b0, x).hurwitz_conditions() == [b0 * b1]
+
+    p1 = Poly(b4 * s**4 + b3 * s**3 + b2 * s**2 + b1 * s + b0, s)
+    p1_ = Poly(b4 * s**4 + b3 * s**3 + b2 * s**2 + b1 * s + b0, s,
+               domain = EXRAW)
+
+    assert p1.hurwitz_conditions() == [
+        b3*b4, -b1*b4 + b2*b3,
+        -b0*b3**2*b4 - b1**2*b4**2 + b1*b2*b3*b4,
+        b0*b4]
+    assert p1_.hurwitz_conditions() == [
+        b3*b4, -b1*b4 + b2*b3,
+        -b3*(b0*b3**2+b1*(b1*b4 - b2*b3)),
+        b0*b3]
+
+    p2 = Poly(-3*s**2 - 2*s - b0, s)
+    assert p2.hurwitz_conditions() == [6, 3*b0]
+
+    a_ = symbols('a', nonpositive = True)
+
+    p3 = Poly(b0*s**2 + a_*s + 3, s)
+    assert p3.hurwitz_conditions() == [a_ * b0, 3 * b0]
+
+    p4 = Poly(b0*s**2 + a_*s - 3, s)
+    assert p4.hurwitz_conditions() == [a_ * b0, -3 * b0]
+
+    p5 = Poly(b0 + b1*s**2 + b1*s + b3*s**4 + b3*s**3, s)
+    p5_ = Poly(b0 + b1*s**2 + b1*s + b3*s**4 + b3*s**3, s, domain = EXRAW)
+
+    assert p5.hurwitz_conditions() == [-1]
+    assert p5_.hurwitz_conditions() == [1, 0, 1, 1, b3**2]
+
+    p6 = Poly(b0 * s**2 + b1**2 * s + b2, s)
+    p6_ = Poly(b0 * s**2 + b1**2 * s + b2, s, domain = EXRAW)
+
+    assert p6.hurwitz_conditions() == [b0 * b1**2, b2 * b0]
+    assert p6_.hurwitz_conditions() == [b0, b2, b1**2]
+
+    # test for issue https://github.com/sympy/sympy/issues/28010
+    # In that test we want to be sure that negative_real_conditions works fast
+    # with EXRAW
+    I_L = Symbol('I_L', nonnegative=True, real=True)
+    I_T = Symbol('I_T', nonnegative=True, real=True)
+    d_L = Symbol('d_L', nonnegative=True, real=True)
+    d_T = Symbol('d_T', nonnegative=True, real=True)
+    l_L = Symbol('l_L', nonnegative=True, real=True)
+    m_L = Symbol('m_L', nonnegative=True, real=True)
+    m_T = Symbol('m_T', nonnegative=True, real=True)
+    g = Symbol('g', nonnegative=True, real=True)
+    k_00, k_01, k_02, k_03 = symbols('k_00 k_01 k_02 k_03')
+    k_10, k_11, k_12, k_13 = symbols('k_10 k_11 k_12 k_13')
+    s_00, s_01, s_02, s_03 = symbols('s_00 s_01 s_02 s_03')
+    s_10, s_11, s_12, s_13 = symbols('s_10 s_11 s_12 s_13')
+
+    common_denom = (I_L*I_T + I_L*d_T**2*m_T + I_T*d_L**2*m_L +
+                    I_T*l_L**2*m_T + d_L**2*d_T**2*m_L*m_T)
+
+    p7 = PurePoly(
+        s**4 + s**3/common_denom*(
+            I_L*k_13*s_13 + I_T*k_02*s_02- I_T*k_03*s_03 - I_T*k_12*s_12 +
+            I_T*k_13*s_13 + d_L**2*k_13*m_L*s_13 + d_T**2*k_02*m_T*s_02 -
+            d_T**2*k_03*m_T*s_03 - d_T**2*k_12*m_T*s_12 + d_T**2*k_13*m_T*s_13 -
+            d_T*k_03*l_L*m_T*s_03 - d_T*k_12*l_L*m_T*s_12 +
+            2*d_T*k_13*l_L*m_T*s_13 + k_13*l_L**2*m_T*s_13) +
+        s**2/common_denom*(
+            I_L*d_T*g*m_T - I_L*k_11*s_11 + I_T*d_L*g*m_L + I_T*g*l_L*m_T -
+            I_T*k_00*s_00 + I_T*k_01*s_01 + I_T*k_10*s_10 - I_T*k_11*s_11 +
+            d_L**2*d_T*g*m_L*m_T - d_L**2*k_11*m_L*s_11 + d_L*d_T**2*g*m_L*m_T +
+            d_T**2*g*l_L*m_T**2 - d_T**2*k_00*m_T*s_00 + d_T**2*k_01*m_T*s_01 +
+            d_T**2*k_10*m_T*s_10 - d_T**2*k_11*m_T*s_11 + d_T*g*l_L**2*m_T**2 +
+            d_T*k_01*l_L*m_T*s_01 + d_T*k_10*l_L*m_T*s_10 -
+            2*d_T*k_11*l_L*m_T*s_11 + k_02*k_13*s_02*s_13 - k_03*k_12*s_03*s_12
+            - k_11*l_L**2*m_T*s_11) +
+        s/common_denom*(
+            d_L*g*k_13*m_L*s_13 +d_T*g*k_02*m_T*s_02 - d_T*g*k_03*m_T*s_03 -
+            d_T*g*k_12*m_T*s_12 + d_T*g*k_13*m_T*s_13 + g*k_13*l_L*m_T*s_13 -
+            k_00*k_13*s_00*s_13 + k_01*k_12*s_01*s_12 - k_02*k_11*s_02*s_11 +
+            k_03*k_10*s_03*s_10) +
+            1/common_denom*(d_L*d_T*g**2*m_L*m_T - d_L*g*k_11*m_L*s_11 +
+            d_T*g**2*l_L*m_T**2 - d_T*g*k_00*m_T*s_00 + d_T*g*k_01*m_T*s_01 +
+            d_T*g*k_10*m_T*s_10 - d_T*g*k_11*m_T*s_11 - g*k_11*l_L*m_T*s_11 +
+            k_00*k_11*s_00*s_11 - k_01*k_10*s_01*s_10), s, domain = EXRAW)
+
+    p7.hurwitz_conditions()
+
+    p8 = Poly(y*x**2 + y**z*x+2, x, domain = EXRAW)
+    assert p8.hurwitz_conditions() == [y**(z+1), 2*y**(3*z)]
+
+    p9 = Poly((x+12)*(x+2345)*(x+2332)*(x+843), x)
+    assert all(c > 0 for c in p9.hurwitz_conditions())
+
+    p10 = Poly((x+12)*(x-2345)*(x+2332)*(x+843), x)
+    assert any(c <= 0 for c in p10.hurwitz_conditions())
+
+    p11 = Poly((x+12)*(x+2345)*(x+2332)*(x+843)*x, x)
+    assert any(c <= 0 for c in p11.hurwitz_conditions())
+
+    p12 = Poly((x+12.234)*(x+0.012)*(x**2+0.03*x+0.03**2+1.23), x)
+    assert all(c > 0 for c in p12.hurwitz_conditions())
+
+    assert all(c > 0 for c in p12.set_domain(QQ).hurwitz_conditions())
+    assert all(c > 0 for c in p12.set_domain(EXRAW).hurwitz_conditions())
+
+    p13 = Poly((x+8.412)*(x+0.2)*(x-0.1942)*(x**2+0.0175*x+0.0175**2+0.23), x)
+    assert any(c <= 0 for c in p13.hurwitz_conditions())
+
+    assert any(c <= 0 for c in p13.set_domain(QQ).hurwitz_conditions())
+    assert any(c <= 0 for c in p13.set_domain(EXRAW).hurwitz_conditions())
+
+    p14 = Poly(x**2 + 1/y, x)
+    assert 0 in p14.hurwitz_conditions()
+    assert 0 in p14.set_domain(EXRAW).hurwitz_conditions()
+
+
+def test_schur_conditions():
+    raises(ValueError, lambda: Poly(0, x).schur_conditions())
+    raises(NotImplementedError, lambda: Poly(x**2 + (1+I)).schur_conditions())
+    assert Poly(1,x).schur_conditions() == []
+
+    b0, b1, b2, b3, b4 = symbols('b_0 b_1 b_2 b_3 b_4')
+
+    assert Poly(b1 * x + b0, x).schur_conditions() == [-b0**2 + b1**2]
+
+    p1 = Poly(b4 * s**4 + b3 * s**3 + b2 * s**2 + b1 * s + b0, s)
+    p1_ = Poly(b4 * s**4 + b3 * s**3 + b2 * s**2 + b1 * s + b0, s,
+               domain = EXRAW)
+
+    assert p1.schur_conditions() == [
+        (-4*b0**2 + 6*b0*b1 - 4*b0*b2 + 2*b0*b3 - 2*b1**2 + 2*b1*b2 - 2*b1*b4 -
+         2*b2*b3 + 4*b2*b4 + 2*b3**2 - 6*b3*b4 + 4*b4**2),
+        (-20*b0**2 + 10*b0*b1 + 12*b0*b2 - 18*b0*b3 - 2*b1**2 - 2*b1*b2 +
+         18*b1*b4 + 2*b2*b3 - 12*b2*b4 + 2*b3**2 - 10*b3*b4 + 20*b4**2),
+        (64*b0**4 - 64*b0**3*b1 - 64*b0**3*b3 + 64*b0**2*b1*b2 +
+         64*b0**2*b1*b3 + 64*b0**2*b1*b4 - 64*b0**2*b2**2 + 64*b0**2*b2*b3 -
+         64*b0**2*b3**2 + 64*b0**2*b3*b4 - 128*b0**2*b4**2 - 64*b0*b1**2*b3 -
+         64*b0*b1**2*b4 + 64*b0*b1*b2*b3 - 128*b0*b1*b2*b4 + 128*b0*b1*b3*b4 +
+         64*b0*b1*b4**2 + 128*b0*b2**2*b4 - 64*b0*b2*b3**2 - 128*b0*b2*b3*b4 +
+         64*b0*b3**3 - 64*b0*b3**2*b4 + 64*b0*b3*b4**2 + 64*b1**3*b4 -
+         64*b1**2*b2*b4 - 64*b1**2*b4**2 + 64*b1*b2*b3*b4 + 64*b1*b2*b4**2 -
+         64*b1*b3**2*b4 + 64*b1*b3*b4**2 - 64*b1*b4**3 - 64*b2**2*b4**2 +
+         64*b2*b3*b4**2 - 64*b3*b4**3 + 64*b4**4),
+        (b0**2 + 2*b0*b2 + 2*b0*b4 - b1**2 - 2*b1*b3 + b2**2 + 2*b2*b4 -
+         b3**2 + b4**2)]
+    assert p1_.schur_conditions() == [
+        -2*((2*b0 - b1 + b3 - 2*b4)*(b0 - b1 + b2 - b3 + b4)),
+        (-4*((3*b0 - b2 + 3*b4)*(2*b0 - b1 + b3 - 2*b4)) +
+         2*((2*b0 + b1 - b3 - 2*b4)*(b0 - b1 + b2 - b3 + b4))),
+        (-8*(((2*((3*b0 - b2 + 3*b4)*(2*b0 - b1 + b3 - 2*b4)) -
+         (2*b0 + b1 - b3 - 2*b4)*(b0 - b1 + b2 - b3 + b4))*
+         (2*b0 + b1 - b3 - 2*b4) - (2*b0 - b1 + b3 - 2*b4)**2*
+         (b0 + b1 + b2 + b3 + b4))*(2*b0 - b1 + b3 - 2*b4))),
+        -2*((2*b0 - b1 + b3 - 2*b4)*(b0 + b1 + b2 + b3 + b4))]
+
+    p2 = Poly((x+0.4531)*(x-0.98321)*(x+0.2328)*(x+0.4), x)
+    assert all(c > 0 for c in p2.schur_conditions())
+
+    p3 = Poly((x+0.4531)*(x-0.64536)*(x+0.2328)*(x+1.0021), x)
+    assert any(c <= 0 for c in p3.schur_conditions())
+
+    p4 = Poly((x+0.4531)*(x-0.64536)*(x+0.2328)*(x+1), x)
+    assert any(c <= 0 for c in p4.schur_conditions())
+
+    p5 = Poly((x+0.4)*(x+0.012)*(x**2-1.52*x+0.9872), x)
+    assert all(c > 0 for c in p5.schur_conditions())
+
+    assert all(c > 0 for c in p5.set_domain(QQ).schur_conditions())
+    assert all(c > 0 for c in p5.set_domain(EXRAW).schur_conditions())
+
+    p6 = Poly((x+0.3)*(x+0.24)*(x-0.1942)*(x**2-1.6*x+1), x)
+    assert any(c <= 0 for c in p6.schur_conditions())
+
+    assert any(c <= 0 for c in p6.set_domain(QQ).schur_conditions())
+    assert any(c <= 0 for c in p6.set_domain(EXRAW).schur_conditions())

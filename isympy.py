@@ -166,7 +166,6 @@ COMMAND LINE OPTIONS
 
 See also isympy --help.
 """
-
 import os
 import sys
 
@@ -199,7 +198,7 @@ def main() -> None:
         dest='console',
         action='store',
         default=None,
-        choices=['ipython', 'python'],
+        choices=['ipython', 'python', 'bpython'],
         metavar='CONSOLE',
         help='select type of interactive session: ipython | python; defaults '
         'to ipython if IPython is installed, otherwise python')
@@ -300,18 +299,27 @@ def main() -> None:
         options.console = 'python'
 
     session = options.console
-
+    from sympy.interactive.session import ConsoleBackend
+    console_backend = ConsoleBackend.IPYTHON
     if session is not None:
-        ipython = session == 'ipython'
+        if session == "python":
+            console_backend = ConsoleBackend.PYTHON
+        elif session == "ipython":
+            console_backend = ConsoleBackend.IPYTHON
+        elif session == "bpython":
+            console_backend = ConsoleBackend.BPYTHON
+        else:
+            print("Unknown console name")
+            return
     else:
         try:
-            import IPython
-            ipython = True
+            import IPython # noqa: F401
+            console_backend = ConsoleBackend.IPYTHON
         except ImportError:
             if not options.quiet:
                 from sympy.interactive.session import no_ipython
                 print(no_ipython)
-            ipython = False
+            console_backend = ConsoleBackend.PYTHON
 
     args = {
         'pretty_print': True,
@@ -336,7 +344,7 @@ def main() -> None:
     args['auto_int_to_Integer'] = options.auto_int_to_Integer or options.interactive
 
     from sympy.interactive import init_session
-    init_session(ipython, **args)
+    init_session(console_backend=console_backend, **args)
 
 if __name__ == "__main__":
     main()

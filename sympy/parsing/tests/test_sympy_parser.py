@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
 
 
-import sys
 import builtins
 import types
 
 from sympy.assumptions import Q
 from sympy.core import Symbol, Function, Float, Rational, Integer, I, Mul, Pow, Eq, Lt, Le, Gt, Ge, Ne
+from sympy.core.singleton import S
 from sympy.functions import exp, factorial, factorial2, sin, Min, Max
-from sympy.logic import And
+from sympy.logic import And, Xor
 from sympy.series import Limit
-from sympy.testing.pytest import raises, skip
+from sympy.testing.pytest import raises
 
 from sympy.parsing.sympy_parser import (
     parse_expr, standard_transformations, rationalize, TokenError,
@@ -296,6 +296,16 @@ def test_issue_24288():
     raises(ValueError, lambda: parse_expr("1 not in 2", evaluate=False))
     raises(ValueError, lambda: parse_expr("1 is not 2", evaluate=False))
 
+    x = Symbol('x')
+    assert parse_expr("1 < sin(x) < 2", evaluate=False) == \
+        And(Lt(1, sin(x), evaluate=False), Lt(sin(x), 2, evaluate=False), evaluate=False)
+    assert parse_expr("1 < sin(pi) < 2", evaluate=False) == \
+        And(
+            Lt(1, sin(S.Pi, evaluate=False), evaluate=False),
+            Lt(sin(S.Pi, evaluate=False), 2, evaluate=False),
+            evaluate=False
+        )
+
 def test_split_symbols_numeric():
     transformations = (
         standard_transformations +
@@ -315,11 +325,6 @@ def test_unicode_names():
 
 
 def test_python3_features():
-    # Make sure the tokenizer can handle Python 3-only features
-    if sys.version_info < (3, 8):
-        skip("test_python3_features requires Python 3.8 or newer")
-
-
     assert parse_expr("123_456") == 123456
     assert parse_expr("1.2[3_4]") == parse_expr("1.2[34]") == Rational(611, 495)
     assert parse_expr("1.2[012_012]") == parse_expr("1.2[012012]") == Rational(400, 333)
@@ -375,3 +380,7 @@ def test_issue_22822():
     raises(ValueError, lambda: parse_expr('x', {'': 1}))
     data = {'some_parameter': None}
     assert parse_expr('some_parameter is None', data) is True
+
+def test_xor_eval_false():
+    p, q = Symbol("p"), Symbol("q")
+    assert parse_expr("p ^ q", evaluate=False) == Xor(p, q, evaluate=False)

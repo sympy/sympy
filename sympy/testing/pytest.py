@@ -1,5 +1,8 @@
 """py.test hacks to support XFAIL/XPASS"""
 
+from __future__ import annotations
+
+import platform
 import sys
 import re
 import functools
@@ -8,13 +11,30 @@ import contextlib
 import warnings
 import inspect
 import pathlib
-from typing import Any, Callable
+from typing import Any, Callable, TYPE_CHECKING, Protocol, overload
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 # Imported here for backwards compatibility. Note: do not import this from
 # here in library code (importing sympy.pytest in library code will break the
 # pytest integration).
 from sympy.utilities.exceptions import ignore_warnings # noqa:F401
+
+
+if TYPE_CHECKING:
+    from contextlib import AbstractContextManager
+
+    class _RaisesType(Protocol):
+        @overload
+        def __call__(self, exc: type[Exception], /) -> AbstractContextManager: ...
+        @overload
+        def __call__(
+            self, exc: type[Exception], func: Callable[[], object], /
+        ) -> object: ...
+
+        def __call__(
+            self, exc: type[Exception], func: Callable[[], object] | None = None, /
+        ) -> AbstractContextManager | object: ...
+
 
 ON_CI = os.getenv('CI', None) == "true"
 
@@ -24,8 +44,9 @@ try:
 except ImportError:
     USE_PYTEST = False
 
+IS_WASM: bool = sys.platform == 'emscripten' or platform.machine() in ["wasm32", "wasm64"]
 
-raises: Callable[[Any, Any], Any]
+raises: _RaisesType
 XFAIL: Callable[[Any], Any]
 skip: Callable[[Any], Any]
 SKIP: Callable[[Any], Any]
@@ -56,8 +77,28 @@ else:
         def __repr__(self):
             return "<ExceptionInfo {!r}>".format(self.value)
 
+    class RaisesContext:
+        def __init__(self, expectedException):
+            self.expectedException = expectedException
 
-    def raises(expectedException, code=None):
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc_value, traceback):
+            if exc_type is None:
+                raise Failed("DID NOT RAISE")
+            return issubclass(exc_type, self.expectedException)
+
+    @overload
+    def _raises(exc: type[Exception], /) -> RaisesContext:
+        ...
+    @overload
+    def _raises(exc: type[Exception], func: Callable[[], object], /) -> ExceptionInfo:
+        ...
+
+    def _raises(expectedException: type[Exception],
+                code: Callable[[], Any] | None = None, /
+                ) -> RaisesContext | ExceptionInfo:
         """
         Tests that ``code`` raises the exception ``expectedException``.
 
@@ -130,17 +171,7 @@ else:
             raise TypeError(
                 'raises() expects a callable for the 2nd argument.')
 
-    class RaisesContext:
-        def __init__(self, expectedException):
-            self.expectedException = expectedException
-
-        def __enter__(self):
-            return None
-
-        def __exit__(self, exc_type, exc_value, traceback):
-            if exc_type is None:
-                raise Failed("DID NOT RAISE")
-            return issubclass(exc_type, self.expectedException)
+    raises = _raises
 
     class XFail(Exception):
         pass
@@ -158,7 +189,7 @@ else:
         def wrapper():
             try:
                 func()
-            except Exception as e:
+            except Exception as e: # noqa: BLE001
                 message = str(e)
                 if message != "Timeout":
                     raise XFail(func.__name__)
@@ -259,7 +290,7 @@ def warns(warningcls, *, match='', test_stacklevel=True):
     for w in warnrec:
         # Should always be true due to the filters above
         assert issubclass(w.category, warningcls)
-        if not re.compile(match, re.I).match(str(w.message)):
+        if not re.compile(match, re.IGNORECASE).match(str(w.message)):
             raise Failed(f"Failed: WRONG MESSAGE. A warning with of the correct category ({warningcls.__name__}) was issued, but it did not match the given match regex ({match!r})")
 
     if test_stacklevel:
@@ -295,8 +326,7 @@ calls the deprecated code (the current stacklevel is showing code from
         targets = []
         for w in warnrec:
             targets.append(w.message.active_deprecations_target)
-        with open(active_deprecations_file, encoding="utf-8") as f:
-            text = f.read()
+        text = pathlib.Path(active_deprecations_file).read_text(encoding="utf-8")
         for target in targets:
             if f'({target})=' not in text:
                 raise Failed(f"The active deprecations target {target!r} does not appear to be a valid target in the active-deprecations.md file ({active_deprecations_file}).")
@@ -379,22 +409,12 @@ def warns_deprecated_sympy():
         yield
 
 
-def _running_under_pyodide():
-    """Test if running under pyodide."""
-    try:
-        import pyodide_js  # type: ignore  # noqa
-    except ImportError:
-        return False
-    else:
-        return True
-
-
 def skip_under_pyodide(message):
-    """Decorator to skip a test if running under pyodide."""
+    """Decorator to skip a test if running under Pyodide/WASM."""
     def decorator(test_func):
         @functools.wraps(test_func)
         def test_wrapper():
-            if _running_under_pyodide():
+            if IS_WASM:
                 skip(message)
             return test_func()
         return test_wrapper

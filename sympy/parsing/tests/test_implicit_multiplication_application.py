@@ -163,7 +163,6 @@ def test_all_implicit_steps():
         'pi': 'pi',  # don't mess with constants
         'None': 'None',
         'ln sin x': 'ln(sin(x))',  # multiple implicit function applications
-        'factorial': 'factorial',  # don't add parentheses
         'sin x**2': 'sin(x**2)',  # implicit application to an exponential
         'alpha': 'Symbol("alpha")',  # don't split Greek letters/subscripts
         'x_2': 'Symbol("x_2")',

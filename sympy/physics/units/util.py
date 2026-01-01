@@ -225,7 +225,7 @@ def check_dimensions(expr, unit_system="SI"):
         dict3 = {**dict1, **dict2}
         for key, value in dict3.items():
             if key in dict1 and key in dict2:
-                   dict3[key] = value + dict1[key]
+                dict3[key] = value + dict1[key]
         return {key:val for key, val in dict3.items() if val != 0}
 
     adds = expr.atoms(Add)
@@ -251,8 +251,9 @@ def check_dimensions(expr, unit_system="SI"):
             if not skip:
                 deset.add(tuple(sorted(dims, key=default_sort_key)))
                 if len(deset) > 1:
+                    sorted_deps = tuple(ordered(deset)) # make message deterministic
                     raise ValueError(
-                        "addends have incompatible dimensions: {}".format(deset))
+                        "addends have incompatible dimensions: {}".format(sorted_deps))
 
     # clear multiplicative constants on Dimensions which may be
     # left after substitution

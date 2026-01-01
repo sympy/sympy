@@ -2,37 +2,84 @@
 
 # Installation
 
-The SymPy CAS can be installed on virtually any computer with Python.
-SymPy does require [mpmath] Python library to be installed first.  The
-recommended method of installation is through Anaconda, which includes
-mpmath, as well as several other useful libraries.  Alternatively, some Linux
-distributions have SymPy packages available.
+SymPy can be installed on virtually any computer that supports Python.
 
-SymPy officially supports Python 3.8, 3.9, 3.10, and PyPy.
+## From PyPi
 
-## Anaconda
-
-[Anaconda](https://www.anaconda.com/products/distribution) is a free Python distribution from
-Continuum Analytics that includes SymPy, Matplotlib, IPython, NumPy, and many
-more useful packages for scientific computing. This is recommended because
-many nice features of SymPy are only enabled when certain libraries are
-installed.  For example, without Matplotlib, only simple text-based plotting
-is enabled.  With the IPython notebook or qtconsole, you can get nicer
-$\mathrm{\LaTeX}$ printing by running `init_printing()`.
-
-If you already have Anaconda and want to update SymPy to the latest version,
-use:
+The official recommend method of installing Python packages from PyPi is via
+pip, with the most basic command being:
 
 ```
-conda update sympy
+pip install sympy
 ```
+
+See the [pip documentation](https://pip.pypa.io/en/stable/index.html) for
+variations of this command suitable for your installation needs. Other tools
+that pull from PyPi like hatch, poetry, or uv can also be used.
+
+## From anaconda.org
+
+SymPy is packaged for Conda based installers and [available for download on
+anaconda.org](https://anaconda.org/search?q=sympy). Install either
+[Anaconda](https://www.anaconda.com/products/distribution) or
+[Miniconda](https://docs.anaconda.com/miniconda/) and the SymPy distributed
+with Anaconda can be installed with:
+
+```
+conda install sympy
+```
+
+SymPy is also packaged by [Conda Forge](https://conda-forge.org) and if
+[Miniforge](https://conda-forge.org/download/) is used, then
+
+```
+conda install sympy
+```
+
+will install the Conda Forge version of SymPy (which is typically updated
+faster than the Anaconda distribution version). You can also install the Conda
+Forge version from Anaconda, Miniconda, or Miniforge with:
+
+```
+conda install --channel conda-forge sympy
+```
+
+Tools such as mamba and pixi can be used to install the SymPy conda package
+also.
+
+## From Linux Package Managers
+
+Many Linux distributions package SymPy, for example on Debian based systems
+SymPy can be installed with apt:
+
+```
+apt install python-sympy
+```
+
+or on Fedora based systems, dnf can be used:
+
+```
+dnf install sympy
+```
+
+## From nightly wheels
+
+We publish a [snapshot of the latest development version of SymPy](
+https://anaconda.org/scientific-python-nightly-wheels/sympy) every night as a
+pip compatible wheel. You can install the latest version with pip:
+
+```
+pip install -i https://pypi.anaconda.org/scientific-python-nightly-wheels/simple sympy
+```
+
+or with other tools that install wheels.
 
 (installation-git)=
-## Git
+## From Git
 
 If you wish to contribute to SymPy or like to get the latest updates as they
-come, install SymPy from git. To download the repository, execute the
-following from the command line:
+come, install SymPy from git. To download the repository, execute the following
+from the command line:
 
 ```
 git clone https://github.com/sympy/sympy.git
@@ -44,26 +91,15 @@ To update to the latest version, go into your repository and execute:
 git pull origin master
 ```
 
-If you want to install SymPy, but still want to use the git version, you can run
-from your repository:
+If you want to install SymPy, but still want to use the git version, you can
+run from your repository:
 
 ```
-python -m pip install -e .
+python -m pip install --editable .
 ```
 
 This will cause the installed version to always point to the version in the git
 directory.
-
-## Other Methods
-
-You may also install SymPy using pip or from source. In addition, most Linux
-and Python distributions have some SymPy version available to install using
-their package manager. Here is a list of several such Python distributions:
-
-- [Anaconda](https://www.anaconda.com/products/distribution)
-- [Enthought Deployment Manager](https://assets.enthought.com/downloads/edm/)
-- [ActivePython](https://www.activestate.com/products/python/)
-- [Spack](https://spack.io/)
 
 ## Run SymPy
 
@@ -88,11 +124,17 @@ log(x)
 For a starter guide on using SymPy effectively, refer to the {ref}`intro-tutorial`.
 
 (mpmath-install)=
-## mpmath
+## mpmath installation
 
 Versions of SymPy prior to 1.0 included [mpmath], but it now depends on it as
-an external dependency.  If you installed SymPy with Anaconda, it will already
-include mpmath. Use:
+an external dependency. If you installed SymPy with pip or conda, it will
+already include mpmath. You can manually install mpmath with:
+
+```
+pip install mpmath
+```
+
+or
 
 ```
 conda install mpmath
@@ -100,11 +142,9 @@ conda install mpmath
 
 to ensure that it is installed.
 
-If you do not wish to use Anaconda, you can use `pip install mpmath`.
-
-If you use mpmath via `sympy.mpmath` in your code, you will need to change
-this to use just `mpmath`. If you depend on code that does this that you
-cannot easily change, you can work around it by doing:
+If you use mpmath via `sympy.mpmath` in your code, you will need to change this
+to use just `mpmath`. If you depend on code that does this that you cannot
+easily change, you can work around it by doing:
 
 ```
 import sys
@@ -112,20 +152,18 @@ import mpmath
 sys.modules['sympy.mpmath'] = mpmath
 ```
 
-before the code that imports `sympy.mpmath`. It is recommended to change
-code that uses `sympy.mpmath` to use `mpmath` directly wherever possible.
+before the code that imports `sympy.mpmath`. It is recommended to change code
+that uses `sympy.mpmath` to use `mpmath` directly wherever possible.
 
 ## Questions
 
 If you have a question about installation or SymPy in general, feel free to
-visit our chat on [Gitter]. In addition, our [mailing list] is an excellent
-source of community support.
+mail our [mailing list].
 
 If you think there's a bug or you would like to request a feature, please open
 an [issue ticket].
 
 [downloads site]: https://github.com/sympy/sympy/releases
-[gitter]: https://gitter.im/sympy/sympy
 [issue ticket]: https://github.com/sympy/sympy/issues
 [mailing list]: https://groups.google.com/forum/#!forum/sympy
 [mpmath]: https://mpmath.org/

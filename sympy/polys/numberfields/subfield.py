@@ -37,6 +37,7 @@ from sympy.core.numbers import AlgebraicNumber
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy
 from sympy.core.sympify import sympify, _sympify
+from sympy.external.mpmath import local_workprec
 from sympy.ntheory import sieve
 from sympy.polys.densetools import dup_eval
 from sympy.polys.domains import QQ
@@ -44,8 +45,6 @@ from sympy.polys.numberfields.minpoly import _choose_factor, minimal_polynomial
 from sympy.polys.polyerrors import IsomorphismFailed
 from sympy.polys.polytools import Poly, PurePoly, factor_list
 from sympy.utilities import public
-
-from mpmath import MPContext
 
 
 def is_isomorphism_possible(a, b):
@@ -88,51 +87,52 @@ def field_isomorphism_pslq(a, b):
     g = b.minpoly.replace(f.gen)
 
     n, m, prev = 100, b.minpoly.degree(), None
-    ctx = MPContext()
 
-    for i in range(1, 5):
-        A = a.root.evalf(n)
-        B = b.root.evalf(n)
+    with local_workprec(53) as ctx:
 
-        basis = [1, B] + [ B**i for i in range(2, m) ] + [-A]
+        for i in range(1, 5):
+            A = a.root.evalf(n)
+            B = b.root.evalf(n)
 
-        ctx.dps = n
-        coeffs = ctx.pslq(basis, maxcoeff=10**10, maxsteps=1000)
+            basis = [1, B] + [ B**i for i in range(2, m) ] + [-A]
 
-        if coeffs is None:
-            # PSLQ can't find an integer linear combination. Give up.
-            break
+            ctx.dps = n
+            coeffs = ctx.pslq(basis, maxcoeff=10**10, maxsteps=1000)
 
-        if coeffs != prev:
-            prev = coeffs
-        else:
-            # Increasing precision didn't produce anything new. Give up.
-            break
+            if coeffs is None:
+                # PSLQ can't find an integer linear combination. Give up.
+                break
 
-        # We have
-        #   c0 + c1*B + c2*B^2 + ... + cm-1*B^(m-1) - cm*A ~ 0.
-        # So bring cm*A to the other side, and divide through by cm,
-        # for an approximate representation of A as a polynomial in B.
-        # (We know cm != 0 since `b.minpoly` is irreducible.)
-        coeffs = [S(c)/coeffs[-1] for c in coeffs[:-1]]
+            if coeffs != prev:
+                prev = coeffs
+            else:
+                # Increasing precision didn't produce anything new. Give up.
+                break
 
-        # Throw away leading zeros.
-        while not coeffs[-1]:
-            coeffs.pop()
+            # We have
+            #   c0 + c1*B + c2*B^2 + ... + cm-1*B^(m-1) - cm*A ~ 0.
+            # So bring cm*A to the other side, and divide through by cm,
+            # for an approximate representation of A as a polynomial in B.
+            # (We know cm != 0 since `b.minpoly` is irreducible.)
+            coeffs = [S(c)/coeffs[-1] for c in coeffs[:-1]]
 
-        coeffs = list(reversed(coeffs))
-        h = Poly(coeffs, f.gen, domain='QQ')
+            # Throw away leading zeros.
+            while not coeffs[-1]:
+                coeffs.pop()
 
-        # We only have A ~ h(B). We must check whether the relation is exact.
-        if f.compose(h).rem(g).is_zero:
-            # Now we know that h(b) is in fact equal to _some conjugate of_ a.
-            # But from the very precise approximation A ~ h(B) we can assume
-            # the conjugate is a itself.
-            return coeffs
-        else:
-            n *= 2
+            coeffs = list(reversed(coeffs))
+            h = Poly(coeffs, f.gen, domain='QQ')
 
-    return None
+            # We only have A ~ h(B). We must check whether the relation is exact.
+            if f.compose(h).rem(g).is_zero:
+                # Now we know that h(b) is in fact equal to _some conjugate of_ a.
+                # But from the very precise approximation A ~ h(B) we can assume
+                # the conjugate is a itself.
+                return coeffs
+            else:
+                n *= 2
+
+        return None
 
 
 def field_isomorphism_factor(a, b):
@@ -347,6 +347,12 @@ def primitive_element(extension, x=None, *, ex=False, polys=False):
     else:
         x, cls = Dummy('x'), PurePoly
 
+    def _canonicalize(f):
+        _, f = f.primitive()
+        if f.LC() < 0:
+            f = -f
+        return f
+
     if not ex:
         gen, coeffs = extension[0], [1]
         g = minimal_polynomial(gen, x, polys=True)
@@ -360,6 +366,7 @@ def primitive_element(extension, x=None, *, ex=False, polys=False):
             gen += s*ext
             coeffs.append(s)
 
+        g = _canonicalize(g)
         if not polys:
             return g.as_expr(), coeffs
         else:
@@ -393,6 +400,8 @@ def primitive_element(extension, x=None, *, ex=False, polys=False):
         f = cls(x, domain=QQ)
     else:
         H = [_.to_list() for _ in reps]
+
+    f = _canonicalize(f)
     if not polys:
         return f.as_expr(), coeffs, H
     else:

@@ -9,4 +9,4 @@ sympy_deprecation_warning("The sympy.utilities.pytest submodule is deprecated. U
     deprecated_since_version="1.6",
     active_deprecations_target="deprecated-sympy-utilities-submodules")
 
-from sympy.testing.pytest import *  # noqa:F401
+from sympy.testing.pytest import *  # noqa:F401,F403

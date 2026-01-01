@@ -64,13 +64,13 @@ you can create a new test function.
 The basic way to run the tests is to use
 
 ```
-./bin/test
+python bin/test
 ```
 
 to run the tests, and
 
 ```
-./bin/doctest
+python bin/doctest
 ```
 
 to run the doctests. Note that the full test suite can take some time to run,
@@ -79,13 +79,13 @@ the module you modified. You can do this by passing the name of the submodules
 or tests files to the test command. For example,
 
 ```
-./bin/test solvers
+python bin/test solvers
 ```
 
 will run only the tests for the solvers.
 
 If you want, you can also use `pytest` to run the tests instead of the
-`./bin/test` tool, for example
+`bin/test` tool, for example
 
 ```
 pytest -m 'not slow' sympy/solvers
@@ -113,7 +113,7 @@ The bit in between `_________________` is the name of the test. You can
 reproduce the test locally by copying and pasting this:
 
 ```
-./bin/test sympy/printing/pretty/tests/test_pretty.py::test_upretty_sub_super
+python bin/test sympy/printing/pretty/tests/test_pretty.py -k test_upretty_sub_super
 ```
 
 or
@@ -145,7 +145,7 @@ locally. Some common causes of this are:
 
 - A test may fail sporadically. Try rerunning the test multiple times. The
   beginning of the test log on CI prints the random seed, which can be passed
-  to `./bin/test --seed`, and the `PYTHONHASHSEED` environment variable, which
+  to `bin/test --seed`, and the `PYTHONHASHSEED` environment variable, which
   may be helpful for reproducing such failures.
 
 It is also sometimes possible that a failure on CI may be unrelated to your
@@ -516,7 +516,7 @@ that it always passes. Random tests can be reproduced by using the random seed
 printed at the top of the tests. For example
 
 ```
-$./bin/test
+$python bin/test
 ========================================================================== test process starts ==========================================================================
 executable:         /Users/aaronmeurer/anaconda3/bin/python  (3.9.13-final-0) [CPython]
 architecture:       64-bit
@@ -530,7 +530,7 @@ hash randomization: on (PYTHONHASHSEED=3923913114)
 Here the random seed is `7357232`. It can be reproduced with
 
 ```
-./bin/test --seed 7357232
+python bin/test --seed 7357232
 ```
 
 In general you may need to use the same Python version and architecture as
@@ -629,7 +629,7 @@ instead of `@slow`. The slow tests will be run automatically in a separate CI
 job, but are skipped by default. You can manually run the slow tests with
 
 ```
-./bin/test --slow
+python bin/test --slow
 ```
 
 (writing-tests-external-dependencies)=
@@ -644,7 +644,7 @@ This will import the module if it is installed and return `None` otherwise.
 
 `sympy.testing.pytest.skip` should be used to skip tests when the module in
 question is not installed (see [](writing-tests-skip) above). This can be done
-at the module level if the entire test file should be skippped, or in each
+at the module level if the entire test file should be skipped, or in each
 individual function.
 
 You should also make sure the test is run in the "Optional Dependencies" CI
@@ -673,7 +673,7 @@ format examples in docstrings.
 To run the doctests, use the
 
 ```
-./bin/doctest
+python bin/doctest
 ```
 
 command. This command can also take arguments to test a specific file or
@@ -966,7 +966,7 @@ The code quality checks are all straightforward to fix. You can run the checks
 locally using
 
 ```
-./bin/test quality
+python bin/test quality
 ```
 
 and
@@ -980,13 +980,13 @@ latest version of flake8 and its dependencies `pycodestyle` and `pyflakes`
 installed. Sometimes newer versions of these packages will add new checks and
 if you have an older version installed you won't see the checks for them.
 
-The `./bin/test quality` check tests for very basic code quality things. The
+The `python bin/test quality` check tests for very basic code quality things. The
 most common of these that will cause the test to fail is trailing whitespace.
 Trailing whitespace is when a line of code has spaces at the end of it. These
 spaces do nothing, and they only cause the code diff to be polluted. The best
 way to handle trailing whitespace is to configure your text editor to
 automatically strip trailing whitespace when you save. You can also use the
-`./bin/strip_whitepace` command in the SymPy repo.
+`python bin/strip_whitepace` command in the SymPy repo.
 
 The `flake8` command will check the code for basic code errors like undefined
 variables. These are restricted by the configuration in `setup.cfg` to only
@@ -1119,14 +1119,14 @@ To generate a test coverage report, first install
 install coverage`). Then run
 
 ```
-./bin/coverage_report.py
+python bin/coverage_report.py
 ```
 
 This will run the test suite and analyze which lines of the codebase are
 covered by at least one test. Note that this will take longer than running the
-tests normally with `./bin/test` because the coverage tooling makes Python run
+tests normally with `python bin/test` because the coverage tooling makes Python run
 a little bit slower. You can also run a subset of the tests, e.g.,
-`./bin/coverage_report.py sympy/solvers`.
+`python bin/coverage_report.py sympy/solvers`.
 
 Once the tests are done, the coverage report will be in `covhtml`, which you
 can view by opening `covhtml/index.html`. Each file will show which lines were

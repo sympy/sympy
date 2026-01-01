@@ -141,24 +141,67 @@ def test_latex_printing():
     assert latex(v[2]) == '- \\mathbf{\\hat{i}_{N}}'
     assert latex(v[5]) == ('\\left(a\\right)\\mathbf{\\hat{i}_{N}} + ' +
                            '\\left(- b\\right)\\mathbf{\\hat{j}_{N}}')
-    assert latex(v[6]) == ('\\left(\\mathbf{{x}_{N}} + a^{2}\\right)\\mathbf{\\hat{i}_' +
+    assert latex(v[6]) == ('\\left(\\boldsymbol{x}_{\\textbf{N}} + a^{2}\\right)\\mathbf{\\hat{i}_' +
                           '{N}} + \\mathbf{\\hat{k}_{N}}')
-    assert latex(v[8]) == ('\\mathbf{\\hat{j}_{N}} + \\left(\\mathbf{{x}_' +
-                           '{C}}^{2} - \\int f{\\left(b \\right)}\\,' +
+    assert latex(v[8]) == ('\\mathbf{\\hat{j}_{N}} + \\left(\\boldsymbol{x}_' +
+                           '{\\textbf{C}}^{2} - \\int f{\\left(b \\right)}\\,' +
                            ' db\\right)\\mathbf{\\hat{k}_{N}}')
-    assert latex(s) == '3 \\mathbf{{y}_{C}} \\mathbf{{x}_{N}}^{2}'
+    assert latex(s) == '3 \\boldsymbol{y}_{\\textbf{C}} \\boldsymbol{x}_{\\textbf{N}}^{2}'
     assert latex(d[0]) == '(\\mathbf{\\hat{0}}|\\mathbf{\\hat{0}})'
-    assert latex(d[4]) == ('\\left(a\\right)\\left(\\mathbf{\\hat{i}_{N}}{\\middle|}' +
+    assert latex(d[4]) == ('\\left(a\\right)\\left(\\mathbf{\\hat{i}_{N}}\\middle|' +
                            '\\mathbf{\\hat{k}_{N}}\\right)')
-    assert latex(d[9]) == ('\\left(\\mathbf{\\hat{k}_{C}}{\\middle|}' +
+    assert latex(d[9]) == ('\\left(\\mathbf{\\hat{k}_{C}}\\middle|' +
                            '\\mathbf{\\hat{k}_{N}}\\right) + \\left(' +
-                           '\\mathbf{\\hat{i}_{N}}{\\middle|}\\mathbf{' +
+                           '\\mathbf{\\hat{i}_{N}}\\middle|\\mathbf{' +
                            '\\hat{k}_{N}}\\right)')
     assert latex(d[11]) == ('\\left(a^{2} + b\\right)\\left(\\mathbf{\\hat{i}_{N}}' +
-                            '{\\middle|}\\mathbf{\\hat{k}_{N}}\\right) + ' +
+                            '\\middle|\\mathbf{\\hat{k}_{N}}\\right) + ' +
                             '\\left(\\int f{\\left(b \\right)}\\, db\\right)\\left(' +
-                            '\\mathbf{\\hat{k}_{N}}{\\middle|}\\mathbf{' +
+                            '\\mathbf{\\hat{k}_{N}}\\middle|\\mathbf{' +
                             '\\hat{k}_{N}}\\right)')
+
+
+def test_latex_base_scalars():
+    Cart = CoordSys3D("Cart")
+    S = Cart.create_new("S", transformation="spherical")
+    C = Cart.create_new("C", transformation="cylindrical")
+    D = Cart.create_new(
+        "D", transformation="cartesian", variable_names=["α", "β", "γ"])
+
+    assert latex(Cart.x) == r"\boldsymbol{x}_{\textbf{Cart}}"
+    assert latex(Cart.y) == r"\boldsymbol{y}_{\textbf{Cart}}"
+    assert latex(Cart.z) == r"\boldsymbol{z}_{\textbf{Cart}}"
+    assert latex(S.phi) == r"\boldsymbol{\phi}_{\textbf{S}}"
+    assert latex(S.r) == r"\boldsymbol{r}_{\textbf{S}}"
+    assert latex(S.theta) == r"\boldsymbol{\theta}_{\textbf{S}}"
+    assert latex(C.r) == r"\boldsymbol{r}_{\textbf{C}}"
+    assert latex(C.theta) == r"\boldsymbol{\theta}_{\textbf{C}}"
+    assert latex(C.z) == r"\boldsymbol{z}_{\textbf{C}}"
+    assert latex(D.α) == r"\boldsymbol{α}_{\textbf{D}}"
+    assert latex(D.β) == r"\boldsymbol{β}_{\textbf{D}}"
+    assert latex(D.γ) == r"\boldsymbol{γ}_{\textbf{D}}"
+
+
+def test_pretty_base_scalars():
+    Cart = CoordSys3D("Cart")
+    S = Cart.create_new("S", transformation="spherical")
+    C = Cart.create_new("C", transformation="cylindrical")
+    D = Cart.create_new(
+        "D", transformation="cartesian", variable_names=["α", "β", "γ"])
+
+    assert pretty(Cart.x) == "x_Cart"
+    assert pretty(Cart.y) == "y_Cart"
+    assert pretty(Cart.z) == "z_Cart"
+    assert pretty(S.r) == "r_S"
+    assert pretty(S.theta) == "θ_S"
+    assert pretty(S.phi) == "φ_S"
+    assert pretty(C.r) == "r_C"
+    assert pretty(C.theta) == "θ_C"
+    assert pretty(C.z) == "z_C"
+    assert pretty(D.α) == "α_D"
+    assert pretty(D.β) == "β_D"
+    assert pretty(D.γ) == "γ_D"
+
 
 def test_issue_23058():
     from sympy import symbols, sin, cos, pi, UnevaluatedExpr
@@ -209,6 +252,7 @@ def test_issue_23058():
 ⎝2⋅10  ⋅cos⎝t⋅10 ⎠⋅sin⎝y_C⋅10  ⎠⎠ i_C \
 """
     assert upretty(vecB) == vecB_str
+
 
 def test_custom_names():
     A = CoordSys3D('A', vector_names=['x', 'y', 'z'],

@@ -11,12 +11,13 @@ import inspect
 import keyword
 import textwrap
 import linecache
+import weakref
 
 # Required despite static analysis claiming it is not used
 from sympy.external import import_module # noqa:F401
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.decorator import doctest_depends_on
-from sympy.utilities.iterables import (is_sequence, iterable,
+from sympy.utilities.iterables import (iterable,
     NotIterable, flatten)
 from sympy.utilities.misc import filldedent
 
@@ -27,12 +28,16 @@ __doctest_requires__ = {('lambdify',): ['numpy', 'tensorflow']}
 # Default namespaces, letting us define translations that can't be defined
 # by simple variable maps, like I => 1j
 MATH_DEFAULT: dict[str, Any] = {}
+CMATH_DEFAULT: dict[str,Any] = {}
 MPMATH_DEFAULT: dict[str, Any] = {}
+UMATH_DEFAULT: dict[str, Any] = {}
 NUMPY_DEFAULT: dict[str, Any] = {"I": 1j}
+UNUMPY_DEFAULT: dict[str, Any] = {"I": 1j}
 SCIPY_DEFAULT: dict[str, Any] = {"I": 1j}
 CUPY_DEFAULT: dict[str, Any] = {"I": 1j}
 JAX_DEFAULT: dict[str, Any] = {"I": 1j}
 TENSORFLOW_DEFAULT: dict[str, Any] = {}
+TORCH_DEFAULT: dict[str, Any] = {"I": 1j}
 SYMPY_DEFAULT: dict[str, Any] = {}
 NUMEXPR_DEFAULT: dict[str, Any] = {}
 
@@ -41,12 +46,16 @@ NUMEXPR_DEFAULT: dict[str, Any] = {}
 # throughout this file, whereas the defaults should remain unmodified.
 
 MATH = MATH_DEFAULT.copy()
+CMATH = CMATH_DEFAULT.copy()
 MPMATH = MPMATH_DEFAULT.copy()
+UMATH = UMATH_DEFAULT.copy()
 NUMPY = NUMPY_DEFAULT.copy()
+UNUMPY = UNUMPY_DEFAULT.copy()
 SCIPY = SCIPY_DEFAULT.copy()
 CUPY = CUPY_DEFAULT.copy()
 JAX = JAX_DEFAULT.copy()
 TENSORFLOW = TENSORFLOW_DEFAULT.copy()
+TORCH = TORCH_DEFAULT.copy()
 SYMPY = SYMPY_DEFAULT.copy()
 NUMEXPR = NUMEXPR_DEFAULT.copy()
 
@@ -57,6 +66,8 @@ MATH_TRANSLATIONS = {
     "E": "e",
     "ln": "log",
 }
+
+CMATH_TRANSLATIONS: dict[str, str] = {}
 
 # NOTE: This dictionary is reused in Function._eval_evalf to allow subclasses
 # of Function to automatically evalf.
@@ -91,9 +102,18 @@ MPMATH_TRANSLATIONS = {
     "betainc_regularized": "betainc",
 }
 
+UMATH_TRANSLATIONS: dict[str, str] = {
+    "ceiling": "ceil",
+    "E": "e",
+    "ln": "log",
+}
+
 NUMPY_TRANSLATIONS: dict[str, str] = {
     "Heaviside": "heaviside",
 }
+
+UNUMPY_TRANSLATIONS: dict[str, str] = {}
+
 SCIPY_TRANSLATIONS: dict[str, str] = {
     "jn" : "spherical_jn",
     "yn" : "spherical_yn"
@@ -102,18 +122,23 @@ CUPY_TRANSLATIONS: dict[str, str] = {}
 JAX_TRANSLATIONS: dict[str, str] = {}
 
 TENSORFLOW_TRANSLATIONS: dict[str, str] = {}
+TORCH_TRANSLATIONS: dict[str, str] = {}
 
 NUMEXPR_TRANSLATIONS: dict[str, str] = {}
 
 # Available modules:
 MODULES = {
     "math": (MATH, MATH_DEFAULT, MATH_TRANSLATIONS, ("from math import *",)),
+    "cmath": (CMATH, CMATH_DEFAULT, CMATH_TRANSLATIONS, ("import cmath; from cmath import *",)),
     "mpmath": (MPMATH, MPMATH_DEFAULT, MPMATH_TRANSLATIONS, ("from mpmath import *",)),
+    "umath": (UMATH, UMATH_DEFAULT, UMATH_TRANSLATIONS, ("from math import pi, e, tau, inf, nan; from uncertainties.umath import *",)),
     "numpy": (NUMPY, NUMPY_DEFAULT, NUMPY_TRANSLATIONS, ("import numpy; from numpy import *; from numpy.linalg import *",)),
+    "unumpy": (UNUMPY, UNUMPY_DEFAULT, UNUMPY_TRANSLATIONS, ("import uncertainties.unumpy; from uncertainties.unumpy import *; from uncertainties.unumpy.ulinalg import *",)),
     "scipy": (SCIPY, SCIPY_DEFAULT, SCIPY_TRANSLATIONS, ("import scipy; import numpy; from scipy.special import *",)),
     "cupy": (CUPY, CUPY_DEFAULT, CUPY_TRANSLATIONS, ("import cupy",)),
     "jax": (JAX, JAX_DEFAULT, JAX_TRANSLATIONS, ("import jax",)),
     "tensorflow": (TENSORFLOW, TENSORFLOW_DEFAULT, TENSORFLOW_TRANSLATIONS, ("import tensorflow",)),
+    "torch": (TORCH, TORCH_DEFAULT, TORCH_TRANSLATIONS, ("import torch",)),
     "sympy": (SYMPY, SYMPY_DEFAULT, {}, (
         "from sympy.functions import *",
         "from sympy.matrices import *",
@@ -127,8 +152,8 @@ def _import(module, reload=False):
     """
     Creates a global translation dictionary for module.
 
-    The argument module has to be one of the following strings: "math",
-    "mpmath", "numpy", "sympy", "tensorflow", "jax".
+    The argument module has to be one of the following strings: "math","cmath"
+    "mpmath", "umath", "numpy", "unumpy", "sympy", "tensorflow", "jax".
     These dictionaries map names of Python functions to their equivalent in
     other modules.
     """
@@ -184,7 +209,7 @@ def _import(module, reload=False):
 _lambdify_generated_counter = 1
 
 
-@doctest_depends_on(modules=('numpy', 'scipy', 'tensorflow',), python_version=(3,))
+@doctest_depends_on(modules=('numpy', 'scipy', 'tensorflow', 'uncertainties'), python_version=(3,))
 def lambdify(args, expr, modules=None, printer=None, use_imps=True,
              dummify=False, cse=False, docstring_limit=1000):
     """Convert a SymPy expression into a function that allows for fast
@@ -311,17 +336,18 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
 
         - ``["scipy", "numpy"]`` if SciPy is installed
         - ``["numpy"]`` if only NumPy is installed
-        - ``["math", "mpmath", "sympy"]`` if neither is installed.
+        - ``["math","cmath", "mpmath", "sympy"]`` if neither is installed.
 
         That is, SymPy functions are replaced as far as possible by
         either ``scipy`` or ``numpy`` functions if available, and Python's
-        standard library ``math``, or ``mpmath`` functions otherwise.
+        standard library ``math`` and ``cmath``, or ``mpmath`` functions otherwise.
 
         *modules* can be one of the following types:
 
-        - The strings ``"math"``, ``"mpmath"``, ``"numpy"``, ``"numexpr"``,
-          ``"scipy"``, ``"sympy"``, or ``"tensorflow"`` or ``"jax"``. This uses the
-          corresponding printer and namespace mapping for that module.
+        - The strings ``"math"``, ``"cmath"``, ``"mpmath"``, ``"umath"``,
+          ``"numpy"``, ``"unumpy"``, ``"numexpr"``, ``"scipy"``, ``"sympy"``,
+          ``"tensorflow"``, ``"torch"`` or ``"jax"``. This uses the corresponding printer
+          and namespace mapping for that module.
         - A module (e.g., ``math``). This uses the global namespace of the
           module. If the module is one of the above known modules, it will
           also use the corresponding printer and namespace mapping
@@ -479,6 +505,37 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     >>> result.numpy()
     [[1. 2.]
      [3. 4.]]
+
+    Usage with the Uncertainties package:
+
+    >>> from uncertainties import ufloat
+    >>> from sympy.abc import x
+
+    Use with scalar values by passing ``modules='umath'``.
+
+    >>> uncert_square = lambdify(x, x**2, 'umath')
+    >>> uncert_square(ufloat(2, 0.1))
+    4.00+/-0.40
+    >>> uncert_square(2) # Also works with non ``ufloat`` inputs
+    4
+
+    Use with vectors and matrices by passing ``modules='unumpy'``.
+
+    >>> uncert_mat_square = lambdify([x, y], Matrix([x, y]).dot(Matrix([2, 3])), 'unumpy')
+    >>> uncert_mat_square(ufloat(1, 0.1), ufloat(2, 0.2))
+     8.00+/-0.6
+
+    Due to the internal workings of ``uncertainties.unumpy``, when a
+    matrix is returned, some elements may unexpectedly be wrapped in a
+    1x1 array. This can be fixed by applying an identity
+    operation to the result, such as multiplying by 1 or adding 0.
+
+    >>> from sympy import sqrt
+    >>> uncert_sqrt = lambdify(x, Matrix([sqrt(x)]), 'unumpy')
+    >>> uncert_sqrt(ufloat(4, 0.4)) # Matrix contains element wrapped in 1x1 array.
+    [[array(2.0+/-0.1, dtype=object)]]
+    >>> uncert_sqrt(ufloat(4, 0.4)) * 1 # Fix by applying identity operation on result
+    [[2.0+/-0.1]]
 
     Notes
     =====
@@ -812,6 +869,8 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
             from sympy.printing.numpy import SciPyPrinter as Printer # type: ignore
         elif _module_present('numpy', namespaces):
             from sympy.printing.numpy import NumPyPrinter as Printer # type: ignore
+        elif _module_present('unumpy', namespaces):
+            from sympy.printing.numpy import NumPyPrinter as Printer # type: ignore
         elif _module_present('cupy', namespaces):
             from sympy.printing.numpy import CuPyPrinter as Printer # type: ignore
         elif _module_present('jax', namespaces):
@@ -820,8 +879,12 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
             from sympy.printing.lambdarepr import NumExprPrinter as Printer # type: ignore
         elif _module_present('tensorflow', namespaces):
             from sympy.printing.tensorflow import TensorflowPrinter as Printer # type: ignore
+        elif _module_present('torch', namespaces):
+            from sympy.printing.pytorch import TorchPrinter as Printer  # type: ignore
         elif _module_present('sympy', namespaces):
             from sympy.printing.pycode import SymPyPrinter as Printer # type: ignore
+        elif _module_present('cmath', namespaces):
+            from sympy.printing.pycode import CmathPrinter as Printer # type: ignore
         else:
             from sympy.printing.pycode import PythonCodePrinter as Printer # type: ignore
         user_functions = {}
@@ -907,7 +970,16 @@ or tuple for the function arguments.
     # mtime has to be None or else linecache.checkcache will remove it
     linecache.cache[filename] = (len(funcstr), None, funcstr.splitlines(True), filename) # type: ignore
 
+    # Remove the entry from the linecache when the object is garbage collected
+    def cleanup_linecache(filename):
+        def _cleanup():
+            if filename in linecache.cache:
+                del linecache.cache[filename]
+        return _cleanup
+
     func = funclocals[funcname]
+
+    weakref.finalize(func, cleanup_linecache(filename))
 
     # Apply the docstring
     sig = "func({})".format(", ".join(str(i) for i in names))
@@ -1052,16 +1124,12 @@ def lambdastr(args, expr, printer=None, dummify=None):
         return iterable(l, exclude=(str, DeferredVector, NotIterable))
 
     def flat_indexes(iterable):
-        n = 0
-
-        for el in iterable:
+        for n, el in enumerate(iterable):
             if isiter(el):
                 for ndeep in flat_indexes(el):
                     yield (n,) + ndeep
             else:
                 yield (n,)
-
-            n += 1
 
     if dummify is None:
         dummify = any(isinstance(a, Basic) and
@@ -1314,21 +1382,17 @@ class _TensorflowEvaluatorPrinter(_EvaluatorPrinter):
     def _print_unpacking(self, lvalues, rvalue):
         """Generate argument unpacking code.
 
-        This method is used when the input value is not interable,
+        This method is used when the input value is not iterable,
         but can be indexed (see issue #14655).
         """
 
         def flat_indexes(elems):
-            n = 0
-
-            for el in elems:
+            for n, el in enumerate(elems):
                 if iterable(el):
                     for ndeep in flat_indexes(el):
                         yield (n,) + ndeep
                 else:
                     yield (n,)
-
-                n += 1
 
         indexed = ', '.join('{}[{}]'.format(rvalue, ']['.join(map(str, ind)))
                                 for ind in flat_indexes(lvalues))
@@ -1375,7 +1439,7 @@ def _imp_namespace(expr, namespace=None):
     if namespace is None:
         namespace = {}
     # tuples, lists, dicts are valid expressions
-    if is_sequence(expr):
+    if isinstance(expr, (list, tuple)):
         for arg in expr:
             _imp_namespace(arg, namespace)
         return namespace
@@ -1560,10 +1624,7 @@ def _too_large_for_docstring(expr, limit):
 
     if limit is None:
         return False
-
-    i = 0
-    for _ in postorder_traversal(expr):
-        i += 1
+    for i, _ in enumerate(postorder_traversal(expr), 1):
         if i > limit:
             return True
     return False

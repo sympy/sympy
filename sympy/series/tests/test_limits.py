@@ -276,6 +276,8 @@ def test_atan():
     x = Symbol("x", real=True)
     assert limit(atan(x)*sin(1/x), x, 0) == 0
     assert limit(atan(x) + sqrt(x + 1) - sqrt(x), x, oo) == pi/2
+    # https://github.com/sympy/sympy/issues/28360
+    assert limit(tan(k*atan(x) - pi*(k - 1)/2)/x, x, oo) == 1/k
 
 
 def test_set_signs():
@@ -506,18 +508,6 @@ def test_issue_3934():
     assert limit((5**(1/x) + 3**(1/x))**x, x, 0) == 5
 
 
-def test_calculate_series():
-    # NOTE
-    # The calculate_series method is being deprecated and is no longer responsible
-    # for result being returned. The mrv_leadterm function now uses simple leadterm
-    # calls rather than calculate_series.
-
-    # needs gruntz calculate_series to go to n = 32
-    assert limit(x**Rational(77, 3)/(1 + x**Rational(77, 3)), x, oo) == 1
-    # needs gruntz calculate_series to go to n = 128
-    assert limit(x**101.1/(1 + x**101.1), x, oo) == 1
-
-
 def test_issue_5955():
     assert limit((x**16)/(1 + x**16), x, oo) == 1
     assert limit((x**100)/(1 + x**100), x, oo) == 1
@@ -556,6 +546,8 @@ def test_Limit_dir():
 def test_polynomial():
     assert limit((x + 1)**1000/((x + 1)**1000 + 1), x, oo) == 1
     assert limit((x + 1)**1000/((x + 1)**1000 + 1), x, -oo) == 1
+    assert limit(x ** Rational(77, 3) / (1 + x ** Rational(77, 3)), x, oo) == 1
+    assert limit(x ** 101.1 / (1 + x ** 101.1), x, oo) == 1
 
 
 def test_rational():
@@ -1328,6 +1320,7 @@ def test_issue_24276():
     assert fx.rewrite(sin).limit(x, oo) == 2
     assert fx.rewrite(sin).simplify().limit(x, oo) == 2
 
+
 def test_issue_25230():
     a = Symbol('a', real = True)
     b = Symbol('b', positive = True)
@@ -1444,3 +1437,34 @@ def test_issue_22982_15323():
 
 def test_issue_26991():
     assert limit(x/((x - 6)*sinh(tanh(0.03*x)) + tanh(x) - 0.5), x, oo) == 1/sinh(1)
+
+
+def test_issue_27278():
+    expr = (1/(x*log((x + 3)/x)))**x*((x + 1)*log((x + 4)/(x + 1)))**(x + 1)/3
+    assert limit(expr, x, oo) == 1
+
+
+def test_issue_28130():
+    #https://github.com/sympy/sympy/issues/28130
+    x = symbols('x')
+    assert limit(2**x, x, -oo) == 0
+    assert limit(3**x, x, -oo) == 0
+    assert limit(E**x, x, -oo) == 0
+    assert limit((0.3)**x, x, -oo) == oo
+
+
+def test_issue_28558():
+    # https://github.com/sympy/sympy/issues/28558
+    # Test that Limit.doit() doesn't raise TypeError about missing 'cdir' parameter
+    # The original issue was: Limit(log(x)*cos(x), x, oo, dir='-').doit()
+    # raised TypeError: Expr._eval_nseries() missing 1 required positional argument: 'cdir'
+    # This was fixed by adding cdir=0 parameter in gruntz.py
+
+    # These limits should not raise TypeError about missing 'cdir'
+    assert limit(log(x), x, oo, dir='-') is oo
+    assert limit(exp(x), x, oo, dir='-') is oo
+    assert limit(x**2, x, oo, dir='-') is oo
+
+    # The original problematic case now raises NotImplementedError instead of TypeError
+    # This confirms the fix - the TypeError about missing 'cdir' is resolved
+    raises(NotImplementedError, lambda: limit(log(x)*cos(x), x, oo, dir='-'))

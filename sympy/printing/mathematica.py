@@ -27,7 +27,6 @@ known_functions = {
     "acot": [(lambda x: True, "ArcCot")],
     "asec": [(lambda x: True, "ArcSec")],
     "acsc": [(lambda x: True, "ArcCsc")],
-    "atan2": [(lambda *x: True, "ArcTan")],
     "sinh": [(lambda x: True, "Sinh")],
     "cosh": [(lambda x: True, "Cosh")],
     "tanh": [(lambda x: True, "Tanh")],
@@ -314,6 +313,10 @@ class MCodePrinter(CodePrinter):
         if len(expr.args) == 1:
             return "ProductLog[{}]".format(self._print(expr.args[0]))
         return "ProductLog[{}, {}]".format(
+            self._print(expr.args[1]), self._print(expr.args[0]))
+
+    def _print_atan2(self, expr):
+        return "ArcTan[{}, {}]".format(
             self._print(expr.args[1]), self._print(expr.args[0]))
 
     def _print_Integral(self, expr):

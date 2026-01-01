@@ -77,7 +77,6 @@ def DEBUG_WRAP(func):
 
 def _debug(text):
     from sympy import SYMPY_DEBUG
-    global _LT_level
 
     if SYMPY_DEBUG:
         print('-LT- %s%s' % ('  '*_LT_level, text), file=sys.stderr)
@@ -298,7 +297,7 @@ def _laplace_transform_integration(f, t, s_, *, simplify):
 @DEBUG_WRAP
 def _laplace_deep_collect(f, t):
     """
-    This is an internal helper function that traverses through the epression
+    This is an internal helper function that traverses through the expression
     tree of `f(t)` and collects arguments. The purpose of it is that
     anything like `f(w*t-1*t-c)` will be written as `f((w-1)*t-c)` such that
     it can match `f(a*t+b)`.
@@ -372,7 +371,7 @@ def _laplace_build_rules():
          S.true, S.Zero, dco),  # Not in Bateman54
         (t**n, gamma(n+1)/s**(n+1),
          n > -1, S.Zero, dco),  # 4.3.1
-        ((a*t+b)**n, uppergamma(n+1, b/a*s)*exp(-b/a*s)/s**(n+1)/a,
+        ((a*t+b)**n, uppergamma(n+1, b/a*s)*exp(b/a*s)/s**(n+1)/a,
          And(n > -1, Abs(arg(b/a)) < pi), S.Zero, dco),  # 4.3.4
         (t**n/(t+a), a**n*gamma(n+1)*uppergamma(-n, a*s),
          And(n > -1, Abs(arg(a)) < pi), S.Zero, dco),  # 4.3.7
@@ -975,7 +974,7 @@ def _laplace_expand(f, t, s):
     """
     This function tries to expand its argument with successively stronger
     methods: first it will expand on the top level, then it will expand any
-    multiplications in depth, then it will try all avilable expansion methods,
+    multiplications in depth, then it will try all available expansion methods,
     and finally it will try to expand trigonometric functions.
 
     If it can expand, it will then compute the Laplace transform of the
@@ -2032,11 +2031,27 @@ def _inverse_laplace_irrational(fn, s, t, plane):
 
 
 @DEBUG_WRAP
+def _inverse_laplace_laplace(fn, s, t, plane):
+    """
+    Helper function for the class InverseLaplaceTransform.
+    """
+
+    if not fn.func == LaplaceTransform:
+        return None
+    _f, _t, _s = fn.args
+    if _s == s:
+        return _f.subs(_t, t)*Heaviside(t), S.true
+    else:
+        return None
+
+
+@DEBUG_WRAP
 def _inverse_laplace_early_prog_rules(F, s, t, plane):
     """
     Helper function for the class InverseLaplaceTransform.
     """
-    prog_rules = [_inverse_laplace_irrational]
+    prog_rules = [
+        _inverse_laplace_laplace, _inverse_laplace_irrational]
 
     for p_rule in prog_rules:
         if (r := p_rule(F, s, t, plane)) is not None:

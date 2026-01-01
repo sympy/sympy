@@ -1,10 +1,10 @@
+from __future__ import annotations
 from itertools import product
-from typing import Tuple as tTuple
 
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
 from sympy.core.expr import Expr
-from sympy.core.function import (Function, ArgumentIndexError, expand_log,
+from sympy.core.function import (DefinedFunction, ArgumentIndexError, expand_log,
     expand_mul, FunctionClass, PoleError, expand_multinomial, expand_complex)
 from sympy.core.logic import fuzzy_and, fuzzy_not, fuzzy_or
 from sympy.core.mul import Mul
@@ -32,7 +32,7 @@ from sympy.ntheory.factor_ import factorint
 # p.is_positive.]
 
 
-class ExpBase(Function):
+class ExpBase(DefinedFunction):
 
     unbranched = True
     _singularities = (S.ComplexInfinity,)
@@ -240,7 +240,7 @@ class exp(ExpBase, metaclass=ExpMeta):
     See Also
     ========
 
-    log
+    sympy.functions.elementary.exponential.log
     """
 
     def fdiff(self, argindex=1):
@@ -447,7 +447,7 @@ class exp(ExpBase, metaclass=ExpMeta):
 
         if old is exp and not new.is_Function:
             return new**self.exp._subs(old, new)
-        return Function._eval_subs(self, old, new)
+        return super()._eval_subs(old, new)
 
     def _eval_is_extended_real(self):
         if self.args[0].is_extended_real:
@@ -604,7 +604,7 @@ def match_real_imag(expr):
         return (None, None) # simpler to check for than None
 
 
-class log(Function):
+class log(DefinedFunction):
     r"""
     The natural logarithm function `\ln(x)` or `\log(x)`.
 
@@ -634,11 +634,11 @@ class log(Function):
     See Also
     ========
 
-    exp
+    sympy.functions.elementary.exponential.exp
 
     """
 
-    args: tTuple[Expr]
+    args: tuple[Expr]
 
     _singularities = (S.Zero, S.ComplexInfinity)
 
@@ -691,9 +691,7 @@ class log(Function):
                 return S.ComplexInfinity
             elif arg is S.One:
                 return S.Zero
-            elif arg is S.Infinity:
-                return S.Infinity
-            elif arg is S.NegativeInfinity:
+            elif arg is S.Infinity or arg is S.NegativeInfinity:
                 return S.Infinity
             elif arg is S.NaN:
                 return S.NaN
@@ -739,9 +737,7 @@ class log(Function):
             coeff = arg.as_coefficient(I)
 
             if coeff is not None:
-                if coeff is S.Infinity:
-                    return S.Infinity
-                elif coeff is S.NegativeInfinity:
+                if coeff is S.Infinity or coeff is S.NegativeInfinity:
                     return S.Infinity
                 elif coeff.is_Rational:
                     if coeff.is_nonnegative:
@@ -1105,7 +1101,7 @@ class log(Function):
         return res
 
 
-class LambertW(Function):
+class LambertW(DefinedFunction):
     r"""
     The Lambert W function $W(z)$ is defined as the inverse
     function of $w \exp(w)$ [1]_.

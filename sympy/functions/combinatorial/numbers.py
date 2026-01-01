@@ -6,20 +6,23 @@ sequences of rational numbers such as Bernoulli and Fibonacci numbers.
 Factorials, binomial coefficients and related functions are located in
 the separate 'factorials' module.
 """
+from __future__ import annotations
 from math import prod
 from collections import defaultdict
-from typing import Tuple as tTuple
+from typing import Callable
 
 from sympy.core import S, Symbol, Add, Dummy
 from sympy.core.cache import cacheit
 from sympy.core.containers import Dict
 from sympy.core.expr import Expr
-from sympy.core.function import ArgumentIndexError, Function, expand_mul
+from sympy.core.function import ArgumentIndexError, DefinedFunction, expand_mul
 from sympy.core.logic import fuzzy_not
 from sympy.core.mul import Mul
 from sympy.core.numbers import E, I, pi, oo, Rational, Integer
 from sympy.core.relational import Eq, is_le, is_gt, is_lt
-from sympy.external.gmpy import SYMPY_INTS, remove, lcm, legendre, jacobi, kronecker
+from sympy.external.gmpy import (SYMPY_INTS, remove, lcm, legendre, jacobi,
+                                 kronecker, fibonacci as _ifib)
+from sympy.external.mpmath import local_workprec, eulernum, bernfrac
 from sympy.functions.combinatorial.factorials import (binomial,
     factorial, subfactorial)
 from sympy.functions.elementary.exponential import log
@@ -37,9 +40,6 @@ from sympy.utilities.iterables import multiset, multiset_derangements, iterable
 from sympy.utilities.memoization import recurrence_memo
 from sympy.utilities.misc import as_int
 
-from mpmath import mp, workprec
-from mpmath.libmp import ifib as _ifib
-
 
 def _product(a, b):
     return prod(range(a, b + 1))
@@ -55,7 +55,7 @@ _sym = Symbol('x')
 #                                                                            #
 #----------------------------------------------------------------------------#
 
-class carmichael(Function):
+class carmichael(DefinedFunction):
     r"""
     Carmichael Numbers:
 
@@ -185,7 +185,7 @@ directly instead.
 #----------------------------------------------------------------------------#
 
 
-class fibonacci(Function):
+class fibonacci(DefinedFunction):
     r"""
     Fibonacci numbers / Fibonacci polynomials
 
@@ -273,7 +273,7 @@ class fibonacci(Function):
 #----------------------------------------------------------------------------#
 
 
-class lucas(Function):
+class lucas(DefinedFunction):
     """
     Lucas numbers
 
@@ -314,8 +314,8 @@ class lucas(Function):
             return fibonacci(n + 1) + fibonacci(n - 1)
 
     def _eval_rewrite_as_sqrt(self, n, **kwargs):
-       from sympy.functions.elementary.miscellaneous import sqrt
-       return 2**(-n)*((1 + sqrt(5))**n + (-sqrt(5) + 1)**n)
+        from sympy.functions.elementary.miscellaneous import sqrt
+        return 2**(-n)*((1 + sqrt(5))**n + (-sqrt(5) + 1)**n)
 
 
 #----------------------------------------------------------------------------#
@@ -325,7 +325,7 @@ class lucas(Function):
 #----------------------------------------------------------------------------#
 
 
-class tribonacci(Function):
+class tribonacci(DefinedFunction):
     r"""
     Tribonacci numbers / Tribonacci polynomials
 
@@ -415,7 +415,7 @@ class tribonacci(Function):
 #----------------------------------------------------------------------------#
 
 
-class bernoulli(Function):
+class bernoulli(DefinedFunction):
     r"""
     Bernoulli numbers / Bernoulli polynomials / Bernoulli function
 
@@ -516,7 +516,7 @@ class bernoulli(Function):
 
     """
 
-    args: tTuple[Integer]
+    args: tuple[Integer]
 
     # Calculates B_n for positive even n
     @staticmethod
@@ -559,7 +559,7 @@ class bernoulli(Function):
                 n = int(n)
                 # Use mpmath for enormous Bernoulli numbers
                 if n > 500:
-                    p, q = mp.bernfrac(n)
+                    p, q = bernfrac(n)
                     return Rational(int(p), int(q))
                 case = n % 6
                 highest_cached = cls._highest[case]
@@ -586,15 +586,15 @@ class bernoulli(Function):
             return
         n = self.args[0]._to_mpmath(prec)
         x = (self.args[1] if len(self.args) > 1 else S.One)._to_mpmath(prec)
-        with workprec(prec):
+        with local_workprec(prec) as mp:
             if n == 0:
                 res = mp.mpf(1)
             elif n == 1:
-                res = x - mp.mpf(0.5)
+                res = mp.fsub(x, mp.mpf(0.5))
             elif mp.isint(n) and n >= 0:
                 res = mp.bernoulli(n) if x == 1 else mp.bernpoly(n, x)
             else:
-                res = -n * mp.zeta(1-n, x)
+                res = mp.fmul(mp.fneg(n), mp.zeta(mp.fsub(1, n), x))
         return Expr._from_mpmath(res, prec)
 
 
@@ -605,7 +605,7 @@ class bernoulli(Function):
 #----------------------------------------------------------------------------#
 
 
-class bell(Function):
+class bell(DefinedFunction):
     r"""
     Bell numbers / Bell polynomials
 
@@ -758,7 +758,7 @@ class bell(Function):
 #----------------------------------------------------------------------------#
 
 
-class harmonic(Function):
+class harmonic(DefinedFunction):
     r"""
     Harmonic numbers
 
@@ -890,6 +890,9 @@ class harmonic(Function):
 
     """
 
+    # This prevents redundant recalculations and speeds up harmonic number computations.
+    harmonic_cache: dict[Integer, Callable[[int], Rational]] = {}
+
     @classmethod
     def eval(cls, n, m=None):
         from sympy.functions.special.zeta_functions import zeta
@@ -914,7 +917,14 @@ class harmonic(Function):
             if n.is_negative and (m.is_integer is False or m.is_nonpositive is False):
                 return S.ComplexInfinity if m is S.One else S.NaN
             if n.is_nonnegative:
-                return Add(*(k**(-m) for k in range(1, int(n)+1)))
+                if m.is_Integer:
+                    if m not in cls.harmonic_cache:
+                        @recurrence_memo([0])
+                        def f(n, prev):
+                            return prev[-1] + S.One / n**m
+                        cls.harmonic_cache[m] = f
+                    return cls.harmonic_cache[m](int(n))
+                return Add(*(k**(-m) for k in range(1, int(n) + 1)))
 
     def _eval_rewrite_as_polygamma(self, n, m=S.One, **kwargs):
         from sympy.functions.special.gamma_functions import gamma, polygamma
@@ -995,13 +1005,13 @@ class harmonic(Function):
             return
         n = self.args[0]._to_mpmath(prec)
         m = (self.args[1] if len(self.args) > 1 else S.One)._to_mpmath(prec)
-        if mp.isint(n) and n < 0:
-            return S.NaN
-        with workprec(prec):
+        with local_workprec(prec) as mp:
+            if mp.isint(n) and n < 0:
+                return S.NaN
             if m == 1:
                 res = mp.harmonic(n)
             else:
-                res = mp.zeta(m) - mp.zeta(m, n+1)
+                res = mp.fsub(mp.zeta(m), mp.zeta(m, mp.fadd(n, 1)))
         return Expr._from_mpmath(res, prec)
 
     def fdiff(self, argindex=1):
@@ -1023,7 +1033,7 @@ class harmonic(Function):
 #----------------------------------------------------------------------------#
 
 
-class euler(Function):
+class euler(DefinedFunction):
     r"""
     Euler numbers / Euler polynomials / Euler function
 
@@ -1121,12 +1131,20 @@ class euler(Function):
             if n.is_odd and n.is_positive:
                 return S.Zero
             elif n.is_Number:
-                from mpmath import mp
-                n = n._to_mpmath(mp.prec)
-                res = mp.eulernum(n, exact=True)
+                n = n._to_mpmath(53)
+                res = eulernum(n, exact=True)
                 return Integer(res)
         # Euler polynomials
         elif n.is_Number:
+            from sympy.core.evalf import pure_complex
+            n = int(n)
+            reim = pure_complex(x, or_real=True)
+            if reim and all(a.is_Float or a.is_Integer for a in reim) \
+                    and any(a.is_Float for a in reim):
+                prec = min([a._prec for a in reim if a.is_Float])
+                with local_workprec(prec) as mp:
+                    res = mp.eulerpoly(n, x)
+                return Expr._from_mpmath(res, prec)
             return euler_poly(n, x)
 
     def _eval_rewrite_as_Sum(self, n, x=None, **kwargs):
@@ -1154,22 +1172,28 @@ class euler(Function):
     def _eval_evalf(self, prec):
         if not all(i.is_number for i in self.args):
             return
-        from mpmath import mp
         m, x = (self.args[0], None) if len(self.args) == 1 else self.args
         m = m._to_mpmath(prec)
         if x is not None:
             x = x._to_mpmath(prec)
-        with workprec(prec):
+        with local_workprec(prec) as mp:
             if mp.isint(m) and m >= 0:
                 res = mp.eulernum(m) if x is None else mp.eulerpoly(m, x)
             else:
                 if m == -1:
-                    res = mp.pi if x is None else mp.digamma((x+1)/2) - mp.digamma(x/2)
+                    if x is None:
+                        res = mp.pi
+                    else:
+                        res = mp.fsub(
+                                mp.digamma(mp.fdiv(mp.fadd(x, 1), 2)),
+                                mp.digamma(mp.fdiv(x, 2)))
                 else:
                     y = 0.5 if x is None else x
-                    res = 2 * (mp.zeta(-m, y) - 2**(m+1) * mp.zeta(-m, (y+1)/2))
+                    res = mp.fmul(2, (mp.fsub(mp.zeta(mp.fneg(m), y),
+                               mp.fmul(mp.power(2, mp.fadd(m, 1)),
+                               mp.zeta(mp.fneg(m), mp.fdiv(mp.fadd(y, 1), 2))))))
                 if x is None:
-                    res *= 2**m
+                    res = mp.fmul(res, mp.power(2, m))
         return Expr._from_mpmath(res, prec)
 
 
@@ -1180,7 +1204,7 @@ class euler(Function):
 #----------------------------------------------------------------------------#
 
 
-class catalan(Function):
+class catalan(DefinedFunction):
     r"""
     Catalan numbers
 
@@ -1326,7 +1350,7 @@ class catalan(Function):
 #----------------------------------------------------------------------------#
 
 
-class genocchi(Function):
+class genocchi(DefinedFunction):
     r"""
     Genocchi numbers / Genocchi polynomials / Genocchi function
 
@@ -1466,7 +1490,7 @@ class genocchi(Function):
 #----------------------------------------------------------------------------#
 
 
-class andre(Function):
+class andre(DefinedFunction):
     r"""
     Andre numbers / Andre function
 
@@ -1568,9 +1592,10 @@ class andre(Function):
         if not self.args[0].is_number:
             return
         s = self.args[0]._to_mpmath(prec+12)
-        with workprec(prec+12):
-            sp, cp = mp.sinpi(s/2), mp.cospi(s/2)
-            res = 2*mp.dirichlet(-s, (-sp, cp, sp, -cp))
+        with local_workprec(prec+12) as mp:
+            s2 = mp.fdiv(s, 2)
+            sp, cp = mp.sinpi(s2), mp.cospi(s2)
+            res = mp.fmul(2, mp.dirichlet(mp.fneg(s), (mp.fneg(sp), cp, sp, mp.fneg(cp))))
         return Expr._from_mpmath(res, prec)
 
 
@@ -1580,8 +1605,7 @@ class andre(Function):
 #                                                                            #
 #----------------------------------------------------------------------------#
 
-
-class partition(Function):
+class partition(DefinedFunction):
     r"""
     Partition numbers
 
@@ -1631,8 +1655,15 @@ class partition(Function):
         if self.args[0].is_nonnegative is True:
             return True
 
+    def _eval_Mod(self, q):
+        # Ramanujan's congruences
+        n = self.args[0]
+        for p, rem in [(5, 4), (7, 5), (11, 6)]:
+            if q == p and n % q == rem:
+                return S.Zero
 
-class divisor_sigma(Function):
+
+class divisor_sigma(DefinedFunction):
     r"""
     Calculate the divisor function `\sigma_k(n)` for positive integer n
 
@@ -1699,7 +1730,7 @@ class divisor_sigma(Function):
                 return Mul(*[cancel((p**(k*(e + 1)) - 1) / (p**k - 1)) for p, e in factorint(n).items()])
 
 
-class udivisor_sigma(Function):
+class udivisor_sigma(DefinedFunction):
     r"""
     Calculate the unitary divisor function `\sigma_k^*(n)` for positive integer n
 
@@ -1771,7 +1802,7 @@ class udivisor_sigma(Function):
             return Mul(*[1+p**(k*e) for p, e in factorint(n).items()])
 
 
-class legendre_symbol(Function):
+class legendre_symbol(DefinedFunction):
     r"""
     Returns the Legendre symbol `(a / p)`.
 
@@ -1819,7 +1850,7 @@ class legendre_symbol(Function):
             return S(legendre(as_int(a), as_int(p)))
 
 
-class jacobi_symbol(Function):
+class jacobi_symbol(DefinedFunction):
     r"""
     Returns the Jacobi symbol `(m / n)`.
 
@@ -1890,7 +1921,7 @@ class jacobi_symbol(Function):
             return S(jacobi(as_int(m), as_int(n)))
 
 
-class kronecker_symbol(Function):
+class kronecker_symbol(DefinedFunction):
     r"""
     Returns the Kronecker symbol `(a / n)`.
 
@@ -1929,7 +1960,7 @@ class kronecker_symbol(Function):
             return S(kronecker(as_int(a), as_int(n)))
 
 
-class mobius(Function):
+class mobius(DefinedFunction):
     """
     Mobius function maps natural number to {-1, 0, 1}
 
@@ -2009,7 +2040,7 @@ class mobius(Function):
         return result
 
 
-class primenu(Function):
+class primenu(DefinedFunction):
     r"""
     Calculate the number of distinct prime factors for a positive integer n.
 
@@ -2061,7 +2092,7 @@ class primenu(Function):
             return S(len(factorint(n)))
 
 
-class primeomega(Function):
+class primeomega(DefinedFunction):
     r"""
     Calculate the number of prime factors counting multiplicities for a
     positive integer n.
@@ -2114,7 +2145,7 @@ class primeomega(Function):
             return S(sum(factorint(n).values()))
 
 
-class totient(Function):
+class totient(DefinedFunction):
     r"""
     Calculate the Euler totient function phi(n)
 
@@ -2164,7 +2195,7 @@ class totient(Function):
             return S(prod(p**(k-1)*(p-1) for p, k in factorint(n).items()))
 
 
-class reduced_totient(Function):
+class reduced_totient(DefinedFunction):
     r"""
     Calculate the Carmichael reduced totient function lambda(n)
 
@@ -2222,7 +2253,7 @@ class reduced_totient(Function):
             return S(lcm(t, *((p-1)*p**(k-1) for p, k in factorint(n).items())))
 
 
-class primepi(Function):
+class primepi(DefinedFunction):
     r""" Represents the prime counting function pi(n) = the number
     of prime numbers less than or equal to n.
 
@@ -2286,7 +2317,7 @@ class primepi(Function):
 
 
 class _MultisetHistogram(tuple):
-    pass
+    __slots__ = ()
 
 
 _N = -1
@@ -2925,7 +2956,7 @@ def nT(n, k=None):
 #-----------------------------------------------------------------------------#
 
 
-class motzkin(Function):
+class motzkin(DefinedFunction):
     """
     The nth Motzkin number is the number
     of ways of drawing non-intersecting chords
@@ -2969,22 +3000,22 @@ class motzkin(Function):
         except ValueError:
             return False
         if n > 0:
-             if n in (1, 2):
+            if n in (1, 2):
                 return True
 
-             tn1 = 1
-             tn = 2
-             i = 3
-             while tn < n:
-                 a = ((2*i + 1)*tn + (3*i - 3)*tn1)/(i + 2)
-                 i += 1
-                 tn1 = tn
-                 tn = a
+            tn1 = 1
+            tn = 2
+            i = 3
+            while tn < n:
+                a = ((2*i + 1)*tn + (3*i - 3)*tn1)/(i + 2)
+                i += 1
+                tn1 = tn
+                tn = a
 
-             if tn == n:
-                 return True
-             else:
-                 return False
+            if tn == n:
+                return True
+            else:
+                return False
 
         else:
             return False

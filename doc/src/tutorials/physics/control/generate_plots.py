@@ -1,6 +1,14 @@
-from sympy import Matrix, laplace_transform, inverse_laplace_transform, exp, cos, sqrt, sin
+from sympy import Matrix, laplace_transform, exp, cos, sqrt, sin
 from sympy.abc import s, t
-from sympy.physics.control import *
+from sympy.physics.control import (
+    TransferFunction,
+    TransferFunctionMatrix,
+    Series,
+    Feedback,
+    pole_zero_plot,
+    bode_magnitude_plot,
+    step_response_plot
+)
 
 def main_q3():
     g =  Matrix([[exp(-t)*(1 - t), exp(-2*t)], [5*exp((-2*t))-exp((-t)), (cos((sqrt(3)*t)/2) - 3*sqrt(3)*sin((sqrt(3)*t)/2))*exp(-t/2)]])

@@ -128,7 +128,6 @@ from sympy.core.traversal import bottom_up
 
 from sympy.functions import log, exp, sign as _sign
 from sympy.series.order import Order
-from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.misc import debug_decorator as debug
 from sympy.utilities.timeutils import timethis
 
@@ -485,47 +484,6 @@ def moveup(l, x):
 
 @debug
 @timeit
-def calculate_series(e, x, logx=None):
-    """ Calculates at least one term of the series of ``e`` in ``x``.
-
-    This is a place that fails most often, so it is in its own function.
-    """
-
-    SymPyDeprecationWarning(
-        feature="calculate_series",
-        useinstead="series() with suitable n, or as_leading_term",
-        issue=21838,
-        deprecated_since_version="1.12"
-    ).warn()
-
-    from sympy.simplify.powsimp import powdenest
-
-    for t in e.lseries(x, logx=logx):
-        # bottom_up function is required for a specific case - when e is
-        # -exp(p/(p + 1)) + exp(-p**2/(p + 1) + p)
-        t = bottom_up(t, lambda w:
-            getattr(w, 'normal', lambda: w)())
-        # And the expression
-        # `(-sin(1/x) + sin((x + exp(x))*exp(-x)/x))*exp(x)`
-        # from the first test of test_gruntz_eval_special needs to
-        # be expanded. But other forms need to be have at least
-        # factor_terms applied. `factor` accomplishes both and is
-        # faster than using `factor_terms` for the gruntz suite. It
-        # does not appear that use of `cancel` is necessary.
-        # t = cancel(t, expand=False)
-        t = t.factor()
-
-        if t.has(exp) and t.has(log):
-            t = powdenest(t)
-
-        if not t.is_zero:
-            break
-
-    return t
-
-
-@debug
-@timeit
 @cacheit
 def mrv_leadterm(e, x):
     """Returns (c0, e0) for e."""
@@ -565,7 +523,7 @@ def mrv_leadterm(e, x):
         _series = Order(1)
         incr = S.One
         while _series.is_Order:
-            _series = f._eval_nseries(w, n=n0+incr, logx=logw)
+            _series = f._eval_nseries(w, n=n0+incr, logx=logw, cdir=0)
             incr *= 2
         series = _series.expand().removeO()
         try:

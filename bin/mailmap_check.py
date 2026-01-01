@@ -27,7 +27,6 @@ def sympy_dir():
 
 # put sympy on the path
 sys.path.insert(0, str(sympy_dir()))
-import sympy
 from sympy.utilities.misc import filldedent
 from sympy.external.importtools import version_tuple
 
@@ -311,7 +310,7 @@ def sort_lines_mailmap(lines):
 
 def read_lines(path):
     with open(path, 'r', encoding='utf-8') as fin:
-        return [line.strip() for line in fin.readlines()]
+        return [line.strip() for line in fin]
 
 
 def write_lines(path, lines):

@@ -3,10 +3,14 @@
 # This module provides pure Python implementations of some number theory
 # functions that are alternately used from gmpy2 if it is installed.
 
-import sys
 import math
 
-import mpmath.libmp as mlib
+from sympy.external.mpmath import (
+    ifac as _ifac,
+    ifib as _ifib,
+    isqrt as _isqrt,
+    sqrtrem as _sqrtrem,
+)
 
 
 _small_trailing = [0] * 256
@@ -80,40 +84,27 @@ def remove(x, f):
 
 def factorial(x):
     """Return x!."""
-    return int(mlib.ifac(int(x)))
+    return int(_ifac(int(x)))
+
+
+def fibonacci(n):
+    """Return the nth Fibonacci number."""
+    return int(_ifib(int(n)))
 
 
 def sqrt(x):
     """Integer square root of x."""
-    return int(mlib.isqrt(int(x)))
+    return int(_isqrt(int(x)))
 
 
 def sqrtrem(x):
     """Integer square root of x and remainder."""
-    s, r = mlib.sqrtrem(int(x))
+    s, r = _sqrtrem(int(x))
     return (int(s), int(r))
 
 
-if sys.version_info[:2] >= (3, 9):
-    # As of Python 3.9 these can take multiple arguments
-    gcd = math.gcd
-    lcm = math.lcm
-
-else:
-    # Until python 3.8 is no longer supported
-    from functools import reduce
-
-
-    def gcd(*args):
-        """gcd of multiple integers."""
-        return reduce(math.gcd, args, 0)
-
-
-    def lcm(*args):
-        """lcm of multiple integers."""
-        if 0 in args:
-            return 0
-        return reduce(lambda x, y: x*y//math.gcd(x, y), args, 1)
+gcd = math.gcd
+lcm = math.lcm
 
 
 def _sign(n):
@@ -176,7 +167,7 @@ def is_square(x):
         return False  # e.g. 97, 388
     if 0xdef9ae771ffe3b9d67dec & (1 << (m % 85)):
         return False  # e.g. 793, 1408
-    return mlib.sqrtrem(int(x))[1] == 0
+    return _sqrtrem(int(x))[1] == 0
 
 
 def invert(x, m):
@@ -258,7 +249,7 @@ def iroot(y, n):
     if n == 1:
         return y, True
     if n == 2:
-        x, rem = mlib.sqrtrem(y)
+        x, rem = _sqrtrem(y)
         return int(x), not rem
     if n >= y.bit_length():
         return 1, False

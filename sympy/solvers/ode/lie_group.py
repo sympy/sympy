@@ -287,15 +287,15 @@ def infinitesimals(eq, func=None, order=None, hint='default', match=None):
                     " the given ODE")
 
             elif hint not in lie_heuristics:
-                 raise ValueError("Heuristic not recognized: " + hint)
+                raise ValueError("Heuristic not recognized: " + hint)
 
             else:
-                 function = globals()['lie_heuristic_' + hint]
-                 xieta = function(match, comp=True)
-                 if xieta:
-                     return xieta
-                 else:
-                     raise ValueError("Infinitesimals could not be found using the"
+                function = globals()['lie_heuristic_' + hint]
+                xieta = function(match, comp=True)
+                if xieta:
+                    return xieta
+                else:
+                    raise ValueError("Infinitesimals could not be found using the"
                          " given heuristic")
 
 

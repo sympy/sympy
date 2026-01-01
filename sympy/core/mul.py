@@ -1,4 +1,6 @@
-from typing import Tuple as tTuple
+from __future__ import annotations
+from typing import TYPE_CHECKING, ClassVar, overload, Literal
+
 from collections import defaultdict
 from functools import reduce
 from itertools import product
@@ -16,6 +18,10 @@ from .parameters import global_parameters
 from .kind import KindDispatcher
 from .traversal import bottom_up
 from sympy.utilities.iterables import sift
+
+
+if TYPE_CHECKING:
+    from .numbers import Number
 
 
 # internal marker to indicate:
@@ -158,23 +164,33 @@ class Mul(Expr, AssocOp):
     """
     __slots__ = ()
 
-    args: tTuple[Expr, ...]
-
     is_Mul = True
 
     _args_type = Expr
     _kind_dispatcher = KindDispatcher("Mul_kind_dispatcher", commutative=True)
+
+    identity: ClassVar[Expr]
 
     @property
     def kind(self):
         arg_kinds = (a.kind for a in self.args)
         return self._kind_dispatcher(*arg_kinds)
 
+    if TYPE_CHECKING:
+
+        def __new__(cls, *args: Expr | complex, evaluate: bool=True) -> Expr: # type: ignore
+            ...
+
+        @property
+        def args(self) -> tuple[Expr, ...]:
+            ...
+
     def could_extract_minus_sign(self):
         if self == (-self):
             return False  # e.g. zoo*x == -zoo*x
         c = self.args[0]
         return c.is_Number and c.is_extended_negative
+
     def __neg__(self):
         c, args = self.as_coeff_mul()
         if args[0] is not S.ComplexInfinity:
@@ -722,15 +738,15 @@ class Mul(Expr, AssocOp):
 
         return c_part, nc_part, order_symbols
 
-    def _eval_power(self, e):
+    def _eval_power(self, expt):
 
         # don't break up NC terms: (A*B)**3 != A**3*B**3, it is A*B*A*B*A*B
         cargs, nc = self.args_cnc(split_1=False)
 
-        if e.is_Integer:
-            return Mul(*[Pow(b, e, evaluate=False) for b in cargs]) * \
-                Pow(Mul._from_args(nc), e, evaluate=False)
-        if e.is_Rational and e.q == 2:
+        if expt.is_Integer:
+            return Mul(*[Pow(b, expt, evaluate=False) for b in cargs]) * \
+                Pow(Mul._from_args(nc), expt, evaluate=False)
+        if expt.is_Rational and expt.q == 2:
             if self.is_imaginary:
                 a = self.as_real_imag()[1]
                 if a.is_Rational:
@@ -741,11 +757,11 @@ class Mul(Expr, AssocOp):
                         if t:
                             from sympy.functions.elementary.complexes import sign
                             r = sympify(n)/d
-                            return _unevaluated_Mul(r**e.p, (1 + sign(a)*S.ImaginaryUnit)**e.p)
+                            return _unevaluated_Mul(r**expt.p, (1 + sign(a)*S.ImaginaryUnit)**expt.p)
 
-        p = Pow(self, e, evaluate=False)
+        p = Pow(self, expt, evaluate=False)
 
-        if e.is_Rational or e.is_Float:
+        if expt.is_Rational or expt.is_Float:
             return p._eval_expand_power_base()
 
         return p
@@ -829,7 +845,13 @@ class Mul(Expr, AssocOp):
                 return S.NegativeOne, (-args[0],) + args[1:]
         return S.One, args
 
-    def as_coeff_Mul(self, rational=False):
+    @overload
+    def as_coeff_Mul(self, rational: Literal[True]) -> tuple['Rational', Expr]: ...
+
+    @overload
+    def as_coeff_Mul(self, rational: bool = False) -> tuple['Number', Expr]: ...
+
+    def as_coeff_Mul(self, rational=False) -> tuple['Number', Expr]:
         """
         Efficiently extract the coefficient of a product.
         """
@@ -838,9 +860,9 @@ class Mul(Expr, AssocOp):
         if coeff.is_Number:
             if not rational or coeff.is_Rational:
                 if len(args) == 1:
-                    return coeff, args[0]
+                    return coeff, args[0] # type: ignore
                 else:
-                    return coeff, self._new_rawargs(*args)
+                    return coeff, self._new_rawargs(*args) # type: ignore
             elif coeff.is_extended_negative:
                 return S.NegativeOne, self._new_rawargs(*((-coeff,) + args))
         return S.One, self
@@ -1457,10 +1479,11 @@ class Mul(Expr, AssocOp):
             return False
         if len(denominators) == 1:
             d = denominators[0]
-            if d.is_Integer and d.is_even:
+            if d.is_Integer:
+                is_power_of_two = d.p & (d.p - 1) == 0
                 # if minimal power of 2 in num vs den is not
                 # negative then we have an integer
-                if (Add(*[i.as_base_exp()[1] for i in
+                if is_power_of_two and (Add(*[i.as_base_exp()[1] for i in
                         numerators if i.is_even]) - trailing(d.p)
                         ).is_nonnegative:
                     return True
@@ -1656,7 +1679,7 @@ class Mul(Expr, AssocOp):
 
     def _eval_is_even(self):
         from sympy.simplify.radsimp import fraction
-        n, d = fraction(self)
+        n, d = fraction(self, exact=True)
         if n.is_Integer and n.is_even:
             # if minimal power of 2 in den vs num is not
             # negative then this is not an integer and
@@ -1851,15 +1874,12 @@ class Mul(Expr, AssocOp):
                 for j in range(take):
                     if nc[i + j][0] != old_nc[j][0]:
                         break
-                    elif j == 0:
-                        rat.append(ndiv(nc[i + j][1], old_nc[j][1]))
-                    elif j == take - 1:
+                    elif j == 0 or j == take - 1:
                         rat.append(ndiv(nc[i + j][1], old_nc[j][1]))
                     elif nc[i + j][1] != old_nc[j][1]:
                         break
                     else:
                         rat.append(1)
-                    j += 1
                 else:
                     ndo = min(rat)
                     if ndo:

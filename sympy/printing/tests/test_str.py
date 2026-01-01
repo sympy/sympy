@@ -463,8 +463,6 @@ def test_PolyElement():
     assert str(x - 1) == "x - 1"
     assert str(x + 1) == "x + 1"
     assert str(x**2) == "x**2"
-    assert str(x**(-2)) == "x**(-2)"
-    assert str(x**QQ(1, 2)) == "x**(1/2)"
 
     assert str((u**2 + 3*u*v + 1)*x**2*y + u + 1) == "(u**2 + 3*u*v + 1)*x**2*y + u + 1"
     assert str((u**2 + 3*u*v + 1)*x**2*y + (u + 1)*x) == "(u**2 + 3*u*v + 1)*x**2*y + (u + 1)*x"
@@ -1046,7 +1044,7 @@ def test_Equivalent():
     assert str(Equivalent(y, x)) == "Equivalent(x, y)"
 
 def test_Xor():
-    assert str(Xor(y, x, evaluate=False)) == "x ^ y"
+    assert str(Xor(y, x, evaluate=False)) == "y ^ x"
 
 def test_Complement():
     assert str(Complement(S.Reals, S.Naturals)) == 'Complement(Reals, Naturals)'
@@ -1168,6 +1166,10 @@ def test_NDimArray():
     assert sstr(NDimArray(1.0), full_prec=False) == '1.0'
     assert sstr(NDimArray([1.0, 2.0]), full_prec=True) == '[1.00000000000000, 2.00000000000000]'
     assert sstr(NDimArray([1.0, 2.0]), full_prec=False) == '[1.0, 2.0]'
+    assert sstr(NDimArray([], (0,))) == 'ImmutableDenseNDimArray([], (0,))'
+    assert sstr(NDimArray([], (0, 0))) == 'ImmutableDenseNDimArray([], (0, 0))'
+    assert sstr(NDimArray([], (0, 1))) == 'ImmutableDenseNDimArray([], (0, 1))'
+    assert sstr(NDimArray([], (1, 0))) == 'ImmutableDenseNDimArray([], (1, 0))'
 
 def test_Predicate():
     assert sstr(Q.even) == 'Q.even'

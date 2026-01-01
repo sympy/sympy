@@ -1,4 +1,6 @@
+from collections import defaultdict
 import itertools
+from sympy.combinatorics.coset_table import modified_coset_enumeration_r
 from sympy.combinatorics.fp_groups import FpGroup, FpSubgroup, simplify_presentation
 from sympy.combinatorics.free_groups import FreeGroup
 from sympy.combinatorics.perm_groups import PermutationGroup
@@ -85,24 +87,44 @@ class GroupHomomorphism:
             image = self.image()
             w = self.domain.identity
             if isinstance(self.codomain, PermutationGroup):
+                if g not in image:
+                    raise ValueError("Given element is not in the image of the homomorphism.")
                 gens = image.generator_product(g)[::-1]
+                for i in range(len(gens)):
+                    s = gens[i]
+                    if s.is_identity:
+                        continue
+                    if s in self._inverses:
+                        w = w*self._inverses[s]
+                    else:
+                        w = w*self._inverses[s**-1]**-1
+                return w
+
             else:
-                gens = g
-            # the following can't be "for s in gens:"
-            # because that would be equivalent to
-            # "for s in gens.array_form:" when g is
-            # a FreeGroupElement. On the other hand,
-            # when you call gens by index, the generator
-            # (or inverse) at position i is returned.
-            for i in range(len(gens)):
-                s = gens[i]
-                if s.is_identity:
-                    continue
-                if s in self._inverses:
-                    w = w*self._inverses[s]
-                else:
-                    w = w*self._inverses[s**-1]**-1
-            return w
+                current_coset = 0
+                im_gens = list(self._inverses)
+                C = modified_coset_enumeration_r(self.codomain, im_gens)
+                total_word = w
+                preimages = list(self._inverses.values())
+                temp_symbols = [gen.array_form[0][0] for gen in C._grp.generators]
+                transl_map = dict(zip(temp_symbols, preimages))
+                symbol_to_group_gen = {gen.array_form[0][0]: gen for gen in self.codomain.generators}
+                for s,exp in g.array_form:
+                    t=symbol_to_group_gen[s]
+                    if exp<0:
+                        j = C.A_dict[t**-1]
+                    else:
+                        j = C.A_dict[t]
+                    for _ in range(abs(exp)):
+                        word_intermediate = C.P[current_coset][j]
+                        if word_intermediate is not None:
+                            for s,exp in word_intermediate.array_form:
+                                total_word = total_word * transl_map[s]**exp
+                        current_coset = C.table[current_coset][j]
+                if current_coset != 0:
+                    raise ValueError("Given element is not in the image of the homomorphism.")
+                return total_word
+
         elif isinstance(g, list):
             return [self.invert(e) for e in g]
 
@@ -466,6 +488,7 @@ def group_isomorphism(G, H, isomorphism=True):
     Uses the approach suggested by Robert Tarjan to compute the isomorphism between two groups.
     First, the generators of ``G`` are mapped to the elements of ``H`` and
     we check if the mapping induces an isomorphism.
+    If G is a permutation group only mappings between elements of the same order are checked.
 
     '''
     if not isinstance(G, (PermutationGroup, FpGroup)):
@@ -510,23 +533,62 @@ def group_isomorphism(G, H, isomorphism=True):
 
     # Match the generators of `G` with subsets of `_H`
     gens = list(G.generators)
-    for subset in itertools.permutations(_H, len(gens)):
-        images = list(subset)
-        images.extend([_H.identity]*(len(G.generators)-len(images)))
-        _images = dict(zip(gens,images))
-        if _check_homomorphism(G, _H, _images):
-            if isinstance(H, FpGroup):
-                images = h_isomorphism.invert(images)
-            T =  homomorphism(G, H, G.generators, images, check=False)
-            if T.is_isomorphism():
-                # It is a valid isomorphism
-                if not isomorphism:
-                    return True
-                return (True, T)
+    if isinstance(G, PermutationGroup):
+        diz_gen = defaultdict(list)
+        diz_imm = defaultdict(list)
+        for g in gens:
+            diz_gen[g.order()].append(g)
+        for el in _H.generate():
+            j = el.order()
+            if j in diz_gen:
+                diz_imm[j].append(el)
 
-    if not isomorphism:
-        return False
-    return (False, None)
+        # creating a list with inside lists that contain all possible permutations of elements of an order
+        lista = []
+        for key,g in diz_gen.items():
+            sublist = list(itertools.permutations(diz_imm[key], len(g)))
+            lista.append(sublist)
+
+        # creating cartesian product of all permutations sorted by order
+        all_matches = itertools.product(*lista)
+        for m in all_matches:
+            images = []
+            # this is flattening out the product
+            for i in range(len(diz_gen)):
+                images.extend(m[i])
+            _images = dict(zip(gens,images))
+            if _check_homomorphism(G, _H, _images):
+                if isinstance(H, FpGroup):
+                    images = h_isomorphism.invert(images)
+                T =  homomorphism(G, H, G.generators, images, check=False)
+                if T.is_isomorphism():
+                    # It is a valid isomorphism
+                    if not isomorphism:
+                        return True
+                    return (True, T)
+
+        if not isomorphism:
+            return False
+        return (False, None)
+
+    else:
+        for subset in itertools.permutations(_H.generate(), len(gens)):
+            images = list(subset)
+            images.extend([_H.identity]*(len(G.generators)-len(images)))
+            _images = dict(zip(gens,images))
+            if _check_homomorphism(G, _H, _images):
+                if isinstance(H, FpGroup):
+                    images = h_isomorphism.invert(images)
+                T =  homomorphism(G, H, G.generators, images, check=False)
+                if T.is_isomorphism():
+                    # It is a valid isomorphism
+                    if not isomorphism:
+                        return True
+                    return (True, T)
+
+        if not isomorphism:
+            return False
+        return (False, None)
 
 def is_isomorphic(G, H):
     '''

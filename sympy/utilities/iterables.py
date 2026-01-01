@@ -1,13 +1,16 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, overload
+
 from collections import Counter, defaultdict, OrderedDict
 from itertools import (
     chain, combinations, combinations_with_replacement, cycle, islice,
     permutations, product, groupby
 )
+
 # For backwards compatibility
 from itertools import product as cartes # noqa: F401
 from operator import gt
-
-
 
 # this is the logical location of these functions
 from sympy.utilities.enumerative import (
@@ -17,7 +20,12 @@ from sympy.utilities.misc import as_int
 from sympy.utilities.decorator import deprecated
 
 
-def is_palindromic(s, i=0, j=None):
+if TYPE_CHECKING:
+    from typing import TypeVar, Iterable, Callable, Literal, Sequence
+    T = TypeVar('T')
+
+
+def is_palindromic(s: Sequence[T], i: int = 0, j: int | None = None) -> bool:
     """
     Return True if the sequence is the same from left to right as it
     is from right to left in the whole sequence (default) or in the
@@ -189,7 +197,14 @@ def reshape(seq, how):
     return type(seq)(rv)
 
 
-def group(seq, multiple=True):
+@overload
+def group(seq: Iterable[T], multiple: Literal[True] = True) -> list[list[T]]: ...
+@overload
+def group(seq: Iterable[T], multiple: Literal[False]) -> list[tuple[T, int]]: ...
+
+def group(
+    seq: Iterable[T], multiple: bool = True
+) -> list[list[T]] | list[tuple[T, int]]:
     """
     Splits a sequence into a list of lists of equal, adjacent elements.
 
@@ -285,7 +300,7 @@ def iproduct(*iterables):
             yield (ef,) + eo
 
 
-def multiset(seq):
+def multiset(seq: Sequence[T]) -> dict[T, int]:
     """Return the hashable sequence in multiset form with values being the
     multiplicity of the item in the sequence.
 
@@ -369,14 +384,14 @@ def ibin(n, bits=None, str=False):
 
     if not str:
         if bits >= 0:
-            return [1 if i == "1" else 0 for i in bin(n)[2:].rjust(bits, "0")]
+            return [1 if i == "1" else 0 for i in f'{n:b}'.rjust(bits, "0")]
         else:
             return variations(range(2), n, repetition=True)
     else:
         if bits >= 0:
-            return bin(n)[2:].rjust(bits, "0")
+            return f'{n:b}'.rjust(bits, "0")
         else:
-            return (bin(i)[2:].rjust(n, "0") for i in range(2**n))
+            return (f'{i:b}'.rjust(n, "0") for i in range(2**n))
 
 
 def variations(seq, n, repetition=False):
@@ -667,6 +682,18 @@ def sift(seq, keyfunc, binary=False):
         except (IndexError, TypeError):
             raise ValueError('keyfunc gave non-binary output')
     return T, F
+
+
+def _sift_true_false(seq: Iterable[T], keyfunc: Callable[[T], bool]) -> tuple[list[T], list[T]]:
+    """Sift iterable for items with keyfunc(item) = True/False."""
+    true: list[T] = []
+    false: list[T] = []
+    for i in seq:
+        if keyfunc(i):
+            true.append(i)
+        else:
+            false.append(i)
+    return true, false
 
 
 def take(iter, n):

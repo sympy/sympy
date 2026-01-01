@@ -1,8 +1,9 @@
-from sympy import sin, Function, symbols, Dummy, Lambda, cos
+from sympy import sin, Function, symbols, Dummy, Lambda, cos, Symbol, factorial, S
 from sympy.parsing.mathematica import parse_mathematica, MathematicaParser
 from sympy.core.sympify import sympify
 from sympy.abc import n, w, x, y, z
 from sympy.testing.pytest import raises
+from sympy.logic.boolalg import And, Or, Not
 
 
 def test_mathematica():
@@ -15,7 +16,8 @@ def test_mathematica():
         'x+y': 'x+y',
         '355/113': '355/113',
         '2.718281828': '2.718281828',
-        'Cos(1/2 * π)': 'Cos(π/2)',
+        'Cos(1/2 * π)': 'Cos*π/2',
+        'Cos[1/2 * π]': 'cos(π/2)',
         'Sin[12]': 'sin(12)',
         'Exp[Log[4]]': 'exp(log(4))',
         '(x+1)(x+3)': '(x+1)*(x+3)',
@@ -69,6 +71,26 @@ def test_mathematica():
         'Prime[5]': 'prime(5)',
         'PrimeQ[5]': 'isprime(5)',
         'Rational[2,19]': 'Rational(2,19)',    # test case for issue 25716
+        'Pi' : 'pi',  # test cases from issue 27868
+        '3*Pi' : '3*pi',
+        'Ωπ' : 'Ωπ',
+        '3*Ωπ' : '3*Ωπ',
+        '3 Ω π' : '3*Ω*π',
+        'Pi*Ω' : 'pi*Ω',
+        'Sqrt[2]*σ' : 'sqrt(2)*σ',
+        'Log[e^2]' : 'log(e**2)',
+        'Log[E^2]' : '2',
+        'Log[ExponentialE^2]' : '2',
+        '(3*數學)/數' : '(3*數學)/數',
+        'I^2' : '-1',
+        'ImaginaryI^2' : '-1',
+        'ImaginaryJ^2' : '-1',
+        '\\[Alpha]': 'α',
+        'x\\[Beta]y': 'xβy',
+        'x \\[Beta] y': 'x*β*y',
+        'a + b\\[Gamma]\\[CapitalGamma]d': 'a + bγΓd',
+        'a + b \\[Gamma] \\[CapitalGamma] d': 'a + b*γ*Γ*d',
+        'a\\[LongEqual]b': 'Eq(a,b)',
         }
 
     for e in d:
@@ -97,8 +119,21 @@ def test_parser_mathematica_tokenizer():
     assert chain("-1") == "-1"
     assert chain("- 3") == "-3"
     assert chain("α") == "α"
+    assert chain("α + β") == ["Plus", "α", "β"]
+    assert chain("αβγ") == "αβγ"
+    assert chain("α̇𝔟⃗𝒞̂") == "α̇𝔟⃗𝒞̂"
+    assert chain("α β γ") == ["Times", "α", "β", "γ"]
+    assert chain("μ1ν2") == "μ1ν2"
+    assert chain("μ1 ν2") == ["Times", "μ1", "ν2"]
+    assert chain("α + βγ") == ["Plus", "α", "βγ"]
+    assert chain("α + β γ") == ["Plus", "α", ["Times", "β", "γ"]]
+    assert chain("α̇ + 𝔟⃗ 𝒞̂") == ["Plus", "α̇", ["Times", "𝔟⃗", "𝒞̂"]]
     assert chain("+Sin[x]") == ["Sin", "x"]
     assert chain("-Sin[x]") == ["Times", "-1", ["Sin", "x"]]
+    assert chain("Cos(1/2 * π)") == ["Times", "Cos", ["Times", "1", ["Power", "2", "-1"], "π"]]
+    assert chain("Cos[1/2 * π]") == ["Cos", ["Times", "1", ["Power", "2", "-1"], "π"]]
+    assert chain("Cos[x]==Sin[y]") == ["Equal", ["Cos", "x"], ["Sin", "y"]]
+    assert chain("Cos[x]!=Sin[y]") == ["Unequal", ["Cos", "x"], ["Sin", "y"]]
     assert chain("x(a+1)") == ["Times", "x", ["Plus", "a", "1"]]
     assert chain("(x)") == "x"
     assert chain("(+x)") == "x"
@@ -193,6 +228,25 @@ def test_parser_mathematica_tokenizer():
     assert chain("a//b//c") == [["a", "b"], "c"]
     assert chain("a//b//c//d") == [[["a", "b"], "c"], "d"]
 
+    # Not operator
+    assert chain("!x") == ["Not", "x"]
+    assert chain("!(a + b)") == ["Not", ["Plus", "a", "b"]]
+    assert chain("!True") == ["Not", "True"]
+    assert chain("!False") == ["Not", "False"]
+
+    # Distinguish Not and factorial
+    assert chain("x!") == ["Factorial", "x"]
+    assert chain("(a + b)!") == ["Factorial", ["Plus", "a", "b"]]
+
+    # Combination of Not with And/Or
+    assert chain("!x && y") == ["And", ["Not", "x"], "y"]
+    assert chain("x || !y") == ["Or", "x", ["Not", "y"]]
+    assert chain("!x || !y") == ["Or", ["Not", "x"], ["Not", "y"]]
+
+    # Enablement of implicit multiplication with factorial
+    assert chain("x!y") == ["Times", ["Factorial", "x"], "y"]
+    assert chain("x!y!") == ["Times", ["Factorial", "x"], ["Factorial", "y"]]
+
     # Compound expressions
     assert chain("a;b") == ["CompoundExpression", "a", "b"]
     assert chain("a;") == ["CompoundExpression", "a", "Null"]
@@ -221,6 +275,7 @@ def test_parser_mathematica_tokenizer():
     assert chain("#") == ["Slot", "1"]
     assert chain("#3") == ["Slot", "3"]
     assert chain("#n") == ["Slot", "n"]
+    assert chain("#name") == ["Slot", "name"]
     assert chain("##") == ["SlotSequence", "1"]
     assert chain("##a") == ["SlotSequence", "a"]
 
@@ -251,6 +306,11 @@ def test_parser_mathematica_tokenizer():
     raises(SyntaxError, lambda: chain("(,"))
     raises(SyntaxError, lambda: chain("()"))
     raises(SyntaxError, lambda: chain("a (* b"))
+    raises(SyntaxError, lambda: parse_mathematica(r"\[Gamma[y"))
+    raises(SyntaxError, lambda: parse_mathematica(r"\[Gamma\[Alpha]]"))
+    raises(SyntaxError, lambda: parse_mathematica(r"]Gamma\["))
+    raises(IndexError, lambda: parse_mathematica(r"]c"))
+    raises(IndexError, lambda: parse_mathematica(r"]\[Gamma]"))
 
 
 def test_parser_mathematica_exp_alt():
@@ -278,3 +338,42 @@ def test_parser_mathematica_exp_alt():
     assert convert_chain3(full_form1) == sin(x*y)
     assert convert_chain3(full_form2) == x*y + z
     assert convert_chain3(full_form3) == sin(x*(y + z)*w**n)
+
+
+def test_Mathematica_literal_regex():
+    import sys
+    import re
+    from sympy.parsing.mathematica import MathematicaParser
+    literal_regex = re.compile(MathematicaParser._literal)
+
+    for c in map(chr, range(sys.maxunicode+1)):
+        if c == "_" or (not c.isidentifier() and not f"x{c}".isidentifier()):
+            assert not literal_regex.match(c)
+            assert not literal_regex.fullmatch(f"x{c}")
+        else:
+            if c.isidentifier():
+                assert literal_regex.fullmatch(c)
+            if f"x{c}".isidentifier():
+                assert literal_regex.fullmatch(f"x{c}")
+
+
+def test_mathematica_not_operator():
+    # Basic tests
+    x = Symbol('x')
+    assert parse_mathematica("!x") == Not(x)
+
+    # And / Or combinations
+    x1, x2 = Symbol('x1'), Symbol('x2')
+    assert parse_mathematica("x1 && !x2") == And(x1, Not(x2))
+    assert parse_mathematica("!x1 || !x2") == Or(Not(x1), Not(x2))
+
+    # Constants
+    assert parse_mathematica("!True") == S.false
+    assert parse_mathematica("!False") == S.true
+
+    # Factorial distinction
+    assert parse_mathematica("x!") == factorial(x)
+
+    # Factorial with implicit multiplication
+    assert parse_mathematica("x!y") == y*factorial(x)
+    assert parse_mathematica("x!y!") == factorial(x)*factorial(y)

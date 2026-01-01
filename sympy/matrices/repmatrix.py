@@ -1,7 +1,13 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, overload
+
 from collections import defaultdict
+from abc import abstractmethod
 
 from operator import index as index_
 
+from sympy.core.basic import Basic
 from sympy.core.expr import Expr
 from sympy.core.kind import Kind, NumberKind, UndefinedKind
 from sympy.core.numbers import Integer, Rational
@@ -10,7 +16,7 @@ from sympy.core.singleton import S
 from sympy.polys.domains import ZZ, QQ, GF, EXRAW
 from sympy.polys.matrices import DomainMatrix
 from sympy.polys.matrices.exceptions import DMNonInvertibleMatrixError
-from sympy.polys.polyerrors import CoercionFailed
+from sympy.polys.polyerrors import CoercionFailed, NotInvertible
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import is_sequence
 from sympy.utilities.misc import filldedent, as_int
@@ -18,6 +24,12 @@ from sympy.utilities.misc import filldedent, as_int
 from .exceptions import ShapeError, NonSquareMatrixError, NonInvertibleMatrixError
 from .matrixbase import classof, MatrixBase
 from .kind import MatrixKind
+
+
+if TYPE_CHECKING:
+    from typing_extensions import Self
+
+    Slice = slice | list[int]
 
 
 class RepMatrix(MatrixBase):
@@ -49,6 +61,11 @@ class RepMatrix(MatrixBase):
     #
 
     _rep: DomainMatrix
+
+    @classmethod
+    @abstractmethod
+    def _fromrep(cls, rep):
+        raise NotImplementedError("Subclasses must implement this method")
 
     def __eq__(self, other):
         # Skip sympify for mutable matrices...
@@ -332,7 +349,21 @@ class RepMatrix(MatrixBase):
     def _eval_extract(self, rowsList, colsList):
         return self._fromrep(self._rep.extract(rowsList, colsList))
 
-    def __getitem__(self, key):
+    @overload
+    def __getitem__(self, key: tuple[int, int], /) -> Expr: ...
+    @overload
+    def __getitem__(self, key: tuple[int, Slice], /) -> Self: ...
+    @overload
+    def __getitem__(self, key: tuple[Slice, int], /) -> Self: ...
+    @overload
+    def __getitem__(self, key: tuple[Slice, Slice], /) -> Self: ...
+    @overload
+    def __getitem__(self, key: int, /) -> Expr: ...
+    @overload
+    def __getitem__(self, key: slice, /) -> list[Expr]: ...
+
+    def __getitem__(self, key: tuple[int | Slice, int | Slice] | int | slice, /
+                    ) -> Expr | Self | list[Expr]:
         return _getitem_RepMatrix(self, key)
 
     @classmethod
@@ -348,10 +379,10 @@ class RepMatrix(MatrixBase):
     def _eval_add(self, other):
         return classof(self, other)._fromrep(self._rep + other._rep)
 
-    def _eval_matrix_mul(self, other):
+    def _eval_matrix_mul(self, other: RepMatrix): # type: ignore
         return classof(self, other)._fromrep(self._rep * other._rep)
 
-    def _eval_matrix_mul_elementwise(self, other):
+    def _eval_matrix_mul_elementwise(self, other: RepMatrix): # type: ignore
         selfrep, otherrep = self._rep.unify(other._rep)
         newrep = selfrep.mul_elementwise(otherrep)
         return classof(self, other)._fromrep(newrep)
@@ -451,11 +482,20 @@ class RepMatrix(MatrixBase):
         except CoercionFailed:
             raise ValueError("inv_mod: matrix entries must be integers")
 
-        try:
-            dMi = dM.inv()
-        except DMNonInvertibleMatrixError as exc:
-            msg = f'Matrix is not invertible (mod {m})'
-            raise NonInvertibleMatrixError(msg) from exc
+        if K.is_Field:
+            try:
+                dMi = dM.inv()
+            except DMNonInvertibleMatrixError as exc:
+                msg = f'Matrix is not invertible (mod {m})'
+                raise NonInvertibleMatrixError(msg) from exc
+        else:
+            dMadj, det = dM.adj_det()
+            try:
+                detinv = 1 / det
+            except NotInvertible:
+                msg = f'Matrix is not invertible (mod {m})'
+                raise NonInvertibleMatrixError(msg)
+            dMi = dMadj * detinv
 
         return dMi.to_Matrix()
 
@@ -576,7 +616,7 @@ class MutableRepMatrix(RepMatrix):
     @classmethod
     def _fromrep(cls, rep):
         obj = super().__new__(cls)
-        obj.rows, obj.cols = rep.shape
+        obj.rows, obj.cols = rep.shape # type: ignore
         obj._rep = rep
         return obj
 
@@ -632,13 +672,81 @@ class MutableRepMatrix(RepMatrix):
             self._rep, value = self._unify_element_sympy(self._rep, value)
             self._rep.rep.setitem(i, j, value)
 
-    def _eval_col_del(self, col):
-        self._rep = DomainMatrix.hstack(self._rep[:,:col], self._rep[:,col+1:])
-        self.cols -= 1
+    def _setitem(self, key, value):
+        """Helper to set value at location given by key.
 
-    def _eval_row_del(self, row):
+        Examples
+        ========
+
+        >>> from sympy import Matrix, I, zeros, ones
+        >>> m = Matrix(((1, 2+I), (3, 4)))
+        >>> m
+        Matrix([
+        [1, 2 + I],
+        [3,     4]])
+        >>> m[1, 0] = 9
+        >>> m
+        Matrix([
+        [1, 2 + I],
+        [9,     4]])
+        >>> m[1, 0] = [[0, 1]]
+
+        To replace row r you assign to position r*m where m
+        is the number of columns:
+
+        >>> M = zeros(4)
+        >>> m = M.cols
+        >>> M[3*m] = ones(1, m)*2; M
+        Matrix([
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+        [2, 2, 2, 2]])
+
+        And to replace column c you can assign to position c:
+
+        >>> M[2] = ones(m, 1)*4; M
+        Matrix([
+        [0, 0, 4, 0],
+        [0, 0, 4, 0],
+        [0, 0, 4, 0],
+        [2, 2, 4, 2]])
+        """
+        is_slice = isinstance(key, slice)
+        i, j = key = self.key2ij(key)
+        is_mat = isinstance(value, MatrixBase)
+        if isinstance(i, slice) or isinstance(j, slice):
+            if isinstance(value, MatrixBase):
+                self.copyin_matrix(key, value)
+                return
+            if not isinstance(value, Expr) and is_sequence(value):
+                self.copyin_list(key, value)
+                return
+            raise ValueError('unexpected value: %s' % value)
+        else:
+            if (not is_mat and
+                    not isinstance(value, Basic) and is_sequence(value)):
+                value = self._new(value)
+                is_mat = True
+            if isinstance(value, MatrixBase):
+                if is_slice:
+                    key = (slice(*divmod(i, self.cols)),
+                           slice(*divmod(j, self.cols)))
+                else:
+                    key = (slice(i, i + value.rows),
+                           slice(j, j + value.cols))
+                self.copyin_matrix(key, value)
+            else:
+                return i, j, self._sympify(value) # type: ignore
+            return
+
+    def _eval_col_del(self, col): # type: ignore
+        self._rep = DomainMatrix.hstack(self._rep[:,:col], self._rep[:,col+1:])
+        self.cols -= 1 # type: ignore
+
+    def _eval_row_del(self, row): # type: ignore
         self._rep = DomainMatrix.vstack(self._rep[:row,:], self._rep[row+1:, :])
-        self.rows -= 1
+        self.rows -= 1 # type: ignore
 
     def _eval_col_insert(self, col, other):
         other = self._new(other)

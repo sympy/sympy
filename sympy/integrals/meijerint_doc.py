@@ -7,6 +7,7 @@ from typing import Any
 from sympy.integrals.meijerint import _create_lookup_table
 from sympy.core.add import Add
 from sympy.core.basic import Basic
+from sympy.core.expr import Expr
 from sympy.core.relational import Eq
 from sympy.core.symbol import Symbol
 from sympy.printing.latex import latex
@@ -24,7 +25,7 @@ for about, category in t.items():
             list(category[0][0].atoms(func))[0]) for func in about) + ':\n\n'
     for formula, gs, cond, hint in category:
         if not isinstance(gs, list):
-            g = Symbol('\\text{generated}')
+            g: Expr = Symbol('\\text{generated}')
         else:
             g = Add(*[fac*f for (fac, f) in gs])
         obj = Eq(formula, g)

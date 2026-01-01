@@ -2,10 +2,11 @@ from math import prod
 
 from sympy.core import Add, S, Dummy, expand_func
 from sympy.core.expr import Expr
-from sympy.core.function import Function, ArgumentIndexError, PoleError
+from sympy.core.function import DefinedFunction, ArgumentIndexError, PoleError
 from sympy.core.logic import fuzzy_and, fuzzy_not
 from sympy.core.numbers import Rational, pi, oo, I
 from sympy.core.power import Pow
+from sympy.external.mpmath import prec_to_dps, local_workprec
 from sympy.functions.special.zeta_functions import zeta
 from sympy.functions.special.error_functions import erf, erfc, Ei
 from sympy.functions.elementary.complexes import re, unpolarify
@@ -17,8 +18,6 @@ from sympy.functions.combinatorial.numbers import bernoulli, harmonic
 from sympy.functions.combinatorial.factorials import factorial, rf, RisingFactorial
 from sympy.utilities.misc import as_int
 
-from mpmath import mp, workprec
-from mpmath.libmp.libmpf import prec_to_dps
 
 def intlike(n):
     try:
@@ -31,7 +30,7 @@ def intlike(n):
 ############################ COMPLETE GAMMA FUNCTION ##########################
 ###############################################################################
 
-class gamma(Function):
+class gamma(DefinedFunction):
     r"""
     The gamma function
 
@@ -219,7 +218,7 @@ class gamma(Function):
 ################## LOWER and UPPER INCOMPLETE GAMMA FUNCTIONS #################
 ###############################################################################
 
-class lowergamma(Function):
+class lowergamma(DefinedFunction):
     r"""
     The lower incomplete gamma function.
 
@@ -342,8 +341,8 @@ class lowergamma(Function):
         if all(x.is_number for x in self.args):
             a = self.args[0]._to_mpmath(prec)
             z = self.args[1]._to_mpmath(prec)
-            with workprec(prec):
-                res = mp.gammainc(a, 0, z)
+            with local_workprec(prec) as ctx:
+                res = ctx.gammainc(a, 0, z)
             return Expr._from_mpmath(res, prec)
         else:
             return self
@@ -395,7 +394,7 @@ class lowergamma(Function):
             return True
 
 
-class uppergamma(Function):
+class uppergamma(DefinedFunction):
     r"""
     The upper incomplete gamma function.
 
@@ -476,8 +475,8 @@ class uppergamma(Function):
         if all(x.is_number for x in self.args):
             a = self.args[0]._to_mpmath(prec)
             z = self.args[1]._to_mpmath(prec)
-            with workprec(prec):
-                res = mp.gammainc(a, z, mp.inf)
+            with local_workprec(prec) as ctx:
+                res = ctx.gammainc(a, z, ctx.inf)
             return Expr._from_mpmath(res, prec)
         return self
 
@@ -561,7 +560,7 @@ class uppergamma(Function):
 ###################### POLYGAMMA and LOGGAMMA FUNCTIONS #######################
 ###############################################################################
 
-class polygamma(Function):
+class polygamma(DefinedFunction):
     r"""
     The function ``polygamma(n, z)`` returns ``log(gamma(z)).diff(n + 1)``.
 
@@ -850,19 +849,22 @@ class polygamma(Function):
             return
         s = self.args[0]._to_mpmath(prec+12)
         z = self.args[1]._to_mpmath(prec+12)
-        if mp.isint(z) and z <= 0:
-            return S.ComplexInfinity
-        with workprec(prec+12):
+        with local_workprec(prec+12) as mp:
+            if mp.isint(z) and z <= 0:
+                return S.ComplexInfinity
             if mp.isint(s) and s >= 0:
                 res = mp.polygamma(s, z)
             else:
-                zt = mp.zeta(s+1, z)
-                dzt = mp.zeta(s+1, z, 1)
-                res = (dzt + (mp.euler + mp.digamma(-s)) * zt) * mp.rgamma(-s)
+                zt = mp.zeta(mp.fadd(s,1), z)
+                dzt = mp.zeta(mp.fadd(s,1), z, 1)
+                res = mp.fmul(
+                    mp.fadd(dzt, mp.fmul(mp.fadd(mp.euler, mp.digamma(mp.fneg(s))), zt)),
+                    mp.rgamma(mp.fneg(s))
+                )
         return Expr._from_mpmath(res, prec)
 
 
-class loggamma(Function):
+class loggamma(DefinedFunction):
     r"""
     The ``loggamma`` function implements the logarithm of the
     gamma function (i.e., $\log\Gamma(x)$).
@@ -1057,7 +1059,7 @@ class loggamma(Function):
             raise ArgumentIndexError(self, argindex)
 
 
-class digamma(Function):
+class digamma(DefinedFunction):
     r"""
     The ``digamma`` function is the first derivative of the ``loggamma``
     function
@@ -1151,7 +1153,7 @@ class digamma(Function):
 
 
 
-class trigamma(Function):
+class trigamma(DefinedFunction):
     r"""
     The ``trigamma`` function is the second derivative of the ``loggamma``
     function
@@ -1252,7 +1254,7 @@ class trigamma(Function):
 ###############################################################################
 
 
-class multigamma(Function):
+class multigamma(DefinedFunction):
     r"""
     The multivariate gamma function is a generalization of the gamma function
 

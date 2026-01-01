@@ -36,11 +36,13 @@ git_whitelist = {
     '.github/PULL_REQUEST_TEMPLATE.md',
     '.github/dependabot.yml',
     '.github/workflows/runtests.yml',
+    '.github/workflows/emscripten.yml',
     '.github/workflows/ci-sage.yml',
     '.github/workflows/comment-on-pr.yml',
     '.github/workflows/release.yml',
     '.github/workflows/docs-preview.yml',
     '.github/workflows/checkconflict.yml',
+    '.github/workflows/nightly-wheels.yml',
     '.ci/durations.json',
     '.ci/generate_durations_log.sh',
     '.ci/parse_durations_log.py',
@@ -57,6 +59,8 @@ git_whitelist = {
     'requirements-dev.txt',
     'MANIFEST.in',
     'banner.svg',
+    # GitHub Codespace
+    '.devcontainer/devcontainer.json',
     # Code of conduct
     'CODE_OF_CONDUCT.md',
     # Contributing guide
@@ -98,7 +102,7 @@ git_whitelist = {
     'bin/mailmap_check.py',
     'bin/test_symengine.py',
     'bin/test_tensorflow.py',
-    'bin/test_pyodide.mjs',
+    'bin/test_pytorch.py',
     # The notebooks are not ready for shipping yet. They need to be cleaned
     # up, and preferably doctested.  See also
     # https://github.com/sympy/sympy/issues/6039.

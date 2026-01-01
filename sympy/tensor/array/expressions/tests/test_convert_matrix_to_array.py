@@ -1,4 +1,4 @@
-from sympy import Lambda, KroneckerProduct
+from sympy import Lambda, KroneckerProduct, sqrt
 from sympy.core.symbol import symbols, Dummy
 from sympy.matrices.expressions.hadamard import (HadamardPower, HadamardProduct)
 from sympy.matrices.expressions.inverse import Inverse
@@ -8,7 +8,7 @@ from sympy.matrices.expressions.special import Identity
 from sympy.matrices.expressions.trace import Trace
 from sympy.matrices.expressions.transpose import Transpose
 from sympy.tensor.array.expressions.array_expressions import ArrayTensorProduct, ArrayContraction, \
-    PermuteDims, ArrayDiagonal, ArrayElementwiseApplyFunc, _array_contraction, _array_tensor_product, Reshape
+    PermuteDims, ArrayDiagonal, ArrayElementwiseApplyFunc, _array_contraction, _array_tensor_product, Reshape, ArrayAdd
 from sympy.tensor.array.expressions.from_array_to_matrix import convert_array_to_matrix
 from sympy.tensor.array.expressions.from_matrix_to_array import convert_matrix_to_array
 
@@ -87,7 +87,11 @@ def test_arrayexpr_convert_matrix_to_array():
     assert convert_matrix_to_array(expr) == result
 
     expr = 3*Trace(M)**2
-    result = ArrayContraction(ArrayTensorProduct(3, M, M), (0, 1), (2, 3))
+    result = ArrayTensorProduct(3, ArrayElementwiseApplyFunc(lambda x: x**2, ArrayContraction(M, (0, 1))))
+    assert convert_matrix_to_array(expr).dummy_eq(result)
+
+    expr = Trace(M) + Trace(N)
+    result = ArrayAdd(ArrayContraction(M, (0, 1)), ArrayContraction(N, (0, 1)))
     assert convert_matrix_to_array(expr) == result
 
     expr = HadamardProduct(M, N)
@@ -126,3 +130,13 @@ def test_arrayexpr_convert_matrix_to_array():
     expr = KroneckerProduct(A, B, C, D)
     cg = convert_matrix_to_array(expr)
     assert cg == Reshape(PermuteDims(ArrayTensorProduct(A, B, C, D), [0, 2, 4, 6, 1, 3, 5, 7]), (k**4, k**4))
+
+    # Related to issue 23931
+    expr = 1/Trace(A)
+    cg = convert_matrix_to_array(expr)
+    assert cg.dummy_eq(ArrayElementwiseApplyFunc(Lambda(m, 1/m), ArrayContraction(A, (0, 1))))
+
+    # Fixes issue https://github.com/sympy/sympy/issues/28615
+    expr = sqrt(Trace(X.T*X))
+    cg = convert_matrix_to_array(expr)
+    assert cg.dummy_eq(ArrayElementwiseApplyFunc(sqrt, ArrayContraction(ArrayTensorProduct(X, X), (0, 2), (1, 3))))

@@ -6,6 +6,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.special.gamma_functions import polygamma
 from sympy.functions.special.error_functions import (Si, Ci)
+from sympy.matrices import Matrix
 from sympy.matrices.expressions.blockmatrix import BlockMatrix
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.matrices.expressions.special import Identity
@@ -329,8 +330,23 @@ def test_jax_tuple_compatibility():
     assert np.allclose(func(*input_tuple2), func(*input_array2))
 
 def test_numpy_array():
-    assert NumPyPrinter().doprint(Array(((1, 2), (3, 5)))) == 'numpy.array([[1, 2], [3, 5]])'
-    assert NumPyPrinter().doprint(Array((1, 2))) == 'numpy.array((1, 2))'
+    p = NumPyPrinter()
+    assert p.doprint(Array([[1, 2], [3, 5]])) == 'numpy.array([[1, 2], [3, 5]])'
+    assert p.doprint(Array([1, 2])) == 'numpy.array([1, 2])'
+    assert p.doprint(Array([[[1, 2, 3]]])) == 'numpy.array([[[1, 2, 3]]])'
+    assert p.doprint(Array([], (0,))) == 'numpy.zeros((0,))'
+    assert p.doprint(Array([], (0, 0))) == 'numpy.zeros((0, 0))'
+    assert p.doprint(Array([], (0, 1))) == 'numpy.zeros((0, 1))'
+    assert p.doprint(Array([], (1, 0))) == 'numpy.zeros((1, 0))'
+    assert p.doprint(Array([1], ())) == 'numpy.array(1)'
+
+def test_numpy_matrix():
+    p = NumPyPrinter()
+    assert p.doprint(Matrix([[1, 2], [3, 5]])) == 'numpy.array([[1, 2], [3, 5]])'
+    assert p.doprint(Matrix([1, 2])) == 'numpy.array([[1], [2]])'
+    assert p.doprint(Matrix(0, 0, [])) == 'numpy.zeros((0, 0))'
+    assert p.doprint(Matrix(0, 1, [])) == 'numpy.zeros((0, 1))'
+    assert p.doprint(Matrix(1, 0, [])) == 'numpy.zeros((1, 0))'
 
 def test_numpy_known_funcs_consts():
     assert _numpy_known_constants['NaN'] == 'numpy.nan'

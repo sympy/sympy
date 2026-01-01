@@ -56,6 +56,11 @@ is the symbol that we want to solve the equation for.
 
 .. autofunction:: sympy.solvers.solvers::unrad
 
+Univariate Equations
+--------------------
+
+See :ref:`solveset`.
+
 Ordinary Differential equations (ODEs)
 --------------------------------------
 
@@ -91,6 +96,14 @@ Systems of Polynomial Equations
 
 .. autofunction:: sympy.solvers.polysys::solve_triangulated
 
+.. autofunction:: sympy.solvers.polysys::factor_system
+
+.. autofunction:: sympy.solvers.polysys::factor_system_bool
+
+.. autofunction:: sympy.solvers.polysys::factor_system_cond
+
+.. autofunction:: sympy.solvers.polysys::factor_system_poly
+
 Diophantine Equations (DEs)
 ---------------------------
 
@@ -111,3 +124,8 @@ Linear Programming (Optimization)
 .. autofunction:: lpmin
 
 .. autofunction:: linprog
+
+Types
+-----
+
+.. py:class:: collections.abc.Sequence

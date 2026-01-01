@@ -1080,7 +1080,7 @@ def test_atan():
     assert atan.nargs == FiniteSet(1)
     assert atan(oo) == pi/2
     assert atan(-oo) == -pi/2
-    assert atan(zoo) == AccumBounds(-pi/2, pi/2)
+    assert unchanged(atan, zoo)
 
     assert atan(0) == 0
     assert atan(1) == pi/4
@@ -1547,14 +1547,6 @@ def test_real_imag():
         assert cot(a).as_real_imag(deep=deep) == (cot(a), 0)
 
 
-@XFAIL
-def test_sin_cos_with_infinity():
-    # Test for issue 5196
-    # https://github.com/sympy/sympy/issues/5196
-    assert sin(oo) is S.NaN
-    assert cos(oo) is S.NaN
-
-
 @slow
 def test_sincos_rewrite_sqrt():
     # equivalent to testing rewrite(pow)
@@ -1693,7 +1685,7 @@ def test_sec():
     assert sec(2*x).expand(trig=True) == 1/(2*cos(x)**2 - 1)
 
     assert sec(x).is_extended_real == True
-    assert sec(z).is_real == None
+    assert sec(z).is_real is None
 
     assert sec(a).is_algebraic is None
     assert sec(na).is_algebraic is False
@@ -1701,7 +1693,7 @@ def test_sec():
     assert sec(x).as_leading_term() == sec(x)
 
     assert sec(0, evaluate=False).is_finite == True
-    assert sec(x).is_finite == None
+    assert sec(x).is_finite is None
     assert sec(pi/2, evaluate=False).is_finite == False
 
     assert series(sec(x), x, x0=0, n=6) == 1 + x**2/2 + 5*x**4/24 + O(x**6)
@@ -1785,7 +1777,7 @@ def test_csc():
     assert csc(2*x).expand(trig=True) == 1/(2*sin(x)*cos(x))
 
     assert csc(x).is_extended_real == True
-    assert csc(z).is_real == None
+    assert csc(z).is_real is None
 
     assert csc(a).is_algebraic is None
     assert csc(na).is_algebraic is False
@@ -1793,7 +1785,7 @@ def test_csc():
     assert csc(x).as_leading_term() == csc(x)
 
     assert csc(0, evaluate=False).is_finite == False
-    assert csc(x).is_finite == None
+    assert csc(x).is_finite is None
     assert csc(pi/2, evaluate=False).is_finite == True
 
     assert series(csc(x), x, x0=pi/2, n=6) == \

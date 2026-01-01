@@ -150,7 +150,7 @@ def test_failing_number_line_properties():
 
 
 def test_equality():
-    # test symetry and reflexivity
+    # test symmetry and reflexivity
     assert ask(Q.eq(x, x)) is True
     assert ask(Q.eq(y, x), Q.eq(x, y)) is True
     assert ask(Q.eq(y, x), ~Q.eq(z, z) | Q.eq(x, y)) is True

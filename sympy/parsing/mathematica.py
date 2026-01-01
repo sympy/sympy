@@ -8,8 +8,8 @@ import sympy
 from sympy import Mul, Add, Pow, Rational, log, exp, sqrt, cos, sin, tan, asin, acos, acot, asec, acsc, sinh, cosh, tanh, asinh, \
     acosh, atanh, acoth, asech, acsch, expand, im, flatten, polylog, cancel, expand_trig, sign, simplify, \
     UnevaluatedExpr, S, atan, atan2, Mod, Max, Min, rf, Ei, Si, Ci, airyai, airyaiprime, airybi, primepi, prime, \
-    isprime, cot, sec, csc, csch, sech, coth, Function, I, pi, Tuple, GreaterThan, StrictGreaterThan, StrictLessThan, \
-    LessThan, Equality, Or, And, Lambda, Integer, Dummy, symbols
+    isprime, cot, sec, csc, csch, sech, coth, Function, E, I, pi, Tuple, GreaterThan, StrictGreaterThan, StrictLessThan, \
+    LessThan, Equality, Or, And, Lambda, Integer, Dummy, symbols, Not, factorial
 from sympy.core.sympify import sympify, _sympify
 from sympy.functions.special.bessel import airybiprime
 from sympy.functions.special.error_functions import li
@@ -105,6 +105,66 @@ def _parse_Function(*args):
 def _deco(cls):
     cls._initialize_class()
     return cls
+
+
+def _literal_character_ranges(initial):
+    """List all characters that may be used in identifiers
+
+    Mathematica identifiers cannot contain underscores.  This function
+    returns a regex range matching all characters that may be used in
+    a Python identifier, excluding underscores.  The `initial` argument
+    is a bool indicating whether this range describes valid initial
+    characters (True) or valid subsequent characters (False).
+    """
+    import sys
+    def valid(character):
+        if character == "_":
+            return False
+        elif initial:
+            return character.isidentifier()
+        else:
+            return ("x" + character).isidentifier()
+
+    # Note that 0 corresponds to the NUL character, which is not an
+    # identifier, so we can use it as a signal that we haven't found a
+    # valid character yet.
+    characters = ""
+    range_begin_character = ""
+    range_begin_index = 0
+    range_end_character = ""
+    range_end_index = 0
+
+    for codepoint in range(sys.maxunicode + 1):
+        character = chr(codepoint)
+        if valid(character):
+            if range_begin_index == 0:
+                range_begin_character = character
+                range_begin_index = codepoint
+            range_end_character = character
+            range_end_index = codepoint
+        elif range_begin_index != 0:
+            # We have reached the end of a range (length 1, 2, or n),
+            # so we add it to our list of characters.
+            if range_begin_index == range_end_index:
+                characters += range_begin_character
+            elif range_begin_index + 1 == range_end_index:
+                characters += range_begin_character + range_end_character
+            else:
+                characters += f"{range_begin_character}-{range_end_character}"
+            # Reset the range
+            range_begin_character = ""
+            range_begin_index = 0
+
+    # In case the loop above ended on a valid character we add it / close the range here
+    if range_begin_index != 0:
+        if range_begin_index == range_end_index:
+            characters += range_begin_character
+        elif range_begin_index + 1 == range_end_index:
+            characters += range_begin_character + range_end_character
+        else:
+            characters += f"{range_begin_character}-{range_end_character}"
+
+    return characters
 
 
 @_deco
@@ -449,7 +509,7 @@ class MathematicaParser:
 
         s = m.string                # whole string
         anc = m.end() + 1           # pointing the first letter of arguments
-        square, curly = [], []      # stack for brakets
+        square, curly = [], []      # stack for brackets
         args = []
 
         # current cursor
@@ -533,10 +593,11 @@ class MathematicaParser:
         return s
 
     def parse(self, s):
-        s2 = self._from_mathematica_to_tokens(s)
-        s3 = self._from_tokens_to_fullformlist(s2)
-        s4 = self._from_fullformlist_to_sympy(s3)
-        return s4
+        s2 = named_characters_to_unicode(s)
+        s3 = self._from_mathematica_to_tokens(s2)
+        s4 = self._from_tokens_to_fullformlist(s3)
+        s5 = self._from_fullformlist_to_sympy(s4)
+        return s5
 
     INFIX = "Infix"
     PREFIX = "Prefix"
@@ -588,7 +649,21 @@ class MathematicaParser:
         "##": lambda: ["SlotSequence", "1"],
     }
 
-    _literal = r"[A-Za-z][A-Za-z0-9]*"
+    # This regex matches any valid python identifier -- excluding
+    # underscores, which Mathematica uses to denote patterns, and
+    # therefore can't be part of a variable name.  The regex has the
+    # form "[a][b]*", where `a` is the set of characters that can
+    # start an identifier, and `b` is the set of characters that can
+    # continue an identifier, which may also include numbers and
+    # unicode combining characters.
+    _literal = (
+        "["
+        + _literal_character_ranges(True)
+        + "]["
+        + _literal_character_ranges(False)
+        + "]*"
+    )
+
     _number = r"(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)"
 
     _enclosure_open = ["(", "[", "[[", "{"]
@@ -656,9 +731,15 @@ class MathematicaParser:
             code_splits[i] = code_split
 
         # Tokenize the input strings with a regular expression:
-        token_lists = [tokenizer.findall(i) if isinstance(i, str) and i.isascii() else [i] for i in code_splits]
-        tokens = [j for i in token_lists for j in i]
+        def token_split(code):
+            if isinstance(code, str):
+                m = tokenizer.findall(code)
+                if m or code.isascii():
+                    return m
+            return [code]
 
+        token_lists = [token_split(code) for code in code_splits]
+        tokens = [j for i in token_lists for j in i]
         # Remove newlines at the beginning
         while tokens and tokens[0] == "\n":
             tokens.pop(0)
@@ -831,6 +912,11 @@ class MathematicaParser:
                         if pointer == 0 or pointer == size - 1 or self._is_op(tokens[pointer - 1]) or self._is_op(tokens[pointer + 1]):
                             pointer += 1
                             continue
+                    # Special case: "!" without preceding operand is PREFIX Not, not POSTFIX Factorial
+                    if token == "!" and op_type == self.POSTFIX:
+                        if pointer == 0 or self._is_op(tokens[pointer - 1]):
+                            pointer += 1
+                            continue
                     changed = True
                     tokens[pointer] = node
                     if op_type == self.INFIX:
@@ -983,7 +1069,6 @@ class MathematicaParser:
         "Log": lambda *a: log(*reversed(a)),
         "Log2": lambda x: log(x, 2),
         "Log10": lambda x: log(x, 10),
-        "Rational": Rational,
         "Exp": exp,
         "Sqrt": sqrt,
 
@@ -1055,13 +1140,17 @@ class MathematicaParser:
         "Equal": Equality,
         "Or": Or,
         "And": And,
-
+        "Not": Not,
         "Function": _parse_Function,
+        "Factorial": factorial,
     }
 
     _atom_conversions = {
         "I": I,
         "Pi": pi,
+        "ExponentialE": E,
+        "ImaginaryI": I,
+        "ImaginaryJ": I,
     }
 
     def _from_fullformlist_to_sympy(self, full_form_list):
@@ -1084,3 +1173,27 @@ class MathematicaParser:
         for mma_form, sympy_node in self._node_conversions.items():
             expr = expr.replace(Function(mma_form), sympy_node)
         return expr
+
+
+def named_characters_to_unicode(s: str) -> str:
+    """
+    Convert Mathematica's named characters to SymPy equivalents.
+
+    The list of named characters is available at
+
+        https://reference.wolfram.com/language/guide/ListingOfNamedCharacters.html
+    """
+    from .mathematica_named_characters import mathematica_named_characters
+    # Mathematica's named characters always start with `\[`, end with
+    # `]`, and have only characters in [a-zA-Z] in between.
+    if r"\[" in s:  # Don't bother if there's no `\[`
+        pattern = r"\\\[([a-zA-Z]+)\]"
+        def replace(match):
+            name = match.group(1)
+            if name not in mathematica_named_characters:
+                raise ValueError(f"Unknown Mathematica named character: {name}")
+            return mathematica_named_characters[name]
+        s = re.sub(pattern, replace, s)
+    if r"\[" in s:
+        raise SyntaxError(f"Unmatched '\\[' in '{s}'")
+    return s

@@ -157,3 +157,8 @@ def test_represent():
     assert represent(sz) == Matrix([[1, 0], [0, -1]])
     assert represent(sm) == Matrix([[0, 0], [1, 0]])
     assert represent(sp) == Matrix([[0, 1], [0, 0]])
+
+
+def test_is_annihilation():
+    assert sm.is_annihilation is True
+    assert sp.is_annihilation is False

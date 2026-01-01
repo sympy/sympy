@@ -4,10 +4,12 @@ from sympy.core.numbers import Integer
 from sympy.matrices.dense import (Matrix, eye)
 from sympy.tensor.indexed import Indexed
 from sympy.combinatorics import Permutation
-from sympy.core import S, Rational, Symbol, Basic, Add, Wild
+from sympy.core import S, Rational, Symbol, Basic, Add, Mul, Wild, Function, Expr
 from sympy.core.containers import Tuple
+from sympy.core.decorators import call_highest_priority
 from sympy.core.symbol import symbols
 from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.integrals import integrate
 from sympy.tensor.array import Array
 from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry, \
     get_symmetric_group_sgs, TensorIndex, tensor_mul, TensAdd, \
@@ -430,6 +432,16 @@ def test_canonicalize4():
     K = TensorHead("K", [Cartesian])
     expr = TensAdd( K(p) , - 2*K(p) )
     assert expr.canon_bp() == -K(p)
+
+def test_canonicalize5():
+    R3 = TensorIndexType('R3', dim=3)
+    p = tensor_indices("p", R3)
+    K = TensorHead("K", [R3])
+    f = symbols("f", cls=Function)
+    x = symbols("x")
+
+    expr = integrate(f(x), (x,0,1)) * K(p)
+    assert expr.as_dummy().canon_bp() == integrate(f(x), (x,0,1)).as_dummy() * K(p)
 
 def test_TensorIndexType():
     D = Symbol('D')
@@ -1014,6 +1026,20 @@ def test_contract_metric4():
     assert expr.contract_metric(delta) == 0
 
 
+def test_contract_metric5():
+    R3 = TensorIndexType('R3', dim=3)
+    p, q, r = tensor_indices("p q r", R3)
+    delta = R3.delta
+    K = TensorHead("K", [R3])
+
+    F = Function("F")
+    x = Symbol("x")
+
+    #Check if contract_metric gets into an infinite loop when given a TensMul whose coeff is an Add
+    expr = (2+F(x))*K(-p)*K(-q)
+    assert expr.contract_metric(delta) == expr
+
+
 def test_epsilon():
     Lorentz = TensorIndexType('Lorentz', dim=4, dummy_name='L')
     a, b, c, d, e = tensor_indices('a,b,c,d,e', Lorentz)
@@ -1229,6 +1255,77 @@ def test_hash():
     assert tsymmetry.func(*tsymmetry.args) == tsymmetry
     assert hash(tsymmetry.func(*tsymmetry.args)) == hash(tsymmetry)
     assert check_all(tsymmetry)
+
+def test_op_priority():
+    class NewExpr(Expr):
+        _op_priority = 100
+        is_commutative = False
+
+        def __neg__(self):
+            return self*S.NegativeOne
+
+        @call_highest_priority('__radd__')
+        def __add__(self, other):
+            return NewAdd(self, other)
+
+        @call_highest_priority('__add__')
+        def __radd__(self, other):
+            return NewAdd(other, self)
+
+        @call_highest_priority('__rsub__')
+        def __sub__(self, other):
+            return NewAdd(self, -other)
+
+        @call_highest_priority('__sub__')
+        def __rsub__(self, other):
+            return NewAdd(other, -self)
+
+        @call_highest_priority('__rmul__')
+        def __mul__(self, other):
+            return NewMul(self, other)
+
+        @call_highest_priority('__mul__')
+        def __rmul__(self, other):
+            return NewMul(other, self)
+
+        @call_highest_priority('__rtruediv__')
+        def __truediv__(self, other):
+            return NewMul(self, other)
+
+        @call_highest_priority('__truediv__')
+        def __rtruediv__(self, other):
+            return NewMul(other, self)
+
+    class NewAdd(NewExpr, Add):
+        pass
+
+    class NewMul(NewExpr, Mul):
+        pass
+
+    class NewSymbol(NewExpr, Symbol):
+        def __init__(self, name):
+            self.name = name
+
+        # The following definitions are required to satisfy mypy.
+
+        def subs():
+            pass
+
+        def simplify():
+            pass
+
+    Lorentz = TensorIndexType('Lorentz', dim=4, dummy_name='L')
+    a = tensor_indices('a', Lorentz)
+    p = tensor_heads('p', [Lorentz])
+    n = NewSymbol('n')
+
+    assert isinstance(n + p(a), NewAdd)
+    assert isinstance(p(a) + n, NewAdd)
+    assert isinstance(n - p(a), NewAdd)
+    assert isinstance(p(a) - n, NewAdd)
+    assert isinstance(n * p(a), NewMul)
+    assert isinstance(p(a) * n, NewMul)
+    assert isinstance(p(a) / n, NewMul)
 
 
 ### TEST VALUED TENSORS ###
@@ -1787,6 +1884,9 @@ def test_tensor_expand():
 
     A, B, C, D = tensor_heads("A B C D", [L])
 
+    F = Function("F")
+    x = Symbol("x")
+
     assert isinstance(Add(A(i), B(i)), TensAdd)
     assert isinstance(expand(A(i)+B(i)), TensAdd)
 
@@ -1830,6 +1930,21 @@ def test_tensor_expand():
 
     expr = C(-i)*(B(j)*B(-j) + B(j)*C(-j))
     assert expr.expand() == C(-i)*B(j)*B(-j) + C(-i)*B(j)*C(-j)
+
+    """
+    Test whether expand correctly handles the case where the coeff of a TensMul
+    is an add. We do not directly check expr_expand == 2*A(i) + F(x)*A(i) since
+    __add__ currently consolidates the coefficients automatically
+    """
+    expr = (2 + F(x))*A(i)
+    expr_expand = expr.expand()
+    assert isinstance(expr_expand, TensAdd)
+    assert expr_expand.args == (2*A(i), F(x)*A(i))
+
+    expr = (2 + F(x))*A(i) + B(i)
+    expr_expand = expr.expand()
+    assert isinstance(expr_expand, TensAdd)
+    assert expr_expand.args == (2*A(i), F(x)*A(i), B(i))
 
 
 def test_tensor_alternative_construction():
@@ -1895,7 +2010,11 @@ def test_tensor_replacement():
 
     expr = K(i, j, -j, k)*A(-i)*A(-k)
     repl = {A(i): [1, 2], K(i,j,k,l): Array([1]*2**4).reshape(2,2,2,2), L: diag(1, -1)}
-    assert expr._extract_data(repl)
+    assert expr._extract_data(repl) == ([], 0)
+
+    expr = K(i, j, k, -l)
+    repl = {K(i,j,k,l): Array([ (i+1) for i in range(2**4)]).reshape(2,2,2,2), L: diag(1, -1)}
+    assert expr.replace_with_arrays(repl) == Array([(i+1)*(-1)**i for i in range(2**4)]).reshape(2,2,2,2)
 
     expr = H(j, k)
     repl = {H(i,j): [[1,2],[3,4]], L: diag(1, -1)}
@@ -2010,9 +2129,9 @@ def test_tensor_matching():
 
     assert a.matches(q) == {a:q}
     assert a.matches(-q) == {a:-q}
-    assert g.matches(-q) == None
+    assert g.matches(-q) is None
     assert g.matches(q) == {g:q}
-    assert eps(p,-a,a).matches( eps(p,q,r) ) == None
+    assert eps(p,-a,a).matches( eps(p,q,r) ) is None
     assert eps(p,-b,a).matches( eps(p,q,r) ) == {a: r, -b: q}
     assert eps(p,-q,r).replace(eps(a,b,c), 1) == 1
     assert W().matches( K(p)*V(q) ) == {W(): K(p)*V(q)}
@@ -2020,7 +2139,7 @@ def test_tensor_matching():
     assert W(a,p).matches( K(p)*V(q) ) == {a:q, W(a,p).head: _WildTensExpr(K(p)*V(q))}
     assert W(p,q).matches( K(p)*V(q) ) == {W(p,q).head: _WildTensExpr(K(p)*V(q))}
     assert W(p,q).matches( A(q,p) ) == {W(p,q).head: _WildTensExpr(A(q, p))}
-    assert U(p,q).matches( A(q,p) ) == None
+    assert U(p,q).matches( A(q,p) ) is None
     assert ( K(q)*K(p) ).replace( W(q,p), 1) == 1
 
     #Some tests for matching without Wild

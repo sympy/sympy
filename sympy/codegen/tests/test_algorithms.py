@@ -13,7 +13,7 @@ from sympy.external import import_module
 from sympy.printing.codeprinter import ccode
 from sympy.utilities._compilation import compile_link_import_strings, has_c, has_fortran
 from sympy.utilities._compilation.util import may_xfail
-from sympy.testing.pytest import skip, raises
+from sympy.testing.pytest import skip, raises, skip_under_pyodide
 
 cython = import_module('cython')
 wurlitzer = import_module('wurlitzer')
@@ -84,6 +84,7 @@ def test_newtons_method_function__pycode():
 
 
 @may_xfail
+@skip_under_pyodide("Emscripten does not support process spawning")
 def test_newtons_method_function__ccode_parameters():
     args = x, A, k, p = symbols('x A k p')
     expr = A*cos(k*x) - p*x**3

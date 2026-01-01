@@ -164,7 +164,7 @@ def test_quaternion_functions():
         Rational(-7, 225), Rational(-1, 225), Rational(-1, 150), Rational(-2, 225))
     assert q1**(-2) == Quaternion(
         Rational(-7, 225), Rational(-1, 225), Rational(-1, 150), Rational(-2, 225))
-    assert q1.pow(-0.5) == NotImplemented
+    assert q1.pow(-0.5) == NotImplemented # type: ignore
     raises(TypeError, lambda: q1**(-0.5))
 
     assert q1.exp() == \
@@ -177,6 +177,8 @@ def test_quaternion_functions():
                2 * sqrt(29) * acos(sqrt(30)/30) / 29,
                3 * sqrt(29) * acos(sqrt(30)/30) / 29,
                4 * sqrt(29) * acos(sqrt(30)/30) / 29)
+    raises(ValueError, lambda: q0.log())
+
 
     assert q1.pow_cos_sin(2) == \
     Quaternion(30 * cos(2 * acos(sqrt(30)/30)),
@@ -188,6 +190,15 @@ def test_quaternion_functions():
 
     assert integrate(Quaternion(x, x, x, x), x) == \
     Quaternion(x**2 / 2, x**2 / 2, x**2 / 2, x**2 / 2)
+
+    assert Quaternion(1, x, x**2, x**3).integrate(x) == \
+    Quaternion(x, x**2/2, x**3/3, x**4/4)
+
+    assert Quaternion(sin(x), cos(x), sin(2*x), cos(2*x)).integrate(x) == \
+    Quaternion(-cos(x), sin(x), -cos(2*x)/2, sin(2*x)/2)
+
+    assert Quaternion(x**2, y**2, z**2, x*y*z).integrate(x, y) == \
+    Quaternion(x**3*y/3, x*y**3/3, x*y*z**2, x**2*y**2*z/4)
 
     assert Quaternion.rotate_point((1, 1, 1), q1) == (S.One / 5, 1, S(7) / 5)
     n = Symbol('n')
@@ -422,7 +433,26 @@ def test_to_euler_options():
                 else:
                     seq = ''.join(seq_tuple)
 
-                for elements in product([-1, 0, 1], repeat=4):
-                    q = Quaternion(*elements)
+                for e1, e2, e3, e4 in product([-1, 0, 1], repeat=4):
+                    q = Quaternion(e1, e2, e3, e4)
                     if not q.is_zero_quaternion():
                         test_one_case(q)
+
+
+def test_issue_28556():
+    """Test that Quaternion.log handles purely real quaternions correctly."""
+    # Test positive real quaternion
+    q1 = Quaternion(1, 0, 0, 0)
+    result1 = q1.log()
+    assert result1 == Quaternion(0, 0, 0, 0)  # log(1) = 0
+
+    # Test another positive real quaternion
+    q2 = Quaternion(E, 0, 0, 0)
+    result2 = q2.log()
+    assert result2 == Quaternion(1, 0, 0, 0)  # log(e) = 1
+
+    # Test symbolic real quaternion
+    r = Symbol('r', positive=True)
+    q3 = Quaternion(r, 0, 0, 0)
+    result3 = q3.log()
+    assert result3 == Quaternion(log(r), 0, 0, 0)

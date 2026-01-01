@@ -85,7 +85,7 @@ class MatrixExpr(Expr):
     # The following is adapted from the core Expr object
 
     @property
-    def shape(self) -> tuple[Expr, Expr]:
+    def shape(self) -> tuple[Expr | int, Expr | int]:
         raise NotImplementedError
 
     @property
@@ -227,7 +227,7 @@ class MatrixExpr(Expr):
 
     def _eval_derivative(self, x):
         # `x` is a scalar:
-        if self.has(x):
+        if self.has(x) or (isinstance(x, MatrixElement) and self.has(x.parent)):
             # See if there are other methods using it:
             return super()._eval_derivative(x)
         else:
@@ -715,7 +715,13 @@ class MatrixSymbol(MatrixExpr):
 
     def _eval_derivative(self, x):
         # x is a scalar:
-        return ZeroMatrix(self.shape[0], self.shape[1])
+        if self.free_symbols & x.free_symbols:
+            if isinstance(x, MatrixElement) and self == x.parent:
+                from .special import MatrixUnit
+                return MatrixUnit(self.shape[0], self.shape[1], x.i, x.j)
+            return None
+        else:
+            return ZeroMatrix(self.shape[0], self.shape[1])
 
     def _eval_derivative_matrix_lines(self, x):
         if self != x:
@@ -762,7 +768,7 @@ class _LeftRightArgs:
 
     @property
     def first_pointer(self):
-       return self._first_pointer_parent[self._first_pointer_index]
+        return self._first_pointer_parent[self._first_pointer_index]
 
     @first_pointer.setter
     def first_pointer(self, value):

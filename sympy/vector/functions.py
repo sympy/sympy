@@ -6,7 +6,6 @@ from sympy.vector.operators import gradient, curl, divergence
 from sympy.core.function import diff
 from sympy.core.singleton import S
 from sympy.integrals.integrals import integrate
-from sympy.simplify.simplify import simplify
 from sympy.core import sympify
 from sympy.vector.dyadic import Dyadic
 
@@ -71,11 +70,11 @@ def express(expr, system, system2=None, variables=False):
             raise ValueError("system2 should not be provided for \
                                 Vectors")
         # Given expr is a Vector
+        subs_dict = {}
         if variables:
             # If variables attribute is True, substitute
             # the coordinate variables in the Vector
             system_list = {x.system for x in expr.atoms(BaseScalar, BaseVector)} - {system}
-            subs_dict = {}
             for f in system_list:
                 subs_dict.update(f.scalar_map(system))
             expr = expr.subs(subs_dict)
@@ -84,10 +83,11 @@ def express(expr, system, system2=None, variables=False):
         parts = expr.separate()
         for x in parts:
             if x != system:
-                temp = system.rotation_matrix(x) * parts[x].to_matrix(x)
+                temp = system.change_of_basis_matrix_from(x) * parts[x].to_matrix(x)
                 outvec += matrix_to_vector(temp, system)
             else:
                 outvec += parts[x]
+        outvec = outvec.subs(subs_dict)
         return outvec
 
     elif isinstance(expr, Dyadic):
@@ -504,7 +504,7 @@ def orthogonalize(*vlist, orthonormal=False):
         # TODO : The following line introduces a performance issue
         # and needs to be changed once a good solution for issue #10279 is
         # found.
-        if simplify(term).equals(Vector.zero):
+        if term.equals(Vector.zero):
             raise ValueError("Vector set not linearly independent")
         ortho_vlist.append(term)
 

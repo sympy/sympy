@@ -2,7 +2,7 @@
 
 
 import os
-from os.path import dirname, join, basename, normpath
+from os.path import dirname, join
 from os import chdir
 import shutil
 

@@ -612,7 +612,7 @@ def test_hankel_transform():
 
 
 def test_issue_7181():
-    assert mellin_transform(1/(1 - x), x, s) != None
+    assert mellin_transform(1/(1 - x), x, s) != None  # noqa: E711
 
 
 def test_issue_8882():

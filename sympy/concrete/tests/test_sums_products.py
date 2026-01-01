@@ -9,29 +9,31 @@ from sympy.core import (Catalan, EulerGamma)
 from sympy.core.facts import InconsistentAssumptions
 from sympy.core.mod import Mod
 from sympy.core.numbers import (E, I, Rational, nan, oo, pi)
-from sympy.core.relational import Eq
+from sympy.core.relational import Eq, Ne
 from sympy.core.numbers import Float
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, symbols)
 from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.factorials import (rf, binomial, factorial)
 from sympy.functions.combinatorial.numbers import harmonic
-from sympy.functions.elementary.complexes import Abs
+from sympy.functions.elementary.complexes import Abs, re
 from sympy.functions.elementary.exponential import (exp, log)
-from sympy.functions.elementary.hyperbolic import (sinh, tanh)
+from sympy.functions.elementary.hyperbolic import (sinh, tanh, coth)
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.functions.elementary.trigonometric import (cos, sin, atan)
 from sympy.functions.special.gamma_functions import (gamma, lowergamma)
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.functions.special.zeta_functions import zeta
+from sympy.functions.elementary.trigonometric import tan
 from sympy.integrals.integrals import Integral
 from sympy.logic.boolalg import And, Or
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.matrices.expressions.special import Identity
 from sympy.matrices import (Matrix, SparseMatrix,
     ImmutableDenseMatrix, ImmutableSparseMatrix, diag)
+from sympy.sets.contains import Contains
 from sympy.sets.fancysets import Range
 from sympy.sets.sets import Interval
 from sympy.simplify.combsimp import combsimp
@@ -137,6 +139,26 @@ def test_karr_convention():
     s = Sum(e, (i, 0, 11))
     assert s.n(3) == s.doit().n(3)
 
+    # issue #27893
+    n = Symbol('n', integer=True)
+    assert Sum(1/(x**2 + 1), (x, oo, 0)).doit(deep=False) == Rational(-1, 2) + pi / (2 * tanh(pi))
+    assert Sum(c**x/factorial(x), (x, oo, 0)).doit(deep=False).simplify() == exp(c) - 1 # exponential series
+    assert Sum((-1)**x/x, (x, oo,0)).doit() == -log(2) # alternating harmnic series
+    assert Sum((1/2)**x,(x, oo, -1)).doit() == S(2) # geometric series
+    assert Sum(1/x, (x, oo, 0)).doit() == oo # harmonic series, divergent
+    assert Sum((-1)**x/(2*x+1), (x, oo, -1)).doit() == pi/4 # leibniz series
+    assert Sum((((-1)**x) * c**(2*x+1)) / factorial(2*x+1), (x, oo, -1)).doit() == sin(c) # sinusoidal series
+    assert Sum((((-1)**x) * c**(2*x+1)) / (2*x+1), (x, 0, oo)).doit() \
+        == Piecewise((atan(c), Ne(c**2, -1) & (Abs(c**2) <= 1)), \
+                     (Sum((-1)**x*c**(2*x + 1)/(2*x + 1), (x, 0, oo)), True)) # arctangent series
+    assert Sum(binomial(n, x) * c**x, (x, 0, oo)).doit() \
+        == Piecewise(((c + 1)**n, \
+                     ((n <= -1) & (Abs(c) < 1)) \
+                        | ((n > 0) & (Abs(c) <= 1)) \
+                        | ((n <= 0) & (n > -1) & Ne(c, -1) & (Abs(c) <= 1))), \
+                     (Sum(c**x*binomial(n, x), (x, 0, oo)), True)) # binomial series
+    assert Sum(1/x**n, (x, oo, 0)).doit() \
+        == Piecewise((zeta(n), n > 1), (Sum(x**(-n), (x, oo, 0)), True)) # Euler's zeta function
 
 def test_karr_proposition_2a():
     # Test Karr, page 309, proposition 2, part a
@@ -636,18 +658,21 @@ def test_Sum_doit():
                     (0, True)), (n, 1, nmax))
 
     q, s = symbols('q, s')
-    assert summation(1/n**(2*s), (n, 1, oo)) == Piecewise((zeta(2*s), 2*s > 1),
+    assert summation(1/n**(2*s), (n, 1, oo)) == Piecewise((zeta(2*s), 2*re(s) > 1),
         (Sum(n**(-2*s), (n, 1, oo)), True))
-    assert summation(1/(n+1)**s, (n, 0, oo)) == Piecewise((zeta(s), s > 1),
+    assert summation(1/(n+1)**s, (n, 0, oo)) == Piecewise((zeta(s), re(s) > 1),
         (Sum((n + 1)**(-s), (n, 0, oo)), True))
     assert summation(1/(n+q)**s, (n, 0, oo)) == Piecewise(
-        (zeta(s, q), And(q > 0, s > 1)),
+        (zeta(s, q), And(~Contains(-q, S.Naturals0), re(s) > 1)),
         (Sum((n + q)**(-s), (n, 0, oo)), True))
     assert summation(1/(n+q)**s, (n, q, oo)) == Piecewise(
-        (zeta(s, 2*q), And(2*q > 0, s > 1)),
+        (zeta(s, 2*q), And(~Contains(-2*q, S.Naturals0), re(s) > 1)),
         (Sum((n + q)**(-s), (n, q, oo)), True))
     assert summation(1/n**2, (n, 1, oo)) == zeta(2)
     assert summation(1/n**s, (n, 0, oo)) == Sum(n**(-s), (n, 0, oo))
+    assert summation(1/(n+1)**(2+I), (n, 0, oo)) == zeta(2+I)
+    t = symbols('t', real=True, positive=True)
+    assert summation(1/(n+I)**(t+1), (n, 0, oo)) == zeta(t+1, I)
 
 
 def test_Product_doit():
@@ -1517,6 +1542,15 @@ def test_issue_21651():
     a = Sum(floor(2*2**(-i)), (i, S.One, 2))
     assert a.doit() == S.One
 
+def test_issue_28721():
+    from sympy.matrices.expressions.special import ZeroMatrix
+    M = MatrixSymbol('M', 3, 3)
+    i = Symbol('i')
+    expr = Sum(M, (i, 0, -1))
+    assert expr.doit() == ZeroMatrix(3, 3)
+    assert isinstance(expr.doit(), ZeroMatrix)
+    assert expr.simplify() == ZeroMatrix(3, 3)
+    assert isinstance(expr.simplify(), ZeroMatrix)
 
 @XFAIL
 def test_matrixsymbol_summation_symbolic_limits():
@@ -1543,7 +1577,7 @@ def test_summation_by_residues():
     assert eval_sum_residue(1 / (4*x**2 - 1), (x, -oo, oo)) == 0
     assert eval_sum_residue(x**2 / (x**2 - S(1)/4)**2, (x, -oo, oo)) == pi**2/2
     assert eval_sum_residue(1 / (4*x**2 - 1)**2, (x, -oo, oo)) == pi**2/8
-    assert eval_sum_residue(1 / ((x - S(1)/2)**2 + 1), (x, -oo, oo)) == pi*tanh(pi)
+    assert eval_sum_residue(1 / ((x - S(1)/2)**2 + 1), (x, -oo, oo)) == pi/coth(pi)
     assert eval_sum_residue(1 / x**2, (x, S(1), oo)) == pi**2/6
     assert eval_sum_residue(1 / x**4, (x, S(1), oo)) == pi**4/90
     assert eval_sum_residue(1 / x**2 / (x**2 + 4), (x, S(1), oo)) == \
@@ -1578,6 +1612,24 @@ def test_summation_by_residues():
     assert eval_sum_residue(1 / x**2, (x, S(3), oo)) == -S(5)/4 + pi**2/6
     assert eval_sum_residue((-1)**x / x**2, (x, S(1), oo)) == -pi**2/12
     assert eval_sum_residue((-1)**x / x**2, (x, S(2), oo)) == 1 - pi**2/12
+
+    # https://github.com/sympy/sympy/issues/27824
+    # even function which works for -oo to k
+    ans = Rational(1, 2) + pi/(2*tanh(pi))
+    assert eval_sum_residue((1/(k**2+1)), (k, -oo, S(0))) == ans
+    assert eval_sum_residue((1/(k**2+1)), (k, oo, -S(1))) == -ans  # Karr convention
+
+    # function which is neither even nor odd which works for -oo to k
+    assert eval_sum_residue(1 / (k**2 + 2*k +2), (k, -oo, S(0))) == 1 + pi/(2*tanh(pi))
+    assert eval_sum_residue(1 / (k**2 + 2*k +2), (k, -oo, -S(1))) == S.Half+pi/tanh(pi)/2
+
+    # odd function that cannot be made even returns None
+    assert eval_sum_residue(1/(k**3 + 1), (k, S(0), oo)) is None
+
+    # SO issue cited on #27827
+    assert summation(1 / ((k+1) ** 4 + 1), (k, -oo, oo)).simplify() == (
+        sqrt(2)*pi*(1 - I)*(I/tan(sqrt(2)*pi*(1 + I)/2) +
+        1/tan(sqrt(2)*pi*(1 - I)/2))/4)
 
 
 @slow

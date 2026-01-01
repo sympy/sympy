@@ -15,6 +15,8 @@ from __future__ import annotations
 import collections
 from functools import reduce
 
+from sympy import Mul
+
 from sympy.core.basic import Basic
 from sympy.core.containers import (Dict, Tuple)
 from sympy.core.singleton import S
@@ -100,6 +102,10 @@ class _QuantityMapper:
             return Dimension(1)
 
     def get_quantity_scale_factor(self, unit):
+        if isinstance(unit, Mul):
+            return Mul.fromiter(self.get_quantity_scale_factor(arg) for arg in unit.args)
+        if isinstance(unit, Pow):
+            return self.get_quantity_scale_factor(unit.base)**unit.exp
         if unit in self._quantity_scale_factors:
             return self._quantity_scale_factors[unit]
         if unit in self._quantity_scale_factors_global:
@@ -117,7 +123,7 @@ class Dimension(Expr):
 
     For example, in classical mechanics we know that time is different from
     temperature and dimensions make this difference (but they do not provide
-    any measure of these quantites.
+    any measure of these quantities.
 
         >>> from sympy.physics.units import Dimension
         >>> length = Dimension('length')

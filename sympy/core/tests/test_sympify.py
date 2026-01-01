@@ -23,11 +23,11 @@ from sympy.core.sympify import (sympify, _sympify, SympifyError, kernS,
 from sympy.core.decorators import _sympifyit
 from sympy.external import import_module
 from sympy.testing.pytest import raises, XFAIL, skip
-from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.geometry import Point, Line
 from sympy.functions.combinatorial.factorials import factorial, factorial2
 from sympy.abc import _clash, _clash1, _clash2
 from sympy.external.gmpy import gmpy as _gmpy, flint as _flint
+from sympy.external.mpmath import conserve_mpmath_dps
 from sympy.sets import FiniteSet, EmptySet
 from sympy.tensor.array.dense_ndim_array import ImmutableDenseNDimArray
 
@@ -769,9 +769,9 @@ def test_numpy_sympify_args():
 
 
 def test_issue_5939():
-     a = Symbol('a')
-     b = Symbol('b')
-     assert sympify('''a+\nb''') == a + b
+    a = Symbol('a')
+    b = Symbol('b')
+    assert sympify('''a+\nb''') == a + b
 
 
 def test_issue_16759():
@@ -883,3 +883,10 @@ def test_issue_21536():
     assert u.is_Add and set(u.args) == {4*x, 2}
     assert v.is_Add and set(v.args) == {6*x, 6}
     assert sympify(["x+3*x+2", "2*x+4*x+2+4"]) == [u, v]
+
+def test_issue_27284():
+    if not numpy:
+        skip("numpy not installed.")
+
+    assert Float(numpy.float32(float('inf'))) == S.Infinity
+    assert Float(numpy.float32(float('-inf'))) == S.NegativeInfinity

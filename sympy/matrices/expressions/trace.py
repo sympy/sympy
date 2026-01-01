@@ -53,7 +53,7 @@ class Trace(Expr):
         expr = self.doit()
         if isinstance(expr, Trace):
             # Avoid looping infinitely:
-            raise NotImplementedError
+            return trace(expr.arg.diff(v))
         return expr._eval_derivative(v)
 
     def _eval_derivative_matrix_lines(self, x):

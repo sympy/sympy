@@ -50,8 +50,8 @@ pi(x)
 pi(C, Q)
 
 """
-
-from typing import Any, Dict as tDict
+from __future__ import annotations
+from typing import Any
 
 import string
 
@@ -64,20 +64,20 @@ from sympy.parsing.sympy_parser import null
 # Implementation note: The easiest way to avoid typos in the symbols()
 # parameter is to copy it from the left-hand side of the assignment.
 
-a, b, c, d, e, f, g, h, i, j = symbols('a, b, c, d, e, f, g, h, i, j')
-k, l, m, n, o, p, q, r, s, t = symbols('k, l, m, n, o, p, q, r, s, t')
-u, v, w, x, y, z = symbols('u, v, w, x, y, z')
+a, b, c, d, e, f, g, h, i, j = symbols('a, b, c, d, e, f, g, h, i, j', seq=True)
+k, l, m, n, o, p, q, r, s, t = symbols('k, l, m, n, o, p, q, r, s, t', seq=True)
+u, v, w, x, y, z = symbols('u, v, w, x, y, z', seq=True)
 
-A, B, C, D, E, F, G, H, I, J = symbols('A, B, C, D, E, F, G, H, I, J')
-K, L, M, N, O, P, Q, R, S, T = symbols('K, L, M, N, O, P, Q, R, S, T')
-U, V, W, X, Y, Z = symbols('U, V, W, X, Y, Z')
+A, B, C, D, E, F, G, H, I, J = symbols('A, B, C, D, E, F, G, H, I, J', seq=True)
+K, L, M, N, O, P, Q, R, S, T = symbols('K, L, M, N, O, P, Q, R, S, T', seq=True)
+U, V, W, X, Y, Z = symbols('U, V, W, X, Y, Z', seq=True)
 
-alpha, beta, gamma, delta = symbols('alpha, beta, gamma, delta')
-epsilon, zeta, eta, theta = symbols('epsilon, zeta, eta, theta')
-iota, kappa, lamda, mu = symbols('iota, kappa, lamda, mu')
-nu, xi, omicron, pi = symbols('nu, xi, omicron, pi')
-rho, sigma, tau, upsilon = symbols('rho, sigma, tau, upsilon')
-phi, chi, psi, omega = symbols('phi, chi, psi, omega')
+alpha, beta, gamma, delta = symbols('alpha, beta, gamma, delta', seq=True)
+epsilon, zeta, eta, theta = symbols('epsilon, zeta, eta, theta', seq=True)
+iota, kappa, lamda, mu = symbols('iota, kappa, lamda, mu', seq=True)
+nu, xi, omicron, pi = symbols('nu, xi, omicron, pi', seq=True)
+rho, sigma, tau, upsilon = symbols('rho, sigma, tau, upsilon', seq=True)
+phi, chi, psi, omega = symbols('phi, chi, psi, omega', seq=True)
 
 
 ##### Clashing-symbols diagnostics #####
@@ -92,10 +92,10 @@ _greek = list(greeks) # make a copy, so we can mutate it
 _greek.remove("lambda")
 _greek.append("lamda")
 
-ns: tDict[str, Any] = {}
+ns: dict[str, Any] = {}
 exec('from sympy import *', ns)
-_clash1: tDict[str, Any] = {}
-_clash2: tDict[str, Any] = {}
+_clash1: dict[str, Any] = {}
+_clash2: dict[str, Any] = {}
 while ns:
     _k, _ = ns.popitem()
     if _k in _greek:

@@ -10,6 +10,7 @@ from sympy.core.singleton import S
 from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, Symbol
 from sympy.core.sympify import sympify
+from sympy.external.mpmath import mp
 from sympy.functions.combinatorial.factorials import binomial, factorial, rf
 from sympy.functions.elementary.exponential import exp_polar, exp, log
 from sympy.functions.elementary.hyperbolic import (cosh, sinh)
@@ -2099,39 +2100,25 @@ def from_hyper(func, x0=0, evalf=False):
     if simp in (Infinity, NegativeInfinity):
         return HolonomicFunction(sol, x).composition(z)
 
-    def _find_conditions(simp, x, x0, order, evalf=False):
-        y0 = []
-        for i in range(order):
-            if evalf:
-                val = simp.subs(x, x0).evalf()
-            else:
-                val = simp.subs(x, x0)
-            # return None if it is Infinite or NaN
-            if val.is_finite is False or isinstance(val, NaN):
-                return None
-            y0.append(val)
-            simp = simp.diff(x)
-        return y0
-
     # if the function is known symbolically
     if not isinstance(simp, hyper):
-        y0 = _find_conditions(simp, x, x0, sol.order)
+        y0 = _find_conditions(simp, x, x0, sol.order, use_limit=False)
         while not y0:
             # if values don't exist at 0, then try to find initial
             # conditions at 1. If it doesn't exist at 1 too then
             # try 2 and so on.
             x0 += 1
-            y0 = _find_conditions(simp, x, x0, sol.order)
+            y0 = _find_conditions(simp, x, x0, sol.order, use_limit=False)
 
         return HolonomicFunction(sol, x).composition(z, x0, y0)
 
     if isinstance(simp, hyper):
         x0 = 1
         # use evalf if the function can't be simplified
-        y0 = _find_conditions(simp, x, x0, sol.order, evalf)
+        y0 = _find_conditions(simp, x, x0, sol.order, evalf, use_limit=False)
         while not y0:
             x0 += 1
-            y0 = _find_conditions(simp, x, x0, sol.order, evalf)
+            y0 = _find_conditions(simp, x, x0, sol.order, evalf, use_limit=False)
         return HolonomicFunction(sol, x).composition(z, x0, y0)
 
     return HolonomicFunction(sol, x).composition(z)
@@ -2183,34 +2170,21 @@ def from_meijerg(func, x0=0, evalf=False, initcond=True, domain=QQ):
     if simp in (Infinity, NegativeInfinity):
         return HolonomicFunction(sol, x).composition(z)
 
-    def _find_conditions(simp, x, x0, order, evalf=False):
-        y0 = []
-        for i in range(order):
-            if evalf:
-                val = simp.subs(x, x0).evalf()
-            else:
-                val = simp.subs(x, x0)
-            if val.is_finite is False or isinstance(val, NaN):
-                return None
-            y0.append(val)
-            simp = simp.diff(x)
-        return y0
-
     # computing initial conditions
     if not isinstance(simp, meijerg):
-        y0 = _find_conditions(simp, x, x0, sol.order)
+        y0 = _find_conditions(simp, x, x0, sol.order, use_limit=False)
         while not y0:
             x0 += 1
-            y0 = _find_conditions(simp, x, x0, sol.order)
+            y0 = _find_conditions(simp, x, x0, sol.order, use_limit=False)
 
         return HolonomicFunction(sol, x).composition(z, x0, y0)
 
     if isinstance(simp, meijerg):
         x0 = 1
-        y0 = _find_conditions(simp, x, x0, sol.order, evalf)
+        y0 = _find_conditions(simp, x, x0, sol.order, evalf, use_limit=False)
         while not y0:
             x0 += 1
-            y0 = _find_conditions(simp, x, x0, sol.order, evalf)
+            y0 = _find_conditions(simp, x, x0, sol.order, evalf, use_limit=False)
 
         return HolonomicFunction(sol, x).composition(z, x0, y0)
 
@@ -2292,11 +2266,7 @@ def expr_to_holonomic(func, x=None, x0=0, y0=None, lenics=None, domain=None, ini
 
     # create the lookup table
     global _lookup_table, domain_for_table
-    if not _lookup_table:
-        domain_for_table = domain
-        _lookup_table = {}
-        _create_table(_lookup_table, domain=domain)
-    elif domain != domain_for_table:
+    if not _lookup_table or domain != domain_for_table:
         domain_for_table = domain
         _lookup_table = {}
         _create_table(_lookup_table, domain=domain)
@@ -2567,9 +2537,6 @@ def DMFsubs(frac, x0, mpm=False):
     sol_p = S.Zero
     sol_q = S.Zero
 
-    if mpm:
-        from mpmath import mp
-
     for i, j in enumerate(reversed(p)):
         if mpm:
             j = sympify(j)._to_mpmath(mp.prec)
@@ -2777,11 +2744,13 @@ def _create_table(table, domain=QQ):
     add(Shi(x_1), -x_1*Dx + 2*Dx**2 + x_1*Dx**3, x_1)
 
 
-def _find_conditions(func, x, x0, order):
+def _find_conditions(func, x, x0, order, evalf=False, use_limit=True):
     y0 = []
-    for i in range(order):
+    for _ in range(order):
         val = func.subs(x, x0)
-        if isinstance(val, NaN):
+        if evalf:
+            val = val.evalf()
+        if use_limit and isinstance(val, NaN):
             val = limit(func, x, x0)
         if val.is_finite is False or isinstance(val, NaN):
             return None

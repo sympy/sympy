@@ -16,7 +16,7 @@ from sympy.ntheory.factor_ import (smoothness, smoothness_p, proper_divisors,
     udivisor_count, proper_divisor_count, primenu, primeomega,
     mersenne_prime_exponent, is_perfect, is_abundant,
     is_deficient, is_amicable, is_carmichael, find_carmichael_numbers_in_range,
-    find_first_n_carmichaels, dra, drm, _perfect_power)
+    find_first_n_carmichaels, dra, drm, _perfect_power, factor_cache)
 
 from sympy.testing.pytest import raises, slow
 
@@ -167,8 +167,83 @@ def test_perfect_power():
     # negatives and non-integer rationals
     assert perfect_power(-4) is False
     assert perfect_power(-8) == (-2, 3)
+    assert perfect_power(-S(1)/8) == (-S(1)/2, 3)
+    assert perfect_power(S(1)/3) == False
+    assert perfect_power(-5**15) == (-5, 15)
+    assert perfect_power(-5**15, big=False) == (-3125, 3)
+    assert perfect_power(-5**15, [15]) == (-5, 15)
+
+    n = -3 ** 60
+    assert perfect_power(n) == (-81, 15)
+    assert perfect_power(n, big=False) == (-3486784401, 3)
+    assert perfect_power(n, [3, 5], big=True) == (-531441, 5)
+    assert perfect_power(n, [3, 5], big=False) == (-3486784401, 3)
+    assert perfect_power(n, [2]) == False
+    assert perfect_power(n, [2, 15]) == (-81, 15)
+    assert perfect_power(n, [2, 13]) == False
+    assert perfect_power(n, [17]) == False
+    assert perfect_power(n, [3]) == (-3486784401, 3)
+    assert perfect_power(n + 1) == False
+
+    r = S(2) ** (2 * 5 * 7) / S(3) ** (2 * 7)
+    assert perfect_power(r) == (S(32) / 3, 14)
+    assert perfect_power(-r) == (-S(1024) / 9, 7)
+    assert perfect_power(r, big=False) == (S(34359738368) / 2187, 2)
+    assert perfect_power(r, [2, 5]) == (S(34359738368) / 2187, 2)
+    assert perfect_power(r, [5, 7]) == (S(1024) / 9, 7)
+    assert perfect_power(r, [5, 7], big=False) == (S(1024) / 9, 7)
+    assert perfect_power(r, [2, 5, 7], big=False) == (S(34359738368) / 2187, 2)
+    assert perfect_power(-r, [5, 7], big=False) == (-S(1024) / 9, 7)
+
+    assert perfect_power(-S(1) / 8) == (-S(1) / 2, 3)
+
+    assert perfect_power((-3)**60) == (3, 60)
+    assert perfect_power((-3)**61) == (-3, 61)
+
+    assert perfect_power(S(2 ** 9) / 3 ** 12) == (S(8)/81, 3)
     assert perfect_power(Rational(1, 2)**3) == (S.Half, 3)
     assert perfect_power(Rational(-3, 2)**3) == (-3*S.Half, 3)
+
+
+def test_factor_cache():
+    factor_cache.cache_clear()
+    raises(ValueError, lambda: factor_cache.__setitem__(1, 5))
+    raises(ValueError, lambda: factor_cache.__setitem__(10, 1))
+    raises(ValueError, lambda: factor_cache.__setitem__(10, 10))
+    raises(ValueError, lambda: factor_cache.__setitem__(10, 3))
+    raises(ValueError, lambda: factor_cache.__setitem__(20, 4))
+    factor_cache.maxsize = 3
+    for i in range(2, 10):
+        factor_cache[5*i] = 5
+    assert len(factor_cache) == 3
+    factor_cache.maxsize = 5
+    for i in range(2, 10):
+        factor_cache[5*i] = 5
+    assert len(factor_cache) == 5
+    factor_cache.maxsize = 2
+    assert len(factor_cache) == 2
+    factor_cache.maxsize =1000
+
+    factor_cache.cache_clear()
+    factor_cache[40] = 5
+    assert factor_cache.get(40) == 5
+    assert factor_cache.get(20) is None
+    assert factor_cache[40] == 5
+    raises(KeyError, lambda: factor_cache[10])
+    del factor_cache[40]
+    assert len(factor_cache) == 0
+    raises(KeyError, lambda: factor_cache.__delitem__(40))
+    factor_cache.add(100, [5, 2])
+    assert len(factor_cache) == 2
+    assert factor_cache[100] == 5
+
+    for n in [1000000007, 10000019*20000003]:
+        factorint(n)
+        assert n in factor_cache
+
+    # Restore the initial state
+    factor_cache.cache_clear()
+    factor_cache.maxsize = 1000
 
 
 @slow
@@ -191,6 +266,10 @@ def test_factorint():
     assert factorint(28300421052393658575) == {3: 1, 5: 2, 11: 2, 43: 1, 2063: 2, 4127: 1, 4129: 1}
     assert factorint(2063**2 * 4127**1 * 4129**1) == {2063: 2, 4127: 1, 4129: 1}
     assert factorint(2347**2 * 7039**1 * 7043**1) == {2347: 2, 7039: 1, 7043: 1}
+    #issue 28621
+    assert factorint(978188756923448938700236182276357436, limit=2**15,
+                     use_trial=True, use_rho=False, use_pm1=False) ==\
+                          {2: 2, 494517127261244783: 1, 494517127415229473: 1}
 
     assert factorint(0, multiple=True) == [0]
     assert factorint(1, multiple=True) == []

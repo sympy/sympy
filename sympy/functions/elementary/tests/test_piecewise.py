@@ -1277,10 +1277,10 @@ def test_issue_8919():
     ans = I.doit()
     assert ans == Piecewise((0, b > c), (a*Min(y, z) - a*Min(0, z), True))
     for cond in (True, False):
-         for yy in range(1, 3):
-             for zz in range(-yy, 0, yy):
-                 reps = [(b > c, cond), (y, yy), (z, zz)]
-                 assert ans.subs(reps) == I.subs(reps).doit()
+        for yy in range(1, 3):
+            for zz in range(-yy, 0, yy):
+                reps = [(b > c, cond), (y, yy), (z, zz)]
+                assert ans.subs(reps) == I.subs(reps).doit()
 
 
 def test_unevaluated_integrals():
@@ -1333,6 +1333,17 @@ def test_Piecewise_rewrite_as_ITE():
     # used to detect this
     raises(NotImplementedError, lambda: _ITE((x, x < y), (y, x >= a)))
     raises(ValueError, lambda: _ITE((a, x < 2), (b, x > 3)))
+
+
+def test_Piecewise_replace_relational_27538():
+    x, y = symbols('x, y')
+    p1 = Piecewise(
+        (0, Eq(x, True)),
+        (1, True),
+    )
+    p2 = p1.xreplace({x: y < 1})
+    assert p2.subs(y, 0) == 0
+    assert p2.subs(y, 1) == 1
 
 
 def test_issue_14052():
@@ -1621,8 +1632,8 @@ def test_piecewise__eval_is_meromorphic():
     f = Piecewise((1, x < 0), (sqrt(1 - x), True))
     assert f.is_meromorphic(x, I) is None
     assert f.is_meromorphic(x, -1) == True
-    assert f.is_meromorphic(x, 0) == None
+    assert f.is_meromorphic(x, 0) is None
     assert f.is_meromorphic(x, 1) == False
     assert f.is_meromorphic(x, 2) == True
-    assert f.is_meromorphic(x, Symbol('a')) == None
-    assert f.is_meromorphic(x, Symbol('a', real=True)) == None
+    assert f.is_meromorphic(x, Symbol('a')) is None
+    assert f.is_meromorphic(x, Symbol('a', real=True)) is None

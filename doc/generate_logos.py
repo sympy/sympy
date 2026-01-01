@@ -15,6 +15,7 @@ import os.path
 import logging
 import subprocess
 import sys
+from pathlib import Path
 from platform import system
 
 default_source_dir = os.path.join(os.path.dirname(__file__), "src", "logo")
@@ -291,9 +292,8 @@ def load_svg(fn):
     return doc
 
 def save_svg(fn, doc):
-    with open(fn, "wb") as f:
-        xmlstr = doc.toxml("utf-8")
-        f.write(xmlstr)
-        logging.info(" File saved: %s" % fn)
+    xmlstr = doc.toxml("utf-8")
+    Path(fn).write_bytes(xmlstr)
+    logging.info(" File saved: %s" % fn)
 
 main()

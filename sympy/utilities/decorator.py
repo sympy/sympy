@@ -1,11 +1,20 @@
 """Useful utility decorators. """
 
+from typing import TypeVar
 import sys
 import types
 import inspect
-from functools import wraps, update_wrapper
+from functools import wraps
+
+# Keep this import for backwards compatibility:
+from sympy.external.mpmath import conserve_mpmath_dps # noqa: F401
 
 from sympy.utilities.exceptions import sympy_deprecation_warning
+
+
+T = TypeVar('T')
+"""A generic type"""
+
 
 def threaded_factory(func, use_add):
     """A factory for ``threaded`` decorators. """
@@ -74,22 +83,6 @@ def xthreaded(func):
 
     """
     return threaded_factory(func, False)
-
-
-def conserve_mpmath_dps(func):
-    """After the function finishes, resets the value of ``mpmath.mp.dps`` to
-    the value it had before the function was run."""
-    import mpmath
-
-    def func_wrapper(*args, **kwargs):
-        dps = mpmath.mp.dps
-        try:
-            return func(*args, **kwargs)
-        finally:
-            mpmath.mp.dps = dps
-
-    func_wrapper = update_wrapper(func_wrapper, func)
-    return func_wrapper
 
 
 class no_attrs_in_subclass:
@@ -175,7 +168,7 @@ def doctest_depends_on(exe=None, modules=None, disable_viewers=None,
     return depends_on_deco
 
 
-def public(obj):
+def public(obj: T) -> T:
     """
     Append ``obj``'s name to global ``__all__`` variable (call site).
 

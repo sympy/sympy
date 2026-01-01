@@ -5,7 +5,7 @@ from sympy.matrices import Matrix, zeros, eye
 from sympy.core.symbol import Symbol
 from sympy.core.numbers import Rational
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.simplify.simplify import simplify
+from sympy.simplify.simplify import simplify, factor_nc
 from sympy.abc import x
 
 
@@ -267,6 +267,40 @@ def test_rref():
             [1, 0, sqrt(x)*(-x + 1)/(-x**Rational(5, 2) + x),
                 0, 1, 1/(sqrt(x) + x + 1)]):
         assert simplify(i - j).is_zero
+
+
+def test_inverse_GE_noncommutative():
+    A, B, C, D = symbols('A, B, C, D', commutative=False)
+    M = Matrix([[A, B], [C, D]])
+
+    # Appealing to convenient authority,
+    # https://en.wikipedia.org/wiki/Schur_complement
+    S = D - C*A**(-1)*B
+    M_inv_expected = Matrix([
+        [A**(-1) + A**(-1)*B*S**(-1)*C*A**(-1), -A**(-1)*B*S**(-1)],
+        [-S**(-1)*C*A**(-1), S**(-1)]
+    ])
+
+    M_inv = M.inverse_GE()
+    assert M_inv == M_inv_expected
+
+    # This result also agrees with Block inverse, upon expansion:
+    assert M_inv == M.inverse_BLOCK().expand()
+
+    # SymPy noncommutative simplification calls can currently
+    # verify that M * M_inv == I and M_inv * M == I
+    # for only 3 of 4 entries each, so we check those:
+    M_M_inv = (M*M_inv).expand().applyfunc(factor_nc)
+    assert M_M_inv[0, 0] == 1
+    assert M_M_inv[0, 1] == 0
+    # assert M_M_inv[1, 0] == 0
+    assert M_M_inv[1, 1] == 1
+
+    M_inv_M = (M_inv*M).expand().applyfunc(factor_nc)
+    assert M_inv_M[0, 0] == 1
+    # assert M_inv_M[0, 1] == 0
+    assert M_inv_M[1, 0] == 0
+    assert M_inv_M[1, 1] == 1
 
 
 def test_rref_rhs():

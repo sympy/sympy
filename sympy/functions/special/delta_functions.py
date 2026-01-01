@@ -1,5 +1,5 @@
 from sympy.core import S, diff
-from sympy.core.function import Function, ArgumentIndexError
+from sympy.core.function import DefinedFunction, ArgumentIndexError
 from sympy.core.logic import fuzzy_not
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.complexes import im, sign
@@ -14,7 +14,7 @@ from sympy.utilities.misc import filldedent
 ###############################################################################
 
 
-class DiracDelta(Function):
+class DiracDelta(DefinedFunction):
     r"""
     The DiracDelta function and its derivatives.
 
@@ -390,7 +390,7 @@ class DiracDelta(Function):
 ###############################################################################
 
 
-class Heaviside(Function):
+class Heaviside(DefinedFunction):
     r"""
     Heaviside step function.
 

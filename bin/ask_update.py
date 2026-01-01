@@ -16,7 +16,7 @@ $ python bin/ask_update.py
 # hook in-tree SymPy into Python path, if possible
 import os
 import sys
-import pprint
+from pathlib import Path
 
 isympy_path = os.path.abspath(__file__)
 isympy_dir = os.path.dirname(isympy_path)
@@ -134,22 +134,17 @@ def generate_code():
 
     return code_string % (all_clauses, matrix_clauses, number_clauses, m)
 
-with open('sympy/assumptions/ask_generated.py', 'w') as f:
-    code = generate_code()
-    f.write(code)
+code = generate_code()
+Path('sympy/assumptions/ask_generated.py').write_text(code)
 
+representation = _generate_assumption_rules()._to_python()
+code_string = dedent('''\
+"""
+Do NOT manually edit this file.
+Instead, run ./bin/ask_update.py.
+"""
 
-with open('sympy/core/assumptions_generated.py', 'w') as f:
-    representation = _generate_assumption_rules()._to_python()
-
-    code_string = dedent('''\
-    """
-    Do NOT manually edit this file.
-    Instead, run ./bin/ask_update.py.
-    """
-
-    %s
-    ''')
-
-    code = code_string % (representation,)
-    f.write(code)
+%s
+''')
+code = code_string % (representation,)
+Path('sympy/core/assumptions_generated.py').write_text(code)
