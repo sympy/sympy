@@ -331,10 +331,10 @@ def func_name(x: Any, short: bool = False) -> str:
     'Unequality': 'Ne',
     }
     typ = str(type(x))
-    if str(typ).startswith("<type '"):
-        typ = str(typ).split("'")[1].split("'")[0]
-    elif str(typ).startswith("<class '"):
-        typ = str(typ).split("'")[1].split("'")[0]
+    if typ.startswith("<type '"):
+        typ = typ.split("'")[1].split("'")[0]
+    elif typ.startswith("<class '"):
+        typ = typ.split("'")[1].split("'")[0]
     rv = getattr(getattr(x, 'func', x), '__name__', typ)
     if '.' in rv:
         rv = rv.split('.')[-1]
