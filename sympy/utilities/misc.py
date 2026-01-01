@@ -304,7 +304,7 @@ def find_executable(executable, path=None):
     return None
 
 
-def func_name(x, short=False):
+def func_name(x: Any, short: bool = False) -> str:
     """Return function name of `x` (if defined) else the `type(x)`.
     If short is True and there is a shorter alias for the result,
     return the alias.
