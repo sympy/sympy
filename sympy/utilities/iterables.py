@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, overload
+from typing import TYPE_CHECKING, overload, Union
 
 from collections import Counter, defaultdict, OrderedDict
 from itertools import (
@@ -322,7 +322,7 @@ def multiset(seq: Sequence[T]) -> dict[T, int]:
 
 
 
-def ibin(n:int, bits=None, str:bool=False)->list:
+def ibin(n: int, bits=None, str: bool = False) -> Union[list[int],str,Iterator[tuple[int,...]],Iterator[str]] :
     """Return a list of length ``bits`` corresponding to the binary value
     of ``n`` with small bits to the right (last). If bits is omitted, the
     length will be the number required to represent ``n``. If the bits are
@@ -394,7 +394,7 @@ def ibin(n:int, bits=None, str:bool=False)->list:
             return (f'{i:b}'.rjust(n, "0") for i in range(2**n))
 
 
-def variations(seq:Sequence, n=int, repetition:bool=False)->Iterator:
+def variations(seq: Sequence[T], n: int, repetition: bool = False) -> Iterator[tuple[T,...]]:
     r"""Returns an iterator over the n-sized variations of ``seq`` (size N).
     ``repetition`` controls whether items in ``seq`` can appear more than once;
 
@@ -441,7 +441,7 @@ def variations(seq:Sequence, n=int, repetition:bool=False)->Iterator:
             return product(seq, repeat=n)
 
 
-def subsets(seq:Sequence, k=None, repetition:bool=False)->Iterator:
+def subsets(seq: Sequence[T], k=None, repetition: bool = False) -> Iterator[tuple[T,...]]:
     r"""Generates all `k`-subsets (combinations) from an `n`-element set, ``seq``.
 
     A `k`-subset of an `n`-element set is any subset of length exactly `k`. The
