@@ -330,12 +330,12 @@ def func_name(x: Any, short: bool = False) -> str:
     'Equality': 'Eq',
     'Unequality': 'Ne',
     }
-    typ = type(x)
+    typ: type | str = type(x)
     if str(typ).startswith("<type '"):
         typ = str(typ).split("'")[1].split("'")[0]
     elif str(typ).startswith("<class '"):
         typ = str(typ).split("'")[1].split("'")[0]
-    rv = getattr(getattr(x, 'func', x), '__name__', typ)
+    rv: str = getattr(getattr(x, 'func', x), '__name__', str(typ))
     if '.' in rv:
         rv = rv.split('.')[-1]
     if short:
