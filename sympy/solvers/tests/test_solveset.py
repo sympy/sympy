@@ -1864,28 +1864,118 @@ def test_nonlinsolve_basic():
     assert nonlinsolve([Eq(1, x + y), Eq(1, -x + y - 1), Eq(1, -x + y - 1)], x, y) == FiniteSet(
         (-S.Half, 3*S.Half))
 
+def test_nonlinsolve_complex_decomposition_basic():
+    x = symbols('x')
 
-def test_nonlinsolve_abs():
-    raises(NotImplementedError, lambda: nonlinsolve([Abs(x) - y], x, y))
-    raises(NotImplementedError, lambda: nonlinsolve([Abs(x) - 1, x - y], x, y))
-    raises(NotImplementedError, lambda: nonlinsolve([Abs(x) - 1, y - 2], x, y))
-    raises(NotImplementedError, lambda: nonlinsolve([Abs(x) - 2, x + y], x, y))
+    # 1. Standard re/im System
+    assert nonlinsolve([re(x) - 1, im(x) - 2], [x]) == FiniteSet((1 + 2*I,))
+
+    # 2. Linear System with Coefficients
+    assert nonlinsolve([2*re(x) - 6, 3*im(x) + 3], [x]) == FiniteSet((3 - I,))
+
+    # 3. Identity Redundancy Check
+    sys = [re(x) - 1, im(x) - 2, x - (re(x) + I*im(x))]
+    assert nonlinsolve(sys, [x]) == FiniteSet((1 + 2*I,))
+
+
+def test_nonlinsolve_complex_decomposition_advanced():
+    x = symbols('x')
+
+    # 1. Linear Conjugate System
+    assert nonlinsolve([x + conjugate(x) - 4, x - conjugate(x) - 6*I], [x]) == \
+        FiniteSet((2 + 3*I,))
+
+    # 2. Modulus (Abs) Intersection
+    res = nonlinsolve([Abs(x) - 5, re(x) - 3], [x])
+    assert res == FiniteSet((3 - 4*I,), (3 + 4*I,))
+
+
+def test_nonlinsolve_complex_decomposition_filtering():
+    x = symbols('x')
+
+    # 1. Polynomial + Component Constraint
+    # Tests that we filter out "parasitic" solutions (re(x) = -2*I)
+    assert nonlinsolve([x**2 + 1, im(x) - 1], [x]) == FiniteSet((I,))
+
+    # 2. Mixed Re/Im Linear System
+    assert nonlinsolve([re(x) + im(x) - 5, re(x) - im(x) - 1], [x]) == \
+        FiniteSet((3 + 2*I,))
+
+
+def test_nonlinsolve_multivar_parametric():
+    x, y = symbols('x y')
+
+    # 1. Decoupled 2-Var System
+    sys = [re(x) - 1, im(x) - 2, re(y) - 3, im(y) - 4]
+    assert nonlinsolve(sys, [x, y]) == FiniteSet((1 + 2*I, 3 + 4*I))
+
+    # 2. Coupled Parametric System: re(x) = y, y = 1
+    res = nonlinsolve([re(x) - y, y - 1], [x, y])
+    assert len(res) == 1
+    sol_x, sol_y = list(res)[0]
+    assert sol_y == 1
+    assert re(sol_x) == 1
+    # Check that im(x) is symbolic (contains a Dummy variable)
+    assert sol_x.has(Dummy)
+    assert sol_x != 1
+
+    # 3. Partial Constraint (Underdetermined)
+    res = nonlinsolve([re(x) - 1], [x])
+    assert len(res) == 1
+    sol = list(res)[0][0]
+    assert re(sol) == 1
+    assert sol.has(Dummy)
+
+
+def test_nonlinsolve_complex_regressions():
+    # Ensure we didn't break standard behavior for explicit real symbols
+    xr = symbols('xr', real=True)
+    x = symbols('x')
+
+    assert nonlinsolve([xr - 3], [xr]) == FiniteSet((3,))
+    assert nonlinsolve([xr - 2, 0], [xr]) == FiniteSet((2,))
+
+    # Contradiction check
+    assert nonlinsolve([re(x) - 1, re(x) - 2], [x]) == S.EmptySet
+
+    # Standard linear sanity check
+    assert nonlinsolve([x + y - 2, x - y], [x, y]) == FiniteSet((1, 1))
+
+
+def test_nonlinsolve_trig_safety():
+    # Ensure the decomposition logic doesn't interfere with trigonometric solving
+    x = symbols('x')
+    n = symbols('n', integer=True)
+
+    # 1. Standard Intersection
+    res = nonlinsolve([cos(x) - S.Half, sin(x) - sqrt(3)/2], [x])
+    # Semantic check: Ensure pi/3 is in the solution set
+    sol_set = list(res)[0][0]
+    assert (pi/3) in sol_set
+    assert (2*pi + pi/3) in sol_set
+
+    # 2. Union Output: cos(x)=0 -> pi/2, 3pi/2
+    res = nonlinsolve([cos(x)], [x])
+    sol_set = list(res)[0][0]
+    assert (pi/2) in sol_set
+    assert (3*pi/2) in sol_set
+
+
+def test_nonlinsolve_formerly_failing_abs_cases():
+    # These cases used to raise NotImplementedError.
+    # We now verify they return valid solutions.
+    x, y = symbols('x y')
+
+    # Case 1: Abs(x) = 1, y = 2 (Circle x Cylinder)
+    res = nonlinsolve([Abs(x) - 1, y - 2], [x, y])
+    assert res != S.EmptySet
+    sol_x, sol_y = list(res)[0]
+    assert sol_y == 2
 
 
 def test_raise_exception_nonlinsolve():
     raises(IndexError, lambda: nonlinsolve([x**2 -1], []))
     raises(ValueError, lambda: nonlinsolve([x**2 -1]))
-
-
-def test_nonlinsolve_re_im_single_symbol_raises():
-    from sympy import symbols, re, im
-    from sympy.solvers.solveset import nonlinsolve
-    from pytest import raises
-
-    x = symbols('x')
-    with raises(ValueError):
-        nonlinsolve([re(x) - 1, im(x) - 2], [x])
-
 
 
 def test_trig_system():

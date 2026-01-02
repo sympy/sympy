@@ -33,7 +33,7 @@ from sympy.functions import (log, tan, cot, sin, cos, sec, csc, exp,
                              acos, asin, atan, acot, acsc, asec,
                              piecewise_fold, Piecewise)
 from sympy.functions.combinatorial.numbers import totient
-from sympy.functions.elementary.complexes import Abs, arg, re, im
+from sympy.functions.elementary.complexes import Abs, arg, re, im, conjugate
 from sympy.functions.elementary.hyperbolic import (HyperbolicFunction,
                             sinh, cosh, tanh, coth, sech, csch,
                             asinh, acosh, atanh, acoth, asech, acsch)
@@ -3899,6 +3899,58 @@ def _handle_poly(polys, symbols):
 
     return poly_sol, poly_eqs
 
+def _handle_complex_components(system, symbols):
+    """
+    Experimental helper: decompose symbols appearing inside re()/im()/conjugate()
+    into real variables and reconstruct solutions.
+    """
+    # We define the list of functions that requires decomposition
+    complex_projections = (re, im, conjugate, Abs, arg)
+
+    new_system = list(system)
+    sym_mapping = {}
+    reconstruction = {}
+
+    dirty = False
+
+    for sym in symbols:
+        # Skip if already real and also real infinities(this is inserted after checking predefined test cases)
+        if sym.is_real or sym.is_extended_real:
+            continue
+
+        # Check if the symbol is trapped inside ANY of the projection functions
+        # (re, im, conjugate, Abs, arg)
+        is_projected = any(
+            any(eq.has(func(sym)) for func in complex_projections) 
+            for eq in system
+        )
+
+        if is_projected:
+            dirty = True
+            #creating dummies which will help us avoid namespace collision
+            r = Dummy(f're_{sym.name}', real=True)
+            i = Dummy(f'im_{sym.name}', real=True)
+
+            decomposition = r + I*i
+
+            sym_mapping[sym] = (r, i)
+            reconstruction[sym] = decomposition
+
+            # Replacing the decomposed form in the entire system (ex: x -> r + I*i)
+            new_system = [eq.subs(sym, decomposition) for eq in new_system]
+
+    if not dirty:
+        return None, None, None
+
+    new_symbols = []
+    for sym in symbols:
+        if sym in sym_mapping:
+            new_symbols.extend(sym_mapping[sym])
+        else:
+            new_symbols.append(sym)
+
+    return new_system, new_symbols, reconstruction
+
 
 def nonlinsolve(system, *symbols):
     r"""
@@ -4073,23 +4125,49 @@ def nonlinsolve(system, *symbols):
 
     symbols = list(map(_sympify, symbols))
     system = [_sympify(eq) for eq in system]
+    #calling helper function to decompose complex projection to 2-D real constraints
+    res = _handle_complex_components(system, symbols)
+    
+    if res[0] is not None:
+        res_system, res_symbols, reconstruction = res
+
+        # Recursively calling nonlinsolve to solve the new "Real" system
+        raw = nonlinsolve(res_system, res_symbols)
+
+        if raw is S.EmptySet or isinstance(raw, ConditionSet):
+            return raw
+
+        rebuilt = set()
+        for sol in raw:
+            # Mapping the solved values to the dummy symbols
+            sol_map = dict(zip(res_symbols, sol))
+            
+            # --- filtering step: Reject "Real" variables that turned out Imaginary ---
+            # This fixes the x**2 + 1 case where r = -2*I was returned by "solve".
+            is_valid_sol = True
+            for s, val in sol_map.items():
+                if s.is_real and val.has(I):
+                    is_valid_sol = False
+                    break
+            if not is_valid_sol:
+                continue
+
+            final_tuple = []
+            for s in symbols:
+                if s in reconstruction:
+                    # Reconstructing complex ( ex: x = r + I*i)
+                    final_tuple.append(reconstruction[s].subs(sol_map))
+                else:
+                    final_tuple.append(sol_map[s])
+            
+            rebuilt.add(tuple(final_tuple))
+
+        return FiniteSet(*rebuilt)
+
     system, symbols, swap = recast_to_symbols(system, symbols)
     if swap:
         soln = nonlinsolve(system, symbols)
         return FiniteSet(*[tuple(i.xreplace(swap) for i in s) for s in soln])
-
-    from sympy import re, im
-
-# Guard ONLY the ambiguous case:
-# single symbol + explicit re/im usage
-    if len(symbols) == 1:
-        sym = symbols[0]
-        if any(eq.has(re(sym)) or eq.has(im(sym)) for eq in system):
-            raise ValueError(
-                "nonlinsolve does not support re(x)/im(x) with a single complex symbol. "
-                "Introduce explicit real variables, e.g. x = a + b*I, and solve for [a, b]."
-            )
-
 
 
     if len(system) == 1 and len(symbols) == 1:
