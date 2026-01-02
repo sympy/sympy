@@ -210,7 +210,7 @@ class Gate(UnitaryOperator):
     @property
     def min_qubits(self):
         """The minimum number of qubits this gate needs to act on.
-        
+
         In general, this is greater than or equal to nqubits. It will be greater
         when the gate acts on non-consecutive qubits. Thus, if targets are (0,2),
         min_qubits will be 3 as you need qubits 0, 1, and 2 to apply the gate.
