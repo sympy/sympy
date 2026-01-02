@@ -1803,8 +1803,8 @@ def test_latex_ComplexRootOf():
 
 
 def test_latex_RootSum():
-    assert latex(RootSum(x**5 + x + 3, sin)) == \
-        r"\operatorname{RootSum} {\left(x^{5} + x + 3, \left( x \mapsto \sin{\left(x \right)} \right)\right)}"
+    assert latex(RootSum(w**5 + w + 3, sin)) == \
+        r"\operatorname{RootSum} {\left(w^{5} + w + 3, \left( w \mapsto \sin{\left(w \right)} \right)\right)}"
 
 
 def test_settings():
