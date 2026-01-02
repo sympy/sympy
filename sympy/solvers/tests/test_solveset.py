@@ -1945,7 +1945,6 @@ def test_nonlinsolve_complex_regressions():
 def test_nonlinsolve_trig_safety():
     # Ensure the decomposition logic doesn't interfere with trigonometric solving
     x = symbols('x')
-    n = symbols('n', integer=True)
 
     # 1. Standard Intersection
     res = nonlinsolve([cos(x) - S.Half, sin(x) - sqrt(3)/2], [x])
