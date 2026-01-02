@@ -1,7 +1,6 @@
 """Implementation of :class:`FractionField` class. """
 
 from __future__ import annotations
-import sys
 from typing import Generic, TYPE_CHECKING
 
 from sympy.polys.domains.domain import Er
@@ -12,6 +11,7 @@ from sympy.utilities import public
 
 
 if TYPE_CHECKING:
+    import sys
     if sys.version_info >= (3, 13):
         from typing import TypeIs
     else:

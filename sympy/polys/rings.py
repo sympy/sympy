@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import sys
 from typing import (
     Generic,
     overload,
@@ -59,6 +58,7 @@ from sympy.utilities.magic import pollute
 
 
 if TYPE_CHECKING:
+    import sys
     if sys.version_info >= (3, 13):
         from typing import TypeIs
     else:
