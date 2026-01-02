@@ -120,22 +120,26 @@ def _flatten_mul(f):
 _qapply_unary = Dispatcher('_qapply_unary')
 
 
-@_qapply_unary.register(Expr)
-def _qapply_unary_expr(expr, **options):
-    """Default handler for Expr - no transformation."""
-    return None
+@_qapply_unary.register(Dagger)
+def _qapply_unary_dagger(expr, **options):
+    """Apply qapply to the argument of Dagger."""
+    return Dagger(qapply(expr, **options))
 
 
-@_qapply_unary.register((int, float, complex))
-def _qapply_unary_number(expr, **options):
-    """Convert numbers to SymPy expressions."""
-    return sympify(expr)
+@_qapply_unary.register(Density)
+def _qapply_unary_density(expr, **options):
+    """Apply qapply to states in a Density matrix."""
+    # For a Density operator call qapply on its state
+    new_args = [(qapply(state, **options), prob) for (state,
+                     prob) in expr.args]
+    return Density(*new_args)
 
 
-@_qapply_unary.register(Abs)
-def _qapply_unary_abs(expr, **options):
-    """Apply qapply to the argument of Abs."""
-    return Abs(qapply(expr.args[0], **options))
+@_qapply_unary.register(TensorProduct)
+def _qapply_unary_tp(expr, **options):
+    """Apply qapply to each factor in a TensorProduct."""
+    new_args = [qapply(t, **options) for t in expr.args]
+    return TensorProduct(*new_args)
 
 
 @_qapply_unary.register(Add)
@@ -182,26 +186,23 @@ def _qapply_unary_integral(expr, **options):
     return result
 
 
-@_qapply_unary.register(Dagger)
-def _qapply_unary_dagger(expr, **options):
-    """Apply qapply to the argument of Dagger."""
-    return Dagger(qapply(expr, **options))
+@_qapply_unary.register(Abs)
+def _qapply_unary_abs(expr, **options):
+    """Apply qapply to the argument of Abs."""
+    return Abs(qapply(expr.args[0], **options))
 
 
-@_qapply_unary.register(Density)
-def _qapply_unary_density(expr, **options):
-    """Apply qapply to states in a Density matrix."""
-    # For a Density operator call qapply on its state
-    new_args = [(qapply(state, **options), prob) for (state,
-                     prob) in expr.args]
-    return Density(*new_args)
+
+@_qapply_unary.register(Expr)
+def _qapply_unary_expr(expr, **options):
+    """Default handler for Expr - no transformation."""
+    return None
 
 
-@_qapply_unary.register(TensorProduct)
-def _qapply_unary_tp(expr, **options):
-    """Apply qapply to each factor in a TensorProduct."""
-    new_args = [qapply(t, **options) for t in expr.args]
-    return TensorProduct(*new_args)
+@_qapply_unary.register((int, float, complex))
+def _qapply_unary_number(expr, **options):
+    """Convert numbers to SymPy expressions."""
+    return sympify(expr)
 
 
 #-----------------------------------------------------------------------------
@@ -238,31 +239,8 @@ qapply_Mul = SlidingTransform(
 )
 
 #-----------------------------------------------------------------------------
-# qapply_Mul: Unary
+# qapply_Mul: SlidingTransform unary
 #-----------------------------------------------------------------------------
-
-
-@qapply_Mul.unary.register((int, float, complex))
-def _qapply_mul_unary_number(expr, **options):
-    """Convert numbers to SymPy expressions in Mul context."""
-    return (sympify(expr),)
-
-
-@qapply_Mul.unary.register(Expr)
-def qapply_mul_unary_expr(expr, **options):
-    """Default handler for Expr in Mul context - no transformation."""
-    return None
-
-
-@qapply_Mul.unary.register(Pow)
-@_flatten_mul
-def _qapply_mul_unary_pow(expr, **options):
-    """Expand integer powers or apply qapply to power expressions."""
-    base, exp = expr.as_base_exp()
-    if exp.is_Integer and exp > 0:
-        return tuple(expr.base for i in range(int(expr.exp)))
-    else:
-        return (qapply(expr, **options),)
 
 
 @qapply_Mul.unary.register(OuterProduct)
@@ -295,9 +273,62 @@ def _qapply_mul_unary_density(expr, **options):
     return (Density(*new_args),)
 
 
+@qapply_Mul.unary.register(Pow)
+@_flatten_mul
+def _qapply_mul_unary_pow(expr, **options):
+    """Expand integer powers or apply qapply to power expressions."""
+    base, exp = expr.as_base_exp()
+    if exp.is_Integer and exp > 0:
+        return tuple(expr.base for i in range(int(expr.exp)))
+    else:
+        return (qapply(expr, **options),)
+
+
+@qapply_Mul.unary.register((int, float, complex))
+def _qapply_mul_unary_number(expr, **options):
+    """Convert numbers to SymPy expressions in Mul context."""
+    return (sympify(expr),)
+
+
+@qapply_Mul.unary.register(Expr)
+def qapply_mul_unary_expr(expr, **options):
+    """Default handler for Expr in Mul context - no transformation."""
+    return None
+
+
 #-----------------------------------------------------------------------------
-# qapply_Mul: Binary
+# qapply_Mul: SlidingTransform binary
 #-----------------------------------------------------------------------------
+
+
+@qapply_Mul.binary.register(Operator, (KetBase, TensorProduct, Wavefunction))
+@_flatten_mul
+def _qapply_mul_binary_op_wavefunction(lhs, rhs, **options):
+    """Apply operator to ket, tensor product, or wavefunction."""
+    _apply = getattr(lhs, '_apply_operator', None)
+    if _apply is not None:
+        try:
+            result = _apply(rhs, **options)
+        except NotImplementedError:
+            result = None
+    else:
+        result = None
+
+    if result is None:
+        _apply_right = getattr(rhs, '_apply_from_right_to', None)
+        if _apply_right is not None:
+            try:
+                result = _apply_right(lhs, **options)
+            except NotImplementedError:
+                result = None
+
+    return None if result is None else (result,)
+
+
+@qapply_Mul.binary.register(BraBase, Operator)
+def _qapply_mul_binary_bra_op(lhs, rhs, **options):
+    """Register this to remind us that we only do this when dagger=True."""
+    return None
 
 
 @qapply_Mul.binary.register(Sum, Sum)
@@ -345,36 +376,6 @@ def _qapply_mul_binary_add_add(lhs, rhs, **options):
                 terms.append(qapply(lhs_term * rhs_term, **options))
         result = Add(*terms)
         return (result,)
-
-
-@qapply_Mul.binary.register(Operator, (KetBase, TensorProduct, Wavefunction))
-@_flatten_mul
-def _qapply_mul_binary_op_wavefunction(lhs, rhs, **options):
-    """Apply operator to ket, tensor product, or wavefunction."""
-    _apply = getattr(lhs, '_apply_operator', None)
-    if _apply is not None:
-        try:
-            result = _apply(rhs, **options)
-        except NotImplementedError:
-            result = None
-    else:
-        result = None
-
-    if result is None:
-        _apply_right = getattr(rhs, '_apply_from_right_to', None)
-        if _apply_right is not None:
-            try:
-                result = _apply_right(lhs, **options)
-            except NotImplementedError:
-                result = None
-
-    return None if result is None else (result,)
-
-
-@qapply_Mul.binary.register(BraBase, Operator)
-def _qapply_mul_binary_bra_op(lhs, rhs, **options):
-    """Register this to remind us that we only do this when dagger=True."""
-    return None
 
 
 @qapply_Mul.binary.register(Sum, Add)
