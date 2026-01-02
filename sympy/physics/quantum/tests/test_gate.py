@@ -7,7 +7,9 @@ from sympy.matrices import Matrix, ImmutableMatrix
 
 from sympy.physics.quantum.gate import (XGate, YGate, ZGate, random_circuit,
         CNOT, IdentityGate, H, X, Y, S, T, Z, SwapGate, gate_simp, gate_sort,
-        CNotGate, TGate, HadamardGate, PhaseGate, UGate, CGate)
+        CNotGate, TGate, HadamardGate, PhaseGate, UGate, CGate,
+        SdgGate, TdgGate, SXGate, PhaseShiftGate, RXGate, RYGate, RZGate,
+        Sdg, Tdg, SX, P, RX, RY, RZ)
 from sympy.physics.quantum.commutator import Commutator
 from sympy.physics.quantum.anticommutator import AntiCommutator
 from sympy.physics.quantum.represent import represent
@@ -194,6 +196,164 @@ def test_represent_tgate():
     assert Matrix([0, exp(I*pi/4), 0, 0]) == represent(circuit, nqubits=2)
 
 
+def test_represent_sdggate():
+    """Test the representation of the Sdg gate."""
+    circuit = SdgGate(0)*Qubit('01')
+    answer = represent(circuit, nqubits=2)
+    assert Matrix([0, -I, 0, 0]) == answer
+
+
+def test_represent_tdggate():
+    """Test the representation of the Tdg gate."""
+    circuit = TdgGate(0)*Qubit('01')
+    assert Matrix([0, exp(-I*pi/4), 0, 0]) == represent(circuit, nqubits=2)
+
+
+def test_represent_sxgate():
+    """Test the representation of the SX gate."""
+    circuit = SXGate(0)*Qubit('01')
+    answer = represent(circuit, nqubits=2)
+    # SX applied to qubit 0 which is in state |1>
+    # SX|1> = ((1-i)/2)|0> + ((1+i)/2)|1>
+    # Basis order is |00>, |01>, |10>, |11>
+    # Qubit('01') is |01> where qubit 1 is |0> and qubit 0 is |1>
+    # Applying SX to qubit 0: (|0> ⊗ SX)|01> = |0> ⊗ (SX|1>)
+    # = |0> ⊗ [((1-i)/2)|0> + ((1+i)/2)|1>]
+    # = ((1-i)/2)|00> + ((1+i)/2)|01>
+    assert Matrix([(1-I)/2, (1+I)/2, 0, 0]) == answer
+
+
+def test_represent_phaseshiftgate():
+    """Test the representation of the parameterized phase shift gate."""
+    # Test with pi/2 (should be same as S gate)
+    circuit = PhaseShiftGate(0, pi/2)*Qubit('01')
+    answer = represent(circuit, nqubits=2)
+    assert Matrix([0, I, 0, 0]) == answer
+
+    # Test with pi/4 (should be same as T gate)
+    circuit = PhaseShiftGate(0, pi/4)*Qubit('01')
+    answer = represent(circuit, nqubits=2)
+    assert Matrix([0, exp(I*pi/4), 0, 0]) == answer
+
+
+def test_represent_rxgate():
+    """Test the representation of the RX gate."""
+    from sympy.functions.elementary.trigonometric import cos, sin
+    # Test with pi (should flip |0> to |1> similar to X gate)
+    circuit = RXGate(0, pi)*Qubit('00')
+    answer = represent(circuit, nqubits=2)
+    # RX(pi)|0> = -i|1>
+    # Qubit('00') means both qubits are |0>
+    # Applying RX(pi) to qubit 0: |0> ⊗ RX(pi)|0> = |0> ⊗ (-i|1>) = -i|01>
+    assert Matrix([0, -I, 0, 0]) == answer
+
+
+def test_represent_rygate():
+    """Test the representation of the RY gate."""
+    from sympy.functions.elementary.trigonometric import cos, sin
+    # Test with pi/2
+    circuit = RYGate(0, pi/2)*Qubit('00')
+    answer = represent(circuit, nqubits=2)
+    # RY(pi/2)|0> = (|0> + |1>)/sqrt(2)
+    assert Matrix([1/sqrt(2), 1/sqrt(2), 0, 0]) == answer
+
+
+def test_represent_rzgate():
+    """Test the representation of the RZ gate."""
+    # Test with pi (should be similar to Z gate up to global phase)
+    circuit = RZGate(0, pi)*Qubit('01')
+    answer = represent(circuit, nqubits=2)
+    # RZ(pi)|1> = exp(i*pi/2)|1> = i|1>
+    assert Matrix([0, I, 0, 0]) == answer
+
+
+def test_sdggate_qapply():
+    """Test SdgGate gate with qapply on single-qubit states."""
+    # Test with |0> state
+    assert qapply(SdgGate(0)*Qubit('0')) == Qubit('0')
+
+    # Test with |1> state
+    assert qapply(SdgGate(0)*Qubit('1')) == -I*Qubit('1')
+
+
+def test_tdggate_qapply():
+    """Test TdgGate gate with qapply on single-qubit states."""
+    # Test with |0> state
+    assert qapply(TdgGate(0)*Qubit('0')) == Qubit('0')
+
+    # Test with |1> state
+    assert qapply(TdgGate(0)*Qubit('1')) == exp(-I*pi/4)*Qubit('1')
+
+
+def test_sxgate_qapply():
+    """Test SXGate gate with qapply on single-qubit states."""
+    # Test with |0> state
+    # SX|0> = (1+I)/2|0> + (1-I)/2|1> = 1/2|0> + I/2|0> + 1/2|1> - I/2|1>
+    assert qapply(SXGate(0)*Qubit('0')) == Qubit('0')/2 + I*Qubit('0')/2 + Qubit('1')/2 - I*Qubit('1')/2
+
+    # Test with |1> state
+    # SX|1> = (1-I)/2|0> + (1+I)/2|1> = 1/2|0> - I/2|0> + 1/2|1> + I/2|1>
+    assert qapply(SXGate(0)*Qubit('1')) == Qubit('0')/2 - I*Qubit('0')/2 + Qubit('1')/2 + I*Qubit('1')/2
+
+
+def test_phaseshiftgate_qapply():
+    """Test PhaseShiftGate gate with qapply on single-qubit states."""
+    from sympy.core.symbol import symbols
+    theta = symbols('theta', real=True)
+
+    # Test with symbolic angle
+    assert qapply(PhaseShiftGate(0, theta)*Qubit('0')) == Qubit('0')
+    assert qapply(PhaseShiftGate(0, theta)*Qubit('1')) == exp(I*theta)*Qubit('1')
+
+    # Test with concrete angle value pi/2
+    assert qapply(PhaseShiftGate(0, pi/2)*Qubit('0')) == Qubit('0')
+    assert qapply(PhaseShiftGate(0, pi/2)*Qubit('1')) == I*Qubit('1')
+
+
+def test_rxgate_qapply():
+    """Test RXGate gate with qapply on single-qubit states."""
+    from sympy.core.symbol import symbols
+    from sympy.functions.elementary.trigonometric import cos, sin
+    theta = symbols('theta', real=True)
+
+    # Test with symbolic angle
+    assert qapply(RXGate(0, theta)*Qubit('0')) == cos(theta/2)*Qubit('0') - I*sin(theta/2)*Qubit('1')
+    assert qapply(RXGate(0, theta)*Qubit('1')) == -I*sin(theta/2)*Qubit('0') + cos(theta/2)*Qubit('1')
+
+    # Test with concrete angle value pi
+    assert qapply(RXGate(0, pi)*Qubit('0')) == -I*Qubit('1')
+    assert qapply(RXGate(0, pi)*Qubit('1')) == -I*Qubit('0')
+
+
+def test_rygate_qapply():
+    """Test RYGate gate with qapply on single-qubit states."""
+    from sympy.core.symbol import symbols
+    from sympy.functions.elementary.trigonometric import cos, sin
+    theta = symbols('theta', real=True)
+
+    # Test with symbolic angle
+    assert qapply(RYGate(0, theta)*Qubit('0')) == cos(theta/2)*Qubit('0') + sin(theta/2)*Qubit('1')
+    assert qapply(RYGate(0, theta)*Qubit('1')) == -sin(theta/2)*Qubit('0') + cos(theta/2)*Qubit('1')
+
+    # Test with concrete angle value pi/2
+    assert qapply(RYGate(0, pi/2)*Qubit('0')) == sqrt(2)/2*Qubit('0') + sqrt(2)/2*Qubit('1')
+    assert qapply(RYGate(0, pi/2)*Qubit('1')) == -sqrt(2)/2*Qubit('0') + sqrt(2)/2*Qubit('1')
+
+
+def test_rzgate_qapply():
+    """Test RZGate gate with qapply on single-qubit states."""
+    from sympy.core.symbol import symbols
+    theta = symbols('theta', real=True)
+
+    # Test with symbolic angle
+    assert qapply(RZGate(0, theta)*Qubit('0')) == exp(-I*theta/2)*Qubit('0')
+    assert qapply(RZGate(0, theta)*Qubit('1')) == exp(I*theta/2)*Qubit('1')
+
+    # Test with concrete angle value pi
+    assert qapply(RZGate(0, pi)*Qubit('0')) == -I*Qubit('0')
+    assert qapply(RZGate(0, pi)*Qubit('1')) == I*Qubit('1')
+
+
 def test_compound_gates():
     """Test a compound gate representation."""
     circuit = YGate(0)*ZGate(0)*XGate(0)*HadamardGate(0)*Qubit('00')
@@ -273,12 +433,48 @@ def test_swap_gate():
 
 def test_one_qubit_commutators():
     """Test single qubit gate commutation relations."""
-    for g1 in (IdentityGate, X, Y, Z, H, T, S):
-        for g2 in (IdentityGate, X, Y, Z, H, T, S):
+    # For gates with a parameter (such as an angle) add them here
+    # using a partial.
+    # Use two different angles to ensure commutators work with different parameters
+    alpha, beta = symbols('alpha beta', real=True)
+
+    # Create two gate sets with different angles
+    gates_alpha = (
+        IdentityGate, X, Y, Z, H, T, S, Sdg, Tdg, SX,
+        lambda t: P(t, alpha),
+        lambda t: RX(t, alpha),
+        lambda t: RY(t, alpha),
+        lambda t: RZ(t, alpha)
+    )
+    gates_beta = (
+        IdentityGate, X, Y, Z, H, T, S, Sdg, Tdg, SX,
+        lambda t: P(t, beta),
+        lambda t: RX(t, beta),
+        lambda t: RY(t, beta),
+        lambda t: RZ(t, beta)
+    )
+
+    for g1 in gates_alpha:
+        for g2 in gates_beta:
             e = Commutator(g1(0), g2(0))
             a = matrix_to_zero(represent(e, nqubits=1, format='sympy'))
             b = matrix_to_zero(represent(e.doit(), nqubits=1, format='sympy'))
-            assert a == b
+            # For symbolic parameters, we need to simplify before comparing
+            from sympy import simplify
+            from sympy.functions.elementary.exponential import exp
+            diff = a - b
+            # Handle both scalar 0 and zero matrix by checking if all elements simplify to zero
+            if diff == 0:
+                pass  # Success - both are scalar 0
+            elif hasattr(diff, 'shape'):
+                # It's a matrix - check each element
+                # Use rewrite(exp) then simplify to handle trig/exp identities
+                for i in range(diff.shape[0]):
+                    for j in range(diff.shape[1]):
+                        elem = simplify(diff[i, j].rewrite(exp))
+                        assert elem == 0, f"Element [{i},{j}] is {elem}, not 0"
+            else:
+                assert simplify(diff.rewrite(exp)) == 0
 
             e = Commutator(g1(0), g2(1))
             assert e.doit() == 0

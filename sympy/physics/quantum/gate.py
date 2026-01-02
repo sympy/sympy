@@ -35,6 +35,7 @@ from sympy.physics.quantum.hilbert import ComplexSpace
 from sympy.physics.quantum.operator import (UnitaryOperator, Operator,
                                             HermitianOperator)
 from sympy.physics.quantum.matrixutils import matrix_tensor_product, matrix_eye
+from sympy.physics.quantum.matrixutils import to_numpy, to_scipy_sparse
 from sympy.physics.quantum.matrixcache import matrix_cache
 
 from sympy.matrices.matrixbase import MatrixBase
@@ -54,6 +55,13 @@ __all__ = [
     'ZGate',
     'TGate',
     'PhaseGate',
+    'SdgGate',
+    'TdgGate',
+    'SXGate',
+    'PhaseShiftGate',
+    'RXGate',
+    'RYGate',
+    'RZGate',
     'SwapGate',
     'CNotGate',
     # Aliased gate names
@@ -66,6 +74,13 @@ __all__ = [
     'T',
     'S',
     'Phase',
+    'Sdg',
+    'Tdg',
+    'SX',
+    'P',
+    'RX',
+    'RY',
+    'RZ',
     'normalized',
     'gate_sort',
     'gate_simp',
@@ -75,19 +90,21 @@ __all__ = [
 ]
 
 #-----------------------------------------------------------------------------
-# Gate Super-Classes
+# Utility functions
 #-----------------------------------------------------------------------------
 
 _normalized = True
 
 
 def _max(*args, **kwargs):
+    """Find the maximum value in args using default_sort_key if no key is given."""
     if "key" not in kwargs:
         kwargs["key"] = default_sort_key
     return max(*args, **kwargs)
 
 
 def _min(*args, **kwargs):
+    """Find the minimum value in args using default_sort_key if no key is given."""
     if "key" not in kwargs:
         kwargs["key"] = default_sort_key
     return min(*args, **kwargs)
@@ -123,6 +140,23 @@ def _validate_targets_controls(tandc):
         )
 
 
+def _matrix_format(m, format):
+    """Convert a sympy Matrix to the target format."""
+    if format == 'sympy':
+        return m
+    elif format == 'numpy':
+        return to_numpy(m)
+    elif format == 'scipy.sparse':
+        return to_scipy_sparse(m)
+    else:
+        raise ValueError('Unknown matrix format: %s' % format)
+
+
+#-----------------------------------------------------------------------------
+# Gate Base-Classes
+#-----------------------------------------------------------------------------
+
+
 class Gate(UnitaryOperator):
     """Non-controlled unitary gate operator that acts on qubits.
 
@@ -143,7 +177,7 @@ class Gate(UnitaryOperator):
     _label_separator = ','
 
     gate_name = 'G'
-    gate_name_latex = 'G'
+    gate_name_latex = r'\mathsf{G}'
 
     #-------------------------------------------------------------------------
     # Initialization/creation
@@ -151,7 +185,7 @@ class Gate(UnitaryOperator):
 
     @classmethod
     def _eval_args(cls, args):
-        args = Tuple(*UnitaryOperator._eval_args(args))
+        args = UnitaryOperator._eval_args(args)
         _validate_targets_controls(args)
         return args
 
@@ -175,7 +209,12 @@ class Gate(UnitaryOperator):
 
     @property
     def min_qubits(self):
-        """The minimum number of qubits this gate needs to act on."""
+        """The minimum number of qubits this gate needs to act on.
+        
+        In general, this is greater than or equal to nqubits. It will be greater
+        when the gate acts on non-consecutive qubits. Thus, if targets are (0,2),
+        min_qubits will be 3 as you need qubits 0, 1, and 2 to apply the gate.
+        """
         return _max(self.targets) + 1
 
     @property
@@ -325,7 +364,7 @@ class CGate(Gate):
     """
 
     gate_name = 'C'
-    gate_name_latex = 'C'
+    gate_name_latex = r'\mathsf{C}'
 
     # The values this class controls for.
     control_value = _S.One
@@ -505,7 +544,7 @@ class UGate(Gate):
         len(targets).
     """
     gate_name = 'U'
-    gate_name_latex = 'U'
+    gate_name_latex = r'\mathsf{U}'
 
     #-------------------------------------------------------------------------
     # Initialization
@@ -529,7 +568,8 @@ class UGate(Gate):
                 'Number of targets must match the matrix size: %r %r' %
                 (targets, mat)
             )
-        return (targets, mat)
+        # Return args as a tuple, but with targets as a Tuple
+        return (Tuple(*targets), mat)
 
     @classmethod
     def _eval_hilbert_space(cls, args):
@@ -627,7 +667,7 @@ class IdentityGate(OneQubitGate):
     """
     is_hermitian = True
     gate_name = '1'
-    gate_name_latex = '1'
+    gate_name_latex = r'\mathsf{1}'
 
     # Short cut version of gate._apply_operator_Qubit
     def _apply_operator_Qubit(self, qubits, **options):
@@ -673,7 +713,7 @@ class HadamardGate(HermitianOperator, OneQubitGate):
 
     """
     gate_name = 'H'
-    gate_name_latex = 'H'
+    gate_name_latex = r'\mathsf{H}'
 
     def get_target_matrix(self, format='sympy'):
         if _normalized:
@@ -713,7 +753,7 @@ class XGate(HermitianOperator, OneQubitGate):
 
     """
     gate_name = 'X'
-    gate_name_latex = 'X'
+    gate_name_latex = r'\mathsf{X}'
 
     def get_target_matrix(self, format='sympy'):
         return matrix_cache.get_matrix('X', format)
@@ -728,6 +768,16 @@ class XGate(HermitianOperator, OneQubitGate):
 
     def _eval_commutator_YGate(self, other, **hints):
         return Integer(2)*I*ZGate(self.targets[0])
+
+    def _eval_commutator_RYGate(self, other, **hints):
+        from sympy.functions.elementary.trigonometric import sin
+        target = self.targets[0]
+        return Integer(2)*sin(other.angle/2)*ZGate(target)
+
+    def _eval_commutator_RZGate(self, other, **hints):
+        from sympy.functions.elementary.trigonometric import sin
+        target = self.targets[0]
+        return -Integer(2)*sin(other.angle/2)*YGate(target)
 
     def _eval_anticommutator_XGate(self, other, **hints):
         return Integer(2)*IdentityGate(self.targets[0])
@@ -752,13 +802,23 @@ class YGate(HermitianOperator, OneQubitGate):
 
     """
     gate_name = 'Y'
-    gate_name_latex = 'Y'
+    gate_name_latex = r'\mathsf{Y}'
 
     def get_target_matrix(self, format='sympy'):
         return matrix_cache.get_matrix('Y', format)
 
     def _eval_commutator_ZGate(self, other, **hints):
         return Integer(2)*I*XGate(self.targets[0])
+
+    def _eval_commutator_RZGate(self, other, **hints):
+        from sympy.functions.elementary.trigonometric import sin
+        target = self.targets[0]
+        return Integer(2)*sin(other.angle/2)*XGate(target)
+
+    def _eval_commutator_RXGate(self, other, **hints):
+        from sympy.functions.elementary.trigonometric import sin
+        target = self.targets[0]
+        return -Integer(2)*sin(other.angle/2)*ZGate(target)
 
     def _eval_anticommutator_YGate(self, other, **hints):
         return Integer(2)*IdentityGate(self.targets[0])
@@ -780,13 +840,35 @@ class ZGate(HermitianOperator, OneQubitGate):
 
     """
     gate_name = 'Z'
-    gate_name_latex = 'Z'
+    gate_name_latex = r'\mathsf{Z}'
 
     def get_target_matrix(self, format='sympy'):
         return matrix_cache.get_matrix('Z', format)
 
     def _eval_commutator_XGate(self, other, **hints):
         return Integer(2)*I*YGate(self.targets[0])
+
+    def _eval_commutator_RXGate(self, other, **hints):
+        from sympy.functions.elementary.trigonometric import sin
+        target = self.targets[0]
+        return Integer(2)*sin(other.angle/2)*YGate(target)
+
+    def _eval_commutator_RYGate(self, other, **hints):
+        from sympy.functions.elementary.trigonometric import sin
+        target = self.targets[0]
+        return -Integer(2)*sin(other.angle/2)*XGate(target)
+
+    def _eval_commutator_PhaseShiftGate(self, other, **hints):
+        return _S.Zero
+
+    def _eval_commutator_RZGate(self, other, **hints):
+        return _S.Zero
+
+    def _eval_commutator_SdgGate(self, other, **hints):
+        return _S.Zero
+
+    def _eval_commutator_TdgGate(self, other, **hints):
+        return _S.Zero
 
     def _eval_anticommutator_YGate(self, other, **hints):
         return _S.Zero
@@ -809,7 +891,7 @@ class PhaseGate(OneQubitGate):
     """
     is_hermitian =  False
     gate_name = 'S'
-    gate_name_latex = 'S'
+    gate_name_latex = r'\mathsf{S}'
 
     def get_target_matrix(self, format='sympy'):
         return matrix_cache.get_matrix('S', format)
@@ -818,6 +900,21 @@ class PhaseGate(OneQubitGate):
         return _S.Zero
 
     def _eval_commutator_TGate(self, other, **hints):
+        return _S.Zero
+
+    def _eval_commutator_PhaseGate(self, other, **hints):
+        return _S.Zero
+
+    def _eval_commutator_PhaseShiftGate(self, other, **hints):
+        return _S.Zero
+
+    def _eval_commutator_RZGate(self, other, **hints):
+        return _S.Zero
+
+    def _eval_commutator_SdgGate(self, other, **hints):
+        return _S.Zero
+
+    def _eval_commutator_TdgGate(self, other, **hints):
         return _S.Zero
 
 
@@ -838,7 +935,7 @@ class TGate(OneQubitGate):
     """
     is_hermitian = False
     gate_name = 'T'
-    gate_name_latex = 'T'
+    gate_name_latex = r'\mathsf{T}'
 
     def get_target_matrix(self, format='sympy'):
         return matrix_cache.get_matrix('T', format)
@@ -849,6 +946,381 @@ class TGate(OneQubitGate):
     def _eval_commutator_PhaseGate(self, other, **hints):
         return _S.Zero
 
+    def _eval_commutator_TGate(self, other, **hints):
+        return _S.Zero
+
+    def _eval_commutator_PhaseShiftGate(self, other, **hints):
+        return _S.Zero
+
+    def _eval_commutator_RZGate(self, other, **hints):
+        return _S.Zero
+
+    def _eval_commutator_SdgGate(self, other, **hints):
+        return _S.Zero
+
+    def _eval_commutator_TdgGate(self, other, **hints):
+        return _S.Zero
+
+
+class SdgGate(OneQubitGate):
+    """The single qubit S-dagger gate.
+
+    This is the inverse of the S (phase) gate. It applies a phase of -i to
+    the |1> state.
+
+    Parameters
+    ----------
+    target : int
+        The target qubit this gate will apply to.
+
+    Examples
+    ========
+
+    """
+    is_hermitian = False
+    gate_name = 'Sdg'
+    gate_name_latex = r'\mathsf{S}^\\dagger'
+
+    def get_target_matrix(self, format='sympy'):
+        return matrix_cache.get_matrix('Sdg', format)
+
+    def _eval_commutator_ZGate(self, other, **hints):
+        return _S.Zero
+
+    def _eval_commutator_PhaseGate(self, other, **hints):
+        return _S.Zero
+
+    def _eval_commutator_TGate(self, other, **hints):
+        return _S.Zero
+
+    def _eval_commutator_SdgGate(self, other, **hints):
+        return _S.Zero
+
+    def _eval_commutator_TdgGate(self, other, **hints):
+        return _S.Zero
+
+    def _eval_commutator_PhaseShiftGate(self, other, **hints):
+        return _S.Zero
+
+    def _eval_commutator_RZGate(self, other, **hints):
+        return _S.Zero
+
+
+class TdgGate(OneQubitGate):
+    """The single qubit T-dagger gate.
+
+    This is the inverse of the T (pi/8) gate. It applies a phase of e^(-iπ/4)
+    to the |1> state.
+
+    Parameters
+    ----------
+    target : int
+        The target qubit this gate will apply to.
+
+    Examples
+    ========
+
+    """
+    is_hermitian = False
+    gate_name = 'Tdg'
+    gate_name_latex = r'\mathsf{T}^\\dagger'
+
+    def get_target_matrix(self, format='sympy'):
+        return matrix_cache.get_matrix('Tdg', format)
+
+    def _eval_commutator_ZGate(self, other, **hints):
+        return _S.Zero
+
+    def _eval_commutator_PhaseGate(self, other, **hints):
+        return _S.Zero
+
+    def _eval_commutator_TGate(self, other, **hints):
+        return _S.Zero
+
+    def _eval_commutator_SdgGate(self, other, **hints):
+        return _S.Zero
+
+    def _eval_commutator_TdgGate(self, other, **hints):
+        return _S.Zero
+
+    def _eval_commutator_PhaseShiftGate(self, other, **hints):
+        return _S.Zero
+
+    def _eval_commutator_RZGate(self, other, **hints):
+        return _S.Zero
+
+
+class SXGate(HermitianOperator, OneQubitGate):
+    """The single qubit square root of X gate.
+
+    This gate is the square root of the X (NOT) gate. Applying it twice is
+    equivalent to applying the X gate once.
+
+    Parameters
+    ----------
+    target : int
+        The target qubit this gate will apply to.
+
+    Examples
+    ========
+
+    """
+    gate_name = 'SX'
+    gate_name_latex = r'\sqrt{\mathsf{X}}'
+
+    def get_target_matrix(self, format='sympy'):
+        return matrix_cache.get_matrix('SX', format)
+
+
+# Single Qubit Gates with Angle Parameters
+
+class OneQubitAngleGate(OneQubitGate):
+
+    """A single qubit gate with an angle parameter.
+
+    This is an abstract base class for single qubit gates that have an angle
+    parameter, such as RX, RY, and RZ.
+
+    Parameters
+    ----------
+    target : int
+        The target qubit this gate will apply to.
+    angle : Expr
+        The angle parameter in radians.
+    """
+
+    @classmethod
+    def _eval_hilbert_space(cls, args):
+        """This returns the smallest possible Hilbert space."""
+        return ComplexSpace(2)**(args[0] + 1)
+
+    @classmethod
+    def _eval_args(cls, args):
+        args = UnitaryOperator._eval_args(args)
+        _validate_targets_controls((args[0],))
+        return args
+
+    @property
+    def targets(self):
+        """A tuple of target qubits."""
+        return (self.args[0],)
+
+    @property
+    def angle(self):
+        """The angle parameter."""
+        return self.args[1]
+
+
+class PhaseShiftGate(OneQubitAngleGate):
+    """The single qubit phase shift gate.
+
+    This is a parameterized phase gate that applies a phase of e^(iλ) to the
+    |1> state, where λ is the phase angle parameter.
+
+    Parameters
+    ----------
+    target : int
+        The target qubit this gate will apply to.
+    angle : Expr
+        The phase angle λ in radians.
+
+    Examples
+    ========
+
+    """
+    is_hermitian = False
+    gate_name = 'P'
+    gate_name_latex = r'\mathsf{P}'
+
+    def get_target_matrix(self, format='sympy'):
+        """Build matrix dynamically from angle parameter."""
+        from sympy.functions.elementary.exponential import exp
+        from sympy.matrices import Matrix
+        angle = self.angle
+        m = Matrix([
+            [1, 0],
+            [0, exp(I*angle)]
+        ])
+        return _matrix_format(m, format)
+
+    def _eval_commutator_ZGate(self, other, **hints):
+        return _S.Zero
+
+    def _eval_commutator_PhaseGate(self, other, **hints):
+        return _S.Zero
+
+    def _eval_commutator_TGate(self, other, **hints):
+        return _S.Zero
+
+    def _eval_commutator_SdgGate(self, other, **hints):
+        return _S.Zero
+
+    def _eval_commutator_TdgGate(self, other, **hints):
+        return _S.Zero
+
+    def _eval_commutator_PhaseShiftGate(self, other, **hints):
+        return _S.Zero
+
+    def _eval_commutator_RZGate(self, other, **hints):
+        return _S.Zero
+
+    def _eval_commutator_XGate(self, other, **hints):
+        from sympy.functions.elementary.exponential import exp
+        target = self.targets[0]
+        return I*(1 - exp(I*self.angle))*YGate(target)
+
+    def _eval_commutator_YGate(self, other, **hints):
+        from sympy.functions.elementary.exponential import exp
+        target = self.targets[0]
+        return -I*(1 - exp(I*self.angle))*XGate(target)
+
+
+class RXGate(OneQubitAngleGate):
+    """The single qubit X-axis rotation gate.
+
+    This gate performs a rotation around the X-axis of the Bloch sphere by
+    angle θ.
+
+    Parameters
+    ----------
+    target : int
+        The target qubit this gate will apply to.
+    angle : Expr
+        The rotation angle θ in radians.
+
+    Examples
+    ========
+
+    """
+    is_hermitian = False
+    gate_name = 'RX'
+    gate_name_latex = r'\mathsf{R}_x'
+
+    def get_target_matrix(self, format='sympy'):
+        """Build matrix dynamically from angle parameter."""
+        from sympy.functions.elementary.trigonometric import cos, sin
+        from sympy.matrices import Matrix
+        angle = self.angle
+        m = Matrix([
+            [cos(angle/2), -I*sin(angle/2)],
+            [-I*sin(angle/2), cos(angle/2)]
+        ])
+        return _matrix_format(m, format)
+
+    def _eval_commutator_RXGate(self, other, **hints):
+        return _S.Zero
+
+    def _eval_commutator_XGate(self, other, **hints):
+        return _S.Zero
+
+    def _eval_commutator_RYGate(self, other, **hints):
+        from sympy.functions.elementary.trigonometric import sin
+        target = self.targets[0]
+        return -Integer(2)*I*sin(self.angle/2)*sin(other.angle/2)*ZGate(target)
+
+
+class RYGate(OneQubitAngleGate):
+    """The single qubit Y-axis rotation gate.
+
+    This gate performs a rotation around the Y-axis of the Bloch sphere by
+    angle θ.
+
+    Parameters
+    ----------
+    target : int
+        The target qubit this gate will apply to.
+    angle : Expr
+        The rotation angle θ in radians.
+
+    Examples
+    ========
+
+    """
+    is_hermitian = False
+    gate_name = 'RY'
+    gate_name_latex = r'\mathsf{R}_y'
+
+    def get_target_matrix(self, format='sympy'):
+        """Build matrix dynamically from angle parameter."""
+        from sympy.functions.elementary.trigonometric import cos, sin
+        from sympy.matrices import Matrix
+        angle = self.angle
+        m = Matrix([
+            [cos(angle/2), -sin(angle/2)],
+            [sin(angle/2), cos(angle/2)]
+        ])
+        return _matrix_format(m, format)
+
+    def _eval_commutator_RYGate(self, other, **hints):
+        return _S.Zero
+
+    def _eval_commutator_YGate(self, other, **hints):
+        return _S.Zero
+
+    def _eval_commutator_RZGate(self, other, **hints):
+        from sympy.functions.elementary.trigonometric import sin
+        target = self.targets[0]
+        return -Integer(2)*I*sin(self.angle/2)*sin(other.angle/2)*XGate(target)
+
+
+class RZGate(OneQubitAngleGate):
+    """The single qubit Z-axis rotation gate.
+
+    This gate performs a rotation around the Z-axis of the Bloch sphere by
+    angle θ.
+
+    Parameters
+    ----------
+    target : int
+        The target qubit this gate will apply to.
+    angle : Expr
+        The rotation angle θ in radians.
+
+    Examples
+    ========
+
+    """
+    is_hermitian = False
+    gate_name = 'RZ'
+    gate_name_latex = r'\mathsf{R}_z}'
+
+    def get_target_matrix(self, format='sympy'):
+        """Build matrix dynamically from angle parameter."""
+        from sympy.functions.elementary.exponential import exp
+        from sympy.matrices import Matrix
+        angle = self.angle
+        m = Matrix([
+            [exp(-I*angle/2), 0],
+            [0, exp(I*angle/2)]
+        ])
+        return _matrix_format(m, format)
+
+    def _eval_commutator_ZGate(self, other, **hints):
+        return _S.Zero
+
+    def _eval_commutator_PhaseGate(self, other, **hints):
+        return _S.Zero
+
+    def _eval_commutator_TGate(self, other, **hints):
+        return _S.Zero
+
+    def _eval_commutator_SdgGate(self, other, **hints):
+        return _S.Zero
+
+    def _eval_commutator_TdgGate(self, other, **hints):
+        return _S.Zero
+
+    def _eval_commutator_PhaseShiftGate(self, other, **hints):
+        return _S.Zero
+
+    def _eval_commutator_RZGate(self, other, **hints):
+        return _S.Zero
+
+    def _eval_commutator_RXGate(self, other, **hints):
+        from sympy.functions.elementary.trigonometric import sin
+        target = self.targets[0]
+        return -Integer(2)*I*sin(self.angle/2)*sin(other.angle/2)*YGate(target)
+
 
 # Aliases for gate names.
 H = HadamardGate
@@ -857,6 +1329,13 @@ Y = YGate
 Z = ZGate
 T = TGate
 Phase = S = PhaseGate
+Sdg = SdgGate
+Tdg = TdgGate
+SX = SXGate
+P = PhaseShiftGate
+RX = RXGate
+RY = RYGate
+RZ = RZGate
 
 
 #-----------------------------------------------------------------------------
@@ -887,7 +1366,7 @@ class CNotGate(HermitianOperator, CGate, TwoQubitGate):
 
     """
     gate_name = 'CNOT'
-    gate_name_latex = r'\text{CNOT}'
+    gate_name_latex = r'\mathsf{CNOT}'
     simplify_cgate = True
 
     #-------------------------------------------------------------------------
@@ -994,7 +1473,7 @@ class SwapGate(TwoQubitGate):
     """
     is_hermitian = True
     gate_name = 'SWAP'
-    gate_name_latex = r'\text{SWAP}'
+    gate_name_latex = r'\mathsf{SWAP}'
 
     def get_target_matrix(self, format='sympy'):
         return matrix_cache.get_matrix('SWAP', format)

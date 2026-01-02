@@ -258,7 +258,7 @@ def test_gate():
     assert str(g1) == '1(2)'
     assert pretty(g1) == '1 \n 2'
     assert upretty(g1) == '1 \n 2'
-    assert latex(g1) == r'1_{2}'
+    assert latex(g1) == r'\mathsf{1}_{2}'
     sT(g1, "IdentityGate(Integer(2))")
     assert str(g1*q) == '1(2)*|10101>'
     ascii_str = \
@@ -273,7 +273,7 @@ def test_gate():
 """
     assert pretty(g1*q) == ascii_str
     assert upretty(g1*q) == ucode_str
-    assert latex(g1*q) == r'1_{2} {\left|10101\right\rangle }'
+    assert latex(g1*q) == r'\mathsf{1}_{2} {\left|10101\right\rangle }'
     sT(g1*q, "Mul(IdentityGate(Integer(2)), Qubit(Integer(1),Integer(0),Integer(1),Integer(0),Integer(1)))")
     assert str(g2) == 'C((3,0),X(1))'
     ascii_str = \
@@ -288,7 +288,7 @@ C   ⎛X ⎞\n\
 """
     assert pretty(g2) == ascii_str
     assert upretty(g2) == ucode_str
-    assert latex(g2) == r'C_{3,0}{\left(X_{1}\right)}'
+    assert latex(g2) == r'\mathsf{C}_{3,0}{\left(\mathsf{X}_{1}\right)}'
     sT(g2, "CGate(Tuple(Integer(3), Integer(0)),XGate(Integer(1)))")
     assert str(g3) == 'CNOT(1,0)'
     ascii_str = \
@@ -303,7 +303,7 @@ CNOT   \n\
 """
     assert pretty(g3) == ascii_str
     assert upretty(g3) == ucode_str
-    assert latex(g3) == r'\text{CNOT}_{1,0}'
+    assert latex(g3) == r'\mathsf{CNOT}_{1,0}'
     sT(g3, "CNotGate(Integer(1),Integer(0))")
     ascii_str = \
 """\
@@ -323,7 +323,7 @@ U((0,),Matrix([\n\
 """
     assert pretty(g4) == ascii_str
     assert upretty(g4) == ucode_str
-    assert latex(g4) == r'U_{0}'
+    assert latex(g4) == r'\mathsf{U}_{0}'
     sT(g4, "UGate(Tuple(Integer(0)),ImmutableDenseMatrix([[Symbol('a'), Symbol('b')], [Symbol('c'), Symbol('d')]]))")
 
 
