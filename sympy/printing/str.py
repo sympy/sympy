@@ -19,6 +19,7 @@ from .printer import Printer, print_function
 
 
 _rootof_x = Symbol('x')
+_rootsum_w = Symbol('w')
 
 
 class StrPrinter(Printer):
@@ -786,10 +787,10 @@ class StrPrinter(Printer):
         return "CRootOf(%s, %d)" % (self._print_Add(poly_expr, order='lex'), expr.index)
 
     def _print_RootSum(self, expr):
-        args = [self._print_Add(expr.poly(_rootof_x), order='lex')]
+        args = [self._print_Add(expr.poly(_rootsum_w), order='lex')]
 
         if expr.fun is not S.IdentityFunction:
-            func = Lambda(_rootof_x, expr.fun(_rootof_x))
+            func = Lambda(_rootsum_w, expr.fun(_rootsum_w))
             args.append(self._print(func))
 
         return "RootSum(%s)" % ", ".join(args)

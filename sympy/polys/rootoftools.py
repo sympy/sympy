@@ -115,6 +115,7 @@ class _pure_key_dict:
 _reals_cache = _pure_key_dict()
 _complexes_cache = _pure_key_dict()
 _rootof_dummy = Dummy('x')
+_rootsum_dummy = Dummy('w')
 
 
 def _pure_factors(poly):
@@ -1139,18 +1140,19 @@ class RootSum(Expr):
         """Construct a new ``RootSum`` instance of roots of a polynomial."""
         coeff, poly = cls._transform(expr, x)
 
-        poly = Poly(poly.replace(poly.gen, _rootof_dummy))
         if not poly.is_univariate:
             raise MultivariatePolynomialError(
                 "only univariate polynomials are allowed")
 
+        poly = Poly(poly.replace(poly.gen, _rootsum_dummy))
+
         if func is None:
-            func = Lambda(poly.gen, poly.gen)
+            func = Lambda(_rootsum_dummy, _rootsum_dummy)
         else:
             is_func = getattr(func, 'is_Function', False)
 
             if is_func and 1 in func.nargs:
-                func = Lambda(poly.gen, func(poly.gen))
+                func = Lambda(_rootsum_dummy, func(_rootsum_dummy))
             else:
                 raise ValueError(
                     "expected a univariate function, got %s" % func)
