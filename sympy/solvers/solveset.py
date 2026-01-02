@@ -3921,7 +3921,7 @@ def _handle_complex_components(system, symbols):
         # Check if the symbol is trapped inside ANY of the projection functions
         # (re, im, conjugate, Abs, arg)
         is_projected = any(
-            any(eq.has(func(sym)) for func in complex_projections) 
+            any(eq.has(func(sym)) for func in complex_projections)
             for eq in system
         )
 
@@ -4127,7 +4127,7 @@ def nonlinsolve(system, *symbols):
     system = [_sympify(eq) for eq in system]
     #calling helper function to decompose complex projection to 2-D real constraints
     res = _handle_complex_components(system, symbols)
-    
+
     if res[0] is not None:
         res_system, res_symbols, reconstruction = res
 
@@ -4141,7 +4141,7 @@ def nonlinsolve(system, *symbols):
         for sol in raw:
             # Mapping the solved values to the dummy symbols
             sol_map = dict(zip(res_symbols, sol))
-            
+
             # --- filtering step: Reject "Real" variables that turned out Imaginary ---
             # This fixes the x**2 + 1 case where r = -2*I was returned by "solve".
             is_valid_sol = True
@@ -4159,7 +4159,7 @@ def nonlinsolve(system, *symbols):
                     final_tuple.append(reconstruction[s].subs(sol_map))
                 else:
                     final_tuple.append(sol_map[s])
-            
+
             rebuilt.add(tuple(final_tuple))
 
         return FiniteSet(*rebuilt)
