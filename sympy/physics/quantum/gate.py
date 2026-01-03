@@ -966,7 +966,7 @@ class SdgGate(OneQubitGate):
     """The single qubit S-dagger gate.
 
     This is the inverse of the S (phase) gate. It applies a phase of -i to
-    the |1> state.
+    the ``|1>`` state.
 
     Parameters
     ----------
@@ -1010,7 +1010,7 @@ class TdgGate(OneQubitGate):
     """The single qubit T-dagger gate.
 
     This is the inverse of the T (pi/8) gate. It applies a phase of e^(-iπ/4)
-    to the |1> state.
+    to the ``|1>`` state.
 
     Parameters
     ----------
@@ -1115,7 +1115,7 @@ class PhaseShiftGate(OneQubitAngleGate):
     """The single qubit phase shift gate.
 
     This is a parameterized phase gate that applies a phase of e^(iλ) to the
-    |1> state, where λ is the phase angle parameter.
+    ``|1>`` state, where λ is the phase angle parameter.
 
     Parameters
     ----------
