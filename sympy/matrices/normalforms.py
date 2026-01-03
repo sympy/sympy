@@ -4,12 +4,13 @@ from sympy.polys.domains.integerring import ZZ
 from sympy.polys.polytools import Poly
 from sympy.polys.matrices import DomainMatrix
 from sympy.polys.matrices.normalforms import (
-        smith_normal_form as _snf,
-        is_smith_normal_form as _is_snf,
-        smith_normal_decomp as _snd,
-        invariant_factors as _invf,
-        hermite_normal_form as _hnf,
-    )
+    smith_normal_form as _snf,
+    is_smith_normal_form as _is_snf,
+    smith_normal_decomp as _snd,
+    invariant_factors as _invf,
+    hermite_normal_form as _hnf,
+    hermite_normal_decomp as _poly_hnf,
+)
 
 
 def _to_domain(m, domain=None):
@@ -91,7 +92,7 @@ def invariant_factors(m, domain=None):
     if hasattr(m, "ring"):
         if m.ring.is_PolynomialRing:
             K = m.ring
-            to_poly = lambda f: Poly(f, K.symbols, domain=K.domain)
+            def to_poly(f): return Poly(f, K.symbols, domain=K.domain)
             factors = tuple(to_poly(f) for f in factors)
     return factors
 
@@ -154,3 +155,32 @@ def hermite_normal_form(A, *, D=None, check_rank=False):
     if D is not None and not ZZ.of_type(D):
         D = ZZ(int(D))
     return _hnf(A._rep, D=D, check_rank=check_rank).to_Matrix()
+
+
+def hermite_normal_decomp(A, *, D=None, check_rank=False):
+    r"""
+    Compute the Hermite Normal Form decomposition of an integer matrix *A*.
+
+    Returns
+    =======
+    (U, H)
+        *U* is a unimodular Matrix with ``U * A == H``
+        *H* is the Hermite Normal Form (a Matrix)
+
+    Examples
+    ========
+
+    >>> from sympy import Matrix
+    >>> from sympy.matrices.normalforms import hermite_normal_decomp
+    >>> m = Matrix([[12, 6, 4], [3, 9, 6], [2, 16, 14]])
+    >>> U, H = hermite_normal_decomp(m)
+    >>> assert U * m == H
+
+    """
+
+    # Convert to DomainMatrix over ZZ
+    A_dm = DomainMatrix.from_Matrix(A, ZZ)
+    U_dm, H_dm = _poly_hnf(A_dm)
+
+    # Convert back to regular Matrix
+    return U_dm.to_Matrix(), H_dm.to_Matrix()
