@@ -43,6 +43,9 @@ unicode_whitelist = [
     r'*/sympy/physics/wigner.py',
     r'*/sympy/physics/optics/polarization.py',
 
+`   # quantum gate.py uses some unicode in docstrings
+    r'*/physics/quantum/gate.py',
+
     # joint.py uses some unicode for variable names in the docstrings
     r'*/sympy/physics/mechanics/joint.py',
 
