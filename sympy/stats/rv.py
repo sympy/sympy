@@ -3,7 +3,7 @@ Main Random Variables Module
 
 Defines abstract random variable type.
 Contains interfaces for probability space object (PSpace) as well as standard
-operators, P, E, sample, density, where, quantile
+operators, ``P``, E, sample, density, where, quantile
 
 See Also
 ========
@@ -278,7 +278,7 @@ class RandomSymbol(Expr):
     those expressions with the Functions
 
     E - Expectation of a random expression
-    P - Probability of a condition
+    ``P`` - Probability of a condition
     density - Probability Density of an expression
     given - A new random expression (with new random symbols) given a condition
 
