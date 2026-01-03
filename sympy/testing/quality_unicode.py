@@ -26,6 +26,7 @@ unicode_whitelist = [
     r'*/sympy/testing/tests/test_code_quality.py',
     r'*/sympy/physics/vector/tests/test_printing.py',
     r'*/physics/quantum/tests/test_printing.py',
+    r'*/physics/quantum/tests/test_gate.py',
     r'*/sympy/vector/tests/test_printing.py',
     r'*/sympy/parsing/tests/test_sympy_parser.py',
     r'*/sympy/printing/pretty/stringpict.py',
@@ -43,7 +44,7 @@ unicode_whitelist = [
     r'*/sympy/physics/wigner.py',
     r'*/sympy/physics/optics/polarization.py',
 
-`   # quantum gate.py uses some unicode in docstrings
+   # quantum gate.py uses some unicode in docstrings
     r'*/physics/quantum/gate.py',
 
     # joint.py uses some unicode for variable names in the docstrings
