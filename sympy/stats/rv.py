@@ -1414,7 +1414,7 @@ def sampling_P(condition, given_condition=None, library='scipy', numsamples=1,
     See Also
     ========
 
-    P
+    sympy.stats.P
     sampling_E
     sampling_density
 
@@ -1446,7 +1446,7 @@ def sampling_E(expr, given_condition=None, library='scipy', numsamples=1,
     See Also
     ========
 
-    :class:`sympy.stats.rv.P`
+    sympy.stats.P
     sampling_P
     sampling_density
     """
