@@ -2,6 +2,7 @@ from sympy.core.mul import Mul
 from sympy.core.numbers import (I, Integer, Rational, pi)
 from sympy.core.symbol import (Wild, symbols)
 from sympy.functions.elementary.exponential import exp
+from sympy import simplify
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.matrices import Matrix, ImmutableMatrix
 
@@ -458,8 +459,6 @@ def test_one_qubit_commutators():
             a = matrix_to_zero(represent(e, nqubits=1, format='sympy'))
             b = matrix_to_zero(represent(e.doit(), nqubits=1, format='sympy'))
             # For symbolic parameters, we need to simplify before comparing
-            from sympy import simplify
-            from sympy.functions.elementary.exponential import exp
             diff = a - b
             # Handle both scalar 0 and zero matrix by checking if all elements simplify to zero
             if diff == 0:
