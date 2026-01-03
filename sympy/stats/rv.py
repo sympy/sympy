@@ -1446,7 +1446,7 @@ def sampling_E(expr, given_condition=None, library='scipy', numsamples=1,
     See Also
     ========
 
-    P
+    ``P``
     sampling_P
     sampling_density
     """
