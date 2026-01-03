@@ -18,13 +18,11 @@ from sympy.utilities.enumerative import (
 
 from sympy.utilities.misc import as_int
 from sympy.utilities.decorator import deprecated
-from typing import cast, TypeVar
-
-_T = TypeVar("_T")
+from typing import cast
 
 
 if TYPE_CHECKING:
-    from typing import Iterable, Callable, Literal, Sequence, Iterator
+    from typing import Iterable, Callable, Literal, Sequence, Iterator, TypeVar
     T = TypeVar("T")
     T1 = TypeVar("T1")
     T2 = TypeVar("T2")
@@ -249,10 +247,10 @@ def _iproduct2(
     elems2: list[T2] = []
 
     sentinel = object()
-    def append(it: Iterator[_T], elems: list[_T]) -> None:
+    def append(it: Iterator[T], elems: list[T]) -> None:
         e = next(it, sentinel)
         if e is not sentinel:
-            elems.append(cast(_T, e))
+            elems.append(cast("T", e))
 
     n = 0
     append(it1, elems1)
