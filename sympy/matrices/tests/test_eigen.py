@@ -1,5 +1,5 @@
 from sympy.core.evalf import N
-from sympy.core.numbers import (Float, I, Rational)
+from sympy.core.numbers import (Float, I, Rational, pi)
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -13,6 +13,7 @@ from sympy.simplify.simplify import simplify
 from sympy.matrices.immutable import ImmutableMatrix
 from sympy.testing.pytest import slow
 from sympy.testing.matrices import allclose
+from sympy import expand
 
 
 def test_eigen():
@@ -725,3 +726,49 @@ def test_issue_25282():
         mat.append(rotate(ds, i) + rotate(dd, i))
 
     assert sum(Matrix(mat).eigenvals().values()) == 24
+
+
+def test_issue_28793():
+    # https://github.com/sympy/sympy/issues/28793
+
+    A = Matrix([
+        [3*sqrt(2)*I*pi*(1 + sqrt(2))/4, 0, -sqrt(2)*I*pi/4, 0, 0, 0, 0, 0],
+        [0, sqrt(2)*I*pi*(1 + sqrt(2))/2, 0, -I*pi/2, 0, 0, 0, 0],
+        [-sqrt(2)*I*pi/4, 0, 3*sqrt(2)*I*pi*(1 + sqrt(2))/4, 0, 0, 0, 0, 0],
+        [0, -I*pi/2, 0, sqrt(2)*I*pi*(1 + sqrt(2))/2, 0, 0, -I*pi/2, 0],
+        [0, 0, 0, 0, sqrt(2)*I*pi*(1 + sqrt(2))/2, 0, 0, 0],
+        [0, 0, 0, 0, 0, sqrt(2)*I*pi*(1 + sqrt(2))/4, 0, -sqrt(2)*I*pi/4],
+        [0, 0, 0, -I*pi/2, 0, 0, sqrt(2)*I*pi*(1 + sqrt(2))/2, 0],
+        [0, 0, 0, 0, 0, -sqrt(2)*I*pi/4, 0, sqrt(2)*I*pi*(1 + sqrt(2))/4]
+    ])
+
+    z = Symbol('z')
+    expected = (
+        z**8
+        + z**7*(-8*I*pi - 4*sqrt(2)*I*pi)
+        + z**6*(-81*pi**2/2 - 55*sqrt(2)*pi**2/2)
+        + z**5*(181*sqrt(2)*I*pi**3/2 + 128*I*pi**3)
+        + z**4*(3991*pi**4/16 + 1413*sqrt(2)*pi**4/8)
+        + z**3*(-1699*sqrt(2)*I*pi**5/8 - 1201*I*pi**5/4)
+        + z**2*(-6927*pi**6/32 - 2449*sqrt(2)*pi**6/16)
+        + z*(1919*sqrt(2)*I*pi**7/32 + 1357*I*pi**7/16)
+        + 309*sqrt(2)*pi**8/32 + 437*pi**8/32
+    )
+    assert A.charpoly(z).as_expr().collect(z, expand) == expected
+
+    vals = A.eigenvals()
+    assert sorted(vals.values()) == [1, 1, 1, 1, 1, 1, 2]
+    assert A.eigenvects() == [
+        (I*pi/2, 1, [Matrix([[0, 0, 0, 0, 0, 1, 0, 1]]).T]),
+        (I*pi, 1, [Matrix([[0, 1, 0, sqrt(2), 0, 0, 1, 0]]).T]),
+        (I*pi/2 + sqrt(2)*I*pi/2, 1, [Matrix([[0, 0, 0, 0, 0, -1, 0, 1]]).T]),
+        (I*pi + sqrt(2)*I*pi, 1, [Matrix([[0, 1, 0, -sqrt(2), 0, 0, 1, 0]]).T]),
+        (-sqrt(2)*I*pi/4 + 3*I*pi*(sqrt(2) + 2)/4, 1, [Matrix([[1, 0, 1, 0, 0, 0, 0, 0]]).T]),
+        (sqrt(2)*I*pi/4 + 3*I*pi*(sqrt(2) + 2)/4, 1, [Matrix([[-1, 0, 1, 0, 0, 0, 0, 0]]).T]),
+        (sqrt(2)*I*pi/2 + I*pi, 2, [Matrix([[0, 0, 0, 0, 1, 0, 0, 0]]).T,
+                                    Matrix([[0, -1, 0, 0, 0, 0, 1, 0]]).T])
+    ]
+
+    P, J = A.jordan_form()
+    assert P.det() == 16*sqrt(2)
+    assert expand(P*J*P.inv()) == expand(A)

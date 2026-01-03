@@ -19,7 +19,7 @@ from sympy.polys.polyfuncs import symmetrize, viete
 from sympy.polys.polyroots import (
     roots_linear, roots_quadratic, roots_binomial,
     preprocess_roots, roots)
-from sympy.polys.polytools import Poly, PurePoly, factor
+from sympy.polys.polytools import Poly, factor
 from sympy.polys.rationaltools import together
 from sympy.polys.rootisolation import (
     dup_isolate_complex_roots_sqf,
@@ -51,26 +51,33 @@ class _pure_key_dict:
 
     >>> P = _pure_key_dict()
 
-    2) assignment for a PurePoly or univariate polynomial
+    2) assignment for a Poly or univariate polynomial
 
     >>> P[x] = 1
     >>> P[PurePoly(x - y, x)] = 2
 
-    3) retrieval based on PurePoly key comparison (use this
-       instead of the get method)
+    3) retrieval based on Poly key comparison
 
-    >>> P[y]
+    >>> P[x]
     1
 
-    4) KeyError when trying to retrieve a nonexisting key
+    4) KeyError when trying to retrieve with different symbol or nonexisting key
 
+    >>> P[y]  # Different symbol, not found
+    Traceback (most recent call last):
+    ...
+    KeyError: Poly(y, y, domain='ZZ')
     >>> P[y + 1]
     Traceback (most recent call last):
     ...
-    KeyError: PurePoly(y + 1, y, domain='ZZ')
+    KeyError: Poly(y + 1, y, domain='ZZ')
 
     5) ability to query with ``in``
 
+    >>> x in P
+    True
+    >>> y in P  # Different symbol
+    False
     >>> x + 1 in P
     False
 
@@ -83,17 +90,19 @@ class _pure_key_dict:
         self._dict = {}
 
     def __getitem__(self, k):
-        if not isinstance(k, PurePoly):
-            if not (isinstance(k, Expr) and len(k.free_symbols) == 1):
+        if not isinstance(k, Poly):
+            try:
+                k = Poly(k, expand=False)
+            except (GeneratorsNeeded, PolynomialError):
                 raise KeyError
-            k = PurePoly(k, expand=False)
         return self._dict[k]
 
     def __setitem__(self, k, v):
-        if not isinstance(k, PurePoly):
-            if not (isinstance(k, Expr) and len(k.free_symbols) == 1):
+        if not isinstance(k, Poly):
+            try:
+                k = Poly(k, expand=False)
+            except (GeneratorsNeeded, PolynomialError):
                 raise ValueError('expecting univariate expression')
-            k = PurePoly(k, expand=False)
         self._dict[k] = v
 
     def __contains__(self, k):
@@ -105,11 +114,13 @@ class _pure_key_dict:
 
 _reals_cache = _pure_key_dict()
 _complexes_cache = _pure_key_dict()
+_rootof_dummy = Dummy('x')
+_rootsum_dummy = Dummy('w')
 
 
 def _pure_factors(poly):
     _, factors = poly.factor_list()
-    return [(PurePoly(f, expand=False), m) for f, m in factors]
+    return [(Poly(f, expand=False).retract(), m) for f, m in factors]
 
 
 def _imag_count_of_factor(f):
@@ -320,7 +331,7 @@ class ComplexRootOf(RootOf):
         else:
             raise ValueError("expected an integer root index, got %s" % index)
 
-        poly = PurePoly(f, x, greedy=False, expand=expand)
+        poly = Poly(f, x, greedy=False, expand=expand)
 
         if not poly.is_univariate:
             raise PolynomialError("only univariate polynomials are allowed")
@@ -357,6 +368,7 @@ class ComplexRootOf(RootOf):
         if not dom.is_ZZ:
             raise NotImplementedError("CRootOf is not supported over %s" % dom)
 
+        poly = Poly(poly.replace(poly.gen, _rootof_dummy))
         root = cls._indexed_root(poly, index, lazy=True)
         return coeff * cls._postprocess_root(root, radicals)
 
@@ -365,7 +377,8 @@ class ComplexRootOf(RootOf):
         """Construct new ``CRootOf`` object from raw data. """
         obj = Expr.__new__(cls)
 
-        obj.poly = PurePoly(poly)
+        poly = poly.replace(poly.gen, _rootof_dummy)
+        obj.poly = Poly(poly)
         obj.index = index
 
         try:
@@ -1131,14 +1144,15 @@ class RootSum(Expr):
             raise MultivariatePolynomialError(
                 "only univariate polynomials are allowed")
 
+        poly = Poly(poly.replace(poly.gen, _rootsum_dummy))
+
         if func is None:
-            func = Lambda(poly.gen, poly.gen)
+            func = Lambda(_rootsum_dummy, _rootsum_dummy)
         else:
             is_func = getattr(func, 'is_Function', False)
 
             if is_func and 1 in func.nargs:
-                if not isinstance(func, Lambda):
-                    func = Lambda(poly.gen, func(poly.gen))
+                func = Lambda(_rootsum_dummy, func(_rootsum_dummy))
             else:
                 raise ValueError(
                     "expected a univariate function, got %s" % func)
@@ -1210,7 +1224,7 @@ class RootSum(Expr):
     @classmethod
     def _transform(cls, expr, x):
         """Transform an expression to a polynomial. """
-        poly = PurePoly(expr, x, greedy=False)
+        poly = Poly(expr, x, greedy=False)
         return preprocess_roots(poly)
 
     @classmethod
@@ -1286,7 +1300,8 @@ class RootSum(Expr):
 
     @property
     def free_symbols(self):
-        return self.poly.free_symbols | self.fun.free_symbols
+        poly_syms = self.poly.free_symbols - {self.poly.gen}
+        return poly_syms | self.fun.free_symbols
 
     @property
     def is_commutative(self):

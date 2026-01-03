@@ -35,6 +35,7 @@ from sympy.integrals.integrals import Integral
 from sympy.logic.boolalg import (And, false, ITE, Not, Or, true)
 from sympy.matrices.expressions.dotproduct import DotProduct
 from sympy.simplify.cse_main import cse
+from sympy.stats import MultivariateNormal
 from sympy.tensor.array import derive_by_array, Array
 from sympy.tensor.array.expressions import ArraySymbol
 from sympy.tensor.indexed import IndexedBase, Idx
@@ -2317,3 +2318,15 @@ def test_array_symbol():
     a = ArraySymbol('a', (3,))
     f = lambdify((a), a)
     assert numpy.all(f(numpy.array([1,2,3])) == numpy.array([1,2,3]))
+
+
+def test_issue_28803_jointrandonsymbol_recursion():
+    """Test that JointRandomSymbol doesn't cause infinite recursion in lambdify."""
+
+    # Used to cause infinite recursion
+    K = MatrixSymbol("K", 4, 4)
+    z = MultivariateNormal("z", [0] * 4, K)
+    a = symbols("a")
+
+    # Should not raise RecursionError
+    lambdify(a, z * a)

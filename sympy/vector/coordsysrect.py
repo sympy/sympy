@@ -2,9 +2,10 @@ from collections.abc import Callable
 
 from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
-from sympy.core import S, Dummy, Lambda
+from sympy.core import S, Dummy, Lambda, factor_terms
 from sympy.core.symbol import Str
 from sympy.core.symbol import symbols
+from sympy.functions.elementary.trigonometric import TrigonometricFunction
 from sympy.matrices.immutable import ImmutableDenseMatrix as Matrix
 from sympy.matrices.matrixbase import MatrixBase
 from sympy.solvers import solve
@@ -16,6 +17,7 @@ from sympy.functions.elementary.trigonometric import (acos, atan2, cos, sin)
 from sympy.matrices.dense import eye
 from sympy.matrices.immutable import ImmutableDenseMatrix
 from sympy.simplify.simplify import simplify
+from sympy.simplify.fu import TR5
 from sympy.simplify.trigsimp import trigsimp
 import sympy.vector
 from sympy.vector.orienters import (Orienter, AxisOrienter, BodyOrienter,
@@ -247,6 +249,30 @@ class CoordSys3D(Basic):
 
         obj._parent_rotation_matrix = rotation_matrix
         obj._origin = origin
+
+        # compute the transformation matrix from this coordinate system
+        # to the parent
+        if parent is not None:
+            u = (x1, x2, x3)
+            X = Matrix(obj._transformation_lambda(*u))
+            h = obj._lame_coefficients
+            J = X.jacobian(u)
+
+            # detects coordinate systems like spherical/cylindrical,
+            # where the Jacobian depends on the position
+            is_curvilinear = J.has(BaseScalar)
+            if is_curvilinear:
+                # normalized jacobian
+                J = Matrix([(J.col(i) / h[i]).T for i in range(3)]).T
+
+            T_to_parent = J
+        else:
+            is_curvilinear = False
+            T_to_parent = eye(3)
+
+        obj._transformation_matrix_to_parent = T_to_parent
+        obj._is_cartesian = (obj._lame_coefficients == (S.One, S.One, S.One))
+        obj._is_curvilinear = is_curvilinear
 
         # Return the instance
         return obj
@@ -485,25 +511,74 @@ class CoordSys3D(Basic):
 
         A SymPy Matrix is returned.
 
+        Note that rotation_matrix only consider pure rotations between
+        Cartesian systems. It doesn't account for changes in base vectors,
+        like curvilinear to Cartesian. Use change_of_basis_matrix_from if
+        those are important.
+
         Parameters
         ==========
 
         other : CoordSys3D
             The system which the DCM is generated to.
 
+        See Also
+        ========
+
+        CoordSys3D.change_of_basis_matrix_from
+
         Examples
         ========
 
         >>> from sympy.vector import CoordSys3D
         >>> from sympy import symbols
+
+        Let's consider two Cartesian systems connected by rotations:
+
         >>> q1 = symbols('q1')
         >>> N = CoordSys3D('N')
         >>> A = N.orient_new_axis('A', q1, N.i)
-        >>> N.rotation_matrix(A)
+
+        The rotation matrix from A to N is:
+
+        >>> R_fromA_toN = N.rotation_matrix(A)
+        >>> R_fromA_toN
         Matrix([
         [1,       0,        0],
         [0, cos(q1), -sin(q1)],
         [0, sin(q1),  cos(q1)]])
+
+        Because the two systems are Cartesians and connected by pure rotation,
+        the rotation matrix is equal to the change-of-basis matrix:
+
+        >>> R_fromA_toN == N.change_of_basis_matrix_from(A)
+        True
+
+        This is generally not true. Specifically if a non-Cartesian coordinate
+        system (like curvilinear system, or a scaled system, or a
+        reflected system, etc.) is in the path of two connected systems,
+        then the two matrices are different, because the one computed by
+        change_of_basis_matrix_from considers both the change in base vectors
+        and the orientation between the systems, whereas the one computed by
+        rotation_matrix only consider the orientation between Cartesian
+        systems. For example:
+
+        >>> B = A.create_new("B", transformation=lambda x,y,z: (2*x, z, y))
+        >>> C = B.orient_new_axis("C", q1, B.i)
+        >>> R_fromC_toN = N.rotation_matrix(C).simplify()
+        >>> R_fromC_toN
+        Matrix([
+        [1,         0,          0],
+        [0, cos(2*q1), -sin(2*q1)],
+        [0, sin(2*q1),  cos(2*q1)]])
+        >>> T_fromC_toN = N.change_of_basis_matrix_from(C).simplify()
+        >>> T_fromC_toN
+        Matrix([
+        [2, 0, 0],
+        [0, 0, 1],
+        [0, 1, 0]])
+
+        Hence, the use of change_of_basis_matrix_from is recommended.
 
         """
         from sympy.vector.functions import _path
@@ -524,6 +599,115 @@ class CoordSys3D(Basic):
             result *= path[i]._parent_rotation_matrix
         for i in range(rootindex + 1, len(path)):
             result *= path[i]._parent_rotation_matrix.T
+        return result
+
+    def change_of_basis_matrix_from(self, other):
+        """
+        Returns the change-of-basis matrix from the ``other`` coordinate system
+        to this coordinate system. This matrix transforms the components of a
+        vector defined in ``other`` to componenets of a vector defined in
+        this system. The columns of this matrix represent the base vectors of
+        the ``other`` system in terms of base vectors of this
+        coordinate system.
+
+        If v_a is a vector defined in system 'A' (in matrix format)
+        and v_b is the same vector defined in system 'B', then
+        v_a = A.change_of_basis_matrix_from(B) * v_b.
+
+        A SymPy Matrix is returned.
+
+        Parameters
+        ==========
+
+        other : CoordSys3D
+            The system from which the change-of-basis matrix is generated.
+
+        See Also
+        ========
+
+        CoordSys3D.rotation_matrix
+
+        Examples
+        ========
+
+        >>> from sympy.vector import CoordSys3D, express
+        >>> from sympy import symbols, Matrix
+
+        Let's consider two Cartesian systems connected by rotations:
+
+        >>> q1 = symbols('q1')
+        >>> N = CoordSys3D('N')
+        >>> A = N.orient_new_axis('A', q1, N.i)
+
+        The change-of-basis matrix (or transformation matrix) from A to N is:
+
+        >>> T_fromA_toN = N.change_of_basis_matrix_from(A)
+        >>> T_fromA_toN
+        Matrix([
+        [1,       0,        0],
+        [0, cos(q1), -sin(q1)],
+        [0, sin(q1),  cos(q1)]])
+
+        The change-of-basis matrix allows to express vectors defined
+        in one system into a different system. In fact, the change-of-basis
+        matrix is internally used by the ``express`` function. The following
+        example shows a direct comparison between working with matrices
+        and the vector module:
+
+        >>> vA_matrix = Matrix([1, 2, 3])
+        >>> vN_matrix = T_fromA_toN * vA_matrix
+        >>> vN_matrix
+        Matrix([
+        [                     1],
+        [-3*sin(q1) + 2*cos(q1)],
+        [ 2*sin(q1) + 3*cos(q1)]])
+        >>> vA = A.i + 2 * A.j + 3 * A.k
+        >>> vN = express(vA, N)
+        >>> vN
+        N.i + (-3*sin(q1) + 2*cos(q1))*N.j + (2*sin(q1) + 3*cos(q1))*N.k
+
+        Change-of-basis matrix from spherical to Cartesian coordinates:
+
+        >>> Cart = CoordSys3D("Cart")
+        >>> S = Cart.create_new("S", transformation="spherical")
+        >>> C = Cart.create_new("C", transformation="cylindrical")
+        >>> Cart.change_of_basis_matrix_from(S)
+        Matrix([
+        [sin(S.theta)*cos(S.phi), cos(S.phi)*cos(S.theta), -sin(S.phi)],
+        [sin(S.phi)*sin(S.theta), sin(S.phi)*cos(S.theta),  cos(S.phi)],
+        [           cos(S.theta),           -sin(S.theta),           0]])
+
+        Change-of-basis matrix from spherical to cylindrical coordinates
+        (note that the azimuthal angle of S and C are the same):
+
+        >>> r_s, theta_s, phi_s = S.base_scalars()
+        >>> r_c, theta_c, z_c = C.base_scalars()
+        >>> C.change_of_basis_matrix_from(S).subs(phi_s, theta_c).simplify()
+        Matrix([
+        [sin(S.theta),  cos(S.theta), 0],
+        [           0,             0, 1],
+        [cos(S.theta), -sin(S.theta), 0]])
+
+        """
+        from sympy.vector.functions import _path
+        if not isinstance(other, CoordSys3D):
+            raise TypeError(str(other) + " is not a CoordSys3D")
+        if self == other:
+            return eye(3)
+
+        # Else, use tree to calculate position
+        rootindex, path = _path(self, other)
+        result = eye(3)
+        for i in range(rootindex):
+            if path[i]._is_cartesian or path[i]._is_curvilinear:
+                result *= path[i]._transformation_matrix_to_parent.T
+            else:
+                result *= path[i]._transformation_matrix_to_parent.inv()
+        for i in range(rootindex + 1, len(path)):
+            result *= path[i]._transformation_matrix_to_parent
+
+        # attempts to cancel out opposite rotations
+        result = TR5(result)
         return result
 
     @cacheit
@@ -577,14 +761,51 @@ class CoordSys3D(Basic):
 
         """
 
-        origin_coords = tuple(self.position_wrt(other).to_matrix(other))
-        relocated_scalars = [x - origin_coords[i]
-                             for i, x in enumerate(other.base_scalars())]
+        from sympy.vector.functions import _path
 
-        vars_matrix = (self.rotation_matrix(other) *
-                       Matrix(relocated_scalars))
-        return {x: trigsimp(vars_matrix[i])
-                for i, x in enumerate(self.base_scalars())}
+        root_idx, systems = _path(other, self)
+        fx, fy, fz = self.base_scalars()
+        current = {fx: fx, fy: fy, fz: fz}
+
+        for system in systems[:root_idx]:
+            px, py, pz = system.transformation_to_parent()
+            parent = system._parent
+            px, py, pz = px.subs(current), py.subs(current), pz.subs(current)
+            pxs, pys, pzs = parent.base_scalars()
+            current = {pxs: px, pys: py, pzs: pz}
+
+        for system in systems[root_idx + 1:]:
+            if system._transformation_from_parent_lambda is None:
+                # for coordinate systems created with transformation=lambda...
+                # attempt to compute the transformation from parent
+                xp, yp, zp = system._parent.base_scalars()
+                equations = [bs - t for bs, t in zip(
+                    system._parent.base_scalars(),
+                    system.transformation_to_parent())]
+                xs, ys, zs = system.base_scalars()
+                sol = solve(equations, system.base_scalars(), dict=True)[0]
+                xs, ys, zs = [sol[k] for k in system.base_scalars()]
+            else:
+                xs, ys, zs = system.transformation_from_parent()
+            xs, ys, zs = [t.subs(current) for t in [xs, ys, zs]]
+            sx, sy, sz = system.base_scalars()
+            current = {sx: xs, sy: ys, sz: zs}
+
+        def post_process(expr):
+            # attempts to cancel out opposite rotations
+            def pattern(t):
+                return (
+                    t.is_Mul
+                    and any(isinstance(a, TrigonometricFunction) for a in t.args)
+                    and any(a.is_Add and a.has(TrigonometricFunction) for a in t.args)
+                )
+
+            if not expr.find(pattern):
+                return expr
+            return TR5(factor_terms(expr.expand()))
+
+        current = {k: post_process(v) for k, v in current.items()}
+        return current
 
     def locate_new(self, name, position, vector_names=None,
                    variable_names=None):

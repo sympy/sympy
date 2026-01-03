@@ -2819,6 +2819,12 @@ class PrettyPrinter(Printer):
     def _print_CoordSystem(self, coords):
         return self._print(coords.name)
 
+    def _print_BaseScalar(self, expr):
+        coord_sys_name, scalar_name = expr.name.split(".")
+        if scalar_name in greek_unicode:
+            scalar_name = greek_unicode[scalar_name]
+        return self._print(pretty_symbol(scalar_name + "_" + coord_sys_name))
+
     def _print_BaseScalarField(self, field):
         string = field._coord_sys.symbols[field._index].name
         return self._print(pretty_symbol(string))

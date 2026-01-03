@@ -1,7 +1,6 @@
 """Implementation of :class:`PolynomialRing` class. """
 
 from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
 from sympy.core.expr import Expr
@@ -16,7 +15,11 @@ from sympy.utilities import public
 
 
 if TYPE_CHECKING:
-    from typing import TypeIs
+    import sys
+    if sys.version_info >= (3, 13):
+        from typing import TypeIs
+    else:
+        from typing_extensions import TypeIs
     from sympy.polys.rings import PolyRing, PolyElement
 
 

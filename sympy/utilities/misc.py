@@ -8,7 +8,7 @@ import os
 import re as _re
 import struct
 from textwrap import fill, dedent
-from typing import TypeVar, Callable, Literal, SupportsIndex, SupportsInt, overload
+from typing import TypeVar, Callable, Literal, SupportsIndex, SupportsInt, overload, Any
 
 _CallableT = TypeVar("_CallableT", bound=Callable)
 
@@ -19,7 +19,7 @@ class Undecidable(ValueError):
     pass
 
 
-def filldedent(s, w=70, **kwargs):
+def filldedent(s: str, w: int = 70, **kwargs: Any) -> str:
     """
     Strips leading and trailing empty lines from a copy of ``s``, then dedents,
     fills and returns it.
@@ -304,7 +304,7 @@ def find_executable(executable, path=None):
     return None
 
 
-def func_name(x, short=False):
+def func_name(x: Any, short: bool = False) -> str:
     """Return function name of `x` (if defined) else the `type(x)`.
     If short is True and there is a shorter alias for the result,
     return the alias.
@@ -330,11 +330,11 @@ def func_name(x, short=False):
     'Equality': 'Eq',
     'Unequality': 'Ne',
     }
-    typ = type(x)
-    if str(typ).startswith("<type '"):
-        typ = str(typ).split("'")[1].split("'")[0]
-    elif str(typ).startswith("<class '"):
-        typ = str(typ).split("'")[1].split("'")[0]
+    typ = str(type(x))
+    if typ.startswith("<type '"):
+        typ = typ.split("'")[1].split("'")[0]
+    elif typ.startswith("<class '"):
+        typ = typ.split("'")[1].split("'")[0]
     rv = getattr(getattr(x, 'func', x), '__name__', typ)
     if '.' in rv:
         rv = rv.split('.')[-1]

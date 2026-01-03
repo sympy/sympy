@@ -561,6 +561,8 @@ def _per(M):
     import itertools
 
     m, n = M.shape
+    if m == 0 or n == 0:
+        return S.One
     if m > n:
         M = M.T
         m, n = n, m

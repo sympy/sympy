@@ -112,8 +112,8 @@ def test_basics(ring_int):
     assert R0.equal_repr(R0.multiply(R0.gen, R0.gen), R0([], 0))
     assert R.equal_repr(R.add(R([2, 4, 5], 3), R([5], 2)), R([7, 4], 2))
 
-    assert R.series_prec(R([1, 2, 3])) == None
-    assert R.series_prec(R([1, 2, 3], None)) == None
+    assert R.series_prec(R([1, 2, 3])) is None
+    assert R.series_prec(R([1, 2, 3], None)) is None
     assert R.series_prec(R([1, 2, 3, 4, 5, 6, 7])) == 6
     assert R.series_prec(R([1, 2, 3, 4, 5, 6, 7], 10)) == 10
 

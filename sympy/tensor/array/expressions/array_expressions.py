@@ -886,26 +886,22 @@ class ArrayDiagonal(_CodegenArrayAbstract):
         return self.args[1:]
 
     @staticmethod
-    def _flatten(expr, *outer_diagonal_indices):
-        inner_diagonal_indices = expr.diagonal_indices
-        all_inner = [j for i in inner_diagonal_indices for j in i]
-        all_inner.sort()
-        # TODO: add API for total rank and cumulative rank:
-        total_rank = _get_subrank(expr)
-        inner_rank = len(all_inner)
-        outer_rank = total_rank - inner_rank
-        shifts = [0 for i in range(outer_rank)]
-        counter = 0
-        pointer = 0
-        for i in range(outer_rank):
-            while pointer < inner_rank and counter >= all_inner[pointer]:
-                counter += 1
-                pointer += 1
-            shifts[i] += pointer
-            counter += 1
-        outer_diagonal_indices = tuple(tuple(shifts[j] + j for j in i) for i in outer_diagonal_indices)
-        diagonal_indices = inner_diagonal_indices + outer_diagonal_indices
-        return _array_diagonal(expr.expr, *diagonal_indices)
+    def _flatten(expr: ArrayDiagonal, *outer_diagonal_indices):
+        inddown = ArrayDiagonal._push_indices_down(outer_diagonal_indices, list(range(get_rank(expr))), get_rank(expr))
+        inddown = tuple(i for i in inddown if i)
+        inddow2 = ArrayDiagonal._push_indices_down(expr.diagonal_indices, inddown, get_rank(expr.expr))
+        new_diag_indices = []
+        for i in inddow2:
+            if not isinstance(i, (tuple, Tuple)):
+                continue
+            diag_group = []
+            for j in i:
+                if isinstance(j, (tuple, Tuple)):
+                    diag_group.extend(list(j))
+                else:
+                    diag_group.append(j)
+            new_diag_indices.append(tuple(diag_group))
+        return _array_diagonal(expr.expr, *new_diag_indices)
 
     @classmethod
     def _ArrayDiagonal_denest_ArrayAdd(cls, expr, *diagonal_indices):
@@ -1019,6 +1015,9 @@ class ArrayElementwiseApplyFunc(_CodegenArrayAbstract):
         if hasattr(expr, "as_explicit"):
             expr = expr.as_explicit()
         return expr.applyfunc(self.function)
+
+    def _canonicalize(self):
+        return self
 
 
 class ArrayContraction(_CodegenArrayAbstract):

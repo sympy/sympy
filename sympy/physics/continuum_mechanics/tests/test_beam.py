@@ -1309,13 +1309,13 @@ def test_cross_section():
     # test for second_moment and cross_section setter
     b0 = Beam(l, E, I)
     assert b0.second_moment == I
-    assert b0.cross_section == None
+    assert b0.cross_section is None
     b0.cross_section = Circle((0, 0), 5)
     assert b0.second_moment == pi*Rational(625, 4)
     assert b0.cross_section == Circle((0, 0), 5)
     b0.second_moment = 2*n - 6
     assert b0.second_moment == 2*n-6
-    assert b0.cross_section == None
+    assert b0.cross_section is None
     with raises(ValueError):
         b0.second_moment = Circle((0, 0), 5)
 
@@ -1358,7 +1358,7 @@ def test_cross_section():
     b.bc_deflection = [(0, 0)]
 
     assert b.second_moment == Piecewise((a*c**3/12, x <= 20), (g*h**3/36, x <= 35))
-    assert b.cross_section == None
+    assert b.cross_section is None
     assert b.length == 35
     assert b.slope().subs(x, 7) == 8400/(E*a*c**3)
     assert b.slope().subs(x, 25) == 52200/(E*g*h**3) + 39600/(E*a*c**3)

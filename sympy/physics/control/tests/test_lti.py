@@ -847,7 +847,7 @@ def test_DiscreteTransferFunction_functions():
     assert marginally_stable_tf.is_stable() == False
     assert unstable_tf.is_stable() == False
     assert DiscreteTransferFunction(
-        z, (z+Rational(1,8))*(z+k), z).is_stable() == None
+        z, (z+Rational(1,8))*(z+k), z).is_stable() is None
 
     generic_den = b4 * s**4 + b3 * s**3 + b2 * s**2 + b1 * s + b0
 
