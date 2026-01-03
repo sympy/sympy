@@ -3706,6 +3706,46 @@ def test_sympy__physics__quantum__gate__ZGate():
     assert _test_args(ZGate(0))
 
 
+def test_sympy__physics__quantum__gate__OneQubitAngleGate():
+    from sympy.physics.quantum.gate import OneQubitAngleGate
+    assert _test_args(OneQubitAngleGate(0, 0))
+
+
+def test_sympy__physics__quantum__gate__PhaseShiftGate():
+    from sympy.physics.quantum.gate import PhaseShiftGate
+    assert _test_args(PhaseShiftGate(0, 0))
+
+
+def test_sympy__physics__quantum__gate__RXGate():
+    from sympy.physics.quantum.gate import RXGate
+    assert _test_args(RXGate(0, 0))
+
+
+def test_sympy__physics__quantum__gate__RYGate():
+    from sympy.physics.quantum.gate import RYGate
+    assert _test_args(RYGate(0, 0))
+
+
+def test_sympy__physics__quantum__gate__RZGate():
+    from sympy.physics.quantum.gate import RZGate
+    assert _test_args(RZGate(0, 0))
+
+
+def test_sympy__physics__quantum__gate__SdgGate():
+    from sympy.physics.quantum.gate import SdgGate
+    assert _test_args(SdgGate(0))
+
+
+def test_sympy__physics__quantum__gate__SXGate():
+    from sympy.physics.quantum.gate import SXGate
+    assert _test_args(SXGate(0))
+
+
+def test_sympy__physics__quantum__gate__TdgGate():
+    from sympy.physics.quantum.gate import TdgGate
+    assert _test_args(TdgGate(0))
+
+
 def test_sympy__physics__quantum__grover__OracleGateFunction():
     from sympy.physics.quantum.grover import OracleGateFunction
     @OracleGateFunction
