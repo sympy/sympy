@@ -238,7 +238,6 @@ def test_represent_phaseshiftgate():
 
 def test_represent_rxgate():
     """Test the representation of the RX gate."""
-    from sympy.functions.elementary.trigonometric import cos, sin
     # Test with pi (should flip |0> to |1> similar to X gate)
     circuit = RXGate(0, pi)*Qubit('00')
     answer = represent(circuit, nqubits=2)
@@ -250,7 +249,6 @@ def test_represent_rxgate():
 
 def test_represent_rygate():
     """Test the representation of the RY gate."""
-    from sympy.functions.elementary.trigonometric import cos, sin
     # Test with pi/2
     circuit = RYGate(0, pi/2)*Qubit('00')
     answer = represent(circuit, nqubits=2)
