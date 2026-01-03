@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, overload
+from typing import TYPE_CHECKING, overload, cast
 
 from collections import Counter, defaultdict, OrderedDict
 from itertools import (
@@ -18,7 +18,6 @@ from sympy.utilities.enumerative import (
 
 from sympy.utilities.misc import as_int
 from sympy.utilities.decorator import deprecated
-from typing import cast
 
 
 if TYPE_CHECKING:
