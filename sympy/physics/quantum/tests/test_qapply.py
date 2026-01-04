@@ -53,6 +53,7 @@ f = FermionOp("f")
 
 A = Operator("A")
 B = Operator("B")
+C = Operator("C")
 
 class SimpleBra(Bra):
     pass
@@ -65,11 +66,12 @@ class SimpleKet(Ket):
 
 TP = TensorProduct
 
-A = Operator("A")
-
 
 # -----------------------------------------------------------------------------
-# Main qapply Unary Handler Tests
+# _qapply_unary: SlidingTransform unary handler tests
+#
+# The tests in this section cover the case where qappy is given a single argument
+# of a given type that is handled by the main unary dispatcher of qapply.
 # -----------------------------------------------------------------------------
 
 
@@ -112,6 +114,12 @@ def test_unary_pow():
     assert qapply((BosonFockBra(1) * a * BosonFockKet(1)) ** 2) == S.Zero
 
 
+def test_unary_Mul():
+    """Test multiplication expression handling"""
+    assert qapply(Jz * po) == hbar * po
+    assert qapply(a * BosonFockKet(p)) == sqrt(p) * BosonFockKet(p - 1)
+
+
 def test_unary_sum():
     """Test Sum expression handling"""
     assert qapply(Sum(a * BosonFockKet(p), (p, 0, 2))) == Sum(
@@ -134,6 +142,7 @@ def test_unary_integral():
 def test_unary_abs():
     """Test absolute value expressions"""
     assert qapply(Abs(alpha)) == Abs(alpha)
+    assert qapply(Abs(BosonFockBra(0) * a * BosonFockKet(1))) == S.One
 
 
 def test_unary_number():
@@ -143,15 +152,18 @@ def test_unary_number():
 
 
 # -----------------------------------------------------------------------------
-# qapply_Mul: SlidingTransform unary handler tests
+# qapply_Mul: SlidingTransform unary
+#
+# The tests in this section cover qapply(Mul) cases where one of the args of the
+# Mul is transformed by the unary SlidingTransform handler.
 # -----------------------------------------------------------------------------
 
 
 def test_mul_unary_outerproduct():
     """Test OuterProduct decomposition"""
     assert qapply(
-        OuterProduct(BosonFockKet(p), BosonFockBra(q)) * a * BosonFockKet(q + 1)
-    ) == sqrt(q + 1) * BosonFockKet(p)
+        A*OuterProduct(BosonFockKet(p), BosonFockBra(q)) * a * BosonFockKet(q + 1)
+    ) == A * sqrt(q + 1) * BosonFockKet(p)
 
 
 def test_mul_unary_commutator():
@@ -205,6 +217,9 @@ def test_mul_unary_pow():
 
 # -----------------------------------------------------------------------------
 # qapply_Mul: SlidingTransform binary handler tests
+#
+# The tests in this section cover qapply(Mul) where two of the Mul args are 
+# handled by the binary SlidingTransform handler for qapply_Mul.
 # -----------------------------------------------------------------------------
 
 def test_mul_binary_op_ket():
@@ -215,7 +230,43 @@ def test_mul_binary_op_ket():
 
 
 def test_mul_binary_op_tensorproduct():
-    pass
+    """Test operator application to TensorProduct"""
+    # Define a custom operator that distributes over TensorProduct args
+    class DistributiveOperator(Operator):
+        """An operator that distributes over TensorProduct arguments."""
+
+        def _apply_operator_TensorProduct(self, tp, **options):
+            """Apply this operator to each argument of a TensorProduct.
+
+            For example: D*TP(A, B) -> TP(D*A, D*B)
+            """
+            from sympy.physics.quantum.qapply import qapply
+            # Apply the operator to each argument of the tensor product
+            new_args = [qapply(self * arg) for arg in tp.args]
+            return TensorProduct(*new_args)
+
+    # Create instances of the distributive operator and generic operators
+    D = DistributiveOperator('D')
+    C = Operator('C')
+    E = Operator('E')
+    F = Operator('F')
+
+    # Test: D * TP(C, E) should become TP(D*C, D*E)
+    result = qapply(D * TP(C, E))
+    expected = TP(D * C, D * E)
+    assert result == expected
+
+    # Test with three arguments: D * TP(C, E, F) should become TP(D*C, D*E, D*F)
+    result = qapply(D * TP(C, E, F))
+    expected = TP(D * C, D * E, D * F)
+    assert result == expected
+
+    # Test with actual quantum states
+    ket1 = Ket('psi')
+    ket2 = Ket('phi')
+    result = qapply(D * TP(ket1, ket2))
+    expected = TP(D * ket1, D * ket2)
+    assert result == expected
 
 
 def test_mul_binary_op_wavefunction():
