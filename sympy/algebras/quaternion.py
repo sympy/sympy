@@ -18,6 +18,9 @@ from sympy.core.expr import Expr
 from sympy.core.sympify import sympify, _sympify
 from sympy.core.logic import fuzzy_not, fuzzy_or
 from sympy.utilities.misc import as_int
+# Look for the other imports and add these:
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.core.relational import Eq
 
 
 if TYPE_CHECKING:
@@ -1722,3 +1725,43 @@ class Quaternion(Expr):
         """
 
         return ln(self.norm())
+    def slerp(self, other: Quaternion, t: Expr) -> Quaternion:
+        """
+        Performs Spherical Linear Interpolation (SLERP) between self and other.
+
+        Parameters
+        ==========
+        other : Quaternion
+            The target quaternion to interpolate towards.
+        t : Expr
+            The interpolation parameter (typically between 0 and 1).
+
+        Returns
+        =======
+        Quaternion
+            The interpolated quaternion.
+        """
+        # 1. Normalize both to ensure valid rotation
+        q1 = self.normalize()
+        q2 = other.normalize()
+
+        # 2. Compute dot product
+        dot = q1.a*q2.a + q1.b*q2.b + q1.c*q2.c + q1.d*q2.d
+
+        # 3. Calculate angle (theta) and sine of angle
+        theta = acos(dot)
+        sin_theta = sqrt(1 - dot**2)
+
+        # 4. Define the Linear Interpolation (LERP) fallback
+        # This is used when the angle is 0 (quaternions are identical)
+        # to avoid dividing by zero.
+        lerp_res = q1 * (1 - t) + q2 * t
+
+        # 5. Define the SLERP formula
+        w1 = sin((1 - t) * theta) / sin_theta
+        w2 = sin(t * theta) / sin_theta
+        slerp_res = w1 * q1 + w2 * q2
+
+        # 6. Return Piecewise to handle the division by zero symbolically
+        # If sin_theta is 0, return LERP. Otherwise, return SLERP.
+        return Piecewise((lerp_res, Eq(sin_theta, 0)), (slerp_res, True))    
