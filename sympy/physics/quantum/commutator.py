@@ -177,10 +177,10 @@ class Commutator(Expr):
             c = B
             comm1 = Commutator(b, c)
             comm2 = Commutator(a, c)
-            if isinstance(comm1, Commutator):
-                comm1 = comm1._eval_expand_commutator()
-            if isinstance(comm2, Commutator):
-                comm2 = comm2._eval_expand_commutator()
+            if hasattr(comm1, 'expand'):
+                comm1 = comm1.expand(commutator=True)
+            if hasattr(comm2, 'expand'):
+                comm2 = comm2.expand(commutator=True)
             first = Mul(a, comm1)
             second = Mul(comm2, b)
             return Add(first, second)
@@ -191,12 +191,10 @@ class Commutator(Expr):
             c = Mul(*B.args[1:])
             comm1 = Commutator(a, b)
             comm2 = Commutator(a, c)
-            if isinstance(comm1, Commutator):
-                comm1 = comm1._eval_expand_commutator()
-
-            if isinstance(comm2, Commutator):
-                comm2 = comm2._eval_expand_commutator()
-
+            if hasattr(comm1, 'expand'):
+                comm1 = comm1.expand(commutator=True)
+            if hasattr(comm2, 'expand'):
+                comm2 = comm2.expand(commutator=True)
             first = Mul(comm1, c)
             second = Mul(b, comm2)
             return Add(first, second)
