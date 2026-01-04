@@ -18,6 +18,8 @@ from sympy.core.expr import Expr
 from sympy.core.sympify import sympify, _sympify
 from sympy.core.logic import fuzzy_not, fuzzy_or
 from sympy.utilities.misc import as_int
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.core.relational import Eq
 
 
 if TYPE_CHECKING:
@@ -1722,3 +1724,49 @@ class Quaternion(Expr):
         """
 
         return ln(self.norm())
+   def slerp(self, other: Quaternion, t: Expr) -> Quaternion:
+        """
+        Performs Spherical Linear Interpolation (SLERP) between self and other.
+
+        Parameters
+        ==========
+        other : Quaternion
+            The target quaternion to interpolate towards.
+        t : Expr
+            The interpolation parameter (typically between 0 and 1).
+
+        Returns
+        =======
+        Quaternion
+            The interpolated quaternion.
+        """
+        # 1. Normalize both to ensure valid rotation
+        q1 = self.normalize()
+        q2 = other.normalize()
+
+        # 2. Compute dot product
+        dot = q1.a*q2.a + q1.b*q2.b + q1.c*q2.c + q1.d*q2.d
+
+        # 3. Calculate angle (theta) and sine of angle
+        theta = acos(dot)
+        sin_theta = sqrt(1 - dot**2)
+
+        # 4. Calculate Weights safely using Piecewise
+        # If sin_theta is 0 (vectors are identical), use Linear Interpolation (LERP) weights.
+        # Otherwise, use SLERP weights.
+        
+        # Weight for q1: limits to (1-t) when theta -> 0
+        w1 = Piecewise(
+            (1 - t, Eq(sin_theta, 0)),
+            (sin((1 - t) * theta) / sin_theta, True)
+        )
+
+        # Weight for q2: limits to t when theta -> 0
+        w2 = Piecewise(
+            (t, Eq(sin_theta, 0)),
+            (sin(t * theta) / sin_theta, True)
+        )
+
+        # 5. Return a valid Quaternion object
+        # The Piecewise logic is now embedded inside the scalar components
+        return w1 * q1 + w2 * q2     
