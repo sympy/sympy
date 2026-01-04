@@ -1,3 +1,5 @@
+# pyright: reportOperatorIssue=false
+
 from sympy.concrete.summations import Sum
 from sympy.core import oo
 from sympy.core.mul import Mul
