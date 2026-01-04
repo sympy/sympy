@@ -1722,3 +1722,28 @@ class Quaternion(Expr):
         """
 
         return ln(self.norm())
+    def slerp(self, other: Quaternion, t: Expr) -> Quaternion:
+        """
+        Performs Spherical Linear Interpolation between self and other.
+        t is the interpolation parameter (usually 0 to 1).
+        """
+        # 1. Normalize both
+        q1 = self.normalize()
+        q2 = other.normalize()
+        
+        # 2. Compute dot product (cos_omega)
+        dot = q1.a*q2.a + q1.b*q2.b + q1.c*q2.c + q1.d*q2.d
+        
+        # 3. Handle the case where dot < 0 (take short path)
+        # Note: In symbolic math, we might need Piecewise or explicit checks
+        # If dot < 0: q1 = -q1, dot = -dot
+        
+        # 4. Calculate angle theta
+        theta = acos(dot)
+        sin_theta = sqrt(1 - dot**2)
+        
+        # 5. Formula
+        w1 = sin((1 - t) * theta) / sin_theta
+        w2 = sin(t * theta) / sin_theta
+        
+        return w1 * q1 + w2 * q2    
