@@ -3,7 +3,6 @@ from sympy.core import oo
 from sympy.core.mul import Mul
 from sympy.core.numbers import I, Rational
 from sympy.core.singleton import S
-from sympy.simplify import simplify
 from sympy.core.symbol import symbols, Symbol
 from sympy.core.sympify import sympify
 from sympy.integrals import Integral
@@ -28,7 +27,7 @@ from sympy.physics.quantum.state import Ket, Bra
 from sympy.physics.quantum.density import Density
 from sympy.physics.quantum.qubit import Qubit, QubitBra
 from sympy.physics.quantum.boson import BosonOp, BosonFockKet, BosonFockBra
-from sympy.physics.quantum.fermion import FermionOp, FermionFockKet, FermionFockBra
+from sympy.physics.quantum.fermion import FermionOp, FermionFockKet
 from sympy.testing.pytest import warns_deprecated_sympy
 
 
