@@ -91,3 +91,67 @@ def test_issue_28740():
     assert comm.expand(commutator=True) == \
         Comm(A1, B1) + Comm(A1, B2) + \
         Comm(A2, B1) + Comm(A2, B2)
+
+
+def test_commutator_expand_mul_and_nested():
+    """
+    Test commutator expansion with products (Mul) and nested cases.
+
+    This test ensures that:
+    1. [A*B, C+D] properly expands products with sums
+    2. [A+B, C*D] properly expands sums with products
+    3. Nested cases like [A*B+C*D, E+F] fully expand
+    4. [A*B, C*D] now fully expands in one call (recursive)
+    5. Scalar coefficients are handled correctly
+    """
+    A = Operator('A')
+    B = Operator('B')
+    C = Operator('C')
+    D = Operator('D')
+    E = Operator('E')
+    F = Operator('F')
+
+    # Test 1: [A*B, C + D] - product with sum
+    comm1 = Comm(A*B, C + D)
+    expanded1 = comm1.expand(commutator=True)
+    expected1 = Comm(A, C)*B + Comm(A, D)*B + A*Comm(B, C) + A*Comm(B, D)
+    assert expanded1 == expected1
+
+    # Test 2: [A + B, C*D] - sum with product (tests both branches)
+    comm2 = Comm(A + B, C*D)
+    expanded2 = comm2.expand(commutator=True)
+    assert len(expanded2.args) == 4
+
+    # Test 3: [A*B + C*D, E + F] - sum of products with sum (deep nesting)
+    comm3 = Comm(A*B + C*D, E + F)
+    expanded3 = comm3.expand(commutator=True)
+    assert len(expanded3.args) == 8
+
+    # Test 4: [A*B*C, D] - triple product expansion
+    comm4 = Comm(A*B*C, D)
+    expanded4 = comm4.expand(commutator=True)
+    expected4 = Comm(A, D)*B*C + A*Comm(B, D)*C + A*B*Comm(C, D)
+    assert expanded4 == expected4
+
+    # Test 5: [(A+B)*C, D + E] - nested (sum)*operator with sum
+    comm5 = Comm((A + B)*C, D + E)
+    expanded5 = comm5.expand(commutator=True)
+    assert len(expanded5.args) == 8
+
+    # Test 6: [A*B, C*D] - Mul*Mul now fully expands in one call
+    # With the fix, this should now expand completely in a single call
+    comm6 = Comm(A*B, C*D)
+    expanded6 = comm6.expand(commutator=True)
+
+    # Should have 4 fully expanded terms in one call
+    assert len(expanded6.args) == 4
+
+    # Should be stable (idempotent)
+    expanded6_again = expanded6.expand(commutator=True)
+    assert expanded6 == expanded6_again
+
+    # Test 7: [2*A + 3*B, C + D] - scalar coefficients
+    comm7 = Comm(2*A + 3*B, C + D)
+    expanded7 = comm7.expand(commutator=True)
+    expected7 = 2*Comm(A, C) + 2*Comm(A, D) + 3*Comm(B, C) + 3*Comm(B, D)
+    assert expanded7 == expected7
