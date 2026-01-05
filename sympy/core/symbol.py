@@ -225,56 +225,63 @@ _uniquely_named_symbol = uniquely_named_symbol
 
 class Symbol(AtomicExpr, Boolean): # type: ignore
     """
-    Symbol class is used to create symbolic variables.
-
-    Explanation
-    ===========
-
-    Symbolic variables are placeholders for mathematical symbols that can represent numbers, constants, or any other mathematical entities and can be used in mathematical expressions and to perform symbolic computations.
-
-    Assumptions:
-
-    commutative = True
-    positive = True
-    real = True
-    imaginary = True
-    complex = True
-    complete list of more assumptions- :ref:`predicates`
-
-    You can override the default assumptions in the constructor.
-
-    Examples
-    ========
-
-    >>> from sympy import Symbol
-    >>> x = Symbol("x", positive=True)
-    >>> x.is_positive
-    True
-    >>> x.is_negative
-    False
-
-    passing in greek letters:
-
-    >>> from sympy import Symbol
-    >>> alpha = Symbol('alpha')
-    >>> alpha #doctest: +SKIP
-    α
-
-    Trailing digits are automatically treated like subscripts of what precedes them in the name.
-    General format to add subscript to a symbol :
-    ``<var_name> = Symbol('<symbol_name>_<subscript>')``
-
-    >>> from sympy import Symbol
-    >>> alpha_i = Symbol('alpha_i')
-    >>> alpha_i #doctest: +SKIP
-    αᵢ
+    A symbolic variable.
 
     Parameters
-    ==========
+    ----------
+    name : str
+        Name of the symbol (e.g., 'x', 'alpha', 'theta').
 
-    AtomicExpr: variable name
-    Boolean: Assumption with a boolean value(True or False)
+    **assumptions : bool, optional
+        Keyword arguments specifying mathematical properties of the symbol. 
+        Each assumption must be given as a boolean value (True or False). 
+        You can override default assumptions in the constructor. Some common assumptions:
+
+        - real : symbol is a real number
+        - positive : symbol is strictly greater than 0
+        - commutative : symbol commutes with other symbols (default: True)
+
+        See the :ref:`assumptions guide <predicates>` for a complete list.
+
+    Explanation
+    -----------
+    Symbolic variables represent mathematical symbols that can be used to build expressions. 
+    They can represent numbers, constants, or other mathematical entities. 
+    Assumptions guide how SymPy simplifies and evaluates expressions.
+
+    Examples
+    --------
+    Create a symbol with no assumptions:
+
+    >>> from sympy import Symbol
+    >>> x = Symbol('x')
+    >>> x.is_real
+    None
+    >>> x.is_commutative
+    True
+
+    Create a symbol with assumptions:
+
+    >>> y = Symbol('y', real=True, positive=True)
+    >>> y.is_real
+    True
+    >>> y.is_positive
+    True
+
+    Assumptions affect simplification:
+
+    >>> from sympy import sqrt
+    >>> z = Symbol('z', positive=True)
+    >>> sqrt(z**2)
+    z
+
+    See Also
+    --------
+    symbols : Create multiple symbols at once
+    Dummy   : Unique symbol for internal use
+    Wild    : Symbol that matches expressions in pattern matching
     """
+
 
     is_comparable = False
 
