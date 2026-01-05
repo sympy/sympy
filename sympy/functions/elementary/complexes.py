@@ -917,6 +917,9 @@ class conjugate(DefinedFunction):
     def _eval_is_algebraic(self):
         return self.args[0].is_algebraic
 
+    def _eval_is_commutative(self):
+        return self.args[0].is_commutative
+
 
 class transpose(DefinedFunction):
     """
@@ -973,6 +976,9 @@ class transpose(DefinedFunction):
 
     def _eval_transpose(self):
         return self.args[0]
+
+    def _eval_is_commutative(self):
+        return self.args[0].is_commutative
 
 
 class adjoint(DefinedFunction):
@@ -1035,6 +1041,9 @@ class adjoint(DefinedFunction):
         else:
             pform = pform**prettyForm('+')
         return pform
+
+    def _eval_is_commutative(self):
+        return self.args[0].is_commutative
 
 ###############################################################################
 ############### HANDLING OF POLAR NUMBERS #####################################

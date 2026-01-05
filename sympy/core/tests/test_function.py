@@ -526,14 +526,14 @@ def test_extensibility_eval():
 @_both_exp_pow
 def test_function_non_commutative():
     x = Symbol('x', commutative=False)
-    assert f(x).is_commutative is False
-    assert sin(x).is_commutative is False
-    assert exp(x).is_commutative is False
-    assert log(x).is_commutative is False
-    assert f(x).is_complex is False
-    assert sin(x).is_complex is False
-    assert exp(x).is_complex is False
-    assert log(x).is_complex is False
+    assert f(x).is_commutative is True
+    assert sin(x).is_commutative is True
+    if not isinstance(exp(x), Pow):
+        assert exp(x).is_commutative is True
+    assert log(x).is_commutative is True
+
+    f_nc = Function('f_nc', commutative=False)
+    assert f_nc(x).is_commutative is False
 
 
 def test_function_complex():
@@ -1457,3 +1457,18 @@ def test_eval_classmethod_check():
 def test_issue_27163():
     # https://github.com/sympy/sympy/issues/27163
     raises(TypeError, lambda: Derivative(f, t))
+
+
+def test_issue_28729():
+    F = Function('F')
+
+    expr1 = 0**(1 - F(x < 1))
+    assert expr1 != S.NaN
+    assert expr1 == 0**(1 - F(x < 1))
+
+    expr2 = 0**(1 - y).subs(y, F(z < 1))
+    assert expr2 != S.NaN
+    assert expr2 == 0**(1 - F(z < 1))
+
+    assert F(z < 1).is_commutative is True
+    assert (1 - F(z < 1)).is_commutative is True

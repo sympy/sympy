@@ -43,7 +43,7 @@ from .containers import Tuple, Dict
 from .decorators import _sympifyit
 from .evalf import pure_complex
 from .expr import Expr, AtomicExpr
-from .logic import fuzzy_and, fuzzy_or, fuzzy_not, FuzzyBool
+from .logic import fuzzy_or, fuzzy_not, FuzzyBool
 from .mul import Mul
 from .numbers import Rational, Float, Integer
 from .operations import LatticeOp
@@ -618,8 +618,6 @@ class Function(Application, Expr):
             l.append(df * da)
         return Add(*l)
 
-    def _eval_is_commutative(self):
-        return fuzzy_and(a.is_commutative for a in self.args)
 
     def _eval_is_meromorphic(self, x, a):
         if not self.args:
@@ -823,6 +821,10 @@ class Function(Application, Expr):
 class DefinedFunction(Function):
     """Base class for defined functions like ``sin``, ``cos``, ..."""
 
+    # Mathematical functions are scalar-valued and thus commutative
+    # even when applied to non-commutative arguments
+    is_commutative = True
+
     @cacheit
     def __new__(cls, *args, **options) -> Expr:  # type: ignore
         return cls._new_(*args, **options)
@@ -902,10 +904,7 @@ class UndefinedFunction(FunctionClass):
         elif not isinstance(name, str):
             raise TypeError('expecting string or Symbol for name')
         else:
-            commutative = assumptions.get('commutative', None)
             assumptions = Symbol(name, **assumptions).assumptions0
-            if commutative is None:
-                assumptions.pop('commutative')
         __dict__ = __dict__ or {}
         # put the `is_*` for into __dict__
         __dict__.update({'is_%s' % k: v for k, v in assumptions.items()})
