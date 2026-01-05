@@ -17,6 +17,8 @@ from sympy.utilities.iterables import sift
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.misc import as_int
 from sympy.multipledispatch import Dispatcher
+from .add import Add
+from .mul import Mul
 
 
 class Pow(Expr):
@@ -1214,6 +1216,18 @@ class Pow(Expr):
         from sympy.functions.elementary.exponential import log
         dbase = self.base.diff(s)
         dexp = self.exp.diff(s)
+        
+        if (not self.base.is_commutative and 
+            self.exp.is_Integer and 
+            self.exp.is_positive and 
+            dexp == 0):
+            n = self.exp
+            base = self.base
+            return Add(*[
+                Mul(Pow(base, i), dbase, Pow(base, n - 1 - i))
+                for i in range(n)
+            ])
+        
         return self * (dexp * log(self.base) + dbase * self.exp/self.base)
 
     def _eval_evalf(self, prec):
