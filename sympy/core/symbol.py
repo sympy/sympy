@@ -256,7 +256,6 @@ class Symbol(AtomicExpr, Boolean): # type: ignore
     >>> from sympy import Symbol
     >>> x = Symbol('x')
     >>> x.is_real
-    None
     >>> x.is_commutative
     True
 
