@@ -1394,6 +1394,11 @@ def test_noncommutative_derivative():
     result_comm = diff(U**2, t)
     assert result_comm == 2*U*dU
 
+    # Test d(S^-1)/dt = -S^-1 * dS/dt * S^-1
+    result_inv = diff(S**-1, t)
+    expected_inv = -S**-1 * dS * S**-1
+    assert result_inv == expected_inv
+
 
 
 def test_Subs_Derivative():
