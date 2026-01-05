@@ -233,8 +233,8 @@ class Symbol(AtomicExpr, Boolean): # type: ignore
         Name of the symbol (e.g., 'x', 'alpha', 'theta').
 
     **assumptions : bool, optional
-        Keyword arguments specifying mathematical properties of the symbol. 
-        Each assumption must be given as a boolean value (True or False). 
+        Keyword arguments specifying mathematical properties of the symbol.
+        Each assumption must be given as a boolean value (True or False).
         You can override default assumptions in the constructor. Some common assumptions:
 
         - real : symbol is a real number
@@ -245,8 +245,8 @@ class Symbol(AtomicExpr, Boolean): # type: ignore
 
     Explanation
     -----------
-    Symbolic variables represent mathematical symbols that can be used to build expressions. 
-    They can represent numbers, constants, or other mathematical entities. 
+    Symbolic variables represent mathematical symbols that can be used to build expressions.
+    They can represent numbers, constants, or other mathematical entities.
     Assumptions guide how SymPy simplifies and evaluates expressions.
 
     Examples
