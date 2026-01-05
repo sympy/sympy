@@ -282,7 +282,6 @@ class Symbol(AtomicExpr, Boolean): # type: ignore
     Wild    : Symbol that matches expressions in pattern matching
     """
 
-
     is_comparable = False
 
     __slots__ = ('name', '_assumptions_orig', '_assumptions0')
