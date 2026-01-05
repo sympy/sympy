@@ -1,4 +1,4 @@
-from sympy.core import Rational, S, Add, Mul, I
+from sympy.core import Rational, S, Add, Mul, Pow, I
 from sympy.simplify import simplify, trigsimp
 from sympy.core.function import (Derivative, Function, diff)
 from sympy.core.numbers import pi
@@ -341,3 +341,89 @@ def test_scalar():
     assert v1.is_scalar is False
     assert (v1.dot(v2)).is_scalar is True
     assert (v1.cross(v2)).is_scalar is False
+
+
+def test_postprocessor_add_scalar_vector():
+    raises(TypeError, lambda: Add(1, C.i))
+    raises(TypeError, lambda: Add(C.i, 2))
+    raises(TypeError, lambda: Add(a, C.j))
+    raises(TypeError, lambda: Add(1.5, C.i))
+    raises(TypeError, lambda: Add(I, C.j))
+    raises(TypeError, lambda: Add(Rational(3, 2), C.k))
+
+
+def test_postprocessor_mul_scalar_vector():
+    x, y = symbols('x y')
+
+    result = Mul(2, C.i)
+    assert result == 2*C.i
+    assert isinstance(result, VectorMul)
+    assert result.measure_number == 2
+
+    result2 = Mul(2, 3, C.i)
+    assert result2 == 6*C.i
+    assert result2.measure_number == 6
+
+    result3 = Mul(x, C.i)
+    assert result3 == x*C.i
+    assert result3.measure_number == x
+
+    result4 = Mul(x, y, C.j)
+    assert result4 == x*y*C.j
+    assert result4.measure_number == x*y
+
+    result_neg = Mul(-1, C.i)
+    assert result_neg == -C.i
+    assert result_neg.measure_number == -1
+
+    result_identity = Mul(1, C.j)
+    assert result_identity == C.j
+
+    result_rational = Mul(Rational(3, 2), C.k)
+    assert result_rational == Rational(3, 2)*C.k
+    assert result_rational.measure_number == Rational(3, 2)
+
+
+def test_postprocessor_mul_vector_vector():
+    raises(ValueError, lambda: Mul(C.i, C.j))
+    raises(ValueError, lambda: Mul(C.j, C.k))
+
+
+def test_postprocessor_add_vector_vector():
+    result = Add(C.i, C.j)
+    assert result == C.i + C.j
+    assert isinstance(result, VectorAdd)
+
+    v1 = C.x * C.i + C.z * C.z * C.j
+    v2 = C.x * C.i + C.y * C.j + C.z * C.k
+    result2 = Add(v1, v2)
+    assert isinstance(result2, VectorAdd)
+    assert result2 == v1 + v2
+
+    result_zero = Add(C.i, Vector.zero)
+    assert result_zero == C.i
+
+    result_inverse = Add(C.i, -C.i)
+    assert result_inverse == Vector.zero
+
+    result_same = Add(C.i, C.i)
+    assert result_same == 2*C.i
+
+def test_postprocessor_pow_vector():
+    raises(TypeError, lambda: C.i**2)
+    raises(TypeError, lambda: C.j**3)
+    raises(TypeError, lambda: (C.i + C.j)**2)
+    raises(TypeError, lambda: Mul(C.i, C.i))
+    raises(TypeError, lambda: Mul(C.j, C.j))
+    raises(TypeError, lambda: Pow(C.i, 2))
+    raises(TypeError, lambda: Pow(C.j, S.Half))
+    raises(TypeError, lambda: Pow(C.k, -1))
+    v1 = C.i + C.j
+    v2 = 2*C.k
+    raises(TypeError, lambda: v1**2)
+    raises(TypeError, lambda: v2**3)
+    raises(TypeError, lambda: Pow(v1, 2))
+    raises(TypeError, lambda: Pow(v2, a))
+    raises(TypeError, lambda: 2**C.i)
+    raises(TypeError, lambda: a**C.j)
+    raises(TypeError, lambda: Pow(2, C.k))

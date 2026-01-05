@@ -1,5 +1,8 @@
 """Algorithms for computing symbolic roots of polynomials. """
 
+from __future__ import annotations
+
+from typing import overload, Any, Literal
 
 import math
 from functools import reduce
@@ -838,6 +841,37 @@ def preprocess_roots(poly):
         poly = poly_func(poly)
     return coeff, poly
 
+
+@overload
+def roots(
+    f,
+    *gens,
+    auto: bool = True,
+    cubics: bool = True,
+    trig: bool = False,
+    quartics: bool = True,
+    quintics: bool = False,
+    multiple: Literal[False] = False,
+    filter: None = None,
+    predicate: None = None,
+    strict: bool = False,
+    **flags: Any,
+) -> dict[Expr, int]: ...
+@overload
+def roots(
+    f,
+    *gens,
+    auto: bool = True,
+    cubics: bool = True,
+    trig: bool = False,
+    quartics: bool = True,
+    quintics: bool = False,
+    multiple: Literal[True],
+    filter: None = None,
+    predicate: None = None,
+    strict: bool = False,
+    **flags: Any,
+) -> list[tuple[Expr, int]]: ...
 
 @public
 def roots(f, *gens,

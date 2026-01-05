@@ -990,14 +990,15 @@ def evalf_log(expr: 'log', prec: int, options: OPT_DICT) -> TMP_RES:
 
     re = mpf_log(mpf_abs(xre), prec, rnd)
     size = fastlog(re)
-    if prec - size > workprec and re != fzero:
+    if prec - size > workprec:
         from .add import Add
-        # We actually need to compute 1+x accurately, not x
+        # We actually need to compute x-1 accurately, not x
         add = Add(S.NegativeOne, arg, evaluate=False)
-        xre, xim, _, _ = evalf_add(add, prec, options)
-        prec2 = workprec - fastlog(xre)
-        # xre is now x - 1 so we add 1 back here to calculate x
-        re = mpf_log(mpf_abs(mpf_add(xre, fone, prec2)), prec, rnd)
+        xre, xim, xre_acc, _ = evalf_add(add, prec, options)
+        if xre != fzero and (xre_acc is None or xre_acc > 1):
+            prec2 = workprec - fastlog(xre)
+            # xre is now x - 1 so we add 1 back here to calculate x
+            re = mpf_log(mpf_abs(mpf_add(xre, fone, prec2)), prec, rnd)
 
     re_acc = prec
 

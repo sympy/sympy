@@ -2865,6 +2865,14 @@ class LatexPrinter(Printer):
     def _print_CovarDerivativeOp(self, cvd):
         return r'\mathbb{\nabla}_{%s}' % self._print(cvd._wrt)
 
+    def _print_BaseScalar(self, expr):
+        coord_sys_name, scalar_name = expr.name.split(".")
+        if scalar_name in greek_letters_set:
+            scalar_name = r"\%s" % scalar_name
+        elif scalar_name in tex_greek_dictionary:
+            scalar_name = tex_greek_dictionary[scalar_name]
+        return r"\boldsymbol{%s}_{\textbf{%s}}" % (scalar_name, coord_sys_name)
+
     def _print_BaseScalarField(self, field):
         string = field._coord_sys.symbols[field._index].name
         return r'\mathbf{{{}}}'.format(self._print(Symbol(string)))

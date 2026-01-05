@@ -5168,12 +5168,12 @@ def test_pretty_RootSum():
     ascii_str = \
 """\
        / 5           \\\n\
-RootSum\\x  + 11*x - 2/\
+RootSum\\w  + 11*w - 2/\
 """
     ucode_str = \
 """\
        ⎛ 5           ⎞\n\
-RootSum⎝x  + 11⋅x - 2⎠\
+RootSum⎝w  + 11⋅w - 2⎠\
 """
 
     assert pretty(expr) == ascii_str
@@ -5181,15 +5181,11 @@ RootSum⎝x  + 11⋅x - 2⎠\
 
     expr = RootSum(x**5 + 11*x - 2, Lambda(z, exp(z)))
     ascii_str = \
-"""\
-       / 5                   z\\\n\
-RootSum\\x  + 11*x - 2, z -> e /\
-"""
+"""       / 5                   w\\
+RootSum\\w  + 11*w - 2, w -> e /"""
     ucode_str = \
-"""\
-       ⎛ 5                  z⎞\n\
-RootSum⎝x  + 11⋅x - 2, z ↦ ℯ ⎠\
-"""
+"""       ⎛ 5                  w⎞
+RootSum⎝w  + 11⋅w - 2, w ↦ ℯ ⎠"""
 
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str

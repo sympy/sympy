@@ -2875,16 +2875,16 @@ def simplify_logic(expr, form=None, deep=True, force=False, dontcare=None):
         elif form == 'dnf':
             form_ok = is_dnf(expr)
 
-        if form_ok and all(is_literal(a)
-                for a in expr.args):
-            return expr
+        if form_ok and dontcare is None and all(is_literal(a)
+               for a in expr.args):
+           return expr
     from sympy.core.relational import Relational
     if deep:
         variables = expr.atoms(Relational)
         from sympy.simplify.simplify import simplify
         s = tuple(map(simplify, variables))
         expr = expr.xreplace(dict(zip(variables, s)))
-    if not isinstance(expr, BooleanFunction):
+    if not isinstance(expr, BooleanFunction) and dontcare is None:
         return expr
     # Replace Relationals with Dummys to possibly
     # reduce the number of variables

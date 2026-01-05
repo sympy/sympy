@@ -436,6 +436,23 @@ def test_nsimplify():
     # Make sure nsimplify on expressions uses full precision
     assert nsimplify(pi.evalf(100)*x, rational_conversion='exact').evalf(100) == pi.evalf(100)*x
 
+    # issue 23822 make sure simple integer strings don't result in complicated, fractional outputs
+    assert nsimplify("4678") == 4678
+    assert str(nsimplify("4678")) == "4678"
+    assert all(str(nsimplify(a)) == a for a in map(str, range(-10000,10000)))
+    assert all(nsimplify(f"{a}/10", rational=True) == Rational(a,10) for a in range(-10000,10000))
+    # still behaves the same for different input precisions
+    for expr_str, expr_decimal, expected in [
+        ["1/3", 1/3, "1/3"],
+        [".3333", .3333, "3333/10000"],
+        [".33333333", .33333333, "1/3"],
+        [str(pi.evalf(15)), pi.evalf(15), "314159265358979/100000000000000"],  # precision cutoff at 15
+        [str(pi.evalf(16)), pi.evalf(16), "3141592653589793/1000000000000000"],
+    ]:
+        a = nsimplify(expr_str)
+        b = nsimplify(expr_decimal)
+        assert str(a) == str(b) == str(expected)
+
 
 def test_issue_9448():
     tmp = sympify("1/(1 - (-1)**(2/3) - (-1)**(1/3)) + 1/(1 + (-1)**(2/3) + (-1)**(1/3))")

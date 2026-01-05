@@ -720,7 +720,7 @@ class cos(TrigonometricFunction):
                 if 0 == q % 2:
                     narg = (pi_coeff*2)*pi
                     nval = cls(narg)
-                    if None == nval:
+                    if None == nval:  # noqa: E711
                         return None
                     x = (2*pi_coeff + 1)/2
                     sign_cos = (-1)**((-1 if x < 0 else 1)*int(abs(x)))
