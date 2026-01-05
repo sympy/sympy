@@ -1370,25 +1370,25 @@ def test_noncommutative_derivative():
     t = symbols('t')
     S = Function('S', commutative=False)(t)
     T = Function('T', commutative=False)(t)
-    
+
     dS = Derivative(S, t)
     dT = Derivative(T, t)
-    
+
     result = diff(S**2, t)
     expected = dS*S + S*dS
     assert result == expected
-    
+
     result3 = diff(S**3, t)
     expected3 = dS*S**2 + S*dS*S + S**2*dS
     assert result3 == expected3
-    
+
     result1 = diff(S**1, t)
     assert result1 == dS
-    
+
     result_mixed = diff(S*T, t)
     expected_mixed = dS*T + S*dT
     assert result_mixed == expected_mixed
-    
+
     U = Function('U')(t)
     dU = Derivative(U, t)
     result_comm = diff(U**2, t)
