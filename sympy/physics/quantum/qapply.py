@@ -1,36 +1,8 @@
-"""
-Quantum operator application system for symbolic quantum mechanics.
+"""Quantum operator application.
 
-The qapply function provides a comprehensive system for applying quantum operators
-to quantum states, handling the complex interactions between operators, states,
-and mathematical expressions in symbolic quantum mechanics.
-
-The system operates through a hierarchical dispatch mechanism:
-
-1. **Unary Transformations**: Individual expressions (Add, Mul, Pow, etc.) are
-   processed through type-specific handlers that recursively apply qapply to
-   sub-expressions while preserving mathematical structure.
-
-2. **Multiplication Processing**: For Mul expressions containing operators and
-   states, a specialized SlidingTransform processes the multiplication from
-   right-to-left, applying binary transformation rules to adjacent pairs of
-   factors.
-
-3. **Operator-State Application**: When an operator is adjacent to a compatible
-   state (ket, bra, wavefunction), the system attempts to apply the operator
-   by calling the operator's `_apply_operator` method or the state's
-   `_apply_from_right_to` method.
-
-4. **Expression Distribution**: The system handles distribution of operators
-   over sums and integrals, automatically propagating applications through
-   linear combinations of states.
-
-The qapply function preserves quantum mechanical properties like linearity
-and handles complex expressions involving tensor products, density matrices,
-commutators, and other quantum constructs while maintaining symbolic exactness.
-
-This system is also extensible so developers can add handlers for new operators
-and states through the multiple dispatch system.
+This module provides the qapply() function which applies quantum operators
+to quantum states, handling distribution over linear combinations and
+complex quantum mechanical expressions symbolically.
 """
 
 from sympy.concrete import Sum
@@ -210,7 +182,125 @@ def _qapply_unary_number(expr, **options):
 #-----------------------------------------------------------------------------
 
 def qapply(e, **options):
-    """Apply quantum operators to states and expressions."""
+    """Apply quantum operators to quantum states in expressions.
+
+    Explanation
+    ===========
+
+    This function applies quantum operators to quantum states, handling the
+    symbolic computation of operator-state interactions. It automatically
+    distributes operators over linear combinations (sums) of states, evaluates
+    operator products, and processes complex quantum mechanical expressions
+    while preserving quantum mechanical properties like linearity.
+
+    Parameters
+    ==========
+
+    e : Expr
+        A SymPy expression containing quantum operators and states.
+
+    **options : dict
+        ip_doit : bool (default True)
+            Automatically call ``.doit()`` on inner products to evaluate them.
+        sum_doit : bool (default False)
+            Automatically call ``.doit()`` on sums to expand them.
+        dagger : bool (default False)
+            Apply operators to bras from the left using dagger transformation.
+
+    Returns
+    =======
+
+    result : Expr
+        The expression with operators applied to states.
+
+    Examples
+    ========
+
+    Basic operator application to quantum states:
+
+        >>> from sympy.physics.quantum import qapply
+        >>> from sympy.physics.quantum.spin import Jz, JzKet
+        >>> qapply(Jz * JzKet(1, 1))
+        hbar*|1,1>
+
+    Bosonic creation and annihilation operators:
+
+        >>> from sympy.physics.quantum.boson import BosonOp, BosonFockKet
+        >>> a = BosonOp("a")
+        >>> qapply(a * BosonFockKet(3))
+        sqrt(3)*|2>
+
+    Automatic distribution over sums of states:
+
+        >>> from sympy.physics.quantum.state import Ket
+        >>> from sympy.physics.quantum.operator import Operator
+        >>> A = Operator('A')
+        >>> ket1 = Ket('0')
+        >>> ket2 = Ket('1')
+        >>> qapply(A * (ket1 + ket2))
+        A*|0> + A*|1>
+
+    Operator powers are expanded and applied:
+
+        >>> from sympy.physics.quantum.dagger import Dagger
+        >>> a = BosonOp("a")
+        >>> qapply(a**2 * BosonFockKet(3))
+        sqrt(6)*|1>
+        >>> qapply(Dagger(a)**2 * BosonFockKet(1))
+        sqrt(6)*|3>
+
+    Commutators are evaluated before application:
+
+        >>> from sympy.physics.quantum.commutator import Commutator
+        >>> from sympy.physics.quantum.spin import Jx, Jy, JzKet
+        >>> qapply(Commutator(Jx, Jy) * JzKet(1, 1))
+        hbar**2*I*|1,1>
+
+    Tensor products of operators and states:
+
+        >>> from sympy.physics.quantum.tensorproduct import TensorProduct
+        >>> a = BosonOp("a")
+        >>> b = BosonOp("b")
+        >>> qapply(TensorProduct(a, b) * TensorProduct(BosonFockKet(1), BosonFockKet(2)))
+        sqrt(2)*|0>|1>
+
+    Inner products with the ip_doit option:
+
+        >>> qapply(JzKet(1, 1).dual * Jz * JzKet(1, 1))
+        hbar
+        >>> qapply(JzKet(1, 1).dual * Jz * JzKet(1, 1), ip_doit=False)
+        hbar*<1,1|1,1>
+
+    The dagger option applies operators to bras:
+
+        >>> from sympy.physics.quantum.qubit import QubitBra
+        >>> from sympy.physics.quantum.gate import H
+        >>> qapply(QubitBra(0) * Dagger(H(0)), dagger=True)
+        sqrt(2)*<0|/2 + sqrt(2)*<1|/2
+
+    Complex nested expressions with double sums:
+
+        >>> from sympy import Sum, symbols
+        >>> p, q = symbols('p q', integer=True, nonnegative=True)
+        >>> a = BosonOp("a")
+        >>> expr = Sum(p * a, (p, 0, 1)) * Sum(BosonFockKet(q), (q, 1, 2))
+        >>> qapply(expr)
+        Sum(p*sqrt(q)*|q - 1>, (p, 0, 1), (q, 1, 2))
+
+    See Also
+    ========
+
+    sympy.physics.quantum.operator.Operator
+    sympy.physics.quantum.state.Ket, sympy.physics.quantum.state.Bra
+    sympy.physics.quantum.tensorproduct.TensorProduct
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Quantum_state
+    .. [2] https://en.wikipedia.org/wiki/Operator_(physics)
+
+    """
     ip_doit = options.get('ip_doit', True)
 
     e = _sympify(e)
