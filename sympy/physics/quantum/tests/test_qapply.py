@@ -2,6 +2,7 @@
 
 from sympy.concrete.summations import Sum
 from sympy.core import oo
+from sympy.core.function import (Derivative, Function)
 from sympy.core.mul import Mul
 from sympy.core.numbers import I, Rational
 from sympy.core.singleton import S
@@ -21,11 +22,13 @@ from sympy.physics.quantum.commutator import Commutator
 from sympy.physics.quantum.constants import hbar
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.gate import H, XGate, IdentityGate
-from sympy.physics.quantum.operator import Operator, IdentityOperator, OuterProduct
+from sympy.physics.quantum.operator import (
+    Operator, IdentityOperator, OuterProduct, DifferentialOperator
+)
 from sympy.physics.quantum.qapply import qapply
 from sympy.physics.quantum.spin import Jx, Jy, Jz, Jplus, Jminus, J2, JzKet
 from sympy.physics.quantum.tensorproduct import TensorProduct
-from sympy.physics.quantum.state import Ket, Bra
+from sympy.physics.quantum.state import Ket, Bra, Wavefunction
 from sympy.physics.quantum.density import Density
 from sympy.physics.quantum.qubit import Qubit, QubitBra
 from sympy.physics.quantum.boson import BosonOp, BosonFockKet, BosonFockBra
@@ -270,7 +273,11 @@ def test_mul_binary_op_tensorproduct():
 
 
 def test_mul_binary_op_wavefunction():
-    pass
+    x = Symbol('x')
+    f = Function('f')
+    d = DifferentialOperator(Derivative(f(x), x), f(x))
+    g = Wavefunction(x**2, x)
+    assert qapply(d*g) == Wavefunction(2*x, x)
 
 
 def test_mul_binary_bra_op():
@@ -279,7 +286,25 @@ def test_mul_binary_bra_op():
 
 
 def test_mul_binary_sum_sum():
-    pass
+    """Test sum of operators applied to sum of states creates double sum"""
+    # Sum of p-dependent operators (p*a) applied to sum of states
+    # The coefficient p depends on the summation variable, but a can still be applied
+    lhs = Sum(p * a, (p, 0, 2))
+    rhs = Sum(BosonFockKet(q), (q, 1, 3))
+
+    # Apply the sum of operators to the sum of states
+    # This should create a double sum where 'a' is applied to each state
+    result = qapply(lhs * rhs)
+
+    # Expected: Double sum where 'a' has been applied to |q>, with p coefficient
+    # p*a*|q> -> p*sqrt(q)*|q-1>
+    expected = Sum(p * sqrt(q) * BosonFockKet(q - 1), (p, 0, 2), (q, 1, 3))
+    assert result == expected
+
+    # Verify it expands correctly when evaluated
+    # Sum over p: 0 + 1 + 2 = 3, Sum over q: sqrt(1)*|0> + sqrt(2)*|1> + sqrt(3)*|2>
+    expected_expanded = 3 * (BosonFockKet(0) + sqrt(2) * BosonFockKet(1) + sqrt(3) * BosonFockKet(2))
+    assert result.doit() == expected_expanded
 
 
 def test_mul_binary_integral_integral():
@@ -297,55 +322,229 @@ def test_mul_binary_integral_integral():
 
 
 def test_mul_binary_add_add():
-    pass
+    """Test addition of operators applied to addition of states"""
+    # Create an addition of bosonic operators
+    lhs = a + Dagger(a)
+
+    # Create an addition of bosonic Fock states
+    rhs = BosonFockKet(1) + BosonFockKet(2)
+
+    # Apply the addition of operators to the addition of states
+    # This should distribute: (a + a†) * (|1> + |2>)
+    result = qapply(lhs * rhs)
+
+    # Expected: Each operator applied to each state
+    # a*|1> + a*|2> + a†*|1> + a†*|2>
+    expected = (
+        BosonFockKet(0) + sqrt(2) * BosonFockKet(1) +
+        sqrt(2) * BosonFockKet(2) + sqrt(3) * BosonFockKet(3)
+    )
+    assert result.expand() == expected.expand()
 
 
 def test_mul_binary_sum_add():
-    pass
+    """Test sum of operators applied to addition of states"""
+    # Create a sum of p-dependent operators
+    lhs = Sum(p * a, (p, 0, 2))
+
+    # Create an addition of bosonic Fock states
+    rhs = BosonFockKet(1) + BosonFockKet(2)
+
+    # Apply the sum of operators to the addition of states
+    # This should create a sum where each operator is applied to each state
+    result = qapply(lhs * rhs)
+
+    # Expected: Sum with Add inside where each operator is applied
+    # Sum(p*a, (p, 0, 2)) * (|1> + |2>) = Sum(p*a*|1> + p*a*|2>, (p, 0, 2))
+    #                                    = Sum(p*|0> + sqrt(2)*p*|1>, (p, 0, 2))
+    expected = Sum(p * BosonFockKet(0) + sqrt(2) * p * BosonFockKet(1), (p, 0, 2))
+    assert result == expected
+
+    # Verify it expands correctly
+    # Sum over p: (0 + 1 + 2) = 3, so 3*|0> + 3*sqrt(2)*|1>
+    assert result.doit() == 3 * BosonFockKet(0) + 3 * sqrt(2) * BosonFockKet(1)
 
 
 def test_mul_binary_add_sum():
-    pass
+    """Test addition of operators applied to sum of states"""
+    # Create an addition of bosonic operators
+    lhs = a + Dagger(a)
+
+    # Create a sum of bosonic Fock states
+    rhs = Sum(BosonFockKet(q), (q, 1, 2))
+
+    # Apply the addition of operators to the sum of states
+    # This should distribute: (a + a†) * Sum(|q>, (q, 1, 2))
+    result = qapply(lhs * rhs)
+
+    # Expected: Sum with Add inside where each operator is applied
+    # (a + a†) * Sum(|q>, (q, 1, 2)) = Sum(a*|q> + a†*|q>, (q, 1, 2))
+    #                                 = Sum(sqrt(q)*|q-1> + sqrt(q+1)*|q+1>, (q, 1, 2))
+    expected = Sum(
+        sqrt(q) * BosonFockKet(q - 1) + sqrt(q + 1) * BosonFockKet(q + 1),
+        (q, 1, 2)
+    )
+    assert result == expected
+
+    # Verify it expands correctly
+    # q=1: sqrt(1)*|0> + sqrt(2)*|2> = |0> + sqrt(2)*|2>
+    # q=2: sqrt(2)*|1> + sqrt(3)*|3>
+    expected_expanded = (
+        BosonFockKet(0) + sqrt(2) * BosonFockKet(1) +
+        sqrt(2) * BosonFockKet(2) + sqrt(3) * BosonFockKet(3)
+    )
+    assert result.doit() == expected_expanded
 
 
 def test_mul_binary_integral_add():
-    pass
+    """Test integral of operators applied to addition of states"""
+    # Create an integral over bosonic operators
+    # Using p as a continuous variable (like a coupling constant)
+    r = symbols('r', real=True)
+    lhs = Integral(r * a, (r, 0, 1))
+
+    # Create an addition of bosonic Fock states
+    rhs = BosonFockKet(1) + BosonFockKet(2)
+
+    # Apply the integral to the addition
+    result = qapply(lhs * rhs)
+
+    # Expected: Integral with Add inside where operator is applied to each state
+    # Integral(r*a, (r, 0, 1)) * (|1> + |2>)
+    # = Integral(r*a*|1> + r*a*|2>, (r, 0, 1))
+    # = Integral(r*|0> + r*sqrt(2)*|1>, (r, 0, 1))
+    expected = Integral(
+        r * BosonFockKet(0) + r * sqrt(2) * BosonFockKet(1),
+        (r, 0, 1)
+    )
+    assert result == expected
 
 
 def test_mul_binary_add_integral():
-    pass
+    """Test addition of operators applied to integral of states"""
+    # Create an addition of bosonic operators
+    lhs = a + Dagger(a)
+
+    # Create an integral over bosonic Fock states
+    r = symbols('r', real=True)
+    rhs = Integral(BosonFockKet(q), (r, 0, 1))
+
+    # Apply the addition to the integral
+    result = qapply(lhs * rhs)
+
+    # Expected: Integral with Add inside
+    # (a + a†) * Integral(|q>, (r, 0, 1))
+    # = Integral(a*|q> + a†*|q>, (r, 0, 1))
+    # = Integral(sqrt(q)*|q-1> + sqrt(q+1)*|q+1>, (r, 0, 1))
+    expected = Integral(
+        sqrt(q) * BosonFockKet(q - 1) + sqrt(q + 1) * BosonFockKet(q + 1),
+        (r, 0, 1)
+    )
+    assert result == expected
 
 
 def test_mul_binary_sum_integral():
-    pass
+    """Test sum of operators applied to integral of states"""
+    # Create a sum of bosonic operators with parameter dependence
+    lhs = Sum(p * a, (p, 0, 1))
+
+    # Create an integral over bosonic Fock states
+    # This is a bit artificial but tests the mechanism
+    rhs = Integral(BosonFockKet(q), (q, 1, 2))
+
+    # Apply the sum to the integral
+    result = qapply(lhs * rhs)
+
+    # Expected: Sum containing an Integral where operator is applied
+    # Sum(p*a, (p, 0, 1)) * Integral(|q>, (q, 1, 2))
+    # = Sum(Integral(p*a*|q>, (q, 1, 2)), (p, 0, 1))
+    # = Sum(Integral(p*sqrt(q)*|q-1>, (q, 1, 2)), (p, 0, 1))
+    expected = Sum(
+        Integral(p * sqrt(q) * BosonFockKet(q - 1), (q, 1, 2)),
+        (p, 0, 1)
+    )
+    assert result == expected
 
 
 def test_mul_binary_integral_sum():
-    pass
+    """Test integral of operators applied to sum of states"""
+    # Create an integral over bosonic operators
+    lhs = Integral(p * a, (p, 0, 1))
 
+    # Create a sum over bosonic Fock states
+    rhs = Sum(BosonFockKet(q), (q, 1, 2))
 
-def test_mul_binary_add_expr():
-    pass
+    # Apply the integral to the sum
+    result = qapply(lhs * rhs)
+
+    # Expected: Integral containing a Sum where operator is applied
+    # Integral(p*a, (p, 0, 1)) * Sum(|q>, (q, 1, 2))
+    # = Integral(Sum(p*a*|q>, (q, 1, 2)), (p, 0, 1))
+    # = Integral(Sum(p*sqrt(q)*|q-1>, (q, 1, 2)), (p, 0, 1))
+    expected = Integral(
+        Sum(p * sqrt(q) * BosonFockKet(q - 1), (q, 1, 2)),
+        (p, 0, 1)
+    )
+    assert result == expected
 
 
 def test_mul_binary_expr_add():
-    pass
+    """Test expression (operator power) applied to addition of states"""
+    # Create an expression: operator to a power
+    lhs = a**2
 
+    # Create an addition of bosonic Fock states
+    rhs = BosonFockKet(2) + BosonFockKet(3)
 
-def test_mul_binary_sum_expr():
-    pass
+    # Apply the expression to the addition
+    result = qapply(lhs * rhs)
+
+    # Expected: a**2 applied to each state
+    # a**2 * |2> = a * a * |2> = a * sqrt(2) * |1> = sqrt(2) * sqrt(1) * |0> = sqrt(2) * |0>
+    # a**2 * |3> = a * a * |3> = a * sqrt(3) * |2> = sqrt(3) * sqrt(2) * |1> = sqrt(6) * |1>
+    expected = sqrt(2) * BosonFockKet(0) + sqrt(6) * BosonFockKet(1)
+    assert result == expected
 
 
 def test_mul_binary_expr_sum():
-    pass
+    """Test expression (operator power) applied to sum of states"""
+    # Create an expression: operator to a power
+    lhs = a**2
 
+    # Create a sum of bosonic Fock states
+    rhs = Sum(BosonFockKet(q), (q, 2, 3))
 
-def test_mul_binary_integral_expr():
-    pass
+    # Apply the expression to the sum
+    result = qapply(lhs * rhs)
+
+    # Expected: Sum with a**2 applied to each state
+    # a**2 * |q> = sqrt(q) * sqrt(q-1) * |q-2> = sqrt(q*(q-1)) * |q-2>
+    expected = Sum(sqrt(q * (q - 1)) * BosonFockKet(q - 2), (q, 2, 3))
+    assert result == expected
+
+    # Verify it expands correctly
+    # q=2: sqrt(2*1)*|0> = sqrt(2)*|0>
+    # q=3: sqrt(3*2)*|1> = sqrt(6)*|1>
+    expected_expanded = sqrt(2) * BosonFockKet(0) + sqrt(6) * BosonFockKet(1)
+    assert result.doit() == expected_expanded
 
 
 def test_mul_binary_expr_integral():
-    pass
+    """Test expression (operator power) applied to integral of states"""
+    # Create an expression: operator to a power
+    lhs = a**2
+
+    # Create an integral over bosonic Fock states
+    r = symbols('r', real=True)
+    rhs = Integral(BosonFockKet(q), (r, 0, 1))
+
+    # Apply the expression to the integral
+    result = qapply(lhs * rhs)
+
+    # Expected: Integral with a**2 applied
+    # a**2 * |q> = sqrt(q*(q-1)) * |q-2>
+    expected = Integral(sqrt(q * (q - 1)) * BosonFockKet(q - 2), (r, 0, 1))
+    assert result == expected
 
 
 def test_mul_binary_add():
