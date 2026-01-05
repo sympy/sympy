@@ -628,6 +628,70 @@ class PermuteDims(_CodegenArrayAbstract):
         return new_expr, new_permutation
 
     @classmethod
+    def _get_arg_transposition(cls, subranks, permutation_indices, index2arg):
+        """
+        Determine the new order of arguments based on index permutation.
+
+        Parameters
+        ==========
+        subranks : list of int
+            Ranks of the arguments.
+        permutation_indices : list of int
+            The permutation being applied.
+        index2arg : list of int
+            Map from index to argument number.
+
+        Returns
+        =======
+        list of int
+            New positions of the arguments.
+        """
+        from itertools import accumulate
+
+        cumulative_subranks = [0] + list(accumulate(subranks))
+        args_positions = list(range(len(subranks)))
+
+        maps = {}
+        for i in range(len(subranks)):
+            start = cumulative_subranks[i]
+            end = cumulative_subranks[i+1]
+
+            # Check which argument these indices mapped to
+            s = {index2arg[permutation_indices[j]] for j in range(start, end)}
+
+            if len(s) != 1:
+                continue
+            elem = next(iter(s))
+            if i != elem:
+                maps[i] = elem
+
+        # distinct cycles decomposition
+        lines = []
+        current_line = []
+        while maps:
+            if len(current_line) == 0:
+                k, v = maps.popitem()
+                current_line.append(k)
+            else:
+                k = current_line[-1]
+                if k not in maps:
+                    current_line = []
+                    continue
+                v = maps.pop(k)
+
+            if v in current_line:
+                lines.append(current_line)
+                current_line = []
+                continue
+            current_line.append(v)
+
+        for line in lines:
+            for i, e in enumerate(line):
+                args_positions[line[(i + 1) % len(line)]] = e
+
+        return args_positions
+
+    @classmethod
     def _check_permutation_mapping(cls, expr, permutation):
         subranks = expr.subranks
         index2arg = [i for i, arg in enumerate(expr.args) for j in range(expr.subranks[i])]
@@ -653,41 +717,9 @@ class PermuteDims(_CodegenArrayAbstract):
                 current_indices = []
         new_permutation.extend(current_indices)
 
-        # TODO: swap args positions in order to simplify the expression:
-        # TODO: this should be in a function
-        args_positions = list(range(len(new_args)))
-        # Get possible shifts:
-        maps = {}
-        cumulative_subranks = [0] + list(accumulate(subranks))
-        for i in range(len(subranks)):
-            s = {index2arg[new_permutation[j]] for j in range(cumulative_subranks[i], cumulative_subranks[i+1])}
-            if len(s) != 1:
-                continue
-            elem = next(iter(s))
-            if i != elem:
-                maps[i] = elem
+        args_positions = cls._get_arg_transposition(subranks, new_permutation, index2arg)
 
-        # Find cycles in the map:
-        lines = []
-        current_line = []
-        while maps:
-            if len(current_line) == 0:
-                k, v = maps.popitem()
-                current_line.append(k)
-            else:
-                k = current_line[-1]
-                if k not in maps:
-                    current_line = []
-                    continue
-                v = maps.pop(k)
-            if v in current_line:
-                lines.append(current_line)
-                current_line = []
-                continue
-            current_line.append(v)
-        for line in lines:
-            for i, e in enumerate(line):
-                args_positions[line[(i + 1) % len(line)]] = e
+        cumulative_subranks = [0] + list(accumulate(subranks))
 
         # TODO: function in order to permute the args:
         permutation_blocks = [[new_permutation[cumulative_subranks[i] + j] for j in range(e)] for i, e in enumerate(subranks)]
