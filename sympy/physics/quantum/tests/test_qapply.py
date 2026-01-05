@@ -221,7 +221,7 @@ def test_mul_unary_pow():
 # -----------------------------------------------------------------------------
 # qapply_Mul: SlidingTransform binary handler tests
 #
-# The tests in this section cover qapply(Mul) where two of the Mul args are 
+# The tests in this section cover qapply(Mul) where two of the Mul args are
 # handled by the binary SlidingTransform handler for qapply_Mul.
 # -----------------------------------------------------------------------------
 
