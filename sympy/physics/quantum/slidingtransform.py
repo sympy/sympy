@@ -25,8 +25,12 @@ separates commutative from non-commutative terms, and efficiently reconstructs
 the final multiplication expression while preserving mathematical properties.
 """
 
+from __future__ import annotations
+from typing import Any, Callable, Iterable, TypeVar
+
 from itertools import tee
 
+from sympy.core.expr import Expr
 from sympy.core.mul import Mul
 from sympy.core.singleton import S
 
@@ -37,19 +41,28 @@ __all__ = [
 ]
 
 
-def _split_on_condition(seq, condition):
+T = TypeVar('T')
+
+
+def _split_on_condition(seq: Iterable[T], condition: Callable[[T], bool]) -> tuple[tuple[T, ...], tuple[T, ...]]:
     l1, l2 = tee((condition(item), item) for item in seq)
     return tuple(i for p, i in l1 if p), tuple(i for p, i in l2 if not p)
 
 
-def _split_cnc(seq):
+def _split_cnc(seq: Iterable[Any]) -> tuple[tuple[Any, ...], tuple[Any, ...]]:
     c, nc = _split_on_condition(seq, lambda x: x.is_commutative)
     return c, nc
 
 
 class SlidingTransform(object):
 
-    def __init__(self, unary=None, binary=None, reverse=False, from_args=True):
+    def __init__(
+        self,
+        unary: Callable[[Any], None | tuple[Any, ...]] | None = None,
+        binary: Callable[[Any, Any], None | tuple[Any, ...]] | None = None,
+        reverse: bool = False,
+        from_args: bool = True
+    ) -> None:
         """
         Initialize a SlidingTransform instance.
 
@@ -92,22 +105,22 @@ class SlidingTransform(object):
         self._from_args = from_args
 
     @property
-    def reverse(self):
+    def reverse(self) -> bool:
         return self._reverse
 
     @property
-    def unary(self):
+    def unary(self) -> Callable[[Any], None | tuple[Any, ...]] | None:
         return self._unary
 
     @property
-    def binary(self):
+    def binary(self) -> Callable[[Any, Any], None | tuple[Any, ...]] | None:
         return self._binary
 
     @property
-    def from_args(self):
+    def from_args(self) -> bool:
         return self._from_args
 
-    def __call__(self, expr, **options):
+    def __call__(self, expr: Mul, **options: Any) -> Expr:
         """Apply the sliding transform to a multiplication expression.
 
         Parameters
