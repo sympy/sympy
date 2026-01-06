@@ -1216,8 +1216,8 @@ class Pow(Expr):
         dexp = self.exp.diff(s)
 
         if not self.base.is_commutative:
-            exp_is_constant = (dexp.is_zero is True) or (dexp == 0)
-            exp_is_integer_const = isinstance(self.exp, Integer) or (self.exp.is_integer is True)
+            exp_is_constant = dexp.is_zero is True
+            exp_is_integer_const = isinstance(self.exp, Integer)
 
             if exp_is_constant and exp_is_integer_const:
                 n = int(self.exp)
