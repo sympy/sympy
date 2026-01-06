@@ -850,3 +850,84 @@ def test_array_sum():
 
     expr = ArrayContraction(ArraySum(T*sin(i), (i, 1, j)), (0, 1))
     assert expr.doit() == ArraySum(ArrayContraction(T*sin(i), (0, 1)), (i, 1, j))
+
+
+def test_array_expr_args_ndims():
+    """Test args_ndims property and args_ndims_total() method."""
+    from sympy.tensor.array.expressions.array_expressions import get_ndim
+
+    # Test get_ndim for basic expressions
+    assert get_ndim(M) == 2
+    assert get_ndim(N) == 2
+    assert get_ndim(a) == 2  # a is (k, 1)
+
+    # Test get_ndim for ZeroArray and OneArray
+    za = ZeroArray(3, 4, 5)
+    oa = OneArray(2, 3)
+    assert get_ndim(za) == 3
+    assert get_ndim(oa) == 2
+
+    # Test args_ndims for ArrayTensorProduct
+    tp = _array_tensor_product(M, N, P)
+    assert tp.args_ndims == [2, 2, 2]
+    assert tp.args_ndims_total() == 6
+    assert get_ndim(tp) == 6
+
+    # Test args_ndims for ArrayContraction
+    cg = _array_contraction(_array_tensor_product(M, N), (1, 2))
+    assert cg.args_ndims == [2, 2]
+    assert cg.args_ndims_total() == 4
+    assert get_ndim(cg) == 2  # 4 - 2 contracted = 2
+
+    # Test args_ndims for ArrayDiagonal
+    dg = _array_diagonal(_array_tensor_product(M, N), (1, 2))
+    assert dg.args_ndims == [2, 2]
+    assert dg.args_ndims_total() == 4
+    assert get_ndim(dg) == 3  # 4 - 2 + 1 diagonal = 3
+
+    # Test args_ndims for mixed expressions
+    expr = _array_contraction(_array_tensor_product(M, N, P, Q), (1, 2), (5, 6))
+    assert expr.args_ndims == [2, 2, 2, 2]
+    assert expr.args_ndims_total() == 8
+    assert get_ndim(expr) == 4  # 8 - 4 contracted = 4
+
+
+def test_array_expr_deprecated_names():
+    """Test that deprecated names raise deprecation warnings."""
+    from sympy.testing.pytest import warns_deprecated_sympy
+    from sympy.tensor.array.expressions.array_expressions import (
+        get_rank, _get_subranks, _get_subrank
+    )
+    from sympy.tensor.array.expressions.utils import _get_mapping_from_subranks
+
+    tp = _array_tensor_product(M, N)
+
+    # Test deprecated subranks property
+    with warns_deprecated_sympy():
+        result = tp.subranks
+    assert result == [2, 2]
+
+    # Test deprecated subrank() method
+    with warns_deprecated_sympy():
+        result = tp.subrank()
+    assert result == 4
+
+    # Test deprecated get_rank() function
+    with warns_deprecated_sympy():
+        result = get_rank(M)
+    assert result == 2
+
+    # Test deprecated _get_subranks() function
+    with warns_deprecated_sympy():
+        result = _get_subranks(tp)
+    assert result == [2, 2]
+
+    # Test deprecated _get_subrank() function
+    with warns_deprecated_sympy():
+        result = _get_subrank(tp)
+    assert result == 4
+
+    # Test deprecated _get_mapping_from_subranks() function
+    with warns_deprecated_sympy():
+        result = _get_mapping_from_subranks([2, 2])
+    assert result == {0: (0, 0), 1: (0, 1), 2: (1, 0), 3: (1, 1)}

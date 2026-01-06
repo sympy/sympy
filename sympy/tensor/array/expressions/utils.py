@@ -4,20 +4,40 @@ from collections import defaultdict
 from sympy.combinatorics import Permutation
 from sympy.core.containers import Tuple
 from sympy.core.numbers import Integer
+from sympy.utilities.exceptions import sympy_deprecation_warning
 
 
-def _get_mapping_from_subranks(subranks):
+def _get_mapping_from_args_ndims(args_ndims):
+    """
+    Create a mapping from flat index to (arg_index, rel_index) tuple.
+    """
     mapping = {}
     counter = 0
-    for i, rank in enumerate(subranks):
-        for j in range(rank):
+    for i, ndim in enumerate(args_ndims):
+        for j in range(ndim):
             mapping[counter] = (i, j)
             counter += 1
     return mapping
 
 
-def _get_contraction_links(args, subranks, *contraction_indices):
-    mapping = _get_mapping_from_subranks(subranks)
+def _get_mapping_from_subranks(subranks):
+    """
+    Deprecated. Use ``_get_mapping_from_args_ndims`` instead.
+    """
+    sympy_deprecation_warning(
+        """
+        The _get_mapping_from_subranks() function is deprecated.
+        Use _get_mapping_from_args_ndims() instead.
+        """,
+        deprecated_since_version="1.14",
+        active_deprecations_target="array-expressions-subranks",
+        stacklevel=3,
+    )
+    return _get_mapping_from_args_ndims(subranks)
+
+
+def _get_contraction_links(args, args_ndims, *contraction_indices):
+    mapping = _get_mapping_from_args_ndims(args_ndims)
     contraction_tuples = [[mapping[j] for j in i] for i in contraction_indices]
     dlinks = defaultdict(dict)
     for links in contraction_tuples:
