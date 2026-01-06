@@ -1215,18 +1215,31 @@ class Pow(Expr):
         dbase = self.base.diff(s)
         dexp = self.exp.diff(s)
 
-        if (not self.base.is_commutative and
-            self.exp.is_Integer and
-            self.exp.is_positive and
-            dexp == 0):
-            n = self.exp
-            base = self.base
-            return Add(*[
-                Mul(Pow(base, i), dbase, Pow(base, n - 1 - i))
-                for i in range(n)
-            ])
+        if not self.base.is_commutative:
+            exp_is_constant = (dexp.is_zero is True) or (dexp == 0)
+            exp_is_integer_const = isinstance(self.exp, Integer) or (self.exp.is_integer is True)
 
-        return self * (dexp * log(self.base) + dbase * self.exp/self.base)
+            if exp_is_constant and exp_is_integer_const:
+                n = int(self.exp)
+                base = self.base
+
+                if n > 0:
+                    return Add(*[
+                        Mul(Pow(base, i), dbase, Pow(base, n - 1 - i))
+                        for i in range(n)
+                    ])
+                elif n < 0:
+                    m = -n
+                    return -Add(*[
+                        Mul(Pow(base, -(i + 1)), dbase, Pow(base, -(m - i)))
+                        for i in range(m)
+                    ])
+                else:
+                    return S.Zero
+
+            return None
+
+        return self * (dexp * log(self.base) + dbase * self.exp / self.base)
 
     def _eval_evalf(self, prec):
         base, exp = self.as_base_exp()

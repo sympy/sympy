@@ -1394,10 +1394,25 @@ def test_noncommutative_derivative():
     result_comm = diff(U**2, t)
     assert result_comm == 2*U*dU
 
-    # Test d(S^-1)/dt = -S^-1 * dS/dt * S^-1
+    # Test S**-1 (negative power - now properly evaluated)
     result_inv = diff(S**-1, t)
-    expected_inv = -S**-1 * dS * S**-1
+    expected_inv = -(Pow(S, -1) * dS * Pow(S, -1))
     assert result_inv == expected_inv
+
+    result_inv2 = diff(S**-2, t)
+    expected_inv2 = -(Pow(S, -1) * dS * Pow(S, -2) + Pow(S, -2) * dS * Pow(S, -1))
+    assert result_inv2 == expected_inv2
+
+    result_inv3 = diff(S**-3, t)
+    expected_inv3 = -(Pow(S, -1)*dS*Pow(S, -3) + Pow(S, -2)*dS*Pow(S, -2) + Pow(S, -3)*dS*Pow(S, -1))
+    assert result_inv3 == expected_inv3
+
+    assert diff(S**0, t) == 0
+
+    n = symbols('n')
+    result_sym = diff(S**n, t)
+    assert isinstance(result_sym, Derivative)
+
 
 
 
