@@ -1374,10 +1374,10 @@ def test_noncommutative_derivative():
     dS = Derivative(S, t)
     dT = Derivative(T, t)
 
-    assert isinstance(diff(S**2, t), Derivative)
-    assert isinstance(diff(S**3, t), Derivative)
-    assert isinstance(diff(S**-1, t), Derivative)
-    assert isinstance(diff(S**-2, t), Derivative)
+    assert diff(S**2, t) == Derivative(S**2, t)
+    assert diff(S**3, t) == Derivative(S**3, t)
+    assert diff(S**-1, t) == Derivative(S**-1, t)
+    assert diff(S**-2, t) == Derivative(S**-2, t)
 
     assert diff(S*T, t) == dS*T + S*dT
 
@@ -1386,7 +1386,7 @@ def test_noncommutative_derivative():
     assert diff(U**2, t) == 2*U*dU
 
     n = symbols('n')
-    assert isinstance(diff(S**n, t), Derivative)
+    assert diff(S**n, t) == Derivative(S**n, t)
 
 
 def test_Subs_Derivative():
