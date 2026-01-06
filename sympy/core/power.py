@@ -1212,13 +1212,12 @@ class Pow(Expr):
 
     def _eval_derivative(self, s):
         from sympy.functions.elementary.exponential import log
+        if not self.base.is_commutative:
+            return None
         dbase = self.base.diff(s)
         dexp = self.exp.diff(s)
 
-        if not self.base.is_commutative:
-            return None
-
-        return self * (dexp * log(self.base) + dbase * self.exp / self.base)
+        return self * (dexp * log(self.base) + dbase * self.exp/self.base)
 
     def _eval_evalf(self, prec):
         base, exp = self.as_base_exp()
