@@ -2046,7 +2046,7 @@ def get_rank(expr):
         not the linear-algebraic rank of a matrix.
         """,
         deprecated_since_version="1.14",
-        active_deprecations_target="array-expressions-get-rank",
+        active_deprecations_target="array-expressions-subranks",
         stacklevel=3,
     )
     return get_ndim(expr)

@@ -1740,6 +1740,21 @@ See the discussion on issue [#17881](https://github.com/sympy/sympy/pull/17881).
 
 ## Version 1.4
 
+(array-expressions-subranks)=
+### Array expression `subranks` and `get_rank` deprecations
+
+The `subranks` attribute and related helper functions in
+`sympy.tensor.array.expressions` are deprecated.
+
+They have been replaced by clearer naming that distinguishes between
+node-level dimensionality and argument-level dimensionality:
+
+- `subranks` → `args_ndims`
+- `get_rank()` → `get_ndim()`
+
+The old API remains available with deprecation warnings and will be
+removed in a future SymPy release.
+
 (deprecated-tensorindextype-attrs)=
 ### `TensorIndexType.data` and related methods
 
