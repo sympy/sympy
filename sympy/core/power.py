@@ -1216,27 +1216,6 @@ class Pow(Expr):
         dexp = self.exp.diff(s)
 
         if not self.base.is_commutative:
-            exp_is_constant = dexp.is_zero is True
-            exp_is_integer_const = isinstance(self.exp, Integer)
-
-            if exp_is_constant and exp_is_integer_const:
-                n = int(self.exp)
-                base = self.base
-
-                if n > 0:
-                    return Add(*[
-                        Mul(Pow(base, i), dbase, Pow(base, n - 1 - i))
-                        for i in range(n)
-                    ])
-                elif n < 0:
-                    m = -n
-                    return -Add(*[
-                        Mul(Pow(base, -(i + 1)), dbase, Pow(base, -(m - i)))
-                        for i in range(m)
-                    ])
-                else:
-                    return S.Zero
-
             return None
 
         return self * (dexp * log(self.base) + dbase * self.exp / self.base)
