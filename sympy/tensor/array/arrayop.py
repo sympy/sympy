@@ -422,8 +422,8 @@ def permutedims(expr, perm=None, index_order_old=None, index_order_new=None):
     from sympy.tensor.array.expressions.array_expressions import _permute_dims
     from sympy.matrices.expressions.matexpr import MatrixSymbol
     from sympy.tensor.array.expressions import PermuteDims
-    from sympy.tensor.array.expressions.array_expressions import get_rank
-    perm = PermuteDims._get_permutation_from_arguments(perm, index_order_old, index_order_new, get_rank(expr))
+    from sympy.tensor.array.expressions.array_expressions import get_ndim
+    perm = PermuteDims._get_permutation_from_arguments(perm, index_order_old, index_order_new, get_ndim(expr))
     if isinstance(expr, (_ArrayExpr, _CodegenArrayAbstract, MatrixSymbol)):
         return _permute_dims(expr, perm)
 
