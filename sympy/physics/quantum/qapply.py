@@ -37,7 +37,8 @@ from sympy.physics.quantum.slidingtransform import SlidingTransform
 
 
 __all__ = [
-    'qapply'
+    'qapply',
+    'QApplyOptions'
 ]
 
 
