@@ -497,3 +497,20 @@ def test_malformed_transform_output():
 
     with raises((TypeError, AttributeError)):
         st_binary(a*b)
+
+
+def test_both_transforms_none():
+    """Test that when both unary and binary transforms are None, the expression is returned unchanged."""
+    st = SlidingTransform(unary=None, binary=None)
+
+    # Test with non-commutative factors only
+    assert st(a*b*c) == a*b*c
+
+    # Test with mixed commutative and non-commutative factors
+    assert st(x*a*y*b*z) == x*a*y*b*z
+
+    # Test with commutative factors only
+    assert st(x*y*z) == x*y*z
+
+    # Test with two factors
+    assert st(a*b) == a*b
