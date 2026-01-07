@@ -2733,3 +2733,18 @@ def test_solve_maxmin():
     assert solve(system, variables) == [(5 - sqrt(42), 67 - 10*sqrt(42)), (5 + sqrt(42), 10*sqrt(42) + 67)]
     system = [Eq(y, Max(3*x, -(S(1)/3)*x)), Eq(y, -(x**2)+10)]
     assert solve(system, variables) == [(-3, 1), (2, 6)]
+import sympy as sp
+def test_solve_with_conjugate_raises():
+    a, b, c, d, e = sp.symbols('a b c d e', complex=True)
+
+    expr = (
+        -2*a*d*sp.conjugate(d)
+        + 2*a*e*sp.conjugate(e)
+        + 2*b*c*sp.conjugate(d)
+        - 2*b*e*sp.conjugate(c)
+        - 2*c*sp.conjugate(b)*sp.conjugate(e)
+        + 2*d*sp.conjugate(b)*sp.conjugate(c)
+    )
+
+    with raises((NotImplementedError, ValueError)):
+        sp.solve(expr, d)

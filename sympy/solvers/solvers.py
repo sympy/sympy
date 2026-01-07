@@ -1033,6 +1033,30 @@ def solve(f, *symbols, **flags):
                 bare_f = False
             flags['dict'] = True
     # end of real/imag handling  -----------------------------
+    from sympy import conjugate
+    from sympy.core.symbol import Symbol
+
+    f_iter = f if isinstance(f, (list, tuple)) else [f]
+
+    conj = None
+    sym = None
+    for sym in symbols:
+
+        if not isinstance(sym, Symbol):
+
+            continue
+
+        conj = conjugate(sym)
+
+    for fi in f_iter:
+        if conj is not None and fi.has(conj) and sym is not None:
+            fi_wo_conj = fi.xreplace({conj: 0})
+
+            if fi_wo_conj.has(sym):
+                raise NotImplementedError(
+                    "solve() does not support equations involving a symbol "
+                    "and its complex conjugate"
+                )
 
     # we can solve for non-symbol entities by replacing them with Dummy symbols
     f, symbols, swap_sym = recast_to_symbols(f, symbols)
