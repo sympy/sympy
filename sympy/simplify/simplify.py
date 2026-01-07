@@ -2179,3 +2179,14 @@ walk = deprecated(
     deprecated_since_version="1.10",
     active_deprecations_target="deprecated-traversal-functions-moved",
 )(_walk)
+from sympy import symbols, erf, erfc
+
+
+def test_erf_erfc_simplify():
+    x = symbols('x', real=True)
+    expr = erf(x) + erfc(x)
+    simplified_expr = _simplify_erf_erfc(expr)
+    assert simplified_expr == 1
+
+
+
