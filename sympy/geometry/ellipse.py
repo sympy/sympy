@@ -13,6 +13,7 @@ from sympy.core.evalf import N
 from sympy.core.parameters import global_parameters
 from sympy.core.logic import fuzzy_bool
 from sympy.core.numbers import Rational, oo
+from sympy.sets.sets import FiniteSet
 from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, uniquely_named_symbol, _symbol
 from sympy.external.mpmath import prec_to_dps
@@ -31,7 +32,7 @@ from sympy.polys.polyutils import _not_a_coeff, _nsort
 from sympy.solvers import solve
 from sympy.solvers.solveset import linear_coeffs
 from sympy.utilities.misc import filldedent, func_name
-
+from sympy.solvers.solveset import nonlinsolve
 
 # XXX: This should use sympy.core.random rather than using the stdlib random
 # module directly.
@@ -665,7 +666,6 @@ class Ellipse(GeometrySet):
         >>> e.intersection(Ellipse(Point(-1, 0), 3, 4))
         [Point2D(-17/5, -12/5), Point2D(-17/5, 12/5), Point2D(7/5, -12/5), Point2D(7/5, 12/5)]
         """
-        # TODO: Replace solve with nonlinsolve, when nonlinsolve will be able to solve in real domain
 
         if isinstance(o, Point):
             if o in self:
@@ -675,9 +675,11 @@ class Ellipse(GeometrySet):
 
         elif isinstance(o, (Segment2D, Ray2D)):
             ellipse_equation = self.equation(x, y)
-            result = solve([ellipse_equation, Line(
-                o.points[0], o.points[1]).equation(x, y)], [x, y],
-                set=True)[1]
+            intermediate = nonlinsolve([ellipse_equation, Line(
+                o.points[0], o.points[1]).equation(x, y)], [x, y])
+            if not isinstance(intermediate, FiniteSet):
+                return intermediate
+            result = [s for s in intermediate if all(val.is_real for val in s)]
             return list(ordered([Point(i) for i in result if i in o]))
 
         elif isinstance(o, Polygon):
@@ -688,9 +690,12 @@ class Ellipse(GeometrySet):
                 return self
             else:
                 ellipse_equation = self.equation(x, y)
-                return list(ordered([Point(i) for i in solve(
-                    [ellipse_equation, o.equation(x, y)], [x, y],
-                    set=True)[1]]))
+                intermediate = nonlinsolve(
+                    [ellipse_equation, o.equation(x, y)], [x, y])
+                if not isinstance(intermediate, FiniteSet):
+                    return intermediate
+                result = [s for s in intermediate if all(val.is_real for val in s)]
+                return list(ordered([Point(i) for i in result]))
         elif isinstance(o, LinearEntity3D):
             raise TypeError('Entity must be two dimensional, not three dimensional')
         else:

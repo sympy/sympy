@@ -3,6 +3,7 @@ from sympy.core.numbers import (Rational, oo, pi)
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
+from sympy import ConditionSet
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import sec
@@ -300,6 +301,15 @@ def test_ellipse_geom():
     c = sqrt(3991)
     ans = [Point(-c/68 + a, c*Rational(2, 17) + a/2), Point(c/68 + a, c*Rational(-2, 17) + a/2)]
     assert [p.subs({x: 2, y:1}) for p in e1.intersection(e2)] == ans
+    # Test for symbolic intersection safety
+    # (handles ConditionSet returns from nonlinsolve)
+    a, b = symbols('a b', positive=True)
+    e_sym1 = Ellipse(Point(0, 0), a, b)
+    e_sym2 = Ellipse(Point(0, 0), a, b)
+    result =  e_sym1.intersection(e_sym2)
+    # Nonlinsolve can either return the shape if its able to recognise it
+    # or it will return the ConditionSet if it struggles
+    assert isinstance(result, (Ellipse, ConditionSet))
 
     # Combinations of above
     assert e3.is_tangent(e3.tangent_lines(p1 + Point(y1, 0))[0])
