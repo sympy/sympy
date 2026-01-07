@@ -58,56 +58,63 @@ register their own transforms to control the canonical form of products
 of quantum expressions.
 """
 
-@_postprocess_qexpr_mul.unary.register(IdentityOperator)
+# Type-narrowed references for dispatcher registration
+# These assertions are safe because we just created _postprocess_qexpr_mul with Dispatcher instances
+assert isinstance(_postprocess_qexpr_mul.unary, Dispatcher)
+assert isinstance(_postprocess_qexpr_mul.binary, Dispatcher)
+_postprocess_qexpr_mul_unary: Dispatcher = _postprocess_qexpr_mul.unary
+_postprocess_qexpr_mul_binary: Dispatcher = _postprocess_qexpr_mul.binary
+
+@_postprocess_qexpr_mul_unary.register(IdentityOperator)
 def _remove_identity(a, **options):
     return ()
 
-@_postprocess_qexpr_mul.unary.register(Expr)
+@_postprocess_qexpr_mul_unary.register(Expr)
 def _pass_on_expr(a, **options):
     return None
 
 
-@_postprocess_qexpr_mul.binary.register(Expr, Expr)
+@_postprocess_qexpr_mul_binary.register(Expr, Expr)
 def _transform_expr(a, b):
     """Default transformer that does nothing for base types."""
     return None
 
 
 # The identity times anything is the anything.
-_postprocess_qexpr_mul.binary.add(
+_postprocess_qexpr_mul_binary.add(
     (IdentityOperator, Expr),
     lambda x, y: (y,),
     on_ambiguity=ambiguity_register_error_ignore_dup
 )
-_postprocess_qexpr_mul.binary.add(
+_postprocess_qexpr_mul_binary.add(
     (Expr, IdentityOperator),
     lambda x, y: (x,),
     on_ambiguity=ambiguity_register_error_ignore_dup
 )
-_postprocess_qexpr_mul.binary.add(
+_postprocess_qexpr_mul_binary.add(
     (IdentityOperator, IdentityOperator),
     lambda x, y: S.One,
     on_ambiguity=ambiguity_register_error_ignore_dup
 )
 
 
-@_postprocess_qexpr_mul.binary.register(IdentityOperator, Expr)
+@_postprocess_qexpr_mul_binary.register(IdentityOperator, Expr)
 def _handle_identity(a, b):
     return (b, )
 
-@_postprocess_qexpr_mul.binary.register(BraBase, KetBase)
+@_postprocess_qexpr_mul_binary.register(BraBase, KetBase)
 def _transform_bra_ket(a, b):
     """Transform a bra*ket -> InnerProduct(bra, ket)."""
     return (InnerProduct(a, b),)
 
 
-@_postprocess_qexpr_mul.binary.register(KetBase, BraBase)
+@_postprocess_qexpr_mul_binary.register(KetBase, BraBase)
 def _transform_ket_bra(a, b):
     """Transform a keT*bra -> OuterProduct(ket, bra)."""
     return (OuterProduct(a, b),)
 
 
-@_postprocess_qexpr_mul.binary.register(KetBase, KetBase)
+@_postprocess_qexpr_mul_binary.register(KetBase, KetBase)
 def _transform_ket_ket(a, b):
     """Raise a TypeError if a user tries to multiply two kets.
 
@@ -118,7 +125,7 @@ def _transform_ket_ket(a, b):
     )
 
 
-@_postprocess_qexpr_mul.binary.register(BraBase, BraBase)
+@_postprocess_qexpr_mul_binary.register(BraBase, BraBase)
 def _transform_bra_bra(a, b):
     """Raise a TypeError if a user tries to multiply two bras.
 
@@ -129,17 +136,17 @@ def _transform_bra_bra(a, b):
     )
 
 
-@_postprocess_qexpr_mul.binary.register(OuterProduct, KetBase)
+@_postprocess_qexpr_mul_binary.register(OuterProduct, KetBase)
 def _transform_op_ket(a, b):
     return (InnerProduct(a.bra, b), a.ket)
 
 
-@_postprocess_qexpr_mul.binary.register(BraBase, OuterProduct)
+@_postprocess_qexpr_mul_binary.register(BraBase, OuterProduct)
 def _transform_bra_op(a, b):
     return (InnerProduct(a, b.ket), b.bra)
 
 
-@_postprocess_qexpr_mul.binary.register(TensorProduct, KetBase)
+@_postprocess_qexpr_mul_binary.register(TensorProduct, KetBase)
 def _transform_tp_ket(a, b):
     """Raise a TypeError if a user tries to multiply TensorProduct(*kets)*ket.
 
@@ -151,7 +158,7 @@ def _transform_tp_ket(a, b):
         )
 
 
-@_postprocess_qexpr_mul.binary.register(KetBase, TensorProduct)
+@_postprocess_qexpr_mul_binary.register(KetBase, TensorProduct)
 def _transform_ket_tp(a, b):
     """Raise a TypeError if a user tries to multiply ket*TensorProduct(*kets).
 
@@ -162,7 +169,7 @@ def _transform_ket_tp(a, b):
             'Multiplication of ket*TensorProduct(*kets) is invalid.'
         )
 
-@_postprocess_qexpr_mul.binary.register(TensorProduct, BraBase)
+@_postprocess_qexpr_mul_binary.register(TensorProduct, BraBase)
 def _transform_tp_bra(a, b):
     """Raise a TypeError if a user tries to multiply TensorProduct(*bras)*bra.
 
@@ -174,7 +181,7 @@ def _transform_tp_bra(a, b):
         )
 
 
-@_postprocess_qexpr_mul.binary.register(BraBase, TensorProduct)
+@_postprocess_qexpr_mul_binary.register(BraBase, TensorProduct)
 def _transform_bra_tp(a, b):
     """Raise a TypeError if a user tries to multiply bra*TensorProduct(*bras).
 
@@ -186,7 +193,7 @@ def _transform_bra_tp(a, b):
         )
 
 
-@_postprocess_qexpr_mul.binary.register(TensorProduct, TensorProduct)
+@_postprocess_qexpr_mul_binary.register(TensorProduct, TensorProduct)
 def _transform_tp_tp(a, b):
     """Combine a product of tensor products if their number of args matches."""
     debug('_transform_tp_tp', a, b)
@@ -197,7 +204,7 @@ def _transform_tp_tp(a, b):
             return (TensorProduct(*(i*j for (i, j) in zip(a.args, b.args))), )
 
 
-@_postprocess_qexpr_mul.binary.register(OuterProduct, OuterProduct)
+@_postprocess_qexpr_mul_binary.register(OuterProduct, OuterProduct)
 def _transform_op_op(a, b):
     """Extract an inner produt from a product of outer products."""
     return (InnerProduct(a.bra, b.ket), OuterProduct(a.ket, b.bra))
