@@ -8,6 +8,12 @@ from sympy.ntheory import isprime, randprime, nextprime, prevprime, \
 from sympy.ntheory.generate import cycle_length, _primepi
 from sympy.ntheory.primetest import mr
 from sympy.testing.pytest import raises
+import math
+import pytest
+from collections import Counter
+from sympy.ntheory.generate import rand_prefactored
+from sympy.ntheory.primetest import isprime
+from sympy.core.numbers import igcd
 
 def test_prime():
     assert prime(1) == 2
@@ -283,3 +289,98 @@ def test_deprecated_ntheory_symbolic_functions():
 
     with warns_deprecated_sympy():
         assert primepi(0) == 0
+
+class TestRandPrefactored:
+    r"""
+    Comprehensive test suite for the rand_prefactored function.
+    Covers logical correctness, edge cases, and statistical uniformity.
+    """
+
+    def test_logical_correctness(self):
+        r"""
+        Verify that the returned value matches the product of its prime factors
+        and that all factors are indeed prime.
+        """
+        for n in [100, 1000, 10**6]:
+            for _ in range(20):
+                val, factors = rand_prefactored(n)
+                
+                # 1. Check bounds
+                assert 1 <= val <= n
+                
+                # 2. Check primality and product
+                reconstructed_product = 1
+                for p, exponent in factors.items():
+                    assert isprime(p), f"Error: {p} is reported as a factor but is not prime."
+                    reconstructed_product *= (p**exponent)
+                
+                # 3. Validation
+                assert val == reconstructed_product, "Error: Product of factors does not match the value."
+
+    def test_edge_cases(self):
+        r"""Test boundary conditions to ensure robustness."""
+        # n = 1 case
+        val, factors = rand_prefactored(1)
+        assert val == 1 and factors == {}
+
+        # Invalid inputs
+        with pytest.raises(ValueError):
+            rand_prefactored(0)
+        with pytest.raises(ValueError):
+            rand_prefactored(-5)
+
+    def test_statistical_uniformity(self):
+        r"""
+        Test if the distribution is approximately uniform across a small range.
+        For n=10, each number should appear with a frequency of ~1/10.
+        """
+        n = 10
+        trials = 5000
+        counts = Counter()
+        
+        for _ in range(trials):
+            val, _ = rand_prefactored(n)
+            counts[val] += 1
+            
+        expected_freq = trials / n
+        tolerance = 0.25  # Allow for statistical variance
+        
+        for i in range(1, n + 1):
+            assert abs(counts[i] - expected_freq) < (expected_freq * tolerance), \
+                f"Statistical Bias: Value {i} appeared {counts[i]} times, expected ~{expected_freq}"
+
+    def test_coprimality_distribution(self):
+        r"""
+        Advanced Statistical Test: Dirichlet's Theorem.
+        
+        The probability that two random integers are coprime (gcd=1) 
+        is 6/(pi^2) ≈ 0.6079. 
+        
+        If rand_prefactored is truly uniform, the empirical probability 
+        should converge to this constant. This is a strong indicator 
+        that the Kalai algorithm implementation is unbiased.
+        """
+        n = 10**6
+        trials = 2000
+        coprime_pairs = 0
+        
+        for _ in range(trials):
+            a, _ = rand_prefactored(n)
+            b, _ = rand_prefactored(n)
+            if igcd(a, b) == 1:
+                coprime_pairs += 1
+                
+        observed_prob = coprime_pairs / trials
+        theoretical_prob = 6 / (math.pi**2)
+        
+        # Check if the result is within a reasonable range (5% margin)
+        assert abs(observed_prob - theoretical_prob) < 0.05, \
+            f"Uniformity Failure: Observed prob {observed_prob}, expected {theoretical_prob}"
+
+    def test_reproducibility(self):
+        r"""Ensure that providing a seed yields the same output."""
+        n = 10**9
+        seed_value = 12345
+        res1, _ = rand_prefactored(n, seed=seed_value)
+        res2, _ = rand_prefactored(n, seed=seed_value)
+        assert res1 == res2, "Reproducibility Error: Different results with the same seed."
