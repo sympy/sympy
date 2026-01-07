@@ -26,7 +26,7 @@ the final multiplication expression while preserving mathematical properties.
 """
 
 from __future__ import annotations
-from typing import Any, Callable, Iterable, TypeVar
+from typing import Any, Callable, Iterable, TypeVar, TYPE_CHECKING
 
 from itertools import tee
 
@@ -35,6 +35,9 @@ from sympy.core.mul import Mul
 from sympy.core.singleton import S
 
 from sympy.utilities.misc import debug
+
+if TYPE_CHECKING:
+    from sympy.multipledispatch import Dispatcher
 
 __all__ = [
     'SlidingTransform',
@@ -54,12 +57,16 @@ def _split_cnc(seq: Iterable[Any]) -> tuple[tuple[Any, ...], tuple[Any, ...]]:
     return c, nc
 
 
-class SlidingTransform(object):
+class SlidingTransform:
+    _unary: Dispatcher | Callable[[Any], None | tuple[Any, ...]] | None
+    _binary: Dispatcher | Callable[[Any, Any], None | tuple[Any, ...]] | None
+    _reverse: bool
+    _from_args: bool
 
     def __init__(
         self,
-        unary: Callable[[Any], None | tuple[Any, ...]] | None = None,
-        binary: Callable[[Any, Any], None | tuple[Any, ...]] | None = None,
+        unary: Dispatcher | Callable[[Any], None | tuple[Any, ...]] | None = None,
+        binary: Dispatcher | Callable[[Any, Any], None | tuple[Any, ...]] | None = None,
         reverse: bool = False,
         from_args: bool = True
     ) -> None:
@@ -109,11 +116,11 @@ class SlidingTransform(object):
         return self._reverse
 
     @property
-    def unary(self) -> Callable[[Any], None | tuple[Any, ...]] | None:
+    def unary(self) -> Dispatcher | Callable[[Any], None | tuple[Any, ...]] | None:
         return self._unary
 
     @property
-    def binary(self) -> Callable[[Any, Any], None | tuple[Any, ...]] | None:
+    def binary(self) -> Dispatcher | Callable[[Any, Any], None | tuple[Any, ...]] | None:
         return self._binary
 
     @property
@@ -259,7 +266,7 @@ class SlidingTransform(object):
             output = []
 
         nc_parts = tuple(input)
-        c_parts = tuple(c_parts)
+        c_parts = tuple(c_parts) # type: ignore[assignment]
 
         # In the logic below, we go out of our way to avoid triggering the post-processor logic
         # unless it is absolutely needed by using Mul._from_args and always validating when we
@@ -273,7 +280,7 @@ class SlidingTransform(object):
             else:
                 c_result_args = () if m == S.One else (m,)
         else:
-            c_result_args = () if (c_parts and c_parts[0] == S.One) else c_parts
+            c_result_args = () if (c_parts and c_parts[0] == S.One) else c_parts  # type: ignore[assignment]
 
         # Handle the non-commutative part
         if len(nc_parts) > 1:
