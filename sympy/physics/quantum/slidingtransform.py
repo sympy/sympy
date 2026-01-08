@@ -26,7 +26,7 @@ the final multiplication expression while preserving mathematical properties.
 """
 
 from __future__ import annotations
-from typing import Any, Callable, Iterable, TypeVar, TYPE_CHECKING
+from typing import Any, Callable, Generic, Iterable, ParamSpec, TypeVar, Protocol
 
 from itertools import tee
 
@@ -36,8 +36,6 @@ from sympy.core.singleton import S
 
 from sympy.utilities.misc import debug
 
-if TYPE_CHECKING:
-    from sympy.multipledispatch import Dispatcher
 
 __all__ = [
     'SlidingTransform',
@@ -56,17 +54,24 @@ def _split_cnc(seq: Iterable[Any]) -> tuple[tuple[Any, ...], tuple[Any, ...]]:
     c, nc = _split_on_condition(seq, lambda x: x.is_commutative)
     return c, nc
 
+P = ParamSpec('P')
 
-class SlidingTransform:
-    _unary: Dispatcher | Callable[[Any], None | tuple[Any, ...]] | None
-    _binary: Dispatcher | Callable[[Any, Any], None | tuple[Any, ...]] | None
+class UnaryTransform(Protocol[P]):
+    def __call__(self, __expr: Any, *args:P.args, **kwargs: P.kwargs) -> tuple[Any, ...] | None: ...
+
+class BinaryTransform(Protocol[P]):
+    def __call__(self, __lhs: Any, __rhs: Any, *args:P.args, **kwargs: P.kwargs) -> tuple[Any, ...] | None: ...
+
+class SlidingTransform(Generic[P]):
+    _unary:  UnaryTransform[P] | None
+    _binary:  BinaryTransform[P] | None
     _reverse: bool
     _from_args: bool
 
     def __init__(
         self,
-        unary: Dispatcher | Callable[[Any], None | tuple[Any, ...]] | None = None,
-        binary: Dispatcher | Callable[[Any, Any], None | tuple[Any, ...]] | None = None,
+        unary:  UnaryTransform[P] | None = None,
+        binary:  BinaryTransform[P] | None = None,
         reverse: bool = False,
         from_args: bool = True
     ) -> None:
@@ -116,18 +121,18 @@ class SlidingTransform:
         return self._reverse
 
     @property
-    def unary(self) -> Dispatcher | Callable[[Any], None | tuple[Any, ...]] | None:
+    def unary(self) ->  UnaryTransform[P] | None:
         return self._unary
 
     @property
-    def binary(self) -> Dispatcher | Callable[[Any, Any], None | tuple[Any, ...]] | None:
+    def binary(self) ->  BinaryTransform[P] | None:
         return self._binary
 
     @property
     def from_args(self) -> bool:
         return self._from_args
 
-    def __call__(self, expr: Mul, **options: Any) -> Expr:
+    def __call__(self, expr: Mul, *args: P.args, **kwargs: P.kwargs) -> Expr:
         """Apply the sliding transform to a multiplication expression.
 
         Parameters
@@ -166,7 +171,7 @@ class SlidingTransform:
                 if next.is_commutative:
                     c_parts.append(next)
                     continue
-                transformed = self._unary(next, **options)
+                transformed = self._unary(next,*args, **kwargs)
                 if transformed == (S.Zero,):
                     return S.Zero
                 elif transformed is None:
@@ -195,7 +200,7 @@ class SlidingTransform:
                         input.append(lhs)
                         continue
 
-                    transformed = self._binary(lhs, rhs, **options)
+                    transformed = self._binary(lhs, rhs, *args, **kwargs)
 
                     if transformed is None:
                         # If transform returns None, append first element
@@ -237,7 +242,7 @@ class SlidingTransform:
                         input.append(rhs)
                         continue
 
-                    transformed = self._binary(lhs, rhs, **options)
+                    transformed = self._binary(lhs, rhs, *args, **kwargs)
 
                     if transformed is None:
                         output.insert(0, rhs)
