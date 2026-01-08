@@ -26,8 +26,7 @@ the final multiplication expression while preserving mathematical properties.
 """
 
 from __future__ import annotations
-from typing import Any, Callable, Generic, Iterable,  TypeVar, TYPE_CHECKING
-from typing_extensions import Protocol
+from typing import Any, Callable, Generic, Iterable, TypeVar, Protocol
 
 from itertools import tee
 
@@ -37,8 +36,6 @@ from sympy.core.singleton import S
 
 from sympy.utilities.misc import debug
 
-if TYPE_CHECKING:
-    from sympy.multipledispatch import Dispatcher
 
 __all__ = [
     'SlidingTransform',
