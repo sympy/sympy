@@ -26,7 +26,8 @@ the final multiplication expression while preserving mathematical properties.
 """
 
 from __future__ import annotations
-from typing import Any, Callable, Iterable, TypeVar, TYPE_CHECKING
+from typing import Any, Callable, Generic, Iterable,  TypeVar, TYPE_CHECKING
+from typing_extensions import Protocol
 
 from itertools import tee
 
@@ -56,17 +57,26 @@ def _split_cnc(seq: Iterable[Any]) -> tuple[tuple[Any, ...], tuple[Any, ...]]:
     c, nc = _split_on_condition(seq, lambda x: x.is_commutative)
     return c, nc
 
+T = TypeVar('T')
 
-class SlidingTransform:
-    _unary: Dispatcher | Callable[[Any], None | tuple[Any, ...]] | None
-    _binary: Dispatcher | Callable[[Any, Any], None | tuple[Any, ...]] | None
+
+class UnaryTransform(Protocol[T]):
+    def __call__(self, __expr: Any, **kwargs: T) -> tuple[Any, ...] | None: ...
+
+class BinaryTransform(Protocol[T]):
+    def __call__(self, __lhs: Any, __rhs: Any, **kwargs: T) -> tuple[Any, ...] | None: ...
+
+# TODO: stricter typing for the callables
+class SlidingTransform(Generic[T]):
+    _unary:  UnaryTransform[T] | None
+    _binary:  BinaryTransform[T] | None
     _reverse: bool
     _from_args: bool
 
     def __init__(
         self,
-        unary: Dispatcher | Callable[[Any], None | tuple[Any, ...]] | None = None,
-        binary: Dispatcher | Callable[[Any, Any], None | tuple[Any, ...]] | None = None,
+        unary:  UnaryTransform[T] | None = None,
+        binary:  BinaryTransform[T] | None = None,
         reverse: bool = False,
         from_args: bool = True
     ) -> None:
@@ -116,18 +126,18 @@ class SlidingTransform:
         return self._reverse
 
     @property
-    def unary(self) -> Dispatcher | Callable[[Any], None | tuple[Any, ...]] | None:
+    def unary(self) ->  UnaryTransform[T] | None:
         return self._unary
 
     @property
-    def binary(self) -> Dispatcher | Callable[[Any, Any], None | tuple[Any, ...]] | None:
+    def binary(self) ->  BinaryTransform[T] | None:
         return self._binary
 
     @property
     def from_args(self) -> bool:
         return self._from_args
 
-    def __call__(self, expr: Mul, **options: Any) -> Expr:
+    def __call__(self, expr: Mul, **options: T) -> Expr:
         """Apply the sliding transform to a multiplication expression.
 
         Parameters

@@ -335,7 +335,7 @@ def qapply(e: Basic | int | float | complex, **options: QApplyOptions) -> Expr:
 #-----------------------------------------------------------------------------
 
 
-qapply_Mul = SlidingTransform(
+qapply_Mul = SlidingTransform[QApplyOptions](
     unary=Dispatcher('_qapply_mul_unary'),
     binary=Dispatcher('_qapply_mul_binary'),
     reverse=True,
