@@ -6,7 +6,7 @@ complex quantum mechanical expressions symbolically.
 """
 
 from __future__ import annotations
-from typing import TypedDict
+from typing import Any,  TypedDict, Unpack,  cast
 
 from sympy.concrete import Sum
 from sympy.core.add import Add
@@ -106,13 +106,13 @@ _qapply_unary = Dispatcher('_qapply_unary')
 
 
 @_qapply_unary.register(Dagger)
-def _qapply_unary_dagger(expr: Dagger, **options: QApplyOptions) -> Dagger:
+def _qapply_unary_dagger(expr: Dagger, **options: Unpack[QApplyOptions]) -> Dagger:
     """Apply qapply to the argument of Dagger."""
     return Dagger(qapply(expr.args[0], **options))
 
 
 @_qapply_unary.register(Density)
-def _qapply_unary_density(expr: Density, **options: QApplyOptions) -> Density:
+def _qapply_unary_density(expr: Density, **options: Unpack[QApplyOptions]) -> Density:
     """Apply qapply to states in a Density matrix."""
     # For a Density operator call qapply on its state
     new_args = [(qapply(state, **options), prob) for (state,  # type: ignore[misc,has-type]
@@ -121,14 +121,14 @@ def _qapply_unary_density(expr: Density, **options: QApplyOptions) -> Density:
 
 
 @_qapply_unary.register(TensorProduct)
-def _qapply_unary_tp(expr: TensorProduct, **options: QApplyOptions) -> TensorProduct:
+def _qapply_unary_tp(expr: TensorProduct, **options: Unpack[QApplyOptions]) -> TensorProduct:
     """Apply qapply to each factor in a TensorProduct."""
     new_args = [qapply(t, **options) for t in expr.args]
     return TensorProduct(*new_args)
 
 
 @_qapply_unary.register(Add)
-def _qapply_unary_state(expr: Add, **options: QApplyOptions) -> Expr:
+def _qapply_unary_state(expr: Add, **options: Unpack[QApplyOptions]) -> Expr:
     """Apply qapply to each term in a sum."""
     result: Expr = S.Zero
     for arg in expr.args:
@@ -137,7 +137,7 @@ def _qapply_unary_state(expr: Add, **options: QApplyOptions) -> Expr:
 
 
 @_qapply_unary.register(Pow)
-def _qapply_unary_pow(expr: Pow, **options: QApplyOptions) -> Expr:
+def _qapply_unary_pow(expr: Pow, **options: Unpack[QApplyOptions]) -> Expr:
     """Apply qapply to the base of a power expression."""
     # For a Pow, call qapply on its base.
     base, exp = expr.as_base_exp()
@@ -146,7 +146,7 @@ def _qapply_unary_pow(expr: Pow, **options: QApplyOptions) -> Expr:
 
 @_qapply_unary.register(Mul)
 @_handle_doit_unary  # type: ignore[arg-type,misc]
-def _qapply_unary_mul(expr: Mul, **options: QApplyOptions) -> Expr:
+def _qapply_unary_mul(expr: Mul, **options: Unpack[QApplyOptions]) -> Expr:
     """We have a Mul where there might be actual operators to apply."""
     dagger = options.get('dagger', False)
     result = qapply_Mul(expr, **options)
@@ -157,7 +157,7 @@ def _qapply_unary_mul(expr: Mul, **options: QApplyOptions) -> Expr:
 
 @_qapply_unary.register(Sum)
 @_handle_doit_unary  # type: ignore[arg-type,misc]
-def _qapply_unary_sum(expr: Sum, **options: QApplyOptions) -> Sum:
+def _qapply_unary_sum(expr: Sum, **options: Unpack[QApplyOptions]) -> Sum:
     """For a Sum, call qapply on its function."""
     result = Sum(qapply(expr.function, **options), *expr.limits)
     return result
@@ -165,27 +165,27 @@ def _qapply_unary_sum(expr: Sum, **options: QApplyOptions) -> Sum:
 
 @_qapply_unary.register(Integral)
 @_handle_doit_unary  # type: ignore[arg-type,misc]
-def _qapply_unary_integral(expr: Integral, **options: QApplyOptions) -> Integral:
+def _qapply_unary_integral(expr: Integral, **options: Unpack[QApplyOptions]) -> Integral:
     """For a Sum, call qapply on its function."""
     result = Integral(qapply(expr.function, **options), *expr.limits)
     return result
 
 
 @_qapply_unary.register(Abs)
-def _qapply_unary_abs(expr: Abs, **options: QApplyOptions) -> Abs:
+def _qapply_unary_abs(expr: Abs, **options: Unpack[QApplyOptions]) -> Abs:
     """Apply qapply to the argument of Abs."""
     return Abs(qapply(expr.args[0], **options))
 
 
 
 @_qapply_unary.register(Expr)
-def _qapply_unary_expr(expr: Expr, **options: QApplyOptions) -> None:
+def _qapply_unary_expr(expr: Expr, **options: Unpack[QApplyOptions]) -> None:
     """Default handler for Expr - no transformation."""
     return None
 
 
 @_qapply_unary.register((int, float, complex))
-def _qapply_unary_number(expr: int | float | complex, **options: QApplyOptions) -> Expr:
+def _qapply_unary_number(expr: int | float | complex, **options: Unpack[QApplyOptions]) -> Expr:
     """Convert numbers to SymPy expressions."""
     return sympify(expr)
 
@@ -194,7 +194,7 @@ def _qapply_unary_number(expr: int | float | complex, **options: QApplyOptions) 
 # qapply
 #-----------------------------------------------------------------------------
 
-def qapply(e: Basic | int | float | complex, **options: QApplyOptions) -> Expr:
+def qapply(e: Basic | int | float | complex, **options: Unpack[QApplyOptions]) -> Expr:
     """Apply quantum operators to quantum states in expressions.
 
     Explanation
@@ -212,7 +212,7 @@ def qapply(e: Basic | int | float | complex, **options: QApplyOptions) -> Expr:
     e : Expr
         A SymPy expression containing quantum operators and states.
 
-    **options : dict
+    **options : QApplyOptions
         ip_doit : bool (default True)
             Automatically call ``.doit()`` on inner products to evaluate them.
         sum_doit : bool (default False)
@@ -334,20 +334,23 @@ def qapply(e: Basic | int | float | complex, **options: QApplyOptions) -> Expr:
 # qapply_Mul
 #-----------------------------------------------------------------------------
 
+_qapply_mul_unary = Dispatcher('_qapply_mul_unary')
+_qapply_mul_binary = Dispatcher('_qapply_mul_binary')
 
-qapply_Mul = SlidingTransform[QApplyOptions](
-    unary=Dispatcher('_qapply_mul_unary'),
-    binary=Dispatcher('_qapply_mul_binary'),
+class _QApplyMulUnary:
+    def __call__(self, expr: Any, **kwargs: Unpack[QApplyOptions]):
+        pass
+class _QApplyMulBinary:
+    def __call__(self, lhs: Any, rhs: Any, **kwargs: Unpack[QApplyOptions]):
+        pass
+
+qapply_Mul = SlidingTransform(
+    unary=cast(_QApplyMulUnary, _qapply_mul_unary),
+    binary=cast(_QApplyMulBinary, _qapply_mul_binary),
     reverse=True,
     from_args=False
 )
 
-# Type-narrowed references for dispatcher registration
-# These assertions are safe because we just created qapply_Mul with Dispatcher instances
-assert isinstance(qapply_Mul.unary, Dispatcher)
-assert isinstance(qapply_Mul.binary, Dispatcher)
-_qapply_mul_unary: Dispatcher = qapply_Mul.unary
-_qapply_mul_binary: Dispatcher = qapply_Mul.binary
 
 #-----------------------------------------------------------------------------
 # qapply_Mul: SlidingTransform unary
@@ -355,28 +358,28 @@ _qapply_mul_binary: Dispatcher = qapply_Mul.binary
 
 
 @_qapply_mul_unary.register(OuterProduct)
-def _qapply_mul_unary_op(expr: OuterProduct, **options: QApplyOptions) -> tuple[Expr, ...]:
+def _qapply_mul_unary_op(expr: OuterProduct, **options: Unpack[QApplyOptions]) -> tuple[Expr, ...]:
     """Split OuterProduct into ket and bra factors."""
     return (expr.ket, expr.bra)
 
 
 @_qapply_mul_unary.register((Commutator, AntiCommutator))
 @_flatten_mul
-def _qapply_mul_unary_comm(expr: Commutator | AntiCommutator, **options: QApplyOptions) -> tuple[Expr, ...]:
+def _qapply_mul_unary_comm(expr: Commutator | AntiCommutator, **options: Unpack[QApplyOptions]) -> tuple[Expr, ...]:
     """Evaluate commutators and anticommutators."""
     return (expr.doit(),)
 
 
 @_qapply_mul_unary.register(TensorProduct)
 @_flatten_mul
-def _qapply_mul_unary_tp(expr: TensorProduct, **options: QApplyOptions) -> tuple[Expr, ...]:
+def _qapply_mul_unary_tp(expr: TensorProduct, **options: Unpack[QApplyOptions]) -> tuple[Expr, ...]:
     """Apply qapply to each factor in TensorProduct."""
     new_args = [qapply(t, **options) for t in expr.args]
     return (TensorProduct(*new_args),)
 
 
 @_qapply_mul_unary.register(Density)
-def _qapply_mul_unary_density(expr: Density, **options: QApplyOptions) -> tuple[Expr, ...]:
+def _qapply_mul_unary_density(expr: Density, **options: Unpack[QApplyOptions]) -> tuple[Expr, ...]:
     """Apply qapply to states in Density matrix."""
     # For a Density operator call qapply on its state
     new_args = [(qapply(state, **options), prob) for (state,  # type: ignore[misc,has-type]
@@ -386,7 +389,7 @@ def _qapply_mul_unary_density(expr: Density, **options: QApplyOptions) -> tuple[
 
 @_qapply_mul_unary.register(Pow)
 @_flatten_mul
-def _qapply_mul_unary_pow(expr: Pow, **options: QApplyOptions) -> tuple[Expr, ...]:
+def _qapply_mul_unary_pow(expr: Pow, **options: Unpack[QApplyOptions]) -> tuple[Expr, ...]:
     """Expand integer powers or apply qapply to power expressions."""
     base, exp = expr.as_base_exp()
     if exp.is_Integer and exp > 0:
@@ -396,13 +399,13 @@ def _qapply_mul_unary_pow(expr: Pow, **options: QApplyOptions) -> tuple[Expr, ..
 
 
 @_qapply_mul_unary.register((int, float, complex))
-def _qapply_mul_unary_number(expr: int | float | complex, **options: QApplyOptions) -> tuple[Expr, ...]:
+def _qapply_mul_unary_number(expr: int | float | complex, **options: Unpack[QApplyOptions]) -> tuple[Expr, ...]:
     """Convert numbers to SymPy expressions in Mul context."""
     return (sympify(expr),)
 
 
 @_qapply_mul_unary.register(Expr)
-def qapply_mul_unary_expr(expr: Expr, **options: QApplyOptions) -> None:
+def qapply_mul_unary_expr(expr: Expr, **options: Unpack[QApplyOptions]) -> None:
     """Default handler for Expr in Mul context - no transformation."""
     return None
 
@@ -414,7 +417,7 @@ def qapply_mul_unary_expr(expr: Expr, **options: QApplyOptions) -> None:
 
 @_qapply_mul_binary.register(Operator, (KetBase, TensorProduct, Wavefunction))
 @_flatten_mul
-def _qapply_mul_binary_op_wavefunction(lhs: Operator, rhs: KetBase | TensorProduct | Wavefunction, **options: QApplyOptions) -> tuple[Expr, ...] | None:
+def _qapply_mul_binary_op_wavefunction(lhs: Operator, rhs: KetBase | TensorProduct | Wavefunction, **options: Unpack[QApplyOptions]) -> tuple[Expr, ...] | None:
     """Apply operator to ket, tensor product, or wavefunction."""
     _apply = getattr(lhs, '_apply_operator', None)
     if _apply is not None:
@@ -437,13 +440,13 @@ def _qapply_mul_binary_op_wavefunction(lhs: Operator, rhs: KetBase | TensorProdu
 
 
 @_qapply_mul_binary.register(BraBase, Operator)
-def _qapply_mul_binary_bra_op(lhs: BraBase, rhs: Operator, **options: QApplyOptions) -> None:
+def _qapply_mul_binary_bra_op(lhs: BraBase, rhs: Operator, **options: Unpack[QApplyOptions]) -> None:
     """Register this to remind us that we only do this when dagger=True."""
     return None
 
 
 @_qapply_mul_binary.register(Sum, Sum)
-def _qapply_mul_binary_sum_sum(lhs: Sum, rhs: Sum, **options: QApplyOptions) -> tuple[Expr, ...] | None:
+def _qapply_mul_binary_sum_sum(lhs: Sum, rhs: Sum, **options: Unpack[QApplyOptions]) -> tuple[Expr, ...] | None:
     """Combine two sums into a single sum."""
     # Require that both are OperatorKind, BraKind, KetKind, or UndefinedKind
     if lhs.kind != NumberKind and rhs.kind != NumberKind:
@@ -461,7 +464,7 @@ def _qapply_mul_binary_sum_sum(lhs: Sum, rhs: Sum, **options: QApplyOptions) -> 
 
 
 @_qapply_mul_binary.register(Integral, Integral)
-def _qapply_mul_binary_integral_integral(lhs: Integral, rhs: Integral, **options: QApplyOptions) -> tuple[Expr, ...] | None:
+def _qapply_mul_binary_integral_integral(lhs: Integral, rhs: Integral, **options: Unpack[QApplyOptions]) -> tuple[Expr, ...] | None:
     """Combine two integrals into a single integral."""
     # Require that both are OperatorKind, BraKind, KetKind, or UndefinedKind
     if lhs.kind != NumberKind and rhs.kind != NumberKind:
@@ -479,7 +482,7 @@ def _qapply_mul_binary_integral_integral(lhs: Integral, rhs: Integral, **options
 
 
 @_qapply_mul_binary.register(Add, Add)
-def _qapply_mul_binary_add_add(lhs: Add, rhs: Add, **options: QApplyOptions) -> tuple[Expr, ...] | None:
+def _qapply_mul_binary_add_add(lhs: Add, rhs: Add, **options: Unpack[QApplyOptions]) -> tuple[Expr, ...] | None:
     """Distribute product of two sums using distributive property."""
     # Require that both are OperatorKind, BraKind, KetKind, or UndefinedKind
     if lhs.kind != NumberKind and rhs.kind != NumberKind:
@@ -493,7 +496,7 @@ def _qapply_mul_binary_add_add(lhs: Add, rhs: Add, **options: QApplyOptions) -> 
 
 
 @_qapply_mul_binary.register(Sum, Add)
-def _qapply_mul_binary_sum_add(lhs: Sum, rhs: Add, **options: QApplyOptions) -> tuple[Expr, ...] | None:
+def _qapply_mul_binary_sum_add(lhs: Sum, rhs: Add, **options: Unpack[QApplyOptions]) -> tuple[Expr, ...] | None:
     """Apply sum to add combination."""
     # Require that both are OperatorKind, BraKind, KetKind, or UndefinedKind
     if lhs.kind != NumberKind and rhs.kind != NumberKind:
@@ -504,7 +507,7 @@ def _qapply_mul_binary_sum_add(lhs: Sum, rhs: Add, **options: QApplyOptions) -> 
 
 
 @_qapply_mul_binary.register(Add, Sum)
-def _qapply_mul_binary_add_sum(lhs: Add, rhs: Sum, **options: QApplyOptions) -> tuple[Expr, ...] | None:
+def _qapply_mul_binary_add_sum(lhs: Add, rhs: Sum, **options: Unpack[QApplyOptions]) -> tuple[Expr, ...] | None:
     """Apply add to sum combination."""
     # Require that both are OperatorKind, BraKind, KetKind, or UndefinedKind
     if lhs.kind != NumberKind and rhs.kind != NumberKind:
@@ -515,7 +518,7 @@ def _qapply_mul_binary_add_sum(lhs: Add, rhs: Sum, **options: QApplyOptions) -> 
 
 
 @_qapply_mul_binary.register(Integral, Add)
-def _qapply_mul_binary_integral_add(lhs: Integral, rhs: Add, **options: QApplyOptions) -> tuple[Expr, ...] | None:
+def _qapply_mul_binary_integral_add(lhs: Integral, rhs: Add, **options: Unpack[QApplyOptions]) -> tuple[Expr, ...] | None:
     """Apply sum to add combination."""
     # Require that both are OperatorKind, BraKind, KetKind, or UndefinedKind
     if lhs.kind != NumberKind and rhs.kind != NumberKind:
@@ -526,7 +529,7 @@ def _qapply_mul_binary_integral_add(lhs: Integral, rhs: Add, **options: QApplyOp
 
 
 @_qapply_mul_binary.register(Add, Integral)
-def _qapply_mul_binary_add_integral(lhs: Add, rhs: Integral, **options: QApplyOptions) -> tuple[Expr, ...] | None:
+def _qapply_mul_binary_add_integral(lhs: Add, rhs: Integral, **options: Unpack[QApplyOptions]) -> tuple[Expr, ...] | None:
     """Apply add to sum combination."""
     # Require that both are OperatorKind, BraKind, KetKind, or UndefinedKind
     if lhs.kind != NumberKind and rhs.kind != NumberKind:
@@ -537,7 +540,7 @@ def _qapply_mul_binary_add_integral(lhs: Add, rhs: Integral, **options: QApplyOp
 
 
 @_qapply_mul_binary.register(Sum, Integral)
-def _qapply_mul_binary_sum_integral(lhs: Sum, rhs: Integral, **options: QApplyOptions) -> tuple[Expr, ...] | None:
+def _qapply_mul_binary_sum_integral(lhs: Sum, rhs: Integral, **options: Unpack[QApplyOptions]) -> tuple[Expr, ...] | None:
     """Apply sum to integral combination."""
     # Require that both are OperatorKind, BraKind, KetKind, or UndefinedKind
     if lhs.kind != NumberKind and rhs.kind != NumberKind:
@@ -553,7 +556,7 @@ def _qapply_mul_binary_sum_integral(lhs: Sum, rhs: Integral, **options: QApplyOp
 
 
 @_qapply_mul_binary.register(Integral, Sum)
-def _qapply_mul_binary_integral_sum(lhs: Integral, rhs: Sum, **options: QApplyOptions) -> tuple[Expr, ...] | None:
+def _qapply_mul_binary_integral_sum(lhs: Integral, rhs: Sum, **options: Unpack[QApplyOptions]) -> tuple[Expr, ...] | None:
     """Apply integral to sum combination."""
     # Require that both are OperatorKind, BraKind, KetKind, or UndefinedKind
     if lhs.kind != NumberKind and rhs.kind != NumberKind:
@@ -569,7 +572,7 @@ def _qapply_mul_binary_integral_sum(lhs: Integral, rhs: Sum, **options: QApplyOp
 
 
 @_qapply_mul_binary.register(Add, Expr, on_ambiguity=ambiguity_register_error_ignore_dup)
-def _qapply_mul_binary_add_expr(lhs: Add, rhs: Expr, **options: QApplyOptions) -> tuple[Expr, ...] | None:
+def _qapply_mul_binary_add_expr(lhs: Add, rhs: Expr, **options: Unpack[QApplyOptions]) -> tuple[Expr, ...] | None:
     """Distribute expression over sum terms."""
     # Require that both are OperatorKind, BraKind, KetKind, or UndefinedKind
     if lhs.kind != NumberKind and rhs.kind != NumberKind:
@@ -579,7 +582,7 @@ def _qapply_mul_binary_add_expr(lhs: Add, rhs: Expr, **options: QApplyOptions) -
 
 
 @_qapply_mul_binary.register(Expr, Add, on_ambiguity=ambiguity_register_error_ignore_dup)
-def _qapply_mul_binary_expr_add(lhs: Expr, rhs: Add, **options: QApplyOptions) -> tuple[Expr, ...] | None:
+def _qapply_mul_binary_expr_add(lhs: Expr, rhs: Add, **options: Unpack[QApplyOptions]) -> tuple[Expr, ...] | None:
     """Distribute expression over sum terms."""
     # Require that both are OperatorKind, BraKind, KetKind, or UndefinedKind
     if lhs.kind != NumberKind and rhs.kind != NumberKind:
@@ -589,7 +592,7 @@ def _qapply_mul_binary_expr_add(lhs: Expr, rhs: Add, **options: QApplyOptions) -
 
 
 @_qapply_mul_binary.register((Sum, Integral), Expr, on_ambiguity=ambiguity_register_error_ignore_dup)
-def _qapply_mul_binary_sum_expr(lhs: Sum | Integral, rhs: Expr, **options: QApplyOptions) -> tuple[Expr, ...] | None:
+def _qapply_mul_binary_sum_expr(lhs: Sum | Integral, rhs: Expr, **options: Unpack[QApplyOptions]) -> tuple[Expr, ...] | None:
     """Apply expression to sum/integral function."""
     # Require that both are OperatorKind, BraKind, KetKind, or UndefinedKind
     if lhs.kind != NumberKind and rhs.kind != NumberKind:
@@ -599,7 +602,7 @@ def _qapply_mul_binary_sum_expr(lhs: Sum | Integral, rhs: Expr, **options: QAppl
 
 
 @_qapply_mul_binary.register(Expr, (Sum, Integral), on_ambiguity=ambiguity_register_error_ignore_dup)
-def _qapply_mul_binary_expr_sum(lhs: Expr, rhs: Sum | Integral, **options: QApplyOptions) -> tuple[Expr, ...] | None:
+def _qapply_mul_binary_expr_sum(lhs: Expr, rhs: Sum | Integral, **options: Unpack[QApplyOptions]) -> tuple[Expr, ...] | None:
     """Apply expression to sum/integral function."""
     # Require that both are OperatorKind, BraKind, KetKind, or UndefinedKind
     if lhs.kind != NumberKind and rhs.kind != NumberKind:
@@ -609,6 +612,6 @@ def _qapply_mul_binary_expr_sum(lhs: Expr, rhs: Sum | Integral, **options: QAppl
 
 
 @_qapply_mul_binary.register(Expr, Expr, on_ambiguity=ambiguity_register_error_ignore_dup)
-def _qapply_mul_binary_expr_expr(lhs: Expr, rhs: Expr, **options: QApplyOptions) -> None:
+def _qapply_mul_binary_expr_expr(lhs: Expr, rhs: Expr, **options: Unpack[QApplyOptions]) -> None:
     """Default binary handler for Expr pairs - no transformation."""
     return None
