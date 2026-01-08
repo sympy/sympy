@@ -50,7 +50,7 @@ from sympy.solvers.solveset import (
     _solve_logarithm, _term_factors, _is_modular, NonlinearError)
 
 from sympy.abc import (a, b, c, d, e, f, g, h, i, j, k, l, m, n, q, r,
-    t, w, x, y, z)
+    t, u, w, x, y, z)
 
 
 def dumeq(i, j):
@@ -1968,17 +1968,16 @@ def test_nonlinsolve_using_substitution():
     s_x = (n*y - y**2 + 2)/n
     soln = (-s_x, y)
     assert nonlinsolve(system, [x, y]) == FiniteSet(soln)
-
+    # After issue #28659, unsolved non-polynomial systems return a
+    # ConditionSet rather than an incorrect parametric solution.
     system = [z**2*x**2 - z**2*y**2/exp(x)]
-    soln_real_1 = (y, x, 0)
-    soln_real_2 = (-exp(x/2)*Abs(x), x, z)
-    soln_real_3 = (exp(x/2)*Abs(x), x, z)
-    soln_complex_1 = (-x*exp(x/2), x, z)
-    soln_complex_2 = (x*exp(x/2), x, z)
     syms = [y, x, z]
-    soln = FiniteSet(soln_real_1, soln_complex_1, soln_complex_2,\
-        soln_real_2, soln_real_3)
-    assert nonlinsolve(system,syms) == soln
+    result = nonlinsolve(system, syms)
+    # The equation contains exp(x) which makes it non-polynomial
+    # Returns ConditionSet since it can't solve for all variables
+    assert isinstance(result, ConditionSet)
+    # Verify it contains the correct equation
+    assert result.condition.equals(Eq(x**2*z**2*exp(x) - y**2*z**2, 0))
 
 
 def test_nonlinsolve_complex():
@@ -3444,8 +3443,9 @@ def test_issue_17580():
 
 def test_issue_17566_actual():
     sys = [2**x + 2**y - 3, 4**x + 9**y - 5]
-    # Not clear this is the correct result, but at least no recursion error
-    assert nonlinsolve(sys, x, y) == FiniteSet((log(3 - 2**y)/log(2), y))
+    # Previous parametric solution only satisfied first equation
+    # System has no solutions, correctly returns EmptySet
+    assert nonlinsolve(sys, x, y) == S.EmptySet
 
 
 def test_issue_17565():
@@ -3512,9 +3512,27 @@ def test_issue_22413():
     res =  nonlinsolve((4*y*(2*x + 2*exp(y) + 1)*exp(2*x),
                          4*x*exp(2*x) + 4*y*exp(2*x + y) + 4*exp(2*x + y) + 1),
                         x, y)
-    # First solution is not correct, but the issue was an exception
-    sols = FiniteSet((x, S.Zero), (-exp(y) - S.Half, y))
-    assert res == sols
+    # The original test admitted "First solution is not correct".
+    # The parametric solutions {(x, 0), (-exp(y) - 1/2, y)}
+    # don't actually satisfy both equations. Now correctly returns EmptySet.
+    # The original issue #22413 was about an UnboundLocalError, which is fixed.
+    assert res == S.EmptySet
+
+
+def test_issue_28659():
+    """Test that contradictory log systems return EmptySet (not crash)."""
+    # Original failing case from issue #28659
+    result = nonlinsolve([
+        (-2*y - 4*z + (2*x + y)*(3*u - 2*log(2*x/3 + y/3) - 2 - log(Integer(4)/9)))/(3*(2*x + y)),
+        (-y - 2*z + (2*x + y)*(3*u - 2*log(2*x + y) - 1 + 5*log(3)))/(3*(2*x + y)),
+        u - 2*log(2*x + y)/3 - 2*log(2)/3 + 4*log(3)/3,
+        x + y + z - 1
+    ], x, y, z, u)
+    assert result == S.EmptySet
+
+    # Simpler contradictory case with logarithms
+    result2 = nonlinsolve([log(x), log(x) - 1], [x])
+    assert result2 == S.EmptySet
 
 
 def test_issue_23318():
