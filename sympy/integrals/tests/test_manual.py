@@ -708,6 +708,14 @@ def test_issue_25093():
         + cos(b)*fresnelc(sqrt(2)*sqrt(a)*x/sqrt(pi)))/(2*sqrt(a)))
 
 
+def test_issue_28596():
+    a, x = symbols('a x', real=True)
+    expr = 1/(a + x**2)
+    res = integrate(expr, x)
+    assert res != 0
+    assert res.has(x)
+
+
 def test_nested_pow():
     assert_is_integral_of(sqrt(x**2), x*sqrt(x**2)/2)
     assert_is_integral_of(sqrt(x**(S(5)/3)), 6*x*sqrt(x**(S(5)/3))/11)
