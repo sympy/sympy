@@ -63,7 +63,6 @@ class UnaryTransform(Protocol[T]):
 class BinaryTransform(Protocol[T]):
     def __call__(self, __lhs: Any, __rhs: Any, **kwargs: T) -> tuple[Any, ...] | None: ...
 
-# TODO: stricter typing for the callables
 class SlidingTransform(Generic[T]):
     _unary:  UnaryTransform[T] | None
     _binary:  BinaryTransform[T] | None
