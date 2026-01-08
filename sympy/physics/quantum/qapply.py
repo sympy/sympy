@@ -6,7 +6,7 @@ complex quantum mechanical expressions symbolically.
 """
 
 from __future__ import annotations
-from typing import Any,  TypedDict, Unpack,  cast
+from typing import TYPE_CHECKING, Any,  TypedDict,   cast
 
 from sympy.concrete import Sum
 from sympy.core.add import Add
@@ -35,6 +35,9 @@ from sympy.physics.quantum.state import KetBase, BraBase, Wavefunction
 from sympy.physics.quantum.tensorproduct import TensorProduct
 from sympy.physics.quantum.slidingtransform import SlidingTransform
 
+
+if TYPE_CHECKING:
+    from typing import Unpack
 
 __all__ = [
     'qapply',
