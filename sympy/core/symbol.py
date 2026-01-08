@@ -230,21 +230,16 @@ class Symbol(AtomicExpr, Boolean): # type: ignore
     Parameters
     ----------
     name : str
-        Name of the symbol (e.g., 'x', 'alpha', 'theta').
 
-    **assumptions : bool, optional
-        Keyword arguments specifying mathematical properties of the symbol.
-        You can override default assumptions in the constructor. Some common assumptions:
+    assumptions : keyword arguments (str -> bool | None)
+        Keyword arguments specifying mathematical properties of the symbol such as:
 
         - real : symbol is a real number
         - positive : symbol is strictly greater than 0
-        - commutative : symbol commutes with other symbols (default: True)
+        - commutative : symbol commutes with other symbols under multiplication (default: True)
 
-        See the :ref:`assumptions guide <predicates>` for a complete list.
-
-    Explanation
-    -----------
-    Assumptions guide how SymPy simplifies and evaluates expressions.
+        See the `assumptions guide <https://docs.sympy.org/latest/guides/assumptions.html#predicates>`_
+        for a complete list.
 
     Examples
     --------
@@ -274,7 +269,7 @@ class Symbol(AtomicExpr, Boolean): # type: ignore
     See Also
     --------
     symbols : Create multiple symbols at once
-    Dummy   : Unique symbol for internal use
+    Dummy   : Symbol guaranteed to be distinct from all other symbols, even with the same name
     Wild    : Symbol that matches expressions in pattern matching
     """
 
