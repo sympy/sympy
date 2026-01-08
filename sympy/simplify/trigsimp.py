@@ -463,6 +463,16 @@ def _trigsimp_inverse(rv):
 def trigsimp(expr, inverse=False, **opts):
     """Returns a reduced expression by using known trig identities.
 
+    While `trigsimp` primarily simplifies trigonometric and hyperbolic
+    expressions, it also performs general algebraic simplifications on
+    non-trigonometric parts. This can lead to broader simplification
+    beyond just trigonometric identities, including factoring and term
+    cancellation, which may make its output resemble `simplify`.
+
+    For targeted trigonometric simplifications that leave other algebraic
+    components untouched, consider using functions from the `sympy.simplify.fu`
+    module for more granular control. Refer to its documentation for details: https://docs.sympy.org/latest/modules/simplify/fu.html
+
     Parameters
     ==========
 
@@ -485,11 +495,10 @@ def trigsimp(expr, inverse=False, **opts):
         If ``'matching'``, simplify the expression recursively by targeting
         common patterns. If ``'groebner'``, apply an experimental groebner
         basis algorithm. In this case further options are forwarded to
-        ``trigsimp_groebner``, please refer to
-        its docstring. If ``'combined'``, it first runs the groebner basis
-        algorithm with small default parameters, then runs the ``'matching'``
-        algorithm. If ``'fu'``, run the collection of trigonometric
-        transformations described by Fu, et al. (see the
+        ``trigsimp_groebner``, please refer to its docstring. If ``'combined'``,
+        it first runs the groebner basis algorithm with small default parameters,
+        then runs the ``'matching'`` algorithm. If ``'fu'``, run the collection
+        of trigonometric transformations described by Fu, et al. (see the
         :py:func:`~sympy.simplify.fu.fu` docstring). If ``'old'``, the original
         SymPy trig simplification function is run.
     opts :
@@ -499,7 +508,7 @@ def trigsimp(expr, inverse=False, **opts):
     Examples
     ========
 
-    >>> from sympy import trigsimp, sin, cos, log
+    >>> from sympy import trigsimp, sin, cos, log, Symbol
     >>> from sympy.abc import x
     >>> e = 2*sin(x)**2 + 2*cos(x)**2
     >>> trigsimp(e)
@@ -509,6 +518,22 @@ def trigsimp(expr, inverse=False, **opts):
 
     >>> trigsimp(log(e))
     log(2)
+
+    Note that `trigsimp` also performs general algebraic simplifications on
+    non-trigonometric parts of the expression:
+
+    >>> x = Symbol('x')
+    >>> expr = (x**2 - 1)/(x - 1) + sin(x)**2 + cos(x)**2
+    >>> trigsimp(expr)
+    x + 2
+
+    For a more targeted trigonometric simplification, such as only simplifying
+    `sin(x)**2 + cos(x)**2` to `1` without affecting `(x**2 - 1)/(x - 1)`,
+    you can use functions from the `sympy.simplify.fu` module:
+
+    >>> from sympy.simplify.fu import TR5
+    >>> TR5(expr)
+    1 + (x**2 - 1)/(x - 1)
 
     Using ``method='groebner'`` (or ``method='combined'``) might lead to
     greater simplification.
