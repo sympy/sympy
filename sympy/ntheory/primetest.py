@@ -5,8 +5,8 @@ Primality testing
 """
 
 from itertools import count
-from typing import SupportsIndex, Iterable, Any
-
+from typing import SupportsIndex, Iterable
+from sympy.core.expr import Expr
 from sympy.core.sympify import sympify
 from sympy.external.gmpy import (gmpy as _gmpy, gcd, jacobi,
                                  is_square as gmpy_is_square,
@@ -809,7 +809,7 @@ def isprime(n: SupportsIndex) -> bool:
     #return mr(n, [2, random.randint(3, n-1)]) and is_strong_lucas_prp(n)
 
 
-def is_gaussian_prime(num: Any) -> bool:
+def is_gaussian_prime(num: Expr) -> bool:
     r"""Test if num is a Gaussian prime number.
 
     References
@@ -819,9 +819,9 @@ def is_gaussian_prime(num: Any) -> bool:
     """
 
     num = sympify(num)
-    a, b = num.as_real_imag()
-    a = as_int(a, strict=False)
-    b = as_int(b, strict=False)
+    _a, _b = num.as_real_imag()
+    a = as_int(_a, strict=False)
+    b = as_int(_b, strict=False)
     if a == 0:
         b = abs(b)
         return isprime(b) and b % 4 == 3
