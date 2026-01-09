@@ -688,9 +688,15 @@ class AccumulationBounds(Expr):
         # TODO : Devise a better method for Union of AccumBounds
         # this method is not actually correct and
         # can be made better
-        if not isinstance(other, AccumBounds):
+        if other is S.EmptySet:
+            return self
+
+        if not isinstance(other, (AccumBounds, FiniteSet)):
             raise TypeError(
                 "Input must be AccumulationBounds or FiniteSet object")
+
+        if isinstance(other, FiniteSet):
+            return AccumBounds(Min(self.min, *other), Max(self.max, *other))
 
         return AccumBounds(Min(self.min, other.min), Max(self.max, other.max))
 
