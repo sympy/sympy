@@ -3398,6 +3398,15 @@ class Poly(Basic):
         (2, [(Poly(x + y, x, y, domain='ZZ'), 1),
              (Poly(x**2 + 1, x, y, domain='ZZ'), 2)])
 
+        >>> # Simple example for beginners
+        >>> from sympy import symbols, Poly
+        >>> x = symbols('x')
+        >>> p = Poly(x**2 - 5*x + 6)
+        >>> p.factor_list()
+        (1, [(Poly(x - 2, x, domain='ZZ'), 1),
+             (Poly(x - 3, x, domain='ZZ'), 1)])
+
+ 
         """
         if hasattr(f.rep, 'factor_list'):
             try:
