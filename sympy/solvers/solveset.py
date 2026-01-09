@@ -4146,7 +4146,7 @@ def nonlinsolve(system, *symbols):
             # This fixes the x**2 + 1 case where r = -2*I was returned by "solve".
             is_valid_sol = True
             for s, val in sol_map.items():
-                if s.is_real and val.has(I):
+                if s.is_real and val.is_real is False:
                     is_valid_sol = False
                     break
             if not is_valid_sol:

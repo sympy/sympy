@@ -1972,6 +1972,14 @@ def test_nonlinsolve_formerly_failing_abs_cases():
     assert sol_y == 2
 
 
+def test_nonlinsolve_casus_irreducibilis():
+    # these test verifies whether the implementation is correctly resolving valid real roots that contain I (Casus Irreducibilis).
+    x = symbols('x', real=True)
+    eq = 2*x**3 - 9*x**2 - 67*x + 3
+    sol = nonlinsolve([eq], [x])
+    assert len(sol) == 3
+
+
 def test_raise_exception_nonlinsolve():
     raises(IndexError, lambda: nonlinsolve([x**2 -1], []))
     raises(ValueError, lambda: nonlinsolve([x**2 -1]))
