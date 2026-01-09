@@ -3,9 +3,14 @@ Primality testing
 
 """
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from itertools import count
 from typing import SupportsIndex, Iterable
-from sympy.core.expr import Expr
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
 from sympy.core.sympify import sympify
 from sympy.external.gmpy import (gmpy as _gmpy, gcd, jacobi,
                                  is_square as gmpy_is_square,
@@ -171,7 +176,7 @@ def is_euler_jacobi_pseudoprime(n: SupportsIndex, a: SupportsIndex) -> bool:
     return is_euler_prp(n, a)
 
 
-def is_square(n: SupportsIndex, prep: bool=True) -> bool:
+def is_square(n: SupportsIndex, prep: bool = True) -> bool:
     """Return True if n == a * a for some integer a, else False.
     If n is suspected of *not* being a square then this is a
     quick method of confirming that it is not.
@@ -808,7 +813,7 @@ def isprime(n: SupportsIndex) -> bool:
     #return mr(n, [2, random.randint(3, n-1)]) and is_strong_lucas_prp(n)
 
 
-def is_gaussian_prime(num: Expr) -> bool:
+def is_gaussian_prime(num: Expr | complex) -> bool:
     r"""Test if num is a Gaussian prime number.
 
     References
