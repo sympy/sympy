@@ -200,7 +200,6 @@ def is_square(n: SupportsIndex, prep: bool = True) -> bool:
     ========
     sympy.core.intfunc.isqrt
     """
-
     n = as_int(n)
     if prep:
         if n < 0:
@@ -253,7 +252,6 @@ def mr(n: SupportsIndex, bases: Iterable[SupportsIndex]) -> bool:
     True
 
     """
-
     n = as_int(n)
     if n < 2 or (n > 2 and n % 2 == 0):
         return False
