@@ -415,7 +415,7 @@ def refine_trig(expr, assumptions):
     if ask(Q.integer(coeff), assumptions):
         if ask(Q.even(coeff), assumptions):
             return S.One
-        else:
+        elif ask(Q.odd(coeff), assumptions):
             return S.NegativeOne
     return expr
 
