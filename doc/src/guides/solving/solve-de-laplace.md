@@ -145,10 +145,3 @@ InverseLaplaceTransform(LaplaceTransform(f(t), t, s)*exp(-x_{positive})*exp(-s*x
 >>> e11
 f(t - x)*exp(-x)*Heaviside(t - x)
 ```
-
-
-
-## Report a Bug
-
-If you find a bug with {func}`~.laplace_transform`, please post the problem on the [SymPy mailing
-list](https://groups.google.com/g/sympy).
