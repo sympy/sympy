@@ -9,8 +9,6 @@ from typing import TYPE_CHECKING
 
 from itertools import count
 from typing import SupportsIndex, Iterable
-if TYPE_CHECKING:
-    from sympy.core.expr import Expr
 from sympy.core.sympify import sympify
 from sympy.external.gmpy import (gmpy as _gmpy, gcd, jacobi,
                                  is_square as gmpy_is_square,
@@ -19,6 +17,9 @@ from sympy.external.gmpy import (gmpy as _gmpy, gcd, jacobi,
                                  is_strong_bpsw_prp)
 from sympy.external.ntheory import _lucas_sequence
 from sympy.utilities.misc import as_int, filldedent
+
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
 
 # Note: This list should be updated whenever new Mersenne primes are found.
 # Refer: https://www.mersenne.org/
@@ -199,13 +200,14 @@ def is_square(n: SupportsIndex, prep: bool = True) -> bool:
     ========
     sympy.core.intfunc.isqrt
     """
+
+    n = as_int(n)
     if prep:
-        n = as_int(n)
         if n < 0:
             return False
         if n in (0, 1):
             return True
-    return gmpy_is_square(as_int(n))
+    return gmpy_is_square(n)
 
 
 def _test(n: int, base: int, s: int, t: int) -> bool:
