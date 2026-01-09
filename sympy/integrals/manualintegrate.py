@@ -1644,6 +1644,45 @@ def sqrt_quadratic_rule(integral: IntegralInfo, degenerate=True):
             step = SqrtQuadraticDenomRule(integrand, x, a, b, c, coeffs)
         return step
 
+    def sqrt_quadratic_reduction_rule(integrand: Expr, n: int):
+        # Implementation of Gradshteyn & Ryzhik 2.263.3
+        k = (-n - 1) // 2
+        delta = 4*a*c - b**2
+        R = c*x**2 + b*x + a
+
+        term_denom = (2*k - 1) * delta * sqrt(R**(2*k-1))
+        constant_term = f*2*(2*c*x+b) / term_denom
+        coeff = (8*c*(k-1))/((2*k-1) * delta)
+        expr = f * R**(S(1)/2 - k)
+
+        rewrite_expr = Derivative(constant_term, x) + coeff * expr
+        derive_expr = Derivative(constant_term, x)
+        derive_step = integral_steps(derive_expr, x)
+
+        if coeff == 0:
+            substep = derive_step
+        else:
+            next_step = integral_steps(expr, x)
+            if not next_step:
+                next_step = DontKnowRule(expr, x)
+
+            substep = AddRule(
+                rewrite_expr,
+                x,
+                [
+                    derive_step,
+                    ConstantTimesRule(
+                        coeff * expr,
+                        x,
+                        coeff,
+                        expr,
+                        next_step
+                    )
+                ]
+            )
+
+        return RewriteRule(integrand, x, rewrite_expr, substep)
+
     if n > 0:  # rewrite poly * sqrt(s)**(2*k-1) to poly*s**k / sqrt(s)
         numer_poly = f_poly * (a+b*x+c*x**2)**((n+1)/2)
         rewritten = numer_poly.as_expr()/sqrt(a+b*x+c*x**2)
@@ -1652,7 +1691,13 @@ def sqrt_quadratic_rule(integral: IntegralInfo, degenerate=True):
     elif n == -1:
         generic_step = sqrt_quadratic_denom_rule(f_poly, integrand)
     else:
-        return  # todo: handle n < -1 case
+        # The numerator must be a const, the formula assumes this
+        if f_poly.degree() == 0:
+            generic_step = sqrt_quadratic_reduction_rule(integrand, n)
+        else:
+            # Handle non-constant numerators (eg. x / R**(-3/2))
+            # This requires splitting the integral as A*(2ax+b) + B form
+            return None
     return _add_degenerate_step(generic_cond, generic_step, degenerate_step)
 
 
@@ -2136,7 +2181,8 @@ def integral_steps(integrand, symbol, **options):
         null_safe(switch(key, {
             Pow: do_one(null_safe(power_rule), null_safe(inverse_trig_rule),
                         null_safe(sqrt_linear_rule),
-                        null_safe(quadratic_denom_rule)),
+                        null_safe(quadratic_denom_rule),
+                        null_safe(sqrt_quadratic_rule)),
             Symbol: power_rule,
             exp: exp_rule,
             Add: add_rule,
