@@ -3901,7 +3901,7 @@ def _handle_poly(polys, symbols):
 
 def _handle_complex_components(system, symbols):
     """
-    Experimental helper: decompose symbols appearing inside re()/im()/conjugate()
+    Decompose symbols appearing inside re()/im()/conjugate()
     into real variables and reconstruct solutions.
     """
     # We define the list of functions that requires decomposition
@@ -3940,7 +3940,7 @@ def _handle_complex_components(system, symbols):
             new_system = [eq.subs(sym, decomposition) for eq in new_system]
 
     if not dirty:
-        return None, None, None
+        return None
 
     new_symbols = []
     for sym in symbols:
@@ -4128,7 +4128,7 @@ def nonlinsolve(system, *symbols):
     #calling helper function to decompose complex projection to 2-D real constraints
     res = _handle_complex_components(system, symbols)
 
-    if res[0] is not None:
+    if res is not None:
         res_system, res_symbols, reconstruction = res
 
         # Recursively calling nonlinsolve to solve the new "Real" system
