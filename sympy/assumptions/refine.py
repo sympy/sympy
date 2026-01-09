@@ -405,27 +405,18 @@ def refine_matrixelement(expr, assumptions):
 
 
 def refine_trig(expr, assumptions):
-    from sympy.functions.elementary.trigonometric import cos, sin
+    from sympy.functions.elementary.trigonometric import sin
     arg = expr.args[0]
     coeff = arg/S.Pi
-    if isinstance(expr, cos):
-        if ask(Q.odd(2*coeff), assumptions):
-            return S.Zero
-        if ask(Q.integer(coeff), assumptions):
-            if ask(Q.even(coeff), assumptions):
-                return S.One
-            if ask(Q.odd(coeff), assumptions):
-                return S.NegativeOne
     if isinstance(expr, sin):
-        if ask(Q.integer(coeff), assumptions):
-            return S.Zero
-        if ask(Q.odd(2*coeff), assumptions):
-            n = 2*coeff
-            m = (n-1)/2
-            if ask(Q.even(m), assumptions):
-                return S.One
-            if ask(Q.odd(m), assumptions):
-                return S.NegativeOne
+        coeff -= S.Half
+    if ask(Q.odd(2*coeff), assumptions):
+        return S.Zero
+    if ask(Q.integer(coeff), assumptions):
+        if ask(Q.even(coeff), assumptions):
+            return S.One
+        else:
+            return S.NegativeOne
     return expr
 
 handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
