@@ -1,4 +1,3 @@
-# pyright: strict
 """
 Primality testing
 
