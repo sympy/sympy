@@ -481,7 +481,7 @@ def translate(s, a, b=None, c=None):
     return s.translate(n)
 
 
-def ordinal(num):
+def ordinal(num: SupportsIndex) -> str:
     """Return ordinal number string of num, e.g. 1 becomes 1st.
     """
     # modified from https://codereview.stackexchange.com/questions/41298/producing-ordinal-numbers
