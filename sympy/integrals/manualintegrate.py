@@ -72,7 +72,7 @@ from sympy.utilities.iterables import iterable
 from sympy.utilities.misc import debug
 
 
-@dataclass
+@dataclass(slots=True)
 class Rule(ABC):
     integrand: Expr
     variable: Symbol
@@ -86,21 +86,21 @@ class Rule(ABC):
         pass
 
 
-@dataclass
+@dataclass(slots=True)
 class AtomicRule(Rule, ABC):
     """A simple rule that does not depend on other rules"""
     def contains_dont_know(self) -> bool:
         return False
 
 
-@dataclass
+@dataclass(slots=True)
 class ConstantRule(AtomicRule):
     """integrate(a, x)  ->  a*x"""
     def eval(self) -> Expr:
         return self.integrand * self.variable
 
 
-@dataclass
+@dataclass(slots=True)
 class ConstantTimesRule(Rule):
     """integrate(a*f(x), x)  ->  a*integrate(f(x), x)"""
     constant: Expr
@@ -114,7 +114,7 @@ class ConstantTimesRule(Rule):
         return self.substep.contains_dont_know()
 
 
-@dataclass
+@dataclass(slots=True)
 class PowerRule(AtomicRule):
     """integrate(x**a, x)"""
     base: Expr
@@ -127,7 +127,7 @@ class PowerRule(AtomicRule):
         )
 
 
-@dataclass
+@dataclass(slots=True)
 class NestedPowRule(AtomicRule):
     """integrate((x**a)**b, x)"""
     base: Expr
@@ -139,7 +139,7 @@ class NestedPowRule(AtomicRule):
                          (m * log(self.base), True))
 
 
-@dataclass
+@dataclass(slots=True)
 class AddRule(Rule):
     """integrate(f(x) + g(x), x) -> integrate(f(x), x) + integrate(g(x), x)"""
     substeps: list[Rule]
@@ -151,7 +151,7 @@ class AddRule(Rule):
         return any(substep.contains_dont_know() for substep in self.substeps)
 
 
-@dataclass
+@dataclass(slots=True)
 class URule(Rule):
     """integrate(f(g(x))*g'(x), x) -> integrate(f(u), u), u = g(x)"""
     u_var: Symbol
@@ -171,7 +171,7 @@ class URule(Rule):
         return self.substep.contains_dont_know()
 
 
-@dataclass
+@dataclass(slots=True)
 class PartsRule(Rule):
     """integrate(u(x)*v'(x), x) -> u(x)*v(x) - integrate(u'(x)*v(x), x)"""
     u: Symbol
@@ -189,7 +189,7 @@ class PartsRule(Rule):
             self.second_step is not None and self.second_step.contains_dont_know())
 
 
-@dataclass
+@dataclass(slots=True)
 class CyclicPartsRule(Rule):
     """Apply PartsRule multiple times to integrate exp(x)*sin(x)"""
     parts_rules: list[PartsRule]
@@ -207,73 +207,73 @@ class CyclicPartsRule(Rule):
         return any(substep.contains_dont_know() for substep in self.parts_rules)
 
 
-@dataclass
+@dataclass(slots=True)
 class TrigRule(AtomicRule, ABC):
     pass
 
 
-@dataclass
+@dataclass(slots=True)
 class SinRule(TrigRule):
     """integrate(sin(x), x) -> -cos(x)"""
     def eval(self) -> Expr:
         return -cos(self.variable)
 
 
-@dataclass
+@dataclass(slots=True)
 class CosRule(TrigRule):
     """integrate(cos(x), x) -> sin(x)"""
     def eval(self) -> Expr:
         return sin(self.variable)
 
 
-@dataclass
+@dataclass(slots=True)
 class SecTanRule(TrigRule):
     """integrate(sec(x)*tan(x), x) -> sec(x)"""
     def eval(self) -> Expr:
         return sec(self.variable)
 
 
-@dataclass
+@dataclass(slots=True)
 class CscCotRule(TrigRule):
     """integrate(csc(x)*cot(x), x) -> -csc(x)"""
     def eval(self) -> Expr:
         return -csc(self.variable)
 
 
-@dataclass
+@dataclass(slots=True)
 class Sec2Rule(TrigRule):
     """integrate(sec(x)**2, x) -> tan(x)"""
     def eval(self) -> Expr:
         return tan(self.variable)
 
 
-@dataclass
+@dataclass(slots=True)
 class Csc2Rule(TrigRule):
     """integrate(csc(x)**2, x) -> -cot(x)"""
     def eval(self) -> Expr:
         return -cot(self.variable)
 
 
-@dataclass
+@dataclass(slots=True)
 class HyperbolicRule(AtomicRule, ABC):
     pass
 
 
-@dataclass
+@dataclass(slots=True)
 class SinhRule(HyperbolicRule):
     """integrate(sinh(x), x) -> cosh(x)"""
     def eval(self) -> Expr:
         return cosh(self.variable)
 
 
-@dataclass
+@dataclass(slots=True)
 class CoshRule(HyperbolicRule):
     """integrate(cosh(x), x) -> sinh(x)"""
     def eval(self):
         return sinh(self.variable)
 
 
-@dataclass
+@dataclass(slots=True)
 class ExpRule(AtomicRule):
     """integrate(a**x, x) -> a**x/ln(a)"""
     base: Expr
@@ -283,7 +283,7 @@ class ExpRule(AtomicRule):
         return self.integrand / log(self.base)
 
 
-@dataclass
+@dataclass(slots=True)
 class ReciprocalRule(AtomicRule):
     """integrate(1/x, x) -> ln(x)"""
     base: Expr
@@ -292,21 +292,21 @@ class ReciprocalRule(AtomicRule):
         return log(self.base)
 
 
-@dataclass
+@dataclass(slots=True)
 class ArcsinRule(AtomicRule):
     """integrate(1/sqrt(1-x**2), x) -> asin(x)"""
     def eval(self) -> Expr:
         return asin(self.variable)
 
 
-@dataclass
+@dataclass(slots=True)
 class ArcsinhRule(AtomicRule):
     """integrate(1/sqrt(1+x**2), x) -> asin(x)"""
     def eval(self) -> Expr:
         return asinh(self.variable)
 
 
-@dataclass
+@dataclass(slots=True)
 class ReciprocalSqrtQuadraticRule(AtomicRule):
     """integrate(1/sqrt(a+b*x+c*x**2), x) -> log(2*sqrt(c)*sqrt(a+b*x+c*x**2)+b+2*c*x)/sqrt(c)"""
     a: Expr
@@ -318,7 +318,7 @@ class ReciprocalSqrtQuadraticRule(AtomicRule):
         return log(2*sqrt(c)*sqrt(a+b*x+c*x**2)+b+2*c*x)/sqrt(c)
 
 
-@dataclass
+@dataclass(slots=True)
 class SqrtQuadraticDenomRule(AtomicRule):
     """integrate(poly(x)/sqrt(a+b*x+c*x**2), x)"""
     a: Expr
@@ -354,7 +354,7 @@ class SqrtQuadraticDenomRule(AtomicRule):
                      for i in range(len(result_coeffs))), e/c)*s + I0
 
 
-@dataclass
+@dataclass(slots=True)
 class SqrtQuadraticRule(AtomicRule):
     """integrate(sqrt(a+b*x+c*x**2), x)"""
     a: Expr
@@ -366,7 +366,7 @@ class SqrtQuadraticRule(AtomicRule):
         return step.eval()
 
 
-@dataclass
+@dataclass(slots=True)
 class AlternativeRule(Rule):
     """Multiple ways to do integration."""
     alternatives: list[Rule]
@@ -378,7 +378,7 @@ class AlternativeRule(Rule):
         return any(substep.contains_dont_know() for substep in self.alternatives)
 
 
-@dataclass
+@dataclass(slots=True)
 class DontKnowRule(Rule):
     """Leave the integral as is."""
     def eval(self) -> Expr:
@@ -388,7 +388,7 @@ class DontKnowRule(Rule):
         return True
 
 
-@dataclass
+@dataclass(slots=True)
 class DerivativeRule(AtomicRule):
     """integrate(f'(x), x) -> f(x)"""
     def eval(self) -> Expr:
@@ -401,7 +401,7 @@ class DerivativeRule(AtomicRule):
         return Derivative(self.integrand.expr, *variable_count)
 
 
-@dataclass
+@dataclass(slots=True)
 class RewriteRule(Rule):
     """Rewrite integrand to another form that is easier to handle."""
     rewritten: Expr
@@ -414,13 +414,13 @@ class RewriteRule(Rule):
         return self.substep.contains_dont_know()
 
 
-@dataclass
+@dataclass(slots=True)
 class CompleteSquareRule(RewriteRule):
     """Rewrite a+b*x+c*x**2 to a-b**2/(4*c) + c*(x+b/(2*c))**2"""
     pass
 
 
-@dataclass
+@dataclass(slots=True)
 class PiecewiseRule(Rule):
     subfunctions: Sequence[tuple[Rule, bool | Boolean]]
 
@@ -432,7 +432,7 @@ class PiecewiseRule(Rule):
         return any(substep.contains_dont_know() for substep, _ in self.subfunctions)
 
 
-@dataclass
+@dataclass(slots=True)
 class HeavisideRule(Rule):
     harg: Expr
     ibnd: Expr
@@ -450,7 +450,7 @@ class HeavisideRule(Rule):
         return self.substep.contains_dont_know()
 
 
-@dataclass
+@dataclass(slots=True)
 class DiracDeltaRule(AtomicRule):
     n: Expr
     a: Expr
@@ -463,7 +463,7 @@ class DiracDeltaRule(AtomicRule):
         return DiracDelta(a+b*x, n-1)/b
 
 
-@dataclass
+@dataclass(slots=True)
 class TrigSubstitutionRule(Rule):
     theta: Expr
     func: Expr
@@ -514,7 +514,7 @@ class TrigSubstitutionRule(Rule):
         return self.substep.contains_dont_know()
 
 
-@dataclass
+@dataclass(slots=True)
 class ArctanRule(AtomicRule):
     """integrate(a/(b*x**2+c), x) -> a/b / sqrt(c/b) * atan(x/sqrt(c/b))"""
     a: Expr
@@ -526,12 +526,12 @@ class ArctanRule(AtomicRule):
         return a/b / sqrt(c/b) * atan(x/sqrt(c/b))
 
 
-@dataclass
+@dataclass(slots=True)
 class OrthogonalPolyRule(AtomicRule, ABC):
     n: Expr
 
 
-@dataclass
+@dataclass(slots=True)
 class JacobiRule(OrthogonalPolyRule):
     a: Expr
     b: Expr
@@ -544,7 +544,7 @@ class JacobiRule(OrthogonalPolyRule):
             ((a + b + 2)*x**2/4 + (a - b)*x/2, Eq(n, 1)))
 
 
-@dataclass
+@dataclass(slots=True)
 class GegenbauerRule(OrthogonalPolyRule):
     a: Expr
 
@@ -556,7 +556,7 @@ class GegenbauerRule(OrthogonalPolyRule):
             (S.Zero, True))
 
 
-@dataclass
+@dataclass(slots=True)
 class ChebyshevTRule(OrthogonalPolyRule):
     def eval(self) -> Expr:
         n, x = self.n, self.variable
@@ -566,7 +566,7 @@ class ChebyshevTRule(OrthogonalPolyRule):
             (x**2/2, True))
 
 
-@dataclass
+@dataclass(slots=True)
 class ChebyshevURule(OrthogonalPolyRule):
     def eval(self) -> Expr:
         n, x = self.n, self.variable
@@ -575,28 +575,28 @@ class ChebyshevURule(OrthogonalPolyRule):
             (S.Zero, True))
 
 
-@dataclass
+@dataclass(slots=True)
 class LegendreRule(OrthogonalPolyRule):
     def eval(self) -> Expr:
         n, x = self.n, self.variable
         return(legendre(n + 1, x) - legendre(n - 1, x))/(2*n + 1)
 
 
-@dataclass
+@dataclass(slots=True)
 class HermiteRule(OrthogonalPolyRule):
     def eval(self) -> Expr:
         n, x = self.n, self.variable
         return hermite(n + 1, x)/(2*(n + 1))
 
 
-@dataclass
+@dataclass(slots=True)
 class LaguerreRule(OrthogonalPolyRule):
     def eval(self) -> Expr:
         n, x = self.n, self.variable
         return laguerre(n, x) - laguerre(n + 1, x)
 
 
-@dataclass
+@dataclass(slots=True)
 class AssocLaguerreRule(OrthogonalPolyRule):
     a: Expr
 
@@ -604,55 +604,55 @@ class AssocLaguerreRule(OrthogonalPolyRule):
         return -assoc_laguerre(self.n + 1, self.a - 1, self.variable)
 
 
-@dataclass
+@dataclass(slots=True)
 class IRule(AtomicRule, ABC):
     a: Expr
     b: Expr
 
 
-@dataclass
+@dataclass(slots=True)
 class CiRule(IRule):
     def eval(self) -> Expr:
         a, b, x = self.a, self.b, self.variable
         return cos(b)*Ci(a*x) - sin(b)*Si(a*x)
 
 
-@dataclass
+@dataclass(slots=True)
 class ChiRule(IRule):
     def eval(self) -> Expr:
         a, b, x = self.a, self.b, self.variable
         return cosh(b)*Chi(a*x) + sinh(b)*Shi(a*x)
 
 
-@dataclass
+@dataclass(slots=True)
 class EiRule(IRule):
     def eval(self) -> Expr:
         a, b, x = self.a, self.b, self.variable
         return exp(b)*Ei(a*x)
 
 
-@dataclass
+@dataclass(slots=True)
 class SiRule(IRule):
     def eval(self) -> Expr:
         a, b, x = self.a, self.b, self.variable
         return sin(b)*Ci(a*x) + cos(b)*Si(a*x)
 
 
-@dataclass
+@dataclass(slots=True)
 class ShiRule(IRule):
     def eval(self) -> Expr:
         a, b, x = self.a, self.b, self.variable
         return sinh(b)*Chi(a*x) + cosh(b)*Shi(a*x)
 
 
-@dataclass
+@dataclass(slots=True)
 class LiRule(IRule):
     def eval(self) -> Expr:
         a, b, x = self.a, self.b, self.variable
         return li(a*x + b)/a
 
 
-@dataclass
+@dataclass(slots=True)
 class ErfRule(AtomicRule):
     a: Expr
     b: Expr
@@ -670,7 +670,7 @@ class ErfRule(AtomicRule):
                 erfi((2*a*x + b)/(2*sqrt(a)))
 
 
-@dataclass
+@dataclass(slots=True)
 class FresnelCRule(AtomicRule):
     a: Expr
     b: Expr
@@ -683,7 +683,7 @@ class FresnelCRule(AtomicRule):
             sin(b**2/(4*a) - c)*fresnels((2*a*x + b)/sqrt(2*a*S.Pi)))
 
 
-@dataclass
+@dataclass(slots=True)
 class FresnelSRule(AtomicRule):
     a: Expr
     b: Expr
@@ -696,7 +696,7 @@ class FresnelSRule(AtomicRule):
             sin(b**2/(4*a) - c)*fresnelc((2*a*x + b)/sqrt(2*a*S.Pi)))
 
 
-@dataclass
+@dataclass(slots=True)
 class PolylogRule(AtomicRule):
     a: Expr
     b: Expr
@@ -705,7 +705,7 @@ class PolylogRule(AtomicRule):
         return polylog(self.b + 1, self.a * self.variable)
 
 
-@dataclass
+@dataclass(slots=True)
 class UpperGammaRule(AtomicRule):
     a: Expr
     e: Expr
@@ -715,7 +715,7 @@ class UpperGammaRule(AtomicRule):
         return x**e * (-a*x)**(-e) * uppergamma(e + 1, -a*x)/a
 
 
-@dataclass
+@dataclass(slots=True)
 class EllipticFRule(AtomicRule):
     a: Expr
     d: Expr
@@ -724,7 +724,7 @@ class EllipticFRule(AtomicRule):
         return elliptic_f(self.variable, self.d/self.a)/sqrt(self.a)
 
 
-@dataclass
+@dataclass(slots=True)
 class EllipticERule(AtomicRule):
     a: Expr
     d: Expr
