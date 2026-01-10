@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING, Optional, overload, Literal, Any, cast, Callab
 from functools import wraps, reduce
 from operator import mul
 from collections import Counter, defaultdict
-from collections.abc import Iterator
 
 from sympy.core import (
     S, Expr, Add, Tuple
@@ -30,7 +29,6 @@ from sympy.logic.boolalg import BooleanAtom
 from sympy.polys import polyoptions as options
 from sympy.polys.constructor import construct_domain
 from sympy.polys.domains import FF, QQ, ZZ
-from sympy.polys.domains.domain import Domain
 from sympy.polys.domains.domainelement import DomainElement
 from sympy.polys.fglmtools import matrix_fglm
 from sympy.polys.groebnertools import groebner as _groebner
@@ -67,6 +65,8 @@ from sympy.external.mpmath import local_workdps, NoConvergence
 
 
 if TYPE_CHECKING:
+    from sympy.polys.domains.domain import Domain
+    from collections.abc import Iterator
     from typing import Self
 
 

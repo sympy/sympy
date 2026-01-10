@@ -13,6 +13,9 @@ from typing import (
 )
 
 if TYPE_CHECKING:
+    from sympy.polys.orderings import MonomialOrder
+    from sympy.polys.domains.polynomialring import PolynomialRing
+    from sympy.core.expr import Expr
     from typing import Self, TypeAlias
     from sympy.polys.rings import PolyElement
 
@@ -20,14 +23,11 @@ from sympy.external.gmpy import GROUND_TYPES, MPQ
 
 from sympy.utilities.exceptions import sympy_deprecation_warning
 
-from sympy.core.expr import Expr
 from sympy.core.numbers import oo, NegativeInfinity
 from sympy.core.sympify import CantSympify
 from sympy.polys.polyutils import PicklableWithSlots, _sort_factors
 from sympy.polys.domains import Domain, ZZ, QQ
 from sympy.polys.domains.domain import Er, Es, Et, Eg
-from sympy.polys.domains.polynomialring import PolynomialRing
-from sympy.polys.orderings import MonomialOrder
 
 from sympy.polys.polyerrors import (
     CoercionFailed,
