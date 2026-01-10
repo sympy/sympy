@@ -1167,7 +1167,21 @@ def solve(f, *symbols, **flags):
         if not solution:
             solution = _solve(f[0], *symbols, **flags)
     else:
-        linear, solution = _solve_system(f, symbols, **flags)
+        try:
+            linear, solution = _solve_system(f, symbols, **flags)
+        except (TypeError, ValueError):
+            # The solver might crash with "Invalid NaN comparison" or similar
+            # if the standard approach fails for complex trig systems.
+            if any(fi.has(sin, cos) for fi in f):
+            # Strategy: Convert sin/cos to complex exponentials
+            # This turns the system into a polynomial system of exponentials.
+            # We use .cancel() to clear denominators (negative exponents) safely.
+                f_exp = [fi.expand(trig=True).rewrite(exp).cancel().as_numer_denom()[0] for fi in f]
+                flags['check'] = False
+                flags['simplify'] = False
+                linear, solution = _solve_system(f_exp, symbols, **flags)
+            else:
+                raise
     assert type(solution) is list
     assert not solution or type(solution[0]) is dict, solution
     #
