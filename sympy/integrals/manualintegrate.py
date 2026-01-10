@@ -1650,7 +1650,7 @@ def sqrt_quadratic_rule(integral: IntegralInfo, degenerate=True):
         delta = 4*a*c - b**2
         R = c*x**2 + b*x + a
 
-        term_denom = (2*k - 1) * delta * sqrt(R**(2*k-1))
+        term_denom = (2*k - 1) * delta * (R**(S(2*k - 1)/2))
         constant_term = f*2*(2*c*x+b) / term_denom
         coeff = (8*c*(k-1))/((2*k-1) * delta)
         expr = f * R**(S(1)/2 - k)
@@ -1690,14 +1690,13 @@ def sqrt_quadratic_rule(integral: IntegralInfo, degenerate=True):
         generic_step = RewriteRule(integrand, x, rewritten, substep)
     elif n == -1:
         generic_step = sqrt_quadratic_denom_rule(f_poly, integrand)
-    else:
+    elif f_poly.degree() == 0:
         # The numerator must be a const, the formula assumes this
-        if f_poly.degree() == 0:
-            generic_step = sqrt_quadratic_reduction_rule(integrand, n)
-        else:
-            # Handle non-constant numerators (eg. x / R**(-3/2))
-            # This requires splitting the integral as A*(2ax+b) + B form
-            return None
+        generic_step = sqrt_quadratic_reduction_rule(integrand, n)
+    else:
+        # Handle non-constant numerators (eg. x / R**(-3/2))
+        # This requires splitting the integral as A*(2ax+b) + B form
+        return None
     return _add_degenerate_step(generic_cond, generic_step, degenerate_step)
 
 
