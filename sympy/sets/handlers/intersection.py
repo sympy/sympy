@@ -292,7 +292,7 @@ def _(self, other):
                     a = fprime
                     value0 = f.subs(n, 0)
 
-                    # a == 0: f (n) is a constant mapping {value0}
+                    # a == 0: f(n) is a constant mapping {value0}
                     if a.is_zero:
                         if value0.is_integer:
                             return FiniteSet(value0)
