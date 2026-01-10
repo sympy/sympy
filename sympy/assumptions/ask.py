@@ -6,6 +6,7 @@ from sympy.assumptions.cnf import CNF, EncodedCNF, Literal
 from sympy.core import sympify
 from sympy.core.kind import BooleanKind
 from sympy.core.relational import Eq, Ne, Gt, Lt, Ge, Le
+from sympy.core.singleton import S
 from sympy.logic.inference import satisfiable
 from sympy.utilities.decorator import memoize_property
 from sympy.utilities.exceptions import (sympy_deprecation_warning,
@@ -500,6 +501,9 @@ def ask(proposition, assumptions=True, context=global_assumptions):
 
     proposition = sympify(proposition)
     assumptions = sympify(assumptions)
+
+    if assumptions is S.false:
+        raise ValueError("inconsistent assumptions")
 
     if isinstance(proposition, Predicate) or proposition.kind is not BooleanKind:
         raise TypeError("proposition must be a valid logical expression")
