@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, overload, cast, Any, Optional, Type, Tuple, Union, Iterable
-if TYPE_CHECKING:
-    from typing_extensions import TypeGuard
+from typing import TYPE_CHECKING, overload, cast
 from collections import Counter, defaultdict, OrderedDict
 from itertools import (
     chain, combinations, combinations_with_replacement, cycle, islice,
@@ -22,7 +20,11 @@ from sympy.utilities.decorator import deprecated
 
 
 if TYPE_CHECKING:
-    from typing import Iterable, Callable, Literal, Sequence, Iterator, TypeVar
+    from typing import (
+        Any, Optional, Type, Tuple, Union,
+        Iterable, Callable, Literal, Sequence, Iterator, TypeVar,
+    )
+    from typing_extensions import TypeGuard
     T = TypeVar("T")
     T1 = TypeVar("T1")
     T2 = TypeVar("T2")
