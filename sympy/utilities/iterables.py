@@ -21,10 +21,9 @@ from sympy.utilities.decorator import deprecated
 
 if TYPE_CHECKING:
     from typing import (
-        Any, Optional, Type, Tuple, Union,
-        Iterable, Callable, Literal, Sequence, Iterator, TypeVar,
+        Any, Iterable, Callable, Literal, Sequence, Iterator, TypeVar,
     )
-    from typing_extensions import TypeGuard
+    from typing_extensions import TypeIs
     T = TypeVar("T")
     T1 = TypeVar("T1")
     T2 = TypeVar("T2")
@@ -3115,10 +3114,24 @@ def iterable(i, exclude=(str, dict, NotIterable)):
     return True
 
 
+@overload
 def is_sequence(
-    i: Any,
-    include: Optional[Union[Type[Any], Tuple[Type[Any], ...]]] = None
-) -> "TypeGuard[Iterable[Any]]":
+    i: Sequence[T] | Iterable[T],
+    include: type | tuple[type, ...] | None = None,
+) -> TypeIs[Sequence[T]]: ...
+
+
+@overload
+def is_sequence(
+    i: object,
+    include: type | tuple[type, ...] | None = None,
+) -> TypeIs[Sequence[Any]]: ...
+
+
+def is_sequence(
+    i: object,
+    include: type | tuple[type, ...] | None = None,
+) -> "TypeIs[Sequence[Any]]":
     """
     Return a boolean indicating whether ``i`` is a sequence in the SymPy
     sense. If anything that fails the test below should be included as
