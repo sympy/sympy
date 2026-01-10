@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, overload, cast, Any, Optional, Type, Tuple, Union
-
+from typing_extensions import TypeGuard
 from collections import Counter, defaultdict, OrderedDict
 from itertools import (
     chain, combinations, combinations_with_replacement, cycle, islice,
@@ -3115,7 +3115,7 @@ def iterable(i, exclude=(str, dict, NotIterable)):
 def is_sequence(
     i: Any,
     include: Optional[Union[Type[Any], Tuple[Type[Any], ...]]] = None
-) -> bool:
+) -> TypeGuard[Iterable[Any]]:
     """
     Return a boolean indicating whether ``i`` is a sequence in the SymPy
     sense. If anything that fails the test below should be included as
