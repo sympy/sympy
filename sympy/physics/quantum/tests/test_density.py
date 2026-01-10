@@ -287,3 +287,70 @@ def test_fidelity():
     # unsupported data-type
     x, y = 1, 2  # random values that is not a matrix
     raises(ValueError, lambda: fidelity(x, y))
+
+
+def test_complex_coefficients():
+    """Test that density matrices with complex coefficients are correctly
+    computed, ensuring that the commutative complex coefficients are
+    conjugated properly when creating the outer product."""
+
+    # Test 1: Single qubit with symbolic complex coefficients (2D case)
+    from sympy import Matrix
+    from sympy.functions.elementary.complexes import conjugate
+
+    # Create a 2x1 matrix of complex symbols (2 coefficients for single qubit)
+    c = Matrix(symbols("c_:2", complex=True, real=False))
+
+    # Create superposition state: ``c[0]|0⟩ + c[1]|1⟩``
+    state = sum([el * Qubit(f"{count}") for count, el in enumerate(c)])
+
+    # Manual vs Density class comparison
+    manual = represent(state * Dagger(state))
+    density_class = represent(Density([state, 1]))
+    assert manual == density_class
+
+    # Test 2: Two qubit with symbolic complex coefficients (4D case)
+    # Create a 2x2 matrix of complex symbols (flattened to 4 coefficients)
+    c = Matrix(symbols("c_:2:2", complex=True, real=False)).reshape(2, 2)
+
+
+    # Create superposition state: ``c[0,0]|00⟩ + c[0,1]|01⟩ + c[1,0]|10⟩ + c[1,1]|11⟩``
+    state = sum([el * Qubit(f"{count:02b}") for count, el in enumerate(c)])
+
+    # Manual creation of density matrix
+    rho_manual = state * Dagger(state)
+    manual = represent(rho_manual)
+
+    # Creation using Density class
+    density_class = represent(Density([state, 1]))
+
+    # These should be exactly equal
+    assert manual == density_class
+
+    # Test 3: Simple concrete complex coefficient test
+    state = (1 + 2j) * Qubit('0')
+    manual = represent(state * Dagger(state))
+    density_class = represent(Density([state, 1]))
+    # Need to expand since density_class may have (1-2j)*(1+2j) unexpanded
+    assert manual.expand() == density_class.expand()
+    # Verify density matrix diagonal element is 5 (|1+2j|² = 1+4 = 5)
+    manual_expanded = manual.expand()
+    assert abs(manual_expanded[0, 0] - 5) < 1e-10
+
+    # Test 4: Symbolic complex coefficients with named symbols
+    a, b = symbols('a b', complex=True)
+    state = a * Qubit('0') + b * Qubit('1')
+    manual = represent(state * Dagger(state))
+    density_class = represent(Density([state, 1]))
+    assert manual.expand() == density_class.expand()
+    # Verify off-diagonal elements contain conjugate(a)*b and a*conjugate(b)
+    assert manual[0, 1] == a * conjugate(b)
+    assert manual[1, 0] == conjugate(a) * b
+
+    # Test 5: Mixed state with complex coefficients
+    state1 = (1 + 1j) * Qubit('0')
+    state2 = (2 - 1j) * Qubit('1')
+    d = Density([state1, 0.5], [state2, 0.5])
+    # Just verify it can be represented without error and produces a matrix
+    rho = represent(d)
+    assert rho.shape == (2, 2)
