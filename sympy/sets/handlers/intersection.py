@@ -300,7 +300,7 @@ def _(self, other):
                             return S.EmptySet
                     else:
                         # f(n) = a*n + b. If there is an integer solution in this case,
-                        # It can only be n=0, and the corresponding value is f (0)=b.
+                        # It can only be n=0, and the corresponding value is f(0)=b.
                         if value0.is_integer:
                             return FiniteSet(value0)
                         elif value0.is_rational:
