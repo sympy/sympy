@@ -279,7 +279,7 @@ def _(self, other):
             # TypeError if equation not polynomial with rational coeff.
             # NotImplementedError if correct format but no solver.
 
-            # Fallback: handel issue #18081
+            # Fallback: handle issue #18081
             # ImageSet(Lambda(n, f(n)), Integers).intersection(S.Integers)
             # f(n) is linear in n (f(n) = a*n + b), a != 0,
             # Moreover, diophantine failed due to non-rational coefficients
