@@ -1,14 +1,16 @@
 (solving-guide-de-laplace)=
 # Solve Ordinary Differential Equations (ODEs) and Partial Differential Equations (PDEs) Algebraically with the Laplace Transform
 
-This guide shows ho to solve ODEs and PDEs using the Laplace Transform.
+This guide shows how to solve ODEs and PDEs using the Laplace Transform.
 Using the Laplace transform implies that there is a boundary at $0$
 with given boundary conditions.
 
 For example, solving $y''(t) + 9y(t)=0$ for initial conditions $y(0)=y_0$ and
 $y'(0)=v_0$ yields $y(t)=\theta(t)\cdot\left(\frac{v_0}{3} \sin(3t) + y_0 \cos(3t)\right)$.
-All solutions will have a factor like $\theta(t)$ (the Heaviside Theta function, or unit step) in it, signifying that the use of the Laplace
-transform implies that the solution is $0$ for $t<0$.
+All solutions will have a factor like $\theta(t)$ (the Heaviside Theta function,
+or unit step) in it, signifying that the use of the Laplace
+transform implies that the solution is $0$ for $t<0$. If you do not want it
+in the solution, you can just substitute $1$ for it as shown below.
 
 ## Solve an Ordinary Differential Equation (ODE)
 
@@ -20,12 +22,17 @@ be simplified to `e3` by replacing abstract transform expressions by
 functions using {func}`~.laplace_correspondence` and by inserting
 initial conditions with {func}`~.laplace_initial_conds`. The resulting
 equation can then be transformed back to the $t$ domain with
-{func}`~.inverse_laplace_transform`.
+{func}`~.inverse_laplace_transform`, giving `e5`. In case you know
+that the solution is also valid for $t<0$, then you can substitute `1`
+for `Heaviside(t)` to get `e6`, but please note that this applies additional
+knowledge about the problem, it is not generally valid to do this when
+solving ODEs by Laplace transform.
 
 ```py
 >>> from sympy import (
-...     diff, Function, inverse_laplace_transform, laplace_correspondence,
-...     laplace_initial_conds, laplace_transform, solve, symbols)
+...     diff, Function, Heaviside, inverse_laplace_transform,
+...     laplace_correspondence, laplace_initial_conds,
+...     laplace_transform, solve, symbols)
 >>> y, Y = symbols('y, Y', cls=Function)
 >>> s = symbols('s')
 >>> t, y0, v0 = symbols('t, y0, v0', real=True)
@@ -44,7 +51,9 @@ s**2*Y(s) - s*y0 - v0 + 9*Y(s)
 >>> e5 = inverse_laplace_transform(e4[0], s, t)
 >>> e5
 (v0*sin(3*t)/3 + y0*cos(3*t))*Heaviside(t)
-
+>>> e6 = e5.subs(Heaviside(t), 1)
+>>> e6
+v0*sin(3*t)/3 + y0*cos(3*t)
 ```
 
 ## Solve a Partial Differential Equation (PDE)
