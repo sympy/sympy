@@ -4,11 +4,9 @@ from __future__ import annotations
 
 from sympy.core.add import Add
 from sympy.core.mul import Mul
-from sympy.core.expr import Expr
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, symbols
 from sympy.external.gmpy import MPQ
-from sympy.polys.domains.domain import Domain
 from sympy.polys.domains.characteristiczero import CharacteristicZero
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.simpledomain import SimpleDomain
@@ -16,6 +14,11 @@ from sympy.polys.domains.ringextension import RingExtension
 from sympy.polys.polyclasses import ANP, DMP
 from sympy.polys.polyerrors import CoercionFailed, DomainError, NotAlgebraic, IsomorphismFailed
 from sympy.utilities import public
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from sympy.polys.domains.domain import Domain
+    from sympy.core.expr import Expr
 
 
 Alg = ANP[MPQ]

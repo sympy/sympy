@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from sympy.polys.densebasic import dup
-from sympy.polys.domains.domain import Er, Domain
 from sympy.core.numbers import I
 
 from sympy.polys.densearith import dup_exquo_ground
@@ -9,9 +8,13 @@ from sympy.polys.domains import EXRAW, EX, QQ, ZZ
 from sympy.polys.densebasic import dup_convert
 from sympy.polys.densetools import dup_clear_denoms, dup_transform, dup_eval
 from sympy.core.exprtools import factor_terms
-from sympy.core.expr import Expr
 from sympy.simplify.simplify import signsimp
 from sympy.core.mul import Mul
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
+    from sympy.polys.domains.domain import Er, Domain
 
 
 def dup_routh_hurwitz(f: dup[Er], K: Domain[Er]) -> list[Er]:

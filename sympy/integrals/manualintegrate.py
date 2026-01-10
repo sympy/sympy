@@ -22,7 +22,7 @@ To enable simple substitutions, add the match to find_substitutions.
 """
 
 from __future__ import annotations
-from typing import NamedTuple, Type, Callable, Sequence
+from typing import NamedTuple, Type, Callable, Sequence, TYPE_CHECKING
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from collections import defaultdict
@@ -31,7 +31,6 @@ from collections.abc import Mapping
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
 from sympy.core.containers import Dict
-from sympy.core.expr import Expr
 from sympy.core.function import Derivative
 from sympy.core.logic import fuzzy_not
 from sympy.core.mul import Mul
@@ -70,6 +69,9 @@ from sympy.solvers.solvers import solve
 from sympy.strategies.core import switch, do_one, null_safe, condition
 from sympy.utilities.iterables import iterable
 from sympy.utilities.misc import debug
+
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
 
 
 @dataclass

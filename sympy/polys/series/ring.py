@@ -9,10 +9,7 @@ from sympy.core.add import Add
 from sympy.core.power import Pow
 from sympy.core.sympify import CantSympify, sympify
 from sympy.polys.domains.domain import Er, Ef, Domain, DomainElement
-from sympy.polys.densebasic import dup
-from sympy.polys.domains.field import Field
 from sympy.polys.polyerrors import GeneratorsError
-from sympy.polys.series.base import PowerSeriesRingProto, PowerSeriesRingFieldProto
 from sympy.polys.series.tring import TSeriesElement, _power_series_ring
 from sympy.series.order import Order
 
@@ -20,6 +17,9 @@ from sympy.series.order import Order
 from typing import Generic, overload, TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from sympy.polys.series.base import PowerSeriesRingProto, PowerSeriesRingFieldProto
+    from sympy.polys.domains.field import Field
+    from sympy.polys.densebasic import dup
     import sys
     if sys.version_info >= (3, 13):
         from typing import TypeIs

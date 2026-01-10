@@ -4,12 +4,12 @@ from typing import TYPE_CHECKING, overload
 
 from sympy.core import S, Add, Expr, Basic, Mul, Pow, Rational
 from sympy.core.logic import fuzzy_not
-from sympy.logic.boolalg import Boolean
 
 from sympy.assumptions import ask, Q  # type: ignore
 
 
 if TYPE_CHECKING:
+    from sympy.logic.boolalg import Boolean
     from typing import Callable
 
 

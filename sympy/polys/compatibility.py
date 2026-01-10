@@ -4,13 +4,13 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from typing import TYPE_CHECKING, Generic, Mapping, Any, cast, overload
-from sympy.external.gmpy import MPZ
 from sympy.polys.domains.domain import Domain, Er, Es, Ef, Eeuclid, Eordered, Eabs
-from sympy.polys.domains.field import Field
-from sympy.polys.domains.algebraicfield import Alg, AlgebraicField
 from sympy.polys.densebasic import dup, dmp
 
 if TYPE_CHECKING:
+    from sympy.external.gmpy import MPZ
+    from sympy.polys.domains.algebraicfield import Alg, AlgebraicField
+    from sympy.polys.domains.field import Field
     from typing import TypeAlias
     from sympy.core.expr import Expr
     from sympy.polys.orderings import MonomialOrder

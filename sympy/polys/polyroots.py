@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-from typing import overload, Any, Literal
+from typing import overload, Any, Literal, TYPE_CHECKING
 
 import math
 from functools import reduce
 
 from sympy.core import S, I, pi
-from sympy.core.expr import Expr
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import _mexpand
 from sympy.core.logic import fuzzy_not
@@ -32,6 +31,9 @@ from sympy.polys.rationaltools import together
 from sympy.polys.specialpolys import cyclotomic_poly
 from sympy.utilities import public
 from sympy.utilities.misc import filldedent
+
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
 
 
 

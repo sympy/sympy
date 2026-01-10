@@ -4,7 +4,6 @@ Boolean algebra module for SymPy
 
 from __future__ import annotations
 from typing import TYPE_CHECKING, overload, Any, Callable
-from collections.abc import Iterable, Mapping
 
 from collections import defaultdict
 from itertools import chain, combinations, product, permutations
@@ -23,6 +22,9 @@ from sympy.core.sorting import ordered
 from sympy.core.sympify import _sympy_converter, _sympify, sympify
 from sympy.utilities.iterables import sift, ibin
 from sympy.utilities.misc import filldedent
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable, Mapping
 
 
 try:  # sys.version_info >= (3, 10)
