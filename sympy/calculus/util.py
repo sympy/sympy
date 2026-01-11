@@ -137,7 +137,7 @@ def continuous_domain(f, symbol, domain):
 
                     if is_cont:
                         result = Union(result, FiniteSet(point))
-                except Exception:
+                except (ValueError, TypeError, AttributeError, NotImplementedError):
                     pass
         return result
 
