@@ -65,6 +65,12 @@ def test_function_range():
         log(x), x, S.Integers))
     raises(NotImplementedError, lambda : function_range(
         sin(x)/2, x, S.Naturals))
+    assert function_range(Piecewise((-1, x < 0), (1, True)), x, S.Reals) == FiniteSet(-1, 1)
+    assert function_range(Piecewise((10, Eq(x, 0)), (S.NaN, True)), x, S.Reals) == FiniteSet(10)
+    assert function_range((x**2 - 1)/(x - 1), x, Interval(0, 2)) == \
+        Union(Interval.Ropen(1, 2), Interval.Lopen(2, 3))
+    assert function_range(Piecewise((x, x > 0), (S.NaN, True)), x, Interval(-5, 5)) == \
+        Interval.Lopen(0, 5)
 
 
 @slow
@@ -138,6 +144,11 @@ def test_continuous_domain():
     assert continuous_domain(0**(x+1), x, S.Reals) == Interval(-1, oo)
     assert continuous_domain(0**(x+1)/(x-2), x, S.Reals) == Union(
         Interval.Ropen(-1, 2), Interval.open(2, oo))
+    assert continuous_domain(Piecewise((x, x < 0), (x, True)), x, S.Reals) == S.Reals
+    assert continuous_domain(Piecewise((-1, x < 0), (1, True)), x, S.Reals) == \
+        Union(Interval.open(-oo, 0), Interval.open(0, oo))
+    assert continuous_domain(Piecewise((1/x, x < 0), (1/x, True)), x, S.Reals) == \
+        Union(Interval.open(-oo, 0), Interval.open(0, oo))
 
 def test_accumbounds_union():
     a = AccumBounds(1, 5)
@@ -150,7 +161,6 @@ def test_accumbounds_union():
     b = AccumBounds(5, 8)
     assert a.union(b) == AccumBounds(1, 8)
 
-@XFAIL
 def test_continuous_domain_acot():
     acot_cont = Piecewise((pi+acot(x), x<0), (acot(x), True))
     assert continuous_domain(acot_cont, x, S.Reals) == S.Reals
@@ -195,6 +205,10 @@ def test_not_empty_in():
     raises(ValueError, lambda: not_empty_in(Interval(0, 1), x))
     raises(NotImplementedError,
            lambda: not_empty_in(FiniteSet(x).intersect(S.Reals), x, a))
+    assert not_empty_in(FiniteSet(Piecewise((1/x, x > 0), (0, True))).intersect(
+        Interval(S(1)/2, 1)), x) == Interval(1, 2)
+    assert not_empty_in(FiniteSet(Piecewise((1/x, x > 1))).intersect(
+        Interval.open(0, S(1)/2)), x) == Interval.open(2, oo)
 
 
 @_both_exp_pow
