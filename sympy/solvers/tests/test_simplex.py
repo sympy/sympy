@@ -273,7 +273,7 @@ def test_assumptions():
 
     # integer assumption
     x0, x1 = symbols('x0 x1', integer=True, nonnegative=True)
-    # 2*x0 + 2*x1 >= 1, x0, x1 >= 0 integers. 
+    # 2*x0 + 2*x1 >= 1, x0, x1 >= 0 integers.
     # Min is 1 (e.g. at x0=1, x1=0), not 0.5.
     assert lpmin(x0 + x1, [2*x0 + 2*x1 >= 1]) == (1, {x0: 1, x1: 0})
 
