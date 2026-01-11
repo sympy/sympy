@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, overload, cast
+from typing import TYPE_CHECKING, overload, cast, Any, Optional, Tuple, Type, Union
 
 from collections import Counter, defaultdict, OrderedDict
 from itertools import (
@@ -3112,7 +3112,10 @@ def iterable(i, exclude=(str, dict, NotIterable)):
     return True
 
 
-def is_sequence(i, include=None):
+def is_sequence(
+    i: Any,
+    include: Optional[Union[Type[Any], Tuple[Type[Any], ...]]] = None
+) -> bool:
     """
     Return a boolean indicating whether ``i`` is a sequence in the SymPy
     sense. If anything that fails the test below should be included as
