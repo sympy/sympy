@@ -4,7 +4,7 @@ from sympy.combinatorics.partitions import (Partition, IntegerPartition,
                                             random_integer_partition)
 from sympy.testing.pytest import raises
 from sympy.utilities.iterables import partitions
-from sympy.sets.sets import Set, FiniteSet
+from sympy.sets.sets import FiniteSet
 
 
 def test_partition_constructor():
@@ -115,4 +115,4 @@ def test_rgs():
 def test_ordered_partition_9608():
     a = Partition([1, 2, 3], [4])
     b = Partition([1, 2], [3, 4])
-    assert list(ordered([a,b], Set._infimum_key))
+    assert list(ordered([a,b]))
