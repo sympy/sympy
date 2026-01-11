@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from sympy import MatMul
 from sympy.concrete.products import Product
 from sympy.concrete.summations import Sum
 from sympy.core.add import Add
@@ -7703,7 +7704,7 @@ H    \n\
 
 def test_issue_15560():
     a = MatrixSymbol('a', 1, 1)
-    e = pretty(a*(KroneckerProduct(a, a)))
+    e = pretty(MatMul(a, KroneckerProduct(a, a)))
     result = 'a*(a x a)'
     assert e == result
 

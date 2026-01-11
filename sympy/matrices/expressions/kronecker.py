@@ -341,10 +341,26 @@ def explicit_kronecker_product(kron):
     return matrix_kronecker_product(*kron.args)
 
 
+def kronecker_product_extract_singleton_matrices(kron: KroneckerProduct):
+    singleton_matrices = []
+    args = []
+    for arg in kron.args:
+        if isinstance(arg, MatrixExpr) and arg.shape == (1, 1):
+            singleton_matrices.append(arg)
+        else:
+            args.append(arg)
+    if len(singleton_matrices) > 1:
+        args.append(MatMul(*singleton_matrices))
+        return KroneckerProduct(*args)
+    else:
+        return kron
+
+
 rules = (unpack,
          explicit_kronecker_product,
          flatten,
-         extract_commutative)
+         extract_commutative,
+         kronecker_product_extract_singleton_matrices)
 
 canonicalize = exhaust(condition(lambda x: isinstance(x, KroneckerProduct),
                                  do_one(*rules)))
