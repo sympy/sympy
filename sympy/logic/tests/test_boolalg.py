@@ -1471,7 +1471,7 @@ def test_transitive_inequality_simplification():
     # This ensures that transitive relations (A < B and B < C implies A < C)
     # allow for the removal of the redundant term (A < C).
     x, y, z = symbols('x y z')
-    
+
     # Case 1: Standard Order
     # x < y (Keep), y < z (Keep), x < z (Redundant -> Remove)
     expr = And(x < y, y < z, x < z)
