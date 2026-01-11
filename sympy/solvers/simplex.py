@@ -2,16 +2,19 @@
 
 For the linear objective function ``f`` with linear constraints
 expressed using `Le`, `Ge` or `Eq` can be found with ``lpmin`` or
-``lpmax``. The symbols are **unbounded** unless specifically
-constrained.
+``lpmax``. Symbols can be constrained using explicit inequalities or
+through assumptions (e.g. ``nonnegative=True``, ``integer=True``).
 
 As an alternative, the matrices describing the objective and the
 constraints, and an optional list of bounds can be passed to
 ``linprog`` which will solve for the minimization of ``C*x``
 under constraints ``A*x <= b`` and/or ``Aeq*x = beq``, and
 individual bounds for variables given as ``(lo, hi)``. The values
-returned are **nonnegative** unless bounds are provided that
-indicate otherwise.
+returned are **nonnegative** unless bounds or assumptions indicate
+otherwise.
+
+Integer Linear Programming (ILP) is supported for symbols with the
+``integer=True`` assumption.
 
 Errors that might be raised are UnboundedLPError when there is no
 finite solution for the system or InfeasibleLPError when the
@@ -72,6 +75,7 @@ from sympy.matrices.dense import Matrix, zeros
 from sympy.solvers.solveset import linear_eq_to_matrix
 from sympy.utilities.iterables import numbered_symbols
 from sympy.utilities.misc import filldedent
+from sympy.functions.elementary.integers import floor, ceiling
 
 
 class UnboundedLPError(Exception):
@@ -596,6 +600,10 @@ def _rel_as_nonpos(constr, syms):
     syms = set(syms)  # the expected syms of the system
 
     # separate out univariates
+    for x in syms:
+        if x.is_nonnegative:
+            univariate[x] = Ge(x, 0, evaluate=False).as_set()
+
     for i in constr:
         if i == True:
             continue  # ignore
@@ -635,7 +643,8 @@ def _rel_as_nonpos(constr, syms):
         if not i:
             return None  # no solution possible
         if i == True:
-            unbound.append(x)
+            if not x.is_nonnegative:
+                unbound.append(x)
             continue
         a, b = i.inf, i.sup
         if a.is_infinite:
@@ -714,7 +723,11 @@ def _lp_matrices(objective, constraints):
 
 def _lp(min_max, f, constr):
     """Return the optimization (min or max) of ``f`` with the given
-    constraints. All variables are unbounded unless constrained.
+    constraints. Symbols can be constrained using explicit expressions
+    or via symbol assumptions (e.g. ``nonnegative=True``).
+
+    If any symbols have the ``integer=True`` assumption, Branch and Bound
+    will be used to find an integer solution.
 
     If `min_max` is 'max' then the results corresponding to the
     maximization of ``f`` will be returned, else the minimization.
@@ -752,40 +765,94 @@ def _lp(min_max, f, constr):
     """
     # get the matrix components for the system expressed
     # in terms of only nonnegative variables
-    A, B, C, D, r, xx, aux = _lp_matrices(f, constr)
+    f = sympify(f)
+    constr = [sympify(c) for c in constr]
 
+    def solve(objective, constraints):
+        A, B, C, D, r, xx, aux = _lp_matrices(objective, constraints)
+
+        how = str(min_max).lower()
+        if "max" in how:
+            # _simplex minimizes for Ax <= B so we
+            # have to change the sign of the function
+            # and negate the optimal value returned
+            _o, p, d = _simplex(A, B, -C, -D)
+            o = -_o
+        elif "min" in how:
+            o, p, d = _simplex(A, B, C, D)
+        else:
+            raise ValueError("expecting min or max")
+
+        # restore original variables and remove aux from p
+        p = dict(zip(xx, p))
+        if r:  # p has original symbols and auxilliary symbols
+            # if r has x: x - z1 use values from p to update
+            r_eval = {k: v.xreplace(p) for k, v in r.items()}
+            # then use the actual value of x (= x - z1) in p
+            p.update(r_eval)
+            # don't show aux
+            p = {k: p[k] for k in ordered(p) if k not in aux}
+        return o, p
+
+    # Collect all symbols with integer assumption
+    syms = set.union(*[i.free_symbols for i in [f] + constr], set())
+    int_syms = [s for s in syms if s.is_integer]
+
+    if not int_syms:
+        return solve(f, constr)
+
+    # Branch and Bound for Integer Linear Programming
+    best_o = None
+    best_p = None
+    stack = [constr]
     how = str(min_max).lower()
-    if "max" in how:
-        # _simplex minimizes for Ax <= B so we
-        # have to change the sign of the function
-        # and negate the optimal value returned
-        _o, p, d = _simplex(A, B, -C, -D)
-        o = -_o
-    elif "min" in how:
-        o, p, d = _simplex(A, B, C, D)
-    else:
-        raise ValueError("expecting min or max")
+    is_max = "max" in how
 
-    # restore original variables and remove aux from p
-    p = dict(zip(xx, p))
-    if r:  # p has original symbols and auxilliary symbols
-        # if r has x: x - z1 use values from p to update
-        r = {k: v.xreplace(p) for k, v in r.items()}
-        # then use the actual value of x (= x - z1) in p
-        p.update(r)
-        # don't show aux
-        p = {k: p[k] for k in ordered(p) if k not in aux}
+    while stack:
+        curr_constr = stack.pop()
+        try:
+            o, p = solve(f, curr_constr)
+        except InfeasibleLPError:
+            continue
 
-    # not returning dual since there may be extra constraints
-    # when a variable has finite bounds
-    return o, p
+        if best_o is not None:
+            if is_max and o <= best_o:
+                continue
+            if not is_max and o >= best_o:
+                continue
+
+        # Check for integer violations
+        violators = [s for s in int_syms if not p[s].is_integer]
+        if not violators:
+            best_o = o
+            best_p = p
+            continue
+
+        # Branch on the first violator
+        v = violators[0]
+        val = p[v]
+        stack.append(curr_constr + [v <= floor(val)])
+        stack.append(curr_constr + [v >= ceiling(val)])
+
+    if best_o is None:
+        # If we didn't find any integer solution, solve the continuous problem.
+        # This will raise if it's infeasible or unbounded.
+        res = solve(f, constr)
+        # If it didn't raise, but we had integer symbols, then no integer solution exists.
+        if int_syms:
+            raise InfeasibleLPError("No integer solution found")
+        return res
+
+    return best_o, best_p
 
 
 def lpmin(f, constr):
     """return minimum of linear equation ``f`` under
     linear constraints expressed using Ge, Le or Eq.
 
-    All variables are unbounded unless constrained.
+    Constraints can be specified via explicit expressions or via
+    symbol assumptions. Symbols with ``integer=True`` will be
+    optimized for integer solutions.
 
     Examples
     ========
@@ -823,7 +890,9 @@ def lpmax(f, constr):
     """return maximum of linear equation ``f`` under
     linear constraints expressed using Ge, Le or Eq.
 
-    All variables are unbounded unless constrained.
+    Constraints can be specified via explicit expressions or via
+    symbol assumptions. Symbols with ``integer=True`` will be
+    optimized for integer solutions.
 
     Examples
     ========

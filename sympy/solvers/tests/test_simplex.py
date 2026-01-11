@@ -262,3 +262,21 @@ def test_28104():
     val, var = lpmax(0, [x >= 0, y >= 0])
     assert var[y] is S.Zero
     assert var[x] is S.Zero
+
+
+def test_assumptions():
+    # nonnegative assumption
+    b0, b1 = symbols('b0 b1', nonnegative=True)
+    # The fix ensures that symbols with nonnegative=True are treated as >= 0
+    # even if not explicitly constrained in the list.
+    assert lpmin(b0 + b1, [b0 + b1 >= 1]) == (1, {b0: 1, b1: 0})
+
+    # integer assumption
+    x0, x1 = symbols('x0 x1', integer=True, nonnegative=True)
+    # 2*x0 + 2*x1 >= 1, x0, x1 >= 0 integers. 
+    # Min is 1 (e.g. at x0=1, x1=0), not 0.5.
+    assert lpmin(x0 + x1, [2*x0 + 2*x1 >= 1]) == (1, {x0: 1, x1: 0})
+
+    # infeasible integer
+    x = symbols('x', integer=True)
+    raises(InfeasibleLPError, lambda: lpmin(x, [x >= Rational(1, 10), x <= Rational(9, 10)]))
