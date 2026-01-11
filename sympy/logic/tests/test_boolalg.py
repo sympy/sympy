@@ -1476,7 +1476,7 @@ def test_transitive_inequality_simplification():
     # x < y (Keep), y < z (Keep), x < z (Redundant -> Remove)
     expr = And(x < y, y < z, x < z)
     assert simplify(expr) == And(x < y, y < z)
-    
+
     # Case 2: Scrambled Order
     # The simplifier should handle inputs regardless of their position in the And()
     expr2 = And(x < z, y < z, x < y)
