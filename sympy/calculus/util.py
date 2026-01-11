@@ -81,6 +81,66 @@ def continuous_domain(f, symbol, domain):
         raise NotImplementedError(filldedent('''
             Domain must be a subset of S.Reals.
             '''))
+
+    if isinstance(f, Piecewise):
+        result = S.EmptySet
+        covered = S.EmptySet
+        for expr, cond in f.args:
+            cond_domain = cond.as_set().intersect(domain)
+            valid_piece_domain = cond_domain - covered
+            if valid_piece_domain is S.EmptySet:
+                continue
+
+            piece_cont = continuous_domain(expr, symbol, valid_piece_domain)
+            # Remove boundary to force explicit limit check at stitching points
+            if hasattr(valid_piece_domain, 'boundary'):
+                try:
+                    piece_cont -= valid_piece_domain.boundary
+                except (TypeError, AttributeError):
+                    pass
+
+            result = Union(result, piece_cont)
+            covered = Union(covered, cond_domain)
+
+        potential_holes = domain - result
+        if potential_holes.is_FiniteSet:
+            for point in potential_holes:
+                try:
+                    val = f.subs(symbol, point)
+                    if not val.is_finite:
+                        continue
+                    is_cont = True
+
+                    # Left Limit check
+                    left_expr = None
+                    for expr, cond in f.args:
+                        cond_set = cond.as_set()
+                        if not cond_set.intersect(Interval.open(point - 1, point)).is_empty:
+                             if point in cond_set.closure:
+                                 left_expr = expr
+                                 break
+                    if left_expr is not None and left_expr.limit(symbol, point, dir='-') != val:
+                        is_cont = False
+
+                    # Right limit check
+                    if is_cont:
+                        right_expr = None
+                        for expr, cond in f.args:
+                            cond_set = cond.as_set()
+                            if not cond_set.intersect(Interval.open(point, point + 1)).is_empty:
+                                if point in cond_set.closure:
+                                    right_expr = expr
+                                    break
+                        if right_expr is not None and right_expr.limit(symbol, point, dir='+') != val:
+                            is_cont = False
+
+
+                    if is_cont:
+                        result = Union(result, FiniteSet(point))
+                except Exception:
+                    pass
+        return result
+
     implemented = [Pow, exp, log, Abs, frac,
                    sin, cos, tan, cot, sec, csc,
                    asin, acos, atan, acot, asec, acsc,
@@ -212,6 +272,31 @@ def function_range(f, symbol, domain):
     if domain is S.EmptySet:
         return S.EmptySet
 
+    from sympy.functions.elementary.piecewise import Piecewise
+
+    if isinstance(f, Piecewise):
+        range_int = S.EmptySet
+        covered_domain = S.EmptySet
+
+        for expr, condition in f.args:
+            if expr is S.NaN or expr == S.NaN:
+                    continue
+
+            # Intersect with the requested domain immediately.
+            cond_domain = condition.as_set().intersect(domain)
+
+            # The active domain is the condition's domain minus any previously covered domain
+            active_domain = cond_domain - covered_domain
+
+            if active_domain is not S.EmptySet:
+                if expr is S.NaN:
+                    continue
+                range_int += function_range(expr, symbol, active_domain)
+
+            covered_domain += cond_domain
+
+        return range_int
+
     period = periodicity(f, symbol)
     if period == S.Zero:
         # the expression is constant wrt symbol
@@ -324,7 +409,6 @@ def not_empty_in(finset_intersection, *syms):
     Union(Interval.Lopen(-2, -1), Interval(2, oo))
     """
 
-    # TODO: handle piecewise defined functions
     # TODO: handle transcendental functions
     # TODO: handle multivariate functions
     if len(syms) == 0:
@@ -358,6 +442,21 @@ def not_empty_in(finset_intersection, *syms):
     def elm_domain(expr, intrvl):
         """ Finds the domain of an expression in any given interval """
         from sympy.solvers.solveset import solveset
+
+        if isinstance(expr, Piecewise):
+            result_domain = S.EmptySet
+            covered_domain = S.EmptySet
+
+            for piece_expr, piece_cond in expr.args:
+                cond_set = piece_cond.as_set().intersect(S.Reals)
+                active_region = cond_set - covered_domain
+
+                if active_region is not S.EmptySet:
+                    sub_domain = elm_domain(piece_expr, intrvl)
+                    result_domain = Union(result_domain, Intersection(sub_domain, active_region))
+
+                covered_domain = Union(covered_domain, cond_set)
+            return result_domain
 
         _start = intrvl.start
         _end = intrvl.end
