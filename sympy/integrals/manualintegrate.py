@@ -24,7 +24,6 @@ To enable simple substitutions, add the match to find_substitutions.
 from __future__ import annotations
 from typing import NamedTuple, Type, Callable, Sequence
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
 from collections import defaultdict
 from collections.abc import Mapping
 
@@ -72,10 +71,13 @@ from sympy.utilities.iterables import iterable
 from sympy.utilities.misc import debug
 
 
-@dataclass
 class Rule(ABC):
     integrand: Expr
     variable: Symbol
+
+    def __init__(self, integrand: Expr, variable: Symbol):
+        self.integrand = integrand
+        self.variable = variable
 
     @abstractmethod
     def eval(self) -> Expr:
@@ -86,26 +88,36 @@ class Rule(ABC):
         pass
 
 
-@dataclass
 class AtomicRule(Rule, ABC):
     """A simple rule that does not depend on other rules"""
     def contains_dont_know(self) -> bool:
         return False
 
 
-@dataclass
 class ConstantRule(AtomicRule):
     """integrate(a, x)  ->  a*x"""
     def eval(self) -> Expr:
         return self.integrand * self.variable
 
 
-@dataclass
 class ConstantTimesRule(Rule):
     """integrate(a*f(x), x)  ->  a*integrate(f(x), x)"""
     constant: Expr
     other: Expr
     substep: Rule
+
+    def __init__(
+        self,
+        integrand: Expr,
+        variable: Symbol,
+        constant: Expr,
+        other: Expr,
+        substep: Rule,
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.constant = constant
+        self.other = other
+        self.substep = substep
 
     def eval(self) -> Expr:
         return self.constant * self.substep.eval()
@@ -114,11 +126,17 @@ class ConstantTimesRule(Rule):
         return self.substep.contains_dont_know()
 
 
-@dataclass
 class PowerRule(AtomicRule):
     """integrate(x**a, x)"""
     base: Expr
     exp: Expr
+
+    def __init__(
+        self, integrand: Expr, variable: Symbol, base: Expr, exp: Expr
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.base = base
+        self.exp = exp
 
     def eval(self) -> Expr:
         return Piecewise(
@@ -127,11 +145,17 @@ class PowerRule(AtomicRule):
         )
 
 
-@dataclass
 class NestedPowRule(AtomicRule):
     """integrate((x**a)**b, x)"""
     base: Expr
     exp: Expr
+
+    def __init__(
+        self, integrand: Expr, variable: Symbol, base: Expr, exp: Expr
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.base = base
+        self.exp = exp
 
     def eval(self) -> Expr:
         m = self.base * self.integrand
@@ -139,10 +163,13 @@ class NestedPowRule(AtomicRule):
                          (m * log(self.base), True))
 
 
-@dataclass
 class AddRule(Rule):
     """integrate(f(x) + g(x), x) -> integrate(f(x), x) + integrate(g(x), x)"""
     substeps: list[Rule]
+
+    def __init__(self, integrand: Expr, variable: Symbol, substeps: list[Rule]) -> None:
+        super().__init__(integrand, variable)
+        self.substeps = substeps
 
     def eval(self) -> Expr:
         return Add(*(substep.eval() for substep in self.substeps))
@@ -151,12 +178,24 @@ class AddRule(Rule):
         return any(substep.contains_dont_know() for substep in self.substeps)
 
 
-@dataclass
 class URule(Rule):
     """integrate(f(g(x))*g'(x), x) -> integrate(f(u), u), u = g(x)"""
     u_var: Symbol
     u_func: Expr
     substep: Rule
+
+    def __init__(
+        self,
+        integrand: Expr,
+        variable: Symbol,
+        u_var: Symbol,
+        u_func: Expr,
+        substep: Rule,
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.u_var = u_var
+        self.u_func = u_func
+        self.substep = substep
 
     def eval(self) -> Expr:
         result = self.substep.eval()
@@ -171,13 +210,27 @@ class URule(Rule):
         return self.substep.contains_dont_know()
 
 
-@dataclass
 class PartsRule(Rule):
     """integrate(u(x)*v'(x), x) -> u(x)*v(x) - integrate(u'(x)*v(x), x)"""
     u: Symbol
     dv: Expr
     v_step: Rule
     second_step: Rule | None  # None when is a substep of CyclicPartsRule
+
+    def __init__(
+        self,
+        integrand: Expr,
+        variable: Symbol,
+        u: Symbol,
+        dv: Expr,
+        v_step: Rule,
+        second_step: Rule | None = None,
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.u = u
+        self.dv = dv
+        self.v_step = v_step
+        self.second_step = second_step
 
     def eval(self) -> Expr:
         assert self.second_step is not None
@@ -189,11 +242,21 @@ class PartsRule(Rule):
             self.second_step is not None and self.second_step.contains_dont_know())
 
 
-@dataclass
 class CyclicPartsRule(Rule):
     """Apply PartsRule multiple times to integrate exp(x)*sin(x)"""
     parts_rules: list[PartsRule]
     coefficient: Expr
+
+    def __init__(
+        self,
+        integrand: Expr,
+        variable: Symbol,
+        parts_rules: list[PartsRule],
+        coefficient: Expr,
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.parts_rules = parts_rules
+        self.coefficient = coefficient
 
     def eval(self) -> Expr:
         result = []
@@ -207,124 +270,142 @@ class CyclicPartsRule(Rule):
         return any(substep.contains_dont_know() for substep in self.parts_rules)
 
 
-@dataclass
 class TrigRule(AtomicRule, ABC):
     pass
 
 
-@dataclass
 class SinRule(TrigRule):
     """integrate(sin(x), x) -> -cos(x)"""
     def eval(self) -> Expr:
         return -cos(self.variable)
 
 
-@dataclass
 class CosRule(TrigRule):
     """integrate(cos(x), x) -> sin(x)"""
     def eval(self) -> Expr:
         return sin(self.variable)
 
 
-@dataclass
 class SecTanRule(TrigRule):
     """integrate(sec(x)*tan(x), x) -> sec(x)"""
     def eval(self) -> Expr:
         return sec(self.variable)
 
 
-@dataclass
 class CscCotRule(TrigRule):
     """integrate(csc(x)*cot(x), x) -> -csc(x)"""
     def eval(self) -> Expr:
         return -csc(self.variable)
 
 
-@dataclass
 class Sec2Rule(TrigRule):
     """integrate(sec(x)**2, x) -> tan(x)"""
     def eval(self) -> Expr:
         return tan(self.variable)
 
 
-@dataclass
 class Csc2Rule(TrigRule):
     """integrate(csc(x)**2, x) -> -cot(x)"""
     def eval(self) -> Expr:
         return -cot(self.variable)
 
 
-@dataclass
 class HyperbolicRule(AtomicRule, ABC):
     pass
 
 
-@dataclass
 class SinhRule(HyperbolicRule):
     """integrate(sinh(x), x) -> cosh(x)"""
     def eval(self) -> Expr:
         return cosh(self.variable)
 
 
-@dataclass
 class CoshRule(HyperbolicRule):
     """integrate(cosh(x), x) -> sinh(x)"""
     def eval(self):
         return sinh(self.variable)
 
 
-@dataclass
 class ExpRule(AtomicRule):
     """integrate(a**x, x) -> a**x/ln(a)"""
     base: Expr
     exp: Expr
 
+    def __init__(
+        self, integrand: Expr, variable: Symbol, base: Expr, exp: Expr
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.base = base
+        self.exp = exp
+
     def eval(self) -> Expr:
         return self.integrand / log(self.base)
 
 
-@dataclass
 class ReciprocalRule(AtomicRule):
     """integrate(1/x, x) -> ln(x)"""
     base: Expr
+
+    def __init__(self, integrand: Expr, variable: Symbol, base: Expr) -> None:
+        super().__init__(integrand, variable)
+        self.base = base
 
     def eval(self) -> Expr:
         return log(self.base)
 
 
-@dataclass
 class ArcsinRule(AtomicRule):
     """integrate(1/sqrt(1-x**2), x) -> asin(x)"""
     def eval(self) -> Expr:
         return asin(self.variable)
 
 
-@dataclass
 class ArcsinhRule(AtomicRule):
     """integrate(1/sqrt(1+x**2), x) -> asin(x)"""
     def eval(self) -> Expr:
         return asinh(self.variable)
 
 
-@dataclass
 class ReciprocalSqrtQuadraticRule(AtomicRule):
     """integrate(1/sqrt(a+b*x+c*x**2), x) -> log(2*sqrt(c)*sqrt(a+b*x+c*x**2)+b+2*c*x)/sqrt(c)"""
     a: Expr
     b: Expr
     c: Expr
 
+    def __init__(
+        self, integrand: Expr, variable: Symbol, a: Expr, b: Expr, c: Expr
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.a = a
+        self.b = b
+        self.c = c
+
     def eval(self) -> Expr:
         a, b, c, x = self.a, self.b, self.c, self.variable
         return log(2*sqrt(c)*sqrt(a+b*x+c*x**2)+b+2*c*x)/sqrt(c)
 
 
-@dataclass
 class SqrtQuadraticDenomRule(AtomicRule):
     """integrate(poly(x)/sqrt(a+b*x+c*x**2), x)"""
     a: Expr
     b: Expr
     c: Expr
     coeffs: list[Expr]
+
+    def __init__(
+        self,
+        integrand: Expr,
+        variable: Symbol,
+        a: Expr,
+        b: Expr,
+        c: Expr,
+        coeffs: list[Expr],
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.a = a
+        self.b = b
+        self.c = c
+        self.coeffs = coeffs
 
     def eval(self) -> Expr:
         a, b, c, coeffs, x = self.a, self.b, self.c, self.coeffs.copy(), self.variable
@@ -354,22 +435,34 @@ class SqrtQuadraticDenomRule(AtomicRule):
                      for i in range(len(result_coeffs))), e/c)*s + I0
 
 
-@dataclass
 class SqrtQuadraticRule(AtomicRule):
     """integrate(sqrt(a+b*x+c*x**2), x)"""
     a: Expr
     b: Expr
     c: Expr
 
+    def __init__(
+        self, integrand: Expr, variable: Symbol, a: Expr, b: Expr, c: Expr
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.a = a
+        self.b = b
+        self.c = c
+
     def eval(self) -> Expr:
         step = sqrt_quadratic_rule(IntegralInfo(self.integrand, self.variable), degenerate=False)
         return step.eval()
 
 
-@dataclass
 class AlternativeRule(Rule):
     """Multiple ways to do integration."""
     alternatives: list[Rule]
+
+    def __init__(
+        self, integrand: Expr, variable: Symbol, alternatives: list[Rule]
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.alternatives = alternatives
 
     def eval(self) -> Expr:
         return self.alternatives[0].eval()
@@ -378,7 +471,6 @@ class AlternativeRule(Rule):
         return any(substep.contains_dont_know() for substep in self.alternatives)
 
 
-@dataclass
 class DontKnowRule(Rule):
     """Leave the integral as is."""
     def eval(self) -> Expr:
@@ -388,7 +480,6 @@ class DontKnowRule(Rule):
         return True
 
 
-@dataclass
 class DerivativeRule(AtomicRule):
     """integrate(f'(x), x) -> f(x)"""
     def eval(self) -> Expr:
@@ -401,11 +492,17 @@ class DerivativeRule(AtomicRule):
         return Derivative(self.integrand.expr, *variable_count)
 
 
-@dataclass
 class RewriteRule(Rule):
     """Rewrite integrand to another form that is easier to handle."""
     rewritten: Expr
     substep: Rule
+
+    def __init__(
+        self, integrand: Expr, variable: Symbol, rewritten: Expr, substep: Rule
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.rewritten = rewritten
+        self.substep = substep
 
     def eval(self) -> Expr:
         return self.substep.eval()
@@ -414,15 +511,22 @@ class RewriteRule(Rule):
         return self.substep.contains_dont_know()
 
 
-@dataclass
 class CompleteSquareRule(RewriteRule):
     """Rewrite a+b*x+c*x**2 to a-b**2/(4*c) + c*(x+b/(2*c))**2"""
     pass
 
 
-@dataclass
 class PiecewiseRule(Rule):
     subfunctions: Sequence[tuple[Rule, bool | Boolean]]
+
+    def __init__(
+        self,
+        integrand: Expr,
+        variable: Symbol,
+        subfunctions: Sequence[tuple[Rule, bool | Boolean]],
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.subfunctions = subfunctions
 
     def eval(self) -> Expr:
         return Piecewise(*[(substep.eval(), cond)
@@ -432,11 +536,23 @@ class PiecewiseRule(Rule):
         return any(substep.contains_dont_know() for substep, _ in self.subfunctions)
 
 
-@dataclass
 class HeavisideRule(Rule):
     harg: Expr
     ibnd: Expr
     substep: Rule
+
+    def __init__(
+        self,
+        integrand: Expr,
+        variable: Symbol,
+        harg: Expr,
+        ibnd: Expr,
+        substep: Rule,
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.harg = harg
+        self.ibnd = ibnd
+        self.substep = substep
 
     def eval(self) -> Expr:
         # If we are integrating over x and the integrand has the form
@@ -450,11 +566,18 @@ class HeavisideRule(Rule):
         return self.substep.contains_dont_know()
 
 
-@dataclass
 class DiracDeltaRule(AtomicRule):
     n: Expr
     a: Expr
     b: Expr
+
+    def __init__(
+        self, integrand: Expr, variable: Symbol, n: Expr, a: Expr, b: Expr
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.n = n
+        self.a = a
+        self.b = b
 
     def eval(self) -> Expr:
         n, a, b, x = self.n, self.a, self.b, self.variable
@@ -463,13 +586,29 @@ class DiracDeltaRule(AtomicRule):
         return DiracDelta(a+b*x, n-1)/b
 
 
-@dataclass
 class TrigSubstitutionRule(Rule):
     theta: Expr
     func: Expr
     rewritten: Expr
     substep: Rule
     restriction: bool | Boolean
+
+    def __init__(
+        self,
+        integrand: Expr,
+        variable: Symbol,
+        theta: Expr,
+        func: Expr,
+        rewritten: Expr,
+        substep: Rule,
+        restriction: bool | Boolean,
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.theta = theta
+        self.func = func
+        self.rewritten = rewritten
+        self.substep = substep
+        self.restriction = restriction
 
     def eval(self) -> Expr:
         theta, func, x = self.theta, self.func, self.variable
@@ -514,27 +653,43 @@ class TrigSubstitutionRule(Rule):
         return self.substep.contains_dont_know()
 
 
-@dataclass
 class ArctanRule(AtomicRule):
     """integrate(a/(b*x**2+c), x) -> a/b / sqrt(c/b) * atan(x/sqrt(c/b))"""
     a: Expr
     b: Expr
     c: Expr
 
+    def __init__(
+        self, integrand: Expr, variable: Symbol, a: Expr, b: Expr, c: Expr
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.a = a
+        self.b = b
+        self.c = c
+
     def eval(self) -> Expr:
         a, b, c, x = self.a, self.b, self.c, self.variable
         return a/b / sqrt(c/b) * atan(x/sqrt(c/b))
 
 
-@dataclass
 class OrthogonalPolyRule(AtomicRule, ABC):
     n: Expr
 
+    def __init__(self, integrand: Expr, variable: Symbol, n: Expr) -> None:
+        super().__init__(integrand, variable)
+        self.n = n
 
-@dataclass
+
 class JacobiRule(OrthogonalPolyRule):
     a: Expr
     b: Expr
+
+    def __init__(
+        self, integrand: Expr, variable: Symbol, n: Expr, a: Expr, b: Expr
+    ) -> None:
+        super().__init__(integrand, variable, n)
+        self.a = a
+        self.b = b
 
     def eval(self) -> Expr:
         n, a, b, x = self.n, self.a, self.b, self.variable
@@ -544,9 +699,12 @@ class JacobiRule(OrthogonalPolyRule):
             ((a + b + 2)*x**2/4 + (a - b)*x/2, Eq(n, 1)))
 
 
-@dataclass
 class GegenbauerRule(OrthogonalPolyRule):
     a: Expr
+
+    def __init__(self, integrand: Expr, variable: Symbol, n: Expr, a: Expr) -> None:
+        super().__init__(integrand, variable, n)
+        self.a = a
 
     def eval(self) -> Expr:
         n, a, x = self.n, self.a, self.variable
@@ -556,7 +714,6 @@ class GegenbauerRule(OrthogonalPolyRule):
             (S.Zero, True))
 
 
-@dataclass
 class ChebyshevTRule(OrthogonalPolyRule):
     def eval(self) -> Expr:
         n, x = self.n, self.variable
@@ -566,7 +723,6 @@ class ChebyshevTRule(OrthogonalPolyRule):
             (x**2/2, True))
 
 
-@dataclass
 class ChebyshevURule(OrthogonalPolyRule):
     def eval(self) -> Expr:
         n, x = self.n, self.variable
@@ -575,88 +731,93 @@ class ChebyshevURule(OrthogonalPolyRule):
             (S.Zero, True))
 
 
-@dataclass
 class LegendreRule(OrthogonalPolyRule):
     def eval(self) -> Expr:
         n, x = self.n, self.variable
         return(legendre(n + 1, x) - legendre(n - 1, x))/(2*n + 1)
 
 
-@dataclass
 class HermiteRule(OrthogonalPolyRule):
     def eval(self) -> Expr:
         n, x = self.n, self.variable
         return hermite(n + 1, x)/(2*(n + 1))
 
 
-@dataclass
 class LaguerreRule(OrthogonalPolyRule):
     def eval(self) -> Expr:
         n, x = self.n, self.variable
         return laguerre(n, x) - laguerre(n + 1, x)
 
 
-@dataclass
 class AssocLaguerreRule(OrthogonalPolyRule):
     a: Expr
+
+    def __init__(self, integrand: Expr, variable: Symbol, n: Expr, a: Expr) -> None:
+        super().__init__(integrand, variable, n)
+        self.a = a
 
     def eval(self) -> Expr:
         return -assoc_laguerre(self.n + 1, self.a - 1, self.variable)
 
 
-@dataclass
 class IRule(AtomicRule, ABC):
     a: Expr
     b: Expr
 
+    def __init__(self, integrand: Expr, variable: Symbol, a: Expr, b: Expr) -> None:
+        super().__init__(integrand, variable)
+        self.a = a
+        self.b = b
 
-@dataclass
+
 class CiRule(IRule):
     def eval(self) -> Expr:
         a, b, x = self.a, self.b, self.variable
         return cos(b)*Ci(a*x) - sin(b)*Si(a*x)
 
 
-@dataclass
 class ChiRule(IRule):
     def eval(self) -> Expr:
         a, b, x = self.a, self.b, self.variable
         return cosh(b)*Chi(a*x) + sinh(b)*Shi(a*x)
 
 
-@dataclass
 class EiRule(IRule):
     def eval(self) -> Expr:
         a, b, x = self.a, self.b, self.variable
         return exp(b)*Ei(a*x)
 
 
-@dataclass
 class SiRule(IRule):
     def eval(self) -> Expr:
         a, b, x = self.a, self.b, self.variable
         return sin(b)*Ci(a*x) + cos(b)*Si(a*x)
 
 
-@dataclass
 class ShiRule(IRule):
     def eval(self) -> Expr:
         a, b, x = self.a, self.b, self.variable
         return sinh(b)*Chi(a*x) + cosh(b)*Shi(a*x)
 
 
-@dataclass
 class LiRule(IRule):
     def eval(self) -> Expr:
         a, b, x = self.a, self.b, self.variable
         return li(a*x + b)/a
 
 
-@dataclass
 class ErfRule(AtomicRule):
     a: Expr
     b: Expr
     c: Expr
+
+    def __init__(
+        self, integrand: Expr, variable: Symbol, a: Expr, b: Expr, c: Expr
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.a = a
+        self.b = b
+        self.c = c
 
     def eval(self) -> Expr:
         a, b, c, x = self.a, self.b, self.c, self.variable
@@ -670,11 +831,18 @@ class ErfRule(AtomicRule):
                 erfi((2*a*x + b)/(2*sqrt(a)))
 
 
-@dataclass
 class FresnelCRule(AtomicRule):
     a: Expr
     b: Expr
     c: Expr
+
+    def __init__(
+        self, integrand: Expr, variable: Symbol, a: Expr, b: Expr, c: Expr
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.a = a
+        self.b = b
+        self.c = c
 
     def eval(self) -> Expr:
         a, b, c, x = self.a, self.b, self.c, self.variable
@@ -683,11 +851,18 @@ class FresnelCRule(AtomicRule):
             sin(b**2/(4*a) - c)*fresnels((2*a*x + b)/sqrt(2*a*S.Pi)))
 
 
-@dataclass
 class FresnelSRule(AtomicRule):
     a: Expr
     b: Expr
     c: Expr
+
+    def __init__(
+        self, integrand: Expr, variable: Symbol, a: Expr, b: Expr, c: Expr
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.a = a
+        self.b = b
+        self.c = c
 
     def eval(self) -> Expr:
         a, b, c, x = self.a, self.b, self.c, self.variable
@@ -696,38 +871,54 @@ class FresnelSRule(AtomicRule):
             sin(b**2/(4*a) - c)*fresnelc((2*a*x + b)/sqrt(2*a*S.Pi)))
 
 
-@dataclass
 class PolylogRule(AtomicRule):
     a: Expr
     b: Expr
+
+    def __init__(self, integrand: Expr, variable: Symbol, a: Expr, b: Expr) -> None:
+        super().__init__(integrand, variable)
+        self.a = a
+        self.b = b
 
     def eval(self) -> Expr:
         return polylog(self.b + 1, self.a * self.variable)
 
 
-@dataclass
 class UpperGammaRule(AtomicRule):
     a: Expr
     e: Expr
+
+    def __init__(self, integrand: Expr, variable: Symbol, a: Expr, e: Expr) -> None:
+        super().__init__(integrand, variable)
+        self.a = a
+        self.e = e
 
     def eval(self) -> Expr:
         a, e, x = self.a, self.e, self.variable
         return x**e * (-a*x)**(-e) * uppergamma(e + 1, -a*x)/a
 
 
-@dataclass
 class EllipticFRule(AtomicRule):
     a: Expr
     d: Expr
+
+    def __init__(self, integrand: Expr, variable: Symbol, a: Expr, d: Expr) -> None:
+        super().__init__(integrand, variable)
+        self.a = a
+        self.d = d
 
     def eval(self) -> Expr:
         return elliptic_f(self.variable, self.d/self.a)/sqrt(self.a)
 
 
-@dataclass
 class EllipticERule(AtomicRule):
     a: Expr
     d: Expr
+
+    def __init__(self, integrand: Expr, variable: Symbol, a: Expr, d: Expr) -> None:
+        super().__init__(integrand, variable)
+        self.a = a
+        self.d = d
 
     def eval(self) -> Expr:
         return elliptic_e(self.variable, self.d/self.a)*sqrt(self.a)
