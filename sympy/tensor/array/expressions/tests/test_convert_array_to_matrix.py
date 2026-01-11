@@ -256,7 +256,7 @@ def test_arrayexpr_convert_array_to_diagonalized_vector():
     expected = _array_contraction(_array_tensor_product(a, I1, OneArray(1), b, I1, OneArray(1), (a.T*b).applyfunc(cos)),
                                 (1, 3), (2, 10), (6, 8), (7, 11))
     assert cg.split_multiple_contractions().dummy_eq(expected)
-    assert convert_array_to_matrix(cg).doit().dummy_eq(MatMul(a, (a.T * b).applyfunc(cos), b.T))
+    assert convert_array_to_matrix(cg).doit().dummy_eq(MatMul(a, (a.T * b).applyfunc(cos), b.T).doit())
 
 
 def test_arrayexpr_convert_array_contraction_tp_additions():
@@ -451,7 +451,7 @@ def test_arrayexpr_convert_array_to_matrix_remove_trivial_dims():
     assert _remove_trivial_dims(expr) == (2*X4*X4.T, [1, 3, 4, 5])
 
     expr = ArrayDiagonal(ArrayTensorProduct(X1.applyfunc(exp), X1, X4, X1), (0, 2, 6), (1, 3, 7))
-    assert _remove_trivial_dims(expr) == (exp(X1[0, 0])*X4*X1**2, [2, 3])
+    assert _remove_trivial_dims(expr) == (X4*X1.applyfunc(exp)*X1**2, [])
 
 
 def test_arrayexpr_convert_array_to_matrix_diag2contraction_diagmatrix():
@@ -694,7 +694,7 @@ def test_convert_array_elementwise_function_to_matrix():
     d = Dummy("d")
 
     expr = ArrayElementwiseApplyFunc(Lambda(d, sin(d)), x.T*y)
-    assert convert_array_to_matrix(expr) == sin(MatrixElement(x.T*y, 0, 0))
+    assert convert_array_to_matrix(expr).dummy_eq((x.T*y).applyfunc(Lambda(d, sin(d))))
 
     expr = ArrayElementwiseApplyFunc(Lambda(d, d**2), x.T*y)
     assert convert_array_to_matrix(expr) == (x.T*y)**2

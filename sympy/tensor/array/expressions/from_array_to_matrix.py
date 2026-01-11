@@ -568,9 +568,6 @@ def _(expr: ArrayDiagonal):
 @_remove_trivial_dims.register(ElementwiseApplyFunction)
 def _(expr: ElementwiseApplyFunction):
     subexpr, removed = _remove_trivial_dims(expr.expr)
-    if subexpr.shape == (1, 1) and isinstance(subexpr, MatrixExpr):
-        # TODO: move this to ElementwiseApplyFunction
-        return expr.function(MatrixElement(subexpr, 0, 0)), removed + [0, 1]
     return ElementwiseApplyFunction(expr.function, subexpr), []
 
 

@@ -116,3 +116,7 @@ def test_applyfunc_shape_11_matrices():
     expr = M.applyfunc(double)
     assert isinstance(expr, MatMul)
     assert expr == 2*M
+
+    expr = M.applyfunc(sin)
+    assert expr.doit() == Matrix([[sin(M[0, 0])]])
+    assert isinstance(expr.doit(), Matrix)

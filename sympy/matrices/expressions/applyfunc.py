@@ -98,6 +98,9 @@ class ElementwiseApplyFunction(MatrixExpr):
         if deep:
             expr = expr.doit(**hints)
         function = self.function
+        if self.shape == (1, 1):
+            from sympy.matrices.dense import Matrix
+            return Matrix([[self.function(self.expr[0, 0])]])
         if isinstance(function, Lambda) and function.is_identity:
             # This is a Lambda containing the identity function.
             return expr
