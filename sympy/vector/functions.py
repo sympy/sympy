@@ -1,3 +1,4 @@
+from sympy.matrices.exceptions import ShapeError
 from sympy.vector.coordsysrect import CoordSys3D
 from sympy.vector.deloperator import Del
 from sympy.vector.scalar import BaseScalar
@@ -427,6 +428,45 @@ def matrix_to_vector(matrix, system):
     for i, x in enumerate(matrix):
         outvec += x * vects[i]
     return outvec
+
+
+def matrix_to_dyadic(matrix, system):
+    """
+    Converts a 3 x 3 matrix to a Dyadic instance.
+
+    Parameters
+    ==========
+
+    matrix : Matrix, Dimensions: (3, 3)
+        The matrix to be converted to a dyadic
+
+    system : CoordSys3D
+        The coordinate system the dyadic is to be defined in
+
+    Examples
+    ========
+
+    >>> from sympy import Matrix
+    >>> from sympy.vector import CoordSys3D, matrix_to_vector
+    >>> C = CoordSys3D('C')
+    >>> m = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+    >>> d = matrix_to_dyadic(m, C)
+    >>> d
+    (C.i|C.i) + 2*(C.i|C.j) + 3*(C.i|C.k) + 4*(C.j|C.i) + 5*(C.j|C.j) + 6*(C.j|C.k) + 7*(C.k|C.i) + 8*(C.k|C.j) + 9*(C.k|C.k)
+    >>> d.to_matrix(C) == m
+    True
+
+    """
+    n, m = matrix.shape
+    if (n != 3) or (m != 3):
+        raise ShapeError("A 3 x 3 matrix is required.")
+
+    out = Dyadic.zero
+    vects = system.base_vectors()
+    for i in range(3):
+        for j in range(3):
+            out += matrix[i, j] * (vects[i] | vects[j])
+    return out
 
 
 def _path(from_object, to_object):
