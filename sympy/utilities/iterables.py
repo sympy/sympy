@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, overload, Union
+from typing import TYPE_CHECKING, overload
 
 from collections import Counter, defaultdict, OrderedDict
 from itertools import (
