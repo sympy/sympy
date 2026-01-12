@@ -324,36 +324,36 @@ def multiset(seq: Sequence[T]) -> dict[T, int]:
 
 @overload
 def ibin(
-    n: int, 
-    bits: int|None, 
+    n: int,
+    bits: int|None,
     str: Literal[False],
     ) ->list [int]: ...
 
 @overload
 def ibin(
     n: int,
-    bits: int, 
+    bits: int,
     str: Literal[True],
     ) -> str : ...
 
 @overload
 def ibin(
-    n: int, 
-    bits: None = None, 
+    n: int,
+    bits: None = None,
     str: Literal[False]=False,
     ) -> Iterator[tuple[int, ...]]: ...
 
 @overload
 def ibin(
-    n: int, 
-    bits: None, 
+    n: int,
+    bits: None,
     str: Literal[True],
     ) -> Iterator[str] : ...
 
 
 
 def ibin(
-        n: int, 
+        n: int,
         bits: int|None = None,
         str: bool = False,
         ) -> list [int]|str|Iterator[tuple[int, ...]]|Iterator[str]:
@@ -429,8 +429,8 @@ def ibin(
 
 
 def variations(
-        seq: Sequence[T], 
-        n: int, 
+        seq: Sequence[T],
+        n: int,
         repetition: bool = False,
         ) -> Iterator[tuple[T,...]]:
     r"""Returns an iterator over the n-sized variations of ``seq`` (size N).
@@ -480,8 +480,8 @@ def variations(
 
 
 def subsets(
-        seq: Sequence[T], 
-        k: int|None = None, 
+        seq: Sequence[T],
+        k: int|None = None,
         repetition: bool = False,
         ) -> Iterator[tuple[T,...]]:
     r"""Generates all `k`-subsets (combinations) from an `n`-element set, ``seq``.
