@@ -322,7 +322,41 @@ def multiset(seq: Sequence[T]) -> dict[T, int]:
 
 
 
-def ibin(n: int, bits=None, str: bool = False) -> Union[list[int],str,Iterator[tuple[int,...]],Iterator[str]] :
+@overload
+def ibin(
+    n: int, 
+    bits: int|None, 
+    str: Literal[False],
+    ) ->list [int]: ...
+
+@overload
+def ibin(
+    n: int,
+    bits: int, 
+    str: Literal[True],
+    ) -> str : ...
+
+@overload
+def ibin(
+    n: int, 
+    bits: None=None, 
+    str: Literal[False]=False,
+    ) -> Iterator[tuple[int, ...]]: ...
+
+@overload
+def ibin(
+    n: int, 
+    bits: None, 
+    str: Literal[True],
+    ) -> Iterator[str] : ...
+
+
+
+def ibin(
+        n: int, 
+        bits: int|None=None,
+        str: bool = False,
+        ) -> list [int]|str|Iterator[tuple[int, ...]]|Iterator[str]:
     """Return a list of length ``bits`` corresponding to the binary value
     of ``n`` with small bits to the right (last). If bits is omitted, the
     length will be the number required to represent ``n``. If the bits are
@@ -394,7 +428,11 @@ def ibin(n: int, bits=None, str: bool = False) -> Union[list[int],str,Iterator[t
             return (f'{i:b}'.rjust(n, "0") for i in range(2**n))
 
 
-def variations(seq: Sequence[T], n: int, repetition: bool = False) -> Iterator[tuple[T,...]]:
+def variations(
+        seq: Sequence[T], 
+        n: int, 
+        repetition: bool = False,
+        ) -> Iterator[tuple[T,...]]:
     r"""Returns an iterator over the n-sized variations of ``seq`` (size N).
     ``repetition`` controls whether items in ``seq`` can appear more than once;
 
@@ -441,7 +479,11 @@ def variations(seq: Sequence[T], n: int, repetition: bool = False) -> Iterator[t
             return product(seq, repeat=n)
 
 
-def subsets(seq: Sequence[T], k=None, repetition: bool = False) -> Iterator[tuple[T,...]]:
+def subsets(
+        seq: Sequence[T], 
+        k: int|None=None, 
+        repetition: bool = False,
+        ) -> Iterator[tuple[T,...]]:
     r"""Generates all `k`-subsets (combinations) from an `n`-element set, ``seq``.
 
     A `k`-subset of an `n`-element set is any subset of length exactly `k`. The
