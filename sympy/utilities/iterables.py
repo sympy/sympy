@@ -3131,7 +3131,7 @@ def is_sequence(
 def is_sequence(
     i: object,
     include: type | tuple[type, ...] | None = None,
-) -> "TypeIs[Sequence[Any]]":
+) -> TypeIs[Sequence[Any]]:
     """
     Return a boolean indicating whether ``i`` is a sequence in the SymPy
     sense. If anything that fails the test below should be included as
