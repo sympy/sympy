@@ -1,4 +1,4 @@
-from sympy import Lambda, KroneckerProduct, sqrt
+from sympy import Lambda, KroneckerProduct, sqrt, sin
 from sympy.core.symbol import symbols, Dummy
 from sympy.matrices.expressions.hadamard import (HadamardPower, HadamardProduct)
 from sympy.matrices.expressions.inverse import Inverse
@@ -140,3 +140,15 @@ def test_arrayexpr_convert_matrix_to_array():
     expr = sqrt(Trace(X.T*X))
     cg = convert_matrix_to_array(expr)
     assert cg.dummy_eq(ArrayElementwiseApplyFunc(sqrt, ArrayContraction(ArrayTensorProduct(X, X), (0, 2), (1, 3))))
+
+    expr = i**3
+    assert convert_matrix_to_array(expr) == expr
+
+    expr = i**j
+    assert convert_matrix_to_array(expr) == expr
+
+    expr = X ** sin(i)
+    assert convert_matrix_to_array(expr) == expr
+
+    expr = X ** sin(1)
+    assert convert_matrix_to_array(expr) == expr

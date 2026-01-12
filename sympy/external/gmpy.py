@@ -4,6 +4,7 @@ from ctypes import c_long, sizeof
 from functools import reduce
 from typing import TYPE_CHECKING
 from warnings import warn
+from types import ModuleType
 
 from sympy.external import import_module
 
@@ -151,8 +152,10 @@ def _get_gmpy2(sympy_ground_types):
 # SYMPY_GROUND_TYPES can be flint, gmpy, gmpy2, python or auto (default)
 #
 _SYMPY_GROUND_TYPES = os.environ.get('SYMPY_GROUND_TYPES', 'auto').lower()
-_flint = None
-_gmpy = None
+
+_flint:  ModuleType | None = None
+_gmpy:  ModuleType | None = None
+
 
 #
 # First handle auto-detection of flint/gmpy2. We will prefer flint if available
@@ -318,8 +321,8 @@ if TYPE_CHECKING:
     def kronecker(x: MPZ | int, y: MPZ | int) -> int: ...
 
     def is_square(x: MPZ | int) -> bool: ...
-    def is_fermat_prp(x: MPZ | int) -> bool: ...
-    def is_euler_prp(x: MPZ | int) -> bool: ...
+    def is_fermat_prp(n: MPZ | int, a: MPZ | int) -> bool: ...
+    def is_euler_prp(n: MPZ | int, a: MPZ | int) -> bool: ...
     def is_strong_prp(x: MPZ | int) -> bool: ...
     def is_fibonacci_prp(x: MPZ | int) -> bool: ...
     def is_lucas_prp(x: MPZ | int) -> bool: ...

@@ -103,6 +103,21 @@ def test_special_denom():
     assert special_denom(a, b, Poly(1, t), c, Poly(1, t), DE) == \
         (a, Poly(t**2/x**2 + (2/x - 1)*t, t), Poly(t**2/x**2 + (2/x - 1)*t, t), Poly(t, t))
 
+    # Example 6.2.2, adding a hypertangent case where the special denominator
+    # is not required in the reduction of the system, hence returning h = 1
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1 + t**2, t)]})
+    a = Poly(t, t, domain='ZZ')
+    ba = Poly((t - 1)*(t**2 + 1), t, domain='ZZ')
+    bd = Poly(1, t, domain='ZZ')
+    ca = Poly(1, t, domain='ZZ')
+    cd = Poly(1, t, domain='ZZ')
+    expected_a = Poly(t, t, domain='ZZ')
+    expected_b = Poly(t**3 - t**2 + t - 1, t, domain='ZZ')
+    expected_c = Poly(1, t, domain='ZZ')
+    expected_h = Poly(1, t, domain='ZZ')
+    assert special_denom(a, ba, bd, ca, cd, DE) == \
+        (expected_a, expected_b, expected_c, expected_h)
+
 def test_bound_degree_fail():
     # Primitive
     DE = DifferentialExtension(extension={'D': [Poly(1, x),

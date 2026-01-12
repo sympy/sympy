@@ -6,14 +6,20 @@ from __future__ import annotations
 from typing import Any
 
 from sympy.core import S, Rational, Pow, Basic, Mul, Number
+from sympy.core.function import Lambda
 from sympy.core.mul import _keep_coeff
 from sympy.core.numbers import Integer
 from sympy.core.relational import Relational
 from sympy.core.sorting import default_sort_key
+from sympy.core.symbol import Symbol
 from sympy.external.mpmath import prec_to_dps, to_str as mlib_to_str
 from sympy.utilities.iterables import sift
 from .precedence import precedence, PRECEDENCE
 from .printer import Printer, print_function
+
+
+_rootof_x = Symbol('x')
+_rootsum_w = Symbol('w')
 
 
 class StrPrinter(Printer):
@@ -777,14 +783,15 @@ class StrPrinter(Printer):
                            self.parenthesize(expr.rhs, precedence(expr)))
 
     def _print_ComplexRootOf(self, expr):
-        return "CRootOf(%s, %d)" % (self._print_Add(expr.expr,  order='lex'),
-                                    expr.index)
+        poly_expr = expr.poly(_rootof_x)
+        return "CRootOf(%s, %d)" % (self._print_Add(poly_expr, order='lex'), expr.index)
 
     def _print_RootSum(self, expr):
-        args = [self._print_Add(expr.expr, order='lex')]
+        args = [self._print_Add(expr.poly(_rootsum_w), order='lex')]
 
         if expr.fun is not S.IdentityFunction:
-            args.append(self._print(expr.fun))
+            func = Lambda(_rootsum_w, expr.fun(_rootsum_w))
+            args.append(self._print(func))
 
         return "RootSum(%s)" % ", ".join(args)
 

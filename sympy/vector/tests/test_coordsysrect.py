@@ -8,7 +8,7 @@ from sympy.core.symbol import symbols
 from sympy.functions.elementary.hyperbolic import (cosh, sinh)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (acos, atan2, cos, sin)
-from sympy.matrices.dense import zeros
+from sympy.matrices.dense import zeros, eye
 from sympy.matrices.immutable import ImmutableDenseMatrix as Matrix
 from sympy.simplify.simplify import simplify
 from sympy.vector.functions import express
@@ -135,7 +135,7 @@ def test_coordinate_vars():
                                A.x: E.x*cos(a) - E.y*sin(a) + a,
                                A.y: E.x*sin(a) + E.y*cos(a) + b}
     assert E.scalar_map(A) == {E.x: (A.x - a)*cos(a) + (A.y - b)*sin(a),
-                               E.y: (-A.x + a)*sin(a) + (A.y - b)*cos(a),
+                               E.y: (A.x - a)*sin(a)*-1 + (A.y - b)*cos(a),
                                E.z: A.z - c}
     F = A.locate_new('F', Vector.zero)
     assert A.scalar_map(F) == {A.z: F.z, A.x: F.x, A.y: F.y}
@@ -497,3 +497,276 @@ def test_cartesian_rotation_transformation_equations():
         xb * cos(alpha) - yb * sin(alpha),
         xb * sin(alpha) + yb * cos(alpha),
         zb)
+
+
+def test_change_of_basis_matrix_from_spherical_to_cartesian():
+    C = CoordSys3D("C")
+    S = C.create_new("S", transformation="spherical")
+    r, theta, phi = S.base_scalars()
+    T_fromS_toC = C.change_of_basis_matrix_from(S)
+    assert T_fromS_toC == Matrix([
+        [sin(theta)*cos(phi), cos(theta)*cos(phi), -sin(phi)],
+        [sin(theta)*sin(phi), cos(theta)*sin(phi), cos(phi)],
+        [cos(theta), -sin(theta), 0]
+    ])
+    assert S.change_of_basis_matrix_from(C) == T_fromS_toC.T
+
+
+def test_change_of_basis_matrix_from_cylindrical_to_cartesian():
+    Cart = CoordSys3D("Cart")
+    C = Cart.create_new("C", transformation="cylindrical")
+    r, theta, z = C.base_scalars()
+    T_fromC_toCart = Cart.change_of_basis_matrix_from(C)
+    assert T_fromC_toCart == Matrix([
+        [cos(theta), -sin(theta), 0],
+        [sin(theta), cos(theta), 0],
+        [0, 0, 1]
+    ])
+    assert C.change_of_basis_matrix_from(Cart) == T_fromC_toCart.T
+
+
+def test_change_of_basis_matrix_from_spherical_to_cylindrical():
+    # The following tests uses simplify in order to show `theta_c - phis_s`,
+    # which is a reminder to the user that the azimuthal angle
+    # of S and C are the same, phi_s=theta_c, [0, 2*pi[
+    Cart = CoordSys3D("Cart")
+    S = Cart.create_new("S", transformation="spherical")
+    C = Cart.create_new("C", transformation="cylindrical")
+    r_s, theta_s, phi_s = S.base_scalars()
+    r_c, theta_c, z_c = C.base_scalars()
+    T_fromS_toC = C.change_of_basis_matrix_from(S)
+    T_fromS_toC = T_fromS_toC.simplify().subs(theta_c - phi_s, 0)
+    assert T_fromS_toC == Matrix([
+        [sin(theta_s), cos(theta_s), 0],
+        [0, 0, 1],
+        [cos(theta_s), -sin(theta_s), 0]
+    ])
+    T_fromC_toS = S.change_of_basis_matrix_from(C).simplify()
+    T_fromC_toS = T_fromC_toS.subs(theta_c - phi_s, 0)
+    assert T_fromC_toS == T_fromS_toC.T
+
+
+def test_change_of_basis_matrix_from_simple_rotation():
+    alpha = symbols("alpha")
+    A = CoordSys3D("A")
+    B = A.orient_new_axis("B", alpha, A.k)
+    T_fromB_toA = A.change_of_basis_matrix_from(B)
+    assert T_fromB_toA == Matrix([
+        [cos(alpha), -sin(alpha), 0],
+        [sin(alpha), cos(alpha), 0],
+        [0, 0, 1]
+    ])
+    assert B.change_of_basis_matrix_from(A) == T_fromB_toA.T
+    assert T_fromB_toA == A.rotation_matrix(B)
+
+
+def test_change_of_basis_matrix_from_three_rotations():
+    a, b, g = symbols("alpha, beta, gamma")
+    bo = BodyOrienter(a, b, g, "123")
+    A = CoordSys3D("A")
+    B = A.orient_new("B", bo)
+    T_fromB_toA = A.change_of_basis_matrix_from(B)
+    assert T_fromB_toA == Matrix([
+        [cos(b) * cos(g), -sin(g) * cos(b), sin(b)],
+        [
+            sin(a) * sin(b) * cos(g) + sin(g) * cos(a),
+            -sin(a) * sin(b) * sin(g) + cos(a) * cos(g),
+            -sin(a) * cos(b)
+        ],
+        [
+            sin(a) * sin(g) - sin(b) * cos(a) * cos(g),
+            sin(a) * cos(g) + sin(b) * sin(g) * cos(a),
+            cos(a) * cos(b)
+        ]
+    ])
+    assert B.change_of_basis_matrix_from(A) == T_fromB_toA.T
+    assert A.rotation_matrix(B) == T_fromB_toA
+
+
+def test_change_of_basis_matrix_from_reflection_to_cartesian():
+    A = CoordSys3D("A")
+    B = A.create_new("B", transformation=lambda x,y,z: (y, x, z))
+    T_fromB_toA = A.change_of_basis_matrix_from(B)
+    assert T_fromB_toA == Matrix([
+        [0, 1, 0],
+        [1, 0, 0],
+        [0, 0, 1]
+    ])
+    assert B.change_of_basis_matrix_from(A) == T_fromB_toA.T
+
+    # a chain of systems
+    A = CoordSys3D("A")
+    B = A.create_new("B", transformation=lambda x,y,z: (y, x, z))
+    C = B.create_new("C", transformation=lambda x,y,z: (z, y, x))
+    T_fromB_toA = A.change_of_basis_matrix_from(B)
+    T_fromC_toA = A.change_of_basis_matrix_from(C)
+    T_fromC_toB = B.change_of_basis_matrix_from(C)
+    assert T_fromB_toA == Matrix([
+        [0, 1, 0],
+        [1, 0, 0],
+        [0, 0, 1]
+    ])
+    assert B.change_of_basis_matrix_from(A) == T_fromB_toA.T
+    assert T_fromC_toB == Matrix([
+        [0, 0, 1],
+        [0, 1, 0],
+        [1, 0, 0]
+    ])
+    assert C.change_of_basis_matrix_from(B) == T_fromC_toB.T
+    assert T_fromC_toA == Matrix([
+        [0, 1, 0],
+        [0, 0, 1],
+        [1, 0, 0]
+    ])
+    assert C.change_of_basis_matrix_from(A) == T_fromC_toA.T
+
+    # same systems, but linked in a different way
+    A = CoordSys3D("A")
+    B = A.create_new("B", transformation=lambda x,y,z: (y, x, z))
+    C = A.create_new("C", transformation=lambda x,y,z: (z, y, x))
+    T_fromB_toA = A.change_of_basis_matrix_from(B)
+    T_fromC_toA = A.change_of_basis_matrix_from(C)
+    T_fromC_toB = B.change_of_basis_matrix_from(C)
+    assert T_fromB_toA == Matrix([
+        [0, 1, 0],
+        [1, 0, 0],
+        [0, 0, 1]
+    ])
+    assert B.change_of_basis_matrix_from(A) == T_fromB_toA.T
+    assert T_fromC_toA == Matrix([
+        [0, 0, 1],
+        [0, 1, 0],
+        [1, 0, 0]
+    ])
+    assert C.change_of_basis_matrix_from(A) == T_fromC_toA.T
+    assert T_fromC_toB == Matrix([
+        [0, 1, 0],
+        [0, 0, 1],
+        [1, 0, 0]
+    ])
+    assert C.change_of_basis_matrix_from(B) == T_fromC_toB.T
+
+
+def test_change_of_basis_matrix_from_reflection_stretch_to_cartesian():
+    A = CoordSys3D("A")
+    B = A.create_new("B", transformation=lambda x,y,z: (y, 2*x, z))
+    T_fromB_toA = A.change_of_basis_matrix_from(B)
+    assert T_fromB_toA == Matrix([
+        [0, 1, 0],
+        [2, 0, 0],
+        [0, 0, 1]
+    ])
+    assert B.change_of_basis_matrix_from(A) == T_fromB_toA.inv()
+
+
+def test_change_of_basis_matrix_from_trigsimp():
+    A = CoordSys3D("A")
+    B = A.orient_new_axis('B', q, A.k)
+    N = B.orient_new_axis('N', -q, B.k)
+    assert N.change_of_basis_matrix_from(A) == eye(3)
+    assert A.change_of_basis_matrix_from(N) == eye(3)
+
+
+def test_spherical_cartesian_scalar_map():
+    C = CoordSys3D("C")
+    S = C.create_new("S", transformation="spherical")
+    x, y, z = C.base_scalars()
+    r, theta, phi = S.base_scalars()
+    assert S.scalar_map(C) == {
+        r: sqrt(x**2 + y**2 + z**2),
+        theta: acos(z / sqrt(x**2 + y**2 + z**2)),
+        phi: atan2(y, x)}
+    assert C.scalar_map(S) == {
+        x: r * sin(theta) * cos(phi),
+        y: r * sin(theta) * sin(phi),
+        z: r * cos(theta)}
+
+
+def test_cylindrical_cartesian_scalar_map():
+    Cart = CoordSys3D("Cart")
+    C = Cart.create_new("C", transformation="cylindrical")
+    x, y, z = Cart.base_scalars()
+    rc, thetac, zc = C.base_scalars()
+    assert C.scalar_map(Cart) == {
+        rc: sqrt(x**2 + y**2),
+        thetac: atan2(y, x),
+        zc: z}
+    assert Cart.scalar_map(C) == {
+        x: rc * cos(thetac),
+        y: rc * sin(thetac),
+        z: zc}
+
+
+def test_scalar_map_for_sequence_of_systems():
+    alpha = symbols("alpha")
+    a, b, c = symbols("a b c")
+    A = CoordSys3D('A')
+    B = A.locate_new("B", a * A.i + b * A.j + c * A.k)
+    C = B.orient_new_axis("C", alpha, B.k)
+    D = C.create_new("D", transformation=lambda x,y,z: (2*x, z, y))
+    E = C.create_new("E", transformation="cylindrical")
+
+    assert B.scalar_map(A) == {B.x: A.x - a, B.y: A.y - b, B.z: A.z - c}
+    assert A.scalar_map(B) == {A.x: B.x + a, A.y: B.y + b, A.z: B.z + c}
+    assert C.scalar_map(B) == {
+        C.x: B.x * cos(alpha) + B.y * sin(alpha),
+        C.y: -B.x * sin(alpha) + B.y * cos(alpha),
+        C.z: B.z}
+    assert B.scalar_map(C) == {
+        B.x: C.x * cos(alpha) - C.y * sin(alpha),
+        B.y: C.x * sin(alpha) + C.y * cos(alpha),
+        B.z: C.z}
+    assert C.scalar_map(A) == {
+        C.x: (A.x - a) * cos(alpha) + (A.y - b) * sin(alpha),
+        C.y: (A.x - a) * sin(alpha) * -1 + (A.y - b) * cos(alpha),
+        C.z: A.z - c}
+    assert A.scalar_map(C) == {
+        A.x: C.x * cos(alpha) - C.y * sin(alpha) + a,
+        A.y: C.x * sin(alpha) + C.y * cos(alpha) + b,
+        A.z: C.z + c}
+    xd, yd, zd = D.base_scalars()
+    assert D.scalar_map(C) == {
+        xd: C.x / 2, yd: C.z, zd: C.y}
+    assert C.scalar_map(D) == {
+        C.x: 2 * xd, C.y: zd, C.z: yd}
+    assert D.scalar_map(A) == {
+        xd: (A.x - a) * cos(alpha) / 2 + (A.y - b) * sin(alpha) / 2,
+        yd: A.z - c,
+        zd: (A.x - a) * sin(alpha) * -1 + (A.y - b) * cos(alpha)}
+    assert A.scalar_map(D) == {
+        A.x: 2 * xd * cos(alpha) - zd * sin(alpha) + a,
+        A.y: 2 * xd * sin(alpha) + zd * cos(alpha) + b,
+        A.z: yd + c}
+    res = E.scalar_map(A)
+    assert res[E.r].equals(sqrt(
+            ((A.x - a) * cos(alpha) + (A.y - b) * sin(alpha))**2 +
+            (-(A.x - a) * sin(alpha) + (A.y - b) * cos(alpha))**2))
+    assert res[E.theta] == atan2(
+            (A.x - a) * sin(alpha) * -1 + (A.y - b) * cos(alpha),
+            (A.x - a) * cos(alpha) + (A.y - b) * sin(alpha))
+    assert res[E.z] == A.z - c
+    assert A.scalar_map(E) == {
+        A.x: a - E.r * sin(E.theta) * sin(alpha) + E.r * cos(E.theta) * cos(alpha),
+        A.y: b + E.r * sin(E.theta) * cos(alpha)  + E.r * cos(E.theta) * sin(alpha),
+        A.z: c + E.z}
+
+    # walk up and down the path of systems
+    assert E.scalar_map(D) == {
+        E.r: sqrt(4 * xd**2 + zd**2),
+        E.theta: atan2(zd, 2*xd),
+        E.z: yd}
+    assert D.scalar_map(E) == {
+        xd: E.r * cos(E.theta) / 2,
+        yd: E.z,
+        zd: E.r * sin(E.theta)}
+
+
+def test_issue_28727():
+    C1 = CoordSys3D("C1")
+    C2 = C1.locate_new("C2", 2 * C1.i)
+    S = C2.create_new("S", transformation="spherical")
+
+    expr = S.r**2*sin(S.phi)**2*sin(S.theta)**2 + S.r**2*sin(S.theta)**2*cos(S.phi)**2
+    result = expr.simplify()
+    expected = S.r**2*sin(S.theta)**2
+    assert simplify(result - expected) == 0
