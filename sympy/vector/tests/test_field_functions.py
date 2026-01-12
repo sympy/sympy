@@ -1,4 +1,6 @@
-from sympy.core.function import Derivative
+from sympy.core.function import Derivative, Function, diff
+from sympy.matrices import Matrix
+from sympy.vector.dyadic import Dyadic
 from sympy.vector.vector import Vector
 from sympy.vector.coordsysrect import CoordSys3D
 from sympy.simplify import simplify
@@ -8,9 +10,11 @@ from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.vector.vector import Dot
 from sympy.vector.operators import curl, divergence, gradient, Gradient, Divergence, Cross
 from sympy.vector.deloperator import Del
-from sympy.vector.functions import (is_conservative, is_solenoidal,
-                                    scalar_potential, directional_derivative,
-                                    laplacian, scalar_potential_difference)
+from sympy.vector.functions import (
+        is_conservative, is_solenoidal,
+        scalar_potential, directional_derivative,
+        laplacian, scalar_potential_difference,
+        matrix_to_dyadic)
 from sympy.testing.pytest import raises
 
 C = CoordSys3D('C')
@@ -319,3 +323,98 @@ def test_mixed_coordinates():
                 a.x**2*b.x*Dot(a.i, c.i) +\
                 b.x**2*c.x*Dot(b.i, a.i) +\
                 a.x*b.x**2*Dot(b.i, c.i)
+
+
+def test_gradient_of_vector_cartesian_coordinates():
+    C = CoordSys3D("C")
+    x, y, z = C.base_scalars()
+    v_x = Function('v_r')(x, y, z)
+    v_y = Function('v_θ')(x, y, z)
+    v_z = Function('v_z')(x, y, z)
+    v = v_x * C.i + v_y * C.j + v_z * C.k
+
+    res = gradient(v)
+    assert isinstance(res, Dyadic)
+    assert res.to_matrix(C) == Matrix([
+        [diff(v_x, x), diff(v_y, x), diff(v_z, x)],
+        [diff(v_x, y), diff(v_y, y), diff(v_z, y)],
+        [diff(v_x, z), diff(v_y, z), diff(v_z, z)]
+    ])
+    assert delop(v).doit() == res
+
+
+def test_gradient_of_vector_cylindrical_coordinates():
+    C = CoordSys3D("C", transformation="cylindrical")
+    e_r, e_theta, e_z = C.base_vectors()
+    r, θ, z = C.base_scalars()
+    v_r = Function('v_r')(r, θ, z)
+    v_θ = Function('v_θ')(r, θ, z)
+    v_z = Function('v_z')(r, θ, z)
+    v = v_r * e_r + v_θ * e_theta + v_z * e_z
+
+    res = gradient(v)
+    assert isinstance(res, Dyadic)
+    assert res.to_matrix(C) == Matrix([
+        [diff(v_r, r), diff(v_θ, r), diff(v_z, r)],
+        [diff(v_r, θ) / r - v_θ / r, diff(v_θ, θ) / r + v_r / r, diff(v_z, θ) / r],
+        [diff(v_r, z), diff(v_θ, z), diff(v_z, z)]
+    ])
+    assert delop(v).doit() == res
+
+
+def test_gradient_of_vector_spherical_coordinates():
+    S = CoordSys3D("S", transformation="spherical")
+    r, θ, 𐌘 = S.base_scalars()
+    v_r = Function('v_r')(r, θ, 𐌘)
+    v_θ = Function('v_θ')(r, θ, 𐌘)
+    v_𐌘 = Function('v_𐌘')(r, θ, 𐌘)
+    v = v_r * S.i + v_θ * S.j + v_𐌘 * S.k
+
+    res = gradient(v)
+    assert isinstance(res, Dyadic)
+    assert res.to_matrix(S) == Matrix([
+        [diff(v_r, r), diff(v_θ, r), diff(v_𐌘, r)],
+        [diff(v_r, θ) / r - v_θ / r, diff(v_θ, θ) / r + v_r / r, diff(v_𐌘, θ) / r],
+        [
+                diff(v_r, 𐌘) / (r * sin(θ)) - v_𐌘 / r,
+                diff(v_θ, 𐌘) / (r * sin(θ)) - v_𐌘 * cos(θ)  / (r * sin(θ)),
+                v_r / r + v_θ * cos(θ) / (r * sin(θ)) + diff(v_𐌘, 𐌘) / (r * sin(θ))
+        ]
+    ])
+    assert delop(v).doit() == res
+
+
+def test_gradient_of_vector_cartesian_cylindrical():
+    # verify that gradients works as expected for a vector whose
+    # components are defined in multiple coordinate systems
+
+    Cart = CoordSys3D("Cart")
+    x, y, z = Cart.base_scalars()
+    v_x = Function('v_x')(x, y, z)
+    v_y = Function('v_y')(x, y, z)
+    v_z = Function('v_z')(x, y, z)
+    v1 = v_x * Cart.i + v_y * Cart.j + v_z * Cart.k
+    m1 = Matrix([
+        [diff(v_x, x), diff(v_y, x), diff(v_z, x)],
+        [diff(v_x, y), diff(v_y, y), diff(v_z, y)],
+        [diff(v_x, z), diff(v_y, z), diff(v_z, z)]
+    ])
+    d1 = matrix_to_dyadic(m1, Cart)
+
+    C = Cart.create_new("C", transformation="cylindrical")
+    r, θ, z = C.base_scalars()
+    v_r = Function('v_r')(r, θ, z)
+    v_θ = Function('v_θ')(r, θ, z)
+    v_z = Function('v_z')(r, θ, z)
+    v2 = v_r * C.i + v_θ * C.j + v_z * C.k
+    m2 = Matrix([
+        [diff(v_r, r), diff(v_θ, r), diff(v_z, r)],
+        [diff(v_r, θ) / r - v_θ / r, diff(v_θ, θ) / r + v_r / r, diff(v_z, θ) / r],
+        [diff(v_r, z), diff(v_θ, z), diff(v_z, z)]
+    ])
+    d2 = matrix_to_dyadic(m2, C)
+
+    v = v1 + v2
+    res = gradient(v)
+    assert res == d1 + d2
+    assert delop(v).doit() == res

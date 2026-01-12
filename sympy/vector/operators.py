@@ -2,6 +2,7 @@ import collections
 from sympy.core.expr import Expr
 from sympy.core import sympify, S, preorder_traversal
 from sympy.vector.coordsysrect import CoordSys3D
+from sympy.vector.dyadic import Dyadic, DyadicAdd
 from sympy.vector.vector import Vector, VectorMul, VectorAdd, Cross, Dot
 from sympy.core.function import Derivative
 from sympy.core.add import Add
@@ -242,16 +243,32 @@ def divergence(vect, doit=True):
             raise ValueError("Invalid argument for divergence")
 
 
-def gradient(scalar_field, doit=True):
+def _christoffel_symbol_2nd_kind(h, q, i, j, k):
     """
-    Returns the vector gradient of a scalar field computed wrt the
-    base scalars of the given coordinate system.
+    Compute the Christoffel symbol of the second kind, Gamma^{k}_{ij},
+    for an orthogonal system.
+    """
+    if (i == j) and (i == k):
+        return Derivative(h[i], q[i]) / h[i]
+    if (i == k) and (i != j):
+        return Derivative(h[i], q[j]) / h[i]
+    if (j == k) and (i != j):
+        return Derivative(h[j], q[i]) / h[j]
+    if (i == j) and (i != k):
+        return -Derivative(h[i], q[k]) * h[i] / h[k]**2
+    return S.Zero
+
+
+def gradient(field, doit=True):
+    """
+    Returns the gradient of the field computed wrt the base scalars
+    of the given coordinate system.
 
     Parameters
     ==========
 
-    scalar_field : SymPy Expr
-        The scalar field to compute the gradient of
+    field : Expr, Vector
+        The scalar-valued or vector-valued function representing the field.
 
     doit : bool
         If True, the result is returned after calling .doit() on
@@ -262,6 +279,9 @@ def gradient(scalar_field, doit=True):
     ========
 
     >>> from sympy.vector import CoordSys3D, gradient
+
+    The gradient of a scalar field is a vector field:
+
     >>> R = CoordSys3D('R')
     >>> s1 = R.x*R.y*R.z
     >>> gradient(s1)
@@ -270,30 +290,77 @@ def gradient(scalar_field, doit=True):
     >>> gradient(s2)
     10*R.x*R.z*R.i + 5*R.x**2*R.k
 
-    """
-    coord_sys = _get_coord_systems(scalar_field)
+    The gradient of a vector field is a dyadic (second order tensor):
 
+    >>> C = CoordSys3D("C", transformation="cylindrical")
+    >>> e_r, e_theta, e_z = C.base_vectors()
+    >>> r, θ, z = C.base_scalars()
+    >>> v_r = Function('v_r')(r, θ, z)
+    >>> v_θ = Function('v_θ')(r, θ, z)
+    >>> v_z = Function('v_z')(r, θ, z)
+    >>> v = v_r * e_r + v_θ * e_theta + v_z * e_z
+    >>> gradient(v)
+    >>> (Derivative(v_r(C.r, C.theta, C.z), C.r))*(C.i|C.i) + (Derivative(v_θ(C.r, C.theta, C.z), C.r))*(C.i|C.j) + (Derivative(v_z(C.r, C.theta, C.z), C.r))*(C.i|C.k) + (-v_θ(C.r, C.theta, C.z)/C.r + Derivative(v_r(C.r, C.theta, C.z), C.theta)/C.r)*(C.j|C.i) + (v_r(C.r, C.theta, C.z)/C.r + Derivative(v_θ(C.r, C.theta, C.z), C.theta)/C.r)*(C.j|C.j) + (Derivative(v_z(C.r, C.theta, C.z), C.theta)/C.r)*(C.j|C.k) + (Derivative(v_r(C.r, C.theta, C.z), C.z))*(C.k|C.i) + (Derivative(v_θ(C.r, C.theta, C.z), C.z))*(C.k|C.j) + (Derivative(v_z(C.r, C.theta, C.z), C.z))*(C.k|C.k)
+
+    """
+    coord_sys = _get_coord_systems(field)
     if len(coord_sys) == 0:
         return Vector.zero
-    elif len(coord_sys) == 1:
+
+    if not isinstance(field, (Vector, Dyadic)):
+        # scalar field
+        if len(coord_sys) > 1:
+            if isinstance(field, (Add, VectorAdd)):
+                return VectorAdd.fromiter(gradient(i) for i in field.args)
+            if isinstance(field, (Mul, VectorMul)):
+                s = _split_mul_args_wrt_coordsys(field)
+                return VectorAdd.fromiter(field / i * gradient(i) for i in s)
+            return Gradient(field)
+
         coord_sys = next(iter(coord_sys))
         h1, h2, h3 = coord_sys.lame_coefficients()
         i, j, k = coord_sys.base_vectors()
         x, y, z = coord_sys.base_scalars()
-        vx = Derivative(scalar_field, x) / h1
-        vy = Derivative(scalar_field, y) / h2
-        vz = Derivative(scalar_field, z) / h3
+        vx = Derivative(field, x) / h1
+        vy = Derivative(field, y) / h2
+        vz = Derivative(field, z) / h3
 
         if doit:
             return (vx * i + vy * j + vz * k).doit()
         return vx * i + vy * j + vz * k
-    else:
-        if isinstance(scalar_field, (Add, VectorAdd)):
-            return VectorAdd.fromiter(gradient(i) for i in scalar_field.args)
-        if isinstance(scalar_field, (Mul, VectorMul)):
-            s = _split_mul_args_wrt_coordsys(scalar_field)
-            return VectorAdd.fromiter(scalar_field / i * gradient(i) for i in s)
-        return Gradient(scalar_field)
+
+    elif isinstance(field, Vector):
+        # vector field
+        if len(coord_sys) > 1:
+            if isinstance(field, (Add, VectorAdd)):
+                return DyadicAdd.fromiter(gradient(i) for i in field.args)
+            if isinstance(field, (Mul, VectorMul)):
+                s = _split_mul_args_wrt_coordsys(field)
+                return DyadicAdd.fromiter(field / i * gradient(i) for i in s)
+            return Gradient(field)
+
+        coord_sys = next(iter(coord_sys))
+        e = coord_sys.base_vectors()
+        q = coord_sys.base_scalars()
+        h = coord_sys.lame_coefficients()
+        A = [field & u for u in e]
+        s = Dyadic.zero
+
+        for i in range(3):
+            for j in range(3):
+                component = Derivative(A[j], q[i]) / h[i] - \
+                    A[j] / (h[i] * h[j]) * Derivative(h[j], q[i])
+
+                for k in range(3):
+                    Gamma = _christoffel_symbol_2nd_kind(h, q, i, k, j)
+                    component += h[j] / (h[i] * h[k]) * A[k] * Gamma
+
+                s += component * (e[i] | e[j])
+        if doit:
+            return s.doit()
+        return s
+
+    return Gradient(field)
 
 
 class Laplacian(Expr):
