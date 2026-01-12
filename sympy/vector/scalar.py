@@ -1,6 +1,5 @@
 from sympy.core import AtomicExpr, Symbol, S
 from sympy.core.sympify import _sympify
-from sympy.printing.pretty.stringpict import prettyForm
 from sympy.printing.precedence import PRECEDENCE
 from sympy.core.kind import NumberKind
 
@@ -55,12 +54,6 @@ class BaseScalar(AtomicExpr):
         if self == s:
             return S.One
         return S.Zero
-
-    def _latex(self, printer=None):
-        return self._latex_form
-
-    def _pretty(self, printer=None):
-        return prettyForm(self._pretty_form)
 
     precedence = PRECEDENCE['Atom']
 

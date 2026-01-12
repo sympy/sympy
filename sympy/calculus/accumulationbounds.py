@@ -685,12 +685,9 @@ class AccumulationBounds(Expr):
                 return self
 
     def union(self, other):
-        # TODO : Devise a better method for Union of AccumBounds
-        # this method is not actually correct and
-        # can be made better
         if not isinstance(other, AccumBounds):
             raise TypeError(
-                "Input must be AccumulationBounds or FiniteSet object")
+                "Input must be AccumulationBounds object")
 
         return AccumBounds(Min(self.min, other.min), Max(self.max, other.max))
 

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, overload
+from typing import TYPE_CHECKING, overload, cast
 
 from collections import Counter, defaultdict, OrderedDict
 from itertools import (
@@ -21,8 +21,10 @@ from sympy.utilities.decorator import deprecated
 
 
 if TYPE_CHECKING:
-    from typing import TypeVar, Iterable, Callable, Literal, Sequence, Iterator
-    T = TypeVar('T')
+    from typing import Iterable, Callable, Literal, Sequence, Iterator, TypeVar
+    T = TypeVar("T")
+    T1 = TypeVar("T1")
+    T2 = TypeVar("T2")
 
 
 def is_palindromic(s: Sequence[T], i: int = 0, j: int | None = None) -> bool:
@@ -231,20 +233,23 @@ def group(
     return [(k, len(list(g))) for k, g in groupby(seq)]
 
 
-def _iproduct2(iterable1, iterable2):
+def _iproduct2(
+    iterable1: Iterable[T1],
+    iterable2: Iterable[T2],
+) -> Iterator[tuple[T1, T2]]:
     '''Cartesian product of two possibly infinite iterables'''
 
     it1 = iter(iterable1)
     it2 = iter(iterable2)
 
-    elems1 = []
-    elems2 = []
+    elems1: list[T1] = []
+    elems2: list[T2] = []
 
     sentinel = object()
-    def append(it, elems):
+    def append(it: Iterator[T], elems: list[T]) -> None:
         e = next(it, sentinel)
         if e is not sentinel:
-            elems.append(e)
+            elems.append(cast("T", e))
 
     n = 0
     append(it1, elems1)
