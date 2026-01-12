@@ -339,7 +339,7 @@ def ibin(
 @overload
 def ibin(
     n: int, 
-    bits: None=None, 
+    bits: None = None, 
     str: Literal[False]=False,
     ) -> Iterator[tuple[int, ...]]: ...
 
@@ -354,7 +354,7 @@ def ibin(
 
 def ibin(
         n: int, 
-        bits: int|None=None,
+        bits: int|None = None,
         str: bool = False,
         ) -> list [int]|str|Iterator[tuple[int, ...]]|Iterator[str]:
     """Return a list of length ``bits`` corresponding to the binary value
@@ -481,7 +481,7 @@ def variations(
 
 def subsets(
         seq: Sequence[T], 
-        k: int|None=None, 
+        k: int|None = None, 
         repetition: bool = False,
         ) -> Iterator[tuple[T,...]]:
     r"""Generates all `k`-subsets (combinations) from an `n`-element set, ``seq``.
