@@ -232,7 +232,7 @@ def is_increasing(expression: Expr, interval: Interval=S.Reals, symbol: Symbol|N
     return monotonicity_helper(expression, lambda x: x >= 0, interval, symbol)
 
 
-def is_strictly_increasing(expression: Expr, interval: Interval=S.Reals, symbol: Symbol=None):
+def is_strictly_increasing(expression: Expr, interval: Interval=S.Reals, symbol: Symbol|None=None):
     """
     Return whether the function is strictly increasing in the given interval.
 
@@ -322,7 +322,7 @@ def is_decreasing(expression: Expr, interval: Interval=S.Reals, symbol: Symbol|N
     return monotonicity_helper(expression, lambda x: x <= 0, interval, symbol)
 
 
-def is_strictly_decreasing(expression: Expr, interval: Interval=S.Reals, symbol: Symbol=None) -> bool:
+def is_strictly_decreasing(expression: Expr, interval: Interval=S.Reals, symbol: Symbol|None=None) -> bool:
     """
     Return whether the function is strictly decreasing in the given interval.
 
