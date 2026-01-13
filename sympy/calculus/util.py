@@ -83,63 +83,7 @@ def continuous_domain(f, symbol, domain):
             '''))
 
     if isinstance(f, Piecewise):
-        result = S.EmptySet
-        covered = S.EmptySet
-        for expr, cond in f.args:
-            cond_domain = cond.as_set().intersect(domain)
-            valid_piece_domain = cond_domain - covered
-            if valid_piece_domain is S.EmptySet:
-                continue
-
-            piece_cont = continuous_domain(expr, symbol, valid_piece_domain)
-            # Remove boundary to force explicit limit check at stitching points
-            if hasattr(valid_piece_domain, 'boundary'):
-                try:
-                    piece_cont -= valid_piece_domain.boundary
-                except (TypeError, AttributeError):
-                    pass
-
-            result = Union(result, piece_cont)
-            covered = Union(covered, cond_domain)
-
-        potential_holes = domain - result
-        if potential_holes.is_FiniteSet:
-            for point in potential_holes:
-                try:
-                    val = f.subs(symbol, point)
-                    if not val.is_finite:
-                        continue
-                    is_cont = True
-
-                    # Left Limit check
-                    left_expr = None
-                    for expr, cond in f.args:
-                        cond_set = cond.as_set()
-                        if not cond_set.intersect(Interval.open(point - 1, point)).is_empty:
-                             if point in cond_set.closure:
-                                 left_expr = expr
-                                 break
-                    if left_expr is not None and left_expr.limit(symbol, point, dir='-') != val:
-                        is_cont = False
-
-                    # Right limit check
-                    if is_cont:
-                        right_expr = None
-                        for expr, cond in f.args:
-                            cond_set = cond.as_set()
-                            if not cond_set.intersect(Interval.open(point, point + 1)).is_empty:
-                                if point in cond_set.closure:
-                                    right_expr = expr
-                                    break
-                        if right_expr is not None and right_expr.limit(symbol, point, dir='+') != val:
-                            is_cont = False
-
-
-                    if is_cont:
-                        result = Union(result, FiniteSet(point))
-                except (ValueError, TypeError, AttributeError, NotImplementedError):
-                    pass
-        return result
+        return _continuous_domain_piecewise(f, symbol, domain)
 
     implemented = [Pow, exp, log, Abs, frac,
                    sin, cos, tan, cot, sec, csc,
@@ -217,6 +161,102 @@ def continuous_domain(f, symbol, domain):
 
     return cont_domain - singularities(f, symbol, domain)
 
+def _continuous_domain_piecewise(f, symbol, domain):
+    """
+    Helper to compute the continuous domain of a Piecewise function.
+
+    Parameters
+    ==========
+
+    f : Piecewise
+        The function to check.
+    symbol : Symbol
+        The variable to check continuity against.
+    domain : Set
+        The domain over which to check continuity.
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol, Piecewise, S
+    >>> from sympy.calculus.util import _continuous_domain_piecewise
+    >>> x = Symbol('x')
+    >>> f = Piecewise((x, x < 0), (0, True))
+    >>> _continuous_domain_piecewise(f, x, S.Reals)
+    Reals
+
+    >>> g = Piecewise((x, x < 0), (1, True))
+    >>> _continuous_domain_piecewise(g, x, S.Reals)
+    Union(Interval.open(-oo, 0), Interval.open(0, oo))
+
+    """
+    result = S.EmptySet
+    pieces = f.as_expr_set_pairs(domain)
+
+    # Check segments
+    for expr, subset in pieces:
+        piece_cont = continuous_domain(expr, symbol, subset)
+        if hasattr(subset, 'boundary'):
+            piece_cont -= subset.boundary
+        result = Union(result, piece_cont)
+
+    # Check stitching points
+    potential_holes = domain - result
+    if not potential_holes.is_FiniteSet:
+        return result
+
+    for point in potential_holes:
+        try:
+            val = f.subs(symbol, point)
+        except ValueError:
+            continue
+
+        if not val.is_finite:
+            continue
+
+        left_expr = None
+        right_expr = None
+        for expr, subset in pieces:
+            if point in subset.closure:
+                if not subset.intersect(Interval.open(point - 1, point)).is_empty:
+                    left_expr = expr
+                if not subset.intersect(Interval.open(point, point + 1)).is_empty:
+                    right_expr = expr
+
+        is_cont = True
+
+        # Check Left Side
+        if left_expr is not None:
+            check_val = left_expr.subs(symbol, point)
+
+            if check_val != val or isinstance(check_val, (type(S.NaN),)):
+                try:
+                    s = left_expr.series(symbol, point, n=1, dir='-')
+                    # removeO() gets the leading term. subs() ensures it's a scalar.
+                    limit_val = s.removeO().subs(symbol, point)
+                    if limit_val != val:
+                        is_cont = False
+                except (ValueError, NotImplementedError, TypeError):
+                    is_cont = False
+
+        # Check Right Side
+        if is_cont and right_expr is not None:
+            check_val = right_expr.subs(symbol, point)
+
+            if check_val != val or isinstance(check_val, (type(S.NaN),)):
+                try:
+                    s = right_expr.series(symbol, point, n=1, dir='+')
+                    limit_val = s.removeO().subs(symbol, point)
+                    if limit_val != val:
+                        is_cont = False
+                except (ValueError, NotImplementedError, TypeError):
+                    is_cont = False
+
+        if is_cont:
+            result = Union(result, FiniteSet(point))
+
+    return result
+
 
 def function_range(f, symbol, domain):
     """
@@ -276,24 +316,19 @@ def function_range(f, symbol, domain):
 
     if isinstance(f, Piecewise):
         range_int = S.EmptySet
-        covered_domain = S.EmptySet
-
-        for expr, condition in f.args:
+        for expr, subset in f.as_expr_set_pairs(domain):
             if expr is S.NaN or expr == S.NaN:
-                    continue
+                continue
 
-            # Intersect with the requested domain immediately.
-            cond_domain = condition.as_set().intersect(domain)
+            try:
+                sub_range = function_range(expr, symbol, subset)
+            except (ValueError, TypeError):
+                continue
 
-            # The active domain is the condition's domain minus any previously covered domain
-            active_domain = cond_domain - covered_domain
+            if sub_range.contains(S.ComplexInfinity):
+                sub_range = sub_range - FiniteSet(S.ComplexInfinity)
 
-            if active_domain is not S.EmptySet:
-                if expr is S.NaN:
-                    continue
-                range_int += function_range(expr, symbol, active_domain)
-
-            covered_domain += cond_domain
+            range_int = Union(range_int, sub_range)
 
         return range_int
 
