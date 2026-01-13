@@ -45,12 +45,12 @@ __all__ = [
 T = TypeVar('T')
 
 
-def _split_on_condition(seq: Iterable[T], condition: Callable[[T], bool]) -> tuple[tuple[T, ...], tuple[T, ...]]:
+def _split_on_condition(seq: Iterable[T], condition: Callable[[T], bool | None]) -> tuple[tuple[T, ...], tuple[T, ...]]:
     l1, l2 = tee((condition(item), item) for item in seq)
     return tuple(i for p, i in l1 if p), tuple(i for p, i in l2 if not p)
 
 
-def _split_cnc(seq: Iterable[Any]) -> tuple[tuple[Any, ...], tuple[Any, ...]]:
+def _split_cnc(seq: Iterable[Expr]) -> tuple[tuple[Expr, ...], tuple[Expr, ...]]:
     c, nc = _split_on_condition(seq, lambda x: x.is_commutative)
     return c, nc
 
@@ -163,8 +163,8 @@ class SlidingTransform(Generic[P]):
             raise TypeError('The SlidingTransform only works on Mul instances.')
 
         input = list(expr.args)
-        output = []
-        c_parts = []
+        output: list[Expr] = []
+        c_parts: list[Expr] = []
         if self._unary is not None:
             while len(input) > 0:
                 next = input.pop(0)
@@ -271,7 +271,6 @@ class SlidingTransform(Generic[P]):
             output = []
 
         nc_parts = tuple(input)
-        c_parts = tuple(c_parts) # type: ignore[assignment]
 
         # In the logic below, we go out of our way to avoid triggering the post-processor logic
         # unless it is absolutely needed by using Mul._from_args and always validating when we
@@ -284,8 +283,10 @@ class SlidingTransform(Generic[P]):
                 c_result_args = m.args
             else:
                 c_result_args = () if m == S.One else (m,)
+        elif c_parts and c_parts[0] == S.One:
+            c_result_args = ()
         else:
-            c_result_args = () if (c_parts and c_parts[0] == S.One) else c_parts  # type: ignore[assignment]
+            c_result_args = tuple(c_parts)
 
         # Handle the non-commutative part
         if len(nc_parts) > 1:
