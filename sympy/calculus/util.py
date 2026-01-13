@@ -183,7 +183,7 @@ def _continuous_domain_piecewise(f, symbol, domain):
     >>> x = Symbol('x')
     >>> f = Piecewise((x, x < 0), (0, True))
     >>> _continuous_domain_piecewise(f, x, S.Reals)
-    Reals
+    Interval(-oo, oo)
 
     >>> g = Piecewise((x, x < 0), (1, True))
     >>> _continuous_domain_piecewise(g, x, S.Reals)
