@@ -21,20 +21,24 @@ class Undecidable(ValueError):
 
 def filldedent(s: str, w: int = 70, **kwargs: Any) -> str:
     """
-    Strips leading and trailing empty lines from a copy of ``s``, then dedents,
-    fills and returns it.
+    Strip leading and trailing empty lines from a copy of ``s``, then dedent,
+    fill, and return the resulting string.
 
-    Empty line stripping serves to deal with docstrings like this one that
-    start with a newline after the initial triple quote, inserting an empty
-    line at the beginning of the string.
+    Parameters
+    ==========
+    s : str
+        Input string.
+    w : int, optional
+        Line width used for wrapping. Default is 70.
+    **kwargs
+        Additional keyword arguments passed to ``textwrap.fill``.
 
-    Additional keyword arguments will be passed to ``textwrap.fill()``.
-
-    See Also
-    ========
-    strlines, rawlines
-
+    Returns
+    =======
+    str
+        The processed string.
     """
+
     return '\n' + fill(dedent(str(s)).strip('\n'), width=w, **kwargs)
 
 
