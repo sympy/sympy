@@ -2586,3 +2586,5 @@ def test_issue_28127():
 
 def test_issue_27964():
     raises(ValueError, lambda: ask(False, False))
+    raises(ValueError, lambda: ask(False, Q.is_true(x) & ~Q.is_true(x)))
+    raises(ValueError, lambda: ask(False, (x | y) & ~x & ~y))
