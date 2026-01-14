@@ -1116,4 +1116,3 @@ def test_simplify_eq_atan2_symbolic_no_crash():
     a = symbols('a')
     expr = Eq(1, atan2(a, 2/a))
     simplify(expr)
-
