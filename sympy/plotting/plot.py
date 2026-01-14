@@ -1232,3 +1232,74 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
                     raise ValueError("The ranges should be a tuple of "
                                      "length 3, got %s" % str(arg[i + expr_len]))
         return args
+
+
+def animate(expr, range_x, range_t, **kwargs):
+    """Create an animated 2D plot of an expression with a time parameter.
+    
+    Parameters
+    ==========
+    expr : Expr
+        Expression to plot. Should contain both spatial variable and time variable.
+    range_x : tuple
+        A 3-tuple denoting the range of the spatial variable (x, x_min, x_max)
+    range_t : tuple
+        A 3-tuple denoting the range of the time variable (t, t_min, t_max)
+    
+    Keyword Arguments
+    =================
+    frames : int
+        Number of animation frames (default 30)
+    interval : int
+        Delay between frames in milliseconds (default 100)
+    show : bool
+        Whether to display the plot immediately (default True)
+    save_to : str, optional
+        Path to save animation (e.g., 'output.gif', 'output.mp4')
+        Requires ffmpeg or imagemagick for video formats
+    **kwargs
+        Additional arguments passed to Plot
+        
+    Examples
+    ========
+    
+    .. plot::
+       :context: close-figs
+       :format: doctest
+       :include-source: True
+       
+       >>> from sympy import symbols, sin, cos, pi
+       >>> from sympy.plotting import animate
+       >>> x, t = symbols('x t')
+       >>> animate(sin(x - t), (x, 0, 2*pi), (t, 0, 2*pi), frames=20) # doctest: +SKIP
+       
+    Animate a wave propagation
+    
+    .. plot::
+       :context: close-figs
+       :format: doctest
+       :include-source: True
+       
+       >>> animate(sin(x) * cos(t), (x, -5, 5), (t, 0, 4*pi)) # doctest: +SKIP
+    
+    See Also
+    ========
+    plot, Plot
+    
+    """
+    from sympy.plotting.series import AnimatedLineSeries
+    
+    show_plot = kwargs.pop('show', True)
+    save_to = kwargs.pop('save_to', None)
+    
+    # force matplotlib backend for animations
+    kwargs.setdefault('backend', 'matplotlib')
+    
+    series = AnimatedLineSeries(expr, range_x, range_t, **kwargs)
+    p = plot_factory(series, **kwargs)
+    
+    if save_to or show_plot:
+        p.show(save_to=save_to)
+    
+    return p
+

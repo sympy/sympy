@@ -7,7 +7,7 @@ class TextBackend(base_backend.Plot):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def show(self):
+    def show(self, save_to=None):
         if not base_backend._show:
             return
         if len(self._series) != 1:
