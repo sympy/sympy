@@ -14,8 +14,9 @@ the following function types in the given ``Interval``:
 - Monotonic
 
 """
+
 from __future__ import annotations
-from typing import Set,Callable
+from typing import Callable
 from sympy.core.expr import Expr
 from sympy.sets.sets import Interval
 from sympy.core.basic import Basic
@@ -30,7 +31,7 @@ from sympy.functions.elementary.hyperbolic import (
 from sympy.utilities.misc import filldedent
 
 
-def singularities(expression: Expr, symbol: Symbol|Basic, domain: Interval|None =None) -> Set[Symbol]:
+def singularities(expression: Expr, symbol: Symbol|Basic, domain: Interval|None =None) -> set[Symbol]:
     """
     Find singularities of a given function.
 
