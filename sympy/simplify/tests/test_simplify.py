@@ -16,7 +16,7 @@ from sympy.functions.elementary.exponential import (exp, exp_polar, log)
 from sympy.functions.elementary.hyperbolic import (cosh, csch, sinh)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.functions.elementary.trigonometric import (acos, asin, atan, cos, sin, sinc, tan)
+from sympy.functions.elementary.trigonometric import (acos, asin, atan, atan2, cos, sin, sinc, tan)
 from sympy.functions.special.error_functions import erf
 from sympy.functions.special.gamma_functions import gamma
 from sympy.functions.special.hyper import hyper
@@ -1111,3 +1111,9 @@ def test_nc_recursion_coeff():
     X = symbols("X", commutative = False)
     assert (2 * cos(pi/3) * X).simplify() == X
     assert (2.0 * cos(pi/3) * X).simplify() == X
+
+def test_simplify_eq_atan2_symbolic_no_crash():
+    a = symbols('a')
+    expr = Eq(1, atan2(a, 2/a))
+    simplify(expr)
+
