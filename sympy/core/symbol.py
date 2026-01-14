@@ -269,11 +269,11 @@ class Symbol(AtomicExpr, Boolean): # type: ignore
     Greek letters and subscripts:
 
     >>> alpha = Symbol('alpha')
-    >>> alpha # doctest: +SKIP
+    >>> alpha #doctest: +SKIP
     α
 
     >>> alpha_i = Symbol('alpha_i')
-    >>> alpha_i # doctest: +SKIP
+    >>> alpha_i #doctest: +SKIP
     αᵢ
 
     See Also
