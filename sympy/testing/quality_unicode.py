@@ -52,7 +52,6 @@ unicode_whitelist = [
 
     # Explanation of symbols uses greek letters
     r'*/sympy/core/symbol.py',
-
 ]
 
 unicode_strict_whitelist = [
