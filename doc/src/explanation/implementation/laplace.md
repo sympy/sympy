@@ -80,7 +80,8 @@ All relevant functions have a debug wrapper, which makes it possible to see what
 ------------------------------------------------------------------------------
 
 (5/(s**2 + 1), 0, True)
->>>```
+>>>
+```
 
 shows that the algorithm has decided to transform `5*sin(t)` from `t` to `s`. 
 
