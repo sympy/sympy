@@ -4,7 +4,6 @@ from ctypes import c_long, sizeof
 from functools import reduce
 from typing import TYPE_CHECKING
 from warnings import warn
-from types import ModuleType
 
 from sympy.external import import_module
 
@@ -38,6 +37,9 @@ from .ntheory import (
     is_bpsw_prp as python_is_bpsw_prp,
     is_strong_bpsw_prp as python_is_strong_bpsw_prp,
 )
+
+if TYPE_CHECKING:
+    from types import ModuleType
 
 
 __all__ = [
