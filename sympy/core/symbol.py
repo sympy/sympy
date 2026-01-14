@@ -266,6 +266,16 @@ class Symbol(AtomicExpr, Boolean): # type: ignore
     >>> sqrt(z**2)
     z
 
+    Greek letters and subscripts:
+
+    >>> alpha = Symbol('alpha')
+    >>> alpha # doctest: +SKIP
+    α
+
+    >>> alpha_i = Symbol('alpha_i')
+    >>> alpha_i # doctest: +SKIP
+    αᵢ
+
     See Also
     --------
     symbols : Create multiple symbols at once
