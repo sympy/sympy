@@ -128,7 +128,19 @@ Usage::
 LLVM JIT Code Printing
 ----------------------
 
-.. automodule:: sympy.printing.llvmjitcode
+The ``llvmjitcode`` module provides a way to compile SymPy expressions into
+executable functions using ``llvmlite``. This is designed to significantly
+accelerate the numerical evaluation of expressions, making it ideal for
+repetitive calls in numerical integration or optimization.
+
+.. module:: sympy.printing.llvmjitcode
+
+.. autofunction:: llvm_callable
+
+.. autoclass:: LLVMJitCode
+   :members:
+
+.. autoclass:: LLVMJitPrinter
    :members:
 
 RCodePrinter
@@ -693,3 +705,4 @@ dotprint
 --------
 
 .. autofunction:: sympy.printing.dot.dotprint
+
