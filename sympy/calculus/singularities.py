@@ -16,7 +16,9 @@ the following function types in the given ``Interval``:
 """
 
 from __future__ import annotations
+
 from typing import Callable
+
 from sympy.core.expr import Expr
 from sympy.sets.sets import Interval
 from sympy.core.basic import Basic
