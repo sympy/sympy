@@ -25,3 +25,8 @@ developer to properly execute. If you are new contributor to SymPy, we will
 most likely close any issues, discussions, or pull requests that are generated
 from large language models. Once again, please do not waste developers' time by
 submitting AI generated code.
+
+If you do make use of large language models (or similar) to assist in the
+development of your patch, you must disclose how it was used and what code in
+the patch is AI generated. We will reject any pull request that does not
+include the disclosure.
