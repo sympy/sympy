@@ -148,3 +148,12 @@ def test_KroneckerProduct_entry():
     B = MatrixSymbol('B', o, p)
 
     assert KroneckerProduct(A, B)._entry(i, j) == A[Mod(floor(i/o), n), Mod(floor(j/p), m)]*B[Mod(i, o), Mod(j, p)]
+
+
+def test_KroneckerProduct_singletons():
+    A = MatrixSymbol('A', 3, 3)
+    A1 = MatrixSymbol('A1', 1, 1)
+    B = MatrixSymbol('B', 3, 3)
+    B1 = MatrixSymbol('B1', 1, 1)
+
+    assert KroneckerProduct(A, A1, B, B1).doit() == KroneckerProduct(A, B, A1*B1)
