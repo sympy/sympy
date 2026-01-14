@@ -299,11 +299,111 @@ class MatplotlibBackend(base_backend.Plot):
         self._create_figure()
         self._process_series(self._series, self.ax)
 
-    def show(self):
-        self.process_series()
-        #TODO after fixing https://github.com/ipython/ipython/issues/1255
-        # you can uncomment the next line and remove the pyplot.show() call
-        #self.fig.show()
+    def show(self, save_to=None):
+        """Display the plot or save animation.
+        
+        Parameters
+        ==========
+        save_to : str, optional
+            Path to save animation file (e.g., 'output.gif', 'output.mp4')
+        """
+        # Check if any series is an animation
+        has_animation = any(hasattr(s, 'is_animation') and s.is_animation for s in self._series)
+        
+        if has_animation:
+            self._show_animation(save_to)
+        else:
+            self.process_series()
+            #TODO after fixing https://github.com/ipython/ipython/issues/1255
+            # you can uncomment the next line and remove the pyplot.show() call
+            #self.fig.show()
+            if base_backend._show:
+                self.fig.tight_layout()
+                self.plt.show()
+            else:
+                self.close()
+    
+    def _show_animation(self, save_to=None):
+        """Create and display animation.
+        
+        Parameters
+        ==========
+        save_to : str, optional
+            Path to save animation file
+        """
+        try:
+            from matplotlib.animation import FuncAnimation
+        except ImportError:
+            raise ImportError(
+                "matplotlib.animation required for animations. "
+                "Update matplotlib to >= 1.1.0"
+            )
+        
+        self._create_figure()
+        
+        # find the animated series
+        # TODO: handle multiple animated series in future
+        animated_series = [s for s in self._series if hasattr(s, 'is_animation') and s.is_animation][0]
+        
+        # setup initial frame
+        x, y = animated_series.get_frame_data(0)
+        line, = self.ax.plot(x, y, label=animated_series.get_label(use_latex=False))
+        
+        # Set labels and title
+        if self.xlabel:
+            self.ax.set_xlabel(str(self.xlabel))
+        if self.ylabel:
+            self.ax.set_ylabel(str(self.ylabel))
+        if self.title:
+            self.ax.set_title(self.title)
+        
+        # Set axis limits based on all frames
+        # Note: this computes all frames upfront to determine proper axis scaling
+        # Could be optimized with lazy evaluation in future
+        all_x, all_y = [], []
+        for frame in range(animated_series.frames):
+            x_f, y_f = animated_series.get_frame_data(frame)
+            all_x.extend(x_f)
+            all_y.extend(y_f)
+        
+        import numpy as np
+        all_x = np.array(all_x)
+        all_y = np.array(all_y)
+        # Filter out nan and inf values
+        all_x = all_x[np.isfinite(all_x)]
+        all_y = all_y[np.isfinite(all_y)]
+        
+        if len(all_x) > 0 and len(all_y) > 0:
+            x_margin = (np.max(all_x) - np.min(all_x)) * 0.1
+            y_margin = (np.max(all_y) - np.min(all_y)) * 0.1
+            self.ax.set_xlim(np.min(all_x) - x_margin, np.max(all_x) + x_margin)
+            self.ax.set_ylim(np.min(all_y) - y_margin, np.max(all_y) + y_margin)
+        
+        def update_frame(frame):
+            """Update function for animation."""
+            x, y = animated_series.get_frame_data(frame)
+            line.set_data(x, y)
+            return line,
+        
+        # Create animation
+        anim = FuncAnimation(
+            self.fig, 
+            update_frame, 
+            frames=animated_series.frames,
+            interval=animated_series.interval,
+            blit=True,
+            repeat=True
+        )
+        
+        # Save or show
+        if save_to:
+            try:
+                anim.save(save_to, writer='pillow' if save_to.endswith('.gif') else 'ffmpeg')
+                print(f"Animation saved to {save_to}")
+            except Exception as e:
+                print(f"Failed to save animation: {e}")
+                print("Make sure ffmpeg is installed for MP4 or pillow for GIF")
+        
         if base_backend._show:
             self.fig.tight_layout()
             self.plt.show()
@@ -316,3 +416,4 @@ class MatplotlibBackend(base_backend.Plot):
 
     def close(self):
         self.plt.close(self.fig)
+

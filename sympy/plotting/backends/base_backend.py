@@ -355,7 +355,7 @@ class Plot:
         else:
             raise TypeError('Expecting Plot or sequence of BaseSeries')
 
-    def show(self):
+    def show(self, save_to=None):
         raise NotImplementedError
 
     def save(self, path):

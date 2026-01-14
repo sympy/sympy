@@ -2587,3 +2587,86 @@ def _set_discretization_points(kwargs, pt):
             else:
                 kwargs["n1"] = kwargs["n2"] = kwargs["n"]
     return kwargs
+
+
+class AnimatedLineSeries(LineOver1DRangeSeries):
+    """Animated 2D line series with time parameter.
+
+    Extends LineOver1DRangeSeries to support animations where expressions
+    change over time/parameter value.
+    """
+
+    is_animation = True
+
+    def __init__(self, expr, var_start_end, time_var_start_end, label="", **kwargs):
+        """Initialize animated series.
+
+        Parameters
+        ==========
+        expr : Expr
+            Expression with both spatial and time variables
+        var_start_end : tuple
+            (symbol, start, end) for x-axis
+        time_var_start_end : tuple
+            (time_symbol, start, end) for time parameter
+        label : str
+            Optional label
+        **kwargs
+            frames : number of frames (default 30)
+            interval : ms between frames (default 100)
+        """
+        # extract time range
+        self.time_var = time_var_start_end[0]
+        self.time_start = sympify(time_var_start_end[1])
+        self.time_end = sympify(time_var_start_end[2])
+        self.frames = kwargs.pop('frames', 30)
+        self.interval = kwargs.pop('interval', 100)
+
+        # validate frames
+        if self.frames < 1:
+            raise ValueError(f"frames must be >= 1, got {self.frames}")
+
+        # treat time variable as parameter so base class doesn't complain
+        kwargs['params'] = kwargs.get('params', {})
+        if self.time_var not in kwargs['params']:
+            kwargs['params'][self.time_var] = float(self.time_start)
+
+        super().__init__(expr, var_start_end, label, **kwargs)
+
+    def __str__(self):
+        pre = "animated " if not self.is_interactive else "interactive animated "
+        return pre + f"cartesian line: {self.expr} for {self.var} over {(self.start, self.end)} with {self.time_var} from {self.time_start} to {self.time_end}"
+
+    def get_frame_data(self, frame_number):
+        """Get plot data for specific frame.
+
+        Parameters
+        ==========
+        frame_number : int
+            Frame index (0 to self.frames - 1)
+
+        Returns
+        =======
+        x, y : arrays
+            Coordinate arrays for this frame
+        """
+        # calculate time value for this frame
+        if self.frames == 1:
+            t_val = float(self.time_start)
+        else:
+            t_val = float(self.time_start) + (float(self.time_end) - float(self.time_start)) * frame_number / (self.frames - 1)
+
+        # substitute time into expression
+        expr_frame = self.expr.subs(self.time_var, t_val)
+
+        # create temp series for evaluation
+        # we reuse LineOver1DRangeSeries to handle the actual plotting
+        temp_series = LineOver1DRangeSeries(
+            expr_frame,
+            (self.var, self.start, self.end),
+            **{k: v for k, v in self.__dict__.items()
+               if k in ['modules', 'adaptive', 'depth', 'only_integers']}
+        )
+        temp_series.n = self.n
+
+        return temp_series.get_points()
