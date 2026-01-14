@@ -358,6 +358,8 @@ class MatplotlibBackend(base_backend.Plot):
             self.ax.set_title(self.title)
         
         # Set axis limits based on all frames
+        # Note: this computes all frames upfront to determine proper axis scaling
+        # Could be optimized with lazy evaluation in future
         all_x, all_y = [], []
         for frame in range(animated_series.frames):
             x_f, y_f = animated_series.get_frame_data(frame)

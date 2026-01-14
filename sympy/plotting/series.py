@@ -2622,6 +2622,10 @@ class AnimatedLineSeries(LineOver1DRangeSeries):
         self.frames = kwargs.pop('frames', 30)
         self.interval = kwargs.pop('interval', 100)
 
+        # validate frames
+        if self.frames < 1:
+            raise ValueError(f"frames must be >= 1, got {self.frames}")
+
         # treat time variable as parameter so base class doesn't complain
         kwargs['params'] = kwargs.get('params', {})
         if self.time_var not in kwargs['params']:
@@ -2647,7 +2651,10 @@ class AnimatedLineSeries(LineOver1DRangeSeries):
             Coordinate arrays for this frame
         """
         # calculate time value for this frame
-        t_val = float(self.time_start) + (float(self.time_end) - float(self.time_start)) * frame_number / (self.frames - 1)
+        if self.frames == 1:
+            t_val = float(self.time_start)
+        else:
+            t_val = float(self.time_start) + (float(self.time_end) - float(self.time_start)) * frame_number / (self.frames - 1)
 
         # substitute time into expression
         expr_frame = self.expr.subs(self.time_var, t_val)
