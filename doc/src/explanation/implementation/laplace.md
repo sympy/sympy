@@ -44,7 +44,8 @@ LaplaceTransform(sin(t), t, s)
 
 If the intention is to calculate a transform, it is better to use the funtions `laplace_transform` and `inverse_laplace_transform`:
 
-```py>>> from sympy import laplace_transform, sin, symbols
+```py
+>>> from sympy import laplace_transform, sin, symbols
 >>> t = symbols('t', real=True)
 >>> s = symbols('s')
 >>> laplace_transform(sin(t), t, s)
