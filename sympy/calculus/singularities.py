@@ -14,7 +14,11 @@ the following function types in the given ``Interval``:
 - Monotonic
 
 """
-
+from __future__ import annotations
+from typing import Set,Callable
+from sympy.core.expr import Expr
+from sympy.sets.sets import Interval
+from sympy.core.basic import Basic
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
@@ -26,7 +30,7 @@ from sympy.functions.elementary.hyperbolic import (
 from sympy.utilities.misc import filldedent
 
 
-def singularities(expression, symbol, domain=None):
+def singularities(expression: Expr, symbol: Symbol|Basic, domain: Interval|None =None) -> Set[Symbol]:
     """
     Find singularities of a given function.
 
@@ -128,7 +132,7 @@ def singularities(expression, symbol, domain=None):
 ###########################################################################
 
 
-def monotonicity_helper(expression, predicate, interval=S.Reals, symbol=None):
+def monotonicity_helper(expression: Expr, predicate: Callable[[Expr],bool], interval: Interval=S.Reals, symbol: Symbol|None=None) -> bool:
     """
     Helper function for functions checking function monotonicity.
 
@@ -187,7 +191,7 @@ def monotonicity_helper(expression, predicate, interval=S.Reals, symbol=None):
     return interval.is_subset(predicate_interval)
 
 
-def is_increasing(expression, interval=S.Reals, symbol=None):
+def is_increasing(expression: Expr, interval: Interval=S.Reals, symbol: Symbol|None=None) -> bool:
     """
     Return whether the function is increasing in the given interval.
 
@@ -230,7 +234,7 @@ def is_increasing(expression, interval=S.Reals, symbol=None):
     return monotonicity_helper(expression, lambda x: x >= 0, interval, symbol)
 
 
-def is_strictly_increasing(expression, interval=S.Reals, symbol=None):
+def is_strictly_increasing(expression: Expr, interval: Interval=S.Reals, symbol: Symbol|None=None) -> bool:
     """
     Return whether the function is strictly increasing in the given interval.
 
@@ -273,7 +277,7 @@ def is_strictly_increasing(expression, interval=S.Reals, symbol=None):
     return monotonicity_helper(expression, lambda x: x > 0, interval, symbol)
 
 
-def is_decreasing(expression, interval=S.Reals, symbol=None):
+def is_decreasing(expression: Expr, interval: Interval=S.Reals, symbol: Symbol|None=None) -> bool:
     """
     Return whether the function is decreasing in the given interval.
 
@@ -320,7 +324,7 @@ def is_decreasing(expression, interval=S.Reals, symbol=None):
     return monotonicity_helper(expression, lambda x: x <= 0, interval, symbol)
 
 
-def is_strictly_decreasing(expression, interval=S.Reals, symbol=None):
+def is_strictly_decreasing(expression: Expr, interval: Interval=S.Reals, symbol: Symbol|None=None) -> bool:
     """
     Return whether the function is strictly decreasing in the given interval.
 
@@ -363,7 +367,7 @@ def is_strictly_decreasing(expression, interval=S.Reals, symbol=None):
     return monotonicity_helper(expression, lambda x: x < 0, interval, symbol)
 
 
-def is_monotonic(expression, interval=S.Reals, symbol=None):
+def is_monotonic(expression: Expr, interval: Interval=S.Reals, symbol: Symbol|None=None) -> bool:
     """
     Return whether the function is monotonic in the given interval.
 
