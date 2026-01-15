@@ -488,3 +488,63 @@ def test_issue_27427():
     expected = -Omega**2 / r * C.i
     assert v & gradient(v) == expected
     assert directional_derivative(v, v) == expected
+
+
+def test_laplacian_vector_field_cartesian_system():
+    C = CoordSys3D("C")
+    x, y, z = C.base_scalars()
+    i, j, k = C.base_vectors()
+    u, v, w = [Function(s)(x, y, z) for s in ["u", "v", "w"]]
+    vec = u * i + v * j + w * k
+    res = laplacian(vec)
+    assert res == (
+        (u.diff(x, 2) + u.diff(y, 2) + u.diff(z, 2)) * i +
+        (v.diff(x, 2) + v.diff(y, 2) + v.diff(z, 2)) * j +
+        (w.diff(x, 2) + w.diff(y, 2) + w.diff(z, 2)) * k)
+
+
+def test_laplacian_vector_field_cylindrical_system():
+    C = CoordSys3D("C", transformation="cylindrical")
+    r, theta, z = C.base_scalars()
+    e_r, e_theta, e_z = C.base_vectors()
+    u, v, w = [Function(s)(r, theta, z) for s in ["u", "v", "w"]]
+    vec = u * e_r + v * e_theta + w * e_z
+    res = laplacian(vec)
+    res = res.expand()
+    assert res == (
+        (u.diff(r, 2) + u.diff(theta, 2) / r**2 + u.diff(z, 2) + u.diff(r) / r - v.diff(theta) * 2 / r**2 - u / r**2) * e_r +
+        (v.diff(r, 2) + v.diff(theta, 2) / r**2 + v.diff(z, 2) + v.diff(r) / r + u.diff(theta) * 2 / r**2 - v / r**2) * e_theta +
+        (w.diff(r, 2) + w.diff(theta, 2) / r**2 + w.diff(z, 2) + w.diff(r) / r) * e_z)
+
+
+def test_laplacian_vector_field_spherical_system():
+    S = CoordSys3D("S", transformation="spherical")
+    r, theta, phi = S.base_scalars()
+    e_r, e_theta, e_phi = S.base_vectors()
+    u, v, w = [Function(s)(r, theta, phi) for s in ["u", "v", "w"]]
+    vec = u * e_r + v * e_theta + w * e_phi
+    res = laplacian(vec)
+    res = res.expand()
+
+    expected_c1 = (
+        ((r**2 * u).diff(r) / r**2).diff(r)
+        + (sin(theta) * u.diff(theta)).diff(theta) / (r**2 * sin(theta))
+        + u.diff(phi, 2) / (r**2 * sin(theta)**2)
+        - 2 * (v * sin(theta)).diff(theta) / (r**2 * sin(theta))
+        - 2 * w.diff(phi) / (r**2 * sin(theta))).expand()
+    expected_c2 = (
+        (r**2 * v.diff(r)).diff(r) / r**2
+        + ((v * sin(theta)).diff(theta) / sin(theta)).diff(theta) / r**2
+        + v.diff(phi, 2) / (r**2 * sin(theta)**2)
+        + 2 * u.diff(theta) / r**2
+        - 2 * cos(theta) / (r**2 * sin(theta)**2) * w.diff(phi)).expand()
+    expected_c3 = (
+        (w.diff(r) * r**2).diff(r) / r**2
+        + ((w * sin(theta)).diff(theta) / sin(theta)).diff(theta) / r**2
+        + w.diff(phi, 2) / (r**2 * sin(theta)**2)
+        + 2 * u.diff(phi) / (r**2 * sin(theta))
+        + 2 * cos(theta) / (r**2 * sin(theta)**2) * v.diff(phi)).expand()
+    assert res == (
+        expected_c1 * e_r +
+        expected_c2 * e_theta +
+        expected_c3 * e_phi)
