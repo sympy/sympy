@@ -590,6 +590,17 @@ class Function(Application, Expr):
             if any(bad(a) for a in args):
                 raise ValueError  # one or more args failed to compute with significance
         except ValueError:
+            try:
+                args = []
+                for a in self.args:
+                    newa = a._eval_evalf(prec)
+                    if newa is None:
+                        args.append(a)
+                    else:
+                        args.append(newa)
+                return self.func(*args)
+            except:
+                pass
             return
 
         # XXX: This should really use local_workprec rather than
