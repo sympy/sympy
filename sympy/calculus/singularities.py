@@ -17,11 +17,8 @@ the following function types in the given ``Interval``:
 
 from __future__ import annotations
 
-from typing import Callable
+from typing import TYPE_CHECKING
 
-from sympy.core.expr import Expr
-from sympy.sets.sets import Interval
-from sympy.core.basic import Basic
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
@@ -31,6 +28,13 @@ from sympy.functions.elementary.trigonometric import sec, csc, cot, tan, cos
 from sympy.functions.elementary.hyperbolic import (
     sech, csch, coth, tanh, cosh, asech, acsch, atanh, acoth)
 from sympy.utilities.misc import filldedent
+
+
+if TYPE_CHECKING:
+    from typing import Callable
+    from sympy.core.expr import Expr
+    from sympy.sets.sets import Interval
+    from sympy.core.basic import Basic
 
 
 def singularities(expression: Expr, symbol: Symbol | Basic, domain: Interval | None = None) -> set[Symbol]:
