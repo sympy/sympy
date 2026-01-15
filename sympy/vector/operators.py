@@ -278,6 +278,7 @@ def gradient(field, doit=True):
     Examples
     ========
 
+    >>> from sympy import Function
     >>> from sympy.vector import CoordSys3D, gradient
 
     The gradient of a scalar field is a vector field:

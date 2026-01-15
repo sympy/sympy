@@ -167,6 +167,7 @@ def directional_derivative(field, direction_vector):
     Examples
     ========
 
+    >>> from sympy import Function
     >>> from sympy.vector import CoordSys3D, directional_derivative
     >>> R = CoordSys3D('R')
 
@@ -484,7 +485,7 @@ def matrix_to_dyadic(matrix, system):
     ========
 
     >>> from sympy import Matrix
-    >>> from sympy.vector import CoordSys3D, matrix_to_vector
+    >>> from sympy.vector import CoordSys3D, matrix_to_dyadic
     >>> C = CoordSys3D('C')
     >>> m = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
     >>> d = matrix_to_dyadic(m, C)
