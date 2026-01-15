@@ -548,3 +548,37 @@ def test_laplacian_vector_field_spherical_system():
         expected_c1 * e_r +
         expected_c2 * e_theta +
         expected_c3 * e_phi)
+
+
+def test_divergence_cartesian_system():
+    C = CoordSys3D("C")
+    x, y, z = C.base_scalars()
+    i, j, k = C.base_vectors()
+    u, v, w = [Function(s)(x, y, z) for s in ["u", "v", "w"]]
+    vec = u * i + v * j + w * k
+    assert divergence(vec) == u.diff(x) + v.diff(y) + w.diff(z)
+
+
+def test_divergence_cylindrical_system():
+    C = CoordSys3D("C", transformation="cylindrical")
+    r, theta, z = C.base_scalars()
+    e_r, e_theta, e_z = C.base_vectors()
+    u, v, w = [Function(s)(r, theta, z) for s in ["u", "v", "w"]]
+    vec = u * e_r + v * e_theta + w * e_z
+    res = divergence(vec)
+    expected = ((r * u).diff(r) + v.diff(theta) + r * w.diff(z)) / r
+    assert res.expand() == expected.expand()
+
+
+def test_divergence_spherical_system():
+    S = CoordSys3D("S", transformation="spherical")
+    r, theta, phi = S.base_scalars()
+    e_r, e_theta, e_phi = S.base_vectors()
+    u, v, w = [Function(s)(r, theta, phi) for s in ["u", "v", "w"]]
+    vec = u * e_r + v * e_theta + w * e_phi
+    res = divergence(vec)
+    expected = (
+        sin(theta) * (r**2 * u).diff(r)
+        + r * (v * sin(theta)).diff(theta)
+        + r * w.diff(phi)) / (r**2 * sin(theta))
+    assert res.expand() == expected.expand()
