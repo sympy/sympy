@@ -215,7 +215,67 @@ def test_directional_derivative():
     r, theta, phi = D.base_scalars()
     e_r, e_theta, e_phi = D.base_vectors()
     assert directional_derivative(r**2*e_r, e_r) == 2*r*e_r
-    assert directional_derivative(5*r**2*phi, 3*e_r + 4*e_theta + e_phi) == 5*r**2 + 30*r*phi
+    assert directional_derivative(5*r**2*phi, 3*e_r + 4*e_theta + e_phi) == 5*r/sin(theta) + 30*r*phi
+
+
+def test_directional_derivative_vector_field_cartesian_systems():
+    C = CoordSys3D("C")
+    x, y, z = C.base_scalars()
+    i, j, k = C.base_vectors()
+    u = Function("u")(x, y, z)
+    v = Function("v")(x, y, z)
+    w = Function("w")(x, y, z)
+    ux, uy, uz = [u.diff(s) for s in [x, y, z]]
+    vx, vy, vz = [v.diff(s) for s in [x, y, z]]
+    wx, wy, wz = [w.diff(s) for s in [x, y, z]]
+    vec = u * i + v * j + w * k
+    direction = i + j + k
+
+    res = directional_derivative(vec, direction)
+    assert res == (
+        (ux + uy + uz) * i +
+        (vx + vy + vz) * j +
+        (wx + wy + wz) * k)
+
+
+def test_directional_derivative_vector_field_cylindrical_systems():
+    C = CoordSys3D("C", transformation="cylindrical")
+    r, theta, z = C.base_scalars()
+    e_r, e_theta, e_z = C.base_vectors()
+    u = Function("u")(r, theta, z)
+    v = Function("v")(r, theta, z)
+    w = Function("w")(r, theta, z)
+    ur, ut, uz = [u.diff(s) for s in [r, theta, z]]
+    vr, vt, vz = [v.diff(s) for s in [r, theta, z]]
+    wr, wt, wz = [w.diff(s) for s in [r, theta, z]]
+    vec = u * e_r + v * e_theta + w * e_z
+    direction = e_r + e_theta + e_z
+
+    res = directional_derivative(vec, direction)
+    assert res == (
+        (ur + ut / r + uz - v / r) * e_r +
+        (vr + vt / r + vz + u / r) * e_theta +
+        (wr + wt / r + wz) * e_z)
+
+
+def test_directional_derivative_vector_field_spherical_systems():
+    S = CoordSys3D("S", transformation="spherical")
+    r, theta, phi = S.base_scalars()
+    e_r, e_theta, e_phi = S.base_vectors()
+    u = Function("u")(r, theta, phi)
+    v = Function("v")(r, theta, phi)
+    w = Function("w")(r, theta, phi)
+    ur, ut, up = [u.diff(s) for s in [r, theta, phi]]
+    vr, vt, vp = [v.diff(s) for s in [r, theta, phi]]
+    wr, wt, wp = [w.diff(s) for s in [r, theta, phi]]
+    vec = u * e_r + v * e_theta + w * e_phi
+    direction = e_r + e_theta + e_phi
+
+    res = directional_derivative(vec, direction)
+    assert res == (
+        (ur + ut / r + up / (r * sin(theta)) - v / r - w / r) * e_r +
+        (vr + vt / r + vp / (r * sin(theta)) + u / r - w * cos(theta) / (r * sin(theta))) * e_theta +
+        (wr + wt / r + wp / (r * sin(theta)) + u / r + v * cos(theta) / (r * sin(theta))) * e_phi)
 
 
 def test_scalar_potential():
@@ -418,3 +478,13 @@ def test_gradient_of_vector_cartesian_cylindrical():
     res = gradient(v)
     assert res == d1 + d2
     assert delop(v).doit() == res
+
+
+def test_issue_27427():
+    C = CoordSys3D('C', transformation='cylindrical')
+    r, theta, z = C.base_scalars()
+    Omega = symbols('Omega')
+    v = Omega * C.j
+    expected = -Omega**2 / r * C.i
+    assert v & gradient(v) == expected
+    assert directional_derivative(v, v) == expected

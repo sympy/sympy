@@ -2,8 +2,8 @@ from sympy.matrices.exceptions import ShapeError
 from sympy.vector.coordsysrect import CoordSys3D
 from sympy.vector.deloperator import Del
 from sympy.vector.scalar import BaseScalar
-from sympy.vector.vector import Vector, BaseVector
-from sympy.vector.operators import gradient, curl, divergence
+from sympy.vector.vector import Vector, BaseVector, Dot
+from sympy.vector.operators import gradient, curl, divergence, Gradient
 from sympy.core.function import diff
 from sympy.core.singleton import S
 from sympy.integrals.integrals import integrate
@@ -126,9 +126,34 @@ def express(expr, system, system2=None, variables=False):
 
 
 def directional_derivative(field, direction_vector):
-    """
+    r"""
     Returns the directional derivative of a scalar or vector field computed
-    along a given vector in coordinate system which parameters are expressed.
+    along a given vector in a coordinate system.
+
+    Note that there are two definitions of directional derivative for a
+    differentiable scalar function $f$. Let $\vec{v}$ be an arbitrary direction
+    vector, and $\hat{v}$ be the normalized direction vector. Some authors
+    define the directional derivative as:
+
+    $$\nabla_{\mathbf{\vec{v}}} f(\mathbf{x}) = \mathbf{\hat{v}} \cdot \nabla f(\mathbf{x})$$
+
+    Other authors define it as:
+
+    $$\nabla_{\vec{v}} f(\mathbf{x}) = \vec{v} \cdot \nabla f(\mathbf{x})$$
+
+    The two definitions differs by the magnitude of the direction vector.
+    This function does not normalize direction_vector. If the user wants
+    to compute the directional derivative according to the first definition,
+    it is user's resposibility to normalize the direction vector before
+    giving it to this function.
+
+    The directional derivative of a vector field $\mathbf{\vec{f}}(\mathbf{x})$
+    along the vector $\mathbf{\vec{v}}}$ is:
+
+    $$\nabla_{\mathbf{\vec{v}}} f(\mathbf{x}) = \mathbf{\vec{v}} \cdot \nabla \mathbf{\vec{f}}(\mathbf{x})$$
+
+    This term frequently appears in continuum mechanics's partial differential
+    equations, in particul the advection equation.
 
     Parameters
     ==========
@@ -139,39 +164,51 @@ def directional_derivative(field, direction_vector):
     direction_vector : Vector
         The vector to calculated directional derivative along them.
 
-
     Examples
     ========
 
     >>> from sympy.vector import CoordSys3D, directional_derivative
     >>> R = CoordSys3D('R')
+
+    Directional derivative of a scalar field with an arbitrary direction
+    vector:
+
     >>> f1 = R.x*R.y*R.z
     >>> v1 = 3*R.i + 4*R.j + R.k
     >>> directional_derivative(f1, v1)
     R.x*R.y + 4*R.x*R.z + 3*R.y*R.z
-    >>> f2 = 5*R.x**2*R.z
-    >>> directional_derivative(f2, v1)
-    5*R.x**2 + 30*R.x*R.z
+
+    Directional derivative of a scalar field with a unit vector:
+
+    >>> directional_derivative(f1, v1.normalize())
+    sqrt(26)*R.x*R.y/26 + 2*sqrt(26)*R.x*R.z/13 + 3*sqrt(26)*R.y*R.z/26
+
+    Directional derivate of a vector field in a cylindrical coordinate system:
+
+    >>> C = CoordSys3D("C", transformation="cylindrical")
+    >>> r, theta, z = C.base_scalars()
+    >>> e_r, e_theta, e_z = C.base_vectors()
+    >>> u, v, w = [Function(s)(r, theta, z) for s in ["u", "v", "w"]]
+    >>> vec = u * e_r + v * e_theta + w * e_z
+    >>> direction = e_theta
+    >>> directional_derivative(vec, direction)
+    (-v(C.r, C.theta, C.z)/C.r + Derivative(u(C.r, C.theta, C.z), C.theta)/C.r)*C.i + (u(C.r, C.theta, C.z)/C.r + Derivative(v(C.r, C.theta, C.z), C.theta)/C.r)*C.j + (Derivative(w(C.r, C.theta, C.z), C.theta)/C.r)*C.k
 
     """
     from sympy.vector.operators import _get_coord_systems
     coord_sys = _get_coord_systems(field)
-    if len(coord_sys) > 0:
-        # TODO: This gets a random coordinate system in case of multiple ones:
-        coord_sys = next(iter(coord_sys))
-        field = express(field, coord_sys, variables=True)
-        i, j, k = coord_sys.base_vectors()
-        x, y, z = coord_sys.base_scalars()
-        out = Vector.dot(direction_vector, i) * diff(field, x)
-        out += Vector.dot(direction_vector, j) * diff(field, y)
-        out += Vector.dot(direction_vector, k) * diff(field, z)
-        if out == 0 and isinstance(field, Vector):
-            out = Vector.zero
-        return out
-    elif isinstance(field, Vector):
-        return Vector.zero
-    else:
+    if len(coord_sys) == 0:
+        if isinstance(field, Vector):
+            return Vector.zero
         return S.Zero
+
+    coord_sys = next(iter(coord_sys))
+    field = express(field, coord_sys, variables=True)
+    grad = gradient(field)
+
+    if isinstance(grad, Gradient):
+        return Dot(direction_vector, grad)
+    return direction_vector & grad
 
 
 def laplacian(expr):
