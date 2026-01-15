@@ -294,13 +294,13 @@ def gradient(field, doit=True):
 
     >>> C = CoordSys3D("C", transformation="cylindrical")
     >>> e_r, e_theta, e_z = C.base_vectors()
-    >>> r, θ, z = C.base_scalars()
-    >>> v_r = Function('v_r')(r, θ, z)
-    >>> v_θ = Function('v_θ')(r, θ, z)
-    >>> v_z = Function('v_z')(r, θ, z)
-    >>> v = v_r * e_r + v_θ * e_theta + v_z * e_z
+    >>> r, theta, z = C.base_scalars()
+    >>> v_r = Function('v_r')(r, theta, z)
+    >>> v_theta = Function('v_theta')(r, theta, z)
+    >>> v_z = Function('v_z')(r, theta, z)
+    >>> v = v_r * e_r + v_theta * e_theta + v_z * e_z
     >>> gradient(v)
-    >>> (Derivative(v_r(C.r, C.theta, C.z), C.r))*(C.i|C.i) + (Derivative(v_θ(C.r, C.theta, C.z), C.r))*(C.i|C.j) + (Derivative(v_z(C.r, C.theta, C.z), C.r))*(C.i|C.k) + (-v_θ(C.r, C.theta, C.z)/C.r + Derivative(v_r(C.r, C.theta, C.z), C.theta)/C.r)*(C.j|C.i) + (v_r(C.r, C.theta, C.z)/C.r + Derivative(v_θ(C.r, C.theta, C.z), C.theta)/C.r)*(C.j|C.j) + (Derivative(v_z(C.r, C.theta, C.z), C.theta)/C.r)*(C.j|C.k) + (Derivative(v_r(C.r, C.theta, C.z), C.z))*(C.k|C.i) + (Derivative(v_θ(C.r, C.theta, C.z), C.z))*(C.k|C.j) + (Derivative(v_z(C.r, C.theta, C.z), C.z))*(C.k|C.k)
+    (Derivative(v_r(C.r, C.theta, C.z), C.r))*(C.i|C.i) + (Derivative(v_theta(C.r, C.theta, C.z), C.r))*(C.i|C.j) + (Derivative(v_z(C.r, C.theta, C.z), C.r))*(C.i|C.k) + (-v_theta(C.r, C.theta, C.z)/C.r + Derivative(v_r(C.r, C.theta, C.z), C.theta)/C.r)*(C.j|C.i) + (v_r(C.r, C.theta, C.z)/C.r + Derivative(v_theta(C.r, C.theta, C.z), C.theta)/C.r)*(C.j|C.j) + (Derivative(v_z(C.r, C.theta, C.z), C.theta)/C.r)*(C.j|C.k) + (Derivative(v_r(C.r, C.theta, C.z), C.z))*(C.k|C.i) + (Derivative(v_theta(C.r, C.theta, C.z), C.z))*(C.k|C.j) + (Derivative(v_z(C.r, C.theta, C.z), C.z))*(C.k|C.k)
 
     """
     coord_sys = _get_coord_systems(field)
