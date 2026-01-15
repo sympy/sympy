@@ -8,7 +8,7 @@ from sympy.core.function import diff
 from sympy.core.singleton import S
 from sympy.integrals.integrals import integrate
 from sympy.core import sympify
-from sympy.vector.dyadic import Dyadic
+from sympy.vector.dyadic import Dyadic, DyadicAdd
 
 
 def express(expr, system, system2=None, variables=False):
@@ -498,12 +498,12 @@ def matrix_to_dyadic(matrix, system):
     if (n != 3) or (m != 3):
         raise ShapeError("A 3 x 3 matrix is required.")
 
-    out = Dyadic.zero
+    args = []
     vects = system.base_vectors()
     for i in range(3):
         for j in range(3):
-            out += matrix[i, j] * (vects[i] | vects[j])
-    return out
+            args.append(matrix[i, j] * (vects[i] | vects[j]))
+    return DyadicAdd(*args)
 
 
 def _path(from_object, to_object):
