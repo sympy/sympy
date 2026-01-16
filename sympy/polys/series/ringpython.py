@@ -3,6 +3,8 @@ from __future__ import annotations
 from typing import Sequence, TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from sympy.polys.domains.field import Field
+    from sympy.polys.domains.domain import Er, Ef
     from typing import TypeAlias, Union
 
 
@@ -30,8 +32,6 @@ from sympy.polys.densetools import (
 )
 from sympy.polys.polyerrors import NotReversible, ExactQuotientFailed
 from sympy.polys.domains import Domain, QQ, ZZ
-from sympy.polys.domains.domain import Er, Ef
-from sympy.polys.domains.field import Field
 from sympy.polys.series.base import series_pprint
 from sympy.external.gmpy import MPZ, MPQ
 from sympy.polys.ring_series import _giant_steps
