@@ -4,9 +4,9 @@ linkify-it-py
 matplotlib
 matplotlib-inline
 mpmath
-myst-parser != 5.0.0
+myst-parser
 scipy
-Sphinx
+Sphinx < 9
 sphinx-autobuild
 sphinx-copybutton
 sphinx-math-dollar
