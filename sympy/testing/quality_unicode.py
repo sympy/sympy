@@ -52,6 +52,9 @@ unicode_whitelist = [
 
     # Explanation of symbols uses greek letters
     r'*/sympy/core/symbol.py',
+
+    # The following test files have unicode in test comments
+    r'*/sympy/physics/quantum/tests/test_density.py',
 ]
 
 unicode_strict_whitelist = [
