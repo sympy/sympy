@@ -28,7 +28,7 @@ This is why practitioners have started to collect known transform pairs and rule
 
 Please note that a function $f(t)$ calculated with the Fourier-Mellin integral must be zero for $t<0$. SymPy covers this by returning a factor `Heaviside(t)` in the result. Other computer algebra tools do not do this, but that is mathematically incorrect.
 
-The most important property of these transforms is that, being integrals, they are linear, so if $f(t)$ and $F(s)$, and $g(t)$ and $G(s)$, are transform pairs, then so are $af(t)+bg(t)$ and $aF(s)+bG(s)$ for any $a$ and $b$. So if any function can be rewritten as a sum, the sum terms can be transformed individually. This is the linearity principle.
+The most important property of these transforms is that, being integrals, they are linear, so if $f(t)$ and $F(s)$, and $g(t)$ and $G(s)$, are transform pairs, then so are $af(t) + bg(t)$ and $aF(s) + bG(s)$ for any $a$ and $b$. So if any function can be rewritten as a sum, the sum terms can be transformed individually. This is the linearity principle.
 
 ## Objects, Functions, and Structure of the Code
 
