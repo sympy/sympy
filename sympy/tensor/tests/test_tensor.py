@@ -2076,8 +2076,12 @@ def test_tensor_replacement():
 
     # Product of rank-3 tensors with contractions in replacements
     expr = M(l, -m, -k) * M(k, -i, -j) 
-    repl = {M(i, -k, -l): Array.zeros(2,2,2), L: diag(1, 1)}
-    assert expr._extract_data(repl) == ([l, -m, -i, -j], Array.zeros(2,2,2,2))
+    assert expr._extract_data({M(i, -k, -l): Array.zeros(2,2,2), L: diag(1, 1)}) == ([l, -m, -i, -j], Array.zeros(2,2,2,2))
+    assert expr._extract_data({M(k, -l, -i): Array.zeros(2,2,2), L: diag(1, 1)}) == ([l, -m, -i, -j], Array.zeros(2,2,2,2))
+    assert expr._extract_data({M(l, -i, -k): Array.zeros(2,2,2), L: diag(1, 1)}) == ([l, -m, -i, -j], Array.zeros(2,2,2,2))
+    assert expr._extract_data({M(k, -i, -l): Array.zeros(2,2,2), L: diag(1, 1)}) == ([l, -m, -i, -j], Array.zeros(2,2,2,2))
+    assert expr._extract_data({M(i, -l, -k): Array.zeros(2,2,2), L: diag(1, 1)}) == ([l, -m, -i, -j], Array.zeros(2,2,2,2))
+    assert expr._extract_data({M(l, -k, -i): Array.zeros(2,2,2), L: diag(1, 1)}) == ([l, -m, -i, -j], Array.zeros(2,2,2,2))
 
     # Replace with array, raise exception if indices are not compatible:
     expr = A(i)*A(j)
