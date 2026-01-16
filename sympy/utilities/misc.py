@@ -322,7 +322,7 @@ def func_name(x: Any, short: bool = False) -> str:
     >>> func_name(x < 1, short=True)
     'Lt'
     """
-    alias = {
+    alias: dict[str, str] = {
     'GreaterThan': 'Ge',
     'StrictGreaterThan': 'Gt',
     'LessThan': 'Le',
