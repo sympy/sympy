@@ -672,6 +672,5 @@ def test_issue_25165():
 def test_issue_28219():
     # removed redundant imports
     assert Pow(S.Zero, -1, evaluate=False).as_real_imag() == (S.NaN, S.NaN)
-    
     x = Symbol('x', real=True)
     assert Pow(x, -1, evaluate=False).as_real_imag() == (1/x, S.Zero)
