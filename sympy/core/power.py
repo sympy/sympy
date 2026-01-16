@@ -1139,7 +1139,6 @@ class Pow(Expr):
             if not im_e and self.base.is_nonzero is not False:
                 return self, S.Zero
             # CHANGE END
-            
             a, b = symbols('a b', cls=Dummy)
             if exp >= 0:
                 if re_e.is_Number and im_e.is_Number:
