@@ -4,7 +4,7 @@ linkify-it-py
 matplotlib
 matplotlib-inline
 mpmath
-myst-parser
+myst-parser != 5.0.0
 scipy
 Sphinx
 sphinx-autobuild
