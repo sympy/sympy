@@ -54,7 +54,7 @@ If the intention is to calculate a transform, it is better to use the funtions `
 (1/(s**2 + 1), 0, True)
 ```
 
-This also returns the convergence plane and possible additional conditions. Calling `laplace_transform` with the additional argument `noconds=True` will return `1/(s**2 + 1)`, while using the method `.doit(noconds=False)` further above will return `(1/(s**2 + 1), 0, True)`.  (The inverse Laplace transform does not output conditions.)
+This also returns the convergence plane and possible additional conditions. Calling `laplace_transform` with the additional argument `noconds=True` will return `1/(s**2 + 1)`, while using the method `.doit(noconds=False)` further above will return `(1/(s**2 + 1), 0, True)`.  (The inverse Laplace transform does not output conditions by defult.)
 
 The actual work is done for both object and function by the functions `_laplace_transform` and `_inverse_laplace_transform`.
 
@@ -330,4 +330,108 @@ The debugging output shows how many functions attempt to solve it, and `_laplace
 
 ## Implementation of the Inverse Transform
 
-to be written ...
+The front-end function `inverse_laplace_transform` is also able to apply element-wise on a matrix. For a non-matrix element, it simply hands the arguments to the `InverseLaplaceTransform` object and executes `.doit(noconds=False, simplify=_simplify)`. Then it returns either only the transformed function, or also the conditions, depending on its own setting of the parameter `noconds`.
+
+The object `InverseLaplaceTransform` uses the method `doit()` to run `_inverse_laplace_transform`, giving it the function, both variables, a convergence plane, and two keys key, `simplify` and `dorational`. It decides by itself, basing on its own setting of `noconds`, whether it should return conditions or not.
+
+### Core of the algorithm: `_inverse_laplace_transform`
+
+This operates in the same way as `_laplace_transform` above, doing in the following order:
+- split in arguments of `Add`,
+- check whether it is a rational function of `s` and try `_inverse_laplace_rational` (only if `dorational=True`),
+- try a table of rules with `_inverse_laplace_apply_simple_rules`,
+- try a first batch of programmed rules with `_inverse_laplace_early_prog_rules`,
+- try `_inverse_laplace_expand`,
+- try a second batch of programmed rules with `_inverse_laplace_apply_prog_rules`,
+- check whether undefined functions are present in the term to transform; if yes, return an `InverseLaplaceTransform` object,
+- try `_inverse_laplace_transform_integration`.
+
+If any of the above succeed, the result is returned, otherwise an `InverseLaplaceTransform` object is returned. The most important design decision here was how to split the programmed rules into two batches, one before expansion, one after expansion, such that the algorithm's coverage of possible inputs is as good as possible.
+
+### Rational functions in $s$: `_inverse_laplace_rational`
+
+This function transforms rational functions of `s` up to second order. If the order is higher than two, it recursively calls `_inverse_laplace_transform` with `dorational=False` such that no infinite recursion happens. The code is simply an algorithmic description of all known zero-, first- and second-order formulas.
+
+### Simple rules: `_inverse_laplace_apply_simple_rules`
+
+This is the same as `_laplace_apply_simple_rules`, but much fewer rules. One of the rules is even hard coded: the inverse Laplace transform of `1` is `DiracDelta(t)`.
+
+### Algorithmic rules I: `_inverse_laplace_early_prog_rules`
+
+Next, a first batch of algorithmic rules is tried that works well before trying expansion:
+- `_inverse_laplace_laplace` checks whether its input is something like an unresolved `LaplaceTransform(f(t), t, s)`. If yes, it returns `f(t)*Heaviside(t)`.
+- `_inverse_laplace_irrational` is an algorithmic implementation of the known irrational fractions like, for example, $s^{-frac12}\left(s^{frac12} + a\right)$, implemented along lines similar to `_inverse_laplace_rational`.
+
+### Expansion: `_inverse_laplace_expand`
+
+This function first checks whether the function passed to it is `Add` and returns `None` if yes; this is a necessary design decision to prevent infinite recursions. Then it uses, in this order:
+
+- `expand(fn, deep=False)`
+- `expand_mul(fn)`
+- `expand(fn)`
+- if it gets a rational function, `fn.apart(s).doit()`.
+
+If any of those return a sum, it recursively calls `_inverse_laplace_transform` and returns the result, otherwise it returns `None`.
+
+### Algorithmic rules II: `_inverse_laplace_apply_prog_rules`
+
+Next, a second batch of algorithmic rules is tried that works much better when expansion cannot be done further: 
+- `_inverse_laplace_time_shift` looks for a factor `exp(a*s)` and replaces it by a time shift `t-a` of the result,
+- `_inverse_laplace_freq_shift` looks for a frequency shift `s-a` and replaces it by a factor `exp(-a*t)` in the result,
+- `_inverse_laplace_time_diff` looks for a factor of `s**n` and applies the `n`-th derivative to the result,
+- `_inverse_laplace_diff` looks for an `n`-th derivative to `s` and replaces it with a factor `t**n` in the result,
+- `_inverse_laplace_irrational` is tried once more.
+
+The last point is also a design decision: due to the nature of irrational fractions and the many ways to enter them, expansion may or may not be needed, and we cannot predict when it is needed, so we have to try twice.
+
+### Integration: `_inverse_laplace_transform_integration`
+
+If nothing else works, then integration is attempted with `_inverse_laplace_transform_integration`.
+
+### Example for the debugging output
+
+The inverse Laplace transform also gives debugging output, for example
+
+```py
+>>> from sympy import inverse_laplace_transform, sqrt, symbols
+>>> s = symbols('s')
+>>> t = symbols('t', real=True)
+>>> a, b = symbols('a, b', positive=True)
+>>> inverse_laplace_transform((a - b)*sqrt(s)/(sqrt(s) + sqrt(a))/(s - b), s, t)
+(sqrt(a)*sqrt(b)*exp(b*t)*erfc(sqrt(b)*sqrt(t)) + a*exp(a*t)*erfc(sqrt(a)*sqrt(t)) - b*exp(b*t))*Heaviside(t)
+```
+
+gives 
+
+```
+[ILT doit] (sqrt(s)*(a - b)/((sqrt(a) + sqrt(s))*(-b + s)), s, t)
+
+------------------------------------------------------------------------------
+-LT- _inverse_laplace_transform(sqrt(s)*(a - b)/((sqrt(a) + sqrt(s))*(-b + s)), s, t, None)
+-LT-   _inverse_laplace_apply_simple_rules(sqrt(s)/((sqrt(a) + sqrt(s))*(-b + s)), s, t)
+-LT-     _inverse_laplace_build_rules is building rules
+-LT-   ---> None
+-LT-   _inverse_laplace_early_prog_rules(sqrt(s)/((sqrt(a) + sqrt(s))*(-b + s)), s, t, None)
+-LT-     _inverse_laplace_laplace(sqrt(s)/((sqrt(a) + sqrt(s))*(-b + s)), s, t, None)
+-LT-     ---> None
+-LT-     _inverse_laplace_irrational(sqrt(s)/((sqrt(a) + sqrt(s))*(-b + s)), s, t, None)
+-LT-            rule 5.3.6
+-LT-     ---> ((sqrt(a)*sqrt(b)*exp(b*t)*erfc(sqrt(b)*sqrt(t)) + a*exp(a*t)*erfc(sqrt(a)*sqrt(t)) - b*exp(b*t))*Heaviside(t)/(a - b), True)
+-LT-   ---> ((sqrt(a)*sqrt(b)*exp(b*t)*erfc(sqrt(b)*sqrt(t)) + a*exp(a*t)*erfc(sqrt(a)*sqrt(t)) - b*exp(b*t))*Heaviside(t)/(a - b), True)
+-LT- ---> ((sqrt(a)*sqrt(b)*exp(b*t)*erfc(sqrt(b)*sqrt(t)) + a*exp(a*t)*erfc(sqrt(a)*sqrt(t)) - b*exp(b*t))*Heaviside(t), True)
+------------------------------------------------------------------------------
+```
+
+showing that `_inverse_laplace_irrational` solved it before `_inverse_laplace_expand` was attempted.
+
+## Further details
+
+There are a few more interesting aspects to `laplace.py`, which we list here in no particular order:
+
+- The debug wrapper function `DEBUG_WRAP(func)` keeps track of the recursion level through a global variable `_LT_level`.
+
+- The code base contains a few more functions written to facilitate solving differential equations by Laplace transform, they are `laplace_correspondence` and `laplace_initial_conds`, and are described in the guide on how to [Solve Ordinary Differential Equations (ODEs) and Partial Differential Equations (PDEs) Algebraically with the Laplace Transform](solving-guide-de-laplace).
+
+- Both `LaplaceTransform` and `InverseLaplaceTransform` have a method `._as_integral()` which returns an unresolved integral, i.e., the formulas shown in the very beginning of this text.
+
+- There is an experimental function `_fast_inverse_laplace` that attempts to solve the problem with root sums, it is presently not very strong. It is not used in the main algorithm.
