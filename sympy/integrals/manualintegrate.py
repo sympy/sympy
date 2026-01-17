@@ -801,6 +801,20 @@ class ArctanRule(AtomicRule):
         a, b, c, x = self.a, self.b, self.c, self.variable
         return a/b / sqrt(c/b) * atan(x/sqrt(c/b))
 
+class SqrtRatioRule(AtomicRule):
+    """integrate(sqrt(a-x)/(x*sqrt(a+x)), x) -> 2*log(sqrt(a+x) + sqrt(a-x)) - log(x)"""
+
+    __slots__ = ("a",)
+
+    a: Expr
+
+    def __init__(self, integrand: Expr, variable: Symbol, a: Expr) -> None:
+        super().__init__(integrand, variable)
+        self.a = a
+
+    def eval(self) -> Expr:
+        a, x = self.a, self.variable
+        return 2*log(sqrt(a + x) + sqrt(a - x)) - log(x)
 
 class OrthogonalPolyRule(AtomicRule, ABC):
 
@@ -1819,6 +1833,18 @@ def trig_product_rule(integral: IntegralInfo):
     if integrand == csc(symbol) * cot(symbol):
         return CscCotRule(integrand, symbol)
 
+def sqrt_ratio_rule(integral: IntegralInfo):
+    integrand, symbol = integral
+
+    a = Wild('a', exclude=[symbol])
+    pattern = sqrt(a - symbol) / (symbol * sqrt(a + symbol))
+
+    match = integrand.match(pattern)
+    if not match:
+        return
+
+    a_val = match[a]
+    return SqrtRatioRule(integrand, symbol, a_val)
 
 def trig_cmplx_exp_rule(integral: IntegralInfo):
     """
@@ -2088,7 +2114,6 @@ def sqrt_quadratic_rule(integral: IntegralInfo, degenerate=True):
         # This requires splitting the integral as A*(2ax+b) + B form
         return None
     return _add_degenerate_step(generic_cond, generic_step, degenerate_step)
-
 
 def hyperbolic_rule(integral: tuple[Expr, Symbol]):
     integrand, symbol = integral
@@ -2577,6 +2602,7 @@ def integral_steps(integrand, symbol, **options):
             Add: add_rule,
             Mul: do_one(null_safe(mul_rule), null_safe(trig_product_rule),
                         null_safe(heaviside_rule), null_safe(quadratic_denom_rule),
+                        null_safe(sqrt_ratio_rule),
                         null_safe(sqrt_linear_rule),
                         null_safe(sqrt_quadratic_rule),
                         null_safe(powsimp_rule),
