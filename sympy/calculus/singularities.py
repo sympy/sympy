@@ -211,7 +211,7 @@ def monotonicity_helper(
 
 
 def is_increasing(
-    expression: Expr,
+    expression: Expr | complex,
     interval: Set = S.Reals,
     symbol: Symbol | None = None,
 ) -> bool:
