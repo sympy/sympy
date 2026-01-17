@@ -145,7 +145,7 @@ def singularities(
 
 
 def monotonicity_helper(
-    expression: Expr,
+    expression: Expr | complex,
     predicate: Callable[[Expr], Boolean],
     interval: Set = S.Reals,
     symbol: Symbol | None = None,
@@ -401,7 +401,7 @@ def is_strictly_decreasing(
 
 
 def is_monotonic(
-    expression: Expr,
+    expression: Expr | complex,
     interval: Set = S.Reals,
     symbol: Symbol | None = None,
 ) -> bool:
