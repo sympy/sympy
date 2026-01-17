@@ -10,26 +10,32 @@ from itertools import count
 
 def _pre():
     maxn = 10**5
-    global _factor, _totient
-    _factor = [0]*maxn
-    _totient = [1]*maxn
+    factor = [0]*maxn
+    totient = [1]*maxn
     lim = int(maxn**0.5) + 5
     for i in range(2, lim):
-        if _factor[i] == 0:
+        if factor[i] == 0:
             for j in range(i*i, maxn, i):
-                if _factor[j] == 0:
-                    _factor[j] = i
+                if factor[j] == 0:
+                    factor[j] = i
     for i in range(2, maxn):
-        if _factor[i] == 0:
-            _factor[i] = i
-            _totient[i] = i-1
+        if factor[i] == 0:
+            factor[i] = i
+            totient[i] = i-1
             continue
-        x = _factor[i]
+        x = factor[i]
         y = i//x
         if y % x == 0:
-            _totient[i] = _totient[y]*x
+            totient[i] = totient[y]*x
         else:
-            _totient[i] = _totient[y]*(x - 1)
+            totient[i] = totient[y]*(x - 1)
+
+    # Assign the global variables once atomically when their values are
+    # fully correct. In multithreading this ensures that one thread does not
+    # overwrite the values while another thread thinks they are safe to read.
+    global _factor, _totient
+    _factor = factor
+    _totient = totient
 
 def _a(n, k, prec):
     """ Compute the inner sum in HRR formula [1]_

@@ -102,10 +102,8 @@ def test_generate():
     assert prevprime(19) == 17
     assert prevprime(20) == 19
 
-    sieve.extend_to_no(9)
-    assert sieve._list[-1] == 23
-
-    assert sieve._list[-1] < 31
+    _list = sieve._extend_to_no(9)
+    assert _list[-1] >= 23
     assert 31 in sieve
 
     assert nextprime(90) == 97
@@ -133,7 +131,7 @@ def test_generate():
         s = Sieve(sieve_interval=sieve_interval)
         for head in range(s._list[-1] + 1, (s._list[-1] + 1)**2, 2):
             for tail in range(head + 1, (s._list[-1] + 1)**2):
-                A = list(s._primerange(head, tail))
+                A = list(s._primerange(head, tail, s._list))
                 B = primelist[bisect(primelist, head):bisect_left(primelist, tail)]
                 assert A == B
         for k in range(s._list[-1], primelist[-1] - 1, 2):
@@ -241,10 +239,10 @@ def test_randprime():
 
 def test_primorial():
     assert primorial(1) == 2
-    assert primorial(1, nth=0) == 1
+    assert primorial(1, nth=False) == 1
     assert primorial(2) == 6
-    assert primorial(2, nth=0) == 2
-    assert primorial(4, nth=0) == 6
+    assert primorial(2, nth=False) == 2
+    assert primorial(4, nth=False) == 6
 
 
 def test_search():
