@@ -33,7 +33,7 @@ from sympy.utilities.misc import filldedent
 if TYPE_CHECKING:
     from typing import Callable
     from sympy.core.expr import Expr
-    from sympy.sets.sets import Interval,Set
+    from sympy.sets.sets import Set
     from sympy.core.basic import Basic
     from sympy.logic.boolalg import Boolean
 
@@ -147,7 +147,7 @@ def singularities(
 def monotonicity_helper(
     expression: Expr,
     predicate: Callable[[Expr], Boolean],
-    interval: Interval = S.Reals,
+    interval: Set = S.Reals,
     symbol: Symbol | None = None,
 ) -> bool:
     """
@@ -210,7 +210,7 @@ def monotonicity_helper(
 
 def is_increasing(
     expression: Expr,
-    interval: Interval = S.Reals,
+    interval: Set = S.Reals,
     symbol: Symbol | None = None,
 ) -> bool:
     """
@@ -257,7 +257,7 @@ def is_increasing(
 
 def is_strictly_increasing(
     expression: Expr,
-    interval: Interval = S.Reals,
+    interval: Set = S.Reals,
     symbol: Symbol | None = None,
 ) -> bool:
     """
@@ -304,7 +304,7 @@ def is_strictly_increasing(
 
 def is_decreasing(
     expression: Expr,
-    interval: Interval = S.Reals,
+    interval: Set = S.Reals,
     symbol: Symbol | None = None,
 ) -> bool:
     """
@@ -355,7 +355,7 @@ def is_decreasing(
 
 def is_strictly_decreasing(
     expression: Expr,
-    interval: Interval = S.Reals,
+    interval: Set = S.Reals,
     symbol: Symbol | None = None,
 ) -> bool:
     """
@@ -402,7 +402,7 @@ def is_strictly_decreasing(
 
 def is_monotonic(
     expression: Expr,
-    interval: Interval = S.Reals,
+    interval: Set = S.Reals,
     symbol: Symbol | None = None,
 ) -> bool:
     """
