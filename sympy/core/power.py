@@ -1132,7 +1132,6 @@ class Pow(Expr):
             from sympy.polys.polytools import poly
 
             exp = self.exp
-            # explicit zero check for base
             if exp < 0 and self.base.is_zero:
                 return (S.NaN, S.NaN)
 
