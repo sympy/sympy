@@ -54,7 +54,7 @@ If the intention is to calculate a transform, it is better to use the funtions `
 (1/(s**2 + 1), 0, True)
 ```
 
-This also returns the convergence plane and possible additional conditions. Calling `laplace_transform` with the additional argument `noconds=True` will return `1/(s**2 + 1)`, while using the method `.doit(noconds=False)` further above will return `(1/(s**2 + 1), 0, True)`.  (The inverse Laplace transform does not output conditions by defult.)
+This also returns the convergence plane and possible additional conditions. Calling `laplace_transform` with the additional argument `noconds=True` will return `1/(s**2+1)`, while using the method `.doit(noconds=False)` further above will return `(1/(s**2+1), 0, True)`.  (The inverse Laplace transform does not output conditions by defult.)
 
 The actual work is done for both object and function by the functions `_laplace_transform` and `_inverse_laplace_transform`.
 
