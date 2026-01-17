@@ -1614,8 +1614,8 @@ class SymPyDocTestFinder(DocTestFinder):
     classmethods, and properties.
 
     Modified from doctest's version to look harder for code that
-    appears comes from a different module. For example, the @vectorize
-    decorator makes it look like functions come from multidimensional.py
+    appears comes from a different module. For example, the @CompositePredicate.register(Expr)
+    decorator can make it appear that functions come from sympy/assumptions/predicates/ntheory.py
     even though their code exists elsewhere.
     """
 

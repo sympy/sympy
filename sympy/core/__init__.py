@@ -19,7 +19,6 @@ from .mod import Mod
 from .relational import ( Rel, Eq, Ne, Lt, Le, Gt, Ge,
     Equality, GreaterThan, LessThan, Unequality, StrictGreaterThan,
     StrictLessThan )
-from .multidimensional import vectorize
 from .function import Lambda, WildFunction, Derivative, diff, FunctionClass, \
     Function, Subs, expand, PoleError, count_ops, \
     expand_mul, expand_log, expand_func, \
@@ -72,7 +71,6 @@ __all__ = [
     'Rel', 'Eq', 'Ne', 'Lt', 'Le', 'Gt', 'Ge', 'Equality', 'GreaterThan',
     'LessThan', 'Unequality', 'StrictGreaterThan', 'StrictLessThan',
 
-    'vectorize',
 
     'Lambda', 'WildFunction', 'Derivative', 'diff', 'FunctionClass',
     'Function', 'Subs', 'expand', 'PoleError', 'count_ops', 'expand_mul',
