@@ -33,14 +33,15 @@ from sympy.utilities.misc import filldedent
 if TYPE_CHECKING:
     from typing import Callable
     from sympy.core.expr import Expr
-    from sympy.sets.sets import Interval
+    from sympy.sets.sets import Interval,Set
     from sympy.core.basic import Basic
+    from sympy.logic.boolalg import Boolean
 
 
 def singularities(
     expression: Expr,
     symbol: Symbol | Basic,
-    domain: Interval | None = None,
+    domain: Set | None = None,
 ) -> set[Symbol]:
     """
     Find singularities of a given function.
@@ -145,7 +146,7 @@ def singularities(
 
 def monotonicity_helper(
     expression: Expr,
-    predicate: Callable[[Expr], bool],
+    predicate: Callable[[Expr], Boolean],
     interval: Interval = S.Reals,
     symbol: Symbol | None = None,
 ) -> bool:
