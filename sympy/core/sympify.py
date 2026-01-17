@@ -643,4 +643,4 @@ def kernS(s):
 
 
 # Avoid circular import
-from .basic import Basic
+from .basic import Basic  # noqa: TC001

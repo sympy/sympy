@@ -3,13 +3,12 @@
 #
 
 from __future__ import annotations
-from typing import ClassVar, Iterator
+from typing import ClassVar, Iterator, TYPE_CHECKING
 
 from .riccati import match_riccati, solve_riccati
 from sympy.core import Add, S, Pow, Rational
 from sympy.core.cache import cached_property
 from sympy.core.exprtools import factor_terms
-from sympy.core.expr import Expr
 from sympy.core.function import AppliedUndef, Derivative, diff, Function, expand, Subs, _mexpand
 from sympy.core.numbers import zoo
 from sympy.core.relational import Equality, Eq
@@ -31,6 +30,9 @@ from .nonhomogeneous import _get_euler_characteristic_eq_sols, _get_const_charac
     _solve_undetermined_coefficients, _solve_variation_of_parameters, _test_term, _undetermined_coefficients_match, \
         _get_simplified_sol
 from .lie_group import _ode_lie_group
+
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
 
 
 class ODEMatchError(NotImplementedError):
