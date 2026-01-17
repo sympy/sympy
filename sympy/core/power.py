@@ -1132,13 +1132,16 @@ class Pow(Expr):
             from sympy.polys.polytools import poly
 
             exp = self.exp
+            
+            # explicit zero check for base
+            if exp < 0 and self.base.is_zero:
+                return (S.NaN, S.NaN)
+
             re_e, im_e = self.base.as_real_imag(deep=deep)
-            # CHANGE START
-            # Only assume result is Real + 0j if the base is NOT explicitly zero.
-            # If is_nonzero is None (unknown), we assume it's safe (to pass regression test).
-            if not im_e and self.base.is_nonzero is not False:
+
+            if not im_e:
                 return self, S.Zero
-            # CHANGE END
+
             a, b = symbols('a b', cls=Dummy)
             if exp >= 0:
                 if re_e.is_Number and im_e.is_Number:
