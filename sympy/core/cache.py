@@ -1,6 +1,9 @@
 """ Caching facility for SymPy """
 from importlib import import_module
-from typing import Callable
+from typing import Callable, TypeVar, cast
+
+_T = TypeVar("_T")
+_S = TypeVar("_S")
 
 class _cache(list):
     """ List of cached functions """
@@ -152,16 +155,16 @@ else:
         'unrecognized value for SYMPY_USE_CACHE: %s' % USE_CACHE)
 
 
-def cached_property(func):
+def cached_property(func: Callable[[_S], _T]) -> property:
     '''Decorator to cache property method'''
     attrname = '__' + func.__name__
     _cached_property_sentinel = object()
-    def propfunc(self):
+    def propfunc(self: _S) -> _T:
         val = getattr(self, attrname, _cached_property_sentinel)
         if val is _cached_property_sentinel:
             val = func(self)
             setattr(self, attrname, val)
-        return val
+        return cast(_T, val)
     return property(propfunc)
 
 
