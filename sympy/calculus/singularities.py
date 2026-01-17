@@ -39,7 +39,7 @@ if TYPE_CHECKING:
 
 
 def singularities(
-    expression: Expr,
+    expression: Expr | complex,
     symbol: Symbol | Basic,
     domain: Set | None = None,
 ) -> set[Symbol]:
@@ -107,6 +107,8 @@ def singularities(
     """
     from sympy.solvers.solveset import solveset
     from sympy.sets.sets import Interval
+
+    expression = sympify(expression)
 
     if domain is None:
         domain = S.Reals if symbol.is_real else S.Complexes
