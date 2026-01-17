@@ -256,7 +256,7 @@ def is_increasing(
 
 
 def is_strictly_increasing(
-    expression: Expr,
+    expression: Expr | complex,
     interval: Set = S.Reals,
     symbol: Symbol | None = None,
 ) -> bool:
@@ -303,7 +303,7 @@ def is_strictly_increasing(
 
 
 def is_decreasing(
-    expression: Expr,
+    expression: Expr | complex,
     interval: Set = S.Reals,
     symbol: Symbol | None = None,
 ) -> bool:
@@ -354,7 +354,7 @@ def is_decreasing(
 
 
 def is_strictly_decreasing(
-    expression: Expr,
+    expression: Expr | complex,
     interval: Set = S.Reals,
     symbol: Symbol | None = None,
 ) -> bool:
