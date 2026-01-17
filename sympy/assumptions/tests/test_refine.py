@@ -7,7 +7,7 @@ from sympy.core.symbol import Symbol
 from sympy.functions.elementary.complexes import (Abs, arg, im, re, sign)
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.functions.elementary.trigonometric import (atan, atan2)
+from sympy.functions.elementary.trigonometric import (atan, atan2, cos, sin)
 from sympy.abc import w, x, y, z
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.piecewise import Piecewise
@@ -225,3 +225,30 @@ def test_matrixelement():
     assert refine(x[1, 0], Q.symmetric(x)) == x[0, 1]
     assert refine(x[i, j], Q.symmetric(x)) == x[j, i]
     assert refine(x[j, i], Q.symmetric(x)) == x[j, i]
+
+
+def test_sin_cos():
+    n = Symbol('n')
+    assert refine(cos(n*pi/2), Q.odd(n)) == 0
+    assert refine(cos(n*pi), Q.even(n)) == 1
+    assert refine(cos(n*pi), Q.odd(n)) == -1
+    assert refine(sin(n*pi), Q.integer(n)) == 0
+    assert refine(sin(n*pi/2), Q.odd(n) & Q.even((n-1)/2)) == 1
+    assert refine(sin(n*pi/2), Q.odd(n) & Q.odd((n-1)/2)) == -1
+    assert refine(cos(n*pi), Q.integer(n)) == (-1)**n
+    assert refine(sin(n*pi/2), Q.even(n)) == 0
+    assert refine(cos(n*pi/2), Q.even(n)) == (-1)**(n/2)
+    assert refine(sin(n*pi/2), Q.odd(n)) == (-1)**((n + 3)/2)
+    assert refine(cos(n*pi/2), Q.odd(n)) == 0
+    assert refine(sin(x + n*pi), Q.integer(n)) == ((-1)**n) * sin(x)
+    assert refine(cos(x + n*pi), Q.integer(n)) == ((-1)**n) * cos(x)
+    assert refine(sin(x + n*pi), Q.even(n)) == sin(x)
+    assert refine(cos(x + n*pi), Q.even(n)) == cos(x)
+    assert refine(sin(x + n*pi), Q.odd(n)) == -sin(x)
+    assert refine(cos(x + n*pi), Q.odd(n)) == -cos(x)
+    assert refine(sin(x + n*pi/2), Q.even(n)) == ((-1)**(n/2)) * sin(x)
+    assert refine(cos(x + n*pi/2), Q.even(n)) == ((-1)**(n/2)) * cos(x)
+    assert refine(sin(x + n*pi/2), Q.odd(n)) == ((-1)**((n + 3)/2)) * cos(x)
+    assert refine(cos(x + n*pi/2), Q.odd(n)) == ((-1)**((n + 1)/2)) * sin(x)
+    assert refine(sin(x + y + 2*n*pi), Q.integer(n)) == sin(x + y)
+    assert refine(cos(x + y + 2*n*pi), Q.integer(n)) == cos(x + y)
