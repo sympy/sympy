@@ -131,9 +131,9 @@ def directional_derivative(field, direction_vector):
     along a given vector in a coordinate system.
 
     Note that there are two definitions of directional derivative for a
-    differentiable scalar function $f$. Let $\vec{v}$ be an arbitrary direction
-    vector, and $\hat{v}$ be the normalized direction vector. Some authors
-    define the directional derivative as:
+    differentiable scalar function $f$. Let $\mathbf{\vec{v}}$ be an arbitrary
+    direction vector, and $\mathbf{\hat{v}}$ be the normalized direction
+    vector. Some authors define the directional derivative as:
 
     $$\nabla_{\mathbf{\vec{v}}} f(\mathbf{x}) = \mathbf{\hat{v}} \cdot \nabla f(\mathbf{x})$$
 
@@ -148,7 +148,7 @@ def directional_derivative(field, direction_vector):
     giving it to this function.
 
     The directional derivative of a vector field $\mathbf{\vec{f}}(\mathbf{x})$
-    along the vector $\mathbf{\vec{v}}}$ is:
+    along the vector $\mathbf{\vec{v}}$ is:
 
     $$\nabla_{\mathbf{\vec{v}}} f(\mathbf{x}) = \mathbf{\vec{v}} \cdot \nabla \mathbf{\vec{f}}(\mathbf{x})$$
 
