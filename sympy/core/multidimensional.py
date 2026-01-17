@@ -5,9 +5,16 @@ Read the vectorize docstring for more details.
 """
 
 from functools import wraps
+from typing import Any, Callable, Union, Iterable
 
 
-def apply_on_element(f, args, kwargs, n):
+def apply_on_element(
+    f: Callable[..., Any],
+    args: list[Any],
+    kwargs: dict[str, Any],
+    n: Union[int, str],
+) -> list[Any]:
+
     """
     Returns a structure with the same dimension as the specified argument,
     where each basic element is replaced by the function f applied on it. All
@@ -37,20 +44,21 @@ def apply_on_element(f, args, kwargs, n):
     return list(map(f_reduced, structure))
 
 
-def iter_copy(structure):
+def iter_copy(structure: Iterable[Any]) -> list[Any]:
     """
     Returns a copy of an iterable object (also copying all embedded iterables).
     """
     return [iter_copy(i) if hasattr(i, "__iter__") else i for i in structure]
 
 
-def structure_copy(structure):
+def structure_copy(structure: Any) -> Any:
     """
     Returns a copy of the given structure (numpy-array, list, iterable, ..).
     """
     if hasattr(structure, "copy"):
         return structure.copy()
     return iter_copy(structure)
+
 
 
 class vectorize:
