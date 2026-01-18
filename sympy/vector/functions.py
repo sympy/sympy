@@ -192,8 +192,10 @@ def directional_derivative(field, direction_vector):
     >>> u, v, w = [Function(s)(r, theta, z) for s in ["u", "v", "w"]]
     >>> vec = u * e_r + v * e_theta + w * e_z
     >>> direction = e_theta
-    >>> directional_derivative(vec, direction)
-    (-v(C.r, C.theta, C.z)/C.r + Derivative(u(C.r, C.theta, C.z), C.theta)/C.r)*C.i + (u(C.r, C.theta, C.z)/C.r + Derivative(v(C.r, C.theta, C.z), C.theta)/C.r)*C.j + (Derivative(w(C.r, C.theta, C.z), C.theta)/C.r)*C.k
+    >>> directional_derivative(vec, direction)  # doctest: +NORMALIZE_WHITESPACE
+    (-v(C.r, C.theta, C.z)/C.r + Derivative(u(C.r, C.theta, C.z), C.theta)/C.r)*C.i
+    + (u(C.r, C.theta, C.z)/C.r + Derivative(v(C.r, C.theta, C.z), C.theta)/C.r)*C.j
+    + (Derivative(w(C.r, C.theta, C.z), C.theta)/C.r)*C.k
 
     """
     from sympy.vector.operators import _get_coord_systems
