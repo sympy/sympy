@@ -1118,7 +1118,6 @@ class Basic(Printable):
                 return sympify(new, strict=True)
 
         sequence = [(sympify_old(s1), sympify_new(s2)) for s1, s2 in items]
-        
         if not sequence:
             return self
 
