@@ -274,12 +274,6 @@ relational
 .. autoclass:: StrictLessThan
    :members:
 
-multidimensional
-----------------
-.. module:: sympy.core.multidimensional
-
-.. autoclass:: vectorize
-   :members:
 
 function
 --------
