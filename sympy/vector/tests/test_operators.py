@@ -1,5 +1,8 @@
 from sympy.vector import CoordSys3D, Gradient, Divergence, Curl, VectorZero, Laplacian
 from sympy.printing.repr import srepr
+from sympy.vector.operators import _christoffel_symbol_2nd_kind
+from sympy import zeros, Matrix, sin, cos
+
 
 R = CoordSys3D('R')
 s1 = R.x*R.y*R.z  # type: ignore
@@ -41,3 +44,41 @@ def test_Laplacian():
     assert Laplacian(v3).doit() == 2*R.i + 2*R.j + 2*R.k
     assert srepr(Laplacian(s3)) == \
             'Laplacian(Add(Pow(R.x, Integer(2)), Pow(R.y, Integer(2)), Pow(R.z, Integer(2))))'
+
+
+def test_christoffel_symbol_2nd_kind_cylindrical_system():
+    C = CoordSys3D("C", transformation="cylindrical")
+    r, theta, z = q = C.base_scalars()
+    h = C.lame_coefficients()
+
+    Gamma_r = zeros(3)
+    Gamma_theta = zeros(3)
+    Gamma_z = zeros(3)
+    for i in range(3):
+        for j in range(3):
+            Gamma_r[i, j] = _christoffel_symbol_2nd_kind(h, q, i, j, 0).doit()
+            Gamma_theta[i, j] = _christoffel_symbol_2nd_kind(h, q, i, j, 1).doit()
+            Gamma_z[i, j] = _christoffel_symbol_2nd_kind(h, q, i, j, 2).doit()
+
+    assert Gamma_r == Matrix([[0, 0, 0], [0, -r, 0], [0, 0, 0]])
+    assert Gamma_theta == Matrix([[0, 1/r, 0], [1/r, 0, 0], [0, 0, 0]])
+    assert Gamma_z == zeros(3)
+
+
+def test_christoffel_symbol_2nd_kind_spherical_system():
+    S = CoordSys3D("C", transformation="spherical")
+    r, theta, phi = q = S.base_scalars()
+    h = S.lame_coefficients()
+
+    Gamma_r = zeros(3)
+    Gamma_theta = zeros(3)
+    Gamma_phi = zeros(3)
+    for i in range(3):
+        for j in range(3):
+            Gamma_r[i, j] = _christoffel_symbol_2nd_kind(h, q, i, j, 0).doit()
+            Gamma_theta[i, j] = _christoffel_symbol_2nd_kind(h, q, i, j, 1).doit()
+            Gamma_phi[i, j] = _christoffel_symbol_2nd_kind(h, q, i, j, 2).doit()
+
+    assert Gamma_r == Matrix([[0, 0, 0], [0, -r, 0], [0, 0, -r*sin(theta)**2]])
+    assert Gamma_theta == Matrix([[0, 1/r, 0], [1/r, 0, 0], [0, 0, -sin(theta)*cos(theta)]])
+    assert Gamma_phi == Matrix([[0, 0, 1/r], [0, 0, cos(theta)/sin(theta)], [1/r, cos(theta)/sin(theta), 0]])
