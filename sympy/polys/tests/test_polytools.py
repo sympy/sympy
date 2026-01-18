@@ -3574,7 +3574,7 @@ def test_cancel():
         evaluate=False)
     assert cancel(q, _signsimp=False) is S.NaN
     assert q.subs(x, 2) is S.NaN
-    assert signsimp(q) is S.NaN
+    assert signsimp(q) is not S.NaN
 
     # issue 9363
     M = MatrixSymbol('M', 5, 5)

@@ -384,3 +384,11 @@ def test_issue_22822():
 def test_xor_eval_false():
     p, q = Symbol("p"), Symbol("q")
     assert parse_expr("p ^ q", evaluate=False) == Xor(p, q, evaluate=False)
+
+
+def test_issue_27832():
+    x = Symbol('x')
+    assert parse_expr('1/1', evaluate=False) == Pow(Integer(1), Integer(-1), evaluate=False)
+    assert parse_expr('1/10 * 4', evaluate=False) == Mul(Pow(Integer(10), Integer(-1), evaluate=False), \
+                                                         Integer(4), evaluate=False)
+    assert parse_expr('1/x', evaluate=False) == Pow(x, Integer(-1), evaluate=False)
