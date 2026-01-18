@@ -19,7 +19,6 @@ from sympy.core.power import Pow
 from sympy.core.function import Derivative, Function, FunctionClass, Lambda, \
     WildFunction
 from sympy.sets.sets import Interval
-from sympy.core.multidimensional import vectorize
 
 from sympy.external.gmpy import gmpy as _gmpy
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -185,10 +184,6 @@ def test_core_interval():
     for c in (Interval, Interval(0, 2)):
         check(c)
 
-
-def test_core_multidimensional():
-    for c in (vectorize, vectorize(0)):
-        check(c)
 
 
 def test_Singletons():
