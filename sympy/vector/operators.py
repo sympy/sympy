@@ -341,9 +341,9 @@ def gradient(field, doit=True):
     elif isinstance(field, Vector):
         # vector field
         if len(coord_sys) > 1:
-            if isinstance(field, (Add, VectorAdd)):
+            if isinstance(field, VectorAdd):
                 return DyadicAdd.fromiter(gradient(i) for i in field.args)
-            if isinstance(field, (Mul, VectorMul)):
+            if isinstance(field, VectorMul):
                 s = _split_mul_args_wrt_coordsys(field)
                 return DyadicAdd.fromiter(field / i * gradient(i) for i in s)
             return Gradient(field)
