@@ -6,7 +6,7 @@ from sympy.core.relational import Ne
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, symbols)
 from sympy.functions.elementary.exponential import (exp, log)
-from sympy.functions.elementary.hyperbolic import (asinh, csch, cosh, coth, sech, sinh, tanh)
+from sympy.functions.elementary.hyperbolic import (asinh, csch, cosh, coth, sech, sinh, tanh, acosh)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise, piecewise_fold
 from sympy.functions.elementary.trigonometric import (acos, acot, acsc, asec, asin, atan, cos, cot, csc, sec, sin, tan)
@@ -209,16 +209,16 @@ def test_manualintegrate_inversetrig():
     assert manualintegrate(atan(a*x), x) == Piecewise(((a*x*atan(a*x) - log(a**2*x**2 + 1)/2)/a, Ne(a, 0)), (0, True))
     assert manualintegrate(x*atan(a*x), x) == -a*(x/a**2 - atan(x/sqrt(a**(-2)))/(a**4*sqrt(a**(-2))))/2 + x**2*atan(a*x)/2
     # acsc
-    assert manualintegrate(acsc(x), x) == x*acsc(x) + Integral(1/(x*sqrt(1 - 1/x**2)), x)
-    assert manualintegrate(acsc(a*x), x) == x*acsc(a*x) + Integral(1/(x*sqrt(1 - 1/(a**2*x**2))), x)/a
-    assert manualintegrate(x*acsc(a*x), x) == x**2*acsc(a*x)/2 + Integral(1/sqrt(1 - 1/(a**2*x**2)), x)/(2*a)
+    assert manualintegrate(acsc(x), x) == x*acsc(x) + acosh(x)
+    assert manualintegrate(acsc(a*x), x) == Piecewise((x*acsc(a*x) + acosh(a*x)/a, Ne(a, 0)))
+    assert manualintegrate(x*acsc(a*x), x) == Piecewise((x**2*acsc(a*x)/2 + sqrt(a**2*x**2 - 1)/(2*a**2), Ne(a**2, 0)))
     # asec
-    assert manualintegrate(asec(x), x) == x*asec(x) - Integral(1/(x*sqrt(1 - 1/x**2)), x)
-    assert manualintegrate(asec(a*x), x) == x*asec(a*x) - Integral(1/(x*sqrt(1 - 1/(a**2*x**2))), x)/a
-    assert manualintegrate(x*asec(a*x), x) == x**2*asec(a*x)/2 - Integral(1/sqrt(1 - 1/(a**2*x**2)), x)/(2*a)
+    assert manualintegrate(asec(x), x) == x*asec(x) - acosh(x)
+    assert manualintegrate(asec(a*x), x) == Piecewise((x*asec(a*x) - acosh(a*x)/a, Ne(a, 0)))
+    assert manualintegrate(x*asec(a*x), x) == Piecewise((x**2*asec(a*x)/2 - sqrt(a**2*x**2 - 1)/(2*a**2), Ne(a**2, 0)))
     # acot
     assert manualintegrate(acot(x), x) == x*acot(x) + log(x**2 + 1)/2
-    assert manualintegrate(acot(a*x), x) == Piecewise(((a*x*acot(a*x) + log(a**2*x**2 + 1)/2)/a, Ne(a, 0)), (pi*x/2, True))
+    assert manualintegrate(acot(a*x), x) == Piecewise( ((a*x*acot(a*x) + log(a**2*x**2 + 1)/2)/a, Ne(a, 0)), (pi*x/2, True))
     assert manualintegrate(x*acot(a*x), x) == a*(x/a**2 - atan(x/sqrt(a**(-2)))/(a**4*sqrt(a**(-2))))/2 + x**2*acot(a*x)/2
 
     # piecewise
@@ -838,3 +838,11 @@ def test_mul_pow_derivative():
     assert_is_integral_of(x**3*Derivative(f(x), (x, 4)),
                           x**3*Derivative(f(x), (x, 3)) - 3*x**2*Derivative(f(x), (x, 2)) +
                           6*x*Derivative(f(x), x) - 6*f(x))
+
+
+def test_issue_26587():
+    from sympy import sec, cos, tan, log, sin, csc, cot
+    # Test that 1/cos(x) is rewritten as sec(x) and solved
+    assert manualintegrate(1/cos(x), x) == log(tan(x) + sec(x))
+    # Test that 1/sin(x) is rewritten as cosec(x) and solved
+    assert manualintegrate(1/sin(x), x) == -log(cot(x) + csc(x))

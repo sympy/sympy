@@ -43,7 +43,7 @@ from sympy.core.function import WildFunction
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.hyperbolic import (HyperbolicFunction, csch,
-    cosh, coth, sech, sinh, tanh, asinh)
+    cosh, coth, sech, sinh, tanh, asinh, acosh)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
@@ -2474,8 +2474,12 @@ def derivative_rule(integral):
 def rewrites_rule(integral):
     integrand, symbol = integral
 
-    if integrand.match(1/cos(symbol)):
+    if integrand.match(1/cos(symbol)) is not None:
         rewritten = integrand.subs(1/cos(symbol), sec(symbol))
+        return RewriteRule(integrand, symbol, rewritten, integral_steps(rewritten, symbol))
+
+    if integrand.match(1/sin(symbol)) is not None:
+        rewritten = integrand.subs(1/sin(symbol), csc(symbol))
         return RewriteRule(integrand, symbol, rewritten, integral_steps(rewritten, symbol))
 
 def fallback_rule(integral):
@@ -2667,6 +2671,29 @@ def manualintegrate(f, var):
     sympy.integrals.integrals.Integral.doit
     sympy.integrals.integrals.Integral
     """
+    if isinstance(f, (acsc, asec)):
+        arg = f.args[0]
+        # Split argument into (coefficient, variable_part)
+        # e.g., if arg is 'a*x', coeff='a', dep='x'
+        coeff, dep = arg.as_independent(var, as_Add=False)
+
+        # Ensure the dependent part is exactly the variable (linear argument)
+        if dep == var:
+            # Calculate the acosh term (positive for acsc, negative for asec)
+            term = acosh(arg)
+            if isinstance(f, asec):
+                term = -term
+
+            # The standard integration formula: x*f(x) + term/coeff
+            result = var * f + term / coeff
+
+            # If coeff is just 1 (e.g. acsc(x)), return simple result
+            if coeff == 1:
+                return result
+
+            # If coeff is a symbol (e.g. acsc(a*x)), return Piecewise safety
+            return Piecewise((result, Ne(coeff, 0)))
+
     result = integral_steps(f, var).eval()
     # Clear the cache of u-parts
     _parts_u_cache.clear()
