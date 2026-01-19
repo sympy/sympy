@@ -23,6 +23,8 @@ from sympy.core.expr import Expr
 from sympy.core.intfunc import igcd
 from sympy.core.symbol import Symbol, symbols as _symbols
 from sympy.core.sympify import CantSympify, sympify
+from sympy.core.numbers import Number
+from sympy.core.sorting import default_sort_key
 from sympy.ntheory.multinomial import multinomial_coefficients
 from sympy.polys.compatibility import IPolys
 from sympy.polys.constructor import construct_domain
@@ -39,6 +41,7 @@ from sympy.polys.polyerrors import (
     GeneratorsError,
     ExactQuotientFailed,
     MultivariatePolynomialError,
+    BasePolynomialError
 )
 from sympy.polys.polyoptions import (
     Domain as DomainOpt,
@@ -204,20 +207,35 @@ def sring(exprs, *symbols, **options):
 
     exprs = list(map(sympify, exprs))
     opt = build_options(symbols, options)
+    opt_fast = opt.clone()
+    try:
+        if not opt_fast.gens:
+            symbols = set()
+            for expr in exprs:
+                symbols.update(expr.free_symbols)
+            opt_fast.gens = tuple(sorted(symbols, key=default_sort_key))
 
-    # TODO: rewrite this so that it doesn't use expand() (see poly()).
-    reps, opt = _parallel_dict_from_expr(exprs, opt)
+        if opt_fast.domain is None:
+            numbers = []
+            for expr in exprs:
+                numbers.extend(expr.atoms(Number))
+            opt_fast.domain, coeffs_dom = construct_domain(numbers, opt=opt_fast)
 
-    if opt.domain is None:
-        coeffs = sum([list(rep.values()) for rep in reps], [])
+        _ring = PolyRing(opt_fast.gens, opt_fast.domain, opt_fast.order)
+        polys = [_ring.from_expr(expr) for expr in exprs]
+    except (ValueError, BasePolynomialError, NotImplementedError):
+        reps, opt = _parallel_dict_from_expr(exprs, opt)
 
-        opt.domain, coeffs_dom = construct_domain(coeffs, opt=opt)
+        if opt.domain is None:
+            coeffs = sum([list(rep.values()) for rep in reps], [])
 
-        coeff_map = dict(zip(coeffs, coeffs_dom))
-        reps = [{m: coeff_map[c] for m, c in rep.items()} for rep in reps]
+            opt.domain, coeffs_dom = construct_domain(coeffs, opt=opt)
 
-    _ring = PolyRing(opt.gens, opt.domain, opt.order)
-    polys = list(map(_ring.from_dict, reps))
+            coeff_map = dict(zip(coeffs, coeffs_dom))
+            reps = [{m: coeff_map[c] for m, c in rep.items()} for rep in reps]
+
+        _ring = PolyRing(opt.gens, opt.domain, opt.order)
+        polys = list(map(_ring.from_dict, reps))
 
     if single:
         return (_ring, polys[0])
