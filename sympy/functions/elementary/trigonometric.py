@@ -3278,6 +3278,9 @@ class asec(InverseTrigonometricFunction):
         from sympy.series.order import O
         arg0 = self.args[0].subs(x, 0)
         # Handling branch points
+        if arg0 is S.Zero:
+            return (pi/2 - acsc(self.args[0]))._eval_nseries(x, n, logx=logx, cdir=cdir)
+
         if arg0 is S.One:
             t = Dummy('t', positive=True)
             ser = asec(S.One + t**2).rewrite(log).nseries(t, 0, 2*n)
