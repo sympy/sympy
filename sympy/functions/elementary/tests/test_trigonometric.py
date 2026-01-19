@@ -1839,6 +1839,7 @@ def test_asec():
         pi*(1 - sqrt(x**2)/x)/2 + sqrt(x**2)*acot(1/sqrt(x**2 - 1))/x
     assert asec(x).rewrite(acsc) == -acsc(x) + pi/2
     raises(ArgumentIndexError, lambda: asec(x).fdiff(2))
+    assert asec(x).series(x, 0, 6) == (pi/2 - acsc(x)).series(x, 0, 6)
 
 
 def test_asec_is_real():
