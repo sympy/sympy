@@ -332,28 +332,28 @@ def ibin(
     n: int,
     bits: int|None,
     str: Literal[False],
-    ) ->list [int]: ...
+ ) -> list[int]: ...
 
 @overload
 def ibin(
     n: int,
     bits: int,
     str: Literal[True],
-    ) -> str : ...
+) -> str: ...
 
 @overload
 def ibin(
     n: int,
     bits: None = None,
     str: Literal[False]=False,
-    ) -> Iterator[tuple[int, ...]]: ...
+) -> Iterator[tuple[int, ...]]: ...
 
 @overload
 def ibin(
     n: int,
     bits: None,
     str: Literal[True],
-    ) -> Iterator[str] : ...
+) -> Iterator[str]: ...
 
 
 
@@ -361,7 +361,7 @@ def ibin(
         n: int,
         bits: int|None = None,
         str: bool = False,
-        ) -> list [int]|str|Iterator[tuple[int, ...]]|Iterator[str]:
+) -> list [int]|str|Iterator[tuple[int, ...]]|Iterator[str]:
     """Return a list of length ``bits`` corresponding to the binary value
     of ``n`` with small bits to the right (last). If bits is omitted, the
     length will be the number required to represent ``n``. If the bits are
@@ -437,7 +437,7 @@ def variations(
         seq: Sequence[T],
         n: int,
         repetition: bool = False,
-        ) -> Iterator[tuple[T,...]]:
+) -> Iterator[tuple[T,...]]:
     r"""Returns an iterator over the n-sized variations of ``seq`` (size N).
     ``repetition`` controls whether items in ``seq`` can appear more than once;
 
@@ -488,7 +488,7 @@ def subsets(
         seq: Sequence[T],
         k: int|None = None,
         repetition: bool = False,
-        ) -> Iterator[tuple[T,...]]:
+) -> Iterator[tuple[T,...]]:
     r"""Generates all `k`-subsets (combinations) from an `n`-element set, ``seq``.
 
     A `k`-subset of an `n`-element set is any subset of length exactly `k`. The
