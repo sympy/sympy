@@ -144,7 +144,7 @@ def directional_derivative(field, direction_vector):
     The two definitions differs by the magnitude of the direction vector.
     This function does not normalize direction_vector. If the user wants
     to compute the directional derivative according to the first definition,
-    it is user's resposibility to normalize the direction vector before
+    it is the user's resposibility to normalize the direction vector before
     giving it to this function.
 
     The directional derivative of a vector field $\mathbf{\vec{f}}(\mathbf{x})$
@@ -153,7 +153,7 @@ def directional_derivative(field, direction_vector):
     $$\nabla_{\mathbf{\vec{v}}} f(\mathbf{x}) = \mathbf{\vec{v}} \cdot \nabla \mathbf{\vec{f}}(\mathbf{x})$$
 
     This term frequently appears in continuum mechanics's partial differential
-    equations, in particul the advection equation.
+    equations, in particular the advection equation.
 
     Parameters
     ==========
@@ -491,8 +491,9 @@ def matrix_to_dyadic(matrix, system):
     >>> C = CoordSys3D('C')
     >>> m = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
     >>> d = matrix_to_dyadic(m, C)
-    >>> d
-    (C.i|C.i) + 2*(C.i|C.j) + 3*(C.i|C.k) + 4*(C.j|C.i) + 5*(C.j|C.j) + 6*(C.j|C.k) + 7*(C.k|C.i) + 8*(C.k|C.j) + 9*(C.k|C.k)
+    >>> d     # doctest: +NORMALIZE_WHITESPACE
+    (C.i|C.i) + 2*(C.i|C.j) + 3*(C.i|C.k) + 4*(C.j|C.i) + 5*(C.j|C.j)
+    + 6*(C.j|C.k) + 7*(C.k|C.i) + 8*(C.k|C.j) + 9*(C.k|C.k)
     >>> d.to_matrix(C) == m
     True
 
