@@ -369,21 +369,16 @@ If there is any ambiguity about the spelling of a word, such as in the case of
 a function named after a person, refer to the spelling of the actual SymPy
 function.
 
-For example, Chebyshev polynomials are named after Pafnuty Lvovich Tchebychev,
-whose name is sometimes transliterated from Russian to be spelled with a “T,”
-but in SymPy it should always be spelled “Chebyshev” to refer to the SymPy
-function.
+For example, some mathematical functions have multiple conventional spellings
+or capitalizations in the literature. In such cases, the documentation should
+always follow the spelling and capitalization of the actual SymPy function.
 
-**Example**
+**Example**::
 
-::
+    from sympy import LambertW
 
-    class chebyshevt(OrthogonalPolynomial):
-        r"""
-        Chebyshev polynomial of the first kind, $T_n(x)$
-        ...
+    LambertW(x)
 
-        """
 
 Capitalization
 ~~~~~~~~~~~~~~
