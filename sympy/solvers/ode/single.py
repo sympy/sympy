@@ -30,6 +30,7 @@ from .nonhomogeneous import _get_euler_characteristic_eq_sols, _get_const_charac
     _solve_undetermined_coefficients, _solve_variation_of_parameters, _test_term, _undetermined_coefficients_match, \
         _get_simplified_sol
 from .lie_group import _ode_lie_group
+from sympy.utilities.iterables import iterable
 
 if TYPE_CHECKING:
     from sympy.core.expr import Expr
@@ -1721,16 +1722,16 @@ class HomogeneousCoeffBest(HomogeneousCoeffSubsIndepDivDep, HomogeneousCoeffSubs
         # There are two substitutions that solve the equation, u1=y/x and u2=x/y
         # # They produce different integrals, so try them both and see which
         # # one is easier
-        sol1 = HomogeneousCoeffSubsIndepDivDep._get_general_solution(self)
-        sol2 = HomogeneousCoeffSubsDepDivIndep._get_general_solution(self)
+        [sol1] = HomogeneousCoeffSubsIndepDivDep._get_general_solution(self)
+        [sol2] = HomogeneousCoeffSubsDepDivIndep._get_general_solution(self)
         fx = self.ode_problem.func
         if simplify_flag:
-            sol1 = odesimp(self.ode_problem.eq, *sol1, fx, "1st_homogeneous_coeff_subs_indep_div_dep")
-            sol2 = odesimp(self.ode_problem.eq, *sol2, fx, "1st_homogeneous_coeff_subs_dep_div_indep")
+            sol1 = odesimp(self.ode_problem.eq, sol1, fx, "1st_homogeneous_coeff_subs_indep_div_dep")
+            sol2 = odesimp(self.ode_problem.eq, sol2, fx, "1st_homogeneous_coeff_subs_dep_div_indep")
         # XXX: not simplify should be not simplify_flag. mypy correctly complains
-        return min([sol1, sol2], key=lambda x: ode_sol_simplicity(x, fx, trysolving=not simplify)) # type: ignore
-
-
+        return min([sol1,sol2], key=lambda x: ode_sol_simplicity(x, fx, trysolving=not simplify_flag)) # type: ignore
+    
+    
 class LinearCoefficients(HomogeneousCoeffBest):
     r"""
     Solves a differential equation with linear coefficients.

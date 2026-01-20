@@ -233,7 +233,6 @@ from sympy.core.containers import Tuple
 from sympy.core.expr import AtomicExpr, Expr
 from sympy.core.function import (Function, Derivative, AppliedUndef, diff,
     expand, expand_mul, Subs)
-from sympy.core.multidimensional import vectorize
 from sympy.core.numbers import nan, zoo, Number
 from sympy.core.relational import Equality, Eq
 from sympy.core.sorting import default_sort_key, ordered
@@ -1567,7 +1566,6 @@ def check_nonlinear_3eq_order2(eq, func, func_coef):
     return None
 
 
-@vectorize(0)
 def odesimp(ode, eq, func, hint):
     r"""
     Simplifies solutions of ODEs, including trying to solve for ``func`` and
@@ -1922,8 +1920,8 @@ def __remove_linear_redundancies(expr, Cs):
         return Eq(lhs, rhs)
     else:
         return _recursive_walk(expr)
-
-@vectorize(0)
+    
+    
 def constantsimp(expr, constants):
     r"""
     Simplifies an expression with arbitrary constants in it.
