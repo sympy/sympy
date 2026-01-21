@@ -9,7 +9,7 @@ from sympy.integrals.integrals import Integral
 from sympy.functions.special.bessel import besselj
 from sympy.functions.special.polynomials import legendre
 from sympy.functions.combinatorial.numbers import bell
-from sympy.printing.conventions import split_super_sub, requires_partial
+from sympy.printing.conventions import split_super_sub, requires_partial, split_leading_trailing_underscore
 from sympy.testing.pytest import XFAIL
 
 def test_super_sub():
@@ -114,3 +114,7 @@ def test_requires_partial_unspecified_variables():
     f = symbols('f', cls=Function)
     assert requires_partial(Derivative(f, x)) is False
     assert requires_partial(Derivative(f, x, y)) is True
+
+def test_split_leading_trailing_underscore():
+    assert split_leading_trailing_underscore('___123__') == (3, '123', 2)
+    assert split_leading_trailing_underscore('a_x^2____') == (0, 'a_x^2', 4)
