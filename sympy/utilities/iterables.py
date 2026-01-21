@@ -330,7 +330,7 @@ def multiset(seq: Sequence[T]) -> dict[T, int]:
 @overload
 def ibin(
     n: int,
-    bits: int|None,
+    bits: int | None,
     str: Literal[False],
  ) -> list[int]: ...
 
@@ -358,10 +358,15 @@ def ibin(
 
 
 def ibin(
-        n: int,
-        bits: int|None = None,
-        str: bool = False,
-) -> list [int]|str|Iterator[tuple[int, ...]]|Iterator[str]:
+    n: int,
+    bits: int | None = None,
+    str: bool = False,
+) ->(
+    list[int]
+    | str
+    | Iterator[tuple[int, ...]]
+    | Iterator[str]
+):
     """Return a list of length ``bits`` corresponding to the binary value
     of ``n`` with small bits to the right (last). If bits is omitted, the
     length will be the number required to represent ``n``. If the bits are
@@ -434,9 +439,9 @@ def ibin(
 
 
 def variations(
-        seq: Sequence[T],
-        n: int,
-        repetition: bool = False,
+    seq: Sequence[T],
+    n: int,
+    repetition: bool = False,
 ) -> Iterator[tuple[T,...]]:
     r"""Returns an iterator over the n-sized variations of ``seq`` (size N).
     ``repetition`` controls whether items in ``seq`` can appear more than once;
@@ -485,9 +490,9 @@ def variations(
 
 
 def subsets(
-        seq: Sequence[T],
-        k: int|None = None,
-        repetition: bool = False,
+    seq: Sequence[T],
+    k: int | None = None,
+    repetition: bool = False,
 ) -> Iterator[tuple[T,...]]:
     r"""Generates all `k`-subsets (combinations) from an `n`-element set, ``seq``.
 
