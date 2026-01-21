@@ -2328,7 +2328,6 @@ def test_issue_28222():
     assert Mod(I, exp(1)) == Mod(I, exp(1))
     assert Mod(I, S(1.5)) == Mod(I, S(1.5))
 from sympy.core import NumberSymbol
-from sympy import pi
 def test_numbersymbol_equality():
     assert NumberSymbol().equals(NumberSymbol()) is True
     assert pi.equals(pi) is True
