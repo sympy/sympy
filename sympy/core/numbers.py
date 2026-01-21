@@ -1735,10 +1735,32 @@ class Rational(Number):
 
     @property
     def numerator(self):
+        """
+        Returns the numerator of the Rational number.
+
+        Examples
+        ========
+
+        >>> from sympy import Rational
+        >>> r = Rational(3, 4)
+        >>> r.numerator
+        3
+        """
         return self.p
 
     @property
     def denominator(self):
+        """
+        Returns the denominator of the Rational number.
+
+        Examples
+        ========
+
+        >>> from sympy import Rational
+        >>> r = Rational(3, 4)
+        >>> r.denominator
+        4
+        """
         return self.q
 
     @_sympifyit('other', NotImplemented)
