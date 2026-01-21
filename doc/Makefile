@@ -50,6 +50,7 @@ clean:
 	-rm -rf $(BUILDDIR)
 	-rm -rf sphinx
 	-rm -f $(PDFFILES)
+	-rm -rf $(SOURCEDIR)/.jupyterlite.doit.db
 
 html:
 	$(MAKE) -s _html || $(MAKE) -s printwarnings
