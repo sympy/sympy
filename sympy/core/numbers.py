@@ -22,49 +22,16 @@ from .kind import NumberKind
 from .sorting import ordered
 from sympy.external.gmpy import SYMPY_INTS, gmpy, flint
 from sympy.multipledispatch import dispatch
-from sympy.external.mpmath import (
-    mpnumeric,
-    make_mpf as _make_mpf,
-    mpf as _mpf,
-    finf as _mpf_inf,
-    fninf as _mpf_ninf,
-    fnan as _mpf_nan,
-    fzero,
-    normalize as mpf_normalize,
-    prec_to_dps,
-    dps_to_prec,
-    round_nearest as rnd,
-    to_float as _to_float,
-    to_int as _to_int,
-    from_int as _from_int,
-    from_rational as _from_rational,
-    from_float as _from_float,
-    from_str as _from_str,
-    MPZ,
-    mpf_neg as _mpf_neg,
-    mpf_gt as _mpf_gt,
-    mpf_lt as _mpf_lt,
-    mpf_le as _mpf_le,
-    mpf_ge as _mpf_ge,
-    mpf_abs as _mpf_abs,
-    mpf_floor as _mpf_floor,
-    mpf_ceil as _mpf_ceil,
-    mpf_add as _mpf_add,
-    mpf_sub as _mpf_sub,
-    mpf_mul as _mpf_mul,
-    mpf_div as _mpf_div,
-    mpf_mod as _mpf_mod,
-    mpf_pow_int as _mpf_pow_int,
-    mpf_pow,
-    mpf_pi,
-    mpf_e,
-    mpc_pow as _mpc_pow,
-    phi_fixed,
-    from_man_exp as _from_man_exp,
-    catalan_fixed as _catalan_fixed,
-    euler_fixed as _euler_fixed,
-    ComplexResult as _ComplexResult,
-)
+import mpmath
+import mpmath.libmp as mlib
+from mpmath.libmp import round_nearest as rnd
+from mpmath.libmp.backend import MPZ
+from mpmath.libmp import mpf_pow, mpf_pi, mpf_e, phi_fixed
+from mpmath.ctx_mp_python import mpnumeric
+from mpmath.libmp.libmpf import (
+    finf as _mpf_inf, fninf as _mpf_ninf,
+    fnan as _mpf_nan, fzero, _normalize as mpf_normalize,
+    prec_to_dps, dps_to_prec)
 from sympy.utilities.misc import debug, as_int
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from .parameters import global_parameters
@@ -206,6 +173,7 @@ def mpf_norm(mpf, prec):
             return mpf
 
     # Necessary if mpmath is using the gmpy backend
+    from mpmath.libmp.backend import MPZ
     rv = mpf_normalize(sign, MPZ(man), expt, bc, prec, rnd)
     return rv
 
@@ -226,7 +194,7 @@ def seterr(divide=False):
 
 
 def _as_integer_ratio(p):
-    neg_pow, man, expt, _ = getattr(p, '_mpf_', _mpf(p)._mpf_)
+    neg_pow, man, expt, _ = getattr(p, '_mpf_', mpmath.mpf(p)._mpf_)
     p = [1, -1][neg_pow % 2]*man
     if expt < 0:
         q = 2**-expt
@@ -359,7 +327,7 @@ class Number(AtomicExpr):
             return Integer(obj)
         if isinstance(obj, tuple) and len(obj) == 2:
             return Rational(*obj)
-        if isinstance(obj, (float, _mpf, decimal.Decimal)):
+        if isinstance(obj, (float, mpmath.mpf, decimal.Decimal)):
             return Float(obj)
         if isinstance(obj, str):
             _obj = obj.lower()  # float('INF') == float('inf')
@@ -438,7 +406,7 @@ class Number(AtomicExpr):
         return self._as_mpf_val(prec), prec
 
     def __float__(self):
-        return _to_float(self._as_mpf_val(53))
+        return mlib.to_float(self._as_mpf_val(53))
 
     def floor(self):
         raise NotImplementedError('%s needs .floor() method' %
@@ -843,7 +811,7 @@ class Float(Number):
             return num
         elif _is_numpy_instance(num):  # support for numpy datatypes
             num = _convert_numpy_types(num)
-        elif isinstance(num, _mpf):
+        elif isinstance(num, mpmath.mpf):
             if precision is None:
                 if dps is None:
                     precision = num.context.prec
@@ -894,12 +862,12 @@ class Float(Number):
         precision = int(precision)
 
         if isinstance(num, float):
-            _mpf_ = _from_float(num, precision, rnd)
+            _mpf_ = mlib.from_float(num, precision, rnd)
         elif isinstance(num, str):
-            _mpf_ = _from_str(num, precision, rnd)
+            _mpf_ = mlib.from_str(num, precision, rnd)
         elif isinstance(num, decimal.Decimal):
             if num.is_finite():
-                _mpf_ = _from_str(str(num), precision, rnd)
+                _mpf_ = mlib.from_str(str(num), precision, rnd)
             elif num.is_nan():
                 return S.NaN
             elif num.is_infinite():
@@ -943,7 +911,7 @@ class Float(Number):
         elif isinstance(num, (Number, NumberSymbol)):
             _mpf_ = num._as_mpf_val(precision)
         else:
-            _mpf_ = _mpf(num, prec=precision)._mpf_
+            _mpf_ = mpmath.mpf(num, prec=precision)._mpf_
 
         return cls._new(_mpf_, precision, zero=False)
 
@@ -974,10 +942,12 @@ class Float(Number):
         return (self._mpf_, self._prec)
 
     def floor(self):
-        return Integer(int(_to_int(_mpf_floor(self._mpf_, self._prec))))
+        return Integer(int(mlib.to_int(
+            mlib.mpf_floor(self._mpf_, self._prec))))
 
     def ceiling(self):
-        return Integer(int(_to_int(_mpf_ceil(self._mpf_, self._prec))))
+        return Integer(int(mlib.to_int(
+            mlib.mpf_ceil(self._mpf_, self._prec))))
 
     def __floor__(self):
         return self.floor()
@@ -987,7 +957,7 @@ class Float(Number):
 
     @property
     def num(self):
-        return _mpf(self._mpf_)
+        return mpmath.mpf(self._mpf_)
 
     def _as_mpf_val(self, prec):
         rv = mpf_norm(self._mpf_, prec)
@@ -1047,34 +1017,34 @@ class Float(Number):
     def __neg__(self):
         if not self:
             return self
-        return Float._new(_mpf_neg(self._mpf_), self._prec)
+        return Float._new(mlib.mpf_neg(self._mpf_), self._prec)
 
     @_sympifyit('other', NotImplemented)
     def __add__(self, other):
         if isinstance(other, Number) and global_parameters.evaluate:
             rhs, prec = other._as_mpf_op(self._prec)
-            return Float._new(_mpf_add(self._mpf_, rhs, prec, rnd), prec)
+            return Float._new(mlib.mpf_add(self._mpf_, rhs, prec, rnd), prec)
         return Number.__add__(self, other)
 
     @_sympifyit('other', NotImplemented)
     def __sub__(self, other):
         if isinstance(other, Number) and global_parameters.evaluate:
             rhs, prec = other._as_mpf_op(self._prec)
-            return Float._new(_mpf_sub(self._mpf_, rhs, prec, rnd), prec)
+            return Float._new(mlib.mpf_sub(self._mpf_, rhs, prec, rnd), prec)
         return Number.__sub__(self, other)
 
     @_sympifyit('other', NotImplemented)
     def __mul__(self, other):
         if isinstance(other, Number) and global_parameters.evaluate:
             rhs, prec = other._as_mpf_op(self._prec)
-            return Float._new(_mpf_mul(self._mpf_, rhs, prec, rnd), prec)
+            return Float._new(mlib.mpf_mul(self._mpf_, rhs, prec, rnd), prec)
         return Number.__mul__(self, other)
 
     @_sympifyit('other', NotImplemented)
     def __truediv__(self, other):
         if isinstance(other, Number) and other != 0 and global_parameters.evaluate:
             rhs, prec = other._as_mpf_op(self._prec)
-            return Float._new(_mpf_div(self._mpf_, rhs, prec, rnd), prec)
+            return Float._new(mlib.mpf_div(self._mpf_, rhs, prec, rnd), prec)
         return Number.__truediv__(self, other)
 
     @_sympifyit('other', NotImplemented)
@@ -1089,7 +1059,7 @@ class Float(Number):
                 return Float(0, precision=max(self._prec, other._prec))
         if isinstance(other, Number) and global_parameters.evaluate:
             rhs, prec = other._as_mpf_op(self._prec)
-            return Float._new(_mpf_mod(self._mpf_, rhs, prec, rnd), prec)
+            return Float._new(mlib.mpf_mod(self._mpf_, rhs, prec, rnd), prec)
         return Number.__mod__(self, other)
 
     @_sympifyit('other', NotImplemented)
@@ -1098,7 +1068,7 @@ class Float(Number):
             return other.__mod__(self)
         if isinstance(other, Number) and global_parameters.evaluate:
             rhs, prec = other._as_mpf_op(self._prec)
-            return Float._new(_mpf_mod(rhs, self._mpf_, prec, rnd), prec)
+            return Float._new(mlib.mpf_mod(rhs, self._mpf_, prec, rnd), prec)
         return Number.__rmod__(self, other)
 
     def _eval_power(self, expt):
@@ -1116,9 +1086,14 @@ class Float(Number):
         if isinstance(expt, Number):
             if isinstance(expt, Integer):
                 prec = self._prec
-                return Float._new(_mpf_pow_int(self._mpf_, expt.p, prec, rnd), prec)
-            elif isinstance(expt, Rational) and \
-                    expt.p == 1 and expt.q % 2 and self.is_negative:
+                return Float._new(
+                    mlib.mpf_pow_int(self._mpf_, expt.p, prec, rnd), prec)
+            elif(
+                isinstance(expt, Rational)
+                and expt.p==1
+                and expt.q%2
+                and self.is_negative
+            ):
                 return Pow(S.NegativeOne, expt, evaluate=False)*(
                     -self)._eval_power(expt)
             expt, prec = expt._as_mpf_op(self._prec)
@@ -1126,17 +1101,19 @@ class Float(Number):
             try:
                 y = mpf_pow(mpfself, expt, prec, rnd)
                 return Float._new(y, prec)
-            except _ComplexResult:
-                re, im = _mpc_pow((mpfself, fzero), (expt, fzero), prec, rnd)
-                return Float._new(re, prec) + Float._new(im, prec)*S.ImaginaryUnit
+            except mlib.ComplexResult:
+                re, im = mlib.mpc_pow(
+                    (mpfself, fzero), (expt, fzero), prec, rnd)
+                return Float._new(re, prec) + \
+                    Float._new(im, prec)*S.ImaginaryUnit
 
     def __abs__(self):
-        return Float._new(_mpf_abs(self._mpf_), self._prec)
+        return Float._new(mlib.mpf_abs(self._mpf_), self._prec)
 
     def __int__(self):
         if self._mpf_ == fzero:
             return 0
-        return int(_to_int(self._mpf_))  # uses round_fast = round_down
+        return int(mlib.to_int(self._mpf_))  # uses round_fast = round_down
 
     def __eq__(self, other):
         if isinstance(other, float):
@@ -1168,11 +1145,11 @@ class Float(Number):
             >>> i = 1234567890
             >>> (f*i)._mpf_
             (0, 471, 18, 9)
-            >>> mpf_mul(f._mpf_, from_int(i))
+            >>> mlib.mpf_mul(f._mpf_, mlib.from_int(i))
             (0, 505555550955, -12, 39)
             '''
-            smpf = _mpf_mul(self._mpf_, _from_int(other.q))
-            ompf = _from_int(other.p)
+            smpf = mlib.mpf_mul(self._mpf_, mlib.from_int(other.q))
+            ompf = mlib.from_int(other.p)
             return _sympify(bool(op(smpf, ompf)))
         elif other.is_Float:
             return _sympify(bool(
@@ -1188,7 +1165,7 @@ class Float(Number):
     def __gt__(self, other):
         if isinstance(other, NumberSymbol):
             return other.__lt__(self)
-        rv = self._Frel(other, _mpf_gt)
+        rv = self._Frel(other, mlib.mpf_gt)
         if rv is None:
             return Expr.__gt__(self, other)
         return rv
@@ -1196,7 +1173,7 @@ class Float(Number):
     def __ge__(self, other):
         if isinstance(other, NumberSymbol):
             return other.__le__(self)
-        rv = self._Frel(other, _mpf_ge)
+        rv = self._Frel(other, mlib.mpf_ge)
         if rv is None:
             return Expr.__ge__(self, other)
         return rv
@@ -1204,7 +1181,7 @@ class Float(Number):
     def __lt__(self, other):
         if isinstance(other, NumberSymbol):
             return other.__gt__(self)
-        rv = self._Frel(other, _mpf_lt)
+        rv = self._Frel(other, mlib.mpf_lt)
         if rv is None:
             return Expr.__lt__(self, other)
         return rv
@@ -1212,7 +1189,7 @@ class Float(Number):
     def __le__(self, other):
         if isinstance(other, NumberSymbol):
             return other.__ge__(self)
-        rv = self._Frel(other, _mpf_le)
+        rv = self._Frel(other, mlib.mpf_le)
         if rv is None:
             return Expr.__le__(self, other)
         return rv
@@ -1616,10 +1593,10 @@ class Rational(Number):
         return
 
     def _as_mpf_val(self, prec):
-        return _from_rational(self.p, self.q, prec, rnd)
+        return mlib.from_rational(self.p, self.q, prec, rnd)
 
     def _mpmath_(self, prec, rnd):
-        return _make_mpf(_from_rational(self.p, self.q, prec, rnd))
+        return mpmath.make_mpf(mlib.from_rational(self.p, self.q, prec, rnd))
 
     def __abs__(self):
         return Rational(abs(self.p), self.q)
@@ -1833,10 +1810,10 @@ class Integer(Rational):
     __slots__ = ()
 
     def _as_mpf_val(self, prec):
-        return _from_int(self.p, prec, rnd)
+        return mlib.from_int(self.p, prec, rnd)
 
     def _mpmath_(self, prec, rnd):
-        return _make_mpf(self._as_mpf_val(prec))
+        return mpmath.make_mpf(self._as_mpf_val(prec))
 
     @cacheit
     def __new__(cls, i):
@@ -3180,7 +3157,7 @@ class Infinity(Number, metaclass=Singleton):
             return self**expt.evalf()
 
     def _as_mpf_val(self, prec):
-        return _mpf_inf
+        return mlib.finf
 
     def __hash__(self):
         return super().__hash__()
@@ -3346,7 +3323,7 @@ class NegativeInfinity(Number, metaclass=Singleton):
             return s_part*inf_part
 
     def _as_mpf_val(self, prec):
-        return _mpf_ninf
+        return mlib.fninf
 
     def __hash__(self):
         return super().__hash__()
@@ -3620,7 +3597,7 @@ class NumberSymbol(AtomicExpr):
 
     def __ne__(self, other):
         return not self == other
-    
+
     def equals(self,other,failing_expression=False):
         if self==other:
             return True
@@ -3916,7 +3893,7 @@ class GoldenRatio(NumberSymbol, metaclass=Singleton):
 
     def _as_mpf_val(self, prec):
          # XXX track down why this has to be increased
-        rv = _from_man_exp(phi_fixed(prec + 10), -prec - 10)
+        rv = mlib.from_man_exp(phi_fixed(prec + 10), -prec - 10)
         return mpf_norm(rv, prec)
 
     def _eval_expand_func(self, **hints):
@@ -4053,8 +4030,8 @@ class EulerGamma(NumberSymbol, metaclass=Singleton):
 
     def _as_mpf_val(self, prec):
          # XXX track down why this has to be increased
-        v = _euler_fixed(prec + 10)
-        rv = _from_man_exp(v, -prec - 10)
+        v = mlib.libhyper.euler_fixed(prec + 10)
+        rv = mlib.from_man_exp(v, -prec - 10)
         return mpf_norm(rv, prec)
 
     def approximation_interval(self, number_cls):
@@ -4105,8 +4082,8 @@ class Catalan(NumberSymbol, metaclass=Singleton):
 
     def _as_mpf_val(self, prec):
         # XXX track down why this has to be increased
-        v = _catalan_fixed(prec + 10)
-        rv = _from_man_exp(v, -prec - 10)
+        v = mlib.catalan_fixed(prec + 10)
+        rv = mlib.from_man_exp(v, -prec - 10)
         return mpf_norm(rv, prec)
 
     def approximation_interval(self, number_cls):
