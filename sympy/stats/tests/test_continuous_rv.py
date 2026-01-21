@@ -1581,3 +1581,52 @@ def test_issue_16318():
 def test_compute_density():
     X = Normal('X', 0, Symbol("sigma")**2)
     raises(ValueError, lambda: density(X**5 + X))
+
+def test_alpha_stable_statistics():
+    from sympy.stats import AlphaStable
+    x = Symbol('x', real=True)
+
+    # 1. Standard Normal Case: Alpha=2, Beta=0, Scale=1, Location=0
+    # Equivalent to NormalDistribution(0, 1)
+    st = AlphaStable('st', 2, 0, 1, 0)
+
+    # Test CDF
+    # CDF of N(0,1) is 1/2 + 1/2 * erf(x / sqrt(2))
+    # We rewrite to erf because SymPy integration may return erfc
+    assert cdf(st)(x).rewrite(erf) == S.Half + erf(x / sqrt(2)) / 2
+
+    # Test Expectations
+    # Mean E[x] = 0
+    assert E(st) == 0
+    # Second moment E[x^2] = 1 (Variance + Mean^2 = 1 + 0 = 1)
+    assert E(st ** 2) == 1
+
+    # 2. Test Probability Integrals
+    # We verify that the probability logic constructs the correct integral
+
+    # Create a real dummy variable for the expected integral
+    _z = Dummy('z', real=True)
+    pdf_z = density(st)(_z)
+
+    # Test P(X < 1)
+    # Expected integral: pdf from -oo to 1
+    expected_lt = Integral(pdf_z, (_z, -oo, 1))
+    # P() returns a Probability object; rewrite as Integral for comparison
+    assert P(st < 1, evaluate=False).rewrite(Integral).dummy_eq(expected_lt)
+
+    # Test P(X > 1)
+    expected_gt = Integral(pdf_z, (_z, 1, oo))
+    assert P(st > 1, evaluate=False).rewrite(Integral).dummy_eq(expected_gt)
+
+    # 3. Test Scaled/Shifted Normal equivalent: AlphaStable(2, 0, 4, 2)
+    # Corresponds to Normal(mean=2, std=4)
+    st_scaled = AlphaStable('st_scaled', 2, 0, 4, 2)
+    pdf_scaled_z = density(st_scaled)(_z)
+
+    # Test P(X < 1) for scaled distribution
+    expected_scaled_lt = Integral(pdf_scaled_z, (_z, -oo, 1))
+    assert P(st_scaled < 1, evaluate=False).rewrite(Integral).dummy_eq(expected_scaled_lt)
+
+    # Test P(X > 1) for scaled distribution
+    expected_scaled_gt = Integral(pdf_scaled_z, (_z, 1, oo))
+    assert P(st_scaled > 1, evaluate=False).rewrite(Integral).dummy_eq(expected_scaled_gt)
