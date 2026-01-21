@@ -409,7 +409,7 @@ def spde(a, b, c, n, DE):
     while True:
         if c.is_zero:
             return (zero, zero, 0, zero, beta)  # -1 is more to the point
-        if (n < 0) is True:
+        if n < 0:
             raise NonElementaryIntegralException
 
         g = a.gcd(b)
