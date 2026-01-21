@@ -3582,6 +3582,11 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                     not_solvable = False
                     try:
                         soln = solver(eq2, sym)
+                        if isinstance(soln, Interval):
+                            raise NotImplementedError(
+                                f"Cannot solve system: solving for {sym} returned an Interval "
+                                f"which cannot be substituted into remaining equations"
+                            )
                         total_solvest_call += 1
                         soln_new = S.EmptySet
                         if isinstance(soln, Complement):
@@ -3603,7 +3608,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                             # corresponding complex soln.
                             if not isinstance(soln, (ImageSet, ConditionSet)):
                                 soln += solveset_complex(eq2, sym)  # might give ValueError with Abs
-                    except (NotImplementedError, ValueError):
+                    except ValueError:
                         # If solveset is not able to solve equation `eq2`. Next
                         # time we may get soln using next equation `eq2`
                         continue
