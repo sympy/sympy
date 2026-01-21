@@ -1111,7 +1111,7 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
         ast.Div: 'Mul',
         ast.BitOr: 'Or',
         ast.BitAnd: 'And',
-        ast.BitXor: 'Xor',
+        ast.BitXor: 'Not',
     }
     functions = (
         'Abs', 'im', 're', 'sign', 'arg', 'conjugate',

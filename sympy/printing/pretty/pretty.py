@@ -2894,6 +2894,11 @@ class PrettyPrinter(Printer):
     def _print_Str(self, s):
         return self._print(s.name)
 
+    def _print_Dummy(self, expr):
+        printed = self._print('_')
+        printed = prettyForm(*printed.right(self._print_Symbol(expr)))
+        return printed
+
 
 @print_function(PrettyPrinter)
 def pretty(expr, **settings):
