@@ -3620,6 +3620,13 @@ class NumberSymbol(AtomicExpr):
 
     def __ne__(self, other):
         return not self == other
+    
+    def equals(self,other,failing_expression=False):
+        if self==other:
+            return True
+        if type(self) is type(other):
+            return True
+        return False
 
     def __le__(self, other):
         if self is other:
