@@ -1767,7 +1767,35 @@ def _solve_system(exprs, symbols, **flags):
     """
     if not exprs:
         return False, []
+    has_coupled_trig = False
+    for fi in exprs:
+        # Optimization: Skip simple cases where the equation is just a single
+        # trig function (e.g. sin(x+y)=0). The standard solver handles these
+        # perfectly (finding all branches), and rewriting them to exponentials
+        # often yields only principal solutions, causing regressions.
+        if isinstance(fi, TrigonometricFunction):
+            continue
 
+        if fi.has(TrigonometricFunction):
+            if any(len(a.free_symbols) > 1 for a in fi.atoms(TrigonometricFunction)):
+                has_coupled_trig = True
+                break
+
+    if has_coupled_trig:
+        try:
+            # expand(trig=True) handles cos(a+b) -> cos(a)cos(b)...
+            f_exp = [fi.expand(trig=True).rewrite(exp).cancel().as_numer_denom()[0] for fi in exprs]
+
+            flags_exp = flags.copy()
+            flags_exp['simplify'] = False
+            flags_exp['check'] = False
+
+            lin_exp, sol_exp = _solve_system(f_exp, symbols, **flags_exp)
+
+            if sol_exp:
+                return lin_exp, sol_exp
+        except (NotImplementedError, ValueError):
+            pass
     if flags.pop('_split', True):
         # Split the system into connected components
         V = exprs
@@ -2800,6 +2828,10 @@ def _tsolve(eq, sym, **flags):
                 return list(set(soln))
             elif lhs.func == LambertW:
                 return _vsolve(lhs.args[0] - rhs*exp(rhs), sym, **flags)
+        if lhs.has(TrigonometricFunction):
+            # Check if any trig function contains multiple symbols
+            if any(len(a.free_symbols) > 1 for a in lhs.atoms(TrigonometricFunction)):
+                lhs = lhs.expand(trig=True)
 
         rewrite = lhs.rewrite(exp)
         rewrite = rebuild(rewrite) # avoid rewrites involving evaluate=False
