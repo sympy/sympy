@@ -47,6 +47,9 @@ unicode_whitelist = [
     # joint.py uses some unicode for variable names in the docstrings
     r'*/sympy/physics/mechanics/joint.py',
 
+    # test_qapply.py uses unicode in some of the new tests and comments
+    r'*/sympy/physics/quantum/tests/test_qapply.py',
+
     # lll method has unicode in docstring references and author name
     r'*/sympy/polys/matrices/domainmatrix.py',
     r'*/sympy/matrices/repmatrix.py',
