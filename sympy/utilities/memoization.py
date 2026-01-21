@@ -1,19 +1,25 @@
 from functools import wraps
-from typing import Callable, List, Protocol, TypeVar, Union, cast
-
-T = TypeVar("T")
+from typing import Callable, List, Union, cast, TYPE_CHECKING
 
 
-class _RecurrenceFunc(Protocol[T]):
-    def __call__(self, n: int) -> T: ...
-    cache_length: Callable[[], int]
-    fetch_item: Callable[[Union[int, slice]], Union[T, List[T]]]
+if TYPE_CHECKING:
+    from typing import Protocol, TypeVar
+
+    T = TypeVar("T")
+
+    class _RecurrenceFunc(Protocol[T]):
+        def __call__(self, n: int) -> T: ...
+        cache_length: Callable[[], int]
+        fetch_item: Callable[[Union[int, slice]], Union[T, List[T]]]
+else:
+    # Runtime-safe fallbacks (avoid Protocol/TypeVar at runtime)
+    T = object
+
+    class _RecurrenceFunc:
+        pass
 
 
-def recurrence_memo(initial: List[T]) -> Callable[
-    [Callable[[int, List[T]], T]],
-    _RecurrenceFunc[T],
-]:
+def recurrence_memo(initial):
     """
     Memo decorator for sequences defined by recurrence
 
@@ -21,23 +27,23 @@ def recurrence_memo(initial: List[T]) -> Callable[
     ========
 
     >>> from sympy.utilities.memoization import recurrence_memo
-    >>> @recurrence_memo([1])  # 0! = 1
+    >>> @recurrence_memo([1]) # 0! = 1
     ... def factorial(n, prev):
     ...     return n * prev[-1]
     >>> factorial(4)
     24
-    >>> factorial(3)  # use cache values
+    >>> factorial(3) # use cache values
     6
-    >>> factorial.cache_length()  # cache length can be obtained
+    >>> factorial.cache_length() # cache length can be obtained
     5
     >>> factorial.fetch_item(slice(2, 4))
     [2, 6]
     """
-    cache: List[T] = initial.copy()
+    cache = list(initial)
 
-    def decorator(f: Callable[[int, List[T]], T]) -> _RecurrenceFunc[T]:
+    def decorator(f):
         @wraps(f)
-        def g(n: int) -> T:
+        def g(n):
             L = len(cache)
             if n < L:
                 return cache[n]
@@ -45,7 +51,7 @@ def recurrence_memo(initial: List[T]) -> Callable[
                 cache.append(f(i, cache))
             return cache[-1]
 
-        rf = cast(_RecurrenceFunc[T], g)
+        rf = cast(_RecurrenceFunc, g)
         rf.cache_length = lambda: len(cache)
         rf.fetch_item = lambda x: cache[x]
         return rf
