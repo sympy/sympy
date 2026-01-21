@@ -1920,8 +1920,8 @@ def __remove_linear_redundancies(expr, Cs):
         return Eq(lhs, rhs)
     else:
         return _recursive_walk(expr)
-    
-    
+
+
 def constantsimp(expr, constants):
     r"""
     Simplifies an expression with arbitrary constants in it.
