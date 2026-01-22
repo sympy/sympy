@@ -3,8 +3,8 @@ AI Generated Code and Communication Policy
 ==========================================
 
 "AI" herein refers to generative AI tools like large language models (LLMs)
-that can generate, edit, and review software code or generate human-like
-communication.
+that can generate, edit, and review software code, create and manipulate
+images, or generate human-like communication.
 
 Responsibility
 ==============
