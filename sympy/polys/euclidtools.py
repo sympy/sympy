@@ -320,14 +320,6 @@ def dup_inner_subresultants(f: dup[Er], g: dup[Er], K: Domain[Er]):
     """
     Subresultant PRS algorithm in `K[x]`.
 
-    Computes the subresultant polynomial remainder sequence (PRS)
-    and the non-zero scalar subresultants of `f` and `g`.
-    By [1] Thm. 3, these are the constants '-c' (- to optimize
-    computation of sign).
-    The first subdeterminant is set to 1 by convention to match
-    the polynomial and the scalar subdeterminants.
-    If 'deg(f) < deg(g)', the subresultants of '(g,f)' are computed.
-
     Examples
     ========
 
@@ -336,12 +328,6 @@ def dup_inner_subresultants(f: dup[Er], g: dup[Er], K: Domain[Er]):
 
     >>> R.dup_inner_subresultants(x**2 + 1, x**2 - 1)
     ([x**2 + 1, x**2 - 1, -2], [1, 1, 4])
-
-    References
-    ==========
-
-    .. [1] W.S. Brown, The Subresultant PRS Algorithm.
-           ACM Transaction of Mathematical Software 4 (1978) 237-249
 
     """
     n = dup_degree(f)
