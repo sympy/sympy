@@ -1727,8 +1727,16 @@ class HomogeneousCoeffBest(HomogeneousCoeffSubsIndepDivDep, HomogeneousCoeffSubs
         if simplify_flag:
             sol1 = odesimp(self.ode_problem.eq, sol1, fx, "1st_homogeneous_coeff_subs_indep_div_dep")
             sol2 = odesimp(self.ode_problem.eq, sol2, fx, "1st_homogeneous_coeff_subs_dep_div_indep")
-        # XXX: not simplify should be not simplify_flag. mypy correctly complains
-        return min([sol1, sol2], key=lambda x: ode_sol_simplicity(x, fx, trysolving=not simplify_flag)) # type: ignore
+        if not isinstance(sol1, list):
+            sol1 = [sol1]
+        if not isinstance(sol2, list):
+            sol2 = [sol2]
+        sol1_max_complexity = max(ode_sol_simplicity(sol, fx, trysolving= not simplify_flag) for sol in sol1)
+        sol2_max_complexity = max(ode_sol_simplicity(sol, fx, trysolving= not simplify_flag) for sol in sol2)
+        if sol2_max_complexity < sol1_max_complexity:
+            return sol2
+        else:
+            return sol1
 
 
 class LinearCoefficients(HomogeneousCoeffBest):
