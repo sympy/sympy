@@ -420,13 +420,14 @@ def refine_sin_cos(expr, assumptions):
                 rem_terms.append(term)
         else:
             rem_terms.append(term)
-    k = Add(*k_terms, evaluate=False)
-    rem = Add(*rem_terms, evaluate=False)
+    k = Add(*k_terms)
     if isinstance(expr, sin):
-        k = Add(k, -1, evaluate=False)
+        k -= 1
     if ask(Q.odd(k), assumptions):
+        rem = Add(*rem_terms)
         return ((-1)**((k + 1) / 2)) * sin(rem)
     elif ask(Q.even(k), assumptions):
+        rem = Add(*rem_terms)
         return ((-1)**(k / 2)) * cos(rem)
     return expr
 
