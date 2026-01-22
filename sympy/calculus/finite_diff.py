@@ -412,7 +412,7 @@ def _as_finite_diff(
                       in range(-order, order + 1, 2)]
     else:
         assert not isinstance(points, Expr)
-        
+
     others = [wrt, 0]
     for v in set(derivative.variables):
         if v == wrt:
