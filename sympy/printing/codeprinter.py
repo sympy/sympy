@@ -472,13 +472,15 @@ class CodePrinter(StrPrinter):
                                  self.__class__.__name__)
         meth_name = '_print_Derivative_%s' % obj.func.__name__
         pmeth = getattr(self, meth_name, None)
-        if pmeth is None:
+        if pmeth is None:     
             if self._settings.get('strict', False):
-                raise PrintMethodNotImplementedError(
-                    f"Unsupported by {type(self)}: {type(expr)}" +
-                    f"\nPrinter has no method: {meth_name}" +
-                    "\nSet the printer option 'strict' to False in order to generate partially printed code."
-                )
+                msg = (
+                       f"Unsupported by {type(self)}: {type(expr)}\n"
+                       "Lambdify cannot translate a Derivative into code. "
+                       "Please calculate the derivative using .doit() first.\n"
+                       "Set the printer option 'strict' to False to ignore this."
+                       )
+                raise PrintMethodNotImplementedError(msg)
             return self._print_not_supported(expr)
         orders = dict(wrt_order_pairs)
         seq_orders = [orders[arg] for arg in obj.args]
