@@ -1,5 +1,5 @@
 from functools import wraps
-from typing import Callable, List, Union, cast, TYPE_CHECKING
+from typing import Callable, cast, TYPE_CHECKING
 
 
 if TYPE_CHECKING:
@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     class _RecurrenceFunc(Protocol[T]):
         def __call__(self, n: int) -> T: ...
         cache_length: Callable[[], int]
-        fetch_item: Callable[[Union[int, slice]], Union[T, List[T]]]
+        fetch_item: Callable[[int | slice], T | list[T]]
 else:
     # Runtime-safe fallbacks (avoid Protocol/TypeVar at runtime)
     T = object
@@ -78,10 +78,13 @@ def assoc_recurrence_memo(base_seq):
                 return cache[n][m]
 
             for i in range(L, n + 1):
+                # get base sequence
                 F_i0 = base_seq(i)
                 F_i_cache = [F_i0]
                 cache.append(F_i_cache)
 
+                # XXX only works for m <= n cases
+                # generate assoc sequence
                 for j in range(1, i + 1):
                     F_ij = f(i, j, cache)
                     F_i_cache.append(F_ij)
