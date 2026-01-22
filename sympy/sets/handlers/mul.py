@@ -1,25 +1,32 @@
-from sympy import Set, symbols
 from sympy.core import Basic, Expr
-from sympy.multipledispatch import dispatch
-from sympy.sets import Interval
+from sympy.core.numbers import oo
+from sympy.core.symbol import symbols
+from sympy.multipledispatch import Dispatcher
+from sympy.sets.setexpr import set_mul
+from sympy.sets.sets import Interval, Set
+
 
 _x, _y = symbols("x y")
 
 
-@dispatch(Basic, Basic)  # type: ignore # noqa:F811
-def _set_mul(x, y): # noqa:F811
+_set_mul = Dispatcher('_set_mul')
+_set_div = Dispatcher('_set_div')
+
+
+@_set_mul.register(Basic, Basic)
+def _(x, y):
     return None
 
-@dispatch(Set, Set)  # type: ignore # noqa:F811
-def _set_mul(x, y): # noqa:F811
+@_set_mul.register(Set, Set)
+def _(x, y):
     return None
 
-@dispatch(Expr, Expr)  # type: ignore # noqa:F811
-def _set_mul(x, y): # noqa:F811
+@_set_mul.register(Expr, Expr)
+def _(x, y):
     return x*y
 
-@dispatch(Interval, Interval)  # type: ignore # noqa:F811
-def _set_mul(x, y): # noqa:F811
+@_set_mul.register(Interval, Interval)
+def _(x, y):
     """
     Multiplications in interval arithmetic
     https://en.wikipedia.org/wiki/Interval_arithmetic
@@ -41,26 +48,24 @@ def _set_mul(x, y): # noqa:F811
         maxopen
     )
 
-@dispatch(Basic, Basic)  # type: ignore # noqa:F811
-def _set_div(x, y): # noqa:F811
+@_set_div.register(Basic, Basic)
+def _(x, y):
     return None
 
-@dispatch(Expr, Expr)  # type: ignore # noqa:F811
-def _set_div(x, y): # noqa:F811
+@_set_div.register(Expr, Expr)
+def _(x, y):
     return x/y
 
-@dispatch(Set, Set)  # type: ignore # noqa:F811 # noqa:F811
-def _set_div(x, y): # noqa:F811
+@_set_div.register(Set, Set)
+def _(x, y):
     return None
 
-@dispatch(Interval, Interval)  # type: ignore # noqa:F811
-def _set_div(x, y): # noqa:F811
+@_set_div.register(Interval, Interval)
+def _(x, y):
     """
     Divisions in interval arithmetic
     https://en.wikipedia.org/wiki/Interval_arithmetic
     """
-    from sympy.sets.setexpr import set_mul
-    from sympy import oo
     if (y.start*y.end).is_negative:
         return Interval(-oo, oo)
     if y.start == 0:

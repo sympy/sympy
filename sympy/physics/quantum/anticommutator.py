@@ -1,12 +1,14 @@
 """The anti-commutator: ``{A,B} = A*B + B*A``."""
 
-from __future__ import print_function, division
-
-from sympy import S, Expr, Mul, Integer
+from sympy.core.expr import Expr
+from sympy.core.kind import KindDispatcher
+from sympy.core.mul import Mul
+from sympy.core.numbers import Integer
+from sympy.core.singleton import S
 from sympy.printing.pretty.stringpict import prettyForm
 
-from sympy.physics.quantum.operator import Operator
 from sympy.physics.quantum.dagger import Dagger
+from sympy.physics.quantum.kind import _OperatorKind, OperatorKind
 
 __all__ = [
     'AntiCommutator'
@@ -20,13 +22,16 @@ __all__ = [
 class AntiCommutator(Expr):
     """The standard anticommutator, in an unevaluated state.
 
+    Explanation
+    ===========
+
     Evaluating an anticommutator is defined [1]_ as: ``{A, B} = A*B + B*A``.
     This class returns the anticommutator in an unevaluated form.  To evaluate
     the anticommutator, use the ``.doit()`` method.
 
     Canonical ordering of an anticommutator is ``{A, B}`` for ``A < B``. The
     arguments of the anticommutator are put into canonical order using
-    ``__cmp__``. If ``B < A``, then ``{A, B}`` is returned as ``{B, A}``.
+    comparison operators. If ``B < A``, then ``{A, B}`` is returned as ``{B, A}``.
 
     Parameters
     ==========
@@ -76,6 +81,13 @@ class AntiCommutator(Expr):
     """
     is_commutative = False
 
+    _kind_dispatcher = KindDispatcher("AntiCommutator_kind_dispatcher", commutative=True)
+
+    @property
+    def kind(self):
+        arg_kinds = (a.kind for a in self.args)
+        return self._kind_dispatcher(*arg_kinds)
+
     def __new__(cls, A, B):
         r = cls.eval(A, B)
         if r is not None:
@@ -106,6 +118,9 @@ class AntiCommutator(Expr):
 
     def doit(self, **hints):
         """ Evaluate anticommutator """
+        # Keep the import of Operator here to avoid problems with
+        # circular imports.
+        from sympy.physics.quantum.operator import Operator
         A = self.args[0]
         B = self.args[1]
         if isinstance(A, Operator) and isinstance(B, Operator):
@@ -130,15 +145,22 @@ class AntiCommutator(Expr):
         )
 
     def _sympystr(self, printer, *args):
-        return "{%s,%s}" % (self.args[0], self.args[1])
+        return "{%s,%s}" % (
+            printer._print(self.args[0]), printer._print(self.args[1]))
 
     def _pretty(self, printer, *args):
         pform = printer._print(self.args[0], *args)
-        pform = prettyForm(*pform.right((prettyForm(u','))))
-        pform = prettyForm(*pform.right((printer._print(self.args[1], *args))))
+        pform = prettyForm(*pform.right(prettyForm(',')))
+        pform = prettyForm(*pform.right(printer._print(self.args[1], *args)))
         pform = prettyForm(*pform.parens(left='{', right='}'))
         return pform
 
     def _latex(self, printer, *args):
         return "\\left\\{%s,%s\\right\\}" % tuple([
             printer._print(arg, *args) for arg in self.args])
+
+
+@AntiCommutator._kind_dispatcher.register(_OperatorKind, _OperatorKind)
+def find_op_kind(e1, e2):
+    """Find the kind of an anticommutator of two OperatorKinds."""
+    return OperatorKind

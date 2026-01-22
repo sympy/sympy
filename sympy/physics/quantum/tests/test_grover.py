@@ -1,4 +1,5 @@
-from sympy import sqrt, Matrix
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.matrices.dense import Matrix
 from sympy.physics.quantum.represent import represent
 from sympy.physics.quantum.qapply import qapply
 from sympy.physics.quantum.qubit import IntQubit

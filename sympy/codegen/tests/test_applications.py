@@ -1,10 +1,12 @@
 # This file contains tests that exercise multiple AST nodes
 
+import tempfile
+
 from sympy.external import import_module
-from sympy.printing.ccode import ccode
+from sympy.printing.codeprinter import ccode
 from sympy.utilities._compilation import compile_link_import_strings, has_c
-from sympy.utilities._compilation.util import TemporaryDirectory, may_xfail
-from sympy.testing.pytest import skip
+from sympy.utilities._compilation.util import may_xfail
+from sympy.testing.pytest import skip, skip_under_pyodide
 from sympy.codegen.ast import (
     FunctionDefinition, FunctionPrototype, Variable, Pointer, real, Assignment,
     integer, CodeBlock, While
@@ -24,7 +26,7 @@ def _mk_func1():
 
 
 def _render_compile_import(funcdef, build_dir):
-    code_str = render_as_source_file(funcdef, settings=dict(contract=False))
+    code_str = render_as_source_file(funcdef, settings={"contract": False})
     declar = ccode(FunctionPrototype.from_FunctionDefinition(funcdef))
     return compile_link_import_strings([
         ('our_test_func.c', code_str),
@@ -38,6 +40,7 @@ def _render_compile_import(funcdef, build_dir):
 
 
 @may_xfail
+@skip_under_pyodide("Emscripten does not support process spawning")
 def test_copying_function():
     if not np:
         skip("numpy not installed.")
@@ -47,7 +50,7 @@ def test_copying_function():
         skip("Cython not found.")
 
     info = None
-    with TemporaryDirectory() as folder:
+    with tempfile.TemporaryDirectory() as folder:
         mod, info = _render_compile_import(_mk_func1(), build_dir=folder)
         inp = np.arange(10.0)
         out = np.empty_like(inp)

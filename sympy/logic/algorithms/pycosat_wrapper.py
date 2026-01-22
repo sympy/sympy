@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.assumptions.cnf import EncodedCNF
 
 
@@ -21,20 +19,20 @@ def pycosat_satisfiable(expr, all_models=False):
         result = (r != "UNSAT")
         if not result:
             return result
-        return dict((expr.symbols[abs(lit) - 1], lit > 0) for lit in r)
+        return {expr.symbols[abs(lit) - 1]: lit > 0 for lit in r}
     else:
         r = pycosat.itersolve(expr.data)
         result = (r != "UNSAT")
         if not result:
             return result
 
-        # Make solutions sympy compatible by creating a generator
+        # Make solutions SymPy compatible by creating a generator
         def _gen(results):
             satisfiable = False
             try:
                 while True:
                     sol = next(results)
-                    yield dict((expr.symbols[abs(lit) - 1], lit > 0) for lit in sol)
+                    yield {expr.symbols[abs(lit) - 1]: lit > 0 for lit in sol}
                     satisfiable = True
             except StopIteration:
                 if not satisfiable:

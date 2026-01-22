@@ -6,14 +6,13 @@ The functions defined in this module allows the user to express functions such a
 as a SymPy function for symbolic manipulation.
 
 """
-
 from sympy.core.function import ArgumentIndexError, Function
 from sympy.core.numbers import Rational
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.miscellaneous import sqrt
-
+from sympy.logic.boolalg import BooleanFunction, true, false
 
 def _expm1(x):
     return exp(x) - S.One
@@ -23,12 +22,16 @@ class expm1(Function):
     """
     Represents the exponential function minus one.
 
+    Explanation
+    ===========
+
     The benefit of using ``expm1(x)`` over ``exp(x) - 1``
     is that the latter is prone to cancellation under finite precision
     arithmetic when x is close to zero.
 
     Examples
     ========
+
     >>> from sympy.abc import x
     >>> from sympy.codegen.cfunctions import expm1
     >>> '%.0e' % expm1(1e-99).evalf()
@@ -84,6 +87,9 @@ class log1p(Function):
     """
     Represents the natural logarithm of a number plus one.
 
+    Explanation
+    ===========
+
     The benefit of using ``log1p(x)`` over ``log(x + 1)``
     is that the latter is prone to cancellation under finite precision
     arithmetic when x is close to zero.
@@ -93,7 +99,7 @@ class log1p(Function):
 
     >>> from sympy.abc import x
     >>> from sympy.codegen.cfunctions import log1p
-    >>> from sympy.core.function import expand_log
+    >>> from sympy import expand_log
     >>> '%.0e' % expand_log(log1p(1e-99)).evalf()
     '1e-99'
     >>> from math import log
@@ -163,6 +169,9 @@ class exp2(Function):
     """
     Represents the exponential function with base two.
 
+    Explanation
+    ===========
+
     The benefit of using ``exp2(x)`` over ``2**x``
     is that the latter is not as efficient under finite precision
     arithmetic.
@@ -172,7 +181,7 @@ class exp2(Function):
 
     >>> from sympy.abc import x
     >>> from sympy.codegen.cfunctions import exp2
-    >>> exp2(2).evalf() == 4
+    >>> exp2(2).evalf() == 4.0
     True
     >>> exp2(x).diff(x)
     log(2)*exp2(x)
@@ -216,6 +225,9 @@ class log2(Function):
     """
     Represents the logarithm function with base two.
 
+    Explanation
+    ===========
+
     The benefit of using ``log2(x)`` over ``log(x)/log(2)``
     is that the latter is not as efficient under finite precision
     arithmetic.
@@ -225,7 +237,7 @@ class log2(Function):
 
     >>> from sympy.abc import x
     >>> from sympy.codegen.cfunctions import log2
-    >>> log2(4).evalf() == 2
+    >>> log2(4).evalf() == 2.0
     True
     >>> log2(x).diff(x)
     1/(x*log(2))
@@ -257,6 +269,9 @@ class log2(Function):
         elif arg.is_Pow and arg.base == _Two:
             return arg.exp
 
+    def _eval_evalf(self, *args, **kwargs):
+        return self.rewrite(log).evalf(*args, **kwargs)
+
     def _eval_expand_func(self, **hints):
         return _log2(*self.args)
 
@@ -273,6 +288,9 @@ def _fma(x, y, z):
 class fma(Function):
     """
     Represents "fused multiply add".
+
+    Explanation
+    ===========
 
     The benefit of using ``fma(x, y, z)`` over ``x*y + z``
     is that, under finite precision arithmetic, the former is
@@ -304,7 +322,7 @@ class fma(Function):
     def _eval_expand_func(self, **hints):
         return _fma(*self.args)
 
-    def _eval_rewrite_as_tractable(self, arg, **kwargs):
+    def _eval_rewrite_as_tractable(self, arg, limitvar=None, **kwargs):
         return _fma(arg)
 
 
@@ -324,7 +342,7 @@ class log10(Function):
 
     >>> from sympy.abc import x
     >>> from sympy.codegen.cfunctions import log10
-    >>> log10(100).evalf() == 2
+    >>> log10(100).evalf() == 2.0
     True
     >>> log10(x).diff(x)
     1/(x*log(10))
@@ -372,6 +390,9 @@ class Sqrt(Function):  # 'sqrt' already defined in sympy.functions.elementary.mi
     """
     Represents the square root function.
 
+    Explanation
+    ===========
+
     The reason why one would use ``Sqrt(x)`` over ``sqrt(x)``
     is that the latter is internally represented as ``Pow(x, S.Half)`` which
     may not be what one wants when doing code-generation.
@@ -418,6 +439,9 @@ def _Cbrt(x):
 class Cbrt(Function):  # 'cbrt' already defined in sympy.functions.elementary.miscellaneous
     """
     Represents the cube root function.
+
+    Explanation
+    ===========
 
     The reason why one would use ``Cbrt(x)`` over ``cbrt(x)``
     is that the latter is internally represented as ``Pow(x, Rational(1, 3))`` which
@@ -467,6 +491,9 @@ class hypot(Function):
     """
     Represents the hypotenuse function.
 
+    Explanation
+    ===========
+
     The hypotenuse function is provided by e.g. the math library
     in the C99 standard, hence one may want to represent the function
     symbolically when doing code-generation.
@@ -476,7 +503,7 @@ class hypot(Function):
 
     >>> from sympy.abc import x, y
     >>> from sympy.codegen.cfunctions import hypot
-    >>> hypot(3, 4).evalf() == 5
+    >>> hypot(3, 4).evalf() == 5.0
     True
     >>> hypot(x, y)
     hypot(x, y)
@@ -503,3 +530,29 @@ class hypot(Function):
         return _hypot(arg)
 
     _eval_rewrite_as_tractable = _eval_rewrite_as_Pow
+
+
+class isnan(BooleanFunction):
+    nargs = 1
+
+    @classmethod
+    def eval(cls, arg):
+        if arg is S.NaN:
+            return true
+        elif arg.is_number:
+            return false
+        else:
+            return None
+
+
+class isinf(BooleanFunction):
+    nargs = 1
+
+    @classmethod
+    def eval(cls, arg):
+        if arg.is_infinite:
+            return true
+        elif arg.is_finite:
+            return false
+        else:
+            return None

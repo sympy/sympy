@@ -1,17 +1,19 @@
-from __future__ import print_function, division
+from functools import reduce
+import operator
 
-from sympy.core.compatibility import reduce
-from operator import add
-
-from sympy.core import Add, Basic, sympify
+from sympy.core import Basic, sympify
+from sympy.core.add import add, Add, _could_extract_minus_sign
+from sympy.core.sorting import default_sort_key
 from sympy.functions import adjoint
-from sympy.matrices.matrices import MatrixBase
+from sympy.matrices.matrixbase import MatrixBase
 from sympy.matrices.expressions.transpose import transpose
 from sympy.strategies import (rm_id, unpack, flatten, sort, condition,
     exhaust, do_one, glom)
-from sympy.matrices.expressions.matexpr import (MatrixExpr, ShapeError,
-    ZeroMatrix, GenericZeroMatrix)
-from sympy.utilities import default_sort_key, sift
+from sympy.matrices.expressions.matexpr import MatrixExpr
+from sympy.matrices.expressions.special import ZeroMatrix, GenericZeroMatrix
+from sympy.matrices.expressions._shape import validate_matadd_integer as validate
+from sympy.utilities.iterables import sift
+from sympy.utilities.exceptions import sympy_deprecation_warning
 
 # XXX: MatAdd should perhaps not subclass directly from Add
 class MatAdd(MatrixExpr, Add):
@@ -33,33 +35,49 @@ class MatAdd(MatrixExpr, Add):
 
     identity = GenericZeroMatrix()
 
-    def __new__(cls, *args, evaluate=False, **kwargs):
+    def __new__(cls, *args, evaluate=False, check=None, _sympify=True):
         if not args:
             return cls.identity
 
         # This must be removed aggressively in the constructor to avoid
         # TypeErrors from GenericZeroMatrix().shape
-        args = filter(lambda i: cls.identity != i, args)
-        args = list(map(sympify, args))
-        check = kwargs.get('check', False)
+        args = list(filter(lambda i: cls.identity != i, args))
+        if _sympify:
+            args = list(map(sympify, args))
+
+        if not all(isinstance(arg, MatrixExpr) for arg in args):
+            raise TypeError("Mix of Matrix and Scalar symbols")
 
         obj = Basic.__new__(cls, *args)
 
-        if check:
-            if all(not isinstance(i, MatrixExpr) for i in args):
-                return Add.fromiter(args)
+        if check is not None:
+            sympy_deprecation_warning(
+                "Passing check to MatAdd is deprecated and the check argument will be removed in a future version.",
+                deprecated_since_version="1.11",
+                active_deprecations_target='remove-check-argument-from-matrix-operations')
+
+        if check is not False:
             validate(*args)
 
         if evaluate:
-            if all(not isinstance(i, MatrixExpr) for i in args):
-                return Add(*args, evaluate=True)
-            obj = canonicalize(obj)
+            obj = cls._evaluate(obj)
 
         return obj
+
+    @classmethod
+    def _evaluate(cls, expr):
+        return canonicalize(expr)
 
     @property
     def shape(self):
         return self.args[0].shape
+
+    def could_extract_minus_sign(self):
+        return _could_extract_minus_sign(self)
+
+    def expand(self, **kwargs):
+        expanded = super(MatAdd, self).expand(**kwargs)
+        return self._evaluate(expanded)
 
     def _entry(self, i, j, **kwargs):
         return Add(*[arg._entry(i, j, **kwargs) for arg in self.args])
@@ -74,27 +92,24 @@ class MatAdd(MatrixExpr, Add):
         from .trace import trace
         return Add(*[trace(arg) for arg in self.args]).doit()
 
-    def doit(self, **kwargs):
-        deep = kwargs.get('deep', True)
+    def doit(self, **hints):
+        deep = hints.get('deep', True)
         if deep:
-            args = [arg.doit(**kwargs) for arg in self.args]
+            args = [arg.doit(**hints) for arg in self.args]
         else:
             args = self.args
         return canonicalize(MatAdd(*args))
+
+    def _eval_derivative(self, x):
+        # MatAdd does not remove ZeroMatrix unless you call .doit():
+        return super()._eval_derivative(x).doit()
 
     def _eval_derivative_matrix_lines(self, x):
         add_lines = [arg._eval_derivative_matrix_lines(x) for arg in self.args]
         return [j for i in add_lines for j in i]
 
+add.register_handlerclass((Add, MatAdd), MatAdd)
 
-def validate(*args):
-    if not all(arg.is_Matrix for arg in args):
-        raise TypeError("Mix of Matrix and Scalar symbols")
-
-    A = args[0]
-    for B in args[1:]:
-        if A.shape != B.shape:
-            raise ShapeError("Matrices %s and %s are not aligned"%(A, B))
 
 factor_of = lambda arg: arg.as_coeff_mmul()[0]
 matrix_of = lambda arg: unpack(arg.as_coeff_mmul()[1])
@@ -128,7 +143,7 @@ def merge_explicit(matadd):
     """
     groups = sift(matadd.args, lambda arg: isinstance(arg, MatrixBase))
     if len(groups[True]) > 1:
-        return MatAdd(*(groups[False] + [reduce(add, groups[True])]))
+        return MatAdd(*(groups[False] + [reduce(operator.add, groups[True])]))
     else:
         return matadd
 

@@ -1,6 +1,5 @@
-from __future__ import print_function, division
-
-from sympy import exp, symbols
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.exponential import exp
 
 x, y = symbols('x,y')
 

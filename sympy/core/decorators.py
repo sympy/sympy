@@ -5,58 +5,43 @@ The purpose of this module is to expose decorators without any other
 dependencies, so that they can be easily imported anywhere in sympy/core.
 """
 
-from __future__ import print_function, division
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from functools import wraps
 from .sympify import SympifyError, sympify
-from sympy.core.compatibility import get_function_code
 
 
-def deprecated(**decorator_kwargs):
-    """This is a decorator which can be used to mark functions
-    as deprecated. It will result in a warning being emitted
-    when the function is used."""
-    from sympy.utilities.exceptions import SymPyDeprecationWarning
-
-    def _warn_deprecation(wrapped, stacklevel):
-        decorator_kwargs.setdefault('feature', wrapped.__name__)
-        SymPyDeprecationWarning(**decorator_kwargs).warn(stacklevel=stacklevel)
-
-    def deprecated_decorator(wrapped):
-        if hasattr(wrapped, '__mro__'):  # wrapped is actually a class
-            class wrapper(wrapped):
-                __doc__ = wrapped.__doc__
-                __name__ = wrapped.__name__
-                __module__ = wrapped.__module__
-                _sympy_deprecated_func = wrapped
-                def __init__(self, *args, **kwargs):
-                    _warn_deprecation(wrapped, 4)
-                    super(wrapper, self).__init__(*args, **kwargs)
-        else:
-            @wraps(wrapped)
-            def wrapper(*args, **kwargs):
-                _warn_deprecation(wrapped, 3)
-                return wrapped(*args, **kwargs)
-            wrapper._sympy_deprecated_func = wrapped
-        return wrapper
-    return deprecated_decorator
+if TYPE_CHECKING:
+    from typing import Callable, TypeVar, Union
+    T1 = TypeVar('T1')
+    T2 = TypeVar('T2')
+    T3 = TypeVar('T3')
 
 
-def _sympifyit(arg, retval=None):
-    """decorator to smartly _sympify function arguments
+def _sympifyit(arg, retval=None) -> Callable[[Callable[[T1, T2], T3]], Callable[[T1, T2], T3]]:
+    """
+    decorator to smartly _sympify function arguments
 
-       @_sympifyit('other', NotImplemented)
-       def add(self, other):
-           ...
+    Explanation
+    ===========
 
-       In add, other can be thought of as already being a SymPy object.
+    @_sympifyit('other', NotImplemented)
+    def add(self, other):
+        ...
 
-       If it is not, the code is likely to catch an exception, then other will
-       be explicitly _sympified, and the whole code restarted.
+    In add, other can be thought of as already being a SymPy object.
 
-       if _sympify(arg) fails, NotImplemented will be returned
+    If it is not, the code is likely to catch an exception, then other will
+    be explicitly _sympified, and the whole code restarted.
 
-       see: __sympifyit
+    if _sympify(arg) fails, NotImplemented will be returned
+
+    See also
+    ========
+
+    __sympifyit
     """
     def deco(func):
         return __sympifyit(func, arg, retval)
@@ -65,16 +50,16 @@ def _sympifyit(arg, retval=None):
 
 
 def __sympifyit(func, arg, retval=None):
-    """decorator to _sympify `arg` argument for function `func`
+    """Decorator to _sympify `arg` argument for function `func`.
 
-       don't use directly -- use _sympifyit instead
+       Do not use directly -- use _sympifyit instead.
     """
 
     # we support f(a,b) only
-    if not get_function_code(func).co_argcount:
+    if not func.__code__.co_argcount:
         raise LookupError("func not found")
     # only b is _sympified
-    assert get_function_code(func).co_varnames[1] == arg
+    assert func.__code__.co_varnames[1] == arg
     if retval is None:
         @wraps(func)
         def __sympifyit_wrapper(a, b):
@@ -85,7 +70,7 @@ def __sympifyit(func, arg, retval=None):
         def __sympifyit_wrapper(a, b):
             try:
                 # If an external class has _op_priority, it knows how to deal
-                # with sympy objects. Otherwise, it must be converted.
+                # with SymPy objects. Otherwise, it must be converted.
                 if not hasattr(b, '_op_priority'):
                     b = sympify(b, strict=True)
                 return func(a, b)
@@ -95,8 +80,12 @@ def __sympifyit(func, arg, retval=None):
     return __sympifyit_wrapper
 
 
-def call_highest_priority(method_name):
+def call_highest_priority(method_name: str
+    ) -> Callable[[Callable[[T1, T2], T3]], Callable[[T1, T2], T3]]:
     """A decorator for binary special methods to handle _op_priority.
+
+    Explanation
+    ===========
 
     Binary special methods in Expr and its subclasses use a special attribute
     '_op_priority' to determine whose special method will be called to
@@ -118,12 +107,12 @@ def call_highest_priority(method_name):
         def __rmul__(self, other):
         ...
     """
-    def priority_decorator(func):
+    def priority_decorator(func: Callable[[T1, T2], T3]) -> Callable[[T1, T2], T3]:
         @wraps(func)
-        def binary_op_wrapper(self, other):
+        def binary_op_wrapper(self: T1, other: T2) -> T3:
             if hasattr(other, '_op_priority'):
-                if other._op_priority > self._op_priority:
-                    f = getattr(other, method_name, None)
+                if other._op_priority > self._op_priority:  # type: ignore
+                    f: Union[Callable[[T1], T3], None] = getattr(other, method_name, None)
                     if f is not None:
                         return f(self)
             return func(self, other)
@@ -131,15 +120,21 @@ def call_highest_priority(method_name):
     return priority_decorator
 
 
-def sympify_method_args(cls):
+def sympify_method_args(cls: type[T1]) -> type[T1]:
     '''Decorator for a class with methods that sympify arguments.
+
+    Explanation
+    ===========
 
     The sympify_method_args decorator is to be used with the sympify_return
     decorator for automatic sympification of method arguments. This is
-    intended for the common idiom of writing a class like
+    intended for the common idiom of writing a class like :
 
-    >>> from sympy.core.basic import Basic
-    >>> from sympy.core.sympify import _sympify, SympifyError
+    Examples
+    ========
+
+    >>> from sympy import Basic, SympifyError, S
+    >>> from sympy.core.sympify import _sympify
 
     >>> class MyTuple(Basic):
     ...     def __add__(self, other):
@@ -151,7 +146,7 @@ def sympify_method_args(cls):
     ...             return NotImplemented
     ...         return MyTuple(*(self.args + other.args))
 
-    >>> MyTuple(1, 2) + MyTuple(3, 4)
+    >>> MyTuple(S(1), S(2)) + MyTuple(S(3), S(4))
     MyTuple(1, 2, 3, 4)
 
     In the above it is important that we return NotImplemented when other is
@@ -170,7 +165,7 @@ def sympify_method_args(cls):
     ...     def __add__(self, other):
     ...          return MyTuple(*(self.args + other.args))
 
-    >>> MyTuple(1, 2) + MyTuple(3, 4)
+    >>> MyTuple(S(1), S(2)) + MyTuple(S(3), S(4))
     MyTuple(1, 2, 3, 4)
 
     The idea here is that the decorators take care of the boiler-plate code
@@ -204,12 +199,12 @@ def sympify_return(*args):
     See the docstring of sympify_method_args for explanation.
     '''
     # Store a wrapper object for the decorated method
-    def wrapper(func):
-        return _SympifyWrapper(func, args)
+    def wrapper(func: Callable[[T1, T2], T3]) -> Callable[[T1, T2], T3]:
+        return _SympifyWrapper(func, args)  # type: ignore
     return wrapper
 
 
-class _SympifyWrapper(object):
+class _SympifyWrapper:
     '''Internal class used by sympify_return and sympify_method_args'''
 
     def __init__(self, func, args):
@@ -229,12 +224,12 @@ class _SympifyWrapper(object):
 
         # Raise RuntimeError since this is a failure at import time and should
         # not be recoverable.
-        nargs = get_function_code(func).co_argcount
+        nargs = func.__code__.co_argcount
         # we support f(a, b) only
         if nargs != 2:
             raise RuntimeError('sympify_return can only be used with 2 argument functions')
         # only b is _sympified
-        if get_function_code(func).co_varnames[1] != parameter:
+        if func.__code__.co_varnames[1] != parameter:
             raise RuntimeError('parameter name mismatch "%s" in %s' %
                     (parameter, func.__name__))
 

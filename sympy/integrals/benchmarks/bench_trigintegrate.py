@@ -1,6 +1,5 @@
-from __future__ import print_function, division
-
-from sympy import Symbol, sin
+from sympy.core.symbol import Symbol
+from sympy.functions.elementary.trigonometric import sin
 from sympy.integrals.trigonometry import trigintegrate
 
 x = Symbol('x')

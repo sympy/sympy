@@ -1,17 +1,50 @@
 """Singleton mechanism"""
 
-from __future__ import print_function, division
+from __future__ import annotations
 
-from typing import Any, Dict, Type
+from typing import TYPE_CHECKING, overload
 
 from .core import Registry
-from .assumptions import ManagedProperties
 from .sympify import sympify
 
+
+if TYPE_CHECKING:
+    from typing import Any, TypeVar
+
+    from sympy.core.numbers import (
+        Zero as _Zero,
+        One as _One,
+        NegativeOne as _NegativeOne,
+        Half as _Half,
+        ImaginaryUnit as _ImaginaryUnit,
+        Exp1 as _Exp1,
+        Pi as _Pi,
+        GoldenRatio as _GoldenRatio,
+        TribonacciConstant as _TribonacciConstant,
+        EulerGamma as _EulerGamma,
+        Catalan as _Catalan,
+        Infinity as _Infinity,
+        NegativeInfinity as _NegativeInfinity,
+        ComplexInfinity as _ComplexInfinity,
+        NaN as _NaN,
+    )
+    from sympy.logic.boolalg import (
+        BooleanTrue as _BooleanTrue,
+        BooleanFalse as _BooleanFalse,
+    )
+
+    from .basic import Basic
+    from .expr import Expr
+    from .numbers import Float, Integer
+
+    Tbasic = TypeVar('Tbasic', bound=Basic)
 
 class SingletonRegistry(Registry):
     """
     The registry for the singleton classes (accessible as ``S``).
+
+    Explanation
+    ===========
 
     This class serves as two separate things.
 
@@ -30,7 +63,10 @@ class SingletonRegistry(Registry):
     the same single instance in memory. The fast comparison comes from the
     fact that you can use ``is`` to compare exact instances in Python
     (usually, you need to use ``==`` to compare things). ``is`` compares
-    objects by memory address, and is very fast. For instance
+    objects by memory address, and is very fast.
+
+    Examples
+    ========
 
     >>> from sympy import S, Integer
     >>> a = Integer(0)
@@ -38,7 +74,7 @@ class SingletonRegistry(Registry):
     True
 
     For the most part, the fact that certain objects are singletonized is an
-    implementation detail that users shouldn't need to worry about. In SymPy
+    implementation detail that users should not need to worry about. In SymPy
     library code, ``is`` comparison is often used for performance purposes
     The primary advantage of ``S`` for end users is the convenient access to
     certain instances that are otherwise difficult to type, like ``S.Half``
@@ -47,7 +83,8 @@ class SingletonRegistry(Registry):
     When using ``is`` comparison, make sure the argument is sympified. For
     instance,
 
-    >>> 0 is S.Zero
+    >>> x = 0
+    >>> x is S.Zero
     False
 
     This problem is not an issue when using ``==``, which is recommended for
@@ -67,8 +104,7 @@ class SingletonRegistry(Registry):
     This is for convenience, since ``S`` is a single letter. It's mostly
     useful for defining rational numbers. Consider an expression like ``x +
     1/2``. If you enter this directly in Python, it will evaluate the ``1/2``
-    and give ``0.5`` (or just ``0`` in Python 2, because of integer division),
-    because both arguments are ints (see also
+    and give ``0.5``, because both arguments are ints (see also
     :ref:`tutorial-gotchas-final-notes`). However, in SymPy, you usually want
     the quotient of two integers to give an exact rational number. The way
     Python's evaluation works, at least one side of an operator needs to be a
@@ -76,13 +112,46 @@ class SingletonRegistry(Registry):
     as ``x + Rational(1, 2)``, but this is a lot more typing. A shorter
     version is ``x + S(1)/2``. Since ``S(1)`` returns ``Integer(1)``, the
     division will return a ``Rational`` type, since it will call
-    ``Integer.__div__``, which knows how to return a ``Rational``.
+    ``Integer.__truediv__``, which knows how to return a ``Rational``.
 
     """
     __slots__ = ()
 
+    Zero: _Zero
+    One: _One
+    NegativeOne: _NegativeOne
+    Half: _Half
+    ImaginaryUnit: _ImaginaryUnit
+    Exp1: _Exp1
+    Pi: _Pi
+    GoldenRatio: _GoldenRatio
+    TribonacciConstant: _TribonacciConstant
+    EulerGamma: _EulerGamma
+    Catalan: _Catalan
+    Infinity: _Infinity
+    NegativeInfinity: _NegativeInfinity
+    ComplexInfinity: _ComplexInfinity
+    NaN: _NaN
+
+    true: _BooleanTrue
+    false: _BooleanFalse
+
     # Also allow things like S(5)
-    __call__ = staticmethod(sympify)
+    @overload
+    def __call__(self, a: int, *, strict: bool = False) -> Integer: ... # type: ignore
+    @overload
+    def __call__(self, a: float, *, strict: bool = False) -> Float: ...
+    @overload
+    def __call__(self, a: Expr | complex, *, strict: bool = False) -> Expr: ...
+    @overload
+    def __call__(self, a: Tbasic, *, strict: bool = False) -> Tbasic: ...
+    @overload
+    def __call__(self, a: Any, *, strict: bool = False) -> Basic: ...
+
+    def __call__(self, a, locals=None, convert_xor=True, strict=False, rational=False,
+            evaluate=None):
+        return sympify(a, locals=locals, convert_xor=convert_xor, strict=strict,
+                       rational=rational, evaluate=evaluate) # type: ignore
 
     def __init__(self):
         self._classes_to_install = {}
@@ -105,6 +174,9 @@ class SingletonRegistry(Registry):
         """Python calls __getattr__ if no attribute of that name was installed
         yet.
 
+        Explanation
+        ===========
+
         This __getattr__ checks whether a class with the requested name was
         already registered but not installed; if no, raises an AttributeError.
         Otherwise, retrieves the class, calculates its singleton value, installs
@@ -125,9 +197,12 @@ class SingletonRegistry(Registry):
 S = SingletonRegistry()
 
 
-class Singleton(ManagedProperties):
+class Singleton(type):
     """
     Metaclass for singleton classes.
+
+    Explanation
+    ===========
 
     A singleton class has only one instance which is returned every time the
     class is instantiated. Additionally, this instance can be accessed through
@@ -138,7 +213,6 @@ class Singleton(ManagedProperties):
 
         >>> from sympy import S, Basic
         >>> from sympy.core.singleton import Singleton
-        >>> from sympy.core.compatibility import with_metaclass
         >>> class MySingleton(Basic, metaclass=Singleton):
         ...     pass
         >>> Basic() is Basic()
@@ -154,32 +228,14 @@ class Singleton(ManagedProperties):
     Instance creation is delayed until the first time the value is accessed.
     (SymPy versions before 1.0 would create the instance during class
     creation time, which would be prone to import cycles.)
-
-    This metaclass is a subclass of ManagedProperties because that is the
-    metaclass of many classes that need to be Singletons (Python does not allow
-    subclasses to have a different metaclass than the superclass, except the
-    subclass may use a subclassed metaclass).
     """
+    def __init__(cls, *args, **kwargs):
+        cls._instance = obj = Basic.__new__(cls)
+        cls.__new__ = lambda cls: obj
+        cls.__getnewargs__ = lambda obj: ()
+        cls.__getstate__ = lambda obj: None
+        S.register(cls)
 
-    _instances = {}  # type: Dict[Type[Any], Any]
-    "Maps singleton classes to their instances."
 
-    def __new__(cls, *args, **kwargs):
-        result = super(Singleton, cls).__new__(cls, *args, **kwargs)
-        S.register(result)
-        return result
-
-    def __call__(self, *args, **kwargs):
-        # Called when application code says SomeClass(), where SomeClass is a
-        # class of which Singleton is the metaclas.
-        # __call__ is invoked first, before __new__() and __init__().
-        if self not in Singleton._instances:
-            Singleton._instances[self] = \
-                super(Singleton, self).__call__(*args, **kwargs)
-                # Invokes the standard constructor of SomeClass.
-        return Singleton._instances[self]
-
-        # Inject pickling support.
-        def __getnewargs__(self):
-            return ()
-        self.__getnewargs__ = __getnewargs__
+# Delayed to avoid cyclic import
+from .basic import Basic

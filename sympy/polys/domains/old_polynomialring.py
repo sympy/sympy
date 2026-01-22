@@ -1,10 +1,7 @@
 """Implementation of :class:`PolynomialRing` class. """
 
-from __future__ import print_function, division
 
-from sympy.core.compatibility import iterable
 from sympy.polys.agca.modules import FreeModulePolyRing
-from sympy.polys.domains.characteristiczero import CharacteristicZero
 from sympy.polys.domains.compositedomain import CompositeDomain
 from sympy.polys.domains.old_fractionfield import FractionField
 from sympy.polys.domains.ring import Ring
@@ -14,11 +11,11 @@ from sympy.polys.polyerrors import (GeneratorsNeeded, PolynomialError,
         CoercionFailed, ExactQuotientFailed, NotReversible)
 from sympy.polys.polyutils import dict_from_basic, basic_from_dict, _dict_reorder
 from sympy.utilities import public
+from sympy.utilities.iterables import iterable
 
-# XXX why does this derive from CharacteristicZero???
 
 @public
-class PolynomialRingBase(Ring, CharacteristicZero, CompositeDomain):
+class PolynomialRingBase(Ring, CompositeDomain):
     """
     Base class for generalized polynomial rings.
 
@@ -40,16 +37,26 @@ class PolynomialRingBase(Ring, CharacteristicZero, CompositeDomain):
         lev = len(gens) - 1
         self.ngens = len(gens)
 
-        self.zero = self.dtype.zero(lev, dom, ring=self)
-        self.one = self.dtype.one(lev, dom, ring=self)
+        self.zero = self.dtype.zero(lev, dom)
+        self.one = self.dtype.one(lev, dom)
 
         self.domain = self.dom = dom
         self.symbols = self.gens = gens
         # NOTE 'order' may not be set if inject was called through CompositeDomain
         self.order = opts.get('order', monomial_key(self.default_order))
 
-    def new(self, element):
-        return self.dtype(element, self.dom, len(self.gens) - 1, ring=self)
+    def set_domain(self, dom, /):
+        """Return a new polynomial ring with given domain. """
+        return self.__class__(dom, *self.gens, order=self.order)
+
+    def new(self, element, /):
+        return self.dtype(element, self.dom, len(self.gens) - 1)
+
+    def _ground_new(self, element):
+        return self.one.ground_new(element)
+
+    def _from_dict(self, element):
+        return DMP.from_dict(element, len(self.gens) - 1, self.dom)
 
     def __str__(self):
         s_order = str(self.order)
@@ -62,43 +69,66 @@ class PolynomialRingBase(Ring, CharacteristicZero, CompositeDomain):
                      self.gens, self.order))
 
     def __eq__(self, other):
-        """Returns `True` if two domains are equivalent. """
+        """Returns ``True`` if two domains are equivalent. """
         return isinstance(other, PolynomialRingBase) and \
             self.dtype == other.dtype and self.dom == other.dom and \
             self.gens == other.gens and self.order == other.order
 
+    def from_ZZ(K1, a, K0):
+        """Convert a Python ``int`` object to ``dtype``. """
+        return K1._ground_new(K1.dom.convert(a, K0))
+
     def from_ZZ_python(K1, a, K0):
-        """Convert a Python `int` object to `dtype`. """
-        return K1(K1.dom.convert(a, K0))
+        """Convert a Python ``int`` object to ``dtype``. """
+        return K1._ground_new(K1.dom.convert(a, K0))
+
+    def from_QQ(K1, a, K0):
+        """Convert a Python ``Fraction`` object to ``dtype``. """
+        return K1._ground_new(K1.dom.convert(a, K0))
 
     def from_QQ_python(K1, a, K0):
-        """Convert a Python `Fraction` object to `dtype`. """
-        return K1(K1.dom.convert(a, K0))
+        """Convert a Python ``Fraction`` object to ``dtype``. """
+        return K1._ground_new(K1.dom.convert(a, K0))
 
     def from_ZZ_gmpy(K1, a, K0):
-        """Convert a GMPY `mpz` object to `dtype`. """
-        return K1(K1.dom.convert(a, K0))
+        """Convert a GMPY ``mpz`` object to ``dtype``. """
+        return K1._ground_new(K1.dom.convert(a, K0))
 
     def from_QQ_gmpy(K1, a, K0):
-        """Convert a GMPY `mpq` object to `dtype`. """
-        return K1(K1.dom.convert(a, K0))
+        """Convert a GMPY ``mpq`` object to ``dtype``. """
+        return K1._ground_new(K1.dom.convert(a, K0))
 
     def from_RealField(K1, a, K0):
-        """Convert a mpmath `mpf` object to `dtype`. """
-        return K1(K1.dom.convert(a, K0))
+        """Convert a mpmath ``mpf`` object to ``dtype``. """
+        return K1._ground_new(K1.dom.convert(a, K0))
 
     def from_AlgebraicField(K1, a, K0):
-        """Convert a `ANP` object to `dtype`. """
+        """Convert a ``ANP`` object to ``dtype``. """
         if K1.dom == K0:
-            return K1(a)
+            return K1._ground_new(a)
+
+    def from_PolynomialRing(K1, a, K0):
+        """Convert a ``PolyElement`` object to ``dtype``. """
+        if K1.gens == K0.symbols:
+            if K1.dom == K0.dom:
+                return K1(dict(a))  # set the correct ring
+            else:
+                convert_dom = lambda c: K1.dom.convert_from(c, K0.dom)
+                return K1._from_dict({m: convert_dom(c) for m, c in a.items()})
+        else:
+            monoms, coeffs = _dict_reorder(a.to_dict(), K0.symbols, K1.gens)
+
+            if K1.dom != K0.dom:
+                coeffs = [ K1.dom.convert(c, K0.dom) for c in coeffs ]
+
+            return K1._from_dict(dict(zip(monoms, coeffs)))
 
     def from_GlobalPolynomialRing(K1, a, K0):
-        """Convert a `DMP` object to `dtype`. """
+        """Convert a ``DMP`` object to ``dtype``. """
         if K1.gens == K0.gens:
-            if K1.dom == K0.dom:
-                return K1(a.rep)  # set the correct ring
-            else:
-                return K1(a.convert(K1.dom).rep)
+            if K1.dom != K0.dom:
+                a = a.convert(K1.dom)
+            return K1(a.to_list())
         else:
             monoms, coeffs = _dict_reorder(a.to_dict(), K0.gens, K1.gens)
 
@@ -108,37 +138,37 @@ class PolynomialRingBase(Ring, CharacteristicZero, CompositeDomain):
             return K1(dict(zip(monoms, coeffs)))
 
     def get_field(self):
-        """Returns a field associated with `self`. """
+        """Returns a field associated with ``self``. """
         return FractionField(self.dom, *self.gens)
 
     def poly_ring(self, *gens):
-        """Returns a polynomial ring, i.e. `K[X]`. """
+        """Returns a polynomial ring, i.e. ``K[X]``. """
         raise NotImplementedError('nested domains not allowed')
 
     def frac_field(self, *gens):
-        """Returns a fraction field, i.e. `K(X)`. """
+        """Returns a fraction field, i.e. ``K(X)``. """
         raise NotImplementedError('nested domains not allowed')
 
     def revert(self, a):
         try:
-            return 1/a
+            return self.exquo(self.one, a)
         except (ExactQuotientFailed, ZeroDivisionError):
             raise NotReversible('%s is not a unit' % a)
 
     def gcdex(self, a, b):
-        """Extended GCD of `a` and `b`. """
+        """Extended GCD of ``a`` and ``b``. """
         return a.gcdex(b)
 
     def gcd(self, a, b):
-        """Returns GCD of `a` and `b`. """
+        """Returns GCD of ``a`` and ``b``. """
         return a.gcd(b)
 
     def lcm(self, a, b):
-        """Returns LCM of `a` and `b`. """
+        """Returns LCM of ``a`` and ``b``. """
         return a.lcm(b)
 
     def factorial(self, a):
-        """Returns factorial of `a`. """
+        """Returns factorial of ``a``. """
         return self.dtype(self.dom.factorial(a))
 
     def _vector_to_sdm(self, v, order):
@@ -173,7 +203,7 @@ class PolynomialRingBase(Ring, CharacteristicZero, CompositeDomain):
         >>> R = QQ.old_poly_ring(x, y, order=ilex)
         >>> L = [((1, 1, 1), QQ(1)), ((0, 1, 0), QQ(1)), ((0, 0, 1), QQ(2))]
         >>> R._sdm_to_vector(L, 2)
-        [x + 2*y, x*y]
+        [DMF([[1], [2, 0]], [[1]], QQ), DMF([[1, 0], []], [[1]], QQ)]
         """
         dics = self._sdm_to_dics(s, n)
         # NOTE this works for global and local rings!
@@ -211,6 +241,14 @@ class GlobalPolynomialRing(PolynomialRingBase):
     is_PolynomialRing = is_Poly = True
     dtype = DMP
 
+    def new(self, element):
+        if isinstance(element, dict):
+            return DMP.from_dict(element, len(self.gens) - 1, self.dom)
+        elif element in self.dom:
+            return self._ground_new(self.dom.convert(element))
+        else:
+            return self.dtype(element, self.dom, len(self.gens) - 1)
+
     def from_FractionField(K1, a, K0):
         """
         Convert a ``DMF`` object to ``DMP``.
@@ -229,43 +267,43 @@ class GlobalPolynomialRing(PolynomialRingBase):
 
         >>> F == DMP([ZZ(1), ZZ(1)], ZZ)
         True
-        >>> type(F)
-        <class 'sympy.polys.polyclasses.DMP'>
+        >>> type(F)  # doctest: +SKIP
+        <class 'sympy.polys.polyclasses.DMP_Python'>
 
         """
         if a.denom().is_one:
             return K1.from_GlobalPolynomialRing(a.numer(), K0)
 
     def to_sympy(self, a):
-        """Convert `a` to a SymPy object. """
+        """Convert ``a`` to a SymPy object. """
         return basic_from_dict(a.to_sympy_dict(), *self.gens)
 
     def from_sympy(self, a):
-        """Convert SymPy's expression to `dtype`. """
+        """Convert SymPy's expression to ``dtype``. """
         try:
             rep, _ = dict_from_basic(a, gens=self.gens)
         except PolynomialError:
-            raise CoercionFailed("can't convert %s to type %s" % (a, self))
+            raise CoercionFailed("Cannot convert %s to type %s" % (a, self))
 
         for k, v in rep.items():
             rep[k] = self.dom.from_sympy(v)
 
-        return self(rep)
+        return DMP.from_dict(rep, self.ngens - 1, self.dom)
 
     def is_positive(self, a):
-        """Returns True if `LC(a)` is positive. """
+        """Returns True if ``LC(a)`` is positive. """
         return self.dom.is_positive(a.LC())
 
     def is_negative(self, a):
-        """Returns True if `LC(a)` is negative. """
+        """Returns True if ``LC(a)`` is negative. """
         return self.dom.is_negative(a.LC())
 
     def is_nonpositive(self, a):
-        """Returns True if `LC(a)` is non-positive. """
+        """Returns True if ``LC(a)`` is non-positive. """
         return self.dom.is_nonpositive(a.LC())
 
     def is_nonnegative(self, a):
-        """Returns True if `LC(a)` is non-negative. """
+        """Returns True if ``LC(a)`` is non-negative. """
         return self.dom.is_nonnegative(a.LC())
 
     def _vector_to_sdm(self, v, order):
@@ -290,8 +328,8 @@ class GeneralizedPolynomialRing(PolynomialRingBase):
     dtype = DMF
 
     def new(self, a):
-        """Construct an element of `self` domain from `a`. """
-        res = self.dtype(a, self.dom, len(self.gens) - 1, ring=self)
+        """Construct an element of ``self`` domain from ``a``. """
+        res = self.dtype(a, self.dom, len(self.gens) - 1)
 
         # make sure res is actually in our ring
         if res.denom().terms(order=self.order)[0][0] != (0,)*len(self.gens):
@@ -307,17 +345,13 @@ class GeneralizedPolynomialRing(PolynomialRingBase):
             return False
         return a.denom().terms(order=self.order)[0][0] == (0,)*len(self.gens)
 
-    def from_FractionField(K1, a, K0):
-        dmf = K1.get_field().from_FractionField(a, K0)
-        return K1((dmf.num, dmf.den))
-
     def to_sympy(self, a):
-        """Convert `a` to a SymPy object. """
+        """Convert ``a`` to a SymPy object. """
         return (basic_from_dict(a.numer().to_sympy_dict(), *self.gens) /
                 basic_from_dict(a.denom().to_sympy_dict(), *self.gens))
 
     def from_sympy(self, a):
-        """Convert SymPy's expression to `dtype`. """
+        """Convert SymPy's expression to ``dtype``. """
         p, q = a.as_numer_denom()
 
         num, _ = dict_from_basic(p, gens=self.gens)
@@ -330,6 +364,23 @@ class GeneralizedPolynomialRing(PolynomialRingBase):
             den[k] = self.dom.from_sympy(v)
 
         return self((num, den)).cancel()
+
+    def exquo(self, a, b):
+        """Exact quotient of ``a`` and ``b``. """
+        # Elements are DMF that will always divide (except 0). The result is
+        # not guaranteed to be in this ring, so we have to check that.
+        r = a / b
+
+        try:
+            r = self.new((r.num, r.den))
+        except CoercionFailed:
+            raise ExactQuotientFailed(a, b, self)
+
+        return r
+
+    def from_FractionField(K1, a, K0):
+        dmf = K1.get_field().from_FractionField(a, K0)
+        return K1((dmf.num, dmf.den))
 
     def _vector_to_sdm(self, v, order):
         """

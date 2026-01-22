@@ -2,15 +2,14 @@
 Discrete Fourier Transform, Number Theoretic Transform,
 Walsh Hadamard Transform, Mobius Transform
 """
-from __future__ import print_function, division, unicode_literals
 
 from sympy.core import S, Symbol, sympify
-from sympy.core.compatibility import as_int, iterable
 from sympy.core.function import expand_mul
 from sympy.core.numbers import pi, I
 from sympy.functions.elementary.trigonometric import sin, cos
 from sympy.ntheory import isprime, primitive_root
-from sympy.utilities.iterables import ibin
+from sympy.utilities.iterables import ibin, iterable
+from sympy.utilities.misc import as_int
 
 
 #----------------------------------------------------------------------------#
@@ -110,7 +109,7 @@ def fft(seq, dps=None):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Cooley%E2%80%93Tukey_FFT_algorithm
-    .. [2] http://mathworld.wolfram.com/FastFourierTransform.html
+    .. [2] https://mathworld.wolfram.com/FastFourierTransform.html
 
     """
 
@@ -222,7 +221,7 @@ def ntt(seq, prime):
     ==========
 
     .. [1] http://www.apfloat.org/ntt.html
-    .. [2] http://mathworld.wolfram.com/NumberTheoreticTransform.html
+    .. [2] https://mathworld.wolfram.com/NumberTheoreticTransform.html
     .. [3] https://en.wikipedia.org/wiki/Discrete_Fourier_transform_(general%29
 
     """

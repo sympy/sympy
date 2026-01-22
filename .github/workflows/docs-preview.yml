@@ -1,0 +1,23 @@
+name: Docs Preview
+on: [status]
+
+jobs:
+  circleci_artifacts_redirector_job:
+    if: "${{ github.event.context == 'ci/circleci: Build Docs Preview' }}"
+    runs-on: ubuntu-latest
+    name: Run CircleCI artifacts redirector
+    steps:
+      - name: GitHub Action step
+        id: step1
+        uses: larsoner/circleci-artifacts-redirector-action@master
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          artifact-path: 0/doc/_build/html/index.html
+          circleci-jobs: Build Docs Preview
+          job-title: Click here to see a preview of the documentation.
+          api-token: ${{ secrets.CIRCLECI_TOKEN }}
+      # This keeps failing even though the step above suceeds:
+      #- name: Check the URL
+      #  if: github.event.status != 'pending'
+      #  run: |
+      #    curl --fail ${{ steps.step1.outputs.url }} | grep $GITHUB_SHA

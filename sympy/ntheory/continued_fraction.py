@@ -1,9 +1,14 @@
+from __future__ import annotations
+import itertools
+from sympy.core.exprtools import factor_terms
 from sympy.core.numbers import Integer, Rational
 from sympy.core.singleton import S
+from sympy.core.symbol import Dummy
 from sympy.core.sympify import _sympify
+from sympy.utilities.misc import as_int
 
 
-def continued_fraction(a):
+def continued_fraction(a) -> list:
     """Return the continued fraction representation of a Rational or
     quadratic irrational.
 
@@ -64,11 +69,10 @@ def continued_fraction(a):
                         # (a + b*sqrt(c))/d
                         c = c.base
                         return continued_fraction_periodic(a, d, c, b)
-    raise ValueError(
-        'expecting a rational or quadratic irrational, not %s' % e)
+    raise ValueError(f"expecting a rational or quadratic irrational, not {e}")
 
 
-def continued_fraction_periodic(p, q, d=0, s=1):
+def continued_fraction_periodic(p, q, d=0, s=1) -> list:
     r"""
     Find the periodic continued fraction expansion of a quadratic irrational.
 
@@ -125,13 +129,12 @@ def continued_fraction_periodic(p, q, d=0, s=1):
            Addison-Wesley, 3 Sub edition, pages 379-381, January 1992.
 
     """
-    from sympy.core.compatibility import as_int
     from sympy.functions import sqrt, floor
 
     p, q, d, s = list(map(as_int, [p, q, d, s]))
 
     if d < 0:
-        raise ValueError("expected non-negative for `d` but got %s" % d)
+        raise ValueError(f"expected non-negative for `d` but got {d}")
 
     if q == 0:
         raise ValueError("The denominator cannot be 0.")
@@ -165,7 +168,7 @@ def continued_fraction_periodic(p, q, d=0, s=1):
         p *= q
         q *= q
 
-    terms = []
+    terms: list[int] = []
     pq = {}
 
     while (p, q) not in pq:
@@ -175,7 +178,7 @@ def continued_fraction_periodic(p, q, d=0, s=1):
         q = (d - p**2)//q
 
     i = pq[(p, q)]
-    return terms[:i] + [terms[i:]]
+    return terms[:i] + [terms[i:]]  # type: ignore
 
 
 def continued_fraction_reduce(cf):
@@ -221,8 +224,6 @@ def continued_fraction_reduce(cf):
     continued_fraction_periodic
 
     """
-    from sympy.core.exprtools import factor_terms
-    from sympy.core.symbol import Dummy
     from sympy.solvers import solve
 
     period = []
@@ -236,7 +237,7 @@ def continued_fraction_reduce(cf):
                 break
             yield nxt
 
-    a = Integer(0)
+    a = S.Zero
     for a in continued_fraction_convergents(untillist(cf)):
         pass
 
@@ -262,7 +263,7 @@ def continued_fraction_iterator(x):
     Examples
     ========
 
-    >>> from sympy.core import Rational, pi
+    >>> from sympy import Rational, pi
     >>> from sympy.ntheory.continued_fraction import continued_fraction_iterator
 
     >>> list(continued_fraction_iterator(Rational(3, 8)))
@@ -290,7 +291,6 @@ def continued_fraction_iterator(x):
 
     """
     from sympy.functions import floor
-
     while True:
         i = floor(x)
         yield i
@@ -304,17 +304,21 @@ def continued_fraction_convergents(cf):
     """
     Return an iterator over the convergents of a continued fraction (cf).
 
-    The parameter should be an iterable returning successive
-    partial quotients of the continued fraction, such as might be
-    returned by continued_fraction_iterator.  In computing the
-    convergents, the continued fraction need not be strictly in
-    canonical form (all integers, all but the first positive).
+    The parameter should be in either of the following to forms:
+    - A list of partial quotients, possibly with the last element being a list
+    of repeating partial quotients, such as might be returned by
+    continued_fraction and continued_fraction_periodic.
+    - An iterable returning successive partial quotients of the continued
+    fraction, such as might be returned by continued_fraction_iterator.
+
+    In computing the convergents, the continued fraction need not be strictly
+    in canonical form (all integers, all but the first positive).
     Rational and negative elements may be present in the expansion.
 
     Examples
     ========
 
-    >>> from sympy.core import Rational, pi
+    >>> from sympy.core import pi
     >>> from sympy import S
     >>> from sympy.ntheory.continued_fraction import \
             continued_fraction_convergents, continued_fraction_iterator
@@ -336,14 +340,27 @@ def continued_fraction_convergents(cf):
     104348/33215
     208341/66317
 
+    >>> it = continued_fraction_convergents([1, [1, 2]])  # sqrt(3)
+    >>> for n in range(7):
+    ...     print(next(it))
+    1
+    2
+    5/3
+    7/4
+    19/11
+    26/15
+    71/41
+
     See Also
     ========
 
-    continued_fraction_iterator
+    continued_fraction_iterator, continued_fraction, continued_fraction_periodic
 
     """
-    p_2, q_2 = Integer(0), Integer(1)
-    p_1, q_1 = Integer(1), Integer(0)
+    if isinstance(cf, list) and isinstance(cf[-1], list):
+        cf = itertools.chain(cf[:-1], itertools.cycle(cf[-1]))
+    p_2, q_2 = S.Zero, S.One
+    p_1, q_1 = S.One, S.Zero
     for a in cf:
         p, q = a*p_1 + p_2, a*q_1 + q_2
         p_2, q_2 = p_1, q_1

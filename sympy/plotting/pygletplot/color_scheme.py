@@ -1,11 +1,11 @@
-from __future__ import print_function, division
-
-from sympy import Basic, Symbol, symbols, lambdify
+from sympy.core.basic import Basic
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.utilities.lambdify import lambdify
 from .util import interpolate, rinterpolate, create_bounds, update_bounds
 from sympy.utilities.iterables import sift
 
 
-class ColorGradient(object):
+class ColorGradient:
     colors = [0.4, 0.4, 0.4], [0.9, 0.9, 0.9]
     intervals = 0.0, 1.0
 
@@ -45,7 +45,7 @@ class ColorGradient(object):
 default_color_schemes = {}  # defined at the bottom of this file
 
 
-class ColorScheme(object):
+class ColorScheme:
 
     def __init__(self, *args, **kwargs):
         self.args = args
@@ -235,7 +235,7 @@ class ColorScheme(object):
         independent variable u.
         """
         bounds = create_bounds()
-        cverts = list()
+        cverts = []
         if callable(set_len):
             set_len(len(u_set)*2)
         # calculate f() = r,g,b for each vert
@@ -273,13 +273,13 @@ class ColorScheme(object):
         independent variables u and v.
         """
         bounds = create_bounds()
-        cverts = list()
+        cverts = []
         if callable(set_len):
             set_len(len(u_set)*len(v_set)*2)
         # calculate f() = r,g,b for each vert
         # and find the min and max for r,g,b
         for _u in range(len(u_set)):
-            column = list()
+            column = []
             for _v in range(len(v_set)):
                 if verts[_u][_v] is None:
                     column.append(None)

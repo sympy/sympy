@@ -1,28 +1,128 @@
-from __future__ import division, print_function
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, overload
 
 from types import FunctionType
+from collections import Counter
 
-from mpmath.libmp.libmpf import prec_to_dps
-
-from sympy.core.compatibility import default_sort_key
+from sympy.core.expr import Expr
+from sympy.core.sorting import default_sort_key
+from sympy.core.evalf import DEFAULT_MAXPREC, PrecisionExhausted
 from sympy.core.logic import fuzzy_and, fuzzy_or
-from sympy.core.numbers import Float
+from sympy.core.numbers import AlgebraicNumber, Float
 from sympy.core.symbol import Dummy
+from sympy.core.sympify import _sympify
+from sympy.external.mpmath import prec_to_dps, local_workprec
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.polys import roots
-from sympy.simplify import nsimplify, simplify as _simplify
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.polys import roots, CRootOf, ZZ, QQ, EX
+from sympy.polys.matrices import DomainMatrix
+from sympy.polys.matrices.eigen import dom_eigenvects, dom_eigenvects_to_sympy
+from sympy.polys.factortools import dup_factor_list
+from sympy.polys.polytools import gcd, Poly
 
-from .common import (MatrixError, NonSquareMatrixError,
-    NonPositiveDefiniteMatrixError)
+from .exceptions import MatrixError, NonSquareMatrixError
+from .determinant import _find_reasonable_pivot
 
-from .utilities import _iszero
+from .utilities import _iszero, _simplify
 
 
-# This functions is a candidate for caching if it gets implemented for matrices.
-def _eigenvals(M, error_when_incomplete=True, **flags):
-    r"""Return eigenvalues using the Berkowitz agorithm to compute
-    the characteristic polynomial.
+if TYPE_CHECKING:
+    from typing import TypeVar, Callable, Any, Literal
+    from sympy.matrices.matrixbase import MatrixBase
+    Tmat = TypeVar('Tmat', bound=MatrixBase)
+
+
+__doctest_requires__ = {
+    ('_is_indefinite',
+     '_is_negative_definite',
+     '_is_negative_semidefinite',
+     '_is_positive_definite',
+     '_is_positive_semidefinite'): ['matplotlib'],
+}
+
+
+def _eigenvals_eigenvects_mpmath(M):
+    norm2 = lambda v: mp.sqrt(sum(i**2 for i in v))
+
+    v1 = None
+    prec_orig = max(x._prec for x in M.atoms(Float))
+    eps = 2**-prec_orig
+
+    prec = prec_orig
+
+    to_expr = lambda e: Expr._from_mpmath(e, prec_orig)
+
+    while prec < DEFAULT_MAXPREC:
+        with local_workprec(prec) as mp:
+            A = mp.matrix(M.evalf(n=prec_to_dps(prec)))
+            E, ER = mp.eig(A)
+            v2 = norm2([i for e in E for i in (mp.re(e), mp.im(e))])
+            if v1 is not None and mp.fabs(v1 - v2) < eps:
+                E = [to_expr(e) for e in E]
+                ER = [[to_expr(e) for e in row] for row in ER.transpose().tolist()]
+                return E, ER
+            v1 = v2
+        prec *= 2
+
+    # we get here because the next step would have taken us
+    # past MAXPREC or because we never took a step; in case
+    # of the latter, we refuse to send back a solution since
+    # it would not have been verified; we also resist taking
+    # a small step to arrive exactly at MAXPREC since then
+    # the two calculations might be artificially close.
+    raise PrecisionExhausted
+
+
+def _eigenvals_mpmath(M, multiple=False):
+    """Compute eigenvalues using mpmath"""
+    result, _ = _eigenvals_eigenvects_mpmath(M)
+    if multiple:
+        return result
+    return dict(Counter(result))
+
+
+def _eigenvects_mpmath(M):
+    from sympy import ImmutableMatrix
+    E, ER = _eigenvals_eigenvects_mpmath(M)
+    result = []
+    for i in range(M.rows):
+        eigenval = _sympify(E[i])
+        eigenvect = ImmutableMatrix(ER[i])
+        result.append((eigenval, 1, [eigenvect]))
+
+    return result
+
+
+@overload
+def _eigenvals(M,
+        error_when_incomplete: bool = True,
+        *,
+        simplify: Callable[[Expr], Expr] | bool = False,
+        multiple: Literal[False] = False,
+        rational: bool = False,
+        **flags: Any,
+   ) -> dict[Expr, int]:
+    ...
+@overload
+def _eigenvals(M,
+        error_when_incomplete: bool = True,
+        *,
+        simplify: Callable[[Expr], Expr] | bool = False,
+        multiple: Literal[True],
+        rational: bool = False,
+        **flags: Any,
+) -> list[Expr]:
+    ...
+
+def _eigenvals(M,
+        error_when_incomplete: bool = True,
+        *,
+        simplify: Callable[[Expr], Expr] | bool = False,
+        multiple: bool = False,
+        rational: bool = False,
+        **flags: Any,
+    ) -> dict[Expr, int] | list[Expr]:
+    r"""Compute eigenvalues of the matrix.
 
     Parameters
     ==========
@@ -74,7 +174,7 @@ def _eigenvals(M, error_when_incomplete=True, **flags):
     Examples
     ========
 
-    >>> from sympy.matrices import Matrix
+    >>> from sympy import Matrix
     >>> M = Matrix(3, 3, [0, 1, 1, 1, 0, 0, 1, 1, 1])
     >>> M.eigenvals()
     {-1: 1, 0: 1, 2: 1}
@@ -82,77 +182,210 @@ def _eigenvals(M, error_when_incomplete=True, **flags):
     See Also
     ========
 
-    MatrixDeterminant.charpoly
+    MatrixBase.charpoly
     eigenvects
 
     Notes
     =====
 
-    Eigenvalues of a matrix `A` can be computed by solving a matrix
-    equation `\det(A - \lambda I) = 0`
+    Eigenvalues of a matrix $A$ can be computed by solving a matrix
+    equation $\det(A - \lambda I) = 0$
+
+    It's not always possible to return radical solutions for
+    eigenvalues for matrices larger than $4, 4$ shape due to
+    Abel-Ruffini theorem.
+
+    If there is no radical solution is found for the eigenvalue,
+    it may return eigenvalues in the form of
+    :class:`sympy.polys.rootoftools.ComplexRootOf`.
     """
-
-    simplify = flags.get('simplify', False) # Collect simplify flag before popped up, to reuse later in the routine.
-    multiple = flags.get('multiple', False) # Collect multiple flag to decide whether return as a dict or list.
-    rational = flags.pop('rational', True)
-
     if not M:
+        if multiple:
+            return []
         return {}
 
+    if not M.is_square:
+        raise NonSquareMatrixError("{} must be a square matrix.".format(M))
+
+    if M._rep.domain not in (ZZ, QQ):
+        # Skip this check for ZZ/QQ because it can be slow
+        if all(x.is_number for x in M) and M.has(Float):
+            return _eigenvals_mpmath(M, multiple=multiple)
+
     if rational:
+        from sympy.simplify import nsimplify
         M = M.applyfunc(
             lambda x: nsimplify(x, rational=True) if x.has(Float) else x)
 
-    if M.is_upper or M.is_lower:
-        if not M.is_square:
-            raise NonSquareMatrixError()
+    if multiple:
+        return _eigenvals_list(
+            M, error_when_incomplete=error_when_incomplete, simplify=simplify,
+            **flags)
+    return _eigenvals_dict(
+        M, error_when_incomplete=error_when_incomplete, simplify=simplify,
+        **flags)
 
-        diagonal_entries = [M[i, i] for i in range(M.rows)]
 
-        if multiple:
-            eigs = diagonal_entries
+eigenvals_error_message = \
+"It is not always possible to express the eigenvalues of a matrix " + \
+"of size 5x5 or higher in radicals. " + \
+"We have CRootOf, but domains other than the rationals are not " + \
+"currently supported. " + \
+"If there are no symbols in the matrix, " + \
+"it should still be possible to compute numeric approximations " + \
+"of the eigenvalues using " + \
+"M.evalf().eigenvals() or M.charpoly().nroots()."
 
-        else:
-            eigs = {}
 
-            for diagonal_entry in diagonal_entries:
-                if diagonal_entry not in eigs:
-                    eigs[diagonal_entry] = 0
+def _eigenvals_list(
+    M: MatrixBase,
+    error_when_incomplete: bool = True,
+    simplify: Callable[[Expr], Expr] | bool = False,
+    **flags,
+) -> list[Expr]:
+    vals_dict = _eigenvals_dict(M, error_when_incomplete, simplify, **flags)
+    vals = []
+    for val, mult in vals_dict.items():
+        vals.extend([val] * mult)
+    return vals
 
-                eigs[diagonal_entry] += 1
 
-    else:
-        flags.pop('simplify', None)  # pop unsupported flag
+def _eigenvals_dict(
+        M: MatrixBase,
+        error_when_incomplete: bool = True,
+        simplify: Callable[[Expr], Expr] | bool = False,
+        **flags: Any,
+    ) -> dict[Expr, int]:
+
+    iblocks = M.strongly_connected_components()
+    all_eigs: dict[Expr, int] = {}
+    expanded_eigs: dict[Expr, Expr] = {}
+
+    # XXX: Only RepMatrix has _rep ...
+    is_dom = M._rep.domain in (ZZ, QQ) # type: ignore
+    for b in iblocks:
+
+        # Fast path for a 1x1 block:
+        if is_dom and len(b) == 1:
+            index = b[0]
+            val = M[index, index]
+            all_eigs[val] = all_eigs.get(val, 0) + 1
+            continue
+
+        block = M[b, b]
 
         if isinstance(simplify, FunctionType):
-            eigs = roots(M.charpoly(x=Dummy('x'), simplify=simplify), **flags)
+            charpoly = block.charpoly(simplify=simplify)
         else:
-            eigs = roots(M.charpoly(x=Dummy('x')), **flags)
+            charpoly = block.charpoly()
 
-    # make sure the algebraic multiplicity sums to the
-    # size of the matrix
-    if error_when_incomplete and (sum(eigs.values()) if
-            isinstance(eigs, dict) else len(eigs)) != M.cols:
-        raise MatrixError("Could not compute eigenvalues for {}".format(M))
+        factors = charpoly.factor_list()[1]
 
-    # Since 'simplify' flag is unsupported in roots()
-    # simplify() function will be applied once at the end of the routine.
+        for factor, multiplicity in factors:
+            eigs = roots(factor, multiple=False, **flags)
+
+            degree = int(factor.degree())
+            if sum(eigs.values()) != degree:
+                try:
+                    eigs = dict(factor.all_roots(multiple=False))
+                except NotImplementedError:
+                    if error_when_incomplete:
+                        raise MatrixError(eigenvals_error_message)
+                    else:
+                        eigs = {}
+
+            for k, v in eigs.items():
+                # Try a bit to canonicalize the eigenvalue expressions to get
+                # the multiplicity correct. This is not robust enough in general
+                # if different subroutines in roots can return different forms
+                # for the same root.
+                k_expanded = k.expand()
+                if k_expanded in expanded_eigs:
+                    k = expanded_eigs[k_expanded]
+                else:
+                    expanded_eigs[k_expanded] = k
+
+                v_total = v * multiplicity
+                if k in all_eigs:
+                    all_eigs[k] += v_total
+                else:
+                    all_eigs[k] = v_total
+
     if not simplify:
-        return eigs
+        return all_eigs
     if not isinstance(simplify, FunctionType):
         simplify = _simplify
+    return {simplify(key): value for key, value in all_eigs.items()}
 
-    # With 'multiple' flag set true, simplify() will be mapped for the list
-    # Otherwise, simplify() will be mapped for the keys of the dictionary
-    if not multiple:
-        return {simplify(key): value for key, value in eigs.items()}
-    else:
-        return [simplify(value) for value in eigs]
+
+def _eigenspace(
+        M: Tmat,
+        eigenval: Expr,
+        iszerofunc: Callable[[Expr], bool | None] = _iszero,
+        simplify: bool | Callable[[Expr], Expr] = False,
+    ) -> list[Tmat]:
+    """Get a basis for the eigenspace for a particular eigenvalue"""
+    m   = M._as_type(M - M.eye(M.rows) * eigenval)
+    ret = m.nullspace(iszerofunc=iszerofunc)
+
+    # The nullspace for a real eigenvalue should be non-trivial.
+    # If we didn't find an eigenvector, try once more a little harder
+    if len(ret) == 0 and simplify:
+        ret = m.nullspace(iszerofunc=iszerofunc, simplify=True)
+    if len(ret) == 0:
+        raise NotImplementedError(
+            "Can't evaluate eigenvector for eigenvalue {}".format(eigenval))
+    return ret
+
+
+def _eigenvects_DOM(M: Tmat, **kwargs) -> list[tuple[Expr, int, list[Tmat]]] | None:
+    DOM = DomainMatrix.from_Matrix(M, field=True, extension=True)
+    DOM = DOM.to_dense()
+
+    if DOM.domain != EX:
+        rational, algebraic = dom_eigenvects(DOM)
+        eigenvects = dom_eigenvects_to_sympy(
+            rational, algebraic, M.__class__, **kwargs)
+        eigenvects = sorted(eigenvects, key=lambda x: default_sort_key(x[0]))
+
+        return eigenvects
+    return None
+
+
+def _eigenvects_sympy(
+        M: Tmat,
+        iszerofunc: Callable[[Expr], bool | None] = _iszero,
+        simplify: bool | Callable[[Expr], Expr] = True,
+        **flags: Any,
+    ) -> list[tuple[Expr, int, list[Tmat]]]:
+    eigenvals = M.eigenvals(rational=False, **flags)
+
+    # Make sure that we have all roots in radical form
+    for x in eigenvals:
+        if x.has(CRootOf):
+            raise MatrixError(
+                "Eigenvector computation is not implemented if the matrix have "
+                "eigenvalues in CRootOf form")
+
+    eigenvals_sorted = sorted(eigenvals.items(), key=default_sort_key)
+    ret = []
+    for val, mult in eigenvals_sorted:
+        vects = _eigenspace(M, val, iszerofunc=iszerofunc, simplify=simplify)
+        ret.append((val, mult, vects))
+    return ret
 
 
 # This functions is a candidate for caching if it gets implemented for matrices.
-def _eigenvects(M, error_when_incomplete=True, iszerofunc=_iszero, **flags):
-    """Return list of triples (eigenval, multiplicity, eigenspace).
+def _eigenvects(
+        M: Tmat,
+        error_when_incomplete: bool = True,
+        iszerofunc: Callable[[Expr], bool | None] = _iszero,
+        simplify: bool | Callable[[Expr], Expr] = False,
+        *,
+        chop: bool | int = False,
+        **flags: Any,
+    ) -> list[tuple[Expr, int, list[Tmat]]]:
+    """Compute eigenvectors of the matrix.
 
     Parameters
     ==========
@@ -187,6 +420,7 @@ def _eigenvects(M, error_when_incomplete=True, iszerofunc=_iszero, **flags):
 
     Returns
     =======
+
     ret : [(eigenval, multiplicity, eigenspace), ...]
         A ragged list containing tuples of data obtained by ``eigenvals``
         and ``nullspace``.
@@ -206,7 +440,7 @@ def _eigenvects(M, error_when_incomplete=True, iszerofunc=_iszero, **flags):
     Examples
     ========
 
-    >>> from sympy.matrices import Matrix
+    >>> from sympy import Matrix
     >>> M = Matrix(3, 3, [0, 1, 1, 1, 0, 0, 1, 1, 1])
     >>> M.eigenvects()
     [(-1, 1, [Matrix([
@@ -224,53 +458,31 @@ def _eigenvects(M, error_when_incomplete=True, iszerofunc=_iszero, **flags):
     ========
 
     eigenvals
-    MatrixSubspaces.nullspace
+    MatrixBase.nullspace
     """
-
-    def eigenspace(eigenval):
-        """Get a basis for the eigenspace for a particular eigenvalue"""
-
-        m   = M - M.eye(M.rows) * eigenval
-        ret = m.nullspace(iszerofunc=iszerofunc)
-
-        # the nullspace for a real eigenvalue should be
-        # non-trivial.  If we didn't find an eigenvector, try once
-        # more a little harder
-        if len(ret) == 0 and simplify:
-            ret = m.nullspace(iszerofunc=iszerofunc, simplify=True)
-        if len(ret) == 0:
-            raise NotImplementedError(
-                    "Can't evaluate eigenvector for eigenvalue %s" % eigenval)
-
-        return ret
-
-    simplify = flags.get('simplify', True)
+    primitive = simplify is not False
 
     if not isinstance(simplify, FunctionType):
         simpfunc = _simplify if simplify else lambda x: x
+    else:
+        simpfunc = simplify
 
-    primitive = flags.get('simplify', False)
-    chop      = flags.pop('chop', False)
-
-    flags.pop('multiple', None)  # remove this if it's there
-
-    has_floats = M.has(Float) # roots doesn't like Floats, so replace them with Rationals
-
+    has_floats = M.has(Float)
     if has_floats:
+        if all(x.is_number for x in M.iter_values()):
+            return _eigenvects_mpmath(M)
+        from sympy.simplify import nsimplify
         M = M.applyfunc(lambda x: nsimplify(x, rational=True))
 
-    eigenvals = M.eigenvals(rational=False,
-            error_when_incomplete=error_when_incomplete, **flags)
-
-    ret = [(val, mult, eigenspace(val)) for val, mult in
-                sorted(eigenvals.items(), key=default_sort_key)]
+    ret = _eigenvects_DOM(M)
+    if ret is None:
+        ret = _eigenvects_sympy(M, iszerofunc, simplify=simplify, **flags)
 
     if primitive:
         # if the primitive flag is set, get rid of any common
         # integer denominators
-        def denom_clean(l):
-            from sympy import gcd
-            return [(v / gcd(list(v))).applyfunc(simpfunc) for v in l]
+        def denom_clean(l: list[Tmat]) -> list[Tmat]:
+            return [(v / gcd(v.flat())).applyfunc(simpfunc) for v in l]
 
         ret = [(val, mult, denom_clean(es)) for val, mult, es in ret]
 
@@ -282,7 +494,7 @@ def _eigenvects(M, error_when_incomplete=True, iszerofunc=_iszero, **flags):
     return ret
 
 
-def _is_diagonalizable_with_eigen(M, reals_only=False):
+def _is_diagonalizable_with_eigen(M: MatrixBase, reals_only: bool = False) -> tuple[bool, list]:
     """See _is_diagonalizable. This function returns the bool along with the
     eigenvectors to avoid calculating them again in functions like
     ``diagonalize``."""
@@ -301,7 +513,7 @@ def _is_diagonalizable_with_eigen(M, reals_only=False):
 
     return True, eigenvecs
 
-def _is_diagonalizable(M, reals_only=False, **kwargs):
+def _is_diagonalizable(M, reals_only=False, **kwargs) -> bool:
     """Returns ``True`` if a matrix is diagonalizable.
 
     Parameters
@@ -342,24 +554,9 @@ def _is_diagonalizable(M, reals_only=False, **kwargs):
     See Also
     ========
 
-    is_diagonal
+    sympy.matrices.matrixbase.MatrixBase.is_diagonal
     diagonalize
     """
-
-    if 'clear_cache' in kwargs:
-        SymPyDeprecationWarning(
-            feature='clear_cache',
-            deprecated_since_version=1.4,
-            issue=15887
-        ).warn()
-
-    if 'clear_subproducts' in kwargs:
-        SymPyDeprecationWarning(
-            feature='clear_subproducts',
-            deprecated_since_version=1.4,
-            issue=15887
-        ).warn()
-
     if not M.is_square:
         return False
 
@@ -370,6 +567,129 @@ def _is_diagonalizable(M, reals_only=False, **kwargs):
         return True
 
     return _is_diagonalizable_with_eigen(M, reals_only=reals_only)[0]
+
+
+#G&VL, Matrix Computations, Algo 5.4.2
+def _householder_vector(x):
+    if not x.cols == 1:
+        raise ValueError("Input must be a column matrix")
+    v = x.copy()
+    v_plus = x.copy()
+    v_minus = x.copy()
+    q = x[0, 0] / abs(x[0, 0])
+    norm_x = x.norm()
+    v_plus[0, 0] = x[0, 0] + q * norm_x
+    v_minus[0, 0] = x[0, 0] - q * norm_x
+    if x[1:, 0].norm() == 0:
+        bet = 0
+        v[0, 0] = 1
+    else:
+        if v_plus.norm() <= v_minus.norm():
+            v = v_plus
+        else:
+            v = v_minus
+        v = v / v[0]
+        bet = 2 / (v.norm() ** 2)
+    return v, bet
+
+
+def _bidiagonal_decmp_hholder(M):
+    m = M.rows
+    n = M.cols
+    A = M.as_mutable()
+    U, V = A.eye(m), A.eye(n)
+    for i in range(min(m, n)):
+        v, bet = _householder_vector(A[i:, i])
+        hh_mat = A.eye(m - i) - bet * v * v.H
+        A[i:, i:] = hh_mat * A[i:, i:]
+        temp = A.eye(m)
+        temp[i:, i:] = hh_mat
+        U = U * temp
+        if i + 1 <= n - 2:
+            v, bet = _householder_vector(A[i, i+1:].T)
+            hh_mat = A.eye(n - i - 1) - bet * v * v.H
+            A[i:, i+1:] = A[i:, i+1:] * hh_mat
+            temp = A.eye(n)
+            temp[i+1:, i+1:] = hh_mat
+            V = temp * V
+    return U, A, V
+
+
+def _eval_bidiag_hholder(M):
+    m = M.rows
+    n = M.cols
+    A = M.as_mutable()
+    for i in range(min(m, n)):
+        v, bet = _householder_vector(A[i:, i])
+        hh_mat = A.eye(m-i) - bet * v * v.H
+        A[i:, i:] = hh_mat * A[i:, i:]
+        if i + 1 <= n - 2:
+            v, bet = _householder_vector(A[i, i+1:].T)
+            hh_mat = A.eye(n - i - 1) - bet * v * v.H
+            A[i:, i+1:] = A[i:, i+1:] * hh_mat
+    return A
+
+
+def _bidiagonal_decomposition(M, upper=True):
+    """
+    Returns $(U,B,V.H)$ for
+
+    $$A = UBV^{H}$$
+
+    where $A$ is the input matrix, and $B$ is its Bidiagonalized form
+
+    Note: Bidiagonal Computation can hang for symbolic matrices.
+
+    Parameters
+    ==========
+
+    upper : bool. Whether to do upper bidiagnalization or lower.
+                True for upper and False for lower.
+
+    References
+    ==========
+
+    .. [1] Algorithm 5.4.2, Matrix computations by Golub and Van Loan, 4th edition
+    .. [2] Complex Matrix Bidiagonalization, https://github.com/vslobody/Householder-Bidiagonalization
+
+    """
+
+    if not isinstance(upper, bool):
+        raise ValueError("upper must be a boolean")
+
+    if upper:
+        return _bidiagonal_decmp_hholder(M)
+
+    X = _bidiagonal_decmp_hholder(M.H)
+    return X[2].H, X[1].H, X[0].H
+
+
+def _bidiagonalize(M, upper=True):
+    """
+    Returns $B$, the Bidiagonalized form of the input matrix.
+
+    Note: Bidiagonal Computation can hang for symbolic matrices.
+
+    Parameters
+    ==========
+
+    upper : bool. Whether to do upper bidiagnalization or lower.
+                True for upper and False for lower.
+
+    References
+    ==========
+
+    .. [1] Algorithm 5.4.2, Matrix computations by Golub and Van Loan, 4th edition
+    .. [2] Complex Matrix Bidiagonalization : https://github.com/vslobody/Householder-Bidiagonalization
+
+    """
+
+    if not isinstance(upper, bool):
+        raise ValueError("upper must be a boolean")
+
+    if upper:
+        return _eval_bidiag_hholder(M)
+    return _eval_bidiag_hholder(M.H).H
 
 
 def _diagonalize(M, reals_only=False, sort=False, normalize=False):
@@ -393,7 +713,7 @@ def _diagonalize(M, reals_only=False, sort=False, normalize=False):
     Examples
     ========
 
-    >>> from sympy.matrices import Matrix
+    >>> from sympy import Matrix
     >>> M = Matrix(3, 3, [1, 2, 0, 0, 3, 0, 2, -4, 2])
     >>> M
     Matrix([
@@ -420,7 +740,7 @@ def _diagonalize(M, reals_only=False, sort=False, normalize=False):
     See Also
     ========
 
-    is_diagonal
+    sympy.matrices.matrixbase.MatrixBase.is_diagonal
     is_diagonalizable
     """
 
@@ -448,96 +768,61 @@ def _diagonalize(M, reals_only=False, sort=False, normalize=False):
     return M.hstack(*p_cols), M.diag(*diag)
 
 
-def _eval_is_positive_definite(M, method="eigen"):
-    """Algorithm dump for computing positive-definiteness of a
-    matrix.
+def _fuzzy_positive_definite(M):
+    positive_diagonals = M._has_positive_diagonals()
+    if positive_diagonals is False:
+        return False
 
-    Parameters
-    ==========
+    if positive_diagonals and M.is_strongly_diagonally_dominant:
+        return True
 
-    method : str, optional
-        Specifies the method for computing positive-definiteness of
-        a matrix.
+    return None
 
-        If ``'eigen'``, it computes the full eigenvalues and decides
-        if the matrix is positive-definite.
 
-        If ``'CH'``, it attempts computing the Cholesky
-        decomposition to detect the definitiveness.
+def _fuzzy_positive_semidefinite(M):
+    nonnegative_diagonals = M._has_nonnegative_diagonals()
+    if nonnegative_diagonals is False:
+        return False
 
-        If ``'LDL'``, it attempts computing the LDL
-        decomposition to detect the definitiveness.
-    """
+    if nonnegative_diagonals and M.is_weakly_diagonally_dominant:
+        return True
 
-    if M.is_hermitian:
-        if method == 'eigen':
-            eigen = M.eigenvals()
-            args  = [x.is_positive for x in eigen.keys()]
+    return None
 
-            return fuzzy_and(args)
-
-        elif method == 'CH':
-            try:
-                M.cholesky(hermitian=True)
-            except NonPositiveDefiniteMatrixError:
-                return False
-
-            return True
-
-        elif method == 'LDL':
-            try:
-                M.LDLdecomposition(hermitian=True)
-            except NonPositiveDefiniteMatrixError:
-                return False
-
-            return True
-
-        else:
-            raise NotImplementedError()
-
-    elif M.is_square:
-        M_H = (M + M.H) / 2
-
-        return M_H._eval_is_positive_definite(method=method)
 
 def _is_positive_definite(M):
-    return M._eval_is_positive_definite()
+    if not M.is_hermitian:
+        if not M.is_square:
+            return False
+        M = M + M.H
+
+    fuzzy = _fuzzy_positive_definite(M)
+    if fuzzy is not None:
+        return fuzzy
+
+    return _is_positive_definite_GE(M)
+
 
 def _is_positive_semidefinite(M):
-    if M.is_hermitian:
-        eigen = M.eigenvals()
-        args  = [x.is_nonnegative for x in eigen.keys()]
+    if not M.is_hermitian:
+        if not M.is_square:
+            return False
+        M = M + M.H
 
-        return fuzzy_and(args)
+    fuzzy = _fuzzy_positive_semidefinite(M)
+    if fuzzy is not None:
+        return fuzzy
 
-    elif M.is_square:
-        return ((M + M.H) / 2).is_positive_semidefinite
+    return _is_positive_semidefinite_cholesky(M)
 
-    return None
 
 def _is_negative_definite(M):
-    if M.is_hermitian:
-        eigen = M.eigenvals()
-        args  = [x.is_negative for x in eigen.keys()]
+    return _is_positive_definite(-M)
 
-        return fuzzy_and(args)
-
-    elif M.is_square:
-        return ((M + M.H) / 2).is_negative_definite
-
-    return None
 
 def _is_negative_semidefinite(M):
-    if M.is_hermitian:
-        eigen = M.eigenvals()
-        args  = [x.is_nonpositive for x in eigen.keys()]
+    return _is_positive_semidefinite(-M)
 
-        return fuzzy_and(args)
-
-    elif M.is_square:
-        return ((M + M.H) / 2).is_negative_semidefinite
-
-    return None
 
 def _is_indefinite(M):
     if M.is_hermitian:
@@ -550,82 +835,241 @@ def _is_indefinite(M):
         return fuzzy_and([any_positive, any_negative])
 
     elif M.is_square:
-        return ((M + M.H) / 2).is_indefinite
+        return (M + M.H).is_indefinite
 
-    return None
+    return False
+
+
+def _is_positive_definite_GE(M):
+    """A division-free gaussian elimination method for testing
+    positive-definiteness."""
+    M = M.as_mutable()
+    size = M.rows
+
+    for i in range(size):
+        is_positive = M[i, i].is_positive
+        if is_positive is not True:
+            return is_positive
+        for j in range(i+1, size):
+            M[j, i+1:] = M[i, i] * M[j, i+1:] - M[j, i] * M[i, i+1:]
+    return True
+
+
+def _is_positive_semidefinite_cholesky(M):
+    """Uses Cholesky factorization with complete pivoting
+
+    References
+    ==========
+
+    .. [1] http://eprints.ma.man.ac.uk/1199/1/covered/MIMS_ep2008_116.pdf
+
+    .. [2] https://www.value-at-risk.net/cholesky-factorization/
+    """
+    M = M.as_mutable()
+    for k in range(M.rows):
+        diags = [M[i, i] for i in range(k, M.rows)]
+        pivot, pivot_val, nonzero, _ = _find_reasonable_pivot(diags)
+
+        if nonzero:
+            return None
+
+        if pivot is None:
+            for i in range(k+1, M.rows):
+                for j in range(k, M.cols):
+                    iszero = M[i, j].is_zero
+                    if iszero is None:
+                        return None
+                    elif iszero is False:
+                        return False
+            return True
+
+        assert pivot_val is not None
+
+        if M[k, k].is_negative or pivot_val.is_negative:
+            return False
+        elif not (M[k, k].is_nonnegative and pivot_val.is_nonnegative):
+            return None
+
+        if pivot > 0:
+            M.col_swap(k, k+pivot)
+            M.row_swap(k, k+pivot)
+
+        M[k, k] = sqrt(M[k, k])
+        M[k, k+1:] /= M[k, k]
+        M[k+1:, k+1:] -= M[k, k+1:].H * M[k, k+1:]
+
+    return M[-1, -1].is_nonnegative
+
 
 _doc_positive_definite = \
     r"""Finds out the definiteness of a matrix.
 
+    Explanation
+    ===========
+
+    A square real matrix $A$ is:
+
+    - A positive definite matrix if $x^T A x > 0$
+      for all non-zero real vectors $x$.
+    - A positive semidefinite matrix if $x^T A x \geq 0$
+      for all non-zero real vectors $x$.
+    - A negative definite matrix if $x^T A x < 0$
+      for all non-zero real vectors $x$.
+    - A negative semidefinite matrix if $x^T A x \leq 0$
+      for all non-zero real vectors $x$.
+    - An indefinite matrix if there exists non-zero real vectors
+      $x, y$ with $x^T A x > 0 > y^T A y$.
+
+    A square complex matrix $A$ is:
+
+    - A positive definite matrix if $\text{re}(x^H A x) > 0$
+      for all non-zero complex vectors $x$.
+    - A positive semidefinite matrix if $\text{re}(x^H A x) \geq 0$
+      for all non-zero complex vectors $x$.
+    - A negative definite matrix if $\text{re}(x^H A x) < 0$
+      for all non-zero complex vectors $x$.
+    - A negative semidefinite matrix if $\text{re}(x^H A x) \leq 0$
+      for all non-zero complex vectors $x$.
+    - An indefinite matrix if there exists non-zero complex vectors
+      $x, y$ with $\text{re}(x^H A x) > 0 > \text{re}(y^H A y)$.
+
+    A matrix need not be symmetric or hermitian to be positive definite.
+
+    - A real non-symmetric matrix is positive definite if and only if
+      $\frac{A + A^T}{2}$ is positive definite.
+    - A complex non-hermitian matrix is positive definite if and only if
+      $\frac{A + A^H}{2}$ is positive definite.
+
+    And this extension can apply for all the definitions above.
+
+    However, for complex cases, you can restrict the definition of
+    $\text{re}(x^H A x) > 0$ to $x^H A x > 0$ and require the matrix
+    to be hermitian.
+    But we do not present this restriction for computation because you
+    can check ``M.is_hermitian`` independently with this and use
+    the same procedure.
+
     Examples
     ========
 
-    An example of numeric positive definite matrix:
+    An example of symmetric positive definite matrix:
 
-    >>> from sympy import Matrix
-    >>> A = Matrix([[1, -2], [-2, 6]])
-    >>> A.is_positive_definite
-    True
-    >>> A.is_positive_semidefinite
-    True
-    >>> A.is_negative_definite
-    False
-    >>> A.is_negative_semidefinite
-    False
-    >>> A.is_indefinite
-    False
+    .. plot::
+        :context: reset
+        :format: doctest
+        :include-source: True
 
-    An example of numeric negative definite matrix:
+        >>> from sympy import Matrix, symbols
+        >>> from sympy.plotting import plot3d
+        >>> a, b = symbols('a b')
+        >>> x = Matrix([a, b])
 
-    >>> A = Matrix([[-1, 2], [2, -6]])
-    >>> A.is_positive_definite
-    False
-    >>> A.is_positive_semidefinite
-    False
-    >>> A.is_negative_definite
-    True
-    >>> A.is_negative_semidefinite
-    True
-    >>> A.is_indefinite
-    False
+        >>> A = Matrix([[1, 0], [0, 1]])
+        >>> A.is_positive_definite
+        True
+        >>> A.is_positive_semidefinite
+        True
 
-    An example of numeric indefinite matrix:
+        >>> p = plot3d((x.T*A*x)[0, 0], (a, -1, 1), (b, -1, 1))
 
-    >>> A = Matrix([[1, 2], [2, 1]])
-    >>> A.is_positive_definite
-    False
-    >>> A.is_positive_semidefinite
-    False
-    >>> A.is_negative_definite
-    False
-    >>> A.is_negative_semidefinite
-    False
-    >>> A.is_indefinite
-    True
+    An example of symmetric positive semidefinite matrix:
+
+    .. plot::
+        :context: close-figs
+        :format: doctest
+        :include-source: True
+
+        >>> A = Matrix([[1, -1], [-1, 1]])
+        >>> A.is_positive_definite
+        False
+        >>> A.is_positive_semidefinite
+        True
+
+        >>> p = plot3d((x.T*A*x)[0, 0], (a, -1, 1), (b, -1, 1))
+
+    An example of symmetric negative definite matrix:
+
+    .. plot::
+        :context: close-figs
+        :format: doctest
+        :include-source: True
+
+        >>> A = Matrix([[-1, 0], [0, -1]])
+        >>> A.is_negative_definite
+        True
+        >>> A.is_negative_semidefinite
+        True
+        >>> A.is_indefinite
+        False
+
+        >>> p = plot3d((x.T*A*x)[0, 0], (a, -1, 1), (b, -1, 1))
+
+    An example of symmetric indefinite matrix:
+
+    .. plot::
+        :context: close-figs
+        :format: doctest
+        :include-source: True
+
+        >>> A = Matrix([[1, 2], [2, -1]])
+        >>> A.is_indefinite
+        True
+
+        >>> p = plot3d((x.T*A*x)[0, 0], (a, -1, 1), (b, -1, 1))
+
+    An example of non-symmetric positive definite matrix.
+
+    .. plot::
+        :context: close-figs
+        :format: doctest
+        :include-source: True
+
+        >>> A = Matrix([[1, 2], [-2, 1]])
+        >>> A.is_positive_definite
+        True
+        >>> A.is_positive_semidefinite
+        True
+
+        >>> p = plot3d((x.T*A*x)[0, 0], (a, -1, 1), (b, -1, 1))
 
     Notes
     =====
 
-    Definitiveness is not very commonly discussed for non-hermitian
-    matrices.
+    Although some people trivialize the definition of positive definite
+    matrices only for symmetric or hermitian matrices, this restriction
+    is not correct because it does not classify all instances of
+    positive definite matrices from the definition $x^T A x > 0$ or
+    $\text{re}(x^H A x) > 0$.
 
-    However, computing the definitiveness of a matrix can be
-    generalized over any real matrix by taking the symmetric part:
+    For instance, ``Matrix([[1, 2], [-2, 1]])`` presented in
+    the example above is an example of real positive definite matrix
+    that is not symmetric.
 
-    `A_S = 1/2 (A + A^{T})`
+    However, since the following formula holds true;
 
-    Or over any complex matrix by taking the hermitian part:
+    .. math::
+        \text{re}(x^H A x) > 0 \iff
+        \text{re}(x^H \frac{A + A^H}{2} x) > 0
 
-    `A_H = 1/2 (A + A^{H})`
+    We can classify all positive definite matrices that may or may not
+    be symmetric or hermitian by transforming the matrix to
+    $\frac{A + A^T}{2}$ or $\frac{A + A^H}{2}$
+    (which is guaranteed to be always real symmetric or complex
+    hermitian) and we can defer most of the studies to symmetric or
+    hermitian positive definite matrices.
 
-    And computing the eigenvalues.
+    But it is a different problem for the existence of Cholesky
+    decomposition. Because even though a non symmetric or a non
+    hermitian matrix can be positive definite, Cholesky or LDL
+    decomposition does not exist because the decompositions require the
+    matrix to be symmetric or hermitian.
 
     References
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Definiteness_of_a_matrix#Eigenvalues
 
-    .. [2] http://mathworld.wolfram.com/PositiveDefiniteMatrix.html
+    .. [2] https://mathworld.wolfram.com/PositiveDefiniteMatrix.html
 
     .. [3] Johnson, C. R. "Positive Definite Matrices." Amer.
         Math. Monthly 77, 259-264 1970.
@@ -638,17 +1082,55 @@ _is_negative_semidefinite.__doc__ = _doc_positive_definite
 _is_indefinite.__doc__            = _doc_positive_definite
 
 
-def _jordan_form(M, calc_transform=True, **kwargs):
-    """Return ``(P, J)`` where `J` is a Jordan block
-    matrix and `P` is a matrix such that
+def _blocks_from_nullity_chain(d):
+    """Return a list of the size of each Jordan block.
+    If d_n is the nullity of E**n, then the number
+    of Jordan blocks of size n is
+        2*d_n - d_(n-1) - d_(n+1)"""
 
-        ``M == P*J*P**-1``
+    # d[0] is always the number of columns, so skip past it
+    mid = [2*d[n] - d[n - 1] - d[n + 1] for n in range(1, len(d) - 1)]
+    # d is assumed to plateau with "d[ len(d) ] == d[-1]", so
+    # 2*d_n - d_(n-1) - d_(n+1) == d_n - d_(n-1)
+    end = [d[-1] - d[-2]] if len(d) > 1 else [d[0]]
+
+    return mid + end
+
+
+@overload
+def _jordan_form(
+        M: Tmat,
+        calc_transform: Literal[True] = True,
+        *,
+        chop: bool = False
+    ) -> tuple[Tmat, Tmat]: ...
+@overload
+def _jordan_form(
+        M: Tmat,
+        calc_transform: Literal[False],
+        *,
+        chop: bool = False,
+    ) -> Tmat: ...
+@overload
+def _jordan_form(M: Tmat,
+         calc_transform: bool = True,
+         *,
+         chop: bool = False
+     ) -> tuple[Tmat, Tmat] | Tmat: ...
+
+def _jordan_form(M: Tmat,
+         calc_transform: bool = True,
+         *,
+         chop: bool = False
+     ) -> tuple[Tmat, Tmat] | Tmat:
+    """Return $(P, J)$ where $J$ is a Jordan block
+    matrix and $P$ is a matrix such that $M = P J P^{-1}$
 
     Parameters
     ==========
 
     calc_transform : bool
-        If ``False``, then only `J` is returned.
+        If ``False``, then only $J$ is returned.
 
     chop : bool
         All matrices are converted to exact types when computing
@@ -659,7 +1141,7 @@ def _jordan_form(M, calc_transform=True, **kwargs):
     Examples
     ========
 
-    >>> from sympy.matrices import Matrix
+    >>> from sympy import Matrix
     >>> M = Matrix([[ 6,  5, -2, -3], [-3, -1,  3,  3], [ 2,  1, -2, -3], [-1,  1,  5,  5]])
     >>> P, J = M.jordan_form()
     >>> J
@@ -678,13 +1160,12 @@ def _jordan_form(M, calc_transform=True, **kwargs):
     if not M.is_square:
         raise NonSquareMatrixError("Only square matrices have Jordan forms")
 
-    chop       = kwargs.pop('chop', False)
     mat        = M
     has_floats = M.has(Float)
 
     if has_floats:
         try:
-            max_prec = max(term._prec for term in M._mat if isinstance(term, Float))
+            max_prec = max(term._prec for term in M.values() if isinstance(term, Float))
         except ValueError:
             # if no term in the matrix is explicitly a Float calling max()
             # will throw a error so setting max_prec to default value of 53
@@ -693,22 +1174,21 @@ def _jordan_form(M, calc_transform=True, **kwargs):
         # setting minimum max_dps to 15 to prevent loss of precision in
         # matrix containing non evaluated expressions
         max_dps = max(prec_to_dps(max_prec), 15)
+    else:
+        max_dps = -1
 
-    def restore_floats(*args):
+    def restore_floats1(arg: Tmat) -> Tmat:
         """If ``has_floats`` is `True`, cast all ``args`` as
         matrices of floats."""
+        return arg.evalf(n=max_dps, chop=chop) if has_floats else arg
 
-        if has_floats:
-            args = [m.evalf(n=max_dps, chop=chop) for m in args]
-        if len(args) == 1:
-            return args[0]
-
-        return args
+    def restore_floats2(arg1: Tmat, arg2: Tmat) -> tuple[Tmat, Tmat]:
+        return restore_floats1(arg1), restore_floats1(arg2)
 
     # cache calculations for some speedup
-    mat_cache = {}
+    mat_cache: dict[tuple[Expr, int], Tmat] = {}
 
-    def eig_mat(val, pow):
+    def eig_mat(val: Expr, pow: int) -> Tmat:
         """Cache computations of ``(M - val*I)**pow`` for quick
         retrieval"""
 
@@ -717,7 +1197,7 @@ def _jordan_form(M, calc_transform=True, **kwargs):
 
         if (val, pow - 1) in mat_cache:
             mat_cache[(val, pow)] = mat_cache[(val, pow - 1)].multiply(
-                    mat_cache[(val, 1)], dotprodsimp=True)
+                    mat_cache[(val, 1)], dotprodsimp=None)
         else:
             mat_cache[(val, pow)] = (mat - val*M.eye(M.rows)).pow(pow)
 
@@ -755,21 +1235,6 @@ def _jordan_form(M, calc_transform=True, **kwargs):
 
         return ret
 
-    def blocks_from_nullity_chain(d):
-        """Return a list of the size of each Jordan block.
-        If d_n is the nullity of E**n, then the number
-        of Jordan blocks of size n is
-
-            2*d_n - d_(n-1) - d_(n+1)"""
-
-        # d[0] is always the number of columns, so skip past it
-        mid = [2*d[n] - d[n - 1] - d[n + 1] for n in range(1, len(d) - 1)]
-        # d is assumed to plateau with "d[ len(d) ] == d[-1]", so
-        # 2*d_n - d_(n-1) - d_(n+1) == d_n - d_(n-1)
-        end = [d[-1] - d[-2]] if len(d) > 1 else [d[0]]
-
-        return mid + end
-
     def pick_vec(small_basis, big_basis):
         """Picks a vector from big_basis that isn't in
         the subspace spanned by small_basis"""
@@ -786,38 +1251,52 @@ def _jordan_form(M, calc_transform=True, **kwargs):
 
     # roots doesn't like Floats, so replace them with Rationals
     if has_floats:
+        from sympy.simplify import nsimplify
         mat = mat.applyfunc(lambda x: nsimplify(x, rational=True))
+
+    # check if matrix is rational
+    has_rationals = all(num.is_number and num.is_rational for num in list(mat.iter_values()))
+
+    if has_rationals:
+        if calc_transform:
+            P, J = _jordan_form_rational_matrix(mat, calc_transform=True)
+            return restore_floats2(P, J)
+        else:
+            J = _jordan_form_rational_matrix(mat, calc_transform=False)
+            return restore_floats1(J)
 
     # first calculate the jordan block structure
     eigs = mat.eigenvals()
 
-    # make sure that we found all the roots by counting
-    # the algebraic multiplicity
-    if sum(m for m in eigs.values()) != mat.cols:
-        raise MatrixError("Could not compute eigenvalues for {}".format(mat))
+    # Make sure that we have all roots in radical form
+    for x in eigs:
+        if x.has(CRootOf):
+            raise MatrixError(
+                "Jordan normal form is not implemented if the matrix have "
+                "eigenvalues in CRootOf form")
 
     # most matrices have distinct eigenvalues
     # and so are diagonalizable.  In this case, don't
     # do extra work!
     if len(eigs.keys()) == mat.cols:
-        blocks     = list(sorted(eigs.keys(), key=default_sort_key))
+        blocks     = sorted(eigs.keys(), key=default_sort_key)
         jordan_mat = mat.diag(*blocks)
 
         if not calc_transform:
-            return restore_floats(jordan_mat)
+            return restore_floats1(jordan_mat)
 
         jordan_basis = [eig_mat(eig, 1).nullspace()[0]
                 for eig in blocks]
         basis_mat    = mat.hstack(*jordan_basis)
 
-        return restore_floats(basis_mat, jordan_mat)
+        return restore_floats2(basis_mat, jordan_mat)
 
     block_structure = []
 
     for eig in sorted(eigs.keys(), key=default_sort_key):
         algebraic_multiplicity = eigs[eig]
         chain = nullity_chain(eig, algebraic_multiplicity)
-        block_sizes = blocks_from_nullity_chain(chain)
+        block_sizes = _blocks_from_nullity_chain(chain)
 
         # if block_sizes =       = [a, b, c, ...], then the number of
         # Jordan blocks of size 1 is a, of size 2 is b, etc.
@@ -829,7 +1308,7 @@ def _jordan_form(M, calc_transform=True, **kwargs):
         size_nums.reverse()
 
         block_structure.extend(
-            (eig, size) for size, num in size_nums for _ in range(num))
+            [(eig, size) for size, num in size_nums for _ in range(num)])
 
     jordan_form_size = sum(size for eig, size in block_structure)
 
@@ -838,11 +1317,11 @@ def _jordan_form(M, calc_transform=True, **kwargs):
             "SymPy had encountered an inconsistent result while "
             "computing Jordan block. : {}".format(M))
 
-    blocks     = (mat.jordan_block(size=size, eigenvalue=eig) for eig, size in block_structure)
-    jordan_mat = mat.diag(*blocks)
+    blocks2     = (mat.jordan_block(size=size, eigenvalue=eig) for eig, size in block_structure)
+    jordan_mat = mat.diag(*blocks2)
 
     if not calc_transform:
-        return restore_floats(jordan_mat)
+        return restore_floats1(jordan_mat)
 
     # For each generalized eigenspace, calculate a basis.
     # We start by looking for a vector in null( (A - eig*I)**n )
@@ -858,7 +1337,7 @@ def _jordan_form(M, calc_transform=True, **kwargs):
     jordan_basis = []
 
     for eig in sorted(eigs.keys(), key=default_sort_key):
-        eig_basis = []
+        eig_basis: list[Tmat] = []
 
         for block_eig, size in block_structure:
             if block_eig != eig:
@@ -872,15 +1351,188 @@ def _jordan_form(M, calc_transform=True, **kwargs):
             # of any other generalized eigenvectors from a different
             # generalized eigenspace sharing the same eigenvalue.
             vec      = pick_vec(null_small + eig_basis, null_big)
-            new_vecs = [eig_mat(eig, i).multiply(vec, dotprodsimp=True)
-                    for i in range(size)]
+            new_vecs = [eig_mat(eig, i).multiply(vec, dotprodsimp=None) for i in range(size)]
 
             eig_basis.extend(new_vecs)
             jordan_basis.extend(reversed(new_vecs))
 
     basis_mat = mat.hstack(*jordan_basis)
 
-    return restore_floats(basis_mat, jordan_mat)
+    return restore_floats2(basis_mat, jordan_mat)
+
+def _jordan_form_rational_matrix(M, calc_transform):
+    dM = DomainMatrix.from_Matrix(M, field=True)
+
+    def char_mat(algebraic_num):
+        field = domain.algebraic_field(algebraic_num)
+        mat_char = dM.convert_to(field) - (dM.eye(M.shape, field) * field.unit)
+        return mat_char
+
+    def factors_to_eigenvals() :
+        eigenvals_by_factor = {}
+
+        for base, exp in factors:
+            eigenvals = []
+            if len(base) == 2:
+                eigenvals.append(domain.to_sympy(-base[1] / base[0]))
+            else:
+                minpoly = Poly.from_list(base, l, domain=domain)
+                roots_found = list(roots(minpoly.as_expr(), l, quartics=False, cubics=False))
+                degree = minpoly.degree()
+                if len(roots_found) != degree:
+                    roots_found = minpoly.all_roots(multiple=True)
+                eigenvals.extend(roots_found)
+
+            eigenvals_by_factor[(tuple(base), exp)] = eigenvals
+        return eigenvals_by_factor
+
+    def get_alg_number(factor):
+        minpoly = Poly.from_list(factor, l, domain=domain)
+        algebraic_num = AlgebraicNumber((minpoly, eigenvals_by_factor[(factor, multiplicity)][0]),
+                                alias='a')
+        return algebraic_num
+
+    nullspace_cache = {}
+    def nullity_chain(fac, algebraic_multiplicity):
+        """Calculate the sequence  [0, nullity(E), nullity(E**2), ...]
+        until it is constant where ``E = M - val*I``"""
+
+        ret     = [0]
+        algebraic_num = get_alg_number(fac)
+        mat_char = char_mat(algebraic_num)
+
+        mat_pow = mat_char
+        vecs = mat_pow.nullspace()
+        nullity = vecs.shape[0]
+
+        if algebraic_multiplicity == nullity:
+            nullspace_cache[fac] = vecs
+
+        while nullity != ret[-1]:
+            ret.append(nullity)
+
+            if nullity == algebraic_multiplicity:
+                break
+            mat_pow = mat_pow * mat_char
+            nullity = mat_pow.nullspace().shape[0]
+        return ret
+
+    def pick_vec(small_basis, eig_basis, big_basis):
+        """Picks a vector from big_basis that isn't in
+        the subspace spanned by small_basis"""
+
+        if len(eig_basis) == 0 and small_basis.shape[0] == 0:
+            return big_basis[0, :].transpose()
+
+        small_basis = small_basis.transpose()
+        for i in range(big_basis.shape[0]):
+            v = big_basis[i, :].transpose()
+            if len(eig_basis) != 0:
+                _, pivots = DomainMatrix.hstack(small_basis,*eig_basis, v).rref()
+            else:
+                _, pivots = DomainMatrix.hstack(small_basis, v).rref()
+            if pivots[-1] == small_basis.shape[1] + len(eig_basis):
+                return v
+
+    charpoly = dM.charpoly()
+    domain = dM.domain
+    l=Dummy('lambda')
+    _, factors = dup_factor_list(charpoly, domain)
+
+    eigenvals_by_factor = factors_to_eigenvals()
+
+    block_structure = {}
+    for fac, multiplicity in eigenvals_by_factor:
+        if multiplicity == 1:
+            block_sizes = [1]
+        else:
+            nullity = nullity_chain(fac, multiplicity)
+            block_sizes = _blocks_from_nullity_chain(nullity)
+
+        size_nums = [(i+1, num) for i, num in enumerate(block_sizes)]
+
+        # we expect larger Jordan blocks to come earlier
+        size_nums.reverse()
+
+        eigen_vals = eigenvals_by_factor[(fac, multiplicity)]
+        for r in eigen_vals:
+            for size, num in size_nums:
+                block_structure.setdefault(r, []).extend([size] * num)
+
+    jordan_form_size = sum(size for sizes in block_structure.values() for size in sizes)
+
+    assert jordan_form_size == M.rows
+
+    blocks2 = (
+        M.jordan_block(size=size, eigenvalue=eig)
+        for eig, sizes in block_structure.items()
+        for size in sizes
+    )
+
+    jordan_mat = M.diag(*blocks2)
+
+    if not calc_transform:
+        return jordan_mat
+
+    jordan_basis = []
+
+
+    for (factor, multiplicity), eigen_vals in eigenvals_by_factor.items():
+        # check if it have enough vectors
+        if factor in nullspace_cache or multiplicity == 1:
+            algebraic_num = None
+
+            if factor not in nullspace_cache or len(factor) != 2:
+                algebraic_num = get_alg_number(factor)
+
+            if factor not in nullspace_cache:
+                vects = char_mat(algebraic_num).nullspace()
+            else:
+                vects = nullspace_cache[factor]
+
+            mat = vects.to_Matrix().T
+            if len(factor) == 2:
+                vect_lists = [mat]
+            else:
+                vect_lists = [mat.xreplace({algebraic_num: val}) for val in eigen_vals]
+            jordan_basis.extend(vect_lists)
+        else:
+            # Precompute generalized vectors
+            genvecs_per_size = {}
+            eig_basis = []
+
+            algebraic_num = get_alg_number(factor)
+            char_matrix = char_mat(algebraic_num)
+
+            for index, size in enumerate(block_structure.get(eigen_vals[0], [])):
+                null_big = char_matrix.pow(size).nullspace()
+                null_small = char_matrix.pow(size - 1).nullspace()
+                vec = pick_vec(null_small, eig_basis, null_big)
+
+                mat_pow = char_matrix
+                new_vecs = [(DomainMatrix.eye(M.shape, domain)) * vec]
+
+                if size > 1:
+                    new_vecs.append(mat_pow * vec)
+
+                for _ in range(2, size):
+                    mat_pow *= char_matrix
+                    new_vecs.append(mat_pow * vec)
+                eig_basis.extend(new_vecs)
+                genvecs_per_size[(factor, size, index)] = new_vecs
+
+            for eig in eigen_vals:
+                for index, size in enumerate(block_structure.get(eigen_vals[0], [])):
+                    genvecs = genvecs_per_size[(factor, size, index)]
+                    if len(factor) != 2 :
+                        genvecs = [vects.to_Matrix().xreplace({algebraic_num : eig})
+                                   for vects in genvecs]
+                    else:
+                        genvecs = [vects.to_Matrix() for vects in genvecs]
+                    jordan_basis.extend(reversed(genvecs))
+
+    basis_mat = M.hstack(*jordan_basis)
+    return basis_mat, jordan_mat
 
 
 def _left_eigenvects(M, **flags):
@@ -894,7 +1546,7 @@ def _left_eigenvects(M, **flags):
     Examples
     ========
 
-    >>> from sympy.matrices import Matrix
+    >>> from sympy import Matrix
     >>> M = Matrix([[0, 1, 1], [1, 0, 0], [1, 1, 1]])
     >>> M.eigenvects()
     [(-1, 1, [Matrix([

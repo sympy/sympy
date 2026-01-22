@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.combinatorics.permutations import Permutation
 from sympy.core.symbol import symbols
 from sympy.matrices import Matrix
@@ -13,13 +11,11 @@ def symmetric(n):
     Examples
     ========
 
-    >>> from sympy.combinatorics.permutations import Permutation
     >>> from sympy.combinatorics.generators import symmetric
     >>> list(symmetric(3))
     [(2), (1 2), (2)(0 1), (0 1 2), (0 2 1), (0 2)]
     """
-    for perm in variations(list(range(n)), n):
-        yield Permutation(perm)
+    yield from (Permutation(perm) for perm in variations(range(n), n))
 
 
 def cyclic(n):
@@ -29,7 +25,6 @@ def cyclic(n):
     Examples
     ========
 
-    >>> from sympy.combinatorics.permutations import Permutation
     >>> from sympy.combinatorics.generators import cyclic
     >>> list(cyclic(5))
     [(4), (0 1 2 3 4), (0 2 4 1 3),
@@ -53,12 +48,11 @@ def alternating(n):
     Examples
     ========
 
-    >>> from sympy.combinatorics.permutations import Permutation
     >>> from sympy.combinatorics.generators import alternating
     >>> list(alternating(3))
     [(2), (0 1 2), (0 2 1)]
     """
-    for perm in variations(list(range(n)), n):
+    for perm in variations(range(n), n):
         p = Permutation(perm)
         if p.is_even:
             yield p
@@ -75,7 +69,6 @@ def dihedral(n):
     Examples
     ========
 
-    >>> from sympy.combinatorics.permutations import Permutation
     >>> from sympy.combinatorics.generators import dihedral
     >>> list(dihedral(3))
     [(2), (0 2), (0 1 2), (1 2), (0 2 1), (2)(0 1)]
@@ -103,7 +96,7 @@ def dihedral(n):
 
 def rubik_cube_generators():
     """Return the permutations of the 3x3 Rubik's cube, see
-    http://www.gap-system.org/Doc/Examples/rubik.html
+    https://www.gap-system.org/Doc/Examples/rubik.html
     """
     a = [
         [(1, 3, 8, 6), (2, 5, 7, 4), (9, 33, 25, 17), (10, 34, 26, 18),
@@ -181,9 +174,9 @@ def rubik(n):
                 cw(F)
             i += 1
             temp = getr(L, i)
-            setr(L, i, list((getu(D, i))))
+            setr(L, i, list(getu(D, i)))
             setu(D, i, list(reversed(getl(R, i))))
-            setl(R, i, list((getd(U, i))))
+            setl(R, i, list(getd(U, i)))
             setd(U, i, list(reversed(temp)))
             i -= 1
 

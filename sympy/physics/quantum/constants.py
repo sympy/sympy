@@ -1,11 +1,9 @@
 """Constants (like hbar) related to quantum mechanics."""
 
-from __future__ import print_function, division
-
 from sympy.core.numbers import NumberSymbol
 from sympy.core.singleton import Singleton
 from sympy.printing.pretty.stringpict import prettyForm
-import mpmath.libmp as mlib
+from sympy.external.mpmath import from_float
 
 #-----------------------------------------------------------------------------
 # Constants
@@ -41,7 +39,7 @@ class HBar(NumberSymbol, metaclass=Singleton):
     __slots__ = ()
 
     def _as_mpf_val(self, prec):
-        return mlib.from_float(1.05457162e-34, prec)
+        return from_float(1.05457162e-34, prec)
 
     def _sympyrepr(self, printer, *args):
         return 'HBar()'
@@ -51,7 +49,7 @@ class HBar(NumberSymbol, metaclass=Singleton):
 
     def _pretty(self, printer, *args):
         if printer._use_unicode:
-            return prettyForm(u'\N{PLANCK CONSTANT OVER TWO PI}')
+            return prettyForm('\N{PLANCK CONSTANT OVER TWO PI}')
         return prettyForm('hbar')
 
     def _latex(self, printer, *args):

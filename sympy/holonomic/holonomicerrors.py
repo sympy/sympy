@@ -1,7 +1,5 @@
 """ Common Exceptions for `holonomic` module. """
 
-from __future__ import print_function, division
-
 class BaseHolonomicError(Exception):
 
     def new(self, *args):

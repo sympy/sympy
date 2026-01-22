@@ -1,15 +1,16 @@
-from __future__ import print_function, division
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from sympy.concrete.expr_with_limits import AddWithLimits
 from sympy.core.add import Add
 from sympy.core.basic import Basic
-from sympy.core.compatibility import is_sequence
-from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
+from sympy.core.exprtools import factor_terms
 from sympy.core.function import diff
 from sympy.core.logic import fuzzy_bool
 from sympy.core.mul import Mul
-from sympy.core.numbers import oo, pi, Float
+from sympy.core.numbers import oo, pi
 from sympy.core.relational import Ne
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, Wild)
@@ -19,26 +20,36 @@ from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.complexes import Abs, sign
 from sympy.functions.elementary.miscellaneous import Min, Max
-from sympy.integrals.manualintegrate import manualintegrate
-from sympy.integrals.trigonometry import trigintegrate
-from sympy.integrals.meijerint import meijerint_definite, meijerint_indefinite
+from sympy.functions.special.singularity_functions import Heaviside
+from .rationaltools import ratint
 from sympy.matrices import MatrixBase
 from sympy.polys import Poly, PolynomialError
-from sympy.series import limit
-from sympy.series.order import Order
 from sympy.series.formal import FormalPowerSeries
-from sympy.simplify.fu import sincos_to_sum
+from sympy.series.limits import limit
+from sympy.series.order import Order
+from sympy.tensor.functions import shape
+from sympy.utilities.exceptions import sympy_deprecation_warning
+from sympy.utilities.iterables import is_sequence
 from sympy.utilities.misc import filldedent
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+
+
+if TYPE_CHECKING:
+    from sympy.core.containers import Tuple
+    SymbolLimits = Expr | tuple[Expr, Expr] | tuple[Expr, Expr, Expr]
 
 
 class Integral(AddWithLimits):
     """Represents unevaluated integral."""
 
-    __slots__ = ('is_commutative',)
+    __slots__ = ()
 
-    def __new__(cls, function, *symbols, **assumptions):
+    args: tuple[Expr, Tuple] # type: ignore
+
+    def __new__(cls, function, *symbols, **assumptions) -> Integral:
         """Create an unevaluated integral.
+
+        Explanation
+        ===========
 
         Arguments are an integrand followed by one or more limits.
 
@@ -80,11 +91,14 @@ class Integral(AddWithLimits):
             return function._eval_Integral(*symbols, **assumptions)
 
         if isinstance(function, Poly):
-            SymPyDeprecationWarning(
-                feature="Using integrate/Integral with Poly",
-                issue=18613,
+            sympy_deprecation_warning(
+                """
+                integrate(Poly) and Integral(Poly) are deprecated. Instead,
+                use the Poly.integrate() method, or convert the Poly to an
+                Expr first with the Poly.as_expr() method.
+                """,
                 deprecated_since_version="1.6",
-                useinstead="the as_expr or integrate methods of Poly").warn()
+                active_deprecations_target="deprecated-integrate-poly")
 
         obj = AddWithLimits.__new__(cls, function, *symbols, **assumptions)
         return obj
@@ -115,7 +129,7 @@ class Integral(AddWithLimits):
         sympy.concrete.expr_with_limits.ExprWithLimits.limits
         sympy.concrete.expr_with_limits.ExprWithLimits.variables
         """
-        return AddWithLimits.free_symbols.fget(self)
+        return super().free_symbols
 
     def _eval_is_zero(self):
         # This is a very naive and quick test, not intended to do the integral to
@@ -179,25 +193,25 @@ class Integral(AddWithLimits):
         =====
 
         The mappings, F(x) or f(u), must lead to a unique integral. Linear
-        or rational linear expression, `2*x`, `1/x` and `sqrt(x)`, will
-        always work; quadratic expressions like `x**2 - 1` are acceptable
+        or rational linear expression, ``2*x``, ``1/x`` and ``sqrt(x)``, will
+        always work; quadratic expressions like ``x**2 - 1`` are acceptable
         as long as the resulting integrand does not depend on the sign of
         the solutions (see examples).
 
-        The integral will be returned unchanged if `x` is not a variable of
+        The integral will be returned unchanged if ``x`` is not a variable of
         integration.
 
-        `x` must be (or contain) only one of of the integration variables. If
-        `u` has more than one free symbol then it should be sent as a tuple
-        (`u`, `uvar`) where `uvar` identifies which variable is replacing
+        ``x`` must be (or contain) only one of of the integration variables. If
+        ``u`` has more than one free symbol then it should be sent as a tuple
+        (``u``, ``uvar``) where ``uvar`` identifies which variable is replacing
         the integration variable.
         XXX can it contain another integration variable?
 
         Examples
         ========
 
-        >>> from sympy.abc import a, b, c, d, x, u, y
-        >>> from sympy import Integral, S, cos, sqrt
+        >>> from sympy.abc import a, x, u
+        >>> from sympy import Integral, cos, sqrt
 
         >>> i = Integral(x*cos(x**2 - 1), (x, 0, 1))
 
@@ -209,7 +223,8 @@ class Integral(AddWithLimits):
         transform can perform u-substitution as long as a unique
         integrand is obtained:
 
-        >>> i.transform(x**2 - 1, u)
+        >>> ui = i.transform(x**2 - 1, u)
+        >>> ui
         Integral(cos(u)/2, (u, -1, 0))
 
         This attempt fails because x = +/-sqrt(u + 1) and the
@@ -225,8 +240,7 @@ class Integral(AddWithLimits):
         result is transformed back into the original expression
         using "u-substitution":
 
-        >>> ui = _
-        >>> _.transform(sqrt(u + 1), x) == i
+        >>> ui.transform(sqrt(u + 1), x) == i
         True
 
         We can accomplish the same with a regular substitution:
@@ -255,7 +269,6 @@ class Integral(AddWithLimits):
         sympy.concrete.expr_with_limits.ExprWithLimits.variables : Lists the integration variables
         as_dummy : Replace integration variables with dummy ones
         """
-        from sympy.solvers.solvers import solve, posify
         d = Dummy('d')
 
         xfree = x.free_symbols.intersection(self.variables)
@@ -305,6 +318,7 @@ class Integral(AddWithLimits):
             u must contain the same variable as in x
             or a variable that is not already an integration variable'''))
 
+        from sympy.solvers.solvers import solve
         if not x.is_Symbol:
             F = [x.subs(xvar, d)]
             soln = solve(u - x, xvar, check=False)
@@ -313,6 +327,7 @@ class Integral(AddWithLimits):
             f = [fi.subs(uvar, d) for fi in soln]
         else:
             f = [u.subs(uvar, d)]
+            from sympy.simplify.simplify import posify
             pdiff, reps = posify(u - x)
             puvar = uvar.subs([(v, k) for k, v in reps.items()])
             soln = [s.subs(reps) for s in solve(pdiff, puvar)]
@@ -320,8 +335,8 @@ class Integral(AddWithLimits):
                 raise ValueError('no solution for solve(F(x) - f(u), u)')
             F = [fi.subs(xvar, d) for fi in soln]
 
-        newfuncs = set([(self.function.subs(xvar, fi)*fi.diff(d)
-                        ).subs(d, uvar) for fi in f])
+        newfuncs = {(self.function.subs(xvar, fi)*fi.diff(d)
+                        ).subs(d, uvar) for fi in f}
         if len(newfuncs) > 1:
             raise ValueError(filldedent('''
             The mapping between F(x) and f(u) did not give
@@ -378,7 +393,7 @@ class Integral(AddWithLimits):
         Examples
         ========
 
-        >>> from sympy import Integral, Piecewise, S
+        >>> from sympy import Piecewise, S
         >>> from sympy.abc import x, t
         >>> p = x**2 + Piecewise((0, x/t < 0), (1, True))
         >>> p.integrate((t, S(4)/5, 1), (x, -1, 1))
@@ -392,15 +407,8 @@ class Integral(AddWithLimits):
         sympy.integrals.rationaltools.ratint
         as_sum : Approximate the integral using a sum
         """
-        from sympy.concrete.summations import Sum
         if not hints.get('integrals', True):
             return self
-
-        if self.has(Float):
-            fvals = self.atoms(Float)
-            fsubs = {f: Dummy() for f in fvals}
-            rsubs = {s: f for f, s in fsubs.items()}
-            return self.subs(fsubs).doit(**hints).subs(rsubs)
 
         deep = hints.get('deep', True)
         meijerg = hints.get('meijerg', None)
@@ -418,10 +426,10 @@ class Integral(AddWithLimits):
             manual = meijerg = heurisch = False
         elif heurisch:
             manual = meijerg = risch = False
-        eval_kwargs = dict(meijerg=meijerg, risch=risch, manual=manual, heurisch=heurisch,
-            conds=conds)
+        eval_kwargs = {"meijerg": meijerg, "risch": risch, "manual": manual, "heurisch": heurisch,
+            "conds": conds}
 
-        if conds not in ['separate', 'piecewise', 'none']:
+        if conds not in ('separate', 'piecewise', 'none'):
             raise ValueError('conds must be one of "separate", "piecewise", '
                              '"none", got: %s' % conds)
 
@@ -434,6 +442,7 @@ class Integral(AddWithLimits):
 
         # hacks to handle integrals of
         # nested summations
+        from sympy.concrete.summations import Sum
         if isinstance(self.function, Sum):
             if any(v in self.function.limits[0] for v in self.variables):
                 raise ValueError('Limit of the sum cannot be an integration variable.')
@@ -445,6 +454,12 @@ class Integral(AddWithLimits):
 
         # now compute and check the function
         function = self.function
+
+        # hack to use a consistent Heaviside(x, 1/2)
+        function = function.replace(
+            lambda x: isinstance(x, Heaviside) and x.args[1]*2 != 1,
+            lambda x: Heaviside(x.args[0]))
+
         if deep:
             function = function.doit(**hints)
         if function.is_zero:
@@ -453,7 +468,7 @@ class Integral(AddWithLimits):
         # hacks to handle special cases
         if isinstance(function, MatrixBase):
             return function.applyfunc(
-                lambda f: self.func(f, self.limits).doit(**hints))
+                lambda f: self.func(f, *self.limits).doit(**hints))
 
         if isinstance(function, FormalPowerSeries):
             if len(self.limits) > 1:
@@ -472,6 +487,13 @@ class Integral(AddWithLimits):
         reps = {}
         for xab in self.limits:
             if len(xab) != 3:
+                # it makes sense to just make
+                # all x real but in practice with the
+                # current state of integration...this
+                # doesn't work out well
+                # x = xab[0]
+                # if x not in reps and not x.is_real:
+                #     reps[x] = Dummy(real=True)
                 continue
             x, a, b = xab
             l = (a, b)
@@ -486,9 +508,9 @@ class Integral(AddWithLimits):
             if d:
                 reps[x] = d
         if reps:
-            undo = dict([(v, k) for k, v in reps.items()])
+            undo = {v: k for k, v in reps.items()}
             did = self.xreplace(reps).doit(**hints)
-            if type(did) is tuple:  # when separate=True
+            if isinstance(did, tuple):  # when separate=True
                 did = tuple([i.xreplace(undo) for i in did])
             else:
                 did = did.xreplace(undo)
@@ -556,17 +578,19 @@ class Integral(AddWithLimits):
                         try:
                             res = meijerint_definite(function, x, a, b)
                         except NotImplementedError:
-                            from sympy.integrals.meijerint import _debug
                             _debug('NotImplementedError '
                                 'from meijerint_definite')
                             res = None
                         if res is not None:
                             f, cond = res
                             if conds == 'piecewise':
-                                ret = Piecewise(
-                                    (f, cond),
-                                    (self.func(
-                                    function, (x, a, b)), True))
+                                u = self.func(function, (x, a, b))
+                                # if Piecewise modifies cond too
+                                # much it may not be recognized by
+                                # _condsimp pattern matching so just
+                                # turn off all evaluation
+                                return Piecewise((f, cond), (u, True),
+                                    evaluate=False)
                             elif conds == 'separate':
                                 if len(self.limits) != 1:
                                     raise ValueError(filldedent('''
@@ -606,7 +630,11 @@ class Integral(AddWithLimits):
                             function = ret
                             continue
 
-            if not isinstance(antideriv, Integral) and antideriv is not None:
+            final = hints.get('final', True)
+            # dotit may be iterated but floor terms making atan and acot
+            # continuous should only be added in the final round
+            if (final and not isinstance(antideriv, Integral) and
+                antideriv is not None):
                 for atan_term in antideriv.atoms(atan):
                     atan_arg = atan_term.args[0]
                     # Checking `atan_arg` to be linear combination of `tan` or `cot`
@@ -710,14 +738,19 @@ class Integral(AddWithLimits):
         differentiating under the integral sign [1], using the Fundamental
         Theorem of Calculus [2] when possible.
 
+        Explanation
+        ===========
+
         Whenever an Integral is encountered that is equivalent to zero or
         has an integrand that is independent of the variable of integration
         those integrals are performed. All others are returned as Integral
         instances which can be resolved with doit() (provided they are integrable).
 
-        References:
-           [1] https://en.wikipedia.org/wiki/Differentiation_under_the_integral_sign
-           [2] https://en.wikipedia.org/wiki/Fundamental_theorem_of_calculus
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Differentiation_under_the_integral_sign
+        .. [2] https://en.wikipedia.org/wiki/Fundamental_theorem_of_calculus
 
         Examples
         ========
@@ -790,13 +823,16 @@ class Integral(AddWithLimits):
             u = Dummy('u')
             arg = f.subs(x, u).diff(sym).subs(u, x)
             if arg:
-                rv += self.func(arg, Tuple(x, a, b))
+                rv += self.func(arg, (x, a, b))
         return rv
 
     def _eval_integral(self, f, x, meijerg=None, risch=None, manual=None,
-                       heurisch=None, conds='piecewise'):
+                       heurisch=None, conds='piecewise',final=None):
         """
         Calculate the anti-derivative to the function f(x).
+
+        Explanation
+        ===========
 
         The following algorithms are applied (roughly in this order):
 
@@ -881,11 +917,9 @@ class Integral(AddWithLimits):
              method. Set heurisch=False to not use it.
 
         """
-        from sympy.integrals.deltafunctions import deltaintegrate
-        from sympy.integrals.singularityfunctions import singularityintegrate
-        from sympy.integrals.heurisch import heurisch as heurisch_, heurisch_wrapper
-        from sympy.integrals.rationaltools import ratint
-        from sympy.integrals.risch import risch_integrate
+
+        from sympy.integrals.risch import risch_integrate, NonElementaryIntegral
+        from sympy.integrals.manualintegrate import manualintegrate
 
         if risch:
             try:
@@ -901,21 +935,18 @@ class Integral(AddWithLimits):
             except (ValueError, PolynomialError):
                 pass
 
-        eval_kwargs = dict(meijerg=meijerg, risch=risch, manual=manual,
-            heurisch=heurisch, conds=conds)
+        eval_kwargs = {"meijerg": meijerg, "risch": risch, "manual": manual,
+            "heurisch": heurisch, "conds": conds}
 
         # if it is a poly(x) then let the polynomial integrate itself (fast)
         #
         # It is important to make this check first, otherwise the other code
-        # will return a sympy expression instead of a Polynomial.
+        # will return a SymPy expression instead of a Polynomial.
         #
         # see Polynomial for details.
         if isinstance(f, Poly) and not (manual or meijerg or risch):
-            SymPyDeprecationWarning(
-                feature="Using integrate/Integral with Poly",
-                issue=18613,
-                deprecated_since_version="1.6",
-                useinstead="the as_expr or integrate methods of Poly").warn()
+            # Note: this is deprecated, but the deprecation warning is already
+            # issued in the Integral constructor.
             return f.integrate(x)
 
         # Piecewise antiderivatives need to call special integrate.
@@ -946,7 +977,6 @@ class Integral(AddWithLimits):
                     # the Risch algorithm, then use the original function to
                     # integrate, instead of re-written one
                     if result == 0:
-                        from sympy.integrals.risch import NonElementaryIntegral
                         return NonElementaryIntegral(f, x).doit(risch=False)
                     else:
                         return result + i.doit(risch=False)
@@ -965,6 +995,7 @@ class Integral(AddWithLimits):
         # because maybe the integral is a sum of an elementary part and a
         # nonelementary part (like erf(x) + exp(x)).  risch_integrate() is
         # quite fast, so this is acceptable.
+        from sympy.simplify.fu import sincos_to_sum
         parts = []
         args = Add.make_args(f)
         for g in args:
@@ -1036,6 +1067,7 @@ class Integral(AddWithLimits):
                     parts.append(coeff * h)
                     continue
 
+                from .singularityfunctions import singularityintegrate
                 # g(x) has at least a Singularity Function term
                 h = singularityintegrate(g, x)
                 if h is not None:
@@ -1058,6 +1090,8 @@ class Integral(AddWithLimits):
 
                 # fall back to heurisch
                 if heurisch is not False:
+                    from sympy.integrals.heurisch import (heurisch as heurisch_,
+                                                          heurisch_wrapper)
                     try:
                         if conds == 'piecewise':
                             h = heurisch_wrapper(g, x, hints=[])
@@ -1076,7 +1110,6 @@ class Integral(AddWithLimits):
                 try:
                     h = meijerint_indefinite(g, x)
                 except NotImplementedError:
-                    from sympy.integrals.meijerint import _debug
                     _debug('NotImplementedError from meijerint_definite')
                 if h is not None:
                     parts.append(coeff * h)
@@ -1094,6 +1127,7 @@ class Integral(AddWithLimits):
                             # method was set to False already
                             new_eval_kwargs = eval_kwargs
                             new_eval_kwargs["manual"] = False
+                            new_eval_kwargs["final"] = False
                             result = result.func(*[
                                 arg.doit(**new_eval_kwargs) if
                                 arg.has(Integral) else arg
@@ -1135,7 +1169,7 @@ class Integral(AddWithLimits):
 
         return Add(*parts)
 
-    def _eval_lseries(self, x, logx):
+    def _eval_lseries(self, x, logx=None, cdir=0):
         expr = self.as_dummy()
         symb = x
         for l in expr.limits:
@@ -1145,19 +1179,18 @@ class Integral(AddWithLimits):
         for term in expr.function.lseries(symb, logx):
             yield integrate(term, *expr.limits)
 
-    def _eval_nseries(self, x, n, logx):
-        expr = self.as_dummy()
+    def _eval_nseries(self, x, n, logx=None, cdir=0):
         symb = x
-        for l in expr.limits:
+        for l in self.limits:
             if x in l[1:]:
                 symb = l[0]
                 break
-        terms, order = expr.function.nseries(
+        terms, order = self.function.nseries(
             x=symb, n=n, logx=logx).as_coeff_add(Order)
         order = [o.subs(symb, x) for o in order]
-        return integrate(terms, *expr.limits) + Add(*order)*x
+        return integrate(terms, *self.limits) + Add(*order)*x
 
-    def _eval_as_leading_term(self, x):
+    def _eval_as_leading_term(self, x, logx, cdir):
         series_gen = self.args[0].lseries(x)
         for leading_term in series_gen:
             if leading_term != 0:
@@ -1165,11 +1198,9 @@ class Integral(AddWithLimits):
         return integrate(leading_term, *self.args[1:])
 
     def _eval_simplify(self, **kwargs):
-        from sympy.core.exprtools import factor_terms
-        from sympy.simplify.simplify import simplify
-
         expr = factor_terms(self)
         if isinstance(expr, Integral):
+            from sympy.simplify.simplify import simplify
             return expr.func(*[simplify(i, **kwargs) for i in expr.args])
         return expr.simplify(**kwargs)
 
@@ -1177,26 +1208,27 @@ class Integral(AddWithLimits):
         """
         Approximates a definite integral by a sum.
 
-        Arguments
-        ---------
-        n
+        Parameters
+        ==========
+
+        n :
             The number of subintervals to use, optional.
-        method
+        method :
             One of: 'left', 'right', 'midpoint', 'trapezoid'.
-        evaluate
+        evaluate : bool
             If False, returns an unevaluated Sum expression. The default
             is True, evaluate the sum.
 
-        These methods of approximate integration are described in [1].
+        Notes
+        =====
 
-        [1] https://en.wikipedia.org/wiki/Riemann_sum#Methods
+        These methods of approximate integration are described in [1].
 
         Examples
         ========
 
-        >>> from sympy import sin, sqrt
+        >>> from sympy import Integral, sin, sqrt
         >>> from sympy.abc import x, n
-        >>> from sympy.integrals import Integral
         >>> e = Integral(sin(x), (x, 3, 7))
         >>> e
         Integral(sin(x), (x, 3, 7))
@@ -1225,9 +1257,10 @@ class Integral(AddWithLimits):
         intervals. This is equivalent to taking the average of the left and
         right hand rule results:
 
-        >>> e.as_sum(2, 'trapezoid')
+        >>> s = e.as_sum(2, 'trapezoid')
+        >>> s
         2*sin(5) + sin(3) + sin(7)
-        >>> (e.as_sum(2, 'left') + e.as_sum(2, 'right'))/2 == _
+        >>> (e.as_sum(2, 'left') + e.as_sum(2, 'right'))/2 == s
         True
 
         Here, the discontinuity at x = 0 can be avoided by using the
@@ -1269,6 +1302,11 @@ class Integral(AddWithLimits):
         ========
 
         Integral.doit : Perform the integration using any hints
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Riemann_sum#Riemann_summation_methods
         """
 
         from sympy.concrete.summations import Sum
@@ -1307,44 +1345,22 @@ class Integral(AddWithLimits):
             raise ValueError("Unknown method %s" % method)
         return result.doit() if evaluate else result
 
-    def _sage_(self):
-        import sage.all as sage
-        f, limits = self.function._sage_(), list(self.limits)
-        for limit_ in limits:
-            if len(limit_) == 1:
-                x = limit_[0]
-                f = sage.integral(f,
-                                    x._sage_(),
-                                    hold=True)
-            elif len(limit_) == 2:
-                x, b = limit_
-                f = sage.integral(f,
-                                    x._sage_(),
-                                    b._sage_(),
-                                    hold=True)
-            else:
-                x, a, b = limit_
-                f = sage.integral(f,
-                                  (x._sage_(),
-                                    a._sage_(),
-                                    b._sage_()),
-                                    hold=True)
-        return f
-
     def principal_value(self, **kwargs):
         """
         Compute the Cauchy Principal Value of the definite integral of a real function in the given interval
         on the real axis.
+
+        Explanation
+        ===========
+
         In mathematics, the Cauchy principal value, is a method for assigning values to certain improper
         integrals which would otherwise be undefined.
 
         Examples
         ========
 
-        >>> from sympy import Dummy, symbols, integrate, limit, oo
-        >>> from sympy.integrals.integrals import Integral
-        >>> from sympy.calculus.singularities import singularities
-        >>> x = symbols('x')
+        >>> from sympy import Integral, oo
+        >>> from sympy.abc import x
         >>> Integral(x+1, (x, -oo, oo)).principal_value()
         oo
         >>> f = 1 / (x**3)
@@ -1357,10 +1373,10 @@ class Integral(AddWithLimits):
 
         References
         ==========
+
         .. [1] https://en.wikipedia.org/wiki/Cauchy_principal_value
-        .. [2] http://mathworld.wolfram.com/CauchyPrincipalValue.html
+        .. [2] https://mathworld.wolfram.com/CauchyPrincipalValue.html
         """
-        from sympy.calculus import singularities
         if len(self.limits) != 1 or len(list(self.limits[0])) != 3:
             raise ValueError("You need to insert a variable, lower_limit, and upper_limit correctly to calculate "
                              "cauchy's principal value")
@@ -1369,12 +1385,15 @@ class Integral(AddWithLimits):
             raise ValueError("The lower_limit must be smaller than or equal to the upper_limit to calculate "
                              "cauchy's principal value. Also, a and b need to be comparable.")
         if a == b:
-            return 0
+            return S.Zero
+
+        from sympy.calculus.singularities import singularities
+
         r = Dummy('r')
         f = self.function
         singularities_list = [s for s in singularities(f, x) if s.is_comparable and a <= s <= b]
         for i in singularities_list:
-            if (i == b) or (i == a):
+            if i in (a, b):
                 raise ValueError(
                     'The principal value is not defined in the given interval due to singularity at %d.' % (i))
         F = integrate(f, x, **kwargs)
@@ -1390,8 +1409,17 @@ class Integral(AddWithLimits):
 
 
 
-def integrate(*args, **kwargs):
+def integrate(function, *symbols: SymbolLimits, meijerg=None, conds='piecewise',
+                        risch=None, heurisch=None, manual=None, **kwargs):
     """integrate(f, var, ...)
+
+    .. deprecated:: 1.6
+
+       Using ``integrate()`` with :class:`~.Poly` is deprecated. Use
+       :meth:`.Poly.integrate` instead. See :ref:`deprecated-integrate-poly`.
+
+    Explanation
+    ===========
 
     Compute definite or indefinite integral of one or more variables
     using Risch-Norman algorithm and table lookup. This procedure is
@@ -1403,7 +1431,7 @@ def integrate(*args, **kwargs):
 
     - a symbol                   -- indefinite integration
     - a tuple (symbol, a)        -- indefinite integration with result
-                                    given with `a` replacing `symbol`
+                                    given with ``a`` replacing ``symbol``
     - a tuple (symbol, a, b)     -- definite integration
 
     Several variables can be specified, in which case the result is
@@ -1531,7 +1559,7 @@ def integrate(*args, **kwargs):
     gamma(a + 1)
 
     >>> integrate(x**a*exp(-x), (x, 0, oo), conds='separate')
-    (gamma(a + 1), -re(a) < 1)
+    (gamma(a + 1), re(a) > -1)
 
     See Also
     ========
@@ -1541,13 +1569,14 @@ def integrate(*args, **kwargs):
     """
     doit_flags = {
         'deep': False,
-        'meijerg': kwargs.pop('meijerg', None),
-        'conds': kwargs.pop('conds', 'piecewise'),
-        'risch': kwargs.pop('risch', None),
-        'heurisch': kwargs.pop('heurisch', None),
-        'manual': kwargs.pop('manual', None)
+        'meijerg': meijerg,
+        'conds': conds,
+        'risch': risch,
+        'heurisch': heurisch,
+        'manual': manual
         }
-    integral = Integral(*args, **kwargs)
+
+    integral = Integral(function, *symbols, **kwargs)
 
     if isinstance(integral, Integral):
         return integral.doit(**doit_flags)
@@ -1555,7 +1584,6 @@ def integrate(*args, **kwargs):
         new_args = [a.doit(**doit_flags) if isinstance(a, Integral) else a
             for a in integral.args]
         return integral.func(*new_args)
-
 
 def line_integrate(field, curve, vars):
     """line_integrate(field, Curve, variables)
@@ -1605,3 +1633,15 @@ def line_integrate(field, curve, vars):
 
     integral = Integral(Ft, curve.limits).doit(deep=False)
     return integral
+
+
+### Property function dispatching ###
+
+@shape.register(Integral)
+def _(expr):
+    return shape(expr.function)
+
+# Delayed imports
+from .deltafunctions import deltaintegrate
+from .meijerint import meijerint_definite, meijerint_indefinite, _debug
+from .trigonometry import trigintegrate

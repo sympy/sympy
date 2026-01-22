@@ -10,9 +10,8 @@
     refactoring.
 """
 
-from __future__ import print_function, division
+from functools import reduce
 
-from sympy.core.compatibility import reduce
 from sympy.core.function import Function
 from sympy.functions import exp, Piecewise
 from sympy.tensor.indexed import Idx, Indexed
@@ -189,8 +188,8 @@ def _get_indices_Add(expr):
     if not non_scalars:
         return set(), {}
 
-    if not all([x == non_scalars[0] for x in non_scalars[1:]]):
-        raise IndexConformanceException("Indices are not consistent: %s" % expr)
+    if not all(x == non_scalars[0] for x in non_scalars[1:]):
+        raise IndexConformanceException(f"Indices are not consistent: {expr}")
     if not reduce(lambda x, y: x != y or y, syms):
         symmetries = syms[0]
     else:
@@ -212,7 +211,7 @@ def get_indices(expr):
 
     >>> from sympy.tensor.index_methods import get_indices
     >>> from sympy import symbols
-    >>> from sympy.tensor import IndexedBase, Idx
+    >>> from sympy.tensor import IndexedBase
     >>> x, y, A = map(IndexedBase, ['x', 'y', 'A'])
     >>> i, j, a, z = symbols('i j a z', integer=True)
 
@@ -281,7 +280,7 @@ def get_indices(expr):
             return set(), {}
         elif isinstance(expr, Function):
             # Support ufunc like behaviour by returning indices from arguments.
-            # Functions do not interpret repeated indices across argumnts
+            # Functions do not interpret repeated indices across arguments
             # as summation
             ind0 = set()
             for arg in expr.args:
@@ -293,7 +292,7 @@ def get_indices(expr):
         elif not expr.has(Indexed):
             return set(), {}
         raise NotImplementedError(
-            "FIXME: No specialized handling of type %s" % type(expr))
+            f"FIXME: No specialized handling of type {type(expr)}")
 
 
 def get_contraction_structure(expr):
@@ -329,7 +328,7 @@ def get_contraction_structure(expr):
     ========
 
     >>> from sympy.tensor.index_methods import get_contraction_structure
-    >>> from sympy import symbols, default_sort_key
+    >>> from sympy import default_sort_key
     >>> from sympy.tensor import IndexedBase, Idx
     >>> x, y, A = map(IndexedBase, ['x', 'y', 'A'])
     >>> i, j, k, l = map(Idx, ['i', 'j', 'k', 'l'])
@@ -467,4 +466,4 @@ def get_contraction_structure(expr):
     elif not expr.has(Indexed):
         return {None: {expr}}
     raise NotImplementedError(
-        "FIXME: No specialized handling of type %s" % type(expr))
+        f"FIXME: No specialized handling of type {type(expr)}")

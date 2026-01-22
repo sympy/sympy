@@ -1,8 +1,7 @@
 """Inference in propositional logic"""
-from __future__ import print_function, division
 
-from sympy.logic.boolalg import And, Not, conjuncts, to_cnf
-from sympy.core.compatibility import ordered
+from sympy.logic.boolalg import And, Not, conjuncts, to_cnf, BooleanFunction
+from sympy.core.sorting import ordered
 from sympy.core.sympify import sympify
 from sympy.external.importtools import import_module
 
@@ -23,20 +22,15 @@ def literal_symbol(literal):
 
     """
 
-    if literal is True or literal is False:
+    if literal is True or literal is False or literal.is_Symbol:
         return literal
-    try:
-        if literal.is_Symbol:
-            return literal
-        if literal.is_Not:
-            return literal_symbol(literal.args[0])
-        else:
-            raise ValueError
-    except (AttributeError, ValueError):
+    elif literal.is_Not:
+        return literal_symbol(literal.args[0])
+    else:
         raise ValueError("Argument must be a boolean literal.")
 
 
-def satisfiable(expr, algorithm=None, all_models=False):
+def satisfiable(expr, algorithm=None, all_models=False, minimal=False, use_lra_theory=False):
     """
     Check satisfiability of a propositional sentence.
     Returns a model when it succeeds.
@@ -78,6 +72,11 @@ def satisfiable(expr, algorithm=None, all_models=False):
     UNSAT
 
     """
+    if use_lra_theory:
+        if algorithm is not None and algorithm != "dpll2":
+            raise ValueError(f"Currently only dpll2 can handle using lra theory. {algorithm} is not handled.")
+        algorithm = "dpll2"
+
     if algorithm is None or algorithm == "pycosat":
         pycosat = import_module('pycosat')
         if pycosat is not None:
@@ -89,15 +88,32 @@ def satisfiable(expr, algorithm=None, all_models=False):
             # is not installed
             algorithm = "dpll2"
 
+    if algorithm=="minisat22":
+        pysat = import_module('pysat')
+        if pysat is None:
+            algorithm = "dpll2"
+
+    if algorithm=="z3":
+        z3 = import_module('z3')
+        if z3 is None:
+            algorithm = "dpll2"
+
     if algorithm == "dpll":
         from sympy.logic.algorithms.dpll import dpll_satisfiable
         return dpll_satisfiable(expr)
     elif algorithm == "dpll2":
         from sympy.logic.algorithms.dpll2 import dpll_satisfiable
-        return dpll_satisfiable(expr, all_models)
+        return dpll_satisfiable(expr, all_models, use_lra_theory=use_lra_theory)
     elif algorithm == "pycosat":
         from sympy.logic.algorithms.pycosat_wrapper import pycosat_satisfiable
         return pycosat_satisfiable(expr, all_models)
+    elif algorithm == "minisat22":
+        from sympy.logic.algorithms.minisat22_wrapper import minisat22_satisfiable
+        return minisat22_satisfiable(expr, all_models, minimal)
+    elif algorithm == "z3":
+        from sympy.logic.algorithms.z3_wrapper import z3_satisfiable
+        return z3_satisfiable(expr, all_models)
+
     raise NotImplementedError
 
 
@@ -125,7 +141,7 @@ def valid(expr):
     return not satisfiable(Not(expr))
 
 
-def pl_true(expr, model={}, deep=False):
+def pl_true(expr, model=None, deep=False):
     """
     Returns whether the given assignment is a model or not.
 
@@ -145,7 +161,7 @@ def pl_true(expr, model={}, deep=False):
     Examples
     ========
 
-    >>> from sympy.abc import A, B, C
+    >>> from sympy.abc import A, B
     >>> from sympy.logic.inference import pl_true
     >>> pl_true( A & B, {A: True, B: True})
     True
@@ -166,7 +182,7 @@ def pl_true(expr, model={}, deep=False):
     """
 
     from sympy.core.symbol import Symbol
-    from sympy.logic.boolalg import BooleanFunction
+
     boolean = (True, False)
 
     def _validate(expr):
@@ -181,12 +197,14 @@ def pl_true(expr, model={}, deep=False):
     expr = sympify(expr)
     if not _validate(expr):
         raise ValueError("%s is not a valid boolean expression" % expr)
-    model = dict((k, v) for k, v in model.items() if v in boolean)
+    if not model:
+        model = {}
+    model = {k: v for k, v in model.items() if v in boolean}
     result = expr.subs(model)
     if result in boolean:
         return bool(result)
     if deep:
-        model = dict((k, True) for k in result.atoms())
+        model = dict.fromkeys(result.atoms(), True)
         if pl_true(result, model):
             if valid(result):
                 return True
@@ -196,7 +214,7 @@ def pl_true(expr, model={}, deep=False):
     return None
 
 
-def entails(expr, formula_set={}):
+def entails(expr, formula_set=None):
     """
     Check whether the given expr_set entail an expr.
     If formula_set is empty then it returns the validity of expr.
@@ -221,12 +239,15 @@ def entails(expr, formula_set={}):
     .. [1] https://en.wikipedia.org/wiki/Logical_consequence
 
     """
-    formula_set = list(formula_set)
+    if formula_set:
+        formula_set = list(formula_set)
+    else:
+        formula_set = []
     formula_set.append(Not(expr))
     return not satisfiable(And(*formula_set))
 
 
-class KB(object):
+class KB:
     """Base class for all knowledge bases"""
     def __init__(self, sentence=None):
         self.clauses_ = set()

@@ -1,7 +1,14 @@
 """Most of these tests come from the examples in Bronstein's book."""
-from sympy import (Poly, I, S, Function, log, symbols, exp, tan, sqrt,
-    Symbol, Lambda, sin, Ne, Piecewise, factor, expand_log, cancel,
-    diff, pi, atan, Rational)
+from sympy.core.function import (Function, Lambda, diff, expand_log)
+from sympy.core.numbers import (I, Rational, pi)
+from sympy.core.relational import Ne
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import (atan, sin, tan)
+from sympy.polys.polytools import (Poly, cancel, factor)
 from sympy.integrals.risch import (gcdex_diophantine, frac_in, as_poly_1t,
     derivation, splitfactor, splitfactor_sqf, canonical_representation,
     hermite_reduce, polynomial_reduce, residue_reduce, residue_reduce_to_basic,
@@ -367,12 +374,14 @@ def test_integrate_hyperexponential_returns_piecewise():
     # TODO: Add a test where two different parts of the extension use a
     # Piecewise, like y**x + z**x.
 
+
 def test_issue_13947():
     a, t, s = symbols('a t s')
     assert risch_integrate(2**(-pi)/(2**t + 1), t) == \
         2**(-pi)*t - 2**(-pi)*log(2**t + 1)/log(2)
     assert risch_integrate(a**(t - s)/(a**t + 1), t) == \
         exp(-s*log(a))*log(a**t + 1)/log(a)
+
 
 def test_integrate_primitive():
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)],
@@ -415,7 +424,7 @@ def test_integrate_nonlinear_no_specials():
     DE = DifferentialExtension(extension={'D': [Poly(1, x),
         Poly(-t**2 - t/x - (1 - nu**2/x**2), t)], 'Tfuncs': [f]})
     assert integrate_nonlinear_no_specials(a, d, DE) == \
-        (-log(1 + f(x)**2 + x**2/2)/2 - (4 + x**2)/(4 + 2*x**2 + 4*f(x)**2), True)
+        (-log(1 + f(x)**2 + x**2/2)/2 + (- 4 - x**2)/(4 + 2*x**2 + 4*f(x)**2), True)
     assert integrate_nonlinear_no_specials(Poly(t, t), Poly(1, t), DE) == \
         (0, False)
 
@@ -694,6 +703,26 @@ def test_risch_integrate():
     assert risch_integrate(log(x**y), x) == x*log(x**y) - x*y
     assert risch_integrate(log(sqrt(x)), x) == x*log(sqrt(x)) - x/2
 
+    # Example 6.2.1
+    expr = (exp(x) - x**2 + 2*x)/((exp(x) + x)**2*x**2)*exp((x**2 - 1)/x + 1/(exp(x) + x))
+    assert risch_integrate(expr, x) == exp(-x)*exp(1/(x + exp(x)) + (x**2 - 1)/x)
+
+    # issue 28407
+    # TODO: exp(exp(x)) - exp(-exp(x)) would be a simpler return form
+    expr = exp(x + exp(x)) + exp(x - exp(x))
+    assert risch_integrate(expr, x) == \
+        (exp(2*x)*exp(-x + exp(x)) - exp(x - exp(x)))*exp(-x)
+
+    # Ensure the results from integrate_hyperexponential() are in a simple
+    # form, i.e., this doesn't return something like (1 + exp(-2*x))*exp(x)/2
+
+    # sinh(x).rewrite(exp)
+    expr = exp(x)/2 - exp(-x)/2
+    assert risch_integrate(expr, x) == exp(x)/2 + exp(-x)/2
+
+    # sin(x).rewrite(exp)
+    expr = -I*(exp(I*x) - exp(-I*x))/2
+    assert risch_integrate(expr, x) == -exp(I*x)/2 - exp(-I*x)/2
 
 def test_risch_integrate_float():
     assert risch_integrate((-60*exp(x) - 19.2*exp(4*x))*exp(4*x), x) == -2.4*exp(8*x) - 12.0*exp(5*x)
@@ -731,3 +760,24 @@ def test_DifferentialExtension_printing():
     assert str(DE) == ("DifferentialExtension({fa=Poly(t1 + t0**2, t1, domain='ZZ[t0]'), "
         "fd=Poly(1, t1, domain='ZZ'), D=[Poly(1, x, domain='ZZ'), Poly(2*x*t0, t0, domain='ZZ[x]'), "
         "Poly(2*t0*x/(t0 + 1), t1, domain='ZZ(x,t0)')]})")
+
+
+def test_issue_23948():
+    f = (
+        ( (-2*x**5 + 28*x**4 - 144*x**3 + 324*x**2 - 270*x)*log(x)**2
+         +(-4*x**6 + 56*x**5 - 288*x**4 + 648*x**3 - 540*x**2)*log(x)
+         +(2*x**5 - 28*x**4 + 144*x**3 - 324*x**2 + 270*x)*exp(x)
+         +(2*x**5 - 28*x**4 + 144*x**3 - 324*x**2 + 270*x)*log(5)
+         -2*x**7 + 26*x**6 - 116*x**5 + 180*x**4 + 54*x**3 - 270*x**2
+        )*log(-log(x)**2 - 2*x*log(x) + exp(x) + log(5) - x**2 - x)**2
+       +( (4*x**5 - 44*x**4 + 168*x**3 - 216*x**2 - 108*x + 324)*log(x)
+         +(-2*x**5 + 24*x**4 - 108*x**3 + 216*x**2 - 162*x)*exp(x)
+         +4*x**6 - 42*x**5 + 144*x**4 - 108*x**3 - 324*x**2 + 486*x
+        )*log(-log(x)**2 - 2*x*log(x) + exp(x) + log(5) - x**2 - x)
+    )/(x*exp(x)**2*log(x)**2 + 2*x**2*exp(x)**2*log(x) - x*exp(x)**3
+       +(-x*log(5) + x**3 + x**2)*exp(x)**2)
+
+    F = ((x**4 - 12*x**3 + 54*x**2 - 108*x + 81)*exp(-2*x)
+        *log(-x**2 - 2*x*log(x) - x + exp(x) - log(x)**2 + log(5))**2)
+
+    assert risch_integrate(f, x) == F

@@ -1,8 +1,20 @@
-from sympy import (
-    symbols, sin, simplify, cos, trigsimp, tan, exptrigsimp,sinh,
-    cosh, diff, cot, Subs, exp, tanh, S, integrate, I,Matrix,
-    Symbol, coth, pi, log, count_ops, sqrt, E, expand, Piecewise , Rational
-    )
+from itertools import product
+from sympy.core.function import (Subs, count_ops, diff, expand)
+from sympy.core.numbers import (E, I, Rational, pi)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.hyperbolic import (cosh, coth, sinh, tanh)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import (cos, cot, sin, tan)
+from sympy.functions.elementary.trigonometric import (acos, asin, atan2)
+from sympy.functions.elementary.trigonometric import (asec, acsc)
+from sympy.functions.elementary.trigonometric import (acot, atan)
+from sympy.integrals.integrals import integrate
+from sympy.matrices.dense import Matrix
+from sympy.simplify.simplify import simplify
+from sympy.simplify.trigsimp import (exptrigsimp, trigsimp)
 
 from sympy.testing.pytest import XFAIL
 
@@ -46,7 +58,7 @@ def test_trigsimp1():
     assert trigsimp(tanh(x + y) - tanh(x)/(1 + tanh(x)*tanh(y))) == \
         sinh(y)/(sinh(y)*tanh(x) + cosh(y))
 
-    assert trigsimp(cos(0.12345)**2 + sin(0.12345)**2) == 1
+    assert trigsimp(cos(0.12345)**2 + sin(0.12345)**2) == 1.0
     e = 2*sin(x)**2 + 2*cos(x)**2
     assert trigsimp(log(e)) == log(2)
 
@@ -284,6 +296,9 @@ def test_hyperbolic_simp():
     e = 2*cosh(x)**2 - 2*sinh(x)**2
     assert trigsimp(log(e)) == log(2)
 
+    # issue 19535:
+    assert trigsimp(sqrt(cosh(x)**2 - 1)) == sqrt(sinh(x)**2)
+
     assert trigsimp(cosh(x)**2*cosh(y)**2 - cosh(x)**2*sinh(y)**2 - sinh(x)**2,
             recursive=True) == 1
     assert trigsimp(sinh(x)**2*sinh(y)**2 - sinh(x)**2*cosh(y)**2 + cosh(x)**2,
@@ -368,7 +383,7 @@ def test_issue_15129_trigsimp_methods():
 
 def test_exptrigsimp():
     def valid(a, b):
-        from sympy.testing.randtest import verify_numerically as tn
+        from sympy.core.random import verify_numerically as tn
         if not (tn(a, b) and a == b):
             return False
         return True
@@ -443,6 +458,11 @@ def test_Piecewise():
     assert trigsimp(Piecewise((e1, e3 < e2), (e3, True))) == \
         Piecewise((e1, e3 < s2), (e3, True))
 
+
+def test_issue_21594():
+    assert simplify(exp(Rational(1,2)) + exp(Rational(-1,2))) == cosh(S.Half)*2
+
+
 def test_trigsimp_old():
     x, y = symbols('x,y')
 
@@ -473,10 +493,28 @@ def test_trigsimp_old():
     assert trigsimp(cosh(x + y) + cosh(x - y), old=True) == 2*cosh(x)*cosh(y)
     assert trigsimp(cosh(x + y) - cosh(x - y), old=True) == 2*sinh(x)*sinh(y)
 
-    assert trigsimp(cos(0.12345)**2 + sin(0.12345)**2, old=True) == 1
+    assert trigsimp(cos(0.12345)**2 + sin(0.12345)**2, old=True) == 1.0
 
     assert trigsimp(sin(x)/cos(x), old=True, method='combined') == tan(x)
     assert trigsimp(sin(x)/cos(x), old=True, method='groebner') == sin(x)/cos(x)
     assert trigsimp(sin(x)/cos(x), old=True, method='groebner', hints=[tan]) == tan(x)
 
     assert trigsimp(1-sin(sin(x)**2+cos(x)**2)**2, old=True, deep=True) == cos(1)**2
+
+
+def test_trigsimp_inverse():
+    alpha = symbols('alpha')
+    s, c = sin(alpha), cos(alpha)
+
+    for finv in [asin, acos, asec, acsc, atan, acot]:
+        f = finv.inverse(None)
+        assert alpha == trigsimp(finv(f(alpha)), inverse=True)
+
+    # test atan2(cos, sin), atan2(sin, cos), etc...
+    for a, b in [[c, s], [s, c]]:
+        for i, j in product([-1, 1], repeat=2):
+            angle = atan2(i*b, j*a)
+            angle_inverted = trigsimp(angle, inverse=True)
+            assert angle_inverted != angle  # assures simplification happened
+            assert sin(angle_inverted) == trigsimp(sin(angle))
+            assert cos(angle_inverted) == trigsimp(cos(angle))

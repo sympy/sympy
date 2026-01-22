@@ -1,11 +1,20 @@
-"""Quantum mechanical angular momemtum."""
+"""Quantum mechanical angular momentum."""
 
-from __future__ import print_function, division
-
-from sympy import (Add, binomial, cos, exp, Expr, factorial, I, Integer, Mul,
-                   pi, Rational, S, sin, simplify, sqrt, Sum, symbols, sympify,
-                   Tuple, Dummy)
-from sympy.core.compatibility import unicode
+from sympy.concrete.summations import Sum
+from sympy.core.add import Add
+from sympy.core.containers import Tuple
+from sympy.core.expr import Expr
+from sympy.core.numbers import int_valued
+from sympy.core.mul import Mul
+from sympy.core.numbers import (I, Integer, Rational, pi)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, symbols)
+from sympy.core.sympify import sympify
+from sympy.functions.combinatorial.factorials import (binomial, factorial)
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.simplify.simplify import simplify
 from sympy.matrices import zeros
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
 from sympy.printing.pretty.pretty_symbology import pretty_symbol
@@ -66,7 +75,7 @@ def m_values(j):
 #-----------------------------------------------------------------------------
 
 
-class SpinOpBase(object):
+class SpinOpBase:
     """Base class for spin operators."""
 
     @classmethod
@@ -79,15 +88,15 @@ class SpinOpBase(object):
         return self.args[0]
 
     def _print_contents(self, printer, *args):
-        return '%s%s' % (unicode(self.name), self._coord)
+        return '%s%s' % (self.name, self._coord)
 
     def _print_contents_pretty(self, printer, *args):
-        a = stringPict(unicode(self.name))
+        a = stringPict(str(self.name))
         b = stringPict(self._coord)
         return self._print_subscript_pretty(a, b)
 
     def _print_contents_latex(self, printer, *args):
-        return r'%s_%s' % ((unicode(self.name), self._coord))
+        return r'%s_%s' % ((self.name, self._coord))
 
     def _represent_base(self, basis, **options):
         j = options.get('j', S.Half)
@@ -134,7 +143,7 @@ class SpinOpBase(object):
     def _apply_operator_TensorProduct(self, tp, **options):
         # Uncoupling operator is only easily found for coordinate basis spin operators
         # TODO: add methods for uncoupling operators
-        if not (isinstance(self, JxOp) or isinstance(self, JyOp) or isinstance(self, JzOp)):
+        if not isinstance(self, (JxOp, JyOp, JzOp)):
             raise NotImplementedError
         result = []
         for n in range(len(tp.args)):
@@ -405,8 +414,8 @@ class J2Op(SpinOpBase, HermitianOperator):
         return self._represent_base(basis, **options)
 
     def _print_contents_pretty(self, printer, *args):
-        a = prettyForm(unicode(self.name))
-        b = prettyForm(u'2')
+        a = prettyForm(str(self.name))
+        b = prettyForm('2')
         return a**b
 
     def _print_contents_latex(self, printer, *args):
@@ -502,7 +511,7 @@ class Rotation(UnitaryOperator):
 
     def _print_operator_name_pretty(self, printer, *args):
         if printer._use_unicode:
-            return prettyForm(u'\N{SCRIPT CAPITAL R}' + u' ')
+            return prettyForm('\N{SCRIPT CAPITAL R}' + ' ')
         else:
             return prettyForm("R ")
 
@@ -623,7 +632,7 @@ class Rotation(UnitaryOperator):
     def _represent_JzOp(self, basis, **options):
         return self._represent_base(basis, **options)
 
-    def _apply_operator_uncoupled(self, state, ket, **options):
+    def _apply_operator_uncoupled(self, state, ket, *, dummy=True, **options):
         a = self.alpha
         b = self.beta
         g = self.gamma
@@ -639,7 +648,7 @@ class Rotation(UnitaryOperator):
                 s.append(z*state(j, mp))
             return Add(*s)
         else:
-            if options.pop('dummy', True):
+            if dummy:
                 mp = Dummy('mp')
             else:
                 mp = symbols('mp')
@@ -654,7 +663,7 @@ class Rotation(UnitaryOperator):
     def _apply_operator_JzKet(self, ket, **options):
         return self._apply_operator_uncoupled(JzKet, ket, **options)
 
-    def _apply_operator_coupled(self, state, ket, **options):
+    def _apply_operator_coupled(self, state, ket, *, dummy=True, **options):
         a = self.alpha
         b = self.beta
         g = self.gamma
@@ -672,7 +681,7 @@ class Rotation(UnitaryOperator):
                 s.append(z*state(j, mp, jn, coupling))
             return Add(*s)
         else:
-            if options.pop('dummy', True):
+            if dummy:
                 mp = Dummy('mp')
             else:
                 mp = symbols('mp')
@@ -853,12 +862,14 @@ class WignerD(Expr):
         return WignerD(*self.args, **hints)
 
     def _eval_wignerd(self):
-        j = sympify(self.j)
-        m = sympify(self.m)
-        mp = sympify(self.mp)
-        alpha = sympify(self.alpha)
-        beta = sympify(self.beta)
-        gamma = sympify(self.gamma)
+        j = self.j
+        m = self.m
+        mp = self.mp
+        alpha = self.alpha
+        beta = self.beta
+        gamma = self.gamma
+        if alpha == 0 and beta == 0 and gamma == 0:
+            return KroneckerDelta(m, mp)
         if not j.is_number:
             raise ValueError(
                 'j parameter must be numerical to evaluate, got %s' % j)
@@ -952,7 +963,6 @@ class SpinState(State):
         gamma = sympify(options.get('gamma', 0))
         size, mvals = m_values(j)
         result = zeros(size, 1)
-        # TODO: Use KroneckerDelta if all Euler angles == 0
         # breaks finding angles on L930
         for p, mval in enumerate(mvals):
             if m.is_number:
@@ -1237,15 +1247,15 @@ class JzKet(SpinState, Ket):
         >>> from sympy.physics.quantum.tensorproduct import TensorProduct
         >>> j1,m1,j2,m2 = symbols('j1 m1 j2 m2')
         >>> TensorProduct(JzKet(1,0), JzKet(1,1))
-        |1,0>x|1,1>
+        |1,0>|1,1>
         >>> TensorProduct(JzKet(j1,m1), JzKet(j2,m2))
-        |j1,m1>x|j2,m2>
+        |j1,m1>|j2,m2>
 
     A TensorProduct can be rewritten, in which case the eigenstates that make
     up the tensor product is rewritten to the new basis:
 
         >>> TensorProduct(JzKet(1,1),JxKet(1,1)).rewrite('Jz')
-        |1,1>x|1,-1>/2 + sqrt(2)*|1,1>x|1,0>/2 + |1,1>x|1,1>/2
+        |1,1>|1,-1>/2 + sqrt(2)*|1,1>|1,0>/2 + |1,1>|1,1>/2
 
     The represent method for TensorProduct's gives the vector representation of
     the state. Note that the state in the product basis is the equivalent of the
@@ -1361,13 +1371,13 @@ class CoupledSpinState(SpinState):
         else:
             raise TypeError("CoupledSpinState only takes 3 or 4 arguments, got: %s" % (len(jcoupling) + 3) )
         # Check arguments have correct form
-        if not (isinstance(jn, list) or isinstance(jn, tuple) or isinstance(jn, Tuple)):
+        if not isinstance(jn, (list, tuple, Tuple)):
             raise TypeError('jn must be Tuple, list or tuple, got %s' %
                             jn.__class__.__name__)
-        if not (isinstance(jcoupling, list) or isinstance(jcoupling, tuple) or isinstance(jcoupling, Tuple)):
+        if not isinstance(jcoupling, (list, tuple, Tuple)):
             raise TypeError('jcoupling must be Tuple, list or tuple, got %s' %
                             jcoupling.__class__.__name__)
-        if not all(isinstance(term, list) or isinstance(term, tuple) or isinstance(term, Tuple) for term in jcoupling):
+        if not all(isinstance(term, (list, tuple, Tuple)) for term in jcoupling):
             raise TypeError(
                 'All elements of jcoupling must be list, tuple or Tuple')
         if not len(jn) - 1 == len(jcoupling):
@@ -1403,7 +1413,7 @@ class CoupledSpinState(SpinState):
                 if abs(j1 - j2) > j3:
                     raise ValueError("All couplings must have |j1+j2| <= j3, "
                         "in coupling number %d got j1,j2,j3: %d,%d,%d" % (n + 1, j1, j2, j3))
-                if int(j1 + j2) == j1 + j2:
+                if int_valued(j1 + j2):
                     pass
             jvals[min(n1 + n2) - 1] = j3
         if len(jcoupling) > 0 and jcoupling[-1][2] != j:
@@ -1441,15 +1451,16 @@ class CoupledSpinState(SpinState):
         )
 
     def _print_label_latex(self, printer, *args):
-        label = [self.j, self.m]
+        label = [
+            printer._print(self.j, *args),
+            printer._print(self.m, *args)
+        ]
         for i, ji in enumerate(self.jn, start=1):
-            label.append('j_{%d}=%s' % (i, printer._print(ji)) )
+            label.append('j_{%d}=%s' % (i, printer._print(ji, *args)) )
         for jn, (n1, n2) in zip(self.coupled_jn[:-1], self.coupled_n[:-1]):
             n = ','.join(str(i) for i in sorted(n1 + n2))
-            label.append('j_{%s}=%s' % (n, printer._print(jn)) )
-        return self._print_sequence(
-            label, self._label_separator, printer, *args
-        )
+            label.append('j_{%s}=%s' % (n, printer._print(jn, *args)) )
+        return self._label_separator.join(label)
 
     @property
     def jn(self):
@@ -1714,7 +1725,7 @@ class JzKetCoupled(CoupledSpinState, Ket):
     state. This is done by passing coupled=False to the rewrite function:
 
         >>> JzKetCoupled(1, 0, (1, 1)).rewrite('Jz', coupled=False)
-        -sqrt(2)*|1,-1>x|1,1>/2 + sqrt(2)*|1,1>x|1,-1>/2
+        -sqrt(2)*|1,-1>|1,1>/2 + sqrt(2)*|1,1>|1,-1>/2
 
     Get the vector representation of a state in terms of the basis elements
     of the Jx operator:
@@ -1845,10 +1856,10 @@ def couple(expr, jcoupling_list=None):
     a = expr.atoms(TensorProduct)
     for tp in a:
         # Allow other tensor products to be in expression
-        if not all([ isinstance(state, SpinState) for state in tp.args]):
+        if not all(isinstance(state, SpinState) for state in tp.args):
             continue
         # If tensor product has all spin states, raise error for invalid tensor product state
-        if not all([state.__class__ is tp.args[0].__class__ for state in tp.args]):
+        if not all(state.__class__ is tp.args[0].__class__ for state in tp.args):
             raise TypeError('All states must be the same basis')
         expr = expr.subs(tp, _couple(tp, jcoupling_list))
     return expr
@@ -1870,9 +1881,9 @@ def _couple(tp, jcoupling_list):
                         (len(states) - 1, len(jcoupling_list)))
     if not all( len(coupling) == 2 for coupling in jcoupling_list):
         raise ValueError('Each coupling must define 2 spaces')
-    if any([n1 == n2 for n1, n2 in jcoupling_list]):
+    if any(n1 == n2 for n1, n2 in jcoupling_list):
         raise ValueError('Spin spaces cannot couple to themselves')
-    if all([sympify(n1).is_number and sympify(n2).is_number for n1, n2 in jcoupling_list]):
+    if all(sympify(n1).is_number and sympify(n2).is_number for n1, n2 in jcoupling_list):
         j_test = [0]*len(states)
         for n1, n2 in jcoupling_list:
             if j_test[n1 - 1] == -1 or j_test[n2 - 1] == -1:
@@ -1913,7 +1924,7 @@ def _couple(tp, jcoupling_list):
 
                 # Skip the configuration if non-physical
                 # This is a lazy check for physical states given the loose restrictions of diff_max
-                if any( [ d > m for d, m in zip(diff_list, diff_max) ] ):
+                if any(d > m for d, m in zip(diff_list, diff_max)):
                     continue
 
                 # Determine term
@@ -1931,11 +1942,11 @@ def _couple(tp, jcoupling_list):
                     cg_terms.append( (j1, m1, j2, m2, j3, m3) )
                     jcoupling.append( (min(j1_n), min(j2_n), j3) )
                 # Better checks that state is physical
-                if any([ abs(term[5]) > term[4] for term in cg_terms ]):
+                if any(abs(term[5]) > term[4] for term in cg_terms):
                     continue
-                if any([ term[0] + term[2] < term[4] for term in cg_terms ]):
+                if any(term[0] + term[2] < term[4] for term in cg_terms):
                     continue
-                if any([ abs(term[0] - term[2]) > term[4] for term in cg_terms ]):
+                if any(abs(term[0] - term[2]) > term[4] for term in cg_terms):
                     continue
                 coeff = Mul( *[ CG(*term).doit() for term in cg_terms] )
                 state = coupled_evect(j3, m3, jn, jcoupling)
@@ -2004,35 +2015,35 @@ def uncouple(expr, jn=None, jcoupling_list=None):
         >>> from sympy.physics.quantum.spin import JzKetCoupled, uncouple
         >>> from sympy import S
         >>> uncouple(JzKetCoupled(1, 0, (S(1)/2, S(1)/2)))
-        sqrt(2)*|1/2,-1/2>x|1/2,1/2>/2 + sqrt(2)*|1/2,1/2>x|1/2,-1/2>/2
+        sqrt(2)*|1/2,-1/2>|1/2,1/2>/2 + sqrt(2)*|1/2,1/2>|1/2,-1/2>/2
 
     Perform the same calculation using a SpinState state:
 
         >>> from sympy.physics.quantum.spin import JzKet
         >>> uncouple(JzKet(1, 0), (S(1)/2, S(1)/2))
-        sqrt(2)*|1/2,-1/2>x|1/2,1/2>/2 + sqrt(2)*|1/2,1/2>x|1/2,-1/2>/2
+        sqrt(2)*|1/2,-1/2>|1/2,1/2>/2 + sqrt(2)*|1/2,1/2>|1/2,-1/2>/2
 
     Uncouple a numerical state of three coupled spaces using a CoupledSpinState state:
 
         >>> uncouple(JzKetCoupled(1, 1, (1, 1, 1), ((1,3,1),(1,2,1)) ))
-        |1,-1>x|1,1>x|1,1>/2 - |1,0>x|1,0>x|1,1>/2 + |1,1>x|1,0>x|1,0>/2 - |1,1>x|1,1>x|1,-1>/2
+        |1,-1>|1,1>|1,1>/2 - |1,0>|1,0>|1,1>/2 + |1,1>|1,0>|1,0>/2 - |1,1>|1,1>|1,-1>/2
 
     Perform the same calculation using a SpinState state:
 
         >>> uncouple(JzKet(1, 1), (1, 1, 1), ((1,3,1),(1,2,1)) )
-        |1,-1>x|1,1>x|1,1>/2 - |1,0>x|1,0>x|1,1>/2 + |1,1>x|1,0>x|1,0>/2 - |1,1>x|1,1>x|1,-1>/2
+        |1,-1>|1,1>|1,1>/2 - |1,0>|1,0>|1,1>/2 + |1,1>|1,0>|1,0>/2 - |1,1>|1,1>|1,-1>/2
 
     Uncouple a symbolic state using a CoupledSpinState state:
 
         >>> from sympy import symbols
         >>> j,m,j1,j2 = symbols('j m j1 j2')
         >>> uncouple(JzKetCoupled(j, m, (j1, j2)))
-        Sum(CG(j1, m1, j2, m2, j, m)*|j1,m1>x|j2,m2>, (m1, -j1, j1), (m2, -j2, j2))
+        Sum(CG(j1, m1, j2, m2, j, m)*|j1,m1>|j2,m2>, (m1, -j1, j1), (m2, -j2, j2))
 
     Perform the same calculation using a SpinState state
 
         >>> uncouple(JzKet(j, m), (j1, j2))
-        Sum(CG(j1, m1, j2, m2, j, m)*|j1,m1>x|j2,m2>, (m1, -j1, j1), (m2, -j2, j2))
+        Sum(CG(j1, m1, j2, m2, j, m)*|j1,m1>|j2,m2>, (m1, -j1, j1), (m2, -j2, j2))
 
     """
     a = expr.atoms(SpinState)
@@ -2050,7 +2061,7 @@ def _uncouple(state, jn, jcoupling_list):
     elif isinstance(state, SpinState):
         if jn is None:
             raise ValueError("Must specify j-values for coupled state")
-        if not (isinstance(jn, list) or isinstance(jn, tuple)):
+        if not isinstance(jn, (list, tuple)):
             raise TypeError("jn must be list or tuple")
         if jcoupling_list is None:
             # Use default
@@ -2058,7 +2069,7 @@ def _uncouple(state, jn, jcoupling_list):
             for i in range(1, len(jn)):
                 jcoupling_list.append(
                     (1, 1 + i, Add(*[jn[j] for j in range(i + 1)])) )
-        if not (isinstance(jcoupling_list, list) or isinstance(jcoupling_list, tuple)):
+        if not isinstance(jcoupling_list, (list, tuple)):
             raise TypeError("jcoupling must be a list or tuple")
         if not len(jcoupling_list) == len(jn) - 1:
             raise ValueError("Must specify 2 fewer coupling terms than the number of j values")
@@ -2091,7 +2102,7 @@ def _uncouple(state, jn, jcoupling_list):
         result = []
         for config_num in range(tot):
             diff_list = _confignum_to_difflist(config_num, diff, n)
-            if any( [ d > p for d, p in zip(diff_list, diff_max) ] ):
+            if any(d > p for d, p in zip(diff_list, diff_max)):
                 continue
 
             cg_terms = []

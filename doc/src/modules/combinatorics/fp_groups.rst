@@ -4,10 +4,10 @@ Finitely Presented Groups
 Introduction
 ------------
 
-This module presents the functionality designed for computing with finitely-
-presented groups (fp-groups for short). The name of the corresponding SymPy
-object is ``FpGroup``. The functions or classes described here are studied
-under **computational group theory**. All code examples assume:
+This module presents the functionality designed for computing with
+finitely-presented groups (fp-groups for short). The name of the corresponding
+SymPy object is ``FpGroup``. The functions or classes described here are
+studied under **computational group theory**. All code examples assume:
 
 >>> from sympy.combinatorics.free_groups import free_group, vfree_group, xfree_group
 >>> from sympy.combinatorics.fp_groups import FpGroup, CosetTable, coset_enumeration_r
@@ -108,7 +108,7 @@ Coset Enumeration: The Todd-Coxeter Algorithm
 
 This section describes the use of coset enumeration techniques in SymPy. The
 algorithm used for coset enumeration procedure is Todd-Coxeter algorithm and
-is developed in Sympy using [Ho05] and [CDHW73]. The reader should consult
+is developed in SymPy using [Ho05] and [CDHW73]. The reader should consult
 [CDHW73] and [Hav91] for a general description of the algorithm.
 
 We have two strategies of coset enumeration *relator-based* and
@@ -269,7 +269,7 @@ Bibliography
 .. [Ho05] Derek F. Holt,
     Handbook of Computational Group Theory.
     In the series 'Discrete Mathematics and its Applications',
-    `Chapman & Hall/CRC 2005, xvi + 514 p <https://www.crcpress.com/Handbook-of-Computational-Group-Theory/Holt-Eick-OBrien/p/book/9781584883722>`_.
+    `Chapman & Hall/CRC 2005, xvi + 514 p <https://www.routledge.com/Handbook-of-Computational-Group-Theory/Holt-Eick-OBrien/p/book/9781584883722>`_.
 
 .. [Hav91] George Havas, Coset enumeration strategies.
     In Proceedings of the International Symposium on Symbolic and Algebraic Computation (ISSAC'91), Bonn 1991, pages 191--199. ACM Press, 1991.

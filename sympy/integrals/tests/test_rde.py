@@ -1,5 +1,7 @@
 """Most of these tests come from the examples in Bronstein's book."""
-from sympy import Poly, symbols, oo, I, Rational
+from sympy.core.numbers import (I, Rational, oo)
+from sympy.core.symbol import symbols
+from sympy.polys.polytools import Poly
 from sympy.integrals.risch import (DifferentialExtension,
     NonElementaryIntegralException)
 from sympy.integrals.rde import (order_at, order_at_oo, weak_normalizer,
@@ -81,7 +83,9 @@ def test_special_denom():
     DE.decrement_level()
     assert special_denom(Poly(1, t0), Poly(I*k, t0), Poly(1, t0), Poly(t0, t0),
     Poly(1, t0), DE) == \
-        (Poly(1, t0), Poly(I*k, t0), Poly(t0, t0), Poly(1, t0))
+        (Poly(1, t0, domain='ZZ'), Poly(I*k, t0, domain='ZZ_I[k,x]'),
+                Poly(t0, t0, domain='ZZ'), Poly(1, t0, domain='ZZ'))
+
 
     assert special_denom(Poly(1, t), Poly(t**2, t), Poly(1, t), Poly(t**2 - 1, t),
     Poly(t, t), DE, case='tan') == \
@@ -91,6 +95,28 @@ def test_special_denom():
     raises(ValueError, lambda: special_denom(Poly(1, t), Poly(t**2, t), Poly(1, t), Poly(t**2 - 1, t),
     Poly(t, t), DE, case='unrecognized_case'))
 
+    # Example 6.2.1
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t, t)]})
+    a = Poly(t**2 + 2*x*t + x**2, t)
+    b = Poly((1 + 1/x**2)*t**2 + (2*x - 1 + 2/x)*t + x**2, t)
+    c = Poly(t/x**2 - 1 + 2/x, t)
+    assert special_denom(a, b, Poly(1, t), c, Poly(1, t), DE) == \
+        (a, Poly(t**2/x**2 + (2/x - 1)*t, t), Poly(t**2/x**2 + (2/x - 1)*t, t), Poly(t, t))
+
+    # Example 6.2.2, adding a hypertangent case where the special denominator
+    # is not required in the reduction of the system, hence returning h = 1
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1 + t**2, t)]})
+    a = Poly(t, t, domain='ZZ')
+    ba = Poly((t - 1)*(t**2 + 1), t, domain='ZZ')
+    bd = Poly(1, t, domain='ZZ')
+    ca = Poly(1, t, domain='ZZ')
+    cd = Poly(1, t, domain='ZZ')
+    expected_a = Poly(t, t, domain='ZZ')
+    expected_b = Poly(t**3 - t**2 + t - 1, t, domain='ZZ')
+    expected_c = Poly(1, t, domain='ZZ')
+    expected_h = Poly(1, t, domain='ZZ')
+    assert special_denom(a, ba, bd, ca, cd, DE) == \
+        (expected_a, expected_b, expected_c, expected_h)
 
 def test_bound_degree_fail():
     # Primitive
@@ -196,3 +222,11 @@ def test_rischDE():
     assert rischDE(Poly(-2*x, x), Poly(1, x), Poly(1 - 2*x - 2*x**2, x),
     Poly(1, x), DE) == \
         (Poly(x + 1, x), Poly(1, x))
+
+    # See issue 28407
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t, t)]})
+    fa = Poly(-t + 1, t)
+    fd = Poly(1, t)
+    ga = Poly(1, t)
+    gd = Poly(1, t)
+    assert rischDE(fa, fd, ga, gd, DE) == (Poly(-1, t), Poly(t, t))

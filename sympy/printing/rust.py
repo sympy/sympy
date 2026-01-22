@@ -31,12 +31,21 @@ complete source code files.
 # .. _Rational64: http://rust-num.github.io/num/num/rational/type.Rational64.html
 # .. _BigRational: http://rust-num.github.io/num/num/rational/type.BigRational.html
 
-from __future__ import print_function, division
+from __future__ import annotations
+from functools import reduce
+import operator
+from typing import Any
 
-from typing import Any, Dict
-
+from sympy.codegen.ast import (
+    float32, float64, int32,
+    real, integer,  bool_
+)
 from sympy.core import S, Rational, Float, Lambda
+from sympy.core.expr import Expr
+from sympy.core.numbers import equal_valued
+from sympy.functions.elementary.integers import ceiling, floor
 from sympy.printing.codeprinter import CodePrinter
+from sympy.printing.precedence import PRECEDENCE, precedence
 
 # Rust's methods for integer and float can be found at here :
 #
@@ -50,8 +59,28 @@ from sympy.printing.codeprinter import CodePrinter
 # 3. args[1].func(), method without arguments (e.g. (e, x) => x.exp())
 # 4. func(args), function with arguments
 
-# dictionary mapping sympy function to (argument_conditions, Rust_function).
+# dictionary mapping SymPy function to (argument_conditions, Rust_function).
 # Used in RustCodePrinter._print_Function(self)
+
+class float_floor(floor):
+    """
+    Same as `sympy.floor`, but mimics the Rust behavior of returning a float rather than an integer
+    """
+    def _eval_is_integer(self):
+        return False
+
+class float_ceiling(ceiling):
+    """
+    Same as `sympy.ceiling`, but mimics the Rust behavior of returning a float rather than an integer
+    """
+    def _eval_is_integer(self):
+        return False
+
+
+function_overrides = {
+    "floor": (floor, float_floor),
+    "ceiling": (ceiling, float_ceiling),
+}
 
 # f64 method in Rust
 known_functions = {
@@ -60,21 +89,21 @@ known_functions = {
     # "": "is_finite",
     # "": "is_normal",
     # "": "classify",
-    "floor": "floor",
-    "ceiling": "ceil",
+    "float_floor": "floor",
+    "float_ceiling": "ceil",
     # "": "round",
     # "": "trunc",
     # "": "fract",
     "Abs": "abs",
-    "sign": "signum",
+    # "": "signum",
     # "": "is_sign_positive",
     # "": "is_sign_negative",
     # "": "mul_add",
-    "Pow": [(lambda base, exp: exp == -S.One, "recip", 2),           # 1.0/x
-            (lambda base, exp: exp == S.Half, "sqrt", 2),            # x ** 0.5
-            (lambda base, exp: exp == -S.Half, "sqrt().recip", 2),   # 1/(x ** 0.5)
+    "Pow": [(lambda base, exp: equal_valued(exp, -1), "recip", 2),   # 1.0/x
+            (lambda base, exp: equal_valued(exp, 0.5), "sqrt", 2),   # x ** 0.5
+            (lambda base, exp: equal_valued(exp, -0.5), "sqrt().recip", 2),   # 1/(x ** 0.5)
             (lambda base, exp: exp == Rational(1, 3), "cbrt", 2),    # x ** (1/3)
-            (lambda base, exp: base == S.One*2, "exp2", 3),          # 2 ** x
+            (lambda base, exp: equal_valued(base, 2), "exp2", 3),    # 2 ** x
             (lambda base, exp: exp.is_integer, "powi", 1),           # x ** y, for i32
             (lambda base, exp: not exp.is_integer, "powf", 1)],      # x ** y, for f64
     "exp": [(lambda exp: True, "exp", 2)],   # e ** x
@@ -103,6 +132,7 @@ known_functions = {
     "asinh": "asinh",
     "acosh": "acosh",
     "atanh": "atanh",
+    "sqrt": "sqrt",  # To enable automatic rewrites
 }
 
 # i64 method in Rust
@@ -159,11 +189,12 @@ known_functions = {
 # }
 
 # These are the core reserved words in the Rust language. Taken from:
-# http://doc.rust-lang.org/grammar.html#keywords
+# https://doc.rust-lang.org/reference/keywords.html
 
 reserved_words = ['abstract',
-                  'alignof',
                   'as',
+                  'async',
+                  'await',
                   'become',
                   'box',
                   'break',
@@ -171,6 +202,7 @@ reserved_words = ['abstract',
                   'continue',
                   'crate',
                   'do',
+                  'dyn',
                   'else',
                   'enum',
                   'extern',
@@ -178,6 +210,7 @@ reserved_words = ['abstract',
                   'final',
                   'fn',
                   'for',
+                  'gen',
                   'if',
                   'impl',
                   'in',
@@ -188,22 +221,19 @@ reserved_words = ['abstract',
                   'mod',
                   'move',
                   'mut',
-                  'offsetof',
                   'override',
                   'priv',
-                  'proc',
                   'pub',
-                  'pure',
                   'ref',
                   'return',
                   'Self',
                   'self',
-                  'sizeof',
                   'static',
                   'struct',
                   'super',
                   'trait',
                   'true',
+                  'try',
                   'type',
                   'typeof',
                   'unsafe',
@@ -215,23 +245,54 @@ reserved_words = ['abstract',
                   'yield']
 
 
+class TypeCast(Expr):
+    """
+    The type casting operator of the Rust language.
+    """
+
+    def __init__(self, expr, type_) -> None:
+        super().__init__()
+        self.explicit = expr.is_integer and type_ is not integer
+        self._assumptions = expr._assumptions
+        if self.explicit:
+            setattr(self, 'precedence', PRECEDENCE["Func"] + 10)
+        else:
+            setattr(self, 'precedence', precedence(self.expr))
+
+    @property
+    def expr(self):
+        return self.args[0]
+
+    @property
+    def type_(self):
+        return self.args[1]
+
+    def sort_key(self, order=None):
+        return self.args[0].sort_key(order=order)
+
 class RustCodePrinter(CodePrinter):
-    """A printer to convert python expressions to strings of Rust code"""
+    """A printer to convert SymPy expressions to strings of Rust code"""
     printmethod = "_rust_code"
     language = "Rust"
 
-    _default_settings = {
-        'order': None,
-        'full_prec': 'auto',
+    type_aliases = {
+        integer: int32,
+        real: float64,
+    }
+
+    type_mappings = {
+        int32: 'i32',
+        float32: 'f32',
+        float64: 'f64',
+        bool_: 'bool'
+    }
+
+    _default_settings: dict[str, Any] = dict(CodePrinter._default_settings, **{
         'precision': 17,
         'user_functions': {},
-        'human': True,
         'contract': True,
         'dereference': set(),
-        'error_on_reserved': False,
-        'reserved_word_suffix': '_',
-        'inline': False,
-    }  # type: Dict[str, Any]
+    })
 
     def __init__(self, settings={}):
         CodePrinter.__init__(self, settings)
@@ -240,6 +301,7 @@ class RustCodePrinter(CodePrinter):
         self.known_functions.update(userfuncs)
         self._dereference = set(settings.get('dereference', []))
         self.reserved_words = set(reserved_words)
+        self.function_overrides = function_overrides
 
     def _rate_index_position(self, p):
         return p*5
@@ -251,7 +313,8 @@ class RustCodePrinter(CodePrinter):
         return "// %s" % text
 
     def _declare_number_const(self, name, value):
-        return "const %s: f64 = %s;" % (name, value)
+        type_ = self.type_mappings[self.type_aliases[real]]
+        return "const %s: %s = %s;" % (name, type_, value)
 
     def _format_code(self, lines):
         return self.indent_code(lines)
@@ -335,35 +398,62 @@ class RustCodePrinter(CodePrinter):
         else:
             return self._print_not_supported(expr)
 
+    def _print_Mul(self, expr):
+        contains_floats = any(arg.is_real and not arg.is_integer for arg in expr.args)
+        if contains_floats:
+            expr = reduce(operator.mul,(self._cast_to_float(arg) if arg != -1 else arg for arg in expr.args))
+
+        return super()._print_Mul(expr)
+
+    def _print_Add(self, expr, order=None):
+        contains_floats = any(arg.is_real and not arg.is_integer for arg in expr.args)
+        if contains_floats:
+            expr = reduce(operator.add, (self._cast_to_float(arg) for arg in expr.args))
+
+        return super()._print_Add(expr, order)
+
     def _print_Pow(self, expr):
         if expr.base.is_integer and not expr.exp.is_integer:
             expr = type(expr)(Float(expr.base), expr.exp)
             return self._print(expr)
         return self._print_Function(expr)
 
+    def _print_TypeCast(self, expr):
+        if not expr.explicit:
+            return self._print(expr.expr)
+        else:
+            return self._print(expr.expr) + ' as %s' % self.type_mappings[self.type_aliases[expr.type_]]
+
     def _print_Float(self, expr, _type=False):
-        ret = super(RustCodePrinter, self)._print_Float(expr)
+        ret = super()._print_Float(expr)
         if _type:
-            return ret + '_f64'
+            return ret + '_%s' % self.type_mappings[self.type_aliases[real]]
         else:
             return ret
 
     def _print_Integer(self, expr, _type=False):
-        ret = super(RustCodePrinter, self)._print_Integer(expr)
+        ret = super()._print_Integer(expr)
         if _type:
-            return ret + '_i32'
+            return ret + '_%s' % self.type_mappings[self.type_aliases[integer]]
         else:
             return ret
 
     def _print_Rational(self, expr):
         p, q = int(expr.p), int(expr.q)
-        return '%d_f64/%d.0' % (p, q)
+        float_suffix = self.type_mappings[self.type_aliases[real]]
+        return '%d_%s/%d.0' % (p, float_suffix, q)
 
     def _print_Relational(self, expr):
-        lhs_code = self._print(expr.lhs)
-        rhs_code = self._print(expr.rhs)
+        if (expr.lhs.is_integer and not expr.rhs.is_integer) or (expr.rhs.is_integer and not expr.lhs.is_integer):
+            lhs = self._cast_to_float(expr.lhs)
+            rhs = self._cast_to_float(expr.rhs)
+        else:
+            lhs = expr.lhs
+            rhs = expr.rhs
+        lhs_code = self._print(lhs)
+        rhs_code = self._print(rhs)
         op = expr.rel_op
-        return "{0} {1} {2}".format(lhs_code, op, rhs_code)
+        return "{} {} {}".format(lhs_code, op, rhs_code)
 
     def _print_Indexed(self, expr):
         # calculate index for 1d array
@@ -434,8 +524,7 @@ class RustCodePrinter(CodePrinter):
 
     def _print_ITE(self, expr):
         from sympy.functions import Piecewise
-        _piecewise = Piecewise((expr.args[1], expr.args[0]), (expr.args[2], True))
-        return self._print(_piecewise)
+        return self._print(expr.rewrite(Piecewise, deep=False))
 
     def _print_MatrixBase(self, A):
         if A.cols == 1:
@@ -443,22 +532,17 @@ class RustCodePrinter(CodePrinter):
         else:
             raise ValueError("Full Matrix Support in Rust need Crates (https://crates.io/keywords/matrix).")
 
+    def _print_SparseRepMatrix(self, mat):
+        # do not allow sparse matrices to be made dense
+        return self._print_not_supported(mat)
+
     def _print_MatrixElement(self, expr):
         return "%s[%s]" % (expr.parent,
                            expr.j + expr.i*expr.parent.shape[1])
 
-    # FIXME: Str/CodePrinter could define each of these to call the _print
-    # method from higher up the class hierarchy (see _print_NumberSymbol).
-    # Then subclasses like us would not need to repeat all this.
-    _print_Matrix = _print_MatrixBase
-    _print_DenseMatrix = _print_MatrixBase
-    _print_MutableDenseMatrix = _print_MatrixBase
-    _print_ImmutableMatrix = _print_MatrixBase
-    _print_ImmutableDenseMatrix = _print_MatrixBase
-
     def _print_Symbol(self, expr):
 
-        name = super(RustCodePrinter, self)._print_Symbol(expr)
+        name = super()._print_Symbol(expr)
 
         if expr in self._dereference:
             return '(*%s)' % name
@@ -478,6 +562,52 @@ class RustCodePrinter(CodePrinter):
             lhs_code = self._print(lhs)
             rhs_code = self._print(rhs)
             return self._get_statement("%s = %s" % (lhs_code, rhs_code))
+
+    def _print_sign(self, expr):
+        arg = self._print(expr.args[0])
+        return "(if (%s == 0.0) { 0.0 } else { (%s).signum() })" % (arg, arg)
+
+    def _cast_to_float(self, expr):
+        if not expr.is_number:
+            return TypeCast(expr, real)
+        elif expr.is_integer:
+            return Float(expr)
+        return expr
+
+    def _can_print(self, name):
+        """ Check if function ``name`` is either a known function or has its own
+            printing method. Used to check if rewriting is possible."""
+
+        # since the whole point of function_overrides is to enable proper printing,
+        # we presume they all are printable
+
+        return name in self.known_functions or name in function_overrides or getattr(self, '_print_{}'.format(name), False)
+
+    def _collect_functions(self, expr):
+        functions = set()
+        if isinstance(expr, Expr):
+            if expr.is_Function:
+                functions.add(expr.func)
+            for arg in expr.args:
+                functions = functions.union(self._collect_functions(arg))
+        return functions
+
+    def _rewrite_known_functions(self, expr):
+        if not isinstance(expr, Expr):
+            return expr
+
+        expression_functions = self._collect_functions(expr)
+        rewriteable_functions = {
+            name: (target_f, required_fs)
+            for name, (target_f, required_fs) in self._rewriteable_functions.items()
+            if self._can_print(target_f)
+            and all(self._can_print(f) for f in required_fs)
+        }
+        for func in expression_functions:
+            target_f, _ = rewriteable_functions.get(func.__name__, (None, None))
+            if target_f:
+                expr = expr.rewrite(target_f)
+        return expr
 
     def indent_code(self, code):
         """Accepts a string of code or a list of code lines"""
@@ -499,127 +629,10 @@ class RustCodePrinter(CodePrinter):
         pretty = []
         level = 0
         for n, line in enumerate(code):
-            if line == '' or line == '\n':
+            if line in ('', '\n'):
                 pretty.append(line)
                 continue
             level -= decrease[n]
             pretty.append("%s%s" % (tab*level, line))
             level += increase[n]
         return pretty
-
-
-def rust_code(expr, assign_to=None, **settings):
-    """Converts an expr to a string of Rust code
-
-    Parameters
-    ==========
-
-    expr : Expr
-        A sympy expression to be converted.
-    assign_to : optional
-        When given, the argument is used as the name of the variable to which
-        the expression is assigned. Can be a string, ``Symbol``,
-        ``MatrixSymbol``, or ``Indexed`` type. This is helpful in case of
-        line-wrapping, or for expressions that generate multi-line statements.
-    precision : integer, optional
-        The precision for numbers such as pi [default=15].
-    user_functions : dict, optional
-        A dictionary where the keys are string representations of either
-        ``FunctionClass`` or ``UndefinedFunction`` instances and the values
-        are their desired C string representations. Alternatively, the
-        dictionary value can be a list of tuples i.e. [(argument_test,
-        cfunction_string)].  See below for examples.
-    dereference : iterable, optional
-        An iterable of symbols that should be dereferenced in the printed code
-        expression. These would be values passed by address to the function.
-        For example, if ``dereference=[a]``, the resulting code would print
-        ``(*a)`` instead of ``a``.
-    human : bool, optional
-        If True, the result is a single string that may contain some constant
-        declarations for the number symbols. If False, the same information is
-        returned in a tuple of (symbols_to_declare, not_supported_functions,
-        code_text). [default=True].
-    contract: bool, optional
-        If True, ``Indexed`` instances are assumed to obey tensor contraction
-        rules and the corresponding nested loops over indices are generated.
-        Setting contract=False will not generate loops, instead the user is
-        responsible to provide values for the indices in the code.
-        [default=True].
-
-    Examples
-    ========
-
-    >>> from sympy import rust_code, symbols, Rational, sin, ceiling, Abs, Function
-    >>> x, tau = symbols("x, tau")
-    >>> rust_code((2*tau)**Rational(7, 2))
-    '8*1.4142135623731*tau.powf(7_f64/2.0)'
-    >>> rust_code(sin(x), assign_to="s")
-    's = x.sin();'
-
-    Simple custom printing can be defined for certain types by passing a
-    dictionary of {"type" : "function"} to the ``user_functions`` kwarg.
-    Alternatively, the dictionary value can be a list of tuples i.e.
-    [(argument_test, cfunction_string)].
-
-    >>> custom_functions = {
-    ...   "ceiling": "CEIL",
-    ...   "Abs": [(lambda x: not x.is_integer, "fabs", 4),
-    ...           (lambda x: x.is_integer, "ABS", 4)],
-    ...   "func": "f"
-    ... }
-    >>> func = Function('func')
-    >>> rust_code(func(Abs(x) + ceiling(x)), user_functions=custom_functions)
-    '(fabs(x) + x.CEIL()).f()'
-
-    ``Piecewise`` expressions are converted into conditionals. If an
-    ``assign_to`` variable is provided an if statement is created, otherwise
-    the ternary operator is used. Note that if the ``Piecewise`` lacks a
-    default term, represented by ``(expr, True)`` then an error will be thrown.
-    This is to prevent generating an expression that may not evaluate to
-    anything.
-
-    >>> from sympy import Piecewise
-    >>> expr = Piecewise((x + 1, x > 0), (x, True))
-    >>> print(rust_code(expr, tau))
-    tau = if (x > 0) {
-        x + 1
-    } else {
-        x
-    };
-
-    Support for loops is provided through ``Indexed`` types. With
-    ``contract=True`` these expressions will be turned into loops, whereas
-    ``contract=False`` will just print the assignment expression that should be
-    looped over:
-
-    >>> from sympy import Eq, IndexedBase, Idx
-    >>> len_y = 5
-    >>> y = IndexedBase('y', shape=(len_y,))
-    >>> t = IndexedBase('t', shape=(len_y,))
-    >>> Dy = IndexedBase('Dy', shape=(len_y-1,))
-    >>> i = Idx('i', len_y-1)
-    >>> e=Eq(Dy[i], (y[i+1]-y[i])/(t[i+1]-t[i]))
-    >>> rust_code(e.rhs, assign_to=e.lhs, contract=False)
-    'Dy[i] = (y[i + 1] - y[i])/(t[i + 1] - t[i]);'
-
-    Matrices are also supported, but a ``MatrixSymbol`` of the same dimensions
-    must be provided to ``assign_to``. Note that any expression that can be
-    generated normally can also exist inside a Matrix:
-
-    >>> from sympy import Matrix, MatrixSymbol
-    >>> mat = Matrix([x**2, Piecewise((x + 1, x > 0), (x, True)), sin(x)])
-    >>> A = MatrixSymbol('A', 3, 1)
-    >>> print(rust_code(mat, A))
-    A = [x.powi(2), if (x > 0) {
-        x + 1
-    } else {
-        x
-    }, x.sin()];
-    """
-
-    return RustCodePrinter(settings).doprint(expr, assign_to)
-
-
-def print_rust_code(expr, **settings):
-    """Prints Rust representation of the given expression."""
-    print(rust_code(expr, **settings))

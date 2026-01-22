@@ -15,13 +15,18 @@ the following function types in the given ``Interval``:
 
 """
 
-from sympy import S, Symbol
+from sympy.core.power import Pow
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
-from sympy.simplify import simplify
-from sympy.solvers.solveset import solveset
+from sympy.functions.elementary.exponential import log
+from sympy.functions.elementary.trigonometric import sec, csc, cot, tan, cos
+from sympy.functions.elementary.hyperbolic import (
+    sech, csch, coth, tanh, cosh, asech, acsch, atanh, acoth)
+from sympy.utilities.misc import filldedent
 
 
-def singularities(expression, symbol):
+def singularities(expression, symbol, domain=None):
     """
     Find singularities of a given function.
 
@@ -40,14 +45,15 @@ def singularities(expression, symbol):
     Set
         A set of values for ``symbol`` for which ``expression`` has a
         singularity. An ``EmptySet`` is returned if ``expression`` has no
-        singularities for any given value of ``Symbol``.
+        singularities for any given value of ``Symbol``. An ``Interval`` is returned
+        if ``expression`` has uncountably many singularities.
 
     Raises
     ======
 
     NotImplementedError
-        The algorithm to find singularities for irrational functions
-        has not been implemented yet.
+        Methods for determining the singularities of this function have
+        not been developed.
 
     Notes
     =====
@@ -56,7 +62,7 @@ def singularities(expression, symbol):
     nor does it find branch points of the expression.
 
     Currently supported functions are:
-        - univariate rational (real or complex) functions
+        - univariate continuous (real or complex) functions
 
     References
     ==========
@@ -66,28 +72,55 @@ def singularities(expression, symbol):
     Examples
     ========
 
-    >>> from sympy.calculus.singularities import singularities
-    >>> from sympy import Symbol
+    >>> from sympy import singularities, Symbol, log
     >>> x = Symbol('x', real=True)
     >>> y = Symbol('y', real=False)
     >>> singularities(x**2 + x + 1, x)
     EmptySet
     >>> singularities(1/(x + 1), x)
-    FiniteSet(-1)
+    {-1}
     >>> singularities(1/(y**2 + 1), y)
-    FiniteSet(I, -I)
+    {-I, I}
     >>> singularities(1/(y**3 + 1), y)
-    FiniteSet(-1, 1/2 - sqrt(3)*I/2, 1/2 + sqrt(3)*I/2)
+    {-1, 1/2 - sqrt(3)*I/2, 1/2 + sqrt(3)*I/2}
+    >>> singularities(log(x), x)
+    {0}
+    >>> singularities(0**x, x)
+    Interval.open(-oo, 0)
 
     """
-    if not expression.is_rational_function(symbol):
-        raise NotImplementedError(
-            "Algorithms finding singularities for non-rational"
-            " functions are not yet implemented."
-        )
-    else:
+    from sympy.solvers.solveset import solveset
+    from sympy.sets.sets import Interval
+
+    if domain is None:
         domain = S.Reals if symbol.is_real else S.Complexes
-        return solveset(simplify(1 / expression), symbol, domain)
+    try:
+        sings = S.EmptySet
+        e = expression.rewrite([sec, csc, cot, tan], cos)
+        e = e.rewrite([sech, csch, coth, tanh], cosh)
+        for i in e.atoms(Pow):
+            if i.base == S.Zero:
+                sing_interval = solveset(i.exp <= 0, symbol, domain)
+                # Since in Sympy we assume that 0**0 = 1,
+                # we can't have a singularity at i.exp == 0 and therefore
+                # we must return an open interval.
+                sing_interval = Interval.open(sing_interval.inf, sing_interval.sup)
+                sings += sing_interval
+            if i.exp.is_infinite:
+                raise NotImplementedError
+            if i.exp.is_negative:
+                # XXX: exponent of varying sign not handled
+                sings += solveset(i.base, symbol, domain)
+        for i in expression.atoms(log, asech, acsch):
+            sings += solveset(i.args[0], symbol, domain)
+        for i in expression.atoms(atanh, acoth):
+            sings += solveset(i.args[0] - 1, symbol, domain)
+            sings += solveset(i.args[0] + 1, symbol, domain)
+        return sings
+    except NotImplementedError:
+        raise NotImplementedError(filldedent('''
+            Methods for determining the singularities
+            of this function have not been developed.'''))
 
 
 ###########################################################################
@@ -126,6 +159,8 @@ def monotonicity_helper(expression, predicate, interval=S.Reals, symbol=None):
         is varied in ``range``, False otherwise.
 
     """
+    from sympy.solvers.solveset import solveset
+
     expression = sympify(expression)
     free = expression.free_symbols
 
@@ -137,6 +172,16 @@ def monotonicity_helper(expression, predicate, interval=S.Reals, symbol=None):
             )
 
     variable = symbol or (free.pop() if free else Symbol('x'))
+
+    try:
+        sings = singularities(expression, variable, interval)
+        if interval.is_subset(S.Reals):
+            interior_sings = interval.interior.intersection(sings)
+            if interior_sings != S.EmptySet:
+                return False
+    except (NotImplementedError, AttributeError):
+        pass
+
     derivative = expression.diff(variable)
     predicate_interval = solveset(predicate(derivative), variable, S.Reals)
     return interval.is_subset(predicate_interval)
@@ -256,11 +301,15 @@ def is_decreasing(expression, interval=S.Reals, symbol=None):
     >>> from sympy import is_decreasing
     >>> from sympy.abc import x, y
     >>> from sympy import S, Interval, oo
+    >>> is_decreasing(1/(x**2 - 3*x), Interval.open(S(3)/2, 3))
+    True
     >>> is_decreasing(1/(x**2 - 3*x), Interval.open(1.5, 3))
     True
     >>> is_decreasing(1/(x**2 - 3*x), Interval.Lopen(3, oo))
     True
     >>> is_decreasing(1/(x**2 - 3*x), Interval.Ropen(-oo, S(3)/2))
+    False
+    >>> is_decreasing(1/(x**2 - 3*x), Interval.Ropen(-oo, 1.5))
     False
     >>> is_decreasing(-x**2, Interval(-oo, 0))
     False
@@ -303,6 +352,8 @@ def is_strictly_decreasing(expression, interval=S.Reals, symbol=None):
     True
     >>> is_strictly_decreasing(1/(x**2 - 3*x), Interval.Ropen(-oo, S(3)/2))
     False
+    >>> is_strictly_decreasing(1/(x**2 - 3*x), Interval.Ropen(-oo, 1.5))
+    False
     >>> is_strictly_decreasing(-x**2, Interval(-oo, 0))
     False
     >>> is_strictly_decreasing(-x**2 + y, Interval(-oo, 0), x)
@@ -340,24 +391,84 @@ def is_monotonic(expression, interval=S.Reals, symbol=None):
     NotImplementedError
         Monotonicity check has not been implemented for the queried function.
 
+    Explanation
+    ===========
+
+    A real-valued function f is monotonic on an interval I if it is either
+    monotonically increasing or monotonically decreasing throughout I:
+
+    - **Monotonically increasing**: For all x1, x2 in I where x1 < x2,
+      we have f(x1) <= f(x2)
+    - **Monotonically decreasing**: For all x1, x2 in I where x1 < x2,
+      we have f(x1) >= f(x2)
+
+    According to Rudin (Theorem 4.30), monotonic functions can have jump
+    discontinuities (first kind) but NOT poles (second kind). Poles violate
+    the ordering property. Example: tan(x) on [0,5] has poles at pi/2, 3*pi/2
+    causing transitions between +-infinity, which breaks monotonicity.
+
     Examples
     ========
 
-    >>> from sympy import is_monotonic
+    Basic monotonicity tests:
+
+    >>> from sympy import is_monotonic, tan, Interval, pi, oo
     >>> from sympy.abc import x, y
-    >>> from sympy import S, Interval, oo
-    >>> is_monotonic(1/(x**2 - 3*x), Interval.open(1.5, 3))
-    True
-    >>> is_monotonic(1/(x**2 - 3*x), Interval.Lopen(3, oo))
-    True
+    >>> from sympy import S
     >>> is_monotonic(x**3 - 3*x**2 + 4*x, S.Reals)
     True
     >>> is_monotonic(-x**2, S.Reals)
     False
+
+    Functions with poles (interior singularities) are not monotonic:
+
+    >>> is_monotonic(tan(x), Interval(0, 5), x)
+    False
+    >>> is_monotonic(1/x, Interval(-1, 1), x)
+    False
+
+    But the same functions are monotonic on intervals that exclude the poles:
+
+    >>> is_monotonic(tan(x), Interval.open(-pi/2, pi/2), x)
+    True
+    >>> is_monotonic(1/x, Interval.open(0, 1), x)
+    True
+
+    Piecewise constant intervals:
+
+    >>> is_monotonic(1/(x**2 - 3*x), Interval.open(S(3)/2, 3), x)
+    True
+    >>> is_monotonic(1/(x**2 - 3*x), Interval.Lopen(3, oo), x)
+    True
+
+    Multivariate expressions:
+
     >>> is_monotonic(x**2 + y + 1, Interval(1, 2), x)
     True
 
+    See Also
+    ========
+
+    is_increasing : Test if function is non-decreasing
+    is_decreasing : Test if function is non-increasing
+    is_strictly_increasing : Test if function is strictly increasing
+    is_strictly_decreasing : Test if function is strictly decreasing
+    singularities : Find singularities of a function
+    continuous_domain : Find the domain where function is continuous
+
+    References
+    ==========
+
+    .. [1] Rudin, W. (1976). "Principles of Mathematical Analysis" (3rd ed.),
+           McGraw-Hill. Theorem 4.30: A monotonic function has at most
+           countably many discontinuities, and all are of the first kind
+           (jump discontinuities).
+
+    .. [2] https://en.wikipedia.org/wiki/Monotonic_function
+
     """
+    from sympy.solvers.solveset import solveset
+
     expression = sympify(expression)
 
     free = expression.free_symbols
@@ -368,5 +479,15 @@ def is_monotonic(expression, interval=S.Reals, symbol=None):
         )
 
     variable = symbol or (free.pop() if free else Symbol('x'))
+
+    try:
+        sings = singularities(expression, variable, interval)
+        if interval.is_subset(S.Reals):
+            interior_sings = interval.interior.intersection(sings)
+            if interior_sings != S.EmptySet:
+                return False
+    except (NotImplementedError, AttributeError):
+        pass
+
     turning_points = solveset(expression.diff(variable), variable, interval)
     return interval.intersection(turning_points) is S.EmptySet

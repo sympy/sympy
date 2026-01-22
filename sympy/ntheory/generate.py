@@ -2,37 +2,34 @@
 Generating and counting primes.
 
 """
-from __future__ import print_function, division
-
-import random
-from bisect import bisect
+from __future__ import annotations
+from typing import Iterator, Callable, overload, SupportsIndex, Literal
+from bisect import bisect, bisect_left
 from itertools import count
 # Using arrays for sieving instead of lists greatly reduces
 # memory consumption
 from array import array as _array
 
-from sympy import Function, S
-from sympy.core.compatibility import as_int
+from sympy.core.random import randint
+from sympy.external.gmpy import sqrt
 from .primetest import isprime
+from sympy.utilities.decorator import deprecated
+from sympy.utilities.misc import as_int
 
 
-def _azeros(n):
-    return _array('l', [0]*n)
-
-
-def _aset(*v):
-    return _array('l', v)
-
-
-def _arange(a, b):
-    return _array('l', range(a, b))
+def _as_int_ceiling(a) -> int:
+    """ Wrapping ceiling in as_int will raise an error if there was a problem
+        determining whether the expression was exactly an integer or not."""
+    from sympy.functions.elementary.integers import ceiling
+    return as_int(ceiling(a))
 
 
 class Sieve:
-    """An infinite list of prime numbers, implemented as a dynamically
+    """A list of prime numbers, implemented as a dynamically
     growing sieve of Eratosthenes. When a lookup is requested involving
     an odd number that has not been sieved, the sieve is automatically
-    extended up to that number.
+    extended up to that number. Implementation details limit the number of
+    primes to ``2^32-1``.
 
     Examples
     ========
@@ -42,18 +39,40 @@ class Sieve:
     >>> 25 in sieve
     False
     >>> sieve._list
-    array('l', [2, 3, 5, 7, 11, 13, 17, 19, 23])
+    array('L', [2, 3, 5, 7, 11, 13, 17, 19, 23])
     """
+    _n: int
+    _list: _array[int]
+    _tlist: _array[int]
+    _mlist: _array[int]
+    sieve_interval: int
 
     # data shared (and updated) by all Sieve instances
-    def __init__(self):
+    def __init__(self, sieve_interval: int = 1_000_000) -> None:
+        """ Initial parameters for the Sieve class.
+
+        Parameters
+        ==========
+
+        sieve_interval (int): Amount of memory to be used
+
+        Raises
+        ======
+
+        ValueError
+            If ``sieve_interval`` is not positive.
+
+        """
         self._n = 6
-        self._list = _aset(2, 3, 5, 7, 11, 13) # primes
-        self._tlist = _aset(0, 1, 1, 2, 2, 4) # totient
-        self._mlist = _aset(0, 1, -1, -1, 0, -1) # mobius
+        self._list = _array('L', [2, 3, 5, 7, 11, 13]) # primes
+        self._tlist = _array('L', [0, 1, 1, 2, 2, 4]) # totient
+        self._mlist = _array('i', [0, 1, -1, -1, 0, -1]) # mobius
+        if sieve_interval <= 0:
+            raise ValueError("sieve_interval should be a positive integer")
+        self.sieve_interval = sieve_interval
         assert all(len(i) == self._n for i in (self._list, self._tlist, self._mlist))
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return ("<%s sieve (%i): %i, %i, %i, ... %i, %i\n"
              "%s sieve (%i): %i, %i, %i, ... %i, %i\n"
              "%s sieve (%i): %i, %i, %i, ... %i, %i>") % (
@@ -67,7 +86,12 @@ class Sieve:
                  self._mlist[0], self._mlist[1],
                  self._mlist[2], self._mlist[-2], self._mlist[-1])
 
-    def _reset(self, prime=None, totient=None, mobius=None):
+    def _reset(
+        self,
+        prime: bool | None = None,
+        totient: bool | None = None,
+        mobius: bool | None = None,
+    ) -> None:
         """Reset all caches (default). To reset one or more set the
             desired keyword to True."""
         if all(i is None for i in (prime, totient, mobius)):
@@ -79,8 +103,8 @@ class Sieve:
         if mobius:
             self._mlist = self._mlist[:self._n]
 
-    def extend(self, n):
-        """Grow the sieve to cover all primes <= n (a real number).
+    def extend(self, n: int) -> None:
+        """Grow the sieve to cover all primes <= n.
 
         Examples
         ========
@@ -92,31 +116,60 @@ class Sieve:
         True
         """
         n = int(n)
-        if n <= self._list[-1]:
+        # `num` is even at any point in the function.
+        # This satisfies the condition required by `self._primerange`.
+        num = self._list[-1] + 1
+        if n < num:
             return
-
-        # We need to sieve against all bases up to sqrt(n).
-        # This is a recursive call that will do nothing if there are enough
-        # known bases already.
-        maxbase = int(n**0.5) + 1
-        self.extend(maxbase)
-
-        # Create a new sieve starting from sqrt(n)
-        begin = self._list[-1] + 1
-        newsieve = _arange(begin, n + 1)
-
-        # Now eliminate all multiples of primes in [2, sqrt(n)]
-        for p in self.primerange(2, maxbase):
-            # Start counting at a multiple of p, offsetting
-            # the index to account for the new sieve's base index
-            startindex = (-begin) % p
-            for i in range(startindex, len(newsieve), p):
-                newsieve[i] = 0
-
+        num2 = num**2
+        while num2 <= n:
+            self._list += _array('L', self._primerange(num, num2))
+            num, num2 = num2, num2**2
         # Merge the sieves
-        self._list += _array('l', [x for x in newsieve if x])
+        self._list += _array('L', self._primerange(num, n + 1))
 
-    def extend_to_no(self, i):
+    def _primerange(self, a: int, b: int) -> Iterator[int]:
+        """ Generate all prime numbers in the range (a, b).
+
+        Parameters
+        ==========
+
+        a, b : positive integers assuming the following conditions
+                * a is an even number
+                * 2 < self._list[-1] < a < b < nextprime(self._list[-1])**2
+
+        Yields
+        ======
+
+        p (int): prime numbers such that ``a < p < b``
+
+        Examples
+        ========
+
+        >>> from sympy.ntheory.generate import Sieve
+        >>> s = Sieve()
+        >>> s._list[-1]
+        13
+        >>> list(s._primerange(18, 31))
+        [19, 23, 29]
+
+        """
+        if b % 2:
+            b -= 1
+        while a < b:
+            block_size = min(self.sieve_interval, (b - a) // 2)
+            # Create the list such that block[x] iff (a + 2x + 1) is prime.
+            # Note that even numbers are not considered here.
+            block = [True] * block_size
+            for p in self._list[1:bisect(self._list, sqrt(a + 2 * block_size + 1))]:
+                for t in range((-(a + 1 + p) // 2) % p, block_size, p):
+                    block[t] = False
+            for idx, p in enumerate(block):
+                if p:
+                    yield a + 2 * idx + 1
+            a += 2 * block_size
+
+    def extend_to_no(self, i: int) -> None:
         """Extend to include the ith prime number.
 
         Parameters
@@ -131,7 +184,7 @@ class Sieve:
         >>> sieve._reset() # this line for doctest only
         >>> sieve.extend_to_no(9)
         >>> sieve._list
-        array('l', [2, 3, 5, 7, 11, 13, 17, 19, 23])
+        array('L', [2, 3, 5, 7, 11, 13, 17, 19, 23])
 
         Notes
         =====
@@ -143,36 +196,43 @@ class Sieve:
         while len(self._list) < i:
             self.extend(int(self._list[-1] * 1.5))
 
-    def primerange(self, a, b):
-        """Generate all prime numbers in the range [a, b).
+    def primerange(self, a: int, b: int | None = None) -> Iterator[int]:
+        """Generate all prime numbers in the range [2, a) or [a, b).
 
         Examples
         ========
 
-        >>> from sympy import sieve
-        >>> print([i for i in sieve.primerange(7, 18)])
-        [7, 11, 13, 17]
-        """
-        from sympy.functions.elementary.integers import ceiling
+        >>> from sympy import sieve, prime
 
-        # wrapping ceiling in as_int will raise an error if there was a problem
-        # determining whether the expression was exactly an integer or not
-        a = max(2, as_int(ceiling(a)))
-        b = as_int(ceiling(b))
+        All primes less than 19:
+
+        >>> print([i for i in sieve.primerange(19)])
+        [2, 3, 5, 7, 11, 13, 17]
+
+        All primes greater than or equal to 7 and less than 19:
+
+        >>> print([i for i in sieve.primerange(7, 19)])
+        [7, 11, 13, 17]
+
+        All primes through the 10th prime
+
+        >>> list(sieve.primerange(prime(10) + 1))
+        [2, 3, 5, 7, 11, 13, 17, 19, 23, 29]
+
+        """
+        if b is None:
+            b = _as_int_ceiling(a)
+            a = 2
+        else:
+            a = max(2, _as_int_ceiling(a))
+            b = _as_int_ceiling(b)
         if a >= b:
             return
         self.extend(b)
-        i = self.search(a)[1]
-        maxi = len(self._list) + 1
-        while i < maxi:
-            p = self._list[i - 1]
-            if p < b:
-                yield p
-                i += 1
-            else:
-                return
+        yield from self._list[bisect_left(self._list, a):
+                              bisect_left(self._list, b)]
 
-    def totientrange(self, a, b):
+    def totientrange(self, a: int, b: int) -> Iterator[int]:
         """Generate all totient numbers for the range [a, b).
 
         Examples
@@ -182,12 +242,8 @@ class Sieve:
         >>> print([i for i in sieve.totientrange(7, 18)])
         [6, 4, 6, 4, 10, 4, 12, 6, 8, 8, 16]
         """
-        from sympy.functions.elementary.integers import ceiling
-
-        # wrapping ceiling in as_int will raise an error if there was a problem
-        # determining whether the expression was exactly an integer or not
-        a = max(1, as_int(ceiling(a)))
-        b = as_int(ceiling(b))
+        a = max(1, _as_int_ceiling(a))
+        b = _as_int_ceiling(b)
         n = len(self._tlist)
         if a >= b:
             return
@@ -195,23 +251,25 @@ class Sieve:
             for i in range(a, b):
                 yield self._tlist[i]
         else:
-            self._tlist += _arange(n, b)
+            self._tlist += _array('L', range(n, b))
             for i in range(1, n):
                 ti = self._tlist[i]
-                startindex = (n + i - 1) // i * i
-                for j in range(startindex, b, i):
-                    self._tlist[j] -= ti
+                if ti == i - 1:
+                    startindex = (n + i - 1) // i * i
+                    for j in range(startindex, b, i):
+                        self._tlist[j] -= self._tlist[j] // i
                 if i >= a:
                     yield ti
 
             for i in range(n, b):
                 ti = self._tlist[i]
-                for j in range(2 * i, b, i):
-                    self._tlist[j] -= ti
+                if ti == i:
+                    for j in range(i, b, i):
+                        self._tlist[j] -= self._tlist[j] // i
                 if i >= a:
-                    yield ti
+                    yield self._tlist[i]
 
-    def mobiusrange(self, a, b):
+    def mobiusrange(self, a: int, b: int) -> Iterator[int]:
         """Generate all mobius numbers for the range [a, b).
 
         Parameters
@@ -230,12 +288,8 @@ class Sieve:
         >>> print([i for i in sieve.mobiusrange(7, 18)])
         [-1, 0, 0, 1, -1, 0, -1, 1, 1, 0, -1]
         """
-        from sympy.functions.elementary.integers import ceiling
-
-        # wrapping ceiling in as_int will raise an error if there was a problem
-        # determining whether the expression was exactly an integer or not
-        a = max(1, as_int(ceiling(a)))
-        b = as_int(ceiling(b))
+        a = max(1, _as_int_ceiling(a))
+        b = _as_int_ceiling(b)
         n = len(self._mlist)
         if a >= b:
             return
@@ -243,7 +297,7 @@ class Sieve:
             for i in range(a, b):
                 yield self._mlist[i]
         else:
-            self._mlist += _azeros(b - n)
+            self._mlist += _array('i', [0]*(b - n))
             for i in range(1, n):
                 mi = self._mlist[i]
                 startindex = (n + i - 1) // i * i
@@ -259,7 +313,7 @@ class Sieve:
                 if i >= a:
                     yield mi
 
-    def search(self, n):
+    def search(self, n: int) -> tuple[int, int]:
         """Return the indices i, j of the primes that bound n.
 
         If n is prime then i == j.
@@ -276,14 +330,10 @@ class Sieve:
         >>> sieve.search(23)
         (9, 9)
         """
-        from sympy.functions.elementary.integers import ceiling
-
-        # wrapping ceiling in as_int will raise an error if there was a problem
-        # determining whether the expression was exactly an integer or not
-        test = as_int(ceiling(n))
+        test = _as_int_ceiling(n)
         n = as_int(n)
         if n < 2:
-            raise ValueError("n should be >= 2 but got: %s" % n)
+            raise ValueError(f"n should be >= 2 but got: {n}")
         if n > self._list[-1]:
             self.extend(n)
         b = bisect(self._list, n)
@@ -292,7 +342,7 @@ class Sieve:
         else:
             return b, b + 1
 
-    def __contains__(self, n):
+    def __contains__(self, n: int) -> bool:
         try:
             n = as_int(n)
             assert n >= 2
@@ -303,16 +353,22 @@ class Sieve:
         a, b = self.search(n)
         return a == b
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[int]:
         for n in count(1):
             yield self[n]
 
-    def __getitem__(self, n):
+    @overload
+    def __getitem__(self, n: int) -> int:
+        ...
+
+    @overload
+    def __getitem__(self, n: slice) -> _array[int]:
+        ...
+
+    def __getitem__(self, n: int | slice) -> int | _array[int]:
         """Return the nth prime number"""
         if isinstance(n, slice):
             self.extend_to_no(n.stop)
-            # Python 2.7 slices have 0 instead of None for start, so
-            # we can't default to 1.
             start = n.start if n.start is not None else 0
             if start < 1:
                 # sieve[:5] would be empty (starting at -1), let's
@@ -331,85 +387,92 @@ class Sieve:
 # Generate a global object for repeated use in trial division etc
 sieve = Sieve()
 
+def prime(nth: SupportsIndex) -> int:
+    r"""
+    Return the nth prime number, where primes are indexed starting from 1:
+    prime(1) = 2, prime(2) = 3, etc.
 
-def prime(nth):
-    """ Return the nth prime, with the primes indexed as prime(1) = 2,
-        prime(2) = 3, etc.... The nth prime is approximately n*log(n).
+    Parameters
+    ==========
 
-        Logarithmic integral of x is a pretty nice approximation for number of
-        primes <= x, i.e.
-        li(x) ~ pi(x)
-        In fact, for the numbers we are concerned about( x<1e11 ),
-        li(x) - pi(x) < 50000
+    nth : int
+        The position of the prime number to return (must be a positive integer).
 
-        Also,
-        li(x) > pi(x) can be safely assumed for the numbers which
-        can be evaluated by this function.
+    Returns
+    =======
 
-        Here, we find the least integer m such that li(m) > n using binary search.
-        Now pi(m-1) < li(m-1) <= n,
+    int
+        The nth prime number.
 
-        We find pi(m - 1) using primepi function.
+    Examples
+    ========
 
-        Starting from m, we have to find n - pi(m-1) more primes.
+    >>> from sympy import prime
+    >>> prime(10)
+    29
+    >>> prime(1)
+    2
+    >>> prime(100000)
+    1299709
 
-        For the inputs this implementation can handle, we will have to test
-        primality for at max about 10**5 numbers, to get our answer.
+    See Also
+    ========
 
-        Examples
-        ========
+    sympy.ntheory.primetest.isprime : Test if a number is prime.
+    primerange : Generate all primes in a given range.
+    primepi : Return the number of primes less than or equal to a given number.
 
-        >>> from sympy import prime
-        >>> prime(10)
-        29
-        >>> prime(1)
-        2
-        >>> prime(100000)
-        1299709
+    References
+    ==========
 
-        See Also
-        ========
-
-        sympy.ntheory.primetest.isprime : Test if n is prime
-        primerange : Generate all primes in a given range
-        primepi : Return the number of primes less than or equal to n
-
-        References
-        ==========
-
-        .. [1] https://en.wikipedia.org/wiki/Prime_number_theorem#Table_of_.CF.80.28x.29.2C_x_.2F_log_x.2C_and_li.28x.29
-        .. [2] https://en.wikipedia.org/wiki/Prime_number_theorem#Approximations_for_the_nth_prime_number
-        .. [3] https://en.wikipedia.org/wiki/Skewes%27_number
+    .. [1] https://en.wikipedia.org/wiki/Prime_number_theorem
+    .. [2] https://en.wikipedia.org/wiki/Logarithmic_integral_function
+    .. [3] https://en.wikipedia.org/wiki/Skewes%27_number
     """
     n = as_int(nth)
     if n < 1:
         raise ValueError("nth must be a positive integer; prime(1) == 2")
+
+    # Check if n is within the sieve range
     if n <= len(sieve._list):
         return sieve[n]
 
-    from sympy.functions.special.error_functions import li
     from sympy.functions.elementary.exponential import log
+    from sympy.functions.special.error_functions import li
 
-    a = 2 # Lower bound for binary search
-    b = int(n*(log(n) + log(log(n)))) # Upper bound for the search.
+    if n < 1000:
+        # Extend sieve up to 8*n as this is empirically sufficient
+        sieve.extend(8 * n)
+        return sieve[n]
 
+    a = 2
+    # Estimate an upper bound for the nth prime using the prime number theorem
+    b = int(n * (log(n).evalf() + log(log(n)).evalf()))
+
+    # Binary search for the least m such that li(m) > n
     while a < b:
         mid = (a + b) >> 1
-        if li(mid) > n:
+        if li(mid).evalf() > n:
             b = mid
         else:
             a = mid + 1
-    n_primes = primepi(a - 1)
-    while n_primes < n:
-        if isprime(a):
-            n_primes += 1
-        a += 1
-    return a - 1
+
+    return nextprime(a - 1, n - _primepi(a - 1))
 
 
-class primepi(Function):
-    """ Represents the prime counting function pi(n) = the number
+@deprecated("""\
+The `sympy.ntheory.generate.primepi` has been moved to `sympy.functions.combinatorial.numbers.primepi`.""",
+deprecated_since_version="1.13",
+active_deprecations_target='deprecated-ntheory-symbolic-functions')
+def primepi(n: SupportsIndex) -> int:
+    r""" Represents the prime counting function pi(n) = the number
         of prime numbers less than or equal to n.
+
+        .. deprecated:: 1.13
+
+            The ``primepi`` function is deprecated. Use :class:`sympy.functions.combinatorial.numbers.primepi`
+            instead. See its documentation for more information. See
+            :ref:`deprecated-ntheory-symbolic-functions` for details.
 
         Algorithm Description:
 
@@ -428,24 +491,24 @@ class primepi(Function):
         We remove all numbers(except j) whose
         smallest prime factor is j.
 
-        Let x= j*a be such a number, where 2 <= a<= i / j
-        Now, after sieving from primes <= j - 1,
+        Let $x= j \times a$ be such a number, where $2 \le a \le i / j$
+        Now, after sieving from primes $\le j - 1$,
         a must remain
-        (because x, and hence a has no prime factor <= j - 1)
+        (because x, and hence a has no prime factor $\le j - 1$)
         Clearly, there are phi(i / j, j - 1) such a
-        which remain on sieving from primes <= j - 1
+        which remain on sieving from primes $\le j - 1$
 
         Now, if a is a prime less than equal to j - 1,
-        x= j*a has smallest prime factor = a, and
+        $x= j \times a$ has smallest prime factor = a, and
         has already been removed(by sieving from a).
-        So, we don't need to remove it again.
+        So, we do not need to remove it again.
         (Note: there will be pi(j - 1) such x)
 
         Thus, number of x, that will be removed are:
         phi(i / j, j - 1) - phi(j - 1, j - 1)
         (Note that pi(j - 1) = phi(j - 1, j - 1))
 
-        => phi(i,j) = phi(i, j - 1) - phi(i / j, j - 1) + phi(j - 1, j - 1)
+        $\Rightarrow$ phi(i,j) = phi(i, j - 1) - phi(i / j, j - 1) + phi(j - 1, j - 1)
 
         So,following recursion is used and implemented as dp:
 
@@ -453,7 +516,7 @@ class primepi(Function):
         phi(a, b) = phi(a, b-1)-phi(a / b, b-1) + phi(b-1, b-1), if b is prime
 
         Clearly a is always of the form floor(n / k),
-        which can take at most 2*sqrt(n) values.
+        which can take at most $2\sqrt{n}$ values.
         Two arrays arr1,arr2 are maintained
         arr1[i] = phi(i, j),
         arr2[i] = phi(n // i, j)
@@ -463,9 +526,20 @@ class primepi(Function):
         Examples
         ========
 
-        >>> from sympy import primepi
+        >>> from sympy import primepi, prime, prevprime, isprime
         >>> primepi(25)
         9
+
+        So there are 9 primes less than or equal to 25. Is 25 prime?
+
+        >>> isprime(25)
+        False
+
+        It is not. So the first prime less than 25 must be the
+        9th prime:
+
+        >>> prevprime(25) == prime(9)
+        True
 
         See Also
         ========
@@ -474,57 +548,128 @@ class primepi(Function):
         primerange : Generate all primes in a given range
         prime : Return the nth prime
     """
-    @classmethod
-    def eval(cls, n):
-        if n is S.Infinity:
-            return S.Infinity
-        if n is S.NegativeInfinity:
-            return S.Zero
+    from sympy.functions.combinatorial.numbers import primepi as func_primepi
+    return func_primepi(as_int(n))
 
-        try:
-            n = int(n)
-        except TypeError:
-            if n.is_real == False or n is S.NaN:
-                raise ValueError("n must be real")
-            return
 
-        if n < 2:
-            return S.Zero
-        if n <= sieve._list[-1]:
-            return S(sieve.search(n)[0])
-        lim = int(n ** 0.5)
-        lim -= 1
-        lim = max(lim, 0)
-        while lim * lim <= n:
-            lim += 1
-        lim -= 1
-        arr1 = [0] * (lim + 1)
-        arr2 = [0] * (lim + 1)
-        for i in range(1, lim + 1):
-            arr1[i] = i - 1
-            arr2[i] = n // i - 1
-        for i in range(2, lim + 1):
-            # Presently, arr1[k]=phi(k,i - 1),
-            # arr2[k] = phi(n // k,i - 1)
-            if arr1[i] == arr1[i - 1]:
+def _primepi(n: int) -> int:
+    r""" Represents the prime counting function pi(n) = the number
+    of prime numbers less than or equal to n.
+
+    Explanation
+    ===========
+
+    In sieve method, we remove all multiples of prime p
+    except p itself.
+
+    Let phi(i,j) be the number of integers 2 <= k <= i
+    which remain after sieving from primes less than
+    or equal to j.
+    Clearly, pi(n) = phi(n, sqrt(n))
+
+    If j is not a prime,
+    phi(i,j) = phi(i, j - 1)
+
+    if j is a prime,
+    We remove all numbers(except j) whose
+    smallest prime factor is j.
+
+    Let $x= j \times a$ be such a number, where $2 \le a \le i / j$
+    Now, after sieving from primes $\le j - 1$,
+    a must remain
+    (because x, and hence a has no prime factor $\le j - 1$)
+    Clearly, there are phi(i / j, j - 1) such a
+    which remain on sieving from primes $\le j - 1$
+
+    Now, if a is a prime less than equal to j - 1,
+    $x= j \times a$ has smallest prime factor = a, and
+    has already been removed(by sieving from a).
+    So, we do not need to remove it again.
+    (Note: there will be pi(j - 1) such x)
+
+    Thus, number of x, that will be removed are:
+    phi(i / j, j - 1) - phi(j - 1, j - 1)
+    (Note that pi(j - 1) = phi(j - 1, j - 1))
+
+    $\Rightarrow$ phi(i,j) = phi(i, j - 1) - phi(i / j, j - 1) + phi(j - 1, j - 1)
+
+    So,following recursion is used and implemented as dp:
+
+    phi(a, b) = phi(a, b - 1), if b is not a prime
+    phi(a, b) = phi(a, b-1)-phi(a / b, b-1) + phi(b-1, b-1), if b is prime
+
+    Clearly a is always of the form floor(n / k),
+    which can take at most $2\sqrt{n}$ values.
+    Two arrays arr1,arr2 are maintained
+    arr1[i] = phi(i, j),
+    arr2[i] = phi(n // i, j)
+
+    Finally the answer is arr2[1]
+
+    Parameters
+    ==========
+
+    n : int
+
+    """
+    if n < 2:
+        return 0
+    if n <= sieve._list[-1]:
+        return sieve.search(n)[0]
+    lim = int(sqrt(n))
+    arr1 = [(i + 1) >> 1 for i in range(lim + 1)]
+    arr2 = [0] + [(n//i + 1) >> 1 for i in range(1, lim + 1)]
+    skip = [False] * (lim + 1)
+    for i in range(3, lim + 1, 2):
+        # Presently, arr1[k]=phi(k,i - 1),
+        # arr2[k] = phi(n // k,i - 1) # not all k's do this
+        if skip[i]:
+            # skip if i is a composite number
+            continue
+        p = arr1[i - 1]
+        for j in range(i, lim + 1, i):
+            skip[j] = True
+        # update arr2
+        # phi(n/j, i) = phi(n/j, i-1) - phi(n/(i*j), i-1) + phi(i-1, i-1)
+        for j in range(1, min(n // (i * i), lim) + 1, 2):
+            # No need for arr2[j] in j such that skip[j] is True to
+            # compute the final required arr2[1].
+            if skip[j]:
                 continue
-            p = arr1[i - 1]
-            for j in range(1, min(n // (i * i), lim) + 1):
-                st = i * j
-                if st <= lim:
-                    arr2[j] -= arr2[st] - p
-                else:
-                    arr2[j] -= arr1[n // st] - p
-            lim2 = min(lim, i * i - 1)
-            for j in range(lim, lim2, -1):
-                arr1[j] -= arr1[j // i] - p
-        return S(arr2[1])
+            st = i * j
+            if st <= lim:
+                arr2[j] -= arr2[st] - p
+            else:
+                arr2[j] -= arr1[n // st] - p
+        # update arr1
+        # phi(j, i) = phi(j, i-1) - phi(j/i, i-1) + phi(i-1, i-1)
+        # where the range below i**2 is fixed and
+        # does not need to be calculated.
+        for j in range(lim, min(lim, i*i - 1), -1):
+            arr1[j] -= arr1[j // i] - p
+    return arr2[1]
 
 
-def nextprime(n, ith=1):
+def nextprime(n: SupportsIndex, ith: SupportsIndex = 1) -> int:
     """ Return the ith prime greater than n.
 
-        i must be an integer.
+        Parameters
+        ==========
+
+        n : integer
+        ith : positive integer
+
+        Returns
+        =======
+
+        int : Return the ith prime greater than n
+
+        Raises
+        ======
+
+        ValueError
+            If ``ith <= 0``.
+            If ``n`` or ``ith`` is not an integer.
 
         Notes
         =====
@@ -545,51 +690,53 @@ def nextprime(n, ith=1):
         primerange : Generate all primes in a given range
 
     """
-    n = int(n)
-    i = as_int(ith)
-    if i > 1:
-        pr = n
-        j = 1
-        while 1:
-            pr = nextprime(pr)
-            j += 1
-            if j > i:
-                break
-        return pr
+    return _nextprime(as_int(n), as_int(ith))
 
+def _nextprime(n: int, ith: int = 1) -> int:
+    """ Internal implementation of nextprime. """
+    i = ith
+    if i <= 0:
+        raise ValueError("ith should be positive")
     if n < 2:
-        return 2
-    if n < 7:
-        return {2: 3, 3: 5, 4: 5, 5: 7, 6: 7}[n]
+        n = 2
+        i -= 1
     if n <= sieve._list[-2]:
-        l, u = sieve.search(n)
-        if l == u:
-            return sieve[u + 1]
-        else:
-            return sieve[u]
+        l, _ = sieve.search(n)
+        if l + i - 1 < len(sieve._list):
+            return sieve._list[l + i - 1]
+        n = sieve._list[-1]
+        i += l - len(sieve._list)
     nn = 6*(n//6)
     if nn == n:
         n += 1
         if isprime(n):
-            return n
+            i -= 1
+            if not i:
+                return n
         n += 4
     elif n - nn == 5:
         n += 2
         if isprime(n):
-            return n
+            i -= 1
+            if not i:
+                return n
         n += 4
     else:
         n = nn + 5
     while 1:
         if isprime(n):
-            return n
+            i -= 1
+            if not i:
+                return n
         n += 2
         if isprime(n):
-            return n
+            i -= 1
+            if not i:
+                return n
         n += 4
 
 
-def prevprime(n):
+def prevprime(n: SupportsIndex) -> int:
     """ Return the largest prime smaller than n.
 
         Notes
@@ -608,11 +755,7 @@ def prevprime(n):
         nextprime : Return the ith prime greater than n
         primerange : Generates all primes in a given range
     """
-    from sympy.functions.elementary.integers import ceiling
-
-    # wrapping ceiling in as_int will raise an error if there was a problem
-    # determining whether the expression was exactly an integer or not
-    n = as_int(ceiling(n))
+    n = int(_as_int_ceiling(n))
     if n < 3:
         raise ValueError("no preceding primes")
     if n < 8:
@@ -640,8 +783,9 @@ def prevprime(n):
         n -= 4
 
 
-def primerange(a, b):
-    """ Generate a list of all prime numbers in the range [a, b).
+def primerange(a: SupportsIndex, b: SupportsIndex | None = None) -> Iterator[int]:
+    """ Generate a list of all prime numbers in the range [2, a),
+        or [a, b).
 
         If the range exists in the default sieve, the values will
         be returned from there; otherwise values will be returned
@@ -650,14 +794,28 @@ def primerange(a, b):
         Examples
         ========
 
-        >>> from sympy import primerange, sieve
-        >>> print([i for i in primerange(1, 30)])
+        >>> from sympy import primerange, prime
+
+        All primes less than 19:
+
+        >>> list(primerange(19))
+        [2, 3, 5, 7, 11, 13, 17]
+
+        All primes greater than or equal to 7 and less than 19:
+
+        >>> list(primerange(7, 19))
+        [7, 11, 13, 17]
+
+        All primes through the 10th prime
+
+        >>> list(primerange(prime(10) + 1))
         [2, 3, 5, 7, 11, 13, 17, 19, 23, 29]
 
         The Sieve method, primerange, is generally faster but it will
         occupy more memory as the sieve stores values. The default
         instance of Sieve, named sieve, can be used:
 
+        >>> from sympy import sieve
         >>> list(sieve.primerange(1, 30))
         [2, 3, 5, 7, 11, 13, 17, 19, 23, 29]
 
@@ -685,6 +843,7 @@ def primerange(a, b):
         See Also
         ========
 
+        prime : Return the nth prime
         nextprime : Return the ith prime greater than n
         prevprime : Return the largest prime smaller than n
         randprime : Returns a random prime in a given range
@@ -697,23 +856,37 @@ def primerange(a, b):
         ==========
 
         .. [1] https://en.wikipedia.org/wiki/Prime_number
-        .. [2] http://primes.utm.edu/notes/gaps.html
+        .. [2] https://primes.utm.edu/notes/gaps.html
     """
-    from sympy.functions.elementary.integers import ceiling
+    a = as_int(a)
+    if b is None:
+        a, b = 2, a
+    else:
+        b = as_int(b)
+    yield from _primerange(a, b)
 
+def _primerange(a: int, b: int) -> Iterator[int]:
+    """ Internal implementation of primerange. """
     if a >= b:
         return
-    # if we already have the range, return it
-    if b <= sieve._list[-1]:
-        for i in sieve.primerange(a, b):
-            yield i
+    # If we already have the range, return it.
+    largest_known_prime = sieve._list[-1]
+    if b <= largest_known_prime:
+        yield from sieve.primerange(a, b)
+        return
+    # If we know some of it, return it.
+    if a <= largest_known_prime:
+        yield from sieve._list[bisect_left(sieve._list, a):]
+        a = largest_known_prime + 1
+    elif a % 2:
+        a -= 1
+    tail = min(b, (largest_known_prime)**2)
+    if a < tail:
+        yield from sieve._primerange(a, tail)
+        a = tail
+    if b <= a:
         return
     # otherwise compute, without storing, the desired range.
-
-    # wrapping ceiling in as_int will raise an error if there was a problem
-    # determining whether the expression was exactly an integer or not
-    a = as_int(ceiling(a)) - 1
-    b = as_int(ceiling(b))
     while 1:
         a = nextprime(a)
         if a < b:
@@ -722,11 +895,17 @@ def primerange(a, b):
             return
 
 
-def randprime(a, b):
+def randprime(a: SupportsIndex, b: SupportsIndex) -> int | None:
     """ Return a random prime number in the range [a, b).
 
         Bertrand's postulate assures that
         randprime(a, 2*a) will always succeed for a > 1.
+
+        Note that due to implementation difficulties,
+        the prime numbers chosen are not uniformly random.
+        For example, there are two primes in the range [112, 128),
+        ``113`` and ``127``, but ``randprime(112, 128)`` returns ``127``
+        with a probability of 15/17.
 
         Examples
         ========
@@ -748,10 +927,12 @@ def randprime(a, b):
         .. [1] https://en.wikipedia.org/wiki/Bertrand's_postulate
 
     """
+    a = as_int(a)
+    b = as_int(b)
     if a >= b:
-        return
+        return None
     a, b = map(int, (a, b))
-    n = random.randint(a - 1, b)
+    n = randint(a - 1, b)
     p = nextprime(n)
     if p >= b:
         p = prevprime(b)
@@ -760,7 +941,7 @@ def randprime(a, b):
     return p
 
 
-def primorial(n, nth=True):
+def primorial(n: int, nth: bool = True) -> int:
     """
     Returns the product of the first n primes (default) or
     the primes less than or equal to n (when ``nth=False``).
@@ -768,7 +949,7 @@ def primorial(n, nth=True):
     Examples
     ========
 
-    >>> from sympy.ntheory.generate import primorial, randprime, primerange
+    >>> from sympy.ntheory.generate import primorial, primerange
     >>> from sympy import factorint, Mul, primefactors, sqrt
     >>> primorial(4) # the first 4 primes are 2, 3, 5, 7
     210
@@ -826,7 +1007,32 @@ def primorial(n, nth=True):
     return p
 
 
-def cycle_length(f, x0, nmax=None, values=False):
+@overload
+def cycle_length(
+    f: Callable[[int], int],
+    x0: int,
+    nmax: SupportsIndex | None = None,
+    *,
+    values: Literal[False] = False,
+) -> Iterator[tuple[int, int | None]]:
+    ...
+
+@overload
+def cycle_length(
+    f: Callable[[int], int],
+    x0: int,
+    nmax: SupportsIndex | None = None,
+    *,
+    values: Literal[True],
+) -> Iterator[int]:
+    ...
+
+def cycle_length(
+    f: Callable[[int], int],
+    x0: int,
+    nmax: SupportsIndex | None = None,
+    values: bool = False,
+) -> Iterator[int] | Iterator[tuple[int, int | None]]:
     """For a given iterated sequence, return a generator that gives
     the length of the iterated cycle (lambda) and the length of terms
     before the cycle begins (mu); if ``values`` is True then the
@@ -842,11 +1048,10 @@ def cycle_length(f, x0, nmax=None, values=False):
 
     This will yield successive values of i <-- func(i):
 
-        >>> def iter(func, i):
+        >>> def gen(func, i):
         ...     while 1:
-        ...         ii = func(i)
-        ...         yield ii
-        ...         i = ii
+        ...         yield i
+        ...         i = func(i)
         ...
 
     A function is defined:
@@ -856,23 +1061,23 @@ def cycle_length(f, x0, nmax=None, values=False):
     and given a seed of 4 and the mu and lambda terms calculated:
 
         >>> next(cycle_length(func, 4))
-        (6, 2)
+        (6, 3)
 
     We can see what is meant by looking at the output:
 
-        >>> n = cycle_length(func, 4, values=True)
-        >>> list(ni for ni in n)
-        [17, 35, 2, 5, 26, 14, 44, 50, 2, 5, 26, 14]
+        >>> iter = cycle_length(func, 4, values=True)
+        >>> list(iter)
+        [4, 17, 35, 2, 5, 26, 14, 44, 50, 2, 5, 26, 14]
 
-    There are 6 repeating values after the first 2.
+    There are 6 repeating values after the first 3.
 
     If a sequence is suspected of being longer than you might wish, ``nmax``
     can be used to exit early (and mu will be returned as None):
 
         >>> next(cycle_length(func, 4, nmax = 4))
         (4, None)
-        >>> [ni for ni in cycle_length(func, 4, nmax = 4, values=True)]
-        [17, 35, 2, 5]
+        >>> list(cycle_length(func, 4, nmax = 4, values=True))
+        [4, 17, 35, 2]
 
     Code modified from:
         https://en.wikipedia.org/wiki/Cycle_detection.
@@ -883,7 +1088,9 @@ def cycle_length(f, x0, nmax=None, values=False):
     # main phase: search successive powers of two
     power = lam = 1
     tortoise, hare = x0, f(x0)  # f(x0) is the element/node next to x0.
-    i = 0
+    i = 1
+    if values:
+        yield tortoise
     while tortoise != hare and (not nmax or i < nmax):
         i += 1
         if power == lam:   # time to start a new power of two?
@@ -910,12 +1117,10 @@ def cycle_length(f, x0, nmax=None, values=False):
             tortoise = f(tortoise)
             hare = f(hare)
             mu += 1
-        if mu:
-            mu -= 1
         yield lam, mu
 
 
-def composite(nth):
+def composite(nth: SupportsIndex) -> int:
     """ Return the nth composite number, with the composite numbers indexed as
         composite(1) = 4, composite(2) = 6, etc....
 
@@ -947,10 +1152,10 @@ def composite(nth):
         return composite_arr[n - 1]
 
     a, b = 4, sieve._list[-1]
-    if n <= b - primepi(b) - 1:
+    if n <= b - _primepi(b) - 1:
         while a < b - 1:
             mid = (a + b) >> 1
-            if mid - primepi(mid) - 1 > n:
+            if mid - _primepi(mid) - 1 > n:
                 b = mid
             else:
                 a = mid
@@ -958,9 +1163,8 @@ def composite(nth):
             a -= 1
         return a
 
-    from sympy.functions.special.error_functions import li
     from sympy.functions.elementary.exponential import log
-
+    from sympy.functions.special.error_functions import li
     a = 4 # Lower bound for binary search
     b = int(n*(log(n) + log(log(n)))) # Upper bound for the search.
 
@@ -971,7 +1175,7 @@ def composite(nth):
         else:
             a = mid + 1
 
-    n_composites = a - primepi(a) - 1
+    n_composites = a - _primepi(a) - 1
     while n_composites > n:
         if not isprime(a):
             n_composites -= 1
@@ -981,7 +1185,7 @@ def composite(nth):
     return a
 
 
-def compositepi(n):
+def compositepi(n: SupportsIndex) -> int:
     """ Return the number of positive composite numbers less than or equal to n.
         The first positive composite is 4, i.e. compositepi(4) = 1.
 
@@ -1006,4 +1210,4 @@ def compositepi(n):
     n = int(n)
     if n < 4:
         return 0
-    return n - primepi(n) - 1
+    return n - _primepi(n) - 1

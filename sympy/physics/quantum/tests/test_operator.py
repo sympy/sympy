@@ -1,5 +1,9 @@
-from sympy import (Derivative, diff, Function, Integer, Mul, pi, sin, Symbol,
-                   symbols)
+from sympy.core.function import (Derivative, Function, diff)
+from sympy.core.mul import Mul
+from sympy.core.numbers import (Integer, pi)
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.core.sympify import sympify
+from sympy.functions.elementary.trigonometric import sin
 from sympy.physics.quantum.qexpr import QExpr
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.hilbert import HilbertSpace
@@ -10,9 +14,11 @@ from sympy.physics.quantum.operator import (Operator, UnitaryOperator,
 from sympy.physics.quantum.state import Ket, Bra, Wavefunction
 from sympy.physics.quantum.qapply import qapply
 from sympy.physics.quantum.represent import represent
-from sympy.core.trace import Tr
 from sympy.physics.quantum.spin import JzKet, JzBra
+from sympy.physics.quantum.trace import Tr
 from sympy.matrices import eye
+
+from sympy.testing.pytest import warns_deprecated_sympy
 
 
 class CustomKet(Ket):
@@ -50,7 +56,8 @@ def test_operator():
     assert t_op.label[0] == Symbol(t_op.default_args()[0])
 
     assert Operator() == Operator("O")
-    assert A*IdentityOperator() == A
+    with warns_deprecated_sympy():
+        assert A*IdentityOperator() == A
 
 
 def test_operator_inv():
@@ -85,25 +92,29 @@ def test_unitary():
 
 
 def test_identity():
-    I = IdentityOperator()
-    O = Operator('O')
-    x = Symbol("x")
+    with warns_deprecated_sympy():
+        I = IdentityOperator()
+        O = Operator('O')
+        x = Symbol("x")
+        three = sympify(3)
 
-    assert isinstance(I, IdentityOperator)
-    assert isinstance(I, Operator)
+        assert isinstance(I, IdentityOperator)
+        assert isinstance(I, Operator)
 
-    assert I * O == O
-    assert O * I == O
-    assert isinstance(I * I, IdentityOperator)
-    assert isinstance(3 * I, Mul)
-    assert isinstance(I * x, Mul)
-    assert I.inv() == I
-    assert Dagger(I) == I
-    assert qapply(I * O) == O
-    assert qapply(O * I) == O
+        assert I * O == O
+        assert O * I == O
+        assert I * Dagger(O) == Dagger(O)
+        assert Dagger(O) * I == Dagger(O)
+        assert isinstance(I * I, IdentityOperator)
+        assert three * I == three
+        assert I * x == x
+        assert I.inv() == I
+        assert Dagger(I) == I
+        assert qapply(I * O) == O
+        assert qapply(O * I) == O
 
-    for n in [2, 3, 5]:
-        assert represent(IdentityOperator(n)) == eye(n)
+        for n in [2, 3, 5]:
+            assert represent(IdentityOperator(n)) == eye(n)
 
 
 def test_outer_product():
@@ -226,3 +237,33 @@ def test_differential_operator():
     assert diff(d, th) == \
         DifferentialOperator(Derivative(d.expr, th), f(r, th))
     assert qapply(d*w) == Wavefunction(3*sin(th), r, (th, 0, pi))
+
+
+def test_eval_power():
+    from sympy.core import Pow
+    from sympy.core.expr import unchanged
+    O = Operator('O')
+    U = UnitaryOperator('U')
+    H = HermitianOperator('H')
+    assert O**-1 == O.inv() # same as doc test
+    assert U**-1 == U.inv()
+    assert H**-1 == H.inv()
+    x = symbols("x", commutative = True)
+    assert unchanged(Pow, H, x) # verify Pow(H,x)=="X^n"
+    assert H**x == Pow(H, x)
+    assert Pow(H,x) == Pow(H, x, evaluate=False) # Just check
+    from sympy.physics.quantum.gate import XGate
+    X = XGate(0) # is hermitian and unitary
+    assert unchanged(Pow, X, x) # verify Pow(X,x)=="X^x"
+    assert X**x == Pow(X, x)
+    assert Pow(X, x, evaluate=False) == Pow(X, x) # Just check
+    n = symbols("n", integer=True, even=True)
+    assert X**n == 1
+    n = symbols("n", integer=True, odd=True)
+    assert X**n == X
+    n = symbols("n", integer=True)
+    assert unchanged(Pow, X, n) # verify Pow(X,n)=="X^n"
+    assert X**n == Pow(X, n)
+    assert Pow(X, n, evaluate=False)==Pow(X, n) # Just check
+    assert X**4 == 1
+    assert X**7 == X

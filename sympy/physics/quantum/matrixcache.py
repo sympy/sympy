@@ -1,15 +1,16 @@
 """A cache for storing small matrices in multiple formats."""
 
-from __future__ import print_function, division
-
-from sympy import Matrix, I, Pow, Rational, exp, pi
+from sympy.core.numbers import (I, Rational, pi)
+from sympy.core.power import Pow
+from sympy.functions.elementary.exponential import exp
+from sympy.matrices.dense import Matrix
 
 from sympy.physics.quantum.matrixutils import (
     to_sympy, to_numpy, to_scipy_sparse
 )
 
 
-class MatrixCache(object):
+class MatrixCache:
     """A cache for small matrices in different formats.
 
     This class takes small matrices in the standard ``sympy.Matrix`` format,
@@ -30,7 +31,7 @@ class MatrixCache(object):
         name : str
             A descriptive name for the matrix, like "identity2".
         m : list of lists
-            The raw matrix data as a sympy Matrix.
+            The raw matrix data as a SymPy Matrix.
         """
         try:
             self._sympy_matrix(name, m)

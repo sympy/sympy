@@ -1,10 +1,29 @@
-from sympy import symbols
 from sympy.physics.mechanics import Point, ReferenceFrame, Dyadic, RigidBody
-from sympy.physics.mechanics import dynamicsymbols, outer, inertia
+from sympy.physics.mechanics import dynamicsymbols, outer, inertia, Inertia
 from sympy.physics.mechanics import inertia_of_point_mass
-from sympy.core.backend import expand
+from sympy import expand, zeros, simplify, symbols
+from sympy.testing.pytest import raises, warns_deprecated_sympy
 
-from sympy.testing.pytest import raises
+
+def test_rigidbody_default():
+    # Test default
+    b = RigidBody('B')
+    I = inertia(b.frame, *symbols('B_ixx B_iyy B_izz B_ixy B_iyz B_izx'))
+    assert b.name == 'B'
+    assert b.mass == symbols('B_mass')
+    assert b.masscenter.name == 'B_masscenter'
+    assert b.inertia == (I, b.masscenter)
+    assert b.central_inertia == I
+    assert b.frame.name == 'B_frame'
+    assert b.__str__() == 'B'
+    assert b.__repr__() == (
+        "RigidBody('B', masscenter=B_masscenter, frame=B_frame, mass=B_mass, "
+        "inertia=Inertia(dyadic=B_ixx*(B_frame.x|B_frame.x) + "
+        "B_ixy*(B_frame.x|B_frame.y) + B_izx*(B_frame.x|B_frame.z) + "
+        "B_ixy*(B_frame.y|B_frame.x) + B_iyy*(B_frame.y|B_frame.y) + "
+        "B_iyz*(B_frame.y|B_frame.z) + B_izx*(B_frame.z|B_frame.x) + "
+        "B_iyz*(B_frame.z|B_frame.y) + B_izz*(B_frame.z|B_frame.z), "
+        "point=B_masscenter))")
 
 
 def test_rigidbody():
@@ -34,8 +53,7 @@ def test_rigidbody():
     assert B.frame == A2
     assert B.masscenter == P2
     assert B.inertia == (I2, B.masscenter)
-    assert B.masscenter == P2
-    assert B.inertia == (I2, B.masscenter)
+    assert isinstance(B.inertia, Inertia)
 
     # Testing linear momentum function assuming A2 is the inertial frame
     N = ReferenceFrame('N')
@@ -61,6 +79,7 @@ def test_rigidbody2():
     B.potential_energy = M * g * h
     assert B.potential_energy == M * g * h
     assert expand(2 * B.kinetic_energy(N)) == omega**2 + M * v**2
+
 
 def test_rigidbody3():
     q1, q2, q3, q4 = dynamicsymbols('q1:5')
@@ -114,6 +133,29 @@ def test_pendulum_angular_momentum():
             S.angular_momentum(O, R).express(R)) == 0
 
 
+def test_rigidbody_inertia():
+    N = ReferenceFrame('N')
+    m, Ix, Iy, Iz, a, b = symbols('m, I_x, I_y, I_z, a, b')
+    Io = inertia(N, Ix, Iy, Iz)
+    o = Point('o')
+    p = o.locatenew('p', a * N.x + b * N.y)
+    R = RigidBody('R', o, N, m, (Io, p))
+    I_check = inertia(N, Ix - b ** 2 * m, Iy - a ** 2 * m,
+                      Iz - m * (a ** 2 + b ** 2), m * a * b)
+    assert isinstance(R.inertia, Inertia)
+    assert R.inertia == (Io, p)
+    assert R.central_inertia == I_check
+    R.central_inertia = Io
+    assert R.inertia == (Io, o)
+    assert R.central_inertia == Io
+    R.inertia = (Io, p)
+    assert R.inertia == (Io, p)
+    assert R.central_inertia == I_check
+    # parse Inertia object
+    R.inertia = Inertia(Io, o)
+    assert R.inertia == (Io, o)
+
+
 def test_parallel_axis():
     N = ReferenceFrame('N')
     m, Ix, Iy, Iz, a, b = symbols('m, I_x, I_y, I_z, a, b')
@@ -125,3 +167,18 @@ def test_parallel_axis():
     Ip_expected = inertia(N, Ix + m * b**2, Iy + m * a**2,
                           Iz + m * (a**2 + b**2), ixy=-m * a * b)
     assert Ip == Ip_expected
+    # Reference frame from which the parallel axis is viewed should not matter
+    A = ReferenceFrame('A')
+    A.orient_axis(N, N.z, 1)
+    assert simplify(
+        (R.parallel_axis(p, A) - Ip_expected).to_matrix(A)) == zeros(3, 3)
+
+
+def test_deprecated_set_potential_energy():
+    m, g, h = symbols('m g h')
+    A = ReferenceFrame('A')
+    P = Point('P')
+    I = Dyadic(0)
+    B = RigidBody('B', P, A, m, (I, P))
+    with warns_deprecated_sympy():
+        B.set_potential_energy(m*g*h)

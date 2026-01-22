@@ -58,7 +58,7 @@ Recall that the determinant of sylvester1(f, g, x) itself is
 called the resultant of f, g and serves as a criterion of whether
 the two polynomials have common roots or not.
 
-In sympy the resultant is computed with the function
+In SymPy the resultant is computed with the function
 resultant(f, g, x). This function does _not_ evaluate the
 determinant of sylvester(f, g, x, 1); instead, it returns
 the last member of the subresultant prs of f, g, multiplied
@@ -131,7 +131,7 @@ subresultant and modified subresultant prs respectively.
 
 2. Functions in the module:
 ===========================
-No function utilizes sympy's function prem().
+No function utilizes SymPy's function prem().
 
 2A. Matrices:
 =============
@@ -243,16 +243,25 @@ res_z(f, g, x)
 """
 
 
-from __future__ import print_function, division
-
-from sympy import (Abs, degree, expand, eye, floor, LC, Matrix, nan, Poly, pprint)
-from sympy import (QQ, pquo, quo, prem, rem, S, sign, simplify, summation, var, zeros)
+from sympy.concrete.summations import summation
+from sympy.core.function import expand
+from sympy.core.numbers import nan
+from sympy.core.singleton import S
+from sympy.core.symbol import Dummy as var
+from sympy.functions.elementary.complexes import Abs, sign
+from sympy.functions.elementary.integers import floor
+from sympy.matrices.dense import eye, Matrix, zeros
+from sympy.printing.pretty.pretty import pretty_print as pprint
+from sympy.simplify.simplify import simplify
+from sympy.polys.domains import QQ
+from sympy.polys.polytools import degree, LC, Poly, pquo, quo, prem, rem
 from sympy.polys.polyerrors import PolynomialError
+
 
 def sylvester(f, g, x, method = 1):
     '''
       The input polynomials f, g are in Z[x] or in Q[x]. Let m = degree(f, x),
-      n = degree(g, x) and mx = max( m , n ).
+      n = degree(g, x) and mx = max(m, n).
 
       a. If method = 1 (default), computes sylvester1, Sylvester's matrix of 1840
           of dimension (m + n) x (m + n). The determinants of properly chosen
@@ -292,16 +301,12 @@ def sylvester(f, g, x, method = 1):
 
     # C:: m == 0 and n < 0 or m < 0 and n == 0
     # (i.e. one poly is constant and the other is 0)
-    if m == 0 and n < 0:
-        return Matrix([])
-    elif m < 0 and n == 0:
+    if (m == 0 and n < 0) or (m < 0 and n == 0):
         return Matrix([])
 
     # D:: m >= 1 and n < 0 or m < 0 and n >=1
     # (i.e. one poly is of degree >=1 and the other is 0)
-    if m >= 1 and n < 0:
-        return Matrix([0])
-    elif m < 0 and n >= 1:
+    if (m >= 1 and n < 0) or (m < 0 and n >= 1):
         return Matrix([0])
 
     fp = Poly(f, x).all_coeffs()
@@ -310,24 +315,16 @@ def sylvester(f, g, x, method = 1):
     # Sylvester's matrix of 1840 (default; a.k.a. sylvester1)
     if method <= 1:
         M = zeros(m + n)
-        k = 0
         for i in range(n):
-            j = k
-            for coeff in fp:
+            for j, coeff in enumerate(fp, i):
                 M[i, j] = coeff
-                j = j + 1
-            k = k + 1
-        k = 0
         for i in range(n, m + n):
-            j = k
-            for coeff in gp:
+            for j, coeff in enumerate(gp, i - n):
                 M[i, j] = coeff
-                j = j + 1
-            k = k + 1
         return M
 
     # Sylvester's matrix of 1853 (a.k.a sylvester2)
-    if method >= 2:
+    else:
         if len(fp) < len(gp):
             h = []
             for i in range(len(gp) - len(fp)):
@@ -341,17 +338,11 @@ def sylvester(f, g, x, method = 1):
         mx = max(m, n)
         dim = 2*mx
         M = zeros( dim )
-        k = 0
         for i in range( mx ):
-            j = k
-            for coeff in fp:
+            for j, coeff in enumerate(fp, i):
                 M[2*i, j] = coeff
-                j = j + 1
-            j = k
-            for coeff in gp:
+            for j, coeff in enumerate(gp, i):
                 M[2*i + 1, j] = coeff
-                j = j + 1
-            k = k + 1
         return M
 
 def process_matrix_output(poly_seq, x):
@@ -427,9 +418,7 @@ def subresultants_sylv(f, g, x):
 
     # pick appropriate submatrices of S
     # and form subresultant polys
-    j = m - 1
-
-    while j > 0:
+    for j in range(m - 1, 0, -1):
         Sp = S[:, :]  # copy of S
         # delete last j rows of coeffs of g
         for ind in range(m + n - j, m + n):
@@ -439,15 +428,13 @@ def subresultants_sylv(f, g, x):
             Sp.row_del(m - j)
 
         # evaluate determinants and form coefficients list
-        coeff_L, k, l = [], Sp.rows, 0
-        while l <= j:
-            coeff_L.append(Sp[ : , 0 : k].det())
+        coeff_L, k = [], Sp.rows
+        for l in range(j + 1):
+            coeff_L.append(Sp[:, 0:k].det())
             Sp.col_swap(k - 1, k + l)
-            l += 1
 
         # form poly and append to SP_L
         SR_L.append(Poly(coeff_L, x).as_expr())
-        j -= 1
 
     # j = 0
     SR_L.append(S.det())
@@ -500,22 +487,18 @@ def modified_subresultants_sylv(f, g, x):
 
     # pick appropriate submatrices of S
     # and form modified subresultant polys
-    j = m - 1
-
-    while j > 0:
+    for j in range(m - 1, 0, -1):
         # delete last 2*j rows of pairs of coeffs of f, g
         Sp = S[0:2*n - 2*j, :]  # copy of first 2*n - 2*j rows of S
 
         # evaluate determinants and form coefficients list
-        coeff_L, k, l = [], Sp.rows, 0
-        while l <= j:
-            coeff_L.append(Sp[ : , 0 : k].det())
+        coeff_L, k = [], Sp.rows
+        for l in range(j + 1):
+            coeff_L.append(Sp[:, 0:k].det())
             Sp.col_swap(k - 1, k + l)
-            l += 1
 
         # form poly and append to SP_L
         SR_L.append(Poly(coeff_L, x).as_expr())
-        j -= 1
 
     # j = 0
     SR_L.append(S.det())
@@ -536,7 +519,7 @@ def res(f, g, x):
 
     """
     if f == 0 or g == 0:
-         raise PolynomialError("The resultant of %s and %s is not defined" % (f, g))
+        raise PolynomialError("The resultant of %s and %s is not defined" % (f, g))
     else:
         return sylvester(f, g, x, 1).det()
 
@@ -611,7 +594,7 @@ def sign_seq(poly_seq, x):
 def bezout(p, q, x, method='bz'):
     """
     The input polynomials p, q are in Z[x] or in Q[x]. Let
-    mx = max( degree(p, x) , degree(q, x) ).
+    mx = max(degree(p, x), degree(q, x)).
 
     The default option bezout(p, q, x, method='bz') returns Bezout's
     symmetric matrix of p and q, of dimensions (mx) x (mx). The
@@ -658,16 +641,12 @@ def bezout(p, q, x, method='bz'):
 
     # C:: m == 0 and n < 0 or m < 0 and n == 0
     # (i.e. one poly is constant and the other is 0)
-    if m == 0 and n < 0:
-        return Matrix([])
-    elif m < 0 and n == 0:
+    if (m == 0 and n < 0) or (m < 0 and n == 0):
         return Matrix([])
 
     # D:: m >= 1 and n < 0 or m < 0 and n >=1
     # (i.e. one poly is of degree >=1 and the other is 0)
-    if m >= 1 and n < 0:
-        return Matrix([0])
-    elif m < 0 and n >= 1:
+    if (m >= 1 and n < 0) or (m < 0 and n >= 1):
         return Matrix([0])
 
     y = var('y')
@@ -765,7 +744,7 @@ def subresultants_bezout(p, q, x):
         M = B[0:j, :]
         k, coeff_L = j - 1, []
         while k <= degF - 1:
-            coeff_L.append(M[: ,0 : j].det())
+            coeff_L.append(M[:, 0:j].det())
             if k < degF - 1:
                 M.col_swap(j - 1, k + 1)
             k = k + 1
@@ -832,24 +811,18 @@ def modified_subresultants_bezout(p, q, x):
 
     # pick appropriate submatrices of B
     # and form subresultant polys
-    if degF > degG:
-        j = 2
-    if degF == degG:
-        j = 1
-    while j <= degF:
+    for j in range(2 if degF > degG else 1, degF + 1):
         M = B[0:j, :]
-        k, coeff_L = j - 1, []
-        while k <= degF - 1:
-            coeff_L.append(M[: ,0 : j].det())
+        coeff_L = []
+        for k in range(j - 1, degF):
+            coeff_L.append(M[:, 0:j].det())
             if k < degF - 1:
                 M.col_swap(j - 1, k + 1)
-            k = k + 1
 
         ## Theorem 2.1 in the paper by Toca & Vega 2004 is _not needed_
         ## in this case since
         ## the bezout matrix is equivalent to sylvester2
         SR_L.append(( Poly(coeff_L, x)).as_expr())
-        j = j + 1
 
     return process_matrix_output(SR_L, x)
 
@@ -1381,7 +1354,7 @@ def euclid_amv(f, g, x):
         sigma0 = -LC(a0)
         c = (sigma0**(deg_dif_p1 - 1)) / (c**(deg_dif_p1 - 2))
         deg_dif_p1 = degree(a0, x) - d2 + 1
-        a2 = rem_z(a0, a1, x) / Abs( ((c**(deg_dif_p1 - 1)) * sigma0) )
+        a2 = rem_z(a0, a1, x) / Abs( (c**(deg_dif_p1 - 1)) * sigma0 )
         euclid_seq.append( a2 )
         d2 =  degree(a2, x)                   # actual degree of a2
 
@@ -1471,8 +1444,8 @@ def modified_subresultants_pg(p, q, x):
 
     # apply Pell-Gordon formula (7) in second reference
     num = 1                                     # numerator of fraction
-    for k in range(len(u_list)):
-        num *= (-1)**u_list[k]
+    for u in u_list:
+        num *= (-1)**u
     num = num * (-1)**v
 
     # denominator depends on complete / incomplete seq
@@ -1496,7 +1469,7 @@ def modified_subresultants_pg(p, q, x):
         subres_l.append(- simplify(rho_1**degdif*a2* Abs(mul_fac_old) ) )
 
     # update Pell-Gordon variables
-    k =  var('k')
+    k = var('k')
     rho_list.append( sign(rho2))
     u =  summation(k, (k, 1, p_list[len(p_list) - 1]))
     u_list.append(u)
@@ -1530,8 +1503,8 @@ def modified_subresultants_pg(p, q, x):
 
         # apply Pell-Gordon formula (7) in second reference
         num = 1                              # numerator
-        for k in range(len(u_list)):
-            num *= (-1)**u_list[k]
+        for u in u_list:
+            num *= (-1)**u
         num = num * (-1)**v
 
         # denominator depends on complete / incomplete seq
@@ -1555,7 +1528,7 @@ def modified_subresultants_pg(p, q, x):
             subres_l.append(- simplify(rho_1**degdif*a2* Abs(mul_fac_old) ) )
 
         # update Pell-Gordon variables
-        k =  var('k')
+        k = var('k')
         rho_list.append( sign(rho2))
         u =  summation(k, (k, 1, p_list[len(p_list) - 1]))
         u_list.append(u)
@@ -1789,7 +1762,7 @@ def rem_z(p, q, x):
     Obtained in Finding the Greatest Common Divisor of Two Polynomials.''
     Serdica Journal of Computing, 9(2) (2015), 123-138.
 
-    2. http://planetMath.org/sturmstheorem
+    2. https://planetMath.org/sturmstheorem
 
     3. Akritas, A. G., G.I. Malaschonok and P.S. Vigklas: ``A Basic Result on
     the Theory of Subresultants.'' Serdica Journal of Computing 10 (2016), No.1, 31-48.
@@ -1929,7 +1902,7 @@ def subresultants_amv(f, g, x):
         sigma0 = -LC(a0)
         c = (sigma0**(deg_dif_p1 - 1)) / (c**(deg_dif_p1 - 2))
         deg_dif_p1 = degree(a0, x) - d2 + 1
-        a2 = rem_z(a0, a1, x) / Abs( ((c**(deg_dif_p1 - 1)) * sigma0) )
+        a2 = rem_z(a0, a1, x) / Abs( (c**(deg_dif_p1 - 1)) * sigma0 )
         sigma3 =  LC(a2, x)                   # leading coeff of a2
         d2 =  degree(a2, x)                   # actual degree of a2
         p1 = d1 - d2                          # degree difference
@@ -2189,7 +2162,7 @@ def rotate_r(L, k):
     for i in range(k):
         el = ll.pop(len(ll) - 1)
         ll.insert(0, el)
-    return ll if type(L) is list else Matrix([ll])
+    return ll if isinstance(L, list) else Matrix([ll])
 
 def rotate_l(L, k):
     '''
@@ -2202,7 +2175,7 @@ def rotate_l(L, k):
     for i in range(k):
         el = ll.pop(0)
         ll.insert(len(ll) - 1, el)
-    return ll if type(L) is list else Matrix([ll])
+    return ll if isinstance(L, list) else Matrix([ll])
 
 def row2poly(row, deg, x):
     '''
@@ -2266,7 +2239,7 @@ def find_degree(M, deg_f):
         if M[M.rows - 1, i] == 0:
             j = j - 1
         else:
-            return j if j >= 0 else 0
+            return max(j, 0)
 
 def final_touches(s2, r, deg_g):
     """

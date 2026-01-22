@@ -1,13 +1,18 @@
-from sympy import S, Integral, sin, cos, pi, sqrt, symbols
+from sympy.core.numbers import pi
+from sympy.core.singleton import S
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.integrals.integrals import Integral
 from sympy.physics.vector import Dyadic, Point, ReferenceFrame, Vector
 from sympy.physics.vector.functions import (cross, dot, express,
                                             time_derivative,
                                             kinematic_equations, outer,
                                             partial_velocity,
                                             get_motion_params, dynamicsymbols)
+from sympy.simplify import trigsimp
 from sympy.testing.pytest import raises
 
-Vector.simp = True
 q1, q2, q3, q4, q5 = symbols('q1 q2 q3 q4 q5')
 N = ReferenceFrame('N')
 A = N.orientnew('A', 'Axis', [q1, N.z])
@@ -40,7 +45,8 @@ def test_dot_different_frames():
     assert dot(N.z, A.y) == 0
     assert dot(N.z, A.z) == 1
 
-    assert dot(N.x, A.x + A.y) == sqrt(2)*cos(q1 + pi/4) == dot(A.x + A.y, N.x)
+    assert trigsimp(dot(N.x, A.x + A.y)) == sqrt(2)*cos(q1 + pi/4)
+    assert trigsimp(dot(N.x, A.x + A.y)) == trigsimp(dot(A.x + A.y, N.x))
 
     assert dot(A.x, C.x) == cos(q3)
     assert dot(A.x, C.y) == 0
@@ -87,7 +93,7 @@ def test_cross_different_frames():
     assert cross(A.x, C.y) == -sin(q3)*C.x + cos(q3)*C.z
     assert cross(A.x, C.z) == -cos(q3)*C.y
     assert cross(C.x, A.x) == -sin(q3)*C.y
-    assert cross(C.y, A.x) == sin(q3)*C.x - cos(q3)*C.z
+    assert cross(C.y, A.x).express(C).simplify() == sin(q3)*C.x - cos(q3)*C.z
     assert cross(C.z, A.x) == cos(q3)*C.y
 
 def test_operator_match():
@@ -261,13 +267,13 @@ def test_express():
     assert express(C.z, C) == C.z == (C.z)
 
     #  Check to make sure Vectors get converted back to UnitVectors
-    assert N.x == express((cos(q1)*A.x - sin(q1)*A.y), N)
-    assert N.y == express((sin(q1)*A.x + cos(q1)*A.y), N)
+    assert N.x == express((cos(q1)*A.x - sin(q1)*A.y), N).simplify()
+    assert N.y == express((sin(q1)*A.x + cos(q1)*A.y), N).simplify()
     assert N.x == express((cos(q1)*B.x - sin(q1)*cos(q2)*B.y +
-            sin(q1)*sin(q2)*B.z), N)
+            sin(q1)*sin(q2)*B.z), N).simplify()
     assert N.y == express((sin(q1)*B.x + cos(q1)*cos(q2)*B.y -
-        sin(q2)*cos(q1)*B.z), N)
-    assert N.z == express((sin(q2)*B.y + cos(q2)*B.z), N)
+        sin(q2)*cos(q1)*B.z), N).simplify()
+    assert N.z == express((sin(q2)*B.y + cos(q2)*B.z), N).simplify()
 
     """
     These don't really test our code, they instead test the auto simplification
@@ -284,33 +290,33 @@ def test_express():
             cos(q2)*cos(q3)*C.z), N)
     """
 
-    assert A.x == express((cos(q1)*N.x + sin(q1)*N.y), A)
-    assert A.y == express((-sin(q1)*N.x + cos(q1)*N.y), A)
+    assert A.x == express((cos(q1)*N.x + sin(q1)*N.y), A).simplify()
+    assert A.y == express((-sin(q1)*N.x + cos(q1)*N.y), A).simplify()
 
-    assert A.y == express((cos(q2)*B.y - sin(q2)*B.z), A)
-    assert A.z == express((sin(q2)*B.y + cos(q2)*B.z), A)
+    assert A.y == express((cos(q2)*B.y - sin(q2)*B.z), A).simplify()
+    assert A.z == express((sin(q2)*B.y + cos(q2)*B.z), A).simplify()
 
-    assert A.x == express((cos(q3)*C.x + sin(q3)*C.z), A)
+    assert A.x == express((cos(q3)*C.x + sin(q3)*C.z), A).simplify()
 
     # Tripsimp messes up here too.
     #print express((sin(q2)*sin(q3)*C.x + cos(q2)*C.y -
     #        sin(q2)*cos(q3)*C.z), A)
     assert A.y == express((sin(q2)*sin(q3)*C.x + cos(q2)*C.y -
-            sin(q2)*cos(q3)*C.z), A)
+            sin(q2)*cos(q3)*C.z), A).simplify()
 
     assert A.z == express((-sin(q3)*cos(q2)*C.x + sin(q2)*C.y +
-            cos(q2)*cos(q3)*C.z), A)
-    assert B.x == express((cos(q1)*N.x + sin(q1)*N.y), B)
+            cos(q2)*cos(q3)*C.z), A).simplify()
+    assert B.x == express((cos(q1)*N.x + sin(q1)*N.y), B).simplify()
     assert B.y == express((-sin(q1)*cos(q2)*N.x +
-            cos(q1)*cos(q2)*N.y + sin(q2)*N.z), B)
+            cos(q1)*cos(q2)*N.y + sin(q2)*N.z), B).simplify()
 
     assert B.z == express((sin(q1)*sin(q2)*N.x -
-            sin(q2)*cos(q1)*N.y + cos(q2)*N.z), B)
+            sin(q2)*cos(q1)*N.y + cos(q2)*N.z), B).simplify()
 
-    assert B.y == express((cos(q2)*A.y + sin(q2)*A.z), B)
-    assert B.z == express((-sin(q2)*A.y + cos(q2)*A.z), B)
-    assert B.x == express((cos(q3)*C.x + sin(q3)*C.z), B)
-    assert B.z == express((-sin(q3)*C.x + cos(q3)*C.z), B)
+    assert B.y == express((cos(q2)*A.y + sin(q2)*A.z), B).simplify()
+    assert B.z == express((-sin(q2)*A.y + cos(q2)*A.z), B).simplify()
+    assert B.x == express((cos(q3)*C.x + sin(q3)*C.z), B).simplify()
+    assert B.z == express((-sin(q3)*C.x + cos(q3)*C.z), B).simplify()
 
     """
     assert C.x == express((
@@ -325,12 +331,12 @@ def test_express():
             cos(q2)*cos(q3)*N.z), C)
     """
     assert C.x == express((cos(q3)*A.x + sin(q2)*sin(q3)*A.y -
-            sin(q3)*cos(q2)*A.z), C)
-    assert C.y == express((cos(q2)*A.y + sin(q2)*A.z), C)
+            sin(q3)*cos(q2)*A.z), C).simplify()
+    assert C.y == express((cos(q2)*A.y + sin(q2)*A.z), C).simplify()
     assert C.z == express((sin(q3)*A.x - sin(q2)*cos(q3)*A.y +
-            cos(q2)*cos(q3)*A.z), C)
-    assert C.x == express((cos(q3)*B.x - sin(q3)*B.z), C)
-    assert C.z == express((sin(q3)*B.x + cos(q3)*B.z), C)
+            cos(q2)*cos(q3)*A.z), C).simplify()
+    assert C.x == express((cos(q3)*B.x - sin(q3)*B.z), C).simplify()
+    assert C.z == express((sin(q3)*B.x + cos(q3)*B.z), C).simplify()
 
 
 def test_time_derivative():

@@ -1,19 +1,23 @@
 """Definitions of monomial orderings. """
 
-from __future__ import print_function, division
+from __future__ import annotations
 
-from typing import Optional
+from typing import Callable, Any, Sequence, overload
 
 __all__ = ["lex", "grlex", "grevlex", "ilex", "igrlex", "igrevlex"]
 
-from sympy.core import Symbol
-from sympy.core.compatibility import iterable
+from sympy.core import Symbol, Expr
+from sympy.utilities.iterables import iterable
 
-class MonomialOrder(object):
+
+MonomKey = Callable[[tuple[int, ...]], Any]
+
+
+class MonomialOrder:
     """Base class for monomial orderings. """
 
-    alias = None  # type: Optional[str]
-    is_global = None  # type: Optional[bool]
+    alias: str | None = None
+    is_global: bool | None = None
     is_default = False
 
     def __repr__(self):
@@ -22,7 +26,7 @@ class MonomialOrder(object):
     def __str__(self):
         return self.alias
 
-    def __call__(self, monomial):
+    def __call__(self, monomial: tuple[int, ...]) -> Any:
         raise NotImplementedError
 
     def __eq__(self, other):
@@ -34,6 +38,7 @@ class MonomialOrder(object):
     def __ne__(self, other):
         return not (self == other)
 
+
 class LexOrder(MonomialOrder):
     """Lexicographic order of monomials. """
 
@@ -44,6 +49,7 @@ class LexOrder(MonomialOrder):
     def __call__(self, monomial):
         return monomial
 
+
 class GradedLexOrder(MonomialOrder):
     """Graded lexicographic order of monomials. """
 
@@ -53,6 +59,7 @@ class GradedLexOrder(MonomialOrder):
     def __call__(self, monomial):
         return (sum(monomial), monomial)
 
+
 class ReversedGradedLexOrder(MonomialOrder):
     """Reversed graded lexicographic order of monomials. """
 
@@ -61,6 +68,7 @@ class ReversedGradedLexOrder(MonomialOrder):
 
     def __call__(self, monomial):
         return (sum(monomial), tuple(reversed([-m for m in monomial])))
+
 
 class ProductOrder(MonomialOrder):
     """
@@ -113,12 +121,12 @@ class ProductOrder(MonomialOrder):
         return tuple(O(lamda(monomial)) for (O, lamda) in self.args)
 
     def __repr__(self):
-        from sympy.core import Tuple
-        return self.__class__.__name__ + repr(Tuple(*[x[0] for x in self.args]))
+        contents = [repr(x[0]) for x in self.args]
+        return self.__class__.__name__ + '(' + ", ".join(contents) + ')'
 
     def __str__(self):
-        from sympy.core import Tuple
-        return self.__class__.__name__ + str(Tuple(*[x[0] for x in self.args]))
+        contents = [str(x[0]) for x in self.args]
+        return self.__class__.__name__ + '(' + ", ".join(contents) + ')'
 
     def __eq__(self, other):
         if not isinstance(other, ProductOrder):
@@ -182,6 +190,7 @@ class InverseOrder(MonomialOrder):
     def __hash__(self):
         return hash((self.__class__, self.O))
 
+
 lex = LexOrder()
 grlex = GradedLexOrder()
 grevlex = ReversedGradedLexOrder()
@@ -189,7 +198,8 @@ ilex = InverseOrder(lex)
 igrlex = InverseOrder(grlex)
 igrevlex = InverseOrder(grevlex)
 
-_monomial_key = {
+
+_monomial_key: dict[str, MonomialOrder] = {
     'lex': lex,
     'grlex': grlex,
     'grevlex': grevlex,
@@ -198,7 +208,32 @@ _monomial_key = {
     'igrevlex': igrevlex
 }
 
-def monomial_key(order=None, gens=None):
+
+@overload
+def monomial_key(
+    order: str | Symbol | None = None, gens: None = None
+) -> MonomialOrder: ...
+
+
+@overload
+def monomial_key(order: MonomKey, gens: None = None) -> MonomKey: ...
+@overload
+
+
+def monomial_key(
+    order: str | Symbol | MonomKey | None = None, *, gens: Sequence[Symbol]
+) -> Callable[[Expr], Any]: ...
+
+
+@overload
+def monomial_key(
+    order: str | Symbol | MonomKey | None, gens: Sequence[Symbol]
+) -> Callable[[Expr], Any]: ...
+
+
+def monomial_key(
+    order: str | Symbol | MonomKey | None = None, gens: Sequence[Symbol] | None = None
+) -> MonomKey | MonomialOrder | Callable[[Expr], Any]:
     """
     Return a function defining admissible order on monomials.
 
@@ -221,27 +256,32 @@ def monomial_key(order=None, gens=None):
     resulting key function can be used to sort SymPy ``Expr`` objects.
 
     """
+    func: Callable[[tuple[int, ...]], Any]
+
     if order is None:
-        order = lex
-
-    if isinstance(order, Symbol):
+        func = lex
+    elif isinstance(order, (str, Symbol)):
         order = str(order)
-
-    if isinstance(order, str):
         try:
-            order = _monomial_key[order]
+            func = _monomial_key[order]
         except KeyError:
             raise ValueError("supported monomial orderings are 'lex', 'grlex' and 'grevlex', got %r" % order)
-    if hasattr(order, '__call__'):
-        if gens is not None:
-            def _order(expr):
-                return order(expr.as_poly(*gens).degree_list())
-            return _order
-        return order
+    elif hasattr(order, '__call__'):
+        func = order
     else:
         raise ValueError("monomial ordering specification must be a string or a callable, got %s" % order)
 
-class _ItemGetter(object):
+    if gens is not None:
+        # XXX: Remove this. It should be defined somewhere else and not part
+        # of the monomial_key function.
+        def _func(expr: Expr):
+            return func(expr.as_poly(*gens).degree_list()) # type: ignore
+        return _func
+
+    return func
+
+
+class _ItemGetter:
     """Helper class to return a subsequence of values."""
 
     def __init__(self, seq):
@@ -255,6 +295,7 @@ class _ItemGetter(object):
             return False
         return self.seq == other.seq
 
+
 def build_product_order(arg, gens):
     """
     Build a monomial order on ``gens``.
@@ -266,7 +307,7 @@ def build_product_order(arg, gens):
 
     For example, build a product of two grlex orders:
 
-    >>> from sympy.polys.orderings import grlex, build_product_order
+    >>> from sympy.polys.orderings import build_product_order
     >>> from sympy.abc import x, y, z, t
 
     >>> O = build_product_order((("grlex", x, y), ("grlex", z, t)), [x, y, z, t])

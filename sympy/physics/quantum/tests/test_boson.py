@@ -1,4 +1,8 @@
-from sympy import sqrt, exp, prod, Rational
+from math import prod
+
+from sympy.core.numbers import Rational
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.physics.quantum import Dagger, Commutator, qapply
 from sympy.physics.quantum.boson import BosonOp
 from sympy.physics.quantum.boson import (
@@ -22,6 +26,8 @@ def test_bosonoperator():
     assert Commutator(a, Dagger(a)).doit() == 1
 
     assert Commutator(a, Dagger(b)).doit() == a * Dagger(b) - Dagger(b) * a
+
+    assert Dagger(exp(a)) == exp(Dagger(a))
 
 
 def test_boson_states():

@@ -1,10 +1,20 @@
-from sympy import (log, sqrt, Rational as R, Symbol, I, exp, pi, S,
-    cos, sin, Mul, Pow, O)
+from sympy.core.expr import unchanged
+from sympy.core.mul import Mul
+from sympy.core.numbers import (I, Rational as R, pi)
+from sympy.core.power import Pow
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
+from sympy.functions.combinatorial.factorials import factorial
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.series.order import O
 from sympy.simplify.radsimp import expand_numer
-from sympy.core.function import expand, expand_multinomial, expand_power_base
+from sympy.core.function import (expand, expand_multinomial,
+    expand_power_base, expand_log)
 
 from sympy.testing.pytest import raises
-from sympy.testing.randtest import verify_numerically
+from sympy.core.random import verify_numerically
 
 from sympy.abc import x, y, z
 
@@ -127,6 +137,13 @@ def test_expand_frac():
         y*(x + y)/(x**2 + x)
     eq = (x + 1)**2/y
     assert expand_numer(eq, multinomial=False) == eq
+    # issue 26329
+    eq = (exp(x*z) - exp(y*z))/exp(z*(x + y))
+    ans = exp(-y*z) - exp(-x*z)
+    assert eq.expand(numer=True) != ans
+    assert eq.expand(numer=True, exact=True) == ans
+    assert expand_numer(eq) != ans
+    assert expand_numer(eq, exact=True) == ans
 
 
 def test_issue_6121():
@@ -230,6 +247,15 @@ def test_expand_arit():
     W = W.expand()
     assert W.has(-1672280820*x**15)
 
+def test_expand_mul():
+    # part of issue 20597
+    e = Mul(2, 3, evaluate=False)
+    assert e.expand() == 6
+
+    e = Mul(2, 3, 1/x, evaluate=False)
+    assert e.expand() == 6/x
+    e = Mul(2, R(1, 3), evaluate=False)
+    assert e.expand() == R(2, 3)
 
 def test_power_expand():
     """Test for Pow.expand()"""
@@ -305,3 +331,34 @@ def test_expand_log():
     t = Symbol('t', positive=True)
     # after first expansion, -2*log(2) + log(4); then 0 after second
     assert expand(log(t**2) - log(t**2/4) - 2*log(2)) == 0
+    assert expand_log(log(7*6)/log(6)) == 1 + log(7)/log(6)
+    b = factorial(10)
+    assert expand_log(log(7*b**4)/log(b)
+        ) == 4 + log(7)/log(b)
+
+
+def test_issue_23952():
+    assert (x**(y + z)).expand(force=True) == x**y*x**z
+    one = Symbol('1', integer=True, prime=True, odd=True, positive=True)
+    two = Symbol('2', integer=True, prime=True, even=True)
+    e = two - one
+    for b in (0, x):
+        # 0**e = 0, 0**-e = zoo; but if expanded then nan
+        assert unchanged(Pow, b, e)  # power_exp
+        assert unchanged(Pow, b, -e)  # power_exp
+        assert unchanged(Pow, b, y - x)  # power_exp
+        assert unchanged(Pow, b, 3 - x)  # multinomial
+        assert (b**e).expand().is_Pow  # power_exp
+        assert (b**-e).expand().is_Pow  # power_exp
+        assert (b**(y - x)).expand().is_Pow  # power_exp
+        assert (b**(3 - x)).expand().is_Pow  # multinomial
+    nn1 = Symbol('nn1', nonnegative=True)
+    nn2 = Symbol('nn2', nonnegative=True)
+    nn3 = Symbol('nn3', nonnegative=True)
+    assert (x**(nn1 + nn2)).expand() == x**nn1*x**nn2
+    assert (x**(-nn1 - nn2)).expand() == x**-nn1*x**-nn2
+    assert unchanged(Pow, x, nn1 + nn2 - nn3)
+    assert unchanged(Pow, x, 1 + nn2 - nn3)
+    assert unchanged(Pow, x, nn1 - nn2)
+    assert unchanged(Pow, x, 1 - nn2)
+    assert unchanged(Pow, x, -1 + nn2)

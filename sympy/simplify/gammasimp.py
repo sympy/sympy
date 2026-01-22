@@ -1,18 +1,18 @@
-from __future__ import print_function, division
-
 from sympy.core import Function, S, Mul, Pow, Add
-from sympy.core.compatibility import ordered, default_sort_key
-from sympy.core.function import count_ops, expand_func
-from sympy.functions.combinatorial.factorials import binomial
+from sympy.core.sorting import ordered, default_sort_key
+from sympy.core.function import expand_func
+from sympy.core.symbol import Dummy
 from sympy.functions import gamma, sqrt, sin
 from sympy.polys import factor, cancel
-
 from sympy.utilities.iterables import sift, uniq
 
 
 def gammasimp(expr):
     r"""
     Simplify expressions with gamma functions.
+
+    Explanation
+    ===========
 
     This function takes as input an expression containing gamma
     functions or functions that can be rewritten in terms of gamma
@@ -37,16 +37,16 @@ def gammasimp(expr):
     It then reduces the number of prefactors by absorbing them into gammas
     where possible and expands gammas with rational argument.
 
-    All transformation rules can be found (or was derived from) here:
+    All transformation rules can be found (or were derived from) here:
 
-    1. http://functions.wolfram.com/GammaBetaErf/Pochhammer/17/01/02/
-    2. http://functions.wolfram.com/GammaBetaErf/Pochhammer/27/01/0005/
+    .. [1] https://functions.wolfram.com/GammaBetaErf/Pochhammer/17/01/02/
+    .. [2] https://functions.wolfram.com/GammaBetaErf/Pochhammer/27/01/0005/
 
     Examples
     ========
 
     >>> from sympy.simplify import gammasimp
-    >>> from sympy import gamma, factorial, Symbol
+    >>> from sympy import gamma, Symbol
     >>> from sympy.abc import x
     >>> n = Symbol('n', integer = True)
 
@@ -58,19 +58,41 @@ def gammasimp(expr):
     """
 
     expr = expr.rewrite(gamma)
-    return _gammasimp(expr, as_comb = False)
+
+    # compute_ST will be looking for Functions and we don't want
+    # it looking for non-gamma functions: issue 22606
+    # so we mask free, non-gamma functions
+    f = expr.atoms(Function)
+    # take out gammas
+    gammas = {i for i in f if isinstance(i, gamma)}
+    if not gammas:
+        return expr  # avoid side effects like factoring
+    f -= gammas
+    # keep only those without bound symbols
+    f = f & expr.as_dummy().atoms(Function)
+    if f:
+        dum, fun, simp = zip(*[
+            (Dummy(), fi, fi.func(*[
+                _gammasimp(a, as_comb=False) for a in fi.args]))
+            for fi in ordered(f)])
+        d = expr.xreplace(dict(zip(fun, dum)))
+        return _gammasimp(d, as_comb=False).xreplace(dict(zip(dum, simp)))
+
+    return _gammasimp(expr, as_comb=False)
 
 
 def _gammasimp(expr, as_comb):
     """
     Helper function for gammasimp and combsimp.
 
+    Explanation
+    ===========
+
     Simplifies expressions written in terms of gamma function. If
     as_comb is True, it tries to preserve integer arguments. See
     docstring of gammasimp for more information. This was part of
     combsimp() in combsimp.py.
     """
-
     expr = expr.replace(gamma,
         lambda n: _rf(1, (n - 1).expand()))
 
@@ -80,35 +102,6 @@ def _gammasimp(expr, as_comb):
     else:
         expr = expr.replace(_rf,
             lambda a, b: gamma(a + b)/gamma(a))
-
-    def rule(n, k):
-        coeff, rewrite = S.One, False
-
-        cn, _n = n.as_coeff_Add()
-
-        if _n and cn.is_Integer and cn:
-            coeff *= _rf(_n + 1, cn)/_rf(_n - k + 1, cn)
-            rewrite = True
-            n = _n
-
-        # this sort of binomial has already been removed by
-        # rising factorials but is left here in case the order
-        # of rule application is changed
-        if k.is_Add:
-            ck, _k = k.as_coeff_Add()
-            if _k and ck.is_Integer and ck:
-                coeff *= _rf(n - ck - _k + 1, ck)/_rf(_k + 1, ck)
-                rewrite = True
-                k = _k
-
-        if count_ops(k) > count_ops(n - k):
-            rewrite = True
-            k = n - k
-
-        if rewrite:
-            return coeff*binomial(n, k)
-
-    expr = expr.replace(binomial, rule)
 
     def rule_gamma(expr, level=0):
         """ Simplify products of gamma functions further. """
@@ -238,11 +231,9 @@ def _gammasimp(expr, as_comb):
                         denom.append(sin(S.Pi*g1))
                         gammas.pop(i)
                         if n > 0:
-                            for k in range(n):
-                                numer.append(1 - g1 + k)
+                            numer.extend(1 - g1 + k for k in range(n))
                         elif n < 0:
-                            for k in range(-n):
-                                denom.append(-g1 - k)
+                            denom.extend(-g1 - k for k in range(-n))
                         break
                     else:
                         new.append(g1)
@@ -273,11 +264,9 @@ def _gammasimp(expr, as_comb):
                     ng.remove(x)
                     dg.remove(y)
                     if n > 0:
-                        for k in range(n):
-                            no.append(2*y + k)
+                        no.extend(2*y + k for k in range(n))
                     elif n < 0:
-                        for k in range(-n):
-                            do.append(2*y - 1 - k)
+                        do.extend(2*y - 1 - k for k in range(-n))
                     ng.append(y + S.Half)
                     no.append(2**(2*y - 1))
                     do.append(sqrt(S.Pi))
@@ -337,7 +326,7 @@ def _gammasimp(expr, as_comb):
                 # look for runs in Rationals for each resid
                 keys = sorted(rats, key=default_sort_key)
                 for resid in keys:
-                    coeffs = list(sorted(rats[resid]))
+                    coeffs = sorted(rats[resid])
                     new = []
                     while True:
                         run = _run(coeffs)
@@ -417,7 +406,7 @@ def _gammasimp(expr, as_comb):
                 if expr in inv:
                     return inv[expr]
                 return (expr.free_symbols, expr.atoms(Function).union(
-                        set(e.exp for e in expr.atoms(Pow))))
+                        {e.exp for e in expr.atoms(Pow)}))
 
             def update_ST(expr):
                 inv[expr] = compute_ST(expr)
@@ -459,8 +448,8 @@ def _gammasimp(expr, as_comb):
             / Mul(*[gamma(g) for g in denom_gammas]) \
             * Mul(*numer_others) / Mul(*denom_others)
 
-    # (for some reason we cannot use Basic.replace in this case)
     was = factor(expr)
+    # (for some reason we cannot use Basic.replace in this case)
     expr = rule_gamma(was)
     if expr != was:
         expr = factor(expr)
@@ -478,18 +467,12 @@ class _rf(Function):
             if not b:
                 return S.One
 
-            n, result = int(b), S.One
+            n = int(b)
 
             if n > 0:
-                for i in range(n):
-                    result *= a + i
-
-                return result
+                return Mul(*[a + i for i in range(n)])
             elif n < 0:
-                for i in range(1, -n + 1):
-                    result *= a - i
-
-                return 1/result
+                return 1/Mul(*[a - i for i in range(1, -n + 1)])
         else:
             if b.is_Add:
                 c, _b = b.as_coeff_Add()

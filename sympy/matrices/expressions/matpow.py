@@ -1,22 +1,25 @@
-from __future__ import print_function, division
-
-from .matexpr import MatrixExpr, ShapeError, Identity, ZeroMatrix
+from .matexpr import MatrixExpr
+from .special import Identity
 from sympy.core import S
+from sympy.core.expr import ExprBuilder
+from sympy.core.cache import cacheit
 from sympy.core.sympify import _sympify
 from sympy.matrices import MatrixBase
-
-from .permutation import PermutationMatrix
+from sympy.matrices.exceptions import NonSquareMatrixError
 
 
 class MatPow(MatrixExpr):
-
-    def __new__(cls, base, exp, evaluate=False, **options):
+    def __new__(cls, base, exp, evaluate=False, **options) -> MatrixExpr: # type: ignore
         base = _sympify(base)
         if not base.is_Matrix:
-            raise TypeError("Function parameter should be a matrix")
-        exp = _sympify(exp)
+            raise TypeError("MatPow base should be a matrix")
 
-        obj = super(MatPow, cls).__new__(cls, base, exp)
+        if base.is_square is False:
+            raise NonSquareMatrixError("Power of non-square matrix %s" % base)
+
+        exp = _sympify(exp)
+        obj = super().__new__(cls, base, exp)
+
         if evaluate:
             obj = obj.doit(deep=False)
 
@@ -34,74 +37,85 @@ class MatPow(MatrixExpr):
     def shape(self):
         return self.base.shape
 
+    @cacheit
+    def _get_explicit_matrix(self):
+        return self.base.as_explicit()**self.exp
+
     def _entry(self, i, j, **kwargs):
         from sympy.matrices.expressions import MatMul
         A = self.doit()
         if isinstance(A, MatPow):
             # We still have a MatPow, make an explicit MatMul out of it.
-            if not A.base.is_square:
-                raise ShapeError("Power of non-square matrix %s" % A.base)
-            elif A.exp.is_Integer and A.exp.is_positive:
+            if A.exp.is_Integer and A.exp.is_positive:
                 A = MatMul(*[A.base for k in range(A.exp)])
-            #elif A.exp.is_Integer and self.exp.is_negative:
-            # Note: possible future improvement: in principle we can take
-            # positive powers of the inverse, but carefully avoid recursion,
-            # perhaps by adding `_entry` to Inverse (as it is our subclass).
-            # T = A.base.as_explicit().inverse()
-            # A = MatMul(*[T for k in range(-A.exp)])
+            elif not self._is_shape_symbolic():
+                return A._get_explicit_matrix()[i, j]
             else:
                 # Leave the expression unevaluated:
                 from sympy.matrices.expressions.matexpr import MatrixElement
                 return MatrixElement(self, i, j)
-        return A._entry(i, j)
+        return A[i, j]
 
-    def doit(self, **kwargs):
-        from sympy.matrices.expressions import Inverse
-        deep = kwargs.get('deep', True)
-        if deep:
-            args = [arg.doit(**kwargs) for arg in self.args]
+    def doit(self, **hints):
+        if hints.get('deep', True):
+            base, exp = (arg.doit(**hints) for arg in self.args)
         else:
-            args = self.args
+            base, exp = self.args
 
-        base, exp = args
-        # combine all powers, e.g. (A**2)**3 = A**6
+        # combine all powers, e.g. (A ** 2) ** 3 -> A ** 6
         while isinstance(base, MatPow):
-            exp = exp*base.args[1]
+            exp *= base.args[1]
             base = base.args[0]
 
-        if exp.is_zero and base.is_square:
-            if isinstance(base, MatrixBase):
-                return base.func(Identity(base.shape[0]))
-            return Identity(base.shape[0])
-        elif isinstance(base, ZeroMatrix) and exp.is_negative:
-            raise ValueError("Matrix determinant is 0, not invertible.")
-        elif isinstance(base, (Identity, ZeroMatrix)):
+        if isinstance(base, MatrixBase):
+            # Delegate
+            return base ** exp
+
+        # Handle simple cases so that _eval_power() in MatrixExpr sub-classes can ignore them
+        if exp == S.One:
             return base
-        elif isinstance(base, PermutationMatrix):
-            return PermutationMatrix(base.args[0] ** exp).doit()
-        elif isinstance(base, MatrixBase):
-            if exp is S.One:
-                return base
-            return base**exp
-        # Note: just evaluate cases we know, return unevaluated on others.
-        # E.g., MatrixSymbol('x', n, m) to power 0 is not an error.
-        elif exp is S.NegativeOne and base.is_square:
-            return Inverse(base).doit(**kwargs)
-        elif exp is S.One:
-            return base
+        if exp == S.Zero:
+            return Identity(base.rows)
+        if exp == S.NegativeOne:
+            from sympy.matrices.expressions import Inverse
+            return Inverse(base).doit(**hints)
+
+        eval_power = getattr(base, '_eval_power', None)
+        if eval_power is not None:
+            return eval_power(exp)
+
         return MatPow(base, exp)
 
     def _eval_transpose(self):
         base, exp = self.args
-        return MatPow(base.T, exp)
+        return MatPow(base.transpose(), exp)
+
+    def _eval_adjoint(self):
+        base, exp = self.args
+        return MatPow(base.adjoint(), exp)
+
+    def _eval_conjugate(self):
+        base, exp = self.args
+        return MatPow(base.conjugate(), exp)
 
     def _eval_derivative(self, x):
-        from sympy import Pow
-        return Pow._eval_derivative(self, x)
+        assert not hasattr(x, "shape")
+        # dbase = self.base.diff(x)
+        dexp = self.exp.diff(x)
+        if dexp != 0:
+            return None
+        if self.exp.is_Integer:
+            if self.exp > 0:
+                from sympy import MatMul
+                return MatMul.fromiter(self.base for _ in range(self.exp))._eval_derivative(x)
+            elif self.exp == 0:
+                from .special import ZeroMatrix
+                return ZeroMatrix(*self.base.shape)
+        return None
 
     def _eval_derivative_matrix_lines(self, x):
-        from sympy.core.expr import ExprBuilder
-        from sympy.codegen.array_utils import CodegenArrayContraction, CodegenArrayTensorProduct
+        from sympy.tensor.array.expressions.array_expressions import ArrayContraction
+        from ...tensor.array.expressions.array_expressions import ArrayTensorProduct
         from .matmul import MatMul
         from .inverse import Inverse
         exp = self.exp
@@ -109,10 +123,10 @@ class MatPow(MatrixExpr):
             lr = self.base._eval_derivative_matrix_lines(x)
             for i in lr:
                 subexpr = ExprBuilder(
-                    CodegenArrayContraction,
+                    ArrayContraction,
                     [
                         ExprBuilder(
-                            CodegenArrayTensorProduct,
+                            ArrayTensorProduct,
                             [
                                 Identity(1),
                                 i._lines[0],
@@ -123,7 +137,7 @@ class MatPow(MatrixExpr):
                         ),
                         (0, 3, 4), (5, 7, 8)
                     ],
-                    validator=CodegenArrayContraction._validate
+                    validator=ArrayContraction._validate
                 )
                 i._first_pointer_parent = subexpr.args[0].args
                 i._first_pointer_index = 0
@@ -142,3 +156,6 @@ class MatPow(MatrixExpr):
         else:
             raise NotImplementedError("cannot evaluate %s derived by %s" % (self, x))
         return newexpr._eval_derivative_matrix_lines(x)
+
+    def _eval_inverse(self):
+        return MatPow(self.base, -self.exp)

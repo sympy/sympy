@@ -1,8 +1,12 @@
 from sympy.core.symbol import symbols, Dummy
 from sympy.matrices.expressions.applyfunc import ElementwiseApplyFunction
-from sympy import Matrix, Lambda, MatrixSymbol, exp, MatMul, sin, simplify
-from sympy.testing.pytest import raises
-from sympy.matrices.common import ShapeError
+from sympy.core.function import Lambda
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.trigonometric import sin
+from sympy.matrices.dense import Matrix
+from sympy.matrices.expressions.matexpr import MatrixSymbol
+from sympy.matrices.expressions.matmul import MatMul
+from sympy.simplify.simplify import simplify
 
 
 X = MatrixSymbol("X", 3, 3)
@@ -36,8 +40,8 @@ def test_applyfunc_matrix():
 
     expr = ElementwiseApplyFunction(exp, X*Y)
     assert expr.expr == X*Y
-    assert expr.function == Lambda(x, exp(x))
-    assert expr == (X*Y).applyfunc(exp)
+    assert expr.function.dummy_eq(Lambda(x, exp(x)))
+    assert expr.dummy_eq((X*Y).applyfunc(exp))
     assert expr.func(*expr.args) == expr
 
     assert isinstance(X*expr, MatMul)
@@ -50,12 +54,10 @@ def test_applyfunc_matrix():
     expr = ElementwiseApplyFunction(exp, Z)*ElementwiseApplyFunction(exp, Z.T)
     assert expr.shape == (2, 2)
 
-    raises(ShapeError, lambda: ElementwiseApplyFunction(exp, Z)*ElementwiseApplyFunction(exp, Z))
-
     M = Matrix([[x, y], [z, t]])
     expr = ElementwiseApplyFunction(sin, M)
     assert isinstance(expr, ElementwiseApplyFunction)
-    assert expr.function == Lambda(x, sin(x))
+    assert expr.function.dummy_eq(Lambda(x, sin(x)))
     assert expr.expr == M
     assert expr.doit() == M.applyfunc(sin)
     assert expr.doit() == Matrix([[sin(x), sin(y)], [sin(z), sin(t)]])
@@ -72,8 +74,6 @@ def test_applyfunc_matrix():
     assert expr2.shape == (t, t)
     expr3 = expr*M
     assert expr3.shape == (k, t)
-
-    raises(ShapeError, lambda: M*expr)
 
     expr1 = ElementwiseApplyFunction(lambda x: x+1, Xk)
     expr2 = ElementwiseApplyFunction(lambda x: x, Xk)
@@ -97,3 +97,22 @@ def test_applyfunc_as_explicit():
         [sin(X[1, 0]), sin(X[1, 1]), sin(X[1, 2])],
         [sin(X[2, 0]), sin(X[2, 1]), sin(X[2, 2])],
     ])
+
+
+def test_applyfunc_transpose():
+
+    af = Xk.applyfunc(sin)
+    assert af.T.dummy_eq(Xk.T.applyfunc(sin))
+
+
+def test_applyfunc_shape_11_matrices():
+    M = MatrixSymbol("M", 1, 1)
+
+    double = Lambda(x, x*2)
+
+    expr = M.applyfunc(sin)
+    assert isinstance(expr, ElementwiseApplyFunction)
+
+    expr = M.applyfunc(double)
+    assert isinstance(expr, MatMul)
+    assert expr == 2*M

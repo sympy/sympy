@@ -13,7 +13,7 @@ def test_solve_lin_sys_2x2_one():
            2*x1 - x2]
     sol = {x1: QQ(5, 3), x2: QQ(10, 3)}
     _sol = solve_lin_sys(eqs, domain)
-    assert _sol == sol and all(isinstance(s, domain.dtype) for s in _sol)
+    assert _sol == sol and all(s.ring == domain for s in _sol)
 
 def test_solve_lin_sys_2x4_none():
     domain, x1,x2 = ring("x1,x2", QQ)
@@ -106,6 +106,7 @@ def test_solve_lin_sys_6x6_2():
 
 def test_eqs_to_matrix():
     domain, x1,x2 = ring("x1,x2", QQ)
-    eqs = [x1 + x2 - 5,
-           2*x1 - x2]
-    assert Matrix([[1, 1, 5], [2, -1, 0]]).__eq__(eqs_to_matrix(eqs, domain))
+    eqs_coeff = [{x1: QQ(1), x2: QQ(1)}, {x1: QQ(2), x2: QQ(-1)}]
+    eqs_rhs = [QQ(-5), QQ(0)]
+    M = eqs_to_matrix(eqs_coeff, eqs_rhs, [x1, x2], QQ)
+    assert M.to_Matrix() == Matrix([[1, 1, 5], [2, -1, 0]])

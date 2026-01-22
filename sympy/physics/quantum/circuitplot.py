@@ -14,13 +14,11 @@ Todo:
 * Write some tests/examples!
 """
 
-from typing import List, Dict
+from __future__ import annotations
 
-from sympy import Mul
+from sympy.core.mul import Mul
 from sympy.external import import_module
 from sympy.physics.quantum.gate import Gate, OneQubitGate, CGate, CGateS
-from sympy.core.core import BasicMeta
-from sympy.core.assumptions import ManagedProperties
 
 
 __all__ = [
@@ -46,7 +44,7 @@ if np and matplotlib:
 #from matplotlib import rc
 #rc('text',usetex=True)
 
-class CircuitPlot(object):
+class CircuitPlot:
     """A class for managing a circuit plot."""
 
     scale = 1.0
@@ -55,8 +53,8 @@ class CircuitPlot(object):
     control_radius = 0.05
     not_radius = 0.15
     swap_delta = 0.05
-    labels = []  # type: List[str]
-    inits = {}  # type: Dict[str, str]
+    labels: list[str] = []
+    inits: dict[str, str] = {}
     label_buffer = 0.5
 
     def __init__(self, c, nqubits, **kwargs):
@@ -141,7 +139,7 @@ class CircuitPlot(object):
             self._axes.add_line(line)
         # Also double any controlled lines off these wires
         for i,g in enumerate(self._gates()):
-            if isinstance(g, CGate) or isinstance(g, CGateS):
+            if isinstance(g, (CGate, CGateS)):
                 wires = g.controls + g.targets
                 for wire in wires:
                     if wire in ismeasured and \
@@ -171,7 +169,7 @@ class CircuitPlot(object):
             gate.plot_gate(self, i)
 
     def _measurements(self):
-        """Return a dict {i:j} where i is the index of the wire that has
+        """Return a dict ``{i:j}`` where i is the index of the wire that has
         been measured, and j is the gate where the wire is measured.
         """
         ismeasured = {}
@@ -199,12 +197,12 @@ class CircuitPlot(object):
             color='k',
             ha='center',
             va='center',
-            bbox=dict(ec='k', fc='w', fill=True, lw=self.linewidth),
+            bbox={"ec": 'k', "fc": 'w', "fill": True, "lw": self.linewidth},
             size=self.fontsize
         )
 
     def two_qubit_box(self, t, gate_idx, wire_idx):
-        """Draw a box for a two qubit gate. Doesn't work yet.
+        """Draw a box for a two qubit gate. Does not work yet.
         """
         # x = self._gate_grid[gate_idx]
         # y = self._wire_grid[wire_idx]+0.5
@@ -297,7 +295,7 @@ def circuit_plot(c, nqubits, **kwargs):
         The circuit to plot. Should be a product of Gate instances.
     nqubits : int
         The number of qubits to include in the circuit. Must be at least
-        as big as the largest `min_qubits`` of the gates.
+        as big as the largest ``min_qubits`` of the gates.
     """
     return CircuitPlot(c, nqubits, **kwargs)
 
@@ -320,10 +318,11 @@ def labeller(n, symbol='q'):
 
     Parameters
     ==========
+
     n : int
-      number of qubits in the circuit
+        number of qubits in the circuit.
     symbol : string
-      A character string to precede all gate labels. E.g. 'q_0', 'q_1', etc.
+        A character string to precede all gate labels. E.g. 'q_0', 'q_1', etc.
 
     >>> from sympy.physics.quantum.circuitplot import labeller
     >>> labeller(2)
@@ -341,7 +340,7 @@ class Mz(OneQubitGate):
     """
     measurement = True
     gate_name='Mz'
-    gate_name_latex=u'M_z'
+    gate_name_latex='M_z'
 
 class Mx(OneQubitGate):
     """Mock-up of an x measurement gate.
@@ -351,14 +350,14 @@ class Mx(OneQubitGate):
     """
     measurement = True
     gate_name='Mx'
-    gate_name_latex=u'M_x'
+    gate_name_latex='M_x'
 
-class CreateOneQubitGate(ManagedProperties):
+class CreateOneQubitGate(type):
     def __new__(mcl, name, latexname=None):
         if not latexname:
             latexname = name
-        return BasicMeta.__new__(mcl, name + "Gate", (OneQubitGate,),
-                                 {'gate_name': name, 'gate_name_latex': latexname})
+        return type(name + "Gate", (OneQubitGate,),
+            {'gate_name': name, 'gate_name_latex': latexname})
 
 def CreateCGate(name, latexname=None):
     """Use a lexical closure to make a controlled gate.

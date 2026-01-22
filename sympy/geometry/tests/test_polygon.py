@@ -1,13 +1,18 @@
-from sympy import (Abs, Rational, Float, S, Symbol, symbols, cos, sin, pi, sqrt, \
-                    oo, acos)
+from sympy.core.numbers import (Float, Rational, oo, pi)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.complexes import Abs
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (acos, cos, sin)
 from sympy.functions.elementary.trigonometric import tan
-from sympy.geometry import (Circle, Ellipse, GeometryError, Point, Point2D, \
-                            Polygon, Ray, RegularPolygon, Segment, Triangle, \
-                            are_similar,convex_hull, intersection, Line, Ray2D)
+from sympy.geometry import (Circle, Ellipse, GeometryError, Point, Point2D,
+                            Polygon, Ray, RegularPolygon, Segment, Triangle,
+                            are_similar, convex_hull, intersection, Line, Ray2D)
 from sympy.testing.pytest import raises, slow, warns
-from sympy.testing.randtest import verify_numerically
+from sympy.core.random import verify_numerically
 from sympy.geometry.polygon import rad, deg
-from sympy import integrate
+from sympy.integrals.integrals import integrate
+from sympy.utilities.iterables import rotate_left
 
 
 def feq(a, b):
@@ -27,6 +32,7 @@ def test_polygon():
     half = S.Half
     a, b, c = Point(0, 0), Point(2, 0), Point(3, 3)
     t = Triangle(a, b, c)
+    assert Polygon(Point(0, 0)) == Point(0, 0)
     assert Polygon(a, Point(1, 0), b, c) == t
     assert Polygon(Point(1, 0), b, c, a) == t
     assert Polygon(b, c, a, Point(1, 0)) == t
@@ -38,7 +44,7 @@ def test_polygon():
         Point(-15, 33/5), Point(-15, -87/10), Point(-15, -15),
         Point(-42/5, -15), Point(-2, -15), Point(7, -15), Point(15, -15),
         Point(15, -3), Point(15, 10), Point(15, 15)) == \
-        Polygon(Point(-15,-15), Point(15,-15), Point(15,15), Point(-15,15))
+        Polygon(Point(-15, -15), Point(15, -15), Point(15, 15), Point(-15, 15))
 
     p1 = Polygon(
         Point(0, 0), Point(3, -1),
@@ -73,8 +79,14 @@ def test_polygon():
         Point(0, 2), Point(2, 2),
         Point(0, 0), Point(2, 0))
     p11 = Polygon(Point(0, 0), 1, n=3)
+    p12 = Polygon(Point(0, 0), 1, 0, n=3)
+    p13 = Polygon(
+        Point(0, 0),Point(8, 8),
+        Point(23, 20),Point(0, 20))
+    p14 = Polygon(*rotate_left(p13.args, 1))
 
-    r = Ray(Point(-9,6.6), Point(-9,5.5))
+
+    r = Ray(Point(-9, 6.6), Point(-9, 5.5))
     #
     # General polygon
     #
@@ -96,9 +108,9 @@ def test_polygon():
     assert p5.encloses_point(Point(1, 3))
     assert p5.encloses_point(Point(0, 0)) is False
     assert p5.encloses_point(Point(4, 0)) is False
-    assert p1.encloses(Circle(Point(2.5,2.5),5)) is False
-    assert p1.encloses(Ellipse(Point(2.5,2),5,6)) is False
-    p5.plot_interval('x') == [x, 0, 1]
+    assert p1.encloses(Circle(Point(2.5, 2.5), 5)) is False
+    assert p1.encloses(Ellipse(Point(2.5, 2), 5, 6)) is False
+    assert p5.plot_interval('x') == [x, 0, 1]
     assert p5.distance(
         Polygon(Point(10, 10), Point(14, 14), Point(10, 14))) == 6 * sqrt(2)
     assert p5.distance(
@@ -122,6 +134,7 @@ def test_polygon():
     assert p6.intersection(r) == [Point(-9, Rational(-84, 13)), Point(-9, Rational(33, 5))]
     assert p10.area == 0
     assert p11 == RegularPolygon(Point(0, 0), 1, 3, 0)
+    assert p11 == p12
     assert p11.vertices[0] == Point(1, 0)
     assert p11.args[0] == Point(0, 0)
     p11.spin(pi/2)
@@ -160,7 +173,7 @@ def test_polygon():
         if isinstance(var, Point):
             assert var == Point(0, 0)
         else:
-            assert var == 5 or var == 10 or var == pi / 3
+            assert var in (5, 10, pi / 3)
     assert p1 != Point(0, 0)
     assert p1 != p5
 
@@ -193,6 +206,12 @@ def test_polygon():
     assert feq(angles[Point(4, 4)].evalf(), Float("1.2490457723982544"))
     assert feq(angles[Point(5, 2)].evalf(), Float("1.8925468811915388"))
     assert feq(angles[Point(3, 0)].evalf(), Float("2.3561944901923449"))
+
+    # https://github.com/sympy/sympy/issues/24885
+    interior_angles_sum = sum(p13.angles.values())
+    assert feq(interior_angles_sum, (len(p13.angles) - 2)*pi )
+    interior_angles_sum = sum(p14.angles.values())
+    assert feq(interior_angles_sum, (len(p14.angles) - 2)*pi )
 
     #
     # Triangle
@@ -250,7 +269,7 @@ def test_polygon():
     assert t1.exradii[t1.sides[2]] == 5*sqrt(2)/2
 
     # Excenters
-    assert t1.excenters[t1.sides[2]] == Point2D(25*sqrt(2), -5*sqrt(2)/2)
+    assert t1.excenters[t1.sides[2]] == Point2D(5*sqrt(2)/2, -5*sqrt(2)/2)
 
     # Circumcircle
     assert t1.circumcircle.center == Point(2.5, 2.5)
@@ -380,7 +399,9 @@ def test_transform():
     assert Triangle(*pts).scale(2, 3, (4, 5)) == Triangle(*pts_out)
     assert RegularPolygon((0, 0), 1, 4).scale(2, 3, (4, 5)) == \
         Polygon(Point(-2, -10), Point(-4, -7), Point(-6, -10), Point(-4, -13))
-
+    # Checks for symmetric scaling
+    assert RegularPolygon((0, 0), 1, 4).scale(2, 2) == \
+        RegularPolygon(Point2D(0, 0), 2, 4, 0)
 
 def test_reflect():
     x = Symbol('x', real=True)
@@ -424,6 +445,12 @@ def test_incenter():
     assert Triangle(Point(0, 0), Point(1, 0), Point(0, 1)).incenter \
         == Point(1 - sqrt(2)/2, 1 - sqrt(2)/2)
 
+def test_excenters():
+    t = Triangle(Point(0, 0), Point(6, 0), Point(0, 2))
+    assert t.excenters[t.sides[0]] == Point(sqrt(10) + 4, sqrt(10) + 4)
+    assert t.excenters[t.sides[1]] == Point(2 - sqrt(10), -2 + sqrt(10))
+    assert t.excenters[t.sides[2]] == Point(2 + sqrt(10), -sqrt(10) - 2)
+
 def test_inradius():
     assert Triangle(Point(0, 0), Point(4, 0), Point(0, 3)).inradius == 1
 
@@ -459,7 +486,7 @@ def test_intersection():
     poly1 = Triangle(Point(0, 0), Point(1, 0), Point(0, 1))
     poly2 = Polygon(Point(0, 1), Point(-5, 0),
                     Point(0, -4), Point(0, Rational(1, 5)),
-                    Point(S.Half, -0.1), Point(1,0), Point(0, 1))
+                    Point(S.Half, -0.1), Point(1, 0), Point(0, 1))
 
     assert poly1.intersection(poly2) == [Point2D(Rational(1, 3), 0),
         Segment(Point(0, Rational(1, 5)), Point(0, 0)),
@@ -470,9 +497,9 @@ def test_intersection():
     assert poly1.intersection(Point(0, 0)) == [Point(0, 0)]
     assert poly1.intersection(Point(-12,  -43)) == []
     assert poly2.intersection(Line((-12, 0), (12, 0))) == [Point(-5, 0),
-        Point(0, 0),Point(Rational(1, 3), 0), Point(1, 0)]
+        Point(0, 0), Point(Rational(1, 3), 0), Point(1, 0)]
     assert poly2.intersection(Line((-12, 12), (12, 12))) == []
-    assert poly2.intersection(Ray((-3,4), (1,0))) == [Segment(Point(1, 0),
+    assert poly2.intersection(Ray((-3, 4), (1, 0))) == [Segment(Point(1, 0),
         Point(0, 1))]
     assert poly2.intersection(Circle((0, -1), 1)) == [Point(0, -2),
         Point(0, 0)]
@@ -494,8 +521,10 @@ def test_parameter_value():
     sq = Polygon((0, 0), (0, 1), (1, 1), (1, 0))
     assert sq.parameter_value((0.5, 1), t) == {t: Rational(3, 8)}
     q = Polygon((0, 0), (2, 1), (2, 4), (4, 0))
-    assert q.parameter_value((4, 0), t) == {t: -6 + 3*sqrt(5)}  # ~= 0.708
+    assert q.parameter_value((4, 0), t) == {t: -6 + 3*sqrt(5)} # ~= 0.708
+
     raises(ValueError, lambda: sq.parameter_value((5, 6), t))
+    raises(ValueError, lambda: sq.parameter_value(Circle(Point(0, 0), 1), t))
 
 
 def test_issue_12966():
@@ -559,7 +588,7 @@ def test_first_moment():
     assert p2.first_moment_of_area((a/8, b/6)) == (-25*a*b**2/648, -5*a**2*b/768)
 
     p2 = Polygon((0, 0), (12, 0), (12, 30))
-    p2.first_moment_of_area() == (1600/3, -640/3)
+    assert p2.first_moment_of_area() == (S(1600)/3, -S(640)/3)
 
 
 def test_section_modulus_and_polar_second_moment_of_area():
@@ -593,7 +622,7 @@ def test_cut_section():
         Point2D(Rational(9, 2), 3), Point2D(-1, Rational(-2, 3)))
 
     # convex polygon
-    p = RegularPolygon(Point2D(0,0), 6, 6)
+    p = RegularPolygon(Point2D(0, 0), 6, 6)
     s = p.cut_section(Line((0, 0), slope=1))
     assert s[0] == Polygon(Point2D(-3*sqrt(3) + 9, -3*sqrt(3) + 9), Point2D(3, 3*sqrt(3)),
         Point2D(-3, 3*sqrt(3)), Point2D(-6, 0), Point2D(-9 + 3*sqrt(3), -9 + 3*sqrt(3)))
@@ -605,9 +634,49 @@ def test_cut_section():
     t1, t2, t3, t4 = [(0, b), (0, 0), (a, 0), (a, b)]
     p = Polygon(t1, t2, t3, t4)
     p1, p2 = p.cut_section(Line((0, b), slope=0))
-    assert p1 == None
+    assert p1 is None
     assert p2 == Polygon(Point2D(0, 10), Point2D(0, 0), Point2D(20, 0), Point2D(20, 10))
 
     p3, p4 = p.cut_section(Line((0, 0), slope=0))
     assert p3 == Polygon(Point2D(0, 10), Point2D(0, 0), Point2D(20, 0), Point2D(20, 10))
-    assert p4 == None
+    assert p4 is None
+
+    # case where the line does not intersect with a polygon at all
+    raises(ValueError, lambda: p.cut_section(Line((0, a), slope=0)))
+
+def test_type_of_triangle():
+    # Isoceles triangle
+    p1 = Polygon(Point(0, 0), Point(5, 0), Point(2, 4))
+    assert p1.is_isosceles() == True
+    assert p1.is_scalene() == False
+    assert p1.is_equilateral() == False
+
+    # Scalene triangle
+    p2 = Polygon (Point(0, 0), Point(0, 2), Point(4, 0))
+    assert p2.is_isosceles() == False
+    assert p2.is_scalene() == True
+    assert p2.is_equilateral() == False
+
+    # Equilateral triangle
+    p3 = Polygon(Point(0, 0), Point(6, 0), Point(3, sqrt(27)))
+    assert p3.is_isosceles() == True
+    assert p3.is_scalene() == False
+    assert p3.is_equilateral() == True
+
+def test_do_poly_distance():
+    # Non-intersecting polygons
+    square1 = Polygon (Point(0, 0), Point(0, 1), Point(1, 1), Point(1, 0))
+    triangle1 = Polygon(Point(1, 2), Point(2, 2), Point(2, 1))
+    assert square1._do_poly_distance(triangle1) == sqrt(2)/2
+
+    # Polygons which sides intersect
+    square2 = Polygon(Point(1, 0), Point(2, 0), Point(2, 1), Point(1, 1))
+    with warns(UserWarning, \
+               match="Polygons may intersect producing erroneous output", test_stacklevel=False):
+        assert square1._do_poly_distance(square2) == 0
+
+    # Polygons which bodies intersect
+    triangle2 = Polygon(Point(0, -1), Point(2, -1), Point(S.Half, S.Half))
+    with warns(UserWarning, \
+               match="Polygons may intersect producing erroneous output", test_stacklevel=False):
+        assert triangle2._do_poly_distance(square1) == 0

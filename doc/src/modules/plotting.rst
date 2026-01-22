@@ -8,27 +8,27 @@ Introduction
 ------------
 
 The plotting module allows you to make 2-dimensional and 3-dimensional plots.
-Presently the plots are rendered using ``matplotlib`` as a backend. It is
-also possible to plot 2-dimensional plots using a ``TextBackend`` if you don't
-have ``matplotlib``.
+Presently the plots are rendered using :external:mod:`matplotlib` as a
+backend. It is also possible to plot 2-dimensional plots using a
+:class:`~.TextBackend` if you do not have :external:mod:`matplotlib`.
 
 The plotting module has the following functions:
 
-* plot: Plots 2D line plots.
-* plot_parametric: Plots 2D parametric plots.
-* plot_implicit: Plots 2D implicit and region plots.
-* plot3d: Plots 3D plots of functions in two variables.
-* plot3d_parametric_line: Plots 3D line plots, defined by a parameter.
-* plot3d_parametric_surface: Plots 3D parametric surface plots.
+* :func:`~.plot`: Plots 2D line plots.
+* :func:`~.plot_parametric`: Plots 2D parametric plots.
+* :func:`~.plot_implicit`: Plots 2D implicit and region plots.
+* :func:`~.plot3d`: Plots 3D plots of functions in two variables.
+* :func:`~.plot3d_parametric_line`: Plots 3D line plots, defined by a parameter.
+* :func:`~.plot3d_parametric_surface`: Plots 3D parametric surface plots.
 
 The above functions are only for convenience and ease of use. It is possible to
-plot any plot by passing the corresponding ``Series`` class to ``Plot`` as
+plot any plot by passing the corresponding ``Series`` class to :class:`~.Plot` as
 argument.
 
 Plot Class
 ----------
 
-.. autoclass:: sympy.plotting.plot.Plot
+.. autoclass:: sympy.plotting.plot::Plot
    :members:
 
 Plotting Function Reference
@@ -44,49 +44,58 @@ Plotting Function Reference
 
 .. autofunction:: plot3d_parametric_surface
 
-.. autofunction:: sympy.plotting.plot_implicit.plot_implicit
+.. autofunction:: sympy.plotting.plot_implicit::plot_implicit
 
 PlotGrid Class
 --------------
 
-.. autoclass:: sympy.plotting.plot.PlotGrid
+.. autoclass:: sympy.plotting.plot::PlotGrid
    :members:
 
 Series Classes
 --------------
 
-.. autoclass:: sympy.plotting.plot.BaseSeries
+.. autoclass:: sympy.plotting.series::BaseSeries
    :members:
 
-.. autoclass:: sympy.plotting.plot.Line2DBaseSeries
+.. autoclass:: sympy.plotting.series::Line2DBaseSeries
    :members:
 
-.. autoclass:: sympy.plotting.plot.LineOver1DRangeSeries
+.. autoclass:: sympy.plotting.series::LineOver1DRangeSeries
    :members:
 
-.. autoclass:: sympy.plotting.plot.Parametric2DLineSeries
+.. autoclass:: sympy.plotting.series::Parametric2DLineSeries
    :members:
 
-.. autoclass:: sympy.plotting.plot.Line3DBaseSeries
+.. autoclass:: sympy.plotting.series::Line3DBaseSeries
    :members:
 
-.. autoclass:: sympy.plotting.plot.Parametric3DLineSeries
+.. autoclass:: sympy.plotting.series::Parametric3DLineSeries
    :members:
 
-.. autoclass:: sympy.plotting.plot.SurfaceBaseSeries
+.. autoclass:: sympy.plotting.series::SurfaceBaseSeries
    :members:
 
-.. autoclass:: sympy.plotting.plot.SurfaceOver2DRangeSeries
+.. autoclass:: sympy.plotting.series::SurfaceOver2DRangeSeries
    :members:
 
-.. autoclass:: sympy.plotting.plot.ParametricSurfaceSeries
+.. autoclass:: sympy.plotting.series::ParametricSurfaceSeries
    :members:
 
-.. autoclass:: sympy.plotting.plot_implicit.ImplicitSeries
+.. autoclass:: sympy.plotting.series::GenericDataSeries
    :members:
 
+.. autoclass:: sympy.plotting.series::ImplicitSeries
+   :members:
 
+Backends
+--------
 
+.. autoclass:: sympy.plotting.plot::MatplotlibBackend
+   :members:
+
+.. autoclass:: sympy.plotting.plot::TextBackend
+   :members:
 
 Pyglet Plotting
 ---------------
@@ -99,16 +108,17 @@ For an alternative you can look at the new plotting module.
 
 The pyglet plotting module can do nice 2D and 3D plots that can be
 controlled by console commands as well as keyboard and mouse, with
-the only dependency being ``pyglet``.
+the only dependency being `pyglet <https://pyglet.org/>`_.
 
 Here is the simplest usage:
 
-    >>> from sympy import var, Plot
+    >>> from sympy import var
+    >>> from sympy.plotting.pygletplot import PygletPlot as Plot
     >>> var('x y z')
     >>> Plot(x*y**3-y*x**3)
 
 To see lots of plotting examples, see ``examples/pyglet_plotting.py`` and try running
-it in interactive mode (python -i plotting.py)::
+it in interactive mode (``python -i plotting.py``)::
 
     $ python -i examples/pyglet_plotting.py
 
@@ -179,7 +189,7 @@ Supported mode names by number of variables:
     >>> Plot(1, 'mode=spherical; color=zfade4')
 
 Note that function parameters are given as option strings of the form
-"key1=value1; key2 = value2" (spaces are truncated). Keyword arguments given
+``"key1=value1; key2 = value2"`` (spaces are truncated). Keyword arguments given
 directly to plot apply to the plot itself.
 
 Specifying Intervals for Variables
@@ -240,7 +250,7 @@ The coloring algorithm works like this:
 #. Scale each component to the color gradient.
 
 When not specified explicitly, the default color gradient is
-f(0.0)=(0.4,0.4,0.4) -> f(1.0)=(0.9,0.9,0.9). In our case, everything is
+$f(0.0)=(0.4,0.4,0.4) \rightarrow f(1.0)=(0.9,0.9,0.9)$. In our case, everything is
 gray-scale because we have applied the default color gradient uniformly for
 each color component. When defining a color scheme in this way, you might want
 to supply a color gradient as well:
@@ -271,32 +281,21 @@ Plotting Geometric Entities
 ---------------------------
 
 The plotting module is capable of plotting some 2D geometric entities like
-line, circle and ellipse. The following example plots a circle and a tangent
-line at a random point on the ellipse.
+line, circle and ellipse. The following example plots a circle centred at
+origin and of radius 2 units.
 ::
 
-    In [1]: p = Plot(axes='label_axes=True')
+    >>> from sympy import *
+    >>> x,y = symbols('x y')
+    >>> plot_implicit(Eq(x**2+y**2, 4))
 
-    In [2]: c = Circle(Point(0,0), 1)
-
-    In [3]: t = c.tangent_line(c.random_point())
-
-    In [4]: p[0] = c
-
-    In [5]: p[1] = t
+Similarly, :func:`~.plot_implicit` may be used to plot any 2-D geometric structure from
+its implicit equation.
 
 Plotting polygons (Polygon, RegularPolygon, Triangle) are not supported
-directly. However a polygon can be plotted through a loop as follows.
-::
-
-    In [6]: p = Plot(axes='label_axes=True')
-
-    In [7]: t = RegularPolygon(Point(0,0), 1, 5)
-
-    In [8]: for i in range(len(t.sides)):
-       ....:    p[i] = t.sides[i]
+directly.
 
 Plotting with ASCII art
 -----------------------
 
-.. autofunction:: sympy.plotting.textplot.textplot
+.. autofunction:: sympy.plotting.textplot::textplot

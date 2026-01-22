@@ -1,9 +1,18 @@
-from sympy import (hyper, meijerg, S, Tuple, pi, I, exp, log, Rational,
-                   cos, sqrt, symbols, oo, Derivative, gamma, O, appellf1)
+from sympy.core.containers import Tuple
+from sympy.core.function import Derivative
+from sympy.core.numbers import (I, Rational, oo, pi)
+from sympy.core.singleton import S
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import cos
+from sympy.functions.special.gamma_functions import gamma
+from sympy.functions.special.hyper import (appellf1, hyper, meijerg)
+from sympy.series.order import O
 from sympy.abc import x, z, k
 from sympy.series.limits import limit
 from sympy.testing.pytest import raises, slow
-from sympy.testing.randtest import (
+from sympy.core.random import (
     random_complex_number as randcplx,
     verify_numerically as tn,
     test_derivative_numerically as td)
@@ -18,9 +27,18 @@ def test_TupleParametersBase():
 def test_hyper():
     raises(TypeError, lambda: hyper(1, 2, z))
 
-    assert hyper((1, 2), (1,), z) == hyper(Tuple(1, 2), Tuple(1), z)
+    assert hyper((2, 1), (1,), z) == hyper(Tuple(1, 2), Tuple(1), z)
+    assert hyper((2, 1, 2), (1, 2, 1, 3), z) == hyper((2,), (1, 3), z)
+    u = hyper((2, 1, 2), (1, 2, 1, 3), z, evaluate=False)
+    assert u.ap == Tuple(1, 2, 2)
+    assert u.bq == Tuple(1, 1, 2, 3)
 
     h = hyper((1, 2), (3, 4, 5), z)
+    assert h.ap == Tuple(1, 2)
+    assert h.bq == Tuple(3, 4, 5)
+    assert h.argument == z
+    assert h.is_commutative is True
+    h = hyper((2, 1), (4, 3, 5), z)
     assert h.ap == Tuple(1, 2)
     assert h.bq == Tuple(3, 4, 5)
     assert h.argument == z
@@ -43,7 +61,7 @@ def test_hyper():
     assert hyper([z], [], z).diff(z) == Derivative(hyper([z], [], z), z)
 
     # hyper is unbranched wrt parameters
-    from sympy import polar_lift
+    from sympy.functions.elementary.complexes import polar_lift
     assert hyper([polar_lift(z)], [polar_lift(k)], polar_lift(x)) == \
         hyper([z], [k], polar_lift(x))
 
@@ -55,7 +73,7 @@ def test_hyper():
 def test_expand_func():
     # evaluation at 1 of Gauss' hypergeometric function:
     from sympy.abc import a, b, c
-    from sympy import gamma, expand_func
+    from sympy.core.function import expand_func
     a1, b1, c1 = randcplx(), randcplx(), randcplx() + 5
     assert expand_func(hyper([a, b], [c], 1)) == \
         gamma(c)*gamma(-a - b + c)/(gamma(-a + c)*gamma(-b + c))
@@ -71,7 +89,7 @@ def test_expand_func():
 
 
 def replace_dummy(expr, sym):
-    from sympy import Dummy
+    from sympy.core.symbol import Dummy
     dum = expr.atoms(Dummy)
     if not dum:
         return expr
@@ -80,7 +98,9 @@ def replace_dummy(expr, sym):
 
 
 def test_hyper_rewrite_sum():
-    from sympy import RisingFactorial, factorial, Dummy, Sum
+    from sympy.concrete.summations import Sum
+    from sympy.core.symbol import Dummy
+    from sympy.functions.combinatorial.factorials import (RisingFactorial, factorial)
     _k = Dummy("k")
     assert replace_dummy(hyper((1, 2), (1, 3), x).rewrite(Sum), _k) == \
         Sum(x**_k / factorial(_k) * RisingFactorial(2, _k) /
@@ -166,7 +186,7 @@ def test_meijer():
         Derivative(meijerg([z, z], [], [], [], z), z)
 
     # meijerg is unbranched wrt parameters
-    from sympy import polar_lift as pl
+    from sympy.functions.elementary.complexes import polar_lift as pl
     assert meijerg([pl(a1)], [pl(a2)], [pl(b1)], [pl(b2)], pl(z)) == \
         meijerg([a1], [a2], [b1], [b2], pl(z))
 
@@ -208,7 +228,7 @@ def test_meijerg_period():
 
 
 def test_hyper_unpolarify():
-    from sympy import exp_polar
+    from sympy.functions.elementary.exponential import exp_polar
     a = exp_polar(2*pi*I)*x
     b = x
     assert hyper([], [], a).argument == b
@@ -225,7 +245,8 @@ def test_hyperrep():
         HyperRep_asin2, HyperRep_sqrts1, HyperRep_sqrts2, HyperRep_log2,
         HyperRep_cosasin, HyperRep_sinasin)
     # First test the base class works.
-    from sympy import Piecewise, exp_polar
+    from sympy.functions.elementary.exponential import exp_polar
+    from sympy.functions.elementary.piecewise import Piecewise
     a, b, c, d, z = symbols('a b c d z')
 
     class myrep(HyperRep):
@@ -309,7 +330,8 @@ def test_hyperrep():
 
 @slow
 def test_meijerg_eval():
-    from sympy import besseli, exp_polar
+    from sympy.functions.elementary.exponential import exp_polar
+    from sympy.functions.special.bessel import besseli
     from sympy.abc import l
     a = randcplx()
     arg = x*exp_polar(k*pi*I)
@@ -342,8 +364,10 @@ def test_limits():
     k, x = symbols('k, x')
     assert hyper((1,), (Rational(4, 3), Rational(5, 3)), k**2).series(k) == \
            1 + 9*k**2/20 + 81*k**4/1120 + O(k**6) # issue 6350
-    assert limit(meijerg((), (), (1,), (0,), -x), x, 0) == \
-            meijerg(((), ()), ((1,), (0,)), 0) # issue 6052
+
+    # https://github.com/sympy/sympy/issues/11465
+    assert limit(1/hyper((1, ), (1, ), x), x, 0) == 1
+
 
 def test_appellf1():
     a, b1, b2, c, x, y = symbols('a b1 b2 c x y')
@@ -357,7 +381,7 @@ def test_appellf1():
 
 
 def test_derivative_appellf1():
-    from sympy import diff
+    from sympy.core.function import diff
     a, b1, b2, c, x, y, z = symbols('a b1 b2 c x y z')
     assert diff(appellf1(a, b1, b2, c, x, y), x) == a*b1*appellf1(a + 1, b2, b1 + 1, c + 1, y, x)/c
     assert diff(appellf1(a, b1, b2, c, x, y), y) == a*b2*appellf1(a + 1, b1, b2 + 1, c + 1, x, y)/c
@@ -367,6 +391,13 @@ def test_derivative_appellf1():
 
 def test_eval_nseries():
     a1, b1, a2, b2 = symbols('a1 b1 a2 b2')
-    assert hyper((1,2), (1,2,3), x**2)._eval_nseries(x, 7, None) == 1 + x**2/3 + x**4/24 + x**6/360 + O(x**7)
-    assert exp(x)._eval_nseries(x,7,None) == hyper((a1, b1), (a1, b1), x)._eval_nseries(x, 7, None)
-    assert hyper((a1, a2), (b1, b2), x)._eval_nseries(z, 7, None) == hyper((a1, a2), (b1, b2), x) + O(z**7)
+    assert hyper((1,2), (1,2,3), x**2)._eval_nseries(x, 7, None) == \
+        1 + x**2/3 + x**4/24 + x**6/360 + O(x**7)
+    assert exp(x)._eval_nseries(x,7,None) == \
+        hyper((a1, b1), (a1, b1), x)._eval_nseries(x, 7, None)
+    assert hyper((a1, a2), (b1, b2), x)._eval_nseries(z, 7, None) ==\
+        hyper((a1, a2), (b1, b2), x) + O(z**7)
+    assert hyper((-S(1)/2, S(1)/2), (1,), 4*x/(x + 1)).nseries(x) == \
+        1 - x + x**2/4 - 3*x**3/4 - 15*x**4/64 - 93*x**5/64 + O(x**6)
+    assert (pi/2*hyper((-S(1)/2, S(1)/2), (1,), 4*x/(x + 1))).nseries(x) == \
+        pi/2 - pi*x/2 + pi*x**2/8 - 3*pi*x**3/8 - 15*pi*x**4/128 - 93*pi*x**5/128 + O(x**6)

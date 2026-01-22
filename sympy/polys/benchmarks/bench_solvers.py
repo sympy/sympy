@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.polys.rings import ring
 from sympy.polys.fields import field
 from sympy.polys.domains import ZZ, QQ
@@ -255,7 +253,7 @@ def time_verify_sol_165x165():
     eqs = eqs_165x165()
     sol = sol_165x165()
     zeros = [ eq.compose(sol) for eq in eqs ]
-    if not all([ zero == 0 for zero in zeros ]):
+    if not all(zero == 0 for zero in zeros):
         raise ValueError("All should be 0")
 
 def time_to_expr_eqs_165x165():
@@ -487,7 +485,7 @@ def time_verify_sol_189x49():
     eqs = eqs_189x49()
     sol = sol_189x49()
     zeros = [ eq.compose(sol) for eq in eqs ]
-    assert all([ zero == 0 for zero in zeros ])
+    assert all(zero == 0 for zero in zeros)
 
 def time_to_expr_eqs_189x49():
     eqs = eqs_189x49()
@@ -537,7 +535,7 @@ def time_verify_sol_10x8():
     eqs = eqs_10x8()
     sol = sol_10x8()
     zeros = [ eq.compose(sol) for eq in eqs ]
-    if not all([ zero == 0 for zero in zeros ]):
+    if not all(zero == 0 for zero in zeros):
         raise ValueError("All values in zero should be 0")
 
 def time_to_expr_eqs_10x8():

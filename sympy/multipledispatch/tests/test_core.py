@@ -1,17 +1,17 @@
-from typing import Dict, Any
+from __future__ import annotations
+from typing import Any
 
 from sympy.multipledispatch import dispatch
 from sympy.multipledispatch.conflict import AmbiguityWarning
-from sympy.testing.pytest import raises, XFAIL, warns
+from sympy.testing.pytest import raises, warns
 from functools import partial
 
-test_namespace = dict()  # type: Dict[str, Any]
+test_namespace: dict[str, Any] = {}
 
 orig_dispatch = dispatch
 dispatch = partial(dispatch, namespace=test_namespace)
 
 
-@XFAIL
 def test_singledispatch():
     @dispatch(int)
     def f(x): # noqa:F811
@@ -45,8 +45,8 @@ def test_multipledispatch():
     assert f(1.0, 2.0) == -1.0
 
 
-class A(object): pass
-class B(object): pass
+class A: pass
+class B: pass
 class C(A): pass
 class D(C): pass
 class E(C): pass
@@ -66,7 +66,6 @@ def test_inheritance():
     assert f(C()) == 'a'
 
 
-@XFAIL
 def test_inheritance_and_multiple_dispatch():
     @dispatch(A, A)
     def f(x, y): # noqa:F811
@@ -108,14 +107,14 @@ def test_competing_multiple():
 
 
 def test_competing_ambiguous():
-    test_namespace = dict()
+    test_namespace = {}
     dispatch = partial(orig_dispatch, namespace=test_namespace)
 
     @dispatch(A, C)
     def f(x, y): # noqa:F811
         return 2
 
-    with warns(AmbiguityWarning):
+    with warns(AmbiguityWarning, test_stacklevel=False):
         @dispatch(C, A) # noqa:F811
         def f(x, y): # noqa:F811
             return 2
@@ -148,8 +147,8 @@ def test_union_types():
 
 
 def test_namespaces():
-    ns1 = dict()
-    ns2 = dict()
+    ns1 = {}
+    ns2 = {}
 
     def foo(x):
         return 1
@@ -177,7 +176,7 @@ def test_dispatch_on_dispatch():
 
 
 def test_methods():
-    class Foo(object):
+    class Foo:
         @dispatch(float)
         def f(self, x): # noqa:F811
             return x - 1
@@ -198,7 +197,7 @@ def test_methods():
 
 
 def test_methods_multiple_dispatch():
-    class Foo(object):
+    class Foo:
         @dispatch(A, A)
         def f(x, y): # noqa:F811
             return 1

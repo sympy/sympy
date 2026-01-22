@@ -1,15 +1,16 @@
-"""Miscellaneous stuff that doesn't really fit anywhere else."""
+"""Miscellaneous stuff that does not really fit anywhere else."""
 
-from __future__ import print_function, division
+from __future__ import annotations
 
-from typing import List
-
+import operator
 import sys
 import os
 import re as _re
 import struct
 from textwrap import fill, dedent
-from sympy.core.compatibility import get_function_name, as_int
+from typing import TypeVar, Callable, Literal, SupportsIndex, SupportsInt, overload, Any
+
+_CallableT = TypeVar("_CallableT", bound=Callable)
 
 
 class Undecidable(ValueError):
@@ -18,20 +19,23 @@ class Undecidable(ValueError):
     pass
 
 
-def filldedent(s, w=70):
+def filldedent(s: str, w: int = 70, **kwargs: Any) -> str:
     """
-    Strips leading and trailing empty lines from a copy of `s`, then dedents,
+    Strips leading and trailing empty lines from a copy of ``s``, then dedents,
     fills and returns it.
 
     Empty line stripping serves to deal with docstrings like this one that
     start with a newline after the initial triple quote, inserting an empty
     line at the beginning of the string.
 
+    Additional keyword arguments will be passed to ``textwrap.fill()``.
+
     See Also
     ========
     strlines, rawlines
+
     """
-    return '\n' + fill(dedent(str(s)).strip('\n'), width=w)
+    return '\n' + fill(dedent(str(s)).strip('\n'), width=w, **kwargs)
 
 
 def strlines(s, c=64, short=False):
@@ -63,7 +67,7 @@ def strlines(s, c=64, short=False):
     ========
     filldedent, rawlines
     """
-    if type(s) is not str:
+    if not isinstance(s, str):
         raise ValueError('expecting string input')
     if '\n' in s:
         return rawlines(s)
@@ -171,13 +175,13 @@ def rawlines(s):
 ARCH = str(struct.calcsize('P') * 8) + "-bit"
 
 
-# XXX: PyPy doesn't support hash randomization
+# XXX: PyPy does not support hash randomization
 HASH_RANDOMIZATION = getattr(sys.flags, 'hash_randomization', False)
 
-_debug_tmp = []  # type: List[str]
+_debug_tmp: list[str] = []
 _debug_iter = 0
 
-def debug_decorator(func):
+def debug_decorator(func: _CallableT) -> _CallableT:
     """If SYMPY_DEBUG is True, it will print a nice execution tree with
     arguments and results of all decorated functions, else do nothing.
     """
@@ -187,20 +191,19 @@ def debug_decorator(func):
         return func
 
     def maketree(f, *args, **kw):
-        global _debug_tmp
-        global _debug_iter
+        global _debug_tmp, _debug_iter
         oldtmp = _debug_tmp
         _debug_tmp = []
         _debug_iter += 1
 
         def tree(subtrees):
-            def indent(s, type=1):
+            def indent(s, variant=1):
                 x = s.split("\n")
                 r = "+-%s\n" % x[0]
                 for a in x[1:]:
                     if a == "":
                         continue
-                    if type == 1:
+                    if variant == 1:
                         r += "| %s\n" % a
                     else:
                         r += "  %s\n" % a
@@ -216,27 +219,27 @@ def debug_decorator(func):
         # If there is a bug and the algorithm enters an infinite loop, enable the
         # following lines. It will print the names and parameters of all major functions
         # that are called, *before* they are called
-        #from sympy.core.compatibility import reduce
+        #from functools import reduce
         #print("%s%s %s%s" % (_debug_iter, reduce(lambda x, y: x + y, \
-        #    map(lambda x: '-', range(1, 2 + _debug_iter))), get_function_name(f), args))
+        #    map(lambda x: '-', range(1, 2 + _debug_iter))), f.__name__, args))
 
         r = f(*args, **kw)
 
         _debug_iter -= 1
-        s = "%s%s = %s\n" % (get_function_name(f), args, r)
+        s = "%s%s = %s\n" % (f.__name__, args, r)
         if _debug_tmp != []:
             s += tree(_debug_tmp)
         _debug_tmp = oldtmp
         _debug_tmp.append(s)
         if _debug_iter == 0:
-            print((_debug_tmp[0]))
+            print(_debug_tmp[0])
             _debug_tmp = []
         return r
 
     def decorated(*args, **kwargs):
         return maketree(func, *args, **kwargs)
 
-    return decorated
+    return decorated  # type: ignore
 
 
 def debug(*args):
@@ -248,12 +251,31 @@ def debug(*args):
         print(*args, file=sys.stderr)
 
 
+def debugf(string, args):
+    """
+    Print ``string%args`` if SYMPY_DEBUG is True, else do nothing. This is
+    intended for debug messages using formatted strings.
+    """
+    from sympy import SYMPY_DEBUG
+    if SYMPY_DEBUG:
+        print(string%args, file=sys.stderr)
+
+
 def find_executable(executable, path=None):
     """Try to find 'executable' in the directories listed in 'path' (a
     string listing directories separated by 'os.pathsep'; defaults to
     os.environ['PATH']).  Returns the complete filename or None if not
     found
     """
+    from .exceptions import sympy_deprecation_warning
+    sympy_deprecation_warning(
+        """
+        sympy.utilities.misc.find_executable() is deprecated. Use the standard
+        library shutil.which() function instead.
+        """,
+        deprecated_since_version="1.7",
+        active_deprecations_target="deprecated-find-executable",
+    )
     if path is None:
         path = os.environ['PATH']
     paths = path.split(os.pathsep)
@@ -282,7 +304,7 @@ def find_executable(executable, path=None):
     return None
 
 
-def func_name(x, short=False):
+def func_name(x: Any, short: bool = False) -> str:
     """Return function name of `x` (if defined) else the `type(x)`.
     If short is True and there is a shorter alias for the result,
     return the alias.
@@ -299,10 +321,6 @@ def func_name(x, short=False):
     'StrictLessThan'
     >>> func_name(x < 1, short=True)
     'Lt'
-
-    See Also
-    ========
-    sympy.core.compatibility get_function_name
     """
     alias = {
     'GreaterThan': 'Ge',
@@ -312,11 +330,11 @@ def func_name(x, short=False):
     'Equality': 'Eq',
     'Unequality': 'Ne',
     }
-    typ = type(x)
-    if str(typ).startswith("<type '"):
-        typ = str(typ).split("'")[1].split("'")[0]
-    elif str(typ).startswith("<class '"):
-        typ = str(typ).split("'")[1].split("'")[0]
+    typ = str(type(x))
+    if typ.startswith("<type '"):
+        typ = typ.split("'")[1].split("'")[0]
+    elif typ.startswith("<class '"):
+        typ = typ.split("'")[1].split("'")[0]
     rv = getattr(getattr(x, 'func', x), '__name__', typ)
     if '.' in rv:
         rv = rv.split('.')[-1]
@@ -344,7 +362,7 @@ def _replace(reps):
         return lambda x: x
     D = lambda match: reps[match.group(0)]
     pattern = _re.compile("|".join(
-        [_re.escape(k) for k, v in reps.items()]), _re.M)
+        [_re.escape(k) for k, v in reps.items()]), _re.MULTILINE)
     return lambda string: pattern.sub(D, string)
 
 
@@ -377,11 +395,11 @@ def replace(string, *reps):
     References
     ==========
 
-    .. [1] https://stackoverflow.com/questions/6116978/python-replace-multiple-strings
+    .. [1] https://stackoverflow.com/questions/6116978/how-to-replace-multiple-substrings-of-a-string
     """
     if len(reps) == 1:
         kv = reps[0]
-        if type(kv) is dict:
+        if isinstance(kv, dict):
             reps = kv
         else:
             return string.replace(*kv)
@@ -441,7 +459,7 @@ def translate(s, a, b=None, c=None):
         c = b
         a = b = ''
     else:
-        if type(a) is dict:
+        if isinstance(a, dict):
             short = {}
             for k in list(a.keys()):
                 if len(k) == 1 and len(a[k]) == 1:
@@ -463,7 +481,7 @@ def translate(s, a, b=None, c=None):
     return s.translate(n)
 
 
-def ordinal(num):
+def ordinal(num: SupportsIndex) -> str:
     """Return ordinal number string of num, e.g. 1 becomes 1st.
     """
     # modified from https://codereview.stackexchange.com/questions/41298/producing-ordinal-numbers
@@ -480,3 +498,77 @@ def ordinal(num):
     else:
         suffix = 'th'
     return str(n) + suffix
+
+
+@overload
+def as_int(n: SupportsIndex, strict: Literal[True] = True) -> int:
+    ...
+@overload
+def as_int(n: SupportsInt, strict: Literal[False]) -> int:
+    ...
+
+def as_int(n: SupportsIndex | SupportsInt, strict: bool = True) -> int:
+    """
+    Convert the argument to a builtin integer.
+
+    The return value is guaranteed to be equal to the input. ValueError is
+    raised if the input has a non-integral value. When ``strict`` is True, this
+    uses `__index__ <https://docs.python.org/3/reference/datamodel.html#object.__index__>`_
+    and when it is False it uses ``int``.
+
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.misc import as_int
+    >>> from sympy import sqrt, S
+
+    The function is primarily concerned with sanitizing input for
+    functions that need to work with builtin integers, so anything that
+    is unambiguously an integer should be returned as an int:
+
+    >>> as_int(S(3))
+    3
+
+    Floats, being of limited precision, are not assumed to be exact and
+    will raise an error unless the ``strict`` flag is False. This
+    precision issue becomes apparent for large floating point numbers:
+
+    >>> big = 1e23
+    >>> type(big) is float
+    True
+    >>> big == int(big)
+    True
+    >>> as_int(big)
+    Traceback (most recent call last):
+    ...
+    ValueError: ... is not an integer
+    >>> as_int(big, strict=False)
+    99999999999999991611392
+
+    Input that might be a complex representation of an integer value is
+    also rejected by default:
+
+    >>> one = sqrt(3 + 2*sqrt(2)) - sqrt(2)
+    >>> int(one) == 1
+    True
+    >>> as_int(one)
+    Traceback (most recent call last):
+    ...
+    ValueError: ... is not an integer
+    """
+    if strict:
+        try:
+            if isinstance(n, bool):
+                raise TypeError
+            return operator.index(n) # type: ignore
+        except TypeError:
+            raise ValueError('%s is not an integer' % (n,))
+    else:
+        try:
+            result = int(n)
+        except TypeError:
+            raise ValueError('%s is not an integer' % (n,))
+        if n - result: # type: ignore
+            raise ValueError('%s is not an integer' % (n,))
+        return result

@@ -1,7 +1,21 @@
-from sympy import (symbols, factorial, sqrt, Rational, atan, I, log, fps, O,
-                   Sum, oo, S, pi, cos, sin, Function, exp, Derivative, asin,
-                   airyai, acos, acosh, gamma, erf, asech, Add, Mul,
-                   integrate)
+from sympy.concrete.summations import Sum
+from sympy.core.add import Add
+from sympy.core.function import (Derivative, Function)
+from sympy.core.mul import Mul
+from sympy.core.numbers import (I, Rational, oo, pi)
+from sympy.core.singleton import S
+from sympy.core.symbol import symbols
+from sympy.functions.combinatorial.factorials import factorial
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.hyperbolic import (acosh, asech)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (acos, asin, atan, cos, sin)
+from sympy.functions.special.bessel import airyai
+from sympy.functions.special.error_functions import erf
+from sympy.functions.special.gamma_functions import gamma
+from sympy.integrals.integrals import integrate
+from sympy.series.formal import fps
+from sympy.series.order import O
 from sympy.series.formal import (rational_algorithm, FormalPowerSeries,
                                  FormalPowerSeriesProduct, FormalPowerSeriesCompose,
                                  FormalPowerSeriesInverse, simpleDE,
@@ -381,7 +395,7 @@ def test_fps__logarithmic_singularity():
 
 @XFAIL
 def test_fps__logarithmic_singularity_fail():
-    f = asech(x)  # Algorithms for computing limits probably needs improvemnts
+    f = asech(x)  # Algorithms for computing limits probably needs improvements
     assert fps(f, x) == log(2) - log(x) - x**2/4 - 3*x**4/64 + O(x**6)
 
 
@@ -402,12 +416,12 @@ def test_fps_symbolic():
 
     f = x**(n - 2)*cos(x)
     assert fps(f, x).truncate() == \
-        (x**(n - 2) - x**n/2 + x**(n + 2)/24 - x**(n + 4)/720 + O(x**(n + 6), x))
+        (x**(n - 2) - x**n/2 + x**(n + 2)/24 + O(x**(n + 4), x))
 
     f = x**(n - 2)*sin(x) + x**n*exp(x)
     assert fps(f, x).truncate() == \
-        (x**(n - 1) + x**n + 5*x**(n + 1)/6 + x**(n + 2)/2 + 7*x**(n + 3)/40 +
-         x**(n + 4)/24 + 41*x**(n + 5)/5040 + O(x**(n + 6), x))
+        (x**(n - 1) + x**(n + 1) + x**(n + 2)/2 + x**n +
+         x**(n + 4)/24 + x**(n + 5)/60 + O(x**(n + 6), x))
 
     f = x**n*atan(x)
     assert fps(f, x, oo).truncate() == \

@@ -1,3 +1,6 @@
+from collections import OrderedDict
+
+
 def expand_tuples(L):
     """
     >>> from sympy.multipledispatch.utils import expand_tuples
@@ -38,18 +41,18 @@ def _toposort(edges):
     [2] https://en.wikipedia.org/wiki/Toposort#Algorithms
     """
     incoming_edges = reverse_dict(edges)
-    incoming_edges = dict((k, set(val)) for k, val in incoming_edges.items())
-    S = set((v for v in edges if v not in incoming_edges))
+    incoming_edges = {k: set(val) for k, val in incoming_edges.items()}
+    S = OrderedDict.fromkeys(v for v in edges if v not in incoming_edges)
     L = []
 
     while S:
-        n = S.pop()
+        n, _ = S.popitem()
         L.append(n)
         for m in edges.get(n, ()):
             assert n in incoming_edges[m]
             incoming_edges[m].remove(n)
             if not incoming_edges[m]:
-                S.add(m)
+                S[m] = None
     if any(incoming_edges.get(v, None) for v in edges):
         raise ValueError("Input has cycles")
     return L
@@ -71,7 +74,7 @@ def reverse_dict(d):
     result = {}
     for key in d:
         for val in d[key]:
-            result[val] = result.get(val, tuple()) + (key, )
+            result[val] = result.get(val, ()) + (key, )
     return result
 
 
@@ -93,10 +96,10 @@ def groupby(func, seq):
         ``countby``
     """
 
-    d = dict()
+    d = {}
     for item in seq:
         key = func(item)
         if key not in d:
-            d[key] = list()
+            d[key] = []
         d[key].append(item)
     return d

@@ -5,15 +5,14 @@ Added kelvin, candela and mole.
 
 """
 
-from __future__ import division
-
-from typing import List
+from __future__ import annotations
 
 from sympy.physics.units import DimensionSystem, Dimension, dHg0
 
-from sympy.physics.units.quantities import Quantity
 
-from sympy import Rational, pi, sqrt, S
+from sympy.core.numbers import (Rational, pi)
+from sympy.core.singleton import S
+from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.physics.units.definitions.dimension_definitions import (
     acceleration, action, current, impedance, length, mass, time, velocity,
     amount_of_substance, temperature, information, frequency, force, pressure,
@@ -25,8 +24,8 @@ from sympy.physics.units.definitions import (
     coulomb, volt, ohm, siemens, farad, henry, tesla, weber, dioptre, lux,
     katal, gray, becquerel, inch, liter, julian_year, gravitational_constant,
     speed_of_light, elementary_charge, planck, hbar, electronvolt,
-    avogadro_number, avogadro_constant, boltzmann_constant,
-    stefan_boltzmann_constant, atomic_mass_constant, molar_gas_constant,
+    avogadro_number, avogadro_constant, boltzmann_constant, electron_rest_mass,
+    stefan_boltzmann_constant, Da, atomic_mass_constant, molar_gas_constant,
     faraday_constant, josephson_constant, von_klitzing_constant,
     acceleration_due_to_gravity, magnetic_constant, vacuum_permittivity,
     vacuum_impedance, coulomb_constant, atmosphere, bar, pound, psi, mmHg,
@@ -42,6 +41,10 @@ from sympy.physics.units.definitions import (
 )
 from sympy.physics.units.prefixes import PREFIXES, prefix_unit
 from sympy.physics.units.systems.mksa import MKSA, dimsys_MKSA
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from sympy.physics.units.quantities import Quantity
 
 derived_dims = (frequency, force, pressure, energy, power, charge, voltage,
                 capacitance, conductance, magnetic_flux,
@@ -52,10 +55,11 @@ units = [mol, cd, K, lux, hertz, newton, pascal, joule, watt, coulomb, volt,
         farad, ohm, siemens, weber, tesla, henry, candela, lux, becquerel,
         gray, katal]
 
-all_units = []  # type: List[Quantity]
+all_units: list[Quantity] = []
 for u in units:
     all_units.extend(prefix_unit(u, PREFIXES))
 
+all_units.extend(units)
 all_units.extend([mol, cd, K, lux])
 
 
@@ -71,7 +75,29 @@ dimsys_default = dimsys_SI.extend(
     [information],
 )
 
-SI = MKSA.extend(base=(mol, cd, K), units=all_units, name='SI', dimension_system=dimsys_SI)
+SI = MKSA.extend(base=(mol, cd, K), units=all_units, name='SI', dimension_system=dimsys_SI, derived_units={
+    power: watt,
+    magnetic_flux: weber,
+    time: second,
+    impedance: ohm,
+    pressure: pascal,
+    current: ampere,
+    voltage: volt,
+    length: meter,
+    frequency: hertz,
+    inductance: henry,
+    temperature: kelvin,
+    amount_of_substance: mole,
+    luminous_intensity: candela,
+    conductance: siemens,
+    mass: kilogram,
+    magnetic_density: tesla,
+    charge: coulomb,
+    force: newton,
+    capacitance: farad,
+    energy: joule,
+    velocity: meter/second,
+})
 
 One = S.One
 
@@ -206,6 +232,10 @@ SI.set_quantity_scale_factor(vacuum_permittivity, 1/(u0 * c**2))
 SI.set_quantity_dimension(vacuum_impedance, impedance)
 SI.set_quantity_scale_factor(vacuum_impedance, u0 * c)
 
+# Electron rest mass
+SI.set_quantity_dimension(electron_rest_mass, mass)
+SI.set_quantity_scale_factor(electron_rest_mass, 9.1093837015e-31*kilogram)
+
 # Coulomb's constant:
 SI.set_quantity_dimension(coulomb_constant, force * length ** 2 / charge ** 2)
 SI.set_quantity_scale_factor(coulomb_constant, 1/(4*pi*vacuum_permittivity))
@@ -320,7 +350,7 @@ __all__ = [
     'mmHg', 'atmosphere', 'inductance', 'newton', 'meter',
     'vacuum_permittivity', 'pascal', 'magnetic_constant', 'voltage',
     'angular_mil', 'luminous_intensity', 'all_units',
-    'julian_year', 'weber', 'division', 'exbibyte', 'liter',
+    'julian_year', 'weber', 'exbibyte', 'liter',
     'molar_gas_constant', 'faraday_constant', 'avogadro_constant',
     'lightyear', 'planck_density', 'gee', 'mol', 'bit', 'gray',
     'planck_momentum', 'bar', 'magnetic_density', 'prefix_unit', 'PREFIXES',
@@ -336,12 +366,12 @@ __all__ = [
     'capacitance', 'tesla', 'steradian', 'planck_mass', 'josephson_constant',
     'planck_area', 'stefan_boltzmann_constant', 'base_dims',
     'astronomical_unit', 'radian', 'planck_voltage', 'impedance',
-    'planck_energy', 'atomic_mass_constant', 'rutherford', 'second', 'inch',
+    'planck_energy', 'Da', 'atomic_mass_constant', 'rutherford', 'second', 'inch',
     'elementary_charge', 'SI', 'electronvolt', 'dimsys_SI', 'henry',
     'planck_angular_frequency', 'ohm', 'pound', 'planck_pressure', 'G', 'psi',
     'dHg0', 'von_klitzing_constant', 'planck_length', 'avogadro_number',
     'mole', 'acceleration', 'information', 'planck_energy_density',
-    'mebibyte', 's', 'acceleration_due_to_gravity',
+    'mebibyte', 's', 'acceleration_due_to_gravity', 'electron_rest_mass',
     'planck_temperature', 'units', 'mass', 'dimsys_MKSA', 'kelvin', 'kPa',
     'boltzmann', 'milli_mass_unit', 'planck_impedance', 'electric_constant',
     'derived_dims', 'kg', 'coulomb', 'siemens', 'byte', 'magnetic_flux',

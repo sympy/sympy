@@ -1,13 +1,13 @@
-from __future__ import print_function, division
-
-from sympy import Basic
+from sympy.core.basic import Basic
 
 new = Basic.__new__
+
 
 def assoc(d, k, v):
     d = d.copy()
     d[k] = v
     return d
+
 
 basic_fns = {'op': type,
              'new': Basic.__new__,

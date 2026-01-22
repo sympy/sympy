@@ -1,15 +1,30 @@
-from __future__ import print_function, division
+"""
+.. deprecated:: 1.8
 
-from typing import Any, Dict
+  ``sympy.printing.theanocode`` is deprecated. Theano has been renamed to
+  Aesara. Use ``sympy.printing.aesaracode`` instead. See
+  :ref:`theanocode-deprecated` for more information.
 
-from sympy.core.compatibility import is_sequence
+"""
+from __future__ import annotations
+import math
+from typing import Any
+
 from sympy.external import import_module
 from sympy.printing.printer import Printer
+from sympy.utilities.iterables import is_sequence
 import sympy
 from functools import partial
 
+from sympy.utilities.decorator import doctest_depends_on
+from sympy.utilities.exceptions import sympy_deprecation_warning
+
+
+__doctest_requires__ = {('theano_function',): ['theano']}
+
 
 theano = import_module('theano')
+
 
 if theano:
     ts = theano.scalar
@@ -53,8 +68,8 @@ if theano:
             sympy.GreaterThan: tt.ge,
             sympy.And: tt.and_,
             sympy.Or: tt.or_,
-            sympy.Max: tt.maximum,  # Sympy accept >2 inputs, Theano only 2
-            sympy.Min: tt.minimum,  # Sympy accept >2 inputs, Theano only 2
+            sympy.Max: tt.maximum,  # SymPy accept >2 inputs, Theano only 2
+            sympy.Min: tt.minimum,  # SymPy accept >2 inputs, Theano only 2
             sympy.conjugate: tt.conj,
             sympy.core.numbers.ImaginaryUnit: lambda:tt.complex(0,1),
             # Matrices
@@ -86,7 +101,7 @@ class TheanoPrinter(Printer):
     ==========
 
     cache : dict
-        A cache of Theano variables which have been created for Sympy
+        A cache of Theano variables which have been created for SymPy
         symbol-like objects (e.g. :class:`sympy.core.symbol.Symbol` or
         :class:`sympy.matrices.expressions.MatrixSymbol`). This is used to
         ensure that all references to a given symbol in an expression (or
@@ -97,17 +112,17 @@ class TheanoPrinter(Printer):
     printmethod = "_theano"
 
     def __init__(self, *args, **kwargs):
-        self.cache = kwargs.pop('cache', dict())
-        super(TheanoPrinter, self).__init__(*args, **kwargs)
+        self.cache = kwargs.pop('cache', {})
+        super().__init__(*args, **kwargs)
 
     def _get_key(self, s, name=None, dtype=None, broadcastable=None):
-        """ Get the cache key for a Sympy object.
+        """ Get the cache key for a SymPy object.
 
         Parameters
         ==========
 
         s : sympy.core.basic.Basic
-            Sympy object to get key for.
+            SymPy object to get key for.
 
         name : str
             Name of object, if it does not have a ``name`` attribute.
@@ -120,7 +135,7 @@ class TheanoPrinter(Printer):
 
     def _get_or_create(self, s, name=None, dtype=None, broadcastable=None):
         """
-        Get the Theano variable for a Sympy symbol from the cache, or create it
+        Get the Theano variable for a SymPy symbol from the cache, or create it
         if it does not exist.
         """
 
@@ -215,7 +230,10 @@ class TheanoPrinter(Printer):
                         for i in (expr.start, expr.stop, expr.step)])
 
     def _print_Pi(self, expr, **kwargs):
-        return 3.141592653589793
+        return math.pi
+
+    def _print_Exp1(self, expr, **kwargs):
+        return ts.exp(1)
 
     def _print_Piecewise(self, expr, **kwargs):
         import numpy as np
@@ -255,12 +273,12 @@ class TheanoPrinter(Printer):
         return expr
 
     def doprint(self, expr, dtypes=None, broadcastables=None):
-        """ Convert a Sympy expression to a Theano graph variable.
+        """ Convert a SymPy expression to a Theano graph variable.
 
         The ``dtypes`` and ``broadcastables`` arguments are used to specify the
         data type, dimension, and broadcasting behavior of the Theano variables
         corresponding to the free symbols in ``expr``. Each is a mapping from
-        Sympy symbols to the value of the corresponding argument to
+        SymPy symbols to the value of the corresponding argument to
         ``theano.tensor.Tensor``.
 
         See the corresponding `documentation page`__ for more information on
@@ -272,16 +290,16 @@ class TheanoPrinter(Printer):
         ==========
 
         expr : sympy.core.expr.Expr
-            Sympy expression to print.
+            SymPy expression to print.
 
         dtypes : dict
-            Mapping from Sympy symbols to Theano datatypes to use when creating
+            Mapping from SymPy symbols to Theano datatypes to use when creating
             new Theano variables for those symbols. Corresponds to the ``dtype``
             argument to ``theano.tensor.Tensor``. Defaults to ``'floatX'``
             for symbols not included in the mapping.
 
         broadcastables : dict
-            Mapping from Sympy symbols to the value of the ``broadcastable``
+            Mapping from SymPy symbols to the value of the ``broadcastable``
             argument to ``theano.tensor.Tensor`` to use when creating Theano
             variables for those symbols. Defaults to the empty tuple for symbols
             not included in the mapping (resulting in a scalar).
@@ -302,18 +320,24 @@ class TheanoPrinter(Printer):
         return self._print(expr, dtypes=dtypes, broadcastables=broadcastables)
 
 
-global_cache = {}  # type: Dict[Any, Any]
+global_cache: dict[Any, Any] = {}
 
 
 def theano_code(expr, cache=None, **kwargs):
     """
-    Convert a Sympy expression into a Theano graph variable.
+    Convert a SymPy expression into a Theano graph variable.
+
+    .. deprecated:: 1.8
+
+      ``sympy.printing.theanocode`` is deprecated. Theano has been renamed to
+      Aesara. Use ``sympy.printing.aesaracode`` instead. See
+      :ref:`theanocode-deprecated` for more information.
 
     Parameters
     ==========
 
     expr : sympy.core.expr.Expr
-        Sympy expression object to convert.
+        SymPy expression object to convert.
 
     cache : dict
         Cached Theano variables (see :class:`TheanoPrinter.cache
@@ -333,6 +357,13 @@ def theano_code(expr, cache=None, **kwargs):
         expression graph.
 
     """
+    sympy_deprecation_warning(
+        """
+        sympy.printing.theanocode is deprecated. Theano has been renamed to
+        Aesara. Use sympy.printing.aesaracode instead.""",
+        deprecated_since_version="1.8",
+    active_deprecations_target='theanocode-deprecated')
+
     if not theano:
         raise ImportError("theano is required for theano_code")
 
@@ -374,7 +405,7 @@ def dim_handling(inputs, dim=None, dims=None, broadcastables=None):
         values (tuple of ``bool``\ s).
     """
     if dim is not None:
-        return {s: (False,) * dim for s in inputs}
+        return dict.fromkeys(inputs, (False,) * dim)
 
     if dims is not None:
         maxdim = max(dims.values())
@@ -389,9 +420,17 @@ def dim_handling(inputs, dim=None, dims=None, broadcastables=None):
     return {}
 
 
-def theano_function(inputs, outputs, scalar=False, **kwargs):
+@doctest_depends_on(modules=('theano',))
+def theano_function(inputs, outputs, scalar=False, *,
+        dim=None, dims=None, broadcastables=None, **kwargs):
     """
     Create a Theano function from SymPy expressions.
+
+    .. deprecated:: 1.8
+
+      ``sympy.printing.theanocode`` is deprecated. Theano has been renamed to
+      Aesara. Use ``sympy.printing.aesaracode`` instead. See
+      :ref:`theanocode-deprecated` for more information.
 
     The inputs and outputs are converted to Theano variables using
     :func:`.theano_code` and then passed to ``theano.function``.
@@ -477,6 +516,12 @@ def theano_function(inputs, outputs, scalar=False, **kwargs):
     dim_handling
 
     """
+    sympy_deprecation_warning(
+        """
+        sympy.printing.theanocode is deprecated. Theano has been renamed to Aesara. Use sympy.printing.aesaracode instead""",
+        deprecated_since_version="1.8",
+    active_deprecations_target='theanocode-deprecated')
+
     if not theano:
         raise ImportError("theano is required for theano_function")
 
@@ -485,10 +530,7 @@ def theano_function(inputs, outputs, scalar=False, **kwargs):
     dtypes = kwargs.pop('dtypes', {})
 
     broadcastables = dim_handling(
-        inputs,
-        dim=kwargs.pop('dim', None),
-        dims=kwargs.pop('dims', None),
-        broadcastables=kwargs.pop('broadcastables', None),
+        inputs, dim=dim, dims=dims, broadcastables=broadcastables,
     )
 
     # Print inputs/outputs

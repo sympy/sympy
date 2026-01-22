@@ -14,8 +14,6 @@ TODO List:
 - Update the dictionary with a complete list of state-operator pairs
 """
 
-from __future__ import print_function, division
-
 from sympy.physics.quantum.cartesian import (XOp, YOp, ZOp, XKet, PxOp, PxKet,
                                              PositionKet3D)
 from sympy.physics.quantum.operator import Operator
@@ -43,7 +41,7 @@ state_mapping = { JxKet: frozenset((J2Op, JxOp)),
                   PxKet: PxOp,
                   XKet: XOp }
 
-op_mapping = dict((v, k) for k, v in state_mapping.items())
+op_mapping = {v: k for k, v in state_mapping.items()}
 
 
 def operators_to_state(operators, **options):
@@ -100,8 +98,7 @@ def operators_to_state(operators, **options):
     |psi>
     """
 
-    if not (isinstance(operators, Operator)
-            or isinstance(operators, set) or issubclass(operators, Operator)):
+    if not (isinstance(operators, (Operator, set)) or issubclass(operators, Operator)):
         raise NotImplementedError("Argument is not an Operator or a set!")
 
     if isinstance(operators, set):

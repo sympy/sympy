@@ -12,12 +12,14 @@ TODO:
       top/center/bottom alignment options for left/right
 """
 
-from __future__ import print_function, division
+import shutil
 
-from .pretty_symbology import hobj, vobj, xsym, xobj, pretty_use_unicode, is_combining
-from sympy.core.compatibility import unicode
+from .pretty_symbology import hobj, vobj, xsym, xobj, pretty_use_unicode, line_width, center
+from sympy.utilities.exceptions import sympy_deprecation_warning
 
-class stringPict(object):
+_GLOBAL_WRAP_LINE = None
+
+class stringPict:
     """An ASCII picture.
     The pictures are represented as a list of equal length strings.
     """
@@ -36,20 +38,13 @@ class stringPict(object):
         self.binding = None
 
     @staticmethod
-    def line_width(line):
-        """Unicode combining symbols (modifiers) are not ever displayed as
-        separate symbols and thus shouldn't be counted
-        """
-        return sum(1 for sym in line if not is_combining(sym))
-
-    @staticmethod
     def equalLengths(lines):
         # empty lines
         if not lines:
             return ['']
 
-        width = max(stringPict.line_width(line) for line in lines)
-        return [line.center(width) for line in lines]
+        width = max(line_width(line) for line in lines)
+        return [center(line, width) for line in lines]
 
     def height(self):
         """The height of the picture in characters."""
@@ -57,7 +52,7 @@ class stringPict(object):
 
     def width(self):
         """The width of the picture in characters."""
-        return stringPict.line_width(self.picture[0])
+        return line_width(self.picture[0])
 
     @staticmethod
     def next(*args):
@@ -146,10 +141,7 @@ class stringPict(object):
                 objects[i] = lineObj
 
         #stack the pictures, and center the result
-        newPicture = []
-        for obj in objects:
-            newPicture.extend(obj.picture)
-        newPicture = [line.center(newWidth) for line in newPicture]
+        newPicture = [center(line, newWidth) for obj in objects for line in obj.picture]
         newBaseline = objects[0].height() + objects[1].baseline
         return '\n'.join(newPicture), newBaseline
 
@@ -261,6 +253,9 @@ class stringPict(object):
            break the expression in a form that can be printed
            on the terminal without being broken up.
          """
+        if _GLOBAL_WRAP_LINE is not None:
+            kwargs["wrap_line"] = _GLOBAL_WRAP_LINE
+
         if kwargs["wrap_line"] is False:
             return "\n".join(self.picture)
 
@@ -271,72 +266,67 @@ class stringPict(object):
             # Attempt to get a terminal width
             ncols = self.terminal_width()
 
-        ncols -= 2
         if ncols <= 0:
-            ncols = 78
+            ncols = 80
 
         # If smaller than the terminal width, no need to correct
         if self.width() <= ncols:
             return type(self.picture[0])(self)
 
-        # for one-line pictures we don't need v-spacers. on the other hand, for
-        # multiline-pictures, we need v-spacers between blocks, compare:
-        #
-        #    2  2        3    | a*c*e + a*c*f + a*d  | a*c*e + a*c*f + a*d  | 3.14159265358979323
-        # 6*x *y  + 4*x*y  +  |                      | *e + a*d*f + b*c*e   | 84626433832795
-        #                     | *e + a*d*f + b*c*e   | + b*c*f + b*d*e + b  |
-        #      3    4    4    |                      | *d*f                 |
-        # 4*y*x  + x  + y     | + b*c*f + b*d*e + b  |                      |
-        #                     |                      |                      |
-        #                     | *d*f
+        """
+        Break long-lines in a visually pleasing format.
+        without overflow indicators | with overflow indicators
+        |   2  2        3     |     |   2  2        3    ↪|
+        |6*x *y  + 4*x*y  +   |     |6*x *y  + 4*x*y  +  ↪|
+        |                     |     |                     |
+        |     3    4    4     |     |↪      3    4    4   |
+        |4*y*x  + x  + y      |     |↪ 4*y*x  + x  + y    |
+        |a*c*e + a*c*f + a*d  |     |a*c*e + a*c*f + a*d ↪|
+        |*e + a*d*f + b*c*e   |     |                     |
+        |+ b*c*f + b*d*e + b  |     |↪ *e + a*d*f + b*c* ↪|
+        |*d*f                 |     |                     |
+        |                     |     |↪ e + b*c*f + b*d*e ↪|
+        |                     |     |                     |
+        |                     |     |↪ + b*d*f            |
+        """
 
-        i = 0
-        svals = []
-        do_vspacers = (self.height() > 1)
-        while i < self.width():
-            svals.extend([ sval[i:i + ncols] for sval in self.picture ])
-            if do_vspacers:
-                svals.append("")  # a vertical spacer
-            i += ncols
+        overflow_first = ""
+        if kwargs["use_unicode"] or pretty_use_unicode():
+            overflow_start = "\N{RIGHTWARDS ARROW WITH HOOK} "
+            overflow_end   = " \N{RIGHTWARDS ARROW WITH HOOK}"
+        else:
+            overflow_start = "> "
+            overflow_end   = " >"
 
-        if svals[-1] == '':
-            del svals[-1]  # Get rid of the last spacer
+        def chunks(line):
+            """Yields consecutive chunks of line_width ncols"""
+            prefix = overflow_first
+            width, start = line_width(prefix + overflow_end), 0
+            for i, x in enumerate(line):
+                wx = line_width(x)
+                # Only flush the screen when the current character overflows.
+                # This way, combining marks can be appended even when width == ncols.
+                if width + wx > ncols:
+                    yield prefix + line[start:i] + overflow_end
+                    prefix = overflow_start
+                    width, start = line_width(prefix + overflow_end), i
+                width += wx
+            yield prefix + line[start:]
 
-        return "\n".join(svals)
+        # Concurrently assemble chunks of all lines into individual screens
+        pictures = zip(*map(chunks, self.picture))
+
+        # Join lines of each screen into sub-pictures
+        pictures = ["\n".join(picture) for picture in pictures]
+
+        # Add spacers between sub-pictures
+        return "\n\n".join(pictures)
 
     def terminal_width(self):
         """Return the terminal width if possible, otherwise return 0.
         """
-        ncols = 0
-        try:
-            import curses
-            import io
-            try:
-                curses.setupterm()
-                ncols = curses.tigetnum('cols')
-            except AttributeError:
-                # windows curses doesn't implement setupterm or tigetnum
-                # code below from
-                # http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/440694
-                from ctypes import windll, create_string_buffer
-                # stdin handle is -10
-                # stdout handle is -11
-                # stderr handle is -12
-                h = windll.kernel32.GetStdHandle(-12)
-                csbi = create_string_buffer(22)
-                res = windll.kernel32.GetConsoleScreenBufferInfo(h, csbi)
-                if res:
-                    import struct
-                    (bufx, bufy, curx, cury, wattr,
-                     left, top, right, bottom, maxx, maxy) = struct.unpack("hhhhHhhhhhh", csbi.raw)
-                    ncols = right - left + 1
-            except curses.error:
-                pass
-            except io.UnsupportedOperation:
-                pass
-        except (ImportError, TypeError):
-            pass
-        return ncols
+        size = shutil.get_terminal_size(fallback=(0, 0))
+        return size.columns
 
     def __eq__(self, o):
         if isinstance(o, str):
@@ -346,13 +336,10 @@ class stringPict(object):
         return False
 
     def __hash__(self):
-        return super(stringPict, self).__hash__()
+        return super().__hash__()
 
     def __str__(self):
-        return str.join('\n', self.picture)
-
-    def __unicode__(self):
-        return unicode.join(u'\n', self.picture)
+        return '\n'.join(self.picture)
 
     def __repr__(self):
         return "stringPict(%r,%d)" % ('\n'.join(self.picture), self.baseline)
@@ -388,7 +375,26 @@ class prettyForm(stringPict):
         """Initialize from stringPict and binding power."""
         stringPict.__init__(self, s, baseline)
         self.binding = binding
-        self.unicode = unicode or s
+        if unicode is not None:
+            sympy_deprecation_warning(
+                """
+                The unicode argument to prettyForm is deprecated. Only the s
+                argument (the first positional argument) should be passed.
+                """,
+                deprecated_since_version="1.7",
+                active_deprecations_target="deprecated-pretty-printing-functions")
+        self._unicode = unicode or s
+
+    @property
+    def unicode(self):
+        sympy_deprecation_warning(
+            """
+            The prettyForm.unicode attribute is deprecated. Use the
+            prettyForm.s attribute instead.
+            """,
+            deprecated_since_version="1.7",
+            active_deprecations_target="deprecated-pretty-printing-functions")
+        return self._unicode
 
     # Note: code to handle subtraction is in _print_Add
 
@@ -410,7 +416,7 @@ class prettyForm(stringPict):
             result.append(arg)
         return prettyForm(binding=prettyForm.ADD, *stringPict.next(*result))
 
-    def __div__(self, den, slashed=False):
+    def __truediv__(self, den, slashed=False):
         """Make a pretty division; stacked or slashed.
         """
         if slashed:
@@ -429,30 +435,30 @@ class prettyForm(stringPict):
             stringPict.LINE,
             den))
 
-    def __truediv__(self, o):
-        return self.__div__(o)
-
     def __mul__(self, *others):
         """Make a pretty multiplication.
         Parentheses are needed around +, - and neg.
         """
         quantity = {
-            'degree': u"\N{DEGREE SIGN}"
+            'degree': "\N{DEGREE SIGN}"
         }
 
         if len(others) == 0:
-            return self # We aren't actually multiplying... So nothing to do here.
-        args = self
-        if args.binding > prettyForm.MUL:
-            arg = stringPict(*args.parens())
-        result = [args]
+            return self  # We aren't actually multiplying... So nothing to do here.
+
+        # add parens on args that need them
+        arg = self
+        if arg.binding > prettyForm.MUL and arg.binding != prettyForm.NEG:
+            arg = stringPict(*arg.parens())
+        result = [arg]
         for arg in others:
             if arg.picture[0] not in quantity.values():
                 result.append(xsym('*'))
             #add parentheses for weak binders
-            if arg.binding > prettyForm.MUL:
+            if arg.binding > prettyForm.MUL and arg.binding != prettyForm.NEG:
                 arg = stringPict(*arg.parens())
             result.append(arg)
+
         len_res = len(result)
         for i in range(len_res):
             if i < len_res - 1 and result[i] == '-1' and result[i + 1] == xsym('*'):

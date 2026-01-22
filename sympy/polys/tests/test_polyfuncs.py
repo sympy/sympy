@@ -8,7 +8,8 @@ from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
 )
 
-from sympy import symbols, S
+from sympy.core.singleton import S
+from sympy.core.symbol import symbols
 from sympy.testing.pytest import raises
 
 from sympy.abc import a, b, c, d, e, x, y, z
@@ -87,7 +88,7 @@ def test_interpolate():
     assert interpolate((9, 4, 9), 3) == 9
     assert interpolate((1, 9, 16), 1) is S.One
     assert interpolate(((x, 1), (2, 3)), x) is S.One
-    assert interpolate(dict([(x, 1), (2, 3)]), x) is S.One
+    assert interpolate({x: 1, 2: 3}, x) is S.One
     assert interpolate(((2, x), (1, 3)), x) == x**2 - 4*x + 6
 
 

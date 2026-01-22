@@ -1,26 +1,42 @@
-from __future__ import division, print_function
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from types import FunctionType
 
+from sympy.core.add import Add
+from sympy.core.cache import cacheit
 from sympy.core.numbers import Float, Integer
 from sympy.core.singleton import S
-from sympy.core.symbol import _uniquely_named_symbol
+from sympy.core.symbol import uniquely_named_symbol
+from sympy.core.mul import Mul
 from sympy.polys import PurePoly, cancel
-from sympy.simplify.simplify import (simplify as _simplify,
-    dotprodsimp as _dotprodsimp)
+from sympy.functions.combinatorial.numbers import nC
+from sympy.polys.matrices.domainmatrix import DomainMatrix
+from sympy.polys.matrices.ddm import DDM
 
-from .common import MatrixError, NonSquareMatrixError
+from .exceptions import NonSquareMatrixError
 from .utilities import (
     _get_intermediate_simp, _get_intermediate_simp_bool,
-    _iszero, _is_zero_after_expand_mul)
+    _iszero, _is_zero_after_expand_mul, _dotprodsimp, _simplify)
 
 
-def _find_reasonable_pivot(col, iszerofunc=_iszero, simpfunc=_simplify):
+if TYPE_CHECKING:
+    from typing import Callable, Iterable
+    from sympy.core.expr import Expr
+    from sympy.matrices.matrixbase import MatrixBase
+
+
+def _find_reasonable_pivot(
+        col: Iterable[Expr],
+        iszerofunc: Callable[[Expr], bool | None] = _iszero,
+        simpfunc: Callable[[Expr], Expr] = _simplify,
+    ) -> tuple[int | None, Expr | None, bool, list[tuple[int, Expr]]]:
     """ Find the lowest index of an item in ``col`` that is
     suitable for a pivot.  If ``col`` consists only of
     Floats, the pivot with the largest norm is returned.
     Otherwise, the first element where ``iszerofunc`` returns
-    False is used.  If ``iszerofunc`` doesn't return false,
+    False is used.  If ``iszerofunc`` does not return false,
     items are simplified and retested until a suitable
     pivot is found.
 
@@ -33,7 +49,7 @@ def _find_reasonable_pivot(col, iszerofunc=_iszero, simpfunc=_simplify):
     elements that were simplified during the process of pivot
     finding."""
 
-    newly_determined = []
+    newly_determined: list[tuple[int, Expr]] = []
     col = list(col)
     # a column that contains a mix of floats and integers
     # but at least one float is considered a numerical
@@ -47,7 +63,7 @@ def _find_reasonable_pivot(col, iszerofunc=_iszero, simpfunc=_simplify):
             # mean the value is numerically zero.  Make sure
             # to replace all entries with numerical zeros
             if max_value != 0:
-                newly_determined = [(i, 0) for i, x in enumerate(col) if x != 0]
+                newly_determined = [(i, S.Zero) for i, x in enumerate(col) if x != 0]
             return (None, None, False, newly_determined)
         index = col_abs.index(max_value)
         return (index, col[index], False, newly_determined)
@@ -80,7 +96,7 @@ def _find_reasonable_pivot(col, iszerofunc=_iszero, simpfunc=_simplify):
             continue
         simped = simpfunc(x)
         is_zero = iszerofunc(simped)
-        if is_zero == True or is_zero == False:
+        if is_zero in (True, False):
             newly_determined.append((i, simped))
         if is_zero == False:
             return (i, simped, False, newly_determined)
@@ -119,7 +135,11 @@ def _find_reasonable_pivot(col, iszerofunc=_iszero, simpfunc=_simplify):
     return (i, col[i], True, newly_determined)
 
 
-def _find_reasonable_pivot_naive(col, iszerofunc=_iszero, simpfunc=None):
+def _find_reasonable_pivot_naive(
+        col: Iterable[Expr],
+        iszerofunc: Callable[[Expr], bool | None] = _iszero,
+        simpfunc: Callable[[Expr], Expr] | None = _simplify,
+    ) -> tuple[int | None, Expr | None, bool, list[tuple[int, Expr]]]:
     """
     Helper that computes the pivot value and location from a
     sequence of contiguous matrix column elements. As a side effect
@@ -234,8 +254,8 @@ def _berkowitz_toeplitz_matrix(M):
     # compute -R * A**n * C.
     diags = [C]
     for i in range(M.rows - 2):
-        diags.append(A.multiply(diags[i], dotprodsimp=True))
-    diags = [(-R).multiply(d, dotprodsimp=True)[0, 0] for d in diags]
+        diags.append(A.multiply(diags[i], dotprodsimp=None))
+    diags = [(-R).multiply(d, dotprodsimp=None)[0, 0] for d in diags]
     diags = [M.one, -a] + diags
 
     def entry(i,j):
@@ -291,7 +311,7 @@ def _berkowitz_vector(M):
 
     submat, toeplitz = _berkowitz_toeplitz_matrix(M)
 
-    return toeplitz.multiply(_berkowitz_vector(submat), dotprodsimp=True)
+    return toeplitz.multiply(_berkowitz_vector(submat), dotprodsimp=None)
 
 
 def _adjugate(M, method="berkowitz"):
@@ -304,8 +324,8 @@ def _adjugate(M, method="berkowitz"):
     ==========
 
     method : string, optional
-        Method to use to find the cofactors, can be "bareiss", "berkowitz" or
-        "lu".
+        Method to use to find the cofactors, can be "bareiss", "berkowitz",
+        "bird", "laplace" or "lu".
 
     Examples
     ========
@@ -321,14 +341,15 @@ def _adjugate(M, method="berkowitz"):
     ========
 
     cofactor_matrix
-    sympy.matrices.common.MatrixCommon.transpose
+    sympy.matrices.matrixbase.MatrixBase.transpose
     """
 
     return M.cofactor_matrix(method=method).transpose()
 
 
 # This functions is a candidate for caching if it gets implemented for matrices.
-def _charpoly(M, x='lambda', simplify=_simplify):
+def _charpoly(M, x: str | Expr = 'lambda',
+              simplify: Callable[[Expr], Expr] = _simplify) -> PurePoly:
     """Computes characteristic polynomial det(x*I - M) where I is
     the identity matrix.
 
@@ -401,18 +422,40 @@ def _charpoly(M, x='lambda', simplify=_simplify):
 
     if not M.is_square:
         raise NonSquareMatrixError()
-    if M.is_lower or M.is_upper:
-        diagonal_elements = M.diagonal()
-        x = _uniquely_named_symbol(x, diagonal_elements)
-        m = 1
-        for i in diagonal_elements:
-            m = m * (x - simplify(i))
-        return PurePoly(m, x)
 
-    berk_vector = _berkowitz_vector(M)
-    x = _uniquely_named_symbol(x, berk_vector)
+    # Use DomainMatrix. We are already going to convert this to a Poly so there
+    # is no need to worry about expanding powers etc. Also since this algorithm
+    # does not require division or zero detection it is fine to use EX.
+    #
+    # M.to_DM() will fall back on EXRAW rather than EX. EXRAW is a lot faster
+    # for elementary arithmetic because it does not call cancel for each
+    # operation but it generates large unsimplified results that are slow in
+    # the subsequent call to simplify. Using EX instead is faster overall
+    # but at least in some cases EXRAW+simplify gives a simpler result so we
+    # preserve that existing behaviour of charpoly for now...
+    dM = M.to_DM()
 
-    return PurePoly([simplify(a) for a in berk_vector], x)
+    K = dM.domain
+
+    cp = dM.charpoly()
+
+    x = uniquely_named_symbol(x, [M], modify=lambda s: '_' + s)
+
+    if K.is_EXRAW or simplify is not _simplify:
+        # XXX: Converting back to Expr is expensive. We only do it if the
+        # caller supplied a custom simplify function for backwards
+        # compatibility or otherwise if the domain was EX. For any other domain
+        # there should be no benefit in simplifying at this stage because Poly
+        # will put everything into canonical form anyway.
+        berk_vector = [K.to_sympy(c) for c in cp]
+        berk_vector = [simplify(a) for a in berk_vector]
+        p = PurePoly(berk_vector, x)
+
+    else:
+        # Convert from the list of domain elements directly to Poly.
+        p = PurePoly(cp, x, domain=K)
+
+    return p
 
 
 def _cofactor(M, i, j, method="berkowitz"):
@@ -422,8 +465,8 @@ def _cofactor(M, i, j, method="berkowitz"):
     ==========
 
     method : string, optional
-        Method to use to find the cofactors, can be "bareiss", "berkowitz" or
-        "lu".
+        Method to use to find the cofactors, can be "bareiss", "berkowitz",
+        "bird", "laplace" or "lu".
 
     Examples
     ========
@@ -444,7 +487,7 @@ def _cofactor(M, i, j, method="berkowitz"):
     if not M.is_square or M.rows < 1:
         raise NonSquareMatrixError()
 
-    return (-1)**((i + j) % 2) * M.minor(i, j, method)
+    return S.NegativeOne**((i + j) % 2) * M.minor(i, j, method)
 
 
 def _cofactor_matrix(M, method="berkowitz"):
@@ -454,8 +497,8 @@ def _cofactor_matrix(M, method="berkowitz"):
     ==========
 
     method : string, optional
-        Method to use to find the cofactors, can be "bareiss", "berkowitz" or
-        "lu".
+        Method to use to find the cofactors, can be "bareiss", "berkowitz",
+        "bird", "laplace" or "lu".
 
     Examples
     ========
@@ -475,12 +518,74 @@ def _cofactor_matrix(M, method="berkowitz"):
     minor_submatrix
     """
 
-    if not M.is_square or M.rows < 1:
+    if not M.is_square:
         raise NonSquareMatrixError()
 
     return M._new(M.rows, M.cols,
             lambda i, j: M.cofactor(i, j, method))
 
+def _per(M):
+    """Returns the permanent of a matrix. Unlike determinant,
+    permanent is defined for both square and non-square matrices.
+
+    For an m x n matrix, with m less than or equal to n,
+    it is given as the sum over the permutations s of size
+    less than or equal to m on [1, 2, . . . n] of the product
+    from i = 1 to m of M[i, s[i]]. Taking the transpose will
+    not affect the value of the permanent.
+
+    In the case of a square matrix, this is the same as the permutation
+    definition of the determinant, but it does not take the sign of the
+    permutation into account. Computing the permanent with this definition
+    is quite inefficient, so here the Ryser formula is used.
+
+    Examples
+    ========
+
+    >>> from sympy import Matrix
+    >>> M = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+    >>> M.per()
+    450
+    >>> M = Matrix([1, 5, 7])
+    >>> M.per()
+    13
+
+    References
+    ==========
+
+    .. [1] Prof. Frank Ben's notes: https://math.berkeley.edu/~bernd/ban275.pdf
+    .. [2] Wikipedia article on Permanent: https://en.wikipedia.org/wiki/Permanent_%28mathematics%29
+    .. [3] https://reference.wolfram.com/language/ref/Permanent.html
+    .. [4] Permanent of a rectangular matrix : https://arxiv.org/pdf/0904.3251.pdf
+    """
+    import itertools
+
+    m, n = M.shape
+    if m == 0 or n == 0:
+        return S.One
+    if m > n:
+        M = M.T
+        m, n = n, m
+    s = list(range(n))
+
+    subsets = []
+    for i in range(1, m + 1):
+        subsets += list(map(list, itertools.combinations(s, i)))
+
+    perm = 0
+    for subset in subsets:
+        prod = 1
+        sub_len = len(subset)
+        for i in range(m):
+            prod *= sum(M[i, j] for j in subset)
+        perm += prod * S.NegativeOne**sub_len * nC(n - sub_len, m - sub_len)
+    perm *= S.NegativeOne**m
+    return perm.simplify()
+
+def _det_DOM(M):
+    DOM = DomainMatrix.from_Matrix(M, field=True, extension=True)
+    K = DOM.domain
+    return K.to_sympy(DOM.det())
 
 # This functions is a candidate for caching if it gets implemented for matrices.
 def _det(M, method="bareiss", iszerofunc=None):
@@ -502,10 +607,17 @@ def _det(M, method="bareiss", iszerofunc=None):
         is computed by simple multiplication of diagonal elements, and the
         specified method is ignored.
 
+        If it is set to ``'domain-ge'``, then Gaussian elimination method will
+        be used via using DomainMatrix.
+
         If it is set to ``'bareiss'``, Bareiss' fraction-free algorithm will
         be used.
 
         If it is set to ``'berkowitz'``, Berkowitz' algorithm will be used.
+
+        If it is set to ``'bird'``, Bird's algorithm will be used [1]_.
+
+        If it is set to ``'laplace'``, Laplace's algorithm will be used.
 
         Otherwise, if it is set to ``'lu'``, LU decomposition will be used.
 
@@ -544,10 +656,24 @@ def _det(M, method="bareiss", iszerofunc=None):
     Examples
     ========
 
-    >>> from sympy import Matrix, MatrixSymbol, eye, det
+    >>> from sympy import Matrix, eye, det
+    >>> I3 = eye(3)
+    >>> det(I3)
+    1
     >>> M = Matrix([[1, 2], [3, 4]])
-    >>> M.det()
+    >>> det(M)
     -2
+    >>> det(M) == M.det()
+    True
+    >>> M.det(method="domain-ge")
+    -2
+
+    References
+    ==========
+
+    .. [1] Bird, R. S. (2011). A simple division-free algorithm for computing
+           determinants. Inf. Process. Lett., 111(21), 1072-1074. doi:
+           10.1016/j.ipl.2011.08.006
     """
 
     # sanitize `method`
@@ -558,7 +684,8 @@ def _det(M, method="bareiss", iszerofunc=None):
     elif method == "det_lu":
         method = "lu"
 
-    if method not in ("bareiss", "berkowitz", "lu"):
+    if method not in ("bareiss", "berkowitz", "lu", "domain-ge", "bird",
+                      "laplace"):
         raise ValueError("Determinant method '%s' unrecognized" % method)
 
     if iszerofunc is None:
@@ -573,15 +700,10 @@ def _det(M, method="bareiss", iszerofunc=None):
     n = M.rows
 
     if n == M.cols: # square check is done in individual method functions
-        if M.is_upper or M.is_lower:
-            m = 1
-            for i in range(n):
-                m = m * M[i, i]
-            return _get_intermediate_simp(_dotprodsimp)(m)
-        elif n == 0:
+        if n == 0:
             return M.one
         elif n == 1:
-            return M[0,0]
+            return M[0, 0]
         elif n == 2:
             m = M[0, 0] * M[1, 1] - M[0, 1] * M[1, 0]
             return _get_intermediate_simp(_dotprodsimp)(m)
@@ -594,18 +716,31 @@ def _det(M, method="bareiss", iszerofunc=None):
                 - M[0, 1] * M[1, 0] * M[2, 2])
             return _get_intermediate_simp(_dotprodsimp)(m)
 
-    if method == "bareiss":
-        return M._eval_det_bareiss(iszerofunc=iszerofunc)
-    elif method == "berkowitz":
-        return M._eval_det_berkowitz()
-    elif method == "lu":
-        return M._eval_det_lu(iszerofunc=iszerofunc)
-    else:
-        raise MatrixError('unknown method for calculating determinant')
+    dets = []
+    for b in M.strongly_connected_components():
+        if method == "domain-ge": # uses DomainMatrix to evaluate determinant
+            det = _det_DOM(M[b, b])
+        elif method == "bareiss":
+            det = M[b, b]._eval_det_bareiss(iszerofunc=iszerofunc)
+        elif method == "berkowitz":
+            det = M[b, b]._eval_det_berkowitz()
+        elif method == "lu":
+            det = M[b, b]._eval_det_lu(iszerofunc=iszerofunc)
+        elif method == "bird":
+            det = M[b, b]._eval_det_bird()
+        elif method == "laplace":
+            det = M[b, b]._eval_det_laplace()
+        else:
+            assert False
+        dets.append(det)
+    return Mul(*dets)
 
 
 # This functions is a candidate for caching if it gets implemented for matrices.
-def _det_bareiss(M, iszerofunc=_is_zero_after_expand_mul):
+def _det_bareiss(
+        M: MatrixBase,
+        iszerofunc: Callable[[Expr], bool | None] = _is_zero_after_expand_mul,
+    ) -> Expr:
     """Compute matrix determinant using Bareiss' fraction-free
     algorithm which is an extension of the well known Gaussian
     elimination method. This approach is best suited for dense
@@ -625,8 +760,8 @@ def _det_bareiss(M, iszerofunc=_is_zero_after_expand_mul):
     """
 
     # Recursively implemented Bareiss' algorithm as per Deanna Richelle Leggett's
-    # thesis http://www.math.usm.edu/perry/Research/Thesis_DRL.pdf
-    def bareiss(mat, cumm=1):
+    # thesis https://aquila.usm.edu/cgi/viewcontent.cgi?article=1001&context=masters_theses
+    def bareiss(mat: MatrixBase, cumm: Expr = S.One):
         if mat.rows == 0:
             return mat.one
         elif mat.rows == 1:
@@ -636,8 +771,8 @@ def _det_bareiss(M, iszerofunc=_is_zero_after_expand_mul):
         # With the default iszerofunc, _find_reasonable_pivot slows down
         # the computation by the factor of 2.5 in one test.
         # Relevant issues: #10279 and #13877.
-        pivot_pos, pivot_val, _, _ = _find_reasonable_pivot(mat[:, 0], iszerofunc=iszerofunc)
-        if pivot_pos is None:
+        pivot_pos, pivot_val, _, _ = _find_reasonable_pivot(mat[:, 0].flat(), iszerofunc=iszerofunc)
+        if pivot_pos is None or pivot_val is None:
             return mat.zero
 
         # if we have a valid pivot, we'll do a "row swap", so keep the
@@ -645,7 +780,7 @@ def _det_bareiss(M, iszerofunc=_is_zero_after_expand_mul):
         sign = (-1) ** (pivot_pos % 2)
 
         # we want every row but the pivot row and every column
-        rows = list(i for i in range(mat.rows) if i != pivot_pos)
+        rows = [i for i in range(mat.rows) if i != pivot_pos]
         cols = list(range(mat.cols))
         tmp_mat = mat.extract(rows, cols)
 
@@ -751,6 +886,89 @@ def _det_LU(M, iszerofunc=_iszero, simpfunc=None):
     return det
 
 
+@cacheit
+def __det_laplace(M):
+    """Compute the determinant of a matrix using Laplace expansion.
+
+    This is a recursive function, and it should not be called directly.
+    Use _det_laplace() instead. The reason for splitting this function
+    into two is to allow caching of determinants of submatrices. While
+    one could also define this function inside _det_laplace(), that
+    would remove the advantage of using caching in Cramer Solve.
+    """
+    n = M.shape[0]
+    if n == 1:
+        return M[0]
+    elif n == 2:
+        return M[0, 0] * M[1, 1] - M[0, 1] * M[1, 0]
+    else:
+        minor = lambda i: __det_laplace(M.minor_submatrix(0, i))
+        return Add(*((-1)**i * M[0, i] * minor(i) for i in range(n)))
+
+
+def _det_laplace(M):
+    """Compute the determinant of a matrix using Laplace expansion.
+
+    While Laplace expansion is not the most efficient method of computing
+    a determinant, it is a simple one, and it has the advantage of
+    being division free. To improve efficiency, this function uses
+    caching to avoid recomputing determinants of submatrices.
+    """
+    if not M.is_square:
+        raise NonSquareMatrixError()
+    if M.shape[0] == 0:
+        return M.one
+        # sympy/matrices/tests/test_matrices.py contains a test that
+        # suggests that the determinant of a 0 x 0 matrix is one, by
+        # convention.
+    return __det_laplace(M.as_immutable())
+
+
+def _det_bird(M):
+    r"""Compute the determinant of a matrix using Bird's algorithm.
+
+    Bird's algorithm is a simple division-free algorithm for computing, which
+    is of lower order than the Laplace's algorithm. It is described in [1]_.
+
+    References
+    ==========
+
+    .. [1] Bird, R. S. (2011). A simple division-free algorithm for computing
+           determinants. Inf. Process. Lett., 111(21), 1072-1074. doi:
+           10.1016/j.ipl.2011.08.006
+    """
+    def mu(X):
+        n = X.shape[0]
+        zero = X.domain.zero
+
+        total = zero
+        diag_sums = [zero]
+        for i in reversed(range(1, n)):
+            total -= X[i][i]
+            diag_sums.append(total)
+        diag_sums = diag_sums[::-1]
+
+        elems = [[zero] * i + [diag_sums[i]] + X_i[i + 1:] for i, X_i in
+                 enumerate(X)]
+        return DDM(elems, X.shape, X.domain)
+
+    Mddm = M._rep.to_ddm()
+    n = M.shape[0]
+    if n == 0:
+        return M.one
+        # sympy/matrices/tests/test_matrices.py contains a test that
+        # suggests that the determinant of a 0 x 0 matrix is one, by
+        # convention.
+    Fn1 = Mddm
+    for _ in range(n - 1):
+        Fn1 = mu(Fn1).matmul(Mddm)
+    detA = Fn1[0][0]
+    if n % 2 == 0:
+        detA = -detA
+
+    return Mddm.domain.to_sympy(detA)
+
+
 def _minor(M, i, j, method="berkowitz"):
     """Return the (i,j) minor of ``M``.  That is,
     return the determinant of the matrix obtained by deleting
@@ -764,7 +982,7 @@ def _minor(M, i, j, method="berkowitz"):
 
     method : string, optional
         Method to use to find the determinant of the submatrix, can be
-        "bareiss", "berkowitz" or "lu".
+        "bareiss", "berkowitz", "bird", "laplace" or "lu".
 
     Examples
     ========

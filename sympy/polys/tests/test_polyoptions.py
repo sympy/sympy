@@ -6,11 +6,13 @@ from sympy.polys.polyoptions import (
     Frac, Formal, Polys, Include, All, Gen, Symbols, Method)
 
 from sympy.polys.orderings import lex
-from sympy.polys.domains import FF, GF, ZZ, QQ, RR, CC, EX
+from sympy.polys.domains import FF, GF, ZZ, QQ, QQ_I, RR, CC, EX
 
 from sympy.polys.polyerrors import OptionError, GeneratorsError
 
-from sympy import Integer, Symbol, I, sqrt
+from sympy.core.numbers import (I, Integer)
+from sympy.core.symbol import Symbol
+from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.testing.pytest import raises
 from sympy.abc import x, y, z
 
@@ -257,8 +259,7 @@ def test_Gaussian_postprocess():
 
     assert opt == {
         'gaussian': True,
-        'extension': {I},
-        'domain': QQ.algebraic_field(I),
+        'domain': QQ_I,
     }
 
 

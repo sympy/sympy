@@ -17,7 +17,7 @@ The module uses numpy for speed which cannot be achieved with mpmath.
 # and hence is slow, while numpy evaluations are orders of magnitude
 # faster.
 
-# Q: Why create a separate class for intervals? Why not use sympy's
+# Q: Why create a separate class for intervals? Why not use SymPy's
 # Interval Sets?
 # A: The functionalities that will be required for plotting is quite
 # different from what Interval Sets implement.
@@ -31,15 +31,15 @@ The module uses numpy for speed which cannot be achieved with mpmath.
 # A It will not affect most of the plots. The interval arithmetic
 # module based suffers the same problems as that of floating point
 # arithmetic.
-from __future__ import print_function, division
 
+from sympy.core.numbers import int_valued
 from sympy.core.logic import fuzzy_and
 from sympy.simplify.simplify import nsimplify
 
 from .interval_membership import intervalMembership
 
 
-class interval(object):
+class interval:
     """ Represents an interval containing floating points as start and
     end of the interval
     The is_valid variable tracks whether the interval obtained as the
@@ -57,8 +57,8 @@ class interval(object):
     of two 3-valued logic values.
     """
 
-    def __init__(self, *args, **kwargs):
-        self.is_valid = kwargs.pop('is_valid', True)
+    def __init__(self, *args, is_valid=True, **kwargs):
+        self.is_valid = is_valid
         if len(args) == 1:
             if isinstance(args[0], interval):
                 self.start, self.end = args[0].start, args[0].end
@@ -269,16 +269,16 @@ class interval(object):
         else:
             return self.start <= other.start and other.end <= self.end
 
-    def __rdiv__(self, other):
+    def __rtruediv__(self, other):
         if isinstance(other, (int, float)):
             other = interval(other)
-            return other.__div__(self)
+            return other.__truediv__(self)
         elif isinstance(other, interval):
-            return other.__div__(self)
+            return other.__truediv__(self)
         else:
             return NotImplemented
 
-    def __div__(self, other):
+    def __truediv__(self, other):
         # Both None and False are handled
         if not self.is_valid:
             # Don't divide as the value is not valid
@@ -319,9 +319,6 @@ class interval(object):
         else:
             return NotImplemented
 
-    __truediv__ = __div__
-    __rtruediv__ = __rdiv__
-
     def __pow__(self, other):
         # Implements only power to an integer.
         from .lib_interval import exp, log
@@ -333,7 +330,7 @@ class interval(object):
             if other < 0:
                 return 1 / self.__pow__(abs(other))
             else:
-                if int(other) == other:
+                if int_valued(other):
                     return _pow_int(self, other)
                 else:
                     return _pow_float(self, other)

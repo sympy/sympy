@@ -1,13 +1,19 @@
+import itertools
 import random
 
 from sympy.combinatorics import Permutation
 from sympy.combinatorics.permutations import _af_invert
 from sympy.testing.pytest import raises
 
-from sympy import symbols, sin, exp, log, cos, transpose, adjoint, conjugate, diff
+from sympy.core.function import diff
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.complexes import (adjoint, conjugate, transpose)
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.tensor.array import Array, ImmutableDenseNDimArray, ImmutableSparseNDimArray, MutableSparseNDimArray
 
-from sympy.tensor.array.arrayop import tensorproduct, tensorcontraction, derive_by_array, permutedims, Flatten
+from sympy.tensor.array.arrayop import tensorproduct, tensorcontraction, derive_by_array, permutedims, Flatten, \
+    tensordiagonal
 
 
 def test_import_NDimArray():
@@ -99,6 +105,11 @@ def test_derivative_by_array():
         b = MutableSparseNDimArray({0:i, 1:j}, (10000, 20000))
         assert derive_by_array(b, i) == ImmutableSparseNDimArray({0: 1}, (10000, 20000))
         assert derive_by_array(b, (i, j)) == ImmutableSparseNDimArray({0: 1, 200000001: 1}, (2, 10000, 20000))
+
+    #https://github.com/sympy/sympy/issues/20655
+    U = Array([x, y, z])
+    E = 2
+    assert derive_by_array(E, U) ==  ImmutableDenseNDimArray([0, 0, 0])
 
 
 def test_issue_emerged_while_discussing_10972():
@@ -290,11 +301,61 @@ def test_array_permutedims():
         B = SparseArrayType({1:1, 20000:2}, (10000, 20000))
         assert B.transpose() == SparseArrayType({10000: 1, 1: 2}, (20000, 10000))
 
+
+def test_permutedims_with_indices():
+    A = Array(range(32)).reshape(2, 2, 2, 2, 2)
+    indices_new = list("abcde")
+    indices_old = list("ebdac")
+    new_A = permutedims(A, index_order_new=indices_new, index_order_old=indices_old)
+    for a, b, c, d, e in itertools.product(range(2), range(2), range(2), range(2), range(2)):
+        assert new_A[a, b, c, d, e] == A[e, b, d, a, c]
+    indices_old = list("cabed")
+    new_A = permutedims(A, index_order_new=indices_new, index_order_old=indices_old)
+    for a, b, c, d, e in itertools.product(range(2), range(2), range(2), range(2), range(2)):
+        assert new_A[a, b, c, d, e] == A[c, a, b, e, d]
+    raises(ValueError, lambda: permutedims(A, index_order_old=list("aacde"), index_order_new=list("abcde")))
+    raises(ValueError, lambda: permutedims(A, index_order_old=list("abcde"), index_order_new=list("abcce")))
+    raises(ValueError, lambda: permutedims(A, index_order_old=list("abcde"), index_order_new=list("abce")))
+    raises(ValueError, lambda: permutedims(A, index_order_old=list("abce"), index_order_new=list("abce")))
+    raises(ValueError, lambda: permutedims(A, [2, 1, 0, 3, 4], index_order_old=list("abcde")))
+    raises(ValueError, lambda: permutedims(A, [2, 1, 0, 3, 4], index_order_new=list("abcde")))
+
+
 def test_flatten():
-    from sympy import Matrix
+    from sympy.matrices.dense import Matrix
     for ArrayType in [ImmutableDenseNDimArray, ImmutableSparseNDimArray, Matrix]:
         A = ArrayType(range(24)).reshape(4, 6)
-        assert [i for i in Flatten(A)] == [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]
+        assert list(Flatten(A)) == [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]
 
         for i, v in enumerate(Flatten(A)):
-            i == v
+            assert i == v
+
+
+def test_tensordiagonal():
+    from sympy.matrices.dense import eye
+    expr = Array(range(9)).reshape(3, 3)
+    raises(ValueError, lambda: tensordiagonal(expr, [0], [1]))
+    raises(ValueError, lambda: tensordiagonal(expr, [0, 0]))
+    assert tensordiagonal(eye(3), [0, 1]) == Array([1, 1, 1])
+    assert tensordiagonal(expr, [0, 1]) == Array([0, 4, 8])
+    x, y, z = symbols("x y z")
+    expr2 = tensorproduct([x, y, z], expr)
+    assert tensordiagonal(expr2, [1, 2]) == Array([[0, 4*x, 8*x], [0, 4*y, 8*y], [0, 4*z, 8*z]])
+    assert tensordiagonal(expr2, [0, 1]) == Array([[0, 3*y, 6*z], [x, 4*y, 7*z], [2*x, 5*y, 8*z]])
+    assert tensordiagonal(expr2, [0, 1, 2]) == Array([0, 4*y, 8*z])
+    # assert tensordiagonal(expr2, [0]) == permutedims(expr2, [1, 2, 0])
+    # assert tensordiagonal(expr2, [1]) == permutedims(expr2, [0, 2, 1])
+    # assert tensordiagonal(expr2, [2]) == expr2
+    # assert tensordiagonal(expr2, [1], [2]) == expr2
+    # assert tensordiagonal(expr2, [0], [1]) == permutedims(expr2, [2, 0, 1])
+
+    a, b, c, X, Y, Z = symbols("a b c X Y Z")
+    expr3 = tensorproduct([x, y, z], [1, 2, 3], [a, b, c], [X, Y, Z])
+    assert tensordiagonal(expr3, [0, 1, 2, 3]) == Array([x*a*X, 2*y*b*Y, 3*z*c*Z])
+    assert tensordiagonal(expr3, [0, 1], [2, 3]) == tensorproduct([x, 2*y, 3*z], [a*X, b*Y, c*Z])
+
+    # assert tensordiagonal(expr3, [0], [1, 2], [3]) == tensorproduct([x, y, z], [a, 2*b, 3*c], [X, Y, Z])
+    assert tensordiagonal(tensordiagonal(expr3, [2, 3]), [0, 1]) == tensorproduct([a*X, b*Y, c*Z], [x, 2*y, 3*z])
+
+    raises(ValueError, lambda: tensordiagonal([[1, 2, 3], [4, 5, 6]], [0, 1]))
+    raises(ValueError, lambda: tensordiagonal(expr3.reshape(3, 3, 9), [1, 2]))

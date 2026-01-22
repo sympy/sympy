@@ -2,14 +2,16 @@
 Mathematica code printer
 """
 
-from __future__ import print_function, division
+from __future__ import annotations
+from typing import Any, TYPE_CHECKING
 
-from typing import Any, Dict, Set, Tuple
-
-from sympy.core import Basic, Expr, Float
+from sympy.core.sorting import default_sort_key
 
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence
+
+if TYPE_CHECKING:
+    from sympy.core import Basic, Expr, Float
 
 # Used in MCodePrinter._print_Function(self)
 known_functions = {
@@ -27,7 +29,6 @@ known_functions = {
     "acot": [(lambda x: True, "ArcCot")],
     "asec": [(lambda x: True, "ArcSec")],
     "acsc": [(lambda x: True, "ArcCsc")],
-    "atan2": [(lambda *x: True, "ArcTan")],
     "sinh": [(lambda x: True, "Sinh")],
     "cosh": [(lambda x: True, "Cosh")],
     "tanh": [(lambda x: True, "Tanh")],
@@ -40,6 +41,7 @@ known_functions = {
     "acoth": [(lambda x: True, "ArcCoth")],
     "asech": [(lambda x: True, "ArcSech")],
     "acsch": [(lambda x: True, "ArcCsch")],
+    "sinc": [(lambda x: True, "Sinc")],
     "conjugate": [(lambda x: True, "Conjugate")],
     "Max": [(lambda *x: True, "Max")],
     "Min": [(lambda *x: True, "Min")],
@@ -69,6 +71,7 @@ known_functions = {
     "subfactorial": [(lambda x: True, "Subfactorial")],
     "catalan": [(lambda x: True, "CatalanNumber")],
     "harmonic": [(lambda *x: True, "HarmonicNumber")],
+    "lucas": [(lambda x: True, "LucasL")],
     "RisingFactorial": [(lambda *x: True, "Pochhammer")],
     "FallingFactorial": [(lambda *x: True, "FactorialPower")],
     "laguerre": [(lambda *x: True, "LaguerreL")],
@@ -90,6 +93,8 @@ known_functions = {
     "elliptic_k": [(lambda x: True, "EllipticK")],
     "elliptic_pi": [(lambda *x: True, "EllipticPi")],
     "zeta": [(lambda *x: True, "Zeta")],
+    "dirichlet_eta": [(lambda x: True, "DirichletEta")],
+    "riemann_xi": [(lambda x: True, "RiemannXi")],
     "besseli": [(lambda *x: True, "BesselI")],
     "besselj": [(lambda *x: True, "BesselJ")],
     "besselk": [(lambda *x: True, "BesselK")],
@@ -112,27 +117,24 @@ known_functions = {
     "DiracDelta": [(lambda x: True, "DiracDelta")],
     "Heaviside": [(lambda x: True, "HeavisideTheta")],
     "KroneckerDelta": [(lambda *x: True, "KroneckerDelta")],
+    "sqrt": [(lambda x: True, "Sqrt")],  # For automatic rewrites
 }
 
 
 class MCodePrinter(CodePrinter):
-    """A printer to convert python expressions to
+    """A printer to convert Python expressions to
     strings of the Wolfram's Mathematica code
     """
     printmethod = "_mcode"
     language = "Wolfram Language"
 
-    _default_settings = {
-        'order': None,
-        'full_prec': 'auto',
+    _default_settings: dict[str, Any] = dict(CodePrinter._default_settings, **{
         'precision': 15,
         'user_functions': {},
-        'human': True,
-        'allow_unknown_functions': False,
-    }  # type: Dict[str, Any]
+    })
 
-    _number_symbols = set()  # type: Set[Tuple[Expr, Float]]
-    _not_supported = set()  # type: Set[Basic]
+    _number_symbols: set[tuple[Expr, Float]] = set()
+    _not_supported: set[Basic] = set()
 
     def __init__(self, settings={}):
         """Register function mappings supplied by user"""
@@ -155,7 +157,7 @@ class MCodePrinter(CodePrinter):
     def _print_Mul(self, expr):
         PREC = precedence(expr)
         c, nc = expr.args_cnc()
-        res = super(MCodePrinter, self)._print_Mul(expr.func(*c))
+        res = super()._print_Mul(expr.func(*c))
         if nc:
             res += '*'
             res += '**'.join(self.parenthesize(a, PREC) for a in nc)
@@ -165,7 +167,7 @@ class MCodePrinter(CodePrinter):
         lhs_code = self._print(expr.lhs)
         rhs_code = self._print(expr.rhs)
         op = expr.rel_op
-        return "{0} {1} {2}".format(lhs_code, op, rhs_code)
+        return "{} {} {}".format(lhs_code, op, rhs_code)
 
     # Primitive numbers
     def _print_Zero(self, expr):
@@ -229,14 +231,13 @@ class MCodePrinter(CodePrinter):
         return self.doprint(expr.tolist())
 
     def _print_ImmutableSparseMatrix(self, expr):
-        from sympy.core.compatibility import default_sort_key
 
         def print_rule(pos, val):
             return '{} -> {}'.format(
             self.doprint((pos[0]+1, pos[1]+1)), self.doprint(val))
 
         def print_data():
-            items = sorted(expr._smat.items(), key=default_sort_key)
+            items = sorted(expr.todok().items(), key=default_sort_key)
             return '{' + \
                 ', '.join(print_rule(k, v) for k, v in items) + \
                 '}'
@@ -301,10 +302,11 @@ class MCodePrinter(CodePrinter):
             for cond, mfunc in cond_mfunc:
                 if cond(*expr.args):
                     return "%s[%s]" % (mfunc, self.stringify(expr.args, ", "))
-        elif (expr.func.__name__ in self._rewriteable_functions and
-              self._rewriteable_functions[expr.func.__name__] in self.known_functions):
+        elif expr.func.__name__ in self._rewriteable_functions:
             # Simple rewrite to supported function possible
-            return self._print(expr.rewrite(self._rewriteable_functions[expr.func.__name__]))
+            target_f, required_fs = self._rewriteable_functions[expr.func.__name__]
+            if self._can_print(target_f) and all(self._can_print(f) for f in required_fs):
+                return self._print(expr.rewrite(target_f))
         return expr.func.__name__ + "[%s]" % self.stringify(expr.args, ", ")
 
     _print_MinMaxBase = _print_Function
@@ -313,6 +315,10 @@ class MCodePrinter(CodePrinter):
         if len(expr.args) == 1:
             return "ProductLog[{}]".format(self._print(expr.args[0]))
         return "ProductLog[{}, {}]".format(
+            self._print(expr.args[1]), self._print(expr.args[0]))
+
+    def _print_atan2(self, expr):
+        return "ArcTan[{}, {}]".format(
             self._print(expr.args[1]), self._print(expr.args[0]))
 
     def _print_Integral(self, expr):

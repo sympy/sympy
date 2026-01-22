@@ -6,9 +6,12 @@ TODO:
 * Document default basis functionality.
 """
 
-from __future__ import print_function, division
-
-from sympy import Add, Expr, I, integrate, Mul, Pow
+from sympy.core.add import Add
+from sympy.core.expr import Expr
+from sympy.core.mul import Mul
+from sympy.core.numbers import I
+from sympy.core.power import Pow
+from sympy.integrals.integrals import integrate
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.commutator import Commutator
 from sympy.physics.quantum.anticommutator import AntiCommutator
@@ -20,6 +23,7 @@ from sympy.physics.quantum.state import KetBase, BraBase, StateBase
 from sympy.physics.quantum.operator import Operator, OuterProduct
 from sympy.physics.quantum.qapply import qapply
 from sympy.physics.quantum.operatorset import operators_to_state, state_to_operators
+
 
 __all__ = [
     'represent',
@@ -36,13 +40,11 @@ __all__ = [
 
 
 def _sympy_to_scalar(e):
-    """Convert from a sympy scalar to a Python scalar."""
+    """Convert from a SymPy scalar to a Python scalar."""
     if isinstance(e, Expr):
         if e.is_Integer:
             return int(e)
-        elif e.is_Float:
-            return float(e)
-        elif e.is_Rational:
+        elif e.is_Float or e.is_Rational:
             return float(e)
         elif e.is_Number or e.is_NumberSymbol or e == I:
             return complex(e)
@@ -61,7 +63,7 @@ def represent(expr, **options):
 
     This function is the top-level interface for this action.
 
-    This function walks the sympy expression tree looking for ``QExpr``
+    This function walks the SymPy expression tree looking for ``QExpr``
     instances that have a ``_represent`` method. This method is then called
     and the object is replaced by the representation returned by this method.
     By default, the ``_represent`` method will dispatch to other methods
@@ -130,12 +132,11 @@ def represent(expr, **options):
     >>> y = XBra('y')
     >>> represent(X*x)
     x*DiracDelta(x - x_2)
-    >>> represent(X*x*y)
-    x*DiracDelta(x - x_3)*DiracDelta(x_1 - y)
-
     """
 
     format = options.get('format', 'sympy')
+    if format == 'numpy':
+        import numpy as np
     if isinstance(expr, QExpr) and not isinstance(expr, OuterProduct):
         options['replace_none'] = False
         temp_basis = get_basis(expr, **options)
@@ -169,7 +170,7 @@ def represent(expr, **options):
         return result
     elif isinstance(expr, Pow):
         base, exp = expr.as_base_exp()
-        if format == 'numpy' or format == 'scipy.sparse':
+        if format in ('numpy', 'scipy.sparse'):
             exp = _sympy_to_scalar(exp)
         base = represent(base, **options)
         # scipy.sparse doesn't support negative exponents
@@ -178,6 +179,8 @@ def represent(expr, **options):
             from scipy.sparse.linalg import inv
             exp = - exp
             base = inv(base.tocsc()).tocsr()
+        if format == 'numpy':
+            return np.linalg.matrix_power(base, exp)
         return base ** exp
     elif isinstance(expr, TensorProduct):
         new_args = [represent(arg, **options) for arg in expr.args]
@@ -185,22 +188,22 @@ def represent(expr, **options):
     elif isinstance(expr, Dagger):
         return Dagger(represent(expr.args[0], **options))
     elif isinstance(expr, Commutator):
-        A = represent(expr.args[0], **options)
-        B = represent(expr.args[1], **options)
-        return A*B - B*A
+        A = expr.args[0]
+        B = expr.args[1]
+        return represent(Mul(A, B) - Mul(B, A), **options)
     elif isinstance(expr, AntiCommutator):
-        A = represent(expr.args[0], **options)
-        B = represent(expr.args[1], **options)
-        return A*B + B*A
-    elif isinstance(expr, InnerProduct):
-        return represent(Mul(expr.bra, expr.ket), **options)
-    elif not (isinstance(expr, Mul) or isinstance(expr, OuterProduct)):
+        A = expr.args[0]
+        B = expr.args[1]
+        return represent(Mul(A, B) + Mul(B, A), **options)
+    elif not isinstance(expr, (Mul, OuterProduct, InnerProduct)):
+        # We have removed special handling of inner products that used to be
+        # required (before automatic transforms).
         # For numpy and scipy.sparse, we can only handle numerical prefactors.
-        if format == 'numpy' or format == 'scipy.sparse':
+        if format in ('numpy', 'scipy.sparse'):
             return _sympy_to_scalar(expr)
         return expr
 
-    if not (isinstance(expr, Mul) or isinstance(expr, OuterProduct)):
+    if not isinstance(expr, (Mul, OuterProduct, InnerProduct)):
         raise TypeError('Mul expected, got: %r' % expr)
 
     if "index" in options:
@@ -208,7 +211,7 @@ def represent(expr, **options):
     else:
         options["index"] = 1
 
-    if not "unities" in options:
+    if "unities" not in options:
         options["unities"] = []
 
     result = represent(expr.args[-1], **options)
@@ -225,7 +228,12 @@ def represent(expr, **options):
         elif isinstance(last_arg, KetBase) and isinstance(arg, BraBase):
             options["unities"].append(options["index"])
 
-        result = represent(arg, **options)*result
+        next_arg = represent(arg, **options)
+        if format == 'numpy' and isinstance(next_arg, np.ndarray):
+            # Must use np.matmult to "matrix multiply" two np.ndarray
+            result = np.matmul(next_arg, result)
+        else:
+            result = next_arg*result
         last_arg = arg
 
     # All three matrix formats create 1 by 1 matrices when inner products of
@@ -273,7 +281,7 @@ def rep_innerproduct(expr, **options):
     if not isinstance(basis, StateBase):
         raise NotImplementedError("Can't form this representation!")
 
-    if not "index" in options:
+    if "index" not in options:
         options["index"] = 1
 
     basis_kets = enumerate_states(basis, options["index"], 2)
@@ -290,7 +298,8 @@ def rep_innerproduct(expr, **options):
     result = prod.doit()
 
     format = options.get('format', 'sympy')
-    return expr._format_represent(result, format)
+    result = expr._format_represent(result, format)
+    return result
 
 
 def rep_expectation(expr, **options):
@@ -306,7 +315,7 @@ def rep_expectation(expr, **options):
     Examples
     ========
 
-    >>> from sympy.physics.quantum.cartesian import XOp, XKet, PxOp, PxKet
+    >>> from sympy.physics.quantum.cartesian import XOp, PxOp, PxKet
     >>> from sympy.physics.quantum.represent import rep_expectation
     >>> rep_expectation(XOp())
     x_1*DiracDelta(x_1 - x_2)
@@ -317,7 +326,7 @@ def rep_expectation(expr, **options):
 
     """
 
-    if not "index" in options:
+    if "index" not in options:
         options["index"] = 1
 
     if not isinstance(expr, Operator):
@@ -333,7 +342,8 @@ def rep_expectation(expr, **options):
     bra = basis_kets[1].dual
     ket = basis_kets[0]
 
-    return qapply(bra*expr*ket)
+    result = qapply(bra*expr*ket)
+    return result
 
 
 def integrate_result(orig_expr, result, **options):
@@ -381,7 +391,7 @@ def integrate_result(orig_expr, result, **options):
         return result
 
     options['replace_none'] = True
-    if not "basis" in options:
+    if "basis" not in options:
         arg = orig_expr.args[-1]
         options["basis"] = get_basis(arg, **options)
     elif not isinstance(options["basis"], StateBase):
@@ -411,7 +421,7 @@ def integrate_result(orig_expr, result, **options):
     return result
 
 
-def get_basis(expr, **options):
+def get_basis(expr, *, basis=None, replace_none=True, **options):
     """
     Returns a basis state instance corresponding to the basis specified in
     options=s. If no basis is specified, the function tries to form a default
@@ -462,9 +472,6 @@ def get_basis(expr, **options):
 
     """
 
-    basis = options.pop("basis", None)
-    replace_none = options.pop("replace_none", True)
-
     if basis is None and not replace_none:
         return None
 
@@ -472,7 +479,7 @@ def get_basis(expr, **options):
         if isinstance(expr, KetBase):
             return _make_default(expr.__class__)
         elif isinstance(expr, BraBase):
-            return _make_default((expr.dual_class()))
+            return _make_default(expr.dual_class())
         elif isinstance(expr, Operator):
             state_inst = operators_to_state(expr)
             return (state_inst if state_inst is not None else None)
@@ -544,7 +551,7 @@ def enumerate_states(*args, **options):
 
     state = args[0]
 
-    if not (len(args) == 2 or len(args) == 3):
+    if len(args) not in (2, 3):
         raise NotImplementedError("Wrong number of arguments!")
 
     if not isinstance(state, StateBase):

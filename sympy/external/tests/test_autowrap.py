@@ -1,7 +1,10 @@
 import sympy
 import tempfile
 import os
-from sympy import symbols, Eq, Mod
+from pathlib import Path
+from sympy.core.mod import Mod
+from sympy.core.relational import Eq
+from sympy.core.symbol import symbols
 from sympy.external import import_module
 from sympy.tensor import IndexedBase, Idx
 from sympy.utilities.autowrap import autowrap, ufuncify, CodeWrapError
@@ -110,11 +113,13 @@ def runtest_issue_10274(language, backend):
     assert f(1, 1, 1) == 1
 
     for file in os.listdir(tmp):
-        if file.startswith("wrapped_code_") and file.endswith(".c"):
-            fil = open(tmp + '/' + file)
+        if not (file.startswith("wrapped_code_") and file.endswith(".c")):
+            continue
+
+        with open(tmp + '/' + file) as fil:
             lines = fil.readlines()
             assert lines[0] == "/******************************************************************************\n"
-            assert "Code generated with sympy " + sympy.__version__ in lines[1]
+            assert "Code generated with SymPy " + sympy.__version__ in lines[1]
             assert lines[2:] == [
                 " *                                                                            *\n",
                 " *              See http://www.sympy.org/ for more information.               *\n",
@@ -254,9 +259,9 @@ def test_issue_15337_C_cython():
 def test_autowrap_custom_printer():
     has_module('Cython')
 
-    from sympy import pi
+    from sympy.core.numbers import pi
     from sympy.utilities.codegen import C99CodeGen
-    from sympy.printing.ccode import C99CodePrinter
+    from sympy.printing.c import C99CodePrinter
 
     class PiPrinter(C99CodePrinter):
         def _print_Pi(self, expr):
@@ -284,7 +289,7 @@ def test_autowrap_custom_printer():
 
     tmpdir = tempfile.mkdtemp()
     # write a trivial header file to use in the generated code
-    open(os.path.join(tmpdir, 'shortpi.h'), 'w').write('#define S_PI 3.14')
+    Path(os.path.join(tmpdir, 'shortpi.h')).write_text('#define S_PI 3.14')
 
     func = autowrap(expr, backend='cython', tempdir=tmpdir, code_gen=gen)
 

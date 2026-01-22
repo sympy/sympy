@@ -5,22 +5,26 @@ Contains
 Plane
 
 """
-from __future__ import division, print_function
 
-from sympy import simplify  # type:ignore
 from sympy.core import Dummy, Rational, S, Symbol
 from sympy.core.symbol import _symbol
-from sympy.core.compatibility import is_sequence
+from sympy.external.mpmath import prec_to_dps
 from sympy.functions.elementary.trigonometric import cos, sin, acos, asin, sqrt
+from .entity import GeometryEntity
+from .line import (Line, Ray, Segment, Line3D, LinearEntity, LinearEntity3D,
+                   Ray3D, Segment3D)
+from .point import Point, Point3D
 from sympy.matrices import Matrix
 from sympy.polys.polytools import cancel
 from sympy.solvers import solve, linsolve
-from sympy.utilities.iterables import uniq
+from sympy.utilities.iterables import uniq, is_sequence
 from sympy.utilities.misc import filldedent, func_name, Undecidable
 
-from .entity import GeometryEntity
-from .point import Point, Point3D
-from .line import Line, Ray, Segment, Line3D, LinearEntity3D, Ray3D, Segment3D
+
+import random
+
+
+x, y, z, t = [Dummy('plane_dummy') for i in range(4)]
 
 
 class Plane(GeometryEntity):
@@ -28,8 +32,9 @@ class Plane(GeometryEntity):
     A plane is a flat, two-dimensional surface. A plane is the two-dimensional
     analogue of a point (zero-dimensions), a line (one-dimension) and a solid
     (three-dimensions). A plane can generally be constructed by two types of
-    inputs. They are three non-collinear points and a point and the plane's
-    normal vector.
+    inputs. They are:
+    - three non-collinear points
+    - a point and the plane's normal vector
 
     Attributes
     ==========
@@ -41,7 +46,6 @@ class Plane(GeometryEntity):
     ========
 
     >>> from sympy import Plane, Point3D
-    >>> from sympy.abc import x
     >>> Plane(Point3D(1, 1, 1), Point3D(2, 3, 4), Point3D(2, 2, 2))
     Plane(Point3D(1, 1, 1), (-1, 2, -1))
     >>> Plane((1, 1, 1), (2, 3, 4), (2, 2, 2))
@@ -62,8 +66,9 @@ class Plane(GeometryEntity):
             normal_vector = tuple(Matrix(a).cross(Matrix(b)))
         else:
             a = kwargs.pop('normal_vector', a)
+            evaluate = kwargs.get('evaluate', True)
             if is_sequence(a) and len(a) == 3:
-                normal_vector = Point3D(a).args
+                normal_vector = Point3D(a).args if evaluate else a
             else:
                 raise ValueError(filldedent('''
                     Either provide 3 3D points or a point with a
@@ -73,11 +78,8 @@ class Plane(GeometryEntity):
         return GeometryEntity.__new__(cls, p1, normal_vector, **kwargs)
 
     def __contains__(self, o):
-        from sympy.geometry.line import LinearEntity, LinearEntity3D
-        x, y, z = map(Dummy, 'xyz')
         k = self.equation(x, y, z)
         if isinstance(o, (LinearEntity, LinearEntity3D)):
-            t = Dummy()
             d = Point3D(o.arbitrary_point(t))
             e = k.subs([(x, d.x), (y, d.y), (z, d.z)])
             return e.equals(0)
@@ -87,6 +89,13 @@ class Plane(GeometryEntity):
             return d.equals(0)
         except TypeError:
             return False
+
+    def _eval_evalf(self, prec=15, **options):
+        pt, tup = self.args
+        dps = prec_to_dps(prec)
+        pt = pt.evalf(n=dps, **options)
+        tup = tuple([i.evalf(n=dps, **options) for i in tup])
+        return self.func(pt, normal_vector=tup, evaluate=False)
 
     def angle_between(self, o):
         """Angle between the plane and other geometric entity.
@@ -119,20 +128,19 @@ class Plane(GeometryEntity):
         -asin(sqrt(21)/6)
 
         """
-        from sympy.geometry.line import LinearEntity3D
         if isinstance(o, LinearEntity3D):
             a = Matrix(self.normal_vector)
             b = Matrix(o.direction_ratio)
             c = a.dot(b)
-            d = sqrt(sum([i**2 for i in self.normal_vector]))
-            e = sqrt(sum([i**2 for i in o.direction_ratio]))
+            d = sqrt(sum(i**2 for i in self.normal_vector))
+            e = sqrt(sum(i**2 for i in o.direction_ratio))
             return asin(c/(d*e))
         if isinstance(o, Plane):
             a = Matrix(self.normal_vector)
             b = Matrix(o.normal_vector)
             c = a.dot(b)
-            d = sqrt(sum([i**2 for i in self.normal_vector]))
-            e = sqrt(sum([i**2 for i in o.normal_vector]))
+            d = sqrt(sum(i**2 for i in self.normal_vector))
+            e = sqrt(sum(i**2 for i in o.normal_vector))
             return acos(c/(d*e))
 
 
@@ -146,7 +154,7 @@ class Plane(GeometryEntity):
         Examples
         ========
 
-        >>> from sympy.geometry import Plane, Ray
+        >>> from sympy import Plane, Ray
         >>> from sympy.abc import u, v, t, r
         >>> p = Plane((1, 1, 1), normal_vector=(1, 0, 0))
         >>> p.arbitrary_point(u, v)
@@ -239,7 +247,7 @@ class Plane(GeometryEntity):
             line = sol[0]
             for i in planes[1:]:
                 l = first.intersection(i)
-                if not l or not l[0] in line:
+                if not l or l[0] not in line:
                     return False
             return True
 
@@ -268,7 +276,7 @@ class Plane(GeometryEntity):
         Examples
         ========
 
-        >>> from sympy import Point, Point3D, Line, Line3D, Plane
+        >>> from sympy import Point3D, Line3D, Plane
         >>> a = Plane(Point3D(1, 1, 1), normal_vector=(1, 1, 1))
         >>> b = Point3D(1, 2, 3)
         >>> a.distance(b)
@@ -320,7 +328,7 @@ class Plane(GeometryEntity):
         if isinstance(o, Plane):
             a = self.equation()
             b = o.equation()
-            return simplify(a / b).is_constant()
+            return cancel(a/b).is_constant()
         else:
             return False
 
@@ -363,7 +371,7 @@ class Plane(GeometryEntity):
         Examples
         ========
 
-        >>> from sympy import Point, Point3D, Line, Line3D, Plane
+        >>> from sympy import Point3D, Line3D, Plane
         >>> a = Plane(Point3D(1, 2, 3), normal_vector=(1, 1, 1))
         >>> b = Point3D(1, 2, 3)
         >>> a.intersection(b)
@@ -377,7 +385,6 @@ class Plane(GeometryEntity):
         [Line3D(Point3D(78/23, -24/23, 0), Point3D(147/23, 321/23, 23))]
 
         """
-        from sympy.geometry.line import LinearEntity, LinearEntity3D
         if not isinstance(o, GeometryEntity):
             o = Point(o, dim=3)
         if isinstance(o, Point):
@@ -399,7 +406,6 @@ class Plane(GeometryEntity):
             if o in self:
                 return [o]
             else:
-                t = Dummy()  # unnamed else it may clash with a symbol in o
                 a = Point3D(o.arbitrary_point(t))
                 p1, n = self.p1, Point3D(self.normal_vector)
 
@@ -439,7 +445,7 @@ class Plane(GeometryEntity):
         Examples
         ========
 
-        >>> from sympy import Plane, Point3D
+        >>> from sympy import Plane
         >>> o = (0, 0, 0)
         >>> p = Plane(o, (1, 1, 1))
         >>> p2 = Plane(o, (2, 2, 2))
@@ -449,7 +455,6 @@ class Plane(GeometryEntity):
         True
         """
         if isinstance(o, Plane):
-            x, y, z = map(Dummy, 'xyz')
             return not cancel(self.equation(x, y, z)/o.equation(x, y, z)).has(x, y, z)
         if isinstance(o, Point3D):
             return o in self
@@ -482,26 +487,18 @@ class Plane(GeometryEntity):
         True
 
         """
-        from sympy.geometry.line import LinearEntity3D
         if isinstance(l, LinearEntity3D):
             a = l.direction_ratio
             b = self.normal_vector
-            c = sum([i*j for i, j in zip(a, b)])
-            if c == 0:
-                return True
-            else:
-                return False
-        elif isinstance(l, Plane):
+            return sum(i*j for i, j in zip(a, b)) == 0
+        if isinstance(l, Plane):
             a = Matrix(l.normal_vector)
             b = Matrix(self.normal_vector)
-            if a.cross(b).is_zero_matrix:
-                return True
-            else:
-                return False
+            return bool(a.cross(b).is_zero_matrix)
 
 
     def is_perpendicular(self, l):
-        """is the given geometric entity perpendicualar to the given plane?
+        """Is the given geometric entity perpendicualar to the given plane?
 
         Parameters
         ==========
@@ -523,7 +520,6 @@ class Plane(GeometryEntity):
         True
 
         """
-        from sympy.geometry.line import LinearEntity3D
         if isinstance(l, LinearEntity3D):
             a = Matrix(l.direction_ratio)
             b = Matrix(self.normal_vector)
@@ -532,12 +528,12 @@ class Plane(GeometryEntity):
             else:
                 return False
         elif isinstance(l, Plane):
-           a = Matrix(l.normal_vector)
-           b = Matrix(self.normal_vector)
-           if a.dot(b) == 0:
-               return True
-           else:
-               return False
+            a = Matrix(l.normal_vector)
+            b = Matrix(self.normal_vector)
+            if a.dot(b) == 0:
+                return True
+            else:
+                return False
         else:
             return False
 
@@ -622,7 +618,7 @@ class Plane(GeometryEntity):
         Examples
         ========
 
-        >>> from sympy import Plane, Point3D, Line3D
+        >>> from sympy import Plane, Point3D
         >>> a = Plane(Point3D(1,4,6), normal_vector=(2, 4, 6))
         >>> a.perpendicular_line(Point3D(9, 8, 7))
         Line3D(Point3D(9, 8, 7), Point3D(11, 12, 13))
@@ -657,7 +653,7 @@ class Plane(GeometryEntity):
         Examples
         ========
 
-        >>> from sympy import Plane, Point3D, Line3D
+        >>> from sympy import Plane, Point3D
         >>> a, b = Point3D(0, 0, 0), Point3D(0, 1, 0)
         >>> Z = (0, 0, 1)
         >>> p = Plane(a, normal_vector=Z)
@@ -723,7 +719,7 @@ class Plane(GeometryEntity):
         Examples
         ========
 
-        >>> from sympy import Plane, Line, Line3D, Point, Point3D
+        >>> from sympy import Plane, Line, Line3D, Point3D
         >>> a = Plane(Point3D(1, 1, 1), normal_vector=(1, 1, 1))
         >>> b = Line(Point3D(1, 1), Point3D(2, 2))
         >>> a.projection_line(b)
@@ -733,7 +729,6 @@ class Plane(GeometryEntity):
         Point3D(1, 1, 1)
 
         """
-        from sympy.geometry.line import LinearEntity, LinearEntity3D
         if not isinstance(line, (LinearEntity, LinearEntity3D)):
             raise NotImplementedError('Enter a linear entity only')
         a, b = self.projection(line.p1), self.projection(line.p2)
@@ -765,7 +760,7 @@ class Plane(GeometryEntity):
         Examples
         ========
 
-        >>> from sympy import Plane, Point, Point3D
+        >>> from sympy import Plane, Point3D
         >>> A = Plane(Point3D(1, 1, 2), normal_vector=(1, 1, 1))
 
         The projection is along the normal vector direction, not the z
@@ -786,7 +781,9 @@ class Plane(GeometryEntity):
         rv = Point(pt, dim=3)
         if rv in self:
             return rv
-        return self.intersection(Line3D(rv, rv + Point3D(self.normal_vector)))[0]
+        n = Point3D(self.normal_vector)
+        d = (rv - self.p1).dot(n) / n.dot(n)
+        return rv - d * n
 
     def random_point(self, seed=None):
         """ Returns a random point on the Plane.
@@ -812,16 +809,14 @@ class Plane(GeometryEntity):
         >>> c.distance(p.p1).equals(1)
         True
         """
-        import random
         if seed is not None:
             rng = random.Random(seed)
         else:
             rng = random
-        u, v = Dummy('u'), Dummy('v')
         params = {
-            u: 2*Rational(rng.gauss(0, 1)) - 1,
-            v: 2*Rational(rng.gauss(0, 1)) - 1}
-        return self.arbitrary_point(u, v).subs(params)
+            x: 2*Rational(rng.gauss(0, 1)) - 1,
+            y: 2*Rational(rng.gauss(0, 1)) - 1}
+        return self.arbitrary_point(x, y).subs(params)
 
     def parameter_value(self, other, u, v=None):
         """Return the parameter(s) corresponding to the given point.
@@ -829,7 +824,7 @@ class Plane(GeometryEntity):
         Examples
         ========
 
-        >>> from sympy import Plane, Point, pi
+        >>> from sympy import pi, Plane
         >>> from sympy.abc import t, u, v
         >>> p = Plane((2, 0, 0), (0, 0, 1), (0, 1, 0))
 
@@ -861,8 +856,6 @@ class Plane(GeometryEntity):
         >>> p.parameter_value(off_circle, u, v)
         {u: sqrt(10)/5, v: sqrt(10)/15}
         """
-        from sympy.geometry.point import Point
-        from sympy.solvers.solvers import solve
         if not isinstance(other, GeometryEntity):
             other = Point(other, dim=self.ambient_dimension)
         if not isinstance(other, Point):

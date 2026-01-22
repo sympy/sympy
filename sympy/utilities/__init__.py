@@ -3,16 +3,12 @@ SymPy.
 """
 from .iterables import (flatten, group, take, subsets,
     variations, numbered_symbols, cartes, capture, dict_merge,
-    postorder_traversal, interactive_traversal,
     prefixes, postfixes, sift, topological_sort, unflatten,
-    has_dups, has_variety, reshape, default_sort_key, ordered,
-    rotations)
+    has_dups, has_variety, reshape, rotations)
 
 from .misc import filldedent
 
 from .lambdify import lambdify
-
-from .source import source
 
 from .decorator import threaded, xthreaded, public, memoize_property
 
@@ -20,16 +16,13 @@ from .timeutils import timed
 
 __all__ = [
     'flatten', 'group', 'take', 'subsets', 'variations', 'numbered_symbols',
-    'cartes', 'capture', 'dict_merge', 'postorder_traversal',
-    'interactive_traversal', 'prefixes', 'postfixes', 'sift',
+    'cartes', 'capture', 'dict_merge', 'prefixes', 'postfixes', 'sift',
     'topological_sort', 'unflatten', 'has_dups', 'has_variety', 'reshape',
-    'default_sort_key', 'ordered', 'rotations',
+    'rotations',
 
     'filldedent',
 
     'lambdify',
-
-    'source',
 
     'threaded', 'xthreaded', 'public', 'memoize_property',
 

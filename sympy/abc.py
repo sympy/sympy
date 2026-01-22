@@ -12,7 +12,7 @@ instead of the slightly more clunky-looking
 Caveats
 =======
 
-1. As of the time of writing this, the names ``C``, ``O``, ``S``, ``I``, ``N``,
+1. As of the time of writing this, the names ``O``, ``S``, ``I``, ``N``,
 ``E``, and ``Q`` are colliding with names defined in SymPy. If you import them
 from both ``sympy.abc`` and ``sympy``, the second import will "win".
 This is an issue only for * imports, which should only be used for short-lived
@@ -50,36 +50,34 @@ pi(x)
 pi(C, Q)
 
 """
-
-from __future__ import print_function, division
-
-from typing import Any, Dict
+from __future__ import annotations
+from typing import Any
 
 import string
 
 from .core import Symbol, symbols
 from .core.alphabets import greeks
-from .core.compatibility import exec_
+from sympy.parsing.sympy_parser import null
 
 ##### Symbol definitions #####
 
 # Implementation note: The easiest way to avoid typos in the symbols()
 # parameter is to copy it from the left-hand side of the assignment.
 
-a, b, c, d, e, f, g, h, i, j = symbols('a, b, c, d, e, f, g, h, i, j')
-k, l, m, n, o, p, q, r, s, t = symbols('k, l, m, n, o, p, q, r, s, t')
-u, v, w, x, y, z = symbols('u, v, w, x, y, z')
+a, b, c, d, e, f, g, h, i, j = symbols('a, b, c, d, e, f, g, h, i, j', seq=True)
+k, l, m, n, o, p, q, r, s, t = symbols('k, l, m, n, o, p, q, r, s, t', seq=True)
+u, v, w, x, y, z = symbols('u, v, w, x, y, z', seq=True)
 
-A, B, C, D, E, F, G, H, I, J = symbols('A, B, C, D, E, F, G, H, I, J')
-K, L, M, N, O, P, Q, R, S, T = symbols('K, L, M, N, O, P, Q, R, S, T')
-U, V, W, X, Y, Z = symbols('U, V, W, X, Y, Z')
+A, B, C, D, E, F, G, H, I, J = symbols('A, B, C, D, E, F, G, H, I, J', seq=True)
+K, L, M, N, O, P, Q, R, S, T = symbols('K, L, M, N, O, P, Q, R, S, T', seq=True)
+U, V, W, X, Y, Z = symbols('U, V, W, X, Y, Z', seq=True)
 
-alpha, beta, gamma, delta = symbols('alpha, beta, gamma, delta')
-epsilon, zeta, eta, theta = symbols('epsilon, zeta, eta, theta')
-iota, kappa, lamda, mu = symbols('iota, kappa, lamda, mu')
-nu, xi, omicron, pi = symbols('nu, xi, omicron, pi')
-rho, sigma, tau, upsilon = symbols('rho, sigma, tau, upsilon')
-phi, chi, psi, omega = symbols('phi, chi, psi, omega')
+alpha, beta, gamma, delta = symbols('alpha, beta, gamma, delta', seq=True)
+epsilon, zeta, eta, theta = symbols('epsilon, zeta, eta, theta', seq=True)
+iota, kappa, lamda, mu = symbols('iota, kappa, lamda, mu', seq=True)
+nu, xi, omicron, pi = symbols('nu, xi, omicron, pi', seq=True)
+rho, sigma, tau, upsilon = symbols('rho, sigma, tau, upsilon', seq=True)
+phi, chi, psi, omega = symbols('phi, chi, psi, omega', seq=True)
 
 
 ##### Clashing-symbols diagnostics #####
@@ -88,26 +86,26 @@ phi, chi, psi, omega = symbols('phi, chi, psi, omega')
 # This is mostly for diagnosing SymPy's namespace during SymPy development.
 
 _latin = list(string.ascii_letters)
-# OSINEQ should not be imported as they clash; gamma, pi and zeta clash, too
+# QOSINE should not be imported as they clash; gamma, pi and zeta clash, too
 _greek = list(greeks) # make a copy, so we can mutate it
 # Note: We import lamda since lambda is a reserved keyword in Python
 _greek.remove("lambda")
 _greek.append("lamda")
 
-ns = {}  # type: Dict[str, Any]
-exec_('from sympy import *', ns)
-_clash1 = {}
-_clash2 = {}
+ns: dict[str, Any] = {}
+exec('from sympy import *', ns)
+_clash1: dict[str, Any] = {}
+_clash2: dict[str, Any] = {}
 while ns:
     _k, _ = ns.popitem()
     if _k in _greek:
-        _clash2[_k] = Symbol(_k)
+        _clash2[_k] = null
         _greek.remove(_k)
     elif _k in _latin:
-        _clash1[_k] = Symbol(_k)
+        _clash1[_k] = null
         _latin.remove(_k)
 _clash = {}
 _clash.update(_clash1)
 _clash.update(_clash2)
 
-del _latin, _greek, Symbol, _k
+del _latin, _greek, Symbol, _k, null

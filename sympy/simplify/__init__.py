@@ -6,15 +6,13 @@ the expression (x+x)**2 will be converted into 4*x**2
 """
 from .simplify import (simplify, hypersimp, hypersimilar,
     logcombine, separatevars, posify, besselsimp, kroneckersimp,
-    signsimp, bottom_up, nsimplify)
+    signsimp, nsimplify)
 
 from .fu import FU, fu
 
 from .sqrtdenest import sqrtdenest
 
 from .cse_main import cse
-
-from .traversaltools import use
 
 from .epathtools import epath, EPath
 
@@ -34,7 +32,7 @@ from .ratsimp import ratsimp, ratsimpmodprime
 
 __all__ = [
     'simplify', 'hypersimp', 'hypersimilar', 'logcombine', 'separatevars',
-    'posify', 'besselsimp', 'kroneckersimp', 'signsimp', 'bottom_up',
+    'posify', 'besselsimp', 'kroneckersimp', 'signsimp',
     'nsimplify',
 
     'FU', 'fu',
@@ -42,8 +40,6 @@ __all__ = [
     'sqrtdenest',
 
     'cse',
-
-    'use',
 
     'epath', 'EPath',
 

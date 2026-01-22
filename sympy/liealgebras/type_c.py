@@ -5,7 +5,7 @@ class TypeC(Standard_Cartan):
 
     def __new__(cls, n):
         if n < 3:
-            raise ValueError("n can not be less than 3")
+            raise ValueError("n cannot be less than 3")
         return Standard_Cartan.__new__(cls, "C", n)
 
 
@@ -91,12 +91,12 @@ class TypeC(Standard_Cartan):
         k = 0
         for i in range(0, n-1):
             for j in range(i+1, n):
-               k += 1
-               posroots[k] = self.basic_root(i, j)
-               k += 1
-               root = self.basic_root(i, j)
-               root[j] = 1
-               posroots[k] = root
+                k += 1
+                posroots[k] = self.basic_root(i, j)
+                k += 1
+                root = self.basic_root(i, j)
+                root[j] = 1
+                posroots[k] = root
 
         for i in range(0, n):
             k += 1
@@ -138,11 +138,9 @@ class TypeC(Standard_Cartan):
 
         n = self.n
         m = 2 * eye(n)
-        i = 1
-        while i < n-1:
-           m[i, i+1] = -1
-           m[i, i-1] = -1
-           i += 1
+        for i in range(1, n - 1):
+            m[i, i+1] = -1
+            m[i, i-1] = -1
         m[0,1] = -1
         m[n-1, n-2] = -2
         return m

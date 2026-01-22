@@ -1,4 +1,4 @@
-from sympy.core.backend import (cos, sin, Matrix, symbols)
+from sympy import (cos, sin, Matrix, symbols)
 from sympy.physics.mechanics import (dynamicsymbols, ReferenceFrame, Point,
                                         KanesMethod, Particle)
 

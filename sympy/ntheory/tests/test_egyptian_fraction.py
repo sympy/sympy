@@ -2,7 +2,7 @@ from sympy.core.numbers import Rational
 from sympy.ntheory.egyptian_fraction import egyptian_fraction
 from sympy.core.add import Add
 from sympy.testing.pytest import raises
-from sympy.testing.randtest import random_complex_number
+from sympy.core.random import random_complex_number
 
 
 def test_egyptian_fraction():
@@ -32,3 +32,18 @@ def test_egyptian_fraction():
                                                      10, 11, 12, 27, 744, 893588,
                                                      1251493536607,
                                                      20361068938197002344405230]
+
+
+def test_input():
+    r = (2,3), Rational(2, 3), (Rational(2), Rational(3))
+    for m in ["Greedy", "Graham Jewett", "Takenouchi", "Golomb"]:
+        for i in r:
+            d = egyptian_fraction(i, m)
+            assert all(i.is_Integer for i in d)
+            if m == "Graham Jewett":
+                assert d == [3, 4, 12]
+            else:
+                assert d == [2, 6]
+    # check prefix
+    d = egyptian_fraction(Rational(5, 3))
+    assert d == [1, 2, 6] and all(i.is_Integer for i in d)

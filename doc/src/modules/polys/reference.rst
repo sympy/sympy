@@ -6,6 +6,9 @@ Polynomials Manipulation Module Reference
 
 .. automodule:: sympy.polys
 
+See :ref:`polys-docs` for an index of documentation for the polys module and
+:ref:`polys-basics` for an introductory explanation.
+
 Basic polynomial manipulation functions
 =======================================
 
@@ -28,13 +31,12 @@ Basic polynomial manipulation functions
 .. autofunction:: quo
 .. autofunction:: exquo
 .. autofunction:: half_gcdex
+.. autofunction:: gcdex_steps
 .. autofunction:: gcdex
 .. autofunction:: invert
 .. autofunction:: subresultants
 .. autofunction:: resultant
 .. autofunction:: discriminant
-.. autofunction:: sympy.polys.dispersion.dispersion
-.. autofunction:: sympy.polys.dispersion.dispersionset
 .. autofunction:: terms_gcd
 .. autofunction:: cofactors
 .. autofunction:: gcd
@@ -59,6 +61,7 @@ Basic polynomial manipulation functions
 .. autofunction:: intervals
 .. autofunction:: refine_root
 .. autofunction:: count_roots
+.. autofunction:: all_roots
 .. autofunction:: real_roots
 .. autofunction:: nroots
 .. autofunction:: ground_roots
@@ -94,27 +97,13 @@ Domain constructors
 
 .. autofunction:: construct_domain
 
-Algebraic number fields
-=======================
-
-.. currentmodule:: sympy.polys.numberfields
-
-.. autofunction:: minimal_polynomial
-.. autofunction:: minpoly
-.. autofunction:: primitive_element
-.. autofunction:: field_isomorphism
-.. autofunction:: to_number_field
-.. autofunction:: isolate
-
-.. autoclass:: AlgebraicNumber
-   :members:
-
 Monomials encoded as tuples
 ===========================
 
 .. currentmodule:: sympy.polys.monomials
 
 .. autoclass:: Monomial
+   :members:
 .. autofunction:: itermonomials
 .. autofunction:: monomial_count
 
@@ -124,9 +113,13 @@ Orderings of monomials
 .. currentmodule:: sympy.polys.orderings
 
 .. autoclass:: MonomialOrder
+   :members:
 .. autoclass:: LexOrder
+   :members:
 .. autoclass:: GradedLexOrder
+   :members:
 .. autoclass:: ReversedGradedLexOrder
+   :members:
 
 Formal manipulation of roots of polynomials
 ===========================================
@@ -140,6 +133,7 @@ Formal manipulation of roots of polynomials
    :members:
    :private-members:
 .. autoclass:: RootSum
+   :members:
 
 Symbolic root-finding algorithms
 ================================
@@ -168,10 +162,22 @@ Orthogonal polynomials
 .. autofunction:: chebyshevu_poly
 .. autofunction:: gegenbauer_poly
 .. autofunction:: hermite_poly
+.. autofunction:: hermite_prob_poly
 .. autofunction:: jacobi_poly
 .. autofunction:: legendre_poly
 .. autofunction:: laguerre_poly
 .. autofunction:: spherical_bessel_fn
+
+Appell sequences
+================
+
+.. currentmodule:: sympy.polys.appellseqs
+
+.. autofunction:: bernoulli_poly
+.. autofunction:: bernoulli_c_poly
+.. autofunction:: genocchi_poly
+.. autofunction:: euler_poly
+.. autofunction:: andre_poly
 
 Manipulation of rational functions
 ==================================
@@ -196,3 +202,8 @@ Dispersion of Polynomials
 
 .. autofunction:: dispersionset
 .. autofunction:: dispersion
+
+Type Annotations
+================
+
+.. py:class:: collections.abc.Iterator

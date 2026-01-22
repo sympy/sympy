@@ -1,9 +1,13 @@
 import math
-from sympy import (
-    Float, Idx, IndexedBase, Integer, Matrix, MatrixSymbol, Range, sin,
-    symbols, Symbol, Tuple, Lt, nan, oo
-)
-from sympy.core.relational import StrictLessThan
+from sympy.core.containers import Tuple
+from sympy.core.numbers import nan, oo, Float, Integer
+from sympy.core.relational import Lt
+from sympy.core.symbol import symbols, Symbol
+from sympy.functions.elementary.trigonometric import sin
+from sympy.matrices.dense import Matrix
+from sympy.matrices.expressions.matexpr import MatrixSymbol
+from sympy.sets.fancysets import Range
+from sympy.tensor.indexed import Idx, IndexedBase
 from sympy.testing.pytest import raises
 
 
@@ -252,7 +256,7 @@ def test_none():
         pass
     foo = Foo()
     assert foo != none
-    assert none == None
+    assert none == None  # noqa: E711
     assert none == NoneToken()
     assert none.func(*none.args) == none
 
@@ -263,6 +267,7 @@ def test_String():
     assert st == String('foobar')
     assert st.text == 'foobar'
     assert st.func(**st.kwargs()) == st
+    assert st.func(*st.args) == st
 
 
     class Signifier(String):
@@ -382,7 +387,6 @@ def test_Variable():
     assert Variable.deduced(z, value=3.0+1j).type == complex_
 
 
-
 def test_Pointer():
     p = Pointer(x)
     assert p.symbol == x
@@ -411,8 +415,9 @@ def test_Declaration():
     vn = Variable(n, type=Type.from_expr(n))
     assert Declaration(vn).variable.type == integer
 
-    lt = StrictLessThan(vu, vn)
-    assert isinstance(lt, StrictLessThan)
+    # PR 19107, does not allow comparison between expressions and Basic
+    # lt = StrictLessThan(vu, vn)
+    # assert isinstance(lt, StrictLessThan)
 
     vuc = Variable(u, Type.from_expr(u), value=3.0, attrs={value_const})
     assert value_const in vuc.attrs
@@ -436,7 +441,6 @@ def test_Declaration():
     assert decl3.variable.value == 3.0
 
     raises(ValueError, lambda: Declaration(vi, 42))
-
 
 
 def test_IntBaseType():
@@ -489,7 +493,7 @@ def test_FloatType():
     assert abs(f80.tiny / Float('3.36210314311209350626e-4932', precision=80) - 1) < 0.1*10**-f80.dig
     assert abs(f128.tiny / Float('3.3621031431120935062626778173217526e-4932', precision=128) - 1) < 0.1*10**-f128.dig
 
-    assert f64.cast_check(0.5) == 0.5
+    assert f64.cast_check(0.5) == Float(0.5, 17)
     assert abs(f64.cast_check(3.7) - 3.7) < 3e-17
     assert isinstance(f64.cast_check(3), (Float, float))
 
@@ -550,7 +554,6 @@ def test_While():
     assert whl1 != While(x < 3, [xpp])
 
 
-
 def test_Scope():
     assign = Assignment(x, y)
     incr = AddAugmentedAssignment(x, 1)
@@ -575,7 +578,7 @@ def test_Print():
     ps2 = Print([n, x])
     assert ps2 == Print([n, x])
     assert ps2 != ps
-    assert ps2.format_string == None
+    assert ps2.format_string == None  # noqa: E711
 
 
 def test_FunctionPrototype_and_FunctionDefinition():

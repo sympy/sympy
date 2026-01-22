@@ -1,8 +1,7 @@
-from __future__ import print_function, division
-
+from collections import deque
 from sympy.combinatorics.rewritingsystem_fsm import StateMachine
 
-class RewritingSystem(object):
+class RewritingSystem:
     '''
     A class implementing rewriting systems for `FpGroup`s.
 
@@ -17,7 +16,6 @@ class RewritingSystem(object):
 
     '''
     def __init__(self, group):
-        from collections import deque
         self.group = group
         self.alphabet = group.generators
         self._is_confluent = None
@@ -261,7 +259,7 @@ class RewritingSystem(object):
                     added = 0
                     if r:
                         # reset i since some elements were removed
-                        i = min([lhs.index(s) for s in r])
+                        i = min(lhs.index(s) for s in r)
                     lhs = [l for l in lhs if l not in r]
                     lhs.extend(a)
                     if r1 in r:
@@ -363,13 +361,13 @@ class RewritingSystem(object):
             automaton_alphabet += rule.letter_form_elm
             # Compute the proper prefixes for every rule.
             proper_prefixes[rule] = []
-            letter_word_array = [s for s in rule.letter_form_elm]
+            letter_word_array = list(rule.letter_form_elm)
             len_letter_word_array = len(letter_word_array)
             for i in range (1, len_letter_word_array):
                 letter_word_array[i] = letter_word_array[i-1]*letter_word_array[i]
                 # Add accept states.
                 elem = letter_word_array[i-1]
-                if not elem in self.reduction_automaton.states:
+                if elem not in self.reduction_automaton.states:
                     self.reduction_automaton.add_state(elem, state_type='a')
                     accept_states.append(elem)
             proper_prefixes[rule] = letter_word_array
@@ -379,7 +377,7 @@ class RewritingSystem(object):
                 self.reduction_automaton.states[rule].rh_rule = all_rules[rule]
                 accept_states.remove(rule)
             # Add dead states
-            if not rule in self.reduction_automaton.states:
+            if rule not in self.reduction_automaton.states:
                 self.reduction_automaton.add_state(rule, state_type='d', rh_rule=all_rules[rule])
 
         automaton_alphabet = set(automaton_alphabet)
@@ -443,9 +441,8 @@ class RewritingSystem(object):
         while flag:
             flag = 0
             current_state = self.reduction_automaton.states['start']
-            word_array = [s for s in word.letter_form_elm]
-            for i in range (0, len(word_array)):
-                next_state_name = current_state.transitions[word_array[i]]
+            for i, s in enumerate(word.letter_form_elm):
+                next_state_name = current_state.transitions[s]
                 next_state = self.reduction_automaton.states[next_state_name]
                 if next_state.state_type == 'd':
                     subst = next_state.rh_rule

@@ -2,8 +2,11 @@
 
 import warnings
 
-from sympy import Add, Mul, Pow, Integer
-from sympy.physics.quantum import Operator, Commutator, AntiCommutator
+from sympy.core.add import Add
+from sympy.core.mul import Mul
+from sympy.core.numbers import Integer
+from sympy.core.power import Pow
+from sympy.physics.quantum import Commutator, AntiCommutator
 from sympy.physics.quantum.boson import BosonOp
 from sympy.physics.quantum.fermion import FermionOp
 
@@ -32,7 +35,6 @@ def _expand_powers(factors):
 
     return new_factors
 
-
 def _normal_ordered_form_factor(product, independent=False, recursive_limit=10,
                                 _recursive_depth=0):
     """
@@ -48,86 +50,45 @@ def _normal_ordered_form_factor(product, independent=False, recursive_limit=10,
     new_factors = []
     n = 0
     while n < len(factors) - 1:
+        current, next = factors[n], factors[n + 1]
+        if any(not isinstance(f, (FermionOp, BosonOp)) for f in (current, next)):
+            new_factors.append(current)
+            n += 1
+            continue
 
-        if isinstance(factors[n], BosonOp):
-            # boson
-            if not isinstance(factors[n + 1], BosonOp):
-                new_factors.append(factors[n])
+        key_1 = (current.is_annihilation, str(current.name))
+        key_2 = (next.is_annihilation, str(next.name))
 
-            elif factors[n].is_annihilation == factors[n + 1].is_annihilation:
-                if (independent and
-                        str(factors[n].name) > str(factors[n + 1].name)):
-                    new_factors.append(factors[n + 1])
-                    new_factors.append(factors[n])
-                    n += 1
-                else:
-                    new_factors.append(factors[n])
+        if key_1 <= key_2:
+            new_factors.append(current)
+            n += 1
+            continue
 
-            elif not factors[n].is_annihilation:
-                new_factors.append(factors[n])
-
-            else:
-                if factors[n + 1].is_annihilation:
-                    new_factors.append(factors[n])
-                else:
-                    if factors[n].args[0] != factors[n + 1].args[0]:
-                        if independent:
-                            c = 0
-                        else:
-                            c = Commutator(factors[n], factors[n + 1])
-                        new_factors.append(factors[n + 1] * factors[n] + c)
+        n += 2
+        if current.is_annihilation and not next.is_annihilation:
+            if isinstance(current, BosonOp) and isinstance(next, BosonOp):
+                if current.args[0] != next.args[0]:
+                    if independent:
+                        c = 0
                     else:
-                        c = Commutator(factors[n], factors[n + 1])
-                        new_factors.append(
-                            factors[n + 1] * factors[n] + c.doit())
-                    n += 1
-
-        elif isinstance(factors[n], FermionOp):
-            # fermion
-            if not isinstance(factors[n + 1], FermionOp):
-                new_factors.append(factors[n])
-
-            elif factors[n].is_annihilation == factors[n + 1].is_annihilation:
-                if (independent and
-                        str(factors[n].name) > str(factors[n + 1].name)):
-                    new_factors.append(factors[n + 1])
-                    new_factors.append(factors[n])
-                    n += 1
+                        c = Commutator(current, next)
+                    new_factors.append(next * current + c)
                 else:
-                    new_factors.append(factors[n])
-
-            elif not factors[n].is_annihilation:
-                new_factors.append(factors[n])
-
-            else:
-                if factors[n + 1].is_annihilation:
-                    new_factors.append(factors[n])
-                else:
-                    if factors[n].args[0] != factors[n + 1].args[0]:
-                        if independent:
-                            c = 0
-                        else:
-                            c = AntiCommutator(factors[n], factors[n + 1])
-                        new_factors.append(-factors[n + 1] * factors[n] + c)
+                    new_factors.append(next * current + 1)
+            elif isinstance(current, FermionOp) and isinstance(next, FermionOp):
+                if current.args[0] != next.args[0]:
+                    if independent:
+                        c = 0
                     else:
-                        c = AntiCommutator(factors[n], factors[n + 1])
-                        new_factors.append(
-                            -factors[n + 1] * factors[n] + c.doit())
-                    n += 1
-
-        elif isinstance(factors[n], Operator):
-
-            if isinstance(factors[n + 1], (BosonOp, FermionOp)):
-                new_factors.append(factors[n + 1])
-                new_factors.append(factors[n])
-                n += 1
-            else:
-                new_factors.append(factors[n])
-
+                        c = AntiCommutator(current, next)
+                    new_factors.append(-next * current + c)
+                else:
+                    new_factors.append(-next * current + 1)
+        elif (current.is_annihilation == next.is_annihilation and
+            isinstance(current, FermionOp) and isinstance(next, FermionOp)):
+            new_factors.append(-next * current)
         else:
-            new_factors.append(factors[n])
-
-        n += 1
+            new_factors.append(next * current)
 
     if n == len(factors) - 1:
         new_factors.append(factors[-1])
@@ -174,7 +135,10 @@ def normal_ordered_form(expr, independent=False, recursive_limit=10,
 
     expr : expression
         The expression write on normal ordered form.
-
+    independent : bool (default False)
+        Whether to consider operator with different names as operating in
+        different Hilbert spaces. If False, the (anti-)commutation is left
+        explicit.
     recursive_limit : int (default 10)
         The number of allowed recursive applications of the function.
 

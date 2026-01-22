@@ -1,18 +1,21 @@
 import random
-from sympy import symbols, Derivative
-from sympy.codegen.array_utils import (CodegenArrayContraction,
-        CodegenArrayTensorProduct, CodegenArrayElementwiseAdd,
-        CodegenArrayPermuteDims, CodegenArrayDiagonal)
+from sympy.core.function import Derivative
+from sympy.core.symbol import symbols
+from sympy import Piecewise
+from sympy.tensor.array.expressions.array_expressions import ArrayTensorProduct, ArrayAdd, \
+    PermuteDims, ArrayDiagonal
 from sympy.core.relational import Eq, Ne, Ge, Gt, Le, Lt
 from sympy.external import import_module
 from sympy.functions import \
     Abs, ceiling, exp, floor, sign, sin, asin, sqrt, cos, \
     acos, tan, atan, atan2, cosh, acosh, sinh, asinh, tanh, atanh, \
     re, im, arg, erf, loggamma, log
+from sympy.codegen.cfunctions import isnan, isinf
 from sympy.matrices import Matrix, MatrixBase, eye, randMatrix
 from sympy.matrices.expressions import \
     Determinant, HadamardProduct, Inverse, MatrixSymbol, Trace
 from sympy.printing.tensorflow import tensorflow_code
+from sympy.tensor.array.expressions.from_matrix_to_array import convert_matrix_to_array
 from sympy.utilities.lambdify import lambdify
 from sympy.testing.pytest import skip
 from sympy.testing.pytest import XFAIL
@@ -34,7 +37,7 @@ Q = MatrixSymbol("Q", 3, 3)
 x, y, z, t = symbols("x y z t")
 
 if tf is not None:
-    llo = [[j for j in range(i, i+3)] for i in range(0, 9, 3)]
+    llo = [list(range(i, i+3)) for i in range(0, 9, 3)]
     m3x3 = tf.constant(llo)
     m3x3sympy = Matrix(llo)
 
@@ -53,7 +56,7 @@ def _compare_tensorflow_matrix(variables, expr, use_float=False):
         session = tf.compat.v1.Session(graph=graph)
         r = session.run(f(*random_variables))
 
-    e = expr.subs({k: v for k, v in zip(variables, random_matrices)})
+    e = expr.subs(dict(zip(variables, random_matrices)))
     e = e.doit()
     if e.is_Matrix:
         if not isinstance(e, MatrixBase):
@@ -85,7 +88,7 @@ def _compare_tensorflow_matrix_inverse(variables, expr, use_float=False):
         session = tf.compat.v1.Session(graph=graph)
         r = session.run(f(*random_variables))
 
-    e = expr.subs({k: v for k, v in zip(variables, random_matrices)})
+    e = expr.subs(dict(zip(variables, random_matrices)))
     e = e.doit()
     if e.is_Matrix:
         if not isinstance(e, MatrixBase):
@@ -113,7 +116,7 @@ def _compare_tensorflow_matrix_scalar(variables, expr):
         session = tf.compat.v1.Session(graph=graph)
         r = session.run(f(*random_variables))
 
-    e = expr.subs({k: v for k, v in zip(variables, random_matrices)})
+    e = expr.subs(dict(zip(variables, random_matrices)))
     e = e.doit()
     assert abs(r-e) < 10**-6
 
@@ -130,7 +133,7 @@ def _compare_tensorflow_scalar(
         session = tf.compat.v1.Session(graph=graph)
         r = session.run(f(*tf_rvs))
 
-    e = expr.subs({k: v for k, v in zip(variables, rvs)}).evalf().doit()
+    e = expr.subs(dict(zip(variables, rvs))).evalf().doit()
     assert abs(r-e) < 10**-6
 
 
@@ -146,7 +149,7 @@ def _compare_tensorflow_relational(
         session = tf.compat.v1.Session(graph=graph)
         r = session.run(f(*tf_rvs))
 
-    e = expr.subs({k: v for k, v in zip(variables, rvs)}).doit()
+    e = expr.subs(dict(zip(variables, rvs))).doit()
     assert r == e
 
 
@@ -362,7 +365,7 @@ def test_codegen_einsum():
         M = MatrixSymbol("M", 2, 2)
         N = MatrixSymbol("N", 2, 2)
 
-        cg = CodegenArrayContraction.from_MatMul(M*N)
+        cg = convert_matrix_to_array(M * N)
         f = lambdify((M, N), cg, 'tensorflow')
 
         ma = tf.constant([[1, 2], [3, 4]])
@@ -389,7 +392,7 @@ def test_codegen_extra():
         mc = tf.constant([[2, 0], [1, 2]])
         md = tf.constant([[1,-1], [4, 7]])
 
-        cg = CodegenArrayTensorProduct(M, N)
+        cg = ArrayTensorProduct(M, N)
         assert tensorflow_code(cg) == \
             'tensorflow.linalg.einsum("ab,cd", M, N)'
         f = lambdify((M, N), cg, 'tensorflow')
@@ -397,14 +400,14 @@ def test_codegen_extra():
         c = session.run(tf.einsum("ij,kl", ma, mb))
         assert (y == c).all()
 
-        cg = CodegenArrayElementwiseAdd(M, N)
+        cg = ArrayAdd(M, N)
         assert tensorflow_code(cg) == 'tensorflow.math.add(M, N)'
         f = lambdify((M, N), cg, 'tensorflow')
         y = session.run(f(ma, mb))
         c = session.run(ma + mb)
         assert (y == c).all()
 
-        cg = CodegenArrayElementwiseAdd(M, N, P)
+        cg = ArrayAdd(M, N, P)
         assert tensorflow_code(cg) == \
             'tensorflow.math.add(tensorflow.math.add(M, N), P)'
         f = lambdify((M, N, P), cg, 'tensorflow')
@@ -412,7 +415,7 @@ def test_codegen_extra():
         c = session.run(ma + mb + mc)
         assert (y == c).all()
 
-        cg = CodegenArrayElementwiseAdd(M, N, P, Q)
+        cg = ArrayAdd(M, N, P, Q)
         assert tensorflow_code(cg) == \
             'tensorflow.math.add(' \
                 'tensorflow.math.add(tensorflow.math.add(M, N), P), Q)'
@@ -421,14 +424,14 @@ def test_codegen_extra():
         c = session.run(ma + mb + mc + md)
         assert (y == c).all()
 
-        cg = CodegenArrayPermuteDims(M, [1, 0])
+        cg = PermuteDims(M, [1, 0])
         assert tensorflow_code(cg) == 'tensorflow.transpose(M, [1, 0])'
         f = lambdify((M,), cg, 'tensorflow')
         y = session.run(f(ma))
         c = session.run(tf.transpose(ma))
         assert (y == c).all()
 
-        cg = CodegenArrayPermuteDims(CodegenArrayTensorProduct(M, N), [1, 2, 3, 0])
+        cg = PermuteDims(ArrayTensorProduct(M, N), [1, 2, 3, 0])
         assert tensorflow_code(cg) == \
             'tensorflow.transpose(' \
                 'tensorflow.linalg.einsum("ab,cd", M, N), [1, 2, 3, 0])'
@@ -437,7 +440,7 @@ def test_codegen_extra():
         c = session.run(tf.transpose(tf.einsum("ab,cd", ma, mb), [1, 2, 3, 0]))
         assert (y == c).all()
 
-        cg = CodegenArrayDiagonal(CodegenArrayTensorProduct(M, N), (1, 2))
+        cg = ArrayDiagonal(ArrayTensorProduct(M, N), (1, 2))
         assert tensorflow_code(cg) == \
             'tensorflow.linalg.einsum("ab,bc->acb", M, N)'
         f = lambdify((M, N), cg, 'tensorflow')
@@ -462,3 +465,29 @@ def test_tensorflow_Derivative():
     expr = Derivative(sin(x), x)
     assert tensorflow_code(expr) == \
         "tensorflow.gradients(tensorflow.math.sin(x), x)[0]"
+
+def test_tensorflow_isnan_isinf():
+    if not tf:
+        skip("TensorFlow not installed")
+
+    # Test for isnan
+    x = symbols("x")
+    # Return 0 if x is of nan value, and 1 otherwise
+    expression = Piecewise((0.0, isnan(x)), (1.0, True))
+    printed_code = tensorflow_code(expression)
+    expected_printed_code = "tensorflow.where(tensorflow.math.is_nan(x), 0.0, 1.0)"
+    assert tensorflow_code(expression) == expected_printed_code, f"Incorrect printed result {printed_code}, expected {expected_printed_code}"
+    for _input, _expected in [(float('nan'), 0.0), (float('inf'), 1.0), (float('-inf'), 1.0), (1.0, 1.0)]:
+        _output = lambdify((x), expression, modules="tensorflow")(x=tf.constant([_input]))
+        assert (_output == _expected).numpy().all()
+
+    # Test for isinf
+    x = symbols("x")
+    # Return 0 if x is of nan value, and 1 otherwise
+    expression = Piecewise((0.0, isinf(x)), (1.0, True))
+    printed_code = tensorflow_code(expression)
+    expected_printed_code = "tensorflow.where(tensorflow.math.is_inf(x), 0.0, 1.0)"
+    assert tensorflow_code(expression) == expected_printed_code, f"Incorrect printed result {printed_code}, expected {expected_printed_code}"
+    for _input, _expected in [(float('inf'), 0.0), (float('-inf'), 0.0), (float('nan'), 1.0), (1.0, 1.0)]:
+        _output = lambdify((x), expression, modules="tensorflow")(x=tf.constant([_input]))
+        assert (_output == _expected).numpy().all()

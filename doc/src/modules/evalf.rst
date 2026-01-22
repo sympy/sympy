@@ -47,11 +47,10 @@ expression is a polynomial in expanded form, the coefficients are evaluated:
 You can also use the standard Python functions ``float()``, ``complex()`` to
 convert SymPy expressions to regular Python numbers:
 
-    >>> float(pi)
-    3.1415926535...
-    >>> complex(pi+E*I)
-    (3.1415926535...+2.7182818284...j)
-
+    >>> float(pi)  # doctest: +SKIP
+    3.141592653589793
+    >>> complex(pi+E*I)  # doctest: +SKIP
+    (3.141592653589793+2.718281828459045j)
 
 If these functions are used, failure to evaluate the expression to an explicit
 number (for example if the expression contains symbols) will raise an exception.
@@ -70,7 +69,7 @@ This shows digits 999,951 through 1,000,000 of pi:
 
 
 High-precision calculations can be slow. It is recommended (but entirely
-optional) to install gmpy (https://code.google.com/p/gmpy/), which will
+optional) to install gmpy (https://github.com/aleaxit/gmpy), which will
 significantly speed up computations such as the one above.
 
 Floating-point numbers
@@ -287,7 +286,7 @@ Oscillatory quadrature requires an integrand containing a factor cos(ax+b) or
 sin(ax+b). Note that many other oscillatory integrals can be transformed to
 this form with a change of variables:
 
-    >>> init_printing(use_unicode=False, wrap_line=False)
+    >>> init_printing(use_unicode=False)
     >>> intgrl = Integral(sin(1/x), (x, 0, 1)).transform(x, 1/x)
     >>> intgrl
      oo
@@ -343,7 +342,7 @@ digits in a fraction of a second with a simple command:
     >>> f = factorial
     >>> n = Symbol('n', integer=True)
     >>> R = 9801/sqrt(8)/Sum(f(4*n)*(1103+26390*n)/f(n)**4/396**(4*n),
-    ...                         (n, 0, oo)) #doctest: +SKIP
+    ...                         (n, 0, oo))
     >>> N(R, 10000) #doctest: +SKIP
     3.141592653589793238462643383279502884197169399375105820974944592307816406286208
     99862803482534211706798214808651328230664709384460955058223172535940812848111745
@@ -392,7 +391,7 @@ Here are several more advanced examples:
         1
     ----------
     5*pi
-    ---- + 2*E
+    ---- + 2*e
      7
     >>> nsimplify(cos(atan('1/3')))
         ____

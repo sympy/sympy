@@ -1,4 +1,4 @@
-from sympy import sqrt
+from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.core import S, Symbol, symbols, I, Rational
 from sympy.discrete import (fft, ifft, ntt, intt, fwht, ifwht,
     mobius_transform, inverse_mobius_transform)
@@ -69,8 +69,8 @@ def test_fwht_ifwht():
     assert ifwht(fls) == ls + [S.Zero]*2
 
     ls = [S.Half + 2*I, Rational(3, 7) + 4*I, Rational(5, 6) + 6*I, Rational(7, 3), Rational(9, 4)]
-    ifls = [Rational(533, 672) + I*Rational(3, 2), Rational(23, 224) + I/2, Rational(1, 672), Rational(107, 224) - I,
-        Rational(155, 672) + I*Rational(3, 2), Rational(-103, 224) + I/2, Rational(-377, 672), Rational(-19, 224) - I]
+    ifls = [Rational(533, 672) + I*3/2, Rational(23, 224) + I/2, Rational(1, 672), Rational(107, 224) - I,
+        Rational(155, 672) + I*3/2, Rational(-103, 224) + I/2, Rational(-377, 672), Rational(-19, 224) - I]
 
     assert ifwht(ls) == ifls
     assert fwht(ifls) == ls + [S.Zero]*3

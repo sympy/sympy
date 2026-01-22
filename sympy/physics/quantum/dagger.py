@@ -1,8 +1,6 @@
 """Hermitian conjugation."""
 
-from __future__ import print_function, division
-
-from sympy.core import Expr
+from sympy.core import Expr, sympify
 from sympy.functions.elementary.complexes import adjoint
 
 __all__ = [
@@ -13,6 +11,9 @@ __all__ = [
 class Dagger(adjoint):
     """General Hermitian conjugate operation.
 
+    Explanation
+    ===========
+
     Take the Hermetian conjugate of an argument [1]_. For matrices this
     operation is equivalent to transpose and complex conjugate [2]_.
 
@@ -20,7 +21,9 @@ class Dagger(adjoint):
     ==========
 
     arg : Expr
-        The sympy expression that we want to take the dagger of.
+        The SymPy expression that we want to take the dagger of.
+    evaluate : bool
+        Whether the resulting expression should be directly evaluated.
 
     Examples
     ========
@@ -76,14 +79,17 @@ class Dagger(adjoint):
     .. [2] https://en.wikipedia.org/wiki/Hermitian_transpose
     """
 
-    def __new__(cls, arg):
-        if hasattr(arg, 'adjoint'):
-            obj = arg.adjoint()
-        elif hasattr(arg, 'conjugate') and hasattr(arg, 'transpose'):
-            obj = arg.conjugate().transpose()
-        if obj is not None:
-            return obj
-        return Expr.__new__(cls, arg)
+    @property
+    def kind(self):
+        """Find the kind of a dagger of something (just the kind of the something)."""
+        return self.args[0].kind
+
+    def __new__(cls, arg, evaluate=True):
+        if hasattr(arg, 'adjoint') and evaluate:
+            return arg.adjoint()
+        elif hasattr(arg, 'conjugate') and hasattr(arg, 'transpose') and evaluate:
+            return arg.conjugate().transpose()
+        return Expr.__new__(cls, sympify(arg))
 
 adjoint.__name__ = "Dagger"
 adjoint._sympyrepr = lambda a, b: "Dagger(%s)" % b._print(a.args[0])

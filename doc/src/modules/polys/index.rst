@@ -18,12 +18,18 @@ Contents
 ========
 
 .. toctree::
-    :maxdepth: 3
+   :titlesonly:
 
-    basics.rst
-    wester.rst
-    reference.rst
-    agca.rst
-    internals.rst
-    ringseries.rst
-    literature.rst
+   basics.rst
+   wester.rst
+   reference.rst
+   agca.rst
+   domainsintro.rst
+   domainsref.rst
+   internals.rst
+   ringseries.rst
+   series.rst
+   literature.rst
+   solvers.rst
+   domainmatrix.rst
+   numberfields.rst

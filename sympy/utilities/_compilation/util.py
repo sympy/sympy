@@ -1,11 +1,8 @@
-from __future__ import (absolute_import, division, print_function)
-
 from collections import namedtuple
 from hashlib import sha256
 import os
 import shutil
 import sys
-import tempfile
 import fnmatch
 
 from sympy.testing.pytest import XFAIL
@@ -21,28 +18,16 @@ def may_xfail(func):
         return func
 
 
-if sys.version_info[0] == 2:
-    class FileNotFoundError(IOError):
-        pass
-
-    class TemporaryDirectory(object):
-        def __init__(self):
-            self.path = tempfile.mkdtemp()
-        def __enter__(self):
-            return self.path
-        def __exit__(self, exc, value, tb):
-            shutil.rmtree(self.path)
-else:
-    FileNotFoundError = FileNotFoundError
-    TemporaryDirectory = tempfile.TemporaryDirectory
-
-
 class CompilerNotFoundError(FileNotFoundError):
     pass
 
 
+class CompileError (Exception):
+    """Failure to compile one or more C/C++ source files."""
+
+
 def get_abspath(path, cwd='.'):
-    """ Returns the aboslute path.
+    """ Returns the absolute path.
 
     Parameters
     ==========
@@ -78,6 +63,33 @@ def make_dirs(path):
     else:
         assert os.path.isdir(path)
 
+def missing_or_other_newer(path, other_path, cwd=None):
+    """
+    Investigate if path is non-existent or older than provided reference
+    path.
+
+    Parameters
+    ==========
+    path: string
+        path to path which might be missing or too old
+    other_path: string
+        reference path
+    cwd: string
+        working directory (root of relative paths)
+
+    Returns
+    =======
+    True if path is older or missing.
+    """
+    cwd = cwd or '.'
+    path = get_abspath(path, cwd=cwd)
+    other_path = get_abspath(other_path, cwd=cwd)
+    if not os.path.exists(path):
+        return True
+    if os.path.getmtime(other_path) - 1e-6 >= os.path.getmtime(path):
+        # 1e-6 is needed because http://stackoverflow.com/questions/17086426/
+        return True
+    return False
 
 def copy(src, dst, only_update=False, copystat=True, cwd=None,
          dest_is_dir=False, create_dest_dirs=False):
@@ -114,7 +126,7 @@ def copy(src, dst, only_update=False, copystat=True, cwd=None,
         if not os.path.isabs(dst):
             dst = os.path.join(cwd, dst)
 
-    if not os.path.exists(src):  # Make sure source file extists
+    if not os.path.exists(src):  # Make sure source file exists
         raise FileNotFoundError("Source: `{}` does not exist".format(src))
 
     # We accept both (re)naming destination file _or_
@@ -132,7 +144,6 @@ def copy(src, dst, only_update=False, copystat=True, cwd=None,
         dst = os.path.join(dest_dir, dest_fname)
     else:
         dest_dir = os.path.dirname(dst)
-        dest_fname = os.path.basename(dst)
 
     if not os.path.exists(dest_dir):
         if create_dest_dirs:
@@ -141,9 +152,7 @@ def copy(src, dst, only_update=False, copystat=True, cwd=None,
             raise FileNotFoundError("You must create directory first.")
 
     if only_update:
-        # This function is not defined:
-        # XXX: This branch is clearly not tested!
-        if not missing_or_other_newer(dst, src): # noqa
+        if not missing_or_other_newer(dst, src):
             return
 
     if os.path.islink(dst):
@@ -208,19 +217,20 @@ def pyx_is_cplus(path):
 
     Returns True if such a file is present in the file, else False.
     """
-    for line in open(path, 'rt'):
-        if line.startswith('#') and '=' in line:
-            splitted = line.split('=')
-            if len(splitted) != 2:
-                continue
-            lhs, rhs = splitted
-            if lhs.strip().split()[-1].lower() == 'language' and \
-               rhs.strip().split()[0].lower() == 'c++':
-                    return True
+    with open(path) as fh:
+        for line in fh:
+            if line.startswith('#') and '=' in line:
+                splitted = line.split('=')
+                if len(splitted) != 2:
+                    continue
+                lhs, rhs = splitted
+                if lhs.strip().split()[-1].lower() == 'language' and \
+                       rhs.strip().split()[0].lower() == 'c++':
+                            return True
     return False
 
 def import_module_from_file(filename, only_if_newer_than=None):
-    """ Imports python extension (from shared object file)
+    """ Imports Python extension (from shared object file)
 
     Provide a list of paths in `only_if_newer_than` to check
     timestamps of dependencies. import_ raises an ImportError
@@ -270,7 +280,7 @@ def import_module_from_file(filename, only_if_newer_than=None):
 def find_binary_of_command(candidates):
     """ Finds binary first matching name among candidates.
 
-    Calls `find_executable` from distuils for provided candidates and returns
+    Calls ``which`` from shutils for provided candidates and returns
     first hit.
 
     Parameters
@@ -284,11 +294,12 @@ def find_binary_of_command(candidates):
 
     CompilerNotFoundError if no candidates match.
     """
-    from distutils.spawn import find_executable
+    from shutil import which
     for c in candidates:
-        binary_path = find_executable(c)
+        binary_path = which(c)
         if c and binary_path:
             return c, binary_path
+
     raise CompilerNotFoundError('No binary located for candidates: {}'.format(candidates))
 
 

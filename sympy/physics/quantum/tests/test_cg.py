@@ -1,4 +1,8 @@
-from sympy import S, sqrt, Sum, symbols, Rational
+from sympy.concrete.summations import Sum
+from sympy.core.numbers import Rational
+from sympy.core.singleton import S
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.physics.quantum.cg import Wigner3j, Wigner6j, Wigner9j, CG, cg_simp
 from sympy.functions.special.tensor_functions import KroneckerDelta
 
@@ -167,8 +171,13 @@ def test_cg_simp_sum():
 
 def test_doit():
     assert Wigner3j(S.Half, Rational(-1, 2), S.Half, S.Half, 0, 0).doit() == -sqrt(2)/2
+    assert Wigner3j(1/2,1/2,1/2,1/2,1/2,1/2).doit() == 0
+    assert Wigner3j(9/2,9/2,9/2,9/2,9/2,9/2).doit() ==  0
     assert Wigner6j(1, 2, 3, 2, 1, 2).doit() == sqrt(21)/105
     assert Wigner6j(3, 1, 2, 2, 2, 1).doit() == sqrt(21) / 105
     assert Wigner9j(
         2, 1, 1, Rational(3, 2), S.Half, 1, S.Half, S.Half, 0).doit() == sqrt(2)/12
     assert CG(S.Half, S.Half, S.Half, Rational(-1, 2), 1, 0).doit() == sqrt(2)/2
+    # J minus M is not integer
+    assert Wigner3j(1, -1, S.Half, S.Half, 1, S.Half).doit() == 0
+    assert CG(4, -1, S.Half, S.Half, 4, Rational(-1, 2)).doit() == 0

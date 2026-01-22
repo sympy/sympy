@@ -1,6 +1,8 @@
 """Polynomial factorization routines in characteristic zero. """
 
-from __future__ import print_function, division
+from sympy.external.gmpy import GROUND_TYPES
+
+from sympy.core.random import _randint
 
 from sympy.polys.galoistools import (
     gf_from_int_poly, gf_to_int_poly,
@@ -43,7 +45,7 @@ from sympy.polys.densearith import (
     dup_max_norm, dmp_max_norm,
     dup_l1_norm,
     dup_mul_ground, dmp_mul_ground,
-    dup_quo_ground, dmp_quo_ground)
+    dup_exquo_ground, dmp_quo_ground, dmp_exquo_ground)
 
 from sympy.polys.densetools import (
     dup_clear_denoms, dmp_clear_denoms,
@@ -53,8 +55,7 @@ from sympy.polys.densetools import (
     dup_primitive, dmp_ground_primitive,
     dmp_eval_tail,
     dmp_eval_in, dmp_diff_eval_in,
-    dmp_compose,
-    dup_shift, dup_mirror)
+    dup_shift, dmp_shift, dup_mirror)
 
 from sympy.polys.euclidtools import (
     dmp_primitive,
@@ -63,7 +64,9 @@ from sympy.polys.euclidtools import (
 from sympy.polys.sqfreetools import (
     dup_sqf_p,
     dup_sqf_norm, dmp_sqf_norm,
-    dup_sqf_part, dmp_sqf_part)
+    dup_sqf_part, dmp_sqf_part,
+    _dup_check_degrees, _dmp_check_degrees,
+    )
 
 from sympy.polys.polyutils import _sort_factors
 from sympy.polys.polyconfig import query
@@ -71,16 +74,23 @@ from sympy.polys.polyconfig import query
 from sympy.polys.polyerrors import (
     ExtraneousFactors, DomainError, CoercionFailed, EvaluationFailed)
 
-from sympy.ntheory import nextprime, isprime, factorint
 from sympy.utilities import subsets
 
-from math import ceil as _ceil, log as _log
+from math import ceil as _ceil, log as _log, log2 as _log2
+
+
+if GROUND_TYPES == 'flint':
+    from flint import fmpz_poly
+else:
+    fmpz_poly = None
 
 
 def dup_trial_division(f, factors, K):
     """
     Determine multiplicities of factors for a univariate polynomial
     using trial division.
+
+    An error will be raised if any factor does not divide ``f``.
     """
     result = []
 
@@ -95,6 +105,9 @@ def dup_trial_division(f, factors, K):
             else:
                 break
 
+        if k == 0:
+            raise RuntimeError("trial division failed")
+
         result.append((factor, k))
 
     return _sort_factors(result)
@@ -104,6 +117,8 @@ def dmp_trial_division(f, factors, u, K):
     """
     Determine multiplicities of factors for a multivariate polynomial
     using trial division.
+
+    An error will be raised if any factor does not divide ``f``.
     """
     result = []
 
@@ -118,19 +133,73 @@ def dmp_trial_division(f, factors, u, K):
             else:
                 break
 
+        if k == 0:
+            raise RuntimeError("trial division failed")
+
         result.append((factor, k))
 
     return _sort_factors(result)
 
 
 def dup_zz_mignotte_bound(f, K):
-    """Mignotte bound for univariate polynomials in `K[x]`. """
-    a = dup_max_norm(f, K)
-    b = abs(dup_LC(f, K))
-    n = dup_degree(f)
+    """
+    The Knuth-Cohen variant of Mignotte bound for
+    univariate polynomials in ``K[x]``.
 
-    return K.sqrt(K(n + 1))*2**n*a*b
+    Examples
+    ========
 
+    >>> from sympy.polys import ring, ZZ
+    >>> R, x = ring("x", ZZ)
+
+    >>> f = x**3 + 14*x**2 + 56*x + 64
+    >>> R.dup_zz_mignotte_bound(f)
+    152
+
+    By checking ``factor(f)`` we can see that max coeff is 8
+
+    Also consider a case that ``f`` is irreducible for example
+    ``f = 2*x**2 + 3*x + 4``. To avoid a bug for these cases, we return the
+    bound plus the max coefficient of ``f``
+
+    >>> f = 2*x**2 + 3*x + 4
+    >>> R.dup_zz_mignotte_bound(f)
+    6
+
+    Lastly, to see the difference between the new and the old Mignotte bound
+    consider the irreducible polynomial:
+
+    >>> f = 87*x**7 + 4*x**6 + 80*x**5 + 17*x**4 + 9*x**3 + 12*x**2 + 49*x + 26
+    >>> R.dup_zz_mignotte_bound(f)
+    744
+
+    The new Mignotte bound is 744 whereas the old one (SymPy 1.5.1) is 1937664.
+
+
+    References
+    ==========
+
+    ..[1] [Abbott13]_
+
+    """
+    from sympy.functions.combinatorial.factorials import binomial
+    d = dup_degree(f)
+    delta = _ceil(d / 2)
+    delta2 = _ceil(delta / 2)
+
+    # euclidean-norm
+    eucl_norm = K.sqrt( sum( cf**2 for cf in f ) )
+
+    # biggest values of binomial coefficients (p. 538 of reference)
+    t1 = binomial(delta - 1, delta2)
+    t2 = binomial(delta - 1, delta2 - 1)
+
+    lc = K.abs(dup_LC(f, K))   # leading coefficient
+    bound = t1 * eucl_norm + t2 * lc   # (p. 538 of reference)
+    bound += dup_max_norm(f, K) # add max coeff for irreducible polys
+    bound = _ceil(bound / 2) * 2   # round up to even integer
+
+    return bound
 
 def dmp_zz_mignotte_bound(f, u, K):
     """Mignotte bound for multivariate polynomials in `K[X]`. """
@@ -199,7 +268,7 @@ def dup_zz_hensel_step(m, f, g, h, s, t, K):
 
 
 def dup_zz_hensel_lift(p, f, f_list, l, K):
-    """
+    r"""
     Multifactor Hensel lifting in `Z[x]`.
 
     Given a prime `p`, polynomial `f` over `Z[x]` such that `lc(f)`
@@ -209,7 +278,7 @@ def dup_zz_hensel_lift(p, f, f_list, l, K):
         f = lc(f) f_1 ... f_r (mod p)
 
     and a positive integer `l`, returns a list of monic polynomials
-    `F_1`, `F_2`, ..., `F_r` satisfying::
+    `F_1,\ F_2,\ \dots,\ F_r` satisfying::
 
        f = lc(f) F_1 ... F_r (mod p**l)
 
@@ -230,7 +299,7 @@ def dup_zz_hensel_lift(p, f, f_list, l, K):
 
     m = p
     k = r // 2
-    d = int(_ceil(_log(l, 2)))
+    d = int(_ceil(_log2(l)))
 
     g = gf_from_int_poly([lc], p)
 
@@ -269,12 +338,14 @@ def dup_zz_zassenhaus(f, K):
     if n == 1:
         return [f]
 
+    from sympy.ntheory import isprime
+
     fc = f[-1]
     A = dup_max_norm(f, K)
     b = dup_LC(f, K)
     B = int(abs(K.sqrt(K(n + 1))*2**n*A*b))
     C = int((n + 1)**(2*n)*A**(2*n - 1))
-    gamma = int(_ceil(2*_log(C, 2)))
+    gamma = int(_ceil(2*_log2(C)))
     bound = int(2*gamma*_log(gamma))
     a = []
     # choose a prime number `p` such that `f` be square free in Z_p
@@ -373,6 +444,7 @@ def dup_zz_irreducible_p(f, K):
     e_fc = dup_content(f[1:], K)
 
     if e_fc:
+        from sympy.ntheory import factorint
         e_ff = factorint(int(e_fc))
 
         for p in e_ff.keys():
@@ -397,6 +469,13 @@ def dup_cyclotomic_p(f, K, irreducible=False):
     >>> g = x**16 + x**14 - x**10 - x**8 - x**6 + x**2 + 1
     >>> R.dup_cyclotomic_p(g)
     True
+
+    References
+    ==========
+
+    Bradford, Russell J., and James H. Davenport. "Effective tests for
+    cyclotomic polynomials." In International Symposium on Symbolic and
+    Algebraic Computation, pp. 244-251. Springer, Berlin, Heidelberg, 1988.
 
     """
     if K.is_QQ:
@@ -429,8 +508,8 @@ def dup_cyclotomic_p(f, K, irreducible=False):
     for i in range(n - 1, -1, -2):
         h.insert(0, f[i])
 
-    g = dup_sqr(dup_strip(g), K)
-    h = dup_sqr(dup_strip(h), K)
+    g = dup_sqr(dup_strip(g, K), K)
+    h = dup_sqr(dup_strip(h, K), K)
 
     F = dup_sub(g, dup_lshift(h, 1, K), K)
 
@@ -458,6 +537,7 @@ def dup_cyclotomic_p(f, K, irreducible=False):
 
 def dup_zz_cyclotomic_poly(n, K):
     """Efficiently generate n-th cyclotomic polynomial. """
+    from sympy.ntheory import factorint
     h = [K.one, -K.one]
 
     for p, k in factorint(n).items():
@@ -468,6 +548,8 @@ def dup_zz_cyclotomic_poly(n, K):
 
 
 def _dup_cyclotomic_decompose(n, K):
+    from sympy.ntheory import factorint
+
     H = [[K.one, -K.one]]
 
     for p, k in factorint(n).items():
@@ -600,6 +682,12 @@ def dup_zz_factor(f, K):
     .. [1] [Gathen99]_
 
     """
+    if GROUND_TYPES == 'flint':
+        f_flint = fmpz_poly(f[::-1])
+        cont, factors = f_flint.factor()
+        factors = [(fac.coeffs()[::-1], exp) for fac, exp in factors]
+        return cont, _sort_factors(factors)
+
     cont, g = dup_primitive(f, K)
 
     n = dup_degree(g)
@@ -626,6 +714,9 @@ def dup_zz_factor(f, K):
         H = dup_zz_zassenhaus(g, K)
 
     factors = dup_trial_division(f, H, K)
+
+    _dup_check_degrees(f, factors)
+
     return cont, factors
 
 
@@ -694,7 +785,7 @@ def dmp_zz_wang_lead_coeffs(f, T, cs, E, H, A, u, K):
 
         C.append(c)
 
-    if any(not j for j in J):
+    if not all(J):
         raise ExtraneousFactors  # pragma: no cover
 
     CC, HH = [], []
@@ -818,7 +909,7 @@ def dmp_zz_diophantine(F, c, A, d, p, u, K):
         m = dmp_nest([K.one, -a], n, K)
         M = dmp_one(n, K)
 
-        for k in K.map(range(0, d)):
+        for k in range(0, d):
             if dmp_zero_p(c, u):
                 break
 
@@ -826,7 +917,7 @@ def dmp_zz_diophantine(F, c, A, d, p, u, K):
             C = dmp_diff_eval_in(c, k + 1, a, n, u, K)
 
             if not dmp_zero_p(C, v):
-                C = dmp_quo_ground(C, K.factorial(k + 1), v, K)
+                C = dmp_quo_ground(C, K.factorial(K(k) + 1), v, K)
                 T = dmp_zz_diophantine(G, C, A, d, p, v, K)
 
                 for i, t in enumerate(T):
@@ -873,7 +964,7 @@ def dmp_zz_wang_hensel_lifting(f, H, LC, A, p, u, K):
 
         dj = dmp_degree_in(s, w, w)
 
-        for k in K.map(range(0, dj)):
+        for k in range(0, dj):
             if dmp_zero_p(c, w):
                 break
 
@@ -881,7 +972,7 @@ def dmp_zz_wang_hensel_lifting(f, H, LC, A, p, u, K):
             C = dmp_diff_eval_in(c, k + 1, a, w, w, K)
 
             if not dmp_zero_p(C, w - 1):
-                C = dmp_quo_ground(C, K.factorial(k + 1), w - 1, K)
+                C = dmp_quo_ground(C, K.factorial(K(k) + 1), w - 1, K)
                 T = dmp_zz_diophantine(G, C, I, d, p, w - 1, K)
 
                 for i, (h, t) in enumerate(zip(H, T)):
@@ -898,7 +989,7 @@ def dmp_zz_wang_hensel_lifting(f, H, LC, A, p, u, K):
 
 
 def dmp_zz_wang(f, u, K, mod=None, seed=None):
-    """
+    r"""
     Factor primitive square-free polynomials in `Z[X]`.
 
     Given a multivariate polynomial `f` in `Z[x_1,...,x_n]`, which is
@@ -911,7 +1002,7 @@ def dmp_zz_wang(f, u, K, mod=None, seed=None):
 
                       x_2 -> a_2, ..., x_n -> a_n
 
-    where `a_i`, for `i = 2, ..., n`, are carefully chosen integers.  The
+    where `a_i`, for `i = 2, \dots, n`, are carefully chosen integers.  The
     mapping is used to transform `f` into a univariate polynomial in `Z[x_1]`,
     which can be factored efficiently using Zassenhaus algorithm. The last
     step is to lift univariate factors to obtain true multivariate
@@ -927,7 +1018,7 @@ def dmp_zz_wang(f, u, K, mod=None, seed=None):
     .. [2] [Geddes92]_
 
     """
-    from sympy.testing.randtest import _randint
+    from sympy.ntheory import nextprime
 
     randint = _randint(seed)
 
@@ -942,7 +1033,7 @@ def dmp_zz_wang(f, u, K, mod=None, seed=None):
         else:
             mod = 1
 
-    history, configs, A, r = set([]), [], [K.zero]*u, None
+    history, configs, A, r = set(), [], [K.zero]*u, None
 
     try:
         cs, s, E = dmp_zz_wang_test_points(f, T, ct, A, u, K)
@@ -999,9 +1090,9 @@ def dmp_zz_wang(f, u, K, mod=None, seed=None):
         else:
             mod += eez_mod_step
 
-    s_norm, s_arg, i = None, 0, 0
+    s_norm, s_arg = None, 0
 
-    for s, _, _, _, _ in configs:
+    for i, (s, _, _, _, _) in enumerate(configs):
         _s_norm = dup_max_norm(s, K)
 
         if s_norm is not None:
@@ -1010,8 +1101,6 @@ def dmp_zz_wang(f, u, K, mod=None, seed=None):
                 s_arg = i
         else:
             s_norm = _s_norm
-
-        i += 1
 
     _, cs, E, H, A = configs[s_arg]
     orig_f = f
@@ -1040,11 +1129,11 @@ def dmp_zz_wang(f, u, K, mod=None, seed=None):
 
 
 def dmp_zz_factor(f, u, K):
-    """
+    r"""
     Factor (non square-free) polynomials in `Z[X]`.
 
     Given a multivariate polynomial `f` in `Z[x]` computes its complete
-    factorization `f_1, ..., f_n` into irreducibles over integers::
+    factorization `f_1, \dots, f_n` into irreducibles over integers::
 
                  f = content(f) f_1**k_1 ... f_n**k_n
 
@@ -1101,11 +1190,143 @@ def dmp_zz_factor(f, u, K):
     for g, k in dmp_zz_factor(G, u - 1, K)[1]:
         factors.insert(0, ([g], k))
 
+    _dmp_check_degrees(f, u, factors)
+
     return cont, _sort_factors(factors)
 
 
+def dup_qq_i_factor(f, K0):
+    """Factor univariate polynomials into irreducibles in `QQ_I[x]`. """
+    # Factor in QQ<I>
+    K1 = K0.as_AlgebraicField()
+    f = dup_convert(f, K0, K1)
+    coeff, factors = dup_factor_list(f, K1)
+    factors = [(dup_convert(fac, K1, K0), i) for fac, i in factors]
+    coeff = K0.convert(coeff, K1)
+    return coeff, factors
+
+
+def dup_zz_i_factor(f, K0):
+    """Factor univariate polynomials into irreducibles in `ZZ_I[x]`. """
+    # First factor in QQ_I
+    K1 = K0.get_field()
+    f = dup_convert(f, K0, K1)
+    coeff, factors = dup_qq_i_factor(f, K1)
+
+    new_factors = []
+    for fac, i in factors:
+        # Extract content
+        fac_denom, fac_num = dup_clear_denoms(fac, K1)
+        fac_num_ZZ_I = dup_convert(fac_num, K1, K0)
+        content, fac_prim = dmp_ground_primitive(fac_num_ZZ_I, 0, K0)
+
+        coeff = (coeff * content ** i) // fac_denom ** i
+        new_factors.append((fac_prim, i))
+
+    factors = new_factors
+    coeff = K0.convert(coeff, K1)
+    return coeff, factors
+
+
+def dmp_qq_i_factor(f, u, K0):
+    """Factor multivariate polynomials into irreducibles in `QQ_I[X]`. """
+    # Factor in QQ<I>
+    K1 = K0.as_AlgebraicField()
+    f = dmp_convert(f, u, K0, K1)
+    coeff, factors = dmp_factor_list(f, u, K1)
+    factors = [(dmp_convert(fac, u, K1, K0), i) for fac, i in factors]
+    coeff = K0.convert(coeff, K1)
+    return coeff, factors
+
+
+def dmp_zz_i_factor(f, u, K0):
+    """Factor multivariate polynomials into irreducibles in `ZZ_I[X]`. """
+    # First factor in QQ_I
+    K1 = K0.get_field()
+    f = dmp_convert(f, u, K0, K1)
+    coeff, factors = dmp_qq_i_factor(f, u, K1)
+
+    new_factors = []
+    for fac, i in factors:
+        # Extract content
+        fac_denom, fac_num = dmp_clear_denoms(fac, u, K1)
+        fac_num_ZZ_I = dmp_convert(fac_num, u, K1, K0)
+        content, fac_prim = dmp_ground_primitive(fac_num_ZZ_I, u, K0)
+
+        coeff = (coeff * content ** i) // fac_denom ** i
+        new_factors.append((fac_prim, i))
+
+    factors = new_factors
+    coeff = K0.convert(coeff, K1)
+    return coeff, factors
+
+
 def dup_ext_factor(f, K):
-    """Factor univariate polynomials over algebraic number fields. """
+    r"""Factor univariate polynomials over algebraic number fields.
+
+    The domain `K` must be an algebraic number field `k(a)` (see :ref:`QQ(a)`).
+
+    Examples
+    ========
+
+    First define the algebraic number field `K = \mathbb{Q}(\sqrt{2})`:
+
+    >>> from sympy import QQ, sqrt
+    >>> from sympy.polys.factortools import dup_ext_factor
+    >>> K = QQ.algebraic_field(sqrt(2))
+
+    We can now factorise the polynomial `x^2 - 2` over `K`:
+
+    >>> p = [K(1), K(0), K(-2)] # x^2 - 2
+    >>> p1 = [K(1), -K.unit]    # x - sqrt(2)
+    >>> p2 = [K(1), +K.unit]    # x + sqrt(2)
+    >>> dup_ext_factor(p, K) == (K.one, [(p1, 1), (p2, 1)])
+    True
+
+    Usually this would be done at a higher level:
+
+    >>> from sympy import factor
+    >>> from sympy.abc import x
+    >>> factor(x**2 - 2, extension=sqrt(2))
+    (x - sqrt(2))*(x + sqrt(2))
+
+    Explanation
+    ===========
+
+    Uses Trager's algorithm. In particular this function is algorithm
+    ``alg_factor`` from [Trager76]_.
+
+    If `f` is a polynomial in `k(a)[x]` then its norm `g(x)` is a polynomial in
+    `k[x]`. If `g(x)` is square-free and has irreducible factors `g_1(x)`,
+    `g_2(x)`, `\cdots` then the irreducible factors of `f` in `k(a)[x]` are
+    given by `f_i(x) = \gcd(f(x), g_i(x))` where the GCD is computed in
+    `k(a)[x]`.
+
+    The first step in Trager's algorithm is to find an integer shift `s` so
+    that `f(x-sa)` has square-free norm. Then the norm is factorized in `k[x]`
+    and the GCD of (shifted) `f` with each factor gives the shifted factors of
+    `f`. At the end the shift is undone to recover the unshifted factors of `f`
+    in `k(a)[x]`.
+
+    The algorithm reduces the problem of factorization in `k(a)[x]` to
+    factorization in `k[x]` with the main additional steps being to compute the
+    norm (a resultant calculation in `k[x,y]`) and some polynomial GCDs in
+    `k(a)[x]`.
+
+    In practice in SymPy the base field `k` will be the rationals :ref:`QQ` and
+    this function factorizes a polynomial with coefficients in an algebraic
+    number field  like `\mathbb{Q}(\sqrt{2})`.
+
+    See Also
+    ========
+
+    dmp_ext_factor:
+        Analogous function for multivariate polynomials over ``k(a)``.
+    dup_sqf_norm:
+        Subroutine ``sqfr_norm`` also from [Trager76]_.
+    sympy.polys.polytools.factor:
+        The high-level function that ultimately uses this function as needed.
+    """
     n, lc = dup_degree(f), dup_LC(f, K)
 
     f = dup_monic(f, K)
@@ -1132,11 +1353,59 @@ def dup_ext_factor(f, K):
         factors[i] = h
 
     factors = dup_trial_division(F, factors, K)
+
+    _dup_check_degrees(F, factors)
+
     return lc, factors
 
 
 def dmp_ext_factor(f, u, K):
-    """Factor multivariate polynomials over algebraic number fields. """
+    r"""Factor multivariate polynomials over algebraic number fields.
+
+    The domain `K` must be an algebraic number field `k(a)` (see :ref:`QQ(a)`).
+
+    Examples
+    ========
+
+    First define the algebraic number field `K = \mathbb{Q}(\sqrt{2})`:
+
+    >>> from sympy import QQ, sqrt
+    >>> from sympy.polys.factortools import dmp_ext_factor
+    >>> K = QQ.algebraic_field(sqrt(2))
+
+    We can now factorise the polynomial `x^2 y^2 - 2` over `K`:
+
+    >>> p = [[K(1),K(0),K(0)], [], [K(-2)]] # x**2*y**2 - 2
+    >>> p1 = [[K(1),K(0)], [-K.unit]]       # x*y - sqrt(2)
+    >>> p2 = [[K(1),K(0)], [+K.unit]]       # x*y + sqrt(2)
+    >>> dmp_ext_factor(p, 1, K) == (K.one, [(p1, 1), (p2, 1)])
+    True
+
+    Usually this would be done at a higher level:
+
+    >>> from sympy import factor
+    >>> from sympy.abc import x, y
+    >>> factor(x**2*y**2 - 2, extension=sqrt(2))
+    (x*y - sqrt(2))*(x*y + sqrt(2))
+
+    Explanation
+    ===========
+
+    This is Trager's algorithm for multivariate polynomials. In particular this
+    function is algorithm ``alg_factor`` from [Trager76]_.
+
+    See :func:`dup_ext_factor` for explanation.
+
+    See Also
+    ========
+
+    dup_ext_factor:
+        Analogous function for univariate polynomials over ``k(a)``.
+    dmp_sqf_norm:
+        Multivariate version of subroutine ``sqfr_norm`` also from [Trager76]_.
+    sympy.polys.polytools.factor:
+        The high-level function that ultimately uses this function as needed.
+    """
     if not u:
         return dup_ext_factor(f, K)
 
@@ -1154,15 +1423,18 @@ def dmp_ext_factor(f, u, K):
     if len(factors) == 1:
         factors = [f]
     else:
-        H = dmp_raise([K.one, s*K.unit], u, 0, K)
-
         for i, (factor, _) in enumerate(factors):
             h = dmp_convert(factor, u, K.dom, K)
             h, _, g = dmp_inner_gcd(h, g, u, K)
-            h = dmp_compose(h, H, u, K)
+            a = [si*K.unit for si in s]
+            h = dmp_shift(h, a, u, K)
             factors[i] = h
 
-    return lc, dmp_trial_division(F, factors, u, K)
+    result = dmp_trial_division(F, factors, u, K)
+
+    _dmp_check_degrees(F, u, result)
+
+    return lc, result
 
 
 def dup_gf_factor(f, K):
@@ -1191,6 +1463,10 @@ def dup_factor_list(f, K0):
         coeff, factors = dup_gf_factor(f, K0)
     elif K0.is_Algebraic:
         coeff, factors = dup_ext_factor(f, K0)
+    elif K0.is_GaussianRing:
+        coeff, factors = dup_zz_i_factor(f, K0)
+    elif K0.is_GaussianField:
+        coeff, factors = dup_qq_i_factor(f, K0)
     else:
         if not K0.is_Exact:
             K0_inexact, K0 = K0, K0.get_exact()
@@ -1230,7 +1506,7 @@ def dup_factor_list(f, K0):
             if K0_inexact:
                 for i, (f, k) in enumerate(factors):
                     max_norm = dup_max_norm(f, K0)
-                    f = dup_quo_ground(f, max_norm, K0)
+                    f = dup_exquo_ground(f, max_norm, K0)
                     f = dup_convert(f, K0, K0_inexact)
                     factors[i] = (f, k)
                     coeff = K0.mul(coeff, K0.pow(max_norm, k))
@@ -1249,7 +1525,7 @@ def dup_factor_list_include(f, K):
     coeff, factors = dup_factor_list(f, K)
 
     if not factors:
-        return [(dup_strip([coeff]), 1)]
+        return [(dup_strip([coeff], K), 1)]
     else:
         g = dup_mul_ground(factors[0][0], coeff, K)
         return [(g, factors[0][1])] + factors[1:]
@@ -1267,6 +1543,10 @@ def dmp_factor_list(f, u, K0):
         coeff, factors = dmp_gf_factor(f, u, K0)
     elif K0.is_Algebraic:
         coeff, factors = dmp_ext_factor(f, u, K0)
+    elif K0.is_GaussianRing:
+        coeff, factors = dmp_zz_i_factor(f, u, K0)
+    elif K0.is_GaussianField:
+        coeff, factors = dmp_qq_i_factor(f, u, K0)
     else:
         if not K0.is_Exact:
             K0_inexact, K0 = K0, K0.get_exact()
@@ -1310,7 +1590,7 @@ def dmp_factor_list(f, u, K0):
             if K0_inexact:
                 for i, (f, k) in enumerate(factors):
                     max_norm = dmp_max_norm(f, u, K0)
-                    f = dmp_quo_ground(f, max_norm, u, K0)
+                    f = dmp_exquo_ground(f, max_norm, u, K0)
                     f = dmp_convert(f, u, K0, K0_inexact)
                     factors[i] = (f, k)
                     coeff = K0.mul(coeff, K0.pow(max_norm, k))
@@ -1336,7 +1616,7 @@ def dmp_factor_list_include(f, u, K):
     coeff, factors = dmp_factor_list(f, u, K)
 
     if not factors:
-        return [(dmp_ground(coeff, u), 1)]
+        return [(dmp_ground(coeff, u, K), 1)]
     else:
         g = dmp_mul_ground(factors[0][0], coeff, u, K)
         return [(g, factors[0][1])] + factors[1:]

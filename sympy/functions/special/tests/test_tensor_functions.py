@@ -1,7 +1,9 @@
-from sympy import (
-    adjoint, conjugate, Dummy, Eijk, KroneckerDelta, LeviCivita, Symbol,
-    symbols, transpose, Piecewise, Ne
-)
+from sympy.core.relational import Ne
+from sympy.core.symbol import (Dummy, Symbol, symbols)
+from sympy.functions.elementary.complexes import (adjoint, conjugate, transpose)
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.special.tensor_functions import (Eijk, KroneckerDelta, LeviCivita)
+
 from sympy.physics.secondquant import evaluate_deltas, F
 
 x, y = symbols('x y')
@@ -44,8 +46,8 @@ def test_kronecker_delta():
     assert KroneckerDelta(i + k, i) == 0
     assert KroneckerDelta(i + k, i + k) == 1
     assert KroneckerDelta(i + k, i + 1 + k) == 0
-    assert KroneckerDelta(i, j).subs(dict(i=1, j=0)) == 0
-    assert KroneckerDelta(i, j).subs(dict(i=3, j=3)) == 1
+    assert KroneckerDelta(i, j).subs({"i": 1, "j": 0}) == 0
+    assert KroneckerDelta(i, j).subs({"i": 3, "j": 3}) == 1
 
     assert KroneckerDelta(i, j)**0 == 1
     for n in range(1, 10):

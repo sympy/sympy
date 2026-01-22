@@ -2,10 +2,25 @@ from sympy.holonomic import (DifferentialOperator, HolonomicFunction,
                              DifferentialOperators, from_hyper,
                              from_meijerg, expr_to_holonomic)
 from sympy.holonomic.recurrence import RecurrenceOperators, HolonomicSequence
-from sympy import (symbols, hyper, S, sqrt, pi, exp, erf, erfc, sstr, Symbol,
-                   O, I, meijerg, sin, cos, log, cosh, besselj, hyperexpand,
-                   Ci, EulerGamma, Si, asinh, gamma, beta, Rational)
-from sympy import ZZ, QQ, RR
+from sympy.core import EulerGamma
+from sympy.core.numbers import (I, Rational, pi)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.hyperbolic import (asinh, cosh)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.functions.special.bessel import besselj
+from sympy.functions.special.beta_functions import beta
+from sympy.functions.special.error_functions import (Ci, Si, erf, erfc)
+from sympy.functions.special.gamma_functions import gamma
+from sympy.functions.special.hyper import (hyper, meijerg)
+from sympy.printing.str import sstr
+from sympy.series.order import O
+from sympy.simplify.hyperexpand import hyperexpand
+from sympy.polys.domains.integerring import ZZ
+from sympy.polys.domains.rationalfield import QQ
+from sympy.polys.domains.realfield import RR
 
 
 def test_DifferentialOperator():
@@ -83,6 +98,16 @@ def test_HolonomicFunction_multiplication():
     q = HolonomicFunction(Dx*x-x, x)
     r = HolonomicFunction((x - 3) + (-2*x + 2)*Dx + (x)*Dx**2, x)
     assert p*q == r
+
+
+def test_HolonomicFunction_power():
+    x = symbols('x')
+    R, Dx = DifferentialOperators(ZZ.old_poly_ring(x), 'Dx')
+    p = HolonomicFunction(Dx+x+x*Dx**2, x)
+    a = HolonomicFunction(Dx, x)
+    for n in range(10):
+        assert a == p**n
+        a *= p
 
 
 def test_addition_initial_condition():
@@ -296,7 +321,7 @@ def test_series():
     assert expr_to_holonomic((2*x - 3*x**2)**Rational(1, 3)).series() == ((2*x - 3*x**2)**Rational(1, 3)).series()
     assert  expr_to_holonomic(sqrt(x**2-x)).series() == (sqrt(x**2-x)).series()
     assert expr_to_holonomic(cos(x)**2/x**2, y0={-2: [1, 0, -1]}).series(n=10) == (cos(x)**2/x**2).series(n=10)
-    assert expr_to_holonomic(cos(x)**2/x**2, x0=1).series(n=10) == (cos(x)**2/x**2).series(n=10, x0=1)
+    assert expr_to_holonomic(cos(x)**2/x**2, x0=1).series(n=10).together() == (cos(x)**2/x**2).series(n=10, x0=1).together()
     assert expr_to_holonomic(cos(x-1)**2/(x-1)**2, x0=1, y0={-2: [1, 0, -1]}).series(n=10) \
         == (cos(x-1)**2/(x-1)**2).series(x0=1, n=10)
 
@@ -312,7 +337,7 @@ def test_evalf_euler():
     s = '0.699525841805253'  # approx. equal to log(2) i.e. 0.693147180559945
     assert sstr(p.evalf(r, method='Euler')[-1]) == s
 
-    # path taken is a traingle 0-->1+i-->2
+    # path taken is a triangle 0-->1+i-->2
     r = [0.1 + 0.1*I]
     for i in range(9):
         r.append(r[-1]+0.1+0.1*I)
@@ -389,7 +414,7 @@ def test_evalf_rk4():
     s = '0.693146363174626'  # approx. equal to log(2) i.e. 0.693147180559945
     assert sstr(p.evalf(r)[-1]) == s
 
-    # path taken is a traingle 0-->1+i-->2
+    # path taken is a triangle 0-->1+i-->2
     r = [0.1 + 0.1*I]
     for i in range(9):
         r.append(r[-1]+0.1+0.1*I)
@@ -673,7 +698,7 @@ def test_diff():
     C_0, C_1, C_2, C_3 = symbols('C_0, C_1, C_2, C_3')
     q = Si(x)
     assert p.diff(x).to_expr() == q.diff()
-    assert p.diff(x, 2).to_expr().subs(C_0, Rational(-1, 3)) == q.diff(x, 2).simplify()
+    assert p.diff(x, 2).to_expr().subs(C_0, Rational(-1, 3)).cancel() == q.diff(x, 2).cancel()
     assert p.diff(x, 3).series().subs({C_3: Rational(-1, 3), C_0: 0}) == q.diff(x, 3).series()
 
 
@@ -799,6 +824,7 @@ def test_expr_in_power():
 
     assert h1 == h2
 
+
 def test_DifferentialOperatorEqPoly():
     x = symbols('x', integer=True)
     R, Dx = DifferentialOperators(QQ.old_poly_ring(x), 'Dx')
@@ -813,3 +839,13 @@ def test_DifferentialOperatorEqPoly():
 
     p2 = do2.listofpoly[0]
     assert not do2 == p2
+
+
+def test_DifferentialOperatorPow():
+    x = symbols('x', integer=True)
+    R, _ = DifferentialOperators(QQ.old_poly_ring(x), 'Dx')
+    do = DifferentialOperator([x**2, R.base.zero, R.base.zero], R)
+    a = DifferentialOperator([R.base.one], R)
+    for n in range(10):
+        assert a == do**n
+        a *= do

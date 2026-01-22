@@ -1,11 +1,31 @@
-from sympy.testing.pytest import XFAIL, raises, warns_deprecated_sympy
-from sympy import (S, Symbol, symbols, nan, oo, I, pi, Float, And, Or,
-    Not, Implies, Xor, zoo, sqrt, Rational, simplify, Function,
-    log, cos, sin, Add, Mul, Pow, floor, ceiling, trigsimp, Reals)
+from sympy.core.logic import fuzzy_and
+from sympy.core.sympify import _sympify
+from sympy.multipledispatch import dispatch
+from sympy.testing.pytest import XFAIL, raises
+from sympy.assumptions.ask import Q
+from sympy.core.add import Add
+from sympy.core.basic import Basic
+from sympy.core.expr import Expr, unchanged
+from sympy.core.function import Function
+from sympy.core.mul import Mul
+from sympy.core.numbers import (Float, I, Rational, nan, oo, pi, zoo)
+from sympy.core.power import Pow
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.complexes import sign, Abs
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.exponential import (exp, exp_polar, log)
+from sympy.functions.elementary.integers import (ceiling, floor)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.logic.boolalg import (And, Implies, Not, Or, Xor)
+from sympy.sets import Reals
+from sympy.simplify.simplify import simplify
+from sympy.simplify.trigsimp import trigsimp
 from sympy.core.relational import (Relational, Equality, Unequality,
                                    GreaterThan, LessThan, StrictGreaterThan,
                                    StrictLessThan, Rel, Eq, Lt, Le,
-                                   Gt, Ge, Ne)
+                                   Gt, Ge, Ne, is_le, is_gt, is_ge, is_lt, is_eq, is_neq)
 from sympy.sets.sets import Interval, FiniteSet
 
 from itertools import combinations
@@ -16,7 +36,7 @@ x, y, z, t = symbols('x,y,z,t')
 def rel_check(a, b):
     from sympy.testing.pytest import raises
     assert a.is_number and b.is_number
-    for do in range(len(set([type(a), type(b)]))):
+    for do in range(len({type(a), type(b)})):
         if S.NaN in (a, b):
             v = [(a == b), (a != b)]
             assert len(set(v)) == 1 and v[0] == False
@@ -114,21 +134,28 @@ def test_wrappers():
     assert Ne(y, x + x**2) == res
 
 
-def test_Eq():
+def test_Eq_Ne():
 
     assert Eq(x, x)  # issue 5719
-
-    with warns_deprecated_sympy():
-        assert Eq(x) == Eq(x, 0)
 
     # issue 6116
     p = Symbol('p', positive=True)
     assert Eq(p, 0) is S.false
 
-    # issue 13348
+    # issue 13348; 19048
+    # SymPy is strict about 0 and 1 not being
+    # interpreted as Booleans
     assert Eq(True, 1) is S.false
+    assert Eq(False, 0) is S.false
+    assert Eq(~x, 0) is S.false
+    assert Eq(~x, 1) is S.false
+    assert Ne(True, 1) is S.true
+    assert Ne(False, 0) is S.true
+    assert Ne(~x, 0) is S.true
+    assert Ne(~x, 1) is S.true
 
     assert Eq((), 1) is S.false
+    assert Ne((), 1) is S.true
 
 
 def test_as_poly():
@@ -249,7 +276,7 @@ def test_rich_cmp():
 
 
 def test_doit():
-    from sympy import Symbol
+    from sympy.core.symbol import Symbol
     p = Symbol('p', positive=True)
     n = Symbol('n', negative=True)
     np = Symbol('np', nonpositive=True)
@@ -351,7 +378,7 @@ def test_new_relational():
     assert (x < 0) != StrictLessThan(x, 1)
 
     # finally, some fuzz testing
-    from random import randint
+    from sympy.core.random import randint
     for i in range(100):
         while 1:
             strtype, length = (chr, 65535) if randint(0, 1) else (chr, 255)
@@ -656,8 +683,8 @@ def test_issue_8245():
     assert rel_check(a, a.n(10))
     assert rel_check(a, a.n(20))
     assert rel_check(a, a.n())
-    # prec of 30 is enough to fully capture a as mpf
-    assert Float(a, 30) == Float(str(a.p), '')/Float(str(a.q), '')
+    # prec of 31 is enough to fully capture a as mpf
+    assert Float(a, 31) == Float(str(a.p), '')/Float(str(a.q), '')
     for i in range(31):
         r = Rational(Float(a, i))
         f = Float(r)
@@ -680,7 +707,7 @@ def test_issue_8245():
     r = Rational(str(a.n(29)))
     assert rel_check(a, r)
 
-    assert Eq(log(cos(2)**2 + sin(2)**2), 0) == True
+    assert Eq(log(cos(2)**2 + sin(2)**2), 0) is S.true
 
 
 def test_issue_8449():
@@ -695,6 +722,11 @@ def test_simplify_relational():
     assert simplify(x*(y + 1) - x*y - x + 1 < x) == (x > 1)
     assert simplify(x*(y + 1) - x*y - x - 1 < x) == (x > -1)
     assert simplify(x < x*(y + 1) - x*y - x + 1) == (x < 1)
+    q, r = symbols("q r")
+    assert (((-q + r) - (q - r)) <= 0).simplify() == (q >= r)
+    root2 = sqrt(2)
+    equation = ((root2 * (-q + r) - root2 * (q - r)) <= 0).simplify()
+    assert equation == (q >= r)
     r = S.One < x
     # canonical operations are not the same as simplification,
     # so if there is no simplification, canonicalization will
@@ -768,6 +800,13 @@ def test_simplify_relational():
     assert Lt(x, 2).simplify() == Lt(x, 2)
     assert Lt(-x, 2).simplify() == Gt(x, -2)
 
+    # Test particular branches of _eval_simplify
+    m = exp(1) - exp_polar(1)
+    assert simplify(m*x > 1) is S.false
+    # These two test the same branch
+    assert simplify(m*x + 2*m*y > 1) is S.false
+    assert simplify(m*x + y > 1 + y) is S.false
+
 
 def test_equals():
     w, x, y, z = symbols('w:z')
@@ -814,6 +853,7 @@ def test_canonical():
     assert [i.canonical for i in c] == c
     assert [i.reversed.canonical for i in c] == c
     assert not any(i.lhs.is_Number and not i.rhs.is_Number for i in c)
+    assert Eq(y < x, x > y).canonical is S.true
 
 
 @XFAIL
@@ -969,7 +1009,7 @@ def test_issue_18188():
     assert result2.as_set() == ConditionSet(x, Eq(sqrt(2)*sqrt(x) + x**2 + sin(x), 0), Reals)
 
 def test_binary_symbols():
-    ans = set([x])
+    ans = {x}
     for f in Eq, Ne:
         for t in S.true, S.false:
             eq = f(x, S.true)
@@ -979,25 +1019,25 @@ def test_binary_symbols():
 
 
 def test_rel_args():
-    # can't have Boolean args; this is automatic with Python 3
-    # so this test and the __lt__, etc..., definitions in
-    # relational.py and boolalg.py which are marked with ///
-    # can be removed.
+    # can't have Boolean args; this is automatic for True/False
+    # with Python 3 and we confirm that SymPy does the same
+    # for true/false
     for op in ['<', '<=', '>', '>=']:
         for b in (S.true, x < 1, And(x, y)):
             for v in (0.1, 1, 2**32, t, S.One):
                 raises(TypeError, lambda: Relational(b, v, op))
 
 
-def test_Equality_rewrite_as_Add():
-    eq = Eq(x + y, y - x)
-    assert eq.rewrite(Add) == 2*x
-    assert eq.rewrite(Add, evaluate=None).args == (x, x, y, -y)
-    assert eq.rewrite(Add, evaluate=False).args == (x, y, x, -y)
+def test_nothing_happens_to_Eq_condition_during_simplify():
+    # issue 25701
+    r = symbols('r', real=True)
+    assert Eq(2*sign(r + 3)/(5*Abs(r + 3)**Rational(3, 5)), 0
+        ).simplify() == Eq(Piecewise(
+        (0, Eq(r, -3)), ((r + 3)/(5*Abs((r + 3)**Rational(8, 5)))*2, True)), 0)
 
 
 def test_issue_15847():
-    a = Ne(x*(x+y), x**2 + x*y)
+    a = Ne(x*(x + y), x**2 + x*y)
     assert simplify(a) == False
 
 
@@ -1115,3 +1155,117 @@ def test_multivariate_linear_function_simplification():
 
 def test_nonpolymonial_relations():
     assert Eq(cos(x), 0).simplify() == Eq(cos(x), 0)
+
+def test_18778():
+    raises(TypeError, lambda: is_le(Basic(), Basic()))
+    raises(TypeError, lambda: is_gt(Basic(), Basic()))
+    raises(TypeError, lambda: is_ge(Basic(), Basic()))
+    raises(TypeError, lambda: is_lt(Basic(), Basic()))
+
+def test_EvalEq():
+    """
+
+    This test exists to ensure backwards compatibility.
+    The method to use is _eval_is_eq
+    """
+    from sympy.core.expr import Expr
+
+    class PowTest(Expr):
+        def __new__(cls, base, exp):
+            return Basic.__new__(PowTest, _sympify(base), _sympify(exp))
+
+        def _eval_Eq(lhs, rhs):
+            if type(lhs) == PowTest and type(rhs) == PowTest:
+                return lhs.args[0] == rhs.args[0] and lhs.args[1] == rhs.args[1]
+
+    assert is_eq(PowTest(3, 4), PowTest(3,4))
+    assert is_eq(PowTest(3, 4), _sympify(4)) is None
+    assert is_neq(PowTest(3, 4), PowTest(3,7))
+
+
+def test_is_eq():
+    # test assumptions
+    assert is_eq(x, y, Q.infinite(x) & Q.finite(y)) is False
+    assert is_eq(x, y, Q.infinite(x) & Q.infinite(y) & Q.extended_real(x) & ~Q.extended_real(y)) is False
+    assert is_eq(x, y, Q.infinite(x) & Q.infinite(y) & Q.extended_positive(x) & Q.extended_negative(y)) is False
+
+    assert is_eq(x+I, y+I, Q.infinite(x) & Q.finite(y)) is False
+    assert is_eq(1+x*I, 1+y*I, Q.infinite(x) & Q.finite(y)) is False
+
+    assert is_eq(x, S(0), assumptions=Q.zero(x))
+    assert is_eq(x, S(0), assumptions=~Q.zero(x)) is False
+    assert is_eq(x, S(0), assumptions=Q.nonzero(x)) is False
+    assert is_neq(x, S(0), assumptions=Q.zero(x)) is False
+    assert is_neq(x, S(0), assumptions=~Q.zero(x))
+    assert is_neq(x, S(0), assumptions=Q.nonzero(x))
+
+    # test registration
+    class PowTest(Expr):
+        def __new__(cls, base, exp):
+            return Basic.__new__(cls, _sympify(base), _sympify(exp))
+
+    @dispatch(PowTest, PowTest)
+    def _eval_is_eq(lhs, rhs):
+        if type(lhs) == PowTest and type(rhs) == PowTest:
+            return fuzzy_and([is_eq(lhs.args[0], rhs.args[0]), is_eq(lhs.args[1], rhs.args[1])])
+
+    assert is_eq(PowTest(3, 4), PowTest(3,4))
+    assert is_eq(PowTest(3, 4), _sympify(4)) is None
+    assert is_neq(PowTest(3, 4), PowTest(3,7))
+
+
+def test_is_ge_le():
+    # test assumptions
+    assert is_ge(x, S(0), Q.nonnegative(x)) is True
+    assert is_ge(x, S(0), Q.negative(x)) is False
+
+    # test registration
+    class PowTest(Expr):
+        def __new__(cls, base, exp):
+            return Basic.__new__(cls, _sympify(base), _sympify(exp))
+
+    @dispatch(PowTest, PowTest)
+    def _eval_is_ge(lhs, rhs):
+        if type(lhs) == PowTest and type(rhs) == PowTest:
+            return fuzzy_and([is_ge(lhs.args[0], rhs.args[0]), is_ge(lhs.args[1], rhs.args[1])])
+
+    assert is_ge(PowTest(3, 9), PowTest(3,2))
+    assert is_gt(PowTest(3, 9), PowTest(3,2))
+    assert is_le(PowTest(3, 2), PowTest(3,9))
+    assert is_lt(PowTest(3, 2), PowTest(3,9))
+
+
+def test_weak_strict():
+    for func in (Eq, Ne):
+        eq = func(x, 1)
+        assert eq.strict == eq.weak == eq
+    eq = Gt(x, 1)
+    assert eq.weak == Ge(x, 1)
+    assert eq.strict == eq
+    eq = Lt(x, 1)
+    assert eq.weak == Le(x, 1)
+    assert eq.strict == eq
+    eq = Ge(x, 1)
+    assert eq.strict == Gt(x, 1)
+    assert eq.weak == eq
+    eq = Le(x, 1)
+    assert eq.strict == Lt(x, 1)
+    assert eq.weak == eq
+
+
+def test_issue_23731():
+    i = symbols('i', integer=True)
+    assert unchanged(Eq, i, 1.0)
+    assert unchanged(Eq, i/2, 0.5)
+    ni = symbols('ni', integer=False)
+    assert Eq(ni, 1) == False
+    assert unchanged(Eq, ni, .1)
+    assert Eq(ni, 1.0) == False
+    nr = symbols('nr', rational=False)
+    assert Eq(nr, .1) == False
+
+
+def test_rewrite_Add():
+    from sympy.testing.pytest import warns_deprecated_sympy
+    with warns_deprecated_sympy():
+        assert Eq(x, y).rewrite(Add) == x - y

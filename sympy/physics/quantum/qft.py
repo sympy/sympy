@@ -11,9 +11,11 @@ Todo:
 * Fix the printing of Rk gates in plotting.
 """
 
-from __future__ import print_function, division
-
-from sympy import Expr, Matrix, exp, I, pi, Integer, Symbol
+from sympy.core.expr import Expr
+from sympy.core.numbers import (I, Integer, pi)
+from sympy.core.symbol import Symbol
+from sympy.functions.elementary.exponential import exp
+from sympy.matrices.dense import Matrix
 from sympy.functions import sqrt
 
 from sympy.physics.quantum.qapply import qapply
@@ -24,6 +26,8 @@ from sympy.physics.quantum.tensorproduct import matrix_tensor_product
 from sympy.physics.quantum.gate import (
     Gate, HadamardGate, SwapGate, OneQubitGate, CGate, PhaseGate, TGate, ZGate
 )
+
+from sympy.functions.elementary.complexes import sign
 
 __all__ = [
     'QFT',
@@ -39,8 +43,8 @@ __all__ = [
 
 class RkGate(OneQubitGate):
     """This is the R_k gate of the QTF."""
-    gate_name = u'Rk'
-    gate_name_latex = u'R'
+    gate_name = 'Rk'
+    gate_name_latex = 'R'
 
     def __new__(cls, *args):
         if len(args) != 2:
@@ -83,7 +87,7 @@ class RkGate(OneQubitGate):
 
     def get_target_matrix(self, format='sympy'):
         if format == 'sympy':
-            return Matrix([[1, 0], [0, exp(Integer(2)*pi*I/(Integer(2)**self.k))]])
+            return Matrix([[1, 0], [0, exp(sign(self.k)*Integer(2)*pi*I/(Integer(2)**abs(self.k)))]])
         raise NotImplementedError(
             'Invalid format for the R_k gate: %r' % format)
 
@@ -157,8 +161,8 @@ class Fourier(Gate):
 class QFT(Fourier):
     """The forward quantum Fourier transform."""
 
-    gate_name = u'QFT'
-    gate_name_latex = u'QFT'
+    gate_name = 'QFT'
+    gate_name_latex = 'QFT'
 
     def decompose(self):
         """Decomposes QFT into elementary gates."""
@@ -187,8 +191,8 @@ class QFT(Fourier):
 class IQFT(Fourier):
     """The inverse quantum Fourier transform."""
 
-    gate_name = u'IQFT'
-    gate_name_latex = u'{QFT^{-1}}'
+    gate_name = 'IQFT'
+    gate_name_latex = '{QFT^{-1}}'
 
     def decompose(self):
         """Decomposes IQFT into elementary gates."""

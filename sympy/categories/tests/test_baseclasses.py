@@ -3,7 +3,9 @@ from sympy.categories import (Object, Morphism, IdentityMorphism,
                               Diagram, Category)
 from sympy.categories.baseclasses import Class
 from sympy.testing.pytest import raises
-from sympy import FiniteSet, EmptySet, Dict, Tuple
+from sympy.core.containers import (Dict, Tuple)
+from sympy.sets import EmptySet
+from sympy.sets.sets import FiniteSet
 
 
 def test_morphisms():

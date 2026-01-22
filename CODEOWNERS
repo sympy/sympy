@@ -1,0 +1,16 @@
+# This file allows SymPy developers with write access to the Github repository
+# to specify if they'd like to be automatically requested for review in new
+# pull requests that touch specific files and directories in the repository.
+# The format is essentially:
+#
+# <file-or-directory> @user1 @user2 ... @usern
+#
+# See the following link for more information on editing this file:
+#
+# https://docs.github.com/en/github/creating-cloning-and-archiving-repositories/about-code-owners
+#
+/sympy/physics/biomechanics/ @moorepants
+/sympy/physics/mechanics/ @moorepants
+/sympy/physics/vector/ @moorepants
+/sympy/solvers/ode/ @oscarbenjamin
+/sympy/*laplace* @hanspi42

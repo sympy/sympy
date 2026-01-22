@@ -1,12 +1,9 @@
 """Formal Power Series"""
 
-from __future__ import print_function, division
-
 from collections import defaultdict
 
-from sympy import oo, zoo, nan
+from sympy.core.numbers import (nan, oo, zoo)
 from sympy.core.add import Add
-from sympy.core.compatibility import iterable
 from sympy.core.expr import Expr
 from sympy.core.function import Derivative, Function, expand
 from sympy.core.mul import Mul
@@ -24,9 +21,10 @@ from sympy.functions.elementary.miscellaneous import Min, Max
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.series.limits import Limit
 from sympy.series.order import Order
-from sympy.simplify.powsimp import powsimp
 from sympy.series.sequences import sequence
 from sympy.series.series_class import SeriesBase
+from sympy.utilities.iterables import iterable
+
 
 
 def rational_algorithm(f, x, k, order=4, full=False):
@@ -34,6 +32,9 @@ def rational_algorithm(f, x, k, order=4, full=False):
     Rational algorithm for computing
     formula of coefficients of Formal Power Series
     of a function.
+
+    Explanation
+    ===========
 
     Applicable when f(x) or some derivative of f(x)
     is a rational function in x.
@@ -46,6 +47,14 @@ def rational_algorithm(f, x, k, order=4, full=False):
     Looks for derivative of a function up to 4'th order (by default).
     This can be overridden using order option.
 
+    Parameters
+    ==========
+
+    x : Symbol
+    order : int, optional
+        Order of the derivative of ``f``, Default is 4.
+    full : bool
+
     Returns
     =======
 
@@ -53,21 +62,22 @@ def rational_algorithm(f, x, k, order=4, full=False):
     ind : Expr
         Independent terms.
     order : int
+    full : bool
 
     Examples
     ========
 
-    >>> from sympy import log, atan, I
+    >>> from sympy import log, atan
     >>> from sympy.series.formal import rational_algorithm as ra
     >>> from sympy.abc import x, k
 
     >>> ra(1 / (1 - x), x, k)
     (1, 0, 0)
     >>> ra(log(1 + x), x, k)
-    (-(-1)**(-k)/k, 0, 1)
+    (-1/((-1)**k*k), 0, 1)
 
     >>> ra(atan(x), x, k, full=True)
-    ((-I*(-I)**(-k)/2 + I*I**(-k)/2)/k, 0, 1)
+    ((-I/(2*(-I)**k) + I/(2*I**k))/k, 0, 1)
 
     Notes
     =====
@@ -156,7 +166,8 @@ def rational_algorithm(f, x, k, order=4, full=False):
 
 
 def rational_independent(terms, x):
-    """Returns a list of all the rationally independent terms.
+    """
+    Returns a list of all the rationally independent terms.
 
     Examples
     ========
@@ -189,7 +200,11 @@ def rational_independent(terms, x):
 
 
 def simpleDE(f, x, g, order=4):
-    r"""Generates simple DE.
+    r"""
+    Generates simple DE.
+
+    Explanation
+    ===========
 
     DE is of the form
 
@@ -231,6 +246,9 @@ def simpleDE(f, x, g, order=4):
 
 def exp_re(DE, r, k):
     """Converts a DE with constant coefficients (explike) into a RE.
+
+    Explanation
+    ===========
 
     Performs the substitution:
 
@@ -277,7 +295,11 @@ def exp_re(DE, r, k):
 
 
 def hyper_re(DE, r, k):
-    """Converts a DE into a RE.
+    """
+    Converts a DE into a RE.
+
+    Explanation
+    ===========
 
     Performs the substitution:
 
@@ -384,10 +406,8 @@ def _compute_formula(f, x, P, Q, k, m, k_max):
         c2 = q.subs(k, 1/k).leadterm(k)[0]
         res *= (-c1 / c2)**k
 
-        for r, mul in roots(p, k).items():
-            res *= rf(-r, k)**mul
-        for r, mul in roots(q, k).items():
-            res /= rf(-r, k)**mul
+        res *= Mul(*[rf(-r, k)**mul for r, mul in roots(p, k).items()])
+        res /= Mul(*[rf(-r, k)**mul for r, mul in roots(q, k).items()])
 
         sol.append((res, kterm))
 
@@ -395,7 +415,11 @@ def _compute_formula(f, x, P, Q, k, m, k_max):
 
 
 def _rsolve_hypergeometric(f, x, P, Q, k, m):
-    """Recursive wrapper to rsolve_hypergeometric.
+    """
+    Recursive wrapper to rsolve_hypergeometric.
+
+    Explanation
+    ===========
 
     Returns a Tuple of (formula, series independent terms,
     maximum power of x in independent terms) if successful
@@ -462,7 +486,11 @@ def _rsolve_hypergeometric(f, x, P, Q, k, m):
 
 
 def rsolve_hypergeometric(f, x, P, Q, k, m):
-    """Solves RE of hypergeometric type.
+    """
+    Solves RE of hypergeometric type.
+
+    Explanation
+    ===========
 
     Attempts to solve RE of the form
 
@@ -526,9 +554,7 @@ def rsolve_hypergeometric(f, x, P, Q, k, m):
         cond = Eq(k % c, j % c)
         sol_dict[cond] += res  # Group together formula for same conditions
 
-    sol = []
-    for cond, res in sol_dict.items():
-        sol.append((res, cond))
+    sol = [(res, cond) for cond, res in sol_dict.items()]
     sol.append((S.Zero, True))
     sol = Piecewise(*sol)
 
@@ -612,8 +638,7 @@ def _transform_explike_DE(DE, g, x, order, syms):
     for i in range(order):
         coeff = DE.coeff(Derivative(g(x), x, i))
         coeff = (coeff / highest_coeff).expand().collect(x)
-        for t in Add.make_args(coeff):
-            eq.append(t)
+        eq.extend(Add.make_args(coeff))
     temp = []
     for e in eq:
         if e.has(x):
@@ -637,10 +662,7 @@ def _transform_DE_RE(DE, g, k, order, syms):
 
     RE = hyper_re(DE, g, k)
 
-    eq = []
-    for i in range(1, order):
-        coeff = RE.coeff(g(k + i))
-        eq.append(coeff)
+    eq = [RE.coeff(g(k + i)) for i in range(1, order)]
     sol = dict(zip(syms, (i for s in linsolve(eq, list(syms)) for i in s)))
     if sol:
         m = Wild('m')
@@ -655,7 +677,11 @@ def _transform_DE_RE(DE, g, k, order, syms):
 
 
 def solve_de(f, x, DE, order, g, k):
-    """Solves the DE.
+    """
+    Solves the DE.
+
+    Explanation
+    ===========
 
     Tries to solve DE by either converting into a RE containing two terms or
     converting into a DE having constant coefficients.
@@ -707,7 +733,11 @@ def solve_de(f, x, DE, order, g, k):
 
 
 def hyper_algorithm(f, x, k, order=4):
-    """Hypergeometric algorithm for computing Formal Power Series.
+    """
+    Hypergeometric algorithm for computing Formal Power Series.
+
+    Explanation
+    ===========
 
     Steps:
         * Generates DE
@@ -823,9 +853,6 @@ def _compute_fps(f, x, x0, dir, hyper, order, rational, full):
     # Otherwise symb is being set to S.One
     syms = f.free_symbols.difference({x})
     (f, symb) = expand(f).as_independent(*syms)
-    if symb.is_zero:
-        symb = S.One
-    symb = powsimp(symb)
 
     result = None
 
@@ -840,6 +867,11 @@ def _compute_fps(f, x, x0, dir, hyper, order, rational, full):
     if result is None:
         return None
 
+    from sympy.simplify.powsimp import powsimp
+    if symb.is_zero:
+        symb = S.One
+    else:
+        symb = powsimp(symb)
     ak = sequence(result[0], (k, result[2], oo))
     xk_formula = powsimp(x**k * symb)
     xk = sequence(xk_formula, (k, 0, oo))
@@ -850,7 +882,11 @@ def _compute_fps(f, x, x0, dir, hyper, order, rational, full):
 
 def compute_fps(f, x, x0=0, dir=1, hyper=True, order=4, rational=True,
                 full=False):
-    """Computes the formula for Formal Power Series of a function.
+    """
+    Computes the formula for Formal Power Series of a function.
+
+    Explanation
+    ===========
 
     Tries to compute the formula by applying the following techniques
     (in order):
@@ -930,7 +966,11 @@ class Coeff(Function):
 
 
 class FormalPowerSeries(SeriesBase):
-    """Represents Formal Power Series of a function.
+    """
+    Represents Formal Power Series of a function.
+
+    Explanation
+    ===========
 
     No computation is performed. This class should only to be used to represent
     a series. No checks are performed.
@@ -1016,7 +1056,11 @@ class FormalPowerSeries(SeriesBase):
         return pow_x
 
     def polynomial(self, n=6):
-        """Truncated series as polynomial.
+        """
+        Truncated series as polynomial.
+
+        Explanation
+        ===========
 
         Returns series expansion of ``f`` upto order ``O(x**n)``
         as a polynomial(without ``O`` term).
@@ -1037,7 +1081,11 @@ class FormalPowerSeries(SeriesBase):
         return Add(*terms)
 
     def truncate(self, n=6):
-        """Truncated series.
+        """
+        Truncated series.
+
+        Explanation
+        ===========
 
         Returns truncated series expansion of f upto
         order ``O(x**n)``.
@@ -1086,7 +1134,7 @@ class FormalPowerSeries(SeriesBase):
         if old.has(x):
             return self
 
-    def _eval_as_leading_term(self, x):
+    def _eval_as_leading_term(self, x, logx, cdir):
         for t in self:
             if t is not S.Zero:
                 return t
@@ -1115,7 +1163,8 @@ class FormalPowerSeries(SeriesBase):
         return self.func(f, self.x, self.x0, self.dir, (ak, self.xk, ind))
 
     def integrate(self, x=None, **kwargs):
-        """Integrate Formal Power Series.
+        """
+        Integrate Formal Power Series.
 
         Examples
         ========
@@ -1159,7 +1208,8 @@ class FormalPowerSeries(SeriesBase):
         return self.func(f, self.x, self.x0, self.dir, (ak, self.xk, ind))
 
     def product(self, other, x=None, n=6):
-        """Multiplies two Formal Power Series, using discrete convolution and
+        """
+        Multiplies two Formal Power Series, using discrete convolution and
         return the truncated terms upto specified order.
 
         Parameters
@@ -1172,7 +1222,7 @@ class FormalPowerSeries(SeriesBase):
         Examples
         ========
 
-        >>> from sympy import fps, sin, exp, convolution
+        >>> from sympy import fps, sin, exp
         >>> from sympy.abc import x
         >>> f1 = fps(sin(x))
         >>> f2 = fps(exp(x))
@@ -1188,8 +1238,6 @@ class FormalPowerSeries(SeriesBase):
 
         """
 
-        if x is None:
-            x = self.x
         if n is None:
             return iter(self)
 
@@ -1219,12 +1267,13 @@ class FormalPowerSeries(SeriesBase):
         The second kind of Bell polynomials (are sometimes called "partial" Bell
         polynomials or incomplete Bell polynomials) are defined as
 
-        .. math:: B_{n,k}(x_1, x_2,\dotsc x_{n-k+1}) =
+        .. math::
+            B_{n,k}(x_1, x_2,\dotsc x_{n-k+1}) =
                 \sum_{j_1+j_2+j_2+\dotsb=k \atop j_1+2j_2+3j_2+\dotsb=n}
-                    \frac{n!}{j_1!j_2!\dotsb j_{n-k+1}!}
-                    \left(\frac{x_1}{1!} \right)^{j_1}
-                    \left(\frac{x_2}{2!} \right)^{j_2} \dotsb
-                    \left(\frac{x_{n-k+1}}{(n-k+1)!} \right) ^{j_{n-k+1}}.
+                \frac{n!}{j_1!j_2!\dotsb j_{n-k+1}!}
+                \left(\frac{x_1}{1!} \right)^{j_1}
+                \left(\frac{x_2}{2!} \right)^{j_2} \dotsb
+                \left(\frac{x_{n-k+1}}{(n-k+1)!} \right) ^{j_{n-k+1}}.
 
         * ``bell(n, k, (x1, x2, ...))`` gives Bell polynomials of the second kind,
           `B_{n,k}(x_1, x_2, \dotsc, x_{n-k+1})`.
@@ -1244,15 +1293,17 @@ class FormalPowerSeries(SeriesBase):
     def compose(self, other, x=None, n=6):
         r"""
         Returns the truncated terms of the formal power series of the composed function,
-        up to specified `n`.
+        up to specified ``n``.
 
-        If `f` and `g` are two formal power series of two different functions,
+        Explanation
+        ===========
+
+        If ``f`` and ``g`` are two formal power series of two different functions,
         then the coefficient sequence ``ak`` of the composed formal power series `fp`
         will be as follows.
 
         .. math::
-
-        \sum\limits_{k=0}^{n} b_k B_{n,k}(x_1, x_2, \dotsc, x_{n-k+1})
+            \sum\limits_{k=0}^{n} b_k B_{n,k}(x_1, x_2, \dotsc, x_{n-k+1})
 
         Parameters
         ==========
@@ -1264,7 +1315,7 @@ class FormalPowerSeries(SeriesBase):
         Examples
         ========
 
-        >>> from sympy import fps, sin, exp, bell
+        >>> from sympy import fps, sin, exp
         >>> from sympy.abc import x
         >>> f1 = fps(exp(x))
         >>> f2 = fps(sin(x))
@@ -1288,8 +1339,6 @@ class FormalPowerSeries(SeriesBase):
 
         """
 
-        if x is None:
-            x = self.x
         if n is None:
             return iter(self)
 
@@ -1318,15 +1367,17 @@ class FormalPowerSeries(SeriesBase):
     def inverse(self, x=None, n=6):
         r"""
         Returns the truncated terms of the inverse of the formal power series,
-        up to specified `n`.
+        up to specified ``n``.
 
-        If `f` and `g` are two formal power series of two different functions,
-        then the coefficient sequence ``ak`` of the composed formal power series `fp`
+        Explanation
+        ===========
+
+        If ``f`` and ``g`` are two formal power series of two different functions,
+        then the coefficient sequence ``ak`` of the composed formal power series ``fp``
         will be as follows.
 
         .. math::
-
-        \sum\limits_{k=0}^{n} (-1)^{k} x_0^{-k-1} B_{n,k}(x_1, x_2, \dotsc, x_{n-k+1})
+            \sum\limits_{k=0}^{n} (-1)^{k} x_0^{-k-1} B_{n,k}(x_1, x_2, \dotsc, x_{n-k+1})
 
         Parameters
         ==========
@@ -1338,7 +1389,7 @@ class FormalPowerSeries(SeriesBase):
         Examples
         ========
 
-        >>> from sympy import fps, exp, cos, bell
+        >>> from sympy import fps, exp, cos
         >>> from sympy.abc import x
         >>> f1 = fps(exp(x))
         >>> f2 = fps(cos(x))
@@ -1362,8 +1413,6 @@ class FormalPowerSeries(SeriesBase):
 
         """
 
-        if x is None:
-            x = self.x
         if n is None:
             return iter(self)
 
@@ -1494,6 +1543,9 @@ class FiniteFormalPowerSeries(FormalPowerSeries):
 class FormalPowerSeriesProduct(FiniteFormalPowerSeries):
     """Represents the product of two formal power series of two functions.
 
+    Explanation
+    ===========
+
     No computation is performed. Terms are calculated using a term by term logic,
     instead of a point by point logic.
 
@@ -1526,13 +1578,13 @@ class FormalPowerSeriesProduct(FiniteFormalPowerSeries):
 
     def _eval_terms(self, n):
         """
-        Returns the first `n` terms of the product formal power series.
+        Returns the first ``n`` terms of the product formal power series.
         Term by term logic is implemented here.
 
         Examples
         ========
 
-        >>> from sympy import fps, sin, exp, convolution
+        >>> from sympy import fps, sin, exp
         >>> from sympy.abc import x
         >>> f1 = fps(sin(x))
         >>> f2 = fps(exp(x))
@@ -1559,7 +1611,11 @@ class FormalPowerSeriesProduct(FiniteFormalPowerSeries):
 
 
 class FormalPowerSeriesCompose(FiniteFormalPowerSeries):
-    """Represents the composed formal power series of two functions.
+    """
+    Represents the composed formal power series of two functions.
+
+    Explanation
+    ===========
 
     No computation is performed. Terms are calculated using a term by term logic,
     instead of a point by point logic.
@@ -1590,6 +1646,9 @@ class FormalPowerSeriesCompose(FiniteFormalPowerSeries):
         Returns the first `n` terms of the composed formal power series.
         Term by term logic is implemented here.
 
+        Explanation
+        ===========
+
         The coefficient sequence of the :obj:`FormalPowerSeriesCompose` object is the generic sequence.
         It is multiplied by ``bell_seq`` to get a sequence, whose terms are added up to get
         the final terms for the polynomial.
@@ -1597,7 +1656,7 @@ class FormalPowerSeriesCompose(FiniteFormalPowerSeries):
         Examples
         ========
 
-        >>> from sympy import fps, sin, exp, bell
+        >>> from sympy import fps, sin, exp
         >>> from sympy.abc import x
         >>> f1 = fps(exp(x))
         >>> f2 = fps(sin(x))
@@ -1629,7 +1688,11 @@ class FormalPowerSeriesCompose(FiniteFormalPowerSeries):
 
 
 class FormalPowerSeriesInverse(FiniteFormalPowerSeries):
-    """Represents the Inverse of a formal power series.
+    """
+    Represents the Inverse of a formal power series.
+
+    Explanation
+    ===========
 
     No computation is performed. Terms are calculated using a term by term logic,
     instead of a point by point logic.
@@ -1672,8 +1735,11 @@ class FormalPowerSeriesInverse(FiniteFormalPowerSeries):
 
     def _eval_terms(self, n):
         """
-        Returns the first `n` terms of the composed formal power series.
+        Returns the first ``n`` terms of the composed formal power series.
         Term by term logic is implemented here.
+
+        Explanation
+        ===========
 
         The coefficient sequence of the `FormalPowerSeriesInverse` object is the generic sequence.
         It is multiplied by ``bell_seq`` to get a sequence, whose terms are added up to get
@@ -1682,7 +1748,7 @@ class FormalPowerSeriesInverse(FiniteFormalPowerSeries):
         Examples
         ========
 
-        >>> from sympy import fps, exp, cos, bell
+        >>> from sympy import fps, exp, cos
         >>> from sympy.abc import x
         >>> f1 = fps(exp(x))
         >>> f2 = fps(cos(x))
@@ -1713,7 +1779,11 @@ class FormalPowerSeriesInverse(FiniteFormalPowerSeries):
 
 
 def fps(f, x=None, x0=0, dir=1, hyper=True, order=4, rational=True, full=False):
-    """Generates Formal Power Series of f.
+    """
+    Generates Formal Power Series of ``f``.
+
+    Explanation
+    ===========
 
     Returns the formal series expansion of ``f`` around ``x = x0``
     with respect to ``x`` in the form of a ``FormalPowerSeries`` object.
@@ -1752,7 +1822,7 @@ def fps(f, x=None, x0=0, dir=1, hyper=True, order=4, rational=True, full=False):
     Examples
     ========
 
-    >>> from sympy import fps, O, ln, atan, sin
+    >>> from sympy import fps, ln, atan, sin
     >>> from sympy.abc import x, n
 
     Rational Functions

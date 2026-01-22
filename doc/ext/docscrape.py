@@ -1,17 +1,15 @@
 """
 Extract reference documentation from the NumPy source tree.
 """
-from __future__ import division, absolute_import, print_function
 
 import inspect
 import textwrap
 import re
 import pydoc
 from collections.abc import Mapping
-import sys
 
 
-class Reader(object):
+class Reader:
     """
     A line-based string reader.
     """
@@ -142,7 +140,7 @@ class NumpyDocString(Mapping):
             return True
 
         l2 = self._doc.peek(1).strip()  # ---------- or ==========
-        return l2.startswith('-'*len(l1)) or l2.startswith('='*len(l1))
+        return l2.startswith(('-' * len(l1), '=' * len(l1)))
 
     def _strip(self, doc):
         i = 0
@@ -198,7 +196,7 @@ class NumpyDocString(Mapping):
         return params
 
     _name_rgx = re.compile(r"^\s*(:(?P<role>\w+):`(?P<name>[a-zA-Z0-9_.-]+)`|"
-                           r" (?P<name2>[a-zA-Z0-9_.-]+))\s*", re.X)
+                           r" (?P<name2>[a-zA-Z0-9_.-]+))\s*", re.VERBOSE)
 
     def _parse_see_also(self, content):
         """
@@ -286,7 +284,7 @@ class NumpyDocString(Mapping):
         while True:
             summary = self._doc.read_to_next_empty_line()
             summary_str = " ".join([s.strip() for s in summary]).strip()
-            if re.compile('^([\w., ]+=)?\s*[\w\.]+\(.*\)$').match(summary_str):
+            if re.compile(r'^([\w., ]+=)?\s*[\w\.]+\(.*\)$').match(summary_str):
                 self['Signature'] = summary_str
                 if not self._is_at_section():
                     continue
@@ -303,7 +301,7 @@ class NumpyDocString(Mapping):
         self._parse_summary()
 
         sections = list(self._read_sections())
-        section_names = set([section for section, content in sections])
+        section_names = {section for section, content in sections}
 
         has_returns = 'Returns' in section_names
         has_yields = 'Yields' in section_names
@@ -340,7 +338,7 @@ class NumpyDocString(Mapping):
 
     def _str_signature(self):
         if self['Signature']:
-            return [self['Signature'].replace('*', '\*')] + ['']
+            return [self['Signature'].replace('*', r'\*')] + ['']
         else:
             return ['']
 
@@ -362,7 +360,7 @@ class NumpyDocString(Mapping):
             out += self._str_header(name)
             for param, param_type, desc in self[name]:
                 if param_type:
-                    out += ['%s : %s' % (param, param_type)]
+                    out += ['{} : {}'.format(param, param_type)]
                 else:
                     out += [param]
                 out += self._str_indent(desc)
@@ -385,9 +383,9 @@ class NumpyDocString(Mapping):
         last_had_desc = True
         for func, desc, role in self['See Also']:
             if role:
-                link = ':%s:`%s`' % (role, func)
+                link = ':{}:`{}`'.format(role, func)
             elif func_role:
-                link = ':%s:`%s`' % (func_role, func)
+                link = ':{}:`{}`'.format(func_role, func)
             else:
                 link = "`%s`_" % func
             if desc or last_had_desc:
@@ -410,7 +408,7 @@ class NumpyDocString(Mapping):
         for section, references in idx.items():
             if section == 'default':
                 continue
-            out += ['   :%s: %s' % (section, ', '.join(references))]
+            out += ['   :{}: {}'.format(section, ', '.join(references))]
         return out
 
     def __str__(self, func_role=''):
@@ -463,14 +461,10 @@ class FunctionDoc(NumpyDocString):
             func, func_name = self.get_func()
             try:
                 # try to read signature
-                if sys.version_info[0] >= 3:
-                    argspec = inspect.getfullargspec(func)
-                else:
-                    argspec = inspect.getargspec(func)
-                argspec = inspect.formatargspec(*argspec)
-                argspec = argspec.replace('*', '\*')
-                signature = '%s%s' % (func_name, argspec)
-            except TypeError as e:
+                argspec = str(inspect.signature(func))
+                argspec = argspec.replace('*', r'\*')
+                signature = '{}{}'.format(func_name, argspec)
+            except TypeError:
                 signature = '%s()' % func_name
             self['Signature'] = signature
 
@@ -486,7 +480,6 @@ class FunctionDoc(NumpyDocString):
         out = ''
 
         func, func_name = self.get_func()
-        signature = self['Signature'].replace('*', '\*')
 
         roles = {'func': 'function',
                  'meth': 'method'}
@@ -494,10 +487,10 @@ class FunctionDoc(NumpyDocString):
         if self._role:
             if self._role not in roles:
                 print("Warning: invalid role %s" % self._role)
-            out += '.. %s:: %s\n    \n\n' % (roles.get(self._role, ''),
+            out += '.. {}:: {}\n    \n\n'.format(roles.get(self._role, ''),
                                              func_name)
 
-        out += super(FunctionDoc, self).__str__(func_role=self._role)
+        out += super().__str__(func_role=self._role)
         return out
 
 

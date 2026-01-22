@@ -10,20 +10,54 @@ are_coplanar
 are_similar
 
 """
-from __future__ import division, print_function
 
-from sympy import Function, Symbol, solve, sqrt
-from sympy.core.compatibility import (
-    is_sequence, ordered)
+from collections import deque
+from math import sqrt as _sqrt
+
+from sympy import nsimplify
+from .entity import GeometryEntity
+from .exceptions import GeometryError
+from .point import Point, Point2D, Point3D
 from sympy.core.containers import OrderedSet
-from .point import Point, Point2D
+from sympy.core.exprtools import factor_terms
+from sympy.core.function import Function, expand_mul
+from sympy.core.numbers import Float
+from sympy.core.sorting import ordered
+from sympy.core.symbol import Symbol
+from sympy.core.singleton import S
+from sympy.external.mpmath import prec_to_dps
+from sympy.polys.polytools import cancel
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.utilities.iterables import is_sequence
 
 
 def find(x, equation):
     """
-    Checks whether the parameter 'x' is present in 'equation' or not.
-    If it is present then it returns the passed parameter 'x' as a free
-    symbol, else, it returns a ValueError.
+    Checks whether a Symbol matching ``x`` is present in ``equation``
+    or not. If present, the matching symbol is returned, else a
+    ValueError is raised. If ``x`` is a string the matching symbol
+    will have the same name; if ``x`` is a Symbol then it will be
+    returned if found.
+
+    Examples
+    ========
+
+    >>> from sympy.geometry.util import find
+    >>> from sympy import Dummy
+    >>> from sympy.abc import x
+    >>> find('x', x)
+    x
+    >>> find('x', Dummy('x'))
+    _x
+
+    The dummy symbol is returned since it has a matching name:
+
+    >>> _.name == 'x'
+    True
+    >>> find(x, Dummy('x'))
+    Traceback (most recent call last):
+    ...
+    ValueError: could not find x
     """
 
     free = equation.free_symbols
@@ -65,10 +99,8 @@ def are_coplanar(*e):
     False
 
     """
-    from sympy.geometry.line import LinearEntity3D
-    from sympy.geometry.entity import GeometryEntity
-    from sympy.geometry.point import Point3D
-    from sympy.geometry.plane import Plane
+    from .line import LinearEntity3D
+    from .plane import Plane
     # XXX update tests for coverage
 
     e = set(e)
@@ -158,8 +190,6 @@ def are_similar(e1, e2):
     False
 
     """
-    from .exceptions import GeometryError
-
     if e1 == e2:
         return True
     is_similar1 = getattr(e1, 'is_similar', None)
@@ -222,8 +252,8 @@ def centroid(*args):
     Point2D(11/10, 1/2)
 
     """
-
-    from sympy.geometry import Polygon, Segment, Point
+    from .line import Segment
+    from .polygon import Polygon
     if args:
         if all(isinstance(g, Point) for g in args):
             c = Point(0, 0)
@@ -257,7 +287,8 @@ def closest_points(*args):
     Parameters
     ==========
 
-    args : a collection of Points on 2D plane.
+    args
+        A collection of Points on 2D plane.
 
     Notes
     =====
@@ -266,28 +297,24 @@ def closest_points(*args):
     be ordered on the number line. If there are no ties then a single
     pair of Points will be in the set.
 
-    References
-    ==========
-
-    [1] http://www.cs.mcgill.ca/~cs251/ClosestPair/ClosestPairPS.html
-
-    [2] Sweep line algorithm
-    https://en.wikipedia.org/wiki/Sweep_line_algorithm
-
     Examples
     ========
 
-    >>> from sympy.geometry import closest_points, Point2D, Triangle
+    >>> from sympy import closest_points, Triangle
     >>> Triangle(sss=(3, 4, 5)).args
     (Point2D(0, 0), Point2D(3, 0), Point2D(3, 4))
     >>> closest_points(*_)
     {(Point2D(0, 0), Point2D(3, 0))}
 
-    """
-    from collections import deque
-    from math import sqrt as _sqrt
-    from sympy.functions.elementary.miscellaneous import sqrt
+    References
+    ==========
 
+    .. [1] https://www.cs.mcgill.ca/~cs251/ClosestPair/ClosestPairPS.html
+
+    .. [2] Sweep line algorithm
+        https://en.wikipedia.org/wiki/Sweep_line_algorithm
+
+    """
     p = [Point2D(i) for i in set(args)]
     if len(p) < 2:
         raise ValueError('At least 2 distinct points must be given.')
@@ -297,7 +324,7 @@ def closest_points(*args):
     except TypeError:
         raise ValueError("The points could not be sorted.")
 
-    if any(not i.is_Rational for j in p for i in j.args):
+    if not all(i.is_Rational for j in p for i in j.args):
         def hypot(x, y):
             arg = x*x + y*y
             if arg.is_Rational:
@@ -308,10 +335,9 @@ def closest_points(*args):
 
     rv = [(0, 1)]
     best_dist = hypot(p[1].x - p[0].x, p[1].y - p[0].y)
-    i = 2
     left = 0
     box = deque([0, 1])
-    while i < len(p):
+    for i in range(2, len(p)):
         while left < i and p[i][0] - p[left][0] > best_dist:
             box.popleft()
             left += 1
@@ -326,12 +352,11 @@ def closest_points(*args):
                 continue
             best_dist = d
         box.append(i)
-        i += 1
 
     return {tuple([p[i] for i in pair]) for pair in rv}
 
 
-def convex_hull(*args, **kwargs):
+def convex_hull(*args, polygon=True):
     """The convex hull surrounding the Points contained in the list of entities.
 
     Parameters
@@ -339,26 +364,23 @@ def convex_hull(*args, **kwargs):
 
     args : a collection of Points, Segments and/or Polygons
 
+    Optional parameters
+    ===================
+
+    polygon : Boolean. If True, returns a Polygon, if false a tuple, see below.
+              Default is True.
+
     Returns
     =======
 
-    convex_hull : Polygon if ``polygon`` is True else as a tuple `(U, L)` where ``L`` and ``U`` are the lower and upper hulls, respectively.
+    convex_hull : Polygon if ``polygon`` is True else as a tuple `(U, L)` where
+                  ``L`` and ``U`` are the lower and upper hulls, respectively.
 
     Notes
     =====
 
     This can only be performed on a set of points whose coordinates can
     be ordered on the number line.
-
-    References
-    ==========
-
-    [1] https://en.wikipedia.org/wiki/Graham_scan
-
-    [2] Andrew's Monotone Chain Algorithm
-    (A.M. Andrew,
-    "Another Efficient Algorithm for Convex Hulls in Two Dimensions", 1979)
-    http://geomalgorithms.com/a10-_hull-1.html
 
     See Also
     ========
@@ -368,7 +390,7 @@ def convex_hull(*args, **kwargs):
     Examples
     ========
 
-    >>> from sympy.geometry import Point, convex_hull
+    >>> from sympy import convex_hull
     >>> points = [(1, 1), (1, 2), (3, 1), (-5, 2), (15, 4)]
     >>> convex_hull(*points)
     Polygon(Point2D(-5, 2), Point2D(1, 1), Point2D(3, 1), Point2D(15, 4))
@@ -376,13 +398,19 @@ def convex_hull(*args, **kwargs):
     ([Point2D(-5, 2), Point2D(15, 4)],
      [Point2D(-5, 2), Point2D(1, 1), Point2D(3, 1), Point2D(15, 4)])
 
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Graham_scan
+
+    .. [2] Andrew's Monotone Chain Algorithm
+      (A.M. Andrew,
+      "Another Efficient Algorithm for Convex Hulls in Two Dimensions", 1979)
+      https://web.archive.org/web/20210511015444/http://geomalgorithms.com/a10-_hull-1.html
+
     """
-    from .entity import GeometryEntity
-    from .point import Point
     from .line import Segment
     from .polygon import Polygon
-
-    polygon = kwargs.get('polygon', True)
     p = OrderedSet()
     for e in args:
         if not isinstance(e, GeometryEntity):
@@ -449,7 +477,8 @@ def farthest_points(*args):
     Parameters
     ==========
 
-    args : a collection of Points on 2D plane.
+    args
+        A collection of Points on 2D plane.
 
     Notes
     =====
@@ -458,28 +487,27 @@ def farthest_points(*args):
     be ordered on the number line. If there are no ties then a single
     pair of Points will be in the set.
 
-    References
-    ==========
-
-    [1] http://code.activestate.com/recipes/117225-convex-hull-and-diameter-of-2d-point-sets/
-
-    [2] Rotating Callipers Technique
-    https://en.wikipedia.org/wiki/Rotating_calipers
-
     Examples
     ========
 
-    >>> from sympy.geometry import farthest_points, Point2D, Triangle
+    >>> from sympy.geometry import farthest_points, Triangle
     >>> Triangle(sss=(3, 4, 5)).args
     (Point2D(0, 0), Point2D(3, 0), Point2D(3, 4))
     >>> farthest_points(*_)
     {(Point2D(0, 0), Point2D(3, 4))}
 
+    References
+    ==========
+
+    .. [1] https://code.activestate.com/recipes/117225-convex-hull-and-diameter-of-2d-point-sets/
+
+    .. [2] Rotating Callipers Technique
+        https://en.wikipedia.org/wiki/Rotating_calipers
+
     """
-    from math import sqrt as _sqrt
 
     def rotatingCalipers(Points):
-        U, L = convex_hull(*Points, **dict(polygon=False))
+        U, L = convex_hull(*Points, **{"polygon": False})
 
         if L is None:
             if isinstance(U, Point):
@@ -505,7 +533,7 @@ def farthest_points(*args):
 
     p = [Point2D(i) for i in set(args)]
 
-    if any(not i.is_Rational for j in p for i in j.args):
+    if not all(i.is_Rational for j in p for i in j.args):
         def hypot(x, y):
             arg = x*x + y*y
             if arg.is_Rational:
@@ -550,7 +578,7 @@ def idiff(eq, y, x, n=1):
     >>> idiff(circ, y, x)
     -x/y
     >>> idiff(circ, y, x, 2).simplify()
-    -(x**2 + y**2)/y**3
+    (-x**2 - y**2)/y**3
 
     Here, ``a`` is assumed to be independent of ``x``:
 
@@ -591,7 +619,11 @@ def idiff(eq, y, x, n=1):
     eq = eq.subs(f)
     derivs = {}
     for i in range(n):
-        yp = solve(eq.diff(x), dydx)[0].subs(derivs)
+        # equation will be linear in dydx, a*dydx + b, so dydx = -b/a
+        deq = eq.diff(x)
+        b = deq.xreplace({dydx: S.Zero})
+        a = (deq - b).xreplace({dydx: S.One})
+        yp = factor_terms(expand_mul(cancel((-b/a).subs(derivs)), deep=False))
         if i == n - 1:
             return yp.subs([(v, k) for k, v in f.items()])
         derivs[dydx] = yp
@@ -599,7 +631,7 @@ def idiff(eq, y, x, n=1):
         dydx = dydx.diff(x)
 
 
-def intersection(*entities, **kwargs):
+def intersection(*entities, pairwise=False, **kwargs):
     """The intersection of a collection of GeometryEntity instances.
 
     Parameters
@@ -644,7 +676,7 @@ def intersection(*entities, **kwargs):
     Examples
     ========
 
-    >>> from sympy.geometry import Ray, Circle, intersection
+    >>> from sympy import Ray, Circle, intersection
     >>> c = Circle((0, 1), 1)
     >>> intersection(c, c.center)
     []
@@ -659,20 +691,21 @@ def intersection(*entities, **kwargs):
     [Segment2D(Point2D(0, 0), Point2D(1, 0))]
 
     """
-
-    from .entity import GeometryEntity
-    from .point import Point
-
-    pairwise = kwargs.pop('pairwise', False)
-
     if len(entities) <= 1:
         return []
 
-    # entities may be an immutable tuple
     entities = list(entities)
+    prec = None
     for i, e in enumerate(entities):
         if not isinstance(e, GeometryEntity):
-            entities[i] = Point(e)
+            # entities may be an immutable tuple
+            e = Point(e)
+        # convert to exact Rationals
+        d = {}
+        for f in e.atoms(Float):
+            prec = f._prec if prec is None else min(f._prec, prec)
+            d.setdefault(f, nsimplify(f, rational=True))
+        entities[i] = e.xreplace(d)
 
     if not pairwise:
         # find the intersection common to all objects
@@ -682,11 +715,16 @@ def intersection(*entities, **kwargs):
             for x in res:
                 newres.extend(x.intersection(entity))
             res = newres
-        return res
+    else:
+        # find all pairwise intersections
+        ans = []
+        for j in range(len(entities)):
+            for k in range(j + 1, len(entities)):
+                ans.extend(intersection(entities[j], entities[k]))
+        res = list(ordered(set(ans)))
 
-    # find all pairwise intersections
-    ans = []
-    for j in range(0, len(entities)):
-        for k in range(j + 1, len(entities)):
-            ans.extend(intersection(entities[j], entities[k]))
-    return list(ordered(set(ans)))
+    # convert back to Floats
+    if prec is not None:
+        p = prec_to_dps(prec)
+        res = [i.n(p) for i in res]
+    return res

@@ -1,8 +1,7 @@
 """Ground types for various mathematical domains in SymPy. """
 
-from __future__ import print_function, division
-
-from sympy.core.compatibility import builtins, HAS_GMPY
+import builtins
+from sympy.external.gmpy import GROUND_TYPES, factorial, sqrt, is_square, sqrtrem
 
 PythonInteger = builtins.int
 PythonReal = builtins.float
@@ -10,74 +9,75 @@ PythonComplex = builtins.complex
 
 from .pythonrational import PythonRational
 
-from sympy.core.numbers import (
+from sympy.core.intfunc import (
     igcdex as python_gcdex,
     igcd2 as python_gcd,
     ilcm as python_lcm,
 )
 
-from sympy import (
-    Float as SymPyReal,
-    Integer as SymPyInteger,
-    Rational as SymPyRational,
-)
+from sympy.core.numbers import (Float as SymPyReal, Integer as SymPyInteger, Rational as SymPyRational)
 
-if HAS_GMPY == 1:
-    from gmpy import (
-        mpz as GMPYInteger,
-        mpq as GMPYRational,
-        fac as gmpy_factorial,
-        numer as gmpy_numer,
-        denom as gmpy_denom,
-        gcdext as gmpy_gcdex,
-        gcd as gmpy_gcd,
-        lcm as gmpy_lcm,
-        sqrt as gmpy_sqrt,
-        qdiv as gmpy_qdiv,
-    )
-elif HAS_GMPY == 2:
+
+class _GMPYInteger:
+    def __init__(self, obj):
+        pass
+
+class _GMPYRational:
+    def __init__(self, obj):
+        pass
+
+
+if GROUND_TYPES == 'gmpy':
+
     from gmpy2 import (
         mpz as GMPYInteger,
         mpq as GMPYRational,
-        fac as gmpy_factorial,
         numer as gmpy_numer,
         denom as gmpy_denom,
         gcdext as gmpy_gcdex,
         gcd as gmpy_gcd,
         lcm as gmpy_lcm,
-        isqrt as gmpy_sqrt,
         qdiv as gmpy_qdiv,
     )
-else:
-    class _GMPYInteger(object):
-        def __init__(self, obj):
-            pass
+    gcdex = gmpy_gcdex
+    gcd = gmpy_gcd
+    lcm = gmpy_lcm
 
-    class _GMPYRational(object):
-        def __init__(self, obj):
-            pass
+elif GROUND_TYPES == 'flint':
+
+    from flint import fmpz as _fmpz
 
     GMPYInteger = _GMPYInteger
     GMPYRational = _GMPYRational
-    gmpy_factorial = None
     gmpy_numer = None
     gmpy_denom = None
     gmpy_gcdex = None
     gmpy_gcd = None
     gmpy_lcm = None
-    gmpy_sqrt = None
     gmpy_qdiv = None
 
+    def gcd(a, b):
+        return a.gcd(b)
 
-import mpmath.libmp as mlib
+    def gcdex(a, b):
+        x, y, g = python_gcdex(a, b)
+        return _fmpz(x), _fmpz(y), _fmpz(g)
 
+    def lcm(a, b):
+        return a.lcm(b)
 
-def python_sqrt(n):
-    return int(mlib.isqrt(n))
-
-
-def python_factorial(n):
-    return int(mlib.ifac(n))
+else:
+    GMPYInteger = _GMPYInteger
+    GMPYRational = _GMPYRational
+    gmpy_numer = None
+    gmpy_denom = None
+    gmpy_gcdex = None
+    gmpy_gcd = None
+    gmpy_lcm = None
+    gmpy_qdiv = None
+    gcdex = python_gcdex
+    gcd = python_gcd
+    lcm = python_lcm
 
 
 __all__ = [
@@ -89,13 +89,11 @@ __all__ = [
 
     'SymPyReal', 'SymPyInteger', 'SymPyRational',
 
-    'GMPYInteger', 'GMPYRational', 'gmpy_factorial', 'gmpy_numer',
-    'gmpy_denom', 'gmpy_gcdex', 'gmpy_gcd', 'gmpy_lcm', 'gmpy_sqrt',
+    'GMPYInteger', 'GMPYRational', 'gmpy_numer',
+    'gmpy_denom', 'gmpy_gcdex', 'gmpy_gcd', 'gmpy_lcm',
     'gmpy_qdiv',
 
+    'factorial', 'sqrt', 'is_square', 'sqrtrem',
+
     'GMPYInteger', 'GMPYRational',
-
-    'mlib',
-
-    'python_sqrt', 'python_factorial'
 ]

@@ -1,10 +1,9 @@
-from __future__ import print_function, division
-
 from sympy.core import S
 from sympy.core.sympify import _sympify
 from sympy.functions import KroneckerDelta
 
-from .matexpr import MatrixExpr, Identity, ZeroMatrix, OneMatrix
+from .matexpr import MatrixExpr
+from .special import ZeroMatrix, Identity, OneMatrix
 
 
 class PermutationMatrix(MatrixExpr):
@@ -25,7 +24,7 @@ class PermutationMatrix(MatrixExpr):
     Examples
     ========
 
-    >>> from sympy.matrices import Matrix, PermutationMatrix
+    >>> from sympy import Matrix, PermutationMatrix
     >>> from sympy.combinatorics import Permutation
 
     Creating a permutation matrix:
@@ -65,7 +64,7 @@ class PermutationMatrix(MatrixExpr):
             raise ValueError(
                 "{} must be a SymPy Permutation instance.".format(perm))
 
-        return super(PermutationMatrix, cls).__new__(cls, perm)
+        return super().__new__(cls, perm)
 
     @property
     def shape(self):
@@ -76,7 +75,7 @@ class PermutationMatrix(MatrixExpr):
     def is_Identity(self):
         return self.args[0].is_Identity
 
-    def doit(self):
+    def doit(self, **hints):
         if self.is_Identity:
             return Identity(self.rows)
         return self
@@ -84,6 +83,9 @@ class PermutationMatrix(MatrixExpr):
     def _entry(self, i, j, **kwargs):
         perm = self.args[0]
         return KroneckerDelta(perm.apply(i), j)
+
+    def _eval_power(self, exp):
+        return PermutationMatrix(self.args[0] ** exp).doit()
 
     def _eval_inverse(self):
         return PermutationMatrix(self.args[0] ** -1)
@@ -182,12 +184,12 @@ class MatrixPermute(MatrixExpr):
     =====
 
     This follows the same notation used in
-    :meth:`sympy.matrices.common.MatrixCommon.permute`.
+    :meth:`sympy.matrices.matrixbase.MatrixBase.permute`.
 
     Examples
     ========
 
-    >>> from sympy.matrices import Matrix, MatrixPermute
+    >>> from sympy import Matrix, MatrixPermute
     >>> from sympy.combinatorics import Permutation
 
     Permuting the matrix rows:
@@ -213,7 +215,7 @@ class MatrixPermute(MatrixExpr):
     See Also
     ========
 
-    sympy.matrices.common.MatrixCommon.permute
+    sympy.matrices.matrixbase.MatrixBase.permute
     """
     def __new__(cls, mat, perm, axis=S.Zero):
         from sympy.combinatorics.permutations import Permutation
@@ -247,14 +249,14 @@ class MatrixPermute(MatrixExpr):
                     "and cannot be converted."
                     .format(perm, mat, axis))
 
-        return super(MatrixPermute, cls).__new__(cls, mat, perm, axis)
+        return super().__new__(cls, mat, perm, axis)
 
-    def doit(self, deep=True):
+    def doit(self, deep=True, **hints):
         mat, perm, axis = self.args
 
         if deep:
-            mat = mat.doit(deep=deep)
-            perm = perm.doit(deep=deep)
+            mat = mat.doit(deep=deep, **hints)
+            perm = perm.doit(deep=deep, **hints)
 
         if perm.is_Identity:
             return mat

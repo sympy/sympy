@@ -1,13 +1,44 @@
-from sympy import (symbols, sin, cos, pi, zeros, eye, simplify, ImmutableMatrix
-                   as Matrix)
+from sympy.core.numbers import pi
+from sympy.core.symbol import symbols
+from sympy.simplify import trigsimp
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.matrices.dense import (eye, zeros)
+from sympy.matrices.immutable import ImmutableDenseMatrix as Matrix
+from sympy.simplify.simplify import simplify
 from sympy.physics.vector import (ReferenceFrame, Vector, CoordinateSym,
                                   dynamicsymbols, time_derivative, express,
                                   dot)
 from sympy.physics.vector.frame import _check_frame
 from sympy.physics.vector.vector import VectorTypeError
 from sympy.testing.pytest import raises
+import warnings
+import pickle
 
-Vector.simp = True
+
+def test_dict_list():
+
+    A = ReferenceFrame('A')
+    B = ReferenceFrame('B')
+    C = ReferenceFrame('C')
+    D = ReferenceFrame('D')
+    E = ReferenceFrame('E')
+    F = ReferenceFrame('F')
+
+    B.orient_axis(A, A.x, 1.0)
+    C.orient_axis(B, B.x, 1.0)
+    D.orient_axis(C, C.x, 1.0)
+
+    assert D._dict_list(A, 0) == [D, C, B, A]
+
+    E.orient_axis(D, D.x, 1.0)
+
+    assert C._dict_list(A, 0) == [C, B, A]
+    assert C._dict_list(E, 0) == [C, D, E]
+
+    # only 0, 1, 2 permitted for second argument
+    raises(ValueError, lambda: C._dict_list(E, 5))
+    # no connecting path
+    raises(ValueError, lambda: F._dict_list(A, 0))
 
 
 def test_coordinate_vars():
@@ -46,22 +77,25 @@ def test_coordinate_vars():
     assert express(B[0]*B.x + B[1]*B.y + B[2]*B.z, A) == \
            (B[0]*cos(q) - B[1]*sin(q))*A.x + (B[0]*sin(q) + \
            B[1]*cos(q))*A.y + B[2]*A.z
-    assert express(B[0]*B.x + B[1]*B.y + B[2]*B.z, A, variables=True) == \
-           A[0]*A.x + A[1]*A.y + A[2]*A.z
+    assert express(B[0]*B.x + B[1]*B.y + B[2]*B.z, A,
+                   variables=True).simplify() == A[0]*A.x + A[1]*A.y + A[2]*A.z
     assert express(A[0]*A.x + A[1]*A.y + A[2]*A.z, B) == \
            (A[0]*cos(q) + A[1]*sin(q))*B.x + \
            (-A[0]*sin(q) + A[1]*cos(q))*B.y + A[2]*B.z
-    assert express(A[0]*A.x + A[1]*A.y + A[2]*A.z, B, variables=True) == \
-           B[0]*B.x + B[1]*B.y + B[2]*B.z
+    assert express(A[0]*A.x + A[1]*A.y + A[2]*A.z, B,
+                   variables=True).simplify() == B[0]*B.x + B[1]*B.y + B[2]*B.z
     N = B.orientnew('N', 'Axis', [-q, B.z])
-    assert N.variable_map(A) == {N[0]: A[0], N[2]: A[2], N[1]: A[1]}
+    assert ({k: v.simplify() for k, v in N.variable_map(A).items()} ==
+            {N[0]: A[0], N[2]: A[2], N[1]: A[1]})
     C = A.orientnew('C', 'Axis', [q, A.x + A.y + A.z])
     mapping = A.variable_map(C)
-    assert mapping[A[0]] == 2*C[0]*cos(q)/3 + C[0]/3 - 2*C[1]*sin(q + pi/6)/3 +\
-           C[1]/3 - 2*C[2]*cos(q + pi/3)/3 + C[2]/3
-    assert mapping[A[1]] == -2*C[0]*cos(q + pi/3)/3 + \
+    assert trigsimp(mapping[A[0]]) == (2*C[0]*cos(q)/3 + C[0]/3 -
+                                       2*C[1]*sin(q + pi/6)/3 +
+                                       C[1]/3 - 2*C[2]*cos(q + pi/3)/3 +
+                                       C[2]/3)
+    assert trigsimp(mapping[A[1]]) == -2*C[0]*cos(q + pi/3)/3 + \
            C[0]/3 + 2*C[1]*cos(q)/3 + C[1]/3 - 2*C[2]*sin(q + pi/6)/3 + C[2]/3
-    assert mapping[A[2]] == -2*C[0]*sin(q + pi/6)/3 + C[0]/3 - \
+    assert trigsimp(mapping[A[2]]) == -2*C[0]*sin(q + pi/6)/3 + C[0]/3 - \
            2*C[1]*cos(q + pi/3)/3 + C[1]/3 + 2*C[2]*cos(q)/3 + C[2]/3
 
 
@@ -367,7 +401,7 @@ def test_reference_frame():
     raises(TypeError, lambda: B.orient(N, 'Space', [q1, q2, q3], '222'))
     raises(TypeError, lambda: B.orient(N, 'Axis', [q1, N.x + 2 * N.y], '222'))
     raises(TypeError, lambda: B.orient(N, 'Axis', q1))
-    raises(TypeError, lambda: B.orient(N, 'Axis', [q1]))
+    raises(IndexError, lambda: B.orient(N, 'Axis', [q1]))
     raises(TypeError, lambda: B.orient(N, 'Quaternion', [q0, q1, q2, q3], '222'))
     raises(TypeError, lambda: B.orient(N, 'Quaternion', q0))
     raises(TypeError, lambda: B.orient(N, 'Quaternion', [q0, q1, q2]))
@@ -416,3 +450,312 @@ def test_dcm_diff_16824():
 
     assert simplify(AwB.dot(A.y) - alpha2) == 0
     assert simplify(AwB.dot(B.y) - beta2) == 0
+
+def test_orient_explicit():
+    cxx, cyy, czz = dynamicsymbols('c_{xx}, c_{yy}, c_{zz}')
+    cxy, cxz, cyx = dynamicsymbols('c_{xy}, c_{xz}, c_{yx}')
+    cyz, czx, czy = dynamicsymbols('c_{yz}, c_{zx}, c_{zy}')
+    dcxx, dcyy, dczz = dynamicsymbols('c_{xx}, c_{yy}, c_{zz}', 1)
+    dcxy, dcxz, dcyx = dynamicsymbols('c_{xy}, c_{xz}, c_{yx}', 1)
+    dcyz, dczx, dczy = dynamicsymbols('c_{yz}, c_{zx}, c_{zy}', 1)
+    A = ReferenceFrame('A')
+    B = ReferenceFrame('B')
+    B_C_A = Matrix([[cxx, cxy, cxz],
+                    [cyx, cyy, cyz],
+                    [czx, czy, czz]])
+    B_w_A = ((cyx*dczx + cyy*dczy + cyz*dczz)*B.x +
+            (czx*dcxx + czy*dcxy + czz*dcxz)*B.y +
+            (cxx*dcyx + cxy*dcyy + cxz*dcyz)*B.z)
+    A.orient_explicit(B, B_C_A)
+    assert B.dcm(A) == B_C_A
+    assert A.ang_vel_in(B) == B_w_A
+    assert B.ang_vel_in(A) == -B_w_A
+
+def test_orient_dcm():
+    cxx, cyy, czz = dynamicsymbols('c_{xx}, c_{yy}, c_{zz}')
+    cxy, cxz, cyx = dynamicsymbols('c_{xy}, c_{xz}, c_{yx}')
+    cyz, czx, czy = dynamicsymbols('c_{yz}, c_{zx}, c_{zy}')
+    B_C_A = Matrix([[cxx, cxy, cxz],
+                    [cyx, cyy, cyz],
+                    [czx, czy, czz]])
+    A = ReferenceFrame('A')
+    B = ReferenceFrame('B')
+    B.orient_dcm(A, B_C_A)
+    assert B.dcm(A) == Matrix([[cxx, cxy, cxz],
+                               [cyx, cyy, cyz],
+                               [czx, czy, czz]])
+
+def test_orient_axis():
+    A = ReferenceFrame('A')
+    B = ReferenceFrame('B')
+    A.orient_axis(B,-B.x, 1)
+    A1 = A.dcm(B)
+    A.orient_axis(B, B.x, -1)
+    A2 = A.dcm(B)
+    A.orient_axis(B, 1, -B.x)
+    A3 = A.dcm(B)
+    assert A1 == A2
+    assert A2 == A3
+    raises(TypeError, lambda: A.orient_axis(B, 1, 1))
+
+def test_orient_body():
+    A = ReferenceFrame('A')
+    B = ReferenceFrame('B')
+    B.orient_body_fixed(A, (1,1,0), 'XYX')
+    assert B.dcm(A) == Matrix([[cos(1), sin(1)**2, -sin(1)*cos(1)], [0, cos(1), sin(1)], [sin(1), -sin(1)*cos(1), cos(1)**2]])
+
+
+def test_orient_body_advanced():
+    q1, q2, q3 = dynamicsymbols('q1:4')
+    c1, c2, c3 = symbols('c1:4')
+    u1, u2, u3 = dynamicsymbols('q1:4', 1)
+
+    # Test with everything as dynamicsymbols
+    A, B = ReferenceFrame('A'), ReferenceFrame('B')
+    B.orient_body_fixed(A, (q1, q2, q3), 'zxy')
+    assert A.dcm(B) == Matrix([
+        [-sin(q1) * sin(q2) * sin(q3) + cos(q1) * cos(q3), -sin(q1) * cos(q2),
+         sin(q1) * sin(q2) * cos(q3) + sin(q3) * cos(q1)],
+        [sin(q1) * cos(q3) + sin(q2) * sin(q3) * cos(q1), cos(q1) * cos(q2),
+         sin(q1) * sin(q3) - sin(q2) * cos(q1) * cos(q3)],
+        [-sin(q3) * cos(q2), sin(q2), cos(q2) * cos(q3)]])
+    assert B.ang_vel_in(A).to_matrix(B) == Matrix([
+        [-sin(q3) * cos(q2) * u1 + cos(q3) * u2],
+        [sin(q2) * u1 + u3],
+        [sin(q3) * u2 + cos(q2) * cos(q3) * u1]])
+
+    # Test with constant symbol
+    A, B = ReferenceFrame('A'), ReferenceFrame('B')
+    B.orient_body_fixed(A, (q1, c2, q3), 131)
+    assert A.dcm(B) == Matrix([
+        [cos(c2), -sin(c2) * cos(q3), sin(c2) * sin(q3)],
+        [sin(c2) * cos(q1), -sin(q1) * sin(q3) + cos(c2) * cos(q1) * cos(q3),
+         -sin(q1) * cos(q3) - sin(q3) * cos(c2) * cos(q1)],
+        [sin(c2) * sin(q1), sin(q1) * cos(c2) * cos(q3) + sin(q3) * cos(q1),
+         -sin(q1) * sin(q3) * cos(c2) + cos(q1) * cos(q3)]])
+    assert B.ang_vel_in(A).to_matrix(B) == Matrix([
+        [cos(c2) * u1 + u3],
+        [-sin(c2) * cos(q3) * u1],
+        [sin(c2) * sin(q3) * u1]])
+
+    # Test all symbols not time dependent
+    A, B = ReferenceFrame('A'), ReferenceFrame('B')
+    B.orient_body_fixed(A, (c1, c2, c3), 123)
+    assert B.ang_vel_in(A) == Vector(0)
+
+
+def test_orient_space_advanced():
+    # space fixed is in the end like body fixed only in opposite order
+    q1, q2, q3 = dynamicsymbols('q1:4')
+    c1, c2, c3 = symbols('c1:4')
+    u1, u2, u3 = dynamicsymbols('q1:4', 1)
+
+    # Test with everything as dynamicsymbols
+    A, B = ReferenceFrame('A'), ReferenceFrame('B')
+    B.orient_space_fixed(A, (q3, q2, q1), 'yxz')
+    assert A.dcm(B) == Matrix([
+        [-sin(q1) * sin(q2) * sin(q3) + cos(q1) * cos(q3), -sin(q1) * cos(q2),
+         sin(q1) * sin(q2) * cos(q3) + sin(q3) * cos(q1)],
+        [sin(q1) * cos(q3) + sin(q2) * sin(q3) * cos(q1), cos(q1) * cos(q2),
+         sin(q1) * sin(q3) - sin(q2) * cos(q1) * cos(q3)],
+        [-sin(q3) * cos(q2), sin(q2), cos(q2) * cos(q3)]])
+    assert B.ang_vel_in(A).to_matrix(B) == Matrix([
+        [-sin(q3) * cos(q2) * u1 + cos(q3) * u2],
+        [sin(q2) * u1 + u3],
+        [sin(q3) * u2 + cos(q2) * cos(q3) * u1]])
+
+    # Test with constant symbol
+    A, B = ReferenceFrame('A'), ReferenceFrame('B')
+    B.orient_space_fixed(A, (q3, c2, q1), 131)
+    assert A.dcm(B) == Matrix([
+        [cos(c2), -sin(c2) * cos(q3), sin(c2) * sin(q3)],
+        [sin(c2) * cos(q1), -sin(q1) * sin(q3) + cos(c2) * cos(q1) * cos(q3),
+         -sin(q1) * cos(q3) - sin(q3) * cos(c2) * cos(q1)],
+        [sin(c2) * sin(q1), sin(q1) * cos(c2) * cos(q3) + sin(q3) * cos(q1),
+         -sin(q1) * sin(q3) * cos(c2) + cos(q1) * cos(q3)]])
+    assert B.ang_vel_in(A).to_matrix(B) == Matrix([
+        [cos(c2) * u1 + u3],
+        [-sin(c2) * cos(q3) * u1],
+        [sin(c2) * sin(q3) * u1]])
+
+    # Test all symbols not time dependent
+    A, B = ReferenceFrame('A'), ReferenceFrame('B')
+    B.orient_space_fixed(A, (c1, c2, c3), 123)
+    assert B.ang_vel_in(A) == Vector(0)
+
+
+def test_orient_body_simple_ang_vel():
+    """This test ensures that the simplest form of that linear system solution
+    is returned, thus the == for the expression comparison."""
+
+    psi, theta, phi = dynamicsymbols('psi, theta, varphi')
+    t = dynamicsymbols._t
+    A = ReferenceFrame('A')
+    B = ReferenceFrame('B')
+    B.orient_body_fixed(A, (psi, theta, phi), 'ZXZ')
+    A_w_B = B.ang_vel_in(A)
+    assert A_w_B.args[0][1] == B
+    assert A_w_B.args[0][0][0] == (sin(theta)*sin(phi)*psi.diff(t) +
+                                   cos(phi)*theta.diff(t))
+    assert A_w_B.args[0][0][1] == (sin(theta)*cos(phi)*psi.diff(t) -
+                                   sin(phi)*theta.diff(t))
+    assert A_w_B.args[0][0][2] == cos(theta)*psi.diff(t) + phi.diff(t)
+
+
+def test_orient_space():
+    A = ReferenceFrame('A')
+    B = ReferenceFrame('B')
+    B.orient_space_fixed(A, (0,0,0), '123')
+    assert B.dcm(A) == Matrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+
+def test_orient_quaternion():
+    A = ReferenceFrame('A')
+    B = ReferenceFrame('B')
+    B.orient_quaternion(A, (0,0,0,0))
+    assert B.dcm(A) == Matrix([[0, 0, 0], [0, 0, 0], [0, 0, 0]])
+
+def test_looped_frame_warning():
+    A = ReferenceFrame('A')
+    B = ReferenceFrame('B')
+    C = ReferenceFrame('C')
+
+    a, b, c = symbols('a b c')
+    B.orient_axis(A, A.x, a)
+    C.orient_axis(B, B.x, b)
+
+    with warnings.catch_warnings(record = True) as w:
+        warnings.simplefilter("always")
+        A.orient_axis(C, C.x, c)
+        assert issubclass(w[-1].category, UserWarning)
+        assert 'Loops are defined among the orientation of frames. ' + \
+            'This is likely not desired and may cause errors in your calculations.' in str(w[-1].message)
+
+def test_frame_dict():
+    A = ReferenceFrame('A')
+    B = ReferenceFrame('B')
+    C = ReferenceFrame('C')
+
+    a, b, c = symbols('a b c')
+
+    B.orient_axis(A, A.x, a)
+    assert A._dcm_dict == {B: Matrix([[1, 0, 0],[0, cos(a), -sin(a)],[0, sin(a),  cos(a)]])}
+    assert B._dcm_dict == {A: Matrix([[1, 0, 0],[0,  cos(a), sin(a)],[0, -sin(a), cos(a)]])}
+    assert C._dcm_dict == {}
+
+    B.orient_axis(C, C.x, b)
+    # Previous relation is not wiped
+    assert A._dcm_dict == {B: Matrix([[1, 0, 0],[0, cos(a), -sin(a)],[0, sin(a),  cos(a)]])}
+    assert B._dcm_dict == {A: Matrix([[1, 0, 0],[0,  cos(a), sin(a)],[0, -sin(a), cos(a)]]), \
+        C: Matrix([[1, 0, 0],[0,  cos(b), sin(b)],[0, -sin(b), cos(b)]])}
+    assert C._dcm_dict == {B: Matrix([[1, 0, 0],[0, cos(b), -sin(b)],[0, sin(b),  cos(b)]])}
+
+    A.orient_axis(B, B.x, c)
+    # Previous relation is updated
+    assert B._dcm_dict == {C: Matrix([[1, 0, 0],[0,  cos(b), sin(b)],[0, -sin(b), cos(b)]]),\
+        A: Matrix([[1, 0, 0],[0, cos(c), -sin(c)],[0, sin(c),  cos(c)]])}
+    assert A._dcm_dict == {B: Matrix([[1, 0, 0],[0,  cos(c), sin(c)],[0, -sin(c), cos(c)]])}
+    assert C._dcm_dict == {B: Matrix([[1, 0, 0],[0, cos(b), -sin(b)],[0, sin(b),  cos(b)]])}
+
+def test_dcm_cache_dict():
+    A = ReferenceFrame('A')
+    B = ReferenceFrame('B')
+    C = ReferenceFrame('C')
+    D = ReferenceFrame('D')
+
+    a, b, c = symbols('a b c')
+
+    B.orient_axis(A, A.x, a)
+    C.orient_axis(B, B.x, b)
+    D.orient_axis(C, C.x, c)
+
+    assert D._dcm_dict == {C: Matrix([[1, 0, 0],[0,  cos(c), sin(c)],[0, -sin(c), cos(c)]])}
+    assert C._dcm_dict == {B: Matrix([[1, 0, 0],[0,  cos(b), sin(b)],[0, -sin(b), cos(b)]]), \
+        D: Matrix([[1, 0, 0],[0, cos(c), -sin(c)],[0, sin(c),  cos(c)]])}
+    assert B._dcm_dict == {A: Matrix([[1, 0, 0],[0,  cos(a), sin(a)],[0, -sin(a), cos(a)]]), \
+        C: Matrix([[1, 0, 0],[0, cos(b), -sin(b)],[0, sin(b),  cos(b)]])}
+    assert A._dcm_dict == {B: Matrix([[1, 0, 0],[0, cos(a), -sin(a)],[0, sin(a),  cos(a)]])}
+
+    assert D._dcm_dict == D._dcm_cache
+
+    D.dcm(A) # Check calculated dcm relation is stored in _dcm_cache and not in _dcm_dict
+    assert list(A._dcm_cache.keys()) == [A, B, D]
+    assert list(D._dcm_cache.keys()) == [C, A]
+    assert list(A._dcm_dict.keys()) == [B]
+    assert list(D._dcm_dict.keys()) == [C]
+    assert A._dcm_dict != A._dcm_cache
+
+    A.orient_axis(B, B.x, b) # _dcm_cache of A is wiped out and new relation is stored.
+    assert A._dcm_dict == {B: Matrix([[1, 0, 0],[0,  cos(b), sin(b)],[0, -sin(b), cos(b)]])}
+    assert A._dcm_dict == A._dcm_cache
+    assert B._dcm_dict == {C: Matrix([[1, 0, 0],[0, cos(b), -sin(b)],[0, sin(b),  cos(b)]]), \
+        A: Matrix([[1, 0, 0],[0, cos(b), -sin(b)],[0, sin(b),  cos(b)]])}
+
+def test_xx_dyad():
+    N = ReferenceFrame('N')
+    F = ReferenceFrame('F', indices=['1', '2', '3'])
+    assert N.xx == Vector.outer(N.x, N.x)
+    assert F.xx == Vector.outer(F.x, F.x)
+
+def test_xy_dyad():
+    N = ReferenceFrame('N')
+    F = ReferenceFrame('F', indices=['1', '2', '3'])
+    assert N.xy == Vector.outer(N.x, N.y)
+    assert F.xy == Vector.outer(F.x, F.y)
+
+def test_xz_dyad():
+    N = ReferenceFrame('N')
+    F = ReferenceFrame('F', indices=['1', '2', '3'])
+    assert N.xz == Vector.outer(N.x, N.z)
+    assert F.xz == Vector.outer(F.x, F.z)
+
+def test_yx_dyad():
+    N = ReferenceFrame('N')
+    F = ReferenceFrame('F', indices=['1', '2', '3'])
+    assert N.yx == Vector.outer(N.y, N.x)
+    assert F.yx == Vector.outer(F.y, F.x)
+
+def test_yy_dyad():
+    N = ReferenceFrame('N')
+    F = ReferenceFrame('F', indices=['1', '2', '3'])
+    assert N.yy == Vector.outer(N.y, N.y)
+    assert F.yy == Vector.outer(F.y, F.y)
+
+def test_yz_dyad():
+    N = ReferenceFrame('N')
+    F = ReferenceFrame('F', indices=['1', '2', '3'])
+    assert N.yz == Vector.outer(N.y, N.z)
+    assert F.yz == Vector.outer(F.y, F.z)
+
+def test_zx_dyad():
+    N = ReferenceFrame('N')
+    F = ReferenceFrame('F', indices=['1', '2', '3'])
+    assert N.zx == Vector.outer(N.z, N.x)
+    assert F.zx == Vector.outer(F.z, F.x)
+
+def test_zy_dyad():
+    N = ReferenceFrame('N')
+    F = ReferenceFrame('F', indices=['1', '2', '3'])
+    assert N.zy == Vector.outer(N.z, N.y)
+    assert F.zy == Vector.outer(F.z, F.y)
+
+def test_zz_dyad():
+    N = ReferenceFrame('N')
+    F = ReferenceFrame('F', indices=['1', '2', '3'])
+    assert N.zz == Vector.outer(N.z, N.z)
+    assert F.zz == Vector.outer(F.z, F.z)
+
+def test_unit_dyadic():
+    N = ReferenceFrame('N')
+    F = ReferenceFrame('F', indices=['1', '2', '3'])
+    assert N.u == N.xx + N.yy + N.zz
+    assert F.u == F.xx + F.yy + F.zz
+
+
+def test_pickle_frame():
+    N = ReferenceFrame('N')
+    A = ReferenceFrame('A')
+    A.orient_axis(N, N.x, 1)
+    A_C_N = A.dcm(N)
+    N1 = pickle.loads(pickle.dumps(N))
+    A1 = tuple(N1._dcm_dict.keys())[0]
+    assert A1.dcm(N1) == A_C_N

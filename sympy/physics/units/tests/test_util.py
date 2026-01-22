@@ -1,11 +1,19 @@
-from sympy import Pow, Tuple, pi, sstr, sympify, symbols
+from sympy.core.containers import Tuple
+from sympy.core.numbers import pi
+from sympy.core.power import Pow
+from sympy.core.symbol import symbols
+from sympy.core.sympify import sympify
+from sympy.physics.units.systems import SI
+from sympy.printing.str import sstr
+from sympy.physics.units.quantities import Quantity
 from sympy.physics.units import (
     G, centimeter, coulomb, day, degree, gram, hbar, hour, inch, joule, kelvin,
     kilogram, kilometer, length, meter, mile, minute, newton, planck,
     planck_length, planck_mass, planck_temperature, planck_time, radians,
-    second, speed_of_light, steradian, time, km)
+    second, speed_of_light, steradian, time, km, ft, m)
 from sympy.physics.units.util import convert_to, check_dimensions
 from sympy.testing.pytest import raises
+from sympy.functions.elementary.miscellaneous import sqrt
 
 
 def NS(e, n=15, **options):
@@ -64,8 +72,29 @@ def test_convert_to_quantities():
     assert convert_to(pi*radians, degree) == 180*degree
     assert convert_to(pi, degree) == 180*degree
 
+    # https://github.com/sympy/sympy/issues/26263
+    assert convert_to(sqrt(meter**2 + meter**2.0), meter) == sqrt(meter**2 + meter**2.0)
+    assert convert_to((meter**2 + meter**2.0)**2, meter) == (meter**2 + meter**2.0)**2
+
+    # https://github.com/sympy/sympy/issues/27812
+    acre_in_ft = Quantity("acre")
+    acre_in_ft.set_global_relative_scale_factor(43560, ft**2)
+    assert convert_to(acre_in_ft, m**2) == 316160658*meter**2/78125
+
+    acre_in_acre = Quantity("acre_in_acre")
+    acre_in_acre.set_global_relative_scale_factor(1, acre_in_ft)
+    assert convert_to(acre_in_acre, m**2) == 316160658*meter**2/78125
+
+    assert SI.get_quantity_scale_factor(kilometer) == 1000
+    assert SI.get_quantity_scale_factor(kilometer*kilogram) == 10**6
+    assert SI.get_quantity_scale_factor(kilometer**2) == 10**6
+
 
 def test_convert_to_tuples_of_quantities():
+    from sympy.core.symbol import symbols
+
+    alpha, beta = symbols('alpha beta')
+
     assert convert_to(speed_of_light, [meter, second]) == 299792458 * meter / second
     assert convert_to(speed_of_light, (meter, second)) == 299792458 * meter / second
     assert convert_to(speed_of_light, Tuple(meter, second)) == 299792458 * meter / second
@@ -77,13 +106,20 @@ def test_convert_to_tuples_of_quantities():
     assert convert_to(2 * speed_of_light, [meter, second, kilogram]) == 2 * 299792458 * meter / second
     assert convert_to(G, [G, speed_of_light, planck]) == 1.0*G
 
-    assert NS(convert_to(meter, [G, speed_of_light, hbar]), n=7) == '6.187142e+34*gravitational_constant**0.5000000*hbar**0.5000000*speed_of_light**(-1.500000)'
+    assert NS(convert_to(meter, [G, speed_of_light, hbar]), n=7) == '6.187142e+34*gravitational_constant**0.5000000*hbar**0.5000000/speed_of_light**1.500000'
     assert NS(convert_to(planck_mass, kilogram), n=7) == '2.176434e-8*kilogram'
     assert NS(convert_to(planck_length, meter), n=7) == '1.616255e-35*meter'
     assert NS(convert_to(planck_time, second), n=6) == '5.39125e-44*second'
     assert NS(convert_to(planck_temperature, kelvin), n=7) == '1.416784e+32*kelvin'
     assert NS(convert_to(convert_to(meter, [G, speed_of_light, planck]), meter), n=10) == '1.000000000*meter'
 
+    # similar to https://github.com/sympy/sympy/issues/26263
+    assert convert_to(sqrt(meter**2 + second**2.0), [meter, second]) == sqrt(meter**2 + second**2.0)
+    assert convert_to((meter**2 + second**2.0)**2, [meter, second]) == (meter**2 + second**2.0)**2
+
+    # similar to https://github.com/sympy/sympy/issues/21463
+    assert convert_to(1/(beta*meter + meter), 1/meter) == 1/(beta*meter + meter)
+    assert convert_to(1/(beta*meter + alpha*meter), 1/kilometer) == (1/(kilometer*beta/1000 + alpha*kilometer/1000))
 
 def test_eval_simplify():
     from sympy.physics.units import cm, mm, km, m, K, kilo
@@ -115,6 +151,30 @@ def test_quantity_simplify():
     assert quantity_simplify(2**(foot/inch*kilo/1000)*inch) == 4096*foot/12
     assert quantity_simplify(foot**2*inch + inch**2*foot) == 13*foot**3/144
 
+def test_quantity_simplify_across_dimensions():
+    from sympy.physics.units.util import quantity_simplify
+    from sympy.physics.units import ampere, ohm, volt, joule, pascal, farad, second, watt, siemens, henry, tesla, weber, hour, newton
+
+    assert quantity_simplify(ampere*ohm, across_dimensions=True, unit_system="SI") == volt
+    assert quantity_simplify(6*ampere*ohm, across_dimensions=True, unit_system="SI") == 6*volt
+    assert quantity_simplify(volt/ampere, across_dimensions=True, unit_system="SI") == ohm
+    assert quantity_simplify(volt/ohm, across_dimensions=True, unit_system="SI") == ampere
+    assert quantity_simplify(joule/meter**3, across_dimensions=True, unit_system="SI") == pascal
+    assert quantity_simplify(farad*ohm, across_dimensions=True, unit_system="SI") == second
+    assert quantity_simplify(joule/second, across_dimensions=True, unit_system="SI") == watt
+    assert quantity_simplify(meter**3/second, across_dimensions=True, unit_system="SI") == meter**3/second
+    assert quantity_simplify(joule/second, across_dimensions=True, unit_system="SI") == watt
+
+    assert quantity_simplify(joule/coulomb, across_dimensions=True, unit_system="SI") == volt
+    assert quantity_simplify(volt/ampere, across_dimensions=True, unit_system="SI") == ohm
+    assert quantity_simplify(ampere/volt, across_dimensions=True, unit_system="SI") == siemens
+    assert quantity_simplify(coulomb/volt, across_dimensions=True, unit_system="SI") == farad
+    assert quantity_simplify(volt*second/ampere, across_dimensions=True, unit_system="SI") == henry
+    assert quantity_simplify(volt*second/meter**2, across_dimensions=True, unit_system="SI") == tesla
+    assert quantity_simplify(joule/ampere, across_dimensions=True, unit_system="SI") == weber
+
+    assert quantity_simplify(5*kilometer/hour, across_dimensions=True, unit_system="SI") == 25*meter/(18*second)
+    assert quantity_simplify(5*kilogram*meter/second**2, across_dimensions=True, unit_system="SI") == 5*newton
 
 def test_check_dimensions():
     x = symbols('x')
@@ -122,6 +182,7 @@ def test_check_dimensions():
     assert check_dimensions(length + x) == length + x
     # after subs we get 2*length; check will clear the constant
     assert check_dimensions((length + x).subs(x, length)) == length
+    assert check_dimensions(newton*meter + joule) == joule + meter*newton
     raises(ValueError, lambda: check_dimensions(inch + 1))
     raises(ValueError, lambda: check_dimensions(length + 1))
     raises(ValueError, lambda: check_dimensions(length + time))
@@ -130,3 +191,8 @@ def test_check_dimensions():
     raises(ValueError, lambda: check_dimensions(2 * meter + 3 * second))
     raises(ValueError, lambda: check_dimensions(1 / second + 1 / meter))
     raises(ValueError, lambda: check_dimensions(2 * meter*(mile + centimeter) + km))
+
+def test_check_dimensions_error_message():
+    with raises(ValueError) as excinfo:
+        check_dimensions(meter + second)
+    assert str(excinfo.value) == "addends have incompatible dimensions: (((Dimension(length, L), 1),), ((Dimension(time, T), 1),))"

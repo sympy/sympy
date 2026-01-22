@@ -1,32 +1,35 @@
 """Options manager for :class:`~.Poly` and public API functions. """
 
-from __future__ import print_function, division
+from __future__ import annotations
 
 __all__ = ["Options"]
 
-from typing import Dict, List, Optional, Type
-
-from sympy.core import S, Basic, sympify
+from sympy.core.basic import Basic
+from sympy.core.sympify import sympify
 from sympy.polys.polyerrors import GeneratorsError, OptionError, FlagError
 from sympy.utilities import numbered_symbols, topological_sort, public
-from sympy.utilities.iterables import has_dups
+from sympy.utilities.iterables import has_dups, is_sequence
 
 import sympy.polys
 
 import re
+from typing import TYPE_CHECKING
 
-class Option(object):
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
+
+class Option:
     """Base class for all kinds of options. """
 
-    option = None  # type: Optional[str]
+    option: str | None = None
 
     is_Flag = False
 
-    requires = []  # type: List[str]
-    excludes = []  # type: List[str]
+    requires: list[str] = []
+    excludes: list[str] = []
 
-    after = []  # type: List[str]
-    before = []  # type: List[str]
+    after: list[str] = []
+    before: list[str] = []
 
     @classmethod
     def default(cls):
@@ -123,7 +126,10 @@ class Options(dict):
     """
 
     __order__ = None
-    __options__ = {}  # type: Dict[str, Type[Option]]
+    __options__: dict[str, type[Option]] = {}
+
+    gens: tuple[Expr, ...]
+    domain: sympy.polys.domains.Domain
 
     def __init__(self, gens, args, flags=None, strict=False):
         dict.__init__(self)
@@ -154,7 +160,7 @@ class Options(dict):
 
         preprocess_options(args)
 
-        for key, value in dict(defaults).items():
+        for key in dict(defaults):
             if key in self:
                 del defaults[key]
             else:
@@ -185,16 +191,14 @@ class Options(dict):
     def _init_dependencies_order(cls):
         """Resolve the order of options' processing. """
         if cls.__order__ is None:
-            vertices, edges = [], set([])
+            vertices, edges = [], set()
 
             for name, option in cls.__options__.items():
                 vertices.append(name)
 
-                for _name in option.after:
-                    edges.add((_name, name))
+                edges.update((_name, name) for _name in option.after)
 
-                for _name in option.before:
-                    edges.add((name, _name))
+                edges.update((name, _name) for _name in option.before)
 
             try:
                 cls.__order__ = topological_sort((vertices, list(edges)))
@@ -218,7 +222,7 @@ class Options(dict):
         if attr in self.__options__:
             self[attr] = value
         else:
-            super(Options, self).__setattr__(attr, value)
+            super().__setattr__(attr, value)
 
     @property
     def args(self):
@@ -259,8 +263,8 @@ class Expand(BooleanOption, metaclass=OptionType):
 
     option = 'expand'
 
-    requires = []  # type: List[str]
-    excludes = []  # type: List[str]
+    requires: list[str] = []
+    excludes: list[str] = []
 
     @classmethod
     def default(cls):
@@ -272,8 +276,8 @@ class Gens(Option, metaclass=OptionType):
 
     option = 'gens'
 
-    requires = []  # type: List[str]
-    excludes = []  # type: List[str]
+    requires: list[str] = []
+    excludes: list[str] = []
 
     @classmethod
     def default(cls):
@@ -283,7 +287,7 @@ class Gens(Option, metaclass=OptionType):
     def preprocess(cls, gens):
         if isinstance(gens, Basic):
             gens = (gens,)
-        elif len(gens) == 1 and hasattr(gens[0], '__iter__'):
+        elif len(gens) == 1 and is_sequence(gens[0]):
             gens = gens[0]
 
         if gens == (None,):
@@ -301,8 +305,8 @@ class Wrt(Option, metaclass=OptionType):
 
     option = 'wrt'
 
-    requires = []  # type: List[str]
-    excludes = []  # type: List[str]
+    requires: list[str] = []
+    excludes: list[str] = []
 
     _re_split = re.compile(r"\s*,\s*|\s+")
 
@@ -316,7 +320,7 @@ class Wrt(Option, metaclass=OptionType):
                 raise OptionError('Bad input: missing parameter.')
             if not wrt:
                 return []
-            return [ gen for gen in cls._re_split.split(wrt) ]
+            return list(cls._re_split.split(wrt))
         elif hasattr(wrt, '__getitem__'):
             return list(map(str, wrt))
         else:
@@ -328,8 +332,8 @@ class Sort(Option, metaclass=OptionType):
 
     option = 'sort'
 
-    requires = []  # type: List[str]
-    excludes = []  # type: List[str]
+    requires: list[str] = []
+    excludes: list[str] = []
 
     @classmethod
     def default(cls):
@@ -350,8 +354,8 @@ class Order(Option, metaclass=OptionType):
 
     option = 'order'
 
-    requires = []  # type: List[str]
-    excludes = []  # type: List[str]
+    requires: list[str] = []
+    excludes: list[str] = []
 
     @classmethod
     def default(cls):
@@ -367,7 +371,7 @@ class Field(BooleanOption, metaclass=OptionType):
 
     option = 'field'
 
-    requires = []  # type: List[str]
+    requires: list[str] = []
     excludes = ['domain', 'split', 'gaussian']
 
 
@@ -376,7 +380,7 @@ class Greedy(BooleanOption, metaclass=OptionType):
 
     option = 'greedy'
 
-    requires = []  # type: List[str]
+    requires: list[str] = []
     excludes = ['domain', 'split', 'gaussian', 'extension', 'modulus', 'symmetric']
 
 
@@ -389,7 +393,7 @@ class Composite(BooleanOption, metaclass=OptionType):
     def default(cls):
         return None
 
-    requires = []  # type: List[str]
+    requires: list[str] = []
     excludes = ['domain', 'split', 'gaussian', 'extension', 'modulus', 'symmetric']
 
 
@@ -398,7 +402,7 @@ class Domain(Option, metaclass=OptionType):
 
     option = 'domain'
 
-    requires = []  # type: List[str]
+    requires: list[str] = []
     excludes = ['field', 'greedy', 'split', 'gaussian', 'extension']
 
     after = ['gens']
@@ -406,12 +410,12 @@ class Domain(Option, metaclass=OptionType):
     _re_realfield = re.compile(r"^(R|RR)(_(\d+))?$")
     _re_complexfield = re.compile(r"^(C|CC)(_(\d+))?$")
     _re_finitefield = re.compile(r"^(FF|GF)\((\d+)\)$")
-    _re_polynomial = re.compile(r"^(Z|ZZ|Q|QQ|R|RR|C|CC)\[(.+)\]$")
+    _re_polynomial = re.compile(r"^(Z|ZZ|Q|QQ|ZZ_I|QQ_I|R|RR|C|CC)\[(.+)\]$")
     _re_fraction = re.compile(r"^(Z|ZZ|Q|QQ)\((.+)\)$")
     _re_algebraic = re.compile(r"^(Q|QQ)\<(.+)\>$")
 
     @classmethod
-    def preprocess(cls, domain):
+    def preprocess(cls, domain) -> sympy.polys.domains.Domain:
         if isinstance(domain, sympy.polys.domains.Domain):
             return domain
         elif hasattr(domain, 'to_domain'):
@@ -422,6 +426,12 @@ class Domain(Option, metaclass=OptionType):
 
             if domain in ['Q', 'QQ']:
                 return sympy.polys.domains.QQ
+
+            if domain == 'ZZ_I':
+                return sympy.polys.domains.ZZ_I
+
+            if domain == 'QQ_I':
+                return sympy.polys.domains.QQ_I
 
             if domain == 'EX':
                 return sympy.polys.domains.EX
@@ -464,6 +474,10 @@ class Domain(Option, metaclass=OptionType):
                     return sympy.polys.domains.QQ.poly_ring(*gens)
                 elif ground in ['R', 'RR']:
                     return sympy.polys.domains.RR.poly_ring(*gens)
+                elif ground == 'ZZ_I':
+                    return sympy.polys.domains.ZZ_I.poly_ring(*gens)
+                elif ground == 'QQ_I':
+                    return sympy.polys.domains.QQ_I.poly_ring(*gens)
                 else:
                     return sympy.polys.domains.CC.poly_ring(*gens)
 
@@ -503,7 +517,7 @@ class Split(BooleanOption, metaclass=OptionType):
 
     option = 'split'
 
-    requires = []  # type: List[str]
+    requires: list[str] = []
     excludes = ['field', 'greedy', 'domain', 'gaussian', 'extension',
         'modulus', 'symmetric']
 
@@ -518,14 +532,14 @@ class Gaussian(BooleanOption, metaclass=OptionType):
 
     option = 'gaussian'
 
-    requires = []  # type: List[str]
+    requires: list[str] = []
     excludes = ['field', 'greedy', 'domain', 'split', 'extension',
         'modulus', 'symmetric']
 
     @classmethod
     def postprocess(cls, options):
         if 'gaussian' in options and options['gaussian'] is True:
-            options['extension'] = set([S.ImaginaryUnit])
+            options['domain'] = sympy.polys.domains.QQ_I
             Extension.postprocess(options)
 
 
@@ -534,7 +548,7 @@ class Extension(Option, metaclass=OptionType):
 
     option = 'extension'
 
-    requires = []  # type: List[str]
+    requires: list[str] = []
     excludes = ['greedy', 'domain', 'split', 'gaussian', 'modulus',
         'symmetric']
 
@@ -546,7 +560,7 @@ class Extension(Option, metaclass=OptionType):
             raise OptionError("'False' is an invalid argument for 'extension'")
         else:
             if not hasattr(extension, '__iter__'):
-                extension = set([extension])
+                extension = {extension}
             else:
                 if not extension:
                     extension = None
@@ -567,7 +581,7 @@ class Modulus(Option, metaclass=OptionType):
 
     option = 'modulus'
 
-    requires = []  # type: List[str]
+    requires: list[str] = []
     excludes = ['greedy', 'split', 'domain', 'gaussian', 'extension']
 
     @classmethod
@@ -762,7 +776,7 @@ def allowed_flags(args, flags):
 
     for arg in args.keys():
         try:
-            if Options.__options__[arg].is_Flag and not arg in flags:
+            if Options.__options__[arg].is_Flag and arg not in flags:
                 raise FlagError(
                     "'%s' flag is not allowed in this context" % arg)
         except KeyError:

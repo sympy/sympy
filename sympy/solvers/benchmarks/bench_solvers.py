@@ -1,6 +1,6 @@
-from __future__ import print_function, division
-
-from sympy import zeros, eye, Symbol, solve_linear_system
+from sympy.core.symbol import Symbol
+from sympy.matrices.dense import (eye, zeros)
+from sympy.solvers.solvers import solve_linear_system
 
 N = 8
 M = zeros(N, N + 1)

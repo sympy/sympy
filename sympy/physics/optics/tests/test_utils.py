@@ -6,7 +6,10 @@ from sympy.physics.optics.utils import (refraction_angle, fresnel_coefficients,
 from sympy.physics.optics.medium import Medium
 from sympy.physics.units import e0
 
-from sympy import symbols, sqrt, Matrix, oo
+from sympy.core.numbers import oo
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.matrices.dense import Matrix
 from sympy.geometry.point import Point3D
 from sympy.geometry.line import Ray3D
 from sympy.geometry.plane import Plane
@@ -15,6 +18,7 @@ from sympy.testing.pytest import raises
 
 
 ae = lambda a, b, n: comp(a, b, 10**-n)
+
 
 def test_refraction_angle():
     n1, n2 = symbols('n1, n2')
@@ -129,7 +133,7 @@ def test_lens_makers_formula():
     n1, n2 = symbols('n1, n2')
     m1 = Medium('m1', permittivity=e0, n=1)
     m2 = Medium('m2', permittivity=e0, n=1.33)
-    assert lens_makers_formula(n1, n2, 10, -10) == 5*n2/(n1 - n2)
+    assert lens_makers_formula(n1, n2, 10, -10) == 5.0*n2/(n1 - n2)
     assert ae(lens_makers_formula(m1, m2, 10, -10), -20.15, 2)
     assert ae(lens_makers_formula(1.33, 1, 10, -10),  15.15, 2)
 
@@ -169,12 +173,30 @@ def test_lens_formula():
     assert lens_formula(focal_length=f, u=oo) == f
     raises(ValueError, lambda: lens_formula(focal_length=f, u=u, v=v))
 
+
 def test_hyperfocal_distance():
     f, N, c = symbols('f, N, c')
     assert hyperfocal_distance(f=f, N=N, c=c) == f**2/(N*c)
     assert ae(hyperfocal_distance(f=0.5, N=8, c=0.0033), 9.47, 2)
 
+
 def test_transverse_magnification():
     si, so = symbols('si, so')
     assert transverse_magnification(si, so) == -si/so
     assert transverse_magnification(30, 15) == -2
+
+
+def test_lens_makers_formula_thick_lens():
+    n1, n2 = symbols('n1, n2')
+    m1 = Medium('m1', permittivity=e0, n=1)
+    m2 = Medium('m2', permittivity=e0, n=1.33)
+    assert ae(lens_makers_formula(m1, m2, 10, -10, d=1), -19.82, 2)
+    assert lens_makers_formula(n1, n2, 1, -1, d=0.1) == n2/((2.0 - (0.1*n1 - 0.1*n2)/n1)*(n1 - n2))
+
+
+def test_lens_makers_formula_plano_lens():
+    n1, n2 = symbols('n1, n2')
+    m1 = Medium('m1', permittivity=e0, n=1)
+    m2 = Medium('m2', permittivity=e0, n=1.33)
+    assert ae(lens_makers_formula(m1, m2, 10, oo), -40.30, 2)
+    assert lens_makers_formula(n1, n2, 10, oo) == 10.0*n2/(n1 - n2)

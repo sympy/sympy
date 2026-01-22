@@ -1,10 +1,9 @@
-from __future__ import division, print_function
-
-from sympy.core.compatibility import as_int
+from sympy.core.containers import Dict
+from sympy.core.symbol import Dummy
 from sympy.utilities.iterables import is_sequence
-from sympy.utilities.misc import filldedent
+from sympy.utilities.misc import as_int, filldedent
 
-from .sparse import SparseMatrix
+from .sparse import MutableSparseMatrix as SparseMatrix
 
 
 def _doktocsr(dok):
@@ -19,6 +18,17 @@ def _doktocsr(dok):
         of row[i]. Thus IA[i+1] - IA[i] gives number of non-zero
         elements row[i]. The length of IA is always 1 more than the
         number of rows in the matrix.
+
+    Examples
+    ========
+
+    >>> from sympy.matrices.sparsetools import _doktocsr
+    >>> from sympy import SparseMatrix, diag
+    >>> m = SparseMatrix(diag(1, 2, 3))
+    >>> m[2, 0] = -1
+    >>> _doktocsr(m)
+    [[1, 2, -1, 3], [0, 1, 0, 2], [0, 1, 2, 4], [3, 3]]
+
     """
     row, JA, A = [list(i) for i in zip(*dok.row_list())]
     IA = [0]*((row[0] if row else 0) + 1)
@@ -30,24 +40,41 @@ def _doktocsr(dok):
 
 
 def _csrtodok(csr):
-    """Converts a CSR representation to DOK representation"""
+    """Converts a CSR representation to DOK representation.
+
+    Examples
+    ========
+
+    >>> from sympy.matrices.sparsetools import _csrtodok
+    >>> _csrtodok([[5, 8, 3, 6], [0, 1, 2, 1], [0, 0, 2, 3, 4], [4, 3]])
+    Matrix([
+    [0, 0, 0],
+    [5, 8, 0],
+    [0, 0, 3],
+    [0, 6, 0]])
+
+    """
     smat = {}
     A, JA, IA, shape = csr
     for i in range(len(IA) - 1):
         indices = slice(IA[i], IA[i + 1])
         for l, m in zip(A[indices], JA[indices]):
             smat[i, m] = l
-    return SparseMatrix(*(shape + [smat]))
+    return SparseMatrix(*shape, smat)
 
 
-def banded(*args, **kwargs):
+def banded(*args, **kwargs) -> SparseMatrix:
     """Returns a SparseMatrix from the given dictionary describing
     the diagonals of the matrix. The keys are positive for upper
     diagonals and negative for those below the main diagonal. The
     values may be:
-        * expressions or single-argument functions,
-        * lists or tuples of values,
-        * matrices
+
+    * expressions or single-argument functions,
+
+    * lists or tuples of values,
+
+    * matrices
+
     Unless dimensions are given, the size of the returned matrix will
     be large enough to contain the largest non-zero value provided.
 
@@ -168,7 +195,6 @@ def banded(*args, **kwargs):
     [0, 0, 0, 0, 2, 1, 1],
     [0, 0, 0, 0, 0, 0, 1]])
     """
-    from sympy import Dict, Dummy, SparseMatrix
     try:
         if len(args) not in (1, 2, 3):
             raise TypeError
@@ -211,22 +237,22 @@ def banded(*args, **kwargs):
                 i += extra
                 if is_sequence(vi):
                     vi = SparseMatrix(vi)
-                    smat[r + i, c + i] = vi
+                    smat[r + i, c + i] = vi # type: ignore
                     extra += min(vi.shape) - 1
                 else:
-                    smat[r + i, c + i] = vi
+                    smat[r + i, c + i] = vi # type: ignore
         elif is_sequence(v):
             v = SparseMatrix(v)
             rv, cv = v.shape
             if rows and cols:
                 nr, xr = divmod(rows - r, rv)
-                nc, xc = divmod(cols - c, cv)
+                nc, xc = divmod(cols - c, cv) # type: ignore
                 x = xr or xc
                 do = min(nr, nc)
             elif rows:
                 do, x = divmod(rows - r, rv)
             elif cols:
-                do, x = divmod(cols - c, cv)
+                do, x = divmod(cols - c, cv) # type: ignore
             else:
                 do = 1
                 x = 0
@@ -238,12 +264,12 @@ def banded(*args, **kwargs):
             for i in range(do):
                 smat[r, c] = v
                 r += j
-                c += j
+                c += j # type: ignore
         elif v:
-            smat[r, c] = tba
+            smat[r, c] = tba # type: ignore
             undone.append((d, v))
     s = SparseMatrix(None, smat)  # to expand matrices
-    smat = s._smat
+    smat = s.todok() # type: ignore
     # check for dim errors here
     if rows is not None and rows < s.rows:
         raise ValueError('Designated rows %s < needed %s' % (rows, s.rows))

@@ -1,5 +1,8 @@
-from sympy import sin, cos, symbols, pi, ImmutableMatrix as Matrix, \
-     simplify
+from sympy.core.numbers import pi
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.matrices.immutable import ImmutableDenseMatrix as Matrix
+from sympy.simplify.simplify import simplify
 from sympy.vector import (CoordSys3D, Vector, Dyadic,
                           DyadicAdd, DyadicMul, DyadicZero,
                           BaseDyadic, express)
@@ -115,3 +118,17 @@ def test_dyadic_simplify():
     test4 = ((-4 * x * y**2 - 2 * y**3 - 2 * x**2 * y) / (x + y)**2) * dy
     test4 = test4.simplify()
     assert (N.i & test4 & N.i) == -2 * y
+
+
+def test_dyadic_srepr():
+    from sympy.printing.repr import srepr
+    N = CoordSys3D('N')
+
+    dy = N.i | N.j
+    res = "BaseDyadic(CoordSys3D(Str('N'), Tuple(ImmutableDenseMatrix([["\
+        "Integer(1), Integer(0), Integer(0)], [Integer(0), Integer(1), "\
+        "Integer(0)], [Integer(0), Integer(0), Integer(1)]]), "\
+        "VectorZero())).i, CoordSys3D(Str('N'), Tuple(ImmutableDenseMatrix("\
+        "[[Integer(1), Integer(0), Integer(0)], [Integer(0), Integer(1), "\
+        "Integer(0)], [Integer(0), Integer(0), Integer(1)]]), VectorZero())).j)"
+    assert srepr(dy) == res

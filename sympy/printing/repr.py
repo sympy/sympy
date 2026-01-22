@@ -5,23 +5,24 @@ The most important function here is srepr that returns a string so that the
 relation eval(srepr(expr))=expr holds in an appropriate environment.
 """
 
-from __future__ import print_function, division
-
-from typing import Any, Dict
+from __future__ import annotations
+from typing import Any
 
 from sympy.core.function import AppliedUndef
-from mpmath.libmp import repr_dps, to_str as mlib_to_str
+from sympy.core.mul import Mul
+from sympy.core.add import Add
+from sympy.external.mpmath import repr_dps, to_str as mlib_to_str
 
-from .printer import Printer
+from .printer import Printer, print_function
 
 
 class ReprPrinter(Printer):
     printmethod = "_sympyrepr"
 
-    _default_settings = {
+    _default_settings: dict[str, Any] = {
         "order": None,
         "perm_cyclic" : True,
-    }  # type: Dict[str, Any]
+    }
 
     def reprify(self, args, sep):
         """
@@ -48,12 +49,9 @@ class ReprPrinter(Printer):
             return str(expr)
 
     def _print_Add(self, expr, order=None):
-        args = self._as_ordered_terms(expr, order=order)
-        nargs = len(args)
+        args = Add.make_args(expr)
         args = map(self._print, args)
         clsname = type(expr).__name__
-        if nargs > 255:  # Issue #10259, Python < 3.7
-            return clsname + "(*[%s])" % ", ".join(args)
         return clsname + "(%s)" % ", ".join(args)
 
     def _print_Cycle(self, expr):
@@ -61,16 +59,19 @@ class ReprPrinter(Printer):
 
     def _print_Permutation(self, expr):
         from sympy.combinatorics.permutations import Permutation, Cycle
-        from sympy.utilities.exceptions import SymPyDeprecationWarning
+        from sympy.utilities.exceptions import sympy_deprecation_warning
 
         perm_cyclic = Permutation.print_cyclic
         if perm_cyclic is not None:
-            SymPyDeprecationWarning(
-                feature="Permutation.print_cyclic = {}".format(perm_cyclic),
-                useinstead="init_printing(perm_cyclic={})"
-                .format(perm_cyclic),
-                issue=15201,
-                deprecated_since_version="1.6").warn()
+            sympy_deprecation_warning(
+                f"""
+                Setting Permutation.print_cyclic is deprecated. Instead use
+                init_printing(perm_cyclic={perm_cyclic}).
+                """,
+                deprecated_since_version="1.6",
+                active_deprecations_target="deprecated-permutation-print_cyclic",
+                stacklevel=7,
+            )
         else:
             perm_cyclic = self._settings.get("perm_cyclic", True)
 
@@ -101,6 +102,13 @@ class ReprPrinter(Printer):
         r += '(%s)' % ', '.join([self._print(a) for a in expr.args])
         return r
 
+    def _print_Heaviside(self, expr):
+        # Same as _print_Function but uses pargs to suppress default value for
+        # 2nd arg.
+        r = self._print(expr.func)
+        r += '(%s)' % ', '.join([self._print(a) for a in expr.pargs])
+        return r
+
     def _print_FunctionClass(self, expr):
         if issubclass(expr, AppliedUndef):
             return 'Function(%r)' % (expr.__name__)
@@ -122,6 +130,9 @@ class ReprPrinter(Printer):
     def _print_Integer(self, expr):
         return 'Integer(%i)' % expr.p
 
+    def _print_Complexes(self, expr):
+        return 'Complexes'
+
     def _print_Integers(self, expr):
         return 'Integers'
 
@@ -131,17 +142,33 @@ class ReprPrinter(Printer):
     def _print_Naturals0(self, expr):
         return 'Naturals0'
 
+    def _print_Rationals(self, expr):
+        return 'Rationals'
+
     def _print_Reals(self, expr):
         return 'Reals'
 
     def _print_EmptySet(self, expr):
         return 'EmptySet'
 
+    def _print_UniversalSet(self, expr):
+        return 'UniversalSet'
+
     def _print_EmptySequence(self, expr):
         return 'EmptySequence'
 
     def _print_list(self, expr):
         return "[%s]" % self.reprify(expr, ", ")
+
+    def _print_dict(self, expr):
+        sep = ", "
+        dict_kvs = ["%s: %s" % (self.doprint(key), self.doprint(value)) for key, value in expr.items()]
+        return "{%s}" % sep.join(dict_kvs)
+
+    def _print_set(self, expr):
+        if not expr:
+            return "set()"
+        return "{%s}" % self.reprify(expr, ", ")
 
     def _print_MatrixBase(self, expr):
         # special case for some empty matrices
@@ -157,30 +184,6 @@ class ReprPrinter(Printer):
                 l[-1].append(expr[i, j])
         return '%s(%s)' % (expr.__class__.__name__, self._print(l))
 
-    def _print_MutableSparseMatrix(self, expr):
-        return self._print_MatrixBase(expr)
-
-    def _print_SparseMatrix(self, expr):
-        return self._print_MatrixBase(expr)
-
-    def _print_ImmutableSparseMatrix(self, expr):
-        return self._print_MatrixBase(expr)
-
-    def _print_Matrix(self, expr):
-        return self._print_MatrixBase(expr)
-
-    def _print_DenseMatrix(self, expr):
-        return self._print_MatrixBase(expr)
-
-    def _print_MutableDenseMatrix(self, expr):
-        return self._print_MatrixBase(expr)
-
-    def _print_ImmutableMatrix(self, expr):
-        return self._print_MatrixBase(expr)
-
-    def _print_ImmutableDenseMatrix(self, expr):
-        return self._print_MatrixBase(expr)
-
     def _print_BooleanTrue(self, expr):
         return "true"
 
@@ -191,17 +194,9 @@ class ReprPrinter(Printer):
         return "nan"
 
     def _print_Mul(self, expr, order=None):
-        terms = expr.args
-        if self.order != 'old':
-            args = expr._new_rawargs(*terms).as_ordered_factors()
-        else:
-            args = terms
-
-        nargs = len(args)
+        args = Mul.make_args(expr)
         args = map(self._print, args)
         clsname = type(expr).__name__
-        if nargs > 255:  # Issue #10259, Python < 3.7
-            return clsname + "(*[%s])" % ", ".join(args)
         return clsname + "(%s)" % ", ".join(args)
 
     def _print_Rational(self, expr):
@@ -221,10 +216,14 @@ class ReprPrinter(Printer):
         return "Sum2(%s, (%s, %s, %s))" % (self._print(expr.f), self._print(expr.i),
                                            self._print(expr.a), self._print(expr.b))
 
+    def _print_Str(self, s):
+        return "%s(%s)" % (s.__class__.__name__, self._print(s.name))
+
     def _print_Symbol(self, expr):
-        d = expr._assumptions.generator
+        d = expr._assumptions_orig
         # print the dummy_index like it was an assumption
         if expr.is_Dummy:
+            d = d.copy()
             d['dummy_index'] = expr.dummy_index
 
         if d == {}:
@@ -234,11 +233,31 @@ class ReprPrinter(Printer):
             return "%s(%s, %s)" % (expr.__class__.__name__,
                                    self._print(expr.name), ', '.join(attr))
 
+    def _print_CoordinateSymbol(self, expr):
+        d = expr._assumptions.generator
+
+        if d == {}:
+            return "%s(%s, %s)" % (
+                expr.__class__.__name__,
+                self._print(expr.coord_sys),
+                self._print(expr.index)
+            )
+        else:
+            attr = ['%s=%s' % (k, v) for k, v in d.items()]
+            return "%s(%s, %s, %s)" % (
+                expr.__class__.__name__,
+                self._print(expr.coord_sys),
+                self._print(expr.index),
+                ', '.join(attr)
+            )
+
     def _print_Predicate(self, expr):
-        return "%s(%s)" % (expr.__class__.__name__, self._print(expr.name))
+        return "Q.%s" % expr.name
 
     def _print_AppliedPredicate(self, expr):
-        return "%s(%s, %s)" % (expr.__class__.__name__, expr.func, expr.arg)
+        # will be changed to just expr.args when args overriding is removed
+        args = expr._args
+        return "%s(%s)" % (expr.__class__.__name__, self.reprify(args, ", "))
 
     def _print_str(self, expr):
         return repr(expr)
@@ -296,13 +315,9 @@ class ReprPrinter(Printer):
 
     def _print_DMP(self, p):
         cls = p.__class__.__name__
-        rep = self._print(p.rep)
+        rep = self._print(p.to_list())
         dom = self._print(p.dom)
-        if p.ring is not None:
-            ringstr = ", ring=" + self._print(p.ring)
-        else:
-            ringstr = ""
-        return "%s(%s, %s%s)" % (cls, rep, dom, ringstr)
+        return "%s(%s, %s)" % (cls, rep, dom)
 
     def _print_MonogenicFiniteExtension(self, ext):
         # The expanded tree shown by srepr(ext.modulus)
@@ -314,7 +329,7 @@ class ReprPrinter(Printer):
         ext = self._print(f.ext)
         return "ExtElem(%s, %s)" % (rep, ext)
 
-
+@print_function(ReprPrinter)
 def srepr(expr, **settings):
     """return expr in repr form"""
     return ReprPrinter(settings).doprint(expr)

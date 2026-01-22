@@ -1,5 +1,7 @@
-from sympy import symbols, S, log, Rational
-from sympy.core.trace import Tr
+from sympy.core.numbers import Rational
+from sympy.core.singleton import S
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.exponential import log
 from sympy.external import import_module
 from sympy.physics.quantum.density import Density, entropy, fidelity
 from sympy.physics.quantum.state import Ket, TimeDepKet
@@ -9,6 +11,7 @@ from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.cartesian import XKet, PxKet, PxOp, XOp
 from sympy.physics.quantum.spin import JzKet
 from sympy.physics.quantum.operator import OuterProduct
+from sympy.physics.quantum.trace import Tr
 from sympy.functions import sqrt
 from sympy.testing.pytest import raises
 from sympy.physics.quantum.matrixutils import scipy_sparse_matrix
@@ -171,7 +174,7 @@ def test_entropy():
         #do this test only if 'numpy' is available on test machine
         np_mat = represent(d, format='numpy')
         ent = entropy(np_mat)
-        assert isinstance(np_mat, np.matrixlib.defmatrix.matrix)
+        assert isinstance(np_mat, np.ndarray)
         assert ent.real == 0.69314718055994529
         assert ent.imag == 0
 
@@ -190,7 +193,7 @@ def test_eval_trace():
     d = Density((up, 0.5), (down, 0.5))
 
     t = Tr(d)
-    assert t.doit() == 1
+    assert t.doit() == 1.0
 
     #test dummy time dependent states
     class TestTimeDepKet(TimeDepKet):
@@ -205,7 +208,7 @@ def test_eval_trace():
                         0.5 * OuterProduct(k2, k2.dual))
 
     t = Tr(d)
-    assert t.doit() == 1
+    assert t.doit() == 1.0
 
 
 def test_fidelity():

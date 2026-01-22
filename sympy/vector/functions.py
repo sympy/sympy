@@ -3,7 +3,9 @@ from sympy.vector.deloperator import Del
 from sympy.vector.scalar import BaseScalar
 from sympy.vector.vector import Vector, BaseVector
 from sympy.vector.operators import gradient, curl, divergence
-from sympy import diff, integrate, S, simplify
+from sympy.core.function import diff
+from sympy.core.singleton import S
+from sympy.integrals.integrals import integrate
 from sympy.core import sympify
 from sympy.vector.dyadic import Dyadic
 
@@ -56,7 +58,7 @@ def express(expr, system, system2=None, variables=False):
 
     """
 
-    if expr == 0 or expr == Vector.zero:
+    if expr in (0, Vector.zero):
         return expr
 
     if not isinstance(system, CoordSys3D):
@@ -68,15 +70,11 @@ def express(expr, system, system2=None, variables=False):
             raise ValueError("system2 should not be provided for \
                                 Vectors")
         # Given expr is a Vector
+        subs_dict = {}
         if variables:
             # If variables attribute is True, substitute
             # the coordinate variables in the Vector
-            system_list = []
-            for x in expr.atoms(BaseScalar, BaseVector):
-                if x.system != system:
-                    system_list.append(x.system)
-            system_list = set(system_list)
-            subs_dict = {}
+            system_list = {x.system for x in expr.atoms(BaseScalar, BaseVector)} - {system}
             for f in system_list:
                 subs_dict.update(f.scalar_map(system))
             expr = expr.subs(subs_dict)
@@ -85,10 +83,11 @@ def express(expr, system, system2=None, variables=False):
         parts = expr.separate()
         for x in parts:
             if x != system:
-                temp = system.rotation_matrix(x) * parts[x].to_matrix(x)
+                temp = system.change_of_basis_matrix_from(x) * parts[x].to_matrix(x)
                 outvec += matrix_to_vector(temp, system)
             else:
                 outvec += parts[x]
+        outvec = outvec.subs(subs_dict)
         return outvec
 
     elif isinstance(expr, Dyadic):
@@ -112,7 +111,7 @@ def express(expr, system, system2=None, variables=False):
                                 Vectors")
         if variables:
             # Given expr is a scalar field
-            system_set = set([])
+            system_set = set()
             expr = sympify(expr)
             # Substitute all the coordinate variables
             for x in expr.atoms(BaseScalar):
@@ -154,8 +153,8 @@ def directional_derivative(field, direction_vector):
     5*R.x**2 + 30*R.x*R.z
 
     """
-    from sympy.vector.operators import _get_coord_sys_from_expr
-    coord_sys = _get_coord_sys_from_expr(field)
+    from sympy.vector.operators import _get_coord_systems
+    coord_sys = _get_coord_systems(field)
     if len(coord_sys) > 0:
         # TODO: This gets a random coordinate system in case of multiple ones:
         coord_sys = next(iter(coord_sys))
@@ -354,7 +353,7 @@ def scalar_potential_difference(field, coord_sys, point1, point2):
     Examples
     ========
 
-    >>> from sympy.vector import CoordSys3D, Point
+    >>> from sympy.vector import CoordSys3D
     >>> from sympy.vector import scalar_potential_difference
     >>> R = CoordSys3D('R')
     >>> P = R.origin.locate_new('P', R.x*R.i + R.y*R.j + R.z*R.k)
@@ -456,14 +455,11 @@ def _path(from_object, to_object):
         from_path.append(obj)
         obj = obj._parent
     index = len(from_path)
-    i = other_path.index(obj)
-    while i >= 0:
-        from_path.append(other_path[i])
-        i -= 1
+    from_path.extend(other_path[other_path.index(obj)::-1])
     return index, from_path
 
 
-def orthogonalize(*vlist, **kwargs):
+def orthogonalize(*vlist, orthonormal=False):
     """
     Takes a sequence of independent vectors and orthogonalizes them
     using the Gram - Schmidt process. Returns a list of
@@ -483,7 +479,6 @@ def orthogonalize(*vlist, **kwargs):
     ========
 
     >>> from sympy.vector.coordsysrect import CoordSys3D
-    >>> from sympy.vector.vector import Vector, BaseVector
     >>> from sympy.vector.functions import orthogonalize
     >>> C = CoordSys3D('C')
     >>> i, j, k = C.base_vectors()
@@ -498,7 +493,6 @@ def orthogonalize(*vlist, **kwargs):
     .. [1] https://en.wikipedia.org/wiki/Gram-Schmidt_process
 
     """
-    orthonormal = kwargs.get('orthonormal', False)
 
     if not all(isinstance(vec, Vector) for vec in vlist):
         raise TypeError('Each element must be of Type Vector')
@@ -510,7 +504,7 @@ def orthogonalize(*vlist, **kwargs):
         # TODO : The following line introduces a performance issue
         # and needs to be changed once a good solution for issue #10279 is
         # found.
-        if simplify(term).equals(Vector.zero):
+        if term.equals(Vector.zero):
             raise ValueError("Vector set not linearly independent")
         ortho_vlist.append(term)
 

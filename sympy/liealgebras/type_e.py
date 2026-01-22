@@ -1,6 +1,8 @@
+import itertools
+
 from .cartan_type import Standard_Cartan
 from sympy.core.backend import eye, Rational
-
+from sympy.core.singleton import S
 
 class TypeE(Standard_Cartan):
 
@@ -38,7 +40,7 @@ class TypeE(Standard_Cartan):
 
     def simple_root(self, i):
         """
-        Every lie algebra has a unique root system.
+        Every Lie algebra has a unique root system.
         Given a root system Q, there is a subset of the
         roots such that an element of Q is called a
         simple root if it cannot be written as the sum
@@ -69,12 +71,12 @@ class TypeE(Standard_Cartan):
             root[0] = 1
             return root
         else:
-            if i == 7 or i == 8 and n == 6:
+            if i in (7, 8) and n == 6:
                 raise ValueError("E6 only has six simple roots!")
             if i == 8 and n == 7:
-                raise ValueError("E7 has only 7 simple roots!")
+                raise ValueError("E7 only has seven simple roots!")
 
-            return self.basic_root(i-3, i-2)
+            return self.basic_root(i - 3, i - 2)
 
     def positive_roots(self):
         """
@@ -93,6 +95,8 @@ class TypeE(Standard_Cartan):
                 5: [0, 1, 0, -1], 6: [0, 0, 1, -1]}
         """
         n = self.n
+        neghalf = Rational(-1, 2)
+        poshalf = S.Half
         if n == 6:
             posroots = {}
             k = 0
@@ -106,27 +110,23 @@ class TypeE(Standard_Cartan):
                     root[i] = 1
                     posroots[k] = root
 
-            root = [Rational(1, 2), Rational(1, 2), Rational(1, 2), Rational(1, 2), Rational(1, 2),
-                    Rational(-1, 2), Rational(-1, 2), Rational(1, 2)]
-            for a in range(0, 2):
-                for b in range(0, 2):
-                    for c in range(0, 2):
-                        for d in range(0, 2):
-                            for e in range(0, 2):
-                                if (a + b + c + d + e)%2 == 0:
-                                    k += 1
-                                    if a == 1:
-                                        root[0] = Rational(-1, 2)
-                                    if b == 1:
-                                        root[1] = Rational(-1, 2)
-                                    if c == 1:
-                                        root[2] = Rational(-1, 2)
-                                    if d == 1:
-                                        root[3] = Rational(-1, 2)
-                                    if e == 1:
-                                        root[4] = Rational(-1, 2)
-                                    posroots[k] = root
-
+            root = [poshalf, poshalf, poshalf, poshalf, poshalf,
+                    neghalf, neghalf, poshalf]
+            for a, b, c, d, e in itertools.product(
+                    range(2), range(2), range(2), range(2), range(2)):
+                if (a + b + c + d + e)%2 == 0:
+                    k += 1
+                    if a == 1:
+                        root[0] = neghalf
+                    if b == 1:
+                        root[1] = neghalf
+                    if c == 1:
+                        root[2] = neghalf
+                    if d == 1:
+                        root[3] = neghalf
+                    if e == 1:
+                        root[4] = neghalf
+                    posroots[k] = root[:]
             return posroots
         if n == 7:
             posroots = {}
@@ -143,30 +143,25 @@ class TypeE(Standard_Cartan):
 
             k += 1
             posroots[k] = [0, 0, 0, 0, 0, 1, 1, 0]
-            root = [Rational(1, 2), Rational(1, 2), Rational(1, 2), Rational(1, 2), Rational(1, 2),
-                    Rational(-1, 2), Rational(-1, 2), Rational(1, 2)]
-            for a in range(0, 2):
-                for b in range(0, 2):
-                    for c in range(0, 2):
-                        for d in range(0, 2):
-                            for e in range(0, 2):
-                                for f in range(0, 2):
-                                    if (a + b + c + d + e + f)%2 == 0:
-                                        k += 1
-                                        if a == 1:
-                                            root[0] = Rational(-1, 2)
-                                        if b == 1:
-                                            root[1] = Rational(-1, 2)
-                                        if c == 1:
-                                            root[2] = Rational(-1, 2)
-                                        if d == 1:
-                                            root[3] = Rational(-1, 2)
-                                        if e == 1:
-                                            root[4] = Rational(-1, 2)
-                                        if f == 1:
-                                            root[5] = Rational(1, 2)
-                                        posroots[k] = root
-
+            root = [poshalf, poshalf, poshalf, poshalf, poshalf,
+                    neghalf, neghalf, poshalf]
+            for a, b, c, d, e, f in itertools.product(
+                    range(2), range(2), range(2), range(2), range(2), range(2)):
+                if (a + b + c + d + e + f)%2 == 0:
+                    k += 1
+                    if a == 1:
+                        root[0] = neghalf
+                    if b == 1:
+                        root[1] = neghalf
+                    if c == 1:
+                        root[2] = neghalf
+                    if d == 1:
+                        root[3] = neghalf
+                    if e == 1:
+                        root[4] = neghalf
+                    if f == 1:
+                        root[5] = poshalf
+                    posroots[k] = root[:]
             return posroots
         if n == 8:
             posroots = {}
@@ -181,33 +176,28 @@ class TypeE(Standard_Cartan):
                     root[i] = 1
                     posroots[k] = root
 
-            root = [Rational(1, 2), Rational(1, 2), Rational(1, 2), Rational(1, 2), Rational(1, 2),
-                    Rational(-1, 2), Rational(-1, 2), Rational(1, 2)]
-            for a in range(0, 2):
-                for b in range(0, 2):
-                    for c in range(0, 2):
-                        for d in range(0, 2):
-                            for e in range(0, 2):
-                                for f in range(0, 2):
-                                    for g in range(0, 2):
-                                        if (a + b + c + d + e + f + g)%2 == 0:
-                                            k += 1
-                                            if a == 1:
-                                                root[0] = Rational(-1, 2)
-                                            if b == 1:
-                                                root[1] = Rational(-1, 2)
-                                            if c == 1:
-                                                root[2] = Rational(-1, 2)
-                                            if d == 1:
-                                                root[3] = Rational(-1, 2)
-                                            if e == 1:
-                                                root[4] = Rational(-1, 2)
-                                            if f == 1:
-                                                root[5] = Rational(1, 2)
-                                            if g == 1:
-                                                root[6] = Rational(1, 2)
-                                            posroots[k] = root
-
+            root = [poshalf, poshalf, poshalf, poshalf, poshalf,
+                    neghalf, neghalf, poshalf]
+            for a, b, c, d, e, f, g in itertools.product(
+                    range(2), range(2), range(2), range(2), range(2),
+                    range(2), range(2)):
+                if (a + b + c + d + e + f + g)%2 == 0:
+                    k += 1
+                    if a == 1:
+                        root[0] = neghalf
+                    if b == 1:
+                        root[1] = neghalf
+                    if c == 1:
+                        root[2] = neghalf
+                    if d == 1:
+                        root[3] = neghalf
+                    if e == 1:
+                        root[4] = neghalf
+                    if f == 1:
+                        root[5] = poshalf
+                    if g == 1:
+                        root[6] = poshalf
+                    posroots[k] = root[:]
             return posroots
 
 
@@ -251,11 +241,9 @@ class TypeE(Standard_Cartan):
 
         n = self.n
         m = 2*eye(n)
-        i = 3
-        while i < n-1:
+        for i in range(3, n - 1):
             m[i, i+1] = -1
             m[i, i-1] = -1
-            i += 1
         m[0, 2] = m[2, 0] = -1
         m[1, 3] = m[3, 1] = -1
         m[2, 3] = -1

@@ -2,14 +2,13 @@
 Solving solvable quintics - An implementation of DS Dummit's paper
 
 Paper :
-http://www.ams.org/journals/mcom/1991-57-195/S0025-5718-1991-1079014-X/S0025-5718-1991-1079014-X.pdf
+https://www.ams.org/journals/mcom/1991-57-195/S0025-5718-1991-1079014-X/S0025-5718-1991-1079014-X.pdf
 
 Mathematica notebook:
 http://www.emba.uvm.edu/~ddummit/quintics/quintics.nb
 
 """
 
-from __future__ import print_function, division
 
 from sympy.core import Symbol
 from sympy.core.evalf import N
@@ -21,7 +20,7 @@ from sympy.utilities import public
 x = Symbol('x')
 
 @public
-class PolyQuintic(object):
+class PolyQuintic:
     """Special functions for solvable quintics"""
     def __init__(self, poly):
         _, _, self.p, self.q, self.r, self.s = poly.all_coeffs()

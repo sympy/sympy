@@ -1,4 +1,6 @@
-from sympy import diff, integrate, S
+from sympy.core.function import diff
+from sympy.core.singleton import S
+from sympy.integrals.integrals import integrate
 from sympy.physics.vector import Vector, express
 from sympy.physics.vector.frame import _check_frame
 from sympy.physics.vector.vector import _check_vector
@@ -42,7 +44,7 @@ def curl(vect, frame):
     if vect == 0:
         return Vector(0)
     vect = express(vect, frame, variables=True)
-    #A mechanical approach to avoid looping overheads
+    # A mechanical approach to avoid looping overheads
     vectx = vect.dot(frame.x)
     vecty = vect.dot(frame.y)
     vectz = vect.dot(frame.z)
@@ -129,7 +131,7 @@ def gradient(scalar, frame):
     outvec = Vector(0)
     scalar = express(scalar, frame, variables=True)
     for i, x in enumerate(frame):
-        outvec += diff(scalar, frame[i]) * x
+        outvec += diff(scalar, frame[i]) * x  # noqa: PLR1736
     return outvec
 
 
@@ -156,9 +158,8 @@ def is_conservative(field):
 
     """
 
-    #Field is conservative irrespective of frame
-    #Take the first frame in the result of the
-    #separate method of Vector
+    # Field is conservative irrespective of frame
+    # Take the first frame in the result of the separate method of Vector
     if field == Vector(0):
         return True
     frame = list(field.separate())[0]
@@ -188,9 +189,8 @@ def is_solenoidal(field):
 
     """
 
-    #Field is solenoidal irrespective of frame
-    #Take the first frame in the result of the
-    #separate method in Vector
+    # Field is solenoidal irrespective of frame
+    # Take the first frame in the result of the separate method in Vector
     if field == Vector(0):
         return True
     frame = list(field.separate())[0]
@@ -227,18 +227,18 @@ def scalar_potential(field, frame):
 
     """
 
-    #Check whether field is conservative
+    # Check whether field is conservative
     if not is_conservative(field):
         raise ValueError("Field is not conservative")
     if field == Vector(0):
         return S.Zero
-    #Express the field exntirely in frame
-    #Substitute coordinate variables also
+    # Express the field exntirely in frame
+    # Substitute coordinate variables also
     _check_frame(frame)
     field = express(field, frame, variables=True)
-    #Make a list of dimensions of the frame
-    dimensions = [x for x in frame]
-    #Calculate scalar potential function
+    # Make a list of dimensions of the frame
+    dimensions = list(frame)
+    # Calculate scalar potential function
     temp_function = integrate(field.dot(dimensions[0]), frame[0])
     for i, dim in enumerate(dimensions[1:]):
         partial_diff = diff(temp_function, frame[i + 1])
@@ -296,15 +296,15 @@ def scalar_potential_difference(field, frame, point1, point2, origin):
 
     _check_frame(frame)
     if isinstance(field, Vector):
-        #Get the scalar potential function
+        # Get the scalar potential function
         scalar_fn = scalar_potential(field, frame)
     else:
-        #Field is a scalar
+        # Field is a scalar
         scalar_fn = field
-    #Express positions in required frame
+    # Express positions in required frame
     position1 = express(point1.pos_from(origin), frame, variables=True)
     position2 = express(point2.pos_from(origin), frame, variables=True)
-    #Get the two positions as substitution dicts for coordinate variables
+    # Get the two positions as substitution dicts for coordinate variables
     subs_dict1 = {}
     subs_dict2 = {}
     for i, x in enumerate(frame):

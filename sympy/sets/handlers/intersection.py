@@ -1,34 +1,48 @@
-from sympy import (S, Dummy, Lambda, symbols, Interval, Intersection, Set,
-                   EmptySet, FiniteSet, Union, ComplexRegion)
-from sympy.multipledispatch import dispatch
+from sympy.core.basic import _aresame
+from sympy.core.function import Lambda, expand_complex
+from sympy.core.mul import Mul
+from sympy.core.numbers import ilcm, Float
+from sympy.core.relational import Eq
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, symbols)
+from sympy.core.sorting import ordered
+from sympy.functions.elementary.complexes import sign
+from sympy.functions.elementary.integers import floor, ceiling
+from sympy.sets.fancysets import ComplexRegion
+from sympy.sets.sets import (FiniteSet, Intersection, Interval, Set, Union)
+from sympy.multipledispatch import Dispatcher
 from sympy.sets.conditionset import ConditionSet
 from sympy.sets.fancysets import (Integers, Naturals, Reals, Range,
     ImageSet, Rationals)
-from sympy.sets.sets import UniversalSet, imageset, ProductSet
+from sympy.sets.sets import EmptySet, UniversalSet, imageset, ProductSet
+from sympy.simplify.radsimp import numer
 
 
-@dispatch(ConditionSet, ConditionSet)  # type: ignore # noqa:F811
-def intersection_sets(a, b): # noqa:F811
+intersection_sets = Dispatcher('intersection_sets')
+
+
+@intersection_sets.register(ConditionSet, ConditionSet)
+def _(a, b):
     return None
 
-@dispatch(ConditionSet, Set)  # type: ignore # noqa:F811
-def intersection_sets(a, b): # noqa:F811
+@intersection_sets.register(ConditionSet, Set)
+def _(a, b):
     return ConditionSet(a.sym, a.condition, Intersection(a.base_set, b))
 
-@dispatch(Naturals, Integers)  # type: ignore # noqa:F811
-def intersection_sets(a, b): # noqa:F811
+@intersection_sets.register(Naturals, Integers)
+def _(a, b):
     return a
 
-@dispatch(Naturals, Naturals)  # type: ignore # noqa:F811
-def intersection_sets(a, b): # noqa:F811
+@intersection_sets.register(Naturals, Naturals)
+def _(a, b):
     return a if a is S.Naturals else b
 
-@dispatch(Interval, Naturals)  # type: ignore # noqa:F811
-def intersection_sets(a, b): # noqa:F811
+@intersection_sets.register(Interval, Naturals)
+def _(a, b):
     return intersection_sets(b, a)
 
-@dispatch(ComplexRegion, Set)  # type: ignore # noqa:F811
-def intersection_sets(self, other): # noqa:F811
+@intersection_sets.register(ComplexRegion, Set)
+def _(self, other):
     if other.is_ComplexRegion:
         # self in rectangular form
         if (not self.polar) and (not other.polar):
@@ -74,14 +88,14 @@ def intersection_sets(self, other): # noqa:F811
             new_interval = Union(*new_interval)
             return Intersection(new_interval, other)
 
-@dispatch(Integers, Reals)  # type: ignore # noqa:F811
-def intersection_sets(a, b): # noqa:F811
+@intersection_sets.register(Integers, Reals)
+def _(a, b):
     return a
 
-@dispatch(Range, Interval)  # type: ignore # noqa:F811
-def intersection_sets(a, b): # noqa:F811
-    from sympy.functions.elementary.integers import floor, ceiling
-    if not all(i.is_number for i in b.args[:2]):
+@intersection_sets.register(Range, Interval)
+def _(a, b):
+    # Check that there are no symbolic arguments
+    if not all(i.is_number for i in a.args + b.args[:2]):
         return
 
     # In case of null Range, return an EmptySet.
@@ -98,15 +112,15 @@ def intersection_sets(a, b): # noqa:F811
         end -= 1
     return intersection_sets(a, Range(start, end + 1))
 
-@dispatch(Range, Naturals)  # type: ignore # noqa:F811
-def intersection_sets(a, b): # noqa:F811
+@intersection_sets.register(Range, Naturals)
+def _(a, b):
     return intersection_sets(a, Interval(b.inf, S.Infinity))
 
-@dispatch(Range, Range)  # type: ignore # noqa:F811
-def intersection_sets(a, b): # noqa:F811
-    from sympy.solvers.diophantine.diophantine import diop_linear
-    from sympy.core.numbers import ilcm
-    from sympy import sign
+@intersection_sets.register(Range, Range)
+def _(a, b):
+    # Check that there are no symbolic range arguments
+    if not all(all(v.is_number for v in r.args) for r in [a, b]):
+        return None
 
     # non-overlap quick exits
     if not b:
@@ -132,6 +146,8 @@ def intersection_sets(a, b): # noqa:F811
         return b
     if r2.start.is_infinite:
         return a
+
+    from sympy.solvers.diophantine.diophantine import diop_linear
 
     # this equation represents the values of the Range;
     # it's a linear equation
@@ -215,20 +231,28 @@ def intersection_sets(a, b): # noqa:F811
     return Range(start, stop, step)
 
 
-@dispatch(Range, Integers)  # type: ignore # noqa:F811
-def intersection_sets(a, b): # noqa:F811
+@intersection_sets.register(Range, Integers)
+def _(a, b):
     return a
 
 
-@dispatch(ImageSet, Set)  # type: ignore # noqa:F811
-def intersection_sets(self, other): # noqa:F811
+@intersection_sets.register(Range, Rationals)
+def _(a, b):
+    return a
+
+
+@intersection_sets.register(ImageSet, Set)
+def _(self, other):
     from sympy.solvers.diophantine import diophantine
 
     # Only handle the straight-forward univariate case
     if (len(self.lamda.variables) > 1
             or self.lamda.signature != self.lamda.variables):
         return None
+
     base_set = self.base_sets[0]
+    if base_set is not S.Integers:
+        return
 
     # Intersection between ImageSets with Integers as base set
     # For {f(n) : n in Integers} & {g(m) : m in Integers} we solve the
@@ -237,146 +261,149 @@ def intersection_sets(self, other): # noqa:F811
     # {f(h(t)) : t in integers}.
     # If the solutions for n are {n_1, n_2, ..., n_k} then we return
     # {f(n_i) : 1 <= i <= k}.
-    if base_set is S.Integers:
-        gm = None
-        if isinstance(other, ImageSet) and other.base_sets == (S.Integers,):
-            gm = other.lamda.expr
-            var = other.lamda.variables[0]
-            # Symbol of second ImageSet lambda must be distinct from first
-            m = Dummy('m')
-            gm = gm.subs(var, m)
-        elif other is S.Integers:
-            m = gm = Dummy('m')
-        if gm is not None:
-            fn = self.lamda.expr
-            n = self.lamda.variables[0]
-            try:
-                solns = list(diophantine(fn - gm, syms=(n, m), permute=True))
-            except (TypeError, NotImplementedError):
-                # TypeError if equation not polynomial with rational coeff.
-                # NotImplementedError if correct format but no solver.
-                return
-            # 3 cases are possible for solns:
-            # - empty set,
-            # - one or more parametric (infinite) solutions,
-            # - a finite number of (non-parametric) solution couples.
-            # Among those, there is one type of solution set that is
-            # not helpful here: multiple parametric solutions.
-            if len(solns) == 0:
-                return EmptySet
-            elif any(not isinstance(s, int) and s.free_symbols
-                     for tupl in solns for s in tupl):
-                if len(solns) == 1:
-                    soln, solm = solns[0]
-                    (t,) = soln.free_symbols
-                    expr = fn.subs(n, soln.subs(t, n)).expand()
-                    return imageset(Lambda(n, expr), S.Integers)
-                else:
-                    return
-            else:
-                return FiniteSet(*(fn.subs(n, s[0]) for s in solns))
-
-    if other == S.Reals:
-        from sympy.solvers.solveset import solveset_real
-        from sympy.core.function import expand_complex
-
-        f = self.lamda.expr
+    gm = None
+    if isinstance(other, ImageSet) and other.base_sets == (S.Integers,):
+        gm = other.lamda.expr
+        var = other.lamda.variables[0]
+        # Symbol of second ImageSet lambda must be distinct from first
+        m = Dummy('m')
+        gm = gm.subs(var, m)
+    elif other is S.Integers:
+        m = gm = Dummy('m')
+    if gm is not None:
+        fn = self.lamda.expr
         n = self.lamda.variables[0]
-
-        n_ = Dummy(n.name, real=True)
-        f_ = f.subs(n, n_)
-
-        re, im = f_.as_real_imag()
-        im = expand_complex(im)
-
-        re = re.subs(n_, n)
-        im = im.subs(n_, n)
-        ifree = im.free_symbols
-        lam = Lambda(n, re)
-        if not im:
-            # allow re-evaluation
-            # of self in this case to make
-            # the result canonical
-            pass
-        elif im.is_zero is False:
+        try:
+            solns = list(diophantine(fn - gm, syms=(n, m), permute=True))
+        except (TypeError, NotImplementedError):
+            # TypeError if equation not polynomial with rational coeff.
+            # NotImplementedError if correct format but no solver.
+            return
+        # 3 cases are possible for solns:
+        # - empty set,
+        # - one or more parametric (infinite) solutions,
+        # - a finite number of (non-parametric) solution couples.
+        # Among those, there is one type of solution set that is
+        # not helpful here: multiple parametric solutions.
+        if len(solns) == 0:
             return S.EmptySet
-        elif ifree != {n}:
-            return None
-        else:
-            # univarite imaginary part in same variable
-            base_set = base_set.intersect(solveset_real(im, n))
-        return imageset(lam, base_set)
-
-    elif isinstance(other, Interval):
-        from sympy.solvers.solveset import (invert_real, invert_complex,
-                                            solveset)
-
-        f = self.lamda.expr
-        n = self.lamda.variables[0]
-        new_inf, new_sup = None, None
-        new_lopen, new_ropen = other.left_open, other.right_open
-
-        if f.is_real:
-            inverter = invert_real
-        else:
-            inverter = invert_complex
-
-        g1, h1 = inverter(f, other.inf, n)
-        g2, h2 = inverter(f, other.sup, n)
-
-        if all(isinstance(i, FiniteSet) for i in (h1, h2)):
-            if g1 == n:
-                if len(h1) == 1:
-                    new_inf = h1.args[0]
-            if g2 == n:
-                if len(h2) == 1:
-                    new_sup = h2.args[0]
-            # TODO: Design a technique to handle multiple-inverse
-            # functions
-
-            # Any of the new boundary values cannot be determined
-            if any(i is None for i in (new_sup, new_inf)):
-                return
-
-
-            range_set = S.EmptySet
-
-            if all(i.is_real for i in (new_sup, new_inf)):
-                # this assumes continuity of underlying function
-                # however fixes the case when it is decreasing
-                if new_inf > new_sup:
-                    new_inf, new_sup = new_sup, new_inf
-                new_interval = Interval(new_inf, new_sup, new_lopen, new_ropen)
-                range_set = base_set.intersect(new_interval)
+        elif any(s.free_symbols for tupl in solns for s in tupl):
+            if len(solns) == 1:
+                soln, solm = solns[0]
+                (t,) = soln.free_symbols
+                expr = fn.subs(n, soln.subs(t, n)).expand()
+                return imageset(Lambda(n, expr), S.Integers)
             else:
-                if other.is_subset(S.Reals):
-                    solutions = solveset(f, n, S.Reals)
-                    if not isinstance(range_set, (ImageSet, ConditionSet)):
-                        range_set = solutions.intersect(other)
-                    else:
-                        return
-
-            if range_set is S.EmptySet:
-                return S.EmptySet
-            elif isinstance(range_set, Range) and range_set.size is not S.Infinity:
-                range_set = FiniteSet(*list(range_set))
-
-            if range_set is not None:
-                return imageset(Lambda(n, f), range_set)
-            return
+                return
         else:
-            return
+            return FiniteSet(*(fn.subs(n, s[0]) for s in solns))
 
 
-@dispatch(ProductSet, ProductSet)  # type: ignore # noqa:F811
-def intersection_sets(a, b): # noqa:F811
+@intersection_sets.register(ImageSet, Reals)
+def _(self, other):
+    # Only handle the straight-forward univariate case
+    if (len(self.lamda.variables) > 1
+            or self.lamda.signature != self.lamda.variables):
+        return None
+
+    base_set = self.base_sets[0]
+
+    from sympy.solvers.solvers import denoms, solve_linear
+
+    def _solution_union(exprs, sym):
+        # return a union of linear solutions to i in expr;
+        # if i cannot be solved, use a ConditionSet for solution
+        sols = []
+        for i in exprs:
+            x, xis = solve_linear(i, 0, [sym])
+            if x == sym:
+                sols.append(FiniteSet(xis))
+            else:
+                sols.append(ConditionSet(sym, Eq(i, 0)))
+        return Union(*sols)
+
+    f = self.lamda.expr
+    n = self.lamda.variables[0]
+
+    n_ = Dummy(n.name, real=True)
+    f_ = f.subs(n, n_)
+
+    re, im = f_.as_real_imag()
+    im = expand_complex(im)
+
+    re = re.subs(n_, n)
+    im = im.subs(n_, n)
+    ifree = im.free_symbols
+    lam = Lambda(n, re)
+    if im.is_zero:
+        # allow re-evaluation
+        # of self in this case to make
+        # the result canonical
+        pass
+    elif im.is_zero is False:
+        return S.EmptySet
+    elif ifree != {n}:
+        return None
+    else:
+        # univarite imaginary part in same variable;
+        # use numer instead of as_numer_denom to keep
+        # this as fast as possible while still handling
+        # simple cases
+        base_set &= _solution_union(
+            Mul.make_args(numer(im)), n)
+    # exclude values that make denominators 0
+    base_set -= _solution_union(denoms(f), n)
+    return imageset(lam, base_set)
+
+
+@intersection_sets.register(ImageSet, Interval)
+def _(self, other):
+    # Handle the straight-forward univariate linear
+    # case by transforming the interval:
+    # {a*n + b: n in S} n [c, d]  -->  {n: n in S} n [(c-b)/a, (d-b)/a]
+
+    if (len(self.lamda.variables) > 1
+            or self.lamda.signature != self.lamda.variables):
+        return None
+
+    base_set = self.base_sets[0]
+
+    f = self.lamda.expr
+    n = self.lamda.variables[0]
+    p = f.as_poly(n)
+
+    if p is not None and p.is_linear:
+        # {a*n + b: n in Z} n [c, d]
+        a, b = p.all_coeffs()
+        c, d, lopen, ropen = other.args
+        if all(v.is_comparable for v in [a, b, c, d]):
+            # S = {n: n in Z} n [(c-b)/a, (d-b)/a]
+            if (a > 0) == True:
+                new_int = Interval((c - b)/a, (d - b)/a, lopen, ropen)
+            elif (a < 0) == True:
+                new_int = Interval((d - b)/a, (c - b)/a, ropen, lopen)
+            else:
+                new_int = None
+
+            if new_int is not None:
+                n_vals = new_int.intersect(base_set)
+                if isinstance(n_vals, Range) and n_vals.size is not S.Infinity:
+                    return FiniteSet(*(a*n + b for n in n_vals))
+                elif not isinstance(n_vals, Intersection):
+                    return imageset(Lambda(n, a*n + b), n_vals)
+
+    return
+
+
+@intersection_sets.register(ProductSet, ProductSet)
+def _(a, b):
     if len(b.args) != len(a.args):
         return S.EmptySet
     return ProductSet(*(i.intersect(j) for i, j in zip(a.sets, b.sets)))
 
 
-@dispatch(Interval, Interval)  # type: ignore # noqa:F811
-def intersection_sets(a, b): # noqa:F811
+@intersection_sets.register(Interval, Interval)
+def _(a, b):
     # handle (-oo, oo)
     infty = S.NegativeInfinity, S.Infinity
     if a == Interval(*infty):
@@ -400,6 +427,19 @@ def intersection_sets(a, b): # noqa:F811
             left_open = a.left_open
         else:
             start = a.start
+            if not _aresame(a.start, b.start):
+                # For example Integer(2) != Float(2)
+                # Prefer the Float boundary because Floats should be
+                # contagious in calculations.
+                if b.start.has(Float) and not a.start.has(Float):
+                    start = b.start
+                elif a.start.has(Float) and not b.start.has(Float):
+                    start = a.start
+                else:
+                    #this is to ensure that if Eq(a.start, b.start) but
+                    #type(a.start) != type(b.start) the order of a and b
+                    #does not matter for the result
+                    start = list(ordered([a,b]))[0].start
             left_open = a.left_open or b.left_open
 
         if a.end < b.end:
@@ -409,7 +449,15 @@ def intersection_sets(a, b): # noqa:F811
             end = b.end
             right_open = b.right_open
         else:
+            # see above for logic with start
             end = a.end
+            if not _aresame(a.end, b.end):
+                if b.end.has(Float) and not a.end.has(Float):
+                    end = b.end
+                elif a.end.has(Float) and not b.end.has(Float):
+                    end = a.end
+                else:
+                    end = list(ordered([a,b]))[0].end
             right_open = a.right_open or b.right_open
 
         if end - start == 0 and (left_open or right_open):
@@ -422,44 +470,43 @@ def intersection_sets(a, b): # noqa:F811
 
     return Interval(start, end, left_open, right_open)
 
-@dispatch(type(EmptySet), Set)  # type: ignore # noqa:F811
-def intersection_sets(a, b): # noqa:F811
+@intersection_sets.register(EmptySet, Set)
+def _(a, b):
     return S.EmptySet
 
-@dispatch(UniversalSet, Set)  # type: ignore # noqa:F811
-def intersection_sets(a, b): # noqa:F811
+@intersection_sets.register(UniversalSet, Set)
+def _(a, b):
     return b
 
-@dispatch(FiniteSet, FiniteSet)  # type: ignore # noqa:F811
-def intersection_sets(a, b): # noqa:F811
+@intersection_sets.register(FiniteSet, FiniteSet)
+def _(a, b):
     return FiniteSet(*(a._elements & b._elements))
 
-@dispatch(FiniteSet, Set)  # type: ignore # noqa:F811
-def intersection_sets(a, b): # noqa:F811
+@intersection_sets.register(FiniteSet, Set)
+def _(a, b):
     try:
         return FiniteSet(*[el for el in a if el in b])
     except TypeError:
         return None  # could not evaluate `el in b` due to symbolic ranges.
 
-@dispatch(Set, Set)  # type: ignore # noqa:F811
-def intersection_sets(a, b): # noqa:F811
+@intersection_sets.register(Set, Set)
+def _(a, b):
     return None
 
-@dispatch(Integers, Rationals)  # type: ignore # noqa:F811
-def intersection_sets(a, b): # noqa:F811
+@intersection_sets.register(Integers, Rationals)
+def _(a, b):
     return a
 
-@dispatch(Naturals, Rationals)  # type: ignore # noqa:F811
-def intersection_sets(a, b): # noqa:F811
+@intersection_sets.register(Naturals, Rationals)
+def _(a, b):
     return a
 
-@dispatch(Rationals, Reals)  # type: ignore # noqa:F811
-def intersection_sets(a, b): # noqa:F811
+@intersection_sets.register(Rationals, Reals)
+def _(a, b):
     return a
 
 def _intlike_interval(a, b):
     try:
-        from sympy.functions.elementary.integers import floor, ceiling
         if b._inf is S.NegativeInfinity and b._sup is S.Infinity:
             return a
         s = Range(max(a.inf, ceiling(b.left)), floor(b.right) + 1)
@@ -467,10 +514,10 @@ def _intlike_interval(a, b):
     except ValueError:
         return None
 
-@dispatch(Integers, Interval)  # type: ignore # noqa:F811
-def intersection_sets(a, b): # noqa:F811
+@intersection_sets.register(Integers, Interval)
+def _(a, b):
     return _intlike_interval(a, b)
 
-@dispatch(Naturals, Interval)  # type: ignore # noqa:F811
-def intersection_sets(a, b): # noqa:F811
+@intersection_sets.register(Naturals, Interval)
+def _(a, b):
     return _intlike_interval(a, b)

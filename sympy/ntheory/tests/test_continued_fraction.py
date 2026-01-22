@@ -1,4 +1,8 @@
-from sympy import S, pi, GoldenRatio as phi, sqrt, Rational
+import itertools
+from sympy.core import GoldenRatio as phi
+from sympy.core.numbers import (Rational, pi)
+from sympy.core.singleton import S
+from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.ntheory.continued_fraction import \
     (continued_fraction_periodic as cf_p,
      continued_fraction_iterator as cf_i,
@@ -42,15 +46,10 @@ def test_continued_fraction():
     assert cf_p(6589, 2569) == [2, 1, 1, 3, 2, 1, 3, 1, 23]
 
     def take(iterator, n=7):
-        res = []
-        for i, t in enumerate(cf_i(iterator)):
-            if i >= n:
-                break
-            res.append(t)
-        return res
+        return list(itertools.islice(iterator, n))
 
-    assert take(phi) == [1, 1, 1, 1, 1, 1, 1]
-    assert take(pi) == [3, 7, 15, 1, 292, 1, 1]
+    assert take(cf_i(phi)) == [1, 1, 1, 1, 1, 1, 1]
+    assert take(cf_i(pi)) == [3, 7, 15, 1, 292, 1, 1]
 
     assert list(cf_i(Rational(17, 12))) == [1, 2, 2, 2]
     assert list(cf_i(Rational(-17, 12))) == [-2, 1, 1, 2, 2]
@@ -60,6 +59,14 @@ def test_continued_fraction():
     assert list(cf_c([1, 1, 1, 1, 1, 1, 1])) == [S.One, S(2), Rational(3, 2), Rational(5, 3),
                                                  Rational(8, 5), Rational(13, 8), Rational(21, 13)]
     assert list(cf_c([1, 6, Rational(-1, 2), 4])) == [S.One, Rational(7, 6), Rational(5, 4), Rational(3, 2)]
+    assert take(cf_c([[1]])) == [S.One, S(2), Rational(3, 2), Rational(5, 3), Rational(8, 5),
+                                 Rational(13, 8), Rational(21, 13)]
+    assert take(cf_c([1, [1, 2]])) == [S.One, S(2), Rational(5, 3), Rational(7, 4), Rational(19, 11),
+                                    Rational(26, 15), Rational(71, 41)]
+
+    cf_iter_e = (2 if i == 1 else i // 3 * 2 if i % 3 == 0 else 1 for i in itertools.count(1))
+    assert take(cf_c(cf_iter_e)) == [S(2), S(3), Rational(8, 3), Rational(11, 4), Rational(19, 7),
+                                     Rational(87, 32), Rational(106, 39)]
 
     assert cf_r([1, 6, 1, 8]) == Rational(71, 62)
     assert cf_r([3]) == S(3)

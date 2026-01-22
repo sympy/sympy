@@ -1,4 +1,5 @@
 from itertools import permutations
+from copy import copy
 
 from sympy.core.expr import unchanged
 from sympy.core.numbers import Integer
@@ -29,6 +30,8 @@ def test_Permutation():
     raises(TypeError, lambda: p(5))
     # conversion to list
     assert list(p) == list(range(4))
+    assert p.copy() == p
+    assert copy(p) == p
     assert Permutation(size=4) == Permutation(3)
     assert Permutation(Permutation(3), size=5) == Permutation(4)
     # cycle form with size
@@ -125,7 +128,7 @@ def test_Permutation():
     assert Permutation.from_inversion_vector(q.inversion_vector()).array_form\
         == q.array_form
     raises(ValueError, lambda: Permutation.from_inversion_vector([0, 2]))
-    assert Permutation([i for i in range(500, -1, -1)]).inversions() == 125250
+    assert Permutation(list(range(500, -1, -1))).inversions() == 125250
 
     s = Permutation([0, 4, 1, 3, 2])
     assert s.parity() == 0
@@ -147,7 +150,6 @@ def test_Permutation():
 
     assert rmul(~p, p).is_Identity
     assert (~p)**13 == Permutation([5, 2, 0, 4, 6, 1, 3])
-    assert ~(r**2).is_Identity
     assert p.max() == 6
     assert p.min() == 0
 
@@ -232,7 +234,7 @@ def test_Permutation_subclassing():
     class CustomPermutation(Permutation):
         def __call__(self, *i):
             try:
-                return super(CustomPermutation, self).__call__(*i)
+                return super().__call__(*i)
             except TypeError:
                 pass
 
@@ -246,10 +248,10 @@ def test_Permutation_subclassing():
             if isinstance(other, Permutation):
                 return self._hashable_content() == other._hashable_content()
             else:
-                return super(CustomPermutation, self).__eq__(other)
+                return super().__eq__(other)
 
         def __hash__(self):
-            return super(CustomPermutation, self).__hash__()
+            return super().__hash__()
 
     p = CustomPermutation([1, 2, 3, 0])
     q = Permutation([1, 2, 3, 0])
@@ -432,6 +434,10 @@ def test_Cycle():
     assert Cycle(1, 2).list() == [0, 2, 1]
     assert Cycle(1, 2).list(4) == [0, 2, 1, 3]
     assert Cycle().size == 0
+    # Issue #28658: Cycle().list(size=0) should return [] not [0]
+    assert Cycle().list(size=0) == []
+    assert Cycle().list(size=0) == Permutation([]).list(size=0)
+
     raises(ValueError, lambda: Cycle((1, 2)))
     raises(ValueError, lambda: Cycle(1, 2, 1))
     raises(TypeError, lambda: Cycle(1, 2)*{})
@@ -473,7 +479,6 @@ def test_printing_cyclic():
 
 
 def test_printing_non_cyclic():
-    from sympy.printing import sstr, srepr
     p1 = Permutation([0, 1, 2, 3, 4, 5])
     assert srepr(p1, perm_cyclic=False) == 'Permutation([], size=6)'
     assert sstr(p1, perm_cyclic=False) == 'Permutation([], size=6)'

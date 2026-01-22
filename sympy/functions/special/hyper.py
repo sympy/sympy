@@ -1,19 +1,43 @@
 """Hypergeometric and Meijer G-functions"""
+from collections import Counter
 
-from __future__ import print_function, division
+from sympy.core import S, Mod
+from sympy.core.add import Add
+from sympy.core.expr import Expr
+from sympy.core.function import DefinedFunction, Derivative, ArgumentIndexError
 
-from sympy.core import S, I, pi, oo, zoo, ilcm, Mod
-from sympy.core.function import Function, Derivative, ArgumentIndexError
-from sympy.core.compatibility import reduce
 from sympy.core.containers import Tuple
 from sympy.core.mul import Mul
+from sympy.core.numbers import I, pi, oo, zoo
+from sympy.core.parameters import global_parameters
+from sympy.core.relational import Ne
+from sympy.core.sorting import default_sort_key
 from sympy.core.symbol import Dummy
 
+from sympy.external.gmpy import lcm
+from sympy.external.mpmath import local_workprec
 from sympy.functions import (sqrt, exp, log, sin, cos, asin, atan,
-        sinh, cosh, asinh, acosh, atanh, acoth, Abs)
-from sympy.utilities.iterables import default_sort_key
+        sinh, cosh, asinh, acosh, atanh, acoth)
+from sympy.functions import factorial, RisingFactorial
+from sympy.functions.elementary.complexes import Abs, re, unpolarify
+from sympy.functions.elementary.exponential import exp_polar
+from sympy.functions.elementary.integers import ceiling
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.logic.boolalg import (And, Or)
+from sympy import ordered
+
 
 class TupleArg(Tuple):
+
+    # This method is only needed because hyper._eval_as_leading_term falls back
+    # (via super()) on using Function._eval_as_leading_term, which in turn
+    # calls as_leading_term on the args of the hyper. Ideally hyper should just
+    # have an _eval_as_leading_term method that handles all cases and this
+    # method should be removed because leading terms of tuples don't make
+    # sense.
+    def as_leading_term(self, *x, logx=None, cdir=0):
+        return TupleArg(*[f.as_leading_term(*x, logx=logx, cdir=cdir) for f in self.args])
+
     def limit(self, x, xlim, dir='+'):
         """ Compute limit x->xlim.
         """
@@ -42,11 +66,10 @@ def _prep_tuple(v):
     (7, 8, 9)
 
     """
-    from sympy import unpolarify
     return TupleArg(*[unpolarify(x) for x in v])
 
 
-class TupleParametersBase(Function):
+class TupleParametersBase(DefinedFunction):
     """ Base class that takes care of differentiation, when some of
         the arguments are actually tuples. """
     # This is not deduced automatically since there are Tuples as arguments.
@@ -111,19 +134,21 @@ class hyper(TupleParametersBase):
     The parameters $a_p$ and $b_q$ can be passed as arbitrary
     iterables, for example:
 
-    >>> from sympy.functions import hyper
+    >>> from sympy import hyper
     >>> from sympy.abc import x, n, a
-    >>> hyper((1, 2, 3), [3, 4], x)
+    >>> h = hyper((1, 2, 3), [3, 4], x); h
+    hyper((1, 2), (4,), x)
+    >>> hyper((3, 1, 2), [3, 4], x, evaluate=False)  # don't remove duplicates
     hyper((1, 2, 3), (3, 4), x)
 
     There is also pretty printing (it looks better using Unicode):
 
     >>> from sympy import pprint
-    >>> pprint(hyper((1, 2, 3), [3, 4], x), use_unicode=False)
+    >>> pprint(h, use_unicode=False)
       _
-     |_  /1, 2, 3 |  \
-     |   |        | x|
-    3  2 \  3, 4  |  /
+     |_  /1, 2 |  \
+     |   |     | x|
+    2  1 \  4  |  /
 
     The parameters must always be iterables, even if they are vectors of
     length one or zero:
@@ -135,7 +160,7 @@ class hyper(TupleParametersBase):
     should not expect much implemented functionality):
 
     >>> hyper((n, a), (n**2,), x)
-    hyper((n, a), (n**2,), x)
+    hyper((a, n), (n**2,), x)
 
     The hypergeometric function generalizes many named special functions.
     The function ``hyperexpand()`` tries to express a hypergeometric function
@@ -184,11 +209,22 @@ class hyper(TupleParametersBase):
 
     def __new__(cls, ap, bq, z, **kwargs):
         # TODO should we check convergence conditions?
-        return Function.__new__(cls, _prep_tuple(ap), _prep_tuple(bq), z, **kwargs)
+        if kwargs.pop('evaluate', global_parameters.evaluate):
+            ca = Counter(Tuple(*ap))
+            cb = Counter(Tuple(*bq))
+            common = ca & cb
+            arg = ap, bq = [], []
+            for i, c in enumerate((ca, cb)):
+                c -= common
+                for k in ordered(c):
+                    arg[i].extend([k]*c[k])
+        else:
+            ap = list(ordered(ap))
+            bq = list(ordered(bq))
+        return super().__new__(cls, _prep_tuple(ap), _prep_tuple(bq), z, **kwargs)
 
     @classmethod
     def eval(cls, ap, bq, z):
-        from sympy import unpolarify
         if len(ap) <= len(bq) or (len(ap) == len(bq) + 1 and (Abs(z) <= 1) == True):
             nz = unpolarify(z)
             if z != nz:
@@ -203,7 +239,8 @@ class hyper(TupleParametersBase):
         return fac*hyper(nap, nbq, self.argument)
 
     def _eval_expand_func(self, **hints):
-        from sympy import gamma, hyperexpand
+        from sympy.functions.special.gamma_functions import gamma
+        from sympy.simplify.hyperexpand import hyperexpand
         if len(self.ap) == 2 and len(self.bq) == 1 and self.argument == 1:
             a, b = self.ap
             c = self.bq[0]
@@ -211,39 +248,45 @@ class hyper(TupleParametersBase):
         return hyperexpand(self)
 
     def _eval_rewrite_as_Sum(self, ap, bq, z, **kwargs):
-        from sympy.functions import factorial, RisingFactorial, Piecewise
-        from sympy import Sum
+        from sympy.concrete.summations import Sum
         n = Dummy("n", integer=True)
-        rfap = Tuple(*[RisingFactorial(a, n) for a in ap])
-        rfbq = Tuple(*[RisingFactorial(b, n) for b in bq])
+        rfap = [RisingFactorial(a, n) for a in ap]
+        rfbq = [RisingFactorial(b, n) for b in bq]
         coeff = Mul(*rfap) / Mul(*rfbq)
         return Piecewise((Sum(coeff * z**n / factorial(n), (n, 0, oo)),
                          self.convergence_statement), (self, True))
 
-    def _eval_nseries(self, x, n, logx):
+    def _eval_as_leading_term(self, x, logx, cdir):
+        arg = self.args[2]
+        x0 = arg.subs(x, 0)
+        if x0 is S.NaN:
+            x0 = arg.limit(x, 0, dir='-' if re(cdir).is_negative else '+')
 
-        from sympy.functions import factorial, RisingFactorial
-        from sympy import Order, Add
+        if x0 is S.Zero:
+            return S.One
+        return super()._eval_as_leading_term(x, logx=logx, cdir=cdir)
+
+    def _eval_nseries(self, x, n, logx, cdir=0):
+
+        from sympy.series.order import Order
 
         arg = self.args[2]
         x0 = arg.limit(x, 0)
         ap = self.args[0]
         bq = self.args[1]
 
-        if x0 != 0:
-            return super(hyper, self)._eval_nseries(x, n, logx)
+        if not (arg == x and x0 == 0):
+            # It would be better to do something with arg.nseries here, rather
+            # than falling back on Function._eval_nseries. The code below
+            # though is not sufficient if arg is something like x/(x+1).
+            from sympy.simplify.hyperexpand import hyperexpand
+            return hyperexpand(super()._eval_nseries(x, n, logx))
 
         terms = []
 
         for i in range(n):
-            num = 1
-            den = 1
-            for a in ap:
-                num *= RisingFactorial(a, i)
-
-            for b in bq:
-                den *= RisingFactorial(b, i)
-
+            num = Mul(*[RisingFactorial(a, i) for a in ap])
+            den = Mul(*[RisingFactorial(b, i) for b in bq])
             terms.append(((num/den) * (arg**i)) / factorial(i))
 
         return (Add(*terms) + Order(x**n,x))
@@ -288,7 +331,7 @@ class hyper(TupleParametersBase):
         Examples
         ========
 
-        >>> from sympy.functions import hyper
+        >>> from sympy import hyper
         >>> from sympy.abc import z
         >>> hyper((1, 2), [3], z).radius_of_convergence
         1
@@ -328,7 +371,6 @@ class hyper(TupleParametersBase):
     @property
     def convergence_statement(self):
         """ Return a condition on z under which the series converges. """
-        from sympy import And, Or, re, Ne, oo
         R = self.radius_of_convergence
         if R == 0:
             return False
@@ -345,12 +387,6 @@ class hyper(TupleParametersBase):
     def _eval_simplify(self, **kwargs):
         from sympy.simplify.hyperexpand import hyperexpand
         return hyperexpand(self)
-
-    def _sage_(self):
-        import sage.all as sage
-        ap = [arg._sage_() for arg in self.args[0]]
-        bq = [arg._sage_() for arg in self.args[1]]
-        return sage.hypergeometric(ap, bq, self.argument._sage_())
 
 
 class meijerg(TupleParametersBase):
@@ -406,12 +442,10 @@ class meijerg(TupleParametersBase):
 
     You can pass the parameters either as four separate vectors:
 
-    >>> from sympy.functions import meijerg
+    >>> from sympy import meijerg, Tuple, pprint
     >>> from sympy.abc import x, a
-    >>> from sympy.core.containers import Tuple
-    >>> from sympy import pprint
     >>> pprint(meijerg((1, 2), (a, 4), (5,), [], x), use_unicode=False)
-     __1, 2 /1, 2  a, 4 |  \
+     __1, 2 /1, 2  4, a |  \
     /__     |           | x|
     \_|4, 1 \ 5         |  /
 
@@ -496,6 +530,7 @@ class meijerg(TupleParametersBase):
         def tr(p):
             if len(p) != 2:
                 raise TypeError("wrong argument")
+            p = [list(ordered(i)) for i in p]
             return TupleArg(_prep_tuple(p[0]), _prep_tuple(p[1]))
 
         arg0, arg1 = tr(args[0]), tr(args[1])
@@ -507,7 +542,7 @@ class meijerg(TupleParametersBase):
                          "any b1, ..., bm by a positive integer")
 
         # TODO should we check convergence conditions?
-        return Function.__new__(cls, arg0, arg1, args[2], **kwargs)
+        return super().__new__(cls, arg0, arg1, args[2], **kwargs)
 
     def fdiff(self, argindex=3):
         if argindex != 3:
@@ -618,9 +653,8 @@ class meijerg(TupleParametersBase):
         Examples
         ========
 
-        >>> from sympy.functions.special.hyper import meijerg
+        >>> from sympy import meijerg, pi, S
         >>> from sympy.abc import z
-        >>> from sympy import pi, S
 
         >>> meijerg([1], [], [], [], z).get_period()
         2*pi
@@ -641,21 +675,21 @@ class meijerg(TupleParametersBase):
                 for j in range(i + 1, len(l)):
                     if not Mod((b - l[j]).simplify(), 1):
                         return oo
-            return reduce(ilcm, (x.q for x in l), 1)
+            return lcm(*(x.q for x in l))
         beta = compute(self.bm)
         alpha = compute(self.an)
         p, q = len(self.ap), len(self.bq)
         if p == q:
-            if beta == oo or alpha == oo:
+            if oo in (alpha, beta):
                 return oo
-            return 2*pi*ilcm(alpha, beta)
+            return 2*pi*lcm(alpha, beta)
         elif p < q:
             return 2*pi*beta
         else:
             return 2*pi*alpha
 
     def _eval_expand_func(self, **hints):
-        from sympy import hyperexpand
+        from sympy.simplify.hyperexpand import hyperexpand
         return hyperexpand(self)
 
     def _eval_evalf(self, prec):
@@ -666,9 +700,6 @@ class meijerg(TupleParametersBase):
         # less than (say) n*pi, we put r=1/n, compute z' = root(z, n)
         # (carefully so as not to loose the branch information), and evaluate
         # G(z'**(1/r)) = G(z'**n) = G(z).
-        from sympy.functions import exp_polar, ceiling
-        from sympy import Expr
-        import mpmath
         znum = self.argument._eval_evalf(prec)
         if znum.has(exp_polar):
             znum, branch = znum.as_coeff_mul(exp_polar)
@@ -677,7 +708,7 @@ class meijerg(TupleParametersBase):
             branch = branch[0].args[0]/I
         else:
             branch = S.Zero
-        n = ceiling(abs(branch/S.Pi)) + 1
+        n = ceiling(abs(branch/pi)) + 1
         znum = znum**(S.One/n)*exp(I*branch / n)
 
         # Convert all args to mpf or mpc
@@ -687,14 +718,19 @@ class meijerg(TupleParametersBase):
         except ValueError:
             return
 
-        with mpmath.workprec(prec):
-            v = mpmath.meijerg(ap, bq, z, r)
+        with local_workprec(prec) as ctx:
+            v = ctx.meijerg(ap, bq, z, r)
+            v_expr = Expr._from_mpmath(v, prec)
 
-        return Expr._from_mpmath(v, prec)
+        return v_expr
+
+    def _eval_as_leading_term(self, x, logx, cdir):
+        from sympy.simplify.hyperexpand import hyperexpand
+        return hyperexpand(self).as_leading_term(x, logx=logx, cdir=cdir)
 
     def integrand(self, s):
         """ Get the defining integrand D(s). """
-        from sympy import gamma
+        from sympy.functions.special.gamma_functions import gamma
         return self.argument**s \
             * Mul(*(gamma(b - s) for b in self.bm)) \
             * Mul(*(gamma(1 - a + s) for a in self.an)) \
@@ -758,7 +794,7 @@ class meijerg(TupleParametersBase):
         return not self.free_symbols
 
 
-class HyperRep(Function):
+class HyperRep(DefinedFunction):
     """
     A base class for "hyper representation functions".
 
@@ -777,7 +813,6 @@ class HyperRep(Function):
 
     @classmethod
     def eval(cls, *args):
-        from sympy import unpolarify
         newargs = tuple(map(unpolarify, args[:-1])) + args[-1:]
         if args != newargs:
             return cls(*newargs)
@@ -803,7 +838,6 @@ class HyperRep(Function):
         raise NotImplementedError
 
     def _eval_rewrite_as_nonrep(self, *args, **kwargs):
-        from sympy import Piecewise
         x, n = self.args[-1].extract_branch_factor(allow_half=True)
         minus = False
         newargs = self.args[:-1] + (x,)
@@ -1093,7 +1127,7 @@ class HyperRep_sinasin(HyperRep):
     def _expr_big_minus(cls, a, z, n):
         return -1/sqrt(1 + 1/z)*sinh(2*a*asinh(sqrt(z)) + 2*a*pi*I*n)
 
-class appellf1(Function):
+class appellf1(DefinedFunction):
     r"""
     This is the Appell hypergeometric function of two variables as:
 
@@ -1102,11 +1136,29 @@ class appellf1(Function):
         \frac{(a)_{m+n} (b_1)_m (b_2)_n}{(c)_{m+n}}
         \frac{x^m y^n}{m! n!}.
 
+    Examples
+    ========
+
+    >>> from sympy import appellf1, symbols
+    >>> x, y, a, b1, b2, c = symbols('x y a b1 b2 c')
+    >>> appellf1(2., 1., 6., 4., 5., 6.)
+    0.0063339426292673
+    >>> appellf1(12., 12., 6., 4., 0.5, 0.12)
+    172870711.659936
+    >>> appellf1(40, 2, 6, 4, 15, 60)
+    appellf1(40, 2, 6, 4, 15, 60)
+    >>> appellf1(20., 12., 10., 3., 0.5, 0.12)
+    15605338197184.4
+    >>> appellf1(40, 2, 6, 4, x, y)
+    appellf1(40, 2, 6, 4, x, y)
+    >>> appellf1(a, b1, b2, c, x, y)
+    appellf1(a, b1, b2, c, x, y)
+
     References
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Appell_series
-    .. [2] http://functions.wolfram.com/HypergeometricFunctions/AppellF1/
+    .. [2] https://functions.wolfram.com/HypergeometricFunctions/AppellF1/
 
     """
 

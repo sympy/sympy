@@ -1,14 +1,28 @@
-from sympy import AccumBounds, Symbol, floor, nan, oo, zoo, E, symbols, \
-        ceiling, pi, Rational, Float, I, sin, exp, log, factorial, frac, Eq, \
-        Le, Ge, Gt, Lt, Ne, sqrt, S
+from sympy.calculus.accumulationbounds import AccumBounds
+from sympy.core.numbers import (E, Float, I, Rational, Integer, nan, oo, pi, zoo)
+from sympy.core.relational import (Eq, Ge, Gt, Le, Lt, Ne)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.combinatorial.factorials import factorial
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.integers import (ceiling, floor, frac)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import sin, cos, tan, asin
+from sympy.polys.rootoftools import RootOf, CRootOf
+from sympy import Integers
+from sympy.sets.sets import Interval
+from sympy.sets.fancysets import ImageSet
+from sympy.core.function import Lambda
 
 from sympy.core.expr import unchanged
-from sympy.testing.pytest import XFAIL
+from sympy.testing.pytest import XFAIL, raises
 
 x = Symbol('x')
 i = Symbol('i', imaginary=True)
 y = Symbol('y', real=True)
 k, n = symbols('k,n', integer=True)
+b = Symbol('b', real=True, noninteger=True)
+m = Symbol('m', positive=True)
 
 
 def test_floor():
@@ -23,6 +37,9 @@ def test_floor():
 
     assert floor(1) == 1
     assert floor(-1) == -1
+
+    assert floor(I*log(asin(5)/abs(asin(5)))) == 0
+    assert floor(-I*log(asin(7)/abs(asin(7)))) == -2
 
     assert floor(E) == 2
     assert floor(-E) == -3
@@ -45,6 +62,11 @@ def test_floor():
 
     assert floor(Float(7.69)) == 7
     assert floor(-Float(7.69)) == -8
+
+    assert floor(1/(m+1)) == S.Zero
+    assert floor((m+2)/(m+1)) == S.One
+    assert floor(-1/(m+1)) == S.NegativeOne
+    assert floor((m+2)/(-m-1)) == Integer(-2)
 
     assert floor(I) == I
     assert floor(-I) == -I
@@ -109,10 +131,10 @@ def test_floor():
     assert floor(factorial(50)/exp(1)) == \
         11188719610782480504630258070757734324011354208865721592720336800
 
-    assert (floor(y) < y) == False
+    assert (floor(y) < y).is_Relational
     assert (floor(y) <= y) == True
     assert (floor(y) > y) == False
-    assert (floor(y) >= y) == False
+    assert (floor(y) >= y).is_Relational
     assert (floor(x) <= x).is_Relational  # x could be non-real
     assert (floor(x) > x).is_Relational
     assert (floor(x) <= y).is_Relational  # arg is not same as rhs
@@ -121,6 +143,10 @@ def test_floor():
     assert (floor(y) < oo) == True
     assert (floor(y) >= -oo) == True
     assert (floor(y) > -oo) == True
+    assert (floor(b) < b) == True
+    assert (floor(b) <= b) == True
+    assert (floor(b) > b) == False
+    assert (floor(b) >= b) == False
 
     assert floor(y).rewrite(frac) == y - frac(y)
     assert floor(y).rewrite(ceiling) == -ceiling(-y)
@@ -196,6 +222,8 @@ def test_floor():
     assert (floor(y) < n) == (y < n)
     assert (floor(y) > n) == (y >= n + 1)
 
+    assert floor(RootOf(x**3 - 27*x, 2)) == 5
+
 
 def test_ceiling():
 
@@ -209,6 +237,9 @@ def test_ceiling():
 
     assert ceiling(1) == 1
     assert ceiling(-1) == -1
+
+    assert ceiling(I*log(asin(5)/abs(asin(5)))) == 1
+    assert ceiling(-I*log(asin(7)/abs(asin(7)))) == -1
 
     assert ceiling(E) == 3
     assert ceiling(-E) == -2
@@ -230,6 +261,11 @@ def test_ceiling():
 
     assert ceiling(Float(7.69)) == 8
     assert ceiling(-Float(7.69)) == -7
+
+    assert ceiling(1/(m+1)) == S.One
+    assert ceiling((m+2)/(m+1)) == Integer(2)
+    assert ceiling(-1/(m+1)) == S.Zero
+    assert ceiling((m+2)/(-m-1)) == S.NegativeOne
 
     assert ceiling(I) == I
     assert ceiling(-I) == -I
@@ -269,6 +305,8 @@ def test_ceiling():
     assert unchanged(ceiling, x + y)
 
     assert ceiling(x + 3) == ceiling(x) + 3
+    assert ceiling(x + 3.0) == ceiling(x) + 3
+    assert ceiling(x + 3.0*I) == ceiling(x) + 3*I
     assert ceiling(x + k) == ceiling(x) + k
 
     assert ceiling(y + 3) == ceiling(y) + 3
@@ -295,9 +333,9 @@ def test_ceiling():
         11188719610782480504630258070757734324011354208865721592720336801
 
     assert (ceiling(y) >= y) == True
-    assert (ceiling(y) > y) == False
+    assert (ceiling(y) > y).is_Relational
     assert (ceiling(y) < y) == False
-    assert (ceiling(y) <= y) == False
+    assert (ceiling(y) <= y).is_Relational
     assert (ceiling(x) >= x).is_Relational  # x could be non-real
     assert (ceiling(x) < x).is_Relational
     assert (ceiling(x) >= y).is_Relational  # arg is not same as rhs
@@ -306,6 +344,10 @@ def test_ceiling():
     assert (ceiling(y) > -oo) == True
     assert (ceiling(y) <= oo) == True
     assert (ceiling(y) < oo) == True
+    assert (ceiling(b) < b) == False
+    assert (ceiling(b) <= b) == False
+    assert (ceiling(b) > b) == True
+    assert (ceiling(b) >= b) == True
 
     assert ceiling(y).rewrite(floor) == -floor(-y)
     assert ceiling(y).rewrite(frac) == y + frac(-y)
@@ -381,6 +423,12 @@ def test_ceiling():
     assert (ceiling(y) < n) == (y <= n - 1)
     assert (ceiling(y) > n) == (y > n)
 
+    assert ceiling(RootOf(x**3 - 27*x, 2)) == 6
+    s = ImageSet(Lambda(n, n + (CRootOf(x**5 - x**2 + 1, 0))), Integers)
+    f = CRootOf(x**5 - x**2 + 1, 0)
+    s = ImageSet(Lambda(n, n + f), Integers)
+    assert s.intersect(Interval(-10, 10)) == {i + f for i in range(-9, 11)}
+
 
 def test_frac():
     assert isinstance(frac(x), frac)
@@ -418,8 +466,8 @@ def test_frac():
     n_i = Symbol('p_i', integer=True, negative=True)
     np_i = Symbol('np_i', integer=True, nonpositive=True)
     nn_i = Symbol('nn_i', integer=True, nonnegative=True)
-    p_r = Symbol('p_r', real=True, positive=True)
-    n_r = Symbol('n_r', real=True, negative=True)
+    p_r = Symbol('p_r', positive=True)
+    n_r = Symbol('n_r', negative=True)
     np_r = Symbol('np_r', real=True, nonpositive=True)
     nn_r = Symbol('nn_r', real=True, nonnegative=True)
 
@@ -541,11 +589,65 @@ def test_series():
     assert ceiling(-x).nseries(x, 0, 100) == 0
 
 
+def test_issue_14355():
+    # This test checks the leading term and series for the floor and ceil
+    # function when arg0 evaluates to S.NaN.
+    assert floor((x**3 + x)/(x**2 - x)).as_leading_term(x, cdir = 1) == -2
+    assert floor((x**3 + x)/(x**2 - x)).as_leading_term(x, cdir = -1) == -1
+    assert floor((cos(x) - 1)/x).as_leading_term(x, cdir = 1) == -1
+    assert floor((cos(x) - 1)/x).as_leading_term(x, cdir = -1) == 0
+    assert floor(sin(x)/x).as_leading_term(x, cdir = 1) == 0
+    assert floor(sin(x)/x).as_leading_term(x, cdir = -1) == 0
+    assert floor(-tan(x)/x).as_leading_term(x, cdir = 1) == -2
+    assert floor(-tan(x)/x).as_leading_term(x, cdir = -1) == -2
+    assert floor(sin(x)/x/3).as_leading_term(x, cdir = 1) == 0
+    assert floor(sin(x)/x/3).as_leading_term(x, cdir = -1) == 0
+    assert ceiling((x**3 + x)/(x**2 - x)).as_leading_term(x, cdir = 1) == -1
+    assert ceiling((x**3 + x)/(x**2 - x)).as_leading_term(x, cdir = -1) == 0
+    assert ceiling((cos(x) - 1)/x).as_leading_term(x, cdir = 1) == 0
+    assert ceiling((cos(x) - 1)/x).as_leading_term(x, cdir = -1) == 1
+    assert ceiling(sin(x)/x).as_leading_term(x, cdir = 1) == 1
+    assert ceiling(sin(x)/x).as_leading_term(x, cdir = -1) == 1
+    assert ceiling(-tan(x)/x).as_leading_term(x, cdir = 1) == -1
+    assert ceiling(-tan(x)/x).as_leading_term(x, cdir = 1) == -1
+    assert ceiling(sin(x)/x/3).as_leading_term(x, cdir = 1) == 1
+    assert ceiling(sin(x)/x/3).as_leading_term(x, cdir = -1) == 1
+    # test for series
+    assert floor(sin(x)/x).series(x, 0, 100, cdir = 1) == 0
+    assert floor(sin(x)/x).series(x, 0, 100, cdir = 1) == 0
+    assert floor((x**3 + x)/(x**2 - x)).series(x, 0, 100, cdir = 1) == -2
+    assert floor((x**3 + x)/(x**2 - x)).series(x, 0, 100, cdir = -1) == -1
+    assert ceiling(sin(x)/x).series(x, 0, 100, cdir = 1) == 1
+    assert ceiling(sin(x)/x).series(x, 0, 100, cdir = -1) == 1
+    assert ceiling((x**3 + x)/(x**2 - x)).series(x, 0, 100, cdir = 1) == -1
+    assert ceiling((x**3 + x)/(x**2 - x)).series(x, 0, 100, cdir = -1) == 0
+
+
+def test_frac_leading_term():
+    assert frac(x).as_leading_term(x) == x
+    assert frac(x).as_leading_term(x, cdir = 1) == x
+    assert frac(x).as_leading_term(x, cdir = -1) == 1
+    assert frac(x + S.Half).as_leading_term(x, cdir = 1) == S.Half
+    assert frac(x + S.Half).as_leading_term(x, cdir = -1) == S.Half
+    assert frac(-2*x + 1).as_leading_term(x, cdir = 1) == S.One
+    assert frac(-2*x + 1).as_leading_term(x, cdir = -1) == -2*x
+    assert frac(sin(x) + 5).as_leading_term(x, cdir = 1) == x
+    assert frac(sin(x) + 5).as_leading_term(x, cdir = -1) == S.One
+    assert frac(sin(x**2) + 5).as_leading_term(x, cdir = 1) == x**2
+    assert frac(sin(x**2) + 5).as_leading_term(x, cdir = -1) == x**2
+
+
 @XFAIL
 def test_issue_4149():
     assert floor(3 + pi*I + y*I) == 3 + floor(pi + y)*I
     assert floor(3*I + pi*I + y*I) == floor(3 + pi + y)*I
     assert floor(3 + E + pi*I + y*I) == 5 + floor(pi + y)*I
+
+
+def test_issue_21651():
+    k = Symbol('k', positive=True, integer=True)
+    exp = 2*2**(-k)
+    assert isinstance(floor(exp), floor)
 
 
 def test_issue_11207():
@@ -561,7 +663,26 @@ def test_nested_floor_ceiling():
     assert floor(ceiling(-floor(x**Rational(7, 2)/y))) == -floor(x**Rational(7, 2)/y)
     assert -ceiling(-ceiling(floor(x)/y)) == ceiling(floor(x)/y)
 
+def test_issue_18689():
+    assert floor(floor(floor(x)) + 3) == floor(x) + 3
+    assert ceiling(ceiling(ceiling(x)) + 1) == ceiling(x) + 1
+    assert ceiling(ceiling(floor(x)) + 3) == floor(x) + 3
 
 def test_issue_18421():
     assert floor(float(0)) is S.Zero
     assert ceiling(float(0)) is S.Zero
+
+def test_issue_25230():
+    a = Symbol('a', real = True)
+    b = Symbol('b', positive = True)
+    c = Symbol('c', negative = True)
+    raises(NotImplementedError, lambda: floor(x/a).as_leading_term(x, cdir = 1))
+    raises(NotImplementedError, lambda: ceiling(x/a).as_leading_term(x, cdir = 1))
+    assert floor(x/b).as_leading_term(x, cdir = 1) == 0
+    assert floor(x/b).as_leading_term(x, cdir = -1) == -1
+    assert floor(x/c).as_leading_term(x, cdir = 1) == -1
+    assert floor(x/c).as_leading_term(x, cdir = -1) == 0
+    assert ceiling(x/b).as_leading_term(x, cdir = 1) == 1
+    assert ceiling(x/b).as_leading_term(x, cdir = -1) == 0
+    assert ceiling(x/c).as_leading_term(x, cdir = 1) == 0
+    assert ceiling(x/c).as_leading_term(x, cdir = -1) == 1

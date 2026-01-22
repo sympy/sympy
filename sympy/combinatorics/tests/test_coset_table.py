@@ -659,8 +659,8 @@ def test_coset_enumeration():
              [460, 489, 498, 498],
              [472, 472, 471, 491]]
 
-    C_r.table == table3
-    C_c.table == table3
+    assert C_r.table == table3
+    assert C_c.table == table3
 
     # Group denoted by B2,4 from [2] Pg. 474
     F, a, b = free_group("a, b")
@@ -690,6 +690,12 @@ def test_coset_enumeration():
     assert C_r.table == table4
     assert C_c.table == table4
 
+    # regression test for wrong initialization of modified coset enumeration
+    F2, a, b = free_group("a, b")
+    H1 = FpGroup(F2, [a**2, b**2, (a*b)**3])
+    Y = [a*b, b**-1]
+    C = modified_coset_enumeration_r(H1, Y)
+    assert C.table == [[0, 0, 0, 0], [None, 0, 0, None]]
 
 def test_look_ahead():
     # Section 3.2 [Test Example] Example (d) from [2]

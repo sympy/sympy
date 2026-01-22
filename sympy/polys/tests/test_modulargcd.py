@@ -9,7 +9,7 @@ from sympy.polys.modulargcd import (
     _to_ANP_poly,
     func_field_modgcd,
     _func_field_modgcd_m)
-from sympy import sqrt
+from sympy.functions.elementary.miscellaneous import sqrt
 
 
 def test_modgcd_univariate_integers():
@@ -314,7 +314,7 @@ def test_modgcd_algebraic_field():
     assert func_field_modgcd(f, g) == (A.one, f, g)
 
 
-# when func_field_modgcd suppors function fields, this test can be changed
+# when func_field_modgcd supports function fields, this test can be changed
 def test_modgcd_func_field():
     D, t = ring("t", ZZ)
     R, x, z = ring("x, z", D)

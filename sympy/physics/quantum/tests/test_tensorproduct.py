@@ -1,4 +1,9 @@
-from sympy import I, symbols, Matrix
+from sympy.core.numbers import I
+from sympy.core.singleton import S
+from sympy.core.symbol import symbols
+from sympy.core.expr import unchanged
+from sympy.matrices import Matrix, SparseMatrix, ImmutableMatrix
+from sympy.testing.pytest import warns_deprecated_sympy
 
 from sympy.physics.quantum.commutator import Commutator as Comm
 from sympy.physics.quantum.tensorproduct import TensorProduct
@@ -6,15 +11,24 @@ from sympy.physics.quantum.tensorproduct import TensorProduct as TP
 from sympy.physics.quantum.tensorproduct import tensor_product_simp
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.qubit import Qubit, QubitBra
-from sympy.physics.quantum.operator import OuterProduct
+from sympy.physics.quantum.operator import OuterProduct, Operator
 from sympy.physics.quantum.density import Density
-from sympy.core.trace import Tr
+from sympy.physics.quantum.trace import Tr
 
-A, B, C, D = symbols('A,B,C,D', commutative=False)
+A = Operator('A')
+B = Operator('B')
+C = Operator('C')
+D = Operator('D')
 x = symbols('x')
+y = symbols('y', integer=True, positive=True)
 
 mat1 = Matrix([[1, 2*I], [1 + I, 3]])
 mat2 = Matrix([[2*I, 3], [4*I, 2]])
+
+
+def test_sparse_matrices():
+    spm = SparseMatrix.diag(1, 0)
+    assert unchanged(TensorProduct, spm, spm)
 
 
 def test_tensor_product_dagger():
@@ -36,6 +50,13 @@ def test_tensor_product_abstract():
 def test_tensor_product_expand():
     assert TP(A + B, B + C).expand(tensorproduct=True) == \
         TP(A, B) + TP(A, C) + TP(B, B) + TP(B, C)
+    #Tests for fix of issue #24142
+    assert TP(A-B, B-A).expand(tensorproduct=True) == \
+        TP(A, B) - TP(A, A) - TP(B, B) + TP(B, A)
+    assert TP(2*A + B, A + B).expand(tensorproduct=True) == \
+        2 * TP(A, A) + 2 * TP(A, B) + TP(B, A) + TP(B, B)
+    assert TP(2 * A * B + A, A + B).expand(tensorproduct=True) == \
+        2 * TP(A*B, A) + 2 * TP(A*B, B) + TP(A, A) + TP(A, B)
 
 
 def test_tensor_product_commutator():
@@ -46,12 +67,14 @@ def test_tensor_product_commutator():
 
 
 def test_tensor_product_simp():
-    assert tensor_product_simp(TP(A, B)*TP(B, C)) == TP(A*B, B*C)
-    # tests for Pow-expressions
-    assert tensor_product_simp(TP(A, B)**x) == TP(A**x, B**x)
-    assert tensor_product_simp(x*TP(A, B)**2) == x*TP(A**2,B**2)
-    assert tensor_product_simp(x*(TP(A, B)**2)*TP(C,D)) == x*TP(A**2*C,B**2*D)
-    assert tensor_product_simp(TP(A,B)-TP(C,D)**x) == TP(A,B)-TP(C**x,D**x)
+    with warns_deprecated_sympy():
+        assert tensor_product_simp(TP(A, B)*TP(B, C)) == TP(A*B, B*C)
+        # tests for Pow-expressions
+        assert TP(A, B)**y == TP(A**y, B**y)
+        assert tensor_product_simp(TP(A, B)**y) == TP(A**y, B**y)
+        assert tensor_product_simp(x*TP(A, B)**2) == x*TP(A**2,B**2)
+        assert tensor_product_simp(x*(TP(A, B)**2)*TP(C,D)) == x*TP(A**2*C,B**2*D)
+        assert tensor_product_simp(TP(A,B)-TP(C,D)**y) == TP(A,B)-TP(C**y,D**y)
 
 
 def test_issue_5923():
@@ -66,8 +89,6 @@ def test_eval_trace():
     # This test includes tests with dependencies between TensorProducts
     #and density operators. Since, the test is more to test the behavior of
     #TensorProducts it remains here
-
-    A, B, C, D, E, F = symbols('A B C D E F', commutative=False)
 
     # Density with simple tensor products as args
     t = TensorProduct(A, B)
@@ -110,3 +131,26 @@ def test_eval_trace():
                         1.0*A*Dagger(C)*Tr(B*Dagger(D)) +
                         1.0*C*Dagger(A)*Tr(D*Dagger(B)) +
                         1.0*C*Dagger(C)*Tr(D*Dagger(D)))
+
+
+def test_pr24993():
+    from sympy.matrices.expressions.kronecker import matrix_kronecker_product
+    from sympy.physics.quantum.matrixutils    import matrix_tensor_product
+    X = Matrix([[0, 1], [1, 0]])
+    Xi = ImmutableMatrix(X)
+    assert TensorProduct(Xi, Xi) == TensorProduct(X, X)
+    assert TensorProduct(Xi, Xi) == matrix_tensor_product(X, X)
+    assert TensorProduct(Xi, Xi) == matrix_kronecker_product(X, X)
+
+
+def test_tensor_product_with_scalars_expand():
+    """Test that TensorProduct with scalars can be expanded without AttributeError.
+
+    This tests the fix for the bug where (TensorProduct(2, B) + TensorProduct(B, 2))**2
+    would raise AttributeError: 'NoneType' object has no attribute 'is_commutative'
+    """
+    e = TensorProduct(x, A) + TensorProduct(B, y)
+    result = (e**2).expand()
+    expected = x**2*TensorProduct(S.One, A**2) + 2*x*y*TensorProduct(B, A) + \
+        y**2*TensorProduct(B**2, S.One)
+    assert result == expected

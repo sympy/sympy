@@ -1,5 +1,6 @@
 import os
-from sympy import Symbol, symbols
+import tempfile
+from sympy.core.symbol import (Symbol, symbols)
 from sympy.codegen.ast import (
     Assignment, Print, Declaration, FunctionDefinition, Return, real,
     FunctionCall, Variable, Element, integer
@@ -7,15 +8,15 @@ from sympy.codegen.ast import (
 from sympy.codegen.fnodes import (
     allocatable, ArrayConstructor, isign, dsign, cmplx, kind, literal_dp,
     Program, Module, use, Subroutine, dimension, assumed_extent, ImpliedDoLoop,
-    intent_out, size, Do, SubroutineCall, sum_, array, bind_C
+    intent_out, size, Do, SubroutineCall, sum_, array, bind_C, reshape
 )
 from sympy.codegen.futils import render_as_module
 from sympy.core.expr import unchanged
 from sympy.external import import_module
-from sympy.printing.fcode import fcode
+from sympy.printing.codeprinter import fcode
 from sympy.utilities._compilation import has_fortran, compile_run_strings, compile_link_import_strings
-from sympy.utilities._compilation.util import TemporaryDirectory, may_xfail
-from sympy.testing.pytest import skip
+from sympy.utilities._compilation.util import may_xfail
+from sympy.testing.pytest import skip, XFAIL
 
 cython = import_module('cython')
 np = import_module('numpy')
@@ -43,7 +44,7 @@ def test_size_assumed_shape():
             'program myprog\n'
             'use mod_rms, only: rms\n'
             'real*8, dimension(4), parameter :: x = [4, 2, 2, 2]\n'
-            'print *, dsqrt(7d0) - rms(x)\n'
+            'print "(f7.5)", dsqrt(7d0) - rms(x)\n'
             'end program\n'
         ))
     ], clean=True)
@@ -52,6 +53,7 @@ def test_size_assumed_shape():
     assert info['exit_status'] == os.EX_OK
 
 
+@XFAIL  # https://github.com/sympy/sympy/issues/20265
 @may_xfail
 def test_ImpliedDoLoop():
     if not has_fortran():
@@ -113,6 +115,7 @@ def test_Module():
     assert stderr == ''
 
 
+@XFAIL  # https://github.com/sympy/sympy/issues/20265
 @may_xfail
 def test_Subroutine():
     # Code to generate the subroutine in the example from
@@ -181,6 +184,26 @@ def test_literal_dp():
     assert fcode(literal_dp(0), source_format='free') == '0d0'
 
 
+def test_reshape():
+    """Test reshape function with keyword arguments and essential edge cases."""
+    from sympy.codegen.ast import String
+
+    array, shape, pad, order = symbols('array shape pad order')
+
+    cases = [
+        (reshape(array, shape), 'reshape(array, shape)'),
+        (reshape(array, shape, pad), 'reshape(array, shape, pad=pad)'),
+        (reshape(array, shape, None, order), 'reshape(array, shape, order=order)'),
+        (reshape(array, shape, pad, order), 'reshape(array, shape, pad=pad, order=order)'),
+        (reshape(Symbol('a') + Symbol('b'), [Symbol('n') * 2]), 'reshape(a + b, [2*n])'),
+        (reshape(array, shape, None, String('F')), 'reshape(array, shape, order=F)'),
+        (reshape(array, [Symbol('n'), 3]), 'reshape(array, [n, 3])'),
+    ]
+
+    for expr, expected in cases:
+        assert fcode(expr, source_format='free') == expected
+
+
 @may_xfail
 def test_bind_C():
     if not has_fortran():
@@ -197,7 +220,7 @@ def test_bind_C():
     fd = FunctionDefinition(real, 'rms', [arr, s], body, attrs=[bind_C('rms')])
     f_mod = render_as_module([fd], 'mod_rms')
 
-    with TemporaryDirectory() as folder:
+    with tempfile.TemporaryDirectory() as folder:
         mod, info = compile_link_import_strings([
             ('rms.f90', f_mod),
             ('_rms.pyx', (

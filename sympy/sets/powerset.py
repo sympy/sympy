@@ -1,12 +1,11 @@
-from __future__ import print_function, division
-
+from typing import TYPE_CHECKING, Iterator
 from sympy.core.decorators import _sympifyit
 from sympy.core.parameters import global_parameters
 from sympy.core.logic import fuzzy_bool
 from sympy.core.singleton import S
 from sympy.core.sympify import _sympify
 
-from .sets import Set
+from .sets import Set, FiniteSet, SetKind
 
 
 class PowerSet(Set):
@@ -37,13 +36,12 @@ class PowerSet(Set):
     Examples
     ========
 
-    >>> from sympy.sets.powerset import PowerSet
-    >>> from sympy import S, FiniteSet
+    >>> from sympy import PowerSet, S, FiniteSet
 
     A power set of a finite set:
 
     >>> PowerSet(FiniteSet(1, 2, 3))
-    PowerSet(FiniteSet(1, 2, 3))
+    PowerSet({1, 2, 3})
 
     A power set of an empty set:
 
@@ -60,9 +58,7 @@ class PowerSet(Set):
     Evaluating the power set of a finite set to its explicit form:
 
     >>> PowerSet(FiniteSet(1, 2, 3)).rewrite(FiniteSet)
-    FiniteSet(FiniteSet(1), FiniteSet(1, 2), FiniteSet(1, 3),
-            FiniteSet(1, 2, 3), FiniteSet(2), FiniteSet(2, 3),
-            FiniteSet(3), EmptySet)
+    FiniteSet(EmptySet, {1}, {2}, {3}, {1, 2}, {1, 3}, {2, 3}, {1, 2, 3})
 
     References
     ==========
@@ -71,6 +67,12 @@ class PowerSet(Set):
 
     .. [2] https://en.wikipedia.org/wiki/Axiom_of_power_set
     """
+
+    if TYPE_CHECKING:
+        @property
+        def args(self) -> tuple[Set]:
+            ...
+
     def __new__(cls, arg, evaluate=None):
         if evaluate is None:
             evaluate=global_parameters.evaluate
@@ -80,7 +82,7 @@ class PowerSet(Set):
         if not isinstance(arg, Set):
             raise ValueError('{} must be a set.'.format(arg))
 
-        return super(PowerSet, cls).__new__(cls, arg)
+        return super().__new__(cls, arg)
 
     @property
     def arg(self):
@@ -102,12 +104,12 @@ class PowerSet(Set):
     def _eval_is_subset(self, other):
         if isinstance(other, PowerSet):
             return self.arg.is_subset(other.arg)
+        return None
 
-    def __len__(self):
+    def __len__(self) -> int:
         return 2 ** len(self.arg)
 
-    def __iter__(self):
-        from .sets import FiniteSet
+    def __iter__(self) -> Iterator[Set]:
         found = [S.EmptySet]
         yield S.EmptySet
 
@@ -119,3 +121,7 @@ class PowerSet(Set):
                 yield new
                 temp.append(new)
             found.extend(temp)
+
+    @property
+    def kind(self):
+        return SetKind(self.arg.kind)

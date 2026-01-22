@@ -1,8 +1,6 @@
 """ Caching facility for SymPy """
-from __future__ import print_function, division
-
-from distutils.version import LooseVersion as V
-
+from importlib import import_module
+from typing import Callable
 
 class _cache(list):
     """ List of cached functions """
@@ -42,107 +40,49 @@ CACHE = _cache()
 print_cache = CACHE.print_cache
 clear_cache = CACHE.clear_cache
 
-from functools import update_wrapper
+from functools import lru_cache, wraps
 
-try:
-    import fastcache
-    from warnings import warn
-    # the version attribute __version__ is not present for all versions
-    if not hasattr(fastcache, '__version__'):
-        warn("fastcache version >= 0.4.0 required", UserWarning)
-        raise ImportError
-        # ensure minimum required version of fastcache is present
-    if V(fastcache.__version__) < '0.4.0':
-        warn("fastcache version >= 0.4.0 required, detected {}"\
-             .format(fastcache.__version__), UserWarning)
-        raise ImportError
-    # Do not use fastcache if running under pypy
-    import platform
-    if platform.python_implementation() == 'PyPy':
-        raise ImportError
-    lru_cache = fastcache.clru_cache
+def __cacheit(maxsize):
+    """caching decorator.
 
-except ImportError:
-    from sympy.core.compatibility import lru_cache
-
-    def __cacheit(maxsize):
-        """caching decorator.
-
-           important: the result of cached function must be *immutable*
+        important: the result of cached function must be *immutable*
 
 
-           Examples
-           ========
+        Examples
+        ========
 
-           >>> from sympy.core.cache import cacheit
-           >>> @cacheit
-           ... def f(a, b):
-           ...    return a+b
+        >>> from sympy import cacheit
+        >>> @cacheit
+        ... def f(a, b):
+        ...    return a+b
 
-           >>> @cacheit
-           ... def f(a, b):
-           ...    return [a, b] # <-- WRONG, returns mutable object
+        >>> @cacheit
+        ... def f(a, b): # noqa: F811
+        ...    return [a, b] # <-- WRONG, returns mutable object
 
-           to force cacheit to check returned results mutability and consistency,
-           set environment variable SYMPY_USE_CACHE to 'debug'
-        """
-        def func_wrapper(func):
-            cfunc = lru_cache(maxsize, typed=True)(func)
+        to force cacheit to check returned results mutability and consistency,
+        set environment variable SYMPY_USE_CACHE to 'debug'
+    """
+    def func_wrapper(func):
+        cfunc = lru_cache(maxsize, typed=True)(func)
 
-            # wraps here does not propagate all the necessary info
-            # for py2.7, use update_wrapper below
-            def wrapper(*args, **kwargs):
-                try:
-                    retval = cfunc(*args, **kwargs)
-                except TypeError:
-                    retval = func(*args, **kwargs)
-                return retval
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            try:
+                retval = cfunc(*args, **kwargs)
+            except TypeError as e:
+                if not e.args or not e.args[0].startswith('unhashable type:'):
+                    raise
+                retval = func(*args, **kwargs)
+            return retval
 
-            wrapper.cache_info = cfunc.cache_info
-            wrapper.cache_clear = cfunc.cache_clear
+        wrapper.cache_info = cfunc.cache_info
+        wrapper.cache_clear = cfunc.cache_clear
 
-            # Some versions of update_wrapper erroneously assign the final
-            # function of the wrapper chain to __wrapped__, see
-            # https://bugs.python.org/issue17482 .
-            # To work around this, we need to call update_wrapper first, then
-            # assign to wrapper.__wrapped__.
-            update_wrapper(wrapper, func)
-            wrapper.__wrapped__ = cfunc.__wrapped__
+        CACHE.append(wrapper)
+        return wrapper
 
-            CACHE.append(wrapper)
-            return wrapper
-
-        return func_wrapper
-else:
-
-    def __cacheit(maxsize):
-        """caching decorator.
-
-           important: the result of cached function must be *immutable*
-
-
-           Examples
-           ========
-
-           >>> from sympy.core.cache import cacheit
-           >>> @cacheit
-           ... def f(a, b):
-           ...    return a+b
-
-           >>> @cacheit
-           ... def f(a, b):
-           ...    return [a, b] # <-- WRONG, returns mutable object
-
-           to force cacheit to check returned results mutability and consistency,
-           set environment variable SYMPY_USE_CACHE to 'debug'
-        """
-        def func_wrapper(func):
-
-            cfunc = fastcache.clru_cache(maxsize, typed=True, unhashable='ignore')(func)
-            CACHE.append(cfunc)
-            return cfunc
-
-        return func_wrapper
+    return func_wrapper
 ########################################
 
 
@@ -153,8 +93,6 @@ def __cacheit_nocache(func):
 def __cacheit_debug(maxsize):
     """cacheit + code to check cache consistency"""
     def func_wrapper(func):
-        from .decorators import wraps
-
         cfunc = __cacheit(maxsize)(func)
 
         @wraps(func)
@@ -212,3 +150,61 @@ elif USE_CACHE == 'debug':
 else:
     raise RuntimeError(
         'unrecognized value for SYMPY_USE_CACHE: %s' % USE_CACHE)
+
+
+def cached_property(func):
+    '''Decorator to cache property method'''
+    attrname = '__' + func.__name__
+    _cached_property_sentinel = object()
+    def propfunc(self):
+        val = getattr(self, attrname, _cached_property_sentinel)
+        if val is _cached_property_sentinel:
+            val = func(self)
+            setattr(self, attrname, val)
+        return val
+    return property(propfunc)
+
+
+def lazy_function(module : str, name : str) -> Callable:
+    """Create a lazy proxy for a function in a module.
+
+    The module containing the function is not imported until the function is used.
+
+    """
+    func = None
+
+    def _get_function():
+        nonlocal func
+        if func is None:
+            func = getattr(import_module(module), name)
+        return func
+
+    # The metaclass is needed so that help() shows the docstring
+    class LazyFunctionMeta(type):
+        @property
+        def __doc__(self):
+            docstring = _get_function().__doc__
+            docstring += f"\n\nNote: this is a {self.__class__.__name__} wrapper of '{module}.{name}'"
+            return docstring
+
+    class LazyFunction(metaclass=LazyFunctionMeta):
+        def __call__(self, *args, **kwargs):
+            # inline get of function for performance gh-23832
+            nonlocal func
+            if func is None:
+                func = getattr(import_module(module), name)
+            return func(*args, **kwargs)
+
+        @property
+        def __doc__(self):
+            docstring = _get_function().__doc__
+            docstring += f"\n\nNote: this is a {self.__class__.__name__} wrapper of '{module}.{name}'"
+            return docstring
+
+        def __str__(self):
+            return _get_function().__str__()
+
+        def __repr__(self):
+            return f"<{__class__.__name__} object at 0x{id(self):x}>: wrapping '{module}.{name}'"
+
+    return LazyFunction()

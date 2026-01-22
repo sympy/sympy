@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 Test that the installed modules in setup.py are up-to-date.
 

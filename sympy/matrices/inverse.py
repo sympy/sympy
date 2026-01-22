@@ -1,9 +1,19 @@
-from __future__ import division, print_function
+from __future__ import annotations
 
-from sympy.core.numbers import mod_inverse
+from typing import TYPE_CHECKING
 
-from .common import MatrixError, NonSquareMatrixError, NonInvertibleMatrixError
+from sympy.polys.matrices.exceptions import DMNonInvertibleMatrixError
+from sympy.polys.domains import EX
+
+from .exceptions import MatrixError, NonSquareMatrixError, NonInvertibleMatrixError
 from .utilities import _iszero
+
+
+if TYPE_CHECKING:
+    from typing import TypeVar, Callable
+    from sympy.core.expr import Expr
+    from sympy.matrices.matrixbase import MatrixBase
+    Tmat = TypeVar('Tmat', bound=MatrixBase)
 
 
 def _pinv_full_rank(M):
@@ -139,53 +149,6 @@ def _pinv(M, method='RD'):
         raise ValueError('invalid pinv method %s' % repr(method))
 
 
-def _inv_mod(M, m):
-    r"""
-    Returns the inverse of the matrix `K` (mod `m`), if it exists.
-
-    Method to find the matrix inverse of `K` (mod `m`) implemented in this function:
-
-    * Compute `\mathrm{adj}(K) = \mathrm{cof}(K)^t`, the adjoint matrix of `K`.
-
-    * Compute `r = 1/\mathrm{det}(K) \pmod m`.
-
-    * `K^{-1} = r\cdot \mathrm{adj}(K) \pmod m`.
-
-    Examples
-    ========
-
-    >>> from sympy import Matrix
-    >>> A = Matrix(2, 2, [1, 2, 3, 4])
-    >>> A.inv_mod(5)
-    Matrix([
-    [3, 1],
-    [4, 2]])
-    >>> A.inv_mod(3)
-    Matrix([
-    [1, 1],
-    [0, 1]])
-
-    """
-
-    if not M.is_square:
-        raise NonSquareMatrixError()
-
-    N       = M.cols
-    det_K   = M.det()
-    det_inv = None
-
-    try:
-        det_inv = mod_inverse(det_K, m)
-    except ValueError:
-        raise NonInvertibleMatrixError('Matrix is not invertible (mod %d)' % m)
-
-    K_adj = M.adjugate()
-    K_inv = M.__class__(N, N,
-            [det_inv * K_adj[i, j] % m for i in range(N) for j in range(N)])
-
-    return K_inv
-
-
 def _verify_invertible(M, iszerofunc=_iszero):
     """Initial check to see if a matrix is invertible. Raises or returns
     determinant for use in _inv_ADJ."""
@@ -218,7 +181,10 @@ def _inv_ADJ(M, iszerofunc=_iszero):
     inverse_LDL
     """
 
-    d = _verify_invertible(M, iszerofunc=iszerofunc)
+    d = M.det()
+
+    if iszerofunc(d):
+        raise NonInvertibleMatrixError("Matrix det == 0; not invertible.")
 
     return M.adjugate() / d
 
@@ -263,8 +229,6 @@ def _inv_LU(M, iszerofunc=_iszero):
 
     if not M.is_square:
         raise NonSquareMatrixError("A Matrix must be square to invert.")
-    if M.free_symbols:
-        _verify_invertible(M, iszerofunc=iszerofunc)
 
     return M.LUsolve(M.eye(M.rows), iszerofunc=_iszero)
 
@@ -319,7 +283,80 @@ def _inv_QR(M, iszerofunc=_iszero):
 
     return M.QRsolve(M.eye(M.rows))
 
-def _inv_block(M, iszerofunc=_iszero):
+def _try_DM(M, use_EX=False):
+    """Try to convert a matrix to a ``DomainMatrix``."""
+    dM = M.to_DM()
+    K = dM.domain
+
+    # Return DomainMatrix if a domain is found. Only use EX if use_EX=True.
+    if not use_EX and K.is_EXRAW:
+        return None
+    elif K.is_EXRAW:
+        return dM.convert_to(EX)
+    else:
+        return dM
+
+
+def _use_exact_domain(dom):
+    """Check whether to convert to an exact domain."""
+    # DomainMatrix can handle RR and CC with partial pivoting. Other inexact
+    # domains like RR[a,b,...] can only be handled by converting to an exact
+    # domain like QQ[a,b,...]
+    if dom.is_RR or dom.is_CC:
+        return False
+    else:
+        return not dom.is_Exact
+
+
+def _inv_DM(dM, cancel=True):
+    """Calculates the inverse using ``DomainMatrix``.
+
+    See Also
+    ========
+
+    inv
+    inverse_ADJ
+    inverse_GE
+    inverse_CH
+    inverse_LDL
+    sympy.polys.matrices.domainmatrix.DomainMatrix.inv
+    """
+    m, n = dM.shape
+    dom = dM.domain
+
+    if m != n:
+        raise NonSquareMatrixError("A Matrix must be square to invert.")
+
+    # Convert RR[a,b,...] to QQ[a,b,...]
+    use_exact = _use_exact_domain(dom)
+
+    if use_exact:
+        dom_exact = dom.get_exact()
+        dM = dM.convert_to(dom_exact)
+    else:
+        dom_exact = None
+
+    try:
+        dMi, den = dM.inv_den()
+    except DMNonInvertibleMatrixError:
+        raise NonInvertibleMatrixError("Matrix det == 0; not invertible.")
+
+    if dom_exact is not None:
+        dMi = dMi.convert_to(dom)
+        den = dom.convert_from(den, dom_exact)
+
+    if cancel:
+        # Convert to field and cancel with the denominator.
+        if not dMi.domain.is_Field:
+            dMi = dMi.to_field()
+        Mi = (dMi / den).to_Matrix()
+    else:
+        # Convert to Matrix and divide without cancelling
+        Mi = dMi.to_Matrix() / dMi.domain.to_sympy(den)
+
+    return Mi
+
+def _inv_block(M: MatrixBase, iszerofunc: Callable[[Expr], bool | None] = _iszero) -> MatrixBase:
     """Calculates the inverse using BLOCKWISE inversion.
 
     See Also
@@ -331,7 +368,7 @@ def _inv_block(M, iszerofunc=_iszero):
     inverse_CH
     inverse_LDL
     """
-    from sympy import BlockMatrix
+    from sympy.matrices.expressions.blockmatrix import BlockMatrix
     i = M.shape[0]
     if i <= 20 :
         return M.inv(method="LU", iszerofunc=_iszero)
@@ -357,15 +394,20 @@ def _inv_block(M, iszerofunc=_iszero):
     nn = BlockMatrix([[A_n, B_n], [C_n, D_n]]).as_explicit()
     return nn
 
-def _inv(M, method=None, iszerofunc=_iszero, try_block_diag=False):
+def _inv(M: Tmat,
+         method: str | None = None,
+         iszerofunc: Callable[[Expr], bool | None] = _iszero,
+         try_block_diag: bool = False
+    ) -> Tmat:
     """
-    Return the inverse of a matrix using the method indicated. Default for
-    dense matrices is is Gauss elimination, default for sparse matrices is LDL.
+    Return the inverse of a matrix using the method indicated. The default
+    is DM if a suitable domain is found or otherwise GE for dense matrices
+    LDL for sparse matrices.
 
     Parameters
     ==========
 
-    method : ('GE', 'LU', 'ADJ', 'CH', 'LDL')
+    method : ('DM', 'DMNC', 'GE', 'LU', 'ADJ', 'CH', 'LDL', 'QR')
 
     iszerofunc : function, optional
         Zero-testing function to use.
@@ -412,6 +454,8 @@ def _inv(M, method=None, iszerofunc=_iszero, try_block_diag=False):
 
     According to the ``method`` keyword, it calls the appropriate method:
 
+        DM .... Use DomainMatrix ``inv_den`` method
+        DMNC .... Use DomainMatrix ``inv_den`` method without cancellation
         GE .... inverse_GE(); default for dense matrices
         LU .... inverse_LU()
         ADJ ... inverse_ADJ()
@@ -443,10 +487,10 @@ def _inv(M, method=None, iszerofunc=_iszero, try_block_diag=False):
         If the determinant of the matrix is zero.
     """
 
-    from sympy.matrices import diag, SparseMatrix
+    from sympy.matrices import SparseMatrix
 
-    if method is None:
-        method = 'LDL' if isinstance(M, SparseMatrix) else 'GE'
+    if not M.is_square:
+        raise NonSquareMatrixError("A Matrix must be square to invert.")
 
     if try_block_diag:
         blocks = M.get_diag_blocks()
@@ -455,9 +499,30 @@ def _inv(M, method=None, iszerofunc=_iszero, try_block_diag=False):
         for block in blocks:
             r.append(block.inv(method=method, iszerofunc=iszerofunc))
 
-        return diag(*r)
+        return M.diag(*r)
 
-    if method == "GE":
+    # Default: Use DomainMatrix if the domain is not EX.
+    # If DM is requested explicitly then use it even if the domain is EX.
+    if method is None and iszerofunc is _iszero:
+        dM = _try_DM(M, use_EX=False)
+    elif method in ("DM", "DMNC"):
+        dM = _try_DM(M, use_EX=True)
+    else:
+        dM = None
+
+    # A suitable domain was not found, fall back to GE for dense matrices
+    # and LDL for sparse matrices.
+    if method is None:
+        if isinstance(M, SparseMatrix):
+            method = 'LDL'
+        else:
+            method = 'GE'
+
+    if dM is not None:
+        rv = _inv_DM(dM)
+    elif method == "DMNC":
+        rv = _inv_DM(dM, cancel=False)
+    elif method == "GE":
         rv = M.inverse_GE(iszerofunc=iszerofunc)
     elif method == "LU":
         rv = M.inverse_LU(iszerofunc=iszerofunc)

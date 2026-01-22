@@ -1,11 +1,17 @@
-from typing import Any, Dict
+from __future__ import annotations
+from typing import TYPE_CHECKING
 
-from sympy.simplify import simplify as simp, trigsimp as tsimp
+from sympy.simplify import simplify as simp, trigsimp as tsimp  # type: ignore
 from sympy.core.decorators import call_highest_priority, _sympifyit
 from sympy.core.assumptions import StdFactKB
-from sympy import factor as fctr, diff as df, Integral
+from sympy.core.function import diff as df
+from sympy.integrals.integrals import Integral
+from sympy.polys.polytools import factor as fctr
 from sympy.core import S, Add, Mul
 from sympy.core.expr import Expr
+
+if TYPE_CHECKING:
+    from sympy.vector.vector import BaseVector
 
 
 class BasisDependent(Expr):
@@ -15,6 +21,8 @@ class BasisDependent(Expr):
     Named so because the representation of these quantities in
     sympy.vector is dependent on the basis they are expressed in.
     """
+
+    zero: BasisDependentZero
 
     @call_highest_priority('__radd__')
     def __add__(self, other):
@@ -46,16 +54,13 @@ class BasisDependent(Expr):
         return self._mul_func(S.NegativeOne, self)
 
     @_sympifyit('other', NotImplemented)
-    @call_highest_priority('__rdiv__')
-    def __div__(self, other):
+    @call_highest_priority('__rtruediv__')
+    def __truediv__(self, other):
         return self._div_helper(other)
 
-    @call_highest_priority('__div__')
-    def __rdiv__(self, other):
+    @call_highest_priority('__truediv__')
+    def __rtruediv__(self, other):
         return TypeError("Invalid divisor for division")
-
-    __truediv__ = __div__
-    __rtruediv__ = __rdiv__
 
     def evalf(self, n=15, subs=None, maxn=100, chop=False, strict=False, quad=None, verbose=False):
         """
@@ -74,7 +79,7 @@ class BasisDependent(Expr):
 
     evalf.__doc__ += Expr.evalf.__doc__  # type: ignore
 
-    n = evalf
+    n = evalf # type: ignore
 
     def simplify(self, **kwargs):
         """
@@ -144,13 +149,12 @@ class BasisDependent(Expr):
     factor.__doc__ += fctr.__doc__  # type: ignore
 
     def as_coeff_Mul(self, rational=False):
-        """Efficiently extract the coefficient of a product. """
+        """Efficiently extract the coefficient of a product."""
         return (S.One, self)
 
     def as_coeff_add(self, *deps):
-        """Efficiently extract the coefficient of a summation. """
-        l = [x * self.components[x] for x in self.components]
-        return 0, tuple(l)
+        """Efficiently extract the coefficient of a summation."""
+        return 0, tuple(x * self.components[x] for x in self.components)
 
     def diff(self, *args, **kwargs):
         """
@@ -186,7 +190,7 @@ class BasisDependentAdd(BasisDependent, Add):
         components = {}
 
         # Check each arg and simultaneously learn the components
-        for i, arg in enumerate(args):
+        for arg in args:
             if not isinstance(arg, cls._expr_type):
                 if isinstance(arg, Mul):
                     arg = cls._mul_func(*(arg.args))
@@ -199,9 +203,8 @@ class BasisDependentAdd(BasisDependent, Add):
             if arg == cls.zero:
                 continue
             # Else, update components accordingly
-            if hasattr(arg, "components"):
-                for x in arg.components:
-                    components[x] = components.get(x, 0) + arg.components[x]
+            for x in arg.components:
+                components[x] = components.get(x, 0) + arg.components[x]
 
         temp = list(components.keys())
         for x in temp:
@@ -214,8 +217,7 @@ class BasisDependentAdd(BasisDependent, Add):
 
         # Build object
         newargs = [x * components[x] for x in components]
-        obj = super(BasisDependentAdd, cls).__new__(cls,
-                                                    *newargs, **options)
+        obj = super().__new__(cls, *newargs, **options)
         if isinstance(obj, Mul):
             return cls._mul_func(*obj.args)
         assumptions = {'commutative': True}
@@ -232,6 +234,17 @@ class BasisDependentMul(BasisDependent, Mul):
     """
 
     def __new__(cls, *args, **options):
+        obj = cls._new(*args, **options)
+        return obj
+
+    def _new_rawargs(self, *args):
+        # XXX: This is needed because Add.flatten() uses it but the default
+        # implementation does not work for Vectors because they assign
+        # attributes outside of .args.
+        return type(self)(*args)
+
+    @classmethod
+    def _new(cls, *args, **options):
         from sympy.vector import Cross, Dot, Curl, Gradient
         count = 0
         measure_number = S.One
@@ -245,7 +258,7 @@ class BasisDependentMul(BasisDependent, Mul):
             if isinstance(arg, cls._zero_func):
                 count += 1
                 zeroflag = True
-            elif arg == S.Zero:
+            elif arg == S.Zero or arg == 0.0:
                 zeroflag = True
             elif isinstance(arg, (cls._base_func, cls._mul_func)):
                 count += 1
@@ -274,10 +287,10 @@ class BasisDependentMul(BasisDependent, Mul):
                        x in expr.args]
             return cls._add_func(*newargs)
 
-        obj = super(BasisDependentMul, cls).__new__(cls, measure_number,
-                                                    expr._base_instance,
-                                                    *extra_args,
-                                                    **options)
+        obj = super().__new__(cls, measure_number,
+                              expr._base_instance,
+                              *extra_args,
+                              **options)
         if isinstance(obj, Add):
             return cls._add_func(*obj.args)
         obj._base_instance = expr._base_instance
@@ -289,30 +302,26 @@ class BasisDependentMul(BasisDependent, Mul):
 
         return obj
 
-    def __str__(self, printer=None):
-        measure_str = self._measure_number.__str__()
+    def _sympystr(self, printer):
+        measure_str = printer._print(self._measure_number)
         if ('(' in measure_str or '-' in measure_str or
                 '+' in measure_str):
             measure_str = '(' + measure_str + ')'
-        return measure_str + '*' + self._base_instance.__str__(printer)
-
-    __repr__ = __str__
-    _sympystr = __str__
+        return measure_str + '*' + printer._print(self._base_instance)
 
 
 class BasisDependentZero(BasisDependent):
     """
     Class to denote a zero basis dependent instance.
     """
-    # XXX: Can't type the keys as BaseVector because of cyclic import
-    # problems.
-    components = {}  # type: Dict[Any, Expr]
+    components: dict['BaseVector', Expr] = {}
+    _latex_form: str
 
     def __new__(cls):
-        obj = super(BasisDependentZero, cls).__new__(cls)
+        obj = super().__new__(cls)
         # Pre-compute a specific hash value for the zero vector
         # Use the same one always
-        obj._hash = tuple([S.Zero, cls]).__hash__()
+        obj._hash = (S.Zero, cls).__hash__()
         return obj
 
     def __hash__(self):
@@ -361,8 +370,5 @@ class BasisDependentZero(BasisDependent):
         """
         return self
 
-    def __str__(self, printer=None):
+    def _sympystr(self, printer):
         return '0'
-
-    __repr__ = __str__
-    _sympystr = __str__

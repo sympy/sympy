@@ -1,20 +1,36 @@
-from sympy import (Lambda, Symbol, Function, Derivative, Subs, sqrt,
-        log, exp, Rational, Float, sin, cos, acos, diff, I, re, im,
-        E, expand, pi, O, Sum, S, polygamma, loggamma, expint,
-        Tuple, Dummy, Eq, Expr, symbols, nfloat, Piecewise, Indexed,
-        Matrix, Basic, Dict, oo, zoo, nan, Pow)
-from sympy.core.basic import _aresame
+from sympy.concrete.summations import Sum
+from sympy.core.basic import Basic, _aresame
 from sympy.core.cache import clear_cache
-from sympy.core.expr import unchanged
+from sympy.core.containers import Dict, Tuple
+from sympy.core.expr import Expr, unchanged
+from sympy.core.function import (Subs, Function, diff, Lambda, expand,
+    nfloat, Derivative)
+from sympy.core.numbers import E, Float, zoo, Rational, pi, I, oo, nan
+from sympy.core.power import Pow
+from sympy.core.relational import Eq
+from sympy.core.singleton import S
+from sympy.core.symbol import symbols, Dummy, Symbol
+from sympy.functions.elementary.complexes import im, re
+from sympy.functions.elementary.exponential import log, exp
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import sin, cos, acos
+from sympy.functions.special.error_functions import expint
+from sympy.functions.special.gamma_functions import loggamma, polygamma
+from sympy.matrices.dense import Matrix
+from sympy.printing.str import sstr
+from sympy.series.order import O
+from sympy.tensor.indexed import Indexed
 from sympy.core.function import (PoleError, _mexpand, arity,
         BadSignatureError, BadArgumentsError)
-from sympy.core.sympify import sympify
+from sympy.core.parameters import _exp_is_pow
+from sympy.core.sympify import sympify, SympifyError
 from sympy.matrices import MutableMatrix, ImmutableMatrix
 from sympy.sets.sets import FiniteSet
 from sympy.solvers.solveset import solveset
 from sympy.tensor.array import NDimArray
 from sympy.utilities.iterables import subsets, variations
-from sympy.testing.pytest import XFAIL, raises, warns_deprecated_sympy
+from sympy.testing.pytest import XFAIL, raises, warns_deprecated_sympy, _both_exp_pow
 
 from sympy.abc import t, w, x, y, z
 f, g, h = symbols('f g h', cls=Function)
@@ -115,6 +131,8 @@ def test_diff_symbols():
     raises(TypeError, lambda: cos(x).diff((x, y)).variables)
     assert cos(x).diff((x, y))._wrt_variables == [x]
 
+    # issue 23222
+    assert sympify("a*x+b").diff("x") == sympify("a")
 
 def test_Function():
     class myfunc(Function):
@@ -218,9 +236,8 @@ def test_Lambda():
 
     assert unchanged(Lambda, (x,), x**2)
     assert Lambda(x, x**2) == Lambda((x,), x**2)
-    assert Lambda(x, x**2) == Lambda(y, y**2)
-    assert Lambda(x, x**2) != Lambda(y, y**2 + 1)
-    assert Lambda((x, y), x**y) == Lambda((y, x), y**x)
+    assert Lambda(x, x**2) != Lambda(x, x**2 + 1)
+    assert Lambda((x, y), x**y) != Lambda((y, x), y**x)
     assert Lambda((x, y), x**y) != Lambda((x, y), y**x)
 
     assert Lambda((x, y), x**y)(x, y) == x**y
@@ -239,7 +256,9 @@ def test_Lambda():
     p = x, y, z, t
     assert Lambda(p, t*(x + y + z))(*p) == t * (x + y + z)
 
-    assert Lambda(x, 2*x) + Lambda(y, 2*y) == 2*Lambda(x, 2*x)
+    eq = Lambda(x, 2*x) + Lambda(y, 2*y)
+    assert eq != 2*Lambda(x, 2*x)
+    assert eq.as_dummy() == 2*Lambda(x, 2*x).as_dummy()
     assert Lambda(x, 2*x) not in [ Lambda(x, x) ]
     raises(BadSignatureError, lambda: Lambda(1, x))
     assert Lambda(x, 1)(1) is S.One
@@ -252,17 +271,17 @@ def test_Lambda():
     with warns_deprecated_sympy():
         assert Lambda([x, y], x+y) == Lambda((x, y), x+y)
 
-    flam = Lambda( ((x, y),) , x + y)
+    flam = Lambda(((x, y),), x + y)
     assert flam((2, 3)) == 5
-    flam = Lambda( ((x, y), z) , x + y + z)
+    flam = Lambda(((x, y), z), x + y + z)
     assert flam((2, 3), 1) == 6
-    flam = Lambda( (((x,y),z),) , x+y+z)
-    assert flam(    ((2,3),1) ) == 6
+    flam = Lambda((((x, y), z),), x + y + z)
+    assert flam(((2, 3), 1)) == 6
     raises(BadArgumentsError, lambda: flam(1, 2, 3))
     flam = Lambda( (x,), (x, x))
     assert flam(1,) == (1, 1)
     assert flam((1,)) == ((1,), (1,))
-    flam = Lambda( ((x,),) , (x, x))
+    flam = Lambda( ((x,),), (x, x))
     raises(BadArgumentsError, lambda: flam(1))
     assert flam((1,)) == (1, 1)
 
@@ -300,12 +319,19 @@ def test_Lambda_arguments():
 
 
 def test_Lambda_equality():
-    assert Lambda(x, 2*x) == Lambda(y, 2*y)
-    # although variables are casts as Dummies, the expressions
-    # should still compare equal
     assert Lambda((x, y), 2*x) == Lambda((x, y), 2*x)
+    # these, of course, should never be equal
     assert Lambda(x, 2*x) != Lambda((x, y), 2*x)
     assert Lambda(x, 2*x) != 2*x
+    # But it is tempting to want expressions that differ only
+    # in bound symbols to compare the same.  But this is not what
+    # Python's `==` is intended to do; two objects that compare
+    # as equal means that they are indistibguishable and cache to the
+    # same value.  We wouldn't want to expression that are
+    # mathematically the same but written in different variables to be
+    # interchanged else what is the point of allowing for different
+    # variable names?
+    assert Lambda(x, 2*x) != Lambda(y, 2*y)
 
 
 def test_Subs():
@@ -348,7 +374,7 @@ def test_Subs():
     assert Subs(y*f(x), x, y).subs(y, 2) == Subs(2*f(x), x, 2)
     assert (2 * Subs(f(x), x, 0)).subs(Subs(f(x), x, 0), y) == 2*y
 
-    assert Subs(f(x), x, 0).free_symbols == set([])
+    assert Subs(f(x), x, 0).free_symbols == set()
     assert Subs(f(x, y), x, z).free_symbols == {y, z}
 
     assert Subs(f(x).diff(x), x, 0).doit(), Subs(f(x).diff(x), x, 0)
@@ -497,6 +523,7 @@ def test_extensibility_eval():
     assert MyFunc(0) == (0, 0, 0)
 
 
+@_both_exp_pow
 def test_function_non_commutative():
     x = Symbol('x', commutative=False)
     assert f(x).is_commutative is False
@@ -533,18 +560,24 @@ def test_function__eval_nseries():
     assert polygamma(n, x + 1)._eval_nseries(x, 2, None) == \
         polygamma(n, 1) + polygamma(n + 1, 1)*x + O(x**2)
     raises(PoleError, lambda: sin(1/x)._eval_nseries(x, 2, None))
-    assert acos(1 - x)._eval_nseries(x, 2, None) == sqrt(2)*sqrt(x) + O(x)
-    assert acos(1 + x)._eval_nseries(x, 2, None) == sqrt(2)*sqrt(-x) + O(x)  # XXX: wrong, branch cuts
+    assert acos(1 - x)._eval_nseries(x, 2, None) == sqrt(2)*sqrt(x) + sqrt(2)*x**(S(3)/2)/12 + O(x**2)
+    assert acos(1 + x)._eval_nseries(x, 2, None) == sqrt(2)*sqrt(-x) + sqrt(2)*(-x)**(S(3)/2)/12 + O(x**2)
     assert loggamma(1/x)._eval_nseries(x, 0, None) == \
         log(x)/2 - log(x)/x - 1/x + O(1, x)
     assert loggamma(log(1/x)).nseries(x, n=1, logx=y) == loggamma(-y)
 
     # issue 6725:
     assert expint(Rational(3, 2), -x)._eval_nseries(x, 5, None) == \
-        2 - 2*sqrt(pi)*sqrt(-x) - 2*x - x**2/3 - x**3/15 - x**4/84 + O(x**5)
+        2 - 2*x - x**2/3 - x**3/15 - x**4/84 - 2*I*sqrt(pi)*sqrt(x) + O(x**5)
     assert sin(sqrt(x))._eval_nseries(x, 3, None) == \
         sqrt(x) - x**Rational(3, 2)/6 + x**Rational(5, 2)/120 + O(x**3)
 
+    # issue 19065:
+    s1 = f(x,y).series(y, n=2)
+    assert {i.name for i in s1.atoms(Symbol)} == {'x', 'xi', 'y'}
+    xi = Symbol('xi')
+    s2 = f(xi, y).series(y, n=2)
+    assert {i.name for i in s2.atoms(Symbol)} == {'xi', 'xi0', 'y'}
 
 def test_doit():
     n = Symbol('n', integer=True)
@@ -591,8 +624,7 @@ def test_issue_5399():
 
 
 def test_derivative_numerically():
-    from random import random
-    z0 = random() + I*random()
+    z0 = x._random()
     assert abs(Derivative(sin(x), x).doit_numerically(z0) - cos(z0)) < 1e-15
 
 
@@ -746,6 +778,14 @@ def test_diff_wrt_not_allowed():
     assert diff(exp(x*y), x*y, 0) == exp(x*y)
 
 
+def test_diff_wrt_intlike():
+    class Two:
+        def __int__(self):
+            return 2
+
+    assert cos(x).diff(x, Two()) == -cos(x)
+
+
 def test_klein_gordon_lagrangian():
     m = Symbol('m')
     phi = f(x, t)
@@ -782,8 +822,7 @@ def test_straight_line():
 
 def test_sort_variable():
     vsort = Derivative._sort_variable_count
-    def vsort0(*v, **kw):
-        reverse = kw.get('reverse', False)
+    def vsort0(*v, reverse=False):
         return [i[0] for i in vsort([(i, 0) for i in (
             reversed(v) if reverse else v)])]
 
@@ -937,6 +976,10 @@ def test_nfloat():
         [[Float('1.0', precision=53), Float('2.0', precision=53)],
         [Float('3.0', precision=53), Float('4.0', precision=53)]])
     assert _aresame(nfloat(A), B)
+
+    # issue 22524
+    f = Function('f')
+    assert not nfloat(f(2)).atoms(Float)
 
 
 def test_issue_7068():
@@ -1119,10 +1162,16 @@ def test_Derivative_as_finite_difference():
 
 def test_issue_11159():
     # Tests Application._eval_subs
-    expr1 = E
-    expr0 = expr1 * expr1
-    expr1 = expr0.subs(expr1,expr0)
-    assert expr0 == expr1
+    with _exp_is_pow(False):
+        expr1 = E
+        expr0 = expr1 * expr1
+        expr1 = expr0.subs(expr1,expr0)
+        assert expr0 == expr1
+    with _exp_is_pow(True):
+        expr1 = E
+        expr0 = expr1 * expr1
+        expr2 = expr0.subs(expr1, expr0)
+        assert expr2 == E ** 4
 
 
 def test_issue_12005():
@@ -1208,12 +1257,7 @@ def test_undef_fcn_float_issue_6938():
 
 def test_undefined_function_eval():
     # Issue 15170. Make sure UndefinedFunction with eval defined works
-    # properly. The issue there was that the hash was determined before _nargs
-    # was set, which is included in the hash, hence changing the hash. The
-    # class is added to sympy.core.core.all_classes before the hash is
-    # changed, meaning "temp in all_classes" would fail, causing sympify(temp(t))
-    # to give a new class. We will eventually remove all_classes, but make
-    # sure this continues to work.
+    # properly.
 
     fdiff = lambda self, argindex=1: cos(self.args[argindex - 1])
     eval = classmethod(lambda cls, t: None)
@@ -1322,6 +1366,29 @@ def test_noncommutative_issue_15131():
     assert eqdt.args[-1] == ft.diff(t)
 
 
+def test_noncommutative_derivative():
+    t = symbols('t')
+    S = Function('S', commutative=False)(t)
+    T = Function('T', commutative=False)(t)
+
+    dS = Derivative(S, t)
+    dT = Derivative(T, t)
+
+    assert diff(S**2, t) == Derivative(S**2, t)
+    assert diff(S**3, t) == Derivative(S**3, t)
+    assert diff(S**-1, t) == Derivative(S**-1, t)
+    assert diff(S**-2, t) == Derivative(S**-2, t)
+
+    assert diff(S*T, t) == dS*T + S*dT
+
+    U = Function('U')(t)
+    dU = Derivative(U, t)
+    assert diff(U**2, t) == 2*U*dU
+
+    n = symbols('n')
+    assert diff(S**n, t) == Derivative(S**n, t)
+
+
 def test_Subs_Derivative():
     a = Derivative(f(g(x), h(x)), g(x), h(x),x)
     b = Derivative(Derivative(f(g(x), h(x)), g(x), h(x)),x)
@@ -1352,6 +1419,64 @@ def test_Derivative_free_symbols():
     assert diff(f(x), (x, n)).free_symbols == {n, x}
 
 
+def test_issue_20683():
+    x = Symbol('x')
+    y = Symbol('y')
+    z = Symbol('z')
+    y = Derivative(z, x).subs(x,0)
+    assert y.doit() == 0
+    y = Derivative(8, x).subs(x,0)
+    assert y.doit() == 0
+
+
 def test_issue_10503():
     f = exp(x**3)*cos(x**6)
     assert f.series(x, 0, 14) == 1 + x**3 + x**6/2 + x**9/6 - 11*x**12/24 + O(x**14)
+
+
+def test_issue_17382():
+    # copied from sympy/core/tests/test_evalf.py
+    def NS(e, n=15, **options):
+        return sstr(sympify(e).evalf(n, **options), full_prec=True)
+
+    x = Symbol('x')
+    expr = solveset(2 * cos(x) * cos(2 * x) - 1, x, S.Reals)
+    expected = "Union(" \
+               "ImageSet(Lambda(_n, 6.28318530717959*_n + 5.79812359592087), Integers), " \
+               "ImageSet(Lambda(_n, 6.28318530717959*_n + 0.485061711258717), Integers))"
+    assert NS(expr) == expected
+
+def test_eval_sympified():
+    # Check both arguments and return types from eval are sympified
+
+    class F(Function):
+        @classmethod
+        def eval(cls, x):
+            assert x is S.One
+            return 1
+
+    assert F(1) is S.One
+
+    # String arguments are not allowed
+    class F2(Function):
+        @classmethod
+        def eval(cls, x):
+            if x == 0:
+                return '1'
+
+    raises(SympifyError, lambda: F2(0))
+    F2(1) # Doesn't raise
+
+    # TODO: Disable string inputs (https://github.com/sympy/sympy/issues/11003)
+    # raises(SympifyError, lambda: F2('2'))
+
+def test_eval_classmethod_check():
+    with raises(TypeError):
+        class F(Function):
+            def eval(self, x):
+                pass
+
+
+def test_issue_27163():
+    # https://github.com/sympy/sympy/issues/27163
+    raises(TypeError, lambda: Derivative(f, t))

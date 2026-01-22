@@ -1,18 +1,20 @@
-from __future__ import print_function, division
-
-from sympy.core.backend import diff, zeros, Matrix, eye, sympify
+from sympy import diff, zeros, Matrix, eye, sympify
+from sympy.core.sorting import default_sort_key
 from sympy.physics.vector import dynamicsymbols, ReferenceFrame
-from sympy.physics.mechanics.functions import (find_dynamicsymbols, msubs,
-                                               _f_list_parser)
+from sympy.physics.mechanics.method import _Methods
+from sympy.physics.mechanics.functions import (
+    find_dynamicsymbols, msubs, _f_list_parser, _validate_coordinates)
 from sympy.physics.mechanics.linearize import Linearizer
-from sympy.utilities import default_sort_key
 from sympy.utilities.iterables import iterable
 
 __all__ = ['LagrangesMethod']
 
 
-class LagrangesMethod(object):
+class LagrangesMethod(_Methods):
     """Lagrange's method object.
+
+    Explanation
+    ===========
 
     This object generates the equations of motion in a two step procedure. The
     first step involves the initialization of LagrangesMethod by supplying the
@@ -29,7 +31,7 @@ class LagrangesMethod(object):
 
     q, u : Matrix
         Matrices of the generalized coordinates and speeds
-    forcelist : iterable
+    loads : iterable
         Iterable of (Point, vector) or (ReferenceFrame, vector) tuples
         describing the forces on the system.
     bodies : iterable
@@ -57,7 +59,7 @@ class LagrangesMethod(object):
 
         >>> from sympy.physics.mechanics import LagrangesMethod, Lagrangian
         >>> from sympy.physics.mechanics import ReferenceFrame, Particle, Point
-        >>> from sympy.physics.mechanics import dynamicsymbols, kinetic_energy
+        >>> from sympy.physics.mechanics import dynamicsymbols
         >>> from sympy import symbols
         >>> q = dynamicsymbols('q')
         >>> qd = dynamicsymbols('q', 1)
@@ -102,7 +104,7 @@ class LagrangesMethod(object):
 
     def __init__(self, Lagrangian, qs, forcelist=None, bodies=None, frame=None,
                  hol_coneqs=None, nonhol_coneqs=None):
-        """Supply the following for the initialization of LagrangesMethod
+        """Supply the following for the initialization of LagrangesMethod.
 
         Lagrangian : Sympifyable
 
@@ -160,6 +162,7 @@ class LagrangesMethod(object):
         self._q = Matrix(qs)
         self._qdots = self.q.diff(dynamicsymbols._t)
         self._qdoubledots = self._qdots.diff(dynamicsymbols._t)
+        _validate_coordinates(self.q)
 
         mat_build = lambda x: Matrix(x) if x else Matrix()
         hol_coneqs = mat_build(hol_coneqs)
@@ -176,7 +179,7 @@ class LagrangesMethod(object):
         """
 
         qds = self._qdots
-        qdd_zero = dict((i, 0) for i in self._qdoubledots)
+        qdd_zero = dict.fromkeys(self._qdoubledots, 0)
         n = len(self.q)
 
         # Internally we represent the EOM as four terms:
@@ -211,7 +214,7 @@ class LagrangesMethod(object):
             self._term4 = zeros(n, 1)
             for i, qd in enumerate(qds):
                 flist = zip(*_f_list_parser(self.forcelist, N))
-                self._term4[i] = sum(v.diff(qd, N) & f for (v, f) in flist)
+                self._term4[i] = sum(v.diff(qd, N).dot(f) for (v, f) in flist)
         else:
             self._term4 = zeros(n, 1)
 
@@ -224,10 +227,16 @@ class LagrangesMethod(object):
         self.eom = without_lam - self._term3
         return self.eom
 
+    def _form_eoms(self):
+        return self.form_lagranges_equations()
+
     @property
     def mass_matrix(self):
         """Returns the mass matrix, which is augmented by the Lagrange
         multipliers, if necessary.
+
+        Explanation
+        ===========
 
         If the system is described by 'n' generalized coordinates and there are
         no constraint equations then an n X n matrix is returned.
@@ -280,18 +289,37 @@ class LagrangesMethod(object):
         else:
             return self._qdots.col_join(self.forcing)
 
-    def to_linearizer(self, q_ind=None, qd_ind=None, q_dep=None, qd_dep=None):
-        """Returns an instance of the Linearizer class, initiated from the
-        data in the LagrangesMethod class. This may be more desirable than using
-        the linearize class method, as the Linearizer object will allow more
+    def to_linearizer(self, q_ind=None, qd_ind=None, q_dep=None, qd_dep=None,
+                      linear_solver='LU'):
+        """Returns an instance of the Linearizer class, initiated from the data
+        in the LagrangesMethod class. This may be more desirable than using the
+        linearize class method, as the Linearizer object will allow more
         efficient recalculation (i.e. about varying operating points).
 
         Parameters
         ==========
+
         q_ind, qd_ind : array_like, optional
             The independent generalized coordinates and speeds.
         q_dep, qd_dep : array_like, optional
             The dependent generalized coordinates and speeds.
+        linear_solver : str, callable
+            Method used to solve the several symbolic linear systems of the
+            form ``A*x=b`` in the linearization process. If a string is
+            supplied, it should be a valid method that can be used with the
+            :meth:`sympy.matrices.matrixbase.MatrixBase.solve`. If a callable is
+            supplied, it should have the format ``x = f(A, b)``, where it
+            solves the equations and returns the solution. The default is
+            ``'LU'`` which corresponds to SymPy's ``A.LUsolve(b)``.
+            ``LUsolve()`` is fast to compute but will often result in
+            divide-by-zero and thus ``nan`` results.
+
+        Returns
+        =======
+        Linearizer
+            An instantiated
+            :class:`sympy.physics.mechanics.linearize.Linearizer`.
+
         """
 
         # Compose vectors
@@ -342,11 +370,30 @@ class LagrangesMethod(object):
                                  quantities when linearizing forcing terms.')
 
         return Linearizer(f_0, f_1, f_2, f_3, f_4, f_c, f_v, f_a, q, u, q_i,
-                q_d, u_i, u_d, r, lams)
+                          q_d, u_i, u_d, r, lams, linear_solver=linear_solver)
 
     def linearize(self, q_ind=None, qd_ind=None, q_dep=None, qd_dep=None,
-            **kwargs):
+                  linear_solver='LU', **kwargs):
         """Linearize the equations of motion about a symbolic operating point.
+
+        Parameters
+        ==========
+        linear_solver : str, callable
+            Method used to solve the several symbolic linear systems of the
+            form ``A*x=b`` in the linearization process. If a string is
+            supplied, it should be a valid method that can be used with the
+            :meth:`sympy.matrices.matrixbase.MatrixBase.solve`. If a callable is
+            supplied, it should have the format ``x = f(A, b)``, where it
+            solves the equations and returns the solution. The default is
+            ``'LU'`` which corresponds to SymPy's ``A.LUsolve(b)``.
+            ``LUsolve()`` is fast to compute but will often result in
+            divide-by-zero and thus ``nan`` results.
+        **kwargs
+            Extra keyword arguments are passed to
+            :meth:`sympy.physics.mechanics.linearize.Linearizer.linearize`.
+
+        Explanation
+        ===========
 
         If kwarg A_and_B is False (default), returns M, A, B, r for the
         linearized form, M*[q', u']^T = A*[q_ind, u_ind]^T + B*r.
@@ -370,16 +417,18 @@ class LagrangesMethod(object):
 
         For more documentation, please see the ``Linearizer`` class."""
 
-        linearizer = self.to_linearizer(q_ind, qd_ind, q_dep, qd_dep)
+        linearizer = self.to_linearizer(q_ind, qd_ind, q_dep, qd_dep,
+                                        linear_solver=linear_solver)
         result = linearizer.linearize(**kwargs)
         return result + (linearizer.r,)
 
     def solve_multipliers(self, op_point=None, sol_type='dict'):
         """Solves for the values of the lagrange multipliers symbolically at
-        the specified operating point
+        the specified operating point.
 
         Parameters
         ==========
+
         op_point : dict or iterable of dicts, optional
             Point at which to solve at. The operating point is specified as
             a dictionary or iterable of dictionaries of {symbol: value}. The
@@ -408,8 +457,8 @@ class LagrangesMethod(object):
             raise TypeError("op_point must be either a dictionary or an "
                             "iterable of dictionaries.")
         # Compose the system to be solved
-        mass_matrix = self.mass_matrix.col_join((-self.lam_coeffs.row_join(
-                zeros(k, k))))
+        mass_matrix = self.mass_matrix.col_join(-self.lam_coeffs.row_join(
+                zeros(k, k)))
         force_matrix = self.forcing.col_join(self._f_cd)
         # Sub in the operating point
         mass_matrix = msubs(mass_matrix, op_point_dict)
@@ -424,7 +473,7 @@ class LagrangesMethod(object):
             raise ValueError("Unknown sol_type {:}.".format(sol_type))
 
     def rhs(self, inv_method=None, **kwargs):
-        """Returns equations that can be solved numerically
+        """Returns equations that can be solved numerically.
 
         Parameters
         ==========
@@ -432,7 +481,7 @@ class LagrangesMethod(object):
         inv_method : str
             The specific sympy inverse matrix calculation method to use. For a
             list of valid methods, see
-            :meth:`~sympy.matrices.matrices.MatrixBase.inv`
+            :meth:`~sympy.matrices.matrixbase.MatrixBase.inv`
         """
 
         if inv_method is None:
@@ -456,4 +505,8 @@ class LagrangesMethod(object):
 
     @property
     def forcelist(self):
+        return self._forcelist
+
+    @property
+    def loads(self):
         return self._forcelist

@@ -1,3 +1,5 @@
+.. _lie-algebras:
+
 ===========
 Lie Algebra
 ===========
@@ -5,37 +7,37 @@ Lie Algebra
 .. automodule:: sympy.liealgebras
 
 .. autoclass:: sympy.liealgebras.root_system.RootSystem
-    :members:
+   :members:
 
 .. autoclass:: sympy.liealgebras.type_a.TypeA
-    :members:
+   :members:
 
 .. autoclass:: sympy.liealgebras.type_b.TypeB
-    :members:
+   :members:
 
 .. autoclass:: sympy.liealgebras.type_c.TypeC
-    :members:
+   :members:
 
 .. autoclass:: sympy.liealgebras.type_d.TypeD
-    :members:
+   :members:
 
 .. autoclass:: sympy.liealgebras.type_e.TypeE
-    :members:
+   :members:
 
 .. autoclass:: sympy.liealgebras.type_f.TypeF
-    :members:
+   :members:
 
 .. autoclass:: sympy.liealgebras.type_g.TypeG
-    :members:
+   :members:
 
 .. autoclass:: sympy.liealgebras.weyl_group.WeylGroup
-    :members:
+   :members:
 
 .. autoclass:: sympy.liealgebras.cartan_type.CartanType_generator
-    :members:
+   :members:
 
 .. autoclass:: sympy.liealgebras.cartan_type.Standard_Cartan
-    :members:
+   :members:
 
 .. autofunction:: sympy.liealgebras.dynkin_diagram.DynkinDiagram
 

@@ -1,3 +1,4 @@
+import string
 from itertools import zip_longest
 
 from sympy.utilities.enumerative import (
@@ -19,7 +20,7 @@ def part_range_filter(partition_iterator, lb, ub):
     Arguments
     =========
 
-    lb, and ub are a range (in the python slice sense) on the lpart
+    lb, and ub are a range (in the Python slice sense) on the lpart
     variable returned from a multiset partition enumeration.  Recall
     that lpart is 0-based (it points to the topmost part on the part
     stack), so if you want to return parts of sizes 2,3,4,5 you would
@@ -85,7 +86,7 @@ def compare_multiset_w_baseline(multiplicities):
     baseline implementation, and compare the results.
 
     """
-    letters = "abcdefghijklmnopqrstuvwxyz"
+    letters = string.ascii_lowercase
     bl_partitions = multiset_partitions_baseline(multiplicities, letters)
 
     # The partitions returned by the different algorithms may have

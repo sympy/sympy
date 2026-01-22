@@ -1,7 +1,11 @@
 import random
 
-from sympy import Integer, Matrix, Rational, sqrt, symbols, S
-from sympy.physics.quantum.qubit import (measure_all, measure_partial,
+from sympy.core.numbers import (Integer, Rational)
+from sympy.core.singleton import S
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.matrices.dense import Matrix
+from sympy.physics.quantum.qubit import (measure_all, measure_all_oneshot, measure_partial,
                                          matrix_to_qubit, matrix_to_density,
                                          qubit_to_matrix, IntQubit,
                                          IntQubitBra, QubitBra)
@@ -12,7 +16,7 @@ from sympy.physics.quantum.represent import represent
 from sympy.physics.quantum.shor import Qubit
 from sympy.testing.pytest import raises
 from sympy.physics.quantum.density import Density
-from sympy.core.trace import Tr
+from sympy.physics.quantum.trace import Tr
 
 x, y = symbols('x,y')
 
@@ -189,13 +193,22 @@ def test_measure_all():
     assert measure_all(qapply(Qubit('0'))) == [(Qubit('0'), 1)]
 
 
+def test_measure_all_oneshot():
+    random.seed(42)
+    # for issue #27092
+    assert measure_all_oneshot(Qubit('11')) == Qubit('11')
+    assert measure_all_oneshot(Qubit('1')) == Qubit('1')
+    assert measure_all_oneshot(Qubit('0')/sqrt(2) + Qubit('1')/sqrt(2)) == \
+            Qubit('0')
+
+
 def test_eval_trace():
     q1 = Qubit('10110')
     q2 = Qubit('01010')
     d = Density([q1, 0.6], [q2, 0.4])
 
     t = Tr(d)
-    assert t.doit() == 1
+    assert t.doit() == 1.0
 
     # extreme bits
     t = Tr(d, 0)
@@ -210,7 +223,7 @@ def test_eval_trace():
                         0.6*Density([Qubit('1010'), 1]))
     #trace all indices
     t = Tr(d, [0, 1, 2, 3, 4])
-    assert t.doit() == 1
+    assert t.doit() == 1.0
 
     # trace some indices, initialized in
     # non-canonical order

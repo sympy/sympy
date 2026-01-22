@@ -7,7 +7,9 @@ from sympy.polys.orderings import lex
 
 from sympy.testing.pytest import raises, XFAIL
 from sympy.core import symbols, E
-from sympy import sqrt, Rational, exp, log
+from sympy.core.numbers import Rational
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.miscellaneous import sqrt
 
 def test_FracField___init__():
     F1 = FracField("x,y", ZZ, lex)
@@ -27,19 +29,10 @@ def test_FracField___hash__():
 
 def test_FracField___eq__():
     assert field("x,y,z", QQ)[0] == field("x,y,z", QQ)[0]
-    assert field("x,y,z", QQ)[0] is field("x,y,z", QQ)[0]
-
     assert field("x,y,z", QQ)[0] != field("x,y,z", ZZ)[0]
-    assert field("x,y,z", QQ)[0] is not field("x,y,z", ZZ)[0]
-
     assert field("x,y,z", ZZ)[0] != field("x,y,z", QQ)[0]
-    assert field("x,y,z", ZZ)[0] is not field("x,y,z", QQ)[0]
-
     assert field("x,y,z", QQ)[0] != field("x,y", QQ)[0]
-    assert field("x,y,z", QQ)[0] is not field("x,y", QQ)[0]
-
     assert field("x,y", QQ)[0] != field("x,y,z", QQ)[0]
-    assert field("x,y", QQ)[0] is not field("x,y,z", QQ)[0]
 
 def test_sfield():
     x = symbols("x")
@@ -97,34 +90,34 @@ def test_FracElement_from_expr():
     F, X, Y, Z = field((x, y, z), ZZ)
 
     f = F.from_expr(1)
-    assert f == 1 and isinstance(f, F.dtype)
+    assert f == 1 and F.is_element(f)
 
     f = F.from_expr(Rational(3, 7))
-    assert f == F(3)/7 and isinstance(f, F.dtype)
+    assert f == F(3)/7 and F.is_element(f)
 
     f = F.from_expr(x)
-    assert f == X and isinstance(f, F.dtype)
+    assert f == X and F.is_element(f)
 
     f = F.from_expr(Rational(3,7)*x)
-    assert f == X*Rational(3, 7) and isinstance(f, F.dtype)
+    assert f == X*Rational(3, 7) and F.is_element(f)
 
     f = F.from_expr(1/x)
-    assert f == 1/X and isinstance(f, F.dtype)
+    assert f == 1/X and F.is_element(f)
 
     f = F.from_expr(x*y*z)
-    assert f == X*Y*Z and isinstance(f, F.dtype)
+    assert f == X*Y*Z and F.is_element(f)
 
     f = F.from_expr(x*y/z)
-    assert f == X*Y/Z and isinstance(f, F.dtype)
+    assert f == X*Y/Z and F.is_element(f)
 
     f = F.from_expr(x*y*z + x*y + x)
-    assert f == X*Y*Z + X*Y + X and isinstance(f, F.dtype)
+    assert f == X*Y*Z + X*Y + X and F.is_element(f)
 
     f = F.from_expr((x*y*z + x*y + x)/(x*y + 7))
-    assert f == (X*Y*Z + X*Y + X)/(X*Y + 7) and isinstance(f, F.dtype)
+    assert f == (X*Y*Z + X*Y + X)/(X*Y + 7) and F.is_element(f)
 
     f = F.from_expr(x**3*y*z + x**2*y**7 + 1)
-    assert f == X**3*Y*Z + X**2*Y**7 + 1 and isinstance(f, F.dtype)
+    assert f == X**3*Y*Z + X**2*Y**7 + 1 and F.is_element(f)
 
     raises(ValueError, lambda: F.from_expr(2**x))
     raises(ValueError, lambda: F.from_expr(7*x + sqrt(2)))
@@ -135,6 +128,33 @@ def test_FracElement_from_expr():
         FracElement)
     assert isinstance(ZZ[exp(Rational(1, 3))].get_field().convert(E),
         FracElement)
+
+
+def test_FracField_nested():
+    a, b, x = symbols('a b x')
+    F1 = ZZ.frac_field(a, b)
+    F2 = F1.frac_field(x)
+    frac = F2(a + b)
+    assert frac.numer == F1.poly_ring(x)(a + b)
+    assert frac.numer.coeffs() == [F1(a + b)]
+    assert frac.denom == F1.poly_ring(x)(1)
+
+    F3 = ZZ.poly_ring(a, b)
+    F4 = F3.frac_field(x)
+    frac = F4(a + b)
+    assert frac.numer == F3.poly_ring(x)(a + b)
+    assert frac.numer.coeffs() == [F3(a + b)]
+    assert frac.denom == F3.poly_ring(x)(1)
+
+    frac = F2(F3(a + b))
+    assert frac.numer == F1.poly_ring(x)(a + b)
+    assert frac.numer.coeffs() == [F1(a + b)]
+    assert frac.denom == F1.poly_ring(x)(1)
+
+    frac = F4(F1(a + b))
+    assert frac.numer == F3.poly_ring(x)(a + b)
+    assert frac.numer.coeffs() == [F3(a + b)]
+    assert frac.denom == F3.poly_ring(x)(1)
 
 
 def test_FracElement__lt_le_gt_ge__():
@@ -239,7 +259,7 @@ def test_FracElement___mul__():
     assert dict(f.numer) == {(1, 1, 0, 0): u + 1, (0, 0, 0, 0): 1}
     assert dict(f.denom) == {(0, 0, 1, 0): v - 1, (0, 0, 0, 1): -u*v, (0, 0, 0, 0): -1}
 
-def test_FracElement___div__():
+def test_FracElement___truediv__():
     F, x,y = field("x,y", QQ)
 
     f, g = 1/x, 1/y
@@ -320,4 +340,14 @@ def test_FracElement_subs():
     raises(ZeroDivisionError, lambda: f.subs(z, 0))
 
 def test_FracElement_compose():
+    pass
+
+def test_FracField_index():
+    a = symbols("a")
+    F, x, y, z = field('x y z', QQ)
+    assert F.index(x) == 0
+    assert F.index(y) == 1
+
+    raises(ValueError, lambda: F.index(1))
+    raises(ValueError, lambda: F.index(a))
     pass

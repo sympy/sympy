@@ -1,12 +1,21 @@
 from collections import defaultdict
 
-from sympy import Matrix, Tuple, symbols, sympify, Basic, Dict, S, FiniteSet, Integer
-from sympy.core.compatibility import is_sequence, iterable
-from sympy.core.containers import tuple_wrapper
+from sympy.core.basic import Basic
+from sympy.core.containers import (Dict, Tuple)
+from sympy.core.numbers import Integer
+from sympy.core.kind import NumberKind
+from sympy.matrices.kind import MatrixKind
+from sympy.core.singleton import S
+from sympy.core.symbol import symbols
+from sympy.core.sympify import sympify
+from sympy.matrices.dense import Matrix
+from sympy.sets.sets import FiniteSet
+from sympy.core.containers import tuple_wrapper, TupleKind
 from sympy.core.expr import unchanged
 from sympy.core.function import Function, Lambda
 from sympy.core.relational import Eq
 from sympy.testing.pytest import raises
+from sympy.utilities.iterables import is_sequence, iterable
 
 from sympy.abc import x, y
 
@@ -133,14 +142,21 @@ def test_tuple_wrapper():
 
 
 def test_iterable_is_sequence():
-    ordered = [list(), tuple(), Tuple(), Matrix([[]])]
+    ordered = [[], (), Tuple(), Matrix([[]])]
     unordered = [set()]
-    not_sympy_iterable = [{}, '', u'']
+    not_sympy_iterable = [{}, '', '']
     assert all(is_sequence(i) for i in ordered)
     assert all(not is_sequence(i) for i in unordered)
     assert all(iterable(i) for i in ordered + unordered)
     assert all(not iterable(i) for i in not_sympy_iterable)
     assert all(iterable(i, exclude=None) for i in not_sympy_iterable)
+
+
+def test_TupleKind():
+    kind = TupleKind(NumberKind, MatrixKind(NumberKind))
+    assert Tuple(1, Matrix([1, 2])).kind is kind
+    assert Tuple(1, 2).kind is TupleKind(NumberKind, NumberKind)
+    assert Tuple(1, 2).kind.element_kind == (NumberKind, NumberKind)
 
 
 def test_Dict():
@@ -149,15 +165,17 @@ def test_Dict():
     assert d[x] == 1
     assert d[y] == 2
     raises(KeyError, lambda: d[2])
+    raises(KeyError, lambda: d['2'])
     assert len(d) == 3
-    assert set(d.keys()) == set((x, y, z))
-    assert set(d.values()) == set((S.One, S(2), S(3)))
+    assert set(d.keys()) == {x, y, z}
+    assert set(d.values()) == {S.One, S(2), S(3)}
     assert d.get(5, 'default') == 'default'
-    assert x in d and z in d and not 5 in d
+    assert d.get('5', 'default') == 'default'
+    assert x in d and z in d and 5 not in d and '5' not in d
     assert d.has(x) and d.has(1)  # SymPy Basic .has method
 
     # Test input types
-    # input - a python dict
+    # input - a Python dict
     # input - items as args - SymPy style
     assert (Dict({x: 1, y: 2, z: 3}) ==
             Dict((x, 1), (y, 2), (z, 3)))
@@ -167,7 +185,7 @@ def test_Dict():
         d[5] = 6  # assert immutability
 
     assert set(
-        d.items()) == set((Tuple(x, S.One), Tuple(y, S(2)), Tuple(z, S(3))))
+        d.items()) == {Tuple(x, S.One), Tuple(y, S(2)), Tuple(z, S(3))}
     assert set(d) == {x, y, z}
     assert str(d) == '{x: 1, y: 2, z: 3}'
     assert d.__repr__() == '{x: 1, y: 2, z: 3}'
@@ -184,8 +202,8 @@ def test_Dict():
     assert Dict(d)
     d = Dict(d)
     assert len(d) == 3
-    assert set(d.keys()) == set((x, y, z))
-    assert set(d.values()) == set((S.Zero, S.Zero, S.Zero))
+    assert set(d.keys()) == {x, y, z}
+    assert set(d.values()) == {S.Zero, S.Zero, S.Zero}
 
 
 def test_issue_5788():
@@ -195,5 +213,5 @@ def test_issue_5788():
         if o != Tuple:
             assert o(*args) == o(*reversed(args))
         pair = [o(*args), o(*reversed(args))]
-        assert sorted(pair) == sorted(reversed(pair))
+        assert sorted(pair) == sorted(pair)
         assert set(o(*args))  # doesn't fail

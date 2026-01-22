@@ -1,8 +1,15 @@
 from sympy.sets.setexpr import SetExpr
 from sympy.sets import Interval, FiniteSet, Intersection, ImageSet, Union
 
-from sympy import (Expr, Set, exp, log, cos, Symbol, Min, Max, S, oo, I,
-        symbols, Lambda, Dummy, Rational)
+from sympy.core.expr import Expr
+from sympy.core.function import Lambda
+from sympy.core.numbers import (I, Rational, oo)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, Symbol, symbols)
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.miscellaneous import (Max, Min, sqrt)
+from sympy.functions.elementary.trigonometric import cos
+from sympy.sets.sets import Set
 
 
 a, x = symbols("a, x")
@@ -71,7 +78,7 @@ def test_same_setexprs_are_not_identical():
     b = SetExpr(FiniteSet(0, 1))
     assert (a + b).set == FiniteSet(0, 1, 2)
 
-    # Cannont detect the set being the same:
+    # Cannot detect the set being the same:
     # assert (a + a).set == FiniteSet(0, 2)
 
 
@@ -183,9 +190,6 @@ def test_Interval_arithmetic():
     assert n23cc/i12cc == SetExpr(Interval(-2, 3))
 
 
-
-
-
 def test_SetExpr_Intersection():
     x, y, z, w = symbols("x y z w")
     set1 = Interval(x, y)
@@ -216,7 +220,7 @@ def test_SetExpr_Interval_div():
 
     assert 1/SetExpr(Interval(0, 2)) == SetExpr(Interval(S.Half, oo))
     assert (-1)/SetExpr(Interval(0, 2)) == SetExpr(Interval(-oo, Rational(-1, 2)))
-    # assert 1/SetExpr(Interval(-oo, 0)) == SetExpr(Interval.open(-oo, 0))
+    assert 1/SetExpr(Interval(-oo, 0)) == SetExpr(Interval.open(-oo, 0))
     assert 1/SetExpr(Interval(-1, 0)) == SetExpr(Interval(-oo, -1))
     # assert (-2)/SetExpr(Interval(-oo, 0)) == SetExpr(Interval(0, oo))
     # assert 1/SetExpr(Interval(-oo, -1)) == SetExpr(Interval(-1, 0))
@@ -244,7 +248,7 @@ def test_SetExpr_Interval_pow():
     assert SetExpr(Interval(-1, 1))**0 == SetExpr(FiniteSet(1))
 
 
-    #assert SetExpr(Interval(1, 2))**Rational(5, 2) == SetExpr(Interval(1, 4*sqrt(2)))
+    assert SetExpr(Interval(1, 2))**Rational(5, 2) == SetExpr(Interval(1, 4*sqrt(2)))
     #assert SetExpr(Interval(-1, 2))**Rational(1, 3) == SetExpr(Interval(-1, 2**Rational(1, 3)))
     #assert SetExpr(Interval(0, 2))**S.Half == SetExpr(Interval(0, sqrt(2)))
 
@@ -297,13 +301,17 @@ def test_SetExpr_Interval_pow():
 
 def test_SetExpr_Integers():
     assert SetExpr(S.Integers) + 1 == SetExpr(S.Integers)
-    assert SetExpr(S.Integers) + I == SetExpr(ImageSet(Lambda(_d, _d + I), S.Integers))
+    assert (SetExpr(S.Integers) + I).dummy_eq(
+        SetExpr(ImageSet(Lambda(_d, _d + I), S.Integers)))
     assert SetExpr(S.Integers)*(-1) == SetExpr(S.Integers)
-    assert SetExpr(S.Integers)*2 == SetExpr(ImageSet(Lambda(_d, 2*_d), S.Integers))
-    assert SetExpr(S.Integers)*I == SetExpr(ImageSet(Lambda(_d, I*_d), S.Integers))
+    assert (SetExpr(S.Integers)*2).dummy_eq(
+        SetExpr(ImageSet(Lambda(_d, 2*_d), S.Integers)))
+    assert (SetExpr(S.Integers)*I).dummy_eq(
+        SetExpr(ImageSet(Lambda(_d, I*_d), S.Integers)))
     # issue #18050:
-    assert SetExpr(S.Integers)._eval_func(Lambda(x, I*x + 1)) == SetExpr(
-            ImageSet(Lambda(_d, I*_d + 1), S.Integers))
+    assert SetExpr(S.Integers)._eval_func(Lambda(x, I*x + 1)).dummy_eq(
+        SetExpr(ImageSet(Lambda(_d, I*_d + 1), S.Integers)))
     # needs improvement:
-    assert SetExpr(S.Integers)*I + 1 == SetExpr(
-            ImageSet(Lambda(x, x + 1), ImageSet(Lambda(_d, _d*I), S.Integers)))
+    assert (SetExpr(S.Integers)*I + 1).dummy_eq(
+        SetExpr(ImageSet(Lambda(x, x + 1),
+        ImageSet(Lambda(_d, _d*I), S.Integers))))

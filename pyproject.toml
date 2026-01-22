@@ -1,0 +1,186 @@
+[tool.pytest.ini_options]
+# Don't run the tests marked as slow by default.
+addopts = "-m 'not slow and not tooslow'"
+filterwarnings = [
+    'ignore:More than 20 figures have been opened.*:RuntimeWarning',
+    'ignore:FigureCanvasAgg is non-interactive, and thus cannot be shown:UserWarning',
+]
+
+# Only run tests under the sympy/ directory. Otherwise pytest will attempt to
+# collect tests from e.g. the bin/ directory as well.
+testpaths = [
+    "sympy",
+    "doc/src",
+]
+
+# Normalise output of doctests.
+doctest_optionflags = [
+    "NORMALIZE_WHITESPACE",
+    "IGNORE_EXCEPTION_DETAIL",
+    "ELLIPSIS",
+    "FLOAT_CMP",
+]
+
+norecursedirs = [
+    "sympy/parsing/autolev/test-examples",
+]
+
+markers = [
+    "nocache_fail",
+    "tooslow",
+]
+
+[tool.coverage.report]
+
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "assert False",
+]
+
+[tool.ruff]
+# Enable Pyflakes `E` and `F` codes by default.
+lint.select = [
+    "B015",  # Useless comparison: a == b rather than a = b.
+    "C4",
+    "E",
+    "F",
+    "FURB",
+    "LOG",
+    "PIE810",
+    "PLE",
+    "PLR1736",
+    "PLW0602", # Global statement used but no assignment
+    "SIM101",
+    "SLOT",
+    "TC001",
+    "TC002",
+    "TC003",
+    "TC004",
+    "TC005",
+    "TRY002",
+    "BLE001", # except Exception or except BaseException
+]
+
+# Ignore rules that currently fail on the SymPy codebase
+lint.ignore = [
+    "E401",  # Multiple imports on one line
+    "E402",  # Module level import not at top of file
+    "E501",  # Line too long (<LENGTH> > 88 characters)
+    "E701",  # Multiple statements on one line (colon)
+    "E702",  # Multiple statements on one line (semicolon)
+    "E712",  # Comparison to `<BOOL>` should be `cond is <BOOL>`
+    "E713",  # Test for membership should be `not in`
+    "E714",  # Test for object identity should be `is not`
+    "E721",  # Do not compare types, use `isinstance()`
+    "E731",  # Do not assign a `lambda` expression, use a `def`
+    "E741",  # Ambiguous variable name: `<VARIABLE>`
+    "E743",  # Ambiguous function name: `<FUNCTION>`
+    # Rules from the stable "FURB" set that are ignored. See #27897
+    # Just to be safe, we'll ignore FURB161 until we drop support for Python 3.9
+    "FURB161",  # Use of `bin({existing}).count('1')`
+    "FURB187",  # Use of assignment of `reversed` on list `{name}`
+]
+
+# Exclude paths currently excluded in the flake8 configuration
+exclude = [
+    "sympy/assumptions/*generated.py",
+    "sympy/core/*_generated.py",
+    "sympy/core/benchmarks/",
+    "sympy/parsing/latex/_antlr/*",
+    "sympy/parsing/autolev/_antlr/*",
+    "sympy/parsing/autolev/test-examples/*",
+    "sympy/plotting/pygletplot/*",
+    "sympy/parsing/latex/_parse_latex_antlr.py",
+    "sympy/parsing/autolev/_listener_autolev_antlr.py",
+    "sympy/integrals/rubi/*",
+]
+
+# Black default, although irrelevant with E501 ignored
+line-length = 88
+
+# Allow unused variables when underscore-prefixed.
+lint.dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+# Per-file ignores currently specified in the flake8 configuration
+[tool.ruff.lint.per-file-ignores]
+"sympy/interactive/session.py" = ["F821"]
+
+# Global mypy settings:
+[tool.mypy]
+warn_unused_configs = true
+exclude = [
+    "sympy/parsing/autolev/test-examples",
+]
+
+# Per module settings:
+[[tool.mypy.overrides]]
+module = [
+    "sympy.parsing.latex._antlr.*",
+    "sympy.parsing.autolev._antlr.*",
+    "sympy.benchmarks.*",
+    "sympy.plotting.pygletplot.*",
+]
+ignore_errors = true
+
+# Third-party untyped code:
+[[tool.mypy.overrides]]
+module = [
+    "antlr4.*",
+    "Cython.*",
+    "flint.*",
+    "gmpy.*",
+    "gmpy2.*",
+    "IPython.*",
+    "lxml.*",
+    "matchpy.*",
+    "matplotlib.*",
+    "mpmath.*",
+    "numpy.*",
+    "PIL.*",
+    "pycosat.*",
+    "pyglet.*",
+    "pymc.*",
+    "pymc3.*",
+    "python-sat.*",
+    "pytest.*",
+    "_pytest.*",
+    "sage.*",
+    "scipy.*",
+    "symengine.*",
+    "aesara.*",
+    "xml.*",
+    "pydy.*",
+    "theano.*",
+    "multiset.*",
+    "pysat.*",
+    "bpython.*"
+]
+ignore_missing_imports = true
+
+# pyright type checker settings:
+[tool.pyright]
+include = ["sympy"]
+exclude = [
+    "sympy/matrices/common.py",
+    "sympy/matrices/matrices.py",
+    "sympy/matrices/tests/test_matrices.py",
+    "sympy/matrices/tests/test_commonmatrix.py",
+    "sympy/matrices/benchmarks",
+]
+
+# This complains when self or cls is not used as the parameter name for an
+# instance method or class method. Since this is used a lot in SymPy we disable
+# this check.
+reportSelfClsParameterName = false
+
+[tool.slotscheck]
+strict-imports = true
+exclude-modules = '''
+(
+    sympy.parsing.latex._antlr
+    |sympy.parsing.autolev._antlr
+    |sympy.galgebra
+    |sympy.plotting.pygletplot
+)
+'''

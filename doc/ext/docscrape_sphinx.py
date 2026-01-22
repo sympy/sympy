@@ -1,19 +1,10 @@
-from __future__ import division, absolute_import, print_function
-
-import sys
 import re
 import inspect
 import textwrap
 import pydoc
 import sphinx
-import collections
 
 from docscrape import NumpyDocString, FunctionDoc, ClassDoc
-
-if sys.version_info[0] >= 3:
-    sixu = lambda s: s
-else:
-    sixu = lambda s: unicode(s, 'unicode_escape')
 
 
 class SphinxDocString(NumpyDocString):
@@ -58,7 +49,7 @@ class SphinxDocString(NumpyDocString):
             out += ['']
             for param, param_type, desc in self[name]:
                 if param_type:
-                    out += self._str_indent(['**%s** : %s' % (param.strip(),
+                    out += self._str_indent(['**{}** : {}'.format(param.strip(),
                                                               param_type)])
                 else:
                     out += self._str_indent([param.strip()])
@@ -75,7 +66,7 @@ class SphinxDocString(NumpyDocString):
             out += ['']
             for param, param_type, desc in self[name]:
                 if param_type:
-                    out += self._str_indent(['**%s** : %s' % (param.strip(),
+                    out += self._str_indent(['**{}** : {}'.format(param.strip(),
                                                               param_type)])
                 else:
                     out += self._str_indent(['**%s**' % param.strip()])
@@ -136,14 +127,16 @@ class SphinxDocString(NumpyDocString):
             #     out += [''] + autosum
 
             if others:
-                maxlen_0 = max(3, max([len(x[0]) for x in others]))
-                hdr = sixu("=")*maxlen_0 + sixu("  ") + sixu("=")*10
-                fmt = sixu('%%%ds  %%s  ') % (maxlen_0,)
+                out += [r'.. tabularcolumns:: p{3cm}p{\dimexpr\linewidth-3cm-4\tabcolsep\relax}']
+                out += ['.. rst-class:: longtable']
+                maxlen_0 = max(3, max(len(x[0]) for x in others))
+                hdr = "="*maxlen_0 + "  " + "="*10
+                fmt = '%%%ds  %%s  ' % (maxlen_0,)
                 out += ['', '', hdr]
                 for param, param_type, desc in others:
-                    desc = sixu(" ").join(x.strip() for x in desc).strip()
+                    desc = " ".join(x.strip() for x in desc).strip()
                     if param_type:
-                        desc = "(%s) %s" % (param_type, desc)
+                        desc = "({}) {}".format(param_type, desc)
                     out += [fmt % (param.strip(), desc)]
                 out += [hdr]
             out += ['']
@@ -162,7 +155,7 @@ class SphinxDocString(NumpyDocString):
     def _str_see_also(self, func_role):
         out = []
         if self['See Also']:
-            see_also = super(SphinxDocString, self)._str_see_also(func_role)
+            see_also = super()._str_see_also(func_role)
             out = ['.. seealso::', '']
             out += self._str_indent(see_also[2:])
         return out
@@ -187,7 +180,7 @@ class SphinxDocString(NumpyDocString):
             elif section == 'refguide':
                 out += ['   single: %s' % (', '.join(references))]
             else:
-                out += ['   %s: %s' % (section, ','.join(references))]
+                out += ['   {}: {}'.format(section, ','.join(references))]
         return out
 
     def _str_references(self):
@@ -206,7 +199,7 @@ class SphinxDocString(NumpyDocString):
                 out += ['.. latexonly::', '']
             items = []
             for line in self['References']:
-                m = re.match(r'.. \[([a-z0-9._-]+)\]', line, re.I)
+                m = re.match(r'.. \[([a-z0-9._-]+)\]', line, re.IGNORECASE)
                 if m:
                     items.append(m.group(1))
             out += ['   ' + ", ".join(["[%s]_" % item for item in items]), '']

@@ -1,7 +1,8 @@
+from io import StringIO
+
 from sympy.core import S, symbols, pi, Catalan, EulerGamma, Function
-from sympy.core.compatibility import StringIO
-from sympy import Piecewise
-from sympy import Equality
+from sympy.core.relational import Equality
+from sympy.functions.elementary.piecewise import Piecewise
 from sympy.utilities.codegen import RustCodeGen, codegen, make_routine
 from sympy.testing.pytest import XFAIL
 import sympy
@@ -37,7 +38,7 @@ def test_simple_code_with_header():
     result, = codegen(name_expr, "Rust", header=True, empty=False)
     assert result[0] == "test.rs"
     source = result[1]
-    version_str = "Code generated with sympy %s" % sympy.__version__
+    version_str = "Code generated with SymPy %s" % sympy.__version__
     version_line = version_str.center(76).rstrip()
     expected = (
         "/*\n"
@@ -177,7 +178,7 @@ def test_results_named_ordered():
 
 
 def test_complicated_rs_codegen():
-    from sympy import sin, cos, tan
+    from sympy.functions.elementary.trigonometric import (cos, sin, tan)
     name_expr = ("testlong",
             [ ((sin(x) + cos(y) + tan(z))**3).expand(),
             cos(cos(cos(cos(cos(cos(cos(cos(x + y + z))))))))
@@ -202,12 +203,12 @@ def test_complicated_rs_codegen():
 
 def test_output_arg_mixed_unordered():
     # named outputs are alphabetical, unnamed output appear in the given order
-    from sympy import sin, cos
+    from sympy.functions.elementary.trigonometric import (cos, sin)
     a = symbols("a")
     name_expr = ("foo", [cos(2*x), Equality(y, sin(x)), cos(x), Equality(a, sin(2*x))])
     result, = codegen(name_expr, "Rust", header=False, empty=False)
     assert result[0] == "foo.rs"
-    source = result[1];
+    source = result[1]
     expected = (
         "fn foo(x: f64) -> (f64, f64, f64, f64) {\n"
         "    let out1 = (2*x).cos();\n"
@@ -227,11 +228,11 @@ def test_piecewise_():
     source = result[1]
     expected = (
         "fn pwtest(x: f64) -> f64 {\n"
-        "    let out1 = if (x < -1) {\n"
+        "    let out1 = if (x < -1.0) {\n"
         "        0\n"
-        "    } else if (x <= 1) {\n"
+        "    } else if (x <= 1.0) {\n"
         "        x.powi(2)\n"
-        "    } else if (x > 1) {\n"
+        "    } else if (x > 1.0) {\n"
         "        2 - x\n"
         "    } else {\n"
         "        1\n"
@@ -264,7 +265,7 @@ def test_multifcns_per_file():
     name_expr = [ ("foo", [2*x, 3*y]), ("bar", [y**2, 4*y]) ]
     result = codegen(name_expr, "Rust", header=False, empty=False)
     assert result[0][0] == "foo.rs"
-    source = result[0][1];
+    source = result[0][1]
     expected = (
         "fn foo(x: f64, y: f64) -> (f64, f64) {\n"
         "    let out1 = 2*x;\n"
@@ -284,8 +285,8 @@ def test_multifcns_per_file_w_header():
     name_expr = [ ("foo", [2*x, 3*y]), ("bar", [y**2, 4*y]) ]
     result = codegen(name_expr, "Rust", header=True, empty=False)
     assert result[0][0] == "foo.rs"
-    source = result[0][1];
-    version_str = "Code generated with sympy %s" % sympy.__version__
+    source = result[0][1]
+    version_str = "Code generated with SymPy %s" % sympy.__version__
     version_line = version_str.center(76).rstrip()
     expected = (
         "/*\n"

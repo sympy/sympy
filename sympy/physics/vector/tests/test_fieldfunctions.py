@@ -1,4 +1,6 @@
-from sympy import S, Symbol, sin, cos
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
+from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.physics.vector import ReferenceFrame, Vector, Point, \
      dynamicsymbols
 from sympy.physics.vector.fieldfunctions import divergence, \

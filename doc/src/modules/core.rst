@@ -1,14 +1,17 @@
+.. _core_module:
+
 ====
 Core
 ====
 
 sympify
 -------
+
 .. module:: sympy.core.sympify
 
-sympify
-^^^^^^^
 .. autofunction:: sympify
+
+.. py:class:: Tbasic
 
 assumptions
 -----------
@@ -19,34 +22,26 @@ cache
 -----
 .. module:: sympy.core.cache
 
-cacheit
-^^^^^^^
-.. autofunction:: cacheit
+.. autofunction:: __cacheit
 
 basic
 -----
 .. module:: sympy.core.basic
 
-Basic
-^^^^^
+.. py:class:: collections.abc.Mapping
+
+.. py:class:: collections.abc.Iterable
+
 .. autoclass:: Basic
    :members:
 
-Atom
-^^^^
 .. autoclass:: Atom
    :members:
-
-core
-----
-.. module:: sympy.core.core
 
 singleton
 ---------
 .. module:: sympy.core.singleton
 
-S
-^
 
 .. autoclass:: sympy.core.singleton.SingletonRegistry
    :members:
@@ -58,18 +53,12 @@ expr
 ----
 .. module:: sympy.core.expr
 
-Expr
-----
 .. autoclass:: Expr
    :members:
 
-UnevaluatedExpr
----------------
 .. autoclass:: UnevaluatedExpr
    :members:
 
-AtomicExpr
-----------
 .. autoclass:: AtomicExpr
    :members:
 
@@ -77,206 +66,158 @@ symbol
 ------
 .. module:: sympy.core.symbol
 
-Symbol
-^^^^^^
 .. autoclass:: Symbol
    :members:
 
-Wild
-^^^^
 .. autoclass:: Wild
    :members:
 
-Dummy
-^^^^^
 .. autoclass:: Dummy
    :members:
 
-symbols
-^^^^^^^
 .. autofunction:: symbols
 
-var
-^^^
 .. autofunction:: var
+
+intfunc
+-------
+.. module:: sympy.core.intfunc
+
+.. autofunction:: num_digits
+
+.. autofunction:: trailing
+
+.. autofunction:: ilcm
+
+.. autofunction:: igcd
+
+.. autofunction:: igcd_lehmer
+
+.. autofunction:: igcdex
+
+.. autofunction:: isqrt
+
+.. autofunction:: integer_nthroot
+
+.. autofunction:: integer_log
+
+.. autofunction:: mod_inverse
 
 numbers
 -------
 .. module:: sympy.core.numbers
 
-Number
-^^^^^^
 .. autoclass:: Number
    :members:
 
-Float
-^^^^^
 .. autoclass:: Float
    :members:
 
-Rational
-^^^^^^^^
 .. autoclass:: Rational
    :members:
 
-Integer
-^^^^^^^
 .. autoclass:: Integer
    :members:
 
-NumberSymbol
-^^^^^^^^^^^^
+.. autoclass:: AlgebraicNumber
+   :members:
+
+   .. automethod:: AlgebraicNumber.__new__
+
 .. autoclass:: NumberSymbol
    :members:
 
-RealNumber
-^^^^^^^^^^
 .. autoclass:: RealNumber
    :members:
 
-igcd
-^^^^
-.. autofunction:: igcd
-
-ilcm
-^^^^
-.. autofunction:: ilcm
-
-seterr
-^^^^^^
 .. autofunction:: seterr
 
-Zero
-^^^^
 
 .. autoclass:: Zero
    :members:
 
-One
-^^^
 
 .. autoclass:: One
    :members:
 
-NegativeOne
-^^^^^^^^^^^
 
 .. autoclass:: NegativeOne
    :members:
 
-Half
-^^^^
 
 .. autoclass:: Half
    :members:
 
-NaN
-^^^
 
 .. autoclass:: NaN
    :members:
 
-Infinity
-^^^^^^^^
 
 .. autoclass:: Infinity
    :members:
 
-NegativeInfinity
-^^^^^^^^^^^^^^^^
 
 .. autoclass:: NegativeInfinity
    :members:
 
-ComplexInfinity
-^^^^^^^^^^^^^^^
 
 .. autoclass:: ComplexInfinity
    :members:
 
-Exp1
-^^^^
 
 .. autoclass:: Exp1
    :members:
 
-ImaginaryUnit
-^^^^^^^^^^^^^
 
 .. autoclass:: ImaginaryUnit
    :members:
 
-Pi
-^^
 
 .. autoclass:: Pi
    :members:
 
-EulerGamma
-^^^^^^^^^^
 
 .. autoclass:: EulerGamma
    :members:
 
-Catalan
-^^^^^^^
 
 .. autoclass:: Catalan
    :members:
 
-GoldenRatio
-^^^^^^^^^^^
 
 .. autoclass:: GoldenRatio
    :members:
 
-TribonacciConstant
-^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: TribonacciConstant
    :members:
 
-mod_inverse
-^^^^^^^^^^^
 
 .. autofunction:: mod_inverse
+
+.. autofunction:: equal_valued
+
 
 power
 -----
 .. module:: sympy.core.power
 
-Pow
-^^^
 .. autoclass:: Pow
    :members:
-
-integer_nthroot
-^^^^^^^^^^^^^^^
-.. autofunction:: integer_nthroot
-
-integer_log
-^^^^^^^^^^^
-.. autofunction:: integer_log
 
 mul
 ---
 .. module:: sympy.core.mul
 
-Mul
-^^^
 .. autoclass:: Mul
    :members:
 
-prod
-^^^^
 .. autofunction:: prod
 
 add
 ---
 .. module:: sympy.core.add
 
-Add
-^^^
 .. autoclass:: Add
    :members:
 
@@ -284,8 +225,6 @@ mod
 ---
 .. module:: sympy.core.mod
 
-Mod
-^^^
 .. autoclass:: Mod
    :members:
 
@@ -293,71 +232,45 @@ relational
 ----------
 .. module:: sympy.core.relational
 
-Rel
-^^^
 .. autoclass:: Relational
    :members:
 
 .. autoclass:: Rel
    :members:
 
-Eq
-^^
 .. autoclass:: Eq
    :members:
 
-Ne
-^^
 .. autoclass:: Ne
    :members:
 
-Lt
-^^
 .. autoclass:: Lt
    :members:
 
-Le
-^^
 .. autoclass:: Le
    :members:
 
-Gt
-^^
 .. autoclass:: Gt
    :members:
 
-Ge
-^^
 .. autoclass:: Ge
    :members:
 
-Equality
-^^^^^^^^
 .. autoclass:: Equality
    :members:
 
-GreaterThan
-^^^^^^^^^^^
 .. autoclass:: GreaterThan
    :members:
 
-LessThan
-^^^^^^^^
 .. autoclass:: LessThan
    :members:
 
-Unequality
-^^^^^^^^^^
 .. autoclass:: Unequality
    :members:
 
-StrictGreaterThan
-^^^^^^^^^^^^^^^^^
 .. autoclass:: StrictGreaterThan
    :members:
 
-StrictLessThan
-^^^^^^^^^^^^^^
 .. autoclass:: StrictLessThan
    :members:
 
@@ -365,8 +278,6 @@ multidimensional
 ----------------
 .. module:: sympy.core.multidimensional
 
-vectorize
-^^^^^^^^^
 .. autoclass:: vectorize
    :members:
 
@@ -374,33 +285,21 @@ function
 --------
 .. module:: sympy.core.function
 
-Lambda
-^^^^^^
 .. autoclass:: Lambda
    :members:
 
-WildFunction
-^^^^^^^^^^^^
 .. autoclass:: WildFunction
    :members:
 
-Derivative
-^^^^^^^^^^
 .. autoclass:: Derivative
    :members:
    :private-members:
 
-diff
-^^^^
 .. autofunction:: diff
 
-FunctionClass
-^^^^^^^^^^^^^
 .. autoclass:: FunctionClass
    :members:
 
-Function
-^^^^^^^^
 .. autoclass:: Function
    :members:
 
@@ -430,122 +329,118 @@ Function
    >>> e.atoms(AppliedUndef)
    {f(x)}
 
-Subs
-^^^^
 .. autoclass:: Subs
    :members:
 
-expand
-^^^^^^
 .. autofunction:: expand
 
-PoleError
-^^^^^^^^^
 .. autoclass:: PoleError
    :members:
 
-count_ops
-^^^^^^^^^
 .. autofunction:: count_ops
 
-expand_mul
-^^^^^^^^^^
 .. autofunction:: expand_mul
 
-expand_log
-^^^^^^^^^^
 .. autofunction:: expand_log
 
-expand_func
-^^^^^^^^^^^
 .. autofunction:: expand_func
 
-expand_trig
-^^^^^^^^^^^
 .. autofunction:: expand_trig
 
-expand_complex
-^^^^^^^^^^^^^^
 .. autofunction:: expand_complex
 
-expand_multinomial
-^^^^^^^^^^^^^^^^^^
 .. autofunction:: expand_multinomial
 
-expand_power_exp
-^^^^^^^^^^^^^^^^
 .. autofunction:: expand_power_exp
 
-expand_power_base
-^^^^^^^^^^^^^^^^^
 .. autofunction:: expand_power_base
 
-nfloat
-^^^^^^
 .. autofunction:: nfloat
 
 evalf
 -----
 .. module:: sympy.core.evalf
 
-EvalfMixin
-^^^^^^^^^^
 
 .. autoclass:: EvalfMixin
    :members:
 
-PrecisionExhausted
-^^^^^^^^^^^^^^^^^^
 .. autoclass:: PrecisionExhausted
    :members:
 
-N
-^
 .. autofunction:: N
 
 containers
 ----------
 .. module:: sympy.core.containers
 
-Tuple
-^^^^^
 .. autoclass:: Tuple
    :members:
 
-Dict
-^^^^
-.. autoclass:: Dict
+.. autoclass:: TupleKind
    :members:
 
-compatibility
--------------
-.. module:: sympy.core.compatibility
-
-iterable
-^^^^^^^^
-.. autofunction:: iterable
-
-is_sequence
-^^^^^^^^^^^
-.. autofunction:: is_sequence
-
-as_int
-^^^^^^
-.. autofunction:: as_int
+.. autoclass:: Dict
+   :members:
 
 exprtools
 ---------
 .. module:: sympy.core.exprtools
 
-gcd_terms
-^^^^^^^^^
 .. autofunction:: gcd_terms
 
-factor_terms
-^^^^^^^^^^^^
 .. autofunction:: factor_terms
 
-ordered
-^^^^^^^
+kind
+----
+.. module:: sympy.core.kind
 
-.. autofunction:: sympy.core.compatibility.ordered
+.. autoclass:: Kind
+   :members:
+
+.. autoclass:: NumberKind
+   :members:
+
+.. autoclass:: UndefinedKind
+   :members:
+
+.. autoclass:: BooleanKind
+   :members:
+
+Sorting
+-------
+
+
+.. autofunction:: sympy.core.sorting.default_sort_key
+
+
+.. autofunction:: sympy.core.sorting.ordered
+
+Random
+------
+
+.. automodule:: sympy.core.random
+
+.. autofunction:: random_complex_number
+
+.. autofunction:: verify_numerically
+
+.. autofunction:: test_derivative_numerically
+
+.. autofunction:: _randrange
+
+.. autofunction:: _randint
+
+Traversal
+---------
+.. module:: sympy.core.traversal
+
+.. autofunction:: bottom_up
+
+.. autofunction:: postorder_traversal
+
+.. autofunction:: preorder_traversal
+
+.. autofunction:: use
+
+.. autofunction:: walk

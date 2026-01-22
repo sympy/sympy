@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 import pyglet.gl as pgl
 from sympy.core import S
 from sympy.plotting.pygletplot.plot_mode_base import PlotModeBase
@@ -20,7 +18,7 @@ class PlotCurve(PlotModeBase):
         self._calculating_verts_pos = 0.0
         self._calculating_verts_len = float(self.t_interval.v_len)
 
-        self.verts = list()
+        self.verts = []
         b = self.bounds
         for t in self.t_set:
             try:

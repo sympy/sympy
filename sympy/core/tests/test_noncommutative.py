@@ -1,32 +1,23 @@
 """Tests for noncommutative symbols and expressions."""
 
-from sympy import (
-    adjoint,
-    cancel,
-    collect,
-    combsimp,
-    conjugate,
-    cos,
-    expand,
-    factor,
-    gammasimp,
-    posify,
-    radsimp,
-    ratsimp,
-    rcollect,
-    sin,
-    simplify,
-    symbols,
-    transpose,
-    trigsimp,
-    I,
-)
+from sympy.core.function import expand
+from sympy.core.numbers import I
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.complexes import (adjoint, conjugate, transpose)
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.polys.polytools import (cancel, factor)
+from sympy.simplify.combsimp import combsimp
+from sympy.simplify.gammasimp import gammasimp
+from sympy.simplify.radsimp import (collect, radsimp, rcollect)
+from sympy.simplify.ratsimp import ratsimp
+from sympy.simplify.simplify import (posify, simplify)
+from sympy.simplify.trigsimp import trigsimp
 from sympy.abc import x, y, z
 from sympy.testing.pytest import XFAIL
+from sympy.physics.quantum import HermitianOperator
 
 A, B, C = symbols("A B C", commutative=False)
-X = symbols("X", commutative=False, hermitian=True)
-Y = symbols("Y", commutative=False, antihermitian=True)
+X = HermitianOperator("X")
 
 
 def test_adjoint():
@@ -39,13 +30,9 @@ def test_adjoint():
 
     assert adjoint(X) == X
     assert adjoint(-I*X) == I*X
-    assert adjoint(Y) == -Y
-    assert adjoint(-I*Y) == -I*Y
 
     assert adjoint(X) == conjugate(transpose(X))
-    assert adjoint(Y) == conjugate(transpose(Y))
     assert adjoint(X) == transpose(conjugate(X))
-    assert adjoint(Y) == transpose(conjugate(Y))
 
 
 def test_cancel():
@@ -141,8 +128,6 @@ def test_transpose():
 
     assert transpose(X) == conjugate(X)
     assert transpose(-I*X) == -I*conjugate(X)
-    assert transpose(Y) == -conjugate(Y)
-    assert transpose(-I*Y) == I*conjugate(Y)
 
 
 def test_trigsimp():

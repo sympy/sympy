@@ -3,16 +3,14 @@
 NOTE
 ----
 
-at present this is mainly needed for facts.py , feel free however to improve
+at present this is mainly needed for facts.py, feel free however to improve
 this stuff for general purpose.
 """
-from __future__ import print_function, division
 
-from typing import Dict, Type, Union
-
+from __future__ import annotations
 
 # Type of a fuzzy bool
-FuzzyBool = Union[bool, None]
+FuzzyBool = bool | None
 
 
 def _torf(args):
@@ -149,7 +147,7 @@ def fuzzy_and(args):
     return rv
 
 
-def fuzzy_not(v):
+def fuzzy_not(v: bool | None) -> bool | None:
     """
     Not in fuzzy logic
 
@@ -203,14 +201,12 @@ def fuzzy_or(args):
 def fuzzy_xor(args):
     """Return None if any element of args is not True or False, else
     True (if there are an odd number of True elements), else False."""
-    t = f = 0
+    t = 0
     for a in args:
         ai = fuzzy_bool(a)
         if ai:
             t += 1
-        elif ai is False:
-            f += 1
-        else:
+        elif ai is None:
             return
     return t % 2 == 1
 
@@ -221,10 +217,10 @@ def fuzzy_nand(args):
     return fuzzy_not(fuzzy_and(args))
 
 
-class Logic(object):
+class Logic:
     """Logical expression"""
     # {} 'op' -> LogicClass
-    op_2class = {}  # type: Dict[str, Type[Logic]]
+    op_2class: dict[str, type[Logic]] = {}
 
     def __new__(cls, *args):
         obj = object.__new__(cls)
@@ -248,20 +244,6 @@ class Logic(object):
             return True
         else:
             return a.args != b.args
-
-    def __lt__(self, other):
-        if self.__cmp__(other) == -1:
-            return True
-        return False
-
-    def __cmp__(self, other):
-        if type(self) is not type(other):
-            a = str(type(self))
-            b = str(type(other))
-        else:
-            a = self.args
-            b = other.args
-        return (a > b) - (a < b)
 
     def __str__(self):
         return '%s(%s)' % (self.__class__.__name__,
@@ -376,8 +358,7 @@ class And(AndOr_Base):
     def expand(self):
 
         # first locate Or
-        for i in range(len(self.args)):
-            arg = self.args[i]
+        for i, arg in enumerate(self.args):
             if isinstance(arg, Or):
                 arest = self.args[:i] + self.args[i + 1:]
 

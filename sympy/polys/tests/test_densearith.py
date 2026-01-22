@@ -1,7 +1,10 @@
 """Tests for dense recursive polynomials' arithmetics. """
+from random import randint
+
+from sympy.external.gmpy import GROUND_TYPES
 
 from sympy.polys.densebasic import (
-    dup_normal, dmp_normal,
+    dup_normal, dmp_normal, dup_truncate, dup_from_list,
 )
 
 from sympy.polys.densearith import (
@@ -18,9 +21,9 @@ from sympy.polys.densearith import (
     dup_neg, dmp_neg,
     dup_add, dmp_add,
     dup_sub, dmp_sub,
-    dup_mul, dmp_mul,
-    dup_sqr, dmp_sqr,
-    dup_pow, dmp_pow,
+    dup_mul, dmp_mul, dup_series_mul,
+    dup_sqr, dmp_sqr, dup_series_sqr,
+    dup_pow, dmp_pow, dup_series_pow,
     dup_add_mul, dmp_add_mul,
     dup_sub_mul, dmp_sub_mul,
     dup_pdiv, dup_prem, dup_pquo, dup_pexquo,
@@ -31,6 +34,7 @@ from sympy.polys.densearith import (
     dmp_div, dmp_rem, dmp_quo, dmp_exquo,
     dup_max_norm, dmp_max_norm,
     dup_l1_norm, dmp_l1_norm,
+    dup_l2_norm_squared, dmp_l2_norm_squared,
     dup_expand, dmp_expand,
 )
 
@@ -38,13 +42,16 @@ from sympy.polys.polyerrors import (
     ExactQuotientFailed,
 )
 
-from sympy.polys.specialpolys import f_polys
-from sympy.polys.domains import FF, ZZ, QQ
+from sympy.polys.specialpolys import f_polys, Symbol, Poly
+from sympy.polys.domains import FF, ZZ, QQ, CC
 
 from sympy.testing.pytest import raises
 
+x = Symbol('x')
+
 f_0, f_1, f_2, f_3, f_4, f_5, f_6 = [ f.to_dense() for f in f_polys() ]
 F_0 = dmp_mul_ground(dmp_normal(f_0, 2, QQ), QQ(1, 7), 2, QQ)
+
 
 def test_dup_add_term():
     f = dup_normal([], ZZ)
@@ -676,6 +683,39 @@ def test_dmp_mul():
         [[K(2)], [K(1)]], [[K(3)], [K(4)]], 1, K) == [[K(5)], [K(4)]]
 
 
+def test_dup_series_mul():
+    f = dup_from_list([2, 0, 0, 1, 7], ZZ)
+    g = dup_from_list([1, 0, 0, 1], ZZ)
+
+    assert dup_series_mul([], [], 4, ZZ) == []
+    assert dup_series_mul(f, [], 5, ZZ) == []
+    assert dup_series_mul(f, f, 0, ZZ) == []
+    assert dup_series_mul(f, g, 1, ZZ) == [ZZ(7)]
+
+    assert dup_series_mul(f, f, 2, ZZ) == dup_from_list(
+        [14, 49], ZZ)
+    assert dup_series_mul(f, g, 5, ZZ) == dup_from_list(
+        [3, 7, 0, 1, 7], ZZ)
+    assert dup_series_mul(f, g, 10, ZZ) == dup_from_list(
+        [2, 0, 0, 3, 7, 0, 1, 7], ZZ)
+
+    f = [QQ(randint(-100, 100), randint(1, 100)) for _ in range(200)]
+    g = [QQ(randint(-100, 100), randint(1, 100)) for _ in range(50, 200)]
+
+    expected = dup_truncate(dup_mul(f, g, QQ), 100, QQ)
+    assert dup_series_mul(f, g, 100, QQ) == expected
+
+    f = dup_from_list([QQ(3, 4), QQ(-1, 2), QQ(1, 6)], QQ)
+    g = dup_from_list([QQ(1, 3), QQ(2, 5)], QQ)
+    assert dup_series_mul(f, g, 3, QQ) == dup_from_list(
+        [QQ(2, 15), QQ(-13, 90), QQ(1, 15)], QQ)
+
+    f = dup_from_list([QQ(1, 2), QQ(0), QQ(1, 3), QQ(1, 4)], QQ)
+    g = dup_from_list([QQ(2), QQ(1, 2)], QQ)
+    assert dup_series_mul(f, g, 4, QQ) == dup_from_list(
+        [QQ(1, 4), QQ(2, 3), QQ(2, 3), QQ(1, 8)], QQ)
+
+
 def test_dup_sqr():
     assert dup_sqr([], ZZ) == []
     assert dup_sqr([ZZ(2)], ZZ) == [ZZ(4)]
@@ -707,6 +747,22 @@ def test_dmp_sqr():
     K = FF(9)
 
     assert dmp_sqr([[K(3)], [K(4)]], 1, K) == [[K(6)], [K(7)]]
+
+
+def test_dup_series_sqr():
+    assert dup_series_sqr([], 2, ZZ) == []
+
+    f = dup_from_list([2, 0, 0, 1, 7], ZZ)
+    assert dup_series_sqr(f, 10, ZZ) == dup_series_mul(f, f, 10, ZZ)
+
+    f2 = dup_from_list([QQ(1, 2), QQ(0), QQ(1, 3), QQ(1, 4)], QQ)
+    assert dup_series_sqr(f2, 4, QQ) == dup_series_mul(f2, f2, 4, QQ)
+
+    f3 = dup_from_list([QQ(3, 4), QQ(-1, 2), QQ(1, 6)], QQ)
+    assert dup_series_sqr(f3, 3, QQ) == dup_series_mul(f3, f3, 3, QQ)
+
+    f4 = dup_from_list([QQ(1, 3), QQ(2, 3), QQ(1, 4), QQ(1, 5), QQ(1, 6), QQ(1, 2)], QQ)
+    assert dup_series_sqr(f4, 7, QQ) == dup_series_mul(f4, f4, 7, QQ)
 
 
 def test_dup_pow():
@@ -759,6 +815,40 @@ def test_dmp_pow():
     f = dup_normal([2, 0, 0, 1, 7], ZZ)
 
     assert dmp_pow(f, 2, 0, ZZ) == dup_pow(f, 2, ZZ)
+
+
+def test_dup_series_pow():
+    assert dup_series_pow([], 1, 1, ZZ) == []
+    assert dup_series_pow([ZZ(1), ZZ(0)], 0, 1, ZZ) == [ZZ(1)]
+    assert dup_series_pow(dup_from_list([1, 2, 3, 4, 5], ZZ), 1, 4, ZZ) == [
+        ZZ(2), ZZ(3), ZZ(4), ZZ(5)]
+
+    assert dup_series_pow([ZZ(1), ZZ(1)], 3, 4, ZZ) == [ZZ(1), ZZ(3), ZZ(3), ZZ(1)]
+    assert dup_series_pow([ZZ(2), ZZ(0), ZZ(1)], 2, 5, ZZ) == [ZZ(4), ZZ(0), ZZ(4),
+        ZZ(0), ZZ(1)]
+    assert dup_series_pow([ZZ(1), ZZ(1)], 5, 6, ZZ) == [ZZ(1), ZZ(5), ZZ(10), ZZ(10),
+        ZZ(5), ZZ(1)]
+    assert dup_series_pow([ZZ(1), ZZ(0), ZZ(1)], 3, 7, ZZ) == [ZZ(1), ZZ(0), ZZ(3),
+        ZZ(0), ZZ(3), ZZ(0), ZZ(1)]
+
+    assert dup_series_pow([QQ(1, 2), QQ(1, 2)], 2, 3, QQ) == [
+        QQ(1, 4), QQ(1, 2), QQ(1, 4)]
+    assert dup_series_pow([QQ(2), QQ(0), QQ(1)], 2, 5, QQ) == [QQ(4), QQ(0), QQ(4),
+        QQ(0), QQ(1)]
+
+    K = FF(7)
+    assert dup_series_pow([K(1), K(1)], 3, 4, K) == [K(1), K(3), K(3), K(1)]
+    assert dup_series_pow([K(2), K(1)], 4, 5, K) == [K(2), K(4), K(3), K(1), K(1)]
+
+    raises(ValueError, lambda: dup_series_pow([ZZ(1), ZZ(1)], -1, 4, ZZ))
+
+    f = dup_from_list([QQ(1, 2), QQ(1, 3)], QQ)
+    assert dup_series_pow(f, 2, 3, QQ) == dup_from_list(
+        [QQ(1, 4), QQ(1, 3), QQ(1, 9)], QQ)
+
+    g = dup_from_list([QQ(2, 3), QQ(1, 4)], QQ)
+    assert dup_series_pow(g, 3, 4, QQ) == dup_from_list(
+        [QQ(8, 27), QQ(1, 3), QQ(1, 8), QQ(1, 64)], QQ)
 
 
 def test_dup_pdiv():
@@ -863,11 +953,10 @@ def test_dup_ff_div():
     assert dup_ff_div(f, g, QQ) == (q, r)
 
 def test_dup_ff_div_gmpy2():
-    try:
-        from gmpy2 import mpq
-    except ImportError:
+    if GROUND_TYPES != 'gmpy2':
         return
 
+    from gmpy2 import mpq
     from sympy.polys.domains import GMPYRationalField
     K = GMPYRationalField()
 
@@ -970,6 +1059,18 @@ def test_dmp_l1_norm():
     assert dmp_l1_norm(f_0, 2, ZZ) == 31
 
 
+def test_dup_l2_norm_squared():
+    assert dup_l2_norm_squared([], ZZ) == 0
+    assert dup_l2_norm_squared([1], ZZ) == 1
+    assert dup_l2_norm_squared([1, 4, 2, 3], ZZ) == 30
+
+
+def test_dmp_l2_norm_squared():
+    assert dmp_l2_norm_squared([[[]]], 2, ZZ) == 0
+    assert dmp_l2_norm_squared([[[1]]], 2, ZZ) == 1
+    assert dmp_l2_norm_squared(f_0, 2, ZZ) == 111
+
+
 def test_dup_expand():
     assert dup_expand((), ZZ) == [1]
     assert dup_expand(([1, 2, 3], [1, 2], [7, 5, 4, 3]), ZZ) == \
@@ -981,3 +1082,11 @@ def test_dmp_expand():
     assert dmp_expand(([[1], [2], [3]], [[1], [2]], [[7], [5], [4], [3]]), 1, ZZ) == \
         dmp_mul([[1], [2], [3]], dmp_mul([[1], [2]], [[7], [5], [
                 4], [3]], 1, ZZ), 1, ZZ)
+
+def test_dup_mul_poly():
+    p = Poly(18786186952704.0*x**165 + 9.31746684052255e+31*x**82, x, domain='RR')
+    px = Poly(18786186952704.0*x**166 + 9.31746684052255e+31*x**83, x, domain='RR')
+
+    assert p * x == px
+    assert p.set_domain(QQ) * x == px.set_domain(QQ)
+    assert p.set_domain(CC) * x == px.set_domain(CC)

@@ -1,7 +1,12 @@
-from __future__ import print_function, division
-
 '''
-Use llvmlite to create executable functions from Sympy expressions
+Use llvmlite to create executable functions from SymPy expressions
+
+The primary goal is to significantly accelerate the numerical evaluation of
+expressions, which is especially useful for functions that need to be called
+repeatedly with different arguments (e.g., in numerical integration,
+optimization, or plotting).
+
+The main entry point for users is the llvm_callable function.
 
 This module requires llvmlite (https://github.com/numba/llvmlite).
 '''
@@ -10,14 +15,17 @@ import ctypes
 
 from sympy.external import import_module
 from sympy.printing.printer import Printer
-from sympy import S, IndexedBase
+from sympy.core.singleton import S
+from sympy.tensor.indexed import IndexedBase
 from sympy.utilities.decorator import doctest_depends_on
 
 llvmlite = import_module('llvmlite')
 if llvmlite:
+    LLVMLITE_VERSION = [int(p) for p in llvmlite.__version__.split('.')[:2]]
     ll = import_module('llvmlite.ir').ir
     llvm = import_module('llvmlite.binding').binding
-    llvm.initialize()
+    if LLVMLITE_VERSION < [0, 45]:
+        llvm.initialize()
     llvm.initialize_native_target()
     llvm.initialize_native_asmprinter()
 
@@ -31,7 +39,7 @@ class LLVMJitPrinter(Printer):
         self.func_arg_map = kwargs.pop("func_arg_map", {})
         if not llvmlite:
             raise ImportError("llvmlite is required for LLVMJITPrinter")
-        super(LLVMJitPrinter, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.fp_type = ll.DoubleType()
         self.module = module
         self.builder = builder
@@ -114,7 +122,7 @@ class LLVMJitPrinter(Printer):
 # handle a variable number of parameters.
 class LLVMJitCallbackPrinter(LLVMJitPrinter):
     def __init__(self, *args, **kwargs):
-        super(LLVMJitCallbackPrinter, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def _print_Indexed(self, expr):
         array, idx = self.func_arg_map[expr.base]
@@ -148,7 +156,7 @@ link_names = set()
 current_link_suffix = 0
 
 
-class LLVMJitCode(object):
+class LLVMJitCode:
     def __init__(self, signature):
         self.signature = signature
         self.fp_type = ll.DoubleType()
@@ -181,7 +189,7 @@ class LLVMJitCode(object):
 
     def _create_function_base(self):
         """Create function with name and type signature"""
-        global link_names, current_link_suffix
+        global current_link_suffix
         default_link_name = 'jit_func'
         current_link_suffix += 1
         self.link_name = default_link_name + str(current_link_suffix)
@@ -264,18 +272,25 @@ class LLVMJitCode(object):
         return vals
 
     def _compile_function(self, strmod):
-        global exe_engines
         llmod = llvm.parse_assembly(strmod)
 
-        pmb = llvm.create_pass_manager_builder()
-        pmb.opt_level = 2
-        pass_manager = llvm.create_module_pass_manager()
-        pmb.populate(pass_manager)
+        target_machine = (llvm.Target.from_default_triple().
+                          create_target_machine())
 
-        pass_manager.run(llmod)
+        if LLVMLITE_VERSION < [0, 45]:
+            pmb = llvm.create_pass_manager_builder()
+            pmb.opt_level = 2
+            pass_manager = llvm.create_module_pass_manager()
+            pmb.populate(pass_manager)
+            pass_manager.run(llmod)
+        else:
+            pto = llvm.create_pipeline_tuning_options(speed_level=2,
+                                                      size_level=0)
+            pto.loop_vectorization = True
+            pass_builder = llvm.create_pass_builder(target_machine, pto)
+            pass_manager = pass_builder.getModulePassManager()
+            pass_manager.run(llmod, pass_builder)
 
-        target_machine = \
-            llvm.Target.from_default_triple().create_target_machine()
         exe_eng = llvm.create_mcjit_compiler(llmod, target_machine)
         exe_eng.finalize_object()
         exe_engines.append(exe_eng)
@@ -291,7 +306,7 @@ class LLVMJitCode(object):
 
 class LLVMJitCodeCallback(LLVMJitCode):
     def __init__(self, signature):
-        super(LLVMJitCodeCallback, self).__init__(signature)
+        super().__init__(signature)
 
     def _create_param_dict(self, func_args):
         for i, a in enumerate(func_args):
@@ -327,7 +342,7 @@ class LLVMJitCodeCallback(LLVMJitCode):
         return strmod
 
 
-class CodeSignature(object):
+class CodeSignature:
     def __init__(self, ret_type):
         self.ret_type = ret_type
         self.arg_ctypes = []
@@ -341,7 +356,7 @@ class CodeSignature(object):
 
 
 def _llvm_jit_code(args, expr, signature, callback_type):
-    """Create a native code function from a Sympy expression"""
+    """Create a native code function from a SymPy expression"""
     if callback_type is None:
         jit = LLVMJitCode(signature)
     else:
@@ -360,7 +375,7 @@ def _llvm_jit_code(args, expr, signature, callback_type):
 
 @doctest_depends_on(modules=('llvmlite', 'scipy'))
 def llvm_callable(args, expr, callback_type=None):
-    '''Compile function from a Sympy expression
+    '''Compile function from a SymPy expression
 
     Expressions are evaluated using double precision arithmetic.
     Some single argument math functions (exp, sin, cos, etc.) are supported
@@ -378,9 +393,9 @@ def llvm_callable(args, expr, callback_type=None):
     callback_type : string
         Create function with signature appropriate to use as a callback.
         Currently supported:
-           'scipy.integrate'
-           'scipy.integrate.test'
-           'cubature'
+        'scipy.integrate'
+        'scipy.integrate.test'
+        'cubature'
 
     Returns
     =======
@@ -401,6 +416,7 @@ def llvm_callable(args, expr, callback_type=None):
 
 
     Callbacks for integration functions can be JIT compiled.
+
     >>> import sympy.printing.llvmjitcode as jit
     >>> from sympy.abc import a
     >>> from sympy import integrate
@@ -428,8 +444,9 @@ def llvm_callable(args, expr, callback_type=None):
     expressions are given to cse, the compiled function returns a tuple.
     The 'cubature' callback handles multiple expressions (set `fdim`
     to match in the integration call.)
+
     >>> import sympy.printing.llvmjitcode as jit
-    >>> from sympy import cse, exp
+    >>> from sympy import cse
     >>> from sympy.abc import x,y
     >>> e1 = x*x + y*y
     >>> e2 = 4*(x*x + y*y) + 8.0
@@ -451,7 +468,7 @@ def llvm_callable(args, expr, callback_type=None):
         for _ in args:
             arg_ctype = ctypes.c_double
             arg_ctypes.append(arg_ctype)
-    elif callback_type == 'scipy.integrate' or callback_type == 'scipy.integrate.test':
+    elif callback_type in ('scipy.integrate', 'scipy.integrate.test'):
         signature.ret_type = ctypes.c_double
         arg_ctypes = [ctypes.c_int, ctypes.POINTER(ctypes.c_double)]
         arg_ctypes_formal = [ctypes.c_int, ctypes.c_double]
@@ -476,5 +493,15 @@ def llvm_callable(args, expr, callback_type=None):
     if callback_type and callback_type == 'scipy.integrate':
         arg_ctypes = arg_ctypes_formal
 
-    cfunc = ctypes.CFUNCTYPE(signature.ret_type, *arg_ctypes)(fptr)
+    # PYFUNCTYPE holds the GIL which is needed to prevent a segfault when
+    # calling PyFloat_FromDouble on Python 3.10. Probably it is better to use
+    # ctypes.c_double when returning a float rather than using ctypes.py_object
+    # and returning a PyFloat from inside the jitted function (i.e. let ctypes
+    # handle the conversion from double to PyFloat).
+    if signature.ret_type == ctypes.py_object:
+        FUNCTYPE = ctypes.PYFUNCTYPE
+    else:
+        FUNCTYPE = ctypes.CFUNCTYPE
+
+    cfunc = FUNCTYPE(signature.ret_type, *arg_ctypes)(fptr)
     return cfunc

@@ -3,14 +3,16 @@
 
 from .sympify import sympify, SympifyError
 from .cache import cacheit
-from .basic import Basic, Atom, preorder_traversal
+from .assumptions import assumptions, check_assumptions, failing_assumptions, common_assumptions
+from .basic import Basic, Atom
 from .singleton import S
 from .expr import Expr, AtomicExpr, UnevaluatedExpr
 from .symbol import Symbol, Wild, Dummy, symbols, var
 from .numbers import Number, Float, Rational, Integer, NumberSymbol, \
     RealNumber, igcd, ilcm, seterr, E, I, nan, oo, pi, zoo, \
     AlgebraicNumber, comp, mod_inverse
-from .power import Pow, integer_nthroot, integer_log
+from .power import Pow
+from .intfunc import integer_nthroot, integer_log, num_digits, trailing
 from .mul import Mul, prod
 from .add import Add
 from .mod import Mod
@@ -27,6 +29,9 @@ from .evalf import PrecisionExhausted, N
 from .containers import Tuple, Dict
 from .exprtools import gcd_terms, factor_terms, factor_nc
 from .parameters import evaluate
+from .kind import UndefinedKind, NumberKind, BooleanKind
+from .traversal import preorder_traversal, bottom_up, use, postorder_traversal
+from .sorting import default_sort_key, ordered
 
 # expose singletons
 Catalan = S.Catalan
@@ -39,7 +44,10 @@ __all__ = [
 
     'cacheit',
 
-    'Basic', 'Atom', 'preorder_traversal',
+    'assumptions', 'check_assumptions', 'failing_assumptions',
+    'common_assumptions',
+
+    'Basic', 'Atom',
 
     'S',
 
@@ -51,7 +59,9 @@ __all__ = [
     'igcd', 'ilcm', 'seterr', 'E', 'I', 'nan', 'oo', 'pi', 'zoo',
     'AlgebraicNumber', 'comp', 'mod_inverse',
 
-    'Pow', 'integer_nthroot', 'integer_log',
+    'Pow',
+
+    'integer_nthroot', 'integer_log', 'num_digits', 'trailing',
 
     'Mul', 'prod',
 
@@ -84,4 +94,10 @@ __all__ = [
     'EulerGamma',
     'GoldenRatio',
     'TribonacciConstant',
+
+    'UndefinedKind', 'NumberKind', 'BooleanKind',
+
+    'preorder_traversal', 'bottom_up', 'use', 'postorder_traversal',
+
+    'default_sort_key', 'ordered',
 ]

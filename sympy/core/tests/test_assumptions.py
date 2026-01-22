@@ -1,7 +1,18 @@
-from sympy import I, sqrt, log, exp, sin, asin, factorial, Mod, pi, oo
+from sympy.core.mod import Mod
+from sympy.core.numbers import (I, oo, pi)
+from sympy.functions.combinatorial.factorials import factorial
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (asin, sin)
+from sympy.simplify.simplify import simplify
 from sympy.core import Symbol, S, Rational, Integer, Dummy, Wild, Pow
+from sympy.core.assumptions import (assumptions, check_assumptions,
+    failing_assumptions, common_assumptions, _generate_assumption_rules,
+    _load_pre_generated_assumption_rules)
 from sympy.core.facts import InconsistentAssumptions
-from sympy import simplify
+from sympy.core.random import seed
+from sympy.combinatorics import Permutation
+from sympy.combinatorics.perm_groups import PermutationGroup
 
 from sympy.testing.pytest import raises, XFAIL
 
@@ -692,6 +703,18 @@ def test_other_symbol():
     assert x.is_integer is False
 
 
+def test_evaluate_false():
+    # Previously this failed because the assumptions query would make new
+    # expressions and some of the evaluation logic would fail under
+    # evaluate(False).
+    from sympy.core.parameters import evaluate
+    from sympy.abc import x, h
+    f = 2**x**7
+    with evaluate(False):
+        fh = f.xreplace({x: x+h})
+        assert fh.exp.is_rational is None
+
+
 def test_issue_3825():
     """catch: hash instability"""
     x = Symbol("x")
@@ -887,6 +910,7 @@ def test_Pow_is_pos_neg():
     assert (x**y).is_positive is True   # 0**0
     assert (x**y).is_negative is False
 
+
 def test_Pow_is_prime_composite():
     x = Symbol('x', positive=True, integer=True)
     y = Symbol('y', positive=True, integer=True)
@@ -906,7 +930,7 @@ def test_Mul_is_infinite():
     i = Symbol('i', infinite=True)
     z = Dummy(zero=True)
     nzf = Dummy(finite=True, zero=False)
-    from sympy import Mul
+    from sympy.core.mul import Mul
     assert (x*f).is_finite is None
     assert (x*i).is_finite is None
     assert (f*i).is_finite is None
@@ -935,7 +959,7 @@ def test_Add_is_infinite():
     i2 = Symbol('i2', infinite=True)
     z = Dummy(zero=True)
     nzf = Dummy(finite=True, zero=False)
-    from sympy import Add
+    from sympy.core.add import Add
     assert (x+f).is_finite is None
     assert (x+i).is_finite is None
     assert (f+i).is_finite is False
@@ -1017,7 +1041,7 @@ def test_sanitize_assumptions():
         assert x.is_positive is False
         assert cls('', real=True, positive=None).is_positive is None
         raises(ValueError, lambda: cls('', commutative=None))
-    raises(ValueError, lambda: Symbol._sanitize(dict(commutative=None)))
+    raises(ValueError, lambda: Symbol._sanitize({"commutative": None}))
 
 
 def test_special_assumptions():
@@ -1094,7 +1118,7 @@ def test_issue_8075():
 
 def test_issue_8642():
     x = Symbol('x', real=True, integer=False)
-    assert (x*2).is_integer is None
+    assert (x*2).is_integer is None, (x*2).is_integer
 
 
 def test_issues_8632_8633_8638_8675_8992():
@@ -1135,6 +1159,7 @@ def test_issue_9165():
     assert 0*(1/z) is S.NaN
     assert 0*f is S.NaN
 
+
 def test_issue_10024():
     x = Dummy('x')
     assert Mod(x, 2*pi).is_zero is None
@@ -1145,9 +1170,11 @@ def test_issue_10302():
     r = Symbol('r', real=True)
     u = -(3*2**pi)**(1/pi) + 2*3**(1/pi)
     i = u + u*I
+
     assert i.is_real is None  # w/o simplification this should fail
     assert (u + i).is_zero is None
     assert (1 + i).is_zero is False
+
     a = Dummy('a', zero=True)
     assert (a + I).is_zero is False
     assert (a + r*I).is_zero is None
@@ -1155,8 +1182,10 @@ def test_issue_10302():
     assert (a + x + I).is_imaginary is None
     assert (a + r*I + I).is_imaginary is None
 
+
 def test_complex_reciprocal_imaginary():
     assert (1 / (4 + 3*I)).is_imaginary is False
+
 
 def test_issue_16313():
     x = Symbol('x', extended_real=False)
@@ -1167,6 +1196,7 @@ def test_issue_16313():
     assert (l*x).is_real is False
     assert (l*x*x).is_real is None  # since x*x can be a real number
     assert (-x).is_positive is False
+
 
 def test_issue_16579():
     # extended_real -> finite | infinite
@@ -1184,7 +1214,121 @@ def test_issue_16579():
     nf = Symbol('nf', finite=False)
     assert nf.is_infinite is True
 
+
 def test_issue_17556():
     z = I*oo
     assert z.is_imaginary is False
     assert z.is_finite is False
+
+
+def test_issue_21651():
+    k = Symbol('k', positive=True, integer=True)
+    exp = 2*2**(-k)
+    assert exp.is_integer is None
+
+
+def test_assumptions_copy():
+    assert assumptions(Symbol('x'), {"commutative": True}
+        ) == {'commutative': True}
+    assert assumptions(Symbol('x'), ['integer']) == {}
+    assert assumptions(Symbol('x'), ['commutative']
+        ) == {'commutative': True}
+    assert assumptions(Symbol('x')) == {'commutative': True}
+    assert assumptions(1)['positive']
+    assert assumptions(3 + I) == {
+        'algebraic': True,
+        'commutative': True,
+        'complex': True,
+        'composite': False,
+        'even': False,
+        'extended_negative': False,
+        'extended_nonnegative': False,
+        'extended_nonpositive': False,
+        'extended_nonzero': False,
+        'extended_positive': False,
+        'extended_real': False,
+        'finite': True,
+        'imaginary': False,
+        'infinite': False,
+        'integer': False,
+        'irrational': False,
+        'negative': False,
+        'noninteger': False,
+        'nonnegative': False,
+        'nonpositive': False,
+        'nonzero': False,
+        'odd': False,
+        'positive': False,
+        'prime': False,
+        'rational': False,
+        'real': False,
+        'transcendental': False,
+        'zero': False}
+
+
+def test_check_assumptions():
+    assert check_assumptions(1, 0) is False
+    x = Symbol('x', positive=True)
+    assert check_assumptions(1, x) is True
+    assert check_assumptions(1, 1) is True
+    assert check_assumptions(-1, 1) is False
+    i = Symbol('i', integer=True)
+    # don't know if i is positive (or prime, etc...)
+    assert check_assumptions(i, 1) is None
+    assert check_assumptions(Dummy(integer=None), integer=True) is None
+    assert check_assumptions(Dummy(integer=None), integer=False) is None
+    assert check_assumptions(Dummy(integer=False), integer=True) is False
+    assert check_assumptions(Dummy(integer=True), integer=False) is False
+    # no T/F assumptions to check
+    assert check_assumptions(Dummy(integer=False), integer=None) is True
+    raises(ValueError, lambda: check_assumptions(2*x, x, positive=True))
+
+
+def test_failing_assumptions():
+    x = Symbol('x', positive=True)
+    y = Symbol('y')
+    assert failing_assumptions(6*x + y, **x.assumptions0) == \
+    {'real': None, 'imaginary': None, 'complex': None,
+    'positive': None, 'nonpositive': None, 'nonnegative': None, 'nonzero': None,
+    'negative': None, 'zero': None, 'extended_real': None, 'finite': None,
+    'infinite': None, 'extended_negative': None, 'extended_nonnegative': None,
+    'extended_nonpositive': None, 'extended_nonzero': None,
+    'extended_positive': None }
+
+
+def test_common_assumptions():
+    assert common_assumptions([0, 1, 2]
+        ) == {'algebraic': True, 'irrational': False, 'extended_real': True, 'real': True, 'extended_negative':
+        False, 'extended_nonnegative': True, 'integer': True,
+        'rational': True, 'imaginary': False, 'complex': True,
+        'commutative': True,'noninteger': False, 'composite': False,
+        'infinite': False, 'nonnegative': True, 'finite': True,
+        'transcendental': False,'negative': False}
+    assert common_assumptions([0, 1, 2], 'positive integer'.split()
+        ) == {'integer': True}
+    assert common_assumptions([0, 1, 2], []) == {}
+    assert common_assumptions([], ['integer']) == {}
+    assert common_assumptions([0], ['integer']) == {'integer': True}
+
+def test_pre_generated_assumption_rules_are_valid():
+    # check the pre-generated assumptions match freshly generated assumptions
+    # if this check fails, consider updating the assumptions
+    # see sympy.core.assumptions._generate_assumption_rules
+    pre_generated_assumptions =_load_pre_generated_assumption_rules()
+    generated_assumptions =_generate_assumption_rules()
+    assert pre_generated_assumptions._to_python() == generated_assumptions._to_python(), "pre-generated assumptions are invalid, see sympy.core.assumptions._generate_assumption_rules"
+
+
+def test_ask_shuffle():
+    grp = PermutationGroup(Permutation(1, 0, 2), Permutation(2, 1, 3))
+
+    seed(123)
+    first = grp.random()
+    seed(123)
+    simplify(I)
+    second = grp.random()
+    seed(123)
+    simplify(-I)
+    third = grp.random()
+
+    assert first == second == third

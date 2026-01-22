@@ -2,11 +2,29 @@ from functools import reduce
 import itertools
 from operator import add
 
-from sympy import (
-    Add, Mul, Pow, Symbol, exp, sqrt, symbols, sympify, cse,
-    Matrix, S, cos, sin, Eq, Function, Tuple, CRootOf,
-    IndexedBase, Idx, Piecewise, O
-)
+from sympy.codegen.matrix_nodes import MatrixSolve
+from sympy.core.add import Add
+from sympy.core.containers import Tuple
+from sympy.core.expr import UnevaluatedExpr
+from sympy.core.function import Function
+from sympy.core.mul import Mul
+from sympy.core.power import Pow
+from sympy.core.relational import Eq
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.core.sympify import sympify
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.matrices.dense import Matrix
+from sympy.matrices.expressions import Inverse, MatAdd, MatMul, Transpose
+from sympy.polys.rootoftools import CRootOf
+from sympy.series.order import O
+from sympy.simplify.cse_main import cse
+from sympy.simplify.simplify import signsimp
+from sympy.tensor.indexed import (Idx, IndexedBase)
+
 from sympy.core.function import count_ops
 from sympy.simplify.cse_opts import sub_pre, sub_post
 from sympy.functions.special.hyper import meijerg
@@ -90,6 +108,7 @@ def test_cse_single2():
     subst_half, (red_half,) = cse(0.5)  # issue 15082
     assert len(subst_half) == 0 and red_half == 0.5
 
+
 def test_cse_not_possible():
     # No substitution possible.
     e = Add(x, y)
@@ -127,6 +146,8 @@ def test_subtraction_opt():
     e = n/x/(-n)**2 - 1/n/x
     assert cse(e, optimizations=[(cse_opts.sub_pre, cse_opts.sub_post)]) == \
         ([], [0])
+    assert cse(((w + x + y + z)*(w - y - z))/(w + x)**3) == \
+        ([(x0, w + x), (x1, y + z)], [(w - x1)*(x0 + x1)/x0**3])
 
 
 def test_multiple_expressions():
@@ -225,8 +246,16 @@ def test_issue_6263():
     assert cse(e, optimizations='basic') == ([], [True])
 
 
+def test_issue_25043():
+    c = symbols("c")
+    x = symbols("x0", real=True)
+    cse_expr = cse(c*x**2 + c*(x**4 - x**2))[-1][-1]
+    free = cse_expr.free_symbols
+    assert len(free) == len({i.name for i in free})
+
+
 def test_dont_cse_tuples():
-    from sympy import Subs
+    from sympy.core.function import Subs
     f = Function("f")
     g = Function("g")
 
@@ -292,11 +321,11 @@ def test_issue_4499():
         -2*a))
     c = cse(t)
     ans = (
-        [(x0, 2*a), (x1, -b), (x2, x0 + x1), (x3, x2 + 1), (x4, sqrt(z)), (x5,
-        B(b - 1, x4)), (x6, -x0), (x7, (x4/2)**(x6 + 1)*G(b)*G(x3)), (x8,
-        x7*B(x2, x4)), (x9, B(b, x4)), (x10, x7*B(x3, x4))],
-        [(a, a + S.Half, x0, b, x3, x5*x8, x4*x8*x9, x10*x4*x5, x10*x9,
-        1, 0, S.Half, z/2, x1 + 1, b + x6, x6)])
+        [(x0, 2*a), (x1, -b + x0), (x2, x1 + 1), (x3, b - 1), (x4, sqrt(z)),
+         (x5, B(x3, x4)), (x6, (x4/2)**(1 - x0)*G(b)*G(x2)), (x7, x6*B(x1, x4)),
+         (x8, B(b, x4)), (x9, x6*B(x2, x4))],
+        [(a, a + S.Half, x0, b, x2, x5*x7, x4*x7*x8, x4*x5*x9, x8*x9,
+          1, 0, S.Half, z/2, -x3, -x1, -x0)])
     assert ans == c
 
 
@@ -329,8 +358,11 @@ def test_cse_MatrixSymbol():
     B = MatrixSymbol("B", n, n)
     assert cse(B) == ([], [B])
 
+    assert cse(A[0] * A[0]) == ([], [A[0]*A[0]])
+
+    assert cse(A[0,0]*A[0,1] + A[0,0]*A[0,1]*A[0,2]) == ([(x0, A[0, 0]*A[0, 1])], [x0*A[0, 2] + x0])
+
 def test_cse_MatrixExpr():
-    from sympy import MatrixSymbol
     A = MatrixSymbol('A', 3, 3)
     y = MatrixSymbol('y', 3, 1)
 
@@ -345,11 +377,12 @@ def test_cse_MatrixExpr():
     replacements, reduced_exprs = cse([A**2, A + A**2])
     assert replacements
 
+
 def test_Piecewise():
     f = Piecewise((-z + x*y, Eq(y, 0)), (-z - x*y, True))
     ans = cse(f)
-    actual_ans = ([(x0, -z), (x1, x*y)],
-        [Piecewise((x0 + x1, Eq(y, 0)), (x0 - x1, True))])
+    actual_ans = ([(x0, x*y)],
+        [Piecewise((x0 - z, Eq(y, 0)), (-z - x0, True))])
     assert ans == actual_ans
 
 
@@ -436,7 +469,7 @@ def test_issue_11230():
     assert not any(i.is_Mul for a in C for i in a.args)
 
     # random tests for the issue
-    from random import choice
+    from sympy.core.random import choice
     from sympy.core.function import expand_mul
     s = symbols('a:m')
     # 35 Mul tests, none of which should ever fail
@@ -470,7 +503,7 @@ def test_issue_11577():
     def check(eq):
         r, c = cse(eq)
         assert eq.count_ops() >= \
-            len(r) + sum([i[1].count_ops() for i in r]) + \
+            len(r) + sum(i[1].count_ops() for i in r) + \
             count_ops(c)
 
     eq = x**5*y**2 + x**5*y + x**5
@@ -501,6 +534,7 @@ def test_cse_ignore():
     assert not any(y in sub.free_symbols for _, sub in subst2), "Sub-expressions containing y must be ignored"
     assert any(sub - sqrt(x + 1) == 0 for _, sub in subst2), "cse failed to identify sqrt(x + 1) as sub-expression"
 
+
 def test_cse_ignore_issue_15002():
     l = [
         w*exp(x)*exp(-z),
@@ -509,6 +543,20 @@ def test_cse_ignore_issue_15002():
     substs, reduced = cse(l, ignore=(x,))
     rl = [e.subs(reversed(substs)) for e in reduced]
     assert rl == l
+
+
+def test_cse_unevaluated():
+    xp1 = UnevaluatedExpr(x + 1)
+    # This used to cause RecursionError
+    [(x0, ue)], [red] = cse([(-1 - xp1) / (1 - xp1)])
+    if ue == xp1:
+        assert red == (-1 - x0) / (1 - x0)
+    elif ue == -xp1:
+        assert red == (-1 + x0) / (1 + x0)
+    else:
+        msg = f'Expected common subexpression {xp1} or {-xp1}, instead got {ue}'
+        assert False, msg
+
 
 def test_cse__performance():
     nexprs, nterms = 3, 20
@@ -527,7 +575,7 @@ def test_cse__performance():
 def test_issue_12070():
     exprs = [x + y, 2 + x + y, x + y + z, 3 + x + y + z]
     subst, red = cse(exprs)
-    assert 6 >= (len(subst) + sum([v.count_ops() for k, v in subst]) +
+    assert 6 >= (len(subst) + sum(v.count_ops() for k, v in subst) +
                  count_ops(red))
 
 
@@ -545,3 +593,169 @@ def test_issue_18203():
 def test_unevaluated_mul():
     eq = Mul(x + y, x + y, evaluate=False)
     assert cse(eq) == ([(x0, x + y)], [x0**2])
+
+
+def test_cse_release_variables():
+    from sympy.simplify.cse_main import cse_release_variables
+    _0, _1, _2, _3, _4 = symbols('_:5')
+    eqs = [(x + y - 1)**2, x,
+        x + y, (x + y)/(2*x + 1) + (x + y - 1)**2,
+        (2*x + 1)**(x + y)]
+    r, e = cse(eqs, postprocess=cse_release_variables)
+    # this can change in keeping with the intention of the function
+    assert r, e == ([
+    (x0, x + y), (x1, (x0 - 1)**2), (x2, 2*x + 1),
+    (_3, x0/x2 + x1), (_4, x2**x0), (x2, None), (_0, x1),
+    (x1, None), (_2, x0), (x0, None), (_1, x)], (_0, _1, _2, _3, _4))
+    r.reverse()
+    r = [(s, v) for s, v in r if v is not None]
+    assert eqs == [i.subs(r) for i in e]
+
+
+def test_cse_list():
+    _cse = lambda x: cse(x, list=False)
+    assert _cse(x) == ([], x)
+    assert _cse('x') == ([], 'x')
+    it = [x]
+    for c in (list, tuple, set):
+        assert _cse(c(it)) == ([], c(it))
+    #Tuple works different from tuple:
+    assert _cse(Tuple(*it)) == ([], Tuple(*it))
+    d = {x: 1}
+    assert _cse(d) == ([], d)
+
+def test_issue_18991():
+    A = MatrixSymbol('A', 2, 2)
+    assert signsimp(-A * A - A) == -A * A - A
+
+
+def test_unevaluated_Mul():
+    m = [Mul(1, 2, evaluate=False)]
+    assert cse(m) == ([], m)
+
+
+def test_cse_matrix_expression_inverse():
+    A = ImmutableDenseMatrix(symbols('A:4')).reshape(2, 2)
+    x = Inverse(A)
+    cse_expr = cse(x)
+    assert cse_expr == ([], [Inverse(A)])
+
+
+def test_cse_matrix_expression_matmul_inverse():
+    A = ImmutableDenseMatrix(symbols('A:4')).reshape(2, 2)
+    b = ImmutableDenseMatrix(symbols('b:2'))
+    x = MatMul(Inverse(A), b)
+    cse_expr = cse(x)
+    assert cse_expr == ([], [x])
+
+
+def test_cse_matrix_negate_matrix():
+    A = ImmutableDenseMatrix(symbols('A:4')).reshape(2, 2)
+    x = MatMul(S.NegativeOne, A)
+    cse_expr = cse(x)
+    assert cse_expr == ([], [x])
+
+
+def test_cse_matrix_negate_matmul_not_extracted():
+    A = ImmutableDenseMatrix(symbols('A:4')).reshape(2, 2)
+    B = ImmutableDenseMatrix(symbols('B:4')).reshape(2, 2)
+    x = MatMul(S.NegativeOne, A, B)
+    cse_expr = cse(x)
+    assert cse_expr == ([], [x])
+
+
+@XFAIL  # No simplification rule for nested associative operations
+def test_cse_matrix_nested_matmul_collapsed():
+    A = ImmutableDenseMatrix(symbols('A:4')).reshape(2, 2)
+    B = ImmutableDenseMatrix(symbols('B:4')).reshape(2, 2)
+    x = MatMul(S.NegativeOne, MatMul(A, B))
+    cse_expr = cse(x)
+    assert cse_expr == ([], [MatMul(S.NegativeOne, A, B)])
+
+
+def test_cse_matrix_optimize_out_single_argument_mul():
+    A = ImmutableDenseMatrix(symbols('A:4')).reshape(2, 2)
+    x = MatMul(MatMul(MatMul(A)))
+    cse_expr = cse(x)
+    assert cse_expr == ([], [A])
+
+
+@XFAIL  # Multiple simplification passed not supported in CSE
+def test_cse_matrix_optimize_out_single_argument_mul_combined():
+    A = ImmutableDenseMatrix(symbols('A:4')).reshape(2, 2)
+    x = MatAdd(MatMul(MatMul(MatMul(A))), MatMul(MatMul(A)), MatMul(A), A)
+    cse_expr = cse(x)
+    assert cse_expr == ([], [MatMul(4, A)])
+
+
+def test_cse_matrix_optimize_out_single_argument_add():
+    A = ImmutableDenseMatrix(symbols('A:4')).reshape(2, 2)
+    x = MatAdd(MatAdd(MatAdd(MatAdd(A))))
+    cse_expr = cse(x)
+    assert cse_expr == ([], [A])
+
+
+@XFAIL  # Multiple simplification passed not supported in CSE
+def test_cse_matrix_optimize_out_single_argument_add_combined():
+    A = ImmutableDenseMatrix(symbols('A:4')).reshape(2, 2)
+    x = MatMul(MatAdd(MatAdd(MatAdd(A))), MatAdd(MatAdd(A)), MatAdd(A), A)
+    cse_expr = cse(x)
+    assert cse_expr == ([], [MatMul(4, A)])
+
+
+def test_cse_matrix_expression_matrix_solve():
+    A = ImmutableDenseMatrix(symbols('A:4')).reshape(2, 2)
+    b = ImmutableDenseMatrix(symbols('b:2'))
+    x = MatrixSolve(A, b)
+    cse_expr = cse(x)
+    assert cse_expr == ([], [x])
+
+
+def test_cse_matrix_matrix_expression():
+    X = ImmutableDenseMatrix(symbols('X:4')).reshape(2, 2)
+    y = ImmutableDenseMatrix(symbols('y:2'))
+    b = MatMul(Inverse(MatMul(Transpose(X), X)), Transpose(X), y)
+    cse_expr = cse(b)
+    x0 = MatrixSymbol('x0', 2, 2)
+    reduced_expr_expected = MatMul(Inverse(MatMul(x0, X)), x0, y)
+    assert cse_expr == ([(x0, Transpose(X))], [reduced_expr_expected])
+
+
+def test_cse_matrix_kalman_filter():
+    """Kalman Filter example from Matthew Rocklin's SciPy 2013 talk.
+
+    Talk titled: "Matrix Expressions and BLAS/LAPACK; SciPy 2013 Presentation"
+
+    Video: https://pyvideo.org/scipy-2013/matrix-expressions-and-blaslapack-scipy-2013-pr.html
+
+    Notes
+    =====
+
+    Equations are:
+
+    new_mu = mu + Sigma*H.T * (R + H*Sigma*H.T).I * (H*mu - data)
+           = MatAdd(mu, MatMul(Sigma, Transpose(H), Inverse(MatAdd(R, MatMul(H, Sigma, Transpose(H)))), MatAdd(MatMul(H, mu), MatMul(S.NegativeOne, data))))
+    new_Sigma = Sigma - Sigma*H.T * (R + H*Sigma*H.T).I * H * Sigma
+              = MatAdd(Sigma, MatMul(S.NegativeOne, Sigma, Transpose(H)), Inverse(MatAdd(R, MatMul(H*Sigma*Transpose(H)))), H, Sigma))
+
+    """
+    N = 2
+    mu = ImmutableDenseMatrix(symbols(f'mu:{N}'))
+    Sigma = ImmutableDenseMatrix(symbols(f'Sigma:{N * N}')).reshape(N, N)
+    H = ImmutableDenseMatrix(symbols(f'H:{N * N}')).reshape(N, N)
+    R = ImmutableDenseMatrix(symbols(f'R:{N * N}')).reshape(N, N)
+    data = ImmutableDenseMatrix(symbols(f'data:{N}'))
+    new_mu = MatAdd(mu, MatMul(Sigma, Transpose(H), Inverse(MatAdd(R, MatMul(H, Sigma, Transpose(H)))), MatAdd(MatMul(H, mu), MatMul(S.NegativeOne, data))))
+    new_Sigma = MatAdd(Sigma, MatMul(S.NegativeOne, Sigma, Transpose(H), Inverse(MatAdd(R, MatMul(H, Sigma, Transpose(H)))), H, Sigma))
+    cse_expr = cse([new_mu, new_Sigma])
+    x0 = MatrixSymbol('x0', N, N)
+    x1 = MatrixSymbol('x1', N, N)
+    replacements_expected = [
+        (x0, Transpose(H)),
+        (x1, Inverse(MatAdd(R, MatMul(H, Sigma, x0)))),
+    ]
+    reduced_exprs_expected = [
+        MatAdd(mu, MatMul(Sigma, x0, x1, MatAdd(MatMul(H, mu), MatMul(S.NegativeOne, data)))),
+        MatAdd(Sigma, MatMul(S.NegativeOne, Sigma, x0, x1, H, Sigma)),
+    ]
+    assert cse_expr == (replacements_expected, reduced_exprs_expected)

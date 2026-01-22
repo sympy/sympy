@@ -4,7 +4,7 @@ from sympy.vector.coordsysrect import CoordSys3D
 from sympy.simplify import simplify
 from sympy.core.symbol import symbols
 from sympy.core import S
-from sympy import sin, cos
+from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.vector.vector import Dot
 from sympy.vector.operators import curl, divergence, gradient, Gradient, Divergence, Cross
 from sympy.vector.deloperator import Del
@@ -115,7 +115,6 @@ def test_del_operator():
                             2*x*z*i + 2*x*z*j + 2*x*z*k
 
 
-
 def test_product_rules():
     """
     Tests the six product rules defined with respect to the Del
@@ -162,8 +161,8 @@ def test_product_rules():
 
     # Sixth product rule
     lhs = (delop ^ (u ^ v)).doit()
-    rhs = ((u * (delop & v) - v * (delop & u) +
-           (v & delop)(u) - (u & delop)(v))).doit()
+    rhs = (u * (delop & v) - v * (delop & u) +
+           (v & delop)(u) - (u & delop)(v)).doit()
     assert simplify(lhs) == simplify(rhs)
 
 
@@ -290,7 +289,7 @@ def test_mixed_coordinates():
     b = CoordSys3D('b')
     c = CoordSys3D('c')
     assert gradient(a.x*b.y) == b.y*a.i + a.x*b.j
-    assert gradient(3*cos(q)*a.x*b.x+a.y*(a.x+((cos(q)+b.x)))) ==\
+    assert gradient(3*cos(q)*a.x*b.x+a.y*(a.x+(cos(q)+b.x))) ==\
            (a.y + 3*b.x*cos(q))*a.i + (a.x + b.x + cos(q))*a.j + (3*a.x*cos(q) + a.y)*b.i
     # Some tests need further work:
     # assert gradient(a.x*(cos(a.x+b.x))) == (cos(a.x + b.x))*a.i + a.x*Gradient(cos(a.x + b.x))

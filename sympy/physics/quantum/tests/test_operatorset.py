@@ -1,4 +1,4 @@
-from sympy import S
+from sympy.core.singleton import S
 
 from sympy.physics.quantum.operatorset import (
     operators_to_state, state_to_operators

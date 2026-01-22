@@ -1,8 +1,26 @@
 from sympy.physics.mechanics import (dynamicsymbols, ReferenceFrame, Point,
                                     RigidBody, LagrangesMethod, Particle,
                                     inertia, Lagrangian)
-from sympy import symbols, pi, sin, cos, tan, simplify, Function, \
-        Derivative, Matrix
+from sympy.core.function import (Derivative, Function)
+from sympy.core.numbers import pi
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.trigonometric import (cos, sin, tan)
+from sympy.matrices.dense import Matrix
+from sympy.simplify.simplify import simplify
+from sympy.testing.pytest import raises
+
+
+def test_invalid_coordinates():
+    # Simple pendulum, but use symbol instead of dynamicsymbol
+    l, m, g = symbols('l m g')
+    q = symbols('q')  # Generalized coordinate
+    N, O = ReferenceFrame('N'), Point('O')
+    O.set_vel(N, 0)
+    P = Particle('P', Point('P'), m)
+    P.point.set_pos(O, l * (sin(q) * N.x - cos(q) * N.y))
+    P.potential_energy = m * g * P.point.pos_from(O).dot(N.y)
+    L = Lagrangian(N, P)
+    raises(ValueError, lambda: LagrangesMethod(L, [q], bodies=P))
 
 
 def test_disc_on_an_incline_plane():
@@ -121,7 +139,7 @@ def test_nonminimal_pendulum():
     assert LM.eom == eom_sol
     # Check multiplier solution
     lam_sol = Matrix([(19.6*q1 + 2*q1d**2 + 2*q2d**2)/(4*q1**2/m + 4*q2**2/m)])
-    assert LM.solve_multipliers(sol_type='Matrix') == lam_sol
+    assert simplify(LM.solve_multipliers(sol_type='Matrix')) == simplify(lam_sol)
 
 
 def test_dub_pen():

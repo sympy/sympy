@@ -1,12 +1,13 @@
 """Sparse rational function fields. """
 
-from __future__ import print_function, division
+from __future__ import annotations
 
-from typing import Any, Dict
+from typing import Generic, Protocol, Any, TYPE_CHECKING
+
+from functools import reduce
 
 from operator import add, mul, lt, le, gt, ge
 
-from sympy.core.compatibility import is_sequence, reduce
 from sympy.core.expr import Expr
 from sympy.core.mod import Mod
 from sympy.core.numbers import Exp1
@@ -14,18 +15,32 @@ from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import CantSympify, sympify
 from sympy.functions.elementary.exponential import ExpBase
+from sympy.polys.domains.domain import Domain, Er, Es
 from sympy.polys.domains.domainelement import DomainElement
 from sympy.polys.domains.fractionfield import FractionField
 from sympy.polys.domains.polynomialring import PolynomialRing
 from sympy.polys.constructor import construct_domain
-from sympy.polys.orderings import lex
+from sympy.polys.orderings import lex, MonomialOrder
 from sympy.polys.polyerrors import CoercionFailed
 from sympy.polys.polyoptions import build_options
 from sympy.polys.polyutils import _parallel_dict_from_expr
-from sympy.polys.rings import PolyElement
+from sympy.polys.rings import PolyRing, PolyElement
 from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
+from sympy.utilities.iterables import is_sequence
 from sympy.utilities.magic import pollute
+
+if TYPE_CHECKING:
+    from sympy.polys.domains.field import Field
+
+
+class FracElementConstructor(Protocol[Er]):
+    def __call__(self,
+        numer: PolyElement[Er],
+        denom: PolyElement[Er] | None = None, /,
+    ) -> FracElement[Er]:
+        ...
+
 
 @public
 def field(symbols, domain, order=lex):
@@ -33,11 +48,13 @@ def field(symbols, domain, order=lex):
     _field = FracField(symbols, domain, order)
     return (_field,) + _field.gens
 
+
 @public
 def xfield(symbols, domain, order=lex):
     """Construct new rational function field returning (field, (x1, ..., xn)). """
     _field = FracField(symbols, domain, order)
     return (_field, _field.gens)
+
 
 @public
 def vfield(symbols, domain, order=lex):
@@ -45,6 +62,7 @@ def vfield(symbols, domain, order=lex):
     _field = FracField(symbols, domain, order)
     pollute([ sym.name for sym in _field.symbols ], _field.gens)
     return _field
+
 
 @public
 def sfield(exprs, *symbols, **options):
@@ -54,16 +72,16 @@ def sfield(exprs, *symbols, **options):
     Parameters
     ==========
 
-    exprs : :class:`Expr` or sequence of :class:`Expr` (sympifiable)
-    symbols : sequence of :class:`Symbol`/:class:`Expr`
-    options : keyword arguments understood by :class:`Options`
+    exprs   : py:class:`~.Expr` or sequence of :py:class:`~.Expr` (sympifiable)
+
+    symbols : sequence of :py:class:`~.Symbol`/:py:class:`~.Expr`
+
+    options : keyword arguments understood by :py:class:`~.Options`
 
     Examples
     ========
 
-    >>> from sympy.core import symbols
-    >>> from sympy.functions import exp, log
-    >>> from sympy.polys.fields import sfield
+    >>> from sympy import exp, log, symbols, sfield
 
     >>> x = symbols("x")
     >>> K, f = sfield((x*log(x) + 4*x**2)*exp(1/x + log(x)/3)/x**2)
@@ -99,13 +117,28 @@ def sfield(exprs, *symbols, **options):
     else:
         return (_field, fracs)
 
-_field_cache = {}  # type: Dict[Any, Any]
 
-class FracField(DefaultPrinting):
+class FracField(DefaultPrinting, Generic[Er]):
     """Multivariate distributed rational function field. """
 
-    def __new__(cls, symbols, domain, order=lex):
-        from sympy.polys.rings import PolyRing
+    ring: PolyRing[Er]
+    gens: tuple[FracElement[Er], ...]
+    symbols: tuple[Expr, ...]
+    ngens: int
+    domain: Domain[Er]
+    order: MonomialOrder
+    zero: FracElement[Er]
+    one: FracElement[Er]
+    dtype: FracElementConstructor[Er]
+    _hash: int
+    _hash_tuple: Any
+
+    def __new__(cls,
+                symbols,
+                domain: Domain[Er],
+                order: str | MonomialOrder | None = lex
+            ) -> FracField[Er]:
+
         ring = PolyRing(symbols, domain, order)
         symbols = ring.symbols
         ngens = ring.ngens
@@ -113,32 +146,29 @@ class FracField(DefaultPrinting):
         order = ring.order
 
         _hash_tuple = (cls.__name__, symbols, ngens, domain, order)
-        obj = _field_cache.get(_hash_tuple)
 
-        if obj is None:
-            obj = object.__new__(cls)
-            obj._hash_tuple = _hash_tuple
-            obj._hash = hash(_hash_tuple)
-            obj.ring = ring
-            obj.dtype = type("FracElement", (FracElement,), {"field": obj})
-            obj.symbols = symbols
-            obj.ngens = ngens
-            obj.domain = domain
-            obj.order = order
+        obj = object.__new__(cls)
+        obj._hash_tuple = _hash_tuple
+        obj._hash = hash(_hash_tuple)
+        obj.ring = ring
+        obj.symbols = symbols
+        obj.ngens = ngens
+        obj.domain = domain
+        obj.order = order
 
-            obj.zero = obj.dtype(ring.zero)
-            obj.one = obj.dtype(ring.one)
+        obj.dtype = FracElement(obj, ring.zero).raw_new
 
-            obj.gens = obj._gens()
+        obj.zero = obj.dtype(ring.zero)
+        obj.one = obj.dtype(ring.one)
 
-            for symbol, generator in zip(obj.symbols, obj.gens):
-                if isinstance(symbol, Symbol):
-                    name = symbol.name
+        obj.gens = obj._gens()
 
-                    if not hasattr(obj, name):
-                        setattr(obj, name, generator)
+        for symbol, generator in zip(obj.symbols, obj.gens):
+            if isinstance(symbol, Symbol):
+                name = symbol.name
 
-            _field_cache[_hash_tuple] = obj
+                if not hasattr(obj, name):
+                    setattr(obj, name, generator)
 
         return obj
 
@@ -152,6 +182,12 @@ class FracField(DefaultPrinting):
     def __hash__(self):
         return self._hash
 
+    def index(self, gen):
+        if self.is_element(gen):
+            return self.ring.index(gen.to_poly())
+        else:
+            raise ValueError("expected a %s, got %s instead" % (self.dtype,gen))
+
     def __eq__(self, other):
         return isinstance(other, FracField) and \
             (self.symbols, self.ngens, self.domain, self.order) == \
@@ -160,17 +196,27 @@ class FracField(DefaultPrinting):
     def __ne__(self, other):
         return not self == other
 
-    def raw_new(self, numer, denom=None):
+    def is_element(self, element):
+        """True if ``element`` is an element of this field. False otherwise. """
+        return isinstance(element, FracElement) and element.field == self
+
+    def raw_new(self,
+            numer: PolyElement[Er],
+            denom: PolyElement[Er] | None = None) -> FracElement[Er]:
         return self.dtype(numer, denom)
-    def new(self, numer, denom=None):
-        if denom is None: denom = self.ring.one
+
+    def new(self,
+            numer: PolyElement[Er],
+            denom: PolyElement[Er] | None = None) -> FracElement[Er]:
+        if denom is None:
+            denom = self.ring.one
         numer, denom = numer.cancel(denom)
         return self.raw_new(numer, denom)
 
-    def domain_new(self, element):
+    def domain_new(self, element) -> Er:
         return self.domain.convert(element)
 
-    def ground_new(self, element):
+    def ground_new(self, element) -> FracElement[Er]:
         try:
             return self.new(self.ring.ground_new(element))
         except CoercionFailed:
@@ -178,7 +224,7 @@ class FracField(DefaultPrinting):
 
             if not domain.is_Field and domain.has_assoc_Field:
                 ring = self.ring
-                ground_field = domain.get_field()
+                ground_field: Field = domain.get_field()
                 element = ground_field.convert(element)
                 numer = ring.ground_new(ground_field.numer(element))
                 denom = ring.ground_new(ground_field.denom(element))
@@ -186,15 +232,31 @@ class FracField(DefaultPrinting):
             else:
                 raise
 
-    def field_new(self, element):
+    def field_new(self, element) -> FracElement[Er]:
         if isinstance(element, FracElement):
             if self == element.field:
                 return element
+
+            if isinstance(self.domain, FractionField) and \
+                self.domain.field == element.field:
+                return self.ground_new(element)
+            elif isinstance(self.domain, PolynomialRing) and \
+                self.domain.ring.to_field() == element.field:
+                return self.ground_new(element)
             else:
                 raise NotImplementedError("conversion")
         elif isinstance(element, PolyElement):
             denom, numer = element.clear_denoms()
-            numer = numer.set_ring(self.ring)
+
+            if isinstance(self.domain, PolynomialRing) and \
+                numer.ring == self.domain.ring:
+                numer = self.ring.ground_new(numer)
+            elif isinstance(self.domain, FractionField) and \
+                numer.ring == self.domain.field.to_ring():
+                numer = self.ring.ground_new(numer)
+            else:
+                numer = numer.set_ring(self.ring)
+
             denom = self.ring.ground_new(denom)
             return self.raw_new(numer, denom)
         elif isinstance(element, tuple) and len(element) == 2:
@@ -231,6 +293,8 @@ class FracField(DefaultPrinting):
                         return mapping.get(gen)**int(e/eg)
                 if e.is_Integer and e is not S.One:
                     return _rebuild(b)**int(e)
+            elif mapping.get(1/expr) is not None:
+                return 1/mapping.get(1/expr)
 
             try:
                 return domain.convert(expr)
@@ -240,39 +304,45 @@ class FracField(DefaultPrinting):
                 else:
                     raise
 
-        return _rebuild(sympify(expr))
+        return _rebuild(expr)
 
-    def from_expr(self, expr):
+    def from_expr(self, expr: Expr) -> FracElement[Er]:
         mapping = dict(list(zip(self.symbols, self.gens)))
 
         try:
-            frac = self._rebuild_expr(expr, mapping)
+            frac = self._rebuild_expr(sympify(expr), mapping)
         except CoercionFailed:
             raise ValueError("expected an expression convertible to a rational function in %s, got %s" % (self, expr))
         else:
             return self.field_new(frac)
 
-    def to_domain(self):
+    def to_domain(self) -> FractionField[Er]:
         return FractionField(self)
 
-    def to_ring(self):
-        from sympy.polys.rings import PolyRing
+    def to_ring(self) -> PolyRing[Er]:
         return PolyRing(self.symbols, self.domain, self.order)
 
-class FracElement(DomainElement, DefaultPrinting, CantSympify):
+
+class FracElement(DomainElement, DefaultPrinting, CantSympify, Generic[Er]):
     """Element of multivariate distributed rational function field. """
 
-    def __init__(self, numer, denom=None):
+    def __init__(self,
+                 field: FracField[Er],
+                 numer: PolyElement[Er],
+                 denom: PolyElement[Er] | None = None) -> None:
         if denom is None:
-            denom = self.field.ring.one
+            denom = field.ring.one
         elif not denom:
             raise ZeroDivisionError("zero denominator")
 
+        self.field = field
         self.numer = numer
         self.denom = denom
 
-    def raw_new(f, numer, denom):
-        return f.__class__(numer, denom)
+    def raw_new(f, numer: PolyElement[Er],
+                   denom: PolyElement[Er] | None = None) -> FracElement[Er]:
+        return f.__class__(f.field, numer, denom)
+
     def new(f, numer, denom):
         return f.raw_new(*numer.cancel(denom))
 
@@ -298,16 +368,16 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
     def copy(self):
         return self.raw_new(self.numer.copy(), self.denom.copy())
 
-    def set_field(self, new_field):
+    def set_field(self, new_field: FracField[Es]) -> FracElement[Es]:
         if self.field == new_field:
-            return self
+            return self # type: ignore
         else:
             new_ring = new_field.ring
             numer = self.numer.set_ring(new_ring)
             denom = self.denom.set_ring(new_ring)
             return new_field.new(numer, denom)
 
-    def as_expr(self, *symbols):
+    def as_expr(self, *symbols) -> Expr:
         return self.numer.as_expr(*symbols)/self.denom.as_expr(*symbols)
 
     def __eq__(f, g):
@@ -319,16 +389,14 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
     def __ne__(f, g):
         return not f == g
 
-    def __nonzero__(f):
+    def __bool__(f):
         return bool(f.numer)
-
-    __bool__ = __nonzero__
 
     def sort_key(self):
         return (self.denom.sort_key(), self.numer.sort_key())
 
     def _cmp(f1, f2, op):
-        if isinstance(f2, f1.field.dtype):
+        if f1.field.is_element(f2):
             return op(f1.sort_key(), f2.sort_key())
         else:
             return NotImplemented
@@ -378,12 +446,12 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
             return f
         elif not f:
             return g
-        elif isinstance(g, field.dtype):
+        elif field.is_element(g):
             if f.denom == g.denom:
                 return f.new(f.numer + g.numer, f.denom)
             else:
                 return f.new(f.numer*g.denom + f.denom*g.numer, f.denom*g.denom)
-        elif isinstance(g, field.ring.dtype):
+        elif field.ring.is_element(g):
             return f.new(f.numer + f.denom*g, f.denom)
         else:
             if isinstance(g, FracElement):
@@ -402,7 +470,7 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
         return f.__radd__(g)
 
     def __radd__(f, c):
-        if isinstance(c, f.field.ring.dtype):
+        if f.field.ring.is_element(c):
             return f.new(f.numer + f.denom*c, f.denom)
 
         op, g_numer, g_denom = f._extract_ground(c)
@@ -422,12 +490,12 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
             return f
         elif not f:
             return -g
-        elif isinstance(g, field.dtype):
+        elif field.is_element(g):
             if f.denom == g.denom:
                 return f.new(f.numer - g.numer, f.denom)
             else:
                 return f.new(f.numer*g.denom - f.denom*g.numer, f.denom*g.denom)
-        elif isinstance(g, field.ring.dtype):
+        elif field.ring.is_element(g):
             return f.new(f.numer - f.denom*g, f.denom)
         else:
             if isinstance(g, FracElement):
@@ -453,7 +521,7 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
             return f.new(f.numer*g_denom - f.denom*g_numer, f.denom*g_denom)
 
     def __rsub__(f, c):
-        if isinstance(c, f.field.ring.dtype):
+        if f.field.ring.is_element(c):
             return f.new(-f.numer + f.denom*c, f.denom)
 
         op, g_numer, g_denom = f._extract_ground(c)
@@ -471,9 +539,9 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
 
         if not f or not g:
             return field.zero
-        elif isinstance(g, field.dtype):
+        elif field.is_element(g):
             return f.new(f.numer*g.numer, f.denom*g.denom)
-        elif isinstance(g, field.ring.dtype):
+        elif field.ring.is_element(g):
             return f.new(f.numer*g, f.denom)
         else:
             if isinstance(g, FracElement):
@@ -492,7 +560,7 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
         return f.__rmul__(g)
 
     def __rmul__(f, c):
-        if isinstance(c, f.field.ring.dtype):
+        if f.field.ring.is_element(c):
             return f.new(f.numer*c, f.denom)
 
         op, g_numer, g_denom = f._extract_ground(c)
@@ -510,9 +578,9 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
 
         if not g:
             raise ZeroDivisionError
-        elif isinstance(g, field.dtype):
+        elif field.is_element(g):
             return f.new(f.numer*g.denom, f.denom*g.numer)
-        elif isinstance(g, field.ring.dtype):
+        elif field.ring.is_element(g):
             return f.new(f.numer, f.denom*g)
         else:
             if isinstance(g, FracElement):
@@ -537,12 +605,10 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
         else:
             return f.new(f.numer*g_denom, f.denom*g_numer)
 
-    __div__ = __truediv__
-
     def __rtruediv__(f, c):
         if not f:
             raise ZeroDivisionError
-        elif isinstance(c, f.field.ring.dtype):
+        elif f.field.ring.is_element(c):
             return f.new(f.denom*c, f.numer)
 
         op, g_numer, g_denom = f._extract_ground(c)
@@ -553,8 +619,6 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
             return NotImplemented
         else:
             return f.new(f.denom*g_numer, f.numer*g_denom)
-
-    __rdiv__ = __rtruediv__
 
     def __pow__(f, n):
         """Raise ``f`` to a non-negative power ``n``. """

@@ -4,15 +4,13 @@
 Import diagnostics. Run bin/diagnose_imports.py --help for details.
 """
 
-from __future__ import print_function
-
-from typing import Dict
+from __future__ import annotations
 
 if __name__ == "__main__":
 
     import sys
     import inspect
-    from sympy.core.compatibility import builtins
+    import builtins
 
     import optparse
 
@@ -93,7 +91,7 @@ if __name__ == "__main__":
 
     builtin_import = builtins.__import__
 
-    class Definition(object):
+    class Definition:
         """Information about a symbol's definition."""
         def __init__(self, name, value, definer):
             self.name = name
@@ -110,11 +108,11 @@ if __name__ == "__main__":
                 repr(self.name), repr(self.definer))
 
     # Maps each function/variable to name of module to define it
-    symbol_definers = {}  # type: Dict[Definition, str]
+    symbol_definers: dict[Definition, str] = {}
 
     def in_module(a, b):
         """Is a the same module as or a submodule of b?"""
-        return a == b or a != None and b != None and a.startswith(b + '.')
+        return a == b or a is not None and b is not None and a.startswith(b + '.')
 
     def relevant(module):
         """Is module relevant for import checking?
@@ -125,7 +123,6 @@ if __name__ == "__main__":
     sorted_messages = []
 
     def msg(msg, *args):
-        global options, sorted_messages
         if options.by_process:
             print(msg % args)
         else:
@@ -145,7 +142,6 @@ if __name__ == "__main__":
         question was already imported.
 
         Keeps the semantics of __import__ unchanged."""
-        global options, symbol_definers
         caller_frame = inspect.getframeinfo(sys._getframe(1))
         importer_filename = caller_frame.filename
         importer_module = globals['__name__']
@@ -161,7 +157,7 @@ if __name__ == "__main__":
             for symbol in result.__dict__.iterkeys():
                 definition = Definition(
                     symbol, result.__dict__[symbol], importer_module)
-                if not definition in symbol_definers:
+                if definition not in symbol_definers:
                     symbol_definers[definition] = importee_module
             if hasattr(result, '__path__'):
                 ##PACKAGE##
@@ -173,19 +169,17 @@ if __name__ == "__main__":
                 else:
                     msg('Error: %s contains package import %s',
                         importer_reference, module)
-            if fromlist != None:
+            if fromlist is not None:
                 symbol_list = fromlist
                 if '*' in symbol_list:
-                    if (importer_filename.endswith('__init__.py')
-                        or importer_filename.endswith('__init__.pyc')
-                        or importer_filename.endswith('__init__.pyo')):
+                    if (importer_filename.endswith(("__init__.py", "__init__.pyc", "__init__.pyo"))):
                         # We do not check starred imports inside __init__
                         # That's the normal "please copy over its imports to my namespace"
                         symbol_list = []
                     else:
                         symbol_list = result.__dict__.iterkeys()
                 for symbol in symbol_list:
-                    if not symbol in result.__dict__:
+                    if symbol not in result.__dict__:
                         if options.by_origin:
                             msg('Error: %s.%s is not defined (yet), but %s tries to import it',
                                 importee_module, symbol, importer_reference)

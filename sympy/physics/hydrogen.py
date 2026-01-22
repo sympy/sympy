@@ -1,19 +1,29 @@
-from __future__ import print_function, division
-
-from sympy import factorial, sqrt, exp, S, assoc_laguerre, Float
-from sympy.functions.special.spherical_harmonics import Ynm
+from sympy.core.numbers import Float
+from sympy.core.singleton import S
+from sympy.functions.combinatorial.factorials import factorial
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.special.polynomials import assoc_laguerre
+from sympy.functions.special.spherical_harmonics import Ynm, Znm
 
 
 def R_nl(n, l, r, Z=1):
     """
     Returns the Hydrogen radial wavefunction R_{nl}.
 
-    n, l
-        quantum numbers 'n' and 'l'
-    r
-        radial coordinate
-    Z
-        atomic number (1 for Hydrogen, 2 for Helium, ...)
+    Parameters
+    ==========
+
+    n : integer
+        Principal Quantum Number which is
+        an integer with possible values as 1, 2, 3, 4,...
+    l : integer
+        ``l`` is the Angular Momentum Quantum Number with
+        values ranging from 0 to ``n-1``.
+    r :
+        Radial coordinate.
+    Z :
+        Atomic number (1 for Hydrogen, 2 for Helium, ...)
 
     Everything is in Hartree atomic units.
 
@@ -21,9 +31,7 @@ def R_nl(n, l, r, Z=1):
     ========
 
     >>> from sympy.physics.hydrogen import R_nl
-    >>> from sympy import var
-    >>> var("r Z")
-    (r, Z)
+    >>> from sympy.abc import r, Z
     >>> R_nl(1, 0, r, Z)
     2*sqrt(Z**3)*exp(-Z*r)
     >>> R_nl(2, 0, r, Z)
@@ -84,20 +92,164 @@ def R_nl(n, l, r, Z=1):
     return C * r0**l * assoc_laguerre(n_r, 2*l + 1, r0).expand() * exp(-r0/2)
 
 
+def Y_lm(l, m, phi, theta):
+    """
+    Returns the spherical harmonic or angular function Y_{l}^{m}.
+
+    Parameters
+    ==========
+
+    l : integer
+        ``l`` is the Angular Momentum Quantum Number with
+        values ranging from 0 to ``n-1``.
+    m : iteger
+        ``m`` is the Magnetic Quantum Number with values
+        ranging from ``-l`` to ``l``.
+    phi :
+        azimuthal angle
+    theta :
+        polar angle
+
+    Notes
+    =====
+
+    This function follows the Condon-Shortley phase convention and may return
+    real or complex values depending on values for ``l`` and ``m``.
+
+    Examples
+    ========
+
+    >>> import sympy
+    >>> from sympy.physics.hydrogen import Y_lm
+    >>> phi, theta = sympy.symbols('phi theta', real=True)
+    >>> Y_lm(1, 0, phi, theta)
+    sqrt(3)*cos(theta)/(2*sqrt(pi))
+    >>> Y_lm(2, -1, phi, theta).simplify()
+    sqrt(30)*exp(-I*phi)*sin(2*theta)/(8*sqrt(pi))
+    >>> Y_lm(1, -1, phi, theta).simplify()
+    sqrt(6)*exp(-I*phi)*sin(theta)/(4*sqrt(pi))
+    >>> Y_lm(1, 1, 0, 1).evalf()
+    -0.290723302201011
+
+    Find angular nodes in dz2 atomic orbital by solving for zero probability.
+    This returns the node theta angles in radians.
+
+    >>> dz2 = Y_lm(2, 0, phi, theta)**2
+    >>> [sol.evalf() for sol in sympy.solve(dz2)]
+    [4.0969092717143, 5.32786868905508, 2.18627603546528, 0.955316618124509]
+
+    See Also
+    ========
+
+    Z_lm, sympy.functions.special.spherical_harmonics.Ynm,
+    sympy.functions.special.spherical_harmonics.Ynm_c,
+    sympy.functions.special.spherical_harmonics.Znm
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Spherical_harmonics
+    .. [2] https://en.wikipedia.org/wiki/Table_of_spherical_harmonics
+    .. [3] https://mathworld.wolfram.com/SphericalHarmonic.html
+    .. [4] https://functions.wolfram.com/Polynomials/SphericalHarmonicY/
+    .. [5] https://dlmf.nist.gov/14.30
+
+    """
+    return Ynm(l, m, theta, phi).expand(func=True)
+
+
+def Z_lm(l, m, phi, theta):
+    """
+    Returns the real spherical harmonic or angular function Y_{l}^{m}.
+
+    Parameters
+    ==========
+
+    l : integer
+        ``l`` is the Angular Momentum Quantum Number with
+        values ranging from 0 to ``n-1``.
+    m : iteger
+        ``m`` is the Magnetic Quantum Number with values
+        ranging from ``-l`` to ``l``.
+    phi :
+        azimuthal angle
+    theta :
+        polar angle
+
+    Notes
+    =====
+
+    This function follows the Condon-Shortley phase convention.
+
+    If the imaginary components do not cancel, try setting your phi and theta
+    symbol assumptions to real. See below.
+
+    Examples
+    ========
+
+    >>> import sympy
+    >>> from sympy.physics.hydrogen import Z_lm
+    >>> phi, theta = sympy.symbols('phi theta', real=True)
+    >>> Z_lm(1, 0, phi, theta)
+    sqrt(3)*cos(theta)/(2*sqrt(pi))
+    >>> Z_lm(2, -1, phi, theta).simplify()
+    -sqrt(15)*sin(phi)*sin(2*theta)/(4*sqrt(pi))
+    >>> Z_lm(1, -1, phi, theta).simplify()
+    -sqrt(3)*sin(phi)*sin(theta)/(2*sqrt(pi))
+    >>> Z_lm(1, 1, 0, 1).evalf()
+    -0.411144836870562
+
+    Find angular nodes in dz2 atomic orbital by solving for zero probability.
+    This returns the node theta angles in radians.
+
+    >>> dz2 = Z_lm(2, 0, phi, theta)**2
+    >>> [sol.evalf() for sol in sympy.solve(dz2)]
+    [4.0969092717143, 5.32786868905508, 2.18627603546528, 0.955316618124509]
+
+    See Also
+    ========
+
+    Y_lm, sympy.functions.special.spherical_harmonics.Ynm,
+    sympy.functions.special.spherical_harmonics.Ynm_c,
+    sympy.functions.special.spherical_harmonics.Znm
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Spherical_harmonics
+    .. [2] https://en.wikipedia.org/wiki/Table_of_spherical_harmonics
+    .. [3] https://mathworld.wolfram.com/SphericalHarmonic.html
+    .. [4] https://functions.wolfram.com/Polynomials/SphericalHarmonicY/
+    .. [5] https://dlmf.nist.gov/14.30
+
+    """
+    return Znm(l, m, theta, phi).expand(func=True)
+
+
 def Psi_nlm(n, l, m, r, phi, theta, Z=1):
     """
     Returns the Hydrogen wave function psi_{nlm}. It's the product of
     the radial wavefunction R_{nl} and the spherical harmonic Y_{l}^{m}.
 
-    n, l, m
-        quantum numbers 'n', 'l' and 'm'
-    r
+    Parameters
+    ==========
+
+    n : integer
+        Principal Quantum Number which is
+        an integer with possible values as 1, 2, 3, 4,...
+    l : integer
+        ``l`` is the Angular Momentum Quantum Number with
+        values ranging from 0 to ``n-1``.
+    m : integer
+        ``m`` is the Magnetic Quantum Number with values
+        ranging from ``-l`` to ``l``.
+    r :
         radial coordinate
-    phi
+    phi :
         azimuthal angle
-    theta
+    theta :
         polar angle
-    Z
+    Z :
         atomic number (1 for Hydrogen, 2 for Helium, ...)
 
     Everything is in Hartree atomic units.
@@ -107,7 +259,7 @@ def Psi_nlm(n, l, m, r, phi, theta, Z=1):
 
     >>> from sympy.physics.hydrogen import Psi_nlm
     >>> from sympy import Symbol
-    >>> r=Symbol("r", real=True, positive=True)
+    >>> r=Symbol("r", positive=True)
     >>> phi=Symbol("phi", real=True)
     >>> theta=Symbol("theta", real=True)
     >>> Z=Symbol("Z", positive=True, integer=True, nonzero=True)
@@ -146,15 +298,22 @@ def E_nl(n, Z=1):
     """
     Returns the energy of the state (n, l) in Hartree atomic units.
 
-    The energy doesn't depend on "l".
+    The energy does not depend on "l".
+
+    Parameters
+    ==========
+
+    n : integer
+        Principal Quantum Number which is
+        an integer with possible values as 1, 2, 3, 4,...
+    Z :
+        Atomic number (1 for Hydrogen, 2 for Helium, ...)
 
     Examples
     ========
 
-    >>> from sympy import var
     >>> from sympy.physics.hydrogen import E_nl
-    >>> var("n Z")
-    (n, Z)
+    >>> from sympy.abc import n, Z
     >>> E_nl(n, Z)
     -Z**2/(2*n**2)
     >>> E_nl(1)
@@ -181,15 +340,22 @@ def E_nl_dirac(n, l, spin_up=True, Z=1, c=Float("137.035999037")):
     The energy is calculated from the Dirac equation. The rest mass energy is
     *not* included.
 
-    n, l
-        quantum numbers 'n' and 'l'
-    spin_up
+    Parameters
+    ==========
+
+    n : integer
+        Principal Quantum Number which is
+        an integer with possible values as 1, 2, 3, 4,...
+    l : integer
+        ``l`` is the Angular Momentum Quantum Number with
+        values ranging from 0 to ``n-1``.
+    spin_up :
         True if the electron spin is up (default), otherwise down
-    Z
-        atomic number (1 for Hydrogen, 2 for Helium, ...)
-    c
-        speed of light in atomic units. Default value is 137.035999037,
-        taken from: http://arxiv.org/abs/1012.3627
+    Z :
+        Atomic number (1 for Hydrogen, 2 for Helium, ...)
+    c :
+        Speed of light in atomic units. Default value is 137.035999037,
+        taken from https://arxiv.org/abs/1012.3627
 
     Examples
     ========

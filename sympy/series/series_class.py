@@ -3,8 +3,6 @@ Contains the base class for series
 Made using sequences in mind
 """
 
-from __future__ import print_function, division
-
 from sympy.core.expr import Expr
 from sympy.core.singleton import S
 from sympy.core.cache import cacheit
@@ -44,7 +42,7 @@ class SeriesBase(Expr):
         This method returns the symbols in the object, excluding those
         that take on a specific value (i.e. the dummy symbols).
         """
-        return (set(j for i in self.args for j in i.free_symbols)
+        return ({j for i in self.args for j in i.free_symbols}
                 .difference(self.variables))
 
     @cacheit
@@ -61,16 +59,6 @@ class SeriesBase(Expr):
                                   % self.func)
 
     def _ith_point(self, i):
-        """
-        Returns the i'th point of a series
-        If start point is negative infinity, point is returned from the end.
-        Assumes the first point to be indexed zero.
-
-        Examples
-        ========
-
-        TODO
-        """
         if self.start is S.NegativeInfinity:
             initial = self.stop
             step = -1

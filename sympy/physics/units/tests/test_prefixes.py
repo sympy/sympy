@@ -1,5 +1,8 @@
-from sympy import symbols, Mul, Symbol, S, Rational
-from sympy.physics.units import Quantity, length, meter
+from sympy.core.mul import Mul
+from sympy.core.numbers import Rational
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.physics.units import Quantity, length, meter, W
 from sympy.physics.units.prefixes import PREFIXES, Prefix, prefix_unit, kilo, \
     kibi
 from sympy.physics.units.systems import SI
@@ -14,7 +17,8 @@ def test_prefix_operations():
 
     dodeca = Prefix('dodeca', 'dd', 1, base=12)
 
-    assert m * k == 1
+    assert m * k is S.One
+    assert m * W == W / 1000
     assert k * k == M
     assert 1 / m == k
     assert k / m == M
@@ -22,7 +26,7 @@ def test_prefix_operations():
     assert dodeca * dodeca == 144
     assert 1 / dodeca == S.One / 12
     assert k / dodeca == S(1000) / 12
-    assert dodeca / dodeca == 1
+    assert dodeca / dodeca is S.One
 
     m = Quantity("fake_meter")
     SI.set_quantity_dimension(m, S.One)
@@ -69,7 +73,7 @@ def test_prefix_unit():
 
     prefs = prefix_unit(m, pref)
     assert set(prefs) == set(res)
-    assert set(map(lambda v: v.abbrev, prefs)) == set(symbols("mm,cm,dm"))
+    assert {v.abbrev for v in prefs} == set(symbols("mm,cm,dm"))
 
 
 def test_bases():

@@ -1,9 +1,8 @@
 """ Elliptic Integrals. """
 
-from __future__ import print_function, division
-
 from sympy.core import S, pi, I, Rational
-from sympy.core.function import Function, ArgumentIndexError
+from sympy.core.function import DefinedFunction, ArgumentIndexError
+from sympy.core.symbol import Dummy,uniquely_named_symbol
 from sympy.functions.elementary.complexes import sign
 from sympy.functions.elementary.hyperbolic import atanh
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -11,7 +10,7 @@ from sympy.functions.elementary.trigonometric import sin, tan
 from sympy.functions.special.gamma_functions import gamma
 from sympy.functions.special.hyper import hyper, meijerg
 
-class elliptic_k(Function):
+class elliptic_k(DefinedFunction):
     r"""
     The complete elliptic integral of the first kind, defined by
 
@@ -34,7 +33,7 @@ class elliptic_k(Function):
     Examples
     ========
 
-    >>> from sympy import elliptic_k, I, pi
+    >>> from sympy import elliptic_k, I
     >>> from sympy.abc import m
     >>> elliptic_k(0)
     pi/2
@@ -52,14 +51,14 @@ class elliptic_k(Function):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Elliptic_integrals
-    .. [2] http://functions.wolfram.com/EllipticIntegrals/EllipticK
+    .. [2] https://functions.wolfram.com/EllipticIntegrals/EllipticK
 
     """
 
     @classmethod
     def eval(cls, m):
         if m.is_zero:
-            return pi/2
+            return pi*S.Half
         elif m is S.Half:
             return 8*pi**Rational(3, 2)/gamma(Rational(-1, 4))**2
         elif m is S.One:
@@ -70,9 +69,6 @@ class elliptic_k(Function):
                    I*S.NegativeInfinity, S.ComplexInfinity):
             return S.Zero
 
-        if m.is_zero:
-            return pi*S.Half
-
     def fdiff(self, argindex=1):
         m = self.args[0]
         return (elliptic_e(m) - (1 - m)*elliptic_k(m))/(2*m*(1 - m))
@@ -82,7 +78,7 @@ class elliptic_k(Function):
         if (m.is_real and (m - 1).is_positive) is False:
             return self.func(m.conjugate())
 
-    def _eval_nseries(self, x, n, logx):
+    def _eval_nseries(self, x, n, logx, cdir=0):
         from sympy.simplify import hyperexpand
         return hyperexpand(self.rewrite(hyper)._eval_nseries(x, n=n, logx=logx))
 
@@ -97,18 +93,14 @@ class elliptic_k(Function):
         if m.is_infinite:
             return True
 
-    def _eval_rewrite_as_Integral(self, *args):
-        from sympy import Integral, Dummy
-        t = Dummy('t')
+    def _eval_rewrite_as_Integral(self, *args, **kwargs):
+        from sympy.integrals.integrals import Integral
+        t = Dummy(uniquely_named_symbol('t', args).name)
         m = self.args[0]
         return Integral(1/sqrt(1 - m*sin(t)**2), (t, 0, pi/2))
 
-    def _sage_(self):
-        import sage.all as sage
-        return sage.elliptic_kc(self.args[0]._sage_())
 
-
-class elliptic_f(Function):
+class elliptic_f(DefinedFunction):
     r"""
     The Legendre incomplete elliptic integral of the first
     kind, defined by
@@ -130,7 +122,7 @@ class elliptic_f(Function):
     Examples
     ========
 
-    >>> from sympy import elliptic_f, I, O
+    >>> from sympy import elliptic_f, I
     >>> from sympy.abc import z, m
     >>> elliptic_f(z, m).series(z)
     z + z**5*(3*m**2/40 - m/30) + m*z**3/6 + O(z**6)
@@ -146,7 +138,7 @@ class elliptic_f(Function):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Elliptic_integrals
-    .. [2] http://functions.wolfram.com/EllipticIntegrals/EllipticF
+    .. [2] https://functions.wolfram.com/EllipticIntegrals/EllipticF
 
     """
 
@@ -179,9 +171,9 @@ class elliptic_f(Function):
         if (m.is_real and (m - 1).is_positive) is False:
             return self.func(z.conjugate(), m.conjugate())
 
-    def _eval_rewrite_as_Integral(self, *args):
-        from sympy import Integral, Dummy
-        t = Dummy('t')
+    def _eval_rewrite_as_Integral(self, *args, **kwargs):
+        from sympy.integrals.integrals import Integral
+        t = Dummy(uniquely_named_symbol('t', args).name)
         z, m = self.args[0], self.args[1]
         return Integral(1/(sqrt(1 - m*sin(t)**2)), (t, 0, z))
 
@@ -193,7 +185,7 @@ class elliptic_f(Function):
             return True
 
 
-class elliptic_e(Function):
+class elliptic_e(DefinedFunction):
     r"""
     Called with two arguments $z$ and $m$, evaluates the
     incomplete elliptic integral of the second kind, defined by
@@ -219,7 +211,7 @@ class elliptic_e(Function):
     Examples
     ========
 
-    >>> from sympy import elliptic_e, I, pi, O
+    >>> from sympy import elliptic_e, I
     >>> from sympy.abc import z, m
     >>> elliptic_e(z, m).series(z)
     z + z**5*(-m**2/40 + m/30) - m*z**3/6 + O(z**6)
@@ -236,8 +228,8 @@ class elliptic_e(Function):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Elliptic_integrals
-    .. [2] http://functions.wolfram.com/EllipticIntegrals/EllipticE2
-    .. [3] http://functions.wolfram.com/EllipticIntegrals/EllipticE
+    .. [2] https://functions.wolfram.com/EllipticIntegrals/EllipticE2
+    .. [3] https://functions.wolfram.com/EllipticIntegrals/EllipticE
 
     """
 
@@ -291,11 +283,11 @@ class elliptic_e(Function):
             if (m.is_real and (m - 1).is_positive) is False:
                 return self.func(m.conjugate())
 
-    def _eval_nseries(self, x, n, logx):
+    def _eval_nseries(self, x, n, logx, cdir=0):
         from sympy.simplify import hyperexpand
         if len(self.args) == 1:
             return hyperexpand(self.rewrite(hyper)._eval_nseries(x, n=n, logx=logx))
-        return super(elliptic_e, self)._eval_nseries(x, n=n, logx=logx)
+        return super()._eval_nseries(x, n=n, logx=logx)
 
     def _eval_rewrite_as_hyper(self, *args, **kwargs):
         if len(args) == 1:
@@ -308,14 +300,14 @@ class elliptic_e(Function):
             return -meijerg(((S.Half, Rational(3, 2)), []), \
                             ((S.Zero,), (S.Zero,)), -m)/4
 
-    def _eval_rewrite_as_Integral(self, *args):
-        from sympy import Integral, Dummy
+    def _eval_rewrite_as_Integral(self, *args, **kwargs):
+        from sympy.integrals.integrals import Integral
         z, m = (pi/2, self.args[0]) if len(self.args) == 1 else self.args
-        t = Dummy('t')
+        t = Dummy(uniquely_named_symbol('t', args).name)
         return Integral(sqrt(1 - m*sin(t)**2), (t, 0, z))
 
 
-class elliptic_pi(Function):
+class elliptic_pi(DefinedFunction):
     r"""
     Called with three arguments $n$, $z$ and $m$, evaluates the
     Legendre incomplete elliptic integral of the third kind, defined by
@@ -340,7 +332,7 @@ class elliptic_pi(Function):
     Examples
     ========
 
-    >>> from sympy import elliptic_pi, I, pi, O, S
+    >>> from sympy import elliptic_pi, I
     >>> from sympy.abc import z, n, m
     >>> elliptic_pi(n, z, m).series(z, n=4)
     z + z**3*(m/6 + n/3) + O(z**4)
@@ -355,15 +347,15 @@ class elliptic_pi(Function):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Elliptic_integrals
-    .. [2] http://functions.wolfram.com/EllipticIntegrals/EllipticPi3
-    .. [3] http://functions.wolfram.com/EllipticIntegrals/EllipticPi
+    .. [2] https://functions.wolfram.com/EllipticIntegrals/EllipticPi3
+    .. [3] https://functions.wolfram.com/EllipticIntegrals/EllipticPi
 
     """
 
     @classmethod
     def eval(cls, n, m, z=None):
         if z is not None:
-            n, z, m = n, m, z
+            z, m = m, z
             if n.is_zero:
                 return elliptic_f(z, m)
             elif n is S.One:
@@ -443,11 +435,11 @@ class elliptic_pi(Function):
                 return (elliptic_e(m)/(m - 1) + elliptic_pi(n, m))/(2*(n - m))
         raise ArgumentIndexError(self, argindex)
 
-    def _eval_rewrite_as_Integral(self, *args):
-        from sympy import Integral, Dummy
+    def _eval_rewrite_as_Integral(self, *args, **kwargs):
+        from sympy.integrals.integrals import Integral
         if len(self.args) == 2:
             n, m, z = self.args[0], self.args[1], pi/2
         else:
             n, z, m = self.args
-        t = Dummy('t')
+        t = Dummy(uniquely_named_symbol('t', args).name)
         return Integral(1/((1 - n*sin(t)**2)*sqrt(1 - m*sin(t)**2)), (t, 0, z))

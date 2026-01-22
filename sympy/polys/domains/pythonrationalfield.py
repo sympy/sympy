@@ -1,6 +1,5 @@
 """Implementation of :class:`PythonRationalField` class. """
 
-from __future__ import print_function, division
 
 from sympy.polys.domains.groundtypes import PythonInteger, PythonRational, SymPyRational
 from sympy.polys.domains.rationalfield import RationalField
@@ -9,11 +8,15 @@ from sympy.utilities import public
 
 @public
 class PythonRationalField(RationalField):
-    """Rational field based on Python rational number type. """
+    """Rational field based on :ref:`MPQ`.
 
-    dtype = PythonRational
-    zero = dtype(0)
-    one = dtype(1)
+    This will be used as :ref:`QQ` if ``gmpy`` and ``gmpy2`` are not
+    installed. Elements are instances of :ref:`MPQ`.
+    """
+
+    dtype = PythonRational # type: ignore
+    zero = dtype(0) # type: ignore
+    one = dtype(1) # type: ignore
     alias = 'QQ_python'
 
     def __init__(self):

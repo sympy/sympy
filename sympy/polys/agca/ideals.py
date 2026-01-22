@@ -1,12 +1,10 @@
 """Computations with ideals of polynomial rings."""
 
-from __future__ import print_function, division
-
-from sympy.core.compatibility import reduce
 from sympy.polys.polyerrors import CoercionFailed
+from sympy.polys.polyutils import IntegerPowerable
 
 
-class Ideal(object):
+class Ideal(IntegerPowerable):
     """
     Abstract base class for ideals.
 
@@ -264,11 +262,13 @@ class Ideal(object):
 
     __rmul__ = __mul__
 
-    def __pow__(self, exp):
-        if exp < 0:
-            raise NotImplementedError
-        # TODO exponentiate by squaring
-        return reduce(lambda x, y: x*y, [self]*exp, self.ring.ideal(1))
+    def _zeroth_power(self):
+        return self.ring.ideal(1)
+
+    def _first_power(self):
+        # Raising to any power but 1 returns a new instance. So we mult by 1
+        # here so that the first power is no exception.
+        return self * 1
 
     def __eq__(self, e):
         if not isinstance(e, Ideal) or e.ring != self.ring:
@@ -326,7 +326,7 @@ class ModuleImplementedIdeal(Ideal):
         >>> from sympy import QQ
         >>> from sympy.abc import x, y
         >>> list(QQ.old_poly_ring(x, y).ideal(x, y, x**2 + y).gens)
-        [x, y, x**2 + y]
+        [DMP_Python([[1], []], QQ), DMP_Python([[1, 0]], QQ), DMP_Python([[1], [], [1, 0]], QQ)]
         """
         return (x[0] for x in self._module.gens)
 
@@ -365,8 +365,9 @@ class ModuleImplementedIdeal(Ideal):
         return self._module.is_full_module()
 
     def __repr__(self):
-        from sympy import sstr
-        return '<' + ','.join(sstr(x) for [x] in self._module.gens) + '>'
+        from sympy.printing.str import sstr
+        gens = [self.ring.to_sympy(x) for [x] in self._module.gens]
+        return '<' + ','.join(sstr(g) for g in gens) + '>'
 
     # NOTE this is the only method using the fact that the module is a SubModule
     def _product(self, J):
@@ -385,8 +386,8 @@ class ModuleImplementedIdeal(Ideal):
         >>> from sympy.abc import x
         >>> from sympy import QQ
         >>> I = QQ.old_poly_ring(x).ideal(x**2 + 1, x)
-        >>> I.in_terms_of_generators(1)
-        [1, -x]
+        >>> I.in_terms_of_generators(1)  # doctest: +SKIP
+        [DMP_Python([1], QQ), DMP_Python([-1, 0], QQ)]
         """
         return self._module.in_terms_of_generators([e])
 

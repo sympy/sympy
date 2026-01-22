@@ -1,8 +1,7 @@
 """Tools to assist importing optional external modules."""
 
-from __future__ import print_function, division
 import sys
-from distutils.version import LooseVersion
+import re
 
 # Override these in the module to change the default warning behavior.
 # For example, you might set both to False before running the tests so that
@@ -15,7 +14,7 @@ WARN_OLD_VERSION = None  # Default is True
 def __sympy_debug():
     # helper function from sympy/__init__.py
     # We don't just import SYMPY_DEBUG from that file because we don't want to
-    # import all of sympy just to use this module.
+    # import all of SymPy just to use this module.
     import os
     debug_str = os.getenv('SYMPY_DEBUG', 'False')
     if debug_str in ('True', 'False'):
@@ -27,6 +26,23 @@ def __sympy_debug():
 if __sympy_debug():
     WARN_OLD_VERSION = True
     WARN_NOT_INSTALLED = True
+
+
+_component_re = re.compile(r'(\d+ | [a-z]+ | \.)', re.VERBOSE)
+
+def version_tuple(vstring):
+    # Parse a version string to a tuple e.g. '1.2' -> (1, 2)
+    # Simplified from distutils.version.LooseVersion which was deprecated in
+    # Python 3.10.
+    components = []
+    for x in _component_re.split(vstring):
+        if x and x != '.':
+            try:
+                x = int(x)
+            except ValueError:
+                pass
+            components.append(x)
+    return tuple(components)
 
 
 def import_module(module, min_module_version=None, min_python_version=None,
@@ -125,10 +141,6 @@ def import_module(module, min_module_version=None, min_python_version=None,
                     UserWarning, stacklevel=2)
             return
 
-    # PyPy 1.6 has rudimentary NumPy support and importing it produces errors, so skip it
-    if module == 'numpy' and '__pypy__' in sys.builtin_module_names:
-        return
-
     try:
         mod = __import__(module, **import_kwargs)
 
@@ -136,7 +148,7 @@ def import_module(module, min_module_version=None, min_python_version=None,
         ##    from matplotlib import collections
         ## gives python's stdlib collections module. explicitly re-importing
         ## the module fixes this.
-        from_list = import_kwargs.get('fromlist', tuple())
+        from_list = import_kwargs.get('fromlist', ())
         for submod in from_list:
             if submod == 'collections' and mod.__name__ == 'matplotlib':
                 __import__(module + '.' + submod)
@@ -156,7 +168,7 @@ def import_module(module, min_module_version=None, min_python_version=None,
         modversion = getattr(mod, module_version_attr)
         if module_version_attr_call_args is not None:
             modversion = modversion(*module_version_attr_call_args)
-        if LooseVersion(modversion) < LooseVersion(min_module_version):
+        if version_tuple(modversion) < version_tuple(min_module_version):
             if warn_old_version:
                 # Attempt to create a pretty string version of the version
                 if isinstance(min_module_version, str):

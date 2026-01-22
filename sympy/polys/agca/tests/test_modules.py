@@ -4,7 +4,7 @@ from sympy.polys.agca.modules import FreeModule, ModuleOrder, FreeModulePolyRing
 from sympy.polys import CoercionFailed, QQ, lex, grlex, ilex, ZZ
 from sympy.abc import x, y, z
 from sympy.testing.pytest import raises
-from sympy import Rational
+from sympy.core.numbers import Rational
 
 
 def test_FreeModuleElement():

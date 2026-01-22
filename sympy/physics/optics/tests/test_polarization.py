@@ -2,7 +2,11 @@ from sympy.physics.optics.polarization import (jones_vector, stokes_vector,
     jones_2_stokes, linear_polarizer, phase_retarder, half_wave_retarder,
     quarter_wave_retarder, transmissive_filter, reflective_filter,
     mueller_matrix, polarizing_beam_splitter)
-from sympy import Matrix, pi, symbols, exp, I, S
+from sympy.core.numbers import (I, pi)
+from sympy.core.singleton import S
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.exponential import exp
+from sympy.matrices.dense import Matrix
 
 
 def test_polarization():

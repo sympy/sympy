@@ -2,26 +2,46 @@
 This module can be used to solve 2D beam bending problems with
 singularity functions in mechanics.
 """
-
-from __future__ import print_function, division
-
 from sympy.core import S, Symbol, diff, symbols
-from sympy.solvers import linsolve
+from sympy.core.add import Add
+from sympy.core.expr import Expr
+from sympy.core.function import (Derivative, Function)
+from sympy.core.mul import Mul
+from sympy.core.relational import Eq
+from sympy.core.sympify import sympify
+from sympy.solvers import linsolve, solveset
+from sympy.solvers.ode.ode import dsolve
+from sympy.solvers.solvers import solve
 from sympy.printing import sstr
 from sympy.functions import SingularityFunction, Piecewise, factorial
-from sympy.core import sympify
 from sympy.integrals import integrate
 from sympy.series import limit
 from sympy.plotting import plot, PlotGrid
 from sympy.geometry.entity import GeometryEntity
 from sympy.external import import_module
-from sympy import lambdify, Add
-from sympy.core.compatibility import iterable
+from sympy.sets.sets import Interval, FiniteSet
+from sympy.utilities.lambdify import lambdify
 from sympy.utilities.decorator import doctest_depends_on
+from sympy.utilities.iterables import iterable
+import warnings
+
+
+__doctest_requires__ = {
+    ('Beam.draw',
+     'Beam.plot_bending_moment',
+     'Beam.plot_deflection',
+     'Beam.plot_ild_moment',
+     'Beam.plot_ild_shear',
+     'Beam.plot_shear_force',
+     'Beam.plot_shear_stress',
+     'Beam.plot_slope'): ['matplotlib'],
+}
+
 
 numpy = import_module('numpy', import_kwargs={'fromlist':['arange']})
 
-class Beam(object):
+
+class Beam:
     """
     A Beam is a structural element that is capable of withstanding load
     primarily by resisting against bending. Beams are characterized by
@@ -29,9 +49,15 @@ class Beam(object):
     and their material.
 
     .. note::
-       While solving a beam bending problem, a user should choose its
-       own sign convention and should stick to it. The results will
-       automatically follow the chosen sign convention.
+       A consistent sign convention must be used while solving a beam
+       bending problem; the results will
+       automatically follow the chosen sign convention. However, the
+       chosen sign convention must respect the rule that, on the positive
+       side of beam's axis (in respect to current section), a loading force
+       giving positive shear yields a negative moment, as below, (the
+       curved arrow shows the positive moment and rotation):
+
+    .. image:: allowed-sign-conventions.png
 
     Examples
     ========
@@ -52,27 +78,64 @@ class Beam(object):
     >>> b.apply_load(R2, 4, -1)
     >>> b.bc_deflection = [(0, 0), (4, 0)]
     >>> b.boundary_conditions
-    {'deflection': [(0, 0), (4, 0)], 'slope': []}
+    {'bending_moment': [], 'deflection': [(0, 0), (4, 0)], 'shear_force': [], 'slope': []}
     >>> b.load
     R1*SingularityFunction(x, 0, -1) + R2*SingularityFunction(x, 4, -1) + 6*SingularityFunction(x, 2, 0)
     >>> b.solve_for_reaction_loads(R1, R2)
     >>> b.load
     -3*SingularityFunction(x, 0, -1) + 6*SingularityFunction(x, 2, 0) - 9*SingularityFunction(x, 4, -1)
     >>> b.shear_force()
-    -3*SingularityFunction(x, 0, 0) + 6*SingularityFunction(x, 2, 1) - 9*SingularityFunction(x, 4, 0)
+    3*SingularityFunction(x, 0, 0) - 6*SingularityFunction(x, 2, 1) + 9*SingularityFunction(x, 4, 0)
     >>> b.bending_moment()
-    -3*SingularityFunction(x, 0, 1) + 3*SingularityFunction(x, 2, 2) - 9*SingularityFunction(x, 4, 1)
+    3*SingularityFunction(x, 0, 1) - 3*SingularityFunction(x, 2, 2) + 9*SingularityFunction(x, 4, 1)
     >>> b.slope()
     (-3*SingularityFunction(x, 0, 2)/2 + SingularityFunction(x, 2, 3) - 9*SingularityFunction(x, 4, 2)/2 + 7)/(E*I)
     >>> b.deflection()
     (7*x - SingularityFunction(x, 0, 3)/2 + SingularityFunction(x, 2, 4)/4 - 3*SingularityFunction(x, 4, 3)/2)/(E*I)
     >>> b.deflection().rewrite(Piecewise)
-    (7*x - Piecewise((x**3, x > 0), (0, True))/2
-         - 3*Piecewise(((x - 4)**3, x - 4 > 0), (0, True))/2
-         + Piecewise(((x - 2)**4, x - 2 > 0), (0, True))/4)/(E*I)
+    (7*x - Piecewise((x**3, x >= 0), (0, True))/2
+         - 3*Piecewise(((x - 4)**3, x >= 4), (0, True))/2
+         + Piecewise(((x - 2)**4, x >= 2), (0, True))/4)/(E*I)
+
+    Calculate the support reactions for a fully symbolic beam of length L.
+    There are two simple supports below the beam, one at the starting point
+    and another at the ending point of the beam. The deflection of the beam
+    at the end is restricted. The beam is loaded with:
+
+    * a downward point load P1 applied at L/4
+    * an upward point load P2 applied at L/8
+    * a counterclockwise moment M1 applied at L/2
+    * a clockwise moment M2 applied at 3*L/4
+    * a distributed constant load q1, applied downward, starting from L/2
+      up to 3*L/4
+    * a distributed constant load q2, applied upward, starting from 3*L/4
+      up to L
+
+    No assumptions are needed for symbolic loads. However, defining a positive
+    length will help the algorithm to compute the solution.
+
+    >>> E, I = symbols('E, I')
+    >>> L = symbols("L", positive=True)
+    >>> P1, P2, M1, M2, q1, q2 = symbols("P1, P2, M1, M2, q1, q2")
+    >>> R1, R2 = symbols('R1, R2')
+    >>> b = Beam(L, E, I)
+    >>> b.apply_load(R1, 0, -1)
+    >>> b.apply_load(R2, L, -1)
+    >>> b.apply_load(P1, L/4, -1)
+    >>> b.apply_load(-P2, L/8, -1)
+    >>> b.apply_load(M1, L/2, -2)
+    >>> b.apply_load(-M2, 3*L/4, -2)
+    >>> b.apply_load(q1, L/2, 0, 3*L/4)
+    >>> b.apply_load(-q2, 3*L/4, 0, L)
+    >>> b.bc_deflection = [(0, 0), (L, 0)]
+    >>> b.solve_for_reaction_loads(R1, R2)
+    >>> print(b.reaction_loads[R1])
+    (-3*L**2*q1 + L**2*q2 - 24*L*P1 + 28*L*P2 - 32*M1 + 32*M2)/(32*L)
+    >>> print(b.reaction_loads[R2])
+    (-5*L**2*q1 + 7*L**2*q2 - 8*L*P1 + 4*L*P2 + 32*M1 - 32*M2)/(32*L)
     """
 
-    def __init__(self, length, elastic_modulus, second_moment, variable=Symbol('x'), base_char='C'):
+    def __init__(self, length, elastic_modulus, second_moment, area=Symbol('A'), variable=Symbol('x'), base_char='C', ild_variable=Symbol('a')):
         """Initializes the class.
 
         Parameters
@@ -98,6 +161,9 @@ class Beam(object):
             bending axis of the beam. The second moment of area will be computed
             from the shape object internally.
 
+        area : Symbol/float
+            Represents the cross-section area of beam
+
         variable : Symbol, optional
             A Symbol object that will be used as the variable along the beam
             while representing the load, shear, moment, slope and deflection
@@ -107,6 +173,11 @@ class Beam(object):
             A String that will be used as base character to generate sequential
             symbols for integration constants in cases where boundary conditions
             are not sufficient to solve them.
+
+        ild_variable : Symbol, optional
+            A Symbol object that will be used as the variable specifying the
+            location of the moving load in ILD calculations. By default, it
+            is set to ``Symbol('a')``.
         """
         self.length = length
         self.elastic_modulus = elastic_modulus
@@ -116,15 +187,27 @@ class Beam(object):
             self.cross_section = None
             self.second_moment = second_moment
         self.variable = variable
+        self.ild_variable = ild_variable
         self._base_char = base_char
-        self._boundary_conditions = {'deflection': [], 'slope': []}
+        self._boundary_conditions = {'deflection': [], 'slope': [], 'bending_moment': [], 'shear_force': []}
         self._load = 0
+        self.area = area
         self._applied_supports = []
+        self._applied_support_symbols = []
+        self._applied_rotation_hinges = []
+        self._applied_sliding_hinges = []
+        self._rotation_hinge_symbols = []
+        self._sliding_hinge_symbols = []
         self._support_as_loads = []
         self._applied_loads = []
         self._reaction_loads = {}
-        self._composite_type = None
-        self._hinge_position = None
+        self._ild_reactions = {}
+        self._ild_shear = 0
+        self._ild_moment = 0
+        # _original_load is a copy of _load equations with unsubstituted reaction
+        # forces. It is used for calculating reaction forces in case of I.L.D.
+        self._original_load = 0
+        self._joined_beam = False
 
     def __str__(self):
         shape_description = self._cross_section if self._cross_section else self._second_moment
@@ -137,6 +220,57 @@ class Beam(object):
         return self._reaction_loads
 
     @property
+    def rotation_jumps(self):
+        """
+        Returns the value for the rotation jumps in rotation hinges in a dictionary.
+        The rotation jump is the rotation (in radian) in a rotation hinge. This can
+        be seen as a jump in the slope plot.
+        """
+        return self._rotation_jumps
+
+    @property
+    def deflection_jumps(self):
+        """
+        Returns the deflection jumps in sliding hinges in a dictionary.
+        The deflection jump is the deflection (in meters) in a sliding hinge.
+        This can be seen as a jump in the deflection plot.
+        """
+        return self._deflection_jumps
+
+    @property
+    def ild_shear(self):
+        """ Returns the I.L.D. shear equation."""
+        return self._ild_shear
+
+    @property
+    def ild_reactions(self):
+        """ Returns the I.L.D. reaction forces in a dictionary."""
+        return self._ild_reactions
+
+    @property
+    def ild_rotation_jumps(self):
+        """
+        Returns the I.L.D. rotation jumps in rotation hinges in a dictionary.
+        The rotation jump is the rotation (in radian) in a rotation hinge. This can
+        be seen as a jump in the slope plot.
+        """
+        return self._ild_rotations_jumps
+
+    @property
+    def ild_deflection_jumps(self):
+        """
+        Returns the I.L.D. deflection jumps in sliding hinges in a dictionary.
+        The deflection jump is the deflection (in meters) in a sliding hinge.
+        This can be seen as a jump in the deflection plot.
+        """
+        return self._ild_deflection_jumps
+
+    @property
+    def ild_moment(self):
+        """ Returns the I.L.D. moment equation."""
+        return self._ild_moment
+
+    @property
     def length(self):
         """Length of the Beam."""
         return self._length
@@ -144,6 +278,15 @@ class Beam(object):
     @length.setter
     def length(self, l):
         self._length = sympify(l)
+
+    @property
+    def area(self):
+        """Cross-sectional area of the Beam. """
+        return self._area
+
+    @area.setter
+    def area(self, a):
+        self._area = sympify(a)
 
     @property
     def variable(self):
@@ -158,7 +301,7 @@ class Beam(object):
 
         >>> from sympy.physics.continuum_mechanics.beam import Beam
         >>> from sympy import symbols
-        >>> E, I = symbols('E, I')
+        >>> E, I, A = symbols('E, I, A')
         >>> x, y, z = symbols('x, y, z')
         >>> b = Beam(4, E, I)
         >>> b.variable
@@ -166,7 +309,7 @@ class Beam(object):
         >>> b.variable = y
         >>> b.variable
         y
-        >>> b = Beam(4, E, I, z)
+        >>> b = Beam(4, E, I, A, z)
         >>> b.variable
         z
         """
@@ -234,12 +377,28 @@ class Beam(object):
         >>> b.bc_deflection = [(0, 2)]
         >>> b.bc_slope = [(0, 1)]
         >>> b.boundary_conditions
-        {'deflection': [(0, 2)], 'slope': [(0, 1)]}
+        {'bending_moment': [], 'deflection': [(0, 2)], 'shear_force': [], 'slope': [(0, 1)]}
 
         Here the deflection of the beam should be ``2`` at ``0``.
         Similarly, the slope of the beam should be ``1`` at ``0``.
         """
         return self._boundary_conditions
+
+    @property
+    def bc_shear_force(self):
+        return self._boundary_conditions['shear_force']
+
+    @bc_shear_force.setter
+    def bc_shear_force(self, sf_bcs):
+        self._boundary_conditions['shear_force'] = sf_bcs
+
+    @property
+    def bc_bending_moment(self):
+        return self._boundary_conditions['bending_moment']
+
+    @bc_bending_moment.setter
+    def bc_bending_moment(self, bm_bcs):
+        self._boundary_conditions['bending_moment'] = bm_bcs
 
     @property
     def bc_slope(self):
@@ -272,7 +431,7 @@ class Beam(object):
         via : String
             States the way two Beam object would get connected
             - For axially fixed Beams, via="fixed"
-            - For Beams connected via hinge, via="hinge"
+            - For Beams connected via rotation hinge, via="hinge"
 
         Examples
         ========
@@ -296,33 +455,44 @@ class Beam(object):
         >>> b.load
         80*SingularityFunction(x, 0, -2) - 20*SingularityFunction(x, 0, -1) + 20*SingularityFunction(x, 4, -1)
         >>> b.slope()
-        (((80*SingularityFunction(x, 0, 1) - 10*SingularityFunction(x, 0, 2) + 10*SingularityFunction(x, 4, 2))/I - 120/I)/E + 80.0/(E*I))*SingularityFunction(x, 2, 0)
-        + 0.666666666666667*(80*SingularityFunction(x, 0, 1) - 10*SingularityFunction(x, 0, 2) + 10*SingularityFunction(x, 4, 2))*SingularityFunction(x, 0, 0)/(E*I)
-        - 0.666666666666667*(80*SingularityFunction(x, 0, 1) - 10*SingularityFunction(x, 0, 2) + 10*SingularityFunction(x, 4, 2))*SingularityFunction(x, 2, 0)/(E*I)
+        (-((-80*SingularityFunction(x, 0, 1) + 10*SingularityFunction(x, 0, 2) - 10*SingularityFunction(x, 4, 2))/I + 120/I)/E + 80.0/(E*I))*SingularityFunction(x, 2, 0)
+        - 0.666666666666667*(-80*SingularityFunction(x, 0, 1) + 10*SingularityFunction(x, 0, 2) - 10*SingularityFunction(x, 4, 2))*SingularityFunction(x, 0, 0)/(E*I)
+        + 0.666666666666667*(-80*SingularityFunction(x, 0, 1) + 10*SingularityFunction(x, 0, 2) - 10*SingularityFunction(x, 4, 2))*SingularityFunction(x, 2, 0)/(E*I)
         """
         x = self.variable
         E = self.elastic_modulus
         new_length = self.length + beam.length
+        if self.elastic_modulus != beam.elastic_modulus:
+            raise NotImplementedError('Joining beams with different Elastic modulus is not implemented.')
+
         if self.second_moment != beam.second_moment:
             new_second_moment = Piecewise((self.second_moment, x<=self.length),
                                     (beam.second_moment, x<=new_length))
         else:
             new_second_moment = self.second_moment
 
+        if via== "fixed" or via=="hinge":
+            pass
+        else:
+            raise ValueError(
+                "Invalid joining method. Choose from 'fixed' or 'hinge'."
+            )
+
         if via == "fixed":
             new_beam = Beam(new_length, E, new_second_moment, x)
-            new_beam._composite_type = "fixed"
+            new_beam._joined_beam = True
             return new_beam
 
         if via == "hinge":
             new_beam = Beam(new_length, E, new_second_moment, x)
-            new_beam._composite_type = "hinge"
-            new_beam._hinge_position = self.length
+            new_beam._joined_beam = True
+            new_beam.apply_rotation_hinge(self.length)
             return new_beam
 
     def apply_support(self, loc, type="fixed"):
         """
-        This method applies support to a particular beam object.
+        This method applies support to a particular beam object and returns
+        the symbol of the unknown reaction load(s).
 
         Parameters
         ==========
@@ -335,14 +505,19 @@ class Beam(object):
             - one degree of freedom, type = "pin"
             - two degrees of freedom, type = "roller"
 
+        Returns
+        =======
+        Symbol or tuple of Symbol
+            The unknown reaction load as a symbol.
+            - Symbol(reaction_force) if type = "pin" or "roller"
+            - Symbol(reaction_force), Symbol(reaction_moment) if type = "fixed"
+
         Examples
         ========
-        There is a beam of length 30 meters. A moment of magnitude 120 Nm is
+        There is a beam of length 20 meters. A moment of magnitude 100 Nm is
         applied in the clockwise direction at the end of the beam. A pointload
-        of magnitude 8 N is applied from the top of the beam at the starting
-        point. There are two simple supports below the beam. One at the end
-        and another one at a distance of 10 meters from the start. The
-        deflection is restricted at both the supports.
+        of magnitude 8 N is applied from the top of the beam at a distance of 10 meters.
+        There is one fixed support at the start of the beam and a roller at the end.
 
         Using the sign convention of upward forces and clockwise moment
         being positive.
@@ -350,29 +525,41 @@ class Beam(object):
         >>> from sympy.physics.continuum_mechanics.beam import Beam
         >>> from sympy import symbols
         >>> E, I = symbols('E, I')
-        >>> b = Beam(30, E, I)
-        >>> b.apply_support(10, 'roller')
-        >>> b.apply_support(30, 'roller')
-        >>> b.apply_load(-8, 0, -1)
-        >>> b.apply_load(120, 30, -2)
-        >>> R_10, R_30 = symbols('R_10, R_30')
-        >>> b.solve_for_reaction_loads(R_10, R_30)
+        >>> b = Beam(20, E, I)
+        >>> p0, m0 = b.apply_support(0, 'fixed')
+        >>> p1 = b.apply_support(20, 'roller')
+        >>> b.apply_load(-8, 10, -1)
+        >>> b.apply_load(100, 20, -2)
+        >>> b.solve_for_reaction_loads(p0, m0, p1)
+        >>> b.reaction_loads
+        {M_0: 20, R_0: -2, R_20: 10}
+        >>> b.reaction_loads[p0]
+        -2
         >>> b.load
-        -8*SingularityFunction(x, 0, -1) + 6*SingularityFunction(x, 10, -1)
-        + 120*SingularityFunction(x, 30, -2) + 2*SingularityFunction(x, 30, -1)
-        >>> b.slope()
-        (-4*SingularityFunction(x, 0, 2) + 3*SingularityFunction(x, 10, 2)
-            + 120*SingularityFunction(x, 30, 1) + SingularityFunction(x, 30, 2) + 4000/3)/(E*I)
+        20*SingularityFunction(x, 0, -2) - 2*SingularityFunction(x, 0, -1)
+        - 8*SingularityFunction(x, 10, -1) + 100*SingularityFunction(x, 20, -2)
+        + 10*SingularityFunction(x, 20, -1)
         """
         loc = sympify(loc)
+
+        if type == "fixed" or type=="roller" or type=="pin":
+            pass
+        else:
+            raise ValueError(
+                "Invalid support type. Choose from 'pin', 'roller', or 'fixed'."
+            )
+
         self._applied_supports.append((loc, type))
-        if type == "pin" or type == "roller":
+        if type in ("pin", "roller"):
             reaction_load = Symbol('R_'+str(loc))
+            self._applied_support_symbols.append(reaction_load)
             self.apply_load(reaction_load, loc, -1)
             self.bc_deflection.append((loc, 0))
         else:
             reaction_load = Symbol('R_'+str(loc))
+            self._applied_support_symbols.append(reaction_load)
             reaction_moment = Symbol('M_'+str(loc))
+            self._applied_support_symbols.append(reaction_moment)
             self.apply_load(reaction_load, loc, -1)
             self.apply_load(reaction_moment, loc, -2)
             self.bc_deflection.append((loc, 0))
@@ -381,6 +568,138 @@ class Beam(object):
 
         self._support_as_loads.append((reaction_load, loc, -1, None))
 
+        if type in ("pin", "roller"):
+            return reaction_load
+        else:
+            return reaction_load, reaction_moment
+
+    def _get_I(self, loc):
+        """
+        Helper function that returns the Second moment (I) at a location in the beam.
+        """
+        I = self.second_moment
+        if not isinstance(I, Piecewise):
+            return I
+        else:
+            for i in range(len(I.args)):
+                if loc <= I.args[i][1].args[1]:
+                    return I.args[i][0]
+
+    def apply_rotation_hinge(self, loc):
+        """
+        This method applies a rotation hinge at a single location on the beam.
+
+        Parameters
+        ----------
+        loc : Sympifyable
+            Location of point at which hinge is applied.
+
+        Returns
+        =======
+        Symbol
+            The unknown rotation jump multiplied by the elastic modulus and second moment as a symbol.
+
+        Examples
+        ========
+        There is a beam of length 15 meters. Pin supports are placed at distances
+        of 0 and 10 meters. There is a fixed support at the end. There are two rotation hinges
+        in the structure, one at 5 meters and one at 10 meters. A pointload of magnitude
+        10 kN is applied on the hinge at 5 meters. A distributed load of 5 kN works on
+        the structure from 10 meters to the end.
+
+        Using the sign convention of upward forces and clockwise moment
+        being positive.
+
+        >>> from sympy.physics.continuum_mechanics.beam import Beam
+        >>> from sympy import Symbol
+        >>> E = Symbol('E')
+        >>> I = Symbol('I')
+        >>> b = Beam(15, E, I)
+        >>> r0 = b.apply_support(0, type='pin')
+        >>> r10 = b.apply_support(10, type='pin')
+        >>> r15, m15 = b.apply_support(15, type='fixed')
+        >>> p5 = b.apply_rotation_hinge(5)
+        >>> p12 = b.apply_rotation_hinge(12)
+        >>> b.apply_load(-10, 5, -1)
+        >>> b.apply_load(-5, 10, 0, 15)
+        >>> b.solve_for_reaction_loads(r0, r10, r15, m15)
+        >>> b.reaction_loads
+        {M_15: -75/2, R_0: 0, R_10: 40, R_15: -5}
+        >>> b.rotation_jumps
+        {P_12: -1875/(16*E*I), P_5: 9625/(24*E*I)}
+        >>> b.rotation_jumps[p12]
+        -1875/(16*E*I)
+        >>> b.bending_moment()
+        -9625*SingularityFunction(x, 5, -1)/24 + 10*SingularityFunction(x, 5, 1)
+        - 40*SingularityFunction(x, 10, 1) + 5*SingularityFunction(x, 10, 2)/2
+        + 1875*SingularityFunction(x, 12, -1)/16 + 75*SingularityFunction(x, 15, 0)/2
+        + 5*SingularityFunction(x, 15, 1) - 5*SingularityFunction(x, 15, 2)/2
+        """
+        loc = sympify(loc)
+        E = self.elastic_modulus
+        I = self._get_I(loc)
+
+        rotation_jump = Symbol('P_'+str(loc))
+        self._applied_rotation_hinges.append(loc)
+        self._rotation_hinge_symbols.append(rotation_jump)
+        self.apply_load(E * I * rotation_jump, loc, -3)
+        self.bc_bending_moment.append((loc, 0))
+        return rotation_jump
+
+    def apply_sliding_hinge(self, loc):
+        """
+        This method applies a sliding hinge at a single location on the beam.
+
+        Parameters
+        ----------
+        loc : Sympifyable
+            Location of point at which hinge is applied.
+
+        Returns
+        =======
+        Symbol
+            The unknown deflection jump multiplied by the elastic modulus and second moment as a symbol.
+
+        Examples
+        ========
+        There is a beam of length 13 meters. A fixed support is placed at the beginning.
+        There is a pin support at the end. There is a sliding hinge at a location of 8 meters.
+        A pointload of magnitude 10 kN is applied on the hinge at 5 meters.
+
+        Using the sign convention of upward forces and clockwise moment
+        being positive.
+
+        >>> from sympy.physics.continuum_mechanics.beam import Beam
+        >>> b = Beam(13, 20, 20)
+        >>> r0, m0 = b.apply_support(0, type="fixed")
+        >>> s8 = b.apply_sliding_hinge(8)
+        >>> r13 = b.apply_support(13, type="pin")
+        >>> b.apply_load(-10, 5, -1)
+        >>> b.solve_for_reaction_loads(r0, m0, r13)
+        >>> b.reaction_loads
+        {M_0: -50, R_0: 10, R_13: 0}
+        >>> b.deflection_jumps
+        {W_8: 85/24}
+        >>> b.deflection_jumps[s8]
+        85/24
+        >>> b.bending_moment()
+        50*SingularityFunction(x, 0, 0) - 10*SingularityFunction(x, 0, 1)
+        + 10*SingularityFunction(x, 5, 1) - 4250*SingularityFunction(x, 8, -2)/3
+        >>> b.deflection()
+        -SingularityFunction(x, 0, 2)/16 + SingularityFunction(x, 0, 3)/240
+        - SingularityFunction(x, 5, 3)/240 + 85*SingularityFunction(x, 8, 0)/24
+        """
+        loc = sympify(loc)
+        E = self.elastic_modulus
+        I = self._get_I(loc)
+
+        deflection_jump = Symbol('W_' + str(loc))
+        self._applied_sliding_hinges.append(loc)
+        self._sliding_hinge_symbols.append(deflection_jump)
+        self.apply_load(E * I * deflection_jump, loc, -4)
+        self.bc_shear_force.append((loc, 0))
+        return deflection_jump
+
     def apply_load(self, value, start, order, end=None):
         """
         This method adds up the loads given to a particular beam object.
@@ -388,7 +707,17 @@ class Beam(object):
         Parameters
         ==========
         value : Sympifyable
-            The magnitude of an applied load.
+            The value inserted should have the units [Force/(Distance**(n+1)]
+            where n is the order of applied load.
+            Units for applied loads:
+
+               - For moments: kN*m
+               - For point loads: kN
+               - For constant distributed load: kN/m
+               - For ramp loads: kN/m**2
+               - For parabolic ramp loads: kN/m**3
+               - And so on.
+
         start : Sympifyable
             The starting point of the applied load. For point moments and
             point forces this is the location of application.
@@ -429,24 +758,23 @@ class Beam(object):
         x = self.variable
         value = sympify(value)
         start = sympify(start)
-        order = sympify(order)
 
         self._applied_loads.append((value, start, order, end))
         self._load += value*SingularityFunction(x, start, order)
+        self._original_load += value*SingularityFunction(x, start, order)
 
-        if end:
-            if order.is_negative:
+        if end is not None:
+            if order < 0:
                 msg = ("If 'end' is provided the 'order' of the load cannot "
-                       "be negative, i.e. 'end' is only valid for distributed "
-                       "loads.")
+                       "be negative, i.e. 'end' is only valid for distributed loads.")
                 raise ValueError(msg)
-            # NOTE : A Taylor series can be used to define the summation of
-            # singularity functions that subtract from the load past the end
-            # point such that it evaluates to zero past 'end'.
-            f = value*x**order
+
+            f = value * (x - start)**order
             for i in range(0, order + 1):
-                self._load -= (f.diff(x, i).subs(x, end - start) *
-                               SingularityFunction(x, end, i)/factorial(i))
+                coeff = f.diff(x, i).subs(x, end)
+                term = coeff * SingularityFunction(x, end, i) / factorial(i)
+                self._load -= term
+                self._original_load -= term
 
     def remove_load(self, value, start, order, end=None):
         """
@@ -498,31 +826,27 @@ class Beam(object):
         x = self.variable
         value = sympify(value)
         start = sympify(start)
-        order = sympify(order)
 
         if (value, start, order, end) in self._applied_loads:
             self._load -= value*SingularityFunction(x, start, order)
+            self._original_load -= value*SingularityFunction(x, start, order)
             self._applied_loads.remove((value, start, order, end))
         else:
             msg = "No such load distribution exists on the beam object."
             raise ValueError(msg)
 
-        if end:
-            # TODO : This is essentially duplicate code wrt to apply_load,
-            # would be better to move it to one location and both methods use
-            # it.
-            if order.is_negative:
+        if end is not None:
+            if order < 0:
                 msg = ("If 'end' is provided the 'order' of the load cannot "
-                       "be negative, i.e. 'end' is only valid for distributed "
-                       "loads.")
+                       "be negative, i.e. 'end' is only valid for distributed loads.")
                 raise ValueError(msg)
-            # NOTE : A Taylor series can be used to define the summation of
-            # singularity functions that subtract from the load past the end
-            # point such that it evaluates to zero past 'end'.
-            f = value*x**order
+
+            f = value * (x - start)**order
             for i in range(0, order + 1):
-                self._load += (f.diff(x, i).subs(x, end - start) *
-                               SingularityFunction(x, end, i)/factorial(i))
+                coeff = f.diff(x, i).subs(x, end)
+                term = coeff * SingularityFunction(x, end, i) / factorial(i)
+                self._load += term
+                self._original_load += term
 
     @property
     def load(self):
@@ -579,144 +903,16 @@ class Beam(object):
         """
         return self._applied_loads
 
-    def _solve_hinge_beams(self, *reactions):
-        """Method to find integration constants and reactional variables in a
-        composite beam connected via hinge.
-        This method resolves the composite Beam into its sub-beams and then
-        equations of shear force, bending moment, slope and deflection are
-        evaluated for both of them separately. These equations are then solved
-        for unknown reactions and integration constants using the boundary
-        conditions applied on the Beam. Equal deflection of both sub-beams
-        at the hinge joint gives us another equation to solve the system.
-
-        Examples
-        ========
-        A combined beam, with constant fkexural rigidity E*I, is formed by joining
-        a Beam of length 2*l to the right of another Beam of length l. The whole beam
-        is fixed at both of its both end. A point load of magnitude P is also applied
-        from the top at a distance of 2*l from starting point.
-
-        >>> from sympy.physics.continuum_mechanics.beam import Beam
-        >>> from sympy import symbols
-        >>> E, I = symbols('E, I')
-        >>> l=symbols('l', positive=True)
-        >>> b1=Beam(l ,E,I)
-        >>> b2=Beam(2*l ,E,I)
-        >>> b=b1.join(b2,"hinge")
-        >>> M1, A1, M2, A2, P = symbols('M1 A1 M2 A2 P')
-        >>> b.apply_load(A1,0,-1)
-        >>> b.apply_load(M1,0,-2)
-        >>> b.apply_load(P,2*l,-1)
-        >>> b.apply_load(A2,3*l,-1)
-        >>> b.apply_load(M2,3*l,-2)
-        >>> b.bc_slope=[(0,0), (3*l, 0)]
-        >>> b.bc_deflection=[(0,0), (3*l, 0)]
-        >>> b.solve_for_reaction_loads(M1, A1, M2, A2)
-        >>> b.reaction_loads
-        {A1: -5*P/18, A2: -13*P/18, M1: 5*P*l/18, M2: -4*P*l/9}
-        >>> b.slope()
-        (5*P*l*SingularityFunction(x, 0, 1)/18 - 5*P*SingularityFunction(x, 0, 2)/36 + 5*P*SingularityFunction(x, l, 2)/36)*SingularityFunction(x, 0, 0)/(E*I)
-        - (5*P*l*SingularityFunction(x, 0, 1)/18 - 5*P*SingularityFunction(x, 0, 2)/36 + 5*P*SingularityFunction(x, l, 2)/36)*SingularityFunction(x, l, 0)/(E*I)
-        + (P*l**2/18 - 4*P*l*SingularityFunction(-l + x, 2*l, 1)/9 - 5*P*SingularityFunction(-l + x, 0, 2)/36 + P*SingularityFunction(-l + x, l, 2)/2
-        - 13*P*SingularityFunction(-l + x, 2*l, 2)/36)*SingularityFunction(x, l, 0)/(E*I)
-        >>> b.deflection()
-        (5*P*l*SingularityFunction(x, 0, 2)/36 - 5*P*SingularityFunction(x, 0, 3)/108 + 5*P*SingularityFunction(x, l, 3)/108)*SingularityFunction(x, 0, 0)/(E*I)
-        - (5*P*l*SingularityFunction(x, 0, 2)/36 - 5*P*SingularityFunction(x, 0, 3)/108 + 5*P*SingularityFunction(x, l, 3)/108)*SingularityFunction(x, l, 0)/(E*I)
-        + (5*P*l**3/54 + P*l**2*(-l + x)/18 - 2*P*l*SingularityFunction(-l + x, 2*l, 2)/9 - 5*P*SingularityFunction(-l + x, 0, 3)/108 + P*SingularityFunction(-l + x, l, 3)/6
-        - 13*P*SingularityFunction(-l + x, 2*l, 3)/108)*SingularityFunction(x, l, 0)/(E*I)
-        """
-        x = self.variable
-        l = self._hinge_position
-        E = self._elastic_modulus
-        I = self._second_moment
-
-        if isinstance(I, Piecewise):
-            I1 = I.args[0][0]
-            I2 = I.args[1][0]
-        else:
-            I1 = I2 = I
-
-        load_1 = 0       # Load equation on first segment of composite beam
-        load_2 = 0       # Load equation on second segment of composite beam
-
-        # Distributing load on both segments
-        for load in self.applied_loads:
-            if load[1] < l:
-                load_1 += load[0]*SingularityFunction(x, load[1], load[2])
-                if load[2] == 0:
-                    load_1 -= load[0]*SingularityFunction(x, load[3], load[2])
-                elif load[2] > 0:
-                    load_1 -= load[0]*SingularityFunction(x, load[3], load[2]) + load[0]*SingularityFunction(x, load[3], 0)
-            elif load[1] == l:
-                load_1 += load[0]*SingularityFunction(x, load[1], load[2])
-                load_2 += load[0]*SingularityFunction(x, load[1] - l, load[2])
-            elif load[1] > l:
-                load_2 += load[0]*SingularityFunction(x, load[1] - l, load[2])
-                if load[2] == 0:
-                    load_2 -= load[0]*SingularityFunction(x, load[3] - l, load[2])
-                elif load[2] > 0:
-                    load_2 -= load[0]*SingularityFunction(x, load[3] - l, load[2]) + load[0]*SingularityFunction(x, load[3] - l, 0)
-
-        h = Symbol('h')     # Force due to hinge
-        load_1 += h*SingularityFunction(x, l, -1)
-        load_2 -= h*SingularityFunction(x, 0, -1)
-
-        eq = []
-        shear_1 = integrate(load_1, x)
-        shear_curve_1 = limit(shear_1, x, l)
-        eq.append(shear_curve_1)
-        bending_1 = integrate(shear_1, x)
-        moment_curve_1 = limit(bending_1, x, l)
-        eq.append(moment_curve_1)
-
-        shear_2 = integrate(load_2, x)
-        shear_curve_2 = limit(shear_2, x, self.length - l)
-        eq.append(shear_curve_2)
-        bending_2 = integrate(shear_2, x)
-        moment_curve_2 = limit(bending_2, x, self.length - l)
-        eq.append(moment_curve_2)
-
-        C1 = Symbol('C1')
-        C2 = Symbol('C2')
-        C3 = Symbol('C3')
-        C4 = Symbol('C4')
-        slope_1 = S.One/(E*I1)*(integrate(bending_1, x) + C1)
-        def_1 = S.One/(E*I1)*(integrate((E*I)*slope_1, x) + C1*x + C2)
-        slope_2 = S.One/(E*I2)*(integrate(integrate(integrate(load_2, x), x), x) + C3)
-        def_2 = S.One/(E*I2)*(integrate((E*I)*slope_2, x) + C4)
-
-        for position, value in self.bc_slope:
-            if position<l:
-                eq.append(slope_1.subs(x, position) - value)
-            else:
-                eq.append(slope_2.subs(x, position - l) - value)
-
-        for position, value in self.bc_deflection:
-            if position<l:
-                eq.append(def_1.subs(x, position) - value)
-            else:
-                eq.append(def_2.subs(x, position - l) - value)
-
-        eq.append(def_1.subs(x, l) - def_2.subs(x, 0)) # Deflection of both the segments at hinge would be equal
-
-        constants = list(linsolve(eq, C1, C2, C3, C4, h, *reactions))
-        reaction_values = list(constants[0])[5:]
-
-        self._reaction_loads = dict(zip(reactions, reaction_values))
-        self._load = self._load.subs(self._reaction_loads)
-
-        # Substituting constants and reactional load and moments with their corresponding values
-        slope_1 = slope_1.subs({C1: constants[0][0], h:constants[0][4]}).subs(self._reaction_loads)
-        def_1 = def_1.subs({C1: constants[0][0], C2: constants[0][1], h:constants[0][4]}).subs(self._reaction_loads)
-        slope_2 = slope_2.subs({x: x-l, C3: constants[0][2], h:constants[0][4]}).subs(self._reaction_loads)
-        def_2 = def_2.subs({x: x-l,C3: constants[0][2], C4: constants[0][3], h:constants[0][4]}).subs(self._reaction_loads)
-
-        self._hinge_beam_slope = slope_1*SingularityFunction(x, 0, 0) - slope_1*SingularityFunction(x, l, 0) + slope_2*SingularityFunction(x, l, 0)
-        self._hinge_beam_deflection = def_1*SingularityFunction(x, 0, 0) - def_1*SingularityFunction(x, l, 0) + def_2*SingularityFunction(x, l, 0)
-
     def solve_for_reaction_loads(self, *reactions):
         """
-        Solves for the reaction forces.
+        This method solves for all the reaction loads, rotation jumps, deflection jumps.
+
+        Parameters
+        ==========
+        reactions : Symbol
+            If the supports are added using apply_load method the unknown support loads needs to be passed as reactions
+            if the supports are applied uing the apply_support method the reaction symbols are optional as they are internally
+            tracked and added for solve_for_reaction_loads and if user is comfortable passing them they can pass the rection symbols too
 
         Examples
         ========
@@ -729,9 +925,10 @@ class Beam(object):
 
         Using the sign convention of upward forces and clockwise moment
         being positive.
+        Below are the three ways you can apply supports and solve_for_reaction_loads
 
         >>> from sympy.physics.continuum_mechanics.beam import Beam
-        >>> from sympy import symbols, linsolve, limit
+        >>> from sympy import symbols
         >>> E, I = symbols('E, I')
         >>> R1, R2 = symbols('R1, R2')
         >>> b = Beam(30, E, I)
@@ -743,26 +940,81 @@ class Beam(object):
         >>> b.load
         R1*SingularityFunction(x, 10, -1) + R2*SingularityFunction(x, 30, -1)
             - 8*SingularityFunction(x, 0, -1) + 120*SingularityFunction(x, 30, -2)
-        >>> b.solve_for_reaction_loads(R1, R2)
+        >>> b.solve_for_reaction_loads(R1, R2)          # The user must pass symbols for solving reactions when applied supports as loads.
         >>> b.reaction_loads
         {R1: 6, R2: 2}
         >>> b.load
         -8*SingularityFunction(x, 0, -1) + 6*SingularityFunction(x, 10, -1)
             + 120*SingularityFunction(x, 30, -2) + 2*SingularityFunction(x, 30, -1)
-        """
-        if self._composite_type == "hinge":
-            return self._solve_hinge_beams(*reactions)
 
+        >>> from sympy.physics.continuum_mechanics.beam import Beam
+        >>> from sympy import symbols
+        >>> E, I = symbols('E, I')
+        >>> R1, R2 = symbols('R1, R2')
+        >>> b = Beam(30, E, I)
+        >>> b.apply_load(-8, 0, -1)
+        >>> R1 = b.apply_support(10,"pin")  # Reaction force at x = 10
+        >>> R2 = b.apply_support(30,"pin")  # Reaction force at x = 30
+        >>> b.apply_load(120, 30, -2)
+        >>> b.load
+        R_10*SingularityFunction(x, 10, -1) + R_30*SingularityFunction(x, 30, -1)
+            - 8*SingularityFunction(x, 0, -1) + 120*SingularityFunction(x, 30, -2)
+        >>> b.solve_for_reaction_loads(R1, R2)       # passing the symbols for solving
+        >>> b.reaction_loads
+        {R_10: 6, R_30: 2}
+        >>> b.load
+        -8*SingularityFunction(x, 0, -1) + 6*SingularityFunction(x, 10, -1)
+            + 120*SingularityFunction(x, 30, -2) + 2*SingularityFunction(x, 30, -1)
+
+        >>> from sympy.physics.continuum_mechanics.beam import Beam
+        >>> from sympy import symbols
+        >>> E, I = symbols('E, I')
+        >>> R1, R2 = symbols('R1, R2')
+        >>> b = Beam(30, E, I)
+        >>> b.apply_load(-8, 0, -1)
+        >>> R1 = b.apply_support(10,"pin")  # Reaction force at x = 10
+        >>> R2 = b.apply_support(30,"pin")  # Reaction force at x = 30
+        >>> b.apply_load(120, 30, -2)
+        >>> b.load
+        R_10*SingularityFunction(x, 10, -1) + R_30*SingularityFunction(x, 30, -1)
+            - 8*SingularityFunction(x, 0, -1) + 120*SingularityFunction(x, 30, -2)
+        >>> b.solve_for_reaction_loads()                 # solving reactions without passing the symbols while using apply_support for supports
+        >>> b.reaction_loads
+        {R_10: 6, R_30: 2}
+        >>> b.load
+        -8*SingularityFunction(x, 0, -1) + 6*SingularityFunction(x, 10, -1)
+            + 120*SingularityFunction(x, 30, -2) + 2*SingularityFunction(x, 30, -1)
+        """
+
+        if len(set(reactions)) != len(reactions):
+            raise ValueError(
+                "Duplicate Symbols passed into solve_for_reaction_loads()"
+            )
         x = self.variable
         l = self.length
         C3 = Symbol('C3')
         C4 = Symbol('C4')
+        rotation_jumps = tuple(self._rotation_hinge_symbols)
+        deflection_jumps = tuple(self._sliding_hinge_symbols)
+        applied_supports = tuple(self._applied_support_symbols)
 
         shear_curve = limit(self.shear_force(), x, l)
         moment_curve = limit(self.bending_moment(), x, l)
 
+        shear_force_eqs = []
+        bending_moment_eqs = []
         slope_eqs = []
         deflection_eqs = []
+
+        for position, value in self._boundary_conditions['shear_force']:
+            eqs = self.shear_force().subs(x, position) - value
+            new_eqs = sum(arg for arg in eqs.args if not any(num.is_infinite for num in arg.args))
+            shear_force_eqs.append(new_eqs)
+
+        for position, value in self._boundary_conditions['bending_moment']:
+            eqs = self.bending_moment().subs(x, position) - value
+            new_eqs = sum(arg for arg in eqs.args if not any(num.is_infinite for num in arg.args))
+            bending_moment_eqs.append(new_eqs)
 
         slope_curve = integrate(self.bending_moment(), x) + C3
         for position, value in self._boundary_conditions['slope']:
@@ -773,13 +1025,21 @@ class Beam(object):
         for position, value in self._boundary_conditions['deflection']:
             eqs = deflection_curve.subs(x, position) - value
             deflection_eqs.append(eqs)
+        total_supports = tuple(set(applied_supports + reactions))
+        solution = list((linsolve([shear_curve, moment_curve] + shear_force_eqs + bending_moment_eqs + slope_eqs
+                            + deflection_eqs, (C3, C4) + total_supports + rotation_jumps + deflection_jumps).args)[0])
+        reaction_index = 2+len(total_supports)
+        rotation_index = reaction_index + len(rotation_jumps)
+        reaction_solution = solution[2:reaction_index]
+        rotation_solution = solution[reaction_index:rotation_index]
+        deflection_solution = solution[rotation_index:]
 
-        solution = list((linsolve([shear_curve, moment_curve] + slope_eqs
-                            + deflection_eqs, (C3, C4) + reactions).args)[0])
-        solution = solution[2:]
-
-        self._reaction_loads = dict(zip(reactions, solution))
+        self._reaction_loads = dict(zip(total_supports, reaction_solution))
+        self._rotation_jumps = dict(zip(rotation_jumps, rotation_solution))
+        self._deflection_jumps = dict(zip(deflection_jumps, deflection_solution))
         self._load = self._load.subs(self._reaction_loads)
+        self._load = self._load.subs(self._rotation_jumps)
+        self._load = self._load.subs(self._deflection_jumps)
 
     def shear_force(self):
         """
@@ -810,15 +1070,14 @@ class Beam(object):
         >>> b.bc_deflection = [(10, 0), (30, 0)]
         >>> b.solve_for_reaction_loads(R1, R2)
         >>> b.shear_force()
-        -8*SingularityFunction(x, 0, 0) + 6*SingularityFunction(x, 10, 0) + 120*SingularityFunction(x, 30, -1) + 2*SingularityFunction(x, 30, 0)
+        8*SingularityFunction(x, 0, 0) - 6*SingularityFunction(x, 10, 0) - 120*SingularityFunction(x, 30, -1) - 2*SingularityFunction(x, 30, 0)
         """
         x = self.variable
-        return integrate(self.load, x)
+        return -integrate(self.load, x)
 
     def max_shear_force(self):
         """Returns maximum Shear force and its coordinate
         in the Beam object."""
-        from sympy import solve, Mul, Interval
         shear_curve = self.shear_force()
         x = self.variable
 
@@ -828,8 +1087,8 @@ class Beam(object):
             if isinstance(term, Mul):
                 term = term.args[-1]    # SingularityFunction in the term
             singularity.append(term.args[1])
-        singularity.sort()
         singularity = list(set(singularity))
+        singularity.sort()
 
         intervals = []    # List of Intervals with discrete value of shear force
         shear_values = []   # List of values of shear force in each interval
@@ -841,10 +1100,9 @@ class Beam(object):
                 points = solve(shear_slope, x)
                 val = []
                 for point in points:
-                    val.append(shear_curve.subs(x, point))
+                    val.append(abs(shear_curve.subs(x, point)))
                 points.extend([singularity[i-1], s])
-                val.extend([limit(shear_curve, x, singularity[i-1], '+'), limit(shear_curve, x, s, '-')])
-                val = list(map(abs, val))
+                val += [abs(limit(shear_curve, x, singularity[i-1], '+')), abs(limit(shear_curve, x, s, '-'))]
                 max_shear = max(val)
                 shear_values.append(max_shear)
                 intervals.append(points[val.index(max_shear)])
@@ -896,15 +1154,40 @@ class Beam(object):
         >>> b.bc_deflection = [(10, 0), (30, 0)]
         >>> b.solve_for_reaction_loads(R1, R2)
         >>> b.bending_moment()
-        -8*SingularityFunction(x, 0, 1) + 6*SingularityFunction(x, 10, 1) + 120*SingularityFunction(x, 30, 0) + 2*SingularityFunction(x, 30, 1)
+        8*SingularityFunction(x, 0, 1) - 6*SingularityFunction(x, 10, 1) - 120*SingularityFunction(x, 30, 0) - 2*SingularityFunction(x, 30, 1)
         """
         x = self.variable
         return integrate(self.shear_force(), x)
 
     def max_bmoment(self):
-        """Returns maximum Shear force and its coordinate
-        in the Beam object."""
-        from sympy import solve, Mul, Interval
+        """
+        Returns maximum Shear force and its coordinate
+        in the Beam object.
+
+        Examples
+        ========
+        There is a beam of length 10 meters. At the left end of the beam
+        there is a fixed support. At two meters from the right end of the
+        beam there is a roller support. A downwards distributed load of 10 kN/m
+        is applied between the two supports. At the right end of the beam, a
+        downwards point load of 50 kN is applied.
+
+        Using the sign convention of upward forces and clockwise moment
+        being positive.
+
+        >>> from sympy.physics.continuum_mechanics.beam import Beam
+        >>> from sympy import symbols
+        >>> E, I = symbols('E, I')
+        >>> b = Beam(10, E, I)
+        >>> b.apply_load(5000, 2, -1)
+        >>> p0, m0 = b.apply_support(0, type='fixed')
+        >>> p8 = b.apply_support(8, type='roller')
+        >>> b.apply_load(20000, 0, 0, end=8)
+        >>> b.apply_load(50000, 10, -1)
+        >>> b.solve_for_reaction_loads(p0, m0, p8)
+        >>> b.max_bmoment()
+        (0, 233125/2)
+        """
         bending_curve = self.bending_moment()
         x = self.variable
 
@@ -914,8 +1197,8 @@ class Beam(object):
             if isinstance(term, Mul):
                 term = term.args[-1]    # SingularityFunction in the term
             singularity.append(term.args[1])
-        singularity.sort()
         singularity = list(set(singularity))
+        singularity.sort()
 
         intervals = []    # List of Intervals with discrete value of bending moment
         moment_values = []   # List of values of bending moment in each interval
@@ -923,17 +1206,20 @@ class Beam(object):
             if s == 0:
                 continue
             try:
-                moment_slope = Piecewise((float("nan"), x<=singularity[i-1]),(self.shear_force().rewrite(Piecewise), x<s), (float("nan"), True))
+                moment_slope = Piecewise(
+                    (float("nan"), x <= singularity[i - 1]),
+                    (self.shear_force().rewrite(Piecewise), x < s),
+                    (float("nan"), True))
                 points = solve(moment_slope, x)
                 val = []
                 for point in points:
-                    val.append(bending_curve.subs(x, point))
+                    val.append(abs(bending_curve.subs(x, point)))
                 points.extend([singularity[i-1], s])
-                val.extend([limit(bending_curve, x, singularity[i-1], '+'), limit(bending_curve, x, s, '-')])
-                val = list(map(abs, val))
+                val += [abs(limit(bending_curve, x, singularity[i-1], '+')), abs(limit(bending_curve, x, s, '-'))]
                 max_moment = max(val)
                 moment_values.append(max_moment)
                 intervals.append(points[val.index(max_moment)])
+
             # If bending moment in a particular Interval has zero or constant
             # slope, then above block gives NotImplementedError as solve
             # can't represent Interval solutions.
@@ -961,7 +1247,7 @@ class Beam(object):
 
         Examples
         ========
-        There is is 10 meter long overhanging beam. There are
+        There is a 10-meter-long overhanging beam. There are
         two simple supports below the beam. One at the start
         and another one at a distance of 6 meters from the start.
         Point loads of magnitude 10KN and 20KN are applied at
@@ -969,6 +1255,7 @@ class Beam(object):
         distribute load of magnitude of magnitude 3KN/m is also
         applied on top starting from 6 meters away from starting
         point till end.
+
         Using the sign convention of upward forces and clockwise moment
         being positive.
 
@@ -984,15 +1271,83 @@ class Beam(object):
         >>> b.point_cflexure()
         [10/3]
         """
-        from sympy import solve, Piecewise
 
-        # To restrict the range within length of the Beam
-        moment_curve = Piecewise((float("nan"), self.variable<=0),
-                (self.bending_moment(), self.variable<self.length),
-                (float("nan"), True))
+        x = self.variable
+        l = self.length
 
-        points = solve(moment_curve.rewrite(Piecewise), self.variable,
-                        domain=S.Reals)
+        bm = self.bending_moment()
+
+        # Filter out singularity terms with order < 0
+        terms = []
+        for term in bm.args:
+            sfs = list(term.atoms(SingularityFunction))
+
+            if not sfs:
+                terms.append(term)
+            else:
+                for sf in sfs:
+                    order = sf.args[2]
+                    if order >= 0:
+                        terms.append(term)
+
+        non_singular_bending_moment = sum(terms)
+
+        # Identify singularity points to define intervals
+        singularity_points = set()
+        for term in non_singular_bending_moment.atoms(SingularityFunction):
+            location = term.args[1]
+            singularity_points.add(location)
+        singularity_points = sorted(singularity_points, key=lambda p: p.evalf())
+
+        # Define intervals
+        intervals = []
+        points = [0] + [p for p in singularity_points if p != 0 and p != l] + [l]
+        for i in range(len(points) - 1):
+            start, end = points[i], points[i + 1]
+            if start != end:
+                intervals.append(Interval(start, end))
+
+        # Solve for roots in each interval
+        roots = set()
+        for interval in intervals:
+            # adding singularity points as default roots for temporary
+            roots.add(interval.start)
+            roots.add(interval.end)
+            expr = non_singular_bending_moment
+
+            sol = solveset(expr, x, domain=interval)
+            if isinstance(sol, FiniteSet):
+                for r in sol:
+                    roots.add(r)
+            elif isinstance(sol, Interval):
+                roots.add(sol.start)
+                roots.add(sol.end)
+
+        roots = sorted(roots)
+
+        # Check for sign changes
+        points = []
+        if len(roots) <= 1:
+            return []
+
+        for i, point in enumerate(roots):
+            if i == 0:
+                left_mid = (0 + point) / 2
+                right_mid = (point + roots[i + 1]) / 2
+            elif i == len(roots) - 1:
+                left_mid = (roots[i - 1] + point) / 2
+                right_mid = (point + self.length) / 2
+            else:
+                left_mid = (roots[i - 1] + point) / 2
+                right_mid = (point + roots[i + 1]) / 2
+
+            left_val = bm.subs(x, left_mid)
+            right_val = bm.subs(x, right_mid)
+
+            product=left_val*right_val
+            if isinstance(product,Expr):
+                if product.is_negative:
+                    points.append(point)
         return points
 
     def slope(self):
@@ -1031,11 +1386,9 @@ class Beam(object):
         E = self.elastic_modulus
         I = self.second_moment
 
-        if self._composite_type == "hinge":
-            return self._hinge_beam_slope
         if not self._boundary_conditions['slope']:
             return diff(self.deflection(), x)
-        if isinstance(I, Piecewise) and self._composite_type == "fixed":
+        if isinstance(I, Piecewise) and self._joined_beam:
             args = I.args
             slope = 0
             prev_slope = 0
@@ -1043,7 +1396,7 @@ class Beam(object):
             for i in range(len(args)):
                 if i != 0:
                     prev_end = args[i-1][1].args[1]
-                slope_value = S.One/E*integrate(self.bending_moment()/args[i][0], (x, prev_end, x))
+                slope_value = -S.One/E*integrate(self.bending_moment()/args[i][0], (x, prev_end, x))
                 if i != len(args) - 1:
                     slope += (prev_slope + slope_value)*SingularityFunction(x, prev_end, 0) - \
                         (prev_slope + slope_value)*SingularityFunction(x, args[i][1].args[1], 0)
@@ -1053,7 +1406,7 @@ class Beam(object):
             return slope
 
         C3 = Symbol('C3')
-        slope_curve = integrate(S.One/(E*I)*self.bending_moment(), x) + C3
+        slope_curve = -integrate(S.One/(E*I)*self.bending_moment(), x) + C3
 
         bc_eqs = []
         for position, value in self._boundary_conditions['slope']:
@@ -1098,10 +1451,8 @@ class Beam(object):
         x = self.variable
         E = self.elastic_modulus
         I = self.second_moment
-        if self._composite_type == "hinge":
-            return self._hinge_beam_deflection
         if not self._boundary_conditions['deflection'] and not self._boundary_conditions['slope']:
-            if isinstance(I, Piecewise) and self._composite_type == "fixed":
+            if isinstance(I, Piecewise) and self._joined_beam:
                 args = I.args
                 prev_slope = 0
                 prev_def = 0
@@ -1110,7 +1461,7 @@ class Beam(object):
                 for i in range(len(args)):
                     if i != 0:
                         prev_end = args[i-1][1].args[1]
-                    slope_value = S.One/E*integrate(self.bending_moment()/args[i][0], (x, prev_end, x))
+                    slope_value = -S.One/E*integrate(self.bending_moment()/args[i][0], (x, prev_end, x))
                     recent_segment_slope = prev_slope + slope_value
                     deflection_value = integrate(recent_segment_slope, (x, prev_end, x))
                     if i != len(args) - 1:
@@ -1123,13 +1474,13 @@ class Beam(object):
                 return deflection
             base_char = self._base_char
             constants = symbols(base_char + '3:5')
-            return S.One/(E*I)*integrate(integrate(self.bending_moment(), x), x) + constants[0]*x + constants[1]
+            return S.One/(E*I)*integrate(-integrate(self.bending_moment(), x), x) + constants[0]*x + constants[1]
         elif not self._boundary_conditions['deflection']:
             base_char = self._base_char
             constant = symbols(base_char + '4')
             return integrate(self.slope(), x) + constant
         elif not self._boundary_conditions['slope'] and self._boundary_conditions['deflection']:
-            if isinstance(I, Piecewise) and self._composite_type == "fixed":
+            if isinstance(I, Piecewise) and self._joined_beam:
                 args = I.args
                 prev_slope = 0
                 prev_def = 0
@@ -1138,7 +1489,7 @@ class Beam(object):
                 for i in range(len(args)):
                     if i != 0:
                         prev_end = args[i-1][1].args[1]
-                    slope_value = S.One/E*integrate(self.bending_moment()/args[i][0], (x, prev_end, x))
+                    slope_value = -S.One/E*integrate(self.bending_moment()/args[i][0], (x, prev_end, x))
                     recent_segment_slope = prev_slope + slope_value
                     deflection_value = integrate(recent_segment_slope, (x, prev_end, x))
                     if i != len(args) - 1:
@@ -1151,7 +1502,7 @@ class Beam(object):
                 return deflection
             base_char = self._base_char
             C3, C4 = symbols(base_char + '3:5')    # Integration constants
-            slope_curve = integrate(self.bending_moment(), x) + C3
+            slope_curve = -integrate(self.bending_moment(), x) + C3
             deflection_curve = integrate(slope_curve, x) + C4
             bc_eqs = []
             for position, value in self._boundary_conditions['deflection']:
@@ -1161,7 +1512,7 @@ class Beam(object):
             deflection_curve = deflection_curve.subs({C3: constants[0][0], C4: constants[0][1]})
             return S.One/(E*I)*deflection_curve
 
-        if isinstance(I, Piecewise) and self._composite_type == "fixed":
+        if isinstance(I, Piecewise) and self._joined_beam:
             args = I.args
             prev_slope = 0
             prev_def = 0
@@ -1199,7 +1550,6 @@ class Beam(object):
         Returns point of max deflection and its corresponding deflection value
         in a Beam object.
         """
-        from sympy import solve, Piecewise
 
         # To restrict the range within length of the Beam
         slope_curve = Piecewise((float("nan"), self.variable<=0),
@@ -1216,6 +1566,77 @@ class Beam(object):
             return (points[deflections.index(max_def)], max_def)
         else:
             return None
+
+    def shear_stress(self):
+        """
+        Returns an expression representing the Shear Stress
+        curve of the Beam object.
+        """
+        return self.shear_force()/self._area
+
+    def plot_shear_stress(self, subs=None):
+        """
+
+        Returns a plot of shear stress present in the beam object.
+
+        Parameters
+        ==========
+        subs : dictionary
+            Python dictionary containing Symbols as key and their
+            corresponding values.
+
+        Examples
+        ========
+        There is a beam of length 8 meters and area of cross section 2 square
+        meters. A constant distributed load of 10 KN/m is applied from half of
+        the beam till the end. There are two simple supports below the beam,
+        one at the starting point and another at the ending point of the beam.
+        A pointload of magnitude 5 KN is also applied from top of the
+        beam, at a distance of 4 meters from the starting point.
+        Take E = 200 GPa and I = 400*(10**-6) meter**4.
+
+        Using the sign convention of downwards forces being positive.
+
+        .. plot::
+            :context: close-figs
+            :format: doctest
+            :include-source: True
+
+            >>> from sympy.physics.continuum_mechanics.beam import Beam
+            >>> from sympy import symbols
+            >>> R1, R2 = symbols('R1, R2')
+            >>> b = Beam(8, 200*(10**9), 400*(10**-6), 2)
+            >>> b.apply_load(5000, 2, -1)
+            >>> b.apply_load(R1, 0, -1)
+            >>> b.apply_load(R2, 8, -1)
+            >>> b.apply_load(10000, 4, 0, end=8)
+            >>> b.bc_deflection = [(0, 0), (8, 0)]
+            >>> b.solve_for_reaction_loads(R1, R2)
+            >>> b.plot_shear_stress()
+            Plot object containing:
+            [0]: cartesian line: 6875*SingularityFunction(x, 0, 0) - 2500*SingularityFunction(x, 2, 0)
+            - 5000*SingularityFunction(x, 4, 1) + 15625*SingularityFunction(x, 8, 0)
+            + 5000*SingularityFunction(x, 8, 1) for x over (0.0, 8.0)
+        """
+
+        shear_stress = self.shear_stress()
+        x = self.variable
+        length = self.length
+
+        if subs is None:
+            subs = {}
+        for sym in shear_stress.atoms(Symbol):
+            if sym != x and sym not in subs:
+                raise ValueError('value of %s was not passed.' %sym)
+
+        if length in subs:
+            length = subs[length]
+
+        # Returns Plot of Shear Stress
+        return plot (shear_stress.subs(subs), (x, 0, length),
+        title='Shear Stress', xlabel=r'$\mathrm{x}$', ylabel=r'$\tau$',
+        line_color='r')
+
 
     def plot_shear_force(self, subs=None):
         """
@@ -1256,9 +1677,9 @@ class Beam(object):
             >>> b.solve_for_reaction_loads(R1, R2)
             >>> b.plot_shear_force()
             Plot object containing:
-            [0]: cartesian line: -13750*SingularityFunction(x, 0, 0) + 5000*SingularityFunction(x, 2, 0)
-            + 10000*SingularityFunction(x, 4, 1) - 31250*SingularityFunction(x, 8, 0)
-            - 10000*SingularityFunction(x, 8, 1) for x over (0.0, 8.0)
+            [0]: cartesian line: 13750*SingularityFunction(x, 0, 0) - 5000*SingularityFunction(x, 2, 0)
+            - 10000*SingularityFunction(x, 4, 1) + 31250*SingularityFunction(x, 8, 0)
+            + 10000*SingularityFunction(x, 8, 1) for x over (0.0, 8.0)
         """
         shear_force = self.shear_force()
         if subs is None:
@@ -1314,9 +1735,9 @@ class Beam(object):
             >>> b.solve_for_reaction_loads(R1, R2)
             >>> b.plot_bending_moment()
             Plot object containing:
-            [0]: cartesian line: -13750*SingularityFunction(x, 0, 1) + 5000*SingularityFunction(x, 2, 1)
-            + 5000*SingularityFunction(x, 4, 2) - 31250*SingularityFunction(x, 8, 1)
-            - 5000*SingularityFunction(x, 8, 2) for x over (0.0, 8.0)
+            [0]: cartesian line: 13750*SingularityFunction(x, 0, 1) - 5000*SingularityFunction(x, 2, 1)
+            - 5000*SingularityFunction(x, 4, 2) + 31250*SingularityFunction(x, 8, 1)
+            + 5000*SingularityFunction(x, 8, 2) for x over (0.0, 8.0)
         """
         bending_moment = self.bending_moment()
         if subs is None:
@@ -1483,7 +1904,6 @@ class Beam(object):
 
             >>> from sympy.physics.continuum_mechanics.beam import Beam
             >>> from sympy import symbols
-            >>> from sympy.plotting import PlotGrid
             >>> R1, R2 = symbols('R1, R2')
             >>> b = Beam(8, 200*(10**9), 400*(10**-6))
             >>> b.apply_load(5000, 2, -1)
@@ -1503,11 +1923,8 @@ class Beam(object):
                 continue
             if sym not in subs:
                 raise ValueError('Value of %s was not passed.' %sym)
-        if self.length in subs:
-            length = subs[self.length]
-        else:
-            length = self.length
-
+        if length in subs:
+            length = subs[length]
         ax1 = plot(self.shear_force().subs(subs), (variable, 0, length),
                    title="Shear Force", xlabel=r'$\mathrm{x}$', ylabel=r'$\mathrm{V}$',
                    line_color='g', show=False)
@@ -1523,19 +1940,539 @@ class Beam(object):
 
         return PlotGrid(4, 1, ax1, ax2, ax3, ax4)
 
+    def _solve_for_ild_equations(self, value):
+        """
+
+        Helper function for I.L.D. It takes the unsubstituted
+        copy of the load equation and uses it to calculate shear force and bending
+        moment equations.
+        """
+        x = self.variable
+        a = self.ild_variable
+        load = self._load + value * SingularityFunction(x, a, -1)
+        shear_force = -integrate(load, x)
+        bending_moment = integrate(shear_force, x)
+
+        return shear_force, bending_moment
+
+    def solve_for_ild_reactions(self, value, *reactions):
+        """
+
+        Determines the Influence Line Diagram equations for reaction
+        forces under the effect of a moving load.
+
+        Parameters
+        ==========
+        value : Integer
+            Magnitude of moving load
+        reactions :
+            The reaction forces applied on the beam.
+
+        Warning
+        =======
+        This method creates equations that can give incorrect results when
+        substituting a = 0 or a = l, with l the length of the beam.
+
+        Examples
+        ========
+
+        There is a beam of length 10 meters. There are two simple supports
+        below the beam, one at the starting point and another at the ending
+        point of the beam. Calculate the I.L.D. equations for reaction forces
+        under the effect of a moving load of magnitude 1kN.
+
+        Using the sign convention of downwards forces being positive.
+
+        .. plot::
+            :context: close-figs
+            :format: doctest
+            :include-source: True
+
+            >>> from sympy import symbols
+            >>> from sympy.physics.continuum_mechanics.beam import Beam
+            >>> E, I = symbols('E, I')
+            >>> R_0, R_10 = symbols('R_0, R_10')
+            >>> b = Beam(10, E, I)
+            >>> p0 = b.apply_support(0, 'pin')
+            >>> p10 = b.apply_support(10, 'roller')
+            >>> b.solve_for_ild_reactions(1,R_0,R_10)
+            >>> b.ild_reactions
+            {R_0: -SingularityFunction(a, 0, 0) + SingularityFunction(a, 0, 1)/10 - SingularityFunction(a, 10, 1)/10,
+            R_10: -SingularityFunction(a, 0, 1)/10 + SingularityFunction(a, 10, 0) + SingularityFunction(a, 10, 1)/10}
+
+        """
+        shear_force, bending_moment = self._solve_for_ild_equations(value)
+        x = self.variable
+        l = self.length
+        a = self.ild_variable
+
+        rotation_jumps = tuple(self._rotation_hinge_symbols)
+        deflection_jumps = tuple(self._sliding_hinge_symbols)
+
+        C3 = Symbol('C3')
+        C4 = Symbol('C4')
+
+        shear_curve = limit(shear_force, x, l) - value*(SingularityFunction(a, 0, 0) - SingularityFunction(a, l, 0))
+        moment_curve = (limit(bending_moment, x, l) - value * (l * SingularityFunction(a, 0, 0)
+                                                               - SingularityFunction(a, 0, 1)
+                                                               + SingularityFunction(a, l, 1)))
+
+        shear_force_eqs = []
+        bending_moment_eqs = []
+        slope_eqs = []
+        deflection_eqs = []
+
+        for position, val in self._boundary_conditions['shear_force']:
+            eqs = self.shear_force().subs(x, position) - val
+            eqs_without_inf = sum(arg for arg in eqs.args if not any(num.is_infinite for num in arg.args))
+            shear_sinc = value * (SingularityFunction(- a, - position, 0) - SingularityFunction(-a, 0, 0))
+            eqs_with_shear_sinc = eqs_without_inf - shear_sinc
+            shear_force_eqs.append(eqs_with_shear_sinc)
+
+        for position, val in self._boundary_conditions['bending_moment']:
+            eqs = self.bending_moment().subs(x, position) - val
+            eqs_without_inf = sum(arg for arg in eqs.args if not any(num.is_infinite for num in arg.args))
+            moment_sinc = value * (position * SingularityFunction(a, 0, 0)
+                                   - SingularityFunction(a, 0, 1) + SingularityFunction(a, position, 1))
+            eqs_with_moment_sinc = eqs_without_inf - moment_sinc
+            bending_moment_eqs.append(eqs_with_moment_sinc)
+
+        slope_curve = integrate(bending_moment, x) + C3
+        for position, val in self._boundary_conditions['slope']:
+            eqs = slope_curve.subs(x, position) - val + value * (SingularityFunction(-a, 0, 1) + position * SingularityFunction(-a, 0, 0))**2 / 2
+            slope_eqs.append(eqs)
+
+        deflection_curve = integrate(slope_curve, x) + C4
+        for position, val in self._boundary_conditions['deflection']:
+            eqs = deflection_curve.subs(x, position) - val + value * (SingularityFunction(-a, 0, 1) + position * SingularityFunction(-a, 0, 0)) ** 3 / 6
+            deflection_eqs.append(eqs)
+
+        solution = list((linsolve([shear_curve, moment_curve] + shear_force_eqs + bending_moment_eqs + slope_eqs
+                                  + deflection_eqs, (C3, C4) + reactions + rotation_jumps + deflection_jumps).args)[0])
+
+        reaction_index = 2 + len(reactions)
+        rotation_index = reaction_index + len(rotation_jumps)
+        reaction_solution = solution[2:reaction_index]
+        rotation_solution = solution[reaction_index:rotation_index]
+        deflection_solution = solution[rotation_index:]
+
+        self._ild_reactions = dict(zip(reactions, reaction_solution))
+        self._ild_rotations_jumps = dict(zip(rotation_jumps, rotation_solution))
+        self._ild_deflection_jumps = dict(zip(deflection_jumps, deflection_solution))
+
+    def plot_ild_reactions(self, subs=None):
+        """
+
+        Plots the Influence Line Diagram of Reaction Forces
+        under the effect of a moving load. This function
+        should be called after calling solve_for_ild_reactions().
+
+        Parameters
+        ==========
+
+        subs : dictionary
+               Python dictionary containing Symbols as key and their
+               corresponding values.
+
+        Warning
+        =======
+        The values for a = 0 and a = l, with l the length of the beam, in
+        the plot can be incorrect.
+
+        Examples
+        ========
+
+        There is a beam of length 10 meters. A point load of magnitude 5KN
+        is also applied from top of the beam, at a distance of 4 meters
+        from the starting point. There are two simple supports below the
+        beam, located at the starting point and at a distance of 7 meters
+        from the starting point. Plot the I.L.D. equations for reactions
+        at both support points under the effect of a moving load
+        of magnitude 1kN.
+
+        Using the sign convention of downwards forces being positive.
+
+        .. plot::
+            :context: close-figs
+            :format: doctest
+            :include-source: True
+
+            >>> from sympy import symbols
+            >>> from sympy.physics.continuum_mechanics.beam import Beam
+            >>> E, I = symbols('E, I')
+            >>> R_0, R_7 = symbols('R_0, R_7')
+            >>> b = Beam(10, E, I)
+            >>> p0 = b.apply_support(0, 'roller')
+            >>> p7 = b.apply_support(7, 'roller')
+            >>> b.apply_load(5,4,-1)
+            >>> b.solve_for_ild_reactions(1,R_0,R_7)
+            >>> b.ild_reactions
+            {R_0: -SingularityFunction(a, 0, 0) + SingularityFunction(a, 0, 1)/7
+            - 3*SingularityFunction(a, 10, 0)/7  - SingularityFunction(a, 10, 1)/7 - 15/7,
+            R_7: -SingularityFunction(a, 0, 1)/7 + 10*SingularityFunction(a, 10, 0)/7 + SingularityFunction(a, 10, 1)/7 - 20/7}
+            >>> b.plot_ild_reactions()
+            PlotGrid object containing:
+            Plot[0]:Plot object containing:
+            [0]: cartesian line: -SingularityFunction(a, 0, 0) + SingularityFunction(a, 0, 1)/7
+            - 3*SingularityFunction(a, 10, 0)/7 - SingularityFunction(a, 10, 1)/7 - 15/7 for a over (0.0, 10.0)
+            Plot[1]:Plot object containing:
+            [0]: cartesian line: -SingularityFunction(a, 0, 1)/7 + 10*SingularityFunction(a, 10, 0)/7
+            + SingularityFunction(a, 10, 1)/7 - 20/7 for a over (0.0, 10.0)
+
+        """
+        if not self._ild_reactions:
+            raise ValueError("I.L.D. reaction equations not found. Please use solve_for_ild_reactions() to generate the I.L.D. reaction equations.")
+
+        a = self.ild_variable
+        ildplots = []
+
+        if subs is None:
+            subs = {}
+
+        for reaction in self._ild_reactions:
+            for sym in self._ild_reactions[reaction].atoms(Symbol):
+                if sym != a and sym not in subs:
+                    raise ValueError('Value of %s was not passed.' %sym)
+
+        for sym in self._length.atoms(Symbol):
+            if sym != a and sym not in subs:
+                raise ValueError('Value of %s was not passed.' %sym)
+
+        for reaction in self._ild_reactions:
+            ildplots.append(plot(self._ild_reactions[reaction].subs(subs),
+            (a, 0, self._length.subs(subs)), title='I.L.D. for Reactions',
+            xlabel=a, ylabel=reaction, line_color='blue', show=False))
+
+        return PlotGrid(len(ildplots), 1, *ildplots)
+
+    def solve_for_ild_shear(self, distance, value, *reactions):
+        """
+
+        Determines the Influence Line Diagram equations for shear at a
+        specified point under the effect of a moving load.
+
+        Parameters
+        ==========
+        distance : Integer
+            Distance of the point from the start of the beam
+            for which equations are to be determined
+        value : Integer
+            Magnitude of moving load
+        reactions :
+            The reaction forces applied on the beam.
+
+        Warning
+        =======
+        This method creates equations that can give incorrect results when
+        substituting a = 0 or a = l, with l the length of the beam.
+
+        Examples
+        ========
+
+        There is a beam of length 12 meters. There are two simple supports
+        below the beam, one at the starting point and another at a distance
+        of 8 meters. Calculate the I.L.D. equations for Shear at a distance
+        of 4 meters under the effect of a moving load of magnitude 1kN.
+
+        Using the sign convention of downwards forces being positive.
+
+        .. plot::
+            :context: close-figs
+            :format: doctest
+            :include-source: True
+
+            >>> from sympy import symbols
+            >>> from sympy.physics.continuum_mechanics.beam import Beam
+            >>> E, I = symbols('E, I')
+            >>> R_0, R_8 = symbols('R_0, R_8')
+            >>> b = Beam(12, E, I)
+            >>> p0 = b.apply_support(0, 'roller')
+            >>> p8 = b.apply_support(8, 'roller')
+            >>> b.solve_for_ild_reactions(1, R_0, R_8)
+            >>> b.solve_for_ild_shear(4, 1, R_0, R_8)
+            >>> b.ild_shear
+            -(-SingularityFunction(a, 0, 0) + SingularityFunction(a, 12, 0) + 2)*SingularityFunction(a, 4, 0)
+            - SingularityFunction(-a, 0, 0) - SingularityFunction(a, 0, 0) + SingularityFunction(a, 0, 1)/8
+            + SingularityFunction(a, 12, 0)/2 - SingularityFunction(a, 12, 1)/8 + 1
+
+        """
+
+        x = self.variable
+        l = self.length
+        a = self.ild_variable
+
+        shear_force, _ = self._solve_for_ild_equations(value)
+
+        shear_curve1 = value - limit(shear_force, x, distance)
+        shear_curve2 = (limit(shear_force, x, l) - limit(shear_force, x, distance)) - value
+
+        for reaction in reactions:
+            shear_curve1 = shear_curve1.subs(reaction,self._ild_reactions[reaction])
+            shear_curve2 = shear_curve2.subs(reaction,self._ild_reactions[reaction])
+
+        shear_eq = (shear_curve1 - (shear_curve1 - shear_curve2) * SingularityFunction(a, distance, 0)
+                    - value * SingularityFunction(-a, 0, 0) + value * SingularityFunction(a, l, 0))
+
+        self._ild_shear = shear_eq
+
+    def plot_ild_shear(self,subs=None):
+        """
+
+        Plots the Influence Line Diagram for Shear under the effect
+        of a moving load. This function should be called after
+        calling solve_for_ild_shear().
+
+        Parameters
+        ==========
+
+        subs : dictionary
+               Python dictionary containing Symbols as key and their
+               corresponding values.
+
+        Warning
+        =======
+        The values for a = 0 and a = l, with l the length of the beam, in
+        the plot can be incorrect.
+
+        Examples
+        ========
+
+        There is a beam of length 12 meters. There are two simple supports
+        below the beam, one at the starting point and another at a distance
+        of 8 meters. Plot the I.L.D. for Shear at a distance
+        of 4 meters under the effect of a moving load of magnitude 1kN.
+
+        Using the sign convention of downwards forces being positive.
+
+        .. plot::
+            :context: close-figs
+            :format: doctest
+            :include-source: True
+
+            >>> from sympy import symbols
+            >>> from sympy.physics.continuum_mechanics.beam import Beam
+            >>> E, I = symbols('E, I')
+            >>> R_0, R_8 = symbols('R_0, R_8')
+            >>> b = Beam(12, E, I)
+            >>> p0 = b.apply_support(0, 'roller')
+            >>> p8 = b.apply_support(8, 'roller')
+            >>> b.solve_for_ild_reactions(1, R_0, R_8)
+            >>> b.solve_for_ild_shear(4, 1, R_0, R_8)
+            >>> b.ild_shear
+            -(-SingularityFunction(a, 0, 0) + SingularityFunction(a, 12, 0) + 2)*SingularityFunction(a, 4, 0)
+            - SingularityFunction(-a, 0, 0) - SingularityFunction(a, 0, 0) + SingularityFunction(a, 0, 1)/8
+            + SingularityFunction(a, 12, 0)/2 - SingularityFunction(a, 12, 1)/8 + 1
+            >>> b.plot_ild_shear()
+            Plot object containing:
+            [0]: cartesian line: -(-SingularityFunction(a, 0, 0) + SingularityFunction(a, 12, 0) + 2)*SingularityFunction(a, 4, 0)
+            - SingularityFunction(-a, 0, 0) - SingularityFunction(a, 0, 0) + SingularityFunction(a, 0, 1)/8
+            + SingularityFunction(a, 12, 0)/2 - SingularityFunction(a, 12, 1)/8 + 1 for a over (0.0, 12.0)
+
+        """
+
+        if not self._ild_shear:
+            raise ValueError("I.L.D. shear equation not found. Please use solve_for_ild_shear() to generate the I.L.D. shear equations.")
+
+        l = self._length
+        a = self.ild_variable
+
+        if subs is None:
+            subs = {}
+
+        for sym in self._ild_shear.atoms(Symbol):
+            if sym != a and sym not in subs:
+                raise ValueError('Value of %s was not passed.' %sym)
+
+        for sym in self._length.atoms(Symbol):
+            if sym != a and sym not in subs:
+                raise ValueError('Value of %s was not passed.' %sym)
+
+        return plot(self._ild_shear.subs(subs), (a, 0, l),  title='I.L.D. for Shear',
+               xlabel=r'$\mathrm{a}$', ylabel=r'$\mathrm{V}$', line_color='blue',show=True)
+
+    def solve_for_ild_moment(self, distance, value, *reactions):
+        """
+
+        Determines the Influence Line Diagram equations for moment at a
+        specified point under the effect of a moving load.
+
+        Parameters
+        ==========
+        distance : Integer
+            Distance of the point from the start of the beam
+            for which equations are to be determined
+        value : Integer
+            Magnitude of moving load
+        reactions :
+            The reaction forces applied on the beam.
+
+        Warning
+        =======
+        This method creates equations that can give incorrect results when
+        substituting a = 0 or a = l, with l the length of the beam.
+
+        Examples
+        ========
+
+        There is a beam of length 12 meters. There are two simple supports
+        below the beam, one at the starting point and another at a distance
+        of 8 meters. Calculate the I.L.D. equations for Moment at a distance
+        of 4 meters under the effect of a moving load of magnitude 1kN.
+
+        Using the sign convention of downwards forces being positive.
+
+        .. plot::
+            :context: close-figs
+            :format: doctest
+            :include-source: True
+
+            >>> from sympy import symbols
+            >>> from sympy.physics.continuum_mechanics.beam import Beam
+            >>> E, I = symbols('E, I')
+            >>> R_0, R_8 = symbols('R_0, R_8')
+            >>> b = Beam(12, E, I)
+            >>> p0 = b.apply_support(0, 'roller')
+            >>> p8 = b.apply_support(8, 'roller')
+            >>> b.solve_for_ild_reactions(1, R_0, R_8)
+            >>> b.solve_for_ild_moment(4, 1, R_0, R_8)
+            >>> b.ild_moment
+            -(4*SingularityFunction(a, 0, 0) - SingularityFunction(a, 0, 1) + SingularityFunction(a, 4, 1))*SingularityFunction(a, 4, 0)
+            - SingularityFunction(a, 0, 1)/2 + SingularityFunction(a, 4, 1) - 2*SingularityFunction(a, 12, 0)
+            - SingularityFunction(a, 12, 1)/2
+
+        """
+
+        x = self.variable
+        l = self.length
+        a = self.ild_variable
+
+        _, moment = self._solve_for_ild_equations(value)
+
+        moment_curve1 = value*(distance * SingularityFunction(a, 0, 0) - SingularityFunction(a, 0, 1)
+                               + SingularityFunction(a, distance, 1)) - limit(moment, x, distance)
+        moment_curve2 = (limit(moment, x, l)-limit(moment, x, distance)
+                         - value * (l * SingularityFunction(a, 0, 0) - SingularityFunction(a, 0, 1)
+                                    + SingularityFunction(a, l, 1)))
+
+        for reaction in reactions:
+            moment_curve1 = moment_curve1.subs(reaction, self._ild_reactions[reaction])
+            moment_curve2 = moment_curve2.subs(reaction, self._ild_reactions[reaction])
+
+        moment_eq = moment_curve1 - (moment_curve1 - moment_curve2) * SingularityFunction(a, distance, 0)
+
+        self._ild_moment = moment_eq
+
+    def plot_ild_moment(self,subs=None):
+        """
+
+        Plots the Influence Line Diagram for Moment under the effect
+        of a moving load. This function should be called after
+        calling solve_for_ild_moment().
+
+        Parameters
+        ==========
+
+        subs : dictionary
+               Python dictionary containing Symbols as key and their
+               corresponding values.
+
+        Warning
+        =======
+        The values for a = 0 and a = l, with l the length of the beam, in
+        the plot can be incorrect.
+
+        Examples
+        ========
+
+        There is a beam of length 12 meters. There are two simple supports
+        below the beam, one at the starting point and another at a distance
+        of 8 meters. Plot the I.L.D. for Moment at a distance
+        of 4 meters under the effect of a moving load of magnitude 1kN.
+
+        Using the sign convention of downwards forces being positive.
+
+        .. plot::
+            :context: close-figs
+            :format: doctest
+            :include-source: True
+
+            >>> from sympy import symbols
+            >>> from sympy.physics.continuum_mechanics.beam import Beam
+            >>> E, I = symbols('E, I')
+            >>> R_0, R_8 = symbols('R_0, R_8')
+            >>> b = Beam(12, E, I)
+            >>> p0 = b.apply_support(0, 'roller')
+            >>> p8 = b.apply_support(8, 'roller')
+            >>> b.solve_for_ild_reactions(1, R_0, R_8)
+            >>> b.solve_for_ild_moment(4, 1, R_0, R_8)
+            >>> b.ild_moment
+            -(4*SingularityFunction(a, 0, 0) - SingularityFunction(a, 0, 1) + SingularityFunction(a, 4, 1))*SingularityFunction(a, 4, 0)
+            - SingularityFunction(a, 0, 1)/2 + SingularityFunction(a, 4, 1) - 2*SingularityFunction(a, 12, 0)
+            - SingularityFunction(a, 12, 1)/2
+            >>> b.plot_ild_moment()
+            Plot object containing:
+            [0]: cartesian line: -(4*SingularityFunction(a, 0, 0) - SingularityFunction(a, 0, 1)
+            + SingularityFunction(a, 4, 1))*SingularityFunction(a, 4, 0) - SingularityFunction(a, 0, 1)/2
+            + SingularityFunction(a, 4, 1) - 2*SingularityFunction(a, 12, 0) - SingularityFunction(a, 12, 1)/2 for a over (0.0, 12.0)
+
+        """
+
+        if not self._ild_moment:
+            raise ValueError("I.L.D. moment equation not found. Please use solve_for_ild_moment() to generate the I.L.D. moment equations.")
+
+        a = self.ild_variable
+
+        if subs is None:
+            subs = {}
+
+        for sym in self._ild_moment.atoms(Symbol):
+            if sym != a and sym not in subs:
+                raise ValueError('Value of %s was not passed.' %sym)
+
+        for sym in self._length.atoms(Symbol):
+            if sym != a and sym not in subs:
+                raise ValueError('Value of %s was not passed.' %sym)
+        return plot(self._ild_moment.subs(subs), (a, 0, self._length), title='I.L.D. for Moment',
+               xlabel=r'$\mathrm{a}$', ylabel=r'$\mathrm{M}$', line_color='blue', show=True)
 
     @doctest_depends_on(modules=('numpy',))
     def draw(self, pictorial=True):
-        """Returns a plot object representing the beam diagram of the beam.
+        """
+        Returns a plot object representing the beam diagram of the beam.
+        In particular, the diagram might include:
+
+        * the beam.
+        * vertical black arrows represent point loads and support reaction
+          forces (the latter if they have been added with the ``apply_load``
+          method).
+        * circular arrows represent moments.
+        * shaded areas represent distributed loads.
+        * the support, if ``apply_support`` has been executed.
+        * if a composite beam has been created with the ``join`` method and
+          a hinge has been specified, it will be shown with a white disc.
+
+        The diagram shows positive loads on the upper side of the beam,
+        and negative loads on the lower side. If two or more distributed
+        loads acts along the same direction over the same region, the
+        function will add them up together.
+
+        .. note::
+            The user must be careful while entering load values.
+            The draw function assumes a sign convention which is used
+            for plotting loads.
+            Given a right-handed coordinate system with XYZ coordinates,
+            the beam's length is assumed to be along the positive X axis.
+            The draw function recognizes positive loads(with n>-2) as loads
+            acting along negative Y direction and positive moments acting
+            along positive Z direction.
 
         Parameters
         ==========
 
         pictorial: Boolean (default=True)
-            Setting ``pictorial=True`` would simply create a pictorial (scaled) view
-            of the beam diagram not with the exact dimensions.
-            Although setting ``pictorial=False`` would create a beam diagram with
-            the exact dimensions on the plot
+            Setting ``pictorial=True`` would simply create a pictorial (scaled)
+            view of the beam diagram. On the other hand, ``pictorial=False``
+            would create a beam diagram with the exact dimensions on the plot.
 
         Examples
         ========
@@ -1547,35 +2484,47 @@ class Beam(object):
 
             >>> from sympy.physics.continuum_mechanics.beam import Beam
             >>> from sympy import symbols
-            >>> R1, R2 = symbols('R1, R2')
+            >>> P1, P2, M = symbols('P1, P2, M')
             >>> E, I = symbols('E, I')
             >>> b = Beam(50, 20, 30)
-            >>> b.apply_load(10, 2, -1)
-            >>> b.apply_load(R1, 10, -1)
-            >>> b.apply_load(R2, 30, -1)
+            >>> b.apply_load(-10, 2, -1)
+            >>> b.apply_load(15, 26, -1)
+            >>> b.apply_load(P1, 10, -1)
+            >>> b.apply_load(-P2, 40, -1)
             >>> b.apply_load(90, 5, 0, 23)
             >>> b.apply_load(10, 30, 1, 50)
-            >>> b.apply_support(50, "pin")
-            >>> b.apply_support(0, "fixed")
-            >>> b.apply_support(20, "roller")
-            >>> b.draw()
+            >>> b.apply_load(M, 15, -2)
+            >>> b.apply_load(-M, 30, -2)
+            >>> p50 = b.apply_support(50, "pin")
+            >>> p0, m0 = b.apply_support(0, "fixed")
+            >>> p20 = b.apply_support(20, "roller")
+            >>> p = b.draw()  # doctest: +SKIP
+            >>> p  # doctest: +ELLIPSIS,+SKIP
             Plot object containing:
-            [0]: cartesian line: 25*SingularityFunction(x, 5, 0)
-            - 25*SingularityFunction(x, 23, 0) + SingularityFunction(x, 30, 1)
-            - 20*SingularityFunction(x, 50, 0) - SingularityFunction(x, 50, 1)
-            + 5 for x over (0.0, 50.0)
+            [0]: cartesian line: 25*SingularityFunction(x, 5, 0) - 25*SingularityFunction(x, 23, 0)
+            + SingularityFunction(x, 30, 1) - 20*SingularityFunction(x, 50, 0)
+            - SingularityFunction(x, 50, 1) + 5 for x over (0.0, 50.0)
+            [1]: cartesian line: 5 for x over (0.0, 50.0)
+            ...
+            >>> p.show() # doctest: +SKIP
+
         """
         if not numpy:
             raise ImportError("To use this function numpy module is required")
 
+        loads = list(set(self.applied_loads) - set(self._support_as_loads))
+        if (not pictorial) and any((len(l[0].free_symbols) > 0) and (l[2] >= 0) for l in loads):
+            raise ValueError("`pictorial=False` requires numerical "
+                "distributed loads. Instead, symbolic loads were found. "
+                "Cannot continue.")
+
         x = self.variable
 
         # checking whether length is an expression in terms of any Symbol.
-        from sympy import Expr
         if isinstance(self.length, Expr):
             l = list(self.length.atoms(Symbol))
             # assigning every Symbol a default value of 10
-            l = {i:10 for i in l}
+            l = dict.fromkeys(l, 10)
             length = self.length.subs(l)
         else:
             l = {}
@@ -1584,18 +2533,56 @@ class Beam(object):
 
         rectangles = []
         rectangles.append({'xy':(0, 0), 'width':length, 'height': height, 'facecolor':"brown"})
-        annotations, markers, load_eq, fill = self._draw_load(pictorial, length, l)
+        annotations, markers, load_eq,load_eq1, fill = self._draw_load(pictorial, length, l)
         support_markers, support_rectangles = self._draw_supports(length, l)
 
         rectangles += support_rectangles
         markers += support_markers
 
-        sing_plot = plot(height + load_eq, (x, 0, length),
-         xlim=(-height, length + height), ylim=(-length, 1.25*length), annotations=annotations,
-          markers=markers, rectangles=rectangles, fill=fill, axis=False, show=False)
+        for loc in self._applied_rotation_hinges:
+            ratio = loc / self.length
+            x_pos = float(ratio) * length
+            markers += [{'args':[[x_pos], [height / 2]], 'marker':'o', 'markersize':6, 'color':"white"}]
+
+        for loc in self._applied_sliding_hinges:
+            ratio = loc / self.length
+            x_pos = float(ratio) * length
+            markers += [{'args': [[x_pos], [height / 2]], 'marker':'|', 'markersize':12, 'color':"white"}]
+
+        ylim = (-length, 1.25*length)
+        if fill:
+            # when distributed loads are presents, they might get clipped out
+            # in the figure by the ylim settings.
+            # It might be necessary to compute new limits.
+            _min = min(min(fill["y2"]), min(r["xy"][1] for r in rectangles))
+            _max = max(max(fill["y1"]), max(r["xy"][1] for r in rectangles))
+            if (_min < ylim[0]) or (_max > ylim[1]):
+                offset = abs(_max - _min) * 0.1
+                ylim = (_min - offset, _max + offset)
+
+        sing_plot = plot(height + load_eq, height + load_eq1, (x, 0, length),
+            xlim=(-height, length + height), ylim=ylim,
+            annotations=annotations, markers=markers, rectangles=rectangles,
+            line_color='brown', fill=fill, axis=False, show=False)
 
         return sing_plot
 
+
+    def _is_load_negative(self, load):
+        """Try to determine if a load is negative or positive, using
+        expansion and doit if necessary.
+
+        Returns
+        =======
+        True: if the load is negative
+        False: if the load is positive
+        None: if it is indeterminate
+
+        """
+        rv = load.is_negative
+        if load.is_Atom or rv is not None:
+            return rv
+        return load.doit().expand().is_negative
 
     def _draw_load(self, pictorial, length, l):
         loads = list(set(self.applied_loads) - set(self._support_as_loads))
@@ -1606,9 +2593,23 @@ class Beam(object):
         markers = []
         load_args = []
         scaled_load = 0
-        load_eq = 0
-        higher_order = False
+        load_args1 = []
+        scaled_load1 = 0
+        load_eq = S.Zero     # For positive valued higher order loads
+        load_eq1 = S.Zero    # For negative valued higher order loads
         fill = None
+
+        # schematic view should use the class convention as much as possible.
+        # However, users can add expressions as symbolic loads, for example
+        # P1 - P2: is this load positive or negative? We can't say.
+        # On these occasions it is better to inform users about the
+        # indeterminate state of those loads.
+        warning_head = "Please, note that this schematic view might not be " \
+            "in agreement with the sign convention used by the Beam class " \
+            "for load-related computations, because it was not possible " \
+            "to determine the sign (hence, the direction) of the " \
+            "following loads:\n"
+        warning_body = ""
 
         for load in loads:
             # check if the position of load is in terms of the beam length.
@@ -1619,58 +2620,87 @@ class Beam(object):
 
             # point loads
             if load[2] == -1:
-                if isinstance(load[0], Symbol) or load[0].is_negative:
-                    annotations.append({'s':'', 'xy':(pos, 0), 'xytext':(pos, height - 4*height), 'arrowprops':dict(width= 1.5, headlength=5, headwidth=5, facecolor='black')})
+                iln = self._is_load_negative(load[0])
+                if iln is None:
+                    warning_body += "* Point load %s located at %s\n" % (load[0], load[1])
+                if iln:
+                    annotations.append({'text':'', 'xy':(pos, 0), 'xytext':(pos, height - 4*height), 'arrowprops':{'width': 1.5, 'headlength': 5, 'headwidth': 5, 'facecolor': 'black'}})
                 else:
-                    annotations.append({'s':'', 'xy':(pos, height),  'xytext':(pos, height*4), 'arrowprops':dict(width= 1.5, headlength=4, headwidth=4, facecolor='black')})
+                    annotations.append({'text':'', 'xy':(pos, height),  'xytext':(pos, height*4), 'arrowprops':{"width": 1.5, "headlength": 4, "headwidth": 4, "facecolor": 'black'}})
             # moment loads
             elif load[2] == -2:
-                if load[0].is_negative:
+                iln = self._is_load_negative(load[0])
+                if iln is None:
+                    warning_body += "* Moment %s located at %s\n" % (load[0], load[1])
+                if self._is_load_negative(load[0]):
                     markers.append({'args':[[pos], [height/2]], 'marker': r'$\circlearrowright$', 'markersize':15})
                 else:
                     markers.append({'args':[[pos], [height/2]], 'marker': r'$\circlearrowleft$', 'markersize':15})
             # higher order loads
             elif load[2] >= 0:
-                higher_order = True
-                # if pictorial is True we remake the load equation again with
-                # some constant magnitude values.
-                if pictorial:
-                    value, start, order, end = load
-                    value = 10**(1-order) if order > 0 else length/2
+                # `fill` will be assigned only when higher order loads are present
+                value, start, order, end = load
 
+                iln = self._is_load_negative(value)
+                if iln is None:
+                    warning_body += "* Distributed load %s from %s to %s\n" % (value, start, end)
+
+                # Positive loads have their separate equations
+                if not iln:
+                    # if pictorial is True we remake the load equation again with
+                    # some constant magnitude values.
+                    if pictorial:
+                        # remake the load equation again with some constant
+                        # magnitude values.
+                        value = 10**(1-order) if order > 0 else length/2
                     scaled_load += value*SingularityFunction(x, start, order)
                     if end:
-                        f2 = 10**(1-order)*x**order if order > 0 else length/2*x**order
+                        f2 = value*x**order if order >= 0 else length/2*x**order
                         for i in range(0, order + 1):
                             scaled_load -= (f2.diff(x, i).subs(x, end - start)*
-                                           SingularityFunction(x, end, i)/factorial(i))
+                                            SingularityFunction(x, end, i)/factorial(i))
 
-        # `fill` will be assigned only when higher order loads are present
-        if higher_order:
-            if pictorial:
-                if isinstance(scaled_load, Add):
-                    load_args = scaled_load.args
+                    if isinstance(scaled_load, Add):
+                        load_args = scaled_load.args
+                    else:
+                        # when the load equation consists of only a single term
+                        load_args = (scaled_load,)
+                    load_eq = Add(*[i.subs(l) for i in load_args])
+
+                # For loads with negative value
                 else:
-                    # when the load equation consists of only a single term
-                    load_args = (scaled_load,)
-                load_eq = [i.subs(l) for i in load_args]
-            else:
-                if isinstance(self.load, Add):
-                    load_args = self.load.args
-                else:
-                    load_args = (self.load,)
-                load_eq = [i.subs(l) for i in load_args if list(i.atoms(SingularityFunction))[0].args[2] >= 0]
+                    if pictorial:
+                        # remake the load equation again with some constant
+                        # magnitude values.
+                        value = 10**(1-order) if order > 0 else length/2
+                    scaled_load1 += abs(value)*SingularityFunction(x, start, order)
+                    if end:
+                        f2 = abs(value)*x**order if order >= 0 else length/2*x**order
+                        for i in range(0, order + 1):
+                            scaled_load1 -= (f2.diff(x, i).subs(x, end - start)*
+                                            SingularityFunction(x, end, i)/factorial(i))
 
-            load_eq = Add(*load_eq)
+                    if isinstance(scaled_load1, Add):
+                        load_args1 = scaled_load1.args
+                    else:
+                        # when the load equation consists of only a single term
+                        load_args1 = (scaled_load1,)
+                    load_eq1 = [i.subs(l) for i in load_args1]
+                    load_eq1 = -Add(*load_eq1) - height
 
-            # filling higher order loads with colour
-            y = numpy.arange(0, float(length), 0.001)
-            expr = height + load_eq.rewrite(Piecewise)
-            y1 = lambdify(x, expr, 'numpy')
-            y2 = float(height)
-            fill = {'x': y, 'y1': y1(y), 'y2': y2, 'color':'darkkhaki'}
+        if len(warning_body) > 0:
+            warnings.warn(warning_head + warning_body)
 
-        return annotations, markers, load_eq, fill
+        xx = numpy.arange(0, float(length), 0.001)
+        yy1 = lambdify([x], height + load_eq.rewrite(Piecewise))(xx)
+        yy2 = lambdify([x], height + load_eq1.rewrite(Piecewise))(xx)
+        if not isinstance(yy1, numpy.ndarray):
+            yy1 *= numpy.ones_like(xx)
+        if not isinstance(yy2, numpy.ndarray):
+            yy2 *= numpy.ones_like(xx)
+        fill = {'x': xx, 'y1': yy1, 'y2': yy2,
+            'color':'darkkhaki', "zorder": -1}
+        return annotations, markers, load_eq, load_eq1, fill
 
 
     def _draw_supports(self, length, l):
@@ -1705,8 +2735,8 @@ class Beam3D(Beam):
     with unequal values of Second moment along different axes.
 
     .. note::
-       While solving a beam bending problem, a user should choose its
-       own sign convention and should stick to it. The results will
+       A consistent sign convention must be used while solving a beam
+       bending problem; the results will
        automatically follow the chosen sign convention.
        This class assumes that any kind of distributed load/moment is
        applied through out the span of a beam.
@@ -1716,11 +2746,11 @@ class Beam3D(Beam):
     There is a beam of l meters long. A constant distributed load of magnitude q
     is applied along y-axis from start till the end of beam. A constant distributed
     moment of magnitude m is also applied along z-axis from start till the end of beam.
-    Beam is fixed at both of its end. So, deflection of the beam at the both ends
+    Beam is fixed at both of ends. So, deflection of the beam at the both ends
     is restricted.
 
     >>> from sympy.physics.continuum_mechanics.beam import Beam3D
-    >>> from sympy import symbols, simplify, collect
+    >>> from sympy import symbols, simplify, collect, factor
     >>> l, E, G, I, A = symbols('l, E, G, I, A')
     >>> b = Beam3D(l, E, G, I, A)
     >>> x, q, m = symbols('x, q, m')
@@ -1733,28 +2763,28 @@ class Beam3D(Beam):
     >>> b.bc_slope = [(0, [0, 0, 0]), (l, [0, 0, 0])]
     >>> b.bc_deflection = [(0, [0, 0, 0]), (l, [0, 0, 0])]
     >>> b.solve_slope_deflection()
-    >>> b.slope()
-    [0, 0, x*(l*(-l*q + 3*l*(A*G*l**2*q - 2*A*G*l*m + 12*E*I*q)/(2*(A*G*l**2 + 12*E*I)) + 3*m)/6
-        + q*x**2/6 + x*(-l*(A*G*l**2*q - 2*A*G*l*m + 12*E*I*q)/(2*(A*G*l**2 + 12*E*I)) - m)/2)/(E*I)]
+    >>> factor(b.slope())
+    [0, 0, x*(-l + x)*(-A*G*l**3*q + 2*A*G*l**2*q*x - 12*E*I*l*q
+        - 72*E*I*m + 24*E*I*q*x)/(12*E*I*(A*G*l**2 + 12*E*I))]
     >>> dx, dy, dz = b.deflection()
     >>> dy = collect(simplify(dy), x)
     >>> dx == dz == 0
     True
-    >>> dy == (x*(12*A*E*G*I*l**3*q - 24*A*E*G*I*l**2*m + 144*E**2*I**2*l*q +
-    ...           x**3*(A**2*G**2*l**2*q + 12*A*E*G*I*q) +
-    ...           x**2*(-2*A**2*G**2*l**3*q - 24*A*E*G*I*l*q - 48*A*E*G*I*m) +
-    ...           x*(A**2*G**2*l**4*q + 72*A*E*G*I*l*m - 144*E**2*I**2*q)
-    ...           )/(24*A*E*G*I*(A*G*l**2 + 12*E*I)))
+    >>> dy == (x*(12*E*I*l*(A*G*l**2*q - 2*A*G*l*m + 12*E*I*q)
+    ... + x*(A*G*l*(3*l*(A*G*l**2*q - 2*A*G*l*m + 12*E*I*q) + x*(-2*A*G*l**2*q + 4*A*G*l*m - 24*E*I*q))
+    ... + A*G*(A*G*l**2 + 12*E*I)*(-2*l**2*q + 6*l*m - 4*m*x + q*x**2)
+    ... - 12*E*I*q*(A*G*l**2 + 12*E*I)))/(24*A*E*G*I*(A*G*l**2 + 12*E*I)))
     True
 
     References
     ==========
 
-    .. [1] http://homes.civil.aau.dk/jc/FemteSemester/Beams3D.pdf
+    .. [1] https://homes.civil.aau.dk/jc/FemteSemester/Beams3D.pdf
 
     """
 
-    def __init__(self, length, elastic_modulus, shear_modulus , second_moment, area, variable=Symbol('x')):
+    def __init__(self, length, elastic_modulus, shear_modulus, second_moment,
+                 area, variable=Symbol('x')):
         """Initializes the class.
 
         Parameters
@@ -1774,20 +2804,22 @@ class Beam3D(Beam):
             Single SymPy expression can be passed if both values are same
         area : Sympifyable
             A SymPy expression representing the Beam's cross-sectional area
-            in a plane prependicular to length of the Beam.
+            in a plane perpendicular to length of the Beam.
         variable : Symbol, optional
             A Symbol object that will be used as the variable along the beam
             while representing the load, shear, moment, slope and deflection
             curve. By default, it is set to ``Symbol('x')``.
         """
-        super(Beam3D, self).__init__(length, elastic_modulus, second_moment, variable)
+        super().__init__(length, elastic_modulus, second_moment, variable)
         self.shear_modulus = shear_modulus
         self.area = area
         self._load_vector = [0, 0, 0]
         self._moment_load_vector = [0, 0, 0]
+        self._torsion_moment = {}
         self._load_Singularity = [0, 0, 0]
         self._slope = [0, 0, 0]
         self._deflection = [0, 0, 0]
+        self._angular_deflection = 0
 
     @property
     def shear_modulus(self):
@@ -1857,7 +2889,7 @@ class Beam3D(Beam):
         >>> b.bc_slope = [(0, (4, 0, 0))]
         >>> b.bc_deflection = [(4, [0, 0, 0])]
         >>> b.boundary_conditions
-        {'deflection': [(4, [0, 0, 0])], 'slope': [(0, (4, 0, 0))]}
+        {'bending_moment': [], 'deflection': [(4, [0, 0, 0])], 'shear_force': [], 'slope': [(0, (4, 0, 0))]}
 
         Here the deflection of the beam should be ``0`` along all the three axes at ``4``.
         Similarly, the slope of the beam should be ``4`` along x-axis and ``0``
@@ -1868,7 +2900,7 @@ class Beam3D(Beam):
     def polar_moment(self):
         """
         Returns the polar moment of area of the beam
-        about the X axis with respect to the centroid.
+        about the X-axis with respect to the centroid.
 
         Examples
         ========
@@ -1952,6 +2984,11 @@ class Beam3D(Beam):
         if dir == "x":
             if not order == -2:
                 self._moment_load_vector[0] += value
+            else:
+                if start in list(self._torsion_moment):
+                    self._torsion_moment[start] += value
+                else:
+                    self._torsion_moment[start] = value
             self._load_Singularity[0] += value*SingularityFunction(x, start, order)
         elif dir == "y":
             if not order == -2:
@@ -1963,7 +3000,13 @@ class Beam3D(Beam):
             self._load_Singularity[0] += value*SingularityFunction(x, start, order)
 
     def apply_support(self, loc, type="fixed"):
-        if type == "pin" or type == "roller":
+        if type in ("pin", "roller", "fixed"):
+            pass
+        else:
+            raise ValueError(
+                "Invalid support type. Choose from 'pin', 'roller', or 'fixed'."
+            )
+        if type in ("pin", "roller"):
             reaction_load = Symbol('R_'+str(loc))
             self._reaction_loads[reaction_load] = reaction_load
             self.bc_deflection.append((loc, [0, 0, 0]))
@@ -1980,8 +3023,8 @@ class Beam3D(Beam):
 
         Examples
         ========
-        There is a beam of length 30 meters. It it supported by rollers at
-        of its end. A constant distributed load of magnitude 8 N is applied
+        There is a beam of length 30 meters. It is supported by rollers at
+        of its ends. A constant distributed load of magnitude 8 N is applied
         from start till its end along y-axis. Another linear load having
         slope equal to 9 is applied along z-axis.
 
@@ -2015,7 +3058,7 @@ class Beam3D(Beam):
             sol = list((linsolve([shear_curve, moment_curve], react).args)[0])
             sol_dict = dict(zip(react, sol))
             reaction_loads = self._reaction_loads
-            # Check if any of the evaluated rection exists in another direction
+            # Check if any of the evaluated reaction exists in another direction
             # and if it exists then it should have same value.
             for key in sol_dict:
                 if key in reaction_loads and sol_dict[key] != reaction_loads[key]:
@@ -2037,6 +3080,19 @@ class Beam3D(Beam):
         """
         return self.shear_force()[0]
 
+    def shear_stress(self):
+        """
+        Returns a list of three expressions which represents the shear stress
+        curve of the Beam object along all three axes.
+        """
+        return [self.shear_force()[0]/self._area, self.shear_force()[1]/self._area, self.shear_force()[2]/self._area]
+
+    def axial_stress(self):
+        """
+        Returns expression of Axial stress present inside the Beam object.
+        """
+        return self.axial_force()/self._area
+
     def bending_moment(self):
         """
         Returns a list of three expressions which represents the bending moment
@@ -2055,8 +3111,43 @@ class Beam3D(Beam):
         """
         return self.bending_moment()[0]
 
+    def solve_for_torsion(self):
+        """
+        Solves for the angular deflection due to the torsional effects of
+        moments being applied in the x-direction i.e. out of or into the beam.
+
+        Here, a positive torque means the direction of the torque is positive
+        i.e. out of the beam along the beam-axis. Likewise, a negative torque
+        signifies a torque into the beam cross-section.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.continuum_mechanics.beam import Beam3D
+        >>> from sympy import symbols
+        >>> l, E, G, I, A, x = symbols('l, E, G, I, A, x')
+        >>> b = Beam3D(20, E, G, I, A, x)
+        >>> b.apply_moment_load(4, 4, -2, dir='x')
+        >>> b.apply_moment_load(4, 8, -2, dir='x')
+        >>> b.apply_moment_load(4, 8, -2, dir='x')
+        >>> b.solve_for_torsion()
+        >>> b.angular_deflection().subs(x, 3)
+        18/(G*I)
+        """
+        x = self.variable
+        sum_moments = 0
+        for point in list(self._torsion_moment):
+            sum_moments += self._torsion_moment[point]
+        list(self._torsion_moment).sort()
+        pointsList = list(self._torsion_moment)
+        torque_diagram = Piecewise((sum_moments, x<=pointsList[0]), (0, x>=pointsList[0]))
+        for i in range(len(pointsList))[1:]:
+            sum_moments -= self._torsion_moment[pointsList[i-1]]
+            torque_diagram += Piecewise((0, x<=pointsList[i-1]), (sum_moments, x<=pointsList[i]), (0, x>=pointsList[i]))
+        integrated_torque_diagram = integrate(torque_diagram)
+        self._angular_deflection =  integrated_torque_diagram/(self.shear_modulus*self.polar_moment())
+
     def solve_slope_deflection(self):
-        from sympy import dsolve, Function, Derivative, Eq
         x = self.variable
         l = self.length
         E = self.elastic_modulus
@@ -2066,7 +3157,7 @@ class Beam3D(Beam):
             I_y, I_z = I[0], I[1]
         else:
             I_y = I_z = I
-        A = self.area
+        A = self._area
         load = self._load_vector
         moment = self._moment_load_vector
         defl = Function('defl')
@@ -2137,3 +3228,821 @@ class Beam3D(Beam):
         the three axes.
         """
         return self._deflection
+
+    def angular_deflection(self):
+        """
+        Returns a function in x depicting how the angular deflection, due to moments
+        in the x-axis on the beam, varies with x.
+        """
+        return self._angular_deflection
+
+    def _plot_shear_force(self, dir, subs=None):
+
+        shear_force = self.shear_force()
+
+        if dir == 'x':
+            dir_num = 0
+            color = 'r'
+
+        elif dir == 'y':
+            dir_num = 1
+            color = 'g'
+
+        elif dir == 'z':
+            dir_num = 2
+            color = 'b'
+
+        if subs is None:
+            subs = {}
+
+        for sym in shear_force[dir_num].atoms(Symbol):
+            if sym != self.variable and sym not in subs:
+                raise ValueError('Value of %s was not passed.' %sym)
+        if self.length in subs:
+            length = subs[self.length]
+        else:
+            length = self.length
+
+        return plot(shear_force[dir_num].subs(subs), (self.variable, 0, length), show = False, title='Shear Force along %c direction'%dir,
+                xlabel=r'$\mathrm{X}$', ylabel=r'$\mathrm{V(%c)}$'%dir, line_color=color)
+
+    def plot_shear_force(self, dir="all", subs=None):
+
+        """
+
+        Returns a plot for Shear force along all three directions
+        present in the Beam object.
+
+        Parameters
+        ==========
+        dir : string (default : "all")
+            Direction along which shear force plot is required.
+            If no direction is specified, all plots are displayed.
+        subs : dictionary
+            Python dictionary containing Symbols as key and their
+            corresponding values.
+
+        Examples
+        ========
+        There is a beam of length 20 meters. It is supported by rollers
+        at both of its ends. A linear load having slope equal to 12 is applied
+        along y-axis. A constant distributed load of magnitude 15 N is
+        applied from start till its end along z-axis.
+
+        .. plot::
+            :context: close-figs
+            :format: doctest
+            :include-source: True
+
+            >>> from sympy.physics.continuum_mechanics.beam import Beam3D
+            >>> from sympy import symbols
+            >>> l, E, G, I, A, x = symbols('l, E, G, I, A, x')
+            >>> b = Beam3D(20, E, G, I, A, x)
+            >>> b.apply_load(15, start=0, order=0, dir="z")
+            >>> b.apply_load(12*x, start=0, order=0, dir="y")
+            >>> b.bc_deflection = [(0, [0, 0, 0]), (20, [0, 0, 0])]
+            >>> R1, R2, R3, R4 = symbols('R1, R2, R3, R4')
+            >>> b.apply_load(R1, start=0, order=-1, dir="z")
+            >>> b.apply_load(R2, start=20, order=-1, dir="z")
+            >>> b.apply_load(R3, start=0, order=-1, dir="y")
+            >>> b.apply_load(R4, start=20, order=-1, dir="y")
+            >>> b.solve_for_reaction_loads(R1, R2, R3, R4)
+            >>> b.plot_shear_force()
+            PlotGrid object containing:
+            Plot[0]:Plot object containing:
+            [0]: cartesian line: 0 for x over (0.0, 20.0)
+            Plot[1]:Plot object containing:
+            [0]: cartesian line: -6*x**2 for x over (0.0, 20.0)
+            Plot[2]:Plot object containing:
+            [0]: cartesian line: -15*x for x over (0.0, 20.0)
+
+        """
+
+        dir = dir.lower()
+        # For shear force along x direction
+        if dir == "x":
+            Px = self._plot_shear_force('x', subs)
+            return Px.show()
+        # For shear force along y direction
+        elif dir == "y":
+            Py = self._plot_shear_force('y', subs)
+            return Py.show()
+        # For shear force along z direction
+        elif dir == "z":
+            Pz = self._plot_shear_force('z', subs)
+            return Pz.show()
+        # For shear force along all direction
+        else:
+            Px = self._plot_shear_force('x', subs)
+            Py = self._plot_shear_force('y', subs)
+            Pz = self._plot_shear_force('z', subs)
+            return PlotGrid(3, 1, Px, Py, Pz)
+
+    def _plot_bending_moment(self, dir, subs=None):
+
+        bending_moment = self.bending_moment()
+
+        if dir == 'x':
+            dir_num = 0
+            color = 'g'
+
+        elif dir == 'y':
+            dir_num = 1
+            color = 'c'
+
+        elif dir == 'z':
+            dir_num = 2
+            color = 'm'
+
+        if subs is None:
+            subs = {}
+
+        for sym in bending_moment[dir_num].atoms(Symbol):
+            if sym != self.variable and sym not in subs:
+                raise ValueError('Value of %s was not passed.' %sym)
+        if self.length in subs:
+            length = subs[self.length]
+        else:
+            length = self.length
+
+        return plot(bending_moment[dir_num].subs(subs), (self.variable, 0, length), show = False, title='Bending Moment along %c direction'%dir,
+                xlabel=r'$\mathrm{X}$', ylabel=r'$\mathrm{M(%c)}$'%dir, line_color=color)
+
+    def plot_bending_moment(self, dir="all", subs=None):
+
+        """
+
+        Returns a plot for bending moment along all three directions
+        present in the Beam object.
+
+        Parameters
+        ==========
+        dir : string (default : "all")
+            Direction along which bending moment plot is required.
+            If no direction is specified, all plots are displayed.
+        subs : dictionary
+            Python dictionary containing Symbols as key and their
+            corresponding values.
+
+        Examples
+        ========
+        There is a beam of length 20 meters. It is supported by rollers
+        at both of its ends. A linear load having slope equal to 12 is applied
+        along y-axis. A constant distributed load of magnitude 15 N is
+        applied from start till its end along z-axis.
+
+        .. plot::
+            :context: close-figs
+            :format: doctest
+            :include-source: True
+
+            >>> from sympy.physics.continuum_mechanics.beam import Beam3D
+            >>> from sympy import symbols
+            >>> l, E, G, I, A, x = symbols('l, E, G, I, A, x')
+            >>> b = Beam3D(20, E, G, I, A, x)
+            >>> b.apply_load(15, start=0, order=0, dir="z")
+            >>> b.apply_load(12*x, start=0, order=0, dir="y")
+            >>> b.bc_deflection = [(0, [0, 0, 0]), (20, [0, 0, 0])]
+            >>> R1, R2, R3, R4 = symbols('R1, R2, R3, R4')
+            >>> b.apply_load(R1, start=0, order=-1, dir="z")
+            >>> b.apply_load(R2, start=20, order=-1, dir="z")
+            >>> b.apply_load(R3, start=0, order=-1, dir="y")
+            >>> b.apply_load(R4, start=20, order=-1, dir="y")
+            >>> b.solve_for_reaction_loads(R1, R2, R3, R4)
+            >>> b.plot_bending_moment()
+            PlotGrid object containing:
+            Plot[0]:Plot object containing:
+            [0]: cartesian line: 0 for x over (0.0, 20.0)
+            Plot[1]:Plot object containing:
+            [0]: cartesian line: -15*x**2/2 for x over (0.0, 20.0)
+            Plot[2]:Plot object containing:
+            [0]: cartesian line: 2*x**3 for x over (0.0, 20.0)
+
+        """
+
+        dir = dir.lower()
+        # For bending moment along x direction
+        if dir == "x":
+            Px = self._plot_bending_moment('x', subs)
+            return Px.show()
+        # For bending moment along y direction
+        elif dir == "y":
+            Py = self._plot_bending_moment('y', subs)
+            return Py.show()
+        # For bending moment along z direction
+        elif dir == "z":
+            Pz = self._plot_bending_moment('z', subs)
+            return Pz.show()
+        # For bending moment along all direction
+        else:
+            Px = self._plot_bending_moment('x', subs)
+            Py = self._plot_bending_moment('y', subs)
+            Pz = self._plot_bending_moment('z', subs)
+            return PlotGrid(3, 1, Px, Py, Pz)
+
+    def _plot_slope(self, dir, subs=None):
+
+        slope = self.slope()
+
+        if dir == 'x':
+            dir_num = 0
+            color = 'b'
+
+        elif dir == 'y':
+            dir_num = 1
+            color = 'm'
+
+        elif dir == 'z':
+            dir_num = 2
+            color = 'g'
+
+        if subs is None:
+            subs = {}
+
+        for sym in slope[dir_num].atoms(Symbol):
+            if sym != self.variable and sym not in subs:
+                raise ValueError('Value of %s was not passed.' %sym)
+        if self.length in subs:
+            length = subs[self.length]
+        else:
+            length = self.length
+
+
+        return plot(slope[dir_num].subs(subs), (self.variable, 0, length), show = False, title='Slope along %c direction'%dir,
+                xlabel=r'$\mathrm{X}$', ylabel=r'$\mathrm{\theta(%c)}$'%dir, line_color=color)
+
+    def plot_slope(self, dir="all", subs=None):
+
+        """
+
+        Returns a plot for Slope along all three directions
+        present in the Beam object.
+
+        Parameters
+        ==========
+        dir : string (default : "all")
+            Direction along which Slope plot is required.
+            If no direction is specified, all plots are displayed.
+        subs : dictionary
+            Python dictionary containing Symbols as keys and their
+            corresponding values.
+
+        Examples
+        ========
+        There is a beam of length 20 meters. It is supported by rollers
+        at both of its ends. A linear load having slope equal to 12 is applied
+        along y-axis. A constant distributed load of magnitude 15 N is
+        applied from start till its end along z-axis.
+
+        .. plot::
+            :context: close-figs
+            :format: doctest
+            :include-source: True
+
+            >>> from sympy.physics.continuum_mechanics.beam import Beam3D
+            >>> from sympy import symbols
+            >>> l, E, G, I, A, x = symbols('l, E, G, I, A, x')
+            >>> b = Beam3D(20, 40, 21, 100, 25, x)
+            >>> b.apply_load(15, start=0, order=0, dir="z")
+            >>> b.apply_load(12*x, start=0, order=0, dir="y")
+            >>> b.bc_deflection = [(0, [0, 0, 0]), (20, [0, 0, 0])]
+            >>> R1, R2, R3, R4 = symbols('R1, R2, R3, R4')
+            >>> b.apply_load(R1, start=0, order=-1, dir="z")
+            >>> b.apply_load(R2, start=20, order=-1, dir="z")
+            >>> b.apply_load(R3, start=0, order=-1, dir="y")
+            >>> b.apply_load(R4, start=20, order=-1, dir="y")
+            >>> b.solve_for_reaction_loads(R1, R2, R3, R4)
+            >>> b.solve_slope_deflection()
+            >>> b.plot_slope()
+            PlotGrid object containing:
+            Plot[0]:Plot object containing:
+            [0]: cartesian line: 0 for x over (0.0, 20.0)
+            Plot[1]:Plot object containing:
+            [0]: cartesian line: -x**3/1600 + 3*x**2/160 - x/8 for x over (0.0, 20.0)
+            Plot[2]:Plot object containing:
+            [0]: cartesian line: x**4/8000 - 19*x**2/172 + 52*x/43 for x over (0.0, 20.0)
+
+        """
+
+        dir = dir.lower()
+        # For Slope along x direction
+        if dir == "x":
+            Px = self._plot_slope('x', subs)
+            return Px.show()
+        # For Slope along y direction
+        elif dir == "y":
+            Py = self._plot_slope('y', subs)
+            return Py.show()
+        # For Slope along z direction
+        elif dir == "z":
+            Pz = self._plot_slope('z', subs)
+            return Pz.show()
+        # For Slope along all direction
+        else:
+            Px = self._plot_slope('x', subs)
+            Py = self._plot_slope('y', subs)
+            Pz = self._plot_slope('z', subs)
+            return PlotGrid(3, 1, Px, Py, Pz)
+
+    def _plot_deflection(self, dir, subs=None):
+
+        deflection = self.deflection()
+
+        if dir == 'x':
+            dir_num = 0
+            color = 'm'
+
+        elif dir == 'y':
+            dir_num = 1
+            color = 'r'
+
+        elif dir == 'z':
+            dir_num = 2
+            color = 'c'
+
+        if subs is None:
+            subs = {}
+
+        for sym in deflection[dir_num].atoms(Symbol):
+            if sym != self.variable and sym not in subs:
+                raise ValueError('Value of %s was not passed.' %sym)
+        if self.length in subs:
+            length = subs[self.length]
+        else:
+            length = self.length
+
+        return plot(deflection[dir_num].subs(subs), (self.variable, 0, length), show = False, title='Deflection along %c direction'%dir,
+                xlabel=r'$\mathrm{X}$', ylabel=r'$\mathrm{\delta(%c)}$'%dir, line_color=color)
+
+    def plot_deflection(self, dir="all", subs=None):
+
+        """
+
+        Returns a plot for Deflection along all three directions
+        present in the Beam object.
+
+        Parameters
+        ==========
+        dir : string (default : "all")
+            Direction along which deflection plot is required.
+            If no direction is specified, all plots are displayed.
+        subs : dictionary
+            Python dictionary containing Symbols as keys and their
+            corresponding values.
+
+        Examples
+        ========
+        There is a beam of length 20 meters. It is supported by rollers
+        at both of its ends. A linear load having slope equal to 12 is applied
+        along y-axis. A constant distributed load of magnitude 15 N is
+        applied from start till its end along z-axis.
+
+        .. plot::
+            :context: close-figs
+            :format: doctest
+            :include-source: True
+
+            >>> from sympy.physics.continuum_mechanics.beam import Beam3D
+            >>> from sympy import symbols
+            >>> l, E, G, I, A, x = symbols('l, E, G, I, A, x')
+            >>> b = Beam3D(20, 40, 21, 100, 25, x)
+            >>> b.apply_load(15, start=0, order=0, dir="z")
+            >>> b.apply_load(12*x, start=0, order=0, dir="y")
+            >>> b.bc_deflection = [(0, [0, 0, 0]), (20, [0, 0, 0])]
+            >>> R1, R2, R3, R4 = symbols('R1, R2, R3, R4')
+            >>> b.apply_load(R1, start=0, order=-1, dir="z")
+            >>> b.apply_load(R2, start=20, order=-1, dir="z")
+            >>> b.apply_load(R3, start=0, order=-1, dir="y")
+            >>> b.apply_load(R4, start=20, order=-1, dir="y")
+            >>> b.solve_for_reaction_loads(R1, R2, R3, R4)
+            >>> b.solve_slope_deflection()
+            >>> b.plot_deflection()
+            PlotGrid object containing:
+            Plot[0]:Plot object containing:
+            [0]: cartesian line: 0 for x over (0.0, 20.0)
+            Plot[1]:Plot object containing:
+            [0]: cartesian line: x**5/40000 - 4013*x**3/90300 + 26*x**2/43 + 1520*x/903 for x over (0.0, 20.0)
+            Plot[2]:Plot object containing:
+            [0]: cartesian line: x**4/6400 - x**3/160 + 27*x**2/560 + 2*x/7 for x over (0.0, 20.0)
+
+
+        """
+
+        dir = dir.lower()
+        # For deflection along x direction
+        if dir == "x":
+            Px = self._plot_deflection('x', subs)
+            return Px.show()
+        # For deflection along y direction
+        elif dir == "y":
+            Py = self._plot_deflection('y', subs)
+            return Py.show()
+        # For deflection along z direction
+        elif dir == "z":
+            Pz = self._plot_deflection('z', subs)
+            return Pz.show()
+        # For deflection along all direction
+        else:
+            Px = self._plot_deflection('x', subs)
+            Py = self._plot_deflection('y', subs)
+            Pz = self._plot_deflection('z', subs)
+            return PlotGrid(3, 1, Px, Py, Pz)
+
+    def plot_loading_results(self, dir='x', subs=None):
+
+        """
+
+        Returns a subplot of Shear Force, Bending Moment,
+        Slope and Deflection of the Beam object along the direction specified.
+
+        Parameters
+        ==========
+
+        dir : string (default : "x")
+               Direction along which plots are required.
+               If no direction is specified, plots along x-axis are displayed.
+        subs : dictionary
+               Python dictionary containing Symbols as key and their
+               corresponding values.
+
+        Examples
+        ========
+        There is a beam of length 20 meters. It is supported by rollers
+        at both of its ends. A linear load having slope equal to 12 is applied
+        along y-axis. A constant distributed load of magnitude 15 N is
+        applied from start till its end along z-axis.
+
+        .. plot::
+            :context: close-figs
+            :format: doctest
+            :include-source: True
+
+            >>> from sympy.physics.continuum_mechanics.beam import Beam3D
+            >>> from sympy import symbols
+            >>> l, E, G, I, A, x = symbols('l, E, G, I, A, x')
+            >>> b = Beam3D(20, E, G, I, A, x)
+            >>> subs = {E:40, G:21, I:100, A:25}
+            >>> b.apply_load(15, start=0, order=0, dir="z")
+            >>> b.apply_load(12*x, start=0, order=0, dir="y")
+            >>> b.bc_deflection = [(0, [0, 0, 0]), (20, [0, 0, 0])]
+            >>> R1, R2, R3, R4 = symbols('R1, R2, R3, R4')
+            >>> b.apply_load(R1, start=0, order=-1, dir="z")
+            >>> b.apply_load(R2, start=20, order=-1, dir="z")
+            >>> b.apply_load(R3, start=0, order=-1, dir="y")
+            >>> b.apply_load(R4, start=20, order=-1, dir="y")
+            >>> b.solve_for_reaction_loads(R1, R2, R3, R4)
+            >>> b.solve_slope_deflection()
+            >>> b.plot_loading_results('y',subs)
+            PlotGrid object containing:
+            Plot[0]:Plot object containing:
+            [0]: cartesian line: -6*x**2 for x over (0.0, 20.0)
+            Plot[1]:Plot object containing:
+            [0]: cartesian line: -15*x**2/2 for x over (0.0, 20.0)
+            Plot[2]:Plot object containing:
+            [0]: cartesian line: -x**3/1600 + 3*x**2/160 - x/8 for x over (0.0, 20.0)
+            Plot[3]:Plot object containing:
+            [0]: cartesian line: x**5/40000 - 4013*x**3/90300 + 26*x**2/43 + 1520*x/903 for x over (0.0, 20.0)
+
+        """
+
+        dir = dir.lower()
+        if subs is None:
+            subs = {}
+
+        ax1 = self._plot_shear_force(dir, subs)
+        ax2 = self._plot_bending_moment(dir, subs)
+        ax3 = self._plot_slope(dir, subs)
+        ax4 = self._plot_deflection(dir, subs)
+
+        return PlotGrid(4, 1, ax1, ax2, ax3, ax4)
+
+    def _plot_shear_stress(self, dir, subs=None):
+
+        shear_stress = self.shear_stress()
+
+        if dir == 'x':
+            dir_num = 0
+            color = 'r'
+
+        elif dir == 'y':
+            dir_num = 1
+            color = 'g'
+
+        elif dir == 'z':
+            dir_num = 2
+            color = 'b'
+
+        if subs is None:
+            subs = {}
+
+        for sym in shear_stress[dir_num].atoms(Symbol):
+            if sym != self.variable and sym not in subs:
+                raise ValueError('Value of %s was not passed.' %sym)
+        if self.length in subs:
+            length = subs[self.length]
+        else:
+            length = self.length
+
+        return plot(shear_stress[dir_num].subs(subs), (self.variable, 0, length), show = False, title='Shear stress along %c direction'%dir,
+                xlabel=r'$\mathrm{X}$', ylabel=r'$\tau(%c)$'%dir, line_color=color)
+
+    def plot_shear_stress(self, dir="all", subs=None):
+
+        """
+
+        Returns a plot for Shear Stress along all three directions
+        present in the Beam object.
+
+        Parameters
+        ==========
+        dir : string (default : "all")
+            Direction along which shear stress plot is required.
+            If no direction is specified, all plots are displayed.
+        subs : dictionary
+            Python dictionary containing Symbols as key and their
+            corresponding values.
+
+        Examples
+        ========
+        There is a beam of length 20 meters and area of cross section 2 square
+        meters. It is supported by rollers at both of its ends. A linear load having
+        slope equal to 12 is applied along y-axis. A constant distributed load
+        of magnitude 15 N is applied from start till its end along z-axis.
+
+        .. plot::
+            :context: close-figs
+            :format: doctest
+            :include-source: True
+
+            >>> from sympy.physics.continuum_mechanics.beam import Beam3D
+            >>> from sympy import symbols
+            >>> l, E, G, I, A, x = symbols('l, E, G, I, A, x')
+            >>> b = Beam3D(20, E, G, I, 2, x)
+            >>> b.apply_load(15, start=0, order=0, dir="z")
+            >>> b.apply_load(12*x, start=0, order=0, dir="y")
+            >>> b.bc_deflection = [(0, [0, 0, 0]), (20, [0, 0, 0])]
+            >>> R1, R2, R3, R4 = symbols('R1, R2, R3, R4')
+            >>> b.apply_load(R1, start=0, order=-1, dir="z")
+            >>> b.apply_load(R2, start=20, order=-1, dir="z")
+            >>> b.apply_load(R3, start=0, order=-1, dir="y")
+            >>> b.apply_load(R4, start=20, order=-1, dir="y")
+            >>> b.solve_for_reaction_loads(R1, R2, R3, R4)
+            >>> b.plot_shear_stress()
+            PlotGrid object containing:
+            Plot[0]:Plot object containing:
+            [0]: cartesian line: 0 for x over (0.0, 20.0)
+            Plot[1]:Plot object containing:
+            [0]: cartesian line: -3*x**2 for x over (0.0, 20.0)
+            Plot[2]:Plot object containing:
+            [0]: cartesian line: -15*x/2 for x over (0.0, 20.0)
+
+        """
+
+        dir = dir.lower()
+        # For shear stress along x direction
+        if dir == "x":
+            Px = self._plot_shear_stress('x', subs)
+            return Px.show()
+        # For shear stress along y direction
+        elif dir == "y":
+            Py = self._plot_shear_stress('y', subs)
+            return Py.show()
+        # For shear stress along z direction
+        elif dir == "z":
+            Pz = self._plot_shear_stress('z', subs)
+            return Pz.show()
+        # For shear stress along all direction
+        else:
+            Px = self._plot_shear_stress('x', subs)
+            Py = self._plot_shear_stress('y', subs)
+            Pz = self._plot_shear_stress('z', subs)
+            return PlotGrid(3, 1, Px, Py, Pz)
+
+    def _max_shear_force(self, dir):
+        """
+        Helper function for max_shear_force().
+        """
+
+        dir = dir.lower()
+
+        if dir == 'x':
+            dir_num = 0
+
+        elif dir == 'y':
+            dir_num = 1
+
+        elif dir == 'z':
+            dir_num = 2
+
+        if not self.shear_force()[dir_num]:
+            return (0,0)
+        # To restrict the range within length of the Beam
+        load_curve = Piecewise((float("nan"), self.variable<=0),
+                (self._load_vector[dir_num], self.variable<self.length),
+                (float("nan"), True))
+
+        points = solve(load_curve.rewrite(Piecewise), self.variable,
+                        domain=S.Reals)
+        points.append(0)
+        points.append(self.length)
+        shear_curve = self.shear_force()[dir_num]
+        shear_values = [shear_curve.subs(self.variable, x) for x in points]
+        shear_values = list(map(abs, shear_values))
+
+        max_shear = max(shear_values)
+        return (points[shear_values.index(max_shear)], max_shear)
+
+    def max_shear_force(self):
+        """
+        Returns point of max shear force and its corresponding shear value
+        along all directions in a Beam object as a list.
+        solve_for_reaction_loads() must be called before using this function.
+
+        Examples
+        ========
+        There is a beam of length 20 meters. It is supported by rollers
+        at both of its ends. A linear load having slope equal to 12 is applied
+        along y-axis. A constant distributed load of magnitude 15 N is
+        applied from start till its end along z-axis.
+
+        .. plot::
+            :context: close-figs
+            :format: doctest
+            :include-source: True
+
+            >>> from sympy.physics.continuum_mechanics.beam import Beam3D
+            >>> from sympy import symbols
+            >>> l, E, G, I, A, x = symbols('l, E, G, I, A, x')
+            >>> b = Beam3D(20, 40, 21, 100, 25, x)
+            >>> b.apply_load(15, start=0, order=0, dir="z")
+            >>> b.apply_load(12*x, start=0, order=0, dir="y")
+            >>> b.bc_deflection = [(0, [0, 0, 0]), (20, [0, 0, 0])]
+            >>> R1, R2, R3, R4 = symbols('R1, R2, R3, R4')
+            >>> b.apply_load(R1, start=0, order=-1, dir="z")
+            >>> b.apply_load(R2, start=20, order=-1, dir="z")
+            >>> b.apply_load(R3, start=0, order=-1, dir="y")
+            >>> b.apply_load(R4, start=20, order=-1, dir="y")
+            >>> b.solve_for_reaction_loads(R1, R2, R3, R4)
+            >>> b.max_shear_force()
+            [(0, 0), (20, 2400), (20, 300)]
+        """
+
+        max_shear = []
+        max_shear.append(self._max_shear_force('x'))
+        max_shear.append(self._max_shear_force('y'))
+        max_shear.append(self._max_shear_force('z'))
+        return max_shear
+
+    def _max_bending_moment(self, dir):
+        """
+        Helper function for max_bending_moment().
+        """
+
+        dir = dir.lower()
+
+        if dir == 'x':
+            dir_num = 0
+
+        elif dir == 'y':
+            dir_num = 1
+
+        elif dir == 'z':
+            dir_num = 2
+
+        if not self.bending_moment()[dir_num]:
+            return (0,0)
+        # To restrict the range within length of the Beam
+        shear_curve = Piecewise((float("nan"), self.variable<=0),
+                (self.shear_force()[dir_num], self.variable<self.length),
+                (float("nan"), True))
+
+        points = solve(shear_curve.rewrite(Piecewise), self.variable,
+                        domain=S.Reals)
+        points.append(0)
+        points.append(self.length)
+        bending_moment_curve = self.bending_moment()[dir_num]
+        bending_moments = [bending_moment_curve.subs(self.variable, x) for x in points]
+        bending_moments = list(map(abs, bending_moments))
+
+        max_bending_moment = max(bending_moments)
+        return (points[bending_moments.index(max_bending_moment)], max_bending_moment)
+
+    def max_bending_moment(self):
+        """
+        Returns point of max bending moment and its corresponding bending moment value
+        along all directions in a Beam object as a list.
+        solve_for_reaction_loads() must be called before using this function.
+
+        Examples
+        ========
+        There is a beam of length 20 meters. It is supported by rollers
+        at both of its ends. A linear load having slope equal to 12 is applied
+        along y-axis. A constant distributed load of magnitude 15 N is
+        applied from start till its end along z-axis.
+
+        .. plot::
+            :context: close-figs
+            :format: doctest
+            :include-source: True
+
+            >>> from sympy.physics.continuum_mechanics.beam import Beam3D
+            >>> from sympy import symbols
+            >>> l, E, G, I, A, x = symbols('l, E, G, I, A, x')
+            >>> b = Beam3D(20, 40, 21, 100, 25, x)
+            >>> b.apply_load(15, start=0, order=0, dir="z")
+            >>> b.apply_load(12*x, start=0, order=0, dir="y")
+            >>> b.bc_deflection = [(0, [0, 0, 0]), (20, [0, 0, 0])]
+            >>> R1, R2, R3, R4 = symbols('R1, R2, R3, R4')
+            >>> b.apply_load(R1, start=0, order=-1, dir="z")
+            >>> b.apply_load(R2, start=20, order=-1, dir="z")
+            >>> b.apply_load(R3, start=0, order=-1, dir="y")
+            >>> b.apply_load(R4, start=20, order=-1, dir="y")
+            >>> b.solve_for_reaction_loads(R1, R2, R3, R4)
+            >>> b.max_bending_moment()
+            [(0, 0), (20, 3000), (20, 16000)]
+        """
+
+        max_bmoment = []
+        max_bmoment.append(self._max_bending_moment('x'))
+        max_bmoment.append(self._max_bending_moment('y'))
+        max_bmoment.append(self._max_bending_moment('z'))
+        return max_bmoment
+
+    max_bmoment = max_bending_moment
+
+    def _max_deflection(self, dir):
+        """
+        Helper function for max_Deflection()
+        """
+
+        dir = dir.lower()
+
+        if dir == 'x':
+            dir_num = 0
+
+        elif dir == 'y':
+            dir_num = 1
+
+        elif dir == 'z':
+            dir_num = 2
+
+        if not self.deflection()[dir_num]:
+            return (0,0)
+        # To restrict the range within length of the Beam
+        slope_curve = Piecewise((float("nan"), self.variable<=0),
+                (self.slope()[dir_num], self.variable<self.length),
+                (float("nan"), True))
+
+        points = solve(slope_curve.rewrite(Piecewise), self.variable,
+                        domain=S.Reals)
+        points.append(0)
+        points.append(self._length)
+        deflection_curve = self.deflection()[dir_num]
+        deflections = [deflection_curve.subs(self.variable, x) for x in points]
+        deflections = list(map(abs, deflections))
+
+        max_def = max(deflections)
+        return (points[deflections.index(max_def)], max_def)
+
+    def max_deflection(self):
+        """
+        Returns point of max deflection and its corresponding deflection value
+        along all directions in a Beam object as a list.
+        solve_for_reaction_loads() and solve_slope_deflection() must be called
+        before using this function.
+
+        Examples
+        ========
+        There is a beam of length 20 meters. It is supported by rollers
+        at both of its ends. A linear load having slope equal to 12 is applied
+        along y-axis. A constant distributed load of magnitude 15 N is
+        applied from start till its end along z-axis.
+
+        .. plot::
+            :context: close-figs
+            :format: doctest
+            :include-source: True
+
+            >>> from sympy.physics.continuum_mechanics.beam import Beam3D
+            >>> from sympy import symbols
+            >>> l, E, G, I, A, x = symbols('l, E, G, I, A, x')
+            >>> b = Beam3D(20, 40, 21, 100, 25, x)
+            >>> b.apply_load(15, start=0, order=0, dir="z")
+            >>> b.apply_load(12*x, start=0, order=0, dir="y")
+            >>> b.bc_deflection = [(0, [0, 0, 0]), (20, [0, 0, 0])]
+            >>> R1, R2, R3, R4 = symbols('R1, R2, R3, R4')
+            >>> b.apply_load(R1, start=0, order=-1, dir="z")
+            >>> b.apply_load(R2, start=20, order=-1, dir="z")
+            >>> b.apply_load(R3, start=0, order=-1, dir="y")
+            >>> b.apply_load(R4, start=20, order=-1, dir="y")
+            >>> b.solve_for_reaction_loads(R1, R2, R3, R4)
+            >>> b.solve_slope_deflection()
+            >>> b.max_deflection()
+            [(0, 0), (10, 495/14), (-10 + 10*sqrt(10793)/43, (10 - 10*sqrt(10793)/43)**3/160 - 20/7 + (10 - 10*sqrt(10793)/43)**4/6400 + 20*sqrt(10793)/301 + 27*(10 - 10*sqrt(10793)/43)**2/560)]
+        """
+
+        max_def = []
+        max_def.append(self._max_deflection('x'))
+        max_def.append(self._max_deflection('y'))
+        max_def.append(self._max_deflection('z'))
+        return max_def

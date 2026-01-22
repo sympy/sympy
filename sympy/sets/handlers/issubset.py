@@ -1,38 +1,58 @@
-from sympy import S, Symbol
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
 from sympy.core.logic import fuzzy_and, fuzzy_bool, fuzzy_not, fuzzy_or
-from sympy.core.relational import Eq
-from sympy.sets.sets import FiniteSet, Interval, Set, Union
-from sympy.sets.fancysets import Complexes, Reals, Range, Rationals
-from sympy.multipledispatch import dispatch
+from sympy.sets.sets import FiniteSet, Interval, Set, Union, ProductSet
+from sympy.sets.fancysets import Complexes, Reals, Range, Rationals, Integers, ImageSet
+from sympy.multipledispatch import Dispatcher
 
 
 _inf_sets = [S.Naturals, S.Naturals0, S.Integers, S.Rationals, S.Reals, S.Complexes]
 
-@dispatch(Set, Set)  # type: ignore # noqa:F811
-def is_subset_sets(a, b): # noqa:F811
+
+is_subset_sets = Dispatcher('is_subset_sets')
+
+
+@is_subset_sets.register(Set, Set)
+def _(a, b):
     return None
 
-@dispatch(Interval, Interval)  # type: ignore # noqa:F811
-def is_subset_sets(a, b): # noqa:F811
-    # This is correct but can be made more comprehensive...
-    if fuzzy_bool(a.start < b.start):
-        return False
-    if fuzzy_bool(a.end > b.end):
-        return False
-    if (b.left_open and not a.left_open and fuzzy_bool(Eq(a.start, b.start))):
-        return False
-    if (b.right_open and not a.right_open and fuzzy_bool(Eq(a.end, b.end))):
+@is_subset_sets.register(Interval, Interval)
+def _(a, b):
+
+    if b.left_open and not a.left_open:
+        # [a1, a2] <= (b1, b2]
+        left_in = fuzzy_bool(a.start > b.start)
+    else:
+        # (a1, a2] <= (b1, b2]
+        # (a1, a2] <= [b1, b2]
+        # [a1, a2] <= [b1, b2]
+        left_in = fuzzy_bool(a.start >= b.start)
+
+    if left_in is False:
         return False
 
-@dispatch(Interval, FiniteSet)  # type: ignore # noqa:F811
-def is_subset_sets(a_interval, b_fs): # noqa:F811
+    if b.right_open and not a.right_open:
+        # [a1, a2] <= [b1, b2)
+        right_in = fuzzy_bool(a.end < b.end)
+    else:
+        # [a1, a2) <= [b1, b2)
+        # [a1, a2) <= [b1, b2]
+        # [a1, a2] <= [b1, b2]
+        right_in = fuzzy_bool(a.end <= b.end)
+
+    return fuzzy_and([left_in, right_in])
+
+@is_subset_sets.register(Interval, FiniteSet)
+def _(a_interval, b_fs):
     # An Interval can only be a subset of a finite set if it is finite
     # which can only happen if it has zero measure.
     if fuzzy_not(a_interval.measure.is_zero):
         return False
 
-@dispatch(Interval, Union)  # type: ignore # noqa:F811
-def is_subset_sets(a_interval, b_u): # noqa:F811
+@is_subset_sets.register(Interval, Union)
+def _(a_interval, b_u):
+    if fuzzy_or(a_interval.is_subset(s) for s in b_u.args):
+        return True
     if all(isinstance(s, (Interval, FiniteSet)) for s in b_u.args):
         intervals = [s for s in b_u.args if isinstance(s, Interval)]
         if all(fuzzy_bool(a_interval.start < s.start) for s in intervals):
@@ -47,14 +67,14 @@ def is_subset_sets(a_interval, b_u): # noqa:F811
             if all(no_overlap(s, a_interval) for s in intervals):
                 return False
 
-@dispatch(Range, Range)  # type: ignore # noqa:F811
-def is_subset_sets(a, b): # noqa:F811
+@is_subset_sets.register(Range, Range)
+def _(a, b):
     if a.step == b.step == 1:
         return fuzzy_and([fuzzy_bool(a.start >= b.start),
                           fuzzy_bool(a.stop <= b.stop)])
 
-@dispatch(Range, Interval)  # type: ignore # noqa:F811
-def is_subset_sets(a_range, b_interval): # noqa:F811
+@is_subset_sets.register(Range, Interval)
+def _(a_range, b_interval):
     if a_range.step.is_positive:
         if b_interval.left_open and a_range.inf.is_finite:
             cond_left = a_range.inf > b_interval.left
@@ -66,8 +86,8 @@ def is_subset_sets(a_range, b_interval): # noqa:F811
             cond_right = a_range.sup <= b_interval.right
         return fuzzy_and([cond_left, cond_right])
 
-@dispatch(Range, FiniteSet)  # type: ignore # noqa:F811
-def is_subset_sets(a_range, b_finiteset): # noqa:F811
+@is_subset_sets.register(Range, FiniteSet)
+def _(a_range, b_finiteset):
     try:
         a_size = a_range.size
     except ValueError:
@@ -100,36 +120,75 @@ def is_subset_sets(a_range, b_finiteset): # noqa:F811
                 return True
         return None
 
-@dispatch(Interval, Range)  # type: ignore # noqa:F811
-def is_subset_sets(a_interval, b_range): # noqa:F811
+@is_subset_sets.register(ImageSet, Reals)
+def _(a_imageset, b_reals):
+    f = a_imageset.lamda
+    base = a_imageset.base_set
+    var = f.variables
+    if base.is_subset(b_reals):
+        if f.expr.as_poly(*var, domain='QQ') is not None:
+            return True
+
+@is_subset_sets.register(Interval, Range)
+def _(a_interval, b_range):
     if a_interval.measure.is_extended_nonzero:
         return False
 
-@dispatch(Interval, Rationals)  # type: ignore # noqa:F811
-def is_subset_sets(a_interval, b_rationals): # noqa:F811
+@is_subset_sets.register(Interval, Rationals)
+def _(a_interval, b_rationals):
     if a_interval.measure.is_extended_nonzero:
         return False
 
-@dispatch(Range, Complexes)  # type: ignore # noqa:F811
-def is_subset_sets(a, b): # noqa:F811
+@is_subset_sets.register(Range, Complexes)
+def _(a, b):
     return True
 
-@dispatch(Complexes, Interval)  # type: ignore # noqa:F811
-def is_subset_sets(a, b): # noqa:F811
+@is_subset_sets.register(Complexes, Interval)
+def _(a, b):
     return False
 
-@dispatch(Complexes, Range)  # type: ignore # noqa:F811
-def is_subset_sets(a, b): # noqa:F811
+@is_subset_sets.register(Complexes, Range)
+def _(a, b):
     return False
 
-@dispatch(Complexes, Rationals)  # type: ignore # noqa:F811
-def is_subset_sets(a, b): # noqa:F811
+@is_subset_sets.register(Complexes, Rationals)
+def _(a, b):
     return False
 
-@dispatch(Rationals, Reals)  # type: ignore # noqa:F811
-def is_subset_sets(a, b): # noqa:F811
+@is_subset_sets.register(Rationals, Complexes)
+def _(a, b):
     return True
 
-@dispatch(Rationals, Range)  # type: ignore # noqa:F811
-def is_subset_sets(a, b): # noqa:F811
+@is_subset_sets.register(Reals, Complexes)
+def _(a, b):
+    return True
+
+@is_subset_sets.register(Interval, Reals)
+def _(a, b):
+    return True
+
+@is_subset_sets.register(Integers, Rationals)
+def _(a, b):
+    return True
+
+@is_subset_sets.register(Rationals, Reals)
+def _(a, b):
+    return True
+
+@is_subset_sets.register(Rationals, Range)
+def _(a, b):
     return False
+
+@is_subset_sets.register(Range, Rationals)
+def _(a, b):
+    return True
+
+@is_subset_sets.register(ProductSet, ProductSet)
+def _(a, b):
+    if len(a.sets) != len(b.sets):
+        return False
+    return fuzzy_and(a_i.is_subset(b_i) for a_i, b_i in zip(a.sets, b.sets))
+
+@is_subset_sets.register(ProductSet, FiniteSet)
+def _(a_ps, b_fs):
+    return fuzzy_and(b_fs.contains(x) for x in a_ps)

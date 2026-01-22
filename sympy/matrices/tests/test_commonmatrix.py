@@ -1,6 +1,17 @@
+#
+# Code for testing deprecated matrix classes. New test code should not be added
+# here. Instead, add it to test_matrixbase.py.
+#
+# This entire test module and the corresponding sympy/matrices/common.py
+# module will be removed in a future release.
+#
+from sympy.testing.pytest import raises, XFAIL, warns_deprecated_sympy
+
 from sympy.assumptions import Q
+from sympy.core.expr import Expr
 from sympy.core.add import Add
 from sympy.core.function import Function
+from sympy.core.kind import NumberKind, UndefinedKind
 from sympy.core.numbers import I, Integer, oo, pi, Rational
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol, symbols
@@ -8,20 +19,91 @@ from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import cos, sin
-from sympy.matrices.common import (ShapeError, NonSquareMatrixError,
+from sympy.matrices.exceptions import ShapeError, NonSquareMatrixError
+from sympy.matrices.kind import MatrixKind
+from sympy.matrices.common import (
     _MinimalMatrix, _CastableMatrix, MatrixShaping, MatrixProperties,
     MatrixOperations, MatrixArithmetic, MatrixSpecial)
 from sympy.matrices.matrices import MatrixCalculus
 from sympy.matrices import (Matrix, diag, eye,
-    matrix_multiply_elementwise, ones, zeros, SparseMatrix, banded)
+    matrix_multiply_elementwise, ones, zeros, SparseMatrix, banded,
+    MutableDenseMatrix, MutableSparseMatrix, ImmutableDenseMatrix,
+    ImmutableSparseMatrix)
+from sympy.polys.polytools import Poly
 from sympy.utilities.iterables import flatten
-from sympy.testing.pytest import raises, XFAIL, warns_deprecated_sympy
+from sympy.tensor.array.dense_ndim_array import ImmutableDenseNDimArray as Array
 
 from sympy.abc import x, y, z
 
-# classes to test the basic matrix classes
-class ShapingOnlyMatrix(_MinimalMatrix, _CastableMatrix, MatrixShaping):
-    pass
+
+def test_matrix_deprecated_isinstance():
+
+    # Test that e.g. isinstance(M, MatrixCommon) still gives True when M is a
+    # Matrix for each of the deprecated matrix classes.
+
+    from sympy.matrices.common import (
+        MatrixRequired,
+        MatrixShaping,
+        MatrixSpecial,
+        MatrixProperties,
+        MatrixOperations,
+        MatrixArithmetic,
+        MatrixCommon
+    )
+    from sympy.matrices.matrices import (
+        MatrixDeterminant,
+        MatrixReductions,
+        MatrixSubspaces,
+        MatrixEigen,
+        MatrixCalculus,
+        MatrixDeprecated
+    )
+    from sympy import (
+        Matrix,
+        ImmutableMatrix,
+        SparseMatrix,
+        ImmutableSparseMatrix
+    )
+    all_mixins = (
+        MatrixRequired,
+        MatrixShaping,
+        MatrixSpecial,
+        MatrixProperties,
+        MatrixOperations,
+        MatrixArithmetic,
+        MatrixCommon,
+        MatrixDeterminant,
+        MatrixReductions,
+        MatrixSubspaces,
+        MatrixEigen,
+        MatrixCalculus,
+        MatrixDeprecated
+    )
+    all_matrices = (
+        Matrix,
+        ImmutableMatrix,
+        SparseMatrix,
+        ImmutableSparseMatrix
+    )
+
+    Ms = [M([[1, 2], [3, 4]]) for M in all_matrices]
+    t = ()
+
+    for mixin in all_mixins:
+        for M in Ms:
+            with warns_deprecated_sympy():
+                assert isinstance(M, mixin) is True
+        with warns_deprecated_sympy():
+            assert isinstance(t, mixin) is False
+
+
+# classes to test the deprecated matrix classes. We use warns_deprecated_sympy
+# to suppress the deprecation warnings because subclassing the deprecated
+# classes causes a warning to be raised.
+
+with warns_deprecated_sympy():
+    class ShapingOnlyMatrix(_MinimalMatrix, _CastableMatrix, MatrixShaping):
+        pass
 
 
 def eye_Shaping(n):
@@ -32,8 +114,9 @@ def zeros_Shaping(n):
     return ShapingOnlyMatrix(n, n, lambda i, j: 0)
 
 
-class PropertiesOnlyMatrix(_MinimalMatrix, _CastableMatrix, MatrixProperties):
-    pass
+with warns_deprecated_sympy():
+    class PropertiesOnlyMatrix(_MinimalMatrix, _CastableMatrix, MatrixProperties):
+        pass
 
 
 def eye_Properties(n):
@@ -44,8 +127,9 @@ def zeros_Properties(n):
     return PropertiesOnlyMatrix(n, n, lambda i, j: 0)
 
 
-class OperationsOnlyMatrix(_MinimalMatrix, _CastableMatrix, MatrixOperations):
-    pass
+with warns_deprecated_sympy():
+    class OperationsOnlyMatrix(_MinimalMatrix, _CastableMatrix, MatrixOperations):
+        pass
 
 
 def eye_Operations(n):
@@ -56,8 +140,9 @@ def zeros_Operations(n):
     return OperationsOnlyMatrix(n, n, lambda i, j: 0)
 
 
-class ArithmeticOnlyMatrix(_MinimalMatrix, _CastableMatrix, MatrixArithmetic):
-    pass
+with warns_deprecated_sympy():
+    class ArithmeticOnlyMatrix(_MinimalMatrix, _CastableMatrix, MatrixArithmetic):
+        pass
 
 
 def eye_Arithmetic(n):
@@ -68,12 +153,14 @@ def zeros_Arithmetic(n):
     return ArithmeticOnlyMatrix(n, n, lambda i, j: 0)
 
 
-class SpecialOnlyMatrix(_MinimalMatrix, _CastableMatrix, MatrixSpecial):
-    pass
+with warns_deprecated_sympy():
+    class SpecialOnlyMatrix(_MinimalMatrix, _CastableMatrix, MatrixSpecial):
+        pass
 
 
-class CalculusOnlyMatrix(_MinimalMatrix, _CastableMatrix, MatrixCalculus):
-    pass
+with warns_deprecated_sympy():
+    class CalculusOnlyMatrix(_MinimalMatrix, _CastableMatrix, MatrixCalculus):
+        pass
 
 
 def test__MinimalMatrix():
@@ -95,6 +182,16 @@ def test__MinimalMatrix():
     assert not (_MinimalMatrix([[1, 2], [3, 4], [5, 6]]) == x)
 
 
+def test_kind():
+    assert Matrix([[1, 2], [3, 4]]).kind == MatrixKind(NumberKind)
+    assert Matrix([[0, 0], [0, 0]]).kind == MatrixKind(NumberKind)
+    assert Matrix(0, 0, []).kind == MatrixKind(NumberKind)
+    assert Matrix([[x]]).kind == MatrixKind(NumberKind)
+    assert Matrix([[1, Matrix([[1]])]]).kind == MatrixKind(UndefinedKind)
+    assert SparseMatrix([[1]]).kind == MatrixKind(NumberKind)
+    assert SparseMatrix([[1, Matrix([[1]])]]).kind == MatrixKind(UndefinedKind)
+
+
 # ShapingOnlyMatrix tests
 def test_vec():
     m = ShapingOnlyMatrix(2, 2, [1, 3, 2, 4])
@@ -104,19 +201,33 @@ def test_vec():
         assert m_vec[i] == i + 1
 
 
+def test_todok():
+    a, b, c, d = symbols('a:d')
+    m1 = MutableDenseMatrix([[a, b], [c, d]])
+    m2 = ImmutableDenseMatrix([[a, b], [c, d]])
+    m3 = MutableSparseMatrix([[a, b], [c, d]])
+    m4 = ImmutableSparseMatrix([[a, b], [c, d]])
+    assert m1.todok() == m2.todok() == m3.todok() == m4.todok() == \
+        {(0, 0): a, (0, 1): b, (1, 0): c, (1, 1): d}
+
+
 def test_tolist():
     lst = [[S.One, S.Half, x*y, S.Zero], [x, y, z, x**2], [y, -S.One, z*x, 3]]
     flat_lst = [S.One, S.Half, x*y, S.Zero, x, y, z, x**2, y, -S.One, z*x, 3]
     m = ShapingOnlyMatrix(3, 4, flat_lst)
     assert m.tolist() == lst
 
+def test_todod():
+    m = ShapingOnlyMatrix(3, 2, [[S.One, 0], [0, S.Half], [x, 0]])
+    dict = {0: {0: S.One}, 1: {1: S.Half}, 2: {0: x}}
+    assert m.todod() == dict
 
 def test_row_col_del():
     e = ShapingOnlyMatrix(3, 3, [1, 2, 3, 4, 5, 6, 7, 8, 9])
-    raises(ValueError, lambda: e.row_del(5))
-    raises(ValueError, lambda: e.row_del(-5))
-    raises(ValueError, lambda: e.col_del(5))
-    raises(ValueError, lambda: e.col_del(-5))
+    raises(IndexError, lambda: e.row_del(5))
+    raises(IndexError, lambda: e.row_del(-5))
+    raises(IndexError, lambda: e.col_del(5))
+    raises(IndexError, lambda: e.col_del(-5))
 
     assert e.row_del(2) == e.row_del(-1) == Matrix([[1, 2, 3], [4, 5, 6]])
     assert e.col_del(2) == e.col_del(-1) == Matrix([[1, 2], [4, 5], [7, 8]])
@@ -152,7 +263,7 @@ def test_get_diag_blocks2():
 
 def test_shape():
     m = ShapingOnlyMatrix(1, 2, [0, 0])
-    m.shape == (1, 2)
+    assert m.shape == (1, 2)
 
 
 def test_reshape():
@@ -409,7 +520,7 @@ def test_is_zero():
     assert PropertiesOnlyMatrix([[0, 0], [0, 0]]).is_zero_matrix
     assert PropertiesOnlyMatrix(zeros(3, 4)).is_zero_matrix
     assert not PropertiesOnlyMatrix(eye(3)).is_zero_matrix
-    assert PropertiesOnlyMatrix([[x, 0], [0, 0]]).is_zero_matrix == None
+    assert PropertiesOnlyMatrix([[x, 0], [0, 0]]).is_zero_matrix is None
     assert PropertiesOnlyMatrix([[x, 1], [0, 0]]).is_zero_matrix == False
     a = Symbol('a', nonzero=True)
     assert PropertiesOnlyMatrix([[a, 0], [0, 0]]).is_zero_matrix == False
@@ -417,10 +528,10 @@ def test_is_zero():
 
 def test_values():
     assert set(PropertiesOnlyMatrix(2, 2, [0, 1, 2, 3]
-        ).values()) == set([1, 2, 3])
+        ).values()) == {1, 2, 3}
     x = Symbol('x', real=True)
     assert set(PropertiesOnlyMatrix(2, 2, [x, 0, 0, 1]
-        ).values()) == set([x, 1])
+        ).values()) == {x, 1}
 
 
 # OperationsOnlyMatrix tests
@@ -522,6 +633,13 @@ def test_replace_map():
     assert N == K
 
 
+def test_rot90():
+    A = Matrix([[1, 2], [3, 4]])
+    assert A == A.rot90(0) == A.rot90(4)
+    assert A.rot90(2) == A.rot90(-2) == A.rot90(6) == Matrix(((4, 3), (2, 1)))
+    assert A.rot90(3) == A.rot90(-1) == A.rot90(7) == Matrix(((2, 4), (1, 3)))
+    assert A.rot90() == A.rot90(-7) == A.rot90(-3) == Matrix(((3, 1), (4, 2)))
+
 def test_simplify():
     n = Symbol('n')
     f = Function('f')
@@ -534,6 +652,10 @@ def test_simplify():
     M = OperationsOnlyMatrix([[eq]])
     assert M.simplify() == Matrix([[eq]])
     assert M.simplify(ratio=oo) == Matrix([[eq.simplify(ratio=oo)]])
+
+    # https://github.com/sympy/sympy/issues/19353
+    m = Matrix([[30, 2], [3, 4]])
+    assert (1/(m.trace())).simplify() == Rational(1, 34)
 
 
 def test_subs():
@@ -597,6 +719,70 @@ def test_permute():
                                             [5,  6,  7,  8],
                                             [9, 10, 11, 12],
                                             [1,  2,  3,  4]])
+
+def test_upper_triangular():
+
+    A = OperationsOnlyMatrix([
+                [1, 1, 1, 1],
+                [1, 1, 1, 1],
+                [1, 1, 1, 1],
+                [1, 1, 1, 1]
+            ])
+
+    R = A.upper_triangular(2)
+    assert R == OperationsOnlyMatrix([
+                        [0, 0, 1, 1],
+                        [0, 0, 0, 1],
+                        [0, 0, 0, 0],
+                        [0, 0, 0, 0]
+                    ])
+
+    R = A.upper_triangular(-2)
+    assert R == OperationsOnlyMatrix([
+                        [1, 1, 1, 1],
+                        [1, 1, 1, 1],
+                        [1, 1, 1, 1],
+                        [0, 1, 1, 1]
+                    ])
+
+    R = A.upper_triangular()
+    assert R == OperationsOnlyMatrix([
+                        [1, 1, 1, 1],
+                        [0, 1, 1, 1],
+                        [0, 0, 1, 1],
+                        [0, 0, 0, 1]
+                    ])
+
+def test_lower_triangular():
+    A = OperationsOnlyMatrix([
+                        [1, 1, 1, 1],
+                        [1, 1, 1, 1],
+                        [1, 1, 1, 1],
+                        [1, 1, 1, 1]
+                    ])
+
+    L = A.lower_triangular()
+    assert L == ArithmeticOnlyMatrix([
+                        [1, 0, 0, 0],
+                        [1, 1, 0, 0],
+                        [1, 1, 1, 0],
+                        [1, 1, 1, 1]])
+
+    L = A.lower_triangular(2)
+    assert L == ArithmeticOnlyMatrix([
+                        [1, 1, 1, 0],
+                        [1, 1, 1, 1],
+                        [1, 1, 1, 1],
+                        [1, 1, 1, 1]
+                    ])
+
+    L = A.lower_triangular(-2)
+    assert L == ArithmeticOnlyMatrix([
+                        [0, 0, 0, 0],
+                        [0, 0, 0, 0],
+                        [1, 0, 0, 0],
+                        [1, 1, 0, 0]
+                    ])
 
 
 # ArithmeticOnlyMatrix tests
@@ -685,6 +871,15 @@ def test_multiplication():
         assert c[1, 0] == 3*5
         assert c[1, 1] == 0
 
+    # https://github.com/sympy/sympy/issues/22353
+    A = Matrix(ones(3, 1))
+    _h = -Rational(1, 2)
+    B = Matrix([_h, _h, _h])
+    assert A.multiply_elementwise(B) == Matrix([
+        [_h],
+        [_h],
+        [_h]])
+
 
 def test_matmul():
     a = Matrix([[1, 2], [3, 4]])
@@ -709,6 +904,22 @@ def test_matmul():
         pass
     except TypeError:  #TypeError is raised in case of NotImplemented is returned
         pass
+
+
+def test_non_matmul():
+    """
+    Test that if explicitly specified as non-matrix, mul reverts
+    to scalar multiplication.
+    """
+    class foo(Expr):
+        is_Matrix=False
+        is_MatrixLike=False
+        shape = (1, 1)
+
+    A = Matrix([[1, 2], [3, 4]])
+    b = foo()
+    assert b*A == Matrix([[b, 2*b], [3*b, 4*b]])
+    assert A*b == Matrix([[b, 2*b], [3*b, 4*b]])
 
 
 def test_power():
@@ -738,7 +949,6 @@ def test_sub():
 def test_div():
     n = ArithmeticOnlyMatrix(1, 2, [1, 2])
     assert n/2 == ArithmeticOnlyMatrix(1, 2, [S.Half, S(2)/2])
-
 
 # SpecialOnlyMatrix tests
 def test_eye():
@@ -855,8 +1065,8 @@ def test_diagonal():
     s = SparseMatrix(3, 3, {(1, 1): 1})
     assert type(s.diagonal()) == type(s)
     assert type(m) != type(s)
-    raises(ValueError, lambda: m.diagonal(3))
-    raises(ValueError, lambda: m.diagonal(-3))
+    assert m.diagonal(3)  == Matrix(1, 0, [])
+    assert m.diagonal(-3) == Matrix(1, 0, [])
     raises(ValueError, lambda: m.diagonal(pi))
     M = ones(2, 3)
     assert banded({i: list(M.diagonal(i))
@@ -889,29 +1099,6 @@ def test_jordan_block():
     lambda: SpecialOnlyMatrix.jordan_block(
         eigenvalue=2, eigenval=4))
 
-    # Deprecated feature
-    with warns_deprecated_sympy():
-        assert (SpecialOnlyMatrix.jordan_block(cols=3, eigenvalue=2) ==
-                SpecialOnlyMatrix(3, 3, (2, 1, 0, 0, 2, 1, 0, 0, 2)))
-
-    with warns_deprecated_sympy():
-        assert (SpecialOnlyMatrix.jordan_block(rows=3, eigenvalue=2) ==
-                SpecialOnlyMatrix(3, 3, (2, 1, 0, 0, 2, 1, 0, 0, 2)))
-
-    with warns_deprecated_sympy():
-        assert SpecialOnlyMatrix.jordan_block(3, 2) == \
-            SpecialOnlyMatrix.jordan_block(cols=3, eigenvalue=2) == \
-            SpecialOnlyMatrix.jordan_block(rows=3, eigenvalue=2)
-
-    with warns_deprecated_sympy():
-        assert SpecialOnlyMatrix.jordan_block(
-            rows=4, cols=3, eigenvalue=2) == \
-            Matrix([
-                [2, 1, 0],
-                [0, 2, 1],
-                [0, 0, 2],
-                [0, 0, 0]])
-
     # Using alias keyword
     assert SpecialOnlyMatrix.jordan_block(size=3, eigenvalue=2) == \
         SpecialOnlyMatrix.jordan_block(size=3, eigenval=2)
@@ -938,6 +1125,38 @@ def test_orthogonalize():
 
     vecs = [Matrix([1, 2, 3]), Matrix([4, 5, 6]), Matrix([7, 8, 9])]
     raises(ValueError, lambda: Matrix.orthogonalize(*vecs, rankcheck=True))
+
+def test_wilkinson():
+
+    wminus, wplus = Matrix.wilkinson(1)
+    assert wminus == Matrix([
+                                [-1, 1, 0],
+                                [1, 0, 1],
+                                [0, 1, 1]])
+    assert wplus == Matrix([
+                            [1, 1, 0],
+                            [1, 0, 1],
+                            [0, 1, 1]])
+
+    wminus, wplus = Matrix.wilkinson(3)
+    assert wminus == Matrix([
+                                [-3,  1,  0, 0, 0, 0, 0],
+                                [1, -2,  1, 0, 0, 0, 0],
+                                [0,  1, -1, 1, 0, 0, 0],
+                                [0,  0,  1, 0, 1, 0, 0],
+                                [0,  0,  0, 1, 1, 1, 0],
+                                [0,  0,  0, 0, 1, 2, 1],
+
+      [0,  0,  0, 0, 0, 1, 3]])
+
+    assert wplus == Matrix([
+                            [3, 1, 0, 0, 0, 0, 0],
+                            [1, 2, 1, 0, 0, 0, 0],
+                            [0, 1, 1, 1, 0, 0, 0],
+                            [0, 0, 1, 0, 1, 0, 0],
+                            [0, 0, 0, 1, 1, 1, 0],
+                            [0, 0, 0, 0, 1, 2, 1],
+                            [0, 0, 0, 0, 0, 1, 3]])
 
 
 # CalculusOnlyMatrix tests
@@ -983,3 +1202,65 @@ def test_issue_13774():
     v = [1, 1, 1]
     raises(TypeError, lambda: M*v)
     raises(TypeError, lambda: v*M)
+
+def test_companion():
+    x = Symbol('x')
+    y = Symbol('y')
+    raises(ValueError, lambda: Matrix.companion(1))
+    raises(ValueError, lambda: Matrix.companion(Poly([1], x)))
+    raises(ValueError, lambda: Matrix.companion(Poly([2, 1], x)))
+    raises(ValueError, lambda: Matrix.companion(Poly(x*y, [x, y])))
+
+    c0, c1, c2 = symbols('c0:3')
+    assert Matrix.companion(Poly([1, c0], x)) == Matrix([-c0])
+    assert Matrix.companion(Poly([1, c1, c0], x)) == \
+        Matrix([[0, -c0], [1, -c1]])
+    assert Matrix.companion(Poly([1, c2, c1, c0], x)) == \
+        Matrix([[0, 0, -c0], [1, 0, -c1], [0, 1, -c2]])
+
+def test_issue_10589():
+    x, y, z = symbols("x, y z")
+    M1 = Matrix([x, y, z])
+    M1 = M1.subs(zip([x, y, z], [1, 2, 3]))
+    assert M1 == Matrix([[1], [2], [3]])
+
+    M2 = Matrix([[x, x, x, x, x], [x, x, x, x, x], [x, x, x, x, x]])
+    M2 = M2.subs(zip([x], [1]))
+    assert M2 == Matrix([[1, 1, 1, 1, 1], [1, 1, 1, 1, 1], [1, 1, 1, 1, 1]])
+
+def test_rmul_pr19860():
+    class Foo(ImmutableDenseMatrix):
+        _op_priority = MutableDenseMatrix._op_priority + 0.01
+
+    a = Matrix(2, 2, [1, 2, 3, 4])
+    b = Foo(2, 2, [1, 2, 3, 4])
+
+    # This would throw a RecursionError: maximum recursion depth
+    # since b always has higher priority even after a.as_mutable()
+    c = a*b
+
+    assert isinstance(c, Foo)
+    assert c == Matrix([[7, 10], [15, 22]])
+
+
+def test_issue_18956():
+    A = Array([[1, 2], [3, 4]])
+    B = Matrix([[1,2],[3,4]])
+    raises(TypeError, lambda: B + A)
+    raises(TypeError, lambda: A + B)
+
+
+def test__eq__():
+    class My(object):
+        def __iter__(self):
+            yield 1
+            yield 2
+            return
+        def __getitem__(self, i):
+            return list(self)[i]
+    a = Matrix(2, 1, [1, 2])
+    assert a != My()
+    class My_sympy(My):
+        def _sympy_(self):
+            return Matrix(self)
+    assert a == My_sympy()

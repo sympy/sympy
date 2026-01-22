@@ -1,22 +1,23 @@
 """Tools for solving inequalities and systems of inequalities. """
+import itertools
 
-from __future__ import print_function, division
-
-from sympy.core import Symbol, Dummy, sympify
-from sympy.core.compatibility import iterable
+from sympy.calculus.util import (continuous_domain, periodicity,
+    function_range)
+from sympy.core import sympify
 from sympy.core.exprtools import factor_terms
-from sympy.core.relational import Relational, Eq, Ge, Lt
-from sympy.sets import Interval
-from sympy.sets.sets import FiniteSet, Union, EmptySet, Intersection
+from sympy.core.relational import Relational, Lt, Ge, Eq
+from sympy.core.symbol import Symbol, Dummy
+from sympy.sets.sets import Interval, FiniteSet, Union, Intersection
 from sympy.core.singleton import S
 from sympy.core.function import expand_mul
-
-from sympy.functions import Abs
+from sympy.functions.elementary.complexes import Abs
 from sympy.logic import And
 from sympy.polys import Poly, PolynomialError, parallel_poly_from_expr
 from sympy.polys.polyutils import _nsort
-from sympy.utilities.iterables import sift
+from sympy.solvers.solveset import solvify, solveset
+from sympy.utilities.iterables import sift, iterable
 from sympy.utilities.misc import filldedent
+
 
 def solve_poly_inequality(poly, rel):
     """Solve a polynomial inequality with rational coefficients.
@@ -24,18 +25,17 @@ def solve_poly_inequality(poly, rel):
     Examples
     ========
 
-    >>> from sympy import Poly
+    >>> from sympy import solve_poly_inequality, Poly
     >>> from sympy.abc import x
-    >>> from sympy.solvers.inequalities import solve_poly_inequality
 
     >>> solve_poly_inequality(Poly(x, x, domain='ZZ'), '==')
-    [FiniteSet(0)]
+    [{0}]
 
     >>> solve_poly_inequality(Poly(x**2 - 1, x, domain='ZZ'), '!=')
     [Interval.open(-oo, -1), Interval.open(-1, 1), Interval.open(1, oo)]
 
     >>> solve_poly_inequality(Poly(x**2 - 1, x, domain='ZZ'), '==')
-    [FiniteSet(-1), FiniteSet(1)]
+    [{-1}, {1}]
 
     See Also
     ========
@@ -116,15 +116,14 @@ def solve_poly_inequalities(polys):
     Examples
     ========
 
+    >>> from sympy import Poly
     >>> from sympy.solvers.inequalities import solve_poly_inequalities
-    >>> from sympy.polys import Poly
     >>> from sympy.abc import x
     >>> solve_poly_inequalities(((
     ... Poly(x**2 - 3), ">"), (
     ... Poly(-x**2 + 1), ">")))
     Union(Interval.open(-oo, -sqrt(3)), Interval.open(-1, 1), Interval.open(sqrt(3), oo))
     """
-    from sympy import Union
     return Union(*[s for p in polys for s in solve_poly_inequality(*p)])
 
 
@@ -135,13 +134,12 @@ def solve_rational_inequalities(eqs):
     ========
 
     >>> from sympy.abc import x
-    >>> from sympy import Poly
-    >>> from sympy.solvers.inequalities import solve_rational_inequalities
+    >>> from sympy import solve_rational_inequalities, Poly
 
     >>> solve_rational_inequalities([[
     ... ((Poly(-x + 1), Poly(1, x)), '>='),
     ... ((Poly(-x + 1), Poly(1, x)), '<=')]])
-    FiniteSet(1)
+    {1}
 
     >>> solve_rational_inequalities([[
     ... ((Poly(x), Poly(1, x)), '!='),
@@ -166,12 +164,12 @@ def solve_rational_inequalities(eqs):
 
             intervals = []
 
-            for numer_interval in numer_intervals:
-                for global_interval in global_intervals:
-                    interval = numer_interval.intersect(global_interval)
+            for numer_interval, global_interval in itertools.product(
+                    numer_intervals, global_intervals):
+                interval = numer_interval.intersect(global_interval)
 
-                    if interval is not S.EmptySet:
-                        intervals.append(interval)
+                if interval is not S.EmptySet:
+                    intervals.append(interval)
 
             global_intervals = intervals
 
@@ -201,7 +199,7 @@ def reduce_rational_inequalities(exprs, gen, relational=True):
     Examples
     ========
 
-    >>> from sympy import Poly, Symbol
+    >>> from sympy import Symbol
     >>> from sympy.solvers.inequalities import reduce_rational_inequalities
 
     >>> x = Symbol('x', real=True)
@@ -226,10 +224,12 @@ def reduce_rational_inequalities(exprs, gen, relational=True):
     """
     exact = True
     eqs = []
-    solution = S.Reals if exprs else S.EmptySet
+    solution = S.EmptySet  # add pieces for each group
     for _exprs in exprs:
+        if not _exprs:
+            continue
         _eqs = []
-
+        _sol = S.Reals
         for expr in _exprs:
             if isinstance(expr, tuple):
                 expr, rel = expr
@@ -237,7 +237,7 @@ def reduce_rational_inequalities(exprs, gen, relational=True):
                 if expr.is_Relational:
                     expr, rel = expr.lhs - expr.rhs, expr.rel_op
                 else:
-                    expr, rel = expr, '=='
+                    rel = '=='
 
             if expr is S.true:
                 numer, denom, rel = S.Zero, S.One, '=='
@@ -263,18 +263,17 @@ def reduce_rational_inequalities(exprs, gen, relational=True):
             if not (domain.is_ZZ or domain.is_QQ):
                 expr = numer/denom
                 expr = Relational(expr, 0, rel)
-                solution &= solve_univariate_inequality(expr, gen, relational=False)
+                _sol &= solve_univariate_inequality(expr, gen, relational=False)
             else:
                 _eqs.append(((numer, denom), rel))
 
         if _eqs:
-            eqs.append(_eqs)
+            _sol &= solve_rational_inequalities([_eqs])
+            exclude = solve_rational_inequalities([[((d, d.one), '==')
+                for i in eqs for ((n, d), _) in i if d.has(gen)]])
+            _sol -= exclude
 
-    if eqs:
-        solution &= solve_rational_inequalities(eqs)
-        exclude = solve_rational_inequalities([[((d, d.one), '==')
-            for i in eqs for ((n, d), _) in i if d.has(gen)]])
-        solution -= exclude
+        solution |= _sol
 
     if not exact and solution:
         solution = solution.evalf()
@@ -291,8 +290,7 @@ def reduce_abs_inequality(expr, rel, gen):
     Examples
     ========
 
-    >>> from sympy import Abs, Symbol
-    >>> from sympy.solvers.inequalities import reduce_abs_inequality
+    >>> from sympy import reduce_abs_inequality, Abs, Symbol
     >>> x = Symbol('x', real=True)
 
     >>> reduce_abs_inequality(Abs(x - 5) - 3, '<', x)
@@ -307,8 +305,8 @@ def reduce_abs_inequality(expr, rel, gen):
     reduce_abs_inequalities
     """
     if gen.is_extended_real is False:
-         raise TypeError(filldedent('''
-            can't solve inequalities with absolute values containing
+        raise TypeError(filldedent('''
+            Cannot solve inequalities with absolute values containing
             non-real variables.
             '''))
 
@@ -324,22 +322,14 @@ def reduce_abs_inequality(expr, rel, gen):
                 if not exprs:
                     exprs = _exprs
                 else:
-                    args = []
-
-                    for expr, conds in exprs:
-                        for _expr, _conds in _exprs:
-                            args.append((op(expr, _expr), conds + _conds))
-
-                    exprs = args
+                    exprs = [(op(expr, _expr), conds + _conds) for (expr, conds), (_expr, _conds) in
+                            itertools.product(exprs, _exprs)]
         elif expr.is_Pow:
             n = expr.exp
             if not n.is_Integer:
                 raise ValueError("Only Integer Powers are allowed on Abs.")
 
-            _exprs = _bottom_up_scan(expr.base)
-
-            for expr, conds in _exprs:
-                exprs.append((expr**n, conds))
+            exprs.extend((expr**n, conds) for expr, conds in _bottom_up_scan(expr.base))
         elif isinstance(expr, Abs):
             _exprs = _bottom_up_scan(expr.args[0])
 
@@ -351,12 +341,10 @@ def reduce_abs_inequality(expr, rel, gen):
 
         return exprs
 
-    exprs = _bottom_up_scan(expr)
-
     mapping = {'<': '>', '<=': '>='}
     inequalities = []
 
-    for expr, conds in exprs:
+    for expr, conds in _bottom_up_scan(expr):
         if rel not in mapping.keys():
             expr = Relational( expr, 0, rel)
         else:
@@ -373,9 +361,7 @@ def reduce_abs_inequalities(exprs, gen):
     Examples
     ========
 
-    >>> from sympy import Abs, Symbol
-    >>> from sympy.abc import x
-    >>> from sympy.solvers.inequalities import reduce_abs_inequalities
+    >>> from sympy import reduce_abs_inequalities, Abs, Symbol
     >>> x = Symbol('x', extended_real=True)
 
     >>> reduce_abs_inequalities([(Abs(3*x - 5) - 7, '<'),
@@ -410,7 +396,7 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
         The domain over which the equation is solved
     continuous: bool
         True if expr is known to be continuous over the given domain
-        (and so continuous_domain() doesn't need to be called on it)
+        (and so continuous_domain() does not need to be called on it)
 
     Raises
     ======
@@ -434,12 +420,11 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
     Examples
     ========
 
-    >>> from sympy.solvers.inequalities import solve_univariate_inequality
-    >>> from sympy import Symbol, sin, Interval, S
+    >>> from sympy import solve_univariate_inequality, Symbol, sin, Interval, S
     >>> x = Symbol('x')
 
     >>> solve_univariate_inequality(x**2 >= 4, x)
-    ((2 <= x) & (x < oo)) | ((x <= -2) & (-oo < x))
+    ((2 <= x) & (x < oo)) | ((-oo < x) & (x <= -2))
 
     >>> solve_univariate_inequality(x**2 >= 4, x, relational=False)
     Union(Interval(-oo, -2), Interval(2, oo))
@@ -452,11 +437,21 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
     Interval.open(0, pi)
 
     """
-    from sympy import im
-    from sympy.calculus.util import (continuous_domain, periodicity,
-        function_range)
     from sympy.solvers.solvers import denoms
-    from sympy.solvers.solveset import solvify, solveset
+
+    if domain.is_subset(S.Reals) is False:
+        raise NotImplementedError(filldedent('''
+        Inequalities in the complex domain are
+        not supported. Try the real domain by
+        setting domain=S.Reals'''))
+    elif domain is not S.Reals:
+        rv = solve_univariate_inequality(
+        expr, gen, relational=False, continuous=continuous).intersection(domain)
+        if relational:
+            rv = rv.as_relational(gen)
+        return rv
+    else:
+        pass  # continue with attempt to solve in Real domain
 
     # This keeps the function independent of the assumptions about `gen`.
     # `solveset` makes sure this function is called only when the domain is
@@ -498,13 +493,13 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
             frange = function_range(e, gen, domain)
 
             rel = expr.rel_op
-            if rel == '<' or rel == '<=':
+            if rel in ('<', '<='):
                 if expr.func(frange.sup, 0):
                     rv = domain
                 elif not expr.func(frange.inf, 0):
                     rv = S.EmptySet
 
-            elif rel == '>' or rel == '>=':
+            elif rel in ('>', '>='):
                 if expr.func(frange.inf, 0):
                     rv = domain
                 elif not expr.func(frange.sup, 0):
@@ -512,7 +507,8 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
 
             inf, sup = domain.inf, domain.sup
             if sup - inf is S.Infinity:
-                domain = Interval(0, period, False, True)
+                domain = Interval(0, period, False, True).intersect(_domain)
+                _domain = domain
 
         if rv is None:
             n, d = e.as_numer_denom()
@@ -588,7 +584,7 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
                     try:
                         reals = sifted[True]
                         if len(reals) > 1:
-                            reals = list(sorted(reals))
+                            reals = sorted(reals)
                     except TypeError:
                         raise NotImplementedError
             except NotImplementedError:
@@ -597,11 +593,11 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
             # If expr contains imaginary coefficients, only take real
             # values of x for which the imaginary part is 0
             make_real = S.Reals
-            if im(expanded_e) != S.Zero:
+            if (coeffI := expanded_e.coeff(S.ImaginaryUnit)) != S.Zero:
                 check = True
                 im_sol = FiniteSet()
                 try:
-                    a = solveset(im(expanded_e), gen, domain)
+                    a = solveset(coeffI, gen, domain)
                     if not isinstance(a, Interval):
                         for z in a:
                             if z not in singularities and valid(z) and z.is_extended_real:
@@ -629,7 +625,7 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
                     im_sol = S.Reals
                     check = False
 
-                if isinstance(im_sol, EmptySet):
+                if im_sol is S.EmptySet:
                     raise ValueError(filldedent('''
                         %s contains imaginary parts which cannot be
                         made 0 for any value of %s satisfying the
@@ -641,7 +637,7 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
             sol_sets = [S.EmptySet]
 
             start = domain.inf
-            if valid(start) and start.is_finite:
+            if start in domain and valid(start) and start.is_finite:
                 sol_sets.append(FiniteSet(start))
 
             for x in reals:
@@ -664,13 +660,13 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
                 start = end
 
             end = domain.sup
-            if valid(end) and end.is_finite:
+            if end in domain and valid(end) and end.is_finite:
                 sol_sets.append(FiniteSet(end))
 
             if valid(_pt(start, end)):
                 sol_sets.append(Interval.open(start, end))
 
-            if im(expanded_e) != S.Zero and check:
+            if coeffI != S.Zero and check:
                 rv = (make_real).intersect(_domain)
             else:
                 rv = Intersection(
@@ -721,7 +717,7 @@ def _solve_inequality(ie, s, linear=False):
     If `linear` is True (default is False) an `s`-dependent expression
     will be isolated on the left, if possible
     but it will not be solved for `s` unless the expression is linear
-    in `s`. Furthermore, only "safe" operations which don't change the
+    in `s`. Furthermore, only "safe" operations which do not change the
     sense of the relationship are applied: no division by an unsigned
     value is attempted unless the relationship involves Eq or Ne and
     no division by a value not known to be nonzero is ever attempted.
@@ -884,6 +880,7 @@ def _solve_inequality(ie, s, linear=False):
     conds.append(rv)
     return And(*conds)
 
+
 def _reduce_inequalities(inequalities, symbols):
     # helper for reduce_inequalities
 
@@ -923,14 +920,8 @@ def _reduce_inequalities(inequalities, symbols):
             else:
                 other.append(_solve_inequality(Relational(expr, 0, rel), gen))
 
-    poly_reduced = []
-    abs_reduced = []
-
-    for gen, exprs in poly_part.items():
-        poly_reduced.append(reduce_rational_inequalities([exprs], gen))
-
-    for gen, exprs in abs_part.items():
-        abs_reduced.append(reduce_abs_inequalities(exprs, gen))
+    poly_reduced = [reduce_rational_inequalities([exprs], gen) for gen, exprs in poly_part.items()]
+    abs_reduced = [reduce_abs_inequalities(exprs, gen) for gen, exprs in abs_part.items()]
 
     return And(*(poly_reduced + abs_reduced + other))
 
@@ -941,9 +932,8 @@ def reduce_inequalities(inequalities, symbols=[]):
     Examples
     ========
 
-    >>> from sympy import sympify as S, Symbol
     >>> from sympy.abc import x, y
-    >>> from sympy.solvers.inequalities import reduce_inequalities
+    >>> from sympy import reduce_inequalities
 
     >>> reduce_inequalities(0 <= x + 3, [])
     (-3 <= x) & (x < oo)

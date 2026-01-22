@@ -1,4 +1,5 @@
-from sympy import var, sturm, subresultants, prem, pquo
+from sympy.core.symbol import Symbol
+from sympy.polys.polytools import (pquo, prem, sturm, subresultants)
 from sympy.matrices import Matrix
 from sympy.polys.subresultants_qq_zz import (sylvester, res, res_q, res_z, bezout,
     subresultants_sylv,   modified_subresultants_sylv,
@@ -12,7 +13,7 @@ from sympy.polys.subresultants_qq_zz import (sylvester, res, res_q, res_z, bezou
 
 
 def test_sylvester():
-    x = var('x')
+    x = Symbol('x')
 
     assert sylvester(x**3 -7, 0, x) == sylvester(x**3 -7, 0, x, 1) == Matrix([[0]])
     assert sylvester(0, x**3 -7, x) == sylvester(0, x**3 -7, x, 1) == Matrix([[0]])
@@ -36,7 +37,7 @@ def test_sylvester():
 [1, 0, -7,  7,  0,  0], [0, 3,  0, -7,  0,  0], [0, 1,  0, -7,  7,  0], [0, 0,  3,  0, -7,  0], [0, 0,  1,  0, -7,  7], [0, 0,  0,  3,  0, -7]])
 
 def test_subresultants_sylv():
-    x = var('x')
+    x = Symbol('x')
 
     p = x**8 + x**6 - 3*x**4 - 3*x**3 + 8*x**2 + 2*x - 5
     q = 3*x**6 + 5*x**4 - 4*x**2 - 9*x + 21
@@ -51,7 +52,7 @@ def test_subresultants_sylv():
     assert subresultants_sylv(p, q, x) == euclid_amv(p, q, x)
 
 def test_modified_subresultants_sylv():
-    x = var('x')
+    x = Symbol('x')
 
     p = x**8 + x**6 - 3*x**4 - 3*x**3 + 8*x**2 + 2*x - 5
     q = 3*x**6 + 5*x**4 - 4*x**2 - 9*x + 21
@@ -66,23 +67,23 @@ def test_modified_subresultants_sylv():
     assert modified_subresultants_sylv(-p, q, x) != sturm_amv(-p, q, x)
 
 def test_res():
-    x = var('x')
+    x = Symbol('x')
 
     assert res(3, 5, x) == 1
 
 def test_res_q():
-    x = var('x')
+    x = Symbol('x')
 
     assert res_q(3, 5, x) == 1
 
 def test_res_z():
-    x = var('x')
+    x = Symbol('x')
 
     assert res_z(3, 5, x) == 1
     assert res(3, 5, x) == res_q(3, 5, x) == res_z(3, 5, x)
 
 def test_bezout():
-    x = var('x')
+    x = Symbol('x')
 
     p = -2*x**5+7*x**3+9*x**2-3*x+1
     q = -10*x**4+21*x**2+18*x-3
@@ -91,7 +92,7 @@ def test_bezout():
     assert bezout(p, q, x, 'prs') == backward_eye(5) * bezout(p, q, x, 'bz') * backward_eye(5)
 
 def test_subresultants_bezout():
-    x = var('x')
+    x = Symbol('x')
 
     p = x**8 + x**6 - 3*x**4 - 3*x**3 + 8*x**2 + 2*x - 5
     q = 3*x**6 + 5*x**4 - 4*x**2 - 9*x + 21
@@ -106,7 +107,7 @@ def test_subresultants_bezout():
     assert subresultants_bezout(p, q, x) == euclid_amv(p, q, x)
 
 def test_modified_subresultants_bezout():
-    x = var('x')
+    x = Symbol('x')
 
     p = x**8 + x**6 - 3*x**4 - 3*x**3 + 8*x**2 + 2*x - 5
     q = 3*x**6 + 5*x**4 - 4*x**2 - 9*x + 21
@@ -121,7 +122,7 @@ def test_modified_subresultants_bezout():
     assert modified_subresultants_bezout(-p, q, x) != sturm_amv(-p, q, x)
 
 def test_sturm_pg():
-    x = var('x')
+    x = Symbol('x')
 
     p = x**8 + x**6 - 3*x**4 - 3*x**3 + 8*x**2 + 2*x - 5
     q = 3*x**6 + 5*x**4 - 4*x**2 - 9*x + 21
@@ -137,7 +138,7 @@ def test_sturm_pg():
     assert sturm_pg(-p, q, x) == modified_subresultants_pg(-p, q, x)
 
 def test_sturm_q():
-    x = var('x')
+    x = Symbol('x')
 
     p = x**3 - 7*x + 7
     q = 3*x**2 - 7
@@ -146,7 +147,7 @@ def test_sturm_q():
 
 
 def test_sturm_amv():
-    x = var('x')
+    x = Symbol('x')
 
     p = x**8 + x**6 - 3*x**4 - 3*x**3 + 8*x**2 + 2*x - 5
     q = 3*x**6 + 5*x**4 - 4*x**2 - 9*x + 21
@@ -163,7 +164,7 @@ def test_sturm_amv():
 
 
 def test_euclid_pg():
-    x = var('x')
+    x = Symbol('x')
 
     p = x**6+x**5-x**4-x**3+x**2-x+1
     q = 6*x**5+5*x**4-4*x**3-3*x**2+2*x-1
@@ -178,7 +179,7 @@ def test_euclid_pg():
 
 
 def test_euclid_q():
-    x = var('x')
+    x = Symbol('x')
 
     p = x**3 - 7*x + 7
     q = 3*x**2 - 7
@@ -186,7 +187,7 @@ def test_euclid_q():
 
 
 def test_euclid_amv():
-    x = var('x')
+    x = Symbol('x')
 
     p = x**3 - 7*x + 7
     q = 3*x**2 - 7
@@ -201,7 +202,7 @@ def test_euclid_amv():
 
 
 def test_modified_subresultants_pg():
-    x = var('x')
+    x = Symbol('x')
 
     p = x**8 + x**6 - 3*x**4 - 3*x**3 + 8*x**2 + 2*x - 5
     q = 3*x**6 + 5*x**4 - 4*x**2 - 9*x + 21
@@ -217,7 +218,7 @@ def test_modified_subresultants_pg():
 
 
 def test_subresultants_pg():
-    x = var('x')
+    x = Symbol('x')
 
     p = x**8 + x**6 - 3*x**4 - 3*x**3 + 8*x**2 + 2*x - 5
     q = 3*x**6 + 5*x**4 - 4*x**2 - 9*x + 21
@@ -233,7 +234,7 @@ def test_subresultants_pg():
 
 
 def test_subresultants_amv_q():
-    x = var('x')
+    x = Symbol('x')
 
     p = x**8 + x**6 - 3*x**4 - 3*x**3 + 8*x**2 + 2*x - 5
     q = 3*x**6 + 5*x**4 - 4*x**2 - 9*x + 21
@@ -249,25 +250,25 @@ def test_subresultants_amv_q():
 
 
 def test_rem_z():
-    x = var('x')
+    x = Symbol('x')
 
     p = x**8 + x**6 - 3*x**4 - 3*x**3 + 8*x**2 + 2*x - 5
     q = 3*x**6 + 5*x**4 - 4*x**2 - 9*x + 21
     assert rem_z(p, -q, x) != prem(p, -q, x)
 
 def test_quo_z():
-    x = var('x')
+    x = Symbol('x')
 
     p = x**8 + x**6 - 3*x**4 - 3*x**3 + 8*x**2 + 2*x - 5
     q = 3*x**6 + 5*x**4 - 4*x**2 - 9*x + 21
     assert quo_z(p, -q, x) != pquo(p, -q, x)
 
-    y = var('y')
+    y = Symbol('y')
     q = 3*x**6 + 5*y**4 - 4*x**2 - 9*x + 21
     assert quo_z(p, -q, x) == pquo(p, -q, x)
 
 def test_subresultants_amv():
-    x = var('x')
+    x = Symbol('x')
 
     p = x**8 + x**6 - 3*x**4 - 3*x**3 + 8*x**2 + 2*x - 5
     q = 3*x**6 + 5*x**4 - 4*x**2 - 9*x + 21
@@ -283,7 +284,7 @@ def test_subresultants_amv():
 
 
 def test_modified_subresultants_amv():
-    x = var('x')
+    x = Symbol('x')
 
     p = x**8 + x**6 - 3*x**4 - 3*x**3 + 8*x**2 + 2*x - 5
     q = 3*x**6 + 5*x**4 - 4*x**2 - 9*x + 21
@@ -299,7 +300,7 @@ def test_modified_subresultants_amv():
 
 
 def test_subresultants_rem():
-    x = var('x')
+    x = Symbol('x')
 
     p = x**8 + x**6 - 3*x**4 - 3*x**3 + 8*x**2 + 2*x - 5
     q = 3*x**6 + 5*x**4 - 4*x**2 - 9*x + 21
@@ -315,7 +316,7 @@ def test_subresultants_rem():
 
 
 def test_subresultants_vv():
-    x = var('x')
+    x = Symbol('x')
 
     p = x**8 + x**6 - 3*x**4 - 3*x**3 + 8*x**2 + 2*x - 5
     q = 3*x**6 + 5*x**4 - 4*x**2 - 9*x + 21
@@ -331,7 +332,7 @@ def test_subresultants_vv():
 
 
 def test_subresultants_vv_2():
-    x = var('x')
+    x = Symbol('x')
 
     p = x**8 + x**6 - 3*x**4 - 3*x**3 + 8*x**2 + 2*x - 5
     q = 3*x**6 + 5*x**4 - 4*x**2 - 9*x + 21

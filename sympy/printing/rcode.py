@@ -1,23 +1,22 @@
 """
 R code printer
 
-The RCodePrinter converts single sympy expressions into single R expressions,
+The RCodePrinter converts single SymPy expressions into single R expressions,
 using the functions defined in math.h where possible.
 
 
 
 """
 
-from __future__ import print_function, division
+from __future__ import annotations
+from typing import Any
 
-from typing import Any, Dict
-
-from sympy.codegen.ast import Assignment
+from sympy.core.numbers import equal_valued
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence, PRECEDENCE
 from sympy.sets.fancysets import Range
 
-# dictionary mapping sympy function to (argument_conditions, C_function).
+# dictionary mapping SymPy function to (argument_conditions, C_function).
 # Used in RCodePrinter._print_Function(self)
 known_functions = {
     #"Abs": [(lambda x: not x.is_integer, "fabs")],
@@ -48,6 +47,7 @@ known_functions = {
     "digamma": "digamma",
     "trigamma": "trigamma",
     "beta": "beta",
+    "sqrt": "sqrt",  # To enable automatic rewrite
 }
 
 # These are the core reserved words in the R language. Taken from:
@@ -76,29 +76,23 @@ reserved_words = ['if',
 
 
 class RCodePrinter(CodePrinter):
-    """A printer to convert python expressions to strings of R code"""
+    """A printer to convert SymPy expressions to strings of R code"""
     printmethod = "_rcode"
     language = "R"
 
-    _default_settings = {
-        'order': None,
-        'full_prec': 'auto',
+    _default_settings: dict[str, Any] = dict(CodePrinter._default_settings, **{
         'precision': 15,
         'user_functions': {},
-        'human': True,
         'contract': True,
         'dereference': set(),
-        'error_on_reserved': False,
-        'reserved_word_suffix': '_',
-    }  # type: Dict[str, Any]
+    })
     _operators = {
        'and': '&',
         'or': '|',
        'not': '!',
     }
 
-    _relationals = {
-    }  # type: Dict[str, str]
+    _relationals: dict[str, str] = {}
 
     def __init__(self, settings={}):
         CodePrinter.__init__(self, settings)
@@ -115,10 +109,10 @@ class RCodePrinter(CodePrinter):
         return "%s;" % codestring
 
     def _get_comment(self, text):
-        return "// {0}".format(text)
+        return "// {}".format(text)
 
     def _declare_number_const(self, name, value):
-        return "{0} = {1};".format(name, value)
+        return "{} = {};".format(name, value)
 
     def _format_code(self, lines):
         return self.indent_code(lines)
@@ -146,9 +140,9 @@ class RCodePrinter(CodePrinter):
         if "Pow" in self.known_functions:
             return self._print_Function(expr)
         PREC = precedence(expr)
-        if expr.exp == -1:
+        if equal_valued(expr.exp, -1):
             return '1.0/%s' % (self.parenthesize(expr.base, PREC))
-        elif expr.exp == 0.5:
+        elif equal_valued(expr.exp, 0.5):
             return 'sqrt(%s)' % self._print(expr.base)
         else:
             return '%s^%s' % (self.parenthesize(expr.base, PREC),
@@ -163,9 +157,6 @@ class RCodePrinter(CodePrinter):
         inds = [ self._print(i) for i in expr.indices ]
         return "%s[%s]" % (self._print(expr.base.label), ", ".join(inds))
 
-    def _print_Idx(self, expr):
-        return self._print(expr.label)
-
     def _print_Exp1(self, expr):
         return "exp(1)"
 
@@ -179,6 +170,8 @@ class RCodePrinter(CodePrinter):
         return '-Inf'
 
     def _print_Assignment(self, expr):
+        from sympy.codegen.ast import Assignment
+
         from sympy.matrices.expressions.matexpr import MatrixSymbol
         from sympy.tensor.indexed import IndexedBase
         lhs = expr.lhs
@@ -229,17 +222,16 @@ class RCodePrinter(CodePrinter):
 
     def _print_ITE(self, expr):
         from sympy.functions import Piecewise
-        _piecewise = Piecewise((expr.args[1], expr.args[0]), (expr.args[2], True))
-        return self._print(_piecewise)
+        return self._print(expr.rewrite(Piecewise))
 
     def _print_MatrixElement(self, expr):
-        return "{0}[{1}]".format(self.parenthesize(expr.parent, PRECEDENCE["Atom"],
+        return "{}[{}]".format(self.parenthesize(expr.parent, PRECEDENCE["Atom"],
             strict=True), expr.j + expr.i*expr.parent.shape[1])
 
     def _print_Symbol(self, expr):
-        name = super(RCodePrinter, self)._print_Symbol(expr)
+        name = super()._print_Symbol(expr)
         if expr in self._dereference:
-            return '(*{0})'.format(name)
+            return '(*{})'.format(name)
         else:
             return name
 
@@ -247,21 +239,13 @@ class RCodePrinter(CodePrinter):
         lhs_code = self._print(expr.lhs)
         rhs_code = self._print(expr.rhs)
         op = expr.rel_op
-        return "{0} {1} {2}".format(lhs_code, op, rhs_code)
-
-    def _print_sinc(self, expr):
-        from sympy.functions.elementary.trigonometric import sin
-        from sympy.core.relational import Ne
-        from sympy.functions import Piecewise
-        _piecewise = Piecewise(
-            (sin(expr.args[0]) / expr.args[0], Ne(expr.args[0], 0)), (1, True))
-        return self._print(_piecewise)
+        return "{} {} {}".format(lhs_code, op, rhs_code)
 
     def _print_AugmentedAssignment(self, expr):
         lhs_code = self._print(expr.lhs)
         op = expr.op
         rhs_code = self._print(expr.rhs)
-        return "{0} {1} {2};".format(lhs_code, op, rhs_code)
+        return "{} {} {};".format(lhs_code, op, rhs_code)
 
     def _print_For(self, expr):
         target = self._print(expr.target)
@@ -270,9 +254,8 @@ class RCodePrinter(CodePrinter):
         else:
             raise NotImplementedError("Only iterable currently supported is Range")
         body = self._print(expr.body)
-        return ('for ({target} = {start}; {target} < {stop}; {target} += '
-                '{step}) {{\n{body}\n}}').format(target=target, start=start,
-                stop=stop, step=step, body=body)
+        return 'for({target} in seq(from={start}, to={stop}, by={step}){{\n{body}\n}}'.format(target=target, start=start,
+                stop=stop-1, step=step, body=body)
 
 
     def indent_code(self, code):
@@ -295,7 +278,7 @@ class RCodePrinter(CodePrinter):
         pretty = []
         level = 0
         for n, line in enumerate(code):
-            if line == '' or line == '\n':
+            if line in ('', '\n'):
                 pretty.append(line)
                 continue
             level -= decrease[n]
@@ -311,7 +294,7 @@ def rcode(expr, assign_to=None, **settings):
     ==========
 
     expr : Expr
-        A sympy expression to be converted.
+        A SymPy expression to be converted.
     assign_to : optional
         When given, the argument is used as the name of the variable to which
         the expression is assigned. Can be a string, ``Symbol``,

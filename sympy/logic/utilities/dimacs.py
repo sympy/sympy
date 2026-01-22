@@ -4,11 +4,10 @@ www.cs.ubc.ca/~hoos/SATLIB/Benchmarks/SAT/satformat.ps
 
 """
 
-from __future__ import print_function, division
-
 from sympy.core import Symbol
 from sympy.logic.boolalg import And, Or
 import re
+from pathlib import Path
 
 
 def load(s):
@@ -66,7 +65,5 @@ def load(s):
 
 def load_file(location):
     """Loads a boolean expression from a file."""
-    with open(location) as f:
-        s = f.read()
-
+    s = Path(location).read_text()
     return load(s)

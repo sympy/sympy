@@ -1,19 +1,33 @@
 """
 Second quantization operators and states for bosons.
 
-This follow the formulation of Fetter and Welecka, "Quantum Theory
-of Many-Particle Systems."
-"""
-from __future__ import print_function, division
+This follow the formulation of Fetter and Welecka, "Quantum Theory of
+Many-Particle Systems."
 
+This module is a predecessor of the sympy.physics.quantum package, and it will
+be superseded by it in the future versions.
+"""
 from collections import defaultdict
 
-from sympy import (Add, Basic, cacheit, Dummy, Expr, Function, I,
-                   KroneckerDelta, Mul, Pow, S, sqrt, Symbol, sympify, Tuple,
-                   zeros)
+from sympy.core.add import Add
+from sympy.core.basic import Basic
+from sympy.core.cache import cacheit
+from sympy.core.containers import Tuple
+from sympy.core.expr import Expr
+from sympy.core.function import Function
+from sympy.core.mul import Mul
+from sympy.core.numbers import I
+from sympy.core.power import Pow
+from sympy.core.singleton import S
+from sympy.core.sorting import default_sort_key
+from sympy.core.symbol import Dummy, Symbol
+from sympy.core.sympify import sympify
+from sympy.functions.elementary.complexes import conjugate
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.special.tensor_functions import KroneckerDelta
+from sympy.matrices.dense import zeros
 from sympy.printing.str import StrPrinter
 from sympy.utilities.iterables import has_dups
-from sympy.utilities import default_sort_key
 
 __all__ = [
     'Dagger',
@@ -129,6 +143,8 @@ class Dagger(Expr):
         dagger = getattr(arg, '_dagger_', None)
         if dagger is not None:
             return dagger()
+        if isinstance(arg, Symbol) and arg.is_commutative:
+            return conjugate(arg)
         if isinstance(arg, Basic):
             if arg.is_Add:
                 return Add(*tuple(map(Dagger, arg.args)))
@@ -140,6 +156,9 @@ class Dagger(Expr):
                 return Pow(Dagger(arg.args[0]), arg.args[1])
             if arg == I:
                 return -arg
+        if isinstance(arg, Function):
+            if all(a.is_commutative for a in arg.args):
+                return arg.func(*[Dagger(a) for a in arg.args])
         else:
             return None
 
@@ -177,9 +196,9 @@ class AntiSymmetricTensor(TensorSymbol):
 
         try:
             upper, signu = _sort_anticommuting_fermions(
-                upper, key=cls._sortkey)
+                upper, key=_sqkey_index)
             lower, signl = _sort_anticommuting_fermions(
-                lower, key=cls._sortkey)
+                lower, key=_sqkey_index)
 
         except ViolationOfPauliPrinciple:
             return S.Zero
@@ -194,36 +213,11 @@ class AntiSymmetricTensor(TensorSymbol):
 
             return TensorSymbol.__new__(cls, symbol, upper, lower)
 
-    @classmethod
-    def _sortkey(cls, index):
-        """Key for sorting of indices.
-
-        particle < hole < general
-
-        FIXME: This is a bottle-neck, can we do it faster?
-        """
-        h = hash(index)
-        label = str(index)
-        if isinstance(index, Dummy):
-            if index.assumptions0.get('above_fermi'):
-                return (20, label, h)
-            elif index.assumptions0.get('below_fermi'):
-                return (21, label, h)
-            else:
-                return (22, label, h)
-
-        if index.assumptions0.get('above_fermi'):
-            return (10, label, h)
-        elif index.assumptions0.get('below_fermi'):
-            return (11, label, h)
-        else:
-            return (12, label, h)
-
     def _latex(self, printer):
-        return "%s^{%s}_{%s}" % (
+        return "{%s^{%s}_{%s}}" % (
             self.symbol,
-            "".join([ i.name for i in self.args[1]]),
-            "".join([ i.name for i in self.args[2]])
+            "".join([ printer._print(i) for i in self.args[1]]),
+            "".join([ printer._print(i) for i in self.args[2]])
         )
 
     @property
@@ -290,22 +284,6 @@ class AntiSymmetricTensor(TensorSymbol):
     def __str__(self):
         return "%s(%s,%s)" % self.args
 
-    def doit(self, **kw_args):
-        """
-        Returns self.
-
-        Examples
-        ========
-
-        >>> from sympy import symbols
-        >>> from sympy.physics.secondquant import AntiSymmetricTensor
-        >>> i, j = symbols('i,j', below_fermi=True)
-        >>> a, b = symbols('a,b', above_fermi=True)
-        >>> AntiSymmetricTensor('v', (a, i), (b, j)).doit()
-        AntiSymmetricTensor(v, (a, i), (b, j))
-        """
-        return self
-
 
 class SqOperator(Expr):
     """
@@ -324,6 +302,9 @@ class SqOperator(Expr):
     def state(self):
         """
         Returns the state index related to this operator.
+
+        Examples
+        ========
 
         >>> from sympy import Symbol
         >>> from sympy.physics.secondquant import F, Fd, B, Bd
@@ -345,6 +326,9 @@ class SqOperator(Expr):
         """
         Returns True if the state is a symbol (as opposed to a number).
 
+        Examples
+        ========
+
         >>> from sympy import Symbol
         >>> from sympy.physics.secondquant import F
         >>> p = Symbol('p')
@@ -358,12 +342,6 @@ class SqOperator(Expr):
             return False
         else:
             return True
-
-    def doit(self, **kw_args):
-        """
-        FIXME: hack to prevent crash further up...
-        """
-        return self
 
     def __repr__(self):
         return NotImplemented
@@ -435,8 +413,10 @@ class AnnihilateBoson(BosonicOperator, Annihilator):
         return "AnnihilateBoson(%s)" % self.state
 
     def _latex(self, printer):
-        return "b_{%s}" % self.state.name
-
+        if self.state is S.Zero:
+            return "b_{0}"
+        else:
+            return "b_{%s}" % printer._print(self.state)
 
 class CreateBoson(BosonicOperator, Creator):
     """
@@ -474,7 +454,10 @@ class CreateBoson(BosonicOperator, Creator):
         return "CreateBoson(%s)" % self.state
 
     def _latex(self, printer):
-        return "b^\\dagger_{%s}" % self.state.name
+        if self.state is S.Zero:
+            return "{b^\\dagger_{0}}"
+        else:
+            return "{b^\\dagger_{%s}}" % printer._print(self.state)
 
 B = AnnihilateBoson
 Bd = CreateBoson
@@ -487,10 +470,15 @@ class FermionicOperator(SqOperator):
         """
         Is this FermionicOperator restricted with respect to fermi level?
 
-        Return values:
+        Returns
+        =======
+
         1  : restricted to orbits above fermi
         0  : no restriction
         -1 : restricted to orbits below fermi
+
+        Examples
+        ========
 
         >>> from sympy import Symbol
         >>> from sympy.physics.secondquant import F, Fd
@@ -524,6 +512,8 @@ class FermionicOperator(SqOperator):
         """
         Does the index of this FermionicOperator allow values above fermi?
 
+        Examples
+        ========
 
         >>> from sympy import Symbol
         >>> from sympy.physics.secondquant import F
@@ -538,6 +528,9 @@ class FermionicOperator(SqOperator):
         >>> F(p).is_above_fermi
         True
 
+        Note
+        ====
+
         The same applies to creation operators Fd
 
         """
@@ -547,6 +540,9 @@ class FermionicOperator(SqOperator):
     def is_below_fermi(self):
         """
         Does the index of this FermionicOperator allow values below fermi?
+
+        Examples
+        ========
 
         >>> from sympy import Symbol
         >>> from sympy.physics.secondquant import F
@@ -571,6 +567,9 @@ class FermionicOperator(SqOperator):
         """
         Is the index of this FermionicOperator restricted to values below fermi?
 
+        Examples
+        ========
+
         >>> from sympy import Symbol
         >>> from sympy.physics.secondquant import F
         >>> a = Symbol('a', above_fermi=True)
@@ -592,6 +591,9 @@ class FermionicOperator(SqOperator):
     def is_only_above_fermi(self):
         """
         Is the index of this FermionicOperator restricted to values above fermi?
+
+        Examples
+        ========
 
         >>> from sympy import Symbol
         >>> from sympy.physics.secondquant import F
@@ -670,6 +672,9 @@ class AnnihilateFermion(FermionicOperator, Annihilator):
         Can we create a quasi-particle?  (create hole or create particle)
         If so, would that be above or below the fermi surface?
 
+        Examples
+        ========
+
         >>> from sympy import Symbol
         >>> from sympy.physics.secondquant import F
         >>> a = Symbol('a', above_fermi=True)
@@ -694,6 +699,9 @@ class AnnihilateFermion(FermionicOperator, Annihilator):
         Can we destroy a quasi-particle?  (annihilate hole or annihilate particle)
         If so, would that be above or below the fermi surface?
 
+        Examples
+        ========
+
         >>> from sympy import Symbol
         >>> from sympy.physics.secondquant import F
         >>> a = Symbol('a', above_fermi=1)
@@ -717,6 +725,8 @@ class AnnihilateFermion(FermionicOperator, Annihilator):
         """
         Always create a quasi-particle?  (create hole or create particle)
 
+        Examples
+        ========
 
         >>> from sympy import Symbol
         >>> from sympy.physics.secondquant import F
@@ -739,6 +749,9 @@ class AnnihilateFermion(FermionicOperator, Annihilator):
         """
         Always destroy a quasi-particle?  (annihilate hole or annihilate particle)
 
+        Examples
+        ========
+
         >>> from sympy import Symbol
         >>> from sympy.physics.secondquant import F
         >>> a = Symbol('a', above_fermi=True)
@@ -759,7 +772,10 @@ class AnnihilateFermion(FermionicOperator, Annihilator):
         return "AnnihilateFermion(%s)" % self.state
 
     def _latex(self, printer):
-        return "a_{%s}" % self.state.name
+        if self.state is S.Zero:
+            return "a_{0}"
+        else:
+            return "a_{%s}" % printer._print(self.state)
 
 
 class CreateFermion(FermionicOperator, Creator):
@@ -805,6 +821,9 @@ class CreateFermion(FermionicOperator, Creator):
         Can we create a quasi-particle?  (create hole or create particle)
         If so, would that be above or below the fermi surface?
 
+        Examples
+        ========
+
         >>> from sympy import Symbol
         >>> from sympy.physics.secondquant import Fd
         >>> a = Symbol('a', above_fermi=True)
@@ -829,6 +848,9 @@ class CreateFermion(FermionicOperator, Creator):
         Can we destroy a quasi-particle?  (annihilate hole or annihilate particle)
         If so, would that be above or below the fermi surface?
 
+        Examples
+        ========
+
         >>> from sympy import Symbol
         >>> from sympy.physics.secondquant import Fd
         >>> a = Symbol('a', above_fermi=1)
@@ -852,6 +874,9 @@ class CreateFermion(FermionicOperator, Creator):
         """
         Always create a quasi-particle?  (create hole or create particle)
 
+        Examples
+        ========
+
         >>> from sympy import Symbol
         >>> from sympy.physics.secondquant import Fd
         >>> a = Symbol('a', above_fermi=True)
@@ -873,6 +898,9 @@ class CreateFermion(FermionicOperator, Creator):
         """
         Always destroy a quasi-particle?  (annihilate hole or annihilate particle)
 
+        Examples
+        ========
+
         >>> from sympy import Symbol
         >>> from sympy.physics.secondquant import Fd
         >>> a = Symbol('a', above_fermi=True)
@@ -893,7 +921,10 @@ class CreateFermion(FermionicOperator, Creator):
         return "CreateFermion(%s)" % self.state
 
     def _latex(self, printer):
-        return "a^\\dagger_{%s}" % self.state.name
+        if self.state is S.Zero:
+            return "{a^\\dagger_{0}}"
+        else:
+            return "{a^\\dagger_{%s}}" % printer._print(self.state)
 
 Fd = CreateFermion
 F = AnnihilateFermion
@@ -933,13 +964,16 @@ class FockState(Expr):
         return ("FockState(%r)") % (self.args)
 
     def __str__(self):
-        return "%s%r%s" % (self.lbracket, self._labels(), self.rbracket)
+        return "%s%r%s" % (getattr(self, 'lbracket', ""), self._labels(), getattr(self, 'rbracket', ""))
 
     def _labels(self):
         return self.args[0]
 
     def __len__(self):
         return len(self.args[0])
+
+    def _latex(self, printer):
+        return "%s%s%s" % (getattr(self, 'lbracket_latex', ""), printer._print(self._labels()), getattr(self, 'rbracket_latex', ""))
 
 
 class BosonState(FockState):
@@ -1001,7 +1035,7 @@ class FermionState(FockState):
         if len(occupations) > 1:
             try:
                 (occupations, sign) = _sort_anticommuting_fermions(
-                    occupations, key=hash)
+                    occupations, key=_sqkey_index)
             except ViolationOfPauliPrinciple:
                 return S.Zero
         else:
@@ -1021,11 +1055,17 @@ class FermionState(FockState):
         """
         Performs the action of a creation operator.
 
+        Explanation
+        ===========
+
         If below fermi we try to remove a hole,
         if above fermi we try to create a particle.
 
-        if general index p we return Kronecker(p,i)*self
-        where i is a new symbol with restriction above or below.
+        If general index p we return ``Kronecker(p,i)*self``
+        where ``i`` is a new symbol with restriction above or below.
+
+        Examples
+        ========
 
         >>> from sympy import Symbol
         >>> from sympy.physics.secondquant import FKet
@@ -1067,11 +1107,17 @@ class FermionState(FockState):
         """
         Performs the action of an annihilation operator.
 
-        If below fermi we try to create a hole,
-        if above fermi we try to remove a particle.
+        Explanation
+        ===========
 
-        if general index p we return Kronecker(p,i)*self
-        where i is a new symbol with restriction above or below.
+        If below fermi we try to create a hole,
+        If above fermi we try to remove a particle.
+
+        If general index p we return ``Kronecker(p,i)*self``
+        where ``i`` is a new symbol with restriction above or below.
+
+        Examples
+        ========
 
         >>> from sympy import Symbol
         >>> from sympy.physics.secondquant import FKet
@@ -1159,14 +1205,19 @@ class FermionState(FockState):
         return self.__class__((i,) + self.args[0], self.fermi_level)
 
     @classmethod
-    def _count_holes(cls, list):
+    def _count_holes(cls, occupations):
         """
-        returns number of identified hole states in list.
+        Returns the number of identified hole states in occupations list.
         """
-        return len([i for i in list if cls._only_below_fermi(i)])
+        return len([i for i in occupations if cls._only_below_fermi(i)])
 
-    def _negate_holes(self, list):
-        return tuple([-i if i <= self.fermi_level else i for i in list])
+    def _negate_holes(self, occupations):
+        """
+        Returns the occupations list where states below the fermi level have negative labels.
+
+        For symbolic state labels, no sign is included.
+        """
+        return tuple([-i if self._only_below_fermi(i) and i.is_number else i for i in occupations])
 
     def __repr__(self):
         if self.fermi_level:
@@ -1184,6 +1235,8 @@ class FockStateKet(FockState):
     """
     lbracket = '|'
     rbracket = '>'
+    lbracket_latex = r'\left|'
+    rbracket_latex = r'\right\rangle'
 
 
 class FockStateBra(FockState):
@@ -1192,6 +1245,8 @@ class FockStateBra(FockState):
     """
     lbracket = '<'
     rbracket = '|'
+    lbracket_latex = r'\left\langle'
+    rbracket_latex = r'\right|'
 
     def __mul__(self, other):
         if isinstance(other, FockStateKet):
@@ -1235,6 +1290,9 @@ class FockStateBosonBra(BosonState, FockStateBra):
 class FockStateFermionKet(FermionState, FockStateKet):
     """
     Many-particle Fock state with a sequence of occupied orbits.
+
+    Explanation
+    ===========
 
     Each state can only have one particle, so we choose to store a list of
     occupied orbits rather than a tuple with occupation numbers (zeros and ones).
@@ -1283,6 +1341,9 @@ def _apply_Mul(m):
     """
     Take a Mul instance with operators and apply them to states.
 
+    Explanation
+    ===========
+
     This method applies all operators with integer state labels
     to the actual states.  For symbolic state labels, nothing is done.
     When inner products of FockStates are encountered (like <a|b>),
@@ -1297,7 +1358,7 @@ def _apply_Mul(m):
         return m
     c_part, nc_part = m.args_cnc()
     n_nc = len(nc_part)
-    if n_nc == 0 or n_nc == 1:
+    if n_nc in (0, 1):
         return m
     else:
         last = nc_part[-1]
@@ -1343,7 +1404,7 @@ def _apply_Mul(m):
 
 def apply_operators(e):
     """
-    Take a sympy expression with operators and states and apply the operators.
+    Take a SymPy expression with operators and states and apply the operators.
 
     Examples
     ========
@@ -1363,6 +1424,9 @@ class InnerProduct(Basic):
     """
     An unevaluated inner product between a bra and ket.
 
+    Explanation
+    ===========
+
     Currently this class just reduces things to a product of
     Kronecker Deltas.  In the future, we could introduce abstract
     states like ``|a>`` and ``|b>``, and leave the inner product unevaluated as
@@ -1375,7 +1439,7 @@ class InnerProduct(Basic):
         if not isinstance(bra, FockStateBra):
             raise TypeError("must be a bra")
         if not isinstance(ket, FockStateKet):
-            raise TypeError("must be a key")
+            raise TypeError("must be a ket")
         return cls.eval(bra, ket)
 
     @classmethod
@@ -1431,14 +1495,14 @@ def matrix_rep(op, basis):
     return a
 
 
-class BosonicBasis(object):
+class BosonicBasis:
     """
     Base class for a basis set of bosonic Fock states.
     """
     pass
 
 
-class VarBosonicBasis(object):
+class VarBosonicBasis:
     """
     A single state, variable particle number basis set.
 
@@ -1591,7 +1655,10 @@ class Commutator(Function):
     """
     The Commutator:  [A, B] = A*B - B*A
 
-    The arguments are ordered according to .__cmp__()
+    The arguments are ordered according to comparison operators
+
+    Examples
+    ========
 
     >>> from sympy import symbols
     >>> from sympy.physics.secondquant import Commutator
@@ -1738,10 +1805,16 @@ class NO(Expr):
 
     i.e.  {abcd}  sometimes written  :abcd:
 
+    Explanation
+    ===========
+
     Applying the function NO(arg) to an argument means that all operators in
     the argument will be assumed to anticommute, and have vanishing
     contractions.  This allows an immediate reordering to canonical form
     upon object creation.
+
+    Examples
+    ========
 
     >>> from sympy import symbols
     >>> from sympy.physics.secondquant import NO, F, Fd
@@ -1752,7 +1825,9 @@ class NO(Expr):
     -NO(CreateFermion(p)*AnnihilateFermion(q))
 
 
-    Note:
+    Note
+    ====
+
     If you want to generate a normal ordered equivalent of an expression, you
     should use the function wicks().  This class only indicates that all
     operators inside the brackets anticommute, and have vanishing contractions.
@@ -1764,6 +1839,9 @@ class NO(Expr):
     def __new__(cls, arg):
         """
         Use anticommutation to get canonical form of operators.
+
+        Explanation
+        ===========
 
         Employ associativity of normal ordered product: {ab{cd}} = {abcd}
         but note that {ab}{cd} /= {abcd}.
@@ -1879,7 +1957,7 @@ class NO(Expr):
         """
         return self.args[0].args[-1].is_q_annihilator
 
-    def doit(self, **kw_args):
+    def doit(self, **hints):
         """
         Either removes the brackets or enables complex computations
         in its arguments.
@@ -1899,10 +1977,10 @@ class NO(Expr):
         _p)*AnnihilateFermion(_a)*CreateFermion(_i) - KroneckerDelta(_i,
         _p)*KroneckerDelta(_i, _q)*AnnihilateFermion(_i)*CreateFermion(_i)
         """
-        if kw_args.get("remove_brackets", True):
+        if hints.get("remove_brackets", True):
             return self._remove_brackets()
         else:
-            return self.__new__(type(self), self.args[0].doit(**kw_args))
+            return self.__new__(type(self), self.args[0].doit(**hints))
 
     def _remove_brackets(self):
         """
@@ -1949,6 +2027,9 @@ class NO(Expr):
     def _expand_operators(self):
         """
         Returns a sum of NO objects that contain no ambiguous q-operators.
+
+        Explanation
+        ===========
 
         If an index q has range both above and below fermi, the operator F(q)
         is ambiguous in the sense that it can be both a q-creator and a q-annihilator.
@@ -2131,13 +2212,41 @@ def contraction(a, b):
         raise ContractionAppliesOnlyToFermions(*t)
 
 
-def _sqkey(sq_operator):
+def _sqkey_operator(sq_operator):
     """Generates key for canonical sorting of SQ operators."""
     return sq_operator._sortkey()
 
+def _sqkey_index(index):
+    """Key for sorting of indices.
 
-def _sort_anticommuting_fermions(string1, key=_sqkey):
+    particle < hole < general
+
+    FIXME: This is a bottle-neck, can we do it faster?
+    """
+    h = hash(index)
+    label = str(index)
+    if isinstance(index, Dummy):
+        if index.assumptions0.get('above_fermi'):
+            return (20, label, h)
+        elif index.assumptions0.get('below_fermi'):
+            return (21, label, h)
+        else:
+            return (22, label, h)
+
+    if index.assumptions0.get('above_fermi'):
+        return (10, label, h)
+    elif index.assumptions0.get('below_fermi'):
+        return (11, label, h)
+    else:
+        return (12, label, h)
+
+
+
+def _sort_anticommuting_fermions(string1, key=_sqkey_operator):
     """Sort fermionic operators to canonical order, assuming all pairs anticommute.
+
+    Explanation
+    ===========
 
     Uses a bidirectional bubble sort.  Items in string1 are not referenced
     so in principle they may be any comparable objects.   The sorting depends on the
@@ -2192,6 +2301,9 @@ def _sort_anticommuting_fermions(string1, key=_sqkey):
 def evaluate_deltas(e):
     """
     We evaluate KroneckerDelta symbols in the expression assuming Einstein summation.
+
+    Explanation
+    ===========
 
     If one index is repeated it is summed over and in effect substituted with
     the other one. If both indices are repeated we substitute according to what
@@ -2300,6 +2412,9 @@ def evaluate_deltas(e):
 def substitute_dummies(expr, new_indices=False, pretty_indices={}):
     """
     Collect terms by substitution of dummy variables.
+
+    Explanation
+    ===========
 
     This routine allows simplification of Add expressions containing terms
     which differ only due to dummy variables.
@@ -2474,7 +2589,10 @@ def __kprint(expr):
 
 
 def _get_ordered_dummies(mul, verbose=False):
-    """Returns all dummies in the mul sorted in canonical order
+    """Returns all dummies in the mul sorted in canonical order.
+
+    Explanation
+    ===========
 
     The purpose of the canonical ordering is that dummies can be substituted
     consistently across terms with the result that equivalent terms can be
@@ -2489,7 +2607,7 @@ def _get_ordered_dummies(mul, verbose=False):
     Strategy
     --------
 
-    The canoncial order is given by an arbitrary sorting rule.  A sort key
+    The canonical order is given by an arbitrary sorting rule.  A sort key
     is determined for each dummy as a tuple that depends on all factors where
     the index is present.  The dummies are thereby sorted according to the
     contraction structure of the term, instead of sorting based solely on the
@@ -2537,8 +2655,8 @@ def _get_ordered_dummies(mul, verbose=False):
     """
     # setup dicts to avoid repeated calculations in key()
     args = Mul.make_args(mul)
-    fac_dum = dict([ (fac, fac.atoms(Dummy)) for fac in args] )
-    fac_repr = dict([ (fac, __kprint(fac)) for fac in args] )
+    fac_dum = { fac: fac.atoms(Dummy) for fac in args }
+    fac_repr = { fac: __kprint(fac) for fac in args }
     all_dums = set().union(*fac_dum.values())
     mask = {}
     for d in all_dums:
@@ -2674,7 +2792,7 @@ def _determine_ambiguous(term, ordered, ambiguous_groups):
     return ordered
 
 
-class _SymbolFactory(object):
+class _SymbolFactory:
     def __init__(self, label):
         self._counterVar = 0
         self._label = label
@@ -2767,12 +2885,11 @@ def wicks(e, **kw_args):
     """
     Returns the normal ordered equivalent of an expression using Wicks Theorem.
 
-
     Examples
     ========
 
-    >>> from sympy import symbols, Function, Dummy
-    >>> from sympy.physics.secondquant import wicks, F, Fd, NO
+    >>> from sympy import symbols, Dummy
+    >>> from sympy.physics.secondquant import wicks, F, Fd
     >>> p, q, r = symbols('p,q,r')
     >>> wicks(Fd(p)*F(q))
     KroneckerDelta(_i, q)*KroneckerDelta(p, q) + NO(CreateFermion(p)*AnnihilateFermion(q))
@@ -2807,12 +2924,7 @@ def wicks(e, **kw_args):
     opts.update(kw_args)
 
     # check if we are already normally ordered
-    if isinstance(e, NO):
-        if opts['keep_only_fully_contracted']:
-            return S.Zero
-        else:
-            return e
-    elif isinstance(e, FermionicOperator):
+    if isinstance(e, (NO, FermionicOperator)):
         if opts['keep_only_fully_contracted']:
             return S.Zero
         else:
@@ -2892,6 +3004,9 @@ class PermutationOperator(Expr):
         """
         Returns -expr with permuted indices.
 
+        Explanation
+        ===========
+
         >>> from sympy import symbols, Function
         >>> from sympy.physics.secondquant import PermutationOperator
         >>> p,q = symbols('p,q')
@@ -2912,12 +3027,15 @@ class PermutationOperator(Expr):
             return expr
 
     def _latex(self, printer):
-        return "P(%s%s)" % self.args
+        return "P(%s%s)" % tuple(printer._print(i) for i in self.args)
 
 
 def simplify_index_permutations(expr, permutation_operators):
     """
     Performs simplification by introducing PermutationOperators where appropriate.
+
+    Explanation
+    ===========
 
     Schematically:
         [abij] - [abji] - [baij] + [baji] ->  P(ab)*P(ij)*[abij]
@@ -2969,8 +3087,8 @@ def simplify_index_permutations(expr, permutation_operators):
         terms = set(expr.args)
 
         for P in permutation_operators:
-            new_terms = set([])
-            on_hold = set([])
+            new_terms = set()
+            on_hold = set()
             while terms:
                 term = terms.pop()
                 permuted = P.get_permuted(term)

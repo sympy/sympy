@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.printing.mathml import mathml
 from sympy.utilities.mathml import c2p
 import tempfile

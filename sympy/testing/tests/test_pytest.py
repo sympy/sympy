@@ -2,7 +2,7 @@ import warnings
 
 from sympy.testing.pytest import (raises, warns, ignore_warnings,
                                     warns_deprecated_sympy, Failed)
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
 
 
 
@@ -79,12 +79,10 @@ def test_warns_raises_without_warning():
 
 
 def test_warns_hides_other_warnings():
-    # This isn't ideal but it's what pytest's warns does:
-    with warnings.catch_warnings(record=True) as w:
+    with raises(RuntimeWarning):
         with warns(UserWarning):
             warnings.warn('this is the warning message', UserWarning)
             warnings.warn('this is the other message', RuntimeWarning)
-        assert len(w) == 0
 
 
 def test_warns_continues_after_warning():
@@ -98,18 +96,9 @@ def test_warns_continues_after_warning():
 
 
 def test_warns_many_warnings():
-    # This isn't ideal but it's what pytest's warns does:
-    with warnings.catch_warnings(record=True) as w:
-        finished = False
-        with warns(UserWarning):
-            warnings.warn('this is the warning message', UserWarning)
-            warnings.warn('this is the other message', RuntimeWarning)
-            warnings.warn('this is the warning message', UserWarning)
-            warnings.warn('this is the other message', RuntimeWarning)
-            warnings.warn('this is the other message', RuntimeWarning)
-            finished = True
-        assert finished
-        assert len(w) == 0
+    with warns(UserWarning):
+        warnings.warn('this is the warning message', UserWarning)
+        warnings.warn('this is the other warning message', UserWarning)
 
 
 def test_warns_match_matching():
@@ -126,12 +115,13 @@ def test_warns_match_non_matching():
                 warnings.warn('this is not the expected warning message', UserWarning)
         assert len(w) == 0
 
-def _warn_sympy_deprecation():
-    SymPyDeprecationWarning(
-            feature="foo",
-            useinstead="bar",
-            issue=1,
-            deprecated_since_version="0.0.0").warn()
+def _warn_sympy_deprecation(stacklevel=3):
+    sympy_deprecation_warning(
+        "feature",
+        active_deprecations_target="active-deprecations",
+        deprecated_since_version="0.0.0",
+        stacklevel=stacklevel,
+    )
 
 def test_warns_deprecated_sympy_catches_warning():
     with warnings.catch_warnings(record=True) as w:
@@ -145,14 +135,17 @@ def test_warns_deprecated_sympy_raises_without_warning():
         with warns_deprecated_sympy():
             pass
 
+def test_warns_deprecated_sympy_wrong_stacklevel():
+    with raises(Failed):
+        with warns_deprecated_sympy():
+            _warn_sympy_deprecation(stacklevel=1)
 
-def test_warns_deprecated_sympy_hides_other_warnings():
-    # This isn't ideal but it's what pytest's deprecated_call does:
-    with warnings.catch_warnings(record=True) as w:
+def test_warns_deprecated_sympy_doesnt_hide_other_warnings():
+    # Unlike pytest's deprecated_call, we should not hide other warnings.
+    with raises(RuntimeWarning):
         with warns_deprecated_sympy():
             _warn_sympy_deprecation()
             warnings.warn('this is the other message', RuntimeWarning)
-        assert len(w) == 0
 
 
 def test_warns_deprecated_sympy_continues_after_warning():
@@ -163,22 +156,6 @@ def test_warns_deprecated_sympy_continues_after_warning():
             finished = True
         assert finished
         assert len(w) == 0
-
-
-def test_warns_deprecated_sympy_many_warnings():
-    # This isn't ideal but it's what pytest's warns_deprecated_sympy does:
-    with warnings.catch_warnings(record=True) as w:
-        finished = False
-        with warns_deprecated_sympy():
-            _warn_sympy_deprecation()
-            warnings.warn('this is the other message', RuntimeWarning)
-            _warn_sympy_deprecation()
-            warnings.warn('this is the other message', RuntimeWarning)
-            warnings.warn('this is the other message', RuntimeWarning)
-            finished = True
-        assert finished
-        assert len(w) == 0
-
 
 def test_ignore_ignores_warning():
     with warnings.catch_warnings(record=True) as w:

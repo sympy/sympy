@@ -1,14 +1,14 @@
-from __future__ import print_function, division
-
 from itertools import combinations
 
 from sympy.combinatorics.graycode import GrayCode
-from sympy.core import Basic
 
 
-class Subset(Basic):
+class Subset():
     """
     Represents a basic subset object.
+
+    Explanation
+    ===========
 
     We generate subsets using essentially two techniques,
     binary enumeration and lexicographic enumeration.
@@ -19,7 +19,7 @@ class Subset(Basic):
     Examples
     ========
 
-    >>> from sympy.combinatorics.subsets import Subset
+    >>> from sympy.combinatorics import Subset
     >>> a = Subset(['c', 'd'], ['a', 'b', 'c', 'd'])
     >>> a.next_binary().subset
     ['b']
@@ -37,12 +37,12 @@ class Subset(Basic):
         """
         Default constructor.
 
-        It takes the subset and its superset as its parameters.
+        It takes the ``subset`` and its ``superset`` as its parameters.
 
         Examples
         ========
 
-        >>> from sympy.combinatorics.subsets import Subset
+        >>> from sympy.combinatorics import Subset
         >>> a = Subset(['c', 'd'], ['a', 'b', 'c', 'd'])
         >>> a.subset
         ['c', 'd']
@@ -58,21 +58,30 @@ class Subset(Basic):
             if elem not in superset:
                 raise ValueError('The superset provided is invalid as it does '
                                  'not contain the element {}'.format(elem))
-        obj = Basic.__new__(cls)
+        obj = object.__new__(cls)
         obj._subset = subset
         obj._superset = superset
         return obj
 
+    def __eq__(self, other):
+        """Return a boolean indicating whether a == b on the basis of
+        whether both objects are of the class Subset and if the values
+        of the subset and superset attributes are the same.
+        """
+        if not isinstance(other, Subset):
+            return NotImplemented
+        return self.subset == other.subset and self.superset == other.superset
+
     def iterate_binary(self, k):
         """
         This is a helper function. It iterates over the
-        binary subsets by k steps. This variable can be
+        binary subsets by ``k`` steps. This variable can be
         both positive or negative.
 
         Examples
         ========
 
-        >>> from sympy.combinatorics.subsets import Subset
+        >>> from sympy.combinatorics import Subset
         >>> a = Subset(['c', 'd'], ['a', 'b', 'c', 'd'])
         >>> a.iterate_binary(-2).subset
         ['d']
@@ -87,7 +96,7 @@ class Subset(Basic):
         """
         bin_list = Subset.bitlist_from_subset(self.subset, self.superset)
         n = (int(''.join(bin_list), 2) + k) % 2**self.superset_size
-        bits = bin(n)[2:].rjust(self.superset_size, '0')
+        bits = f'{n:b}'.rjust(self.superset_size, '0')
         return Subset.subset_from_bitlist(self.superset, bits)
 
     def next_binary(self):
@@ -97,7 +106,7 @@ class Subset(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.subsets import Subset
+        >>> from sympy.combinatorics import Subset
         >>> a = Subset(['c', 'd'], ['a', 'b', 'c', 'd'])
         >>> a.next_binary().subset
         ['b']
@@ -119,7 +128,7 @@ class Subset(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.subsets import Subset
+        >>> from sympy.combinatorics import Subset
         >>> a = Subset([], ['a', 'b', 'c', 'd'])
         >>> a.prev_binary().subset
         ['a', 'b', 'c', 'd']
@@ -141,7 +150,7 @@ class Subset(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.subsets import Subset
+        >>> from sympy.combinatorics import Subset
         >>> a = Subset(['c', 'd'], ['a', 'b', 'c', 'd'])
         >>> a.next_lexicographic().subset
         ['d']
@@ -163,7 +172,7 @@ class Subset(Basic):
             else:
                 indices.remove(i)
                 i = i - 1
-                while not i in indices and i >= 0:
+                while i >= 0 and i not in indices:
                     i = i - 1
                 if i >= 0:
                     indices.remove(i)
@@ -186,7 +195,7 @@ class Subset(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.subsets import Subset
+        >>> from sympy.combinatorics import Subset
         >>> a = Subset([], ['a', 'b', 'c', 'd'])
         >>> a.prev_lexicographic().subset
         ['d']
@@ -202,10 +211,10 @@ class Subset(Basic):
         i = self.superset_size - 1
         indices = Subset.subset_indices(self.subset, self.superset)
 
-        while i not in indices and i >= 0:
+        while i >= 0 and i not in indices:
             i = i - 1
 
-        if i - 1 in indices or i == 0:
+        if i == 0 or i - 1 in indices:
             indices.remove(i)
         else:
             if i >= 0:
@@ -222,12 +231,12 @@ class Subset(Basic):
     def iterate_graycode(self, k):
         """
         Helper function used for prev_gray and next_gray.
-        It performs k step overs to get the respective Gray codes.
+        It performs ``k`` step overs to get the respective Gray codes.
 
         Examples
         ========
 
-        >>> from sympy.combinatorics.subsets import Subset
+        >>> from sympy.combinatorics import Subset
         >>> a = Subset([1, 2, 3], [1, 2, 3, 4])
         >>> a.iterate_graycode(3).subset
         [1, 4]
@@ -251,7 +260,7 @@ class Subset(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.subsets import Subset
+        >>> from sympy.combinatorics import Subset
         >>> a = Subset([1, 2, 3], [1, 2, 3, 4])
         >>> a.next_gray().subset
         [1, 3]
@@ -270,7 +279,7 @@ class Subset(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.subsets import Subset
+        >>> from sympy.combinatorics import Subset
         >>> a = Subset([2, 3, 4], [1, 2, 3, 4, 5])
         >>> a.prev_gray().subset
         [2, 3, 4, 5]
@@ -290,7 +299,7 @@ class Subset(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.subsets import Subset
+        >>> from sympy.combinatorics import Subset
         >>> a = Subset([], ['a','b','c','d'])
         >>> a.rank_binary
         0
@@ -317,7 +326,7 @@ class Subset(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.subsets import Subset
+        >>> from sympy.combinatorics import Subset
         >>> a = Subset(['c', 'd'], ['a', 'b', 'c', 'd'])
         >>> a.rank_lexicographic
         14
@@ -345,7 +354,7 @@ class Subset(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.subsets import Subset
+        >>> from sympy.combinatorics import Subset
         >>> a = Subset(['c','d'], ['a','b','c','d'])
         >>> a.rank_gray
         2
@@ -371,7 +380,7 @@ class Subset(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.subsets import Subset
+        >>> from sympy.combinatorics import Subset
         >>> a = Subset(['c', 'd'], ['a', 'b', 'c', 'd'])
         >>> a.subset
         ['c', 'd']
@@ -391,7 +400,7 @@ class Subset(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.subsets import Subset
+        >>> from sympy.combinatorics import Subset
         >>> a = Subset(['c', 'd'], ['a', 'b', 'c', 'd'])
         >>> a.size
         2
@@ -411,7 +420,7 @@ class Subset(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.subsets import Subset
+        >>> from sympy.combinatorics import Subset
         >>> a = Subset(['c', 'd'], ['a', 'b', 'c', 'd'])
         >>> a.superset
         ['a', 'b', 'c', 'd']
@@ -431,7 +440,7 @@ class Subset(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.subsets import Subset
+        >>> from sympy.combinatorics import Subset
         >>> a = Subset(['c', 'd'], ['a', 'b', 'c', 'd'])
         >>> a.superset_size
         4
@@ -451,7 +460,7 @@ class Subset(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.subsets import Subset
+        >>> from sympy.combinatorics import Subset
         >>> a = Subset(['c', 'd'], ['a', 'b', 'c', 'd'])
         >>> a.cardinality
         16
@@ -471,7 +480,7 @@ class Subset(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.subsets import Subset
+        >>> from sympy.combinatorics import Subset
         >>> Subset.subset_from_bitlist(['a', 'b', 'c', 'd'], '0011').subset
         ['c', 'd']
 
@@ -496,7 +505,7 @@ class Subset(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.subsets import Subset
+        >>> from sympy.combinatorics import Subset
         >>> Subset.bitlist_from_subset(['c', 'd'], ['a', 'b', 'c', 'd'])
         '0011'
 
@@ -506,7 +515,7 @@ class Subset(Basic):
         subset_from_bitlist
         """
         bitlist = ['0'] * len(superset)
-        if type(subset) is Subset:
+        if isinstance(subset, Subset):
             subset = subset.subset
         for i in Subset.subset_indices(subset, superset):
             bitlist[i] = '1'
@@ -520,7 +529,7 @@ class Subset(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.subsets import Subset
+        >>> from sympy.combinatorics import Subset
         >>> Subset.unrank_binary(4, ['a', 'b', 'c', 'd']).subset
         ['b']
 
@@ -529,7 +538,7 @@ class Subset(Basic):
 
         iterate_binary, rank_binary
         """
-        bits = bin(rank)[2:].rjust(len(superset), '0')
+        bits = f'{rank:b}'.rjust(len(superset), '0')
         return Subset.subset_from_bitlist(superset, bits)
 
     @classmethod
@@ -540,7 +549,7 @@ class Subset(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.subsets import Subset
+        >>> from sympy.combinatorics import Subset
         >>> Subset.unrank_gray(4, ['a', 'b', 'c']).subset
         ['a', 'b']
         >>> Subset.unrank_gray(0, ['a', 'b', 'c']).subset
@@ -557,7 +566,7 @@ class Subset(Basic):
     @classmethod
     def subset_indices(self, subset, superset):
         """Return indices of subset in superset in a list; the list is empty
-        if all elements of subset are not in superset.
+        if all elements of ``subset`` are not in ``superset``.
 
         Examples
         ========
@@ -582,13 +591,13 @@ class Subset(Basic):
                 if not sb:
                     break
         else:
-            return list()
+            return []
         return [d[bi] for bi in b]
 
 
 def ksubsets(superset, k):
     """
-    Finds the subsets of size k in lexicographic order.
+    Finds the subsets of size ``k`` in lexicographic order.
 
     This uses the itertools generator.
 

@@ -8,6 +8,8 @@ from sympy.polys.densebasic import (
 
 from sympy.polys.densearith import dmp_mul_ground
 
+from sympy.polys.densebasic import dup_from_list
+
 from sympy.polys.densetools import (
     dup_clear_denoms, dmp_clear_denoms,
     dup_integrate, dmp_integrate, dmp_integrate_in,
@@ -20,15 +22,16 @@ from sympy.polys.densetools import (
     dup_primitive, dmp_ground_primitive,
     dup_extract, dmp_ground_extract,
     dup_real_imag,
-    dup_mirror, dup_scale, dup_shift,
+    dup_mirror, dup_scale, dup_shift, dmp_shift,
     dup_transform,
-    dup_compose, dmp_compose,
+    dup_compose, dmp_compose, dup_series_compose,
     dup_decompose,
     dmp_lift,
     dup_sign_variations,
     dup_revert, dmp_revert,
+    _dup_series_reversion_small,
+    dup_series_reversion
 )
-
 from sympy.polys.polyclasses import ANP
 
 from sympy.polys.polyerrors import (
@@ -40,16 +43,18 @@ from sympy.polys.polyerrors import (
 
 from sympy.polys.specialpolys import f_polys
 
-from sympy.polys.domains import FF, ZZ, QQ, EX
+from sympy.polys.domains import FF, ZZ, QQ, ZZ_I, QQ_I, EX, RR
 from sympy.polys.rings import ring
 
-from sympy import S, I, sin
+from sympy.core.numbers import I
+from sympy.core.singleton import S
+from sympy.functions.elementary.trigonometric import sin
 
 from sympy.abc import x
-
 from sympy.testing.pytest import raises
 
 f_0, f_1, f_2, f_3, f_4, f_5, f_6 = [ f.to_dense() for f in f_polys() ]
+
 
 def test_dup_integrate():
     assert dup_integrate([], 1, QQ) == []
@@ -75,6 +80,8 @@ def test_dup_integrate():
 
 
 def test_dmp_integrate():
+    assert dmp_integrate([QQ(1)], 2, 0, QQ) == [QQ(1, 2), QQ(0), QQ(0)]
+
     assert dmp_integrate([[[]]], 1, 2, QQ) == [[[]]]
     assert dmp_integrate([[[]]], 2, 2, QQ) == [[[]]]
 
@@ -106,6 +113,9 @@ def test_dmp_integrate_in():
     assert dmp_integrate_in(f, 3, 2, 3, QQ) == \
         dmp_swap(
             dmp_integrate(dmp_swap(f, 0, 2, 3, QQ), 3, 3, QQ), 0, 2, 3, QQ)
+
+    raises(IndexError, lambda: dmp_integrate_in(f, 1, -1, 3, QQ))
+    raises(IndexError, lambda: dmp_integrate_in(f, 1, 4, 3, QQ))
 
 
 def test_dup_diff():
@@ -180,6 +190,8 @@ def test_dmp_diff_in():
     assert dmp_diff_in(f_6, 3, 2, 3, ZZ) == \
         dmp_swap(dmp_diff(dmp_swap(f_6, 0, 2, 3, ZZ), 3, 3, ZZ), 0, 2, 3, ZZ)
 
+    raises(IndexError, lambda: dmp_diff_in(f_6, 1, -1, 3, ZZ))
+    raises(IndexError, lambda: dmp_diff_in(f_6, 1, 4, 3, ZZ))
 
 def test_dup_eval():
     assert dup_eval([], 7, ZZ) == 0
@@ -217,6 +229,9 @@ def test_dmp_eval_in():
     assert dmp_eval_in(f, -2, 2, 2, ZZ) == \
         [[45], [], [], [-9, -1, 0, -44]]
 
+    raises(IndexError, lambda: dmp_eval_in(f_6, ZZ(1), -1, 3, ZZ))
+    raises(IndexError, lambda: dmp_eval_in(f_6, ZZ(1), 4, 3, ZZ))
+
 
 def test_dmp_eval_tail():
     assert dmp_eval_tail([[]], [1], 1, ZZ) == []
@@ -248,6 +263,11 @@ def test_dmp_diff_eval_in():
     assert dmp_diff_eval_in(f_6, 2, 7, 1, 3, ZZ) == \
         dmp_eval(dmp_diff(dmp_swap(f_6, 0, 1, 3, ZZ), 2, 3, ZZ), 7, 3, ZZ)
 
+    assert dmp_diff_eval_in(f_6, 2, 7, 0, 3, ZZ) == \
+        dmp_eval(dmp_diff(f_6, 2, 3, ZZ), 7, 3, ZZ)
+
+    raises(IndexError, lambda: dmp_diff_eval_in(f_6, 1, ZZ(1), 4, 3, ZZ))
+
 
 def test_dup_revert():
     f = [-QQ(1, 720), QQ(0), QQ(1, 24), QQ(0), -QQ(1, 2), QQ(0), QQ(1)]
@@ -267,9 +287,46 @@ def test_dmp_revert():
     raises(MultivariatePolynomialError, lambda: dmp_revert([[1]], 2, 1, QQ))
 
 
+def test_dup_series_reversion():
+    assert dup_series_reversion([], 3, QQ) == []
+    assert dup_series_reversion([ZZ(12), ZZ(1), ZZ(0)], 3, ZZ) == \
+           dup_from_list([-12, 1, 0], QQ)
+
+    f = dup_from_list([4, 3, 4, 1, 0], QQ)
+    g = dup_from_list([49313847, -4043832, 340156, -29596, 2699, -264, 29, -4, 1, 0], QQ)
+    assert dup_series_reversion(f, 10, QQ) == g
+
+    raises(ValueError, lambda: dup_series_reversion([QQ(1), QQ(1)], 5, QQ))
+    raises(ValueError, lambda: dup_series_reversion([QQ(1), QQ(1)], 0, QQ))
+    raises(NotReversible, lambda: dup_series_reversion([QQ(1), QQ(0), QQ(0)], 5, QQ))
+
+    f = dup_from_list([QQ(1, 2), QQ(1, 3), QQ(0)], QQ)
+    assert dup_series_reversion(f, 4, QQ) == dup_from_list(
+        [QQ(243, 2), QQ(-27, 2), QQ(3), QQ(0)], QQ)
+
+    g = dup_from_list([QQ(2, 3), QQ(1, 4), QQ(1, 6), QQ(0)], QQ)
+    assert dup_series_reversion(g, 5, QQ) == dup_from_list(
+        [QQ(17010), QQ(108), QQ(-54), QQ(6), QQ(0)], QQ)
+
+
+def test_dup_series_reversion_small():
+    assert _dup_series_reversion_small(ZZ.map([1, 1, 0]), 3, ZZ) == [-1, 1, 0]
+    assert _dup_series_reversion_small(ZZ.map([12, 7, 1, 0]), 4, ZZ) == [86, -7, 1, 0]
+    assert _dup_series_reversion_small(ZZ.map([2, 1, 0]), 2, ZZ) == [1, 0]
+
+    raises(NotReversible, lambda: _dup_series_reversion_small(ZZ.map([1, 1, 0]), 1, ZZ))
+    raises(ValueError, lambda: _dup_series_reversion_small(ZZ.map([0]), 0, ZZ))
+
+
 def test_dup_trunc():
     assert dup_trunc([1, 2, 3, 4, 5, 6], ZZ(3), ZZ) == [1, -1, 0, 1, -1, 0]
     assert dup_trunc([6, 5, 4, 3, 2, 1], ZZ(3), ZZ) == [-1, 1, 0, -1, 1]
+
+    R = ZZ_I
+    assert dup_trunc([R(3), R(4), R(5)], R(3), R) == [R(1), R(-1)]
+
+    K = FF(5)
+    assert dup_trunc([K(3), K(4), K(5)], K(3), K) == [K(1), K(0)]
 
 
 def test_dmp_trunc():
@@ -294,6 +351,8 @@ def test_dup_monic():
 
 
 def test_dmp_ground_monic():
+    assert dmp_ground_monic([3, 6, 9], 0, ZZ) == [1, 2, 3]
+
     assert dmp_ground_monic([[3], [6], [9]], 1, ZZ) == [[1], [2], [3]]
 
     raises(
@@ -386,6 +445,8 @@ def test_dup_primitive():
 
 
 def test_dmp_ground_primitive():
+    assert dmp_ground_primitive([ZZ(1)], 0, ZZ) == (ZZ(1), [ZZ(1)])
+
     assert dmp_ground_primitive([[]], 1, ZZ) == (ZZ(0), [[]])
 
     assert dmp_ground_primitive(f_0, 2, ZZ) == (ZZ(1), f_0)
@@ -456,7 +517,13 @@ def test_dup_real_imag():
     assert dup_real_imag(
         [1, 2, 3], ZZ) == ([[1], [2], [-1, 0, 3]], [[2, 0], [2, 0]])
 
+    assert dup_real_imag([ZZ(1), ZZ(0), ZZ(1), ZZ(3)], ZZ) == (
+        [[ZZ(1)], [], [ZZ(-3), ZZ(0), ZZ(1)], [ZZ(3)]],
+        [[ZZ(3), ZZ(0)], [], [ZZ(-1), ZZ(0), ZZ(1), ZZ(0)]]
+    )
+
     raises(DomainError, lambda: dup_real_imag([EX(1), EX(2)], EX))
+
 
 
 def test_dup_mirror():
@@ -481,6 +548,16 @@ def test_dup_shift():
 
     assert dup_shift([1, 2, 3, 4, 5], 1, ZZ) == [1, 6, 15, 20, 15]
     assert dup_shift([1, 2, 3, 4, 5], 7, ZZ) == [1, 30, 339, 1712, 3267]
+
+
+def test_dmp_shift():
+    assert dmp_shift([ZZ(1), ZZ(2)], [ZZ(1)], 0, ZZ) == [ZZ(1), ZZ(3)]
+
+    assert dmp_shift([[]], [ZZ(1), ZZ(2)], 1, ZZ) == [[]]
+
+    xy = [[ZZ(1), ZZ(0)], []]               # x*y
+    x1y2 = [[ZZ(1), ZZ(2)], [ZZ(1), ZZ(2)]] # (x+1)*(y+2)
+    assert dmp_shift(xy, [ZZ(1), ZZ(2)], 1, ZZ) == x1y2
 
 
 def test_dup_transform():
@@ -532,6 +609,28 @@ def test_dmp_compose():
         [[1], [2], [1]], [[1], [2], [1]], 1, ZZ) == [[1], [4], [8], [8], [4]]
 
 
+def test_dup_series_compose():
+    f = dup_from_list([1, 2, 3, 4, 5], ZZ)
+    g = dup_from_list([2, 7, 1, 6, 23, 2 , 1, 4], ZZ)
+
+    assert dup_series_compose([], g, 5, ZZ) == []
+    assert dup_series_compose(f, [ZZ(4)], 5, ZZ) == [ZZ(453)]
+    assert dup_series_compose([ZZ(4)], g, 5, ZZ) == [ZZ(4)]
+
+    assert dup_series_compose(f, g, 8, ZZ) == \
+        dup_from_list([72414, 76477, 14638, 8539, 9250, 883, 380, 453], ZZ)
+
+    f = dup_from_list([QQ(1, 2), QQ(1, 3), QQ(1, 4)], QQ)
+    g = dup_from_list([QQ(2, 3), QQ(1, 5)], QQ)
+    assert dup_series_compose(f, g, 4, QQ) == dup_from_list(
+        [QQ(2, 9), QQ(16, 45), QQ(101, 300)], QQ)
+
+    f = dup_from_list([QQ(1, 3), QQ(-1, 2), QQ(1, 6)], QQ)
+    g = dup_from_list([QQ(1, 4), QQ(1, 2), QQ(1, 3)], QQ)
+    assert dup_series_compose(f, g, 5, QQ) == dup_from_list(
+        [QQ(1, 48), QQ(1, 12), QQ(1, 72), QQ(-5, 36), QQ(1, 27)], QQ)
+
+
 def test_dup_decompose():
     assert dup_decompose([1], ZZ) == [[1]]
 
@@ -570,12 +669,16 @@ def test_dup_decompose():
 def test_dmp_lift():
     q = [QQ(1, 1), QQ(0, 1), QQ(1, 1)]
 
-    f = [ANP([QQ(1, 1)], q, QQ), ANP([], q, QQ), ANP([], q, QQ),
+    f_a = [ANP([QQ(1, 1)], q, QQ), ANP([], q, QQ), ANP([], q, QQ),
          ANP([QQ(1, 1), QQ(0, 1)], q, QQ), ANP([QQ(17, 1), QQ(0, 1)], q, QQ)]
 
-    assert dmp_lift(f, 0, QQ.algebraic_field(I)) == \
-        [QQ(1), QQ(0), QQ(0), QQ(0), QQ(0), QQ(0), QQ(2), QQ(0), QQ(578),
-         QQ(0), QQ(0), QQ(0), QQ(1), QQ(0), QQ(-578), QQ(0), QQ(83521)]
+    f_lift = QQ.map([1, 0, 0, 0, 0, 0, 1, 34, 289])
+
+    assert dmp_lift(f_a, 0, QQ.algebraic_field(I)) == f_lift
+
+    f_g = [QQ_I(1), QQ_I(0), QQ_I(0), QQ_I(0, 1), QQ_I(0, 17)]
+
+    assert dmp_lift(f_g, 0, QQ_I) == f_lift
 
     raises(DomainError, lambda: dmp_lift([EX(1), EX(2)], 0, EX))
 
@@ -635,6 +738,9 @@ def test_dup_clear_denoms():
     assert dup_clear_denoms([EX(7)], EX) == (EX(1), [EX(7)])
     assert dup_clear_denoms([EX(sin(x)/x), EX(0)], EX) == (EX(x), [EX(sin(x)), EX(0)])
 
+    F = RR.frac_field(x)
+    result = dup_clear_denoms([F(8.48717/(8.0089*x + 2.83)), F(0.0)], F)
+    assert str(result) == "(x + 0.353356890459364, [1.05971731448763, 0.0])"
 
 def test_dmp_clear_denoms():
     assert dmp_clear_denoms([[]], 1, QQ, ZZ) == (ZZ(1), [[]])

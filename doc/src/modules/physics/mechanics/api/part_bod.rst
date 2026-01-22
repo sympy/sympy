@@ -1,57 +1,52 @@
 .. _part_bod:
 
-=====================================================
-Masses, Inertias & Particles, RigidBodys (Docstrings)
-=====================================================
+======================================================
+Bodies, Inertias, Loads & Other Functions (Docstrings)
+======================================================
 
-Particle
+Bodies
+======
+
+.. autoclass:: sympy.physics.mechanics.particle.Particle
+   :members:
+   :inherited-members:
+
+.. autoclass:: sympy.physics.mechanics.rigidbody.RigidBody
+   :members:
+   :inherited-members:
+
+Inertias
 ========
 
-.. automodule:: sympy.physics.mechanics.particle
+.. autoclass:: sympy.physics.mechanics.inertia.Inertia
    :members:
 
+.. autofunction:: sympy.physics.mechanics.inertia.inertia
 
-RigidBody
-=========
+.. autofunction:: sympy.physics.mechanics.inertia.inertia_of_point_mass
 
-.. automodule:: sympy.physics.mechanics.rigidbody
+Loads
+=====
+
+.. autoclass:: sympy.physics.mechanics.loads.Force
    :members:
 
+.. autoclass:: sympy.physics.mechanics.loads.Torque
+   :members:
 
-inertia
-=======
-
-.. autofunction:: sympy.physics.mechanics.functions.inertia
-
-
-inertia_of_point_mass
-=====================
-
-.. autofunction:: sympy.physics.mechanics.functions.inertia_of_point_mass
-
-
-linear_momentum
+Other Functions
 ===============
+
+.. autofunction:: sympy.physics.mechanics.functions.center_of_mass
 
 .. autofunction:: sympy.physics.mechanics.functions.linear_momentum
 
-
-angular_momentum
-================
-
 .. autofunction:: sympy.physics.mechanics.functions.angular_momentum
-
-kinetic_energy
-==============
 
 .. autofunction:: sympy.physics.mechanics.functions.kinetic_energy
 
-potential_energy
-================
-
 .. autofunction:: sympy.physics.mechanics.functions.potential_energy
 
-Lagrangian
-==========
-
 .. autofunction:: sympy.physics.mechanics.functions.Lagrangian
+
+.. autofunction:: sympy.physics.mechanics.functions.find_dynamicsymbols

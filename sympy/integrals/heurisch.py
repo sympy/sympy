@@ -1,20 +1,22 @@
-from __future__ import print_function, division
+from __future__ import annotations
 
-from typing import Dict, List
-
+from collections import defaultdict
+from functools import reduce
 from itertools import permutations
 
 from sympy.core.add import Add
 from sympy.core.basic import Basic
 from sympy.core.mul import Mul
-from sympy.core.symbol import Wild, Dummy
+from sympy.core.symbol import Wild, Dummy, Symbol
 from sympy.core.basic import sympify
 from sympy.core.numbers import Rational, pi, I
 from sympy.core.relational import Eq, Ne
 from sympy.core.singleton import S
+from sympy.core.sorting import ordered
+from sympy.core.traversal import iterfreeargs
 
 from sympy.functions import exp, sin, cos, tan, cot, asin, atan
-from sympy.functions import log, sinh, cosh, tanh, coth, asinh, acosh
+from sympy.functions import log, sinh, cosh, tanh, coth, asinh
 from sympy.functions import sqrt, erf, erfi, li, Ei
 from sympy.functions import besselj, bessely, besseli, besselk
 from sympy.functions import hankel1, hankel2, jn, yn
@@ -29,7 +31,7 @@ from sympy.simplify.radsimp import collect
 from sympy.logic.boolalg import And, Or
 from sympy.utilities.iterables import uniq
 
-from sympy.polys import quo, gcd, lcm, factor, cancel, PolynomialError
+from sympy.polys import quo, gcd, lcm, factor_list, cancel, PolynomialError
 from sympy.polys.monomials import itermonomials
 from sympy.polys.polyroots import root_factors
 
@@ -37,7 +39,6 @@ from sympy.polys.rings import PolyRing
 from sympy.polys.solvers import solve_lin_sys
 from sympy.polys.constructor import construct_domain
 
-from sympy.core.compatibility import reduce, ordered
 from sympy.integrals.integrals import integrate
 
 
@@ -48,8 +49,11 @@ def components(f, x):
     non-integer powers. Fractional powers are collected with
     minimal, positive exponents.
 
+    Examples
+    ========
+
     >>> from sympy import cos, sin
-    >>> from sympy.abc import x, y
+    >>> from sympy.abc import x
     >>> from sympy.integrals.heurisch import components
 
     >>> components(sin(x)*cos(x)**2, x)
@@ -62,7 +66,7 @@ def components(f, x):
     """
     result = set()
 
-    if x in f.free_symbols:
+    if f.has_free(x):
         if f.is_symbol and f.is_commutative:
             result.add(f)
         elif f.is_Function or f.is_Derivative:
@@ -85,7 +89,7 @@ def components(f, x):
     return result
 
 # name -> [] of symbols
-_symbols_cache = {}  # type: Dict[str, List[Dummy]]
+_symbols_cache: dict[str, list[Dummy]] = {}
 
 
 # NB @cacheit is not convenient here
@@ -109,6 +113,9 @@ def heurisch_wrapper(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     """
     A wrapper around the heurisch integration algorithm.
 
+    Explanation
+    ===========
+
     This method takes the result from heurisch and checks for poles in the
     denominator. For each of these poles, the integral is reevaluated, and
     the final integration result is given in terms of a Piecewise.
@@ -116,8 +123,7 @@ def heurisch_wrapper(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     Examples
     ========
 
-    >>> from sympy.core import symbols
-    >>> from sympy.functions import cos
+    >>> from sympy import cos, symbols
     >>> from sympy.integrals.heurisch import heurisch, heurisch_wrapper
     >>> n, x = symbols('n x')
     >>> heurisch(cos(n*x), x)
@@ -132,20 +138,25 @@ def heurisch_wrapper(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     """
     from sympy.solvers.solvers import solve, denoms
     f = sympify(f)
-    if x not in f.free_symbols:
+    if not f.has_free(x):
         return f*x
 
     res = heurisch(f, x, rewrite, hints, mappings, retries, degree_offset,
                    unnecessary_permutations, _try_heurisch)
     if not isinstance(res, Basic):
         return res
+
     # We consider each denominator in the expression, and try to find
     # cases where one or more symbolic denominator might be zero. The
     # conditions for these cases are stored in the list slns.
+    #
+    # Since denoms returns a set we use ordered. This is important because the
+    # ordering of slns determines the order of the resulting Piecewise so we
+    # need a deterministic order here to make the output deterministic.
     slns = []
-    for d in denoms(res):
+    for d in ordered(denoms(res)):
         try:
-            slns += solve(d, dict=True, exclude=(x,))
+            slns += solve([d], dict=True, exclude=(x,))
         except NotImplementedError:
             pass
     if not slns:
@@ -155,7 +166,7 @@ def heurisch_wrapper(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     slns0 = []
     for d in denoms(f):
         try:
-            slns0 += solve(d, dict=True, exclude=(x,))
+            slns0 += solve([d], dict=True, exclude=(x,))
         except NotImplementedError:
             pass
     slns = [s for s in slns if s not in slns0]
@@ -192,7 +203,7 @@ def heurisch_wrapper(f, x, rewrite=False, hints=None, mappings=None, retries=3,
                               True))
     return Piecewise(*pairs)
 
-class BesselTable(object):
+class BesselTable:
     """
     Derivatives of Bessel functions of orders n and n-1
     in terms of each other.
@@ -234,9 +245,12 @@ class BesselTable(object):
 
 _bessel_table = None
 
-class DiffCache(object):
+class DiffCache:
     """
     Store for derivatives of expressions.
+
+    Explanation
+    ===========
 
     The standard form of the derivative of a Bessel function of order n
     contains two Bessel functions of orders n-1 and n+1, respectively.
@@ -285,6 +299,9 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     """
     Compute indefinite integral using heuristic Risch algorithm.
 
+    Explanation
+    ===========
+
     This is a heuristic approach to indefinite integration in finite
     terms using the extended heuristic (parallel) Risch algorithm, based
     on Manuel Bronstein's "Poor Man's Integrator".
@@ -299,8 +316,8 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     recursive Risch algorithm in such case.  It's an open question if
     this algorithm can be made a full decision procedure.
 
-    This is an internal integrator procedure. You should use toplevel
-    'integrate' function in most cases,  as this procedure needs some
+    This is an internal integrator procedure. You should use top level
+    'integrate' function in most cases, as this procedure needs some
     preprocessing steps and otherwise may fail.
 
     Specification
@@ -331,21 +348,24 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
 
     See Manuel Bronstein's "Poor Man's Integrator":
 
-    [1] http://www-sop.inria.fr/cafe/Manuel.Bronstein/pmint/index.html
+    References
+    ==========
+
+    .. [1] https://www-sop.inria.fr/cafe/Manuel.Bronstein/pmint/index.html
 
     For more information on the implemented algorithm refer to:
 
-    [2] K. Geddes, L. Stefanus, On the Risch-Norman Integration
+    .. [2] K. Geddes, L. Stefanus, On the Risch-Norman Integration
        Method and its Implementation in Maple, Proceedings of
        ISSAC'89, ACM Press, 212-217.
 
-    [3] J. H. Davenport, On the Parallel Risch Algorithm (I),
+    .. [3] J. H. Davenport, On the Parallel Risch Algorithm (I),
        Proceedings of EUROCAM'82, LNCS 144, Springer, 144-157.
 
-    [4] J. H. Davenport, On the Parallel Risch Algorithm (III):
+    .. [4] J. H. Davenport, On the Parallel Risch Algorithm (III):
        Use of Tangents, SIGSAM Bulletin 16 (1982), 3-6.
 
-    [5] J. H. Davenport, B. M. Trager, On the Parallel Risch
+    .. [5] J. H. Davenport, B. M. Trager, On the Parallel Risch
        Algorithm (II), ACM Transactions on Mathematical
        Software 11 (1985), 356-362.
 
@@ -365,7 +385,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
         if f.has(Abs, re, im, sign, Heaviside, DiracDelta, floor, ceiling, arg):
             return
 
-    if x not in f.free_symbols:
+    if not f.has_free(x):
         return f*x
 
     if not f.is_Add:
@@ -389,6 +409,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
             rewrite = True
 
     terms = components(f, x)
+    dcache = DiffCache(x)
 
     if hints is not None:
         if not hints:
@@ -448,18 +469,28 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
 
                         if M is not None and M[b].is_positive:
                             if M[a].is_positive:
-                                terms.add(acosh(sqrt(M[a]/M[b])*x))
+                                dF = 1/sqrt(M[a]*x**2 - M[b])
+                                F = log(2*sqrt(M[a])*sqrt(M[a]*x**2 - M[b]) + 2*M[a]*x)/sqrt(M[a])
+                                dcache.cache[F] = dF  # hack: F.diff(x) doesn't automatically simplify to f
+                                terms.add(F)
                             elif M[a].is_negative:
-                                terms.add((-M[b]/2*sqrt(-M[a])*
-                                           atan(sqrt(-M[a])*x/sqrt(M[a]*x**2 - M[b]))))
+                                terms.add(-M[b]/2*sqrt(-M[a])*
+                                           atan(sqrt(-M[a])*x/sqrt(M[a]*x**2 - M[b])))
 
         else:
             terms |= set(hints)
 
-    dcache = DiffCache(x)
-
     for g in set(terms):  # using copy of terms
         terms |= components(dcache.get_diff(g), x)
+
+    # XXX: The commented line below makes heurisch more deterministic wrt
+    # PYTHONHASHSEED and the iteration order of sets. There are other places
+    # where sets are iterated over but this one is possibly the most important.
+    # Theoretically the order here should not matter but different orderings
+    # can expose potential bugs in the different code paths so potentially it
+    # is better to keep the non-determinism.
+    #
+    # terms = list(ordered(terms))
 
     # TODO: caching is significant factor for why permutations work at all. Change this.
     V = _symbols('x', len(terms))
@@ -473,7 +504,17 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
         # optimizing the number of permutations of mapping              #
         assert mapping[-1][0] == x # if not, find it and correct this comment
         unnecessary_permutations = [mapping.pop(-1)]
-        mappings = permutations(mapping)
+        # permute types of objects
+        types = defaultdict(list)
+        for i in mapping:
+            e, _ = i
+            types[type(e)].append(i)
+        mapping = [types[i] for i in types]
+        def _iter_mappings():
+            for i in permutations(mapping):
+                # make the expression of a given type be ordered
+                yield [j for i in i for j in ordered(i)]
+        mappings = _iter_mappings()
     else:
         unnecessary_permutations = unnecessary_permutations or []
 
@@ -578,16 +619,16 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
             else:
                 return 1
         elif not g.is_Atom and g.args:
-            return max([ _exponent(h) for h in g.args ])
+            return max(_exponent(h) for h in g.args)
         else:
             return 1
 
     A, B = _exponent(f), a + max(b, c)
 
     if A > 1 and B > 1:
-        monoms = tuple(itermonomials(V, A + B - 1 + degree_offset))
+        monoms = tuple(ordered(itermonomials(V, A + B - 1 + degree_offset)))
     else:
-        monoms = tuple(itermonomials(V, A + B + degree_offset))
+        monoms = tuple(ordered(itermonomials(V, A + B + degree_offset)))
 
     poly_coeffs = _symbols('A', len(monoms))
 
@@ -596,42 +637,30 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
 
     reducibles = set()
 
-    for poly in polys:
-        if poly.has(*V):
-            try:
-                factorization = factor(poly, greedy=True)
-            except PolynomialError:
-                factorization = poly
-
-            if factorization.is_Mul:
-                factors = factorization.args
-            else:
-                factors = (factorization, )
-
-            for fact in factors:
-                if fact.is_Pow:
-                    reducibles.add(fact.base)
-                else:
-                    reducibles.add(fact)
+    for poly in ordered(polys):
+        coeff, factors = factor_list(poly, *V)
+        reducibles.add(coeff)
+        reducibles.update(fact for fact, mul in factors)
 
     def _integrate(field=None):
-        irreducibles = set()
         atans = set()
         pairs = set()
 
-        for poly in reducibles:
-            for z in poly.free_symbols:
-                if z in V:
-                    break  # should this be: `irreducibles |= \
-            else:          # set(root_factors(poly, z, filter=field))`
-                continue   # and the line below deleted?
-                           #               |
-                           #               V
-            irreducibles |= set(root_factors(poly, z, filter=field))
+        if field == 'Q':
+            irreducibles = set(reducibles)
+        else:
+            setV = set(V)
+            irreducibles = set()
+            for poly in ordered(reducibles):
+                zV = setV & set(iterfreeargs(poly))
+                for z in ordered(zV):
+                    s = set(root_factors(poly, z, filter=field))
+                    irreducibles |= s
+                    break
 
         log_part, atan_part = [], []
 
-        for poly in list(irreducibles):
+        for poly in ordered(irreducibles):
             m = collect(poly, I, evaluate=False)
             y = m.get(I, S.Zero)
             if y:
@@ -658,12 +687,12 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
         C = _symbols('C', len(atans))
 
         # Note: the ordering matters here
-        for poly, b in reversed(list(ordered(zip(irreducibles, B)))):
+        for poly, b in reversed(list(zip(ordered(irreducibles), B))):
             if poly.has(*V):
                 poly_coeffs.append(b)
                 log_part.append(b * log(poly))
 
-        for poly, c in reversed(list(ordered(zip(atans, C)))):
+        for poly, c in reversed(list(zip(ordered(atans), C))):
             if poly.has(*V):
                 poly_coeffs.append(c)
                 atan_part.append(c * poly)
@@ -682,14 +711,14 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
         # sqrt(y) and similar expressions can appear, leading to non-trivial
         # domains.
         syms = set(poly_coeffs) | set(V)
-        non_syms = set([])
+        non_syms = set()
 
         def find_non_syms(expr):
             if expr.is_Integer or expr.is_Rational:
                 pass # ignore trivial numbers
             elif expr in syms:
                 pass # ignore variables
-            elif not expr.has(*syms):
+            elif not expr.has_free(*syms):
                 non_syms.add(expr)
             elif expr.is_Add or expr.is_Mul or expr.is_Pow:
                 list(map(find_non_syms, expr.args))
@@ -716,10 +745,17 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
         if solution is None:
             return None
         else:
-            return candidate.subs(solution).subs(
-                list(zip(poly_coeffs, [S.Zero]*len(poly_coeffs))))
+            return candidate.xreplace(solution).xreplace(
+                dict(zip(poly_coeffs, [S.Zero]*len(poly_coeffs))))
 
-    if not (F.free_symbols - set(V)):
+    if all(isinstance(_, Symbol) for _ in V):
+        more_free = F.free_symbols - set(V)
+    else:
+        Fd = F.as_dummy()
+        more_free = Fd.xreplace(dict(zip(V, (Dummy() for _ in V)))
+            ).free_symbols & Fd.free_symbols
+    if not more_free:
+        # all free generators are identified in V
         solution = _integrate('Q')
 
         if solution is None:
@@ -729,7 +765,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
 
     if solution is not None:
         antideriv = solution.subs(rev_mapping)
-        antideriv = cancel(antideriv).expand(force=True)
+        antideriv = cancel(antideriv).expand()
 
         if antideriv.is_Add:
             antideriv = antideriv.as_independent(x)[1]

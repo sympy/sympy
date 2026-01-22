@@ -1,14 +1,19 @@
 """Tools for manipulation of rational expressions. """
 
-from __future__ import print_function, division
+from __future__ import annotations
 
 from sympy.core import Basic, Add, sympify
-from sympy.core.compatibility import iterable
 from sympy.core.exprtools import gcd_terms
 from sympy.utilities import public
+from sympy.utilities.iterables import iterable
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
+
 
 @public
-def together(expr, deep=False, fraction=True):
+def together(expr: Expr, deep: bool = False, fraction: bool = True) -> Expr:
     """
     Denest and combine rational expressions using symbolic methods.
 
@@ -74,9 +79,9 @@ def together(expr, deep=False, fraction=True):
                 else:
                     exp = expr.exp
 
-                return expr.__class__(base, exp)
+                return expr.func(base, exp)
             else:
-                return expr.__class__(*[ _together(arg) for arg in expr.args ])
+                return expr.func(*[ _together(arg) for arg in expr.args ])
         elif iterable(expr):
             return expr.__class__([ _together(ex) for ex in expr ])
 

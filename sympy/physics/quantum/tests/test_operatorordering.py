@@ -21,8 +21,10 @@ def test_normal_order():
 
 def test_normal_ordered_form():
     a = BosonOp('a')
+    b = BosonOp('b')
 
     c = FermionOp('c')
+    d = FermionOp('d')
 
     assert normal_ordered_form(Dagger(a) * a) == Dagger(a) * a
     assert normal_ordered_form(a * Dagger(a)) == 1 + Dagger(a) * a
@@ -36,3 +38,13 @@ def test_normal_ordered_form():
     assert normal_ordered_form(c ** 2 * Dagger(c)) == Dagger(c) * c ** 2
     assert normal_ordered_form(c ** 3 * Dagger(c)) == \
         c ** 2 - Dagger(c) * c ** 3
+
+    assert normal_ordered_form(a * Dagger(b), True) == Dagger(b) * a
+    assert normal_ordered_form(Dagger(a) * b, True) == Dagger(a) * b
+    assert normal_ordered_form(b * a, True) == a * b
+    assert normal_ordered_form(Dagger(b) * Dagger(a), True) == Dagger(a) * Dagger(b)
+
+    assert normal_ordered_form(c * Dagger(d), True) == -Dagger(d) * c
+    assert normal_ordered_form(Dagger(c) * d, True) == Dagger(c) * d
+    assert normal_ordered_form(d * c, True) == -c * d
+    assert normal_ordered_form(Dagger(d) * Dagger(c), True) == -Dagger(c) * Dagger(d)

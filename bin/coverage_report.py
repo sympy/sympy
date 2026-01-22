@@ -42,7 +42,7 @@ except ImportError:
     sys.exit(-1)
 
 
-omit_dir_patterns = ['.*tests', 'benchmark', 'examples',
+omit_dir_patterns = ['benchmark', 'examples',
                      'pyglet', 'test_external']
 omit_dir_re = re.compile(r'|'.join(omit_dir_patterns))
 source_re = re.compile(r'.*\.py$')
@@ -70,7 +70,6 @@ def make_report(
     cov = coverage.coverage()
     cov.exclude("raise NotImplementedError")
     cov.exclude("def canonize")  # this should be "@decorated"
-    cov.exclude("def __mathml__")
     if use_cache:
         cov.load()
     else:
