@@ -207,6 +207,7 @@ class TransformToSymPyExpr(Transformer):
     def superscript(self, tokens):
         def isprime(x):
             return isinstance(x, Token) and x.type == "PRIMES"
+
         def iscmdprime(x):
             return isinstance(x, Token) and (x.type == "PRIMES_VIA_CMD"
                                              or x.type == "CMD_PRIME")
