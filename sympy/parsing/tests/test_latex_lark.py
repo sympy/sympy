@@ -530,6 +530,25 @@ MISCELLANEOUS_EXPRESSION_PAIRS = [
     (r"\left(  x + y\right ) z", _Mul(_Add(x, y), z)),
 ]
 
+SQUARE_BRACKET_EXPRESSION_PAIRS = [
+    (r"[x+y]z", _Mul(_Add(x, y), z)),
+    (r"[a+b]c", _Mul(_Add(a, b), c)),
+    (r"[x]y", _Mul(x, y)),
+    (r"[a+b][c+d]", _Mul(_Add(a, b), _Add(c, d))),
+    (r"[x][y]", _Mul(x, y)),
+    (r"[x+y]a", _Mul(_Add(x, y), a)),
+    (r"[a]b", _Mul(a, b)),
+]
+
+EVALUATED_SQUARE_BRACKET_EXPRESSION_PAIRS = [
+    (r"[x+y]z", (x + y) * z),
+    (r"[a+b]c", (a + b) * c),
+    (r"[x]y", x * y),
+    (r"[a+b][c+d]", (a + b) * (c + d)),
+    (r"[x][y]", x * y),
+    (r"[2+3]x", 5 * x),
+]
+
 UNEVALUATED_LITERAL_COMPLEX_NUMBER_EXPRESSION_PAIRS = [
     (r"\imaginaryunit^2", _Pow(I, 2)),
     (r"|\imaginaryunit|", _Abs(I)),
@@ -855,6 +874,17 @@ def test_miscellaneous_expressions():
     for latex_str, sympy_expr in MISCELLANEOUS_EXPRESSION_PAIRS:
         with evaluate(False):
             assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
+def test_square_bracket_multiplication():
+    for latex_str, sympy_expr in SQUARE_BRACKET_EXPRESSION_PAIRS:
+        with evaluate(False):
+            result = parse_latex_lark(latex_str)
+            assert result == sympy_expr, f"Failed for {latex_str}: got {result}, expected {sympy_expr}"
+
+    for latex_str, sympy_expr in EVALUATED_SQUARE_BRACKET_EXPRESSION_PAIRS:
+        result = parse_latex_lark(latex_str)
+        assert result == sympy_expr, f"Failed for {latex_str}: got {result}, expected {sympy_expr}"
 
 
 def test_literal_complex_number_expressions():
