@@ -381,6 +381,9 @@ def test_scipy_print_methods():
     assert prntr.doprint(Ci(x)) == "scipy.special.sici(x)[1]"
 
 def test_numpy_contains_integers():
+    if not np:
+        skip("NumPy not installed")
+
     x = symbols('x')
     f = lambdify(x, Contains(x, S.Integers), modules="numpy")
     arr = np.array([1.0, 1.5, 2.0])
