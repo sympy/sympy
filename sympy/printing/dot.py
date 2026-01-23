@@ -276,7 +276,7 @@ def dotprint(expr,
     # repeat works by adding a signature tuple to the end of each node for its
     # position in the graph. For example, for expr = Add(x, Pow(x, 2)), the x in the
     # Pow will have the tuple (1, 0), meaning it is expr.args[1].args[0].
-    if styles == None:
+    if styles is None:
         styles = default_styles
     graphstyle = _graphstyle.copy()
     graphstyle.update(kwargs)
