@@ -11,7 +11,7 @@ from sympy.matrices.expressions.blockmatrix import BlockMatrix
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.matrices.expressions.special import Identity
 from sympy.utilities.lambdify import lambdify
-from sympy import symbols, Min, Max
+from sympy import symbols, Min, Max, Contains, S
 
 from sympy.abc import x, i, j, a, b, c, d
 from sympy.core import Pow
@@ -379,3 +379,11 @@ def test_scipy_print_methods():
     assert prntr.doprint(polygamma(k, x)) == "scipy.special.polygamma(k, x)"
     assert prntr.doprint(Si(x)) == "scipy.special.sici(x)[0]"
     assert prntr.doprint(Ci(x)) == "scipy.special.sici(x)[1]"
+
+def test_numpy_contains_integers():
+    x = symbols('x')
+    f = lambdify(x, Contains(x, S.Integers), modules="numpy")
+    arr = np.array([1.0, 1.5, 2.0])
+    result = f(arr)
+    expected = np.array([True, False, True])
+    assert np.array_equal(result, expected)
