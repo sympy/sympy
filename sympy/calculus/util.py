@@ -19,7 +19,7 @@ from sympy.functions.elementary.hyperbolic import (sinh, cosh, tanh, coth,
     sech, csch, asinh, acosh, atanh, acoth, asech, acsch)
 from sympy.polys.polytools import degree, lcm_list
 from sympy.sets.sets import (Interval, Intersection, FiniteSet, Union,
-                             Complement, EmptySet)
+                             Complement)
 from sympy.sets.fancysets import ImageSet
 from sympy.sets.conditionset import ConditionSet
 from sympy.utilities import filldedent
@@ -1086,7 +1086,7 @@ def _argMaxMin(f, symbol, domain, is_max):
     # If the supremum or the infimum of the function is not in its range,
     # then an empty set is returned.
     if not frange.contains(extremum):
-        return EmptySet()
+        return S.EmptySet
 
     critical_points = Union(
         solveset(first_deriv, symbol=symbol, domain=domain), domain.boundary,
