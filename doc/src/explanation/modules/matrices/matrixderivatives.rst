@@ -264,7 +264,8 @@ $$D_{mnij} = \frac{\partial}{\partial X_{mn}} \Big (Y_{ij} \Big ).$$
 
 SymPy adopts a denominator-first index ordering for derivatives, placing the
 indices of the differentiation variable ${}_{\{mn\}}$ before those of the
-derivand ${}_{\{ij\}}$.  This ${}_{\{mnij\}}$ convention aligns with Wolfram
+derivand ${}_{\{ij\}}$. The roughly corresponds to the mixed layout convention,
+see [LayoutConventions]_.  This ${}_{\{mnij\}}$ convention aligns with Wolfram
 Mathematica but differs from PyTorch/NumPy, which implicitly follow the
 ${}_{\{ijmn\}}$ index-order convention.
 
@@ -832,3 +833,4 @@ References
 ----------
 
 .. [MatrixCookbook] The Matrix Cookbook, by Kaare Brandt Petersen and Michael Syskind Pedersen, https://www.math.uwaterloo.ca/~hwolkowi/matrixcookbook.pdf
+.. [LayoutConventions] https://en.wikipedia.org/wiki/Matrix_calculus#Layout_conventions
