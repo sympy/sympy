@@ -49,7 +49,7 @@ from sympy.ntheory.residue_ntheory import discrete_log, nthroot_mod
 from sympy.polys import (roots, Poly, degree, together, PolynomialError,
                          RootOf, factor, lcm, gcd)
 from sympy.polys.polyerrors import CoercionFailed
-from sympy.polys.polytools import invert, groebner, poly
+from sympy.polys.polytools import invert, groebner, poly, real_roots
 from sympy.polys.solvers import (sympy_eqs_to_ring, solve_lin_sys,
     PolyNonlinearError)
 from sympy.polys.matrices.linsolve import _linsolve
@@ -1025,7 +1025,11 @@ def _solve_as_poly(f, symbol, domain=S.Complexes):
     """
     result = None
     if f.is_polynomial(symbol):
-        solns = roots(f, symbol, cubics=True, quartics=True,
+        if (domain.is_subset(S.Reals) or domain==S.Reals) and (f.atoms(Symbol)==f.free_symbols) and (FiniteSet(*Poly(f,symbol).coeffs()).is_subset(S.Rationals)):
+            solns=FiniteSet(*real_roots(Poly(f,symbol))).evalf()
+            return solns
+        else:
+            solns = roots(f, symbol, cubics=True, quartics=True,
                       quintics=True, domain='EX')
         num_roots = sum(solns.values())
         if degree(f, symbol) <= num_roots:
