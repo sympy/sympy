@@ -1,6 +1,7 @@
 """Miscellaneous stuff that does not really fit anywhere else."""
 
 from __future__ import annotations
+from typing import List
 
 import operator
 import sys
@@ -38,7 +39,6 @@ def filldedent(s: str, w: int = 70, **kwargs: Any) -> str:
     return '\n' + fill(dedent(str(s)).strip('\n'), width=w, **kwargs)
 
 
-from typing import List
 
 def strlines(s: str, c: int = 64, short: bool = False) -> List[str]:
     """Return a cut-and-pastable string that, when printed, is
