@@ -47,10 +47,10 @@ def mangle_docstrings(app, what, name, obj, options, lines,
     else:
         try:
             doc = get_doc_object(obj, what, u_NL.join(lines), config=cfg)
-            doc = str(doc)
-            lines[:] = doc.split(u_NL)
         except ValueError:
             return
+        doc = str(doc)
+        lines[:] = doc.split(u_NL)
 
     if (app.config.numpydoc_edit_link and hasattr(obj, '__name__') and
             obj.__name__):
