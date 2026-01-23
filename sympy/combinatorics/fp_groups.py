@@ -614,7 +614,7 @@ class FpSubgroup(DefaultPrinting):
                             # start, end
                             r1, r2 = w2[0][0], w2[0][0]**-1
                         else:
-                            r1, r2 = w2[0], w2[len(w1)-1]
+                            r1, r2 = w2[0], w2[len(w2)-1]
 
                         # p1 and p2 are w1 and w2 or, in case when
                         # w1 or w2 is an infinite family, a representative
