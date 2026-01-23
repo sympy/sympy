@@ -45,6 +45,8 @@ def mangle_docstrings(app, what, name, obj, options, lines,
         title_re = re.compile(pattern, re.IGNORECASE | re.DOTALL)
         lines[:] = title_re.sub('', u_NL.join(lines)).split(u_NL)
     else:
+        if inspect.isbuiltin(obj):
+            return
         doc = get_doc_object(obj, what, u_NL.join(lines), config=cfg)
         doc = str(doc)
         lines[:] = doc.split(u_NL)
