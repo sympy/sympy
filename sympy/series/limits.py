@@ -177,18 +177,18 @@ class Limit(Expr):
         return isyms
 
 
-    def pow_heuristics(self, e, z, z0):
+    def pow_heuristics(self, e, z, z0, dir):
         b1, e1 = e.base, e.exp
         if not b1.has(z):
-            res = limit(e1*log(b1), z, z0)
+            res = limit(e1*log(b1), z, z0, dir=dir)
             return exp(res)
 
-        ex_lim = limit(e1, z, z0)
-        base_lim = limit(b1, z, z0)
+        ex_lim = limit(e1, z, z0, dir=dir)
+        base_lim = limit(b1, z, z0, dir=dir)
 
         if base_lim is S.One:
             if ex_lim in (S.Infinity, S.NegativeInfinity):
-                res = limit(e1*(b1 - 1), z, z0)
+                res = limit(e1*(b1 - 1), z, z0, dir=dir)
                 return exp(res)
         if base_lim is S.NegativeInfinity and ex_lim is S.Infinity:
             return S.ComplexInfinity
@@ -338,7 +338,7 @@ class Limit(Expr):
             from sympy.simplify.powsimp import powsimp
             e = powsimp(e)
             if e.is_Pow:
-                r = self.pow_heuristics(e, z, z0)
+                r = self.pow_heuristics(e, z, z0, dir)
                 if r is not None:
                     return r
             try:

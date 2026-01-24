@@ -32,12 +32,10 @@ from sympy.functions.special.bessel import (BesselBase, besselj, besseli,
                                             besselk, bessely, jn)
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.integrals.integrals import Integral
-from sympy.logic.boolalg import Boolean
 from sympy.matrices.expressions import (MatrixExpr, MatAdd, MatMul,
                                             MatPow, MatrixSymbol)
 from sympy.polys import together, cancel, factor
 from sympy.polys.numberfields.minpoly import _is_sum_surds, _minimal_polynomial_sq
-from sympy.sets.sets import Set
 from sympy.simplify.combsimp import combsimp
 from sympy.simplify.cse_opts import sub_pre, sub_post
 from sympy.simplify.hyperexpand import hyperexpand
@@ -57,6 +55,8 @@ from sympy.external.mpmath import (
 
 
 if TYPE_CHECKING:
+    from sympy.logic.boolalg import Boolean
+    from sympy.sets.sets import Set
     from typing import Literal
 
 
