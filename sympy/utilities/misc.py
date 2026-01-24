@@ -1,6 +1,8 @@
 """Miscellaneous stuff that does not really fit anywhere else."""
 
 from __future__ import annotations
+from typing import overload
+from typing_extensions import Literal
 
 import operator
 import sys
@@ -39,7 +41,18 @@ def filldedent(s: str, w: int = 70, **kwargs: Any) -> str:
 
 
 
-def strlines(s: str, c: int = 64, short: bool = False) -> list[str]:
+@overload
+def strlines(
+    s: str, c: int = 64, short: Literal[False] = False
+) -> list[str]: ...
+    
+@overload
+def strlines(
+    s: str, c: int = 64, short: Literal[True] = True
+) -> str: ...
+
+
+def strlines(s: str, c: int = 64, short: bool = False):
     """Return a cut-and-pastable string that, when printed, is
     equivalent to the input.  The lines will be surrounded by
     parentheses and no line will be longer than c (default 64)
@@ -71,9 +84,9 @@ def strlines(s: str, c: int = 64, short: bool = False) -> list[str]:
     if not isinstance(s, str):
         raise ValueError('expecting string input')
     if '\n' in s:
-        return rawlines(s).splitlines()
+        return rawlines(s)
     q = '"' if repr(s).startswith('"') else "'"
-    q = q *2
+    q = (q,)*2
     if '\\' in s:  # use r-string
         m = '(\nr%s%%s%s\n)' % q
         j = '%s\nr%s' % q
@@ -87,8 +100,8 @@ def strlines(s: str, c: int = 64, short: bool = False) -> list[str]:
         out.append(s[:c])
         s=s[c:]
     if short and len(out) == 1:
-        return [(m % out[0]).splitlines()[1]]  # strip bounding (\n...\n)
-    return (m % j.join(out)).splitlines()
+        return (m % out[0]).splitlines()[1]  # strip bounding (\n...\n)
+    return m % j.join(out)
 
 
 def rawlines(s):
