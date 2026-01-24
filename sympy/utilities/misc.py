@@ -71,7 +71,7 @@ def strlines(s: str, c: int = 64, short: bool = False) -> list[str]:
     if not isinstance(s, str):
         raise ValueError('expecting string input')
     if '\n' in s:
-        return rawlines(s)
+        return rawlines(s).splitlines()
     q = '"' if repr(s).startswith('"') else "'"
     q = (q,)*2
     if '\\' in s:  # use r-string
@@ -87,8 +87,8 @@ def strlines(s: str, c: int = 64, short: bool = False) -> list[str]:
         out.append(s[:c])
         s=s[c:]
     if short and len(out) == 1:
-        return (m % out[0]).splitlines()[1]  # strip bounding (\n...\n)
-    return m % j.join(out)
+        return [(m % out[0]).splitlines()[1]]  # strip bounding (\n...\n)
+    return (m % j.join(out)).splitlines()
 
 
 def rawlines(s):
