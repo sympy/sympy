@@ -195,6 +195,10 @@ def test_fp_subgroup():
     S = FpSubgroup(f, H)
     _test_subgroup(K, T, S)
 
+    F, x, y = free_group("x, y")
+    H = FpSubgroup(F, [x*y, x])
+    assert x in H
+
 def test_permutation_methods():
     F, x, y = free_group("x, y")
     # DihedralGroup(8)

@@ -568,6 +568,9 @@ class FpSubgroup(DefaultPrinting):
 
         if isinstance(self.parent, FreeGroup):
             if self._min_words is None:
+                def _is_family(word):
+                    return isinstance(word, tuple) and not isinstance(word, FreeGroupElement)
+
                 # make _min_words - a list of subwords such that
                 # g is in the subgroup if and only if it can be
                 # partitioned into these subwords. Infinite families of
@@ -597,20 +600,20 @@ class FpSubgroup(DefaultPrinting):
                 for w1 in gens:
                     for w2 in gens:
                         # if w1 and w2 are equal or are inverses, continue
-                        if w1 == w2 or (not isinstance(w1, tuple)
+                        if w1 == w2 or (not _is_family(w1)
                                                         and w1**-1 == w2):
                             continue
 
                         # if the start of one word is the inverse of the
                         # end of the other, their multiple should be added
                         # to _min_words because of cancellation
-                        if isinstance(w1, tuple):
+                        if _is_family(w1):
                             # start, end
                             s1, s2 = w1[0][0], w1[0][0]**-1
                         else:
                             s1, s2 = w1[0], w1[len(w1)-1]
 
-                        if isinstance(w2, tuple):
+                        if _is_family(w2):
                             # start, end
                             r1, r2 = w2[0][0], w2[0][0]**-1
                         else:
@@ -619,21 +622,23 @@ class FpSubgroup(DefaultPrinting):
                         # p1 and p2 are w1 and w2 or, in case when
                         # w1 or w2 is an infinite family, a representative
                         p1, p2 = w1, w2
-                        if isinstance(w1, tuple):
+                        if _is_family(w1):
                             p1 = w1[0]*w1[1]*w1[0]**-1
-                        if isinstance(w2, tuple):
+                        if _is_family(w2):
                             p2 = w2[0]*w2[1]*w2[0]**-1
 
                         # add the product of the words to the list is necessary
                         if r1**-1 == s2 and not (p1*p2).is_identity:
                             new = _process(p1*p2)
-                            if new not in gens:
-                                gens.extend(new)
+                            for word in new:
+                                if word not in gens:
+                                    gens.append(word)
 
                         if r2**-1 == s1 and not (p2*p1).is_identity:
                             new = _process(p2*p1)
-                            if new not in gens:
-                                gens.extend(new)
+                            for word in new:
+                                if word not in gens:
+                                    gens.append(word)
 
                 self._min_words = gens
 
@@ -646,7 +651,7 @@ class FpSubgroup(DefaultPrinting):
                 if r.is_identity or self.normal:
                     return w in min_words
                 else:
-                    t = [s[1] for s in min_words if isinstance(s, tuple)
+                    t = [s[1] for s in min_words if _is_family(s)
                                                                 and s[0] == r]
                     return [s for s in t if w.power_of(s)] != []
 
