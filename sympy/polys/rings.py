@@ -242,30 +242,6 @@ def sring(exprs, *symbols, **options):
     else:
         return (_ring, polys)
 
-def sring_old(exprs, *symbols, **options):
-    """The logic of sring BEFORE your optimization (The 'Slow' Path)"""
-    single = False
-    if not isinstance(exprs, (list, tuple)):
-        exprs, single = [exprs], True
-    exprs = list(map(sympify, exprs))
-    
-    # OLD LOGIC: Always used _parallel_dict_from_expr first
-    opt = build_options(symbols, options)
-    reps, opt = _parallel_dict_from_expr(exprs, opt)
-    
-    if opt.domain is None:
-        # Construct domain from dictionary coefficients
-        coeffs = sum([list(rep.values()) for rep in reps], [])
-        opt.domain, coeffs_dom = construct_domain(coeffs, opt=opt)
-        coeff_map = dict(zip(coeffs, coeffs_dom))
-        reps = [{m: coeff_map[c] for m, c in rep.items()} for rep in reps]
-    
-    _ring = PolyRing(opt.gens, opt.domain, opt.order)
-    polys = list(map(_ring.from_dict, reps))
-    
-    if single: return (_ring, polys[0])
-    return (_ring, polys)
-
 def _parse_symbols(
     symbols: str | Expr | Sequence[str] | Sequence[Expr],
 ) -> Sequence[Expr]:
