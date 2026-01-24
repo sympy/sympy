@@ -4267,25 +4267,23 @@ def test_schur_conditions():
 
 
 def test_cancel_noncommutative():
-    x, y = symbols('x y') 
+    x, y = symbols('x y')
     A = symbols('A', commutative=False)
     B = symbols('B', commutative=False)
-    
+
     expr1 = A * (x**2 - 1)/(x + 1) * B
     assert cancel(expr1) == (x - 1) * A * B
-    
+
     expr2 = (x**2 - 1)/(x + 1) * A * B
     expr3 = (x**2 - 1)/(x + 1) * B * A
     assert cancel(expr2) == (x - 1) * A * B
     assert cancel(expr3) == (x - 1) * B * A
-    
+
     # 3. Two scalar variables
     expr4 = A * (x**2 - y**2)/(x + y) * B
-    # Note: Depending on canonicalization, y*A*B might be A*B*y. 
-    # Just ensure coeff is correct and A is left of B.
     res4 = cancel(expr4)
     assert res4 == (x - y) * A * B
 
     # 4. False Cancellation (Safety check)
     expr5 = (A**2 - B**2)/(A + B)
-    assert cancel(expr5) == expr5 
+    assert cancel(expr5) == expr5
