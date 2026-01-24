@@ -3524,7 +3524,7 @@ def test_cancel():
     # issue 7022
     A = Symbol('A', commutative=False)
     p1 = Piecewise((A*(x**2 - 1)/(x + 1), x > 1), ((x + 2)/(x**2 + 2*x), True))
-    p2 = Piecewise((A*x - A, x > 1), (1/x, True))
+    p2 = Piecewise((A*(x - 1), x > 1), (1/x, True))
     assert cancel(p1) == p2
     assert cancel(2*p1) == 2*p2
     assert cancel(1 + p1) == 1 + p2
@@ -4264,3 +4264,28 @@ def test_schur_conditions():
 
     assert any(c <= 0 for c in p6.set_domain(QQ).schur_conditions())
     assert any(c <= 0 for c in p6.set_domain(EXRAW).schur_conditions())
+
+
+def test_cancel_noncommutative():
+    x, y = symbols('x y') 
+    A = symbols('A', commutative=False)
+    B = symbols('B', commutative=False)
+    
+    expr1 = A * (x**2 - 1)/(x + 1) * B
+    assert cancel(expr1) == (x - 1) * A * B
+    
+    expr2 = (x**2 - 1)/(x + 1) * A * B
+    expr3 = (x**2 - 1)/(x + 1) * B * A
+    assert cancel(expr2) == (x - 1) * A * B
+    assert cancel(expr3) == (x - 1) * B * A
+    
+    # 3. Two scalar variables
+    expr4 = A * (x**2 - y**2)/(x + y) * B
+    # Note: Depending on canonicalization, y*A*B might be A*B*y. 
+    # Just ensure coeff is correct and A is left of B.
+    res4 = cancel(expr4)
+    assert res4 == (x - y) * A * B
+
+    # 4. False Cancellation (Safety check)
+    expr5 = (A**2 - B**2)/(A + B)
+    assert cancel(expr5) == expr5 
