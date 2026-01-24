@@ -1,8 +1,6 @@
 """Miscellaneous stuff that does not really fit anywhere else."""
 
 from __future__ import annotations
-from typing import overload
-from typing_extensions import Literal
 
 import operator
 import sys
@@ -41,18 +39,8 @@ def filldedent(s: str, w: int = 70, **kwargs: Any) -> str:
 
 
 
-@overload
-def strlines(
-    s: str, c: int = 64, short: Literal[False] = False
-) -> list[str]: ...
-    
-@overload
-def strlines(
-    s: str, c: int = 64, short: Literal[True] = True
-) -> str: ...
 
-
-def strlines(s: str, c: int = 64, short: bool = False):
+def strlines(s: str, c: int = 64, short: bool = False) -> str:
     """Return a cut-and-pastable string that, when printed, is
     equivalent to the input.  The lines will be surrounded by
     parentheses and no line will be longer than c (default 64)
