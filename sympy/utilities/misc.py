@@ -1,7 +1,6 @@
 """Miscellaneous stuff that does not really fit anywhere else."""
 
 from __future__ import annotations
-from typing import List
 
 import operator
 import sys
@@ -40,7 +39,7 @@ def filldedent(s: str, w: int = 70, **kwargs: Any) -> str:
 
 
 
-def strlines(s: str, c: int = 64, short: bool = False) -> List[str]:
+def strlines(s: str, c: int = 64, short: bool = False) -> list[str]:
     """Return a cut-and-pastable string that, when printed, is
     equivalent to the input.  The lines will be surrounded by
     parentheses and no line will be longer than c (default 64)
