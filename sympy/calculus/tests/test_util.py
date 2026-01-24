@@ -18,7 +18,8 @@ from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.simplify.simplify import simplify
 from sympy.calculus.util import (function_range, continuous_domain, not_empty_in,
                                  periodicity, lcim, is_convex,
-                                 stationary_points, minimum, maximum)
+                                 stationary_points, minimum, maximum,
+                                 argmax_real, argmin_real)
 from sympy.sets.sets import (Interval, FiniteSet, Complement, Union)
 from sympy.sets.fancysets import ImageSet
 from sympy.sets.conditionset import ConditionSet
@@ -405,3 +406,53 @@ def test_issue_18747():
 
 def test_issue_25942():
     assert (acos(x) > pi/3).as_set() == Interval.Ropen(-1, S(1)/2)
+
+def test_argmax_real():
+    from sympy.sets.fancysets import ImageSet
+    from sympy.core.function import Lambda
+
+    x = Symbol('x')
+    y = Symbol('y', real = True)
+
+    raises (ValueError, lambda : argmax_real(y, x, S.Reals))
+    raises (ValueError, lambda: argmax_real(x*y, domain = S.Reals))
+    assert argmax_real(x - 2, domain=Interval(2, 3)) == FiniteSet(3)
+    assert argmax_real(x**2 - 2*x + 1, domain=Interval(-oo, -3)) == S.EmptySet
+    assert argmax_real(x**2, domain=Interval(-oo, 4)) == S.EmptySet
+    assert argmax_real(-(log(x)), x, Interval(0.02, 10)) == FiniteSet(0.02)
+
+    arg_max_sin_x = argmax_real(sin(x), x, S.Reals)
+
+    # TODO: Move away from this hacky fix. We need to have better equality support on ImageSet values
+    dummy_variable = arg_max_sin_x.args[0].args[0][0]
+    assert (arg_max_sin_x ==
+            ImageSet(Lambda(x, 2*x*pi + pi/2), S.Integers).xreplace({x: dummy_variable}))
+
+    assert argmax_real(x**2, x, Interval(-3, 3)) == FiniteSet(-3, 3)
+    assert argmax_real(exp(y), y, Interval(-oo, 10)) == FiniteSet(10)
+    assert argmax_real(exp(y), y, S.Reals) == S.EmptySet
+
+
+def test_argmin_real():
+    from sympy.sets.fancysets import ImageSet
+    from sympy.core.function import Lambda
+
+    x = Symbol('x')
+    y = Symbol('y', real = True)
+
+    raises (ValueError, lambda: argmin_real(y, x, S.Reals))
+    assert argmin_real(x**2 - 2*x + 1, domain = Interval(-oo, -3)) == FiniteSet(-3)
+    assert argmin_real(x**2 - 2*x + 1, domain = S.Reals) == FiniteSet(1)
+
+    arg_min_sin_x = argmin_real(sin(x), x, S.Reals)
+    dummy_variable = arg_min_sin_x.args[0].args[0][0]
+    assert arg_min_sin_x == \
+        ImageSet(Lambda(x, 2*x*pi + 3*pi/2), S.Integers).xreplace({x: dummy_variable})
+    assert argmin_real(log(x), x, Interval(1, 10)) == FiniteSet(1)
+    assert argmin_real(exp(y), y, Interval(-10, 10)) == FiniteSet(-10)
+    assert argmin_real(-x**2 + 4, x, Interval(-2, 2)) == FiniteSet(-2, 2)
+    assert argmin_real(exp(y)) == S.EmptySet
+    assert argmin_real(abs(x), x, S.Reals) == FiniteSet(0)
+    assert argmin_real(abs(2*x-1), domain=S.Reals) == FiniteSet(Rational(1, 2))
+    ## Cases like abs(x) + 2 is still not solved using this method and
+    ## this will be updated in later PRs
