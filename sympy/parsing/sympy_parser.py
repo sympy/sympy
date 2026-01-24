@@ -1185,6 +1185,16 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
                     keywords=[ast.keyword(arg='evaluate', value=ast.Constant(value=False))]
                 )
             elif isinstance(node.op, ast.Div):
+                # If numerator is 1, directly return Pow(denominator, -1)
+                if isinstance(left, ast.Call) and \
+                     (isinstance(left.func, ast.Name) and left.func.id == 'Integer') and \
+                     (isinstance(left.args[0], ast.Constant) and left.args[0].value == 1):
+                    return ast.Call(
+                    func=ast.Name(id='Pow', ctx=ast.Load()),
+                    args=[right, ast.UnaryOp(op=ast.USub(), operand=ast.Constant(1))],
+                    keywords=[ast.keyword(arg='evaluate', value=ast.Constant(value=False))]
+                    )
+
                 if isinstance(node.left, ast.UnaryOp):
                     left, right = right, left
                     rev = True
@@ -1202,11 +1212,6 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
 
                 if rev:  # undo reversal
                     left, right = right, left
-                if isinstance(left, ast.Call) and \
-                     (isinstance(left.func, ast.Name) and left.func.id == 'Integer') and \
-                     (isinstance(left.args[0], ast.Constant) and left.args[0].value == 1):
-                    # if numerator is Integer(1), returns 1/x to avoid Mul(1, 1/x)
-                    return right
 
             new_node = ast.Call(
                 func=ast.Name(id=sympy_class, ctx=ast.Load()),
