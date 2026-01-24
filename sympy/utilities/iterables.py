@@ -401,7 +401,7 @@ def ibin(n, bits=None, str=False):
             return (f'{i:b}'.rjust(n, "0") for i in range(2**n))
 
 
-def variations(seq, n: int, repetition: bool = False):
+def variations(seq: Iterable[T], n: int, repetition: bool = False) -> Iterable[tuple[T, ...]]:
     r"""Returns an iterator over the n-sized variations of ``seq`` (size N).
     ``repetition`` controls whether items in ``seq`` can appear more than once;
 
