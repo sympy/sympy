@@ -73,7 +73,7 @@ def strlines(s: str, c: int = 64, short: bool = False) -> list[str]:
     if '\n' in s:
         return rawlines(s).splitlines()
     q = '"' if repr(s).startswith('"') else "'"
-    q = (q,)*2
+    q = q *2
     if '\\' in s:  # use r-string
         m = '(\nr%s%%s%s\n)' % q
         j = '%s\nr%s' % q
