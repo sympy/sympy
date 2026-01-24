@@ -475,18 +475,10 @@ class CodePrinter(StrPrinter):
         if pmeth is None:     
             if self._settings.get('strict', False):
                 msg = (
-<<<<<<< Updated upstream
-                       f"Unsupported by {type(self)}: {type(expr)}\n"
-                       "Lambdify cannot translate a Derivative into code. "
-                       "Please calculate the derivative using .doit() first.\n"
-                       "Set the printer option 'strict' to False to ignore this."
-                       )
-=======
-                        f"Unsupported by {type(self)}: {type(expr)}\n"
-                        "Lambdify cannot translate a symbolic Derivative into code.\n"
-                        "Set the printer option 'strict' to False to ignore this."
-)
->>>>>>> Stashed changes
+                f"Unsupported by {type(self)}: {type(expr)}\n"
+                "Lambdify cannot translate a symbolic Derivative into code.\n"
+                "Set the printer option 'strict' to False to ignore this."
+                    )
                 raise PrintMethodNotImplementedError(msg)
             return self._print_not_supported(expr)
         orders = dict(wrt_order_pairs)
