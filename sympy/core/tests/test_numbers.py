@@ -2327,3 +2327,29 @@ def test_issue_28222():
     assert Mod(2 + 3*I, 10) == Mod(2 + 3*I, 10)
     assert Mod(I, exp(1)) == Mod(I, exp(1))
     assert Mod(I, S(1.5)) == Mod(I, S(1.5))
+
+def test_issue_19988_Float_pickle_precision():
+    # Test that Float preserves precision through pickle round-trip.
+    # Regression test for issue #19988.https://github.com/sympy/sympy/issues/19988
+    import pickle
+    from sympy import Float, pi
+    # Test with 100 decimal digits precision
+    original = Float(pi, dps=100)
+    unpickled = pickle.loads(pickle.dumps(original))
+    # Precision should be preserved
+    assert original._prec == unpickled._prec
+    assert original == unpickled
+    # Verify it's actually high precision (not defaulting to 53 bits)
+    assert unpickled._prec > 53
+    # String representation should match
+    assert str(original) == str(unpickled)
+    # Test with explicit binary precision
+    original_bits = Float(pi, precision=200)
+    unpickled_bits = pickle.loads(pickle.dumps(original_bits))
+    assert original_bits._prec == unpickled_bits._prec
+    assert original_bits == unpickled_bits
+    # Test with lower precision to ensure it works for all cases
+    original_low = Float(pi, dps=5)
+    unpickled_low = pickle.loads(pickle.dumps(original_low))
+    assert original_low._prec == unpickled_low._prec
+    assert original_low == unpickled_low
