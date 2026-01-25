@@ -1163,6 +1163,8 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
                 arg_func = arg.func
                 if isinstance(arg_func, ast.Call):
                     arg_func = arg_func.func
+                # Safety check: Ensure arg_func is a Name before accessing `.id`.
+                # Lambda nodes (used in ast.Div) would raise an error if not checked.
                 if isinstance(arg_func, ast.Name) and arg_func.id == func:
                     result.extend(self.flatten(arg.args, func))
                 else:
@@ -1202,10 +1204,36 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
 
                 if rev:  # undo reversal
                     left, right = right, left
-                # Check if numerator is 1, if yes, directly returns Pow(denom, -1)
+
+                # This is for checking if numerator is 1, if it is, return just Pow(denom, -1)
+                # For any division operator like x/y, the expression returned is Mul(x, Pow(y,-1))
+                # But if x = 1, returning Mul(1, Pow(y,-1)) is redundant so we strip the extra 1 before Mul node is created
+                #
+                # For ast.Div operators we create a temporary lambda node which eliminates extra 1
+                # a lambda function is passed as an argument (string) to ast.parse, ast.parse creates a module
+                # This module has an expr which can be captured by body[0] (O because there is only one expr)
+                # This expr's value contains the lambda node which is called by .value
+                #
+                # The lambda function works like this:
+                # - if n == 1: it just checks if numerator is 1, (e.g. from "-(-1)"), we strictly return denominator
+                # This ensures that the redundant "1" is stripped.
+                # example: "-(-1)/x" == Pow(x, -1)
+                #
+                # - Flattening (if isinstance(n, Mul)): We are using a lambda function, the AST flatten()
+                # cannot see inside to flatten chained operations. We have to integrate this with lambda function
+                # example: "x/y/z": lambda sees n = 'x/y' (Mul Operator). We unpack it using (*n.args) to ensure
+                # the result we get is Mul(x, Pow(y, -1), Pow(z, -1)), avoiding nested structures
+                # like Mul(Mul(x, Pow(y,-1)), Pow(z, -1))
+                #
+                # - For standard cases (else) : For cases just like "x/y", node has a normal structure.
+                # example: "x/y": Mul(x, Pow(y, -1))
                 temp_node = ast.parse("lambda n, d: d if n == 1 else (Mul(*n.args, d, evaluate=False) \
                                       if isinstance(n, Mul) else Mul(n, d, evaluate=False))").body[0].value
 
+                # For division we return the node immediately.
+                # func=temp.node: The lambda AST Node created acts as a function.
+                # args=[left, right]: We pass numerator(left) and denominator(right) as arguments (which are n and d)
+                # keywords=[]: If ommited, keywords would have the default value of None, it will just return an AttributeError.
                 return ast.Call(
                     func=temp_node,
                     args=[left, right],
