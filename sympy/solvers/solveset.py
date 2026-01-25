@@ -3685,7 +3685,13 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                             # corresponding complex soln.
                             if not isinstance(soln, (ImageSet, ConditionSet)):
                                 soln += solveset_complex(eq2, sym)  # might give ValueError with Abs
-                    except (NotImplementedError, ValueError):
+
+                        if not isinstance(soln, (FiniteSet, ImageSet, ConditionSet, Union)) and soln is not S.EmptySet:
+                            raise NotImplementedError(
+                                f"nonlinsolve cannot handle solution of type {type(soln).__name__} "
+                                f"for symbol {sym}. Got {soln} from equation {eq2}."
+                            )
+                    except ValueError:
                         # If solveset is not able to solve equation `eq2`. Next
                         # time we may get soln using next equation `eq2`
                         continue
