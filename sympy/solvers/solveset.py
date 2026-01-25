@@ -31,7 +31,7 @@ from sympy.simplify.simplify import simplify, fraction, trigsimp, nsimplify
 from sympy.simplify import powdenest, logcombine
 from sympy.functions import (log, tan, cot, sin, cos, sec, csc, exp,
                              acos, asin, atan, acot, acsc, asec,
-                             piecewise_fold, Piecewise)
+                             piecewise_fold, Piecewise, floor, ceiling)
 from sympy.functions.combinatorial.numbers import totient
 from sympy.functions.elementary.complexes import Abs, arg, re, im
 from sympy.functions.elementary.hyperbolic import (HyperbolicFunction,
@@ -3173,6 +3173,88 @@ def linsolve(system, *symbols):
 ##############################################################################
 
 
+def _solve_floor_ceiling(eq, sym, domain=S.Reals):
+    """
+    Solve equations containing floor or ceiling functions.
+    
+    For floor(x) = n, returns Intersection(Interval(n, n+1, ...), FiniteSet(sym))
+    For ceiling(x) = n, returns Intersection(Interval(n-1, n, ...), FiniteSet(sym))
+    
+    Parameters
+    ==========
+    eq : Expr
+        The equation to solve (should be in form f(x) = 0)
+    sym : Symbol
+        The symbol to solve for
+    domain : Set
+        The domain to solve in (default: S.Reals)
+    
+    Returns
+    =======
+    Intersection or EmptySet
+        The solution set if the equation can be solved, otherwise EmptySet
+    """
+    from sympy.core.relational import Eq
+    
+    # Only handle real domain for now
+    if domain != S.Reals:
+        return S.EmptySet
+    
+    # Try to match floor(sym) - n = 0 or ceiling(sym) - n = 0
+    # where n is a constant
+    eq = eq.rewrite(Add)
+    
+    # Check if equation has floor or ceiling
+    floor_terms = [arg for arg in eq.atoms(floor) if arg.has(sym)]
+    ceiling_terms = [arg for arg in eq.atoms(ceiling) if arg.has(sym)]
+    
+    # Simple case: floor(sym) - n = 0 or ceiling(sym) - n = 0
+    if len(floor_terms) == 1 and not ceiling_terms:
+        floor_term = floor_terms[0]
+        # Check if floor_term is floor(sym)
+        if floor_term.args[0] == sym:
+            # Solve for the constant: floor(sym) = n
+            # eq is of form floor(sym) - n = 0, so n = floor(sym)
+            # We need to extract n from the equation
+            try:
+                # Substitute floor(sym) with a dummy variable to extract n
+                dummy = Dummy('dummy')
+                eq_sub = eq.subs(floor_term, dummy)
+                # Solve for dummy: dummy - n = 0 => dummy = n
+                n_val = -eq_sub.subs(dummy, 0)
+                
+                # Check if n_val is a number
+                if n_val.is_Number:
+                    # floor(sym) = n_val means n_val <= sym < n_val + 1
+                    interval = Interval(n_val, n_val + 1, left_open=False, right_open=True)
+                    # Return as Intersection so it's handled by the existing logic
+                    return Intersection(interval, FiniteSet(sym))
+            except:
+                pass
+    
+    elif len(ceiling_terms) == 1 and not floor_terms:
+        ceiling_term = ceiling_terms[0]
+        # Check if ceiling_term is ceiling(sym)
+        if ceiling_term.args[0] == sym:
+            try:
+                # Substitute ceiling(sym) with a dummy variable to extract n
+                dummy = Dummy('dummy')
+                eq_sub = eq.subs(ceiling_term, dummy)
+                # Solve for dummy: dummy - n = 0 => dummy = n
+                n_val = -eq_sub.subs(dummy, 0)
+                
+                # Check if n_val is a number
+                if n_val.is_Number:
+                    # ceiling(sym) = n_val means n_val - 1 < sym <= n_val
+                    interval = Interval(n_val - 1, n_val, left_open=True, right_open=False)
+                    # Return as Intersection so it's handled by the existing logic
+                    return Intersection(interval, FiniteSet(sym))
+            except:
+                pass
+    
+    return S.EmptySet
+
+
 def _return_conditionset(eqs, symbols):
     # return conditionset
     eqs = (Eq(lhs, 0) for lhs in eqs)
@@ -3608,7 +3690,20 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                         # time we may get soln using next equation `eq2`
                         continue
                     if isinstance(soln, ConditionSet):
-                        if soln.base_set in (S.Reals, S.Complexes):
+                        # Try to solve floor/ceiling equations before giving up
+                        if eq2.has(floor) or eq2.has(ceiling):
+                            floor_ceil_soln = _solve_floor_ceiling(eq2, sym, domain=S.Reals if solver == solveset_real else S.Complexes)
+                            if floor_ceil_soln is not S.EmptySet:
+                                soln = floor_ceil_soln
+                            elif soln.base_set in (S.Reals, S.Complexes):
+                                soln = S.EmptySet
+                                # don't do `continue` we may get soln
+                                # in terms of other symbol(s)
+                                not_solvable = True
+                                total_conditionst += 1
+                            else:
+                                soln = soln.base_set
+                        elif soln.base_set in (S.Reals, S.Complexes):
                             soln = S.EmptySet
                             # don't do `continue` we may get soln
                             # in terms of other symbol(s)

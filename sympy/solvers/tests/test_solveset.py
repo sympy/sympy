@@ -15,7 +15,7 @@ from sympy.functions.elementary.exponential import (LambertW, exp, log)
 from sympy.functions.elementary.hyperbolic import (HyperbolicFunction,
     sinh, cosh, tanh, coth, sech, csch, asinh, acosh, atanh, acoth, asech, acsch)
 from sympy.functions.elementary.miscellaneous import sqrt, Min, Max
-from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions import floor, ceiling
 from sympy.functions.elementary.trigonometric import (
     TrigonometricFunction, acos, acot, acsc, asec, asin, atan, atan2,
     cos, cot, csc, sec, sin, tan)
@@ -2397,6 +2397,36 @@ def test_nonlinsolve_conditionset():
         intermediate_system,
         S.Complexes**2)
     assert nonlinsolve([f1, f2], [x, y]) == soln
+
+
+def test_nonlinsolve_floor_ceiling():
+    """Test nonlinsolve with floor and ceiling functions - Issue #29007"""
+    # Test floor(x) - 5 = 0 with a linear equation
+    # The solution should have x constrained to Interval(5, 6, left_open=False, right_open=True)
+    result = nonlinsolve([floor(x) - 5, y - x - 1], [x, y])
+    # The result should contain an Interval constraint
+    assert result != S.EmptySet
+    assert len(result) == 1
+    sol = list(result)[0]
+    # Check that the solution contains an Intersection with an Interval
+    assert any(isinstance(elem, Intersection) for elem in sol)
+    # Find the Intersection element
+    intersection_elem = [elem for elem in sol if isinstance(elem, Intersection)][0]
+    # Check that it contains an Interval
+    assert any(isinstance(arg, Interval) for arg in intersection_elem.args)
+    interval = [arg for arg in intersection_elem.args if isinstance(arg, Interval)][0]
+    # Verify the interval is [5, 6)
+    assert interval == Interval(5, 6, left_open=False, right_open=True)
+    
+    # Test ceiling(x) - 3 = 0
+    result2 = nonlinsolve([ceiling(x) - 3], [x])
+    assert result2 != S.EmptySet
+    # The solution should contain an Interval (2, 3]
+    sol2 = list(result2)[0]
+    assert len(sol2) == 1
+    if isinstance(sol2[0], Intersection):
+        interval2 = [arg for arg in sol2[0].args if isinstance(arg, Interval)][0]
+        assert interval2 == Interval(2, 3, left_open=True, right_open=False)
 
 
 def test_substitution_basic():
