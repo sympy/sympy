@@ -325,8 +325,6 @@ def multiset(seq: Sequence[T]) -> dict[T, int]:
     return dict(Counter(seq).items())
 
 
-
-
 @overload
 def ibin(
     n: int,
@@ -354,8 +352,6 @@ def ibin(
     bits: None,
     str: Literal[True],
 ) -> Iterator[str]: ...
-
-
 
 def ibin(
     n: int,
