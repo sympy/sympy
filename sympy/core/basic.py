@@ -1118,8 +1118,7 @@ class Basic(Printable):
                 return sympify(new, strict=True)
 
         sequence = [(sympify_old(s1), sympify_new(s2)) for s1, s2 in items]
-        if not sequence:
-            return self
+    
 
         # skip if there is no change
         sequence = [(s1, s2) for s1, s2 in sequence if not _aresame(s1, s2)]
