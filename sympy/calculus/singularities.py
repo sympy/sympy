@@ -198,12 +198,13 @@ def monotonicity_helper(
 
     try:
         sings = singularities(expression, variable, interval)
+    except NotImplementedError:
+        pass
+    else:
         if interval.is_subset(S.Reals):
             interior_sings = interval.interior.intersection(sings)
             if interior_sings != S.EmptySet:
                 return False
-    except (NotImplementedError, AttributeError):
-        pass
 
     derivative = expression.diff(variable)
     predicate_interval = solveset(predicate(derivative), variable, S.Reals)
@@ -525,12 +526,13 @@ def is_monotonic(
 
     try:
         sings = singularities(expression, variable, interval)
+    except NotImplementedError:
+        pass
+    else:
         if interval.is_subset(S.Reals):
             interior_sings = interval.interior.intersection(sings)
             if interior_sings != S.EmptySet:
                 return False
-    except (NotImplementedError, AttributeError):
-        pass
 
     turning_points = solveset(expression.diff(variable), variable, interval)
     return interval.intersection(turning_points) is S.EmptySet
