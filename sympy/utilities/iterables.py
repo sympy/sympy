@@ -329,7 +329,7 @@ def multiset(seq: Sequence[T]) -> dict[T, int]:
 
 
 
-def ibin(n, bits=None, str=False):
+def ibin(n: int, bits: int | None = None, str: bool = False):
     """Return a list of length ``bits`` corresponding to the binary value
     of ``n`` with small bits to the right (last). If bits is omitted, the
     length will be the number required to represent ``n``. If the bits are
