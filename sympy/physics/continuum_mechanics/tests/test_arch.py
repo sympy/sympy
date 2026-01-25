@@ -17,7 +17,7 @@ def test_arch_init():
     a.change_support_type(left_support='roller')
     a.add_member(0.5)
     assert a.supports == {'left':'roller', 'right':'hinge'}
-    assert simplify(a.get_shape_eqn) == simplify(9/5 - (x - 6)**2/20)
+    assert simplify(a.get_shape_eqn) == x*(12 - x)/20
 
 def test_arch_support():
     a = Arch((0,0),(40,0),crown_x=20,crown_y=12)
