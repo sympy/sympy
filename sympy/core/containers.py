@@ -112,17 +112,19 @@ class Tuple(Basic):
     def _to_mpmath(self, prec):
         return tuple(a._to_mpmath(prec) for a in self.args)
 
-     def _eval_evalf(self, prec):
-        from sympy.core.expr import Expr
+def _eval_evalf(self, prec):
+    from sympy import Tuple
+    from sympy.core.expr import Expr
 
-        new = []
-        for arg in self:
-            if isinstance(arg, Expr):
-                new.append(arg._eval_evalf(prec) or arg)
-            else:
-                new.append(arg)
-        return self.func(*new)
-         
+    new = []
+    for arg in self:
+        if isinstance(arg, Expr):
+            new.append(arg._eval_evalf(prec) or arg)
+        else:
+            new.append(arg)
+
+    return Tuple(*new)
+
     def __lt__(self, other):
         return _sympify(self.args < other.args)
 
