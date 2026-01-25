@@ -2330,7 +2330,7 @@ def test_issue_28222():
 
 def test_issue_19988_Float_pickle_precision():
     # Test that Float preserves precision through pickle round-trip.
-    # Regression test for issue #19988.https://github.com/sympy/sympy/issues/19988
+    # Regression test for issue #19988. https://github.com/sympy/sympy/issues/19988
     import pickle
     from sympy import Float, pi
     # Test with 100 decimal digits precision
