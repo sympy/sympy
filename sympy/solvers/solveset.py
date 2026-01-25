@@ -3536,7 +3536,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
             to_remove = []
             # if imageset, expr is used to solve for other symbol
             imgset_yes = False
-            for res in list(result):
+            for res in result:
                 original_imageset = {}
                 got_symbol = set()  # symbols solved in one iteration
                 # find the imageset and use its expr.
@@ -3672,9 +3672,8 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                 result = newresult
 
             # Remove invalid branches after iteration
-            for res in to_remove:
-                if res in result:
-                    result.remove(res)
+            to_remove_ids = {id(r) for r in to_remove}
+            result = [r for r in result if id(r) not in to_remove_ids]
 
         return result, total_solvest_call, total_conditionst
 
