@@ -7,7 +7,7 @@ import types
 from sympy.assumptions import Q
 from sympy.core import Symbol, Function, Float, Rational, Integer, I, Mul, Pow, Eq, Lt, Le, Gt, Ge, Ne
 from sympy.core.singleton import S
-from sympy.functions import exp, factorial, factorial2, sin, Min, Max
+from sympy.functions import exp, factorial, factorial2, sin, cos, Min, Max
 from sympy.logic import And, Xor
 from sympy.series import Limit
 from sympy.testing.pytest import raises
@@ -392,3 +392,10 @@ def test_issue_27832():
     assert parse_expr('1/10 * 4', evaluate=False) == Mul(Pow(Integer(10), Integer(-1), evaluate=False), \
                                                          Integer(4), evaluate=False)
     assert parse_expr('1/x', evaluate=False) == Pow(x, Integer(-1), evaluate=False)
+    assert parse_expr('+1/20', evaluate=False) == Pow(Integer(20), Integer(-1), evaluate=False)
+    assert parse_expr('~(~1)/20', evaluate=False) == Pow(Integer(20), Integer(-1), evaluate=False)
+    assert parse_expr('-(-1)/10', evaluate=False) == Pow(Integer(10), Integer(-1), evaluate=False)
+    assert parse_expr('-(~0)/10', evaluate=False) == Pow(Integer(10), Integer(-1), evaluate=False)
+    assert parse_expr('+cos(0)/10', evaluate=False) == Mul(cos(Integer(0), evaluate=False), \
+                                                               Pow(Integer(10), Integer(-1), evaluate=False), \
+                                                               evaluate=False)
