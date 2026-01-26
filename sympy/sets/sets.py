@@ -2155,7 +2155,7 @@ class FiniteSet(Set, EvalfMixin):
                 new_elems.append(elem.evalf(n=dps))
 
         return FiniteSet(*new_elems)
-        
+
     def _eval_simplify(self, **kwargs):
         from sympy.simplify import simplify
         return FiniteSet(*[simplify(elem, **kwargs) for elem in self])
