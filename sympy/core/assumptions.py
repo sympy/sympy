@@ -292,7 +292,7 @@ _assume_rules = _load_pre_generated_assumption_rules()
 _assume_defined = _assume_rules.defined_facts.copy()
 _assume_defined.add('polar')
 _assume_defined = frozenset(_assume_defined)
-
+all_assumptions = _assume_defined
 
 def assumptions(expr, _check=None):
     """return the T/F assumptions of ``expr``"""
