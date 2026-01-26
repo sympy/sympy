@@ -118,7 +118,6 @@ def test_smith_normal():
 
     raises(ValueError, lambda: smith_normal_form(DM([[1]], ZZ[x])))
 
-
 def test_hermite_normal():
     m = DM([[2, 7, 17, 29, 41], [3, 11, 19, 31, 43], [5, 13, 23, 37, 47]], ZZ)
     hnf = DM([[1, 0, 0], [0, 2, 1], [0, 0, 1]], ZZ)
