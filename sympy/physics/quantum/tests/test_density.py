@@ -266,7 +266,6 @@ def test_fidelity():
     assert abs(fidelity(d1, d2) - 0.996) < 1e-3
     assert abs(fidelity(d1, d2) - fidelity(d2, d1)) < 1e-3
 
-    #TODO: test for invalid arguments
     # non-square matrix
     mat1 = [[0, 0],
             [0, 0],
@@ -287,3 +286,10 @@ def test_fidelity():
     # unsupported data-type
     x, y = 1, 2  # random values that is not a matrix
     raises(ValueError, lambda: fidelity(x, y))
+
+    # check density objs of different sizes
+    d1 = Density([Qubit('0'), 1])
+    d2 = Density([Qubit('00'), 1])
+    raises(ValueError, lambda: fidelity(d1, d2))
+
+    raises(ValueError, lambda: fidelity(d1, 123))
