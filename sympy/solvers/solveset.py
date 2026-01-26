@@ -3615,11 +3615,11 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                         continue
                     if isinstance(soln, ConditionSet):
                         if soln.base_set in (S.Reals, S.Complexes):
-                            soln = S.EmptySet
-                            # don't do `continue` we may get soln
-                            # in terms of other symbol(s)
-                            not_solvable = True
-                            total_conditionst += 1
+                            raise NotImplementedError(
+                                f"Cannot solve {eq2} for {sym} - got ConditionSet. "
+                                f"Functions like floor/ceiling/sign can only filter solutions, "
+                                f"not be solved standalone."
+                            )
                         else:
                             soln = soln.base_set
 
