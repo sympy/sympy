@@ -5,7 +5,7 @@ Authors:
 * Matt Curry
 """
 
-from functools import reduce
+from functools import reduce as _reduce
 
 from sympy.core.basic import Basic
 from sympy.core.singleton import S
@@ -383,7 +383,7 @@ class TensorProductHilbertSpace(HilbertSpace):
         if S.Infinity in arg_list:
             return S.Infinity
         else:
-            return reduce(lambda x, y: x*y, arg_list)
+            return _reduce(lambda x, y: x*y, arg_list)
 
     @property
     def spaces(self):
@@ -502,7 +502,7 @@ class DirectSumHilbertSpace(HilbertSpace):
         if S.Infinity in arg_list:
             return S.Infinity
         else:
-            return reduce(lambda x, y: x + y, arg_list)
+            return _reduce(lambda x, y: x + y, arg_list)
 
     @property
     def spaces(self):
