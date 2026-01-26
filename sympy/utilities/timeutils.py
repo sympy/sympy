@@ -11,7 +11,9 @@ _units = ['s', 'ms', '\N{GREEK SMALL LETTER MU}s', 'ns']
 
 
 def timed(
-        func: Callable[[], object], setup: str = "pass", limit: int | None = None
+        func: Callable[[], object],
+          setup: str = "pass",
+            limit: int | None = None,
         ) -> tuple[int, float, float, str]:
     """Adaptively measure execution time of a function. """
     timer = timeit.Timer(func, setup=setup)
