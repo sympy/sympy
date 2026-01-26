@@ -631,7 +631,7 @@ class Permutation(Atom):
     >>> Permutation(1, 2)(3)
     Traceback (most recent call last):
     ...
-    IndexError: list index out of range
+    TypeError: 3 should be an integer between 0 and 2
 
     This is ok: only the call to an out of range singleton is prohibited;
     otherwise the permutation autosizes:
