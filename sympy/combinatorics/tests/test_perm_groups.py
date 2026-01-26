@@ -67,6 +67,14 @@ def test_order():
     assert PermutationGroup().order() == 1
 
 
+def test_identity_generators_dups_false():
+    identity = Permutation(3)
+    G = PermutationGroup(identity, identity, dups=False)
+    assert len(G.generators) == 1
+    assert G.generators[0].is_identity
+    assert G.order() == 1
+
+
 def test_equality():
     p_1 = Permutation(0, 1, 3)
     p_2 = Permutation(0, 2, 3)
