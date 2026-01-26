@@ -1653,7 +1653,7 @@ class Permutation(Atom):
             i = i[0]
             if not isinstance(i, Iterable):
                 i = as_int(i)
-                if i < 0 or i > self.size:
+                if i < 0 or i >= self.size:
                     raise TypeError(
                         "{} should be an integer between 0 and {}"
                         .format(i, self.size-1))
