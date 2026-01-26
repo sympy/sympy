@@ -1966,7 +1966,7 @@ class UniversalSet(Set, metaclass=Singleton):
         return S.EmptySet
 
 
-class FiniteSet(Set):
+class FiniteSet(Set, EvalfMixin):
     """
     Represents a finite set of Sympy expressions.
 
@@ -2155,6 +2155,7 @@ class FiniteSet(Set):
                 new_elems.append(elem.evalf(n=dps))
 
         return FiniteSet(*new_elems)
+        
     def _eval_simplify(self, **kwargs):
         from sympy.simplify import simplify
         return FiniteSet(*[simplify(elem, **kwargs) for elem in self])
