@@ -126,6 +126,9 @@ class TransformToSymPyExpr(Transformer):
     def group_curly_parentheses(self, tokens):
         return tokens[1]
 
+    def group_curly_literal_parentheses(self, tokens):
+        return tokens[1]
+
     def eq(self, tokens):
         return sympy.Eq(tokens[0], tokens[2])
 
@@ -219,7 +222,7 @@ class TransformToSymPyExpr(Transformer):
         base = tokens[0]
         if len(tokens) == 3: # a^b OR a^\prime OR a^\ast
             sup = tokens[2]
-        if len(tokens) == 5:
+        elif len(tokens) == 5:
             # a^{'}, a^{''}, ... OR
             # a^{*}, a^{**}, ... OR
             # a^{\prime}, a^{\prime\prime}, ... OR
