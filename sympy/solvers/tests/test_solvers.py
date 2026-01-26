@@ -2741,5 +2741,4 @@ def test_nonlinsolve_evalf_satisfies_equations():
     sol = nonlinsolve([x**2 - 2], [x])
     solf = sol.evalf()
 
-    # Numerical solutions returned by evalf should satisfy the system
     assert all(abs(t[0]**2 - 2) < 1e-12 for t in solf)
