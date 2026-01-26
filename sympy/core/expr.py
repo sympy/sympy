@@ -814,7 +814,10 @@ class Expr(Basic, EvalfMixin):
             if None not in fac_zero:  # every part can be decided
                 return any(fac_zero)
 
-        constant = diff.is_constant(simplify=False, failing_number=True)
+        try:
+            constant = diff.is_constant(simplify=False, failing_number=True)
+        except TypeError:
+            return None
 
         if constant is False:
             return False

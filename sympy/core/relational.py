@@ -442,12 +442,8 @@ class Relational(Boolean, EvalfMixin):
                 if any(i._prec == 1 for i in v.as_real_imag()):
                     rv, iv = [i.n(2) for i in dif.as_real_imag()]
                     v = rv + S.ImaginaryUnit*iv
-            elif not dif.is_comparable:
-                try:
-                    if dif.equals(0):  # XXX this is expensive
-                        v = S.Zero
-                except TypeError:
-                    pass
+            elif dif.equals(0):  # XXX this is expensive
+                v = S.Zero
             if v is not None:
                 r = r.func._eval_relation(v, S.Zero)
             r = r.canonical
