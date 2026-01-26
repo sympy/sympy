@@ -1889,6 +1889,7 @@ def test_nonlinsolve_floor_ceiling():
     result2 = nonlinsolve([ceiling(x) - 3], [x])
     assert isinstance(result2, FiniteSet)
 
+
 def test_raise_exception_nonlinsolve():
     raises(IndexError, lambda: nonlinsolve([x**2 -1], []))
     raises(ValueError, lambda: nonlinsolve([x**2 -1]))
