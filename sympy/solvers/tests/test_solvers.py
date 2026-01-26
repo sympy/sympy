@@ -2733,3 +2733,13 @@ def test_solve_maxmin():
     assert solve(system, variables) == [(5 - sqrt(42), 67 - 10*sqrt(42)), (5 + sqrt(42), 10*sqrt(42) + 67)]
     system = [Eq(y, Max(3*x, -(S(1)/3)*x)), Eq(y, -(x**2)+10)]
     assert solve(system, variables) == [(-3, 1), (2, 6)]
+
+def test_nonlinsolve_evalf_satisfies_equations():
+    from sympy import symbols, nonlinsolve
+
+    x = symbols('x')
+    sol = nonlinsolve([x**2 - 2], [x])
+    solf = sol.evalf()
+
+    # Numerical solutions returned by evalf should satisfy the system
+    assert all(abs(t[0]**2 - 2) < 1e-12 for t in solf)
