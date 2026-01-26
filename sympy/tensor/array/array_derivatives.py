@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from sympy.core.expr import Expr
 from sympy.core.function import Derivative
 from sympy.core.numbers import Integer
 from sympy.matrices.matrixbase import MatrixBase
@@ -9,6 +8,10 @@ from .arrayop import derive_by_array
 from sympy.matrices.expressions.matexpr import MatrixExpr
 from sympy.matrices.expressions.special import ZeroMatrix
 from sympy.matrices.expressions.matexpr import _matrix_derivative
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
 
 
 class ArrayDerivative(Derivative):

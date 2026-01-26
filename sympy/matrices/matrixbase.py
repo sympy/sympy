@@ -30,7 +30,6 @@ from sympy.functions.combinatorial.factorials import binomial, factorial
 
 from collections.abc import Callable
 from sympy.utilities.iterables import reshape
-from sympy.core.expr import Expr
 from sympy.core.power import Pow
 from sympy.core.symbol import uniquely_named_symbol
 
@@ -91,6 +90,7 @@ from .graph import (
 
 
 if TYPE_CHECKING:
+    from sympy.core.expr import Expr
     from abc import ABCMeta, abstractmethod
 else:
     from abc import abstractmethod

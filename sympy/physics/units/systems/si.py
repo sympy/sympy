@@ -9,7 +9,6 @@ from __future__ import annotations
 
 from sympy.physics.units import DimensionSystem, Dimension, dHg0
 
-from sympy.physics.units.quantities import Quantity
 
 from sympy.core.numbers import (Rational, pi)
 from sympy.core.singleton import S
@@ -42,6 +41,10 @@ from sympy.physics.units.definitions import (
 )
 from sympy.physics.units.prefixes import PREFIXES, prefix_unit
 from sympy.physics.units.systems.mksa import MKSA, dimsys_MKSA
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from sympy.physics.units.quantities import Quantity
 
 derived_dims = (frequency, force, pressure, energy, power, charge, voltage,
                 capacitance, conductance, magnetic_flux,
