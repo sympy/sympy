@@ -2234,3 +2234,9 @@ def test_issue_23843():
     assert acot(x + I).series(x, -oo) == 16/(5*x**5) + 2*I/x**4 - 4/(3*x**3) - I/x**2 + 1/x + O(x**(-6), (x, -oo))
     assert acot(x - I).series(x, oo) == 16/(5*x**5) - 2*I/x**4 - 4/(3*x**3) + I/x**2 + 1/x + O(x**(-6), (x, oo))
     assert acot(x - I).series(x, -oo) == 16/(5*x**5) - 2*I/x**4 - 4/(3*x**3) + I/x**2 + 1/x + O(x**(-6), (x, -oo))
+def test_trig_non_commutative_expansion():
+    from sympy import symbols, sin, cos, tan, expand
+    A, B = symbols('A B', commutative=False)
+    assert expand(sin(A + B), trig=True) == sin(A + B)
+    assert expand(cos(A + B), trig=True) == cos(A + B)
+    assert expand(tan(A + B), trig=True) == tan(A + B)
