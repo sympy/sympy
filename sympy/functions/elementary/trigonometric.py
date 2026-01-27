@@ -507,7 +507,7 @@ class sin(TrigonometricFunction):
     def _eval_expand_trig(self, **hints):
         from sympy.functions.special.polynomials import chebyshevt, chebyshevu
         arg = self.args[0]
-        # Safety check: Non-commutative identities for sin(A+B) 
+        # Safety check: Non-commutative identities for sin(A+B)
         # are not simply sin(A)cos(B) + cos(A)sin(B).
         if arg.is_commutative is False:
             return self
