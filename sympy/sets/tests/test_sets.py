@@ -1055,9 +1055,7 @@ def test_finiteset_evalf_basic():
     s = FiniteSet(sqrt(2), 1)
     sf = s.evalf()
 
-    values = [float(x) for x in sf]
-    assert any(abs(v - 1.0) < 1e-12 for v in values)
-    assert any(abs(v**2 - 2.0) < 1e-12 for v in values)
+    assert sf == FiniteSet(sqrt(2).evalf(), 1.0)
 
 
 def test_finiteset_n_alias():
