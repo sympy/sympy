@@ -1,5 +1,4 @@
-"""Simple tools for timing functions' execution, when IPython is not available. """
-
+"""Simple tools for timing functions' execution, when IPython is not available."""
 
 import timeit
 import math
@@ -7,11 +6,13 @@ from typing import TypeVar, Callable
 
 _CallableT = TypeVar("_CallableT", bound=Callable)
 _scales = [1e0, 1e3, 1e6, 1e9]
-_units = ['s', 'ms', '\N{GREEK SMALL LETTER MU}s', 'ns']
+_units = ["s", "ms", "\N{GREEK SMALL LETTER MU}s", "ns"]
 
 
-def timed(func: Callable[[], object], setup: str = "pass", limit: int | None = None) -> tuple[int, float, float, str]:
-    """Adaptively measure execution time of a function. """
+def timed(
+    func: Callable[[], object], setup: str = "pass", limit: int | None = None
+) -> tuple[int, float, float, str]:
+    """Adaptively measure execution time of a function."""
     timer = timeit.Timer(func, setup=setup)
     repeat, number = 3, 1
 
@@ -30,23 +31,26 @@ def timed(func: Callable[[], object], setup: str = "pass", limit: int | None = N
     else:
         order = 3
 
-    return (number, time, time*_scales[order], _units[order])
+    return (number, time, time * _scales[order], _units[order])
 
 
 # Code for doing inline timings of recursive algorithms.
 
+
 def __do_timings():
     import os
-    res = os.getenv('SYMPY_TIMINGS', '')
-    res = [x.strip() for x in res.split(',')]
+
+    res = os.getenv("SYMPY_TIMINGS", "")
+    res = [x.strip() for x in res.split(",")]
     return set(res)
+
 
 _do_timings = __do_timings()
 _timestack = None
 
 
 def _print_timestack(stack, level=1):
-    print('-'*level, '%.2f %s%s' % (stack[2], stack[0], stack[3]))
+    print("-" * level, "%.2f %s%s" % (stack[2], stack[0], stack[3]))
     for s in stack[1]:
         _print_timestack(s, level + 1)
 
@@ -58,6 +62,7 @@ def timethis(name) -> Callable[[_CallableT], _CallableT]:
 
         def wrapper(*args, **kwargs):
             from time import time
+
             global _timestack
             oldtimestack = _timestack
             _timestack = [func.func_name, [], 0, args]
@@ -72,5 +77,7 @@ def timethis(name) -> Callable[[_CallableT], _CallableT]:
                 _print_timestack(_timestack)
                 _timestack = None
             return r
+
         return wrapper
+
     return decorator
