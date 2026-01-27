@@ -1050,11 +1050,14 @@ def test_finite_basic():
 
 
 def test_finiteset_evalf_basic():
-    from sympy import sqrt
+    from sympy import FiniteSet, sqrt
+
     s = FiniteSet(sqrt(2), 1)
     sf = s.evalf()
-    assert all(abs(float(x**2) - 2) < 1e-12 or x == 1 for x in sf)
-    assert 1 in sf
+
+    values = [float(x) for x in sf]
+    assert any(abs(v - 1.0) < 1e-12 for v in values)
+    assert any(abs(v**2 - 2.0) < 1e-12 for v in values)
 
 
 def test_finiteset_n_alias():
