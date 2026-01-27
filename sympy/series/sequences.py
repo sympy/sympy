@@ -896,7 +896,7 @@ class RecursiveSeq(SeqBase):
     @property
     def interval(self):
         """Interval on which sequence is defined."""
-        return (self.start, S.Infinity)
+        return Interval(self.start, S.Infinity)
 
     def _eval_coeff(self, index):
         if index - self.start < len(self.cache):
