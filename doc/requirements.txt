@@ -6,7 +6,7 @@ matplotlib-inline
 mpmath
 myst-parser
 scipy
-Sphinx < 9
+Sphinx
 sphinx-autobuild
 sphinx-copybutton
 sphinx-math-dollar

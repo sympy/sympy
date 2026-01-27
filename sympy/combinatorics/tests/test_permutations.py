@@ -28,6 +28,7 @@ def test_Permutation():
     assert list(p(1, 2)) == [0, 2, 1, 3]
     raises(TypeError, lambda: p(-1))
     raises(TypeError, lambda: p(5))
+    raises(TypeError, lambda: p(4))
     # conversion to list
     assert list(p) == list(range(4))
     assert p.copy() == p
