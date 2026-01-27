@@ -1112,6 +1112,7 @@ def test_nc_recursion_coeff():
     assert (2 * cos(pi/3) * X).simplify() == X
     assert (2.0 * cos(pi/3) * X).simplify() == X
 
+
 def test_simplify_eq_atan2_symbolic_no_crash():
     a = symbols('a')
     expr = Eq(1, atan2(a, 2/a))

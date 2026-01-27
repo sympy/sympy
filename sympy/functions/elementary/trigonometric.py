@@ -3701,9 +3701,13 @@ class atan2(InverseTrigonometricFunction):
             if x.is_extended_nonzero:
                 return pi*(S.One - Heaviside(x))
             if x.is_number:
-                return Piecewise((pi, re(x) < 0),
-                                 (0, Ne(x, 0)),
-                                 (S.NaN, True))
+                rx = re(x)
+                if rx.is_negative:
+                    return pi
+                elif rx.is_nonnegative:
+                    return S.Zero
+                else:
+                    return None
         if x.is_number and y.is_number:
             return -S.ImaginaryUnit*log(
                 (x + S.ImaginaryUnit*y)/sqrt(x**2 + y**2))
