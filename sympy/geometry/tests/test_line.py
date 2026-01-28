@@ -856,6 +856,6 @@ def test_issue_12598():
     assert str(r1.intersection(r2)[0]) == 'Point2D(0.82, 0.82)'
     l1 = Line((0, 0), (1, 1))
     l2 = Segment((-1, 1), (0, -1)).n(2)
-    assert str(l1.intersection(l2)[0]) == 'Point2D(-0.33, -0.33)'
+    assert l1.intersection(l2)[0] == Point2D(Rational(-1, 3), Rational(-1, 3))
     l2 = Segment((-1, 1), (-1/2, 1/2)).n(2)
     assert not l1.intersection(l2)
