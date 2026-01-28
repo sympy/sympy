@@ -362,7 +362,11 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
                 array_form.append((-letter, -1))
         return _reduce_array_form(array_form)
 
-    def __new__(cls, init=(), *, reduced=False, boundary_index=None):
+    def __new__(cls, init=()):
+        return cls._new(init)
+
+    @classmethod
+    def _new(cls, init=(), *, reduced=False, boundary_index=None):
         if not init:
             return tuple.__new__(cls, ())
         if boundary_index is not None:
@@ -372,10 +376,11 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
             return tuple.__new__(cls, tuple(init))
         return tuple.__new__(cls, _reduce_array_form(init))
 
-    def new(self, init):
+    @classmethod
+    def new(cls, init):
         if isinstance(init, FreeGroupElement):
-            return self.__class__(init, reduced=True)
-        return self.__class__(init)
+            return cls._new(init, reduced=True)
+        return cls._new(init)
 
     _hash = None
 
@@ -553,7 +558,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         if other.is_identity:
             return self
         r = self.array_form + other.array_form
-        return group.dtype(r, boundary_index=len(self.array_form) - 1)
+        return group.dtype._new(r, boundary_index=len(self.array_form) - 1)
 
     def __truediv__(self, other):
         group = self.group
@@ -589,7 +594,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         """
         group = self.group
         r = tuple((i, -j) for i, j in self.array_form[::-1])
-        return group.dtype(r, reduced=True)
+        return group.dtype._new(r, reduced=True)
 
     def order(self):
         """Find the order of a ``FreeGroupElement``.
@@ -925,7 +930,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         else:
             letter_form = self.letter_form[from_i: to_j]
             array_form = self._array_form_from_letter_form(letter_form)
-            return group.dtype(array_form, reduced=True)
+            return group.dtype._new(array_form, reduced=True)
 
     def subword_index(self, word, start = 0):
         '''
@@ -1026,7 +1031,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         period2 = int(to_j/l) - 1
         word += letter_form*period2 + letter_form[:diff-l+from_i-l*period2]
         array_form = self._array_form_from_letter_form(word)
-        return group.dtype(array_form, reduced=True)
+        return group.dtype._new(array_form, reduced=True)
 
     def cyclic_conjugates(self):
         """Returns a words which are cyclic to the word `self`.
