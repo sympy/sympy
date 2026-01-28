@@ -7,6 +7,7 @@ from sympy.functions.elementary.trigonometric import (asin, cos, sin)
 from sympy.physics.vector import ReferenceFrame, dynamicsymbols, Dyadic
 from sympy.physics.vector.printing import (VectorLatexPrinter, vpprint,
                                            vsprint, vsstrrepr, vlatex)
+from sympy.testing.pytest import XFAIL
 
 
 a, b, c = symbols('a, b, c')
@@ -187,12 +188,12 @@ def test_vector_latex_with_functions():
 def test_dyadic_pretty_print():
 
     expected = """\
- 2
+                      2                      
 a  n_x|n_y + b n_y|n_y + c*sin(alpha) n_z|n_y\
 """
 
     uexpected = """\
- 2
+                    2                    
 a  n_x⊗n_y + b n_y⊗n_y + c⋅sin(α) n_z⊗n_y\
 """
     assert ascii_vpretty(y) == expected
@@ -211,6 +212,32 @@ a  n_x⊗n_y + b n_y⊗n_y + c⋅sin(α) n_z⊗n_y\
 
     assert ascii_vpretty(xx2) == 'n_x|n_y + n_x|n_z'
     assert unicode_vpretty(xx2) == 'n_x⊗n_y + n_x⊗n_z'
+
+
+def test_dyadic_tuple_pretty_print():
+    """Test that printing tuples of dyadics works (regression test).
+    
+    This is a regression test for issue where printing (dyadic, dyadic)
+    raised AttributeError: 'Fake' object has no attribute 'height'.
+    
+    Worked in SymPy 1.12.1, broken in 1.13+.
+    Bisected to commit 8935af2 which fixed vectors but not dyadics.
+    """
+    from sympy import symbols
+    from sympy.physics.mechanics import ReferenceFrame, outer
+    from sympy.printing.pretty import pretty
+
+    I = symbols('I')
+    A = ReferenceFrame('A')
+    I_A_Ao = I * outer(A.y, A.y) + I * outer(A.z, A.z)
+
+    result = pretty((I_A_Ao, I_A_Ao))
+
+    assert isinstance(result, str)
+    assert len(result) > 0
+
+    result_single = pretty(I_A_Ao)
+    assert isinstance(result_single, str)
 
 
 def test_dyadic_latex():

@@ -3,6 +3,8 @@ from sympy.core.evalf import EvalfMixin
 from sympy.external.mpmath import prec_to_dps
 from sympy.printing.defaults import Printable
 
+from sympy.printing import printer
+
 
 __all__ = ['Dyadic']
 
@@ -202,58 +204,56 @@ class Dyadic(Printable, EvalfMixin):
         return outstr
 
     def _pretty(self, printer):
-        e = self
-
-        class Fake:
-            baseline = 0
-
-            def render(self, *args, **kwargs):
-                ar = e.args  # just to shorten things
-                mpp = printer
-                if len(ar) == 0:
-                    return str(0)
-                bar = "\N{CIRCLED TIMES}" if printer._use_unicode else "|"
-                ol = []  # output list, to be concatenated to a string
-                for v in ar:
-                    # if the coef of the dyadic is 1, we skip the 1
-                    if v[0] == 1:
-                        ol.extend([" + ",
-                                  mpp.doprint(v[1]),
-                                  bar,
-                                  mpp.doprint(v[2])])
-
-                    # if the coef of the dyadic is -1, we skip the 1
-                    elif v[0] == -1:
-                        ol.extend([" - ",
-                                  mpp.doprint(v[1]),
-                                  bar,
-                                  mpp.doprint(v[2])])
-
-                    # If the coefficient of the dyadic is not 1 or -1,
-                    # we might wrap it in parentheses, for readability.
-                    elif v[0] != 0:
-                        if isinstance(v[0], Add):
-                            arg_str = mpp._print(
-                                v[0]).parens()[0]
-                        else:
-                            arg_str = mpp.doprint(v[0])
-                        if arg_str.startswith("-"):
-                            arg_str = arg_str[1:]
-                            str_start = " - "
-                        else:
-                            str_start = " + "
-                        ol.extend([str_start, arg_str, " ",
-                                  mpp.doprint(v[1]),
-                                  bar,
-                                  mpp.doprint(v[2])])
-
-                outstr = "".join(ol)
-                if outstr.startswith(" + "):
-                    outstr = outstr[3:]
-                elif outstr.startswith(" "):
-                    outstr = outstr[1:]
-                return outstr
-        return Fake()
+        from sympy.printing.pretty.stringpict import prettyForm
+        
+        ar = self.args
+        if len(ar) == 0:
+            return prettyForm(str(0))
+        
+        bar = "\N{CIRCLED TIMES}" if printer._use_unicode else "|"
+        
+        # Build list of string representations for each term
+        # This mimics the original Fake.render() approach
+        ol = []  # output list
+        
+        for v in ar:
+            coeff, vec1, vec2 = v[0], v[1], v[2]
+            
+            # Print vectors as strings
+            vec1_str = printer._print(vec1).render(**printer._settings)
+            vec2_str = printer._print(vec2).render(**printer._settings)
+            
+            # Handle coefficient
+            if coeff == 1:
+                ol.extend([" + ", vec1_str, bar, vec2_str])
+            elif coeff == -1:
+                ol.extend([" - ", vec1_str, bar, vec2_str])
+            else:
+                # General coefficient
+                coeff_pretty = printer._print(coeff)
+                if isinstance(coeff, Add):
+                    coeff_pretty = prettyForm(*coeff_pretty.parens())
+                
+                coeff_str = coeff_pretty.render(**printer._settings)
+                
+                if coeff_str.startswith("-"):
+                    coeff_str = coeff_str[1:]
+                    str_start = " - "
+                else:
+                    str_start = " + "
+                
+                ol.extend([str_start, coeff_str, " ", vec1_str, bar, vec2_str])
+        
+        # Join everything
+        outstr = "".join(ol)
+        
+        # Clean up leading signs
+        if outstr.startswith(" + "):
+            outstr = outstr[3:]
+        elif outstr.startswith(" "):
+            outstr = outstr[1:]
+        
+        return prettyForm(outstr)
 
     def __rsub__(self, other):
         return (-1 * self) + other
