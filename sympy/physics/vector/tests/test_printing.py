@@ -187,12 +187,12 @@ def test_vector_latex_with_functions():
 def test_dyadic_pretty_print():
 
     expected = """\
-                      2
+                      2                      
 a  n_x|n_y + b n_y|n_y + c*sin(alpha) n_z|n_y\
 """
 
     uexpected = """\
-                    2
+                    2                    
 a  n_x⊗n_y + b n_y⊗n_y + c⋅sin(α) n_z⊗n_y\
 """
     assert ascii_vpretty(y) == expected
