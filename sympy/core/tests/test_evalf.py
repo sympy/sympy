@@ -631,7 +631,7 @@ def test_issue_17421():
 
 
 def test_issue_20291():
-    from sympy.sets import EmptySet, Reals
+    from sympy.sets import Reals
     from sympy.sets.sets import (Complement, FiniteSet, Intersection)
     a = Symbol('a')
     b = Symbol('b')
