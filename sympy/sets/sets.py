@@ -2144,18 +2144,9 @@ class FiniteSet(Set):
         return Or(*[Eq(symbol, elem) for elem in self])
 
     def _eval_evalf(self, prec):
-        from sympy.core.containers import Tuple
-        dps = prec_to_dps(prec)
-
-        new_elems = []
-        for elem in self:
-            if isinstance(elem, Tuple):
-                new_elems.append(Tuple(*(e.evalf(n=dps) for e in elem)))
-            else:
-                new_elems.append(elem.evalf(n=dps))
-
-        return FiniteSet(*new_elems)
-
+      dps = prec_to_dps(prec)
+    return FiniteSet(*(elem.evalf(n=dps) for elem in self))
+    
     def _eval_simplify(self, **kwargs):
         from sympy.simplify import simplify
         return FiniteSet(*[simplify(elem, **kwargs) for elem in self])
