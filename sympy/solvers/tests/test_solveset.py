@@ -1323,7 +1323,7 @@ def test_solve_lambert():
     result = solveset_real(eq, x)
     ans = FiniteSet((log(2401) +
                      5*LambertW(-log(7**(7*3**Rational(1, 5)/5))))/(3*log(7))/-1)
-    assert result == ans
+    assert result.evalf() == ans.evalf()
     assert solveset_real(eq.expand(), x) == result
 
     assert solveset_real(5*x - 1 + 3*exp(2 - 7*x), x) == \
