@@ -187,12 +187,12 @@ def test_vector_latex_with_functions():
 def test_dyadic_pretty_print():
 
     expected = """\
-                      2                      
+                      2
 a  n_x|n_y + b n_y|n_y + c*sin(alpha) n_z|n_y\
 """
 
     uexpected = """\
-                    2                    
+                    2
 a  n_x⊗n_y + b n_y⊗n_y + c⋅sin(α) n_z⊗n_y\
 """
     assert ascii_vpretty(y) == expected
@@ -215,10 +215,10 @@ a  n_x⊗n_y + b n_y⊗n_y + c⋅sin(α) n_z⊗n_y\
 
 def test_dyadic_tuple_pretty_print():
     """Test that printing tuples of dyadics works (regression test).
-    
+
     This is a regression test for issue where printing (dyadic, dyadic)
     raised AttributeError: 'Fake' object has no attribute 'height'.
-    
+
     Worked in SymPy 1.12.1, broken in 1.13+.
     Bisected to commit 8935af2 which fixed vectors but not dyadics.
     """
