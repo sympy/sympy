@@ -9,7 +9,6 @@ from sympy.physics.vector.printing import (VectorLatexPrinter, vpprint,
                                            vsprint, vsstrrepr, vlatex)
 
 
-
 a, b, c = symbols('a, b, c')
 alpha, omega, beta = dynamicsymbols('alpha, omega, beta')
 
