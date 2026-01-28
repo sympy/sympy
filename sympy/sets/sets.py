@@ -1966,7 +1966,7 @@ class UniversalSet(Set, metaclass=Singleton):
         return S.EmptySet
 
 
-class FiniteSet(Set, EvalfMixin):
+class FiniteSet(Set):
     """
     Represents a finite set of Sympy expressions.
 
