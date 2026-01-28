@@ -570,36 +570,68 @@ class SeqPer(SeqExpr):
     def _add(self, other):
         """See docstring of SeqBase._add"""
         if isinstance(other, SeqPer):
-            per1, lper1 = self.periodical, self.period
-            per2, lper2 = other.periodical, other.period
-
-            per_length = lcm(lper1, lper2)
-
-            new_per = []
-            for x in range(per_length):
-                ele1 = per1[x % lper1]
-                ele2 = per2[x % lper2]
-                new_per.append(ele1 + ele2)
-
-            start, stop = self._intersect_interval(other)
-            return SeqPer(new_per, (self.variables[0], start, stop))
+            return self._combine_periodic(other, lambda a, b: a + b)
 
     def _mul(self, other):
         """See docstring of SeqBase._mul"""
         if isinstance(other, SeqPer):
-            per1, lper1 = self.periodical, self.period
-            per2, lper2 = other.periodical, other.period
+            return self._combine_periodic(other, lambda a, b: a * b)
 
-            per_length = lcm(lper1, lper2)
+    def _combine_periodic(self, other, op):
+        per1, lper1 = self.periodical, self.period
+        per2, lper2 = other.periodical, other.period
 
-            new_per = []
-            for x in range(per_length):
-                ele1 = per1[x % lper1]
-                ele2 = per2[x % lper2]
-                new_per.append(ele1 * ele2)
+        per_length = int(lcm(lper1, lper2))
 
-            start, stop = self._intersect_interval(other)
-            return SeqPer(new_per, (self.variables[0], start, stop))
+        start, stop = self._intersect_interval(other)
+        align_to_stop = start is S.NegativeInfinity
+
+        def _as_int(expr):
+            expr = sympify(expr)
+            if expr in (S.Infinity, S.NegativeInfinity):
+                return None
+            if expr.is_integer is not True:
+                return None
+            try:
+                return int(expr)
+            except (TypeError, ValueError):
+                return None
+
+        def _shift(seq):
+            if align_to_stop:
+                if seq.start is S.NegativeInfinity:
+                    shift_expr = seq.stop - stop
+                    direction = 1
+                else:
+                    shift_expr = stop - seq.start
+                    direction = -1
+            else:
+                if seq.start is S.NegativeInfinity:
+                    shift_expr = seq.stop - start
+                    direction = -1
+                else:
+                    shift_expr = start - seq.start
+                    direction = 1
+            shift_int = _as_int(shift_expr)
+            return shift_int, direction
+
+        shift1, dir1 = _shift(self)
+        shift2, dir2 = _shift(other)
+        if shift1 is None or shift2 is None:
+            return None
+
+        v1 = self.variables[0]
+        v2 = other.variables[0]
+        if v1 != v2:
+            per2 = [p.subs(v2, v1) for p in per2]
+
+        new_per = []
+        for x in range(per_length):
+            idx1 = (shift1 + dir1*x) % lper1
+            idx2 = (shift2 + dir2*x) % lper2
+            new_per.append(op(per1[idx1], per2[idx2]))
+
+        return SeqPer(new_per, (v1, start, stop))
 
     def coeff_mul(self, coeff):
         """See docstring of SeqBase.coeff_mul"""
