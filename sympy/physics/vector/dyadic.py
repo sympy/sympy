@@ -3,8 +3,6 @@ from sympy.core.evalf import EvalfMixin
 from sympy.external.mpmath import prec_to_dps
 from sympy.printing.defaults import Printable
 
-from sympy.printing import printer
-
 
 __all__ = ['Dyadic']
 
