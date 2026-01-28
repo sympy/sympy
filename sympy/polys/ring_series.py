@@ -1975,8 +1975,6 @@ def rs_min_pow(expr, series_rs, a):
 
 
 def _rs_series(expr, series_rs, a, prec):
-    # TODO Use _parallel_dict_from_expr instead of sring as sring is
-    # inefficient. For details, read the todo in sring.
     args = expr.args
     R = series_rs.ring
 
