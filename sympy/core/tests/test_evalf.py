@@ -158,22 +158,22 @@ def test_evalf_strict_precision_loss():
     """Test that strict=True catches precision loss (issue #28514)"""
     from sympy import symbols, log, Rational
     from sympy.core.evalf import PrecisionExhausted
-    
+
     b = symbols('b')
     y = b/(b + 1)
     z = b
-    
+
     substitutions = {b: Rational('1e-22')}
-    
+
     # This should raise PrecisionExhausted with default precision
     # because log(1 + 1e-22) requires high precision
-    raises(PrecisionExhausted, 
+    raises(PrecisionExhausted,
            lambda: log(y/z).evalf(subs=substitutions, strict=True, maxn=1e300))
-    
+
     # With sufficient output precision, it should work
     result1 = log(y/z).evalf(subs=substitutions, n=50, strict=True, maxn=1e300)
     result2 = (log(y) - log(z)).evalf(subs=substitutions, n=50, strict=True, maxn=1e300)
-    
+
     # Both should give the same non-zero result
     assert result1 != 0
     assert abs(result1 - result2) < 1e-40

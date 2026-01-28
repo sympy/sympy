@@ -965,13 +965,13 @@ def evalf_log(expr: 'log', prec: int, options: OPT_DICT) -> TMP_RES:
     if result is S.ComplexInfinity:
         return result
     xre, xim, xacc, _ = result
-    
-    # STRICT MODE: detect cancellation of (1 + eps) → 1
+
+    # STRICT MODE: detect cancellation of (1 + eps) -> 1
     if options.get('strict', False):
         # arg is symbolically not 1, but numerically rounded to 1
         if arg != S.One and xre == fone:
             raise PrecisionExhausted(
-                "Argument rounded to 1 causing log(1+ε) cancellation. "
+                "Argument rounded to 1 causing log(1+epsilon) cancellation. "
                 "Increase output precision n."
             )
 
@@ -997,10 +997,10 @@ def evalf_log(expr: 'log', prec: int, options: OPT_DICT) -> TMP_RES:
         return re[0], im, re[2], prec
 
     imaginary_term = (mpf_cmp(xre, fzero) < 0)
-    
+
     re = mpf_log(mpf_abs(xre), prec, rnd)
     size = fastlog(re)
-    
+
     # Check if we're computing log(1 + small_number) which needs special handling
     # to avoid catastrophic cancellation
     if prec - size > workprec:
@@ -1039,7 +1039,7 @@ def evalf_log(expr: 'log', prec: int, options: OPT_DICT) -> TMP_RES:
     else:
         return re, None, re_acc, None
 
-    
+
 def evalf_atan(v: 'atan', prec: int, options: OPT_DICT) -> TMP_RES:
     arg = v.args[0]
     result = evalf(arg, prec + 5, options)
@@ -1709,7 +1709,7 @@ class EvalfMixin:
         re, im, re_acc, im_acc = result
         if re is S.NaN or im is S.NaN:
             return S.NaN
-        
+
         # Check if strict mode is enabled and verify precision was achieved
         if strict:
             from .evalf import PrecisionExhausted
@@ -1727,7 +1727,7 @@ class EvalfMixin:
                     f"Achieved accuracy: {prec_to_dps(im_acc)} digits. "
                     f"Try increasing maxn or the output precision n."
                 )
-        
+
         if re:
             p = max(min(prec, re_acc), 1)
             re = Float._new(re, p)
