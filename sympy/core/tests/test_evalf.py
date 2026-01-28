@@ -641,7 +641,7 @@ def test_issue_20291():
     assert B.evalf(subs={a: 1, b: 2}) == FiniteSet(-1.0, 1.0)
 
     sol = Complement(Intersection(FiniteSet(-b/2 - sqrt(b**2-4*pi)/2), Reals), FiniteSet(0))
-    assert sol.evalf(subs={b: 1}) == EmptySet
+    assert sol.evalf(subs={b: 1}).is_EmptySet
 
 
 def test_evalf_with_zoo():
