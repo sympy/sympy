@@ -3701,6 +3701,8 @@ class atan2(InverseTrigonometricFunction):
             if x.is_extended_nonzero:
                 return pi*(S.One - Heaviside(x))
             if x.is_number:
+                if not x.is_finite:
+                    return S.NaN
                 rx = re(x)
                 if rx.is_negative:
                     return pi
