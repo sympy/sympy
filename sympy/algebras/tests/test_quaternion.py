@@ -458,9 +458,7 @@ def test_issue_28556():
     assert result3 == Quaternion(log(r), 0, 0, 0)
 
 def test_quaternion_invalid_norm():
-
     raises(ValueError, lambda: Quaternion(1, 2, 3, 4, norm=-1))
-
     raises(ValueError, lambda: Quaternion(1, 2, 2, 1, norm=2))
 
 def test_quaternion_product_matrix_numeric():
