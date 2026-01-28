@@ -801,8 +801,9 @@ class Set(Basic, EvalfMixin):
     def _kind(self):
         return SetKind(UndefinedKind)
 
-def _eval_evalf(self, prec):
-    from sympy.core.containers import Tuple
+    def _eval_evalf(self, prec):
+        dps = prec_to_dps(prec)
+        return FiniteSet(*(e.evalf(n=dps) for e in self))
 
     dps = prec_to_dps(prec)
     new_elems = []
