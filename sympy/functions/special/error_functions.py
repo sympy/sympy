@@ -1437,15 +1437,41 @@ class expint(DefinedFunction):
     _eval_rewrite_as_Chi = _eval_rewrite_as_Si
     _eval_rewrite_as_Shi = _eval_rewrite_as_Si
 
+    def _eval_rewrite_as_tractable(self, nu, z, limitvar=None, **kwargs):
+        return exp(-z)*_expint(nu, z)
+
+    def _eval_as_leading_term(self, x, logx, cdir):
+        if not self.args[0].has(x):
+            try:
+                _, ex = self.args[1].leadterm(x)
+            except (ValueError, NotImplementedError):
+                return self
+
+            if ex.is_positive:
+                nu = self.args[0]
+                if nu == S.One:
+                    f = self._eval_rewrite_as_Si(*self.args)
+                    return f._eval_as_leading_term(x, logx, cdir)
+                elif nu.is_Integer and (nu > 1) is S.true:
+                    f = self._eval_rewrite_as_Ei(*self.args)
+                    return f._eval_as_leading_term(x, logx, cdir)
+        return super()._eval_as_leading_term(x, logx, cdir)
+
     def _eval_nseries(self, x, n, logx, cdir=0):
         if not self.args[0].has(x):
-            nu = self.args[0]
-            if nu == 1:
-                f = self._eval_rewrite_as_Si(*self.args)
-                return f._eval_nseries(x, n, logx)
-            elif nu.is_Integer and nu > 1:
-                f = self._eval_rewrite_as_Ei(*self.args)
-                return f._eval_nseries(x, n, logx)
+            try:
+                _, ex = self.args[1].leadterm(x)
+            except (ValueError, NotImplementedError):
+                return self
+
+            if ex.is_positive:
+                nu = self.args[0]
+                if nu == S.One:
+                    f = self._eval_rewrite_as_Si(*self.args)
+                    return f._eval_nseries(x, n, logx)
+                elif nu.is_Integer and nu > 1:
+                    f = self._eval_rewrite_as_Ei(*self.args)
+                    return f._eval_nseries(x, n, logx)
         return super()._eval_nseries(x, n, logx)
 
     def _eval_aseries(self, n, args0, x, logx):
@@ -1453,10 +1479,10 @@ class expint(DefinedFunction):
         point = args0[1]
         nu = self.args[0]
 
-        if point is S.Infinity:
+        if point in [S.Infinity, S.NegativeInfinity]:
             z = self.args[1]
-            s = [S.NegativeOne**k * RisingFactorial(nu, k) / z**k for k in range(n)] + [Order(1/z**n, x)]
-            return (exp(-z)/z) * Add(*s)
+            s = [S.NegativeOne**k * RisingFactorial(nu, k) / z**(k+1) for k in range(n)] + [Order(1/z**n, x)]
+            return exp(-z) * Add(*s)
 
         return super(expint, self)._eval_aseries(n, args0, x, logx)
 
@@ -2795,6 +2821,36 @@ class _eis(DefinedFunction):
             f = self._eval_rewrite_as_intractable(*self.args)
             return f._eval_as_leading_term(x, logx=logx, cdir=cdir)
         return super()._eval_as_leading_term(x, logx=logx, cdir=cdir)
+
+    def _eval_nseries(self, x, n, logx, cdir=0):
+        x0 = self.args[0].limit(x, 0)
+        if x0.is_zero:
+            f = self._eval_rewrite_as_intractable(*self.args)
+            return f._eval_nseries(x, n, logx)
+        return super()._eval_nseries(x, n, logx)
+
+
+class _expint(Function):
+    """
+    Helper function to make the $\\mathrm{expint}(nu, z)$
+    function tractable for the Gruntz algorithm.
+
+    """
+
+    def _eval_aseries(self, n, args0, x, logx):
+        from sympy.series.order import Order
+        point = args0[1]
+        nu = self.args[0]
+
+        if point in [S.Infinity, S.NegativeInfinity]:
+            z = self.args[1]
+            s = [S.NegativeOne**k * RisingFactorial(nu, k) / z**(k+1) for k in range(n)] + [Order(1/z**n, x)]
+            return Add(*s)
+
+        return super(expint, self)._eval_aseries(n, args0, x, logx)
+
+    def _eval_rewrite_as_intractable(self, nu, z, **kwargs):
+        return exp(z)*expint(nu, z)
 
     def _eval_nseries(self, x, n, logx, cdir=0):
         x0 = self.args[0].limit(x, 0)
