@@ -801,9 +801,19 @@ class Set(Basic, EvalfMixin):
     def _kind(self):
         return SetKind(UndefinedKind)
 
-    def _eval_evalf(self, prec):
-        dps = prec_to_dps(prec)
-        return self.func(*[arg.evalf(n=dps) for arg in self.args])
+def _eval_evalf(self, prec):
+    from sympy.core.containers import Tuple
+
+    dps = prec_to_dps(prec)
+    new_elems = []
+    for elem in self:
+        if isinstance(elem, Tuple):
+            new_elems.append(elem)
+        else:
+            new_elems.append(elem.evalf(n=dps))
+
+    return FiniteSet(*new_elems)
+
 
     @sympify_return([('other', 'Set')], NotImplemented)
     def __add__(self, other):
