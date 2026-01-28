@@ -820,7 +820,7 @@ class SDM(dict):
         if m == 1 and n == 3 and n2 == 3 and o == 3:
             C = {}
             A_row = [A.get(0, {}).get(i, zero) for i in range(3)]
-            
+
             for j in range(3):
                 val_b0 = B.get(0, {}).get(j, zero)
                 val_b1 = B.get(1, {}).get(j, zero)
@@ -829,9 +829,9 @@ class SDM(dict):
                 t1 = K.mul(A_row[0], val_b0)
                 t2 = K.mul(A_row[1], val_b1)
                 t3 = K.mul(A_row[2], val_b2)
-                
+
                 c = K.add(K.add(t1, t2), t3)
-                
+
                 if c != zero:
                     C[j] = c
 
@@ -842,7 +842,7 @@ class SDM(dict):
         elif m == 3 and n == 3 and n2 == 3 and o == 1:
             C = {}
             B_col = [B.get(i, {}).get(0, zero) for i in range(3)]
-            
+
             for j in range(3):
                 val_a0 = A.get(j, {}).get(0, zero)
                 val_a1 = A.get(j, {}).get(1, zero)
@@ -851,7 +851,7 @@ class SDM(dict):
                 t2 = K.mul(val_a1, B_col[1])
                 t3 = K.mul(val_a2, B_col[2])
                 c = K.add(K.add(t1, t2), t3)
-                
+
                 if c != zero:
                     C[j] = {0: c}
 
@@ -860,11 +860,11 @@ class SDM(dict):
             return A.new({0: C}, (m, o), A.domain)
         elif m == 3 and n == 3 and n2 == 3 and o == 3:
             C = {}
-            
+
             for i in range(3):
                 T = {}
                 A_row = [A.get(i, {}).get(k, zero) for k in range(3)]
-                
+
                 for j in range(3):
                     val_b0 = B.get(0, {}).get(j, zero)
                     val_b1 = B.get(1, {}).get(j, zero)
@@ -873,15 +873,15 @@ class SDM(dict):
                     t2 = K.mul(A_row[1], val_b1)
                     t3 = K.mul(A_row[2], val_b2)
                     c = K.add(K.add(t1, t2), t3)
-                    
+
                     if c != zero:
                         T[j] = c
-                
+
                 if T:
                     C[i] = T
             if not C:
                 return A.new({}, (m, o), A.domain)
-            return A.new({0: C}, (m, o), A.domain)       
+            return A.new({0: C}, (m, o), A.domain)
         elif n != n2:
             raise DMShapeError
         C = sdm_matmul(A, B, A.domain, m, o)
