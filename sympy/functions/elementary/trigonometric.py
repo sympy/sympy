@@ -3698,7 +3698,7 @@ class atan2(InverseTrigonometricFunction):
                 elif y.is_zero:
                     return S.NaN
         if y.is_zero:
-            if x.is_number and not x.is_finite:
+            if x is S.Infinity or x is S.NegativeInfinity:
                 raise TypeError("atan2 undefined for non-finite arguments")
             if x.is_extended_real:
                 if x.is_positive:
