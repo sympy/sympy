@@ -403,6 +403,34 @@ def refine_matrixelement(expr, assumptions):
             return expr
         return MatrixElement(matrix, j, i)
 
+
+def refine_sin_cos(expr, assumptions):
+    from sympy.functions.elementary.trigonometric import sin, cos
+    arg = expr.args[0]
+    k_terms = []
+    rem_terms = []
+    terms = arg.args if arg.is_Add else (arg,)
+    for term in terms:
+        pi_coeff = term.coeff(S.Pi)
+        if pi_coeff:
+            coeff = 2 * pi_coeff
+            if ask(Q.integer(coeff), assumptions):
+                k_terms.append(coeff)
+            else:
+                rem_terms.append(term)
+        else:
+            rem_terms.append(term)
+    k = Add(*k_terms)
+    if isinstance(expr, sin):
+        k -= 1
+    if ask(Q.odd(k), assumptions):
+        rem = Add(*rem_terms)
+        return ((-1)**((k + 1) / 2)) * sin(rem)
+    elif ask(Q.even(k), assumptions):
+        rem = Add(*rem_terms)
+        return ((-1)**(k / 2)) * cos(rem)
+    return expr
+
 handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'Abs': refine_abs,
     'Pow': refine_Pow,
@@ -411,5 +439,7 @@ handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'im': refine_im,
     'arg': refine_arg,
     'sign': refine_sign,
-    'MatrixElement': refine_matrixelement
+    'MatrixElement': refine_matrixelement,
+    'cos': refine_sin_cos,
+    'sin': refine_sin_cos,
 }
