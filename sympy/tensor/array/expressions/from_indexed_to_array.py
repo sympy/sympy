@@ -110,15 +110,36 @@ def _convert_indexed_to_array(expr):
         subexpr, subindices = _convert_indexed_to_array(function)
         subindicessets = {j: i for i in subindices if isinstance(i, frozenset) for j in i}
         summation_indices = sorted({subindicessets.get(i, i) for i in summation_indices}, key=default_sort_key)
-        # TODO: check that Kronecker delta is only contracted to one other element:
+        # Check that Kronecker delta is only contracted to one other element:
         kronecker_indices = set()
         if isinstance(function, Mul):
+            other_indices_count = defaultdict(int)
+            for arg in function.args:
+                if isinstance(arg, KroneckerDelta):
+                    continue
+                if isinstance(arg, (Indexed, IndexedBase)):
+                    for idx in arg.indices:
+                        other_indices_count[idx] += 1
+                elif isinstance(arg, Pow) and isinstance(arg.base, (Indexed, IndexedBase)):
+                    for idx in arg.base.indices:
+                        other_indices_count[idx] += 1
+
             for arg in function.args:
                 if not isinstance(arg, KroneckerDelta):
                     continue
                 arg_indices = sorted(set(arg.indices), key=default_sort_key)
                 if len(arg_indices) == 2:
                     kronecker_indices.update(arg_indices)
+
+                    for k_idx in arg_indices:
+                        is_summed = (k_idx in summation_indices) or \
+                                    any(k_idx in s for s in summation_indices if isinstance(s, frozenset))
+
+                        if is_summed and other_indices_count[k_idx] > 1:
+                            raise NotImplementedError(
+                                f"Contraction of KroneckerDelta index '{k_idx}' with multiple "
+                                "elements is not currently supported."
+                            )
         kronecker_indices = sorted(kronecker_indices, key=default_sort_key)
         # Check dimensional consistency:
         shape = get_shape(subexpr)
