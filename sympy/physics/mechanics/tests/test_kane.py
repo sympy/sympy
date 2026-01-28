@@ -1,4 +1,4 @@
-from sympy import solve, symbols
+from sympy import solve
 from sympy import (cos, expand, Matrix, sin, symbols, tan, sqrt, S,
                                 zeros, eye)
 from sympy.simplify.simplify import simplify
