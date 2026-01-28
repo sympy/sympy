@@ -825,11 +825,9 @@ class SDM(dict):
                 val_b0 = B.get(0, {}).get(j, zero)
                 val_b1 = B.get(1, {}).get(j, zero)
                 val_b2 = B.get(2, {}).get(j, zero)
-
                 t1 = K.mul(A_row[0], val_b0)
                 t2 = K.mul(A_row[1], val_b1)
                 t3 = K.mul(A_row[2], val_b2)
-
                 c = K.add(K.add(t1, t2), t3)
 
                 if c != zero:
@@ -857,7 +855,7 @@ class SDM(dict):
 
             if not C:
                 return A.new({}, (m, o), A.domain)
-            return A.new({0: C}, (m, o), A.domain)
+            return A.new(C, (m, o), A.domain)
         elif m == 3 and n == 3 and n2 == 3 and o == 3:
             C = {}
 
@@ -881,7 +879,7 @@ class SDM(dict):
                     C[i] = T
             if not C:
                 return A.new({}, (m, o), A.domain)
-            return A.new({0: C}, (m, o), A.domain)
+            return A.new(C, (m, o), A.domain)
         elif n != n2:
             raise DMShapeError
         C = sdm_matmul(A, B, A.domain, m, o)
