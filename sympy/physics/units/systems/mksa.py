@@ -12,7 +12,10 @@ from sympy.physics.units.definitions.dimension_definitions import (
     magnetic_density, magnetic_flux, voltage)
 from sympy.physics.units.prefixes import PREFIXES, prefix_unit
 from sympy.physics.units.systems.mks import MKS, dimsys_length_weight_time
-from sympy.physics.units.quantities import Quantity
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from sympy.physics.units.quantities import Quantity
 
 dims = (voltage, impedance, conductance, current, capacitance, inductance, charge,
         magnetic_density, magnetic_flux)

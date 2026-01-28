@@ -3,13 +3,12 @@
 #
 
 from __future__ import annotations
-from typing import ClassVar, Iterator
+from typing import ClassVar, Iterator, TYPE_CHECKING
 
 from .riccati import match_riccati, solve_riccati
 from sympy.core import Add, S, Pow, Rational
 from sympy.core.cache import cached_property
 from sympy.core.exprtools import factor_terms
-from sympy.core.expr import Expr
 from sympy.core.function import AppliedUndef, Derivative, diff, Function, expand, Subs, _mexpand
 from sympy.core.numbers import zoo
 from sympy.core.relational import Equality, Eq
@@ -31,6 +30,9 @@ from .nonhomogeneous import _get_euler_characteristic_eq_sols, _get_const_charac
     _solve_undetermined_coefficients, _solve_variation_of_parameters, _test_term, _undetermined_coefficients_match, \
         _get_simplified_sol
 from .lie_group import _ode_lie_group
+
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
 
 
 class ODEMatchError(NotImplementedError):
@@ -1719,14 +1721,22 @@ class HomogeneousCoeffBest(HomogeneousCoeffSubsIndepDivDep, HomogeneousCoeffSubs
         # There are two substitutions that solve the equation, u1=y/x and u2=x/y
         # # They produce different integrals, so try them both and see which
         # # one is easier
-        sol1 = HomogeneousCoeffSubsIndepDivDep._get_general_solution(self)
-        sol2 = HomogeneousCoeffSubsDepDivIndep._get_general_solution(self)
+        [sol1] = HomogeneousCoeffSubsIndepDivDep._get_general_solution(self)
+        [sol2] = HomogeneousCoeffSubsDepDivIndep._get_general_solution(self)
         fx = self.ode_problem.func
         if simplify_flag:
-            sol1 = odesimp(self.ode_problem.eq, *sol1, fx, "1st_homogeneous_coeff_subs_indep_div_dep")
-            sol2 = odesimp(self.ode_problem.eq, *sol2, fx, "1st_homogeneous_coeff_subs_dep_div_indep")
-        # XXX: not simplify should be not simplify_flag. mypy correctly complains
-        return min([sol1, sol2], key=lambda x: ode_sol_simplicity(x, fx, trysolving=not simplify)) # type: ignore
+            sol1 = odesimp(self.ode_problem.eq, sol1, fx, "1st_homogeneous_coeff_subs_indep_div_dep")
+            sol2 = odesimp(self.ode_problem.eq, sol2, fx, "1st_homogeneous_coeff_subs_dep_div_indep")
+        if not isinstance(sol1, list):
+            sol1 = [sol1]
+        if not isinstance(sol2, list):
+            sol2 = [sol2]
+        sol1_max_complexity = max(ode_sol_simplicity(sol, fx, trysolving= not simplify_flag) for sol in sol1)
+        sol2_max_complexity = max(ode_sol_simplicity(sol, fx, trysolving= not simplify_flag) for sol in sol2)
+        if sol2_max_complexity < sol1_max_complexity:
+            return sol2
+        else:
+            return sol1
 
 
 class LinearCoefficients(HomogeneousCoeffBest):
