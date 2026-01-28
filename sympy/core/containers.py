@@ -115,7 +115,11 @@ class Tuple(Basic):
 
     def _eval_evalf(self, prec):
         dps = prec_to_dps(prec)
-        return Tuple(*(a.evalf(n=dps) for a in self.args))
+        elems = []
+        for a in self.args:
+            ea = a.evalf(n=dps)
+            elems.append(a if ea == a else ea)
+        return Tuple(*elems)
 
     def __lt__(self, other):
         return _sympify(self.args < other.args)
