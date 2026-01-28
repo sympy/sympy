@@ -143,7 +143,8 @@ class PermutationGroup(Basic):
         if dups:
             args = list(uniq([_af_new(list(a)) for a in args]))
         if len(args) > 1:
-            args = [g for g in args if not g.is_identity]
+            non_identity = [g for g in args if not g.is_identity]
+            args = non_identity if non_identity else [args[0]]
         return Basic.__new__(cls, *args, **kwargs)
 
     def __init__(self, *args, **kwargs):

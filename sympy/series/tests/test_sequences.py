@@ -146,7 +146,7 @@ def test_SeqAdd():
 
     s1 = SeqAdd(per, per_bou)
     assert isinstance(s1, SeqPer)
-    assert s1 == SeqPer((2, 4, 4, 3, 3, 5), (n, 1, 5))
+    assert s1 == SeqPer((3, 5, 2, 4, 4, 3), (n, 1, 5))
     s2 = SeqAdd(form, form_bou)
     assert isinstance(s2, SeqFormula)
     assert s2 == SeqFormula(2*n**2, (6, 10))
@@ -185,7 +185,7 @@ def test_SeqMul():
 
     s1 = SeqMul(per, per_bou)
     assert isinstance(s1, SeqPer)
-    assert s1 == SeqPer((1, 4, 3, 2, 2, 6), (n, 1, 5))
+    assert s1 == SeqPer((2, 6, 1, 4, 3, 2), (n, 1, 5))
     s2 = SeqMul(form, form_bou)
     assert isinstance(s2, SeqFormula)
     assert s2 == SeqFormula(n**4, (6, 10))
@@ -200,6 +200,14 @@ def test_SeqMul():
 
     assert SeqMul(SeqPer((1, 2), (n, 0, oo)), SeqPer((1, 2), (n, 0, oo))) == \
         SeqPer((1, 4), (n, 0, oo))
+
+
+def test_SeqPer_variable_unification():
+    s1 = SeqPer((n,), (n, 0, 5))
+    s2 = SeqPer((m + 1,m+2), (m, 1, oo))
+
+    assert (s1 + s2).coeff(2) == 6
+    assert (s1 * s2).coeff(2) == 8
 
 
 def test_add():
