@@ -1038,35 +1038,36 @@ def _solve_as_poly(f, symbol, domain=S.Complexes):
             else:
                 result = ConditionSet(symbol, Eq(f, 0), domain)
     else:
-        poly = Poly(f)
+        poly = f.as_poly()
         if poly is None:
             result = ConditionSet(symbol, Eq(f, 0), domain)
-        gens = [g for g in poly.gens if g.has(symbol)]
-
-        if len(gens) == 1:
-            poly = Poly(poly, gens[0])
-            gen = poly.gen
-            deg = poly.degree()
-            poly = Poly(poly.as_expr(), poly.gen, composite=True)
-            poly_solns = FiniteSet(*roots(poly, cubics=True, quartics=True,
-                                          quintics=True).keys())
-
-            if len(poly_solns) < deg:
-                result = ConditionSet(symbol, Eq(f, 0), domain)
-
-            if gen != symbol:
-                y = Dummy('y')
-                inverter = invert_real if domain.is_subset(S.Reals) else invert_complex
-                lhs, rhs_s = inverter(gen, y, symbol)
-                if lhs == symbol:
-                    result = Union(*[rhs_s.subs(y, s) for s in poly_solns])
-                    if isinstance(result, FiniteSet) and isinstance(gen, Pow
-                            ) and gen.base.is_Rational:
-                        result = FiniteSet(*[expand_log(i) for i in result])
-                else:
-                    result = ConditionSet(symbol, Eq(f, 0), domain)
         else:
-            result = ConditionSet(symbol, Eq(f, 0), domain)
+            gens = [g for g in poly.gens if g.has(symbol)]
+
+            if len(gens) == 1:
+                poly = Poly(poly, gens[0])
+                gen = poly.gen
+                deg = poly.degree()
+                poly = Poly(poly.as_expr(), poly.gen, composite=True)
+                poly_solns = FiniteSet(*roots(poly, cubics=True, quartics=True,
+                                              quintics=True).keys())
+
+                if len(poly_solns) < deg:
+                    result = ConditionSet(symbol, Eq(f, 0), domain)
+
+                if gen != symbol:
+                    y = Dummy('y')
+                    inverter = invert_real if domain.is_subset(S.Reals) else invert_complex
+                    lhs, rhs_s = inverter(gen, y, symbol)
+                    if lhs == symbol:
+                        result = Union(*[rhs_s.subs(y, s) for s in poly_solns])
+                        if isinstance(result, FiniteSet) and isinstance(gen, Pow
+                                ) and gen.base.is_Rational:
+                            result = FiniteSet(*[expand_log(i) for i in result])
+                    else:
+                        result = ConditionSet(symbol, Eq(f, 0), domain)
+            else:
+                result = ConditionSet(symbol, Eq(f, 0), domain)
 
     if result is not None:
         if isinstance(result, FiniteSet):
@@ -3532,6 +3533,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
         # symbols appears first
         for index, eq in enumerate(eqs_in_better_order):
             newresult = []
+            to_remove = []
             # if imageset, expr is used to solve for other symbol
             imgset_yes = False
             for res in result:
@@ -3568,7 +3570,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                             # eq2 doesn't return `zero` or deleting the `res`
                             # (a soln) since it satisfies expr of `exclude`
                             # list.
-                            result.remove(res)
+                            to_remove.append(res)
                     continue  # skip as it's independent of desired symbols
                 depen1, depen2 = eq2.as_independent(*unsolved_syms)
                 if (depen1.has(Abs) or depen2.has(Abs)) and solver == solveset_complex:
@@ -3620,6 +3622,9 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                             # in terms of other symbol(s)
                             not_solvable = True
                             total_conditionst += 1
+                            # This equation couldn't be solved - mark branch for removal
+                            to_remove.append(res)
+                            break  # Don't try other symbols in this equation
                         else:
                             soln = soln.base_set
 
@@ -3668,9 +3673,14 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                     # solution got for sym
                     if not not_solvable:
                         got_symbol.add(sym)
-            # next time use this new soln
+            # Next time use the new soln
             if newresult:
                 result = newresult
+
+            # Remove invalid branches after iteration
+            to_remove_ids = {id(r) for r in to_remove}
+            result = [r for r in result if id(r) not in to_remove_ids]
+
         return result, total_solvest_call, total_conditionst
 
     new_result_real, solve_call1, cnd_call1 = _solve_using_known_values(
