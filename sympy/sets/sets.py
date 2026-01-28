@@ -2142,7 +2142,14 @@ class FiniteSet(Set):
 
     def _eval_evalf(self, prec):
         dps = prec_to_dps(prec)
-        return FiniteSet(*(elem.evalf(n=dps) for elem in self))
+        new_elems = []
+        for elem in self:
+            evaluated = elem.evalf(n=dps)
+            if evaluated == elem:
+                new_elems.append(elem)
+            else:
+                new_elems.append(evaluated)
+        return FiniteSet(*new_elems)
 
     def _eval_simplify(self, **kwargs):
         from sympy.simplify import simplify
