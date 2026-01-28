@@ -177,7 +177,8 @@ def solve_rational_inequalities(eqs):
 
             for global_interval in global_intervals:
                 for denom_interval in denom_intervals:
-                    global_interval -= denom_interval
+                    if denom_interval is not S.EmptySet:
+                        global_interval -= denom_interval
 
                 if global_interval is not S.EmptySet:
                     intervals.append(global_interval)
