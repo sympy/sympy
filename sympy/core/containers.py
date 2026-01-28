@@ -15,6 +15,7 @@ from .basic import Basic
 from .sorting import default_sort_key, ordered
 from .sympify import _sympify, sympify, _sympy_converter, SympifyError
 from sympy.core.kind import Kind
+from sympy.core.evalf import prec_to_dps
 from sympy.utilities.iterables import iterable
 from sympy.utilities.misc import as_int
 
@@ -113,7 +114,8 @@ class Tuple(Basic):
         return tuple(a._to_mpmath(prec) for a in self.args)
 
     def _eval_evalf(self, prec):
-        return Tuple(*(a.evalf(n, **options) for a in self.args))
+        dps = prec_to_dps(prec)
+        return Tuple(*(a.evalf(n=dps) for a in self.args))
 
     def __lt__(self, other):
         return _sympify(self.args < other.args)
