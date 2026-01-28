@@ -2,7 +2,7 @@ from sympy.core.numbers import (Rational, pi)
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.geometry import (Circle, Ellipse, Point, Line, Parabola,
-    Polygon, Ray, RegularPolygon, Segment, Triangle, Plane, Curve)
+    Polygon, Ray, RegularPolygon, Segment, Triangle, Plane, Curve, Point3D)
 from sympy.geometry.entity import scale, GeometryEntity
 from sympy.testing.pytest import raises
 
@@ -56,6 +56,12 @@ def test_subs():
         assert 'y' in str(o.subs(x, y))
     assert p.subs({x: 1}) == Point(1, 2)
     assert Point(1, 2).subs(Point(1, 2), Point(3, 4)) == Point(3, 4)
+    # Recursion issue 29043
+    assert Circle(Point(0,0), 5).subs(Point(0,0), Point(1,1)) == Circle(Point(1,1), 5)
+    assert Line(Point(0,0), Point(1,0)).subs(Point(0,0), Point(1,1)) == Line(Point(1,1), Point(1,0))
+    assert Point3D(0,0,0).subs(Point3D(0,0,0), Point3D(1,1,1)) == Point3D(1,1,1)
+    assert Plane(Point3D(0,0,0), (0,0,1)).subs(Point3D(0,0,0), Point3D(1,1,1)) == Plane(Point3D(1,1,1), (0,0,1))
+
     assert Point(1, 2).subs((1, 2), Point(3, 4)) == Point(3, 4)
     assert Point(1, 2).subs(Point(1, 2), Point(3, 4)) == Point(3, 4)
     assert Point(1, 2).subs({(1, 2)}) == Point(2, 2)
