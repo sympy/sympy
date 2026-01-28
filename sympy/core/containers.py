@@ -112,6 +112,9 @@ class Tuple(Basic):
 
     def _to_mpmath(self, prec):
         return tuple(a._to_mpmath(prec) for a in self.args)
+ 
+    def evalf(self, n=15, **options):
+        return self._eval_evalf(prec=n)
 
     def _eval_evalf(self, prec):
         dps = prec_to_dps(prec)
