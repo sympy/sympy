@@ -613,7 +613,8 @@ def test_remove_reaction_forces():
     auxdt ={auxx.diff(t), auxy.diff(t), auxz.diff(t)}
     for objekt in (force, fr+frstar, reaktion):
         if objekt is not reaktion:
-            assert (set([fx, fy, fz]).
+            assert ({fx, fy, fz}.
                     intersection(find_dynamicsymbols(objekt)) == set())
-        assert set(aux).intersection(find_dynamicsymbols(objekt)) == set()
+        assert ({auxx, auxy, auxz}.
+                intersection(find_dynamicsymbols(objekt)) == set())
         assert auxdt.intersection(find_dynamicsymbols(objekt)) == set()
