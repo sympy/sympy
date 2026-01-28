@@ -1,4 +1,4 @@
-from sympy import solve
+from sympy import solve, symbols
 from sympy import (cos, expand, Matrix, sin, symbols, tan, sqrt, S,
                                 zeros, eye)
 from sympy.simplify.simplify import simplify
@@ -137,6 +137,7 @@ def test_pend():
 
 
 def test_rolling_disc():
+
     # Rolling Disc Example
     # Here the rolling disc is formed from the contact point up, removing the
     # need to introduce generalized speeds. Only 3 configuration and three
@@ -551,3 +552,68 @@ def test_issue_24887():
     assert find_dynamicsymbols(kane.forcing).issubset({q1, q2, q3, u1, u2, u3})
     assert simplify(kane.mass_matrix - expected_md) == zeros(3, 3)
     assert simplify(kane.forcing - expected_fd) == zeros(3, 1)
+
+
+def test_remove_reaction_forces():
+    # Simple 3D pendulum.
+    # If a point P1 has both, real speeds and auxiliary speeds, then the
+    # reaction forces will appear in the force vector. Test whether they are
+    # removed.
+    # If a applied force depends on, say, P1.vel(N), then the auxiliary speeds
+    # will appear in the force vector. Test whether they are removed.
+    # If an applied force depends on P1.vel(N).diff(t, N), then the
+    # auxiliary speeds and their derivatives will appear in the force vector.
+    # Test whether they are removed.
+
+    N, A = symbols('N A', cls=ReferenceFrame)
+    O, P, P1 = symbols('O P P1', cls=Point)
+    t = dynamicsymbols._t
+    O.set_vel(N, 0)
+
+    q1, q2, q3 = dynamicsymbols('q1 q2 q3')
+    u1, u2, u3 = dynamicsymbols('u1 u2 u3')
+    # virtual speeds and reaction forces.
+    auxx, auxy, auxz, fx, fy, fz = dynamicsymbols('auxx auxy auxz fx fy fz')
+    x, y, ux, uy = dynamicsymbols('x y ux uy')
+
+    m, g, le, iXX, iYY, iZZ = symbols('m g le iXX iYY iZZ')
+
+    A.orient_body_fixed(N, (q1, q2, q3), 'XYZ')
+    rot = A.ang_vel_in(N)
+    A.set_ang_vel(N, u1 * A.x + u2 * A.y + u3 * A.z)
+    rot1 = A.ang_vel_in(N)
+
+    P1.set_pos(O, x * N.x + y * N.y)
+    P1.set_vel(N, ux * N.x + uy * N.y + auxx * N.x + auxy * N.y + auxz * N.z)
+    P.set_pos(P1, -le * A.z)
+    P.v2pt_theory(P1, N, A)
+
+    Inert = inertia(A, iXX*t, iYY*t, iZZ*t)
+    body = RigidBody('body', P, A, m, (Inert, P))
+    bodies = [body]
+    # P1.vel(N).diff(t, N) is not a standard force and cannot be dealt with
+    # by KanesMethod without further ado. Here it is used to create
+    # aux.diff(t)
+    forces = [(P, -m * g * N.z), (P1, fx * N.x + fy * N.y + fz * N.z -
+                                  P1.vel(N).diff(t, N))]
+
+    kd = Matrix([*[(rot - rot1).dot(uv) for uv in N],
+                    ux - x.diff(t), uy - y.diff(t)])
+
+    q_ind = [q1, q2, q3, x, y]
+    u_ind = [u1, u2, u3, ux, uy]
+    aux = [auxx, auxy, auxz]
+
+    kanes = KanesMethod(N, q_ind, u_ind, kd_eqs=kd, u_auxiliary=aux,
+                           reaction_forces=[fx, fy, fz])
+    fr, frstar = (kanes.kanes_equations(bodies, forces))
+    force = kanes.forcing
+    reaktion = kanes.auxiliary_eqs
+
+    auxdt ={auxx.diff(t), auxy.diff(t), auxz.diff(t)}
+    for objekt in (force, fr+frstar, reaktion):
+        if objekt is not reaktion:
+            assert (set([fx, fy, fz]).
+                    intersection(find_dynamicsymbols(objekt)) == set())
+        assert set(aux).intersection(find_dynamicsymbols(objekt)) == set()
+        assert auxdt.intersection(find_dynamicsymbols(objekt)) == set()
