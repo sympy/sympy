@@ -351,7 +351,19 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
     __slots__ = ()
     is_assoc_word = True
 
+    def __new__(cls, init=(), *, reduced=False, boundary_index=None):
+        if not init:
+            return tuple.__new__(cls, ())
+        if boundary_index is not None:
+            init = _reduce_array_form(init, boundary_index=boundary_index)
+            return tuple.__new__(cls, init)
+        if reduced:
+            return tuple.__new__(cls, tuple(init))
+        return tuple.__new__(cls, _reduce_array_form(init))
+
     def new(self, init):
+        if isinstance(init, FreeGroupElement):
+            return self.__class__(init, reduced=True)
         return self.__class__(init)
 
     _hash = None
@@ -529,9 +541,8 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
             return other
         if other.is_identity:
             return self
-        r = list(self.array_form + other.array_form)
-        zero_mul_simp(r, len(self.array_form) - 1)
-        return group.dtype(tuple(r))
+        r = self.array_form + other.array_form
+        return group.dtype(r, boundary_index=len(self.array_form) - 1)
 
     def __truediv__(self, other):
         group = self.group
@@ -566,8 +577,8 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
 
         """
         group = self.group
-        r = tuple([(i, -j) for i, j in self.array_form[::-1]])
-        return group.dtype(r)
+        r = tuple((i, -j) for i, j in self.array_form[::-1])
+        return group.dtype(r, reduced=True)
 
     def order(self):
         """Find the order of a ``FreeGroupElement``.
@@ -1305,6 +1316,35 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
             rest = self.subword(l, len(self))
             return rest.power_of(other)
         return False
+
+
+def _reduce_array_form(array_form, boundary_index=None):
+    """Return a reduced array form.
+
+    When ``boundary_index`` is provided, ``array_form`` is assumed to be the
+    concatenation of two reduced words and only the collision at the boundary
+    is reduced.
+    """
+    if not array_form:
+        return ()
+    if boundary_index is not None:
+        reduced = list(array_form)
+        zero_mul_simp(reduced, boundary_index)
+        return tuple(reduced)
+
+    reduced = []
+    for gen, exp in array_form:
+        if exp == 0:
+            continue
+        if reduced and reduced[-1][0] == gen:
+            exp = reduced[-1][1] + exp
+            if exp == 0:
+                reduced.pop()
+            else:
+                reduced[-1] = (gen, exp)
+        else:
+            reduced.append((gen, exp))
+    return tuple(reduced)
 
 
 def letter_form_to_array_form(array_form, group):

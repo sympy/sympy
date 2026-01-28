@@ -224,3 +224,10 @@ def test_FreeGroupElm_words():
 
     assert w.substituted_word(0, 7, y**-1) == y**-1*x*y**-4*x
     assert w.substituted_word(0, 7, y**2*x) == y**2*x**2*y**-4*x
+
+
+def test_FreeGroupElm_cyclic_subword_reduction():
+    _, x, y = free_group("x y")
+    w = x*y*x**-1
+    rot = w.cyclic_subword(1, 1 + len(w))
+    assert rot == y
