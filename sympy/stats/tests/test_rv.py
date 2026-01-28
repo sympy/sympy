@@ -440,5 +440,14 @@ def test_issue_20286():
     assert eq.dummy_eq(H(B))
 
 def test_marginal_distribution_pdf_joint():
+    from sympy import simplify
     X = Normal('X', 0, 1)
-    assert density(X).pdf(0) is not None
+    Y = Normal('Y', 0, 1)
+
+    joint = density(X, Y)
+
+    marginal_X = joint.pdf(0, 0).integrate((Y, -oo, oo))
+
+    expected = density(X).pdf(0)
+
+    assert simplify(marginal_X - expected) == 0
