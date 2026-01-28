@@ -7,7 +7,7 @@ from sympy.functions.elementary.trigonometric import (asin, cos, sin)
 from sympy.physics.vector import ReferenceFrame, dynamicsymbols, Dyadic
 from sympy.physics.vector.printing import (VectorLatexPrinter, vpprint,
                                            vsprint, vsstrrepr, vlatex)
-from sympy.testing.pytest import XFAIL
+
 
 
 a, b, c = symbols('a, b, c')
