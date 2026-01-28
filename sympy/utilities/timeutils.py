@@ -12,7 +12,7 @@ _units = ['s', 'ms', '\N{GREEK SMALL LETTER MU}s', 'ns']
 
 def timed(
         func: Callable[[], object], setup: str = "pass", limit: int | None = None
-) -> tuple[str, float, float, int]:
+) -> tuple[int, float, float, str]:
     """Adaptively measure execution time of a function. """
     timer = timeit.Timer(func, setup=setup)
     repeat, number = 3, 1
