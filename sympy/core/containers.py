@@ -113,8 +113,7 @@ class Tuple(Basic):
         return tuple(a._to_mpmath(prec) for a in self.args)
 
     def _eval_evalf(self, prec):
-        dps = prec_to_dps(prec)
-        return FiniteSet(*(e.evalf(n=dps) for e in self))
+        return Tuple(*(a.evalf(n, **options) for a in self.args))
 
     def __lt__(self, other):
         return _sympify(self.args < other.args)
