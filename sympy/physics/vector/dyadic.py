@@ -205,24 +205,24 @@ class Dyadic(Printable, EvalfMixin):
 
     def _pretty(self, printer):
         from sympy.printing.pretty.stringpict import prettyForm
-        
+
         ar = self.args
         if len(ar) == 0:
             return prettyForm(str(0))
-        
+
         bar = "\N{CIRCLED TIMES}" if printer._use_unicode else "|"
-        
+
         # Build list of string representations for each term
         # This mimics the original Fake.render() approach
         ol = []  # output list
-        
+
         for v in ar:
             coeff, vec1, vec2 = v[0], v[1], v[2]
-            
+
             # Print vectors as strings
             vec1_str = printer._print(vec1).render(**printer._settings)
             vec2_str = printer._print(vec2).render(**printer._settings)
-            
+
             # Handle coefficient
             if coeff == 1:
                 ol.extend([" + ", vec1_str, bar, vec2_str])
@@ -233,26 +233,26 @@ class Dyadic(Printable, EvalfMixin):
                 coeff_pretty = printer._print(coeff)
                 if isinstance(coeff, Add):
                     coeff_pretty = prettyForm(*coeff_pretty.parens())
-                
+
                 coeff_str = coeff_pretty.render(**printer._settings)
-                
+
                 if coeff_str.startswith("-"):
                     coeff_str = coeff_str[1:]
                     str_start = " - "
                 else:
                     str_start = " + "
-                
+
                 ol.extend([str_start, coeff_str, " ", vec1_str, bar, vec2_str])
-        
+
         # Join everything
         outstr = "".join(ol)
-        
+
         # Clean up leading signs
         if outstr.startswith(" + "):
             outstr = outstr[3:]
         elif outstr.startswith(" "):
             outstr = outstr[1:]
-        
+
         return prettyForm(outstr)
 
     def __rsub__(self, other):
