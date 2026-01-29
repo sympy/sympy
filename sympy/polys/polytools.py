@@ -4908,12 +4908,12 @@ def _degree_fast(expr, gen):
     if expr.is_Number:
         if expr is S.Zero:
             return S.NegativeInfinity
-        return 0
+        return S.Zero
 
     if expr == gen:
-        return 1
+        return S.One
     if expr.is_Symbol:
-        return 0
+        return S.Zero
 
     if expr.is_Pow:
         base, exp = expr.args
@@ -4993,7 +4993,7 @@ def degree(f, gen=0):
             if not gen_is_Num:
                 fast_deg = _degree_fast(f, gen)
                 if fast_deg is not None:
-                    return Integer(fast_deg) if isinstance(fast_deg, int) else fast_deg
+                    return fast_deg
 
             if gen_is_Num:
                 p, _ = poly_from_expr(f)
