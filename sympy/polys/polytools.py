@@ -4912,7 +4912,6 @@ def _degree_fast(expr, gen):
 
     if expr == gen:
         return 1
-    
     if expr.is_Symbol:
         return 0
 
@@ -4942,14 +4941,14 @@ def _degree_fast(expr, gen):
             if d is None:
                 return None
             degrees.append(d)
-        
+
         # S.NegativeInfinity + 1 is S.NegativeInfinity, safe.
         max_deg = max(degrees, default=S.NegativeInfinity)
-        
+
         # Check uniqueness to avoid cancellation (e.g. x**2 - x**2)
         if degrees.count(max_deg) == 1:
             return max_deg
-        
+
         # Cancellation possible, unsafe fallback
         return None
 
