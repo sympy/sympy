@@ -4908,12 +4908,12 @@ def _degree_fast(expr, gen):
     if expr.is_Number:
         if expr is S.Zero:
             return S.NegativeInfinity
-        return 0
+        return S.Zero
 
     if expr == gen:
-        return 1
+        return S.One
     if expr.is_Symbol:
-        return 0
+        return S.Zero
 
     if expr.is_Pow:
         base, exp = expr.args
