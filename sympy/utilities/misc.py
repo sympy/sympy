@@ -408,7 +408,7 @@ def replace(string, *reps):
     return _replace(reps)(string)
 
 
-def translate(s, a, b=None, c=None):
+def translate(s: str, a: str, b: str | None = None, c: str | None = None) -> str:
     """Return ``s`` where characters have been replaced or deleted.
 
     SYNTAX
