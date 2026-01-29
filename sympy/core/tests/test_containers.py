@@ -45,6 +45,15 @@ def test_Tuple():
     assert st2.fromiter(st2.args) == st2
 
 
+def test_Tuple_evalf_n_api():
+    t = Tuple(1, x)
+    # evalf and n should be available and not error
+    assert hasattr(t, "evalf")
+    assert hasattr(t, "n")
+    t.evalf()
+    t.n()
+
+
 def test_Tuple_contains():
     t1, t2 = Tuple(1), Tuple(2)
     assert t1 in Tuple(1, 2, 3, t1, Tuple(t2))
