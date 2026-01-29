@@ -351,8 +351,31 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
     __slots__ = ()
     is_assoc_word = True
 
-    def new(self, init):
-        return self.__class__(init)
+    def _array_form_from_letter_form(self, letter_form):
+        if not letter_form:
+            return ()
+        array_form = []
+        for letter in letter_form:
+            if letter.is_Symbol:
+                array_form.append((letter, 1))
+            else:
+                array_form.append((-letter, -1))
+        return _reduce_array_form(array_form)
+
+    def __new__(cls, init=()):
+        if isinstance(init, FreeGroupElement):
+            return cls._new(tuple(init))
+        return cls._new(_reduce_array_form(init))
+
+    @classmethod
+    def _new(cls, array_form=()):
+        return tuple.__new__(cls, array_form)
+
+    @classmethod
+    def _new_reduce_at_boundary(cls, array_form, boundary_index):
+        array_form = _reduce_array_form(array_form,
+                                        boundary_index=boundary_index)
+        return cls._new(array_form)
 
     _hash = None
 
@@ -363,7 +386,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         return _hash
 
     def copy(self):
-        return self.new(self)
+        return self._new(tuple(self))
 
     @property
     def is_identity(self):
@@ -529,9 +552,8 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
             return other
         if other.is_identity:
             return self
-        r = list(self.array_form + other.array_form)
-        zero_mul_simp(r, len(self.array_form) - 1)
-        return group.dtype(tuple(r))
+        r = self.array_form + other.array_form
+        return group.dtype._new_reduce_at_boundary(r, len(self.array_form) - 1)
 
     def __truediv__(self, other):
         group = self.group
@@ -566,8 +588,8 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
 
         """
         group = self.group
-        r = tuple([(i, -j) for i, j in self.array_form[::-1]])
-        return group.dtype(r)
+        r = tuple((i, -j) for i, j in self.array_form[::-1])
+        return group.dtype._new(r)
 
     def order(self):
         """Find the order of a ``FreeGroupElement``.
@@ -902,8 +924,8 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
             return group.identity
         else:
             letter_form = self.letter_form[from_i: to_j]
-            array_form = letter_form_to_array_form(letter_form, group)
-            return group.dtype(array_form)
+            array_form = self._array_form_from_letter_form(letter_form)
+            return group.dtype._new(array_form)
 
     def subword_index(self, word, start = 0):
         '''
@@ -1003,8 +1025,8 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         word = letter_form[from_i: to_j]
         period2 = int(to_j/l) - 1
         word += letter_form*period2 + letter_form[:diff-l+from_i-l*period2]
-        word = letter_form_to_array_form(word, group)
-        return group.dtype(word)
+        array_form = self._array_form_from_letter_form(word)
+        return group.dtype._new(array_form)
 
     def cyclic_conjugates(self):
         """Returns a words which are cyclic to the word `self`.
@@ -1307,49 +1329,38 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         return False
 
 
-def letter_form_to_array_form(array_form, group):
-    """
-    This method converts a list given with possible repetitions of elements in
-    it. It returns a new list such that repetitions of consecutive elements is
-    removed and replace with a tuple element of size two such that the first
-    index contains `value` and the second index contains the number of
-    consecutive repetitions of `value`.
+def _reduce_array_form(array_form, boundary_index=None):
+    """Return a reduced array form.
 
+    When ``boundary_index`` is provided, ``array_form`` is assumed to be the
+    concatenation of two reduced words and only the collision at the boundary
+    is reduced.
     """
-    a = list(array_form[:])
-    new_array = []
-    n = 1
-    symbols = group.symbols
-    for i in range(len(a)):
-        if i == len(a) - 1:
-            if a[i] == a[i - 1]:
-                if (-a[i]) in symbols:
-                    new_array.append((-a[i], -n))
-                else:
-                    new_array.append((a[i], n))
+    if not array_form:
+        return ()
+    if boundary_index is not None:
+        reduced = list(array_form)
+        index = boundary_index
+        while index >= 0 and index < len(reduced) - 1 and reduced[index][0] == reduced[index + 1][0]:
+            exp = reduced[index][1] + reduced[index + 1][1]
+            base = reduced[index][0]
+            reduced[index] = (base, exp)
+            del reduced[index + 1]
+            if reduced[index][1] == 0:
+                del reduced[index]
+                index -= 1
+        return tuple(reduced)
+
+    reduced = []
+    for gen, exp in array_form:
+        if exp == 0:
+            continue
+        if reduced and reduced[-1][0] == gen:
+            exp = reduced[-1][1] + exp
+            if exp == 0:
+                reduced.pop()
             else:
-                if (-a[i]) in symbols:
-                    new_array.append((-a[i], -1))
-                else:
-                    new_array.append((a[i], 1))
-            return new_array
-        elif a[i] == a[i + 1]:
-            n += 1
+                reduced[-1] = (gen, exp)
         else:
-            if (-a[i]) in symbols:
-                new_array.append((-a[i], -n))
-            else:
-                new_array.append((a[i], n))
-            n = 1
-
-
-def zero_mul_simp(l, index):
-    """Used to combine two reduced words."""
-    while index >=0 and index < len(l) - 1 and l[index][0] == l[index + 1][0]:
-        exp = l[index][1] + l[index + 1][1]
-        base = l[index][0]
-        l[index] = (base, exp)
-        del l[index + 1]
-        if l[index][1] == 0:
-            del l[index]
-            index -= 1
+            reduced.append((gen, exp))
+    return tuple(reduced)
