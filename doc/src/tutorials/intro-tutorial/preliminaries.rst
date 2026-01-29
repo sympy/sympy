@@ -26,6 +26,6 @@ Exercises
 
 This tutorial was the basis for a tutorial given at the 2013 SciPy conference
 in Austin, TX.  The website for that tutorial is `here
-<https://certik.github.io/scipy-2013-tutorial/html/index.html>`_. It has links
+<https://docs.sympy.org/latest/tutorials/intro-tutorial/index.html>`_. It has links
 to videos, materials, and IPython notebook exercises.  The IPython notebook
 exercises in particular are recommended to anyone going through this tutorial.
