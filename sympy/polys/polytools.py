@@ -4993,7 +4993,7 @@ def degree(f, gen=0):
             if not gen_is_Num:
                 fast_deg = _degree_fast(f, gen)
                 if fast_deg is not None:
-                    return Integer(fast_deg) if isinstance(fast_deg, int) else fast_deg
+                    return fast_deg
 
             if gen_is_Num:
                 p, _ = poly_from_expr(f)
