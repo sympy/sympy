@@ -4281,3 +4281,7 @@ def test_degree_optimization():
 
     # 5. Generator independence
     assert degree(y*(x + 1)**10, x) == 10
+
+    # 6. Function generator (suggested in review)
+    from sympy import exp
+    assert degree((2*exp(x)**4 + 1)**6 + 1, exp(x)) == 24
