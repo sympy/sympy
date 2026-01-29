@@ -232,8 +232,8 @@ def test_dyadic_tuple_pretty_print():
 
     result = pretty((I_A_Ao, I_A_Ao))
 
-    assert isinstance(result, str)
-    assert len(result) > 0
+    expected = "(I a_y|a_y + I a_z|a_z, I a_y|a_y + I a_z|a_z)"
+    assert result == expected
 
     result_single = pretty(I_A_Ao)
     assert isinstance(result_single, str)
