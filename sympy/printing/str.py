@@ -154,6 +154,9 @@ class StrPrinter(Printer):
     def _print_Dummy(self, expr):
         return '_' + expr.name
 
+    def _print_Equation(self, expr):
+        return 'Eqn('+self._print(expr.lhs) + ', ' + self._print(expr.rhs)+')'
+
     def _print_EulerGamma(self, expr):
         return 'EulerGamma'
 
