@@ -69,6 +69,9 @@ def test_FreeGroup__getitem__():
 
 def test_FreeGroupElm__hash__():
     assert hash(x*y*z)
+    assert hash(x * y) != hash(y * x)
+    assert hash(x * y * x) != hash(x * y)
+    assert hash(x**2 * y) == hash(x * x * y)
 
 
 def test_FreeGroupElm_copy():
