@@ -82,6 +82,9 @@ class KanesMethod(_Methods):
         time-derivative of the velocity constraints.
     u_auxiliary : iterable of dynamicsymbols, optional
         Auxiliary generalized speeds.
+    reaction_forces : iterable of Expr, optional
+        Reaction forces. Needed only to remove them from (fr + frstar) and
+        from the force vector where they appear in certain cases.
     bodies : iterable of Particle and/or RigidBody, optional
         The particles and rigid bodies in the system.
     forcelist : iterable of tuple[Point | ReferenceFrame, Vector], optional
@@ -208,7 +211,8 @@ class KanesMethod(_Methods):
     def __init__(self, frame, q_ind, u_ind, kd_eqs=None, q_dependent=None,
                  configuration_constraints=None, u_dependent=None,
                  velocity_constraints=None, acceleration_constraints=None,
-                 u_auxiliary=None, bodies=None, forcelist=None,
+                 u_auxiliary=None, reaction_forces=None, bodies=None,
+                 forcelist=None,
                  explicit_kinematics=True, kd_eqs_solver='LU',
                  constraint_solver='LU'):
 
@@ -226,6 +230,7 @@ class KanesMethod(_Methods):
 
         self._forcelist = forcelist
         self._bodylist = bodies
+        self._reaction_forces = reaction_forces
 
         self.explicit_kinematics = explicit_kinematics
         self._constraint_solver = constraint_solver
@@ -265,7 +270,8 @@ class KanesMethod(_Methods):
         self._udot = self.u.diff(dynamicsymbols._t)
         self._uaux = none_handler(u_aux)
 
-    def _initialize_constraint_matrices(self, config, vel, acc, linear_solver='LU'):
+    def _initialize_constraint_matrices(self, config, vel, acc,
+                                        linear_solver='LU'):
         """Initializes constraint matrices."""
         linear_solver = _parse_linear_solver(linear_solver)
         # Define vector dimensions
@@ -719,7 +725,8 @@ class KanesMethod(_Methods):
         if self._uaux:
             if not self._udep:
                 km = KanesMethod(self._inertial, self.q, self._uaux,
-                             u_auxiliary=self._uaux, constraint_solver=self._constraint_solver)
+                             u_auxiliary=self._uaux,
+                             constraint_solver=self._constraint_solver)
             else:
                 km = KanesMethod(self._inertial, self.q, self._uaux,
                         u_auxiliary=self._uaux, u_dependent=self._udep,
@@ -736,6 +743,19 @@ class KanesMethod(_Methods):
             self._aux_eq = fraux + frstaraux
             self._fr = fr.col_join(fraux)
             self._frstar = frstar.col_join(frstaraux)
+
+            # Remove reaction forces and auxiliary speeds from fr, frstar
+            if self._reaction_forces is not None:
+                d_dict = dict.fromkeys(self._reaction_forces, 0)
+                self._fr = msubs(self._fr, d_dict)
+                self._frstar = msubs(self._frstar, d_dict)
+
+            if self._uaux is not None:
+                u_auxdt = [i.diff(dynamicsymbols._t) for i in self._uaux]
+                d_dict = dict.fromkeys(self._uaux, 0) | dict.fromkeys(u_auxdt, 0)
+                self._fr = msubs(self._fr, d_dict)
+                self._frstar = msubs(self._frstar, d_dict)
+
         return (self._fr, self._frstar)
 
     def _form_eoms(self):
@@ -789,6 +809,12 @@ class KanesMethod(_Methods):
             raise ValueError('Need to compute Fr, Fr* first.')
         if not self._uaux:
             raise ValueError('No auxiliary speeds have been declared.')
+
+        # remove auxiliary speeds.
+        if self._uaux is not None:
+            d_dict = dict.fromkeys(self._uaux, 0) | dict.fromkeys(
+                [i.diff(dynamicsymbols._t) for i in self._uaux], 0)
+            self._aux_eq = msubs(self._aux_eq, d_dict)
         return self._aux_eq
 
     @property
@@ -816,6 +842,15 @@ class KanesMethod(_Methods):
         """The forcing vector of the system."""
         if not self._fr or not self._frstar:
             raise ValueError('Need to compute Fr, Fr* first.')
+        if self._reaction_forces is not None:
+            d_dict = dict.fromkeys(self._reaction_forces, 0)
+            self._f_d = msubs(self._f_d, d_dict)
+            self._f_dnh = msubs(self._f_dnh, d_dict)
+        if self._uaux is not None:
+            u_auxdt = [i.diff(dynamicsymbols._t) for i in self._uaux]
+            d_dict = dict.fromkeys(self._uaux, 0) | dict.fromkeys(u_auxdt, 0)
+            self._f_d = msubs(self._f_d, d_dict)
+            self._f_dnh = msubs(self._f_dnh, d_dict)
         return -Matrix([self._f_d, self._f_dnh])
 
     @property
