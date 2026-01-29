@@ -1049,6 +1049,21 @@ def test_finite_basic():
     assert A > AandB and B > AandB
 
 
+def test_finiteset_evalf_basic():
+    from sympy import FiniteSet, sqrt
+
+    s = FiniteSet(sqrt(2), 1)
+    sf = s.evalf()
+
+    assert sf == FiniteSet(sqrt(2).evalf(), 1.0)
+
+
+def test_finiteset_n_alias():
+    from sympy import sqrt
+    s = FiniteSet(sqrt(2))
+    assert s.n() == s.evalf()
+
+
 def test_product_basic():
     H, T = 'H', 'T'
     unit_line = Interval(0, 1)

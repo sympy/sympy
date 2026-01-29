@@ -1502,7 +1502,8 @@ def evalf(x: Expr, prec: int, options: OPT_DICT) -> TMP_RES:
         if as_real_imag is None:
             raise NotImplementedError # e.g. FiniteSet(-1.0, 1.0).evalf()
         re, im = as_real_imag()
-        if re.has(re_) or im.has(im_):
+        if (re.has(re_) or im.has(im_) or
+            re.has(im_) or im.has(re_)):
             raise NotImplementedError
         if not re:
             re = None
