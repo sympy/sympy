@@ -434,3 +434,14 @@ def test_issue_21057_pymc():
                     assert tuple(s.flatten()) in p.pspace.distribution.set
         except NotImplementedError:
             continue
+
+
+def test_marginal_distribution_pdf_multivariate_28763():
+    from sympy.stats import MultivariateNormal
+    from sympy.stats.joint_rv import MarginalDistribution
+    from sympy import Matrix, eye
+
+    M = MultivariateNormal('M', Matrix([0, 0]), eye(2))
+    m = MarginalDistribution(M, (M[0],))
+    result = m.pdf(M[0])
+    assert result is not None
