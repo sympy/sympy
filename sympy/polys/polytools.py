@@ -4904,6 +4904,58 @@ def _update_args(args, key, value):
 
 
 @public
+def _degree_fast(expr, gen):
+    if expr.is_Number:
+        if expr is S.Zero:
+            return S.NegativeInfinity
+        return 0
+
+    if expr == gen:
+        return 1
+    
+    if expr.is_Symbol:
+        return 0
+
+    if expr.is_Pow:
+        base, exp = expr.args
+        if exp.is_Integer and exp > 0:
+            d = _degree_fast(base, gen)
+            if d is not None:
+                return d * exp
+        return None
+
+    if expr.is_Mul:
+        total = 0
+        for arg in expr.args:
+            d = _degree_fast(arg, gen)
+            if d is None:
+                return None
+            if d is S.NegativeInfinity:
+                return S.NegativeInfinity
+            total += d
+        return total
+
+    if expr.is_Add:
+        degrees = []
+        for arg in expr.args:
+            d = _degree_fast(arg, gen)
+            if d is None:
+                return None
+            degrees.append(d)
+        
+        # S.NegativeInfinity + 1 is S.NegativeInfinity, safe.
+        max_deg = max(degrees, default=S.NegativeInfinity)
+        
+        # Check uniqueness to avoid cancellation (e.g. x**2 - x**2)
+        if degrees.count(max_deg) == 1:
+            return max_deg
+        
+        # Cancellation possible, unsafe fallback
+        return None
+
+    return None
+
+@public
 def degree(f, gen=0):
     """
     Return the degree of ``f`` in the given variable.
@@ -4938,6 +4990,12 @@ def degree(f, gen=0):
     else:
         isNum = f.is_Number
         if not isNum:
+            # Conservative fast-path to avoid unnecessary expansion
+            if not gen_is_Num:
+                fast_deg = _degree_fast(f, gen)
+                if fast_deg is not None:
+                    return Integer(fast_deg) if isinstance(fast_deg, int) else fast_deg
+
             if gen_is_Num:
                 p, _ = poly_from_expr(f)
             else:

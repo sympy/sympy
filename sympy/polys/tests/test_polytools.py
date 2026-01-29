@@ -4264,3 +4264,20 @@ def test_schur_conditions():
 
     assert any(c <= 0 for c in p6.set_domain(QQ).schur_conditions())
     assert any(c <= 0 for c in p6.set_domain(EXRAW).schur_conditions())
+
+
+def test_degree_optimization():
+    # 1. Large power (fast-path, no expansion)
+    assert degree((x + 1)**10000, x) == 10000
+
+    # 2. Addition without cancellation
+    assert degree((x + 1)**100 + x**50, x) == 100
+
+    # 3. Addition with cancellation (fallback required)
+    assert degree((x + 1)**2 - x**2, x) == 1
+
+    # 4. Nested multiplication
+    assert degree(x*(x + 1)**10, x) == 11
+
+    # 5. Generator independence
+    assert degree(y*(x + 1)**10, x) == 10
