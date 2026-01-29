@@ -138,7 +138,7 @@ class GeometryEntity(Basic, EvalfMixin):
             else:
                 old = Point(old)
                 new = Point(new)
-            return  self._subs(old, new)
+            return self.xreplace({old: new})
 
     def _repr_svg_(self):
         """SVG representation of a GeometryEntity suitable for IPython"""
