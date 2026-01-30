@@ -2242,8 +2242,8 @@ def test_non_commutative_expansion():
     assert expand_trig(cos(A + B)) == cos(A + B)
     assert expand_trig(tan(A + B)) == tan(A + B)
     assert expand_trig(cot(A + B)) == cot(A + B)
-    
-    # These verify that even without a guard, they don't 
+
+    # These verify that even without a guard, they don't
     # expand into long addition identities.
     assert expand_trig(sec(A + B)) == cos(A + B)**-1
     assert expand_trig(csc(A + B)) == sin(A + B)**-1
