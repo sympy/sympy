@@ -202,7 +202,7 @@ def slow_sring(exprs, opt):
 
         coeff_map = dict(zip(coeffs, coeffs_dom))
         reps = [{m: coeff_map[c] for m, c in rep.items()} for rep in reps]
-   
+
     _ring = PolyRing(opt.gens, opt.domain, opt.order)
     polys = list(map(_ring.from_dict, reps))
     return _ring, polys
