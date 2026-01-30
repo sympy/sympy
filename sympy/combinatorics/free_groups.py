@@ -382,7 +382,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
     def __hash__(self):
         _hash = self._hash
         if _hash is None:
-            self._hash = _hash = hash((self.group, frozenset(tuple(self))))
+            self._hash = _hash = hash((self.group, tuple(self)))
         return _hash
 
     def copy(self):
