@@ -265,6 +265,9 @@ def function_range(f, symbol, domain):
             if isinstance(critical_points, ImageSet):
                 raise NotImplementedError(
                         'Infinite number of critical points for {}'.format(f))
+            if not critical_points.is_FiniteSet:
+                raise NotImplementedError(
+                        'Infinite critical points for {}'.format(f))
 
             for critical_point in critical_points:
                 vals += FiniteSet(f.subs(symbol, critical_point))
