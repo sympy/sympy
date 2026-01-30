@@ -114,6 +114,7 @@ def test_FreeGroupElm_eliminate_word():
     assert w3.eliminate_word(y, x**-1) == x**-3
     assert w3.eliminate_word(x, y*z) == y*z*y*z*y**3*z**-1
     assert (y**-3).eliminate_word(y, x**-1*z**-1) == z*x*z*x*z*x
+    raises(ValueError, lambda: w.eliminate_word(F.identity, x))
     #assert w3.eliminate_word(x, y*x) == y*x*y*x**2*y*x*y*x*y*x*z**3
     #assert w3.eliminate_word(x, x*y) == x*y*x**2*y*x*y*x*y*x*y*z**3
 
@@ -229,8 +230,15 @@ def test_FreeGroupElm_words():
     assert w.substituted_word(0, 7, y**2*x) == y**2*x**2*y**-4*x
 
 
-def test_FreeGroupElm_cyclic_subword_reduction():
-    _, x, y = free_group("x y")
+def test_FreeGroupElm_cyclic():
+    F, x, y = free_group("x y")
     w = x*y*x**-1
     rot = w.cyclic_subword(1, 1 + len(w))
     assert rot == y
+    identity = F.identity
+    assert identity.cyclic_subword(3, 7) == identity
+    assert identity.cyclic_conjugates() == {identity}
+    assert x.is_cyclic_conjugate(identity) is False
+    assert identity.is_cyclic_conjugate(x * x**-1)
+    v = x*y*x*y*x
+    assert v.cyclic_conjugates() == {x*y*x**2*y, x**2*y*x*y, y*x*y*x**2, y*x**2*y*x, x*y*x*y*x}
