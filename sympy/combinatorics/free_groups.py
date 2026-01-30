@@ -1016,6 +1016,8 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
     def cyclic_subword(self, from_i, to_j):
         group = self.group
         l = len(self)
+        if l == 0:
+            return group.identity
         letter_form = self.letter_form
         period1 = int(from_i/l)
         if from_i >= l:
@@ -1049,7 +1051,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         .. [1] https://planetmath.org/cyclicpermutation
 
         """
-        return {self.cyclic_subword(i, i+len(self)) for i in range(len(self))}
+        return {self, *(self.cyclic_subword(i, i+len(self)) for i in range(1,len(self)))}
 
     def is_cyclic_conjugate(self, w):
         """
