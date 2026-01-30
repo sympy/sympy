@@ -1568,6 +1568,9 @@ class cot(TrigonometricFunction):
 
     def _eval_expand_trig(self, **hints):
         arg = self.args[0]
+        # Fix for non-commutative symbols
+        if not arg.is_commutative:
+            return self
         x = None
         if arg.is_Add:
             n = len(arg.args)
