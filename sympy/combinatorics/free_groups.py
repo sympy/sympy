@@ -677,6 +677,8 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         """
         if by is None:
             by = self.group.identity
+        if not gen:
+            raise ValueError("gen must be a non-empty word")
         if self.is_independent(gen) or gen == by:
             return self
         if gen == self:
