@@ -4906,7 +4906,7 @@ def _update_args(args, key, value):
 @public
 def _degree_fast(expr, gen):
     if expr.is_Number:
-        if expr is S.Zero:
+        if expr.is_zero:  # 0.0 or 0
             return S.NegativeInfinity
         return S.Zero
 
