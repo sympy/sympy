@@ -4279,11 +4279,13 @@ def test_cancel_noncommutative():
     assert cancel(expr2) == (x - 1) * A * B
     assert cancel(expr3) == (x - 1) * B * A
 
-    # 3. Two scalar variables
+    # Two scalar variables, commutativity of A and B should not
+    # get affected here, cancel will handle that
     expr4 = A * (x**2 - y**2)/(x + y) * B
     res4 = cancel(expr4)
     assert res4 == (x - y) * A * B
 
-    # 4. False Cancellation (Safety check)
+    # False Cancellation (Safety check), since AB != BA
+    # the expr wont get simplified any further
     expr5 = (A**2 - B**2)/(A + B)
     assert cancel(expr5) == expr5
