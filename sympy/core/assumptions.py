@@ -155,6 +155,20 @@ can be obtained as follows:
     False, 'prime': False, 'rational': False, 'real': False, 'zero':
     False}
 
+To access the set of all defined assumption names, you can use ``all_assumptions``
+which can be obtained as follows:
+
+    >>> from sympy.core import all_assumptions
+    >>> 'real' in all_assumptions
+    True
+    >>> all_assumptions
+    frozenset({'negative', 'zero', 'commutative', 'extended_real',
+    'real', 'infinite', 'algebraic', 'complex', 'even', 'polar',
+    'imaginary', 'composite', 'finite', 'extended_negative', 'positive',
+    'extended_nonnegative', 'nonpositive', 'extended_nonpositive', 'odd',
+    'nonzero', 'noninteger', 'integer', 'irrational', 'nonnegative', 'rational',
+    'extended_positive', 'transcendental', 'prime', 'extended_nonzero'})
+
 Developers Notes
 ================
 
@@ -293,6 +307,7 @@ _assume_defined = _assume_rules.defined_facts.copy()
 _assume_defined.add('polar')
 _assume_defined = frozenset(_assume_defined)
 all_assumptions = _assume_defined
+
 
 def assumptions(expr, _check=None):
     """return the T/F assumptions of ``expr``"""
