@@ -3,7 +3,8 @@
 
 from .sympify import sympify, SympifyError
 from .cache import cacheit
-from .assumptions import assumptions, check_assumptions, failing_assumptions, common_assumptions, all_assumptions
+from .assumptions import (assumptions, check_assumptions, failing_assumptions, 
+                          common_assumptions, all_assumptions)
 from .basic import Basic, Atom
 from .singleton import S
 from .expr import Expr, AtomicExpr, UnevaluatedExpr
