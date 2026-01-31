@@ -429,8 +429,6 @@ def refine_sin_cos(expr, assumptions):
     from sympy.functions.elementary.trigonometric import sin, cos
     arg = expr.args[0]
 
-    # The logic is to separate integer multiples of pi/2
-    # to apply trigonometric reduction formulas.
     integer_coeffs_of_pi_half = []
     remaining_terms = []
 
@@ -446,19 +444,23 @@ def refine_sin_cos(expr, assumptions):
     if not integer_coeffs_of_pi_half:
         return expr
 
-    # As `sin(x) = cos(x-pi/2)`, solving things for `cos` will allow us to use
-    # same logic for both functions by decreasing the coefficient of pi/2 by 1.
-    integer_coeff_of_pi_half = sum(integer_coeffs_of_pi_half)
+    k = sum(integer_coeffs_of_pi_half)
+    # Treat sin as a phase-shifted cosine so a single logic path can handle both.
     if isinstance(expr, sin):
-        integer_coeff_of_pi_half -= 1
+        k -= 1
 
-    # Odd multiples of pi/2 shift to sin while even preserves cos.
-    if ask(Q.odd(integer_coeff_of_pi_half), assumptions):
+    # If k is even:
+    #    `cos(rem + k*pi/2)` -> `(-1)^(k/2) * cos(rem)`
+    #
+    # If k is odd:
+    #    `cos(rem + k*pi/2)` -> `(-1)^((k+1)/2) * sin(rem)`
+    if ask(Q.even(k), assumptions):
         rem = sum(remaining_terms)
-        return ((-1)**((integer_coeff_of_pi_half + 1) / 2)) * sin(rem)
-    elif ask(Q.even(integer_coeff_of_pi_half), assumptions):
+        return ((-1) ** (k / 2)) * cos(rem)
+    elif ask(Q.odd(k), assumptions):
         rem = sum(remaining_terms)
-        return ((-1)**(integer_coeff_of_pi_half / 2)) * cos(rem)
+        return ((-1)**((k + 1) / 2)) * sin(rem)
+
     return expr
 
 handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
