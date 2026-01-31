@@ -443,10 +443,11 @@ def refine_sin_cos(expr, assumptions):
         else:
             remaining_terms.append(term)
 
-    # As `sin(x) = cos(x-pi/2)`, solving things for `cos` will allow us to use
-    # same logic for both functions by decreasing the coefficient of pi/2 by 1.
     if not integer_coeffs_of_pi_half:
         return expr
+
+    # As `sin(x) = cos(x-pi/2)`, solving things for `cos` will allow us to use
+    # same logic for both functions by decreasing the coefficient of pi/2 by 1.
     integer_coeff_of_pi_half = sum(integer_coeffs_of_pi_half)
     if isinstance(expr, sin):
         integer_coeff_of_pi_half -= 1
