@@ -1380,12 +1380,12 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
         np = import_module('numpy')
         def f_point(t):
             return np.array([t, _adaptive_eval(f, t)])
-        
+
         points, _ = adaptive_sampler(
-            f_point, 
-            self.start.real, 
-            self.end.real, 
-            self.depth, 
+            f_point,
+            self.start.real,
+            self.end.real,
+            self.depth,
             use_log_sampling=(self.xscale == 'log')
         )
         x_coords = [p[0] for p in points]
@@ -1593,12 +1593,12 @@ class Parametric2DLineSeries(ParametricLineBaseSeries):
         np = import_module('numpy')
         def f_point(t):
             return np.array([_adaptive_eval(f_x, t), _adaptive_eval(f_y, t)])
-        
+
         points, params = adaptive_sampler(
-            f_point, 
-            self.start, 
-            self.end, 
-            self.depth, 
+            f_point,
+            self.start,
+            self.end,
+            self.depth,
             use_log_sampling=False
         )
         x_coords = [p[0] for p in points]
@@ -1683,12 +1683,12 @@ class Parametric3DLineSeries(ParametricLineBaseSeries):
         np = import_module('numpy')
         def f_point(t):
             return np.array([_adaptive_eval(f_x, t), _adaptive_eval(f_y, t), _adaptive_eval(f_z, t)])
-        
+
         points, params = adaptive_sampler(
-            f_point, 
-            self.start, 
-            self.end, 
-            self.depth, 
+            f_point,
+            self.start,
+            self.end,
+            self.depth,
             use_log_sampling=False
         )
         x_coords = [p[0] for p in points]
