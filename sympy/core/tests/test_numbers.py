@@ -2327,3 +2327,21 @@ def test_issue_28222():
     assert Mod(2 + 3*I, 10) == Mod(2 + 3*I, 10)
     assert Mod(I, exp(1)) == Mod(I, exp(1))
     assert Mod(I, S(1.5)) == Mod(I, S(1.5))
+
+def test_issue_19988():
+    import pickle
+    from sympy import Float
+    
+    # Create a float with 20 decimal digits of precision
+    t = Float('1.123456789123456789', dps=20)
+    
+    # Pickle and Unpickle
+    serialized = pickle.dumps(t)
+    deserialized = pickle.loads(serialized)
+    
+    # 1. Check if the values are equal
+    assert t == deserialized
+    
+    # 2. Check if the internal binary precision (_prec) was preserved
+    # This was the specific part that used to fail!
+    assert t._prec == deserialized._prec
