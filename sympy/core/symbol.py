@@ -231,14 +231,10 @@ class Symbol(AtomicExpr, Boolean): # type: ignore
     ----------
     name : str
 
-    **assumptions :
-        Boolean keyword arguments specifying mathematical properties of the symbol such as
-        - real : symbol is a real number
-        - positive : symbol is strictly greater than 0
-        - commutative : symbol commutes with other symbols under multiplication (default: True)
-
+    **assumptions
+        Boolean keyword arguments specifying mathematical properties of the symbol.
         See the `assumptions guide <https://docs.sympy.org/latest/guides/assumptions.html#predicates>`_
-        for a complete list.
+        for a complete list of possible assumptions.
 
     Examples
     --------
@@ -270,7 +266,6 @@ class Symbol(AtomicExpr, Boolean): # type: ignore
     >>> alpha = Symbol('alpha')
     >>> alpha #doctest: +SKIP
     α
-
     >>> alpha_i = Symbol('alpha_i')
     >>> alpha_i #doctest: +SKIP
     αᵢ
