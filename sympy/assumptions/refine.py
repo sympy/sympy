@@ -429,39 +429,35 @@ def refine_sin_cos(expr, assumptions):
     from sympy.functions.elementary.trigonometric import sin, cos
     arg = expr.args[0]
 
-    # The logic is to separate integer multiples of pi/2 to apply trigonometric reduction formulas.
-    k_terms = [] # To store the integral multiples of pi/2.
-    rem_terms = [] # To store the remaining terms in the expr.
+    # The logic is to separate integer multiples of pi/2
+    # to apply trigonometric reduction formulas.
+    integer_coeffs_of_pi_half = []
+    remaining_terms = []
 
     terms = arg.args if arg.is_Add else (arg,)
     for term in terms:
-        # Extract coefficient of pi in each of the terms.
-        pi_coeff = term.coeff(S.Pi)
-        if pi_coeff:
-            # We need integral coefficient of pi/2. `coeff` is the coefficient of pi/2.
-            coeff = 2 * pi_coeff
-            if ask(Q.integer(coeff), assumptions):
-                k_terms.append(coeff)
-            else:
-                rem_terms.append(term)
+        coeff_of_pi = term.coeff(S.Pi)
+        if coeff_of_pi and ask(Q.integer(2 * coeff_of_pi), assumptions):
+            coeff_of_pi_half = 2 * coeff_of_pi
+            integer_coeffs_of_pi_half.append(coeff_of_pi_half)
         else:
-            rem_terms.append(term)
+            remaining_terms.append(term)
 
-    # Add all integral multiples of pi/2. As `sin(x) = cos(x-pi/2)`, we will solve things for `cos`.
-    # This allows us to use the same logic for both by decreasing the `coeff` by 1.
-    k = Add(*k_terms)
+    # As `sin(x) = cos(x-pi/2)`, solving things for `cos` will allow us to use
+    # same logic for both functions by decreasing the coefficient of pi/2 by 1.
+    if not integer_coeffs_of_pi_half:
+        return expr
+    integer_coeff_of_pi_half = sum(integer_coeffs_of_pi_half)
     if isinstance(expr, sin):
-        k -= 1
+        integer_coeff_of_pi_half -= 1
 
-    # Calculate the value of `rem` only if we can determine the parity of k.
-    # We will use trigonometric identities for this. Odd multiples shift to sin while even preserve cos.
-    if ask(Q.odd(k), assumptions):
-        rem = Add(*rem_terms)
-        return ((-1)**((k + 1) / 2)) * sin(rem)
-    elif ask(Q.even(k), assumptions):
-        rem = Add(*rem_terms)
-        return ((-1)**(k / 2)) * cos(rem)
-    # Best to leave the expression as is.
+    # Odd multiples of pi/2 shift to sin while even preserves cos.
+    if ask(Q.odd(integer_coeff_of_pi_half), assumptions):
+        rem = sum(remaining_terms)
+        return ((-1)**((integer_coeff_of_pi_half + 1) / 2)) * sin(rem)
+    elif ask(Q.even(integer_coeff_of_pi_half), assumptions):
+        rem = sum(remaining_terms)
+        return ((-1)**(integer_coeff_of_pi_half / 2)) * cos(rem)
     return expr
 
 handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
