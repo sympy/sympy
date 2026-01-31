@@ -5,15 +5,14 @@ from typing import TYPE_CHECKING, overload
 from types import FunctionType
 from collections import Counter
 
-from mpmath import mp, workprec
-from mpmath.libmp.libmpf import prec_to_dps
-
+from sympy.core.expr import Expr
 from sympy.core.sorting import default_sort_key
 from sympy.core.evalf import DEFAULT_MAXPREC, PrecisionExhausted
 from sympy.core.logic import fuzzy_and, fuzzy_or
 from sympy.core.numbers import AlgebraicNumber, Float
 from sympy.core.symbol import Dummy
 from sympy.core.sympify import _sympify
+from sympy.external.mpmath import prec_to_dps, local_workprec
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.polys import roots, CRootOf, ZZ, QQ, EX
 from sympy.polys.matrices import DomainMatrix
@@ -29,7 +28,6 @@ from .utilities import _iszero, _simplify
 
 if TYPE_CHECKING:
     from typing import TypeVar, Callable, Any, Literal
-    from sympy.core.expr import Expr
     from sympy.matrices.matrixbase import MatrixBase
     Tmat = TypeVar('Tmat', bound=MatrixBase)
 
@@ -47,15 +45,21 @@ def _eigenvals_eigenvects_mpmath(M):
     norm2 = lambda v: mp.sqrt(sum(i**2 for i in v))
 
     v1 = None
-    prec = max(x._prec for x in M.atoms(Float))
-    eps = 2**-prec
+    prec_orig = max(x._prec for x in M.atoms(Float))
+    eps = 2**-prec_orig
+
+    prec = prec_orig
+
+    to_expr = lambda e: Expr._from_mpmath(e, prec_orig)
 
     while prec < DEFAULT_MAXPREC:
-        with workprec(prec):
+        with local_workprec(prec) as mp:
             A = mp.matrix(M.evalf(n=prec_to_dps(prec)))
             E, ER = mp.eig(A)
             v2 = norm2([i for e in E for i in (mp.re(e), mp.im(e))])
             if v1 is not None and mp.fabs(v1 - v2) < eps:
+                E = [to_expr(e) for e in E]
+                ER = [[to_expr(e) for e in row] for row in ER.transpose().tolist()]
                 return E, ER
             v1 = v2
         prec *= 2
@@ -71,19 +75,19 @@ def _eigenvals_eigenvects_mpmath(M):
 
 def _eigenvals_mpmath(M, multiple=False):
     """Compute eigenvalues using mpmath"""
-    E, _ = _eigenvals_eigenvects_mpmath(M)
-    result = [_sympify(x) for x in E]
+    result, _ = _eigenvals_eigenvects_mpmath(M)
     if multiple:
         return result
     return dict(Counter(result))
 
 
 def _eigenvects_mpmath(M):
+    from sympy import ImmutableMatrix
     E, ER = _eigenvals_eigenvects_mpmath(M)
     result = []
     for i in range(M.rows):
         eigenval = _sympify(E[i])
-        eigenvect = _sympify(ER[:, i])
+        eigenvect = ImmutableMatrix(ER[i])
         result.append((eigenval, 1, [eigenvect]))
 
     return result
@@ -234,52 +238,16 @@ eigenvals_error_message = \
 
 
 def _eigenvals_list(
-        M: MatrixBase,
-        error_when_incomplete: bool = True,
-        simplify: Callable[[Expr], Expr] | bool = False,
-        **flags
-    ) -> list[Expr]:
-    iblocks = M.strongly_connected_components()
-    all_eigs = []
-    is_dom = M._rep.domain in (ZZ, QQ) # type: ignore
-    for b in iblocks:
-
-        # Fast path for a 1x1 block:
-        if is_dom and len(b) == 1:
-            index = b[0]
-            val = M[index, index]
-            all_eigs.append(val)
-            continue
-
-        block = M[b, b]
-
-        if isinstance(simplify, FunctionType):
-            charpoly = block.charpoly(simplify=simplify)
-        else:
-            charpoly = block.charpoly()
-
-        factors = charpoly.factor_list()[1]
-
-        for factor, multiplicity in factors:
-            eigs = roots(factor, multiple=True, **flags)
-
-            degree = int(factor.degree())
-            if len(eigs) != degree:
-                try:
-                    eigs = factor.all_roots(multiple=True)
-                except NotImplementedError:
-                    if error_when_incomplete:
-                        raise MatrixError(eigenvals_error_message)
-                    else:
-                        eigs = []
-
-            all_eigs += eigs * multiplicity
-
-    if not simplify:
-        return all_eigs
-    if not isinstance(simplify, FunctionType):
-        simplify = _simplify
-    return [simplify(value) for value in all_eigs]
+    M: MatrixBase,
+    error_when_incomplete: bool = True,
+    simplify: Callable[[Expr], Expr] | bool = False,
+    **flags,
+) -> list[Expr]:
+    vals_dict = _eigenvals_dict(M, error_when_incomplete, simplify, **flags)
+    vals = []
+    for val, mult in vals_dict.items():
+        vals.extend([val] * mult)
+    return vals
 
 
 def _eigenvals_dict(
@@ -288,8 +256,11 @@ def _eigenvals_dict(
         simplify: Callable[[Expr], Expr] | bool = False,
         **flags: Any,
     ) -> dict[Expr, int]:
+
     iblocks = M.strongly_connected_components()
     all_eigs: dict[Expr, int] = {}
+    expanded_eigs: dict[Expr, Expr] = {}
+
     # XXX: Only RepMatrix has _rep ...
     is_dom = M._rep.domain in (ZZ, QQ) # type: ignore
     for b in iblocks:
@@ -324,6 +295,16 @@ def _eigenvals_dict(
                         eigs = {}
 
             for k, v in eigs.items():
+                # Try a bit to canonicalize the eigenvalue expressions to get
+                # the multiplicity correct. This is not robust enough in general
+                # if different subroutines in roots can return different forms
+                # for the same root.
+                k_expanded = k.expand()
+                if k_expanded in expanded_eigs:
+                    k = expanded_eigs[k_expanded]
+                else:
+                    expanded_eigs[k_expanded] = k
+
                 v_total = v * multiplicity
                 if k in all_eigs:
                     all_eigs[k] += v_total

@@ -3,7 +3,7 @@ from sympy.core.singleton import S
 from sympy.core.symbol import Symbol, Dummy
 from sympy.core.function import Lambda
 from sympy.functions.elementary.exponential import (exp, log)
-from sympy.functions.elementary.trigonometric import sec, csc
+from sympy.functions.elementary.trigonometric import sec, csc, tan
 from sympy.functions.elementary.hyperbolic import (coth, sech,
                                                    atanh, asech, acoth, acsch)
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -123,3 +123,20 @@ def test_issue_23401():
     x = Symbol('x')
     expr = (x + 1)/(-1.0e-3*x**2 + 0.1*x + 0.1)
     assert is_increasing(expr, Interval(1,2), x)
+
+
+def test_monotonicity_with_interior_singularities():
+    assert is_monotonic(tan(x), Interval(0, 5), x) is False
+    assert is_increasing(tan(x), Interval(0, 5), x) is False
+
+    assert is_monotonic(1/x, Interval(-1, 1), x) is False
+    assert is_increasing(1/x, Interval(-1, 1), x) is False
+    assert is_decreasing(1/x, Interval(-1, 1), x) is False
+
+    assert is_increasing(tan(x), Interval(0, 1), x) is True
+    assert is_increasing(tan(x), Interval.open(-pi/2, pi/2), x) is True
+
+    assert is_decreasing(1/x, Interval.open(0, 1), x) is True
+    assert is_decreasing(1/x, Interval(-1, Rational(-1, 10)), x) is True
+    assert not is_decreasing(1/x, Interval(-1, 1), x)
+    assert not is_increasing(1/x, Interval(-1, 1), x)

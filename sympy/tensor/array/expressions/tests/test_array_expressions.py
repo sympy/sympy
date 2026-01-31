@@ -220,6 +220,16 @@ def test_arrayexpr_array_flatten():
     cg = _array_tensor_product(_array_diagonal(_array_tensor_product(A, X, Y), (0, 3), (1, 5)), a, b)
     assert cg == _permute_dims(_array_diagonal(_array_tensor_product(A, X, Y, a, b), (0, 3), (1, 5)), [0, 1, 6, 7, 2, 3, 4, 5])
 
+def test_flattening_issue_28823():
+    A = ArraySymbol("A", (1, 1, 1, 1, k, 1, 1, 1))
+    expr = ArrayDiagonal(A, (2, 6), (3, 7))  # ==> (1, 1, k, 1, 1, 1)
+    expr = ArrayDiagonal(expr, (0, 4), (1, 5))  # ==> (k, 1, 1, 1)
+    flat = expr.doit()
+    assert flat == ArrayDiagonal(A, (0, 2, 6), (1, 3, 7))
+
+    expr = ArrayDiagonal(ArrayDiagonal(ArrayDiagonal(A, (0, 1)), (0, 1)), (1, 2))
+    assert expr.doit() == ArrayDiagonal(A, (0, 1), (2, 3), (5, 6))
+
 
 def test_arrayexpr_array_diagonal():
     cg = _array_diagonal(M, (1, 0))
@@ -809,6 +819,9 @@ def test_array_expr_as_explicit_with_explicit_component_arrays():
 
 
 def test_array_sum():
+    X = MatrixSymbol("X", k, k)
+    Y = MatrixSymbol("Y", k, k)
+
     expr = ArraySum(X, (i, 1, j))
     assert isinstance(expr, Sum)
     assert expr.doit() == j*X
@@ -832,7 +845,7 @@ def test_array_sum():
     assert expr.doit().dummy_eq(ArraySum(ArrayTensorProduct(X**sin(m), i*Y), (m, 1, j)))
 
     expr = ArrayContraction(ArraySum(X, (i, 0, j)), (0, 1))
-    # assert expr.doit() == ArrayContraction(j*T, (0, 1))  # TODO: Not working!
+    assert expr.doit() == ArrayContraction((j + 1)*X, (0, 1))
 
     T = MatrixSymbol("T", 3, 3)
     expr = ArrayContraction(ArraySum(T, (i, 1, j)), (0, 1))

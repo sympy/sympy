@@ -1,11 +1,13 @@
 """Algorithms for computing symbolic roots of polynomials. """
 
+from __future__ import annotations
+
+from typing import overload, Any, Literal, TYPE_CHECKING
 
 import math
 from functools import reduce
 
 from sympy.core import S, I, pi
-from sympy.core.expr import Expr
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import _mexpand
 from sympy.core.logic import fuzzy_not
@@ -29,6 +31,9 @@ from sympy.polys.rationaltools import together
 from sympy.polys.specialpolys import cyclotomic_poly
 from sympy.utilities import public
 from sympy.utilities.misc import filldedent
+
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
 
 
 
@@ -838,6 +843,37 @@ def preprocess_roots(poly):
         poly = poly_func(poly)
     return coeff, poly
 
+
+@overload
+def roots(
+    f,
+    *gens,
+    auto: bool = True,
+    cubics: bool = True,
+    trig: bool = False,
+    quartics: bool = True,
+    quintics: bool = False,
+    multiple: Literal[False] = False,
+    filter: None = None,
+    predicate: None = None,
+    strict: bool = False,
+    **flags: Any,
+) -> dict[Expr, int]: ...
+@overload
+def roots(
+    f,
+    *gens,
+    auto: bool = True,
+    cubics: bool = True,
+    trig: bool = False,
+    quartics: bool = True,
+    quintics: bool = False,
+    multiple: Literal[True],
+    filter: None = None,
+    predicate: None = None,
+    strict: bool = False,
+    **flags: Any,
+) -> list[tuple[Expr, int]]: ...
 
 @public
 def roots(f, *gens,

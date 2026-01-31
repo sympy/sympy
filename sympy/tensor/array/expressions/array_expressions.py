@@ -782,12 +782,12 @@ class ArrayDiagonal(_CodegenArrayAbstract):
     In a 2-dimensional array it returns the diagonal, this looks like the
     operation:
 
-    `A_{ij} \rightarrow A_{ii}`
+    `A_{ij} \Longrightarrow A_{ii}`
 
     The diagonal over axes 1 and 2 (the second and third) of the tensor product
     of two 2-dimensional arrays `A \otimes B` is
 
-    `\Big[ A_{ab} B_{cd} \Big]_{abcd} \rightarrow \Big[ A_{ai} B_{id} \Big]_{adi}`
+    `\Big[ A_{ab} B_{cd} \Big]_{abcd} \Longrightarrow \Big[ A_{ai} B_{id} \Big]_{adi}`
 
     In this last example the array expression has been reduced from
     4-dimensional to 3-dimensional. Notice that no contraction has occurred,
@@ -850,7 +850,7 @@ class ArrayDiagonal(_CodegenArrayAbstract):
         if isinstance(expr, ArrayAdd):
             return self._ArrayDiagonal_denest_ArrayAdd(expr, *diagonal_indices)
         if isinstance(expr, ArrayDiagonal):
-            return self._ArrayDiagonal_denest_ArrayDiagonal(expr, *diagonal_indices)
+            return self._ArrayDiagonal_denest_ArrayDiagonal(expr, get_rank(self), *diagonal_indices)
         if isinstance(expr, PermuteDims):
             return self._ArrayDiagonal_denest_PermuteDims(expr, *diagonal_indices)
         if isinstance(expr, (ZeroArray, ZeroMatrix)):
@@ -886,26 +886,22 @@ class ArrayDiagonal(_CodegenArrayAbstract):
         return self.args[1:]
 
     @staticmethod
-    def _flatten(expr, *outer_diagonal_indices):
-        inner_diagonal_indices = expr.diagonal_indices
-        all_inner = [j for i in inner_diagonal_indices for j in i]
-        all_inner.sort()
-        # TODO: add API for total rank and cumulative rank:
-        total_rank = _get_subrank(expr)
-        inner_rank = len(all_inner)
-        outer_rank = total_rank - inner_rank
-        shifts = [0 for i in range(outer_rank)]
-        counter = 0
-        pointer = 0
-        for i in range(outer_rank):
-            while pointer < inner_rank and counter >= all_inner[pointer]:
-                counter += 1
-                pointer += 1
-            shifts[i] += pointer
-            counter += 1
-        outer_diagonal_indices = tuple(tuple(shifts[j] + j for j in i) for i in outer_diagonal_indices)
-        diagonal_indices = inner_diagonal_indices + outer_diagonal_indices
-        return _array_diagonal(expr.expr, *diagonal_indices)
+    def _flatten(expr: ArrayDiagonal, outer_dims, *outer_diagonal_indices):
+        inddown = ArrayDiagonal._push_indices_down(outer_diagonal_indices, list(range(outer_dims)), get_rank(expr))
+        inddown = tuple(i for i in inddown)
+        inddow2 = ArrayDiagonal._push_indices_down(expr.diagonal_indices, inddown, get_rank(expr.expr))
+        new_diag_indices = []
+        for i in inddow2:
+            if not isinstance(i, (tuple, Tuple)):
+                continue
+            diag_group = []
+            for j in i:
+                if isinstance(j, (tuple, Tuple)):
+                    diag_group.extend(list(j))
+                else:
+                    diag_group.append(j)
+            new_diag_indices.append(tuple(diag_group))
+        return _array_diagonal(expr.expr, *new_diag_indices)
 
     @classmethod
     def _ArrayDiagonal_denest_ArrayAdd(cls, expr, *diagonal_indices):
@@ -1020,11 +1016,47 @@ class ArrayElementwiseApplyFunc(_CodegenArrayAbstract):
             expr = expr.as_explicit()
         return expr.applyfunc(self.function)
 
+    def _canonicalize(self):
+        return self
+
 
 class ArrayContraction(_CodegenArrayAbstract):
     r"""
-    This class is meant to represent contractions of arrays in a form easily
-    processable by the code printers.
+    Contraction operation of array axes.
+
+    Explanation
+    ===========
+
+    In a 2-dimensional array it returns the trace, this looks like the
+    operation:
+
+    `A_{ij} \Longrightarrow \sum_{i} A_{ii}`
+
+    Examples
+    ========
+
+    >>> from sympy import MatrixSymbol
+    >>> from sympy.tensor.array.expressions import ArrayContraction, ArrayTensorProduct
+    >>> M = MatrixSymbol('M', 3, 3)
+    >>> N = MatrixSymbol('N', 3, 3)
+    >>> ArrayContraction(M, (0, 1))
+    ArrayContraction(M, (0, 1))
+
+    We can define a matrix multiplication equivalent operation:
+
+    >>> expr = ArrayContraction(ArrayTensorProduct(M, N), (1, 2))
+    >>> expr
+    ArrayContraction(ArrayTensorProduct(M, N), (1, 2))
+
+    Indeed, given two matrices `M` and `N`, the contraction of the second axis of `M`
+    with the first of `N`, here represented as the tuple (1, 2), is equivalent to the matrix multiplication between `M` and `N`.
+
+    This can be verified with the proper conversion function:
+
+    >>> from sympy.tensor.array.expressions import convert_array_to_matrix
+    >>> convert_array_to_matrix(expr)
+    M*N
+
     """
 
     def __new__(cls, expr, *contraction_indices, **kwargs):
@@ -1999,6 +2031,8 @@ def nest_permutation(expr):
 
 
 def _array_tensor_product(*args, **kwargs):
+    if all(not isinstance(i, (_ArrayExpr, _CodegenArrayAbstract)) and get_shape(i) == () for i in args):
+        return Mul.fromiter(args)
     return ArrayTensorProduct(*args, canonicalize=True, **kwargs)
 
 

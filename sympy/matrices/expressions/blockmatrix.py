@@ -845,7 +845,7 @@ def blockinverse_2x2(expr):
          [C, D]] = expr.arg.blocks.tolist()
 
         formula = _choose_2x2_inversion_formula(A, B, C, D)
-        if formula != None:
+        if formula != None:  # noqa: E711
             MI = expr.arg.schur(formula).I
         if formula == 'A':
             AI = A.I

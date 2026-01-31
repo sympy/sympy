@@ -25,11 +25,10 @@ from sympy.core.numbers import Float
 from sympy.core.sorting import ordered
 from sympy.core.symbol import Symbol
 from sympy.core.singleton import S
+from sympy.external.mpmath import prec_to_dps
 from sympy.polys.polytools import cancel
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.utilities.iterables import is_sequence
-
-from mpmath.libmp.libmpf import prec_to_dps
 
 
 def find(x, equation):

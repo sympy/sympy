@@ -4,7 +4,6 @@ Boolean algebra module for SymPy
 
 from __future__ import annotations
 from typing import TYPE_CHECKING, overload, Any, Callable
-from collections.abc import Iterable, Mapping
 
 from collections import defaultdict
 from itertools import chain, combinations, product, permutations
@@ -23,6 +22,9 @@ from sympy.core.sorting import ordered
 from sympy.core.sympify import _sympy_converter, _sympify, sympify
 from sympy.utilities.iterables import sift, ibin
 from sympy.utilities.misc import filldedent
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable, Mapping
 
 
 try:  # sys.version_info >= (3, 10)
@@ -2875,16 +2877,16 @@ def simplify_logic(expr, form=None, deep=True, force=False, dontcare=None):
         elif form == 'dnf':
             form_ok = is_dnf(expr)
 
-        if form_ok and all(is_literal(a)
-                for a in expr.args):
-            return expr
+        if form_ok and dontcare is None and all(is_literal(a)
+               for a in expr.args):
+           return expr
     from sympy.core.relational import Relational
     if deep:
         variables = expr.atoms(Relational)
         from sympy.simplify.simplify import simplify
         s = tuple(map(simplify, variables))
         expr = expr.xreplace(dict(zip(variables, s)))
-    if not isinstance(expr, BooleanFunction):
+    if not isinstance(expr, BooleanFunction) and dontcare is None:
         return expr
     # Replace Relationals with Dummys to possibly
     # reduce the number of variables

@@ -21,6 +21,7 @@ from .ntheory import (
     gcdext as python_gcdext,
     is_square as python_is_square,
     invert as python_invert,
+    fibonacci as python_fibonacci,
     legendre as python_legendre,
     jacobi as python_jacobi,
     kronecker as python_kronecker,
@@ -36,6 +37,9 @@ from .ntheory import (
     is_bpsw_prp as python_is_bpsw_prp,
     is_strong_bpsw_prp as python_is_strong_bpsw_prp,
 )
+
+if TYPE_CHECKING:
+    from types import ModuleType
 
 
 __all__ = [
@@ -72,6 +76,7 @@ __all__ = [
     'lcm',
     'gcdext',
     'invert',
+    'fibonacci',
     'legendre',
     'jacobi',
     'kronecker',
@@ -149,8 +154,10 @@ def _get_gmpy2(sympy_ground_types):
 # SYMPY_GROUND_TYPES can be flint, gmpy, gmpy2, python or auto (default)
 #
 _SYMPY_GROUND_TYPES = os.environ.get('SYMPY_GROUND_TYPES', 'auto').lower()
-_flint = None
-_gmpy = None
+
+_flint:  ModuleType | None = None
+_gmpy:  ModuleType | None = None
+
 
 #
 # First handle auto-detection of flint/gmpy2. We will prefer flint if available
@@ -310,13 +317,14 @@ if TYPE_CHECKING:
     def remove(x: MPZ | int, y: MPZ | int) -> tuple[MPZ, MPZ]: ...
     def iroot(x: MPZ | int, n: int) -> tuple[MPZ, bool]: ...
 
+    def fibonacci(x: MPZ | int) -> MPZ: ...
     def jacobi(x: MPZ | int, y: MPZ | int) -> int: ...
     def legendre(x: MPZ | int, y: MPZ | int) -> int: ...
     def kronecker(x: MPZ | int, y: MPZ | int) -> int: ...
 
     def is_square(x: MPZ | int) -> bool: ...
-    def is_fermat_prp(x: MPZ | int) -> bool: ...
-    def is_euler_prp(x: MPZ | int) -> bool: ...
+    def is_fermat_prp(n: MPZ | int, a: MPZ | int) -> bool: ...
+    def is_euler_prp(n: MPZ | int, a: MPZ | int) -> bool: ...
     def is_strong_prp(x: MPZ | int) -> bool: ...
     def is_fibonacci_prp(x: MPZ | int) -> bool: ...
     def is_lucas_prp(x: MPZ | int) -> bool: ...
@@ -351,6 +359,7 @@ elif _SYMPY_GROUND_TYPES == 'gmpy':
     lcm = gmpy.lcm
     gcdext = gmpy.gcdext
     invert = gmpy.invert
+    fibonacci = gmpy.fib
     legendre = gmpy.legendre
     jacobi = gmpy.jacobi
     kronecker = gmpy.kronecker
@@ -389,6 +398,7 @@ elif _SYMPY_GROUND_TYPES == 'flint':
     bit_scan1 = python_bit_scan1
     bit_scan0 = python_bit_scan0
     remove = python_remove
+    fibonacci = flint.fmpz.fib_ui
     factorial = python_factorial
 
     def sqrt(x):
@@ -458,6 +468,7 @@ elif _SYMPY_GROUND_TYPES == 'python':
     lcm = python_lcm
     gcdext = python_gcdext
     invert = python_invert
+    fibonacci = python_fibonacci
     legendre = python_legendre
     jacobi = python_jacobi
     kronecker = python_kronecker

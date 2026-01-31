@@ -6,6 +6,7 @@ from sympy.vector.dyadic import (Dyadic, DyadicAdd, DyadicMul,
 from sympy.vector.scalar import BaseScalar
 from sympy.vector.deloperator import Del
 from sympy.vector.functions import (express, matrix_to_vector,
+                                    matrix_to_dyadic,
                                     laplacian, is_conservative,
                                     is_solenoidal, scalar_potential,
                                     directional_derivative,
@@ -33,7 +34,8 @@ __all__ = [
 
     'CoordSys3D',
 
-    'express', 'matrix_to_vector', 'laplacian', 'is_conservative',
+    'express', 'matrix_to_vector', 'matrix_to_dyadic',
+    'laplacian', 'is_conservative',
     'is_solenoidal', 'scalar_potential', 'directional_derivative',
     'scalar_potential_difference',
 

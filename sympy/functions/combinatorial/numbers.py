@@ -20,7 +20,9 @@ from sympy.core.logic import fuzzy_not
 from sympy.core.mul import Mul
 from sympy.core.numbers import E, I, pi, oo, Rational, Integer
 from sympy.core.relational import Eq, is_le, is_gt, is_lt
-from sympy.external.gmpy import SYMPY_INTS, remove, lcm, legendre, jacobi, kronecker
+from sympy.external.gmpy import (SYMPY_INTS, remove, lcm, legendre, jacobi,
+                                 kronecker, fibonacci as _ifib)
+from sympy.external.mpmath import local_workprec, eulernum, bernfrac
 from sympy.functions.combinatorial.factorials import (binomial,
     factorial, subfactorial)
 from sympy.functions.elementary.exponential import log
@@ -37,9 +39,6 @@ from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import multiset, multiset_derangements, iterable
 from sympy.utilities.memoization import recurrence_memo
 from sympy.utilities.misc import as_int
-
-from mpmath import mp, workprec
-from mpmath.libmp import ifib as _ifib
 
 
 def _product(a, b):
@@ -560,7 +559,7 @@ class bernoulli(DefinedFunction):
                 n = int(n)
                 # Use mpmath for enormous Bernoulli numbers
                 if n > 500:
-                    p, q = mp.bernfrac(n)
+                    p, q = bernfrac(n)
                     return Rational(int(p), int(q))
                 case = n % 6
                 highest_cached = cls._highest[case]
@@ -587,15 +586,15 @@ class bernoulli(DefinedFunction):
             return
         n = self.args[0]._to_mpmath(prec)
         x = (self.args[1] if len(self.args) > 1 else S.One)._to_mpmath(prec)
-        with workprec(prec):
+        with local_workprec(prec) as mp:
             if n == 0:
                 res = mp.mpf(1)
             elif n == 1:
-                res = x - mp.mpf(0.5)
+                res = mp.fsub(x, mp.mpf(0.5))
             elif mp.isint(n) and n >= 0:
                 res = mp.bernoulli(n) if x == 1 else mp.bernpoly(n, x)
             else:
-                res = -n * mp.zeta(1-n, x)
+                res = mp.fmul(mp.fneg(n), mp.zeta(mp.fsub(1, n), x))
         return Expr._from_mpmath(res, prec)
 
 
@@ -1006,13 +1005,13 @@ class harmonic(DefinedFunction):
             return
         n = self.args[0]._to_mpmath(prec)
         m = (self.args[1] if len(self.args) > 1 else S.One)._to_mpmath(prec)
-        if mp.isint(n) and n < 0:
-            return S.NaN
-        with workprec(prec):
+        with local_workprec(prec) as mp:
+            if mp.isint(n) and n < 0:
+                return S.NaN
             if m == 1:
                 res = mp.harmonic(n)
             else:
-                res = mp.zeta(m) - mp.zeta(m, n+1)
+                res = mp.fsub(mp.zeta(m), mp.zeta(m, mp.fadd(n, 1)))
         return Expr._from_mpmath(res, prec)
 
     def fdiff(self, argindex=1):
@@ -1132,9 +1131,8 @@ class euler(DefinedFunction):
             if n.is_odd and n.is_positive:
                 return S.Zero
             elif n.is_Number:
-                from mpmath import mp
-                n = n._to_mpmath(mp.prec)
-                res = mp.eulernum(n, exact=True)
+                n = n._to_mpmath(53)
+                res = eulernum(n, exact=True)
                 return Integer(res)
         # Euler polynomials
         elif n.is_Number:
@@ -1143,9 +1141,8 @@ class euler(DefinedFunction):
             reim = pure_complex(x, or_real=True)
             if reim and all(a.is_Float or a.is_Integer for a in reim) \
                     and any(a.is_Float for a in reim):
-                from mpmath import mp
                 prec = min([a._prec for a in reim if a.is_Float])
-                with workprec(prec):
+                with local_workprec(prec) as mp:
                     res = mp.eulerpoly(n, x)
                 return Expr._from_mpmath(res, prec)
             return euler_poly(n, x)
@@ -1175,22 +1172,28 @@ class euler(DefinedFunction):
     def _eval_evalf(self, prec):
         if not all(i.is_number for i in self.args):
             return
-        from mpmath import mp
         m, x = (self.args[0], None) if len(self.args) == 1 else self.args
         m = m._to_mpmath(prec)
         if x is not None:
             x = x._to_mpmath(prec)
-        with workprec(prec):
+        with local_workprec(prec) as mp:
             if mp.isint(m) and m >= 0:
                 res = mp.eulernum(m) if x is None else mp.eulerpoly(m, x)
             else:
                 if m == -1:
-                    res = mp.pi if x is None else mp.digamma((x+1)/2) - mp.digamma(x/2)
+                    if x is None:
+                        res = mp.pi
+                    else:
+                        res = mp.fsub(
+                                mp.digamma(mp.fdiv(mp.fadd(x, 1), 2)),
+                                mp.digamma(mp.fdiv(x, 2)))
                 else:
                     y = 0.5 if x is None else x
-                    res = 2 * (mp.zeta(-m, y) - 2**(m+1) * mp.zeta(-m, (y+1)/2))
+                    res = mp.fmul(2, (mp.fsub(mp.zeta(mp.fneg(m), y),
+                               mp.fmul(mp.power(2, mp.fadd(m, 1)),
+                               mp.zeta(mp.fneg(m), mp.fdiv(mp.fadd(y, 1), 2))))))
                 if x is None:
-                    res *= 2**m
+                    res = mp.fmul(res, mp.power(2, m))
         return Expr._from_mpmath(res, prec)
 
 
@@ -1589,9 +1592,10 @@ class andre(DefinedFunction):
         if not self.args[0].is_number:
             return
         s = self.args[0]._to_mpmath(prec+12)
-        with workprec(prec+12):
-            sp, cp = mp.sinpi(s/2), mp.cospi(s/2)
-            res = 2*mp.dirichlet(-s, (-sp, cp, sp, -cp))
+        with local_workprec(prec+12) as mp:
+            s2 = mp.fdiv(s, 2)
+            sp, cp = mp.sinpi(s2), mp.cospi(s2)
+            res = mp.fmul(2, mp.dirichlet(mp.fneg(s), (mp.fneg(sp), cp, sp, mp.fneg(cp))))
         return Expr._from_mpmath(res, prec)
 
 

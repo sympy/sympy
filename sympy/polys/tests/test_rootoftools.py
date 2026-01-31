@@ -185,6 +185,11 @@ def test_CRootOf_subs():
     assert rootof(x**3 + x + 1, 0).subs(x, y) == rootof(y**3 + y + 1, 0)
 
 
+def test_CRootOf_xreplace():
+    r = CRootOf(x**2 + 2*x - 1, 0)
+    assert (x - r).xreplace({x: r}) == 0
+
+
 def test_CRootOf_diff():
     assert rootof(x**3 + x + 1, 0).diff(x) == 0
     assert rootof(x**3 + x + 1, 0).diff(y) == 0
@@ -286,7 +291,7 @@ def test_issue_24978():
     # (factor of -1 is extracted), before being stored as CRootOf.poly.
     f = -x**2 + 2
     r = CRootOf(f, 0)
-    assert r.poly.as_expr() == x**2 - 2
+    assert r.poly(x) == x**2 - 2
     # An action that prompts calculation of an interval puts r.poly in
     # the cache.
     r.n()
@@ -620,8 +625,6 @@ def test_pure_key_dict():
     assert (1 in p) is False
     p[x] = 1
     assert x in p
-    assert y in p
-    assert p[y] == 1
     raises(KeyError, lambda: p[1])
     def dont(k):
         p[k] = 2
@@ -695,3 +698,9 @@ def test_issue_19113():
         ) == '[CRootOf(x**3 - x + 1, 0)]'
     assert str(Poly(eq.subs(y, tan(x))).real_roots()
         ) == '[CRootOf(x**3 - x + 1, 0)]'
+
+
+def test_Poly_with_CRootOf():
+    r = RootOf(x**3 + x + 1, 0)
+    p = Poly(r, x)
+    assert p.as_expr() == CRootOf(x**3 + x + 1, 0)

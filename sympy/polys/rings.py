@@ -18,7 +18,6 @@ from operator import add, mul, lt, le, gt, ge
 from functools import reduce
 from types import GeneratorType
 
-from sympy.external.gmpy import MPQ
 from sympy.core.cache import cacheit
 from sympy.core.expr import Expr
 from sympy.core.intfunc import igcd
@@ -58,7 +57,12 @@ from sympy.utilities.magic import pollute
 
 
 if TYPE_CHECKING:
-    from typing import TypeIs
+    from sympy.external.gmpy import MPQ
+    import sys
+    if sys.version_info >= (3, 13):
+        from typing import TypeIs
+    else:
+        from typing_extensions import TypeIs
     from sympy.polys.fields import FracField
     from types import NotImplementedType
 

@@ -1,3 +1,4 @@
+from typing import TYPE_CHECKING, Iterator
 from sympy.core.decorators import _sympifyit
 from sympy.core.parameters import global_parameters
 from sympy.core.logic import fuzzy_bool
@@ -66,6 +67,12 @@ class PowerSet(Set):
 
     .. [2] https://en.wikipedia.org/wiki/Axiom_of_power_set
     """
+
+    if TYPE_CHECKING:
+        @property
+        def args(self) -> tuple[Set]:
+            ...
+
     def __new__(cls, arg, evaluate=None):
         if evaluate is None:
             evaluate=global_parameters.evaluate
@@ -97,11 +104,12 @@ class PowerSet(Set):
     def _eval_is_subset(self, other):
         if isinstance(other, PowerSet):
             return self.arg.is_subset(other.arg)
+        return None
 
-    def __len__(self):
+    def __len__(self) -> int:
         return 2 ** len(self.arg)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Set]:
         found = [S.EmptySet]
         yield S.EmptySet
 

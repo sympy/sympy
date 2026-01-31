@@ -201,7 +201,7 @@ class LinearEntity(GeometrySet):
         >>> l1.smallest_angle_between(l2)
         acos(sqrt(2)/3)
         """
-        if not isinstance(l1, LinearEntity) and not isinstance(l2, LinearEntity):
+        if not isinstance(l1, LinearEntity) or not isinstance(l2, LinearEntity):
             raise TypeError('Must pass only LinearEntity objects')
 
         v1, v2 = l1.direction, l2.direction
@@ -236,7 +236,7 @@ class LinearEntity(GeometrySet):
 
         angle_between, is_perpendicular, Ray2D.closing_angle
         """
-        if not isinstance(l1, LinearEntity) and not isinstance(l2, LinearEntity):
+        if not isinstance(l1, LinearEntity) or not isinstance(l2, LinearEntity):
             raise TypeError('Must pass only LinearEntity objects')
 
         v1, v2 = l1.direction, l2.direction
@@ -613,7 +613,7 @@ class LinearEntity(GeometrySet):
         False
 
         """
-        if not isinstance(l1, LinearEntity) and not isinstance(l2, LinearEntity):
+        if not isinstance(l1, LinearEntity) or not isinstance(l2, LinearEntity):
             raise TypeError('Must pass only LinearEntity objects')
 
         return l1.direction.is_scalar_multiple(l2.direction)
@@ -661,7 +661,7 @@ class LinearEntity(GeometrySet):
         False
 
         """
-        if not isinstance(l1, LinearEntity) and not isinstance(l2, LinearEntity):
+        if not isinstance(l1, LinearEntity) or not isinstance(l2, LinearEntity):
             raise TypeError('Must pass only LinearEntity objects')
 
         return S.Zero.equals(l1.direction.dot(l2.direction))

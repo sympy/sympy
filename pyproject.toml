@@ -53,6 +53,11 @@ lint.select = [
     "PLW0602", # Global statement used but no assignment
     "SIM101",
     "SLOT",
+    "TC001",
+    "TC002",
+    "TC003",
+    "TC004",
+    "TC005",
     "TRY002",
     "BLE001", # except Exception or except BaseException
 ]
@@ -64,7 +69,6 @@ lint.ignore = [
     "E501",  # Line too long (<LENGTH> > 88 characters)
     "E701",  # Multiple statements on one line (colon)
     "E702",  # Multiple statements on one line (semicolon)
-    "E711",  # Comparison to `None` should be `cond is not None`
     "E712",  # Comparison to `<BOOL>` should be `cond is <BOOL>`
     "E713",  # Test for membership should be `not in`
     "E714",  # Test for object identity should be `is not`

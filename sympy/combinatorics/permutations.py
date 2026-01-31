@@ -15,7 +15,7 @@ from sympy.printing.repr import srepr
 from sympy.utilities.iterables import (flatten, has_variety, minlex,
     has_dups, runs, is_sequence)
 from sympy.utilities.misc import as_int
-from mpmath.libmp.libintmath import ifac
+from sympy.external.gmpy import factorial
 from sympy.multipledispatch import dispatch
 
 def _af_rmul(a, b):
@@ -631,7 +631,7 @@ class Permutation(Atom):
     >>> Permutation(1, 2)(3)
     Traceback (most recent call last):
     ...
-    IndexError: list index out of range
+    TypeError: 3 should be an integer between 0 and 2
 
     This is ok: only the call to an out of range singleton is prohibited;
     otherwise the permutation autosizes:
@@ -1653,7 +1653,7 @@ class Permutation(Atom):
             i = i[0]
             if not isinstance(i, Iterable):
                 i = as_int(i)
-                if i < 0 or i > self.size:
+                if i < 0 or i >= self.size:
                     raise TypeError(
                         "{} should be an integer between 0 and {}"
                         .format(i, self.size-1))
@@ -1802,7 +1802,7 @@ class Permutation(Atom):
 
         id_perm = list(range(n))
         n = int(n)
-        r = r % ifac(n)
+        r = r % factorial(n)
         _unrank1(n, r, id_perm)
         return self._af_new(id_perm)
 
@@ -1866,7 +1866,7 @@ class Permutation(Atom):
         rank_nonlex, unrank_nonlex
         """
         r = self.rank_nonlex()
-        if r == ifac(self.size) - 1:
+        if r == factorial(self.size) - 1:
             return None
         return self.unrank_nonlex(self.size, r + 1)
 
@@ -1896,7 +1896,7 @@ class Permutation(Atom):
         rho = self.array_form[:]
         n = self.size - 1
         size = n + 1
-        psize = int(ifac(n))
+        psize = int(factorial(n))
         for j in range(size - 1):
             rank += rho[j]*psize
             for i in range(j + 1, size):
@@ -1925,7 +1925,7 @@ class Permutation(Atom):
 
         length, order, rank, size
         """
-        return int(ifac(self.size))
+        return int(factorial(self.size))
 
     def parity(self):
         """
@@ -2562,7 +2562,7 @@ class Permutation(Atom):
         """
         perm = [0]*size
         r2 = 0
-        n = ifac(size)
+        n = factorial(size)
         pj = 1
         for j in range(2, size + 1):
             pj *= j

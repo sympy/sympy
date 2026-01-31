@@ -16,11 +16,11 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - uses: actions/setup-python@v6
         with:
-          python-version: '3.13'
+          python-version: '3.14'
       - run: python -m pip install --upgrade pip setuptools
 
       - run: pip install -r requirements-dev.txt
@@ -64,10 +64,10 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
         with:
-          python-version: '3.13'
+          python-version: '3.14'
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath mypy hypothesis
 
@@ -81,10 +81,10 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
         with:
-          python-version: '3.13'
+          python-version: '3.14'
       - run: python -m pip install --upgrade pip
       - run: pip install sphinx-lint
 
@@ -97,13 +97,13 @@ jobs:
     needs: code-quality
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           # Clone full git history (needed for detecting authors)
           fetch-depth: 0
       - uses: actions/setup-python@v6
         with:
-          python-version: '3.13'
+          python-version: '3.14'
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath
       - run: bin/mailmap_check.py
@@ -115,10 +115,10 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
         with:
-          python-version: '3.13'
+          python-version: '3.14'
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath
       - run: bin/doctest --force-colors
@@ -133,10 +133,10 @@ jobs:
     name: Tests
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
         with:
-          python-version: '3.13'
+          python-version: '3.14'
       - run: python -m pip install --upgrade pip
       - run: pip install -r requirements-dev.txt
       - run: pytest -n auto
@@ -151,12 +151,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13']
+        python-version: ['3.10', '3.11', '3.12', '3.13', '3.14']
 
     name: ${{ matrix.python-version }} Optional Dendendencies
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
@@ -194,10 +194,10 @@ jobs:
     name: Bleeding edge dependencies
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
         with:
-          python-version: '3.13'
+          python-version: '3.14'
       - run: pip install --upgrade pip
       - run: pip install git+https://github.com/mpmath/mpmath.git@master
       - run: |
@@ -221,7 +221,7 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
         with:
           python-version: '3.13'
@@ -238,10 +238,10 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
         with:
-          python-version: '3.13'
+          python-version: '3.14'
       - run: python -m pip install --upgrade pip
       - run: pip install -r requirements-dev.txt
       - run: pip install python-flint gmpy2
@@ -255,11 +255,11 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
         with:
-          # tensorflow not yet available for 3.13
-          python-version: '3.12'
+          # tensorflow not yet available for 3.14
+          python-version: '3.13'
       - run: python -m pip install --upgrade pip
       - run: pip install -r requirements-dev.txt
       - run: pip install numpy scipy tensorflow
@@ -273,10 +273,10 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
         with:
-          python-version: '3.13'
+          python-version: '3.14'
       - run: python -m pip install --upgrade pip
       - run: pip install -r requirements-dev.txt
       - run: pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
@@ -290,10 +290,10 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
         with:
-          python-version: '3.13'
+          python-version: '3.14'
       - run: python -m pip install --upgrade pip
       - run: pip install -r requirements-dev.txt
       - run: pip install numpy symengine
@@ -310,7 +310,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
         with:
           python-version: '3.13'
@@ -328,14 +328,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13', '3.14', 'pypy-3.11']
+        python-version: ['3.10', '3.11', '3.12', '3.13', '3.14', '3.15', 'pypy-3.11']
         exclude:
-          - python-version: 3.13
+          - python-version: 3.14
 
     name: ${{ matrix.python-version }} Tests
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
@@ -354,14 +354,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13', '3.14', 'pypy-3.11']
+        python-version: ['3.10', '3.11', '3.12', '3.13', '3.14', '3.15', 'pypy-3.11']
         exclude:
-          - python-version: 3.13
+          - python-version: 3.14
 
     name: ${{ matrix.python-version }} Doctests
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
@@ -380,10 +380,10 @@ jobs:
     name: mpmath-master Tests
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
         with:
-          python-version: '3.13'
+          python-version: '3.14'
       - run: python -m pip install --upgrade pip
       - run: pip install git+https://github.com/mpmath/mpmath.git@master
       - run: pip install -r requirements-dev.txt
@@ -396,10 +396,10 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
         with:
-          python-version: '3.13'
+          python-version: '3.14'
       - run: doc/aptinstall.sh
       - run: pip install -r doc/requirements.txt
       - run: bin/test_sphinx.sh
@@ -423,7 +423,7 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
         with:
           python-version: 'pypy2.7'
@@ -436,10 +436,10 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
         with:
-          python-version: '3.13'
+          python-version: '3.14'
       - run: python -m pip install --upgrade pip build
       - run: python -m build --sdist
       - run: release/compare_tar_against_git.py dist/*.tar.gz .
@@ -451,13 +451,13 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           # Checkout repo with full history
           fetch-depth: 0
       - uses: actions/setup-python@v6
         with:
-          python-version: '3.13'
+          python-version: '3.14'
       - run: pip install asv virtualenv packaging
       - run: git submodule add https://github.com/sympy/sympy_benchmarks.git
 
@@ -489,7 +489,7 @@ jobs:
         # GitHub Actions summary page.
 
       - name: Upload results as artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: benchmarks
           path: |
