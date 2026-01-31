@@ -231,9 +231,8 @@ class Symbol(AtomicExpr, Boolean): # type: ignore
     ----------
     name : str
 
-    assumptions : keyword arguments (str -> bool | None)
-        Keyword arguments specifying mathematical properties of the symbol such as:
-
+    **assumptions :
+        Boolean keyword arguments specifying mathematical properties of the symbol such as
         - real : symbol is a real number
         - positive : symbol is strictly greater than 0
         - commutative : symbol commutes with other symbols under multiplication (default: True)
