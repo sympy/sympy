@@ -2538,9 +2538,9 @@ def adaptive_sampler(f_point, start, end, depth_max, tol=1e-3, use_log_sampling=
             t_new = 10**(np.log10(t0) + random * (np.log10(t1) - np.log10(t0)))
         else:
             t_new = t0 + random * (t1 - t0)
-        
+
         p_new = f_point(t_new)
-        
+
         # Check validity (NaN detection)
         # We consider a point invalid if ANY coordinate is NaN.
         # This handles:
@@ -2570,9 +2570,9 @@ def adaptive_sampler(f_point, start, end, depth_max, tol=1e-3, use_log_sampling=
                 t_array = np.logspace(np.log10(t0), np.log10(t1), 10)
             else:
                 t_array = np.linspace(t0, t1, 10)
-            
+
             p_array = [f_point(t) for t in t_array]
-            
+
             # Check if any point in between is valid
             if not all(np.any(np.isnan(p)) for p in p_array):
                 for i in range(len(p_array) - 1):
@@ -2581,12 +2581,12 @@ def adaptive_sampler(f_point, start, end, depth_max, tol=1e-3, use_log_sampling=
                     # Original logic recurses if NOT (both are None).
                     # Meaning: recurse if at least one is valid, OR boundaries of validity?
                     # If both are NaN, we skip? Yes.
-                    
+
                     p_i = p_array[i]
                     p_next = p_array[i+1]
                     invalid_i = np.any(np.isnan(p_i))
                     invalid_next = np.any(np.isnan(p_next))
-                    
+
                     if not (invalid_i and invalid_next):
                         sample(t_array[i], t_array[i+1], p_i, p_next, depth + 1)
 
@@ -2603,10 +2603,10 @@ def adaptive_sampler(f_point, start, end, depth_max, tol=1e-3, use_log_sampling=
     # Initial call
     p_start = f_point(start)
     p_end = f_point(end)
-    
+
     points.append(p_start)
     params.append(start)
-    
+
     sample(start, end, p_start, p_end, 0)
-    
+
     return points, params
