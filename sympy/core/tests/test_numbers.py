@@ -2331,17 +2331,8 @@ def test_issue_28222():
 def test_issue_19988():
     import pickle
     from sympy import Float
-    
-    # Create a float with 20 decimal digits of precision
     t = Float('1.123456789123456789', dps=20)
-    
-    # Pickle and Unpickle
     serialized = pickle.dumps(t)
     deserialized = pickle.loads(serialized)
-    
-    # 1. Check if the values are equal
     assert t == deserialized
-    
-    # 2. Check if the internal binary precision (_prec) was preserved
-    # This was the specific part that used to fail!
     assert t._prec == deserialized._prec
