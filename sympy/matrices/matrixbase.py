@@ -4440,7 +4440,7 @@ class MatrixBase(Printable):
 
         Parameters
         ==========
-
+        
             b : 3x1 or 1x3 Matrix
 
         See Also
@@ -5750,9 +5750,7 @@ class DeferredVector(Symbol, NotIterable): # type: ignore
             i = 0
         if i < 0:
             raise IndexError('DeferredVector index out of range')
-        
         component_name = '%s[%d]' % (self.name, i)
-        
         return Symbol(component_name)
 
     def __str__(self):
