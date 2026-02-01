@@ -246,12 +246,18 @@ def test_sin_cos():
     assert refine(cos(x + n*pi), Q.even(n)) == cos(x)
     assert refine(sin(x + n*pi), Q.odd(n)) == -sin(x)
     assert refine(cos(x + n*pi), Q.odd(n)) == -cos(x)
+    assert refine(sin(x - n*pi), Q.odd(n)) == -sin(x)
+    assert refine(cos(x - n*pi), Q.even(n)) == cos(x)
     assert refine(sin(x + n*pi/2), Q.even(n)) == ((-1)**(n/2)) * sin(x)
     assert refine(cos(x + n*pi/2), Q.even(n)) == ((-1)**(n/2)) * cos(x)
     assert refine(sin(x + n*pi/2), Q.odd(n)) == ((-1)**((n + 3)/2)) * cos(x)
     assert refine(cos(x + n*pi/2), Q.odd(n)) == ((-1)**((n + 1)/2)) * sin(x)
+    assert refine(sin(x - n*pi/2), Q.odd(n)) == ((-1)**((n + 3)/2)) * -cos(x)
+    assert refine(cos(x - n*pi / 2), Q.even(n)) == ((-1)**(n/2)) * cos(x)
     assert refine(sin(x + y + 2*n*pi), Q.integer(n)) == sin(x + y)
     assert refine(cos(x + y + 2*n*pi), Q.integer(n)) == cos(x + y)
+    assert refine(sin(x + n * pi), Q.zero(n)) == sin(x)
+    assert refine(sin(x + n * pi), Q.zero(-n)) == sin(x)
     m = Symbol('m')
     assert refine(cos(x + n*pi + m*pi / 2), Q.integer(n) & Q.even(m)) == \
         (-1)**(n + m / 2) * cos(x)
@@ -259,8 +265,12 @@ def test_sin_cos():
         (-1)**(n + (m + 1)/2) * sin(x)
     assert refine(cos(x + n*pi + m*pi / 2), Q.integer(n) & Q.integer(m)) == \
         (-1)**(n) * cos(x + m*pi / 2)
-    assert refine(cos(x + (2*n + 1)*pi + m*pi / 2), Q.integer(n) & Q.integer(m)) == \
+    assert refine(cos(x + (2*n + 1)*pi + m*pi / 2), \
+        Q.integer(n) & Q.integer(m)) == \
         - cos(x + m*pi / 2)
+    assert refine(sin(x - (2*n)*pi + m*pi/2), \
+        Q.integer(n) & Q.integer(m)) == \
+        sin(x + m*pi / 2)
     k = Symbol('k')
     assert refine(cos(x + n*pi + k*pi/2 + m*pi/2), \
                   Q.integer(n) & Q.odd(k) & Q.integer(m)) == \
