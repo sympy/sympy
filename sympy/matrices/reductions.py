@@ -369,7 +369,7 @@ def _rref(
         pivots: bool = True,
         normalize_last: bool = True,
     ) -> Tmat | tuple[Tmat, tuple[int]]:
-    """RReturn the reduced row-echelon form (RREF) of the matrix.
+    """Return the reduced row-echelon form (RREF) of the matrix.
     Parameters
 ==========
 iszerofunc : callable, optional
