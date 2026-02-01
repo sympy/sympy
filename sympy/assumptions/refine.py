@@ -444,25 +444,19 @@ def refine_sin_cos(expr, assumptions):
     if not integer_coeffs_of_pi_half:
         return expr
 
-    even_coeff = 0
-    odd_coeff = 0
+    parity_known_coeff = 0
     unknown_parity_coeff = 0
     for coeff in integer_coeffs_of_pi_half:
-        if ask(Q.even(coeff), assumptions):
-            even_coeff += coeff
-        elif ask(Q.odd(coeff), assumptions):
-            odd_coeff += coeff
+        if ask(Q.even(coeff), assumptions) or ask(Q.odd(coeff), assumptions):
+            parity_known_coeff += coeff
         else:
             unknown_parity_coeff += coeff
 
-    if ask(Q.even(unknown_parity_coeff), assumptions):
-        even_coeff += unknown_parity_coeff
-        unknown_parity_coeff = 0
-    elif ask(Q.odd(unknown_parity_coeff), assumptions):
-        odd_coeff += unknown_parity_coeff
+    if ask(Q.even(unknown_parity_coeff), assumptions) or \
+        ask(Q.odd(unknown_parity_coeff), assumptions):
+        parity_known_coeff += unknown_parity_coeff
         unknown_parity_coeff = 0
 
-    parity_known_coeff = even_coeff + odd_coeff
     if parity_known_coeff == 0:
         return expr
 
