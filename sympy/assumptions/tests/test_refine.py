@@ -261,3 +261,13 @@ def test_sin_cos():
         (-1)**(n) * cos(x + m*pi / 2)
     assert refine(cos(x + (2*n + 1)*pi + m*pi / 2), Q.integer(n) & Q.integer(m)) == \
         - cos(x + m*pi / 2)
+    k = Symbol('k')
+    assert refine(cos(x + n*pi + k*pi/2 + m*pi/2), \
+                  Q.integer(n) & Q.odd(k) & Q.integer(m)) == \
+        (-1)**(n + (k + 1)/2) * sin(x + m*pi/2)
+    assert refine(sin(x + n*pi + k*pi/2 + m*pi/2), \
+                  Q.integer(n) & Q.odd(k) & Q.integer(m)) == \
+        (-1)**(n + (k + 3)/2) * cos(x + m*pi/2)
+    assert refine(cos(x + n*pi/2 + k*pi/2 + m*pi/2), \
+                  Q.odd(n) & Q.odd(k) & Q.integer(m)) == \
+        (-1)**((n + k)/2) * cos(x + m*pi/2)

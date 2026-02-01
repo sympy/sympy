@@ -445,34 +445,45 @@ def refine_sin_cos(expr, assumptions):
         return expr
 
     even_coeff = 0
-    rest_coeff = 0
+    odd_coeff = 0
+    unknown_parity_coeff = 0
     for coeff in integer_coeffs_of_pi_half:
         if ask(Q.even(coeff), assumptions):
             even_coeff += coeff
+        elif ask(Q.odd(coeff), assumptions):
+            odd_coeff += coeff
         else:
-            rest_coeff += coeff
+            unknown_parity_coeff += coeff
+
+    if ask(Q.even(unknown_parity_coeff), assumptions):
+        even_coeff += unknown_parity_coeff
+        unknown_parity_coeff = 0
+    elif ask(Q.odd(unknown_parity_coeff), assumptions):
+        odd_coeff += unknown_parity_coeff
+        unknown_parity_coeff = 0
+
+    parity_known_coeff = even_coeff + odd_coeff
+    if parity_known_coeff == 0:
+        return expr
+
     # Treat sin as a phase-shifted cosine so a single logic path can handle both.
-    shifting_coeff = rest_coeff - 1 if isinstance(expr, sin) else rest_coeff
+    if isinstance(expr, sin):
+        k = parity_known_coeff - 1
+    else:
+        k = parity_known_coeff
 
     # If k is even:
     #    `cos(rem + k*pi/2)` -> `(-1)^(k/2) * cos(rem)`
     #
     # If k is odd:
     #    `cos(rem + k*pi/2)` -> `(-1)^((k+1)/2) * sin(rem)`
-    if ask(Q.even(shifting_coeff), assumptions):
-        rem = sum(remaining_terms)
-        k = even_coeff + shifting_coeff
+    if ask(Q.even(k), assumptions):
+        rem = sum(remaining_terms) + unknown_parity_coeff*S.Pi / 2
         return ((-1)**(k / 2)) * cos(rem)
-    elif ask(Q.odd(shifting_coeff), assumptions):
-        rem = sum(remaining_terms)
-        k = even_coeff + shifting_coeff + 1
-        return ((-1)**(k / 2)) * sin(rem)
-
-    if even_coeff == 0:
-       return expr
-
-    rem = sum(remaining_terms)
-    return ((-1)**(even_coeff/2)*expr.func(rem + rest_coeff*S.Pi / 2))
+    elif ask(Q.odd(k), assumptions):
+        rem = sum(remaining_terms) + unknown_parity_coeff*S.Pi / 2
+        return ((-1)**((k + 1) / 2)) * sin(rem)
+    return expr
 
 handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'Abs': refine_abs,
