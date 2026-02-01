@@ -4440,7 +4440,6 @@ class MatrixBase(Printable):
 
         Parameters
         ==========
-        
             b : 3x1 or 1x3 Matrix
 
         See Also
