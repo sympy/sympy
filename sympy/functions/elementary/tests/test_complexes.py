@@ -79,11 +79,10 @@ def test_re():
     assert re(i*r*x).diff(i) == I*r*im(x)
 
     assert re(
-        sqrt(a + b*I)) == (a**2 + b**2)**Rational(1, 4)*cos(atan2(b, a)/2)
+        sqrt(a + b*I)) == re(sqrt(a + b*I))
     assert re(a * (2 + b*I)) == 2*a
 
-    assert re((1 + sqrt(a + b*I))/2) == \
-        (a**2 + b**2)**Rational(1, 4)*cos(atan2(b, a)/2)/2 + S.Half
+    assert re((1 + sqrt(a + b*I))/2) == re(sqrt(a + I*b))/2 + S.Half
 
     assert re(x).rewrite(im) == x - S.ImaginaryUnit*im(x)
     assert (x + re(y)).rewrite(re, im) == x + y - S.ImaginaryUnit*im(y)
@@ -176,11 +175,10 @@ def test_im():
     assert im(i*r*x).diff(i) == -I * re(r*x)
 
     assert im(
-        sqrt(a + b*I)) == (a**2 + b**2)**Rational(1, 4)*sin(atan2(b, a)/2)
+        sqrt(a + b*I)) == im(sqrt(a + b*I))
     assert im(a * (2 + b*I)) == a*b
 
-    assert im((1 + sqrt(a + b*I))/2) == \
-        (a**2 + b**2)**Rational(1, 4)*sin(atan2(b, a)/2)/2
+    assert im((1 + sqrt(a + b*I))/2) == im(sqrt(a + I*b))/2
 
     assert im(x).rewrite(re) == -S.ImaginaryUnit * (x - re(x))
     assert (x + im(y)).rewrite(im, re) == x - S.ImaginaryUnit * (y - re(y))
@@ -345,17 +343,14 @@ def test_as_real_imag():
 
     # issue 6261
     x = Symbol('x')
-    assert sqrt(x).as_real_imag() == \
-        ((re(x)**2 + im(x)**2)**Rational(1, 4)*cos(atan2(im(x), re(x))/2),
-     (re(x)**2 + im(x)**2)**Rational(1, 4)*sin(atan2(im(x), re(x))/2))
+    assert sqrt(x).as_real_imag() == (re(sqrt(x)), im(sqrt(x)))
 
     # issue 3853
     a, b = symbols('a,b', real=True)
     assert ((1 + sqrt(a + b*I))/2).as_real_imag() == \
            (
-               (a**2 + b**2)**Rational(
-                   1, 4)*cos(atan2(b, a)/2)/2 + S.Half,
-               (a**2 + b**2)**Rational(1, 4)*sin(atan2(b, a)/2)/2)
+               re(sqrt(a + I*b))/2 + S.Half,
+               im(sqrt(a + I*b))/2)
 
     assert sqrt(a**2).as_real_imag() == (sqrt(a**2), 0)
     i = symbols('i', imaginary=True)

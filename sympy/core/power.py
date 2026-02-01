@@ -1175,7 +1175,7 @@ class Pow(Expr):
 
         from sympy.functions.elementary.trigonometric import atan2, cos, sin
 
-        if self.exp.is_Rational:
+        if self.exp.is_Rational and not self.base.free_symbols:
             re_e, im_e = self.base.as_real_imag(deep=deep)
 
             if im_e.is_zero and self.exp is S.Half:
