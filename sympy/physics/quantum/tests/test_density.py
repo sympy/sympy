@@ -1,7 +1,9 @@
+from sympy import I
 from sympy.core.numbers import Rational
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols
 from sympy.functions.elementary.exponential import log
+from sympy.matrices import Matrix
 from sympy.external import import_module
 from sympy.physics.quantum.density import Density, entropy, fidelity
 from sympy.physics.quantum.state import Ket, TimeDepKet
@@ -17,6 +19,7 @@ from sympy.testing.pytest import raises
 from sympy.physics.quantum.matrixutils import scipy_sparse_matrix
 from sympy.physics.quantum.tensorproduct import TensorProduct
 
+from sympy.testing.pytest import XFAIL
 
 def test_eval_args():
     # check instance created
@@ -267,20 +270,28 @@ def test_fidelity():
     assert abs(fidelity(d1, d2) - fidelity(d2, d1)) < 1e-3
 
     # non-square matrix
-    mat1 = [[0, 0],
-            [0, 0],
-            [0, 0]]
+    mat1 = Matrix(
+        [[0, 0],
+        [0, 0],
+        [0, 0]]
+    )
 
-    mat2 = [[0, 0],
-            [0, 0]]
+    mat2 = Matrix(
+        [[0, 0],
+        [0, 0]]
+    )
     raises(ValueError, lambda: fidelity(mat1, mat2))
 
     # unequal dimensions
-    mat1 = [[0, 0],
-            [0, 0]]
-    mat2 = [[0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]]
+    mat1 = Matrix(
+        [[0, 0],
+        [0, 0]]
+    )
+    mat2 = Matrix(
+        [[0, 0, 0],
+        [0, 0, 0],
+        [0, 0, 0]]
+    )
     raises(ValueError, lambda: fidelity(mat1, mat2))
 
     # unsupported data-type
@@ -293,3 +304,45 @@ def test_fidelity():
     raises(ValueError, lambda: fidelity(d1, d2))
 
     raises(ValueError, lambda: fidelity(d1, 123))
+
+    state_h = sqrt(x)*Qubit('0') + sqrt(1-x)*Qubit('1')
+    d1 = Density([state_h, 1])
+    state_h = sqrt(y)*Qubit('0') + sqrt(1-y)*Qubit('1')
+    d2 = Density([state_h, 1])
+
+    assert fidelity(d1, d2) == sqrt(x*y) + sqrt((1-x)*(1-y))
+
+
+@XFAIL
+def test_fidelity_physical_validations():
+    # fidelity assumes proper physical quantum states, this is
+    # potentially unsafe, these tests show the fails
+    m1 = Matrix(
+        [[0.5, I],
+        [0, 0.5]]
+    )
+    m2 = Matrix(
+        [[1, 0], 
+        [0, 0]]
+    )
+    raises(ValueError, lambda: fidelity(m1, m2))
+
+    m1 = Matrix(
+        [[1, 0], 
+        [0, 1]]
+    )
+    m2 = Matrix(
+        [[0.5, I/4], 
+        [-I/4, 0.5]]
+    )
+    raises(ValueError, lambda: fidelity(m1, m2))
+
+    m1 = Matrix(
+        [[1.2, 0], 
+        [0, -0.2]]
+    )
+    m2 = Matrix(
+        [[1, 0],
+        [0, 0]]
+    )
+    raises(ValueError, lambda: fidelity(m1, m2))

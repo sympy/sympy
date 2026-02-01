@@ -1,6 +1,6 @@
 """Primitive circuit operations on quantum circuits."""
 
-from functools import reduce as _reduce
+from functools import reduce
 
 from sympy.core.sorting import default_sort_key
 from sympy.core.containers import Tuple
@@ -483,6 +483,6 @@ def random_insert(circuit, choices, seed=None):
 def flatten_ids(ids):
     collapse = lambda acc, an_id: acc + sorted(an_id.equivalent_ids,
                                         key=default_sort_key)
-    ids = _reduce(collapse, ids, [])
+    ids = reduce(collapse, ids, [])
     ids.sort(key=default_sort_key)
     return ids
