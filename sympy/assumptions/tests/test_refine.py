@@ -229,7 +229,6 @@ def test_matrixelement():
 
 def test_sin_cos():
     n = Symbol('n')
-    m = Symbol('m')
     assert refine(cos(n*pi/2), Q.odd(n)) == 0
     assert refine(cos(n*pi), Q.even(n)) == 1
     assert refine(cos(n*pi), Q.odd(n)) == -1
@@ -253,7 +252,12 @@ def test_sin_cos():
     assert refine(cos(x + n*pi/2), Q.odd(n)) == ((-1)**((n + 1)/2)) * sin(x)
     assert refine(sin(x + y + 2*n*pi), Q.integer(n)) == sin(x + y)
     assert refine(cos(x + y + 2*n*pi), Q.integer(n)) == cos(x + y)
+    m = Symbol('m')
     assert refine(cos(x + n*pi + m*pi / 2), Q.integer(n) & Q.even(m)) == \
         (-1)**(n + m / 2) * cos(x)
     assert refine(cos(x + n*pi + m*pi / 2), Q.integer(n) & Q.odd(m)) == \
         (-1)**(n + (m + 1)/2) * sin(x)
+    assert refine(cos(x + n*pi + m*pi / 2), Q.integer(n) & Q.integer(m)) == \
+        (-1)**(n) * cos(x + m*pi / 2)
+    assert refine(cos(x + (2*n + 1)*pi + m*pi / 2), Q.integer(n) & Q.integer(m)) == \
+        - cos(x + m*pi / 2)

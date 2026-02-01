@@ -444,24 +444,35 @@ def refine_sin_cos(expr, assumptions):
     if not integer_coeffs_of_pi_half:
         return expr
 
-    k = sum(integer_coeffs_of_pi_half)
+    even_coeff = 0
+    rest_coeff = 0
+    for coeff in integer_coeffs_of_pi_half:
+        if ask(Q.even(coeff), assumptions):
+            even_coeff += coeff
+        else:
+            rest_coeff += coeff
     # Treat sin as a phase-shifted cosine so a single logic path can handle both.
-    if isinstance(expr, sin):
-        k -= 1
+    shifting_coeff = rest_coeff - 1 if isinstance(expr, sin) else rest_coeff
 
     # If k is even:
     #    `cos(rem + k*pi/2)` -> `(-1)^(k/2) * cos(rem)`
     #
     # If k is odd:
     #    `cos(rem + k*pi/2)` -> `(-1)^((k+1)/2) * sin(rem)`
-    if ask(Q.even(k), assumptions):
+    if ask(Q.even(shifting_coeff), assumptions):
         rem = sum(remaining_terms)
-        return ((-1) ** (k / 2)) * cos(rem)
-    elif ask(Q.odd(k), assumptions):
+        k = even_coeff + shifting_coeff
+        return ((-1)**(k / 2)) * cos(rem)
+    elif ask(Q.odd(shifting_coeff), assumptions):
         rem = sum(remaining_terms)
-        return ((-1)**((k + 1) / 2)) * sin(rem)
+        k = even_coeff + shifting_coeff + 1
+        return ((-1)**(k / 2)) * sin(rem)
 
-    return expr
+    if even_coeff == 0:
+       return expr
+
+    rem = sum(remaining_terms)
+    return ((-1)**(even_coeff/2)*expr.func(rem + rest_coeff*S.Pi / 2))
 
 handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'Abs': refine_abs,
