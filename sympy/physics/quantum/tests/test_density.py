@@ -322,23 +322,23 @@ def test_fidelity_physical_validations():
         [0, 0.5]]
     )
     m2 = Matrix(
-        [[1, 0], 
+        [[1, 0],
         [0, 0]]
     )
     raises(ValueError, lambda: fidelity(m1, m2))
 
     m1 = Matrix(
-        [[1, 0], 
+        [[1, 0],
         [0, 1]]
     )
     m2 = Matrix(
-        [[0.5, I/4], 
+        [[0.5, I/4],
         [-I/4, 0.5]]
     )
     raises(ValueError, lambda: fidelity(m1, m2))
 
     m1 = Matrix(
-        [[1.2, 0], 
+        [[1.2, 0],
         [0, -0.2]]
     )
     m2 = Matrix(
