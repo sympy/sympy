@@ -5757,4 +5757,3 @@ class DeferredVector(Symbol, NotIterable): # type: ignore
 
     def __repr__(self):
         return "DeferredVector('%s')" % self.name
-    
