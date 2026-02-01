@@ -1092,6 +1092,7 @@ class MatrixBase(Printable):
 
         See Also
         ========
+
         eye
         diagonal
         .dense.diag
@@ -1179,6 +1180,7 @@ class MatrixBase(Printable):
 
         kwargs
         ======
+
         cls : class of the returned matrix
         """
         if cols is None:
@@ -1337,6 +1339,7 @@ class MatrixBase(Printable):
 
         kwargs
         ======
+
         cls : class of the returned matrix
         """
         if cols is None:
@@ -1371,6 +1374,7 @@ class MatrixBase(Printable):
 
         kwargs
         ======
+
         cls : class of the returned matrix
         """
         if cols is None:
@@ -4436,6 +4440,7 @@ class MatrixBase(Printable):
 
         Parameters
         ==========
+
             b : 3x1 or 1x3 Matrix
 
         See Also
@@ -5201,8 +5206,10 @@ class MatrixBase(Printable):
 
 
         =====  ============================  ==========================
+
         ord    norm for matrices             norm for vectors
         =====  ============================  ==========================
+
         None   Frobenius norm                2-norm
         'fro'  Frobenius norm                - does not exist
         inf    maximum row sum               max(abs(x))
@@ -5743,7 +5750,9 @@ class DeferredVector(Symbol, NotIterable): # type: ignore
             i = 0
         if i < 0:
             raise IndexError('DeferredVector index out of range')
+        
         component_name = '%s[%d]' % (self.name, i)
+        
         return Symbol(component_name)
 
     def __str__(self):
@@ -5751,3 +5760,4 @@ class DeferredVector(Symbol, NotIterable): # type: ignore
 
     def __repr__(self):
         return "DeferredVector('%s')" % self.name
+    
