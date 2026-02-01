@@ -391,7 +391,7 @@ def _rref(
 
     Returns
     =======
-    
+
     Matrix or (Matrix, tuple)
         Reduced row-echelon form, optionally with pivot indices.
 
