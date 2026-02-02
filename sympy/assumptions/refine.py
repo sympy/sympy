@@ -446,11 +446,16 @@ def refine_sin_cos(expr, assumptions):
 
     sum_of_parity_known_coeffs = 0
     sum_of_parity_unknown_coeffs = 0
+    sum_of_parity_known_coeffs_is_even = True
     for coeff in integer_coeffs_of_pi_half:
-        if ask(Q.even(coeff), assumptions) is None:
+        coeff_is_even = ask(Q.even(coeff), assumptions)
+        if coeff_is_even is None:
             sum_of_parity_unknown_coeffs += coeff
         else:
             sum_of_parity_known_coeffs += coeff
+            sum_of_parity_known_coeffs_is_even = (
+                sum_of_parity_known_coeffs_is_even == coeff_is_even
+            )
 
     if sum_of_parity_known_coeffs == 0:
         return expr
@@ -458,16 +463,18 @@ def refine_sin_cos(expr, assumptions):
     # Treat sin as a phase-shifted cosine so a single logic path can handle both.
     if isinstance(expr, sin):
         k = sum_of_parity_known_coeffs - 1
+        k_is_even = not sum_of_parity_known_coeffs_is_even
     else:
         k = sum_of_parity_known_coeffs
+        k_is_even = sum_of_parity_known_coeffs_is_even
 
     # If k is even:
     #    `cos(rem + k*pi/2)` -> `(-1)^(k/2) * cos(rem)`
     #
     # If k is odd:
     #    `cos(rem + k*pi/2)` -> `(-1)^((k+1)/2) * sin(rem)`
-    rem = sum(remaining_terms) + sum_of_parity_unknown_coeffs*S.Pi / 2
-    if ask(Q.even(k), assumptions):
+    rem = sum(remaining_terms) + sum_of_parity_unknown_coeffs * S.Pi / 2
+    if k_is_even:
         return ((-1)**(k / 2)) * cos(rem)
     else:
         return ((-1)**((k + 1) / 2)) * sin(rem)
