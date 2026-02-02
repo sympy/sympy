@@ -139,26 +139,38 @@ class GroupHomomorphism:
 
     def _compute_kernel(self):
         G = self.domain
-        G_order = G.order()
-        if G_order is S.Infinity:
+        if G.order() is S.Infinity:
             raise NotImplementedError(
                 "Kernel computation is not implemented for infinite groups")
-        gens = []
-        if isinstance(G, PermutationGroup):
-            K = PermutationGroup(G.identity)
-        else:
-            K = FpSubgroup(G, gens, normal=True)
-        i = self.image().order()
-        while K.order()*i != G_order:
-            r = G.random()
-            k = r*self.invert(self(r))**-1
-            if k not in K:
-                gens.append(k)
-                if isinstance(G, PermutationGroup):
+
+        def _kernel_from_permutation_group(group, apply, image_order):
+            if image_order == group.order():
+                return PermutationGroup(group.identity)
+            gens = []
+            K = PermutationGroup(group.identity)
+            target_order = group.order() // image_order
+            for element in group.generate_schreier_sims():
+                if apply(element).is_identity and element not in K:
+                    gens.append(element)
                     K = PermutationGroup(gens)
-                else:
-                    K = FpSubgroup(G, gens, normal=True)
-        return K
+                    if K.order() == target_order:
+                        break
+            return K
+
+        if isinstance(G, FpGroup):
+            P, T = G._to_perm_group()
+            perm_images = {g: self(T.invert(g)) for g in P.generators}
+            perm_hom = GroupHomomorphism(P, self.codomain, perm_images)
+            perm_kernel = perm_hom._compute_kernel()
+            kernel_gens = T.invert(perm_kernel.generators)
+            return FpSubgroup(G, kernel_gens, normal=True)
+
+        image_order = self.image().order()
+        if isinstance(G, PermutationGroup):
+            return _kernel_from_permutation_group(G, self, image_order)
+
+        raise NotImplementedError(
+            "Kernel computation is not implemented for this group type")
 
     def image(self):
         '''
