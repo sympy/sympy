@@ -256,8 +256,10 @@ def test_sin_cos():
     assert refine(cos(x - n*pi / 2), Q.even(n)) == ((-1)**(n/2)) * cos(x)
     assert refine(sin(x + y + 2*n*pi), Q.integer(n)) == sin(x + y)
     assert refine(cos(x + y + 2*n*pi), Q.integer(n)) == cos(x + y)
-    assert refine(sin(x + n * pi), Q.zero(n)) == sin(x)
-    assert refine(sin(x + n * pi), Q.zero(-n)) == sin(x)
+    assert refine(sin(x + n*pi), Q.zero(n)) == sin(x)
+    assert refine(sin(x + n*pi), Q.zero(-n)) == sin(x)
+    assert refine(cos(x + n*pi/2), Q.integer(n)) == cos(x + n*pi/2)
+    assert refine(cos(x + y + n*pi/2), Q.integer(n)) == cos(x + y + n*pi/2)
     m = Symbol('m')
     assert refine(cos(x + n*pi + m*pi / 2), Q.integer(n) & Q.even(m)) == \
         (-1)**(n + m / 2) * cos(x)
