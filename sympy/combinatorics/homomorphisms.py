@@ -143,17 +143,6 @@ class GroupHomomorphism:
             raise NotImplementedError(
                 "Kernel computation is not implemented for infinite groups")
 
-        def _kernel_from_permutation_group(group, apply, image_order):
-            if image_order == group.order():
-                return PermutationGroup(group.identity)
-            if image_order == 1:
-                return group
-            base, strong_gens = group.schreier_sims_incremental()
-            return group.subgroup_search(
-                lambda g: apply(g).is_identity,
-                base=base,
-                strong_gens=strong_gens)
-
         if isinstance(G, FpGroup):
             P, T = G._to_perm_group()
             perm_images = {g: self(T.invert(g)) for g in P.generators}
@@ -162,9 +151,8 @@ class GroupHomomorphism:
             kernel_gens = T.invert(perm_kernel.generators)
             return FpSubgroup(G, kernel_gens, normal=True)
 
-        image_order = self.image().order()
         if isinstance(G, PermutationGroup):
-            return _kernel_from_permutation_group(G, self, image_order)
+            return G.subgroup_search(lambda g: self(g).is_identity)
 
         raise NotImplementedError(
             "Kernel computation is not implemented for this group type")
