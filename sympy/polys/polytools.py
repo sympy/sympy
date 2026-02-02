@@ -203,7 +203,7 @@ class Poly(Basic):
     # avoiding creating a Basic instance just to be hashable.
 
     @classmethod
-    def new(cls, rep: DMP, *gens: Expr) -> Poly:
+    def new(cls, rep: DMP, *gens: Expr) -> Self:
         """Construct :class:`Poly` instance from raw representation. """
         if not isinstance(rep, DMP):
             raise PolynomialError(
