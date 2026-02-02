@@ -1494,12 +1494,6 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
     def nsimplify_real(x):
         xv = x._to_mpmath(bprec)
         with local_workprec(prec) as ctx:
-            # We'll be happy with low precision if a simple fraction
-            if not (tolerance or full):
-                ctx.dps = 15
-                rat = ctx.pslq([xv, 1])
-                if rat is not None:
-                    return Rational(-int(rat[1]), int(rat[0]))
             ctx.dps = prec
             newexpr = ctx.identify(xv, constants=constants_dict,
                 tol=tolerance, full=full)
