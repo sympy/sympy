@@ -1476,12 +1476,14 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
     prec = 30
     bprec = int(prec*3.33)
 
+    constants_sym = []
     constants_dict = {}
     for constant in constants:
         constant = sympify(constant)
         v = constant.evalf(prec)
         if not v.is_Float:
             raise ValueError("constants must be real-valued")
+        constants_sym.append(constant)
         constants_dict[str(constant)] = v._to_mpmath(bprec)
 
     exprval = expr.evalf(prec, chop=True)
@@ -1490,6 +1492,10 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
     # safety check to make sure that this evaluated to a number
     if not (re.is_Number and im.is_Number):
         return expr
+
+    def count_constants(expr):
+        # TODO is this any better/worse than `sum(expr.count(s) for s in constants_sym)`?
+        return expr.subs({s: Dummy() for s in constants_sym}).count(Dummy)
 
     def nsimplify_real(x):
         xv = x._to_mpmath(bprec)
