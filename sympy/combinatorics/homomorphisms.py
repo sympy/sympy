@@ -139,26 +139,23 @@ class GroupHomomorphism:
 
     def _compute_kernel(self):
         G = self.domain
-        G_order = G.order()
-        if G_order is S.Infinity:
+        if G.order() is S.Infinity:
             raise NotImplementedError(
                 "Kernel computation is not implemented for infinite groups")
-        gens = []
+
+        if isinstance(G, FpGroup):
+            P, T = G._to_perm_group()
+            perm_images = {g: self(T.invert(g)) for g in P.generators}
+            perm_hom = GroupHomomorphism(P, self.codomain, perm_images)
+            perm_kernel = perm_hom._compute_kernel()
+            kernel_gens = T.invert(perm_kernel.generators)
+            return FpSubgroup(G, kernel_gens, normal=True)
+
         if isinstance(G, PermutationGroup):
-            K = PermutationGroup(G.identity)
-        else:
-            K = FpSubgroup(G, gens, normal=True)
-        i = self.image().order()
-        while K.order()*i != G_order:
-            r = G.random()
-            k = r*self.invert(self(r))**-1
-            if k not in K:
-                gens.append(k)
-                if isinstance(G, PermutationGroup):
-                    K = PermutationGroup(gens)
-                else:
-                    K = FpSubgroup(G, gens, normal=True)
-        return K
+            return G.subgroup_search(lambda g: self(g).is_identity)
+
+        raise NotImplementedError(
+            "Kernel computation is not implemented for this group type")
 
     def image(self):
         '''
