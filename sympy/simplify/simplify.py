@@ -1537,11 +1537,51 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
                 raise ValueError  # "expression is too complicated"
 
             return expr
+
+    def nsimplify_real_spread(x):
+        """ `mpmath.identify()` seems to work best for Floats under 1000
+            attempt to rescale values around 1 so before attempting
+            to identify it
+        """
+        # get the base order of magnitude
+        magnitude = int(log(abs(x), 10).evalf())
+        # try the range containing 2 orders of magnitide on either side
+        trials = []
+        # TODO should prec or tolerance be rescaled?
+        for offset in [None,0,-1,1,2]:  # try to identify with a window of orders of magnitude
+            try:
+                if offset is None:  # begin with unscaled value
+                    expr = nsimplify_real(x)
+                else:
+                    scale_factor = 10**(magnitude + offset)
+                    expr = nsimplify_real(x / scale_factor) * scale_factor
+            except ValueError:
+                continue
+            trials.append((
+                expr,  # expr itself, rest are in order of sort importance
+                # constant count: more total constant members are preferred
+                -count_constants(expr),
+                # Float component: sort later and by-count
+                # NOTE constants can be Float, skip for x<0 which may expect a Float result
+                None if magnitude < 0 else expr.count(Float),
+                # complexity: less complexity sorts earlier, but beware Floats vs Rationals
+                # for example C(.3)=1, but C(3/10)=2 so this should come after Float check
+                expr.count_ops(),
+            ))
+
+        if not trials:
+            raise ValueError("no trial succeeded!")
+
+        # prefer instances as more constant(s), no/less floats, lower ops
+        trials = sorted(trials, key=lambda x: x[1:])
+        best = trials[0][0]
+        return best
+
     try:
         if re:
-            re = nsimplify_real(re)
+            re = nsimplify_real_spread(re)
         if im:
-            im = nsimplify_real(im)
+            im = nsimplify_real_spread(im)
     except ValueError:
         if rational is None:
             return _real_to_rational(expr, rational_conversion=rational_conversion)
