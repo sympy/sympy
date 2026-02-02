@@ -8,7 +8,7 @@ from sympy.concrete.products import Product
 from sympy.concrete.summations import Sum
 from sympy.core import (Basic, S, Add, Mul, Pow, Symbol, sympify,
                         expand_func, Function, Dummy, Expr, factor_terms,
-                        expand_power_exp, Eq)
+                        expand_power_exp, Eq, Wild)
 from sympy.core.exprtools import factor_nc
 from sympy.core.parameters import global_parameters
 from sympy.core.function import (expand_log, count_ops, _mexpand,
@@ -1512,6 +1512,30 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
                 raise ValueError
             if expr.is_finite is False and xv not in [_mpmath_inf, _mpmath_ninf]:
                 raise ValueError
+
+            if full:  # user definitely wants the nsimplify_real() result if full is passed
+                return expr
+
+            # attempt to classify "complicated" expressions to throw out the spurious results from
+            # `mpmath.identify()` (such as noted in issue 23822), while still allowing well-formed
+            # results, especially when reasonable given constants and irrational values like
+            # `sqrt(2)` are present in the result
+
+            # allow anything with a "reasonable" Nth-root of Integer
+            # `mpmath.identify()` can generate sqrt(2) and sqrt(3)
+            # in the future, consider more values like `sympy.ntheory.generate.primerange(20)`?
+            match_expr = Pow(
+                Wild("a", properties=[lambda a: a.is_Integer]),
+                Wild("b", properties=[lambda b: b in (2,3,5,7)])**-1)
+            if expr.count(match_expr):
+                return expr
+            # TODO should this similarly allow logarithms? I doubt it, user should provide give as constants
+
+            # 5+ atoms, but only Rationals
+            # TODO constants can be Rational, but are they ever meaningfully used?
+            if expr.atoms() == expr.atoms(Rational) and (len(expr.atoms()) - count_constants(expr)) > 4:
+                raise ValueError  # "expression is too complicated"
+
             return expr
     try:
         if re:
