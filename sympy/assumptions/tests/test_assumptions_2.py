@@ -46,5 +46,4 @@ def test_ask_single_fact():
     assert _ask_single_fact(Q.prime,   CNF.from_prop(Q.composite)) is False
     assert _ask_single_fact(Q.zero, CNF.from_prop(~Q.even)) is False
 
-    # previously _ask_single_fact gave None for this type of case
     assert _ask_single_fact(Q.zero, CNF.from_prop(~Q.even & Q.real)) is False
