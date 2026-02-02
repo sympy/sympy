@@ -146,16 +146,13 @@ class GroupHomomorphism:
         def _kernel_from_permutation_group(group, apply, image_order):
             if image_order == group.order():
                 return PermutationGroup(group.identity)
-            gens = []
-            K = PermutationGroup(group.identity)
-            target_order = group.order() // image_order
-            for element in group.generate_schreier_sims():
-                if apply(element).is_identity and element not in K:
-                    gens.append(element)
-                    K = PermutationGroup(gens)
-                    if K.order() == target_order:
-                        break
-            return K
+            if image_order == 1:
+                return group
+            base, strong_gens = group.schreier_sims_incremental()
+            return group.subgroup_search(
+                lambda g: apply(g).is_identity,
+                base=base,
+                strong_gens=strong_gens)
 
         if isinstance(G, FpGroup):
             P, T = G._to_perm_group()
