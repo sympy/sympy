@@ -1401,7 +1401,7 @@ def nthroot(expr, n, max_len=4, prec=15):
 
 
 def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
-    rational_conversion='base10'):
+    rational_conversion='base10', magnitude_offsets=None):
     """
     Find a simple representation for a number or, if there are free symbols or
     if ``rational=True``, then replace Floats with their Rational equivalents. If
@@ -1430,6 +1430,12 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
     convert floats to rationals using their base-10 (string) representation.
     When rational_conversion='exact' it uses the exact, base-2 representation.
 
+    In order to get better simplifies from mpmath.identify(), nsimplify will try
+    to temporarily rescale values into a friendlier order of magnitude and pick
+    the best result from its set. ``magnitude_offsets`` can be given as either
+    a collection of integers (and/or None for no rescaling), with a default of
+    [None,0,-1,1,2], where None means no rescale is performed
+
     Examples
     ========
 
@@ -1447,6 +1453,11 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
     6004799503160655/18014398509481984
     >>> nsimplify(0.333333333333333, rational=True)
     1/3
+
+    >>> nsimplify(N(10**20*sqrt(2)), magnitude_offsets=False)
+    141421356237309509632
+    >>> nsimplify(N(10**20*sqrt(2)), magnitude_offsets=[0])
+    100000000000000000000*sqrt(2)
 
     See Also
     ========
@@ -1475,6 +1486,17 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
     # from tolerance?
     prec = 30
     bprec = int(prec*3.33)
+
+    if magnitude_offsets is None:  # use default
+        magnitude_offsets = [None,0,-1,1,2]  # None means no intermedaite normalization
+    elif not magnitude_offsets:  # False or empty collection: disabled
+         magnitude_offsets = False
+    elif isinstance(magnitude_offsets, int):  # pass in a list like `[offset]` to omit default
+        magnitude_offsets = [magnitude_offsets, None]
+    elif not isinstance(magnitude_offsets, (list, tuple, set)):
+        # NOTE decimal offsets are not explicitly blocked here as they might be useful to somebody
+        #   though it might make sense to warn for silly offsets
+        raise TypeError(f"magnitude_offsets must be False (disabled), or a list/tuple/set of None or integers")
 
     constants_sym = []
     constants_dict = {}
@@ -1543,12 +1565,15 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
             attempt to rescale values around 1 so before attempting
             to identify it
         """
+        if not magnitude_offsets:
+            return nsimplify_real(x)
+
         # get the base order of magnitude
         magnitude = int(log(abs(x), 10).evalf())
         # try the range containing 2 orders of magnitide on either side
         trials = []
         # TODO should prec or tolerance be rescaled?
-        for offset in [None,0,-1,1,2]:  # try to identify with a window of orders of magnitude
+        for offset in magnitude_offsets:  # try to identify with a window of orders of magnitude
             try:
                 if offset is None:  # begin with unscaled value
                     expr = nsimplify_real(x)
