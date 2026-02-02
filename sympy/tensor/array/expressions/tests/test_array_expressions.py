@@ -1,6 +1,6 @@
 import random
 
-from sympy import tensordiagonal, eye, KroneckerDelta, Array
+from sympy import tensordiagonal, eye, KroneckerDelta, Array, Sum
 from sympy.core.symbol import symbols
 from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.matrices.expressions.diagonal import DiagMatrix
@@ -12,7 +12,7 @@ from sympy.combinatorics import Permutation
 from sympy.tensor.array.expressions.array_expressions import ZeroArray, OneArray, ArraySymbol, ArrayElement, \
     PermuteDims, ArrayContraction, ArrayTensorProduct, ArrayDiagonal, \
     ArrayAdd, nest_permutation, ArrayElementwiseApplyFunc, _EditArrayContraction, _ArgE, _array_tensor_product, \
-    _array_contraction, _array_diagonal, _array_add, _permute_dims, Reshape
+    _array_contraction, _array_diagonal, _array_add, _permute_dims, Reshape, ArraySum
 from sympy.testing.pytest import raises
 
 i, j, k, l, m, n = symbols("i j k l m n")
@@ -219,6 +219,16 @@ def test_arrayexpr_array_flatten():
 
     cg = _array_tensor_product(_array_diagonal(_array_tensor_product(A, X, Y), (0, 3), (1, 5)), a, b)
     assert cg == _permute_dims(_array_diagonal(_array_tensor_product(A, X, Y, a, b), (0, 3), (1, 5)), [0, 1, 6, 7, 2, 3, 4, 5])
+
+def test_flattening_issue_28823():
+    A = ArraySymbol("A", (1, 1, 1, 1, k, 1, 1, 1))
+    expr = ArrayDiagonal(A, (2, 6), (3, 7))  # ==> (1, 1, k, 1, 1, 1)
+    expr = ArrayDiagonal(expr, (0, 4), (1, 5))  # ==> (k, 1, 1, 1)
+    flat = expr.doit()
+    assert flat == ArrayDiagonal(A, (0, 2, 6), (1, 3, 7))
+
+    expr = ArrayDiagonal(ArrayDiagonal(ArrayDiagonal(A, (0, 1)), (0, 1)), (1, 2))
+    assert expr.doit() == ArrayDiagonal(A, (0, 1), (2, 3), (5, 6))
 
 
 def test_arrayexpr_array_diagonal():
@@ -806,3 +816,40 @@ def test_array_expr_as_explicit_with_explicit_component_arrays():
     assert ArrayElementwiseApplyFunc(sin, A).as_explicit() == A.applyfunc(sin)
     assert PermuteDims(A, [1, 0]).as_explicit() == permutedims(A, [1, 0])
     assert Reshape(A, [4]).as_explicit() == A.reshape(4)
+
+
+def test_array_sum():
+    X = MatrixSymbol("X", k, k)
+    Y = MatrixSymbol("Y", k, k)
+
+    expr = ArraySum(X, (i, 1, j))
+    assert isinstance(expr, Sum)
+    assert expr.doit() == j*X
+
+    expr = ArraySum(X, (i, 1, 5))
+    assert expr.doit() == 5*X
+
+    expr = ArrayTensorProduct(ArraySum(X, (i, 1, 5)), Y)
+    assert expr.doit() == ArrayTensorProduct(5*X, Y)
+
+    expr = ArrayTensorProduct(A, ArraySum(X, (i, 1, j)), B, ArraySum(Y, (i, 1, m)), C)
+    assert expr.doit() == ArrayTensorProduct(A, j*X, B, m*Y, C)
+
+    expr = ArrayTensorProduct(A, ArraySum(X*sin(i), (i, 1, j)), B, ArraySum(Y*sin(i), (i, 1, m)), C)
+    assert expr.doit().dummy_eq(ArraySum(ArrayTensorProduct(A, sin(i)*X, B, sin(n)*Y, C), (i, 1, j), (n, 1, m)))
+
+    expr = ArrayTensorProduct(ArraySum(X**sin(i), (i, 1, j)), Y)
+    assert expr.doit().dummy_eq(ArraySum(ArrayTensorProduct(X**sin(i), Y), (i, 1, j)))
+
+    expr = ArrayTensorProduct(ArraySum(X**sin(i), (i, 1, j)), i*Y)
+    assert expr.doit().dummy_eq(ArraySum(ArrayTensorProduct(X**sin(m), i*Y), (m, 1, j)))
+
+    expr = ArrayContraction(ArraySum(X, (i, 0, j)), (0, 1))
+    assert expr.doit() == ArrayContraction((j + 1)*X, (0, 1))
+
+    T = MatrixSymbol("T", 3, 3)
+    expr = ArrayContraction(ArraySum(T, (i, 1, j)), (0, 1))
+    assert expr.doit() == ArrayContraction(j*T, (0, 1))
+
+    expr = ArrayContraction(ArraySum(T*sin(i), (i, 1, j)), (0, 1))
+    assert expr.doit() == ArraySum(ArrayContraction(T*sin(i), (0, 1)), (i, 1, j))

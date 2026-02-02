@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING, Optional, overload, Literal, Any, cast, Callab
 from functools import wraps, reduce
 from operator import mul
 from collections import Counter, defaultdict
-from collections.abc import Iterator
 
 from sympy.core import (
     S, Expr, Add, Tuple
@@ -30,7 +29,6 @@ from sympy.logic.boolalg import BooleanAtom
 from sympy.polys import polyoptions as options
 from sympy.polys.constructor import construct_domain
 from sympy.polys.domains import FF, QQ, ZZ
-from sympy.polys.domains.domain import Domain
 from sympy.polys.domains.domainelement import DomainElement
 from sympy.polys.fglmtools import matrix_fglm
 from sympy.polys.groebnertools import groebner as _groebner
@@ -63,12 +61,12 @@ from sympy.utilities.iterables import iterable, sift
 
 # Required to avoid errors
 import sympy.polys
-
-import mpmath
-from mpmath.libmp.libhyper import NoConvergence
+from sympy.external.mpmath import local_workdps, NoConvergence
 
 
 if TYPE_CHECKING:
+    from sympy.polys.domains.domain import Domain
+    from collections.abc import Iterator
     from typing import Self
 
 
@@ -3670,7 +3668,18 @@ class Poly(Basic):
         else:
             return group(reals, multiple=False)
 
-    def all_roots(f, multiple=True, radicals=True):
+    @overload
+    def all_roots(
+        f, multiple: Literal[True] = True, radicals: bool = True
+    ) -> list[Expr]: ...
+    @overload
+    def all_roots(
+        f, multiple: Literal[False], *, radicals: bool = True
+    ) -> list[tuple[Expr, int]]: ...
+
+    def all_roots(
+        f, multiple: bool = True, radicals: bool = True
+    ) -> list[Expr] | list[tuple[Expr, int]]:
         """
         Return a list of real and complex roots with multiplicities.
 
@@ -3739,42 +3748,31 @@ class Poly(Basic):
             fac = ilcm(*denoms)
             coeffs = [int(coeff*fac) for coeff in f.all_coeffs()]
         else:
-            coeffs = [coeff.evalf(n=n).as_real_imag()
-                    for coeff in f.all_coeffs()]
-            with mpmath.workdps(n):
+            coeffs = [coeff.evalf(n=n).as_real_imag() for coeff in f.all_coeffs()]
+            with local_workdps(n) as ctx:
                 try:
-                    coeffs = [mpmath.mpc(*coeff) for coeff in coeffs]
+                    coeffs = [ctx.mpc(*coeff) for coeff in coeffs]
                 except TypeError:
-                    raise DomainError("Numerical domain expected, got %s" % \
-                            f.rep.dom)
-
-        dps = mpmath.mp.dps
-        mpmath.mp.dps = n
+                    raise DomainError("Numerical domain expected, got %s" % f.rep.dom)
 
         from sympy.functions.elementary.complexes import sign
-        try:
-            # We need to add extra precision to guard against losing accuracy.
-            # 10 times the degree of the polynomial seems to work well.
-            roots = mpmath.polyroots(coeffs, maxsteps=maxsteps,
-                    cleanup=cleanup, error=False, extraprec=f.degree()*10)
-
-            # Mpmath puts real roots first, then complex ones (as does all_roots)
-            # so we make sure this convention holds here, too.
-            roots = list(map(sympify,
-                sorted(roots, key=lambda r: (1 if r.imag else 0, r.real, abs(r.imag), sign(r.imag)))))
-        except NoConvergence:
+        opts = {'maxsteps': maxsteps, 'cleanup': cleanup, 'error': False}
+        for prec in [f.degree()*10, f.degree()*15]:
             try:
-                # If roots did not converge try again with more extra precision.
-                roots = mpmath.polyroots(coeffs, maxsteps=maxsteps,
-                    cleanup=cleanup, error=False, extraprec=f.degree()*15)
-                roots = list(map(sympify,
-                    sorted(roots, key=lambda r: (1 if r.imag else 0, r.real, abs(r.imag), sign(r.imag)))))
+                with local_workdps(n) as ctx:
+                    roots = ctx.polyroots(coeffs, **opts, extraprec=prec)
+                    # Mpmath puts real roots first, then complex ones (as does
+                    # all_roots) so we make sure this convention holds here,
+                    # too.
+                    key = lambda r: (1 if r.imag else 0, r.real, abs(r.imag), sign(r.imag))
+                    roots = [sympify(r) for r in sorted(roots, key=key)]
+                    break
             except NoConvergence:
-                raise NoConvergence(
-                    'convergence to root failed; try n < %s or maxsteps > %s' % (
-                    n, maxsteps))
-        finally:
-            mpmath.mp.dps = dps
+                continue
+        else:
+            msg = 'convergence to root failed; try n < %s or maxsteps > %s'
+            raise NoConvergence(msg % (n, maxsteps))
+
 
         return roots
 
@@ -3974,19 +3972,23 @@ class Poly(Basic):
         return f._which_roots(candidates, f.degree())
 
     def _which_roots(f, candidates, num_roots):
+        fe = f.as_expr()
+        x = f.gens[0]
         prec = 10
-        # using Counter bc its like an ordered set
-        root_counts = Counter(candidates)
-        while len(root_counts) > num_roots:
-            for r in list(root_counts.keys()):
-                # If f(r) != 0 then f(r).evalf() gives a float/complex with precision.
-                f_r = f(r).evalf(prec, maxn=2*prec)
-                if abs(f_r)._prec >= 2:
-                    root_counts.pop(r)
+        candidates = list(Counter(candidates).keys())
 
+        while len(candidates) > num_roots:
+            potential_candidates = []
+            for r in candidates:
+                # If f(r) != 0 then f(r).evalf() gives a float/complex with precision.
+                f_r = fe.xreplace({x: r}).evalf(prec, maxn=2*prec)
+                if abs(f_r)._prec < 2:
+                    potential_candidates.append(r)
+
+            candidates = potential_candidates
             prec *= 2
 
-        return list(root_counts.keys())
+        return candidates
 
     def same_root(f, a, b):
         """
@@ -4215,6 +4217,45 @@ class Poly(Basic):
 
         """
         conds = f.rep.hurwitz_conditions()
+        return [f.domain.to_sympy(cond) for cond in conds]
+
+    def schur_conditions(f):
+        """
+        Compute the conditions that ensure ``f`` is a Schur stable polynomial.
+
+        Explanation
+        ===========
+
+        Returns expressions ``[e1, e2, ...]`` such that all roots of the
+        polynomial lie inside the unit circle if and only if ``ei > 0``
+        for all ``i``.
+
+        Note
+        ====
+
+        If you need a fast computation of the conditions, consider using the
+        domain ``EXRAW``. Conditions may be less simplified and there could be
+        some precision issues, but the computation will be a lot faster.
+
+        Examples
+        ========
+
+        >>> from sympy import symbols, Poly, reduce_inequalities
+        >>> x, k = symbols("x k")
+        >>> p3 = Poly(x**3 + x**2 + 2*k*x + 1 - k, x)
+        >>> conditions = p3.schur_conditions()
+        >>> conditions
+        [-15*k**2 + 20*k - 5, -8*k**2 - 8*k + 8, 3*k**2 + 8*k - 3]
+        >>> reduce_inequalities([c > 0 for c in conditions])
+        (1/3 < k) & (k < -1/2 + sqrt(5)/2)
+
+        References
+        ==========
+
+        .. [1] https://faculty.washington.edu/chx/teaching/me547/2_1_stability.pdf#:~:text=2.6%20Routh,plane%20Real
+
+        """
+        conds = f.rep.schur_conditions()
         return [f.domain.to_sympy(cond) for cond in conds]
 
     @property
@@ -7849,6 +7890,23 @@ def hurwitz_conditions(f, *gens, **args):
         raise ComputationFailed('hurwitz_conditions', 1, exc)
 
     return F.hurwitz_conditions()
+
+
+@public
+def schur_conditions(f, *gens, **args):
+    """
+    See :func:`~.Poly.schur_conditions`.
+
+    """
+    options.allowed_flags(args, ['polys'])
+
+    try:
+        F, opt = poly_from_expr(f, *gens, **args)
+    except PolificationFailed as exc:
+        raise ComputationFailed('schur_conditions', 1, exc)
+
+    return F.schur_conditions()
+
 
 @public
 class GroebnerBasis(Basic):

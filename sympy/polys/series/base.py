@@ -1,9 +1,11 @@
 from __future__ import annotations
 
-from typing import Protocol, Sequence, TypeVar
-from sympy.polys.domains import Domain
+from typing import Protocol, Sequence, TypeVar, TYPE_CHECKING
 from sympy.polys.domains.domain import Ef, Er
 from sympy.polys.densebasic import dup, dup_pretty
+
+if TYPE_CHECKING:
+    from sympy.polys.domains import Domain
 
 
 TSeries = TypeVar("TSeries")
@@ -87,6 +89,10 @@ class PowerSeriesRingProto(Protocol[TSeries, Er]):
 
     def from_list(self, coeffs: list[Er], prec: int | None = None, /) -> TSeries:
         """Create a power series from a list of coefficients."""
+        ...
+
+    def from_element(self, s: TSeries, /) -> TSeries:
+        """Convert a power series element into the corresponding element of this ring."""
         ...
 
     def to_list(self, s: TSeries, /) -> list[Er]:

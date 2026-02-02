@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 from sympy.calculus.singularities import is_decreasing
+from sympy.calculus.util import continuous_domain
 from sympy.calculus.accumulationbounds import AccumulationBounds
 from .expr_with_intlimits import ExprWithIntLimits
 from .expr_with_limits import AddWithLimits
 from .gosper import gosper_sum
-from sympy.core.expr import Expr
 from sympy.core.add import Add
 from sympy.core.containers import Tuple
 from sympy.core.function import Derivative, expand, expand_mul
@@ -26,6 +26,7 @@ from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.functions.special.zeta_functions import zeta
 from sympy.integrals.integrals import Integral
 from sympy.logic.boolalg import And, Not
+from sympy.matrices.expressions.special import ZeroMatrix
 from sympy.polys.partfrac import apart
 from sympy.polys.polyerrors import PolynomialError, PolificationFailed
 from sympy.polys.polytools import parallel_poly_from_expr, Poly, factor
@@ -36,6 +37,10 @@ from sympy.sets.contains import Contains
 from sympy.sets.sets import FiniteSet, Interval
 from sympy.utilities.iterables import sift
 import itertools
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
 
 
 class Sum(AddWithLimits, ExprWithIntLimits):
@@ -189,7 +194,10 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         # cancel out. This only answers whether the summand is zero; if
         # not then None is returned since we don't analyze whether all
         # terms cancel out.
-        if self.function.is_zero or self.has_empty_sequence:
+        if self.function.is_zero:
+            return True
+
+        if self.has_empty_sequence and not self.function.is_Matrix:
             return True
 
     def _eval_is_extended_real(self):
@@ -238,7 +246,9 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             expanded = self.expand()
             if self != expanded:
                 return expanded.doit()
-            return _eval_matrix_sum(self)
+            expr = _eval_matrix_sum(self)
+            if expr is not None:
+                return expr
 
         for n, limit in enumerate(self.limits):
             i, a, b = limit
@@ -579,8 +589,13 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
         ### ------------- alternating series test ----------- ###
         dict_val = sequence_term.match(S.NegativeOne**(sym + p)*q)
-        if not dict_val[p].has(sym) and is_decreasing(dict_val[q], interval):
-            return S.true
+        if not dict_val[p].has(sym):
+            try:
+                cont_dom = continuous_domain(dict_val[q], sym, interval)
+                if interval.is_subset(cont_dom) and is_decreasing(dict_val[q], interval):
+                    return S.true
+            except NotImplementedError:
+                pass
 
         ### ------------- integral test -------------- ###
         check_interval = None
@@ -590,17 +605,22 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             check_interval = interval
         elif isinstance(maxima, FiniteSet) and maxima.sup.is_number:
             check_interval = Interval(maxima.sup, interval.sup)
-        if (check_interval is not None and
-            (is_decreasing(sequence_term, check_interval) or
-            is_decreasing(-sequence_term, check_interval))):
-                integral_val = Integral(
-                    sequence_term, (sym, lower_limit, upper_limit))
-                try:
-                    integral_val_evaluated = integral_val.doit()
-                    if integral_val_evaluated.is_number:
-                        return S(integral_val_evaluated.is_finite)
-                except NotImplementedError:
-                    pass
+        if check_interval is not None:
+            try:
+                cont_dom = continuous_domain(sequence_term, sym, check_interval)
+                if (check_interval.is_subset(cont_dom) and
+                    (is_decreasing(sequence_term, check_interval) or
+                    is_decreasing(-sequence_term, check_interval))):
+                        integral_val = Integral(
+                            sequence_term, (sym, lower_limit, upper_limit))
+                        try:
+                            integral_val_evaluated = integral_val.doit()
+                            if integral_val_evaluated.is_number:
+                                return S(integral_val_evaluated.is_finite)
+                        except NotImplementedError:
+                            pass
+            except NotImplementedError:
+                pass
 
         ### ----- Dirichlet and bounded times convergent tests ----- ###
         # TODO
@@ -654,10 +674,15 @@ class Sum(AddWithLimits, ExprWithIntLimits):
                     a_n = Mul(*a_tuple)
                     b_n = Mul(*b_set)
 
-                    if is_decreasing(a_n, interval):
-                        dirich = _dirichlet_test(b_n)
-                        if dirich is not None:
-                            return dirich
+                    try:
+                        cont_dom = continuous_domain(a_n, sym, interval)
+                        if interval.is_subset(cont_dom): # Defensive: ensure continuity even though is_decreasing now checks singularities
+                            if is_decreasing(a_n, interval):
+                                dirich = _dirichlet_test(b_n)
+                                if dirich is not None:
+                                    return dirich
+                    except NotImplementedError:
+                        pass
 
                     bc_test = _bounded_convergent_test(a_n, b_n)
                     if bc_test is not None:
@@ -1666,8 +1691,10 @@ def _eval_matrix_sum(expression):
     for limit in expression.limits:
         i, a, b = limit
         dif = b - a
+        if dif == -1:
+            return ZeroMatrix(*f.shape)
         if dif.is_Integer:
-            if (dif < 0) == True:
+            if dif.is_negative:
                 a, b = b + 1, a - 1
                 f = -f
 

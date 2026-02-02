@@ -11,7 +11,7 @@ from mpmath import mnorm, mpf
 from sympy.solvers import nsolve
 from sympy.utilities.lambdify import lambdify
 from sympy.testing.pytest import raises, XFAIL
-from sympy.utilities.decorator import conserve_mpmath_dps
+from sympy.external.mpmath import conserve_mpmath_dps
 
 @XFAIL
 def test_nsolve_fail():

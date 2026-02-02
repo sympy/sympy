@@ -86,10 +86,10 @@ ordering_of_classes = [
 ]
 
 def _cmp_name(x: type, y: type) -> int:
-    """return -1, 0, 1 if the name of x is before that of y.
+    """Return -1, 0, 1 if the name of x is before that of y.
     A string comparison is done if either name does not appear
     in `ordering_of_classes`. This is the helper for
-    ``Basic.compare``
+    ``Basic.compare``.
 
     Examples
     ========
@@ -134,7 +134,7 @@ def _cmp_name(x: type, y: type) -> int:
 
 @cacheit
 def _get_postprocessors(clsname, arg_type):
-    # Since only Add, Mul, Pow can be clsname, this cache
+    # Since only Add, Mul, and Pow can be clsname, this cache
     # is not quadratic.
     postprocessors = set()
     mappings = _get_postprocessors_for_type(arg_type)
@@ -184,7 +184,7 @@ class Basic(Printable):
     (x,)
 
 
-    3)  By "SymPy object" we mean something that can be returned by
+    3)  By "SymPy object", we mean something that can be returned by
         ``sympify``.  But not all objects one encounters using SymPy are
         subclasses of Basic.  For example, mutable objects are not:
 
@@ -212,7 +212,7 @@ class Basic(Printable):
     def __init_subclass__(cls):
         # Initialize the default_assumptions FactKB and also any assumptions
         # property methods. This method will only be called for subclasses of
-        # Basic but not for Basic itself so we call
+        # Basic but not for Basic itself, so we call
         # _prepare_class_assumptions(Basic) below the class definition.
         super().__init_subclass__()
         _prepare_class_assumptions(cls)
@@ -389,7 +389,7 @@ class Basic(Printable):
         1
 
         """
-        # all redefinitions of __cmp__ method should start with the
+        # all redefinitions of compare method should start with the
         # following lines:
         if self is other:
             return 0

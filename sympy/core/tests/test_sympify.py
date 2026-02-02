@@ -23,11 +23,11 @@ from sympy.core.sympify import (sympify, _sympify, SympifyError, kernS,
 from sympy.core.decorators import _sympifyit
 from sympy.external import import_module
 from sympy.testing.pytest import raises, XFAIL, skip
-from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.geometry import Point, Line
 from sympy.functions.combinatorial.factorials import factorial, factorial2
 from sympy.abc import _clash, _clash1, _clash2
 from sympy.external.gmpy import gmpy as _gmpy, flint as _flint
+from sympy.external.mpmath import conserve_mpmath_dps
 from sympy.sets import FiniteSet, EmptySet
 from sympy.tensor.array.dense_ndim_array import ImmutableDenseNDimArray
 
@@ -436,7 +436,7 @@ def test_evaluate_false():
         '2**2 / 3': Mul(Pow(2, 2, evaluate=False), Pow(3, -1, evaluate=False), evaluate=False),
         '2 + 3 * 5': Add(2, Mul(3, 5, evaluate=False), evaluate=False),
         '2 - 3 * 5': Add(2, Mul(-1, Mul(3, 5,evaluate=False), evaluate=False), evaluate=False),
-        '1 / 3': Mul(1, Pow(3, -1, evaluate=False), evaluate=False),
+        '1 / 3': Pow(3, -1, evaluate=False),
         'True | False': Or(True, False, evaluate=False),
         '1 + 2 + 3 + 5*3 + integrate(x)': Add(1, 2, 3, Mul(5, 3, evaluate=False), x**2/2, evaluate=False),
         '2 * 4 * 6 + 8': Add(Mul(2, 4, 6, evaluate=False), 8, evaluate=False),

@@ -13,6 +13,9 @@ from typing import (
 )
 
 if TYPE_CHECKING:
+    from sympy.polys.orderings import MonomialOrder
+    from sympy.polys.domains.polynomialring import PolynomialRing
+    from sympy.core.expr import Expr
     from typing import Self, TypeAlias
     from sympy.polys.rings import PolyElement
 
@@ -20,14 +23,11 @@ from sympy.external.gmpy import GROUND_TYPES, MPQ
 
 from sympy.utilities.exceptions import sympy_deprecation_warning
 
-from sympy.core.expr import Expr
 from sympy.core.numbers import oo, NegativeInfinity
 from sympy.core.sympify import CantSympify
 from sympy.polys.polyutils import PicklableWithSlots, _sort_factors
 from sympy.polys.domains import Domain, ZZ, QQ
 from sympy.polys.domains.domain import Er, Es, Et, Eg
-from sympy.polys.domains.polynomialring import PolynomialRing
-from sympy.polys.orderings import MonomialOrder
 
 from sympy.polys.polyerrors import (
     CoercionFailed,
@@ -1164,6 +1164,10 @@ class DMP(CantSympify, Generic[Er]):
         """Computes the Routh Hurwitz criteria of ``f``. """
         raise NotImplementedError
 
+    def schur_conditions(f) -> list[Er]:
+        """Computes the Schur conditions of ``f``. """
+        raise NotImplementedError
+
     @property
     def is_zero(f) -> bool:
         """Returns ``True`` if ``f`` is a zero polynomial. """
@@ -1629,7 +1633,7 @@ class DMP_Python(DMP[Er]):
 
     def _half_gcdex(f, g: Self) -> tuple[Self, Self]:
         """Half extended Euclidean algorithm, if univariate. """
-        s, h = dup_half_gcdex(f._rep, g._rep, f.dom)
+        s, h = dup_half_gcdex(f._rep, g._rep, f.dom) # type: ignore
         return f.per(s), f.per(h)
 
     def _gcdex(f, g: Self) -> tuple[Self, Self, Self]:
@@ -1836,6 +1840,13 @@ class DMP_Python(DMP[Er]):
         if f.lev:
             raise ValueError("Routh-Hurwitz stability is only defined for univariate polynomials.")
         return dup_routh_hurwitz(f._rep, f.dom)
+
+    def schur_conditions(f) -> list[Er]:
+        """Computes the Schur conditions of ``f``. """
+        from sympy.polys.rootconditions import dup_schur_conditions
+        if f.lev:
+            raise ValueError("Schur stability is only defined for univariate polynomials.")
+        return dup_schur_conditions(f._rep, f.dom)
 
     @property
     def is_zero(f) -> bool:
@@ -2544,6 +2555,10 @@ class DUP_Flint(DMP[Er]):
     def hurwitz_conditions(f) -> list[Er]:
         """Computes the Routh Hurwitz criteria of ``f``. """
         return f.to_DMP_Python().hurwitz_conditions()
+
+    def schur_conditions(f) -> list[Er]:
+        """Computes the Schur conditions of ``f``. """
+        return f.to_DMP_Python().schur_conditions()
 
     @property
     def is_zero(f) -> bool:

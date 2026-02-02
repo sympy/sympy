@@ -3,6 +3,8 @@ from __future__ import annotations
 from typing import Sequence, TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from sympy.polys.domains.field import Field
+    from sympy.polys.domains.domain import Er, Ef
     from typing import TypeAlias, Union
 
 
@@ -30,8 +32,6 @@ from sympy.polys.densetools import (
 )
 from sympy.polys.polyerrors import NotReversible, ExactQuotientFailed
 from sympy.polys.domains import Domain, QQ, ZZ
-from sympy.polys.domains.domain import Er, Ef
-from sympy.polys.domains.field import Field
 from sympy.polys.series.base import series_pprint
 from sympy.external.gmpy import MPZ, MPQ
 from sympy.polys.ring_series import _giant_steps
@@ -54,7 +54,7 @@ def _useries(
 
     prec = min(series_prec, ring_prec)
     if deg < prec:
-        return coeffs, series_prec
+        return coeffs, prec
 
     coeffs = dup_truncate(coeffs, prec, dom)
     return coeffs, prec
@@ -1194,13 +1194,16 @@ class PythonPowerSeriesRingZZ:
                 return coeffs, None
             else:
                 prec = self._prec
-        else:
-            prec = min(prec, self._prec)
 
         if len(coeffs) > prec:
             coeffs = dup_truncate(coeffs, prec, self._domain)
 
         return coeffs, prec
+
+    def from_element(self, s: USeries[MPZ]) -> USeries[MPZ]:
+        """Convert a power series element into the corresponding element of this ring."""
+        coeffs, prec = s
+        return _useries(coeffs, prec, self._domain, self._prec)
 
     def to_list(self, s: USeries[MPZ]) -> list[MPZ]:
         """Returns the list of series coefficients."""
@@ -1462,13 +1465,16 @@ class PythonPowerSeriesRingQQ:
                 return coeffs, None
             else:
                 prec = self._prec
-        else:
-            prec = min(prec, self._prec)
 
         if len(coeffs) > prec:
             coeffs = dup_truncate(coeffs, prec, self._domain)
 
         return coeffs, prec
+
+    def from_element(self, s: USeries[MPQ]) -> USeries[MPQ]:
+        """Convert a power series element into the corresponding element of this ring."""
+        coeffs, prec = s
+        return _useries(coeffs, prec, self._domain, self._prec)
 
     def to_list(self, s: USeries[MPQ]) -> list[MPQ]:
         """Return the list of series coefficients."""

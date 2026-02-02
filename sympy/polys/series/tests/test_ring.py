@@ -112,10 +112,10 @@ def test_basics(ring_int):
     assert R0.equal_repr(R0.multiply(R0.gen, R0.gen), R0([], 0))
     assert R.equal_repr(R.add(R([2, 4, 5], 3), R([5], 2)), R([7, 4], 2))
 
-    assert R.series_prec(R([1, 2, 3])) == None
-    assert R.series_prec(R([1, 2, 3], None)) == None
+    assert R.series_prec(R([1, 2, 3])) is None
+    assert R.series_prec(R([1, 2, 3], None)) is None
     assert R.series_prec(R([1, 2, 3, 4, 5, 6, 7])) == 6
-    assert R.series_prec(R([1, 2, 3, 4, 5, 6, 7], 10)) == 6
+    assert R.series_prec(R([1, 2, 3, 4, 5, 6, 7], 10)) == 10
 
 
 def test_positive(ring_int):
@@ -1315,9 +1315,20 @@ def test_PowerSeriesRing_from_expr():
 
 def test_PowerSeriesRing_ring_new():
     R = PowerSeriesRingRing(QQ, "x", 5)
+    R3 = PowerSeriesRingRing(QQ, "y", 3)
+    x = R.gen
+    y = R3.gen
 
     assert R.ring_new(QQ(7)) == R.from_ground(QQ(7))
     assert R.ring_new(3) == R.from_int(3)
+
+    assert R.ring_new(y + y**2 + y**3).ring == R.ring
+    assert R.ring_new(y + y**2 + y**3) == R.from_list([QQ(0), QQ(1), QQ(1)], 3)
+    assert (
+        R3.ring_new(R3.from_list([QQ(0), QQ(1), QQ(1), QQ(1)], 4))
+        == y + y**2 + R3.order_term()
+    )
+    assert R3.ring_new(x + x**4 + x**5) == y + R3.order_term()
 
 
 def test_PowerSeriesRing_arith(groundring_int):

@@ -1,5 +1,4 @@
 from __future__ import annotations
-
 from functools import reduce
 from operator import add, mul
 
@@ -10,10 +9,7 @@ from sympy.core.add import Add
 from sympy.core.power import Pow
 from sympy.core.sympify import CantSympify, sympify
 from sympy.polys.domains.domain import Er, Ef, Domain, DomainElement
-from sympy.polys.densebasic import dup
-from sympy.polys.domains.field import Field
 from sympy.polys.polyerrors import GeneratorsError
-from sympy.polys.series.base import PowerSeriesRingProto, PowerSeriesRingFieldProto
 from sympy.polys.series.tring import TSeriesElement, _power_series_ring
 from sympy.series.order import Order
 
@@ -21,7 +17,14 @@ from sympy.series.order import Order
 from typing import Generic, overload, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import TypeIs
+    from sympy.polys.series.base import PowerSeriesRingProto, PowerSeriesRingFieldProto
+    from sympy.polys.domains.field import Field
+    from sympy.polys.densebasic import dup
+    import sys
+    if sys.version_info >= (3, 13):
+        from typing import TypeIs
+    else:
+        from typing_extensions import TypeIs
 
 
 @overload
@@ -241,6 +244,14 @@ class PowerSeriesRingRing(Generic[Er]):
         """Convert a lower power series element to a PowerSeriesElement."""
         return PowerSeriesElement(self, element)
 
+    def from_powerserieselement(
+        self, element: PowerSeriesElement[Er]
+    ) -> PowerSeriesElement[Er]:
+        """Convert a power series element into the corresponding element of this ring."""
+        R = self.ring
+        s = R.from_element(element.series)
+        return self.from_element(s)
+
     def from_int(self, arg: int) -> PowerSeriesElement[Er]:
         """Convert an integer to a power series element."""
         g = self.domain_new(arg)
@@ -285,9 +296,13 @@ class PowerSeriesRingRing(Generic[Er]):
         """Convert arg to the element of ground domain of ring."""
         return self.domain.convert(arg, self.domain)
 
-    def ring_new(self, arg: Expr | Er | int) -> PowerSeriesElement[Er]:
+    def ring_new(
+        self, arg: PowerSeriesElement[Er] | Expr | Er | int
+    ) -> PowerSeriesElement[Er]:
         """Create a power series element from various types."""
-        if isinstance(arg, Expr):
+        if isinstance(arg, PowerSeriesElement):
+            return self.from_powerserieselement(arg)
+        elif isinstance(arg, Expr):
             return self.from_expr(arg)
         elif isinstance(arg, int):
             return self.from_int(arg)
@@ -1040,6 +1055,11 @@ class PowerSeriesElement(DomainElement, CantSympify, Generic[Er]):
         coeffs = R.to_list(self.series)
         series = R.from_list(coeffs)
         return self._new(series)
+
+    @property
+    def prec(self) -> int | None:
+        """Return the precision of the series."""
+        return self.ring.series_prec(self.series)
 
     @property
     def is_ground(self) -> bool | None:

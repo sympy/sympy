@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from sympy.polys.domains.domain import Domain, Er, Ef, Eeuclid, Eabs, Eordered
 
 from sympy.polys.densebasic import (
     dup, dmp, _dup, _dmp, _dmp_ground,
@@ -15,6 +14,10 @@ from sympy.polys.densebasic import (
     dmp_one_p, dmp_one,
     dmp_ground, dmp_zeros)
 from sympy.polys.polyerrors import (ExactQuotientFailed, PolynomialDivisionFailed)
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from sympy.polys.domains.domain import Domain, Er, Ef, Eeuclid, Eabs, Eordered
 
 
 def dup_add_term(f: dup[Er], c: Er, i: int, K: Domain[Er]) -> dup[Er]:
@@ -323,10 +326,7 @@ def dup_quo_ground(f: dup[Er], c: Er, K: Domain[Er]) -> dup[Er]:
     if not f:
         return f
 
-    if K.is_Field:
-        return [ K.quo(cf, c) for cf in f ]
-    else:
-        return [ cf // c for cf in f ] # type: ignore
+    return [ K.quo(cf, c) for cf in f ]
 
 
 def dmp_quo_ground(

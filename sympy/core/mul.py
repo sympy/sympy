@@ -1479,10 +1479,11 @@ class Mul(Expr, AssocOp):
             return False
         if len(denominators) == 1:
             d = denominators[0]
-            if d.is_Integer and d.is_even:
+            if d.is_Integer:
+                is_power_of_two = d.p & (d.p - 1) == 0
                 # if minimal power of 2 in num vs den is not
                 # negative then we have an integer
-                if (Add(*[i.as_base_exp()[1] for i in
+                if is_power_of_two and (Add(*[i.as_base_exp()[1] for i in
                         numerators if i.is_even]) - trailing(d.p)
                         ).is_nonnegative:
                     return True

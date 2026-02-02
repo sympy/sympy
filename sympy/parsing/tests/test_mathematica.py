@@ -1,8 +1,9 @@
-from sympy import sin, Function, symbols, Dummy, Lambda, cos
+from sympy import sin, Function, symbols, Dummy, Lambda, cos, Symbol, factorial, S
 from sympy.parsing.mathematica import parse_mathematica, MathematicaParser
 from sympy.core.sympify import sympify
 from sympy.abc import n, w, x, y, z
 from sympy.testing.pytest import raises
+from sympy.logic.boolalg import And, Or, Not
 
 
 def test_mathematica():
@@ -227,6 +228,25 @@ def test_parser_mathematica_tokenizer():
     assert chain("a//b//c") == [["a", "b"], "c"]
     assert chain("a//b//c//d") == [[["a", "b"], "c"], "d"]
 
+    # Not operator
+    assert chain("!x") == ["Not", "x"]
+    assert chain("!(a + b)") == ["Not", ["Plus", "a", "b"]]
+    assert chain("!True") == ["Not", "True"]
+    assert chain("!False") == ["Not", "False"]
+
+    # Distinguish Not and factorial
+    assert chain("x!") == ["Factorial", "x"]
+    assert chain("(a + b)!") == ["Factorial", ["Plus", "a", "b"]]
+
+    # Combination of Not with And/Or
+    assert chain("!x && y") == ["And", ["Not", "x"], "y"]
+    assert chain("x || !y") == ["Or", "x", ["Not", "y"]]
+    assert chain("!x || !y") == ["Or", ["Not", "x"], ["Not", "y"]]
+
+    # Enablement of implicit multiplication with factorial
+    assert chain("x!y") == ["Times", ["Factorial", "x"], "y"]
+    assert chain("x!y!") == ["Times", ["Factorial", "x"], ["Factorial", "y"]]
+
     # Compound expressions
     assert chain("a;b") == ["CompoundExpression", "a", "b"]
     assert chain("a;") == ["CompoundExpression", "a", "Null"]
@@ -335,3 +355,25 @@ def test_Mathematica_literal_regex():
                 assert literal_regex.fullmatch(c)
             if f"x{c}".isidentifier():
                 assert literal_regex.fullmatch(f"x{c}")
+
+
+def test_mathematica_not_operator():
+    # Basic tests
+    x = Symbol('x')
+    assert parse_mathematica("!x") == Not(x)
+
+    # And / Or combinations
+    x1, x2 = Symbol('x1'), Symbol('x2')
+    assert parse_mathematica("x1 && !x2") == And(x1, Not(x2))
+    assert parse_mathematica("!x1 || !x2") == Or(Not(x1), Not(x2))
+
+    # Constants
+    assert parse_mathematica("!True") == S.false
+    assert parse_mathematica("!False") == S.true
+
+    # Factorial distinction
+    assert parse_mathematica("x!") == factorial(x)
+
+    # Factorial with implicit multiplication
+    assert parse_mathematica("x!y") == y*factorial(x)
+    assert parse_mathematica("x!y!") == factorial(x)*factorial(y)

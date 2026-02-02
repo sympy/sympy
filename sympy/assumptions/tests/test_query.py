@@ -1952,6 +1952,7 @@ def test_positive():
 
     #exponential
     assert ask(Q.positive(exp(x)), Q.real(x)) is True
+    assert ask(Q.positive(x**y), Q.nonzero(x) & Q.even(y)) is True
     assert ask(~Q.negative(exp(x)), Q.real(x)) is True
     assert ask(Q.positive(x + exp(x)), Q.real(x)) is None
     assert ask(Q.positive(exp(x)), Q.imaginary(x)) is None
@@ -1959,7 +1960,13 @@ def test_positive():
     assert ask(Q.negative(exp(pi*I, evaluate=False)), Q.imaginary(x)) is True
     assert ask(Q.positive(exp(x*pi*I)), Q.even(x)) is True
     assert ask(Q.positive(exp(x*pi*I)), Q.odd(x)) is False
+    assert ask(Q.positive(x**y), Q.zero(x) & Q.positive(y)) is False
     assert ask(Q.positive(exp(x*pi*I)), Q.real(x)) is None
+    assert ask(Q.positive(x**2), Q.real(x)) is None
+    assert ask(Q.positive(x**y), Q.even(y) & Q.real(x)) is None
+    assert ask(Q.positive(x**y),Q.zero(x)) is None
+    assert ask(Q.positive(x**y), Q.zero(x) & Q.negative(y)) is None
+    assert ask(Q.positive(x**y), Q.zero(x) & Q.even(y)) is None
 
     # logarithm
     assert ask(Q.positive(log(x)), Q.imaginary(x)) is False
@@ -2093,10 +2100,10 @@ def test_matrix():
     assert ask(Q.hermitian(Matrix([[2, 2 + I, 4], [2 - I, 3, I], [4, -I, 1]]))) == True
     assert ask(Q.hermitian(Matrix([[2, 2 + I, 4], [2 + I, 3, I], [4, -I, 1]]))) == False
     z = symbols('z', complex=True)
-    assert ask(Q.hermitian(Matrix([[2, 2 + I, z], [2 - I, 3, I], [4, -I, 1]]))) == None
+    assert ask(Q.hermitian(Matrix([[2, 2 + I, z], [2 - I, 3, I], [4, -I, 1]]))) is None
     assert ask(Q.hermitian(SparseMatrix(((25, 15, -5), (15, 18, 0), (-5, 0, 11))))) == True
     assert ask(Q.hermitian(SparseMatrix(((25, 15, -5), (15, I, 0), (-5, 0, 11))))) == False
-    assert ask(Q.hermitian(SparseMatrix(((25, 15, -5), (15, z, 0), (-5, 0, 11))))) == None
+    assert ask(Q.hermitian(SparseMatrix(((25, 15, -5), (15, z, 0), (-5, 0, 11))))) is None
 
     # antihermitian
     A = Matrix([[0, -2 - I, 0], [2 - I, 0, -I], [0, -I, 0]])
@@ -2569,3 +2576,10 @@ def test_issue_25221():
 def test_issue_27440():
     nan = S.NaN
     assert ask(Q.negative(nan)) is None
+
+def test_issue_28127():
+    assert ask(Q.le(x,y), Q.gt(x,y)) is False
+    assert ask(Q.ge(x,y), Q.lt(x,y)) is False
+    assert ask(Q.gt(y,x), Q.lt(x,y)) is True
+    assert ask(Q.lt(y,x), Q.gt(x,y)) is True
+    assert ask(Q.le(y,x), Q.ge(x,y)) is True

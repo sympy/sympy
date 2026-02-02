@@ -13,7 +13,7 @@ from sympy.core.exprtools import factor_nc
 from sympy.core.parameters import global_parameters
 from sympy.core.function import (expand_log, count_ops, _mexpand,
     nfloat, expand_mul, expand)
-from sympy.core.numbers import Float, I, pi, Rational, equal_valued
+from sympy.core.numbers import Float, I, Integer, pi, Rational, equal_valued
 from sympy.core.relational import Relational
 from sympy.core.rules import Transform
 from sympy.core.sorting import ordered
@@ -32,12 +32,10 @@ from sympy.functions.special.bessel import (BesselBase, besselj, besseli,
                                             besselk, bessely, jn)
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.integrals.integrals import Integral
-from sympy.logic.boolalg import Boolean
 from sympy.matrices.expressions import (MatrixExpr, MatAdd, MatMul,
                                             MatPow, MatrixSymbol)
 from sympy.polys import together, cancel, factor
 from sympy.polys.numberfields.minpoly import _is_sum_surds, _minimal_polynomial_sq
-from sympy.sets.sets import Set
 from sympy.simplify.combsimp import combsimp
 from sympy.simplify.cse_opts import sub_pre, sub_post
 from sympy.simplify.hyperexpand import hyperexpand
@@ -47,12 +45,18 @@ from sympy.simplify.sqrtdenest import sqrtdenest
 from sympy.simplify.trigsimp import trigsimp, exptrigsimp
 from sympy.utilities.decorator import deprecated
 from sympy.utilities.iterables import has_variety, sift, subsets, iterable
-from sympy.utilities.misc import as_int
 
-import mpmath
+from sympy.external.mpmath import (
+    prec_to_dps,
+    local_workprec,
+    inf as _mpmath_inf,
+    ninf as _mpmath_ninf,
+)
 
 
 if TYPE_CHECKING:
+    from sympy.logic.boolalg import Boolean
+    from sympy.sets.sets import Set
     from typing import Literal
 
 
@@ -1450,14 +1454,13 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
     sympy.core.function.nfloat
 
     """
-    try:
-        return sympify(as_int(expr))
-    except (TypeError, ValueError):
-        pass
-    expr = sympify(expr).xreplace({
+    expr = sympify(expr)
+    if isinstance(expr, Integer):
+        return expr
+    expr = expr.xreplace({
         Float('inf'): S.Infinity,
         Float('-inf'): S.NegativeInfinity,
-        })
+    })
     if expr is S.Infinity or expr is S.NegativeInfinity:
         return expr
     if rational or expr.free_symbols:
@@ -1467,9 +1470,7 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
     # lower tolerances set, so use them to pick the largest tolerance if None
     # was given
     if tolerance is None:
-        tolerance = 10**-min([15] +
-             [mpmath.libmp.libmpf.prec_to_dps(n._prec)
-             for n in expr.atoms(Float)])
+        tolerance = 10**-min([15] + [prec_to_dps(n._prec) for n in expr.atoms(Float)])
     # XXX should prec be set independent of tolerance or should it be computed
     # from tolerance?
     prec = 30
@@ -1491,17 +1492,16 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
         return expr
 
     def nsimplify_real(x):
-        orig = mpmath.mp.dps
         xv = x._to_mpmath(bprec)
-        try:
+        with local_workprec(prec) as ctx:
             # We'll be happy with low precision if a simple fraction
             if not (tolerance or full):
-                mpmath.mp.dps = 15
-                rat = mpmath.pslq([xv, 1])
+                ctx.dps = 15
+                rat = ctx.pslq([xv, 1])
                 if rat is not None:
                     return Rational(-int(rat[1]), int(rat[0]))
-            mpmath.mp.dps = prec
-            newexpr = mpmath.identify(xv, constants=constants_dict,
+            ctx.dps = prec
+            newexpr = ctx.identify(xv, constants=constants_dict,
                 tol=tolerance, full=full)
             if not newexpr:
                 raise ValueError
@@ -1510,13 +1510,9 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
             expr = sympify(newexpr)
             if x and not expr:  # don't let x become 0
                 raise ValueError
-            if expr.is_finite is False and xv not in [mpmath.inf, mpmath.ninf]:
+            if expr.is_finite is False and xv not in [_mpmath_inf, _mpmath_ninf]:
                 raise ValueError
             return expr
-        finally:
-            # even though there are returns above, this is executed
-            # before leaving
-            mpmath.mp.dps = orig
     try:
         if re:
             re = nsimplify_real(re)
@@ -1589,10 +1585,12 @@ def _real_to_rational(expr, tolerance=None, rational_conversion='base10'):
                     r = S.ComplexInfinity
                 elif fl < 0:
                     fl = -fl
-                    d = Pow(10, int(mpmath.log(fl)/mpmath.log(10)))
+                    with local_workprec(53) as ctx:
+                        d = Pow(10, int(ctx.log(fl)/ctx.log(10)))
                     r = -Rational(str(fl/d))*d
                 elif fl > 0:
-                    d = Pow(10, int(mpmath.log(fl)/mpmath.log(10)))
+                    with local_workprec(53) as ctx:
+                        d = Pow(10, int(ctx.log(fl)/ctx.log(10)))
                     r = Rational(str(fl/d))*d
                 else:
                     r = S.Zero

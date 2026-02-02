@@ -28,6 +28,7 @@ def test_Permutation():
     assert list(p(1, 2)) == [0, 2, 1, 3]
     raises(TypeError, lambda: p(-1))
     raises(TypeError, lambda: p(5))
+    raises(TypeError, lambda: p(4))
     # conversion to list
     assert list(p) == list(range(4))
     assert p.copy() == p
@@ -434,6 +435,10 @@ def test_Cycle():
     assert Cycle(1, 2).list() == [0, 2, 1]
     assert Cycle(1, 2).list(4) == [0, 2, 1, 3]
     assert Cycle().size == 0
+    # Issue #28658: Cycle().list(size=0) should return [] not [0]
+    assert Cycle().list(size=0) == []
+    assert Cycle().list(size=0) == Permutation([]).list(size=0)
+
     raises(ValueError, lambda: Cycle((1, 2)))
     raises(ValueError, lambda: Cycle(1, 2, 1))
     raises(TypeError, lambda: Cycle(1, 2)*{})

@@ -873,7 +873,7 @@ class Truss:
                 objects = self._node_coordinates[node][0].as_coeff_Mul()
                 for object in objects:
                     if type(object) in (Symbol, Quantity):
-                        if subs_dict==None or object not in subs_dict:
+                        if subs_dict is None or object not in subs_dict:
                             raise ValueError("provided substituted dictionary is not adequate")
                         else:
                             self._node_coordinates[node][0] /= object
@@ -888,7 +888,7 @@ class Truss:
                 objects = self._node_coordinates[node][1].as_coeff_Mul()
                 for object in objects:
                     if type(object) in (Symbol, Quantity):
-                        if subs_dict==None or object not in subs_dict:
+                        if subs_dict is None or object not in subs_dict:
                             raise ValueError("provided substituted dictionary is not adequate")
                         else:
                             self._node_coordinates[node][1] /= object

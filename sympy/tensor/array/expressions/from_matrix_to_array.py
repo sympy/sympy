@@ -1,4 +1,4 @@
-from sympy import KroneckerProduct
+from sympy import KroneckerProduct, Add
 from sympy.core.basic import Basic
 from sympy.core.function import Lambda
 from sympy.core.mul import Mul
@@ -15,7 +15,13 @@ from sympy.matrices.expressions.transpose import Transpose
 from sympy.matrices.expressions.matexpr import MatrixExpr
 from sympy.tensor.array.expressions.array_expressions import \
     ArrayElementwiseApplyFunc, _array_tensor_product, _array_contraction, \
-    _array_diagonal, _array_add, _permute_dims, Reshape
+    _array_diagonal, _array_add, _permute_dims, Reshape, get_shape, _ArrayExpr, _CodegenArrayAbstract
+
+
+def _array_elementwise_apply_func(function, element):
+    if not isinstance(element, (MatrixExpr, _ArrayExpr, _CodegenArrayAbstract)):
+        return function(element)
+    return ArrayElementwiseApplyFunc(function, element)
 
 
 def convert_matrix_to_array(expr: Basic) -> Basic:
@@ -40,7 +46,7 @@ def convert_matrix_to_array(expr: Basic) -> Basic:
                 tprod,
                 *contractions
         )
-    elif isinstance(expr, MatAdd):
+    elif isinstance(expr, (Add, MatAdd)):
         return _array_add(
                 *[convert_matrix_to_array(arg) for arg in expr.args]
         )
@@ -56,14 +62,23 @@ def convert_matrix_to_array(expr: Basic) -> Basic:
     elif isinstance(expr, Pow):
         base = convert_matrix_to_array(expr.base)
         if (expr.exp > 0) == True:
-            return _array_tensor_product(*[base for i in range(expr.exp)])
+            base_conv = convert_matrix_to_array(base)
+            if get_shape(base_conv) == ():
+                return _array_elementwise_apply_func(lambda x: x**expr.exp, base_conv)
+            else:
+                return _array_tensor_product(*[base_conv for i in range(expr.exp)])
+        elif get_shape(base) == ():
+            d = Dummy("d")
+            return _array_elementwise_apply_func(Lambda(d, d**expr.exp), base)
         else:
             return expr
     elif isinstance(expr, MatPow):
         base = convert_matrix_to_array(expr.base)
         if expr.exp.is_Integer != True:
-            b = symbols("b", cls=Dummy)
-            return ArrayElementwiseApplyFunc(Lambda(b, b**expr.exp), convert_matrix_to_array(base))
+            if get_shape(expr) == (1, 1):
+                b = symbols("b", cls=Dummy)
+                return _array_elementwise_apply_func(Lambda(b, b ** expr.exp), convert_matrix_to_array(base))
+            return expr
         elif (expr.exp > 0) == True:
             return convert_matrix_to_array(MatMul.fromiter(base for i in range(expr.exp)))
         else:
@@ -78,7 +93,7 @@ def convert_matrix_to_array(expr: Basic) -> Basic:
             return convert_matrix_to_array(HadamardProduct.fromiter(base for i in range(exp)))
         else:
             d = Dummy("d")
-            return ArrayElementwiseApplyFunc(Lambda(d, d**exp), base)
+            return _array_elementwise_apply_func(Lambda(d, d**exp), base)
     elif isinstance(expr, KroneckerProduct):
         kp_args = [convert_matrix_to_array(arg) for arg in expr.args]
         permutation = [2*i for i in range(len(kp_args))] + [2*i + 1 for i in range(len(kp_args))]

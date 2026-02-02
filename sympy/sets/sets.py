@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import Any, TYPE_CHECKING, overload
 from functools import reduce
 from collections import defaultdict
-from collections.abc import Mapping, Iterable
 import inspect
 
 from sympy.core.kind import Kind, UndefinedKind, NumberKind
@@ -23,6 +22,7 @@ from sympy.core.singleton import Singleton, S
 from sympy.core.sorting import ordered
 from sympy.core.symbol import symbols, Symbol, Dummy, uniquely_named_symbol
 from sympy.core.sympify import _sympify, sympify, _sympy_converter
+from sympy.external.mpmath import prec_to_dps, mpf, mpi
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.miscellaneous import Max, Min
 from sympy.logic.boolalg import And, Or, Not, Xor, true, false, Boolean
@@ -32,9 +32,8 @@ from sympy.utilities.iterables import (iproduct, sift, roundrobin, iterable,
                                        subsets)
 from sympy.utilities.misc import func_name, filldedent
 
-from mpmath import mpi, mpf
-
-from mpmath.libmp.libmpf import prec_to_dps
+if TYPE_CHECKING:
+    from collections.abc import Mapping, Iterable
 
 
 tfn: dict[bool | Boolean | None, Boolean | None] = defaultdict(lambda: None, {
@@ -2143,9 +2142,6 @@ class FiniteSet(Set):
     def as_relational(self, symbol):
         """Rewrite a FiniteSet in terms of equalities and logic operators. """
         return Or(*[Eq(symbol, elem) for elem in self])
-
-    def compare(self, other):
-        return (hash(self) - hash(other))
 
     def _eval_evalf(self, prec):
         dps = prec_to_dps(prec)

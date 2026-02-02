@@ -11,7 +11,7 @@ from typing import Any
 from sympy.core.function import AppliedUndef
 from sympy.core.mul import Mul
 from sympy.core.add import Add
-from mpmath.libmp import repr_dps, to_str as mlib_to_str
+from sympy.external.mpmath import repr_dps, to_str as mlib_to_str
 
 from .printer import Printer, print_function
 

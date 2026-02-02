@@ -5,7 +5,7 @@ from sympy.core.symbol import (Symbol, symbols)
 from sympy.sets.sets import Interval
 from sympy.simplify.simplify import simplify
 from sympy.physics.continuum_mechanics.beam import Beam
-from sympy.functions import SingularityFunction, Piecewise, meijerg, Abs, log, sqrt
+from sympy.functions import SingularityFunction, Piecewise, meijerg, Abs, log, sqrt, factorial
 from sympy.testing.pytest import raises
 from sympy.physics.units import meter, newton, kilo, giga, milli
 from sympy.physics.continuum_mechanics.beam import Beam3D
@@ -1126,6 +1126,57 @@ def test_ild_with_sliding_hinge():
     b.solve_for_ild_moment(8, 1, r0, r6, r13, m13)
     assert b.ild_moment.subs(a, 3) == -Rational(12, 7)
 
+
+def test_apply_load_ramp_start_greater_than_end():
+    # issue #28174
+
+    E, I = symbols('E I')
+
+    # order 1 - fullbeam
+    b = Beam(10, E, I)
+    b.apply_load(5, 10, 1, end=0)
+    expected_load = 50*SingularityFunction(x, 0, 0) \
+                    - 5*SingularityFunction(x, 0, 1) \
+                    + 5*SingularityFunction(x, 10, 1)
+    assert simplify(b.load - expected_load) == 0
+
+    # order 3 - full beam
+    b1 = Beam(10, E, I)
+    b1.apply_load(5, 10, 3, end=0)
+    expected_load = 5000*SingularityFunction(x, 0, 0) \
+                    - 1500*SingularityFunction(x, 0, 1) \
+                    + 150*SingularityFunction(x, 0, 2) \
+                    - 5*SingularityFunction(x, 0, 3) \
+                    + 5*SingularityFunction(x, 10, 3)
+    assert simplify(b1.load - expected_load) == 0
+
+    # order 1 - section of beam
+    b2 = Beam(10, E, I)
+    b2.apply_load(5, 6, 1, end=2)
+    expected_load = 20*SingularityFunction(x, 2, 0) \
+                    - 5*SingularityFunction(x, 2, 1) \
+                    + 5*SingularityFunction(x, 6, 1)
+    assert simplify(b2.load - expected_load) == 0
+
+
+def test_apply_load_symbolic_start_end():
+    # Symbolic test for start > end case
+    E, I = symbols('E I')
+    a, b_ = symbols('a b', real=True)
+
+    beam = Beam(b_, E, I)
+    beam.apply_load(5, b_, 1, end=a)
+
+    f = 5 * x**1
+    expected_load = (
+        f.subs(x, b_ - a) * SingularityFunction(x, a, 0)
+        - f.diff(x, 1).subs(x, b_ - a) * SingularityFunction(x, a, 1) / factorial(1)
+        + 5 * SingularityFunction(x, b_, 1)
+    )
+
+    assert simplify(beam.load - expected_load) == 0
+
+
 def test_Beam3D():
     l, E, G, I, A = symbols('l, E, G, I, A')
     R1, R2, R3, R4 = symbols('R1, R2, R3, R4')
@@ -1258,13 +1309,13 @@ def test_cross_section():
     # test for second_moment and cross_section setter
     b0 = Beam(l, E, I)
     assert b0.second_moment == I
-    assert b0.cross_section == None
+    assert b0.cross_section is None
     b0.cross_section = Circle((0, 0), 5)
     assert b0.second_moment == pi*Rational(625, 4)
     assert b0.cross_section == Circle((0, 0), 5)
     b0.second_moment = 2*n - 6
     assert b0.second_moment == 2*n-6
-    assert b0.cross_section == None
+    assert b0.cross_section is None
     with raises(ValueError):
         b0.second_moment = Circle((0, 0), 5)
 
@@ -1307,7 +1358,7 @@ def test_cross_section():
     b.bc_deflection = [(0, 0)]
 
     assert b.second_moment == Piecewise((a*c**3/12, x <= 20), (g*h**3/36, x <= 35))
-    assert b.cross_section == None
+    assert b.cross_section is None
     assert b.length == 35
     assert b.slope().subs(x, 7) == 8400/(E*a*c**3)
     assert b.slope().subs(x, 25) == 52200/(E*g*h**3) + 39600/(E*a*c**3)

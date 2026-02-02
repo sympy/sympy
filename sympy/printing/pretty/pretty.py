@@ -928,6 +928,13 @@ class PrettyPrinter(Printer):
         else:
             return prettyForm('1')
 
+    def _print_MatrixUnit(self, expr):
+        if self._use_unicode:
+            s = self._print(Symbol(f'{pretty_atom("MatrixUnit")}_{expr._i}{expr._j}'))
+        else:
+            s = self._print(Symbol(f'E_{expr._i}{expr._j}'))
+        return s
+
     def _print_DotProduct(self, expr):
         args = list(expr.args)
 
@@ -995,15 +1002,16 @@ class PrettyPrinter(Printer):
 
     def _print_DiscreteTransferFunction(self, expr):
         if not expr.num == 1:
-            num, den = expr.num, expr.den
-            res = Mul(num, Pow(den, -1, evaluate=False), evaluate=False)
-
+            res = Mul(expr.num, Pow(expr.den, -1, evaluate=False),
+                      evaluate=False)
             result = self._print_Mul(res)
-            result = prettyForm(\
-                *result.right(f", sampling time: {expr.sampling_time}"))
-            return result
         else:
-            return self._print(1)/self._print(expr.den)
+            result =  self._print(1)/self._print(expr.den)
+
+        result = prettyForm(\
+            *result.right(f" [st: {expr.sampling_time}]"))
+        return result
+
 
     def _print_Series(self, expr):
         args = list(expr.args)
@@ -1122,7 +1130,7 @@ class PrettyPrinter(Printer):
         if expr.sampling_time == 0:
             return mat
 
-        return prettyForm(*mat.right(f", sampling time: {expr.sampling_time}"))
+        return prettyForm(*mat.below(f"[st: {expr.sampling_time}]"))
 
     def _print_StateSpace(self, expr):
         from sympy.matrices.expressions.blockmatrix import BlockMatrix
@@ -1132,6 +1140,16 @@ class PrettyPrinter(Printer):
         D = expr._D
         mat = BlockMatrix([[A, B], [C, D]])
         return self._print(mat.blocks)
+
+    def _print_DiscreteStateSpace(self, expr):
+        from sympy.matrices.expressions.blockmatrix import BlockMatrix
+        A = expr._A
+        B = expr._B
+        C = expr._C
+        D = expr._D
+        mat = BlockMatrix([[A, B], [C, D]])
+        mat = self._print(mat)
+        return prettyForm(*mat.below(f"\n[st: {expr.sampling_time}]"))
 
     def _print_BasisDependent(self, expr):
         from sympy.vector import Vector
@@ -1269,7 +1287,7 @@ class PrettyPrinter(Printer):
         return self._print(out_expr)
 
     def _printer_tensor_indices(self, name, indices, index_map={}):
-        center = stringPict(name)
+        center = stringPict(pretty_symbol(name))
         top = stringPict(" "*center.width())
         bot = stringPict(" "*center.width())
 
@@ -2800,6 +2818,12 @@ class PrettyPrinter(Printer):
 
     def _print_CoordSystem(self, coords):
         return self._print(coords.name)
+
+    def _print_BaseScalar(self, expr):
+        coord_sys_name, scalar_name = expr.name.split(".")
+        if scalar_name in greek_unicode:
+            scalar_name = greek_unicode[scalar_name]
+        return self._print(pretty_symbol(scalar_name + "_" + coord_sys_name))
 
     def _print_BaseScalarField(self, field):
         string = field._coord_sys.symbols[field._index].name

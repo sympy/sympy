@@ -1457,3 +1457,12 @@ def test_evaluate_false():
     expr = Equivalent(x, x, x, evaluate=False)
     assert isinstance(expr, Equivalent)
     assert expr.args == (x, x, x)
+
+def test_simplify_logic_dontcare_issue_28369():
+   A, B = symbols('A B')
+
+   # Test 1: Fast path symbol check
+   assert simplify_logic(A, dontcare=~A) is S.true
+
+   # Test 2: Fast path form check
+   assert simplify_logic(A | B, dontcare=A, form='dnf') == B

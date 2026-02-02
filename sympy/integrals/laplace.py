@@ -371,7 +371,7 @@ def _laplace_build_rules():
          S.true, S.Zero, dco),  # Not in Bateman54
         (t**n, gamma(n+1)/s**(n+1),
          n > -1, S.Zero, dco),  # 4.3.1
-        ((a*t+b)**n, uppergamma(n+1, b/a*s)*exp(-b/a*s)/s**(n+1)/a,
+        ((a*t+b)**n, uppergamma(n+1, b/a*s)*exp(b/a*s)/s**(n+1)/a,
          And(n > -1, Abs(arg(b/a)) < pi), S.Zero, dco),  # 4.3.4
         (t**n/(t+a), a**n*gamma(n+1)*uppergamma(-n, a*s),
          And(n > -1, Abs(arg(a)) < pi), S.Zero, dco),  # 4.3.7
@@ -2031,11 +2031,27 @@ def _inverse_laplace_irrational(fn, s, t, plane):
 
 
 @DEBUG_WRAP
+def _inverse_laplace_laplace(fn, s, t, plane):
+    """
+    Helper function for the class InverseLaplaceTransform.
+    """
+
+    if not fn.func == LaplaceTransform:
+        return None
+    _f, _t, _s = fn.args
+    if _s == s:
+        return _f.subs(_t, t)*Heaviside(t), S.true
+    else:
+        return None
+
+
+@DEBUG_WRAP
 def _inverse_laplace_early_prog_rules(F, s, t, plane):
     """
     Helper function for the class InverseLaplaceTransform.
     """
-    prog_rules = [_inverse_laplace_irrational]
+    prog_rules = [
+        _inverse_laplace_laplace, _inverse_laplace_irrational]
 
     for p_rule in prog_rules:
         if (r := p_rule(F, s, t, plane)) is not None:

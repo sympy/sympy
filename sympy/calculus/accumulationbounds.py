@@ -679,24 +679,17 @@ class AccumulationBounds(Expr):
                 return other
 
         if other.min <= self.min:
-            if other.max < self.max:
+            if other.max <= self.max:
                 return AccumBounds(self.min, other.max)
             if other.max > self.max:
                 return self
 
     def union(self, other):
-        # TODO : Devise a better method for Union of AccumBounds
-        # this method is not actually correct and
-        # can be made better
         if not isinstance(other, AccumBounds):
             raise TypeError(
-                "Input must be AccumulationBounds or FiniteSet object")
+                "Input must be AccumulationBounds object")
 
-        if self.min <= other.min and self.max >= other.min:
-            return AccumBounds(self.min, Max(self.max, other.max))
-
-        if other.min <= self.min and other.max >= self.min:
-            return AccumBounds(other.min, Max(self.max, other.max))
+        return AccumBounds(Min(self.min, other.min), Max(self.max, other.max))
 
 
 @dispatch(AccumulationBounds, AccumulationBounds) # type: ignore # noqa:F811

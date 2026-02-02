@@ -5,7 +5,7 @@ from typing import FrozenSet
 from functools import singledispatch
 from itertools import accumulate
 
-from sympy import MatMul, Basic, Wild, KroneckerProduct
+from sympy import MatMul, Basic, Wild, KroneckerProduct, NDimArray
 from sympy.assumptions.ask import (Q, ask)
 from sympy.core.mul import Mul
 from sympy.core.singleton import S
@@ -22,7 +22,7 @@ from sympy.matrices.expressions.matexpr import MatrixElement
 from sympy.tensor.array.expressions.array_expressions import PermuteDims, ArrayDiagonal, \
     ArrayTensorProduct, OneArray, get_rank, _get_subrank, ZeroArray, ArrayContraction, \
     ArrayAdd, _CodegenArrayAbstract, get_shape, ArrayElementwiseApplyFunc, _ArrayExpr, _EditArrayContraction, _ArgE, \
-    ArrayElement, _array_tensor_product, _array_contraction, _array_diagonal, _array_add, _permute_dims
+    ArrayElement, _array_tensor_product, _array_contraction, _array_diagonal, _array_add, _permute_dims, ArraySum
 from sympy.tensor.array.expressions.utils import _get_mapping_from_subranks
 
 
@@ -209,6 +209,15 @@ def _(expr: ArrayTensorProduct):
     return _a2m_tensor_product(*[_array2matrix(arg) for arg in expr.args])
 
 
+@_array2matrix.register(ArraySum)
+def _(expr: ArraySum):
+    new_function = _array2matrix(expr.function)
+    output = expr.func(new_function, *expr.limits).simplify()
+    if isinstance(output, ZeroArray) and get_rank(output) == 2:
+        return ZeroMatrix(*output.shape)
+    return output
+
+
 @_array2matrix.register(ArrayContraction)
 def _(expr: ArrayContraction):
     expr = expr.flatten_contraction_of_diagonal()
@@ -330,6 +339,8 @@ def _(expr: ArrayElementwiseApplyFunc):
             if m is not None:
                 return m[w]*HadamardPower(subexpr, m[p])
         return ElementwiseApplyFunction(expr.function, subexpr)
+    elif not hasattr(subexpr, "shape"):
+        return expr.function(subexpr)
     else:
         return ArrayElementwiseApplyFunc(expr.function, subexpr)
 
@@ -366,16 +377,24 @@ def _(expr: ArrayTensorProduct):
             continue
         if not isinstance(arg, (MatrixExpr, MatrixBase)):
             rarg, rem = _remove_trivial_dims(arg)
-            removed.extend(rem)
-            newargs.append(rarg)
-            continue
-        elif getattr(arg, "is_Identity", False) and arg.shape == (1, 1):
+            rem_dims = [current_range[j] for j in rem]
+            removed.extend(rem_dims)
+            if not isinstance(rarg, MatrixExpr) or 1 not in rarg.shape:
+                newargs.append(rarg)
+                continue
+            else:
+                current_range = [j for j in current_range if j not in rem_dims]
+                arg = rarg
+        if getattr(arg, "is_Identity", False) and arg.shape == (1, 1):
             if arg.shape == (1, 1):
                 # Ignore identity matrices of shape (1, 1) - they are equivalent to scalar 1.
                 removed.extend(current_range)
             continue
         elif arg.shape == (1, 1):
-            arg, _ = _remove_trivial_dims(arg)
+            arg, rem = _remove_trivial_dims(arg)
+            if rem:
+                rem_dims = [current_range[j] for j in rem]
+                removed.extend(rem_dims)
             # Matrix is equivalent to scalar:
             if len(newargs) == 0:
                 newargs.append(arg)
@@ -387,12 +406,23 @@ def _(expr: ArrayTensorProduct):
                 removed.extend(current_range)
             else:
                 newargs.append(arg)
+            pending = 1
+            prev_i = i
         elif 1 in arg.shape:
             k = [i for i in arg.shape if i != 1][0]
             if pending is None:
-                pending = k
+                pending = k  # type: ignore
                 prev_i = i
                 newargs.append(arg)
+            elif pending == 1:
+                prev = newargs[-1]
+                if arg.shape[0] == 1:
+                    newargs[-1] = prev*arg
+                else:  # case args.shape[1] == 1
+                    newargs[-1] = arg*prev
+                removed.extend([cumul[prev_i], cumul[prev_i] + 1])  # type: ignore
+                pending = k  # type: ignore
+                prev_i = i
             elif pending == k:
                 prev = newargs[-1]
                 if prev.shape[0] == 1:
@@ -410,12 +440,12 @@ def _(expr: ArrayTensorProduct):
                 removed.extend([d1, d2])
             else:
                 newargs.append(arg)
-                pending = k
+                pending = k  # type: ignore
                 prev_i = i
         else:
             newargs.append(arg)
             pending = None
-    newexpr, newremoved = _a2m_tensor_product(*newargs), sorted(removed)
+    newexpr, newremoved = _a2m_tensor_product(*newargs), sorted(set(removed))
     if isinstance(newexpr, ArrayTensorProduct):
         newexpr, newremoved2 = _find_trivial_matrices_rewrite(newexpr)
         newremoved = _combine_removed(-1, newremoved, newremoved2)
@@ -538,9 +568,9 @@ def _(expr: ArrayDiagonal):
 @_remove_trivial_dims.register(ElementwiseApplyFunction)
 def _(expr: ElementwiseApplyFunction):
     subexpr, removed = _remove_trivial_dims(expr.expr)
-    if subexpr.shape == (1, 1):
+    if subexpr.shape == (1, 1) and isinstance(subexpr, MatrixExpr):
         # TODO: move this to ElementwiseApplyFunction
-        return expr.function(subexpr), removed + [0, 1]
+        return expr.function(MatrixElement(subexpr, 0, 0)), removed + [0, 1]
     return ElementwiseApplyFunction(expr.function, subexpr), []
 
 
@@ -705,6 +735,9 @@ def _a2m_tensor_product(*args):
     for arg in args:
         if isinstance(arg, (MatrixExpr, _ArrayExpr, _CodegenArrayAbstract)):
             arrays.append(arg)
+        elif isinstance(arg, (NDimArray, MatrixBase)):
+            # This fixes issue 15651
+            arrays.append(arg)
         else:
             scalars.append(arg)
     scalar = Mul.fromiter(scalars)
@@ -792,7 +825,14 @@ def identify_hadamard_products(expr: ArrayContraction | ArrayDiagonal):
 
         # This is a Hadamard product:
 
-        hp = hadamard_product(*[i.element if check_transpose(i.indices) else Transpose(i.element) for i in hadamard_factors])
+        elems = [i.element if check_transpose(i.indices) else Transpose(i.element) for i in hadamard_factors]
+
+        if elems[0].shape == (1, 1):
+            # In this case, the Hadamard product is equivalent to the matrix multiplication:
+            hp = MatMul(*elems).doit()
+        else:
+            hp = hadamard_product(*elems)
+
         hp_indices = v[0].indices
         if not check_transpose(hadamard_factors[0].indices):
             hp_indices = list(reversed(hp_indices))

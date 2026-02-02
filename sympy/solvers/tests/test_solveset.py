@@ -1848,17 +1848,35 @@ def test_nonlinsolve_basic():
     assert nonlinsolve([f(x), 0], f(x), f(y)) == FiniteSet((0, f(y)))
     A = Indexed('A', x)
     assert nonlinsolve([A, 0], A, y) == FiniteSet((0, y))
-    assert nonlinsolve([x**2 -1], [sin(x)]) == FiniteSet((S.EmptySet,))
-    assert nonlinsolve([x**2 -1], sin(x)) == FiniteSet((S.EmptySet,))
+    assert nonlinsolve([x**2 -1], [sin(x)]) == S.EmptySet
+    assert nonlinsolve([x**2 -1], sin(x)) == S.EmptySet
     assert nonlinsolve([x**2 -1], 1) == FiniteSet((x**2,))
-    assert nonlinsolve([x**2 -1], x + y) == FiniteSet((S.EmptySet,))
+    assert nonlinsolve([x**2 -1], x + y) == S.EmptySet
+    assert nonlinsolve([1], [x]) == S.EmptySet
+    assert nonlinsolve([5], [x, y]) == S.EmptySet
+    assert nonlinsolve([-1], [x, y]) == S.EmptySet
+    assert nonlinsolve([Rational(1, 2)], [x]) == S.EmptySet
+    assert nonlinsolve([sqrt(2)], [x]) == S.EmptySet
+    assert nonlinsolve([0], [x, y]) == FiniteSet((x, y))
+    assert nonlinsolve([0, 0], [x, y]) == FiniteSet((x, y))
+    assert nonlinsolve([S.Zero], [x, y]) == FiniteSet((x, y))
+    assert nonlinsolve([0], [x, y, z]) == FiniteSet((x, y, z))
     assert nonlinsolve([Eq(1, x + y), Eq(1, -x + y - 1), Eq(1, -x + y - 1)], x, y) == FiniteSet(
         (-S.Half, 3*S.Half))
 
 
 def test_nonlinsolve_abs():
-    soln = FiniteSet((y, y), (-y, y))
-    assert nonlinsolve([Abs(x) - y], x, y) == soln
+    raises(NotImplementedError, lambda: nonlinsolve([Abs(x) - y], x, y))
+    raises(NotImplementedError, lambda: nonlinsolve([Abs(x) - 1, x - y], x, y))
+    raises(NotImplementedError, lambda: nonlinsolve([Abs(x) - 1, y - 2], x, y))
+    raises(NotImplementedError, lambda: nonlinsolve([Abs(x) - 2, x + y], x, y))
+
+
+def test_nonlinsolve_sign():
+    raises(NotImplementedError, lambda: nonlinsolve([sign(x) - 1, x*y - 4], [x, y]))
+    raises(NotImplementedError, lambda: nonlinsolve([sign(x) - 1, x - y], [x, y]))
+    result = nonlinsolve([sign(x) - 1], [x])
+    assert isinstance(result, FiniteSet)
 
 
 def test_raise_exception_nonlinsolve():
@@ -2029,6 +2047,28 @@ def test_nonlinsolve_inexact():
             0.460812006002492 + 0.539199997693599*I)]
     assert all(abs(res.args[i][j] - sol[i][j]) < 1e-9
                for i in range(5) for j in range(2))
+
+def test_nonlinsolve_issue_28646():
+    # Issue #28646
+    x, y = symbols('x, y')
+    lst = [
+        x**2*(y - 0.508793242825092)**2 - sin(pi/8)*sqrt(0.508793242825092**2),
+        (x - 1)**2*y**2 - 0.508793242825092**2
+    ]
+    sol = [
+        (-1.46090514484456, 0.206750448667629),
+        (-0.523599958428888, -0.333941491669343),
+        (0.343659735308009, -0.775197363617209),
+        (0.593645451108387, 1.25209190893042),
+        (1.65634026469208, 0.77519736361721),
+        (2.52359995842889, 0.333941491669342),
+        (0.433629846868413 - 0.82415098716298*I, 0.28816530685116 - 0.419322453336153*I),
+        (0.433629846868413 + 0.82415098716298*I, 0.28816530685116 + 0.419322453336153*I),
+    ]
+    res = nonlinsolve(lst, x, y)
+    assert len(res) == 8
+    assert all(abs(res.args[i][j] - sol[i][j]) < 1e-9
+               for i in range(8) for j in range(2))
 
 @XFAIL
 def test_solve_nonlinear_trans():
@@ -3472,7 +3512,7 @@ def test_issue_19144():
     soln_eq2 = nonlinsolve(eq2, [x, y])
     assert soln_eq2 == soln_expr2 == soln2
     # denominators that cancel in expression
-    assert nonlinsolve([Eq(x + 1/x, 1/x)], [x]) == FiniteSet((S.EmptySet,))
+    assert nonlinsolve([Eq(x + 1/x, 1/x)], [x]) == S.EmptySet
 
 
 def test_issue_22413():
