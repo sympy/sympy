@@ -14,39 +14,6 @@ from sympy.utilities.exceptions import sympy_deprecation_warning
 from ..predicates.common import CommutativePredicate, IsTruePredicate
 
 
-class AskHandler:
-    """Base class that all Ask Handlers must inherit."""
-    def __new__(cls, *args, **kwargs):
-        sympy_deprecation_warning(
-            """
-            The AskHandler system is deprecated. The AskHandler class should
-            be replaced with the multipledispatch handler of Predicate
-            """,
-            deprecated_since_version="1.8",
-            active_deprecations_target='deprecated-askhandler',
-        )
-        return super().__new__(cls, *args, **kwargs)
-
-
-class CommonHandler(AskHandler):
-    # Deprecated
-    """Defines some useful methods common to most Handlers. """
-
-    @staticmethod
-    def AlwaysTrue(expr, assumptions):
-        return True
-
-    @staticmethod
-    def AlwaysFalse(expr, assumptions):
-        return False
-
-    @staticmethod
-    def AlwaysNone(expr, assumptions):
-        return None
-
-    NaN = AlwaysFalse
-
-
 # CommutativePredicate
 
 @CommutativePredicate.register(Symbol)
