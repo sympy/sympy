@@ -1519,54 +1519,54 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
         # TODO is this any better/worse than `sum(expr.count(s) for s in constants_sym)`?
         return expr.subs({s: Dummy() for s in constants_sym}).count(Dummy)
 
-    def nsimplify_real(x):
+    def nsimplify_real(ctx, x):
         xv = x._to_mpmath(bprec)
-        with local_workprec(prec) as ctx:
-            ctx.dps = prec
-            newexpr = ctx.identify(xv, constants=constants_dict,
-                tol=tolerance, full=full)
-            if not newexpr:
-                raise ValueError
-            if full:
-                newexpr = newexpr[0]
-            expr = sympify(newexpr)
-            if x and not expr:  # don't let x become 0
-                raise ValueError
-            if expr.is_finite is False and xv not in [_mpmath_inf, _mpmath_ninf]:
-                raise ValueError
+        newexpr = ctx.identify(xv, constants=constants_dict,
+            tol=tolerance, full=full)
+        if not newexpr:
+            raise ValueError
+        if full:
+            newexpr = newexpr[0]
+        expr = sympify(newexpr)
+        if x and not expr:  # don't let x become 0
+            raise ValueError
+        if expr.is_finite is False and xv not in [_mpmath_inf, _mpmath_ninf]:
+            raise ValueError
 
-            if full:  # user definitely wants the nsimplify_real() result if full is passed
-                return expr
-
-            # attempt to classify "complicated" expressions to throw out the spurious results from
-            # `mpmath.identify()` (such as noted in issue 23822), while still allowing well-formed
-            # results, especially when reasonable given constants and irrational values like
-            # `sqrt(2)` are present in the result
-
-            # allow anything with a "reasonable" Nth-root of Integer
-            # `mpmath.identify()` can generate sqrt(2) and sqrt(3)
-            # in the future, consider more values like `sympy.ntheory.generate.primerange(20)`?
-            match_expr = Pow(
-                Wild("a", properties=[lambda a: a.is_Integer]),
-                Wild("b", properties=[lambda b: b in (2,3,5,7)])**-1)
-            if expr.count(match_expr):
-                return expr
-            # TODO should this similarly allow logarithms? I doubt it, user should provide give as constants
-
-            # 5+ atoms, but only Rationals
-            # TODO constants can be Rational, but are they ever meaningfully used?
-            if expr.atoms() == expr.atoms(Rational) and (len(expr.atoms()) - count_constants(expr)) > 4:
-                raise ValueError  # "expression is too complicated"
-
+        if full:  # user definitely wants the nsimplify_real() result if full is passed
             return expr
 
-    def nsimplify_real_spread(x):
+        # attempt to classify "complicated" expressions to throw out the spurious results from
+        # `mpmath.identify()` (such as noted in issue 23822), while still allowing well-formed
+        # results, especially when reasonable given constants and irrational values like
+        # `sqrt(2)` are present in the result
+
+        # allow anything with a "reasonable" Nth-root of Integer
+        # `mpmath.identify()` can generate sqrt(2) and sqrt(3)
+        # in the future, consider more values like `sympy.ntheory.generate.primerange(20)`?
+        match_expr = Pow(
+            Wild("a", properties=[lambda a: a.is_Integer]),
+            Wild("b", properties=[lambda b: b in (2,3,5,7)])**-1)
+        if expr.count(match_expr):
+            return expr
+        # TODO should this similarly allow logarithms? I doubt it, user should provide give as constants
+
+        # 5+ atoms, but only Rationals
+        # TODO constants can be Rational, but are they ever meaningfully used?
+        if expr.atoms() == expr.atoms(Rational) and (len(expr.atoms()) - count_constants(expr)) > 4:
+            raise ValueError  # "expression is too complicated"
+
+        return expr
+
+    def nsimplify_real_spread(ctx, x):
         """ `mpmath.identify()` seems to work best for Floats under 1000
             attempt to rescale values around 1 so before attempting
             to identify it
         """
-        if not magnitude_offsets:
-            return nsimplify_real(x)
+        if not x:  # nothing to do for 0
+            return x
+        if not magnitude_offsets:  # offsetting disabled (False)
+            return nsimplify_real(ctx, x)
 
         # get the base order of magnitude
         magnitude = int(log(abs(x), 10).evalf())
@@ -1576,10 +1576,10 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
         for offset in magnitude_offsets:  # try to identify with a window of orders of magnitude
             try:
                 if offset is None:  # begin with unscaled value
-                    expr = nsimplify_real(x)
+                    expr = nsimplify_real(ctx, x)
                 else:
                     scale_factor = 10**(magnitude + offset)
-                    expr = nsimplify_real(x / scale_factor) * scale_factor
+                    expr = nsimplify_real(ctx, x / scale_factor) * scale_factor
             except ValueError:
                 continue
             trials.append((
@@ -1603,10 +1603,10 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
         return best
 
     try:
-        if re:
-            re = nsimplify_real_spread(re)
-        if im:
-            im = nsimplify_real_spread(im)
+        with local_workprec(prec) as mp:
+            mp.dps = prec  # TODO understand this option
+            re = nsimplify_real_spread(mp, re)
+            im = nsimplify_real_spread(mp, im)
     except ValueError:
         if rational is None:
             return _real_to_rational(expr, rational_conversion=rational_conversion)
