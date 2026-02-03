@@ -8,7 +8,7 @@ import os
 import re as _re
 import struct
 from textwrap import fill, dedent
-from typing import TypeVar, Callable, Literal, SupportsIndex, SupportsInt, overload, Any
+from typing import TypeVar, Callable, Literal, SupportsIndex, SupportsInt, overload, Any, Optional
 
 _CallableT = TypeVar("_CallableT", bound=Callable)
 
@@ -38,7 +38,7 @@ def filldedent(s: str, w: int = 70, **kwargs: Any) -> str:
     return '\n' + fill(dedent(str(s)).strip('\n'), width=w, **kwargs)
 
 
-def strlines(s, c=64, short=False):
+def strlines(s: str, c: int = 64, short: bool = False) -> str:
     """Return a cut-and-pastable string that, when printed, is
     equivalent to the input.  The lines will be surrounded by
     parentheses and no line will be longer than c (default 64)
@@ -84,13 +84,13 @@ def strlines(s, c=64, short=False):
     out = []
     while s:
         out.append(s[:c])
-        s=s[c:]
+        s = s[c:]
     if short and len(out) == 1:
         return (m % out[0]).splitlines()[1]  # strip bounding (\n...\n)
     return m % j.join(out)
 
 
-def rawlines(s):
+def rawlines(s: str) -> str:
     """Return a cut-and-pastable string that, when printed, is equivalent
     to the input. Use this when there is more than one line in the
     string. The string returned is formatted so it can be indented
@@ -242,7 +242,7 @@ def debug_decorator(func: _CallableT) -> _CallableT:
     return decorated  # type: ignore
 
 
-def debug(*args):
+def debug(*args: object) -> None:
     """
     Print ``*args`` if SYMPY_DEBUG is True, else do nothing.
     """
@@ -251,7 +251,7 @@ def debug(*args):
         print(*args, file=sys.stderr)
 
 
-def debugf(string, args):
+def debugf(string: str, args: object) -> None:
     """
     Print ``string%args`` if SYMPY_DEBUG is True, else do nothing. This is
     intended for debug messages using formatted strings.
@@ -260,8 +260,7 @@ def debugf(string, args):
     if SYMPY_DEBUG:
         print(string%args, file=sys.stderr)
 
-
-def find_executable(executable, path=None):
+def find_executable(executable: str, path: Optional[str] = None) -> Optional[str]:
     """Try to find 'executable' in the directories listed in 'path' (a
     string listing directories separated by 'os.pathsep'; defaults to
     os.environ['PATH']).  Returns the complete filename or None if not
