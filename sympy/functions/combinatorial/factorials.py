@@ -171,7 +171,7 @@ class factorial(CombinatorialFunction):
                         result = _gmpy.fac(n)
 
                     else:
-                        bits = bin(n).count('1')
+                        bits = n.bit_count()
                         result = cls._recursive(n)*2**(n - bits)
 
                     return Integer(result)
