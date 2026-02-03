@@ -141,11 +141,12 @@ class GroupHomomorphism:
         G = self.domain
         H = self.codomain
         Ginf = G.order() is S.Infinity
-        if Ginf and isinstance(G, FpGroup) and isinstance(H, FpGroup):
+        if Ginf and isinstance(H, FpGroup):
+            preimages = None
             try: # surjectivity test
                 preimages = {g: self.invert(g) for g in H.generators}
             except ValueError:
-                pass
+                preimages = None
             if preimages is not None:
                 symbol_to_preimage = {
                     g.ext_rep[0]: preimages[g] for g in H.generators
@@ -155,9 +156,14 @@ class GroupHomomorphism:
                     word = G.identity
                     for symbol, power in relator.array_form:
                         word = word * symbol_to_preimage[symbol]**power
-                    word = G.reduce(word)
+                    if isinstance(G, FpGroup):
+                        word = G.reduce(word)
                     if not word.is_identity:
                         kernel_gens.append(word)
+                if isinstance(G, PermutationGroup):
+                    if not kernel_gens:
+                        return PermutationGroup([G.identity])
+                    return G.normal_closure(kernel_gens)
                 return FpSubgroup(G, kernel_gens, normal=True)
 
         if Ginf:
