@@ -162,7 +162,7 @@ class GroupHomomorphism:
 
         if Ginf:
             raise NotImplementedError(
-                "Kernel computation is not implemented for infinite groups")
+                "Kernel computation is not implemented for this group type")
 
         if isinstance(G, FpGroup):
             P, T = G._to_perm_group()
