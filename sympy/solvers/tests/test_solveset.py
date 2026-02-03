@@ -3443,9 +3443,9 @@ def test_issue_17580():
 
 def test_issue_17566_actual():
     sys = [2**x + 2**y - 3, 4**x + 9**y - 5]
-    # Parametric solution valid but y requires solving transcendental equation.
-    # Returns EmptySet since solveset can't solve symbolically (solver limitation).
-    # Real solutions exist numerically (e.g., x=0.866, y=0.236).
+    # This system has real solutions (e.g., x=0.866, y=0.235) but nonlinsolve
+    # returns EmptySet because it can't solve the transcendental equation
+    # 9^y + (3-2^y)^2 - 5 = 0 that results from substitution (solver limitation).
     assert nonlinsolve(sys, x, y) == S.EmptySet
 
 
@@ -3513,9 +3513,9 @@ def test_issue_22413():
     res =  nonlinsolve((4*y*(2*x + 2*exp(y) + 1)*exp(2*x),
                          4*x*exp(2*x) + 4*y*exp(2*x + y) + 4*exp(2*x + y) + 1),
                         x, y)
-    # The original test admitted "First solution is not correct".
-    # The system has infinitely many complex solutions (y=0, x=LambertW(-exp(2)/2, n)/2-1)
-    # But nonlinsolve cannot solve LambertW equations yet, so EmptySet is acceptable.
+    # This system has infinitely many complex solutions of the form
+    # (x=LambertW(-exp(2)/2, n)/2-1, y=0) for each integer n, but nonlinsolve
+    # returns EmptySet because it can't solve LambertW equations (solver limitation).
     # The original issue #22413 was about an UnboundLocalError, which is now fixed.
     assert res == S.EmptySet
 
