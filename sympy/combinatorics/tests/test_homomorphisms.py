@@ -116,6 +116,16 @@ def test_check_homomorphism():
     G = PermutationGroup([a, b])
     raises(ValueError, lambda: homomorphism(G, G, [a], [a]))
 
+def test_fpgroup_kernel_surjective():
+    F, a, b = free_group("a, b")
+    G = FpGroup(F, [a**2])
+    H = FpGroup(F, [a**2, b**3, (a*b)**2])
+    T = homomorphism(G, H, G.generators, H.generators)
+    kernel = T.kernel()
+    assert kernel.normal
+    assert b**3 in kernel
+    assert (a*b)**2 in kernel
+
 def test_fpgroup_isomorphism():
 
     # S3
