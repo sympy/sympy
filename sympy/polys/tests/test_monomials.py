@@ -202,6 +202,13 @@ def test_monomial_divides():
     assert monomial_divides((1, 2, 3), (4, 5, 6)) is True
     assert monomial_divides((1, 2, 3), (0, 5, 6)) is False
 
+def test_monomial_mismatched_lengths():
+    assert monomial_mul((1,), (1, 2)) == (2, 2)
+    assert monomial_div((1,), (1, 2)) is None
+    assert monomial_gcd((1,), (1, 2)) == (1, 0)
+    assert monomial_lcm((1,), (1, 2)) == (1, 2)
+    assert monomial_divides((1,), (1, 2)) is True
+
 def test_Monomial():
     m = Monomial((3, 4, 1), (x, y, z))
     n = Monomial((1, 2, 0), (x, y, z))

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 
-from itertools import combinations_with_replacement, product
+from itertools import combinations_with_replacement, product, zip_longest
 from textwrap import dedent
 
 from sympy.core.cache import cacheit
@@ -195,7 +195,7 @@ def monomial_mul(A, B):
     which gives `x**4*y**5*z`.
 
     """
-    return tuple([ a + b for a, b in zip(A, B) ])
+    return tuple([ a + b for a, b in zip_longest(A, B, fillvalue=0) ])
 
 def monomial_div(A: monom, B: monom) -> monom | None:
     """
@@ -248,7 +248,7 @@ def monomial_ldiv(A: monom, B: monom) -> monom:
     which gives `x**2*y**2*z**-1`.
 
     """
-    return tuple([ a - b for a, b in zip(A, B) ])
+    return tuple([ a - b for a, b in zip_longest(A, B, fillvalue=0) ])
 
 def monomial_pow(A, n):
     """Return the n-th pow of the monomial. """
@@ -271,7 +271,7 @@ def monomial_gcd(A, B):
     which gives `x*y**2`.
 
     """
-    return tuple([ min(a, b) for a, b in zip(A, B) ])
+    return tuple([ min(a, b) for a, b in zip_longest(A, B, fillvalue=0) ])
 
 def monomial_lcm(A, B):
     """
@@ -290,7 +290,7 @@ def monomial_lcm(A, B):
     which gives `x**3*y**4*z`.
 
     """
-    return tuple([ max(a, b) for a, b in zip(A, B) ])
+    return tuple([ max(a, b) for a, b in zip_longest(A, B, fillvalue=0) ])
 
 def monomial_divides(A, B):
     """
@@ -305,7 +305,7 @@ def monomial_divides(A, B):
     >>> monomial_divides((1, 2), (0, 2))
     False
     """
-    return all(a <= b for a, b in zip(A, B))
+    return all(a <= b for a, b in zip_longest(A, B, fillvalue=0))
 
 def monomial_max(*monoms):
     """
