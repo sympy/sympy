@@ -1401,7 +1401,7 @@ def nthroot(expr, n, max_len=4, prec=15):
 
 
 def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
-    rational_conversion='base10', magnitude_offsets=None):
+    rational_conversion='base10', shortcut_integers=True, magnitude_offsets=None):
     """
     Find a simple representation for a number or, if there are free symbols or
     if ``rational=True``, then replace Floats with their Rational equivalents. If
@@ -1466,7 +1466,7 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
 
     """
     expr = sympify(expr)
-    if isinstance(expr, Integer):
+    if shortcut_integers and isinstance(expr, Integer):
         return expr
     expr = expr.xreplace({
         Float('inf'): S.Infinity,
@@ -1565,6 +1565,9 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
         """
         if not x:  # nothing to do for 0
             return x
+        # only offer integer shortcutting within tolerance
+        if shortcut_integers and x < (1/tolerance) and ctx.isint(x):
+            return Integer(int(x))
         if not magnitude_offsets:  # offsetting disabled (False)
             return nsimplify_real(ctx, x)
 
