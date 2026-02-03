@@ -257,7 +257,7 @@ def extract_pred_from_old_assum(all_exprs):
         if len(expr.free_symbols) == 0:
             continue
 
-        if expr.is_real is not True:
+        if expr.is_real is False:
             raise UnhandledInput(f"LRASolver: {expr} must be real")
         # test for I times imaginary variable; such expressions are considered real
         if isinstance(expr, Mul) and any(arg.is_real is not True for arg in expr.args):
