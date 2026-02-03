@@ -133,6 +133,7 @@ def test_polygon():
         Point(x, 0), Point(0, y), Point(x, y)).arbitrary_point('x'))
     assert p6.intersection(r) == [Point(-9, Rational(-84, 13)), Point(-9, Rational(33, 5))]
     assert p10.area == 0
+    raises(GeometryError, lambda: p10.centroid)
     assert p11 == RegularPolygon(Point(0, 0), 1, 3, 0)
     assert p11 == p12
     assert p11.vertices[0] == Point(1, 0)

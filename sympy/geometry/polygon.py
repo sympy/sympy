@@ -378,7 +378,11 @@ class Polygon(GeometrySet):
         Point2D(31/18, 11/18)
 
         """
-        A = 1/(6*self.area)
+        area = self.area
+        if area == 0:
+            raise GeometryError(
+                "Cannot compute centroid of a zero-area polygon")
+        A = 1/(6*area)
         cx, cy = 0, 0
         args = self.args
         for i in range(len(args)):
