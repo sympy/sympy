@@ -378,6 +378,7 @@ class Polygon(GeometrySet):
         Point2D(31/18, 11/18)
 
         """
+        area = self.area
         if area == 0:
             raise GeometryError("The centroid of a polygon with zero area is undefined.")
         A = 1/(6*area)
