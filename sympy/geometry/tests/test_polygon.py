@@ -685,4 +685,3 @@ def test_do_poly_distance():
 def test_centroid_zero_area():
     p = Polygon((0, 2), (2, 2), (0, 0), (2, 0))
     raises(GeometryError, lambda: p.centroid)
-
