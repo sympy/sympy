@@ -139,26 +139,50 @@ class GroupHomomorphism:
 
     def _compute_kernel(self):
         G = self.domain
-        G_order = G.order()
-        if G_order is S.Infinity:
-            raise NotImplementedError(
-                "Kernel computation is not implemented for infinite groups")
-        gens = []
-        if isinstance(G, PermutationGroup):
-            K = PermutationGroup(G.identity)
-        else:
-            K = FpSubgroup(G, gens, normal=True)
-        i = self.image().order()
-        while K.order()*i != G_order:
-            r = G.random()
-            k = r*self.invert(self(r))**-1
-            if k not in K:
-                gens.append(k)
+        H = self.codomain
+        Ginf = G.order() is S.Infinity
+        if Ginf and isinstance(H, FpGroup):
+            preimages = None
+            try: # surjectivity test
+                preimages = {g: self.invert(g) for g in H.generators}
+            except ValueError:
+                preimages = None
+            if preimages is not None:
+                symbol_to_preimage = {
+                    g.ext_rep[0]: preimages[g] for g in H.generators
+                }
+                kernel_gens = []
+                for relator in H.relators:
+                    word = G.identity
+                    for symbol, power in relator.array_form:
+                        word = word * symbol_to_preimage[symbol]**power
+                    if isinstance(G, FpGroup):
+                        word = G.reduce(word)
+                    if not word.is_identity:
+                        kernel_gens.append(word)
                 if isinstance(G, PermutationGroup):
-                    K = PermutationGroup(gens)
-                else:
-                    K = FpSubgroup(G, gens, normal=True)
-        return K
+                    if not kernel_gens:
+                        return PermutationGroup([G.identity])
+                    return G.normal_closure(kernel_gens)
+                return FpSubgroup(G, kernel_gens, normal=True)
+
+        if Ginf:
+            raise NotImplementedError(
+                "Kernel computation is not implemented for this group type")
+
+        if isinstance(G, FpGroup):
+            P, T = G._to_perm_group()
+            perm_images = {g: self(T.invert(g)) for g in P.generators}
+            perm_hom = GroupHomomorphism(P, H, perm_images)
+            perm_kernel = perm_hom._compute_kernel()
+            kernel_gens = T.invert(perm_kernel.generators)
+            return FpSubgroup(G, kernel_gens, normal=True)
+
+        if isinstance(G, PermutationGroup):
+            return G.subgroup_search(lambda g: self(g).is_identity)
+
+        raise NotImplementedError(
+            "Kernel computation is not implemented for this group type")
 
     def image(self):
         '''

@@ -3,8 +3,9 @@ rename this to test_assumptions.py when the old assumptions system is deleted
 """
 from sympy.abc import x, y
 from sympy.assumptions.assume import global_assumptions
-from sympy.assumptions.ask import Q
+from sympy.assumptions.ask import Q, _ask_single_fact
 from sympy.printing import pretty
+from sympy.assumptions.cnf import CNF
 
 
 def test_equal():
@@ -33,3 +34,16 @@ def test_global():
     global_assumptions.clear()
     assert not (x > 0) in global_assumptions
     assert not (y > 0) in global_assumptions
+
+
+def test_ask_single_fact():
+    assert _ask_single_fact(Q.real, CNF()) is None
+    assert _ask_single_fact(Q.even, CNF.from_prop(Q.zero)) is True
+    assert _ask_single_fact(Q.even, CNF.from_prop(Q.odd)) is False
+    assert _ask_single_fact(Q.even, CNF.from_prop(Q.real)) is None
+    assert _ask_single_fact(Q.integer, CNF.from_prop(Q.even | Q.odd)) is None
+    assert _ask_single_fact(Q.integer, CNF.from_prop(Q.prime)) is True
+    assert _ask_single_fact(Q.prime,   CNF.from_prop(Q.composite)) is False
+    assert _ask_single_fact(Q.zero, CNF.from_prop(~Q.even)) is False
+
+    assert _ask_single_fact(Q.zero, CNF.from_prop(~Q.even & Q.real)) is False

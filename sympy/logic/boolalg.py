@@ -3,7 +3,7 @@ Boolean algebra module for SymPy
 """
 
 from __future__ import annotations
-from typing import TYPE_CHECKING, overload, Any, Callable
+from typing import TYPE_CHECKING, overload, Any
 
 from collections import defaultdict
 from itertools import chain, combinations, product, permutations
@@ -25,12 +25,6 @@ from sympy.utilities.misc import filldedent
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Mapping
-
-
-try:  # sys.version_info >= (3, 10)
-    _bit_count: Callable[[int], int] = int.bit_count
-except AttributeError:
-    _bit_count = lambda i: bin(i).count("1")
 
 
 def as_Boolean(e):
@@ -2224,7 +2218,7 @@ def _get_odd_parity_terms(n):
     with an odd number of ones.
     """
     return [[1 if (mask >> i) & 1 else 0 for i in range(n)]
-            for mask in range(1 << n) if _bit_count(mask) % 2 == 1]
+            for mask in range(1 << n) if mask.bit_count() % 2 == 1]
 
 
 def _get_even_parity_terms(n):
@@ -2233,7 +2227,7 @@ def _get_even_parity_terms(n):
     with an even number of ones.
     """
     return [[1 if (mask >> i) & 1 else 0 for i in range(n)]
-            for mask in range(1 << n) if _bit_count(mask) % 2 == 0]
+            for mask in range(1 << n) if mask.bit_count() % 2 == 0]
 
 
 def _simplified_pairs(terms):
