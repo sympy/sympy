@@ -1496,10 +1496,11 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
 
     if magnitude_offsets is None:  # use default
         magnitude_offsets = [None,0,-1,1,2]  # None means no normalization
+    elif isinstance(magnitude_offsets, int) and not isinstance(magnitude_offsets, bool):
+        # pass in a list like `[offset]` to omit default
+        magnitude_offsets = [magnitude_offsets, None]
     elif not magnitude_offsets:  # False or empty collection: disabled
          magnitude_offsets = False
-    elif isinstance(magnitude_offsets, int):  # pass in a list like `[offset]` to omit default
-        magnitude_offsets = [magnitude_offsets, None]
     elif not isinstance(magnitude_offsets, (list, tuple, set)):
         # NOTE decimal offsets are not explicitly blocked here as they might be useful to somebody
         #   though it might make sense to warn for silly offsets
