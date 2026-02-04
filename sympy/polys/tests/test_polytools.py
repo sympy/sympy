@@ -1334,7 +1334,7 @@ def test_Poly_degree():
     assert degree(x*y**2, y) == 2
     assert degree(x*y**2, z) == 0
 
-    assert degree(pi) == 1
+    raises(TypeError, lambda: degree(pi))  # no guessing for non-Number expressions
 
     raises(TypeError, lambda: degree(y**2 + x**3))
     raises(TypeError, lambda: degree(y**2 + x**3, 1))
@@ -1347,6 +1347,11 @@ def test_Poly_degree():
     assert degree(Poly(y**2 + x**3, y, x), 1) == 3
     assert degree(Poly(y**2 + x**3, x), z) == 0
     assert degree(Poly(y**2 + x**3 + z**4, x), z) == 4
+
+    # Regression test for Issue 29090
+    assert degree(x**2) == 2
+    raises(TypeError, lambda: degree(x*(1/x + 1)))  # no help for gen=0
+    raises(TypeError, lambda: degree(x + 1/x))  # no guessing for gen=0
 
 def test_Poly_degree_list():
     assert Poly(0, x).degree_list() == (-oo,)

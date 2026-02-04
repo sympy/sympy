@@ -4907,8 +4907,13 @@ def _update_args(args, key, value):
 def degree(f, gen=0):
     """
     Return the degree of ``f`` in the given variable.
+    When ``f`` is a univariate polynomial, it is not
+    necessary to pass a generator, but if the generator
+    is given as an int it refers to the gen-th generator
+    of the expression which must be passed as a Poly
+    instance.
 
-    The degree of 0 is negative infinity.
+    The degree of 0 with respect to any variable is ``-oo``.
 
     Examples
     ========
@@ -4916,6 +4921,8 @@ def degree(f, gen=0):
     >>> from sympy import degree
     >>> from sympy.abc import x, y
 
+    >>> degree(x**2)
+    2
     >>> degree(x**2 + y*x + 1, gen=x)
     2
     >>> degree(x**2 + y*x + 1, gen=y)
@@ -4930,36 +4937,26 @@ def degree(f, gen=0):
     degree_list
     """
 
+    _degree = lambda x: Integer(x) if type(x) is int else x
+
     f = sympify(f, strict=True)
-    gen_is_Num = sympify(gen, strict=True).is_Number
-    if f.is_Poly:
-        p = f
-        isNum = p.as_expr().is_Number
-    else:
-        isNum = f.is_Number
-        if not isNum:
-            if gen_is_Num:
-                p, _ = poly_from_expr(f)
-            else:
-                p, _ = poly_from_expr(f, gen)
+    if type(gen) is int:
+        if isinstance(f, Poly):
+            return _degree(f.degree(gen))
+        if f.is_Number:
+            return S.NegativeInfinity if f.is_zero else S.Zero
+        free = f.free_symbols
+        if not (gen == 0 and len(free) == 1 and f.is_polynomial(
+                gen := next(iter(free)))):  # <-- assigns symbol to gen
+            raise TypeError(filldedent('''
+                To avoid ambiguity, this expression requires either
+                a symbol (not int) generator or a Poly (which identifies
+                the generators).'''))
 
-    if isNum:
-        return S.Zero if f else S.NegativeInfinity
-
-    if not gen_is_Num:
-        if f.is_Poly and gen not in p.gens:
-            # try recast without explicit gens
-            p, _ = poly_from_expr(f.as_expr())
-        if gen not in p.gens:
-            return S.Zero
-    elif not f.is_Poly and len(f.free_symbols) > 1:
-        raise TypeError(filldedent('''
-         A symbolic generator of interest is required for a multivariate
-         expression like func = %s, e.g. degree(func, gen = %s) instead of
-         degree(func, gen = %s).
-        ''' % (f, next(ordered(f.free_symbols)), gen)))
-    result = p.degree(gen)
-    return Integer(result) if isinstance(result, int) else S.NegativeInfinity
+    gen = sympify(gen, strict=True)
+    if not isinstance(f, Poly) or gen not in f.gens:
+        f = poly_from_expr(f, gen)[0]
+    return _degree(f.degree(gen))
 
 
 @public
