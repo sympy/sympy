@@ -1462,9 +1462,11 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
     1/3
 
     >>> nsimplify(N(10**20*sqrt(2)), magnitude_offsets=False)
-    141421356237309509632
+    141421356237310000000
     >>> nsimplify(N(10**20*sqrt(2)), magnitude_offsets=[0])
     100000000000000000000*sqrt(2)
+    >>> nsimplify(N(10**20*sqrt(2)), tolerance=10**-22)  # detects as Integer
+    141421356237309509632
 
     See Also
     ========
