@@ -1446,7 +1446,7 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
     Examples
     ========
 
-    >>> from sympy import nsimplify, sqrt, GoldenRatio, exp, I, pi
+    >>> from sympy import nsimplify, N, sqrt, GoldenRatio, exp, I, pi
     >>> nsimplify(4/(1+sqrt(5)), [GoldenRatio])
     -2 + 2*GoldenRatio
     >>> nsimplify((1/(exp(3*pi*I/5)+1)))
