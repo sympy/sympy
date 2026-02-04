@@ -424,3 +424,8 @@ Here are several more advanced examples:
     >>> nsimplify(gamma('1/4')*gamma('3/4'), [pi])
       ___
     \/ 2 *pi
+    >>> nsimplify((100*sqrt(7)/30*pi*E*log(2)).evalf(), [pi,E,log(2)], full=true)
+         ___
+    10*\/ 7 *e*pi*log(2)
+    --------------------
+             3
