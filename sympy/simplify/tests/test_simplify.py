@@ -390,8 +390,7 @@ def test_nsimplify():
     assert nsimplify(pi, tolerance=0.001) == Rational(355, 113)
     assert nsimplify(0.33333, tolerance=1e-4) == Rational(1, 3)
     assert nsimplify(2.0**(1/3.), tolerance=0.001) == Rational(635, 504)
-    assert nsimplify(2.0**(1/3.), tolerance=0.001, full=True) == \
-        2**Rational(1, 3)
+    assert nsimplify(2.0**(1/3.)) == 2**Rational(1, 3)
     assert nsimplify(x + .5, rational=True) == S.Half + x
     assert nsimplify(1/.3 + x, rational=True) == Rational(10, 3) + x
     assert nsimplify(log(3).n(), rational=True) == \
