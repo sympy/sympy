@@ -1503,7 +1503,7 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
     elif not isinstance(magnitude_offsets, (list, tuple, set)):
         # NOTE decimal offsets are not explicitly blocked here as they might be useful to somebody
         #   though it might make sense to warn for silly offsets
-        raise TypeError(f"magnitude_offsets must be False (disabled), or a list/tuple/set of None or integers")
+        raise TypeError("magnitude_offsets must be False (disabled), or a list/tuple/set of None or integers")
 
     constants_sym = []
     constants_dict = {}
@@ -1598,7 +1598,6 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
 
         # get the base order of magnitude
         magnitude = int(log(abs(x), 10).evalf())
-        # try the range containing 2 orders of magnitide on either side
         trials = []
         # TODO should prec or tolerance be rescaled?
         for offset in magnitude_offsets:  # try to identify with a window of orders of magnitude
