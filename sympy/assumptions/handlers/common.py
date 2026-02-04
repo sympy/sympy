@@ -9,7 +9,6 @@ from sympy.core.logic import _fuzzy_group, fuzzy_and, fuzzy_or
 from sympy.core.numbers import NaN, Number
 from sympy.logic.boolalg import (And, BooleanTrue, BooleanFalse, conjuncts,
     Equivalent, Implies, Not, Or)
-from sympy.utilities.exceptions import sympy_deprecation_warning
 
 from ..predicates.common import CommutativePredicate, IsTruePredicate
 
