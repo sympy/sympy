@@ -1,0 +1,1 @@
+* Added regression tests for refining ``cos(pi*n)`` with ``Q.odd(n)`` and ``Q.even(n)``.
