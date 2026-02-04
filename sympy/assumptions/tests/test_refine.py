@@ -12,7 +12,7 @@ from sympy.abc import w, x, y, z
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.matrices.expressions.matexpr import MatrixSymbol
-from sympy import cos, pi, symbols, Q
+from sympy import symbols
 
 def test_refine_cos_pi_parity():
     n = symbols('n', integer=True)
