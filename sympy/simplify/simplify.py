@@ -1617,8 +1617,8 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
                 # constant count: more total constant members are preferred
                 -count_constants(expr),
                 # Float component: sort later and by-count
-                # NOTE constants can be Float, skip for x<0 which may expect a Float result
-                None if magnitude < 0 else expr.count(Float),
+                # NOTE constants can be Float
+                expr.count(Float),
                 # complexity: less complexity sorts earlier, but beware Floats vs Rationals
                 # for example C(.3)=1, but C(3/10)=2 so this should come after Float check
                 expr.count_ops(),
