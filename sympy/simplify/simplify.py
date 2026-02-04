@@ -1430,11 +1430,18 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
     convert floats to rationals using their base-10 (string) representation.
     When rational_conversion='exact' it uses the exact, base-2 representation.
 
-    In order to get better simplifies from mpmath.identify(), nsimplify will try
-    to temporarily rescale values into a friendlier order of magnitude and pick
-    the best result from its set. ``magnitude_offsets`` can be given as either
-    a collection of integers (and/or None for no rescaling), with a default of
-    [None,0,-1,1,2], where None means no rescale is performed
+    In order to get better results from mpmath.identify(), nsimplify will also
+    try to normalize values, dividing off their order of magnitude, trying to
+    identify, and multiplying the factor back again afterwards. Then it chooses
+    the "best" result from the resulting collection. ``magnitude_offsets`` can
+    be given as either a collection of integers and/or None, with a default of
+    [None,0,-1,1,2], where None means no normalization is performed and integers
+    are offsets from the essential power-of-ten. For example, 50000.5 will be tried
+    at 50000.5 (itself), 5.00005, 50.0005, 0.500005, and 0.0500005, with each result
+    then rescaled back after attempting to simplify it. This is especially helpful
+    for large floating-point numbers which may appear to be an integer-valued float,
+    but can actually be constructed from a simple expression multiplied by a simple
+    power-of-ten scaling factor.
 
     Examples
     ========
@@ -1488,7 +1495,7 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
     bprec = int(prec*3.33)
 
     if magnitude_offsets is None:  # use default
-        magnitude_offsets = [None,0,-1,1,2]  # None means no intermedaite normalization
+        magnitude_offsets = [None,0,-1,1,2]  # None means no normalization
     elif not magnitude_offsets:  # False or empty collection: disabled
          magnitude_offsets = False
     elif isinstance(magnitude_offsets, int):  # pass in a list like `[offset]` to omit default
@@ -1559,13 +1566,31 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
         return expr
 
     def nsimplify_real_spread(ctx, x):
-        """ `mpmath.identify()` seems to work best for Floats under 1000
-            attempt to rescale values around 1 so before attempting
-            to identify it
+        """ `nsimplify_real()` relies heavily on `mpmath.identify()` to determine
+            reasonable constructions of floats from an expression (especially
+            with constant values) and seems to work best for floats under 1000.
+            To help it out out, attempt to normalize and try a spread of
+            offsets (of that base magnitude) in addition to the original value,
+            then choose the "best" from the resulting collection.
         """
         if not x:  # nothing to do for 0
             return x
-        # only offer integer shortcutting within tolerance
+        # dedicated integer shortcut
+        # this is especially helpful to catch a small, but troublesome proportion
+        # of integer-valued floats, which identify fails to give a good result
+        # for and/or fail with the default nsimplify tolerance/precision
+        #   >>> mpmath.identify(4679.)
+        #   '(5**3*7**(23/3))/(2**(20/27)*3**(265/27))'
+        #   >>> mpmath.identify(23591.)
+        #   '(2**(32/5)*3**(61/15)*5**(197/45))/(7**(136/45))'
+        #   >>> nsimplify(23591., shortcut_integers=False)
+        #   55361684267444749690566057...643 / 23467290181613452053139535...000
+        # only offer integer shortcutting within tolerance to avoid preemptively
+        # dropping very large values which appear to be an integer-valued float,
+        # but can actually be constructed from a simple expression multiplied
+        # by a large scaling factor
+        # users can increase the tolerance to change this behavior or call
+        # `mpmath.isint()` themselves
         if shortcut_integers and abs(x) < (.1/tolerance) and ctx.isint(x):
             return Integer(int(x))
         if not magnitude_offsets:  # offsetting disabled (False)
@@ -1580,10 +1605,10 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
             try:
                 if offset is None:  # begin with unscaled value
                     expr = nsimplify_real(ctx, x)
-                else:
+                else:  # attempt when dynamically normalized
                     scale_factor = 10**(magnitude + offset)
                     expr = nsimplify_real(ctx, x / scale_factor) * scale_factor
-            except ValueError:
+            except ValueError:  # nsimplify_real failed to give a good result
                 continue
             trials.append((
                 expr,  # expr itself, rest are in order of sort importance
@@ -1597,10 +1622,15 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
                 expr.count_ops(),
             ))
 
-        if not trials:
+        if not trials:  # mirror inner nsimplify_real behavior
             raise ValueError("no trial succeeded!")
 
+        # sort to select the "best" value from the successful trials
         # prefer instances as more constant(s), no/less floats, lower ops
+        # if the values are all the same, the original ordering will remain,
+        # preferring the first, non-normalized result, but in practice this
+        # both represents success and is unlikely or impossible, as it means
+        # all 5 (or user-provided) trials succeeded with the same counts!
         trials = sorted(trials, key=lambda x: x[1:])
         best = trials[0][0]
         return best
