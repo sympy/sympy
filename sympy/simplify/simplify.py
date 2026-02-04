@@ -1481,7 +1481,7 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
         Float('inf'): S.Infinity,
         Float('-inf'): S.NegativeInfinity,
     })
-    if expr is S.Infinity or expr is S.NegativeInfinity:
+    if expr is S.Infinity or expr is S.NegativeInfinity or expr is S.NaN:
         return expr
     if rational or expr.free_symbols:
         return _real_to_rational(expr, tolerance, rational_conversion)
