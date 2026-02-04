@@ -380,7 +380,7 @@ and a minimum numerical tolerance. Here are some elementary examples:
     635
     ---
     504
-    >>> nsimplify(2.0**(1/3.), tolerance=0.001, full=True)
+    >>> nsimplify(2.0**(1/3.))
     3 ___
     \/ 2
 
