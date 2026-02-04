@@ -12,6 +12,18 @@ from sympy.abc import w, x, y, z
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.matrices.expressions.matexpr import MatrixSymbol
+from sympy import cos, pi, symbols, Q
+
+def test_refine_cos_pi_parity():
+    n = symbols('n', integer=True)
+    assert cos(pi*n).refine(Q.even(n)) == 1
+    assert cos(pi*n).refine(Q.odd(n)) == -1
+
+
+def test_refine_cos_pi_parity_without_integer_assumption():
+    n = symbols('n')
+    assert cos(pi*n).refine(Q.even(n)) == 1
+    assert cos(pi*n).refine(Q.odd(n)) == -1
 
 
 def test_Abs():
