@@ -1594,7 +1594,7 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
         # by a large scaling factor
         # users can increase the tolerance to change this behavior or call
         # `mpmath.isint()` themselves
-        if shortcut_integers and abs(x) < (.1/tolerance) and ctx.isint(x):
+        if shortcut_integers and tolerance != 0 and abs(x) < (.1/tolerance) and ctx.isint(x):
             return Integer(int(x))
         if not magnitude_offsets:  # offsetting disabled (False)
             return nsimplify_real(ctx, x)
