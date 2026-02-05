@@ -142,11 +142,7 @@ class GroupHomomorphism:
         H = self.codomain
         Ginf = G.order() is S.Infinity
         if Ginf and isinstance(H, FpGroup):
-            preimages = None
-            try: # surjectivity test
-                preimages = {g: self.invert(g) for g in H.generators}
-            except ValueError:
-                preimages = None
+            preimages = self._is_surjective_cert()
             if preimages is not None:
                 symbol_to_preimage = {
                     g.ext_rep[0]: preimages[g] for g in H.generators
@@ -247,17 +243,26 @@ class GroupHomomorphism:
         '''
         return self.kernel().order() == 1
 
+    def _is_surjective_cert(self):
+        '''
+        Return a certificate of surjectivity, i.e. a dictionary of
+        preimages of the codomain generators, if the homomorphism
+        is surjective. Otherwise, return None.
+
+        '''
+        preimages = None
+        try:
+            preimages = {g: self.invert(g) for g in self.codomain.generators}
+        except ValueError:
+            preimages = None
+        return preimages
+
     def is_surjective(self):
         '''
         Check if the homomorphism is surjective
 
         '''
-        im = self.image().order()
-        oth = self.codomain.order()
-        if im is S.Infinity and oth is S.Infinity:
-            return None
-        else:
-            return im == oth
+        return self._is_surjective_cert() is not None
 
     def is_isomorphism(self):
         '''

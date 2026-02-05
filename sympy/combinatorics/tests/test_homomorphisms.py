@@ -116,6 +116,14 @@ def test_check_homomorphism():
     G = PermutationGroup([a, b])
     raises(ValueError, lambda: homomorphism(G, G, [a], [a]))
 
+def test_is_surjective():
+    F1, x = free_group("x")
+    G = FpGroup(F1, [])
+    T = homomorphism(G, G, [x], [x])
+    assert T.is_surjective() is True
+    T = homomorphism(G, G, [x], [x**2])
+    assert T.is_surjective() is False
+
 def test_fpgroup_kernel_surjective():
     F, a, b = free_group("a, b")
     G = FpGroup(F, [a**2])
