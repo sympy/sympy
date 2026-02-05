@@ -151,6 +151,26 @@ def test_fpgroup_kernel_surjective():
     assert b**3 in kernel
     assert (a*b)**2 in kernel
 
+def test_homomorphism_factor():
+    F, a, b = free_group("a, b")
+    H = FpGroup(F, [a**2, b**2, (a*b)**2])
+    T = homomorphism(F, H, [a, b], [a, a])
+
+    surj, inj = T.factor()
+
+    assert surj.is_surjective()
+    assert inj.is_injective()
+    assert H.equals(inj(surj(a*b*a**-1)), T(a*b*a**-1))
+
+    F, a, b = free_group("a, b")
+    E, x, y = free_group("x, y")
+    T = homomorphism(F, E, [a, b], [x, y])
+
+    surj, inj = T.factor()
+
+    assert surj.is_surjective()
+    assert inj(surj(a*b**2*a**-1)) == T(a*b**2*a**-1)
+
 def test_fpgroup_isomorphism():
 
     # S3

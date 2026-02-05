@@ -279,6 +279,74 @@ class GroupHomomorphism:
         '''
         return self.image().order() == 1
 
+    def factor(self):
+        '''
+        Return a factorization of ``self`` as ``iota`` o ``pi`` where
+        ``pi`` is surjective and ``iota`` is injective.
+
+        Returns
+        =======
+
+        (pi, iota) : tuple of ``GroupHomomorphism``
+            ``pi`` maps from the domain of ``self`` onto a presentation
+            of the image of ``self`` and ``iota`` embeds that image into
+            the codomain of ``self``.
+
+        '''
+        if isinstance(self.codomain, PermutationGroup):
+            image = self.image()
+            surj = homomorphism(
+                self.domain,
+                image,
+                self.domain.generators,
+                [self(g) for g in self.domain.generators],
+                check=False,
+            )
+            inj = homomorphism(
+                image,
+                self.codomain,
+                image.generators,
+                image.generators,
+            )
+            return surj, inj
+
+        if not isinstance(self.codomain, (FpGroup, FreeGroup)):
+            raise NotImplementedError(
+                "Factorization is implemented only for permutation, "
+                "finitely presented, and free codomains"
+            )
+
+        if isinstance(self.codomain, FpGroup):
+            codomain = self.codomain
+        else:
+            codomain = FpGroup(self.codomain, [])
+
+        image_gens = list(dict.fromkeys(self.images.values()))
+        image_group, image_inclusion = codomain.subgroup(
+            image_gens,
+            homomorphism=True,
+        )
+
+        surj_images = [
+            image_inclusion.invert(self(g)) for g in self.domain.generators
+        ]
+        surj = homomorphism(
+            self.domain,
+            image_group,
+            self.domain.generators,
+            surj_images,
+            check=False,
+        )
+
+        inj = homomorphism(
+            image_group,
+            self.codomain,
+            image_group.generators,
+            image_inclusion(image_group.generators),
+            check=False,
+        )
+        return surj, inj
+
     def compose(self, other):
         '''
         Return the composition of `self` and `other`, i.e.
