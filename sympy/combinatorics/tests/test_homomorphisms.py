@@ -126,6 +126,14 @@ def test_fpgroup_kernel_surjective():
     assert b**3 in kernel
     assert (a*b)**2 in kernel
 
+    F, a, b = free_group('a, b')
+    Z, c = free_group('c')
+    G = FpGroup(Z, [])
+    T = homomorphism(F, G, [a, b], [c, c])
+    kernel = T.kernel()
+    assert kernel.normal
+    assert b*a**-1 in kernel
+
     F, a, b = free_group("a, b")
     H = FpGroup(F, [a**2, b**3, (a*b)**2])
     T = homomorphism(F, H, F.generators, H.generators)

@@ -151,15 +151,23 @@ class GroupHomomorphism:
                 symbol_to_preimage = {
                     g.ext_rep[0]: preimages[g] for g in H.generators
                 }
+
+                def _lift_to_domain(word):
+                    lifted = G.identity
+                    for symbol, power in word.array_form:
+                        lifted = lifted * symbol_to_preimage[symbol]**power
+                    return lifted
+
                 kernel_gens = []
                 for relator in H.relators:
-                    word = G.identity
-                    for symbol, power in relator.array_form:
-                        word = word * symbol_to_preimage[symbol]**power
-                    if isinstance(G, FpGroup):
-                        word = G.reduce(word)
-                    if not word.is_identity:
-                        kernel_gens.append(word)
+                    word = _lift_to_domain(relator)
+                    kernel_gens.append(word)
+
+                for generator in G.generators:
+                    lifted_image = _lift_to_domain(self(generator))
+                    word = generator * lifted_image**-1
+                    kernel_gens.append(word)
+
                 if isinstance(G, PermutationGroup):
                     if not kernel_gens:
                         return PermutationGroup([G.identity])
