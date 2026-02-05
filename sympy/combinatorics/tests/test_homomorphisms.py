@@ -124,7 +124,7 @@ def test_is_surjective():
     T = homomorphism(G, G, [x], [x**2])
     assert T.is_surjective() is False
 
-def test_fpgroup_kernel_surjective():
+def test_fpgroup_kernel():
     F, a, b = free_group("a, b")
     G = FpGroup(F, [a**2])
     H = FpGroup(F, [a**2, b**3, (a*b)**2])
@@ -150,6 +150,15 @@ def test_fpgroup_kernel_surjective():
     assert a**2 in kernel
     assert b**3 in kernel
     assert (a*b)**2 in kernel
+
+    F, a, b = free_group("a, b")
+    E, x, y = free_group("x, y")
+    H = FpGroup(E, [y**2, y*x*y*x])
+    T = homomorphism(F, H, [a, b], [x, x])
+    assert T.is_surjective() is False
+    kernel = T.kernel()
+    assert kernel.normal
+    assert b*a**-1 in kernel
 
 def test_homomorphism_factor():
     F, a, b = free_group("a, b")

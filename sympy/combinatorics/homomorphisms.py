@@ -141,7 +141,9 @@ class GroupHomomorphism:
         G = self.domain
         H = self.codomain
         Ginf = G.order() is S.Infinity
-        if Ginf and isinstance(H, FpGroup):
+        if Ginf and isinstance(H, (FpGroup, FreeGroup)):
+            if isinstance(H, FreeGroup):
+                H = FpGroup(H, [])
             preimages = self._is_surjective_cert()
             if preimages is not None:
                 symbol_to_preimage = {
@@ -169,6 +171,8 @@ class GroupHomomorphism:
                         return PermutationGroup([G.identity])
                     return G.normal_closure(kernel_gens)
                 return FpSubgroup(G, kernel_gens, normal=True)
+            else:
+                return self.factor()[0].kernel()
 
         if Ginf:
             raise NotImplementedError(
