@@ -21,7 +21,6 @@ from sympy.core.mul import Mul, _keep_coeff
 from sympy.core.intfunc import ilcm
 from sympy.core.numbers import I, Integer, equal_valued, NegativeInfinity
 from sympy.core.relational import Relational, Equality
-from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, Symbol
 from sympy.core.sympify import sympify, _sympify
 from sympy.core.traversal import preorder_traversal, bottom_up
@@ -4913,7 +4912,9 @@ def degree(f, gen=0):
     of the expression which must be passed as a Poly
     instance.
 
-    The degree of 0 with respect to any variable is ``-oo``.
+    The degree of 0 with respect to any variable is ``-oo``; if ``f``
+    is a numerical expression equal to 0, but not identically 0,
+    zero may be returned instead (because the variable does not appear).
 
     Examples
     ========
@@ -4930,6 +4931,20 @@ def degree(f, gen=0):
     >>> degree(0, x)
     -oo
 
+    In contrast to the strict Poly method, if the specified generator is
+    not in Poly's generators, the Poly instance is recast in terms of the
+    generator instead of raising an error.
+
+    >>> from sympy import Poly
+    >>> p = Poly(x + y, x)
+    >>> p.degree(y)
+    Traceback (most recent call last):
+    ...
+    PolynomialError: a valid generator expected, got y
+
+    >>> degree(p, y)
+    1
+
     See also
     ========
 
@@ -4945,13 +4960,21 @@ def degree(f, gen=0):
             return _degree(f.degree(gen))
         if f.is_Number:
             return S.NegativeInfinity if f.is_zero else S.Zero
-        free = f.free_symbols
-        if not (gen == 0 and len(free) == 1 and f.is_polynomial(
-                gen := next(iter(free)))):  # <-- assigns symbol to gen
-            raise TypeError(filldedent('''
-                To avoid ambiguity, this expression requires either
-                a symbol (not int) generator or a Poly (which identifies
-                the generators).'''))
+        try:
+            p = Poly(f, expand=False)
+        except GeneratorsNeeded:
+            p = Poly(f, Dummy())
+        else:
+            gens = p.gens
+            free = f.free_symbols
+            if not (gen == 0 and len(gens) == 1 and len(free) < 2 and f.is_polynomial(
+                    gen := next(iter(gens))) and # <-- assigns gen
+                    gen.is_Atom):  # e.g. x or pi
+                raise TypeError(filldedent('''
+                    To avoid ambiguity, this expression requires either
+                    a symbol (not int) generator or a Poly (which identifies
+                    the generators).'''))
+        return p.degree(gen)
 
     gen = sympify(gen, strict=True)
     if not isinstance(f, Poly) or gen not in f.gens:
