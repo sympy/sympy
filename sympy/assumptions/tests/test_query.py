@@ -1902,7 +1902,7 @@ def test_prime():
 
     # https://github.com/sympy/sympy/issues/27446
     assert ask(Q.prime(4**x), Q.integer(x)) is False
-    assert ask(Q.prime(p**x), Q.prime(p) & Q.integer(x) & Q.ne(x, 1)) is False
+    assert ask(Q.prime(p**x), Q.prime(p) & Q.integer(x) & ~Q.zero(x-1)) is False
     assert ask(Q.prime(n**x), Q.integer(x) & Q.composite(n)) is False
     assert ask(Q.prime(x**y), Q.integer(x) & Q.integer(y)) is None
     assert ask(Q.prime(2**x), Q.integer(x)) is None
