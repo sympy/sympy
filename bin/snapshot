@@ -26,8 +26,8 @@ options, args = parser.parse_known_args()
 ok = run_snapshot_tests(options, args)
 
 if ok:
-    print(f"All okay.")
+    print("All okay.")
     sys.exit(0)
 else:
-    print(f"All not okay.")
+    print("All not okay.")
     sys.exit(1)
