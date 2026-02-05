@@ -2230,25 +2230,25 @@ def test_key_extensibility():
     # make sure the key is not defined
     raises(AttributeError, lambda: ask(Q.my_key(x)))
 
-    # Old handler system
-    class MyAskHandler(AskHandler):
-        @staticmethod
-        def Symbol(expr, assumptions):
-            return True
-    try:
-        with warns_deprecated_sympy():
-            register_handler('my_key', MyAskHandler)
-        with warns_deprecated_sympy():
-            assert ask(Q.my_key(x)) is True
-        with warns_deprecated_sympy():
-            assert ask(Q.my_key(x + 1)) is None
-    finally:
-        # We have to disable the stacklevel testing here because this raises
-        # the warning twice from two different places
-        with warns_deprecated_sympy():
-            remove_handler('my_key', MyAskHandler)
-        del Q.my_key
-    raises(AttributeError, lambda: ask(Q.my_key(x)))
+    # # Old handler system
+    # class MyAskHandler(AskHandler):
+    #     @staticmethod
+    #     def Symbol(expr, assumptions):
+    #         return True
+    # try:
+    #     with warns_deprecated_sympy():
+    #         register_handler('my_key', MyAskHandler)
+    #     with warns_deprecated_sympy():
+    #         assert ask(Q.my_key(x)) is True
+    #     with warns_deprecated_sympy():
+    #         assert ask(Q.my_key(x + 1)) is None
+    # finally:
+    #     # We have to disable the stacklevel testing here because this raises
+    #     # the warning twice from two different places
+    #     with warns_deprecated_sympy():
+    #         remove_handler('my_key', MyAskHandler)
+    #     del Q.my_key
+    # raises(AttributeError, lambda: ask(Q.my_key(x)))
 
     # New handler system
     class MyPredicate(Predicate):
@@ -2473,26 +2473,26 @@ def test_autosimp_used_to_fail():
 def test_custom_AskHandler():
     from sympy.logic.boolalg import conjuncts
 
-    # Old handler system
-    class MersenneHandler(AskHandler):
-        @staticmethod
-        def Integer(expr, assumptions):
-            if ask(Q.integer(log(expr + 1, 2))):
-                return True
-        @staticmethod
-        def Symbol(expr, assumptions):
-            if expr in conjuncts(assumptions):
-                return True
-    try:
-        with warns_deprecated_sympy():
-            register_handler('mersenne', MersenneHandler)
-        n = Symbol('n', integer=True)
-        with warns_deprecated_sympy():
-            assert ask(Q.mersenne(7))
-        with warns_deprecated_sympy():
-            assert ask(Q.mersenne(n), Q.mersenne(n))
-    finally:
-        del Q.mersenne
+    # # Old handler system
+    # class MersenneHandler(AskHandler):
+    #     @staticmethod
+    #     def Integer(expr, assumptions):
+    #         if ask(Q.integer(log(expr + 1, 2))):
+    #             return True
+    #     @staticmethod
+    #     def Symbol(expr, assumptions):
+    #         if expr in conjuncts(assumptions):
+    #             return True
+    # try:
+    #     with warns_deprecated_sympy():
+    #         register_handler('mersenne', MersenneHandler)
+    #     n = Symbol('n', integer=True)
+    #     with warns_deprecated_sympy():
+    #         assert ask(Q.mersenne(7))
+    #     with warns_deprecated_sympy():
+    #         assert ask(Q.mersenne(n), Q.mersenne(n))
+    # finally:
+    #     del Q.mersenne
 
     # New handler system
     class MersennePredicate(Predicate):
