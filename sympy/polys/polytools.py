@@ -4962,18 +4962,18 @@ def degree(f, gen=0):
             return S.NegativeInfinity if f.is_zero else S.Zero
         try:
             p = Poly(f, expand=False)
-        except GeneratorsNeeded:
-            p = Poly(f, Dummy())
+        except GeneratorsNeeded:  # e.g. f = (1+I)**2/2
+            gens = ()  # do not guess what the user intended
         else:
             gens = p.gens
-            free = f.free_symbols
-            if not (gen == 0 and len(gens) == 1 and len(free) < 2 and f.is_polynomial(
-                    gen := next(iter(gens))) and # <-- assigns gen
-                    gen.is_Atom):  # e.g. x or pi
-                raise TypeError(filldedent('''
-                    To avoid ambiguity, this expression requires either
-                    a symbol (not int) generator or a Poly (which identifies
-                    the generators).'''))
+        free = f.free_symbols
+        if not (gen == 0 and len(gens) == 1 and len(free) < 2 and f.is_polynomial(
+                gen := next(iter(gens))) and # <-- assigns gen
+                gen.is_Atom):  # e.g. x or pi
+            raise TypeError(filldedent('''
+                To avoid ambiguity, this expression requires either
+                a symbol (not int) generator or a Poly (which identifies
+                the generators).'''))
         return p.degree(gen)
 
     gen = sympify(gen, strict=True)
