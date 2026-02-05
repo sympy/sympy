@@ -26,6 +26,9 @@ class GroupHomomorphism:
         self._inverses = None
         self._kernel = None
         self._image = None
+        self._surjective_cert = None
+        self._surjective_cert_computed = False
+        self._factorization = None
 
     def _invs(self):
         '''
@@ -159,12 +162,14 @@ class GroupHomomorphism:
                 kernel_gens = []
                 for relator in H.relators:
                     word = _lift_to_domain(relator)
-                    kernel_gens.append(word)
+                    if not word.is_identity:
+                        kernel_gens.append(word)
 
                 for generator in G.generators:
-                    lifted_image = _lift_to_domain(self(generator))
+                    lifted_image = _lift_to_domain(self.images[generator])
                     word = generator * lifted_image**-1
-                    kernel_gens.append(word)
+                    if not word.is_identity:
+                        kernel_gens.append(word)
 
                 if isinstance(G, PermutationGroup):
                     if not kernel_gens:
@@ -254,12 +259,15 @@ class GroupHomomorphism:
         is surjective. Otherwise, return None.
 
         '''
-        preimages = None
-        try:
-            preimages = {g: self.invert(g) for g in self.codomain.generators}
-        except ValueError:
+        if not self._surjective_cert_computed:
             preimages = None
-        return preimages
+            try:
+                preimages = {g: self.invert(g) for g in self.codomain.generators}
+            except ValueError:
+                preimages = None
+            self._surjective_cert = preimages
+            self._surjective_cert_computed = True
+        return self._surjective_cert
 
     def is_surjective(self):
         '''
@@ -297,13 +305,16 @@ class GroupHomomorphism:
             the codomain of ``self``.
 
         '''
+        if self._factorization is not None:
+            return self._factorization
+
         if isinstance(self.codomain, PermutationGroup):
             image = self.image()
             surj = homomorphism(
                 self.domain,
                 image,
                 self.domain.generators,
-                [self(g) for g in self.domain.generators],
+                [self.images[g] for g in self.domain.generators],
                 check=False,
             )
             inj = homomorphism(
@@ -312,7 +323,8 @@ class GroupHomomorphism:
                 image.generators,
                 image.generators,
             )
-            return surj, inj
+            self._factorization = (surj, inj)
+            return self._factorization
 
         if not isinstance(self.codomain, (FpGroup, FreeGroup)):
             raise NotImplementedError(
@@ -332,7 +344,7 @@ class GroupHomomorphism:
         )
 
         surj_images = [
-            image_inclusion.invert(self(g)) for g in self.domain.generators
+            image_inclusion.invert(self.images[g]) for g in self.domain.generators
         ]
         surj = homomorphism(
             self.domain,
@@ -349,7 +361,8 @@ class GroupHomomorphism:
             image_inclusion(image_group.generators),
             check=False,
         )
-        return surj, inj
+        self._factorization = (surj, inj)
+        return self._factorization
 
     def compose(self, other):
         '''
