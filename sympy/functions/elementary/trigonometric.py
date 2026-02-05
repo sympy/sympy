@@ -3233,23 +3233,7 @@ class asec(InverseTrigonometricFunction):
         """
         return sec
 
-    @staticmethod
-    @cacheit
-    def taylor_term(n, x, *previous_terms):
-        if n == 0:
-            return S.ImaginaryUnit*log(2 / x)
-        elif n < 0 or n % 2 == 1:
-            return S.Zero
-        else:
-            x = sympify(x)
-            if len(previous_terms) > 2 and n > 2:
-                p = previous_terms[-2]
-                return p * ((n - 1)*(n-2)) * x**2/(4 * (n//2)**2)
-            else:
-                k = n // 2
-                R = RisingFactorial(S.Half, k) *  n
-                F = factorial(k) * n // 2 * n // 2
-                return -S.ImaginaryUnit * R / F * x**n / 4
+
 
     def _eval_as_leading_term(self, x, logx, cdir):
         arg = self.args[0]
@@ -3277,6 +3261,10 @@ class asec(InverseTrigonometricFunction):
     def _eval_nseries(self, x, n, logx, cdir=0):  # asec
         from sympy.series.order import O
         arg0 = self.args[0].subs(x, 0)
+
+        if arg0 is S.Zero:
+            raise ValueError("asec(x) does not admit a real Taylor series expansion at x=0")
+
         # Handling branch points
         if arg0 is S.One:
             t = Dummy('t', positive=True)
