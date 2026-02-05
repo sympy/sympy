@@ -39,6 +39,7 @@ class FinitePredicate(Predicate):
 
     """
     name = 'finite'
+    _is_user_defined_predicate = False
     handler = Dispatcher(
         "FiniteHandler",
         doc=("Handler for Q.finite. Test that an expression is bounded respect"
@@ -56,6 +57,7 @@ class InfinitePredicate(Predicate):
     """
     # TODO: Add examples
     name = 'infinite'
+    _is_user_defined_predicate = False
     handler = Dispatcher(
         "InfiniteHandler",
         doc="""Handler for Q.infinite key."""
@@ -69,6 +71,7 @@ class PositiveInfinitePredicate(Predicate):
     ``Q.positive_infinite(x)`` is true iff ``x`` is positive infinity ``oo``.
     """
     name = 'positive_infinite'
+    _is_user_defined_predicate = False
     handler = Dispatcher("PositiveInfiniteHandler")
 
 
@@ -79,4 +82,5 @@ class NegativeInfinitePredicate(Predicate):
     ``Q.negative_infinite(x)`` is true iff ``x`` is negative infinity ``-oo``.
     """
     name = 'negative_infinite'
+    _is_user_defined_predicate = False
     handler = Dispatcher("NegativeInfiniteHandler")

@@ -53,6 +53,7 @@ class EqualityPredicate(BinaryRelation):
     is_symmetric = True
 
     name = 'eq'
+    _is_user_defined_predicate = False
     handler = None  # Do not allow dispatching by this predicate
 
     @property
@@ -97,6 +98,7 @@ class UnequalityPredicate(BinaryRelation):
     is_symmetric = True
 
     name = 'ne'
+    _is_user_defined_predicate = False
     handler = None
 
     @property
@@ -141,6 +143,7 @@ class StrictGreaterThanPredicate(BinaryRelation):
     is_symmetric = False
 
     name = 'gt'
+    _is_user_defined_predicate = False
     handler = None
 
     @property
@@ -189,6 +192,7 @@ class GreaterThanPredicate(BinaryRelation):
     is_symmetric = False
 
     name = 'ge'
+    _is_user_defined_predicate = False
     handler = None
 
     @property
@@ -237,6 +241,7 @@ class StrictLessThanPredicate(BinaryRelation):
     is_symmetric = False
 
     name = 'lt'
+    _is_user_defined_predicate = False
     handler = None
 
     @property
@@ -285,6 +290,7 @@ class LessThanPredicate(BinaryRelation):
     is_symmetric = False
 
     name = 'le'
+    _is_user_defined_predicate = False
     handler = None
 
     @property

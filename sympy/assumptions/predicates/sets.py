@@ -28,6 +28,7 @@ class IntegerPredicate(Predicate):
 
     """
     name = 'integer'
+    _is_user_defined_predicate = False
     handler = Dispatcher(
         "IntegerHandler",
         doc=("Handler for Q.integer.\n\n"
@@ -40,6 +41,7 @@ class NonIntegerPredicate(Predicate):
     Non-integer extended real predicate.
     """
     name = 'noninteger'
+    _is_user_defined_predicate = False
     handler = Dispatcher(
         "NonIntegerHandler",
         doc=("Handler for Q.noninteger.\n\n"
@@ -75,6 +77,7 @@ class RationalPredicate(Predicate):
 
     """
     name = 'rational'
+    _is_user_defined_predicate = False
     handler = Dispatcher(
         "RationalHandler",
         doc=("Handler for Q.rational.\n\n"
@@ -112,6 +115,7 @@ class IrrationalPredicate(Predicate):
 
     """
     name = 'irrational'
+    _is_user_defined_predicate = False
     handler = Dispatcher(
         "IrrationalHandler",
         doc=("Handler for Q.irrational.\n\n"
@@ -178,6 +182,7 @@ class RealPredicate(Predicate):
 
     """
     name = 'real'
+    _is_user_defined_predicate = False
     handler = Dispatcher(
         "RealHandler",
         doc=("Handler for Q.real.\n\n"
@@ -211,6 +216,7 @@ class ExtendedRealPredicate(Predicate):
 
     """
     name = 'extended_real'
+    _is_user_defined_predicate = False
     handler = Dispatcher(
         "ExtendedRealHandler",
         doc=("Handler for Q.extended_real.\n\n"
@@ -237,6 +243,7 @@ class HermitianPredicate(Predicate):
     """
     # TODO: Add examples
     name = 'hermitian'
+    _is_user_defined_predicate = False
     handler = Dispatcher(
         "HermitianHandler",
         doc=("Handler for Q.hermitian.\n\n"
@@ -273,6 +280,7 @@ class ComplexPredicate(Predicate):
 
     """
     name = 'complex'
+    _is_user_defined_predicate = False
     handler = Dispatcher(
         "ComplexHandler",
         doc=("Handler for Q.complex.\n\n"
@@ -309,6 +317,7 @@ class ImaginaryPredicate(Predicate):
 
     """
     name = 'imaginary'
+    _is_user_defined_predicate = False
     handler = Dispatcher(
         "ImaginaryHandler",
         doc=("Handler for Q.imaginary.\n\n"
@@ -336,6 +345,7 @@ class AntihermitianPredicate(Predicate):
     """
     # TODO: Add examples
     name = 'antihermitian'
+    _is_user_defined_predicate = False
     handler = Dispatcher(
         "AntiHermitianHandler",
         doc=("Handler for Q.antihermitian.\n\n"
@@ -373,6 +383,7 @@ class AlgebraicPredicate(Predicate):
 
     """
     name = 'algebraic'
+    _is_user_defined_predicate = False
     AlgebraicHandler = Dispatcher(
         "AlgebraicHandler",
         doc="""Handler for Q.algebraic key."""
@@ -409,6 +420,7 @@ class TranscendentalPredicate(Predicate):
     """
 
     name = 'transcendental'
+    _is_user_defined_predicate = False
     handler = Dispatcher(
         "Transcendental",
         doc="""Handler for Q.transcendental key."""

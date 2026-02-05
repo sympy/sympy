@@ -309,6 +309,9 @@ class Predicate(Boolean, metaclass=PredicateMeta):
 
     is_Atom = True
 
+    # All built-in SymPy predicates should override this to False
+    _is_user_defined_predicate = True
+
     def __new__(cls, *args, **kwargs):
         if cls is Predicate:
             return UndefinedPredicate(*args, **kwargs)
@@ -361,7 +364,10 @@ class Predicate(Boolean, metaclass=PredicateMeta):
             #     result = self.handler(*args, assumptions=assumptions)
             # else:
             # try:
-            result = self.handler(*args, assumptions=assumptions, rec=rec)
+            if self._is_user_defined_predicate:
+                result = self.handler(*args, assumptions=assumptions)
+            else:
+                result = self.handler(*args, assumptions=assumptions, rec=rec)
             # except TypeError:
             #     result = self.handler(*args, assumptions=assumptions)
         except NotImplementedError:

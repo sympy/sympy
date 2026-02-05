@@ -41,6 +41,7 @@ class NegativePredicate(Predicate):
 
     """
     name = 'negative'
+    _is_user_defined_predicate = False
     handler = Dispatcher(
         "NegativeHandler",
         doc=("Handler for Q.negative. Test that an expression is strictly less"
@@ -82,6 +83,7 @@ class NonNegativePredicate(Predicate):
 
     """
     name = 'nonnegative'
+    _is_user_defined_predicate = False
     handler = Dispatcher(
         "NonNegativeHandler",
         doc=("Handler for Q.nonnegative.")
@@ -129,6 +131,7 @@ class NonZeroPredicate(Predicate):
 
     """
     name = 'nonzero'
+    _is_user_defined_predicate = False
     handler = Dispatcher(
         "NonZeroHandler",
         doc=("Handler for key 'nonzero'. Test that an expression is not identically"
@@ -163,6 +166,7 @@ class ZeroPredicate(Predicate):
 
     """
     name = 'zero'
+    _is_user_defined_predicate = False
     handler = Dispatcher(
         "ZeroHandler",
         doc="Handler for key 'zero'."
@@ -204,6 +208,7 @@ class NonPositivePredicate(Predicate):
 
     """
     name = 'nonpositive'
+    _is_user_defined_predicate = False
     handler = Dispatcher(
         "NonPositiveHandler",
         doc="Handler for key 'nonpositive'."
@@ -249,6 +254,7 @@ class PositivePredicate(Predicate):
 
     """
     name = 'positive'
+    _is_user_defined_predicate = False
     handler = Dispatcher(
         "PositiveHandler",
         doc=("Handler for key 'positive'. Test that an expression is strictly"
@@ -279,6 +285,7 @@ class ExtendedPositivePredicate(Predicate):
 
     """
     name = 'extended_positive'
+    _is_user_defined_predicate = False
     handler = Dispatcher("ExtendedPositiveHandler")
 
 
@@ -305,6 +312,7 @@ class ExtendedNegativePredicate(Predicate):
 
     """
     name = 'extended_negative'
+    _is_user_defined_predicate = False
     handler = Dispatcher("ExtendedNegativeHandler")
 
 
@@ -331,6 +339,7 @@ class ExtendedNonZeroPredicate(Predicate):
 
     """
     name = 'extended_nonzero'
+    _is_user_defined_predicate = False
     handler = Dispatcher("ExtendedNonZeroHandler")
 
 
@@ -359,6 +368,7 @@ class ExtendedNonPositivePredicate(Predicate):
 
     """
     name = 'extended_nonpositive'
+    _is_user_defined_predicate = False
     handler = Dispatcher("ExtendedNonPositiveHandler")
 
 
@@ -387,4 +397,5 @@ class ExtendedNonNegativePredicate(Predicate):
 
     """
     name = 'extended_nonnegative'
+    _is_user_defined_predicate = False
     handler = Dispatcher("ExtendedNonNegativeHandler")

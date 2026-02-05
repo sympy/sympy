@@ -30,6 +30,7 @@ class PrimePredicate(Predicate):
 
     """
     name = 'prime'
+    _is_user_defined_predicate = False
     handler = Dispatcher(
         "PrimeHandler",
         doc=("Handler for key 'prime'. Test that an expression represents a prime"
@@ -64,6 +65,7 @@ class CompositePredicate(Predicate):
 
     """
     name = 'composite'
+    _is_user_defined_predicate = False
     handler = Dispatcher("CompositeHandler", doc="Handler for key 'composite'.")
 
 
@@ -92,6 +94,7 @@ class EvenPredicate(Predicate):
 
     """
     name = 'even'
+    _is_user_defined_predicate = False
     handler = Dispatcher("EvenHandler", doc="Handler for key 'even'.")
 
 
@@ -119,6 +122,7 @@ class OddPredicate(Predicate):
 
     """
     name = 'odd'
+    _is_user_defined_predicate = False
     handler = Dispatcher(
         "OddHandler",
         doc=("Handler for key 'odd'. Test that an expression represents an odd"

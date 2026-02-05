@@ -33,6 +33,7 @@ class SquarePredicate(Predicate):
 
     """
     name = 'square'
+    _is_user_defined_predicate = False
     handler = Dispatcher("SquareHandler", doc="Handler for Q.square.")
 
 
@@ -70,6 +71,7 @@ class SymmetricPredicate(Predicate):
     # TODO: Add handlers to make these keys work with
     # actual matrices and add more examples in the docstring.
     name = 'symmetric'
+    _is_user_defined_predicate = False
     handler = Dispatcher("SymmetricHandler", doc="Handler for Q.symmetric.")
 
 
@@ -104,6 +106,7 @@ class InvertiblePredicate(Predicate):
 
     """
     name = 'invertible'
+    _is_user_defined_predicate = False
     handler = Dispatcher("InvertibleHandler", doc="Handler for Q.invertible.")
 
 
@@ -143,6 +146,7 @@ class OrthogonalPredicate(Predicate):
 
     """
     name = 'orthogonal'
+    _is_user_defined_predicate = False
     handler = Dispatcher("OrthogonalHandler", doc="Handler for key 'orthogonal'.")
 
 
@@ -179,6 +183,7 @@ class UnitaryPredicate(Predicate):
 
     """
     name = 'unitary'
+    _is_user_defined_predicate = False
     handler = Dispatcher("UnitaryHandler", doc="Handler for key 'unitary'.")
 
 
@@ -208,6 +213,7 @@ class FullRankPredicate(Predicate):
 
     """
     name = 'fullrank'
+    _is_user_defined_predicate = False
     handler = Dispatcher("FullRankHandler", doc="Handler for key 'fullrank'.")
 
 
@@ -244,6 +250,7 @@ class PositiveDefinitePredicate(Predicate):
 
     """
     name = "positive_definite"
+    _is_user_defined_predicate = False
     handler = Dispatcher("PositiveDefiniteHandler", doc="Handler for key 'positive_definite'.")
 
 
@@ -273,6 +280,7 @@ class UpperTriangularPredicate(Predicate):
 
     """
     name = "upper_triangular"
+    _is_user_defined_predicate = False
     handler = Dispatcher("UpperTriangularHandler", doc="Handler for key 'upper_triangular'.")
 
 
@@ -302,6 +310,7 @@ class LowerTriangularPredicate(Predicate):
 
     """
     name = "lower_triangular"
+    _is_user_defined_predicate = False
     handler = Dispatcher("LowerTriangularHandler", doc="Handler for key 'lower_triangular'.")
 
 
@@ -334,6 +343,7 @@ class DiagonalPredicate(Predicate):
 
     """
     name = "diagonal"
+    _is_user_defined_predicate = False
     handler = Dispatcher("DiagonalHandler", doc="Handler for key 'diagonal'.")
 
 
@@ -357,6 +367,7 @@ class IntegerElementsPredicate(Predicate):
 
     """
     name = "integer_elements"
+    _is_user_defined_predicate = False
     handler = Dispatcher("IntegerElementsHandler", doc="Handler for key 'integer_elements'.")
 
 
@@ -380,6 +391,7 @@ class RealElementsPredicate(Predicate):
 
     """
     name = "real_elements"
+    _is_user_defined_predicate = False
     handler = Dispatcher("RealElementsHandler", doc="Handler for key 'real_elements'.")
 
 
@@ -405,6 +417,7 @@ class ComplexElementsPredicate(Predicate):
 
     """
     name = "complex_elements"
+    _is_user_defined_predicate = False
     handler = Dispatcher("ComplexElementsHandler", doc="Handler for key 'complex_elements'.")
 
 
@@ -431,6 +444,7 @@ class SingularPredicate(Predicate):
 
     """
     name = "singular"
+    _is_user_defined_predicate = False
     handler = Dispatcher("SingularHandler", doc="Predicate fore key 'singular'.")
 
 
@@ -455,6 +469,7 @@ class NormalPredicate(Predicate):
 
     """
     name = "normal"
+    _is_user_defined_predicate = False
     handler = Dispatcher("NormalHandler", doc="Predicate fore key 'normal'.")
 
 
@@ -485,6 +500,7 @@ class TriangularPredicate(Predicate):
 
     """
     name = "triangular"
+    _is_user_defined_predicate = False
     handler = Dispatcher("TriangularHandler", doc="Predicate fore key 'triangular'.")
 
 
@@ -508,4 +524,5 @@ class UnitTriangularPredicate(Predicate):
 
     """
     name = "unit_triangular"
+    _is_user_defined_predicate = False
     handler = Dispatcher("UnitTriangularHandler", doc="Predicate fore key 'unit_triangular'.")
