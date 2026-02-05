@@ -1335,6 +1335,7 @@ def test_Poly_degree():
     assert degree(x*y**2, z) == 0
 
     assert degree(pi) == 1
+    raises(TypeError, lambda: degree(I))  # Poly sees a number but no gen -> needs gen
     raises(TypeError, lambda: degree(y**2 + x**3))
     raises(TypeError, lambda: degree(y**2 + x**3, 1))
     raises(PolynomialError, lambda: degree(x**2/(x**3 + 1), x))
