@@ -264,7 +264,7 @@ class GroupHomomorphism:
             try:
                 preimages = {g: self.invert(g) for g in self.codomain.generators}
             except ValueError:
-                preimages = None
+                pass
             self._surjective_cert = preimages
             self._surjective_cert_computed = True
         return self._surjective_cert
