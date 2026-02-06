@@ -65,6 +65,8 @@ git_whitelist = {
     'CODE_OF_CONDUCT.md',
     # Contributing guide
     'CONTRIBUTING.md',
+    # AI assistant guidelines
+    'CLAUDE.md',
     # Citation config
     'CITATION.cff',
     # Nothing from bin/ should be shipped unless we intend to install it. Most
