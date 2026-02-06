@@ -311,8 +311,13 @@ class TableForm:
                 l = (l if self._head_align != 'c' else
                      l.center(_head_width))
                 d = [l] + d
+
             s.append(format_str % tuple(d))
-        return ''.join(s)[:-1]  # don't include trailing newline
+
+        test1 = [line.rstrip('\n') for line in s]
+        test2 = [line.rstrip() for line in test1]
+        result = (line + "\n" for line in test2)
+        return ''.join(list(result))[:-1]  # don't include trailing newline
 
     def _latex(self, printer):
         """
