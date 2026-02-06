@@ -324,6 +324,10 @@ def test_unicode_names():
     assert parse_expr('α') == Symbol('α')
 
 
+def test_unicode_nfkc_names():
+    assert parse_expr('ϵ', {'ϵ': Symbol('ϵ')}) == Symbol('ϵ')
+
+
 def test_python3_features():
     assert parse_expr("123_456") == 123456
     assert parse_expr("1.2[3_4]") == parse_expr("1.2[34]") == Rational(611, 495)
