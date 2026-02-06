@@ -76,7 +76,7 @@ class Mod(DefinedFunction):
                         return S.One
 
             if hasattr(p, '_eval_Mod'):
-                rv = getattr(p, '_eval_Mod')(q)
+                rv = p._eval_Mod(q)
                 if rv is not None:
                     return rv
 
