@@ -1,12 +1,13 @@
 from sympy.core import Add, Mul, S
 from sympy.core.containers import Tuple
+from sympy.core.expr import Expr
 from sympy.core.exprtools import factor_terms
 from sympy.core.numbers import I
 from sympy.core.relational import Eq, Equality
 from sympy.core.sorting import default_sort_key, ordered
 from sympy.core.symbol import Dummy, Symbol
-from sympy.core.function import (expand_mul, expand, Derivative,
-                                 AppliedUndef, Function, Subs)
+from sympy.core.function import (expand_mul, expand, AppliedUndef, Function,
+                                 Subs)
 from sympy.functions import (exp, im, cos, sin, re, Piecewise,
                              piecewise_fold, sqrt, log)
 from sympy.functions.combinatorial.factorials import factorial
@@ -1064,18 +1065,232 @@ def canonical_odes(eqs, funcs, t):
     List
 
     """
-    from sympy.solvers.solvers import solve
-
-    order = _get_func_order(eqs, funcs)
-
-    canon_eqs = solve(eqs, *[func.diff(t, order[func]) for func in funcs], dict=True)
+    # Solve for the highest derivatives carefully noting whether it is possible
+    # to solve for any lower order derivatives first.
+    solutions_derivatives = _solve_reduce_derivatives(eqs, funcs, t)
 
     systems = []
-    for eq in canon_eqs:
-        system = [Eq(func.diff(t, order[func]), eq[func.diff(t, order[func])]) for func in funcs]
+
+    for solution, derivatives in solutions_derivatives:
+        # Add parameter functions to handle underdetermined cases.
+        solution = _add_parameters_solve(solution, derivatives, t)
+
+        system = [Eq(lhs, rhs) for lhs, rhs in solution.items()]
         systems.append(system)
 
     return systems
+
+
+def _solve_reduce_derivatives(eqs, funcs, t):
+    #
+    # Solve for the highest derivatives of funcs in eqs.
+    #
+    # First try to solve for all derivatives of all orders. This will likely be
+    # an underdetermined system of equations but might give definite results
+    # for some derivatives. In particular we are interested in cases where we
+    # can solve for a lower order derivative than the highest derivative in the
+    # system. An example would be:
+    #
+    #   x' + y' = x
+    #   x' + y' = 0
+    #
+    # Here although the system appears to be first order in x (x' is the
+    # highest derivative) in fact it is zero order in x and we can conclude
+    # immediately that x=0 implying also that x'=0. The system is reduced to
+    #
+    #   y' = 0
+    #   x  = 0
+    #
+    from sympy.solvers.solvers import solve
+
+    order = _get_func_order(eqs, funcs)
+    highest_derivatives = [func.diff(t, order[func]) for func in funcs]
+
+    # There is no point in attempting any of the things below if the equations
+    # are already in explicit form. Maybe just use linsolve here?
+    derivs_found = []
+    derivs_set = set(highest_derivatives)
+    for eq in eqs:
+        if not eq.is_Equality:
+            break
+        for lhs, rhs in [(eq.lhs, eq.rhs), (eq.rhs, eq.lhs)]:
+            if lhs in derivs_set and not rhs.has_xfree(derivs_set):
+                derivs_found.append(eq.lhs)
+                break
+            # XXX: Catch a trivial Add or something else here...
+
+    if len(derivs_found) == len(eqs) == len(set(derivs_found)):
+        [sols] = solve(eqs, highest_derivatives, dict=True)
+        return [(sols, highest_derivatives)]
+
+    func2derivs = {}
+    deriv2func = {}
+
+    for f in funcs:
+        derivs = [f.diff(t, i) for i in range(order[f] + 1)]
+        func2derivs[f] = derivs
+        for n, dfdn in enumerate(derivs):
+            deriv2func[dfdn] = (f, n)
+
+    all_derivatives = list(deriv2func)
+
+    #
+    # Solve will solve somewhat randomly for different variables in the
+    # underdetermined system and returns effectively a new system of equations
+    # connecting different derivatives of different orders. What we want to do
+    # is for each solution find any equation that connects only derivatives
+    # that are *not* of the highest order. Such an equation can be used to
+    # eliminate higher order derivatives from the original equations.
+    #
+    solutions = solve(eqs, all_derivatives, dict=True)
+
+    all_solutions = []
+
+    for solution in solutions:
+
+        low_order_eqs = []
+
+        for lhs, rhs in solution.items():
+            if not Tuple(lhs, rhs).has_xfree(set(highest_derivatives)):
+                low_order_eqs.append((lhs, rhs))
+
+        if low_order_eqs:
+            # Build a substitution map to eliminate higher order derivatives
+            # from the original equations and also auxiliary equations to
+            # represent the solved relationships.
+            new_eqs = list(eqs)
+            constraints = []
+            replacements = {}
+
+            for lhs, rhs in low_order_eqs:
+                f, order_f = deriv2func[lhs]
+                lower_derivs = func2derivs[f][:order_f]
+                higher_derivs = func2derivs[f][order_f:]
+
+                # Use only the equation for the derivative of lowest order.
+                if any(d in solution for d in lower_derivs):
+                    continue
+
+                # This equation constrains low order derivative
+                constraints.append(Eq(lhs, rhs))
+
+                for i, df in enumerate(higher_derivs):
+                    replacements[df] = rhs.diff(t, i)
+
+                    if df in solution:
+                        # Require solutions to be consistent with derivatives
+                        constraints.append(Eq(solution[df], replacements[df]))
+
+            # New equations after elimination.
+            eqs_replaced = [eq.subs(replacements) for eq in new_eqs]
+
+            # Include also the constraints on derivatives but do not apply the
+            # replacement rules to these as it turns them into 0=0 etc.
+            eqs_replaced.extend(constraints)
+
+            # Apply recursively in case more derivatives can now be eliminated
+            # from the reduced equations.
+            new_solutions = _solve_reduce_derivatives(eqs_replaced, funcs, t)
+
+            all_solutions.extend(new_solutions)
+
+        else:
+            # Base case of the recursion. No more higher derivatives can be
+            # eliminated. Now solve only for the highest order derivatives.
+            derivs_sol = solve(eqs, highest_derivatives, dict=True)
+
+            for deriv_sol in derivs_sol:
+                all_solutions.append((deriv_sol, highest_derivatives))
+
+    #
+    # When solve returns multiple solutions it is possible that different paths
+    # through the loop above will ultimately lead to the same result giving
+    # duplicate sets of equations.
+    #
+    unique_solutions = []
+
+    for sol_derivs in all_solutions:
+        if sol_derivs not in unique_solutions:
+            unique_solutions.append(sol_derivs)
+
+    return unique_solutions
+
+
+def _add_parameters_solve(solution, derivatives, t):
+    #
+    # Process a solution dict from solve to add missing equations and replace
+    # free variables with symbolic parameters.
+    #
+    # If the system of equations to be solved was underdetermined we may have
+    # parametric solutions like:
+    #
+    # {f(t).diff(t): g(t).diff(t)}
+    #
+    # In this case we introduce a dummy function alpha1 and transform the
+    # solution to:
+    #
+    # {f(t).diff(t): alpha1(t), g(t).diff(t): alpha1(t)}
+    #
+    # Then all variables have an explicit equation and at the end dsolve will
+    # find these new functions and replace them with integration "functions"
+    # like C1(x), C2(x), ... along with the actual integration constants.
+    #
+    derivative_map = {}
+    new_solution = {}
+
+    all_rhs = Tuple(*solution.values())
+
+    for derivative in derivatives:
+        if derivative in solution:
+            new_solution[derivative] = solution[derivative]
+        else:
+            # Replace g'' = C1(t) with g = C1(t) if g does not appear in any
+            # other equations.
+            if derivative.is_Derivative:
+                function = derivative.args[0]
+                if not all_rhs.has_xfree({derivative}):
+                    derivative = function
+            new_solution[derivative] = derivative
+            derivative_map[derivative] = _DummyFunc.new(t)
+
+    # Replace all occurence of variables on rhs with parameters.
+    return {d: sol.subs(derivative_map) for d, sol in new_solution.items()}
+
+
+class _DummyFunc(Expr):
+    #
+    # This is needed because Function(Dummy()) does not work properly.
+    # In particular:
+    #
+    #   >>> Function(Dummy('x')) == Function(Dummy('x'))
+    #   True
+    #   >>> Function(Dummy('x')).free_symbols
+    #   set()
+    #
+    is_commutative = True
+
+    @classmethod
+    def new(cls, arg):
+        return cls(Dummy(), arg)
+
+    def to_func(self):
+        func = Function(self.args[0].name)
+        return func(*self.args[1:])
+
+    @classmethod
+    def replace_dummyfuncs(cls, eqs, sol):
+        #
+        # Replace all _DummyFunc with ordinary functions. The internal Dummy
+        # will have been already replaced with C1/C2/... by constant_renumber.
+        # Final output from dsolve_system will not include any _DummyFunc so
+        # they should not exist in the input equations to dsolve_system except
+        # during a recursive call from dsolve_system to itself.
+        #
+        dummy_funcs = Tuple(*sol).atoms(_DummyFunc)
+        eqs_tuple = Tuple(*eqs)
+        dummy_funcs = {df for df in dummy_funcs if not eqs_tuple.has_xfree({df})}
+        func_map = {df: df.to_func() for df in dummy_funcs}
+        return [eq.xreplace(func_map) for eq in sol]
 
 
 def _is_commutative_anti_derivative(A, t):
@@ -1413,7 +1628,26 @@ def _classify_linear_system(eqs, funcs, t, is_canon=False):
     order = _get_func_order(eqs, funcs)
     system_order = max(order[func] for func in funcs)
     is_higher_order = system_order > 1
-    is_second_order = system_order == 2 and all(order[func] == 2 for func in funcs)
+    is_second_order = all(order[func] == 2 for func in funcs)
+
+    if any(order[func] == 0 for func in funcs):
+        # The system contains some purely algebraic equations. The general ODE
+        # systems solvers do not incorporate such equations but the weak component
+        # solver should be able to separate them from the differential equations.
+        #
+        # This happens if we have e.g.:
+        #
+        # (1)  x' = x + y + z
+        # (2)  y' = x - y
+        # (3)  z  = t + x + y
+        #
+        # The weak component solver will divide this into two components (1, 2)
+        # and (3). The first system (1, 2) is all first order. Once solved its
+        # solutions can be substituted directly into (3) which immediately
+        # gives z. The strong component solver will accept (3) as being already
+        # the solution for z. We return None now so that weak component solver
+        # can try again and return components in the form expected here.
+        return None
 
     # Not adding the check if the len(func.args) for
     # every func in funcs is 1
@@ -1696,6 +1930,25 @@ def _higher_order_ode_solver(match):
 def _strong_component_solver(eqs, funcs, t):
     from sympy.solvers.ode.ode import dsolve, constant_renumber
 
+    # In the case of purely algebraic equations we might actually just have
+    # something like:
+    #
+    #  x = something
+    #  y = something
+    #
+    # If that is the case then we can just return the equation as is since it
+    # already gives the solution. Algebraic equations in the orginal input will
+    # be in this form already because an earlier step solves for them
+    # algebraically. The weak component solver will separate such equations
+    # from the differential equations so it should not be necessary to handle
+    # both algebraic and differential equations in the same component.
+
+    def is_solved(eq):
+        return eq.lhs in funcs and not eq.rhs.has_xfree(set(funcs))
+
+    if all(is_solved(eq) for eq in eqs):
+        return eqs
+
     match = _classify_linear_system(eqs, funcs, t, is_canon=True)
     sol = None
 
@@ -1726,7 +1979,14 @@ def _strong_component_solver(eqs, funcs, t):
 
 
 def _get_funcs_from_canon(eqs):
-    return [eq.lhs.args[0] for eq in eqs]
+    #
+    # We need to check if the lhs is a derivative in case there are equations
+    # without derivatives e.g. like:
+    #
+    #  x' = x + y
+    #  y = x + 1
+    #
+    return [eq.lhs.args[0] if eq.lhs.is_Derivative else eq.lhs for eq in eqs]
 
 
 # Returns: List of Equations(a solution)
@@ -2083,18 +2343,13 @@ def dsolve_system(eqs, funcs=None, t=None, ics=None, doit=False, simplify=True):
             variable.
         '''))
 
-    if len(eqs) != len(funcs):
-        raise ValueError(filldedent('''
-            Number of equations and number of functions do not match
-        '''))
-
     if t is not None and not isinstance(t, Symbol):
         raise ValueError(filldedent('''
             The independent variable must be of type Symbol
         '''))
 
     if t is None:
-        t = list(list(eqs[0].atoms(Derivative))[0].atoms(Symbol))[0]
+        [t] = funcs[0].args
 
     sols = []
     canon_eqs = canonical_odes(eqs, funcs, t)
@@ -2113,11 +2368,13 @@ def dsolve_system(eqs, funcs=None, t=None, ics=None, doit=False, simplify=True):
     if sols:
         final_sols = []
         variables = Tuple(*eqs).free_symbols
+        functions = {Symbol(f.name) for f in Tuple(*eqs).atoms(AppliedUndef)}
 
         for sol in sols:
 
             sol = _select_equations(sol, funcs)
-            sol = constant_renumber(sol, variables=variables)
+            sol = constant_renumber(sol, variables=variables | functions)
+            sol = _DummyFunc.replace_dummyfuncs(eqs, sol)
 
             if ics:
                 constants = Tuple(*sol).free_symbols - variables
