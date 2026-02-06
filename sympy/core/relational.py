@@ -448,7 +448,7 @@ class Relational(Boolean, EvalfMixin):
                 r = r.func._eval_relation(v, S.Zero)
             r = r.canonical
             # If there is only one symbol in the expression,
-            # try to write it on a simplified form
+            # try to write it in a simplified form
             free = list(filter(lambda x: x.is_real is not False, r.free_symbols))
             if len(free) == 1:
                 try:
@@ -463,7 +463,9 @@ class Relational(Boolean, EvalfMixin):
                             r = r.func(-b / m, x)
                         else:
                             r = r.func(x, -b / m)
-                    else:
+                    elif m.is_zero is True:
+                        # not sure we can ever get here because
+                        # instantiation will detect the symbolic 0
                         r = r.func(b, S.Zero)
                 except ValueError:
                     # maybe not a linear function, try polynomial
