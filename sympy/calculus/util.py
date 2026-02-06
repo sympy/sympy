@@ -258,7 +258,12 @@ def function_range(f, symbol, domain):
                     vals += FiniteSet(f.subs(symbol, limit_point))
 
             critical_points = solveset(f.diff(symbol), symbol, interval)
-
+            if not critical_points.is_finite_set:
+                raise NotImplementedError(
+                    f"Unable to find explicit critical points for the derivative:\n\n  {f.diff(symbol)} = 0\n\n"
+                    "The computed set of critical points is non-finite, which may be due to the unsimplified form of "
+                    "the derivative (e.g. involving radicals or transcendental functions). "
+                )
             if not iterable(critical_points):
                 raise NotImplementedError(
                         'Unable to find critical points for {}'.format(f))
