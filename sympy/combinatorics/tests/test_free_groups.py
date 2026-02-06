@@ -144,6 +144,9 @@ def test_FreeGroupElm__mul__pow__():
     assert x**2 == x1*x
 
     assert (x**2*y*x**-2)**4 == x**2*y**4*x**-2
+    assert (x**2*y*x**-2)**-3 == x**2*y**-3*x**-2
+    assert (x*y*x)**3 == x*y*x**2*y*x**2*y*x
+    assert (x*y*x)**-2 == x**-1*y**-1*x**-2*y**-1*x**-1
     assert (x**2)**2 == x**4
     assert (x**-1)**-1 == x
     assert (x**-1)**0 == F.identity

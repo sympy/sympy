@@ -511,22 +511,41 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
 
     def __pow__(self, n):
         n = as_int(n)
-        result = self.group.identity
+        group = self.group
         if n == 0:
-            return result
+            return group.identity
+        if self.is_identity:
+            return self
+        if tuple.__len__(self) > 1 and not self.is_cyclically_reduced():
+            reduced, removed = self.cyclic_reduction(removed=True)
+            power = reduced**n
+            if removed.is_identity:
+                return power
+            rep = _concat_reduced_array_forms(
+                removed.array_form,
+                power.array_form,
+                removed.inverse().array_form,
+            )
+            return group.dtype._new(rep)
         if n < 0:
             n = -n
             x = self.inverse()
         else:
             x = self
-        while True:
-            if n % 2:
-                result *= x
-            n >>= 1
-            if not n:
-                break
-            x *= x
-        return result
+        array = x.array_form
+        if len(array) == 1:
+            gen, exp = array[0]
+            return group.dtype._new(((gen, exp*n),))
+        head = array[0]
+        tail = array[-1]
+        if head[0] != tail[0]:
+            return group.dtype._new(array*n)
+        # x is cyclically reduced here, so the boundary merge has a fixed,
+        # nonzero exponent and there are no cascading cancellations.
+        bridge = ((head[0], head[1] + tail[1]),)
+        middle = array[1:-1]
+        rep = (head,) + (middle + bridge)*(n - 1) + middle + (tail,)
+        return group.dtype._new(rep)
 
     def __mul__(self, other):
         """Returns the product of elements belonging to the same ``FreeGroup``.
@@ -1368,3 +1387,31 @@ def _reduce_array_form(array_form, boundary_index=None):
         else:
             reduced.append((gen, exp))
     return tuple(reduced)
+
+
+def _concat_reduced_array_forms(*parts):
+    """Concatenate reduced array forms, reducing only at part boundaries."""
+    out = []
+    for part in parts:
+        if not part:
+            continue
+        if not out:
+            out.extend(part)
+            continue
+        if out[-1][0] != part[0][0]:
+            out.extend(part)
+            continue
+
+        j = 0
+        while j < len(part) and out and out[-1][0] == part[j][0]:
+            exp = out[-1][1] + part[j][1]
+            gen = out[-1][0]
+            if exp:
+                out[-1] = (gen, exp)
+                j += 1
+                break
+            out.pop()
+            j += 1
+        if j < len(part):
+            out.extend(part[j:])
+    return tuple(out)
