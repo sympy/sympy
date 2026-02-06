@@ -8,7 +8,7 @@ import os
 import re as _re
 import struct
 from textwrap import fill, dedent
-from typing import TypeVar, Callable, Literal, SupportsIndex, SupportsInt, overload, Any, Tuple, Union, List, Optional
+from typing import TypeVar, Callable, Literal, SupportsIndex, SupportsInt, overload, Any, Tuple, List, Optional
 
 _CallableT = TypeVar("_CallableT", bound=Callable)
 
@@ -166,7 +166,7 @@ def rawlines(s: str) -> str:
                 rv.append(repr(li))
         return '(\n    %s\n)' % '\n    '.join(rv)
     else:
-        rv_str = '\n    '.join(lines)
+        rv = '\n    '.join(lines)
         if triple[0]:
             return 'dedent("""\\\n    %s""")' % rv
         else:
