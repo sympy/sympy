@@ -831,7 +831,7 @@ class legendre(OrthogonalPolynomial):
         if not n.is_Number:
             # Symbolic result L_n(x)
             # L_n(-x)  --->  (-1)**n * L_n(x)
-            if x.could_extract_minus_sign():
+            if x.could_extract_minus_sign() and n.is_nonnegative:
                 return S.NegativeOne**n * legendre(n, -x)
             # L_{-n}(x)  --->  L_{n-1}(x)
             if n.could_extract_minus_sign() and not(-n - 1).could_extract_minus_sign():
