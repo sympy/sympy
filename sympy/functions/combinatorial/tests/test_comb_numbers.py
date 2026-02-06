@@ -1252,4 +1252,3 @@ def test_deprecated_ntheory_symbolic_functions():
 
 def test_issue_29117():
     raises(ValueError, lambda: nP(3, -1))
-
