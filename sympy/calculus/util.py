@@ -257,6 +257,7 @@ def function_range(f, symbol, domain):
                 else:
                     vals += FiniteSet(f.subs(symbol, limit_point))
 
+
             critical_points = solveset(f.diff(symbol), symbol, interval)
 
             if not iterable(critical_points):
@@ -265,15 +266,15 @@ def function_range(f, symbol, domain):
             if isinstance(critical_points, ImageSet):
                 raise NotImplementedError(
                         'Infinite number of critical points for {}'.format(f))
-
-            for critical_point in critical_points:
-                from sympy import RootOf
-                if isinstance(critical_point, RootOf):
-                    numeric_val = critical_point.n()
-                    val = f.subs(symbol, numeric_val)
-                else:
-                    val = f.subs(symbol, critical_point)
-                vals += FiniteSet(val)
+            if isinstance(critical_points, Intersection):
+                critical_points = [
+                    critical_point.expand(complex=True) for critical_point in critical_points.args[1]]
+                for critical_point in critical_points:
+                    if critical_point in domain:
+                        vals += FiniteSet(f.subs(symbol, critical_point))
+            else:
+                for critical_point in critical_points:
+                    vals += FiniteSet(f.subs(symbol, critical_point))
 
             left_open, right_open = False, False
 

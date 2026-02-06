@@ -614,11 +614,23 @@ def test_solve_sqrt_3():
     R = Symbol('R')
     eq = sqrt(2)*R*sqrt(1/(R + 1)) + (R + 1)*(sqrt(2)*sqrt(1/(R + 1)) - 1)
     sol = solveset_complex(eq, R)
-    expected = FiniteSet(
-        CRootOf(R**3 - 5*R**2 - 5*R - 1, 1),
-        CRootOf(R**3 - 5*R**2 - 5*R - 1, 2)
-    )
-    assert sol == expected
+    fset = [Rational(5, 3) + 4*sqrt(10)*cos(atan(3*sqrt(111)/251)/3)/3,
+            -sqrt(10)*cos(atan(3*sqrt(111)/251)/3)/3 +
+            40*re(1/((Rational(-1, 2) - sqrt(3)*I/2)*(Rational(251, 27) + sqrt(111)*I/9)**Rational(1, 3)))/9 +
+            sqrt(30)*sin(atan(3*sqrt(111)/251)/3)/3 + Rational(5, 3) +
+            I*(-sqrt(30)*cos(atan(3*sqrt(111)/251)/3)/3 -
+               sqrt(10)*sin(atan(3*sqrt(111)/251)/3)/3 +
+               40*im(1/((Rational(-1, 2) - sqrt(3)*I/2)*(Rational(251, 27) + sqrt(111)*I/9)**Rational(1, 3)))/9)]
+    cset = [40*re(1/((Rational(-1, 2) + sqrt(3)*I/2)*(Rational(251, 27) + sqrt(111)*I/9)**Rational(1, 3)))/9 -
+            sqrt(10)*cos(atan(3*sqrt(111)/251)/3)/3 - sqrt(30)*sin(atan(3*sqrt(111)/251)/3)/3 +
+            Rational(5, 3) +
+            I*(40*im(1/((Rational(-1, 2) + sqrt(3)*I/2)*(Rational(251, 27) + sqrt(111)*I/9)**Rational(1, 3)))/9 -
+               sqrt(10)*sin(atan(3*sqrt(111)/251)/3)/3 +
+               sqrt(30)*cos(atan(3*sqrt(111)/251)/3)/3)]
+
+    fs = FiniteSet(*fset)
+    cs = ConditionSet(R, Eq(eq, 0), FiniteSet(*cset))
+    assert sol == (fs - {-1}) | (cs - {-1})
 
     # the number of real roots will depend on the value of m: for m=1 there are 4
     # and for m=-1 there are none.
@@ -2434,11 +2446,14 @@ def test_substitution_incorrect():
 
 
 def test_substitution_redundant():
+    # the third and fourth solutions are redundant in the test below
     assert substitution([x**2 - y**2, z - 1], [x, z]) == \
            {(-y, 1), (y, 1), (-sqrt(y**2), 1), (sqrt(y**2), 1)}
 
+    # the system below has three solutions. Two of the solutions
+    # returned by substitution are redundant.
     res = substitution([x - y, y**3 - 3*y**2 + 1], [x, y])
-    assert len(res) == 3
+    assert len(res) == 5
 
 
 def test_issue_5132_substitution():
