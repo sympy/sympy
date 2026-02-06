@@ -12,7 +12,7 @@ from sympy.ntheory.residue_ntheory import _primitive_root_prime_iter, \
     _primitive_root_prime_power_iter, _primitive_root_prime_power2_iter, \
     _nthroot_mod_prime_power, _discrete_log_trial_mul, _discrete_log_shanks_steps, \
     _discrete_log_pollard_rho, _discrete_log_index_calculus, _discrete_log_pohlig_hellman, \
-    _binomial_mod_prime_power, binomial_mod
+    _discrete_log_with_prime_order, _binomial_mod_prime_power, binomial_mod
 from sympy.polys.domains import ZZ
 from sympy.testing.pytest import raises
 from sympy.core.random import randint, choice
@@ -265,6 +265,10 @@ def test_residue():
     assert _discrete_log_pohlig_hellman(78723213, 11**31, 11) == 31
     assert _discrete_log_pohlig_hellman(32942478, 11**98, 11) == 98
     assert _discrete_log_pohlig_hellman(14789363, 11**444, 11) == 444
+    assert _discrete_log_with_prime_order(131, 63, 107, 13) == 11
+    assert _discrete_log_with_prime_order(928858687, 680878378, 414021216, 5351) == 1456
+    assert _discrete_log_with_prime_order(1800089287, 565636273, 1234453013, 3) == 2
+    assert _discrete_log_with_prime_order(309619555093087, 140898220853159, 57600725599583, 7371894168883) == 152868906156
     assert discrete_log(1, 0, 2) == 0
     raises(ValueError, lambda: discrete_log(-4, 1, 3))
     raises(ValueError, lambda: discrete_log(10, 3, 2))
@@ -279,6 +283,10 @@ def test_residue():
     args = 5779, 3528, 6215
     assert discrete_log(*args) == 687
     assert discrete_log(*Tuple(*args)) == 687
+    assert discrete_log(2326570877, 1286723896, 268435456, 83091817, False) == 39680941
+    assert discrete_log(7247914829, 1680923475, 6396875911, 997, True) == 624
+    raises(ValueError, lambda: discrete_log(11, 7, 2, 0))
+    raises(TypeError, lambda: discrete_log(11, 7, 2, 6, 16))
     assert quadratic_congruence(400, 85, 125, 1600) == [295, 615, 935, 1255, 1575]
     assert quadratic_congruence(3, 6, 5, 25) == [3, 20]
     assert quadratic_congruence(120, 80, 175, 500) == []
