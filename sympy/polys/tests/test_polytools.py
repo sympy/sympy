@@ -72,7 +72,7 @@ from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.hyperbolic import tanh
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.functions.elementary.trigonometric import sin
+from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.matrices.dense import Matrix
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.polys.rootoftools import rootof
@@ -1335,10 +1335,9 @@ def test_Poly_degree():
     assert degree(x*y**2, z) == 0
 
     assert degree(pi) == 1
-
+    raises(TypeError, lambda: degree(I))  # Poly sees a number but no gen -> needs gen
     raises(TypeError, lambda: degree(y**2 + x**3))
     raises(TypeError, lambda: degree(y**2 + x**3, 1))
-    raises(PolynomialError, lambda: degree(x, 1.1))
     raises(PolynomialError, lambda: degree(x**2/(x**3 + 1), x))
 
     assert degree(Poly(0,x),z) is -oo
@@ -1347,6 +1346,40 @@ def test_Poly_degree():
     assert degree(Poly(y**2 + x**3, y, x), 1) == 3
     assert degree(Poly(y**2 + x**3, x), z) == 0
     assert degree(Poly(y**2 + x**3 + z**4, x), z) == 4
+
+
+    # optimization
+    big = 2  # make this number 1000 when full expansion can be avoided
+
+    assert degree((x + 1)**big, x) == big  # Large power (fast-path, no expansion)
+    assert degree((x + 1)**big + x**(big-1), x) == big  # Addition without cancellation
+    assert degree((x + 1)**2 - x**2, x) == 1  # Addition with cancellation (fallback required)
+    assert degree(x*(x + 1)**big, x) == big + 1  # Nested multiplication
+    assert degree(y*(x + 1)**big, x) == big  # Generator independence
+
+    # checking 0 detection
+    Z = pi*(1/pi + 1) - 1 - pi
+    assert degree(Z**big, x) is S.NegativeInfinity
+    assert degree(Z**big, pi) is S.NegativeInfinity
+    Z = Add(0, Mul(0, x, evaluate=False), evaluate=False)
+    assert degree(Z, x) is S.NegativeInfinity
+    assert degree(cos(1)**2 + sin(1)**2 - 1, x) == 0  # should be -oo
+
+    # /!\ user was warned; anything could change as Poly is improved-#
+    eq = x + 1/x**2                                                  #
+    raises(PolynomialError, lambda: degree(eq**big, x))              #
+    assert degree(eq**big, 1/x) == 2*big                             #
+                                                                     #
+    eq = exp(x) + 1/exp(2*x)                                         #
+    assert degree(eq, exp(x)) == 1                                   #
+    assert degree(eq, exp(-x)) == 2                                  #
+                                                                     #
+    one = Pow(x, 0, evaluate=False)                                  #
+    raises(PolynomialError, lambda: degree(one, one))                #
+    assert degree(x, 1.1) == degree(x, pi) == 0                      #
+    assert degree(0, 1.1) == -oo                                     #
+    # end of zoo of warnings-----------------------------------------#
+
 
 def test_Poly_degree_list():
     assert Poly(0, x).degree_list() == (-oo,)
