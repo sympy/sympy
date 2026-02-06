@@ -139,7 +139,7 @@ jobs:
           python-version: '3.14'
       - run: python -m pip install --upgrade pip
       - run: pip install -r requirements-dev.txt
-      - run: pytest -n auto
+      - run: pytest -n auto -v
 
   # -------------------- Optional dependency tests ----------------- #
 
@@ -212,7 +212,7 @@ jobs:
 
       - run: pip install -r requirements-dev.txt
       - run: pip install .
-      - run: pytest -n auto
+      - run: pytest -n auto -v
 
   # -------------------- FLINT tests -------------------------------- #
 
@@ -229,7 +229,7 @@ jobs:
       - run: pip install -r requirements-dev.txt
       - run: pip install python-flint
       - run: pip install .
-      - run: pytest -n auto
+      - run: pytest -n auto -v
 
   # -------------------- FLINT+gmpy2 ------------------------------ #
 
@@ -246,7 +246,7 @@ jobs:
       - run: pip install -r requirements-dev.txt
       - run: pip install python-flint gmpy2
       - run: pip install .
-      - run: pytest -n auto
+      - run: pytest -n auto -v
 
   # -------------------- Tensorflow tests -------------------------- #
 
@@ -342,7 +342,7 @@ jobs:
           allow-prereleases: true
       - run: python -m pip install --upgrade pip
       - run: pip install -r requirements-dev.txt
-      - run: pytest -n auto
+      - run: pytest -n auto -v
 
   # -------------------- Doctests older (and newer) Python --------------------- #
 
@@ -387,7 +387,7 @@ jobs:
       - run: python -m pip install --upgrade pip
       - run: pip install git+https://github.com/mpmath/mpmath.git@master
       - run: pip install -r requirements-dev.txt
-      - run: pytest -n auto
+      - run: pytest -n auto -v
 
   # -------------------- Build the html/latex docs ----------------- #
 
