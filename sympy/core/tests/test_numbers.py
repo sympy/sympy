@@ -2327,3 +2327,12 @@ def test_issue_28222():
     assert Mod(2 + 3*I, 10) == Mod(2 + 3*I, 10)
     assert Mod(I, exp(1)) == Mod(I, exp(1))
     assert Mod(I, S(1.5)) == Mod(I, S(1.5))
+
+def test_issue_19988():
+    import pickle
+    from sympy import Float
+    t = Float('1.123456789123456789', dps=20)
+    serialized = pickle.dumps(t)
+    deserialized = pickle.loads(serialized)
+    assert t == deserialized
+    assert t._prec == deserialized._prec
