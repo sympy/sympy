@@ -8,7 +8,7 @@ import os
 import re as _re
 import struct
 from textwrap import fill, dedent
-from typing import TypeVar, Callable, Literal, SupportsIndex, SupportsInt, overload, Any, Optional
+from typing import TypeVar, Callable, Literal, SupportsIndex, SupportsInt, overload, Any, Tuple, Union, List, Optional
 
 _CallableT = TypeVar("_CallableT", bound=Callable)
 
@@ -71,8 +71,8 @@ def strlines(s: str, c: int = 64, short: bool = False) -> str:
         raise ValueError('expecting string input')
     if '\n' in s:
         return rawlines(s)
-    q = '"' if repr(s).startswith('"') else "'"
-    q = (q,)*2
+    q_char = '"' if repr(s).startswith('"') else "'"
+    q: Tuple[str, str] = (q_char, q_char)
     if '\\' in s:  # use r-string
         m = '(\nr%s%%s%s\n)' % q
         j = '%s\nr%s' % q
@@ -155,7 +155,7 @@ def rawlines(s: str) -> str:
         return repr(lines[0])
     triple = ["'''" in s, '"""' in s]
     if any(li.endswith(' ') for li in lines) or '\\' in s or all(triple):
-        rv = []
+        rv: List[str] = []
         # add on the newlines
         trailing = s.endswith('\n')
         last = len(lines) - 1
@@ -166,7 +166,7 @@ def rawlines(s: str) -> str:
                 rv.append(repr(li))
         return '(\n    %s\n)' % '\n    '.join(rv)
     else:
-        rv = '\n    '.join(lines)
+        rv_str = '\n    '.join(lines)
         if triple[0]:
             return 'dedent("""\\\n    %s""")' % rv
         else:
