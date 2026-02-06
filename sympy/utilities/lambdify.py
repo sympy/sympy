@@ -12,6 +12,7 @@ import keyword
 import textwrap
 import linecache
 import weakref
+import re
 
 # Required despite static analysis claiming it is not used
 from sympy.external import import_module # noqa:F401
@@ -1251,8 +1252,8 @@ class _EvaluatorPrinter:
 
         funclines = [funcsig]
         funclines.extend(['    ' + line for line in funcbody])
-
-        return '\n'.join(funclines) + '\n'
+        #add a regex-based fix to remove the stray dot and any whitespace without tampering inside lambdiff
+        return re.sub(r'\)\s*\.\s*\(', ')(', '\n'.join(funclines) + '\n')
 
     @classmethod
     def _is_safe_ident(cls, ident):
