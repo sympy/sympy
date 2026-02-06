@@ -257,43 +257,43 @@ elementary_charge = PhysicalConstant("elementary_charge", abbrev="e")
 planck = PhysicalConstant("planck", abbrev="h")
 
 # Reduced Planck constant
-hbar = PhysicalConstant("hbar", abbrev="hbar")
+hbar = PhysicalConstant("hbar", abbrev="hbar", latex_repr=r"\hbar")
 
 # Electronvolt
 eV = electronvolt = electronvolts = PhysicalConstant("electronvolt", abbrev="eV")
 
 # Avogadro number
-avogadro_number = PhysicalConstant("avogadro_number")
+avogadro_number = PhysicalConstant("avogadro_number", latex_repr="N_0")
 
 # Avogadro constant
-avogadro = avogadro_constant = PhysicalConstant("avogadro_constant")
+avogadro = avogadro_constant = PhysicalConstant("avogadro_constant", latex_repr="N_A")
 
 # Boltzmann constant
-boltzmann = boltzmann_constant = PhysicalConstant("boltzmann_constant")
+boltzmann = boltzmann_constant = PhysicalConstant("boltzmann_constant", latex_repr="k_B")
 
 # Stefan-Boltzmann constant
-stefan = stefan_boltzmann_constant = PhysicalConstant("stefan_boltzmann_constant")
+stefan = stefan_boltzmann_constant = PhysicalConstant("stefan_boltzmann_constant", latex_repr=r"\sigma")
 
 # Molar gas constant
 R = molar_gas_constant = PhysicalConstant("molar_gas_constant", abbrev="R")
 
 # Faraday constant
-faraday_constant = PhysicalConstant("faraday_constant")
+faraday_constant = PhysicalConstant("faraday_constant", latex_repr=r"\mathcal{F}")
 
 # Josephson constant
-josephson_constant = PhysicalConstant("josephson_constant", abbrev="K_j")
+josephson_constant = PhysicalConstant("josephson_constant", abbrev="K_j", latex_repr="K_j")
 
 # Von Klitzing constant
-von_klitzing_constant = PhysicalConstant("von_klitzing_constant", abbrev="R_k")
+von_klitzing_constant = PhysicalConstant("von_klitzing_constant", abbrev="R_k", latex_repr="R_k")
 
 # Acceleration due to gravity (on the Earth surface)
 gee = gees = acceleration_due_to_gravity = PhysicalConstant("acceleration_due_to_gravity", abbrev="g")
 
 # magnetic constant:
-u0 = magnetic_constant = vacuum_permeability = PhysicalConstant("magnetic_constant")
+u0 = magnetic_constant = vacuum_permeability = PhysicalConstant("magnetic_constant", latex_repr=r"\mu_0")
 
 # electric constat:
-e0 = electric_constant = vacuum_permittivity = PhysicalConstant("vacuum_permittivity")
+e0 = electric_constant = vacuum_permittivity = PhysicalConstant("vacuum_permittivity", latex_repr="\varepsilon_0")
 
 # vacuum impedance:
 Z0 = vacuum_impedance = PhysicalConstant("vacuum_impedance", abbrev='Z_0', latex_repr=r'Z_{0}')
