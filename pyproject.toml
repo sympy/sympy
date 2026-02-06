@@ -121,6 +121,10 @@ module = [
 ]
 ignore_errors = true
 
+[[tool.mypy.overrides]]
+module = "flint.*"
+follow_imports = "skip"
+
 # Third-party untyped code:
 [[tool.mypy.overrides]]
 module = [
