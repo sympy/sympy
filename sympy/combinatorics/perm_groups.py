@@ -1298,6 +1298,11 @@ class PermutationGroup(Basic):
         coset_factor
 
         """
+        if len(self.base) == 0:
+            if self.contains(g):
+                return 0
+            else:
+                return None
         factors = self.coset_factor(g, True)
         if not factors:
             return None
@@ -1327,11 +1332,10 @@ class PermutationGroup(Basic):
         basic_orbits = self.basic_orbits
         m = len(base)
         if m == 0:
-            h = list(range(self._degree))
             if af:
-                return h
+                return list(range(self._degree))
             else:
-                return _af_new(h)
+                return self.identity
         v = [0]*m
         for i in range(m):
             rank, c = divmod(rank, len(transversals[i]))
