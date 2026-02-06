@@ -4728,31 +4728,40 @@ class PermutationGroup(Basic):
         for b in betas:
             k_gens = K.stabilizer(b).generators
             for y in k_gens:
-                new_rel = transversal[b]
                 gens = K.generator_product(y, original=True)
-                for g in gens[::-1]:
-                    new_rel = new_rel*phi.invert(g)
-                new_rel = new_rel*transversal[b]**-1
+                dtype = type(transversal[b])
+                new_rel = dtype.prod(chain(
+                    (transversal[b],),
+                    (phi.invert(g) for g in gens[::-1]),
+                    (transversal[b]**-1,),
+                ))
 
                 perm = phi(new_rel)
                 try:
                     gens = K.generator_product(perm, original=True)
                 except ValueError:
                     return False, perm
-                for g in gens:
-                    new_rel = new_rel*phi.invert(g)**-1
+                new_rel = dtype.prod(chain(
+                    (new_rel,),
+                    (phi.invert(g)**-1 for g in gens),
+                ))
                 if new_rel not in rels:
                     rels.append(new_rel)
 
         for gamma in gammas:
-            new_rel = transversal[gamma]*phi.invert(z)*transversal[gamma^z]**-1
+            dtype = type(transversal[gamma])
+            new_rel = dtype.prod((
+                transversal[gamma], phi.invert(z), transversal[gamma^z]**-1,
+            ))
             perm = phi(new_rel)
             try:
                 gens = K.generator_product(perm, original=True)
             except ValueError:
                 return False, perm
-            for g in gens:
-                new_rel = new_rel*phi.invert(g)**-1
+            new_rel = dtype.prod(chain(
+                (new_rel,),
+                (phi.invert(g)**-1 for g in gens),
+            ))
             if new_rel not in rels:
                 rels.append(new_rel)
 
@@ -4828,8 +4837,12 @@ class PermutationGroup(Basic):
                         t = K.orbit_rep(alpha, alpha^z)
                         rel = phi.invert(z)*phi.invert(t)**-1
                         perm = z*t**-1
-                    for g in K.generator_product(perm, original=True):
-                        rel = rel*phi.invert(g)**-1
+                    dtype = type(rel)
+                    rel = dtype.prod(chain(
+                        (rel,),
+                        (phi.invert(g)**-1 for g in
+                            K.generator_product(perm, original=True)),
+                    ))
                     new_rels = [rel]
                 elif len(orbit_k) == 1:
                     # `success` is always true because `strong_gens`
@@ -4977,9 +4990,9 @@ class PermutationGroup(Basic):
             gen = G_p.generators[x//2]**((-1)**(x % 2))
             new_rel = transversal[beta]*gen*transversal[C[beta][x]]**-1
             perm = T(new_rel)
-            nxt = G_p.identity
-            for s in H.generator_product(perm, original=True):
-                nxt = nxt*T.invert(s)**-1
+            dtype = type(G_p.identity)
+            nxt = dtype.prod(T.invert(s)**-1 for s in
+                H.generator_product(perm, original=True))
             new_rel = new_rel*nxt
 
             # continue coset enumeration
