@@ -641,6 +641,70 @@ def test_point_cflexure():
     b.solve_for_reaction_loads(r0, m0, r4,m4, r7,m7)
     assert b.point_cflexure() == [Rational(13,16),2,Rational(482,129),4,5,Rational(83,13)]
 
+def test_inconsistent_systems():
+    # conditional consistent system of equations with rotation hinge
+    E, I, P = Symbol('E'), Symbol('I'), Symbol('P')
+    b = Beam(10, E, I)
+    r1 = b.apply_support(0, 'pin')
+    r2 = b.apply_support(10, 'roller')
+    b.apply_rotation_hinge(4)
+    b.apply_load(-P, 4, -1)
+    with raises(ValueError,match="The system is only solvable with symbolic constraint"):
+        b.solve_for_reaction_loads(r1, r2)
+
+    # conditional consistent system of equations with rotation hinges
+    E = Symbol('E')
+    I = Symbol('I')
+    Q= Symbol('Q')
+    b = Beam(15, E, I)
+    b.apply_rotation_hinge(5)
+    b.apply_rotation_hinge(10)
+    r0 = b.apply_support(0, 'pin')
+    r15 = b.apply_support(15, 'roller')
+    b.apply_load(-Q, 0, 0, end=15)
+    with raises(ValueError, match="The system is only solvable with symbolic constraint"):
+        b.solve_for_reaction_loads(r0, r15)
+
+    # Inconsistent system of equations without enough boundary conditions
+    E, I = Symbol('E'), Symbol('I')
+    b = Beam(10, E, I)
+    R1=b.apply_support(0,'pin')
+    b.apply_load(10, 10, -1)
+    with raises(ValueError, match="The boundary conditions, supports, or hinges impose contradictory constraints, such as conflicting reaction forces or incompatible hinge conditions."):
+        b.solve_for_reaction_loads(R1)
+
+    # conditional consistent system of equations with sliding hinge
+    E, I = Symbol('E'), Symbol('I')
+    b = Beam(8, E, I)
+    R1=b.apply_support(0,'roller')
+    b.apply_sliding_hinge(4)
+    b.apply_load(5, 8, -1)
+    R1 = Symbol('R1')
+    with raises(ValueError, match="The boundary conditions, supports, or hinges impose contradictory constraints, such as conflicting reaction forces or incompatible hinge conditions."):
+        b.solve_for_reaction_loads(R1)
+
+    E = Symbol('E')
+    I = Symbol('I')
+    Q= Symbol('Q')
+    b = Beam(15, E, I)
+    b.apply_rotation_hinge(5)
+    b.apply_rotation_hinge(10)
+    r0 = b.apply_support(0, 'pin')
+    r15 = b.apply_support(15, 'roller')
+    b.apply_load(-Q, 0, 0, end=15)
+    with raises(ValueError, match="The system is only solvable with symbolic constraint"):
+        b.solve_for_reaction_loads(r0,r15)
+
+    b = Beam(12, E, I)
+    b.apply_rotation_hinge(3)
+    b.apply_rotation_hinge(8)
+    r1 = b.apply_support(0, 'pin')
+    r2= b.apply_support(12, 'roller')
+    b.apply_load(-P, 6, -1)
+    b.apply_load(Q, 9,-1)
+    with raises(ValueError, match="The system is only solvable with symbolic constraint"):
+        b.solve_for_reaction_loads(r1,r2)
+
 
 def test_remove_load():
     E = Symbol('E')
