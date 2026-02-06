@@ -162,6 +162,12 @@ def test_piecewise2():
     assert limit(func2, x, 0) == 0
     assert limit(func3, x, -1) == 2
 
+def test_issue_27236():
+    func1 = Piecewise((1, x < 0), (-1, x >= 0))
+
+    assert limit(func1, x, 0, '+') == -1
+    assert limit(func1, x, 0, '-') == 1
+
 
 def test_basic5():
     class my(Function):
