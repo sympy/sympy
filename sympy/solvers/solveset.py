@@ -1025,17 +1025,6 @@ def _solve_as_poly(f, symbol, domain=S.Complexes):
     """
     result = None
     if f.is_polynomial(symbol):
-        poly = Poly(f, symbol)
-        deg = poly.degree()
-        if deg == 3:
-            from sympy import discriminant
-            disc = discriminant(poly)
-            if disc.is_number and disc.is_real and disc > 0:
-                all_roots = poly.all_roots()
-                filtered_roots = [r for r in all_roots if r.is_real and (domain.contains(r))]
-
-                return FiniteSet(*filtered_roots)
-
         solns = roots(f, symbol, cubics=True, quartics=True,
                       quintics=True, domain='EX')
         num_roots = sum(solns.values())
@@ -1087,8 +1076,7 @@ def _solve_as_poly(f, symbol, domain=S.Complexes):
             # For example, expand_complex(a) returns re(a) + I*im(a)
             if all(s.atoms(Symbol, AppliedUndef) == set() and not isinstance(s, RootOf)
                    for s in result):
-                s = Dummy('s')
-                result = imageset(Lambda(s, expand_complex(s)), result)
+                result = FiniteSet(*(expand_complex(s) for s in result))
         if isinstance(result, FiniteSet) and domain != S.Complexes:
             # Avoid adding gratuitous intersections with S.Complexes. Actual
             # conditions should be handled elsewhere.

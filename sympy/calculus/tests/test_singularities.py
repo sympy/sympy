@@ -28,7 +28,7 @@ def test_singularities():
     assert singularities(x/(x**3 + 1), x) == \
         FiniteSet(-1, (1 - sqrt(3) * I) / 2, (1 + sqrt(3) * I) / 2)
     assert singularities(1/(y**2 + 2*I*y + 1), y) == \
-        FiniteSet(-I + sqrt(2)*I, -I - sqrt(2)*I)
+        FiniteSet(I*(-1 + sqrt(2)), I*(-sqrt(2) - 1))
     _n = Dummy('n')
     assert singularities(sech(x), x).dummy_eq(Union(
         ImageSet(Lambda(_n, 2*_n*I*pi + I*pi/2), S.Integers),
