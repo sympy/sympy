@@ -34,6 +34,7 @@ from sympy.functions import (log, tan, cot, sin, cos, sec, csc, exp,
                              piecewise_fold, Piecewise)
 from sympy.functions.combinatorial.numbers import totient
 from sympy.functions.elementary.complexes import Abs, arg, re, im
+from sympy.functions.elementary.integers import floor, ceiling
 from sympy.functions.elementary.hyperbolic import (HyperbolicFunction,
                             sinh, cosh, tanh, coth, sech, csch,
                             asinh, acosh, atanh, acoth, asech, acsch)
@@ -3587,6 +3588,10 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                     # complex domain
                     raise NotImplementedError(
                         "nonlinsolve cannot solve equations with Abs in the complex domain"
+                    )
+                if depen1.has(floor) or depen2.has(floor) or depen1.has(ceiling) or depen2.has(ceiling):
+                    raise NotImplementedError(
+                        "nonlinsolve cannot solve equations with floor or ceiling functions"
                     )
                 soln_imageset = {}
                 for sym in unsolved_syms:
