@@ -306,4 +306,3 @@ def extract_pred_from_old_assum(all_exprs, allowed_symbols=None):
             ret.append(Q.nonnegative(expr))
 
     return ret
-
