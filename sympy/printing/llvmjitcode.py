@@ -34,7 +34,22 @@ __doctest_requires__ = {('llvm_callable'): ['llvmlite']}
 
 
 class LLVMJitPrinter(Printer):
-    '''Convert expressions to LLVM IR'''
+    '''Convert SymPy expressions to LLVM IR.
+    Parameters
+    ==========
+    module : llvmlite.ir.Module
+        LLVM module to which generated IR is added.
+    builder : llvmlite.ir.IRBuilder
+        IR builder used to construct instructions.
+    fn : llvmlite.ir.Function
+        LLVM function being constructed.
+    func_arg_map : dict, optional
+        Mapping from Symbols to LLVM function arguments/values.
+    Notes
+    =====
+    This printer is used internally by :func:`llvm_callable` to lower SymPy
+    expressions to LLVM IR for JIT compilation via llvmlite.
+    '''
     def __init__(self, module, builder, fn, *args, **kwargs):
         self.func_arg_map = kwargs.pop("func_arg_map", {})
         if not llvmlite:
