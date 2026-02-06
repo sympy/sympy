@@ -48,3 +48,13 @@ def test_exactlyonearg():
         Or((Q.positive(x) | Q.negative(x)) &
         ~(Q.positive(y) | Q.negative(y)), (Q.positive(y) | Q.negative(y)) &
         ~(Q.positive(x) | Q.negative(x)))
+
+
+def test_odd_negation_symmetry():
+    from sympy import symbols
+    from sympy.assumptions.ask import Q, ask
+
+    n = symbols('n', integer=True)
+
+    assert ask(Q.odd(-n), Q.odd(n)) is True
+    assert ask(Q.odd(n), Q.odd(-n)) is True
