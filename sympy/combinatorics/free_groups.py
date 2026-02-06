@@ -514,8 +514,12 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         group = self.group
         if n == 0:
             return group.identity
+        if n == 1:
+            return self
         if self.is_identity:
             return self
+        if n == -1:
+            return self.inverse()
         if tuple.__len__(self) > 1 and not self.is_cyclically_reduced():
             reduced, removed = self.cyclic_reduction(removed=True)
             power = reduced**n
