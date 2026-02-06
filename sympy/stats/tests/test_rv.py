@@ -15,8 +15,8 @@ from sympy.logic.boolalg import (And, Or)
 from sympy.matrices.dense import Matrix
 from sympy.sets.sets import Interval
 from sympy.tensor.indexed import Indexed
-from sympy.stats import (Die, Normal, Exponential, FiniteRV, P, E, H, variance,
-        density, given, independent, dependent, where, pspace, GaussianUnitaryEnsemble,
+from sympy.stats import (Die,Normal, Exponential, FiniteRV, P, E, H, variance,density,
+         given, independent, dependent, where, pspace, GaussianUnitaryEnsemble,
         random_symbols, sample, Geometric, factorial_moment, Binomial, Hypergeometric,
         DiscreteUniform, Poisson, characteristic_function, moment_generating_function,
         BernoulliProcess, Variance, Expectation, Probability, Covariance, covariance, cmoment,
@@ -438,3 +438,16 @@ def test_issue_20286():
     k = Dummy('k', integer = True)
     eq = Sum(Piecewise((-p**k*(1 - p)**(-k + n)*log(p**k*(1 - p)**(-k + n)*binomial(n, k))*binomial(n, k), (k >= 0) & (k <= n)), (nan, True)), (k, 0, n))
     assert eq.dummy_eq(H(B))
+
+def test_marginal_distribution_pdf_joint():
+    from sympy import simplify
+    X = Normal('X', 0, 1)
+    Y = Normal('Y', 0, 1)
+
+    joint = density(X, Y)
+
+    marginal_X = joint.pdf(0, 0).integrate((Y, -oo, oo))
+
+    expected = density(X).pdf(0)
+
+    assert simplify(marginal_X - expected) == 0
