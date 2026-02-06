@@ -1,22 +1,37 @@
 Matrix derivatives
 ==================
 
+Matrix derivatives are a powerful tool utilized in theoretical statistics and
+machine learning.  SymPy provides support for computing closed-formula
+derivatives of matrices and, more broadly, symbolic expressions involving
+matrices.
+
+Matrix derivatives constitute a complex concept that encompasses both the
+principles of matrices and higher-dimensional arrays in general.  The
+conventional matrix syntax employed in mathematics, although powerful,
+occasionally proves incomplete.
+
+In this explanation, we will introduce the framework of matrix expressions and
+array expressions in SymPy, before exploring a detailed description of the
+matrix derivation algorithm.
+
 Matrix and array expressions in SymPy
 -------------------------------------
 
 SymPy provides matrices and general N-dimensional arrays through the modules
-``sympy.matrices`` and ``sympy.tensor.array``, respectively. Each of these two
-modules is component-explicit, meaning that every element is stored and
-directly accessible, so the object explicitly contains the full set of
-component values rather than representing them implicitly.
+``sympy.matrices`` and ``sympy.tensor.array``, respectively. The basic objects
+of these two modules are component-explicit, meaning that every element is
+stored and directly accessible, so the object explicitly contains the full set
+of component values rather than representing them implicitly.
 
 SymPy also supports symbolic matrix expressions and array expressions through
-dedicated modules. These represent matrices and arrays abstractly as symbols,
-defined solely by an identifying name (such as $X$ or $M$) and a shape tuple.
-For matrices, the shape is always a 2-element tuple, representing the number of
-rows and columns. The dimensions within this tuple can be either fixed integers
-(for known sizes) or arbitrary symbolic expressions (when dimensions are
-undetermined).
+the respective dedicated submodules ``sympy.matrices.expressions`` and
+``sympy.tensor.array.expressions``.  These represent matrices and arrays
+abstractly as symbols, defined solely by an identifying name (such as $X$ or
+$M$) and a shape tuple.  For matrices, the shape is always a 2-element tuple,
+representing the number of rows and columns. The dimensions within this tuple
+can be either fixed integers (for known sizes) or arbitrary symbolic
+expressions (when dimensions are undetermined).
 
 Unlike component-explicit matrices, which perform elementwise calculations
 immediately, symbolic matrix expressions retain operations unevaluated in
@@ -28,7 +43,7 @@ $\mathbf{M}\mathbf{N}' \mathbf{P}$) represent abstract matrix multiplication
 rather than explicit numerical results.
 
 Array expressions are analogous, the only difference is that they may have any
-number of dimensions, whereas matrices are define to have exactly two.
+number of dimensions, whereas matrices are defined to have exactly two.
 
 In SymPy both matrix symbols and array symbols support Python's ``[ ]``
 operator to reference individual elements. For example:
@@ -65,12 +80,13 @@ A[k, l, m]
 Operations on matrix and array expressions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The matrix expression module in SymPy reflects the common convention used in
-mathematics to represent matrices when indices are not explicit. Therefore,
-``M*N`` or `\mathbf{M}\cdot\mathbf{N}` is the matrix multiplication, or in
-index-explicit form $\sum_j M_{ij} N_{jk}$ with final free indices
-${}_{\{ik\}}$.  Common operators such as determinant, trace, Hadamard product
-and Hadamard power are provided.
+The matrix expression module ``sympy.matrices.expressions`` in SymPy reflects
+the common convention used in mathematics to represent matrices when indices
+are not explicit. Therefore, ``M*N`` or `\mathbf{M}\cdot\mathbf{N}` is the
+matrix multiplication, or in index-explicit form $\sum_j M_{ij} N_{jk}$ with
+final free indices ${}_{\{ik\}}$.  Common operators such as determinant, trace,
+Hadamard (i.e. elementwise) product and Hadamard (i.e. elementwise) power are
+provided.
 
 When a function is applied to a matrix, it is understood in the mathematical
 sense, so ``exp(M)`` or `\exp(\mathbf{M})` denotes the matrix exponential.
@@ -83,25 +99,27 @@ from the matrix exponential.
 The array expressions module, by contrast, is designed to express arbitrary
 operations on arrays of any dimension.
 
-+---------------------------+-------------------------+-------------------------------------------+-----------------------------------------------------------------------------------------------------------+
-| operation name            | SymPy object            | representation                            | index-explicit equivalent                                                                                 |
-+===========================+=========================+===========================================+===========================================================================================================+
-| tensor product            | ``ArrayTensorProduct``  | $A \otimes B$                             | $A_{ij} B_{kl}$                                                                                           |
-+---------------------------+-------------------------+-------------------------------------------+-----------------------------------------------------------------------------------------------------------+
-| contraction               | ``ArrayContraction``    | $A$ on axes $a$, $b$                      | $A_{i_{1} i_{2} \ldots i_{a} \ldots i_{b} \ldots } \Rightarrow \sum_j A_{i_{1} \ldots j \ldots j \ldots}$ |
-+---------------------------+-------------------------+-------------------------------------------+-----------------------------------------------------------------------------------------------------------+
-| diagonal                  | ``ArrayDiagonal``       | $A$ on axes $a$, $b$                      | $A_{i_{1} i_{2} \ldots i_{a} \ldots i_{b} \ldots } \Rightarrow A_{i_{1} \ldots j \ldots j \ldots}$        |
-+---------------------------+-------------------------+-------------------------------------------+-----------------------------------------------------------------------------------------------------------+
-| permutation of dimensions | ``PermuteDims``         | permutation $\sigma$ on axes of $A$       | $A_{i_{1} i_{2} \ldots} \Rightarrow A_{i_{\sigma(1)} i_{\sigma(2) \ldots}}$                               |
-+---------------------------+-------------------------+-------------------------------------------+-----------------------------------------------------------------------------------------------------------+
-| addition                  | ``ArrayAdd``            | elementwise $A + B$                       | $A_{ij} + B_{ij}$                                                                                         |
-+---------------------------+-------------------------+-------------------------------------------+-----------------------------------------------------------------------------------------------------------+
-| summation                 | ``ArraySum``            | summation $\sum_{x} A^{x}$                | $\sum_{x} A^{x}_{ij}$                                                                                     |
-+---------------------------+-------------------------+-------------------------------------------+-----------------------------------------------------------------------------------------------------------+
++---------------------------+--------------------------------+-------------------------------------------+-----------------------------------------------------------------------------------------------------------+
+| operation name            | SymPy object                   | representation                            | index-explicit equivalent                                                                                 |
++===========================+================================+===========================================+===========================================================================================================+
+| tensor product            | ``ArrayTensorProduct``         | $A \otimes B$                             | $A_{ij} B_{kl}$                                                                                           |
++---------------------------+--------------------------------+-------------------------------------------+-----------------------------------------------------------------------------------------------------------+
+| contraction               | ``ArrayContraction``           | $A$ on axes $a$, $b$                      | $A_{i_{1} i_{2} \ldots i_{a} \ldots i_{b} \ldots } \Rightarrow \sum_j A_{i_{1} \ldots j \ldots j \ldots}$ |
++---------------------------+--------------------------------+-------------------------------------------+-----------------------------------------------------------------------------------------------------------+
+| diagonal                  | ``ArrayDiagonal``              | $A$ on axes $a$, $b$                      | $A_{i_{1} i_{2} \ldots i_{a} \ldots i_{b} \ldots } \Rightarrow A_{i_{1} \ldots j \ldots j \ldots}$        |
++---------------------------+--------------------------------+-------------------------------------------+-----------------------------------------------------------------------------------------------------------+
+| permutation of dimensions | ``PermuteDims``                | permutation $\sigma$ on axes of $A$       | $A_{i_{1} i_{2} \ldots} \Rightarrow A_{i_{\sigma(1)} i_{\sigma(2) \ldots}}$                               |
++---------------------------+--------------------------------+-------------------------------------------+-----------------------------------------------------------------------------------------------------------+
+| addition                  | ``ArrayAdd``                   | elementwise $A + B$                       | $A_{ij} + B_{ij}$                                                                                         |
++---------------------------+--------------------------------+-------------------------------------------+-----------------------------------------------------------------------------------------------------------+
+| summation                 | ``ArraySum``                   | summation $\sum_{x} A^{x}$                | $\sum_{x} A^{x}_{ij}$                                                                                     |
++---------------------------+--------------------------------+-------------------------------------------+-----------------------------------------------------------------------------------------------------------+
+| elementwise application   | ``ArrayElementwiseApplyFunc``  | $f$ applied to elements of $f_{\circ}(A)$ | $f(A^{x}_{ij})$                                                                                           |
++---------------------------+--------------------------------+-------------------------------------------+-----------------------------------------------------------------------------------------------------------+
 
-In SymPy, array expressions are built from four primitive nodes
-``ArrayTensorProduct``, ``ArrayContraction``, ``ArrayDiagonal``,
-``PermuteDims`` that compose and manipulate arrays of arbitrary dimension.
+In SymPy, array expressions are built from four primitive nodes, most
+importantly ``ArrayTensorProduct``, ``ArrayContraction``, ``ArrayDiagonal``,
+``PermuteDims``, that compose and manipulate arrays of arbitrary dimension.
 
 These four operators have a canonical form where, when all four are present,
 they must be nested in the following sequence (from outermost to innermost):
@@ -246,7 +264,8 @@ $$D_{mnij} = \frac{\partial}{\partial X_{mn}} \Big (Y_{ij} \Big ).$$
 
 SymPy adopts a denominator-first index ordering for derivatives, placing the
 indices of the differentiation variable ${}_{\{mn\}}$ before those of the
-derivand ${}_{\{ij\}}$.  This ${}_{\{mnij\}}$ convention aligns with Wolfram
+derivand ${}_{\{ij\}}$. The roughly corresponds to the mixed layout convention,
+see [LayoutConventions]_.  This ${}_{\{mnij\}}$ convention aligns with Wolfram
 Mathematica but differs from PyTorch/NumPy, which implicitly follow the
 ${}_{\{ijmn\}}$ index-order convention.
 
@@ -270,6 +289,28 @@ $${}_{\{ij\}} \Longrightarrow \Big(M'\Big)_{ij} = M_{ji}$$
 demonstrates how transposition is encoded solely through index-order
 reversal, the ${}_{\{ij\}}$ mapping of $M_{ji}$ directly yields the
 component expression of the transposition.
+
+Exceptions to the derivative index-order
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Be aware that certain functions within the matrix module, such as
+``.jacobian(...)``, employ their own index ordering conventions, which are
+typically derivand-first.  Specifically, in the case of the Jacobian function,
+the derivand axis corresponds to the columns, while the deriving variable axis
+corresponds to the rows of the resulting Jacobian matrix.
+
+Indeed, let's consider the following example:
+$$X = \left[\begin{matrix}f{\left(x,y \right)}\\g{\left(x,y \right)}\end{matrix}\right]$$
+and
+$$Y = \left[\begin{matrix}x\\y\end{matrix}\right]$$
+
+Using the matrix derivative convention, ``X.diff(Y).reshape(2, 2)`` returns:
+
+$$\left[\begin{matrix}\frac{\partial}{\partial x} f{\left(x,y \right)} & \frac{\partial}{\partial x} g{\left(x,y \right)}\\\frac{\partial}{\partial y} f{\left(x,y \right)} & \frac{\partial}{\partial y} g{\left(x,y \right)}\end{matrix}\right]$$
+
+In contrast, calling ``X.jacobian(Y)`` returns the previous matrix transposed:
+
+$$\left[\begin{matrix}\frac{\partial}{\partial x} f{\left(x,y \right)} & \frac{\partial}{\partial y} f{\left(x,y \right)}\\\frac{\partial}{\partial x} g{\left(x,y \right)} & \frac{\partial}{\partial y} g{\left(x,y \right)}\end{matrix}\right]$$
 
 Reconstructing a matrix expression
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -609,13 +650,17 @@ A handful of tricks is used to collapse the array dimensions:
   Notice that an arbitrary number of matrix-vectors can be added, each contributes to the final expression with a singleton dimension,
   which can be dropped.
 * multi-index contractions involving identity matrices may create redundant diagonal axes that can be simplified away:
-  $$\sum_{j} A_{ij} I_{jk} I_{jl} \Longrightarrow \mathbf{A}$$
-  this is equivalent to:
+  $$\sum_{l} A_{il} I_{lk} I_{jl} \Longrightarrow \mathbf{A}$$
+  by summing up, this is equivalent to:
+  $${}_{\{ijk\}} \Rightarrow A_{ik} I_{kj}$$
+  or in component-explicit form:
   $$\left[\begin{matrix}\left[\begin{matrix}{A}_{00} & 0 & 0\\0 & {A}_{01} & 0\\0 & 0 & {A}_{02}\end{matrix}\right] & \left[\begin{matrix}{A}_{10} & 0 & 0\\0 & {A}_{11} & 0\\0 & 0 & {A}_{12}\end{matrix}\right] & \left[\begin{matrix}{A}_{20} & 0 & 0\\0 & {A}_{21} & 0\\0 & 0 & {A}_{22}\end{matrix}\right]\end{matrix}\right]\Longrightarrow \left[\begin{matrix}{A}_{00} & {A}_{01} & {A}_{02}\\{A}_{10} & {A}_{11} & {A}_{12}\\{A}_{20} & {A}_{21} & {A}_{22}\end{matrix}\right]$$
   This collapse has shrunk a **non-singleton dimension**, from $[k \times k \times k]$ to $[k \times k]$.
   Unlike squeezing singleton dimensions, this simplification cannot be done by a simple array reshaping.
   Similarly,
-  $$\sum_{j} I_{ij} A_{kj} I_{jl} \Longrightarrow \mathbf{A}'$$
+  $$\sum_{l} A_{lj} I_{il} I_{lk} \Longrightarrow \mathbf{A}'$$
+  summing up reduces it to
+  $${}_{\{ijk\}} \Rightarrow A_{ij} I_{ik} $$
   which is equivalent, in explicit form, to:
   $$\left[\begin{matrix}\left[\begin{matrix}{A}_{00} & 0 & 0\\{A}_{01} & 0 & 0\\{A}_{02} & 0 & 0\end{matrix}\right] & \left[\begin{matrix}0 & {A}_{10} & 0\\0 & {A}_{11} & 0\\0 & {A}_{12} & 0\end{matrix}\right] & \left[\begin{matrix}0 & 0 & {A}_{20}\\0 & 0 & {A}_{21}\\0 & 0 & {A}_{22}\end{matrix}\right]\end{matrix}\right] \Longrightarrow \left[\begin{matrix}{A}_{00} & {A}_{10} & {A}_{20}\\{A}_{01} & {A}_{11} & {A}_{21}\\{A}_{02} & {A}_{12} & {A}_{22}\end{matrix}\right] $$
   this last expression has three axes, but the second ${}_{\{j\}}$ and third ${}_{\{k\}}$ are diagonal:
@@ -788,3 +833,4 @@ References
 ----------
 
 .. [MatrixCookbook] The Matrix Cookbook, by Kaare Brandt Petersen and Michael Syskind Pedersen, https://www.math.uwaterloo.ca/~hwolkowi/matrixcookbook.pdf
+.. [LayoutConventions] https://en.wikipedia.org/wiki/Matrix_calculus#Layout_conventions
