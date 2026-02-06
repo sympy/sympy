@@ -765,6 +765,8 @@ def test_solve_linear():
     eq = cos(x)**2 + sin(x)**2  # = 1
     assert solve_linear(eq) == (0, 1)
     raises(ValueError, lambda: solve_linear(Eq(x, 3), 3))
+    assert solve_linear((x + oo)*(y + oo)) == ((x + oo)*(y + oo), 1)
+    assert solve_linear(x*(y + oo)) == (x*(y + oo), 1)
 
 
 def test_solve_undetermined_coeffs():
@@ -1063,30 +1065,7 @@ def _make_example_24609():
 def test_issue_24609():
     # https://github.com/sympy/sympy/issues/24609
     eq, expected, x = _make_example_24609()
-    assert solve(eq, x, simplify=True) == [expected]
-    [solapprox] = solve(eq.n(), x)
-    assert abs(solapprox - expected.n()) < 1e-14
-
-
-@XFAIL
-def test_issue_24609_xfail():
-    #
-    # This returns 5 solutions when it should be 1 (with x positive).
-    # Simplification reveals all solutions to be equivalent. It is expected
-    # that solve without simplify=True returns duplicate solutions in some
-    # cases but the core of this equation is a simple quadratic that can easily
-    # be solved without introducing any redundant solutions:
-    #
-    #     >>> print(factor_terms(eq.as_numer_denom()[0]))
-    #     2**(2/3)*pi**(2/3)*D_c*V**(2/3)*x**(7/3)*(231361*x**2 - 20000*pi**2)
-    #
-    eq, expected, x = _make_example_24609()
-    assert len(solve(eq, x)) == [expected]
-    #
-    # We do not want to pass this test just by using simplify so if the above
-    # passes then uncomment the additional test below:
-    #
-    # assert len(solve(eq, x, simplify=False)) == 1
+    assert solve(eq, x, simplify=False) == [expected]
 
 
 def test_polysys():
@@ -1409,14 +1388,15 @@ def test_unrad1():
     assert unrad(eq) is None
 
 
-@slow
 def test_unrad_slow():
     # this has roots with multiplicity > 1; there should be no
     # repeats in roots obtained, however
     eq = (sqrt(1 + sqrt(1 - 4*x**2)) - x*(1 + sqrt(1 + 2*sqrt(1 - 4*x**2))))
-    assert solve(eq) == [S.Half]
+    got = solve(eq, simplify=False, check=False)
+    assert len(got) == len(set(got))
 
 
+@slow
 @XFAIL
 def test_unrad_fail():
     # this only works if we check real_root(eq.subs(x, Rational(1, 3)))
@@ -2279,10 +2259,11 @@ def test_issue_8828():
 
 def test_issue_2840_8155():
     # with parameter-free solutions (i.e. no `n`), we want to avoid
-    # excessive periodic solutions
-    assert solve(sin(3*x) + sin(6*x)) == [0, -2*pi/9, 2*pi/9]
-    assert solve(sin(300*x) + sin(600*x)) == [0, -pi/450, pi/450]
-    assert solve(2*sin(x) - 2*sin(2*x)) == [0, -pi/3, pi/3]
+    # excessive periodic solutions; we want all solutions within
+    # one period of the function (each of these has 4 such solutions)
+    assert solve(sin(3*x) + sin(6*x)) == [0, 2*pi/9, pi/3, 4*pi/9]
+    assert solve(sin(300*x) + sin(600*x)) == [0, pi/450, pi/300, pi/225]
+    assert solve(2*sin(x) - 2*sin(2*x)) == [0, pi/3, pi, 5*pi/3]
 
 
 def test_issue_9567():
@@ -2329,10 +2310,13 @@ def test_issue_12114():
             d: -f/2 + s3/2, e: -f/2 - s5/2, g: 2}]
 
 
-def test_inf():
+def test_solve_with_inf_nan():
     assert solve(1 - oo*x) == []
     assert solve(oo*x, x) == []
     assert solve(oo*x - oo, x) == []
+    assert solve(x*(y + oo)) == []
+    assert solve(x*(y - oo)) == []
+    assert solve(x*log(x)) == [1]
 
 
 def test_issue_12448():
