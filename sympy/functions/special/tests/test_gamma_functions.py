@@ -107,6 +107,16 @@ def test_gamma_series():
        EulerGamma) + (x + 1)**2*(-1 - pi**2/12 - EulerGamma**2/2 + EulerGamma**3/6 - \
        polygamma(2, 1)/6 + EulerGamma*pi**2/12 + EulerGamma) + O((x + 1)**3, (x, -1))
 
+    #aseries
+    s = Symbol('s', positive=True)
+    assert gamma(s).series(s, oo) == sqrt(2)*sqrt(pi)*(163879/(209018880*s**5) - \
+            571/(2488320*s**4) - 139/(51840*s**3) + 1/(288*s**2) + 1/(12*s) + 1 + \
+            O(s**(-6), (s, oo)))*exp(-s*log(1/s) - s)/sqrt(s)
+    assert gamma(s).series(s, -oo) == sqrt(2)*sqrt(pi)*(163879/(209018880*s**5) - \
+            571/(2488320*s**4) - 139/(51840*s**3) + 1/(288*s**2) + 1/(12*s) + 1 + \
+            O(s**(-6), (s, -oo)))*exp(-s*log(-1/s) - s + I*pi*s)/sqrt(s)
+
+
 
 def tn_branch(s, func):
     from sympy.core.random import uniform
