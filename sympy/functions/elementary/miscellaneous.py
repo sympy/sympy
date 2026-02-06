@@ -245,7 +245,7 @@ def root(arg, n, k=0, evaluate=None):
     To get the k-th n-th root, specify k:
 
     >>> root(-2, 3, 2)
-    -(-1)**(2/3)*2**(1/3)
+    -2**(1/3)*I**(4/3)
 
     To get all n n-th roots you can use the rootof function.
     The following examples show the roots of unity for n
@@ -269,14 +269,14 @@ def root(arg, n, k=0, evaluate=None):
     come back as -2:
 
     >>> root(-8, 3)
-    2*(-1)**(1/3)
+    2*I**(2/3)
 
     The real_root function can be used to either make the principal
     result real (or simply to return the real root directly):
 
     >>> from sympy import real_root
     >>> real_root(_)
-    -2
+    2*I**(2/3)
     >>> real_root(-32, 5)
     -2
 
@@ -335,17 +335,17 @@ def real_root(arg, n=None, evaluate=None):
     >>> real_root(-8, 3)
     -2
     >>> root(-8, 3)
-    2*(-1)**(1/3)
+    2*I**(2/3)
     >>> real_root(_)
-    -2
+    2*I**(2/3)
 
     If one creates a non-principal root and applies real_root, the
     result will not be real (so use with caution):
 
     >>> root(-8, 3, 2)
-    -2*(-1)**(2/3)
+    -2*I**(4/3)
     >>> real_root(_)
-    -2*(-1)**(2/3)
+    -2*I**(4/3)
 
     See Also
     ========
