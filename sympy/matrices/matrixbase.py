@@ -1092,6 +1092,7 @@ class MatrixBase(Printable):
 
         See Also
         ========
+
         eye
         diagonal
         .dense.diag
@@ -1179,6 +1180,7 @@ class MatrixBase(Printable):
 
         kwargs
         ======
+
         cls : class of the returned matrix
         """
         if cols is None:
@@ -1337,6 +1339,7 @@ class MatrixBase(Printable):
 
         kwargs
         ======
+
         cls : class of the returned matrix
         """
         if cols is None:
@@ -1371,6 +1374,7 @@ class MatrixBase(Printable):
 
         kwargs
         ======
+
         cls : class of the returned matrix
         """
         if cols is None:
@@ -5201,8 +5205,10 @@ class MatrixBase(Printable):
 
 
         =====  ============================  ==========================
+
         ord    norm for matrices             norm for vectors
         =====  ============================  ==========================
+
         None   Frobenius norm                2-norm
         'fro'  Frobenius norm                - does not exist
         inf    maximum row sum               max(abs(x))
