@@ -477,7 +477,9 @@ def find_dynamicsymbols(expression, exclude=None, reference_frame=None):
         else:
             expression = expression.to_matrix(reference_frame)
     return {i for i in expression.atoms(AppliedUndef, Derivative) if
-            i.free_symbols == t_set} - exclude_set
+        i.free_symbols == t_set} | {d.args[0] for d in
+        expression.atoms(Derivative) if
+        d.args[0].free_symbols == t_set} - exclude_set
 
 
 def msubs(expr, *sub_dicts, smart=False, **kwargs):
