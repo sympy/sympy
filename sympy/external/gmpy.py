@@ -345,6 +345,7 @@ elif _SYMPY_GROUND_TYPES == 'gmpy':
     HAS_GMPY = 2
     GROUND_TYPES = 'gmpy'
     SYMPY_INTS = (int, type(gmpy.mpz(0)))
+    SYMPY_INTS_MOD = ()
     MPZ = gmpy.mpz
     MPQ = gmpy.mpq
 
@@ -392,6 +393,7 @@ elif _SYMPY_GROUND_TYPES == 'flint':
     HAS_GMPY = 0
     GROUND_TYPES = 'flint'
     SYMPY_INTS = (int, flint.fmpz) # type: ignore
+    SYMPY_INTS_MOD = (flint.nmod, flint.fmpz_mod) # type: ignore
     MPZ = flint.fmpz # type: ignore
     MPQ = flint.fmpq # type: ignore
 
@@ -454,6 +456,7 @@ elif _SYMPY_GROUND_TYPES == 'python':
     HAS_GMPY = 0
     GROUND_TYPES = 'python'
     SYMPY_INTS = (int,)
+    SYMPY_INTS_MOD = ()
     MPZ = int
     MPQ = PythonMPQ
 
