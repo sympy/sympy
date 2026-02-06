@@ -1592,7 +1592,7 @@ def _dmp_inner_gcd(f, g, u, K):
                 pass
 
         return dmp_rr_prs_gcd(f, g, u, K)
-    
+
 
 # NOTE:
 # There is no safe purely structural early-exit for multivariate coprimeness.
