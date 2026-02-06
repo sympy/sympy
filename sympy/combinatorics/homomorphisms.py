@@ -154,10 +154,16 @@ class GroupHomomorphism:
                 }
 
                 def _lift_to_domain(word):
-                    lifted = G.identity
-                    for symbol, power in word.array_form:
-                        lifted = lifted * symbol_to_preimage[symbol]**power
-                    return lifted
+                    if isinstance(G, PermutationGroup):
+                        lifted = G.identity
+                        for symbol, power in word.array_form:
+                            lifted = lifted * symbol_to_preimage[symbol]**power
+                        return lifted
+                    if isinstance(G, (FpGroup, FreeGroup)):
+                        dtype = type(G.identity)
+                        return dtype.prod(
+                            symbol_to_preimage[symbol]**power for symbol, power in word.array_form
+                        )
 
                 kernel_gens = []
                 for relator in H.relators:
