@@ -984,7 +984,7 @@ def test_nC_nP_nT():
         multiset_permutations, multiset_combinations, multiset_partitions,
         partitions, subsets, permutations)
     from sympy.functions.combinatorial.numbers import (
-        nC, nT, stirling, _stirling1, _stirling2, _multiset_histogram, _AOP_product)
+        nP, nC, nT, stirling, _stirling1, _stirling2, _multiset_histogram, _AOP_product)
 
     from sympy.combinatorics.permutations import Permutation
     from sympy.core.random import choice
