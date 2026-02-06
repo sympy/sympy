@@ -1374,84 +1374,23 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
                 "be a slow operation."
             )
             f = lambdify([self.var], self.expr, "sympy")
-            x, y = self._adaptive_sampling_helper(f)
-        return x, y
+        return self._adaptive_sampling_helper(f)
 
     def _adaptive_sampling_helper(self, f):
-        """The adaptive sampling is done by recursively checking if three
-        points are almost collinear. If they are not collinear, then more
-        points are added between those points.
-
-        References
-        ==========
-
-        .. [1] Adaptive polygonal approximation of parametric curves,
-               Luiz Henrique de Figueiredo.
-        """
         np = import_module('numpy')
+        def f_point(t):
+            return np.array([t, _adaptive_eval(f, t)])
 
-        x_coords = []
-        y_coords = []
-        def sample(p, q, depth):
-            """ Samples recursively if three points are almost collinear.
-            For depth < 6, points are added irrespective of whether they
-            satisfy the collinearity condition or not. The maximum depth
-            allowed is 12.
-            """
-            # Randomly sample to avoid aliasing.
-            random = 0.45 + np.random.rand() * 0.1
-            if self.xscale == 'log':
-                xnew = 10**(np.log10(p[0]) + random * (np.log10(q[0]) -
-                                                        np.log10(p[0])))
-            else:
-                xnew = p[0] + random * (q[0] - p[0])
-            ynew = _adaptive_eval(f, xnew)
-            new_point = np.array([xnew, ynew])
-
-            # Maximum depth
-            if depth > self.depth:
-                x_coords.append(q[0])
-                y_coords.append(q[1])
-
-            # Sample to depth of 6 (whether the line is flat or not)
-            # without using linspace (to avoid aliasing).
-            elif depth < 6:
-                sample(p, new_point, depth + 1)
-                sample(new_point, q, depth + 1)
-
-            # Sample ten points if complex values are encountered
-            # at both ends. If there is a real value in between, then
-            # sample those points further.
-            elif p[1] is None and q[1] is None:
-                if self.xscale == 'log':
-                    xarray = np.logspace(p[0], q[0], 10)
-                else:
-                    xarray = np.linspace(p[0], q[0], 10)
-                yarray = list(map(f, xarray))
-                if not all(y is None for y in yarray):
-                    for i in range(len(yarray) - 1):
-                        if not (yarray[i] is None and yarray[i + 1] is None):
-                            sample([xarray[i], yarray[i]],
-                                [xarray[i + 1], yarray[i + 1]], depth + 1)
-
-            # Sample further if one of the end points in None (i.e. a
-            # complex value) or the three points are not almost collinear.
-            elif (p[1] is None or q[1] is None or new_point[1] is None
-                    or not flat(p, new_point, q)):
-                sample(p, new_point, depth + 1)
-                sample(new_point, q, depth + 1)
-            else:
-                x_coords.append(q[0])
-                y_coords.append(q[1])
-
-        f_start = _adaptive_eval(f, self.start.real)
-        f_end = _adaptive_eval(f, self.end.real)
-        x_coords.append(self.start.real)
-        y_coords.append(f_start)
-        sample(np.array([self.start.real, f_start]),
-                np.array([self.end.real, f_end]), 0)
-
-        return (x_coords, y_coords)
+        points, _ = adaptive_sampler(
+            f_point,
+            self.start.real,
+            self.end.real,
+            self.depth,
+            use_log_sampling=(self.xscale == 'log')
+        )
+        x_coords = [p[0] for p in points]
+        y_coords = [p[1] for p in points]
+        return x_coords, y_coords
 
     def _uniform_sampling(self):
         np = import_module('numpy')
@@ -1648,92 +1587,23 @@ class Parametric2DLineSeries(ParametricLineBaseSeries):
             )
             f_x = lambdify([self.var], self.expr_x, "sympy")
             f_y = lambdify([self.var], self.expr_y, "sympy")
-            x, y, p = self._adaptive_sampling_helper(f_x, f_y)
-        return x, y, p
+        return self._adaptive_sampling_helper(f_x, f_y)
 
     def _adaptive_sampling_helper(self, f_x, f_y):
-        """The adaptive sampling is done by recursively checking if three
-        points are almost collinear. If they are not collinear, then more
-        points are added between those points.
+        np = import_module('numpy')
+        def f_point(t):
+            return np.array([_adaptive_eval(f_x, t), _adaptive_eval(f_y, t)])
 
-        References
-        ==========
-
-        .. [1] Adaptive polygonal approximation of parametric curves,
-            Luiz Henrique de Figueiredo.
-        """
-        x_coords = []
-        y_coords = []
-        param = []
-
-        def sample(param_p, param_q, p, q, depth):
-            """ Samples recursively if three points are almost collinear.
-            For depth < 6, points are added irrespective of whether they
-            satisfy the collinearity condition or not. The maximum depth
-            allowed is 12.
-            """
-            # Randomly sample to avoid aliasing.
-            np = import_module('numpy')
-            random = 0.45 + np.random.rand() * 0.1
-            param_new = param_p + random * (param_q - param_p)
-            xnew = _adaptive_eval(f_x, param_new)
-            ynew = _adaptive_eval(f_y, param_new)
-            new_point = np.array([xnew, ynew])
-
-            # Maximum depth
-            if depth > self.depth:
-                x_coords.append(q[0])
-                y_coords.append(q[1])
-                param.append(param_p)
-
-            # Sample irrespective of whether the line is flat till the
-            # depth of 6. We are not using linspace to avoid aliasing.
-            elif depth < 6:
-                sample(param_p, param_new, p, new_point, depth + 1)
-                sample(param_new, param_q, new_point, q, depth + 1)
-
-            # Sample ten points if complex values are encountered
-            # at both ends. If there is a real value in between, then
-            # sample those points further.
-            elif ((p[0] is None and q[1] is None) or
-                    (p[1] is None and q[1] is None)):
-                param_array = np.linspace(param_p, param_q, 10)
-                x_array = [_adaptive_eval(f_x, t) for t in param_array]
-                y_array = [_adaptive_eval(f_y, t) for t in param_array]
-                if not all(x is None and y is None
-                           for x, y in zip(x_array, y_array)):
-                    for i in range(len(y_array) - 1):
-                        if ((x_array[i] is not None and y_array[i] is not None) or
-                                (x_array[i + 1] is not None and y_array[i + 1] is not None)):
-                            point_a = [x_array[i], y_array[i]]
-                            point_b = [x_array[i + 1], y_array[i + 1]]
-                            sample(param_array[i], param_array[i], point_a,
-                                   point_b, depth + 1)
-
-            # Sample further if one of the end points in None (i.e. a complex
-            # value) or the three points are not almost collinear.
-            elif (p[0] is None or p[1] is None
-                    or q[1] is None or q[0] is None
-                    or not flat(p, new_point, q)):
-                sample(param_p, param_new, p, new_point, depth + 1)
-                sample(param_new, param_q, new_point, q, depth + 1)
-            else:
-                x_coords.append(q[0])
-                y_coords.append(q[1])
-                param.append(param_p)
-
-        f_start_x = _adaptive_eval(f_x, self.start)
-        f_start_y = _adaptive_eval(f_y, self.start)
-        start = [f_start_x, f_start_y]
-        f_end_x = _adaptive_eval(f_x, self.end)
-        f_end_y = _adaptive_eval(f_y, self.end)
-        end = [f_end_x, f_end_y]
-        x_coords.append(f_start_x)
-        y_coords.append(f_start_y)
-        param.append(self.start)
-        sample(self.start, self.end, start, end, 0)
-
-        return x_coords, y_coords, param
+        points, params = adaptive_sampler(
+            f_point,
+            self.start,
+            self.end,
+            self.depth,
+            use_log_sampling=False
+        )
+        x_coords = [p[0] for p in points]
+        y_coords = [p[1] for p in points]
+        return x_coords, y_coords, params
 
 
 ### 3D lines
@@ -1765,7 +1635,7 @@ class Parametric3DLineSeries(ParametricLineBaseSeries):
         self.expr = (self.expr_x, self.expr_y, self.expr_z)
         self.ranges = [var_start_end]
         self._cast = float
-        self.adaptive = False
+        self.adaptive = kwargs.get("adaptive", False)
         self.use_cm = kwargs.get("use_cm", True)
         self._set_parametric_line_label(label)
         self._post_init()
@@ -1783,6 +1653,48 @@ class Parametric3DLineSeries(ParametricLineBaseSeries):
             str(self.var),
             str((self.start, self.end))
         ))
+
+    def _adaptive_sampling(self):
+        try:
+            if callable(self.expr_x) and callable(self.expr_y) and callable(self.expr_z):
+                f_x = self.expr_x
+                f_y = self.expr_y
+                f_z = self.expr_z
+            else:
+                f_x = lambdify([self.var], self.expr_x)
+                f_y = lambdify([self.var], self.expr_y)
+                f_z = lambdify([self.var], self.expr_z)
+            x, y, z, p = self._adaptive_sampling_helper(f_x, f_y, f_z)
+        except Exception as err: # noqa: BLE001
+            warnings.warn(
+                "The evaluation with %s failed.\n" % (
+                    "NumPy/SciPy" if not self.modules else self.modules) +
+                "{}: {}\n".format(type(err).__name__, err) +
+                "Trying to evaluate the expression with Sympy, but it might "
+                "be a slow operation."
+            )
+            f_x = lambdify([self.var], self.expr_x, "sympy")
+            f_y = lambdify([self.var], self.expr_y, "sympy")
+            f_z = lambdify([self.var], self.expr_z, "sympy")
+            x, y, z, p = self._adaptive_sampling_helper(f_x, f_y, f_z)
+        return x, y, z, p
+
+    def _adaptive_sampling_helper(self, f_x, f_y, f_z):
+        np = import_module('numpy')
+        def f_point(t):
+            return np.array([_adaptive_eval(f_x, t), _adaptive_eval(f_y, t), _adaptive_eval(f_z, t)])
+
+        points, params = adaptive_sampler(
+            f_point,
+            self.start,
+            self.end,
+            self.depth,
+            use_log_sampling=False
+        )
+        x_coords = [p[0] for p in points]
+        y_coords = [p[1] for p in points]
+        z_coords = [p[2] for p in points]
+        return x_coords, y_coords, z_coords, params
 
     def get_data(self):
         # TODO: remove this
@@ -2587,3 +2499,114 @@ def _set_discretization_points(kwargs, pt):
             else:
                 kwargs["n1"] = kwargs["n2"] = kwargs["n"]
     return kwargs
+
+
+def adaptive_sampler(f_point, start, end, depth_max, tol=1e-3, use_log_sampling=False):
+    """
+    Generic adaptive sampler for 1D, 2D, 3D lines.
+
+    Parameters
+    ==========
+    f_point : callable
+        Function t -> numpy array of coordinates [x, y, ...].
+        Note: for 1D, this should return [t, y].
+    start, end : float
+        Interval of the parameter t.
+    depth_max : int
+        Maximum recursion depth.
+    tol : float
+        Tolerance for collinearity check.
+    use_log_sampling : bool
+        If True, sample parameter t uniformly in log space.
+
+    Returns
+    =======
+    list_of_points : list of numpy arrays
+    list_of_params : list of floats
+    """
+    np = import_module('numpy')
+
+    points = []
+    params = []
+
+    def sample(t0, t1, p0, p1, depth):
+        """ Samples recursively if three points are almost collinear.
+        """
+        # Randomly sample to avoid aliasing.
+        random = 0.45 + np.random.rand() * 0.1
+        if use_log_sampling:
+            t_new = 10**(np.log10(t0) + random * (np.log10(t1) - np.log10(t0)))
+        else:
+            t_new = t0 + random * (t1 - t0)
+
+        p_new = f_point(t_new)
+
+        # Check validity (NaN detection)
+        # We consider a point invalid if ANY coordinate is NaN.
+        # This handles:
+        # 1D: [t, y] -> invalid if y is NaN (t is never nan)
+        # Parametric: [x, y] -> invalid if x or y is NaN
+        invalid_p0 = np.any(np.isnan(p0))
+        invalid_p1 = np.any(np.isnan(p1))
+        invalid_new = np.any(np.isnan(p_new))
+
+        # Maximum depth
+        if depth > depth_max:
+            points.append(p1)
+            params.append(t1)
+
+        # Sample to depth of 6 (whether the line is flat or not)
+        # without using linspace (to avoid aliasing).
+        elif depth < 6:
+            sample(t0, t_new, p0, p_new, depth + 1)
+            sample(t_new, t1, p_new, p1, depth + 1)
+
+        # Sample ten points if complex values are encountered
+        # at both ends. If there is a real value in between, then
+        # sample those points further.
+        # Handles cases like [NaN, ..., Valid, ..., NaN]
+        elif invalid_p0 and invalid_p1:
+            if use_log_sampling:
+                t_array = np.logspace(np.log10(t0), np.log10(t1), 10)
+            else:
+                t_array = np.linspace(t0, t1, 10)
+
+            p_array = [f_point(t) for t in t_array]
+
+            # Check if any point in between is valid
+            if not all(np.any(np.isnan(p)) for p in p_array):
+                for i in range(len(p_array) - 1):
+                    # Recurse if we have a valid segment or a transition
+                    # Optimization: only recurse if not both are NaN?
+                    # Original logic recurses if NOT (both are None).
+                    # Meaning: recurse if at least one is valid, OR boundaries of validity?
+                    # If both are NaN, we skip? Yes.
+
+                    p_i = p_array[i]
+                    p_next = p_array[i+1]
+                    invalid_i = np.any(np.isnan(p_i))
+                    invalid_next = np.any(np.isnan(p_next))
+
+                    if not (invalid_i and invalid_next):
+                        sample(t_array[i], t_array[i+1], p_i, p_next, depth + 1)
+
+        # Sample further if one of the end points is Invalid
+        # or the three points are not almost collinear.
+        elif (invalid_p0 or invalid_p1 or invalid_new
+                or not flat(p0, p_new, p1, eps=tol)):
+            sample(t0, t_new, p0, p_new, depth + 1)
+            sample(t_new, t1, p_new, p1, depth + 1)
+        else:
+            points.append(p1)
+            params.append(t1)
+
+    # Initial call
+    p_start = f_point(start)
+    p_end = f_point(end)
+
+    points.append(p_start)
+    params.append(start)
+
+    sample(start, end, p_start, p_end, 0)
+
+    return points, params

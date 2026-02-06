@@ -93,6 +93,7 @@ def test_centroid():
     assert centroid(p, q) == Point(1, -sqrt(2) + 2)
     assert centroid(Point(0, 0), Point(2, 0)) == Point(2, 0)/2
     assert centroid(Point(0, 0), Point(0, 0), Point(2, 0)) == Point(2, 0)/3
+    assert centroid(Point(0, 0), Segment((0, 0), (1, 1))) is None
 
 
 def test_farthest_points_closest_points():
