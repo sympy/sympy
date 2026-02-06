@@ -574,6 +574,29 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         r = self.array_form + other.array_form
         return group.dtype._new_reduce_at_boundary(r, len(self.array_form) - 1)
 
+    @classmethod
+    def prod(cls, words):
+        """Return the product of an iterable of words from the same free group.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics import free_group
+        >>> F, x, y = free_group("x y")
+        >>> F.dtype.prod([x, y, x**-1])
+        x*y*x**-1
+        """
+        parts = []
+        for word in words:
+            if not isinstance(word, cls):
+                raise TypeError("only FreeGroup elements of same FreeGroup can "
+                        "be multiplied")
+            if word:
+                parts.append(word.array_form)
+        if not parts:
+            return cls.group.identity
+        return cls._new(_concat_reduced_array_forms(*parts))
+
     def __truediv__(self, other):
         group = self.group
         if not isinstance(other, group.dtype):

@@ -171,6 +171,19 @@ def test_FreeGroupElm__mul__pow__():
         a *= x
 
 
+def test_FreeGroupElm_prod():
+    dtype = F.dtype
+    assert dtype.prod([]) == F.identity
+    assert dtype.prod([F.identity, x, y, x**-1, F.identity]) == x*y*x**-1
+    assert dtype.prod((x**k for k in [3, -1, 5, -2])) == x**5
+    words = [x**2*y*x**-2, x**2, y**-3, x**-2, y**3]
+    naive = F.identity
+    for word in words:
+        naive *= word
+    assert dtype.prod(words) == naive
+    raises(TypeError, lambda: dtype.prod([x, 1]))
+
+
 def test_FreeGroupElm__len__():
     assert len(x**5*y*x**2*y**-4*x) == 13
     assert len(x**17) == 17
