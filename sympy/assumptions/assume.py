@@ -155,12 +155,12 @@ class AppliedPredicate(Boolean):
         # Will be changed to self.args[1:] after args overriding is removed
         return self._args[1:]
 
-    def _eval_ask(self, assumptions, rec):
+    def _eval_ask(self, assumptions):
         import inspect
         sig = inspect.signature(self.function.eval)
         # if len(sig.parameters) == 2:
         #     return self.function.eval(self.arguments, assumptions)
-        return self.function.eval(self.arguments, assumptions, rec)
+        return self.function.eval(self.arguments, assumptions)
 
     @property
     def binary_symbols(self):
@@ -364,10 +364,10 @@ class Predicate(Boolean, metaclass=PredicateMeta):
             #     result = self.handler(*args, assumptions=assumptions)
             # else:
             # try:
-            if self._is_user_defined_predicate:
-                result = self.handler(*args, assumptions=assumptions)
-            else:
-                result = self.handler(*args, assumptions=assumptions, rec=rec)
+            # if self._is_user_defined_predicate:
+            result = self.handler(*args, assumptions=assumptions)
+            # else:
+            #     result = self.handler(*args, assumptions=assumptions, rec=rec)
             # except TypeError:
             #     result = self.handler(*args, assumptions=assumptions)
         except NotImplementedError:
@@ -509,10 +509,10 @@ def assuming(*assumptions):
         global_assumptions.update(old_global_assumptions)
 
 
-def recursive_ask(proposition, assumptions, rec=float('inf')):
-    if rec > 0:
-        from sympy.assumptions.ask import ask
-        return ask(proposition, assumptions, rec=rec-1)
+def recursive_ask(proposition, assumptions):
+    # if rec > 0:
+    #     from sympy.assumptions.ask import ask
+    #     return ask(proposition, assumptions, rec=rec-1)
 
 
     from sympy.assumptions.ask import _ask_single_fact, Q, _extract_all_facts
@@ -562,7 +562,7 @@ def recursive_ask(proposition, assumptions, rec=float('inf')):
         return res
 
     # direct resolution method, no logic
-    res = key(*args)._eval_ask(assumptions, rec)
+    res = key(*args)._eval_ask(assumptions)
     if res is not None:
         return bool(res)
 

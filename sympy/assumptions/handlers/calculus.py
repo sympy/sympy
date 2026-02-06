@@ -8,7 +8,7 @@ from sympy.logic.boolalg import conjuncts
 from ..predicates.calculus import FinitePredicate, InfinitePredicate, PositiveInfinitePredicate, NegativeInfinitePredicate
 
 @FinitePredicate.register(Symbol)
-def _(expr, assumptions, rec):
+def _(expr, assumptions):
     """
     Handles Symbol.
     """
@@ -19,7 +19,7 @@ def _(expr, assumptions, rec):
     return None
 
 @FinitePredicate.register(Add)
-def _(expr, assumptions, rec):
+def _(expr, assumptions):
     """
     Return True if expr is bounded, False if not and None if unknown.
 
@@ -83,10 +83,10 @@ def _(expr, assumptions, rec):
     sign = -1
     result = True
     for arg in expr.args:
-        _bounded = recursive_ask(Q.finite(arg), assumptions=assumptions, rec=rec)
+        _bounded = recursive_ask(Q.finite(arg), assumptions=assumptions)
         if _bounded:
             continue
-        s = recursive_ask(Q.extended_positive(arg), assumptions=assumptions, rec=rec)
+        s = recursive_ask(Q.extended_positive(arg), assumptions=assumptions)
         if sign != -1 and s != sign or (s is None and None in (_bounded, sign)):
             return None
         else:
@@ -96,7 +96,7 @@ def _(expr, assumptions, rec):
     return result
 
 @FinitePredicate.register(Mul)
-def _(expr, assumptions, rec):
+def _(expr, assumptions):
     """
     Return True if expr is bounded, False if not and None if unknown.
 
@@ -137,16 +137,16 @@ def _(expr, assumptions, rec):
     result = True
     possible_zero = False
     for arg in expr.args:
-        _bounded = recursive_ask(Q.finite(arg), assumptions=assumptions, rec=rec)
+        _bounded = recursive_ask(Q.finite(arg), assumptions=assumptions)
         if _bounded:
-            if recursive_ask(Q.zero(arg), assumptions=assumptions, rec=rec) is not False:
+            if recursive_ask(Q.zero(arg), assumptions=assumptions) is not False:
                 if result is False:
                     return None
                 possible_zero = True
         elif _bounded is None:
             if result is None:
                 return None
-            if recursive_ask(Q.extended_nonzero(arg), assumptions=assumptions, rec=rec) is None:
+            if recursive_ask(Q.extended_nonzero(arg), assumptions=assumptions) is None:
                 return None
             if result is not False:
                 result = None
@@ -157,7 +157,7 @@ def _(expr, assumptions, rec):
     return result
 
 @FinitePredicate.register(Pow)
-def _(expr, assumptions, rec):
+def _(expr, assumptions):
     """
     * Unbounded ** NonZero -> Unbounded
 
@@ -170,70 +170,70 @@ def _(expr, assumptions, rec):
     * Otherwise unknown
     """
     if expr.base == E:
-        return recursive_ask(Q.finite(expr.exp), assumptions=assumptions, rec=rec)
-    base_bounded = recursive_ask(Q.finite(expr.base), assumptions=assumptions, rec=rec)
-    exp_bounded = recursive_ask(Q.finite(expr.exp), assumptions=assumptions, rec=rec)
+        return recursive_ask(Q.finite(expr.exp), assumptions=assumptions)
+    base_bounded = recursive_ask(Q.finite(expr.base), assumptions=assumptions)
+    exp_bounded = recursive_ask(Q.finite(expr.exp), assumptions=assumptions)
     if base_bounded is None and exp_bounded is None:
         return None
-    if base_bounded is False and recursive_ask(Q.extended_nonzero(expr.exp), assumptions=assumptions, rec=rec):
+    if base_bounded is False and recursive_ask(Q.extended_nonzero(expr.exp), assumptions=assumptions):
         return False
     if base_bounded and exp_bounded:
-        is_base_zero = recursive_ask(Q.zero(expr.base), assumptions=assumptions, rec=rec)
-        is_exp_negative = recursive_ask(Q.negative(expr.exp), assumptions=assumptions, rec=rec)
+        is_base_zero = recursive_ask(Q.zero(expr.base), assumptions=assumptions)
+        is_exp_negative = recursive_ask(Q.negative(expr.exp), assumptions=assumptions)
         if is_base_zero is True and is_exp_negative is True:
             return False
         if is_base_zero is not False and is_exp_negative is not False:
             return None
         return True
-    if (abs(expr.base) <= 1) == True and recursive_ask(Q.extended_positive(expr.exp), assumptions=assumptions, rec=rec):
+    if (abs(expr.base) <= 1) == True and recursive_ask(Q.extended_positive(expr.exp), assumptions=assumptions):
         return True
-    if (abs(expr.base) >= 1) == True and recursive_ask(Q.extended_negative(expr.exp), assumptions=assumptions, rec=rec):
+    if (abs(expr.base) >= 1) == True and recursive_ask(Q.extended_negative(expr.exp), assumptions=assumptions):
         return True
     if (abs(expr.base) >= 1) == True and exp_bounded is False:
         return False
     return None
 
 @FinitePredicate.register(exp)
-def _(expr, assumptions, rec):
-    return recursive_ask(Q.finite(expr.exp), assumptions=assumptions, rec=rec)
+def _(expr, assumptions):
+    return recursive_ask(Q.finite(expr.exp), assumptions=assumptions)
 
 @FinitePredicate.register(log)
-def _(expr, assumptions, rec):
-    if recursive_ask(Q.infinite(expr.args[0]), assumptions=assumptions, rec=rec):
+def _(expr, assumptions):
+    if recursive_ask(Q.infinite(expr.args[0]), assumptions=assumptions):
         return False
-    return recursive_ask(~Q.zero(expr.args[0]), assumptions=assumptions, rec=rec)
+    return recursive_ask(~Q.zero(expr.args[0]), assumptions=assumptions)
 
 @FinitePredicate.register_many(cos, sin, Number, Pi, Exp1, GoldenRatio, TribonacciConstant, ImaginaryUnit, sign)
-def _(expr, assumptions, rec):
+def _(expr, assumptions):
     return True
 
 @FinitePredicate.register_many(ComplexInfinity, Infinity, NegativeInfinity)
-def _(expr, assumptions, rec):
+def _(expr, assumptions):
     return False
 
 @FinitePredicate.register(NaN)
-def _(expr, assumptions, rec):
+def _(expr, assumptions):
     return None
 
 @InfinitePredicate.register(Expr)
-def _(expr, assumptions, rec):
-    is_finite = Q.finite(expr)._eval_ask(assumptions, rec=rec)
+def _(expr, assumptions):
+    is_finite = Q.finite(expr)._eval_ask(assumptions)
     if is_finite is None:
         return None
     return not is_finite
 
 @PositiveInfinitePredicate.register(Infinity)
-def _(expr, assumptions, rec):
+def _(expr, assumptions):
     return True
 
 @PositiveInfinitePredicate.register_many(NegativeInfinity, ComplexInfinity)
-def _(expr, assumptions, rec):
+def _(expr, assumptions):
     return False
 
 @NegativeInfinitePredicate.register(NegativeInfinity)
-def _(expr, assumptions, rec):
+def _(expr, assumptions):
     return True
 
 @NegativeInfinitePredicate.register_many(Infinity, ComplexInfinity)
-def _(expr, assumptions, rec):
+def _(expr, assumptions):
     return False

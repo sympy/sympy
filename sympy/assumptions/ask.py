@@ -364,7 +364,7 @@ def _extract_all_facts(assump, exprs):
     return CNF(facts)
 
 
-def ask(proposition, assumptions=True, context=global_assumptions, rec=float('inf')):
+def ask(proposition, assumptions=True, context=global_assumptions):
     """
     Function to evaluate the proposition with assumptions.
 
@@ -498,7 +498,7 @@ def ask(proposition, assumptions=True, context=global_assumptions, rec=float('in
         return res
 
     # direct resolution method, no logic
-    res = key(*args)._eval_ask(assumptions, rec)
+    res = key(*args)._eval_ask(assumptions)
     if res is not None:
         return bool(res)
 

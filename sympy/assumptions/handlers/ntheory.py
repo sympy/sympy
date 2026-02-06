@@ -20,82 +20,83 @@ def _PrimePredicate_number(expr, assumptions):
         return isprime(i)
 
 @PrimePredicate.register(Expr)
-def _(expr, assumptions, rec):
+def _(expr, assumptions):
     ret = expr.is_prime
     if ret is None:
         raise MDNotImplementedError
     return ret
 
 @PrimePredicate.register(Basic)
-def _(expr, assumptions, rec):
+def _(expr, assumptions):
     if expr.is_number:
         return _PrimePredicate_number(expr, assumptions)
 
 @PrimePredicate.register(Mul)
-def _(expr, assumptions, rec):
+def _(expr, assumptions):
     if expr.is_number:
         return _PrimePredicate_number(expr, assumptions)
     for arg in expr.args:
-        if not recursive_ask(Q.integer(arg), assumptions=assumptions, rec=rec):
+        if not recursive_ask(Q.integer(arg), assumptions=assumptions):
             return None
     for arg in expr.args:
         if arg.is_number and arg.is_composite:
             return False
 
 @PrimePredicate.register(Pow)
-def _(expr, assumptions, rec):
+def _(expr, assumptions):
     """
     Integer**Integer     -> !Prime
     """
     if expr.is_number:
         return _PrimePredicate_number(expr, assumptions)
-    if recursive_ask(Q.integer(expr.exp), assumptions=assumptions, rec=rec) and recursive_ask(Q.integer(expr.base), assumptions=assumptions, rec=rec):
-        prime_base = recursive_ask(Q.prime(expr.base), assumptions=assumptions, rec=rec)
+    if recursive_ask(Q.integer(expr.exp), assumptions=assumptions) and recursive_ask(Q.integer(expr.base),
+                                                                                     assumptions=assumptions):
+        prime_base = recursive_ask(Q.prime(expr.base), assumptions=assumptions)
         if prime_base is False:
             return False
-        is_exp_one = recursive_ask(Q.zero(expr.exp - 1), assumptions=assumptions, rec=rec)
+        is_exp_one = recursive_ask(Q.zero(expr.exp - 1), assumptions=assumptions)
         if is_exp_one is False:
             return False
         if prime_base is True and is_exp_one is True:
             return True
 
 @PrimePredicate.register(Integer)
-def _(expr, assumptions, rec):
+def _(expr, assumptions):
     return isprime(expr)
 
 @PrimePredicate.register_many(Rational, Infinity, NegativeInfinity, ImaginaryUnit)
-def _(expr, assumptions, rec):
+def _(expr, assumptions):
     return False
 
 @PrimePredicate.register(Float)
-def _(expr, assumptions, rec):
+def _(expr, assumptions):
     return _PrimePredicate_number(expr, assumptions)
 
 @PrimePredicate.register(NumberSymbol)
-def _(expr, assumptions, rec):
+def _(expr, assumptions):
     return _PrimePredicate_number(expr, assumptions)
 
 @PrimePredicate.register(NaN)
-def _(expr, assumptions, rec):
+def _(expr, assumptions):
     return None
 
 @CompositePredicate.register(Expr)
-def _(expr, assumptions, rec):
+def _(expr, assumptions):
     ret = expr.is_composite
     if ret is None:
         raise MDNotImplementedError
     return ret
 
 @CompositePredicate.register(Basic)
-def _(expr, assumptions, rec):
-    _positive = recursive_ask(Q.positive(expr), assumptions=assumptions, rec=rec)
+def _(expr, assumptions):
+    _positive = recursive_ask(Q.positive(expr), assumptions=assumptions)
     if _positive:
-        _integer = recursive_ask(Q.integer(expr), assumptions=assumptions, rec=rec)
+        _integer = recursive_ask(Q.integer(expr), assumptions=assumptions)
         if _integer:
-            _prime = recursive_ask(Q.prime(expr), assumptions=assumptions, rec=rec)
+            _prime = recursive_ask(Q.prime(expr), assumptions=assumptions)
             if _prime is None:
                 return
-            _is_one = recursive_ask(Q.zero(expr - 1), assumptions=assumptions, rec=rec)
+            _is_one = recursive_ask(Q.zero(expr - 1), assumptions=assumptions)
             if _is_one:
                 return False
             if _is_one is None:
@@ -120,19 +121,19 @@ def _EvenPredicate_number(expr, assumptions):
     return i % 2 == 0
 
 @EvenPredicate.register(Expr)
-def _(expr, assumptions, rec):
+def _(expr, assumptions):
     ret = expr.is_even
     if ret is None:
         raise MDNotImplementedError
     return ret
 
 @EvenPredicate.register(Basic)
-def _(expr, assumptions, rec):
+def _(expr, assumptions):
     if expr.is_number:
         return _EvenPredicate_number(expr, assumptions)
 
 @EvenPredicate.register(Mul)
-def _(expr, assumptions, rec):
+def _(expr, assumptions):
     """
     Even * Integer    -> Even
     Even * Odd        -> Even
@@ -146,15 +147,15 @@ def _(expr, assumptions, rec):
         return _EvenPredicate_number(expr, assumptions)
     even, odd, irrational, acc = (False, 0, False, 1)
     for arg in expr.args:
-        if recursive_ask(Q.integer(arg), assumptions=assumptions, rec=rec):
-            if recursive_ask(Q.even(arg), assumptions=assumptions, rec=rec):
+        if recursive_ask(Q.integer(arg), assumptions=assumptions):
+            if recursive_ask(Q.even(arg), assumptions=assumptions):
                 even = True
-            elif recursive_ask(Q.odd(arg), assumptions=assumptions, rec=rec):
+            elif recursive_ask(Q.odd(arg), assumptions=assumptions):
                 odd += 1
             elif not even and acc != 1:
-                if recursive_ask(Q.odd(acc + arg), assumptions=assumptions, rec=rec):
+                if recursive_ask(Q.odd(acc + arg), assumptions=assumptions):
                     even = True
-        elif recursive_ask(Q.irrational(arg), assumptions=assumptions, rec=rec):
+        elif recursive_ask(Q.irrational(arg), assumptions=assumptions):
             if irrational:
                 break
             irrational = True
@@ -170,7 +171,7 @@ def _(expr, assumptions, rec):
             return False
 
 @EvenPredicate.register(Add)
-def _(expr, assumptions, rec):
+def _(expr, assumptions):
     """
     Even + Odd  -> Odd
     Even + Even -> Even
@@ -181,9 +182,9 @@ def _(expr, assumptions, rec):
         return _EvenPredicate_number(expr, assumptions)
     _result = True
     for arg in expr.args:
-        if recursive_ask(Q.even(arg), assumptions=assumptions, rec=rec):
+        if recursive_ask(Q.even(arg), assumptions=assumptions):
             pass
-        elif recursive_ask(Q.odd(arg), assumptions=assumptions, rec=rec):
+        elif recursive_ask(Q.odd(arg), assumptions=assumptions):
             _result = not _result
         else:
             break
@@ -191,60 +192,60 @@ def _(expr, assumptions, rec):
         return _result
 
 @EvenPredicate.register(Pow)
-def _(expr, assumptions, rec):
+def _(expr, assumptions):
     if expr.is_number:
         return _EvenPredicate_number(expr, assumptions)
-    if recursive_ask(Q.integer(expr.exp), assumptions=assumptions, rec=rec):
-        if recursive_ask(Q.positive(expr.exp), assumptions=assumptions, rec=rec):
-            return recursive_ask(Q.even(expr.base), assumptions=assumptions, rec=rec)
-        elif recursive_ask(~Q.negative(expr.exp) & Q.odd(expr.base), assumptions=assumptions, rec=rec):
+    if recursive_ask(Q.integer(expr.exp), assumptions=assumptions):
+        if recursive_ask(Q.positive(expr.exp), assumptions=assumptions):
+            return recursive_ask(Q.even(expr.base), assumptions=assumptions)
+        elif recursive_ask(~Q.negative(expr.exp) & Q.odd(expr.base), assumptions=assumptions):
             return False
         elif expr.base is S.NegativeOne:
             return False
 
 @EvenPredicate.register(Integer)
-def _(expr, assumptions, rec):
+def _(expr, assumptions):
     return not bool(expr.p & 1)
 
 @EvenPredicate.register_many(Rational, Infinity, NegativeInfinity, ImaginaryUnit)
-def _(expr, assumptions, rec):
+def _(expr, assumptions):
     return False
 
 @EvenPredicate.register(NumberSymbol)
-def _(expr, assumptions, rec):
+def _(expr, assumptions):
     return _EvenPredicate_number(expr, assumptions)
 
 @EvenPredicate.register(Abs)
-def _(expr, assumptions, rec):
-    if recursive_ask(Q.real(expr.args[0]), assumptions=assumptions, rec=rec):
-        return recursive_ask(Q.even(expr.args[0]), assumptions=assumptions, rec=rec)
+def _(expr, assumptions):
+    if recursive_ask(Q.real(expr.args[0]), assumptions=assumptions):
+        return recursive_ask(Q.even(expr.args[0]), assumptions=assumptions)
 
 @EvenPredicate.register(re)
-def _(expr, assumptions, rec):
-    if recursive_ask(Q.real(expr.args[0]), assumptions=assumptions, rec=rec):
-        return recursive_ask(Q.even(expr.args[0]), assumptions=assumptions, rec=rec)
+def _(expr, assumptions):
+    if recursive_ask(Q.real(expr.args[0]), assumptions=assumptions):
+        return recursive_ask(Q.even(expr.args[0]), assumptions=assumptions)
 
 @EvenPredicate.register(im)
-def _(expr, assumptions, rec):
-    if recursive_ask(Q.real(expr.args[0]), assumptions=assumptions, rec=rec):
+def _(expr, assumptions):
+    if recursive_ask(Q.real(expr.args[0]), assumptions=assumptions):
         return True
 
 @EvenPredicate.register(NaN)
-def _(expr, assumptions, rec):
+def _(expr, assumptions):
     return None
 
 @OddPredicate.register(Expr)
-def _(expr, assumptions, rec):
+def _(expr, assumptions):
     ret = expr.is_odd
     if ret is None:
         raise MDNotImplementedError
     return ret
 
 @OddPredicate.register(Basic)
-def _(expr, assumptions, rec):
-    _integer = recursive_ask(Q.integer(expr), assumptions=assumptions, rec=rec)
+def _(expr, assumptions):
+    _integer = recursive_ask(Q.integer(expr), assumptions=assumptions)
     if _integer:
-        _even = recursive_ask(Q.even(expr), assumptions=assumptions, rec=rec)
+        _even = recursive_ask(Q.even(expr), assumptions=assumptions)
         if _even is None:
             return None
         return not _even

@@ -32,7 +32,7 @@ class CommonHandler(AskHandler):
     NaN = AlwaysFalse
 
 @CommutativePredicate.register(Symbol)
-def _(expr, assumptions, rec):
+def _(expr, assumptions):
     """Objects are expected to be commutative unless otherwise stated"""
     assumps = conjuncts(assumptions)
     if expr.is_commutative is not None:
@@ -44,52 +44,52 @@ def _(expr, assumptions, rec):
     return True
 
 @CommutativePredicate.register(Basic)
-def _(expr, assumptions, rec):
+def _(expr, assumptions):
     for arg in expr.args:
-        if not recursive_ask(Q.commutative(arg), assumptions=assumptions, rec=rec):
+        if not recursive_ask(Q.commutative(arg), assumptions=assumptions):
             return False
     return True
 
 @CommutativePredicate.register(Number)
-def _(expr, assumptions, rec):
+def _(expr, assumptions):
     return True
 
 @CommutativePredicate.register(NaN)
-def _(expr, assumptions, rec):
+def _(expr, assumptions):
     return True
 
 @IsTruePredicate.register(bool)
-def _(expr, assumptions, rec):
+def _(expr, assumptions):
     return expr
 
 @IsTruePredicate.register(BooleanTrue)
-def _(expr, assumptions, rec):
+def _(expr, assumptions):
     return True
 
 @IsTruePredicate.register(BooleanFalse)
-def _(expr, assumptions, rec):
+def _(expr, assumptions):
     return False
 
 @IsTruePredicate.register(AppliedPredicate)
-def _(expr, assumptions, rec):
-    return recursive_ask(expr, assumptions=assumptions, rec=rec)
+def _(expr, assumptions):
+    return recursive_ask(expr, assumptions=assumptions)
 
 @IsTruePredicate.register(Not)
-def _(expr, assumptions, rec):
+def _(expr, assumptions):
     arg = expr.args[0]
     if arg.is_Symbol:
         return None
-    value = recursive_ask(arg, assumptions=assumptions, rec=rec)
+    value = recursive_ask(arg, assumptions=assumptions)
     if value in (True, False):
         return not value
     else:
         return None
 
 @IsTruePredicate.register(Or)
-def _(expr, assumptions, rec):
+def _(expr, assumptions):
     result = False
     for arg in expr.args:
-        p = recursive_ask(arg, assumptions=assumptions, rec=rec)
+        p = recursive_ask(arg, assumptions=assumptions)
         if p is True:
             return True
         if p is None:
@@ -97,10 +97,10 @@ def _(expr, assumptions, rec):
     return result
 
 @IsTruePredicate.register(And)
-def _(expr, assumptions, rec):
+def _(expr, assumptions):
     result = True
     for arg in expr.args:
-        p = recursive_ask(arg, assumptions=assumptions, rec=rec)
+        p = recursive_ask(arg, assumptions=assumptions)
         if p is False:
             return False
         if p is None:
@@ -108,30 +108,30 @@ def _(expr, assumptions, rec):
     return result
 
 @IsTruePredicate.register(Implies)
-def _(expr, assumptions, rec):
+def _(expr, assumptions):
     p, q = expr.args
-    return recursive_ask(~p | q, assumptions=assumptions, rec=rec)
+    return recursive_ask(~p | q, assumptions=assumptions)
 
 @IsTruePredicate.register(Equivalent)
-def _(expr, assumptions, rec):
+def _(expr, assumptions):
     p, q = expr.args
-    pt = recursive_ask(p, assumptions=assumptions, rec=rec)
+    pt = recursive_ask(p, assumptions=assumptions)
     if pt is None:
         return None
-    qt = recursive_ask(q, assumptions=assumptions, rec=rec)
+    qt = recursive_ask(q, assumptions=assumptions)
     if qt is None:
         return None
     return pt == qt
 
-def test_closed_group(expr, assumptions, key, rec):
+def test_closed_group(expr, assumptions, key):
     """
     Test for membership in a group with respect
     to the current operation.
     """
-    return _fuzzy_group((recursive_ask(key(a), assumptions=assumptions, rec=rec) for a in expr.args), quick_exit=True)
+    return _fuzzy_group((recursive_ask(key(a), assumptions=assumptions) for a in expr.args), quick_exit=True)
 
-def ask_all(*queries, assumptions, rec):
-    return fuzzy_and((recursive_ask(query, assumptions=assumptions, rec=rec) for query in queries))
+def ask_all(*queries, assumptions):
+    return fuzzy_and((recursive_ask(query, assumptions=assumptions) for query in queries))
 
-def ask_any(*queries, assumptions, rec):
-    return fuzzy_or((recursive_ask(query, assumptions=assumptions, rec=rec) for query in queries))
+def ask_any(*queries, assumptions):
+    return fuzzy_or((recursive_ask(query, assumptions=assumptions) for query in queries))
