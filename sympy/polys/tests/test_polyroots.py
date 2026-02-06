@@ -324,13 +324,7 @@ def test_roots_binomial():
     r0 = roots_quadratic(Poly(a1*x**2 + b1, x))
     r1 = roots_binomial(Poly(a1*x**2 + b1, x))
 
-    # XXX: roots_quadratic should be improved to handle signs under the radical
-    # like roots_binomial. It is much better to get the minus sign out of the
-    # radical and have an I outside:
-    assert r0 == [-sqrt(b1)*sqrt(-1/a1), sqrt(b1)*sqrt(-1/a1)]
-    assert r1 == [-I*sqrt(b1)/sqrt(a1), I*sqrt(b1)/sqrt(a1)]
-    # assert powsimp(r0[0]) == powsimp(r1[0])
-    # assert powsimp(r0[1]) == powsimp(r1[1])
+    assert r0 == r1 == [-I*sqrt(b1)/sqrt(a1), I*sqrt(b1)/sqrt(a1)]
 
     for a, b, s, n in product((1, 2), (1, 2), (-1, 1), (2, 3, 4, 5)):
         if a == b and a != 1:  # a == b == 1 is sufficient

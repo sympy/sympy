@@ -489,7 +489,7 @@ def solve(f, *symbols, **flags):
         >>> solve(f(x).diff(x) - f(x) - x, f(x))
         [-x + Derivative(f(x), x)]
         >>> solve(x + exp(x)**2, exp(x), set=True)
-        ([exp(x)], {(-sqrt(-x),), (sqrt(-x),)})
+        ([exp(x)], {(-I*sqrt(x),), (I*sqrt(x),)})
 
         >>> from sympy import Indexed, IndexedBase, Tuple
         >>> A = IndexedBase('A')

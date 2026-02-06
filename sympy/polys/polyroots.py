@@ -67,21 +67,23 @@ def roots_quadratic(f):
     dom = f.get_domain()
 
     def _sqrt(d):
-        # remove squares from square root since both will be represented
-        # in the results; a similar thing is happening in roots() but
-        # must be duplicated here because not all quadratics are binomials
-        co = []
-        other = []
+        # sqrt(x**2) -> x
+        # sqrt(1/x) -> 1/sqrt(x)
+        rat = []
+        numrad = []
+        denrad = []
         for di in Mul.make_args(d):
             if di.is_Pow and di.exp.is_Integer and di.exp % 2 == 0:
-                co.append(Pow(di.base, di.exp//2))
+                rat.append(Pow(di.base, di.exp//2))
+            elif di.is_Pow and di.exp.is_Integer and di.exp < 0:
+                denrad.append(Pow(di.base, -di.exp))
             else:
-                other.append(di)
-        if co:
-            d = Mul(*other)
-            co = Mul(*co)
-            return co*sqrt(d)
-        return sqrt(d)
+                numrad.append(di)
+
+        ratpart = Mul(*rat)
+        numpart = Mul(*numrad)
+        denpart = Mul(*denrad)
+        return ratpart * sqrt(numpart) / sqrt(denpart)
 
     def _simplify(expr):
         if dom.is_Composite:
@@ -102,9 +104,17 @@ def roots_quadratic(f):
         if not dom.is_Numerical:
             r = _simplify(r)
 
-        R = _sqrt(r)
-        r0 = -R
-        r1 = R
+        coeff, _ = r.as_coeff_Mul()
+        minus = coeff < 0
+
+        if minus:
+            R = _sqrt(-r)
+            r0 = -I*R
+            r1 = I*R
+        else:
+            R = _sqrt(r)
+            r0 = -R
+            r1 = R
     else:
         d = b**2 - 4*a*c
         A = 2*a

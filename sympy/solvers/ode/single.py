@@ -1134,8 +1134,8 @@ class Liouville(SinglePatternODESolver):
     >>> f = Function('f')
     >>> pprint(dsolve(diff(f(x), x, x) + diff(f(x), x)**2/f(x) +
     ... diff(f(x), x)/x, f(x), hint='Liouville'))
-               ________________           ________________
-    [f(x) = -\/ C1 + C2*log(x) , f(x) = \/ C1 + C2*log(x) ]
+               ___     ________________           ___     ________________
+    [f(x) = -\/ 2 *I*\/ C1 + C2*log(x) , f(x) = \/ 2 *I*\/ C1 + C2*log(x) ]
 
     References
     ==========
@@ -1941,8 +1941,7 @@ class NthOrderReducible(SingleODESolver):
     >>> f = Function('f')
     >>> eq = Eq(x*f(x).diff(x)**2 + f(x).diff(x, 2), 0)
     >>> dsolve(eq, f(x), hint='nth_order_reducible')
-    ... # doctest: +NORMALIZE_WHITESPACE
-    Eq(f(x), C1 - sqrt(-1/C2)*log(-C2*sqrt(-1/C2) + x) + sqrt(-1/C2)*log(C2*sqrt(-1/C2) + x))
+    Eq(f(x), C1 - C2*log(-I*C2 + x) + C2*log(I*C2 + x))
 
     """
     hint = "nth_order_reducible"
