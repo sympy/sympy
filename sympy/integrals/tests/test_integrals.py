@@ -445,6 +445,13 @@ def test_issue_21741():
     assert all_close(integrate(fun, z), r)
 
 
+def test_issue_27234():
+    x, y = symbols('x y', real=True)
+    assert integrate(Abs(cos(x + y)), y) == Integral(
+        Piecewise((cos(x + y), cos(x + y) >= 0), (-cos(x + y), True)), y
+    )
+
+
 def test_matrices():
     M = Matrix(2, 2, lambda i, j: (i + j + 1)*sin((i + j + 1)*x))
 
