@@ -159,6 +159,27 @@ class FpGroup(DefaultPrinting):
             return g, homomorphism(g, self, g.generators, _gens, check=False)
         return g
 
+    def quotient(self, N):
+        '''
+        Return the quotient group of ``self`` by the normal subgroup ``N``.
+
+        ``N`` can be given either as a collection of generators or as a normal
+        ``FpSubgroup``.
+        '''
+        if isinstance(N, FpSubgroup):
+            if not N.normal:
+                raise ValueError("FpSubgroup must be normal")
+            if N.parent not in (self, self.free_group):
+                raise ValueError("Subgroup is not a subgroup of the group")
+            gens = N.generators
+        else:
+            gens = list(N)
+        if not all(isinstance(g, FreeGroupElement) for g in gens):
+            raise ValueError("Generators must be `FreeGroupElement`s")
+        if not all(g.group == self.free_group for g in gens):
+            raise ValueError("Given generators are not members of the group")
+        return FpGroup(self.free_group, list(self.relators) + list(gens))
+
     def coset_enumeration(self, H, strategy="relator_based", max_cosets=None,
                                                         draft=None, incomplete=False):
         """
@@ -578,6 +599,13 @@ class FpSubgroup(DefaultPrinting):
         arXiv preprint math/0202285.
         '''
 
+        if self.normal:
+            if isinstance(self.parent, FreeGroup):
+                quotient = FpGroup(self.parent, self.generators)
+            else:
+                quotient = self.parent.quotient(self)
+            return quotient.equals(g, quotient.identity)
+
         if isinstance(self.parent, FreeGroup):
             def _inverse_label(label):
                 return -label
@@ -650,14 +678,7 @@ class FpSubgroup(DefaultPrinting):
             base_vertex = 0
             next_vertex_id = 1
 
-            if self.normal:
-                # TODO: this is wrong in general and there is no algorithm for
-                # all normal subgroups. There is an algorithm for normal
-                # subgroups of finite index and it should be implemented here.
-                gens = [w.cyclic_reduction() for w in self.generators]
-                g = g.cyclic_reduction()
-            else:
-                gens = list(self.generators)
+            gens = list(self.generators)
 
             for gen in gens:
                 next_vertex_id = _add_generator_loop(

@@ -267,7 +267,13 @@ def function_range(f, symbol, domain):
                         'Infinite number of critical points for {}'.format(f))
 
             for critical_point in critical_points:
-                vals += FiniteSet(f.subs(symbol, critical_point))
+                from sympy import RootOf
+                if isinstance(critical_point, RootOf):
+                    numeric_val = critical_point.n()
+                    val = f.subs(symbol, numeric_val)
+                else:
+                    val = f.subs(symbol, critical_point)
+                vals += FiniteSet(val)
 
             left_open, right_open = False, False
 

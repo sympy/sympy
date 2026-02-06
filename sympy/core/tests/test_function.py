@@ -259,7 +259,7 @@ def test_Lambda():
     eq = Lambda(x, 2*x) + Lambda(y, 2*y)
     assert eq != 2*Lambda(x, 2*x)
     assert eq.as_dummy() == 2*Lambda(x, 2*x).as_dummy()
-    assert Lambda(x, 2*x) not in [ Lambda(x, x) ]
+    assert Lambda(x, 2*x) != Lambda(x, x)
     raises(BadSignatureError, lambda: Lambda(1, x))
     assert Lambda(x, 1)(1) is S.One
 
