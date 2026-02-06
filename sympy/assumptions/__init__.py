@@ -6,13 +6,13 @@ from .assume import (
     AppliedPredicate, Predicate, AssumptionsContext, assuming,
     global_assumptions
 )
-from .ask import Q, ask, register_handler, remove_handler
+from .ask import Q, ask
 from .refine import refine
 from .relation import BinaryRelation, AppliedBinaryRelation
 
 __all__ = [
     'AppliedPredicate', 'Predicate', 'AssumptionsContext', 'assuming',
-    'global_assumptions', 'Q', 'ask', 'register_handler', 'remove_handler',
+    'global_assumptions', 'Q', 'ask',
     'refine',
     'BinaryRelation', 'AppliedBinaryRelation'
 ]
