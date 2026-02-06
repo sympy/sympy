@@ -20,7 +20,7 @@ from sympy.functions import (
     primenu, primeomega, totient, reduced_totient, primepi,
     motzkin, binomial, gamma, sqrt, cbrt, hyper, log, digamma,
     trigamma, polygamma, factorial, sin, cos, cot, polylog, zeta, dirichlet_eta)
-from sympy.functions.combinatorial.numbers import _nT, nP,nC
+from sympy.functions.combinatorial.numbers import _nT, nP
 from sympy.ntheory.factor_ import factorint
 
 from sympy.core.expr import unchanged
