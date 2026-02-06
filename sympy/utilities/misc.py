@@ -8,7 +8,7 @@ import os
 import re as _re
 import struct
 from textwrap import fill, dedent
-from typing import TypeVar, Callable, Literal, SupportsIndex, SupportsInt, overload, Any, Tuple, List, Optional
+from typing import TypeVar, Callable, Literal, SupportsIndex, SupportsInt, overload, Any
 
 _CallableT = TypeVar("_CallableT", bound=Callable)
 
@@ -72,7 +72,7 @@ def strlines(s: str, c: int = 64, short: bool = False) -> str:
     if '\n' in s:
         return rawlines(s)
     q_char = '"' if repr(s).startswith('"') else "'"
-    q: Tuple[str, str] = (q_char, q_char)
+    q = (q_char, q_char)
     if '\\' in s:  # use r-string
         m = '(\nr%s%%s%s\n)' % q
         j = '%s\nr%s' % q
@@ -81,7 +81,7 @@ def strlines(s: str, c: int = 64, short: bool = False) -> str:
         m = '(\n%s%%s%s\n)' % q
         j = '%s\n%s' % q
         c -= 2
-    out = []
+    out: list[str] = []
     while s:
         out.append(s[:c])
         s = s[c:]
@@ -155,7 +155,7 @@ def rawlines(s: str) -> str:
         return repr(lines[0])
     triple = ["'''" in s, '"""' in s]
     if any(li.endswith(' ') for li in lines) or '\\' in s or all(triple):
-        rv: List[str] = []
+        rv: list[str] = []
         # add on the newlines
         trailing = s.endswith('\n')
         last = len(lines) - 1
@@ -166,11 +166,11 @@ def rawlines(s: str) -> str:
                 rv.append(repr(li))
         return '(\n    %s\n)' % '\n    '.join(rv)
     else:
-        rv = '\n    '.join(lines)
+        rv_str = '\n    '.join(lines)
         if triple[0]:
-            return 'dedent("""\\\n    %s""")' % rv
+            return 'dedent("""\\\n    %s""")' % rv_str
         else:
-            return "dedent('''\\\n    %s''')" % rv
+            return "dedent('''\\\n    %s''')" % rv_str
 
 ARCH = str(struct.calcsize('P') * 8) + "-bit"
 
@@ -260,7 +260,7 @@ def debugf(string: str, args: object) -> None:
     if SYMPY_DEBUG:
         print(string%args, file=sys.stderr)
 
-def find_executable(executable: str, path: Optional[str] = None) -> Optional[str]:
+def find_executable(executable: str, path: str | None = None) -> str | None:
     """Try to find 'executable' in the directories listed in 'path' (a
     string listing directories separated by 'os.pathsep'; defaults to
     os.environ['PATH']).  Returns the complete filename or None if not
