@@ -3562,6 +3562,13 @@ def test_issue_22628():
     assert nonlinsolve([x**3 - 1, x + y, x**2 - 4], [x, y]) == S.EmptySet
 
 
+
+def test_issue_25711():
+    r = symbols('r', real=True)
+    eq = -2*r/(3*Abs(r**2 - 1)**(S(2)/3)*sign(r**2 - 1)**2) + 2*Abs(r)**(2/3)*sign(r)**2/(3*r)
+    assert solveset(eq, r, S.Reals) == {-sqrt(2)/2, sqrt(2)/2}
+
+
 def test_issue_25781():
     assert solve(sqrt(x/2) - x) == [0, S.Half]
 
