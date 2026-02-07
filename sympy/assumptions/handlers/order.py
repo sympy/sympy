@@ -43,6 +43,8 @@ def _determine_definite_strict_sign_of_add(expr, assumptions):
     =======
 
     >>> from sympy import Symbol, Q
+    >>> from sympy.assumptions.handlers.order import (
+    ...     _determine_definite_strict_sign_of_add)
     >>> x = Symbol('x')
     >>> _determine_definite_strict_sign_of_add(x + 1, Q.positive(x))
     (True, False)
