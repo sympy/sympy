@@ -109,34 +109,34 @@ class Boolean(Basic):
             ...
 
     @sympify_return([('other', 'Boolean')], NotImplemented)
-    def __and__(self, other) -> "Boolean":
+    def __and__(self, other) -> Boolean:
         return And(self, other)
 
     __rand__ = __and__
 
     @sympify_return([('other', 'Boolean')], NotImplemented)
-    def __or__(self, other) -> "Boolean":
+    def __or__(self, other) -> Boolean:
         return Or(self, other)
 
     __ror__ = __or__
 
-    def __invert__(self) -> "Boolean":
+    def __invert__(self) -> Boolean:
         """Overloading for ~"""
         return Not(self)
 
     @sympify_return([('other', 'Boolean')], NotImplemented)
-    def __rshift__(self, other) -> "Boolean":
+    def __rshift__(self, other) -> Boolean:
         return Implies(self, other)
 
     @sympify_return([('other', 'Boolean')], NotImplemented)
-    def __lshift__(self, other) -> "Boolean":
+    def __lshift__(self, other) -> Boolean:
         return Implies(other, self)
 
     __rrshift__ = __lshift__
     __rlshift__ = __rshift__
 
     @sympify_return([('other', 'Boolean')], NotImplemented)
-    def __xor__(self, other) -> "Boolean":
+    def __xor__(self, other) -> Boolean:
         return Xor(self, other)
 
     __rxor__ = __xor__
@@ -171,7 +171,7 @@ class Boolean(Basic):
         # override where necessary
         return self
 
-    def as_set(self) -> "Set":
+    def as_set(self) -> Set | Boolean:
         """
         Rewrites Boolean expression in terms of real sets.
 
@@ -227,7 +227,7 @@ class Boolean(Basic):
                            if i.is_Boolean or i.is_Symbol
                            or isinstance(i, (Eq, Ne))])
 
-    def _eval_refine(self, assumptions) -> "Boolean | None":
+    def _eval_refine(self, assumptions) -> Boolean | None:
         from sympy.assumptions import ask
         ret = ask(self, assumptions)
         if ret is True:
