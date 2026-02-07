@@ -399,16 +399,15 @@ def _normalize_relations(expr):
 
     return expr.replace(_filter, _replace)
 
-    def _normalize_negative_assumptions_even(expr):
-        def _convert(e):
-            if isintance(e, AppliedPredicate) and e.function == Q:
-                neg_arg = e.arguments[0]
-                if isinstance(neg_arg, Mul) and neg_arg.args[0] == -1:
-                    pos_arg = neg_arg[1:]
-                    return Q.even(Mul(*pos_arg))
-                return e
-            return expr.replace(lambda e: isinstance(e, AppliedPredicate) and e.function == Q.even, _convert)
-
+def _normalize_negative_assumptions_even(expr):
+    def _convert(e):
+        if isinstance(e, AppliedPredicate) and e.function == Q.even:
+            neg_arg = e.arguments[0]
+            if isinstance(neg_arg, Mul) and neg_arg.args[0] == -1:
+                pos_arg = Mul(*neg_arg.args[1:])
+                return Q.even(pos_arg)
+        return e
+    return expr.replace(lambda e: isinstance(e, AppliedPredicate) and e.function == Q.even, _convert)
 
 def _normalize_expr(expr):
     expr = _normalize_relations(expr)
@@ -520,8 +519,13 @@ def ask(proposition, assumptions=True, context=global_assumptions):
         raise TypeError("assumptions must be a valid logical expression")
 
     # Normalize both proposition and assumptions
-    proposition = _normalize_expr(proposition)
-    assumptions = _normalize_expr(assumptions)
+    proposition = _normalize_relations(proposition)
+    proposition = _normalize_applied_predicates(proposition)
+    
+    assumptions = _normalize_relations(assumptions)
+    assumptions = _normalize_applied_predicates(assumptions)
+    assumptions = _normalize_negative_assumptions_even(assumptions)
+     
 
     if isinstance(proposition, AppliedPredicate):
         key, args = proposition.function, proposition.arguments
