@@ -1379,7 +1379,7 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
     def _adaptive_sampling_helper(self, f):
         np = import_module('numpy')
         def f_point(t):
-            return np.array([t, _adaptive_eval(f, t)])
+            return np.array([t, _adaptive_eval(f, complex(t))])
 
         points, _ = adaptive_sampler(
             f_point,
