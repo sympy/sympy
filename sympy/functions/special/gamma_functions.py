@@ -213,6 +213,16 @@ class gamma(DefinedFunction):
             return self.func(x0)
         raise PoleError()
 
+    def _eval_aseries(self, n, args0, x, logx):
+        # Refer: https://functions.wolfram.com/GammaBetaErf/Gamma/06/02/0003/
+        point = args0[0]
+        if point in [S.Infinity, S.NegativeInfinity]:
+            z = self.args[0]
+            r = exp((log(z)*(z - S.Half) - z + log(2*pi)/2).expand())
+            l = [bernoulli(2*k) / (2*k*(2*k - 1)*z**(2*k - 1)) for k in range(1, n)]
+            return (exp(Add(*l))._eval_nseries(x, n, logx))*r
+        return super()._eval_aseries(n, args0, x, logx)
+
 
 ###############################################################################
 ################## LOWER and UPPER INCOMPLETE GAMMA FUNCTIONS #################
@@ -388,6 +398,9 @@ class lowergamma(DefinedFunction):
             return self
         return self.rewrite(uppergamma).rewrite(expint)
 
+    def _eval_as_leading_term(self, x, logx, cdir):
+        return self.rewrite(uppergamma)._eval_as_leading_term(x, logx=logx, cdir=cdir)
+
     def _eval_is_zero(self):
         x = self.args[1]
         if x.is_zero:
@@ -548,12 +561,16 @@ class uppergamma(DefinedFunction):
     def _eval_rewrite_as_lowergamma(self, s, x, **kwargs):
         return gamma(s) - lowergamma(s, x)
 
-    def _eval_rewrite_as_tractable(self, s, x, **kwargs):
-        return exp(loggamma(s)) - lowergamma(s, x)
-
     def _eval_rewrite_as_expint(self, s, x, **kwargs):
         from sympy.functions.special.error_functions import expint
         return expint(1 - s, x)*x**s
+
+    def _eval_rewrite_as_tractable(self, s, x, **kwargs):
+        return exp(loggamma(s)) - lowergamma(s, x)
+
+    def _eval_as_leading_term(self, x, logx, cdir):
+        from sympy.functions.special.error_functions import expint
+        return self.rewrite(expint)._eval_as_leading_term(x, logx=logx, cdir=cdir)
 
 
 ###############################################################################
@@ -1023,8 +1040,9 @@ class loggamma(DefinedFunction):
         return super()._eval_nseries(x, n, logx)
 
     def _eval_aseries(self, n, args0, x, logx):
+        # Refer: https://functions.wolfram.com/GammaBetaErf/LogGamma/06/03/0001/
         from sympy.series.order import Order
-        if args0[0] != oo:
+        if args0[0] not in [S.Infinity, S.NegativeInfinity]:
             return super()._eval_aseries(n, args0, x, logx)
         z = self.args[0]
         r = log(z)*(z - S.Half) - z + log(2*pi)/2

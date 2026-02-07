@@ -10,6 +10,7 @@ from sympy.functions.elementary.exponential import (exp, exp_polar, log)
 from sympy.functions.elementary.hyperbolic import tanh
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (cos, sin, atan)
+from sympy.series.limits import limit
 from sympy.functions.special.error_functions import (Ei, erf, erfc)
 from sympy.functions.special.gamma_functions import (digamma, gamma, loggamma, lowergamma, multigamma, polygamma, trigamma, uppergamma)
 from sympy.functions.special.zeta_functions import zeta
@@ -106,6 +107,21 @@ def test_gamma_series():
         -1/(x + 1) + EulerGamma - 1 + (x + 1)*(-1 - pi**2/12 - EulerGamma**2/2 + \
        EulerGamma) + (x + 1)**2*(-1 - pi**2/12 - EulerGamma**2/2 + EulerGamma**3/6 - \
        polygamma(2, 1)/6 + EulerGamma*pi**2/12 + EulerGamma) + O((x + 1)**3, (x, -1))
+    assert gamma(x + 1).series(x, oo, 3) == sqrt(2)*sqrt(pi)*sqrt(x + 1)*(-23/(288*x**2) + \
+            1/(12*x) + 1 + O(x**(-3), (x, oo)))*exp(x*log(x + 1) - x - 1)
+    assert gamma(x).series(x, oo, 3) == sqrt(2)*sqrt(pi)*(1/(288*x**2) + 1/(12*x) + 1 + \
+            O(x**(-3), (x, oo)))*sqrt(1/x)*exp(-x*log(1/x) - x)
+    assert gamma(x + 1).series(x, -oo, 3) == sqrt(2)*sqrt(pi)*sqrt(x + 1)*(-23/(288*x**2) + \
+            1/(12*x) + 1 + O(-1/x**3, (x, -oo)))*exp(x*log(x + 1) - x - 1)
+    assert gamma(x).series(x, -oo, 3) ==  -sqrt(2)*I*sqrt(pi)*sqrt(-1/x)*(1/(288*x**2) + \
+            1/(12*x) + 1 + O(-1/x**3, (x, -oo)))*exp(-x*log(-1/x) - x + I*pi*x)
+
+
+def test_gamma_limit():
+    assert limit(gamma(x), x, oo) == S.Infinity
+    assert limit(gamma(x), x, -oo) == S.Zero
+    assert limit(gamma(1/x), x, 0, dir='+') == S.Infinity
+    assert limit(gamma(1/x), x, 0, dir='-') == S.Zero
 
 
 def tn_branch(s, func):
@@ -589,6 +605,16 @@ def test_loggamma():
     assert s1 == -log(x) - EulerGamma*x + pi**2*x**2/12 + x**3*polygamma(2, 1)/6 + \
         pi**4*x**4/360 + x**5*polygamma(4, 1)/120 + O(x**6)
     assert s1 == loggamma(x).rewrite('intractable').series(x).cancel()
+    assert loggamma(x).series(x, oo) == 1/(1260*x**5) - 1/(360*x**3) + 1/(12*x) + log(2*pi)/2 + \
+        log(1/x)/2 + x*(-log(1/x) - 1) + O(x**(-6), (x, oo))
+    assert loggamma(x).series(x, -oo) == 1/(1260*x**5) - 1/(360*x**3) + 1/(12*x) - I*pi/2 + log(2*pi)/2 + \
+        log(-1/x)/2 - x*(log(-1/x) + 1 - I*pi) + O(x**(-6), (x, -oo))
+
+    # test limits
+    assert limit(loggamma(x), x, oo) == S.Infinity
+    assert limit(loggamma(x), x, -oo) == S.NegativeInfinity
+    assert limit(loggamma(1/x), x, 0, dir='+') == S.Infinity
+    assert limit(loggamma(1/x), x, 0, dir='-') == S.NegativeInfinity
 
     assert conjugate(loggamma(x)) == loggamma(conjugate(x))
     assert conjugate(loggamma(0)) is oo
