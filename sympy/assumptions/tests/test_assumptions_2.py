@@ -47,3 +47,48 @@ def test_ask_single_fact():
     assert _ask_single_fact(Q.zero, CNF.from_prop(~Q.even)) is False
 
     assert _ask_single_fact(Q.zero, CNF.from_prop(~Q.even & Q.real)) is False
+
+def test_ask_single_fact_negation_even():
+    # test for negation of even, when assumption is on n
+    assert _ask_single_fact(Q.even(-x), CNF.from_prop(Q.even(x))) is True
+    assert _ask_single_fact(Q.even(-1*x), CNF.from_prop(Q.even(x))) is True
+    assert _ask_single_fact(Q.even(1*-x), CNF.from_prop(Q.even(x))) is True
+    assert _ask_single_fact(Q.even(x*-1), CNF.from_prop(Q.even(x))) is True
+    assert _ask_single_fact(Q.even(-x*1), CNF.from_prop(Q.even(x))) is True
+    assert _ask_single_fact(Q.even(-x), CNF.from_prop(Q.even(1*x))) is True
+
+    # test for negatio of even, when assumption is on -n type -n
+    assert _ask_single_fact(Q.even(x), CNF.from_prop(Q.even(-x))) is True
+    assert _ask_single_fact(Q.even(1*x), CNF.from_prop(Q.even(-x))) is True
+    assert _ask_single_fact(Q.even(x*-1), CNF.from_prop(Q.even(-x))) is True
+    assert _ask_single_fact(Q.even(-1*-x), CNF.from_prop(Q.even(-x))) is True
+    assert _ask_single_fact(Q.even(-x*-1), CNF.from_prop(Q.even(-x))) is True
+
+    # test for negation of even, when assumption is on -n type -1*n
+    assert _ask_single_fact(Q.even(x), CNF.from_prop(Q.even(-1*x))) is True
+    assert _ask_single_fact(Q.even(1*x), CNF.from_prop(Q.even(-1*x))) is True
+    assert _ask_single_fact(Q.even(x*-1), CNF.from_prop(Q.even(-1*x))) is True
+    assert _ask_single_fact(Q.even(-1*-x), CNF.from_prop(Q.even(-1*x))) is True
+    assert _ask_single_fact(Q.even(-x*-1), CNF.from_prop(Q.even(-1*x))) is True
+
+    # test for negation of even, when assumption is on -n type 1*-n
+    assert _ask_single_fact(Q.even(x), CNF.from_prop(Q.even(1*-x))) is True
+    assert _ask_single_fact(Q.even(1*x), CNF.from_prop(Q.even(1*-x))) is True
+    assert _ask_single_fact(Q.even(x*-1), CNF.from_prop(Q.even(1*-x))) is True
+    assert _ask_single_fact(Q.even(-1*-x), CNF.from_prop(Q.even(1*-x))) is True
+    assert _ask_single_fact(Q.even(-x*-1), CNF.from_prop(Q.even(1*-x))) is True
+
+    # test for negation of even, when assumption is on n- type -n*1
+    assert _ask_single_fact(Q.even(x), CNF.from_prop(Q.even(x*-1))) is True
+    assert _ask_single_fact(Q.even(1*x), CNF.from_prop(Q.even(x*-1))) is True
+    assert _ask_single_fact(Q.even(x*-1), CNF.from_prop(Q.even(x*-1))) is True
+    assert _ask_single_fact(Q.even(-1*-x), CNF.from_prop(Q.even(x*-1))) is True
+    assert _ask_single_fact(Q.even(-x*-1), CNF.from_prop(Q.even(x*-1))) is True
+
+    # test for negation of even, when assumption is on -n type -1*-n
+    assert _ask_single_fact(Q.even(x), CNF.from_prop(Q.even(-x*1))) is True
+    assert _ask_single_fact(Q.even(1*x), CNF.from_prop(Q.even(-x*1))) is True
+    assert _ask_single_fact(Q.even(x*-1), CNF.from_prop(Q.even(-x*1))) is True
+    assert _ask_single_fact(Q.even(-1*-x), CNF.from_prop(Q.even(-x*1))) is True
+    assert _ask_single_fact(Q.even(-x*-1), CNF.from_prop(Q.even(x*-1))) is True
+    
