@@ -1,5 +1,6 @@
 """Module for querying SymPy objects about assumptions."""
 
+from sympy import Mul
 from sympy.assumptions.assume import (global_assumptions, Predicate,
         AppliedPredicate)
 from sympy.assumptions.cnf import CNF, EncodedCNF, Literal
@@ -398,10 +399,21 @@ def _normalize_relations(expr):
 
     return expr.replace(_filter, _replace)
 
+    def _normalize_negative_assumptions_even(expr):
+        def _convert(e):
+            if isintance(e, AppliedPredicate) and e.function == Q:
+                neg_arg = e.arguments[0]
+                if isinstance(neg_arg, Mul) amd neg_arg[0] == -1:
+                    pos_arg = neg_arg[1:]
+                    return Q.even(Mul(*pos_arg))
+                return e
+            return expr.replace(lambda e: isinstance(e, AppliedPredicate) and e.function == Q.even, _convert)
+
 
 def _normalize_expr(expr):
     expr = _normalize_relations(expr)
     expr = _normalize_applied_predicates(expr)
+    expr = _normalize_negative_assumptions_even(expr)
     return expr
 
 def ask(proposition, assumptions=True, context=global_assumptions):
