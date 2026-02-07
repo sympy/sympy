@@ -84,16 +84,17 @@ class Boolean(Basic):
 
     if TYPE_CHECKING:
         from sympy.sets.sets import Set
+        from sympy.core.relational import Relational
 
         def __new__(cls, *args: Basic | complex) -> Boolean:
             ...
 
         @overload # type: ignore
-        def subs(self, arg1: Mapping[Basic | complex, Boolean | complex], arg2: None=None) -> Boolean: ...
+        def subs(self, arg1: Mapping[Basic | complex, Boolean | Relational | complex], arg2: None=None) -> Boolean: ...
         @overload
-        def subs(self, arg1: Iterable[tuple[Basic | complex, Boolean | complex]], arg2: None=None, **kwargs: Any) -> Boolean: ...
+        def subs(self, arg1: Iterable[tuple[Basic | complex, Boolean | Relational | complex]], arg2: None=None, **kwargs: Any) -> Boolean: ...
         @overload
-        def subs(self, arg1: Boolean | complex, arg2: Boolean | complex) -> Boolean: ...
+        def subs(self, arg1: Boolean | Relational | complex, arg2: Boolean | Relational | complex) -> Boolean: ...
         @overload
         def subs(self, arg1: Mapping[Basic | complex, Basic | complex], arg2: None=None, **kwargs: Any) -> Basic: ...
         @overload
@@ -197,7 +198,7 @@ class Boolean(Basic):
         if len(free) == 1:
             x = free.pop()
             if x.kind is NumberKind:
-                reps = {}
+                reps: dict[Basic | complex, Boolean | Relational | complex] = {}
                 for r in self.atoms(Relational):
                     if periodicity(r, x) not in (0, None):
                         s = r._eval_as_set()
@@ -208,13 +209,13 @@ class Boolean(Basic):
                             as_set is not implemented for relationals
                             with periodic solutions
                             '''))
-                new = self.subs(reps)  # type: ignore
+                new = self.subs(reps)
                 if new.func != self.func:
                     return new.as_set()  # restart with new obj
                 else:
-                    return new._eval_as_set()  # type: ignore
+                    return new._eval_as_set()
 
-            return self._eval_as_set()  # type: ignore
+            return self._eval_as_set()
         else:
             raise NotImplementedError("Sorry, as_set has not yet been"
                                       " implemented for multivariate"
@@ -222,10 +223,11 @@ class Boolean(Basic):
 
     @property
     def binary_symbols(self) -> set[Basic]:
+        from sympy.core.symbol import Symbol
         from sympy.core.relational import Eq, Ne
-        return set().union(*[i.binary_symbols for i in self.args  # type: ignore
-                           if i.is_Boolean or i.is_Symbol
-                           or isinstance(i, (Eq, Ne))])
+
+        return set().union(*[i.binary_symbols for i in self.args
+                           if isinstance(i, (Boolean, Symbol, Eq, Ne))])
 
     def _eval_refine(self, assumptions) -> Boolean | None:
         from sympy.assumptions import ask
@@ -235,6 +237,13 @@ class Boolean(Basic):
         elif ret is False:
             return false
         return None
+
+    def _eval_as_set(self) -> Set:
+        """
+        Helper method for as_set.
+        Subclasses should implement this if they support set conversion.
+        """
+        raise NotImplementedError("Subclasses of Boolean must implement _eval_as_set")
 
 
 class BooleanAtom(Boolean):
