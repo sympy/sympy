@@ -116,3 +116,9 @@ class FunctionMatrix(MatrixExpr):
 
     def _eval_as_real_imag(self):
         return (re(Matrix(self)), im(Matrix(self)))
+
+    def _eval_transpose(self):
+        return FunctionMatrix(self.cols, self.rows, Lambda(self.lamda.variables[::-1], self.lamda.expr))
+
+    def _eval_derivative(self, x):
+        return FunctionMatrix(self.rows, self.cols, Lambda(self.lamda.variables, self.lamda.expr.diff(x)))
