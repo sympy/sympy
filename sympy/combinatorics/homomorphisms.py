@@ -48,9 +48,7 @@ class GroupHomomorphism:
             gens = image.strong_gens
         else:
             gens = image.generators
-        use_prod = isinstance(self.domain, (FpGroup, FreeGroup))
-        if use_prod:
-            dtype = type(self.domain.identity)
+        dtype = type(self.domain.identity)
         for g in gens:
             if g in inverses or g.is_identity:
                 continue
@@ -58,18 +56,10 @@ class GroupHomomorphism:
                 parts = image._strong_gens_slp[g][::-1]
             else:
                 parts = g
-            if use_prod:
-                w = dtype.prod(
-                    inverses[s] if s in inverses else inverses[s**-1]**-1
-                    for s in parts
-                )
-            else:
-                w = self.domain.identity
-                for s in parts:
-                    if s in inverses:
-                        w = w*inverses[s]
-                    else:
-                        w = w*inverses[s**-1]**-1
+            w = dtype.prod(
+                inverses[s] if s in inverses else inverses[s**-1]**-1
+                for s in parts
+            )
             inverses[g] = w
 
         return inverses
@@ -102,34 +92,19 @@ class GroupHomomorphism:
                 if g not in image:
                     raise ValueError("Given element is not in the image of the homomorphism.")
                 gens = image.generator_product(g)[::-1]
-                if isinstance(self.domain, (FpGroup, FreeGroup)):
-                    dtype = type(w)
-                    return dtype.prod(
-                        self._inverses[s] if s in self._inverses
-                        else self._inverses[s**-1]**-1
-                        for s in gens if not s.is_identity
-                    )
-                else:
-                    for i in range(len(gens)):
-                        s = gens[i]
-                        if s.is_identity:
-                            continue
-                        if s in self._inverses:
-                            w = w*self._inverses[s]
-                        else:
-                            w = w*self._inverses[s**-1]**-1
-                    return w
+                dtype = type(w)
+                return dtype.prod(
+                    self._inverses[s] if s in self._inverses
+                    else self._inverses[s**-1]**-1
+                    for s in gens if not s.is_identity
+                )
 
             else:
                 current_coset = 0
                 im_gens = list(self._inverses)
                 C = modified_coset_enumeration_r(self.codomain, im_gens)
-                use_prod = isinstance(self.domain, (FpGroup, FreeGroup))
-                if use_prod:
-                    dtype = type(w)
-                    factors = []
-                else:
-                    total_word = w
+                dtype = type(w)
+                factors = []
                 preimages = list(self._inverses.values())
                 temp_symbols = [gen.array_form[0][0] for gen in C._grp.generators]
                 transl_map = dict(zip(temp_symbols, preimages))
@@ -143,19 +118,14 @@ class GroupHomomorphism:
                     for _ in range(abs(exp)):
                         word_intermediate = C.P[current_coset][j]
                         if word_intermediate is not None:
-                            if use_prod:
-                                factors.extend(
-                                    transl_map[s]**exp for s, exp in word_intermediate.array_form
-                                )
-                            else:
-                                for s,exp in word_intermediate.array_form:
-                                    total_word = total_word * transl_map[s]**exp
+                            factors.extend(
+                                transl_map[s]**exp
+                                for s, exp in word_intermediate.array_form
+                            )
                         current_coset = C.table[current_coset][j]
                 if current_coset != 0:
                     raise ValueError("Given element is not in the image of the homomorphism.")
-                if use_prod:
-                    return dtype.prod(factors)
-                return total_word
+                return dtype.prod(factors)
 
         elif isinstance(g, list):
             return [self.invert(e) for e in g]
@@ -183,16 +153,11 @@ class GroupHomomorphism:
                 }
 
                 def _lift_to_domain(word):
-                    if isinstance(G, (FpGroup, FreeGroup)):
-                        dtype = type(G.identity)
-                        return dtype.prod(
-                            symbol_to_preimage[symbol]**power for symbol, power in word.array_form
-                        )
-                    else:
-                        lifted = G.identity
-                        for symbol, power in word.array_form:
-                            lifted = lifted * symbol_to_preimage[symbol]**power
-                        return lifted
+                    dtype = type(G.identity)
+                    return dtype.prod(
+                        symbol_to_preimage[symbol]**power
+                        for symbol, power in word.array_form
+                    )
 
                 kernel_gens = []
                 for relator in H.relators:
@@ -206,10 +171,6 @@ class GroupHomomorphism:
                     if not word.is_identity:
                         kernel_gens.append(word)
 
-                if isinstance(G, PermutationGroup):
-                    if not kernel_gens:
-                        return PermutationGroup([G.identity])
-                    return G.normal_closure(kernel_gens)
                 return FpSubgroup(G, kernel_gens, normal=True)
             else:
                 return self.factor()[0].kernel()
@@ -505,21 +466,13 @@ def _check_homomorphism(domain, codomain, images):
     symbols = [g.ext_rep[0] for g in gens]
     symbols_to_domain_generators = dict(zip(symbols, domain.generators))
     identity = codomain.identity
-    use_prod = isinstance(codomain, (FpGroup, FreeGroup))
-    if use_prod:
-        dtype = type(identity)
+    dtype = type(identity)
 
     def _image(r):
-        if use_prod:
-            return dtype.prod(
-                images[symbols_to_domain_generators[symbol]]**power
-                for symbol, power in r.array_form
-            )
-        w = identity
-        for symbol, power in r.array_form:
-            g = symbols_to_domain_generators[symbol]
-            w *= images[g]**power
-        return w
+        return dtype.prod(
+            images[symbols_to_domain_generators[symbol]]**power
+            for symbol, power in r.array_form
+        )
 
     for r in rels:
         if isinstance(codomain, FpGroup):

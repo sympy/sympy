@@ -370,6 +370,11 @@ def test_mul():
     assert Permutation.rmul(a, b, c) == Permutation([1, 2, 3, 0])
     assert Permutation.rmul(a, c) == Permutation([3, 2, 1, 0])
     raises(TypeError, lambda: Permutation.rmul(b, c))
+    assert Permutation.prod([a, Permutation(b), Permutation(c)]) == (
+        a*Permutation(b)*Permutation(c))
+    assert Permutation.prod((p for p in [a, Permutation(b), Permutation(c)])) == (
+        a*Permutation(b)*Permutation(c))
+    assert Permutation.prod([]) == Permutation()
 
     n = 6
     m = 8

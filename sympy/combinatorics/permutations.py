@@ -1298,6 +1298,28 @@ class Permutation(Atom):
         return rv
 
     @classmethod
+    def prod(cls, perms):
+        """
+        Return the product of an iterable of permutations in multiplication
+        order.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics import Permutation
+        >>> a = Permutation([1, 0, 2])
+        >>> b = Permutation([0, 2, 1])
+        >>> Permutation.prod([a, b]) == a*b
+        True
+        >>> Permutation.prod([])
+        Permutation([])
+        """
+        perms = list(perms)
+        if not perms:
+            return cls()
+        return cls.rmul(*reversed(perms))
+
+    @classmethod
     def rmul_with_af(cls, *args):
         """
         same as rmul, but the elements of args are Permutation objects
