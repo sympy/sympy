@@ -144,6 +144,8 @@ class GroupHomomorphism:
         H = self.codomain
         Ginf = G.order() is S.Infinity
         if Ginf and isinstance(H, (FpGroup, FreeGroup)):
+            # TODO: Make this work for PermutationGroup codomain by replacing it
+            # with FpGroup using PermutationGroup.presentation()
             if isinstance(H, FreeGroup):
                 H = FpGroup(H, [])
             preimages = self._is_surjective_cert()
