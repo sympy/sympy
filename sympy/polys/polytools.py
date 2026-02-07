@@ -4970,7 +4970,7 @@ def _xpoly(f, gen, strict=True, _first=True):
     if e.is_zero:
         raise TypeError('invalid generator')
     if isinstance(gen, (Add, Mul)):
-        raise NotImplementedError('replacement of %s generators' % func_name(gen))
+        raise NotImplementedError('replacement of %s generators' % gen)
     f = sympify(f, strict=True)
 
     x = Dummy('')
