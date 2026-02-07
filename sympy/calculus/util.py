@@ -257,7 +257,6 @@ def function_range(f, symbol, domain):
                 else:
                     vals += FiniteSet(f.subs(symbol, limit_point))
 
-
             critical_points = solveset(f.diff(symbol), symbol, interval)
 
             if not iterable(critical_points):
