@@ -604,7 +604,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
             if word:
                 parts.append(word.array_form)
         if not parts:
-            return cls.group.identity
+            return cls._new(())
         return cls._new(_concat_reduced_array_forms(*parts))
 
     def __truediv__(self, other):
