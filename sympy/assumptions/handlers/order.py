@@ -21,7 +21,7 @@ from ..predicates.order import (NegativePredicate, NonNegativePredicate,
 
 def _determine_definite_strict_sign_of_add(expr, assumptions):
     """
-    Analyzes an Add expression to determine if it is 
+    Analyzes an Add expression to determine if it is
     definitively strictly positive or negative.
 
     Parameters
