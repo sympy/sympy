@@ -1,7 +1,9 @@
 from __future__ import annotations
 
-from collections.abc import Iterable
-from typing import TypeVar
+from typing import TYPE_CHECKING, TypeVar
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 from sympy.core import S
 from sympy.core.expr import Expr
