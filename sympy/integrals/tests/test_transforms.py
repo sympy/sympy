@@ -578,8 +578,10 @@ def test_cosine_transform():
     assert inverse_cosine_transform(sqrt(2)*meijerg(((S.Half, 0), ()), (
         (S.Half, 0, 0), (S.Half,)), a**2*w**2/4)/(2*pi), w, t) == 1/(a + t)
 
-    assert cosine_transform(1/sqrt(a**2 + t**2), t, w) == sqrt(2)*meijerg(
-        ((S.Half,), ()), ((0, 0), (S.Half,)), a**2*w**2/4)/(2*sqrt(pi))
+    res = cosine_transform(1/sqrt(a**2 + t**2), t, w)
+    assert res == sqrt(2)*meijerg(((S.Half,), ()), ((0, 0), (S.Half,)), a**2*w**2*exp_polar(0)/4)/(2*sqrt(pi))
+    assert res.replace(exp_polar, exp) == sqrt(2)*meijerg(((S.Half,), ()), ((0, 0), (S.Half,)), a**2*w**2/4)/(2*sqrt(pi))
+
     assert inverse_cosine_transform(sqrt(2)*meijerg(((S.Half,), ()), ((0, 0), (S.Half,)), a**2*w**2/4)/(2*sqrt(pi)), w, t) == 1/(t*sqrt(a**2/t**2 + 1))
 
 
