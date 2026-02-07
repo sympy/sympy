@@ -2,6 +2,7 @@ import random
 from collections import defaultdict
 from collections.abc import Iterable
 from functools import reduce
+from typing import TypeVar
 
 from sympy.core.parameters import global_parameters
 from sympy.core.basic import Atom
@@ -17,6 +18,8 @@ from sympy.utilities.iterables import (flatten, has_variety, minlex,
 from sympy.utilities.misc import as_int
 from sympy.external.gmpy import factorial
 from sympy.multipledispatch import dispatch
+
+P = TypeVar("P", bound="Permutation")
 
 def _af_rmul(a, b):
     """
@@ -1298,7 +1301,7 @@ class Permutation(Atom):
         return rv
 
     @classmethod
-    def prod(cls, perms):
+    def prod(cls: type[P], perms: Iterable[P]) -> P:
         """
         Return the product of an iterable of permutations in multiplication
         order.

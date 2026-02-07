@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
+from typing import TypeVar
+
 from sympy.core import S
 from sympy.core.expr import Expr
 from sympy.core.symbol import Symbol, symbols as _symbols
@@ -110,6 +113,7 @@ def _parse_symbols(symbols):
 ##############################################################################
 
 _free_group_cache: dict[int, FreeGroup] = {}
+C = TypeVar("C", bound="FreeGroupElement")
 
 class FreeGroup(DefaultPrinting):
     """
@@ -579,7 +583,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         return group.dtype._new_reduce_at_boundary(r, len(self.array_form) - 1)
 
     @classmethod
-    def prod(cls, words):
+    def prod(cls: type[C], words: Iterable[C]) -> C:
         """Return the product of an iterable of words from the same free group.
 
         Examples
