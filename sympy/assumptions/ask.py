@@ -403,7 +403,7 @@ def _normalize_relations(expr):
         def _convert(e):
             if isintance(e, AppliedPredicate) and e.function == Q:
                 neg_arg = e.arguments[0]
-                if isinstance(neg_arg, Mul) amd neg_arg[0] == -1:
+                if isinstance(neg_arg, Mul) and neg_arg.args[0] == -1:
                     pos_arg = neg_arg[1:]
                     return Q.even(Mul(*pos_arg))
                 return e
