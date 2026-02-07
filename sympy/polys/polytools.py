@@ -2603,7 +2603,7 @@ class Poly(Basic):
 
         return per(s), per(t), per(h)
 
-    def invert(f, g, auto=True):
+    def invert(f, g: Poly, auto: bool = True) -> Poly:
         """
         Invert ``f`` modulo ``g`` when possible.
 
@@ -2634,7 +2634,7 @@ class Poly(Basic):
 
         return per(result)
 
-    def revert(f, n):
+    def revert(f, n: int) -> Poly:
         """
         Compute ``f**(-1)`` mod ``x**n``.
 
@@ -2930,7 +2930,7 @@ class Poly(Basic):
 
         return per(h), per(cff), per(cfg)
 
-    def gcd(f, g):
+    def gcd(f, g: Poly | Expr | complex) -> Poly:
         """
         Returns the polynomial GCD of ``f`` and ``g``.
 
@@ -2953,7 +2953,7 @@ class Poly(Basic):
 
         return per(result)
 
-    def lcm(f, g):
+    def lcm(f, g: Poly | Expr | complex) -> Poly:
         """
         Returns polynomial LCM of ``f`` and ``g``.
 
@@ -2976,7 +2976,7 @@ class Poly(Basic):
 
         return per(result)
 
-    def trunc(f, p):
+    def trunc(f, p: Expr | int) -> Poly:
         """
         Reduce ``f`` modulo a constant ``p``.
 
@@ -2999,7 +2999,7 @@ class Poly(Basic):
 
         return f.per(result)
 
-    def monic(self, auto=True):
+    def monic(self, auto: bool = True) -> Poly:
         """
         Divides all coefficients by ``LC(f)``.
 
@@ -3070,7 +3070,7 @@ class Poly(Basic):
 
         return f.rep.dom.to_sympy(cont), f.per(result)
 
-    def compose(f, g):
+    def compose(f, g: Poly | Expr) -> Poly:
         """
         Computes the functional composition of ``f`` and ``g``.
 
@@ -3093,7 +3093,7 @@ class Poly(Basic):
 
         return per(result)
 
-    def decompose(f):
+    def decompose(f) -> list[Poly]:
         """
         Computes a functional decomposition of ``f``.
 
@@ -3114,7 +3114,7 @@ class Poly(Basic):
 
         return list(map(f.per, result))
 
-    def shift(f, a):
+    def shift(f, a: Expr) -> Poly:
         """
         Efficiently compute Taylor shift ``f(x + a)``.
 
@@ -3134,7 +3134,7 @@ class Poly(Basic):
         """
         return f.per(f.rep.shift(a))
 
-    def shift_list(f, a):
+    def shift_list(f, a: list[Expr]) -> Poly:
         """
         Efficiently compute Taylor shift ``f(X + A)``.
 
@@ -3154,7 +3154,8 @@ class Poly(Basic):
         """
         return f.per(f.rep.shift_list(a))
 
-    def transform(f, p, q):
+    def transform(f, p: Poly, q: Poly) -> Poly:
+
         """
         Efficiently evaluate the functional transformation ``q**n * f(p/q)``.
 
