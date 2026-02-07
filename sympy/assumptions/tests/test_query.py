@@ -2584,6 +2584,7 @@ def test_issue_28127():
     assert ask(Q.lt(y,x), Q.gt(x,y)) is True
     assert ask(Q.le(y,x), Q.ge(x,y)) is True
 
+
 def test_issue_29096():
     assert ask(x > -1, Q.positive(x)) is True
     assert ask(x < 1, Q.negative(x)) is True
