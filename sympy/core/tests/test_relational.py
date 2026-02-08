@@ -1156,11 +1156,29 @@ def test_multivariate_linear_function_simplification():
 def test_nonpolymonial_relations():
     assert Eq(cos(x), 0).simplify() == Eq(cos(x), 0)
 
+
+def test_simplify_integer_symbols():
+    x, y = symbols("x, y", integer=True)
+    assert (x < 3).simplify() == (x <= 2)
+    assert (x <= 3).simplify() == (x <= 3)
+    assert (x < pi).simplify() == (x <= 3)
+    assert (x <= pi).simplify() == (x <= 3)
+    assert (x > pi).simplify() == (x >= 4)
+    assert (x >= pi).simplify() == (x >= 4)
+    assert (2*x > pi).simplify() == (x >= 2)
+    assert (2*x >= pi).simplify() == (x >= 2)
+    assert (x > y).simplify() == (x > y)
+    assert (x > y + pi).simplify() == (x - y >= 4)
+    assert (x >= y).simplify() == (x >= y)
+    assert (x >= y + pi).simplify() == (x - y >= 4)
+
+
 def test_18778():
     raises(TypeError, lambda: is_le(Basic(), Basic()))
     raises(TypeError, lambda: is_gt(Basic(), Basic()))
     raises(TypeError, lambda: is_ge(Basic(), Basic()))
     raises(TypeError, lambda: is_lt(Basic(), Basic()))
+
 
 def test_EvalEq():
     """
