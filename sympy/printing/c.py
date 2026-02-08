@@ -627,6 +627,10 @@ class C89CodePrinter(CodePrinter):
                 [self._print(decl) for decl in expr.declarations] + [''])
         }
 
+    def _print_KroneckerDelta(self, expr):
+        from sympy import Equality
+        return self._print(Equality(expr.args[0], expr.args[1]))
+
     def _print_BreakToken(self, _):
         return 'break'
 
