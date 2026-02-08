@@ -27,6 +27,7 @@ from sympy.simplify.simplify import simplify
 from sympy.utilities.lambdify import lambdify
 from sympy.functions.special.error_functions import erfinv
 from sympy.functions.special.hyper import meijerg
+from sympy.functions.special.beta_functions import betainc_regularized
 from sympy.sets.sets import FiniteSet, Complement, Intersection
 from sympy.stats import (P, E, where, density, variance, covariance, skewness, kurtosis, median,
                          given, pspace, cdf, characteristic_function, moment_generating_function,
@@ -35,7 +36,7 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness, k
                          Exponential, ExponentialPower, FDistribution, FisherZ, Frechet, Gamma,
                          GammaInverse, Gompertz, Gumbel, Kumaraswamy, Laplace, Levy, Logistic, LogCauchy,
                          LogLogistic, LogitNormal, LogNormal, Maxwell, Moyal, Nakagami, Normal, GaussianInverse,
-                         Pareto, PowerFunction, QuadraticU, RaisedCosine, Rayleigh, Reciprocal, ShiftedGompertz, StudentT,
+                         Pareto, PERT, PowerFunction, QuadraticU, RaisedCosine, Rayleigh, Reciprocal, ShiftedGompertz, StudentT,
                          Trapezoidal, Triangular, Uniform, UniformSum, VonMises, Weibull, coskewness,
                          WignerSemicircle, Wald, correlation, moment, cmoment, smoment, quantile,
                          Lomax, BoundedPareto)
@@ -1061,6 +1062,15 @@ def test_pareto():
     # computation of taylor series for MGF still too slow
     #assert simplify(variance(X)) == xm**2*alpha / ((alpha-1)**2*(alpha-2))
 
+
+def test_PERT():
+    a, b, c = symbols('a b c', real=True)
+    X = PERT('x', a, b, c)
+
+    assert density(X)(z) == (-a + c)**(4*a/(-a + c) - 4*b + 4*b/(-a + c) - 4*c - 1)*(-a + z)**(-4*a/(-a + c) + 4*b) \
+    *(c - z)**(-4*b/(-a + c) + 4*c)/beta(-4*a/(-a + c) + 4*b + 1, -4*b/(-a + c) + 4*c + 1)
+    assert cdf(X)(z) == betainc_regularized(-4*a/(-a + c) + 4*b + 1, -4*b/(-a + c) + 4*c + 1, 0, (-a + z)/(-a + c))
+    assert E(X) == a/6 + 2*b/3 + c/6
 
 def test_pareto_numeric():
     xm, beta = 3, 2
