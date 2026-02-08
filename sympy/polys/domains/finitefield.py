@@ -1,6 +1,7 @@
 """Implementation of :class:`FiniteField` class. """
 
 import operator
+from types import ModuleType
 
 from sympy.external.gmpy import GROUND_TYPES
 from sympy.utilities.decorator import doctest_depends_on
@@ -20,11 +21,14 @@ if GROUND_TYPES == 'flint':
     __doctest_skip__ = ['FiniteField']
 
 
+flint: ModuleType | None
+
 if GROUND_TYPES == 'flint':
-    import flint
+    import flint as _flint
+    flint = _flint
     # Don't use python-flint < 0.5.0 because nmod was missing some features in
     # previous versions of python-flint and fmpz_mod was not yet added.
-    _major, _minor, *_ = flint.__version__.split('.')
+    _major, _minor, *_ = _flint.__version__.split('.')
     if (int(_major), int(_minor)) < (0, 5):
         flint = None
 else:

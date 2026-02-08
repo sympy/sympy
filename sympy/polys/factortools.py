@@ -1,5 +1,9 @@
 """Polynomial factorization routines in characteristic zero. """
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from sympy.external.gmpy import GROUND_TYPES
 
 from sympy.core.random import _randint
@@ -79,8 +83,13 @@ from sympy.utilities import subsets
 from math import ceil as _ceil, log as _log, log2 as _log2
 
 
+if TYPE_CHECKING:
+    from flint import fmpz_poly as FLINT_FMPZ_POLY
+
+fmpz_poly: type[FLINT_FMPZ_POLY] | None
 if GROUND_TYPES == 'flint':
-    from flint import fmpz_poly
+    from flint import fmpz_poly as _fmpz_poly
+    fmpz_poly = _fmpz_poly
 else:
     fmpz_poly = None
 
@@ -683,6 +692,7 @@ def dup_zz_factor(f, K):
 
     """
     if GROUND_TYPES == 'flint':
+        assert fmpz_poly is not None
         f_flint = fmpz_poly(f[::-1])
         cont, factors = f_flint.factor()
         factors = [(fac.coeffs()[::-1], exp) for fac, exp in factors]
