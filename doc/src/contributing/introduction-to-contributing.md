@@ -15,7 +15,7 @@ The tutorial is also available on video:
 
 We authored a journal paper in 2017 that provides a high-level look at SymPy and its capabilities. You can read it here:
 
-https://peerj.com/articles/cs-103/
+[SymPy:symbolic computing in Python](https://peerj.com/articles/cs-103/)
 
 ## Peruse the documentation
 
@@ -33,7 +33,7 @@ how to use SymPy, discuss feature requests, discuss software bugs, or share
 how you are using SymPy. Request to join the list on the Google Groups page.
 Note that to prevent spam, the first time you post your message will need to
 be moderated before it is posted to the list. Please read
-http://shakthimaan.com/downloads/book/chapter1.pdf before posting to get
+[Mailing List Guidelines](http://shakthimaan.com/downloads/book/chapter1.pdf) before posting to get
 familiar with mailing list etiquette.
 
 ## Setup your development environment
@@ -80,8 +80,8 @@ printed to the terminal and Jupyter.
 
 SymPy's documentation lives in two places:
 
-1. The documentation source files: https://github.com/sympy/sympy/tree/master/doc/src
-2. The docstrings* of the functions in the source code: https://github.com/sympy/sympy/tree/master/sympy
+1. The documentation [source files](https://github.com/sympy/sympy/tree/master/doc/src).
+2. The docstrings* of the functions in the [source code](https://github.com/sympy/sympy/tree/master/sympy).
 
 Both of these end up displayed here on the documentation website. You can
 click the "[Source]" link next to any function documentation to go to its
@@ -93,8 +93,7 @@ While contributing to or improving upon our documentation, please follow the [Sy
 
 ### Review pull requests
 
-Every contribution to SymPy goes through a pull request
-https://github.com/sympy/sympy/pulls. We require that every pull request
+Every contribution to SymPy goes through a [pull request](https://github.com/sympy/sympy/pulls). We require that every pull request
 undergo a review before it can be merged. If you have gained some familiarity
 with a part of the SymPy codebase and the SymPy development processes, it can
 be helpful to the community to review others' pull requests. You can view the
