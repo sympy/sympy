@@ -601,7 +601,8 @@ if TYPE_CHECKING:
         gmpy = None
 
     try:
-        import flint
+        import flint as _flint_mod
+        flint = _flint_mod
     except ImportError:
         flint = None
 
