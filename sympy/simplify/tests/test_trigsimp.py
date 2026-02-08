@@ -209,6 +209,19 @@ def test_trigsimp_issues():
 
     assert trigsimp(-sin(x)**4 - 2*sin(x)**2*cos(x)**2 - cos(x)**4) == -1
 
+    # issue 29056: check for no Dummy variable in result
+    z = Symbol('z')
+    expr = (-sinh((z - 2*I*atan(sinh(z/2)))/4))*sinh((z + 2*I*atan(sinh(z/2)))/4)
+    result = trigsimp(expr)
+    assert not any(a.is_Dummy for a in result.atoms())
+    F = sqrt(cosh(z/2)) * Matrix([
+    cosh(z/4 + I/2*atan(sinh(z/2))),
+    -I*sinh(z/4 + I/2*atan(sinh(z/2))),
+    cosh(-z/4 + I/2*atan(sinh(z/2))),
+    -I*sinh(-z/4 + I/2*atan(sinh(z/2)))
+    ])
+    result = simplify(F[0]*F[2] - F[1]*F[3])
+    assert not any(a.is_Dummy for a in result.atoms())
 
 def test_trigsimp_issue_2515():
     x = Symbol('x')
