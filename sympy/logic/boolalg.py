@@ -90,11 +90,11 @@ class Boolean(Basic):
             ...
 
         @overload # type: ignore
-        def subs(self, arg1: Mapping[Basic | complex, Boolean | Relational | complex], arg2: None=None) -> Boolean: ...
+        def subs(self, arg1: Mapping[Basic | complex, Boolean | complex], arg2: None=None) -> Boolean: ...
         @overload
-        def subs(self, arg1: Iterable[tuple[Basic | complex, Boolean | Relational | complex]], arg2: None=None, **kwargs: Any) -> Boolean: ...
+        def subs(self, arg1: Iterable[tuple[Basic | complex, Boolean | complex]], arg2: None=None, **kwargs: Any) -> Boolean: ...
         @overload
-        def subs(self, arg1: Boolean | Relational | complex, arg2: Boolean | Relational | complex) -> Boolean: ...
+        def subs(self, arg1: Boolean | complex, arg2: Boolean | complex) -> Boolean: ...
         @overload
         def subs(self, arg1: Mapping[Basic | complex, Basic | complex], arg2: None=None, **kwargs: Any) -> Basic: ...
         @overload
@@ -110,13 +110,13 @@ class Boolean(Basic):
             ...
 
     @sympify_return([('other', 'Boolean')], NotImplemented)
-    def __and__(self, other) -> Boolean:
+    def __and__(self, other: Boolean) -> Boolean:
         return And(self, other)
 
     __rand__ = __and__
 
     @sympify_return([('other', 'Boolean')], NotImplemented)
-    def __or__(self, other) -> Boolean:
+    def __or__(self, other: Boolean) -> Boolean:
         return Or(self, other)
 
     __ror__ = __or__
@@ -126,18 +126,18 @@ class Boolean(Basic):
         return Not(self)
 
     @sympify_return([('other', 'Boolean')], NotImplemented)
-    def __rshift__(self, other) -> Boolean:
+    def __rshift__(self, other: Boolean) -> Boolean:
         return Implies(self, other)
 
     @sympify_return([('other', 'Boolean')], NotImplemented)
-    def __lshift__(self, other) -> Boolean:
+    def __lshift__(self, other: Boolean) -> Boolean:
         return Implies(other, self)
 
     __rrshift__ = __lshift__
     __rlshift__ = __rshift__
 
     @sympify_return([('other', 'Boolean')], NotImplemented)
-    def __xor__(self, other) -> Boolean:
+    def __xor__(self, other: Boolean) -> Boolean:
         return Xor(self, other)
 
     __rxor__ = __xor__
@@ -198,7 +198,7 @@ class Boolean(Basic):
         if len(free) == 1:
             x = free.pop()
             if x.kind is NumberKind:
-                reps: dict[Basic | complex, Boolean | Relational | complex] = {}
+                reps: dict[Basic | complex, Boolean | complex] = {}
                 for r in self.atoms(Relational):
                     if periodicity(r, x) not in (0, None):
                         s = r._eval_as_set()
@@ -227,7 +227,7 @@ class Boolean(Basic):
         from sympy.core.relational import Eq, Ne
 
         return set().union(*[i.binary_symbols for i in self.args
-                           if isinstance(i, (Boolean, Symbol, Eq, Ne))])
+                           if isinstance(i, (Boolean, Symbol))])
 
     def _eval_refine(self, assumptions) -> Boolean | None:
         from sympy.assumptions import ask
