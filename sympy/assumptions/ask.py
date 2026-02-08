@@ -521,11 +521,9 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     # Normalize both proposition and assumptions
     proposition = _normalize_relations(proposition)
     proposition = _normalize_applied_predicates(proposition)
-    
     assumptions = _normalize_relations(assumptions)
     assumptions = _normalize_applied_predicates(assumptions)
     assumptions = _normalize_negative_assumptions_even(assumptions)
-     
 
     if isinstance(proposition, AppliedPredicate):
         key, args = proposition.function, proposition.arguments
@@ -627,7 +625,6 @@ def _ask_single_fact(key, local_facts):
         arg = key.arguments[0]
         if isinstance(arg, Mul) and arg.args[0] == -1:
             key = Q.even(Mul(*arg.args[1:]))
-    
     if not local_facts.clauses:
         return None
 
