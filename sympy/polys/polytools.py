@@ -9,7 +9,7 @@ from operator import mul
 from collections import Counter, defaultdict
 
 from sympy.core import (
-    S, Expr, Add, Tuple
+    S, Expr, Add, Tuple, Dummy, Symbol
 )
 from sympy.core.basic import Basic
 from sympy.core.decorators import _sympifyit
@@ -8215,6 +8215,70 @@ class GroebnerBasis(Basic):
 
         """
         return self.reduce(poly)[1] == 0
+
+
+def _xpoly(eq, x, strict=True):
+    """
+    Create a Poly object by replacing a generator with a dummy variable.
+
+    This utility function is designed to handle non-Symbol generators
+    (like exp(x), 1/x, etc.) by temporarily replacing them with a dummy
+    variable, creating a polynomial, and validating the structure.
+
+    Raises
+    ======
+    ValueError
+        If strict=True and dependent generators are detected, or if
+        the result is not polynomial in the generator.
+
+    Examples
+    ========
+    >>> from sympy import symbols, exp
+    >>> x = symbols('x')
+    >>> eq = x**4 + 2*x**2 + 1
+
+    # Basic usage with polynomial powers
+    >>> F, dummy, P = _xpoly(eq, x**2)
+    >>> F
+    _**2 + 2*_ + 1
+    >>> P
+    Poly(_**2 + 2*_ + 1, _, domain='ZZ')
+
+    # With exponential
+    >>> e = exp(x)
+    >>> eq = e**2 + 2*e + 1
+    >>> F, dummy, P = _xpoly(eq, e)
+    >>> F
+    _**2 + 2*_ + 1
+    """
+    from sympy import simplify
+
+     # Create a dummy variable for substitution
+    dummy = Dummy()
+
+    # Get the symbols from the original generator
+    gen_symbols = x.free_symbols
+
+    # Replace the generator with the dummy
+    F = eq.subs(x, dummy)
+
+    if strict:
+        # Try expanding the original to see if generator actually cancels out
+        eq_expanded = eq.expand()
+        F_expanded = eq_expanded.subs(x, dummy)
+
+        # Check if generator symbols remain after substitution
+        if gen_symbols & F_expanded.free_symbols:
+            raise ValueError("generator symbols remained after substitution")
+
+    # Try to create a Poly object
+    # If Poly creation succeeds, it's already polynomial by definition
+    try:
+        P = Poly(F, dummy)
+    except Exception as e:
+        raise ValueError(f"expression is not polynomial in the generator: {e}")
+
+    return F, dummy, P
 
 
 @public

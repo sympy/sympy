@@ -54,6 +54,7 @@ from sympy.polys.domains import FF, ZZ, QQ, ZZ_I, QQ_I, RR, EX, EXRAW
 from sympy.polys.domains.realfield import RealField
 from sympy.polys.domains.complexfield import ComplexField
 from sympy.polys.orderings import lex, grlex, grevlex
+from sympy.polys.polytools import _xpoly
 
 from sympy.combinatorics.galois import S4TransitiveSubgroups
 from sympy.core.add import Add
@@ -66,7 +67,7 @@ from sympy.core.numbers import (Float, I, Integer, Rational, oo, pi)
 from sympy.core.power import Pow
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
-from sympy.core.symbol import Symbol, symbols
+from sympy.core.symbol import Symbol, symbols, Dummy
 from sympy.functions.elementary.complexes import (im, re)
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.hyperbolic import tanh
@@ -85,6 +86,7 @@ from sympy.testing.pytest import (
 )
 
 from sympy.abc import a, b, c, d, p, q, t, w, x, y, z, s
+from sympy import symbols, exp, sin, cos, log, sqrt, I, Rational
 
 
 def _epsilon_eq(a, b):
@@ -4297,3 +4299,294 @@ def test_schur_conditions():
 
     assert any(c <= 0 for c in p6.set_domain(QQ).schur_conditions())
     assert any(c <= 0 for c in p6.set_domain(EXRAW).schur_conditions())
+
+
+def test_xpoly_basic():
+    """Test basic _xpoly functionality with simple generators."""
+    from sympy import symbols, Dummy
+    from sympy.polys.polytools import _xpoly
+
+    x = symbols('x')
+
+    # Test with x**2 as generator
+    eq = x**4 + 2*x**2 + 1
+    F, dummy, P = _xpoly(eq, x**2)
+
+    assert isinstance(dummy, Dummy)
+    assert P.degree() == 2
+    assert P.as_expr().subs(dummy, x**2) == eq
+
+    # Test coefficients
+    assert P.nth(0) == 1
+    assert P.nth(1) == 2
+    assert P.nth(2) == 1
+
+
+def test_xpoly_exponential():
+    """Test _xpoly with exponential generators."""
+    from sympy import symbols, exp
+    from sympy.polys.polytools import _xpoly
+
+    x = symbols('x')
+    e = exp(x)
+
+    # Simple exponential polynomial
+    eq = e**2 + 2*e + 1
+    F, dummy, P = _xpoly(eq, e)
+
+    assert P.degree() == 2
+    assert P.as_expr().subs(dummy, e) == eq
+
+    # Check coefficients
+    assert P.nth(0) == 1
+    assert P.nth(1) == 2
+    assert P.nth(2) == 1
+
+
+def test_xpoly_trig():
+    """Test _xpoly with trigonometric generators."""
+    from sympy import symbols, sin, cos
+    from sympy.polys.polytools import _xpoly
+
+    x = symbols('x')
+
+    # Test with sin(x)
+    s = sin(x)
+    eq = s**3 + 2*s**2 - s + 3
+    F, dummy, P = _xpoly(eq, s)
+
+    assert P.degree() == 3
+    assert P.as_expr().subs(dummy, s) == eq
+
+    # Test with cos(x)
+    c = cos(x)
+    eq = c**2 + 2*c + 1
+    F, dummy, P = _xpoly(eq, c)
+
+    assert P.degree() == 2
+
+
+def test_xpoly_strict_mode():
+    """Test _xpoly strict mode for dependent generators."""
+    from sympy import symbols, exp
+    from sympy.polys.polytools import _xpoly
+
+    x = symbols('x')
+    e = exp(x)
+
+    # This should raise an error: generator and x both present
+    eq = e + x
+    raises(ValueError, lambda: _xpoly(eq, e, strict=True))
+
+    # Non-strict mode should allow it
+    F, dummy, P = _xpoly(eq, e, strict=False)
+    assert P is not None
+
+
+def test_xpoly_non_strict():
+    """Test _xpoly with strict=False for edge cases."""
+    from sympy import symbols, exp
+    from sympy.polys.polytools import _xpoly
+
+    x = symbols('x')
+    e = exp(x)
+
+    # Expression with both e and x
+    eq = e**2 + x*e + 1
+    F, dummy, P = _xpoly(eq, e, strict=False)
+
+    # Should create a Poly, but with x as a coefficient
+    assert P is not None
+    assert dummy in P.free_symbols or x in P.free_symbols
+
+
+def test_xpoly_negative_powers():
+    """Test that _xpoly rejects negative powers."""
+    from sympy import symbols, exp
+    from sympy.polys.polytools import _xpoly
+
+    x = symbols('x')
+    e = exp(x)
+
+    # Negative power should fail
+    eq = e**(-1) + e + 1
+    raises(ValueError, lambda: _xpoly(eq, e))
+
+    # Fractional power should also fail
+    eq = e**0.5 + e + 1
+    raises(ValueError, lambda: _xpoly(eq, e))
+
+
+def test_xpoly_complex_generator():
+    """Test _xpoly with more complex generators."""
+    from sympy import symbols, exp, log
+    from sympy.polys.polytools import _xpoly
+
+    x = symbols('x')
+
+    # Test with log(x)
+    l = log(x)
+    eq = l**2 + 3*l + 2
+    F, dummy, P = _xpoly(eq, l)
+
+    assert P.degree() == 2
+    assert P.as_expr().subs(dummy, l) == eq
+
+    # Test with exp(2*x)
+    e2 = exp(2*x)
+    eq = e2**3 + 2*e2 + 1
+    F, dummy, P = _xpoly(eq, e2)
+
+    assert P.degree() == 3
+
+
+def test_xpoly_multivariate():
+    """Test _xpoly with expressions in multiple variables."""
+    from sympy import symbols
+    from sympy.polys.polytools import _xpoly
+
+    x, y = symbols('x y')
+
+    # Expression in x**2 and y
+    eq = x**4 + 2*x**2*y + y**2
+    F, dummy, P = _xpoly(eq, x**2)
+
+    # Should be polynomial in dummy with y as a parameter
+    assert P.degree() == 2
+    assert y in P.free_symbols
+
+    # Check structure
+    assert P.nth(0) == y**2
+    assert P.nth(1) == 2*y
+    assert P.nth(2) == 1
+
+
+def test_xpoly_constant():
+    """Test _xpoly with constant expressions."""
+    from sympy import symbols, S
+    from sympy.polys.polytools import _xpoly
+
+    x = symbols('x')
+
+    # Pure constant
+    eq = S(5)
+    F, dummy, P = _xpoly(eq, x**2)
+
+    assert P.degree() == 0
+    assert P.nth(0) == 5
+
+
+def test_xpoly_symbolic_coefficients():
+    """Test _xpoly with symbolic coefficients."""
+    from sympy import symbols, exp
+    from sympy.polys.polytools import _xpoly
+
+    x, a, b, c = symbols('x a b c')
+    e = exp(x)
+
+    # Polynomial with symbolic coefficients
+    eq = a*e**2 + b*e + c
+    F, dummy, P = _xpoly(eq, e)
+
+    assert P.degree() == 2
+    # Coefficients should be symbolic
+    assert P.nth(0) == c
+    assert P.nth(1) == b
+    assert P.nth(2) == a
+
+
+def test_xpoly_nested_generators():
+    """Test _xpoly with nested function generators."""
+    from sympy import symbols, exp, sin
+    from sympy.polys.polytools import _xpoly
+
+    x = symbols('x')
+
+    # Nested: exp(sin(x))
+    g = exp(sin(x))
+    eq = g**2 + 2*g + 1
+    F, dummy, P = _xpoly(eq, g)
+
+    assert P.degree() == 2
+    assert P.as_expr().subs(dummy, g) == eq
+
+
+def test_xpoly_zero_polynomial():
+    """Test _xpoly with zero polynomial."""
+    from sympy import symbols, S
+    from sympy.polys.polytools import _xpoly
+
+    x = symbols('x')
+
+    eq = S(0)
+    F, dummy, P = _xpoly(eq, x**2)
+
+    assert P.is_zero
+    assert P.degree() == -oo
+
+
+def test_xpoly_linear():
+    """Test _xpoly with linear expressions."""
+    from sympy import symbols, exp
+    from sympy.polys.polytools import _xpoly
+
+    x = symbols('x')
+    e = exp(x)
+
+    # Linear in e
+    eq = 2*e + 3
+    F, dummy, P = _xpoly(eq, e)
+
+    assert P.degree() == 1
+    assert P.nth(0) == 3
+    assert P.nth(1) == 2
+
+
+def test_xpoly_return_values():
+    """Test that _xpoly returns the correct tuple structure."""
+    from sympy import symbols, Dummy, Poly
+    from sympy.polys.polytools import _xpoly
+
+    x = symbols('x')
+    eq = x**4 + 1
+
+    result = _xpoly(eq, x**2)
+
+    # Should return a 3-tuple
+    assert len(result) == 3
+
+    F, dummy, P = result
+
+    # Check types
+    assert isinstance(F, type(eq))  # Expr type
+    assert isinstance(dummy, Dummy)
+    assert isinstance(P, Poly)
+
+    # Check consistency
+    assert F == eq.subs(x**2, dummy)
+    assert P.gen == dummy
+
+
+def test_xpoly_error_messages():
+    """Test that _xpoly provides clear error messages."""
+    from sympy import symbols, exp
+    from sympy.polys.polytools import _xpoly
+
+    x = symbols('x')
+    e = exp(x)
+
+    # Test dependent generator error
+    try:
+        _xpoly(e + x, e, strict=True)
+        assert False, "Should have raised ValueError"
+    except ValueError as ex:
+        assert "generator symbols remained" in str(ex).lower() or \
+               "substitution" in str(ex).lower()
+
+    # Test non-polynomial error
+    try:
+        _xpoly(e**(-1) + 1, e)
+        assert False, "Should have raised ValueError"
+    except ValueError as ex:
+        assert "polynomial" in str(ex).lower() or \
+               "not polynomial" in str(ex).lower()
