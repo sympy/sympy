@@ -33,6 +33,7 @@ def test_decompose_power():
     assert decompose_power(x**(2*y)) == (x**y, 2)
     assert decompose_power(x**(2*y/3)) == (x**(y/3), 2)
     assert decompose_power(x**(y*Rational(2, 3))) == (x**(y/3), 2)
+    assert decompose_power(81**x) == (3**x, 4)
 
 
 def test_Factors():
