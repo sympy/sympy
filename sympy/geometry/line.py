@@ -2125,6 +2125,9 @@ class Line2D(LinearEntity2D, Line):
         y : str, optional
             The name to use for the y-axis, default value is 'y'.
 
+        Note : Symbols being used need to be declared as real to avoid
+               unexpected results. The best approach is to provide your
+               own symbols as .equation(x, y) .
         Returns
         =======
 
