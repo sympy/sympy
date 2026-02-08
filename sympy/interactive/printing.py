@@ -65,7 +65,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
     imagesize = 'tight'
     offset = "0cm,0cm"
     resolution = round(150*scale)
-    dvi = r"-T %s -D %d -bg %s -fg %s -O %s" % (
+    dvi = r"-T %s -D %d -bg %s -fg %s -O %s --nogs " % (
         imagesize, resolution, backcolor, forecolor, offset)
     dvioptions = dvi.split()
 
