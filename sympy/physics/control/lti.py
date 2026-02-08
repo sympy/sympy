@@ -4483,13 +4483,16 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
         |    [  -    -----]    [-  -]   |     [  -    -----]
         \    [  1      s  ]{t} [1  1]{t}/     [  1      s  ]{t}
         >>> pprint(F_1.doit(), use_unicode=False)
-        [  -s           s - 1       ]
-        [-------     -----------    ]
-        [6*s - 1     s*(6*s - 1)    ]
-        [                           ]
-        [5*s - 5  (s - 1)*(6*s + 24)]
-        [-------  ------------------]
-        [6*s - 1     s*(6*s - 1)    ]{t}
+        [  -s          s - 1      ]
+        [-------      --------    ]
+        [6*s - 1         2        ]
+        [             6*s  - s    ]
+        [                         ]
+        [            2            ]
+        [5*s - 5  6*s  + 18*s - 24]
+        [-------  ----------------]
+        [6*s - 1         2        ]
+        [             6*s  - s    ]{t}
 
         If the user wants the resultant ``TransferFunctionMatrix`` object without
         canceling the common factors then the ``cancel`` kwarg should be passed ``False``.
