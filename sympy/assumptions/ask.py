@@ -623,6 +623,11 @@ def _ask_single_fact(key, local_facts):
     >>> _ask_single_fact(key, local_facts)
     False
     """
+    if isinstance(key, AppliedPredicate) and key.function == Q.even:
+        arg = key.arguments[0]
+        if isinstance(arg, Mul) and arg.args[0] == -1:
+            key = Q.even(Mul(*arg.args[1:]))
+    
     if not local_facts.clauses:
         return None
 
