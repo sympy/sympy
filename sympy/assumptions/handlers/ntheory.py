@@ -144,9 +144,17 @@ def _EvenPredicate_number(expr, assumptions):
 @EvenPredicate.register(Expr)
 def _(expr, assumptions):
     ret = expr.is_even
-    if ret is None:
+    if ret is not None:
+        return ret
+
+    # IMPORTANT: do NOT block Mul(-1, n)
+    if expr.is_Mul:
         raise MDNotImplementedError
-    return ret
+
+    raise MDNotImplementedError
+
+
+
 
 @EvenPredicate.register(Basic)
 def _(expr, assumptions):
@@ -164,11 +172,23 @@ def _(expr, assumptions):
     Integer * Integer -> Even if Integer + Integer = Odd
     otherwise         -> ?
     """
+
+    # -------------------------------------------------
+    # SYMMETRY FIX: even(-n) <-> even(n)
+    # -------------------------------------------------
+    if len(expr.args) == 2 and S.NegativeOne in expr.args:
+        other = expr.args[0] if expr.args[1] is S.NegativeOne else expr.args[1]
+        return ask(Q.even(other), assumptions)
+
+    # -------------------------------------------------
+    # Existing logic (UNCHANGED)
+    # -------------------------------------------------
     if expr.is_number:
         return _EvenPredicate_number(expr, assumptions)
+
     even, odd, irrational, acc = False, 0, False, 1
+
     for arg in expr.args:
-        # check for all integers and at least one even
         if ask(Q.integer(arg), assumptions):
             if ask(Q.even(arg), assumptions):
                 even = True
@@ -178,8 +198,6 @@ def _(expr, assumptions):
                 if ask(Q.odd(acc + arg), assumptions):
                     even = True
         elif ask(Q.irrational(arg), assumptions):
-            # one irrational makes the result False
-            # two makes it undefined
             if irrational:
                 break
             irrational = True
@@ -268,6 +286,7 @@ def _(expr, assumptions):
         raise MDNotImplementedError
     return ret
 
+
 @OddPredicate.register(Basic)
 def _(expr, assumptions):
     _integer = ask(Q.integer(expr), assumptions)
@@ -277,3 +296,27 @@ def _(expr, assumptions):
             return None
         return not _even
     return _integer
+
+
+@OddPredicate.register(Mul)
+def _(expr, assumptions):
+    # Handle odd(-n) <-> odd(n)
+    if expr.is_number:
+        return None
+
+    # Check for -1 * n or n * -1
+    if len(expr.args) == 2 and S.NegativeOne in expr.args:
+        other = expr.args[0] if expr.args[1] is S.NegativeOne else expr.args[1]
+        return ask(Q.odd(other), assumptions)
+
+    return None
+
+
+from sympy import Symbol
+@OddPredicate.register(Symbol)
+def _(expr, assumptions):
+    #If odd(-n) is known,then odd(n) is also true
+    if ask(Q.odd(-expr), assumptions):
+        return True
+    return None
+
