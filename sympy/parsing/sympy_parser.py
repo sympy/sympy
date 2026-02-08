@@ -1037,9 +1037,10 @@ def parse_expr(s: str, local_dict: DICT | None = None,
 
     stringify_expr, eval_expr, standard_transformations,
     implicit_multiplication_application
-
     """
-
+    if type(transformations) is str:
+        from sympy.parsing.sympy_parser import standard_transformations, implicit_multiplication_application
+        transformations = (standard_transformations + (implicit_multiplication_application,))
     if local_dict is None:
         local_dict = {}
     elif not isinstance(local_dict, dict):
