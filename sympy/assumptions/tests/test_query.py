@@ -1713,6 +1713,10 @@ def test_negative():
     assert ask(Q.negative(x + y), Q.negative(x)) is None
     assert ask(Q.negative(x + y), Q.negative(x) & Q.negative(y)) is True
     assert ask(Q.negative(x + y), Q.negative(x) & Q.nonpositive(y)) is True
+    assert ask(Q.negative(x + 1), Q.positive(x)) is False
+    assert ask(Q.negative(-1 - x), Q.positive(x)) is True
+    assert ask(Q.negative(1 - x), Q.negative(x)) is False
+    assert ask(Q.negative(x + y), Q.positive(x) & Q.negative(y)) is None
     assert ask(Q.negative(2 + I)) is False
     # although this could be False, it is representative of expressions
     # that don't evaluate to a zero with precision
@@ -1930,6 +1934,11 @@ def test_positive():
     assert ask(Q.positive(x + y), Q.positive(x) & Q.nonnegative(y)) is True
     assert ask(Q.positive(x + y), Q.positive(x) & Q.negative(y)) is None
     assert ask(Q.positive(x + y), Q.positive(x) & Q.imaginary(y)) is False
+    assert ask(Q.positive(x + 1), Q.positive(x)) is True
+    assert ask(Q.positive(x - 1), Q.positive(x)) is None
+    assert ask(Q.positive(x + y), Q.positive(x)) is None
+    assert ask(Q.positive(x+1), Q.real(x)) is None
+    assert ask(Q.positive(x+1)) is None
 
     assert ask(Q.positive(2*x), Q.positive(x)) is True
     assumptions = Q.positive(x) & Q.negative(y) & Q.negative(z) & Q.positive(w)
@@ -2588,10 +2597,3 @@ def test_issue_28127():
 def test_issue_29096():
     assert ask(x > -1, Q.positive(x)) is True
     assert ask(x < 1, Q.negative(x)) is True
-    assert ask(Q.positive(x + 1), Q.positive(x)) is True
-    assert ask(Q.negative(x + 1), Q.positive(x)) is False
-    assert ask(Q.negative(-1 - x), Q.positive(x)) is True
-    assert ask(Q.negative(1 - x), Q.negative(x)) is False
-    assert ask(Q.positive(x - 1), Q.positive(x)) is None
-    assert ask(Q.negative(x + y), Q.positive(x) & Q.negative(y)) is None
-    assert ask(Q.positive(x + y), Q.positive(x)) is None
