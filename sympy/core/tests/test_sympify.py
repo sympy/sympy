@@ -302,8 +302,9 @@ def test__sympify():
     # Function f is not Basic and can't sympify to Basic. We allow it to pass
     # with sympify but not with _sympify.
     # https://github.com/sympy/sympy/issues/20124
-    assert sympify(f) is f
-    raises(SympifyError, lambda: _sympify(f))
+    # Sympify can now handle Function Classes by converting them to a FunctionSymbol
+    assert sympify(f) == f
+    assert _sympify(f) == f
 
     class A:
         def _sympy_(self):
