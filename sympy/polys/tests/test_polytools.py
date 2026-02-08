@@ -4590,3 +4590,4 @@ def test_xpoly_error_messages():
     except ValueError as ex:
         assert "polynomial" in str(ex).lower() or \
                "not polynomial" in str(ex).lower()
+               
