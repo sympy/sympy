@@ -4304,7 +4304,6 @@ def test_schur_conditions():
 def test_xpoly_basic():
     """Test basic _xpoly functionality with simple generators."""
     from sympy import symbols, Dummy
-    from sympy.polys.polytools import _xpoly
 
     x = symbols('x')
 
@@ -4325,7 +4324,6 @@ def test_xpoly_basic():
 def test_xpoly_exponential():
     """Test _xpoly with exponential generators."""
     from sympy import symbols, exp
-    from sympy.polys.polytools import _xpoly
 
     x = symbols('x')
     e = exp(x)
@@ -4346,7 +4344,6 @@ def test_xpoly_exponential():
 def test_xpoly_trig():
     """Test _xpoly with trigonometric generators."""
     from sympy import symbols, sin, cos
-    from sympy.polys.polytools import _xpoly
 
     x = symbols('x')
 
@@ -4369,7 +4366,6 @@ def test_xpoly_trig():
 def test_xpoly_strict_mode():
     """Test _xpoly strict mode for dependent generators."""
     from sympy import symbols, exp
-    from sympy.polys.polytools import _xpoly
 
     x = symbols('x')
     e = exp(x)
@@ -4386,7 +4382,6 @@ def test_xpoly_strict_mode():
 def test_xpoly_non_strict():
     """Test _xpoly with strict=False for edge cases."""
     from sympy import symbols, exp
-    from sympy.polys.polytools import _xpoly
 
     x = symbols('x')
     e = exp(x)
@@ -4403,7 +4398,6 @@ def test_xpoly_non_strict():
 def test_xpoly_negative_powers():
     """Test that _xpoly rejects negative powers."""
     from sympy import symbols, exp
-    from sympy.polys.polytools import _xpoly
 
     x = symbols('x')
     e = exp(x)
@@ -4420,7 +4414,6 @@ def test_xpoly_negative_powers():
 def test_xpoly_complex_generator():
     """Test _xpoly with more complex generators."""
     from sympy import symbols, exp, log
-    from sympy.polys.polytools import _xpoly
 
     x = symbols('x')
 
@@ -4443,7 +4436,6 @@ def test_xpoly_complex_generator():
 def test_xpoly_multivariate():
     """Test _xpoly with expressions in multiple variables."""
     from sympy import symbols
-    from sympy.polys.polytools import _xpoly
 
     x, y = symbols('x y')
 
@@ -4464,7 +4456,6 @@ def test_xpoly_multivariate():
 def test_xpoly_constant():
     """Test _xpoly with constant expressions."""
     from sympy import symbols, S
-    from sympy.polys.polytools import _xpoly
 
     x = symbols('x')
 
@@ -4479,7 +4470,6 @@ def test_xpoly_constant():
 def test_xpoly_symbolic_coefficients():
     """Test _xpoly with symbolic coefficients."""
     from sympy import symbols, exp
-    from sympy.polys.polytools import _xpoly
 
     x, a, b, c = symbols('x a b c')
     e = exp(x)
@@ -4498,7 +4488,6 @@ def test_xpoly_symbolic_coefficients():
 def test_xpoly_nested_generators():
     """Test _xpoly with nested function generators."""
     from sympy import symbols, exp, sin
-    from sympy.polys.polytools import _xpoly
 
     x = symbols('x')
 
@@ -4514,7 +4503,6 @@ def test_xpoly_nested_generators():
 def test_xpoly_zero_polynomial():
     """Test _xpoly with zero polynomial."""
     from sympy import symbols, S
-    from sympy.polys.polytools import _xpoly
 
     x = symbols('x')
 
@@ -4528,7 +4516,6 @@ def test_xpoly_zero_polynomial():
 def test_xpoly_linear():
     """Test _xpoly with linear expressions."""
     from sympy import symbols, exp
-    from sympy.polys.polytools import _xpoly
 
     x = symbols('x')
     e = exp(x)
@@ -4545,7 +4532,6 @@ def test_xpoly_linear():
 def test_xpoly_return_values():
     """Test that _xpoly returns the correct tuple structure."""
     from sympy import symbols, Dummy, Poly
-    from sympy.polys.polytools import _xpoly
 
     x = symbols('x')
     eq = x**4 + 1
@@ -4570,7 +4556,6 @@ def test_xpoly_return_values():
 def test_xpoly_error_messages():
     """Test that _xpoly provides clear error messages."""
     from sympy import symbols, exp
-    from sympy.polys.polytools import _xpoly
 
     x = symbols('x')
     e = exp(x)
