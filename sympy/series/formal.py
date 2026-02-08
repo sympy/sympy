@@ -13,7 +13,6 @@ from sympy.sets.sets import Interval
 from sympy.core.singleton import S
 from sympy.core.symbol import Wild, Dummy, symbols, Symbol
 from sympy.core.sympify import sympify
-from sympy.discrete.convolutions import convolution
 from sympy.functions.combinatorial.factorials import binomial, factorial, rf
 from sympy.functions.combinatorial.numbers import bell
 from sympy.functions.elementary.integers import floor, frac, ceiling
@@ -1599,13 +1598,13 @@ class FormalPowerSeriesProduct(FiniteFormalPowerSeries):
         sympy.series.formal.FormalPowerSeries.product
 
         """
-        coeff1, coeff2 = self.coeff1, self.coeff2
-
-        aks = convolution(coeff1[:n], coeff2[:n])
-
+        ffps, gfps = self.ffps, self.gfps
         terms = []
-        for i in range(0, n):
-            terms.append(aks[i] * self.ffps.xk.coeff(i))
+        for i in range(n):
+            terms.append(Add(*[
+                ffps._eval_term(j) * gfps._eval_term(i - j)
+                for j in range(i + 1)
+            ]))
 
         return Add(*terms)
 
