@@ -1328,6 +1328,91 @@ def test_issue_15084_13166():
     assert eq.diff(x, g(x)) == eq.diff(g(x), x)
 
 
+def test_issue_22439():
+    # Refer https://github.com/sympy/sympy/pull/22806#issuecomment-1007272066 to see the results
+    # being displayed in their pretty printed format.
+    x, y, h = symbols('x y h')
+    u = Function('u')
+    _xi_1, _xi_2 = [Dummy() for i in range(2)]
+    assert u(x - h, y - h).diff(h, 2) == Subs(Derivative(u(_xi_1, -h + y), (_xi_1, 2)), _xi_1, -h + x) + \
+            Subs(Derivative(u(-h + x, _xi_2), (_xi_2, 2)), _xi_2, -h + y) + \
+            2*Subs(Derivative(u(_xi_1, _xi_2), _xi_1, _xi_2), (_xi_1, _xi_2), (-h + x, -h + y))
+    assert u(x + h, y - h).diff(h, 3) == Subs(Derivative(u(_xi_1, -h + y), (_xi_1, 3)), _xi_1, h + x) - \
+            Subs(Derivative(u(h + x, _xi_2), (_xi_2, 3)), _xi_2, -h + y) + \
+            3*Subs(Derivative(u(_xi_1, _xi_2), _xi_1, (_xi_2, 2)), (_xi_1, _xi_2), (h + x, -h + y)) - \
+            3*Subs(Derivative(u(_xi_1, _xi_2), (_xi_1, 2), _xi_2), (_xi_1, _xi_2), (h + x, -h + y))
+    assert u(x-h, y-h).diff(h, 4) == Subs(Derivative(u(_xi_1, -h + y), (_xi_1, 4)), _xi_1, -h + x) + \
+            Subs(Derivative(u(-h + x, _xi_2), (_xi_2, 4)), _xi_2, -h + y) + \
+            4*Subs(Derivative(u(_xi_1, _xi_2), _xi_1, (_xi_2, 3)), (_xi_2, _xi_1), (-h + y, -h + x)) + \
+            6*Subs(Derivative(u(_xi_1, _xi_2), (_xi_1, 2), (_xi_2, 2)), (_xi_1, _xi_2), (-h + x, -h + y)) + \
+            4*Subs(Derivative(u(_xi_1, _xi_2), (_xi_1, 3), _xi_2), (_xi_1, _xi_2), (-h + x, -h + y))
+    assert u(x - h, y - h).series(h, x0 = 0, n = 3).simplify() == u(x, y) - h*(Derivative(u(x, y), x) + Derivative(u(x, y), y)) + \
+            h**2*(Derivative(u(x, y), (x, 2)) + Derivative(u(x, y), (y, 2)) + \
+            2*Derivative(u(x, y), x, y))/2 + O(h**3)
+    assert u(x - h, y - h).series(h, x0 = 0, n = 4).simplify() == u(x, y) - h*(Derivative(u(x, y), x) + Derivative(u(x, y), y)) + \
+            h**2*(Derivative(u(x, y), (x, 2)) + Derivative(u(x, y), (y, 2)) + 2*Derivative(u(x, y), x, y))/2 - \
+            h**3*(Derivative(u(x, y), (x, 3)) + Derivative(u(x, y), (y, 3)) + 3*Derivative(u(x, y), x, (y, 2)) + \
+            3*Derivative(u(x, y), (x, 2), y))/6 + O(h**4)
+
+
+def test_denesting_for_Subs():
+    # Refer https://github.com/sympy/sympy/pull/22806#issuecomment-1037339531 to see the results
+    # being displayed in their pretty printed format.
+    # This test addresses denesting for subs when we encounter expressions of type Mul(expr, Subs(...))
+    # where expr could be of type Symbol, Number/Constant.
+    x, y, h = symbols('x y h')
+    u = Function('u')
+    _xi_1, _xi_2 = [Dummy() for i in range(2)]
+
+    assert u(x - 2*h, y - 2*h).diff(h, 2).simplify() == 4*(Subs(Derivative(u(_xi_1, -2*h + y), (_xi_1, 2)), _xi_1, -2*h + x) + \
+            Subs(Derivative(u(-2*h + x, _xi_2), (_xi_2, 2)), _xi_2, -2*h + y) + \
+            2*Subs(Derivative(u(_xi_1, _xi_2), _xi_1, _xi_2), (_xi_1, _xi_2), (-2*h + x, -2*h + y)))
+    assert u(x + 3*h, y + 3*h).diff(h, 3).simplify() == 27*(Subs(Derivative(u(_xi_1, 3*h + y), (_xi_1, 3)), _xi_1, 3*h + x) + \
+            Subs(Derivative(u(3*h + x, _xi_2), (_xi_2, 3)), _xi_2, 3*h + y) + \
+            3*Subs(Derivative(u(_xi_1, _xi_2), _xi_1, (_xi_2, 2)), (_xi_2, _xi_1), (3*h + y, 3*h + x)) + \
+            3*Subs(Derivative(u(_xi_1, _xi_2), (_xi_1, 2), _xi_2), (_xi_1, _xi_2), (3*h + x, 3*h + y)))
+    assert u(x + 2*h, y - 3*h).diff(h, 4).simplify() == 16*Subs(Derivative(u(_xi_1, -3*h + y), (_xi_1, 4)), _xi_1, 2*h + x) + \
+            81*Subs(Derivative(u(2*h + x, _xi_2), (_xi_2, 4)), _xi_2, -3*h + y) - \
+            216*Subs(Derivative(u(_xi_1, _xi_2), _xi_1, (_xi_2, 3)), (_xi_2, _xi_1), (-3*h + y, 2*h + x)) + \
+            216*Subs(Derivative(u(_xi_1, _xi_2), (_xi_1, 2), (_xi_2, 2)), (_xi_2, _xi_1), (-3*h + y, 2*h + x)) - \
+            96*Subs(Derivative(u(_xi_1, _xi_2), (_xi_1, 3), _xi_2), (_xi_2, _xi_1), (-3*h + y, 2*h + x))
+    assert u(x - 2*h, y - 2*h).series(h, x0=0, n=4).simplify() == u(x, y) - 2*h*(Derivative(u(x, y), x) + Derivative(u(x, y), y)) + \
+            2*h**2*(Derivative(u(x, y), (x, 2)) + Derivative(u(x, y), (y, 2)) + 2*Derivative(u(x, y), x, y)) - \
+            4*h**3*(Derivative(u(x, y), (x, 3)) + Derivative(u(x, y), (y, 3)) + 3*Derivative(u(x, y), x, (y, 2)) + \
+            3*Derivative(u(x, y), (x, 2), y))/3 + O(h**4)
+    assert u(x + 3*h, y - 2*h).series(h, x0=0, n=6).simplify() == u(x, y) + h*(3*Derivative(u(x, y), x) - 2*Derivative(u(x, y), y)) + \
+            h**2*(9*Derivative(u(x, y), (x, 2)) + 4*Derivative(u(x, y), (y, 2)) - 12*Derivative(u(x, y), x, y))/2 + \
+            h**3*(27*Derivative(u(x, y), (x, 3)) - 8*Derivative(u(x, y), (y, 3)) + 36*Derivative(u(x, y), x, (y, 2)) - \
+            54*Derivative(u(x, y), (x, 2), y))/6 + h**4*(81*Derivative(u(x, y), (x, 4)) + 16*Derivative(u(x, y), (y, 4)) - \
+            96*Derivative(u(x, y), x, (y, 3)) + 216*Derivative(u(x, y), (x, 2), (y, 2)) - 216*Derivative(u(x, y), (x, 3), y))/24 + \
+            h**5*(243*Derivative(u(x, y), (x, 5)) - 32*Derivative(u(x, y), (y, 5)) + 240*Derivative(u(x, y), x, (y, 4)) - \
+            720*Derivative(u(x, y), (x, 2), (y, 3)) + 1080*Derivative(u(x, y), (x, 3), (y, 2)) - 810*Derivative(u(x, y), (x, 4), y))/120 + O(h**6)
+
+
+def test_denesting_for_Subs2():
+    # Refer https://github.com/sympy/sympy/pull/22806/files#r805224808 to see the results
+    # being displayed in their pretty printed format.
+    # This test addresses denesting for subs when we encounter expressions of type Mul(expr, Subs(...))
+    # where expr could be of type Mul, Pow.
+    x, y, z, a, h = symbols('x y z a h')
+    u = Function('u')
+    _xi_1, _xi_2 = [Dummy() for i in range(2)]
+
+    assert u(x - 2*z*h, y - 2*z*h).diff(h, 3) == -8*z**3*(Subs(Derivative(u(_xi_1, -2*h*z + y), (_xi_1, 3)), _xi_1, -2*h*z + x) + \
+            Subs(Derivative(u(-2*h*z + x, _xi_2), (_xi_2, 3)), _xi_2, -2*h*z + y) + \
+            3*Subs(Derivative(u(_xi_1, _xi_2), _xi_1, (_xi_2, 2)), (_xi_1, _xi_2), (-2*h*z + x, -2*h*z + y)) + \
+            3*Subs(Derivative(u(_xi_1, _xi_2), (_xi_1, 2), _xi_2), (_xi_2, _xi_1), (-2*h*z + y, -2*h*z + x)))
+    assert u(x - a*z**2*h, y - a*z**2*h).diff(h, 2) == a**2*z**4*(Subs(Derivative(u(_xi_1, -a*h*z**2 + y), (_xi_1, 2)), _xi_1, -a*h*z**2 + x) + \
+            Subs(Derivative(u(-a*h*z**2 + x, _xi_2), (_xi_2, 2)), _xi_2, -a*h*z**2 + y) + \
+            2*Subs(Derivative(u(_xi_1, _xi_2), _xi_1, _xi_2), (_xi_2, _xi_1), (-a*h*z**2 + y, -a*h*z**2 + x)))
+    assert u(x - 3*z*h, y + 3*z*h).series(h, 0, 4).simplify() == u(x, y) - 3*h*z*(Derivative(u(x, y), x) - Derivative(u(x, y), y)) + \
+            9*h**2*z**2*(Derivative(u(x, y), (x, 2)) + Derivative(u(x, y), (y, 2)) - \
+            2*Derivative(u(x, y), x, y))/2 + 9*h**3*z**3*(-Derivative(u(x, y), (x, 3)) + Derivative(u(x, y), (y, 3)) - \
+            3*Derivative(u(x, y), x, (y, 2)) + 3*Derivative(u(x, y), (x, 2), y))/2 + O(h**4)
+    assert u(x + a*z**2*h, y + a*z**2*h).series(h, 0, 3).simplify() == u(x, y) + a*h*z**2*(Derivative(u(x, y), x) + Derivative(u(x, y), y)) + \
+            a**2*h**2*z**4*(Derivative(u(x, y), (x, 2)) + Derivative(u(x, y), (y, 2)) + 2*Derivative(u(x, y), x, y))/2 + O(h**3)
+
+
 def test_negative_counts():
     # issue 13873
     raises(ValueError, lambda: sin(x).diff(x, -1))
