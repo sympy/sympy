@@ -456,3 +456,30 @@ def test_issue_28556():
     q3 = Quaternion(r, 0, 0, 0)
     result3 = q3.log()
     assert result3 == Quaternion(log(r), 0, 0, 0)
+
+def test_quaternion_invalid_norm():
+
+    raises(ValueError, lambda: Quaternion(1, 2, 3, 4, norm=-1))
+
+    raises(ValueError, lambda: Quaternion(1, 2, 2, 1, norm=2))
+
+def test_quaternion_product_matrix_numeric():
+    q1 = Quaternion(1, 0, 0, 1)
+    q2 = Quaternion(1, 2, 3, 4)
+
+    assert q1.product_matrix_left * q2.to_Matrix() == (q1*q2).to_Matrix()
+    assert q2.product_matrix_right * q1.to_Matrix() == (q1*q2).to_Matrix()
+
+def test_quaternion_from_matrix_invalid_length():
+    raises(ValueError, lambda: Quaternion.from_Matrix([1, 2]))
+    raises(ValueError, lambda: Quaternion.from_Matrix([1, 2, 3, 4, 5]))
+
+def test_quaternion_subs_with_norm():
+    q = Quaternion(w, x, y, z, norm=1)
+    q2 = q.subs(w, 1)
+
+    assert q2.norm() == 1
+
+def test_quaternion_log_pure_real():
+    q = Quaternion(5, 0, 0, 0)
+    assert q.log() == Quaternion(log(5), 0, 0, 0)
