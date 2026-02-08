@@ -1,3 +1,4 @@
+from typing import Iterator, List, Any, Type
 from sympy.core import Basic, Integer
 
 import random
@@ -51,7 +52,7 @@ class GrayCode(Basic):
     _current = 0
     _rank = None
 
-    def __new__(cls, n, *args, **kw_args):
+    def __new__(cls: Type["GrayCode"], n: int, *args: Any, **kw_args: Any) -> "GrayCode":
         """
         Default constructor.
 
@@ -99,7 +100,7 @@ class GrayCode(Basic):
             obj._current = obj.unrank(n, obj._rank)
         return obj
 
-    def next(self, delta=1):
+    def next(self, delta: int = 1) -> "GrayCode":
         """
         Returns the Gray code a distance ``delta`` (default = 1) from the
         current value in canonical order.
@@ -147,7 +148,7 @@ class GrayCode(Basic):
         """
         return self.args[0]
 
-    def generate_gray(self, **hints):
+    def generate_gray(self, **hints: Any) -> Iterator[str]:
         """
         Generates the sequence of bit vectors of a Gray Code.
 
@@ -286,7 +287,7 @@ class GrayCode(Basic):
         return rv.rjust(self.n, '0')
 
     @classmethod
-    def unrank(self, n, rank):
+    def unrank(cls, n: int, rank: int) -> str:
         """
         Unranks an n-bit sized Gray code of rank k. This method exists
         so that a derivative GrayCode class can define its own code of
@@ -319,7 +320,7 @@ class GrayCode(Basic):
         return _unrank(rank, n)
 
 
-def random_bitstring(n):
+def random_bitstring(n: int) -> str:
     """
     Generates a random bitlist of length n.
 
@@ -333,7 +334,7 @@ def random_bitstring(n):
     return ''.join([random.choice('01') for i in range(n)])
 
 
-def gray_to_bin(bin_list):
+def gray_to_bin(bin_list: str) -> str:
     """
     Convert from Gray coding to binary coding.
 
@@ -357,7 +358,7 @@ def gray_to_bin(bin_list):
     return ''.join(b)
 
 
-def bin_to_gray(bin_list):
+def bin_to_gray(bin_list: str) -> str:
     """
     Convert from binary coding to gray coding.
 
@@ -381,7 +382,7 @@ def bin_to_gray(bin_list):
     return ''.join(b)
 
 
-def get_subset_from_bitstring(super_set, bitstring):
+def get_subset_from_bitstring(super_set: List[Any], bitstring: str) -> List[Any]:
     """
     Gets the subset defined by the bitstring.
 
@@ -405,7 +406,7 @@ def get_subset_from_bitstring(super_set, bitstring):
             if bitstring[i] == '1']
 
 
-def graycode_subsets(gray_code_set):
+def graycode_subsets(gray_code_set: List[Any]) -> Iterator[List[Any]]:
     """
     Generates the subsets as enumerated by a Gray code.
 
