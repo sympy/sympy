@@ -224,7 +224,6 @@ class Boolean(Basic):
     @property
     def binary_symbols(self) -> set[Basic]:
         from sympy.core.symbol import Symbol
-        from sympy.core.relational import Eq, Ne
 
         return set().union(*[i.binary_symbols for i in self.args
                            if isinstance(i, (Boolean, Symbol))])
