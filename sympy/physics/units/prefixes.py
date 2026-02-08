@@ -64,6 +64,10 @@ class Prefix(Expr):
         return self._latex_repr
 
     @property
+    def exponent(self):
+        return self._exponent
+
+    @property
     def base(self):
         return self._base
 
@@ -73,10 +77,10 @@ class Prefix(Expr):
     def __repr__(self):
         if self.base == 10:
             return "Prefix(%r, %r, %r)" % (
-                str(self.name), str(self.abbrev), self._exponent)
+                str(self.name), str(self.abbrev), self.exponent)
         else:
             return "Prefix(%r, %r, %r, %r)" % (
-                str(self.name), str(self.abbrev), self._exponent, self.base)
+                str(self.name), str(self.abbrev), self.exponent, self.base)
 
     def __mul__(self, other):
         from sympy.physics.units import Quantity
