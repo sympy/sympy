@@ -11,6 +11,7 @@ def test_euler_interface():
     y = Symbol('y')
     t = Symbol('t')
     raises(TypeError, lambda: euler())
+    raises(ValueError, lambda: euler(y**2))
     raises(TypeError, lambda: euler(D(x(t), t)*y(t), [x(t), y]))
     raises(ValueError, lambda: euler(D(x(t), t)*x(y), [x(t), x(y)]))
     raises(TypeError, lambda: euler(D(x(t), t)**2, x(0)))
