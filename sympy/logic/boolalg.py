@@ -3,7 +3,7 @@ Boolean algebra module for SymPy
 """
 
 from __future__ import annotations
-from typing import TYPE_CHECKING, overload, Any, Callable
+from typing import TYPE_CHECKING, overload, Any, cast
 
 from collections import defaultdict
 from itertools import chain, combinations, product, permutations
@@ -91,6 +91,8 @@ class Boolean(Basic):
 
         @overload # type: ignore
         def subs(self, arg1: Mapping[Basic | complex, Boolean | complex], arg2: None=None) -> Boolean: ...
+        @overload
+        def subs(self, arg1: Mapping[Relational, Relational], arg2: None=None) -> Boolean: ...
         @overload
         def subs(self, arg1: Iterable[tuple[Basic | complex, Boolean | complex]], arg2: None=None, **kwargs: Any) -> Boolean: ...
         @overload
@@ -198,12 +200,12 @@ class Boolean(Basic):
         if len(free) == 1:
             x = free.pop()
             if x.kind is NumberKind:
-                reps: dict[Basic | complex, Boolean | complex] = {}
+                reps = {}
                 for r in self.atoms(Relational):
                     if periodicity(r, x) not in (0, None):
                         s = r._eval_as_set()
                         if s in (S.EmptySet, S.UniversalSet, S.Reals):
-                            reps[r] = s.as_relational(x)
+                            reps[r] = cast(Any, s).as_relational(x)
                             continue
                         raise NotImplementedError(filldedent('''
                             as_set is not implemented for relationals
