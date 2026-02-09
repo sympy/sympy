@@ -1118,6 +1118,11 @@ class BaseVectorField(Expr):
         result = result.subs(list(zip(coords, self._coord_sys.coord_functions())))
         return result.doit()
 
+    def __add__(self, other):
+        if isinstance(other, BaseVectorField):
+            return Add(self, other)
+        raise TypeError("Cannot add BaseVectorField and other instance")
+
 
 def _find_coords(expr):
     # Finds CoordinateSystems existing in expr
@@ -1312,6 +1317,11 @@ class Differential(Expr):
                         ret += (-1)**(i + j)*t
             return ret
 
+    def __add__(self, other):
+        if isinstance(other, Differential):
+            return Add(self, other)
+        raise TypeError("Cannot add Differential and other instance")
+
 
 class TensorProduct(Expr):
     """Tensor product of forms.
@@ -1398,6 +1408,7 @@ class TensorProduct(Expr):
         fields = [fields[i:j] for i, j in zip([0] + indices, indices + [None])]
         multipliers = [t[0].rcall(*t[1]) for t in zip(self._args, fields)]
         return TensorProduct(*multipliers)
+
 
 
 class WedgeProduct(TensorProduct):
