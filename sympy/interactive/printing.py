@@ -232,7 +232,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
         plaintext_formatter.for_type(cls, _print_plain)
 
     svg_formatter = ip.display_formatter.formatters['image/svg+xml']
-    if use_latex in ('svg', ):
+    if use_latex == 'svg':
         debug("init_printing: using svg formatter")
         for cls in printable_types:
             svg_formatter.for_type(cls, _print_latex_svg)

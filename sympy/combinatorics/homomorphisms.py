@@ -26,6 +26,9 @@ class GroupHomomorphism:
         self._inverses = None
         self._kernel = None
         self._image = None
+        self._surjective_cert = None
+        self._surjective_cert_computed = False
+        self._factorization = None
 
     def _invs(self):
         '''
@@ -45,19 +48,18 @@ class GroupHomomorphism:
             gens = image.strong_gens
         else:
             gens = image.generators
+        dtype = type(self.domain.identity)
         for g in gens:
             if g in inverses or g.is_identity:
                 continue
-            w = self.domain.identity
             if isinstance(self.codomain, PermutationGroup):
                 parts = image._strong_gens_slp[g][::-1]
             else:
                 parts = g
-            for s in parts:
-                if s in inverses:
-                    w = w*inverses[s]
-                else:
-                    w = w*inverses[s**-1]**-1
+            w = dtype.prod(
+                inverses[s] if s in inverses else inverses[s**-1]**-1
+                for s in parts
+            )
             inverses[g] = w
 
         return inverses
@@ -90,21 +92,19 @@ class GroupHomomorphism:
                 if g not in image:
                     raise ValueError("Given element is not in the image of the homomorphism.")
                 gens = image.generator_product(g)[::-1]
-                for i in range(len(gens)):
-                    s = gens[i]
-                    if s.is_identity:
-                        continue
-                    if s in self._inverses:
-                        w = w*self._inverses[s]
-                    else:
-                        w = w*self._inverses[s**-1]**-1
-                return w
+                dtype = type(w)
+                return dtype.prod(
+                    self._inverses[s] if s in self._inverses
+                    else self._inverses[s**-1]**-1
+                    for s in gens if not s.is_identity
+                )
 
             else:
                 current_coset = 0
                 im_gens = list(self._inverses)
                 C = modified_coset_enumeration_r(self.codomain, im_gens)
-                total_word = w
+                dtype = type(w)
+                factors = []
                 preimages = list(self._inverses.values())
                 temp_symbols = [gen.array_form[0][0] for gen in C._grp.generators]
                 transl_map = dict(zip(temp_symbols, preimages))
@@ -118,12 +118,14 @@ class GroupHomomorphism:
                     for _ in range(abs(exp)):
                         word_intermediate = C.P[current_coset][j]
                         if word_intermediate is not None:
-                            for s,exp in word_intermediate.array_form:
-                                total_word = total_word * transl_map[s]**exp
+                            factors.extend(
+                                transl_map[s]**exp
+                                for s, exp in word_intermediate.array_form
+                            )
                         current_coset = C.table[current_coset][j]
                 if current_coset != 0:
                     raise ValueError("Given element is not in the image of the homomorphism.")
-                return total_word
+                return dtype.prod(factors)
 
         elif isinstance(g, list):
             return [self.invert(e) for e in g]
@@ -139,26 +141,59 @@ class GroupHomomorphism:
 
     def _compute_kernel(self):
         G = self.domain
-        G_order = G.order()
-        if G_order is S.Infinity:
+        H = self.codomain
+        Ginf = G.order() is S.Infinity
+        if Ginf and isinstance(H, (FpGroup, FreeGroup)):
+            # TODO: Make this work for PermutationGroup codomain by replacing it
+            # with FpGroup using PermutationGroup.presentation()
+            if isinstance(H, FreeGroup):
+                H = FpGroup(H, [])
+            preimages = self._is_surjective_cert()
+            if preimages is not None:
+                symbol_to_preimage = {
+                    g.ext_rep[0]: preimages[g] for g in H.generators
+                }
+
+                def _lift_to_domain(word):
+                    dtype = type(G.identity)
+                    return dtype.prod(
+                        symbol_to_preimage[symbol]**power
+                        for symbol, power in word.array_form
+                    )
+
+                kernel_gens = []
+                for relator in H.relators:
+                    word = _lift_to_domain(relator)
+                    if not word.is_identity:
+                        kernel_gens.append(word)
+
+                for generator in G.generators:
+                    lifted_image = _lift_to_domain(self.images[generator])
+                    word = generator * lifted_image**-1
+                    if not word.is_identity:
+                        kernel_gens.append(word)
+
+                return FpSubgroup(G, kernel_gens, normal=True)
+            else:
+                return self.factor()[0].kernel()
+
+        if Ginf:
             raise NotImplementedError(
-                "Kernel computation is not implemented for infinite groups")
-        gens = []
+                "Kernel computation is not implemented for this group type")
+
+        if isinstance(G, FpGroup):
+            P, T = G._to_perm_group()
+            perm_images = {g: self(T.invert(g)) for g in P.generators}
+            perm_hom = GroupHomomorphism(P, H, perm_images)
+            perm_kernel = perm_hom._compute_kernel()
+            kernel_gens = T.invert(perm_kernel.generators)
+            return FpSubgroup(G, kernel_gens, normal=True)
+
         if isinstance(G, PermutationGroup):
-            K = PermutationGroup(G.identity)
-        else:
-            K = FpSubgroup(G, gens, normal=True)
-        i = self.image().order()
-        while K.order()*i != G_order:
-            r = G.random()
-            k = r*self.invert(self(r))**-1
-            if k not in K:
-                gens.append(k)
-                if isinstance(G, PermutationGroup):
-                    K = PermutationGroup(gens)
-                else:
-                    K = FpSubgroup(G, gens, normal=True)
-        return K
+            return G.subgroup_search(lambda g: self(g).is_identity)
+
+        raise NotImplementedError(
+            "Kernel computation is not implemented for this group type")
 
     def image(self):
         '''
@@ -215,17 +250,29 @@ class GroupHomomorphism:
         '''
         return self.kernel().order() == 1
 
+    def _is_surjective_cert(self):
+        '''
+        Return a certificate of surjectivity, i.e. a dictionary of
+        preimages of the codomain generators, if the homomorphism
+        is surjective. Otherwise, return None.
+
+        '''
+        if not self._surjective_cert_computed:
+            preimages = None
+            try:
+                preimages = {g: self.invert(g) for g in self.codomain.generators}
+            except ValueError:
+                pass
+            self._surjective_cert = preimages
+            self._surjective_cert_computed = True
+        return self._surjective_cert
+
     def is_surjective(self):
         '''
         Check if the homomorphism is surjective
 
         '''
-        im = self.image().order()
-        oth = self.codomain.order()
-        if im is S.Infinity and oth is S.Infinity:
-            return None
-        else:
-            return im == oth
+        return self._is_surjective_cert() is not None
 
     def is_isomorphism(self):
         '''
@@ -241,6 +288,79 @@ class GroupHomomorphism:
 
         '''
         return self.image().order() == 1
+
+    def factor(self):
+        '''
+        Return a factorization of ``self`` as ``iota`` o ``pi`` where
+        ``pi`` is surjective and ``iota`` is injective.
+
+        Returns
+        =======
+
+        (pi, iota) : tuple of ``GroupHomomorphism``
+            ``pi`` maps from the domain of ``self`` onto a presentation
+            of the image of ``self`` and ``iota`` embeds that image into
+            the codomain of ``self``.
+
+        '''
+        if self._factorization is not None:
+            return self._factorization
+
+        if isinstance(self.codomain, PermutationGroup):
+            image = self.image()
+            surj = homomorphism(
+                self.domain,
+                image,
+                self.domain.generators,
+                [self.images[g] for g in self.domain.generators],
+                check=False,
+            )
+            inj = homomorphism(
+                image,
+                self.codomain,
+                image.generators,
+                image.generators,
+            )
+            self._factorization = (surj, inj)
+            return self._factorization
+
+        if not isinstance(self.codomain, (FpGroup, FreeGroup)):
+            raise NotImplementedError(
+                "Factorization is implemented only for permutation, "
+                "finitely presented, and free codomains"
+            )
+
+        if isinstance(self.codomain, FpGroup):
+            codomain = self.codomain
+        else:
+            codomain = FpGroup(self.codomain, [])
+
+        image_gens = list(dict.fromkeys(self.images.values()))
+        image_group, image_inclusion = codomain.subgroup(
+            image_gens,
+            homomorphism=True,
+        )
+
+        surj_images = [
+            image_inclusion.invert(self.images[g]) for g in self.domain.generators
+        ]
+        surj = homomorphism(
+            self.domain,
+            image_group,
+            self.domain.generators,
+            surj_images,
+            check=False,
+        )
+
+        inj = homomorphism(
+            image_group,
+            self.codomain,
+            image_group.generators,
+            image_inclusion(image_group.generators),
+            check=False,
+        )
+        self._factorization = (surj, inj)
+        return self._factorization
 
     def compose(self, other):
         '''
@@ -348,13 +468,13 @@ def _check_homomorphism(domain, codomain, images):
     symbols = [g.ext_rep[0] for g in gens]
     symbols_to_domain_generators = dict(zip(symbols, domain.generators))
     identity = codomain.identity
+    dtype = type(identity)
 
     def _image(r):
-        w = identity
-        for symbol, power in r.array_form:
-            g = symbols_to_domain_generators[symbol]
-            w *= images[g]**power
-        return w
+        return dtype.prod(
+            images[symbols_to_domain_generators[symbol]]**power
+            for symbol, power in r.array_form
+        )
 
     for r in rels:
         if isinstance(codomain, FpGroup):

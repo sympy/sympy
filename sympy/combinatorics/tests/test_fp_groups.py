@@ -210,6 +210,15 @@ def test_fp_subgroup():
     H = FpSubgroup(F, [b])
     assert not (a in H)
 
+    F, a, b = free_group("a, b")
+    G = FpGroup(F, [a**2, b**2, (a*b)**2])
+    H = FpSubgroup(G, [a], normal=True)
+    assert a in H
+    assert b not in H
+    H_free = FpSubgroup(F, [a], normal=True)
+    assert b**-1*a*b in H_free
+    assert b**3*a*b not in H_free
+
 def test_permutation_methods():
     F, x, y = free_group("x, y")
     # DihedralGroup(8)
