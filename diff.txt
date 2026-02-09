@@ -1,0 +1,57 @@
+diff --git a/sympy/assumptions/ask.py b/sympy/assumptions/ask.py
+index 2b5f56b117..cde4772c90 100644
+--- a/sympy/assumptions/ask.py
++++ b/sympy/assumptions/ask.py
+@@ -1,5 +1,6 @@
+ """Module for querying SymPy objects about assumptions."""
+ 
++from sympy import Mul
+ from sympy.assumptions.assume import (global_assumptions, Predicate,
+         AppliedPredicate)
+ from sympy.assumptions.cnf import CNF, EncodedCNF, Literal
+@@ -398,10 +399,20 @@ def _replace(e):
+ 
+     return expr.replace(_filter, _replace)
+ 
++def _normalize_negative_assumptions_even(expr):
++    def _convert(e):
++        if isinstance(e, AppliedPredicate) and e.function == Q.even:
++            neg_arg = e.arguments[0]
++            if isinstance(neg_arg, Mul) and neg_arg.args[0] == -1:
++                pos_arg = Mul(*neg_arg.args[1:])
++                return Q.even(pos_arg)
++        return e
++    return expr.replace(lambda e: isinstance(e, AppliedPredicate) and e.function == Q.even, _convert)
+ 
+ def _normalize_expr(expr):
+     expr = _normalize_relations(expr)
+     expr = _normalize_applied_predicates(expr)
++    expr = _normalize_negative_assumptions_even(expr)
+     return expr
+ 
+ def ask(proposition, assumptions=True, context=global_assumptions):
+@@ -508,8 +519,11 @@ def ask(proposition, assumptions=True, context=global_assumptions):
+         raise TypeError("assumptions must be a valid logical expression")
+ 
+     # Normalize both proposition and assumptions
+-    proposition = _normalize_expr(proposition)
+-    assumptions = _normalize_expr(assumptions)
++    proposition = _normalize_relations(proposition)
++    proposition = _normalize_applied_predicates(proposition)
++    assumptions = _normalize_relations(assumptions)
++    assumptions = _normalize_applied_predicates(assumptions)
++    assumptions = _normalize_negative_assumptions_even(assumptions)
+ 
+     if isinstance(proposition, AppliedPredicate):
+         key, args = proposition.function, proposition.arguments
+@@ -607,6 +621,10 @@ def _ask_single_fact(key, local_facts):
+     >>> _ask_single_fact(key, local_facts)
+     False
+     """
++    if isinstance(key, AppliedPredicate) and key.function == Q.even:
++        arg = key.arguments[0]
++        if isinstance(arg, Mul) and arg.args[0] == -1:
++            key = Q.even(Mul(*arg.args[1:]))
+     if not local_facts.clauses:
+         return None
+ 
