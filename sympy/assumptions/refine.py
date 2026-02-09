@@ -478,6 +478,70 @@ def refine_sin_cos(expr, assumptions):
         return ((-1)**(k / 2)) * cos(rem)
     else:
         return ((-1)**((k + 1) / 2)) * sin(rem)
+def refine_inequality(expr, assumptions):
+    """
+    Handler for inequality expressions (>=, >, <, <=).
+    This handler simplifies inequalities based on assumptions about the expressions involved.
+    Examples
+    ========
+    >>> from sympy import sqrt, Symbol, Q
+    >>> from sympy.assumptions.refine import refine_inequality
+    >>> x = Symbol('x', real=True)
+    >>> refine_inequality(sqrt(x) >= 0, Q.real(sqrt(x)))
+    True
+    >>> refine_inequality(sqrt(x) > 0, Q.positive(sqrt(x)))
+    True
+    >>> refine_inequality(sqrt(x) < 0, Q.real(sqrt(x)))
+    False
+    """
+    from sympy.core.relational import GreaterThan, StrictGreaterThan, LessThan, StrictLessThan
+
+    lhs = expr.lhs
+    rhs = expr.rhs
+
+    if isinstance(expr, (GreaterThan, StrictGreaterThan)):
+        if isinstance(lhs, Pow) and lhs.exp == Rational(1, 2):
+            if rhs == S.Zero or (rhs.is_number and rhs <= 0):
+                # Special case: real sqrt is always nonnegative
+                if ask(Q.real(lhs), assumptions):
+                    if isinstance(expr, GreaterThan):
+                        return S.true
+                    elif ask(Q.positive(lhs), assumptions):
+                        return S.true
+
+        if rhs == S.Zero or (rhs.is_number and rhs <= 0):
+            if isinstance(expr, GreaterThan):
+                if ask(Q.nonnegative(lhs), assumptions) or ask(Q.positive(lhs), assumptions):
+                    return S.true
+            else:
+                if ask(Q.positive(lhs), assumptions):
+                    return S.true
+
+    elif isinstance(expr, (LessThan, StrictLessThan)):
+        if isinstance(lhs, Pow) and lhs.exp == Rational(1, 2):
+            if rhs == S.Zero or (rhs.is_number and rhs >= 0):
+                if ask(Q.real(lhs), assumptions):
+                    if isinstance(expr, StrictLessThan):
+                        return S.false
+                    else:
+                        if ask(Q.zero(lhs), assumptions):
+                            return S.true
+                        elif ask(Q.positive(lhs), assumptions):
+                            return S.false
+
+        if rhs == S.Zero or (rhs.is_number and rhs >= 0):
+            if isinstance(expr, StrictLessThan):
+                if ask(Q.negative(lhs), assumptions):
+                    return S.true
+                elif ask(Q.nonnegative(lhs), assumptions) or ask(Q.positive(lhs), assumptions):
+                    return S.false
+            else:
+                if ask(Q.nonpositive(lhs), assumptions) or ask(Q.negative(lhs), assumptions):
+                    return S.true
+                elif ask(Q.positive(lhs), assumptions):
+                    return S.false
+
+    return None
 
 handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'Abs': refine_abs,
@@ -490,4 +554,8 @@ handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'MatrixElement': refine_matrixelement,
     'cos': refine_sin_cos,
     'sin': refine_sin_cos,
+    'GreaterThan': refine_inequality,
+    'StrictGreaterThan': refine_inequality,
+    'LessThan': refine_inequality,
+    'StrictLessThan': refine_inequality,
 }

@@ -283,3 +283,21 @@ def test_sin_cos():
     assert refine(cos(x + n*pi/2 + k*pi/2 + m*pi/2), \
                   Q.odd(n) & Q.odd(k) & Q.integer(m)) == \
         (-1)**((n + k)/2) * cos(x + m*pi/2)
+def test_refine_inequality():
+    """Test refining inequality expressions with assumptions (Issue #27750)."""
+    # sqrt inequalities - the main issue #27750
+    assert refine(sqrt(x) >= 0, Q.real(sqrt(x))) == S.true
+    assert refine(sqrt(x) < 0, Q.real(sqrt(x))) == S.false
+    assert refine(sqrt(x) > 0, Q.positive(sqrt(x))) == S.true
+    assert refine(sqrt(x) <= 0, Q.positive(sqrt(x))) == S.false
+    assert refine(sqrt(x) <= 0, Q.zero(sqrt(x))) == S.true
+    # General inequality refinements
+    assert refine(x >= 0, Q.positive(x)) == S.true
+    assert refine(x < 0, Q.positive(x)) == S.false
+    assert refine(x > 0, Q.positive(x)) == S.true
+    assert refine(x <= 0, Q.negative(x)) == S.true
+    assert refine(x < 0, Q.negative(x)) == S.true
+    assert refine(x >= 0, Q.negative(x)) == S.false
+    # Inequalities that cannot be refined should remain unchanged
+    assert refine(x >= 0, Q.real(x)) == (x >= 0)
+    assert refine(x > 0, Q.real(x)) == (x > 0)
