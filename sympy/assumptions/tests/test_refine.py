@@ -5,7 +5,7 @@ from sympy.core.numbers import (I, Rational, nan, pi)
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.functions.elementary.complexes import (Abs, arg, im, re, sign)
-from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (atan, atan2, cos, sin)
 from sympy.abc import w, x, y, z
@@ -283,3 +283,29 @@ def test_sin_cos():
     assert refine(cos(x + n*pi/2 + k*pi/2 + m*pi/2), \
                   Q.odd(n) & Q.odd(k) & Q.integer(m)) == \
         (-1)**((n + k)/2) * cos(x + m*pi/2)
+
+
+def test_log():
+    # Power rule: log(x**p) -> p*log(x) when x > 0
+    assert refine(log(x**2), Q.positive(x)) == 2*log(x)
+    assert refine(log(x**y), Q.positive(x)) == y*log(x)
+    assert refine(log(x**3), Q.positive(x)) == 3*log(x)
+
+    # Product rule: log(x*y) -> log(x) + log(y) when both positive
+    assert refine(log(x*y), Q.positive(x) & Q.positive(y)) == log(x) + log(y)
+    assert refine(log(x*y*z), Q.positive(x) & Q.positive(y) & Q.positive(z)) == \
+        log(x) + log(y) + log(z)
+
+    # Quotient rule: log(x/y) -> log(x) - log(y) when both positive
+    # (x/y is represented as x * y**(-1))
+    assert refine(log(x/y), Q.positive(x) & Q.positive(y)) == log(x) - log(y)
+
+    # Inverse: log(exp(x)) -> x when x is real
+    assert refine(log(exp(x)), Q.real(x)) == x
+    assert refine(log(exp(y)), Q.real(y)) == y
+
+    # No simplification without proper assumptions
+    assert refine(log(x**2), True) == log(x**2)
+    assert refine(log(x*y), Q.positive(x)) == log(x) + log(y)  # partial simplification
+    assert refine(log(exp(x)), True) == log(exp(x))  # need Q.real
+

@@ -479,6 +479,64 @@ def refine_sin_cos(expr, assumptions):
     else:
         return ((-1)**((k + 1) / 2)) * sin(rem)
 
+
+def refine_log(expr, assumptions):
+    """
+    Handler for the natural logarithm.
+
+    Examples
+    ========
+
+    >>> from sympy import Q, log, exp, refine
+    >>> from sympy.abc import x, y
+
+    >>> refine(log(exp(x)), Q.real(x))
+    x
+
+    >>> refine(log(x**2), Q.positive(x))
+    2*log(x)
+
+    >>> refine(log(x*y), Q.positive(x) & Q.positive(y))
+    log(x) + log(y)
+
+    """
+    from sympy.functions.elementary.exponential import log, exp
+
+    arg = expr.args[0]
+
+    # Rule 1: log(exp(x)) -> x when x is real
+    if isinstance(arg, exp):
+        if ask(Q.real(arg.exp), assumptions):
+            return arg.exp
+
+    # Rule 2: log(x**p) -> p*log(x) when x > 0
+    if arg.is_Pow:
+        base, exponent = arg.as_base_exp()
+        if ask(Q.positive(base), assumptions):
+            return exponent * log(base)
+
+    # Rule 3: log(x*y*...) -> log(x) + log(y) + ... when all are positive
+    if arg.is_Mul:
+        positive_factors = []
+        other_factors = []
+        for factor in arg.args:
+            if ask(Q.positive(factor), assumptions):
+                positive_factors.append(factor)
+            else:
+                other_factors.append(factor)
+
+        # Only simplify if we found at least one positive factor
+        if positive_factors:
+            result = Add(*[log(f) for f in positive_factors])
+            if other_factors:
+                result = result + log(Mul(*other_factors))
+            # Only return if we actually made progress
+            if len(positive_factors) > 1 or other_factors:
+                return result
+
+    return None
+
+
 handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'Abs': refine_abs,
     'Pow': refine_Pow,
@@ -490,4 +548,5 @@ handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'MatrixElement': refine_matrixelement,
     'cos': refine_sin_cos,
     'sin': refine_sin_cos,
+    'log': refine_log,
 }
