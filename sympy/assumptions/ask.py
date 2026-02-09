@@ -400,6 +400,7 @@ def _normalize_relations(expr):
     return expr.replace(_filter, _replace)
 
 def _normalize_negative_assumptions_even(expr):
+    # Replace Q.even(-x) with Q.even(x) in assumptions
     def _convert(e):
         if isinstance(e, AppliedPredicate) and e.function == Q.even:
             neg_arg = e.arguments[0]
