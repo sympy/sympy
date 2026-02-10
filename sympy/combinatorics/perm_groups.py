@@ -9,7 +9,7 @@ from sympy.combinatorics.util import (_check_cycles_alt_sym,
     _distribute_gens_by_base, _orbits_transversals_from_bsgs,
     _handle_precomputed_bsgs, _base_ordering, _strong_gens_from_distr,
     _strip, _strip_af)
-from sympy.core import Basic, Mul, S
+from sympy.core import Add, Expr, Basic, Mul, S
 from sympy.core.random import _randrange, randrange, choice
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import _sympify
@@ -2714,7 +2714,7 @@ class PermutationGroup(Basic):
 
         return classes
 
-    def molien_series(self, x: Basic | None = None) -> FormalPowerSeries:
+    def molien_series(self, x: Expr | None = None) -> FormalPowerSeries:
         r"""Return the Molien series for the permutation action on
         ``k[x_1, ..., x_n]``.
 
@@ -2753,19 +2753,21 @@ class PermutationGroup(Basic):
         1 + t + 2*t**2 + 3*t**3 + 4*t**4 + 5*t**5 + 7*t**6 + O(t**7)
         """
         x = Symbol('t') if x is None else _sympify(x)
+        if self.degree == 0:
+            return fps(S.One + Mul(S.Zero, x, evaluate=False), x)
+
         order = self.order()
-        molien = S.Zero
+        terms = []
 
         for conjugacy_class in self.conjugacy_classes():
             representative = next(iter(conjugacy_class))
             term = S(len(conjugacy_class))
             for cycle_length, count in representative.cycle_structure.items():
                 term *= (1 - x**cycle_length)**(-count)
-            molien += term
+            terms.append(term)
 
+        molien = Add(*terms)
         molien = molien/S(order)
-        if not molien.has(x):
-            molien += Mul(S.Zero, x, evaluate=False)
         return fps(molien, x)
 
     def normal_closure(self, other, k=10):
