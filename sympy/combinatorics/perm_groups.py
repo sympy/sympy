@@ -2761,9 +2761,10 @@ class PermutationGroup(Basic):
 
         for conjugacy_class in self.conjugacy_classes():
             representative = next(iter(conjugacy_class))
-            term = S(len(conjugacy_class))
+            factors = [S(len(conjugacy_class))]
             for cycle_length, count in representative.cycle_structure.items():
-                term *= (1 - x**cycle_length)**(-count)
+                factors.append((1 - x**cycle_length)**(-count))
+            term = Mul(*factors)
             terms.append(term)
 
         molien = Add(*terms)
