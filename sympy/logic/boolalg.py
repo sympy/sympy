@@ -77,12 +77,18 @@ class Boolean(Basic):
     kind = BooleanKind
 
     if TYPE_CHECKING:
+        from sympy.sets.sets import Set
+        from sympy.core.relational import Relational
 
         def __new__(cls, *args: Basic | complex) -> Boolean:
+            ...
+        def _eval_as_set(self) -> Set:
             ...
 
         @overload # type: ignore
         def subs(self, arg1: Mapping[Basic | complex, Boolean | complex], arg2: None=None) -> Boolean: ...
+        @overload
+        def subs(self, arg1: Mapping[Relational, Relational], arg2: None=None) -> Boolean: ...
         @overload
         def subs(self, arg1: Iterable[tuple[Basic | complex, Boolean | complex]], arg2: None=None, **kwargs: Any) -> Boolean: ...
         @overload
@@ -102,34 +108,34 @@ class Boolean(Basic):
             ...
 
     @sympify_return([('other', 'Boolean')], NotImplemented)
-    def __and__(self, other):
+    def __and__(self, other: Boolean) -> Boolean:
         return And(self, other)
 
     __rand__ = __and__
 
     @sympify_return([('other', 'Boolean')], NotImplemented)
-    def __or__(self, other):
+    def __or__(self, other: Boolean) -> Boolean:
         return Or(self, other)
 
     __ror__ = __or__
 
-    def __invert__(self):
+    def __invert__(self) -> Boolean:
         """Overloading for ~"""
         return Not(self)
 
     @sympify_return([('other', 'Boolean')], NotImplemented)
-    def __rshift__(self, other):
+    def __rshift__(self, other: Boolean) -> Boolean:
         return Implies(self, other)
 
     @sympify_return([('other', 'Boolean')], NotImplemented)
-    def __lshift__(self, other):
+    def __lshift__(self, other: Boolean) -> Boolean:
         return Implies(other, self)
 
     __rrshift__ = __lshift__
     __rlshift__ = __rshift__
 
     @sympify_return([('other', 'Boolean')], NotImplemented)
-    def __xor__(self, other):
+    def __xor__(self, other: Boolean) -> Boolean:
         return Xor(self, other)
 
     __rxor__ = __xor__
@@ -164,7 +170,7 @@ class Boolean(Basic):
         # override where necessary
         return self
 
-    def as_set(self):
+    def as_set(self) -> Set:
         """
         Rewrites Boolean expression in terms of real sets.
 
@@ -195,13 +201,13 @@ class Boolean(Basic):
                     if periodicity(r, x) not in (0, None):
                         s = r._eval_as_set()
                         if s in (S.EmptySet, S.UniversalSet, S.Reals):
-                            reps[r] = s.as_relational(x)
+                            reps[r] = false if s is S.EmptySet else true
                             continue
                         raise NotImplementedError(filldedent('''
                             as_set is not implemented for relationals
                             with periodic solutions
                             '''))
-                new = self.subs(reps)
+                new = self.xreplace(reps)
                 if new.func != self.func:
                     return new.as_set()  # restart with new obj
                 else:
@@ -214,13 +220,12 @@ class Boolean(Basic):
                                       " expressions")
 
     @property
-    def binary_symbols(self):
-        from sympy.core.relational import Eq, Ne
+    def binary_symbols(self) -> set[Basic]:
+        from sympy.core.symbol import Symbol
         return set().union(*[i.binary_symbols for i in self.args
-                           if i.is_Boolean or i.is_Symbol
-                           or isinstance(i, (Eq, Ne))])
+                           if isinstance(i, (Boolean, Symbol))])
 
-    def _eval_refine(self, assumptions):
+    def _eval_refine(self, assumptions) -> Boolean | None:
         from sympy.assumptions import ask
         ret = ask(self, assumptions)
         if ret is True:
