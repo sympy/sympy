@@ -9,6 +9,8 @@ from sympy.combinatorics.permutations import Permutation
 from sympy.combinatorics.polyhedron import tetrahedron as Tetra, cube
 from sympy.combinatorics.testutil import _verify_bsgs, _verify_centralizer,\
     _verify_normal_closure
+from sympy import O, binomial
+from sympy.series.formal import FormalPowerSeries
 from sympy.testing.pytest import skip, XFAIL, slow
 
 rmul = Permutation.rmul
@@ -65,6 +67,25 @@ def test_order():
     g = PermutationGroup([a, b])
     assert g.order() == 1814400
     assert PermutationGroup().order() == 1
+
+
+def test_molien_series():
+    from sympy.abc import t
+    G = PermutationGroup()
+    assert G.molien_series().truncate(6) == 1 + O(t**6)
+
+    C3 = CyclicGroup(3)
+    assert C3.molien_series().truncate(8) == 1 + t + 2*t**2 + 4*t**3 + 5*t**4 + 7*t**5 + 10*t**6 + 12*t**7 + O(t**8)
+
+    S3 = SymmetricGroup(3)
+    assert isinstance(S3.molien_series(), FormalPowerSeries)
+    assert S3.molien_series().truncate(8) == 1 + t + 2*t**2 + 3*t**3 + 4*t**4 + 5*t**5 + 7*t**6 + 8*t**7 + O(t**8)
+    assert S3.molien_series(t).truncate(8) == (1/((1 - t)*(1 - t**2)*(1 - t**3))).series(t, 0, 8)
+
+    G = PermutationGroup(Permutation(5))
+    assert G.molien_series().truncate(8) == sum(
+        binomial(d + G.degree - 1, d)*t**d for d in range(8)
+    ) + O(t**8)
 
 
 def test_identity_generators_dups_false():

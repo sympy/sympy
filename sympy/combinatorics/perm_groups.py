@@ -9,7 +9,7 @@ from sympy.combinatorics.util import (_check_cycles_alt_sym,
     _distribute_gens_by_base, _orbits_transversals_from_bsgs,
     _handle_precomputed_bsgs, _base_ordering, _strong_gens_from_distr,
     _strip, _strip_af)
-from sympy.core import Basic
+from sympy.core import Basic, Mul, S
 from sympy.core.random import _randrange, randrange, choice
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import _sympify
@@ -17,6 +17,7 @@ from sympy.functions.combinatorial.factorials import factorial
 from sympy.ntheory import primefactors, sieve
 from sympy.ntheory.factor_ import (factorint, multiplicity)
 from sympy.ntheory.primetest import isprime
+from sympy.series.formal import FormalPowerSeries, fps
 from sympy.utilities.iterables import has_variety, is_sequence, uniq
 
 rmul = Permutation.rmul_with_af
@@ -2712,6 +2713,60 @@ class PermutationGroup(Basic):
                 known_elements.update(new_class)
 
         return classes
+
+    def molien_series(self, x: Basic | None = None) -> FormalPowerSeries:
+        r"""Return the Molien series for the permutation action on
+        ``k[x_1, ..., x_n]``.
+
+        Explanation
+        ===========
+
+        For a finite permutation group `G \le S_n`, this computes the Molien
+        series
+
+        .. math::
+            \mathrm{Mol}_G(t) = \frac{1}{|G|}\sum_{g\in G}
+            \prod_{i=1}^{n} (1 - t^i)^{-c_i(g)},
+
+        where `c_i(g)` is the number of `i`-cycles of `g`.
+
+        The implementation aggregates by conjugacy classes of ``G``.
+
+        Parameters
+        ==========
+
+        x : Symbol, optional
+            Indeterminate for the formal power series. Defaults to ``t``.
+
+        Returns
+        =======
+
+        FormalPowerSeries
+            The Molien series as a SymPy formal power series.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.named_groups import SymmetricGroup
+        >>> S3 = SymmetricGroup(3)
+        >>> S3.molien_series().truncate(7)
+        1 + t + 2*t**2 + 3*t**3 + 4*t**4 + 5*t**5 + 7*t**6 + O(t**7)
+        """
+        x = Symbol('t') if x is None else _sympify(x)
+        order = self.order()
+        molien = S.Zero
+
+        for conjugacy_class in self.conjugacy_classes():
+            representative = next(iter(conjugacy_class))
+            term = S(len(conjugacy_class))
+            for cycle_length, count in representative.cycle_structure.items():
+                term *= (1 - x**cycle_length)**(-count)
+            molien += term
+
+        molien = molien/S(order)
+        if not molien.has(x):
+            molien += Mul(S.Zero, x, evaluate=False)
+        return fps(molien, x)
 
     def normal_closure(self, other, k=10):
         r"""Return the normal closure of a subgroup/set of permutations.
