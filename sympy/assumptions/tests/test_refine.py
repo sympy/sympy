@@ -286,12 +286,24 @@ def test_sin_cos():
 
 
 def test_log():
-    # Power rule: log(x**p) -> p*log(x) when x > 0
+    # Power rule: log(x**p) -> p*log(x) when x > 0 and p is real
     assert refine(log(x**2), Q.positive(x)) == 2*log(x)
-    assert refine(log(x**y), Q.positive(x)) == y*log(x)
+    assert refine(log(x**y), Q.positive(x) & Q.real(y)) == y*log(x)
     assert refine(log(x**3), Q.positive(x)) == 3*log(x)
 
+    # Power rule must NOT apply with imaginary exponents
+    assert refine(log(x**(2*I)), Q.positive(x)) == log(x**(2*I))
+    assert refine(log(x**y), Q.positive(x)) == log(x**y)
+
+    # Mixed exponent: split real parts from non-real parts
+    assert refine(log(x**(2*I + y)), Q.positive(x) & Q.real(y)) == \
+        y*log(x) + log(x**(2*I))
+    # Also works with Q.positive(y) since positive implies real
+    assert refine(log(x**(2*I + y)), Q.positive(x) & Q.positive(y)) == \
+        y*log(x) + log(x**(2*I))
+
     # Product rule: log(x*y) -> log(x) + log(y) when both positive
+
     assert refine(log(x*y), Q.positive(x) & Q.positive(y)) == log(x) + log(y)
     assert refine(log(x*y*z), Q.positive(x) & Q.positive(y) & Q.positive(z)) == \
         log(x) + log(y) + log(z)
@@ -306,5 +318,19 @@ def test_log():
 
     # No simplification without proper assumptions
     assert refine(log(x**2), True) == log(x**2)
-    assert refine(log(x*y), Q.positive(x)) == log(x) + log(y)  # partial simplification
+    assert refine(log(x*y), Q.positive(x)) == log(x) + log(y)  # partial split
     assert refine(log(exp(x)), True) == log(exp(x))  # need Q.real
+
+    # Combined product + power: log(x**2 * y**3) with both positive
+    assert refine(log(x**2 * y**3), Q.positive(x) & Q.positive(y)) == \
+        2*log(x) + 3*log(y)
+
+    # Nested: log(exp(x)) inside a product
+    assert refine(log(x * exp(y)), Q.positive(x) & Q.real(y)) == \
+        log(x) + y
+
+    # log(1/x) with positive x -> -log(x)
+    assert refine(log(S.One/x), Q.positive(x)) == -log(x)
+
+    # Negative base should NOT simplify power rule
+    assert refine(log(x**2), Q.negative(x)) == log(x**2)

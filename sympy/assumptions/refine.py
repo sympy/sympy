@@ -504,37 +504,56 @@ def refine_log(expr, assumptions):
 
     arg = expr.args[0]
 
-    # Rule 1: log(exp(x)) -> x when x is real
-    if isinstance(arg, exp):
-        if ask(Q.real(arg.exp), assumptions):
-            return arg.exp
+    # Treat arg as a product of terms (single term is fine too)
+    terms = arg.args if arg.is_Mul else (arg,)
 
-    # Rule 2: log(x**p) -> p*log(x) when x > 0
-    if arg.is_Pow:
-        base, exponent = arg.as_base_exp()
-        if ask(Q.positive(base), assumptions):
-            return exponent * log(base)
+    positive_factors = []
+    other_factors = []
 
-    # Rule 3: log(x*y*...) -> log(x) + log(y) + ... when all are positive
-    if arg.is_Mul:
-        positive_factors = []
-        other_factors = []
-        for factor in arg.args:
-            if ask(Q.positive(factor), assumptions):
-                positive_factors.append(factor)
+    for term in terms:
+        if ask(Q.positive(term), assumptions):
+            base, exponent = term.as_base_exp()
+            if ask(Q.positive(base), assumptions) and \
+                    ask(Q.real(exponent), assumptions):
+                # log(b**e) -> e*log(b) when b > 0 and e is real
+                positive_factors.append(exponent * log(base))
             else:
-                other_factors.append(factor)
+                positive_factors.append(log(term))
+        elif isinstance(term, exp) and ask(Q.real(term.exp), assumptions):
+            # log(exp(x)) -> x when x is real
+            positive_factors.append(term.exp)
+        elif term.is_Pow:
+            base, exponent = term.as_base_exp()
+            if ask(Q.positive(base), assumptions) and exponent.is_Add:
+                # Mixed exponent: split real parts from non-real parts
+                # e.g. log(x**(y + 2*I)) -> y*log(x) + log(x**(2*I))
+                real_parts = []
+                other_parts = []
+                for a in exponent.args:
+                    if ask(Q.real(a), assumptions):
+                        real_parts.append(a)
+                    else:
+                        other_parts.append(a)
+                if real_parts:
+                    positive_factors.append(Add(*real_parts) * log(base))
+                    if other_parts:
+                        positive_factors.append(
+                            log(base**Add(*other_parts)))
+                else:
+                    other_factors.append(term)
+            else:
+                other_factors.append(term)
+        else:
+            other_factors.append(term)
 
-        # Only simplify if we found at least one positive factor
-        if positive_factors:
-            result = Add(*[log(f) for f in positive_factors])
-            if other_factors:
-                result = result + log(Mul(*other_factors))
-            # Only return if we actually made progress
-            if len(positive_factors) > 1 or other_factors:
-                return result
+    if not positive_factors:
+        return None
 
-    return None
+    result = Add(*positive_factors)
+    if other_factors:
+        result += log(Mul(*other_factors))
+
+    return result
 
 
 handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
