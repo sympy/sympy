@@ -1365,20 +1365,20 @@ def test_Poly_degree():
     assert degree(Z, x) is S.NegativeInfinity
     assert degree(cos(1)**2 + sin(1)**2 - 1, x) == 0  # should be -oo
 
-    # /!\ user was warned; anything could change as Poly is improved-#
-    eq = x + 1/x**2                                                  #
-    raises(PolynomialError, lambda: degree(eq**big, x))              #
-    assert degree(eq**big, 1/x) == 2*big                             #
-                                                                     #
-    eq = exp(x) + 1/exp(2*x)                                         #
-    assert degree(eq, exp(x)) == 1                                   #
-    assert degree(eq, exp(-x)) == 2                                  #
-                                                                     #
-    one = Pow(x, 0, evaluate=False)                                  #
-    raises(PolynomialError, lambda: degree(one, one))                #
-    assert degree(x, 1.1) == degree(x, pi) == 0                      #
-    assert degree(0, 1.1) == -oo                                     #
-    # end of zoo of warnings-----------------------------------------#
+    eq = exp(x) + 1/exp(2*x)
+    raises(PolynomialError, lambda: degree(eq, exp(x)))
+    raises(PolynomialError, lambda: degree(eq, exp(-x)))
+
+    one = Pow(x, 0, evaluate=False)
+    raises(TypeError, lambda: degree(one, one))
+    eq = x + 1/x**2
+    raises(PolynomialError, lambda: degree(eq**big, x))
+    raises(PolynomialError, lambda: degree(eq**big, 1/x))
+
+    # /!\ user was warned; anything could change as Poly is improved
+    assert degree(x, 1.1) == degree(x, pi) == 0
+    assert degree(0, 1.1) == -oo
+    raises((NotImplementedError, PolynomialError), lambda: degree(x/y + 1, x/y))
 
 
 def test_Poly_degree_list():

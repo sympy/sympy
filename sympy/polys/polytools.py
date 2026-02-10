@@ -19,7 +19,7 @@ from sympy.core.evalf import (
 from sympy.core.function import Derivative
 from sympy.core.mul import Mul, _keep_coeff
 from sympy.core.intfunc import ilcm
-from sympy.core.numbers import I, Integer, equal_valued, NegativeInfinity
+from sympy.core.numbers import I, Integer, equal_valued, NegativeInfinity, NumberSymbol
 from sympy.core.relational import Relational, Equality
 from sympy.core.symbol import Dummy, Symbol
 from sympy.core.sympify import sympify, _sympify
@@ -4903,6 +4903,172 @@ def _update_args(args, key, value):
     return args
 
 
+def _xpoly(f, gen, strict=True, _first=True):
+    """Return ``(b, p, x)`` where ``p`` is obtained by
+    replacing ``gen`` with ``x``. If strict is False then ``b`` will be None
+    and it is possible that the expression will not be polynomial
+    in ``x`` or that there are subexpressions depend on free symbols in ``gen``,
+    otherwise ``b`` will be True if ``p`` is polynomial in ``x``, False
+    if not, and None if it could not be determined.
+
+    Examples
+    ========
+
+    >>> from sympy.polys.polytools import _xpoly
+    >>> from sympy import Symbol, exp
+    >>> from sympy.abc import x, y
+    >>> def f(a, b, strict=True):
+    ...     a, b, c = _xpoly(a, b, strict); x = Symbol('_')
+    ...     return a, b.xreplace({c: x}), x
+    ...
+
+    If an expression has none of the symbols in the generator, it is
+    a constant polynomial.
+
+    >>> f(0, x)
+    (True, 0, _)
+
+    A certificate of being polynomial in x is returned by default:
+
+    >>> f(x, x)
+    (True, _, _)
+    >>> f(x + y, x)
+    (True, _ + y, _)
+
+    If strict is False then the substituted expression is returned
+    with None reported for the certificate.
+
+    >>> f(x, x, strict=False)
+    (None, _, _)
+
+    False might be returned if the expression is not polynomial
+
+    >>> f(x + 1/x, x)
+    (False, (_**2 + 1)/_, _)
+    >>> f(x + 1/x, 1/x)
+    (False, _ + x, _)
+
+    False is also returned if the generator shows interdependence with
+    other generators in the expression.
+
+    >>> f(exp(x/y) + y, exp(x/y))
+    (False, _ + y, _)
+
+    ``gen`` should be something that Poly would recognize as a generator.
+    Processing of ``f`` happens from the bottom up, so trying to replace ``x/y``
+    with a symbol fails with a NotImplementedError:
+
+    >>> _xpoly(x/y + 1, x/y)
+    Traceback (most recent call last):
+    ...
+    NotImplementedError: replacement of Mul generators
+    """
+
+    from sympy.functions.elementary.exponential import exp
+
+    gen = sympify(gen, strict=True)
+    b, e = gen.as_base_exp()
+    if e.is_zero:
+        raise TypeError('invalid generator')
+    if isinstance(gen, (Add, Mul)):
+        raise NotImplementedError('replacement of %s generators' % gen)
+    f = sympify(f, strict=True)
+
+    x = Dummy('')
+
+    def repl(p):
+        bb, ee = p.as_base_exp()
+        if bb != b:
+            return p  # what if it has gen but q is not Integer XXX
+        q = ee/e
+        # For degree(), we require polynomial powers in gen:
+        if q.is_Integer and (q >= 0 or p.func == exp):
+            return S.One if q == 0 else x**q
+        return p
+
+    fx = f.replace(
+        lambda p: (p.is_Pow or p.func == exp) and p.as_base_exp()[0] == b,
+        repl
+    )
+
+    # If gen is a Symbol, convert occurrences of that symbol to Dummy
+    # since they would not have been found during the check for powers.
+    if gen.is_Symbol:
+        fx = fx.xreplace({gen: x})
+
+    if not strict:
+        poly = None
+    elif fx.free_symbols & gen.free_symbols:
+        poly = False
+    elif not fx.has_free(x):
+        poly = True
+    else:
+        poly = fx.is_polynomial(x)
+        if not poly:  # None or False (allow for cancellation of common factors)
+            f2 = together(fx)
+            if f2 != fx:
+                fx = f2
+                poly = fx.is_polynomial(x)
+        if not poly:
+            if fx.is_rational_function(x):
+                # definitely not polynomial, it is rational
+                poly = False
+            else:
+                poly = None
+    return poly, fx, x
+
+
+def _degree_fast(expr, gen):
+    if expr.is_Number:
+        if expr.is_zero:  # 0.0 or 0
+            return S.NegativeInfinity
+        return S.Zero
+
+    if expr == gen:
+        return S.One
+    if expr.is_Symbol:
+        return S.Zero
+
+    if expr.is_Pow:
+        base, exp = expr.args
+        if exp.is_Integer and exp > 0:
+            d = _degree_fast(base, gen)
+            if d is not None:
+                return d * exp
+        return None
+
+    if expr.is_Mul:
+        total = 0
+        for arg in expr.args:
+            d = _degree_fast(arg, gen)
+            if d is None:
+                return None
+            if d is S.NegativeInfinity:
+                return S.NegativeInfinity
+            total += d
+        return total
+
+    if expr.is_Add:
+        degrees = []
+        for arg in expr.args:
+            d = _degree_fast(arg, gen)
+            if d is None:
+                return None
+            degrees.append(d)
+
+        # S.NegativeInfinity + 1 is S.NegativeInfinity, safe.
+        max_deg = max(degrees, default=S.NegativeInfinity)
+
+        # Check uniqueness to avoid cancellation (e.g. x**2 - x**2)
+        if degrees.count(max_deg) == 1:
+            return max_deg
+
+        # Cancellation possible, unsafe fallback
+        return None
+
+    return None
+
+
 @public
 def degree(f, gen=0):
     """
@@ -4952,8 +5118,10 @@ def degree(f, gen=0):
     sympy.polys.polytools.Poly.total_degree
     degree_list
     """
-
     _degree = lambda x: Integer(x) if type(x) is int else x
+
+    if type(f) is dict and type(gen) is int:
+        raise GeneratorsNeeded("Cannot initialize from 'dict' without generators")
 
     f = sympify(f, strict=True)
     if type(gen) is int:
@@ -4961,12 +5129,10 @@ def degree(f, gen=0):
             return _degree(f.degree(gen))
         if f.is_Number:
             return S.NegativeInfinity if f.is_zero else S.Zero
-        try:
-            p = Poly(f, expand=False)
-        except GeneratorsNeeded:  # e.g. f = (1+I)**2/2
-            gens = ()  # do not guess what the user intended
-        else:
-            gens = p.gens
+        if f.is_number and not isinstance(f, NumberSymbol):
+            raise TypeError("a numeric-like object is not a valid generator")
+        p = Poly(f, expand=False)
+        gens = p.gens
         free = f.free_symbols
         if not (gen == 0 and len(gens) == 1 and len(free) < 2 and f.is_polynomial(
                 gen := next(iter(gens))) and # <-- assigns gen
@@ -4978,9 +5144,30 @@ def degree(f, gen=0):
         return p.degree(gen)
 
     gen = sympify(gen, strict=True)
-    if not isinstance(f, Poly) or gen not in f.gens:
-        f = poly_from_expr(f, gen)[0]
-    return _degree(f.degree(gen))
+
+    if isinstance(f, Poly):
+        x = gen
+    else:
+        # rewrite non-Symbol generator in terms of symbol
+        ok, f, x = _xpoly(f, gen, strict=True)
+        if ok == False:
+            raise PolynomialError(filldedent('''
+                expression is not polynomial in gen: it might have
+                other generators that depend on gen, or the
+                expression it self is not polynomial in gen.'''))
+        if ok:
+            fast_deg = _degree_fast(f, x)
+            if fast_deg is not None:
+                return fast_deg
+            # else defer to Poly for full expansion
+
+
+    # fall back to expanded Poly to let it fully verify whether
+    # the generator was valid and whether the expression simplified
+    # to zero or not
+    if not isinstance(f, Poly) or x not in f.gens:
+        f = poly_from_expr(f, x)[0]
+    return _degree(f.degree(x))
 
 
 @public
