@@ -8217,7 +8217,7 @@ class GroebnerBasis(Basic):
         return self.reduce(poly)[1] == 0
 
 
-def _xpoly(eq, x, strict=True):
+def _xpoly(f, gen, strict=True):
     """
     Create a Poly object by replacing a generator with a dummy variable.
 
@@ -8251,34 +8251,42 @@ def _xpoly(eq, x, strict=True):
     >>> F
     _**2 + 2*_ + 1
     """
-    from sympy import simplify
+    from sympy.functions.elementary.exponential import exp
 
-     # Create a dummy variable for substitution
-    dummy = Dummy()
+    b, e = gen.as_base_exp()
+    if e.is_zero:
+        raise TypeError('invalid generator')
 
-    # Get the symbols from the original generator
-    gen_symbols = x.free_symbols
+    x = Dummy('')
 
-    # Replace the generator with the dummy
-    F = eq.subs(x, dummy)
+    def repl(p):
+        bb, ee = p.as_base_exp()
+        if bb != b:
+            return p  # what if it has gen but q is not Integer XXX
+        q = ee/e
+        # For degree(), we require polynomial powers in gen:
+        if q.is_Integer and (q >= 0 or p.func == exp):
+            return S.One if q == 0 else x**q
+        return p
+
+    fx = f.replace(
+        lambda p: (p.is_Pow or p.func == exp) and p.as_base_exp()[0] == b,
+        repl
+    )
+
+    # convert occurrences that were not powers.
+    if not gen.is_Pow:
+        fx = fx.xreplace({gen: x})
 
     if strict:
-        # Try expanding the original to see if generator actually cancels out
-        eq_expanded = eq.expand()
-        F_expanded = eq_expanded.subs(x, dummy)
-
-        # Check if generator symbols remain after substitution
-        if gen_symbols & F_expanded.free_symbols:
-            raise ValueError("generator symbols remained after substitution")
-
-    # Try to create a Poly object
-    # If Poly creation succeeds, it's already polynomial by definition
-    try:
-        P = Poly(F, dummy)
-    except Exception as e:
-        raise ValueError(f"expression is not polynomial in the generator: {e}")
-
-    return F, dummy, P
+        # confirm that we now have a Poly in gen
+        p = poly_from_expr(fx)[0]
+        # polynomial check
+        assert p.as_expr().is_polynomial(x), ('nonpolynomial', fx)
+        # no symbolic interdependence
+        assert not p.free_symbols & gen.free_symbols, ('dependent generators', fx)
+        return fx, x, p
+    return fx, x
 
 
 @public
