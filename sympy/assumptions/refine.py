@@ -97,8 +97,8 @@ def refine_abs(expr, assumptions):
     """
     from sympy.functions.elementary.complexes import Abs
     arg = expr.args[0]
-    if (ask(Q.real(arg), assumptions) and
-            fuzzy_not(ask(Q.negative(arg), assumptions))):
+    if ask(Q.real(arg), assumptions) and \
+            fuzzy_not(ask(Q.negative(arg), assumptions)):
         # if it's nonnegative
         return arg
     if ask(Q.negative(arg), assumptions):
@@ -147,8 +147,8 @@ def refine_Pow(expr, assumptions):
     from sympy.functions.elementary.complexes import Abs
     from sympy.functions import sign
     if isinstance(expr.base, Abs):
-        if (ask(Q.real(expr.base.args[0]), assumptions) and
-                ask(Q.even(expr.exp), assumptions)):
+        if ask(Q.real(expr.base.args[0]), assumptions) and \
+                ask(Q.even(expr.exp), assumptions):
             return expr.base.args[0] ** expr.exp
     if ask(Q.real(expr.base), assumptions):
         if expr.base.is_number:
