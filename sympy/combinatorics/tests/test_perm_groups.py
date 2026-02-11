@@ -9,7 +9,6 @@ from sympy.combinatorics.permutations import Permutation
 from sympy.combinatorics.polyhedron import tetrahedron as Tetra, cube
 from sympy.combinatorics.testutil import _verify_bsgs, _verify_centralizer,\
     _verify_normal_closure
-from sympy import S
 from sympy.testing.pytest import skip, XFAIL, slow
 
 rmul = Permutation.rmul

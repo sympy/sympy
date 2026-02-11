@@ -2720,7 +2720,7 @@ class PermutationGroup(Basic):
         Explanation
         ===========
 
-        For a finite permutation group `G \le S_n`, this computes the generating function 
+        For a finite permutation group `G \le S_n`, this computes the generating function
         for the Molien series
 
         .. math::
