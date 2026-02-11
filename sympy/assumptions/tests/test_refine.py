@@ -76,35 +76,35 @@ def test_exp():
 def test_Piecewise():
     assert refine(Piecewise((1, x < 0), (3, True)), (x < 0)) == 1
     assert refine(Piecewise((1, x < 0), (3, True)), ~(x < 0)) == 3
-    assert (refine(Piecewise((1, x < 0), (3, True)), (y < 0)) == 
+    assert (refine(Piecewise((1, x < 0), (3, True)), (y < 0)) ==
         Piecewise((1, x < 0), (3, True)))
     assert refine(Piecewise((1, x > 0), (3, True)), (x > 0)) == 1
     assert refine(Piecewise((1, x > 0), (3, True)), ~(x > 0)) == 3
-    assert (refine(Piecewise((1, x > 0), (3, True)), (y > 0)) == 
+    assert (refine(Piecewise((1, x > 0), (3, True)), (y > 0)) ==
         Piecewise((1, x > 0), (3, True)))
     assert (refine(Piecewise((1, x <= 0), (3, True)), (x <= 0)) == 1)
     assert (refine(Piecewise((1, x <= 0), (3, True)), ~(x <= 0)) == 3)
-    assert (refine(Piecewise((1, x <= 0), (3, True)), (y <= 0)) == 
+    assert (refine(Piecewise((1, x <= 0), (3, True)), (y <= 0)) ==
         Piecewise((1, x <= 0), (3, True)))
     assert (refine(Piecewise((1, x >= 0), (3, True)), (x >= 0)) == 1)
     assert (refine(Piecewise((1, x >= 0), (3, True)), ~(x >= 0)) == 3)
-    assert (refine(Piecewise((1, x >= 0), (3, True)), (y >= 0)) == 
+    assert (refine(Piecewise((1, x >= 0), (3, True)), (y >= 0)) ==
         Piecewise((1, x >= 0), (3, True)))
-    assert (refine(Piecewise((1, Eq(x, 0)), (3, True)), (Eq(x, 0))) == 
+    assert (refine(Piecewise((1, Eq(x, 0)), (3, True)), (Eq(x, 0))) ==
         1)
-    assert (refine(Piecewise((1, Eq(x, 0)), (3, True)), (Eq(0, x))) == 
+    assert (refine(Piecewise((1, Eq(x, 0)), (3, True)), (Eq(0, x))) ==
         1)
-    assert (refine(Piecewise((1, Eq(x, 0)), (3, True)), ~(Eq(x, 0))) == 
+    assert (refine(Piecewise((1, Eq(x, 0)), (3, True)), ~(Eq(x, 0))) ==
         3)
-    assert (refine(Piecewise((1, Eq(x, 0)), (3, True)), ~(Eq(0, x))) == 
+    assert (refine(Piecewise((1, Eq(x, 0)), (3, True)), ~(Eq(0, x))) ==
         3)
-    assert (refine(Piecewise((1, Eq(x, 0)), (3, True)), (Eq(y, 0))) == 
+    assert (refine(Piecewise((1, Eq(x, 0)), (3, True)), (Eq(y, 0))) ==
         Piecewise((1, Eq(x, 0)), (3, True)))
-    assert (refine(Piecewise((1, Ne(x, 0)), (3, True)), (Ne(x, 0))) == 
+    assert (refine(Piecewise((1, Ne(x, 0)), (3, True)), (Ne(x, 0))) ==
         1)
-    assert (refine(Piecewise((1, Ne(x, 0)), (3, True)), ~(Ne(x, 0))) == 
+    assert (refine(Piecewise((1, Ne(x, 0)), (3, True)), ~(Ne(x, 0))) ==
         3)
-    assert (refine(Piecewise((1, Ne(x, 0)), (3, True)), (Ne(y, 0))) == 
+    assert (refine(Piecewise((1, Ne(x, 0)), (3, True)), (Ne(y, 0))) ==
         Piecewise((1, Ne(x, 0)), (3, True)))
 
 
@@ -142,9 +142,9 @@ def test_im():
 
 
 def test_complex():
-    assert (refine(re(1/(x + I*y)), Q.real(x) & Q.real(y)) == 
+    assert (refine(re(1/(x + I*y)), Q.real(x) & Q.real(y)) ==
         x/(x**2 + y**2))
-    assert (refine(im(1/(x + I*y)), Q.real(x) & Q.real(y)) == 
+    assert (refine(im(1/(x + I*y)), Q.real(x) & Q.real(y)) ==
         -y/(x**2 + y**2))
     assert (refine(re((w + I*x) * (y + I*z)), Q.real(w) & Q.real(x) & Q.real(y)
         & Q.real(z)) == w*y - x*z)
@@ -261,22 +261,22 @@ def test_sin_cos():
     assert refine(cos(x + n*pi/2), Q.integer(n)) == cos(x + n*pi/2)
     assert refine(cos(x + y + n*pi/2), Q.integer(n)) == cos(x + y + n*pi/2)
     m = Symbol('m')
-    assert (refine(cos(x + n*pi + m*pi / 2), Q.integer(n) & Q.even(m)) == 
+    assert (refine(cos(x + n*pi + m*pi / 2), Q.integer(n) & Q.even(m)) ==
         (-1)**(n + m / 2) * cos(x))
-    assert (refine(cos(x + n*pi + m*pi / 2), Q.integer(n) & Q.odd(m)) == 
+    assert (refine(cos(x + n*pi + m*pi / 2), Q.integer(n) & Q.odd(m)) ==
         (-1)**(n + (m + 1)/2) * sin(x))
-    assert (refine(cos(x + n*pi + m*pi / 2), Q.integer(n) & Q.integer(m)) == 
+    assert (refine(cos(x + n*pi + m*pi / 2), Q.integer(n) & Q.integer(m)) ==
         (-1)**(n) * cos(x + m*pi / 2))
-    assert (refine(cos(x + (2*n + 1)*pi + m*pi / 2), Q.integer(n) & Q.integer(m)) == 
+    assert (refine(cos(x + (2*n + 1)*pi + m*pi / 2), Q.integer(n) & Q.integer(m)) ==
         - cos(x + m*pi / 2))
-    assert (refine(sin(x - (2*n)*pi + m*pi/2), Q.integer(n) & Q.integer(m)) == 
+    assert (refine(sin(x - (2*n)*pi + m*pi/2), Q.integer(n) & Q.integer(m)) ==
         sin(x + m*pi / 2))
     k = Symbol('k')
-    assert (refine(cos(x + n*pi + k*pi/2 + m*pi/2), Q.integer(n) & Q.odd(k) & Q.integer(m)) == 
+    assert (refine(cos(x + n*pi + k*pi/2 + m*pi/2), Q.integer(n) & Q.odd(k) & Q.integer(m)) ==
         (-1)**(n + (k + 1)/2) * sin(x + m*pi/2))
-    assert (refine(sin(x + n*pi + k*pi/2 + m*pi/2), Q.integer(n) & Q.odd(k) & Q.integer(m)) == 
+    assert (refine(sin(x + n*pi + k*pi/2 + m*pi/2), Q.integer(n) & Q.odd(k) & Q.integer(m)) ==
         (-1)**(n + (k + 3)/2) * cos(x + m*pi/2))
-    assert (refine(cos(x + n*pi/2 + k*pi/2 + m*pi/2), Q.odd(n) & Q.odd(k) & Q.integer(m)) == 
+    assert (refine(cos(x + n*pi/2 + k*pi/2 + m*pi/2), Q.odd(n) & Q.odd(k) & Q.integer(m)) ==
         (-1)**((n + k)/2) * cos(x + m*pi/2))
 
 
@@ -291,16 +291,16 @@ def test_log():
     assert refine(log(x**y), Q.positive(x)) == log(x**y)
 
     # Mixed exponent: split real parts from non-real parts
-    assert (refine(log(x**(2*I + y)), Q.positive(x) & Q.real(y)) == 
+    assert (refine(log(x**(2*I + y)), Q.positive(x) & Q.real(y)) ==
         y*log(x) + log(x**(2*I)))
     # Also works with Q.positive(y) since positive implies real
-    assert (refine(log(x**(2*I + y)), Q.positive(x) & Q.positive(y)) == 
+    assert (refine(log(x**(2*I + y)), Q.positive(x) & Q.positive(y)) ==
         y*log(x) + log(x**(2*I)))
 
     # Product rule: log(x*y) -> log(x) + log(y) when both positive
 
     assert refine(log(x*y), Q.positive(x) & Q.positive(y)) == log(x) + log(y)
-    assert (refine(log(x*y*z), Q.positive(x) & Q.positive(y) & Q.positive(z)) == 
+    assert (refine(log(x*y*z), Q.positive(x) & Q.positive(y) & Q.positive(z)) ==
         log(x) + log(y) + log(z))
 
     # Quotient rule: log(x/y) -> log(x) - log(y) when both positive
@@ -317,11 +317,11 @@ def test_log():
     assert refine(log(exp(x)), True) == log(exp(x))  # need Q.real
 
     # Combined product + power: log(x**2 * y**3) with both positive
-    assert (refine(log(x**2 * y**3), Q.positive(x) & Q.positive(y)) == 
+    assert (refine(log(x**2 * y**3), Q.positive(x) & Q.positive(y)) ==
         2*log(x) + 3*log(y))
 
     # Nested: log(exp(x)) inside a product
-    assert (refine(log(x * exp(y)), Q.positive(x) & Q.real(y)) == 
+    assert (refine(log(x * exp(y)), Q.positive(x) & Q.real(y)) ==
         log(x) + y)
 
     # log(1/x) with positive x -> -log(x)
