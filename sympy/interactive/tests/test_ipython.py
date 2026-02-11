@@ -2,7 +2,7 @@
 
 from sympy.core import Integer, Rational, Symbol
 from sympy.external import import_module
-from sympy.interactive.session import (
+from sympy.interactive.session import ( 
     enable_automatic_int_sympification, enable_automatic_symbols,
     init_ipython_session)
 from sympy.testing.pytest import raises
@@ -24,10 +24,10 @@ def _setup_ipython_session(setup_formatter=True, import_ipython=False):
     ==========
     setup_formatter : bool, optional, (default is True)
         If True, sets up the IPython instance and display formatter only (import_ipython defaul is False ).
-        If False, skips formatter setup.    
+        If False, skips formatter setup.
     import_ipython : bool, optional, (default is False)
         If True, runs 'import IPython' before formatter setup.
-        If False. Only relevant if setup_formatter is True. 
+        If False. Only relevant if setup_formatter is True.
 
     Examples
     ========
@@ -68,7 +68,6 @@ def test_automatic_symbols():
     # NOTE: Because of the way the hook works, you have to use run_cell(code,
     # True).  This means that the code must have no Out, or it will be printed
     # during the tests.
-    
     app = _setup_ipython_session(setup_formatter=False)
     app.run_cell("from sympy import *")
     enable_automatic_symbols(app)
@@ -259,7 +258,7 @@ def test_builtin_containers():
  [2]  \
 """
         assert app.user_ns['c'][0]['text/latex'] == '$\\displaystyle \\left( \\left[\\begin{matrix}1\\\\2\\end{matrix}\\right],\\right)$'
-
+    
 def test_matplotlib_bad_latex():
     app = _setup_ipython_session(import_ipython=True)
     app.run_cell("from sympy import init_printing, Matrix")
