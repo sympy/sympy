@@ -1,11 +1,49 @@
 """Tests of tools for setting up interactive IPython sessions. """
 
-from sympy.interactive.session import (init_ipython_session,
-    enable_automatic_symbols, enable_automatic_int_sympification)
-
-from sympy.core import Symbol, Rational, Integer
+from sympy.core import Integer, Rational, Symbol
 from sympy.external import import_module
+from sympy.interactive.session import (
+    enable_automatic_int_sympification, enable_automatic_symbols,
+    init_ipython_session)
 from sympy.testing.pytest import raises
+
+
+# Helper function for session setup
+def _setup_ipython_session(setup_formatter=True, import_ipython=False):
+    """
+    Initialize and optionally configure an IPython session.
+
+    Explanation
+    ===========
+    This funciton sets up an IPython session and,
+    if requested,configures the display formatter and imports IPython.
+    It is intended to ensure consistent session setup and reduce code duplication.
+
+
+    Parameters
+    ==========
+    setup_formatter : bool, optional, (default is True)
+        If True, sets up the IPython instance and display formatter only (import_ipython defaul is False ).
+        If False, skips formatter setup.    
+    import_ipython : bool, optional, (default is False)
+        If True, runs 'import IPython' before formatter setup.
+        If False. Only relevant if setup_formatter is True. 
+
+    Examples
+    ========
+    # Sets up the formatter without importing IPython
+    >>> app = _setup_ipython_session()
+    >>> app.run_cell("from sympy import ...")
+
+    """
+    app = init_ipython_session()
+    if setup_formatter:
+        if import_ipython:
+            app.run_cell("import IPython")
+        app.run_cell("ip = get_ipython()")
+        app.run_cell("inst = ip.instance()")
+        app.run_cell("format = inst.display_formatter.format")
+    return app
 
 # TODO: The code below could be made more granular with something like:
 #
@@ -30,9 +68,9 @@ def test_automatic_symbols():
     # NOTE: Because of the way the hook works, you have to use run_cell(code,
     # True).  This means that the code must have no Out, or it will be printed
     # during the tests.
-    app = init_ipython_session()
+    
+    app = _setup_ipython_session(setup_formatter=False)
     app.run_cell("from sympy import *")
-
     enable_automatic_symbols(app)
 
     symbol = "verylongsymbolname"
@@ -57,11 +95,11 @@ def test_automatic_symbols():
 
 def test_int_to_Integer():
     # XXX: Warning, don't test with == here.  0.5 == Rational(1, 2) is True!
-    app = init_ipython_session()
+    app = _setup_ipython_session(setup_formatter=False)
     app.run_cell("from sympy import Integer")
+    
     app.run_cell("a = 1")
     assert isinstance(app.user_ns['a'], int)
-
     enable_automatic_int_sympification(app)
     app.run_cell("a = 1/2")
     assert isinstance(app.user_ns['a'], Rational)
@@ -71,21 +109,19 @@ def test_int_to_Integer():
     assert isinstance(app.user_ns['a'], int)
     app.run_cell("a = (1/\n2)")
     assert app.user_ns['a'] == Rational(1, 2)
+
     # TODO: How can we test that the output of a SyntaxError is the original
     # input, not the transformed input?
 
 
 def test_ipythonprinting():
-    # Initialize and setup IPython session
-    app = init_ipython_session()
-    app.run_cell("ip = get_ipython()")
-    app.run_cell("inst = ip.instance()")
-    app.run_cell("format = inst.display_formatter.format")
+    app = _setup_ipython_session()
     app.run_cell("from sympy import Symbol")
 
     # Printing without printing extension
     app.run_cell("a = format(Symbol('pi'))")
     app.run_cell("a2 = format(Symbol('pi')**2)")
+
     # Deal with API change starting at IPython 1.0
     if int(ipython.__version__.split(".")[0]) < 1:
         assert app.user_ns['a']['text/plain'] == "pi"
@@ -97,9 +133,11 @@ def test_ipythonprinting():
     # Load printing extension
     app.run_cell("from sympy import init_printing")
     app.run_cell("init_printing()")
+
     # Printing with printing extension
     app.run_cell("a = format(Symbol('pi'))")
     app.run_cell("a2 = format(Symbol('pi')**2)")
+
     # Deal with API change starting at IPython 1.0
     if int(ipython.__version__.split(".")[0]) < 1:
         assert app.user_ns['a']['text/plain'] in ('\N{GREEK SMALL LETTER PI}', 'pi')
@@ -110,15 +148,11 @@ def test_ipythonprinting():
 
 
 def test_print_builtin_option():
-    # Initialize and setup IPython session
-    app = init_ipython_session()
-    app.run_cell("ip = get_ipython()")
-    app.run_cell("inst = ip.instance()")
-    app.run_cell("format = inst.display_formatter.format")
+    app = _setup_ipython_session()
     app.run_cell("from sympy import Symbol")
     app.run_cell("from sympy import init_printing")
-
     app.run_cell("a = format({Symbol('pi'): 3.14, Symbol('n_i'): 3})")
+
     # Deal with API change starting at IPython 1.0
     if int(ipython.__version__.split(".")[0]) < 1:
         text = app.user_ns['a']['text/plain']
@@ -126,6 +160,7 @@ def test_print_builtin_option():
     else:
         text = app.user_ns['a'][0]['text/plain']
         raises(KeyError, lambda: app.user_ns['a'][0]['text/latex'])
+
     # XXX: How can we make this ignore the terminal width? This test fails if
     # the terminal is too narrow.
     assert text in ("{pi: 3.14, n_i: 3}",
@@ -138,6 +173,7 @@ def test_print_builtin_option():
     app.run_cell("inst.display_formatter.formatters['text/latex'].enabled = True")
     app.run_cell("init_printing(use_latex=True)")
     app.run_cell("a = format({Symbol('pi'): 3.14, Symbol('n_i'): 3})")
+
     # Deal with API change starting at IPython 1.0
     if int(ipython.__version__.split(".")[0]) < 1:
         text = app.user_ns['a']['text/plain']
@@ -159,6 +195,7 @@ def test_print_builtin_option():
             return r"\\LaTeX"
     """)
     app.run_cell("a = format((WithOverload(),))")
+
     # Deal with API change starting at IPython 1.0
     if int(ipython.__version__.split(".")[0]) < 1:
         latex = app.user_ns['a']['text/latex']
@@ -169,6 +206,7 @@ def test_print_builtin_option():
     app.run_cell("inst.display_formatter.formatters['text/latex'].enabled = True")
     app.run_cell("init_printing(use_latex=True, print_builtin=False)")
     app.run_cell("a = format({Symbol('pi'): 3.14, Symbol('n_i'): 3})")
+
     # Deal with API change starting at IPython 1.0
     if int(ipython.__version__.split(".")[0]) < 1:
         text = app.user_ns['a']['text/plain']
@@ -176,6 +214,7 @@ def test_print_builtin_option():
     else:
         text = app.user_ns['a'][0]['text/plain']
         raises(KeyError, lambda: app.user_ns['a'][0]['text/latex'])
+
     # Note : In Python 3 we have one text type: str which holds Unicode data
     # and two byte types bytes and bytearray.
     # Python 3.3.3 + IPython 0.13.2 gives: '{n_i: 3, pi: 3.14}'
@@ -184,11 +223,7 @@ def test_print_builtin_option():
 
 
 def test_builtin_containers():
-    # Initialize and setup IPython session
-    app = init_ipython_session()
-    app.run_cell("ip = get_ipython()")
-    app.run_cell("inst = ip.instance()")
-    app.run_cell("format = inst.display_formatter.format")
+    app = _setup_ipython_session()
     app.run_cell("inst.display_formatter.formatters['text/latex'].enabled = True")
     app.run_cell("from sympy import init_printing, Matrix")
     app.run_cell('init_printing(use_latex=True, use_unicode=False)')
@@ -198,6 +233,7 @@ def test_builtin_containers():
     app.run_cell('import sys')
     app.run_cell('b = format(sys.flags)')
     app.run_cell('c = format((Matrix([1, 2]),))')
+    
     # Deal with API change starting at IPython 1.0
     if int(ipython.__version__.split(".")[0]) < 1:
         assert app.user_ns['a']['text/plain'] ==  '(True, False)'
@@ -225,12 +261,7 @@ def test_builtin_containers():
         assert app.user_ns['c'][0]['text/latex'] == '$\\displaystyle \\left( \\left[\\begin{matrix}1\\\\2\\end{matrix}\\right],\\right)$'
 
 def test_matplotlib_bad_latex():
-    # Initialize and setup IPython session
-    app = init_ipython_session()
-    app.run_cell("import IPython")
-    app.run_cell("ip = get_ipython()")
-    app.run_cell("inst = ip.instance()")
-    app.run_cell("format = inst.display_formatter.format")
+    app = _setup_ipython_session(import_ipython=True)
     app.run_cell("from sympy import init_printing, Matrix")
     app.run_cell("init_printing(use_latex='matplotlib')")
 
@@ -254,12 +285,7 @@ def test_matplotlib_bad_latex():
 
 
 def test_override_repr_latex():
-    # Initialize and setup IPython session
-    app = init_ipython_session()
-    app.run_cell("import IPython")
-    app.run_cell("ip = get_ipython()")
-    app.run_cell("inst = ip.instance()")
-    app.run_cell("format = inst.display_formatter.format")
+    app = _setup_ipython_session(import_ipython=True)
     app.run_cell("inst.display_formatter.formatters['text/latex'].enabled = True")
     app.run_cell("from sympy import init_printing")
     app.run_cell("from sympy import Symbol")
