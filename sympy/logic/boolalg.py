@@ -82,13 +82,11 @@ class Boolean(Basic):
 
         def __new__(cls, *args: Basic | complex) -> Boolean:
             ...
-        def _eval_as_set(self) -> Set:
-            ...
 
         @overload # type: ignore
         def subs(self, arg1: Mapping[Basic | complex, Boolean | complex], arg2: None=None) -> Boolean: ...
         @overload
-        def subs(self, arg1: Mapping[Relational, Relational], arg2: None=None) -> Boolean: ...
+        def subs(self, arg1: Mapping[Relational, BooleanTrue | BooleanFalse], arg2: None=None) -> Boolean: ...
         @overload
         def subs(self, arg1: Iterable[tuple[Basic | complex, Boolean | complex]], arg2: None=None, **kwargs: Any) -> Boolean: ...
         @overload
@@ -207,7 +205,7 @@ class Boolean(Basic):
                             as_set is not implemented for relationals
                             with periodic solutions
                             '''))
-                new = self.xreplace(reps)
+                new = self.subs(reps)
                 if new.func != self.func:
                     return new.as_set()  # restart with new obj
                 else:
@@ -233,6 +231,9 @@ class Boolean(Basic):
         elif ret is False:
             return false
         return None
+
+    def _eval_as_set(self) -> Set:
+        raise NotImplementedError("Subclasses of Boolean should implement this")
 
 
 class BooleanAtom(Boolean):
