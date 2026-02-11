@@ -2,7 +2,7 @@
 
 from sympy.core import Integer, Rational, Symbol
 from sympy.external import import_module
-from sympy.interactive.session import ( 
+from sympy.interactive.session import (
     enable_automatic_int_sympification, enable_automatic_symbols,
     init_ipython_session)
 from sympy.testing.pytest import raises
@@ -96,7 +96,6 @@ def test_int_to_Integer():
     # XXX: Warning, don't test with == here.  0.5 == Rational(1, 2) is True!
     app = _setup_ipython_session(setup_formatter=False)
     app.run_cell("from sympy import Integer")
-    
     app.run_cell("a = 1")
     assert isinstance(app.user_ns['a'], int)
     enable_automatic_int_sympification(app)
@@ -232,7 +231,6 @@ def test_builtin_containers():
     app.run_cell('import sys')
     app.run_cell('b = format(sys.flags)')
     app.run_cell('c = format((Matrix([1, 2]),))')
-    
     # Deal with API change starting at IPython 1.0
     if int(ipython.__version__.split(".")[0]) < 1:
         assert app.user_ns['a']['text/plain'] ==  '(True, False)'
@@ -258,7 +256,6 @@ def test_builtin_containers():
  [2]  \
 """
         assert app.user_ns['c'][0]['text/latex'] == '$\\displaystyle \\left( \\left[\\begin{matrix}1\\\\2\\end{matrix}\\right],\\right)$'
-    
 def test_matplotlib_bad_latex():
     app = _setup_ipython_session(import_ipython=True)
     app.run_cell("from sympy import init_printing, Matrix")
