@@ -17,7 +17,6 @@ from sympy.functions.combinatorial.factorials import factorial
 from sympy.ntheory import primefactors, sieve
 from sympy.ntheory.factor_ import (factorint, multiplicity)
 from sympy.ntheory.primetest import isprime
-from sympy.series.formal import FormalPowerSeries, fps
 from sympy.utilities.iterables import has_variety, is_sequence, uniq
 
 rmul = Permutation.rmul_with_af
@@ -2714,15 +2713,15 @@ class PermutationGroup(Basic):
 
         return classes
 
-    def molien_series(self, x: Expr | None = None) -> FormalPowerSeries:
-        r"""Return the Molien series for the permutation action on
+    def molien(self, x: Expr | None = None) -> Expr:
+        r"""Return the Molien rational function for the permutation action on
         ``k[x_1, ..., x_n]``.
 
         Explanation
         ===========
 
-        For a finite permutation group `G \le S_n`, this computes the Molien
-        series
+        For a finite permutation group `G \le S_n`, this computes the generating function 
+        for the Molien series
 
         .. math::
             \mathrm{Mol}_G(t) = \frac{1}{|G|}\sum_{g\in G}
@@ -2736,25 +2735,25 @@ class PermutationGroup(Basic):
         ==========
 
         x : Symbol, optional
-            Indeterminate for the formal power series. Defaults to ``t``.
+            Indeterminate for the Molien function. Defaults to ``t``.
 
         Returns
         =======
 
-        FormalPowerSeries
-            The Molien series as a SymPy formal power series.
+        Expr
+            The Molien function as a rational SymPy expression.
 
         Examples
         ========
 
         >>> from sympy.combinatorics.named_groups import SymmetricGroup
         >>> S3 = SymmetricGroup(3)
-        >>> S3.molien_series().truncate(7)
-        1 + t + 2*t**2 + 3*t**3 + 4*t**4 + 5*t**5 + 7*t**6 + O(t**7)
+        >>> S3.molien()
+        1/(3*(1 - t**3)) + 1/(2*(1 - t)*(1 - t**2)) + 1/(6*(1 - t)**3)
         """
         x = Symbol('t') if x is None else _sympify(x)
         if self.degree == 0:
-            return fps(S.One + Mul(S.Zero, x, evaluate=False), x)
+            return S.One
 
         order = self.order()
         terms = []
@@ -2769,7 +2768,7 @@ class PermutationGroup(Basic):
 
         molien = Add(*terms)
         molien = molien/S(order)
-        return fps(molien, x)
+        return molien
 
     def normal_closure(self, other, k=10):
         r"""Return the normal closure of a subgroup/set of permutations.
