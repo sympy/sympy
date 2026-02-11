@@ -19,12 +19,43 @@ class SymPySnapshotRunner(SymPyDocTestRunner):
         self.snapshot_mismatches = []
 
     def report_failure(self, out, test, example, got):
-        # record mismatch data required
+        # Normal output mismatch
+
+        if got is None:
+            got = ""
+
+        if got and not got.endswith("\n"):
+            got += "\n"
+
+        want = example.want or ""
+        if want and not want.endswith("\n"):
+            want += "\n"
+
         self.snapshot_mismatches.append({
             "filename": test.filename,
             "lineno": example.lineno,
             "source": example.source,
-            "want": example.want,
+            "want": want,
+            "got": got,
+        })
+
+        self._fakeout.truncate(0)
+        self._fakeout.seek(0)
+
+    def report_unexpected_exception(self, out, test, example, exc_info):
+        # Exception mismatch
+
+        got = format_exception_for_snapshot(exc_info)
+
+        want = example.want or ""
+        if want and not want.endswith("\n"):
+            want += "\n"
+
+        self.snapshot_mismatches.append({
+            "filename": test.filename,
+            "lineno": example.lineno,
+            "source": example.source,
+            "want": want,
             "got": got,
         })
 
@@ -35,6 +66,7 @@ class SymPySnapshotRunner(SymPyDocTestRunner):
 # Monkeypatch name-mangled methods for SnapshotRunner
 monkeypatched_snapshot_methods = [
     'report_failure',
+    'report_unexpected_exception',
 ]
 
 for method in monkeypatched_snapshot_methods:
@@ -71,14 +103,14 @@ def apply_snapshot_updates(filename, mismatches):
         f.writelines(lines)
 
 
-def _run_section(name, text, filename, base_globs, optionflags, update, start_line):
+def _run_section(name, text, filename, base_globs, optionflags, start_line):
     """
     Run snapshot tests for one markdown section.
     """
     globs = base_globs.copy()
     globs["__name__"] = "__main__"
 
-    runner = SymPySnapshotRunner(optionflags=optionflags)
+    runner = SymPySnapshotRunner(verbose=False, optionflags=optionflags)
     runner._checker = SymPyOutputChecker()
 
     parser = pdoctest.DocTestParser()
@@ -106,11 +138,14 @@ def snapshot_testfile(filename, module_relative=True, name=None, package=None,
     text, filename = pdoctest._load_testfile(
         filename, package, module_relative, encoding)
 
-    (preamble_text, preamble_start), sections = split_markdown_sections(text)
+    sections = split_markdown_sections(text)
 
     if not sections:
-        print(f"{filename}: no snapshot sections found")
+        print(f"{filename}: no test sections found")
         return SymPyTestResults(0, 0)
+
+    preamble_name, preamble_text, preamble_start = sections[0]
+    test_sections = sections[1:]
 
     # Base globals (from preamble)
     base_globs = {}
@@ -120,13 +155,20 @@ def snapshot_testfile(filename, module_relative=True, name=None, package=None,
             preamble_text, base_globs, "<preamble>", filename, 0
         )
 
-        preamble_runner = SymPySnapshotRunner(optionflags=optionflags)
+        preamble_runner = SymPySnapshotRunner(verbose=False, optionflags=optionflags)
         preamble_runner._checker = SymPyOutputChecker()
         # run the preamble code, but do not forget the globals set
         preamble_runner.run(preamble_test, clear_globs=False)
 
         if preamble_runner.snapshot_mismatches:
-            print(f"{filename}: failures in preamble")
+            for m in preamble_runner.snapshot_mismatches:
+                print(f"Preamble failure at line {m['lineno']}")
+                print(m["source"].rstrip())
+                print("--- expected")
+                print(m["want"].rstrip())
+                print("+++ got")
+                print(m["got"].rstrip())
+
             return SymPyTestResults(
                 len(preamble_runner.snapshot_mismatches),
                 preamble_runner.tries,
@@ -135,28 +177,30 @@ def snapshot_testfile(filename, module_relative=True, name=None, package=None,
         # record the globals set in the preamble
         base_globs = preamble_test.globs.copy()
 
+    if not test_sections:
+        print(f"{filename}: no test sections after preamble")
+        return SymPyTestResults(0, 0)
+
     total_tries = 0
     total_failures = 0
     all_mismatches = []
 
-    print(f"{filename}: {len(sections)} sections")
+    print(f"{filename}: {len(test_sections)} sections")
 
     # Run sections
-    for section_name, section_text, section_start in sections:
-        print(f"  [{section_name}]")
+    for name, text, start in test_sections:
+        print(f"  [{name}]")
 
         tries, mismatches = _run_section(
-            section_name,
-            section_text,
+            name,
+            text,
             filename,
             base_globs,
             optionflags,
-            update,
-            section_start
+            start,
         )
 
         total_tries += tries
-
         if mismatches:
             total_failures += len(mismatches)
             all_mismatches.extend(mismatches)
@@ -178,18 +222,14 @@ def snapshot_testfile(filename, module_relative=True, name=None, package=None,
 
 def split_markdown_sections(text):
     """
-    Split markdown text into preamble and named sections.
-
-    First top-level heading (# ...) is treated as preamble.
-    Remaining headings are test sections.
+    Split file into sections based on '# ' headings.
 
     Returns:
-        preamble: (text, start_line)
         sections: list of (name, text, start_line)
     """
     lines = text.splitlines(keepends=True)
 
-    blocks = []
+    sections = []
 
     current_name = None
     current_lines = []
@@ -197,32 +237,47 @@ def split_markdown_sections(text):
 
     for i, line in enumerate(lines):
         if line.startswith("# "):
-            # Save previous block
+            # Save previous
             if current_name is not None:
-                blocks.append(
+                sections.append(
                     (current_name, "".join(current_lines), current_start)
                 )
 
             current_name = line[2:].strip()
             current_lines = []
-            current_start = i + 1  # content starts after header
+
+            # + 1 because doctest uses 1 based line numbers
+            current_start = i + 1
         else:
             current_lines.append(line)
 
-    # Save last block
     if current_name is not None:
-        blocks.append(
+        sections.append(
             (current_name, "".join(current_lines), current_start)
         )
 
-    if not blocks:
-        return ("", 0), []
+    return sections
 
-    # First block = preamble
-    preamble = (blocks[0][1], blocks[0][2])
-    sections = blocks[1:]
 
-    return preamble, sections
+def format_exception_for_snapshot(exc_info):
+    """
+    Format exception like doctest does:
+    Keep only first + last line.
+    """
+    import traceback
+
+    lines = traceback.format_exception_only(exc_info[0], exc_info[1])
+
+    if not lines:
+        return ""
+
+    last = lines[-1].rstrip()
+
+    return (
+        "Traceback (most recent call last):\n"
+        "...\n"
+        + last + "\n"
+    )
 
 
 def iter_markdown_files(paths):
@@ -255,7 +310,9 @@ def run_snapshot_tests(options, args):
                 optionflags=(
                     pdoctest.ELLIPSIS |
                     pdoctest.NORMALIZE_WHITESPACE |
-                    pdoctest.IGNORE_EXCEPTION_DETAIL
+                    pdoctest.IGNORE_EXCEPTION_DETAIL |
+                    pdoctest.REPORT_UDIFF |
+                    pdoctest.FAIL_FAST
                 ),
                 update=options.update
             )
