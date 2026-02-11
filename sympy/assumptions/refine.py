@@ -97,8 +97,8 @@ def refine_abs(expr, assumptions):
     """
     from sympy.functions.elementary.complexes import Abs
     arg = expr.args[0]
-    if ask(Q.real(arg), assumptions) and \
-            fuzzy_not(ask(Q.negative(arg), assumptions)):
+    if (ask(Q.real(arg), assumptions) and
+            fuzzy_not(ask(Q.negative(arg), assumptions))):
         # if it's nonnegative
         return arg
     if ask(Q.negative(arg), assumptions):
@@ -147,8 +147,8 @@ def refine_Pow(expr, assumptions):
     from sympy.functions.elementary.complexes import Abs
     from sympy.functions import sign
     if isinstance(expr.base, Abs):
-        if ask(Q.real(expr.base.args[0]), assumptions) and \
-                ask(Q.even(expr.exp), assumptions):
+        if (ask(Q.real(expr.base.args[0]), assumptions) and
+                ask(Q.even(expr.exp), assumptions)):
             return expr.base.args[0] ** expr.exp
     if ask(Q.real(expr.base), assumptions):
         if expr.base.is_number:
@@ -504,26 +504,40 @@ def refine_log(expr, assumptions):
 
     arg = expr.args[0]
 
-    # Treat arg as a product of terms (single term is fine too)
-    terms = arg.args if arg.is_Mul else (arg,)
+    product_terms = arg.args if arg.is_Mul else (arg,)
 
-    positive_factors = []
-    other_factors = []
+    resultant_terms = []
+    other_terms = []
 
-    for term in terms:
+    for term in product_terms:
         if ask(Q.positive(term), assumptions):
-            base, exponent = term.as_base_exp()
-            if ask(Q.positive(base), assumptions) and \
-                    ask(Q.real(exponent), assumptions):
-                # log(b**e) -> e*log(b) when b > 0 and e is real
-                positive_factors.append(exponent * log(base))
-            else:
-                positive_factors.append(log(term))
-        elif isinstance(term, exp) and ask(Q.real(term.exp), assumptions):
-            # log(exp(x)) -> x when x is real
-            positive_factors.append(term.exp)
+            if term.is_Pow:
+                base, exponent = term.base, term.exp
+                if (ask(Q.positive(base), assumptions) and
+                        ask(Q.real(exponent), assumptions)):
+                    # log(b**e) -> e*log(b) when b > 0 and e is real
+                    resultant_terms.append(exponent * log(base))
+                    continue
+            if isinstance(term, exp):
+                if ask(Q.real(term.exp), assumptions):
+                    resultant_terms.append(term.exp)
+                    continue
+                elif term.exp.is_Add:
+                    real_parts = []
+                    other_parts = []
+                    for a in term.exp.args:
+                        if ask(Q.real(a), assumptions):
+                            real_parts.append(a)
+                        else:
+                            other_parts.append(a)
+                    if real_parts:
+                        resultant_terms.append(Add(*real_parts))
+                        if other_parts:
+                            resultant_terms.append(log(exp(Add(*other_parts))))
+                        continue
+            resultant_terms.append(log(term))
         elif term.is_Pow:
-            base, exponent = term.as_base_exp()
+            base, exponent = term.base, term.exp
             if ask(Q.positive(base), assumptions) and exponent.is_Add:
                 # Mixed exponent: split real parts from non-real parts
                 # e.g. log(x**(y + 2*I)) -> y*log(x) + log(x**(2*I))
@@ -535,23 +549,23 @@ def refine_log(expr, assumptions):
                     else:
                         other_parts.append(a)
                 if real_parts:
-                    positive_factors.append(Add(*real_parts) * log(base))
+                    resultant_terms.append(Add(*real_parts) * log(base))
                     if other_parts:
-                        positive_factors.append(
+                        resultant_terms.append(
                             log(base**Add(*other_parts)))
                 else:
-                    other_factors.append(term)
+                    other_terms.append(term)
             else:
-                other_factors.append(term)
+                other_terms.append(term)
         else:
-            other_factors.append(term)
+            other_terms.append(term)
 
-    if not positive_factors:
-        return None
+    if not resultant_terms:
+        return expr
 
-    result = Add(*positive_factors)
-    if other_factors:
-        result += log(Mul(*other_factors))
+    result = Add(*resultant_terms)
+    if other_terms:
+        result += log(Mul(*other_terms))
 
     return result
 
