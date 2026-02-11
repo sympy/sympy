@@ -67,6 +67,23 @@ def test_order():
     assert PermutationGroup().order() == 1
 
 
+def test_molien():
+    from sympy.abc import t
+    G = PermutationGroup()
+    assert G.molien() == 1
+    assert G.molien(t) == 1
+
+    C3 = CyclicGroup(3)
+    assert C3.molien() == 2*(1 - t**3)**(-1)/3 + (1 - t)**(-3)/3
+
+    S3 = SymmetricGroup(3)
+    assert S3.molien() == (2*(1 - t**3)**(-1) + 3/((1 - t)*(1 - t**2)) + (1 - t)**(-3))/6
+    assert S3.molien(t) == (2*(1 - t**3)**(-1) + 3/((1 - t)*(1 - t**2)) + (1 - t)**(-3))/6
+
+    G = PermutationGroup(Permutation(5))
+    assert G.molien() == 1/(1 - t)**6
+
+
 def test_identity_generators_dups_false():
     identity = Permutation(3)
     G = PermutationGroup(identity, identity, dups=False)

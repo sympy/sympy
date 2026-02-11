@@ -9,7 +9,7 @@ from sympy.combinatorics.util import (_check_cycles_alt_sym,
     _distribute_gens_by_base, _orbits_transversals_from_bsgs,
     _handle_precomputed_bsgs, _base_ordering, _strong_gens_from_distr,
     _strip, _strip_af)
-from sympy.core import Basic
+from sympy.core import Add, Expr, Basic, Mul, S
 from sympy.core.random import _randrange, randrange, choice
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import _sympify
@@ -2712,6 +2712,63 @@ class PermutationGroup(Basic):
                 known_elements.update(new_class)
 
         return classes
+
+    def molien(self, x: Expr | None = None) -> Expr:
+        r"""Return the Molien rational function for the permutation action on
+        ``k[x_1, ..., x_n]``.
+
+        Explanation
+        ===========
+
+        For a finite permutation group `G \le S_n`, this computes the generating function
+        for the Molien series
+
+        .. math::
+            \mathrm{Mol}_G(t) = \frac{1}{|G|}\sum_{g\in G}
+            \prod_{i=1}^{n} (1 - t^i)^{-c_i(g)},
+
+        where `c_i(g)` is the number of `i`-cycles of `g`.
+
+        The implementation aggregates by conjugacy classes of ``G``.
+
+        Parameters
+        ==========
+
+        x : Symbol, optional
+            Indeterminate for the Molien function. Defaults to ``t``.
+
+        Returns
+        =======
+
+        Expr
+            The Molien function as a rational SymPy expression.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.named_groups import SymmetricGroup
+        >>> S3 = SymmetricGroup(3)
+        >>> S3.molien()
+        1/(3*(1 - t**3)) + 1/(2*(1 - t)*(1 - t**2)) + 1/(6*(1 - t)**3)
+        """
+        x = Symbol('t') if x is None else _sympify(x)
+        if self.degree == 0:
+            return S.One
+
+        order = self.order()
+        terms = []
+
+        for conjugacy_class in self.conjugacy_classes():
+            representative = next(iter(conjugacy_class))
+            factors = [S(len(conjugacy_class))]
+            for cycle_length, count in representative.cycle_structure.items():
+                factors.append((1 - x**cycle_length)**(-count))
+            term = Mul(*factors)
+            terms.append(term)
+
+        molien = Add(*terms)
+        molien = molien/S(order)
+        return molien
 
     def normal_closure(self, other, k=10):
         r"""Return the normal closure of a subgroup/set of permutations.
