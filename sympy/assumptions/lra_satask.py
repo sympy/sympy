@@ -248,10 +248,10 @@ def extract_pred_from_old_assum(all_exprs, allowed_symbols=None):
     explicitly non-real (is_real is False). Symbols with unknown realness
     (is_real is None) are allowed if they appear in the allowed_symbols set,
     which contains symbols that have real-implying predicates in the factbase.
-    
-    Real-implying predicates include all ordering predicates (Q.positive, 
-    Q.negative, Q.zero, Q.nonzero, Q.nonnegative, Q.nonpositive, etc.) 
-    because complex numbers cannot be ordered. Any symbol with such a 
+
+    Real-implying predicates include all ordering predicates (Q.positive,
+    Q.negative, Q.zero, Q.nonzero, Q.nonnegative, Q.nonpositive, etc.)
+    because complex numbers cannot be ordered. Any symbol with such a
     predicate must necessarily be real.
 
     Ignored predicate:

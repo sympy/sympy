@@ -2588,40 +2588,40 @@ def test_issue_28127():
 def test_issue_29096_lra_generic_symbols():
     """
     Test that LRASolver handles generic symbols when assumptions imply realness.
-    
+
     Issue #29096: ask(x > -1, Q.positive(x)) was returning None instead of True.
-    The problem was that LRASolver was rejecting symbols where is_real wasn't 
+    The problem was that LRASolver was rejecting symbols where is_real wasn't
     explicitly True, even when assumptions like Q.positive(x) imply realness.
-    
-    All predicates in the WHITE_LIST (Q.positive, Q.negative, Q.zero, etc.) 
-    imply realness because complex numbers cannot be ordered. Any ordering 
+
+    All predicates in the WHITE_LIST (Q.positive, Q.negative, Q.zero, etc.)
+    imply realness because complex numbers cannot be ordered. Any ordering
     relation necessarily means the number must be real.
     """
     x = Symbol('x')  # Generic symbol with no explicit real assumption
     y = Symbol('y')
     z = Symbol('z')
-    
+
     # Original issue - positive implies real
     assert ask(x > -1, Q.positive(x)) is True
     assert ask(x < 1, Q.negative(x)) is True
-    
+
     # Other real-implying predicates
     assert ask(x > 0, Q.nonnegative(x) & ~Q.zero(x)) is True
     assert ask(x < 0, Q.nonpositive(x) & ~Q.zero(x)) is True
-    
+
     # Edge case: zero
     assert ask(x > -1, Q.zero(x)) is True
     assert ask(x < 1, Q.zero(x)) is True
-    
+
     # Multiple symbols with real-implying assumptions
     assert ask(x + y > 0, Q.positive(x) & Q.positive(y)) is True
-    
+
     # Relations with Q.gt/Q.lt predicates
     assert ask(z > 5, Q.gt(z, 10)) is True
-    
+
     # Nonzero predicate
     assert ask(x != 0, Q.nonzero(x)) is True
-    
+
     # Extended predicates also imply realness
     assert ask(x > 0, Q.extended_positive(x) & ~Q.positive_infinite(x)) is True
 
@@ -2629,18 +2629,18 @@ def test_issue_29096_lra_generic_symbols():
 def test_issue_29096_complex_symbols_still_rejected():
     """
     Test that explicitly complex (non-real) symbols are still properly rejected.
-    
+
     This ensures the fix doesn't break complex number handling. Complex numbers
     cannot be ordered, so relations with explicitly complex symbols should fail.
     """
     from sympy.logic.algorithms.lra_theory import UnhandledInput
-    
+
     # Explicitly complex symbol
     z = Symbol('z', real=False)
-    
+
     # Should raise UnhandledInput because complex numbers can't be ordered
     raises(UnhandledInput, lambda: ask(z > 0, Q.positive(z)))
-    
+
     # Imaginary symbols also can't be ordered
     i_sym = Symbol('i_sym', imaginary=True)
     raises(UnhandledInput, lambda: ask(i_sym > 0))
@@ -2649,23 +2649,23 @@ def test_issue_29096_complex_symbols_still_rejected():
 def test_issue_29096_edge_cases():
     """
     Test edge cases and document current limitations.
-    
+
     Some cases may still return None - this documents the current behavior
     and helps identify areas for future improvement.
     """
     x = Symbol('x')
     y = Symbol('y')
-    
+
     # Symbol with no assumptions and no context - should return None
     assert ask(x > 0) is None
-    
+
     # Mixed: one symbol with assumption, one without
     # This currently works because x has a real-implying assumption
     assert ask(x + y > 0, Q.positive(x) & Q.positive(y)) is True
-    
+
     # Negated predicates - ensure they're handled correctly
     assert ask(x < 0, ~Q.positive(x) & Q.real(x)) is None  # Could be zero or negative
-    
+
     # Relations without sufficient assumptions
     assert ask(x > y) is None
     assert ask(x > y, Q.real(x) & Q.real(y)) is None  # Need more info
