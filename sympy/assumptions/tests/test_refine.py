@@ -76,36 +76,30 @@ def test_exp():
 def test_Piecewise():
     assert refine(Piecewise((1, x < 0), (3, True)), (x < 0)) == 1
     assert refine(Piecewise((1, x < 0), (3, True)), ~(x < 0)) == 3
-    assert (refine(Piecewise((1, x < 0), (3, True)), (y < 0)) ==
-        Piecewise((1, x < 0), (3, True)))
+    assert (refine(Piecewise((1, x < 0), (3, True)), (y < 0))
+    == Piecewise((1, x < 0), (3, True)))
     assert refine(Piecewise((1, x > 0), (3, True)), (x > 0)) == 1
     assert refine(Piecewise((1, x > 0), (3, True)), ~(x > 0)) == 3
-    assert (refine(Piecewise((1, x > 0), (3, True)), (y > 0)) ==
-        Piecewise((1, x > 0), (3, True)))
+    assert (refine(Piecewise((1, x > 0), (3, True)), (y > 0))
+    == Piecewise((1, x > 0), (3, True)))
     assert (refine(Piecewise((1, x <= 0), (3, True)), (x <= 0)) == 1)
     assert (refine(Piecewise((1, x <= 0), (3, True)), ~(x <= 0)) == 3)
-    assert (refine(Piecewise((1, x <= 0), (3, True)), (y <= 0)) ==
-        Piecewise((1, x <= 0), (3, True)))
+    assert (refine(Piecewise((1, x <= 0), (3, True)), (y <= 0))
+    == Piecewise((1, x <= 0), (3, True)))
     assert (refine(Piecewise((1, x >= 0), (3, True)), (x >= 0)) == 1)
     assert (refine(Piecewise((1, x >= 0), (3, True)), ~(x >= 0)) == 3)
-    assert (refine(Piecewise((1, x >= 0), (3, True)), (y >= 0)) ==
-        Piecewise((1, x >= 0), (3, True)))
-    assert (refine(Piecewise((1, Eq(x, 0)), (3, True)), (Eq(x, 0))) ==
-        1)
-    assert (refine(Piecewise((1, Eq(x, 0)), (3, True)), (Eq(0, x))) ==
-        1)
-    assert (refine(Piecewise((1, Eq(x, 0)), (3, True)), ~(Eq(x, 0))) ==
-        3)
-    assert (refine(Piecewise((1, Eq(x, 0)), (3, True)), ~(Eq(0, x))) ==
-        3)
-    assert (refine(Piecewise((1, Eq(x, 0)), (3, True)), (Eq(y, 0))) ==
-        Piecewise((1, Eq(x, 0)), (3, True)))
-    assert (refine(Piecewise((1, Ne(x, 0)), (3, True)), (Ne(x, 0))) ==
-        1)
-    assert (refine(Piecewise((1, Ne(x, 0)), (3, True)), ~(Ne(x, 0))) ==
-        3)
-    assert (refine(Piecewise((1, Ne(x, 0)), (3, True)), (Ne(y, 0))) ==
-        Piecewise((1, Ne(x, 0)), (3, True)))
+    assert (refine(Piecewise((1, x >= 0), (3, True)), (y >= 0))
+    == Piecewise((1, x >= 0), (3, True)))
+    assert (refine(Piecewise((1, Eq(x, 0)), (3, True)), (Eq(x, 0))) == 1)
+    assert (refine(Piecewise((1, Eq(x, 0)), (3, True)), (Eq(0, x))) == 1)
+    assert (refine(Piecewise((1, Eq(x, 0)), (3, True)), ~(Eq(x, 0))) == 3)
+    assert (refine(Piecewise((1, Eq(x, 0)), (3, True)), ~(Eq(0, x))) == 3)
+    assert (refine(Piecewise((1, Eq(x, 0)), (3, True)), (Eq(y, 0)))
+    == Piecewise((1, Eq(x, 0)), (3, True)))
+    assert (refine(Piecewise((1, Ne(x, 0)), (3, True)), (Ne(x, 0))) == 1)
+    assert (refine(Piecewise((1, Ne(x, 0)), (3, True)), ~(Ne(x, 0))) == 3)
+    assert (refine(Piecewise((1, Ne(x, 0)), (3, True)), (Ne(y, 0)))
+    == Piecewise((1, Ne(x, 0)), (3, True)))
 
 
 def test_atan2():
