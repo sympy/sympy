@@ -24,7 +24,8 @@ from sympy.utilities.iterables import sift, ibin
 from sympy.utilities.misc import filldedent
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable, Mapping
+    from collections.abc import Iterable
+    from sympy.core.basic import _SupportsItems
 
 
 def as_Boolean(e):
@@ -78,27 +79,24 @@ class Boolean(Basic):
 
     if TYPE_CHECKING:
         from sympy.sets.sets import Set
-        from sympy.core.relational import Relational
 
         def __new__(cls, *args: Basic | complex) -> Boolean:
             ...
 
         @overload # type: ignore
-        def subs(self, arg1: Mapping[Basic | complex, Boolean | complex], arg2: None=None) -> Boolean: ...
-        @overload
-        def subs(self, arg1: Mapping[Relational, BooleanTrue | BooleanFalse], arg2: None=None) -> Boolean: ...
-        @overload
-        def subs(self, arg1: Iterable[tuple[Basic | complex, Boolean | complex]], arg2: None=None, **kwargs: Any) -> Boolean: ...
+        def subs(self, arg1: _SupportsItems[Basic | complex, Boolean | complex]
+                 | Iterable[tuple[Basic | complex, Boolean | complex]],
+                 arg2: None=None, **kwargs: Any) -> Boolean: ...
         @overload
         def subs(self, arg1: Boolean | complex, arg2: Boolean | complex) -> Boolean: ...
         @overload
-        def subs(self, arg1: Mapping[Basic | complex, Basic | complex], arg2: None=None, **kwargs: Any) -> Basic: ...
-        @overload
-        def subs(self, arg1: Iterable[tuple[Basic | complex, Basic | complex]], arg2: None=None, **kwargs: Any) -> Basic: ...
+        def subs(self, arg1: _SupportsItems[Basic | complex, Basic | complex]
+                 | Iterable[tuple[Basic | complex, Basic | complex]],
+                 arg2: None=None, **kwargs: Any) -> Basic: ...
         @overload
         def subs(self, arg1: Basic | complex, arg2: Basic | complex, **kwargs: Any) -> Basic: ...
 
-        def subs(self, arg1: Mapping[Basic | complex, Basic | complex] | Basic | complex, # type: ignore
+        def subs(self, arg1: _SupportsItems[Basic | complex, Basic | complex] | Basic | complex, # type: ignore
                  arg2: Basic | complex | None = None, **kwargs: Any) -> Basic:
             ...
 
@@ -106,13 +104,13 @@ class Boolean(Basic):
             ...
 
     @sympify_return([('other', 'Boolean')], NotImplemented)
-    def __and__(self, other: Boolean) -> Boolean:
+    def __and__(self, other: Boolean | bool) -> Boolean:
         return And(self, other)
 
     __rand__ = __and__
 
     @sympify_return([('other', 'Boolean')], NotImplemented)
-    def __or__(self, other: Boolean) -> Boolean:
+    def __or__(self, other: Boolean | bool) -> Boolean:
         return Or(self, other)
 
     __ror__ = __or__
@@ -122,18 +120,18 @@ class Boolean(Basic):
         return Not(self)
 
     @sympify_return([('other', 'Boolean')], NotImplemented)
-    def __rshift__(self, other: Boolean) -> Boolean:
+    def __rshift__(self, other: Boolean | bool) -> Boolean:
         return Implies(self, other)
 
     @sympify_return([('other', 'Boolean')], NotImplemented)
-    def __lshift__(self, other: Boolean) -> Boolean:
+    def __lshift__(self, other: Boolean | bool) -> Boolean:
         return Implies(other, self)
 
     __rrshift__ = __lshift__
     __rlshift__ = __rshift__
 
     @sympify_return([('other', 'Boolean')], NotImplemented)
-    def __xor__(self, other: Boolean) -> Boolean:
+    def __xor__(self, other: Boolean | bool) -> Boolean:
         return Xor(self, other)
 
     __rxor__ = __xor__
