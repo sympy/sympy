@@ -1,5 +1,6 @@
 from math import factorial as _factorial, log, prod
 from itertools import chain, product
+from typing import TYPE_CHECKING, Iterable
 
 
 from sympy.combinatorics import Permutation
@@ -21,6 +22,9 @@ from sympy.utilities.iterables import has_variety, is_sequence, uniq
 
 rmul = Permutation.rmul_with_af
 _af_new = Permutation._af_new
+
+if TYPE_CHECKING:
+    from sympy.polys.rings import PolyElement
 
 
 class PermutationGroup(Basic):
@@ -1086,6 +1090,185 @@ class PermutationGroup(Basic):
             return self.centralizer(PermutationGroup(gens))
         elif hasattr(other, 'array_form'):
             return self.centralizer(PermutationGroup([other]))
+
+    def polynomial_stabilizer(
+        self, polys: "PolyElement | Iterable[PolyElement]"
+    ) -> "PermutationGroup":
+        r"""Return the subgroup fixing given polynomials under variable action.
+
+        Explanation
+        ===========
+
+        The group action is by permutation of variable indices. A permutation
+        `g` is in the returned subgroup if every supplied polynomial is
+        unchanged when variable exponents are permuted by `g`.
+
+        For a maximal variable-symmetry group on `n` variables, use this on
+        `S_n`, e.g. ``SymmetricGroup(n).polynomial_stabilizer(polys)``.
+
+        Parameters
+        ==========
+
+        polys
+            A :class:`~sympy.polys.rings.PolyElement` or an iterable of
+            :class:`~sympy.polys.rings.PolyElement` from the same ring.
+
+        Returns
+        =======
+
+        PermutationGroup
+            Subgroup of ``self`` preserving all supplied polynomials.
+
+        """
+        from sympy.polys.rings import PolyElement
+
+        if isinstance(polys, PolyElement):
+            polys = [polys]
+        elif hasattr(polys, '__iter__'):
+            polys = list(polys)
+        else:
+            raise TypeError(
+                "polys must be a PolyElement or an iterable of PolyElement")
+
+        if not polys:
+            return self
+
+        if not all(isinstance(f, PolyElement) for f in polys):
+            raise TypeError("polys must contain only PolyElement instances")
+
+        ring = polys[0].ring
+        if any(f.ring != ring for f in polys[1:]):
+            raise ValueError("all polynomials must belong to the same ring")
+
+        n = ring.ngens
+        if self.degree != n:
+            raise ValueError(
+                "group degree must equal the number of ring generators")
+
+        if self.is_trivial:
+            return self
+
+        identity = _af_new(list(range(n)))
+        zero = ring.domain.zero
+        to_sympy = ring.domain.to_sympy
+
+        # Keep sparse term data for exact checks and signature precomputation.
+        term_data = []
+        for f in polys:
+            terms = list(f.items())
+            term_data.append((dict(terms), terms))
+
+        def canonical_projection(proj):
+            items = []
+            for key in sorted(proj):
+                coeff = proj[key]
+                if coeff:
+                    items.append((key, to_sympy(coeff)))
+            return tuple(items)
+
+        unary_sig_to_class = {}
+        unary_classes = [None]*n
+
+        for i in range(n):
+            signature_parts = []
+            for _, term_items in term_data:
+                proj = {}
+                for monom, coeff in term_items:
+                    key = monom[i]
+                    value = proj.get(key, zero) + coeff
+                    if value:
+                        proj[key] = value
+                    elif key in proj:
+                        del proj[key]
+                signature_parts.append(canonical_projection(proj))
+            signature = tuple(signature_parts)
+            unary_classes[i] = unary_sig_to_class.setdefault(
+                signature, len(unary_sig_to_class))
+
+        pair_sig_to_class = {}
+        pair_classes = [[None]*n for _ in range(n)]
+
+        for i in range(n):
+            for j in range(n):
+                signature_parts = []
+                for _, term_items in term_data:
+                    proj = {}
+                    for monom, coeff in term_items:
+                        key = (monom[i], monom[j])
+                        value = proj.get(key, zero) + coeff
+                        if value:
+                            proj[key] = value
+                        elif key in proj:
+                            del proj[key]
+                    signature_parts.append(canonical_projection(proj))
+                signature = tuple(signature_parts)
+                pair_classes[i][j] = pair_sig_to_class.setdefault(
+                    signature, len(pair_sig_to_class))
+
+        class_sizes = [0]*len(unary_sig_to_class)
+        for cls in unary_classes:
+            class_sizes[cls] += 1
+        ordered_points = sorted(
+            range(n), key=lambda i: (class_sizes[unary_classes[i]], i))
+        base, strong_gens = self.schreier_sims_incremental(base=ordered_points)
+
+        base_len = len(base)
+
+        def make_test(level):
+            def test(computed_words, level=level):
+                af = computed_words[level]._array_form
+                for i in range(level + 1):
+                    bi = base[i]
+                    if unary_classes[bi] != unary_classes[af[bi]]:
+                        return False
+                for i in range(level + 1):
+                    bi = base[i]
+                    im_bi = af[bi]
+                    pair_row = pair_classes[bi]
+                    pair_row_image = pair_classes[im_bi]
+                    for j in range(level + 1):
+                        bj = base[j]
+                        if pair_row[bj] != pair_row_image[af[bj]]:
+                            return False
+                return True
+            return test
+
+        tests = [make_test(l) for l in range(base_len)]
+
+        def prop(g):
+            af = g._array_form
+            for term_dict, term_items in term_data:
+                for monom, coeff in term_items:
+                    permuted = [0]*n
+                    for idx, exp in enumerate(monom):
+                        permuted[af[idx]] = exp
+                    if term_dict.get(tuple(permuted)) != coeff:
+                        return False
+            return True
+
+        class_points = {}
+        for point, cls in enumerate(unary_classes):
+            class_points.setdefault(cls, []).append(point)
+
+        init_gens = []
+        for points in class_points.values():
+            if len(points) <= 1:
+                continue
+            for a, b in zip(points, points[1:]):
+                transposition = list(range(n))
+                transposition[a], transposition[b] = \
+                    transposition[b], transposition[a]
+                transposition = _af_new(transposition)
+                if transposition in self and prop(transposition):
+                    init_gens.append(transposition)
+
+        if init_gens:
+            init_subgroup = PermutationGroup(init_gens)
+        else:
+            init_subgroup = PermutationGroup([identity])
+
+        return self.subgroup_search(prop, base=base, strong_gens=strong_gens,
+                                    tests=tests, init_subgroup=init_subgroup)
 
     def commutator(self, G, H):
         """
