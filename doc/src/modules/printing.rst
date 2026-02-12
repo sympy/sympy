@@ -128,7 +128,58 @@ Usage::
 LLVM JIT Code Printing
 ----------------------
 
-.. automodule:: sympy.printing.llvmjitcode
+.. module:: sympy.printing.llvmjitcode
+
+This module provides Just-In-Time (JIT) compilation of SymPy expressions to
+native machine code using LLVM. It converts symbolic expressions to compiled
+functions that can be evaluated much faster than pure Python evaluation.
+
+The main entry point is ``llvm_callable`` which creates a native function from
+a SymPy expression.
+
+Usage::
+
+    >>> from sympy import symbols, exp
+    >>> from sympy.abc import x, y
+    >>> from sympy.printing.llvmjitcode import llvm_callable
+    >>> # Compile a simple expression
+    >>> f = llvm_callable([x], x**2 + 3*x + 1)
+    >>> f(2.0)
+    11.0
+    >>> # Compile with multiple variables
+    >>> g = llvm_callable([x, y], x*exp(-y))
+    >>> g(3.0, 1.5)
+    0.669390480...
+
+``llvm_callable`` can also be used with callback signatures for integration
+with scipy.integrate::
+
+    >>> # Create a callback function for scipy.integrate
+    >>> h = llvm_callable([x], exp(-x**2), callback_type='scipy.integrate')
+    >>> import numpy as np
+    >>> # Can be used with scipy.integrate.quad
+    >>> from scipy import integrate
+    >>> integrate.quad(h, -np.inf, np.inf)
+    (1.7724538509055159, 1.4202636780944923)
+
+.. autofunction:: llvm_callable
+
+LLVMJitPrinter
+++++++++++++++
+
+.. autoclass:: LLVMJitPrinter
+   :members:
+
+LLVMJitCallbackPrinter
+++++++++++++++++++++++
+
+.. autoclass:: LLVMJitCallbackPrinter
+   :members:
+
+CodeSignature
++++++++++++++
+
+.. autoclass:: CodeSignature
    :members:
 
 RCodePrinter
