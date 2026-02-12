@@ -199,7 +199,7 @@ class Boolean(Basic):
                     if periodicity(r, x) not in (0, None):
                         s = r._eval_as_set()
                         if s in (S.EmptySet, S.UniversalSet, S.Reals):
-                            reps[r] = false if s is S.EmptySet else true
+                            reps[r] = s.as_relational(x)
                             continue
                         raise NotImplementedError(filldedent('''
                             as_set is not implemented for relationals
