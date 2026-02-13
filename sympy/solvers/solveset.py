@@ -1290,12 +1290,30 @@ def _solveset(f, symbol, domain, _check=False):
         result = Intersection(_solveset(re(a) > 0, symbol, domain),
                               _solveset(im(a), symbol, domain))
     elif f.is_Piecewise:
-        expr_set_pairs = f.as_expr_set_pairs(domain)
-        for (expr, in_set) in expr_set_pairs:
-            if in_set.is_Relational:
-                in_set = in_set.as_set()
-            solns = solver(expr, symbol, in_set)
-            result += solns
+
+        remaining = S.true
+        for expr, cond in f.args:
+            cond_eff = cond & remaining
+            if cond_eff is S.false:
+                remaining = remaining & ~cond
+                continue
+            if cond_eff is S.true:
+                result += solver(expr, symbol, domain)
+                break
+            if not cond_eff.has(symbol):
+                solns = solver(expr, symbol, domain)
+                result += ConditionSet(symbol, cond_eff, solns)
+            else:
+                try:
+                    in_set = cond_eff.as_set()
+                except Exception:
+                    solns = solver(expr, symbol, domain)
+                    result += ConditionSet(symbol, cond_eff, solns)
+                else:
+                    solns = solver(expr, symbol, in_set)
+                    result += solns
+            remaining = remaining & ~cond
+
     elif isinstance(f, Eq):
         result = solver(Add(f.lhs, -f.rhs, evaluate=False), symbol, domain)
 
