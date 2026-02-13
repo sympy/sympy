@@ -122,6 +122,7 @@ nitpick_ignore = [
 
 # To stop docstrings inheritance.
 autodoc_inherit_docstrings = False
+autodoc_typehints = "none"
 
 # See https://www.sympy.org/sphinx-math-dollar/
 mathjax3_config = {

@@ -130,7 +130,22 @@ LLVM JIT Code Printing
 
 .. automodule:: sympy.printing.llvmjitcode
    :members:
+   :undoc-members:
+   :show-inheritance:
+   
+Example
+-------
 
+Here is a simple example of using LLVM JIT code printing::
+
+    from sympy import symbols
+    from sympy.printing.llvmjitcode import llvmjit
+
+    x = symbols('x')
+    expr = x**2 + 1
+
+    f = llvmjit(expr, [x])
+    print(f(2))  # Output: 5
 RCodePrinter
 ------------
 
