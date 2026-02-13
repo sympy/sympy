@@ -14,6 +14,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (atan2, cos, sin)
 from sympy.functions.special.gamma_functions import gamma
+from sympy.functions.special.bessel import besselj
 from sympy.integrals.integrals import Integral
 from sympy.sets.fancysets import Range
 
@@ -223,6 +224,21 @@ def test_user_functions():
     n = symbols('n', integer=True)
     assert fcode(
         factorial(n), user_functions={"factorial": "fct"}) == "      fct(n)"
+
+
+def test_fcode_integer_args_not_converted_to_floats():
+    # issue 20435
+    n = symbols('n', integer=True)
+    x = symbols('x')
+    p = FCodePrinter({'user_functions': {'besselj': 'BESJN'}})
+    # integer-typed arguments should not be converted to floats
+    assert p.doprint(besselj(n + 1, x**2)) == '      BESJN(n + 1, x**2)'
+    assert p.doprint(besselj(n, x)) == '      BESJN(n, x)'
+    # non-integer constant arguments should still be evaluated
+    m = symbols('m', integer=True)
+    result = p.doprint(besselj(m + 2, pi))
+    assert 'm + 2' in result
+    assert '3.14159' in result
 
 
 def test_inline_function():

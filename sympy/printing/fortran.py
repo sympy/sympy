@@ -299,7 +299,7 @@ class FCodePrinter(CodePrinter):
     def _print_Function(self, expr):
         # All constant function args are evaluated as floats
         prec =  self._settings['precision']
-        args = [N(a, prec) for a in expr.args]
+        args = [a if a.is_integer and not a.is_number else N(a, prec) for a in expr.args]
         eval_expr = expr.func(*args)
         if not isinstance(eval_expr, Function):
             return self._print(eval_expr)
