@@ -602,5 +602,5 @@ if GROUND_TYPES == 'flint':
     _GF_types = (flint.nmod, flint.fmpz_mod)
 else:
     from sympy.polys.domains.modularinteger import ModularInteger
-    flint = None
+    flint = None  # type: ignore[assignment]
     _GF_types = (ModularInteger,)

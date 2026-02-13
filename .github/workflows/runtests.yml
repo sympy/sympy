@@ -74,6 +74,21 @@ jobs:
       - name: Run mypy on the sympy package
         run: mypy sympy
 
+  mypy-flint:
+    needs: code-quality
+
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.14'
+      - run: python -m pip install --upgrade pip
+      - run: pip install mpmath mypy hypothesis python-flint
+
+      - name: Run mypy on the sympy package with python-flint installed
+        run: mypy sympy
+
   # ------------------------- sphinx-lint -------------------------- #
 
   sphinx-lint:
