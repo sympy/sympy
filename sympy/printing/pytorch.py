@@ -1,5 +1,6 @@
 
 import functools as ft
+from typing import Any
 
 from sympy.printing.pycode import AbstractPythonCodePrinter, ArrayPrinter
 from sympy.tensor.array.expressions.array_expressions import ArrayTensorProduct
@@ -9,12 +10,16 @@ from sympy.core.mul import Mul
 from sympy.printing.precedence import PRECEDENCE
 from sympy.external import import_module
 from sympy.codegen.cfunctions import Sqrt
+from sympy.functions.elementary.piecewise import ExprCondPair
 from sympy import S, MutableDenseMatrix
 from sympy import Integer
 
 import sympy
 
 torch = import_module('torch')
+_TorchNNModule: Any = object
+if torch is not None:
+    _TorchNNModule = torch.nn.Module
 
 
 def _torch_attr(path):
@@ -223,7 +228,7 @@ _TORCH_FUNCTION_MAP = {
     sympy.MatPow: ("torch.linalg.matrix_power", _torch_attr("linalg.matrix_power")),
     sympy.Inverse: ("torch.linalg.inv", lambda x, *args: torch.linalg.inv(x)),
     sympy.Piecewise: ("torch.where", piecewise),
-    sympy.functions.elementary.piecewise.ExprCondPair: ("expr_cond_pair", expr_cond_pair),
+    ExprCondPair: ("expr_cond_pair", expr_cond_pair),
     sympy.Mod: ("torch.remainder", _torch_attr("remainder")),
     sympy.Heaviside: ("torch.heaviside", lambda x, h=None: torch.heaviside(x, torch.tensor(
         float(h) if h is not None else 0.5, dtype=x.dtype))),
@@ -554,7 +559,7 @@ class TorchPrinter(ArrayPrinter, AbstractPythonCodePrinter):
 
 
 if torch is not None:
-    class _Node(torch.nn.Module):
+    class _Node(_TorchNNModule):
         def __init__(self, expr, _memodict, _func_lookup, **kwargs):
             super().__init__(**kwargs)
             self._sympy_func = expr.func
@@ -613,7 +618,7 @@ if torch is not None:
                     args.append(arg_)
                 self._args = torch.nn.ModuleList(args)
 
-        def forward(self, memodict) -> torch.Tensor:
+        def forward(self, memodict) -> Any:
             args = []
             for arg in self._args:
                 try:
@@ -672,7 +677,7 @@ if torch is not None:
                 return self._sympy_func(*args)
 
 
-    class SymPyTorchModule(torch.nn.Module):
+    class SymPyTorchModule(_TorchNNModule):
         _default_settings = {
             'torch_version': None,
         }
@@ -727,10 +732,6 @@ if torch is not None:
         def to_sympy(self):
             _memodict = {}
             return [node.to_sympy(_memodict) for node in self._nodes]
-else:
-    SymPyTorchModule = None  # type: ignore[assignment]
-
-
 def torch_code(expr, requires_grad=False, dtype="torch.float64", **settings):
     printer = TorchPrinter(settings={'requires_grad': requires_grad, 'dtype': dtype})
     return printer.doprint(expr, **settings)

@@ -28,9 +28,9 @@ torch = import_module("torch")
 np = import_module("numpy")
 
 if np is None:
-    skip("NumPy not installed", allow_module_level=True)
+    skip("NumPy not installed")
 if torch is None:
-    skip("PyTorch not installed", allow_module_level=True)
+    skip("PyTorch not installed")
 
 if torch is not None:
     m3x3sympy = Matrix([[0, 1, 2], [3, 4, 5], [6, 7, 8]])

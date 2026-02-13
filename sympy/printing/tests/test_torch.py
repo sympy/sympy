@@ -27,7 +27,7 @@ from sympy import Heaviside, gamma, polygamma
 
 torch = import_module("torch")
 if torch is None:
-    skip("PyTorch not installed", allow_module_level=True)
+    skip("PyTorch not installed")
 
 M = MatrixSymbol("M", 3, 3)
 N = MatrixSymbol("N", 3, 3)
