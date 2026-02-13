@@ -2,12 +2,12 @@
 
 import random
 
+import pytest
 import sympy
-from sympy.testing.pytest import skip
 from sympy.external import import_module
 
 from sympy import symbols, Derivative
-from sympy.printing.pytorch import SymPyTorchModule, torch_module, torch_nn_module
+from sympy.printing.pytorch import torch_module, torch_nn_module
 from sympy import (eye, MatrixSymbol, Matrix)
 from sympy.tensor.array import NDimArray
 from sympy.tensor.array.expressions.array_expressions import (
@@ -28,9 +28,9 @@ torch = import_module("torch")
 np = import_module("numpy")
 
 if np is None:
-    skip("NumPy not installed")
+    pytest.skip("NumPy not installed", allow_module_level=True)
 if torch is None:
-    skip("PyTorch not installed")
+    pytest.skip("PyTorch not installed", allow_module_level=True)
 
 if torch is not None:
     m3x3sympy = Matrix([[0, 1, 2], [3, 4, 5], [6, 7, 8]])
@@ -103,10 +103,8 @@ def test_torch_nn_module_alias():
 
     expr = x + y
     mod = torch_nn_module((x, y), expr)
-    assert isinstance(mod, SymPyTorchModule)
-
     alias_mod = torch_module((x, y), expr)
-    assert isinstance(alias_mod, SymPyTorchModule)
+    assert type(mod) is type(alias_mod)
     assert torch.allclose(mod(torch.tensor(2.0), torch.tensor(3.0)),
                           alias_mod(torch.tensor(2.0), torch.tensor(3.0)))
 

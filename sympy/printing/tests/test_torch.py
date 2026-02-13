@@ -1,6 +1,7 @@
 import random
 import math
 
+import pytest
 from sympy import symbols, Derivative
 from sympy.printing.pytorch import torch_code
 from sympy import (eye, MatrixSymbol, Matrix)
@@ -14,7 +15,6 @@ from sympy.functions import \
     Abs, Min, Max, ceiling, exp, floor, sign, sin, asin, cos, \
     acos, tan, atan, atan2, cosh, acosh, sinh, asinh, tanh, atanh, \
     re, im, arg, erf, loggamma, sqrt
-from sympy.testing.pytest import skip
 from sympy.external import import_module
 from sympy.matrices.expressions import \
     Determinant, HadamardProduct, Inverse, Trace
@@ -27,7 +27,7 @@ from sympy import Heaviside, gamma, polygamma
 
 torch = import_module("torch")
 if torch is None:
-    skip("PyTorch not installed")
+    pytest.skip("PyTorch not installed", allow_module_level=True)
 
 M = MatrixSymbol("M", 3, 3)
 N = MatrixSymbol("N", 3, 3)
