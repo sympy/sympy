@@ -47,7 +47,7 @@ def mangle_docstrings(app, what, name, obj, options, lines,
     else:
         try:
             doc = get_doc_object(obj, what, u_NL.join(lines), config=cfg)
-        except ValueError:
+        except (ValueError, TypeError):
             return
         doc = str(doc)
         lines[:] = doc.split(u_NL)
