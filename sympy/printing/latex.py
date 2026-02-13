@@ -14,6 +14,7 @@ from sympy.core.operations import AssocOp
 from sympy.core.power import Pow
 from sympy.core.sorting import default_sort_key
 from sympy.core.sympify import SympifyError
+from sympy.external.mpmath import prec_to_dps, to_str as mlib_to_str
 from sympy.logic.boolalg import true, BooleanTrue, BooleanFalse
 
 
@@ -22,8 +23,6 @@ from sympy.printing.precedence import precedence_traditional
 from sympy.printing.printer import Printer, print_function
 from sympy.printing.conventions import split_super_sub, requires_partial
 from sympy.printing.precedence import precedence, PRECEDENCE
-
-from mpmath.libmp.libmpf import prec_to_dps, to_str as mlib_to_str
 
 from sympy.utilities.iterables import has_variety, sift
 
@@ -683,8 +682,18 @@ class LatexPrinter(Printer):
                             return r"\frac{1}{\frac{%s}{%s}}" % (base_p, base_q)
                         else:
                             return r"\frac{1}{(\frac{%s}{%s})^{%s}}" % (base_p, base_q, abs(expr.exp))
-                # things like 1/x
-                return self._print_Mul(expr)
+                # things like 1/x^y
+                if expr.exp == -1:
+                    if self._settings.get('fold_short_frac', False):
+                        tex = self.parenthesize(expr.base, PRECEDENCE["Pow"])
+                        return r"1 / %s" % tex
+                    else:
+                        base_tex = self._print(expr.base)
+                        return r"\frac{1}{%s}" % base_tex
+                pos_pow = Pow(expr.base, abs(expr.exp), evaluate=False)
+                tex = self._helper_print_standard_power(pos_pow, r"%s^{%s}")
+                return r"\frac{1}{%s}" % tex
+
         if expr.base.is_Function:
             return self._print(expr.base, exp=self._print(expr.exp))
         tex = r"%s^{%s}"
@@ -824,14 +833,18 @@ class LatexPrinter(Printer):
         else:
             tex = r"\frac{%s^{%s}}{%s}" % (diff_symbol, self._print(dim), tex)
 
+        precedence = PRECEDENCE["Mul"]
+        if self._settings['mul_symbol']:
+            # Nudge up the precedence so d/dx (f(x) * g(x)) also gets parenthesized
+            precedence += 1
         if any(i.could_extract_minus_sign() for i in expr.args):
             return r"%s %s" % (tex, self.parenthesize(expr.expr,
-                                                  PRECEDENCE["Mul"],
+                                                  precedence,
                                                   is_neg=True,
                                                   strict=True))
 
         return r"%s %s" % (tex, self.parenthesize(expr.expr,
-                                                  PRECEDENCE["Mul"],
+                                                  precedence,
                                                   is_neg=False,
                                                   strict=True))
 
@@ -1076,7 +1089,14 @@ class LatexPrinter(Printer):
             return tex
 
     def _print_log(self, expr, exp=None):
-        if not self._settings["ln_notation"]:
+        if len(expr.args) == 2:
+            argument = self._print(expr.args[0])
+            base = self._print(expr.args[1])
+            if len(base) == 1:
+                tex = r"\log_%s{\left(%s \right)}" % (base, argument)
+            else:
+                tex = r"\log_{%s}{\left(%s \right)}" % (base, argument)
+        elif not self._settings["ln_notation"]:
             tex = r"\log{\left(%s \right)}" % self._print(expr.args[0])
         else:
             tex = r"\ln{\left(%s \right)}" % self._print(expr.args[0])
@@ -1867,6 +1887,10 @@ class LatexPrinter(Printer):
         return self._print_Symbol(expr, style=self._settings[
             'mat_symbol_style'])
 
+    def _print_MatrixUnit(self, E):
+        return "E_{%s,%s}" % (self._print(E._i), self._print(E._j)) \
+            if self._settings['mat_symbol_style'] == 'plain' else r"\mathcal{E}_{%s,%s}" % (self._print(E._i), self._print(E._j))
+
     def _print_ZeroMatrix(self, Z):
         return "0" if self._settings[
             'mat_symbol_style'] == 'plain' else r"\mathbf{0}"
@@ -2625,6 +2649,12 @@ class LatexPrinter(Printer):
         num, den = self._print(expr.num), self._print(expr.den)
         return r"\frac{%s}{%s}" % (num, den)
 
+    def _print_DiscreteTransferFunction(self, expr):
+        num, den = self._print(expr.num), self._print(expr.den)
+        sampling_time = self._print(expr.sampling_time)
+        return r"\frac{%s}{%s} \text{ [st: } {%s} \text{]}" % \
+            (num, den, sampling_time)
+
     def _print_Series(self, expr):
         args = list(expr.args)
         parens = lambda x: self.parenthesize(x, precedence_traditional(expr),
@@ -2685,11 +2715,17 @@ class LatexPrinter(Printer):
         inv_mat = self._print(MIMOSeries(expr.sys2, expr.sys1))
         sys1 = self._print(expr.sys1)
         _sign = "+" if expr.sign == -1 else "-"
-        return r"\left(I_{\tau} %s %s\right)^{-1} \cdot %s" % (_sign, inv_mat, sys1)
+        return r"\left(I_{\tau} %s %s\right)^{-1} \cdot %s" % (_sign, inv_mat,
+                                                               sys1)
 
     def _print_TransferFunctionMatrix(self, expr):
         mat = self._print(expr._expr_mat)
-        return r"%s_\tau" % mat
+        if expr.sampling_time == 0:
+            print_mat = r"%s_\tau" % mat
+        else:
+            print_mat = r"\underset{[st:\ {%s}]}{%s_k}" %\
+                        (expr.sampling_time, mat)
+        return print_mat
 
     def _print_DFT(self, expr):
         return r"\text{{{}}}_{{{}}}".format(expr.__class__.__name__, expr.n)
@@ -2828,6 +2864,14 @@ class LatexPrinter(Printer):
 
     def _print_CovarDerivativeOp(self, cvd):
         return r'\mathbb{\nabla}_{%s}' % self._print(cvd._wrt)
+
+    def _print_BaseScalar(self, expr):
+        coord_sys_name, scalar_name = expr.name.split(".")
+        if scalar_name in greek_letters_set:
+            scalar_name = r"\%s" % scalar_name
+        elif scalar_name in tex_greek_dictionary:
+            scalar_name = tex_greek_dictionary[scalar_name]
+        return r"\boldsymbol{%s}_{\textbf{%s}}" % (scalar_name, coord_sys_name)
 
     def _print_BaseScalarField(self, field):
         string = field._coord_sys.symbols[field._index].name

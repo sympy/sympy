@@ -9,6 +9,7 @@ from collections.abc import Mapping
 import glob
 from contextlib import contextmanager
 from getpass import getpass
+from pathlib import Path
 
 import requests
 from requests.auth import HTTPBasicAuth
@@ -357,8 +358,7 @@ def save_token_file(token):
     try:
         if not os.path.isdir(token_folder):
             os.mkdir(token_folder, 0o700)
-        with open(token_file_expand, 'w') as f:
-            f.write(token + '\n')
+        Path(token_file_expand).write_text(token + '\n')
         os.chmod(token_file_expand, stat.S_IREAD | stat.S_IWRITE)
     except OSError as e:
         print("> Unable to create folder for token file: ", e)

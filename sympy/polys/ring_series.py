@@ -47,14 +47,14 @@ from sympy.polys.puiseux import PuiseuxPoly
 from sympy.polys.polyerrors import DomainError
 from sympy.polys.monomials import (monomial_min, monomial_mul, monomial_div,
                                    monomial_ldiv)
-from mpmath.libmp.libintmath import ifac
+from sympy.external.gmpy import factorial as ifac
+from sympy.external.mpmath import giant_steps
 from sympy.core import PoleError, Function, Expr
 from sympy.core.numbers import Rational
 from sympy.core.intfunc import igcd
 from sympy.functions import (sin, cos, tan, atan, exp, atanh, asinh, tanh, log,
                              ceiling, sinh, cosh)
 from sympy.utilities.misc import as_int
-from mpmath.libmp.libintmath import giant_steps
 import math
 
 
@@ -233,7 +233,7 @@ def rs_mul(p1, p2, x, prec):
     """
     R = p1.ring
     p = {}
-    if R.__class__ != p2.ring.__class__ or R != p2.ring:
+    if R != p2.ring:
         raise ValueError('p1 and p2 must have the same ring')
     iv = R.gens.index(x)
     if not isinstance(p2, (PolyElement, PuiseuxPoly)):
@@ -398,7 +398,7 @@ def rs_subs(p, rules, x, prec):
     """
     R = p.ring
     ngens = R.ngens
-    d = R(0)
+    d = {}
     for i in range(ngens):
         d[(i, 1)] = R.gens[i]
     for var in rules:
@@ -672,10 +672,6 @@ def rs_series_from_list(p, c, x, prec, concur=1):
     >>> rs_trunc(pc.compose(x, p), x, 4)
     6*x**3 + 11*x**2 + 8*x + 6
 
-    """
-
-    # TODO: Add this when it is documented in Sphinx
-    """
     See Also
     ========
 
@@ -974,10 +970,7 @@ def rs_nth_root(p, n, x, prec):
     if _has_constant_term(p - 1, x):
         zm = R.zero_monom
         c = p[zm]
-        if R.domain is EX:
-            c_expr = c.as_expr()
-            const = EX(c_expr**QQ(1, n))
-        elif isinstance(c, PolyElement):
+        if isinstance(c, PolyElement):
             try:
                 c_expr = c.as_expr()
                 const = R(c_expr**(QQ(1, n)))
@@ -1029,25 +1022,15 @@ def rs_log(p, x, prec):
         const = 0
         if c == 1:
             pass
-        else:
+        try:
             c_expr = c.as_expr()
-            if R.domain is EX:
-                const = log(c_expr)
-            elif isinstance(c, (PolyElement, PuiseuxPoly)):
-                try:
-                    const = R(log(c_expr))
-                except ValueError:
-                    R = R.add_gens([log(c_expr)])
-                    p = p.set_ring(R)
-                    x = x.set_ring(R)
-                    c = c.set_ring(R)
-                    const = R(log(c_expr))
-            else:
-                try:
-                    const = R(log(c))
-                except ValueError:
-                    raise DomainError("The given series cannot be expanded in "
-                        "this domain.")
+            const = R(log(c_expr))
+        except ValueError:
+            R = R.add_gens([log(c_expr)])
+            p = p.set_ring(R)
+            x = x.set_ring(R)
+            c = c.set_ring(R)
+            const = R(log(c_expr))
 
         dlog = p.diff(x)
         dlog = rs_mul(dlog, _series_inversion1(p, x, prec), x, prec - 1)
@@ -1073,7 +1056,7 @@ def rs_LambertW(p, x, prec):
     See Also
     ========
 
-    LambertW
+    sympy.functions.elementary.exponential.LambertW
     """
     if rs_is_puiseux(p, x):
         return rs_puiseux(rs_LambertW, p, x, prec)
@@ -1123,25 +1106,16 @@ def rs_exp(p, x, prec):
     R = p.ring
     c = _get_constant_term(p, x)
     if c:
-        if R.domain is EX:
+        try:
             c_expr = c.as_expr()
-            const = exp(c_expr)
-        elif isinstance(c, PolyElement):
-            try:
-                c_expr = c.as_expr()
-                const = R(exp(c_expr))
-            except ValueError:
-                R = R.add_gens([exp(c_expr)])
-                p = p.set_ring(R)
-                x = x.set_ring(R)
-                c = c.set_ring(R)
-                const = R(exp(c_expr))
-        else:
-            try:
-                const = R(exp(c))
-            except ValueError:
-                raise DomainError("The given series cannot be expanded in "
-                    "this domain.")
+            const = R(exp(c_expr))
+        except ValueError:
+            R = R.add_gens([exp(c_expr)])
+            p = p.set_ring(R)
+            x = x.set_ring(R)
+            c = c.set_ring(R)
+            const = R(exp(c_expr))
+
         p1 = p - c
 
     # Makes use of SymPy functions to evaluate the values of the cos/sin
@@ -1196,7 +1170,7 @@ def rs_atan(p, x, prec):
     See Also
     ========
 
-    atan
+    sympy.functions.elementary.trigonometric.atan
     """
     if rs_is_puiseux(p, x):
         return rs_puiseux(rs_atan, p, x, prec)
@@ -1204,25 +1178,15 @@ def rs_atan(p, x, prec):
     const = 0
     c = _get_constant_term(p, x)
     if c:
-        if R.domain is EX:
+        try:
             c_expr = c.as_expr()
-            const = atan(c_expr)
-        elif isinstance(c, PolyElement):
-            try:
-                c_expr = c.as_expr()
-                const = R(atan(c_expr))
-            except ValueError:
-                R = R.add_gens([atan(c_expr)])
-                p = p.set_ring(R)
-                x = x.set_ring(R)
-                c = c.set_ring(R)
-                const = R(atan(c_expr))
-        else:
-            try:
-                const = R(atan(c))
-            except ValueError:
-                raise DomainError("The given series cannot be expanded in "
-                    "this domain.")
+            const = R(atan(c_expr))
+        except ValueError:
+            R = R.add_gens([atan(c_expr)])
+            p = p.set_ring(R)
+            x = x.set_ring(R)
+            c = c.set_ring(R)
+            const = R(atan(c_expr))
 
     # Instead of using a closed form formula, we differentiate atan(p) to get
     # `1/(1+p**2) * dp`, whose series expansion is much easier to calculate.
@@ -1252,13 +1216,13 @@ def rs_asin(p, x, prec):
     See Also
     ========
 
-    asin
+    sympy.functions.elementary.trigonometric.asin
     """
     if rs_is_puiseux(p, x):
         return rs_puiseux(rs_asin, p, x, prec)
     if _has_constant_term(p, x):
         raise NotImplementedError("Polynomial must not have constant term in "
-                                  "series variables")
+                                    "series variables")
     R = p.ring
     if x in R.gens:
         # get a good value
@@ -1318,7 +1282,8 @@ def rs_tan(p, x, prec):
    See Also
    ========
 
-   _tan1, tan
+   _tan1
+   sympy.functions.elementary.trigonometric.tan
    """
     if rs_is_puiseux(p, x):
         r = rs_puiseux(rs_tan, p, x, prec)
@@ -1327,25 +1292,16 @@ def rs_tan(p, x, prec):
     const = 0
     c = _get_constant_term(p, x)
     if c:
-        if R.domain is EX:
+        try:
             c_expr = c.as_expr()
-            const = tan(c_expr)
-        elif isinstance(c, PolyElement):
-            try:
-                c_expr = c.as_expr()
-                const = R(tan(c_expr))
-            except ValueError:
-                R = R.add_gens([tan(c_expr, )])
-                p = p.set_ring(R)
-                x = x.set_ring(R)
-                c = c.set_ring(R)
-                const = R(tan(c_expr))
-        else:
-            try:
-                const = R(tan(c))
-            except ValueError:
-                raise DomainError("The given series cannot be expanded in "
-                    "this domain.")
+            const = R(tan(c_expr))
+        except ValueError:
+            R = R.add_gens([tan(c_expr, )])
+            p = p.set_ring(R)
+            x = x.set_ring(R)
+            c = c.set_ring(R)
+            const = R(tan(c_expr))
+
         p1 = p - c
 
     # Makes use of SymPy functions to evaluate the values of the cos/sin
@@ -1378,7 +1334,7 @@ def rs_cot(p, x, prec):
     See Also
     ========
 
-    cot
+    sympy.functions.elementary.trigonometric.cot
     """
     # It can not handle series like `p = x + x*y` where the coefficient of the
     # linear term in the series variable is symbolic.
@@ -1386,7 +1342,7 @@ def rs_cot(p, x, prec):
         r = rs_puiseux(rs_cot, p, x, prec)
         return r
     i, m = _check_series_var(p, x, 'cot')
-    prec1 = prec + 2*m
+    prec1 = int(prec + 2*m)
     c, s = rs_cos_sin(p, x, prec1)
     s = mul_xin(s, i, -m)
     s = rs_series_inversion(s, x, prec1)
@@ -1416,7 +1372,7 @@ def rs_sin(p, x, prec):
     See Also
     ========
 
-    sin
+    sympy.functions.elementary.trigonometric.sin
     """
     if rs_is_puiseux(p, x):
         return rs_puiseux(rs_sin, p, x, prec)
@@ -1425,30 +1381,22 @@ def rs_sin(p, x, prec):
         return R(0)
     c = _get_constant_term(p, x)
     if c:
-        if R.domain is EX:
+        try:
             c_expr = c.as_expr()
-            t1, t2 = sin(c_expr), cos(c_expr)
-        elif isinstance(c, PolyElement):
-            try:
-                c_expr = c.as_expr()
-                t1, t2 = R(sin(c_expr)), R(cos(c_expr))
-            except ValueError:
-                R = R.add_gens([sin(c_expr), cos(c_expr)])
-                p = p.set_ring(R)
-                x = x.set_ring(R)
-                c = c.set_ring(R)
-                t1, t2 = R(sin(c_expr)), R(cos(c_expr))
-        else:
-            try:
-                t1, t2 = R(sin(c)), R(cos(c))
-            except ValueError:
-                raise DomainError("The given series cannot be expanded in "
-                    "this domain.")
+            t1, t2 = R(sin(c_expr)), R(cos(c_expr))
+        except ValueError:
+            R = R.add_gens([sin(c_expr), cos(c_expr)])
+            p = p.set_ring(R)
+            x = x.set_ring(R)
+            c = c.set_ring(R)
+            t1, t2 = R(sin(c_expr)), R(cos(c_expr))
+
         p1 = p - c
 
     # Makes use of SymPy cos, sin functions to evaluate the values of the
     # cos/sin of the constant term.
-        return rs_sin(p1, x, prec)*t2 + rs_cos(p1, x, prec)*t1
+        p_cos, p_sin = rs_cos_sin(p1, x, prec)
+        return p_sin*t2 + p_cos*t1
 
     # Series is calculated in terms of tan as its evaluation is fast.
     if len(p) > 20 and R.ngens == 1:
@@ -1486,41 +1434,27 @@ def rs_cos(p, x, prec):
     See Also
     ========
 
-    cos
+    sympy.functions.elementary.trigonometric.cos
     """
     if rs_is_puiseux(p, x):
         return rs_puiseux(rs_cos, p, x, prec)
     R = p.ring
     c = _get_constant_term(p, x)
     if c:
-        if R.domain is EX:
+        try:
             c_expr = c.as_expr()
-            _, _ = sin(c_expr), cos(c_expr)
-        elif isinstance(c, PolyElement):
-            try:
-                c_expr = c.as_expr()
-                _, _ = R(sin(c_expr)), R(cos(c_expr))
-            except ValueError:
-                R = R.add_gens([sin(c_expr), cos(c_expr)])
-                p = p.set_ring(R)
-                x = x.set_ring(R)
-                c = c.set_ring(R)
-        else:
-            try:
-                _, _ = R(sin(c)), R(cos(c))
-            except ValueError:
-                raise DomainError("The given series cannot be expanded in "
-                    "this domain.")
-        p1 = p - c
+            t1, t2 = R(sin(c_expr)), R(cos(c_expr))
+        except ValueError:
+            R = R.add_gens([sin(c_expr), cos(c_expr)])
+            p = p.set_ring(R)
+            x = x.set_ring(R)
+            c = c.set_ring(R)
+            t1, t2 = R(sin(c_expr)), R(cos(c_expr))
 
-    # Makes use of SymPy cos, sin functions to evaluate the values of the
-    # cos/sin of the constant term.
-        p_cos = rs_cos(p1, x, prec)
-        p_sin = rs_sin(p1, x, prec)
-        R = R.compose(p_cos.ring).compose(p_sin.ring)
-        p_cos.set_ring(R)
-        p_sin.set_ring(R)
-        t1, t2 = R(sin(c_expr)), R(cos(c_expr))
+        p1 = p - c
+        # Makes use of SymPy cos, sin functions to evaluate the values of the
+        # cos/sin of the constant term.
+        p_cos, p_sin = rs_cos_sin(p1, x, prec)
         return p_cos*t2 - p_sin*t1
 
     # Series is calculated in terms of tan as its evaluation is fast.
@@ -1539,17 +1473,65 @@ def rs_cos(p, x, prec):
     return rs_series_from_list(p, c, x, prec)
 
 def rs_cos_sin(p, x, prec):
-    r"""
-    Return the tuple ``(rs_cos(p, x, prec)`, `rs_sin(p, x, prec))``.
+    """
+    Cosine and sine of a series
 
-    Is faster than calling rs_cos and rs_sin separately
+    Return the series expansion of the cosine and sine of ``p``, about 0.
+
+    Examples
+    ========
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.rings import ring
+    >>> from sympy.polys.ring_series import rs_cos_sin
+    >>> R, x, y = ring('x, y', QQ)
+    >>> c, s = rs_cos_sin(x + x*y, x, 4)
+    >>> c
+    -1/2*x**2*y**2 - x**2*y - 1/2*x**2 + 1
+    >>> s
+    -1/6*x**3*y**3 - 1/2*x**3*y**2 - 1/2*x**3*y - 1/6*x**3 + x*y + x
+
+    See Also
+    ========
+
+    rs_cos, rs_sin
     """
     if rs_is_puiseux(p, x):
         return rs_puiseux(rs_cos_sin, p, x, prec)
-    t = rs_tan(p/2, x, prec)
-    t2 = rs_square(t, x, prec)
-    p1 = rs_series_inversion(1 + t2, x, prec)
-    return (rs_mul(p1, 1 - t2, x, prec), rs_mul(p1, 2*t, x, prec))
+    R = p.ring
+    if not p:
+        return R(0), R(0)
+    c = _get_constant_term(p, x)
+    if c:
+        try:
+            c_expr = c.as_expr()
+            t1, t2 = R(sin(c_expr)), R(cos(c_expr))
+        except ValueError:
+            R = R.add_gens([sin(c_expr), cos(c_expr)])
+            p = p.set_ring(R)
+            x = x.set_ring(R)
+            c = c.set_ring(R)
+            t1, t2 = R(sin(c_expr)), R(cos(c_expr))
+
+        p1 = p - c
+        p_cos, p_sin = rs_cos_sin(p1, x, prec)
+        return p_cos*t2 - p_sin*t1, p_cos*t1 + p_sin*t2
+
+    if len(p) > 20 and R.ngens == 1:
+        t = rs_tan(p/2, x, prec)
+        t2 = rs_square(t, x, prec)
+        p1 = rs_series_inversion(1 + t2, x, prec)
+        return (rs_mul(p1, 1 - t2, x, prec), rs_mul(p1, 2*t, x, prec))
+
+    one = R(1)
+    coeffs = []
+    cn, sn = 1, 1
+    for k in range(2, prec+2, 2):
+        coeffs.extend([(one/cn, 0), (0, one/sn)])
+        cn, sn = -cn*k*(k - 1), -sn*k*(k + 1)
+
+    c, s = zip(*coeffs)
+    return (rs_series_from_list(p, c, x, prec), rs_series_from_list(p, s, x, prec))
 
 def _atanh(p, x, prec):
     """
@@ -1586,31 +1568,20 @@ def rs_atanh(p, x, prec):
     See Also
     ========
 
-    atanh
+    sympy.functions.elementary.hyperbolic.atanh
     """
     if rs_is_puiseux(p, x):
         return rs_puiseux(rs_atanh, p, x, prec)
     R = p.ring
     const = 0
-    if _has_constant_term(p, x):
-        zm = R.zero_monom
-        c = p[zm]
-        if R.domain is EX:
+    c = _get_constant_term(p, x)
+    if c:
+        try:
             c_expr = c.as_expr()
-            const = atanh(c_expr)
-        elif isinstance(c, PolyElement):
-            try:
-                c_expr = c.as_expr()
-                const = R(atanh(c_expr))
-            except ValueError:
-                raise DomainError("The given series cannot be expanded in "
-                    "this domain.")
-        else:
-            try:
-                const = R(atanh(c))
-            except ValueError:
-                raise DomainError("The given series cannot be expanded in "
-                    "this domain.")
+            const = R(atanh(c_expr))
+        except ValueError:
+            raise DomainError("The given series cannot be expanded in "
+                "this domain.")
 
     # Instead of using a closed form formula, we differentiate atanh(p) to get
     # `1/(1-p**2) * dp`, whose series expansion is much easier to calculate.
@@ -1640,7 +1611,7 @@ def rs_asinh(p, x, prec):
     See Also
     ========
 
-    asinh
+    sympy.functions.elementary.hyperbolic.asinh
     """
     if rs_is_puiseux(p, x):
         return rs_puiseux(rs_asinh, p, x, prec)
@@ -1648,22 +1619,12 @@ def rs_asinh(p, x, prec):
     const = 0
     c = _get_constant_term(p, x)
     if c:
-        if R.domain is EX:
+        try:
             c_expr = c.as_expr()
-            const = asinh(c_expr)
-        elif isinstance(c, PolyElement):
-            try:
-                c_expr = c.as_expr()
-                const = R(asinh(c_expr))
-            except ValueError:
-                raise DomainError("The given series cannot be expanded in "
-                    "this domain.")
-        else:
-            try:
-                const = R(asinh(c))
-            except ValueError:
-                raise DomainError("The given series cannot be expanded in "
-                    "this domain.")
+            const = R(asinh(c_expr))
+        except ValueError:
+            raise DomainError("The given series cannot be expanded in "
+                "this domain.")
 
     # Instead of using a closed form formula, we differentiate asinh(p) to get
     # `1/sqrt(1+p**2) * dp`, whose series expansion is much easier to calculate.
@@ -1694,7 +1655,7 @@ def rs_sinh(p, x, prec):
     See Also
     ========
 
-    sinh
+    sympy.functions.elementary.hyperbolic.sinh
     """
     if rs_is_puiseux(p, x):
         return rs_puiseux(rs_sinh, p, x, prec)
@@ -1703,28 +1664,19 @@ def rs_sinh(p, x, prec):
         return R(0)
     c = _get_constant_term(p, x)
     if c:
-        if R.domain is EX:
+        try:
             c_expr = c.as_expr()
-            t1, t2 = sinh(c_expr), cosh(c_expr)
-        elif isinstance(c, PolyElement):
-            try:
-                c_expr = c.as_expr()
-                t1, t2 = R(sinh(c_expr)), R(cosh(c_expr))
-            except ValueError:
-                R = R.add_gens([sinh(c_expr), cosh(c_expr)])
-                p = p.set_ring(R)
-                x = x.set_ring(R)
-                c = c.set_ring(R)
-                t1, t2 = R(sinh(c_expr)), R(cosh(c_expr))
-        else:
-            try:
-                t1, t2 = R(sinh(c)), R(cosh(c))
-            except ValueError:
-                raise DomainError("The given series cannot be expanded in "
-                                  "this domain.")
+            t1, t2 = R(sinh(c_expr)), R(cosh(c_expr))
+        except ValueError:
+            R = R.add_gens([sinh(c_expr), cosh(c_expr)])
+            p = p.set_ring(R)
+            x = x.set_ring(R)
+            c = c.set_ring(R)
+            t1, t2 = R(sinh(c_expr)), R(cosh(c_expr))
 
         p1 = p - c
-        return rs_sinh(p1, x, prec) * t2 + rs_cosh(p1, x, prec) * t1
+        p_cosh, p_sinh = rs_cosh_sinh(p1, x, prec)
+        return p_sinh * t2 + p_cosh * t1
 
     t = rs_exp(p, x, prec)
     t1 = rs_series_inversion(t, x, prec)
@@ -1749,39 +1701,82 @@ def rs_cosh(p, x, prec):
     See Also
     ========
 
-    cosh
+    sympy.functions.elementary.hyperbolic.cosh
     """
     if rs_is_puiseux(p, x):
         return rs_puiseux(rs_cosh, p, x, prec)
     R = p.ring
+    if not p:
+        return R(1)
     c = _get_constant_term(p, x)
     if c:
-        if R.domain is EX:
+        try:
             c_expr = c.as_expr()
-            t1, t2 = sinh(c_expr), cosh(c_expr)
-        elif isinstance(c, PolyElement):
-            try:
-                c_expr = c.as_expr()
-                t1, t2 = R(sinh(c_expr)), R(cosh(c_expr))
-            except ValueError:
-                R = R.add_gens([sinh(c_expr), cosh(c_expr)])
-                p = p.set_ring(R)
-                x = x.set_ring(R)
-                c = c.set_ring(R)
-                t1, t2 = R(sinh(c_expr)), R(cosh(c_expr))
-        else:
-            try:
-                t1, t2 = R(sinh(c)), R(cosh(c))
-            except ValueError:
-                raise DomainError("The given series cannot be expanded in "
-                                  "this domain.")
+            t1, t2 = R(sinh(c_expr)), R(cosh(c_expr))
+        except ValueError:
+            R = R.add_gens([sinh(c_expr), cosh(c_expr)])
+            p = p.set_ring(R)
+            x = x.set_ring(R)
+            c = c.set_ring(R)
+            t1, t2 = R(sinh(c_expr)), R(cosh(c_expr))
 
         p1 = p - c
-        return rs_cosh(p1, x, prec) * t2 + rs_sinh(p1, x, prec) * t1
+        p_cosh, p_sinh = rs_cosh_sinh(p1, x, prec)
+        return p_cosh * t2 + p_sinh * t1
 
     t = rs_exp(p, x, prec)
     t1 = rs_series_inversion(t, x, prec)
     return (t + t1)/2
+
+def rs_cosh_sinh(p, x, prec):
+    """
+    Hyperbolic cosine and sine of a series
+
+    Return the series expansion of the hyperbolic cosine and sine of ``p``, about 0.
+
+    Examples
+    ========
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.rings import ring
+    >>> from sympy.polys.ring_series import rs_cosh_sinh
+    >>> R, x, y = ring('x, y', QQ)
+    >>> c, s = rs_cosh_sinh(x + x*y, x, 4)
+    >>> c
+    1/2*x**2*y**2 + x**2*y + 1/2*x**2 + 1
+    >>> s
+    1/6*x**3*y**3 + 1/2*x**3*y**2 + 1/2*x**3*y + 1/6*x**3 + x*y + x
+
+    See Also
+    ========
+
+    rs_cosh, rs_sinh
+    """
+    if rs_is_puiseux(p, x):
+        return rs_puiseux(rs_cosh_sinh, p, x, prec)
+    R = p.ring
+    if not p:
+        return R(0), R(0)
+    c = _get_constant_term(p, x)
+    if c:
+        try:
+            c_expr = c.as_expr()
+            t1, t2 = R(sinh(c_expr)), R(cosh(c_expr))
+        except ValueError:
+            R = R.add_gens([sinh(c_expr), cosh(c_expr)])
+            p = p.set_ring(R)
+            x = x.set_ring(R)
+            c = c.set_ring(R)
+            t1, t2 = R(sinh(c_expr)), R(cosh(c_expr))
+
+        p1 = p - c
+        p_cosh, p_sinh = rs_cosh_sinh(p1, x, prec)
+        return p_cosh * t2 + p_sinh * t1, p_sinh * t2 + p_cosh * t1
+
+    t = rs_exp(p, x, prec)
+    t1 = rs_series_inversion(t, x, prec)
+    return (t + t1)/2, (t - t1)/2
+
 
 def _tanh(p, x, prec):
     r"""
@@ -1823,7 +1818,7 @@ def rs_tanh(p, x, prec):
     See Also
     ========
 
-    tanh
+    sympy.functions.elementary.hyperbolic.tanh
     """
     if rs_is_puiseux(p, x):
         return rs_puiseux(rs_tanh, p, x, prec)
@@ -1831,25 +1826,16 @@ def rs_tanh(p, x, prec):
     const = 0
     c = _get_constant_term(p, x)
     if c:
-        if R.domain is EX:
+        try:
             c_expr = c.as_expr()
-            const = tanh(c_expr)
-        elif isinstance(c, PolyElement):
-            try:
-                c_expr = c.as_expr()
-                const = R(tanh(c_expr))
-            except ValueError:
-                R = R.add_gens([tanh(c_expr)])
-                p = p.set_ring(R)
-                x = x.set_ring(R)
-                c = c.set_ring(R)
-                const = R(tanh(c_expr))
-        else:
-            try:
-                const = R(tanh(c))
-            except ValueError:
-                raise DomainError("The given series cannot be expanded in "
-                    "this domain.")
+            const = R(tanh(c_expr))
+        except ValueError:
+            R = R.add_gens([tanh(c_expr)])
+            p = p.set_ring(R)
+            x = x.set_ring(R)
+            c = c.set_ring(R)
+            const = R(tanh(c_expr))
+
         p1 = p - c
         t1 = rs_tanh(p1, x, prec)
         t = rs_series_inversion(1 + const*t1, x, prec)
@@ -1906,10 +1892,10 @@ def rs_hadamard_exp(p1, inverse=False):
     p = R.zero
     if not inverse:
         for exp1, v1 in p1.items():
-            p[exp1] = v1/int(ifac(exp1[0]))
+            p[exp1] = v1/int(ifac(int(exp1[0])))
     else:
         for exp1, v1 in p1.items():
-            p[exp1] = v1*int(ifac(exp1[0]))
+            p[exp1] = v1*int(ifac(int(exp1[0])))
     return p
 
 def rs_compose_add(p1, p2):

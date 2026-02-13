@@ -56,8 +56,8 @@ def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
     A number is used to indicate that the search space should be increased.
     A function is used to indicate that said function is likely to occur in a
     simplified expression.
-    An iterable is used indicate that func(var1 + var2 + ...) is likely to
-    occur in a simplified .
+    An iterable is used to indicate that func(var1 + var2 + ...) is likely to
+    occur in a simplified expression.
     An additional generator also indicates that it is likely to occur.
     (See examples below).
 
@@ -590,7 +590,13 @@ def exptrigsimp(expr):
         # functions
         choices = [e]
         if e.has(*_trigs):
-            choices.append(e.rewrite(exp))
+            op = e.rewrite(exp)
+            # if e is an Add, we can try to factor it
+            # helps with expressions with leading factors
+            if e.is_Add:
+                choices.append(factor_terms(op))
+            else:
+                choices.append(op)
         choices.append(e.rewrite(cos))
         return min(*choices, key=count_ops)
     newexpr = bottom_up(expr, exp_trig)

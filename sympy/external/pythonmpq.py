@@ -29,13 +29,13 @@ case we do not bother implementing e.g. __mod__ so that we can be sure we
 are not using it when gmpy2 is installed either.
 """
 
-
+from __future__ import annotations
 import operator
 from math import gcd
 from decimal import Decimal
 from fractions import Fraction
 import sys
-from typing import Tuple as tTuple, Type
+from typing import Type
 
 
 # Used for __hash__
@@ -331,7 +331,7 @@ class PythonMPQ:
         else:
             return NotImplemented
 
-    _compatible_types: tTuple[Type, ...] = ()
+    _compatible_types: tuple[Type, ...] = ()
 
 #
 # These are the types that PythonMPQ will interoperate with for operations

@@ -10,6 +10,7 @@ from sympy.core.singleton import S
 from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, Symbol
 from sympy.core.sympify import sympify
+from sympy.external.mpmath import mp
 from sympy.functions.combinatorial.factorials import binomial, factorial, rf
 from sympy.functions.elementary.exponential import exp_polar, exp, log
 from sympy.functions.elementary.hyperbolic import (cosh, sinh)
@@ -2265,11 +2266,7 @@ def expr_to_holonomic(func, x=None, x0=0, y0=None, lenics=None, domain=None, ini
 
     # create the lookup table
     global _lookup_table, domain_for_table
-    if not _lookup_table:
-        domain_for_table = domain
-        _lookup_table = {}
-        _create_table(_lookup_table, domain=domain)
-    elif domain != domain_for_table:
+    if not _lookup_table or domain != domain_for_table:
         domain_for_table = domain
         _lookup_table = {}
         _create_table(_lookup_table, domain=domain)
@@ -2539,9 +2536,6 @@ def DMFsubs(frac, x0, mpm=False):
     q = frac.den
     sol_p = S.Zero
     sol_q = S.Zero
-
-    if mpm:
-        from mpmath import mp
 
     for i, j in enumerate(reversed(p)):
         if mpm:

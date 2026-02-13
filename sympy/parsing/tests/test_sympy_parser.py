@@ -6,8 +6,9 @@ import types
 
 from sympy.assumptions import Q
 from sympy.core import Symbol, Function, Float, Rational, Integer, I, Mul, Pow, Eq, Lt, Le, Gt, Ge, Ne
-from sympy.functions import exp, factorial, factorial2, sin, Min, Max
-from sympy.logic import And
+from sympy.core.singleton import S
+from sympy.functions import exp, factorial, factorial2, sin, cos, Min, Max
+from sympy.logic import And, Xor
 from sympy.series import Limit
 from sympy.testing.pytest import raises
 
@@ -295,6 +296,16 @@ def test_issue_24288():
     raises(ValueError, lambda: parse_expr("1 not in 2", evaluate=False))
     raises(ValueError, lambda: parse_expr("1 is not 2", evaluate=False))
 
+    x = Symbol('x')
+    assert parse_expr("1 < sin(x) < 2", evaluate=False) == \
+        And(Lt(1, sin(x), evaluate=False), Lt(sin(x), 2, evaluate=False), evaluate=False)
+    assert parse_expr("1 < sin(pi) < 2", evaluate=False) == \
+        And(
+            Lt(1, sin(S.Pi, evaluate=False), evaluate=False),
+            Lt(sin(S.Pi, evaluate=False), 2, evaluate=False),
+            evaluate=False
+        )
+
 def test_split_symbols_numeric():
     transformations = (
         standard_transformations +
@@ -369,3 +380,22 @@ def test_issue_22822():
     raises(ValueError, lambda: parse_expr('x', {'': 1}))
     data = {'some_parameter': None}
     assert parse_expr('some_parameter is None', data) is True
+
+def test_xor_eval_false():
+    p, q = Symbol("p"), Symbol("q")
+    assert parse_expr("p ^ q", evaluate=False) == Xor(p, q, evaluate=False)
+
+
+def test_issue_27832():
+    x = Symbol('x')
+    assert parse_expr('1/1', evaluate=False) == Pow(Integer(1), Integer(-1), evaluate=False)
+    assert parse_expr('1/10 * 4', evaluate=False) == Mul(Pow(Integer(10), Integer(-1), evaluate=False), \
+                                                         Integer(4), evaluate=False)
+    assert parse_expr('1/x', evaluate=False) == Pow(x, Integer(-1), evaluate=False)
+    assert parse_expr('+1/20', evaluate=False) == Pow(Integer(20), Integer(-1), evaluate=False)
+    assert parse_expr('~(~1)/20', evaluate=False) == Pow(Integer(20), Integer(-1), evaluate=False)
+    assert parse_expr('-(-1)/10', evaluate=False) == Pow(Integer(10), Integer(-1), evaluate=False)
+    assert parse_expr('-(~0)/10', evaluate=False) == Pow(Integer(10), Integer(-1), evaluate=False)
+    assert parse_expr('+cos(0)/10', evaluate=False) == Mul(cos(Integer(0), evaluate=False), \
+                                                               Pow(Integer(10), Integer(-1), evaluate=False), \
+                                                               evaluate=False)

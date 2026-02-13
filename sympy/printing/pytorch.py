@@ -1,3 +1,4 @@
+
 import functools as ft
 
 from sympy.printing.pycode import AbstractPythonCodePrinter, ArrayPrinter
@@ -13,8 +14,16 @@ from sympy import Integer
 
 import sympy
 
-
 torch = import_module('torch')
+
+
+def _torch_attr(path):
+    if torch is None:
+        return None
+    obj = torch
+    for name in path.split('.'):
+        obj = getattr(obj, name)
+    return obj
 
 
 def _reduce(fn):
@@ -26,13 +35,22 @@ def _reduce(fn):
 def piecewise(*expr_conds):
     output = None
     already_used = None
+
+    def as_bool_tensor(cond, like):
+        if isinstance(cond, torch.Tensor):
+            return cond.bool()
+        if isinstance(like, torch.Tensor):
+            return torch.tensor(bool(cond), dtype=torch.bool, device=like.device)
+        return torch.tensor(bool(cond), dtype=torch.bool)
+
     for expr, cond in expr_conds:
+        cond_ = as_bool_tensor(cond, expr)
         if output is None:
-            already_used = cond
-            output = torch.where(cond, expr, torch.zeros_like(expr))
+            already_used = cond_
+            output = torch.where(cond_, expr, torch.zeros_like(expr))
         else:
-            output += torch.where(cond.bool() & ~already_used, expr, torch.zeros_like(expr))
-            already_used = already_used | cond.bool()
+            output += torch.where(cond_ & ~already_used, expr, torch.zeros_like(expr))
+            already_used = already_used | cond_
     return output
 
 
@@ -49,54 +67,53 @@ def _get_einsum_spec(subranks, contraction_indices=None, diagonal_indices=None):
     if len(subranks) * max(subranks, default=0) > len(letters):
         raise ValueError("Too many indices for available letters")
 
-    index_map = {}
+    if contraction_indices and diagonal_indices:
+        raise ValueError("Only one of contraction_indices or diagonal_indices can be set")
+
+    index_groups = contraction_indices if contraction_indices else diagonal_indices
+    if index_groups and all(isinstance(i, (int, sympy.Integer)) for i in index_groups):
+        index_groups = (tuple(index_groups),)
+
+    d = {}
+    if index_groups:
+        d = {j: min(group) for group in index_groups for j in group}
+
     counter = 0
-    input_specs = []
+    indices = []
     for rank in subranks:
-        arg_indices = []
+        lindices = []
         for _ in range(rank):
-            if counter not in index_map:
-                index_map[counter] = letters[len(index_map)]
-            arg_indices.append(index_map[counter])
+            lindices.append(d.get(counter, counter))
             counter += 1
-        input_specs.append("".join(arg_indices))
+        indices.append(lindices)
 
-    if diagonal_indices:
-        if all(isinstance(i, (int, sympy.Integer)) for i in diagonal_indices):
-            diagonal_indices = (tuple(diagonal_indices),)
-        d = {j: min(group) for group in diagonal_indices for j in group}
-        indices = []
-        counter = 0
-        for rank in subranks:
-            lindices = []
-            for _ in range(rank):
-                if counter in d:
-                    lindices.append(d[counter])
-                else:
-                    lindices.append(counter)
-                counter += 1
-            indices.append(lindices)
-        mapping = {}
-        letters_free = []
-        letters_dum = []
-        input_specs = []
-        for i in indices:
-            spec = ""
-            for j in i:
-                if j not in mapping:
-                    l = letters[len(mapping)]
-                    mapping[j] = l
-                else:
-                    l = mapping[j]
-                spec += l
-                if j in d:
-                    if l not in letters_dum:
-                        letters_dum.append(l)
-                else:
-                    letters_free.append(l)
-            input_specs.append(spec)
+    mapping = {}
+    letters_free = []
+    letters_dum = []
+    input_specs = []
+    for i in indices:
+        spec = ""
+        for j in i:
+            if j not in mapping:
+                l = letters[len(mapping)]
+                mapping[j] = l
+            else:
+                l = mapping[j]
+            spec += l
+            if j in d:
+                if l not in letters_dum:
+                    letters_dum.append(l)
+            else:
+                letters_free.append(l)
+        input_specs.append(spec)
 
-    output_spec = "".join(sorted(letters_free + letters_dum))
+    if contraction_indices:
+        output_spec = "".join(sorted(letters_free))
+    elif diagonal_indices:
+        output_spec = "".join(letters_free + letters_dum)
+    else:
+        output_spec = "".join(letters_free)
+
     input_spec = ",".join(input_specs)
     return f"{input_spec}->{output_spec}"
 
@@ -118,6 +135,9 @@ def array_tensor_product(*args):
 
 
 def array_contraction(expr, contraction_indices, *args):
+    if isinstance(expr, torch.Tensor):
+        spec = _get_einsum_spec([expr.dim()], contraction_indices=contraction_indices)
+        return torch.einsum(spec, expr)
     subranks = expr.expr.subranks if isinstance(expr.expr, ArrayTensorProduct) else [len(expr.expr.shape)]
     operands = expr.expr.args if isinstance(expr.expr, ArrayTensorProduct) else [expr.expr]
     spec = _get_einsum_spec(subranks, contraction_indices=contraction_indices)
@@ -153,60 +173,62 @@ def array_add(*args):
 
 
 _TORCH_FUNCTION_MAP = {
-    sympy.Mul: ("torch.mul", _reduce(torch.mul)),
-    sympy.Add: ("torch.add", _reduce(torch.add)),
-    sympy.div: ("torch.div", torch.div),
-    sympy.Abs: ("torch.abs", torch.abs),
-    sympy.sign: ("torch.sign", torch.sign),
-    sympy.ceiling: ("torch.ceil", torch.ceil),
-    sympy.floor: ("torch.floor", torch.floor),
-    sympy.log: ("torch.log", torch.log),
-    sympy.exp: ("torch.exp", torch.exp),
-    Sqrt: ("torch.sqrt", torch.sqrt),
-    sympy.cos: ("torch.cos", torch.cos),
-    sympy.acos: ("torch.acos", torch.acos),
-    sympy.sin: ("torch.sin", torch.sin),
-    sympy.asin: ("torch.asin", torch.asin),
-    sympy.tan: ("torch.tan", torch.tan),
-    sympy.atan: ("torch.atan", torch.atan),
-    sympy.atan2: ("torch.atan2", torch.atan2),
-    sympy.cosh: ("torch.cosh", torch.cosh),
-    sympy.acosh: ("torch.acosh", torch.acosh),
-    sympy.sinh: ("torch.sinh", torch.sinh),
-    sympy.asinh: ("torch.asinh", torch.asinh),
-    sympy.tanh: ("torch.tanh", torch.tanh),
-    sympy.atanh: ("torch.atanh", torch.atanh),
-    sympy.Pow: ("torch.pow", torch.pow),
-    sympy.re: ("torch.real", torch.real),
-    sympy.im: ("torch.imag", torch.imag),
-    sympy.arg: ("torch.angle", torch.angle),
-    sympy.conjugate: ("torch.conj", torch.conj),
+    sympy.Mul: ("torch.mul", _reduce(_torch_attr("mul"))),
+    sympy.Add: ("torch.add", _reduce(_torch_attr("add"))),
+    sympy.div: ("torch.div", _torch_attr("div")),
+    sympy.Abs: ("torch.abs", _torch_attr("abs")),
+    sympy.sign: ("torch.sign", _torch_attr("sign")),
+    sympy.ceiling: ("torch.ceil", _torch_attr("ceil")),
+    sympy.floor: ("torch.floor", _torch_attr("floor")),
+    sympy.log: ("torch.log", _torch_attr("log")),
+    sympy.exp: ("torch.exp", _torch_attr("exp")),
+    Sqrt: ("torch.sqrt", _torch_attr("sqrt")),
+    sympy.cos: ("torch.cos", _torch_attr("cos")),
+    sympy.acos: ("torch.acos", _torch_attr("acos")),
+    sympy.sin: ("torch.sin", _torch_attr("sin")),
+    sympy.asin: ("torch.asin", _torch_attr("asin")),
+    sympy.tan: ("torch.tan", _torch_attr("tan")),
+    sympy.atan: ("torch.atan", _torch_attr("atan")),
+    sympy.atan2: ("torch.atan2", _torch_attr("atan2")),
+    sympy.cosh: ("torch.cosh", _torch_attr("cosh")),
+    sympy.acosh: ("torch.acosh", _torch_attr("acosh")),
+    sympy.sinh: ("torch.sinh", _torch_attr("sinh")),
+    sympy.asinh: ("torch.asinh", _torch_attr("asinh")),
+    sympy.tanh: ("torch.tanh", _torch_attr("tanh")),
+    sympy.atanh: ("torch.atanh", _torch_attr("atanh")),
+    sympy.Pow: ("torch.pow", _torch_attr("pow")),
+    sympy.re: ("torch.real", _torch_attr("real")),
+    sympy.im: ("torch.imag", _torch_attr("imag")),
+    sympy.arg: ("torch.angle", _torch_attr("angle")),
+    sympy.conjugate: ("torch.conj", _torch_attr("conj")),
     sympy.core.numbers.ImaginaryUnit: ("1j", lambda *args: torch.tensor(1j)),
-    sympy.erf: ("torch.erf", torch.erf),
-    sympy.loggamma: ("torch.lgamma", torch.lgamma),
-    sympy.Eq: ("torch.eq", torch.eq),
-    sympy.Ne: ("torch.ne", torch.ne),
-    sympy.StrictGreaterThan: ("torch.gt", torch.gt),
-    sympy.StrictLessThan: ("torch.lt", torch.lt),
-    sympy.LessThan: ("torch.le", torch.le),
-    sympy.GreaterThan: ("torch.ge", torch.ge),
-    sympy.And: ("torch.logical_and", torch.logical_and),
-    sympy.Or: ("torch.logical_or", torch.logical_or),
-    sympy.Not: ("torch.logical_not", torch.logical_not),
-    sympy.Max: ("torch.max", torch.max),
-    sympy.Min: ("torch.min", torch.min),
-    sympy.MatAdd: ("torch.add", _reduce(torch.add)),
-    sympy.HadamardProduct: ("torch.mul", torch.mul),
-    sympy.Trace: ("torch.trace", torch.trace),
-    sympy.Determinant: ("torch.det", torch.det),
-    sympy.MatMul: ("torch.matmul", _reduce(torch.matmul)),
-    sympy.MatPow: ("torch.linalg.matrix_power", torch.linalg.matrix_power),
+    sympy.erf: ("torch.erf", _torch_attr("erf")),
+    sympy.loggamma: ("torch.lgamma", _torch_attr("lgamma")),
+    sympy.Eq: ("torch.eq", _torch_attr("eq")),
+    sympy.Ne: ("torch.ne", _torch_attr("ne")),
+    sympy.StrictGreaterThan: ("torch.gt", _torch_attr("gt")),
+    sympy.StrictLessThan: ("torch.lt", _torch_attr("lt")),
+    sympy.LessThan: ("torch.le", _torch_attr("le")),
+    sympy.GreaterThan: ("torch.ge", _torch_attr("ge")),
+    sympy.And: ("torch.logical_and", _torch_attr("logical_and")),
+    sympy.Or: ("torch.logical_or", _torch_attr("logical_or")),
+    sympy.Not: ("torch.logical_not", _torch_attr("logical_not")),
+    sympy.Max: ("torch.maximum", _reduce(_torch_attr("maximum"))),
+    sympy.Min: ("torch.minimum", _reduce(_torch_attr("minimum"))),
+    sympy.MatAdd: ("torch.add", _reduce(_torch_attr("add"))),
+    sympy.HadamardProduct: ("torch.mul", _torch_attr("mul")),
+    sympy.Trace: ("torch.trace", _torch_attr("trace")),
+    sympy.Determinant: ("torch.det", _torch_attr("det")),
+    sympy.MatMul: ("torch.matmul", _reduce(_torch_attr("matmul"))),
+    sympy.MatPow: ("torch.linalg.matrix_power", _torch_attr("linalg.matrix_power")),
     sympy.Inverse: ("torch.linalg.inv", lambda x, *args: torch.linalg.inv(x)),
     sympy.Piecewise: ("torch.where", piecewise),
     sympy.functions.elementary.piecewise.ExprCondPair: ("expr_cond_pair", expr_cond_pair),
-    sympy.Mod: ("torch.remainder", torch.remainder),
+    sympy.Mod: ("torch.remainder", _torch_attr("remainder")),
     sympy.Heaviside: ("torch.heaviside", lambda x, h=None: torch.heaviside(x, torch.tensor(
         float(h) if h is not None else 0.5, dtype=x.dtype))),
+    sympy.logic.boolalg.BooleanTrue: ("True", lambda *args: torch.tensor(True)),
+    sympy.logic.boolalg.BooleanFalse: ("False", lambda *args: torch.tensor(False)),
     sympy.core.numbers.Half: ("0.5", lambda *args: torch.tensor(0.5)),
     sympy.core.numbers.One: ("1.0", lambda *args: torch.tensor(1.0)),
     sympy.logic.boolalg.ITE: ("torch.where", if_then_else),
@@ -227,11 +249,11 @@ _TORCHMODULE_ONLY_FUNCTION_MAP = {
     sympy.tensor.array.expressions.array_expressions.ArrayDiagonal: array_diagonal,
     # Other operations
     sympy.Transpose: lambda x: x.transpose(-2, -1),
-    sympy.matrices.expressions.diagonal.DiagonalMatrix: torch.diag,
-    sympy.matrices.expressions.hadamard.HadamardProduct: torch.mul,
-    sympy.matrices.expressions.hadamard.HadamardPower: torch.pow,
-    sympy.matrices.expressions.determinant.Determinant: torch.linalg.det,
-    DFT: torch.fft.fft,
+    sympy.matrices.expressions.diagonal.DiagonalMatrix: _torch_attr("diag"),
+    sympy.matrices.expressions.hadamard.HadamardProduct: _torch_attr("mul"),
+    sympy.matrices.expressions.hadamard.HadamardPower: _torch_attr("pow"),
+    sympy.matrices.expressions.determinant.Determinant: _torch_attr("linalg.det"),
+    DFT: _torch_attr("fft.fft"),
     sympy.core.symbol.Str: lambda value, *args: value
 }
 
@@ -245,14 +267,71 @@ _TORCH_FUNCTION_MAP.update({
 })
 
 
-_TORCHMODULE_ONLY_FUNCTION_MAP .update(
+_TORCHMODULE_ONLY_FUNCTION_MAP.update(
     {s: ft.partial(lambda val, *args: torch.tensor(float(val)), s())
      for s in number_symbols}
 )
 
 
 class TorchPrinter(ArrayPrinter, AbstractPythonCodePrinter):
+
     printmethod = "_torchcode"
+
+    mapping = {
+        sympy.Abs: "torch.abs",
+        sympy.sign: "torch.sign",
+
+        # XXX May raise error for ints.
+        sympy.ceiling: "torch.ceil",
+        sympy.floor: "torch.floor",
+        sympy.log: "torch.log",
+        sympy.exp: "torch.exp",
+        Sqrt: "torch.sqrt",
+        sympy.cos: "torch.cos",
+        sympy.acos: "torch.acos",
+        sympy.sin: "torch.sin",
+        sympy.asin: "torch.asin",
+        sympy.tan: "torch.tan",
+        sympy.atan: "torch.atan",
+        sympy.atan2: "torch.atan2",
+        # XXX Also may give NaN for complex results.
+        sympy.cosh: "torch.cosh",
+        sympy.acosh: "torch.acosh",
+        sympy.sinh: "torch.sinh",
+        sympy.asinh: "torch.asinh",
+        sympy.tanh: "torch.tanh",
+        sympy.atanh: "torch.atanh",
+        sympy.Pow: "torch.pow",
+
+        sympy.re: "torch.real",
+        sympy.im: "torch.imag",
+        sympy.arg: "torch.angle",
+
+        # XXX May raise error for ints and complexes
+        sympy.erf: "torch.erf",
+        sympy.loggamma: "torch.lgamma",
+
+        sympy.Eq: "torch.eq",
+        sympy.Ne: "torch.ne",
+        sympy.StrictGreaterThan: "torch.gt",
+        sympy.StrictLessThan: "torch.lt",
+        sympy.LessThan: "torch.le",
+        sympy.GreaterThan: "torch.ge",
+
+        sympy.And: "torch.logical_and",
+        sympy.Or: "torch.logical_or",
+        sympy.Not: "torch.logical_not",
+        sympy.Max: "torch.maximum",
+        sympy.Min: "torch.minimum",
+
+        # Matrices
+        sympy.MatAdd: "torch.add",
+        sympy.HadamardProduct: "torch.mul",
+        sympy.Trace: "torch.trace",
+
+        # XXX May raise error for integer matrices.
+        sympy.Determinant: "torch.det",
+    }
 
     _default_settings = dict(
         AbstractPythonCodePrinter._default_settings,
@@ -271,17 +350,19 @@ class TorchPrinter(ArrayPrinter, AbstractPythonCodePrinter):
             version = torch.__version__
         self.torch_version = version
 
-    def _get_op(self, expr_type):
-        return _TORCH_FUNCTION_MAP.get(expr_type, (None, None))
-
     def _print_Function(self, expr):
-        op_str, _ = self._get_op(expr.func)
-        if op_str is None:
+
+        op = self.mapping.get(type(expr), None)
+        if op is None:
             return super()._print_Basic(expr)
         children = [self._print(arg) for arg in expr.args]
         if len(children) == 1:
-            return f"{self._module_format(op_str)}({children[0]})"
-        return self._expand_fold_binary_op(op_str, children)
+            return "%s(%s)" % (
+                self._module_format(op),
+                children[0]
+            )
+        else:
+            return self._expand_fold_binary_op(op, children)
 
     # mirrors the tensorflow version
     _print_Expr = _print_Function
@@ -472,166 +553,182 @@ class TorchPrinter(ArrayPrinter, AbstractPythonCodePrinter):
     _zeros = "zeros"
 
 
-class _Node(torch.nn.Module):
-    def __init__(self, expr, _memodict, _func_lookup, **kwargs):
-        super().__init__(**kwargs)
-        self._sympy_func = expr.func
+if torch is not None:
+    class _Node(torch.nn.Module):
+        def __init__(self, expr, _memodict, _func_lookup, **kwargs):
+            super().__init__(**kwargs)
+            self._sympy_func = expr.func
 
-        if issubclass(expr.func, sympy.Float):
-            self._value = torch.nn.Parameter(torch.tensor(float(expr)))
-            self._torch_func = lambda: self._value
-            self._args = ()
-        elif issubclass(expr.func, sympy.Integer):
-            self.register_buffer("_value", torch.tensor(int(expr)))
-            self._torch_func = lambda: self._value
-            self._args = ()
-        elif issubclass(expr.func, sympy.core.containers.Tuple):
-            self._value = tuple(expr.args)
-            self._torch_func = lambda: self._value
-            self._args = ()
-        elif issubclass(expr.func, sympy.Rational):
-            self.register_buffer("_numerator", torch.tensor(expr.p))
-            self.register_buffer("_denominator", torch.tensor(expr.q))
-            self._torch_func = lambda: self._numerator / self._denominator
-            self._args = ()
-        elif issubclass(expr.func, sympy.combinatorics.permutations.Permutation):
-            self._value = list(expr.array_form)
-            self._torch_func = lambda: self._value
-            self._args = ()
-        elif issubclass(expr.func, sympy.UnevaluatedExpr):
-            if len(expr.args) != 1 or not issubclass(expr.args[0].func, sympy.Float):
-                raise ValueError("UnevaluatedExpr should only be used to wrap floats.")
-            self.register_buffer("_value", torch.tensor(float(expr.args[0])))
-            self._torch_func = lambda: self._value
-            self._args = ()
-        elif issubclass(expr.func, sympy.Symbol):
-            self._name = expr.name
-            self._torch_func = lambda value, *args: value
-            self._args = ((lambda memodict: memodict[expr.name]),)
-        elif issubclass(expr.func, sympy.matrices.expressions.matexpr.MatrixSymbol):
-            self._name = expr.name
-            self._torch_func = lambda value, *args: value
-            self._args = ((lambda memodict: memodict[expr.name]),)
-        elif issubclass(expr.func, sympy.core.numbers.ImaginaryUnit):
-            self._torch_func = lambda: torch.tensor(1j)
-            self._args = ()
-        else:
-            try:
-                self._torch_func = _func_lookup[self._sympy_func]
-            except KeyError:
-                raise ValueError(f"Unsupported SymPy function: {self._sympy_func.__name__}")
-            args = []
-            for arg in expr.args:
+            if issubclass(expr.func, sympy.Float):
+                self._value = torch.nn.Parameter(torch.tensor(float(expr)))
+                self._torch_func = lambda: self._value
+                self._args = ()
+            elif issubclass(expr.func, sympy.Integer):
+                self.register_buffer("_value", torch.tensor(int(expr)))
+                self._torch_func = lambda: self._value
+                self._args = ()
+            elif (issubclass(expr.func, sympy.core.containers.Tuple)
+                  and expr.func not in _func_lookup):
+                self._value = tuple(expr.args)
+                self._torch_func = lambda: self._value
+                self._args = ()
+            elif issubclass(expr.func, sympy.Rational):
+                self.register_buffer("_numerator", torch.tensor(expr.p))
+                self.register_buffer("_denominator", torch.tensor(expr.q))
+                self._torch_func = lambda: self._numerator / self._denominator
+                self._args = ()
+            elif issubclass(expr.func, sympy.combinatorics.permutations.Permutation):
+                self._value = list(expr.array_form)
+                self._torch_func = lambda: self._value
+                self._args = ()
+            elif issubclass(expr.func, sympy.UnevaluatedExpr):
+                if len(expr.args) != 1 or not issubclass(expr.args[0].func, sympy.Float):
+                    raise ValueError("UnevaluatedExpr should only be used to wrap floats.")
+                self.register_buffer("_value", torch.tensor(float(expr.args[0])))
+                self._torch_func = lambda: self._value
+                self._args = ()
+            elif issubclass(expr.func, sympy.Symbol):
+                self._name = expr.name
+                self._torch_func = lambda value, *args: value
+                self._args = ((lambda memodict: memodict[expr.name]),)
+            elif issubclass(expr.func, sympy.matrices.expressions.matexpr.MatrixSymbol):
+                self._name = expr.name
+                self._torch_func = lambda value, *args: value
+                self._args = ((lambda memodict: memodict[expr.name]),)
+            elif issubclass(expr.func, sympy.core.numbers.ImaginaryUnit):
+                self._torch_func = lambda: torch.tensor(1j)
+                self._args = ()
+            else:
                 try:
-                    arg_ = _memodict[arg]
+                    self._torch_func = _func_lookup[self._sympy_func]
                 except KeyError:
-                    arg_ = _Node(expr=arg, _memodict=_memodict, _func_lookup=_func_lookup, **kwargs)
-                    _memodict[arg] = arg_
-                args.append(arg_)
-            self._args = torch.nn.ModuleList(args)
+                    raise ValueError(f"Unsupported SymPy function: {self._sympy_func.__name__}")
+                args = []
+                for arg in expr.args:
+                    try:
+                        arg_ = _memodict[arg]
+                    except KeyError:
+                        arg_ = _Node(expr=arg, _memodict=_memodict, _func_lookup=_func_lookup, **kwargs)
+                        _memodict[arg] = arg_
+                    args.append(arg_)
+                self._args = torch.nn.ModuleList(args)
 
-    def forward(self, memodict) -> torch.Tensor:
-        args = []
-        for arg in self._args:
-            try:
-                arg_ = memodict[arg]
-            except KeyError:
-                arg_ = arg(memodict)
-                memodict[arg] = arg_
-            args.append(arg_)
-        return self._torch_func(*args)
-
-    def to_sympy(self, _memodict):
-        if issubclass(self._sympy_func, sympy.Float):
-            return self._sympy_func(self._value.item())
-        elif issubclass(self._sympy_func, sympy.UnevaluatedExpr):
-            return self._sympy_func(self._value.item())
-        elif issubclass(self._sympy_func, (type(sympy.S.NegativeOne), type(sympy.S.One), type(sympy.S.Zero))):
-            return self._sympy_func()
-        elif issubclass(self._sympy_func, sympy.Integer):
-            return self._sympy_func(self._value.item())
-        elif issubclass(self._sympy_func, sympy.Rational):
-            if issubclass(self._sympy_func, type(sympy.S.Half)):
-                return sympy.S.Half
-            else:
-                return self._sympy_func(self._numerator.item(), self._denominator.item())
-        elif issubclass(self._sympy_func, sympy.Symbol):
-            return self._sympy_func(self._name)
-        elif issubclass(self._sympy_func, sympy.core.numbers.ImaginaryUnit):
-            return sympy.I
-        elif issubclass(self._sympy_func, sympy.core.numbers.NumberSymbol):
-            return self._sympy_func()
-        else:
-            if issubclass(self._sympy_func, (sympy.Min, sympy.Max)):
-                evaluate = False
-            else:
-                evaluate = True
+        def forward(self, memodict) -> torch.Tensor:
             args = []
             for arg in self._args:
                 try:
-                    arg_ = _memodict[arg]
+                    arg_ = memodict[arg]
                 except KeyError:
-                    arg_ = arg.to_sympy(_memodict)
-                    _memodict[arg] = arg_
+                    arg_ = arg(memodict)
+                    memodict[arg] = arg_
                 args.append(arg_)
-            return self._sympy_func(*args, evaluate=evaluate)
+            return self._torch_func(*args)
+
+        def to_sympy(self, _memodict):
+            if issubclass(self._sympy_func, sympy.Float):
+                return self._sympy_func(self._value.item())
+            elif issubclass(self._sympy_func, sympy.UnevaluatedExpr):
+                return self._sympy_func(self._value.item())
+            elif issubclass(self._sympy_func, (type(sympy.S.NegativeOne), type(sympy.S.One), type(sympy.S.Zero))):
+                return self._sympy_func()
+            elif issubclass(self._sympy_func, sympy.Integer):
+                return self._sympy_func(self._value.item())
+            elif issubclass(self._sympy_func, sympy.Rational):
+                if issubclass(self._sympy_func, type(sympy.S.Half)):
+                    return sympy.S.Half
+                else:
+                    return self._sympy_func(self._numerator.item(), self._denominator.item())
+            elif issubclass(self._sympy_func, sympy.Symbol):
+                return self._sympy_func(self._name)
+            elif issubclass(self._sympy_func, sympy.core.numbers.ImaginaryUnit):
+                return sympy.I
+            elif issubclass(self._sympy_func, sympy.logic.boolalg.BooleanTrue):
+                return sympy.true
+            elif issubclass(self._sympy_func, sympy.logic.boolalg.BooleanFalse):
+                return sympy.false
+            elif issubclass(self._sympy_func, sympy.core.numbers.NumberSymbol):
+                return self._sympy_func()
+            else:
+                if issubclass(self._sympy_func, (sympy.Min, sympy.Max)):
+                    evaluate = False
+                    args = []
+                    for arg in self._args:
+                        try:
+                            arg_ = _memodict[arg]
+                        except KeyError:
+                            arg_ = arg.to_sympy(_memodict)
+                            _memodict[arg] = arg_
+                        args.append(arg_)
+                    return self._sympy_func(*args, evaluate=evaluate)
+
+                args = []
+                for arg in self._args:
+                    try:
+                        arg_ = _memodict[arg]
+                    except KeyError:
+                        arg_ = arg.to_sympy(_memodict)
+                        _memodict[arg] = arg_
+                    args.append(arg_)
+                return self._sympy_func(*args)
 
 
-class SympyModule(torch.nn.Module):
-    _default_settings = {
-        'torch_version': None,
-    }
+    class SymPyTorchModule(torch.nn.Module):
+        _default_settings = {
+            'torch_version': None,
+        }
 
-    def __init__(self, args, expr, extra_funcs=None, **settings):
-        super().__init__()
-        self._settings = self._default_settings.copy()
-        if settings:
-            self._settings.update(settings)
+        def __init__(self, args, expr, extra_funcs=None, **settings):
+            super().__init__()
+            self._settings = self._default_settings.copy()
+            if settings:
+                self._settings.update(settings)
 
-        version = self._settings['torch_version']
-        if version is None and torch:
-            version = torch.__version__
-        self.torch_version = version
+            version = self._settings['torch_version']
+            if version is None and torch:
+                version = torch.__version__
+            self.torch_version = version
 
-        self.args = tuple(args)
-        self.arg_names = [arg.name for arg in self.args]
-        self.expressions = tuple(expr) if isinstance(expr, (tuple, list, MutableDenseMatrix)) else (expr,)
+            self.args = tuple(args)
+            self.arg_names = [arg.name for arg in self.args]
+            self.expressions = tuple(expr) if isinstance(expr, (tuple, list, MutableDenseMatrix)) else (expr,)
 
-        func_lookup = {k: v[1] if isinstance(v, tuple) else v for k, v in _TORCH_FUNCTION_MAP.items()}
-        func_lookup = {**func_lookup, **_TORCHMODULE_ONLY_FUNCTION_MAP}
-        if extra_funcs:
-            func_lookup.update(extra_funcs)
-        _memodict = {}
-        self._nodes = torch.nn.ModuleList([
-            _Node(expr, _memodict, func_lookup) for expr in self.expressions
-        ])
-        self._expressions_string = str(self.expressions)
+            func_lookup = {k: v[1] if isinstance(v, tuple) else v for k, v in _TORCH_FUNCTION_MAP.items()}
+            func_lookup = {**func_lookup, **_TORCHMODULE_ONLY_FUNCTION_MAP}
+            if extra_funcs:
+                func_lookup.update(extra_funcs)
+            _memodict = {}
+            self._nodes = torch.nn.ModuleList([
+                _Node(expr, _memodict, func_lookup) for expr in self.expressions
+            ])
+            self._expressions_string = str(self.expressions)
 
-    def __repr__(self):
-        return f"{type(self).__name__}(expressions={self._expressions_string})"
+        def __repr__(self):
+            return f"{type(self).__name__}(expressions={self._expressions_string})"
 
-    def forward(self, *inputs, **kwargs):
-        memodict = dict(kwargs)
+        def forward(self, *inputs, **kwargs):
+            memodict = dict(kwargs)
 
-        for i, input_tensor in enumerate(inputs):
-            if i < len(self.arg_names):
-                memodict[self.arg_names[i]] = input_tensor
+            for i, input_tensor in enumerate(inputs):
+                if i < len(self.arg_names):
+                    memodict[self.arg_names[i]] = input_tensor
 
-        missing = [name for name in self.arg_names if name not in memodict]
-        if missing:
-            raise ValueError(f"Missing inputs for symbols: {missing}")
+            missing = [name for name in self.arg_names if name not in memodict]
+            if missing:
+                raise ValueError(f"Missing inputs for symbols: {missing}")
 
-        out = [node(memodict) for node in self._nodes]
+            out = [node(memodict) for node in self._nodes]
 
-        if len(out) == 1:
-            return out[0]
+            if len(out) == 1:
+                return out[0]
 
-        out = torch.broadcast_tensors(*out)
-        return torch.stack(out, dim=-1)
+            out = torch.broadcast_tensors(*out)
+            return torch.stack(out, dim=-1)
 
-    def to_sympy(self):
-        _memodict = {}
-        return [node.to_sympy(_memodict) for node in self._nodes]
+        def to_sympy(self):
+            _memodict = {}
+            return [node.to_sympy(_memodict) for node in self._nodes]
+else:
+    SymPyTorchModule = None  # type: ignore[assignment]
 
 
 def torch_code(expr, requires_grad=False, dtype="torch.float64", **settings):
@@ -639,7 +736,15 @@ def torch_code(expr, requires_grad=False, dtype="torch.float64", **settings):
     return printer.doprint(expr, **settings)
 
 
-def torch_module(args, expr, extra_funcs=None, **settings):
+def torch_nn_module(args, expr, extra_funcs=None, **settings):
+    """Build a ``torch.nn.Module`` from a SymPy expression tree."""
+    if torch is None:
+        raise ImportError("torch_nn_module requires PyTorch to be installed")
     if isinstance(args, sympy.Symbol):
         args = (args,)
-    return SympyModule(args, expr, extra_funcs, **settings)
+    return SymPyTorchModule(args, expr, extra_funcs, **settings)
+
+
+def torch_module(args, expr, extra_funcs=None, **settings):
+    """Backward-compatible alias for :func:`torch_nn_module`."""
+    return torch_nn_module(args, expr, extra_funcs, **settings)

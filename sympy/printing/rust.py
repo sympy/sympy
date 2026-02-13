@@ -45,7 +45,7 @@ from sympy.core.expr import Expr
 from sympy.core.numbers import equal_valued
 from sympy.functions.elementary.integers import ceiling, floor
 from sympy.printing.codeprinter import CodePrinter
-from sympy.printing.precedence import PRECEDENCE
+from sympy.printing.precedence import PRECEDENCE, precedence
 
 # Rust's methods for integer and float can be found at here :
 #
@@ -189,11 +189,12 @@ known_functions = {
 # }
 
 # These are the core reserved words in the Rust language. Taken from:
-# http://doc.rust-lang.org/grammar.html#keywords
+# https://doc.rust-lang.org/reference/keywords.html
 
 reserved_words = ['abstract',
-                  'alignof',
                   'as',
+                  'async',
+                  'await',
                   'become',
                   'box',
                   'break',
@@ -201,6 +202,7 @@ reserved_words = ['abstract',
                   'continue',
                   'crate',
                   'do',
+                  'dyn',
                   'else',
                   'enum',
                   'extern',
@@ -208,6 +210,7 @@ reserved_words = ['abstract',
                   'final',
                   'fn',
                   'for',
+                  'gen',
                   'if',
                   'impl',
                   'in',
@@ -218,22 +221,19 @@ reserved_words = ['abstract',
                   'mod',
                   'move',
                   'mut',
-                  'offsetof',
                   'override',
                   'priv',
-                  'proc',
                   'pub',
-                  'pure',
                   'ref',
                   'return',
                   'Self',
                   'self',
-                  'sizeof',
                   'static',
                   'struct',
                   'super',
                   'trait',
                   'true',
+                  'try',
                   'type',
                   'typeof',
                   'unsafe',
@@ -256,6 +256,8 @@ class TypeCast(Expr):
         self._assumptions = expr._assumptions
         if self.explicit:
             setattr(self, 'precedence', PRECEDENCE["Func"] + 10)
+        else:
+            setattr(self, 'precedence', precedence(self.expr))
 
     @property
     def expr(self):
@@ -267,7 +269,6 @@ class TypeCast(Expr):
 
     def sort_key(self, order=None):
         return self.args[0].sort_key(order=order)
-
 
 class RustCodePrinter(CodePrinter):
     """A printer to convert SymPy expressions to strings of Rust code"""

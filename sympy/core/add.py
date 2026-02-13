@@ -215,18 +215,16 @@ class Add(Expr, AssocOp):
         from sympy.calculus.accumulationbounds import AccumBounds
         from sympy.matrices.expressions import MatrixExpr
         from sympy.tensor.tensor import TensExpr, TensAdd
-        rv = None
+
         if len(seq) == 2:
             a, b = seq
             if b.is_Rational:
                 a, b = b, a
-            if a.is_Rational:
-                if b.is_Mul:
-                    rv = [a, b], [], None
-            if rv:
-                if all(s.is_commutative for s in rv[0]):
-                    return rv
-                return [], rv[0], None
+            if a.is_Rational and b.is_Mul:
+                if a.is_commutative and b.is_commutative:
+                    return [a, b], [], None
+                else:
+                    return [], [a, b], None
 
         # term -> coeff
         # e.g. x**2 -> 5   for ... + 5*x**2 + ...
@@ -810,9 +808,7 @@ class Add(Expr, AssocOp):
             return saw_INF.pop()
         elif unknown_sign:
             return
-        elif not nonpos and not nonneg and pos:
-            return True
-        elif not nonpos and pos:
+        elif pos and not nonpos:
             return True
         elif not pos and not nonneg:
             return False
@@ -894,9 +890,7 @@ class Add(Expr, AssocOp):
             return saw_INF.pop()
         elif unknown_sign:
             return
-        elif not nonneg and not nonpos and neg:
-            return True
-        elif not nonneg and neg:
+        elif neg and not nonneg:
             return True
         elif not neg and not nonpos:
             return False

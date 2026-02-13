@@ -60,7 +60,7 @@ def _get_argindex(subindices, ind):
             return i
         if isinstance(sind, (set, frozenset)) and ind in sind:
             return i
-    raise IndexError("%s not found in %s" % (ind, subindices))
+    raise IndexError(f"{ind} not found in {subindices}")
 
 
 def _apply_recursively_over_nested_lists(func, arr):

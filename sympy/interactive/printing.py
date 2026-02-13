@@ -80,7 +80,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
     def _print_plain(arg, p, cycle):
         """caller for pretty, for use in IPython 0.11"""
         if _can_print(arg):
-            p.text(stringify_func(arg, **settings))
+            p.text(stringify_func(arg))
         else:
             p.text(IPython.lib.pretty.pretty(arg))
 
@@ -232,7 +232,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
         plaintext_formatter.for_type(cls, _print_plain)
 
     svg_formatter = ip.display_formatter.formatters['image/svg+xml']
-    if use_latex in ('svg', ):
+    if use_latex == 'svg':
         debug("init_printing: using svg formatter")
         for cls in printable_types:
             svg_formatter.for_type(cls, _print_latex_svg)

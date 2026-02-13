@@ -10,18 +10,18 @@ name: release
 on:
   push:
     branches:
-      - '1.14'
+      - '1.15'
     tags:
-      - 'sympy-1.14.*'
+      - 'sympy-1.15.*'
   pull_request:
     branches:
-      - '1.14'
+      - '1.15'
 env:
-  release_branch: '1.14'
-  release_version: '1.14.0-dev'
-  final_release_version: '1.14.0'
-  previous_version: '1.13.0'
-  dev_version: '1.14-dev'
+  release_branch: '1.15'
+  release_version: '1.15.0-dev'
+  final_release_version: '1.15.0'
+  previous_version: '1.14.0'
+  dev_version: '1.15-dev'
 
 jobs:
 
@@ -32,20 +32,20 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       # Check out with full git history for authors check:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
-          python-version: '3.12'
+          python-version: '3.13'
 
       - name: Build release files
         run: release/ci_release_script.sh ${{ env.release_version }} ${{ env.previous_version }}
 
       - name: Store release files
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: release_files
           path: release-${{ env.release_version }}
@@ -64,12 +64,12 @@ jobs:
     name: Python ${{ matrix.python-version }} test install
     steps:
       - name: Setup python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
 
       - name: Retrieve release files
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: release_files
 
@@ -101,7 +101,7 @@ jobs:
 
     steps:
       - name: Download release artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: release_files
           path: dist.all
@@ -130,7 +130,7 @@ jobs:
 
     steps:
       - name: Download release artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: release_files
           path: dist.all
@@ -142,38 +142,10 @@ jobs:
         # It is recommended to pin a commit hash here for security but it
         # should be kept up to date. Probably all actions and dependencies
         # used by the build script should be pinned...
-        uses: pypa/gh-action-pypi-publish@76f52bc884231f62b9a034ebfe128415bbaabdfc  # v1.12.4
+        uses: pypa/gh-action-pypi-publish@ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e  # v1.13.0
 
-  # -------------------- Make a GitHub release --------------------- #
+  # -------------------- Check if this is a final release ---------- #
 
-  github-publish:
-    name: Publish GitHub release
-    needs: [build, pypi-publish]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-
-    steps:
-      - name: Checkout sympy
-        uses: actions/checkout@v4
-
-      - name: Download release artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: release_files
-          path: dist
-
-      - name: Create GitHub release
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: >
-          gh release create ${{ env.release_version }} dist/*
-          --title "SymPy ${{ env.release_version }}"
-          --notes "See https://github.com/sympy/sympy/wiki/release-notes-for-${{ env.final_release_version }} for release notes"
-
-  # -------------------- Update the docs repository ---------------- #
-
-  # Dummy job to determine whether the release is final
   check-final:
     name: Check whether the release is final
     needs: [build, pypi-publish]
@@ -183,6 +155,46 @@ jobs:
       is-final: ${{ env.release_version == env.final_release_version }}
     steps:
       - run: echo "null"
+
+  # -------------------- Make a GitHub release --------------------- #
+
+  github-publish:
+    name: Publish GitHub release
+    needs: [check-final]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout sympy
+        uses: actions/checkout@v6
+
+      - name: Download release artifacts
+        uses: actions/download-artifact@v7
+        with:
+          name: release_files
+          path: dist
+
+      - name: Create GitHub prerelease
+        if: ${{ needs.check-final.outputs.is-final != 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >
+          gh release create ${{ env.release_version }} dist/*
+              --prerelease
+              --title "SymPy ${{ env.release_version }}"
+              --notes "See https://github.com/sympy/sympy/wiki/release-notes-for-${{ env.final_release_version }} for release notes"
+
+      - name: Create Final GitHub release
+        if: ${{ needs.check-final.outputs.is-final == 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >
+          gh release create ${{ env.release_version }} dist/*
+              --title "SymPy ${{ env.release_version }}"
+              --notes "See https://github.com/sympy/sympy/wiki/release-notes-for-${{ env.final_release_version }} for release notes"
+
+  # -------------------- Update the docs repository ---------------- #
 
   update-docs:
     name: Update the docs repository
@@ -195,10 +207,10 @@ jobs:
 
     steps:
       - name: Checkout sympy
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Checkout sympy_doc
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: sympy/sympy_doc
           ref: gh-pages
@@ -208,7 +220,7 @@ jobs:
       - run: git config --global user.name "SymPy GitHub Actions release bot"
       - run: git config --global user.email "<>"
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         with:
           name: release_files
           path: dist

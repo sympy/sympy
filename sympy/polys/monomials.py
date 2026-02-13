@@ -1,5 +1,7 @@
 """Tools and arithmetics for monomials of distributed polynomials. """
 
+from __future__ import annotations
+
 
 from itertools import combinations_with_replacement, product
 from textwrap import dedent
@@ -10,6 +12,10 @@ from sympy.polys.polyerrors import ExactQuotientFailed
 from sympy.polys.polyutils import PicklableWithSlots, dict_from_expr
 from sympy.utilities import public
 from sympy.utilities.iterables import is_sequence, iterable
+
+
+monom = tuple[int, ...]
+
 
 @public
 def itermonomials(variables, max_degrees, min_degrees=None):
@@ -191,7 +197,7 @@ def monomial_mul(A, B):
     """
     return tuple([ a + b for a, b in zip(A, B) ])
 
-def monomial_div(A, B):
+def monomial_div(A: monom, B: monom) -> monom | None:
     """
     Division of tuples representing monomials.
 
@@ -220,7 +226,7 @@ def monomial_div(A, B):
     else:
         return None
 
-def monomial_ldiv(A, B):
+def monomial_ldiv(A: monom, B: monom) -> monom:
     """
     Division of tuples representing monomials.
 
@@ -326,7 +332,7 @@ def monomial_max(*monoms):
 
     return tuple(M)
 
-def monomial_min(*monoms):
+def monomial_min(*monoms: monom) -> monom:
     """
     Returns minimal degree for each variable in a set of monomials.
 

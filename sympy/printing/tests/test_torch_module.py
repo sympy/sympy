@@ -1,21 +1,18 @@
-"""
-Unit tests for the torch_module function and lambdify with "torch_module" in sympy.printing.pytorch.
-"""
+"""Unit tests for torch nn.Module builders in sympy.printing.pytorch."""
 
 import random
-import numpy as np
 
 import sympy
 from sympy.testing.pytest import skip
 from sympy.external import import_module
 
 from sympy import symbols, Derivative
-from sympy.printing.pytorch import torch_module
-from sympy.utilities.lambdify import lambdify
+from sympy.printing.pytorch import SymPyTorchModule, torch_module, torch_nn_module
 from sympy import (eye, MatrixSymbol, Matrix)
 from sympy.tensor.array import NDimArray
 from sympy.tensor.array.expressions.array_expressions import (
-    ArrayTensorProduct, ArrayAdd, PermuteDims, ArrayDiagonal, _CodegenArrayAbstract)
+    ArrayTensorProduct, ArrayAdd, ArrayContraction, PermuteDims, ArrayDiagonal,
+    _CodegenArrayAbstract)
 from sympy.core.relational import Eq, Ne, Ge, Gt, Le, Lt
 from sympy.functions import (
     Abs, ceiling, exp, floor, sign, sin, asin, cos, acos, tan, atan, atan2,
@@ -28,6 +25,12 @@ from sympy import Heaviside, gamma, polygamma
 
 
 torch = import_module("torch")
+np = import_module("numpy")
+
+if np is None:
+    skip("NumPy not installed", allow_module_level=True)
+if torch is None:
+    skip("PyTorch not installed", allow_module_level=True)
 
 if torch is not None:
     m3x3sympy = Matrix([[0, 1, 2], [3, 4, 5], [6, 7, 8]])
@@ -43,11 +46,9 @@ x, y, z, t = symbols("x y z t")
 
 
 def _compare_torch_module_matrix(variables, expr, use_lambdify=False):
-    if not torch:
-        skip("PyTorch not installed")
 
     if use_lambdify:
-        mod = lambdify(variables, expr, "torch_module")
+        mod = torch_nn_module(variables, expr)
     else:
         mod = torch_module(variables, expr)
     random_matrices = [randMatrix(i.shape[0], i.shape[1]) for i in variables]
@@ -72,11 +73,9 @@ def _compare_torch_module_matrix(variables, expr, use_lambdify=False):
         raise TypeError(f"Cannot compare {type(result)} with {type(expected)}")
 
 def _compare_torch_module_scalar(variables, expr, rng=lambda: random.uniform(-5, 5), use_lambdify=False):
-    if not torch:
-        skip("PyTorch not installed")
 
     if use_lambdify:
-        mod = lambdify(variables, expr, "torch_module")
+        mod = torch_nn_module(variables, expr)
     else:
         mod = torch_module(variables, expr)
     rvs = [rng() for v in variables]
@@ -88,11 +87,9 @@ def _compare_torch_module_scalar(variables, expr, rng=lambda: random.uniform(-5,
     assert abs(result - expected) < 1e-6
 
 def _compare_torch_module_relational(variables, expr, rng=lambda: random.randint(0, 10), use_lambdify=False):
-    if not torch:
-        skip("PyTorch not installed")
 
     if use_lambdify:
-        mod = lambdify(variables, expr, "torch_module")
+        mod = torch_nn_module(variables, expr)
     else:
         mod = torch_module(variables, expr)
     rvs = [rng() for v in variables]
@@ -101,9 +98,20 @@ def _compare_torch_module_relational(variables, expr, rng=lambda: random.randint
     expected = bool(expr.subs(dict(zip(variables, rvs))).doit())
     assert result.item() == expected
 
+
+def test_torch_nn_module_alias():
+
+    expr = x + y
+    mod = torch_nn_module((x, y), expr)
+    assert isinstance(mod, SymPyTorchModule)
+
+    alias_mod = torch_module((x, y), expr)
+    assert isinstance(alias_mod, SymPyTorchModule)
+    assert torch.allclose(mod(torch.tensor(2.0), torch.tensor(3.0)),
+                          alias_mod(torch.tensor(2.0), torch.tensor(3.0)))
+
+
 def test_torch_module_math():
-    if not torch:
-        skip("PyTorch not installed")
 
     expr = Abs(x)
     mod = torch_module(x, expr)
@@ -176,11 +184,9 @@ def test_torch_module_math():
     _compare_torch_module_scalar((x,), expr, rng=lambda: random.uniform(0.5, 5))
 
 def test_torch_module_lambdify_math():
-    if not torch:
-        skip("PyTorch not installed")
 
     expr = Abs(x)
-    mod = lambdify(x, expr, "torch_module")
+    mod = torch_nn_module(x, expr)
     ma = torch.tensor([[-1, 2, -3, -4]], dtype=torch.float64)
     result = mod(ma)
     expected = torch.abs(ma)
@@ -250,8 +256,6 @@ def test_torch_module_lambdify_math():
     _compare_torch_module_scalar((x,), expr, rng=lambda: random.uniform(0.5, 5), use_lambdify=True)
 
 def test_torch_module_complexes():
-    if not torch:
-        skip("PyTorch not installed")
 
     expr = re(x)
     mod = torch_module(x, expr)
@@ -270,28 +274,24 @@ def test_torch_module_complexes():
     assert torch.allclose(result, torch.angle(input_tensor))
 
 def test_torch_module_lambdify_complexes():
-    if not torch:
-        skip("PyTorch not installed")
 
     expr = re(x)
-    mod = lambdify(x, expr, "torch_module")
+    mod = torch_nn_module(x, expr)
     input_tensor = torch.tensor([1.0 + 2.0j], dtype=torch.complex128)
     result = mod(input_tensor)
     assert torch.allclose(result, torch.real(input_tensor))
 
     expr = im(x)
-    mod = lambdify(x, expr, "torch_module")
+    mod = torch_nn_module(x, expr)
     result = mod(input_tensor)
     assert torch.allclose(result, torch.imag(input_tensor))
 
     expr = arg(x)
-    mod = lambdify(x, expr, "torch_module")
+    mod = torch_nn_module(x, expr)
     result = mod(input_tensor)
     assert torch.allclose(result, torch.angle(input_tensor))
 
 def test_torch_module_relational():
-    if not torch:
-        skip("PyTorch not installed")
 
     expr = Eq(x, y)
     _compare_torch_module_relational((x, y), expr)
@@ -312,8 +312,6 @@ def test_torch_module_relational():
     _compare_torch_module_relational((x, y), expr)
 
 def test_torch_module_lambdify_relational():
-    if not torch:
-        skip("PyTorch not installed")
 
     expr = Eq(x, y)
     _compare_torch_module_relational((x, y), expr, use_lambdify=True)
@@ -334,8 +332,6 @@ def test_torch_module_lambdify_relational():
     _compare_torch_module_relational((x, y), expr, use_lambdify=True)
 
 def test_torch_module_matrix():
-    if not torch:
-        skip("PyTorch not installed")
 
     expr = M
     mod = torch_module((M,), expr)
@@ -368,11 +364,9 @@ def test_torch_module_matrix():
     assert torch.allclose(result, expected)
 
 def test_torch_module_lambdify_matrix():
-    if not torch:
-        skip("PyTorch not installed")
 
     expr = M
-    mod = lambdify((M,), expr, "torch_module")
+    mod = torch_nn_module((M,), expr)
     eye_tensor = torch.tensor(eye(3).tolist(), dtype=torch.float64)
     result = mod(eye_tensor)
     assert torch.allclose(result, eye_tensor)
@@ -396,14 +390,12 @@ def test_torch_module_lambdify_matrix():
     _compare_torch_module_matrix((M, N), expr, use_lambdify=True)
 
     expr = Inverse(M)
-    mod = lambdify((M,), expr, "torch_module")
+    mod = torch_nn_module((M,), expr)
     result = mod(eye_tensor)
     expected = torch.linalg.inv(eye_tensor)
     assert torch.allclose(result, expected)
 
 def test_torch_module_array_operations():
-    if not torch:
-        skip("PyTorch not installed")
 
     M = MatrixSymbol("M", 2, 2)
     N = MatrixSymbol("N", 2, 2)
@@ -456,18 +448,28 @@ def test_torch_module_array_operations():
     cg = ArrayDiagonal(ArrayTensorProduct(M, N), (1, 2))
     mod = torch_module((M, N), cg)
     result = mod(ma, mb)
-    expected = torch.tensor([[[1., -2.], [-2., 6.]], [[3., -6.], [-4., 12.]]], dtype=torch.float64)
+    expected = torch.einsum("ab,bc->acb", ma, mb)
     assert torch.allclose(result, expected)
 
     cg = ArrayDiagonal(ArrayTensorProduct(M, N), (1, 2))
-    mod = lambdify((M, N), cg, "torch_module")
+    mod = torch_nn_module((M, N), cg)
     result = mod(ma, mb)
-    expected = torch.einsum("ab,bc->abc", ma, mb)
+    expected = torch.einsum("ab,bc->acb", ma, mb)
+    assert torch.allclose(result, expected)
+
+    cg = ArrayContraction(ArrayTensorProduct(M, N), (1, 2))
+    mod = torch_module((M, N), cg)
+    result = mod(ma, mb)
+    expected = torch.einsum("ab,bc->ac", ma, mb)
+    assert torch.allclose(result, expected)
+
+    cg = ArrayContraction(ArrayTensorProduct(M, N), (1, 2))
+    mod = torch_nn_module((M, N), cg)
+    result = mod(ma, mb)
+    expected = torch.einsum("ab,bc->ac", ma, mb)
     assert torch.allclose(result, expected)
 
 def test_torch_module_lambdify_array_operations():
-    if not torch:
-        skip("PyTorch not installed")
 
     M = MatrixSymbol("M", 2, 2)
     N = MatrixSymbol("N", 2, 2)
@@ -480,50 +482,54 @@ def test_torch_module_lambdify_array_operations():
     md = torch.tensor([[1., -1.], [4., 7.]], dtype=torch.float64)
 
     cg = ArrayTensorProduct(M, N)
-    mod = lambdify((M, N), cg, "torch_module")
+    mod = torch_nn_module((M, N), cg)
     result = mod(ma, mb)
     expected = torch.einsum("ij,kl", ma, mb)
     assert torch.allclose(result, expected)
 
     cg = ArrayAdd(M, N)
-    mod = lambdify((M, N), cg, "torch_module")
+    mod = torch_nn_module((M, N), cg)
     result = mod(ma, mb)
     expected = ma + mb
     assert torch.allclose(result, expected)
 
     cg = ArrayAdd(M, N, P)
-    mod = lambdify((M, N, P), cg, "torch_module")
+    mod = torch_nn_module((M, N, P), cg)
     result = mod(ma, mb, mc)
     expected = ma + mb + mc
     assert torch.allclose(result, expected)
 
     cg = ArrayAdd(M, N, P, Q)
-    mod = lambdify((M, N, P, Q), cg, "torch_module")
+    mod = torch_nn_module((M, N, P, Q), cg)
     result = mod(ma, mb, mc, md)
     expected = ma + mb + mc + md
     assert torch.allclose(result, expected)
 
     cg = PermuteDims(M, [1, 0])
-    mod = lambdify((M,), cg, "torch_module")
+    mod = torch_nn_module((M,), cg)
     result = mod(ma)
     expected = ma.T
     assert torch.allclose(result, expected)
 
     cg = PermuteDims(ArrayTensorProduct(M, N), [1, 2, 3, 0])
-    mod = lambdify((M, N), cg, "torch_module")
+    mod = torch_nn_module((M, N), cg)
     result = mod(ma, mb)
     expected = torch.einsum("ab,cd", ma, mb).permute(1, 2, 3, 0)
     assert torch.allclose(result, expected)
 
     cg = ArrayDiagonal(ArrayTensorProduct(M, N), (1, 2))
-    mod = lambdify((M, N), cg, "torch_module")
+    mod = torch_nn_module((M, N), cg)
     result = mod(ma, mb)
-    expected = torch.einsum("ab,bc->abc", ma, mb)
+    expected = torch.einsum("ab,bc->acb", ma, mb)
+    assert torch.allclose(result, expected)
+
+    cg = ArrayContraction(ArrayTensorProduct(M, N), (1, 2))
+    mod = torch_nn_module((M, N), cg)
+    result = mod(ma, mb)
+    expected = torch.einsum("ab,bc->ac", ma, mb)
     assert torch.allclose(result, expected)
 
 def test_torch_module_derivative():
-    if not torch:
-        skip("PyTorch not installed")
 
     expr = Derivative(sin(x), x)
     try:
@@ -533,19 +539,15 @@ def test_torch_module_derivative():
         assert str(e) == "Unsupported SymPy function: Derivative"
 
 def test_torch_module_lambdify_derivative():
-    if not torch:
-        skip("PyTorch not installed")
 
     expr = Derivative(sin(x), x)
     try:
-        lambdify(x, expr, "torch_module")
+        torch_nn_module(x, expr)
         assert False, "Expected ValueError for unsupported Derivative"
     except ValueError as e:
         assert str(e) == "Unsupported SymPy function: Derivative"
 
 def test_torch_module_requires_grad():
-    if not torch:
-        skip("PyTorch not installed")
 
     expr = sin(x) + cos(y)
     mod = torch_module([x, y], expr)
@@ -558,11 +560,9 @@ def test_torch_module_requires_grad():
     assert torch.isclose(y_val.grad, -torch.sin(y_val), atol=1e-6)
 
 def test_torch_module_lambdify_requires_grad():
-    if not torch:
-        skip("PyTorch not installed")
 
     expr = sin(x) + cos(y)
-    mod = lambdify([x, y], expr, "torch_module")
+    mod = torch_nn_module([x, y], expr)
     x_val = torch.tensor(1.0, requires_grad=True, dtype=torch.float64)
     y_val = torch.tensor(2.0, requires_grad=True, dtype=torch.float64)
     result = mod(x_val, y_val)
@@ -572,11 +572,9 @@ def test_torch_module_lambdify_requires_grad():
     assert torch.isclose(y_val.grad, -torch.sin(y_val), atol=1e-6)
 
 def test_torch_module_lambdify_requires_grad_low_precision():
-    if not torch:
-        skip("PyTorch not installed")
 
     expr = sin(x) + cos(y)
-    mod = lambdify([x, y], expr, "torch_module")
+    mod = torch_nn_module([x, y], expr)
     x_val = torch.tensor(1.0, requires_grad=True, dtype=torch.float32)
     y_val = torch.tensor(2.0, requires_grad=True, dtype=torch.float32)
     result = mod(x_val, y_val)
@@ -586,8 +584,6 @@ def test_torch_module_lambdify_requires_grad_low_precision():
     assert torch.isclose(y_val.grad, -torch.sin(y_val), atol=1e-6)
 
 def test_torch_module_special_matrices():
-    if not torch:
-        skip("PyTorch not installed")
 
     expr = Identity(3)
     mod = torch_module([], expr)
@@ -608,30 +604,26 @@ def test_torch_module_special_matrices():
     assert torch.allclose(result, expected)
 
 def test_torch_module_lambdify_special_matrices():
-    if not torch:
-        skip("PyTorch not installed")
 
     expr = Identity(3)
-    mod = lambdify([], expr, "torch_module")
+    mod = torch_nn_module([], expr)
     result = mod()
     expected = torch.eye(3, dtype=torch.float64)
     assert torch.allclose(result, expected)
 
     expr = ZeroMatrix(2, 3)
-    mod = lambdify([], expr, "torch_module")
+    mod = torch_nn_module([], expr)
     result = mod()
     expected = torch.zeros((2, 3), dtype=torch.float64)
     assert torch.allclose(result, expected)
 
     expr = OneMatrix(2, 3)
-    mod = lambdify([], expr, "torch_module")
+    mod = torch_nn_module([], expr)
     result = mod()
     expected = torch.ones((2, 3), dtype=torch.float64)
     assert torch.allclose(result, expected)
 
 def test_torch_module_complex_operations():
-    if not torch:
-        skip("PyTorch not installed")
 
     expr = conjugate(x)
     mod = torch_module(x, expr)
@@ -668,17 +660,15 @@ def test_torch_module_complex_operations():
     assert torch.allclose(result, expected)
 
 def test_torch_module_lambdify_complex_operations():
-    if not torch:
-        skip("PyTorch not installed")
 
     expr = conjugate(x)
-    mod = lambdify(x, expr, "torch_module")
+    mod = torch_nn_module(x, expr)
     input_tensor = torch.tensor([1.0 + 2.0j], dtype=torch.complex64)
     result = mod(input_tensor)
     assert torch.allclose(result, torch.conj(input_tensor))
 
     expr = conjugate(sin(x) + I * cos(y))
-    mod = lambdify([x, y], expr, "torch_module")
+    mod = torch_nn_module([x, y], expr)
     x_val = torch.tensor(1.0, dtype=torch.float64)
     y_val = torch.tensor(2.0, dtype=torch.float64)
     result = mod(x_val, y_val)
@@ -686,28 +676,26 @@ def test_torch_module_lambdify_complex_operations():
     assert torch.allclose(result, expected, atol=1e-6)
 
     expr = I
-    mod = lambdify([], expr, "torch_module")
+    mod = torch_nn_module([], expr)
     result = mod()
     expected = torch.tensor(1j, dtype=torch.complex64)
     assert torch.allclose(result, expected)
 
     expr = 2 * I + x
-    mod = lambdify(x, expr, "torch_module")
+    mod = torch_nn_module(x, expr)
     x_val = torch.tensor(3.0, dtype=torch.float64)
     result = mod(x_val)
     expected = x_val + 2 * 1j
     assert torch.allclose(result, expected)
 
     expr = exp(I * x)
-    mod = lambdify(x, expr, "torch_module")
+    mod = torch_nn_module(x, expr)
     x_val = torch.tensor(1.0, dtype=torch.float64)
     result = mod(x_val)
     expected = torch.exp(1j * x_val)
     assert torch.allclose(result, expected)
 
 def test_torch_module_special_functions():
-    if not torch:
-        skip("PyTorch not installed")
 
     expr = Heaviside(x)
     mod = torch_module(x, expr)
@@ -737,35 +725,59 @@ def test_torch_module_special_functions():
         assert str(e) == "Unsupported SymPy function: polygamma"
 
 def test_torch_module_lambdify_special_functions():
-    if not torch:
-        skip("PyTorch not installed")
 
     expr = Heaviside(x)
-    mod = lambdify(x, expr, "torch_module")
+    mod = torch_nn_module(x, expr)
     x_val = torch.tensor([-1.0, 0.0, 1.0], dtype=torch.float64)
     result = mod(x_val)
     expected = torch.heaviside(x_val, torch.tensor(0.5, dtype=torch.float64))
     assert torch.allclose(result, expected)
 
     expr = Heaviside(x, 0)
-    mod = lambdify(x, expr, "torch_module")
+    mod = torch_nn_module(x, expr)
     result = mod(x_val)
     expected = torch.heaviside(x_val, torch.tensor(0.0, dtype=torch.float64))
     assert torch.allclose(result, expected)
 
     expr = gamma(x)
     try:
-        lambdify(x, expr, "torch_module")
+        torch_nn_module(x, expr)
         assert False, "Expected ValueError for unsupported gamma"
     except ValueError as e:
         assert str(e) == "Unsupported SymPy function: gamma"
 
     expr = polygamma(0, x)
     try:
-        lambdify(x, expr, "torch_module")
+        torch_nn_module(x, expr)
         assert False, "Expected ValueError for unsupported polygamma"
     except ValueError as e:
         assert str(e) == "Unsupported SymPy function: polygamma"
+
+
+def test_torch_module_piecewise():
+    expr = sympy.Piecewise((x**2, x < 0), (x + 1.0, True))
+    mod = torch_module(x, expr)
+    x_val = torch.tensor([-2.0, -0.5, 0.0, 2.0], dtype=torch.float64)
+    result = mod(x_val)
+    expected = torch.where(x_val < 0, x_val**2, x_val + 1.0)
+    assert torch.allclose(result, expected)
+
+
+def test_torch_module_lambdify_piecewise():
+    expr = sympy.Piecewise((x**2, x < 0), (x + 1.0, True))
+    mod = torch_nn_module(x, expr)
+    x_val = torch.tensor([-2.0, -0.5, 0.0, 2.0], dtype=torch.float64)
+    result = mod(x_val)
+    expected = torch.where(x_val < 0, x_val**2, x_val + 1.0)
+    assert torch.allclose(result, expected)
+
+
+def test_torch_module_piecewise_to_sympy_roundtrip():
+    expr = sympy.Piecewise((x**2, x < 0), (x + 1.0, True))
+    mod = torch_module(x, expr)
+    result_expr = mod.to_sympy()[0]
+    assert result_expr == expr
+
 
 def test_example():
     x = sympy.symbols("x_name")
@@ -887,9 +899,7 @@ def test_complex():
     out = complex_func_torch(torch.tensor(2.0, dtype=torch.double)).detach().numpy()
     assert np.isclose(out[0].item(), 2.0j, atol=1e-6)
     assert np.isclose(out[1].item(), 2.0, atol=1e-6)
-    assert np.isclose(out[2].item(), 2.0, atol
-
-=1e-6)
+    assert np.isclose(out[2].item(), 2.0, atol=1e-6)
 
     out = complex_func_torch(torch.tensor(2.0j, dtype=torch.complex128)).detach().numpy()
     assert np.isclose(out[0].item(), -2.0, atol=1e-6)
@@ -1008,3 +1018,47 @@ def test_torch_module_complex_system():
 
     assert torch.allclose(result, expected, atol=1e-6), \
         f"Different input failed: Expected {expected}, got {result}"
+
+
+def test_torch_module_training_linear_scale():
+    x = sympy.symbols("x")
+    model = torch_nn_module(x, 1.0*x)
+    params = list(model.parameters())
+    assert len(params) == 1
+
+    x_train = torch.linspace(-2.0, 2.0, 21)
+    y_target = 2.5*x_train
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.15)
+    initial_loss = None
+
+    for _ in range(80):
+        optimizer.zero_grad()
+        prediction = model(x_train)
+        loss = torch.mean((prediction - y_target)**2)
+        if initial_loss is None:
+            initial_loss = loss.detach()
+        loss.backward()
+        optimizer.step()
+
+    learned_scale = next(model.parameters()).detach()
+    assert torch.allclose(learned_scale, torch.tensor(2.5), atol=1e-3)
+    assert loss.item() < initial_loss.item() * 1e-4
+
+
+def test_torch_module_lotka_volterra():
+    prey, predator = symbols('prey predator')
+    alpha, beta, delta, gamma_ = symbols('alpha beta delta gamma')
+    dprey = alpha*prey - beta*prey*predator
+    dpredator = delta*prey*predator - gamma_*predator
+    model = torch_nn_module((prey, predator, alpha, beta, delta, gamma_), (dprey, dpredator))
+
+    out = model(
+        torch.tensor(10.0),
+        torch.tensor(5.0),
+        torch.tensor(1.1),
+        torch.tensor(0.4),
+        torch.tensor(0.1),
+        torch.tensor(0.4),
+    )
+    expected = torch.tensor([-9.0, 3.0])
+    assert torch.allclose(out, expected)

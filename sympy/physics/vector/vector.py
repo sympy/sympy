@@ -4,8 +4,7 @@ from sympy.simplify.trigsimp import trigsimp
 from sympy.printing.defaults import Printable
 from sympy.utilities.misc import filldedent
 from sympy.core.evalf import EvalfMixin
-
-from mpmath.libmp.libmpf import prec_to_dps
+from sympy.external.mpmath import prec_to_dps
 
 
 __all__ = ['Vector']
@@ -174,7 +173,7 @@ class Vector(Printable, EvalfMixin):
 
         newlist = list(self.args)
         other = sympify(other)
-        for i, v in enumerate(newlist):
+        for i in range(len(newlist)):
             newlist[i] = (other * newlist[i][0], newlist[i][1])
         return Vector(newlist)
 
@@ -228,7 +227,7 @@ class Vector(Printable, EvalfMixin):
         if len(ar) == 0:
             return str(0)
         ol = []  # output list, to be concatenated to a string
-        for i, v in enumerate(ar):
+        for v in ar:
             for j in 0, 1, 2:
                 # if the coef of the basis vector is 1, we skip the 1
                 if v[0][j] == 1:
@@ -302,7 +301,7 @@ class Vector(Printable, EvalfMixin):
             for key in keys:
                 ar.append((d[key], key))
         ol = []  # output list, to be concatenated to a string
-        for i, v in enumerate(ar):
+        for v in ar:
             for j in 0, 1, 2:
                 # if the coef of the basis vector is 1, we skip the 1
                 if v[0][j] == 1:
@@ -388,7 +387,7 @@ class Vector(Printable, EvalfMixin):
 
         outlist = []
         ar = other.args  # For brevity
-        for i, v in enumerate(ar):
+        for v in ar:
             tempx = v[1].x
             tempy = v[1].y
             tempz = v[1].z

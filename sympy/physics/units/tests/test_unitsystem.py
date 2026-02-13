@@ -40,7 +40,7 @@ def test_convert_to():
     Js.set_global_relative_scale_factor(S.One, joule*second)
 
     mksa = UnitSystem((m, kg, s, A), (Js,))
-    assert convert_to(Js, mksa._base_units) == m**2*kg*s**-1/1000
+    assert convert_to(Js, mksa._base_units) == m**2*kg*s**-1
 
 
 def test_extend():

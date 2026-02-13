@@ -58,8 +58,10 @@ from sympy.matrices import (Adjoint, Inverse, MatrixSymbol, Transpose,
 from sympy.matrices.expressions import hadamard_power
 
 from sympy.physics import mechanics
-from sympy.physics.control.lti import (TransferFunction, Feedback, TransferFunctionMatrix,
-    Series, Parallel, MIMOSeries, MIMOParallel, MIMOFeedback, StateSpace)
+from sympy.physics.control.lti import (
+    TransferFunction, DiscreteTransferFunction,Feedback, TransferFunctionMatrix,
+    Series, Parallel, MIMOSeries, MIMOParallel, MIMOFeedback, StateSpace,
+    DiscreteStateSpace)
 from sympy.physics.units import joule, degree
 from sympy.printing.pretty import pprint, pretty as xpretty
 from sympy.printing.pretty.pretty_symbology import center_accent, is_combining, center
@@ -2459,6 +2461,30 @@ def test_pretty_TransferFunction():
     assert upretty(tf3) == "  p  \n─────\np + 1"
 
 
+def test_pretty_DiscreteTransferFunction():
+    tf1 = DiscreteTransferFunction(s - 1, s + 1, s)
+    assert upretty(tf1) == \
+"""\
+s - 1        \n\
+───── [st: 1]\n\
+s + 1        \
+"""
+    tf2 = DiscreteTransferFunction(2*s + 1, 3 - p, s, Symbol('T'))
+    assert upretty(tf2) == \
+"""\
+2⋅s + 1        \n\
+─────── [st: T]\n\
+ 3 - p         \
+"""
+    tf3 = DiscreteTransferFunction(p, p + 1, p, 0.1)
+    assert upretty(tf3) == \
+"""\
+  p                          \n\
+───── [st: 0.100000000000000]\n\
+p + 1                        \
+"""
+
+
 def test_pretty_Series():
     tf1 = TransferFunction(x + y, x - 2*y, y)
     tf2 = TransferFunction(x - y, x + y, y)
@@ -2852,6 +2878,24 @@ def test_pretty_TransferFunctionMatrix():
         expected5
 
 
+    dtf1 = DiscreteTransferFunction(x + y, x - 2*y, y, 0.1)
+    dtf2 = DiscreteTransferFunction(x - y, x + y, y, 0.1)
+
+    expected6 = \
+"""\
+     ⎡ x + y ⎤         \n\
+     ⎢───────⎥         \n\
+     ⎢x - 2⋅y⎥         \n\
+     ⎢       ⎥         \n\
+     ⎢ x - y ⎥         \n\
+     ⎢ ───── ⎥         \n\
+     ⎣ x + y ⎦{k}      \n\
+[st: 0.100000000000000]\
+"""
+
+    assert upretty(TransferFunctionMatrix([[dtf1], [dtf2]])) == expected6
+
+
 def test_pretty_StateSpace():
     ss1 = StateSpace(Matrix([a]), Matrix([b]), Matrix([c]), Matrix([d]))
     A = Matrix([[0, 1], [1, 0]])
@@ -2892,6 +2936,55 @@ def test_pretty_StateSpace():
     assert upretty(ss1) == expected1
     assert upretty(ss2) == expected2
     assert upretty(ss3) == expected3
+
+
+def test_pretty_DiscreteStateSpace():
+    ss1 = DiscreteStateSpace(Matrix([a]), Matrix([b]), Matrix([c]), Matrix([d]))
+    A = Matrix([[0, 1], [1, 0]])
+    B = Matrix([1, 0])
+    C = Matrix([[0, 1]])
+    D = Matrix([0])
+    ss2 = DiscreteStateSpace(A, B, C, D, Symbol('T'))
+    ss3 = DiscreteStateSpace(Matrix([[-1.5, -2], [1, 0]]),
+                    Matrix([[0.5, 0], [0, 1]]),
+                    Matrix([[0, 1], [0, 2]]),
+                    Matrix([[2, 2], [1, 1]]), 0.1)
+
+    expected1 = \
+"""\
+⎡[a]  [b]⎤\n\
+⎢        ⎥\n\
+⎣[c]  [d]⎦\n\
+          \n\
+ [st: 1]  \
+"""
+    expected2 = \
+"""\
+⎡⎡0  1⎤  ⎡1⎤⎤\n\
+⎢⎢    ⎥  ⎢ ⎥⎥\n\
+⎢⎣1  0⎦  ⎣0⎦⎥\n\
+⎢           ⎥\n\
+⎣[0  1]  [0]⎦\n\
+             \n\
+   [st: T]   \
+"""
+    expected3 = \
+"""\
+⎡⎡-1.5  -2⎤  ⎡0.5  0⎤⎤ \n\
+⎢⎢        ⎥  ⎢      ⎥⎥ \n\
+⎢⎣ 1    0 ⎦  ⎣ 0   1⎦⎥ \n\
+⎢                    ⎥ \n\
+⎢  ⎡0  1⎤     ⎡2  2⎤ ⎥ \n\
+⎢  ⎢    ⎥     ⎢    ⎥ ⎥ \n\
+⎣  ⎣0  2⎦     ⎣1  1⎦ ⎦ \n\
+                       \n\
+[st: 0.100000000000000]\
+"""
+
+    assert upretty(ss1) == expected1
+    assert upretty(ss2) == expected2
+    assert upretty(ss3) == expected3
+
 
 def test_pretty_order():
     expr = O(1)
@@ -5075,12 +5168,12 @@ def test_pretty_RootSum():
     ascii_str = \
 """\
        / 5           \\\n\
-RootSum\\x  + 11*x - 2/\
+RootSum\\w  + 11*w - 2/\
 """
     ucode_str = \
 """\
        ⎛ 5           ⎞\n\
-RootSum⎝x  + 11⋅x - 2⎠\
+RootSum⎝w  + 11⋅w - 2⎠\
 """
 
     assert pretty(expr) == ascii_str
@@ -5088,15 +5181,11 @@ RootSum⎝x  + 11⋅x - 2⎠\
 
     expr = RootSum(x**5 + 11*x - 2, Lambda(z, exp(z)))
     ascii_str = \
-"""\
-       / 5                   z\\\n\
-RootSum\\x  + 11*x - 2, z -> e /\
-"""
+"""       / 5                   w\\
+RootSum\\w  + 11*w - 2, w -> e /"""
     ucode_str = \
-"""\
-       ⎛ 5                  z⎞\n\
-RootSum⎝x  + 11⋅x - 2, z ↦ ℯ ⎠\
-"""
+"""       ⎛ 5                  w⎞
+RootSum⎝w  + 11⋅w - 2, w ↦ ℯ ⎠"""
 
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -5319,8 +5408,8 @@ def test_pretty_no_wrap_line():
     huge_expr = 0
     for i in range(20):
         huge_expr += i*sin(i + x)
-    assert xpretty(huge_expr            ).find('\n') != -1
-    assert xpretty(huge_expr, wrap_line=False).find('\n') == -1
+    assert xpretty(huge_expr, num_columns=80            ).find('\n') != -1
+    assert xpretty(huge_expr, num_columns=80, wrap_line=False).find('\n') == -1
 
 
 def test_settings():
@@ -7261,6 +7350,7 @@ def test_pretty_print_tensor_expr():
     i, j, k = tensor_indices("i j k", L)
     i0 = tensor_indices("i_0", L)
     A, B, C, D = tensor_heads("A B C D", [L])
+    A0 = tensor_heads("A_0", [L])
     H = TensorHead("H", [L, L])
 
     expr = -i
@@ -7303,6 +7393,22 @@ A   \n\
  i₀\n\
 A  \n\
    \
+"""
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = A0(i0)
+    ascii_str = \
+"""\
+   i_0\n\
+A_0   \n\
+      \
+"""
+    ucode_str = \
+"""\
+  i₀\n\
+A₀  \n\
+    \
 """
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -7715,12 +7821,15 @@ def test_imaginary_unit():
 
 def test_str_special_matrices():
     from sympy.matrices import Identity, ZeroMatrix, OneMatrix
+    from sympy.matrices.expressions.special import MatrixUnit
     assert pretty(Identity(4)) == 'I'
     assert upretty(Identity(4)) == '𝕀'
     assert pretty(ZeroMatrix(2, 2)) == '0'
     assert upretty(ZeroMatrix(2, 2)) == '𝟘'
     assert pretty(OneMatrix(2, 2)) == '1'
     assert upretty(OneMatrix(2, 2)) == '𝟙'
+    assert pretty(MatrixUnit(3, 3, 1, 2)) == 'E_12'
+    assert upretty(MatrixUnit(3, 3, 1, 2)) == '𝔼₁₂'
 
 
 def test_pretty_misc_functions():

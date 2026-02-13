@@ -265,12 +265,9 @@ class FiniteField(Field, SimpleDomain):
 
     def from_sympy(self, a):
         """Convert SymPy's Integer to SymPy's ``Integer``. """
-        if a.is_Integer:
+        if a.is_Integer or int_valued(a):
             return self.dtype(self.dom.dtype(int(a)))
-        elif int_valued(a):
-            return self.dtype(self.dom.dtype(int(a)))
-        else:
-            raise CoercionFailed("expected an integer, got %s" % a)
+        raise CoercionFailed("expected an integer, got %s" % a)
 
     def to_int(self, a):
         """Convert ``val`` to a Python ``int`` object. """

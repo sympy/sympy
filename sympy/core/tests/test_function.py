@@ -259,7 +259,7 @@ def test_Lambda():
     eq = Lambda(x, 2*x) + Lambda(y, 2*y)
     assert eq != 2*Lambda(x, 2*x)
     assert eq.as_dummy() == 2*Lambda(x, 2*x).as_dummy()
-    assert Lambda(x, 2*x) not in [ Lambda(x, x) ]
+    assert Lambda(x, 2*x) != Lambda(x, x)
     raises(BadSignatureError, lambda: Lambda(1, x))
     assert Lambda(x, 1)(1) is S.One
 
@@ -1364,6 +1364,29 @@ def test_noncommutative_issue_15131():
     eq = fx * A * ft
     eqdt = eq.diff(t)
     assert eqdt.args[-1] == ft.diff(t)
+
+
+def test_noncommutative_derivative():
+    t = symbols('t')
+    S = Function('S', commutative=False)(t)
+    T = Function('T', commutative=False)(t)
+
+    dS = Derivative(S, t)
+    dT = Derivative(T, t)
+
+    assert diff(S**2, t) == Derivative(S**2, t)
+    assert diff(S**3, t) == Derivative(S**3, t)
+    assert diff(S**-1, t) == Derivative(S**-1, t)
+    assert diff(S**-2, t) == Derivative(S**-2, t)
+
+    assert diff(S*T, t) == dS*T + S*dT
+
+    U = Function('U')(t)
+    dU = Derivative(U, t)
+    assert diff(U**2, t) == 2*U*dU
+
+    n = symbols('n')
+    assert diff(S**n, t) == Derivative(S**n, t)
 
 
 def test_Subs_Derivative():

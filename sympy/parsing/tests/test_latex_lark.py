@@ -530,6 +530,38 @@ MISCELLANEOUS_EXPRESSION_PAIRS = [
     (r"\left(  x + y\right ) z", _Mul(_Add(x, y), z)),
 ]
 
+SQUARE_BRACKET_EXPRESSION_PAIRS = [
+    (r"[x+y]z", _Mul(_Add(x, y), z)),
+    (r"[a+b]c", _Mul(_Add(a, b), c)),
+    (r"[x]y", _Mul(x, y)),
+    (r"[a+b][c+d]", _Mul(_Add(a, b), _Add(c, d))),
+    (r"[x][y]", _Mul(x, y)),
+    (r"[x+y]a", _Mul(_Add(x, y), a)),
+    (r"[a]b", _Mul(a, b)),
+]
+
+EVALUATED_SQUARE_BRACKET_EXPRESSION_PAIRS = [
+    (r"[x+y]z", (x + y) * z),
+    (r"[a+b]c", (a + b) * c),
+    (r"[x]y", x * y),
+    (r"[a+b][c+d]", (a + b) * (c + d)),
+    (r"[x][y]", x * y),
+    (r"[2+3]x", 5 * x),
+]
+
+LITERAL_BRACE_EXPRESSION_PAIRS = [
+    (r"\{x+y\}z", _Mul(_Add(x, y), z)),
+    (r"\{a\}b", _Mul(a, b)),
+    (r"\{x+y\}\{a+b\}", _Mul(_Add(x, y), _Add(a, b))),
+]
+
+MIXED_BRACKET_BRACE_EXPRESSION_PAIRS = [
+    (r"[x+y]\{a+b\}", _Mul(_Add(x, y), _Add(a, b))),
+    (r"\{a+b\}[x+y]", _Mul(_Add(a, b), _Add(x, y))),
+    (r"[x]\{y\}", _Mul(x, y)),
+    (r"\{a\}[b]", _Mul(a, b)),
+]
+
 UNEVALUATED_LITERAL_COMPLEX_NUMBER_EXPRESSION_PAIRS = [
     (r"\imaginaryunit^2", _Pow(I, 2)),
     (r"|\imaginaryunit|", _Abs(I)),
@@ -857,6 +889,32 @@ def test_miscellaneous_expressions():
             assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
 
+def test_square_bracket_multiplication():
+    for latex_str, sympy_expr in SQUARE_BRACKET_EXPRESSION_PAIRS:
+        with evaluate(False):
+            result = parse_latex_lark(latex_str)
+            assert result == sympy_expr, f"Failed for {latex_str}: got {result}, expected {sympy_expr}"
+
+    for latex_str, sympy_expr in EVALUATED_SQUARE_BRACKET_EXPRESSION_PAIRS:
+        result = parse_latex_lark(latex_str)
+        assert result == sympy_expr, f"Failed for {latex_str}: got {result}, expected {sympy_expr}"
+
+
+def test_literal_brace_multiplication():
+    for latex_str, sympy_expr in LITERAL_BRACE_EXPRESSION_PAIRS:
+        with evaluate(False):
+            result = parse_latex_lark(latex_str)
+            assert result == sympy_expr, f"Failed for {latex_str}"
+
+
+def test_mixed_bracket_brace_multiplication():
+    for latex_str, sympy_expr in MIXED_BRACKET_BRACE_EXPRESSION_PAIRS:
+        with evaluate(False):
+            result = parse_latex_lark(latex_str)
+            assert result == sympy_expr, \
+                f"Failed for {latex_str}: got {result}, expected {sympy_expr}"
+
+
 def test_literal_complex_number_expressions():
     for latex_str, sympy_expr in UNEVALUATED_LITERAL_COMPLEX_NUMBER_EXPRESSION_PAIRS:
         with evaluate(False):
@@ -870,3 +928,10 @@ def test_matrix_expressions():
 
     for latex_str, sympy_expr in EVALUATED_MATRIX_EXPRESSION_PAIRS:
         assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+def test_latex_cases_environment_error():
+    from sympy.parsing.latex import parse_latex, LaTeXParsingError
+    from sympy.testing.pytest import raises
+    latex_string = r"\begin{cases} x=1 \\ y=2 \end{cases}"
+    with raises(LaTeXParsingError, match="The 'cases' environment is not currently supported"):
+        parse_latex(latex_string)

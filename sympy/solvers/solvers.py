@@ -31,7 +31,7 @@ from sympy.core.traversal import preorder_traversal
 from sympy.logic.boolalg import And, BooleanAtom
 
 from sympy.functions import (log, exp, LambertW, cos, sin, tan, acos, asin, atan,
-                             Abs, re, im, arg, sqrt, atan2)
+                             Abs, re, im, arg, sqrt, atan2, Max, Min)
 from sympy.functions.combinatorial.factorials import binomial
 from sympy.functions.elementary.hyperbolic import HyperbolicFunction
 from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
@@ -54,9 +54,7 @@ from sympy.utilities.lambdify import lambdify
 from sympy.utilities.misc import filldedent, debugf
 from sympy.utilities.iterables import (connected_components,
     generate_bell, uniq, iterable, is_sequence, subsets, flatten, sift)
-from sympy.utilities.decorator import conserve_mpmath_dps
-
-from mpmath import findroot
+from sympy.external.mpmath import conserve_mpmath_dps, findroot
 
 from sympy.solvers.polysys import solve_poly_system
 
@@ -964,6 +962,12 @@ def solve(f, *symbols, **flags):
 
         # if we have a Matrix, we need to iterate over its elements again
         if f[i].is_Matrix:
+            try:
+                f[i] = f[i].as_explicit()
+            except ValueError:
+                raise ValueError(
+                    "solve cannot handle matrices with symbolic shape."
+                )
             bare_f = False
             f.extend(list(f[i]))
             f[i] = S.Zero
@@ -986,17 +990,19 @@ def solve(f, *symbols, **flags):
             return [], set()
         return []
 
+    repl_funcs = (Abs, Min, Max)
     for i, fi in enumerate(f):
-        # Abs
+        # Abs / Max / Min
+        # Rewrites as piecewise functions prior to solving
         while True:
             was = fi
-            fi = fi.replace(Abs, lambda arg:
-                separatevars(Abs(arg)).rewrite(Piecewise) if arg.has(*symbols)
-                else Abs(arg))
+            fi = fi.replace(lambda ex: type(ex) in repl_funcs,
+                       lambda ex: separatevars(ex).rewrite(Piecewise) if any(
+                           arg.has(*symbols) for arg in ex.args) else ex)
             if was == fi:
                 break
 
-        for e in fi.find(Abs):
+        for e in fi.find(lambda ex: type(ex) in repl_funcs):
             if e.has(*symbols):
                 raise NotImplementedError('solving %s when the argument '
                     'is not real or imaginary.' % e)
@@ -3014,6 +3020,8 @@ def nsolve(*args, dict=False, **kwargs):
             "solver".'''))
 
     if 'prec' in kwargs:
+        # XXX: This should use local_workprec instead of changing the global
+        # precision.
         import mpmath
         mpmath.mp.dps = kwargs.pop('prec')
 

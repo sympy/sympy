@@ -13,8 +13,7 @@ Fortunately SymPy offers a number of easy-to-use hooks into other numeric
 systems, allowing you to create mathematical expressions in SymPy and then
 ship them off to the numeric system of your choice.  This page documents many
 of the options available including the ``math`` library, the popular array
-computing package ``numpy``, code generation in ``Fortran`` or ``C``, and the
-use of the array compiler ``Aesara``.
+computing package ``numpy``, code generation in ``Fortran`` or ``C``.
 
 Subs/evalf
 ----------
@@ -97,6 +96,13 @@ replacement for numpy.
     array([ 0.84147096,  0.8411998 ,  0.84092844, ..., -0.05426079,
        -0.05433151, -0.05440211], dtype=float32)
 
+PyTorch can also be used as a lambdify backend:
+
+    >>> f = lambdify(x, expr, "torch")  # doctest: +SKIP
+
+If you need an actual ``torch.nn.Module`` object instead of a plain function,
+use ``sympy.printing.pytorch.torch_nn_module``.
+
 uFuncify
 --------
 
@@ -116,6 +122,11 @@ The API reference of all the above is listed here: :py:func:`sympy.utilities.aut
 
 Aesara
 ------
+
+.. deprecated:: 1.14.
+    The ``Aesara Code printing`` is deprecated.See its documentation for
+    more information. See :ref:`deprecated-aesaraprinter` for details.
+
 
 SymPy has a strong connection with
 `Aesara <https://aesara.readthedocs.io/en/latest/>`_, a mathematical array
@@ -143,11 +154,10 @@ So Which Should I Use?
 ----------------------
 
 The options here were listed in order from slowest and least dependencies to
-fastest and most dependencies.  For example, if you have Aesara installed then
-that will often be the best choice.  If you don't have Aesara but do have
-``f2py`` then you should use ``ufuncify``. If you have been comfortable using
-lambdify with the numpy module, but have a GPU, CuPy and JAX can provide substantial
-speedups with little effort.
+fastest and most dependencies. For example, If you have f2py installed,
+then you should use ufuncify, as that will often be the best choice.
+If you have been comfortable using lambdify with the numpy module,
+but have a GPU, CuPy and JAX can provide substantial speedups with little effort.
 
 +-----------------+-------+------------------------------------------+---------------+
 | Tool            | Speed | Qualities                                | Dependencies  |
@@ -163,6 +173,4 @@ speedups with little effort.
 | lambdify-cupy   | 10ns  | Vector functions on GPUs                 | cupy          |
 +-----------------+-------+------------------------------------------+---------------+
 | lambdify-jax    | 10ns  | Vector functions on CPUs, GPUs and TPUs  | jax           |
-+-----------------+-------+------------------------------------------+---------------+
-| Aesara          | 10ns  | Many outputs, CSE, GPUs                  | Aesara        |
 +-----------------+-------+------------------------------------------+---------------+

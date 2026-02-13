@@ -15,6 +15,16 @@ open. -->
 #### Other comments
 
 
+#### AI Generation Disclosure
+
+<!-- If this pull request includes AI-generated code or text, please disclose
+the tool used and specify which lines were generated. Disclosure is not
+required for minor assistive tasks, such as spell-checking or code reviewing,
+in primarily human-authored work. Otherwise, leave this area blank. Read our
+Policy on AI Generated Code and Communication at
+https://docs.sympy.org/dev/contributing/ai-generated-code-policy.html. -->
+
+
 #### Release Notes
 
 <!-- Write the release notes for this release below between the BEGIN and END

@@ -1,9 +1,14 @@
 from math import exp, log
 from sympy.core.random import _randint
-from sympy.external.gmpy import bit_scan1, gcd, invert, sqrt as isqrt
+from sympy.external.gmpy import bit_scan1, gcd, invert, jacobi, sqrt as isqrt
 from sympy.ntheory.factor_ import _perfect_power
+from sympy.ntheory.generate import primerange
 from sympy.ntheory.primetest import isprime
 from sympy.ntheory.residue_ntheory import _sqrt_mod_prime_power
+
+
+_SHIFT = 2**10
+_LOG2_SHIFT = 710 # = round(log(2)*_SHIFT)
 
 
 class SievePolynomial:
@@ -71,17 +76,17 @@ def _generate_factor_base(prime_bound, n):
     prime_bound : upper prime bound of the factor_base
     n : integer to be factored
     """
-    from sympy.ntheory.generate import sieve
-    factor_base = []
+    # 2 is always included in the `factor_base`
+    factor_base = [FactorBaseElem(2, 1, _LOG2_SHIFT)]
     idx_1000, idx_5000 = None, None
-    for prime in sieve.primerange(1, prime_bound):
-        if pow(n, (prime - 1) // 2, prime) == 1:
+    for prime in primerange(3, prime_bound):
+        if jacobi(n, prime) == 1:
             if prime > 1000 and idx_1000 is None:
                 idx_1000 = len(factor_base) - 1
             if prime > 5000 and idx_5000 is None:
                 idx_5000 = len(factor_base) - 1
             residue = _sqrt_mod_prime_power(n, prime, 1)[0]
-            log_p = round(log(prime)*2**10)
+            log_p = round(log(prime)*_SHIFT)
             factor_base.append(FactorBaseElem(prime, residue, log_p))
     return idx_1000, idx_5000, factor_base
 
@@ -136,7 +141,7 @@ def _generate_polynomial(N, M, factor_base, idx_1000, idx_5000, randint):
             B.append(a//q_l*gamma)
         b = sum(B)
         g = SievePolynomial(a, b, N)
-        for fb in factor_base:
+        for fb in factor_base[1:]:
             if a % fb.prime == 0:
                 fb.soln1 = None
                 continue
@@ -153,7 +158,7 @@ def _generate_polynomial(N, M, factor_base, idx_1000, idx_5000, randint):
             b = g.b + 2*neg_pow*B[v]
             a = g.a
             g = SievePolynomial(a, b, N)
-            for fb in factor_base:
+            for fb in factor_base[1:]:
                 if fb.soln1 is None:
                     continue
                 fb.soln1 = (fb.soln1 - neg_pow*fb.b_ainv[v]) % fb.prime
@@ -161,7 +166,7 @@ def _generate_polynomial(N, M, factor_base, idx_1000, idx_5000, randint):
             yield g
 
 
-def _gen_sieve_array(M, factor_base):
+def _gen_sieve_array(M, factor_base, g):
     """Sieve Stage of the Quadratic Sieve. For every prime in the factor_base
     that does not divide the coefficient `a` we add log_p over the sieve_array
     such that ``-M <= soln1 + i*p <=  M`` and ``-M <= soln2 + i*p <=  M`` where `i`
@@ -174,17 +179,18 @@ def _gen_sieve_array(M, factor_base):
     M : sieve interval
     factor_base : factor_base primes
     """
-    sieve_array = [0]*(2*M + 1)
-    for factor in factor_base:
+    if g.a % 2 == 0:
+        sieve_array = [0] * (2*M)
+    elif (M - g.b) % 2:
+        sieve_array = [_LOG2_SHIFT, 0] * M
+    else:
+        sieve_array = [0, _LOG2_SHIFT] * M
+    for factor in factor_base[1:]:
         if factor.soln1 is None: #The prime does not divides a
             continue
-        for idx in range((M + factor.soln1) % factor.prime, 2*M, factor.prime):
-            sieve_array[idx] += factor.log_p
-        if factor.prime == 2:
-            continue
-        #if prime is 2 then sieve only with soln_1_p
-        for idx in range((M + factor.soln2) % factor.prime, 2*M, factor.prime):
-            sieve_array[idx] += factor.log_p
+        for s in [factor.soln1, factor.soln2]:
+            for idx in range((M + s) % factor.prime, 2*M, factor.prime):
+                sieve_array[idx] += factor.log_p
     return sieve_array
 
 
@@ -239,7 +245,7 @@ def _trial_division_stage(N, M, factor_base, sieve_array, sieve_poly, partial_re
     partial_relations : stores partial relations with one large prime
     ERROR_TERM : error term for accumulated_val
     """
-    accumulated_val = (log(M) + log(N)/2 - ERROR_TERM) * 2**10
+    accumulated_val = (log(M) + log(N)/2 - ERROR_TERM) * _SHIFT
     smooth_relations = []
     proper_factor = set()
     partial_relation_upper_bound = 128*factor_base[-1].prime
@@ -421,7 +427,7 @@ def qs_factor(N, prime_bound, M, ERROR_TERM=25, seed=1234):
     idx_1000, idx_5000, factor_base = _generate_factor_base(prime_bound, N)
     threshold = len(factor_base) * 105//100
     for g in _generate_polynomial(N, M, factor_base, idx_1000, idx_5000, randint):
-        sieve_array = _gen_sieve_array(M, factor_base)
+        sieve_array = _gen_sieve_array(M, factor_base, g)
         s_rel, p_f = _trial_division_stage(N, M, factor_base, sieve_array, g, partial_relations, ERROR_TERM)
         smooth_relations += s_rel
         for p in p_f:

@@ -1,9 +1,8 @@
-from mpmath.matrices.matrices import _matrix
-
 from sympy.core import Basic, Dict, Tuple
 from sympy.core.numbers import Integer
 from sympy.core.cache import cacheit
 from sympy.core.sympify import _sympy_converter as sympify_converter, _sympify
+from sympy.external.mpmath import _matrix
 from sympy.matrices.dense import DenseMatrix
 from sympy.matrices.expressions import MatrixExpr
 from sympy.matrices.matrixbase import MatrixBase
@@ -39,10 +38,14 @@ class ImmutableRepMatrix(RepMatrix, MatrixExpr): # type: ignore
     # both ImmutableDenseMatrix and ImmutableSparseMatrix.
     #
 
+    _cols: int
+    _rows: int
+
     def __new__(cls, *args, **kwargs):
         return cls._new(*args, **kwargs)
 
-    __hash__ = MatrixExpr.__hash__
+    def __hash__(self):
+        return MatrixExpr.__hash__(self)
 
     def copy(self):
         return self

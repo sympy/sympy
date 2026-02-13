@@ -2,6 +2,7 @@
 
 from collections import defaultdict
 import os
+import string
 import json
 import time
 
@@ -18,7 +19,7 @@ def read_log():
             except ValueError:
                 return
             else:
-                if dur[0] not in '0123456789':
+                if dur[0] not in string.digits:
                     return
             if kind != 'call':
                 continue

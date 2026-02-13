@@ -1,4 +1,4 @@
-from typing import Tuple as tTuple
+from __future__ import annotations
 
 from sympy.core.basic import Basic
 from sympy.core.expr import Expr
@@ -21,7 +21,7 @@ from sympy.multipledispatch import dispatch
 class RoundFunction(DefinedFunction):
     """Abstract base class for rounding functions."""
 
-    args: tTuple[Expr]
+    args: tuple[Expr]
 
     @classmethod
     def eval(cls, arg):
@@ -552,12 +552,9 @@ class frac(DefinedFunction):
             if arg.is_integer:
                 return S.Zero
             if arg.is_number:
-                if arg is S.NaN:
+                if arg is S.NaN or arg is S.ComplexInfinity:
                     return S.NaN
-                elif arg is S.ComplexInfinity:
-                    return S.NaN
-                else:
-                    return arg - floor(arg)
+                return arg - floor(arg)
             return cls(arg, evaluate=False)
 
         real, imag = S.Zero, S.Zero

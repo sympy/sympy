@@ -743,13 +743,11 @@ class Wavefunction(Function):
     #avoid errors from calling is_Float in the constructor
     def __new__(cls, *args, **options):
         new_args = [None for i in args]
-        ct = 0
-        for arg in args:
+        for ct, arg in enumerate(args):
             if isinstance(arg, tuple):
                 new_args[ct] = Tuple(*arg)
             else:
                 new_args[ct] = arg
-            ct += 1
 
         return super().__new__(cls, *new_args, **options)
 

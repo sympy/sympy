@@ -5,7 +5,7 @@ from sympy.core.symbol import (Symbol, symbols)
 from sympy.sets.sets import Interval
 from sympy.simplify.simplify import simplify
 from sympy.physics.continuum_mechanics.beam import Beam
-from sympy.functions import SingularityFunction, Piecewise, meijerg, Abs, log
+from sympy.functions import SingularityFunction, Piecewise, meijerg, Abs, log, sqrt, factorial
 from sympy.testing.pytest import raises
 from sympy.physics.units import meter, newton, kilo, giga, milli
 from sympy.physics.continuum_mechanics.beam import Beam3D
@@ -422,8 +422,15 @@ def test_composite_beam():
                     - 133*SingularityFunction(x, 1, 3)/405000 + SingularityFunction(x, 3, 3)/3000\
                     - 37*SingularityFunction(x, 4, 3)/202500
 
+    E = Symbol('E')
+    I = Symbol('I')
+    b=Beam(6, E, I)
+    c=Beam(6, E, I)
+    with raises(ValueError, match="Invalid joining method. Choose from 'fixed' or 'hinge'."):
+        b.join(c, "hige")
 
 def test_point_cflexure():
+    #single contraflexure
     E = Symbol('E')
     I = Symbol('I')
     b = Beam(10, E, I)
@@ -434,6 +441,7 @@ def test_point_cflexure():
     b.apply_load(3, 6, 0)
     assert b.point_cflexure() == [Rational(10, 3)]
 
+    # Multiple contraflexure points
     E = Symbol('E')
     I = Symbol('I')
     b = Beam(15, E, I)
@@ -446,8 +454,67 @@ def test_point_cflexure():
     b.solve_for_reaction_loads(r0, r10, r15, m15)
     assert b.point_cflexure() == [Rational(1200, 163), 12, Rational(163, 12)]
 
+    # constant zero region in the end
     E = Symbol('E')
     I = Symbol('I')
+    b = Beam(10, E, I)
+    r0, m0 = b.apply_support(0, type='fixed')
+    r4 = b.apply_support(4, type='pin')
+    r7,m7 = b.apply_support(7, type='fixed')
+    b.apply_rotation_hinge(2)
+    b.apply_rotation_hinge(5)
+    b.apply_load(-5, 0, 0, 2)
+    b.apply_load(7,3,-1)
+    b.solve_for_reaction_loads(r0, m0, r4, r7,m7)
+    assert b.point_cflexure() == [Rational(173,260),2,Rational(1490,381),5]
+
+    # Symbolic load
+    E = symbols('E')
+    I = symbols('I')
+    P = symbols('P',positive=True)
+    b = Beam(15, E, I)
+    r0 = b.apply_support(0, type='pin')
+    r10 = b.apply_support(10, type='pin')
+    r15, m15 = b.apply_support(15, type='fixed')
+    b.apply_rotation_hinge(12)
+    b.apply_load(-P, 5, -1)
+    b.solve_for_reaction_loads(r0, r10, r15, m15)
+    assert b.point_cflexure()==[Rational(25,3),12]
+
+    #symbolic load using bcs
+    E = Symbol('E')
+    I = Symbol('I')
+    M1, M2, R1, R2 = symbols('M1, M2, R1,R2')
+    F = Symbol('F',positive=True)
+    b5 = Beam(10, E, I)
+    b5.bc_deflection = [(0, 0),(10, 0)]
+    b5.bc_slope = [(0, 0),(10, 0)]
+    b5.apply_load(R1, 0, -1)
+    b5.apply_load(M1, 0, -2)
+    b5.apply_load(R2, 10, -1)
+    b5.apply_load(M2, 10, -2)
+    b5.apply_load(-F, 5, -1)
+    b5.solve_for_reaction_loads(R1, R2, M1, M2)
+    assert b5.point_cflexure()==[Rational(5,2),Rational(15,2)]
+
+    # constant zero region at start
+    E = Symbol('E')
+    I = Symbol('I')
+    b = Beam(10, E, I)
+    r0, m0 = b.apply_support(0, type='fixed')
+    r4 = b.apply_support(4, type='pin')
+    r7,m7 = b.apply_support(7, type='fixed')
+    b.apply_rotation_hinge(2)
+    b.apply_rotation_hinge(5)
+    b.apply_load(-5, 0, 0, 2)
+    b.apply_load(7,3,-1)
+    b.solve_for_reaction_loads(r0, m0, r4, r7,m7)
+    assert b.point_cflexure() == [Rational(173,260),2,Rational(1490,381),5]
+
+    # Symbolic load
+    E = symbols('E')
+    I = symbols('I')
+    P = symbols('P',positive=True)
     b = Beam(15, E, I)
     r0 = b.apply_support(0, type='pin')
     r10 = b.apply_support(10, type='pin')
@@ -457,8 +524,123 @@ def test_point_cflexure():
     b.apply_load(-10, 5, -1)
     b.apply_load(-5, 10, 0, 15)
     b.solve_for_reaction_loads(r0, r10, r15, m15)
-    with raises(NotImplementedError):
-        b.point_cflexure()
+    assert b.point_cflexure() == [12]
+
+    #points that are not simple
+    E = Symbol('E')
+    E = 200
+    I = Symbol('I')
+    I = 1000
+    b1 = Beam(5, E, I)
+    b2 = Beam(10, E, I)
+    b = b1.join(b2, via="hinge")
+    b.apply_support(0, type='pin')
+    b.apply_support(10, type='pin')
+    b.apply_support(15, type='fixed')
+    b.apply_load(-10, 5, -1)
+    b.apply_load(-5, 0, 0, 5)
+    b.apply_load(-5, 10, 0, 15)
+    r0, r10, r15, m15 = symbols('R_0, R_10, R_15, M_15')
+    b.solve_for_reaction_loads(r0, r10, r15, m15)
+    assert b.point_cflexure()==[5, Rational(149,8) - 3*sqrt(209)/8]
+
+    # zero contra flexure points
+    E = Symbol('E')
+    I = Symbol('I')
+    b = Beam(10, E, I)
+    b.apply_support(0, type="pin")
+    b.apply_support(10, type="pin")
+    b.apply_load(-20, 5, -1)
+    R_0, R_10 = symbols('R_0, R_10')
+    b.solve_for_reaction_loads(R_0, R_10)
+    assert b.point_cflexure() == []
+
+    # Join method with symbolic
+    E = Symbol('E')
+    I = Symbol('I')
+    P = Symbol('P', positive=True)
+    Z = Symbol('Z', positive=True)
+    b1 = Beam(5, E, I)
+    b2 = Beam(3, E, I)
+    b = b1.join(b2, via="hinge")
+    b.apply_support(0, type='fixed')
+    b.apply_support(8, type='pin')
+    b.apply_load(-P, 2, -1)
+    b.apply_load(-Z, 5, 0, 8)
+    r0, m0, r8 = symbols('R_0, M_0, R_8')
+    b.solve_for_reaction_loads(r0, m0, r8)
+    assert b.point_cflexure() == [5]
+
+    # with roots touching axis but never crossing
+    E = Symbol('E')
+    I = Symbol('I')
+    b1 = Beam(5, E, I)
+    b2 = Beam(3, E, I)
+    b = b1.join(b2, via="hinge")
+    b.apply_support(0, type='fixed')
+    b.apply_support(8, type='pin')
+    b.apply_load(-10, 5, -1)
+    b.apply_load(10, 7, -1)
+    r0, m0, r8 = symbols('R_0, M_0, R_8')
+    b.solve_for_reaction_loads(r0, m0, r8)
+    assert b.point_cflexure() == []
+
+    # zero constant region
+    E = Symbol('E')
+    I = Symbol('I')
+    b1 = Beam(5, E, I)
+    b2 = Beam(3, E, I)
+    b = b1.join(b2, via="hinge")
+    b.apply_support(0, type='fixed')
+    b.apply_support(8, type='pin')
+    b.apply_load(-10, 5, -1)
+    r0, m0, r8 = symbols('R_0, M_0, R_8')
+    b.solve_for_reaction_loads(r0, m0, r8)
+    assert b.point_cflexure() == []
+
+    # non zero moment at ends
+    E = Symbol('E')
+    I = Symbol('I')
+    b = Beam(7, E, I)
+    r0, m0 = b.apply_support(0, type='fixed')
+    r4 = b.apply_support(4, type='pin')
+    r7 = b.apply_support(7, type='pin')
+    b.apply_rotation_hinge(2)
+    b.apply_rotation_hinge(5)
+    b.apply_load(-5, 0, 0, 2)
+    b.apply_load(-10, 6, -1)
+    b.solve_for_reaction_loads(r0, m0, r4, r7)
+    assert b.point_cflexure() == [1,2,5]
+
+    E = Symbol('E')
+    I = Symbol('I')
+    b = Beam(10, E, I)
+    r0, m0 = b.apply_support(0, type='fixed')
+    r4 = b.apply_support(4, type='pin')
+    r7,m7 = b.apply_support(7, type='fixed')
+    b.apply_rotation_hinge(2)
+    b.apply_rotation_hinge(5)
+    b.apply_load(-5, 0, 0, 2)
+    b.apply_load(-10, 6, -1)
+    b.apply_load(7,3,-1)
+    b.solve_for_reaction_loads(r0, m0, r4, r7,m7)
+    assert b.point_cflexure() == [Rational(73,260), 2, 5, Rational(2705,437)]
+
+    # with a jump at 4
+    E = Symbol('E')
+    I = Symbol('I')
+    b = Beam(10, E, I)
+    r0, m0 = b.apply_support(0, type='fixed')
+    r4,m4 = b.apply_support(4, type='fixed')
+    r7,m7 = b.apply_support(7, type='fixed')
+    b.apply_rotation_hinge(2)
+    b.apply_rotation_hinge(5)
+    b.apply_load(-5, 0, 0, 2)
+    b.apply_load(-10, 6, -1)
+    b.apply_load(7,3,-1)
+    b.solve_for_reaction_loads(r0, m0, r4,m4, r7,m7)
+    assert b.point_cflexure() == [Rational(13,16),2,Rational(482,129),4,5,Rational(83,13)]
+
 
 def test_remove_load():
     E = Symbol('E')
@@ -500,7 +682,7 @@ def test_apply_support():
     I = Symbol('I')
 
     b = Beam(4, E, I)
-    b.apply_support(0, "cantilever")
+    b.apply_support(0, "fixed")
     b.apply_load(20, 4, -1)
     M_0, R_0 = symbols('M_0, R_0')
     b.solve_for_reaction_loads(R_0, M_0)
@@ -539,6 +721,20 @@ def test_apply_support():
     assert b.reaction_loads == {R_0: 25, M_0: -40, R_8: 15}
     assert b.reaction_loads[m0] == -40
 
+    b = Beam(8, E, I)
+    p0, m0 = b.apply_support(0, "fixed")
+    p1 = b.apply_support(8, "roller")
+    b.apply_load(-5, 0, 0, 8)
+    b.solve_for_reaction_loads() # solving reactions without passing symbols
+    R_0 = Symbol('R_0')
+    M_0 = Symbol('M_0')
+    R_8 = Symbol('R_8')
+    assert p0 == R_0
+    assert m0 == M_0
+    assert p1 == R_8
+    assert b.reaction_loads == {R_0: 25, M_0: -40, R_8: 15}
+    assert b.reaction_loads[m0] == -40
+
     P = Symbol('P', positive=True)
     L = Symbol('L', positive=True)
     b = Beam(L, E, I)
@@ -548,6 +744,47 @@ def test_apply_support():
     R_0, R_L, M_0, M_L = symbols('R_0, R_L, M_0, M_L')
     b.solve_for_reaction_loads(R_0, R_L, M_0, M_L)
     assert b.reaction_loads == {R_0: P/2, R_L: P/2, M_0: -L*P/8, M_L: L*P/8}
+
+    P = Symbol('P', positive=True)
+    L = Symbol('L', positive=True)
+    b = Beam(L, E, I)
+    b.apply_support(0, type='fixed')
+    b.apply_support(L, type='fixed')
+    b.apply_load(-P, L/2, -1)
+    R_0, R_L, M_0, M_L = symbols('R_0, R_L, M_0, M_L')
+    b.solve_for_reaction_loads() # solving reactions without passing symbols
+    assert b.reaction_loads == {R_0: P/2, R_L: P/2, M_0: -L*P/8, M_L: L*P/8}
+
+    P = Symbol('P', positive=True)
+    L = Symbol('L', positive=True)
+    c = Beam(L, E, I)
+    c.apply_support(0, type='fixed')
+    c.apply_support(L, type='fixed')
+    c.apply_load(-P, L/2, -1)
+    R_0, R_L, M_0, M_L = symbols('R_0, R_L, M_0, M_L')
+    c.solve_for_reaction_loads()
+    assert c.reaction_loads == {R_0: P/2, R_L: P/2, M_0: -L*P/8, M_L: L*P/8}
+
+    E = Symbol('E')
+    I = Symbol('I')
+    b=Beam(6, E, I)
+    with raises(ValueError, match="Invalid support type. Choose from 'pin', 'roller', or 'fixed'."):
+        b.apply_support(0,"pen")
+
+
+def test_for_duplicate_symbols_to_solve_for_reaction_loads():
+    E, I = symbols('E I')
+    b = Beam(4, E, I)
+    b.apply_load(20, 4, -1)
+    R, M = symbols('R, M')
+    b.apply_load(R, 0, -1)
+    b.apply_load(M, 0, -2)
+    b.bc_deflection = [(0, 0)]
+    b.bc_slope = [(0, 0)]
+    b.solve_for_reaction_loads(R, M)
+    with raises(ValueError, match="Duplicate Symbols passed into solve_for_reaction_loads()"):
+        b.solve_for_reaction_loads(R,R)
+
 
 def test_apply_rotation_hinge():
     b = Beam(15, 20, 20)
@@ -889,6 +1126,57 @@ def test_ild_with_sliding_hinge():
     b.solve_for_ild_moment(8, 1, r0, r6, r13, m13)
     assert b.ild_moment.subs(a, 3) == -Rational(12, 7)
 
+
+def test_apply_load_ramp_start_greater_than_end():
+    # issue #28174
+
+    E, I = symbols('E I')
+
+    # order 1 - fullbeam
+    b = Beam(10, E, I)
+    b.apply_load(5, 10, 1, end=0)
+    expected_load = 50*SingularityFunction(x, 0, 0) \
+                    - 5*SingularityFunction(x, 0, 1) \
+                    + 5*SingularityFunction(x, 10, 1)
+    assert simplify(b.load - expected_load) == 0
+
+    # order 3 - full beam
+    b1 = Beam(10, E, I)
+    b1.apply_load(5, 10, 3, end=0)
+    expected_load = 5000*SingularityFunction(x, 0, 0) \
+                    - 1500*SingularityFunction(x, 0, 1) \
+                    + 150*SingularityFunction(x, 0, 2) \
+                    - 5*SingularityFunction(x, 0, 3) \
+                    + 5*SingularityFunction(x, 10, 3)
+    assert simplify(b1.load - expected_load) == 0
+
+    # order 1 - section of beam
+    b2 = Beam(10, E, I)
+    b2.apply_load(5, 6, 1, end=2)
+    expected_load = 20*SingularityFunction(x, 2, 0) \
+                    - 5*SingularityFunction(x, 2, 1) \
+                    + 5*SingularityFunction(x, 6, 1)
+    assert simplify(b2.load - expected_load) == 0
+
+
+def test_apply_load_symbolic_start_end():
+    # Symbolic test for start > end case
+    E, I = symbols('E I')
+    a, b_ = symbols('a b', real=True)
+
+    beam = Beam(b_, E, I)
+    beam.apply_load(5, b_, 1, end=a)
+
+    f = 5 * x**1
+    expected_load = (
+        f.subs(x, b_ - a) * SingularityFunction(x, a, 0)
+        - f.diff(x, 1).subs(x, b_ - a) * SingularityFunction(x, a, 1) / factorial(1)
+        + 5 * SingularityFunction(x, b_, 1)
+    )
+
+    assert simplify(beam.load - expected_load) == 0
+
+
 def test_Beam3D():
     l, E, G, I, A = symbols('l, E, G, I, A')
     R1, R2, R3, R4 = symbols('R1, R2, R3, R4')
@@ -1021,13 +1309,13 @@ def test_cross_section():
     # test for second_moment and cross_section setter
     b0 = Beam(l, E, I)
     assert b0.second_moment == I
-    assert b0.cross_section == None
+    assert b0.cross_section is None
     b0.cross_section = Circle((0, 0), 5)
     assert b0.second_moment == pi*Rational(625, 4)
     assert b0.cross_section == Circle((0, 0), 5)
     b0.second_moment = 2*n - 6
     assert b0.second_moment == 2*n-6
-    assert b0.cross_section == None
+    assert b0.cross_section is None
     with raises(ValueError):
         b0.second_moment = Circle((0, 0), 5)
 
@@ -1070,7 +1358,7 @@ def test_cross_section():
     b.bc_deflection = [(0, 0)]
 
     assert b.second_moment == Piecewise((a*c**3/12, x <= 20), (g*h**3/36, x <= 35))
-    assert b.cross_section == None
+    assert b.cross_section is None
     assert b.length == 35
     assert b.slope().subs(x, 7) == 8400/(E*a*c**3)
     assert b.slope().subs(x, 25) == 52200/(E*g*h**3) + 39600/(E*a*c**3)

@@ -75,6 +75,12 @@ class NumPyPrinter(ArrayPrinter, PythonCodePrinter):
             return '({})'.format(').dot('.join(self._print(i) for i in expr_list))
         return '({})'.format(').dot('.join(self._print(i) for i in expr.args))
 
+    def _print_Contains(self, expr):
+        item, s = expr.args
+        if s == S.Integers:
+            return "equal(mod({}, 1), 0)".format(self._print(item))
+        raise NotImplementedError(f"NumPy printing for Contains({item}, {s}) not implemented")
+
     def _print_MatPow(self, expr):
         "Matrix power printer"
         return '{}({}, {})'.format(self._module_format(self._module + '.linalg.matrix_power'),

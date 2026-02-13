@@ -224,8 +224,8 @@ tested. They should demonstrate the API of the function to the user (i.e., what
 the input parameters look like, what the output looks like, and what it does).
 If you only want to test something, add a test to the relevant ``test_*.py file``.
 
-You can use the ``./bin/coverage_doctest.py`` script to test the doctest
-coverage of a file or module. Run the doctests with ``./bin/doctest``.
+You can use the ``bin/coverage_doctest.py`` script to test the doctest
+coverage of a file or module. Run the doctests with ``python bin/doctest``.
 
 You should only skip the testing of an example if it is impossible to test it.
 If necessary, testing of an example can be skipped by adding a special comment.
@@ -274,7 +274,7 @@ sympy`` or ``from sympy import *``. To define symbols, use ``from sympy.abc
 import x``, unless the name is not in ``sympy.abc`` (for instance, if it has
 assumptions), in which case use ``symbols`` like ``x, y = symbols('x y')``.
 
-In general, you should run ``./bin/doctest`` to make sure your examples run
+In general, you should run ``python bin/doctest`` to make sure your examples run
 correctly, and fix them if they do not.
 
 4. Parameters Section

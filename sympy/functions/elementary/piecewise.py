@@ -577,8 +577,12 @@ class Piecewise(DefinedFunction):
                     return Undefined
                 # TODO simplify hi <= upto
                 return Piecewise((sum, hi <= upto), (Undefined, True))
-            sum += abei[i][-2]._eval_interval(x, a, b)
-            upto = b
+            k = abei[i][-2]._eval_interval(x, a, b)
+            if k is Undefined:
+                return Piecewise((sum, hi <= upto), (Undefined, True))
+            else:
+                sum += k
+                upto = b
         return sum
 
     def _intervals(self, sym, err_on_Eq=False):
@@ -810,9 +814,9 @@ class Piecewise(DefinedFunction):
     _eval_is_positive = lambda self: self._eval_template_is_attr('is_positive')
     _eval_is_extended_real = lambda self: self._eval_template_is_attr(
             'is_extended_real')
-    _eval_is_extended_positive = lambda self: self._eval_template_is_attr(
+    _eval_is_extended_positive = lambda self: self._eval_template_is_attr( # type: ignore
             'is_extended_positive')
-    _eval_is_extended_negative = lambda self: self._eval_template_is_attr(
+    _eval_is_extended_negative = lambda self: self._eval_template_is_attr( # type: ignore
             'is_extended_negative')
     _eval_is_extended_nonzero = lambda self: self._eval_template_is_attr(
             'is_extended_nonzero')

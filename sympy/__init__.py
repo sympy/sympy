@@ -48,7 +48,9 @@ def __sympy_debug():
     else:
         raise RuntimeError("unrecognized value for SYMPY_DEBUG: %s" %
                            debug_str)
+# Fails py2 test if using type hinting
 SYMPY_DEBUG = __sympy_debug()  # type: bool
+
 
 from .core import (sympify, SympifyError, cacheit, Basic, Atom,
         preorder_traversal, S, Expr, AtomicExpr, UnevaluatedExpr, Symbol,
@@ -80,9 +82,10 @@ from .polys import (Poly, PurePoly, poly_from_expr, parallel_poly_from_expr,
         decompose, sturm, gff_list, gff, sqf_norm, sqf_part, sqf_list, sqf,
         factor_list, factor, intervals, refine_root, count_roots, all_roots,
         real_roots, nroots, ground_roots, nth_power_roots_poly, cancel,
-        reduced, groebner, is_zero_dimensional, GroebnerBasis, poly,
-        symmetrize, horner, interpolate, rational_interpolate, viete, together,
-        BasePolynomialError, ExactQuotientFailed, PolynomialDivisionFailed,
+        reduced, groebner, is_zero_dimensional, hurwitz_conditions,
+        schur_conditions, GroebnerBasis, poly, symmetrize, horner, interpolate,
+        rational_interpolate, viete, together, BasePolynomialError,
+        ExactQuotientFailed, PolynomialDivisionFailed,
         OperationNotSupported, HeuristicGCDFailed, HomomorphismFailed,
         IsomorphismFailed, ExtraneousFactors, EvaluationFailed,
         RefinementFailed, CoercionFailed, NotInvertible, NotReversible,
@@ -107,8 +110,8 @@ from .polys import (Poly, PurePoly, poly_from_expr, parallel_poly_from_expr,
         Options, ring, xring, vring, sring, field, xfield, vfield, sfield)
 
 from .series import (Order, O, limit, Limit, gruntz, series, approximants,
-        residue, EmptySequence, SeqPer, SeqFormula, sequence, SeqAdd, SeqMul,
-        fourier_series, fps, difference_delta, limit_seq)
+        pade_approximant, residue, EmptySequence, SeqPer, SeqFormula, sequence,
+        SeqAdd, SeqMul, fourier_series, fps, difference_delta, limit_seq)
 
 from .functions import (factorial, factorial2, rf, ff, binomial,
         RisingFactorial, FallingFactorial, subfactorial, carmichael,
@@ -300,23 +303,23 @@ __all__ = [
     'sqf_norm', 'sqf_part', 'sqf_list', 'sqf', 'factor_list', 'factor',
     'intervals', 'refine_root', 'count_roots', 'all_roots', 'real_roots',
     'nroots', 'ground_roots', 'nth_power_roots_poly', 'cancel', 'reduced',
-    'groebner', 'is_zero_dimensional', 'GroebnerBasis', 'poly', 'symmetrize',
-    'horner', 'interpolate', 'rational_interpolate', 'viete', 'together',
-    'BasePolynomialError', 'ExactQuotientFailed', 'PolynomialDivisionFailed',
-    'OperationNotSupported', 'HeuristicGCDFailed', 'HomomorphismFailed',
-    'IsomorphismFailed', 'ExtraneousFactors', 'EvaluationFailed',
-    'RefinementFailed', 'CoercionFailed', 'NotInvertible', 'NotReversible',
-    'NotAlgebraic', 'DomainError', 'PolynomialError', 'UnificationFailed',
-    'GeneratorsError', 'GeneratorsNeeded', 'ComputationFailed',
-    'UnivariatePolynomialError', 'MultivariatePolynomialError',
-    'PolificationFailed', 'OptionError', 'FlagError', 'minpoly',
-    'minimal_polynomial', 'primitive_element', 'field_isomorphism',
-    'to_number_field', 'isolate', 'round_two', 'prime_decomp',
-    'prime_valuation', 'galois_group', 'itermonomials', 'Monomial', 'lex', 'grlex',
-    'grevlex', 'ilex', 'igrlex', 'igrevlex', 'CRootOf', 'rootof', 'RootOf',
-    'ComplexRootOf', 'RootSum', 'roots', 'Domain', 'FiniteField',
-    'IntegerRing', 'RationalField', 'RealField', 'ComplexField',
-    'PythonFiniteField', 'GMPYFiniteField', 'PythonIntegerRing',
+    'groebner', 'is_zero_dimensional', 'hurwitz_conditions', 'schur_conditions',
+    'GroebnerBasis', 'poly', 'symmetrize', 'horner', 'interpolate',
+    'rational_interpolate', 'viete', 'together', 'BasePolynomialError',
+    'ExactQuotientFailed', 'PolynomialDivisionFailed', 'OperationNotSupported',
+    'HeuristicGCDFailed', 'HomomorphismFailed', 'IsomorphismFailed',
+    'ExtraneousFactors', 'EvaluationFailed', 'RefinementFailed',
+    'CoercionFailed', 'NotInvertible', 'NotReversible', 'NotAlgebraic',
+    'DomainError', 'PolynomialError', 'UnificationFailed', 'GeneratorsError',
+    'GeneratorsNeeded', 'ComputationFailed', 'UnivariatePolynomialError',
+    'MultivariatePolynomialError', 'PolificationFailed', 'OptionError',
+    'FlagError', 'minpoly', 'minimal_polynomial', 'primitive_element',
+    'field_isomorphism', 'to_number_field', 'isolate', 'round_two',
+    'prime_decomp', 'prime_valuation', 'galois_group', 'itermonomials',
+    'Monomial', 'lex', 'grlex', 'grevlex', 'ilex', 'igrlex', 'igrevlex',
+    'CRootOf', 'rootof', 'RootOf', 'ComplexRootOf', 'RootSum', 'roots',
+    'Domain', 'FiniteField', 'IntegerRing', 'RationalField', 'RealField',
+    'ComplexField', 'PythonFiniteField', 'GMPYFiniteField', 'PythonIntegerRing',
     'GMPYIntegerRing', 'PythonRational', 'GMPYRationalField',
     'AlgebraicField', 'PolynomialRing', 'FractionField', 'ExpressionDomain',
     'FF_python', 'FF_gmpy', 'ZZ_python', 'ZZ_gmpy', 'QQ_python', 'QQ_gmpy',
@@ -324,14 +327,15 @@ __all__ = [
     'construct_domain', 'swinnerton_dyer_poly', 'cyclotomic_poly',
     'symmetric_poly', 'random_poly', 'interpolating_poly', 'jacobi_poly',
     'chebyshevt_poly', 'chebyshevu_poly', 'hermite_poly', 'hermite_prob_poly',
-    'legendre_poly', 'laguerre_poly', 'apart', 'apart_list', 'assemble_partfrac_list',
-    'Options', 'ring', 'xring', 'vring', 'sring', 'field', 'xfield', 'vfield',
-    'sfield',
+    'legendre_poly', 'laguerre_poly', 'apart', 'apart_list',
+    'assemble_partfrac_list', 'Options', 'ring', 'xring', 'vring', 'sring',
+    'field', 'xfield', 'vfield', 'sfield',
 
     # sympy.series
     'Order', 'O', 'limit', 'Limit', 'gruntz', 'series', 'approximants',
-    'residue', 'EmptySequence', 'SeqPer', 'SeqFormula', 'sequence', 'SeqAdd',
-    'SeqMul', 'fourier_series', 'fps', 'difference_delta', 'limit_seq',
+    'pade_approximant', 'residue', 'EmptySequence', 'SeqPer', 'SeqFormula',
+    'sequence', 'SeqAdd', 'SeqMul', 'fourier_series', 'fps', 'difference_delta',
+    'limit_seq',
 
     # sympy.functions
     'factorial', 'factorial2', 'rf', 'ff', 'binomial', 'RisingFactorial',

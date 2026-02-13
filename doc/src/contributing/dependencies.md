@@ -153,7 +153,7 @@ solvers if they are installed. Note that `satisfiable()` is also used by
 
 - **pysat**: [Pysat](https://pysathq.github.io/) is a library which wraps many
   SAT solvers. It can also be used as a backend to `satisfiable()`. Presently,
-  only [Minisat](http://minisat.se/MiniSat.html) is implemented, using
+  only [Minisat](https://github.com/niklasso/minisat) is implemented, using
   `satisfiable(algorithm=minisat22')`.
 
 ### Plotting
@@ -210,6 +210,10 @@ those libraries.
   machine learning library. `lambdify` can produce TensorFlow compatible
   functions using `lambdify(modules='tensorflow')`.
 
+- **PyTorch**: [PyTorch](https://pytorch.org/) is a popular machine learning
+  library. `lambdify` can produce PyTorch-compatible functions using
+  `lambdify(modules='torch')`.
+
 - **NumExpr**: [NumExpr](https://github.com/pydata/numexpr) is a fast
   numerical expression evaluator for NumPy. `lambdify` can produce NumExpr
   compatible functions using `lambdify(modules='numexpr')`.
@@ -260,11 +264,6 @@ Most code printers generate Python strings, and therefore do not require the
 given library or language compiler as a dependency. However, a few code
 printers generate Python functions instead of strings:
 
-- **Aesara**: The {mod}`sympy.printing.aesaracode` module contains functions
-  to convert SymPy expressions into a functions using the
-  [Aeseara](https://aesara.readthedocs.io/en/latest) (previously Theano)
-  library. The Aesara code generation functions return Aesara graph objects.
-
 - **llvmlite**: The `sympy.printing.llvmjitcode` module supports generating LLVM Jit
   from a SymPy expression. The functions make use of
   [llvmlite](https://llvmlite.readthedocs.io/en/latest/), a Python wrapper
@@ -278,6 +277,10 @@ printers generate Python functions instead of strings:
   if available in order to automatically detect the TensorFlow version. If it
   is not installed, the `tensorflow_code()` function assumes the latest
   supported version of TensorFlow.
+
+- **PyTorch**: The `sympy.printing.pytorch` module supports generating PyTorch
+  code strings with `torch_code()`, and can also construct
+  `torch.nn.Module` objects with `torch_nn_module()`.
 
 #### Testing-Only Dependencies
 
@@ -369,7 +372,7 @@ library code should be imported with `import_module()`.
 
 - **pytest**: [Pytest](https://docs.pytest.org/en/latest/) is not a required dependency
   for the SymPy test suite. SymPy has its own test runner, which can be
-  accessed via the `bin/test` script in the SymPy source directory or the
+  accessed by running `python bin/test` script in the SymPy source directory or the
   {func}`~.test` function.
 
   However, if you prefer to use pytest, you can use it to run the tests

@@ -647,9 +647,9 @@ def test_RootSum():
     f = x**5 + 2*x - 1
 
     assert str(
-        RootSum(f, Lambda(z, z), auto=False)) == "RootSum(x**5 + 2*x - 1)"
+        RootSum(f, Lambda(z, z), auto=False)) == "RootSum(w**5 + 2*w - 1)"
     assert str(RootSum(f, Lambda(
-        z, z**2), auto=False)) == "RootSum(x**5 + 2*x - 1, Lambda(z, z**2))"
+        z, z**2), auto=False)) == "RootSum(w**5 + 2*w - 1, Lambda(w, w**2))"
 
 
 def test_GroebnerBasis():
@@ -1044,7 +1044,7 @@ def test_Equivalent():
     assert str(Equivalent(y, x)) == "Equivalent(x, y)"
 
 def test_Xor():
-    assert str(Xor(y, x, evaluate=False)) == "x ^ y"
+    assert str(Xor(y, x, evaluate=False)) == "y ^ x"
 
 def test_Complement():
     assert str(Complement(S.Reals, S.Naturals)) == 'Complement(Reals, Naturals)'
