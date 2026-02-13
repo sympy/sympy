@@ -1023,3 +1023,47 @@ def test_torch_module_complex_system():
 
     assert torch.allclose(result, expected, atol=1e-6), \
         f"Different input failed: Expected {expected}, got {result}"
+
+
+def test_torch_module_training_linear_scale():
+    x = sympy.symbols("x")
+    model = torch_nn_module(x, 1.0*x)
+    params = list(model.parameters())
+    assert len(params) == 1
+
+    x_train = torch.linspace(-2.0, 2.0, 21)
+    y_target = 2.5*x_train
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.15)
+    initial_loss = None
+
+    for _ in range(80):
+        optimizer.zero_grad()
+        prediction = model(x_train)
+        loss = torch.mean((prediction - y_target)**2)
+        if initial_loss is None:
+            initial_loss = loss.detach()
+        loss.backward()
+        optimizer.step()
+
+    learned_scale = next(model.parameters()).detach()
+    assert torch.allclose(learned_scale, torch.tensor(2.5), atol=1e-3)
+    assert loss.item() < initial_loss.item() * 1e-4
+
+
+def test_torch_module_lotka_volterra():
+    prey, predator = symbols('prey predator')
+    alpha, beta, delta, gamma_ = symbols('alpha beta delta gamma')
+    dprey = alpha*prey - beta*prey*predator
+    dpredator = delta*prey*predator - gamma_*predator
+    model = torch_nn_module((prey, predator, alpha, beta, delta, gamma_), (dprey, dpredator))
+
+    out = model(
+        torch.tensor(10.0),
+        torch.tensor(5.0),
+        torch.tensor(1.1),
+        torch.tensor(0.4),
+        torch.tensor(0.1),
+        torch.tensor(0.4),
+    )
+    expected = torch.tensor([-9.0, 3.0])
+    assert torch.allclose(out, expected)

@@ -233,6 +233,50 @@ def test_torch_max_min():
     assert torch.allclose(result, expected)
 
 
+def test_torch_max_min_with_scalar_constants():
+    if torch is None:
+        skip("PyTorch not installed")
+
+    x = symbols('x')
+    expr = Max(1.0, x) + Min(1.0, x)
+    func = lambdify([x], expr, "torch")
+    x_test = torch.tensor([-2.0, 0.5, 3.0], dtype=torch.float64)
+
+    result = func(x_test)
+    expected = x_test + 1.0
+    assert torch.allclose(result, expected)
+
+
+def test_torch_lotka_volterra_original_api():
+    if torch is None:
+        skip("PyTorch not installed")
+
+    prey, predator = symbols('prey predator')
+    alpha, beta, delta, gamma_ = symbols('alpha beta delta gamma')
+    dprey = alpha*prey - beta*prey*predator
+    dpredator = delta*prey*predator - gamma_*predator
+    f = lambdify((prey, predator, alpha, beta, delta, gamma_), (dprey, dpredator), "torch")
+
+    prey_t = torch.tensor(10.0, requires_grad=True)
+    predator_t = torch.tensor(5.0, requires_grad=True)
+    alpha_t = torch.tensor(1.1)
+    beta_t = torch.tensor(0.4)
+    delta_t = torch.tensor(0.1)
+    gamma_t = torch.tensor(0.4)
+
+    out = f(prey_t, predator_t, alpha_t, beta_t, delta_t, gamma_t)
+    expected_dprey = alpha_t*prey_t - beta_t*prey_t*predator_t
+    expected_dpredator = delta_t*prey_t*predator_t - gamma_t*predator_t
+    assert torch.allclose(out[0], expected_dprey)
+    assert torch.allclose(out[1], expected_dpredator)
+
+    (out[0] + out[1]).backward()
+    expected_dloss_dprey = alpha_t + predator_t*(delta_t - beta_t)
+    expected_dloss_dpredator = prey_t*(delta_t - beta_t) - gamma_t
+    assert torch.allclose(prey_t.grad, expected_dloss_dprey)
+    assert torch.allclose(predator_t.grad, expected_dloss_dpredator)
+
+
 def test_torch_matrix():
     if torch is None:
         skip("PyTorch not installed")
