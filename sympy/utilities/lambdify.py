@@ -361,6 +361,9 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
           with a custom version, you can use
           ``[{'sin': custom_sin}, 'numpy']``).
 
+        To build a ``torch.nn.Module`` object instead of a plain function, use
+        :func:`sympy.printing.pytorch.torch_nn_module`.
+
     dummify : bool, optional
         Whether or not the variables in the provided expression that are not
         valid Python identifiers are substituted with dummy symbols.
