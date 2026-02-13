@@ -845,6 +845,10 @@ class Set(Basic, EvalfMixin):
             raise TypeError('did not evaluate to a bool: %r' % c)
         return b
 
+    def as_relational(self, symbol):
+        """Rewrites the set as a relational."""
+        raise NotImplementedError("as_relational is not implemented for this set type.")
+
 
 class ProductSet(Set):
     """
