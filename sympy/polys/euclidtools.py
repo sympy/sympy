@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import overload, Literal, TYPE_CHECKING, cast
 
+from sympy.polys.domains.field import Field # <- move here
+
 from sympy.polys.densearith import (
     dup_sub_mul,
     dup_neg, dmp_neg,
@@ -51,8 +53,7 @@ from sympy.polys.polyerrors import (
     DomainError)
 
 if TYPE_CHECKING:
-    from sympy.polys.domains.field import Field
-    from sympy.polys.domains.domain import Domain, Er, Ef
+       from sympy.polys.domains.domain import Domain, Er, Ef
 
 
 def dup_half_gcdex(f: dup[Er], g: dup[Er], K: Domain[Er]) -> tuple[dup[Er], dup[Er]]:
