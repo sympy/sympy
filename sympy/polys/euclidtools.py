@@ -76,7 +76,6 @@ def dup_half_gcdex(f: dup[Er], g: dup[Er], K: Domain[Er]) -> tuple[dup[Er], dup[
     """
     if not K.is_Field:
         raise DomainError("Cannot compute half extended GCD over %s" % K)
-    
     Kf = cast(Field,K)
 
     a: dup[Er]
