@@ -1,6 +1,6 @@
 from math import factorial as _factorial, log, prod
 from itertools import chain, product
-from typing import TYPE_CHECKING, Iterable
+from typing import TYPE_CHECKING, Any, Iterable
 
 
 from sympy.combinatorics import Permutation
@@ -1158,7 +1158,7 @@ class PermutationGroup(Basic):
             terms = list(f.items())
             term_data.append((dict(terms), terms))
 
-        def canonical_projection(proj):
+        def canonical_projection(proj: dict[Any, Any]) -> tuple[tuple[Any, Any], ...]:
             items = []
             for key in sorted(proj):
                 coeff = proj[key]
@@ -1166,41 +1166,41 @@ class PermutationGroup(Basic):
                     items.append((key, to_sympy(coeff)))
             return tuple(items)
 
-        unary_sig_to_class = {}
-        unary_classes = [None]*n
+        unary_sig_to_class: dict[tuple[Any, ...], int] = {}
+        unary_classes: list[int] = [0]*n
 
         for i in range(n):
             signature_parts = []
             for _, term_items in term_data:
-                proj = {}
+                proj: dict[int, Any] = {}
                 for monom, coeff in term_items:
-                    key = monom[i]
-                    value = proj.get(key, zero) + coeff
+                    unary_key = monom[i]
+                    value = proj.get(unary_key, zero) + coeff
                     if value:
-                        proj[key] = value
-                    elif key in proj:
-                        del proj[key]
+                        proj[unary_key] = value
+                    elif unary_key in proj:
+                        del proj[unary_key]
                 signature_parts.append(canonical_projection(proj))
             signature = tuple(signature_parts)
             unary_classes[i] = unary_sig_to_class.setdefault(
                 signature, len(unary_sig_to_class))
 
-        pair_sig_to_class = {}
-        pair_classes = [[None]*n for _ in range(n)]
+        pair_sig_to_class: dict[tuple[Any, ...], int] = {}
+        pair_classes: list[list[int]] = [[0]*n for _ in range(n)]
 
         for i in range(n):
             for j in range(n):
                 signature_parts = []
                 for _, term_items in term_data:
-                    proj = {}
+                    pair_proj: dict[tuple[int, int], Any] = {}
                     for monom, coeff in term_items:
-                        key = (monom[i], monom[j])
-                        value = proj.get(key, zero) + coeff
+                        pair_key = (monom[i], monom[j])
+                        value = pair_proj.get(pair_key, zero) + coeff
                         if value:
-                            proj[key] = value
-                        elif key in proj:
-                            del proj[key]
-                    signature_parts.append(canonical_projection(proj))
+                            pair_proj[pair_key] = value
+                        elif pair_key in pair_proj:
+                            del pair_proj[pair_key]
+                    signature_parts.append(canonical_projection(pair_proj))
                 signature = tuple(signature_parts)
                 pair_classes[i][j] = pair_sig_to_class.setdefault(
                     signature, len(pair_sig_to_class))
@@ -1246,7 +1246,7 @@ class PermutationGroup(Basic):
                         return False
             return True
 
-        class_points = {}
+        class_points: dict[int, list[int]] = {}
         for point, cls in enumerate(unary_classes):
             class_points.setdefault(cls, []).append(point)
 
