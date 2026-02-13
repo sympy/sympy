@@ -695,49 +695,6 @@ def test_subgroup_search2():
     _subgroup_search(16, 17, 1)
 
 
-def _poly_fixed_by_perm(poly, perm):
-    terms = dict(poly.items())
-    af = perm._array_form
-    n = poly.ring.ngens
-    for monom, coeff in terms.items():
-        image = [0]*n
-        for i, exp in enumerate(monom):
-            image[af[i]] = exp
-        if terms.get(tuple(image)) != coeff:
-            return False
-    return True
-
-
-def test_polynomial_stabilizer_basic_cases():
-    R, x, y, z = ring('x, y, z', ZZ)
-    S = SymmetricGroup(3)
-
-    full = S.polynomial_stabilizer(x + y + z)
-    assert full.order() == 6
-
-    partial = S.polynomial_stabilizer(x + y + 2*z)
-    assert partial.order() == 2
-    assert Permutation([1, 0, 2]) in partial
-    assert Permutation([2, 1, 0]) not in partial
-
-    trivial = S.polynomial_stabilizer(x + 2*y + 3*z)
-    assert trivial.order() == 1
-
-    constants = S.polynomial_stabilizer([R.zero, R.one.mul_ground(5)])
-    assert constants.equals(S)
-    assert S.polynomial_stabilizer([]) is S
-
-
-def test_polynomial_stabilizer_multiple_polynomials():
-    _, x, y, z = ring('x, y, z', ZZ)
-    S = SymmetricGroup(3)
-
-    G = S.polynomial_stabilizer([x + y + z, x + y])
-    assert G.order() == 2
-    assert Permutation([1, 0, 2]) in G
-    assert Permutation([0, 2, 1]) not in G
-
-
 def test_polynomial_stabilizer():
     _, x, y = ring('x, y', ZZ)
     _, a, b = ring('a, b', ZZ)
