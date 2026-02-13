@@ -893,7 +893,7 @@ class Permutation(Atom):
 
     is_Permutation = True
 
-    _array_form = None
+    _array_form: list[int]
     _cyclic_form = None
     _cycle_structure = None
     _size = None
