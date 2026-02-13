@@ -12,6 +12,7 @@ from typing import (
     TypeVar,
     cast
 )
+from sympy.polys.domains.field import Field
 
 if TYPE_CHECKING:
     from sympy.polys.orderings import MonomialOrder
@@ -1640,12 +1641,12 @@ class DMP_Python(DMP[Er]):
 
     def _gcdex(f, g: Self) -> tuple[Self, Self, Self]:
         """Extended Euclidean algorithm, if univariate. """
-        s, t, h = dup_gcdex(f._rep, g._rep, cast(Field[Any], f.dom))
+        s, t, h = dup_gcdex(f._rep, g._rep, cast("Field[Any]", f.dom))
         return f.per(s), f.per(t), f.per(h)
 
     def _invert(f, g: Self) -> Self:
         """Invert ``f`` modulo ``g``, if possible. """
-        s = dup_invert(f._rep, g._rep,cast(Field[Any], f.dom))
+        s = dup_invert(f._rep, g._rep, cast("Field[Any]", f.dom))
         return f.per(s)
 
     def _revert(f, n: int) -> Self:

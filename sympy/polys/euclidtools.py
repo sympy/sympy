@@ -51,8 +51,8 @@ from sympy.polys.polyerrors import (
     DomainError)
 
 if TYPE_CHECKING:
-       from sympy.polys.domains.field import Field
-       from sympy.polys.domains.domain import Domain, Er, Ef
+    from sympy.polys.domains.field import Field
+    from sympy.polys.domains.domain import Domain, Er, Ef
 
 
 def dup_half_gcdex(f: dup[Ef], g: dup[Ef], K: Field[Ef]) -> tuple[dup[Ef], dup[Ef]]:
