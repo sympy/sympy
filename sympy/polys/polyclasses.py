@@ -12,7 +12,6 @@ from typing import (
     TypeVar,
     cast
 )
-from sympy.polys.domains.field import Field
 
 if TYPE_CHECKING:
     from sympy.polys.orderings import MonomialOrder
