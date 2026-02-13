@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-from typing import overload, Literal, TYPE_CHECKING, cast
-
-from sympy.polys.domains.field import Field # <- move here
+from typing import overload, Literal, TYPE_CHECKING
 
 from sympy.polys.densearith import (
     dup_sub_mul,
@@ -53,10 +51,11 @@ from sympy.polys.polyerrors import (
     DomainError)
 
 if TYPE_CHECKING:
+       from sympy.polys.domains.field import Field
        from sympy.polys.domains.domain import Domain, Er, Ef
 
 
-def dup_half_gcdex(f: dup[Er], g: dup[Er], K: Domain[Er]) -> tuple[dup[Er], dup[Er]]:
+def dup_half_gcdex(f: dup[Ef], g: dup[Ef], K: Field[Ef]) -> tuple[dup[Ef], dup[Ef]]:
     """
     Half extended Euclidean algorithm in `F[x]`.
 
@@ -77,10 +76,9 @@ def dup_half_gcdex(f: dup[Er], g: dup[Er], K: Domain[Er]) -> tuple[dup[Er], dup[
     """
     if not K.is_Field:
         raise DomainError("Cannot compute half extended GCD over %s" % K)
-    Kf = cast(Field,K)
 
-    a: dup[Er]
-    b: dup[Er]
+    a: dup[Ef]
+    b: dup[Ef]
 
     a, b = [K.one], []
 
@@ -89,8 +87,8 @@ def dup_half_gcdex(f: dup[Er], g: dup[Er], K: Domain[Er]) -> tuple[dup[Er], dup[
         f, g = g, r
         a, b = b, dup_sub_mul(a, q, b, K)
 
-    a = dup_exquo_ground(a, dup_LC(f, K), Kf)
-    f = dup_monic(f, Kf)
+    a = dup_exquo_ground(a, dup_LC(f, K), K)
+    f = dup_monic(f, K)
 
     return a, f
 
@@ -112,7 +110,7 @@ def dmp_half_gcdex(f, g, u, K):
         raise MultivariatePolynomialError(f, g)
 
 
-def dup_gcdex(f: dup[Er], g: dup[Er], K: Domain[Er]) -> tuple[dup[Er], dup[Er], dup[Er]]:
+def dup_gcdex(f: dup[Ef], g: dup[Ef], K: Field[Ef]) -> tuple[dup[Ef], dup[Ef], dup[Ef]]:
     """
     Extended Euclidean algorithm in `F[x]`.
 
@@ -140,8 +138,8 @@ def dup_gcdex(f: dup[Er], g: dup[Er], K: Domain[Er]) -> tuple[dup[Er], dup[Er], 
 
 
 def dmp_gcdex(
-    f: dmp[Er], g: dmp[Er], u: int, K: Domain[Er]
-) -> tuple[dmp[Er], dmp[Er], dmp[Er]]:
+    f: dmp[Ef], g: dmp[Ef], u: int, K: Field[Ef]
+) -> tuple[dmp[Ef], dmp[Ef], dmp[Ef]]:
     """
     Extended Euclidean algorithm in `F[X]`.
 
@@ -158,7 +156,7 @@ def dmp_gcdex(
         raise MultivariatePolynomialError(f, g)
 
 
-def dup_invert(f: dup[Er], g: dup[Er], K: Domain[Er]) -> dup[Er]:
+def dup_invert(f: dup[Ef], g: dup[Ef], K: Field[Ef]) -> dup[Ef]:
     """
     Compute multiplicative inverse of `f` modulo `g` in `F[x]`.
 
@@ -189,7 +187,7 @@ def dup_invert(f: dup[Er], g: dup[Er], K: Domain[Er]) -> dup[Er]:
         raise NotInvertible("zero divisor")
 
 
-def dmp_invert(f: dmp[Er], g: dmp[Er], u: int, K: Domain[Er]) -> dmp[Er]:
+def dmp_invert(f: dmp[Ef], g: dmp[Ef], u: int, K: Field[Ef]) -> dmp[Ef]:
     """
     Compute multiplicative inverse of `f` modulo `g` in `F[X]`.
 
