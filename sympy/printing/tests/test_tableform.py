@@ -104,57 +104,57 @@ def test_TableForm_latex():
     s = latex(TableForm([[0, x**3], ["c", S.One/4], [sqrt(x), sin(x**2)]],
             wipe_zeros=True, headings=("automatic", "automatic")))
     assert s == (
-        '\\begin{tabular}{r l l}\n'
+        '\\begin{array}{r l l}\n'
         ' & 1 & 2 \\\\\n'
         '\\hline\n'
-        '1 &   & $x^{3}$ \\\\\n'
-        '2 & $c$ & $\\frac{1}{4}$ \\\\\n'
-        '3 & $\\sqrt{x}$ & $\\sin{\\left(x^{2} \\right)}$ \\\\\n'
-        '\\end{tabular}'
+        '1 &   & x^{3} \\\\\n'
+        '2 & c & \\frac{1}{4} \\\\\n'
+        '3 & \\sqrt{x} & \\sin{\\left(x^{2} \\right)} \\\\\n'
+        '\\end{array}'
     )
     s = latex(TableForm([[0, x**3], ["c", S.One/4], [sqrt(x), sin(x**2)]],
             wipe_zeros=True, headings=("automatic", "automatic"), alignments='l'))
     assert s == (
-        '\\begin{tabular}{r l l}\n'
+        '\\begin{array}{r l l}\n'
         ' & 1 & 2 \\\\\n'
         '\\hline\n'
-        '1 &   & $x^{3}$ \\\\\n'
-        '2 & $c$ & $\\frac{1}{4}$ \\\\\n'
-        '3 & $\\sqrt{x}$ & $\\sin{\\left(x^{2} \\right)}$ \\\\\n'
-        '\\end{tabular}'
+        '1 &   & x^{3} \\\\\n'
+        '2 & c & \\frac{1}{4} \\\\\n'
+        '3 & \\sqrt{x} & \\sin{\\left(x^{2} \\right)} \\\\\n'
+        '\\end{array}'
     )
     s = latex(TableForm([[0, x**3], ["c", S.One/4], [sqrt(x), sin(x**2)]],
             wipe_zeros=True, headings=("automatic", "automatic"), alignments='l'*3))
     assert s == (
-        '\\begin{tabular}{l l l}\n'
+        '\\begin{array}{l l l}\n'
         ' & 1 & 2 \\\\\n'
         '\\hline\n'
-        '1 &   & $x^{3}$ \\\\\n'
-        '2 & $c$ & $\\frac{1}{4}$ \\\\\n'
-        '3 & $\\sqrt{x}$ & $\\sin{\\left(x^{2} \\right)}$ \\\\\n'
-        '\\end{tabular}'
+        '1 &   & x^{3} \\\\\n'
+        '2 & c & \\frac{1}{4} \\\\\n'
+        '3 & \\sqrt{x} & \\sin{\\left(x^{2} \\right)} \\\\\n'
+        '\\end{array}'
     )
     s = latex(TableForm([["a", x**3], ["c", S.One/4], [sqrt(x), sin(x**2)]],
             headings=("automatic", "automatic")))
     assert s == (
-        '\\begin{tabular}{r l l}\n'
+        '\\begin{array}{r l l}\n'
         ' & 1 & 2 \\\\\n'
         '\\hline\n'
-        '1 & $a$ & $x^{3}$ \\\\\n'
-        '2 & $c$ & $\\frac{1}{4}$ \\\\\n'
-        '3 & $\\sqrt{x}$ & $\\sin{\\left(x^{2} \\right)}$ \\\\\n'
-        '\\end{tabular}'
+        '1 & a & x^{3} \\\\\n'
+        '2 & c & \\frac{1}{4} \\\\\n'
+        '3 & \\sqrt{x} & \\sin{\\left(x^{2} \\right)} \\\\\n'
+        '\\end{array}'
     )
     s = latex(TableForm([["a", x**3], ["c", S.One/4], [sqrt(x), sin(x**2)]],
             formats=['(%s)', None], headings=("automatic", "automatic")))
     assert s == (
-        '\\begin{tabular}{r l l}\n'
+        '\\begin{array}{r l l}\n'
         ' & 1 & 2 \\\\\n'
         '\\hline\n'
-        '1 & (a) & $x^{3}$ \\\\\n'
-        '2 & (c) & $\\frac{1}{4}$ \\\\\n'
-        '3 & (sqrt(x)) & $\\sin{\\left(x^{2} \\right)}$ \\\\\n'
-        '\\end{tabular}'
+        '1 & (a) & x^{3} \\\\\n'
+        '2 & (c) & \\frac{1}{4} \\\\\n'
+        '3 & (sqrt(x)) & \\sin{\\left(x^{2} \\right)} \\\\\n'
+        '\\end{array}'
     )
 
     def neg_in_paren(x, i, j):
@@ -165,18 +165,18 @@ def test_TableForm_latex():
     s = latex(TableForm([[-1, 2], [-3, 4]],
             formats=[neg_in_paren]*2, headings=("automatic", "automatic")))
     assert s == (
-        '\\begin{tabular}{r l l}\n'
+        '\\begin{array}{r l l}\n'
         ' & 1 & 2 \\\\\n'
         '\\hline\n'
         '1 & -1 & 2 \\\\\n'
         '2 & (-3) & 4 \\\\\n'
-        '\\end{tabular}'
+        '\\end{array}'
     )
     s = latex(TableForm([["a", x**3], ["c", S.One/4], [sqrt(x), sin(x**2)]]))
     assert s == (
-        '\\begin{tabular}{l l}\n'
-        '$a$ & $x^{3}$ \\\\\n'
-        '$c$ & $\\frac{1}{4}$ \\\\\n'
-        '$\\sqrt{x}$ & $\\sin{\\left(x^{2} \\right)}$ \\\\\n'
-        '\\end{tabular}'
+        '\\begin{array}{l l}\n'
+        'a & x^{3} \\\\\n'
+        'c & \\frac{1}{4} \\\\\n'
+        '\\sqrt{x} & \\sin{\\left(x^{2} \\right)} \\\\\n'
+        '\\end{array}'
     )
