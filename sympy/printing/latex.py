@@ -1661,6 +1661,9 @@ class LatexPrinter(Printer):
         name = translate(name)
         supers = [translate(sup) for sup in supers]
         subs = [translate(sub) for sub in subs]
+        if name and name[0] == '_':
+            i = len(name) - len(name.lstrip('_'))
+            name = r'\_' * i + name[i:]
         return (name, supers, subs)
 
     def _deal_with_super_sub(self, string: str, style='plain') -> str:
