@@ -35,13 +35,22 @@ def _reduce(fn):
 def piecewise(*expr_conds):
     output = None
     already_used = None
+
+    def as_bool_tensor(cond, like):
+        if isinstance(cond, torch.Tensor):
+            return cond.bool()
+        if isinstance(like, torch.Tensor):
+            return torch.tensor(bool(cond), dtype=torch.bool, device=like.device)
+        return torch.tensor(bool(cond), dtype=torch.bool)
+
     for expr, cond in expr_conds:
+        cond_ = as_bool_tensor(cond, expr)
         if output is None:
-            already_used = cond
-            output = torch.where(cond, expr, torch.zeros_like(expr))
+            already_used = cond_
+            output = torch.where(cond_, expr, torch.zeros_like(expr))
         else:
-            output += torch.where(cond.bool() & ~already_used, expr, torch.zeros_like(expr))
-            already_used = already_used | cond.bool()
+            output += torch.where(cond_ & ~already_used, expr, torch.zeros_like(expr))
+            already_used = already_used | cond_
     return output
 
 
@@ -58,54 +67,53 @@ def _get_einsum_spec(subranks, contraction_indices=None, diagonal_indices=None):
     if len(subranks) * max(subranks, default=0) > len(letters):
         raise ValueError("Too many indices for available letters")
 
-    index_map = {}
+    if contraction_indices and diagonal_indices:
+        raise ValueError("Only one of contraction_indices or diagonal_indices can be set")
+
+    index_groups = contraction_indices if contraction_indices else diagonal_indices
+    if index_groups and all(isinstance(i, (int, sympy.Integer)) for i in index_groups):
+        index_groups = (tuple(index_groups),)
+
+    d = {}
+    if index_groups:
+        d = {j: min(group) for group in index_groups for j in group}
+
     counter = 0
-    input_specs = []
+    indices = []
     for rank in subranks:
-        arg_indices = []
+        lindices = []
         for _ in range(rank):
-            if counter not in index_map:
-                index_map[counter] = letters[len(index_map)]
-            arg_indices.append(index_map[counter])
+            lindices.append(d.get(counter, counter))
             counter += 1
-        input_specs.append("".join(arg_indices))
+        indices.append(lindices)
 
-    if diagonal_indices:
-        if all(isinstance(i, (int, sympy.Integer)) for i in diagonal_indices):
-            diagonal_indices = (tuple(diagonal_indices),)
-        d = {j: min(group) for group in diagonal_indices for j in group}
-        indices = []
-        counter = 0
-        for rank in subranks:
-            lindices = []
-            for _ in range(rank):
-                if counter in d:
-                    lindices.append(d[counter])
-                else:
-                    lindices.append(counter)
-                counter += 1
-            indices.append(lindices)
-        mapping = {}
-        letters_free = []
-        letters_dum = []
-        input_specs = []
-        for i in indices:
-            spec = ""
-            for j in i:
-                if j not in mapping:
-                    l = letters[len(mapping)]
-                    mapping[j] = l
-                else:
-                    l = mapping[j]
-                spec += l
-                if j in d:
-                    if l not in letters_dum:
-                        letters_dum.append(l)
-                else:
-                    letters_free.append(l)
-            input_specs.append(spec)
+    mapping = {}
+    letters_free = []
+    letters_dum = []
+    input_specs = []
+    for i in indices:
+        spec = ""
+        for j in i:
+            if j not in mapping:
+                l = letters[len(mapping)]
+                mapping[j] = l
+            else:
+                l = mapping[j]
+            spec += l
+            if j in d:
+                if l not in letters_dum:
+                    letters_dum.append(l)
+            else:
+                letters_free.append(l)
+        input_specs.append(spec)
 
-    output_spec = "".join(sorted(letters_free + letters_dum))
+    if contraction_indices:
+        output_spec = "".join(sorted(letters_free))
+    elif diagonal_indices:
+        output_spec = "".join(letters_free + letters_dum)
+    else:
+        output_spec = "".join(letters_free)
+
     input_spec = ",".join(input_specs)
     return f"{input_spec}->{output_spec}"
 
@@ -127,6 +135,9 @@ def array_tensor_product(*args):
 
 
 def array_contraction(expr, contraction_indices, *args):
+    if isinstance(expr, torch.Tensor):
+        spec = _get_einsum_spec([expr.dim()], contraction_indices=contraction_indices)
+        return torch.einsum(spec, expr)
     subranks = expr.expr.subranks if isinstance(expr.expr, ArrayTensorProduct) else [len(expr.expr.shape)]
     operands = expr.expr.args if isinstance(expr.expr, ArrayTensorProduct) else [expr.expr]
     spec = _get_einsum_spec(subranks, contraction_indices=contraction_indices)
@@ -216,6 +227,8 @@ _TORCH_FUNCTION_MAP = {
     sympy.Mod: ("torch.remainder", _torch_attr("remainder")),
     sympy.Heaviside: ("torch.heaviside", lambda x, h=None: torch.heaviside(x, torch.tensor(
         float(h) if h is not None else 0.5, dtype=x.dtype))),
+    sympy.logic.boolalg.BooleanTrue: ("True", lambda *args: torch.tensor(True)),
+    sympy.logic.boolalg.BooleanFalse: ("False", lambda *args: torch.tensor(False)),
     sympy.core.numbers.Half: ("0.5", lambda *args: torch.tensor(0.5)),
     sympy.core.numbers.One: ("1.0", lambda *args: torch.tensor(1.0)),
     sympy.logic.boolalg.ITE: ("torch.where", if_then_else),
@@ -554,7 +567,8 @@ if torch is not None:
                 self.register_buffer("_value", torch.tensor(int(expr)))
                 self._torch_func = lambda: self._value
                 self._args = ()
-            elif issubclass(expr.func, sympy.core.containers.Tuple):
+            elif (issubclass(expr.func, sympy.core.containers.Tuple)
+                  and expr.func not in _func_lookup):
                 self._value = tuple(expr.args)
                 self._torch_func = lambda: self._value
                 self._args = ()
@@ -628,13 +642,25 @@ if torch is not None:
                 return self._sympy_func(self._name)
             elif issubclass(self._sympy_func, sympy.core.numbers.ImaginaryUnit):
                 return sympy.I
+            elif issubclass(self._sympy_func, sympy.logic.boolalg.BooleanTrue):
+                return sympy.true
+            elif issubclass(self._sympy_func, sympy.logic.boolalg.BooleanFalse):
+                return sympy.false
             elif issubclass(self._sympy_func, sympy.core.numbers.NumberSymbol):
                 return self._sympy_func()
             else:
                 if issubclass(self._sympy_func, (sympy.Min, sympy.Max)):
                     evaluate = False
-                else:
-                    evaluate = True
+                    args = []
+                    for arg in self._args:
+                        try:
+                            arg_ = _memodict[arg]
+                        except KeyError:
+                            arg_ = arg.to_sympy(_memodict)
+                            _memodict[arg] = arg_
+                        args.append(arg_)
+                    return self._sympy_func(*args, evaluate=evaluate)
+
                 args = []
                 for arg in self._args:
                     try:
@@ -643,7 +669,7 @@ if torch is not None:
                         arg_ = arg.to_sympy(_memodict)
                         _memodict[arg] = arg_
                     args.append(arg_)
-                return self._sympy_func(*args, evaluate=evaluate)
+                return self._sympy_func(*args)
 
 
     class SymPyTorchModule(torch.nn.Module):

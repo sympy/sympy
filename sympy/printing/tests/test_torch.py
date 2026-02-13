@@ -6,7 +6,7 @@ from sympy.printing.pytorch import torch_code
 from sympy import (eye, MatrixSymbol, Matrix)
 from sympy.tensor.array import NDimArray
 from sympy.tensor.array.expressions.array_expressions import (
-    ArrayTensorProduct, ArrayAdd,
+    ArrayTensorProduct, ArrayAdd, ArrayContraction,
     PermuteDims, ArrayDiagonal, _CodegenArrayAbstract)
 from sympy.utilities.lambdify import lambdify
 from sympy.core.relational import Eq, Ne, Ge, Gt, Le, Lt
@@ -26,6 +26,8 @@ from sympy import Heaviside, gamma, polygamma
 
 
 torch = import_module("torch")
+if torch is None:
+    skip("PyTorch not installed", allow_module_level=True)
 
 M = MatrixSymbol("M", 3, 3)
 N = MatrixSymbol("N", 3, 3)
@@ -86,8 +88,6 @@ def _compare_torch_relational(variables, expr, rng=lambda: random.randint(0, 10)
 
 
 def test_torch_math():
-    if not torch:
-        skip("PyTorch not installed")
 
     expr = Abs(x)
     assert torch_code(expr) == "torch.abs(x)"
@@ -189,8 +189,6 @@ def test_torch_complexes():
 
 
 def test_torch_relational():
-    if not torch:
-        skip("PyTorch not installed")
 
     expr = Eq(x, y)
     assert torch_code(expr) == "torch.eq(x, y)"
@@ -218,8 +216,6 @@ def test_torch_relational():
 
 
 def test_torch_max_min():
-    if torch is None:
-        skip("PyTorch not installed")
 
     x, y = symbols('x y')
     expr = Max(x, y) + Min(x, y)
@@ -234,8 +230,6 @@ def test_torch_max_min():
 
 
 def test_torch_max_min_with_scalar_constants():
-    if torch is None:
-        skip("PyTorch not installed")
 
     x = symbols('x')
     expr = Max(1.0, x) + Min(1.0, x)
@@ -247,9 +241,18 @@ def test_torch_max_min_with_scalar_constants():
     assert torch.allclose(result, expected)
 
 
+def test_torch_max_min_with_scalar_inputs_only():
+
+    x, y = symbols('x y')
+    expr = Max(x, y) - Min(x, y)
+    func = lambdify([x, y], expr, "torch")
+
+    result = func(3.0, 1.5)
+    expected = torch.tensor(1.5)
+    assert torch.allclose(result, expected)
+
+
 def test_torch_lotka_volterra_original_api():
-    if torch is None:
-        skip("PyTorch not installed")
 
     prey, predator = symbols('prey predator')
     alpha, beta, delta, gamma_ = symbols('alpha beta delta gamma')
@@ -278,8 +281,6 @@ def test_torch_lotka_volterra_original_api():
 
 
 def test_torch_matrix():
-    if torch is None:
-        skip("PyTorch not installed")
 
     expr = M
     assert torch_code(expr) == "M"
@@ -325,8 +326,6 @@ def test_torch_matrix():
 
 
 def test_torch_array_operations():
-    if not torch:
-        skip("PyTorch not installed")
 
     M = MatrixSymbol("M", 2, 2)
     N = MatrixSymbol("N", 2, 2)
@@ -387,6 +386,13 @@ def test_torch_array_operations():
     c = torch.einsum("ab,bc->acb", ma, mb)
     assert torch.allclose(y, c)
 
+    cg = ArrayContraction(ArrayTensorProduct(M, N), (1, 2))
+    assert torch_code(cg) == 'torch.einsum("ab,bc->ac", M,N)'
+    f = lambdify((M, N), cg, 'torch')
+    y = f(ma, mb)
+    c = torch.einsum("ab,bc->ac", ma, mb)
+    assert torch.allclose(y, c)
+
 
 def test_torch_derivative():
     """Test derivative handling."""
@@ -395,8 +401,6 @@ def test_torch_derivative():
 
 
 def test_torch_printing_dtype():
-    if not torch:
-        skip("PyTorch not installed")
 
     # matrix printing with default dtype
     expr = Matrix([[x, sin(y)], [exp(z), -t]])
@@ -417,8 +421,6 @@ def test_torch_printing_dtype():
 
 
 def test_requires_grad():
-    if not torch:
-        skip("PyTorch not installed")
 
     expr = sin(x) + cos(y)
     f = lambdify([x, y], expr, 'torch')
@@ -438,8 +440,6 @@ def test_requires_grad():
 
 
 def test_torch_multi_variable_derivatives():
-    if not torch:
-        skip("PyTorch not installed")
 
     x, y, z = symbols("x y z")
 
@@ -471,8 +471,6 @@ def test_torch_multi_variable_derivatives():
 
 
 def test_torch_derivative_lambdify():
-    if not torch:
-        skip("PyTorch not installed")
 
     x = symbols("x")
     y = symbols("y")
@@ -503,8 +501,6 @@ def test_torch_derivative_lambdify():
 
 
 def test_torch_special_matrices():
-    if not torch:
-        skip("PyTorch not installed")
 
     expr = Identity(3)
     assert torch_code(expr) == "torch.eye(3)"
@@ -528,8 +524,6 @@ def test_torch_special_matrices():
 
 
 def test_torch_special_matrices_lambdify():
-    if not torch:
-        skip("PyTorch not installed")
 
     expr = Identity(3)
     f = lambdify([], expr, 'torch')
@@ -551,8 +545,6 @@ def test_torch_special_matrices_lambdify():
 
 
 def test_torch_complex_operations():
-    if not torch:
-        skip("PyTorch not installed")
 
     expr = conjugate(x)
     assert torch_code(expr) == "torch.conj(x)"
@@ -572,8 +564,6 @@ def test_torch_complex_operations():
 
 
 def test_torch_special_functions():
-    if not torch:
-        skip("PyTorch not installed")
 
     expr = Heaviside(x)
     assert torch_code(expr) == "torch.heaviside(x, 1/2)"

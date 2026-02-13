@@ -1389,11 +1389,8 @@ class _EvaluatorPrinter:
         return expr
 
 
-def _tensorize_for_torch_binary_op(value, other):
+def _tensorize_for_torch_binary_op(value, other, torch):
     """Return ``value`` as a tensor when mixed with torch tensors."""
-    torch = import_module("torch")
-    if torch is None:
-        raise ImportError("PyTorch is required for torch lambdify backend")
     if isinstance(value, torch.Tensor):
         return value
     if isinstance(other, torch.Tensor):
@@ -1404,13 +1401,11 @@ def _tensorize_for_torch_binary_op(value, other):
 def _torch_maximum(*args):
     """Torch maximum that accepts scalar constants mixed with tensors."""
     torch = import_module("torch")
-    if torch is None:
-        raise ImportError("PyTorch is required for torch lambdify backend")
     op = getattr(torch, "maximum", torch.max)
     out = args[0]
     for nxt in args[1:]:
-        out = _tensorize_for_torch_binary_op(out, nxt)
-        nxt = _tensorize_for_torch_binary_op(nxt, out)
+        out = _tensorize_for_torch_binary_op(out, nxt, torch)
+        nxt = _tensorize_for_torch_binary_op(nxt, out, torch)
         out = op(out, nxt)
     return out
 
@@ -1418,13 +1413,11 @@ def _torch_maximum(*args):
 def _torch_minimum(*args):
     """Torch minimum that accepts scalar constants mixed with tensors."""
     torch = import_module("torch")
-    if torch is None:
-        raise ImportError("PyTorch is required for torch lambdify backend")
     op = getattr(torch, "minimum", torch.min)
     out = args[0]
     for nxt in args[1:]:
-        out = _tensorize_for_torch_binary_op(out, nxt)
-        nxt = _tensorize_for_torch_binary_op(nxt, out)
+        out = _tensorize_for_torch_binary_op(out, nxt, torch)
+        nxt = _tensorize_for_torch_binary_op(nxt, out, torch)
         out = op(out, nxt)
     return out
 
