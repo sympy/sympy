@@ -1306,7 +1306,7 @@ def _solveset(f, symbol, domain, _check=False):
             else:
                 try:
                     in_set = cond_eff.as_set()
-                except Exception:
+                except (TypeError, ValueError):
                     solns = solver(expr, symbol, domain)
                     result += ConditionSet(symbol, cond_eff, solns)
                 else:
