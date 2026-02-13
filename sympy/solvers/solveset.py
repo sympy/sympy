@@ -1290,6 +1290,12 @@ def _solveset(f, symbol, domain, _check=False):
         result = Intersection(_solveset(re(a) > 0, symbol, domain),
                               _solveset(im(a), symbol, domain))
     elif f.is_Piecewise:
+        if not domain.is_subset(S.Reals):
+            for _, cond in f.args:
+                if cond is not True and cond.has(Relational):
+                    raise ValueError(
+                        "Inequalities in Piecewise require an ordered domain."
+                    )
 
         remaining = S.true
         for expr, cond in f.args:
@@ -1311,6 +1317,7 @@ def _solveset(f, symbol, domain, _check=False):
                     result += ConditionSet(symbol, cond_eff, solns)
                 else:
                     solns = solver(expr, symbol, in_set)
+                    solns = Intersection(solns, domain)
                     result += solns
             remaining = remaining & ~cond
 
