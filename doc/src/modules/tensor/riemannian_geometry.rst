@@ -38,7 +38,7 @@ We verify this by computing the scalar curvature:
    >>> g = diag(1, r**2)
    >>> coords = [r, th]
    >>> Gamma = metric_to_Christoffel_2nd(g, coords)
-    >>> Gamma[0, 1, 1]
+   >>> Gamma[0, 1, 1]
    r
    >>> Riem = riemann_tensor(Gamma, coords)
    >>> Ric = ricci_tensor(Riem, coords)
