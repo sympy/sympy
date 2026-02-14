@@ -18,3 +18,4 @@ Contents
    index_methods.rst
    tensor.rst
    toperators.rst
+   riemannian_geometry.rst
