@@ -334,6 +334,13 @@ class Plane(GeometryEntity):
 
 
     def equation(self, x=None, y=None, z=None):
+
+        coords = {x, y, z} - {None}
+        if coords & self.free_symbols:
+            raise ValueError(
+                "Plane.equation(): provided symbols clash with symbols used to define the plane."
+            )
+
         """The equation of the Plane.
 
         Examples
