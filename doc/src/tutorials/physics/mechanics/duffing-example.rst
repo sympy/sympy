@@ -112,7 +112,7 @@ With the problem setup, the Lagrangian can be calculated, and the equations of m
    >>> LM = me.LagrangesMethod(L, [q1, q2], bodies=bodies, forcelist=loads, frame=N)
    >>> sm.simplify(LM.form_lagranges_equations())
     [                                       /                                    2          \   /          2\   ]
-    [-M*g + M*q1''(t) + c1*q1'(t) - g*m - m*\l*sin(q2)*q2''(t) + l*cos(q2)*q2'(t)  - q1''(t)/ + \k1 + k2*q1 /*q1]
+    [-M*g + M*q1''(t) + c1*q1'(t) + m*\-g - l*sin(q2)*q2''(t) - l*cos(q2)*q2'(t)**2 + q1''(t)/ + \k1 + k2*q1 /*q1]
     [                                                                                                           ]
     [                     /                   2                                    2        \                   ]
     [                   m*\5*g*l*sin(q2) + 5*l *q2''(t) - 5*l*sin(q2)*q1''(t) + 2*r *q2''(t)/                   ]
