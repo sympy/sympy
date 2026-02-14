@@ -1,8 +1,10 @@
-from typing import Iterator, List, Any, Type
+from __future__ import annotations
+from typing import Iterator, Any, TypeVar
 from sympy.core import Basic, Integer
 
 import random
 
+T = TypeVar("T")
 
 class GrayCode(Basic):
     """
@@ -52,7 +54,7 @@ class GrayCode(Basic):
     _current = 0
     _rank = None
 
-    def __new__(cls: Type["GrayCode"], n: int, *args: Any, **kw_args: Any) -> "GrayCode":
+    def __new__(cls: type[GrayCode], n: int, *args: Any, **kw_args: Any) -> GrayCode:
         """
         Default constructor.
 
@@ -100,7 +102,7 @@ class GrayCode(Basic):
             obj._current = obj.unrank(n, obj._rank)
         return obj
 
-    def next(self, delta: int = 1) -> "GrayCode":
+    def next(self, delta: int = 1) -> GrayCode:
         """
         Returns the Gray code a distance ``delta`` (default = 1) from the
         current value in canonical order.
@@ -287,7 +289,7 @@ class GrayCode(Basic):
         return rv.rjust(self.n, '0')
 
     @classmethod
-    def unrank(cls, n: int, rank: int) -> str:
+    def unrank(cls, n: int | Basic, rank: int) -> str:
         """
         Unranks an n-bit sized Gray code of rank k. This method exists
         so that a derivative GrayCode class can define its own code of
@@ -382,7 +384,7 @@ def bin_to_gray(bin_list: str) -> str:
     return ''.join(b)
 
 
-def get_subset_from_bitstring(super_set: List[Any], bitstring: str) -> List[Any]:
+def get_subset_from_bitstring(super_set: list[T], bitstring: str) -> list[T]:
     """
     Gets the subset defined by the bitstring.
 
@@ -406,7 +408,7 @@ def get_subset_from_bitstring(super_set: List[Any], bitstring: str) -> List[Any]
             if bitstring[i] == '1']
 
 
-def graycode_subsets(gray_code_set: List[Any]) -> Iterator[List[Any]]:
+def graycode_subsets(gray_code_set: list[T]) -> Iterator[list[T]]:
     """
     Generates the subsets as enumerated by a Gray code.
 
