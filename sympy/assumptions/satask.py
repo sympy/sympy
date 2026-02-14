@@ -64,6 +64,7 @@ def satask(proposition, assumptions=True, context=global_assumptions,
     True
 
     """
+    is_true_assumptions = (assumptions is True or assumptions == S.true)
     props = CNF.from_prop(proposition)
     _props = CNF.from_prop(~proposition)
 
@@ -78,7 +79,6 @@ def satask(proposition, assumptions=True, context=global_assumptions,
     sat.add_from_cnf(assumptions)
     if context:
         sat.add_from_cnf(context_cnf)
-    is_true_assumptions = (assumptions is True or assumptions == S.true)
     if not is_true_assumptions:
         if not satisfiable(sat):
             from sympy.core.facts import InconsistentAssumptions
@@ -330,7 +330,6 @@ def get_all_relevant_facts(proposition, assumptions, context,
         if i == 0:
             exprs = extract_predargs(proposition, assumptions, context)
             if assumptions:
-                from sympy.assumptions.assume import AppliedPredicate
                 for lit in assumptions.all_predicates():
                     if isinstance(lit, AppliedPredicate):
                         exprs |= set(lit.arguments)

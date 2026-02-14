@@ -325,8 +325,7 @@ from sympy.matrices.expressions import MatrixExpr, MatrixSymbol
 @class_fact_registry.multiregister(MatrixExpr, MatrixSymbol)
 def matrix_scalar_facts(expr):
     # Register for predicates that are scalar as False for Matrix
-    from sympy.assumptions.ask import Q
-    return[
+    return [
         ~Q.positive(expr),
         ~Q.negative(expr),
         ~Q.prime(expr),
