@@ -561,13 +561,15 @@ def trigsimp(expr, inverse=False, **opts):
         trig_args = []
         non_trig_args = []
         for arg in x.args:
-            if arg.has(*_trigs):
+            if arg.has(*_trigs) or not arg.free_symbols:
                 trig_args.append(arg)
             else:
                 non_trig_args.append(arg)
 
         if not trig_args:
             return x
+        if not non_trig_args:
+            return futrig(x)
 
         trig_part = Add(*trig_args)
         non_trig_part = Add(*non_trig_args) if non_trig_args else S.Zero
