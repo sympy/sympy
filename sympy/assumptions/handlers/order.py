@@ -152,6 +152,12 @@ def _(expr, assumptions):
 
 # NonZeroPredicate
 
+@NonZeroPredicate.register(exp)
+def _(expr, assumptions):
+    # exp is always nonzero
+    return True
+
+
 @NonZeroPredicate.register(Expr)
 def _(expr, assumptions):
     ret = expr.is_nonzero

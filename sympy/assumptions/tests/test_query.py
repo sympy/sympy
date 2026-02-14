@@ -1761,6 +1761,11 @@ def test_nonzero():
     assert ask(Q.nonzero(Abs(x))) is None
     assert ask(Q.nonzero(Abs(x)), Q.nonzero(x)) is True
 
+    # exp tests
+    assert ask(Q.nonzero(exp(x)), Q.real(x)) is True
+    assert ask(Q.nonzero(exp(x)), Q.positive(x)) is True
+    assert ask(Q.nonzero(exp(x)), Q.negative(x)) is True
+
     assert ask(Q.nonzero(log(exp(2*I)))) is False
     # although this could be False, it is representative of expressions
     # that don't evaluate to a zero with precision
