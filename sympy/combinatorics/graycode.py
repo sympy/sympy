@@ -4,7 +4,7 @@ from sympy.core import Basic, Integer
 
 import random
 
-T = TypeVar("T")
+_T = TypeVar("_T")
 
 class GrayCode(Basic):
     """
@@ -384,7 +384,7 @@ def bin_to_gray(bin_list: str) -> str:
     return ''.join(b)
 
 
-def get_subset_from_bitstring(super_set: list[T], bitstring: str) -> list[T]:
+def get_subset_from_bitstring(super_set: list[_T], bitstring: str) -> list[_T]:
     """
     Gets the subset defined by the bitstring.
 
@@ -408,7 +408,7 @@ def get_subset_from_bitstring(super_set: list[T], bitstring: str) -> list[T]:
             if bitstring[i] == '1']
 
 
-def graycode_subsets(gray_code_set: list[T]) -> Iterator[list[T]]:
+def graycode_subsets(gray_code_set: list[_T]) -> Iterator[list[_T]]:
     """
     Generates the subsets as enumerated by a Gray code.
 
