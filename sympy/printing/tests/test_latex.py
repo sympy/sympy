@@ -1,6 +1,7 @@
 from sympy import MatAdd, MatMul, Array
 from sympy.algebras.quaternion import Quaternion
 from sympy.calculus.accumulationbounds import AccumBounds
+from sympy.combinatorics.free_groups import free_group
 from sympy.combinatorics.permutations import Cycle, Permutation, AppliedPermutation
 from sympy.concrete.products import Product
 from sympy.concrete.summations import Sum
@@ -1724,6 +1725,18 @@ def test_latex_Lambda():
     assert latex(Lambda(x, x + 1)) == r"\left( x \mapsto x + 1 \right)"
     assert latex(Lambda((x, y), x + 1)) == r"\left( \left( x, \  y\right) \mapsto x + 1 \right)"
     assert latex(Lambda(x, x)) == r"\left( x \mapsto x \right)"
+
+
+def test_latex_FreeGroupElement():
+    F, a, b = free_group("a,b")
+
+    assert latex(a**0) == "1"
+    assert latex(a) == "a"
+    assert latex(a**-1) == "a^{-1}"
+    assert latex(a**3*b**2*a*b**(-1)) == "a^{3} b^{2} a b^{-1}"
+    assert latex(b**(-2)*a*b**3, mul_symbol='dot') == \
+        r"b^{-2} \cdot a \cdot b^{3}"
+
 
 def test_latex_PolyElement():
     Ruv, u, v = ring("u,v", ZZ)
