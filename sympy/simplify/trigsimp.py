@@ -553,11 +553,8 @@ def trigsimp(expr, inverse=False, **opts):
         return trigsimp_groebner(new, **opts)
 
     def match_trig_only(x):
-
-
         if not x.is_Add:
             return futrig(x)
-
         trig_args = []
         non_trig_args = []
         for arg in x.args:
@@ -565,15 +562,29 @@ def trigsimp(expr, inverse=False, **opts):
                 trig_args.append(arg)
             else:
                 non_trig_args.append(arg)
-
-        if not trig_args:
-            return x
-        if not non_trig_args:
+        if not trig_args or not non_trig_args:
             return futrig(x)
-
-        trig_part = Add(*trig_args)
-        non_trig_part = Add(*non_trig_args) if non_trig_args else S.Zero
-
+        # Find symbols inside trig function arguments
+        trig_inner_symbols = set()
+        for arg in trig_args:
+            for t in arg.atoms(*_trigs):
+                trig_inner_symbols |= t.free_symbols
+        # Coefficient symbols are those outside trig functions
+        trig_coeff_symbols = set()
+        for arg in trig_args:
+            trig_coeff_symbols |= (arg.free_symbols - trig_inner_symbols)
+        # Only split non-trig args that share no coefficient symbols
+        safe_non_trig = []
+        linked_non_trig = []
+        for arg in non_trig_args:
+            if arg.free_symbols & trig_coeff_symbols:
+                linked_non_trig.append(arg)
+            else:
+                safe_non_trig.append(arg)
+        if not safe_non_trig:
+            return futrig(x)
+        trig_part = Add(*trig_args + linked_non_trig)
+        non_trig_part = Add(*safe_non_trig)
         return futrig(trig_part) + non_trig_part
 
     trigsimpfunc = {
