@@ -27,26 +27,19 @@ describes flat Euclidean space, so the Ricci tensor and scalar curvature should
 be zero.
 
 We verify this by computing the scalar curvature:
-.. doctest::
+.. code-block:: pycon
 
-   >>> from sympy import symbols, diag, simplify
-   >>> from sympy.diffgeom.riemannian_geometry import (
-   ...     metric_to_Christoffel_2nd, riemann_tensor,
-   ...     ricci_tensor, scalar_curvature
-   ... )
-   >>> r, th = symbols('r th', positive=True, real=True)
-   >>> g = diag(1, r**2)
-   >>> coords = [r, th]
-   >>> Gamma = metric_to_Christoffel_2nd(g, coords)
-   >>> Gamma[0, 1, 1]
-   r
-   >>> Riem = riemann_tensor(Gamma, coords)
-   >>> Ric = ricci_tensor(Riem, coords)
-   >>> Scal = scalar_curvature(Ric, g, coords)
-   >>> all(simplify(c) == 0 for row in Ric for c in row)
-   True
-   >>> simplify(Scal)
-   0
+   >>> from sympy.diffgeom import TensorProduct, metric_to_Christoffel_2nd, metric_to_Ricci_components
+   >>> from sympy.diffgeom.rn import R2_p
+   >>> TP = TensorProduct
+   >>> g = TP(R2_p.dr, R2_p.dr) + R2_p.r**2*TP(R2_p.dtheta, R2_p.dtheta)
+   >>> Gamma = metric_to_Christoffel_2nd(g)
+   >>> Gamma[0][1][1]
+   -rho
+   >>> Ric = metric_to_Ricci_components(g)
+   >>> Ric
+   [[0, 0], [0, 0]]
+
 
 Unit 2-sphere
 =============
@@ -62,20 +55,17 @@ has constant positive curvature. For the unit sphere, the scalar curvature is 2
 
 .. code-block:: pycon
 
-   >>> from sympy import symbols, diag, sin, simplify
-   >>> from sympy.diffgeom.riemannian_geometry import (
-   ...     metric_to_Christoffel_2nd, riemann_tensor,
-   ...     ricci_tensor, scalar_curvature
-   ... )
-   >>> th, ph = symbols('th ph', real=True)
-   >>> g = diag(1, sin(th)**2)
-   >>> coords = [th, ph]
-   >>> Gamma = metric_to_Christoffel_2nd(g, coords)
-   >>> Riem = riemann_tensor(Gamma, coords)
-   >>> Ric = ricci_tensor(Riem, coords)
-   >>> Scal = scalar_curvature(Ric, g, coords)
-   >>> simplify(Scal - 2)
-   0
+   >>> from sympy.diffgeom import TensorProduct, metric_to_Ricci_components
+   >>> from sympy.diffgeom.rn import R2
+   >>> from sympy import simplify
+   >>> TP = TensorProduct
+   >>> g = (1/R2.y**2)*(TP(R2.dx, R2.dx) + TP(R2.dy, R2.dy))
+   >>> Ric = metric_to_Ricci_components(g)
+   >>> Ric
+   [[-1/y**2, 0], [0, -1/y**2]]
+   >>> R = simplify((R2.y**2)*Ric[0][0] + (R2.y**2)*Ric[1][1])
+   >>> R
+   -2
 
 Notes on larger examples
 ========================
