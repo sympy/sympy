@@ -1292,7 +1292,10 @@ def _solveset(f, symbol, domain, _check=False):
     elif f.is_Piecewise:
         if not domain.is_subset(S.Reals):
             for _, cond in f.args:
-                if cond is not True and cond.has(Relational):
+                if cond is True:
+                    continue
+                rels = cond.atoms(Relational)
+                if any(getattr(r, "rel_op", None) in ("<", "<=", ">", ">=") for r in rels):
                     raise ValueError(
                         "Inequalities in Piecewise require an ordered domain."
                     )
