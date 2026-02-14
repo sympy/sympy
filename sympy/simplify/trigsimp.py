@@ -552,9 +552,31 @@ def trigsimp(expr, inverse=False, **opts):
             return new
         return trigsimp_groebner(new, **opts)
 
+    def match_trig_only(x):
+
+
+        if not x.is_Add:
+            return futrig(x)
+
+        trig_args = []
+        non_trig_args = []
+        for arg in x.args:
+            if arg.has(*_trigs):
+                trig_args.append(arg)
+            else:
+                non_trig_args.append(arg)
+        
+        if not trig_args:
+            return x  
+        
+        trig_part = Add(*trig_args)
+        non_trig_part = Add(*non_trig_args) if non_trig_args else S.Zero
+        
+        return futrig(trig_part) + non_trig_part
+
     trigsimpfunc = {
         'fu': (lambda x: fu(x, **opts)),
-        'matching': (lambda x: futrig(x)),
+        'matching': (lambda x: match_trig_only(x)),  
         'groebner': (lambda x: groebnersimp(x, **opts)),
         'combined': (lambda x: futrig(groebnersimp(x,
                                polynomial=True, hints=[2, tan]))),
