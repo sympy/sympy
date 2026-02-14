@@ -565,7 +565,7 @@ def trigsimp(expr, inverse=False, **opts):
                 trig_args.append(arg)
             else:
                 non_trig_args.append(arg)
-        
+
         if not trig_args:
             return x  
         
