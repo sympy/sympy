@@ -220,14 +220,14 @@ def test_ccode_Relational():
 
 
 def test_ccode_KroneckerDelta():
-    # Base rendering
-    assert ccode(KroneckerDelta(x, y)) == "(x == y)"
-    assert ccode(KroneckerDelta(x, y + 1)) == "(x == y + 1)"
+    # Base rendering with safe parentheses
+    assert ccode(KroneckerDelta(x, y)) == "((x) == (y))"
+    assert ccode(KroneckerDelta(x, y + 1)) == "((x) == (y + 1))"
 
     # Regression: ensure composition keeps intended precedence
-    assert ccode(2*KroneckerDelta(x, y)) == "2*(x == y)"
-    assert ccode(z + KroneckerDelta(x, y)) == "z + (x == y)"
-    assert ccode(Eq(KroneckerDelta(x, y), z)) == "(x == y) == z"
+    assert ccode(2*KroneckerDelta(x, y)) == "2*((x) == (y))"
+    assert ccode(z + KroneckerDelta(x, y)) == "z + ((x) == (y))"
+    assert ccode(Eq(KroneckerDelta(x, y), z)) == "((x) == (y)) == z"
 
 
 def test_ccode_Piecewise():
