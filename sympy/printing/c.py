@@ -628,7 +628,20 @@ class C89CodePrinter(CodePrinter):
         }
 
     def _print_KroneckerDelta(self, expr):
-        return "((%s) == (%s))" % (self._print(expr.args[0]), self._print(expr.args[1]))
+        i, j = expr.args[:2]
+        eq = "((%s) == (%s))" % (self._print(i), self._print(j))
+
+        if len(expr.args) == 2:
+            return eq
+
+        dinf, dsup = expr.args[2]
+        i_in_range = "((%s) <= (%s) && (%s) <= (%s))" % (
+            self._print(dinf), self._print(i), self._print(i), self._print(dsup)
+        )
+        j_in_range = "((%s) <= (%s) && (%s) <= (%s))" % (
+            self._print(dinf), self._print(j), self._print(j), self._print(dsup)
+        )
+        return "(%s && %s && %s)" % (eq, i_in_range, j_in_range)
 
     def _print_BreakToken(self, _):
         return 'break'

@@ -224,10 +224,18 @@ def test_ccode_KroneckerDelta():
     assert ccode(KroneckerDelta(x, y)) == "((x) == (y))"
     assert ccode(KroneckerDelta(x, y + 1)) == "((x) == (y + 1))"
 
+    # Range-aware KroneckerDelta must include domain checks for both indices
+    n = symbols('n', integer=True)
+    range_delta = "(((x) == (y)) && ((0) <= (x) && (x) <= (n)) && ((0) <= (y) && (y) <= (n)))"
+    assert ccode(KroneckerDelta(x, y, (0, n))) == range_delta
+
     # Regression: ensure composition keeps intended precedence
     assert ccode(2*KroneckerDelta(x, y)) == "2*((x) == (y))"
+    assert ccode(2*KroneckerDelta(x, y, (0, n))) == "2*" + range_delta
     assert ccode(z + KroneckerDelta(x, y)) == "z + ((x) == (y))"
+    assert ccode(z + KroneckerDelta(x, y, (0, n))) == "z + " + range_delta
     assert ccode(Eq(KroneckerDelta(x, y), z)) == "((x) == (y)) == z"
+    assert ccode(Eq(KroneckerDelta(x, y, (0, n)), z)) == range_delta + " == z"
 
 
 def test_ccode_Piecewise():
