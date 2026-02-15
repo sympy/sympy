@@ -71,4 +71,4 @@ represent the constraint forces in those directions. ::
   Matrix([
   [                                      -m*r*(u1*u3 + u2') + f1],
   [-m*r*u1**2*sin(q2) - m*r*u2*u3/cos(q2) + m*r*cos(q2)*u1' + f2],
-  [        m*(-g + r*u1**2*cos(q2) + r*sin(q2)*u1') + f3]])
+  [                -g*m + m*r*(u1**2*cos(q2) + sin(q2)*u1') + f3]])
