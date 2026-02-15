@@ -43,6 +43,31 @@ TF5 = TransferFunction(k, p, s)
 TF6 = TransferFunction(k*s + p, k*s + p, s)
 
 
+def test_state_space_rewrite_from_pr_27651():
+    c0, c1, c2 = symbols('c0, c1, c2', real=True)
+    a0, a1, a2, a3 = symbols('a0, a1, a2, a3', real=True)
+    d = symbols('d', real=True)
+    s = symbols('s')
+    t = TransferFunction(d, 1, s) + TransferFunction(c2*s**2 + c1*s**1 + c0,
+                                                     s**4 + a3*s**3 + a2*s**2 +
+                                                     a1*s**1 + a0, s)
+    expected = StateSpace(
+        Matrix([[0,   0,   0,   0,   0],
+                [0,   0,   1,   0,   0],
+                [0,   0,   0,   1,   0],
+                [0,   0,   0,   0,   1],
+                [0, -a0, -a1, -a2, -a3]]),
+        Matrix([[0],
+                [0],
+                [0],
+                [0],
+                [1]]),
+        Matrix([[0, c0, c1, c2, 0]]),
+        Matrix([[d]]))
+
+    assert t.rewrite(StateSpace).doit() == expected
+
+
 def test_create_transfer_function():
     cont_tf1 = create_transfer_function(s+1, s**2 + 2, s)
     assert isinstance(cont_tf1, TransferFunction)

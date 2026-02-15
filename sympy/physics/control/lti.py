@@ -1458,7 +1458,7 @@ class TransferFunctionBase(SISOLinearTimeInvariant, ABC):
         den_coeffs = den_poly.all_coeffs()
 
         if n == 0:
-            return StateSpace(
+            return (
                 Matrix([zeros(1)]),
                 Matrix([zeros(1)]),
                 Matrix([zeros(1)]),
@@ -1466,7 +1466,7 @@ class TransferFunctionBase(SISOLinearTimeInvariant, ABC):
             )
 
         if self.num == self.den:
-            return StateSpace(
+            return (
                 Matrix([zeros(1)]), Matrix([zeros(1)]), Matrix([zeros(1)]), Matrix([1])
             )
 
