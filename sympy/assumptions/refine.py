@@ -263,7 +263,7 @@ def refine_atan2(expr, assumptions):
 
 def refine_re(expr, assumptions):
     """
-    Handler for real part.
+    Handler for the real part.
 
     Examples
     ========
@@ -403,7 +403,6 @@ def refine_matrixelement(expr, assumptions):
             return expr
         return MatrixElement(matrix, j, i)
 
-
 def refine_sin_cos(expr, assumptions):
     """
     Handler for sin and cos functions.
@@ -479,15 +478,33 @@ def refine_sin_cos(expr, assumptions):
     else:
         return ((-1)**((k + 1) / 2)) * sin(rem)
 
+def refine_conjugate(expr, assumptions):
+    '''
+    Handler
+    for the conjugate function.
+
+    Examples
+    == == == ==
+
+    >> > from sympy import Q, conjugate, refine, symbols
+    >> > x = symbols('x')
+    >> > refine (conjugate(x), Q.real(x))
+    x
+    '''
+    arg = expr.args[0]
+    if ask(Q.real(arg),assumptions):
+        return arg
+    return expr
 handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
-    'Abs': refine_abs,
-    'Pow': refine_Pow,
-    'atan2': refine_atan2,
-    're': refine_re,
-    'im': refine_im,
-    'arg': refine_arg,
-    'sign': refine_sign,
-    'MatrixElement': refine_matrixelement,
-    'cos': refine_sin_cos,
-    'sin': refine_sin_cos,
+'Abs': refine_abs,
+'Pow': refine_Pow,
+'atan2': refine_atan2,
+'re': refine_re,
+'im': refine_im,
+'arg': refine_arg,
+'sign': refine_sign,
+'MatrixElement': refine_matrixelement,
+'cos': refine_sin_cos,
+'sin': refine_sin_cos,
+'conjugate': refine_conjugate,
 }
