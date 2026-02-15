@@ -478,6 +478,7 @@ def refine_sin_cos(expr, assumptions):
     else:
         return ((-1)**((k + 1) / 2)) * sin(rem)
 
+
 def refine_conjugate(expr, assumptions):
     '''
     Handler
@@ -485,6 +486,7 @@ def refine_conjugate(expr, assumptions):
 
     Examples
     ========
+
 
     >>> from sympy import Q, conjugate, refine, symbols
     >>> x = symbols('x')
