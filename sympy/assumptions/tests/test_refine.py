@@ -4,7 +4,7 @@ from sympy.core.expr import Expr
 from sympy.core.numbers import (I, Rational, nan, pi)
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
-from sympy.functions.elementary.complexes import (Abs, arg, im, re, sign)
+from sympy.functions.elementary.complexes import (Abs, arg, im, re, sign,conjugate)
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (atan, atan2, cos, sin)
@@ -283,3 +283,11 @@ def test_sin_cos():
     assert refine(cos(x + n*pi/2 + k*pi/2 + m*pi/2), \
                   Q.odd(n) & Q.odd(k) & Q.integer(m)) == \
         (-1)**((n + k)/2) * cos(x + m*pi/2)
+
+def test_conjugate():
+    x = Symbol('x')
+    y = Symbol('x',real=True)
+    assert refine(conjugate(y), Q.real(y)) == y
+    assert refine(conjugate(x), Q.real(x)) == x
+    assert refine(conjugate(x), Q.imaginary(x)) == -x
+

@@ -484,11 +484,11 @@ def refine_conjugate(expr, assumptions):
     for the conjugate function.
 
     Examples
-    == == == ==
+    ========
 
-    >> > from sympy import Q, conjugate, refine, symbols
-    >> > x = symbols('x')
-    >> > refine (conjugate(x), Q.real(x))
+    >>> from sympy import Q, conjugate, refine, symbols
+    >>> x = symbols('x')
+    >>> refine (conjugate(x), Q.real(x))
     x
     '''
     arg = expr.args[0]
