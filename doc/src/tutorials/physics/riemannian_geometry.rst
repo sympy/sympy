@@ -1,4 +1,4 @@
-.. _tensor_riemannian_geometry:
+.. _riemannian_geometry_tutorial:
 
 ========================================================
 Computing Christoffel Symbols, Riemann and Ricci Tensors
