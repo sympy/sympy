@@ -8,6 +8,9 @@ import os
 import re as _re
 import struct
 from textwrap import fill, dedent
+from typing import TypeVar, Callable, Literal, SupportsIndex, SupportsInt, overload, Any
+
+_CallableT = TypeVar("_CallableT", bound=Callable)
 
 
 class Undecidable(ValueError):
@@ -16,7 +19,7 @@ class Undecidable(ValueError):
     pass
 
 
-def filldedent(s, w=70, **kwargs):
+def filldedent(s: str, w: int = 70, **kwargs: Any) -> str:
     """
     Strips leading and trailing empty lines from a copy of ``s``, then dedents,
     fills and returns it.
@@ -178,7 +181,7 @@ HASH_RANDOMIZATION = getattr(sys.flags, 'hash_randomization', False)
 _debug_tmp: list[str] = []
 _debug_iter = 0
 
-def debug_decorator(func):
+def debug_decorator(func: _CallableT) -> _CallableT:
     """If SYMPY_DEBUG is True, it will print a nice execution tree with
     arguments and results of all decorated functions, else do nothing.
     """
@@ -188,8 +191,7 @@ def debug_decorator(func):
         return func
 
     def maketree(f, *args, **kw):
-        global _debug_tmp
-        global _debug_iter
+        global _debug_tmp, _debug_iter
         oldtmp = _debug_tmp
         _debug_tmp = []
         _debug_iter += 1
@@ -237,7 +239,7 @@ def debug_decorator(func):
     def decorated(*args, **kwargs):
         return maketree(func, *args, **kwargs)
 
-    return decorated
+    return decorated  # type: ignore
 
 
 def debug(*args):
@@ -302,7 +304,7 @@ def find_executable(executable, path=None):
     return None
 
 
-def func_name(x, short=False):
+def func_name(x: Any, short: bool = False) -> str:
     """Return function name of `x` (if defined) else the `type(x)`.
     If short is True and there is a shorter alias for the result,
     return the alias.
@@ -328,11 +330,11 @@ def func_name(x, short=False):
     'Equality': 'Eq',
     'Unequality': 'Ne',
     }
-    typ = type(x)
-    if str(typ).startswith("<type '"):
-        typ = str(typ).split("'")[1].split("'")[0]
-    elif str(typ).startswith("<class '"):
-        typ = str(typ).split("'")[1].split("'")[0]
+    typ = str(type(x))
+    if typ.startswith("<type '"):
+        typ = typ.split("'")[1].split("'")[0]
+    elif typ.startswith("<class '"):
+        typ = typ.split("'")[1].split("'")[0]
     rv = getattr(getattr(x, 'func', x), '__name__', typ)
     if '.' in rv:
         rv = rv.split('.')[-1]
@@ -360,7 +362,7 @@ def _replace(reps):
         return lambda x: x
     D = lambda match: reps[match.group(0)]
     pattern = _re.compile("|".join(
-        [_re.escape(k) for k, v in reps.items()]), _re.M)
+        [_re.escape(k) for k, v in reps.items()]), _re.MULTILINE)
     return lambda string: pattern.sub(D, string)
 
 
@@ -479,7 +481,7 @@ def translate(s, a, b=None, c=None):
     return s.translate(n)
 
 
-def ordinal(num):
+def ordinal(num: SupportsIndex) -> str:
     """Return ordinal number string of num, e.g. 1 becomes 1st.
     """
     # modified from https://codereview.stackexchange.com/questions/41298/producing-ordinal-numbers
@@ -498,7 +500,14 @@ def ordinal(num):
     return str(n) + suffix
 
 
-def as_int(n, strict=True):
+@overload
+def as_int(n: SupportsIndex, strict: Literal[True] = True) -> int:
+    ...
+@overload
+def as_int(n: SupportsInt, strict: Literal[False]) -> int:
+    ...
+
+def as_int(n: SupportsIndex | SupportsInt, strict: bool = True) -> int:
     """
     Convert the argument to a builtin integer.
 
@@ -552,7 +561,7 @@ def as_int(n, strict=True):
         try:
             if isinstance(n, bool):
                 raise TypeError
-            return operator.index(n)
+            return operator.index(n) # type: ignore
         except TypeError:
             raise ValueError('%s is not an integer' % (n,))
     else:
@@ -560,6 +569,6 @@ def as_int(n, strict=True):
             result = int(n)
         except TypeError:
             raise ValueError('%s is not an integer' % (n,))
-        if n - result:
+        if n - result: # type: ignore
             raise ValueError('%s is not an integer' % (n,))
         return result

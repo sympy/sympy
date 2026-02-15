@@ -27,6 +27,7 @@ unicode_whitelist = [
     r'*/sympy/physics/vector/tests/test_printing.py',
     r'*/physics/quantum/tests/test_printing.py',
     r'*/sympy/vector/tests/test_printing.py',
+    r'*/sympy/vector/tests/test_field_functions.py',
     r'*/sympy/parsing/tests/test_sympy_parser.py',
     r'*/sympy/printing/pretty/stringpict.py',
     r'*/sympy/printing/pretty/tests/test_pretty.py',
@@ -56,8 +57,8 @@ unicode_whitelist = [
 
 unicode_strict_whitelist = [
     r'*/sympy/parsing/latex/_antlr/__init__.py',
-    # test_mathematica.py uses some unicode for testing Greek characters are working #24055
     r'*/sympy/parsing/tests/test_mathematica.py',
+    r'*/sympy/parsing/mathematica_named_characters.py',
 ]
 
 

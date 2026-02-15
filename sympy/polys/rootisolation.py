@@ -121,7 +121,7 @@ def dup_root_lower_bound(f, K):
               Values of the Positive Roots of Polynomials"
               Journal of Universal Computer Science, Vol. 15, No. 3, 523-537, 2009.
     """
-    bound = dup_root_upper_bound(dup_reverse(f), K)
+    bound = dup_root_upper_bound(dup_reverse(f, K), K)
 
     if bound is not None:
         return 1/bound
@@ -163,7 +163,7 @@ def dup_cauchy_upper_bound(f, K):
 def dup_cauchy_lower_bound(f, K):
     """Compute the Cauchy lower bound on the absolute value of all non-zero
        roots of f, real or complex."""
-    g = dup_reverse(f)
+    g = dup_reverse(f, K)
     if len(g) < 2:
         raise PolynomialError('Polynomial has no non-zero roots.')
     if K.is_ZZ:
@@ -257,7 +257,7 @@ def dup_step_refine_real_root(f, M, K, fast=False):
     if k == 1:
         a, b, c, d = a1, b1, c1, d1
     else:
-        f = dup_shift(dup_reverse(g), K.one, K)
+        f = dup_shift(dup_reverse(g, K), K.one, K)
 
         if not dup_eval(f, K.zero, K):
             f = dup_rshift(f, 1, K)
@@ -312,8 +312,8 @@ def dup_outer_refine_real_root(f, s, t, K, eps=None, steps=None, disjoint=None, 
     """Refine a positive root of `f` given an interval `(s, t)`. """
     a, b, c, d = _mobius_from_interval((s, t), K.get_field())
 
-    f = dup_transform(f, dup_strip([a, b]),
-                         dup_strip([c, d]), K)
+    f = dup_transform(f, dup_strip([a, b], K),
+                         dup_strip([c, d], K), K)
 
     if dup_sign_variations(f, K) != 1:
         raise RefinementFailed("there should be exactly one root in (%s, %s) interval" % (s, t))
@@ -423,7 +423,7 @@ def dup_inner_isolate_real_roots(f, K, eps=None, fast=False):
             a2, b2, c2, d2 = b, a + b, d, c + d
 
             if k2 > 1:
-                f2 = dup_shift(dup_reverse(f), K.one, K)
+                f2 = dup_shift(dup_reverse(f, K), K.one, K)
 
                 if not dup_TC(f2, K):
                     f2 = dup_rshift(f2, 1, K)
@@ -441,7 +441,7 @@ def dup_inner_isolate_real_roots(f, K, eps=None, fast=False):
                 continue
 
             if f1 is None:
-                f1 = dup_shift(dup_reverse(f), K.one, K)
+                f1 = dup_shift(dup_reverse(f, K), K.one, K)
 
                 if not dup_TC(f1, K):
                     f1 = dup_rshift(f1, 1, K)
@@ -456,7 +456,7 @@ def dup_inner_isolate_real_roots(f, K, eps=None, fast=False):
                 continue
 
             if f2 is None:
-                f2 = dup_shift(dup_reverse(f), K.one, K)
+                f2 = dup_shift(dup_reverse(f, K), K.one, K)
 
                 if not dup_TC(f2, K):
                     f2 = dup_rshift(f2, 1, K)
@@ -629,7 +629,7 @@ def dup_isolate_real_roots(f, K, eps=None, inf=None, sup=None, basis=False, fast
     return sorted(I_neg + I_zero + I_pos)
 
 def dup_isolate_real_roots_list(polys, K, eps=None, inf=None, sup=None, strict=False, basis=False, fast=False):
-    """Isolate real roots of a list of square-free polynomial using Vincent-Akritas-Strzebonski (VAS) CF approach.
+    """Isolate real roots of a list of polynomial using Vincent-Akritas-Strzebonski (VAS) CF approach.
 
        References
        ==========
@@ -1743,8 +1743,8 @@ class RealInterval:
 
             a, b, c, d = _mobius_from_interval((s, t), dom.get_field())
 
-            f = dup_transform(f, dup_strip([a, b]),
-                                 dup_strip([c, d]), dom)
+            f = dup_transform(f, dup_strip([a, b], dom),
+                                 dup_strip([c, d], dom), dom)
 
             self.mobius = a, b, c, d
         else:

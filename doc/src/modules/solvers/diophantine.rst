@@ -218,7 +218,7 @@ Here A is a 2 X 2 matrix and B is a 2 X 1 matrix such that the transformation
 
     \begin{bmatrix} X\\Y \end{bmatrix} = A \begin{bmatrix} x\\y \end{bmatrix} + B
 
-gives the equation `X^2 -5Y^2 = 920`. Values of `A` and `B` are as belows.
+gives the equation `X^2 -5Y^2 = 920`. Values of `A` and `B` are as below.
 
 >>> A
 Matrix([

@@ -9,16 +9,18 @@ convenience routines for converting between Expr and the poly domains as well
 as unifying matrices with different domains.
 
 """
+from __future__ import annotations
+
+from typing import overload, TYPE_CHECKING
+
 from collections import Counter
 from functools import reduce
-from typing import Union as tUnion, Tuple as tTuple
 
 from sympy.external.gmpy import GROUND_TYPES
 from sympy.utilities.decorator import doctest_depends_on
 
 from sympy.core.sympify import _sympify
 
-from ..domains import Domain
 
 from ..constructor import construct_domain
 
@@ -36,11 +38,10 @@ from .domainscalar import DomainScalar
 
 from sympy.polys.domains import ZZ, EXRAW, QQ
 
-from sympy.polys.densearith import dup_mul
+from sympy.polys.densearith import dup_mul, dup_exquo_ground
 from sympy.polys.densebasic import dup_convert
 from sympy.polys.densetools import (
     dup_mul_ground,
-    dup_quo_ground,
     dup_content,
     dup_clear_denoms,
     dup_primitive,
@@ -56,6 +57,9 @@ from .sdm import SDM
 from .dfm import DFM
 
 from .rref import _dm_rref, _dm_rref_den
+
+if TYPE_CHECKING:
+    from ..domains import Domain
 
 
 if GROUND_TYPES != 'flint':
@@ -131,8 +135,8 @@ class DomainMatrix:
     Poly
 
     """
-    rep: tUnion[SDM, DDM, DFM]
-    shape: tTuple[int, int]
+    rep: SDM | DDM | DFM
+    shape: tuple[int, int]
     domain: Domain
 
     def __new__(cls, rows, shape, domain, *, fmt=None):
@@ -188,7 +192,16 @@ class DomainMatrix:
         args = (arg, rep.shape, rep.domain)
         return (self.__class__, args)
 
-    def __getitem__(self, key):
+    @overload
+    def __getitem__(self, key: tuple[int, int]) -> DomainScalar: ...
+    @overload
+    def __getitem__(self, key: tuple[slice, int]) -> DomainMatrix: ...
+    @overload
+    def __getitem__(self, key: tuple[int, slice]) -> DomainMatrix: ...
+    @overload
+    def __getitem__(self, key: tuple[slice, slice]) -> DomainMatrix: ...
+
+    def __getitem__(self, key: tuple[slice | int, slice | int]) -> DomainMatrix | DomainScalar:
         i, j = key
         m, n = self.shape
         if not (isinstance(i, slice) or isinstance(j, slice)):
@@ -456,7 +469,7 @@ class DomainMatrix:
         See Also
         ========
 
-        Matrix
+        sympy.matrices.dense.Matrix
 
         """
         if fmt == 'dense':
@@ -1601,7 +1614,7 @@ class DomainMatrix:
         return A.from_rep(A.rep.matmul(B.rep))
 
     def _scalarmul(A, lamda, reverse):
-        if lamda == A.domain.zero:
+        if lamda == A.domain.zero and (not (A.domain.is_EXRAW)):
             return DomainMatrix.zeros(A.shape, A.domain)
         elif lamda == A.domain.one:
             return A.copy()
@@ -2002,7 +2015,7 @@ class DomainMatrix:
             common = K.gcd(content, denom)
 
             if not K.is_one(common):
-                elements = dup_quo_ground(elements, common, K)
+                elements = dup_exquo_ground(elements, common, K)
                 denom = K.quo(denom, common)
 
         if not K.is_one(u):
@@ -2187,7 +2200,7 @@ class DomainMatrix:
               for dense matrices or for matrices with simple denominators.
 
             - ``A.rref(method='CD')`` clears the denominators before using
-              fraction-free Gauss-Jordan elimination in the assoicated ring.
+              fraction-free Gauss-Jordan elimination in the associated ring.
               This is most efficient for dense matrices with very simple
               denominators.
 
@@ -2272,7 +2285,7 @@ class DomainMatrix:
               simple denominators.
 
             - ``A.rref(method='CD')`` clears denominators before using
-              fraction-free Gauss-Jordan elimination in the assoicated ring.
+              fraction-free Gauss-Jordan elimination in the associated ring.
               The result will be converted back to the original domain unless
               ``keep_domain=False`` is passed in which case the result will be
               over the ring used for elimination. This is most efficient for
@@ -3369,6 +3382,77 @@ class DomainMatrix:
             raise DMNotAField('Not a field')
         sol = self.rep.lu_solve(rhs.rep)
         return self.from_rep(sol)
+
+    def fflu(self):
+        """
+        Fraction-free LU decomposition of DomainMatrix.
+
+        Explanation
+        ===========
+
+        This method computes the PLDU decomposition
+        using Gauss-Bareiss elimination in a fraction-free manner,
+        it ensures that all intermediate results remain in
+        the domain of the input matrix. Unlike standard
+        LU decomposition, which introduces division, this approach
+        avoids fractions, making it particularly suitable
+        for exact arithmetic over integers or polynomials.
+
+        This method satisfies the invariant:
+
+        P * A = L * inv(D) * U
+
+        Returns
+        =======
+
+        (P, L, D, U)
+            - P (Permutation matrix)
+            - L (Lower triangular matrix)
+            - D (Diagonal matrix)
+            - U (Upper triangular matrix)
+
+        Examples
+        ========
+
+        >>> from sympy import ZZ
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> A = DomainMatrix([[1, 2], [3, 4]], (2, 2), ZZ)
+        >>> P, L, D, U = A.fflu()
+        >>> P
+        DomainMatrix([[1, 0], [0, 1]], (2, 2), ZZ)
+        >>> L
+        DomainMatrix([[1, 0], [3, -2]], (2, 2), ZZ)
+        >>> D
+        DomainMatrix([[1, 0], [0, -2]], (2, 2), ZZ)
+        >>> U
+        DomainMatrix([[1, 2], [0, -2]], (2, 2), ZZ)
+        >>> L.is_lower and U.is_upper and D.is_diagonal
+        True
+        >>> L * D.to_field().inv() * U == P * A.to_field()
+        True
+        >>> I, d = D.inv_den()
+        >>> L * I * U == d * P * A
+        True
+
+        See Also
+        ========
+
+        sympy.polys.matrices.ddm.DDM.fflu
+
+        References
+        ==========
+
+        .. [1]  Nakos, G. C., Turner, P. R., & Williams, R. M. (1997). Fraction-free
+                algorithms for linear and polynomial equations. ACM SIGSAM Bulletin,
+                31(3), 11-19. https://doi.org/10.1145/271130.271133
+        .. [2]  Middeke, J.; Jeffrey, D.J.; Koutschan, C. (2020), "Common Factors
+                in Fraction-Free Matrix Decompositions", Mathematics in Computer Science,
+                15 (4): 589–608, arXiv:2005.12380, doi:10.1007/s11786-020-00495-9
+        .. [3]  https://en.wikipedia.org/wiki/Bareiss_algorithm
+        """
+        from_rep = self.from_rep
+        P, L, D, U = self.rep.fflu()
+        return from_rep(P), from_rep(L), from_rep(D), from_rep(U)
 
     def _solve(A, b):
         # XXX: Not sure about this method or its signature. It is just created

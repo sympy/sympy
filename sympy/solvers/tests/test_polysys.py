@@ -8,6 +8,7 @@ from sympy.polys.domains.rationalfield import QQ
 from sympy.polys.polyerrors import UnsolvableFactorError
 from sympy.polys.polyoptions import Options
 from sympy.polys.polytools import Poly
+from sympy.polys.rootoftools import CRootOf
 from sympy.solvers.solvers import solve
 from sympy.utilities.iterables import flatten
 from sympy.abc import a, b, c, x, y, z
@@ -169,6 +170,10 @@ def test_solve_triangulated():
     dom = QQ.algebraic_field(sqrt(2))
 
     assert solve_triangulated([f_1, f_2, f_3], x, y, z, domain=dom) == \
+        [(0, 0, 1), (0, 1, 0), (1, 0, 0), (a, a, a), (b, b, b)]
+
+    a, b = CRootOf(z**2 + 2*z - 1, 0), CRootOf(z**2 + 2*z - 1, 1)
+    assert solve_triangulated([f_1, f_2, f_3], x, y, z, extension=True) == \
         [(0, 0, 1), (0, 1, 0), (1, 0, 0), (a, a, a), (b, b, b)]
 
 

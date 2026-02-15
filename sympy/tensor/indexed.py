@@ -290,14 +290,14 @@ class Indexed(Expr):
             upper = getattr(i, 'upper', None)
             lower = getattr(i, 'lower', None)
             if None in (upper, lower):
-                raise IndexException(filldedent("""
-                    Range is not defined for all indices in: %s""" % self))
+                raise IndexException(filldedent(f"""
+                    Range is not defined for all indices in: {self}"""))
             try:
                 size = upper - lower + 1
             except TypeError:
-                raise IndexException(filldedent("""
+                raise IndexException(filldedent(f"""
                     Shape cannot be inferred from Idx with
-                    undefined range: %s""" % self))
+                    undefined range: {self}"""))
             sizes.append(size)
         return Tuple(*sizes)
 
@@ -334,7 +334,7 @@ class Indexed(Expr):
 
     def _sympystr(self, p):
         indices = list(map(p.doprint, self.indices))
-        return "%s[%s]" % (p.doprint(self.base), ", ".join(indices))
+        return f"{p.doprint(self.base)}[{', '.join(indices)}]"
 
     @property
     def free_symbols(self):
@@ -657,8 +657,8 @@ class Idx(Expr):
 
         elif is_sequence(range):
             if len(range) != 2:
-                raise ValueError(filldedent("""
-                    Idx range tuple must have length 2, but got %s""" % len(range)))
+                raise ValueError(filldedent(f"""
+                    Idx range tuple must have length 2, but got {len(range)}"""))
             for bound in range:
                 if (bound.is_integer is False and bound is not S.Infinity
                         and bound is not S.NegativeInfinity):

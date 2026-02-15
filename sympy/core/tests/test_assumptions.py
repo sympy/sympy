@@ -1288,7 +1288,7 @@ def test_failing_assumptions():
     x = Symbol('x', positive=True)
     y = Symbol('y')
     assert failing_assumptions(6*x + y, **x.assumptions0) == \
-    {'real': None, 'imaginary': None, 'complex': None, 'hermitian': None,
+    {'real': None, 'imaginary': None, 'complex': None,
     'positive': None, 'nonpositive': None, 'nonnegative': None, 'nonzero': None,
     'negative': None, 'zero': None, 'extended_real': None, 'finite': None,
     'infinite': None, 'extended_negative': None, 'extended_nonnegative': None,
@@ -1298,8 +1298,7 @@ def test_failing_assumptions():
 
 def test_common_assumptions():
     assert common_assumptions([0, 1, 2]
-        ) == {'algebraic': True, 'irrational': False, 'hermitian':
-        True, 'extended_real': True, 'real': True, 'extended_negative':
+        ) == {'algebraic': True, 'irrational': False, 'extended_real': True, 'real': True, 'extended_negative':
         False, 'extended_nonnegative': True, 'integer': True,
         'rational': True, 'imaginary': False, 'complex': True,
         'commutative': True,'noninteger': False, 'composite': False,

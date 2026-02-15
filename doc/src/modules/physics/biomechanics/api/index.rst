@@ -30,7 +30,7 @@ both :mod:`sympy.physics.mechanics` and :mod:`sympy.physics.biomechanics`, and
 use objects from both interchangeably. :mod:`sympy.physics.biomechanics` has
 been designed in such a way that its class hierarchies are related to, and
 interfaces (e.g. attribute names, call signatures, and return types) mimic,
-those of :mod:`sympy.physics.mechanics`. Consequentially, :mod:`sympy.physics.mechanics`
+those of :mod:`sympy.physics.mechanics`. Consequently, :mod:`sympy.physics.mechanics`
 will correctly generate equations of motion for multibody systems that
 incorporate biomechanical components.
 

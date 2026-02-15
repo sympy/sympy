@@ -45,7 +45,7 @@ from sympy.polys.densearith import (
     dup_max_norm, dmp_max_norm,
     dup_l1_norm,
     dup_mul_ground, dmp_mul_ground,
-    dup_quo_ground, dmp_quo_ground)
+    dup_exquo_ground, dmp_quo_ground, dmp_exquo_ground)
 
 from sympy.polys.densetools import (
     dup_clear_denoms, dmp_clear_denoms,
@@ -508,8 +508,8 @@ def dup_cyclotomic_p(f, K, irreducible=False):
     for i in range(n - 1, -1, -2):
         h.insert(0, f[i])
 
-    g = dup_sqr(dup_strip(g), K)
-    h = dup_sqr(dup_strip(h), K)
+    g = dup_sqr(dup_strip(g, K), K)
+    h = dup_sqr(dup_strip(h, K), K)
 
     F = dup_sub(g, dup_lshift(h, 1, K), K)
 
@@ -1090,9 +1090,9 @@ def dmp_zz_wang(f, u, K, mod=None, seed=None):
         else:
             mod += eez_mod_step
 
-    s_norm, s_arg, i = None, 0, 0
+    s_norm, s_arg = None, 0
 
-    for s, _, _, _, _ in configs:
+    for i, (s, _, _, _, _) in enumerate(configs):
         _s_norm = dup_max_norm(s, K)
 
         if s_norm is not None:
@@ -1101,8 +1101,6 @@ def dmp_zz_wang(f, u, K, mod=None, seed=None):
                 s_arg = i
         else:
             s_norm = _s_norm
-
-        i += 1
 
     _, cs, E, H, A = configs[s_arg]
     orig_f = f
@@ -1508,7 +1506,7 @@ def dup_factor_list(f, K0):
             if K0_inexact:
                 for i, (f, k) in enumerate(factors):
                     max_norm = dup_max_norm(f, K0)
-                    f = dup_quo_ground(f, max_norm, K0)
+                    f = dup_exquo_ground(f, max_norm, K0)
                     f = dup_convert(f, K0, K0_inexact)
                     factors[i] = (f, k)
                     coeff = K0.mul(coeff, K0.pow(max_norm, k))
@@ -1527,7 +1525,7 @@ def dup_factor_list_include(f, K):
     coeff, factors = dup_factor_list(f, K)
 
     if not factors:
-        return [(dup_strip([coeff]), 1)]
+        return [(dup_strip([coeff], K), 1)]
     else:
         g = dup_mul_ground(factors[0][0], coeff, K)
         return [(g, factors[0][1])] + factors[1:]
@@ -1592,7 +1590,7 @@ def dmp_factor_list(f, u, K0):
             if K0_inexact:
                 for i, (f, k) in enumerate(factors):
                     max_norm = dmp_max_norm(f, u, K0)
-                    f = dmp_quo_ground(f, max_norm, u, K0)
+                    f = dmp_exquo_ground(f, max_norm, u, K0)
                     f = dmp_convert(f, u, K0, K0_inexact)
                     factors[i] = (f, k)
                     coeff = K0.mul(coeff, K0.pow(max_norm, k))
@@ -1618,7 +1616,7 @@ def dmp_factor_list_include(f, u, K):
     coeff, factors = dmp_factor_list(f, u, K)
 
     if not factors:
-        return [(dmp_ground(coeff, u), 1)]
+        return [(dmp_ground(coeff, u, K), 1)]
     else:
         g = dmp_mul_ground(factors[0][0], coeff, u, K)
         return [(g, factors[0][1])] + factors[1:]

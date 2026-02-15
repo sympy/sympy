@@ -2,6 +2,7 @@ from sympy.core import Expr, S, oo, pi, sympify
 from sympy.core.evalf import N
 from sympy.core.sorting import default_sort_key, ordered
 from sympy.core.symbol import _symbol, Dummy, Symbol
+from sympy.external.mpmath import prec_to_dps
 from sympy.functions.elementary.complexes import sign
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import cos, sin, tan
@@ -17,7 +18,6 @@ from sympy.solvers.solvers import solve
 from sympy.utilities.iterables import has_dups, has_variety, uniq, rotate_left, least_rotation
 from sympy.utilities.misc import as_int, func_name
 
-from mpmath.libmp.libmpf import prec_to_dps
 
 import warnings
 
@@ -363,6 +363,14 @@ class Polygon(GeometrySet):
 
         centroid : Point
 
+        Raises
+        ======
+
+        GeometryError
+            When the polygon has zero area. Note that this check only catches
+            the case where the computed area is zero. Not all self-intersecting
+            polygons are detected, only those that reduce to zero area.
+
         See Also
         ========
 
@@ -378,7 +386,10 @@ class Polygon(GeometrySet):
         Point2D(31/18, 11/18)
 
         """
-        A = 1/(6*self.area)
+        area = self.area
+        if area == 0:
+            raise GeometryError("Centroid is undefined for a polygon with zero area.")
+        A = 1/(6*area)
         cx, cy = 0, 0
         args = self.args
         for i in range(len(args)):
@@ -2688,7 +2699,7 @@ class Triangle(Polygon):
         >>> p1, p2, p3 = Point(0, 0), Point(6, 0), Point(0, 2)
         >>> t = Triangle(p1, p2, p3)
         >>> t.excenters[t.sides[0]]
-        Point2D(12*sqrt(10), 2/3 + sqrt(10)/3)
+        Point2D(sqrt(10) + 4, sqrt(10) + 4)
 
         See Also
         ========
@@ -2699,24 +2710,25 @@ class Triangle(Polygon):
         ==========
 
         .. [1] https://mathworld.wolfram.com/Excircles.html
+        .. [2] https://www.geeksforgeeks.org/maths/excenter-of-a-triangle/
 
         """
 
         s = self.sides
         v = self.vertices
-        a = s[0].length
-        b = s[1].length
-        c = s[2].length
+        a = s[1].length
+        b = s[2].length
+        c = s[0].length
         x = [v[0].x, v[1].x, v[2].x]
         y = [v[0].y, v[1].y, v[2].y]
 
         exc_coords = {
-            "x1": simplify(-a*x[0]+b*x[1]+c*x[2]/(-a+b+c)),
-            "x2": simplify(a*x[0]-b*x[1]+c*x[2]/(a-b+c)),
-            "x3": simplify(a*x[0]+b*x[1]-c*x[2]/(a+b-c)),
-            "y1": simplify(-a*y[0]+b*y[1]+c*y[2]/(-a+b+c)),
-            "y2": simplify(a*y[0]-b*y[1]+c*y[2]/(a-b+c)),
-            "y3": simplify(a*y[0]+b*y[1]-c*y[2]/(a+b-c))
+            "x1": simplify((-a*x[0]+b*x[1]+c*x[2])/(-a+b+c)),
+            "x2": simplify((a*x[0]-b*x[1]+c*x[2])/(a-b+c)),
+            "x3": simplify((a*x[0]+b*x[1]-c*x[2])/(a+b-c)),
+            "y1": simplify((-a*y[0]+b*y[1]+c*y[2])/(-a+b+c)),
+            "y2": simplify((a*y[0]-b*y[1]+c*y[2])/(a-b+c)),
+            "y3": simplify((a*y[0]+b*y[1]-c*y[2])/(a+b-c))
         }
 
         excenters = {

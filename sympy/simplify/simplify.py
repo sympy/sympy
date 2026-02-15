@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import overload
+from typing import overload, TYPE_CHECKING
 
 from collections import defaultdict
 
@@ -13,7 +13,7 @@ from sympy.core.exprtools import factor_nc
 from sympy.core.parameters import global_parameters
 from sympy.core.function import (expand_log, count_ops, _mexpand,
     nfloat, expand_mul, expand)
-from sympy.core.numbers import Float, I, pi, Rational, equal_valued
+from sympy.core.numbers import Float, I, Integer, pi, Rational, equal_valued
 from sympy.core.relational import Relational
 from sympy.core.rules import Transform
 from sympy.core.sorting import ordered
@@ -32,12 +32,10 @@ from sympy.functions.special.bessel import (BesselBase, besselj, besseli,
                                             besselk, bessely, jn)
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.integrals.integrals import Integral
-from sympy.logic.boolalg import Boolean
 from sympy.matrices.expressions import (MatrixExpr, MatAdd, MatMul,
                                             MatPow, MatrixSymbol)
 from sympy.polys import together, cancel, factor
 from sympy.polys.numberfields.minpoly import _is_sum_surds, _minimal_polynomial_sq
-from sympy.sets.sets import Set
 from sympy.simplify.combsimp import combsimp
 from sympy.simplify.cse_opts import sub_pre, sub_post
 from sympy.simplify.hyperexpand import hyperexpand
@@ -47,9 +45,19 @@ from sympy.simplify.sqrtdenest import sqrtdenest
 from sympy.simplify.trigsimp import trigsimp, exptrigsimp
 from sympy.utilities.decorator import deprecated
 from sympy.utilities.iterables import has_variety, sift, subsets, iterable
-from sympy.utilities.misc import as_int
 
-import mpmath
+from sympy.external.mpmath import (
+    prec_to_dps,
+    local_workprec,
+    inf as _mpmath_inf,
+    ninf as _mpmath_ninf,
+)
+
+
+if TYPE_CHECKING:
+    from sympy.logic.boolalg import Boolean
+    from sympy.sets.sets import Set
+    from typing import Literal
 
 
 def separatevars(expr, symbols=[], dict=False, force=False):
@@ -264,7 +272,7 @@ def posify(eq):
     [2]
     """
     eq = sympify(eq)
-    if iterable(eq):
+    if not isinstance(eq, Basic) and iterable(eq):
         f = type(eq)
         eq = list(eq)
         syms = set()
@@ -1446,14 +1454,13 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
     sympy.core.function.nfloat
 
     """
-    try:
-        return sympify(as_int(expr))
-    except (TypeError, ValueError):
-        pass
-    expr = sympify(expr).xreplace({
+    expr = sympify(expr)
+    if isinstance(expr, Integer):
+        return expr
+    expr = expr.xreplace({
         Float('inf'): S.Infinity,
         Float('-inf'): S.NegativeInfinity,
-        })
+    })
     if expr is S.Infinity or expr is S.NegativeInfinity:
         return expr
     if rational or expr.free_symbols:
@@ -1463,9 +1470,7 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
     # lower tolerances set, so use them to pick the largest tolerance if None
     # was given
     if tolerance is None:
-        tolerance = 10**-min([15] +
-             [mpmath.libmp.libmpf.prec_to_dps(n._prec)
-             for n in expr.atoms(Float)])
+        tolerance = 10**-min([15] + [prec_to_dps(n._prec) for n in expr.atoms(Float)])
     # XXX should prec be set independent of tolerance or should it be computed
     # from tolerance?
     prec = 30
@@ -1487,17 +1492,16 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
         return expr
 
     def nsimplify_real(x):
-        orig = mpmath.mp.dps
         xv = x._to_mpmath(bprec)
-        try:
+        with local_workprec(prec) as ctx:
             # We'll be happy with low precision if a simple fraction
             if not (tolerance or full):
-                mpmath.mp.dps = 15
-                rat = mpmath.pslq([xv, 1])
+                ctx.dps = 15
+                rat = ctx.pslq([xv, 1])
                 if rat is not None:
                     return Rational(-int(rat[1]), int(rat[0]))
-            mpmath.mp.dps = prec
-            newexpr = mpmath.identify(xv, constants=constants_dict,
+            ctx.dps = prec
+            newexpr = ctx.identify(xv, constants=constants_dict,
                 tol=tolerance, full=full)
             if not newexpr:
                 raise ValueError
@@ -1506,13 +1510,9 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
             expr = sympify(newexpr)
             if x and not expr:  # don't let x become 0
                 raise ValueError
-            if expr.is_finite is False and xv not in [mpmath.inf, mpmath.ninf]:
+            if expr.is_finite is False and xv not in [_mpmath_inf, _mpmath_ninf]:
                 raise ValueError
             return expr
-        finally:
-            # even though there are returns above, this is executed
-            # before leaving
-            mpmath.mp.dps = orig
     try:
         if re:
             re = nsimplify_real(re)
@@ -1585,10 +1585,12 @@ def _real_to_rational(expr, tolerance=None, rational_conversion='base10'):
                     r = S.ComplexInfinity
                 elif fl < 0:
                     fl = -fl
-                    d = Pow(10, int(mpmath.log(fl)/mpmath.log(10)))
+                    with local_workprec(53) as ctx:
+                        d = Pow(10, int(ctx.log(fl)/ctx.log(10)))
                     r = -Rational(str(fl/d))*d
                 elif fl > 0:
-                    d = Pow(10, int(mpmath.log(fl)/mpmath.log(10)))
+                    with local_workprec(53) as ctx:
+                        d = Pow(10, int(ctx.log(fl)/ctx.log(10)))
                     r = Rational(str(fl/d))*d
                 else:
                     r = S.Zero
@@ -1596,7 +1598,7 @@ def _real_to_rational(expr, tolerance=None, rational_conversion='base10'):
     return p.subs(reps, simultaneous=True)
 
 
-def clear_coefficients(expr, rhs=S.Zero):
+def clear_coefficients(expr: Expr, rhs: Expr = S.Zero) -> tuple[Expr, Expr]:
     """Return `p, r` where `p` is the expression obtained when Rational
     additive and multiplicative coefficients of `expr` have been stripped
     away in a naive fashion (i.e. without simplification). The operations
@@ -1824,13 +1826,16 @@ def nc_simplify(expr, deep=True):
                             not isinstance(args[i].args[0], _Symbol)):
                 subterm = args[i].args[0].args
                 l = len(subterm)
-                if args[i-l:i] == subterm:
+                # Only apply optimization if power base matches subterm pattern
+                if (args[i-l:i] == subterm and
+                    args[i].args[0] == _Mul(*subterm)):
                     # e.g. a*b in a*b*(a*b)**2 is not repeated
                     # in args (= [a, b, (a*b)**2]) but it
                     # can be matched here
                     p += 1
                     start -= l
-                if args[i+1:i+1+l] == subterm:
+                if (args[i+1:i+1+l] == subterm and
+                    args[i].args[0] == _Mul(*subterm)):
                     # e.g. a*b in (a*b)**2*a*b
                     p += 1
                     end += l
@@ -1970,7 +1975,17 @@ def nc_simplify(expr, deep=True):
     return simp
 
 
-def dotprodsimp(expr, withsimp=False):
+@overload
+def dotprodsimp(expr: Expr, withsimp: Literal[False] = False) -> Expr:
+    ...
+@overload
+def dotprodsimp(expr: Expr, withsimp: Literal[True]) -> tuple[Expr, bool]:
+    ...
+@overload
+def dotprodsimp(expr: Expr, withsimp: bool) -> Expr | tuple[Expr, bool]:
+    ...
+
+def dotprodsimp(expr: Expr, withsimp: bool = False) -> Expr | tuple[Expr, bool]:
     """Simplification for a sum of products targeted at the kind of blowup that
     occurs during summation of products. Intended to reduce expression blowup
     during matrix multiplication or other similar operations. Only works with
@@ -1986,7 +2001,7 @@ def dotprodsimp(expr, withsimp=False):
         simplify an expression repetitively which does not simplify.
     """
 
-    def count_ops_alg(expr):
+    def count_ops_alg(expr: Expr) -> tuple[int, bool]:
         """Optimized count algebraic operations with no recursion into
         non-algebraic args that ``core.function.count_ops`` does. Also returns
         whether rational functions may be present according to negative
@@ -2002,8 +2017,8 @@ def dotprodsimp(expr, withsimp=False):
             which ``cancel`` MIGHT optimize.
         """
 
-        ops     = 0
-        args    = [expr]
+        ops = 0
+        args: list[Basic] = [expr]
         ratfunc = False
 
         while args:
@@ -2012,11 +2027,11 @@ def dotprodsimp(expr, withsimp=False):
             if not isinstance(a, Basic):
                 continue
 
-            if a.is_Rational:
+            if isinstance(a, Rational):
                 if a is not S.One: # -1/3 = NEG + DIV
                     ops += bool (a.p < 0) + bool (a.q != 1)
 
-            elif a.is_Mul:
+            elif isinstance(a, Mul):
                 if a.could_extract_minus_sign():
                     ops += 1
                     if a.args[0] is S.NegativeOne:
@@ -2042,7 +2057,7 @@ def dotprodsimp(expr, withsimp=False):
                     ops += len(a.args) - 1
                     args.extend(a.args)
 
-            elif a.is_Add:
+            elif isinstance(a, Add):
                 laargs = len(a.args)
                 negs   = 0
 
@@ -2054,7 +2069,7 @@ def dotprodsimp(expr, withsimp=False):
 
                 ops += laargs - (negs != laargs) # -x - y = NEG + SUB
 
-            elif a.is_Pow:
+            elif isinstance(a, Pow):
                 ops += 1
                 args.append(a.base)
 
@@ -2063,7 +2078,7 @@ def dotprodsimp(expr, withsimp=False):
 
         return ops, ratfunc
 
-    def nonalg_subs_dummies(expr, dummies):
+    def nonalg_subs_dummies(expr: Expr, dummies: dict[Expr, Dummy]) -> Expr:
         """Substitute dummy variables for non-algebraic expressions to avoid
         evaluation of non-algebraic terms that ``polys.polytools.cancel`` does.
         """
@@ -2071,11 +2086,11 @@ def dotprodsimp(expr, withsimp=False):
         if not expr.args:
             return expr
 
-        if expr.is_Add or expr.is_Mul or expr.is_Pow:
+        if isinstance(expr, (Add, Mul, Pow)):
             args = None
 
             for i, a in enumerate(expr.args):
-                c = nonalg_subs_dummies(a, dummies)
+                c = nonalg_subs_dummies(a, dummies) # type: ignore
 
                 if c is a:
                     continue
@@ -2106,7 +2121,7 @@ def dotprodsimp(expr, withsimp=False):
 
         if exprops >= 6: # empirically tested cutoff for expensive simplification
             if ratfunc:
-                dummies = {}
+                dummies: dict[Expr, Dummy] = {}
                 expr2   = nonalg_subs_dummies(expr, dummies)
 
                 if expr2 is expr or count_ops_alg(expr2)[0] >= 6: # check again after substitution
@@ -2120,8 +2135,8 @@ def dotprodsimp(expr, withsimp=False):
         elif (exprops == 5 and expr.is_Add and expr.args [0].is_Mul and
                 expr.args [1].is_Mul and expr.args [0].args [-1].is_Pow and
                 expr.args [1].args [-1].is_Pow and
-                expr.args [0].args [-1].exp is S.NegativeOne and
-                expr.args [1].args [-1].exp is S.NegativeOne):
+              expr.args [0].args [-1].exp is S.NegativeOne and # type: ignore
+              expr.args [1].args [-1].exp is S.NegativeOne): # type: ignore
 
             expr2    = together (expr)
             expr2ops = count_ops_alg(expr2)[0]

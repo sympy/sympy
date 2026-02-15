@@ -94,8 +94,8 @@ def test_residue():
     assert sqrt_mod(3, -13) == 4
     assert sqrt_mod(6, 23) == 11
     assert sqrt_mod(345, 690) == 345
-    assert sqrt_mod(67, 101) == None
-    assert sqrt_mod(1020, 104729) == None
+    assert sqrt_mod(67, 101) is None
+    assert sqrt_mod(1020, 104729) is None
 
     for p in range(3, 100):
         d = defaultdict(list)
@@ -265,6 +265,9 @@ def test_residue():
     assert _discrete_log_pohlig_hellman(78723213, 11**31, 11) == 31
     assert _discrete_log_pohlig_hellman(32942478, 11**98, 11) == 98
     assert _discrete_log_pohlig_hellman(14789363, 11**444, 11) == 444
+    assert discrete_log(1, 0, 2) == 0
+    raises(ValueError, lambda: discrete_log(-4, 1, 3))
+    raises(ValueError, lambda: discrete_log(10, 3, 2))
     assert discrete_log(587, 2**9, 2) == 9
     assert discrete_log(2456747, 3**51, 3) == 51
     assert discrete_log(32942478, 11**127, 11) == 127

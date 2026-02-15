@@ -113,11 +113,6 @@ Here follows a list of possible assumption names:
         as without the extended part, but also including infinity with
         corresponding sign, e.g., extended_positive includes ``oo``
 
-    hermitian
-    antihermitian
-        object belongs to the field of Hermitian
-        (antihermitian) operators.
-
 Examples
 ========
 
@@ -159,6 +154,20 @@ can be obtained as follows:
     'nonpositive': False, 'nonzero': False, 'odd': False, 'positive':
     False, 'prime': False, 'rational': False, 'real': False, 'zero':
     False}
+
+To access the set of all defined assumption names, you can use ``all_assumptions``
+which can be obtained as follows:
+
+    >>> from sympy.core import all_assumptions
+    >>> all_assumptions
+    frozenset({'algebraic', 'commutative', 'complex', 'composite', 'even',
+    'extended_negative', 'extended_nonnegative', 'extended_nonpositive',
+    'extended_nonzero', 'extended_positive', 'extended_real', 'finite', 'imaginary',
+    'infinite', 'integer', 'irrational', 'negative', 'noninteger', 'nonnegative',
+    'nonpositive', 'nonzero', 'odd', 'polar', 'positive', 'prime', 'rational',
+    'real', 'transcendental', 'zero'})
+    >>> 'real' in all_assumptions
+    True
 
 Developers Notes
 ================
@@ -241,9 +250,7 @@ def _generate_assumption_rules():
     'rational       ->  algebraic',
     'algebraic      ->  complex',
     'transcendental ==  complex & !algebraic',
-    'real           ->  hermitian',
     'imaginary      ->  complex',
-    'imaginary      ->  antihermitian',
     'extended_real  ->  commutative',
     'complex        ->  commutative',
     'complex        ->  finite',
@@ -299,6 +306,7 @@ _assume_rules = _load_pre_generated_assumption_rules()
 _assume_defined = _assume_rules.defined_facts.copy()
 _assume_defined.add('polar')
 _assume_defined = frozenset(_assume_defined)
+all_assumptions = _assume_defined
 
 
 def assumptions(expr, _check=None):

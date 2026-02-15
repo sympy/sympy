@@ -138,7 +138,7 @@ def matrix_dagger(e):
     raise TypeError('Expected sympy/numpy/scipy.sparse matrix, got: %r' % e)
 
 
-# TODO: Move this into sympy.matricies.
+# TODO: Move this into sympy.matrices.
 def _sympy_tensor_product(*matrices):
     """Compute the kronecker product of a sequence of SymPy Matrices.
     """

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Callable, overload, TYPE_CHECKING, TypeVar
 
-import mpmath.libmp as mlib
+from sympy.external.mpmath import from_rational
 
 from inspect import getmro
 import string
@@ -106,7 +106,7 @@ def _convert_numpy_types(a, **sympify_args):
             return Float('-inf')
         else:
             p, q = a.as_integer_ratio()
-            a = mlib.from_rational(p, q, prec)
+            a = from_rational(p, q, prec)
             return Float(a, precision=prec)
 
 
@@ -202,11 +202,11 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     ...
     TypeError: unbound method...
 
-    In order to have ``bitcount`` be recognized it can be imported into a
+    In order to have ``bitcount`` be recognized it can be defined in a
     namespace dictionary and passed as locals:
 
     >>> ns = {}
-    >>> exec('from sympy.core.evalf import bitcount', ns)
+    >>> exec('bitcount = lambda n: int(n).bit_length()', ns)
     >>> sympify(s, locals=ns)
     6
 
@@ -643,4 +643,4 @@ def kernS(s):
 
 
 # Avoid circular import
-from .basic import Basic
+from .basic import Basic  # noqa: TC001

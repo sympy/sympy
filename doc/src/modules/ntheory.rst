@@ -256,6 +256,8 @@ with two 25 digit factors. `qs` is able to factorize this in around 248s.
 
 .. autofunction:: qs
 
+.. autofunction:: qs_factor
+
 Examples
 --------
 

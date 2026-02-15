@@ -6,6 +6,7 @@
 
 import os
 import re
+from pathlib import Path
 
 from sympy.assumptions.ask import Q
 from sympy.core.basic import Basic
@@ -47,8 +48,7 @@ def test_all_classes_are_tested():
             if not file.endswith(".py"):
                 continue
 
-            with open(os.path.join(root, file), encoding='utf-8') as f:
-                text = f.read()
+            text = Path(os.path.join(root, file)).read_text(encoding='utf-8')
 
             submodule = module + '.' + file[:-3]
 
@@ -338,6 +338,14 @@ def test_sympy__codegen__ast__RuntimeError_():
 def test_sympy__codegen__ast__FunctionCall():
     from sympy.codegen.ast import FunctionCall
     assert _test_args(FunctionCall('pwer', [x]))
+
+
+def test_sympy__codegen__ast__KeywordFunctionCall():
+    from sympy.codegen.ast import KeywordFunctionCall, String
+    from sympy.core.containers import Tuple
+    from sympy.core.symbol import Symbol
+    obj = KeywordFunctionCall(String('reshape'), Tuple(Symbol('x'), Symbol('y')), {'order': Symbol('z')})
+    assert _test_args(obj)
 
 
 def test_sympy__codegen__ast__Element():
@@ -3253,6 +3261,11 @@ def test_sympy__matrices__expressions__special__ZeroMatrix():
     assert _test_args(ZeroMatrix(3, 5))
 
 
+def test_sympy__matrices__expressions__special__MatrixUnit():
+    from sympy.matrices.expressions.special import MatrixUnit
+    assert _test_args(MatrixUnit(8, 9, 3, 5))
+
+
 def test_sympy__matrices__expressions__special__GenericZeroMatrix():
     from sympy.matrices.expressions.special import GenericZeroMatrix
     assert _test_args(GenericZeroMatrix())
@@ -4346,10 +4359,20 @@ def test_sympy__physics__control__lti__MIMOLinearTimeInvariant():
     # Direct instances of MIMOLinearTimeInvariant class are not allowed.
     pass
 
+@SKIP("abstract class")
+def test_sympy__physics__control__lti__TransferFunctionBase():
+    # Direct instances of TransferFunctionBase class are not allowed.
+    pass
+
 
 def test_sympy__physics__control__lti__TransferFunction():
     from sympy.physics.control.lti import TransferFunction
     assert _test_args(TransferFunction(2, 3, x))
+
+
+def test_sympy__physics__control__lti__DiscreteTransferFunction():
+    from sympy.physics.control.lti import DiscreteTransferFunction
+    assert _test_args(DiscreteTransferFunction(2, 3, x, 0.1))
 
 
 def _test_args_PIDController(obj):
@@ -4424,6 +4447,11 @@ def test_sympy__physics__control__lti__TransferFunctionMatrix():
     tf2 = TransferFunction(y - x, z + y, x)
     assert _test_args(TransferFunctionMatrix([[tf1, tf2]]))
 
+@SKIP("abstract class")
+def test_sympy__physics__control__lti__StateSpaceBase():
+    # Direct instances of StateSpaceBase class are not allowed.
+    pass
+
 
 def test_sympy__physics__control__lti__StateSpace():
     from sympy.matrices.dense import Matrix
@@ -4433,6 +4461,16 @@ def test_sympy__physics__control__lti__StateSpace():
     C = Matrix([[1, 2]])
     D = Matrix([0])
     assert _test_args(StateSpace(A, B, C, D))
+
+
+def test_sympy__physics__control__lti__DiscreteStateSpace():
+    from sympy.matrices.dense import Matrix
+    from sympy.physics.control import DiscreteStateSpace
+    A = Matrix([[-5, -1], [3, -1]])
+    B = Matrix([2, 5])
+    C = Matrix([[1, 2]])
+    D = Matrix([0])
+    assert _test_args(DiscreteStateSpace(A, B, C, D, 0.1))
 
 
 def test_sympy__physics__units__dimensions__Dimension():
@@ -5142,6 +5180,12 @@ def test_sympy__tensor__array__expressions__array_expressions__Reshape():
     from sympy.tensor.array.expressions.array_expressions import ArraySymbol, Reshape
     A = ArraySymbol("A", (4,))
     assert _test_args(Reshape(A, (2, 2)))
+
+
+def test_sympy__tensor__array__expressions__array_expressions__ArraySum():
+    from sympy.tensor.array.expressions.array_expressions import ArraySum, ArraySymbol
+    A = ArraySymbol("A", (3, 3))
+    assert _test_args(ArraySum(A*sin(a), (a, 1, b)))
 
 
 def test_sympy__codegen__ast__Assignment():

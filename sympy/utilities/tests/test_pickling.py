@@ -679,7 +679,6 @@ def test_printing2():
     check(MathMLPresentationPrinter())
 
 
-@XFAIL
 def test_printing3():
     check(PrettyPrinter())
 

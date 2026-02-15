@@ -201,12 +201,7 @@ def _helper_simplify(eq, hint, func, order, match, solvefun):
     equations. This minimizes the computation in
     calling _desolve multiple times.
     """
-
-    if hint.endswith("_Integral"):
-        solvefunc = globals()[
-            "pde_" + hint[:-len("_Integral")]]
-    else:
-        solvefunc = globals()["pde_" + hint]
+    solvefunc = globals()["pde_" + hint.removesuffix("_Integral")]
     return _handle_Integral(solvefunc(eq, func, order,
         match, solvefun), func, order, hint)
 

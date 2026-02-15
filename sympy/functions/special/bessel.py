@@ -10,6 +10,7 @@ from sympy.core.numbers import Rational, pi, I
 from sympy.core.power import Pow
 from sympy.core.symbol import Dummy, uniquely_named_symbol, Wild
 from sympy.core.sympify import sympify
+from sympy.external.mpmath import dps_to_prec, local_workprec
 from sympy.functions.combinatorial.factorials import factorial, RisingFactorial
 from sympy.functions.elementary.trigonometric import sin, cos, csc, cot
 from sympy.functions.elementary.integers import ceiling
@@ -20,7 +21,6 @@ from sympy.functions.special.gamma_functions import gamma, digamma, uppergamma
 from sympy.functions.special.hyper import hyper
 from sympy.polys.orthopolys import spherical_bessel_fn
 
-from mpmath import mp, workprec
 
 # TODO
 # o Scorer functions G1 and G2
@@ -1308,12 +1308,13 @@ def jn_zeros(n, k, method="sympy", dps=15):
     from math import pi as math_pi
 
     if method == "sympy":
-        from mpmath import besseljzero
-        from mpmath.libmp.libmpf import dps_to_prec
         prec = dps_to_prec(dps)
-        return [Expr._from_mpmath(besseljzero(S(n + 0.5)._to_mpmath(prec),
-                                              int(l)), prec)
-                for l in range(1, k + 1)]
+        with local_workprec(prec) as ctx:
+            values = []
+            for l in range(1, k + 1):
+                v = ctx.besseljzero(S(n + 0.5)._to_mpmath(prec), l)
+                values.append(Expr._from_mpmath(v, prec))
+        return values
     elif method == "scipy":
         from scipy.optimize import newton
         try:
@@ -1468,9 +1469,7 @@ class airyai(AiryBase):
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
-            elif arg is S.Infinity:
-                return S.Zero
-            elif arg is S.NegativeInfinity:
+            elif arg is S.Infinity or arg is S.NegativeInfinity:
                 return S.Zero
             elif arg.is_zero:
                 return S.One / (3**Rational(2, 3) * gamma(Rational(2, 3)))
@@ -1824,8 +1823,8 @@ class airyaiprime(AiryBase):
 
     def _eval_evalf(self, prec):
         z = self.args[0]._to_mpmath(prec)
-        with workprec(prec):
-            res = mp.airyai(z, derivative=1)
+        with local_workprec(prec) as ctx:
+            res = ctx.airyai(z, derivative=1)
         return Expr._from_mpmath(res, prec)
 
     def _eval_rewrite_as_besselj(self, z, **kwargs):
@@ -1988,8 +1987,8 @@ class airybiprime(AiryBase):
 
     def _eval_evalf(self, prec):
         z = self.args[0]._to_mpmath(prec)
-        with workprec(prec):
-            res = mp.airybi(z, derivative=1)
+        with local_workprec(prec) as ctx:
+            res = ctx.airybi(z, derivative=1)
         return Expr._from_mpmath(res, prec)
 
     def _eval_rewrite_as_besselj(self, z, **kwargs):

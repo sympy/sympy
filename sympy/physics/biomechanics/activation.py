@@ -280,7 +280,7 @@ class ZerothOrderActivation(ActivationBase):
     exictation to activation. As a result, no additional state equations are
     introduced to your system. They also remove a potential source of delay
     between the input and dynamics of your system as no (ordinary) differential
-    equations are involed.
+    equations are involved.
 
     """
 

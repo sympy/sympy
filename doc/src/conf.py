@@ -141,7 +141,7 @@ myst_enable_checkboxes = True
 # myst_update_mathjax = False
 
 # Don't linkify links unless they start with "https://". This is needed
-# because the linkify library treates .py as a TLD.
+# because the linkify library treats .py as a TLD.
 myst_linkify_fuzzy_links = False
 
 # Add any paths that contain templates here, relative to this directory.
@@ -341,7 +341,7 @@ html_css_files = ['custom.css']
 html_domain_indices = ['py-modindex']
 
 # If true, the reST sources are included in the HTML build as _sources/<name>.
-# html_copy_source = True
+html_copy_source = False
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'SymPydoc'
@@ -492,8 +492,9 @@ if not commit_hash:
 
 fork = 'sympy'
 blobpath = \
-    "https://github.com/{}/sympy/blob/{}/sympy/".format(fork, commit_hash)
+    "https://github.com/{}/sympy/blob/{}/".format(fork, commit_hash)
 
+html_theme_options["source_view_link"] = blobpath + "doc/src/{filename}?plain=1"
 
 def linkcode_resolve(domain, info):
     """Determine the URL corresponding to Python object."""
@@ -532,7 +533,7 @@ def linkcode_resolve(domain, info):
         linespec = ""
 
     fn = os.path.relpath(fn, start=os.path.dirname(sympy.__file__))
-    return blobpath + fn + linespec
+    return blobpath + "sympy/" + fn + linespec
 
 
 def resolve_type_aliases(app, env, node, contnode):

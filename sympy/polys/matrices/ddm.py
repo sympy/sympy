@@ -424,7 +424,7 @@ class DDM(list):
 
     def iter_values(self):
         """
-        Iterater over the non-zero values of the matrix.
+        Iterate over the non-zero values of the matrix.
 
         Examples
         ========
@@ -957,6 +957,111 @@ class DDM(list):
         swaps = ddm_ilu_split(L, U, K)
 
         return L, U, swaps
+
+    def _fflu(self):
+        """
+        Private method for Phase 1 of fraction-free LU decomposition.
+        Performs row operations and elimination to compute U and permutation indices.
+
+        Returns:
+            LU : decomposition as a single matrix.
+            perm (list): Permutation indices for row swaps.
+        """
+        rows, cols = self.shape
+        K = self.domain
+
+        LU = self.copy()
+        perm = list(range(rows))
+        rank = 0
+
+        for j in range(min(rows, cols)):
+            # Skip columns where all entries are zero
+            if all(LU[i][j] == K.zero for i in range(rows)):
+                continue
+
+            # Find the first non-zero pivot in the current column
+            pivot_row = -1
+            for i in range(rank, rows):
+                if LU[i][j] != K.zero:
+                    pivot_row = i
+                    break
+
+            # If no pivot is found, skip column
+            if pivot_row == -1:
+                continue
+
+            # Swap rows to bring the pivot to the current rank
+            if pivot_row != rank:
+                LU[rank], LU[pivot_row] = LU[pivot_row], LU[rank]
+                perm[rank], perm[pivot_row] = perm[pivot_row], perm[rank]
+
+            # Found pivot - (Gauss-Bareiss elimination)
+            pivot = LU[rank][j]
+            for i in range(rank + 1, rows):
+                multiplier = LU[i][j]
+                # Denominator is previous pivot or 1
+                denominator = LU[rank - 1][rank - 1] if rank > 0 else K.one
+                for k in range(j + 1, cols):
+                    LU[i][k] = K.exquo(pivot * LU[i][k] - LU[rank][k] * multiplier, denominator)
+                # Keep the multiplier for L matrix
+                LU[i][j] = multiplier
+            rank += 1
+
+        return LU, perm
+
+    def fflu(self):
+        """
+        Fraction-free LU decomposition of DDM.
+
+        See Also
+        ========
+
+        sympy.polys.matrices.domainmatrix.DomainMatrix.fflu
+            The higher-level interface to this function.
+        """
+        rows, cols = self.shape
+        K = self.domain
+
+        # Phase 1: Perform row operations and get permutation
+        U, perm = self._fflu()
+
+        # Phase 2: Construct P, L, D matrices
+        # Create P from permutation
+        P = self.zeros((rows, rows), K)
+        for i, pi in enumerate(perm):
+            P[i][pi] = K.one
+
+        # Create L matrix
+        L = self.zeros((rows, rows), K)
+        i = j = 0
+        while i < rows and j < cols:
+            if U[i][j] != K.zero:
+                # Found non-zero pivot
+                # Diagonal entry is the pivot
+                L[i][i] = U[i][j]
+                for l in range(i + 1, rows):
+                    # Off-diagonal entries are the multipliers
+                    L[l][i] = U[l][j]
+                    # zero out the entries in U
+                    U[l][j] = K.zero
+                i += 1
+            j += 1
+
+        # Fill remaining diagonal of L with ones
+        for i in range(i, rows):
+            L[i][i] = K.one
+
+        # Create D matrix - using FLINT's approach with accumulator
+        D = self.zeros((rows, rows), K)
+        if rows >= 1:
+            D[0][0] = L[0][0]
+        di = K.one
+        for i in range(1, rows):
+            # Accumulate product of pivots
+            di = L[i - 1][i - 1] * L[i][i]
+            D[i][i] = di
+
+        return P, L, D, U
 
     def qr(self):
         """

@@ -21,7 +21,6 @@ from sympy.utilities.iterables import (common_prefix, common_suffix,
         variations, iterable, is_sequence)
 
 from collections import defaultdict
-from typing import Tuple as tTuple
 
 
 _eps = Dummy(positive=True)
@@ -216,7 +215,7 @@ def _monotonic_sign(self):
             return rv.subs(_eps, 0)
 
 
-def decompose_power(expr: Expr) -> tTuple[Expr, int]:
+def decompose_power(expr: Expr) -> tuple[Expr, int]:
     """
     Decompose power into symbolic base and integer exponent.
 
@@ -250,17 +249,15 @@ def decompose_power(expr: Expr) -> tTuple[Expr, int]:
         if exp is S.NegativeOne:
             base, e = Pow(base, tail), -1
         elif exp is not S.One:
-            # todo: after dropping python 3.7 support, use overload and Literal
-            #  in as_coeff_Mul to make exp Rational, and remove these 2 ignores
-            tail = _keep_coeff(Rational(1, exp.q), tail)  # type: ignore
-            base, e = Pow(base, tail), exp.p  # type: ignore
+            tail = _keep_coeff(Rational(1, exp.q), tail)
+            base, e = Pow(base, tail), exp.p
         else:
             base, e = expr, 1
 
     return base, e
 
 
-def decompose_power_rat(expr: Expr) -> tTuple[Expr, Rational]:
+def decompose_power_rat(expr: Expr) -> tuple[Expr, Rational]:
     """
     Decompose power into symbolic base and rational exponent;
     if the exponent is not a Rational, then separate only the
@@ -1364,7 +1361,7 @@ def _mask_nc(eq, name=None):
     nc_obj = set()
     nc_syms = set()
     pot = preorder_traversal(expr, keys=default_sort_key)
-    for i, a in enumerate(pot):
+    for a in pot:
         if any(a == r[0] for r in rep):
             pot.skip()
         elif not a.is_commutative:

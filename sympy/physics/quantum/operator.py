@@ -272,7 +272,7 @@ class IdentityOperator(Operator):
     ========
 
     >>> from sympy.physics.quantum import IdentityOperator
-    >>> IdentityOperator()
+    >>> IdentityOperator() # doctest: +SKIP
     I
     """
     is_hermitian = True

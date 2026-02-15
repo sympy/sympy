@@ -66,7 +66,7 @@ class AssumptionKeys:
 
     @memoize_property
     def transcendental(self):
-        from .predicates.sets import TranscendentalPredicate
+        from .handlers.sets import TranscendentalPredicate
         return TranscendentalPredicate()
 
     @memoize_property
@@ -363,6 +363,46 @@ def _extract_all_facts(assump, exprs):
                 facts.add(frozenset(args))
     return CNF(facts)
 
+def _normalize_applied_predicates(expr):
+    # Replace Q.gt(a,b) with Q.lt(b,a)
+    expr = expr.replace(
+        lambda e: hasattr(e, 'function') and e.function == Q.gt,
+        lambda e: Q.lt(e.arguments[1], e.arguments[0])
+    )
+    # Replace Q.ge(a,b) with Q.le(b,a)
+    expr = expr.replace(
+        lambda e: hasattr(e, 'function') and e.function == Q.ge,
+        lambda e: Q.le(e.arguments[1], e.arguments[0])
+    )
+    return expr
+
+def _normalize_relations(expr):
+    def _filter(e):
+        return isinstance(e, (Gt, Ge, Lt, Le, Eq, Ne))
+
+    def _replace(e):
+        a, b = e.args
+        if isinstance(e, Gt):
+            return Q.lt(b, a)
+        elif isinstance(e, Ge):
+            return Q.le(b, a)
+        elif isinstance(e, Lt):
+            return Q.lt(a, b)
+        elif isinstance(e, Le):
+            return Q.le(a, b)
+        elif isinstance(e, Eq):
+            return Q.eq(a, b)
+        elif isinstance(e, Ne):
+            return Q.ne(a, b)
+        return e
+
+    return expr.replace(_filter, _replace)
+
+
+def _normalize_expr(expr):
+    expr = _normalize_relations(expr)
+    expr = _normalize_applied_predicates(expr)
+    return expr
 
 def ask(proposition, assumptions=True, context=global_assumptions):
     """
@@ -467,11 +507,12 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     if isinstance(assumptions, Predicate) or assumptions.kind is not BooleanKind:
         raise TypeError("assumptions must be a valid logical expression")
 
-    binrelpreds = {Eq: Q.eq, Ne: Q.ne, Gt: Q.gt, Lt: Q.lt, Ge: Q.ge, Le: Q.le}
+    # Normalize both proposition and assumptions
+    proposition = _normalize_expr(proposition)
+    assumptions = _normalize_expr(assumptions)
+
     if isinstance(proposition, AppliedPredicate):
         key, args = proposition.function, proposition.arguments
-    elif proposition.func in binrelpreds:
-        key, args = binrelpreds[type(proposition)], proposition.args
     else:
         key, args = Q.is_true, (proposition,)
 
@@ -490,7 +531,7 @@ def ask(proposition, assumptions=True, context=global_assumptions):
 
     # check the satisfiability of given assumptions
     if local_facts.clauses and satisfiable(enc_cnf) is False:
-        raise ValueError("inconsistent assumptions %s" % assumptions)
+        raise ValueError(f"inconsistent assumptions {assumptions}")
 
     # quick computation for single fact
     res = _ask_single_fact(key, local_facts)
@@ -517,7 +558,7 @@ def ask(proposition, assumptions=True, context=global_assumptions):
 
 def _ask_single_fact(key, local_facts):
     """
-    Compute the truth value of single predicate using assumptions.
+    Determine whether the key is directly implied or refuted by any unit clause in local_facts.
 
     Parameters
     ==========
@@ -566,34 +607,34 @@ def _ask_single_fact(key, local_facts):
     >>> _ask_single_fact(key, local_facts)
     False
     """
-    if local_facts.clauses:
+    if not local_facts.clauses:
+        return None
 
-        known_facts_dict = get_known_facts_dict()
+    known_facts_dict = get_known_facts_dict()
+    get_facts = lambda k: known_facts_dict.get(k, (set(), set()))
 
-        if len(local_facts.clauses) == 1:
-            cl, = local_facts.clauses
-            if len(cl) == 1:
-                f, = cl
-                prop_facts = known_facts_dict.get(key, None)
-                prop_req = prop_facts[0] if prop_facts is not None else set()
-                if f.is_Not and f.arg in prop_req:
-                    # the prerequisite of proposition is rejected
-                    return False
+    for clause in local_facts.clauses:
+        if len(clause) != 1:
+            continue
+        (f,) = clause
+        pred, negated = f.arg, f.is_Not
 
-        for clause in local_facts.clauses:
-            if len(clause) == 1:
-                f, = clause
-                prop_facts = known_facts_dict.get(f.arg, None) if not f.is_Not else None
-                if prop_facts is None:
-                    continue
+        # Negative literal
+        key_req, _ = get_facts(key)
+        if negated and pred in key_req:
+            # If key implies pred and pred is false,
+            # then key must be false.
+            return False
 
-                prop_req, prop_rej = prop_facts
-                if key in prop_req:
-                    # assumption implies the proposition
-                    return True
-                elif key in prop_rej:
-                    # proposition rejects the assumption
-                    return False
+        # Positive literal
+        if not negated:
+            req, rej = get_facts(pred)
+            if key in req:
+                # key is implied by pred
+                return True
+            if key in rej:
+                # ~key is implied by pred
+                return False
 
     return None
 

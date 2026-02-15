@@ -49,7 +49,7 @@ also.
 
 ## From Linux Package Managers
 
-Many Linux distrubtions package SymPy, for example on Debian based systems
+Many Linux distributions package SymPy, for example on Debian based systems
 SymPy can be installed with apt:
 
 ```

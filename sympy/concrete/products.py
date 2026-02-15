@@ -1,8 +1,7 @@
-from typing import Tuple as tTuple
+from __future__ import annotations
 
 from .expr_with_intlimits import ExprWithIntLimits
 from .summations import Sum, summation, _dummy_with_inherited_properties_concrete
-from sympy.core.expr import Expr
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import Derivative
 from sympy.core.mul import Mul
@@ -12,6 +11,10 @@ from sympy.functions.combinatorial.factorials import RisingFactorial
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.polys import quo, roots
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
 
 
 class Product(ExprWithIntLimits):
@@ -191,7 +194,7 @@ class Product(ExprWithIntLimits):
 
     __slots__ = ()
 
-    limits: tTuple[tTuple[Symbol, Expr, Expr]]
+    limits: tuple[tuple[Symbol, Expr, Expr]]
 
     def __new__(cls, function, *symbols, **assumptions):
         obj = ExprWithIntLimits.__new__(cls, function, *symbols, **assumptions)

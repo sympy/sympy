@@ -282,7 +282,7 @@ class GrayCode(Basic):
         """
         rv = self._current or '0'
         if not isinstance(rv, str):
-            rv = bin(rv)[2:]
+            rv = f'{rv:b}'
         return rv.rjust(self.n, '0')
 
     @classmethod

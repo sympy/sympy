@@ -201,7 +201,7 @@ def test_call():
     assert sin(x).rcall(1) == sin(x)
     assert (1 + sin(x)).rcall(1) == 1 + sin(x)
 
-    # Effect in the pressence of callables
+    # Effect in the presence of callables
     l = Lambda(x, 2*x)
     assert (l + x).rcall(y) == 2*y + x
     assert (x**l).rcall(2) == x**4

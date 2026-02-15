@@ -1,4 +1,4 @@
-from sympy.ntheory.elliptic_curve import EllipticCurve
+from sympy.ntheory.elliptic_curve import EllipticCurve, EllipticCurvePoint
 
 
 def test_elliptic_curve():
@@ -18,3 +18,6 @@ def test_elliptic_curve():
     assert EllipticCurve(-2731, -55146, 1, 0, 1).discriminant == 25088
     # Torsion points
     assert len(EllipticCurve(0, 1).torsion_points()) == 6
+    # Issue 28546: -O should return canonical infinity point
+    O = EllipticCurvePoint.point_at_infinity(e3)
+    assert (-O).x == O.x and (-O).y == O.y and (-O).z == O.z

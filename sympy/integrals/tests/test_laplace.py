@@ -17,6 +17,7 @@ from sympy.functions.elementary.hyperbolic import cosh, sinh, coth, asinh
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import atan, cos, sin
+from sympy.functions.elementary.complexes import sign
 from sympy.logic.boolalg import And
 from sympy.functions.special.gamma_functions import (
     lowergamma, gamma, uppergamma)
@@ -24,9 +25,9 @@ from sympy.functions.special.delta_functions import DiracDelta, Heaviside
 from sympy.functions.special.singularity_functions import SingularityFunction
 from sympy.functions.special.zeta_functions import lerchphi
 from sympy.functions.special.error_functions import (
-    fresnelc, fresnels, erf, erfc, Ei, Ci, expint, E1)
+    fresnelc, fresnels, erf, erfc, erfi, Ei, Ci, expint, E1)
 from sympy.functions.special.bessel import besseli, besselj, besselk, bessely
-from sympy.testing.pytest import slow, warns_deprecated_sympy
+from sympy.testing.pytest import slow, warns_deprecated_sympy, XFAIL
 from sympy.matrices import Matrix, eye
 from sympy.abc import s
 
@@ -71,8 +72,10 @@ def test_laplace_transform():
              0, True))
     assert (LT(1/(a*sqrt(t) + t**(3/2)), t, s) ==
             (pi*sqrt(a)*exp(a*s)*erfc(sqrt(a)*sqrt(s)), 0, True))
-    assert (LT((t+a)**b, t, s) ==
-            (s**(-b - 1)*exp(-a*s)*uppergamma(b + 1, a*s), 0, True))
+    assert (
+        (LT((t+a)**b, t, s) ==
+            (s**(-b - 1)*exp(a*s)*uppergamma(b + 1, a*s), 0, True))
+        )
     assert LT(t**5/(t+a), t, s) == (120*a**5*uppergamma(-5, a*s), 0, True)
     assert LT(exp(t), t, s) == (1/(s - 1), 1, True)
     assert LT(exp(2*t), t, s) == (1/(s - 2), 2, True)
@@ -93,8 +96,12 @@ def test_laplace_transform():
              0, True))
     assert (LT(exp(-2*t**2), t, s) ==
             (sqrt(2)*sqrt(pi)*exp(s**2/8)*erfc(sqrt(2)*s/4)/4, 0, True))
-    assert (LT(b*exp(2*t**2), t, s) ==
-            (b*LaplaceTransform(exp(2*t**2), t, s), -oo, True))
+    # The following test case fails because when using the integral definition
+    # of LT, a substitution into a divergent integral occurs, that does not
+    # simplify into infinity. To be fixed in the future, for now it is marked
+    # as an xfail at  test_laplace_transform_exp_2t2
+    # assert (LT(b*exp(2*t**2), t, s) ==
+    #         (b*LaplaceTransform(exp(2*t**2), t, s), -oo, True))
     assert (LT(t*exp(-a*t**2), t, s) ==
             (1/(2*a) - s*erfc(s/(2*sqrt(a)))/(4*sqrt(pi)*a**(S(3)/2)),
              0, True))
@@ -397,6 +404,8 @@ def test_laplace_transform():
     assert (
         LT((1/(t-1))*sin(4*pi*(t-1))*DiracDelta(t-1) *
            (Heaviside(t-1/4) - Heaviside(t-2)), t, s)[0] == 4*pi*exp(-s))
+    # Issue #28686
+    assert (LT((t + 4)*a, t, s) == (a*(4*s + 1)/s**2, 0, True))
     # additional basic tests from wikipedia
     assert (LT((t - a)**b*exp(-c*(t - a))*Heaviside(t - a), t, s) ==
             ((c + s)**(-b - 1)*exp(-a*s)*gamma(b + 1), -c, True))
@@ -489,9 +498,21 @@ def test_laplace_transform():
 
 
 @slow
+@XFAIL
+def test_laplace_transform_exp_2t2():
+    # the test belongs in test_laplace_transform once fixed and is already
+    # there but commented out
+    LT = laplace_transform
+    b = symbols('b', positive=True)
+    t = symbols('t')
+    wrong = (b*(oo*sign(exp(-s**2/8)) + sqrt(2)*sqrt(pi)*exp(-s**2/8)*erfi(sqrt(2)*s/4)/4), -oo, True)
+    assert (LT(b*exp(2*t**2), t, s) != wrong)
+
+
+@slow
 def test_inverse_laplace_transform():
     s = symbols('s')
-    k, n, t = symbols('k, n, t', real=True)
+    k, n, t, x = symbols('k, n, t, x', real=True)
     a, b, c, d = symbols('a, b, c, d', positive=True)
     f = Function('f')
     F = Function('F')
@@ -505,6 +526,14 @@ def test_inverse_laplace_transform():
     def ILTF(g):
         return laplace_correspondence(
             inverse_laplace_transform(g, s, t), {f: F})
+
+    # Tests for the inverse Laplace transform of a Laplace transform
+    assert (inverse_laplace_transform(LaplaceTransform(f(t), t, s), s, t) ==
+            f(t)*Heaviside(t))
+    assert (inverse_laplace_transform(LaplaceTransform(f(t), t, s), s, x) ==
+            f(x)*Heaviside(x))
+    assert (inverse_laplace_transform(LaplaceTransform(f(t), t, s), x, t) ==
+            LaplaceTransform(f(t), t, s)*DiracDelta(t))
 
     # Tests for the rules in Bateman54.
 

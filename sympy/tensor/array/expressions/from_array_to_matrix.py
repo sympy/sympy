@@ -1,10 +1,11 @@
+from __future__ import annotations
 import itertools
 from collections import defaultdict
-from typing import Tuple as tTuple, Union as tUnion, FrozenSet, Dict as tDict, List, Optional
+from typing import FrozenSet
 from functools import singledispatch
 from itertools import accumulate
 
-from sympy import MatMul, Basic, Wild, KroneckerProduct
+from sympy import MatMul, Basic, Wild, KroneckerProduct, NDimArray
 from sympy.assumptions.ask import (Q, ask)
 from sympy.core.mul import Mul
 from sympy.core.singleton import S
@@ -21,18 +22,18 @@ from sympy.matrices.expressions.matexpr import MatrixElement
 from sympy.tensor.array.expressions.array_expressions import PermuteDims, ArrayDiagonal, \
     ArrayTensorProduct, OneArray, get_rank, _get_subrank, ZeroArray, ArrayContraction, \
     ArrayAdd, _CodegenArrayAbstract, get_shape, ArrayElementwiseApplyFunc, _ArrayExpr, _EditArrayContraction, _ArgE, \
-    ArrayElement, _array_tensor_product, _array_contraction, _array_diagonal, _array_add, _permute_dims
+    ArrayElement, _array_tensor_product, _array_contraction, _array_diagonal, _array_add, _permute_dims, ArraySum
 from sympy.tensor.array.expressions.utils import _get_mapping_from_subranks
 
 
-def _get_candidate_for_matmul_from_contraction(scan_indices: List[Optional[int]], remaining_args: List[_ArgE]) -> tTuple[Optional[_ArgE], bool, int]:
+def _get_candidate_for_matmul_from_contraction(scan_indices: list[int | None], remaining_args: list[_ArgE]) -> tuple[_ArgE | None, bool, int]:
 
-    scan_indices_int: List[int] = [i for i in scan_indices if i is not None]
+    scan_indices_int: list[int] = [i for i in scan_indices if i is not None]
     if len(scan_indices_int) == 0:
         return None, False, -1
 
     transpose: bool = False
-    candidate: Optional[_ArgE] = None
+    candidate: _ArgE | None = None
     candidate_index: int = -1
     for arg_with_ind2 in remaining_args:
         if not isinstance(arg_with_ind2.element, MatrixExpr):
@@ -60,7 +61,7 @@ def _get_candidate_for_matmul_from_contraction(scan_indices: List[Optional[int]]
 
 def _insert_candidate_into_editor(editor: _EditArrayContraction, arg_with_ind: _ArgE, candidate: _ArgE, transpose1: bool, transpose2: bool):
     other = candidate.element
-    other_index: Optional[int]
+    other_index: int | None
     if transpose2:
         other = Transpose(other)
         other_index = candidate.indices[0]
@@ -140,12 +141,12 @@ def _find_trivial_matrices_rewrite(expr: ArrayTensorProduct):
     # "b*a*b.T"
 
     trivial_matrices = []
-    pos: Optional[int] = None
-    first: Optional[MatrixExpr] = None
-    second: Optional[MatrixExpr] = None
-    removed: List[int] = []
+    pos: int | None = None  # must be initialized else causes UnboundLocalError
+    first: MatrixExpr | None = None  # may cause UnboundLocalError if not initialized
+    second: MatrixExpr | None = None  # may cause UnboundLocalError if not initialized
+    removed: list[int] = []
     counter: int = 0
-    args: List[Optional[Basic]] = list(expr.args)
+    args: list[Basic | None] = list(expr.args)
     for i, arg in enumerate(expr.args):
         if isinstance(arg, MatrixExpr):
             if arg.shape == (1, 1):
@@ -168,7 +169,7 @@ def _find_trivial_matrices_rewrite(expr: ArrayTensorProduct):
 
 
 def _find_trivial_kronecker_products_broadcast(expr: ArrayTensorProduct):
-    newargs: List[Basic] = []
+    newargs: list[Basic] = []
     removed = []
     count_dims = 0
     for arg in expr.args:
@@ -208,6 +209,15 @@ def _(expr: ArrayTensorProduct):
     return _a2m_tensor_product(*[_array2matrix(arg) for arg in expr.args])
 
 
+@_array2matrix.register(ArraySum)
+def _(expr: ArraySum):
+    new_function = _array2matrix(expr.function)
+    output = expr.func(new_function, *expr.limits).simplify()
+    if isinstance(output, ZeroArray) and get_rank(output) == 2:
+        return ZeroMatrix(*output.shape)
+    return output
+
+
 @_array2matrix.register(ArrayContraction)
 def _(expr: ArrayContraction):
     expr = expr.flatten_contraction_of_diagonal()
@@ -217,7 +227,7 @@ def _(expr: ArrayContraction):
     if not isinstance(expr, ArrayContraction):
         return _array2matrix(expr)
     subexpr = expr.expr
-    contraction_indices: tTuple[tTuple[int]] = expr.contraction_indices
+    contraction_indices: tuple[tuple[int]] = expr.contraction_indices
     if contraction_indices == ((0,), (1,)) or (
         contraction_indices == ((0,),) and subexpr.shape[1] == 1
     ) or (
@@ -329,6 +339,8 @@ def _(expr: ArrayElementwiseApplyFunc):
             if m is not None:
                 return m[w]*HadamardPower(subexpr, m[p])
         return ElementwiseApplyFunction(expr.function, subexpr)
+    elif not hasattr(subexpr, "shape"):
+        return expr.function(subexpr)
     else:
         return ArrayElementwiseApplyFunc(expr.function, subexpr)
 
@@ -365,16 +377,24 @@ def _(expr: ArrayTensorProduct):
             continue
         if not isinstance(arg, (MatrixExpr, MatrixBase)):
             rarg, rem = _remove_trivial_dims(arg)
-            removed.extend(rem)
-            newargs.append(rarg)
-            continue
-        elif getattr(arg, "is_Identity", False) and arg.shape == (1, 1):
+            rem_dims = [current_range[j] for j in rem]
+            removed.extend(rem_dims)
+            if not isinstance(rarg, MatrixExpr) or 1 not in rarg.shape:
+                newargs.append(rarg)
+                continue
+            else:
+                current_range = [j for j in current_range if j not in rem_dims]
+                arg = rarg
+        if getattr(arg, "is_Identity", False) and arg.shape == (1, 1):
             if arg.shape == (1, 1):
                 # Ignore identity matrices of shape (1, 1) - they are equivalent to scalar 1.
                 removed.extend(current_range)
             continue
         elif arg.shape == (1, 1):
-            arg, _ = _remove_trivial_dims(arg)
+            arg, rem = _remove_trivial_dims(arg)
+            if rem:
+                rem_dims = [current_range[j] for j in rem]
+                removed.extend(rem_dims)
             # Matrix is equivalent to scalar:
             if len(newargs) == 0:
                 newargs.append(arg)
@@ -386,12 +406,23 @@ def _(expr: ArrayTensorProduct):
                 removed.extend(current_range)
             else:
                 newargs.append(arg)
+            pending = 1
+            prev_i = i
         elif 1 in arg.shape:
             k = [i for i in arg.shape if i != 1][0]
             if pending is None:
-                pending = k
+                pending = k  # type: ignore
                 prev_i = i
                 newargs.append(arg)
+            elif pending == 1:
+                prev = newargs[-1]
+                if arg.shape[0] == 1:
+                    newargs[-1] = prev*arg
+                else:  # case args.shape[1] == 1
+                    newargs[-1] = arg*prev
+                removed.extend([cumul[prev_i], cumul[prev_i] + 1])  # type: ignore
+                pending = k  # type: ignore
+                prev_i = i
             elif pending == k:
                 prev = newargs[-1]
                 if prev.shape[0] == 1:
@@ -409,12 +440,12 @@ def _(expr: ArrayTensorProduct):
                 removed.extend([d1, d2])
             else:
                 newargs.append(arg)
-                pending = k
+                pending = k  # type: ignore
                 prev_i = i
         else:
             newargs.append(arg)
             pending = None
-    newexpr, newremoved = _a2m_tensor_product(*newargs), sorted(removed)
+    newexpr, newremoved = _a2m_tensor_product(*newargs), sorted(set(removed))
     if isinstance(newexpr, ArrayTensorProduct):
         newexpr, newremoved2 = _find_trivial_matrices_rewrite(newexpr)
         newremoved = _combine_removed(-1, newremoved, newremoved2)
@@ -537,9 +568,9 @@ def _(expr: ArrayDiagonal):
 @_remove_trivial_dims.register(ElementwiseApplyFunction)
 def _(expr: ElementwiseApplyFunction):
     subexpr, removed = _remove_trivial_dims(expr.expr)
-    if subexpr.shape == (1, 1):
+    if subexpr.shape == (1, 1) and isinstance(subexpr, MatrixExpr):
         # TODO: move this to ElementwiseApplyFunction
-        return expr.function(subexpr), removed + [0, 1]
+        return expr.function(MatrixElement(subexpr, 0, 0)), removed + [0, 1]
     return ElementwiseApplyFunction(expr.function, subexpr), []
 
 
@@ -704,6 +735,9 @@ def _a2m_tensor_product(*args):
     for arg in args:
         if isinstance(arg, (MatrixExpr, _ArrayExpr, _CodegenArrayAbstract)):
             arrays.append(arg)
+        elif isinstance(arg, (NDimArray, MatrixBase)):
+            # This fixes issue 15651
+            arrays.append(arg)
         else:
             scalars.append(arg)
     scalar = Mul.fromiter(scalars)
@@ -741,12 +775,12 @@ def _a2m_transpose(arg):
         return Transpose(arg).doit()
 
 
-def identify_hadamard_products(expr: tUnion[ArrayContraction, ArrayDiagonal]):
+def identify_hadamard_products(expr: ArrayContraction | ArrayDiagonal):
 
     editor: _EditArrayContraction = _EditArrayContraction(expr)
 
-    map_contr_to_args: tDict[FrozenSet, List[_ArgE]] = defaultdict(list)
-    map_ind_to_inds: tDict[Optional[int], int] = defaultdict(int)
+    map_contr_to_args: dict[FrozenSet, list[_ArgE]] = defaultdict(list)
+    map_ind_to_inds: dict[int | None, int] = defaultdict(int)
     for arg_with_ind in editor.args_with_ind:
         for ind in arg_with_ind.indices:
             map_ind_to_inds[ind] += 1
@@ -755,7 +789,7 @@ def identify_hadamard_products(expr: tUnion[ArrayContraction, ArrayDiagonal]):
         map_contr_to_args[frozenset(arg_with_ind.indices)].append(arg_with_ind)
 
     k: FrozenSet[int]
-    v: List[_ArgE]
+    v: list[_ArgE]
     for k, v in map_contr_to_args.items():
         make_trace: bool = False
         if len(k) == 1 and next(iter(k)) >= 0 and sum(next(iter(k)) in i for i in map_contr_to_args) == 1:
@@ -791,7 +825,14 @@ def identify_hadamard_products(expr: tUnion[ArrayContraction, ArrayDiagonal]):
 
         # This is a Hadamard product:
 
-        hp = hadamard_product(*[i.element if check_transpose(i.indices) else Transpose(i.element) for i in hadamard_factors])
+        elems = [i.element if check_transpose(i.indices) else Transpose(i.element) for i in hadamard_factors]
+
+        if elems[0].shape == (1, 1):
+            # In this case, the Hadamard product is equivalent to the matrix multiplication:
+            hp = MatMul(*elems).doit()
+        else:
+            hp = hadamard_product(*elems)
+
         hp_indices = v[0].indices
         if not check_transpose(hadamard_factors[0].indices):
             hp_indices = list(reversed(hp_indices))
@@ -866,7 +907,7 @@ def identify_removable_identity_matrices(expr):
 
 def remove_identity_matrices(expr: ArrayContraction):
     editor = _EditArrayContraction(expr)
-    removed: List[int] = []
+    removed: list[int] = []
 
     permutation_map = {}
 
@@ -929,7 +970,7 @@ def remove_identity_matrices(expr: ArrayContraction):
     return ret_expr2, removed
 
 
-def _combine_removed(dim: int, removed1: List[int], removed2: List[int]) -> List[int]:
+def _combine_removed(dim: int, removed1: list[int], removed2: list[int]) -> list[int]:
     # Concatenate two axis removal operations as performed by
     # _remove_trivial_dims,
     removed1 = sorted(removed1)
@@ -955,7 +996,7 @@ def _combine_removed(dim: int, removed1: List[int], removed2: List[int]) -> List
 def _array_contraction_to_diagonal_multiple_identity(expr: ArrayContraction):
     editor = _EditArrayContraction(expr)
     editor.track_permutation_start()
-    removed: List[int] = []
+    removed: list[int] = []
     diag_index_counter: int = 0
     for i in range(editor.number_of_contraction_indices):
         identities = []

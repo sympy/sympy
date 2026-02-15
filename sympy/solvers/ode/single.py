@@ -3,24 +3,22 @@
 #
 
 from __future__ import annotations
-from typing import ClassVar, Iterator
+from typing import ClassVar, Iterator, TYPE_CHECKING
 
 from .riccati import match_riccati, solve_riccati
 from sympy.core import Add, S, Pow, Rational
 from sympy.core.cache import cached_property
 from sympy.core.exprtools import factor_terms
-from sympy.core.expr import Expr
 from sympy.core.function import AppliedUndef, Derivative, diff, Function, expand, Subs, _mexpand
 from sympy.core.numbers import zoo
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Dummy, Wild
 from sympy.core.mul import Mul
-from sympy.functions import exp, tan, log, sqrt, besselj, bessely, cbrt, airyai, airybi
+from sympy.functions import exp, tan, log, sqrt, besselj, bessely, cbrt, airyai, airybi, Abs
 from sympy.integrals import Integral
 from sympy.polys import Poly
-from sympy.polys.polytools import cancel, factor, degree
+from sympy.polys.polytools import cancel, factor, factor_list, degree
 from sympy.simplify import collect, simplify, separatevars, logcombine, posify # type: ignore
-from sympy.simplify.radsimp import fraction
 from sympy.utilities import numbered_symbols
 from sympy.solvers.solvers import solve
 from sympy.solvers.deutils import ode_order, _preprocess
@@ -32,6 +30,9 @@ from .nonhomogeneous import _get_euler_characteristic_eq_sols, _get_const_charac
     _solve_undetermined_coefficients, _solve_variation_of_parameters, _test_term, _undetermined_coefficients_match, \
         _get_simplified_sol
 from .lie_group import _ode_lie_group
+
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
 
 
 class ODEMatchError(NotImplementedError):
@@ -70,19 +71,15 @@ class SingleODEProblem:
     """
 
     # Instance attributes:
-    eq = None  # type: Expr
-    func = None  # type: AppliedUndef
-    sym = None  # type: Symbol
-    _order = None  # type: int
-    _eq_expanded = None  # type: Expr
-    _eq_preprocessed = None  # type: Expr
+    eq: Expr
+    func: AppliedUndef
+    sym: Symbol
+    _order: int
+    _eq_expanded: Expr
+    _eq_preprocessed: Expr
     _eq_high_order_free = None
 
-    def __init__(self, eq, func, sym, prep=True, **kwargs):
-        assert isinstance(eq, Expr)
-        assert isinstance(func, AppliedUndef)
-        assert isinstance(sym, Symbol)
-        assert isinstance(prep, bool)
+    def __init__(self, eq: Expr, func: AppliedUndef, sym: Symbol, prep: bool = True, **kwargs):
         self.eq = eq
         self.func = func
         self.sym = sym
@@ -255,7 +252,7 @@ class SingleODESolver:
     has_integral: ClassVar[bool]
 
     # The ODE to be solved
-    ode_problem = None  # type: SingleODEProblem
+    ode_problem: SingleODEProblem
 
     # Cache whether or not the equation has matched the method
     _matched: bool | None = None
@@ -864,28 +861,17 @@ class Factorable(SingleODESolver):
         eq_orig = self.ode_problem.eq
         f = self.ode_problem.func.func
         x = self.ode_problem.sym
-        df = f(x).diff(x)
-        self.eqs = []
-        eq = eq_orig.collect(f(x), func = cancel)
-        eq = fraction(factor(eq))[0]
-        factors = Mul.make_args(factor(eq))
-        roots = [fac.as_base_exp() for fac in factors if len(fac.args)!=0]
-        if len(roots)>1 or roots[0][1]>1:
-            for base, expo in roots:
-                if base.has(f(x)):
-                    self.eqs.append(base)
-            if len(self.eqs)>0:
-                return True
-        roots = solve(eq, df)
-        if len(roots)>0:
-            self.eqs = [(df - root) for root in roots]
-            # Avoid infinite recursion
-            matches = self.eqs != [eq_orig]
-            return matches
-        for i in factors:
-            if i.has(f(x)):
-                self.eqs.append(i)
-        return len(self.eqs)>0 and len(factors)>1
+
+        eq, den = eq_orig.as_numer_denom()
+
+        _, facs_m = factor_list(eq)
+        ms = [m for f, m in facs_m]
+
+        is_reduced = sum(ms) > 1 or den.has(f(x))
+
+        self.eqs = [fac for fac, m in facs_m if fac.has(f(x))]
+
+        return is_reduced
 
     def _get_general_solution(self, *, simplify_flag: bool = True):
         func = self.ode_problem.func.func
@@ -905,7 +891,7 @@ class Factorable(SingleODESolver):
 
         if sols == []:
             raise NotImplementedError("The given ODE " + str(eq) + " cannot be solved by"
-                + " the factorable group method")
+                + " the factorable method")
         return sols
 
 
@@ -1735,14 +1721,22 @@ class HomogeneousCoeffBest(HomogeneousCoeffSubsIndepDivDep, HomogeneousCoeffSubs
         # There are two substitutions that solve the equation, u1=y/x and u2=x/y
         # # They produce different integrals, so try them both and see which
         # # one is easier
-        sol1 = HomogeneousCoeffSubsIndepDivDep._get_general_solution(self)
-        sol2 = HomogeneousCoeffSubsDepDivIndep._get_general_solution(self)
+        [sol1] = HomogeneousCoeffSubsIndepDivDep._get_general_solution(self)
+        [sol2] = HomogeneousCoeffSubsDepDivIndep._get_general_solution(self)
         fx = self.ode_problem.func
         if simplify_flag:
-            sol1 = odesimp(self.ode_problem.eq, *sol1, fx, "1st_homogeneous_coeff_subs_indep_div_dep")
-            sol2 = odesimp(self.ode_problem.eq, *sol2, fx, "1st_homogeneous_coeff_subs_dep_div_indep")
-        # XXX: not simplify should be not simplify_flag. mypy correctly complains
-        return min([sol1, sol2], key=lambda x: ode_sol_simplicity(x, fx, trysolving=not simplify)) # type: ignore
+            sol1 = odesimp(self.ode_problem.eq, sol1, fx, "1st_homogeneous_coeff_subs_indep_div_dep")
+            sol2 = odesimp(self.ode_problem.eq, sol2, fx, "1st_homogeneous_coeff_subs_dep_div_indep")
+        if not isinstance(sol1, list):
+            sol1 = [sol1]
+        if not isinstance(sol2, list):
+            sol2 = [sol2]
+        sol1_max_complexity = max(ode_sol_simplicity(sol, fx, trysolving= not simplify_flag) for sol in sol1)
+        sol2_max_complexity = max(ode_sol_simplicity(sol, fx, trysolving= not simplify_flag) for sol in sol2)
+        if sol2_max_complexity < sol1_max_complexity:
+            return sol2
+        else:
+            return sol1
 
 
 class LinearCoefficients(HomogeneousCoeffBest):
@@ -1968,7 +1962,8 @@ class NthOrderReducible(SingleODESolver):
         are considered, and only in them should ``func`` appear.
         """
         # ODE only handles functions of 1 variable so this affirms that state
-        assert len(func.args) == 1
+        if len(func.args) != 1:
+            raise ValueError("Function must have exactly one argument")
         vc = [d.variable_count[0] for d in eq.atoms(Derivative)
             if d.expr == func and len(d.variable_count) == 1]
         ords = [c for v, c in vc if v == x]
@@ -2127,11 +2122,11 @@ class NthLinearConstantCoeffHomogeneous(SingleODESolver):
     >>> dsolve(f(x).diff(x, 5) + 10*f(x).diff(x) - 2*f(x), f(x),
     ... hint='nth_linear_constant_coeff_homogeneous')
     ... # doctest: +NORMALIZE_WHITESPACE
-    Eq(f(x), C5*exp(x*CRootOf(_x**5 + 10*_x - 2, 0))
-    + (C1*sin(x*im(CRootOf(_x**5 + 10*_x - 2, 1)))
-    + C2*cos(x*im(CRootOf(_x**5 + 10*_x - 2, 1))))*exp(x*re(CRootOf(_x**5 + 10*_x - 2, 1)))
-    + (C3*sin(x*im(CRootOf(_x**5 + 10*_x - 2, 3)))
-    + C4*cos(x*im(CRootOf(_x**5 + 10*_x - 2, 3))))*exp(x*re(CRootOf(_x**5 + 10*_x - 2, 3))))
+    Eq(f(x), C5*exp(x*CRootOf(x**5 + 10*x - 2, 0))
+    + (C1*sin(x*im(CRootOf(x**5 + 10*x - 2, 1)))
+    + C2*cos(x*im(CRootOf(x**5 + 10*x - 2, 1))))*exp(x*re(CRootOf(x**5 + 10*x - 2, 1)))
+    + (C3*sin(x*im(CRootOf(x**5 + 10*x - 2, 3)))
+    + C4*cos(x*im(CRootOf(x**5 + 10*x - 2, 3))))*exp(x*re(CRootOf(x**5 + 10*x - 2, 3))))
 
     Note that because this method does not involve integration, there is no
     ``nth_linear_constant_coeff_homogeneous_Integral`` hint.
@@ -2692,7 +2687,7 @@ class SecondLinearBessel(SingleODESolver):
     References
     ==========
 
-    https://math24.net/bessel-differential-equation.html
+    https://web.archive.org/web/20250516234946/https://math24.net/bessel-differential-equation.html
 
     """
     hint = "2nd_linear_bessel"
@@ -2749,12 +2744,12 @@ class SecondLinearBessel(SingleODESolver):
             if coeff1 is None:
                 return False
             # c3 maybe of very complex form so I am simply checking (a - b) form
-            # if yes later I will match with the standerd form of bessel in a and b
+            # if yes later I will match with the standard form of bessel in a and b
             # a, b are wild variable defined above.
             _coeff2 = expand(r[c3]).match(a - b)
             if _coeff2 is None:
                 return False
-            # matching with standerd form for c3
+            # matching with standard form for c3
             coeff2 = factor(_coeff2[a]).match(c4**2*(x)**(2*a4))
             if coeff2 is None:
                 return False
@@ -2782,6 +2777,108 @@ class SecondLinearBessel(SingleODESolver):
         (C1, C2) = self.ode_problem.get_numbered_constants(num=2)
         return [Eq(f(x), ((x**(Rational(1-c4,2)))*(C1*besselj(n/d4,a4*x**d4/d4)
             + C2*bessely(n/d4,a4*x**d4/d4))).subs(x, x-b4))]
+
+
+class SecondLinearBesselTransform(SingleODESolver):
+    r"""
+    Solves second-order ODEs of the form y'' + A*x^k*y = 0.
+
+    These equations have solutions in terms of Bessel functions.
+
+    The general solution is:
+
+    .. math:: y(x) = \sqrt{x} \left[C_1 J_\nu(z) + C_2 Y_\nu(z)\right]
+
+    where :math:`\nu = \frac{1}{k+2}` and :math:`z = \frac{2}{k+2} x^{(k+2)/2}`
+
+    Examples
+    ========
+
+    >>> from sympy import symbols, Function, dsolve, Derivative
+    >>> x, k = symbols('x k')
+    >>> y = Function('y')
+    >>> dsolve(Derivative(y(x), (x, 2)) + x**k*y(x))
+    Eq(y(x), sqrt(x)*(C1*besselj(1/(k + 2), 2*x**(k/2 + 1)/(k + 2)) +
+                  C2*bessely(1/(k + 2), 2*x**(k/2 + 1)/(k + 2))))
+
+    References
+    ==========
+    - Abramowitz & Stegun, Handbook of Mathematical Functions, 9.1.52
+    - https://eqworld.ipmnet.ru/en/solutions/ode/ode0201.pdf
+    """
+    hint = "2nd_linear_bessel_transform"
+    has_integral = False
+    order = [2]
+
+    def _matches(self):
+        eq = self.ode_problem.eq_high_order_free
+        f = self.ode_problem.func
+        x = self.ode_problem.sym
+        order = self.ode_problem.order
+
+        if order != 2:
+            return False
+
+        # Get linear coefficients
+        match = self.ode_problem.get_linear_coefficients(eq, f, order)
+        if not match:
+            return False
+
+        # We need: a3*y'' + b3*y' + c3*y = 0
+        # For Bessel with symbolic exponent: y'' + 0*y' + (x^k)*y = 0
+        a3 = match[2]  # coefficient of y''
+        b3 = match[1]  # coefficient of y'
+        c3 = match[0]  # coefficient of y
+        rhs = match[-1]  # right-hand side
+
+        # Check if b3 = 0 (no first derivative term) or a3 = 0  (no second derivative term)
+        # or rhs != 0 (non-homogeneous)
+        if b3 != 0 or a3 == 0 or rhs != 0:
+            return False
+
+        # Normalize: divide by coefficient of y''
+        c3 = c3 / a3
+
+        # Check if c3 is of the form A*x^k where k has free symbols
+        A_sym = Wild('A_sym', exclude=[x])
+        k_sym = Wild('k_sym', exclude=[x])
+
+        pattern_match = c3.match(A_sym * x**k_sym)
+
+        if not pattern_match or k_sym not in pattern_match:
+            return False
+
+        k_val = pattern_match[k_sym]
+        A_val = pattern_match[A_sym]
+
+        if k_val == -2:
+            # Special case: k = -2 is an Euler equation, better handled by other solvers.
+            return False
+
+        # Store the matched values
+        self.match_dict = {
+            'A': A_val,
+            'k': k_val,
+        }
+
+        return True
+
+    def _get_general_solution(self, *, simplify_flag: bool = True):
+        f = self.ode_problem.func.func
+        x = self.ode_problem.sym
+        (C1, C2) = self.ode_problem.get_numbered_constants(num=2)
+
+        A = self.match_dict['A']
+        k = self.match_dict['k']
+
+        # For y'' + A*x^k*y = 0
+        # The Bessel order and argument are:
+        nu = 1 / (k + 2)
+
+        z = (2 * sqrt(Abs(A)) / (k + 2)) * x**((k + 2)/2)
+
+        # General solution
+        return [Eq(f(x), sqrt(x) * (C1*besselj(nu, z) + C2*bessely(nu, z)))]
 
 
 class SecondLinearAiry(SingleODESolver):
@@ -2966,6 +3063,7 @@ solver_map = {
     'Liouville': Liouville,
     '2nd_linear_airy': SecondLinearAiry,
     '2nd_linear_bessel': SecondLinearBessel,
+    '2nd_linear_bessel_transform': SecondLinearBesselTransform,
     '2nd_hypergeometric': SecondHypergeometric,
     'nth_order_reducible': NthOrderReducible,
     '2nd_nonlinear_autonomous_conserved': SecondNonlinearAutonomousConserved,

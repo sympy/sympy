@@ -1,5 +1,5 @@
 """Transform a string with Python-like source code into SymPy expression. """
-
+from __future__ import annotations
 from tokenize import (generate_tokens, untokenize, TokenError,
     NUMBER, STRING, NAME, OP, ENDMARKER, ERRORTOKEN, NEWLINE)
 
@@ -10,8 +10,7 @@ import unicodedata
 from io import StringIO
 import builtins
 import types
-from typing import Tuple as tTuple, Dict as tDict, Any, Callable, \
-    List, Optional, Union as tUnion
+from typing import Any, Callable
 from functools import reduce
 from sympy.assumptions.ask import AssumptionKeys
 from sympy.core.basic import Basic
@@ -23,9 +22,9 @@ from sympy.functions.elementary.miscellaneous import Max, Min
 
 null = ''
 
-TOKEN = tTuple[int, str]
-DICT = tDict[str, Any]
-TRANS = Callable[[List[TOKEN], DICT, DICT], List[TOKEN]]
+TOKEN = tuple[int, str]
+DICT = dict[str, Any]
+TRANS = Callable[[list[TOKEN], DICT, DICT], list[TOKEN]]
 
 def _token_splittable(token_name: str) -> bool:
     """
@@ -56,7 +55,7 @@ def _token_callable(token: TOKEN, local_dict: DICT, global_dict: DICT, nextToken
     return callable(func) and not isinstance(func, Symbol)
 
 
-def _add_factorial_tokens(name: str, result: List[TOKEN]) -> List[TOKEN]:
+def _add_factorial_tokens(name: str, result: list[TOKEN]) -> list[TOKEN]:
     if result == [] or result[-1][1] == '(':
         raise TokenError()
 
@@ -84,7 +83,7 @@ def _add_factorial_tokens(name: str, result: List[TOKEN]) -> List[TOKEN]:
     return result
 
 
-class ParenthesisGroup(List[TOKEN]):
+class ParenthesisGroup(list[TOKEN]):
     """List of tokens representing an expression in parentheses."""
     pass
 
@@ -103,7 +102,7 @@ class AppliedFunction:
         self.exponent = exponent
         self.items = ['function', 'args', 'exponent']
 
-    def expand(self) -> List[TOKEN]:
+    def expand(self) -> list[TOKEN]:
         """Return a list of tokens representing the function"""
         return [self.function, *self.args]
 
@@ -115,8 +114,8 @@ class AppliedFunction:
                                                 self.exponent)
 
 
-def _flatten(result: List[tUnion[TOKEN, AppliedFunction]]):
-    result2: List[TOKEN] = []
+def _flatten(result: list[TOKEN | AppliedFunction]):
+    result2: list[TOKEN] = []
     for tok in result:
         if isinstance(tok, AppliedFunction):
             result2.extend(tok.expand())
@@ -126,14 +125,14 @@ def _flatten(result: List[tUnion[TOKEN, AppliedFunction]]):
 
 
 def _group_parentheses(recursor: TRANS):
-    def _inner(tokens: List[TOKEN], local_dict: DICT, global_dict: DICT):
+    def _inner(tokens: list[TOKEN], local_dict: DICT, global_dict: DICT):
         """Group tokens between parentheses with ParenthesisGroup.
 
         Also processes those tokens recursively.
 
         """
-        result: List[tUnion[TOKEN, ParenthesisGroup]] = []
-        stacks: List[ParenthesisGroup] = []
+        result: list[TOKEN | ParenthesisGroup] = []
+        stacks: list[ParenthesisGroup] = []
         stacklevel = 0
         for token in tokens:
             if token[0] == OP:
@@ -141,6 +140,8 @@ def _group_parentheses(recursor: TRANS):
                     stacks.append(ParenthesisGroup([]))
                     stacklevel += 1
                 elif token[1] == ')':
+                    if not stacklevel:
+                        raise TokenError("Mismatched parentheses")
                     stacks[-1].append(token)
                     stack = stacks.pop()
 
@@ -169,14 +170,14 @@ def _group_parentheses(recursor: TRANS):
     return _inner
 
 
-def _apply_functions(tokens: List[tUnion[TOKEN, ParenthesisGroup]], local_dict: DICT, global_dict: DICT):
+def _apply_functions(tokens: list[TOKEN | ParenthesisGroup], local_dict: DICT, global_dict: DICT):
     """Convert a NAME token + ParenthesisGroup into an AppliedFunction.
 
     Note that ParenthesisGroups, if not applied to any function, are
     converted back into lists of tokens.
 
     """
-    result: List[tUnion[TOKEN, AppliedFunction]] = []
+    result: list[TOKEN | AppliedFunction] = []
     symbol = None
     for tok in tokens:
         if isinstance(tok, ParenthesisGroup):
@@ -194,7 +195,7 @@ def _apply_functions(tokens: List[tUnion[TOKEN, ParenthesisGroup]], local_dict: 
     return result
 
 
-def _implicit_multiplication(tokens: List[tUnion[TOKEN, AppliedFunction]], local_dict: DICT, global_dict: DICT):
+def _implicit_multiplication(tokens: list[TOKEN | AppliedFunction], local_dict: DICT, global_dict: DICT):
     """Implicitly adds '*' tokens.
 
     Cases:
@@ -210,7 +211,7 @@ def _implicit_multiplication(tokens: List[tUnion[TOKEN, AppliedFunction]], local
     - AppliedFunction next to an implicitly applied function ("sin(x)cos x")
 
     """
-    result: List[tUnion[TOKEN, AppliedFunction]] = []
+    result: list[TOKEN | AppliedFunction] = []
     skip = False
     for tok, nextTok in zip(tokens, tokens[1:]):
         result.append(tok)
@@ -259,9 +260,9 @@ def _implicit_multiplication(tokens: List[tUnion[TOKEN, AppliedFunction]], local
     return result
 
 
-def _implicit_application(tokens: List[tUnion[TOKEN, AppliedFunction]], local_dict: DICT, global_dict: DICT):
+def _implicit_application(tokens: list[TOKEN | AppliedFunction], local_dict: DICT, global_dict: DICT):
     """Adds parentheses as needed after functions."""
-    result: List[tUnion[TOKEN, AppliedFunction]] = []
+    result: list[TOKEN | AppliedFunction] = []
     appendParen = 0  # number of closing parentheses to add
     skip = 0  # number of tokens to delay before adding a ')' (to
               # capture **, ^, etc.)
@@ -310,7 +311,7 @@ def _implicit_application(tokens: List[tUnion[TOKEN, AppliedFunction]], local_di
     return result
 
 
-def function_exponentiation(tokens: List[TOKEN], local_dict: DICT, global_dict: DICT):
+def function_exponentiation(tokens: list[TOKEN], local_dict: DICT, global_dict: DICT):
     """Allows functions to be exponentiated, e.g. ``cos**2(x)``.
 
     Examples
@@ -322,8 +323,8 @@ def function_exponentiation(tokens: List[TOKEN], local_dict: DICT, global_dict: 
     >>> parse_expr('sin**4(x)', transformations=transformations)
     sin(x)**4
     """
-    result: List[TOKEN] = []
-    exponent: List[TOKEN] = []
+    result: list[TOKEN] = []
+    exponent: list[TOKEN] = []
     consuming_exponent = False
     level = 0
     for tok, nextTok in zip(tokens, tokens[1:]):
@@ -384,8 +385,8 @@ def split_symbols_custom(predicate: Callable[[str], bool]):
     ... (transformation, implicit_multiplication))
     unsplittable
     """
-    def _split_symbols(tokens: List[TOKEN], local_dict: DICT, global_dict: DICT):
-        result: List[TOKEN] = []
+    def _split_symbols(tokens: list[TOKEN], local_dict: DICT, global_dict: DICT):
+        result: list[TOKEN] = []
         split = False
         split_previous=False
 
@@ -452,8 +453,8 @@ def split_symbols_custom(predicate: Callable[[str], bool]):
 split_symbols = split_symbols_custom(_token_splittable)
 
 
-def implicit_multiplication(tokens: List[TOKEN], local_dict: DICT,
-                            global_dict: DICT) -> List[TOKEN]:
+def implicit_multiplication(tokens: list[TOKEN], local_dict: DICT,
+                            global_dict: DICT) -> list[TOKEN]:
     """Makes the multiplication operator optional in most cases.
 
     Use this before :func:`implicit_application`, otherwise expressions like
@@ -476,8 +477,8 @@ def implicit_multiplication(tokens: List[TOKEN], local_dict: DICT,
     return result
 
 
-def implicit_application(tokens: List[TOKEN], local_dict: DICT,
-                         global_dict: DICT) -> List[TOKEN]:
+def implicit_application(tokens: list[TOKEN], local_dict: DICT,
+                         global_dict: DICT) -> list[TOKEN]:
     """Makes parentheses optional in some cases for function calls.
 
     Use this after :func:`implicit_multiplication`, otherwise expressions
@@ -500,8 +501,8 @@ def implicit_application(tokens: List[TOKEN], local_dict: DICT,
     return result
 
 
-def implicit_multiplication_application(result: List[TOKEN], local_dict: DICT,
-                                        global_dict: DICT) -> List[TOKEN]:
+def implicit_multiplication_application(result: list[TOKEN], local_dict: DICT,
+                                        global_dict: DICT) -> list[TOKEN]:
     """Allows a slightly relaxed syntax.
 
     - Parentheses for single-argument method calls are optional.
@@ -531,9 +532,9 @@ def implicit_multiplication_application(result: List[TOKEN], local_dict: DICT,
     return result
 
 
-def auto_symbol(tokens: List[TOKEN], local_dict: DICT, global_dict: DICT):
+def auto_symbol(tokens: list[TOKEN], local_dict: DICT, global_dict: DICT):
     """Inserts calls to ``Symbol``/``Function`` for undefined variables."""
-    result: List[TOKEN] = []
+    result: list[TOKEN] = []
     prevTok = (-1, '')
 
     tokens.append((-1, ''))  # so zip traverses all tokens
@@ -582,13 +583,13 @@ def auto_symbol(tokens: List[TOKEN], local_dict: DICT, global_dict: DICT):
     return result
 
 
-def lambda_notation(tokens: List[TOKEN], local_dict: DICT, global_dict: DICT):
+def lambda_notation(tokens: list[TOKEN], local_dict: DICT, global_dict: DICT):
     """Substitutes "lambda" with its SymPy equivalent Lambda().
     However, the conversion does not take place if only "lambda"
     is passed because that is a syntax error.
 
     """
-    result: List[TOKEN] = []
+    result: list[TOKEN] = []
     flag = False
     toknum, tokval = tokens[0]
     tokLen = len(tokens)
@@ -622,9 +623,9 @@ def lambda_notation(tokens: List[TOKEN], local_dict: DICT, global_dict: DICT):
     return result
 
 
-def factorial_notation(tokens: List[TOKEN], local_dict: DICT, global_dict: DICT):
+def factorial_notation(tokens: list[TOKEN], local_dict: DICT, global_dict: DICT):
     """Allows standard notation for factorial."""
-    result: List[TOKEN] = []
+    result: list[TOKEN] = []
     nfactorial = 0
     for toknum, tokval in tokens:
         if toknum == OP and tokval == "!":
@@ -649,9 +650,9 @@ def factorial_notation(tokens: List[TOKEN], local_dict: DICT, global_dict: DICT)
     return result
 
 
-def convert_xor(tokens: List[TOKEN], local_dict: DICT, global_dict: DICT):
+def convert_xor(tokens: list[TOKEN], local_dict: DICT, global_dict: DICT):
     """Treats XOR, ``^``, as exponentiation, ``**``."""
-    result: List[TOKEN] = []
+    result: list[TOKEN] = []
     for toknum, tokval in tokens:
         if toknum == OP:
             if tokval == '^':
@@ -664,20 +665,20 @@ def convert_xor(tokens: List[TOKEN], local_dict: DICT, global_dict: DICT):
     return result
 
 
-def repeated_decimals(tokens: List[TOKEN], local_dict: DICT, global_dict: DICT):
+def repeated_decimals(tokens: list[TOKEN], local_dict: DICT, global_dict: DICT):
     """
     Allows 0.2[1] notation to represent the repeated decimal 0.2111... (19/90)
 
     Run this before auto_number.
 
     """
-    result: List[TOKEN] = []
+    result: list[TOKEN] = []
 
     def is_digit(s):
         return all(i in '0123456789_' for i in s)
 
     # num will running match any DECIMAL [ INTEGER ]
-    num: List[TOKEN] = []
+    num: list[TOKEN] = []
     for toknum, tokval in tokens:
         if toknum == NUMBER:
             if (not num and '.' in tokval and 'e' not in tokval.lower() and
@@ -752,7 +753,7 @@ def repeated_decimals(tokens: List[TOKEN], local_dict: DICT, global_dict: DICT):
     return result
 
 
-def auto_number(tokens: List[TOKEN], local_dict: DICT, global_dict: DICT):
+def auto_number(tokens: list[TOKEN], local_dict: DICT, global_dict: DICT):
     """
     Converts numeric literals to use SymPy equivalents.
 
@@ -760,7 +761,7 @@ def auto_number(tokens: List[TOKEN], local_dict: DICT, global_dict: DICT):
     literals use ``Float``.
 
     """
-    result: List[TOKEN] = []
+    result: list[TOKEN] = []
 
     for toknum, tokval in tokens:
         if toknum == NUMBER:
@@ -786,9 +787,9 @@ def auto_number(tokens: List[TOKEN], local_dict: DICT, global_dict: DICT):
     return result
 
 
-def rationalize(tokens: List[TOKEN], local_dict: DICT, global_dict: DICT):
+def rationalize(tokens: list[TOKEN], local_dict: DICT, global_dict: DICT):
     """Converts floats into ``Rational``. Run AFTER ``auto_number``."""
-    result: List[TOKEN] = []
+    result: list[TOKEN] = []
     passed_float = False
     for toknum, tokval in tokens:
         if toknum == NAME:
@@ -796,7 +797,7 @@ def rationalize(tokens: List[TOKEN], local_dict: DICT, global_dict: DICT):
                 passed_float = True
                 tokval = 'Rational'
             result.append((toknum, tokval))
-        elif passed_float == True and toknum == NUMBER:
+        elif passed_float and toknum == NUMBER:
             passed_float = False
             result.append((STRING, tokval))
         else:
@@ -805,7 +806,7 @@ def rationalize(tokens: List[TOKEN], local_dict: DICT, global_dict: DICT):
     return result
 
 
-def _transform_equals_sign(tokens: List[TOKEN], local_dict: DICT, global_dict: DICT):
+def _transform_equals_sign(tokens: list[TOKEN], local_dict: DICT, global_dict: DICT):
     """Transforms the equals sign ``=`` to instances of Eq.
 
     This is a helper function for ``convert_equals_signs``.
@@ -819,7 +820,7 @@ def _transform_equals_sign(tokens: List[TOKEN], local_dict: DICT, global_dict: D
     This does not deal with function arguments yet.
 
     """
-    result: List[TOKEN] = []
+    result: list[TOKEN] = []
     if (OP, "=") in tokens:
         result.append((NAME, "Eq"))
         result.append((OP, "("))
@@ -834,8 +835,8 @@ def _transform_equals_sign(tokens: List[TOKEN], local_dict: DICT, global_dict: D
     return result
 
 
-def convert_equals_signs(tokens: List[TOKEN], local_dict: DICT,
-                         global_dict: DICT) -> List[TOKEN]:
+def convert_equals_signs(tokens: list[TOKEN], local_dict: DICT,
+                         global_dict: DICT) -> list[TOKEN]:
     """ Transforms all the equals signs ``=`` to instances of Eq.
 
     Parses the equals signs in the expression and replaces them with
@@ -873,13 +874,13 @@ def convert_equals_signs(tokens: List[TOKEN], local_dict: DICT,
 #: Standard transformations for :func:`parse_expr`.
 #: Inserts calls to :class:`~.Symbol`, :class:`~.Integer`, and other SymPy
 #: datatypes and allows the use of standard factorial notation (e.g. ``x!``).
-standard_transformations: tTuple[TRANS, ...] \
+standard_transformations: tuple[TRANS, ...] \
     = (lambda_notation, auto_symbol, repeated_decimals, auto_number,
        factorial_notation)
 
 
 def stringify_expr(s: str, local_dict: DICT, global_dict: DICT,
-        transformations: tTuple[TRANS, ...]) -> str:
+        transformations: tuple[TRANS, ...]) -> str:
     """
     Converts the string ``s`` to Python code, in ``local_dict``
 
@@ -908,11 +909,15 @@ def eval_expr(code, local_dict: DICT, global_dict: DICT):
     return expr
 
 
-def parse_expr(s: str, local_dict: Optional[DICT] = None,
-               transformations: tUnion[tTuple[TRANS, ...], str] \
+def parse_expr(s: str, local_dict: DICT | None = None,
+               transformations: tuple[TRANS, ...] | str \
                    = standard_transformations,
-               global_dict: Optional[DICT] = None, evaluate=True):
+               global_dict: DICT | None = None, evaluate=True):
     """Converts the string ``s`` to a SymPy expression, in ``local_dict``.
+
+    .. warning::
+        Note that this function uses ``eval``, and thus shouldn't be used on
+        unsanitized input.
 
     Parameters
     ==========
@@ -1080,7 +1085,7 @@ def parse_expr(s: str, local_dict: Optional[DICT] = None,
         for i in local_dict.pop(null, ()):
             local_dict[i] = null
         return rv
-    except Exception as e:
+    except Exception as e: # noqa: BLE001
         # restore neutral definitions for names
         for i in local_dict.pop(null, ()):
             local_dict[i] = null
@@ -1108,7 +1113,7 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
         ast.Div: 'Mul',
         ast.BitOr: 'Or',
         ast.BitAnd: 'And',
-        ast.BitXor: 'Not',
+        ast.BitXor: 'Xor',
     }
     functions = (
         'Abs', 'im', 're', 'sign', 'arg', 'conjugate',
@@ -1160,7 +1165,9 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
                 arg_func = arg.func
                 if isinstance(arg_func, ast.Call):
                     arg_func = arg_func.func
-                if arg_func.id == func:
+                # Safety check: Ensure arg_func is a Name before accessing `.id`.
+                # Lambda nodes (used in ast.Div) would raise an error if not checked.
+                if isinstance(arg_func, ast.Name) and arg_func.id == func:
                     result.extend(self.flatten(arg.args, func))
                 else:
                     result.append(arg)
@@ -1197,8 +1204,44 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
                     keywords=[ast.keyword(arg='evaluate', value=ast.Constant(value=False))]
                 )
 
-            if rev:  # undo reversal
-                left, right = right, left
+                if rev:  # undo reversal
+                    left, right = right, left
+
+                # This is for checking if numerator is 1, if it is, return just Pow(denom, -1)
+                # For any division operator like x/y, the expression returned is Mul(x, Pow(y,-1))
+                # But if x = 1, returning Mul(1, Pow(y,-1)) is redundant so we strip the extra 1 before Mul node is created
+                #
+                # For ast.Div operators we create a temporary lambda node which eliminates extra 1
+                # a lambda function is passed as an argument (string) to ast.parse, ast.parse creates a module
+                # This module has an expr which can be captured by body[0] (O because there is only one expr)
+                # This expr's value contains the lambda node which is called by .value
+                #
+                # The lambda function works like this:
+                # - if n == 1: it just checks if numerator is 1, (e.g. from "-(-1)"), we strictly return denominator
+                # This ensures that the redundant "1" is stripped.
+                # example: "-(-1)/x" == Pow(x, -1)
+                #
+                # - Flattening (if isinstance(n, Mul)): We are using a lambda function, the AST flatten()
+                # cannot see inside to flatten chained operations. We have to integrate this with lambda function
+                # example: "x/y/z": lambda sees n = 'x/y' (Mul Operator). We unpack it using (*n.args) to ensure
+                # the result we get is Mul(x, Pow(y, -1), Pow(z, -1)), avoiding nested structures
+                # like Mul(Mul(x, Pow(y,-1)), Pow(z, -1))
+                #
+                # - For standard cases (else) : For cases just like "x/y", node has a normal structure.
+                # example: "x/y": Mul(x, Pow(y, -1))
+                temp_node = ast.parse("lambda n, d: d if n == 1 else (Mul(*n.args, d, evaluate=False) \
+                                      if isinstance(n, Mul) else Mul(n, d, evaluate=False))").body[0].value
+
+                # For division we return the node immediately.
+                # func=temp.node: The lambda AST Node created acts as a function.
+                # args=[left, right]: We pass numerator(left) and denominator(right) as arguments (which are n and d)
+                # keywords=[]: If ommited, keywords would have the default value of None, it will just return an AttributeError.
+                return ast.Call(
+                    func=temp_node,
+                    args=[left, right],
+                    keywords=[]
+                )
+
             new_node = ast.Call(
                 func=ast.Name(id=sympy_class, ctx=ast.Load()),
                 args=[left, right],
@@ -1213,10 +1256,13 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
         return node
 
     def visit_Call(self, node):
-        new_node = self.generic_visit(node)
         if isinstance(node.func, ast.Name) and node.func.id in self.functions:
-            new_node.keywords.append(ast.keyword(arg='evaluate', value=ast.Constant(value=False)))
-        return new_node
+            func = self.visit(node.func)
+            args = [self.visit(arg) for arg in node.args]
+            keywords = [ast.keyword(arg=keyword.arg, value=self.visit(keyword.value)) for keyword in node.keywords]
+            keywords.append(ast.keyword(arg='evaluate', value=ast.Constant(value=False)))
+            return ast.Call(func=func, args=args, keywords=keywords)
+        return self.generic_visit(node)
 
 
 _transformation = {  # items can be added but never re-ordered

@@ -1,13 +1,14 @@
+from __future__ import annotations
 import collections.abc
 import operator
 from collections import defaultdict, Counter
 from functools import reduce
 import itertools
 from itertools import accumulate
-from typing import Optional, List, Tuple as tTuple
 
 import typing
 
+from sympy import Sum
 from sympy.core.numbers import Integer
 from sympy.core.relational import Equality
 from sympy.functions.special.tensor_functions import KroneckerDelta
@@ -37,7 +38,7 @@ from sympy.core.sympify import _sympify
 
 
 class _ArrayExpr(Expr):
-    shape: tTuple[Expr, ...]
+    shape: tuple[Expr, ...]
 
     def __getitem__(self, item):
         if not isinstance(item, collections.abc.Iterable):
@@ -157,6 +158,33 @@ class ZeroArray(_ArrayExpr):
         return S.Zero
 
 
+class ArraySum(Sum, _ArrayExpr):
+
+    is_zero = False  # ArraySum has ZeroArray (not S.Zero) as addition identity element.
+
+    def __new__(cls, function, *limits):
+        obj = Sum.__new__(cls, function, *limits)
+        return obj
+
+    def doit(self, **hints):
+        done = super().doit(**hints)
+        if (done == 0) == True:
+            return ZeroArray(*self.shape)
+        return done
+
+    def _eval_simplify(self, **kwargs):
+        ret = super()._eval_simplify(**kwargs)
+        if (ret == 0) == True:
+            return ZeroArray(*self.shape)
+        if isinstance(ret, Sum) and not isinstance(ret, ArraySum):
+            ret = ArraySum(ret.function, *ret.limits)
+        return ret
+
+    @property
+    def shape(self):
+        return self.function.shape
+
+
 class OneArray(_ArrayExpr):
     """
     Symbolic array of ones.
@@ -182,7 +210,9 @@ class OneArray(_ArrayExpr):
         return S.One
 
 
-class _CodegenArrayAbstract(Basic):
+class _CodegenArrayAbstract(Expr):
+
+    is_Atom = True
 
     @property
     def subranks(self):
@@ -229,6 +259,7 @@ class _CodegenArrayAbstract(Basic):
         else:
             return self._canonicalize()
 
+
 class ArrayTensorProduct(_CodegenArrayAbstract):
     r"""
     Class to represent the tensor product of array-like objects.
@@ -258,6 +289,26 @@ class ArrayTensorProduct(_CodegenArrayAbstract):
         args = self._flatten(args)
 
         ranks = [get_rank(arg) for arg in args]
+
+        # Check if there are nested ArraySum objects:
+        array_sums_i = []
+        for i, arg in enumerate(args):
+            if isinstance(arg, ArraySum):
+                array_sums_i.append(i)
+
+        if len(array_sums_i) > 0:
+            new_limits = []
+            new_args = []
+            last_i = 0
+            for i in array_sums_i:
+                array_sum = args[i]
+                new_args.extend(args[last_i:i])
+                replacements = {j: Dummy(str(j)) for j, jlow, jupp in array_sum.limits}
+                new_limits.extend([(replacements[j], jlow, jupp) for j, jlow, jupp in array_sum.limits])
+                new_args.append(array_sum.function.subs(replacements))
+                last_i = i + 1
+            new_args.extend(args[last_i:])
+            return ArraySum(_array_tensor_product(*new_args), *new_limits)
 
         # Check if there are nested permutation and lift them up:
         permutation_cycles = []
@@ -330,7 +381,7 @@ class ArrayAdd(_CodegenArrayAbstract):
         ranks = list(set(ranks))
         if len(ranks) != 1:
             raise ValueError("summing arrays of different ranks")
-        shapes = [arg.shape for arg in args]
+        shapes = [arg.shape if hasattr(arg, "shape") else () for arg in args]
         if len({i for i in shapes if i is not None}) > 1:
             raise ValueError("mismatching shapes in addition")
 
@@ -545,7 +596,7 @@ class PermuteDims(_CodegenArrayAbstract):
         permutation_array_blocks_up = []
         image_form = _af_invert(permutation.array_form)
         counter = 0
-        for i, e in enumerate(subranks):
+        for i in range(len(subranks)):
             current = []
             for j in range(cumul[i], cumul[i+1]):
                 if j in contraction_indices_flat:
@@ -731,12 +782,12 @@ class ArrayDiagonal(_CodegenArrayAbstract):
     In a 2-dimensional array it returns the diagonal, this looks like the
     operation:
 
-    `A_{ij} \rightarrow A_{ii}`
+    `A_{ij} \Longrightarrow A_{ii}`
 
     The diagonal over axes 1 and 2 (the second and third) of the tensor product
     of two 2-dimensional arrays `A \otimes B` is
 
-    `\Big[ A_{ab} B_{cd} \Big]_{abcd} \rightarrow \Big[ A_{ai} B_{id} \Big]_{adi}`
+    `\Big[ A_{ab} B_{cd} \Big]_{abcd} \Longrightarrow \Big[ A_{ai} B_{id} \Big]_{adi}`
 
     In this last example the array expression has been reduced from
     4-dimensional to 3-dimensional. Notice that no contraction has occurred,
@@ -799,7 +850,7 @@ class ArrayDiagonal(_CodegenArrayAbstract):
         if isinstance(expr, ArrayAdd):
             return self._ArrayDiagonal_denest_ArrayAdd(expr, *diagonal_indices)
         if isinstance(expr, ArrayDiagonal):
-            return self._ArrayDiagonal_denest_ArrayDiagonal(expr, *diagonal_indices)
+            return self._ArrayDiagonal_denest_ArrayDiagonal(expr, get_rank(self), *diagonal_indices)
         if isinstance(expr, PermuteDims):
             return self._ArrayDiagonal_denest_PermuteDims(expr, *diagonal_indices)
         if isinstance(expr, (ZeroArray, ZeroMatrix)):
@@ -835,26 +886,22 @@ class ArrayDiagonal(_CodegenArrayAbstract):
         return self.args[1:]
 
     @staticmethod
-    def _flatten(expr, *outer_diagonal_indices):
-        inner_diagonal_indices = expr.diagonal_indices
-        all_inner = [j for i in inner_diagonal_indices for j in i]
-        all_inner.sort()
-        # TODO: add API for total rank and cumulative rank:
-        total_rank = _get_subrank(expr)
-        inner_rank = len(all_inner)
-        outer_rank = total_rank - inner_rank
-        shifts = [0 for i in range(outer_rank)]
-        counter = 0
-        pointer = 0
-        for i in range(outer_rank):
-            while pointer < inner_rank and counter >= all_inner[pointer]:
-                counter += 1
-                pointer += 1
-            shifts[i] += pointer
-            counter += 1
-        outer_diagonal_indices = tuple(tuple(shifts[j] + j for j in i) for i in outer_diagonal_indices)
-        diagonal_indices = inner_diagonal_indices + outer_diagonal_indices
-        return _array_diagonal(expr.expr, *diagonal_indices)
+    def _flatten(expr: ArrayDiagonal, outer_dims, *outer_diagonal_indices):
+        inddown = ArrayDiagonal._push_indices_down(outer_diagonal_indices, list(range(outer_dims)), get_rank(expr))
+        inddown = tuple(i for i in inddown)
+        inddow2 = ArrayDiagonal._push_indices_down(expr.diagonal_indices, inddown, get_rank(expr.expr))
+        new_diag_indices = []
+        for i in inddow2:
+            if not isinstance(i, (tuple, Tuple)):
+                continue
+            diag_group = []
+            for j in i:
+                if isinstance(j, (tuple, Tuple)):
+                    diag_group.extend(list(j))
+                else:
+                    diag_group.append(j)
+            new_diag_indices.append(tuple(diag_group))
+        return _array_diagonal(expr.expr, *new_diag_indices)
 
     @classmethod
     def _ArrayDiagonal_denest_ArrayAdd(cls, expr, *diagonal_indices):
@@ -951,7 +998,7 @@ class ArrayElementwiseApplyFunc(_CodegenArrayAbstract):
 
     @property
     def shape(self):
-        return self.expr.shape
+        return get_shape(self.expr)
 
     def _get_function_fdiff(self):
         d = Dummy("d")
@@ -969,11 +1016,47 @@ class ArrayElementwiseApplyFunc(_CodegenArrayAbstract):
             expr = expr.as_explicit()
         return expr.applyfunc(self.function)
 
+    def _canonicalize(self):
+        return self
+
 
 class ArrayContraction(_CodegenArrayAbstract):
     r"""
-    This class is meant to represent contractions of arrays in a form easily
-    processable by the code printers.
+    Contraction operation of array axes.
+
+    Explanation
+    ===========
+
+    In a 2-dimensional array it returns the trace, this looks like the
+    operation:
+
+    `A_{ij} \Longrightarrow \sum_{i} A_{ii}`
+
+    Examples
+    ========
+
+    >>> from sympy import MatrixSymbol
+    >>> from sympy.tensor.array.expressions import ArrayContraction, ArrayTensorProduct
+    >>> M = MatrixSymbol('M', 3, 3)
+    >>> N = MatrixSymbol('N', 3, 3)
+    >>> ArrayContraction(M, (0, 1))
+    ArrayContraction(M, (0, 1))
+
+    We can define a matrix multiplication equivalent operation:
+
+    >>> expr = ArrayContraction(ArrayTensorProduct(M, N), (1, 2))
+    >>> expr
+    ArrayContraction(ArrayTensorProduct(M, N), (1, 2))
+
+    Indeed, given two matrices `M` and `N`, the contraction of the second axis of `M`
+    with the first of `N`, here represented as the tuple (1, 2), is equivalent to the matrix multiplication between `M` and `N`.
+
+    This can be verified with the proper conversion function:
+
+    >>> from sympy.tensor.array.expressions import convert_array_to_matrix
+    >>> convert_array_to_matrix(expr)
+    M*N
+
     """
 
     def __new__(cls, expr, *contraction_indices, **kwargs):
@@ -1004,6 +1087,9 @@ class ArrayContraction(_CodegenArrayAbstract):
 
         if len(contraction_indices) == 0:
             return expr
+
+        if isinstance(expr, ArraySum):
+            return expr.func(_array_contraction(expr.function, *contraction_indices), expr.limits)
 
         if isinstance(expr, ArrayContraction):
             return self._ArrayContraction_denest_ArrayContraction(expr, *contraction_indices)
@@ -1588,9 +1674,9 @@ class _ArgE:
     the second index is contracted to the 4th (i.e. number ``3``) group of the
     array contraction object.
     """
-    indices: List[Optional[int]]
+    indices: list[int | None]
 
-    def __init__(self, element, indices: Optional[List[Optional[int]]] = None):
+    def __init__(self, element, indices: list[int | None] | None = None):
         self.element = element
         if indices is None:
             self.indices = [None for i in range(get_rank(element))]
@@ -1598,8 +1684,7 @@ class _ArgE:
             self.indices = indices
 
     def __str__(self):
-        return "_ArgE(%s, %s)" % (self.element, self.indices)
-
+        return f"_ArgE({self.element}, {self.indices})"
     __repr__ = __str__
 
 
@@ -1615,7 +1700,7 @@ class _IndPos:
         self.rel = rel
 
     def __str__(self):
-        return "_IndPos(%i, %i)" % (self.arg, self.rel)
+        return f"_IndPos({self.arg}, {self.rel})"
 
     __repr__ = __str__
 
@@ -1641,8 +1726,8 @@ class _EditArrayContraction:
     def __init__(self, base_array: typing.Union[ArrayContraction, ArrayDiagonal, ArrayTensorProduct]):
 
         expr: Basic
-        diagonalized: tTuple[tTuple[int, ...], ...]
-        contraction_indices: List[tTuple[int]]
+        diagonalized: tuple[tuple[int, ...], ...]
+        contraction_indices: list[tuple[int]]
         if isinstance(base_array, ArrayContraction):
             mapping = _get_mapping_from_subranks(base_array.subranks)
             expr = base_array.expr
@@ -1678,14 +1763,14 @@ class _EditArrayContraction:
         else:
             args = [expr]
 
-        args_with_ind: List[_ArgE] = [_ArgE(arg) for arg in args]
+        args_with_ind: list[_ArgE] = [_ArgE(arg) for arg in args]
         for i, contraction_tuple in enumerate(contraction_indices):
             for j in contraction_tuple:
                 arg_pos, rel_pos = mapping[j]
                 args_with_ind[arg_pos].indices[rel_pos] = i
-        self.args_with_ind: List[_ArgE] = args_with_ind
+        self.args_with_ind: list[_ArgE] = args_with_ind
         self.number_of_contraction_indices: int = len(contraction_indices)
-        self._track_permutation: Optional[List[List[int]]] = None
+        self._track_permutation: list[list[int]] | None = None
 
         mapping = _get_mapping_from_subranks(base_array.subranks)
 
@@ -1794,8 +1879,8 @@ class _EditArrayContraction:
         expr3 = _permute_dims(expr2, permutation)
         return expr3
 
-    def get_contraction_indices(self) -> List[List[int]]:
-        contraction_indices: List[List[int]] = [[] for i in range(self.number_of_contraction_indices)]
+    def get_contraction_indices(self) -> list[list[int]]:
+        contraction_indices: list[list[int]] = [[] for i in range(self.number_of_contraction_indices)]
         current_position: int = 0
         for arg_with_ind in self.args_with_ind:
             for j in arg_with_ind.indices:
@@ -1804,18 +1889,18 @@ class _EditArrayContraction:
                 current_position += 1
         return contraction_indices
 
-    def get_mapping_for_index(self, ind) -> List[_IndPos]:
+    def get_mapping_for_index(self, ind) -> list[_IndPos]:
         if ind >= self.number_of_contraction_indices:
             raise ValueError("index value exceeding the index range")
-        positions: List[_IndPos] = []
+        positions: list[_IndPos] = []
         for i, arg_with_ind in enumerate(self.args_with_ind):
             for j, arg_ind in enumerate(arg_with_ind.indices):
                 if ind == arg_ind:
                     positions.append(_IndPos(i, j))
         return positions
 
-    def get_contraction_indices_to_ind_rel_pos(self) -> List[List[_IndPos]]:
-        contraction_indices: List[List[_IndPos]] = [[] for i in range(self.number_of_contraction_indices)]
+    def get_contraction_indices_to_ind_rel_pos(self) -> list[list[_IndPos]]:
+        contraction_indices: list[list[_IndPos]] = [[] for i in range(self.number_of_contraction_indices)]
         for i, arg_with_ind in enumerate(self.args_with_ind):
             for j, ind in enumerate(arg_with_ind.indices):
                 if ind is not None:
@@ -1832,11 +1917,11 @@ class _EditArrayContraction:
                 counter += 1
         return counter
 
-    def get_args_with_index(self, index: int) -> List[_ArgE]:
+    def get_args_with_index(self, index: int) -> list[_ArgE]:
         """
         Get a list of arguments having the given index.
         """
-        ret: List[_ArgE] = [i for i in self.args_with_ind if index in i.indices]
+        ret: list[_ArgE] = [i for i in self.args_with_ind if index in i.indices]
         return ret
 
     @property
@@ -1946,6 +2031,8 @@ def nest_permutation(expr):
 
 
 def _array_tensor_product(*args, **kwargs):
+    if all(not isinstance(i, (_ArrayExpr, _CodegenArrayAbstract)) and get_shape(i) == () for i in args):
+        return Mul.fromiter(args)
     return ArrayTensorProduct(*args, canonicalize=True, **kwargs)
 
 

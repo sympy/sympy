@@ -2,19 +2,18 @@
 
 from __future__ import annotations
 
-from typing import Any
-from collections.abc import Sequence, Iterable
+from typing import Any, TYPE_CHECKING
 
 import itertools
 
 from sympy import Dummy
 from sympy.core import S
-from sympy.core.expr import Expr
 from sympy.core.exprtools import factor_terms
 from sympy.core.sorting import default_sort_key
 from sympy.logic.boolalg import Boolean
 from sympy.polys import Poly, groebner, roots
 from sympy.polys.domains import ZZ
+from sympy.polys.polyoptions import build_options
 from sympy.polys.polytools import parallel_poly_from_expr, sqf_part
 from sympy.polys.polyerrors import (
     ComputationFailed,
@@ -29,6 +28,10 @@ from sympy.utilities.iterables import cartes
 from sympy.utilities.misc import filldedent
 from sympy.logic.boolalg import Or, And
 from sympy.core.relational import Eq
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence, Iterable
+    from sympy.core.expr import Expr
 
 
 class SolveFailed(Exception):
@@ -394,6 +397,13 @@ def solve_triangulated(polys, *gens, **args):
     >>> solve_triangulated(F, x, y, z)
     [(0, 0, 1), (0, 1, 0), (1, 0, 0)]
 
+    Using extension for algebraic solutions.
+
+    >>> solve_triangulated(F, x, y, z, extension=True) #doctest: +NORMALIZE_WHITESPACE
+    [(0, 0, 1), (0, 1, 0), (1, 0, 0),
+     (CRootOf(x**2 + 2*x - 1, 0), CRootOf(x**2 + 2*x - 1, 0), CRootOf(x**2 + 2*x - 1, 0)),
+     (CRootOf(x**2 + 2*x - 1, 1), CRootOf(x**2 + 2*x - 1, 1), CRootOf(x**2 + 2*x - 1, 1))]
+
     References
     ==========
 
@@ -402,20 +412,34 @@ def solve_triangulated(polys, *gens, **args):
     Algebraic Algorithms and Error-Correcting Codes, LNCS 356 247--257, 1989
 
     """
+    opt = build_options(gens, args)
+
     G = groebner(polys, gens, polys=True)
     G = list(reversed(G))
 
-    domain = args.get('domain')
+    extension = opt.get('extension', False)
+    if extension:
+        def _solve_univariate(f):
+            return [r for r, _ in f.all_roots(multiple=False, radicals=False)]
+    else:
+        domain = opt.get('domain')
 
-    if domain is not None:
-        for i, g in enumerate(G):
-            G[i] = g.set_domain(domain)
+        if domain is not None:
+            for i, g in enumerate(G):
+                G[i] = g.set_domain(domain)
+
+        def _solve_univariate(f):
+            return list(f.ground_roots().keys())
 
     f, G = G[0].ltrim(-1), G[1:]
     dom = f.get_domain()
 
-    zeros = f.ground_roots()
-    solutions = {((zero,), dom) for zero in zeros}
+    zeros = _solve_univariate(f)
+
+    if extension:
+        solutions = {((zero,), dom.algebraic_field(zero)) for zero in zeros}
+    else:
+        solutions = {((zero,), dom) for zero in zeros}
 
     var_seq = reversed(gens[:-1])
     vars_seq = postfixes(gens[1:])
@@ -430,16 +454,18 @@ def solve_triangulated(polys, *gens, **args):
                 _vars = (var,) + vars
 
                 if g.has_only_gens(*_vars) and g.degree(var) != 0:
+                    if extension:
+                        g = g.set_domain(g.domain.unify(dom))
                     h = g.ltrim(var).eval(dict(mapping))
 
                     if g.degree(var) == h.degree():
                         H.append(h)
 
             p = min(H, key=lambda h: h.degree())
-            zeros = p.ground_roots()
+            zeros = _solve_univariate(p)
 
             for zero in zeros:
-                if not zero.is_Rational:
+                if not (zero in dom):
                     dom_zero = dom.algebraic_field(zero)
                 else:
                     dom_zero = dom

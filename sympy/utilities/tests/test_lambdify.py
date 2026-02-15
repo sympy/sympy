@@ -35,6 +35,7 @@ from sympy.integrals.integrals import Integral
 from sympy.logic.boolalg import (And, false, ITE, Not, Or, true)
 from sympy.matrices.expressions.dotproduct import DotProduct
 from sympy.simplify.cse_main import cse
+from sympy.stats import MultivariateNormal
 from sympy.tensor.array import derive_by_array, Array
 from sympy.tensor.array.expressions import ArraySymbol
 from sympy.tensor.indexed import IndexedBase, Idx
@@ -55,7 +56,7 @@ from sympy.printing.lambdarepr import LambdaPrinter
 from sympy.printing.numpy import NumPyPrinter
 from sympy.utilities.lambdify import implemented_function, lambdastr
 from sympy.testing.pytest import skip
-from sympy.utilities.decorator import conserve_mpmath_dps
+from sympy.external.mpmath import conserve_mpmath_dps
 from sympy.utilities.exceptions import ignore_warnings
 from sympy.external import import_module
 from sympy.functions.special.gamma_functions import uppergamma, lowergamma
@@ -73,6 +74,7 @@ tensorflow = import_module('tensorflow')
 cupy = import_module('cupy')
 jax = import_module('jax')
 numba = import_module('numba')
+uncertainties = import_module('uncertainties')
 
 if tensorflow:
     # Hide Tensorflow warnings
@@ -727,6 +729,61 @@ def test_scipy_sparse_matrix():
     B = f(1, 2)
     assert isinstance(B, scipy.sparse.coo_matrix)
 
+
+
+def test_umath_basic_math():
+    if not uncertainties:
+        skip("uncertainties not installed.")
+    if not numpy:
+        skip("numpy not installed.")
+
+    x, y, z = symbols("x y z")
+    f = lambdify((x, y, z), x**2 + y * z, "umath")
+
+    res = f(uncertainties.ufloat(2.0, 0.1), uncertainties.ufloat(3.0, 0.2), uncertainties.ufloat(4.0, 0.3))
+
+    numpy.testing.assert_allclose([res.nominal_value, res.std_dev], [16, 1.268857754044952])
+
+def test_umath_functions():
+    if not uncertainties:
+        skip("uncertainties not installed.")
+    if not numpy:
+        skip("numpy not installed.")
+
+    x = symbols("x")
+    f = lambdify((x,), log(x, 2), "umath")
+    res = f(uncertainties.ufloat(8, 0.25))
+
+    numpy.testing.assert_allclose([res.nominal_value, res.std_dev], [3, 0.045084220027780106])
+
+    f = lambdify((x,), sin(x)**2 + cos(x)**2, "umath")
+    res = f(uncertainties.ufloat(1, 1))
+
+    numpy.testing.assert_allclose([res.nominal_value, res.std_dev], [1, 0])
+
+    f = lambdify((x,), sin(x * pi), "umath")
+    res = f(uncertainties.ufloat(2, 1.0))
+
+    numpy.testing.assert_allclose([res.nominal_value, res.std_dev], [0, float(pi)], atol=1e-15)
+
+def test_unumpy_vectorized():
+    if not uncertainties:
+        skip("uncertainties not installed.")
+    if not numpy:
+        skip("numpy not installed.")
+
+    x, y = symbols("x y")
+    f = lambdify((x, y), Matrix([x + y, x**2, sqrt(y)]), "unumpy")
+    res = f(uncertainties.ufloat(5, 0.1), uncertainties.ufloat(1, 0.5)) * 1
+
+    assert len(res) == 3
+    numpy.testing.assert_allclose(uncertainties.unumpy.nominal_values(res), [ [6], [25], [1] ])
+    numpy.testing.assert_allclose(uncertainties.unumpy.std_devs(res), [ [0.5099019513492785], [1], [0.25] ])
+
+    f = lambdify((x, y), Matrix([sin(x), cos(x)]).dot(Matrix([1, 2])), "unumpy")
+    res = f(uncertainties.ufloat(pi, 0.2), uncertainties.ufloat(pi/2, 0.2)) * 1
+
+    numpy.testing.assert_allclose([ res.nominal_value, res.std_dev ], [ -2, 0.2 ])
 
 def test_python_div_zero_issue_11306():
     if not numpy:
@@ -2261,3 +2318,15 @@ def test_array_symbol():
     a = ArraySymbol('a', (3,))
     f = lambdify((a), a)
     assert numpy.all(f(numpy.array([1,2,3])) == numpy.array([1,2,3]))
+
+
+def test_issue_28803_jointrandonsymbol_recursion():
+    """Test that JointRandomSymbol doesn't cause infinite recursion in lambdify."""
+
+    # Used to cause infinite recursion
+    K = MatrixSymbol("K", 4, 4)
+    z = MultivariateNormal("z", [0] * 4, K)
+    a = symbols("a")
+
+    # Should not raise RecursionError
+    lambdify(a, z * a)

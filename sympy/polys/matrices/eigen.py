@@ -9,7 +9,6 @@ from ..agca.extensions import FiniteExtension
 from ..factortools import dup_factor_list
 from ..polyroots import roots
 from ..polytools import Poly
-from ..rootoftools import CRootOf
 
 from .domainmatrix import DomainMatrix
 
@@ -76,11 +75,9 @@ def dom_eigenvects_to_sympy(
         eigenvects = [[field.to_sympy(x) for x in vect] for vect in eigenvects]
 
         degree = minpoly.degree()
-        minpoly = minpoly.as_expr()
-        eigenvals = roots(minpoly, l, **kwargs)
+        eigenvals = roots(minpoly.as_expr(), l, **kwargs)
         if len(eigenvals) != degree:
-            eigenvals = [CRootOf(minpoly, l, idx) for idx in range(degree)]
-
+            eigenvals = minpoly.all_roots(multiple=True)
         for eigenvalue in eigenvals:
             new_eigenvects = [
                 Matrix([x.subs(l, eigenvalue) for x in vect])

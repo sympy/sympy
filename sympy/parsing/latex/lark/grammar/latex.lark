@@ -195,6 +195,7 @@ _atomic_expr: _one_letter_symbol
 group_round_parentheses: L_PAREN _expression R_PAREN
 group_square_brackets: L_BRACKET _expression R_BRACKET
 group_curly_parentheses: L_BRACE _expression R_BRACE
+group_curly_literal_parentheses: L_BRACE_LITERAL _expression R_BRACE_LITERAL
 
 _relation: eq | ne | lt | lte | gt | gte
 
@@ -215,7 +216,7 @@ mul: _expression_mul MUL_SYMBOL _expression_power
 div: _expression_mul DIV_SYMBOL _expression_power
 
 adjacent_expressions: (_one_letter_symbol | number) _expression_mul
-    | group_round_parentheses (group_round_parentheses | _one_letter_symbol)
+    | (group_round_parentheses | group_square_brackets | group_curly_literal_parentheses) (group_round_parentheses | group_square_brackets | group_curly_parentheses | group_curly_literal_parentheses | _one_letter_symbol)
     | _function _function
     | fraction _expression_mul
 

@@ -456,6 +456,7 @@ class Collector(DefaultPrinting):
         pc_relators = {}
         perm_to_free = {}
         pcgs = self.pcgs
+        dtype = type(free_group.identity)
 
         for gen, s in zip(pcgs, free_group.generators):
             perm_to_free[gen**-1] = s**-1
@@ -474,9 +475,7 @@ class Collector(DefaultPrinting):
             l = G.generator_product(gen**re, original = True)
             l.reverse()
 
-            word = free_group.identity
-            for g in l:
-                word = word*perm_to_free[g]
+            word = dtype.prod(perm_to_free[g] for g in l)
 
             word = self.collected_word(word)
             pc_relators[relation] = word if word else ()
@@ -495,9 +494,7 @@ class Collector(DefaultPrinting):
 
                     l = G.generator_product(gens, original = True)
                     l.reverse()
-                    word = free_group.identity
-                    for g in l:
-                        word = word*perm_to_free[g]
+                    word = dtype.prod(perm_to_free[g] for g in l)
 
                     word = self.collected_word(word)
                     pc_relators[relation] = word if word else ()
@@ -561,9 +558,8 @@ class Collector(DefaultPrinting):
         for sym, g in zip(free_group.generators, self.pcgs):
             perm_to_free[g**-1] = sym**-1
             perm_to_free[g] = sym
-        w = free_group.identity
-        for g in gens:
-            w = w*perm_to_free[g]
+        dtype = type(free_group.identity)
+        w = dtype.prod(perm_to_free[g] for g in gens)
 
         word = self.collected_word(w)
 
@@ -674,7 +670,7 @@ class Collector(DefaultPrinting):
         >>> gens = [G[0], G[1]]
         >>> ipcgs = collector.induced_pcgs(gens)
         >>> [gen.order() for gen in ipcgs]
-        [3]
+        [3, 3]
 
         """
         z = [1]*len(self.pcgs)
@@ -683,7 +679,7 @@ class Collector(DefaultPrinting):
             g = G.pop(0)
             h = self._sift(z, g)
             d = self.depth(h)
-            if d < len(self.pcgs):
+            if d <= len(self.pcgs) and z[d-1] == 1:
                 for gen in z:
                     if gen != 1:
                         G.append(h**-1*gen**-1*h*gen)
@@ -705,6 +701,6 @@ class Collector(DefaultPrinting):
                 h = gen**(-f)*h
                 e[i] = f
                 d = self.depth(h)
-        if h == 1:
+        if h.is_identity:
             return e
         return False

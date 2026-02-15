@@ -1,12 +1,14 @@
 import operator
 from functools import reduce, singledispatch
 
-from sympy.core.expr import Expr
 from sympy.core.singleton import S
+from sympy import MatrixBase, derive_by_array, Integer, Determinant, Function, MatPow, Dummy, Pow, Mul
+from sympy.tensor.array import NDimArray
+from sympy.core.expr import Expr
 from sympy.matrices.expressions.hadamard import HadamardProduct
 from sympy.matrices.expressions.inverse import Inverse
-from sympy.matrices.expressions.matexpr import (MatrixExpr, MatrixSymbol)
-from sympy.matrices.expressions.special import Identity, OneMatrix
+from sympy.matrices.expressions.matexpr import (MatrixExpr, MatrixSymbol, MatrixElement)
+from sympy.matrices.expressions.special import Identity, OneMatrix, MatrixUnit
 from sympy.matrices.expressions.transpose import Transpose
 from sympy.combinatorics.permutations import _af_invert
 from sympy.matrices.expressions.applyfunc import ElementwiseApplyFunction
@@ -14,7 +16,7 @@ from sympy.tensor.array.expressions.array_expressions import (
     _ArrayExpr, ZeroArray, ArraySymbol, ArrayTensorProduct, ArrayAdd,
     PermuteDims, ArrayDiagonal, ArrayElementwiseApplyFunc, get_rank,
     get_shape, ArrayContraction, _array_tensor_product, _array_contraction,
-    _array_diagonal, _array_add, _permute_dims, Reshape)
+    _array_diagonal, _array_add, _permute_dims, Reshape, ArraySum)
 from sympy.tensor.array.expressions.from_matrix_to_array import convert_matrix_to_array
 
 
@@ -28,7 +30,33 @@ def array_derive(expr, x):
 
 @array_derive.register(Expr)
 def _(expr: Expr, x: _ArrayExpr):
+    if expr.free_symbols & x.free_symbols:
+        if isinstance(expr, MatrixElement) and isinstance(x, MatrixSymbol):
+            return MatrixUnit(x.shape[0], x.shape[1], expr.i, expr.j)
+        raise NotImplementedError("algorithm not implemented for this case")
     return ZeroArray(*x.shape)
+
+
+@array_derive.register(Mul)
+def _(expr: Mul, x: _ArrayExpr):
+    args = expr.args
+    return ArrayAdd.fromiter([
+        _array_tensor_product(Mul.fromiter(args[:i]), array_derive(arg, x), Mul.fromiter(args[(i+1):]))
+        for i, arg in enumerate(args)
+    ])
+
+
+@array_derive.register(Pow)
+def _(expr: Pow, x: _ArrayExpr):
+    return Pow._eval_derivative(expr, x)
+
+
+@array_derive.register(Function)
+def _(expr: Function, x: _ArrayExpr):
+    if len(expr.args) != 1:
+        raise NotImplementedError("only 1-parameter functions are supported")
+    dexpr = array_derive(expr.args[0], x)
+    return _array_tensor_product(expr.fdiff(), dexpr)
 
 
 @array_derive.register(ArrayTensorProduct)
@@ -80,6 +108,16 @@ def _(expr: MatrixSymbol, x: _ArrayExpr):
             [0, 2, 1, 3]
         )
     return ZeroArray(*(x.shape + expr.shape))
+
+
+@array_derive.register(Determinant)
+def _(expr: Determinant, x: Expr):
+    arg = expr.arg
+    arg_inverse = arg.inv()
+    darg = array_derive(arg, x)
+    tp = _array_tensor_product(expr, arg_inverse, darg)
+    tc = _array_contraction(tp, (0, 5), (1, 4))
+    return tc
 
 
 @array_derive.register(Identity)
@@ -144,7 +182,25 @@ def _(expr: ArrayElementwiseApplyFunc, x: Expr):
 @array_derive.register(MatrixExpr)
 def _(expr: MatrixExpr, x: Expr):
     cg = convert_matrix_to_array(expr)
+    if cg == expr:
+        # Avoid infinite looping:
+        raise NotImplementedError()
     return array_derive(cg, x)
+
+
+@array_derive.register(MatPow)
+def _(expr: MatPow, x: Expr):
+    base = expr.base
+    exponent = expr.exp
+    dbase = array_derive(base, x)
+    dexponent = array_derive(exponent, x)
+    if not isinstance(dexponent, ZeroArray) or (dexponent == 0) == True:
+        raise NotImplementedError()
+    d = Dummy("d")
+    tp = _array_tensor_product(base**d, dbase, base**(exponent-d-1))
+    tc = _array_contraction(tp, (1, 4), (5, 6))
+    pd = _permute_dims(tc, [1, 2, 0, 3])
+    return ArraySum(pd,(d, 0, exponent-1))
 
 
 @array_derive.register(HadamardProduct)
@@ -185,6 +241,22 @@ def _(expr: PermuteDims, x: Expr):
 def _(expr: Reshape, x: Expr):
     de = array_derive(expr.expr, x)
     return Reshape(de, get_shape(x) + expr.shape)
+
+
+@array_derive.register(MatrixBase)
+def _(expr: MatrixBase, x):
+    if not set.intersection(expr.free_symbols, x.free_symbols):
+        return ZeroArray(*x.shape, *expr.shape)
+    if isinstance(x, MatrixExpr) and all(isinstance(i, (int, Integer)) for i in x.shape):
+        x = x.as_explicit()
+    if isinstance(x, MatrixBase):
+        return derive_by_array(expr, x)
+    raise NotImplementedError("could not determine derivative")
+
+
+@array_derive.register(NDimArray)
+def _(expr: NDimArray, x):
+    derive_by_array(expr, x)
 
 
 def matrix_derive(expr, x):

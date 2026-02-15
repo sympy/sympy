@@ -32,7 +32,7 @@ class Commutator(Expr):
     commutator, use the ``.doit()`` method.
 
     Canonical ordering of a commutator is ``[A, B]`` for ``A < B``. The
-    arguments of the commutator are put into canonical order using ``__cmp__``.
+    arguments of the commutator are put into canonical order using comparison operators.
     If ``B < A``, then ``[B, A]`` is returned as ``-[A, B]``.
 
     Parameters

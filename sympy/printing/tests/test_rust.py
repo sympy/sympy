@@ -1,8 +1,8 @@
-from sympy.core import (S, pi, oo, symbols, Rational, Integer,
+from sympy.core import (S, pi, oo, symbols, Rational, Integer, Symbol,
                         GoldenRatio, EulerGamma, Catalan, Lambda, Dummy,
                         Eq, Ne, Le, Lt, Gt, Ge, Mod)
 from sympy.functions import (Piecewise, sin, cos, Abs, exp, ceiling, sqrt,
-                             sign, floor)
+                             sign, floor, log)
 from sympy.logic import ITE
 from sympy.testing.pytest import raises
 from sympy.utilities.lambdify import implemented_function
@@ -175,15 +175,15 @@ def test_dereference_printing():
 
 def test_sign():
     expr = sign(x) * y
-    assert rust_code(expr) == "y*x.signum() as f64"
-    assert rust_code(expr, assign_to='r') == "r = y*x.signum() as f64;"
+    assert rust_code(expr) == "y*(if (x == 0.0) { 0.0 } else { (x).signum() }) as f64"
+    assert rust_code(expr, assign_to='r') == "r = y*(if (x == 0.0) { 0.0 } else { (x).signum() }) as f64;"
 
     expr = sign(x + y) + 42
-    assert rust_code(expr) == "(x + y).signum() + 42"
-    assert rust_code(expr, assign_to='r') == "r = (x + y).signum() + 42;"
+    assert rust_code(expr) == "(if (x + y == 0.0) { 0.0 } else { (x + y).signum() }) + 42"
+    assert rust_code(expr, assign_to='r') == "r = (if (x + y == 0.0) { 0.0 } else { (x + y).signum() }) + 42;"
 
     expr = sign(cos(x))
-    assert rust_code(expr) == "x.cos().signum()"
+    assert rust_code(expr) == "(if (x.cos() == 0.0) { 0.0 } else { (x.cos()).signum() })"
 
 
 def test_reserved_words():
@@ -361,3 +361,8 @@ def test_sparse_matrix():
     # gh-15791
     with raises(NotImplementedError):
         rust_code(SparseMatrix([[1, 2, 3]]))
+
+def test_parenthesize_typecast():
+    modulus = Symbol("modulus")
+    exp = (2 ** (2.0 * ceiling(-y + log(x) / log(2.0) + 4)) + 0.5) / (3 * modulus**2)
+    assert(rust_code(exp) == '(1_f64/3.0)*(0.5 + (2.0*(-y + 1.44269504088896*x.ln()).ceil() + 8.0).exp2())*modulus.powi(-2)')

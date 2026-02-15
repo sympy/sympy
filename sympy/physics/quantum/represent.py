@@ -44,9 +44,7 @@ def _sympy_to_scalar(e):
     if isinstance(e, Expr):
         if e.is_Integer:
             return int(e)
-        elif e.is_Float:
-            return float(e)
-        elif e.is_Rational:
+        elif e.is_Float or e.is_Rational:
             return float(e)
         elif e.is_Number or e.is_NumberSymbol or e == I:
             return complex(e)

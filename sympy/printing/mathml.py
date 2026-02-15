@@ -9,13 +9,12 @@ from sympy.core.mul import Mul
 from sympy.core.singleton import S
 from sympy.core.sorting import default_sort_key
 from sympy.core.sympify import sympify
+from sympy.external.mpmath import prec_to_dps, repr_dps, to_str as mlib_to_str
 from sympy.printing.conventions import split_super_sub, requires_partial
 from sympy.printing.precedence import \
     precedence_traditional, PRECEDENCE, PRECEDENCE_TRADITIONAL
 from sympy.printing.pretty.pretty_symbology import greek_unicode
 from sympy.printing.printer import Printer, print_function
-
-from mpmath.libmp import prec_to_dps, repr_dps, to_str as mlib_to_str
 
 
 class MathMLPrinterBase(Printer):
@@ -38,6 +37,7 @@ class MathMLPrinterBase(Printer):
         "root_notation": True,
         "symbol_names": {},
         "mul_symbol_mathml_numbers": '&#xB7;',
+        "disable_split_super_sub": False,
     }
 
     def __init__(self, settings=None):
@@ -72,6 +72,12 @@ class MathMLPrinterBase(Printer):
         xmlbstr = unistr.encode('ascii', 'xmlcharrefreplace')
         res = xmlbstr.decode()
         return res
+
+    def _split_super_sub(self, name):
+        if self._settings["disable_split_super_sub"]:
+            return (name, [], [])
+        else:
+            return split_super_sub(name)
 
 
 class MathMLContentPrinter(MathMLPrinterBase):
@@ -373,7 +379,7 @@ class MathMLContentPrinter(MathMLPrinterBase):
             else:
                 return s
 
-        name, supers, subs = split_super_sub(sym.name)
+        name, supers, subs = self._split_super_sub(sym.name)
         name = translate(name)
         supers = [translate(sup) for sup in supers]
         subs = [translate(sub) for sub in subs]
@@ -997,7 +1003,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
             else:
                 return s
 
-        name, supers, subs = split_super_sub(sym.name)
+        name, supers, subs = self._split_super_sub(sym.name)
         name = translate(name)
         supers = [translate(sup) for sup in supers]
         subs = [translate(sub) for sub in subs]

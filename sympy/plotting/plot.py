@@ -205,7 +205,7 @@ plot_backends = {
 # TODO: Add more plotting options for 3d plots.
 # TODO: Adaptive sampling for 3D plots.
 
-def plot(*args, show=True, **kwargs):
+def plot(*args, show=True, **kwargs) -> Plot:
     """Plots a function of a single variable as a curve.
 
     Parameters
@@ -420,7 +420,7 @@ def plot(*args, show=True, **kwargs):
     return plots
 
 
-def plot_parametric(*args, show=True, **kwargs):
+def plot_parametric(*args, show=True, **kwargs) -> Plot:
     """
     Plots a 2D parametric curve.
 
@@ -615,7 +615,7 @@ def plot_parametric(*args, show=True, **kwargs):
     return plots
 
 
-def plot3d_parametric_line(*args, show=True, **kwargs):
+def plot3d_parametric_line(*args, show=True, **kwargs) -> Plot:
     """
     Plots a 3D parametric line plot.
 
@@ -787,7 +787,7 @@ def _plot3d_plot_contour_helper(Series, *args, **kwargs):
     return plots
 
 
-def plot3d(*args, show=True, **kwargs):
+def plot3d(*args, show=True, **kwargs) -> Plot:
     """
     Plots a 3D surface plot.
 
@@ -923,7 +923,7 @@ def plot3d(*args, show=True, **kwargs):
         SurfaceOver2DRangeSeries, *args, **kwargs)
 
 
-def plot3d_parametric_surface(*args, show=True, **kwargs):
+def plot3d_parametric_surface(*args, show=True, **kwargs) -> Plot:
     """
     Plots a 3D parametric surface plot.
 
@@ -1044,7 +1044,7 @@ def plot3d_parametric_surface(*args, show=True, **kwargs):
         plots.show()
     return plots
 
-def plot_contour(*args, show=True, **kwargs):
+def plot_contour(*args, show=True, **kwargs) -> Plot:
     """
     Draws contour plot of a function
 

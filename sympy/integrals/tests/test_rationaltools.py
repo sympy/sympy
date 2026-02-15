@@ -1,4 +1,4 @@
-from sympy.core.numbers import (I, Rational)
+from sympy.core.numbers import (I, Rational, pi)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, symbols)
 from sympy.functions.elementary.exponential import log
@@ -181,3 +181,29 @@ def test_issue_25896():
     assert ratint((4*x + 7)/(x**2 + 4*x + 6) + 2/x, x) == (
         2*log(x) + 2*log(x**2 + 4*x + 6) - sqrt(2)*atan(
         sqrt(2)*x/2 + sqrt(2))/2)
+
+
+def test_issue_28186():
+    x, w = symbols('x w', real=True, seq=True)
+    f = w**2 * (x - w)**3 / ((x - w)**2 + 1)**2
+    F = (-w**2/2 - w*x + 3*x*atan(w - x)
+         - (x**2/2 - 1)*log(w**2 - 2*w*x + x**2 + 1)
+         - (2*w*x - x**2 - 1)/(2*w**2 - 4*w*x + 2*x**2 + 2))
+    assert integrate(f, w) == F
+    assert (F.diff(w) - f).cancel() == 0
+
+    a, b, c = symbols('a b c', real=True, seq=True)
+    f = 1 / (a*x**2 + b*x + c)
+    d = 4*a*c - b**2
+    F = (
+        - sqrt(-1/d)*log(x + (-4*a*c*sqrt(-1/d) + b**2*sqrt(-1/d) + b)/(2*a))
+        + sqrt(-1/d)*log(x + (4*a*c*sqrt(-1/d) - b**2*sqrt(-1/d) + b)/(2*a))
+    )
+    assert integrate(f, x) == F
+    assert (F.diff(x) - f).ratsimp() == 0
+
+    # https://github.com/sympy/sympy/issues/28657
+    p = 400*pi**2*x**2/(1600*pi**4*x**4 - 796*pi**2*x**2 + 100)
+    P = ratint(p, x)
+    res = P.evalf(subs={x:1e100}) - P.evalf(subs={x:0})
+    assert abs(res - 2.5) < 1e-10

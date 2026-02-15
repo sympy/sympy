@@ -37,15 +37,15 @@ jobs:
       NODE_VERSION: 20
     steps:
       - name: Checkout SymPy
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up Python ${{ env.PYTHON_VERSION }}
-        uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # v5.0.0
+        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Set up Emscripten toolchain
-        uses: mymindstorm/setup-emsdk@6ab9eb1bda2574c4ddb79809fc9247783eaf9021 # v14
+        uses: pyodide/setup-emsdk@ca2dd8aef8c2a0e11743c5c36f0b430ddb694b5c # v15
         with:
           version: ${{ env.EMSCRIPTEN_VERSION }}
           actions-cache-folder: emsdk-cache
@@ -54,13 +54,13 @@ jobs:
         run: pip install pyodide-build
 
       - name: Set up Node.js
-        uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a # v4.2.0
+        uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
         with:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: Retrieve previous test durations from GHA cache
         id: restore-test-durations
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: test_durations_merged.json
           key: ${{ env.DURATIONS_CACHE_NAME }}
@@ -95,7 +95,7 @@ jobs:
 
       - name: Upload test duration artifacts
         if: always()
-        uses: actions/upload-artifact@v4.4.3
+        uses: actions/upload-artifact@v6
         with:
           name: pytest_durations_${{ matrix.group }}
           path: test_durations_group_${{ matrix.group }}.json
@@ -151,7 +151,7 @@ jobs:
     if: always()
     steps:
       - name: Download all artifacts
-        uses: actions/download-artifact@v4.1.8
+        uses: actions/download-artifact@v7
         with:
           path: all_test_durations
           merge-multiple: true
@@ -165,14 +165,14 @@ jobs:
           jq -s 'add' test_durations_group_*.json > test_durations_merged.json
 
       - name: Save test durations as an artifact for debugging
-        uses: actions/upload-artifact@v4.4.3
+        uses: actions/upload-artifact@v6
         with:
           name: test_durations_merged
           path: test_durations_merged.json
           if-no-files-found: error
 
       - name: Cache test durations file for subsequent runs
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v5
         with:
           path: test_durations_merged.json
           key: ${{ env.DURATIONS_CACHE_NAME }}

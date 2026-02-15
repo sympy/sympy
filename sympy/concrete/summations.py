@@ -1,14 +1,14 @@
-from typing import Tuple as tTuple
+from __future__ import annotations
 
 from sympy.calculus.singularities import is_decreasing
+from sympy.calculus.util import continuous_domain
 from sympy.calculus.accumulationbounds import AccumulationBounds
 from .expr_with_intlimits import ExprWithIntLimits
 from .expr_with_limits import AddWithLimits
 from .gosper import gosper_sum
-from sympy.core.expr import Expr
 from sympy.core.add import Add
 from sympy.core.containers import Tuple
-from sympy.core.function import Derivative, expand
+from sympy.core.function import Derivative, expand, expand_mul
 from sympy.core.mul import Mul
 from sympy.core.numbers import Float, _illegal
 from sympy.core.relational import Eq
@@ -17,24 +17,30 @@ from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, Wild, Symbol, symbols
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.combinatorial.numbers import bernoulli, harmonic
+from sympy.functions.elementary.complexes import re
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.functions.elementary.trigonometric import cot, csc
+from sympy.functions.elementary.trigonometric import tan, sin, cot, csc
 from sympy.functions.special.hyper import hyper
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.functions.special.zeta_functions import zeta
 from sympy.integrals.integrals import Integral
-from sympy.logic.boolalg import And
+from sympy.logic.boolalg import And, Not
+from sympy.matrices.expressions.special import ZeroMatrix
 from sympy.polys.partfrac import apart
 from sympy.polys.polyerrors import PolynomialError, PolificationFailed
 from sympy.polys.polytools import parallel_poly_from_expr, Poly, factor
 from sympy.polys.rationaltools import together
 from sympy.series.limitseq import limit_seq
 from sympy.series.order import O
-from sympy.series.residues import residue
+from sympy.sets.contains import Contains
 from sympy.sets.sets import FiniteSet, Interval
 from sympy.utilities.iterables import sift
 import itertools
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
 
 
 class Sum(AddWithLimits, ExprWithIntLimits):
@@ -172,9 +178,9 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
     __slots__ = ()
 
-    limits: tTuple[tTuple[Symbol, Expr, Expr]]
+    limits: tuple[tuple[Symbol, Expr, Expr]]
 
-    def __new__(cls, function, *symbols, **assumptions):
+    def __new__(cls, function, *symbols, **assumptions) -> Sum:
         obj = AddWithLimits.__new__(cls, function, *symbols, **assumptions)
         if not hasattr(obj, 'limits'):
             return obj
@@ -188,7 +194,10 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         # cancel out. This only answers whether the summand is zero; if
         # not then None is returned since we don't analyze whether all
         # terms cancel out.
-        if self.function.is_zero or self.has_empty_sequence:
+        if self.function.is_zero:
+            return True
+
+        if self.has_empty_sequence and not self.function.is_Matrix:
             return True
 
     def _eval_is_extended_real(self):
@@ -237,7 +246,9 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             expanded = self.expand()
             if self != expanded:
                 return expanded.doit()
-            return _eval_matrix_sum(self)
+            expr = _eval_matrix_sum(self)
+            if expr is not None:
+                return expr
 
         for n, limit in enumerate(self.limits):
             i, a, b = limit
@@ -277,13 +288,18 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         zeta function does not converge unless `s > 1` and `q > 0`
         """
         i, a, b = limits
+        if a.is_comparable and b.is_comparable and a > b:
+            return self.eval_zeta_function(f, (i, b + S.One, a - S.One))
+        if b is not S.Infinity:
+            return
         w, y, z = Wild('w', exclude=[i]), Wild('y', exclude=[i]), Wild('z', exclude=[i])
-        result = f.match((w * i + y) ** (-z))
-        if result is not None and b is S.Infinity:
+        if result := f.match((w * i + y) ** (-z)):
             coeff = 1 / result[w] ** result[z]
             s = result[z]
             q = result[y] / result[w] + a
-            return Piecewise((coeff * zeta(s, q), And(q > 0, s > 1)), (self, True))
+            return Piecewise((coeff * zeta(s, q),
+                              And(Not(Contains(-q, S.Naturals0)), re(s) > S.One)),
+                             (self, True))
 
     def _eval_derivative(self, x):
         """
@@ -573,8 +589,13 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
         ### ------------- alternating series test ----------- ###
         dict_val = sequence_term.match(S.NegativeOne**(sym + p)*q)
-        if not dict_val[p].has(sym) and is_decreasing(dict_val[q], interval):
-            return S.true
+        if not dict_val[p].has(sym):
+            try:
+                cont_dom = continuous_domain(dict_val[q], sym, interval)
+                if interval.is_subset(cont_dom) and is_decreasing(dict_val[q], interval):
+                    return S.true
+            except NotImplementedError:
+                pass
 
         ### ------------- integral test -------------- ###
         check_interval = None
@@ -584,17 +605,22 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             check_interval = interval
         elif isinstance(maxima, FiniteSet) and maxima.sup.is_number:
             check_interval = Interval(maxima.sup, interval.sup)
-        if (check_interval is not None and
-            (is_decreasing(sequence_term, check_interval) or
-            is_decreasing(-sequence_term, check_interval))):
-                integral_val = Integral(
-                    sequence_term, (sym, lower_limit, upper_limit))
-                try:
-                    integral_val_evaluated = integral_val.doit()
-                    if integral_val_evaluated.is_number:
-                        return S(integral_val_evaluated.is_finite)
-                except NotImplementedError:
-                    pass
+        if check_interval is not None:
+            try:
+                cont_dom = continuous_domain(sequence_term, sym, check_interval)
+                if (check_interval.is_subset(cont_dom) and
+                    (is_decreasing(sequence_term, check_interval) or
+                    is_decreasing(-sequence_term, check_interval))):
+                        integral_val = Integral(
+                            sequence_term, (sym, lower_limit, upper_limit))
+                        try:
+                            integral_val_evaluated = integral_val.doit()
+                            if integral_val_evaluated.is_number:
+                                return S(integral_val_evaluated.is_finite)
+                        except NotImplementedError:
+                            pass
+            except NotImplementedError:
+                pass
 
         ### ----- Dirichlet and bounded times convergent tests ----- ###
         # TODO
@@ -648,10 +674,15 @@ class Sum(AddWithLimits, ExprWithIntLimits):
                     a_n = Mul(*a_tuple)
                     b_n = Mul(*b_set)
 
-                    if is_decreasing(a_n, interval):
-                        dirich = _dirichlet_test(b_n)
-                        if dirich is not None:
-                            return dirich
+                    try:
+                        cont_dom = continuous_domain(a_n, sym, interval)
+                        if interval.is_subset(cont_dom): # Defensive: ensure continuity even though is_decreasing now checks singularities
+                            if is_decreasing(a_n, interval):
+                                dirich = _dirichlet_test(b_n)
+                                if dirich is not None:
+                                    return dirich
+                    except NotImplementedError:
+                        pass
 
                     bc_test = _bounded_convergent_test(a_n, b_n)
                     if bc_test is not None:
@@ -1014,6 +1045,8 @@ def eval_sum(f, limits):
         return f*(b - a + 1)
     if a == b:
         return f.subs(i, a)
+    if a.is_comparable and b.is_comparable and a > b:
+        return eval_sum(f, (i, b + S.One, a - S.One))
     if isinstance(f, Piecewise):
         if not any(i in arg.args[1].free_symbols for arg in f.args):
             # Piecewise conditions do not depend on the dummy summation variable,
@@ -1447,6 +1480,25 @@ def eval_sum_residue(f, i_a_b):
     """
     i, a, b = i_a_b
 
+    # We don't know how to deal with symbolic constants in summand
+    if f.free_symbols - {i}:
+        return None
+
+    if not (a.is_Integer or a in (S.Infinity, S.NegativeInfinity)):
+        return None
+    if not (b.is_Integer or b in (S.Infinity, S.NegativeInfinity)):
+        return None
+
+    # Quick exit heuristic for the sums without infinite bound;
+    # right now the order is arbitrary
+    if not any(x in (S.NegativeInfinity, S.Infinity) for x in (a, b)):
+        return None
+
+    # If lower limit > upper limit: Karr Summation Convention;
+    # now order is canonical
+    if a > b:
+        return -eval_sum_residue(f, (i, b + S.One, a - S.One))
+
     def is_even_function(numer, denom):
         """Test if the rational function is an even function"""
         numer_even = all(i % 2 == 0 for (i,) in numer.monoms())
@@ -1478,29 +1530,8 @@ def eval_sum_residue(f, i_a_b):
         shift = - b / a / n
         return shift
 
-    #Need a dummy symbol with no assumptions set for get_residue_factor
-    z = Dummy('z')
-
-    def get_residue_factor(numer, denom, alternating):
-        residue_factor = (numer.as_expr() / denom.as_expr()).subs(i, z)
-        if not alternating:
-            residue_factor *= cot(S.Pi * z)
-        else:
-            residue_factor *= csc(S.Pi * z)
-        return residue_factor
-
-    # We don't know how to deal with symbolic constants in summand
-    if f.free_symbols - {i}:
-        return None
-
-    if not (a.is_Integer or a in (S.Infinity, S.NegativeInfinity)):
-        return None
-    if not (b.is_Integer or b in (S.Infinity, S.NegativeInfinity)):
-        return None
-
-    # Quick exit heuristic for the sums which doesn't have infinite range
-    if a != S.NegativeInfinity and b != S.Infinity:
-        return None
+    def residues(numer, denom, alternating, poles):
+        return [_get_residue(numer, denom, a, alternating) for a in poles]
 
     match = match_rational(f, i)
     if match:
@@ -1517,44 +1548,51 @@ def eval_sum_residue(f, i_a_b):
     if denom.degree(i) - numer.degree(i) < 2:
         return None
 
-    if (a, b) == (S.NegativeInfinity, S.Infinity):
+    # handle non-even function with limits (-oo, oo), (-oo, k) or (k, oo)
+
+    both_inf = (a,b) == (S.NegativeInfinity, S.Infinity)
+
+    if not is_even_function(numer, denom):
+        # Try shifting summation and check if the summand can be made
+        # even wrt the origin.
+        # Sum(f(n), (n, a, b)) => Sum(f(n + s), (n, a - s, b - s))
+        shift = get_shift(denom)
+
+        if not shift:
+            return None
+
+        if shift.is_Integer:
+            numer = numer.shift(shift)
+            denom = denom.shift(shift)
+            if not is_even_function(numer, denom):
+                return None
+
+            if alternating:
+                f = S.NegativeOne**i * (S.NegativeOne**shift * numer.as_expr() / denom.as_expr())
+            else:
+                f = numer.as_expr() / denom.as_expr()
+            return eval_sum_residue(f, (i, a-shift, b-shift))
+        elif not both_inf:
+            return None  # can't make a shift that keeps limits integer
+
+    if both_inf:  # even or not
         poles = get_poles(denom)
         if poles is None:
             return None
         int_roots, nonint_roots = poles
-
         if int_roots:
             return None
 
-        residue_factor = get_residue_factor(numer, denom, alternating)
-        residues = [residue(residue_factor, z, root) for root in nonint_roots]
-        return -S.Pi * sum(residues)
+        return -S.Pi * sum(residues(numer, denom, alternating, nonint_roots))
 
-    if not (a.is_finite and b is S.Infinity):
-        return None
+    # handle even function with semi-infinite limits
 
-    if not is_even_function(numer, denom):
-        # Try shifting summation and check if the summand can be made
-        # and even function from the origin.
-        # Sum(f(n), (n, a, b)) => Sum(f(n + s), (n, a - s, b - s))
-        shift = get_shift(denom)
+    if a is S.NegativeInfinity:
+        # this is ok for an even function and will be necessary
+        # so the extraneous roots can be handled properly below
+        a, b = -b, -a
 
-        if not shift.is_Integer:
-            return None
-        if shift == 0:
-            return None
-
-        numer = numer.shift(shift)
-        denom = denom.shift(shift)
-
-        if not is_even_function(numer, denom):
-            return None
-
-        if alternating:
-            f = S.NegativeOne**i * (S.NegativeOne**shift * numer.as_expr() / denom.as_expr())
-        else:
-            f = numer.as_expr() / denom.as_expr()
-        return eval_sum_residue(f, (i, a-shift, b-shift))
+    assert a.is_Integer and b is S.Infinity  # even function with limits (k, oo)
 
     poles = get_poles(denom)
     if poles is None:
@@ -1562,11 +1600,10 @@ def eval_sum_residue(f, i_a_b):
     int_roots, nonint_roots = poles
 
     if int_roots:
-        int_roots = [int(root) for root in int_roots]
         int_roots_max = max(int_roots)
         int_roots_min = min(int_roots)
         # Integer valued poles must be next to each other
-        # and also symmetric from origin (Because the function is even)
+        # and also symmetric from origin (because the function is even)
         if not len(int_roots) == int_roots_max - int_roots_min + 1:
             return None
 
@@ -1574,9 +1611,7 @@ def eval_sum_residue(f, i_a_b):
         if a <= max(int_roots):
             return None
 
-    residue_factor = get_residue_factor(numer, denom, alternating)
-    residues = [residue(residue_factor, z, root) for root in int_roots + nonint_roots]
-    full_sum = -S.Pi * sum(residues)
+    full_sum = -S.Pi * sum(residues(numer, denom, alternating, int_roots + nonint_roots))
 
     if not int_roots:
         # Compute Sum(f, (i, 0, oo)) by adding a extraneous evaluation
@@ -1600,13 +1635,66 @@ def eval_sum_residue(f, i_a_b):
     return result
 
 
+def _get_residue(numer: Poly, denom: Poly, a: Expr, alternating: bool) -> Expr:
+    """``Res((cot/csc)(pi*z)*numer(z)/denom(z))`` at ``a``."""
+    #
+    # Helper for eval_sum_residue. Since we know that a is a root of denom, we
+    # can factor out ``(x - a)^p`` from denom exactly using polynomials over
+    # the extension field containing ``a``. This is more efficient and more
+    # robust than the current implementation of ``residue`` which uses a series
+    # expansion.
+    #
+    x = denom.gen
+    z = Dummy("z")
+
+    if (2 * a).is_Integer:
+        # In this case we have to deal with zeros and poles of cot(pi*z) or
+        # csc(pi*z) which complicate the residue calculation. The series
+        # residue function handles rational roots well enough though.
+        from sympy.series.residues import residue
+        if not alternating:
+            return residue(cot(S.Pi*z)*(numer(z)/denom(z)), z, a)
+        else:
+            return residue(csc(S.Pi*z)*(numer(z)/denom(z)), z, a)
+
+    numer = numer.xreplace({x: z})
+    denom = denom.xreplace({x: z})
+    za = Poly(z - a, z, extension=True)
+    za, denom = za.unify(denom)
+
+    # Divide out (z - a)^p from denom
+    # Should this first cancel factors of (z - a) between numer and denom?
+    p = 0
+    q, r = denom.div(za)
+    while r == 0 and denom != 0:
+        denom = q
+        p += 1
+        q, r = denom.div(za)
+
+    assert p > 0, "a is not a pole"
+
+    if not alternating:
+        expr = (1/tan(S.Pi*z))*(numer/denom)
+    else:
+        expr = (1/sin(S.Pi*z))*(numer/denom)
+
+    if p > 1:
+        expr = expr.diff((z, p-1)) / factorial(p - 1)
+
+    expr = expr.xreplace({S.Pi*z: expand_mul(S.Pi*a), z: a})
+
+    return expr
+
+
 def _eval_matrix_sum(expression):
     f = expression.function
     for limit in expression.limits:
         i, a, b = limit
         dif = b - a
+        if dif == -1:
+            return ZeroMatrix(*f.shape)
         if dif.is_Integer:
-            if (dif < 0) == True:
+            if dif.is_negative:
                 a, b = b + 1, a - 1
                 f = -f
 

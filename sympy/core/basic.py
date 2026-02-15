@@ -21,12 +21,20 @@ from sympy.utilities.misc import filldedent, func_name
 
 
 if TYPE_CHECKING:
-    from typing import ClassVar, TypeVar, Any
+    from typing import ClassVar, Any, Hashable, TypeVar, Protocol
     from typing_extensions import Self
     from .assumptions import StdFactKB
     from .symbol import Symbol
 
     Tbasic = TypeVar("Tbasic", bound='Basic')
+
+
+    _K_co = TypeVar("_K_co", covariant=True)
+    _V_co = TypeVar("_V_co", covariant=True)
+
+    class _SupportsItems(Protocol[_K_co, _V_co]):
+        def items(self) -> Iterable[tuple[_K_co, _V_co]]:
+            ...
 
 
 def as_Basic(expr):
@@ -86,10 +94,10 @@ ordering_of_classes = [
 ]
 
 def _cmp_name(x: type, y: type) -> int:
-    """return -1, 0, 1 if the name of x is before that of y.
+    """Return -1, 0, 1 if the name of x is before that of y.
     A string comparison is done if either name does not appear
     in `ordering_of_classes`. This is the helper for
-    ``Basic.compare``
+    ``Basic.compare``.
 
     Examples
     ========
@@ -134,7 +142,7 @@ def _cmp_name(x: type, y: type) -> int:
 
 @cacheit
 def _get_postprocessors(clsname, arg_type):
-    # Since only Add, Mul, Pow can be clsname, this cache
+    # Since only Add, Mul, and Pow can be clsname, this cache
     # is not quadratic.
     postprocessors = set()
     mappings = _get_postprocessors_for_type(arg_type)
@@ -184,7 +192,7 @@ class Basic(Printable):
     (x,)
 
 
-    3)  By "SymPy object" we mean something that can be returned by
+    3)  By "SymPy object", we mean something that can be returned by
         ``sympify``.  But not all objects one encounters using SymPy are
         subclasses of Basic.  For example, mutable objects are not:
 
@@ -212,7 +220,7 @@ class Basic(Printable):
     def __init_subclass__(cls):
         # Initialize the default_assumptions FactKB and also any assumptions
         # property methods. This method will only be called for subclasses of
-        # Basic but not for Basic itself so we call
+        # Basic but not for Basic itself, so we call
         # _prepare_class_assumptions(Basic) below the class definition.
         super().__init_subclass__()
         _prepare_class_assumptions(cls)
@@ -262,7 +270,6 @@ class Basic(Printable):
     is_rational: bool | None
     is_extended_nonnegative: bool | None
     is_infinite: bool | None
-    is_antihermitian: bool | None
     is_extended_negative: bool | None
     is_extended_real: bool | None
     is_finite: bool | None
@@ -277,7 +284,6 @@ class Basic(Printable):
     is_commutative: bool | None
     is_nonnegative: bool | None
     is_nonpositive: bool | None
-    is_hermitian: bool | None
     is_irrational: bool | None
     is_real: bool | None
     is_zero: bool | None
@@ -296,7 +302,7 @@ class Basic(Printable):
     def copy(self):
         return self.func(*self.args)
 
-    def __getnewargs__(self):
+    def __getnewargs__(self) -> tuple[Basic, ...] | tuple[Hashable, ...]:
         return self.args
 
     def __getstate__(self):
@@ -321,7 +327,7 @@ class Basic(Printable):
             self._mhash = h
         return h
 
-    def _hashable_content(self):
+    def _hashable_content(self) -> tuple[Hashable, ...]:
         """Return a tuple of information about self that can be used to
         compute the hash. If a class defines additional attributes,
         like ``name`` in Symbol, then this method should be updated
@@ -356,7 +362,7 @@ class Basic(Printable):
         {'commutative': True, 'complex': True, 'extended_negative': False,
          'extended_nonnegative': True, 'extended_nonpositive': False,
          'extended_nonzero': True, 'extended_positive': True, 'extended_real':
-         True, 'finite': True, 'hermitian': True, 'imaginary': False,
+         True, 'finite': True, 'imaginary': False,
          'infinite': False, 'negative': False, 'nonnegative': True,
          'nonpositive': False, 'nonzero': True, 'positive': True, 'real':
          True, 'zero': False}
@@ -391,7 +397,7 @@ class Basic(Printable):
         1
 
         """
-        # all redefinitions of __cmp__ method should start with the
+        # all redefinitions of compare method should start with the
         # following lines:
         if self is other:
             return 0
@@ -956,13 +962,13 @@ class Basic(Printable):
         return S.One, self
 
     @overload
-    def subs(self, arg1: Mapping[Basic | complex, Basic | complex], arg2: None=None, **kwargs: Any) -> Basic: ...
-    @overload
-    def subs(self, arg1: Iterable[tuple[Basic | complex, Basic | complex]], arg2: None=None, **kwargs: Any) -> Basic: ...
+    def subs(self, arg1: _SupportsItems[Basic | complex, Basic | complex]
+            | Iterable[tuple[Basic | complex, Basic | complex]],
+              arg2: None=None, **kwargs: Any) -> Basic: ...
     @overload
     def subs(self, arg1: Basic | complex, arg2: Basic | complex, **kwargs: Any) -> Basic: ...
 
-    def subs(self, arg1: Mapping[Basic | complex, Basic | complex]
+    def subs(self, arg1: _SupportsItems[Basic | complex, Basic | complex]
             | Iterable[tuple[Basic | complex, Basic | complex]] | Basic | complex,
              arg2: Basic | complex | None = None, **kwargs: Any) -> Basic:
         """
@@ -1285,7 +1291,7 @@ class Basic(Printable):
             rv = fallback(self, old, new)
         return rv
 
-    def _eval_subs(self, old, new) -> Basic | None:
+    def _eval_subs(self, old: Basic, new: Basic) -> Basic | None:
         """Override this stub if you want to do anything more than
         attempt a replacement of old with new in the arguments of self.
 
@@ -1713,9 +1719,7 @@ class Basic(Printable):
         if isinstance(query, type):
             _query = lambda expr: isinstance(expr, query)
 
-            if isinstance(value, type):
-                _value = lambda expr, result: value(*expr.args)
-            elif callable(value):
+            if isinstance(value, type) or callable(value):
                 _value = lambda expr, result: value(*expr.args)
             else:
                 raise TypeError(
@@ -2125,11 +2129,8 @@ class Basic(Printable):
         # functions for matching expression node names.
 
         clsname = obj.__class__.__name__
-        postprocessors = set()
-        for i in obj.args:
-            for f in _get_postprocessors(clsname, type(i)):
-                postprocessors.add(f)
-
+        postprocessors = {f for i in obj.args
+                            for f in _get_postprocessors(clsname, type(i))}
         for f in postprocessors:
             obj = f(obj)
 

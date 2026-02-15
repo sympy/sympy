@@ -59,6 +59,8 @@ git_whitelist = {
     'requirements-dev.txt',
     'MANIFEST.in',
     'banner.svg',
+    # GitHub Codespace
+    '.devcontainer/devcontainer.json',
     # Code of conduct
     'CODE_OF_CONDUCT.md',
     # Contributing guide
@@ -100,6 +102,7 @@ git_whitelist = {
     'bin/mailmap_check.py',
     'bin/test_symengine.py',
     'bin/test_tensorflow.py',
+    'bin/test_pytorch.py',
     # The notebooks are not ready for shipping yet. They need to be cleaned
     # up, and preferably doctested.  See also
     # https://github.com/sympy/sympy/issues/6039.
