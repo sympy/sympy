@@ -290,4 +290,3 @@ def test_conjugate():
     assert refine(conjugate(y), Q.real(y)) == y
     assert refine(conjugate(x), Q.real(x)) == x
     assert refine(conjugate(x), Q.imaginary(x)) == -x
-
