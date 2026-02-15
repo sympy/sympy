@@ -223,13 +223,14 @@ def test_dyadic_tuple_pretty_print():
     Worked in SymPy 1.12.1, broken in 1.13+.
     Bisected to commit 8935af2 which fixed vectors but not dyadics.
     """
-    from sympy import symbols
-    from sympy.physics.mechanics import ReferenceFrame, outer
     from sympy.printing.pretty import pretty
+    import sympy as sm
+    import sympy.physics.mechanics as me
 
-    I = symbols('I')
-    A = ReferenceFrame('A')
-    I_A_Ao = I * outer(A.y, A.y) + I * outer(A.z, A.z)
+    sm.init_printing()
+    A = me.ReferenceFrame('A')
+    I = sm.symbols('I')
+    I_A_Ao = I*me.outer(A.y, A.y) + I*me.outer(A.z, A.z)
 
     result = pretty((I_A_Ao, I_A_Ao))
 
