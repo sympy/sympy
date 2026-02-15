@@ -214,6 +214,7 @@ def test_trigsimp_issues():
     expr = (-sinh((z - 2*I*atan(sinh(z/2)))/4))*sinh((z + 2*I*atan(sinh(z/2)))/4)
     result = trigsimp(expr)
     assert not any(a.is_Dummy for a in result.atoms())
+    assert result == -cosh(z/2)/2 + 1/(2*sqrt(sinh(z/2)**2 + 1))
     F = sqrt(cosh(z/2)) * Matrix([
     cosh(z/4 + I/2*atan(sinh(z/2))),
     -I*sinh(z/4 + I/2*atan(sinh(z/2))),
@@ -222,6 +223,7 @@ def test_trigsimp_issues():
     ])
     result = simplify(F[0]*F[2] - F[1]*F[3])
     assert not any(a.is_Dummy for a in result.atoms())
+    assert result == cosh(z/2)/sqrt(sinh(z/2)**2 + 1)
 
 def test_trigsimp_issue_2515():
     x = Symbol('x')
