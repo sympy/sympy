@@ -488,12 +488,16 @@ def refine_conjugate(expr, assumptions):
 
     >>> from sympy import Q, conjugate, refine, symbols
     >>> x = symbols('x')
-    >>> refine (conjugate(x), Q.real(x))
+    >>> refine(conjugate(x), Q.real(x))
     x
+    >>> refine(conjugate(x), Q.imaginary(x))
+    -x
     '''
     arg = expr.args[0]
-    if ask(Q.real(arg),assumptions):
+    if ask(Q.real(arg), assumptions):
         return arg
+    if ask(Q.imaginary(arg), assumptions):
+        return -arg
     return expr
 handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
 'Abs': refine_abs,
