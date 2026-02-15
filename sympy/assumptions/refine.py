@@ -502,15 +502,15 @@ def refine_conjugate(expr, assumptions):
         return -arg
     return expr
 handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
-'Abs': refine_abs,
-'Pow': refine_Pow,
-'atan2': refine_atan2,
-'re': refine_re,
-'im': refine_im,
-'arg': refine_arg,
-'sign': refine_sign,
-'MatrixElement': refine_matrixelement,
-'cos': refine_sin_cos,
-'sin': refine_sin_cos,
-'conjugate': refine_conjugate,
+    'Abs': refine_abs,
+    'Pow': refine_Pow,
+    'atan2': refine_atan2,
+    're': refine_re,
+    'im': refine_im,
+    'arg': refine_arg,
+    'sign': refine_sign,
+    'MatrixElement': refine_matrixelement,
+    'cos': refine_sin_cos,
+    'sin': refine_sin_cos,
+    'conjugate': refine_conjugate,
 }
