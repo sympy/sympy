@@ -479,6 +479,39 @@ def refine_sin_cos(expr, assumptions):
     else:
         return ((-1)**((k + 1) / 2)) * sin(rem)
 
+def refine_floor(expr, assumptions):
+    """
+    handler for the floor function
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol, refine, Q, floor
+    >>> x = Symbol('x', integer=True)
+    >>> refine(floor(x), Q.integer(x))
+    x
+    """
+    arg = expr.args[0]
+    if ask(Q.integer(arg), assumptions):
+        return arg
+    return expr
+
+def refine_ceiling(expr, assumptions):
+    """
+    handler for ceiling function
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol, refine, Q, ceiling
+    >>> x = Symbol('x')
+    >>> refine(ceiling(x), Q.integer(x))
+    x
+    """
+    arg = expr.args[0]
+    if ask(Q.integer(arg), assumptions):
+        return arg
+    return expr
 handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'Abs': refine_abs,
     'Pow': refine_Pow,
@@ -490,4 +523,6 @@ handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'MatrixElement': refine_matrixelement,
     'cos': refine_sin_cos,
     'sin': refine_sin_cos,
+    'floor': refine_floor,
+    'ceiling': refine_ceiling,
 }
