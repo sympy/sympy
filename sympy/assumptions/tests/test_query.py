@@ -1776,10 +1776,10 @@ def test_nonzero():
     #
     assert ask(Q.nonzero(exp(x)), Q.real(exp(x))) is True
     assert ask(Q.nonzero(exp(I*pi))) is True
-    assert ask(Q.nonzero(exp((I*pi)//2))) is False
+    assert ask(Q.nonzero(exp((I*pi)/2))) is False
     assert ask(Q.nonzero(exp(n*I*pi)), Q.integer(n)) is True
-    assert ask(Q.nonzero(exp((n*I*pi)//2)), Q.integer(n)) is None
-    assert ask(Q.nonzero(exp((I*pi)//2)), Q.integer(n)) is False
+    assert ask(Q.nonzero(exp((n*I*pi)/2)), Q.integer(n)) is None
+    assert ask(Q.nonzero(exp((I*pi)/2)), Q.integer(n)) is False
 
 
 def test_zero():
