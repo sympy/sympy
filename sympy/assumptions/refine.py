@@ -488,7 +488,7 @@ def refine_conjugate(expr, assumptions):
     Examples
     ========
 
-    >>> from sympy import Q, conjugate, refine, Symbol, log, Pow
+    >>> from sympy import Q, conjugate, refine, log, Pow
     >>> x = Symbol('x')
     >>> refine(conjugate((x), Q.real(x)))
     x
