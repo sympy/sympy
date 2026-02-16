@@ -286,14 +286,15 @@ def test_sin_cos():
         (-1)**((n + k)/2) * cos(x + m*pi/2)
 
 def test_floor():
-    x = Symbol('x', integer=True)
+    x = Symbol('x')
     y = Symbol('y')
     assert refine(floor(x), Q.integer(x)) == x
     assert refine(floor(y), Q.real(y)) == floor(y)
     assert refine(floor(y), Q.imaginary(y)) == floor(y)
 
+
 def test_ceiling():
-    x = Symbol('x', integer=True)
+    x = Symbol('x')
     y = Symbol('y')
     assert refine(ceiling(x), Q.integer(x)) == x
     assert refine(ceiling(y), Q.real(y)) == ceiling(y)
