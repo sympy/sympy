@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, overload
 
+from sympy import Symbol
 from sympy.core import S, Add, Expr, Basic, Mul, Pow, Rational
 from sympy.core.logic import fuzzy_not
 
@@ -403,6 +404,7 @@ def refine_matrixelement(expr, assumptions):
             return expr
         return MatrixElement(matrix, j, i)
 
+
 def refine_sin_cos(expr, assumptions):
     """
     Handler for sin and cos functions.
@@ -481,26 +483,50 @@ def refine_sin_cos(expr, assumptions):
 
 def refine_conjugate(expr, assumptions):
     '''
-    Handler
-    for the conjugate function.
+    Handler for the conjugate function.
 
     Examples
     ========
 
-
-    >>> from sympy import Q, conjugate, refine, symbols
-    >>> x = symbols('x')
-    >>> refine(conjugate(x), Q.real(x))
+    >>> from sympy import Q, conjugate, refine, Symbol, log, Pow
+    >>> x = Symbol('x')
+    >>> refine(conjugate((x), Q.real(x)))
     x
-    >>> refine(conjugate(x), Q.imaginary(x))
+    >>> refine(conjugate((x), Q.imaginary(x)))
     -x
+    >>> refine(conjugate((log(x)), Q.real(x)))
+    log(x)
+    >>> refine(conjugate(log(x)), Q.imaginary(x))
+    log(-x)
+    >>> x = Symbol('x')
+    >>> n = Symbol('n')
+    >>> refine(conjugate(x**n), Q.real(x) & Q.integer(n))
+    x**n
+    >>> refine(conjugate(x**n), Q.imaginary(x) & Q.integer(n))
+    conjugate(x)**n
     '''
+    from sympy import log, conjugate, Pow, ask, refine
+    from sympy import Q
     arg = expr.args[0]
     if ask(Q.real(arg), assumptions):
         return arg
-    if ask(Q.imaginary(arg), assumptions):
+
+    elif ask(Q.imaginary(arg), assumptions):
         return -arg
+
+    # logarithm conjugate
+    if isinstance(arg,log):
+            return log(refine(conjugate(arg.args[0]), assumptions))
+
+    # pow conjugate - real exp
+    if isinstance(arg, Pow):
+        base = arg.args[0]
+        exp = arg.args[1]
+        if ask(Q.integer(exp), assumptions):
+            return refine(conjugate(base)**exp, assumptions)
     return expr
+
+
 handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'Abs': refine_abs,
     'Pow': refine_Pow,

@@ -4,8 +4,8 @@ from sympy.core.expr import Expr
 from sympy.core.numbers import (I, Rational, nan, pi)
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
-from sympy.functions.elementary.complexes import (Abs, arg, im, re, sign,conjugate)
-from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.complexes import (Abs, arg, im, re, sign, conjugate)
+from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (atan, atan2, cos, sin)
 from sympy.abc import w, x, y, z
@@ -287,5 +287,17 @@ def test_sin_cos():
 
 def test_conjugate():
     x = Symbol('x')
+    n = Symbol('n')
     assert refine(conjugate(x), Q.real(x)) == x
     assert refine(conjugate(x), Q.imaginary(x)) == -x
+    #logarithm
+    assert refine(conjugate(log(x)), Q.real(x)) == log(x)
+    assert refine(conjugate(log(x)), Q.imaginary(x)) == log(-x)
+    #complex / generic case
+    z = Symbol('z')
+    assert refine(conjugate(log(z)), Q.complex(z)) == log(conjugate(z))
+    #Pow
+    assert refine(conjugate(x ** n), Q.real(x) & Q.integer(n)) == x ** n
+    assert refine(conjugate(x ** n), Q.imaginary(x) & Q.integer(n)) == (-x) ** n
+
+
