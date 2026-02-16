@@ -10,6 +10,7 @@ from typing import (
     overload,
     Callable,
     TypeVar,
+    cast
 )
 
 if TYPE_CHECKING:
@@ -18,6 +19,7 @@ if TYPE_CHECKING:
     from sympy.core.expr import Expr
     from typing import Self, TypeAlias
     from sympy.polys.rings import PolyElement
+    from sympy.polys.domains.field import Field
 
 from sympy.external.gmpy import GROUND_TYPES, MPQ
 
@@ -1638,12 +1640,12 @@ class DMP_Python(DMP[Er]):
 
     def _gcdex(f, g: Self) -> tuple[Self, Self, Self]:
         """Extended Euclidean algorithm, if univariate. """
-        s, t, h = dup_gcdex(f._rep, g._rep, f.dom)
+        s, t, h = dup_gcdex(f._rep, g._rep, cast("Field[Any]", f.dom))
         return f.per(s), f.per(t), f.per(h)
 
     def _invert(f, g: Self) -> Self:
         """Invert ``f`` modulo ``g``, if possible. """
-        s = dup_invert(f._rep, g._rep, f.dom)
+        s = dup_invert(f._rep, g._rep, cast("Field[Any]", f.dom))
         return f.per(s)
 
     def _revert(f, n: int) -> Self:
