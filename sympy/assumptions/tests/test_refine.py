@@ -285,6 +285,7 @@ def test_sin_cos():
                   Q.odd(n) & Q.odd(k) & Q.integer(m)) == \
         (-1)**((n + k)/2) * cos(x + m*pi/2)
 
+
 def test_floor():
     x = Symbol('x')
     y = Symbol('y')
