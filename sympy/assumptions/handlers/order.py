@@ -203,7 +203,7 @@ def _(expr, assumptions):
     if ask(Q.real(expr), assumptions):
         return True
     if ask(Q.imaginary(expr.exp), assumptions):
-        return ask(Q.even(expr.exp/(I*pi)), assumptions)
+        return ask(Q.integer(expr.exp/(I*pi)), assumptions)
 
 
 # ZeroPredicate
