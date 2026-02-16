@@ -611,6 +611,7 @@ def test_issue_14704():
     x, xexact = integer_nthroot(a,a)
     assert x == 1 and xexact is False
 
+
 def test_issue_29000():
     x = symbols('x')
 
@@ -676,6 +677,7 @@ def test_issue_26546():
     assert Pow(x+I, Rational(1,2)).is_extended_real is False
     assert Pow(x+I, Rational(1,13)).is_extended_real is False
     assert Pow(x+I, Rational(2,3)).is_extended_real is None
+
 
 def test_issue_25165():
     e1 = (1/sqrt(( - x + 1)**2 + (x - 0.23)**4)).series(x, 0, 2)
