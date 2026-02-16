@@ -352,10 +352,11 @@ class FpGroup(DefaultPrinting):
 
     def random(self):
         import random
-        r = self.free_group.identity
-        for i in range(random.randint(2,3)):
-            r = r*random.choice(self.generators)**random.choice([1,-1])
-        return r
+        dtype = type(self.free_group.identity)
+        return dtype.prod(
+            random.choice(self.generators)**random.choice([1, -1])
+            for _ in range(random.randint(2, 3))
+        )
 
     def index(self, H, strategy="relator_based"):
         """
@@ -1003,12 +1004,10 @@ def simplify_presentation(*args, change_gens=False):
         identity = F.identity
         gens = F.generators
         subs = dict(zip(syms, gens))
+        dtype = type(identity)
         for j, r in enumerate(rels):
             a = r.array_form
-            rel = identity
-            for sym, p in a:
-                rel = rel*subs[sym]**p
-            rels[j] = rel
+            rels[j] = dtype.prod(subs[sym]**p for sym, p in a)
     return gens, rels
 
 def _simplify_relators(rels):
@@ -1251,12 +1250,14 @@ def rewrite(C, alpha, w):
     x_4*y_2*x_3*x_1*x_2*y_4*x_5
 
     """
-    v = C._schreier_free_group.identity
+    dtype = type(C._schreier_free_group.identity)
+    factors = []
     for i in range(len(w)):
         x_i = w[i]
-        v = v*C.P[alpha][C.A_dict[x_i]]
-        alpha = C.table[alpha][C.A_dict[x_i]]
-    return v
+        j = C.A_dict[x_i]
+        factors.append(C.P[alpha][j])
+        alpha = C.table[alpha][j]
+    return dtype.prod(factors)
 
 # Pg 350, section 2.5.2 from [2]
 def elimination_technique_2(C):
