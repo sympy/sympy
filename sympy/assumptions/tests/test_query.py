@@ -1767,13 +1767,11 @@ def test_nonzero():
     assert ask(Q.nonzero(cos(1)**2 + sin(1)**2 - 1)) is None
 
     assert ask(Q.nonzero(exp(x))) is None
-    #
     assert ask(Q.nonzero(exp(x)), Q.real(x)) is True
     assert ask(Q.nonzero(exp(x)), Q.complex(x)) is None
     assert ask(Q.nonzero(exp(x)), Q.positive(x)) is True
     assert ask(Q.nonzero(exp(x)), Q.negative(x)) is True
     assert ask(Q.nonzero(exp(x)), Q.zero(x)) is True
-    #
     assert ask(Q.nonzero(exp(x)), Q.real(exp(x))) is True
     assert ask(Q.nonzero(exp(I*pi))) is True
     assert ask(Q.nonzero(exp((I*pi)/2))) is False
