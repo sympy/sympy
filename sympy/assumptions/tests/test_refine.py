@@ -299,5 +299,3 @@ def test_conjugate():
     #Pow
     assert refine(conjugate(x ** n), Q.real(x) & Q.integer(n)) == x ** n
     assert refine(conjugate(x ** n), Q.imaginary(x) & Q.integer(n)) == (-x) ** n
-
-
