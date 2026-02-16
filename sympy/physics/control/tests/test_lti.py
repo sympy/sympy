@@ -25,7 +25,7 @@ from sympy.physics.control.lti import (
     TransferFunctionMatrix, MIMOSeries, MIMOParallel, MIMOFeedback, StateSpace,
     DiscreteStateSpace, create_state_space, gbt, bilinear, forward_diff,
     backward_diff, phase_margin, gain_margin)
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, XFAIL
 from sympy.logic.boolalg import false, true
 
 from math import isclose
@@ -38,6 +38,35 @@ a0, a1, a2, a3, b0, b1, b2, b3, b4, c0, c1, c2, c3, d0, d1, d2, d3 = \
 TF1 = TransferFunction(1, s**2 + 2*zeta*wn*s + wn**2, s)
 TF2 = TransferFunction(k, 1, s)
 TF3 = TransferFunction(a2*p - s, a2*s + p, s)
+TF4 = TransferFunction(k*s + p, tau*s + 1, s)
+TF5 = TransferFunction(k, p, s)
+TF6 = TransferFunction(k*s + p, k*s + p, s)
+
+
+@XFAIL
+def test_state_space_rewrite_from_pr_27651():
+    c0, c1, c2 = symbols('c0, c1, c2', real=True)
+    a0, a1, a2, a3 = symbols('a0, a1, a2, a3', real=True)
+    d = symbols('d', real=True)
+    s = symbols('s')
+    t = TransferFunction(d, 1, s) + TransferFunction(c2*s**2 + c1*s**1 + c0,
+                                                     s**4 + a3*s**3 + a2*s**2 +
+                                                     a1*s**1 + a0, s)
+    expected = StateSpace(
+        Matrix([[0,   1,   0,   0],
+                [0,   0,   1,   0],
+                [0,   0,   0,   1],
+                [-a0, -a1, -a2, -a3]]),
+        Matrix([[0],
+                [0],
+                [0],
+                [1]]),
+        Matrix([[c0, c1, c2, 0]]),
+        Matrix([[d]]))
+
+    # The call to Parallel.doit() is not working correctly.
+    assert t.rewrite(StateSpace).doit() == expected
+    assert t.rewrite(StateSpace).doit() == t.doit().rewrite(StateSpace)
 
 
 def test_create_transfer_function():
@@ -3484,6 +3513,21 @@ def test_conversion():
                    Matrix([[1, 0]]),
                    Matrix([[0]]))
     assert SS.rewrite(TransferFunction)[0][0] == TF1
+
+    SS1 = TF4.rewrite(StateSpace)
+    assert SS1 == \
+        StateSpace(Matrix([[-1/tau]]), Matrix([[1]]), Matrix([[-k/tau**2 + p/tau]]),
+                   Matrix([[k/tau]]))
+    assert SS1.rewrite(TransferFunction)[0][0] == TF4
+
+    SS2 = TF5.rewrite(StateSpace)
+    assert SS2 == \
+        StateSpace(Matrix([[0]]), Matrix([[0]]), Matrix([[0]]), Matrix([[k/p]]))
+    assert SS2.rewrite(TransferFunction)[0][0] == TF5
+
+    SS3 = TF6.rewrite(StateSpace)
+    assert SS3 == \
+        StateSpace(Matrix([[0]]), Matrix([[0]]), Matrix([[0]]), Matrix([[1]]))
 
     # TransferFunction cannot be converted to DiscreteStateSpace
     raises(TypeError, lambda: TF1.rewrite(DiscreteStateSpace))
