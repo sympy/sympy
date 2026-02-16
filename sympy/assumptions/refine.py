@@ -487,13 +487,13 @@ def refine_conjugate(expr, assumptions):
     Examples
     ========
 
-    >>> from sympy import Q, conjugate, refine, log, Pow
+    >>> from sympy import Q, conjugate, refine, log, Symbol
     >>> x = Symbol('x')
-    >>> refine(conjugate((x), Q.real(x)))
+    >>> refine(conjugate(x), Q.real(x))
     x
-    >>> refine(conjugate((x), Q.imaginary(x)))
+    >>> refine(conjugate(x), Q.imaginary(x))
     -x
-    >>> refine(conjugate((log(x)), Q.real(x)))
+    >>> refine(conjugate(log(x)), Q.real(x))
     log(x)
     >>> refine(conjugate(log(x)), Q.imaginary(x))
     log(-x)
@@ -502,7 +502,7 @@ def refine_conjugate(expr, assumptions):
     >>> refine(conjugate(x**n), Q.real(x) & Q.integer(n))
     x**n
     >>> refine(conjugate(x**n), Q.imaginary(x) & Q.integer(n))
-    conjugate(x)**n
+    (-x)**n
     '''
     from sympy import log, conjugate, Pow, ask, refine
     from sympy import Q
