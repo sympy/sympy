@@ -286,7 +286,10 @@ def test_sin_cos():
 
 
 def test_conjugate():
-    z = Symbol('z')
     x = Symbol('x')
+    assert refine(conjugate(x), Q.real(x)) == x
+    assert refine(conjugate(x), Q.imaginary(x)) == -x
+    #logarithm
+    z = Symbol('z')
     assert refine(conjugate(log(z)), Q.complex(z) & ~Q.negative(z)) == log(conjugate(z))
     assert refine(conjugate(log(x)), Q.real(x)) == conjugate(log(x))

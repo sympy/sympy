@@ -493,8 +493,6 @@ def refine_conjugate(expr, assumptions):
     x
     >>> refine(conjugate(x), Q.imaginary(x))
     -x
-    >>> refine(conjugate(log(x)), Q.real(x))
-    conjugate(log(x))
     >>> refine(conjugate(log(x)), Q.complex(x) & ~Q.negative(x))
     log(conjugate(x))
     >>> x = Symbol('x')
