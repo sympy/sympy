@@ -200,7 +200,10 @@ def _(expr, assumptions):
 
 @NonZeroPredicate.register(exp)
 def _(expr, assumptions):
-    return True
+    if ask(Q.real(expr), assumptions):
+        return True
+    if ask(Q.imaginary(expr.exp), assumptions):
+        return ask(Q.even(expr.exp/(I*pi)), assumptions)
 
 
 # ZeroPredicate
