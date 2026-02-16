@@ -494,9 +494,9 @@ def refine_conjugate(expr, assumptions):
     >>> refine(conjugate(x), Q.imaginary(x))
     -x
     >>> refine(conjugate(log(x)), Q.real(x))
-    log(x)
-    >>> refine(conjugate(log(x)), Q.imaginary(x))
-    log(-x)
+    conjugate(log(x))
+    >>> refine(conjugate(log(x)), Q.complex(x) & ~Q.negative(x))
+    log(conjugate(x))
     >>> x = Symbol('x')
     >>> n = Symbol('n')
     >>> refine(conjugate(x**n), Q.real(x) & Q.integer(n))
@@ -515,7 +515,13 @@ def refine_conjugate(expr, assumptions):
 
     # logarithm conjugate
     if isinstance(arg,log):
-            return log(refine(conjugate(arg.args[0]), assumptions))
+        inner = arg.args[0]
+        if ask(~Q.negative(inner), assumptions):
+            if ask(Q.imaginary(inner), assumptions):
+                return log(conjugate(inner))
+            if ask(Q.complex(inner), assumptions):
+                return log(refine(conjugate(inner), assumptions))
+
 
     # pow conjugate - real exp
     if isinstance(arg, Pow):
