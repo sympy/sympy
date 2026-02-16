@@ -263,7 +263,7 @@ def refine_atan2(expr, assumptions):
 
 def refine_re(expr, assumptions):
     """
-    Handler for the real part.
+    Handler for real part.
 
     Examples
     ========
