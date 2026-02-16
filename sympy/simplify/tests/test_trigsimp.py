@@ -209,21 +209,13 @@ def test_trigsimp_issues():
 
     assert trigsimp(-sin(x)**4 - 2*sin(x)**2*cos(x)**2 - cos(x)**4) == -1
 
-    # issue 29056: check for no Dummy variable in result
-    z = Symbol('z')
-    expr = (-sinh((z - 2*I*atan(sinh(z/2)))/4))*sinh((z + 2*I*atan(sinh(z/2)))/4)
-    result = trigsimp(expr)
-    assert not any(a.is_Dummy for a in result.atoms())
-    assert result == -cosh(z/2)/2 + 1/(2*sqrt(sinh(z/2)**2 + 1))
-    F = sqrt(cosh(z/2)) * Matrix([
-    cosh(z/4 + I/2*atan(sinh(z/2))),
-    -I*sinh(z/4 + I/2*atan(sinh(z/2))),
-    cosh(-z/4 + I/2*atan(sinh(z/2))),
-    -I*sinh(-z/4 + I/2*atan(sinh(z/2)))
-    ])
-    result = simplify(F[0]*F[2] - F[1]*F[3])
-    assert not any(a.is_Dummy for a in result.atoms())
-    assert result == cosh(z/2)/sqrt(sinh(z/2)**2 + 1)
+    # issue 29056: the expressions below previously manipulated Dummy variables 
+    # in a way that prevented restoring them, leaving them in the final output
+    z = (-sinh((x - 2*I*atan(sinh(x/2)))/4))*sinh((x + 2*I*atan(sinh(x/2)))/4)
+    assert trigsimp(z) == -cosh(x/2)/2 + 1/(2*sqrt(sinh(x/2)**2 + 1))
+    z = cosh(x/4 + I/2*atan(sinh(x/2))) * cosh(-x/4 + I/2*atan(sinh(x/2)))
+    z1 = -I*sinh(x/4 + I/2*atan(sinh(x/2))) * -I*sinh(-x/4 + I/2*atan(sinh(x/2)))
+    assert trigsimp(cosh(x/2) * (z - z1)) == cosh(x/2)/sqrt(sinh(x/2)**2 + 1)
 
 def test_trigsimp_issue_2515():
     x = Symbol('x')
