@@ -25,7 +25,7 @@ from sympy.physics.control.lti import (
     TransferFunctionMatrix, MIMOSeries, MIMOParallel, MIMOFeedback, StateSpace,
     DiscreteStateSpace, create_state_space, gbt, bilinear, forward_diff,
     backward_diff, phase_margin, gain_margin)
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, XFAIL
 from sympy.logic.boolalg import false, true
 
 from math import isclose
@@ -43,6 +43,7 @@ TF5 = TransferFunction(k, p, s)
 TF6 = TransferFunction(k*s + p, k*s + p, s)
 
 
+@XFAIL
 def test_state_space_rewrite_from_pr_27651():
     c0, c1, c2 = symbols('c0, c1, c2', real=True)
     a0, a1, a2, a3 = symbols('a0, a1, a2, a3', real=True)
@@ -52,20 +53,20 @@ def test_state_space_rewrite_from_pr_27651():
                                                      s**4 + a3*s**3 + a2*s**2 +
                                                      a1*s**1 + a0, s)
     expected = StateSpace(
-        Matrix([[0,   0,   0,   0,   0],
-                [0,   0,   1,   0,   0],
-                [0,   0,   0,   1,   0],
-                [0,   0,   0,   0,   1],
-                [0, -a0, -a1, -a2, -a3]]),
+        Matrix([[0,   1,   0,   0],
+                [0,   0,   1,   0],
+                [0,   0,   0,   1],
+                [-a0, -a1, -a2, -a3]]),
         Matrix([[0],
                 [0],
                 [0],
-                [0],
                 [1]]),
-        Matrix([[0, c0, c1, c2, 0]]),
+        Matrix([[c0, c1, c2, 0]]),
         Matrix([[d]]))
 
+    # The call to Parallel.doit() is not working correctly.
     assert t.rewrite(StateSpace).doit() == expected
+    assert t.rewrite(StateSpace).doit() == t.doit().rewrite(StateSpace)
 
 
 def test_create_transfer_function():
