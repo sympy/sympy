@@ -2395,7 +2395,7 @@ def test_nonlinsolve_conditionset():
     assert nonlinsolve([f1, f2], [x, y]) == soln
 
 
-def test_nonlinsolve_floor():
+def test_nonlinsolve_floor_ceiling():
     raises(NotImplementedError, lambda: nonlinsolve([floor(x) - 5, y - x - 1], [x, y]))
     raises(NotImplementedError, lambda: nonlinsolve([ceiling(x) - 5, y - 2], [x, y]))
     raises(NotImplementedError, lambda: nonlinsolve([floor(x) - 3], [x]))

@@ -3591,11 +3591,12 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                     )
                 soln_imageset = {}
                 for sym in unsolved_syms:
+                    not_solvable = False
                     if any(f.args[0].has(sym) for f in eq2.atoms(floor, ceiling)):
+                        not_solvable = True
                         raise NotImplementedError(
                             "nonlinsolve cannot solve equations with floor or ceiling functions"
                         )
-                    not_solvable = False
                     try:
                         soln = solver(eq2, sym)
                         total_solvest_call += 1
