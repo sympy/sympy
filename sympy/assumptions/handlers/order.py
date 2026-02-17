@@ -203,7 +203,7 @@ def _(expr, assumptions):
     r = ask(Q.positive(expr.args[0]), assumptions)
     if r is False:
         return False
-    if r is True:
+    else:
         return ask(Q.ne(expr.args[0], 1))
 
 
