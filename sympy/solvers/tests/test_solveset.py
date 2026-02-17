@@ -2398,6 +2398,11 @@ def test_nonlinsolve_conditionset():
 def test_nonlinsolve_floor():
     raises(NotImplementedError, lambda: nonlinsolve([floor(x) - 5, y - x - 1], [x, y]))
     raises(NotImplementedError, lambda: nonlinsolve([ceiling(x) - 5, y - 2], [x, y]))
+    raises(NotImplementedError, lambda: nonlinsolve([floor(x) - 3], [x]))
+    raises(NotImplementedError, lambda: nonlinsolve([ceiling(x) - 3], [x]))
+    raises(NotImplementedError, lambda: nonlinsolve([x + floor(x) - 5], [x]))
+    assert nonlinsolve([x - floor(y)], [x]) == FiniteSet((floor(y),))
+    assert nonlinsolve([x - ceiling(y)], [x]) == FiniteSet((ceiling(y),))
 
 
 def test_substitution_basic():

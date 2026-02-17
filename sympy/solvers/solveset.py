@@ -3589,12 +3589,12 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                     raise NotImplementedError(
                         "nonlinsolve cannot solve equations with Abs in the complex domain"
                     )
-                if depen1.has(floor) or depen2.has(floor) or depen1.has(ceiling) or depen2.has(ceiling):
-                    raise NotImplementedError(
-                        "nonlinsolve cannot solve equations with floor or ceiling functions"
-                    )
                 soln_imageset = {}
                 for sym in unsolved_syms:
+                    if any(f.args[0].has(sym) for f in eq2.atoms(floor, ceiling)):
+                        raise NotImplementedError(
+                            "nonlinsolve cannot solve equations with floor or ceiling functions"
+                        )
                     not_solvable = False
                     try:
                         soln = solver(eq2, sym)
@@ -4094,7 +4094,7 @@ def nonlinsolve(system, *symbols):
         raise IndexError(filldedent(msg))
 
     symbols = list(map(_sympify, symbols))
-    system = [_sympify(eq) for eq in system]
+    sys,tem = [_sympify(eq) for eq in system]
     system, symbols, swap = recast_to_symbols(system, symbols)
     if swap:
         soln = nonlinsolve(system, symbols)
