@@ -502,7 +502,7 @@ def refine_conjugate(expr, assumptions):
     >>> refine(conjugate(x**n), Q.imaginary(x) & Q.integer(n))
     (-x)**n
     '''
-    from sympy import log, conjugate, Pow, ask, refine
+    from sympy import log, conjugate, Pow, ask
     from sympy import Q
     arg = expr.args[0]
     if ask(Q.real(arg), assumptions):
