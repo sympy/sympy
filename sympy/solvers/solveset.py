@@ -4094,7 +4094,7 @@ def nonlinsolve(system, *symbols):
         raise IndexError(filldedent(msg))
 
     symbols = list(map(_sympify, symbols))
-    sys,tem = [_sympify(eq) for eq in system]
+    system = [_sympify(eq) for eq in system]
     system, symbols, swap = recast_to_symbols(system, symbols)
     if swap:
         soln = nonlinsolve(system, symbols)
