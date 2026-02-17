@@ -87,12 +87,16 @@ def refine_abs(expr, assumptions):
 
     >>> from sympy import Q, Abs
     >>> from sympy.assumptions.refine import refine_abs
-    >>> from sympy.abc import x
+    >>> from sympy.abc import x, y
     >>> refine_abs(Abs(x), Q.real(x))
     >>> refine_abs(Abs(x), Q.positive(x))
     x
     >>> refine_abs(Abs(x), Q.negative(x))
     -x
+    >>> refine_abs(Abs(y-x), Q.nonnegative(y-x))
+    -x + y
+    >>> refine_abs(Abs(y-x), Q.negative(y-x))
+    x - y
 
     """
     from sympy.functions.elementary.complexes import Abs
@@ -103,6 +107,16 @@ def refine_abs(expr, assumptions):
         return arg
     if ask(Q.negative(arg), assumptions):
         return -arg
+
+    #arg si Add
+    if isinstance(arg, Add):
+        if ask(Q.negative(-arg), assumptions):
+            return arg
+        elif ask(Q.nonnegative(-arg), assumptions):
+            return -arg
+        else:
+            return expr
+
     # arg is Mul
     if isinstance(arg, Mul):
         r = [refine(abs(a), assumptions) for a in arg.args]
@@ -305,6 +319,7 @@ def refine_im(expr, assumptions):
     if ask(Q.imaginary(arg), assumptions):
         return - S.ImaginaryUnit * arg
     return _refine_reim(expr, assumptions)
+
 
 def refine_arg(expr, assumptions):
     """
