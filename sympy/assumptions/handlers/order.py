@@ -198,6 +198,12 @@ def _(expr, assumptions):
 def _(expr, assumptions):
     return None
 
+@NonZeroPredicate.register(log)
+def _(expr, assumptions):
+    print("log")
+    return ask(Q.positive(expr.args[0]  - 1, assumptions))
+
+
 
 # ZeroPredicate
 
