@@ -1766,6 +1766,13 @@ def test_nonzero():
     # that don't evaluate to a zero with precision
     assert ask(Q.nonzero(cos(1)**2 + sin(1)**2 - 1)) is None
 
+    assert ask(Q.nonzero(log(x))) is None
+    assert ask(Q.nonzero(log(x)), Q.real(x)) is None
+    assert ask(Q.nonzero(log(x)), Q.complex(x)) is None
+    assert ask(Q.nonzero(log(x)), Q.positive(x)) is None
+    assert ask(Q.nonzero(log(x)), Q.negative(x)) is False
+    assert ask(Q.nonzero(log(x)), Q.zero(x)) is False
+
 
 def test_zero():
     assert ask(Q.zero(x)) is None
