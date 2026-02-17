@@ -204,7 +204,7 @@ def _(expr, assumptions):
     if r is False:
         return False
     else:
-        return ask(Q.ne(expr.args[0], 1))
+        return ask(Q.ne(expr.args[0], 1), assumptions)
 
 
 # ZeroPredicate
