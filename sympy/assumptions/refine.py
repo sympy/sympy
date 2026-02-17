@@ -518,7 +518,7 @@ def refine_conjugate(expr, assumptions):
             if ask(Q.imaginary(inner), assumptions):
                 return log(conjugate(inner))
             if ask(Q.complex(inner), assumptions):
-                return log(refine(conjugate(inner), assumptions))
+                return log(conjugate(inner))
 
 
     # pow conjugate - real exp
@@ -526,7 +526,7 @@ def refine_conjugate(expr, assumptions):
         base = arg.args[0]
         exp = arg.args[1]
         if ask(Q.integer(exp), assumptions):
-            return refine(conjugate(base)**exp, assumptions)
+            return conjugate(base) ** exp
     return expr
 
 
