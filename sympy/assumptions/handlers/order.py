@@ -200,9 +200,10 @@ def _(expr, assumptions):
 
 @NonZeroPredicate.register(log)
 def _(expr, assumptions):
-    if ask(Q.positive(expr.args[0]), assumptions) is False:
+    r = ask(Q.positive(expr.args[0]), assumptions)
+    if r is False:
         return False
-    if ask(Q.positive(expr.args[0]), assumptions) is True:
+    if r is True:
         return ask(Q.ne(expr.args[0], 1))
 
 
