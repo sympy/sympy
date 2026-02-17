@@ -20,6 +20,12 @@ def test_Abs():
     assert refine(Abs(x), Q.negative(x)) == -x
     assert refine(1 + Abs(x), Q.negative(x)) == 1 - x
 
+    assert refine(Abs(y-x), Q.positive(y-x)) == -x + y
+
+    a = Symbol('a', real=True)
+    b = Symbol('b', real=True)
+    assert refine(Abs(b-a), Q.is_true(b > a)) == -a + b
+
     assert refine(Abs(x**2)) != x**2
     assert refine(Abs(x**2), Q.real(x)) == x**2
 
