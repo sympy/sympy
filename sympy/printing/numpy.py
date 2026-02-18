@@ -289,7 +289,7 @@ class NumPyPrinter(ArrayPrinter, PythonCodePrinter):
                                  self._print(expr.args[0].tolist()))
 
     def _print_NDimArray(self, expr):
-        if expr.rank() == 0:
+        if expr.ndim == 0:
             func = self._module_format(f'{self._module}.array')
             return f"{func}({self._print(expr[()])})"
         if 0 in expr.shape:

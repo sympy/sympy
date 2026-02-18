@@ -25,7 +25,7 @@ def test_array_comprehension():
     assert b.subs(j, 3) == ArrayComprehension(i, (i, 1, 4))
     assert b.free_symbols == {j}
     assert b.shape == (j + 1,)
-    assert b.rank() == 1
+    assert b.ndim == 1
     assert b.is_shape_numeric == False
     assert c.free_symbols == set()
     assert c.function == i + j + k + l

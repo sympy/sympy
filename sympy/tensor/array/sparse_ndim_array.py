@@ -85,7 +85,7 @@ class SparseNDimArray(NDimArray):
         [1, 1, 1]])
         """
         from sympy.matrices import SparseMatrix
-        if self.rank() != 2:
+        if self.ndim != 2:
             raise ValueError('Dimensions must be of size of 2')
 
         mat_sparse = {}
@@ -122,7 +122,7 @@ class ImmutableSparseNDimArray(SparseNDimArray, ImmutableNDimArray): # type: ign
 
         self = Basic.__new__(cls, sparse_array, shape, **kwargs)
         self._shape = shape
-        self._rank = len(shape)
+        self._ndim = len(shape)
         self._loop_size = loop_size
         self._sparse_array = sparse_array
 
@@ -141,7 +141,7 @@ class MutableSparseNDimArray(MutableNDimArray, SparseNDimArray):
         shape, flat_list = cls._handle_ndarray_creation_inputs(iterable, shape, **kwargs)
         self = object.__new__(cls)
         self._shape = shape
-        self._rank = len(shape)
+        self._ndim = len(shape)
         self._loop_size = functools.reduce(lambda x,y: x*y, shape) if shape else len(flat_list)
 
         # Sparse array:

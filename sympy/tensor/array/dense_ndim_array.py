@@ -93,7 +93,7 @@ class DenseNDimArray(NDimArray):
         """
         from sympy.matrices import Matrix
 
-        if self.rank() != 2:
+        if self.ndim != 2:
             raise ValueError('Dimensions must be of size of 2')
 
         return Matrix(self.shape[0], self.shape[1], self._array)
@@ -142,7 +142,7 @@ class ImmutableDenseNDimArray(DenseNDimArray, ImmutableNDimArray): # type: ignor
         self = Basic.__new__(cls, flat_list, shape, **kwargs)
         self._shape = shape
         self._array = list(flat_list)
-        self._rank = len(shape)
+        self._ndim = len(shape)
         self._loop_size = functools.reduce(lambda x,y: x*y, shape, 1)
         return self
 
@@ -168,7 +168,7 @@ class MutableDenseNDimArray(DenseNDimArray, MutableNDimArray):
         self = object.__new__(cls)
         self._shape = shape
         self._array = list(flat_list)
-        self._rank = len(shape)
+        self._ndim = len(shape)
         self._loop_size = functools.reduce(lambda x,y: x*y, shape) if shape else len(flat_list)
         return self
 

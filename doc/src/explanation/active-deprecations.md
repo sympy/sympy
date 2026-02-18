@@ -76,7 +76,13 @@ SymPy deprecation warnings.
 
 ## Version 1.15
 
-There are no deprecations yet for SymPy 1.15.
+(ndim-array-rank)=
+### Use .ndim instead of .rank for the number of dimensions of arrays.
+
+N-dimensional arrays have used to method `rank` to return the number of
+dimensions.  Unfortunately this not the proper term and it can be confused with
+the concept of matrix rank.  From now on, please use `.ndim` property or the
+`get_ndim(...)` function instead.
 
 ## Version 1.14
 

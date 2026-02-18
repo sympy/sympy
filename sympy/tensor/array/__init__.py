@@ -22,7 +22,7 @@ Array construction can detect the shape of nested lists and tuples:
 [[1, 2], [3, 4], [5, 6]]
 >>> a1.shape
 (3, 2)
->>> a1.rank()
+>>> a1.ndim
 2
 >>> from sympy.abc import x, y, z
 >>> a2 = Array([[[x, y], [z, x*z]], [[1, x*y], [1/x, x/y]]])
@@ -30,7 +30,7 @@ Array construction can detect the shape of nested lists and tuples:
 [[[x, y], [z, x*z]], [[1, x*y], [1/x, x/y]]]
 >>> a2.shape
 (2, 2, 2)
->>> a2.rank()
+>>> a2.ndim
 3
 
 Otherwise one could pass a 1-dim array followed by a shape tuple:
