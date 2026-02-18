@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, overload
-
 from sympy.core import S, Add, Expr, Basic, Mul, Pow, Rational
 from sympy.core.logic import fuzzy_not
 
@@ -481,7 +480,7 @@ def refine_sin_cos(expr, assumptions):
 
 
 def refine_conjugate(expr, assumptions):
-    '''
+    """
     Handler for the conjugate function.
 
     Examples
@@ -501,9 +500,9 @@ def refine_conjugate(expr, assumptions):
     x**n
     >>> refine(conjugate(x**n), Q.imaginary(x) & Q.integer(n))
     (-x)**n
-    '''
-    from sympy import log, conjugate, Pow, ask
-    from sympy import Q
+    """
+    from sympy.functions.elementary.exponential import log
+    from sympy.functions.elementary.complexes import conjugate
     arg = expr.args[0]
     if ask(Q.real(arg), assumptions):
         return arg
@@ -511,17 +510,13 @@ def refine_conjugate(expr, assumptions):
     elif ask(Q.imaginary(arg), assumptions):
         return -arg
 
-    # logarithm conjugate
     if isinstance(arg,log):
-        inner = arg.args[0]
-        if ask(~Q.negative(inner), assumptions):
-            if ask(Q.imaginary(inner), assumptions):
-                return log(conjugate(inner))
-            if ask(Q.complex(inner), assumptions):
-                return log(conjugate(inner))
+        if ask(~Q.negative(arg.args[0]), assumptions):
+            if ask(Q.imaginary(arg.args[0]), assumptions):
+                return log(conjugate(arg.args[0]))
+            if ask(Q.complex(arg.args[0]), assumptions):
+                return log(conjugate(arg.args[0]))
 
-
-    # pow conjugate - real exp
     if isinstance(arg, Pow):
         base = arg.args[0]
         exp = arg.args[1]
