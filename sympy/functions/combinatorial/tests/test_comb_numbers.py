@@ -20,7 +20,7 @@ from sympy.functions import (
     primenu, primeomega, totient, reduced_totient, primepi,
     motzkin, binomial, gamma, sqrt, cbrt, hyper, log, digamma,
     trigamma, polygamma, factorial, sin, cos, cot, polylog, zeta, dirichlet_eta)
-from sympy.functions.combinatorial.numbers import _nT
+from sympy.functions.combinatorial.numbers import _nT, nP
 from sympy.ntheory.factor_ import factorint
 
 from sympy.core.expr import unchanged
@@ -1248,3 +1248,7 @@ def test_deprecated_ntheory_symbolic_functions():
         assert carmichael.find_carmichael_numbers_in_range(10, 20) == []
     with warns_deprecated_sympy():
         assert carmichael.find_first_n_carmichaels(1)
+
+
+def test_issue_29117():
+    raises(ValueError, lambda: nP(3, -1))

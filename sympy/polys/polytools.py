@@ -21,7 +21,6 @@ from sympy.core.mul import Mul, _keep_coeff
 from sympy.core.intfunc import ilcm
 from sympy.core.numbers import I, Integer, equal_valued, NegativeInfinity
 from sympy.core.relational import Relational, Equality
-from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, Symbol
 from sympy.core.sympify import sympify, _sympify
 from sympy.core.traversal import preorder_traversal, bottom_up
@@ -2604,7 +2603,7 @@ class Poly(Basic):
 
         return per(s), per(t), per(h)
 
-    def invert(f, g, auto=True):
+    def invert(f, g: Poly, auto: bool = True) -> Poly:
         """
         Invert ``f`` modulo ``g`` when possible.
 
@@ -2635,7 +2634,7 @@ class Poly(Basic):
 
         return per(result)
 
-    def revert(f, n):
+    def revert(f, n: int) -> Poly:
         """
         Compute ``f**(-1)`` mod ``x**n``.
 
@@ -2931,7 +2930,7 @@ class Poly(Basic):
 
         return per(h), per(cff), per(cfg)
 
-    def gcd(f, g):
+    def gcd(f, g: Poly | Expr | complex) -> Poly:
         """
         Returns the polynomial GCD of ``f`` and ``g``.
 
@@ -2954,7 +2953,7 @@ class Poly(Basic):
 
         return per(result)
 
-    def lcm(f, g):
+    def lcm(f, g: Poly | Expr | complex) -> Poly:
         """
         Returns polynomial LCM of ``f`` and ``g``.
 
@@ -2977,7 +2976,7 @@ class Poly(Basic):
 
         return per(result)
 
-    def trunc(f, p):
+    def trunc(f, p: Expr | int) -> Poly:
         """
         Reduce ``f`` modulo a constant ``p``.
 
@@ -3000,7 +2999,7 @@ class Poly(Basic):
 
         return f.per(result)
 
-    def monic(self, auto=True):
+    def monic(self, auto: bool = True) -> Poly:
         """
         Divides all coefficients by ``LC(f)``.
 
@@ -3071,7 +3070,7 @@ class Poly(Basic):
 
         return f.rep.dom.to_sympy(cont), f.per(result)
 
-    def compose(f, g):
+    def compose(f, g: Poly | Expr) -> Poly:
         """
         Computes the functional composition of ``f`` and ``g``.
 
@@ -3094,7 +3093,7 @@ class Poly(Basic):
 
         return per(result)
 
-    def decompose(f):
+    def decompose(f) -> list[Poly]:
         """
         Computes a functional decomposition of ``f``.
 
@@ -3115,7 +3114,7 @@ class Poly(Basic):
 
         return list(map(f.per, result))
 
-    def shift(f, a):
+    def shift(f, a: Expr) -> Poly:
         """
         Efficiently compute Taylor shift ``f(x + a)``.
 
@@ -3135,7 +3134,7 @@ class Poly(Basic):
         """
         return f.per(f.rep.shift(a))
 
-    def shift_list(f, a):
+    def shift_list(f, a: list[Expr]) -> Poly:
         """
         Efficiently compute Taylor shift ``f(X + A)``.
 
@@ -3155,7 +3154,8 @@ class Poly(Basic):
         """
         return f.per(f.rep.shift_list(a))
 
-    def transform(f, p, q):
+    def transform(f, p: Poly, q: Poly) -> Poly:
+
         """
         Efficiently evaluate the functional transformation ``q**n * f(p/q)``.
 
@@ -4907,8 +4907,15 @@ def _update_args(args, key, value):
 def degree(f, gen=0):
     """
     Return the degree of ``f`` in the given variable.
+    When ``f`` is a univariate polynomial, it is not
+    necessary to pass a generator, but if the generator
+    is given as an int it refers to the gen-th generator
+    of the expression which must be passed as a Poly
+    instance.
 
-    The degree of 0 is negative infinity.
+    The degree of 0 with respect to any variable is ``-oo``; if ``f``
+    is a numerical expression equal to 0, but not identically 0,
+    zero may be returned instead (because the variable does not appear).
 
     Examples
     ========
@@ -4916,12 +4923,28 @@ def degree(f, gen=0):
     >>> from sympy import degree
     >>> from sympy.abc import x, y
 
+    >>> degree(x**2)
+    2
     >>> degree(x**2 + y*x + 1, gen=x)
     2
     >>> degree(x**2 + y*x + 1, gen=y)
     1
     >>> degree(0, x)
     -oo
+
+    In contrast to the strict Poly method, if the specified generator is
+    not in Poly's generators, the Poly instance is recast in terms of the
+    generator instead of raising an error.
+
+    >>> from sympy import Poly
+    >>> p = Poly(x + y, x)
+    >>> p.degree(y)
+    Traceback (most recent call last):
+    ...
+    PolynomialError: a valid generator expected, got y
+
+    >>> degree(p, y)
+    1
 
     See also
     ========
@@ -4930,36 +4953,34 @@ def degree(f, gen=0):
     degree_list
     """
 
+    _degree = lambda x: Integer(x) if type(x) is int else x
+
     f = sympify(f, strict=True)
-    gen_is_Num = sympify(gen, strict=True).is_Number
-    if f.is_Poly:
-        p = f
-        isNum = p.as_expr().is_Number
-    else:
-        isNum = f.is_Number
-        if not isNum:
-            if gen_is_Num:
-                p, _ = poly_from_expr(f)
-            else:
-                p, _ = poly_from_expr(f, gen)
+    if type(gen) is int:
+        if isinstance(f, Poly):
+            return _degree(f.degree(gen))
+        if f.is_Number:
+            return S.NegativeInfinity if f.is_zero else S.Zero
+        try:
+            p = Poly(f, expand=False)
+        except GeneratorsNeeded:  # e.g. f = (1+I)**2/2
+            gens = ()  # do not guess what the user intended
+        else:
+            gens = p.gens
+        free = f.free_symbols
+        if not (gen == 0 and len(gens) == 1 and len(free) < 2 and f.is_polynomial(
+                gen := next(iter(gens))) and # <-- assigns gen
+                gen.is_Atom):  # e.g. x or pi
+            raise TypeError(filldedent('''
+                To avoid ambiguity, this expression requires either
+                a symbol (not int) generator or a Poly (which identifies
+                the generators).'''))
+        return p.degree(gen)
 
-    if isNum:
-        return S.Zero if f else S.NegativeInfinity
-
-    if not gen_is_Num:
-        if f.is_Poly and gen not in p.gens:
-            # try recast without explicit gens
-            p, _ = poly_from_expr(f.as_expr())
-        if gen not in p.gens:
-            return S.Zero
-    elif not f.is_Poly and len(f.free_symbols) > 1:
-        raise TypeError(filldedent('''
-         A symbolic generator of interest is required for a multivariate
-         expression like func = %s, e.g. degree(func, gen = %s) instead of
-         degree(func, gen = %s).
-        ''' % (f, next(ordered(f.free_symbols)), gen)))
-    result = p.degree(gen)
-    return Integer(result) if isinstance(result, int) else S.NegativeInfinity
+    gen = sympify(gen, strict=True)
+    if not isinstance(f, Poly) or gen not in f.gens:
+        f = poly_from_expr(f, gen)[0]
+    return _degree(f.degree(gen))
 
 
 @public

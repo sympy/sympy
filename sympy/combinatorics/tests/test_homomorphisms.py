@@ -116,7 +116,15 @@ def test_check_homomorphism():
     G = PermutationGroup([a, b])
     raises(ValueError, lambda: homomorphism(G, G, [a], [a]))
 
-def test_fpgroup_kernel_surjective():
+def test_is_surjective():
+    F1, x = free_group("x")
+    G = FpGroup(F1, [])
+    T = homomorphism(G, G, [x], [x])
+    assert T.is_surjective() is True
+    T = homomorphism(G, G, [x], [x**2])
+    assert T.is_surjective() is False
+
+def test_fpgroup_kernel():
     F, a, b = free_group("a, b")
     G = FpGroup(F, [a**2])
     H = FpGroup(F, [a**2, b**3, (a*b)**2])
@@ -126,6 +134,14 @@ def test_fpgroup_kernel_surjective():
     assert b**3 in kernel
     assert (a*b)**2 in kernel
 
+    F, a, b = free_group('a, b')
+    Z, c = free_group('c')
+    G = FpGroup(Z, [])
+    T = homomorphism(F, G, [a, b], [c, c])
+    kernel = T.kernel()
+    assert kernel.normal
+    assert b*a**-1 in kernel
+
     F, a, b = free_group("a, b")
     H = FpGroup(F, [a**2, b**3, (a*b)**2])
     T = homomorphism(F, H, F.generators, H.generators)
@@ -134,6 +150,35 @@ def test_fpgroup_kernel_surjective():
     assert a**2 in kernel
     assert b**3 in kernel
     assert (a*b)**2 in kernel
+
+    F, a, b = free_group("a, b")
+    E, x, y = free_group("x, y")
+    H = FpGroup(E, [y**2, y*x*y*x])
+    T = homomorphism(F, H, [a, b], [x, x])
+    assert T.is_surjective() is False
+    kernel = T.kernel()
+    assert kernel.normal
+    assert b*a**-1 in kernel
+
+def test_homomorphism_factor():
+    F, a, b = free_group("a, b")
+    H = FpGroup(F, [a**2, b**2, (a*b)**2])
+    T = homomorphism(F, H, [a, b], [a, a])
+
+    surj, inj = T.factor()
+
+    assert surj.is_surjective()
+    assert inj.is_injective()
+    assert H.equals(inj(surj(a*b*a**-1)), T(a*b*a**-1))
+
+    F, a, b = free_group("a, b")
+    E, x, y = free_group("x, y")
+    T = homomorphism(F, E, [a, b], [x, y])
+
+    surj, inj = T.factor()
+
+    assert surj.is_surjective()
+    assert inj(surj(a*b**2*a**-1)) == T(a*b**2*a**-1)
 
 def test_fpgroup_isomorphism():
 
