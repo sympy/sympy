@@ -292,7 +292,9 @@ def test_conjugate():
 
     z = Symbol('z')
     assert refine(conjugate(log(z)), Q.complex(z) & ~Q.negative(z)) == log(conjugate(z))
+    assert refine(conjugate(log(z)), Q.complex(z)) == conjugate(log(z))
     assert refine(conjugate(log(x)), Q.real(x)) == conjugate(log(x))
 
     n = Symbol('n')
     assert refine(conjugate(x ** n), Q.complex(x) & Q.integer(n)) == conjugate(x) ** n
+    assert refine(conjugate(x ** n), ~Q.complex(x) & Q.integer) == conjugate(x ** n)

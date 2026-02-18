@@ -512,9 +512,7 @@ def refine_conjugate(expr, assumptions):
 
     if isinstance(arg,log):
         if ask(~Q.negative(arg.args[0]), assumptions):
-            if ask(Q.imaginary(arg.args[0]), assumptions):
-                return log(conjugate(arg.args[0]))
-            if ask(Q.complex(arg.args[0]), assumptions):
+            if ask(~Q.negative(arg.args[0]), assumptions) and ask(Q.complex(arg.args[0]), assumptions):
                 return log(conjugate(arg.args[0]))
 
     if isinstance(arg, Pow):
