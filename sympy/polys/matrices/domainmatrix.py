@@ -11,7 +11,9 @@ as unifying matrices with different domains.
 """
 from __future__ import annotations
 
-from typing import overload, TYPE_CHECKING
+from typing import overload, TYPE_CHECKING, Generic
+
+from sympy.polys.domains.domain import Er
 
 from collections import Counter
 from functools import reduce
@@ -87,7 +89,7 @@ def DM(rows, domain):
     return DomainMatrix.from_list(rows, domain)
 
 
-class DomainMatrix:
+class DomainMatrix(Generic[Er]):
     r"""
     Associate Matrix with :py:class:`~.Domain`
 
@@ -137,7 +139,7 @@ class DomainMatrix:
     """
     rep: SDM | DDM | DFM
     shape: tuple[int, int]
-    domain: Domain
+    domain: Domain[Er]
 
     def __new__(cls, rows, shape, domain, *, fmt=None):
         """
@@ -513,10 +515,10 @@ class DomainMatrix:
         dom, elements_dom = construct_domain(elements, **opts)
         return self.from_flat_nz(elements_dom, data, dom)
 
-    def copy(self) -> DomainMatrix:
+    def copy(self) -> DomainMatrix[Er]:
         return self.from_rep(self.rep.copy())
 
-    def convert_to(self, K: Domain) -> DomainMatrix:
+    def convert_to(self, K: Domain[Er]) -> DomainMatrix[Er]:
         r"""
         Change the domain of DomainMatrix to desired domain or field
 
@@ -562,10 +564,10 @@ class DomainMatrix:
 
         return self.from_rep(rep_K)
 
-    def to_sympy(self) -> DomainMatrix:
+    def to_sympy(self) -> DomainMatrix[Er]:
         return self.convert_to(EXRAW)
 
-    def to_field(self) -> DomainMatrix:
+    def to_field(self) -> DomainMatrix[Er]:
         r"""
         Returns a DomainMatrix with the appropriate field
 
@@ -591,7 +593,7 @@ class DomainMatrix:
         K = self.domain.get_field()
         return self.convert_to(K)
 
-    def to_sparse(self) -> DomainMatrix:
+    def to_sparse(self) -> DomainMatrix[Er]:
         """
         Return a sparse DomainMatrix representation of *self*.
 
@@ -612,7 +614,7 @@ class DomainMatrix:
 
         return self.from_rep(self.rep.to_sdm())
 
-    def to_dense(self) -> DomainMatrix:
+    def to_dense(self) -> DomainMatrix[Er]:
         """
         Return a dense DomainMatrix representation of *self*.
 
