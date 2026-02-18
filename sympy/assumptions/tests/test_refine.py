@@ -297,4 +297,4 @@ def test_conjugate():
 
     n = Symbol('n')
     assert refine(conjugate(x ** n), Q.complex(x) & Q.integer(n)) == conjugate(x) ** n
-    assert refine(conjugate(x ** n), ~Q.complex(x) & Q.integer) == conjugate(x ** n)
+    assert refine(conjugate(x ** n), ~Q.complex(x)) == conjugate(x ** n)
