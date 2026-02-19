@@ -266,7 +266,7 @@ def writeConstants(self, ctx):
 
 def processVariables(self, ctx):
     # Specified F = x*N1> + y*N2>
-    name = ctx.ID().getText().lower()
+    name = ctx.ID().getText()
     if "=" in ctx.getText():
         text = name + "'"*(ctx.getChildCount()-3)
         self.write(text + " = " + self.getValue(ctx.expr()) + "\n")
@@ -1533,11 +1533,11 @@ if AutolevListener:
                             ", " + self.symbol_table2[v3] + ")\n")
                             self.inertia_point.update({v2: v3})
                         elif v2 in self.type2.keys() and self.type2[v2] == "particle":
-                            self.write(ch.ID().getText().lower() + " = " + self.getValue(ctx.expr()) + "\n")
+                            self.write(ch.ID().getText() + " = " + self.getValue(ctx.expr()) + "\n")
                         else:
-                            self.write(ch.ID().getText().lower() + " = " + self.getValue(ctx.expr()) + "\n")
+                            self.write(ch.ID().getText() + " = " + self.getValue(ctx.expr()) + "\n")
                     else:
-                        self.write(ch.ID().getText().lower() + " = " + self.getValue(ctx.expr()) + "\n")
+                        self.write(ch.ID().getText() + " = " + self.getValue(ctx.expr()) + "\n")
 
                 elif num == 1:
                     v1, v2 = ch.ID().getText().lower().split('_')
@@ -1553,12 +1553,12 @@ if AutolevListener:
                             self.forces[e2] = self.forces[e2] + " + " + self.getValue(ctx.expr())
                         else:
                             self.forces.update({e2: self.getValue(ctx.expr())})
-                        self.write(ch.ID().getText().lower() + " = " + self.forces[e2] + "\n")
+                        self.write(ch.ID().getText() + " = " + self.forces[e2] + "\n")
 
                     else:
                         name = ch.ID().getText().lower()
                         self.symbol_table.update({vec_text: name})
-                        self.write(ch.ID().getText().lower() + " = " + self.getValue(ctx.expr()) + "\n")
+                        self.write(ch.ID().getText() + " = " + self.getValue(ctx.expr()) + "\n")
                 else:
                     name = ch.ID().getText().lower()
                     self.symbol_table.update({vec_text: name})
@@ -1813,11 +1813,11 @@ if AutolevListener:
                     self.symbol_table.update({ctx.expr(1).getText().lower(): ctx.expr(1).getText().lower()})
                     self.symbol_table.update({ctx.expr(2).getText().lower(): ctx.expr(2).getText().lower()})
                     # _sm.Matrix([i.evalf() for i in (i_s_so).eigenvals().keys()])
-                    self.write(ctx.expr(1).getText().lower() + " = " +
+                    self.write(ctx.expr(1).getText()+ " = " +
                                "_sm.Matrix([i.evalf() for i in " +
                                "(" + self.getValue(ctx.expr(0)) + ")" + ".eigenvals().keys()])\n")
                     # _sm.Matrix([i[2][0].evalf() for i in (i_s_o).eigenvects()]).reshape(i_s_o.shape[0], i_s_o.shape[1])
-                    self.write(ctx.expr(2).getText().lower() + " = " +
+                    self.write(ctx.expr(2).getText() + " = " +
                                "_sm.Matrix([i[2][0].evalf() for i in " + "(" + self.getValue(ctx.expr(0)) + ")" +
                                ".eigenvects()]).reshape(" + self.getValue(ctx.expr(0)) + ".shape[0], " +
                                self.getValue(ctx.expr(0)) + ".shape[1])\n")
@@ -2025,7 +2025,7 @@ if AutolevListener:
                 else:
                     e = self.getValue(ctx.expr().expr(1))
                 self.symbol_table.update({ctx.expr().expr(0).getText().lower(): ctx.expr().expr(0).getText().lower()})
-                self.write(ctx.expr().expr(0).getText().lower() + " = " + e + "\n")
+                self.write(ctx.expr().expr(0).getText() + " = " + e + "\n")
                 mass = ctx.expr().expr(0).getText().lower()
             else:
                 try:
