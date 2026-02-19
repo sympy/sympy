@@ -1078,6 +1078,13 @@ def test_sympy__sets__contains__Contains():
     from sympy.sets.contains import Contains
     assert _test_args(Contains(x, Range(0, 10, 2)))
 
+def test_sympy__sets__subset__Subset():
+    from sympy.sets.fancysets import Range
+    from sympy.core.singleton import S
+    from sympy.sets.subset import Subset
+    from sympy.sets.sets import Set
+    assert _test_args(Subset(Set(S.Zero), Range(0, 10, 2)))
+
 
 # STATS
 
