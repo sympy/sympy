@@ -1962,9 +1962,10 @@ def test_tensor_alternative_construction():
 def test_tensor_replacement():
     L = TensorIndexType("L")
     L2 = TensorIndexType("L2", dim=2)
-    i, j, k, l = tensor_indices("i j k l", L)
+    i, j, k, l, m = tensor_indices("i j k l m", L)
     A, B, C, D = tensor_heads("A B C D", [L])
     H = TensorHead("H", [L, L])
+    M = TensorHead("M", [L]*3)
     K = TensorHead("K", [L]*4)
 
     expr = H(i, j)
@@ -2067,6 +2068,27 @@ def test_tensor_replacement():
         L: Array([[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, -1]]),
     }
     assert expr._extract_data(repl) == ([], 4)
+
+    ## Product of rank-2 tensors with contractions in replacements
+    expr = H(-i,j) * H(-j,-k) 
+    repl = {H(-i,-j): [[1,2],[3,4]], L: diag(1, 1)}
+    assert expr._extract_data(repl) == ([-i, -k], Array([[7, 10], [15, 22]]))
+
+    # Product of rank-3 tensors with contractions in replacements
+    expr = M(l, -m, -k) * M(k, -i, -j) 
+    assert expr._extract_data({M(l, -i, -j): Array.zeros(2,2,2), L: diag(1, 1)}) == ([l, -m, -i, -j], Array.zeros(2,2,2,2))
+    assert expr._extract_data({M(i, -j, -l): Array.zeros(2,2,2), L: diag(1, 1)}) == ([l, -m, -i, -j], Array.zeros(2,2,2,2))
+    assert expr._extract_data({M(j, -l, -i): Array.zeros(2,2,2), L: diag(1, 1)}) == ([l, -m, -i, -j], Array.zeros(2,2,2,2))
+    assert expr._extract_data({M(l, -j, -i): Array.zeros(2,2,2), L: diag(1, 1)}) == ([l, -m, -i, -j], Array.zeros(2,2,2,2))
+    assert expr._extract_data({M(j, -i, -l): Array.zeros(2,2,2), L: diag(1, 1)}) == ([l, -m, -i, -j], Array.zeros(2,2,2,2))
+    assert expr._extract_data({M(i, -l, -j): Array.zeros(2,2,2), L: diag(1, 1)}) == ([l, -m, -i, -j], Array.zeros(2,2,2,2))
+
+    assert expr._extract_data({M(i, -k, -l): Array.zeros(2,2,2), L: diag(1, 1)}) == ([l, -m, -i, -j], Array.zeros(2,2,2,2))
+    assert expr._extract_data({M(k, -l, -i): Array.zeros(2,2,2), L: diag(1, 1)}) == ([l, -m, -i, -j], Array.zeros(2,2,2,2))
+    assert expr._extract_data({M(l, -i, -k): Array.zeros(2,2,2), L: diag(1, 1)}) == ([l, -m, -i, -j], Array.zeros(2,2,2,2))
+    assert expr._extract_data({M(k, -i, -l): Array.zeros(2,2,2), L: diag(1, 1)}) == ([l, -m, -i, -j], Array.zeros(2,2,2,2))
+    assert expr._extract_data({M(i, -l, -k): Array.zeros(2,2,2), L: diag(1, 1)}) == ([l, -m, -i, -j], Array.zeros(2,2,2,2))
+    assert expr._extract_data({M(l, -k, -i): Array.zeros(2,2,2), L: diag(1, 1)}) == ([l, -m, -i, -j], Array.zeros(2,2,2,2))
 
     # Replace with array, raise exception if indices are not compatible:
     expr = A(i)*A(j)
@@ -2292,3 +2314,14 @@ def test_TensMul_nocoeff():
 
     expr = TensMul(2, K(i), P(j))
     assert expr.coeff * expr.nocoeff == expr
+
+def test_issue_28949():
+    L = TensorIndexType("L")
+    i, j, k, l, m = tensor_indices("i j k l m", L)
+    M = TensorHead("M", [L]*3)
+
+    # Product of rank-3 tensors with contractions in replacements
+    expr = M(l, -m, -k) * M(k, -i, -j) 
+    repl = {M(i, -k, -l): Array.zeros(2,2,2), L: diag(1, 1)}
+    assert expr.replace_with_arrays(repl) == Array.zeros(2,2,2,2)
+    assert expr._extract_data(repl) == ([l, -m, -i, -j], Array.zeros(2,2,2,2))
