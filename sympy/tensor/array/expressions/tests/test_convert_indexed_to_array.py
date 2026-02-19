@@ -71,6 +71,8 @@ def test_arrayexpr_convert_index_to_array_support_function():
     assert _convert_indexed_to_array(expr) == (M, ({i, j, k, m, n}, 0))
     expr = M[i, i]
     assert _convert_indexed_to_array(expr) == (ArrayDiagonal(M, (0, 1)), (i,))
+    expr = Sum(KroneckerDelta(i, j) * A[j] * B[j], (j, 0, n - 1))
+    raises(NotImplementedError, lambda: _convert_indexed_to_array(expr))
 
 
 def test_arrayexpr_convert_indexed_to_array_expression():
