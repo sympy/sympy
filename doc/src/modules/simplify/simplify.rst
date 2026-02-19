@@ -62,6 +62,10 @@ Simplify
 
 .. autofunction:: combsimp
 
+.. module:: sympy.simplify.gammasimp
+
+.. autofunction:: gammasimp
+
 .. module:: sympy.simplify.sqrtdenest
 
 .. autofunction:: sqrtdenest
