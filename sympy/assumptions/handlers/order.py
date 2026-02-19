@@ -130,6 +130,23 @@ def _(expr, assumptions):
         return False
     raise MDNotImplementedError
 
+@NegativePredicate.register(log)
+def _(expr, assumptions):
+    r = ask(Q.real(expr.args[0]), assumptions)
+    if r is not True:
+        return r
+    # log(x) < 0 iff 0 < x < 1
+    # Check using relational predicates (handles Q.gt/Q.lt assumptions)
+    # and also using positivity of arg-1 (handles symbolic expressions)
+    if ask(Q.gt(expr.args[0], 0) & Q.lt(expr.args[0], 1), assumptions):
+        return True
+    if ask(Q.positive(expr.args[0]) & Q.negative(expr.args[0] - 1), assumptions):
+        return True
+    if ask(Q.ge(expr.args[0], 1), assumptions):
+        return False
+    if ask(Q.nonnegative(expr.args[0] - 1), assumptions):
+        return False
+
 
 # NonNegativePredicate
 
@@ -341,8 +358,16 @@ def _(expr, assumptions):
     r = ask(Q.real(expr.args[0]), assumptions)
     if r is not True:
         return r
+    # log(x) > 0 iff x > 1
+    # Check using relational predicates (handles Q.gt assumptions)
+    # and also using positivity of arg-1 (handles symbolic expressions)
+    if ask(Q.gt(expr.args[0], 1), assumptions):
+        return True
     if ask(Q.positive(expr.args[0] - 1), assumptions):
         return True
+    # log(x) <= 0 iff x <= 1 (includes x < 0, x = 0, 0 < x <= 1)
+    if ask(Q.lt(expr.args[0], 1), assumptions):
+        return False
     if ask(Q.negative(expr.args[0] - 1), assumptions):
         return False
 

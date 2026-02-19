@@ -2583,3 +2583,20 @@ def test_issue_28127():
     assert ask(Q.gt(y,x), Q.lt(x,y)) is True
     assert ask(Q.lt(y,x), Q.gt(x,y)) is True
     assert ask(Q.le(y,x), Q.ge(x,y)) is True
+
+
+def test_issue_29186():
+    # ask should return True for Q.negative(log(x)) when 0 < x < 1 and x is real
+    x = Symbol('x')
+    # Test cases from the issue report
+    assert ask(Q.negative(log(x)), Q.real(x) & Q.lt(x, 1) & Q.gt(x, 0)) is True
+    assert ask(Q.negative(log(x)), Q.real(x) & Q.positive(x) & Q.lt(x, 1)) is True
+
+    x_real = Symbol('x_real', real=True)
+    assert ask(Q.negative(log(x_real)), Q.lt(x_real, 1) & Q.gt(x_real, 0)) is True
+    assert ask(Q.negative(log(x_real)), Q.positive(x_real) & Q.lt(x_real, 1)) is True
+
+    # Regression: log(x) should be positive when x > 1
+    assert ask(Q.positive(log(x)), Q.real(x) & Q.gt(x, 1)) is True
+    # log(x) with non-real arg should not be negative
+    assert ask(Q.negative(log(x)), Q.imaginary(x)) is False
