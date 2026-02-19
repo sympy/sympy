@@ -98,6 +98,9 @@ import sympy as sym
 
 from sympy.abc import mu, tau
 
+from sympy import symbols
+from sympy.printing.latex import latex
+
 
 class lowergamma(sym.lowergamma):
     pass   # testing notation inheritance by a subclass with same name
@@ -3218,3 +3221,25 @@ def test_latex_disable_split_super_sub():
     assert latex(Symbol('u^a_b')) == 'u^{a}_{b}'
     assert latex(Symbol('u^a_b'), disable_split_super_sub=False) == 'u^{a}_{b}'
     assert latex(Symbol('u^a_b'), disable_split_super_sub=True) == 'u\\^a\\_b'
+
+
+def test_latex_leading_underscore_test():
+    temp = symbols('_x')
+    assert latex(temp) == r"\_x"
+
+def test_latex_leading_multiple_underscore():
+    temp = symbols('__alpha')
+    assert latex(temp) == r"\_\_alpha"
+
+def test_latex_check_middle_underscore():
+    temp = symbols('x_1')
+    assert latex(temp) in ("x_{1}", r"x_{1}")
+
+
+
+
+
+
+
+
+
