@@ -758,7 +758,25 @@ class Ellipse(GeometrySet):
             else:
                 return False
         elif isinstance(o, Polygon):
-            return all(self.is_tangent(s) for s in o.sides)
+            tangent_count = 0
+            for seg in o.sides:
+                inter = self.intersection(seg)
+                if len(inter) >= 2:
+                    return False
+                if len(inter) == 1:
+                    p = inter[0]
+                    if any(p.equals(v) for v in seg.points):
+                        return False
+                    if any(self.encloses_point(v) for v in seg.points):
+                        return False
+                    tangent_count += 1
+            if tangent_count == 0:
+                return False
+            try:
+                inside = o.encloses_point(self.center)
+            except (GeometryError, TypeError):
+                inside = False
+            return inside or tangent_count >= 2
         elif isinstance(o, (LinearEntity3D, Point3D)):
             raise TypeError('Entity must be two dimensional, not three dimensional')
         else:
