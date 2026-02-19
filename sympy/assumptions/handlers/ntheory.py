@@ -19,17 +19,13 @@ from ..predicates.ntheory import (PrimePredicate, CompositePredicate,
 
 def _PrimePredicate_number(expr, assumptions):
     # helper method
-    exact = not expr.atoms(Float)
     try:
         i = int(expr.round())
         if (expr - i).equals(0) is False:
             raise TypeError
     except TypeError:
         return False
-    if exact:
-        return isprime(i)
-    # when not exact, we won't give a True or False
-    # since the number represents an approximate value
+    return isprime(i)
 
 @PrimePredicate.register(Expr)
 def _(expr, assumptions):
