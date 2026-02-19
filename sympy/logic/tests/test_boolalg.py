@@ -1466,3 +1466,18 @@ def test_simplify_logic_dontcare_issue_28369():
 
    # Test 2: Fast path form check
    assert simplify_logic(A | B, dontcare=A, form='dnf') == B
+def test_transitive_inequality_simplification():
+    # Covers _apply_patternbased_threeterm_simplification logic
+    # This ensures that transitive relations (A < B and B < C implies A < C)
+    # allow for the removal of the redundant term (A < C).
+    x, y, z = symbols('x y z')
+
+    # Case 1: Standard Order
+    # x < y (Keep), y < z (Keep), x < z (Redundant -> Remove)
+    expr = And(x < y, y < z, x < z)
+    assert simplify(expr) == And(x < y, y < z)
+
+    # Case 2: Scrambled Order
+    # The simplifier should handle inputs regardless of their position in the And()
+    expr2 = And(x < z, y < z, x < y)
+    assert simplify(expr2) == And(x < y, y < z)
