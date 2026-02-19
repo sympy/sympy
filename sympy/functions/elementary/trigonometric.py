@@ -507,6 +507,10 @@ class sin(TrigonometricFunction):
     def _eval_expand_trig(self, **hints):
         from sympy.functions.special.polynomials import chebyshevt, chebyshevu
         arg = self.args[0]
+        # Safety check: Non-commutative identities for sin(A+B)
+        # are not simply sin(A)cos(B) + cos(A)sin(B).
+        if arg.is_commutative is False:
+            return self
         x = None
         if arg.is_Add:  # TODO, implement more if deep stuff here
             # TODO: Do this more efficiently for more than two terms
@@ -886,6 +890,9 @@ class cos(TrigonometricFunction):
     def _eval_expand_trig(self, **hints):
         from sympy.functions.special.polynomials import chebyshevt
         arg = self.args[0]
+        # Fix for non-commutative symbols
+        if arg.is_commutative is False:
+            return self
         x = None
         if arg.is_Add:  # TODO: Do this more efficiently for more than two terms
             x, y = arg.as_two_terms()
@@ -1169,6 +1176,9 @@ class tan(TrigonometricFunction):
 
     def _eval_expand_trig(self, **hints):
         arg = self.args[0]
+        # Guard for non-commutative symbols
+        if arg.is_commutative is False:
+            return self
         x = None
         if arg.is_Add:
             n = len(arg.args)
@@ -1558,6 +1568,9 @@ class cot(TrigonometricFunction):
 
     def _eval_expand_trig(self, **hints):
         arg = self.args[0]
+        # Fix for non-commutative symbols
+        if not arg.is_commutative:
+            return self
         x = None
         if arg.is_Add:
             n = len(arg.args)

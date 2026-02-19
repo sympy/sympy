@@ -2234,3 +2234,16 @@ def test_issue_23843():
     assert acot(x + I).series(x, -oo) == 16/(5*x**5) + 2*I/x**4 - 4/(3*x**3) - I/x**2 + 1/x + O(x**(-6), (x, -oo))
     assert acot(x - I).series(x, oo) == 16/(5*x**5) - 2*I/x**4 - 4/(3*x**3) + I/x**2 + 1/x + O(x**(-6), (x, oo))
     assert acot(x - I).series(x, -oo) == 16/(5*x**5) - 2*I/x**4 - 4/(3*x**3) + I/x**2 + 1/x + O(x**(-6), (x, -oo))
+def test_non_commutative_expansion():
+    from sympy import symbols, expand_trig, sin, cos, tan, cot, sec, csc
+    A, B = symbols('A, B', commutative=False)
+
+    assert expand_trig(sin(A + B)) == sin(A + B)
+    assert expand_trig(cos(A + B)) == cos(A + B)
+    assert expand_trig(tan(A + B)) == tan(A + B)
+    assert expand_trig(cot(A + B)) == cot(A + B)
+
+    # These verify that even without a guard, they don't
+    # expand into long addition identities.
+    assert expand_trig(sec(A + B)) == cos(A + B)**-1
+    assert expand_trig(csc(A + B)) == sin(A + B)**-1
