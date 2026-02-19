@@ -8079,3 +8079,45 @@ def test_center():
     assert center('1', 3) == ' 1 '
     assert center('1', 3, '-') == '-1-'
     assert center('1', 5, '-') == '--1--'
+
+
+def test_pretty_quaternion():
+    from sympy.algebras.quaternion import Quaternion
+    from sympy import Rational
+    from sympy.abc import x, y, z, t
+
+    q1 = Quaternion(1, 2, 3, 4)
+    assert pretty(q1) == '1 + 2i + 3j + 4k'
+    assert upretty(q1) == '1 + 2𝑖 + 3𝑗 + 4𝑘'
+
+    q2 = Quaternion(1, 1, 1, 1)
+    assert pretty(q2) == '1 + i + j + k'
+    assert upretty(q2) == '1 + 𝑖 + 𝑗 + 𝑘'
+
+    q3 = Quaternion(0, -1, -1, 1)
+    assert pretty(q3) == '-i - j + k'
+    assert upretty(q3) == '-𝑖 - 𝑗 + 𝑘'
+
+    q4 = Quaternion(-1, -2, -3, -4)
+    assert pretty(q4) == '-1 - 2i - 3j - 4k'
+    assert upretty(q4) == '-1 - 2𝑖 - 3𝑗 - 4𝑘'
+
+    q5 = Quaternion(0, 0, 0, 0)
+    assert pretty(q5) == '0'
+    assert upretty(q5) == '0'
+
+    q6 = Quaternion(5, 0, 0, 0)
+    assert pretty(q6) == '5'
+    assert upretty(q6) == '5'
+
+    q7 = Quaternion(0, 1, -1, 2)
+    assert pretty(q7) == 'i - j + 2k'
+    assert upretty(q7) == '𝑖 - 𝑗 + 2𝑘'
+
+    q8 = Quaternion(Rational(1,2), Rational(3,4), -Rational(2,3), 1)
+    assert pretty(q8) == ' 1   3i   2j     \n- + --- - --- + k\n2    4     3     '
+    assert upretty(q8) == ' 1   3𝑖   2𝑗     \n─ + ─── - ─── + 𝑘\n2    4     3     '
+
+    q9 = Quaternion(x, y, z, t)
+    assert pretty(q9) == 'x + iy + jz + kt'
+    assert upretty(q9) == 'x + y𝑖 + z𝑗 + t𝑘'
