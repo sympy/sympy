@@ -659,6 +659,7 @@ def test_si():
 
     t = Symbol('t', Dummy=True)
     assert Si(x).rewrite(sinc).dummy_eq(Integral(sinc(t), (t, 0, x)))
+    assert Shi(x).rewrite(Integral).dummy_eq(Integral(sinh(t) / t, (t, 0, x)))
 
     assert limit(Shi(x), x, S.Infinity) == S.Infinity
     assert limit(Shi(x), x, S.NegativeInfinity) == S.NegativeInfinity
@@ -717,6 +718,9 @@ def test_ci():
                                         expint(1, x*exp_polar(I*pi/2))/2
     raises(ArgumentIndexError, lambda: Ci(x).fdiff(2))
 
+    t = Symbol('t', Dummy=True)
+    assert Ci(x).rewrite(Integral).dummy_eq(EulerGamma + log(x) - Integral((1 - cos(t)) / t, (t, 0, x)))
+    assert Chi(x).rewrite(Integral).dummy_eq(EulerGamma + log(x) + Integral((cosh(t) - 1) / t, (t, 0, x)))
 
 def test_fresnel():
     assert fresnels(0) is S.Zero
