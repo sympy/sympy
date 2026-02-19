@@ -118,7 +118,7 @@ def test_torch_math():
     _compare_torch_scalar((x,), expr, rng=lambda: random.random())
 
     expr = x ** 4
-    assert torch_code(expr) == "torch.pow(x, 4)"
+    assert torch_code(expr) == "torch.pow(x, torch.tensor(4, dtype=torch.int64))"
     _compare_torch_scalar((x,), expr, rng=lambda: random.random())
 
     expr = cos(x)
@@ -221,7 +221,6 @@ def test_torch_max_min():
     if torch is None:
         skip("PyTorch not installed")
 
-    x, y = symbols('x y')
     expr = Max(x, y) + Min(x, y)
     assert torch_code(expr) == "torch.maximum(x, y) + torch.minimum(x, y)"
 
@@ -230,6 +229,16 @@ def test_torch_max_min():
 
     result = func(x_test, y_test)
     expected = x_test + y_test
+    assert torch.allclose(result, expected)
+
+    expr = Max(1.0, x) + Min(0.0, y)
+    assert (torch_code(expr) == "torch.maximum(torch.tensor(1.0, dtype=torch.float64), x) + torch.minimum(torch.tensor(0.0, dtype=torch.float64), y)")
+
+    func = lambdify([x, y], expr, "torch")
+    x_test, y_test = torch.tensor([0.5, 1.5, 2.5]), torch.tensor([-1.0, 0.5, 1.0])
+
+    result = func(x_test, y_test)
+    expected = torch.maximum(torch.tensor(1.0), x_test) + torch.minimum(torch.tensor(0.0), y_test)
     assert torch.allclose(result, expected)
 
 
@@ -463,21 +472,21 @@ def test_torch_special_matrices():
         skip("PyTorch not installed")
 
     expr = Identity(3)
-    assert torch_code(expr) == "torch.eye(3)"
+    assert torch_code(expr) == "torch.eye(torch.tensor(3, dtype=torch.int64))"
 
     n = symbols("n")
     expr = Identity(n)
     assert torch_code(expr) == "torch.eye(n, n)"
 
     expr = ZeroMatrix(2, 3)
-    assert torch_code(expr) == "torch.zeros((2, 3))"
+    assert torch_code(expr) == "torch.zeros((torch.tensor(2, dtype=torch.int64), torch.tensor(3, dtype=torch.int64)))"
 
     m, n = symbols("m n")
     expr = ZeroMatrix(m, n)
     assert torch_code(expr) == "torch.zeros((m, n))"
 
     expr = OneMatrix(2, 3)
-    assert torch_code(expr) == "torch.ones((2, 3))"
+    assert torch_code(expr) == "torch.ones((torch.tensor(2, dtype=torch.int64), torch.tensor(3, dtype=torch.int64)))"
 
     expr = OneMatrix(m, n)
     assert torch_code(expr) == "torch.ones((m, n))"
@@ -521,7 +530,7 @@ def test_torch_complex_operations():
     assert torch_code(expr) == "1j"
 
     expr = 2 * I + x
-    assert torch_code(expr) == "x + 2*1j"
+    assert torch_code(expr) == "x + torch.tensor(2, dtype=torch.int64)*1j"
 
     expr = exp(I * x)
     assert torch_code(expr) == "torch.exp(1j*x)"
@@ -532,10 +541,10 @@ def test_torch_special_functions():
         skip("PyTorch not installed")
 
     expr = Heaviside(x)
-    assert torch_code(expr) == "torch.heaviside(x, 1/2)"
+    assert torch_code(expr) == "torch.heaviside(x, torch.tensor(1/2, dtype=torch.float64))"
 
     expr = Heaviside(x, 0)
-    assert torch_code(expr) == "torch.heaviside(x, 0)"
+    assert torch_code(expr) == "torch.heaviside(x, torch.tensor(0, dtype=torch.int64))"
 
     expr = gamma(x)
     assert torch_code(expr) == "torch.special.gamma(x)"
