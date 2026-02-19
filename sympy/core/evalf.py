@@ -955,6 +955,7 @@ def evalf_trig(v: Expr, prec: int, options: OPT_DICT) -> TMP_RES:
 
 
 def evalf_log(expr: 'log', prec: int, options: OPT_DICT) -> TMP_RES:
+    from sympy import S
     if len(expr.args)>1:
         expr = expr.doit()
         return evalf(expr, prec, options)
@@ -964,6 +965,15 @@ def evalf_log(expr: 'log', prec: int, options: OPT_DICT) -> TMP_RES:
     if result is S.ComplexInfinity:
         return result
     xre, xim, xacc, _ = result
+
+    # STRICT MODE: detect cancellation of (1 + eps) -> 1
+    if options.get('strict', False):
+        # arg is symbolically not 1, but numerically rounded to 1
+        if arg != S.One and xre == fone:
+            raise PrecisionExhausted(
+                "Argument rounded to 1 causing log(1+epsilon) cancellation. "
+                "Increase output precision n."
+            )
 
     # evalf can return NoneTypes if chop=True
     # issue 18516, 19623
@@ -990,18 +1000,40 @@ def evalf_log(expr: 'log', prec: int, options: OPT_DICT) -> TMP_RES:
 
     re = mpf_log(mpf_abs(xre), prec, rnd)
     size = fastlog(re)
+
+    # Check if we're computing log(1 + small_number) which needs special handling
+    # to avoid catastrophic cancellation
     if prec - size > workprec:
         from .add import Add
-        # We actually need to compute x-1 accurately, not x
+
+        # Compute x = arg - 1 accurately
         add = Add(S.NegativeOne, arg, evaluate=False)
         xre, xim, xre_acc, _ = evalf_add(add, prec, options)
+
+        # STRICT MODE: catastrophic cancellation detection
+        if options.get('strict', False):
+            # If x rounded to zero or accuracy is insufficient, fail
+            if xre == fzero or xre_acc is None or xre_acc < prec:
+                raise PrecisionExhausted(
+                    "log(1+x) lost precision due to catastrophic cancellation. "
+                    "Increase output precision n."
+                )
+
+        # Compute log(1+x) safely
         if xre != fzero and (xre_acc is None or xre_acc > 1):
             prec2 = workprec - fastlog(xre)
-            # xre is now x - 1 so we add 1 back here to calculate x
             re = mpf_log(mpf_abs(mpf_add(xre, fone, prec2)), prec, rnd)
+            re_acc = prec
+        else:
+            re = mpf_log(mpf_abs(xre or fzero), prec, rnd)
+            re_acc = prec
+
+        if imaginary_term:
+            return re, mpf_pi(prec), re_acc, prec
+        else:
+            return re, None, re_acc, None
 
     re_acc = prec
-
     if imaginary_term:
         return re, mpf_pi(prec), re_acc, prec
     else:
@@ -1677,6 +1709,25 @@ class EvalfMixin:
         re, im, re_acc, im_acc = result
         if re is S.NaN or im is S.NaN:
             return S.NaN
+
+        # Check if strict mode is enabled and verify precision was achieved
+        if strict:
+            from .evalf import PrecisionExhausted
+            # Check real part accuracy
+            if re and re_acc < prec:
+                raise PrecisionExhausted(
+                    f"Failed to compute real part to {n} digits precision. "
+                    f"Achieved accuracy: {prec_to_dps(re_acc)} digits. "
+                    f"Try increasing maxn or the output precision n."
+                )
+            # Check imaginary part accuracy
+            if im and im_acc < prec:
+                raise PrecisionExhausted(
+                    f"Failed to compute imaginary part to {n} digits precision. "
+                    f"Achieved accuracy: {prec_to_dps(im_acc)} digits. "
+                    f"Try increasing maxn or the output precision n."
+                )
+
         if re:
             p = max(min(prec, re_acc), 1)
             re = Float._new(re, p)

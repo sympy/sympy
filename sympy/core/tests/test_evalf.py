@@ -154,6 +154,30 @@ def test_evalf_complex_cancellation():
     assert NS((A + B*I)*(
         C + D*I) - F*I, 5) in ('6.4471e-6 + 0.e-14*I', '6.4471e-6 - 0.e-14*I')
 
+def test_evalf_strict_precision_loss():
+    """Test that strict=True catches precision loss (issue #28514)"""
+    from sympy import symbols, log, Rational
+    from sympy.core.evalf import PrecisionExhausted
+
+    b = symbols('b')
+    y = b/(b + 1)
+    z = b
+
+    substitutions = {b: Rational('1e-22')}
+
+    # This should raise PrecisionExhausted with default precision
+    # because log(1 + 1e-22) requires high precision
+    raises(PrecisionExhausted,
+           lambda: log(y/z).evalf(subs=substitutions, strict=True, maxn=1e300))
+
+    # With sufficient output precision, it should work
+    result1 = log(y/z).evalf(subs=substitutions, n=50, strict=True, maxn=1e300)
+    result2 = (log(y) - log(z)).evalf(subs=substitutions, n=50, strict=True, maxn=1e300)
+
+    # Both should give the same non-zero result
+    assert result1 != 0
+    assert abs(result1 - result2) < 1e-40
+    assert abs(result1 + Rational('1e-22')) < 1e-40  # Should be approximately -1e-22
 
 def test_evalf_logs():
     assert NS("log(3+pi*I)", 15) == '1.46877619736226 + 0.808448792630022*I'
