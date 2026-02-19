@@ -4,6 +4,7 @@ import operator
 from sympy.core import Basic, sympify
 from sympy.core.add import add, Add, _could_extract_minus_sign
 from sympy.core.sorting import default_sort_key
+from sympy.core.singleton import S
 from sympy.functions import adjoint
 from sympy.matrices.matrixbase import MatrixBase
 from sympy.matrices.expressions.transpose import transpose
@@ -107,6 +108,45 @@ class MatAdd(MatrixExpr, Add):
     def _eval_derivative_matrix_lines(self, x):
         add_lines = [arg._eval_derivative_matrix_lines(x) for arg in self.args]
         return [j for i in add_lines for j in i]
+
+    def _eval_subs(self, old, new):
+        substitution = None
+
+        if not old.is_Add:
+            if old is S.Infinity and -old in self.args:
+                substitution = self.xreplace({-old: -new})
+
+        coeff_self, terms_self = self.as_coeff_Add()
+        coeff_old, terms_old = old.as_coeff_Add()
+
+        if coeff_self.is_Rational and coeff_old.is_Rational:
+            if terms_self == terms_old:
+                substitution = self.func(new, coeff_self, -coeff_old)
+            elif terms_self == -terms_old:
+                substitution = self.func(-new, coeff_self, coeff_old)
+        elif coeff_self == coeff_old:
+            args_old = self.func.make_args(terms_old)
+            args_self = self.func.make_args(terms_self)
+
+            if len(args_old) < len(args_self):
+                self_set = set(args_self)
+                old_set = set(args_old)
+
+                if old_set >= self_set:
+                    args_old = self.func.make_args(-terms_old)
+                    old_set = set(args_old)
+
+                if old_set < self_set:
+                    ret_set = self_set - old_set
+                    if isinstance(coeff_old, MatrixExpr) \
+                            and isinstance(coeff_self, MatrixExpr):
+                        substitution = self.func(new, coeff_self, -coeff_old,
+                                   *[s._subs(old, new) for s in ret_set])
+                    else:
+                        substitution = self.func(new,
+                                   *[s._subs(old, new) for s in ret_set])
+
+        return substitution
 
 add.register_handlerclass((Add, MatAdd), MatAdd)
 
