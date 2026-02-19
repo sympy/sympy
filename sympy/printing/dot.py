@@ -75,6 +75,71 @@ def purestr(x, with_args=False):
     return rv
 
 
+
+def get_purestr_short():
+    """ Returns a function ```purestr_short``` that acts the same as ```purestr```,
+    but with shorter node names, i.e. ```node_0```, ```node_1```, ```node_2```, ... instead of ```type(obj)(*obj.args)```.
+    This requires keeping track of already assigned node ids, which is why ```purestr_short``` must be obtained by calling ```get_purestr_short```.
+
+    Examples
+    ========
+
+    >>> from sympy import Float, Symbol, MatrixSymbol
+    >>> from sympy import Integer # noqa: F401
+    >>> from sympy.core.symbol import Str # noqa: F401
+    >>> from sympy.printing.dot import get_purestr_short
+
+    Obtain callable purestr_short:
+    >>> purestr_short = get_purestr_short()
+
+    Applying ``purestr_short`` for basic symbolic object:
+    >>> code = purestr_short(Symbol('x'))
+    >>> code
+    "Symbol('x')"
+    >>> eval(code) == Symbol('x')
+    True
+
+    For basic numeric object:
+    >>> purestr_short(Float(2))
+    "Float('2.0', precision=53)"
+
+    For matrix symbol:
+    >>> code = purestr_short(MatrixSymbol('x', 2, 2))
+    >>> code
+    'node_0'
+    >>> eval(code)
+    Traceback (most recent call last):
+    ...
+    NameError: name 'node_0' is not defined
+
+    With ``with_args=True``:
+    >>> purestr_short(Float(2), with_args=True)
+    ("Float('2.0', precision=53)", ())
+    >>> purestr_short(MatrixSymbol('x', 2, 2), with_args=True)
+    ('node_0', ("Str('x')", 'Integer(2)', 'Integer(2)'))
+    """
+
+    nodeid_map = {}
+    def purestr_short(x, with_args=False):
+        #nonlocal nodeid_map #nonlocal statement not needed here, but we are still using nodeid_map from the enclosing scope
+        if not isinstance(x, Basic):
+            rv = str(x)
+        elif not x.args:
+            rv = srepr(x)
+        else:
+            if x in nodeid_map:
+                nodeid = nodeid_map[x]
+            else:
+                nodeid = len(nodeid_map)
+                nodeid_map[x] = nodeid
+            rv = f"node_{nodeid}"
+        if with_args:
+            rv = rv, tuple(map(purestr_short, x.args))
+        return rv
+    return purestr_short
+
+
+
 def styleof(expr, styles=default_styles):
     """ Merge style dictionaries in order
 
@@ -113,8 +178,17 @@ def attrprint(d, delimiter=', '):
     return delimiter.join('"%s"="%s"'%item for item in sorted(d.items()))
 
 
-def dotnode(expr, styles=default_styles, labelfunc=str, pos=(), repeat=True):
+def dotnode(expr, styles=default_styles, labelfunc=str, pos=(), repeat=True, nodenamefunc=purestr):
     """ String defining a node
+
+    nodenamefunc : function, optional
+        A function to create a node name for a given expression.
+
+        The default is ``purestr``, which returns the full expression as a string.
+
+        When called from ``dotprint``, ``purestr_short`` is used instead which provides short node names like `node_0`, `node_1`, ...
+        for all nodes that are not of type basic or do not have args themselves.
+
 
     Examples
     ========
@@ -131,16 +205,18 @@ def dotnode(expr, styles=default_styles, labelfunc=str, pos=(), repeat=True):
     else:
         label = labelfunc(expr)
     style['label'] = label
-    expr_str = purestr(expr)
+    expr_str = nodenamefunc(expr)
     if repeat:
         expr_str += '_%s' % str(pos)
     return '"%s" [%s];' % (expr_str, attrprint(style))
 
 
-def dotedges(expr, atom=lambda x: not isinstance(x, Basic), pos=(), repeat=True):
+def dotedges(expr, atom=lambda x: not isinstance(x, Basic), pos=(), repeat=True, nodenamefunc=purestr):
     """ List of strings for all expr->expr.arg pairs
 
     See the docstring of dotprint for explanations of the options.
+
+    nodenamefunc : See the docstring of dotnode.
 
     Examples
     ========
@@ -155,7 +231,7 @@ def dotedges(expr, atom=lambda x: not isinstance(x, Basic), pos=(), repeat=True)
     if atom(expr):
         return []
     else:
-        expr_str, arg_strs = purestr(expr, with_args=True)
+        expr_str, arg_strs = nodenamefunc(expr, with_args=True)
         if repeat:
             expr_str += '_%s' % str(pos)
             arg_strs = ['%s_%s' % (a, str(pos + (i,)))
@@ -260,7 +336,7 @@ def dotprint(expr,
     # Nodes #
     #########
     <BLANKLINE>
-    "Add(Integer(2), Symbol('x'))_()" ["color"="black", "label"="Add", "shape"="ellipse"];
+    "node_0_()" ["color"="black", "label"="Add", "shape"="ellipse"];
     "Integer(2)_(0,)" ["color"="black", "label"="2", "shape"="ellipse"];
     "Symbol('x')_(1,)" ["color"="black", "label"="x", "shape"="ellipse"];
     <BLANKLINE>
@@ -268,8 +344,8 @@ def dotprint(expr,
     # Edges #
     #########
     <BLANKLINE>
-    "Add(Integer(2), Symbol('x'))_()" -> "Integer(2)_(0,)";
-    "Add(Integer(2), Symbol('x'))_()" -> "Symbol('x')_(1,)";
+    "node_0_()" -> "Integer(2)_(0,)";
+    "node_0_()" -> "Symbol('x')_(1,)";
     }
 
     """
@@ -281,13 +357,16 @@ def dotprint(expr,
     graphstyle = _graphstyle.copy()
     graphstyle.update(kwargs)
 
+    nodenamefunc = get_purestr_short()
+
     nodes = []
     edges = []
+
     def traverse(e, depth, pos=()):
-        nodes.append(dotnode(e, styles, labelfunc=labelfunc, pos=pos, repeat=repeat))
+        nodes.append(dotnode(e, styles, labelfunc=labelfunc, pos=pos, repeat=repeat, nodenamefunc=nodenamefunc))
         if maxdepth and depth >= maxdepth:
             return
-        edges.extend(dotedges(e, atom=atom, pos=pos, repeat=repeat))
+        edges.extend(dotedges(e, atom=atom, pos=pos, repeat=repeat, nodenamefunc=nodenamefunc))
         [traverse(arg, depth+1, pos + (i,)) for i, arg in enumerate(e.args) if not atom(arg)]
     traverse(expr, 0)
 
