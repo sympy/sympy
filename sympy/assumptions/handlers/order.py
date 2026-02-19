@@ -19,6 +19,80 @@ from ..predicates.order import (NegativePredicate, NonNegativePredicate,
     ExtendedPositivePredicate,)
 
 
+def _determine_definite_strict_sign_of_add(expr, assumptions):
+    """
+    Analyzes an Add expression to determine if it is
+    definitively strictly positive or negative.
+
+    Parameters
+    ==========
+
+    expr : Add
+        The ``Add`` expression to analyse.
+
+    assumptions : Boolean
+        The assumptions given to ``expr``.
+
+    Returns
+    =======
+
+    tuple(bool, bool)
+        A tuple of (is_strictly_positive, is_strictly_negative)
+
+    Examples
+    =======
+
+    >>> from sympy import Symbol, Q
+    >>> from sympy.assumptions.handlers.order import (
+    ...     _determine_definite_strict_sign_of_add)
+    >>> x = Symbol('x')
+    >>> _determine_definite_strict_sign_of_add(x + 1, Q.positive(x))
+    (True, False)
+    >>> _determine_definite_strict_sign_of_add(-x - 3, Q.positive(x))
+    (False, True)
+    """
+    can_be_pos = True
+    can_be_neg = True
+    strict_pos = False
+    strict_neg = False
+
+    for arg in expr.args:
+        if not can_be_pos and not can_be_neg:
+            return False, False
+
+        is_pos = ask(Q.positive(arg), assumptions)
+        if is_pos:
+            strict_pos = True
+            can_be_neg = False
+            if not can_be_pos:
+                return False, False
+            continue
+
+        is_neg = ask(Q.negative(arg), assumptions)
+        if is_neg:
+            strict_neg = True
+            can_be_pos = False
+            if not can_be_neg:
+                return False, False
+            continue
+
+        if can_be_pos:
+            if is_neg is not False:
+                can_be_pos = False
+        if can_be_neg:
+            if is_pos is not False:
+                can_be_neg = False
+
+    # is_definitely_positive is True only if:
+    # 1) There are no negative terms (can_be_pos -> True)
+    # 2) Atleast one term is > 0 (strict_pos -> True)
+    # Similar logic for is_definitely_negative
+    is_definitely_positive = can_be_pos and strict_pos
+    is_definitely_negative = can_be_neg and strict_neg
+
+    return is_definitely_positive, is_definitely_negative
+
+
 # NegativePredicate
 
 def _NegativePredicate_number(expr, assumptions):
@@ -69,16 +143,14 @@ def _(expr, assumptions):
     if r is not True:
         return r
 
-    nonpos = 0
-    for arg in expr.args:
-        if ask(Q.negative(arg), assumptions) is not True:
-            if ask(Q.positive(arg), assumptions) is False:
-                nonpos += 1
-            else:
-                break
-    else:
-        if nonpos < len(expr.args):
-            return True
+    # determine the definite sign of the expr.
+    is_pos, is_neg = _determine_definite_strict_sign_of_add(expr, assumptions)
+
+    if is_neg:
+        return True
+    if is_pos:
+        return False
+    return None
 
 @NegativePredicate.register(Mul)
 def _(expr, assumptions):
@@ -294,16 +366,14 @@ def _(expr, assumptions):
     if r is not True:
         return r
 
-    nonneg = 0
-    for arg in expr.args:
-        if ask(Q.positive(arg), assumptions) is not True:
-            if ask(Q.negative(arg), assumptions) is False:
-                nonneg += 1
-            else:
-                break
-    else:
-        if nonneg < len(expr.args):
-            return True
+    # determine the definite sign of the expr.
+    is_pos, is_neg = _determine_definite_strict_sign_of_add(expr, assumptions)
+
+    if is_pos:
+        return True
+    if is_neg:
+        return False
+    return None
 
 @PositivePredicate.register(Pow)
 def _(expr, assumptions):
