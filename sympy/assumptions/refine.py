@@ -506,7 +506,7 @@ def refine_log(expr, assumptions):
 
     product_terms = arg.args if arg.is_Mul else (arg,)
 
-    resultant_terms = []
+    sum_of_log_terms = []
     other_terms = []
 
     for term in product_terms:
@@ -516,11 +516,11 @@ def refine_log(expr, assumptions):
                 if (ask(Q.positive(base), assumptions) and
                         ask(Q.real(exponent), assumptions)):
                     # log(b**e) -> e*log(b) when b > 0 and e is real
-                    resultant_terms.append(exponent * log(base))
+                    sum_of_log_terms.append(exponent * log(base))
                     continue
             if isinstance(term, exp):
                 if ask(Q.real(term.exp), assumptions):
-                    resultant_terms.append(term.exp)
+                    sum_of_log_terms.append(term.exp)
                     continue
                 elif term.exp.is_Add:
                     real_parts = []
@@ -531,11 +531,11 @@ def refine_log(expr, assumptions):
                         else:
                             other_parts.append(a)
                     if real_parts:
-                        resultant_terms.append(Add(*real_parts))
+                        sum_of_log_terms.append(sum(real_parts))
                         if other_parts:
-                            resultant_terms.append(log(exp(Add(*other_parts))))
+                            sum_of_log_terms.append(log(exp(sum(other_parts))))
                         continue
-            resultant_terms.append(log(term))
+            sum_of_log_terms.append(log(term))
         elif term.is_Pow:
             base, exponent = term.base, term.exp
             if ask(Q.positive(base), assumptions) and exponent.is_Add:
@@ -549,10 +549,27 @@ def refine_log(expr, assumptions):
                     else:
                         other_parts.append(a)
                 if real_parts:
-                    resultant_terms.append(Add(*real_parts) * log(base))
+                    sum_of_log_terms.append(sum(real_parts) * log(base))
                     if other_parts:
-                        resultant_terms.append(
-                            log(base**Add(*other_parts)))
+                        sum_of_log_terms.append(
+                            log(base**sum(other_parts)))
+                else:
+                    other_terms.append(term)
+            else:
+                other_terms.append(term)
+        elif isinstance(term, exp):
+            if term.exp.is_Add:
+                real_parts = []
+                other_parts = []
+                for a in term.exp.args:
+                    if ask(Q.real(a), assumptions):
+                        real_parts.append(a)
+                    else:
+                        other_parts.append(a)
+                if real_parts:
+                    sum_of_log_terms.append(sum(real_parts))
+                    if other_parts:
+                        sum_of_log_terms.append(log(exp(sum(other_parts))))
                 else:
                     other_terms.append(term)
             else:
@@ -560,10 +577,10 @@ def refine_log(expr, assumptions):
         else:
             other_terms.append(term)
 
-    if not resultant_terms:
+    if not sum_of_log_terms:
         return expr
 
-    result = Add(*resultant_terms)
+    result = sum(sum_of_log_terms)
     if other_terms:
         result += log(Mul(*other_terms))
 
