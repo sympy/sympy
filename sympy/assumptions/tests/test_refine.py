@@ -283,3 +283,10 @@ def test_sin_cos():
     assert refine(cos(x + n*pi/2 + k*pi/2 + m*pi/2), \
                   Q.odd(n) & Q.odd(k) & Q.integer(m)) == \
         (-1)**((n + k)/2) * cos(x + m*pi/2)
+
+
+def test_exp_refine_issue_29196():
+    assert refine(exp(x*2*I*pi), Q.integer(x)) == 1
+    assert refine(exp(x*I*pi), Q.even(x)) == 1
+    assert refine(exp(x*I*pi), Q.odd(x)) == -1
+
