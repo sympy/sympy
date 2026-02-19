@@ -10,13 +10,14 @@ from sympy.core.relational import (Eq, Lt, Gt, Ge, Le)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.core.sympify import sympify
-from sympy.functions.combinatorial.factorials import (binomial, factorial)
+from sympy.functions.combinatorial.factorials import (binomial, factorial, ff)
 from sympy.functions.elementary.complexes import (Abs, sign)
 from sympy.functions.elementary.exponential import (exp, exp_polar, log)
 from sympy.functions.elementary.hyperbolic import (cosh, csch, sinh)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (acos, asin, atan, cos, sin, sinc, tan)
+from sympy.functions.special.beta_functions import beta
 from sympy.functions.special.error_functions import erf
 from sympy.functions.special.gamma_functions import gamma
 from sympy.functions.special.hyper import hyper
@@ -360,14 +361,60 @@ def test_hypersimp():
     assert hypersimp(binomial(n + 1, k), k) == (n - k + 1)/(k + 1)
 
     term = (4*k + 1)*factorial(k)/factorial(2*k + 1)
-    assert hypersimp(term, k) == S.Half*((4*k + 5)/(3 + 14*k + 8*k**2))
+    assert hypersimp(term, k) == S.Half*((4*k + 5)/((2*k + 3)*(4*k + 1)))
 
     term = 1/((2*k - 1)*factorial(2*k + 1))
-    assert hypersimp(term, k) == (k - S.Half)/((k + 1)*(2*k + 1)*(2*k + 3))
+    assert hypersimp(term, k) == S.Half*((2*k - 1)/((k + 1)*(2*k + 1)*(2*k + 3)))
 
     term = binomial(n, k)*(-1)**k/factorial(k)
-    assert hypersimp(term, k) == (k - n)/(k + 1)**2
+    assert hypersimp(term, k) == -((-k + n)/(k + 1)**2)
 
+    term = Rational(2, 3)**(k + 1)*Piecewise((2**(k + 1)/(8*2**k), k - k <= 1), (0, True))
+    assert hypersimp(term, k) == Rational(2, 3)
+
+    # issue 27975
+    term = binomial(n + 1, k)*(2**(-n-1)) - binomial(n, k)*(2**(-n))
+    assert hypersimp(term, k) == (-k + n + 1)*(2*k - n + 1)/((k + 1)*(2*k - n - 1))
+
+    term = 2**(-n - 1)*binomial(n + 1, k) - binomial(n, k)/2**n
+    assert hypersimp(term, k) == (-k + n + 1)*(2*k - n + 1)/((k + 1)*(2*k - n - 1))
+
+    term = -2**(1 - k)*binomial(k + n - 1, k) + binomial(k + n, k)/2**k
+    assert hypersimp(term, k) == S.Half*((k + n)*(k - n + 1))/((k + 1)*(k - n))
+
+    term = -2**(1 - k)*factorial(k + 2)/factorial(k - 1) + factorial(k + 3)/(2**k*factorial(k))
+    assert hypersimp(term, k) == S.Half*(((2 - k)*(k + 3))/((3 - k)*(k + 1)))
+
+    term = 3**k*binomial(k + n, k)/factorial(k)
+    assert hypersimp(term, k) == 3*((k + n + 1)/(k + 1)**2)
+
+    term = 2**k*binomial(k, 2)/(k + 1)
+    assert hypersimp(term, k) == 2*((k + 1)**2/((k - 1)*(k + 2)))
+
+    term = (2*k + 1)*binomial(n, k)
+    assert hypersimp(term, k) == -(k - n)*(2*k + 3)/((k + 1)*(2*k + 1))
+
+    term = (k + 1)*binomial(n, k)/(k + 2)
+    assert hypersimp(term, k) == (-k + n)*(k + 2)**2/((k + 1)**2*(k + 3))
+
+    term = n*(n + a + b)*a**n*b**n/(factorial(n + a)*factorial(n + b))
+    assert hypersimp(term, n) == (a*b*(n + 1)*(a + b + n + 1)/(n*(a + b + n)*(a + n + 1)*(b + n + 1)))
+    assert hypersimp((a**n)*(n**2), n) == a*(n + 1)**2/n**2
+
+    assert hypersimp(1/(a*a**i - a**i*b), i) == 1/a
+
+    term = 2**a*Piecewise((2**a/(4*2**b), a - b <= 0), (0, True))/3
+    assert hypersimp(term, c) == Piecewise((4*2**b/2**a, a - b <= 0), (zoo, True)) * \
+        Piecewise((2**a/(4*2**b), a - b <= 0), (0, True))
+    assert hypersimp(Piecewise((k, True)), k) == (k + 1) / k
+    assert hypersimp(Piecewise((k + 1, n < 2), (i*k, True)), k) == Piecewise(((k + 2)/(k + 1), n < 2), ((k + 1)/k, True))
+    assert hypersimp(Piecewise((gamma(k + n)/gamma(n), n > 0), ((-1)**k*gamma(1 - n)/gamma(-k - n + 1), True)), k) == k + n
+
+    assert hypersimp(ff(n, k), k) == -k + n
+    assert hypersimp(beta(n, k), k) == k / (k + n)
+
+    # interval depends on k
+    assert hypersimp(Piecewise((k + 1, k < 2), (k, True)), k) is None
 
 def test_nsimplify():
     x = Symbol("x")
