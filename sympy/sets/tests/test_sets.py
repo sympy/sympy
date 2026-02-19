@@ -9,6 +9,7 @@ from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.core.sympify import sympify
 from sympy.functions.elementary.miscellaneous import (Max, Min, sqrt)
+from sympy import log
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.logic.boolalg import (false, true)
@@ -68,6 +69,14 @@ def test_imageset():
         Add(x, y), Interval(1, 2), Interval(2, 3)).dummy_eq(
         ImageSet(Lambda((x1, x2), x1 + x2),
         Interval(1, 2), Interval(2, 3)))
+
+def test_imageset_integer_intersection_irrational():
+    # Regression Test: Issue # 18081
+    # Imageset (Lambda (n, n * log (2)), S.Integer)&S.Integer should be {0}
+    ints = S.Integers
+    A = imageset(n, n*log(2), ints)
+    assert A.intersection(ints) == FiniteSet(0)
+
 
 
 def test_is_empty():
