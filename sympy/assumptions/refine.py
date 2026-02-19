@@ -486,7 +486,7 @@ def refine_conjugate(expr, assumptions):
     Examples
     ========
 
-    >>> from sympy import Q, conjugate, refine, log, Symbol
+    >>> from sympy import Q, conjugate, refine, log, Symbol, S
     >>> x = Symbol('x')
     >>> refine(conjugate(x), Q.real(x))
     x
@@ -494,16 +494,23 @@ def refine_conjugate(expr, assumptions):
     -x
     >>> refine(conjugate(log(x)), Q.complex(x) & ~Q.negative(x))
     log(conjugate(x))
-    >>> x = Symbol('x')
     >>> n = Symbol('n')
     >>> refine(conjugate(x**n), Q.real(x) & Q.integer(n))
     x**n
     >>> refine(conjugate(x**n), Q.imaginary(x) & Q.integer(n))
     (-x)**n
+    >>> refine(conjugate((x**S.Half)), Q.complex(x) & ~Q.negative(x))
+    sqrt(conjugate(x))
     """
     from sympy.functions.elementary.exponential import log
     from sympy.functions.elementary.complexes import conjugate
     arg = expr.args[0]
+
+    if isinstance(arg, Pow) and arg.args[1] == S.Half:
+        if ask(~Q.negative(arg.args[0]), assumptions) and ask(Q.complex(arg.args[0]), assumptions):
+            return conjugate(arg.args[0]) ** S.Half
+        return expr
+
     if ask(Q.real(arg), assumptions):
         return arg
 
@@ -511,8 +518,7 @@ def refine_conjugate(expr, assumptions):
         return -arg
 
     if isinstance(arg,log):
-        if ask(~Q.negative(arg.args[0]), assumptions):
-            if ask(~Q.negative(arg.args[0]), assumptions) and ask(Q.complex(arg.args[0]), assumptions):
+        if ask(~Q.negative(arg.args[0]), assumptions) and ask(Q.complex(arg.args[0]), assumptions):
                 return log(conjugate(arg.args[0]))
 
     if isinstance(arg, Pow):
@@ -520,8 +526,26 @@ def refine_conjugate(expr, assumptions):
         exp = arg.args[1]
         if ask(Q.integer(exp), assumptions):
             return conjugate(base) ** exp
-    return expr
+    return  expr
 
+def refine_Mul(expr, assumptions):
+    """
+    handler for Mul function
+
+    Examples
+    ========
+
+    >>> from sympy.assumptions.refine import refine_Mul
+    >>> from sympy import conjugate, Symbol, Q
+    >>> z = Symbol('z')
+    >>> refine_Mul(z * conjugate(z), Q.complex(z))
+    Abs(z)**2
+    """
+    from sympy.functions.elementary.complexes import conjugate, Abs
+    if expr.args[1] == conjugate(expr.args[0]) or expr.args[0] == conjugate(expr.args[1]):
+        if ask(Q.complex(expr.args[0]), assumptions):
+            return Abs(expr.args[0]) ** 2
+    return expr
 
 handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'Abs': refine_abs,
@@ -535,4 +559,5 @@ handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'cos': refine_sin_cos,
     'sin': refine_sin_cos,
     'conjugate': refine_conjugate,
+    'Mul' : refine_Mul,
 }

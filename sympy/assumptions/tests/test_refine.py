@@ -1,6 +1,7 @@
 from sympy.assumptions.ask import Q
 from sympy.assumptions.refine import refine
 from sympy.core.expr import Expr
+from sympy.core.mul import Mul
 from sympy.core.numbers import (I, Rational, nan, pi)
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
@@ -298,3 +299,13 @@ def test_conjugate():
     n = Symbol('n')
     assert refine(conjugate(x ** n), Q.complex(x) & Q.integer(n)) == conjugate(x) ** n
     assert refine(conjugate(x ** n), ~Q.complex(x)) == conjugate(x ** n)
+
+    assert refine(conjugate(x ** S.Half), Q.complex(x) & ~Q.negative(x)) == conjugate(x) ** S.Half
+    assert refine(conjugate(x ** S.Half), Q.real(x) & Q.negative(x)) == conjugate(x** S.Half)
+    assert refine(conjugate(x ** S.Half), Q.real(x)) == conjugate(x ** S.Half)
+
+
+def test_Mul():
+    z = Symbol('z')
+    assert refine(Mul(z * conjugate(z)), Q.complex(z)) == Abs(z) ** 2
+    assert refine(Mul(z * conjugate(z)), Q.real(z)) == z ** 2
