@@ -10,7 +10,7 @@ from sympy.external import import_module
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.integers import floor, ceiling
 from sympy.functions.elementary.miscellaneous import (sqrt, cbrt, root, Min,
-                                                      Max, real_root, Rem)
+                                                      Max, real_root, Rem, Hyperoperation, Loop)
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.functions.special.delta_functions import Heaviside
 
@@ -502,3 +502,27 @@ def test_minmax_no_evaluate():
         assert Max(0, p).args == (0, p)
         assert Min(0, p) != 0
         assert Min(0, p).args == (0, p)
+
+def test_hyperoperation():
+    from sympy.abc import x, y
+    assert Hyperoperation(0, x, y) == x + 1
+    assert Hyperoperation(1, x, y) == x + y
+    assert Hyperoperation(2, x, y) == x * y
+    assert Hyperoperation(3, x, y) == x ** y
+    assert Hyperoperation(4, 2, 4) == 65536
+    raises(ValueError, lambda: Hyperoperation(-1, x, y))
+    raises(ValueError, lambda: Hyperoperation(4, x, -2))
+    raises(ValueError, lambda: Hyperoperation(oo, x, y))
+
+def test_loop():
+    from sympy.abc import x, y, z
+    assert Loop(x + 2, 5) == x + 10
+    assert Loop(5, 3, x) == 5
+    assert Loop(5, 0, x) == x
+    assert Loop(x ** 2, 5) == x ** 32
+    assert Loop(x + y, 5, x) == x + 5*y
+    assert Loop(x + y, 0, x) == x
+    raises(ValueError, lambda: Loop(x, -1))
+    raises(ValueError, lambda: Loop(x + y, 5))
+    raises(ValueError, lambda: Loop(x + y, 5, z))
+    raises(ValueError, lambda: Loop(x, oo))

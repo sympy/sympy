@@ -18,7 +18,7 @@ from sympy.core.symbol import Dummy
 from sympy.core.rules import Transform
 from sympy.core.logic import fuzzy_and, fuzzy_or, _torf
 from sympy.core.traversal import walk
-from sympy.core.numbers import Integer
+from sympy.core.numbers import Integer, Number
 from sympy.logic.boolalg import And, Or
 
 
@@ -913,3 +913,131 @@ class Rem(DefinedFunction):
         if q.is_Number:
             if p.is_Number:
                 return p - Integer(p/q)*q
+
+###############################################################################
+############################### HYPER OPERATION ###############################
+###############################################################################
+
+class Hyperoperation(DefinedFunction):
+    """Returns the hyperoperation of degree ``n`` between ``x`` and ``y``. In Knuth's up arrow notation, this is ``x`` (n-2 up arrows) ``y``.
+
+    Parameters
+    ==========
+    degree: Expr
+        The degree of the hyperoperation, where 1 is the successor function, 2 is addition, 3 is multiplication, 4 is exponentiation, and so on.
+        In knuth's up arrow notation, this is two more than the number of up arrows.
+
+    x: Expr
+        The base. In Knuth's up arrow notation, this is the number on the left hand side.
+
+    y: Expr
+        The height. In Knuth's up arrow notation, this is the number on the right hand side.
+
+    Notes
+    =====
+
+    Currently, ``y`` must be a positive integer for degrees greater than 3.
+
+    Examples
+    ========
+
+    >>> from sympy.abc import x, y
+    >>> from sympy.functions.elementary.miscellaneous import Hyperoperation
+    >>> Hyperoperation(1, x, y)
+    x + y
+    >>> Hyperoperation(3, x, y)
+    x**y
+    >>> Hyperoperation(4, x, y)
+    Hyperoperation(4, x, y)
+    >>> Hyperoperation(4, x, y).subs({x: 2, y: 4})
+    65536
+    """
+    @classmethod
+    def eval(cls, degree, x, y):
+        if degree == 0:
+            return x + 1
+        elif degree == 1:
+            return x + y
+        elif degree == 2:
+            return x * y
+        elif degree == 3:
+            return x ** y
+        else:
+            if isinstance(degree, Integer):
+                if degree.is_nonnegative is False or degree.is_real is False or degree.is_finite is False:
+                    raise ValueError("Degree must be a non-negative integer.")
+                if y.is_positive is False or y.is_integer is False or y.is_real is False:
+                    raise ValueError("y must be a positive real integer for degree > 3.")
+                if isinstance(y, Number):
+                    t = x
+                    for i in range(y-1):
+                        t = Hyperoperation(degree - 1, x, t)
+                    return t
+            else:
+                if degree.is_nonnegative is False or degree.is_real is False or degree.is_integer is False or degree.is_finite is False:
+                    raise ValueError("Degree must be a non-negative real integer.")
+
+###############################################################################
+################################### LOOPING ###################################
+###############################################################################
+
+class Loop(DefinedFunction):
+    """Applies an expression to itself repeatedly.
+
+    Parameters
+    ==========
+
+    expr : Expr
+        The expression to be applied repeatedly.
+
+    n : Expr
+        The number of times to apply the expression to itself.
+
+    s : Symbol | None
+        The symbol which is treated as the variable. All other symbols in the expression will be treated as constants.
+
+    Notes
+    =====
+    This will not automatically evaluate unless ``n`` is a number (not an expression).
+    Negative, non-integral, or non-real values for ``n`` are currently not supported.
+    If ``s`` is not provided, ``expr`` must contain exactly one variable.
+
+    Examples
+    ========
+    >>> from sympy.abc import x, y
+    >>> from sympy.functions.elementary.miscellaneous import Loop
+    >>> Loop(x + 1, 3)
+    x + 3
+    >>> Loop(2 ** x, 2)
+    2**(2**x)
+    >>> Loop(x + 23, 1)
+    x + 23
+    >>> Loop(x + 23, 0)
+    x
+    >>> Loop(x + 3, y + 2)
+    Loop(x + 3, y + 2)
+    >>> Loop(x + 1, y + 2).subs({y: 3})
+    x + 5
+    """
+
+    @classmethod
+    def eval(cls, expr, n, s=None):
+        if n.is_integer is False or n.is_nonnegative is False or n.is_real is False or n.is_finite is False:
+            raise ValueError("n must be a non-negative real integer.")
+        else:
+            if isinstance(n, Integer):
+                symbols = expr.free_symbols
+                if s is None:
+                    if len(symbols) != 1:
+                        raise ValueError("If s is not provided, expr must contain exactly one variable.")
+                    else:
+                        var = [*symbols][0]
+                else:
+                    if s not in symbols and len(symbols) != 0:
+                        raise ValueError("s must be a symbol in expr.")
+                    else:
+                        var = s
+                t = var
+                for i in range(n):
+                    t = t.subs({var: expr})
+                return t
