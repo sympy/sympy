@@ -474,8 +474,10 @@ class ArrayPrinter:
         raise ValueError("out of letters")
 
     def _print_ArrayTensorProduct(self, expr):
+        from sympy.tensor.array.expressions.array_expressions import _get_sub_ndim_list
+
         letters = self._get_letter_generator_for_einsum()
-        contraction_string = ",".join(["".join([next(letters) for j in range(i)]) for i in expr.subranks])
+        contraction_string = ",".join(["".join([next(letters) for j in range(i)]) for i in _get_sub_ndim_list(expr)])
         return '%s("%s", %s)' % (
                 self._module_format(self._module + "." + self._einsum),
                 contraction_string,
@@ -488,13 +490,14 @@ class ArrayPrinter:
         contraction_indices = expr.contraction_indices
 
         if isinstance(base, ArrayTensorProduct):
+            from sympy.tensor.array.expressions.array_expressions import _get_sub_ndim_list
             elems = ",".join(["%s" % (self._print(arg)) for arg in base.args])
-            ranks = base.subranks
+            ndim_list = _get_sub_ndim_list(base)
         else:
             elems = self._print(base)
-            ranks = [len(base.shape)]
+            ndim_list = [len(base.shape)]
 
-        contraction_string, letters_free, letters_dum = self._get_einsum_string(ranks, contraction_indices)
+        contraction_string, letters_free, letters_dum = self._get_einsum_string(ndim_list, contraction_indices)
 
         if not contraction_indices:
             return self._print(base)
@@ -510,12 +513,14 @@ class ArrayPrinter:
 
     def _print_ArrayDiagonal(self, expr):
         from sympy.tensor.array.expressions.array_expressions import ArrayTensorProduct
+        from sympy.tensor.array.expressions.array_expressions import _get_sub_ndim_list
+
         diagonal_indices = list(expr.diagonal_indices)
         if isinstance(expr.expr, ArrayTensorProduct):
-            subranks = expr.expr.subranks
+            subranks = _get_sub_ndim_list(expr.expr)
             elems = expr.expr.args
         else:
-            subranks = expr.subranks
+            subranks = _get_sub_ndim_list(expr)
             elems = [expr.expr]
         diagonal_string, letters_free, letters_dum = self._get_einsum_string(subranks, diagonal_indices)
         elems = [self._print(i) for i in elems]

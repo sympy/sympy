@@ -1909,7 +1909,7 @@ class LatexPrinter(Printer):
 
     def _print_NDimArray(self, expr: NDimArray):
 
-        if expr.rank() == 0:
+        if expr.ndim == 0:
             return self._print(expr[()])
 
         mat_str = self._settings['mat_str']
@@ -1917,7 +1917,7 @@ class LatexPrinter(Printer):
             if self._settings['mode'] == 'inline':
                 mat_str = 'smallmatrix'
             else:
-                if (expr.rank() == 0) or (expr.shape[-1] <= 10):
+                if (expr.ndim == 0) or (expr.shape[-1] <= 10):
                     mat_str = 'matrix'
                 else:
                     mat_str = 'array'
@@ -1932,15 +1932,15 @@ class LatexPrinter(Printer):
             block_str = r'\left' + left_delim + block_str + \
                         r'\right' + right_delim
 
-        if expr.rank() == 0:
+        if expr.ndim == 0:
             return block_str % ""
 
-        level_str: list[list[str]] = [[] for i in range(expr.rank() + 1)]
+        level_str: list[list[str]] = [[] for i in range(expr.ndim + 1)]
         shape_ranges = [list(range(i)) for i in expr.shape]
         for outer_i in itertools.product(*shape_ranges):
             level_str[-1].append(self._print(expr[outer_i]))
             even = True
-            for back_outer_i in range(expr.rank()-1, -1, -1):
+            for back_outer_i in range(expr.ndim-1, -1, -1):
                 if len(level_str[back_outer_i+1]) < expr.shape[back_outer_i]:
                     break
                 if even:
@@ -1957,7 +1957,7 @@ class LatexPrinter(Printer):
 
         out_str = level_str[0][0]
 
-        if expr.rank() % 2 == 1:
+        if expr.ndim % 2 == 1:
             out_str = block_str % out_str
 
         return out_str
