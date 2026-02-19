@@ -2071,6 +2071,7 @@ def test_real_pow():
     assert ask(Q.real(x**two_thirds), Q.zero(x)) is True
     assert ask(Q.real(x**pi), Q.zero(x)) is True
     assert ask(Q.real(x**sqrt(2)), Q.zero(x)) is True
+    assert ask(Q.real(x**Rational(1/2)), Q.zero(x)) is True
 
 
 @_both_exp_pow
