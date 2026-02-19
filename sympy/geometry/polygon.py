@@ -1157,6 +1157,13 @@ class Polygon(GeometrySet):
         if center_dist <= e1_max_radius + e2_max_radius:
             warnings.warn("Polygons may intersect producing erroneous output",
                           stacklevel=3)
+            # If polygons actually intersect (vertex inside other polygon), return 0
+            for vertex in e1.vertices:
+                if e2.encloses_point(vertex):
+                    return S.Zero
+            for vertex in e2.vertices:
+                if e1.encloses_point(vertex):
+                    return S.Zero
 
         '''
         Find the upper rightmost vertex of e1 and the lowest leftmost vertex of e2
@@ -1245,7 +1252,7 @@ class Polygon(GeometrySet):
             e2_angle = pi - support_line.angle_between(Line(
                 e2_current, e2_next))
 
-            if (e1_angle < e2_angle) is True:
+            if (e1_angle < e2_angle) == True:
                 support_line = Line(e1_current, e1_next)
                 e1_segment = Segment(e1_current, e1_next)
                 min_dist_current = e1_segment.distance(e2_current)
@@ -1259,7 +1266,7 @@ class Polygon(GeometrySet):
                 else:
                     e1_current = e1_next
                     e1_next = e1_connections[e1_next][1]
-            elif (e1_angle > e2_angle) is True:
+            elif (e1_angle > e2_angle) == True:
                 support_line = Line(e2_next, e2_current)
                 e2_segment = Segment(e2_current, e2_next)
                 min_dist_current = e2_segment.distance(e1_current)

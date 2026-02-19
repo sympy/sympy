@@ -235,7 +235,7 @@ def test_harmonic():
     assert harmonic(oo, 3) == zeta(3)
     assert harmonic(oo, Dummy(negative=True)) is S.NaN
     ip = Dummy(integer=True, positive=True)
-    if (1/ip <= 1) is True:  #---------------------------------+
+    if (1/ip <= 1) == True:  #---------------------------------+
         assert None, 'delete this if-block and the next line' #|
     ip = Dummy(even=True, positive=True)  #--------------------+
     assert harmonic(oo, 1/ip) is oo

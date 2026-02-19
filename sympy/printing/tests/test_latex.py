@@ -1582,8 +1582,13 @@ def test_latex_Matrix():
     assert latex(M, mat_delim=None, mat_str='bmatrix') == \
         r'\begin{bmatrix}x + 1 & y\\y & x - 1\end{bmatrix}'
 
-    M2 = Matrix(1, 11, range(11))
-    assert latex(M2) == \
+    M_10 = Matrix(1, 10, range(10))
+    assert latex(M_10) == \
+        r'\left[\begin{matrix}' \
+        r'0 & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9\end{matrix}\right]'
+
+    M_11 = Matrix(1, 11, range(11))
+    assert latex(M_11) == \
         r'\left[\begin{array}{ccccccccccc}' \
         r'0 & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & 10\end{array}\right]'
 
