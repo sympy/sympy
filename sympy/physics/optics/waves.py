@@ -19,6 +19,9 @@ from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (atan2, cos, sin)
 from sympy.physics.units import speed_of_light, meter, second
+from sympy.core.numbers import Integer,Float
+from sympy import Tuple
+
 
 
 c = speed_of_light.convert_to(meter/second)
@@ -27,7 +30,7 @@ c = speed_of_light.convert_to(meter/second)
 class TWave(Expr):
 
     r"""
-    This is a simple transverse sine wave travelling in a one-dimensional space.
+    This is a simple transverse sine wave travelling in a three-dimensional space.
     Basic properties are required at the time of creation of the object,
     but they can be changed later with respective methods provided.
 
@@ -54,6 +57,8 @@ class TWave(Expr):
         Time period of the wave.
     n : Sympifyable
         Refractive index of the medium.
+    direction : tuple, optional
+        3D direction vector of wave propagation (default is (1, 0, 0)).
 
     Raises
     =======
@@ -92,7 +97,8 @@ class TWave(Expr):
             frequency=None,
             phase=S.Zero,
             time_period=None,
-            n=Symbol('n')):
+            n=Symbol('n'),
+            direction=(1, 0, 0)):
         if time_period is not None:
             time_period = _sympify(time_period)
             _frequency = S.One/time_period
@@ -108,11 +114,17 @@ class TWave(Expr):
             frequency = _frequency
         if time_period is None:
             time_period = _time_period
+        # Validate direction, it should be a 3-element tuple with numbers or sympy objects
+        if len(direction) != 3 or not all(isinstance(comp, (int, float,Integer,Float)) for comp in direction):
+            raise ValueError("Direction must be a 3-element tuple number.")
+        # normalize the direction vector
+        magnitude = S(sqrt(sum(comp**2 for comp in direction)))
+        direction = Tuple(*tuple(comp / magnitude for comp in direction))
 
         amplitude = _sympify(amplitude)
         phase = _sympify(phase)
         n = sympify(n)
-        obj = Basic.__new__(cls, amplitude, frequency, phase, time_period, n)
+        obj = Basic.__new__(cls, amplitude, frequency, phase, time_period, n,direction)
         return obj
 
     @property
@@ -192,6 +204,11 @@ class TWave(Expr):
         Returns the refractive index of the medium
         """
         return self.args[4]
+
+    @property
+    def direction(self):
+        """3D direction vector of wave propagation."""
+        return self.args[5]
 
     @property
     def wavelength(self):
@@ -281,21 +298,32 @@ class TWave(Expr):
         The type of interference will depend on their phase angles.
         """
         if isinstance(other, TWave):
-            if self.frequency == other.frequency and self.wavelength == other.wavelength:
-                return TWave(sqrt(self.amplitude**2 + other.amplitude**2 + 2 *
-                                  self.amplitude*other.amplitude*cos(
-                                      self.phase - other.phase)),
-                             self.frequency,
-                             atan2(self.amplitude*sin(self.phase)
-                             + other.amplitude*sin(other.phase),
-                             self.amplitude*cos(self.phase)
-                             + other.amplitude*cos(other.phase))
-                             )
+            if (self.frequency == other.frequency and
+                self.n == other.n and
+                self.direction == other.direction):
+                new_amplitude = sqrt(
+                    self.amplitude**2 + other.amplitude**2 +
+                    2 * self.amplitude * other.amplitude * cos(self.phase - other.phase)
+                )
+                new_phase = atan2(
+                    self.amplitude * sin(self.phase) + other.amplitude * sin(other.phase),
+                    self.amplitude * cos(self.phase) + other.amplitude * cos(other.phase)
+                )
+                return TWave(
+                    new_amplitude,
+                    self.frequency,
+                    new_phase,
+                    self.time_period,
+                    self.n,
+                    self.direction
+                )
             else:
-                raise NotImplementedError("Interference of waves with different frequencies"
-                    " has not been implemented.")
+                raise NotImplementedError(
+                    "Superposition of waves with different frequencies, "
+                    "refractive indices, or directions is not implemented."
+                )
         else:
-            raise TypeError(type(other).__name__ + " and TWave objects cannot be added.")
+            raise TypeError(f"Cannot add {type(other).__name__} to TWave.")
 
     def __mul__(self, other):
         """
