@@ -1331,7 +1331,24 @@ class Permutation(Atom):
 
     def mul_inv(self, other):
         """
-        other*~self, self and other have _array_form
+        Calculates the product of ``other`` and the inverse of ``self``.
+
+        Explanation
+        ===========
+
+        Mathematically, this computes ``other * ~self``.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics import Permutation
+        >>> p = Permutation([1, 2, 0])
+        >>> q = Permutation([2, 0, 1])
+        >>> p.mul_inv(q)
+        (0 1 2)
+        >>> q * ~p
+        (0 1 2)
+
         """
         a = _af_invert(self._array_form)
         b = other._array_form
