@@ -1582,6 +1582,16 @@ def test_solvify_piecewise():
     assert solvify(p4, x, S.Reals) == [pi]
 
 
+def test_solveset_piecewise_condition_not_in_symbol():
+    x, y = symbols('x y', real=True)
+    f = Piecewise((x**2 - 4, y < 5), (x**2 - 36, True))
+    sol = solveset(f, x, S.Reals)
+
+    assert sol == Union(
+        ConditionSet(x, y >= 5, FiniteSet(-6, 6)),
+        ConditionSet(x, y < 5, FiniteSet(-2, 2)),
+    )
+
 def test_abs_invert_solvify():
 
     x = Symbol('x',positive=True)
