@@ -15,6 +15,7 @@ from typing import overload, TYPE_CHECKING, Generic
 
 from sympy.polys.domains.domain import Er
 
+
 from collections import Counter
 from functools import reduce
 
@@ -526,8 +527,6 @@ class DomainMatrix(Generic[Er]):
         ==========
 
         K : Represents the desired domain or field.
-            Alternatively, ``None`` may be passed, in which case this method
-            just returns a copy of this DomainMatrix.
 
         Returns
         =======
