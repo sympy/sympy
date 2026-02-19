@@ -143,7 +143,7 @@ class RouthHurwitz(MutableDenseMatrix):
     ==========
     .. [1] https://en.wikipedia.org/wiki/Routh-Hurwitz_stability_criterion
     .. [2] https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=b1ed2c8cbd00da0a4aac7b7e9684255a833af6b4
-    .. [3] https://www.circuitbread.com/tutorials/routh-hurwitz-criterion-part-2-3-3
+    .. [3] https://web.archive.org/web/20210625043801/https://www.circuitbread.com/tutorials/routh-hurwitz-criterion-part-2-3-3
 
     """
     def __new__(cls, polynomial, var):
