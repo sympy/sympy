@@ -51,6 +51,22 @@ def check_satisfiability(prop, _prop, factbase):
 
     all_pred, all_exprs = get_all_pred_and_expr_from_enc_cnf(sat_true)
 
+    # Some expressions like generic symbols are not strictly real.
+    # However, if the assumptions imply they are real, we can handle them.
+    # We inspect the factbase (assumptions only) to find such symbols.
+    # We only allow symbols that appear with non-negated real-implying predicates.
+    real_implying_preds = WHITE_LIST | {Q.real}
+    allowed_symbols = set()
+
+    # Build reverse encoding to check which predicates are asserted (not negated)
+    rev_encoding = {value: key for key, value in factbase.encoding.items()}
+    for clause in factbase.data:
+        for lit in clause:
+            if lit > 0:  # Only consider non-negated literals
+                pred = rev_encoding.get(lit)
+                if isinstance(pred, AppliedPredicate) and pred.function in real_implying_preds:
+                    allowed_symbols.update(pred.arguments)
+
     for pred in all_pred:
         if pred.function not in WHITE_LIST and pred.function != Q.ne:
             raise UnhandledInput(f"LRASolver: {pred} is an unhandled predicate")
@@ -62,7 +78,7 @@ def check_satisfiability(prop, _prop, factbase):
 
     # convert old assumptions into predicates and add them to sat_true and sat_false
     # also check for unhandled predicates
-    for assm in extract_pred_from_old_assum(all_exprs):
+    for assm in extract_pred_from_old_assum(all_exprs, allowed_symbols):
         n = len(sat_true.encoding)
         if assm not in sat_true.encoding:
             sat_true.encoding[assm] = n+1
@@ -223,13 +239,20 @@ def get_all_pred_and_expr_from_enc_cnf(enc_cnf):
 
     return all_pred, all_exprs
 
-def extract_pred_from_old_assum(all_exprs):
+def extract_pred_from_old_assum(all_exprs, allowed_symbols=None):
     """
     Returns a list of relevant new assumption predicate
     based on any old assumptions.
 
     Raises an UnhandledInput exception if any of the assumptions are
-    unhandled.
+    explicitly non-real (is_real is False). Symbols with unknown realness
+    (is_real is None) are allowed if they appear in the allowed_symbols set,
+    which contains symbols that have real-implying predicates in the factbase.
+
+    Real-implying predicates include all ordering predicates (Q.positive,
+    Q.negative, Q.zero, Q.nonzero, Q.nonnegative, Q.nonpositive, etc.)
+    because complex numbers cannot be ordered. Any symbol with such a
+    predicate must necessarily be real.
 
     Ignored predicate:
     - commutative
@@ -250,6 +273,8 @@ def extract_pred_from_old_assum(all_exprs):
     >>> extract_pred_from_old_assum([x, y, 2])
     [Q.positive(x), Q.positive(y)]
     """
+    if allowed_symbols is None:
+        allowed_symbols = set()
     ret = []
     for expr in all_exprs:
         if not hasattr(expr, "free_symbols"):
@@ -257,11 +282,15 @@ def extract_pred_from_old_assum(all_exprs):
         if len(expr.free_symbols) == 0:
             continue
 
+        # Check if expression is real or if all its free symbols are allowed
         if expr.is_real is not True:
-            raise UnhandledInput(f"LRASolver: {expr} must be real")
+            if expr not in allowed_symbols and not expr.free_symbols.issubset(allowed_symbols):
+                raise UnhandledInput(f"LRASolver: {expr} must be real")
         # test for I times imaginary variable; such expressions are considered real
-        if isinstance(expr, Mul) and any(arg.is_real is not True for arg in expr.args):
-            raise UnhandledInput(f"LRASolver: {expr} must be real")
+        if isinstance(expr, Mul):
+            for arg in expr.args:
+                if arg.is_real is not True and arg not in allowed_symbols and not arg.free_symbols.issubset(allowed_symbols):
+                    raise UnhandledInput(f"LRASolver: {expr} must be real")
 
         if expr.is_integer == True and expr.is_zero != True:
             raise UnhandledInput(f"LRASolver: {expr} is an integer")
