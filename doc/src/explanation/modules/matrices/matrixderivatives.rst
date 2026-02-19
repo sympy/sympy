@@ -102,7 +102,7 @@ operations on arrays of any dimension.
 +---------------------------+--------------------------------+-------------------------------------------+-----------------------------------------------------------------------------------------------------------+
 | operation name            | SymPy object                   | representation                            | index-explicit equivalent                                                                                 |
 +===========================+================================+===========================================+===========================================================================================================+
-| tensor product            | ``ArrayTensorProduct``         | $A \otimes B$                             | $A_{ij} B_{kl}$                                                                                           |
+| tensor product            | ``ArrayTensorProduct``         | $A \boxtimes B$                           | $A_{ij} B_{kl}$                                                                                           |
 +---------------------------+--------------------------------+-------------------------------------------+-----------------------------------------------------------------------------------------------------------+
 | contraction               | ``ArrayContraction``           | $A$ on axes $a$, $b$                      | $A_{i_{1} i_{2} \ldots i_{a} \ldots i_{b} \ldots } \Rightarrow \sum_j A_{i_{1} \ldots j \ldots j \ldots}$ |
 +---------------------------+--------------------------------+-------------------------------------------+-----------------------------------------------------------------------------------------------------------+
@@ -157,7 +157,7 @@ expressions encompass a more general set of operations.
 +---------------------------+-------------------------------------------+------------------------------------------------------------+----------------------------------------------------------------------------------+
 | matrix operation          | matrix expression form                    | index form                                                 | array expression form                                                            |
 +===========================+===========================================+============================================================+==================================================================================+
-| matrix multiplication     | $\mathbf{M} \mathbf{N}$                   | ${}_{\{ij\}} \Rightarrow \sum_k M_{ik} N_{kj}$             | contraction: $M \otimes N$ on 2nd and 3rd axes                                   |
+| matrix multiplication     | $\mathbf{M} \mathbf{N}$                   | ${}_{\{ij\}} \Rightarrow \sum_k M_{ik} N_{kj}$             | contraction: $M \boxtimes N$ on 2nd and 3rd axes                                 |
 +---------------------------+-------------------------------------------+------------------------------------------------------------+----------------------------------------------------------------------------------+
 | trace                     | $\mbox{tr}(\mathbf{M})$                   | ${}_{\{\}} \Rightarrow \sum_i M_{ii}$                      | contraction: $M$ on 1st and 2nd axes                                             |
 +---------------------------+-------------------------------------------+------------------------------------------------------------+----------------------------------------------------------------------------------+
@@ -165,20 +165,20 @@ expressions encompass a more general set of operations.
 +---------------------------+-------------------------------------------+------------------------------------------------------------+----------------------------------------------------------------------------------+
 | transposition             | $\mathbf{M}'$                             | ${}_{\{ij\}} \Rightarrow M_{ji}$                           | permutation: $M$ on 1st and 2nd axes                                             |
 +---------------------------+-------------------------------------------+------------------------------------------------------------+----------------------------------------------------------------------------------+
-| Hadamard product          | $\mathbf{M} \circ \mathbf{N}$             | ${}_{\{ij\}} \Rightarrow M_{ij} N_{ij}$                    | diagonalize: $M \otimes N$ on 1st-3rd axes and 2nd-4th axes                      |
+| Hadamard product          | $\mathbf{M} \circ \mathbf{N}$             | ${}_{\{ij\}} \Rightarrow M_{ij} N_{ij}$                    | diagonalize: $M \boxtimes N$ on 1st-3rd axes and 2nd-4th axes                    |
 +---------------------------+-------------------------------------------+------------------------------------------------------------+----------------------------------------------------------------------------------+
-| Kronecker product         | $\mathbf{M} \boxtimes \mathbf{N}$         | ${}_{\{m=id_1+k,n=jd_2+l\}} \Longrightarrow A_{ij} B_{kl}$ | permute $M \otimes N$ on 2nd and 3rd axes, then reshape                          |
+| Kronecker product         | $\mathbf{M} \otimes \mathbf{N}$         | ${}_{\{m=id_1+k,n=jd_2+l\}} \Longrightarrow A_{ij} B_{kl}$ | permute $M \boxtimes N$ on 2nd and 3rd axes, then reshape                          |
 +---------------------------+-------------------------------------------+------------------------------------------------------------+----------------------------------------------------------------------------------+
 
 Kronecker product versus tensor product
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-In SymPy, the Kronecker product $\boxtimes$ and tensor product $\otimes$
+In SymPy, the Kronecker product $\otimes$ and tensor product $\boxtimes$
 represent very similar underlying operations.  Given matrices $\mathbf{A}$ and
 $\mathbf{B}$, the elements of the resulting tensor product are combined as the
 product of the individual elements:
 
-$$\mathbf{A} \otimes \mathbf{B} \Longrightarrow A_{ij} B_{kl} $$
+$$\mathbf{A} \boxtimes \mathbf{B} \Longrightarrow A_{ij} B_{kl} $$
 
 When representing this expression as an array, different approaches arise
 depending on the index-order and the reshaping of the 4-dimensional array into
@@ -195,7 +195,7 @@ $$\left[
 
 The Kronecker product can be defined in terms of indices ${}_{\{mn\}}$ where $m$ spans over rows of both $\mathbf{A}$
 and $\mathbf{B}$, while $n$ spans over their columns:
-$$A \boxtimes B = \Big[ {}_{\{mn\}} = {}_{\{m=id_1+k,n=jd_2+l\}} \Longrightarrow A_{ij} B_{kl} \Big]$$
+$$A \otimes B = \Big[ {}_{\{mn\}} = {}_{\{m=id_1+k,n=jd_2+l\}} \Longrightarrow A_{ij} B_{kl} \Big]$$
 where $[d_1 \times d_2]$ is the shape of $\mathbf{A}$.
 
 The Kronecker product, implemented by ``KroneckerProduct`` and ``kronecker_product``, combines the rows and columns of $\mathbf{A}$ and $\mathbf{B}$
@@ -330,7 +330,7 @@ denominator has length 1, the result can be collapsed to the $[k \times k]$
 identity matrix $\mathbf{I}_{[k]}$ instead of keeping the full tensor form.
 Explicitly:
 
-$$\left[{}_{\{mnij\}} \Longrightarrow \frac{\partial}{\partial x_{mn}}x_{ij} = \delta_{mi} \delta_{nj} = \big( \mathbf{I}_{[k]} \otimes \mathbf{I}_{[1]} \big)_{minj}\right] \rightarrow \Big[ {}_{\{mi\}}\Longrightarrow \big(\mathbf{I}_{[k]}\big)_{mi}\Big]$$
+$$\left[{}_{\{mnij\}} \Longrightarrow \frac{\partial}{\partial x_{mn}}x_{ij} = \delta_{mi} \delta_{nj} = \big( \mathbf{I}_{[k]} \boxtimes \mathbf{I}_{[1]} \big)_{minj}\right] \rightarrow \Big[ {}_{\{mi\}}\Longrightarrow \big(\mathbf{I}_{[k]}\big)_{mi}\Big]$$
 
 Here, the second and fourth axes are singletons, appearing in the derivative as
 scalar identity matrix $\mathbf{I}_{[1]}$, equivalent to scalar unit.  In index
@@ -346,7 +346,7 @@ Derive matrix by itself
 As an example, the derivative of $[k \times l]$ matrix $\mathbf{X}$ by itself
 is given by identity relationships between indices:
 
-$${}_{\{mnij\}} \Longrightarrow \frac{\partial}{\partial X_{mn}} \Big ( X_{ij} \Big ) = \delta_{mi} \delta_{nj} = \Big( \mathbf{I}_{[k]} \otimes \mathbf{I}_{[l]} \Big)_{minj}, $$
+$${}_{\{mnij\}} \Longrightarrow \frac{\partial}{\partial X_{mn}} \Big ( X_{ij} \Big ) = \delta_{mi} \delta_{nj} = \Big( \mathbf{I}_{[k]} \boxtimes \mathbf{I}_{[l]} \Big)_{minj}, $$
 
 where $\delta$ is the Kronecker delta, which satisfies $\delta_{ab} = 1$ if
 $a = b$ and $\delta_{ab} = 0$ otherwise.  Indeed, matrix $\mathbf{X}$ is made of
@@ -378,9 +378,9 @@ Notice that the result of ``X.diff(X)`` can also be expressed as
 
 indeed some authors represent
 
-$$\frac{\partial}{\partial \mathbf{X}}\mathbf{X} = \mathbf{I}_{[k]} \bar\boxtimes \mathbf{I}_{[l]},$$
+$$\frac{\partial}{\partial \mathbf{X}}\mathbf{X} = \mathbf{I}_{[k]} \bar\otimes \mathbf{I}_{[l]},$$
 
-where $\bar\boxtimes$ represents the 4-dimensionally reshaped Kronecker
+where $\bar\otimes$ represents the 4-dimensionally reshaped Kronecker
 product.
 
 Mixing symbols and elements
@@ -457,25 +457,25 @@ the chain rule expression, while the deriving indices need to be brought in
 front of all others (remember, we use the convention that the indices of the
 deriving variable precede the indices of the expression to be derived).
 
-+--------------------------------+---------------------------------+-------------------------------------------------------------------------------------+
-| operation                      | expression                      | chain rule                                                                          |
-+================================+=================================+=====================================================================================+
-| matrix addition                | $\mathbf{Y} + \mathbf{Z}$       | $\partial \mathbf{Y} + \partial\mathbf{Z}$                                          |
-+--------------------------------+---------------------------------+-------------------------------------------------------------------------------------+
-| matrix multiplication          | $\mathbf{Y}\mathbf{Z}$          | $(\partial \mathbf{Y})\mathbf{Z} + \mathbf{Y} (\partial\mathbf{Z})$                 |
-+--------------------------------+---------------------------------+-------------------------------------------------------------------------------------+
-| Hadamard (elementwise) product | $\mathbf{Y} \circ \mathbf{Z}$   | $(\partial \mathbf{Y})\circ\mathbf{Z} + \mathbf{Y}\circ(\partial\mathbf{Z})$        |
-+--------------------------------+---------------------------------+-------------------------------------------------------------------------------------+
-| tensor product                 | $\mathbf{Y}\otimes\mathbf{Z}$   | $(\partial \mathbf{Y})\otimes\mathbf{Z} + \mathbf{Y}\otimes(\partial\mathbf{Z})$    |
-+--------------------------------+---------------------------------+-------------------------------------------------------------------------------------+
-| inverse                        | $\mathbf{Y}^{-1}$               | $-\mathbf{Y}^{-1} (\partial \mathbf{Y}) \mathbf{Y}^{-1}$                            |
-+--------------------------------+---------------------------------+-------------------------------------------------------------------------------------+
-| trace                          | $\mbox{tr}(\mathbf{Y})$         | $\mbox{tr}(\partial\mathbf{Y})$                                                     |
-+--------------------------------+---------------------------------+-------------------------------------------------------------------------------------+
-| determinant                    | $\mbox{det}(\mathbf{Y})$        | $\mbox{det}(\mathbf{Y}) \mbox{tr}(\mathbf{Y}^{-1}\partial\mathbf{Y})$               |
-+--------------------------------+---------------------------------+-------------------------------------------------------------------------------------+
-| transposition                  | $\mathbf{Y}'$                   | $(\partial\mathbf{Y})'$                                                             |
-+--------------------------------+---------------------------------+-------------------------------------------------------------------------------------+
++--------------------------------+---------------------------------+--------------------------------------------------------------------------------------+
+| operation                      | expression                      | chain rule                                                                           |
++================================+=================================+======================================================================================+
+| matrix addition                | $\mathbf{Y} + \mathbf{Z}$       | $\partial \mathbf{Y} + \partial\mathbf{Z}$                                           |
++--------------------------------+---------------------------------+--------------------------------------------------------------------------------------+
+| matrix multiplication          | $\mathbf{Y}\mathbf{Z}$          | $(\partial \mathbf{Y})\mathbf{Z} + \mathbf{Y} (\partial\mathbf{Z})$                  |
++--------------------------------+---------------------------------+--------------------------------------------------------------------------------------+
+| Hadamard (elementwise) product | $\mathbf{Y} \circ \mathbf{Z}$   | $(\partial \mathbf{Y})\circ\mathbf{Z} + \mathbf{Y}\circ(\partial\mathbf{Z})$         |
++--------------------------------+---------------------------------+--------------------------------------------------------------------------------------+
+| tensor product                 | $\mathbf{Y}\boxtimes\mathbf{Z}$ | $(\partial \mathbf{Y})\boxtimes\mathbf{Z} + \mathbf{Y}\boxtimes(\partial\mathbf{Z})$ |
++--------------------------------+---------------------------------+--------------------------------------------------------------------------------------+
+| inverse                        | $\mathbf{Y}^{-1}$               | $-\mathbf{Y}^{-1} (\partial \mathbf{Y}) \mathbf{Y}^{-1}$                             |
++--------------------------------+---------------------------------+--------------------------------------------------------------------------------------+
+| trace                          | $\mbox{tr}(\mathbf{Y})$         | $\mbox{tr}(\partial\mathbf{Y})$                                                      |
++--------------------------------+---------------------------------+--------------------------------------------------------------------------------------+
+| determinant                    | $\mbox{det}(\mathbf{Y})$        | $\mbox{det}(\mathbf{Y}) \mbox{tr}(\mathbf{Y}^{-1}\partial\mathbf{Y})$                |
++--------------------------------+---------------------------------+--------------------------------------------------------------------------------------+
+| transposition                  | $\mathbf{Y}'$                   | $(\partial\mathbf{Y})'$                                                              |
++--------------------------------+---------------------------------+--------------------------------------------------------------------------------------+
 
 When differentiating with respect to a matrix $\mathbf{X}$, we treat the
 gradient $\partial \mathbf{Y}$ as a 4-dimensional array whose first two axes
@@ -521,7 +521,7 @@ using our array expression syntax, this can be represented as
 
 here, ``array_derive(Y, X)`` returns a 4-dimensional array expression, we then proceed to create an 8-dimensional
 array expression,
-$$-\mathbf{Y}^{-1} \otimes \frac{\partial\mathbf{Y}}{\partial\mathbf{X}} \otimes \mathbf{Y}^{-1}$$
+$$-\mathbf{Y}^{-1} \boxtimes \frac{\partial\mathbf{Y}}{\partial\mathbf{X}} \boxtimes \mathbf{Y}^{-1}$$
 which is then contracted on the 2-nd and 5-th axes, i.e. (1, 4), and on the 6-th and 7-th axes, i.e. (5, 6).
 $$-\frac{1}{\partial\mathbf{X}} \Big( \mathbf{Y}^{-1} (\partial\mathbf{Y}) \mathbf{Y}^{-1} \Big)$$
 The contraction reproduce the structure of the matrix multiplication of the chain rule for the inverse.
@@ -631,13 +631,13 @@ The simplification step tries to drop any singleton or diagonal dimensions;
 if this reduces the array to two dimensions, an equivalent matrix expression is sought.
 A handful of tricks is used to collapse the array dimensions:
 
-* tensor product of two matrix-vectors $\mathbf{a}$ and $\mathbf{a}$, of shape $[k \times 1]$ each, $\mathbf{a} \otimes \mathbf{b}$, can be turned into a matrix multiplication over their trivial dimension: $\mathbf{a} \cdot \mathbf{b}'$. Indeed
-  $$\mathbf{a} \otimes \mathbf{b} = a_{i0} b_{j0} \Longrightarrow \sum_{k=0}^0 a_{ik} b_{jk} = \mathbf{a} \mathbf{b}' $$
+* tensor product of two matrix-vectors $\mathbf{a}$ and $\mathbf{a}$, of shape $[k \times 1]$ each, $\mathbf{a} \boxtimes \mathbf{b}$, can be turned into a matrix multiplication over their trivial dimension: $\mathbf{a} \cdot \mathbf{b}'$. Indeed
+  $$\mathbf{a} \boxtimes \mathbf{b} = a_{i0} b_{j0} \Longrightarrow \sum_{k=0}^0 a_{ik} b_{jk} = \mathbf{a} \mathbf{b}' $$
   This has shrunk the array from $[k \times 1 \times k \times 1]$ to $[k \times k]$ by squeezing out the singleton dimensions.
 * similar to the previous point, but more complex:
-  $$\mathbf{a} \otimes \mathbf{b} \otimes \mathbf{x}'\mathbf{x} \Longrightarrow \mathbf{a} \mathbf{x}' \mathbf{x} \mathbf{b}' $$
-* if one term of the tensor product has shape $[1 \times 1]$, the result may be expressed as a Kronecker product $\boxtimes$ between matrices:
-  $$\mathbf{x}' \mathbf{x} \otimes \mathbf{A} \Longrightarrow \left( \mathbf{x}' \mathbf{x} \right) \boxtimes \mathbf{A} $$
+  $$\mathbf{a} \boxtimes \mathbf{b} \boxtimes \mathbf{x}'\mathbf{x} \Longrightarrow \mathbf{a} \mathbf{x}' \mathbf{x} \mathbf{b}' $$
+* if one term of the tensor product has shape $[1 \times 1]$, the result may be expressed as a Kronecker product $\otimes$ between matrices:
+  $$\mathbf{x}' \mathbf{x} \boxtimes \mathbf{A} \Longrightarrow \left( \mathbf{x}' \mathbf{x} \right) \otimes \mathbf{A} $$
   This has shrunk the array from $[1 \times 1 \times k \times k]$ to $[k \times k]$.
 * the triple contraction of two matrices and a matrix-vector may be reinterpreted in terms of matrix multiplication:
   $$\sum_{j} \mathbf{A}_{ij} \mathbf{b}_{j0} \mathbf{C}_{jk} \Longrightarrow \mathbf{A}\, \mbox{diag}(\mathbf{b}) \, \mathbf{C}.$$
