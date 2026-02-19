@@ -1,14 +1,11 @@
 """A module which implements predicates and assumption context."""
 
 from contextlib import contextmanager
-import inspect
 from sympy.core.symbol import Str
 from sympy.core.sympify import _sympify
 from sympy.logic.boolalg import Boolean, false, true
 from sympy.multipledispatch.dispatcher import Dispatcher, str_signature
-from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import is_sequence
-from sympy.utilities.source import get_class
 
 
 class AssumptionsContext(set):
@@ -401,63 +398,8 @@ class UndefinedPredicate(Predicate):
     def __call__(self, expr):
         return AppliedPredicate(self, expr)
 
-    def add_handler(self, handler):
-        sympy_deprecation_warning(
-            """
-            The AskHandler system is deprecated. Predicate.add_handler()
-            should be replaced with the multipledispatch handler of Predicate.
-            """,
-            deprecated_since_version="1.8",
-            active_deprecations_target='deprecated-askhandler',
-        )
-        self.handlers.append(handler)
-
-    def remove_handler(self, handler):
-        sympy_deprecation_warning(
-            """
-            The AskHandler system is deprecated. Predicate.remove_handler()
-            should be replaced with the multipledispatch handler of Predicate.
-            """,
-            deprecated_since_version="1.8",
-            active_deprecations_target='deprecated-askhandler',
-        )
-        self.handlers.remove(handler)
-
     def eval(self, args, assumptions=True):
-        # Support for deprecated design
-        # When old design is removed, this will always return None
-        sympy_deprecation_warning(
-            """
-            The AskHandler system is deprecated. Evaluating UndefinedPredicate
-            objects should be replaced with the multipledispatch handler of
-            Predicate.
-            """,
-            deprecated_since_version="1.8",
-            active_deprecations_target='deprecated-askhandler',
-            stacklevel=5,
-        )
-        expr, = args
-        res, _res = None, None
-        mro = inspect.getmro(type(expr))
-        for handler in self.handlers:
-            cls = get_class(handler)
-            for subclass in mro:
-                eval_ = getattr(cls, subclass.__name__, None)
-                if eval_ is None:
-                    continue
-                res = eval_(expr, assumptions)
-                # Do not stop if value returned is None
-                # Try to check for higher classes
-                if res is None:
-                    continue
-                if _res is None:
-                    _res = res
-                else:
-                    # only check consistency if both resolutors have concluded
-                    if _res != res:
-                        raise ValueError('incompatible resolutors')
-                break
-        return res
+        return None
 
 
 @contextmanager
