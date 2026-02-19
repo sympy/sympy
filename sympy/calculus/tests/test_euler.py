@@ -72,3 +72,33 @@ def test_issue_18653():
     f, g, h = f(), g(), h()
     expr2 = f.diff(x)*h.diff(z)
     assert euler(expr2, (f,), (x, y)) == []
+
+def test_euler_edge_cases():
+    # Edge Case: Lagrangian with no explicit dependence on variables
+    x = Function('x')
+    t = Symbol('t')
+    L = D(x(t), t)**2/2
+    assert euler(L, x(t), t) == [Eq(-D(x(t), t, t), 0)]
+
+    # Edge Case: Lagrangian with constant
+    L = 5
+    assert euler(L, x(t), t) == [Eq(0, 0)]
+
+
+def test_euler_high_order_derivatives():
+    # High-Order Derivative Test
+    x = Function('x')
+    t = Symbol('t')
+    L = D(x(t), t, t)**2/2
+    assert euler(L, x(t), t) == [Eq(-D(x(t), t, t, t, t), 0)]
+
+def test_negative_tests():
+    # Negative Testing: Invalid input types
+    x = Function('x')
+    t = Symbol('t')
+    raises(TypeError, lambda: euler(42, x(t), t))  # Lagrangian not an expression
+    raises(TypeError, lambda: euler(D(x(t), t)**2, x(t), "not_a_symbol"))  # Variable is not a symbol
+
+    # Negative Testing: Functions and variables mismatch
+    raises(ValueError, lambda: euler(D(x(t), t)**2, x(t), [t, Symbol('y')]))
+
