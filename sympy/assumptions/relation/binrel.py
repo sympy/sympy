@@ -179,6 +179,14 @@ class AppliedBinaryRelation(AppliedPredicate):
         return neg_rel(*self.arguments)
 
     def _eval_ask(self, assumptions):
+
+        from sympy.assumptions.lra_satask import lra_satask
+        from sympy.assumptions.assume import AssumptionsContext
+        context = AssumptionsContext()
+        res = lra_satask(self, assumptions=assumptions, context=context)
+        return res
+
+
         conj_assumps = set()
         binrelpreds = {Eq: Q.eq, Ne: Q.ne, Gt: Q.gt, Lt: Q.lt, Ge: Q.ge, Le: Q.le}
         for a in conjuncts(assumptions):
