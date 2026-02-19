@@ -724,6 +724,13 @@ class WrappingCone(WrappingGeometryBase):
         """
         pos1 = point_1.pos_from(self.apex)
         pos2 = point_2.pos_from(self.apex)
+
+        # Handle case where one of the points is the apex itself
+        if pos1.magnitude() == 0:
+            return pos2.magnitude()
+        if pos2.magnitude() == 0:
+            return pos1.magnitude()
+
         z1 = pos1.dot(self.axis)
         z2 = pos2.dot(self.axis)
         s1 = z1 / cos(self.alpha)
