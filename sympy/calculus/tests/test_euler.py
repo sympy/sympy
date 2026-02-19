@@ -15,6 +15,7 @@ def test_euler_interface():
     raises(ValueError, lambda: euler(D(x(t), t)*x(y), [x(t), x(y)]))
     raises(TypeError, lambda: euler(D(x(t), t)**2, x(0)))
     raises(TypeError, lambda: euler(D(x(t), t)*y(t), [t]))
+    raises(ValueError, lambda: euler(y**2))  # Lagrangian with no Function terms
     assert euler(D(x(t), t)**2/2, {x(t)}) == [Eq(-D(x(t), t, t), 0)]
     assert euler(D(x(t), t)**2/2, x(t), {t}) == [Eq(-D(x(t), t, t), 0)]
 

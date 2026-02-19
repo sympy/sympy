@@ -78,6 +78,9 @@ def euler_equations(L, funcs=(), vars=()):
             if not isinstance(f, Function):
                 raise TypeError('Function expected, got: %s' % f)
 
+    if not funcs:
+        raise ValueError('No functions found in Lagrangian')
+
     vars = tuple(vars) if iterable(vars) else (vars,)
 
     if not vars:
