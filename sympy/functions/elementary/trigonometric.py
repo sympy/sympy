@@ -3698,12 +3698,16 @@ class atan2(InverseTrigonometricFunction):
                 elif y.is_zero:
                     return S.NaN
         if y.is_zero:
-            if x.is_extended_nonzero:
-                return pi*(S.One - Heaviside(x))
-            if x.is_number:
-                return Piecewise((pi, re(x) < 0),
-                                 (0, Ne(x, 0)),
-                                 (S.NaN, True))
+            if x is S.Infinity or x is S.NegativeInfinity:
+                raise TypeError("atan2 undefined for non-finite arguments")
+            if x.is_extended_real:
+                if x.is_positive:
+                    return S.Zero
+                elif x.is_negative:
+                    return pi
+                elif x.is_zero:
+                    return S.NaN
+            return None
         if x.is_number and y.is_number:
             return -S.ImaginaryUnit*log(
                 (x + S.ImaginaryUnit*y)/sqrt(x**2 + y**2))
