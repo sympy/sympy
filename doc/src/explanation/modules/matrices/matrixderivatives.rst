@@ -39,7 +39,7 @@ expression trees. Arithmetic operations (addition, multiplication, transpose,
 etc.) are formally applied but frozen as symbolic representations rather than
 computed results. This aligns with conventional mathematical notation in
 textbooks, where expressions like ``M*N.T*P`` (also written as
-$\mathbf{M}\mathbf{N}' \mathbf{P}$) represent abstract matrix multiplication
+$\mathbf{M}\mathbf{N}^{T} \mathbf{P}$) represent abstract matrix multiplication
 rather than explicit numerical results.
 
 Array expressions are analogous, the only difference is that they may have any
@@ -163,7 +163,7 @@ expressions encompass a more general set of operations.
 +---------------------------+-------------------------------------------+------------------------------------------------------------+----------------------------------------------------------------------------------+
 | diagonal                  | $\mbox{diag}(\mathbf{M})$                 | ${}_{\{i\}} \Rightarrow  M_{ii}$                           | diagonalize: $M$ on 1st and 2nd axes                                             |
 +---------------------------+-------------------------------------------+------------------------------------------------------------+----------------------------------------------------------------------------------+
-| transposition             | $\mathbf{M}'$                             | ${}_{\{ij\}} \Rightarrow M_{ji}$                           | permutation: $M$ on 1st and 2nd axes                                             |
+| transposition             | $\mathbf{M}^{T}$                          | ${}_{\{ij\}} \Rightarrow M_{ji}$                           | permutation: $M$ on 1st and 2nd axes                                             |
 +---------------------------+-------------------------------------------+------------------------------------------------------------+----------------------------------------------------------------------------------+
 | Hadamard product          | $\mathbf{M} \circ \mathbf{N}$             | ${}_{\{ij\}} \Rightarrow M_{ij} N_{ij}$                    | diagonalize: $M \boxtimes N$ on 1st-3rd axes and 2nd-4th axes                    |
 +---------------------------+-------------------------------------------+------------------------------------------------------------+----------------------------------------------------------------------------------+
@@ -264,7 +264,7 @@ $$D_{mnij} = \frac{\partial}{\partial X_{mn}} \Big (Y_{ij} \Big ).$$
 
 SymPy adopts a denominator-first index ordering for derivatives, placing the
 indices of the differentiation variable ${}_{\{mn\}}$ before those of the
-derivand ${}_{\{ij\}}$. The roughly corresponds to the mixed layout convention,
+derivand ${}_{\{ij\}}$. This roughly corresponds to the mixed layout convention,
 see [LayoutConventions]_.  This ${}_{\{mnij\}}$ convention aligns with Wolfram
 Mathematica but differs from PyTorch/NumPy, which implicitly follow the
 ${}_{\{ijmn\}}$ index-order convention.
@@ -284,7 +284,7 @@ this shows that differentiation indices ($mn$) precede the derivand indices
 ($ij$).  Importantly, this notation inherently captures index permutations,
 eliminating the need for operators such as transposition. For example:
 
-$${}_{\{ij\}} \Longrightarrow \Big(M'\Big)_{ij} = M_{ji}$$
+$${}_{\{ij\}} \Longrightarrow \Big(M^{T}\Big)_{ij} = M_{ji}$$
 
 demonstrates how transposition is encoded solely through index-order
 reversal, the ${}_{\{ij\}}$ mapping of $M_{ji}$ directly yields the
@@ -336,7 +336,7 @@ Here, the second and fourth axes are singletons, appearing in the derivative as
 scalar identity matrix $\mathbf{I}_{[1]}$, equivalent to scalar unit.  In index
 notation they only survive in a Kronecker $\delta_{nj}$.
 
-Likewise, $\frac{\partial}{\partial \mathbf{x}}\mathbf{x}'$ has shape
+Likewise, $\frac{\partial}{\partial \mathbf{x}}\mathbf{x}^{T}$ has shape
 $[k \times 1 \times 1 \times k]$, and collapses again to the same
 $[k \times k]$ identity matrix $\mathbf{I}_{[k]}$.
 
@@ -409,7 +409,7 @@ A common example in neural networks involves deriving expressions for matrices
 that undergo elementwise functions. For instance, consider a matrix $\mathbf{W}$
 of shape $[k \times l]$ and a matrix-vector $\mathbf{x}$ of shape $[l \times 1]$
 
-$$\frac{\partial}{\partial \mathbf{x}}{\operatorname{atanh}}_{\circ}\left({\mathbf{W} \mathbf{x}}\right) = \mathbf{W}' \operatorname{diag}\left({\left( d \mapsto \frac{1}{1 - d^{2}} \right)}_{\circ}\left({\mathbf{W} \mathbf{x}}\right)\right)$$
+$$\frac{\partial}{\partial \mathbf{x}}{\operatorname{atanh}}_{\circ}\left({\mathbf{W} \mathbf{x}}\right) = \mathbf{W}^{T} \operatorname{diag}\left({\left( d \mapsto \frac{1}{1 - d^{2}} \right)}_{\circ}\left({\mathbf{W} \mathbf{x}}\right)\right)$$
 
 The symbol ${}_{\circ}$ is used to mark the function as acting elementwise.
 Here, we have used the **diag** operator:
@@ -474,7 +474,7 @@ deriving variable precede the indices of the expression to be derived).
 +--------------------------------+---------------------------------+--------------------------------------------------------------------------------------+
 | determinant                    | $\mbox{det}(\mathbf{Y})$        | $\mbox{det}(\mathbf{Y}) \mbox{tr}(\mathbf{Y}^{-1}\partial\mathbf{Y})$                |
 +--------------------------------+---------------------------------+--------------------------------------------------------------------------------------+
-| transposition                  | $\mathbf{Y}'$                   | $(\partial\mathbf{Y})'$                                                              |
+| transposition                  | $\mathbf{Y}^{T}$                | $(\partial\mathbf{Y})^{T}$                                                           |
 +--------------------------------+---------------------------------+--------------------------------------------------------------------------------------+
 
 When differentiating with respect to a matrix $\mathbf{X}$, we treat the
@@ -530,7 +530,7 @@ as they are the axes referring to the deriving variable $\mathbf{X}$.
 
 A **concrete example** involving the inverse matrix taken from [MatrixCookbook]_ (number 124):
 
-$$\frac{\partial}{\partial \mathbf{X}} \operatorname{tr}\left(\mathbf{A} \mathbf{X}^{-1} \mathbf{B} \right) = - \left(\mathbf{X}'\right)^{-1} \mathbf{A}' \mathbf{B}' \left(\mathbf{X}'\right)^{-1} $$
+$$\frac{\partial}{\partial \mathbf{X}} \operatorname{tr}\left(\mathbf{A} \mathbf{X}^{-1} \mathbf{B} \right) = - \left(\mathbf{X}^{T}\right)^{-1} \mathbf{A}^{T} \mathbf{B}^{T} \left(\mathbf{X}^{T}\right)^{-1} $$
 
 >>> from sympy import MatrixSymbol, Trace, Inverse
 >>> from sympy.abc import k
@@ -549,7 +549,7 @@ Some examples of the derivative of the determinant:
 
 [MatrixCookbook]_ example 49:
 
-$$\frac{\partial}{\partial \mathbf{X}} \mbox{det}(\mathbf{X}) = \mbox{det}(\mathbf{X}) \left(\mathbf{X}'\right)^{-1}$$
+$$\frac{\partial}{\partial \mathbf{X}} \mbox{det}(\mathbf{X}) = \mbox{det}(\mathbf{X}) \left(\mathbf{X}^{T}\right)^{-1}$$
 
 >>> from sympy import Determinant
 >>> expr = Determinant(X)
@@ -558,7 +558,7 @@ Determinant(X)*X.T**(-1)
 
 [MatrixCookbook]_ example 51:
 
-$$\frac{\partial}{\partial \mathbf{X}} \mbox{det}(\mathbf{A}\mathbf{X}\mathbf{B}) = \mbox{det}(\mathbf{A}\mathbf{X}\mathbf{B}) \left(\mathbf{X}'\right)^{-1}$$
+$$\frac{\partial}{\partial \mathbf{X}} \mbox{det}(\mathbf{A}\mathbf{X}\mathbf{B}) = \mbox{det}(\mathbf{A}\mathbf{X}\mathbf{B}) \left(\mathbf{X}^{T}\right)^{-1}$$
 
 >>> expr = Determinant(A*X*B)
 >>> expr.diff(X)
@@ -566,7 +566,7 @@ $$\frac{\partial}{\partial \mathbf{X}} \mbox{det}(\mathbf{A}\mathbf{X}\mathbf{B}
 
 [MatrixCookbook]_ example 55:
 
-$$\frac{\partial}{\partial \mathbf{X}} \log\,\mbox{det}(\mathbf{X}) = 2 \left(\mathbf{X}'\right)^{-1}$$
+$$\frac{\partial}{\partial \mathbf{X}} \log\,\mbox{det}(\mathbf{X}) = 2 \left(\mathbf{X}^{T}\right)^{-1}$$
 
 >>> from sympy import log
 >>> expr = log(Determinant(X.T*X))
@@ -579,7 +579,7 @@ Example derivatives of the trace
 
 [MatrixCookbook]_ example 107:
 
-$$\frac{\partial}{\partial \mathbf{X}} \mbox{tr}(\mathbf{X}^2\mathbf{B}) = \left( \mathbf{X} \mathbf{B} + \mathbf{B}\mathbf{X}\right)'$$
+$$\frac{\partial}{\partial \mathbf{X}} \mbox{tr}(\mathbf{X}^2\mathbf{B}) = \left( \mathbf{X} \mathbf{B} + \mathbf{B}\mathbf{X}\right)^{T}$$
 
 >>> expr = Trace(X**2*B)
 >>> expr.diff(X)
@@ -587,7 +587,7 @@ B.T*X.T + X.T*B.T
 
 [MatrixCookbook]_ example 108:
 
-$$\frac{\partial}{\partial \mathbf{X}} \mbox{tr}(\mathbf{X}'\mathbf{B}\mathbf{X}) = \mathbf{B} \mathbf{X} + \mathbf{B}' \mathbf{X}$$
+$$\frac{\partial}{\partial \mathbf{X}} \mbox{tr}(\mathbf{X}^{T}\mathbf{B}\mathbf{X}) = \mathbf{B} \mathbf{X} + \mathbf{B}^{T} \mathbf{X}$$
 
 >>> expr = Trace(X.T*B*X)
 >>> expr.diff(X)
@@ -608,13 +608,13 @@ spotting the equivalent matrix multiplication or trace forms is straightforward.
 For example:
 
 $$\sum_{b,c,e,f} M_{cb} N_{cd} P_{ef} Q_{ba} R_{fe}
-\Longrightarrow \mathbf{Q}' \mathbf{M}' \mathbf{N} \, \mbox{tr}\big( \mathbf{P} \mathbf{R} \big)
+\Longrightarrow \mathbf{Q}^{T} \mathbf{M}^{T} \mathbf{N} \, \mbox{tr}\big( \mathbf{P} \mathbf{R} \big)
 $$
 
 * generally, open two-paired contraction lines are matrix multiplications:
-  $$\sum_{j} \mathbf{A}_{ij} \mathbf{B}_{ij} \Longrightarrow \mathbf{A} \mathbf{B}' $$
+  $$\sum_{j} \mathbf{A}_{ij} \mathbf{B}_{ij} \Longrightarrow \mathbf{A} \mathbf{B}^{T} $$
 * while closed two-paired contraction lines are traces:
-  $$\sum_{ij} \mathbf{A}_{ij} \mathbf{B}_{ij} \Longrightarrow \mbox{tr}\Big(\mathbf{A} \mathbf{B}'\Big) $$
+  $$\sum_{ij} \mathbf{A}_{ij} \mathbf{B}_{ij} \Longrightarrow \mbox{tr}\Big(\mathbf{A} \mathbf{B}^{T}\Big) $$
 
 Matrix multiplication is the most frequent pattern, but traces, diag-expansions, and Hadamard products may also appear.
 
@@ -631,13 +631,13 @@ The simplification step tries to drop any singleton or diagonal dimensions;
 if this reduces the array to two dimensions, an equivalent matrix expression is sought.
 A handful of tricks is used to collapse the array dimensions:
 
-* tensor product of two matrix-vectors $\mathbf{a}$ and $\mathbf{a}$, of shape $[k \times 1]$ each, $\mathbf{a} \boxtimes \mathbf{b}$, can be turned into a matrix multiplication over their trivial dimension: $\mathbf{a} \cdot \mathbf{b}'$. Indeed
-  $$\mathbf{a} \boxtimes \mathbf{b} = a_{i0} b_{j0} \Longrightarrow \sum_{k=0}^0 a_{ik} b_{jk} = \mathbf{a} \mathbf{b}' $$
+* tensor product of two matrix-vectors $\mathbf{a}$ and $\mathbf{a}$, of shape $[k \times 1]$ each, $\mathbf{a} \boxtimes \mathbf{b}$, can be turned into a matrix multiplication over their trivial dimension: $\mathbf{a} \cdot \mathbf{b}^{T}$. Indeed
+  $$\mathbf{a} \boxtimes \mathbf{b} = a_{i0} b_{j0} \Longrightarrow \sum_{k=0}^0 a_{ik} b_{jk} = \mathbf{a} \mathbf{b}^{T} $$
   This has shrunk the array from $[k \times 1 \times k \times 1]$ to $[k \times k]$ by squeezing out the singleton dimensions.
 * similar to the previous point, but more complex:
-  $$\mathbf{a} \boxtimes \mathbf{b} \boxtimes \mathbf{x}'\mathbf{x} \Longrightarrow \mathbf{a} \mathbf{x}' \mathbf{x} \mathbf{b}' $$
+  $$\mathbf{a} \boxtimes \mathbf{b} \boxtimes \mathbf{x}^{T}\mathbf{x} \Longrightarrow \mathbf{a} \mathbf{x}^{T} \mathbf{x} \mathbf{b}^{T} $$
 * if one term of the tensor product has shape $[1 \times 1]$, the result may be expressed as a Kronecker product $\otimes$ between matrices:
-  $$\mathbf{x}' \mathbf{x} \boxtimes \mathbf{A} \Longrightarrow \left( \mathbf{x}' \mathbf{x} \right) \otimes \mathbf{A} $$
+  $$\mathbf{x}^{T} \mathbf{x} \boxtimes \mathbf{A} \Longrightarrow \left( \mathbf{x}^{T} \mathbf{x} \right) \otimes \mathbf{A} $$
   This has shrunk the array from $[1 \times 1 \times k \times k]$ to $[k \times k]$.
 * the triple contraction of two matrices and a matrix-vector may be reinterpreted in terms of matrix multiplication:
   $$\sum_{j} \mathbf{A}_{ij} \mathbf{b}_{j0} \mathbf{C}_{jk} \Longrightarrow \mathbf{A}\, \mbox{diag}(\mathbf{b}) \, \mathbf{C}.$$
@@ -658,7 +658,7 @@ A handful of tricks is used to collapse the array dimensions:
   This collapse has shrunk a **non-singleton dimension**, from $[k \times k \times k]$ to $[k \times k]$.
   Unlike squeezing singleton dimensions, this simplification cannot be done by a simple array reshaping.
   Similarly,
-  $$\sum_{l} A_{lj} I_{il} I_{lk} \Longrightarrow \mathbf{A}'$$
+  $$\sum_{l} A_{lj} I_{il} I_{lk} \Longrightarrow \mathbf{A}^{T}$$
   summing up reduces it to
   $${}_{\{ijk\}} \Rightarrow A_{ij} I_{ik} $$
   which is equivalent, in explicit form, to:
@@ -701,7 +701,7 @@ $$\min_{\boldsymbol{\beta}} \Big\Vert \mathbf{y} - \mathbf{X} \boldsymbol{\beta}
 The variable ``obj`` is the objective function to be minimized, here
 represented as a dot-product,
 
-$$\left(\mathbf{y} - \mathbf{X}\boldsymbol{\beta}\right)' \left(\mathbf{y} - \mathbf{X}\boldsymbol{\beta}\right).$$
+$$\left(\mathbf{y} - \mathbf{X}\boldsymbol{\beta}\right)^{T} \left(\mathbf{y} - \mathbf{X}\boldsymbol{\beta}\right).$$
 
 A standard way to find the minimizer is to differentiate this objective
 function with respect to $\boldsymbol{\beta}$ and set the resulting gradient
@@ -713,7 +713,7 @@ equal to zero:
 that is, computing the derivative of the objective function with respect to
 $\boldsymbol{\beta}$ yields
 
-$$- 2 \mathbf{X}' \left(\mathbf{y} - \mathbf{X}\boldsymbol{\beta}\right).$$
+$$- 2 \mathbf{X}^{T} \left(\mathbf{y} - \mathbf{X}\boldsymbol{\beta}\right).$$
 
 Setting this derivative equal to zero gives the normal equations, which can
 then be solved to obtain the ordinary least squares estimator.  We can
@@ -722,12 +722,12 @@ rearrange:
 >>> ((X.T*X).inv() * obj.diff(beta)).expand()
 -2*(X.T*X)**(-1)*X.T*y + 2*beta
 
-that is, $- 2 \left(\mathbf{X}' \mathbf{X}\right)^{-1} \mathbf{X}' \mathbf{y} + 2 \boldsymbol{\beta}$.
+that is, $- 2 \left(\mathbf{X}^{T} \mathbf{X}\right)^{-1} \mathbf{X}^{T} \mathbf{y} + 2 \boldsymbol{\beta}$.
 
 This leads immediately to the well-known closed-form solution for the ordinary
 least squares estimator:
 
-$$\boldsymbol{\beta} = \left(\mathbf{X}' \mathbf{X}\right)^{-1} \mathbf{X}' \mathbf{y}$$
+$$\boldsymbol{\beta} = \left(\mathbf{X}^{T} \mathbf{X}\right)^{-1} \mathbf{X}^{T} \mathbf{y}$$
 
 Ridge regression
 ~~~~~~~~~~~~~~~~
@@ -752,7 +752,7 @@ Using SymPy, the objective function can be written as:
 >>> obj
 lambda*beta.T*beta + (-beta.T*X.T + y.T)*(-X*beta + y)
 
-which corresponds to $\lambda \boldsymbol{\beta}' \boldsymbol{\beta} + \left( \mathbf{y}' - \boldsymbol{\beta}' \mathbf{X}' \right) \left( \mathbf{y} -
+which corresponds to $\lambda \boldsymbol{\beta}^{T} \boldsymbol{\beta} + \left( \mathbf{y}^{T} - \boldsymbol{\beta}^{T} \mathbf{X}^{T} \right) \left( \mathbf{y} -
 \mathbf{X} \boldsymbol{\beta} \right)$.
 
 Taking the derivative of the objective function with respect to
@@ -761,16 +761,16 @@ $\boldsymbol{\beta}$ yields:
 >>> obj.diff(beta)
 (2*lambda)*beta - 2*X.T*(-X*beta + y)
 
-which is $2 \lambda \boldsymbol{\beta} - 2 \mathbf{X}' \left( \mathbf{y} - \mathbf{X} \boldsymbol{\beta} \right)$.
+which is $2 \lambda \boldsymbol{\beta} - 2 \mathbf{X}^{T} \left( \mathbf{y} - \mathbf{X} \boldsymbol{\beta} \right)$.
 Regrouping the terms by $\boldsymbol{\beta}$ and dropping the constant factor
 of 2, we obtain:
 
-$$\left(\lambda \mathbf{I} + \mathbf{X}' \mathbf{X}\right  ) \boldsymbol{\beta} - \mathbf{X}' \mathbf{y}$$
+$$\left(\lambda \mathbf{I} + \mathbf{X}^{T} \mathbf{X}\right  ) \boldsymbol{\beta} - \mathbf{X}^{T} \mathbf{y}$$
 
 Solving for the stationary point by setting this derivative equal to zero gives
 the normal equations for ridge regression:
 
-$$\boldsymbol{\beta} = \left(\lambda \mathbf{I} + \mathbf{X}' \mathbf{X}\right)^{-1} \mathbf{X}' \mathbf{y}$$
+$$\boldsymbol{\beta} = \left(\lambda \mathbf{I} + \mathbf{X}^{T} \mathbf{X}\right)^{-1} \mathbf{X}^{T} \mathbf{y}$$
 
 Principal component analysis
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -789,12 +789,12 @@ $$\underset{\mathbf{w}}{\operatorname{arg\,max}} \, \Big\Vert \mathbf{X} \mathbf
 
 Expressing the norms in terms of matrix products, the problem can be written as
 
-$$\underset{\mathbf{w}}{\operatorname{arg\,max}} \left( \mathbf{w}' \mathbf{X}' \mathbf{X} \mathbf{w} \right) \\ \mbox{with } \mathbf{w}'\mathbf{w} = 1$$
+$$\underset{\mathbf{w}}{\operatorname{arg\,max}} \left( \mathbf{w}^{T} \mathbf{X}^{T} \mathbf{X} \mathbf{w} \right) \\ \mbox{with } \mathbf{w}^{T}\mathbf{w} = 1$$
 
 To solve this constrained optimization problem, we introduce a Lagrange
 multiplier and define the Lagrangian
 
-$$\mathcal{L} = \mathbf{w}' \mathbf{X}' \mathbf{X} \mathbf{w} + \lambda ( \mathbf{w}'\mathbf{w} - 1 )$$
+$$\mathcal{L} = \mathbf{w}^{T} \mathbf{X}^{T} \mathbf{X} \mathbf{w} + \lambda ( \mathbf{w}^{T}\mathbf{w} - 1 )$$
 
 In SymPy, this setup can be expressed as follows:
 
@@ -821,13 +821,13 @@ and setting them equal to zero in order to obtain the stationary conditions for
 this optimization problem.  That is, we are required to solve the following two
 equations:
 
-$$\frac{\partial \mathcal{L}}{\partial \mathbf{w}} = 2 \lambda \mathbf{w} + 2 \mathbf{X}' \mathbf{X} \mathbf{w} = 0$$
+$$\frac{\partial \mathcal{L}}{\partial \mathbf{w}} = 2 \lambda \mathbf{w} + 2 \mathbf{X}^{T} \mathbf{X} \mathbf{w} = 0$$
 
-$$\frac{\partial \mathcal{L}}{\partial \lambda} = \mathbf{w}' \mathbf{w} - \mathbb{I} = 0$$
+$$\frac{\partial \mathcal{L}}{\partial \lambda} = \mathbf{w}^{T} \mathbf{w} - \mathbb{I} = 0$$
 
 The first equation corresponds to the eigenvalue equation of the matrix
-$\mathbf{X}' \mathbf{X}$. Therefore, we conclude that $\mathbf{w}$ must be an
-eigenvector of $\mathbf{X}' \mathbf{X}$.
+$\mathbf{X}^{T} \mathbf{X}$. Therefore, we conclude that $\mathbf{w}$ must be an
+eigenvector of $\mathbf{X}^{T} \mathbf{X}$.
 
 References
 ----------
