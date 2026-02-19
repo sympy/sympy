@@ -489,12 +489,22 @@ def refine_floor(expr, assumptions):
 
     >>> from sympy import Symbol, refine, Q, floor
     >>> x = Symbol('x')
+    >>> y = Symbol('y')
     >>> refine(floor(x), Q.integer(x))
     x
+    >>> refine(floor(x + y), Q.integer(x))
+    x + floor(y)
     """
+    from sympy.functions.elementary.integers import floor
     arg = expr.args[0]
     if ask(Q.integer(arg), assumptions):
         return arg
+
+    if isinstance(arg, Add):
+        if ask(Q.integer(arg.args[0]), assumptions):
+            return arg.args[0] + floor(arg.args[1])
+        elif ask(Q.integer(expr.args[1]), assumptions):
+            return arg.args[1] + floor(arg.args[0])
     return expr
 
 
@@ -509,11 +519,20 @@ def refine_ceiling(expr, assumptions):
     >>> x = Symbol('x')
     >>> refine(ceiling(x), Q.integer(x))
     x
+    >>> y = Symbol('y')
+    >>> refine(ceiling(x + y), Q.integer(x))
+        x + ceiling(y)
     """
+    from sympy.functions.elementary.integers import ceiling
     arg = expr.args[0]
     if ask(Q.integer(arg), assumptions):
         return arg
-    return expr
+
+    if isinstance(arg, Add):
+        if ask(Q.integer(arg.args[0]), assumptions):
+            return arg.args[0] + ceiling(arg.args[1])
+        elif ask(Q.integer(arg.args[1]), assumptions):
+            return arg.args[1] + ceiling(arg.args[0])
 
 
 handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {

@@ -292,6 +292,7 @@ def test_floor():
     assert refine(floor(x), Q.integer(x)) == x
     assert refine(floor(y), Q.real(y)) == floor(y)
     assert refine(floor(y), Q.imaginary(y)) == floor(y)
+    assert refine(floor(x + y), Q.integer(x)) == x + floor(y)
 
 
 def test_ceiling():
@@ -300,3 +301,4 @@ def test_ceiling():
     assert refine(ceiling(x), Q.integer(x)) == x
     assert refine(ceiling(y), Q.real(y)) == ceiling(y)
     assert refine(ceiling(y), Q.imaginary(y)) == ceiling(y)
+    assert refine(ceiling(x + y), Q.integer(x)) == x + ceiling(y)
