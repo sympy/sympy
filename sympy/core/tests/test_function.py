@@ -1159,6 +1159,33 @@ def test_Derivative_as_finite_difference():
     ref2 = f(xm, ym) + f(xp, yp) - f(xp, ym) - f(xm, yp)
     assert (d2fdxdy.as_finite_difference() - ref2).simplify() == 0
 
+def test_derivative_rewrite_as_piecewise():
+    """Test Derivative.rewrite(Piecewise) for x**m and log(x)."""
+    from sympy import Derivative, symbols, log, Piecewise, simplify, gamma, factorial
+
+    x, m, n = symbols('x m n')
+
+    # Test 1: x**m returns Piecewise with formula
+    expr1 = Derivative(x**m, (x, n))
+    result1 = expr1.rewrite(Piecewise)
+
+    # Check it's a Piecewise (not the original Derivative)
+    assert isinstance(result1, Piecewise)
+
+    # Check the formula is in the Piecewise
+    expected_formula = x**(m - n)*gamma(m + 1)/gamma(m - n + 1)
+    assert result1.has(expected_formula)
+
+    # Test 2: log(x) returns correct formula
+    expr2 = Derivative(log(x), (x, n))
+    result2 = expr2.rewrite(Piecewise)
+    assert result2 == (-1)**(n - 1)*factorial(n - 1)/x**n
+
+    # Test 3: Concrete cases
+    assert simplify(Derivative(x**3, (x, 5)).rewrite(Piecewise)) == 0
+    assert simplify(Derivative(x**5, (x, 3)).rewrite(Piecewise)) == 60*x**2
+    assert Derivative(log(x), (x, 3)).rewrite(Piecewise) == 2/x**3
+
 
 def test_issue_11159():
     # Tests Application._eval_subs
