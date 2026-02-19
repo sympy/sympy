@@ -33,6 +33,18 @@ from sympy.stats.rv import (RandomDomain, SingleDomain, ConditionalDomain, is_ra
         ProductDomain, PSpace, SinglePSpace, random_symbols, NamedArgsMixin, Distribution)
 
 
+# --- Compatibility shim for legacy imports ---
+# New SymPy versions removed ContinuousRV, but older tests still reference it.
+# Provide a minimal no-op shell to keep imports working.
+
+class ContinuousRV:
+    def __init__(self, *args, **kwargs):
+        raise ImportError(
+            "ContinuousRV is deprecated and no longer available. "
+            "Use distribution classes from sympy.stats.crv_types instead."
+        )
+
+
 class ContinuousDomain(RandomDomain):
     """
     A domain with continuous support

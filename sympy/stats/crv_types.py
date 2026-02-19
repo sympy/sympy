@@ -89,7 +89,6 @@ from sympy.sets.sets import Interval
 from sympy.matrices import MatrixBase
 from sympy.stats.crv import SingleContinuousPSpace, SingleContinuousDistribution
 from sympy.stats.rv import _value_check, is_random
-
 oo = S.Infinity
 
 __all__ = ['ContinuousRV',
@@ -4730,3 +4729,98 @@ def WignerSemicircle(name, R):
     """
 
     return rv(name, WignerSemicircleDistribution, (R,))
+
+
+#-------------------------------------------------------------------------------
+# Alpha-Stable Distribution
+#-------------------------------------------------------------------------------
+class AlphaStableDistribution(SingleContinuousDistribution):
+    _argnames = ('alpha', 'beta', 'scale', 'location')
+
+    def check(self, alpha, beta, scale, location):
+        if alpha.is_number and (alpha <= 0 or alpha > 2):
+            raise ValueError("alpha must be in (0, 2]")
+        if beta.is_number and (beta < -1 or beta > 1):
+            raise ValueError("beta must be in [-1, 1]")
+        if scale.is_number and scale <= 0:
+            raise ValueError("scale must be positive")
+
+    def pdf(self, x):
+        alpha, beta, scale, location = self.alpha, self.beta, self.scale, self.location
+
+        # Cauchy case
+        if alpha == 1 and beta == 0:
+            return 1 / (pi * scale * (1 + ((x - location)/scale)**2))
+
+        # Gaussian case
+        if alpha == 2:
+            return sqrt(2)*exp(-(x-location)**2/(2*scale**2)) / (2*scale*sqrt(pi))
+
+        # Levy case
+        if alpha == Rational(1,2) and beta == 1:
+            return sqrt(scale/(2*pi)) * exp(-scale/(2*(x-location))) / (x-location)**Rational(3,2)
+
+        raise NotImplementedError("PDF not implemented for general Alpha-Stable.")
+
+    def compute_characteristic_function(self, **kwargs):
+        t = Dummy('t', real=True)
+        alpha, beta, scale, location = self.alpha, self.beta, self.scale, self.location
+        phi = exp(I * location * t - scale * Abs(t)**alpha * (1 - I*beta*sign(t)*tan(pi*alpha/2)))
+        return Lambda(t, phi)
+
+    @property
+    def support(self):
+        return S.Reals
+
+
+def AlphaStable(name, alpha, beta, scale, location):
+    """
+    Create an Alpha-Stable random variable.
+
+    Parameters
+    ==========
+    name : str
+        Name of the random variable
+    alpha : float or expression
+        Stability parameter, must be in (0, 2]
+    beta : float or expression
+        Skewness parameter, must be in [-1, 1]
+    scale : float or expression
+        Scale parameter, must be positive
+    location : float or expression
+        Location parameter
+
+    Returns
+    =======
+    RandomSymbol
+        An alpha-stable random variable
+
+    Examples
+    ========
+
+    >>> from sympy.stats import AlphaStable, density
+
+
+    # Cauchy distribution (alpha=1, beta=0)
+    >>> X = AlphaStable('X', 1, 0, 1, 0)
+    >>> density(X).set
+    Interval(-oo, oo)
+
+    # Gaussian case (alpha=2)
+    >>> Y = AlphaStable('Y', 2, 0, 1, 0)
+    >>> density(Y)(0)
+    sqrt(2)/(2*sqrt(pi))
+
+    # For general parameters, PDF may not have closed form
+    >>> from sympy import Rational
+    >>> Z = AlphaStable('Z', Rational(3,2), 0, 1, 0)
+    >>> density(Z)
+    AlphaStableDistribution(3/2, 0, 1, 0)
+
+    References
+    ==========
+
+     [1] https://en.wikipedia.org/wiki/Stable_distribution
+
+    """
+    return rv(name, AlphaStableDistribution, (alpha, beta, scale, location))

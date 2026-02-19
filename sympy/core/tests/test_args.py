@@ -5559,3 +5559,23 @@ def test_sympy__combinatorics__perm_groups__Coset():
     b = Permutation(0, 1)
     G = PermutationGroup([a, b])
     assert _test_args(Coset(a, G))
+
+
+from sympy import Symbol
+from sympy.stats.crv_types import AlphaStableDistribution
+
+
+def test_sympy__stats__crv_types__AlphaStableDistribution():
+    alpha = Symbol('alpha', positive=True, real=True)
+    beta = Symbol('beta', real=True)
+    scale = Symbol('scale', positive=True, real=True)
+    location = Symbol('location', real=True)
+
+    dist = AlphaStableDistribution(alpha, beta, scale, location)
+
+    assert dist.alpha == alpha
+    assert dist.beta == beta
+    assert dist.scale == scale
+    assert dist.location == location
+
+    assert dist.args == (alpha, beta, scale, location)
