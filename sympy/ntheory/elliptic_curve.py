@@ -322,7 +322,8 @@ class EllipticCurvePoint:
             slope = (y1 - y2) / (x1 - x2)
             yint = (y1 * x2 - y2 * x1) / (x2 - x1)
         else:
-            if (y1 + y2) == 0:
+            # For the general Weierstrass form the inverse of a point (x,y) is (x, -y - a1*x - a3)
+            if y2 == -y1 - a1*x1 - a3:
                 return self.point_at_infinity(self._curve)
             slope = (3 * x1**2 + 2*a2*x1 + a4 - a1*y1) / (a1 * x1 + a3 + 2 * y1)
             yint = (-x1**3 + a4*x1 + 2*a6 - a3*y1) / (a1*x1 + a3 + 2*y1)
@@ -397,3 +398,65 @@ class EllipticCurvePoint:
             if p.z == 0:
                 return i
         return oo
+
+    def __eq__(self, other):
+        """
+        Check if two elliptic curve points are equal.
+
+        Two points are equal if they represent the same point in projective space.
+        Points at infinity (z=0) are always equal regardless of x and y coordinates.
+        For finite points, we compare using projective coordinate equivalence.
+
+        Parameters
+        ==========
+        other : EllipticCurvePoint
+            The point to compare with.
+
+        Returns
+        =======
+        bool or NotImplemented
+            True if the points are equal, False if they are different points on
+            the same curve, NotImplemented if other is not an EllipticCurvePoint
+            or is on a different curve.
+
+
+        Examples
+        ========
+        >>> from sympy.ntheory.elliptic_curve import EllipticCurve
+        >>> curve = EllipticCurve(0, 0, 1, 0, 1, 0)
+        >>> P = curve(0, 0, 1)
+        >>> Q = P + (-P)  # Point at infinity
+        >>> from sympy.ntheory.elliptic_curve import EllipticCurvePoint
+        >>> inf = EllipticCurvePoint.point_at_infinity(curve)
+        >>> Q == inf
+        True
+        """
+        if not isinstance(other, EllipticCurvePoint):
+            return NotImplemented
+
+        # points must have all values equal
+        if (self._curve._a1 != other._curve._a1 or
+            self._curve._a2 != other._curve._a2 or
+            self._curve._a3 != other._curve._a3 or
+            self._curve._a4 != other._curve._a4 or
+            self._curve._a6 != other._curve._a6 or
+            self._curve.modulus != other._curve.modulus):
+            return False
+        # Both points at infinity are equal
+        if self.z == 0 and other.z == 0:
+            return True
+
+        # One at infinity, the other not
+        if self.z == 0 or other.z == 0:
+            return False
+
+        # If both are finite points compare in projective coordinates
+        return (self.x * other.z == other.x * self.z and
+                self.y * other.z == other.y * self.z)
+
+    def __ne__(self, other):
+        """Check if two points are not equal."""
+        result = self.__eq__(other)
+        if result is NotImplemented:
+            return NotImplemented
+        return not result
