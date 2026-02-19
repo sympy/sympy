@@ -76,6 +76,15 @@ def test_FlorySchulz():
     assert density(x)(z) == a**2*z*(1 - a)**(z - 1)
 
 
+def test_Geometric_support():
+    G = Geometric('G', p=S(1)/4)
+    D = density(G)
+    assert D(0) == 0
+    assert D(-1) == 0
+    assert D(S(1)/2) == 0
+    assert D(1) == S(1)/4
+
+
 @slow
 def test_GeometricDistribution():
     p = S.One / 5
