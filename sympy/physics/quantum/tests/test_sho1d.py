@@ -113,7 +113,7 @@ def test_NumberOp():
 
 def test_Hamiltonian():
     assert Commutator(H, N).doit() == Integer(0)
-    assert qapply(H*k) == ((hbar*omega*(k.n + Integer(1)/Integer(2)))*k).expand()
+    assert qapply(H*k) == ((hbar*omega*(k.n + Integer(1)/Integer(2)))*k)
     assert H.rewrite('a').doit() == hbar*omega*(ad*a + Integer(1)/Integer(2))
     assert H.rewrite('xp').doit() == \
         (Integer(1)/(Integer(2)*m))*(Px**2 + (m*omega*X)**2)

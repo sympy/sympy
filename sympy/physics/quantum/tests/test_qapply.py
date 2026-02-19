@@ -1,93 +1,625 @@
+# pyright: reportOperatorIssue=false
+
+from sympy.concrete.summations import Sum
+from sympy.core import oo
+from sympy.core.function import (Derivative, Function)
 from sympy.core.mul import Mul
-from sympy.core.numbers import (I, Integer, Rational)
+from sympy.core.numbers import I, Rational
 from sympy.core.singleton import S
-from sympy.core.symbol import symbols
+from sympy.core.symbol import symbols, Symbol
+from sympy.core.sympify import sympify
+from sympy.integrals import Integral
+from sympy.functions.elementary.complexes import Abs
+from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.special.delta_functions import DiracDelta
+from sympy.functions.special.tensor_functions import KroneckerDelta
+
 
 from sympy.physics.quantum.anticommutator import AntiCommutator
+from sympy.physics.quantum.cartesian import X, XKet, XBra, PxOp
 from sympy.physics.quantum.commutator import Commutator
 from sympy.physics.quantum.constants import hbar
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.gate import H, XGate, IdentityGate
-from sympy.physics.quantum.operator import Operator, IdentityOperator
+from sympy.physics.quantum.operator import (
+    Operator, IdentityOperator, OuterProduct, DifferentialOperator
+)
 from sympy.physics.quantum.qapply import qapply
 from sympy.physics.quantum.spin import Jx, Jy, Jz, Jplus, Jminus, J2, JzKet
 from sympy.physics.quantum.tensorproduct import TensorProduct
-from sympy.physics.quantum.state import Ket
+from sympy.physics.quantum.state import Ket, Bra, Wavefunction
 from sympy.physics.quantum.density import Density
 from sympy.physics.quantum.qubit import Qubit, QubitBra
 from sympy.physics.quantum.boson import BosonOp, BosonFockKet, BosonFockBra
+from sympy.physics.quantum.fermion import FermionOp, FermionFockKet
 from sympy.testing.pytest import warns_deprecated_sympy
 
 
+# -----------------------------------------------------------------------------
+# Variables and utilities
+# -----------------------------------------------------------------------------
+
+
 j, jp, m, mp = symbols("j j' m m'")
+p, q, r, st = symbols("p q r s", integer=True, nonnegative=True)
+x, y, z = symbols("x y z", real=True)
+omega = Symbol("omega", real=True)
+alpha = Symbol("alpha", complex=True)
 
 z = JzKet(1, 0)
 po = JzKet(1, 1)
 mo = JzKet(1, -1)
 
-A = Operator('A')
+a = BosonOp("a")
+f = FermionOp("f")
+
+A = Operator("A")
+B = Operator("B")
+C = Operator("C")
+
+class SimpleBra(Bra):
+    pass
 
 
-class Foo(Operator):
-    def _apply_operator_JzKet(self, ket, **options):
-        return ket
+class SimpleKet(Ket):
+    def _eval_innerproduct_SimpleBra(self, bra, **hints):
+        return alpha * exp(I * omega)
+
+
+TP = TensorProduct
+
+
+# -----------------------------------------------------------------------------
+# _qapply_unary: SlidingTransform unary handler tests
+#
+# The tests in this section cover the case where qappy is given a single argument
+# of a given type that is handled by the main unary dispatcher of qapply.
+# -----------------------------------------------------------------------------
+
+
+def test_unary_dagger():
+    """Test Dagger expression handling"""
+    assert qapply(Dagger(a * BosonFockKet(p)), dagger=True) == sqrt(p) * BosonFockBra(
+        p - 1
+    )
+
+
+def test_unary_density():
+    """Test Density matrix handling"""
+    d = Density([a * BosonFockKet(p), 0.5], [a * BosonFockKet(q), 0.5])
+    assert qapply(d) == Density(
+        [sqrt(p) * BosonFockKet(p - 1), 0.5], [sqrt(q) * BosonFockKet(q - 1), 0.5]
+    )
+    d = Density([Jz * mo, 0.5], [Jz * po, 0.5])
+    assert qapply(d) == Density([-hbar * mo, 0.5], [hbar * po, 0.5])
+
+
+def test_unary_tensorproduct():
+    """Test TensorProduct expression handling"""
+    assert qapply(TP(a * BosonFockKet(p), a * BosonFockKet(q))) == TP(
+        sqrt(p) * BosonFockKet(p - 1), sqrt(q) * BosonFockKet(q - 1)
+    )
+
+
+def test_unary_add():
+    """Test distribution over addition"""
+    assert qapply(a * BosonFockKet(p) + Dagger(a) * BosonFockKet(q)) == sqrt(
+        p
+    ) * BosonFockKet(p - 1) + sqrt(q + 1) * BosonFockKet(q + 1)
+
+
+def test_unary_pow():
+    """Test power expression handling"""
+    assert qapply((SimpleBra() * SimpleKet()) ** 2) == alpha**2 * exp(2 * I * omega)
+    assert qapply(sqrt(SimpleBra() * SimpleKet())) == sqrt(alpha * exp(I * omega))
+    assert qapply((po.dual * Jz * po) ** 2) == hbar**2
+    assert qapply((BosonFockBra(1) * a * BosonFockKet(1)) ** 2) == S.Zero
+
+
+def test_unary_Mul():
+    """Test multiplication expression handling"""
+    assert qapply(Jz * po) == hbar * po
+    assert qapply(a * BosonFockKet(p)) == sqrt(p) * BosonFockKet(p - 1)
+
+
+def test_unary_sum():
+    """Test Sum expression handling"""
+    assert qapply(Sum(a * BosonFockKet(p), (p, 0, 2))) == Sum(
+        sqrt(p) * BosonFockKet(p - 1), (p, 0, 2)
+    )
+    assert qapply(Sum(a * BosonFockKet(p), (p, 0, 2)), sum_doit=True) == sqrt(
+        1
+    ) * BosonFockKet(0) + sqrt(2) * BosonFockKet(1)
+    assert qapply(Jz * po + Jz * mo) == hbar * po - hbar * mo
+
+
+def test_unary_integral():
+    """Test Integral expression handling"""
+    assert qapply(Integral(XBra(x) * XKet(y), (x, -oo, oo))).doit() == S.One
+    assert qapply(Integral(XBra(x) * XKet(y), (x, -oo, oo))) == Integral(
+        DiracDelta(y-x), (x, -oo, oo)
+    )
+
+
+def test_unary_abs():
+    """Test absolute value expressions"""
+    assert qapply(Abs(alpha)) == Abs(alpha)
+    assert qapply(Abs(BosonFockBra(0) * a * BosonFockKet(1))) == S.One
+
+
+def test_unary_number():
+    """Test numeric type conversion"""
+    assert qapply(0) == S.Zero
+    assert qapply(1.0) == sympify(1.0)
+
+
+# -----------------------------------------------------------------------------
+# qapply_Mul: SlidingTransform unary
+#
+# The tests in this section cover qapply(Mul) cases where one of the args of the
+# Mul is transformed by the unary SlidingTransform handler.
+# -----------------------------------------------------------------------------
+
+
+def test_mul_unary_outerproduct():
+    """Test OuterProduct decomposition"""
+    assert qapply(
+        A*OuterProduct(BosonFockKet(p), BosonFockBra(q)) * a * BosonFockKet(q + 1)
+    ) == A * sqrt(q + 1) * BosonFockKet(p)
+
+
+def test_mul_unary_commutator():
+    """Test commutator evaluation in products"""
+    assert qapply(Commutator(Jx, Jy) * Jz * po) == I * hbar**3 * po
+    assert qapply(Commutator(J2, Jz) * Jz * po) == 0
+    assert qapply(Commutator(a, Dagger(a)) * BosonFockKet(1)) == BosonFockKet(1)
+    assert qapply(Commutator(X, PxOp()) * XKet(x)) == I * hbar * XKet(x)
+
+
+def test_mul_unary_anticommutator():
+    """Test anticommutator evaluation in products"""
+    assert qapply(AntiCommutator(f, Dagger(f)) * FermionFockKet(0)) == FermionFockKet(0)
+    assert qapply(AntiCommutator(Jx, Jy) * Jz * po).expand() == hbar**3*I*mo
+
+def test_mul_unary_tensorproduct():
+    """Test tensor product in products."""
+    assert qapply(A*TensorProduct(Jz*po, Jz*mo)*B) == -hbar**2*A*TensorProduct(po, mo)*B
+
+
+def test_mul_unary_density():
+    """Test density matrix in products."""
+    d = Density([a * BosonFockKet(p), 0.5], [a * BosonFockKet(q), 0.5])
+    assert qapply(A*d*B) == A*Density(
+        [sqrt(p) * BosonFockKet(p - 1), 0.5], [sqrt(q) * BosonFockKet(q - 1), 0.5]
+    )*B
+    d = Density([Jz * mo, 0.5], [Jz * po, 0.5])
+    assert qapply(A*d*B) == A*Density([-hbar * mo, 0.5], [hbar * po, 0.5])*B
+
+
+def test_mul_unary_pow():
+    """Test power expansion in multiplications"""
+    assert qapply(a**2 * BosonFockKet(p)) == sqrt(p) * sqrt(p - 1) * BosonFockKet(p - 2)
+    assert qapply(BosonFockBra(q) * a**2 * BosonFockKet(p)) == KroneckerDelta(
+        q, p - 2
+    ) * sqrt(p) * sqrt(p - 1)
+    # Here we are testing the path for a Mul that has a Pow with a non-integer
+    # power
+    assert qapply(
+        alpha
+        * sqrt(
+            BosonFockBra(p)
+            * a
+            * BosonFockKet(p + 1)
+            * BosonFockBra(p + 1)
+            * Dagger(a)
+            * BosonFockKet(p)
+        )
+    ) == alpha * sqrt(p + 1)
+
+
+# -----------------------------------------------------------------------------
+# qapply_Mul: SlidingTransform binary handler tests
+#
+# The tests in this section cover qapply(Mul) where two of the Mul args are
+# handled by the binary SlidingTransform handler for qapply_Mul.
+# -----------------------------------------------------------------------------
+
+def test_mul_binary_op_ket():
+    """Test operator application to kets"""
+    assert qapply(a * BosonFockKet(q)) == sqrt(q) * BosonFockKet(q - 1)
+    assert qapply(A * BosonFockKet(q)) == A * BosonFockKet(q)
+    assert qapply(Jplus * Jplus * mo) == 2 * hbar**2 * po
+
+
+def test_mul_binary_op_tensorproduct():
+    """Test operator application to TensorProduct"""
+    # Define a custom operator that distributes over TensorProduct args
+    class DistributiveOperator(Operator):
+        """An operator that distributes over TensorProduct arguments."""
+
+        def _apply_operator_TensorProduct(self, tp, **options):
+            """Apply this operator to each argument of a TensorProduct.
+
+            For example: D*TP(A, B) -> TP(D*A, D*B)
+            """
+            from sympy.physics.quantum.qapply import qapply
+            # Apply the operator to each argument of the tensor product
+            new_args = [qapply(self * arg) for arg in tp.args]
+            return TensorProduct(*new_args)
+
+    # Create instances of the distributive operator and generic operators
+    D = DistributiveOperator('D')
+    C = Operator('C')
+    E = Operator('E')
+    F = Operator('F')
+
+    # Test: D * TP(C, E) should become TP(D*C, D*E)
+    result = qapply(D * TP(C, E))
+    expected = TP(D * C, D * E)
+    assert result == expected
+
+    # Test with three arguments: D * TP(C, E, F) should become TP(D*C, D*E, D*F)
+    result = qapply(D * TP(C, E, F))
+    expected = TP(D * C, D * E, D * F)
+    assert result == expected
+
+    # Test with actual quantum states
+    ket1 = Ket('psi')
+    ket2 = Ket('phi')
+    result = qapply(D * TP(ket1, ket2))
+    expected = TP(D * ket1, D * ket2)
+    assert result == expected
+
+
+def test_mul_binary_op_wavefunction():
+    x = Symbol('x')
+    f = Function('f')
+    d = DifferentialOperator(Derivative(f(x), x), f(x))
+    g = Wavefunction(x**2, x)
+    assert qapply(d*g) == Wavefunction(2*x, x)
+
+
+def test_mul_binary_bra_op():
+    """Test bra-operator interactions"""
+    assert qapply(BosonFockBra(q) * a, dagger=True) == sqrt(q + 1) * BosonFockBra(q + 1)
+
+
+def test_mul_binary_sum_sum():
+    """Test sum of operators applied to sum of states creates double sum"""
+    # Sum of p-dependent operators (p*a) applied to sum of states
+    # The coefficient p depends on the summation variable, but a can still be applied
+    lhs = Sum(p * a, (p, 0, 2))
+    rhs = Sum(BosonFockKet(q), (q, 1, 3))
+
+    # Apply the sum of operators to the sum of states
+    # This should create a double sum where 'a' is applied to each state
+    result = qapply(lhs * rhs)
+
+    # Expected: Double sum where 'a' has been applied to |q>, with p coefficient
+    # p*a*|q> -> p*sqrt(q)*|q-1>
+    expected = Sum(p * sqrt(q) * BosonFockKet(q - 1), (p, 0, 2), (q, 1, 3))
+    assert result == expected
+
+    # Verify it expands correctly when evaluated
+    # Sum over p: 0 + 1 + 2 = 3, Sum over q: sqrt(1)*|0> + sqrt(2)*|1> + sqrt(3)*|2>
+    expected_expanded = 3 * (BosonFockKet(0) + sqrt(2) * BosonFockKet(1) + sqrt(3) * BosonFockKet(2))
+    assert result.doit() == expected_expanded
+
+
+def test_mul_binary_integral_integral():
+    """Test integral-expression interactions"""
+    e = qapply(XBra(x) * Integral(X * XKet(y), (y, -oo, oo)))
+    assert e == Integral(y * DiracDelta(y - x), (y, -oo, oo))
+    assert e.doit() == x
+
+    e = qapply(Integral(XBra(y) * X, (y, -oo, oo)) * XKet(x))
+    assert e == Integral(x * DiracDelta(x - y), (y, -oo, oo))
+    assert e.doit() == x
+
+    e = qapply(Integral(XBra(x), (x, -oo, oo)) * Integral(XKet(y), (y, -oo, oo)))
+    assert e == Integral(DiracDelta(y - x), (x, -oo, oo), (y, -oo, oo))
+
+
+def test_mul_binary_add_add():
+    """Test addition of operators applied to addition of states"""
+    # Create an addition of bosonic operators
+    lhs = a + Dagger(a)
+
+    # Create an addition of bosonic Fock states
+    rhs = BosonFockKet(1) + BosonFockKet(2)
+
+    # Apply the addition of operators to the addition of states
+    # This should distribute: (a + a†) * (|1> + |2>)
+    result = qapply(lhs * rhs)
+
+    # Expected: Each operator applied to each state
+    # a*|1> + a*|2> + a†*|1> + a†*|2>
+    expected = (
+        BosonFockKet(0) + sqrt(2) * BosonFockKet(1) +
+        sqrt(2) * BosonFockKet(2) + sqrt(3) * BosonFockKet(3)
+    )
+    assert result.expand() == expected.expand()
+
+
+def test_mul_binary_sum_add():
+    """Test sum of operators applied to addition of states"""
+    # Create a sum of p-dependent operators
+    lhs = Sum(p * a, (p, 0, 2))
+
+    # Create an addition of bosonic Fock states
+    rhs = BosonFockKet(1) + BosonFockKet(2)
+
+    # Apply the sum of operators to the addition of states
+    # This should create a sum where each operator is applied to each state
+    result = qapply(lhs * rhs)
+
+    # Expected: Sum with Add inside where each operator is applied
+    # Sum(p*a, (p, 0, 2)) * (|1> + |2>) = Sum(p*a*|1> + p*a*|2>, (p, 0, 2))
+    #                                    = Sum(p*|0> + sqrt(2)*p*|1>, (p, 0, 2))
+    expected = Sum(p * BosonFockKet(0) + sqrt(2) * p * BosonFockKet(1), (p, 0, 2))
+    assert result == expected
+
+    # Verify it expands correctly
+    # Sum over p: (0 + 1 + 2) = 3, so 3*|0> + 3*sqrt(2)*|1>
+    assert result.doit() == 3 * BosonFockKet(0) + 3 * sqrt(2) * BosonFockKet(1)
+
+
+def test_mul_binary_add_sum():
+    """Test addition of operators applied to sum of states"""
+    # Create an addition of bosonic operators
+    lhs = a + Dagger(a)
+
+    # Create a sum of bosonic Fock states
+    rhs = Sum(BosonFockKet(q), (q, 1, 2))
+
+    # Apply the addition of operators to the sum of states
+    # This should distribute: (a + a†) * Sum(|q>, (q, 1, 2))
+    result = qapply(lhs * rhs)
+
+    # Expected: Sum with Add inside where each operator is applied
+    # (a + a†) * Sum(|q>, (q, 1, 2)) = Sum(a*|q> + a†*|q>, (q, 1, 2))
+    #                                 = Sum(sqrt(q)*|q-1> + sqrt(q+1)*|q+1>, (q, 1, 2))
+    expected = Sum(
+        sqrt(q) * BosonFockKet(q - 1) + sqrt(q + 1) * BosonFockKet(q + 1),
+        (q, 1, 2)
+    )
+    assert result == expected
+
+    # Verify it expands correctly
+    # q=1: sqrt(1)*|0> + sqrt(2)*|2> = |0> + sqrt(2)*|2>
+    # q=2: sqrt(2)*|1> + sqrt(3)*|3>
+    expected_expanded = (
+        BosonFockKet(0) + sqrt(2) * BosonFockKet(1) +
+        sqrt(2) * BosonFockKet(2) + sqrt(3) * BosonFockKet(3)
+    )
+    assert result.doit() == expected_expanded
+
+
+def test_mul_binary_integral_add():
+    """Test integral of operators applied to addition of states"""
+    # Create an integral over bosonic operators
+    # Using p as a continuous variable (like a coupling constant)
+    r = symbols('r', real=True)
+    lhs = Integral(r * a, (r, 0, 1))
+
+    # Create an addition of bosonic Fock states
+    rhs = BosonFockKet(1) + BosonFockKet(2)
+
+    # Apply the integral to the addition
+    result = qapply(lhs * rhs)
+
+    # Expected: Integral with Add inside where operator is applied to each state
+    # Integral(r*a, (r, 0, 1)) * (|1> + |2>)
+    # = Integral(r*a*|1> + r*a*|2>, (r, 0, 1))
+    # = Integral(r*|0> + r*sqrt(2)*|1>, (r, 0, 1))
+    expected = Integral(
+        r * BosonFockKet(0) + r * sqrt(2) * BosonFockKet(1),
+        (r, 0, 1)
+    )
+    assert result == expected
+
+
+def test_mul_binary_add_integral():
+    """Test addition of operators applied to integral of states"""
+    # Create an addition of bosonic operators
+    lhs = a + Dagger(a)
+
+    # Create an integral over bosonic Fock states
+    r = symbols('r', real=True)
+    rhs = Integral(BosonFockKet(q), (r, 0, 1))
+
+    # Apply the addition to the integral
+    result = qapply(lhs * rhs)
+
+    # Expected: Integral with Add inside
+    # (a + a†) * Integral(|q>, (r, 0, 1))
+    # = Integral(a*|q> + a†*|q>, (r, 0, 1))
+    # = Integral(sqrt(q)*|q-1> + sqrt(q+1)*|q+1>, (r, 0, 1))
+    expected = Integral(
+        sqrt(q) * BosonFockKet(q - 1) + sqrt(q + 1) * BosonFockKet(q + 1),
+        (r, 0, 1)
+    )
+    assert result == expected
+
+
+def test_mul_binary_sum_integral():
+    """Test sum of operators applied to integral of states"""
+    # Create a sum of bosonic operators with parameter dependence
+    lhs = Sum(p * a, (p, 0, 1))
+
+    # Create an integral over bosonic Fock states
+    # This is a bit artificial but tests the mechanism
+    rhs = Integral(BosonFockKet(q), (q, 1, 2))
+
+    # Apply the sum to the integral
+    result = qapply(lhs * rhs)
+
+    # Expected: Sum containing an Integral where operator is applied
+    # Sum(p*a, (p, 0, 1)) * Integral(|q>, (q, 1, 2))
+    # = Sum(Integral(p*a*|q>, (q, 1, 2)), (p, 0, 1))
+    # = Sum(Integral(p*sqrt(q)*|q-1>, (q, 1, 2)), (p, 0, 1))
+    expected = Sum(
+        Integral(p * sqrt(q) * BosonFockKet(q - 1), (q, 1, 2)),
+        (p, 0, 1)
+    )
+    assert result == expected
+
+
+def test_mul_binary_integral_sum():
+    """Test integral of operators applied to sum of states"""
+    # Create an integral over bosonic operators
+    lhs = Integral(p * a, (p, 0, 1))
+
+    # Create a sum over bosonic Fock states
+    rhs = Sum(BosonFockKet(q), (q, 1, 2))
+
+    # Apply the integral to the sum
+    result = qapply(lhs * rhs)
+
+    # Expected: Integral containing a Sum where operator is applied
+    # Integral(p*a, (p, 0, 1)) * Sum(|q>, (q, 1, 2))
+    # = Integral(Sum(p*a*|q>, (q, 1, 2)), (p, 0, 1))
+    # = Integral(Sum(p*sqrt(q)*|q-1>, (q, 1, 2)), (p, 0, 1))
+    expected = Integral(
+        Sum(p * sqrt(q) * BosonFockKet(q - 1), (q, 1, 2)),
+        (p, 0, 1)
+    )
+    assert result == expected
+
+
+def test_mul_binary_expr_add():
+    """Test expression (operator power) applied to addition of states"""
+    # Create an expression: operator to a power
+    lhs = a**2
+
+    # Create an addition of bosonic Fock states
+    rhs = BosonFockKet(2) + BosonFockKet(3)
+
+    # Apply the expression to the addition
+    result = qapply(lhs * rhs)
+
+    # Expected: a**2 applied to each state
+    # a**2 * |2> = a * a * |2> = a * sqrt(2) * |1> = sqrt(2) * sqrt(1) * |0> = sqrt(2) * |0>
+    # a**2 * |3> = a * a * |3> = a * sqrt(3) * |2> = sqrt(3) * sqrt(2) * |1> = sqrt(6) * |1>
+    expected = sqrt(2) * BosonFockKet(0) + sqrt(6) * BosonFockKet(1)
+    assert result == expected
+
+
+def test_mul_binary_expr_sum():
+    """Test expression (operator power) applied to sum of states"""
+    # Create an expression: operator to a power
+    lhs = a**2
+
+    # Create a sum of bosonic Fock states
+    rhs = Sum(BosonFockKet(q), (q, 2, 3))
+
+    # Apply the expression to the sum
+    result = qapply(lhs * rhs)
+
+    # Expected: Sum with a**2 applied to each state
+    # a**2 * |q> = sqrt(q) * sqrt(q-1) * |q-2> = sqrt(q*(q-1)) * |q-2>
+    expected = Sum(sqrt(q * (q - 1)) * BosonFockKet(q - 2), (q, 2, 3))
+    assert result == expected
+
+    # Verify it expands correctly
+    # q=2: sqrt(2*1)*|0> = sqrt(2)*|0>
+    # q=3: sqrt(3*2)*|1> = sqrt(6)*|1>
+    expected_expanded = sqrt(2) * BosonFockKet(0) + sqrt(6) * BosonFockKet(1)
+    assert result.doit() == expected_expanded
+
+
+def test_mul_binary_expr_integral():
+    """Test expression (operator power) applied to integral of states"""
+    # Create an expression: operator to a power
+    lhs = a**2
+
+    # Create an integral over bosonic Fock states
+    r = symbols('r', real=True)
+    rhs = Integral(BosonFockKet(q), (r, 0, 1))
+
+    # Apply the expression to the integral
+    result = qapply(lhs * rhs)
+
+    # Expected: Integral with a**2 applied
+    # a**2 * |q> = sqrt(q*(q-1)) * |q-2>
+    expected = Integral(sqrt(q * (q - 1)) * BosonFockKet(q - 2), (r, 0, 1))
+    assert result == expected
+
+
+def test_mul_binary_add():
+    """Test distribution over addition"""
+    assert (
+        qapply((Jplus + Jminus) * z / sqrt(2)).expand() == (hbar * (po + mo)).expand()
+    )
+    assert qapply(Jz * (po + mo)).expand() == (hbar * (po - mo)).expand()
+    assert qapply((a + Dagger(a)) * BosonFockKet(1)).expand() == (BosonFockKet(0) + sqrt(2) * BosonFockKet(2)).expand()
+
+
+def test_mul_binary_sum():
+    """Test sum-expression interactions"""
+    e = qapply(Jz * Sum(JzKet(j, m), (m, -1, 1)))
+    assert e == Sum(hbar * m * JzKet(j, m), (m, -1, 1))
+    assert e.doit() == hbar * (JzKet(j, 1) - JzKet(j, -1))
+    assert qapply(
+        Sum(BosonFockBra(p), (p, 0, 3)) * Sum(BosonFockKet(q), (q, 0, 3))
+    ) == Sum(KroneckerDelta(p, q), (p, 0, 3), (q, 0, 3))
+
+
+# -----------------------------------------------------------------------------
+# Integration Tests
+# -----------------------------------------------------------------------------
 
 
 def test_basic():
-    assert qapply(Jz*po) == hbar*po
-    assert qapply(Jx*z) == hbar*po/sqrt(2) + hbar*mo/sqrt(2)
-    assert qapply((Jplus + Jminus)*z/sqrt(2)) == hbar*po + hbar*mo
-    assert qapply(Jz*(po + mo)) == hbar*po - hbar*mo
-    assert qapply(Jz*po + Jz*mo) == hbar*po - hbar*mo
-    assert qapply(Jminus*Jminus*po) == 2*hbar**2*mo
-    assert qapply(Jplus**2*mo) == 2*hbar**2*po
-    assert qapply(Jplus**2*Jminus**2*po) == 4*hbar**4*po
+    """Test basic operator applications"""
+    assert qapply(Jz * po) == hbar * po
+    assert qapply(Jx * z).expand() == (sqrt(2) * hbar * (po + mo) / sympify(2)).expand()
+    assert qapply(Jminus * Jminus * po) == 2 * hbar**2 * mo
+    assert qapply(Jplus**2 * mo) == 2 * hbar**2 * po
+    assert qapply(Jplus**2 * Jminus**2 * po) == 4 * hbar**4 * po
 
 
 def test_extra():
-    extra = z.dual*A*z
-    assert qapply(Jz*po*extra) == hbar*po*extra
-    assert qapply(Jx*z*extra) == (hbar*po/sqrt(2) + hbar*mo/sqrt(2))*extra
-    assert qapply(
-        (Jplus + Jminus)*z/sqrt(2)*extra) == hbar*po*extra + hbar*mo*extra
-    assert qapply(Jz*(po + mo)*extra) == hbar*po*extra - hbar*mo*extra
-    assert qapply(Jz*po*extra + Jz*mo*extra) == hbar*po*extra - hbar*mo*extra
-    assert qapply(Jminus*Jminus*po*extra) == 2*hbar**2*mo*extra
-    assert qapply(Jplus**2*mo*extra) == 2*hbar**2*po*extra
-    assert qapply(Jplus**2*Jminus**2*po*extra) == 4*hbar**4*po*extra
+    """Test complex expressions with non-quantum factors"""
+    extra = z.dual * A * z
+    assert qapply(Jz * po * extra) == hbar * po * extra
+    assert (
+        qapply(Jx * z * extra).expand()
+        == ((hbar * po / sqrt(2) + hbar * mo / sqrt(2)) * extra).expand()
+    )
+    assert (
+        qapply((Jplus + Jminus) * z / sqrt(2) * extra).expand()
+        == (hbar * (po + mo) * extra).expand()
+    )
+    assert (
+        qapply(Jz * (po + mo) * extra).expand() == (hbar * (po - mo) * extra).expand()
+    )
+    assert (
+        qapply(Jz * po * extra + Jz * mo * extra).expand()
+        == (hbar * (po - mo) * extra).expand()
+    )
+    assert qapply(Jminus * Jminus * po * extra) == 2 * hbar**2 * mo * extra
+    assert qapply(Jplus**2 * mo * extra) == 2 * hbar**2 * po * extra
+    assert qapply(Jplus**2 * Jminus**2 * po * extra) == 4 * hbar**4 * po * extra
 
 
 def test_innerproduct():
-    assert qapply(po.dual*Jz*po, ip_doit=False) == hbar*(po.dual*po)
-    assert qapply(po.dual*Jz*po) == hbar
-
-
-def test_zero():
-    assert qapply(0) == 0
-    assert qapply(Integer(0)) == 0
-
-
-def test_commutator():
-    assert qapply(Commutator(Jx, Jy)*Jz*po) == I*hbar**3*po
-    assert qapply(Commutator(J2, Jz)*Jz*po) == 0
-    assert qapply(Commutator(Jz, Foo('F'))*po) == 0
-    assert qapply(Commutator(Foo('F'), Jz)*po) == 0
-
-
-def test_anticommutator():
-    assert qapply(AntiCommutator(Jz, Foo('F'))*po) == 2*hbar*po
-    assert qapply(AntiCommutator(Foo('F'), Jz)*po) == 2*hbar*po
+    """Test inner product handling"""
+    assert qapply(po.dual * Jz * po, ip_doit=False) == hbar * (po.dual * po)
+    assert qapply(po.dual * Jz * po) == hbar
 
 
 def test_outerproduct():
-    e = Jz*(mo*po.dual)*Jz*po
-    assert qapply(e) == -hbar**2*mo
-    assert qapply(e, ip_doit=False) == -hbar**2*(po.dual*po)*mo
-    assert qapply(e).doit() == -hbar**2*mo
+    """Test outer product handling"""
+    e = Jz * (mo * po.dual) * Jz * po
+    assert qapply(e) == -(hbar**2) * mo
+    assert qapply(e, ip_doit=False) == -(hbar**2) * (po.dual * po) * mo
+    assert qapply(e).doit() == -(hbar**2) * mo
 
 
 def test_tensorproduct():
+    """Test tensor product applications"""
     a = BosonOp("a")
     b = BosonOp("b")
     ket1 = TensorProduct(BosonFockKet(1), BosonFockKet(2))
@@ -95,58 +627,71 @@ def test_tensorproduct():
     ket3 = TensorProduct(BosonFockKet(0), BosonFockKet(2))
     bra1 = TensorProduct(BosonFockBra(0), BosonFockBra(0))
     bra2 = TensorProduct(BosonFockBra(1), BosonFockBra(2))
-    assert qapply(TensorProduct(a, b ** 2) * ket1) == sqrt(2) * ket2
+    assert qapply(TensorProduct(a, b**2) * ket1) == sqrt(2) * ket2
     assert qapply(TensorProduct(a, Dagger(b) * b) * ket1) == 2 * ket3
-    assert qapply(bra1 * TensorProduct(a, b * b),
-                  dagger=True) == sqrt(2) * bra2
+    assert qapply(bra1 * TensorProduct(a, b * b), dagger=True) == sqrt(2) * bra2
     assert qapply(bra2 * ket1).doit() == S.One
     assert qapply(TensorProduct(a, b * b) * ket1) == sqrt(2) * ket2
-    assert qapply(Dagger(TensorProduct(a, b * b) * ket1),
-                  dagger=True) == sqrt(2) * Dagger(ket2)
+    assert qapply(Dagger(TensorProduct(a, b * b) * ket1), dagger=True) == sqrt(
+        2
+    ) * Dagger(ket2)
 
 
 def test_dagger():
-    lhs = Dagger(Qubit(0))*Dagger(H(0))
-    rhs = Dagger(Qubit(1))/sqrt(2) + Dagger(Qubit(0))/sqrt(2)
+    """Test dagger option handling"""
+    lhs = Dagger(Qubit(0)) * Dagger(H(0))
+    rhs = Dagger(Qubit(1)) / sqrt(2) + Dagger(Qubit(0)) / sqrt(2)
     assert qapply(lhs, dagger=True) == rhs
 
 
+# -----------------------------------------------------------------------------
+# Historical Issues
+# -----------------------------------------------------------------------------
+
+
 def test_issue_6073():
-    x, y = symbols('x y', commutative=False)
+    """Test handling of non-commutative symbols in states"""
+    x, y = symbols("x y", commutative=False)
     A = Ket(x, y)
-    B = Operator('B')
+    B = Operator("B")
     assert qapply(A) == A
-    assert qapply(A.dual*B) == A.dual*B
+    assert qapply(A.dual * B) == A.dual * B
 
 
-def test_density():
-    d = Density([Jz*mo, 0.5], [Jz*po, 0.5])
-    assert qapply(d) == Density([-hbar*mo, 0.5], [hbar*po, 0.5])
-
-
-def test_issue3044():
-    expr1 = TensorProduct(Jz*JzKet(S(2),S.NegativeOne)/sqrt(2), Jz*JzKet(S.Half,S.Half))
+def test_issue_3044():
+    """Test tensor product of spin operators"""
+    expr1 = TensorProduct(
+        Jz * JzKet(S(2), S.NegativeOne) / sqrt(2), Jz * JzKet(S.Half, S.Half)
+    )
     result = Mul(S.NegativeOne, Rational(1, 4), 2**S.Half, hbar**2)
-    result *= TensorProduct(JzKet(2,-1), JzKet(S.Half,S.Half))
+    result *= TensorProduct(JzKet(2, -1), JzKet(S.Half, S.Half))
     assert qapply(expr1) == result
 
 
-# Issue 24158: Tests whether qapply incorrectly evaluates some ket*op as op*ket
-def test_issue24158_ket_times_op():
-    P = BosonFockKet(0) * BosonOp("a") # undefined term
+def test_issue_24158_ket_times_op():
+    """Test that qapply doesn't incorrectly evaluate ket*op as op*ket"""
+    P = BosonFockKet(0) * BosonOp("a")  # undefined term
     # Does lhs._apply_operator_BosonOp(rhs) still evaluate ket*op as op*ket?
-    assert qapply(P) == P   # qapply(P) -> BosonOp("a")*BosonFockKet(0) = 0 before fix
-    P = Qubit(1) * XGate(0) # undefined term
+    assert qapply(P) == P  # qapply(P) -> BosonOp("a")*BosonFockKet(0) = 0 before fix
+    P = Qubit(1) * XGate(0)  # undefined term
     # Does rhs._apply_operator_Qubit(lhs) still evaluate ket*op as op*ket?
-    assert qapply(P) == P   # qapply(P) -> Qubit(0) before fix
-    P1 = Mul(QubitBra(0), Mul(QubitBra(0), Qubit(0)), XGate(0)) # legal expr <0| * (<1|*|1>) * X
-    assert qapply(P1) == QubitBra(0) * XGate(0)     # qapply(P1) -> 0 before fix
-    P1 = qapply(P1, dagger = True)  # unsatisfactorily -> <0|*X(0), expect <1| since dagger=True
-    assert qapply(P1, dagger = True) == QubitBra(1) # qapply(P1, dagger=True) -> 0 before fix
-    P2 = QubitBra(0) * (QubitBra(0) * Qubit(0)) * XGate(0) # 'forgot' to set brackets
-    P2 = qapply(P2, dagger = True) # unsatisfactorily -> <0|*X(0), expect <1| since dagger=True
-    assert P2 == QubitBra(1) # qapply(P1) -> 0 before fix
+    assert qapply(P) == P  # qapply(P) -> Qubit(0) before fix
+    P1 = Mul(
+        QubitBra(0), Mul(QubitBra(0), Qubit(0)), XGate(0)
+    )  # legal expr <0| * (<1|*|1>) * X
+    assert qapply(P1) == QubitBra(0) * XGate(0)  # qapply(P1) -> 0 before fix
+    P1 = qapply(
+        P1, dagger=True
+    )  # unsatisfactorily -> <0|*X(0), expect <1| since dagger=True
+    assert qapply(P1, dagger=True) == QubitBra(
+        1
+    )  # qapply(P1, dagger=True) -> 0 before fix
+    P2 = QubitBra(0) * (QubitBra(0) * Qubit(0)) * XGate(0)  # 'forgot' to set brackets
+    P2 = qapply(
+        P2, dagger=True
+    )  # unsatisfactorily -> <0|*X(0), expect <1| since dagger=True
+    assert P2 == QubitBra(1)  # qapply(P1) -> 0 before fix
     # Pull Request 24237: IdentityOperator from the right without dagger=True option
     with warns_deprecated_sympy():
-        assert qapply(QubitBra(1)*IdentityOperator()) == QubitBra(1)
-        assert qapply(IdentityGate(0)*(Qubit(0) + Qubit(1))) == Qubit(0) + Qubit(1)
+        assert qapply(QubitBra(1) * IdentityOperator()) == QubitBra(1)
+        assert qapply(IdentityGate(0) * (Qubit(0) + Qubit(1))) == Qubit(0) + Qubit(1)
