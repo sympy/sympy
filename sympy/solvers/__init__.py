@@ -37,6 +37,8 @@ from .solveset import solveset, linsolve, linear_eq_to_matrix, nonlinsolve, subs
 
 from .simplex import lpmin, lpmax, linprog
 
+from sympy.solvers.rpf import rpfsolve
+
 # This is here instead of sympy/sets/__init__.py to avoid circular import issues
 from ..core.singleton import S
 Complexes = S.Complexes
@@ -71,5 +73,7 @@ __all__ = [
     # This is here instead of sympy/sets/__init__.py to avoid circular import issues
     'Complexes',
 
-    'lpmin', 'lpmax', 'linprog'
+    'lpmin', 'lpmax', 'linprog',
+
+    'rpfsolve'
 ]
