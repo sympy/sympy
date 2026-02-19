@@ -213,6 +213,19 @@ class gamma(DefinedFunction):
             return self.func(x0)
         raise PoleError()
 
+    def _eval_aseries(self, n, args0, x, logx):
+        from sympy.functions.combinatorial.numbers import bernoulli
+        z=self.args[0]
+        point=args0[0]
+
+        if point in (S.Infinity, S.NegativeInfinity):
+            coeff = exp((log(z)*(z - S.Half) - z + log(2*pi)/2).expand())
+            expressions = [bernoulli(2*k) / (2*k*(2*k - 1)*z**(2*k - 1)) for k in range(1, n)]
+
+            return (exp(Add(*expressions))._eval_nseries(x, n, logx))*coeff
+
+        return super()._eval_aseries(n, args0, x, logx)
+
 
 ###############################################################################
 ################## LOWER and UPPER INCOMPLETE GAMMA FUNCTIONS #################
