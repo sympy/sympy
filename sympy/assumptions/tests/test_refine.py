@@ -1,7 +1,6 @@
 from sympy.assumptions.ask import Q
 from sympy.assumptions.refine import refine
 from sympy.core.expr import Expr
-from sympy.core.mul import Mul
 from sympy.core.numbers import (I, Rational, nan, pi)
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
