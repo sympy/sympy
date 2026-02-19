@@ -230,13 +230,22 @@ def _(expr, assumptions):
 # RealPredicate
 
 def _RealPredicate_number(expr, assumptions):
-    # let as_real_imag() work first since the expression may
-    # be simpler to evaluate
+    # Special-case: 0 ** (negative) is undefined → not real
+    if isinstance(expr, Pow):
+        base, exp = expr.as_base_exp()
+        if base is S.Zero and (getattr(exp, "is_negative", None) is True or (exp.is_Number and exp < 0)):
+            return False
+
+    # Treat any infinite numeric (oo, -oo, zoo) as not real for Q.real
+    is_inf = getattr(expr, "is_infinite", None)
+    if is_inf is True:
+        return False
+
+    # Fall back to checking the imaginary part
     i = expr.as_real_imag()[1].evalf(2)
     if i._prec != 1:
         return not i
     # allow None to be returned if we couldn't show for sure
-    # that i was 0
 
 @RealPredicate.register_many(Abs, Exp1, Float, GoldenRatio, im, Pi, Rational,
     re, TribonacciConstant)
@@ -342,7 +351,15 @@ def _(expr, assumptions):
             if ask(Q.zero(expr.base), assumptions) is not False:
                 if ask(Q.positive(expr.exp), assumptions):
                     return True
+                if ask(Q.negative(expr.exp), assumptions):
+                    is_zero = ask(Q.zero(expr.base), assumptions)
+                    if is_zero is True:
+                        # 0**(negative) -> zoo -> not real
+                        return False
+                    # base might be zero -> undecidable
+                    return
                 return
+            
             if expr.exp.is_Rational and \
                     ask(Q.even(expr.exp.q), assumptions):
                 return ask(Q.positive(expr.base), assumptions)
