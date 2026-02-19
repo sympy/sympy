@@ -2583,3 +2583,8 @@ def test_issue_28127():
     assert ask(Q.gt(y,x), Q.lt(x,y)) is True
     assert ask(Q.lt(y,x), Q.gt(x,y)) is True
     assert ask(Q.le(y,x), Q.ge(x,y)) is True
+
+def test_issue_27964():
+    raises(ValueError, lambda: ask(False, False))
+    raises(ValueError, lambda: ask(False, Q.is_true(x) & ~Q.is_true(x)))
+    raises(ValueError, lambda: ask(False, (x | y) & ~x & ~y))
