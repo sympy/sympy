@@ -4297,3 +4297,28 @@ def test_schur_conditions():
 
     assert any(c <= 0 for c in p6.set_domain(QQ).schur_conditions())
     assert any(c <= 0 for c in p6.set_domain(EXRAW).schur_conditions())
+
+
+def test_cancel_noncommutative():
+    x, y = symbols('x y')
+    A = symbols('A', commutative=False)
+    B = symbols('B', commutative=False)
+
+    expr1 = A * (x**2 - 1)/(x + 1) * B
+    assert cancel(expr1) == (x - 1) * A * B
+
+    expr2 = (x**2 - 1)/(x + 1) * A * B
+    expr3 = (x**2 - 1)/(x + 1) * B * A
+    assert cancel(expr2) == (x - 1) * A * B
+    assert cancel(expr3) == (x - 1) * B * A
+
+    # Two scalar variables, commutativity of A and B should not
+    # get affected here, cancel will handle that
+    expr4 = A * (x**2 - y**2)/(x + y) * B
+    res4 = cancel(expr4)
+    assert res4 == (x - y) * A * B
+
+    # False Cancellation (Safety check), since AB != BA
+    # the expr wont get simplified any further
+    expr5 = (A**2 - B**2)/(A + B)
+    assert cancel(expr5) == expr5

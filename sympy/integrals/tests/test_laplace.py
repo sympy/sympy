@@ -129,7 +129,7 @@ def test_laplace_transform():
     assert (LT(b*sinh(a*t)**2, t, s) ==
             (2*a**2*b/(-4*a**2*s + s**3), 2*a, True))
     assert (LT(b*sinh(a*t)**2, t, s, simplify=True) ==
-            (2*a**2*b/(s*(-4*a**2 + s**2)), 2*a, True))
+            (-2*a**2*b/(s*(4*a**2 - s**2)), 2*a, True))
     # The following line confirms that issue #21202 is solved
     assert LT(cosh(2*t), t, s) == (s/(-4 + s**2), 2, True)
     assert LT(cosh(a*t), t, s) == (s/(-a**2 + s**2), a, True)
@@ -143,7 +143,7 @@ def test_laplace_transform():
         21*(s**2 + s*(-s*cos(2*x) + 2*w*sin(2*x)) +
             4*w**2)/(s*(s**2 + 4*w**2))).simplify() == 0
     # The following line replaces the old test test_issue_7173()
-    assert LT(sinh(a*t)*cosh(a*t), t, s, simplify=True) == (a/(-4*a**2 + s**2),
+    assert LT(sinh(a*t)*cosh(a*t), t, s, simplify=True) == (-a/(4*a**2 - s**2),
                                                             2*a, True)
     assert LT(sinh(a*t)/t, t, s) == (log((a + s)/(-a + s))/2, a, True)
     assert (LT(t**(-S(3)/2)*sinh(a*t), t, s) ==

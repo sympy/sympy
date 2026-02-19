@@ -1316,8 +1316,8 @@ def _get_examples_ode_sol_nth_order_reducible():
             'examples':{
     'reducible_01': {
         'eq': Eq(x*Derivative(f(x), x)**2 + Derivative(f(x), x, 2), 0),
-        'sol': [Eq(f(x),C1 - sqrt(-1/C2)*log(-C2*sqrt(-1/C2) + x) +
-        sqrt(-1/C2)*log(C2*sqrt(-1/C2) + x))],
+        'sol': [Eq(f(x),C1 + sqrt(1/C2)*log(-C2*sqrt(1/C2) + x) -
+        sqrt(1/C2)*log(C2*sqrt(1/C2) + x))],
         'slow': True,
     },
 
