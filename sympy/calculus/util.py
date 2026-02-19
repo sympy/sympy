@@ -81,6 +81,10 @@ def continuous_domain(f, symbol, domain):
         raise NotImplementedError(filldedent('''
             Domain must be a subset of S.Reals.
             '''))
+
+    if isinstance(f, Piecewise):
+        return _continuous_domain_piecewise(f, symbol, domain)
+
     implemented = [Pow, exp, log, Abs, frac,
                    sin, cos, tan, cot, sec, csc,
                    asin, acos, atan, acot, asec, acsc,
@@ -157,6 +161,102 @@ def continuous_domain(f, symbol, domain):
 
     return cont_domain - singularities(f, symbol, domain)
 
+def _continuous_domain_piecewise(f, symbol, domain):
+    """
+    Helper to compute the continuous domain of a Piecewise function.
+
+    Parameters
+    ==========
+
+    f : Piecewise
+        The function to check.
+    symbol : Symbol
+        The variable to check continuity against.
+    domain : Set
+        The domain over which to check continuity.
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol, Piecewise, S
+    >>> from sympy.calculus.util import _continuous_domain_piecewise
+    >>> x = Symbol('x')
+    >>> f = Piecewise((x, x < 0), (0, True))
+    >>> _continuous_domain_piecewise(f, x, S.Reals)
+    Interval(-oo, oo)
+
+    >>> g = Piecewise((x, x < 0), (1, True))
+    >>> _continuous_domain_piecewise(g, x, S.Reals)
+    Union(Interval.open(-oo, 0), Interval.open(0, oo))
+
+    """
+    result = S.EmptySet
+    pieces = f.as_expr_set_pairs(domain)
+
+    # Check segments
+    for expr, subset in pieces:
+        piece_cont = continuous_domain(expr, symbol, subset)
+        if hasattr(subset, 'boundary'):
+            piece_cont -= subset.boundary
+        result = Union(result, piece_cont)
+
+    # Check stitching points
+    potential_holes = domain - result
+    if not potential_holes.is_FiniteSet:
+        return result
+
+    for point in potential_holes:
+        try:
+            val = f.subs(symbol, point)
+        except ValueError:
+            continue
+
+        if not val.is_finite:
+            continue
+
+        left_expr = None
+        right_expr = None
+        for expr, subset in pieces:
+            if point in subset.closure:
+                if not subset.intersect(Interval.open(point - 1, point)).is_empty:
+                    left_expr = expr
+                if not subset.intersect(Interval.open(point, point + 1)).is_empty:
+                    right_expr = expr
+
+        is_cont = True
+
+        # Check Left Side
+        if left_expr is not None:
+            check_val = left_expr.subs(symbol, point)
+
+            if check_val != val or isinstance(check_val, (type(S.NaN),)):
+                try:
+                    s = left_expr.series(symbol, point, n=1, dir='-')
+                    # removeO() gets the leading term. subs() ensures it's a scalar.
+                    limit_val = s.removeO().subs(symbol, point)
+                    if limit_val != val:
+                        is_cont = False
+                except (ValueError, NotImplementedError, TypeError):
+                    is_cont = False
+
+        # Check Right Side
+        if is_cont and right_expr is not None:
+            check_val = right_expr.subs(symbol, point)
+
+            if check_val != val or isinstance(check_val, (type(S.NaN),)):
+                try:
+                    s = right_expr.series(symbol, point, n=1, dir='+')
+                    limit_val = s.removeO().subs(symbol, point)
+                    if limit_val != val:
+                        is_cont = False
+                except (ValueError, NotImplementedError, TypeError):
+                    is_cont = False
+
+        if is_cont:
+            result = Union(result, FiniteSet(point))
+
+    return result
+
 
 def function_range(f, symbol, domain):
     """
@@ -211,6 +311,26 @@ def function_range(f, symbol, domain):
 
     if domain is S.EmptySet:
         return S.EmptySet
+
+    from sympy.functions.elementary.piecewise import Piecewise
+
+    if isinstance(f, Piecewise):
+        range_int = S.EmptySet
+        for expr, subset in f.as_expr_set_pairs(domain):
+            if expr is S.NaN or expr == S.NaN:
+                continue
+
+            try:
+                sub_range = function_range(expr, symbol, subset)
+            except (ValueError, TypeError):
+                continue
+
+            if sub_range.contains(S.ComplexInfinity):
+                sub_range = sub_range - FiniteSet(S.ComplexInfinity)
+
+            range_int = Union(range_int, sub_range)
+
+        return range_int
 
     period = periodicity(f, symbol)
     if period == S.Zero:
@@ -324,7 +444,6 @@ def not_empty_in(finset_intersection, *syms):
     Union(Interval.Lopen(-2, -1), Interval(2, oo))
     """
 
-    # TODO: handle piecewise defined functions
     # TODO: handle transcendental functions
     # TODO: handle multivariate functions
     if len(syms) == 0:
@@ -358,6 +477,21 @@ def not_empty_in(finset_intersection, *syms):
     def elm_domain(expr, intrvl):
         """ Finds the domain of an expression in any given interval """
         from sympy.solvers.solveset import solveset
+
+        if isinstance(expr, Piecewise):
+            result_domain = S.EmptySet
+            covered_domain = S.EmptySet
+
+            for piece_expr, piece_cond in expr.args:
+                cond_set = piece_cond.as_set().intersect(S.Reals)
+                active_region = cond_set - covered_domain
+
+                if active_region is not S.EmptySet:
+                    sub_domain = elm_domain(piece_expr, intrvl)
+                    result_domain = Union(result_domain, Intersection(sub_domain, active_region))
+
+                covered_domain = Union(covered_domain, cond_set)
+            return result_domain
 
         _start = intrvl.start
         _end = intrvl.end
