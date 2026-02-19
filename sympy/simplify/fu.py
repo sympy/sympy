@@ -2022,8 +2022,11 @@ def _osbornei(e, d):
     """
 
     def f(rv):
-        if not isinstance(rv, TrigonometricFunction):
+        if not isinstance(rv, (TrigonometricFunction, HyperbolicFunction)):
             return rv
+        if isinstance(rv, HyperbolicFunction):
+            a = rv.args[0].xreplace({d: I})
+            return rv.func(a)
         const, x = rv.args[0].as_independent(d, as_Add=True)
         a = x.xreplace({d: S.One}) + const*I
         if isinstance(rv, sin):
