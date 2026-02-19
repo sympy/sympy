@@ -136,12 +136,20 @@ class log1p(Function):
 
     @classmethod
     def eval(cls, arg):
-        if arg.is_Rational:
-            return log(arg + S.One)
-        elif not arg.is_Float:  # not safe to add 1 to Float
+        if arg.is_zero:
+            return S.Zero
+        if not arg.is_Float and not arg.is_number:
             return log.eval(arg + S.One)
-        elif arg.is_number:
-            return log(Rational(arg) + S.One)
+
+    def _eval_evalf(self, prec):
+        from mpmath import mp, workprec
+        from sympy.core.expr import Expr
+        arg = self.args[0]
+        if arg.is_number:
+            x = arg._to_mpmath(prec)
+            with workprec(prec):
+                res = mp.log1p(x)
+            return Expr._from_mpmath(res, prec)
 
     def _eval_is_real(self):
         return (self.args[0] + S.One).is_nonnegative
