@@ -504,8 +504,8 @@ def refine_conjugate(expr, assumptions):
     """
     from sympy.functions.elementary.exponential import log
     from sympy.functions.elementary.complexes import conjugate
-    arg = expr.args[0]
 
+    arg = expr.args[0]
     if isinstance(arg, Pow) and arg.args[1] == S.Half:
         if ask(~Q.negative(arg.args[0]), assumptions) and ask(Q.complex(arg.args[0]), assumptions):
             return conjugate(arg.args[0]) ** S.Half
@@ -517,6 +517,8 @@ def refine_conjugate(expr, assumptions):
     elif ask(Q.imaginary(arg), assumptions):
         return -arg
 
+    #the logarithm has a branch cut along the negative real axis. we can safely push the conjugate inside the function
+    #only if we are guaranteed that the argument is not a negative real number.
     if isinstance(arg,log):
         if ask(~Q.negative(arg.args[0]), assumptions) and ask(Q.complex(arg.args[0]), assumptions):
                 return log(conjugate(arg.args[0]))
@@ -528,24 +530,6 @@ def refine_conjugate(expr, assumptions):
             return conjugate(base) ** exp
     return  expr
 
-def refine_Mul(expr, assumptions):
-    """
-    handler for Mul function
-
-    Examples
-    ========
-
-    >>> from sympy.assumptions.refine import refine_Mul
-    >>> from sympy import conjugate, Symbol, Q
-    >>> z = Symbol('z')
-    >>> refine_Mul(z * conjugate(z), Q.complex(z))
-    Abs(z)**2
-    """
-    from sympy.functions.elementary.complexes import conjugate, Abs
-    if expr.args[1] == conjugate(expr.args[0]) or expr.args[0] == conjugate(expr.args[1]):
-        if ask(Q.complex(expr.args[0]), assumptions):
-            return Abs(expr.args[0]) ** 2
-    return expr
 
 handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'Abs': refine_abs,
@@ -559,5 +543,4 @@ handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'cos': refine_sin_cos,
     'sin': refine_sin_cos,
     'conjugate': refine_conjugate,
-    'Mul' : refine_Mul,
 }

@@ -295,6 +295,8 @@ def test_conjugate():
     assert refine(conjugate(log(z)), Q.complex(z) & ~Q.negative(z)) == log(conjugate(z))
     assert refine(conjugate(log(z)), Q.complex(z)) == conjugate(log(z))
     assert refine(conjugate(log(x)), Q.real(x)) == conjugate(log(x))
+    assert refine(conjugate(log(x)), Q.nonpositive(x)) == conjugate(log(x))
+    assert refine(conjugate(log(x)), Q.nonnegative(x)) == log(x)
 
     n = Symbol('n')
     assert refine(conjugate(x ** n), Q.complex(x) & Q.integer(n)) == conjugate(x) ** n
@@ -303,9 +305,4 @@ def test_conjugate():
     assert refine(conjugate(x ** S.Half), Q.complex(x) & ~Q.negative(x)) == conjugate(x) ** S.Half
     assert refine(conjugate(x ** S.Half), Q.real(x) & Q.negative(x)) == conjugate(x** S.Half)
     assert refine(conjugate(x ** S.Half), Q.real(x)) == conjugate(x ** S.Half)
-
-
-def test_Mul():
-    z = Symbol('z')
-    assert refine(Mul(z * conjugate(z)), Q.complex(z)) == Abs(z) ** 2
-    assert refine(Mul(z * conjugate(z)), Q.real(z)) == z ** 2
+    assert refine(conjugate(x ** S.Half), Q.nonnegative(x)) == x ** S.Half
