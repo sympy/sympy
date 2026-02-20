@@ -22,9 +22,15 @@ def test_Abs():
 
     assert refine(Abs(y - x), Q.positive(y - x)) == -x + y
     assert refine(Abs(y - x), Q.negative(y - x)) == x - y
+    assert refine(Abs(z - y + x), Q.positive(z - y + x)) == x - y + z
+    assert refine(Abs(z - y + x), Q.negative(z - y + x)) == -x + y - z
 
     assert refine(Abs(x**2)) != x**2
     assert refine(Abs(x**2), Q.real(x)) == x**2
+
+    assert refine(Abs(x * y), Q.positive(x) & Q.real(y)) == x * Abs(y)
+    assert refine(Abs(x * y), Q.positive(x) & Q.positive(y)) == x * y
+    assert refine(Abs(x * y), Q.real(x) & Q.real(y)) == Abs(x * y)
 
 
 def test_pow1():
