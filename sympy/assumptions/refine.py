@@ -493,7 +493,7 @@ def refine_conjugate(expr, assumptions):
     >>> refine(conjugate(x), Q.imaginary(x))
     -x
     >>> refine(conjugate(log(x)), Q.complex(x) & ~Q.negative(x))
-    log(conjugate(x))
+    conjugate(log(x))
     >>> n = Symbol('n')
     >>> refine(conjugate(x**n), Q.real(x) & Q.integer(n))
     x**n
