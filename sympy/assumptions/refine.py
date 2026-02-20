@@ -520,7 +520,7 @@ def refine_conjugate(expr, assumptions):
     #the logarithm has a branch cut along the negative real axis. we can safely push the conjugate inside the function
     #only if we are guaranteed that the argument is not a negative real number.
     if isinstance(arg,log):
-        if ask(~Q.negative(arg.args[0]), assumptions) and ask(Q.complex(arg.args[0]), assumptions):
+        if ask(~Q.nonpositive(arg.args[0]), assumptions)  and ask(Q.complex(arg.args[0]), assumptions):
                 return log(conjugate(arg.args[0]))
 
     if isinstance(arg, Pow):
