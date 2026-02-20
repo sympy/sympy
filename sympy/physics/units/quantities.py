@@ -106,8 +106,15 @@ class Quantity(AtomicExpr):
         return self
 
     def _eval_subs(self, old, new):
+        # If `new` is a Quantity and `self` is not `old`, preserve current behavior
         if isinstance(new, Quantity) and self != old:
             return self
+        # Use parent class substitution
+        expr = super()._eval_subs(old, new)
+        # Prevent substitution in unit symbols directly
+        if isinstance(self, Quantity):
+            return self
+        return expr
 
     def _latex(self, printer):
         if self._latex_repr:
