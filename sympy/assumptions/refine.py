@@ -108,7 +108,7 @@ def refine_abs(expr, assumptions):
     if ask(Q.negative(arg), assumptions):
         return -arg
 
-    #arg si Add
+    #arg is Add
     if isinstance(arg, Add):
         if ask(Q.negative(-arg), assumptions):
             return arg
