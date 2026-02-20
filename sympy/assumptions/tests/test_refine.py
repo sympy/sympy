@@ -291,10 +291,12 @@ def test_floor_ceiling():
     y = Symbol('y')
     assert refine(floor(x), Q.integer(x)) == x
     assert refine(ceiling(x), Q.integer(x)) == x
+    assert refine(floor(x), Q.infinite(x)) == x
 
     assert refine(floor(y), Q.real(y)) == floor(y)
     assert refine(ceiling(y), Q.real(y)) == ceiling(y)
-    assert refine(floor(y), Q.imaginary(y)) == floor(y)
 
     assert refine(floor(x + y), Q.integer(x)) == x + floor(y)
     assert refine(ceiling(x + y), Q.integer(x)) == x + ceiling(y)
+
+    assert refine(floor(x), Q.imaginary(x) & ~Q.integer(x)) == I * floor(-I * x)

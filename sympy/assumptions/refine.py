@@ -7,7 +7,6 @@ from sympy.core.logic import fuzzy_not
 
 from sympy.assumptions import ask, Q  # type: ignore
 
-
 if TYPE_CHECKING:
     from sympy.logic.boolalg import Boolean
     from typing import Callable
@@ -494,20 +493,36 @@ def refine_floor_ceiling(expr, assumptions):
     x
     >>> refine(ceiling(x), Q.integer(x))
     x
+    >>> refine(floor(x), ~Q.integer(x))
+    floor(x)
+    >>> refine(floor(x), Q.imaginary(x) & ~Q.integer(x))
+    I*floor(-I*x)
     >>> refine(floor(x + y), Q.integer(x))
     x + floor(y)
     >>> refine(ceiling(x + y), Q.integer(x))
     x + ceiling(y)
+    >>> refine(ceiling(x), Q.infinite(x))
+    x
     """
+    from sympy.functions.elementary.complexes import im
     arg = expr.args[0]
-    if ask(Q.integer(arg), assumptions):
+    if ask(Q.integer(arg), assumptions) or ask(Q.infinite(arg), assumptions):
         return arg
 
+    #it takes only the imaginary part of the number, applies the function mentioned and multiplies
+    #by the imaginary unit
+    if ask(Q.imaginary(arg), assumptions):
+        return expr.func(im(arg)) * S.ImaginaryUnit
+
     if isinstance(arg, Add):
-        if ask(Q.integer(arg.args[0]), assumptions):
-            return arg.args[0] + expr.func(arg.args[1])
-        elif ask(Q.integer(expr.args[1]), assumptions):
-            return arg.args[1] + expr.func(arg.args[0])
+        simplified = []
+        non_simplified = []
+        for term in arg.args:
+            if ask(Q.integer(term), assumptions):
+                simplified.append(term)
+            else:
+                non_simplified.append(term)
+        return Add(*simplified) + expr.func(Add(*non_simplified))
     return expr
 
 
