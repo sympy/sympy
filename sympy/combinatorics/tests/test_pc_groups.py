@@ -85,8 +85,6 @@ def test_induced_pcgs():
         for i in ipcgs:
             m.append(collector.exponent_vector(i))
         assert Matrix(m).is_upper
-
-
 def test_induced_pcgs_final_depth():
     G = SymmetricGroup(3)
     H = G.sylow_subgroup(2)
@@ -108,3 +106,42 @@ def test_induced_pcgs_final_depth():
     identity = H.identity
     e_identity = collector.constructive_membership_test(ipcgs, identity)
     assert e_identity == [0]
+
+
+def test_collected_word_with_order_multiples():
+    from sympy.combinatorics import free_group
+
+    G = SymmetricGroup(4)
+    pc_group = G.polycyclic_group()
+    collector = pc_group.collector
+    pcgs = collector.pcgs
+    F, *gens = free_group(','.join([f'x{i}' for i in range(len(pcgs))]))
+
+    def perm_from_word(w):
+        if len(pcgs) > 0:
+            perm = Permutation(size=pcgs[0].size)
+        else:
+            perm = Permutation()
+        for sym, exp in w.array_form:
+            perm *= pcgs[int(sym.name[1:])] ** exp
+        return perm
+
+
+    test_cases = [
+        (gens[2] ** -2, "x2^-2 where x2 has order 2"),
+        (gens[2] ** 2, "x2^2 where x2 has order 2"),
+        (gens[2] ** -4, "x2^-4 where x2 has order 2"),
+        (gens[2] ** 4, "x2^4 where x2 has order 2"),
+        (gens[0] ** 4, "x0^4 where x0 has order 4"),
+        (gens[0] ** 8, "x0^8 where x0 has order 4"),
+        (gens[1] ** 3, "x1^3 where x1 has order 3"),
+        (gens[1] ** 6, "x1^6 where x1 has order 3"),
+        (gens[1] ** -3, "x1^-3 where x1 has order 3"),
+    ]
+
+    for word, description in test_cases:
+        word_perm = perm_from_word(word)
+        collected = collector.collected_word(word)
+        col_perm = perm_from_word(collected)
+        assert word_perm == col_perm, \
+            f"Failed for {description}: {word_perm} != {col_perm}"
