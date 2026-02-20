@@ -1076,8 +1076,7 @@ def _solve_as_poly(f, symbol, domain=S.Complexes):
             # For example, expand_complex(a) returns re(a) + I*im(a)
             if all(s.atoms(Symbol, AppliedUndef) == set() and not isinstance(s, RootOf)
                    for s in result):
-                s = Dummy('s')
-                result = imageset(Lambda(s, expand_complex(s)), result)
+                result = FiniteSet(*(expand_complex(s) for s in result))
         if isinstance(result, FiniteSet) and domain != S.Complexes:
             # Avoid adding gratuitous intersections with S.Complexes. Actual
             # conditions should be handled elsewhere.
