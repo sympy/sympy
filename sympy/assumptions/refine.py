@@ -506,9 +506,15 @@ def refine_conjugate(expr, assumptions):
     from sympy.functions.elementary.complexes import conjugate
 
     arg = expr.args[0]
-    if isinstance(arg, Pow) and arg.args[1] == S.Half:
+
+    # Handle the Pow cases
+    if isinstance(arg, Pow) and ask(Q.real(arg.args[1]), assumptions):
+        base = arg.args[0]
+        exp = arg.args[1]
+        if ask(Q.integer(exp), assumptions):
+            return conjugate(base) ** exp
         if ask(~Q.negative(arg.args[0]), assumptions) and ask(Q.complex(arg.args[0]), assumptions):
-            return conjugate(arg.args[0]) ** S.Half
+            return conjugate(arg.args[0]) ** arg.args[1]
         return expr
 
     if ask(Q.real(arg), assumptions):
@@ -517,18 +523,16 @@ def refine_conjugate(expr, assumptions):
     elif ask(Q.imaginary(arg), assumptions):
         return -arg
 
-    #the logarithm has a branch cut along the negative real axis. we can safely push the conjugate inside the function
-    #only if we are guaranteed that the argument is not a negative real number.
-    if isinstance(arg,log):
-        if ask(~Q.nonpositive(arg.args[0]), assumptions)  and ask(Q.complex(arg.args[0]), assumptions):
-                return log(conjugate(arg.args[0]))
-
-    if isinstance(arg, Pow):
-        base = arg.args[0]
-        exp = arg.args[1]
-        if ask(Q.integer(exp), assumptions):
-            return conjugate(base) ** exp
-    return  expr
+    # The logarithm has a branch cut along the negative real axis.
+    # We can safely push the conjugate inside only if the argument is not
+    # strictly negative or zero. For a negative real x, the equality fails
+    # (e.g., conjugate(log(-1)) == -I*pi, but log(conjugate(-1)) == I*pi).
+    # Additionally, log(0) evaluates to complex infinity (zoo).
+    if isinstance(arg, log):
+        log_arg = arg.args[0]
+        if ask(~Q.nonpositive(log_arg), assumptions)  and ask(Q.complex(log_arg), assumptions):
+                return log(conjugate(log_arg))
+    return expr
 
 
 handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {

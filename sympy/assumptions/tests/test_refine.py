@@ -286,7 +286,6 @@ def test_sin_cos():
 
 
 def test_conjugate():
-    x = Symbol('x')
     assert refine(conjugate(x), Q.real(x)) == x
     assert refine(conjugate(x), Q.imaginary(x)) == -x
 
