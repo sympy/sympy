@@ -2,6 +2,7 @@
 
 from sympy.core.function import expand
 from sympy.core import (GoldenRatio, TribonacciConstant)
+from sympy.core import sympify
 from sympy.core.numbers import (AlgebraicNumber, I, Rational, oo, pi)
 from sympy.core.power import Pow
 from sympy.core.singleton import S
@@ -328,9 +329,13 @@ def test_minpoly_compose():
 
 
 def test_minpoly_issue_7113():
-    # see discussion in https://github.com/sympy/sympy/pull/2234
+    # see discussion in
+    #   https://github.com/sympy/sympy/pull/2234
+    #   https://github.com/sympy/sympy/pull/2288
+    #   https://github.com/sympy/sympy/pull/29101
     from sympy.simplify.simplify import nsimplify
-    r = nsimplify(pi, tolerance=0.000000001)
+    r = nsimplify(pi, tolerance=0.000000001, full=True, magnitude_offsets=False)
+    assert r == sympify("2*2**(22/109)*3**(42/109)*5**(90/109)*7**(71/109)/15")
     mp = minimal_polynomial(r, x)
     assert mp == 1768292677839237920489538677417507171630859375*x**109 - \
     2734577732179183863586489182929671773182898498218854181690460140337930774573792597743853652058046464
