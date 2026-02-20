@@ -9,6 +9,7 @@ from sympy.assumptions.handlers import AskHandler
 from sympy.assumptions.ask_generated import (get_all_known_facts,
     get_known_facts_dict)
 from sympy.core.add import Add
+from sympy.core.mul import Mul
 from sympy.core.numbers import (I, Integer, Rational, oo, zoo, pi)
 from sympy.core.singleton import S
 from sympy.core.power import Pow
@@ -2058,6 +2059,19 @@ def test_real_pow():
     assert ask(Q.real(1/Abs(x))) is None
     assert ask(Q.real(x**y), Q.zero(x) & Q.real(y)) is None
     assert ask(Q.real(x**y), Q.zero(x) & Q.positive(y)) is True
+
+    # https://github.com/sympy/sympy/issues/28142
+    assert ask(Q.real(sqrt(x)), Q.real(x)) is None
+    one_half = Mul(S.Half, 1, evaluate=False)
+    assert ask(Q.real(x ** one_half), Q.real(x)) is None
+    assert ask(Q.real(Pow(x, 1, evaluate=False)), Q.zero(x)) is True
+    assert ask(Q.real(x**x), Q.zero(x)) is True
+    assert ask(Q.real(Pow(x, -1, evaluate=False)), Q.zero(x)) is False
+    two_thirds = Rational(2, 3)
+    assert ask(Q.real(x**two_thirds), Q.zero(x)) is True
+    assert ask(Q.real(x**pi), Q.zero(x)) is True
+    assert ask(Q.real(x**sqrt(2)), Q.zero(x)) is True
+    assert ask(Q.real(x**Rational(1/2)), Q.zero(x)) is True
 
 
 @_both_exp_pow
