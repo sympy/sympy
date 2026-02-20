@@ -116,38 +116,28 @@ def test_detect_poles():
     assert len(s4.poles_locations) == 2
     assert np.allclose(np.abs(s4.poles_locations), np.pi / 2)
 
-    with warns(
-            UserWarning,
-            match="NumPy is unable to evaluate with complex numbers some of",
-            test_stacklevel=False,
-        ):
-        u, v = symbols("u, v", real=True)
-        n = S(1) / 3
-        f = (u + I * v)**n
-        r, i = re(f), im(f)
-        s1 = Parametric2DLineSeries(r.subs(u, -2), i.subs(u, -2), (v, -2, 2),
-            adaptive=False, n=1000, detect_poles=False)
-        s2 = Parametric2DLineSeries(r.subs(u, -2), i.subs(u, -2), (v, -2, 2),
-            adaptive=False, n=1000, detect_poles=True)
+    u, v = symbols("u, v", real=True)
+    n = S(1) / 3
+    f = (u + I * v)**n
+    r, i = re(f), im(f)
+    s1 = Parametric2DLineSeries(r.subs(u, -2), i.subs(u, -2), (v, -2, 2),
+        adaptive=False, n=1000, detect_poles=False)
+    s2 = Parametric2DLineSeries(r.subs(u, -2), i.subs(u, -2), (v, -2, 2),
+        adaptive=False, n=1000, detect_poles=True)
     with ignore_warnings(RuntimeWarning):
         xx1, yy1, pp1 = s1.get_data()
         assert not np.isnan(yy1).any()
         xx2, yy2, pp2 = s2.get_data()
         assert np.isnan(yy2).any()
 
-    with warns(
-            UserWarning,
-            match="NumPy is unable to evaluate with complex numbers some of",
-            test_stacklevel=False,
-        ):
-        f = (x * u + x * I * v)**n
-        r, i = re(f), im(f)
-        s1 = Parametric2DLineSeries(r.subs(u, -2), i.subs(u, -2),
-            (v, -2, 2), params={x: 1},
-            adaptive=False, n1=1000, detect_poles=False)
-        s2 = Parametric2DLineSeries(r.subs(u, -2), i.subs(u, -2),
-            (v, -2, 2), params={x: 1},
-            adaptive=False, n1=1000, detect_poles=True)
+    f = (x * u + x * I * v)**n
+    r, i = re(f), im(f)
+    s1 = Parametric2DLineSeries(r.subs(u, -2), i.subs(u, -2),
+        (v, -2, 2), params={x: 1},
+        adaptive=False, n1=1000, detect_poles=False)
+    s2 = Parametric2DLineSeries(r.subs(u, -2), i.subs(u, -2),
+        (v, -2, 2), params={x: 1},
+        adaptive=False, n1=1000, detect_poles=True)
     with ignore_warnings(RuntimeWarning):
         xx1, yy1, pp1 = s1.get_data()
         assert not np.isnan(yy1).any()
@@ -711,9 +701,9 @@ def test_mpmath():
     assert np.all(yy2 > 0)
 
     s1 = LineOver1DRangeSeries(im(sqrt(-z)), (z, -5, 5),
-        adaptive=False, n=20, modules=None, force_real_eval=True)
+        adaptive=False, n=20, modules=None, force_real_eval=False)
     s2 = LineOver1DRangeSeries(im(sqrt(-z)), (z, -5, 5),
-        adaptive=False, n=20, modules="mpmath", force_real_eval=True)
+        adaptive=False, n=20, modules="mpmath", force_real_eval=False)
     xx1, yy1 = s1.get_data()
     xx2, yy2 = s2.get_data()
     assert np.allclose(xx1, xx2)

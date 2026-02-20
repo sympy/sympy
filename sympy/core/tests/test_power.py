@@ -15,6 +15,7 @@ from sympy.series.order import O
 from sympy.sets import FiniteSet
 from sympy.core.power import power
 from sympy.core.intfunc import integer_nthroot
+from sympy.functions.elementary.complexes import re, im
 from sympy.testing.pytest import warns, _both_exp_pow
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.abc import a, b, c, x, y
@@ -609,6 +610,20 @@ def test_issue_14704():
     a = 144**144
     x, xexact = integer_nthroot(a,a)
     assert x == 1 and xexact is False
+
+
+def test_issue_29000():
+    x = symbols('x')
+
+    assert re(sqrt(x)).subs(x, 0) == 0
+    assert im(sqrt(x)).subs(x, 0) == 0
+    assert sqrt(x).as_real_imag()[0].subs(x, 0) == 0
+    assert sqrt(x).as_real_imag()[1].subs(x, 0) == 0
+
+    assert re(x**Rational(3,2)).subs(x, 0) == 0
+    assert im(x**Rational(3,2)).subs(x, 0) == 0
+    assert re(x**Rational(0, 1)).subs(x, 0) == 1
+    assert im(x**Rational(0, 1)).subs(x, 0) == 0
 
 
 def test_rational_powers_larger_than_one():
