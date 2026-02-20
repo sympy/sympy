@@ -762,7 +762,7 @@ class ArrayDiagonal(_CodegenArrayAbstract):
     `A_{ij} \Longrightarrow A_{ii}`
 
     The diagonal over axes 1 and 2 (the second and third) of the tensor product
-    of two 2-dimensional arrays `A \otimes B` is
+    of two 2-dimensional arrays `A \boxtimes B` is
 
     `\Big[ A_{ab} B_{cd} \Big]_{abcd} \Longrightarrow \Big[ A_{ai} B_{id} \Big]_{adi}`
 
@@ -1201,7 +1201,7 @@ class ArrayContraction(_CodegenArrayAbstract):
             #
             # Examples:
             #
-            # * `A_ij b_j0 C_jk` ===> `A*DiagMatrix(b)*C \otimes OneArray(1)` with permutation (1 2)
+            # * `A_ij b_j0 C_jk` ===> `A*DiagMatrix(b)*C \boxtimes OneArray(1)` with permutation (1 2)
             #
             # Care for:
             # - matrix being diagonalized (i.e. `A_ii`)
@@ -1439,7 +1439,7 @@ class ArrayContraction(_CodegenArrayAbstract):
         =====
 
         Here the contraction pair `(1, 2)` meaning that the 2nd and 3rd indices
-        of the tensor product `A\otimes B` are contracted, has been transformed
+        of the tensor product `A\boxtimes B` are contracted, has been transformed
         into `(0, 1)` and `(1, 0)`, identifying the same indices in a different
         notation. `(0, 1)` is the second index (1) of the first argument (i.e.
                 0 or `A`). `(1, 0)` is the first index (i.e. 0) of the second
