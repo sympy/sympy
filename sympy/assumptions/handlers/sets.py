@@ -346,9 +346,9 @@ def _(expr, assumptions):
             if base_is_zero or ask(Q.integer(expr.exp), assumptions):
                 # Division by zero : If the base is 0 and the exponent
                 # is negative, ``expr`` evaluates to complex infinity.
-                expr_is_not_real = fuzzy_and([base_is_zero,
+                expr_is_complex_infinity = fuzzy_and([base_is_zero,
                                 ask(Q.negative(expr.exp), assumptions)])
-                return fuzzy_not(expr_is_not_real)
+                return fuzzy_not(expr_is_complex_infinity)
             elif ask(Q.positive(expr.base), assumptions):
                 return True
 
