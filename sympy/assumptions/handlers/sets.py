@@ -7,7 +7,7 @@ from sympy.core import Add, Basic, Expr, Mul, Pow, S
 from sympy.core.numbers import (AlgebraicNumber, ComplexInfinity, Exp1, Float,
     GoldenRatio, ImaginaryUnit, Infinity, Integer, NaN, NegativeInfinity,
     Number, NumberSymbol, Pi, pi, Rational, TribonacciConstant, E)
-from sympy.core.logic import fuzzy_bool, fuzzy_not
+from sympy.core.logic import fuzzy_bool, fuzzy_not, fuzzy_and
 from sympy.functions import (Abs, acos, acot, asin, atan, cos, cot, exp, im,
     log, re, sin, tan)
 from sympy.core.numbers import I
@@ -339,11 +339,13 @@ def _(expr, assumptions):
 
     if ask(Q.real(expr.base), assumptions):
         if ask(Q.real(expr.exp), assumptions):
-            if expr.exp.is_Rational and \
-                    ask(Q.even(expr.exp.q), assumptions):
-                return ask(Q.positive(expr.base), assumptions)
-            elif ask(Q.integer(expr.exp), assumptions):
-                is_not_real = ask_all(Q.zero(expr.base), Q.negative(expr.exp), assumptions=assumptions)
+            if (expr.exp.is_Rational and
+                    ask(Q.even(expr.exp.q), assumptions)):
+                return ask(Q.nonnegative(expr.base), assumptions)
+            base_is_zero = ask(Q.zero(expr.base), assumptions)
+            if base_is_zero or ask(Q.integer(expr.exp), assumptions):
+                is_not_real = fuzzy_and([base_is_zero,
+                                ask(Q.negative(expr.exp), assumptions)])
                 return fuzzy_not(is_not_real)
             elif ask(Q.positive(expr.base), assumptions):
                 return True
