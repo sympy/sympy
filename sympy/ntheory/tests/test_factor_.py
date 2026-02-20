@@ -1,3 +1,4 @@
+import pytest
 from sympy.core.containers import Dict
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
@@ -205,6 +206,7 @@ def test_perfect_power():
     assert perfect_power(Rational(-3, 2)**3) == (-3*S.Half, 3)
 
 
+@pytest.mark.thread_unsafe(reason="test relies on mutating a global cache")
 def test_factor_cache():
     factor_cache.cache_clear()
     raises(ValueError, lambda: factor_cache.__setitem__(1, 5))
