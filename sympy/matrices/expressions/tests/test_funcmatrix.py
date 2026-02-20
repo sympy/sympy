@@ -1,6 +1,6 @@
 from sympy.core import symbols, Lambda
 from sympy.core.sympify import SympifyError
-from sympy.functions import KroneckerDelta
+from sympy.functions import KroneckerDelta, sin, cos
 from sympy.matrices import Matrix
 from sympy.matrices.expressions import FunctionMatrix, MatrixExpr, Identity
 from sympy.testing.pytest import raises
@@ -52,3 +52,38 @@ def test_funcmatrix():
 def test_replace_issue():
     X = FunctionMatrix(3, 3, KroneckerDelta)
     assert X.replace(lambda x: True, lambda x: x) == X
+
+
+def test_funcmatrix_transpose():
+    i, j = symbols('i j')
+
+    M = FunctionMatrix(3, 3, Lambda((i, j), i + 2*j))
+    MT = M.T
+
+    assert isinstance(MT, FunctionMatrix)
+    assert MT.shape == (3, 3)
+    assert MT[0, 1] == 1
+    assert MT[1, 0] == 2
+    assert MT.lamda.dummy_eq(Lambda((j, i), i + 2*j))
+
+    A = FunctionMatrix(2, 3, Lambda((i, j), i*j))
+    AT = A.T
+    assert AT.shape == (3, 2)
+    assert AT[2, 1] == A[1, 2]
+
+
+def test_funcmatrix_derivative():
+    i, j, x = symbols('i j x')
+    M = FunctionMatrix(3, 3, Lambda((i, j), x * (i + j)))
+
+    D = M.diff(x)
+    assert isinstance(D, FunctionMatrix)
+    assert D.shape == (3, 3)
+    assert D.lamda.expr == i + j
+    assert D[1, 2] == 3
+
+    M2 = FunctionMatrix(2, 2, Lambda((i, j), sin(x)*i))
+    D2 = M2.diff(x)
+    assert D2.lamda.expr == cos(x)*i
+    D3 = M2.diff(x, 2)
+    assert D3.lamda.expr == -sin(x)*i
