@@ -491,8 +491,8 @@ def refine_factorial(expr, assumptions):
     if ask(Q.positive_infinite(arg), assumptions):
         return S.Infinity
     return expr
-        
-        
+
+
 handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'Abs': refine_abs,
     'Pow': refine_Pow,

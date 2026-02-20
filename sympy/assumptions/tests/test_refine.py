@@ -4,7 +4,6 @@ from sympy.core.expr import Expr
 from sympy.core.numbers import (I, Rational, nan, pi)
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
-from sympy.core.numbers import oo, Infinity, ComplexInfinity, zoo
 from sympy.functions.elementary.complexes import (Abs, arg, im, re, sign)
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -285,7 +284,7 @@ def test_sin_cos():
     assert refine(cos(x + n*pi/2 + k*pi/2 + m*pi/2), \
                   Q.odd(n) & Q.odd(k) & Q.integer(m)) == \
         (-1)**((n + k)/2) * cos(x + m*pi/2)
-    
+
 
 def test_factorial():
     n = Symbol('n')
@@ -293,4 +292,3 @@ def test_factorial():
     assert refine(factorial(n), Q.eq(n, 1)) == 1
     assert refine(factorial(n), Q.integer(n) & Q.negative(n)) is S.ComplexInfinity
     assert refine(factorial(n), Q.positive_infinite(n)) is S.Infinity
-    
