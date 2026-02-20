@@ -60,37 +60,77 @@ class Sum(AddWithLimits, ExprWithIntLimits):
     Finite sums
     ===========
 
-    For finite sums (and sums with symbolic limits assumed to be finite) we
-    follow the summation convention described by Karr [1], especially
-    definition 3 of section 1.4. The sum:
+    For finite sums (and sums with symbolic limits assumed to be finite), the
+    sum
 
     .. math::
 
-        \sum_{m \leq i < n} f(i)
+        S_a^b = \sum_{a \leq i \leq b} f(i)
 
-    has *the obvious meaning* for `m < n`, namely:
-
-    .. math::
-
-        \sum_{m \leq i < n} f(i) = f(m) + f(m+1) + \ldots + f(n-2) + f(n-1)
-
-    with the upper limit value `f(n)` excluded. The sum over an empty set is
-    zero if and only if `m = n`:
+    has *the obvious meaning* for `a \leq b`, namely:
 
     .. math::
 
-        \sum_{m \leq i < n} f(i) = 0  \quad \mathrm{for} \quad  m = n
+        S_a^b = \sum_{a \leq i \leq b} f(i) = f(a) + f(a+1) + \cdots + f(b-1) + f(b) \quad \mathrm{for} \quad a \leq b
 
-    Finally, for all other sums over empty sets we assume the following
-    definition:
+    with the lower and upper limit values `f(a)` and `f(b)` included.  In case
+    `a > b`, we use the following convention:
 
     .. math::
 
-        \sum_{m \leq i < n} f(i) = - \sum_{n \leq i < m} f(i)  \quad \mathrm{for} \quad  m > n
+        S_a^b = - \sum_{b < i < a} f(i) = - f(b+1) - f(b+2) - \cdots - f(a-1)
 
-    It is important to note that Karr defines all sums with the upper
-    limit being exclusive. This is in contrast to the usual mathematical notation,
-    but does not affect the summation convention. Indeed we have:
+    with the lower and upper limit values `f(b)` and `f(a)` excluded. The sum
+    over an empty set is zero if `b = a - 1`:
+
+    .. math::
+
+        S_a^{a-1} = \sum_{a \leq i \leq a - 1} f(i) = 0
+
+    Relation to the Karr convention
+    -------------------------------
+
+    The Karr convention for summations, introduced by Karr [1], specifically
+    definition 3 of section 1.4, offers a distinct framework that differs from
+    the standard approach used in SymPy.  The sum is defined for the case where
+    `a < b` as:
+
+    .. math::
+
+        K_a^b = \sum_{a \leq i < b} f(i) = f(a) + f(a+1) + \cdots + f(b-1)
+
+    The Karr convention for summations is built upon a single, elegant
+    objective: for any summation `K_a^b`, the following identity must hold true
+    for all integers `a`, `b` and `c`:
+
+    .. math::
+
+        K_a^b + K_b^c = K_a^c
+
+    This property is directly analogous to the additivity rule for definite
+    integrals.  By enforcing this consistency, the convention naturally extends
+    the definition of a sum to cases where the lower bound is not strictly less
+    than the upper bound, i.e. `a \nless b`, resulting in the following
+    generalizations:
+
+    .. math::
+
+        K_a^a = 0 \quad \mbox{because} \quad K_a^b + K_b^b = K_a^b
+
+    .. math::
+
+        K_a^b = -K_b^a \quad \mbox{because} \quad K_a^b + K_b^a = K_a^a = 0
+
+    Consequently, when $a > b$, the convention implies:
+
+    .. math::
+
+        K_a^b = - \sum_{b \leq i < a} f(i) = - f(b) - f(b+1) - \cdots - f(a-1)
+
+    A key distinction in Karr's convention is that the upper limit is always
+    exclusive.  While this departs from traditional mathematical notation, it
+    does not undermine the logic of the summation convention itself.  The
+    relationship between the two notations can be expressed as:
 
     .. math::
 
@@ -98,6 +138,35 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
     where the difference in notation is intentional to emphasize the meaning,
     with limits typeset on the top being inclusive.
+
+    The connection to the convention used in SymPy is straightforward:
+
+    .. math::
+
+        S_a^b = K_a^{b+1}
+
+    This leads to the additivity rule
+
+    .. math::
+
+        S_a^{b-1} + S_b^c = S_a^c
+
+    By requiring this formula to hold for all integers $a$, $b$ and $c$, we can
+    derive the formulas for the cases where `a \nless b`, in a way analogous to
+    the derivations for the Karr convention:
+
+    .. math::
+
+        S_a^{a-1} = K_a^a = 0
+
+    and
+
+    .. math::
+
+        S_a^b = K_a^{b+1} = -K_{b+1}^a = - f(b+1) - f(b+2) - \cdots - f(a-1) \quad \mbox{for} \quad a > b
+
+    This result provides an explanation for the choice of behavior in SymPy in
+    cases where $a \nless b$.
 
     Examples
     ========
@@ -159,6 +228,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
     >>> S3 = Sum(i, (i, m, m-1)).doit()
     >>> S3
     0
+
 
     See Also
     ========
