@@ -479,6 +479,20 @@ def refine_sin_cos(expr, assumptions):
     else:
         return ((-1)**((k + 1) / 2)) * sin(rem)
 
+
+def refine_factorial(expr, assumptions):
+    arg = expr.args[0]
+    if ask(Q.zero(arg), assumptions):
+        return S.One
+    if ask(Q.eq(arg, 1), assumptions):
+        return S.One
+    if ask(Q.integer(arg) & Q.negative(arg), assumptions):
+            return S.ComplexInfinity
+    if ask(Q.positive_infinite(arg), assumptions):
+        return S.Infinity
+    return expr
+        
+        
 handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'Abs': refine_abs,
     'Pow': refine_Pow,
@@ -490,4 +504,5 @@ handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'MatrixElement': refine_matrixelement,
     'cos': refine_sin_cos,
     'sin': refine_sin_cos,
+    'factorial': refine_factorial,
 }
