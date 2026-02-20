@@ -227,6 +227,14 @@ class PrettyPrinter(Printer):
         pform = prettyForm(*stringPict.next(l, op, r), binding=prettyForm.OPEN)
         return pform
 
+    def _print_Equation(self, e):
+        op = prettyForm(' = ')
+
+        l = self._print(e.lhs)
+        r = self._print(e.rhs)
+        pform = prettyForm(*stringPict.next(l, op, r), binding=prettyForm.OPEN)
+        return pform
+
     def _print_Not(self, e):
         from sympy.logic.boolalg import (Equivalent, Implies)
         if self._use_unicode:

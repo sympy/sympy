@@ -149,7 +149,12 @@ def sqrt(arg, evaluate=None):
     .. [2] https://en.wikipedia.org/wiki/Principal_value
     """
     # arg = sympify(arg) is handled by Pow
-    return Pow(arg, S.Half, evaluate=evaluate)
+    from sympy.core.equation import Equation
+    if isinstance(arg, Equation):
+        return Equation(Pow(arg.lhs, S.Half, evaluate=evaluate), Pow(arg.rhs,
+                        S.Half, evaluate=evaluate))
+    else:
+        return Pow(arg, S.Half, evaluate=evaluate)
 
 
 def cbrt(arg, evaluate=None):
@@ -206,7 +211,12 @@ def cbrt(arg, evaluate=None):
     .. [2] https://en.wikipedia.org/wiki/Principal_value
 
     """
-    return Pow(arg, Rational(1, 3), evaluate=evaluate)
+    from sympy.core.equation import Equation
+    if isinstance(arg, Equation):
+        return Equation(Pow(arg.lhs, Rational(1, 3), evaluate=evaluate),
+                        Pow(arg.rhs, Rational(1, 3), evaluate=evaluate))
+    else:
+        return Pow(arg, Rational(1, 3), evaluate=evaluate)
 
 
 def root(arg, n, k=0, evaluate=None):
@@ -303,7 +313,29 @@ def root(arg, n, k=0, evaluate=None):
     .. [5] https://mathworld.wolfram.com/CubeRoot.html
 
     """
+    from sympy.core.equation import Equation
+    # n-th root is an Equation
+    if isinstance(n,Equation):
+        if k:
+            return Equation(
+                Mul(Pow(arg,S.One/n.lhs,evaluate=evaluate),
+                    S.NegativeOne**(2*k/n.lhs), evaluate=evaluate),
+                Mul(Pow(arg, S.One/n.rhs, evaluate=evaluate),
+                    S.NegativeOne ** (2 * k / n.rhs), evaluate=evaluate))
+        return Equation(Pow(arg, 1/n.lhs, evaluate=evaluate),
+                        Pow(arg, 1/n.rhs, evaluate=evaluate))
     n = sympify(n)
+    # What the root is of is an Equation
+    if isinstance(arg, Equation):
+        if k:
+            return Equation(
+                Mul(Pow(arg.lhs,S.One/n,evaluate=evaluate),
+                    S.NegativeOne**(2*k/n), evaluate=evaluate),
+                Mul(Pow(arg.rhs, S.One/n, evaluate=evaluate),
+                    S.NegativeOne ** (2 * k / n), evaluate=evaluate))
+        return Equation(Pow(arg.lhs, 1/n, evaluate=evaluate),
+                        Pow(arg.rhs, 1/n, evaluate=evaluate))
+    # What the root is of is an Expr
     if k:
         return Mul(Pow(arg, S.One/n, evaluate=evaluate), S.NegativeOne**(2*k/n), evaluate=evaluate)
     return Pow(arg, 1/n, evaluate=evaluate)

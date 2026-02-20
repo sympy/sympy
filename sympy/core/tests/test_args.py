@@ -666,6 +666,11 @@ def test_sympy__core__expr__Expr():
     from sympy.core.expr import Expr
     assert _test_args(Expr())
 
+def test_sympy__core__equation__Equation():
+    from sympy.core.equation import Equation
+    from sympy.abc import a, b, c
+    assert _test_args(Equation(a, b/c))
+
 
 def test_sympy__core__expr__UnevaluatedExpr():
     from sympy.core.expr import UnevaluatedExpr
