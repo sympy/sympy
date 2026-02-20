@@ -97,7 +97,8 @@ def refine_abs(expr, assumptions):
     -x + y
     >>> refine_abs(Abs(y-x), Q.negative(y-x))
     x - y
-
+    >>> refine_abs(Abs(x * y), Q.positive(x) & Q.positive(y))
+    x*y
     """
     from sympy.functions.elementary.complexes import Abs
     arg = expr.args[0]
