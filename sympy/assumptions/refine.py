@@ -480,59 +480,35 @@ def refine_sin_cos(expr, assumptions):
         return ((-1)**((k + 1) / 2)) * sin(rem)
 
 
-def refine_floor(expr, assumptions):
+def refine_floor_ceiling(expr, assumptions):
     """
-    handler for the floor function
+    handler for the floor and ceiling functions
 
     Examples
     ========
 
-    >>> from sympy import Symbol, refine, Q, floor
+    >>> from sympy import Symbol, refine, Q, floor, ceiling
     >>> x = Symbol('x')
     >>> y = Symbol('y')
     >>> refine(floor(x), Q.integer(x))
     x
-    >>> refine(floor(x + y), Q.integer(x))
-    x + floor(y)
-    """
-    from sympy.functions.elementary.integers import floor
-    arg = expr.args[0]
-    if ask(Q.integer(arg), assumptions):
-        return arg
-
-    if isinstance(arg, Add):
-        if ask(Q.integer(arg.args[0]), assumptions):
-            return arg.args[0] + floor(arg.args[1])
-        elif ask(Q.integer(expr.args[1]), assumptions):
-            return arg.args[1] + floor(arg.args[0])
-    return expr
-
-
-def refine_ceiling(expr, assumptions):
-    """
-    handler for ceiling function
-
-    Examples
-    ========
-
-    >>> from sympy import Symbol, refine, Q, ceiling
-    >>> x = Symbol('x')
     >>> refine(ceiling(x), Q.integer(x))
     x
-    >>> y = Symbol('y')
+    >>> refine(floor(x + y), Q.integer(x))
+    x + floor(y)
     >>> refine(ceiling(x + y), Q.integer(x))
-        x + ceiling(y)
+    x + ceiling(y)
     """
-    from sympy.functions.elementary.integers import ceiling
     arg = expr.args[0]
     if ask(Q.integer(arg), assumptions):
         return arg
 
     if isinstance(arg, Add):
         if ask(Q.integer(arg.args[0]), assumptions):
-            return arg.args[0] + ceiling(arg.args[1])
-        elif ask(Q.integer(arg.args[1]), assumptions):
-            return arg.args[1] + ceiling(arg.args[0])
+            return arg.args[0] + expr.func(arg.args[1])
+        elif ask(Q.integer(expr.args[1]), assumptions):
+            return arg.args[1] + expr.func(arg.args[0])
+    return expr
 
 
 handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
@@ -546,6 +522,6 @@ handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'MatrixElement': refine_matrixelement,
     'cos': refine_sin_cos,
     'sin': refine_sin_cos,
-    'floor': refine_floor,
-    'ceiling': refine_ceiling,
+    'floor': refine_floor_ceiling,
+    'ceiling' : refine_floor_ceiling,
 }
