@@ -431,6 +431,10 @@ def test_latex_symbols():
     assert latex(Symbol('e^Alpha')) == r"e^{\mathrm{A}}"
     assert latex(Symbol('omega_alpha^beta')) == r"\omega^{\beta}_{\alpha}"
     assert latex(Symbol('omega') ** Symbol('beta')) == r"\omega^{\beta}"
+    assert latex(Symbol('_x')) == r"\_x"
+    assert latex(2*Symbol('_x')) == r"2 \_x"
+    assert latex(Symbol('x_')) == r"x\_"
+    assert latex(Symbol('__x__')) == r"\_\_x\_\_"
 
 
 @XFAIL
