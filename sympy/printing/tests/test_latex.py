@@ -1119,6 +1119,12 @@ def test_latex_FourierSeries():
     latex_str = \
         r'2 \sin{\left(x \right)} - \sin{\left(2 x \right)} + \frac{2 \sin{\left(3 x \right)}}{3} + \ldots'
     assert latex(fourier_series(x, (x, -pi, pi))) == latex_str
+    latex_str_sin = r'\sin{\left(x \right)}'
+    assert latex(fourier_series(sin(x), (x, -pi, pi))) == latex_str_sin
+    latex_str_4terms = r'\sin{\left(x \right)} + \sin{\left(2 x \right)} + \sin{\left(3 x \right)} + \sin{\left(4 x \right)}'
+    assert latex(fourier_series(sin(x) + sin(2*x) + sin(3*x) + sin(4*x), (x, -pi, pi))) == latex_str_4terms
+    latex_str_sin2 = r'\frac{1}{2} - \frac{\cos{\left(2 x \right)}}{2}'
+    assert latex(fourier_series(sin(x)**2, (x, -pi, pi))) == latex_str_sin2
 
 
 def test_latex_FormalPowerSeries():

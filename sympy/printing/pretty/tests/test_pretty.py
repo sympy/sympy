@@ -4936,6 +4936,19 @@ def test_pretty_sequences():
 def test_pretty_FourierSeries():
     f = fourier_series(x, (x, -pi, pi))
 
+    assert pretty(f) == (
+        '                      2*sin(3*x)      \n'
+        '2*sin(x) - sin(2*x) + ---------- + ...\n'
+        '                          3           ')
+
+    assert pretty(fourier_series(sin(x), (x, -pi, pi))) == 'sin(x)'
+    assert pretty(fourier_series(sin(x) + sin(2*x) + sin(3*x) + sin(4*x), (x, -pi, pi))) == (
+        'sin(x) + sin(2*x) + sin(3*x) + sin(4*x)')
+    assert pretty(fourier_series(sin(x)**2, (x, -pi, pi))) == (
+        '1   cos(2*x)\n'
+        '- - --------\n'
+        '2      2    ')
+
     ascii_str = \
 """\
                       2*sin(3*x)      \n\
