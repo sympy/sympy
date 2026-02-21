@@ -73,39 +73,15 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
         S_a^b = \sum_{a \leq i \leq b} f(i) = f(a) + f(a+1) + \cdots + f(b-1) + f(b) \quad \mathrm{for} \quad a \leq b
 
-    with the lower and upper limit values `f(a)` and `f(b)` included.  In case
-    `a > b`, we use the following convention:
+    with the lower and upper limit values `f(a)` and `f(b)` included.
+
+    The convention for summations is built upon a single, elegant objective:
+    for any summation `S_a^b`, the following additivity rule must hold true for
+    all integers `a`, `b` and `c`:
 
     .. math::
 
-        S_a^b = - \sum_{b < i < a} f(i) = - f(b+1) - f(b+2) - \cdots - f(a-1)
-
-    with the lower and upper limit values `f(b)` and `f(a)` excluded. The sum
-    over an empty set is zero if `b = a - 1`:
-
-    .. math::
-
-        S_a^{a-1} = \sum_{a \leq i \leq a - 1} f(i) = 0
-
-    Relation to the Karr convention
-    -------------------------------
-
-    The Karr convention for summations, introduced by Karr [1], specifically
-    definition 3 of section 1.4, offers a distinct framework that differs from
-    the standard approach used in SymPy.  The sum is defined for the case where
-    `a < b` as:
-
-    .. math::
-
-        K_a^b = \sum_{a \leq i < b} f(i) = f(a) + f(a+1) + \cdots + f(b-1)
-
-    The Karr convention for summations is built upon a single, elegant
-    objective: for any summation `K_a^b`, the following identity must hold true
-    for all integers `a`, `b` and `c`:
-
-    .. math::
-
-        K_a^b + K_b^c = K_a^c
+        S_a^{b-1} + S_b^c = S_a^c
 
     This property is directly analogous to the additivity rule for definite
     integrals.  By enforcing this consistency, the convention naturally extends
@@ -114,59 +90,19 @@ class Sum(AddWithLimits, ExprWithIntLimits):
     generalizations:
 
     .. math::
-
-        K_a^a = 0 \quad \mbox{because} \quad K_a^b + K_b^b = K_a^b
-
-    .. math::
-
-        K_a^b = -K_b^a \quad \mbox{because} \quad K_a^b + K_b^a = K_a^a = 0
-
-    Consequently, when $a > b$, the convention implies:
-
-    .. math::
-
-        K_a^b = - \sum_{b \leq i < a} f(i) = - f(b) - f(b+1) - \cdots - f(a-1)
-
-    A key distinction in Karr's convention is that the upper limit is always
-    exclusive.  While this departs from traditional mathematical notation, it
-    does not undermine the logic of the summation convention itself.  The
-    relationship between the two notations can be expressed as:
-
-    .. math::
-
-        \sum_{m \leq i < n} f(i) = \sum_{i = m}^{n - 1} f(i)
-
-    where the difference in notation is intentional to emphasize the meaning,
-    with limits typeset on the top being inclusive.
-
-    The connection to the convention used in SymPy is straightforward:
-
-    .. math::
-
-        S_a^b = K_a^{b+1}
-
-    This leads to the additivity rule
-
-    .. math::
-
-        S_a^{b-1} + S_b^c = S_a^c
-
-    By requiring this formula to hold for all integers $a$, $b$ and $c$, we can
-    derive the formulas for the cases where `a \nless b`, in a way analogous to
-    the derivations for the Karr convention:
-
-    .. math::
-
-        S_a^{a-1} = K_a^a = 0
+        S_b^{b-1} = 0 \quad \mbox{because} \quad S_a^{b-1} + S_b^{b-1} = S_a^{b-1}
 
     and
 
     .. math::
+        S_a^b = -S_{b+1}^{a-1} \quad \mbox{because} \quad S_a^b + S_{b+1}^{a-1} = S_a^{a-1} = 0
 
-        S_a^b = K_a^{b+1} = -K_{b+1}^a = - f(b+1) - f(b+2) - \cdots - f(a-1) \quad \mbox{for} \quad a > b
+    therefore, in case `a > b`:
 
-    This result provides an explanation for the choice of behavior in SymPy in
-    cases where $a \nless b$.
+    .. math::
+        S_a^b = -S_{b+1}^{a-1} = - \sum_{b + 1 \leq i \leq a - 1} f(i) = - f(b+1) - f(b+2) - \cdots - f(a-1)
+
+    with the lower and upper limit values `f(b)` and `f(a)` excluded.
 
     Examples
     ========
@@ -228,7 +164,6 @@ class Sum(AddWithLimits, ExprWithIntLimits):
     >>> S3 = Sum(i, (i, m, m-1)).doit()
     >>> S3
     0
-
 
     See Also
     ========
