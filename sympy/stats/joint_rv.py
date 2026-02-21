@@ -113,6 +113,10 @@ class JointPSpace(ProductPSpace):
         rvs = rvs or syms
         if not any(i in rvs for i in syms):
             return expr
+        if hasattr(self.distribution, "_compute_expectation"):
+            res = self.distribution._compute_expectation(expr, syms, rvs=rvs, **kwargs)
+            if res is not None:
+                return res
         expr = expr*self.pdf
         for rv in rvs:
             if isinstance(rv, Indexed):

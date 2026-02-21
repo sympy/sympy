@@ -194,6 +194,9 @@ def test_MultivariateBeta():
     a1_f, a2_f = symbols('a1, a2', positive=False, real=True)
     mb = MultivariateBeta('B', [a1, a2])
     mb_c = MultivariateBeta('C', a1, a2)
+    X = MultivariateBeta('X', [1, 1, 1])
+    assert E(X[0]) == Rational(1, 3)
+    assert E(X[0] + X[1] + X[2]) == 1
     assert density(mb)(1, 2) == S(2)**(a2 - 1)*gamma(a1 + a2)/\
                                 (gamma(a1)*gamma(a2))
     assert marginal_distribution(mb_c, 0)(3) == S(3)**(a1 - 1)*gamma(a1 + a2)/\
