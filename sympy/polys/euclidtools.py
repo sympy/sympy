@@ -1602,35 +1602,47 @@ def _dmp_inner_gcd(f, g, u, K):
         return dmp_rr_prs_gcd(f, g, u, K)
 
 
+# NOTE:
+# There is no safe purely structural early-exit for multivariate coprimeness.
+# Variable or monomial separation only restricts the form of a possible GCD,
+# but does not guarantee that the GCD is 1.
+#
+# Examples like:
+#   f = z**2*u**2 + 2*z**2*u + z**2 + z*u + z
+#   g = u**2 + 2*u + 1
+# share a non-trivial factor despite apparent sparsity.
+
 def dmp_inner_gcd(f, g, u, K):
     """
     Computes polynomial GCD and cofactors of `f` and `g` in `K[X]`.
 
-    Returns ``(h, cff, cfg)`` such that ``a = gcd(f, g)``,
+    Returns ``(h, cff, cfg)`` such that ``h = gcd(f, g)``,
     ``cff = quo(f, h)``, and ``cfg = quo(g, h)``.
 
     Examples
     ========
 
     >>> from sympy.polys import ring, ZZ
-    >>> R, x,y, = ring("x,y", ZZ)
-
+    >>> R, x, y = ring("x,y", ZZ)
     >>> f = x**2 + 2*x*y + y**2
     >>> g = x**2 + x*y
-
     >>> R.dmp_inner_gcd(f, g)
     (x + y, x + y, x)
-
     """
     if not u:
         return dup_inner_gcd(f, g, K)
 
     J, (f, g) = dmp_multi_deflate((f, g), u, K)
+
     h, cff, cfg = _dmp_inner_gcd(f, g, u, K)
 
-    return (dmp_inflate(h, J, u, K),
-            dmp_inflate(cff, J, u, K),
-            dmp_inflate(cfg, J, u, K))
+    return (
+        dmp_inflate(h, J, u, K),
+        dmp_inflate(cff, J, u, K),
+        dmp_inflate(cfg, J, u, K),
+    )
+
+
 
 
 def dup_gcd(f, g, K):
