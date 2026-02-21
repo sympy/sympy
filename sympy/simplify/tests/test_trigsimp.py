@@ -20,7 +20,10 @@ from sympy.testing.pytest import XFAIL
 
 from sympy.abc import x, y
 
-
+def test_trigsimp_not_aggressive():
+    expr = sin(x)**2 + cos(x)**2 + (x**2 - 1)/(x - 1)
+    result = trigsimp(expr)
+    assert result == 1 + (x**2 - 1)/(x - 1)
 
 def test_trigsimp1():
     x, y = symbols('x,y')
