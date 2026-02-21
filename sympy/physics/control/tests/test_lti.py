@@ -17,7 +17,7 @@ from sympy.polys.polytools import factor
 from sympy.polys.rootoftools import CRootOf
 from sympy.simplify.simplify import simplify
 from sympy.core.containers import Tuple
-from sympy.matrices import ImmutableMatrix, Matrix, ShapeError
+from sympy.matrices import ImmutableMatrix, Matrix, ShapeError, zeros
 from sympy.functions.elementary.trigonometric import sin, cos
 from sympy.physics.control.lti import (
     create_transfer_function, TransferFunctionBase, TransferFunction,
@@ -43,7 +43,6 @@ TF5 = TransferFunction(k, p, s)
 TF6 = TransferFunction(k*s + p, k*s + p, s)
 
 
-@XFAIL
 def test_state_space_rewrite_from_pr_27651():
     c0, c1, c2 = symbols('c0, c1, c2', real=True)
     a0, a1, a2, a3 = symbols('a0, a1, a2, a3', real=True)
@@ -3522,7 +3521,7 @@ def test_conversion():
 
     SS2 = TF5.rewrite(StateSpace)
     assert SS2 == \
-        StateSpace(Matrix([[0]]), Matrix([[0]]), Matrix([[0]]), Matrix([[k/p]]))
+        StateSpace(zeros(0, 0), zeros(0, 1), zeros(1, 0), Matrix([[k/p]]))
     assert SS2.rewrite(TransferFunction)[0][0] == TF5
 
     SS3 = TF6.rewrite(StateSpace)

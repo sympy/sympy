@@ -1458,10 +1458,11 @@ class TransferFunctionBase(SISOLinearTimeInvariant, ABC):
         den_coeffs = den_poly.all_coeffs()
 
         if n == 0:
+            # Pure gain: no state variables needed, return empty matrices
             return (
-                Matrix([zeros(1)]),
-                Matrix([zeros(1)]),
-                Matrix([zeros(1)]),
+                zeros(0, 0),
+                zeros(0, 1),
+                zeros(1, 0),
                 Matrix([num_coeffs[0] / den_coeffs[0]]),
             )
 
