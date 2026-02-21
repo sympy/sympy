@@ -479,6 +479,39 @@ def refine_sin_cos(expr, assumptions):
     else:
         return ((-1)**((k + 1) / 2)) * sin(rem)
 
+def refine_exp(expr, assumptions):
+    """
+    Handler for exponential function.
+
+    Examples
+    ========
+
+    >>> from sympy import pi, exp, I, Q
+    >>> from sympy.assumptions.refine import refine_exp
+    >>> from sympy.abc import x
+    >>> refine_exp(exp(pi*I*2*x), Q.integer(x))
+    1
+    >>> refine_exp(exp(pi*I*x), Q.even(x))
+    1
+    >>> refine_exp(exp(pi*I*x), Q.odd(x))
+    -1
+
+    """
+    arg = expr.args[0]
+    if arg.is_Mul:
+        coeff = arg.as_coefficient(S.Pi*S.ImaginaryUnit)
+        if coeff:
+            if ask(Q.integer(2*coeff), assumptions):
+                if ask(Q.even(coeff), assumptions):
+                    return S.One
+                elif ask(Q.odd(coeff), assumptions):
+                    return S.NegativeOne
+                elif ask(Q.even(coeff + S.Half), assumptions):
+                    return -S.ImaginaryUnit
+                elif ask(Q.odd(coeff + S.Half), assumptions):
+                    return S.ImaginaryUnit
+    return expr
+
 handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'Abs': refine_abs,
     'Pow': refine_Pow,
@@ -490,4 +523,5 @@ handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'MatrixElement': refine_matrixelement,
     'cos': refine_sin_cos,
     'sin': refine_sin_cos,
+    'exp': refine_exp,
 }
