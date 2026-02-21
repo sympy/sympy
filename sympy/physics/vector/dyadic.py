@@ -203,51 +203,55 @@ class Dyadic(Printable, EvalfMixin):
         return outstr
 
     def _pretty(self, printer):
-        e = self
 
-        class Fake:
-            baseline = 0
+        ar = self.args
+        if len(ar) == 0:
+            return prettyForm(str(0))
 
-            def render(self, *args, **kwargs):
-                mpp = printer
-                if len(e.args) == 0:
-                    return mpp._print(0)
+        bar = "\N{CIRCLED TIMES}" if printer._use_unicode else "|"
 
-                outstr = None
-                bar = prettyForm(u"\N{CIRCLED TIMES}" if mpp._use_unicode else "|")
-                for i, v in enumerate(e.args):
-                    p_v1 = mpp._print(v[1])
-                    p_v2 = mpp._print(v[2])
-                    p_dyad = prettyForm(*p_v1.right(bar, p_v2))
+        # Build list of string representations for each term
+        # This mimics the original Fake.render() approach
+        ol = []  # output list
 
-                    c = v[0]
-                    if i == 0:
-                        sign = ""
-                    else:
-                        sign = " + "
+        for v in ar:
+            coeff, vec1, vec2 = v[0], v[1], v[2]
 
-                    coeff, rest = c.as_coeff_Mul()
-                    if coeff < 0:
-                        if i == 0:
-                            sign = "- "
-                        else:
-                            sign = " - "
-                        c = -c
+            # Print vectors as strings
+            vec1_str = printer._print(vec1).render(**printer._settings)
+            vec2_str = printer._print(vec2).render(**printer._settings)
 
-                    if c == 1:
-                        p_term = p_dyad
-                    else:
-                        p_c = mpp._print(c)
-                        if isinstance(c, Add):
-                            p_c = prettyForm(*p_c.parens())
-                        p_term = prettyForm(*p_c.right(" ", p_dyad))
+            # Handle coefficient
+            if coeff == 1:
+                ol.extend([" + ", vec1_str, bar, vec2_str])
+            elif coeff == -1:
+                ol.extend([" - ", vec1_str, bar, vec2_str])
+            else:
+                # General coefficient
+                coeff_pretty = printer._print(coeff)
+                if isinstance(coeff, Add):
+                    coeff_pretty = prettyForm(*coeff_pretty.parens())
 
-                    if outstr is None:
-                        outstr = prettyForm(*p_term.left(sign))
-                    else:
-                        outstr = prettyForm(*outstr.right(sign, p_term))
-                return outstr.__str__()
-        return Fake()
+                coeff_str = coeff_pretty.render(**printer._settings)
+
+                if coeff_str.startswith("-"):
+                    coeff_str = coeff_str[1:]
+                    str_start = " - "
+                else:
+                    str_start = " + "
+
+                ol.extend([str_start, coeff_str, " ", vec1_str, bar, vec2_str])
+
+        # Join everything
+        outstr = "".join(ol)
+
+        # Clean up leading signs
+        if outstr.startswith(" + "):
+            outstr = outstr[3:]
+        elif outstr.startswith(" "):
+            outstr = outstr[1:]
+
+        return prettyForm(outstr)
 
     def __rsub__(self, other):
         return (-1 * self) + other
