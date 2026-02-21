@@ -12,6 +12,7 @@ from sympy.core.function import AppliedUndef
 from sympy.physics.mechanics.inertia import (inertia as _inertia,
     inertia_of_point_mass as _inertia_of_point_mass)
 from sympy.utilities.exceptions import sympy_deprecation_warning
+from sympy.simplify._cse_diff import _forward_jacobian
 
 __all__ = ['linear_momentum',
            'angular_momentum',
@@ -733,3 +734,15 @@ def _parse_linear_solver(linear_solver):
     if callable(linear_solver):
         return linear_solver
     return lambda A, b: Matrix.solve(A, b, method=linear_solver)
+
+
+def _parse_jacobian_function(jacobian_function):
+    """Helper function to retrieve a specified jacobian function."""
+    if callable(jacobian_function):
+        return jacobian_function
+
+    elif jacobian_function == 'classic_jacobian':
+        return lambda expr, wrt: expr.jacobian(wrt)
+
+    elif jacobian_function == 'forward_jacobian':
+        return _forward_jacobian

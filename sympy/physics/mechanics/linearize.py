@@ -4,7 +4,8 @@ from sympy import Matrix, eye, zeros
 from sympy.core.symbol import Dummy
 from sympy.utilities.iterables import flatten
 from sympy.physics.vector import dynamicsymbols
-from sympy.physics.mechanics.functions import msubs, _parse_linear_solver
+from sympy.physics.mechanics.functions import (msubs, _parse_linear_solver,
+                                               _parse_jacobian_function)
 
 from collections import namedtuple
 from collections.abc import Iterable
@@ -43,7 +44,7 @@ class Linearizer:
 
     def __init__(self, f_0, f_1, f_2, f_3, f_4, f_c, f_v, f_a, q, u, q_i=None,
                  q_d=None, u_i=None, u_d=None, r=None, lams=None,
-                 linear_solver='LU'):
+                 linear_solver='LU', jacobian_func='forward_jacobian'):
         """
         Parameters
         ==========
@@ -74,9 +75,17 @@ class Linearizer:
             ``'LU'`` which corresponds to SymPy's ``A.LUsolve(b)``.
             ``LUsolve()`` is fast to compute but will often result in
             divide-by-zero and thus ``nan`` results.
+        jacobian_func : str, callable
+            Function used to compute the Jacobian matrix. If a string is
+            supplied, it should be a method between ``'forward_jacobian'``, or
+            ``'classic_jacobian'``. If a callable is supplied, it should
+            have the signature ``jacobian_func(expr, wrt)``, where ``expr``
+            is the expression to differentiate and ``wrt`` is the iterable of
+            variables with respect to which to differentiate the expression.
 
         """
         self.linear_solver = _parse_linear_solver(linear_solver)
+        self.jacobian_func = _parse_jacobian_function(jacobian_func)
 
         # Generalized equation form
         self.f_0 = Matrix(f_0)
@@ -182,7 +191,7 @@ class Linearizer:
         # If there are configuration constraints (l > 0), form C_0 as normal.
         # If not, C_0 is I_(nxn). Note that this works even if n=0
         if l > 0:
-            f_c_jac_q = self.f_c.jacobian(self.q)
+            f_c_jac_q = self.jacobian_func(self.f_c, self.q)
             self._C_0 = (eye(n) - self._Pqd *
                          self.linear_solver(f_c_jac_q*self._Pqd,
                                             f_c_jac_q))*self._Pqi
@@ -192,10 +201,10 @@ class Linearizer:
         # If not, C_1 is 0, and C_2 is I_(oxo). Note that this works even if
         # o = 0.
         if m > 0:
-            f_v_jac_u = self.f_v.jacobian(self.u)
+            f_v_jac_u = self.jacobian_func(self.f_v, self.u)
             temp = f_v_jac_u * self._Pud
             if n != 0:
-                f_v_jac_q = self.f_v.jacobian(self.q)
+                f_v_jac_q = self.jacobian_func(self.f_v, self.q)
                 self._C_1 = -self._Pud * self.linear_solver(temp, f_v_jac_q)
             else:
                 self._C_1 = zeros(o, n)
@@ -213,45 +222,45 @@ class Linearizer:
         # Block Matrix Definitions. These are only defined if under certain
         # conditions. If undefined, an empty matrix is used instead
         if n != 0:
-            self._M_qq = self.f_0.jacobian(self._qd)
-            self._A_qq = -(self.f_0 + self.f_1).jacobian(self.q)
+            self._M_qq = self.jacobian_func(self.f_0, self._qd)
+            self._A_qq = -self.jacobian_func(self.f_0 + self.f_1, self.q)
         else:
             self._M_qq = Matrix()
             self._A_qq = Matrix()
         if n != 0 and m != 0:
-            self._M_uqc = self.f_a.jacobian(self._qd_dup)
-            self._A_uqc = -self.f_a.jacobian(self.q)
+            self._M_uqc = self.jacobian_func(self.f_a, self._qd_dup)
+            self._A_uqc = -self.jacobian_func(self.f_a, self.q)
         else:
             self._M_uqc = Matrix()
             self._A_uqc = Matrix()
         if n != 0 and o - m + k != 0:
-            self._M_uqd = self.f_3.jacobian(self._qd_dup)
-            self._A_uqd = -(self.f_2 + self.f_3 + self.f_4).jacobian(self.q)
+            self._M_uqd = self.jacobian_func(self.f_3, self._qd_dup)
+            self._A_uqd = -self.jacobian_func(self.f_2 + self.f_3 + self.f_4, self.q)
         else:
             self._M_uqd = Matrix()
             self._A_uqd = Matrix()
         if o != 0 and m != 0:
-            self._M_uuc = self.f_a.jacobian(self._ud)
-            self._A_uuc = -self.f_a.jacobian(self.u)
+            self._M_uuc = self.jacobian_func(self.f_a, self._ud)
+            self._A_uuc = -self.jacobian_func(self.f_a, self.u)
         else:
             self._M_uuc = Matrix()
             self._A_uuc = Matrix()
         if o != 0 and o - m + k != 0:
-            self._M_uud = self.f_2.jacobian(self._ud)
-            self._A_uud = -(self.f_2 + self.f_3).jacobian(self.u)
+            self._M_uud = self.jacobian_func(self.f_2, self._ud)
+            self._A_uud = -self.jacobian_func(self.f_2 + self.f_3, self.u)
         else:
             self._M_uud = Matrix()
             self._A_uud = Matrix()
         if o != 0 and n != 0:
-            self._A_qu = -self.f_1.jacobian(self.u)
+            self._A_qu = -self.jacobian_func(self.f_1, self.u)
         else:
             self._A_qu = Matrix()
         if k != 0 and o - m + k != 0:
-            self._M_uld = self.f_4.jacobian(self.lams)
+            self._M_uld = self.jacobian_func(self.f_4, self.lams)
         else:
             self._M_uld = Matrix()
         if s != 0 and o - m + k != 0:
-            self._B_u = -self.f_3.jacobian(self.r)
+            self._B_u = -self.jacobian_func(self.f_3, self.r)
         else:
             self._B_u = Matrix()
 
