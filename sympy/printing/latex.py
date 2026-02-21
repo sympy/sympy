@@ -1664,7 +1664,21 @@ class LatexPrinter(Printer):
         return (name, supers, subs)
 
     def _deal_with_super_sub(self, string: str, style='plain') -> str:
+        # Treat leading/trailing underscores as literal characters so names
+        # like "_x" or "x_" produce valid LaTeX output.
+        literal_uscore_prefix = ""
+        literal_uscore_suffix = ""
+        if not self._settings["disable_split_super_sub"] and string:
+            leading = len(string) - len(string.lstrip('_'))
+            trailing = len(string) - len(string.rstrip('_'))
+            if leading or trailing:
+                literal_uscore_prefix = r"\_" * leading
+                literal_uscore_suffix = r"\_" * trailing
+                end = len(string) - trailing if trailing else len(string)
+                string = string[leading:end]
+
         name, supers, subs = self._split_super_sub(string)
+        name = literal_uscore_prefix + name + literal_uscore_suffix
 
         # apply the style only to the name
         if style == 'bold':
