@@ -348,6 +348,9 @@ class Plane(GeometryEntity):
         6*x + 6*y + 6*z - 42
 
         """
+        coords = {x, y, z} - {None}
+        if coords & self.free_symbols:
+            raise ValueError("Provided symbols clash with symbols used to define the plane")
         x, y, z = [i if i else Symbol(j, real=True) for i, j in zip((x, y, z), 'xyz')]
         a = Point3D(x, y, z)
         b = self.p1.direction_ratio(a)
