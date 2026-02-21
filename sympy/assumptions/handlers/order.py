@@ -198,6 +198,11 @@ def _(expr, assumptions):
 def _(expr, assumptions):
     return None
 
+@NonZeroPredicate.register(exp)
+def _(expr, assumptions):
+    if ask(Q.real(expr), assumptions):
+        return True
+
 
 # ZeroPredicate
 

@@ -1767,6 +1767,18 @@ def test_nonzero():
     # that don't evaluate to a zero with precision
     assert ask(Q.nonzero(cos(1)**2 + sin(1)**2 - 1)) is None
 
+    assert ask(Q.nonzero(exp(x))) is None
+    assert ask(Q.nonzero(exp(x)), Q.real(x)) is True
+    assert ask(Q.nonzero(exp(x)), Q.complex(x)) is None
+    assert ask(Q.nonzero(exp(x)), Q.positive(x)) is True
+    assert ask(Q.nonzero(exp(x)), Q.negative(x)) is True
+    assert ask(Q.nonzero(exp(x)), Q.zero(x)) is True
+    assert ask(Q.nonzero(exp(x)), Q.real(exp(x))) is True
+    assert ask(Q.nonzero(exp(I*pi))) is True
+    assert ask(Q.nonzero(exp((I*pi)/2))) is False
+    assert ask(Q.nonzero(exp(n*I*pi)), Q.integer(n)) is True
+    assert ask(Q.nonzero(exp((n*I*pi)/2)), Q.integer(n)) is None
+
 
 def test_zero():
     assert ask(Q.zero(x)) is None
