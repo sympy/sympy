@@ -501,7 +501,26 @@ class MultivariateBetaDistribution(JointDistribution):
     def pdf(self, *syms):
         alpha = self.alpha
         B = Mul.fromiter(map(gamma, alpha))/gamma(Add(*alpha))
-        return Mul.fromiter(sym**(a_k - 1) for a_k, sym in zip(alpha, syms))/B
+        return Mul.fromiter(sym ** (a_k - 1) for a_k, sym in zip(alpha, syms)) / B
+
+    def _compute_expectation(self, expr, syms, rvs=None, **kwargs):
+        alpha = self.alpha
+        A = Add(*alpha)
+        means = {}
+        for rv in syms:
+            if not isinstance(rv, Indexed):
+                return None
+            i = rv.args[1]
+            means[rv] = alpha[i] / A
+        const_part = expr
+        for rv in syms:
+            const_part -= expr.coeff(rv) * rv
+        if any(const_part.has(rv) for rv in syms):
+            return None
+        result = const_part
+        for rv in syms:
+            result += expr.coeff(rv) * means[rv]
+        return result
 
 def MultivariateBeta(syms, *alpha):
     """
