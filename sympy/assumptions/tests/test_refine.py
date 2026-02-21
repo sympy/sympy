@@ -4,8 +4,8 @@ from sympy.core.expr import Expr
 from sympy.core.numbers import (I, Rational, nan, pi)
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
-from sympy.functions.elementary.complexes import (Abs, arg, im, re, sign)
-from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.complexes import (Abs, arg, im, re, sign, conjugate)
+from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (atan, atan2, cos, sin)
 from sympy.abc import w, x, y, z
@@ -283,3 +283,25 @@ def test_sin_cos():
     assert refine(cos(x + n*pi/2 + k*pi/2 + m*pi/2), \
                   Q.odd(n) & Q.odd(k) & Q.integer(m)) == \
         (-1)**((n + k)/2) * cos(x + m*pi/2)
+
+
+def test_conjugate():
+    assert refine(conjugate(x), Q.real(x)) == x
+    assert refine(conjugate(x), Q.imaginary(x)) == -x
+
+    z = Symbol('z')
+    assert refine(conjugate(log(z)), Q.complex(z) & ~Q.nonpositive(z)) == log(conjugate(z))
+    assert refine(conjugate(log(z)), Q.complex(z)) == conjugate(log(z))
+    assert refine(conjugate(log(x)), Q.real(x)) == conjugate(log(x))
+    assert refine(conjugate(log(x)), Q.nonpositive(x)) == conjugate(log(x))
+    assert refine(conjugate(log(x)), Q.nonnegative(x)) == conjugate(log(x))
+    assert refine(conjugate(log(x)), Q.positive(x)) == log(x)
+
+    n = Symbol('n')
+    assert refine(conjugate(x ** n), Q.complex(x) & Q.integer(n)) == conjugate(x) ** n
+    assert refine(conjugate(x ** n), ~Q.complex(x)) == conjugate(x ** n)
+
+    assert refine(conjugate(x ** S.Half), Q.complex(x) & ~Q.negative(x)) == conjugate(x) ** S.Half
+    assert refine(conjugate(x ** S.Half), Q.real(x) & Q.negative(x)) == conjugate(x** S.Half)
+    assert refine(conjugate(x ** S.Half), Q.real(x)) == conjugate(x ** S.Half)
+    assert refine(conjugate(x ** S.Half), Q.nonnegative(x)) == x ** S.Half

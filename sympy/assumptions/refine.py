@@ -479,6 +479,63 @@ def refine_sin_cos(expr, assumptions):
     else:
         return ((-1)**((k + 1) / 2)) * sin(rem)
 
+
+def refine_conjugate(expr, assumptions):
+    """
+    Handler for the conjugate function.
+
+    Examples
+    ========
+
+    >>> from sympy import Q, conjugate, refine, log, Symbol, S
+    >>> x = Symbol('x')
+    >>> refine(conjugate(x), Q.real(x))
+    x
+    >>> refine(conjugate(x), Q.imaginary(x))
+    -x
+    >>> refine(conjugate(log(x)), Q.complex(x) & ~Q.negative(x))
+    conjugate(log(x))
+    >>> n = Symbol('n')
+    >>> refine(conjugate(x**n), Q.real(x) & Q.integer(n))
+    x**n
+    >>> refine(conjugate(x**n), Q.imaginary(x) & Q.integer(n))
+    (-x)**n
+    >>> refine(conjugate((x**S.Half)), Q.complex(x) & ~Q.negative(x))
+    sqrt(conjugate(x))
+    """
+    from sympy.functions.elementary.exponential import log
+    from sympy.functions.elementary.complexes import conjugate
+
+    arg = expr.args[0]
+
+    # Handle the Pow cases
+    if isinstance(arg, Pow) and ask(Q.real(arg.args[1]), assumptions):
+        base = arg.args[0]
+        exp = arg.args[1]
+        if ask(Q.integer(exp), assumptions):
+            return conjugate(base) ** exp
+        if ask(~Q.negative(arg.args[0]), assumptions) and ask(Q.complex(arg.args[0]), assumptions):
+            return conjugate(arg.args[0]) ** arg.args[1]
+        return expr
+
+    if ask(Q.real(arg), assumptions):
+        return arg
+
+    elif ask(Q.imaginary(arg), assumptions):
+        return -arg
+
+    # The logarithm has a branch cut along the negative real axis.
+    # We can safely push the conjugate inside only if the argument is not
+    # strictly negative or zero. For a negative real x, the equality fails
+    # (e.g., conjugate(log(-1)) == -I*pi, but log(conjugate(-1)) == I*pi).
+    # Additionally, log(0) evaluates to complex infinity (zoo).
+    if isinstance(arg, log):
+        log_arg = arg.args[0]
+        if ask(~Q.nonpositive(log_arg), assumptions)  and ask(Q.complex(log_arg), assumptions):
+                return log(conjugate(log_arg))
+    return expr
+
+
 handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'Abs': refine_abs,
     'Pow': refine_Pow,
@@ -490,4 +547,5 @@ handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'MatrixElement': refine_matrixelement,
     'cos': refine_sin_cos,
     'sin': refine_sin_cos,
+    'conjugate': refine_conjugate,
 }
