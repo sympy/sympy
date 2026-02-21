@@ -2174,8 +2174,8 @@ def test_Transpose():
     assert latex(Transpose(X)) == r'X^{T}'
     assert latex(Transpose(X + Y)) == r'\left(X + Y\right)^{T}'
 
-    assert latex(Transpose(HadamardPower(X, 2))) == r'\left(X^{\circ {2}}\right)^{T}'
-    assert latex(HadamardPower(Transpose(X), 2)) == r'\left(X^{T}\right)^{\circ {2}}'
+    assert latex(Transpose(HadamardPower(X, 2))) == r'\left(X^{\odot {2}}\right)^{T}'
+    assert latex(HadamardPower(Transpose(X), 2)) == r'\left(X^{T}\right)^{\odot {2}}'
     assert latex(Transpose(MatPow(X, 2))) == r'\left(X^{2}\right)^{T}'
     assert latex(MatPow(Transpose(X), 2)) == r'\left(X^{T}\right)^{2}'
     m = Matrix(((1, 2), (3, 4)))
@@ -2196,23 +2196,23 @@ def test_Hadamard():
     from sympy.matrices.expressions import MatAdd, MatMul, MatPow
     X = MatrixSymbol('X', 2, 2)
     Y = MatrixSymbol('Y', 2, 2)
-    assert latex(HadamardProduct(X, Y*Y)) == r'X \circ Y^{2}'
-    assert latex(HadamardProduct(X, Y)*Y) == r'\left(X \circ Y\right) Y'
+    assert latex(HadamardProduct(X, Y*Y)) == r'X \odot Y^{2}'
+    assert latex(HadamardProduct(X, Y)*Y) == r'\left(X \odot Y\right) Y'
 
-    assert latex(HadamardPower(X, 2)) == r'X^{\circ {2}}'
-    assert latex(HadamardPower(X, -1)) == r'X^{\circ \left({-1}\right)}'
+    assert latex(HadamardPower(X, 2)) == r'X^{\odot {2}}'
+    assert latex(HadamardPower(X, -1)) == r'X^{\odot \left({-1}\right)}'
     assert latex(HadamardPower(MatAdd(X, Y), 2)) == \
-        r'\left(X + Y\right)^{\circ {2}}'
+        r'\left(X + Y\right)^{\odot {2}}'
     assert latex(HadamardPower(MatMul(X, Y), 2)) == \
-        r'\left(X Y\right)^{\circ {2}}'
+        r'\left(X Y\right)^{\odot {2}}'
 
     assert latex(HadamardPower(MatPow(X, -1), -1)) == \
-        r'\left(X^{-1}\right)^{\circ \left({-1}\right)}'
+        r'\left(X^{-1}\right)^{\odot \left({-1}\right)}'
     assert latex(MatPow(HadamardPower(X, -1), -1)) == \
-        r'\left(X^{\circ \left({-1}\right)}\right)^{-1}'
+        r'\left(X^{\odot \left({-1}\right)}\right)^{-1}'
 
     assert latex(HadamardPower(X, n+1)) == \
-        r'X^{\circ \left({n + 1}\right)}'
+        r'X^{\odot \left({n + 1}\right)}'
 
 
 def test_MatPow():
