@@ -299,5 +299,3 @@ def test_floor_ceiling():
     assert refine(ceiling(x + y), Q.integer(x)) == x + ceiling(y)
     assert refine(floor(x + y + z), Q.integer(x) & Q.integer(y)) == x + y + floor(z)
     assert refine(ceiling(x + y + z), Q.integer(x) & Q.integer(z)) == x + z + ceiling(y)
-
-    assert refine(floor(x), Q.imaginary(x) & ~Q.integer(x)) == I * floor(-I * x)

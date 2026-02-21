@@ -495,8 +495,6 @@ def refine_floor_ceiling(expr, assumptions):
     x
     >>> refine(floor(x), ~Q.integer(x))
     floor(x)
-    >>> refine(floor(x), Q.imaginary(x) & ~Q.integer(x))
-    I*floor(-I*x)
     >>> refine(floor(x + y), Q.integer(x))
     x + floor(y)
     >>> refine(ceiling(x + y), Q.integer(x))
@@ -504,15 +502,9 @@ def refine_floor_ceiling(expr, assumptions):
     >>> refine(ceiling(x), Q.infinite(x))
     x
     """
-    from sympy.functions.elementary.complexes import im
     arg = expr.args[0]
     if ask(Q.integer(arg), assumptions) or ask(Q.infinite(arg), assumptions):
         return arg
-
-    #it takes only the imaginary part of the number, applies the function mentioned and multiplies
-    #by the imaginary unit
-    if ask(Q.imaginary(arg), assumptions):
-        return expr.func(im(arg)) * S.ImaginaryUnit
 
     if isinstance(arg, Add):
         simplified = []
