@@ -998,8 +998,8 @@ class Beam:
         deflection_jumps = tuple(self._sliding_hinge_symbols)
         applied_supports = tuple(self._applied_support_symbols)
 
-        shear_curve = limit(self.shear_force(), x, l)
-        moment_curve = limit(self.bending_moment(), x, l)
+        shear_curve = limit(self.shear_force().rewrite('Heaviside'), x, l)
+        moment_curve = limit(self.bending_moment().rewrite('Heaviside'), x, l)
 
         shear_force_eqs = []
         bending_moment_eqs = []
