@@ -34,6 +34,7 @@ from sympy.functions import (log, tan, cot, sin, cos, sec, csc, exp,
                              piecewise_fold, Piecewise)
 from sympy.functions.combinatorial.numbers import totient
 from sympy.functions.elementary.complexes import Abs, arg, re, im
+from sympy.functions.elementary.integers import floor, ceiling
 from sympy.functions.elementary.hyperbolic import (HyperbolicFunction,
                             sinh, cosh, tanh, coth, sech, csch,
                             asinh, acosh, atanh, acoth, asech, acsch)
@@ -3580,6 +3581,11 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                 soln_imageset = {}
                 for sym in unsolved_syms:
                     not_solvable = False
+                    if any(f.args[0].has(sym) for f in eq2.atoms(floor, ceiling)):
+                        not_solvable = True
+                        raise NotImplementedError(
+                            f"nonlinsolve cannot solve equations with {sym} appearing inside floor/ceiling functions"
+                        )
                     try:
                         soln = solver(eq2, sym)
                         total_solvest_call += 1

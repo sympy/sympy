@@ -12,6 +12,7 @@ from sympy.core.symbol import (Dummy, Symbol, symbols)
 from sympy.core.sympify import sympify
 from sympy.functions.elementary.complexes import (Abs, arg, im, re, sign, conjugate)
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
+from sympy.functions.elementary.integers import floor, ceiling
 from sympy.functions.elementary.hyperbolic import (HyperbolicFunction,
     sinh, cosh, tanh, coth, sech, csch, asinh, acosh, atanh, acoth, asech, acsch)
 from sympy.functions.elementary.miscellaneous import sqrt, Min, Max
@@ -1871,6 +1872,13 @@ def test_nonlinsolve_abs():
     raises(NotImplementedError, lambda: nonlinsolve([Abs(x) - 1, y - 2], x, y))
     raises(NotImplementedError, lambda: nonlinsolve([Abs(x) - 2, x + y], x, y))
 
+def test_nonlinsolve_floor_ceiling():
+    # raises NotImplementedError when variable is inside floor/ceiling
+    raises(NotImplementedError, lambda: nonlinsolve([floor(x) - 5, y - x - 1], [x, y]))
+    raises(NotImplementedError, lambda: nonlinsolve([ceiling(x) - 3, y - x], [x, y]))
+
+    # test working cases when variable is outside floor/ceiling
+    assert nonlinsolve([x - floor(y)], [x]) == FiniteSet((floor(y),))
 
 def test_nonlinsolve_sign():
     raises(NotImplementedError, lambda: nonlinsolve([sign(x) - 1, x*y - 4], [x, y]))
