@@ -1658,9 +1658,15 @@ class LatexPrinter(Printer):
             name, supers, subs = (name.replace('_', '\\_').replace('^', '\\^'), [], [])
         else:
             name, supers, subs = split_super_sub(name)
+        prefix = ''
+        if name and name.startswith('_'):
+            i = len(name) - len(name.lstrip('_'))
+            prefix = r'\_' * i
+            name = name[i:]
         name = translate(name)
         supers = [translate(sup) for sup in supers]
         subs = [translate(sub) for sub in subs]
+        name = prefix + name
         return (name, supers, subs)
 
     def _deal_with_super_sub(self, string: str, style='plain') -> str:
