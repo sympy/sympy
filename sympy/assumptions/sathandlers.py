@@ -320,3 +320,16 @@ def _(expr):
         if prop is not None:
             ret.append(Equivalent(pred, prop))
     return ret
+
+from sympy.matrices.expressions import MatrixExpr, MatrixSymbol
+@class_fact_registry.multiregister(MatrixExpr, MatrixSymbol)
+def matrix_scalar_facts(expr):
+    # Register for predicates that are scalar as False for Matrix
+    return [
+        ~Q.positive(expr),
+        ~Q.negative(expr),
+        ~Q.prime(expr),
+        ~Q.composite(expr),
+        ~Q.even(expr),
+        ~Q.odd(expr)
+    ]
