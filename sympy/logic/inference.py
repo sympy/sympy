@@ -1,12 +1,16 @@
 """Inference in propositional logic"""
 
+from __future__ import annotations
+
+from typing import Any, Generator
+
 from sympy.logic.boolalg import And, Not, conjuncts, to_cnf, BooleanFunction
 from sympy.core.sorting import ordered
 from sympy.core.sympify import sympify
 from sympy.external.importtools import import_module
 
 
-def literal_symbol(literal):
+def literal_symbol(literal: Any) -> Any:
     """
     The symbol in this literal (without the negation).
 
@@ -30,7 +34,13 @@ def literal_symbol(literal):
         raise ValueError("Argument must be a boolean literal.")
 
 
-def satisfiable(expr, algorithm=None, all_models=False, minimal=False, use_lra_theory=False):
+def satisfiable(
+    expr: Any,
+    algorithm: str | None = None,
+    all_models: bool = False,
+    minimal: bool = False,
+    use_lra_theory: bool = False
+) -> Any | Generator[Any | bool, None, None]:
     """
     Check satisfiability of a propositional sentence.
     Returns a model when it succeeds.
@@ -100,10 +110,10 @@ def satisfiable(expr, algorithm=None, all_models=False, minimal=False, use_lra_t
 
     if algorithm == "dpll":
         from sympy.logic.algorithms.dpll import dpll_satisfiable
-        return dpll_satisfiable(expr)
+        return dpll_satisfiable(expr)  # type: ignore[call-arg]
     elif algorithm == "dpll2":
         from sympy.logic.algorithms.dpll2 import dpll_satisfiable
-        return dpll_satisfiable(expr, all_models, use_lra_theory=use_lra_theory)
+        return dpll_satisfiable(expr, all_models, use_lra_theory=use_lra_theory)  # type: ignore[call-arg]
     elif algorithm == "pycosat":
         from sympy.logic.algorithms.pycosat_wrapper import pycosat_satisfiable
         return pycosat_satisfiable(expr, all_models)
