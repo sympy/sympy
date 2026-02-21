@@ -203,7 +203,6 @@ class Dyadic(Printable, EvalfMixin):
         return outstr
 
     def _pretty(self, printer):
-        from sympy.printing.pretty.stringpict import prettyForm
 
         ar = self.args
         if len(ar) == 0:
