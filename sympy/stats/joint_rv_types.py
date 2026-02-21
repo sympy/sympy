@@ -14,7 +14,6 @@ from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.special.bessel import besselk
-from sympy.functions.special.delta_functions import DiracDelta
 from sympy.functions.special.gamma_functions import gamma
 from sympy.matrices.dense import (Matrix, ones)
 from sympy.sets.fancysets import Range
