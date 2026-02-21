@@ -2591,9 +2591,14 @@ def test_issue_27440():
     nan = S.NaN
     assert ask(Q.negative(nan)) is None
 
+
+def test_issue_28150():
+    assert ask(Q.real(Pow(0, -1, evaluate=False))) is False
+
 def test_issue_28127():
     assert ask(Q.le(x,y), Q.gt(x,y)) is False
     assert ask(Q.ge(x,y), Q.lt(x,y)) is False
     assert ask(Q.gt(y,x), Q.lt(x,y)) is True
     assert ask(Q.lt(y,x), Q.gt(x,y)) is True
     assert ask(Q.le(y,x), Q.ge(x,y)) is True
+
