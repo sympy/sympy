@@ -9,7 +9,9 @@ from sympy.combinatorics.permutations import Permutation
 from sympy.combinatorics.polyhedron import tetrahedron as Tetra, cube
 from sympy.combinatorics.testutil import _verify_bsgs, _verify_centralizer,\
     _verify_normal_closure
-from sympy.testing.pytest import skip, XFAIL, slow
+from sympy.polys.domains import ZZ
+from sympy.polys.rings import ring
+from sympy.testing.pytest import skip, XFAIL, raises, slow
 
 rmul = Permutation.rmul
 
@@ -691,6 +693,32 @@ def test_subgroup_search():
 def test_subgroup_search2():
     skip('takes too much time')
     _subgroup_search(16, 17, 1)
+
+
+def test_polynomial_stabilizer():
+    _, x, y = ring('x, y', ZZ)
+    _, a, b = ring('a, b', ZZ)
+    S2 = SymmetricGroup(2)
+    S3 = SymmetricGroup(3)
+
+    raises(TypeError, lambda: S2.polynomial_stabilizer([x + y, 1]))
+    raises(ValueError, lambda: S2.polynomial_stabilizer([x + y, a + b]))
+    raises(ValueError, lambda: S3.polynomial_stabilizer(x + y))
+
+    _, x, y, z, t = ring('x, y, z, t', ZZ)
+    S = SymmetricGroup(4)
+    G = S.polynomial_stabilizer(x + y + z + t)
+    assert G.equals(S)
+    G = S.polynomial_stabilizer(x + y + 2*z + 2*t)
+    assert G.equals(PermutationGroup(Permutation(3)(0, 1), Permutation(3)(2, 3)))
+    G = S.polynomial_stabilizer((x - y)*(z - t))
+    assert G.equals(PermutationGroup(Permutation(3)(0, 1)(2,3), Permutation(3)(0, 2)(1, 3)))
+    G = S.polynomial_stabilizer((x - y)*(x - z)*(x - t)*(y - z)*(y - t)*(z - t))
+    assert G.equals(AlternatingGroup(4))
+    G = S.polynomial_stabilizer([x + y, z + t])
+    assert G.equals(PermutationGroup(Permutation(3)(0, 1), Permutation(3)(2, 3)))
+    G = S.polynomial_stabilizer([x**2 + x * y +  y**2, z - t**3])
+    assert G.equals(PermutationGroup(Permutation(3)(0, 1)))
 
 
 def test_normal_closure():

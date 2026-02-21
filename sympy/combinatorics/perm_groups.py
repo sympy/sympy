@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 from math import factorial as _factorial, log, prod
 from itertools import chain, product
-
+from typing import TYPE_CHECKING, overload
 
 from sympy.combinatorics import Permutation
 from sympy.combinatorics.permutations import (_af_commutes_with, _af_invert,
@@ -21,6 +23,16 @@ from sympy.utilities.iterables import has_variety, is_sequence, uniq
 
 rmul = Permutation.rmul_with_af
 _af_new = Permutation._af_new
+
+
+if TYPE_CHECKING:
+    from typing import Iterable, Literal, TypeVar, Callable
+    from sympy.polys.domains.domain import Er
+    from sympy.polys.rings import PolyElement
+    T = TypeVar("T", int, tuple[int, int])
+    Mon = tuple[int, ...]
+    Proj = tuple[tuple[T, Expr], ...]
+    Sig = tuple[Proj, ...]
 
 
 class PermutationGroup(Basic):
@@ -120,6 +132,16 @@ class PermutationGroup(Basic):
 
     """
     is_group = True
+
+
+    if TYPE_CHECKING:
+        @property
+        def args(self) -> tuple[Permutation, ...]: ...
+
+
+    _generators: list[Permutation]
+    _degree: int
+
 
     def __new__(cls, *args, dups=True, **kwargs):
         """The default constructor. Accepts Cycle and Permutation forms.
@@ -1087,6 +1109,186 @@ class PermutationGroup(Basic):
         elif hasattr(other, 'array_form'):
             return self.centralizer(PermutationGroup([other]))
 
+    def polynomial_stabilizer(
+        self, polys: PolyElement[Er] | Iterable[PolyElement[Er]]
+    ) -> PermutationGroup:
+        r"""Return the subgroup fixing given polynomials under variable action.
+
+        Explanation
+        ===========
+
+        The group action is by permutation of variable indices. A permutation
+        `g` is in the returned subgroup if every supplied polynomial is
+        unchanged when variable exponents are permuted by `g`.
+
+        For a maximal variable-symmetry group on `n` variables, use this on
+        `S_n`, e.g. ``SymmetricGroup(n).polynomial_stabilizer(polys)``.
+
+        Parameters
+        ==========
+
+        polys
+            A :class:`~sympy.polys.rings.PolyElement` or an iterable of
+            :class:`~sympy.polys.rings.PolyElement` from the same ring.
+
+        Returns
+        =======
+
+        PermutationGroup
+            Subgroup of ``self`` preserving all supplied polynomials.
+
+        """
+        from sympy.polys.rings import PolyElement
+
+        if isinstance(polys, PolyElement):
+            polys = [polys]
+        elif hasattr(polys, '__iter__'):
+            polys = list(polys)
+        else:
+            raise TypeError(
+                "polys must be a PolyElement or an iterable of PolyElement")
+
+        if not polys:
+            return self
+
+        if not all(isinstance(f, PolyElement) for f in polys):
+            raise TypeError("polys must contain only PolyElement instances")
+
+        ring = polys[0].ring
+        if any(f.ring != ring for f in polys[1:]):
+            raise ValueError("all polynomials must belong to the same ring")
+
+        n = ring.ngens
+        if self.degree != n:
+            raise ValueError(
+                "group degree must equal the number of ring generators")
+
+        if self.is_trivial:
+            return self
+
+        identity = _af_new(list(range(n)))
+        zero = ring.domain.zero
+        to_sympy = ring.domain.to_sympy
+
+        # Keep sparse term data for exact checks and signature precomputation.
+        term_data: list[tuple[dict[Mon, Er], list[tuple[Mon, Er]]]] = []
+        for f in polys:
+            terms = list(f.items())
+            term_data.append((dict(terms), terms))
+
+        def canonical_projection(proj: dict[T, Er]) -> Proj[T]:
+            items: list[tuple[T, Expr]] = []
+            for key in sorted(proj):
+                coeff = proj[key]
+                if coeff:
+                    items.append((key, to_sympy(coeff)))
+            return tuple(items)
+
+        unary_sig_to_class: dict[Sig, int] = {}
+        unary_classes: list[int] = [0]*n
+
+        for i in range(n):
+            signature_parts: list[Proj] = []
+            for _, term_items in term_data:
+                proj: dict[int, Er] = {}
+                for monom, coeff in term_items:
+                    unary_key = monom[i]
+                    value = proj.get(unary_key, zero) + coeff
+                    if value:
+                        proj[unary_key] = value
+                    elif unary_key in proj:
+                        del proj[unary_key]
+                signature_parts.append(canonical_projection(proj))
+            signature = tuple(signature_parts)
+            unary_classes[i] = unary_sig_to_class.setdefault(
+                signature, len(unary_sig_to_class))
+
+        pair_sig_to_class: dict[tuple[Proj, ...], int] = {}
+        pair_classes = [[0]*n for _ in range(n)]
+
+        for i in range(n):
+            for j in range(n):
+                signature_parts = []
+                for _, term_items in term_data:
+                    pair_proj: dict[tuple[int, int], Er] = {}
+                    for monom, coeff in term_items:
+                        pair_key = (monom[i], monom[j])
+                        value = pair_proj.get(pair_key, zero) + coeff
+                        if value:
+                            pair_proj[pair_key] = value
+                        elif pair_key in pair_proj:
+                            del pair_proj[pair_key]
+                    signature_parts.append(canonical_projection(pair_proj))
+                signature = tuple(signature_parts)
+                pair_classes[i][j] = pair_sig_to_class.setdefault(
+                    signature, len(pair_sig_to_class))
+
+        class_sizes = [0]*len(unary_sig_to_class)
+        for cls in unary_classes:
+            class_sizes[cls] += 1
+        ordered_points = sorted(
+            range(n), key=lambda i: (class_sizes[unary_classes[i]], i))
+        base, strong_gens = self.schreier_sims_incremental(base=ordered_points)
+
+        base_len = len(base)
+
+        def make_test(level: int) -> Callable[[list[Permutation]], bool]:
+            def test(computed_words: list[Permutation], level: int = level) -> bool:
+                af: list[int] = computed_words[level]._array_form
+                for i in range(level + 1):
+                    bi = base[i]
+                    if unary_classes[bi] != unary_classes[af[bi]]:
+                        return False
+                for i in range(level + 1):
+                    bi = base[i]
+                    im_bi = af[bi]
+                    pair_row = pair_classes[bi]
+                    pair_row_image = pair_classes[im_bi]
+                    for j in range(level + 1):
+                        bj = base[j]
+                        if pair_row[bj] != pair_row_image[af[bj]]:
+                            return False
+                return True
+
+            return test
+
+        tests = [make_test(l) for l in range(base_len)]
+
+        def prop(g: Permutation) -> bool:
+            af: list[int] = g._array_form
+            for term_dict, term_items in term_data:
+                for monom, coeff in term_items:
+                    permuted = [0]*n
+                    for idx, exp in enumerate(monom):
+                        permuted[af[idx]] = exp
+                    if term_dict.get(tuple(permuted)) != coeff:
+                        return False
+            return True
+
+        class_points: dict[int, list[int]] = {}
+        for point, cls in enumerate(unary_classes):
+            class_points.setdefault(cls, []).append(point)
+
+        init_gens: list[Permutation] = []
+        for points in class_points.values():
+            if len(points) <= 1:
+                continue
+            for a, b in zip(points, points[1:]):
+                transposition = list(range(n))
+                transposition[a], transposition[b] = \
+                    transposition[b], transposition[a]
+                transposition = _af_new(transposition)
+                if transposition in self and prop(transposition):
+                    init_gens.append(transposition)
+
+        if init_gens:
+            init_subgroup = PermutationGroup(init_gens)
+        else:
+            init_subgroup = PermutationGroup([identity])
+
+        return self.subgroup_search(prop, base=base, strong_gens=strong_gens,
+                                    tests=tests, init_subgroup=init_subgroup)
+
     def commutator(self, G, H):
         """
         Return the commutator of two subgroups.
@@ -1344,7 +1546,7 @@ class PermutationGroup(Basic):
             return _af_new(h)
 
     @property
-    def degree(self):
+    def degree(self) -> int:
         """Returns the size of the permutations in the group.
 
         Explanation
@@ -1680,7 +1882,7 @@ class PermutationGroup(Basic):
                 h -= 1
 
     @property
-    def generators(self):
+    def generators(self) -> list[Permutation]:
         """Returns the generators of the group.
 
         Examples
@@ -3612,7 +3814,32 @@ class PermutationGroup(Basic):
         self._basic_orbits = [sorted(x) for x in basic_orbits]
         self._transversal_slp = slps
 
-    def schreier_sims_incremental(self, base=None, gens=None, slp_dict=False):
+    @overload
+    def schreier_sims_incremental(
+        self,
+        base: list[int] | None = None,
+        gens: list[Permutation] | None = None,
+        slp_dict: Literal[False] = False,
+    ) -> tuple[list[int], list[Permutation]]: ...
+
+    @overload
+    def schreier_sims_incremental(
+        self,
+        base: list[int] | None = None,
+        gens: list[Permutation] | None = None,
+        *,
+        slp_dict: Literal[True],
+    ) -> tuple[list[int], list[Permutation], dict[Permutation, list[Permutation]]]: ...
+
+    def schreier_sims_incremental(
+        self,
+        base: list[int] | None = None,
+        gens: list[Permutation] | None = None,
+        slp_dict: bool = False,
+    ) -> (
+        tuple[list[int], list[Permutation]]
+        | tuple[list[int], list[Permutation], dict[Permutation, list[Permutation]]]
+    ):
         """Extend a sequence of points and generating set to a base and strong
         generating set.
 
@@ -3697,7 +3924,7 @@ class PermutationGroup(Basic):
                     assert None  # can this ever happen?
                 _base.append(new)
         # distribute generators according to basic stabilizers
-        strong_gens_distr = _distribute_gens_by_base(_base, _gens)
+        strong_gens_distr: list[list[Permutation]] = _distribute_gens_by_base(_base, _gens)
         strong_gens_slp = []
         # initialize the basic stabilizers, basic orbits and basic transversals
         orbs = {}
@@ -3717,7 +3944,7 @@ class PermutationGroup(Basic):
             # a nested loop
             continue_i = False
             # test the generators for being a strong generating set
-            db = {}
+            db: dict[int, list[int]] = {}
             for beta, u_beta in list(transversals[i].items()):
                 for j, gen in enumerate(strong_gens_distr[i]):
                     gb = gen._array_form[beta]
@@ -3788,11 +4015,11 @@ class PermutationGroup(Basic):
                         slp[i] = strong_gens_distr[s[0]][s[1][0]]**-1
                     else:
                         slp[i] = strong_gens_distr[s[0]][s[1]]
-            strong_gens_slp = dict(strong_gens_slp)
+            strong_gens_slp_dict = dict(strong_gens_slp)
             # add the original generators
             for g in _gens:
-                strong_gens_slp[g] = [g]
-            return (_base, strong_gens, strong_gens_slp)
+                strong_gens_slp_dict[g] = [g]
+            return (_base, strong_gens, strong_gens_slp_dict)
 
         strong_gens.extend([k for k, _ in strong_gens_slp])
         return _base, strong_gens
