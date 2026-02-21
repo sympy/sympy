@@ -7,7 +7,6 @@ from sympy.core.logic import fuzzy_not
 
 from sympy.assumptions import ask, Q  # type: ignore
 
-
 if TYPE_CHECKING:
     from sympy.logic.boolalg import Boolean
     from typing import Callable
@@ -479,6 +478,46 @@ def refine_sin_cos(expr, assumptions):
     else:
         return ((-1)**((k + 1) / 2)) * sin(rem)
 
+
+def refine_floor_ceiling(expr, assumptions):
+    """
+    handler for the floor and ceiling functions
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol, refine, Q, floor, ceiling
+    >>> x = Symbol('x')
+    >>> y = Symbol('y')
+    >>> refine(floor(x), Q.integer(x))
+    x
+    >>> refine(ceiling(x), Q.integer(x))
+    x
+    >>> refine(floor(x), ~Q.integer(x))
+    floor(x)
+    >>> refine(floor(x + y), Q.integer(x))
+    x + floor(y)
+    >>> refine(ceiling(x + y), Q.integer(x))
+    x + ceiling(y)
+    >>> refine(ceiling(x), Q.infinite(x))
+    x
+    """
+    arg = expr.args[0]
+    if ask(Q.integer(arg), assumptions) or ask(Q.infinite(arg), assumptions):
+        return arg
+
+    if isinstance(arg, Add):
+        simplified = []
+        non_simplified = []
+        for term in arg.args:
+            if ask(Q.integer(term), assumptions):
+                simplified.append(term)
+            else:
+                non_simplified.append(term)
+        return Add(*simplified) + expr.func(Add(*non_simplified))
+    return expr
+
+
 handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'Abs': refine_abs,
     'Pow': refine_Pow,
@@ -490,4 +529,6 @@ handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'MatrixElement': refine_matrixelement,
     'cos': refine_sin_cos,
     'sin': refine_sin_cos,
+    'floor': refine_floor_ceiling,
+    'ceiling' : refine_floor_ceiling,
 }
