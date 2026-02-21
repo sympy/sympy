@@ -7,7 +7,7 @@ from sympy.physics.vector.printing import (vprint, vsprint, vpprint, vlatex,
 from sympy.physics.mechanics.particle import Particle
 from sympy.physics.mechanics.rigidbody import RigidBody
 from sympy.simplify.simplify import simplify
-from sympy import Matrix, Mul, Derivative, sin, cos, tan, S
+from sympy import Matrix, Mul, Derivative, Basic, Function, Pow, sin, cos, tan, S
 from sympy.core.function import AppliedUndef
 from sympy.physics.mechanics.inertia import (inertia as _inertia,
     inertia_of_point_mass as _inertia_of_point_mass)
@@ -423,46 +423,147 @@ def Lagrangian(frame, *body):
 def find_dynamicsymbols(expression, exclude=None, reference_frame=None):
     """Find all dynamicsymbols in expression.
 
-    Explanation
-    ===========
+        Explanation
+        ===========
 
-    If the optional ``exclude`` kwarg is used, only dynamicsymbols
-    not in the iterable ``exclude`` are returned.
-    If we intend to apply this function on a vector, the optional
-    ``reference_frame`` is also used to inform about the corresponding frame
-    with respect to which the dynamic symbols of the given vector is to be
-    determined.
+        If the optional ``exclude`` kwarg is used, only dynamicsymbols
+        not in the iterable ``exclude`` are returned.
 
-    Parameters
-    ==========
+        If we intend to apply this function on a vector, the optional
+        ``reference_frame`` is also used to inform about the corresponding frame
+        with respect to which the dynamic symbols of the given vector is to be
+        determined.
 
-    expression : SymPy expression
+        Parameters
+        ==========
 
-    exclude : iterable of dynamicsymbols, optional
+        expression : SymPy expression
 
-    reference_frame : ReferenceFrame, optional
-        The frame with respect to which the dynamic symbols of the
-        given vector is to be determined.
+        exclude : iterable of dynamicsymbols, optional
 
-    Examples
-    ========
+        reference_frame : ReferenceFrame, optional
+            The frame with respect to which the dynamic symbols of the
+            given vector is to be determined.
 
-    >>> from sympy.physics.mechanics import dynamicsymbols, find_dynamicsymbols
-    >>> from sympy.physics.mechanics import ReferenceFrame
-    >>> x, y = dynamicsymbols('x, y')
-    >>> expr = x + x.diff()*y
-    >>> find_dynamicsymbols(expr)
-    {x(t), y(t), Derivative(x(t), t)}
-    >>> find_dynamicsymbols(expr, exclude=[x, y])
-    {Derivative(x(t), t)}
-    >>> a, b, c = dynamicsymbols('a, b, c')
-    >>> A = ReferenceFrame('A')
-    >>> v = a * A.x + b * A.y + c * A.z
-    >>> find_dynamicsymbols(v, reference_frame=A)
-    {a(t), b(t), c(t)}
+        Examples
+        ========
+
+        >>> from sympy.physics.mechanics import dynamicsymbols, find_dynamicsymbols
+        >>> from sympy.physics.mechanics import ReferenceFrame
+        >>> x, y = dynamicsymbols('x, y')
+        >>> expr = x + x.diff()*y
+        >>> find_dynamicsymbols(expr)
+        {x(t), y(t), Derivative(x(t), t)}
+        >>> find_dynamicsymbols(expr, exclude=[x, y])
+        {Derivative(x(t), t)}
+        >>> a, b, c = dynamicsymbols('a, b, c')
+        >>> A = ReferenceFrame('A')
+        >>> v = a * A.x + b * A.y + c * A.z
+        >>> find_dynamicsymbols(v, reference_frame=A)
+        {a(t), b(t), c(t)}
 
     """
-    t_set = {dynamicsymbols._t}
+
+    result_set = set()
+
+    derivative_order = 0
+    derivative_stack = []
+    func_count = 0
+    pending_stack = []
+    mult_count_stack = []
+    t = dynamicsymbols._t
+
+    # Define the elementary conditions to identify the dynamic symbols
+
+    # Rule 1)
+    def dyn_sym(node):
+        if isinstance(node, AppliedUndef):
+            return node.free_symbols == {t}
+        return False
+
+    # Rule 2)
+    def der_dyn_sym(node):
+        if isinstance(node, Derivative):
+            args0 = node.args[0]
+            if isinstance(args0, AppliedUndef):
+                return args0.free_symbols == {t}
+        return False
+
+    def traverse(node):
+        nonlocal derivative_order, func_count
+
+        if der_dyn_sym(node) or dyn_sym(node):
+            if derivative_order:
+                if len(mult_count_stack) > 0:
+                    mult_count_stack[-1] += 1
+                    symbols = [Derivative(node, (t, i)) for i in range(0, derivative_order)]
+                    pending_stack.extend(symbols)
+
+                if func_count > 0:
+                    derivatives = [Derivative(node, (t, i)) for i in range(0, derivative_order + 1)]
+                    result_set.update(derivatives)
+
+                else:
+                    result_set.add(Derivative(node, (t, derivative_order)))
+
+            else:
+                result_set.add(node)
+            return
+
+        if isinstance(node, Derivative) and node.args[1][0] == t:
+            time_derivative_order = node.args[1][1]
+            derivative_stack.append(time_derivative_order)
+            derivative_order += time_derivative_order
+
+        if derivative_order > 0:
+            if isinstance(node, Function) and not dyn_sym(node) or isinstance(node, Pow):
+                func_count += 1
+
+        if derivative_order > 0:
+            if isinstance(node, Mul):
+                mult_count_stack.append(0)
+
+        if isinstance(node, Basic):
+            for arg in node.args:
+                traverse(arg)
+
+        if isinstance(node, Matrix):
+            for element in node:
+                traverse(element)
+
+        if derivative_order > 0:
+            if isinstance(node, Mul):
+                if mult_count_stack[-1] > 1:
+                    n = mult_count_stack[-1] * derivative_order
+                    result_set.update(pending_stack[-n:])
+                    del pending_stack[-(n - 1):]
+                    mult_count_stack.pop()
+                    if mult_count_stack:
+                        mult_count_stack[-1] += 1
+
+                else:
+                    n = mult_count_stack[-1] * derivative_order
+                    del pending_stack[-n:]
+                    mult_count_stack.pop()
+
+        if derivative_order > 0:
+            if isinstance(node, Function) and not dyn_sym(node) or isinstance(node, Pow):
+                func_count -= 1
+
+        if isinstance(node, Derivative) and node.args[1][0] == t:
+            derivative_order -= derivative_stack.pop()
+
+    # Manage the vector case
+    if isinstance(expression, Vector):
+        if reference_frame is None:
+            raise ValueError("You must provide reference_frame when passing a "
+                             "vector expression, got %s." % reference_frame)
+        else:
+            expression = expression.to_matrix(reference_frame)
+
+    traverse(expression)
+
+    # Manage the excluded symbols
     if exclude:
         if iterable(exclude):
             exclude_set = set(exclude)
@@ -470,14 +571,8 @@ def find_dynamicsymbols(expression, exclude=None, reference_frame=None):
             raise TypeError("exclude kwarg must be iterable")
     else:
         exclude_set = set()
-    if isinstance(expression, Vector):
-        if reference_frame is None:
-            raise ValueError("You must provide reference_frame when passing a "
-                             "vector expression, got %s." % reference_frame)
-        else:
-            expression = expression.to_matrix(reference_frame)
-    return {i for i in expression.atoms(AppliedUndef, Derivative) if
-            i.free_symbols == t_set} - exclude_set
+
+    return result_set - exclude_set
 
 
 def msubs(expr, *sub_dicts, smart=False, **kwargs):
