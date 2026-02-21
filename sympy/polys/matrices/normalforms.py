@@ -121,12 +121,22 @@ def smith_normal_decomp(m):
     return smf, s, t
 
 
-def _smith_normal_decomp(m, domain, shape, full):
+def _smith_normal_decomp(m, domain, shape, full, pivot='minabs'):
     '''
     Return the tuple of abelian invariants for a matrix `m`
     (as in the Smith-Normal form). If `full=True` then invertible matrices
     ``s, t`` such that the product ``s, m, t`` is the Smith Normal Form
     are also returned.
+
+    Parameters
+    ==========
+
+    pivot : str, optional
+        Pivot selection strategy. When ``'minabs'`` (the default) and the
+        domain is ``ZZ``, each recursion level scans the entire active
+        submatrix for the non-zero element with the smallest absolute
+        value and swaps it into the pivot position. This reduces
+        intermediate coefficient growth.
     '''
     if not domain.is_PID:
         msg = f"The matrix entries must be over a principal ideal domain, but got {domain}"
@@ -198,19 +208,49 @@ def _smith_normal_decomp(m, domain, shape, full):
                 pivot = g
 
     # permute the rows and columns until m[0,0] is non-zero if possible
-    ind = [i for i in range(rows) if m[i][0] != zero]
-    if ind and ind[0] != zero:
-        m[0], m[ind[0]] = m[ind[0]], m[0]
-        if full:
-            s[0], s[ind[0]] = s[ind[0]], s[0]
+    if pivot == 'minabs' and domain.is_ZZ:
+        # Global minimum absolute value pivot selection for ZZ domain.
+        # Scanning the entire active submatrix for the smallest non-zero
+        # element and moving it to (0, 0) reduces intermediate coefficient
+        # growth (see sympy/sympy#29139).
+        best_val = None
+        best_i = None
+        best_j = None
+        for i in range(rows):
+            for j in range(cols):
+                if m[i][j] != zero:
+                    av = abs(m[i][j])
+                    if best_val is None or av < best_val:
+                        best_val = av
+                        best_i = i
+                        best_j = j
+        if best_val is not None:
+            # Row swap (unimodular): move best element to row 0
+            if best_i != 0:
+                m[0], m[best_i] = m[best_i], m[0]
+                if full:
+                    s[0], s[best_i] = s[best_i], s[0]
+            # Column swap (unimodular): move best element to column 0
+            if best_j != 0:
+                for row in m:
+                    row[0], row[best_j] = row[best_j], row[0]
+                if full:
+                    for row in t:
+                        row[0], row[best_j] = row[best_j], row[0]
     else:
-        ind = [j for j in range(cols) if m[0][j] != zero]
+        ind = [i for i in range(rows) if m[i][0] != zero]
         if ind and ind[0] != zero:
-            for row in m:
-                row[0], row[ind[0]] = row[ind[0]], row[0]
+            m[0], m[ind[0]] = m[ind[0]], m[0]
             if full:
-                for row in t:
+                s[0], s[ind[0]] = s[ind[0]], s[0]
+        else:
+            ind = [j for j in range(cols) if m[0][j] != zero]
+            if ind and ind[0] != zero:
+                for row in m:
                     row[0], row[ind[0]] = row[ind[0]], row[0]
+                if full:
+                    for row in t:
+                        row[0], row[ind[0]] = row[ind[0]], row[0]
 
     # make the first row and column except m[0,0] zero
     while (any(m[0][i] != zero for i in range(1,cols)) or
@@ -235,7 +275,7 @@ def _smith_normal_decomp(m, domain, shape, full):
     else:
         lower_right = [r[1:] for r in m[1:]]
         ret = _smith_normal_decomp(lower_right, domain,
-                shape=(rows - 1, cols - 1), full=full)
+                shape=(rows - 1, cols - 1), full=full, pivot=pivot)
         if full:
             invs, s_small, t_small = ret
             s2 = [[1] + [0]*(rows-1)] + [[0] + row for row in s_small]
