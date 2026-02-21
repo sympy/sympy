@@ -1658,7 +1658,7 @@ def _dmp_is_coprime_heuristic(f, g, u, K):
 
         h_dup, _, _ = dup_inner_gcd(f_dup, g_dup, K)
 
-        if dup_degree(h_dup) > 0:
+        if h_dup != [K.one]:
             return False
 
     return True
