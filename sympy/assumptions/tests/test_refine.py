@@ -66,12 +66,12 @@ def test_pow2():
 
 
 def test_exp():
-    x = Symbol('x', integer=True)
-    assert refine(exp(pi*I*2*x)) == 1
-    assert refine(exp(pi*I*2*(x + S.Half))) == -1
-    assert refine(exp(pi*I*2*(x + Rational(1, 4)))) == I
-    assert refine(exp(pi*I*2*(x + Rational(3, 4)))) == -I
-
+    assert refine(exp(pi*I*2*x), Q.integer(x)) == 1
+    assert refine(exp(pi*I*2*(x + S.Half)), Q.integer(x)) == -1
+    assert refine(exp(pi*I*2*(x + Rational(1, 4))), Q.integer(x)) == I
+    assert refine(exp(pi*I*2*(x + Rational(3, 4))), Q.integer(x)) == -I
+    assert refine(exp(x*I*pi), Q.even(x)) == 1
+    assert refine(exp(x*I*pi), Q.odd(x)) == -1
 
 def test_Piecewise():
     assert refine(Piecewise((1, x < 0), (3, True)), (x < 0)) == 1
