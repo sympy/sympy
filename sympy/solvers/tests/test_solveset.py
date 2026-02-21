@@ -14,6 +14,7 @@ from sympy.functions.elementary.complexes import (Abs, arg, im, re, sign, conjug
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
 from sympy.functions.elementary.hyperbolic import (HyperbolicFunction,
     sinh, cosh, tanh, coth, sech, csch, asinh, acosh, atanh, acoth, asech, acsch)
+from sympy.functions.elementary.integers import floor, ceiling
 from sympy.functions.elementary.miscellaneous import sqrt, Min, Max
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (
@@ -2404,6 +2405,12 @@ def test_nonlinsolve_conditionset():
         intermediate_system,
         S.Complexes**2)
     assert nonlinsolve([f1, f2], [x, y]) == soln
+
+
+def test_nonlinsolve_floor_ceiling():
+    raises(NotImplementedError, lambda: nonlinsolve([floor(x) - 5, y - x - 1], [x, y]))
+    raises(NotImplementedError, lambda: nonlinsolve([ceiling(x) - 3, y - x], [x, y]))
+    assert nonlinsolve([x - floor(y)], [x]) == FiniteSet((floor(y),))
 
 
 def test_substitution_basic():
