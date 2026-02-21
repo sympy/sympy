@@ -24,11 +24,11 @@ class TableForm:
     format (ascii, latex, html, ...).
 
     >>> print(t.as_latex())
-    \begin{tabular}{l l}
-    $5$ & $7$ \\
-    $4$ & $2$ \\
-    $10$ & $3$ \\
-    \end{tabular}
+    \begin{array}{l l}
+    5 & 7 \\
+    4 & 2 \\
+    10 & 3 \\
+    \end{array}
 
     """
 
@@ -332,7 +332,7 @@ class TableForm:
             alignments = [self._head_align]
         alignments.extend(self._alignments)
 
-        s = r"\begin{tabular}{" + " ".join(alignments) + "}\n"
+        s = r"\begin{array}{" + " ".join(alignments) + "}\n"
 
         if self._headings[1]:
             d = self._headings[1]
@@ -358,9 +358,9 @@ class TableForm:
                     d.append(v)
                 else:
                     v = printer._print(x)
-                    d.append("$%s$" % v)
+                    d.append(v)
             if self._headings[0]:
                 d = [self._headings[0][i]] + d
             s += " & ".join(d) + r" \\" + "\n"
-        s += r"\end{tabular}"
+        s += r"\end{array}"
         return s
