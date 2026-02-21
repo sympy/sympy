@@ -223,6 +223,11 @@ def test_user_functions():
     n = symbols('n', integer=True)
     assert fcode(
         factorial(n), user_functions={"factorial": "fct"}) == "      fct(n)"
+    # Integer arguments should not be converted to floats (issue #20435)
+    x = symbols('x')
+    g = Function('g')
+    assert fcode(
+        g(n + 1, x**2), user_functions={"g": "myfunc"}) == "      myfunc(n + 1, x**2)"
 
 
 def test_inline_function():
