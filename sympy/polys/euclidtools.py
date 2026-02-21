@@ -22,7 +22,7 @@ from sympy.polys.densearith import (
     dmp_exquo_ground,
     dup_max_norm, dmp_max_norm)
 from sympy.polys.densebasic import (
-    dup, dmp, _dup, _dmp,
+    dup, dmp, _dup, _dmp, dmp_to_dict,
     dup_strip, dmp_raise,
     dmp_zero, dmp_one, dmp_ground,
     dmp_one_p, dmp_zero_p,
@@ -1602,6 +1602,68 @@ def _dmp_inner_gcd(f, g, u, K):
         return dmp_rr_prs_gcd(f, g, u, K)
 
 
+def _dmp_is_coprime_heuristic(f, g, u, K):
+    """
+    Fast conservative check for coprimality of two multivariate polynomials.
+    """
+    if not u:
+        return False
+
+    F = dmp_to_dict(f, u, K)
+    G = dmp_to_dict(g, u, K)
+
+    for i in range(u + 1):
+        f_uni = {}
+        g_uni = {}
+
+        max_deg_f = 0
+        for monom, c in F.items():
+            if all(m == 0 for j, m in enumerate(monom) if j != i):
+                f_uni[monom[i]] = c
+                if monom[i] > max_deg_f:
+                    max_deg_f = monom[i]
+
+        true_deg_f = dmp_degree_in(f, i, u)
+        if max_deg_f < true_deg_f:
+            return False
+
+        max_deg_g = 0
+        for monom, c in G.items():
+            if all(m == 0 for j, m in enumerate(monom) if j != i):
+                g_uni[monom[i]] = c
+                if monom[i] > max_deg_g:
+                    max_deg_g = monom[i]
+
+        true_deg_g = dmp_degree_in(g, i, u)
+        if max_deg_g < true_deg_g:
+            return False
+
+        if max_deg_f == 0 and max_deg_g == 0:
+            return False
+
+        n = max(f_uni.keys() or [0])
+        f_dup = [K.zero] * (n + 1)
+        for k, c in f_uni.items():
+            f_dup[n - k] = c
+        f_dup = dup_strip(f_dup, K)
+
+        m = max(g_uni.keys() or [0])
+        g_dup = [K.zero] * (m + 1)
+        for k, c in g_uni.items():
+            g_dup[m - k] = c
+        g_dup = dup_strip(g_dup, K)
+
+        if not f_dup or not g_dup:
+            return False
+
+        h_dup, _, _ = dup_inner_gcd(f_dup, g_dup, K)
+
+        if dup_degree(h_dup) > 0:
+            return False
+
+    return True
+
+
 def dmp_inner_gcd(f, g, u, K):
     """
     Computes polynomial GCD and cofactors of `f` and `g` in `K[X]`.
@@ -1626,6 +1688,12 @@ def dmp_inner_gcd(f, g, u, K):
         return dup_inner_gcd(f, g, K)
 
     J, (f, g) = dmp_multi_deflate((f, g), u, K)
+
+    if _dmp_is_coprime_heuristic(f, g, u, K):
+        return (dmp_inflate(dmp_one(u, K), J, u, K),
+                dmp_inflate(f, J, u, K),
+                dmp_inflate(g, J, u, K))
+
     h, cff, cfg = _dmp_inner_gcd(f, g, u, K)
 
     return (dmp_inflate(h, J, u, K),

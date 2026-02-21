@@ -565,6 +565,19 @@ def test_dmp_gcd():
         (1.0*x, 2.1*y**2 - 2.2*y + 2.1, 1.0*x**2)
 
 
+def test_dmp_gcd_sparse_coprime():
+    R, x, y = ring("x,y", ZZ)
+
+    f = x**50 + y**50 + 1
+    g = x**49 + y**49 + 1
+    assert R.dmp_gcd(f, g) == 1
+
+    R3, x, y, z = ring("x,y,z", ZZ)
+    f3 = x**10 + y**10 + z**10 + 1
+    g3 = x**9 + y**9 + z**9 + 1
+    assert R3.dmp_gcd(f3, g3) == 1
+
+
 def test_dup_lcm():
     R, x = ring("x", ZZ)
 
