@@ -479,6 +479,114 @@ def refine_sin_cos(expr, assumptions):
     else:
         return ((-1)**((k + 1) / 2)) * sin(rem)
 
+
+def refine_log(expr, assumptions):
+    """
+    Handler for the natural logarithm.
+
+    Examples
+    ========
+
+    >>> from sympy import Q, log, exp, refine
+    >>> from sympy.abc import x, y
+
+    >>> refine(log(exp(x)), Q.real(x))
+    x
+
+    >>> refine(log(x**2), Q.positive(x))
+    2*log(x)
+
+    >>> refine(log(x*y), Q.positive(x) & Q.positive(y))
+    log(x) + log(y)
+
+    """
+    from sympy.functions.elementary.exponential import log, exp
+
+    arg = expr.args[0]
+
+    product_terms = arg.args if arg.is_Mul else (arg,)
+
+    sum_of_log_terms = []
+    other_terms = []
+
+    for term in product_terms:
+        if ask(Q.positive(term), assumptions):
+            if term.is_Pow:
+                base, exponent = term.base, term.exp
+                if (ask(Q.positive(base), assumptions) and
+                        ask(Q.real(exponent), assumptions)):
+                    # log(b**e) -> e*log(b) when b > 0 and e is real
+                    sum_of_log_terms.append(exponent * log(base))
+                    continue
+            if isinstance(term, exp):
+                if ask(Q.real(term.exp), assumptions):
+                    sum_of_log_terms.append(term.exp)
+                    continue
+                elif term.exp.is_Add:
+                    real_parts = []
+                    other_parts = []
+                    for a in term.exp.args:
+                        if ask(Q.real(a), assumptions):
+                            real_parts.append(a)
+                        else:
+                            other_parts.append(a)
+                    if real_parts:
+                        sum_of_log_terms.append(sum(real_parts))
+                        if other_parts:
+                            sum_of_log_terms.append(log(exp(sum(other_parts))))
+                        continue
+            sum_of_log_terms.append(log(term))
+        elif term.is_Pow:
+            base, exponent = term.base, term.exp
+            if ask(Q.positive(base), assumptions) and exponent.is_Add:
+                # Mixed exponent: split real parts from non-real parts
+                # e.g. log(x**(y + 2*I)) -> y*log(x) + log(x**(2*I))
+                real_parts = []
+                other_parts = []
+                for a in exponent.args:
+                    if ask(Q.real(a), assumptions):
+                        real_parts.append(a)
+                    else:
+                        other_parts.append(a)
+                if real_parts:
+                    sum_of_log_terms.append(sum(real_parts) * log(base))
+                    if other_parts:
+                        sum_of_log_terms.append(
+                            log(base**sum(other_parts)))
+                else:
+                    other_terms.append(term)
+            else:
+                other_terms.append(term)
+        elif isinstance(term, exp):
+            if term.exp.is_Add:
+                real_parts = []
+                other_parts = []
+                for a in term.exp.args:
+                    if ask(Q.real(a), assumptions):
+                        real_parts.append(a)
+                    else:
+                        other_parts.append(a)
+                if real_parts:
+                    sum_of_log_terms.append(sum(real_parts))
+                    if other_parts:
+                        sum_of_log_terms.append(log(exp(sum(other_parts))))
+                else:
+                    other_terms.append(term)
+            else:
+                other_terms.append(term)
+        else:
+            other_terms.append(term)
+
+    if not sum_of_log_terms:
+        return expr
+
+    result = sum(sum_of_log_terms)
+    if other_terms:
+        result += log(Mul(*other_terms))
+
+    return result
+
+
 handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'Abs': refine_abs,
     'Pow': refine_Pow,
@@ -490,4 +598,5 @@ handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'MatrixElement': refine_matrixelement,
     'cos': refine_sin_cos,
     'sin': refine_sin_cos,
+    'log': refine_log,
 }
