@@ -1,3 +1,4 @@
+from unittest import result
 from sympy import sympify, Add, ImmutableMatrix as Matrix
 from sympy.core.evalf import EvalfMixin
 from sympy.external.mpmath import prec_to_dps
@@ -210,48 +211,39 @@ class Dyadic(Printable, EvalfMixin):
 
         bar = "\N{CIRCLED TIMES}" if printer._use_unicode else "|"
 
-        # Build list of string representations for each term
-        # This mimics the original Fake.render() approach
-        ol = []  # output list
+        terms = []  # output list
 
-        for v in ar:
-            coeff, vec1, vec2 = v[0], v[1], v[2]
+        def juxtapose(coeff, v1, v2):
+            pc = printer._print(coeff)
+            pv1 = printer._print(v1)
+            pv2 = printer._print(v2)
+            if coeff.is_Add:
+                pc = prettyForm(*pc.parens())
+            bar_form = prettyForm(bar)
+            return printer._print_seq([pc, pv1, bar_form, pv2], delimiter=' ')
 
-            # Print vectors as strings
-            vec1_str = printer._print(vec1).render(**printer._settings)
-            vec2_str = printer._print(vec2).render(**printer._settings)
+        for coeff, vec1, vec2 in ar:
 
-            # Handle coefficient
+            pv1 = printer._print(vec1)
+            pv2 = printer._print(vec2)
+            bar_form = prettyForm(bar)
+
             if coeff == 1:
-                ol.extend([" + ", vec1_str, bar, vec2_str])
+                term = printer._print_seq([pv1, bar_form, pv2], delimiter=' ')
             elif coeff == -1:
-                ol.extend([" - ", vec1_str, bar, vec2_str])
+                minus = prettyForm('-')
+                term = printer._print_seq([minus, pv1, bar_form, pv2], delimiter=' ')
             else:
-                # General coefficient
-                coeff_pretty = printer._print(coeff)
-                if isinstance(coeff, Add):
-                    coeff_pretty = prettyForm(*coeff_pretty.parens())
+                term = juxtapose(coeff, vec1, vec2)
 
-                coeff_str = coeff_pretty.render(**printer._settings)
+            terms.append(term)
 
-                if coeff_str.startswith("-"):
-                    coeff_str = coeff_str[1:]
-                    str_start = " - "
-                else:
-                    str_start = " + "
+        if terms:
+            result = prettyForm.__add__(*terms)
+        else:
+            result = prettyForm("0")
 
-                ol.extend([str_start, coeff_str, " ", vec1_str, bar, vec2_str])
-
-        # Join everything
-        outstr = "".join(ol)
-
-        # Clean up leading signs
-        if outstr.startswith(" + "):
-            outstr = outstr[3:]
-        elif outstr.startswith(" "):
-            outstr = outstr[1:]
-
-        return prettyForm(outstr)
+        return result
 
     def __rsub__(self, other):
         return (-1 * self) + other
