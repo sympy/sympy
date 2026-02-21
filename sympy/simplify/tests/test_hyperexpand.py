@@ -106,6 +106,8 @@ def test_polynomial():
     assert hyperexpand(hyper([-2], [-1], z)) is oo
     assert hyperexpand(hyper([0, 0], [-1], z)) == 1
     assert can_do([-5, -2, randcplx(), randcplx()], [-10, randcplx()])
+    assert hyperexpand(hyper((-6, -7, -5), (-6, -6), 1)) == S(-1)/6
+    assert hyperexpand(hyper((-5, -3, -4), (-6, -6), 1)) == S(1)/30
     assert hyperexpand(hyper((-1, 1), (-2,), z)) == 1 + z/2
 
 

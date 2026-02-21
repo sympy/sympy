@@ -1457,7 +1457,22 @@ def reduce_order(func):
     (Hyper_Function((2,), (3,)), [<Reduce order by cancelling
     upper 4 with lower 3.>])
     """
-    nap, nbq, operators = _reduce_order(func.ap, func.bq, ReduceOrder, default_sort_key)
+    nap = list(func.ap)
+    nbq = list(func.bq)
+
+    # Eliminate common upper and lower parameters.
+    for x in nap[:]:
+        if x in nbq:
+            nap.remove(x)
+            nbq.remove(x)
+
+    if any(b.is_integer and b.is_nonpositive for b in nbq):
+        nap.sort(key=default_sort_key)
+        nbq.sort(key=default_sort_key)
+        operators = []  # No shifts applied.
+    else:
+        nap, nbq, operators = _reduce_order(
+            func.ap, func.bq, ReduceOrder, default_sort_key)
 
     return Hyper_Function(Tuple(*nap), Tuple(*nbq)), operators
 
