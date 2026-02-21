@@ -630,6 +630,11 @@ class Wild(Symbol):
     >>> E.match(a*b)
     {a_: 2, b_: x**3*y*z}
 
+    NOTE
+    ====
+
+    Wild is commonly used for symbolic pattern matching.
+    
     """
     is_Wild = True
 
