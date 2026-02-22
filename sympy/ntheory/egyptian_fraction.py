@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.containers import Tuple
 from sympy.core.numbers import (Integer, Rational)
 from sympy.core.singleton import S
@@ -139,8 +140,7 @@ def egyptian_fraction(r, algorithm="Greedy"):
     return prefix + [Integer(i) for i in postfix]
 
 
-def egypt_greedy(x, y):
-    # assumes gcd(x, y) == 1
+def egypt_greedy(x: int, y: int) -> list[int]:    # assumes gcd(x, y) == 1
     if x == 1:
         return [y]
     else:
