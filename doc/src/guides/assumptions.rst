@@ -38,7 +38,7 @@ a concrete integer such as $2$ or $-2$:
 What these examples demonstrate is that for a positive number $x$ we have
 $\sqrt{x^2} = x$ whereas for a negative number we would instead have
 $\sqrt{x^2} = -x$. That may seem obvious but the situation can be more
-surprising when working with a symbol rather then an explicit number. For
+surprising when working with a symbol rather than an explicit number. For
 example
 
     >>> from sympy import Symbol, simplify
