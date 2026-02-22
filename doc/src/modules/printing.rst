@@ -128,8 +128,27 @@ Usage::
 LLVM JIT Code Printing
 ----------------------
 
-.. automodule:: sympy.printing.llvmjitcode
+This module provides LLVM-based JIT compilation utilities for SymPy
+expressions.
+
+.. module:: sympy.printing.llvmjitcode
+
+LLVMPrinter
+^^^^^^^^^^^
+
+The ``LLVMPrinter`` class converts SymPy expressions into LLVM IR.
+
+.. autoclass:: sympy.printing.llvmjitcode.LLVMPrinter
    :members:
+   :show-inheritance:
+
+llvm_callable
+^^^^^^^^^^^^^
+
+The ``llvm_callable`` function creates a callable LLVM-compiled function
+from a SymPy expression.
+
+.. autofunction:: sympy.printing.llvmjitcode.llvm_callable
 
 RCodePrinter
 ------------
