@@ -10,6 +10,9 @@ Calculus
 .. automodule:: sympy.calculus.singularities
     :members:
 
+.. automodule:: sympy.calculus.accumulationbounds
+   :members:
+
 .. _finite_diff:
 
 .. automodule:: sympy.calculus.finite_diff
