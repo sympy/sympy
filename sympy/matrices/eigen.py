@@ -459,6 +459,17 @@ def _eigenvects(
 
     eigenvals
     MatrixBase.nullspace
+
+    Notes
+    =====
+
+    The eigenvectors returned form a basis of the eigenspace.
+    They are not guaranteed to be orthogonal or normalized,
+    even in the case of repeated eigenvalues.
+    If orthonormal eigenvectors are required, an additional
+    orthogonalization step (for example, Gram–Schmidt)
+    must be applied by the user.
+
     """
     primitive = simplify is not False
 
