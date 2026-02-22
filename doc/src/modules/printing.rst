@@ -128,8 +128,12 @@ Usage::
 LLVM JIT Code Printing
 ----------------------
 
-.. automodule:: sympy.printing.llvmjitcode
+.. module:: sympy.printing.llvmjitcode
+
+.. autoclass:: LLVMJitCodePrinter
    :members:
+
+.. autofunction:: llvm_callable
 
 RCodePrinter
 ------------
