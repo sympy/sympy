@@ -4903,6 +4903,69 @@ def _update_args(args, key, value):
     return args
 
 
+def _degree_expr_fast(expr, gen):
+    """Compute degree recursively without polynomial expansion when safe.
+
+    Returns ``None`` when exact fallback via ``poly_from_expr`` is required.
+    """
+    expr = sympify(expr)
+
+    if expr.is_zero is True:
+        return S.NegativeInfinity
+    if expr.is_Number:
+        return S.Zero
+    if expr.is_Atom and expr == gen:
+        return S.One
+    if not expr.has(gen):
+        if expr.is_Atom:
+            return S.Zero
+        return None
+
+    if expr.is_Add:
+        degrees = []
+        for arg in expr.args:
+            d = _degree_expr_fast(arg, gen)
+            if d is None:
+                return None
+            if d != S.NegativeInfinity:
+                degrees.append(d)
+
+        if not degrees:
+            return S.NegativeInfinity
+
+        dmax = max(degrees)
+        # If max degree is unique then it cannot cancel with other terms.
+        if degrees.count(dmax) == 1:
+            return dmax
+        return None
+
+    if expr.is_Mul:
+        total = S.Zero
+        for arg in expr.args:
+            d = _degree_expr_fast(arg, gen)
+            if d is None:
+                return None
+            if d == S.NegativeInfinity:
+                return S.NegativeInfinity
+            total += d
+        return total
+
+    if expr.is_Pow:
+        base, exp = expr.as_base_exp()
+        if exp.is_Integer and exp.is_nonnegative:
+            if exp.is_zero:
+                return S.Zero
+            dbase = _degree_expr_fast(base, gen)
+            if dbase is None:
+                return None
+            if dbase == S.NegativeInfinity:
+                return S.NegativeInfinity
+            return Integer(exp) * dbase
+        return None
+
+    return None
+
+
 @public
 def degree(f, gen=0):
     """
@@ -4978,6 +5041,10 @@ def degree(f, gen=0):
         return p.degree(gen)
 
     gen = sympify(gen, strict=True)
+    if not isinstance(f, Poly) and gen.is_Atom:
+        d = _degree_expr_fast(f, gen)
+        if d is not None:
+            return _degree(d)
     if not isinstance(f, Poly) or gen not in f.gens:
         f = poly_from_expr(f, gen)[0]
     return _degree(f.degree(gen))

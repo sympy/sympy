@@ -1350,12 +1350,17 @@ def test_Poly_degree():
 
     # optimization
     big = 2  # make this number 1000 when full expansion can be avoided
+    very_big = 10000
 
     assert degree((x + 1)**big, x) == big  # Large power (fast-path, no expansion)
+    assert degree((x + 1)**very_big, x) == very_big  # regression: no eager expansion
     assert degree((x + 1)**big + x**(big-1), x) == big  # Addition without cancellation
+    assert degree((x + 1)**very_big + x**(very_big - 1), x) == very_big
     assert degree((x + 1)**2 - x**2, x) == 1  # Addition with cancellation (fallback required)
     assert degree(x*(x + 1)**big, x) == big + 1  # Nested multiplication
+    assert degree(x*(x + 1)**very_big, x) == very_big + 1
     assert degree(y*(x + 1)**big, x) == big  # Generator independence
+    assert degree(y*(x + 1)**very_big, x) == very_big
 
     # checking 0 detection
     Z = pi*(1/pi + 1) - 1 - pi
