@@ -7,6 +7,7 @@ from sympy.core.logic import fuzzy_not
 
 from sympy.assumptions import ask, Q  # type: ignore
 
+
 if TYPE_CHECKING:
     from sympy.logic.boolalg import Boolean
     from typing import Callable
@@ -501,6 +502,8 @@ def refine_floor_ceiling(expr, assumptions):
     x + ceiling(y)
     >>> refine(ceiling(x), Q.infinite(x))
     x
+    >>> refine(ceiling(ceiling(x) + ceiling(y)), Q.complex(x) & Q.complex(y))
+    ceiling(x) + ceiling(y)
     """
     arg = expr.args[0]
     if ask(Q.integer(arg), assumptions) or ask(Q.infinite(arg), assumptions):
@@ -510,7 +513,7 @@ def refine_floor_ceiling(expr, assumptions):
         simplified = []
         non_simplified = []
         for term in arg.args:
-            if ask(Q.integer(term), assumptions):
+            if ask(Q.integer(term), assumptions) or isinstance(term, expr.func):
                 simplified.append(term)
             else:
                 non_simplified.append(term)
