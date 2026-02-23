@@ -202,12 +202,9 @@ def _(expr, assumptions):
 def _(expr, assumptions):
     if ask(Q.negative_infinite(expr.exp), assumptions):
         return False
-    exp = expr.exp
-    if ask(Q.imaginary(exp), assumptions):
-        coeff = exp / (I*pi)
-        return ask(Q.integer(coeff), assumptions)
-    if ask(Q.real(expr), assumptions):
-        return True
+    return fuzzy_and([
+        ask(Q.real(expr), assumptions)
+    ])
 
 
 # ZeroPredicate
