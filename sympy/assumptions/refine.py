@@ -88,6 +88,8 @@ def refine_abs(expr, assumptions):
     >>> from sympy import Q, Abs
     >>> from sympy.assumptions.refine import refine_abs
     >>> from sympy.abc import x, y
+    >>> refine_abs(Abs(x), Q.zero(x))
+    0
     >>> refine_abs(Abs(x), Q.real(x))
     >>> refine_abs(Abs(x), Q.positive(x))
     x
@@ -102,6 +104,8 @@ def refine_abs(expr, assumptions):
     """
     from sympy.functions.elementary.complexes import Abs
     arg = expr.args[0]
+    if ask(Q.zero(arg), assumptions):
+        return 0
     if ask(Q.real(arg), assumptions) and \
             fuzzy_not(ask(Q.negative(arg), assumptions)):
         # if it's nonnegative

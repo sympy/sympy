@@ -20,7 +20,10 @@ def test_Abs():
     assert refine(1 + Abs(x), Q.positive(x)) == 1 + x
     assert refine(Abs(x), Q.negative(x)) == -x
     assert refine(1 + Abs(x), Q.negative(x)) == 1 - x
+    assert refine(Abs(x), Q.zero(x)) == 0
+    assert refine(Abs(x), Q.complex(x)) == Abs(x)
 
+    assert refine(Abs(y - x)) == Abs(y - x)
     assert refine(Abs(y - x), Q.positive(y - x)) == -x + y
     assert refine(Abs(y - x), Q.negative(y - x)) == x - y
     assert refine(Abs(z - y + x), Q.positive(z - y + x)) == x - y + z
