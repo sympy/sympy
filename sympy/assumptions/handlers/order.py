@@ -200,6 +200,8 @@ def _(expr, assumptions):
 
 @NonZeroPredicate.register(exp)
 def _(expr, assumptions):
+    if ask(Q.negative_infinite(expr.exp), assumptions):
+        return False
     if ask(Q.real(expr), assumptions):
         return True
 
