@@ -1,8 +1,9 @@
 from __future__ import annotations
 from sympy.concrete.products import Product
 from sympy.concrete.summations import Sum
+from sympy.core.add import Add
 from sympy.core.numbers import (Rational, oo, pi)
-from sympy.core.relational import Eq
+from sympy.core.relational import Eq, Ge
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols
 from sympy.functions.combinatorial.factorials import (RisingFactorial, factorial)
@@ -14,9 +15,11 @@ from sympy.functions.special.bessel import besselk
 from sympy.functions.special.gamma_functions import gamma
 from sympy.matrices.dense import eye
 from sympy.matrices.expressions.determinant import Determinant
+from sympy.sets.conditionset import ConditionSet
 from sympy.sets.fancysets import Range
 from sympy.sets.sets import (Interval, ProductSet)
 from sympy.simplify.simplify import simplify
+from sympy.stats.joint_rv_types import MultivariateBetaDistribution
 from sympy.tensor.indexed import (Indexed, IndexedBase)
 from sympy.core.numbers import comp
 from sympy.integrals.integrals import integrate
@@ -34,7 +37,8 @@ from sympy.external import import_module
 
 from sympy.abc import x, y
 
-
+def _is_simplex_sample(vec, tol=1e-12):
+    return all(float(v) >= -tol for v in vec) and abs(sum(float(v) for v in vec) - 1.0) <= tol
 
 def test_Normal():
     m = Normal('A', [1, 2], [[1, 0], [0, 1]])
@@ -198,15 +202,21 @@ def test_MultivariateBeta():
     X = MultivariateBeta('X', [1, 1, 1])
     assert E(X[0]) == Rational(1, 3)
     assert E(X[0] + X[1] + X[2]) == 1
-    assert density(mb)(1, 2) == S(2)**(a2 - 1)*gamma(a1 + a2)/\
-                                (gamma(a1)*gamma(a2))
-    assert marginal_distribution(mb_c, 0)(3) == S(3)**(a1 - 1)*gamma(a1 + a2)/\
-                                                (a2*gamma(a1)*gamma(a2))
+    t = Rational(1, 3)
+    expected = t ** (a1 - 1) * (1 - t) ** (a2 - 1) * gamma(a1 + a2) / (gamma(a1) * gamma(a2))
+    assert density(mb)(t, 1 - t) == expected
+    assert marginal_distribution(mb_c, 0)(t) == expected
     raises(ValueError, lambda: MultivariateBeta('b1', [a1_f, a2]))
     raises(ValueError, lambda: MultivariateBeta('b2', [a1, a2_f]))
     raises(ValueError, lambda: MultivariateBeta('b3', [0, 0]))
     raises(ValueError, lambda: MultivariateBeta('b4', [a1_f, a2_f]))
-    assert mb.pspace.distribution.set == ProductSet(Interval(0, 1), Interval(0, 1))
+    support = mb.pspace.distribution.set
+    assert isinstance(support, ConditionSet)
+    xs = support.sym
+    cond = support.condition
+    for x_i in xs:
+        assert cond.has(Ge(x_i, 0))
+    assert cond.has(Eq(Add(*xs), 1))
 
 
 def test_MultivariateEwens():
@@ -323,7 +333,10 @@ def test_sample_numpy():
         for X in distribs_numpy:
             samps = sample(X, size=size, library='numpy')
             for sam in samps:
-                assert tuple(sam) in X.pspace.distribution.set
+                if isinstance(X.pspace.distribution, MultivariateBetaDistribution):
+                    assert _is_simplex_sample(sam)
+                else:
+                    assert tuple(sam) in X.pspace.distribution.set
         N_c = NegativeMultinomial('N', 3, 0.1, 0.1, 0.1)
         raises(NotImplementedError, lambda: sample(N_c, library='numpy'))
 
@@ -344,10 +357,16 @@ def test_sample_scipy():
             samps = sample(X, size=size)
             samps2 = sample(X, size=(2, 2))
             for sam in samps:
-                assert tuple(sam) in X.pspace.distribution.set
+                if isinstance(X.pspace.distribution, MultivariateBetaDistribution):
+                    assert _is_simplex_sample(sam)
+                else:
+                    assert tuple(sam) in X.pspace.distribution.set
             for i in range(2):
                 for j in range(2):
-                    assert tuple(samps2[i][j]) in X.pspace.distribution.set
+                    if isinstance(X.pspace.distribution, MultivariateBetaDistribution):
+                        assert _is_simplex_sample(samps2[i][j])
+                    else:
+                        assert tuple(samps2[i][j]) in X.pspace.distribution.set
         N_c = NegativeMultinomial('N', 3, 0.1, 0.1, 0.1)
         raises(NotImplementedError, lambda: sample(N_c))
 
