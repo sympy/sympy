@@ -505,19 +505,20 @@ def refine_floor_ceiling(expr, assumptions):
     >>> refine(ceiling(ceiling(x) + ceiling(y)), Q.complex(x) & Q.complex(y))
     ceiling(x) + ceiling(y)
     """
+    from sympy.functions.elementary.integers import floor, ceiling
     arg = expr.args[0]
     if ask(Q.integer(arg), assumptions) or ask(Q.infinite(arg), assumptions):
         return arg
 
     if isinstance(arg, Add):
-        simplified = []
-        non_simplified = []
+        integer_terms = []
+        noninteger_terms = []
         for term in arg.args:
-            if ask(Q.integer(term), assumptions) or isinstance(term, expr.func):
-                simplified.append(term)
+            if ask(Q.integer(term), assumptions) or isinstance(term, (floor, ceiling)):
+                integer_terms.append(term)
             else:
-                non_simplified.append(term)
-        return Add(*simplified) + expr.func(Add(*non_simplified))
+                noninteger_terms.append(term)
+        return Add(*integer_terms) + expr.func(Add(*noninteger_terms))
     return expr
 
 
