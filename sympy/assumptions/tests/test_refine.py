@@ -289,6 +289,6 @@ def test_sin_cos():
 def test_factorial():
     n = Symbol('n')
     assert refine(factorial(n), Q.zero(n)) == 1
-    assert refine(factorial(n), Q.eq(n, 1)) == 1
+    assert refine(factorial(n), Q.zero(n - 1)) == 1
     assert refine(factorial(n), Q.integer(n) & Q.negative(n)) is S.ComplexInfinity
     assert refine(factorial(n), Q.positive_infinite(n)) is S.Infinity
