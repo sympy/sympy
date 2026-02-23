@@ -505,6 +505,7 @@ def refine_conjugate(expr, assumptions):
     """
     from sympy.functions.elementary.exponential import log
     from sympy.functions.elementary.complexes import conjugate
+    from sympy.core.numbers import I, pi
 
     arg = expr.args[0]
 
@@ -533,6 +534,8 @@ def refine_conjugate(expr, assumptions):
         log_arg = arg.args[0]
         if ask(~Q.nonpositive(log_arg), assumptions)  and ask(Q.complex(log_arg), assumptions):
                 return log(conjugate(log_arg))
+        elif ask(Q.negative(log_arg), assumptions):
+            return log(log_arg) - 2 * I * pi
     return expr
 
 

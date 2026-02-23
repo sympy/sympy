@@ -296,6 +296,7 @@ def test_conjugate():
     assert refine(conjugate(log(x)), Q.nonpositive(x)) == conjugate(log(x))
     assert refine(conjugate(log(x)), Q.nonnegative(x)) == conjugate(log(x))
     assert refine(conjugate(log(x)), Q.positive(x)) == log(x)
+    assert refine(conjugate(log(x)), Q.negative(x)) == log(x) - 2 * I * pi
 
     n = Symbol('n')
     assert refine(conjugate(x ** n), Q.complex(x) & Q.integer(n)) == conjugate(x) ** n
