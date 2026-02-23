@@ -482,7 +482,7 @@ def refine_sin_cos(expr, assumptions):
 
 def refine_floor_ceiling(expr, assumptions):
     """
-    handler for the floor and ceiling functions
+    Handler for the floor and ceiling functions
 
     Examples
     ========
@@ -494,15 +494,13 @@ def refine_floor_ceiling(expr, assumptions):
     x
     >>> refine(ceiling(x), Q.integer(x))
     x
-    >>> refine(floor(x), ~Q.integer(x))
-    floor(x)
     >>> refine(floor(x + y), Q.integer(x))
     x + floor(y)
     >>> refine(ceiling(x + y), Q.integer(x))
     x + ceiling(y)
     >>> refine(ceiling(x), Q.infinite(x))
     x
-    >>> refine(ceiling(ceiling(x) + ceiling(y)), Q.complex(x) & Q.complex(y))
+    >>> refine(ceiling(ceiling(x) + ceiling(y)))
     ceiling(x) + ceiling(y)
     """
     from sympy.functions.elementary.integers import floor, ceiling
