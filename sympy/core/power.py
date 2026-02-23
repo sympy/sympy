@@ -175,6 +175,11 @@ class Pow(Expr):
                         return S.ComplexInfinity
                     if base.is_finite is False:
                         return S.NaN
+                # Imaginary base with infinite exponent oscillates (e.g.
+                # I**oo cycles through I, -1, -I, 1) so it is undefined.
+                # Note: is_nonzero is real-only so we use `is_zero is False`.
+                if base.is_imaginary and base.is_zero is False:
+                    return S.NaN
             if exp is S.Zero:
                 return S.One
             elif exp is S.One:

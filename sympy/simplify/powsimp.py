@@ -588,6 +588,15 @@ def powdenest(eq, force=False, polar=False):
     from sympy.simplify.simplify import posify
 
     if force:
+        import warnings
+        warnings.warn(
+            "powdenest(force=True) treats all symbols as positive. "
+            "This can produce mathematically incorrect results for negative "
+            "values (e.g., sqrt(a**2) -> a instead of Abs(a)). "
+            "Use with caution.",
+            UserWarning,
+            stacklevel=2,
+        )
         def _denest(b, e):
             if not isinstance(b, (Pow, exp)):
                 return b.is_positive, Pow(b, e, evaluate=False)

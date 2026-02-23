@@ -904,6 +904,17 @@ def eval_expr(code, local_dict: DICT, global_dict: DICT):
 
     Generally, ``parse_expr`` should be used.
     """
+    # Defense-in-depth: restrict builtins AND remove dangerous names
+    # that may have been added to global_dict (e.g. by parse_expr).
+    _DANGEROUS_NAMES = frozenset({
+        '__import__', 'exec', 'eval', 'compile', 'open',
+        'getattr', 'setattr', 'delattr', 'globals', 'locals',
+        'vars', 'breakpoint', 'exit', 'quit', 'input',
+    })
+    global_dict = dict(global_dict)
+    global_dict['__builtins__'] = {}
+    for _name in _DANGEROUS_NAMES:
+        global_dict.pop(_name, None)
     expr = eval(
         code, global_dict, local_dict)  # take local objects in preference
     return expr
@@ -1053,10 +1064,18 @@ def parse_expr(s: str, local_dict: DICT | None = None,
         global_dict = {}
         exec('from sympy import *', global_dict)
 
+        # Block dangerous builtins that enable code injection.
+        _DANGEROUS_BUILTINS = frozenset({
+            '__import__', 'exec', 'eval', 'compile', 'open',
+            'getattr', 'setattr', 'delattr', 'globals', 'locals',
+            'vars', 'breakpoint', 'exit', 'quit', 'input',
+            'memoryview', 'help',
+        })
         builtins_dict = vars(builtins)
         for name, obj in builtins_dict.items():
             if isinstance(obj, types.BuiltinFunctionType):
-                global_dict[name] = obj
+                if name not in _DANGEROUS_BUILTINS:
+                    global_dict[name] = obj
         global_dict['max'] = Max
         global_dict['min'] = Min
 

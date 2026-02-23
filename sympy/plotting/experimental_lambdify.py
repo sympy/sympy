@@ -265,8 +265,11 @@ class Lambdifier:
             print(newexpr)
         eval_str = 'lambda %s : ( %s )' % (argstr, newexpr)
         self.eval_str = eval_str
-        exec("MYNEWLAMBDA = %s" % eval_str, namespace)
-        self.lambda_func = namespace['MYNEWLAMBDA']
+        # Restrict builtins to prevent code injection via crafted expressions.
+        safe_namespace = dict(namespace)
+        safe_namespace['__builtins__'] = {}
+        exec("MYNEWLAMBDA = %s" % eval_str, safe_namespace)
+        self.lambda_func = safe_namespace['MYNEWLAMBDA']
 
     def __call__(self, *args, **kwargs):
         return self.lambda_func(*args, **kwargs)

@@ -58,6 +58,11 @@ class Str(Atom):
         return (self.name,)
 
 
+# Registry to track created Symbol names and their assumptions.
+# Used to warn when same-name Symbols with different assumptions are created.
+_symbol_registry: dict[str, tuple] = {}
+
+
 def _filter_assumptions(kwargs: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
     """Split the given dict into assumptions and non-assumptions.
     Keys are taken as assumptions if they correspond to an
@@ -379,11 +384,29 @@ class Symbol(AtomicExpr, Boolean): # type: ignore
         if not isinstance(name, str):
             raise TypeError("name should be a string, not %s" % repr(type(name)))
 
+        # Warn if a Symbol with the same name but different assumptions
+        # already exists. This catches the confusing case where
+        # Symbol('a', positive=True) + Symbol('a', negative=True)
+        # prints as "a + a" but is NOT 2*a.
+        assumptions_kb, assumptions_orig, assumptions0 = Symbol._canonical_assumptions(**assumptions)
+        _key = (name, tuple(sorted(assumptions0.items())))
+        if name in _symbol_registry:
+            existing = _symbol_registry[name]
+            if existing != _key[1]:
+                import warnings
+                warnings.warn(
+                    f"Creating Symbol '{name}' with assumptions "
+                    f"{dict(assumptions_orig)} but a Symbol with the same name "
+                    f"and different assumptions already exists. These are "
+                    f"distinct objects that print identically, which can cause "
+                    f"subtle bugs. Consider using Dummy('{name}') instead.",
+                    UserWarning,
+                    stacklevel=4,
+                )
+        _symbol_registry[name] = _key[1]
 
         obj = Expr.__new__(cls)
         obj.name = name
-
-        assumptions_kb, assumptions_orig, assumptions0 = Symbol._canonical_assumptions(**assumptions)
 
         obj._assumptions = assumptions_kb
         obj._assumptions_orig = assumptions_orig
