@@ -64,6 +64,9 @@ class JointPSpace(ProductPSpace):
 
     @property
     def component_count(self):
+        dim = getattr(self.distribution, 'dimension', None)
+        if dim is not None:
+            return S(dim)
         _set = self.distribution.set
         if isinstance(_set, ProductSet):
             return S(len(_set.args))
