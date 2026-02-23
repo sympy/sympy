@@ -573,7 +573,7 @@ def MultivariateBeta(syms, *alpha):
     >>> density(B)(x, y)
     x**(a1 - 1)*y**(a2 - 1)*gamma(a1 + a2)/(gamma(a1)*gamma(a2))
     >>> marginal_distribution(C, C[0])(x)
-    x**(a1 - 1)*gamma(a1 + a2)/(a2*gamma(a1)*gamma(a2))
+    x**(a1 - 1)*(1 - x)**(a2 - 1)*gamma(a1 + a2)/(gamma(a1)*gamma(a2))
 
     References
     ==========
