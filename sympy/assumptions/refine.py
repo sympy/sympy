@@ -511,14 +511,14 @@ def refine_floor_ceiling(expr, assumptions):
         return arg
 
     if isinstance(arg, Add):
-        integer_terms = []
-        noninteger_terms = []
+        gaussian_integer_terms = []
+        nongausian_intergers_terms = []
         for term in arg.args:
             if ask(Q.integer(term), assumptions) or isinstance(term, (floor, ceiling)):
-                integer_terms.append(term)
+                gaussian_integer_terms.append(term)
             else:
-                noninteger_terms.append(term)
-        return Add(*integer_terms) + expr.func(Add(*noninteger_terms))
+                nongausian_intergers_terms.append(term)
+        return Add(*gaussian_integer_terms) + expr.func(Add(*nongausian_intergers_terms))
     return expr
 
 
