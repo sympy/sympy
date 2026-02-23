@@ -26,8 +26,13 @@ def test_Abs():
     assert refine(Abs(y - x)) == Abs(y - x)
     assert refine(Abs(y - x), Q.positive(y - x)) == -x + y
     assert refine(Abs(y - x), Q.negative(y - x)) == x - y
+
     assert refine(Abs(z - y + x), Q.positive(z - y + x)) == x - y + z
     assert refine(Abs(z - y + x), Q.negative(z - y + x)) == -x + y - z
+
+    assert refine(Abs(z - y + x), Q.positive(z) & Q.negative(y) & Q.positive(x)) == z - y + x
+    assert refine(Abs(z - y - x), Q.negative(z) & Q.positive(y) & Q.positive(x)) == - z + y + x
+    assert refine(Abs(z - y + x), Q.positive(z) & Q.positive(y) & Q.positive(x)) == Abs(z - y + x)
 
     assert refine(Abs(x**2)) != x**2
     assert refine(Abs(x**2), Q.real(x)) == x**2
