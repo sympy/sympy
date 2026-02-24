@@ -208,8 +208,10 @@ def _(expr, assumptions):
         for t in arguments:
             results.append(ask(Q.nonzero(exp(t)), assumptions))
         return fuzzy_and(results)
-    else:
+    if ask(Q.negative_infinite(expr.exp), assumptions) is False:
         return ask(Q.real(expr), assumptions)
+    else:
+        return None
 
 
 # ZeroPredicate
