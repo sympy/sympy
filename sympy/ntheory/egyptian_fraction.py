@@ -111,6 +111,9 @@ def egyptian_fraction(r: Rational | Tuple | tuple[int, int], algorithm: str ="Gr
             r = Rational(*r)
         else:
             raise ValueError("Value must be a Rational or tuple of ints")
+
+    assert isinstance(r, Rational)
+
     if r <= 0:
         raise ValueError("Value must be positive")
 
