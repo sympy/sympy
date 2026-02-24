@@ -202,9 +202,14 @@ def _(expr, assumptions):
 def _(expr, assumptions):
     if ask(Q.negative_infinite(expr.exp), assumptions):
         return False
-    return fuzzy_and([
-        ask(Q.real(expr), assumptions)
-    ])
+    if isinstance(expr.exp, Add):
+        arguments = expr.exp.args
+        results = []
+        for t in arguments:
+            results.append(ask(Q.nonzero(exp(t)), assumptions))
+        return fuzzy_and(results)
+    else:
+        return ask(Q.real(expr), assumptions)
 
 
 # ZeroPredicate
