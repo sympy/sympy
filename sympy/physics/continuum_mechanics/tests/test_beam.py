@@ -917,6 +917,7 @@ def test_apply_sliding_hinge():
                              + (l1**3*l2*q/24 + l1**3*l3*q/24)*SingularityFunction(x, l1 + l2, 0))/(E*I)
 
 def test_max_shear_force():
+    from sympy import FiniteSet, Union
     E = Symbol('E')
     I = Symbol('I')
 
@@ -939,9 +940,31 @@ def test_max_shear_force():
     b.apply_load(P, 0, 0, end=l)
     b.solve_for_reaction_loads(R1, R2)
     max_shear = b.max_shear_force()
-    assert max_shear[0] == 0
+    assert max_shear[0] == FiniteSet(*{0, l})
     assert simplify(max_shear[1] - (l*Abs(P)/2)) == 0
 
+    E = Symbol('E')
+    I = Symbol('I')
+    b = Beam(15, E, I)
+    r0 = b.apply_support(0, type='pin')
+    r10 = b.apply_support(10, type='pin')
+    r15, m15 = b.apply_support(15, type='fixed')
+    b.apply_rotation_hinge(5)
+    b.apply_rotation_hinge(12)
+    b.apply_load(-10, 5, -1)
+    b.apply_load(-5, 10, 0, 15)
+    b.solve_for_reaction_loads(r0, r10, r15, m15)
+    assert b.max_shear_force() == (10, 30)
+
+    l = symbols('l', positive=True)
+    P = Symbol('P')
+    b = Beam(l, E, I)
+    R1, R2 = symbols('R1, R2')
+    b.apply_load(R1, 0, -1)
+    b.apply_load(R2, l, -1)
+    b.apply_load(P, l/2, -1)
+    b.solve_for_reaction_loads(R1, R2)
+    assert b.max_shear_force() == (Union(Interval(0, l/2), Interval(l/2, l)), Abs(P)/2)
 
 def test_max_bmoment():
     E = Symbol('E')
