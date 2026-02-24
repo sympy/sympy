@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, overload
 
 from sympy.core import S, Add, Expr, Basic, Mul, Pow, Rational
+from sympy.core.numbers import I, pi
 from sympy.core.logic import fuzzy_not
 
 from sympy.assumptions import ask, Q  # type: ignore
@@ -493,8 +494,8 @@ def refine_conjugate(expr, assumptions):
     x
     >>> refine(conjugate(x), Q.imaginary(x))
     -x
-    >>> refine(conjugate(log(x)), Q.complex(x) & ~Q.negative(x))
-    conjugate(log(x))
+    >>> refine(conjugate(log(x)), Q.complex(x) & ~Q.nonpositive(x))
+    log(conjugate(x))
     >>> n = Symbol('n')
     >>> refine(conjugate(x**n), Q.real(x) & Q.integer(n))
     x**n
@@ -503,27 +504,9 @@ def refine_conjugate(expr, assumptions):
     >>> refine(conjugate((x**S.Half)), Q.complex(x) & ~Q.negative(x))
     sqrt(conjugate(x))
     """
-    from sympy.functions.elementary.exponential import log
     from sympy.functions.elementary.complexes import conjugate
-    from sympy.core.numbers import I, pi
-
+    from sympy.functions.elementary.exponential import log
     arg = expr.args[0]
-
-    # Handle the Pow cases
-    if isinstance(arg, Pow) and ask(Q.real(arg.args[1]), assumptions):
-        base = arg.args[0]
-        exp = arg.args[1]
-        if ask(Q.integer(exp), assumptions):
-            return conjugate(base) ** exp
-        if ask(~Q.negative(arg.args[0]), assumptions) and ask(Q.complex(arg.args[0]), assumptions):
-            return conjugate(arg.args[0]) ** arg.args[1]
-        return expr
-
-    if ask(Q.real(arg), assumptions):
-        return arg
-
-    elif ask(Q.imaginary(arg), assumptions):
-        return -arg
 
     # The logarithm has a branch cut along the negative real axis.
     # We can safely push the conjugate inside only if the argument is not
@@ -536,6 +519,20 @@ def refine_conjugate(expr, assumptions):
                 return log(conjugate(log_arg))
         elif ask(Q.negative(log_arg), assumptions):
             return log(log_arg) - 2 * I * pi
+
+    if isinstance(arg, Pow) and ask(Q.real(arg.args[1]), assumptions):
+        base, exp = arg.args[0], arg.args[1]
+        if ask(Q.integer(exp), assumptions):
+            return conjugate(base) ** exp
+        if ask(~Q.negative(base), assumptions) and ask(Q.complex(base), assumptions):
+            return conjugate(base) ** exp
+        return expr
+
+    if ask(Q.real(arg), assumptions):
+        return arg
+
+    elif ask(Q.imaginary(arg), assumptions):
+        return -arg
     return expr
 
 
