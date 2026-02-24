@@ -35,6 +35,7 @@ from sympy.testing.pytest import raises, XFAIL, skip, slow
 from sympy.external import import_module
 
 from sympy.abc import x, y
+import numpy as np
 
 def _is_simplex_sample(vec, tol=1e-12):
     return all(float(v) >= -tol for v in vec) and abs(sum(float(v) for v in vec) - 1.0) <= tol
@@ -384,7 +385,12 @@ def test_sample_pymc():
         for X in distribs_pymc:
             samps = sample(X, size=size, library='pymc')
             for sam in samps:
-                assert tuple(sam.flatten()) in X.pspace.distribution.set
+                flat = np.asarray(sam).reshape(-1)
+                if X.pspace.distribution.__class__.__name__ == "MultivariateBetaDistribution":
+                    assert np.all(flat >= 0)
+                    assert np.isclose(flat.sum(), 1.0, rtol=0, atol=1e-12)
+                else:
+                    assert tuple(sam.flatten()) in X.pspace.distribution.set
         N_c = NegativeMultinomial('N', 3, 0.1, 0.1, 0.1)
         raises(NotImplementedError, lambda: sample(N_c, library='pymc'))
 
