@@ -319,6 +319,16 @@ class Basic(Printable):
         return super().__reduce_ex__(protocol)
 
     def __hash__(self) -> int:
+        """
+        Return the hash of the SymPy object.
+
+        Examples
+        ========
+        >>> from sympy import Symbol
+        >>> x = Symbol('x')
+        >>> isinstance(hash(x), int)
+        True
+        """
         # hash cannot be cached using cache_it because infinite recurrence
         # occurs as hash is needed for setting cache dictionary keys
         h = self._mhash
