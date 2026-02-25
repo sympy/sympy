@@ -2289,14 +2289,14 @@ class PolyElement(
 
         for multinomial, multinomial_coeff in multinomials:
             product_monom = zero_monom
-            product_coeff = multinomial_coeff
+            product_coeff = self.ring.domain_new(multinomial_coeff)
             for exp, (monom, coeff) in zip(multinomial, terms):
                 if exp:
                     product_monom = monomial_mulpow(product_monom, monom, exp)
-                    product_coeff *= cast(int, coeff**exp)
+                    product_coeff *= coeff**exp
 
             monom = tuple(product_monom)
-            coeff = cast(Er, product_coeff)
+            coeff = product_coeff
 
             coeff = poly.get(monom, zero) + coeff
 
