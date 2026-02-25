@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.testing.pytest import raises
 from sympy.matrices.exceptions import NonSquareMatrixError, NonInvertibleMatrixError
 

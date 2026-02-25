@@ -1,3 +1,4 @@
+from __future__ import annotations
 import random
 from sympy.core.random import random as rand, seed, shuffle, _assumptions_shuffle
 from sympy.core.symbol import Symbol, symbols

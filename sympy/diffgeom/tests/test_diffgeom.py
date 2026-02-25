@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core import Lambda, Symbol, symbols
 from sympy.diffgeom.rn import R2, R2_p, R2_r, R3_r, R3_c, R3_s, R2_origin
 from sympy.diffgeom import (Manifold, Patch, CoordSystem, Commutator, Differential, TensorProduct,

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core import Basic
 from sympy.functions import adjoint, conjugate
 from sympy.matrices.expressions.matexpr import MatrixExpr

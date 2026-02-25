@@ -20,6 +20,7 @@ match the existing API while thinly wrapping pytest.
 These two key functions are `test` and `doctest`.
 
 """
+from __future__ import annotations
 
 import functools
 import importlib.util

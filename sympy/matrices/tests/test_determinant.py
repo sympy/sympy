@@ -1,3 +1,4 @@
+from __future__ import annotations
 import random
 import pytest
 from sympy.core.numbers import I

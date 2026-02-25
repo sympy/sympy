@@ -8,6 +8,7 @@ TODO:
 * Doctests and documentation of special methods for InnerProduct, Commutator,
   AntiCommutator, represent, apply_operators.
 """
+from __future__ import annotations
 from typing import Optional
 
 from sympy.core.add import Add

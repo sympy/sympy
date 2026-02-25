@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.ntheory.partitions_ import npartitions, _partition_rec, _partition
 
 

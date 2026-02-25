@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.concrete.guess import (
             find_simple_recurrence_vector,
             find_simple_recurrence,

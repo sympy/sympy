@@ -1,3 +1,4 @@
+from __future__ import annotations
 import typing
 
 import sympy
@@ -9,17 +10,19 @@ from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import exp, log, Pow
 from sympy.functions.elementary.hyperbolic import sinh, cosh, tanh
 from sympy.functions.elementary.miscellaneous import Min, Max
-from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import sin, cos, tan, asin, acos, atan, atan2
 from sympy.logic.boolalg import And, Or, Xor, Implies, Boolean
 from sympy.logic.boolalg import BooleanTrue, BooleanFalse, BooleanFunction, Not, ITE
 from sympy.printing.printer import Printer
-from sympy.sets import Interval
 from sympy.external.mpmath import prec_to_dps, to_str as mlib_to_str
-from sympy.assumptions.assume import AppliedPredicate
 from sympy.assumptions.relation.binrel import AppliedBinaryRelation
 from sympy.assumptions.ask import Q
 from sympy.assumptions.relation.equality import StrictGreaterThanPredicate, StrictLessThanPredicate, GreaterThanPredicate, LessThanPredicate, EqualityPredicate
+
+if typing.TYPE_CHECKING:
+    from sympy.functions.elementary.piecewise import Piecewise
+    from sympy.sets import Interval
+    from sympy.assumptions.assume import AppliedPredicate
 
 
 class SMTLibPrinter(Printer):

@@ -1,4 +1,5 @@
 """Tests for sho1d.py"""
+from __future__ import annotations
 
 from sympy.concrete import Sum
 from sympy.core import oo

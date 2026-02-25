@@ -1,4 +1,5 @@
 """Finitely Presented Groups and its algorithms. """
+from __future__ import annotations
 
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols

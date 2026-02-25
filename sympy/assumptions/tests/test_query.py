@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.abc import t, w, x, y, z, n, k, m, p, i
 from sympy.assumptions import (ask, AssumptionsContext, Q)
 from sympy.assumptions.assume import assuming, global_assumptions, Predicate

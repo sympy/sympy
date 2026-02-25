@@ -6,6 +6,7 @@
 # More functions could be added here if needed but these are the ones that were
 # used in the sympy codebase when this module was added.
 #
+from __future__ import annotations
 from functools import update_wrapper as _update_wrapper
 
 

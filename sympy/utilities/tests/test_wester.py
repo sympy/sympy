@@ -5,6 +5,7 @@ http://www.math.unm.edu/~wester/cas/book/Wester.pdf
 See also http://math.unm.edu/~wester/cas_review.html for detailed output of
 each tested system.
 """
+from __future__ import annotations
 
 from sympy.assumptions.ask import Q, ask
 from sympy.assumptions.refine import refine

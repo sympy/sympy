@@ -1,5 +1,5 @@
+from __future__ import annotations
 from sympy import KroneckerProduct, Add
-from sympy.core.basic import Basic
 from sympy.core.function import Lambda
 from sympy.core.mul import Mul
 from sympy.core.numbers import Integer
@@ -16,6 +16,10 @@ from sympy.matrices.expressions.matexpr import MatrixExpr
 from sympy.tensor.array.expressions.array_expressions import \
     ArrayElementwiseApplyFunc, _array_tensor_product, _array_contraction, \
     _array_diagonal, _array_add, _permute_dims, Reshape, get_shape, _ArrayExpr, _CodegenArrayAbstract
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from sympy.core.basic import Basic
 
 
 def _array_elementwise_apply_func(function, element):

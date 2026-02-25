@@ -1,4 +1,5 @@
 """Implementation of :class:`CharacteristicZero` class. """
+from __future__ import annotations
 
 
 from sympy.polys.domains.domain import Domain

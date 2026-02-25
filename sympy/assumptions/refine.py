@@ -479,6 +479,47 @@ def refine_sin_cos(expr, assumptions):
     else:
         return ((-1)**((k + 1) / 2)) * sin(rem)
 
+
+def refine_floor_ceiling(expr, assumptions):
+    """
+    Handler for the floor and ceiling functions
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol, refine, Q, floor, ceiling
+    >>> x = Symbol('x')
+    >>> y = Symbol('y')
+    >>> refine(floor(x), Q.integer(x))
+    x
+    >>> refine(ceiling(x), Q.integer(x))
+    x
+    >>> refine(floor(x + y), Q.integer(x))
+    x + floor(y)
+    >>> refine(ceiling(x + y), Q.integer(x))
+    x + ceiling(y)
+    >>> refine(ceiling(x), Q.infinite(x))
+    x
+    >>> refine(ceiling(ceiling(x) + ceiling(y)))
+    ceiling(x) + ceiling(y)
+    """
+    from sympy.functions.elementary.integers import floor, ceiling
+    arg = expr.args[0]
+    if ask(Q.integer(arg), assumptions) or ask(Q.infinite(arg), assumptions):
+        return arg
+
+    if isinstance(arg, Add):
+        gaussian_integer_terms = []
+        nongausian_intergers_terms = []
+        for term in arg.args:
+            if ask(Q.integer(term), assumptions) or isinstance(term, (floor, ceiling)):
+                gaussian_integer_terms.append(term)
+            else:
+                nongausian_intergers_terms.append(term)
+        return Add(*gaussian_integer_terms) + expr.func(Add(*nongausian_intergers_terms))
+    return expr
+
+
 handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'Abs': refine_abs,
     'Pow': refine_Pow,
@@ -490,4 +531,6 @@ handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'MatrixElement': refine_matrixelement,
     'cos': refine_sin_cos,
     'sin': refine_sin_cos,
+    'floor': refine_floor_ceiling,
+    'ceiling' : refine_floor_ceiling,
 }

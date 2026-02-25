@@ -1,3 +1,4 @@
+from __future__ import annotations
 from .abstract_nodes import List as AbstractList
 from .ast import Token
 

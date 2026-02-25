@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.symbol import symbols
 from sympy.sets.sets import FiniteSet
 from sympy.combinatorics.polyhedron import (Polyhedron,

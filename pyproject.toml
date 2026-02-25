@@ -42,6 +42,7 @@ exclude_lines = [
 # Enable Pyflakes `E` and `F` codes by default.
 lint.select = [
     "B015",  # Useless comparison: a == b rather than a = b.
+    "I002",  # `import` statement not at top of file
     "C4",
     "E",
     "F",
@@ -99,6 +100,9 @@ line-length = 88
 
 # Allow unused variables when underscore-prefixed.
 lint.dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+# Add to all files
+lint.isort.required-imports = ["from __future__ import annotations"]
 
 # Per-file ignores currently specified in the flake8 configuration
 [tool.ruff.lint.per-file-ignores]

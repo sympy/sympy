@@ -1,4 +1,5 @@
 """A module which implements predicates and assumption context."""
+from __future__ import annotations
 
 from contextlib import contextmanager
 from sympy.core.symbol import Str

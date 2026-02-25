@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.assumptions.cnf import EncodedCNF
 
 def minisat22_satisfiable(expr, all_models=False, minimal=False):

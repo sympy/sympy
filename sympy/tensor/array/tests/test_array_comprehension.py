@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.tensor.array.array_comprehension import ArrayComprehension, ArrayComprehensionMap
 from sympy.tensor.array import ImmutableDenseNDimArray
 from sympy.abc import i, j, k, l

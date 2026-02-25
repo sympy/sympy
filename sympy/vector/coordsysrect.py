@@ -1,3 +1,4 @@
+from __future__ import annotations
 from collections.abc import Callable
 
 from sympy.core.basic import Basic

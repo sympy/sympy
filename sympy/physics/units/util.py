@@ -1,6 +1,7 @@
 """
 Several methods to simplify expressions involving unit objects.
 """
+from __future__ import annotations
 from functools import reduce
 from collections.abc import Iterable
 from typing import Optional

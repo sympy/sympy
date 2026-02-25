@@ -1,3 +1,4 @@
+from __future__ import annotations
 from itertools import product
 from sympy.core.function import (Subs, count_ops, diff, expand)
 from sympy.core.numbers import (E, I, Rational, pi)

@@ -1,4 +1,5 @@
 ### The base class for all series
+from __future__ import annotations
 from collections.abc import Callable
 from sympy.calculus.util import continuous_domain
 from sympy.concrete import Sum, Product

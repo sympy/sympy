@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.expr import unchanged
 from sympy.core.mul import Mul
 from sympy.core.numbers import (I, Rational as R, pi)

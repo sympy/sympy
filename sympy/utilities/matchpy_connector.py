@@ -2,8 +2,9 @@
 The objects in this module allow the usage of the MatchPy pattern matching
 library on SymPy expressions.
 """
+from __future__ import annotations
 import re
-from typing import List, Callable, NamedTuple, Any, Dict
+from typing import List, Callable, NamedTuple, Any, Dict, TYPE_CHECKING
 
 from sympy.core.sympify import _sympify
 from sympy.external import import_module
@@ -13,7 +14,6 @@ from sympy.functions.elementary.trigonometric import atan, acsc, asin, acot, aco
 from sympy.functions.special.error_functions import fresnelc, fresnels, erfc, erfi, Ei
 from sympy.core.add import Add
 from sympy.core.basic import Basic
-from sympy.core.expr import Expr
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.relational import (Equality, Unequality)
@@ -22,6 +22,9 @@ from sympy.functions.elementary.exponential import exp
 from sympy.integrals.integrals import Integral
 from sympy.printing.repr import srepr
 from sympy.utilities.decorator import doctest_depends_on
+
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
 
 
 matchpy = import_module("matchpy")

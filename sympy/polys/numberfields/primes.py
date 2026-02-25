@@ -1,4 +1,5 @@
 """Prime ideals in number fields. """
+from __future__ import annotations
 
 from sympy.polys.polytools import Poly
 from sympy.polys.domains.finitefield import FF
