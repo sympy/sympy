@@ -131,7 +131,7 @@ def multinomial_coefficients(m: SupportsIndex, n: SupportsIndex) -> dict[tuple[i
 
 
 def multinomial_coefficients_iterator(
-    m: SupportsIndex, n: SupportsIndex, _tuple: Type[tuple[int, ...]] = tuple
+    m: SupportsIndex, n: SupportsIndex, _tuple: Type[tuple] = tuple
 ) -> Iterable[tuple[tuple[int, ...], int]]:
     """multinomial coefficient iterator
 
