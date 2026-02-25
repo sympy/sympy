@@ -4,6 +4,7 @@ from sympy.core.expr import Expr
 from sympy.core.numbers import (I, Rational, nan, pi)
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
+from sympy.functions.combinatorial.factorials import binomial
 from sympy.functions.elementary.complexes import (Abs, arg, im, re, sign)
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -283,3 +284,11 @@ def test_sin_cos():
     assert refine(cos(x + n*pi/2 + k*pi/2 + m*pi/2), \
                   Q.odd(n) & Q.odd(k) & Q.integer(m)) == \
         (-1)**((n + k)/2) * cos(x + m*pi/2)
+
+def test_binomial():
+    n = Symbol('n')
+    k = Symbol('k')
+    assert refine(binomial(n, k), Q.integer(n) & Q.zero(k)) == S.One
+    assert refine(binomial(n, 1), Q.integer(n)) == n
+    assert refine(binomial(n, k), Q.integer(n) & Q.negative(k) & Q.integer(k)) == S.Zero
+    assert refine(binomial(n, k), Q.integer(n) & Q.negative(n - k) & Q.nonnegative(n)) == S.Zero

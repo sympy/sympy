@@ -479,6 +479,20 @@ def refine_sin_cos(expr, assumptions):
     else:
         return ((-1)**((k + 1) / 2)) * sin(rem)
 
+
+def refine_binomial(expr, assumptions):
+    n , k = expr.args
+    if ask(Q.zero(k), assumptions):
+        return S.One
+    if ask(Q.zero(k - 1), assumptions):
+        return n
+    if ask(Q.integer(k), assumptions):
+        if ask(Q.negative(k), assumptions):
+            return S.Zero
+    if ask(Q.integer(n) & Q.nonnegative(n), assumptions) and ask(Q.negative(n - k), assumptions):
+        return S.Zero
+
+
 handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'Abs': refine_abs,
     'Pow': refine_Pow,
@@ -490,4 +504,5 @@ handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'MatrixElement': refine_matrixelement,
     'cos': refine_sin_cos,
     'sin': refine_sin_cos,
+    'binomial': refine_binomial
 }
