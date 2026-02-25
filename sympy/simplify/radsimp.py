@@ -15,6 +15,8 @@ from sympy.functions.elementary.complexes import Abs
 from sympy.polys import gcd
 from sympy.simplify.sqrtdenest import sqrtdenest
 from sympy.utilities.iterables import iterable, sift
+from sympy.core.expr import Expr
+from typing import Tuple
 
 
 
@@ -1047,7 +1049,7 @@ def rad_rationalize(num, den):
     return rad_rationalize(num, den)
 
 
-def fraction(expr, exact=False):
+def fraction(expr: Expr, exact: bool = False) -> Tuple[Expr, Expr]:
     """Returns a pair with expression's numerator and denominator.
        If the given expression is not a fraction then this function
        will return the tuple (expr, 1).
@@ -1138,11 +1140,11 @@ def fraction(expr, exact=False):
     return Mul(*numer, evaluate=not exact), Mul(*denom, evaluate=not exact)
 
 
-def numer(expr, exact=False):  # default matches fraction's default
+def numer(expr: Expr, exact: bool = False) -> Expr:  # default matches fraction's default
     return fraction(expr, exact=exact)[0]
 
 
-def denom(expr, exact=False):  # default matches fraction's default
+def denom(expr: Expr, exact: bool = False) -> Expr:  # default matches fraction's default
     return fraction(expr, exact=exact)[1]
 
 
