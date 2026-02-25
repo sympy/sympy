@@ -65,6 +65,16 @@ should be :math:`L^3 M^{-1} T^{-2}`.
 Note that one should first solve the equation, and then substitute with the
 dimensions.
 
+Basic unit conversion
+=====================
+
+A simple example showing how to convert between units:
+
+    >>> from sympy.physics.units import kilometer, hour, meter, second
+    >>> from sympy.physics.units import convert_to
+    >>> speed = kilometer/hour
+    >>> convert_to(speed, meter/second)
+    meter/(second)
 
 Equation with quantities
 ========================
