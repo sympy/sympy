@@ -3,37 +3,53 @@ from abc import ABC, abstractmethod
 class _Methods(ABC):
     """Abstract Base Class for all methods."""
 
+    @property
     @abstractmethod
     def q(self):
-        pass
+        """Generalized coordinates of the system."""
+        ...
 
+    @property
     @abstractmethod
     def u(self):
-        pass
+        """Generalized speeds of the system."""
+        ...
 
+    @property
     @abstractmethod
     def bodies(self):
-        pass
+        """Bodies in the system."""
+        ...
 
+    @property
     @abstractmethod
     def loads(self):
-        pass
+        """Loads applied to the system."""
+        ...
 
+    @property
     @abstractmethod
     def mass_matrix(self):
-        pass
+        """The mass matrix of the system."""
+        ...
 
+    @property
     @abstractmethod
     def forcing(self):
-        pass
+        """The forcing vector of the system."""
+        ...
 
+    @property
     @abstractmethod
     def mass_matrix_full(self):
-        pass
+        """The mass matrix of the system, augmented by the kinematic equations."""
+        ...
 
+    @property
     @abstractmethod
     def forcing_full(self):
-        pass
+        """The forcing vector of the system, augmented by the kinematic equations."""
+        ...
 
     def _form_eoms(self):
         raise NotImplementedError("Subclasses must implement this.")
