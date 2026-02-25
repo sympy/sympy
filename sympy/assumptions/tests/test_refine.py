@@ -325,6 +325,11 @@ def test_conjugate():
     assert refine(conjugate(x ** n), ~Q.complex(x)) == conjugate(x ** n)
 
     assert refine(conjugate(x ** S.Half), Q.complex(x) & ~Q.negative(x)) == conjugate(x) ** S.Half
-    assert refine(conjugate(x ** S.Half), Q.real(x) & Q.negative(x)) == conjugate(x** S.Half)
+    assert refine(conjugate(x ** S.Half), Q.real(x) & Q.negative(x)) == -(x ** S.Half)
     assert refine(conjugate(x ** S.Half), Q.real(x)) == conjugate(x ** S.Half)
     assert refine(conjugate(x ** S.Half), Q.nonnegative(x)) == x ** S.Half
+
+    assert refine(conjugate(log(x ** n)), Q.positive(x) & Q.integer(n)) == log(x**n)
+    assert refine(log(conjugate(x ** n)), Q.positive & Q.integer(n)) == log(conjugate(x) ** n)
+    assert refine(conjugate(log(x ** n)), Q.complex(x) & Q.integer(n)) == conjugate(log(x**n))
+    assert refine(conjugate(log(x ** S.Half)), Q.real(x) & Q.negative(x)) == conjugate(log(x ** S.Half))

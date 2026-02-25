@@ -567,7 +567,6 @@ def refine_conjugate(expr, assumptions):
             return conjugate(base) ** exp
         if ask(~Q.negative(base), assumptions) and ask(Q.complex(base), assumptions):
             return conjugate(base) ** exp
-        return expr
 
     if ask(Q.real(arg), assumptions):
         return arg
