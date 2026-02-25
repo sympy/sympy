@@ -131,7 +131,9 @@ def multinomial_coefficients(m: SupportsIndex, n: SupportsIndex) -> dict[tuple[i
     return r
 
 
-def multinomial_coefficients_iterator(m: SupportsIndex, n: SupportsIndex, _tuple: Type[tuple[int, ...]] =tuple) -> Iterable[tuple[tuple[int, ...], int]]:
+def multinomial_coefficients_iterator(
+        m: SupportsIndex, n: SupportsIndex, _tuple: Type[tuple[int, ...]] =tuple
+) -> Iterable[tuple[tuple[int, ...], int]]:
     """multinomial coefficient iterator
 
     This routine has been optimized for `m` large with respect to `n` by taking
