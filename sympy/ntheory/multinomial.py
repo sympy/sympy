@@ -24,7 +24,7 @@ def binomial_coefficients(n: SupportsIndex) -> dict[tuple[int, ...], int]:
     binomial_coefficients_list, multinomial_coefficients
     """
     n = as_int(n)
-    d = {(0, n): 1, (n, 0): 1}
+    d: dict[tuple[int, ...], int] = {(0, n): 1, (n, 0): 1}
     a = 1
     for k in range(1, n//2 + 1):
         a = (a * (n - k + 1))//k
