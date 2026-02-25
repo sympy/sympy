@@ -8,7 +8,7 @@ import sympy.polys
 from math import gcd
 
 
-def egyptian_fraction(r: Rational | Tuple | tuple[int, int], algorithm: str ="Greedy") -> list[Integer]:
+def egyptian_fraction(r: Rational | tuple[int, int], algorithm: str ="Greedy") -> list[Integer]:
     """
     Return the list of denominators of an Egyptian fraction
     expansion [1]_ of the said rational `r`.
