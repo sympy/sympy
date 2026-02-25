@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import SupportsIndex, Iterable, Type
+from typing import SupportsIndex, Iterable
 
 from sympy.utilities.misc import as_int
 
@@ -131,7 +131,7 @@ def multinomial_coefficients(m: SupportsIndex, n: SupportsIndex) -> dict[tuple[i
 
 
 def multinomial_coefficients_iterator(
-    m: SupportsIndex, n: SupportsIndex, _tuple: Type[tuple] = tuple
+    m: SupportsIndex, n: SupportsIndex, _tuple: type[tuple] = tuple
 ) -> Iterable[tuple[tuple[int, ...], int]]:
     """multinomial coefficient iterator
 
