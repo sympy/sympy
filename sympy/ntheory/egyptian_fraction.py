@@ -106,25 +106,25 @@ def egyptian_fraction(r: Rational | tuple[int, int], algorithm: str = "Greedy") 
 
     """
 
-    if not isinstance(r, Rational):
-        if isinstance(r, (Tuple, tuple)) and len(r) == 2:
-            r = Rational(*r)
-        else:
-            raise ValueError("Value must be a Rational or tuple of ints")
+    # r reassigned to rat variable so that mypy knows it has Rational type
+    if isinstance(r, Rational):
+        rat = r
+    elif isinstance(r, (Tuple, tuple)) and len(r) == 2:
+        rat = Rational(*r)
+    else:
+        raise ValueError("Value must be a Rational or tuple of ints")
 
-    assert isinstance(r, Rational)
-
-    if r <= 0:
+    if rat <= 0:
         raise ValueError("Value must be positive")
 
     # common cases that all methods agree on
-    x, y = r.as_numer_denom()
+    x, y = rat.as_numer_denom()
     if y == 1 and x == 2:
         return [Integer(i) for i in [1, 2, 3, 6]]
     if x == y + 1:
         return [S.One, y]
 
-    prefix, rem = egypt_harmonic(r)
+    prefix, rem = egypt_harmonic(rat)
     if rem == 0:
         return prefix
     # work in Python ints
