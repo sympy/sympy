@@ -7,7 +7,7 @@ from sympy.core import Add, Basic, Expr, Mul, Pow, S
 from sympy.core.numbers import (AlgebraicNumber, ComplexInfinity, Exp1, Float,
     GoldenRatio, ImaginaryUnit, Infinity, Integer, NaN, NegativeInfinity,
     Number, NumberSymbol, Pi, pi, Rational, TribonacciConstant, E)
-from sympy.core.logic import fuzzy_bool, fuzzy_not
+from sympy.core.logic import fuzzy_bool, fuzzy_not, fuzzy_and
 from sympy.functions import (Abs, acos, acot, asin, atan, cos, cot, exp, im,
     log, re, sin, tan)
 from sympy.core.numbers import I
@@ -339,15 +339,16 @@ def _(expr, assumptions):
 
     if ask(Q.real(expr.base), assumptions):
         if ask(Q.real(expr.exp), assumptions):
-            if ask(Q.zero(expr.base), assumptions) is not False:
-                if ask(Q.positive(expr.exp), assumptions):
-                    return True
-                return
-            if expr.exp.is_Rational and \
-                    ask(Q.even(expr.exp.q), assumptions):
-                return ask(Q.positive(expr.base), assumptions)
-            elif ask(Q.integer(expr.exp), assumptions):
-                return True
+            if (expr.exp.is_Rational and
+                    ask(Q.even(expr.exp.q), assumptions)):
+                return ask(Q.nonnegative(expr.base), assumptions)
+            base_is_zero = ask(Q.zero(expr.base), assumptions)
+            if base_is_zero or ask(Q.integer(expr.exp), assumptions):
+                # Division by zero : If the base is 0 and the exponent
+                # is negative, ``expr`` evaluates to complex infinity.
+                expr_is_complex_infinity = fuzzy_and([base_is_zero,
+                                ask(Q.negative(expr.exp), assumptions)])
+                return fuzzy_not(expr_is_complex_infinity)
             elif ask(Q.positive(expr.base), assumptions):
                 return True
 

@@ -14,8 +14,12 @@ from sympy.polys.polyerrors import NotReversible
 _require_flint_version = False
 
 if TYPE_CHECKING:
-    from flint import fmpq_poly, fmpq_series, fmpz_poly, fmpz_series, ctx  # type: ignore
-    from flint.utils.flint_exceptions import DomainError  # type: ignore
+    from flint import ctx
+    from flint.utils.flint_exceptions import DomainError
+    from sympy.external.gmpy import FMPQ_POLY as fmpq_poly
+    from sympy.external.gmpy import FMPQ_SERIES as fmpq_series
+    from sympy.external.gmpy import FMPZ_POLY as fmpz_poly
+    from sympy.external.gmpy import FMPZ_SERIES as fmpz_series
 elif GROUND_TYPES == "flint":
     from flint import fmpq_poly, fmpq_series, fmpz_poly, fmpz_series, ctx
     from flint.utils.flint_exceptions import DomainError
@@ -30,7 +34,6 @@ elif GROUND_TYPES == "flint":
         _require_flint_version = True
 else:
     fmpq_poly = fmpq_series = fmpz_poly = fmpz_series = ctx = None
-
 
 ZZSeries = Union[fmpz_series, fmpz_poly]
 QQSeries = Union[fmpq_series, fmpq_poly]

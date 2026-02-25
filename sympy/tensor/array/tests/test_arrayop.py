@@ -176,7 +176,7 @@ def test_array_permutedims():
         raises(ValueError, lambda: po.transpose())
         raises(ValueError, lambda: po.adjoint())
 
-        assert permutedims(po, reversed(range(po.rank()))) == ArrayType(
+        assert permutedims(po, reversed(range(po.ndim))) == ArrayType(
             [[[[[[sa[0], sa[72]], [sa[36], sa[108]]], [[sa[12], sa[84]], [sa[48], sa[120]]], [[sa[24],
                                                                                                sa[96]], [sa[60], sa[132]]]],
                [[[sa[4], sa[76]], [sa[40], sa[112]]], [[sa[16],

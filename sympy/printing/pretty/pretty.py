@@ -1256,17 +1256,17 @@ class PrettyPrinter(Printer):
     def _print_NDimArray(self, expr):
         from sympy.matrices.immutable import ImmutableMatrix
 
-        if expr.rank() == 0:
+        if expr.ndim == 0:
             return self._print(expr[()])
 
-        level_str = [[]] + [[] for i in range(expr.rank())]
+        level_str = [[]] + [[] for i in range(expr.ndim)]
         shape_ranges = [list(range(i)) for i in expr.shape]
         # leave eventual matrix elements unflattened
         mat = lambda x: ImmutableMatrix(x, evaluate=False)
         for outer_i in itertools.product(*shape_ranges):
             level_str[-1].append(expr[outer_i])
             even = True
-            for back_outer_i in range(expr.rank()-1, -1, -1):
+            for back_outer_i in range(expr.ndim-1, -1, -1):
                 if len(level_str[back_outer_i+1]) < expr.shape[back_outer_i]:
                     break
                 if even:
@@ -1281,7 +1281,7 @@ class PrettyPrinter(Printer):
                 level_str[back_outer_i+1] = []
 
         out_expr = level_str[0][0]
-        if expr.rank() % 2 == 1:
+        if expr.ndim % 2 == 1:
             out_expr = mat([out_expr])
 
         return self._print(out_expr)

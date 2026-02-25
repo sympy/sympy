@@ -22,7 +22,7 @@ Array construction can detect the shape of nested lists and tuples:
 [[1, 2], [3, 4], [5, 6]]
 >>> a1.shape
 (3, 2)
->>> a1.rank()
+>>> a1.ndim
 2
 >>> from sympy.abc import x, y, z
 >>> a2 = Array([[[x, y], [z, x*z]], [[1, x*y], [1/x, x/y]]])
@@ -30,7 +30,7 @@ Array construction can detect the shape of nested lists and tuples:
 [[[x, y], [z, x*z]], [[1, x*y], [1/x, x/y]]]
 >>> a2.shape
 (2, 2, 2)
->>> a2.rank()
+>>> a2.ndim
 3
 
 Otherwise one could pass a 1-dim array followed by a shape tuple:
@@ -89,7 +89,7 @@ Products and contractions
 -------------------------
 
 Tensor product between arrays `A_{i_1,\ldots,i_n}` and `B_{j_1,\ldots,j_m}`
-creates the combined array `P = A \otimes B` defined as
+creates the combined array `P = A \boxtimes B` defined as
 
 `P_{i_1,\ldots,i_n,j_1,\ldots,j_m} := A_{i_1,\ldots,i_n}\cdot B_{j_1,\ldots,j_m}.`
 
@@ -122,7 +122,7 @@ Tensor product between a rank-1 array and a matrix creates a rank-3 array:
 >>> p1
 [[[x, 0, 0, 0], [0, x, 0, 0], [0, 0, x, 0], [0, 0, 0, x]], [[y, 0, 0, 0], [0, y, 0, 0], [0, 0, y, 0], [0, 0, 0, y]], [[z, 0, 0, 0], [0, z, 0, 0], [0, 0, z, 0], [0, 0, 0, z]], [[t, 0, 0, 0], [0, t, 0, 0], [0, 0, t, 0], [0, 0, 0, t]]]
 
-Now, to get back `A_0 \otimes \mathbf{1}` one can access `p_{0,m,n}` by slicing:
+Now, to get back `A_0 \boxtimes \mathbf{1}` one can access `p_{0,m,n}` by slicing:
 
 >>> p1[0,:,:]
 [[x, 0, 0, 0], [0, x, 0, 0], [0, 0, x, 0], [0, 0, 0, x]]
