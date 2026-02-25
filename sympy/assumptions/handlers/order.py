@@ -200,7 +200,8 @@ def _(expr, assumptions):
 
 @NonZeroPredicate.register(exp)
 def _(expr, assumptions):
-    if ask(Q.negative_infinite(expr.exp), assumptions):
+    is_neg_infinity = ask(Q.negative_infinite(expr.exp), assumptions)
+    if is_neg_infinity:
         return False
     if isinstance(expr.exp, Add):
         arguments = expr.exp.args
@@ -208,10 +209,8 @@ def _(expr, assumptions):
         for t in arguments:
             results.append(ask(Q.nonzero(exp(t)), assumptions))
         return fuzzy_and(results)
-    if ask(Q.negative_infinite(expr.exp), assumptions) is False:
+    if is_neg_infinity is False:
         return ask(Q.real(expr), assumptions)
-    else:
-        return None
 
 
 # ZeroPredicate
