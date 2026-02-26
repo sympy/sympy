@@ -369,76 +369,235 @@ def _rref(
         pivots: bool = True,
         normalize_last: bool = True,
     ) -> Tmat | tuple[Tmat, tuple[int]]:
-    """Return reduced row-echelon form of matrix and indices
-    of pivot vars.
+    """Return the reduced row-echelon form (RREF) of a matrix, together
+    with the column indices of the pivot columns.
+
+    **What is RREF?**
+
+    A matrix is in *reduced row-echelon form* when all four of the
+    following conditions hold:
+
+    1. All rows consisting entirely of zeros are at the bottom.
+    2. The first non-zero entry in every non-zero row (called the
+       *pivot* or *leading entry*) is 1.
+    3. Each pivot lies strictly to the right of the pivot in the row
+       above it.
+    4. Every entry directly *above and below* each pivot is 0.
+
+    Unlike plain echelon form, the RREF of a matrix is **unique** -- there
+    is exactly one RREF for any given matrix.
 
     Parameters
     ==========
 
-    iszerofunc : Function
-        A function used for detecting whether an element can
-        act as a pivot.  ``lambda x: x.is_zero`` is used by default.
+    iszerofunc : callable, optional
+        A function that accepts a single expression and returns:
 
-    simplify : Function
-        A function used to simplify elements when looking for a pivot.
-        By default SymPy's ``simplify`` is used.
+        * ``True``  -- the entry is zero (may be used as a zero during
+          row operations, but not chosen as a pivot).
+        * ``False`` -- the entry is definitely non-zero (can be a pivot).
+        * ``None``  -- cannot be determined; SymPy will try to simplify
+          further before deciding.
 
-    pivots : True or False
-        If ``True``, a tuple containing the row-reduced matrix and a tuple
-        of pivot columns is returned.  If ``False`` just the row-reduced
-        matrix is returned.
+        The default is ``lambda x: x.is_zero``, which works perfectly
+        for exact symbolic and rational matrices.
 
-    normalize_last : True or False
-        If ``True``, no pivots are normalized to `1` until after all
-        entries above and below each pivot are zeroed.  This means the row
-        reduction algorithm is fraction free until the very last step.
-        If ``False``, the naive row reduction procedure is used where
-        each pivot is normalized to be `1` before row operations are
-        used to zero above and below the pivot.
+        The most common reason to override ``iszerofunc`` is **floating-
+        point rounding**: arithmetic on ``float`` entries can produce tiny
+        residuals like ``2.3e-17`` that are logically zero but not detected
+        as such by the default check.  Supplying a tolerance-based
+        function like ``lambda x: abs(x) < 1e-9`` tells SymPy to treat
+        those small values as zero.
+
+        For purely integer, rational, or symbolic matrices you never need
+        to change this argument.
+
+    simplify : bool or callable, optional
+        Controls whether algebraic simplification is applied to entries
+        during the pivot search.
+
+        * ``False`` (default) -- no extra simplification is performed
+          while searching for a pivot.  SymPy's ``simplify`` is still
+          called internally if ``iszerofunc`` returns ``None`` for a
+          candidate pivot.
+        * ``True`` -- use SymPy's built-in :func:`~.simplify`
+          during every pivot check.
+        * A callable -- use that function (e.g. ``trigsimp``,
+          ``radsimp``) instead of the default ``simplify``.
+
+        You rarely need this for numeric matrices.  It is helpful when
+        your matrix contains symbolic expressions whose zero-ness cannot
+        be decided without transformation (e.g. ``sin(x)**2 + cos(x)**2
+        - 1``).
+
+    pivots : bool, optional
+        Determines what the function returns.
+
+        * ``True`` (default) -- return a 2-tuple
+          ``(rref_matrix, pivot_columns)``.
+        * ``False`` -- return only ``rref_matrix``, with no pivot
+          information.
+
+        Pass ``pivots=False`` when you only need the reduced matrix and
+        the column indices are not important to you.
+
+    normalize_last : bool, optional
+        Controls the internal order in which row operations are applied.
+
+        * ``True`` (default) -- use a **fraction-free** algorithm that
+          postpones dividing each row by its pivot until *after* all
+          entries above and below that pivot have been zeroed.  This
+          avoids large intermediate fractions and is significantly faster
+          for matrices with symbols or large integers.
+        * ``False`` -- use the classic textbook algorithm where each
+          pivot is normalized to 1 *before* the surrounding rows are
+          cleared.  The final matrix is **identical**; only the
+          intermediate steps differ.
+
+        .. note::
+
+           When the matrix contains only integers or rationals, SymPy
+           routes the computation through a specialised ``DomainMatrix``
+           backend and ``normalize_last`` has no effect.
+
+    Returns
+    =======
+
+    (rref_matrix, pivot_columns) : tuple
+        Returned when ``pivots=True`` (the default).
+
+        - ``rref_matrix`` -- a new ``Matrix`` that is row-equivalent to
+          the input and is in reduced row-echelon form.
+        - ``pivot_columns`` -- a tuple of **0-based** column indices
+          where the leading 1 of each non-zero row appears.  The length
+          of this tuple equals the *rank* of the original matrix.
+
+    rref_matrix : Matrix
+        Returned when ``pivots=False``.  Only the reduced matrix.
 
     Examples
     ========
 
+    **Basic usage**
+
     >>> from sympy import Matrix
+    >>> M = Matrix([[1, 2, 3],
+    ...             [4, 5, 6],
+    ...             [7, 8, 9]])
+    >>> rref_M, pivots = M.rref()
+    >>> rref_M
+    Matrix([
+    [1, 0, -1],
+    [0, 1,  2],
+    [0, 0,  0]])
+    >>> pivots
+    (0, 1)
+
+    Two pivot columns mean the rank of ``M`` is 2; column 2 is a free
+    variable column.
+
+    **Getting only the matrix with** ``pivots=False``
+
+    >>> M.rref(pivots=False)
+    Matrix([
+    [1, 0, -1],
+    [0, 1,  2],
+    [0, 0,  0]])
+
+    **Symbolic matrix**
+
     >>> from sympy.abc import x
-    >>> m = Matrix([[1, 2], [x, 1 - 1/x]])
-    >>> m.rref()
+    >>> S = Matrix([[1, 2],
+    ...             [x, 1 - 1/x]])
+    >>> S.rref()
     (Matrix([
     [1, 0],
     [0, 1]]), (0, 1))
-    >>> rref_matrix, rref_pivots = m.rref()
-    >>> rref_matrix
-    Matrix([
-    [1, 0],
-    [0, 1]])
-    >>> rref_pivots
-    (0, 1)
 
-    ``iszerofunc`` can correct rounding errors in matrices with float
-    values. In the following example, calling ``rref()`` leads to
-    floating point errors, incorrectly row reducing the matrix.
-    ``iszerofunc= lambda x: abs(x) < 1e-9`` sets sufficiently small numbers
-    to zero, avoiding this error.
+    **Solving a linear system with an augmented matrix**
 
-    >>> m = Matrix([[0.9, -0.1, -0.2, 0], [-0.8, 0.9, -0.4, 0], [-0.1, -0.8, 0.6, 0]])
+    Build ``[A | b]`` and reduce it to read off the solution directly::
+
+        x = 2, y = 3, z = -1
+
+    >>> A = Matrix([[2,  1, -1],
+    ...             [-3, -1,  2],
+    ...             [-2,  1,  2]])
+    >>> b = Matrix([8, -11, -3])
+    >>> A.row_join(b).rref()
+    (Matrix([
+    [1, 0, 0,  2],
+    [0, 1, 0,  3],
+    [0, 0, 1, -1]]), (0, 1, 2))
+
+    **Using** ``iszerofunc`` **to handle floating-point rounding errors**
+
+    Matrices built from ``float`` values can have tiny rounding residuals
+    that cause a rank-deficient matrix to look full-rank.  The first call
+    below incorrectly returns rank 3; the second, with a tolerance, gives
+    the correct rank-2 result:
+
+    >>> m = Matrix([[0.9, -0.1, -0.2, 0],
+    ...             [-0.8, 0.9, -0.4, 0],
+    ...             [-0.1, -0.8, 0.6, 0]])
     >>> m.rref()
     (Matrix([
     [1, 0, 0, 0],
     [0, 1, 0, 0],
     [0, 0, 1, 0]]), (0, 1, 2))
-    >>> m.rref(iszerofunc=lambda x:abs(x)<1e-9)
+    >>> m.rref(iszerofunc=lambda x: abs(x) < 1e-9)
     (Matrix([
     [1, 0, -0.301369863013699, 0],
     [0, 1, -0.712328767123288, 0],
-    [0, 0,         0,          0]]), (0, 1))
+    [0, 0,                  0, 0]]), (0, 1))
+
+    **Using a custom** ``simplify`` **function**
+
+    When entries involve trigonometric expressions, pass ``trigsimp`` so
+    that identities like ``sin(x)**2 + cos(x)**2`` are recognised as 1:
+
+    >>> from sympy import trigsimp, sin, cos, pi
+    >>> T = Matrix([[sin(pi/4), cos(pi/4)],
+    ...             [cos(pi/4), -sin(pi/4)]])
+    >>> T.rref(simplify=trigsimp)
+    (Matrix([
+    [1, 0],
+    [0, 1]]), (0, 1))
+
+    **Effect of** ``normalize_last``
+
+    Both settings produce the same final matrix; ``normalize_last=True``
+    (the default) is typically faster for symbolic entries:
+
+    >>> from sympy import symbols
+    >>> a, b = symbols('a b')
+    >>> N = Matrix([[a, 1],
+    ...             [1, b]])
+    >>> N.rref(normalize_last=True)   # default, fraction-free internally
+    (Matrix([
+    [1, 0],
+    [0, 1]]), (0, 1))
+    >>> N.rref(normalize_last=False)  # classic textbook order
+    (Matrix([
+    [1, 0],
+    [0, 1]]), (0, 1))
 
     Notes
     =====
 
-    The default value of ``normalize_last=True`` can provide significant
-    speedup to row reduction, especially on matrices with symbols.  However,
-    if you depend on the form row reduction algorithm leaves entries
-    of the matrix, set ``normalize_last=False``
+    The default ``normalize_last=True`` provides a significant speedup
+    for matrices with symbolic entries because it keeps entries as
+    integers (or polynomials) throughout the elimination phase and only
+    divides at the very end.  If you need to observe exactly how
+    intermediate rows look during reduction, set ``normalize_last=False``
+    to follow the textbook algorithm step-by-step.
+
+    See Also
+    ========
+
+    sympy.matrices.matrixbase.MatrixBase.echelon_form
+    sympy.matrices.matrixbase.MatrixBase.rank
+    sympy.matrices.matrixbase.MatrixBase.nullspace
     """
     # Try to use DomainMatrix for ZZ or QQ
     dM = _to_DM_ZZ_QQ(M)
