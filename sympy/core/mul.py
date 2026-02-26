@@ -1426,6 +1426,7 @@ class Mul(Expr, AssocOp):
         numerators = []
         denominators = []
         unknown = False
+        noninteger_count = 0
         for a in self.args:
             hit = False
             if a.is_integer:
@@ -1454,10 +1455,19 @@ class Mul(Expr, AssocOp):
                     # x**2, 2**x, or x**y with x and y int-unknown -> unknown
                     return
             else:
-                return
+                if a.is_integer is False:
+                    noninteger_count += 1
+                else:
+                    return
 
-        if not denominators and not unknown:
+        if not denominators and not unknown and noninteger_count == 0:
             return True
+
+        # If we have exactly one noninteger factor (that is not a Rational or Pow)
+        # and no numerators (meaning all integer factors had absolute value 1),
+        # then the product is ±(noninteger) which is noninteger.
+        if noninteger_count == 1 and not denominators and not unknown and not numerators:
+            return False
 
         allodd = lambda x: all(i.is_odd for i in x)
         alleven = lambda x: all(i.is_even for i in x)

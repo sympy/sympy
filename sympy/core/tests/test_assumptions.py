@@ -1105,7 +1105,6 @@ def test_issue_7899():
     assert ((x - I)*(x - 1)).is_real is None
 
 
-@XFAIL
 def test_issue_7993():
     x = Dummy(integer=True)
     y = Dummy(noninteger=True)
