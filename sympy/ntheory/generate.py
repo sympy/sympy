@@ -387,6 +387,10 @@ class Sieve:
 # Generate a global object for repeated use in trial division etc
 sieve = Sieve()
 
+# Caches used by the Meissel-Lehmer type prime counting implementation.
+_primepi_lehmer_cache: dict[int, int] = {}
+_phi_lehmer_cache: dict[tuple[int, int], int] = {}
+
 def prime(nth: SupportsIndex) -> int:
     r"""
     Return the nth prime number, where primes are indexed starting from 1:
@@ -559,52 +563,36 @@ def _primepi(n: int) -> int:
     Explanation
     ===========
 
-    In sieve method, we remove all multiples of prime p
-    except p itself.
+    The implementation uses a combinatorial prime counting method of
+    Meissel-Lehmer type.
 
-    Let phi(i,j) be the number of integers 2 <= k <= i
-    which remain after sieving from primes less than
-    or equal to j.
-    Clearly, pi(n) = phi(n, sqrt(n))
+    Let :math:`p_1 = 2, p_2 = 3, \dots` be the sequence of prime numbers
+    and let :math:`\phi(x, a)` denote the number of positive integers
+    :math:`\le x` that have no prime factor :math:`\le p_a`. Then the
+    following identity holds for suitable choices of :math:`a`:
 
-    If j is not a prime,
-    phi(i,j) = phi(i, j - 1)
+    .. math::
 
-    if j is a prime,
-    We remove all numbers(except j) whose
-    smallest prime factor is j.
+        \pi(x) = \phi(x, a) + a - 1 - \sum_{i=1}^{a} \pi\!\left(\frac{x}{p_i}\right).
 
-    Let $x= j \times a$ be such a number, where $2 \le a \le i / j$
-    Now, after sieving from primes $\le j - 1$,
-    a must remain
-    (because x, and hence a has no prime factor $\le j - 1$)
-    Clearly, there are phi(i / j, j - 1) such a
-    which remain on sieving from primes $\le j - 1$
+    The helper function :math:`\phi(x, a)` satisfies the recursion
 
-    Now, if a is a prime less than equal to j - 1,
-    $x= j \times a$ has smallest prime factor = a, and
-    has already been removed(by sieving from a).
-    So, we do not need to remove it again.
-    (Note: there will be pi(j - 1) such x)
+    .. math::
 
-    Thus, number of x, that will be removed are:
-    phi(i / j, j - 1) - phi(j - 1, j - 1)
-    (Note that pi(j - 1) = phi(j - 1, j - 1))
+        \phi(x, 0) = x, \qquad
+        \phi(x, a) = \phi(x, a-1) - \phi\!\left(\frac{x}{p_a}, a-1\right)
 
-    $\Rightarrow$ phi(i,j) = phi(i, j - 1) - phi(i / j, j - 1) + phi(j - 1, j - 1)
+    and is evaluated with memoisation.  The main routine follows the
+    improvements due to Lehmer and later authors by choosing
+    :math:`a = \pi(x^{1/4})` and splitting the sum so that only
+    values of :math:`\pi(y)` with :math:`y \le \sqrt{x}` appear
+    recursively.  Primes up to :math:`\sqrt{x}` are generated using the
+    global :class:`sympy.ntheory.generate.Sieve` instance.
 
-    So,following recursion is used and implemented as dp:
-
-    phi(a, b) = phi(a, b - 1), if b is not a prime
-    phi(a, b) = phi(a, b-1)-phi(a / b, b-1) + phi(b-1, b-1), if b is prime
-
-    Clearly a is always of the form floor(n / k),
-    which can take at most $2\sqrt{n}$ values.
-    Two arrays arr1,arr2 are maintained
-    arr1[i] = phi(i, j),
-    arr2[i] = phi(n // i, j)
-
-    Finally the answer is arr2[1]
+    This has running time :math:`O(x^{2/3} / \log^2 x)` for large
+    :math:`x`, and is significantly faster than a straightforward sieve
+    over :math:`[2, x]` for large inputs while still being efficient for
+    the ranges used inside SymPy.
 
     Parameters
     ==========
@@ -612,42 +600,79 @@ def _primepi(n: int) -> int:
     n : int
 
     """
+    # Small arguments and values inside the current sieve range are
+    # handled directly without invoking the full combinatorial algorithm.
     if n < 2:
         return 0
     if n <= sieve._list[-1]:
         return sieve.search(n)[0]
-    lim = int(sqrt(n))
-    arr1 = [(i + 1) >> 1 for i in range(lim + 1)]
-    arr2 = [0] + [(n//i + 1) >> 1 for i in range(1, lim + 1)]
-    skip = [False] * (lim + 1)
-    for i in range(3, lim + 1, 2):
-        # Presently, arr1[k]=phi(k,i - 1),
-        # arr2[k] = phi(n // k,i - 1) # not all k's do this
-        if skip[i]:
-            # skip if i is a composite number
-            continue
-        p = arr1[i - 1]
-        for j in range(i, lim + 1, i):
-            skip[j] = True
-        # update arr2
-        # phi(n/j, i) = phi(n/j, i-1) - phi(n/(i*j), i-1) + phi(i-1, i-1)
-        for j in range(1, min(n // (i * i), lim) + 1, 2):
-            # No need for arr2[j] in j such that skip[j] is True to
-            # compute the final required arr2[1].
-            if skip[j]:
-                continue
-            st = i * j
-            if st <= lim:
-                arr2[j] -= arr2[st] - p
-            else:
-                arr2[j] -= arr1[n // st] - p
-        # update arr1
-        # phi(j, i) = phi(j, i-1) - phi(j/i, i-1) + phi(i-1, i-1)
-        # where the range below i**2 is fixed and
-        # does not need to be calculated.
-        for j in range(lim, min(lim, i*i - 1), -1):
-            arr1[j] -= arr1[j // i] - p
-    return arr2[1]
+
+    # Delegate to the Meissel-Lehmer style implementation with caching.
+    from sympy.core.intfunc import integer_nthroot
+
+    def _phi_lehmer(x: int, a: int) -> int:
+        """Helper for the combinatorial phi(x, a) with memoisation."""
+        if a == 0 or x <= 1:
+            # phi(x, 0) = x counts all integers in [1, x]
+            # For x <= 1 the recursion terminates quickly.
+            return int(x)
+        key = (x, a)
+        try:
+            return _phi_lehmer_cache[key]
+        except KeyError:
+            p = sieve._list[a - 1]
+            val = _phi_lehmer(x, a - 1) - _phi_lehmer(x // p, a - 1)
+            _phi_lehmer_cache[key] = val
+            return val
+
+    def _primepi_lehmer(m: int) -> int:
+        """Recursive Meissel-Lehmer style prime counting."""
+        if m < 2:
+            return 0
+        try:
+            return _primepi_lehmer_cache[m]
+        except KeyError:
+            pass
+
+        if m <= sieve._list[-1]:
+            res = sieve.search(m)[0]
+            _primepi_lehmer_cache[m] = res
+            return res
+
+        # Ensure the sieve contains all primes up to sqrt(m), which
+        # suffices for the combinatorial algorithm.
+        lim = int(sqrt(m))
+        sieve.extend(lim)
+
+        # Root bounds used in Lehmer's improvement.
+        y, _ = integer_nthroot(m, 4)
+        a = _primepi_lehmer(y)
+        b = _primepi_lehmer(lim)
+        c_root, _ = integer_nthroot(m, 3)
+        c = _primepi_lehmer(c_root)
+
+        # Main combinatorial formula.
+        res = _phi_lehmer(m, a)
+        res += (b + a - 2) * (b - a + 1) // 2
+
+        # Access to primes via the global sieve.
+        primes = sieve._list
+
+        for i in range(a + 1, b + 1):
+            p_i = primes[i - 1]
+            w = m // p_i
+            res -= _primepi_lehmer(w)
+            if i <= c:
+                w_sqrt = int(sqrt(w))
+                bi = _primepi_lehmer(w_sqrt)
+                for j in range(i, bi + 1):
+                    p_j = primes[j - 1]
+                    res -= _primepi_lehmer(w // p_j) - (j - 1)
+
+        _primepi_lehmer_cache[m] = res
+        return res
+
+    return _primepi_lehmer(n)
 
 
 def nextprime(n: SupportsIndex, ith: SupportsIndex = 1) -> int:
