@@ -465,7 +465,7 @@ class Relational(Boolean, EvalfMixin):
                         else:
                             r = r.func(x, -b / m)
                     elif m.is_zero is True:
-                        r = r.func(b, S.Zero) 
+                        r = r.func(b, S.Zero)
                     elif m.is_zero is None and not isinstance(r, Equality):
                          r = r.func(b, S.Zero)
                 except ValueError:
