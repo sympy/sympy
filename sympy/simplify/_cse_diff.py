@@ -1,4 +1,5 @@
 """Module for differentiation using CSE."""
+from __future__ import annotations
 
 from sympy import cse, Matrix, Derivative, MatrixBase
 from sympy.utilities.iterables import iterable

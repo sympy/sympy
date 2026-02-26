@@ -10,6 +10,7 @@ This module contains functions to:
 
     - solve a system of Non Linear Equations with N variables and M equations
 """
+from __future__ import annotations
 from sympy.core.sympify import sympify
 from sympy.core import (S, Pow, Dummy, pi, Expr, Wild, Mul,
                         Add, Basic)

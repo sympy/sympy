@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy import MatAdd
 from sympy.algebras.quaternion import Quaternion
 from sympy.assumptions.ask import Q

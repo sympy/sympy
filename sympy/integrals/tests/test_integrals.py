@@ -1,3 +1,4 @@
+from __future__ import annotations
 import math
 from sympy.concrete.summations import (Sum, summation)
 from sympy.core.add import Add

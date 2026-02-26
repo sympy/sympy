@@ -3,6 +3,7 @@ Python code printers
 
 This module contains Python code printers for plain Python as well as NumPy & SciPy enabled code.
 """
+from __future__ import annotations
 from collections import defaultdict
 from itertools import chain
 from sympy.core import S

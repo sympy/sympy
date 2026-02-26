@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.vector.vector import Vector
 from sympy.vector.coordsysrect import CoordSys3D
 from sympy.vector.functions import (

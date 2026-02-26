@@ -1,6 +1,7 @@
 """
 Handlers for predicates related to set membership: integer, rational, etc.
 """
+from __future__ import annotations
 
 from sympy.assumptions import Q, ask
 from sympy.core import Add, Basic, Expr, Mul, Pow, S

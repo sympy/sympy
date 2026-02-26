@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.combinatorics import Permutation
 from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy.combinatorics.homomorphisms import homomorphism, group_isomorphism, is_isomorphic

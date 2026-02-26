@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.assumptions.refine import refine
 from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.concrete.products import Product

@@ -1,3 +1,4 @@
+from __future__ import annotations
 import numbers as nums
 import decimal
 from sympy.concrete.summations import Sum

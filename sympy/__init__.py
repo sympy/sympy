@@ -1,3 +1,4 @@
+# noqa: I002
 """
 SymPy is a Python library for symbolic mathematics. It aims to become a
 full-featured computer algebra system (CAS) while keeping the code as simple

@@ -12,6 +12,7 @@
 * hyperfocal_distance
 * transverse_magnification
 """
+from __future__ import annotations
 
 __all__ = ['refraction_angle',
            'deviation',

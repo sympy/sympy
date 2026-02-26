@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy import (zeros, Matrix, symbols, lambdify, sqrt, pi,
                                 simplify)
 from sympy.physics.mechanics import (dynamicsymbols, cross, inertia, RigidBody,

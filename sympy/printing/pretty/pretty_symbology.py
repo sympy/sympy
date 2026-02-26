@@ -1,4 +1,5 @@
 """Symbolic primitives + unicode/ASCII abstraction for pretty.py"""
+from __future__ import annotations
 
 import sys
 import warnings

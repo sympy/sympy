@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core import symbols, Rational, Function, diff
 from sympy.physics.sho import R_nl, E_nl
 from sympy.simplify.simplify import simplify

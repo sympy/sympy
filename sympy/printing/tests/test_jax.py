@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.concrete.summations import Sum
 from sympy.core.mod import Mod
 from sympy.core.relational import (Equality, Unequality)

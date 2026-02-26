@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.combinatorics.free_groups import free_group, FreeGroup
 from sympy.core import Symbol
 from sympy.testing.pytest import raises

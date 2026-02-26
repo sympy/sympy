@@ -2,6 +2,7 @@
 
 
 # Default precedence values for some basic types
+from __future__ import annotations
 PRECEDENCE = {
     "Lambda": 1,
     "Xor": 10,

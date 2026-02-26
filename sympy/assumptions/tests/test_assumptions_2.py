@@ -1,6 +1,7 @@
 """
 rename this to test_assumptions.py when the old assumptions system is deleted
 """
+from __future__ import annotations
 from sympy.abc import x, y
 from sympy.assumptions.assume import global_assumptions
 from sympy.assumptions.ask import Q, _ask_single_fact

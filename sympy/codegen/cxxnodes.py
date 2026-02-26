@@ -1,6 +1,7 @@
 """
 AST nodes specific to C++.
 """
+from __future__ import annotations
 
 from sympy.codegen.ast import Attribute, String, Token, Type, none
 

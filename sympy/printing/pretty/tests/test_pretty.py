@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import annotations
 from sympy.concrete.products import Product
 from sympy.concrete.summations import Sum
 from sympy.core.add import Add

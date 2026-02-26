@@ -1,4 +1,5 @@
 """Implementation of :class:`RationalField` class. """
+from __future__ import annotations
 
 
 from sympy.external.gmpy import MPQ
