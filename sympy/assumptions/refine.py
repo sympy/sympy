@@ -114,6 +114,7 @@ def refine_abs(expr, assumptions):
             else:
                 non_abs.append(i)
         return Mul(*non_abs) * Abs(Mul(*in_abs))
+    return expr
 
 
 def refine_Pow(expr, assumptions):
@@ -214,6 +215,7 @@ def refine_Pow(expr, assumptions):
 
                 if old != expr:
                     return expr
+    return expr
 
 
 def refine_atan2(expr, assumptions):
@@ -326,7 +328,7 @@ def refine_arg(expr, assumptions):
         return S.Zero
     if ask(Q.negative(rg), assumptions):
         return S.Pi
-    return None
+    return expr
 
 
 def _refine_reim(expr, assumptions):
@@ -337,7 +339,7 @@ def _refine_reim(expr, assumptions):
         if refined != expanded:
             return refined
     # Best to leave the expression as is
-    return None
+    return expr
 
 
 def refine_sign(expr, assumptions):
@@ -402,6 +404,7 @@ def refine_matrixelement(expr, assumptions):
         if (i - j).could_extract_minus_sign():
             return expr
         return MatrixElement(matrix, j, i)
+    return expr
 
 
 def refine_sin_cos(expr, assumptions):
