@@ -89,6 +89,7 @@ def refine_abs(expr, assumptions):
     >>> from sympy.assumptions.refine import refine_abs
     >>> from sympy.abc import x
     >>> refine_abs(Abs(x), Q.real(x))
+    Abs(x)
     >>> refine_abs(Abs(x), Q.positive(x))
     x
     >>> refine_abs(Abs(x), Q.negative(x))
@@ -128,6 +129,7 @@ def refine_Pow(expr, assumptions):
     >>> from sympy.assumptions.refine import refine_Pow
     >>> from sympy.abc import x,y,z
     >>> refine_Pow((-1)**x, Q.real(x))
+    (-1)**x
     >>> refine_Pow((-1)**x, Q.even(x))
     1
     >>> refine_Pow((-1)**x, Q.odd(x))
