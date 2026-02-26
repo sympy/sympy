@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.diffgeom import Manifold, Patch, CoordSystem, Point
 from sympy.core.function import Function
 from sympy.core.symbol import symbols

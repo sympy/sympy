@@ -1,4 +1,5 @@
 """ The module contains implemented functions for interval arithmetic."""
+from __future__ import annotations
 from functools import reduce
 
 from sympy.plotting.intervalmath import interval

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.numbers import I, pi
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.polys.partfrac import apart

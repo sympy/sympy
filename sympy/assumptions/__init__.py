@@ -1,6 +1,7 @@
 """
 A module to implement logical predicates and assumption system.
 """
+from __future__ import annotations
 
 from .assume import (
     AppliedPredicate, Predicate, AssumptionsContext, assuming,

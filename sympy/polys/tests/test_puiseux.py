@@ -1,6 +1,7 @@
 #
 # Tests for PuiseuxRing and PuiseuxPoly
 #
+from __future__ import annotations
 
 from sympy.testing.pytest import raises
 

@@ -1,6 +1,7 @@
 """
 C++ code printer
 """
+from __future__ import annotations
 
 from itertools import chain
 from sympy.codegen.ast import Type, none

@@ -227,7 +227,7 @@ jobs:
 
       - run: pip install -r requirements-dev.txt
       - run: pip install .
-      - run: pytest -n auto
+      - run: pytest -Werror -n auto
 
   # -------------------- FLINT tests -------------------------------- #
 

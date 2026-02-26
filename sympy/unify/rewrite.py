@@ -1,4 +1,5 @@
 """ Functions to support rewriting of SymPy expressions """
+from __future__ import annotations
 
 from sympy.core.expr import Expr
 from sympy.assumptions import ask

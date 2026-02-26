@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional, overload, Literal, Any, cast, Callable
+from typing import TYPE_CHECKING, overload, Literal, Any, cast, Callable
 
 from functools import wraps, reduce
 from operator import mul
@@ -3757,6 +3757,16 @@ class Poly(Basic):
 
         from sympy.functions.elementary.complexes import sign
         opts = {'maxsteps': maxsteps, 'cleanup': cleanup, 'error': False}
+
+        # mpmath 1.4 deprecates calling polyroots without the 'asc' argument
+        # and apparently prefers asc=True which reverses the order compared to
+        # default behaviour for mpmath < 1.4.
+        from mpmath import __version__ as mpver
+        if not any(mpver.startswith(prefix) for prefix in ('0.', '1.0.', '1.1.', '1.2.', '1.3.')):
+            # This should be the code when mpmath 1.4.0 is the minimum version:
+            opts['asc'] = True
+            coeffs = coeffs[::-1]
+
         for prec in [f.degree()*10, f.degree()*15]:
             try:
                 with local_workdps(n) as ctx:
@@ -6034,7 +6044,7 @@ def lcm_list(seq, *gens, **args):
     """
     seq = sympify(seq)
 
-    def try_non_polynomial_lcm(seq) -> Optional[Expr]:
+    def try_non_polynomial_lcm(seq) -> Expr | None:
         if not gens and not args:
             domain, numbers = construct_domain(seq)
 

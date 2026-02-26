@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy import permutedims
 from sympy.core.numbers import Number
 from sympy.core.singleton import S

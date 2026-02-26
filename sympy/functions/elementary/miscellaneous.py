@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core import S, sympify, NumberKind
 from sympy.utilities.iterables import sift
 from sympy.core.add import Add

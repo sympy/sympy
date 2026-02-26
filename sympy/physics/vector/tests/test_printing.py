@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import annotations
 
 from sympy.core.function import Function
 from sympy.core.symbol import symbols

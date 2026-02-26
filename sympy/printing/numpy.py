@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core import S
 from sympy.core.function import Lambda
 from sympy.core.power import Pow

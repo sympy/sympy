@@ -5,6 +5,7 @@ Contains
 Plane
 
 """
+from __future__ import annotations
 
 from sympy.core import Dummy, Rational, S, Symbol
 from sympy.core.symbol import _symbol

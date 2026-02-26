@@ -1,4 +1,5 @@
 """Tools for solving inequalities and systems of inequalities. """
+from __future__ import annotations
 import itertools
 
 from sympy.calculus.util import (continuous_domain, periodicity,
