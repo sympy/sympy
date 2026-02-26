@@ -1779,18 +1779,23 @@ def test_nonzero():
     assert ask(Q.nonzero(exp(x)), Q.zero(exp(x))) is False
     assert ask(Q.nonzero(exp(x)), Q.real(exp(x))) is None
     assert ask(Q.nonzero(exp(x*I*pi)), Q.integer(x)) is True
+    assert ask(Q.nonzero(exp(x*I*pi)), Q.imaginary(x)) is True
     assert ask(Q.nonzero(exp((x*I*pi)/2)), Q.integer(x)) is None
     assert ask(Q.nonzero(exp((x*I*pi)/2)), Q.integer(x) & Q.even(x)) is True
     assert ask(Q.nonzero(exp((x*I*pi)/2)), Q.integer(x) & Q.odd(x)) is False
+    assert ask(Q.nonzero(exp((x*I*pi)/2)), Q.imaginary(x)) is True
     assert ask(Q.nonzero(exp((x*I*pi) + 2)), Q.integer(x)) is True
+    assert ask(Q.nonzero(exp((x*I*pi) + 2)), Q.imaginary(x)) is True
     assert ask(Q.nonzero(exp((I*pi*x) + y)), Q.integer(x)) is None
     assert ask(Q.nonzero(exp((I*pi*x) + y + 2)), Q.integer(x) & Q.real(y)) is True
-    assert ask(Q.nonzero(exp((I*pi*x) + y + I)), Q.integer(x) & Q.real(y)) is False
     assert ask(Q.nonzero(exp((I*pi*x) + y + 2)), Q.integer(x) & Q.negative_infinite(y)) is False
+    assert ask(Q.nonzero(exp((I*pi*x) + y + I)), Q.integer(x) & Q.real(y)) is False
+    assert ask(Q.nonzero(exp((x + y)*I*pi)), Q.imaginary(x) & Q.integer(y)) is True
+    assert ask(Q.nonzero(exp(x*y)), Q.zero(x)) is True
     assert ask(Q.nonzero(exp(x*y)), Q.real(x)) is None
     assert ask(Q.nonzero(exp(x*y)), Q.real(x) & Q.real(y)) is True
     assert ask(Q.nonzero(exp((x*y) + y)), Q.real(x)) is None
-    assert ask(Q.nonzero(exp(x*y)), Q.zero(x)) is True
+
 
 def test_zero():
     assert ask(Q.zero(x)) is None

@@ -2,6 +2,7 @@
 Handlers related to order relations: positive, negative, etc.
 """
 
+from sympy import expand
 from sympy.assumptions import Q, ask
 from sympy.core import Add, Basic, Expr, Mul, Pow, S
 from sympy.core.logic import fuzzy_not, fuzzy_and, fuzzy_or
@@ -200,17 +201,30 @@ def _(expr, assumptions):
 
 @NonZeroPredicate.register(exp)
 def _(expr, assumptions):
-    is_neg_infinity = ask(Q.negative_infinite(expr.exp), assumptions)
-    if is_neg_infinity:
-        return False
-    if isinstance(expr.exp, Add):
-        arguments = expr.exp.args
-        results = []
-        for t in arguments:
-            results.append(ask(Q.nonzero(exp(t)), assumptions))
-        return fuzzy_and(results)
-    if is_neg_infinity is False:
-        return ask(Q.real(expr), assumptions)
+    if ask(Q.zero(expr.exp), assumptions):
+        return True
+    arg = expr.exp.args
+    if arg == ():
+        neg_inf = ask(Q.negative_infinite(expr.exp), assumptions)
+        if neg_inf:
+            return False
+        if neg_inf is None:
+            return None
+    else:
+        for a in arg:
+            neg_inf = ask(Q.negative_infinite(a), assumptions)
+            if a.is_Symbol:
+                if neg_inf:
+                    return False
+                if neg_inf is None:
+                    return None
+    expanded_expr = expand(expr)
+    expanded_terms = expanded_expr.args
+    results = []
+    for e in expanded_terms:
+        real = ask(Q.real(exp(e)), assumptions)
+        results.append(real)
+    return fuzzy_and(results)
 
 
 # ZeroPredicate
