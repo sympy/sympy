@@ -464,7 +464,7 @@ class Relational(Boolean, EvalfMixin):
                             r = r.func(-b / m, x)
                         else:
                             r = r.func(x, -b / m)
-                    else:
+                    elif m.is_zero is True:
                         r = r.func(b, S.Zero)
                 except ValueError:
                     # maybe not a linear function, try polynomial
@@ -727,11 +727,14 @@ class Equality(Relational):
                     Add(e.lhs, -e.rhs, evaluate=False), x)
                 if m.is_zero is False:
                     enew = e.func(x, -b / m)
-                else:
+                    measure = kwargs['measure']
+                    if measure(enew) <= kwargs['ratio'] * measure(e):
+                        e = enew
+                elif m.is_zero is True:
                     enew = e.func(m * x, -b)
-                measure = kwargs['measure']
-                if measure(enew) <= kwargs['ratio'] * measure(e):
-                    e = enew
+                    measure = kwargs['measure']
+                    if measure(enew) <= kwargs['ratio'] * measure(e):
+                        e = enew
             except ValueError:
                 pass
         return e.canonical
