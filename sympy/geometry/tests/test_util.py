@@ -1,3 +1,4 @@
+from __future__ import annotations
 import pytest
 from sympy.core.numbers import Float
 from sympy.core.function import (Derivative, Function)

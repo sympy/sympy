@@ -10,6 +10,7 @@ The main entry point for users is the llvm_callable function.
 
 This module requires llvmlite (https://github.com/numba/llvmlite).
 '''
+from __future__ import annotations
 
 import ctypes
 

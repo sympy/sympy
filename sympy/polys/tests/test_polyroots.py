@@ -1,4 +1,5 @@
 """Tests for algorithms for computing symbolic roots of polynomials. """
+from __future__ import annotations
 
 from sympy.core.numbers import (I, Rational, pi)
 from sympy.core.singleton import S

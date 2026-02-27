@@ -1,4 +1,4 @@
-from sympy.core.expr import Expr
+from __future__ import annotations
 from sympy.core.mul import Mul
 from sympy.core.function import (Derivative, Function, diff, expand)
 from sympy.core.numbers import (I, Rational, pi)
@@ -22,6 +22,10 @@ from sympy import factor
 from sympy.integrals.manualintegrate import (manualintegrate, find_substitutions,
     _parts_rule, integral_steps, manual_subs)
 from sympy.testing.pytest import raises, slow
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
 
 x, y, z, u, n, a, b, c, d, e = symbols('x y z u n a b c d e')
 f = Function('f')

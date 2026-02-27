@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.combinatorics.permutations import Permutation, Cycle
 from sympy.combinatorics.prufer import Prufer
 from sympy.combinatorics.generators import cyclic, alternating, symmetric, dihedral

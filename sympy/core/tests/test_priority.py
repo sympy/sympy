@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.decorators import call_highest_priority
 from sympy.core.expr import Expr
 from sympy.core.mod import Mod

@@ -2,6 +2,7 @@
 This module implements the Residue function and related tools for working
 with residues.
 """
+from __future__ import annotations
 
 from sympy.core.mul import Mul
 from sympy.core.singleton import S

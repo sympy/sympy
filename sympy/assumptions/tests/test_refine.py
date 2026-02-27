@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.assumptions.ask import Q
 from sympy.assumptions.refine import refine
 from sympy.core.expr import Expr
@@ -12,6 +13,7 @@ from sympy.abc import w, x, y, z
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.matrices.expressions.matexpr import MatrixSymbol
+from sympy.functions.elementary.integers import floor, ceiling
 
 
 def test_Abs():
@@ -283,3 +285,23 @@ def test_sin_cos():
     assert refine(cos(x + n*pi/2 + k*pi/2 + m*pi/2), \
                   Q.odd(n) & Q.odd(k) & Q.integer(m)) == \
         (-1)**((n + k)/2) * cos(x + m*pi/2)
+
+
+def test_floor_ceiling():
+    assert refine(floor(x), Q.integer(x)) == x
+    assert refine(ceiling(x), Q.integer(x)) == x
+    assert refine(floor(x), Q.infinite(x)) == x
+    assert refine(ceiling(x), Q.infinite(x)) == x
+
+    assert refine(floor(y), Q.real(y)) == floor(y)
+    assert refine(ceiling(y), Q.real(y)) == ceiling(y)
+
+    assert refine(floor(x + y), Q.integer(x)) == x + floor(y)
+    assert refine(ceiling(x + y), Q.integer(x)) == x + ceiling(y)
+    assert refine(floor(x + y + z), Q.integer(x) & Q.integer(y)) == x + y + floor(z)
+    assert refine(ceiling(x + y + z), Q.integer(x) & Q.integer(z)) == x + z + ceiling(y)
+    assert refine(floor(x + y - z)) == floor (x + y - z)
+    assert refine(ceiling(ceiling(x) + y + floor(z))) == ceiling(x) + ceiling(y) + floor(z)
+
+    assert refine(floor(floor(x)+ floor(y))) == floor(x) + floor(y)
+    assert refine(ceiling(ceiling(x) - ceiling(y))) == ceiling(x) - ceiling(y)

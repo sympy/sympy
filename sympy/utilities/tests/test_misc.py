@@ -1,3 +1,4 @@
+from __future__ import annotations
 from textwrap import dedent
 import sys
 from subprocess import Popen, PIPE

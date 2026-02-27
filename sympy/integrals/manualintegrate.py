@@ -22,7 +22,7 @@ To enable simple substitutions, add the match to find_substitutions.
 """
 
 from __future__ import annotations
-from typing import NamedTuple, Type, Callable, Sequence, TYPE_CHECKING
+from typing import NamedTuple, Callable, Sequence, TYPE_CHECKING
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from collections.abc import Mapping
@@ -1412,7 +1412,7 @@ def orthogonal_poly_rule(integral):
                     return orthogonal_poly_classes[klass](integrand, symbol, *integrand.args[:var_index])
 
 
-_special_function_patterns: list[tuple[Type, Expr, Callable | None, tuple]] = []
+_special_function_patterns: list[tuple[type, Expr, Callable | None, tuple]] = []
 _wilds = []
 _symbol = Dummy('x')
 

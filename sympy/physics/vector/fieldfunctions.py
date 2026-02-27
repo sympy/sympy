@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.function import diff
 from sympy.core.singleton import S
 from sympy.integrals.integrals import integrate

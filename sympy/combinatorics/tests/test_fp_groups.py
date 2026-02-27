@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.singleton import S
 from sympy.combinatorics.fp_groups import (FpGroup, low_index_subgroups,
                                    reidemeister_presentation, FpSubgroup,

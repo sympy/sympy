@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.numbers import (Rational, pi)
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.miscellaneous import sqrt

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy import sympify
 from sympy.physics.vector import Point, Dyadic, ReferenceFrame, outer
 from collections import namedtuple

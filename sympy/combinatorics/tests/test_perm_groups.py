@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.containers import Tuple
 from sympy.combinatorics.generators import rubik_cube_generators
 from sympy.combinatorics.homomorphisms import is_isomorphic

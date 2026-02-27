@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.containers import Dict
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
