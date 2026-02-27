@@ -475,9 +475,9 @@ def refine_sin_cos(expr, assumptions):
     #    `cos(rem + k*pi/2)` -> `(-1)^((k+1)/2) * sin(rem)`
     rem = sum(remaining_terms) + sum_of_parity_unknown_coeffs * S.Pi / 2
     if k_is_even:
-        return ((-1)**(k / 2)) * cos(rem)
+        return refine(((-1)**(k / 2)) * cos(rem), assumptions)
     else:
-        return ((-1)**((k + 1) / 2)) * sin(rem)
+        return refine(((-1)**((k + 1) / 2)) * sin(rem), assumptions)
 
 
 def refine_floor_ceiling(expr, assumptions):
