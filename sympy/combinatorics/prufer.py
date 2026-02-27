@@ -292,8 +292,8 @@ class Prufer(Basic):
                 msg = 'Nodes %s are missing.' % sorted(missing_nodes)
             raise ValueError(msg)
         if nmin != 0:
-            for i, ei in enumerate(rv):
-                rv[i] = [n - nmin for n in ei]
+            for i, edge in enumerate(rv):
+                rv[i] = [n - nmin for n in edge]
             nmax -= nmin
         return sorted(rv), nmax + 1
 
