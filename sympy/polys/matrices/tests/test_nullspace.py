@@ -1,12 +1,13 @@
 from sympy import ZZ, Matrix
+from typing import Any
 from sympy.polys.matrices import DM, DomainMatrix
 from sympy.polys.matrices.ddm import DDM
 from sympy.polys.matrices.sdm import SDM
 
 import pytest
 
-zeros = lambda shape, K: DomainMatrix.zeros(shape, K).to_dense()
-eye = lambda n, K: DomainMatrix.eye(n, K).to_dense()
+zeros: Any = lambda shape, K: DomainMatrix.zeros(shape, K).to_dense()
+eye: Any = lambda n, K: DomainMatrix.eye(n, K).to_dense()
 
 
 #

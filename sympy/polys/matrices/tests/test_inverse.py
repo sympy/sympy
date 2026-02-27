@@ -15,7 +15,7 @@ from sympy.abc import x
 # these exactly but inv_den only matches after cancel_denom.
 
 
-INVERSE_EXAMPLES = [
+INVERSE_EXAMPLES: list = [
 
     (
         'zz_1',

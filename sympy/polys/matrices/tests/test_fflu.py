@@ -4,7 +4,7 @@ from sympy import Matrix
 import pytest
 
 
-FFLU_EXAMPLES = [
+FFLU_EXAMPLES: list = [
     (
         'zz_2x3',
         DM([[1, 2, 3], [4, 5, 6]], ZZ),
