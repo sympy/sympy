@@ -24,8 +24,8 @@ def test_Abs():
     assert refine(Abs(x), Q.complex(x)) == Abs(x)
 
     assert refine(Abs(y - x)) == Abs(y - x)
-    assert refine(Abs(y - x), Q.positive(y - x)) == -x + y
-    assert refine(Abs(y - x), Q.negative(y - x)) == x - y
+    assert refine(Abs(x - y), Q.positive(x - y)) == x - y
+    assert refine(Abs(x - y), Q.negative(x - y)) == -x + y
 
     assert refine(Abs(z - y + x), Q.positive(z - y + x)) == x - y + z
     assert refine(Abs(z - y + x), Q.negative(z - y + x)) == -x + y - z
