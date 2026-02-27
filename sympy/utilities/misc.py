@@ -8,7 +8,7 @@ import os
 import re as _re
 import struct
 from textwrap import fill, dedent
-from typing import TypeVar, Callable, Literal, SupportsIndex, SupportsInt, overload, Any
+from typing import TypeVar, Callable, Literal, SupportsIndex, SupportsInt, overload, Any, Optional
 
 _CallableT = TypeVar("_CallableT", bound=Callable)
 
@@ -261,7 +261,7 @@ def debugf(string, args):
         print(string%args, file=sys.stderr)
 
 
-def find_executable(executable, path=None):
+def find_executable(executable: str, path: Optional[str] = None) -> Optional[str]:
     """Try to find 'executable' in the directories listed in 'path' (a
     string listing directories separated by 'os.pathsep'; defaults to
     os.environ['PATH']).  Returns the complete filename or None if not
