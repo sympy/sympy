@@ -25,13 +25,13 @@ class Prufer(Basic):
     .. [1] https://mathworld.wolfram.com/LabeledTree.html
 
     """
-    _prufer_repr = None
-    _tree_repr = None
-    _nodes = None
-    _rank = None
+    _prufer_repr: list[int] | None = None
+    _tree_repr: list[list[int]] | None = None
+    _nodes: int | None = None
+    _rank: int | None = None
 
     @property
-    def prufer_repr(self):
+    def prufer_repr(self) -> list[int]:
         """Returns Prufer sequence for the Prufer object.
 
         This sequence is found by removing the highest numbered vertex,
@@ -54,11 +54,12 @@ class Prufer(Basic):
 
         """
         if self._prufer_repr is None:
+            assert self._tree_repr is not None
             self._prufer_repr = self.to_prufer(self._tree_repr[:], self.nodes)
         return self._prufer_repr
 
     @property
-    def tree_repr(self):
+    def tree_repr(self) -> list[list[int]]:
         """Returns the tree representation of the Prufer object.
 
         Examples
@@ -77,11 +78,12 @@ class Prufer(Basic):
 
         """
         if self._tree_repr is None:
+            assert self._prufer_repr is not None
             self._tree_repr = self.to_tree(self._prufer_repr[:])
         return self._tree_repr
 
     @property
-    def nodes(self):
+    def nodes(self) -> int:
         """Returns the number of nodes in the tree.
 
         Examples
@@ -94,10 +96,11 @@ class Prufer(Basic):
         5
 
         """
+        assert self._nodes is not None
         return self._nodes
 
     @property
-    def rank(self):
+    def rank(self) -> int:
         """Returns the rank of the Prufer sequence.
 
         Examples
@@ -123,7 +126,7 @@ class Prufer(Basic):
         return self._rank
 
     @property
-    def size(self):
+    def size(self) -> int:
         """Return the number of possible trees of this Prufer object.
 
         Examples
@@ -142,7 +145,7 @@ class Prufer(Basic):
         return self.prev(self.rank).prev().rank + 1
 
     @staticmethod
-    def to_prufer(tree, n):
+    def to_prufer(tree: list[list[int]], n: int) -> list[int]:
         """Return the Prufer sequence for a tree given as a list of edges where
         ``n`` is the number of nodes in the tree.
 
@@ -161,8 +164,8 @@ class Prufer(Basic):
         prufer_repr: returns Prufer sequence of a Prufer object.
 
         """
-        d = defaultdict(int)
-        L = []
+        d: defaultdict[int, int] = defaultdict(int)
+        L: list[int] = []
         for edge in tree:
             # Increment the value of the corresponding
             # node in the degree list as we encounter an
@@ -175,7 +178,7 @@ class Prufer(Basic):
                 if d[x] == 1:
                     break
             # find the node it was connected to
-            y = None
+            y: int | None = None
             for edge in tree:
                 if x == edge[0]:
                     y = edge[1]
@@ -184,6 +187,7 @@ class Prufer(Basic):
                 if y is not None:
                     break
             # record and update
+            assert y is not None
             L.append(y)
             for j in (x, y):
                 d[j] -= 1
@@ -193,7 +197,7 @@ class Prufer(Basic):
         return L
 
     @staticmethod
-    def to_tree(prufer):
+    def to_tree(prufer: list[int]) -> list[list[int]]:
         """Return the tree (as a list of edges) of the given Prufer sequence.
 
         Examples
@@ -216,10 +220,10 @@ class Prufer(Basic):
         tree_repr: returns tree representation of a Prufer object.
 
         """
-        tree = []
-        last = []
+        tree: list[list[int]] = []
+        last: list[int] = []
         n = len(prufer) + 2
-        d = defaultdict(lambda: 1)
+        d: defaultdict[int, int] = defaultdict(lambda: 1)
         for p in prufer:
             d[p] += 1
         for i in prufer:
@@ -238,7 +242,7 @@ class Prufer(Basic):
         return tree
 
     @staticmethod
-    def edges(*runs):
+    def edges(*runs: list[int]) -> tuple[list[list[int]], int]:
         """Return a list of edges and the number of nodes from the given runs
         that connect nodes in an integer-labelled tree.
 
@@ -261,29 +265,31 @@ class Prufer(Basic):
         ([[0, 1], [1, 2], [1, 4], [2, 3], [4, 5], [4, 6]], 7)
 
         """
-        e = set()
-        nmin = runs[0][0]
+        e: set[tuple[int, int]] = set()
         for r in runs:
             for i in range(len(r) - 1):
                 a, b = r[i: i + 2]
                 if b < a:
                     a, b = b, a
                 e.add((a, b))
-        rv = []
-        got = set()
-        nmin = nmax = None
+        rv: list[list[int]] = []
+        got: set[int] = set()
+        nmin: int | None = None
+        nmax: int | None = None
         for ei in e:
             got.update(ei)
             nmin = min(ei[0], nmin) if nmin is not None else ei[0]
             nmax = max(ei[1], nmax) if nmax is not None else ei[1]
             rv.append(list(ei))
-        missing = set(range(nmin, nmax + 1)) - got
+        assert nmin is not None
+        assert nmax is not None
+        missing: set[int] = set(range(nmin, nmax + 1)) - got
         if missing:
-            missing = [i + nmin for i in missing]
-            if len(missing) == 1:
-                msg = 'Node %s is missing.' % missing.pop()
+            missing_nodes: list[int] = [i + nmin for i in missing]
+            if len(missing_nodes) == 1:
+                msg = 'Node %s is missing.' % missing_nodes.pop()
             else:
-                msg = 'Nodes %s are missing.' % sorted(missing)
+                msg = 'Nodes %s are missing.' % sorted(missing_nodes)
             raise ValueError(msg)
         if nmin != 0:
             for i, ei in enumerate(rv):
@@ -291,7 +297,7 @@ class Prufer(Basic):
             nmax -= nmin
         return sorted(rv), nmax + 1
 
-    def prufer_rank(self):
+    def prufer_rank(self) -> int:
         """Computes the rank of a Prufer sequence.
 
         Examples
@@ -316,7 +322,7 @@ class Prufer(Basic):
         return r
 
     @classmethod
-    def unrank(self, rank, n):
+    def unrank(cls, rank: int, n: int) -> Prufer:
         """Finds the unranked Prufer sequence.
 
         Examples
@@ -389,7 +395,7 @@ class Prufer(Basic):
             ret_obj._nodes = len(ret_obj._prufer_repr) + 2
         return ret_obj
 
-    def next(self, delta=1):
+    def next(self, delta: int = 1) -> Prufer:
         """Generates the Prufer sequence that is delta beyond the current one.
 
         Examples
@@ -411,7 +417,7 @@ class Prufer(Basic):
         """
         return Prufer.unrank(self.rank + delta, self.nodes)
 
-    def prev(self, delta=1):
+    def prev(self, delta: int = 1) -> Prufer:
         """Generates the Prufer sequence that is -delta before the current one.
 
         Examples
