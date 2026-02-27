@@ -475,6 +475,11 @@ class Pow(Expr):
 
     def _eval_is_integer(self):
         b, e = self.args
+        if b in (S.ImaginaryUnit, -S.ImaginaryUnit):
+            if e.is_even:
+                return True
+            if e.is_odd:
+                return False
         if b.is_rational:
             if b.is_integer is False and e.is_positive:
                 return False  # rat**nonneg
@@ -1270,8 +1275,8 @@ class Pow(Expr):
                     return True
                 if b == e:  # always rational, even for 0**0
                     return True
-            elif b.is_irrational:
-                return e.is_zero
+            elif b.is_irrational and e.is_zero:
+                return True
         if b is S.Exp1:
             if e.is_rational and e.is_nonzero:
                 return False
