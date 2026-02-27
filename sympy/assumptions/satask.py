@@ -101,11 +101,8 @@ def check_satisfiability(prop, _prop, factbase):
         return False
 
     if not can_be_true and not can_be_false:
-        # If both can't be true and can't be false, return None
-        # This happens when the proposition is indeterminate (e.g., inf*0)
-        # or when assumptions on different variables create no valid model
-        return None
-
+        # If both can't be true and can't be false, the assumptions are contradictory
+        raise ValueError("Contradictory assumptions")
 
 def extract_predargs(proposition, assumptions=None, context=None):
     """
