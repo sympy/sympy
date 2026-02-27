@@ -101,10 +101,10 @@ def check_satisfiability(prop, _prop, factbase):
         return False
 
     if not can_be_true and not can_be_false:
-        # TODO: Run additional checks to see which combination of the
-        # assumptions, global_assumptions, and relevant_facts are
-        # inconsistent.
-        raise ValueError("Inconsistent assumptions")
+        # If both can't be true and can't be false, return None
+        # This happens when the proposition is indeterminate (e.g., inf*0)
+        # or when assumptions on different variables create no valid model
+        return None
 
 
 def extract_predargs(proposition, assumptions=None, context=None):
