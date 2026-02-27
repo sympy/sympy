@@ -77,6 +77,10 @@ def satask(proposition, assumptions=True, context=global_assumptions,
     sat = get_all_relevant_facts(props, assumptions, context_cnf,
         use_known_facts=use_known_facts, iterations=iterations)
     sat.add_from_cnf(assumptions)
+
+    # Check if assumptions themselves are contradictory
+    if not satisfiable(sat.copy()):
+        raise ValueError("Inconsistent assumptions")
     if context:
         sat.add_from_cnf(context_cnf)
 
