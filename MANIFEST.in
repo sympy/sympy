@@ -18,3 +18,6 @@ include AUTHORS
 include README.md
 include bin/isympy
 exclude MANIFEST.in
+include bin/snapshot
+include snapshot_test.md
+include sympy/testing/tests/test_solving_guidance.md
