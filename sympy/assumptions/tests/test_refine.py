@@ -12,6 +12,7 @@ from sympy.functions.combinatorial.factorials import factorial
 from sympy.abc import w, x, y, z
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.special.gamma_functions import gamma
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 
 
@@ -292,3 +293,4 @@ def test_factorial():
     assert refine(factorial(n), Q.eq(n, 1)) == 1
     assert refine(factorial(n), Q.integer(n) & Q.negative(n)) is S.ComplexInfinity
     assert refine(factorial(n), Q.positive_infinite(n)) is S.Infinity
+    assert refine(factorial(n), Q.negative_infinite(n)) == gamma(S.NegativeInfinity)

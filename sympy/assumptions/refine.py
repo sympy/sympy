@@ -481,6 +481,7 @@ def refine_sin_cos(expr, assumptions):
 
 
 def refine_factorial(expr, assumptions):
+    from sympy.functions.special.gamma_functions import gamma
     arg = expr.args[0]
     if ask(Q.zero(arg), assumptions):
         return S.One
@@ -490,7 +491,8 @@ def refine_factorial(expr, assumptions):
             return S.ComplexInfinity
     if ask(Q.positive_infinite(arg), assumptions):
         return S.Infinity
-    return expr
+    if ask(Q.negative_infinite(arg), assumptions):
+        return gamma(S.NegativeInfinity)
 
 
 handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
