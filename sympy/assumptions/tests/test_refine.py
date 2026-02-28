@@ -13,7 +13,6 @@ from sympy.abc import w, x, y, z
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.special.gamma_functions import gamma
-from sympy.functions.special.gamma_functions import gamma
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 
 
