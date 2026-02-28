@@ -294,7 +294,7 @@ def test_factorial():
     assert refine(factorial(n), Q.zero(n - 1)) == 1
     assert refine(factorial(n), Q.integer(n) & Q.negative(n)) is S.ComplexInfinity
 
-    
+
 def test_floor_ceiling():
     assert refine(floor(x), Q.integer(x)) == x
     assert refine(ceiling(x), Q.integer(x)) == x
