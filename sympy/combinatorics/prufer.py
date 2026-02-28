@@ -54,7 +54,6 @@ class Prufer(Basic):
 
         """
         if self._prufer_repr is None:
-            assert self._tree_repr is not None
             self._prufer_repr = self.to_prufer(self._tree_repr[:], self.nodes)
         return self._prufer_repr
 
@@ -78,7 +77,6 @@ class Prufer(Basic):
 
         """
         if self._tree_repr is None:
-            assert self._prufer_repr is not None
             self._tree_repr = self.to_tree(self._prufer_repr[:])
         return self._tree_repr
 
@@ -96,7 +94,6 @@ class Prufer(Basic):
         5
 
         """
-        assert self._nodes is not None
         return self._nodes
 
     @property
@@ -178,7 +175,7 @@ class Prufer(Basic):
                 if d[x] == 1:
                     break
             # find the node it was connected to
-            y: int | None = None
+            y = None
             for edge in tree:
                 if x == edge[0]:
                     y = edge[1]
@@ -187,7 +184,6 @@ class Prufer(Basic):
                 if y is not None:
                     break
             # record and update
-            assert y is not None
             L.append(y)
             for j in (x, y):
                 d[j] -= 1
@@ -274,16 +270,14 @@ class Prufer(Basic):
                 e.add((a, b))
         rv: list[list[int]] = []
         got: set[int] = set()
-        nmin: int | None = None
-        nmax: int | None = None
+        nmin = None
+        nmax = None
         for ei in e:
             got.update(ei)
             nmin = min(ei[0], nmin) if nmin is not None else ei[0]
             nmax = max(ei[1], nmax) if nmax is not None else ei[1]
             rv.append(list(ei))
-        assert nmin is not None
-        assert nmax is not None
-        missing: set[int] = set(range(nmin, nmax + 1)) - got
+        missing = set(range(nmin, nmax + 1)) - got
         if missing:
             missing_nodes: list[int] = [i + nmin for i in missing]
             if len(missing_nodes) == 1:
