@@ -15,8 +15,6 @@ from typing import overload, TYPE_CHECKING, Generic, TypeVar, cast
 
 Er = TypeVar("Er")
 
-from types import NotImplementedType
-
 from collections import Counter
 from functools import reduce
 
@@ -66,6 +64,7 @@ if TYPE_CHECKING:
     from ..domains import Domain
     from sympy.core.expr import Expr
     from sympy.matrices.dense import MutableDenseMatrix
+    from types import NotImplementedType
 
 
 if GROUND_TYPES != 'flint':
@@ -306,7 +305,9 @@ class DomainMatrix(Generic[Er]):
 
     @classmethod
     @doctest_depends_on(ground_types=['python', 'gmpy'])
-    def from_list(cls, rows, domain) -> DomainMatrix[Er]:
+    def from_list(
+        cls, rows: list[list[Er]], domain: Domain
+        ) -> DomainMatrix[Er]:
         r"""
         Convert a list of lists into a DomainMatrix
 
@@ -434,7 +435,7 @@ class DomainMatrix(Generic[Er]):
         domain, items_domain = cls.get_domain(items_sympy, **kwargs)
 
         idx = 0
-        items_dict: dict[int, dict[int, object]] = {}
+        items_dict: dict[int, dict[int, Er]] = {}
         for i, row in elemsdict.items():
             items_dict[i] = {}
             for j in row:
@@ -527,7 +528,7 @@ class DomainMatrix(Generic[Er]):
     def copy(self) -> DomainMatrix[Er]:
         return self.from_rep(self.rep.copy())
 
-    def convert_to(self, K: Domain) -> DomainMatrix[Er]:
+    def convert_to(self, K: Domain) -> DomainMatrix:
         r"""
         Change the domain of DomainMatrix to desired domain or field
 
@@ -1282,7 +1283,7 @@ class DomainMatrix(Generic[Er]):
         rref, pivots = self.rref()
         return len(pivots)
 
-    def hstack(A: DomainMatrix[Er], *B: DomainMatrix[Er]) -> DomainMatrix[Er]:
+    def hstack(A, *B):
         r"""Horizontally stack the given matrices.
 
         Parameters
@@ -1317,12 +1318,10 @@ class DomainMatrix(Generic[Er]):
 
         unify
         """
-        matrices = A.unify(*B, fmt=A.rep.fmt)
-        A2 = matrices[0]
-        B2 = matrices[1:]
+        A, *B = A.unify(*B, fmt=A.rep.fmt)
         return DomainMatrix.from_rep(A.rep.hstack(*(Bk.rep for Bk in B)))
 
-    def vstack(A: DomainMatrix[Er], *B: DomainMatrix[Er]) -> DomainMatrix[Er]:
+    def vstack(A, *B):
         r"""Vertically stack the given matrices.
 
         Parameters
@@ -1357,9 +1356,7 @@ class DomainMatrix(Generic[Er]):
 
         unify
         """
-        matrices = A.unify(*B, fmt='dense')
-        A2 = matrices[0]
-        B2 = matrices[1:]
+        A, *B = A.unify(*B, fmt='dense')
         return DomainMatrix.from_rep(A.rep.vstack(*(Bk.rep for Bk in B)))
 
     def applyfunc(self, func, domain=None):
@@ -1591,7 +1588,7 @@ class DomainMatrix(Generic[Er]):
         """
         return A.from_rep(A.rep.mul(b))
 
-    def rmul(A: DomainMatrix[Er], b: Er) -> DomainMatrix[Er]:
+    def rmul(A, b: Er) -> DomainMatrix[Er]:
         return A.from_rep(A.rep.rmul(b))
 
     def matmul(A: DomainMatrix[Er], B: DomainMatrix[Er]) -> DomainMatrix[Er]:
