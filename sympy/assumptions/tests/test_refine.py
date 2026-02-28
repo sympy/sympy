@@ -9,11 +9,12 @@ from sympy.functions.elementary.complexes import (Abs, arg, im, re, sign)
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (atan, atan2, cos, sin)
+from sympy.functions.combinatorial.factorials import factorial
 from sympy.abc import w, x, y, z
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.special.gamma_functions import gamma
 from sympy.matrices.expressions.matexpr import MatrixSymbol
-from sympy.functions.elementary.integers import floor, ceiling
 
 
 def test_Abs():
@@ -287,21 +288,11 @@ def test_sin_cos():
         (-1)**((n + k)/2) * cos(x + m*pi/2)
 
 
-def test_floor_ceiling():
-    assert refine(floor(x), Q.integer(x)) == x
-    assert refine(ceiling(x), Q.integer(x)) == x
-    assert refine(floor(x), Q.infinite(x)) == x
-    assert refine(ceiling(x), Q.infinite(x)) == x
-
-    assert refine(floor(y), Q.real(y)) == floor(y)
-    assert refine(ceiling(y), Q.real(y)) == ceiling(y)
-
-    assert refine(floor(x + y), Q.integer(x)) == x + floor(y)
-    assert refine(ceiling(x + y), Q.integer(x)) == x + ceiling(y)
-    assert refine(floor(x + y + z), Q.integer(x) & Q.integer(y)) == x + y + floor(z)
-    assert refine(ceiling(x + y + z), Q.integer(x) & Q.integer(z)) == x + z + ceiling(y)
-    assert refine(floor(x + y - z)) == floor (x + y - z)
-    assert refine(ceiling(ceiling(x) + y + floor(z))) == ceiling(x) + ceiling(y) + floor(z)
-
-    assert refine(floor(floor(x)+ floor(y))) == floor(x) + floor(y)
-    assert refine(ceiling(ceiling(x) - ceiling(y))) == ceiling(x) - ceiling(y)
+def test_factorial():
+    n = Symbol('n')
+    assert refine(factorial(n), Q.zero(n)) == 1
+    assert refine(factorial(n), Q.zero(n - S.One)) == 1
+    assert refine(factorial(n), Q.zero(n - S.One)) == 1
+    assert refine(factorial(n), Q.integer(n) & Q.negative(n)) is S.ComplexInfinity
+    assert refine(factorial(n), Q.positive_infinite(n)) is S.Infinity
+    assert refine(factorial(n), Q.negative_infinite(n)) == gamma(S.NegativeInfinity)
