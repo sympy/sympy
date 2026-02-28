@@ -271,3 +271,30 @@ def _(expr, assumptions):
 @NegativeInfinitePredicate.register_many(Infinity, ComplexInfinity)
 def _(expr, assumptions):
     return False
+
+@NegativeInfinitePredicate.register(Add)
+def _(expr, assumptions):
+    is_neg_inf = False
+    pos, neg, infi, fini = 0, 0, 0, 0
+    for a in expr.args:
+        neg_inf = ask(Q.negative_infinite(a), assumptions)
+        pos_inf = ask(Q.positive_infinite(a), assumptions)
+        inf = ask(Q.infinite(a), assumptions)
+        finite = ask(Q.finite(a), assumptions)
+        if inf:
+            infi += 1
+        elif neg_inf:
+            neg += 1
+        elif pos_inf:
+            pos += 1
+        elif finite:
+            fini += 1
+    if neg == 0 and (fini > 0 or pos > 0 or infi > 0):
+        return False
+    if neg > 0:
+        if (pos > 0 or infi > 0):
+            return None
+        if fini > 0:
+            return True
+        else:
+            return True
