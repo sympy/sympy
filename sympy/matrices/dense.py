@@ -122,8 +122,8 @@ def _force_mutable(x):
 
 class MutableDenseMatrix(DenseMatrix, MutableRepMatrix):
 
-    """A mutable matrix class represents a mathematical matrix whose entries can 
-    be modified after creation. Entries can be any SymPy expression, including 
+    """A mutable matrix class represents a mathematical matrix whose entries can
+    be modified after creation. Entries can be any SymPy expression, including
     symbols, numbers, and mathematical functions.
 
     Examples
@@ -144,7 +144,7 @@ class MutableDenseMatrix(DenseMatrix, MutableRepMatrix):
     [2],
     [3]])
 
-    Another way to create a matrix is by specifying the number of rows and columns 
+    Another way to create a matrix is by specifying the number of rows and columns
     along with the 1D iterable of values:
     >>> Matrix(3, 3, [1, 2, 3, 4, 5, 6, 7, 8, 9])
     Matrix([
@@ -152,7 +152,7 @@ class MutableDenseMatrix(DenseMatrix, MutableRepMatrix):
     [4, 5, 6],
     [7, 8, 9]])
 
-    A lambda function can be used to generate matrix entries that follow a 
+    A lambda function can be used to generate matrix entries that follow a
     pattern or rule:
     >>> Matrix(2, 2, lambda i, j: i+j)
     Matrix([
@@ -172,8 +172,8 @@ class MutableDenseMatrix(DenseMatrix, MutableRepMatrix):
 
     Notes
     =====
-    Users should use Matrix or ImmutableMatrix directly. The base 
-    classes such as MatrixBase, DenseMatrix and MutableRepMatrix are for 
+    Users should use Matrix or ImmutableMatrix directly. The base
+    classes such as MatrixBase, DenseMatrix and MutableRepMatrix are for
     internal use only.
 
     See Also
