@@ -2,7 +2,7 @@
 Integer factorization
 """
 from __future__ import annotations
-
+from typing import SupportsIndex
 from bisect import bisect_left
 from collections import defaultdict, OrderedDict
 from collections.abc import MutableMapping
@@ -26,7 +26,7 @@ from sympy.utilities.misc import as_int, filldedent
 from .ecm import _ecm_one_factor
 
 
-def smoothness(n):
+def smoothness(n: SupportsIndex) -> tuple[int, int]:
     """
     Return the B-smooth and B-power smooth values of n.
 

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.printing.codeprinter import CodePrinter, PrintMethodNotImplementedError
 from sympy.core import symbols
 from sympy.core.symbol import Dummy

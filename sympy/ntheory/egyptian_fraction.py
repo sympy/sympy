@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from sympy.core.containers import Tuple
 from sympy.core.numbers import (Integer, Rational)
 from sympy.core.singleton import S
@@ -6,7 +8,7 @@ import sympy.polys
 from math import gcd
 
 
-def egyptian_fraction(r, algorithm="Greedy"):
+def egyptian_fraction(r: Rational | tuple[int, int], algorithm: str = "Greedy") -> list[Integer]:
     """
     Return the list of denominators of an Egyptian fraction
     expansion [1]_ of the said rational `r`.
@@ -104,22 +106,25 @@ def egyptian_fraction(r, algorithm="Greedy"):
 
     """
 
-    if not isinstance(r, Rational):
-        if isinstance(r, (Tuple, tuple)) and len(r) == 2:
-            r = Rational(*r)
-        else:
-            raise ValueError("Value must be a Rational or tuple of ints")
-    if r <= 0:
+    # r reassigned to rat variable so that mypy knows it has Rational type
+    if isinstance(r, Rational):
+        rat = r
+    elif isinstance(r, (Tuple, tuple)) and len(r) == 2:
+        rat = Rational(*r)
+    else:
+        raise ValueError("Value must be a Rational or tuple of ints")
+
+    if rat <= 0:
         raise ValueError("Value must be positive")
 
     # common cases that all methods agree on
-    x, y = r.as_numer_denom()
+    x, y = rat.as_numer_denom()
     if y == 1 and x == 2:
         return [Integer(i) for i in [1, 2, 3, 6]]
     if x == y + 1:
         return [S.One, y]
 
-    prefix, rem = egypt_harmonic(r)
+    prefix, rem = egypt_harmonic(rat)
     if rem == 0:
         return prefix
     # work in Python ints
@@ -139,7 +144,7 @@ def egyptian_fraction(r, algorithm="Greedy"):
     return prefix + [Integer(i) for i in postfix]
 
 
-def egypt_greedy(x, y):
+def egypt_greedy(x: int, y: int) -> list[int]:
     # assumes gcd(x, y) == 1
     if x == 1:
         return [y]
@@ -154,7 +159,7 @@ def egypt_greedy(x, y):
         return [y//x + 1] + egypt_greedy(num, denom)
 
 
-def egypt_graham_jewett(x, y):
+def egypt_graham_jewett(x: int, y: int) -> list[int]:
     # assumes gcd(x, y) == 1
     l = [y] * x
 
@@ -176,7 +181,7 @@ def egypt_graham_jewett(x, y):
     return sorted(l)
 
 
-def egypt_takenouchi(x, y):
+def egypt_takenouchi(x: int, y: int) -> list[int]:
     # assumes gcd(x, y) == 1
     # special cases for 3/y
     if x == 3:
@@ -201,7 +206,7 @@ def egypt_takenouchi(x, y):
     return sorted(l)
 
 
-def egypt_golomb(x, y):
+def egypt_golomb(x: int, y: int) -> list[int]:
     # assumes x < y and gcd(x, y) == 1
     if x == 1:
         return [y]
@@ -211,9 +216,9 @@ def egypt_golomb(x, y):
     return sorted(rv)
 
 
-def egypt_harmonic(r):
+def egypt_harmonic(r: Rational) -> tuple[list[Integer], Rational]:
     # assumes r is Rational
-    rv = []
+    rv: list[Integer] = []
     d = S.One
     acc = S.Zero
     while acc + 1/d <= r:

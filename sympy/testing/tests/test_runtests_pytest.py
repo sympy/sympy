@@ -1,5 +1,5 @@
+from __future__ import annotations
 import pathlib
-from typing import List
 from pathlib import Path
 import pytest
 
@@ -96,7 +96,7 @@ class TestUpdateArgsWithPaths:
             ),
         ]
     )
-    def test_multiple_paths_from_non_root(paths: List[str], expected_paths: List[str]):
+    def test_multiple_paths_from_non_root(paths: list[str], expected_paths: list[str]):
         """Multiple partial paths are matched correctly."""
         args = update_args_with_paths(paths=paths, keywords=None, args=[])
         assert len(args) == len(expected_paths)
@@ -115,7 +115,7 @@ class TestUpdateArgsWithPaths:
             ['sympy/physics/mechanics/tests/test_kane3.py'],
         ]
     )
-    def test_string_as_keyword(paths: List[str]):
+    def test_string_as_keyword(paths: list[str]):
         """String keywords are matched correctly."""
         keywords = ('bicycle', )
         args = update_args_with_paths(paths=paths, keywords=keywords, args=[])
@@ -135,7 +135,7 @@ class TestUpdateArgsWithPaths:
             ['sympy/core/tests/test_sympify.py'],
         ]
     )
-    def test_integer_as_keyword(paths: List[str]):
+    def test_integer_as_keyword(paths: list[str]):
         """Integer keywords are matched correctly."""
         keywords = ('3538', )
         args = update_args_with_paths(paths=paths, keywords=keywords, args=[])

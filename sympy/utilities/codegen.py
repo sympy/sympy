@@ -78,6 +78,7 @@ unsurmountable issues that can only be tackled with dedicated code generator:
 - ...
 
 """
+from __future__ import annotations
 
 import os
 import textwrap

@@ -2,6 +2,7 @@
 This module can be used to solve column displacement problems
 using singularity functions in mechanics.
 """
+from __future__ import annotations
 
 from sympy import nsimplify, simplify
 from sympy.core import Symbol, symbols

@@ -113,6 +113,7 @@ References
        A Fast Linear-Arithmetic Solver for DPLL(T)
        https://link.springer.com/chapter/10.1007/11817963_11
 """
+from __future__ import annotations
 from sympy.solvers.solveset import linear_eq_to_matrix
 from sympy.matrices.dense import eye
 from sympy.assumptions import Predicate

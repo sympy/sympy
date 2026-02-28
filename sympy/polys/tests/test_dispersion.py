@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core import Symbol, S, oo
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.polys import poly

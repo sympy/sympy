@@ -13,6 +13,7 @@ from sympy.abc import w, x, y, z
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.special.gamma_functions import gamma
+from sympy.functions.special.gamma_functions import gamma
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 
 
@@ -290,6 +291,7 @@ def test_sin_cos():
 def test_factorial():
     n = Symbol('n')
     assert refine(factorial(n), Q.zero(n)) == 1
+    assert refine(factorial(n), Q.zero(n - S.One)) == 1
     assert refine(factorial(n), Q.zero(n - S.One)) == 1
     assert refine(factorial(n), Q.integer(n) & Q.negative(n)) is S.ComplexInfinity
     assert refine(factorial(n), Q.positive_infinite(n)) is S.Infinity

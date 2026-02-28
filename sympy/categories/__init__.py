@@ -16,6 +16,7 @@ from
    katmat.math.uni-bremen.de/acc/acc.pdf
 
 """
+from __future__ import annotations
 
 from .baseclasses import (Object, Morphism, IdentityMorphism,
                          NamedMorphism, CompositeMorphism, Category,

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.basic import _aresame
 from sympy.core.function import Lambda, expand_complex
 from sympy.core.mul import Mul

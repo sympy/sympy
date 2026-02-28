@@ -20,6 +20,7 @@ object distance
 image distance
     positive for real images
 """
+from __future__ import annotations
 
 __all__ = [
     'RayTransferMatrix',

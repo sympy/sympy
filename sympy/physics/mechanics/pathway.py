@@ -1,4 +1,5 @@
 """Implementations of pathways for use by actuators."""
+from __future__ import annotations
 
 from abc import ABC, abstractmethod
 

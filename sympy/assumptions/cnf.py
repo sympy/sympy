@@ -4,6 +4,7 @@ only and should not be used anywhere else as these do not possess the
 signatures common to SymPy objects. For general use of logic constructs
 please refer to sympy.logic classes And, Or, Not, etc.
 """
+from __future__ import annotations
 from itertools import combinations, product, zip_longest
 from sympy.assumptions.assume import AppliedPredicate, Predicate
 from sympy.core.relational import Eq, Ne, Gt, Lt, Ge, Le

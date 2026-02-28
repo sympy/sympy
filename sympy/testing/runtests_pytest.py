@@ -20,6 +20,7 @@ match the existing API while thinly wrapping pytest.
 These two key functions are `test` and `doctest`.
 
 """
+from __future__ import annotations
 
 import functools
 import importlib.util
@@ -27,7 +28,6 @@ import os
 import pathlib
 import re
 from fnmatch import fnmatch
-from typing import List, Optional, Tuple
 
 try:
     import pytest
@@ -95,10 +95,10 @@ def sympy_dir() -> pathlib.Path:
 
 
 def update_args_with_paths(
-    paths: List[str],
-    keywords: Optional[Tuple[str]],
-    args: List[str],
-) -> List[str]:
+    paths: list[str],
+    keywords: tuple[str] | None,
+    args: list[str],
+) -> list[str]:
     """Appends valid paths and flags to the args `list` passed to `pytest.main`.
 
     The are three different types of "path" that a user may pass to the `paths`

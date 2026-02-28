@@ -1,3 +1,4 @@
+from __future__ import annotations
 from math import factorial as _factorial, log, prod
 from itertools import chain, product
 

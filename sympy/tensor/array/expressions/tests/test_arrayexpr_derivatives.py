@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy import exp, Matrix, Array
 from sympy.core.symbol import symbols
 from sympy.functions.elementary.trigonometric import (cos, sin)

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.function import (Derivative as D, Function)
 from sympy.core.relational import Eq
 from sympy.core.symbol import (Symbol, symbols)

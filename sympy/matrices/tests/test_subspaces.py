@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.matrices import Matrix
 from sympy.core.numbers import Rational
 from sympy.core.symbol import symbols
