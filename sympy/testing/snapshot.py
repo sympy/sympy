@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """
 Classes and functions for carrying out snapshot testing in sympy.
 Ideas and code borrowed from pre-existing doctest framework.
