@@ -485,7 +485,7 @@ def refine_factorial(expr, assumptions):
     arg = expr.args[0]
     if ask(Q.zero(arg), assumptions):
         return S.One
-    if ask(Q.eq(arg, 1), assumptions):
+    if ask(Q.zero(arg - 1), assumptions):
         return S.One
     if ask(Q.integer(arg) & Q.negative(arg), assumptions):
             return S.ComplexInfinity
