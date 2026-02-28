@@ -9,6 +9,8 @@ this stuff for general purpose.
 
 from __future__ import annotations
 
+from collections import deque
+
 # Type of a fuzzy bool
 FuzzyBool = bool | None
 
@@ -329,14 +331,11 @@ class AndOr_Base(Logic):
     @classmethod
     def flatten(cls, args):
         # quick-n-dirty flattening for And and Or
-        args_queue = list(args)
+        args_queue = deque(args)
         res = []
 
-        while True:
-            try:
-                arg = args_queue.pop(0)
-            except IndexError:
-                break
+        while args_queue:
+            arg = args_queue.popleft()
             if isinstance(arg, Logic):
                 if isinstance(arg, cls):
                     args_queue.extend(arg.args)
