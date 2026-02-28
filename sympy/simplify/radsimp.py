@@ -16,6 +16,7 @@ from sympy.functions.elementary.complexes import Abs
 from sympy.polys import gcd
 from sympy.simplify.sqrtdenest import sqrtdenest
 from sympy.utilities.iterables import iterable, sift
+from sympy.core.expr import Expr
 
 
 
@@ -840,7 +841,6 @@ def radsimp(expr, symbolic=True, max_terms=4):
     1/(a + b*sqrt(c))
 
     """
-    from sympy.core.expr import Expr
     from sympy.simplify.simplify import signsimp
 
     syms = symbols("a:d A:D")
@@ -1048,7 +1048,7 @@ def rad_rationalize(num, den):
     return rad_rationalize(num, den)
 
 
-def fraction(expr, exact=False):
+def fraction(expr: Expr, exact: bool = False) -> tuple[Expr, Expr]:
     """Returns a pair with expression's numerator and denominator.
        If the given expression is not a fraction then this function
        will return the tuple (expr, 1).
@@ -1131,19 +1131,20 @@ def fraction(expr, exact=False):
             else:
                 numer.append(term)
         elif term.is_Rational and not term.is_Integer:
-            if term.p != 1:
-                numer.append(term.p)
-            denom.append(term.q)
+            if isinstance(term, Rational):
+                if term.p != 1:
+                    numer.append(term.p)
+                denom.append(term.q)
         else:
             numer.append(term)
     return Mul(*numer, evaluate=not exact), Mul(*denom, evaluate=not exact)
 
 
-def numer(expr, exact=False):  # default matches fraction's default
+def numer(expr: Expr, exact: bool = False) -> Expr:  # default matches fraction's default
     return fraction(expr, exact=exact)[0]
 
 
-def denom(expr, exact=False):  # default matches fraction's default
+def denom(expr: Expr, exact: bool = False) -> Expr:  # default matches fraction's default
     return fraction(expr, exact=exact)[1]
 
 
