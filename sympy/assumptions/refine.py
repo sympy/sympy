@@ -95,10 +95,10 @@ def refine_abs(expr, assumptions):
     x
     >>> refine_abs(Abs(x), Q.negative(x))
     -x
-    >>> refine_abs(Abs(x-y), Q.positive(x-y))
-    x - y
-    >>> refine_abs(Abs(x-y), Q.negative(x-y))
+    >>> refine_abs(Abs(y-x), Q.positive(y-x))
     -x + y
+    >>> refine_abs(Abs(y-x), Q.negative(y-x))
+    x - y
     >>> refine_abs(Abs(x * y), Q.positive(x) & Q.positive(y))
     x*y
     >>> refine_abs(Abs(z - y + x), Q.positive(z) & Q.negative(y) & Q.positive(x))
@@ -124,7 +124,14 @@ def refine_abs(expr, assumptions):
         elif ask(Q.zero(arg), assumptions):
             return 0
         else:
-            return expr
+            opposite_arg = -arg
+            if ask(Q.positive(opposite_arg), assumptions):
+                return -arg
+            elif ask(Q.negative(opposite_arg), assumptions):
+                return arg
+            elif ask(Q.zero(opposite_arg), assumptions):
+                return 0
+        return expr
 
     # arg is Mul
     if isinstance(arg, Mul):
