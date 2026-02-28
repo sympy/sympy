@@ -1795,6 +1795,7 @@ def test_nonzero():
     assert ask(Q.nonzero(exp(x*y)), Q.real(x)) is None
     assert ask(Q.nonzero(exp(x*y)), Q.real(x) & Q.real(y)) is True
     assert ask(Q.nonzero(exp((x*y) + y)), Q.real(x)) is None
+    assert ask(Q.nonzero(exp((x*y) + y)), Q.negative_infinite(x) & Q.positive(y)) is False
 
 
 def test_zero():
