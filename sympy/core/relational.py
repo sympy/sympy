@@ -465,9 +465,13 @@ class Relational(Boolean, EvalfMixin):
                         else:
                             r = r.func(x, -b / m)
                     elif m.is_zero is True:
-                        r = r.func(b, S.Zero)
-                    elif m.is_zero is None and not isinstance(r, Equality):
                          r = r.func(b, S.Zero)
+                    else:
+    # m.is_zero is None - uncertain if m is zero
+    # For Equalities, always try the simplification
+    # For inequalities, only if we can't prove m is non-zero
+                        if isinstance(r, Equality) or m.equals(0) is not False:
+                            r = r.func(b, S.Zero)
                 except ValueError:
                     # maybe not a linear function, try polynomial
                     from sympy.polys.polyerrors import PolynomialError
