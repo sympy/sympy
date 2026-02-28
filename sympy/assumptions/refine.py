@@ -482,7 +482,6 @@ def refine_sin_cos(expr, assumptions):
 
 def refine_factorial(expr, assumptions):
     from sympy.functions.special.gamma_functions import gamma
-    from sympy.functions.special.gamma_functions import gamma
     arg = expr.args[0]
     if ask(Q.zero(arg), assumptions):
         return S.One
