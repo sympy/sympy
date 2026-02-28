@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.abc import x, zeta
 from sympy.polys import Poly, cyclotomic_poly
 from sympy.polys.domains import FF, QQ, ZZ

@@ -8,6 +8,7 @@ Features:
 References:
   - https://en.wikipedia.org/wiki/DPLL_algorithm
 """
+from __future__ import annotations
 
 from collections import defaultdict
 from heapq import heappush, heappop

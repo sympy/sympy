@@ -3,6 +3,7 @@
 # NOTE: keep tests sorted by (module, class name) key. If a class can't
 # be instantiated, add it here anyway with @SKIP("abstract class) (see
 # e.g. Function).
+from __future__ import annotations
 
 import os
 import re

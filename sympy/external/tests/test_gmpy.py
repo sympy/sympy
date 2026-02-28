@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.external.gmpy import LONG_MAX, iroot
 from sympy.testing.pytest import raises
 

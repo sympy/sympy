@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.assumptions.ask import Q
 from sympy.assumptions.assume import assuming
 from sympy.core.numbers import (I, pi)

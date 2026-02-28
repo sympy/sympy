@@ -1,4 +1,5 @@
 """Thread-safe global parameters"""
+from __future__ import annotations
 
 from .cache import clear_cache
 from contextlib import contextmanager

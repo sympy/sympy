@@ -1,3 +1,4 @@
+from __future__ import annotations
 from hypothesis import given
 from hypothesis import settings, strategies as st
 from hypothesis.strategies import composite

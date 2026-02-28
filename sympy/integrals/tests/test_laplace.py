@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.integrals.laplace import (
     laplace_transform, inverse_laplace_transform,
     LaplaceTransform, InverseLaplaceTransform,

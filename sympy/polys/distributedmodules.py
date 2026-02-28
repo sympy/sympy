@@ -25,6 +25,7 @@ distributedpolys.py) is never needed in this code.
 The main reference for this file is [SCA],
 "A Singular Introduction to Commutative Algebra".
 """
+from __future__ import annotations
 
 
 from itertools import permutations

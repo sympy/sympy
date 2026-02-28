@@ -7,6 +7,7 @@ References
 .. [1] https://mathworld.wolfram.com/KroneckerDelta.html
 
 """
+from __future__ import annotations
 from .products import product
 from .summations import Sum, summation
 from sympy.core import Add, Mul, S, Dummy

@@ -1,4 +1,5 @@
 """Test modules.py code."""
+from __future__ import annotations
 
 from sympy.polys.agca.modules import FreeModule, ModuleOrder, FreeModulePolyRing
 from sympy.polys import CoercionFailed, QQ, lex, grlex, ilex, ZZ

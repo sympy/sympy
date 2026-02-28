@@ -1,4 +1,5 @@
 """Implementation of the Kronecker product"""
+from __future__ import annotations
 from functools import reduce
 from math import prod
 

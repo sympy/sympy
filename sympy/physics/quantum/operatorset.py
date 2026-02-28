@@ -13,6 +13,7 @@ descriptions for details.
 TODO List:
 - Update the dictionary with a complete list of state-operator pairs
 """
+from __future__ import annotations
 
 from sympy.physics.quantum.cartesian import (XOp, YOp, ZOp, XKet, PxOp, PxKet,
                                              PositionKet3D)

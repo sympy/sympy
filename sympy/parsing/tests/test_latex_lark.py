@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.testing.pytest import XFAIL
 from sympy.parsing.latex.lark import parse_latex_lark
 from sympy.external import import_module

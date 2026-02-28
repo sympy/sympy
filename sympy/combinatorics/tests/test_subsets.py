@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.combinatorics.subsets import Subset, ksubsets
 from sympy.testing.pytest import raises
 

@@ -5,6 +5,7 @@ models created using `sympy.physics.mechanics` into biomechanical or
 musculoskeletal models involding musculotendons and activation dynamics.
 
 """
+from __future__ import annotations
 
 from .activation import (
    ActivationBase,
