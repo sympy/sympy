@@ -316,7 +316,7 @@ def run_snapshot_tests(options, args):
                 ),
                 update=options.update
             )
-        except Exception as e:
+        except OSError as e:
             print(f"Error while testing {filename}: {e}")
             ok = False
             continue
