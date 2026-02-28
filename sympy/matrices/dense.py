@@ -122,6 +122,65 @@ def _force_mutable(x):
 
 class MutableDenseMatrix(DenseMatrix, MutableRepMatrix):
 
+    """A mutable matrix class represents a mathematical matrix whose entries can 
+    be modified after creation. Entries can be any SymPy expression, including 
+    symbols, numbers, and mathematical functions.
+
+    Examples
+    ========
+
+    >>> from sympy import Matrix
+
+    Create a matrix from a nested iterable:
+    >>> Matrix([[1, 2], [3, 4]])
+    Matrix([
+    [1, 2],
+    [3, 4]])
+
+    A 1D iterable can be used to create a column vector matrix:
+    >>> Matrix([1, 2, 3])
+    Matrix([
+    [1],
+    [2],
+    [3]])
+
+    Another way to create a matrix is by specifying the number of rows and columns 
+    along with the 1D iterable of values:
+    >>> Matrix(3, 3, [1, 2, 3, 4, 5, 6, 7, 8, 9])
+    Matrix([
+    [1, 2, 3],
+    [4, 5, 6],
+    [7, 8, 9]])
+
+    A lambda function can be used to generate matrix entries that follow a 
+    pattern or rule:
+    >>> Matrix(2, 2, lambda i, j: i+j)
+    Matrix([
+    [0, 1],
+    [1, 2]])
+
+    For example, to create an identity matrix:
+    >>> Matrix(3, 3, lambda i, j: 1 if i == j else 0)
+    Matrix([
+    [1, 0, 0],
+    [0, 1, 0],
+    [0, 0, 1]])
+
+    An empty matrix can be created with no arguments:
+    >>> Matrix()
+    Matrix(0, 0, [])
+
+    Notes
+    =====
+    Users should use Matrix or ImmutableMatrix directly. The base 
+    classes such as MatrixBase, DenseMatrix and MutableRepMatrix are for 
+    internal use only.
+
+    See Also
+    ========
+    ImmutableMatrix
+    """
+
     # The simplify method for mutable mattrices is inconsistent with the
     # one for immutable matrices.
 
