@@ -203,22 +203,11 @@ def _(expr, assumptions):
 def _(expr, assumptions):
     if ask(Q.zero(expr.exp), assumptions):
         return True
-    arg = expr.exp.args
-    if arg == ():
-        neg_inf = ask(Q.negative_infinite(expr.exp), assumptions)
-        if neg_inf:
-            return False
-        if neg_inf is None:
-            return None
-    else:
-        for a in arg:
-            neg_inf = ask(Q.negative_infinite(a), assumptions)
-            if a.is_number is False:
-                print(a)
-                if neg_inf:
-                    return False
-                if neg_inf is None:
-                    return None
+    neg_inf = ask(Q.negative_infinite(expr.exp), assumptions)
+    if neg_inf:
+        return False
+    if neg_inf is None:
+        return None
     expanded_expr = expand(expr)
     expanded_terms = expanded_expr.args
     results = []

@@ -274,19 +274,31 @@ def _(expr, assumptions):
 
 @NegativeInfinitePredicate.register(Add)
 def _(expr, assumptions):
-    is_neg_inf = False
     pos, neg, inf, fin = 0, 0, 0, 0
     for a in expr.args:
-        if ask(Q.infinite(a), assumptions):
-            inf += 1
-        elif ask(Q.finite(a), assumptions):
+        is_inf = ask(Q.infinite(a), assumptions)
+        is_neg = ask(Q.negative_infinite(a), assumptions)
+        is_pos = ask(Q.positive_infinite(a), assumptions)
+        is_fin = ask(Q.finite(a), assumptions)
+        if is_inf:
+            if is_neg:
+                neg += 1
+                continue  
+            if is_pos:
+                pos += 1
+                continue   
+            else:
+                inf += 1
+                continue
+        elif is_fin:
             fin += 1
-        elif ask(Q.negative_infinite(a), assumptions):
-            neg += 1
-        elif ask(Q.positive_infinite(a), assumptions):
-            pos += 1
-    if neg == 0 and (fin > 0 or pos > 0 or inf > 0):
-        return False
+        elif is_inf is None and is_fin is None and is_neg is None and is_pos is None:
+            return None
+    if neg == 0:
+        if inf > 0 and pos == 0:
+            return None
+        if (fin > 0 or pos > 0):
+            return False
     if neg > 0:
         if (pos > 0 or inf > 0):
             return None
@@ -295,3 +307,35 @@ def _(expr, assumptions):
         else:
             return True
 
+@NegativeInfinitePredicate.register(Mul)
+def _(expr, assumptions):
+    inf, pos_inf, neg_inf, neg, zero = 0, 0, 0, 0, 0
+    for a in expr.args:
+        print(a)
+        is_inf = ask(Q.infinite(a), assumptions)
+        is_neg_inf = ask(Q.negative_infinite(a), assumptions)
+        is_pos_inf = ask(Q.positive_infinite(a), assumptions)
+        is_neg = ask(Q.negative(a), assumptions)
+        is_zero = ask(Q.zero(a), assumptions)
+        if is_zero:
+            zero += 1
+        if is_inf:
+            if is_neg_inf:
+                neg_inf += 1
+            elif is_pos_inf:
+                pos_inf += 1
+            else:
+                inf += 1
+        if is_neg:
+            neg += 1
+    if zero > 0 and (neg_inf > 0 or pos_inf > 0 or inf > 0):
+        return None
+    if neg_inf + pos_inf + inf == 0:
+        return False
+    if inf > 0:
+        return None
+    total_neg = neg_inf + neg
+    if total_neg % 2 == 1:
+        return True
+    return False
+    
