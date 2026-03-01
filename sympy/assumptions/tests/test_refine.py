@@ -7,7 +7,7 @@ from sympy.core.symbol import Symbol
 from sympy.functions.elementary.complexes import (Abs, arg, im, re, sign, conjugate)
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.functions.elementary.trigonometric import (atan, atan2, cos, sin)
+from sympy.functions.elementary.trigonometric import (atan, atan2, cos, sin, asin, acos)
 from sympy.abc import w, x, y, z
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.piecewise import Piecewise
@@ -333,3 +333,12 @@ def test_conjugate():
     assert refine(log(conjugate(x ** n)), Q.positive & Q.integer(n)) == log(conjugate(x) ** n)
     assert refine(conjugate(log(x ** n)), Q.complex(x) & Q.integer(n)) == conjugate(log(x**n))
     assert refine(conjugate(log(x ** S.Half)), Q.real(x) & Q.negative(x)) == conjugate(log(x ** S.Half))
+
+    assert refine(conjugate(asin(x)), Q.real(x) & ~Q.positive(x - 1) & ~Q.negative(x + 1)) == asin(x)
+    assert refine(conjugate(acos(x)), Q.real(x) & ~Q.negative(x + 1) & ~Q.positive(x - 1)) == acos(x)
+    assert refine(conjugate(asin(x)), Q.real(x)) == conjugate(asin(x))
+    assert refine(conjugate(atan(x)), Q.real(x)) == atan(x)
+    assert refine(conjugate(asin(x)), Q.complex(x) & ~Q.real(x)) == asin(conjugate(x))
+    assert refine(conjugate(acos(x)), Q.complex(x) & ~Q.real(x)) == acos(conjugate(x))
+    assert refine(conjugate(asin(x)), Q.real(x)) == conjugate(asin(x))
+    assert refine(conjugate(atan(x)), Q.imaginary(x)) == conjugate(atan(x))
