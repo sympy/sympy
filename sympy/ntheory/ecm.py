@@ -1,10 +1,14 @@
+from __future__ import annotations
 from math import log
-
 from sympy.core.random import _randint
-from sympy.external.gmpy import gcd, invert, sqrt
+from sympy.external.gmpy import gcd, invert, sqrt,MPZ
 from sympy.utilities.misc import as_int
 from .generate import sieve, primerange
 from .primetest import isprime
+
+
+from typing import Iterable
+
 
 
 #----------------------------------------------------------------------------#
@@ -36,8 +40,9 @@ class Point:
            https://www.hyperelliptic.org/tanja/SHARCS/talks06/Gaj.pdf
 
     """
+    
 
-    def __init__(self, x_cord, z_cord, a_24, mod):
+    def __init__(self, x_cord: int , z_cord: int, a_24: int, mod: int) ->  None :
         """
         Initial parameters for the Point class.
 
@@ -54,7 +59,7 @@ class Point:
         self.a_24 = a_24
         self.mod = mod
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool :
         """Two points are equal if X/Z of both points are equal
         """
         if self.a_24 != other.a_24 or self.mod != other.mod:
@@ -62,7 +67,8 @@ class Point:
         return self.x_cord * other.z_cord % self.mod ==\
             other.x_cord * self.z_cord % self.mod
 
-    def add(self, Q, diff):
+    def add(self, Q: Point, diff: Point) -> Point:
+
         """
         Add two points self and Q where diff = self - Q. Moreover the assumption
         is self.x_cord*Q.x_cord*(self.x_cord - Q.x_cord) != 0. This algorithm
@@ -99,7 +105,7 @@ class Point:
         z_cord = diff.x_cord * subt * subt % self.mod
         return Point(x_cord, z_cord, self.a_24, self.mod)
 
-    def double(self):
+    def double(self) -> Point:
         """
         Doubles a point in an elliptic curve in Montgomery form.
         This algorithm requires 5 multiplications.
@@ -122,7 +128,7 @@ class Point:
         z_cord = diff*(v + self.a_24*diff) % self.mod
         return Point(x_cord, z_cord, self.a_24, self.mod)
 
-    def mont_ladder(self, k):
+    def mont_ladder(self, k: int)-> Point:
         """
         Scalar multiplication of a point in Montgomery form
         using Montgomery Ladder Algorithm.
@@ -157,7 +163,7 @@ class Point:
         return Q
 
 
-def _ecm_one_factor(n, B1=10000, B2=100000, max_curve=200, seed=None):
+def _ecm_one_factor(n: int, B1: int =10000, B2: int =100000, max_curve: int  =200, seed: None|int|list[int] = None) ->  None | int :
     """Returns one factor of n using
     Lenstra's 2 Stage Elliptic curve Factorization
     with Suyama's Parameterization. Here Montgomery
@@ -210,10 +216,11 @@ def _ecm_one_factor(n, B1=10000, B2=100000, max_curve=200, seed=None):
     randint = _randint(seed)
 
     # When calculating T, if (B1 - 2*D) is negative, it cannot be calculated.
-    D = min(sqrt(B2), B1 // 2 - 1)
+    D = int(min(float(sqrt(B2)), float(B1 // 2 - 1)))
+    
     sieve.extend(D)
     beta = [0] * D
-    S = [0] * D
+    S: list[Point] = []
     k = 1
     for p in primerange(2, B1 + 1):
         k *= pow(p, int(log(B1, p)))
@@ -222,10 +229,10 @@ def _ecm_one_factor(n, B1=10000, B2=100000, max_curve=200, seed=None):
     # Using the fact that the x-coordinates of point P and its
     # inverse -P coincide, the number of primes to be checked
     # in stage 2 can be reduced.
-    deltas_list = []
+    deltas_list: list[list[int]] = []
     for r in range(B1 + 2*D, B2 + 2*D, 4*D):
         # d in deltas iff r+(2d+1) and/or r-(2d+1) is prime
-        deltas = {abs(q - r) >> 1 for q in primerange(r - 2*D, r + 2*D)}
+        deltas:Iterable[int] = {abs(q - r) >> 1 for q in primerange(r - 2*D, r + 2*D)}
         deltas_list.append(list(deltas))
 
     for _ in range(max_curve):
@@ -243,15 +250,15 @@ def _ecm_one_factor(n, B1=10000, B2=100000, max_curve=200, seed=None):
             a24 = pow(v - u, 3, n)*(3*u + v)*invert(16*u_3*v, n) % n
         except ZeroDivisionError:
             #If the invert(16*u_3*v, n) doesn't exist (i.e., g != 1)
-            g = gcd(2*u_3*v, n)
+            g: int = int(gcd(2*u_3*v, n))
             #If g = n, try another curve
             if g == n:
                 continue
             return g
 
-        Q = Point(u_3, pow(v, 3, n), a24, n)
+        Q = Point(u_3, int(pow(v, 3, n)), int(a24), n)
         Q = Q.mont_ladder(k)
-        g = gcd(Q.z_cord, n)
+        g = int(gcd(Q.z_cord, n))
 
         #Stage 1 factor
         if g != 1 and g != n:
@@ -267,7 +274,7 @@ def _ecm_one_factor(n, B1=10000, B2=100000, max_curve=200, seed=None):
         beta[0] = (S[0].x_cord*S[0].z_cord) % n
         beta[1] = (S[1].x_cord*S[1].z_cord) % n
         for d in range(2, D):
-            S[d] = S[d - 1].add(Q2, S[d - 2])
+            S.append(S[d - 1].add(Q2, S[d - 2]))
             beta[d] = (S[d].x_cord*S[d].z_cord) % n
         # i.e., S[i] = Q.mont_ladder(2*i + 1)
 
@@ -285,14 +292,15 @@ def _ecm_one_factor(n, B1=10000, B2=100000, max_curve=200, seed=None):
                     (R.z_cord + S[delta].z_cord) - alpha + beta[delta]
                 g = (g*f) % n
             T, R = R, R.add(W, T)
-        g = gcd(n, g)
+        g = int(gcd(n, g))
 
         #Stage 2 Factor found
         if g != 1 and g != n:
             return g
+    return None
 
 
-def ecm(n, B1=10000, B2=100000, max_curve=200, seed=1234):
+def ecm(n: int, B1: int=10000, B2: int=100000, max_curve: int=200, seed: int=1234)-> set[int]:
     """Performs factorization using Lenstra's Elliptic curve method.
 
     This function repeatedly calls ``_ecm_one_factor`` to compute the factors
@@ -330,7 +338,7 @@ def ecm(n, B1=10000, B2=100000, max_curve=200, seed=1234):
                 n //= prime
 
     queue = []
-    def check(m):
+    def check(m:int)->None:
         if isprime(m):
             factors.add(m)
             return
