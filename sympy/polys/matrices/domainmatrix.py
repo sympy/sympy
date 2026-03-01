@@ -1672,7 +1672,7 @@ class DomainMatrix(Generic[Er]):
         if lamda.element == lamda.domain.one: #type: ignore[attr-defined]
             return A
 
-        return A.mul(1 / lamda.element) #type: ignore[attr-defined]
+        return A.mul(A.domain.one / lamda.element) #type: ignore[attr-defined]
 
     def pow(A: DomainMatrix[Er], n: int) -> DomainMatrix[Er]:
         r"""
