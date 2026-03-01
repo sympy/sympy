@@ -7,7 +7,7 @@ from sympy.core.symbol import Symbol
 from sympy.functions.elementary.complexes import (Abs, arg, im, re, sign, conjugate)
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.functions.elementary.trigonometric import (atan, atan2, cos, sin, asin, acos)
+from sympy.functions.elementary.trigonometric import (atan, atan2, cos, sin, asin, acos, acot, asec, acsc)
 from sympy.abc import w, x, y, z
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.piecewise import Piecewise
@@ -338,7 +338,17 @@ def test_conjugate():
     assert refine(conjugate(acos(x)), Q.real(x) & ~Q.negative(x + 1) & ~Q.positive(x - 1)) == acos(x)
     assert refine(conjugate(asin(x)), Q.real(x)) == conjugate(asin(x))
     assert refine(conjugate(atan(x)), Q.real(x)) == atan(x)
-    assert refine(conjugate(asin(x)), Q.complex(x) & ~Q.real(x)) == asin(conjugate(x))
-    assert refine(conjugate(acos(x)), Q.complex(x) & ~Q.real(x)) == acos(conjugate(x))
+    assert refine(conjugate(acot(x)), Q.real(x)) == acot(x)
+    assert refine(conjugate(asin(x)), ~Q.real(x)) == asin(conjugate(x))
+    assert refine(conjugate(acos(x)), ~Q.real(x)) == acos(conjugate(x))
     assert refine(conjugate(asin(x)), Q.real(x)) == conjugate(asin(x))
     assert refine(conjugate(atan(x)), Q.imaginary(x)) == conjugate(atan(x))
+    assert refine(conjugate(acot(x)), Q.imaginary(x)) == conjugate(acot(x))
+    assert refine(conjugate(asec(x)), Q.real(x) & Q.nonnegative(x - 1)) == asec(x)
+    assert refine(conjugate(asec(x)), Q.real(x) & Q.nonpositive(x + 1)) == asec(x)
+    assert refine(conjugate(acsc(x)), Q.real(x) & Q.nonnegative(x - 1)) == acsc(x)
+    assert refine(conjugate(acsc(x)), Q.real(x) & Q.nonpositive(x + 1)) == acsc(x)
+    assert refine(conjugate(asec(x)), ~Q.real(x)) == asec(conjugate(x))
+    assert refine(conjugate(acsc(x)), ~Q.real(x)) == acsc(conjugate(x))
+    assert refine(conjugate(asec(x)), Q.real(x)) == conjugate(asec(x))
+    assert refine(conjugate(acsc(x)), Q.real(x)) == conjugate(acsc(x))

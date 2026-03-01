@@ -535,7 +535,7 @@ def refine_conjugate(expr, assumptions):
     >>> from sympy.core.singleton import S
     >>> from sympy.functions.elementary.complexes import conjugate
     >>> from sympy.assumptions.refine import refine
-    >>> from sympy.functions.elementary.trigonometric import asin
+    >>> from sympy.functions.elementary.trigonometric import asin, atan
     >>> x = Symbol('x')
     >>> refine(conjugate(x), Q.real(x))
     x
@@ -552,10 +552,12 @@ def refine_conjugate(expr, assumptions):
     sqrt(conjugate(x))
     >>> refine(conjugate(asin(x)), Q.real(x) & ~Q.positive(x - 1) & ~Q.negative(x + 1))
     asin(x)
+    >>> refine(conjugate(atan(x)), Q.real(x))
+    atan(x)
     """
     from sympy.functions.elementary.complexes import conjugate
     from sympy.functions.elementary.exponential import log
-    from sympy.functions.elementary.trigonometric import asin, acos, atan
+    from sympy.functions.elementary.trigonometric import asin, acos, atan, acot, asec, acsc
     arg = expr.args[0]
 
     # The logarithm has a branch cut along the negative real axis.
@@ -578,28 +580,39 @@ def refine_conjugate(expr, assumptions):
             return conjugate(base) ** exp
 
 
-    #The asin and acos functions have a branch cut along the real axis when arg < -1 and arg > 1
-    #We can safely push the conjugate inside only if the arg is not in those intervals
+    # The asin and acos functions have a branch cut along the real axis when asin_acos_arg < -1 and asin_acos_arg > 1
+    # We can safely push the conjugate inside only if the argument is not in those intervals
     if isinstance(arg, (asin, acos)):
-        trigonometric_arg = arg.args[0]
-        if ask(Q.real(trigonometric_arg), assumptions):
-            if ask(~Q.positive(trigonometric_arg - 1), assumptions) and ask(~Q.negative(trigonometric_arg + 1), assumptions):
+        asin_acos_arg = arg.args[0]
+        if ask(Q.real(asin_acos_arg), assumptions):
+            if ask(~Q.positive(asin_acos_arg - 1), assumptions) and ask(~Q.negative(asin_acos_arg + 1), assumptions):
                 return arg
             else:
                 return expr
-        elif ask(~Q.real(trigonometric_arg), assumptions):
-            return arg.func(conjugate(trigonometric_arg))
+        elif ask(~Q.real(asin_acos_arg), assumptions):
+            return arg.func(conjugate(asin_acos_arg))
 
-    # the atan function has a branch cut along the imaginary axis.
-    # We can safely push the conjugate inside only if the argument is not
-    # strictly an imaginary number.
-    if isinstance(arg, atan):
-        atan_arg = arg.args[0]
-        if ask(Q.real(atan_arg), assumptions):
+    # The atan and acot functions have branch cuts along the imaginary axis. For atan,
+    # the cuts are from i to i∞ and from -i to -i∞. For acot, the cut is on the interval (-i, i).
+    # We can safely push the conjugate inside only if the argument is not a purely imaginary number
+    if isinstance(arg, (acot,atan)):
+        atan_acot_arg = arg.args[0]
+        if ask(Q.real(atan_acot_arg), assumptions):
             return arg
-        elif ask(~Q.imaginary(atan_arg), assumptions):
-            return atan(conjugate(atan_arg))
+        elif ask(~Q.imaginary(atan_acot_arg), assumptions):
+            return arg.func(conjugate(atan_acot_arg))
 
+    # The asec and acsc functions have a branch cut along the real axis on the interval [-1, 1].
+    # We can safely push the conjugate inside only if the argument is strictly outside this interval.
+    if isinstance(arg, (asec, acsc)):
+        asec_acsc_arg = arg.args[0]
+        if ask(Q.real(asec_acsc_arg), assumptions):
+            if ask(Q.nonnegative(asec_acsc_arg - 1), assumptions) or ask(Q.nonpositive(asec_acsc_arg +1), assumptions):
+                return arg
+            else:
+                return expr
+        elif ask(~Q.real(asec_acsc_arg), assumptions):
+            return arg.func(conjugate(asec_acsc_arg))
 
     if ask(Q.real(arg), assumptions):
         return arg
