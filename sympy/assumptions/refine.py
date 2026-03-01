@@ -593,7 +593,7 @@ def refine_conjugate(expr, assumptions):
             return arg.func(conjugate(asin_acos_arg))
 
     # The atan and acot functions have branch cuts along the imaginary axis. For atan,
-    # the cuts are from i to i∞ and from -i to -i∞. For acot, the cut is on the interval (-i, i).
+    # the cuts are from i to i oo and from -i to -i oo. For acot, the cut is on the interval (-i, i).
     # We can safely push the conjugate inside only if the argument is not a purely imaginary number
     if isinstance(arg, (acot,atan)):
         atan_acot_arg = arg.args[0]
