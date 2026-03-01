@@ -1,15 +1,14 @@
 """
-This module contain solvers for all kinds of equations:
+This module contains solvers for different kinds of equations:
 
-    - algebraic or transcendental, use solve()
+    - Algebraic or transcendental equations: use ``solve()``
+    - Recurrence relations: use ``rsolve()``
+    - Differential equations: use ``dsolve()``
+    - Nonlinear equations (numerically): use ``nsolve()``
+      (requires a suitable starting point)
 
-    - recurrence, use rsolve()
-
-    - differential, use dsolve()
-
-    - nonlinear (numerically), use nsolve()
-      (you will need a good starting point)
-
+These functions provide high-level interfaces for solving symbolic
+and numerical equations in SymPy.
 """
 from __future__ import annotations
 
@@ -2301,11 +2300,14 @@ def solve_linear_system(system, *symbols, **flags):
     Explanation
     ===========
 
-    The possible number of solutions is zero, one, or infinite. Respectively,
-    this procedure will return None or a dictionary with solutions. In the
-    case of underdetermined systems, all arbitrary parameters are skipped.
-    This may cause a situation in which an empty dictionary is returned.
-    In that case, all symbols can be assigned arbitrary values.
+    The possible number of solutions is zero, one, or infinite.
+    - If the system is inconsistent, ``None`` is returned.
+    - If a unique solution exists, a dictionary mapping symbols to values
+    is returned.
+    - If the system is underdetermined, arbitrary parameters are omitted
+    and a dictionary of determined symbols is returned. In some cases,
+    this may result in an empty dictionary, indicating that all symbols
+    are free.
 
     Input to this function is a $N\times M + 1$ matrix, which means it has
     to be in augmented form. If you prefer to enter $N$ equations and $M$
