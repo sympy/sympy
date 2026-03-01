@@ -1,7 +1,7 @@
 from __future__ import annotations
 from math import log
 from sympy.core.random import _randint
-from sympy.external.gmpy import gcd, invert, sqrt,MPZ
+from sympy.external.gmpy import gcd, invert, sqrt
 from sympy.utilities.misc import as_int
 from .generate import sieve, primerange
 from .primetest import isprime
