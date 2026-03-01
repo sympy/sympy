@@ -14,6 +14,7 @@ from __future__ import annotations
 from typing import overload, TYPE_CHECKING, Generic, TypeVar, cast
 
 Er = TypeVar("Er")
+"""Type variable for domain elements."""
 
 from collections import Counter
 from functools import reduce
@@ -142,7 +143,7 @@ class DomainMatrix(Generic[Er]):
     """
     rep: SDM | DDM | DFM
     shape: tuple[int, int]
-    domain: Domain
+    domain: Domain[Er] #type: ignore[type-var]
 
     def __new__(
     cls, rows, shape: tuple[int, int], domain, *, fmt: str | None = None
@@ -2025,7 +2026,7 @@ class DomainMatrix(Generic[Er]):
 
         # First canonicalize the denominator (e.g. multiply by -1).
         if K.is_negative(denom):
-            u = -K.one
+            u = -K.one #type: ignore[operator]
         else:
             u = K.canonical_unit(denom)
 
@@ -2033,7 +2034,7 @@ class DomainMatrix(Generic[Er]):
         # complicated than the elements of the numerator. Hopefully it will be
         # quicker to find the gcd of the numerator and if there is no content
         # then we do not need to look at the denominator at all.
-        content = dup_content(elements, K)
+        content = dup_content(elements, K) # type: ignore[type-var]
         common = K.gcd(content, denom)
 
         if not K.is_one(content):
@@ -2041,11 +2042,11 @@ class DomainMatrix(Generic[Er]):
             common = K.gcd(content, denom)
 
             if not K.is_one(common):
-                elements = dup_exquo_ground(elements, common, K)
+                elements = dup_exquo_ground(elements, common, K) # type: ignore[type-var]
                 denom = K.quo(denom, common)
 
         if not K.is_one(u):
-            elements = dup_mul_ground(elements, u, K)
+            elements = dup_mul_ground(cast(list, elements), u, K)
             denom = u * denom
         elif K.is_one(common):
             return (M.copy(), denom)
@@ -2141,7 +2142,7 @@ class DomainMatrix(Generic[Er]):
         """
         K = self.domain
         elements, _ = self.to_flat_nz()
-        return dup_content(elements, K)
+        return dup_content(elements, K) # type: ignore[type-var]
 
     def primitive(self: DomainMatrix[Er]) -> tuple[Er, DomainMatrix[Er]]:
         """
@@ -2173,7 +2174,7 @@ class DomainMatrix(Generic[Er]):
         """
         K = self.domain
         elements, data = self.to_flat_nz()
-        content, prims = dup_primitive(elements, K)
+        content, prims = dup_primitive(elements, K) # type: ignore[type-var]
         M_primitive = self.from_flat_nz(prims, data, K)
         return content, M_primitive
 
@@ -3569,7 +3570,7 @@ class DomainMatrix(Generic[Er]):
 
         for f, mult in factors:
             for _ in range(mult):
-                cp = dup_mul(cp, f, K)
+                cp = dup_mul(cp, f, K) # type: ignore[type-var]
 
         return cp
 
@@ -3770,10 +3771,10 @@ class DomainMatrix(Generic[Er]):
             # Restore the denominator in the charpoly over K_f.
             #
             # If M = N/d then p_M(x) = p_N(x*d)/d^n.
-            cp = dup_convert(cp, K_r, K_f)
+            cp = dup_convert(cp, K_r, K_f) # type: ignore[type-var]
             p = [K_f.one, K_f.zero]
-            q = [K_f.one/d]
-            cp = dup_transform(cp, p, q, K_f)
+            q = [K_f.one/d] #type: ignore[operator]
+            cp = dup_transform(cp, p, q, K_f) # type: ignore[type-var]
 
         return cp
 
