@@ -1012,9 +1012,14 @@ class Quaternion(Expr):
         q = self
         vector_norm = sqrt(q.b**2 + q.c**2 + q.d**2)
         a = exp(q.a) * cos(vector_norm)
-        b = exp(q.a) * sin(vector_norm) * q.b / vector_norm
-        c = exp(q.a) * sin(vector_norm) * q.c / vector_norm
-        d = exp(q.a) * sin(vector_norm) * q.d / vector_norm
+        if vector_norm == 0:
+            b=S.Zero
+            c=S.Zero
+            d=S.Zero
+        else:
+            b = exp(q.a) * sin(vector_norm) * q.b / vector_norm
+            c = exp(q.a) * sin(vector_norm) * q.c / vector_norm
+            d = exp(q.a) * sin(vector_norm) * q.d / vector_norm
 
         return Quaternion(a, b, c, d)
 
