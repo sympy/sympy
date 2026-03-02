@@ -5,8 +5,6 @@ from sympy.external.gmpy import gcd, invert, sqrt
 from sympy.utilities.misc import as_int
 from .generate import sieve, primerange
 from .primetest import isprime
-
-
 from typing import Iterable
 
 
@@ -40,9 +38,9 @@ class Point:
            https://www.hyperelliptic.org/tanja/SHARCS/talks06/Gaj.pdf
 
     """
-    
 
-    def __init__(self, x_cord: int , z_cord: int, a_24: int, mod: int) ->  None :
+
+    def __init__(self,x_cord: int ,z_cord: int,a_24: int,mod: int) -> None:
         """
         Initial parameters for the Point class.
 
@@ -59,7 +57,7 @@ class Point:
         self.a_24 = a_24
         self.mod = mod
 
-    def __eq__(self, other) -> bool :
+    def __eq__(self,other) -> bool :
         """Two points are equal if X/Z of both points are equal
         """
         if self.a_24 != other.a_24 or self.mod != other.mod:
@@ -217,7 +215,7 @@ def _ecm_one_factor(n: int, B1: int =10000, B2: int =100000, max_curve: int  =20
 
     # When calculating T, if (B1 - 2*D) is negative, it cannot be calculated.
     D = int(min(float(sqrt(B2)), float(B1 // 2 - 1)))
-    
+
     sieve.extend(D)
     beta = [0] * D
     S: list[Point] = []
