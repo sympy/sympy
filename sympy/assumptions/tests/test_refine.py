@@ -363,7 +363,7 @@ def test_log():
     assert refine(log(exp(x)), Q.real(x) & Q.positive(y)) == x
     # Should not refine without real assumption
     assert refine(log(exp(x))) == log(exp(x))
-    
+
     # log(x**2)
     assert refine(log(x**2), Q.real(x)) == 2*log(Abs(x))
     assert refine(log(x**2), Q.positive(x)) == 2*log(x)
