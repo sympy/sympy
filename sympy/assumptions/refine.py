@@ -560,7 +560,7 @@ def refine_minmax(expr, assumptions):
     x
 
     """
-    from sympy.functions.elementary.miscellaneous import Min, Max
+    from sympy.functions.elementary.miscellaneous import Min
     is_min = isinstance(expr, Min)
     args = list(expr.args)
 
