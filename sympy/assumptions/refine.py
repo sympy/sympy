@@ -624,7 +624,7 @@ def refine_exp(expr, assumptions):
     from sympy.functions.elementary.exponential import exp
     from sympy.core.singleton import S
     from sympy.core.add import Add
-    
+
     arg = expr.args[0].expand()
 
     if isinstance(arg, Add):
@@ -638,7 +638,6 @@ def refine_exp(expr, assumptions):
 
     for term in terms:
         coeff = term.extract_multiplicatively(I_pi)
-        
         if coeff is not None:
             if ask(Q.even(coeff), assumptions):
                 pass
@@ -686,7 +685,7 @@ def refine_log(expr, assumptions):
     from sympy.functions.elementary.exponential import log, exp
     from sympy.functions.elementary.complexes import Abs
     arg = expr.args[0]
-    
+
     if isinstance(arg, exp):
         if ask(Q.real(arg.args[0]), assumptions):
             return arg.args[0]
