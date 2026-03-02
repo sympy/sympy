@@ -480,7 +480,127 @@ def refine_sin_cos(expr, assumptions):
         return ((-1)**((k + 1) / 2)) * sin(rem)
 
 
+def refine_tan(expr, assumptions):
+    """
+    Handler for the tan function.
+
+    Explanation
+    ===========
+
+    Simplifies ``tan`` expressions using the new assumptions system.
+
+    Examples
+    ========
+
+    >>> from sympy.assumptions.refine import refine_tan
+    >>> from sympy import Symbol, Q, tan, pi
+    >>> n = Symbol('n')
+    >>> refine_tan(tan(n*pi), Q.integer(n))
+    0
+    >>> refine_tan(tan(n*pi/2), Q.odd(n))
+    zoo
+
+    """
+    from sympy.functions.elementary.trigonometric import tan
+    from sympy.core.numbers import zoo
+    arg = expr.args[0]
+
+    # Find terms that are integer multiples of pi
+    integer_multiples_of_pi = []
+    remaining_terms = []
+
+    terms = arg.args if arg.is_Add else (arg,)
+    for term in terms:
+        coeff_of_pi = term.coeff(S.Pi)
+        if coeff_of_pi:
+            if ask(Q.integer(coeff_of_pi), assumptions):
+                # integer multiple of pi: tan(k*pi) = 0
+                integer_multiples_of_pi.append(term)
+            elif ask(Q.integer(2 * coeff_of_pi), assumptions):
+                # half-integer multiple of pi: tan(k*pi/2) = undefined (zoo)
+                if ask(Q.odd(2 * coeff_of_pi), assumptions):
+                    return zoo
+                else:
+                    integer_multiples_of_pi.append(term)
+            else:
+                remaining_terms.append(term)
+        else:
+            remaining_terms.append(term)
+
+    if not integer_multiples_of_pi:
+        return expr
+
+    # tan(k*pi + rem) = tan(rem)
+    rem = Add(*remaining_terms) if remaining_terms else S.Zero
+    if rem == S.Zero:
+        return S.Zero
+    return tan(rem)
+
+
+def refine_minmax(expr, assumptions):
+    """
+    Handler for Min and Max functions.
+
+    Explanation
+    ===========
+
+    Simplifies ``Min`` and ``Max`` expressions when the ordering between
+    arguments can be determined from the given assumptions.
+
+    Examples
+    ========
+
+    >>> from sympy.assumptions.refine import refine_minmax
+    >>> from sympy import Symbol, Q, Min, Max
+    >>> x = Symbol('x')
+    >>> y = Symbol('y')
+    >>> refine_minmax(Min(x, y), Q.positive(x) & Q.negative(y))
+    y
+    >>> refine_minmax(Max(x, y), Q.positive(x) & Q.negative(y))
+    x
+
+    """
+    from sympy.functions.elementary.miscellaneous import Min, Max
+    is_min = isinstance(expr, Min)
+    args = list(expr.args)
+
+    # Use a simple pairwise comparison to eliminate dominated args
+    # An argument a is dominated by b if ask(Q.le(a, b)) (for Min)
+    # or ask(Q.ge(a, b)) (for Max)
+    dominated = set()
+    for i, a in enumerate(args):
+        for j, b in enumerate(args):
+            if i == j or i in dominated:
+                continue
+            if is_min:
+                # If a > b or a == b, then a is dominated (b will be the min)
+                if ask(Q.positive(a - b), assumptions) or ask(Q.zero(a - b), assumptions):
+                    dominated.add(i)
+                    break
+                # Also check nonnegative directly (handles 0 vs positive case)
+                if ask(Q.nonnegative(a - b), assumptions):
+                    dominated.add(i)
+                    break
+            else:
+                # If a < b or a == b, then a is dominated (b will be the max)
+                if ask(Q.negative(a - b), assumptions) or ask(Q.zero(a - b), assumptions):
+                    dominated.add(i)
+                    break
+                # Also check nonpositive directly
+                if ask(Q.nonpositive(a - b), assumptions):
+                    dominated.add(i)
+                    break
+
+    remaining = [a for i, a in enumerate(args) if i not in dominated]
+    if len(remaining) == len(args):
+        return expr
+    if len(remaining) == 1:
+        return remaining[0]
+    return expr.func(*remaining)
+
+
 def refine_floor_ceiling(expr, assumptions):
+
     """
     Handler for the floor and ceiling functions
 
@@ -531,6 +651,9 @@ handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'MatrixElement': refine_matrixelement,
     'cos': refine_sin_cos,
     'sin': refine_sin_cos,
+    'tan': refine_tan,
     'floor': refine_floor_ceiling,
-    'ceiling' : refine_floor_ceiling,
+    'ceiling': refine_floor_ceiling,
+    'Min': refine_minmax,
+    'Max': refine_minmax,
 }

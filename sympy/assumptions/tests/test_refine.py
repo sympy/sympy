@@ -8,12 +8,14 @@ from sympy.core.symbol import Symbol
 from sympy.functions.elementary.complexes import (Abs, arg, im, re, sign)
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.functions.elementary.trigonometric import (atan, atan2, cos, sin)
+from sympy.functions.elementary.trigonometric import (atan, atan2, cos, sin, tan)
 from sympy.abc import w, x, y, z
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.functions.elementary.integers import floor, ceiling
+from sympy.functions.elementary.miscellaneous import Min, Max
+from sympy.core.numbers import zoo
 
 
 def test_Abs():
@@ -303,5 +305,41 @@ def test_floor_ceiling():
     assert refine(floor(x + y - z)) == floor (x + y - z)
     assert refine(ceiling(ceiling(x) + y + floor(z))) == ceiling(x) + ceiling(y) + floor(z)
 
-    assert refine(floor(floor(x)+ floor(y))) == floor(x) + floor(y)
+    assert refine(floor(floor(x) + floor(y))) == floor(x) + floor(y)
     assert refine(ceiling(ceiling(x) - ceiling(y))) == ceiling(x) - ceiling(y)
+
+
+def test_tan():
+    n = Symbol('n')
+    x = Symbol('x')
+    # tan(n*pi) should be 0 when n is an integer
+    assert refine(tan(n*pi), Q.integer(n)) == S.Zero
+    # tan(n*pi/2) should be zoo (undefined) when n is odd
+    assert refine(tan(n*pi/2), Q.odd(n)) == zoo
+    # tan(x + n*pi) = tan(x) when n is an integer
+    assert refine(tan(x + n*pi), Q.integer(n)) == tan(x)
+    # tan(n*pi/4) = 0 when n is even (even multiple of pi/4 = integer multiple of pi/2 => 0)
+    assert refine(tan(n*pi/4), Q.even(n)) == S.Zero
+    # If the coefficient is not an integer multiple of pi, leave unchanged
+    assert refine(tan(x), Q.integer(n)) == tan(x)
+
+
+def test_minmax():
+    x = Symbol('x')
+    y = Symbol('y')
+    # Min: y is the minimum when x > 0 and y < 0
+    assert refine(Min(x, y), Q.positive(x) & Q.negative(y)) == y
+    # Max: x is the maximum when x > 0 and y < 0
+    assert refine(Max(x, y), Q.positive(x) & Q.negative(y)) == x
+    # Min(0, x) where x > 0 should give 0
+    assert refine(Min(0, x), Q.positive(x)) == S.Zero
+    # Max(0, x) where x > 0 should give x
+    assert refine(Max(0, x), Q.positive(x)) == x
+    # Min with unknown ordering should be unchanged
+    assert refine(Min(x, y), Q.positive(x)) == Min(x, y)
+    # 3-argument case: Min(x, y, z) where x > 0, y > 0, z < 0
+    z = Symbol('z')
+    assert refine(Min(x, y, z), Q.positive(x) & Q.positive(y) & Q.negative(z)) == z
+    # Max with equal args is just the arg itself
+    assert refine(Max(x, x), True) == x
+
