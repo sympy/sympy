@@ -49,7 +49,7 @@ from sympy.polys.monomials import (monomial_min, monomial_mul, monomial_div,
                                    monomial_ldiv)
 from sympy.external.gmpy import factorial as ifac
 from sympy.external.mpmath import giant_steps
-from sympy.core import PoleError, Function, Expr
+from sympy.core import PoleError, Expr
 from sympy.core.numbers import Rational
 from sympy.core.intfunc import igcd
 from sympy.functions import (sin, cos, tan, atan, exp, atanh, asinh, tanh, log,
@@ -1980,15 +1980,11 @@ def _rs_series(expr, series_rs, a, prec):
     args = expr.args
     R = series_rs.ring
 
-    # expr does not contain any function to be expanded
-    if (not any(arg.has(Function) for arg in args)
-        and not any(arg.is_Pow and arg.has(a) for arg in args)
-        and not expr.is_Function
-        and not expr.is_Pow):
-        return series_rs
-
     if not expr.has(a):
         return series_rs
+
+    elif expr.is_Symbol:
+        return series_rs.ring(expr)
 
     elif expr.is_Function:
         arg = args[0]
@@ -2059,6 +2055,8 @@ def _rs_series(expr, series_rs, a, prec):
         return series
 
     elif expr.is_Pow:
+        if expr.base == a:
+            return series_rs
         R1, s1 = sring(expr.base, domain=QQ, expand=False, series=True)
         R = R.compose(R1)
         series_inner = _rs_series(expr.base, s1, a, prec)
