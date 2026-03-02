@@ -1981,7 +1981,10 @@ def _rs_series(expr, series_rs, a, prec):
     R = series_rs.ring
 
     # expr does not contain any function to be expanded
-    if not any(arg.has(Function) for arg in args) and not expr.is_Function:
+    if (not any(arg.has(Function) for arg in args)
+        and not any(arg.is_Pow and arg.has(a) for arg in args)
+        and not expr.is_Function
+        and not expr.is_Pow):
         return series_rs
 
     if not expr.has(a):
@@ -2015,18 +2018,28 @@ def _rs_series(expr, series_rs, a, prec):
 
     elif expr.is_Mul:
         n = len(args)
+        R_args = []
         for arg in args:    # XXX Looks redundant
             if not arg.is_Number:
-                R1, _ = sring(arg, expand=False, series=True)
+                R1, s1 = sring(arg, domain=QQ, expand=False, series=True)
+                if a not in R1.symbols:
+                    R1= R1.add_gens([a])
+                    s1 = s1.set_ring(R1)
                 R = R.compose(R1)
-        min_pows = list(map(rs_min_pow, args, [R(arg) for arg in args],
-            [a]*len(args)))
+                R_args.append(s1)
+            else:
+                R_args.append(R(arg))
+        min_pows = list(map(rs_min_pow, args, R_args, [a]*len(args)))
         sum_pows = sum(min_pows)
         series = R(1)
 
         for i in range(n):
-            _series = _rs_series(args[i], R(args[i]), a, ceiling(prec
-                - sum_pows + min_pows[i]))
+            arg = args[i]
+            if arg.is_Pow and arg.base.has(a) and not arg.exp.is_positive:
+                R1, s1 = sring(arg, domain=QQ, expand=False, series=True)
+                _series = _rs_series(arg, s1, a, ceiling(prec - sum_pows + min_pows[i]))
+            else:
+                _series = _rs_series(arg, R(arg), a, ceiling(prec - sum_pows + min_pows[i]))
             R = R.compose(_series.ring)
             _series = _series.set_ring(R)
             series = series.set_ring(R)
@@ -2038,7 +2051,8 @@ def _rs_series(expr, series_rs, a, prec):
         n = len(args)
         series = R(0)
         for i in range(n):
-            _series = _rs_series(args[i], R(args[i]), a, prec)
+            R1, s1 = sring(args[i],domain=QQ, expand=False, series=True)
+            _series = _rs_series(args[i], s1, a, prec)
             R = R.compose(_series.ring)
             _series = _series.set_ring(R)
             series = series.set_ring(R)
@@ -2046,9 +2060,9 @@ def _rs_series(expr, series_rs, a, prec):
         return series
 
     elif expr.is_Pow:
-        R1, _ = sring(expr.base, domain=QQ, expand=False, series=True)
+        R1, s1 = sring(expr.base, domain=QQ, expand=False, series=True)
         R = R.compose(R1)
-        series_inner = _rs_series(expr.base, R(expr.base), a, prec)
+        series_inner = _rs_series(expr.base, s1, a, prec)
         return rs_pow(series_inner, expr.exp, series_inner.ring(a), prec)
 
     # The `is_constant` method is buggy hence we check it at the end.
