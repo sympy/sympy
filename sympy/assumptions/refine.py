@@ -600,7 +600,6 @@ def refine_minmax(expr, assumptions):
 
 
 def refine_floor_ceiling(expr, assumptions):
-
     """
     Handler for the floor and ceiling functions
 
