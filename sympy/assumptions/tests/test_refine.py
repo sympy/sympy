@@ -368,5 +368,3 @@ def test_log():
     assert refine(log(x**2), Q.real(x)) == 2*log(Abs(x))
     assert refine(log(x**2), Q.positive(x)) == 2*log(x)
     assert refine(log(x**y), Q.positive(x) & Q.real(y)) == y*log(x)
-
-
