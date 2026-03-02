@@ -616,7 +616,7 @@ def refine_exp(expr, assumptions):
     >>> refine(exp(I*pi*n), Q.odd(n))
     -1
     >>> refine(exp(I*pi/2*n), Q.even(n))
-    1
+    (-1)**(n/2)
     >>> refine(exp(I*pi/2*n), Q.odd(n))
     exp(I*pi*n/2)
 
@@ -643,6 +643,8 @@ def refine_exp(expr, assumptions):
                 pass
             elif ask(Q.odd(coeff), assumptions):
                 mult *= S.NegativeOne
+            elif ask(Q.integer(coeff), assumptions):
+                mult *= S.NegativeOne ** coeff
             elif ask(Q.even(coeff - S.Half), assumptions):
                 mult *= S.ImaginaryUnit
             elif ask(Q.odd(coeff - S.Half), assumptions):
