@@ -597,6 +597,108 @@ def refine_minmax(expr, assumptions):
     if len(remaining) == 1:
         return remaining[0]
     return expr.func(*remaining)
+def refine_exp(expr, assumptions):
+    """
+    Handler for the exp function.
+
+    Explanation
+    ===========
+
+    Simplifies ``exp`` expressions using the new assumptions system.
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol, Q, refine, exp, I, pi
+    >>> n = Symbol('n')
+    >>> refine(exp(I*pi*n), Q.even(n))
+    1
+    >>> refine(exp(I*pi*n), Q.odd(n))
+    -1
+    >>> refine(exp(I*pi/2*n), Q.even(n))
+    1
+    >>> refine(exp(I*pi/2*n), Q.odd(n))
+    exp(I*pi*n/2)
+
+    """
+    from sympy.functions.elementary.exponential import exp
+    from sympy.core.singleton import S
+    from sympy.core.add import Add
+    
+    arg = expr.args[0].expand()
+
+    if isinstance(arg, Add):
+        terms = arg.args
+    else:
+        terms = (arg,)
+
+    I_pi = S.ImaginaryUnit * S.Pi
+    rem_terms = []
+    mult = S.One
+
+    for term in terms:
+        coeff = term.extract_multiplicatively(I_pi)
+        
+        if coeff is not None:
+            if ask(Q.even(coeff), assumptions):
+                pass
+            elif ask(Q.odd(coeff), assumptions):
+                mult *= S.NegativeOne
+            elif ask(Q.even(coeff - S.Half), assumptions):
+                mult *= S.ImaginaryUnit
+            elif ask(Q.odd(coeff - S.Half), assumptions):
+                mult *= -S.ImaginaryUnit
+            else:
+                rem_terms.append(term)
+        else:
+            rem_terms.append(term)
+
+    if not rem_terms:
+        if mult == S.One:
+            return S.One
+        return mult
+    elif mult != S.One or len(rem_terms) != len(terms):
+        return mult * exp(Add(*rem_terms))
+    else:
+        return expr
+
+
+def refine_log(expr, assumptions):
+    """
+    Handler for the log function.
+
+    Explanation
+    ===========
+
+    Simplifies ``log`` expressions using the new assumptions system.
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol, Q, refine, log, exp
+    >>> x = Symbol('x')
+    >>> refine(log(exp(x)), Q.real(x))
+    x
+    >>> refine(log(x**2), Q.real(x))
+    2*log(Abs(x))
+
+    """
+    from sympy.functions.elementary.exponential import log, exp
+    from sympy.functions.elementary.complexes import Abs
+    arg = expr.args[0]
+    
+    if isinstance(arg, exp):
+        if ask(Q.real(arg.args[0]), assumptions):
+            return arg.args[0]
+    elif arg.is_Pow:
+        base, exp_val = arg.args
+        if ask(Q.real(base), assumptions) and ask(Q.even(exp_val), assumptions):
+            return exp_val * log(Abs(base))
+        if ask(Q.positive(base), assumptions) and ask(Q.real(exp_val), assumptions):
+            return exp_val * log(base)
+
+    return expr
+
 
 
 def refine_floor_ceiling(expr, assumptions):
@@ -640,6 +742,8 @@ def refine_floor_ceiling(expr, assumptions):
 
 
 handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
+    'exp': refine_exp,
+    'log': refine_log,
     'Abs': refine_abs,
     'Pow': refine_Pow,
     'atan2': refine_atan2,

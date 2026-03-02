@@ -6,7 +6,7 @@ from sympy.core.numbers import (I, Rational, nan, pi)
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.functions.elementary.complexes import (Abs, arg, im, re, sign)
-from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (atan, atan2, cos, sin, tan)
 from sympy.abc import w, x, y, z
@@ -75,6 +75,16 @@ def test_exp():
     assert refine(exp(pi*I*2*(x + S.Half))) == -1
     assert refine(exp(pi*I*2*(x + Rational(1, 4)))) == I
     assert refine(exp(pi*I*2*(x + Rational(3, 4)))) == -I
+
+    # tests for new assumptions
+    n = Symbol('n')
+    assert refine(exp(pi*I*2*n), Q.integer(n)) == 1
+    assert refine(exp(pi*I*n), Q.even(n)) == 1
+    assert refine(exp(pi*I*n), Q.odd(n)) == -1
+    assert refine(exp(pi*I*2*(n + S.Half)), Q.integer(n)) == -1
+    assert refine(exp(pi*I*2*(n + Rational(1, 4))), Q.integer(n)) == I
+    assert refine(exp(pi*I*2*(n + Rational(3, 4))), Q.integer(n)) == -I
+
 
 
 def test_Piecewise():
@@ -342,4 +352,21 @@ def test_minmax():
     assert refine(Min(x, y, z), Q.positive(x) & Q.positive(y) & Q.negative(z)) == z
     # Max with equal args is just the arg itself
     assert refine(Max(x, x), True) == x
+
+def test_log():
+    x = Symbol('x')
+    y = Symbol('y')
+    # log(exp(x))
+    assert refine(log(exp(x)), Q.real(x)) == x
+    assert refine(log(exp(x)), Q.integer(x)) == x
+    assert refine(log(exp(x)), Q.positive(x)) == x
+    assert refine(log(exp(x)), Q.real(x) & Q.positive(y)) == x
+    # Should not refine without real assumption
+    assert refine(log(exp(x))) == log(exp(x))
+    
+    # log(x**2)
+    assert refine(log(x**2), Q.real(x)) == 2*log(Abs(x))
+    assert refine(log(x**2), Q.positive(x)) == 2*log(x)
+    assert refine(log(x**y), Q.positive(x) & Q.real(y)) == y*log(x)
+
 
