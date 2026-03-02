@@ -803,8 +803,8 @@ if AutolevListener:
                     child = ch.expr(index)
                     v = self.getValue(child.getChild(0))
                     a = self.getValue(child.getChild(2))
-                    if v in self.type.keys() and self.type[v] in ("variable", "motionvariable", "motionvariable'", "specified"):
-                        l.append(".subs(" + v + ", _sm.Symbol('" + v + "_dummy')).series(_sm.Symbol('" + v + "_dummy'), " + a + ", " + order + ").removeO().subs(_sm.Symbol('" + v + "_dummy'), " + v + ")")
+                if v in self.type.keys() and self.type[v] in ("motionvariable", "motionvariable'") or v in self.q_ind + self.q_dep + self.u_ind + self.u_dep:
+                    l.append(".subs(" + v + ", _sm.Symbol('" + v + "_dummy')).series(_sm.Symbol('" + v + "_dummy'), " + a + ", " + order + ").removeO().subs(_sm.Symbol('" + v + "_dummy'), " + v + ")")
                     else:
                         l.append(".series(" + v + ", " + a + ", " + order + ").removeO()")
                 self.setValue(ctx, "(" + exp + ")" + "".join(l))
