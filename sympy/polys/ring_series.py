@@ -2036,8 +2036,7 @@ def _rs_series(expr, series_rs, a, prec):
         for i in range(n):
             arg = args[i]
             if arg.is_Pow and arg.base.has(a) and not arg.exp.is_positive:
-                R1, s1 = sring(arg, domain=QQ, expand=False, series=True)
-                _series = _rs_series(arg, s1, a, ceiling(prec - sum_pows + min_pows[i]))
+                _series = _rs_series(arg, R_args[i], a, ceiling(prec - sum_pows + min_pows[i]))
             else:
                 _series = _rs_series(arg, R(arg), a, ceiling(prec - sum_pows + min_pows[i]))
             R = R.compose(_series.ring)
