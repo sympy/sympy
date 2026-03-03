@@ -79,8 +79,6 @@ def test_re():
     assert re(i*r*x).diff(r) == re(i*x)
     assert re(i*r*x).diff(i) == I*r*im(x)
 
-    assert re(
-        sqrt(a + b*I)) == re(sqrt(a + b*I))
     assert re(a * (2 + b*I)) == 2*a
 
     assert re((1 + sqrt(a + b*I))/2) == re(sqrt(a + I*b))/2 + S.Half
@@ -175,8 +173,6 @@ def test_im():
     assert im(i*r*x).diff(r) == im(i*x)
     assert im(i*r*x).diff(i) == -I * re(r*x)
 
-    assert im(
-        sqrt(a + b*I)) == im(sqrt(a + b*I))
     assert im(a * (2 + b*I)) == a*b
 
     assert im((1 + sqrt(a + b*I))/2) == im(sqrt(a + I*b))/2
