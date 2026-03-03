@@ -8067,8 +8067,7 @@ def test_deprecated_prettyForm():
         assert xstr(1) == '1'
 
     with warns_deprecated_sympy():
-        from sympy.printing.pretty.stringpict import prettyForm
-        p = prettyForm('s', unicode='s')
+            p = prettyForm('s', unicode='s')
 
     with warns_deprecated_sympy():
         assert p.unicode == p.s == 's'
@@ -8088,7 +8087,6 @@ def test_pretty_symbol_with_underscore():
     subscripts that don't render properly in most fonts.
     """
     from sympy.core.symbol import Symbol
-    from sympy.printing.pretty.stringpict import prettyForm
 
     # The main fix: multi-character subscripts should use plain underscore
     # to avoid font rendering issues
