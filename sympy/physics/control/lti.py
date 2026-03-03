@@ -6551,6 +6551,22 @@ class StateSpace(StateSpaceBase):
         >>> ss.dsolve()
         Matrix([[0]])
 
+        The following example models a mass-spring-damper system with
+        initial displacement of 1 and zero velocity, with no external force applied.
+
+        >>> from sympy import Matrix
+        >>> from sympy.physics.control import StateSpace
+        >>> A = Matrix([[0, 1], [-1, -2]])
+        >>> B = Matrix([[0], [1]])
+        >>> C = Matrix([[1, 0]])
+        >>> D = Matrix([[0]])
+        >>> ss = StateSpace(A, B, C, D)
+        >>> i = Matrix([1, 0])
+        >>> ip = Matrix([0])
+        >>> ss.dsolve(input_vector=ip, initial_conditions=i).simplify()
+        Matrix([[(t + 1)*exp(-t)]])
+
+
         References
         ==========
         .. [1] https://web.mit.edu/2.14/www/Handouts/StateSpaceResponse.pdf
