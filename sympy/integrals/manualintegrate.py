@@ -37,6 +37,7 @@ from sympy.core.numbers import Integer, Number, E
 from sympy.core.power import Pow
 from sympy.core.relational import Eq, Ne
 from sympy.core.singleton import S
+from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, Symbol, Wild
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import WildFunction
@@ -1569,7 +1570,7 @@ def inverse_trig_rule(integral: IntegralInfo, degenerate=True):
     elif b.is_zero:
         degenerate_step = ConstantRule(a ** exp, symbol)
     else:
-        degenerate_step = sqrt_linear_rule(IntegralInfo((a + b * symbol) ** exp, symbol))
+        degenerate_step = sqrt_fractional_linear_rule(IntegralInfo((a + b * symbol) ** exp, symbol))
 
     if simplify(2*exp + 1) == 0:
         h, k = -b/(2*c), a - b**2/(4*c)  # rewrite base to k + c*(symbol-h)**2
@@ -1935,48 +1936,103 @@ def quadratic_denom_rule(integral):
     return
 
 
-def sqrt_linear_rule(integral: IntegralInfo):
+def sqrt_fractional_linear_rule(integral : IntegralInfo):
     """
-    Substitute common (a+b*x)**(1/n)
+    Substitute common ((a*x + b)/(c*x + d))**(1/n)
     """
     integrand, x = integral
     a = Wild('a', exclude=[x])
-    b = Wild('b', exclude=[x, 0])
-    a0 = b0 = 0
-    bases, qs, bs = [], [], []
-    for pow_ in integrand.find(Pow):  # collect all (a+b*x)**(p/q)
+    b = Wild('b', exclude=[x])
+    c = Wild('c', exclude=[x])
+    d = Wild('d', exclude=[x])
+    base0 = None
+    bases, qs, ratios = [], [], []
+    constant_bases_subs = {}
+    # use ordered() to ensure a selection of the smallest base0 (eg. first sqrt(x), then cbrt(2x), x chosen)
+    for pow_ in ordered(integrand.find((Pow))): # collect all ((a*x + b)/(c*x + d))**(p/q)
         base, exp_ = pow_.base, pow_.exp
-        if exp_.is_Integer or x not in base.free_symbols:  # skip 1/x and sqrt(2)
+        if exp_.is_Integer or x not in base.free_symbols: # skip 1/x and sqrt(2)
             continue
-        if not exp_.is_Rational:  # exclude x**pi
-            return
-        match = base.match(a+b*x)
-        if not match:  # skip non-linear
-            continue  # for sqrt(x+sqrt(x)), although base is non-linear, we can still substitute sqrt(x)
-        a1, b1 = match[a], match[b]
-        if a0*b1 != a1*b0 or not (b0/b1).is_nonnegative:  # cannot transform sqrt(x) to sqrt(x+1) or sqrt(-x)
-            return
-        if b0 == 0 or (b0/b1 > 1) is S.true:  # choose the latter of sqrt(2*x) and sqrt(x) as representative
-            a0, b0 = a1, b1
-        bases.append(base)
-        bs.append(b1)
-        qs.append(exp_.q)
-    if b0 == 0:  # no such pattern found
-        return
+        if not exp_.is_Rational: # exclude x**pi
+            return None
+        num, den = base.as_numer_denom()
+        match_num = num.match(a*x + b)
+        match_den = den.match(c*x + d)
+        if not match_num or not match_den:
+            continue
+        aa, bb = match_num[a], match_num[b]
+        cc, dd = match_den[c], match_den[d]
+        if cc.is_zero and dd.is_zero:
+            return None
+        det = aa*dd - bb*cc
+        if det.is_zero: # constant value as sqrt((5*x + 10)/(2*x +  4))
+            const_val = (S(aa) / cc) if not cc.is_zero else (S(bb) / dd)
+            constant_bases_subs[base] = const_val
+            continue
+        if base0 is None:
+            base0 = base
+            a0, b0, c0, d0 = aa, bb, cc, dd
+            bases.append(base)
+            ratios.append(S.One)
+            qs.append(exp_.q)
+        else:
+            K = (base / base0).cancel()
+            if K.has(x): # cannot substitute both sqrt(x) and sqrt(x + 1)
+                return None
+            bases.append(base)
+            ratios.append(K)
+            qs.append(exp_.q)
+    if base0 is None and not constant_bases_subs:
+        return None
+    if constant_bases_subs:
+        integrand = integrand.subs(constant_bases_subs)
+    if base0 is None:
+        substep = integral_steps(integrand, x)
+        if not substep.contains_dont_know():
+            return RewriteRule(integral.integrand, x, integrand, substep)
+        return None
     q0: Integer = lcm_list(qs)
-    u_x = (a0 + b0*x)**(1/q0)
     u = Dummy("u")
-    substituted = integrand.subs({base**(S.One/q): (b/b0)**(S.One/q)*u**(q0/q)
-                                  for base, b, q in zip(bases, bs, qs)}).subs(x, (u**q0-a0)/b0)
-    substep = integral_steps(substituted*u**(q0-1)*q0/b0, u)
+    u_x = base0**(S.One/q0)
+    u_pow = u**q0
+    x_u = (b0 - d0*u_pow)/(c0*u_pow - a0)
+    dx_u = (q0*(a0*d0 - b0*c0)*u**(q0 - 1))/(c0*u_pow - a0)**2
+    subs_dict = {}
+    for base_i, ratio_i, q_i in zip(bases, ratios, qs):
+        subs_dict[base_i**(S.One/q_i)] = (ratio_i)**(S.One/q_i) * u**(q0/q_i)
+    substituted = integrand.subs(subs_dict).subs(x, x_u) * dx_u
+    substep = integral_steps(substituted, u)
     if not substep.contains_dont_know():
         step: Rule = URule(integrand, x, u, u_x, substep)
-        generic_cond = Ne(b0, 0)
-        if generic_cond is not S.true:  # possible degenerate case
-            simplified = integrand.subs(dict.fromkeys(bs, 0))
-            degenerate_step = integral_steps(simplified, x)
-            step = PiecewiseRule(integrand, x, [(step, generic_cond), (degenerate_step, S.true)])
-        return step
+        # in these cases, deteminant would be 0 only if both c0 and d0 were 0 (null denom), no need of Piecewise
+        if (c0.is_zero and (a0.is_zero is False)) or (d0.is_zero and (b0.is_zero is False)):
+            if constant_bases_subs:
+                return RewriteRule(integral.integrand, x, integrand, step)
+            else:
+                return step
+        generic_cond = Ne(a0*d0 - b0*c0, 0)
+        if generic_cond is not S.true:
+            pieces: list[tuple[Rule, Boolean]] = [(step, generic_cond)]
+            cond_c0 = Ne(c0, 0)
+            if cond_c0 is not S.false:
+                const_val = a0 / c0
+                subs_a = {base_i: ratio_i * const_val for base_i, ratio_i in zip(bases, ratios)}
+                simplified_a = integrand.subs(subs_a)
+                degenerate_step_a = integral_steps(simplified_a, x)
+                pieces.append((degenerate_step_a, cond_c0))
+            if cond_c0 is not S.true:
+                const_val = b0 / d0
+                subs_b = {base_i: ratio_i * const_val for base_i, ratio_i in zip(bases, ratios)}
+                simplified_b = integrand.subs(subs_b)
+                simplified_b.subs({a0: 0, c0: 0}) # if det=0 and c0=0 and d0!=0, a0=0
+                degenerate_step_b = integral_steps(simplified_b, x)
+                pieces.append((degenerate_step_b, S.true))
+            step = PiecewiseRule(integrand, x, pieces)
+        if constant_bases_subs:
+            return RewriteRule(integral.integrand, x, integrand, step)
+        else:
+            return step
+    return None
 
 
 def sqrt_quadratic_rule(integral: IntegralInfo, degenerate=True):
@@ -2000,7 +2056,7 @@ def sqrt_quadratic_rule(integral: IntegralInfo, degenerate=True):
     elif b.is_zero:
         degenerate_step = integral_steps(f*sqrt(a)**n, x)
     else:
-        degenerate_step = sqrt_linear_rule(IntegralInfo(f*sqrt(a+b*x)**n, x))
+        degenerate_step = sqrt_fractional_linear_rule(IntegralInfo(f*sqrt(a+b*x)**n, x))
 
     def sqrt_quadratic_denom_rule(numer_poly: Poly, integrand: Expr):
         denom = sqrt(a+b*x+c*x**2)
@@ -2569,16 +2625,16 @@ def integral_steps(integrand, symbol, **options):
         null_safe(special_function_rule),
         null_safe(switch(key, {
             Pow: do_one(null_safe(power_rule), null_safe(inverse_trig_rule),
-                        null_safe(sqrt_linear_rule),
                         null_safe(quadratic_denom_rule),
-                        null_safe(sqrt_quadratic_rule)),
+                        null_safe(sqrt_quadratic_rule),
+                        null_safe(sqrt_fractional_linear_rule)),
             Symbol: power_rule,
             exp: exp_rule,
             Add: add_rule,
             Mul: do_one(null_safe(mul_rule), null_safe(trig_product_rule),
                         null_safe(heaviside_rule), null_safe(quadratic_denom_rule),
-                        null_safe(sqrt_linear_rule),
                         null_safe(sqrt_quadratic_rule),
+                        null_safe(sqrt_fractional_linear_rule),
                         null_safe(powsimp_rule),
                         null_safe(trig_cmplx_exp_rule)),
             Derivative: derivative_rule,

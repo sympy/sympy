@@ -1,5 +1,4 @@
 from __future__ import annotations
-from sympy.core.mul import Mul
 from sympy.core.function import (Derivative, Function, diff, expand)
 from sympy.core.numbers import (I, Rational, pi)
 from sympy.core.relational import Ne
@@ -732,7 +731,7 @@ def test_manualintegrate_sqrt_linear():
                           10*(3*x + 2)**(S(7)/2)/567 - 4*(3*x + 2)**(S(5)/2)/27 +
                           40*(3*x + 2)**(S(3)/2)/81 + 136*sqrt(3*x + 2)/81)
     assert manualintegrate(x/sqrt(a+b*x)**3, x) == \
-        Piecewise((Mul(2, b**-2, a/sqrt(a + b*x) + sqrt(a + b*x)), Ne(b, 0)), (x**2/(2*a**(S(3)/2)), True))
+        Piecewise((-2*((-a/sqrt(a + b*x) - sqrt(a + b*x))/b**2), Ne(b, 0)), (x**2/(2*a**(S(3)/2)), True))
     assert_is_integral_of((sqrt(3*x+3)+1)/((2*x+2)**(1/S(3))+1),
                           3*sqrt(6)*(2*x + 2)**(S(7)/6)/14 - 3*sqrt(6)*(2*x + 2)**(S(5)/6)/10 -
                           3*sqrt(6)*(2*x + 2)**(S.One/6)/2 + 3*(2*x + 2)**(S(2)/3)/4 - 3*(2*x + 2)**(S.One/3)/2 +
@@ -743,6 +742,29 @@ def test_manualintegrate_sqrt_linear():
     assert_is_integral_of(sqrt(2*x+3+sqrt(4*x+5))**3,
                           sqrt(2*x + sqrt(4*x + 5) + 3) *
                           (9*x/10 + 11*(4*x + 5)**(S(3)/2)/40 + sqrt(4*x + 5)/40 + (4*x + 5)**2/10 + S(11)/10)/2)
+
+
+def test_manualintegrate_sqrt_fractional_linear():
+    # https://github.com/sympy/sympy/issues/28945
+    f = sqrt((a - x)/(a + x))/x
+    F1 = (-4*a*(-log(sqrt((a - x)/(a + x)) - 1)/(4*a) + log(sqrt((a - x)/(a + x)) + 1)/(4*a)
+                - atan(sqrt((a - x)/(a + x)))/(2*a)))
+    F2 = I*log(x)
+    assert manualintegrate(f, x) == Piecewise((F1, Ne(a, 0)), (F2, True))
+    assert (F1.diff(x) - f).cancel().factor() == 0
+    assert F2.diff(x) == f.subs(a, 0)
+    # linear dependent bases (2*x + 2)/(x - 1) and (x + 1)/(x - 1)
+    f = ((2*x+2)/(x-1))**(S.One/4)*sqrt(((x+1)/(x-1)))
+    F = (-8*2**(S.One/4)*(-((x + 1)/(x - 1))**(S.One/4)*S(1)/8/(sqrt((x + 1)/(x - 1)) + 1)
+         + 3*log(((x + 1)/(x - 1))**(S.One/4) - 1)/16 - 3*log(((x + 1)/(x - 1))**(S.One/4) + 1)/16
+         + 3*atan(((x + 1)/(x - 1))**(S.One/4))/8 - S(1)/16/(((x + 1)/(x - 1))**(S.One/4) + 1)
+         - S(1)/16/(((x + 1)/(x - 1))**(S.One/4) - 1)))
+    assert_is_integral_of(f, F)
+    # constant values sqrt((2*x + 4)/(6*x + 12)) and ((2*a*x + 6*b) / (a*x + 3*b))**(S.One/3)
+    f = sqrt((2*x + 4)/(6*x + 12))*((2*a*x + 6*b) / (a*x + 3*b))**(S.One/3)*sqrt(((x+1)/(x-1)))
+    F = (-4*2**(S.One/3)*sqrt(3)*(log(sqrt((x + 1)/(x - 1)) - 1)/4 - log(sqrt((x + 1)/(x - 1)) + 1)/4
+        - S(1)/4/(sqrt((x + 1)/(x - 1)) + 1) - S(1)/4/(sqrt((x + 1)/(x - 1)) - 1)))/3
+    assert_is_integral_of(f, F)
 
 
 def test_manualintegrate_sqrt_quadratic():
@@ -767,7 +789,7 @@ def test_manualintegrate_sqrt_quadratic():
                    Piecewise((log(b + 2*sqrt(c)*sqrt(a + b*x + c*x**2) + 2*c*x)/sqrt(c), Ne(a - b**2/(4*c), 0)),
                              ((b/(2*c) + x)*log(b/(2*c) + x)/sqrt(c*(b/(2*c) + x)**2), True)) +
                    e*sqrt(a + b*x + c*x**2)/c, Ne(c, 0)),
-                  ((2*d*sqrt(a + b*x) + 2*e*(-a*sqrt(a + b*x) + (a + b*x)**(S(3)/2)/3)/b)/b, Ne(b, 0)),
+                  (2*((d*sqrt(a + b*x) - e*(a*sqrt(a + b*x) - (a + b*x)**(S(3)/2)/3)/b)/b), Ne(b, 0)),
                   ((d*x + e*x**2/2)/sqrt(a), True))
 
     assert manualintegrate((3*x**3-x**2+2*x-4)/sqrt(x**2-3*x+2), x) == \

@@ -2044,7 +2044,7 @@ def test_sqrt_quadratic():
                    Piecewise((log(b + 2*sqrt(c)*sqrt(a + b*x + c*x**2) + 2*c*x)/sqrt(c), Ne(a - b**2/(4*c), 0)),
                              ((b/(2*c) + x)*log(b/(2*c) + x)/sqrt(c*(b/(2*c) + x)**2), True)) +
                    e*sqrt(a + b*x + c*x**2)/c, Ne(c, 0)),
-                  ((2*d*sqrt(a + b*x) + 2*e*(-a*sqrt(a + b*x) + (a + b*x)**(S(3)/2)/3)/b)/b, Ne(b, 0)),
+                  (2*((d*sqrt(a + b*x) - e*(a*sqrt(a + b*x) - (a + b*x)**(S(3)/2)/3)/b)/b), Ne(b, 0)),
                   ((d*x + e*x**2/2)/sqrt(a), True))
 
     assert integrate((3*x**3-x**2+2*x-4)/sqrt(x**2-3*x+2)) == \
