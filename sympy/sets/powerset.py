@@ -111,17 +111,17 @@ class PowerSet(Set):
         return 2 ** len(self.arg)
 
     def __iter__(self) -> Iterator[Set]:
-        found = [S.EmptySet]
-        yield S.EmptySet
-
-        for x in self.arg:
-            temp = []
-            x = FiniteSet(x)
-            for y in found:
-                new = x + y
-                yield new
-                temp.append(new)
-            found.extend(temp)
+        elements = list(self.arg)
+        n = len(elements)
+         for i in range(1 << n):
+            combo = []
+            for j in range(n):
+                if i & (1 << j):
+                    combo.append(elements[j])
+            if not combo:
+                yield S.EmptySet
+            else:
+                yield FiniteSet(*combo)
 
     @property
     def kind(self):
