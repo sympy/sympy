@@ -283,10 +283,10 @@ def _(expr, assumptions):
         if is_inf:
             if is_neg_inf:
                 neg_inf += 1
-                continue  
+                continue
             if is_pos_inf:
                 pos_inf += 1
-                continue   
+                continue
             else:
                 return None
         elif is_fin:

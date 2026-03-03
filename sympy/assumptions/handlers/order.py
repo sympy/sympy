@@ -2,7 +2,6 @@
 Handlers related to order relations: positive, negative, etc.
 """
 
-from sympy import expand
 from sympy.assumptions import Q, ask
 from sympy.core import Add, Basic, Expr, Mul, Pow, S
 from sympy.core.logic import fuzzy_not, fuzzy_and, fuzzy_or
