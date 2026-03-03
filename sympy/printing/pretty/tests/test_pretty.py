@@ -8083,27 +8083,27 @@ def test_center():
 
 def test_pretty_symbol_with_underscore():
     """Test that multi-character subscripts don't use problematic Unicode.
-    
+
     Fixes issue #20207 where symbols like x_input would try to use Unicode
     subscripts that don't render properly in most fonts.
     """
     from sympy.core.symbol import Symbol
     from sympy.printing.pretty.stringpict import prettyForm
-    
+
     # The main fix: multi-character subscripts should use plain underscore
     # to avoid font rendering issues
     x_input = Symbol('x_input')
     result = pretty(x_input)
     # Should not contain Unicode subscript characters
     assert result == 'x_input', f"Expected 'x_input' but got {result!r}"
-    
+
     # Verify single chars and numbers still work (when unicode is enabled)
     # These tests are more lenient since unicode may not be enabled in all test environments
     x_i = Symbol('x_i')
     result_i = pretty(x_i)
     assert 'x' in result_i and 'i' in result_i  # At minimum contains the characters
-    
-    x_2 = Symbol('x_2') 
+
+    x_2 = Symbol('x_2')
     result_2 = pretty(x_2)
     assert 'x' in result_2 and '2' in result_2  # At minimum contains the characters
 
