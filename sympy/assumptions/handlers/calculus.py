@@ -274,33 +274,30 @@ def _(expr, assumptions):
 
 @NegativeInfinitePredicate.register(Add)
 def _(expr, assumptions):
-    pos, neg, inf, fin = 0, 0, 0, 0
+    pos_inf, neg_inf, fin = 0, 0, 0
     for a in expr.args:
         is_inf = ask(Q.infinite(a), assumptions)
-        is_neg = ask(Q.negative_infinite(a), assumptions)
-        is_pos = ask(Q.positive_infinite(a), assumptions)
+        is_neg_inf = ask(Q.negative_infinite(a), assumptions)
+        is_pos_inf = ask(Q.positive_infinite(a), assumptions)
         is_fin = ask(Q.finite(a), assumptions)
         if is_inf:
-            if is_neg:
-                neg += 1
+            if is_neg_inf:
+                neg_inf += 1
                 continue  
-            if is_pos:
-                pos += 1
+            if is_pos_inf:
+                pos_inf += 1
                 continue   
             else:
-                inf += 1
-                continue
+                return None
         elif is_fin:
             fin += 1
-        elif is_inf is None and is_fin is None and is_neg is None and is_pos is None:
+        if is_inf is None and is_fin is None and is_neg_inf is None and is_pos_inf is None:
             return None
-    if inf > 0:
-        return None
-    if neg == 0:
-        if (fin > 0 or pos > 0):
+    if neg_inf == 0:
+        if (fin > 0 or pos_inf > 0):
             return False
-    if neg > 0:
-        if (pos > 0):
+    if neg_inf > 0:
+        if (pos_inf > 0):
             return None
         elif fin > 0:
             return True
@@ -308,41 +305,35 @@ def _(expr, assumptions):
 
 @NegativeInfinitePredicate.register(Mul)
 def _(expr, assumptions):
-    inf, pos_inf, neg_inf, neg, pos, zero = 0, 0, 0, 0, 0, 0
+    pos_inf, neg_inf, neg = 0, 0, 0
     for a in expr.args:
+        is_fin = ask(Q.finite(a), assumptions)
+        is_neg = ask(Q.negative(a), assumptions)
+        is_zero = ask(Q.zero(a), assumptions)
         is_inf = ask(Q.infinite(a), assumptions)
         is_neg_inf = ask(Q.negative_infinite(a), assumptions)
         is_pos_inf = ask(Q.positive_infinite(a), assumptions)
-        is_neg = ask(Q.negative(a), assumptions)
-        is_pos = ask(Q.positive(a), assumptions)
-        is_zero = ask(Q.zero(a), assumptions)
         if is_zero:
-            zero += 1
+            return False
         if is_inf:
             if is_neg_inf:
                 neg_inf += 1
             elif is_pos_inf:
                 pos_inf += 1
             else:
-                inf += 1
+                return None
         if is_neg:
             neg += 1
-        if is_pos:
-            pos += 1
-    if neg_inf + pos_inf + inf + neg + pos + zero < len(expr.args):
-        return None
-    if inf > 0:
-        return None
-    if zero > 0:
-        if (neg_inf > 0 or pos_inf > 0 or inf > 0):
+        if (is_fin or is_inf or is_zero) is None:
             return None
-        return False
     total_neg = neg + neg_inf
     if pos_inf > 0:
-            if total_neg % 2 == 0:
-                return False
-            return True
+        if total_neg % 2 == 0:
+            return False
+        return True
     if neg_inf > 0:
         if total_neg % 2 == 0:
             return False
         return True
+    else:
+        return False

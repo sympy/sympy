@@ -208,12 +208,12 @@ def _(expr, assumptions):
         return False
     if neg_inf is None:
         return None
-    expanded_expr = expand(expr)
-    expanded_terms = expanded_expr.args
     results = []
-    for e in expanded_terms:
-        real = ask(Q.real(exp(e)), assumptions)
-        results.append(real)
+    for a in expr.exp.as_ordered_terms():
+        results.append(fuzzy_or([
+            ask(Q.real(exp(a)), assumptions),
+            ask(Q.real(a), assumptions)
+        ]))
     return fuzzy_and(results)
 
 

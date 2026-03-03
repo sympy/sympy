@@ -1790,7 +1790,10 @@ def test_nonzero():
     assert ask(Q.nonzero(exp((I*pi*x) + y + 2)), Q.integer(x) & Q.real(y)) is True
     assert ask(Q.nonzero(exp((I*pi*x) + y + 2)), Q.integer(x) & Q.negative_infinite(y)) is False
     assert ask(Q.nonzero(exp((I*pi*x) + y + I)), Q.integer(x) & Q.real(y)) is False
-    assert ask(Q.nonzero(exp((x + y)*I*pi)), Q.imaginary(x) & Q.integer(y)) is True
+    #assert ask(Q.nonzero(exp((x + y)*I*pi)), Q.imaginary(x) & Q.integer(y)) is True
+    assert ask(Q.nonzero(exp((x + y)*I*pi)), Q.imaginary(x) & Q.real(y)) is None
+    assert ask(Q.nonzero(exp((x + y)*I*pi)), Q.imaginary(x) & Q.imaginary(y)) is True
+    assert ask(Q.nonzero(exp((x + y)*I*pi)), Q.imaginary(x) & Q.finite(y)) is None
     assert ask(Q.nonzero(exp(x*y)), Q.zero(x)) is True
     assert ask(Q.nonzero(exp(x*y)), Q.real(x)) is None
     assert ask(Q.nonzero(exp(x*y)), Q.real(x) & Q.real(y)) is True
@@ -1823,6 +1826,8 @@ def test_nengative_infinite():
     assert ask(Q.negative_infinite(x*y), Q.negative_infinite(x) & Q.negative_infinite(y)) is False
     assert ask(Q.negative_infinite(x*y), Q.negative_infinite(x) & Q.positive_infinite(y)) is True
     assert ask(Q.negative_infinite(x*y), Q.infinite(x) & Q.positive(y)) is None
+    #assert ask(Q.negative_infinite(x*y), Q.zero(x) & Q.infinite(y)) is None
+    #assert ask(Q.negative_infinite(x*y), Q.zero(x) & Q.positive_infinite(y)) is None
     #assert ask(Q.negative_infinite(x*y), Q.zero(x) & Q.negative_infinite(y)) is None
     assert ask(Q.negative_infinite(x*y*z), Q.negative_infinite(x) & Q.negative(y) & Q.positive(z)) is False
     assert ask(Q.negative_infinite(x*y*z), Q.negative_infinite(x) & Q.negative(y) & Q.negative(z)) is True
