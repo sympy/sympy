@@ -119,7 +119,7 @@ class PowerSet(Set):
                 z=2**(cardinality-n)
                 y=i%z
                 if y>=z//2:
-                    temp |= FiniteSet(elements[n])
+                    temp |= FiniteSet(elements[cardinality-n-1])
             yield temp
 
     @property
