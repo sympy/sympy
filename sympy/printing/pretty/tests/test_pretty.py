@@ -8106,5 +8106,3 @@ def test_pretty_symbol_with_underscore():
     x_2 = Symbol('x_2')
     result_2 = pretty(x_2)
     assert 'x' in result_2 and '2' in result_2  # At minimum contains the characters
-
-
