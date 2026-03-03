@@ -111,17 +111,16 @@ class PowerSet(Set):
         return 2 ** len(self.arg)
 
     def __iter__(self) -> Iterator[Set]:
-        found = [S.EmptySet]
-        yield S.EmptySet
-
-        for x in self.arg:
-            temp = []
-            x = FiniteSet(x)
-            for y in found:
-                new = x + y
-                yield new
-                temp.append(new)
-            found.extend(temp)
+        elements = list(self.arg)
+        cardinality = len(elements)
+        for i in range(2**cardinality):
+            temp = S.EmptySet
+            for n in range(cardinality):
+                z=2**(cardinality-n)
+                y=i%z
+                if y>=z//2:
+                    temp |= FiniteSet(elements[n])
+            yield temp
 
     @property
     def kind(self):
