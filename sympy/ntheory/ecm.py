@@ -6,6 +6,7 @@ from sympy.external.gmpy import gcd, invert, sqrt
 from sympy.utilities.misc import as_int
 from .generate import sieve, primerange
 from .primetest import isprime
+from typing import SupportsIndex
 
 
 #----------------------------------------------------------------------------#
@@ -295,7 +296,7 @@ def _ecm_one_factor(n:int, B1:int=10000, B2:int=100000, max_curve:int=200, seed:
             return g
 
 
-def ecm(n:int, B1:int=10000, B2:int=100000, max_curve:int=200, seed:int=1234)->set[int]:
+def ecm(n:SupportsIndex, B1:int=10000, B2:int=100000, max_curve:int=200, seed:int=1234)->set[int]:
     """Performs factorization using Lenstra's Elliptic curve method.
 
     This function repeatedly calls ``_ecm_one_factor`` to compute the factors
