@@ -36,7 +36,10 @@ from sympy.testing.pytest import raises, XFAIL, skip, slow
 from sympy.external import import_module
 
 from sympy.abc import x, y
-import numpy as np
+
+np = import_module("numpy")
+if np is None:
+    skip("numpy is not installed", allow_module_level=True)
 
 def _is_simplex_sample(vec, tol=1e-12):
     return all(float(v) >= -tol for v in vec) and abs(sum(float(v) for v in vec) - 1.0) <= tol
