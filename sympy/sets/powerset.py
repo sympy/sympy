@@ -110,18 +110,18 @@ class PowerSet(Set):
     def __len__(self) -> int:
         return 2 ** len(self.arg)
 
-    def __iter__(self) -> Iterator[Set]:
-        elements = list(self.arg)
-        n = len(elements)
-         for i in range(1 << n):
-            combo = []
-            for j in range(n):
-                if i & (1 << j):
-                    combo.append(elements[j])
-            if not combo:
-                yield S.EmptySet
-            else:
-                yield FiniteSet(*combo)
+   def __iter__(self):
+    from sympy.sets.sets import FiniteSet
+
+    if not isinstance(self.arg, FiniteSet):
+        raise TypeError("PowerSet is defined only for FiniteSet")
+
+    elements = tuple(self.arg)  #
+    n = len(elements)
+
+    for mask in range(1 << n):
+        subset = [elements[i] for i in range(n) if (mask >> i) & 1]
+        yield FiniteSet(*subset)
 
     @property
     def kind(self):
