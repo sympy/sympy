@@ -1,118 +1,22 @@
 """Implementation of :class:`Domain` class. """
 
 from __future__ import annotations
-from typing import Any, Generic, TypeVar, Protocol, Callable, Iterable, TYPE_CHECKING
+from typing import Any
 
 from sympy.core.numbers import AlgebraicNumber
-from sympy.core import Basic, Expr, sympify
-from sympy.core.sorting import ordered
-from sympy.external.gmpy import GROUND_TYPES, MPZ
+from sympy.core import Basic, sympify
+from sympy.core.sorting import default_sort_key, ordered
+from sympy.external.gmpy import GROUND_TYPES
 from sympy.polys.domains.domainelement import DomainElement
-from sympy.polys.orderings import lex, MonomialOrder
+from sympy.polys.orderings import lex
 from sympy.polys.polyerrors import UnificationFailed, CoercionFailed, DomainError
 from sympy.polys.polyutils import _unify_gens, _not_a_coeff
 from sympy.utilities import public
 from sympy.utilities.iterables import is_sequence
 
 
-if TYPE_CHECKING:
-    import sys
-    if sys.version_info >= (3, 13):
-        from typing import TypeIs
-    else:
-        from typing_extensions import TypeIs
-    from sympy.polys.polytools import Poly
-    from sympy.polys.domains.ring import Ring
-    from sympy.polys.domains.field import Field
-    from sympy.polys.domains.finitefield import FiniteField
-    from sympy.polys.domains.integerring import IntegerRing
-    from sympy.polys.domains.rationalfield import RationalField
-    from sympy.polys.domains.algebraicfield import AlgebraicField
-    from sympy.polys.domains.realfield import RealField
-    from sympy.polys.domains.complexfield import ComplexField
-    from sympy.polys.domains.polynomialring import PolynomialRing
-    from sympy.polys.domains.powerseriesring import PowerSeriesRing
-    from sympy.polys.domains.fractionfield import FractionField
-    from sympy.polys.rings import PolyElement
-    from sympy.polys.fields import FracElement
-
-
-T = TypeVar('T')
-
-
-if TYPE_CHECKING:
-    from typing import Self
-
-
-class RingElement(Protocol):
-    """A ring element.
-
-    Must support ``+``, ``-``, ``*``, ``**`` and ``-``.
-    """
-    def __pos__(self, /) -> Self: ...
-    def __neg__(self, /) -> Self: ...
-    def __add__(self, other: Self | int, /) -> Self: ...
-    def __radd__(self, other: int, /) -> Self: ...
-    def __sub__(self, other: Self | int, /) -> Self: ...
-    def __rsub__(self, other: int, /) -> Self: ...
-    def __mul__(self, other: Self | int, /) -> Self: ...
-    def __rmul__(self, other: int, /) -> Self: ...
-    def __pow__(self, other: int, /) -> Self: ...
-
-
-class FieldElement(RingElement, Protocol):
-    """A field element.
-
-    Must support ``/``.
-    """
-    def __truediv__(self, other: Self | int, /) -> Self: ...
-    def __rtruediv__(self, other: int, /) -> Self: ...
-
-
-class EuclidElement(RingElement, Protocol):
-    """An Euclidean domain element.
-
-    Must support ``//``, ``%`` and ``divmod``.
-    """
-    def __floordiv__(self, other: Self | int, /) -> Self: ...
-    def __rfloordiv__(self, other: int, /) -> Self: ...
-    def __mod__(self, other: Self | int, /) -> Self: ...
-    def __rmod__(self, other: int, /) -> Self: ...
-    def __divmod__(self, other: Self | int, /) -> tuple[Self, Self]: ...
-    def __rdivmod__(self, other: int, /) -> tuple[Self, Self]: ...
-
-
-class AbsElement(RingElement, Protocol):
-    """An element that can be made positive or negative.
-
-    Must support ``abs``.
-    """
-    def __abs__(self, /) -> Self: ...
-
-
-class OrderedElement(AbsElement, Protocol):
-    """An element that can be compared to other elements.
-
-    Must support ``<``, ``<=``, ``>``, ``>=``.
-    """
-    def __lt__(self, other: Self, /) -> bool: ...
-    def __le__(self, other: Self, /) -> bool: ...
-    def __gt__(self, other: Self, /) -> bool: ...
-    def __ge__(self, other: Self, /) -> bool: ...
-
-
-Er = TypeVar('Er', bound=RingElement)
-Es = TypeVar('Es', bound=RingElement)
-Et = TypeVar('Et', bound=RingElement)
-Eg = TypeVar('Eg', bound=RingElement)
-Ef = TypeVar('Ef', bound=FieldElement)
-Eeuclid = TypeVar('Eeuclid', bound=EuclidElement)
-Eabs = TypeVar('Eabs', bound=AbsElement)
-Eordered = TypeVar('Eordered', bound=OrderedElement)
-
-
 @public
-class Domain(Generic[Er]):
+class Domain:
     """Superclass for all domains in the polys domains system.
 
     See :ref:`polys-domainsintro` for an introductory explanation of the
@@ -212,7 +116,7 @@ class Domain(Generic[Er]):
     ZZ[x]
     >>> type(K)             # class of the domain
     <class 'sympy.polys.domains.polynomialring.PolynomialRing'>
-    >>> K.dtype             # doctest: +SKIP
+    >>> K.dtype             # class of the elements
     <class 'sympy.polys.rings.PolyElement'>
     >>> p_expr = x**2 + 1   # Expr
     >>> p_expr
@@ -283,8 +187,7 @@ class Domain(Generic[Er]):
 
     """
 
-    # XXX: Should this be Callable[[int | MPZ], Er]?
-    dtype: type[Er] | Callable[..., Er]
+    dtype: type | None = None
     """The type (class) of the elements of this :py:class:`~.Domain`:
 
     >>> from sympy import ZZ, QQ, Symbol
@@ -307,7 +210,7 @@ class Domain(Generic[Er]):
     of_type
     """
 
-    zero: Er
+    zero: Any = None
     """The zero element of the :py:class:`~.Domain`:
 
     >>> from sympy import QQ
@@ -323,7 +226,7 @@ class Domain(Generic[Er]):
     one
     """
 
-    one: Er
+    one: Any = None
     """The one element of the :py:class:`~.Domain`:
 
     >>> from sympy import QQ
@@ -339,7 +242,7 @@ class Domain(Generic[Er]):
     zero
     """
 
-    is_Ring: bool = False
+    is_Ring = False
     """Boolean flag indicating if the domain is a :py:class:`~.Ring`.
 
     >>> from sympy import ZZ
@@ -358,7 +261,7 @@ class Domain(Generic[Er]):
     has_assoc_Ring
     """
 
-    is_Field: bool = False
+    is_Field = False
     """Boolean flag indicating if the domain is a :py:class:`~.Field`.
 
     >>> from sympy import ZZ, QQ
@@ -376,7 +279,7 @@ class Domain(Generic[Er]):
     has_assoc_Field
     """
 
-    has_assoc_Ring: bool = False
+    has_assoc_Ring = False
     """Boolean flag indicating if the domain has an associated
     :py:class:`~.Ring`.
 
@@ -393,7 +296,7 @@ class Domain(Generic[Er]):
     get_ring
     """
 
-    has_assoc_Field: bool = False
+    has_assoc_Field = False
     """Boolean flag indicating if the domain has an associated
     :py:class:`~.Field`.
 
@@ -410,103 +313,34 @@ class Domain(Generic[Er]):
     get_field
     """
 
-    is_FiniteField: bool = False
-    """Boolean flag indicating if the domain is a :py:class:`~.FiniteField`."""
+    is_FiniteField = is_FF = False
+    is_IntegerRing = is_ZZ = False
+    is_RationalField = is_QQ = False
+    is_GaussianRing = is_ZZ_I = False
+    is_GaussianField = is_QQ_I = False
+    is_RealField = is_RR = False
+    is_ComplexField = is_CC = False
+    is_AlgebraicField = is_Algebraic = False
+    is_PolynomialRing = is_Poly = False
+    is_FractionField = is_Frac = False
+    is_SymbolicDomain = is_EX = False
+    is_SymbolicRawDomain = is_EXRAW = False
+    is_FiniteExtension = False
 
-    is_FF: bool = False
-    """Alias for :py:attr:`~.Domain.is_FiniteField`."""
+    is_Exact = True
+    is_Numerical = False
 
-    is_IntegerRing: bool = False
-    """Boolean flag indicating if the domain is an :py:class:`~.IntegerRing`."""
+    is_Simple = False
+    is_Composite = False
 
-    is_ZZ: bool = False
-    """Alias for :py:attr:`~.Domain.is_IntegerRing`."""
-
-    is_RationalField: bool = False
-    """Boolean flag indicating if the domain is a :py:class:`~.RationalField`."""
-
-    is_QQ: bool = False
-    """Alias for :py:attr:`~.Domain.is_RationalField`."""
-
-    is_GaussianRing: bool = False
-    """Boolean flag indicating if the domain is a :py:class:`~.GaussianIntegerRing`."""
-
-    is_ZZ_I: bool = False
-    """Alias for :py:attr:`~.Domain.is_GaussianRing`."""
-
-    is_GaussianField: bool = False
-    """Boolean flag indicating if the domain is a :py:class:`~.GaussianRationalField`."""
-
-    is_QQ_I: bool = False
-    """Alias for :py:attr:`~.Domain.is_GaussianField`."""
-
-    is_RealField: bool = False
-    """Boolean flag indicating if the domain is a :py:class:`~.RealField`."""
-
-    is_RR: bool = False
-    """Alias for :py:attr:`~.Domain.is_RealField`."""
-
-    is_ComplexField: bool = False
-    """Boolean flag indicating if the domain is a :py:class:`~.ComplexField`."""
-
-    is_CC: bool = False
-    """Alias for :py:attr:`~.Domain.is_ComplexField`."""
-
-    is_AlgebraicField: bool = False
-    """Boolean flag indicating if the domain is an :py:class:`~.AlgebraicField`."""
-
-    is_Algebraic: bool = False
-    """Alias for :py:attr:`~.Domain.is_AlgebraicField`."""
-
-    is_PolynomialRing: bool = False
-    """Boolean flag indicating if the domain is a :py:class:`~.PolynomialRing`."""
-
-    is_Poly: bool = False
-    """Alias for :py:attr:`~.Domain.is_PolynomialRing`."""
-
-    is_FractionField: bool = False
-    """Boolean flag indicating if the domain is a :py:class:`~.FractionField`."""
-
-    is_Frac: bool = False
-    """Alias for :py:attr:`~.Domain.is_FractionField`."""
-
-    is_SymbolicDomain: bool = False
-    """Boolean flag indicating if the domain is a :py:class:`~.ExpressionDomain`."""
-
-    is_EX: bool = False
-    """Alias for :py:attr:`~.Domain.is_SymbolicDomain`."""
-
-    is_SymbolicRawDomain: bool = False
-    """Boolean flag indicating if the domain is a :py:class:`~.ExpressionRawDomain`."""
-
-    is_EXRAW: bool = False
-    """Alias for :py:attr:`~.Domain.is_SymbolicRawDomain`."""
-
-    is_FiniteExtension: bool = False
-    """Boolean flag indicating if the domain is a :py:class:`~.MonogenicFiniteExtension`. """
-
-    # These flags are used to indicate the type of the domain.
-    is_Exact: bool = True
-    """Boolean flag indicating if the domain is an exact domain."""
-
-    is_Numerical: bool = False
-    """Boolean flag indicating if the domain is a numerical domain."""
-
-    is_Simple: bool = False
-    """Boolean flag indicating if the domain is a simple domain."""
-
-    is_Composite: bool = False
-    """Boolean flag indicating if the domain is a composite domain."""
-
-    is_RingExtension: bool = False
-    """Boolean flag indicating if the domain is a ring extension domain."""
-
-    is_PID: bool = False
+    is_PID = False
     """Boolean flag indicating if the domain is a `principal ideal domain`_.
 
     >>> from sympy import ZZ
-    >>> ZZ.is_PID
+    >>> ZZ.has_assoc_Field
     True
+    >>> ZZ.get_field()
+    QQ
 
     .. _principal ideal domain: https://en.wikipedia.org/wiki/Principal_ideal_domain
 
@@ -517,40 +351,39 @@ class Domain(Generic[Er]):
     get_field
     """
 
-    has_CharacteristicZero: bool = False
-    """Boolean flag indicating if the domain has characteristic zero."""
+    has_CharacteristicZero = False
 
-    rep: str
+    rep: str | None = None
     alias: str | None = None
 
     def __init__(self):
         raise NotImplementedError
 
-    def __str__(self) -> str:
+    def __str__(self):
         return self.rep
 
-    def __repr__(self) -> str:
+    def __repr__(self):
         return str(self)
 
-    def __hash__(self) -> int:
+    def __hash__(self):
         return hash((self.__class__.__name__, self.dtype))
 
-    def new(self, *args) -> Er:
+    def new(self, *args):
         return self.dtype(*args)
 
     @property
-    def tp(self) -> type[Er]:
+    def tp(self):
         """Alias for :py:attr:`~.Domain.dtype`"""
-        return self.dtype # type: ignore
+        return self.dtype
 
-    def __call__(self, *args) -> Er:
+    def __call__(self, *args):
         """Construct an element of ``self`` domain from ``args``. """
         return self.new(*args)
 
-    def normal(self, *args: int | MPZ) -> Er:
+    def normal(self, *args):
         return self.dtype(*args)
 
-    def convert_from(self, element: Es, base: Domain[Es]) -> Er:
+    def convert_from(self, element, base):
         """Convert ``element`` to ``self.dtype`` given the base domain. """
         if base.alias is not None:
             method = "from_" + base.alias
@@ -567,16 +400,13 @@ class Domain(Generic[Er]):
 
         raise CoercionFailed("Cannot convert %s of type %s from %s to %s" % (element, type(element), base, self))
 
-    def convert(self,
-                element: Es | Expr | complex,
-                base: Domain[Es] | None = None
-                ) -> Er:
+    def convert(self, element, base=None):
         """Convert ``element`` to ``self.dtype``. """
 
         if base is not None:
             if _not_a_coeff(element):
                 raise CoercionFailed('%s is not in any domain' % element)
-            return self.convert_from(element, base) # type: ignore
+            return self.convert_from(element, base)
 
         if self.of_type(element):
             return element
@@ -587,39 +417,31 @@ class Domain(Generic[Er]):
         from sympy.polys.domains import ZZ, QQ, RealField, ComplexField
 
         if ZZ.of_type(element):
-            return self.convert_from(element, ZZ) # type: ignore
+            return self.convert_from(element, ZZ)
 
         if isinstance(element, int):
             return self.convert_from(ZZ(element), ZZ)
 
         if GROUND_TYPES != 'python':
             if isinstance(element, ZZ.tp):
-                return self.convert_from(element, ZZ) # type: ignore
+                return self.convert_from(element, ZZ)
             if isinstance(element, QQ.tp):
-                return self.convert_from(element, QQ) # type: ignore
+                return self.convert_from(element, QQ)
 
         if isinstance(element, float):
-            RR = RealField()
-            return self.convert_from(RR(element), RR)
+            parent = RealField(tol=False)
+            return self.convert_from(parent(element), parent)
 
         if isinstance(element, complex):
-            CC = ComplexField()
-            return self.convert_from(CC(element), CC)
-
-        if type(element).__name__ == 'mpf':
-            RR = RealField()
-            return self.convert_from(RR(element), RR)
-
-        if type(element).__name__ == 'mpc':
-            CC = ComplexField()
-            return self.convert_from(CC(element), CC)
+            parent = ComplexField(tol=False)
+            return self.convert_from(parent(element), parent)
 
         if isinstance(element, DomainElement):
             return self.convert_from(element, element.parent())
 
         # TODO: implement this in from_ methods
         if self.is_Numerical and getattr(element, 'is_ground', False):
-            return self.convert(element.LC()) # type: ignore
+            return self.convert(element.LC())
 
         if isinstance(element, Basic):
             try:
@@ -629,19 +451,19 @@ class Domain(Generic[Er]):
         else: # TODO: remove this branch
             if not is_sequence(element):
                 try:
-                    element = sympify(element, strict=True) # type: ignore
+                    element = sympify(element, strict=True)
                     if isinstance(element, Basic):
-                        return self.from_sympy(element) # type: ignore
+                        return self.from_sympy(element)
                 except (TypeError, ValueError):
                     pass
 
         raise CoercionFailed("Cannot convert %s of type %s to %s" % (element, type(element), self))
 
-    def of_type(self, element: Any) -> TypeIs[Er]:
+    def of_type(self, element):
         """Check if ``a`` is of type ``dtype``. """
-        return isinstance(element, self.tp)
+        return isinstance(element, self.tp) # XXX: this isn't correct, e.g. PolyElement
 
-    def __contains__(self, a: Any) -> bool:
+    def __contains__(self, a):
         """Check if ``a`` belongs to this domain. """
         try:
             if _not_a_coeff(a):
@@ -652,7 +474,7 @@ class Domain(Generic[Er]):
 
         return True
 
-    def to_sympy(self, a: Er) -> Expr:
+    def to_sympy(self, a):
         """Convert domain element *a* to a SymPy expression (Expr).
 
         Explanation
@@ -745,7 +567,7 @@ class Domain(Generic[Er]):
         """
         raise NotImplementedError
 
-    def from_sympy(self, a: Expr) -> Er:
+    def from_sympy(self, a):
         """Convert a SymPy expression to an element of this domain.
 
         Explanation
@@ -773,78 +595,76 @@ class Domain(Generic[Er]):
         """
         raise NotImplementedError
 
-    def sum(self, args: Iterable[Er]) -> Er:
+    def sum(self, args):
         return sum(args, start=self.zero)
 
-    def from_FF(K1, a, K0: FiniteField) -> Er | None:
+    def from_FF(K1, a, K0):
         """Convert ``ModularInteger(int)`` to ``dtype``. """
         return None
 
-    def from_FF_python(K1, a, K0: FiniteField) -> Er | None:
+    def from_FF_python(K1, a, K0):
         """Convert ``ModularInteger(int)`` to ``dtype``. """
         return None
 
-    def from_ZZ_python(K1, a, K0: IntegerRing) -> Er | None:
+    def from_ZZ_python(K1, a, K0):
         """Convert a Python ``int`` object to ``dtype``. """
         return None
 
-    def from_QQ_python(K1, a, K0: RationalField) -> Er | None:
+    def from_QQ_python(K1, a, K0):
         """Convert a Python ``Fraction`` object to ``dtype``. """
         return None
 
-    def from_FF_gmpy(K1, a, K0: FiniteField) -> Er | None:
+    def from_FF_gmpy(K1, a, K0):
         """Convert ``ModularInteger(mpz)`` to ``dtype``. """
         return None
 
-    def from_ZZ_gmpy(K1, a, K0: IntegerRing) -> Er | None:
+    def from_ZZ_gmpy(K1, a, K0):
         """Convert a GMPY ``mpz`` object to ``dtype``. """
         return None
 
-    def from_QQ_gmpy(K1, a, K0: RationalField) -> Er | None:
+    def from_QQ_gmpy(K1, a, K0):
         """Convert a GMPY ``mpq`` object to ``dtype``. """
         return None
 
-    def from_RealField(K1, a, K0: RealField) -> Er | None:
+    def from_RealField(K1, a, K0):
         """Convert a real element object to ``dtype``. """
         return None
 
-    def from_ComplexField(K1, a, K0: ComplexField) -> Er | None:
+    def from_ComplexField(K1, a, K0):
         """Convert a complex element to ``dtype``. """
         return None
 
-    def from_AlgebraicField(K1, a, K0: AlgebraicField) -> Er | None:
+    def from_AlgebraicField(K1, a, K0):
         """Convert an algebraic number to ``dtype``. """
         return None
 
-    def from_PolynomialRing(K1, a: PolyElement[Es], K0: PolynomialRing[Es]) -> Er | None:
+    def from_PolynomialRing(K1, a, K0):
         """Convert a polynomial to ``dtype``. """
         if a.is_ground:
             return K1.convert(a.LC, K0.dom)
-        return None
 
-    def from_FractionField(K1, a: FracElement[Es], K0: FractionField[Es]) -> Er | None:
+    def from_FractionField(K1, a, K0):
         """Convert a rational function to ``dtype``. """
         return None
 
-    def from_MonogenicFiniteExtension(K1, a, K0) -> Er | None:
+    def from_MonogenicFiniteExtension(K1, a, K0):
         """Convert an ``ExtensionElement`` to ``dtype``. """
         return K1.convert_from(a.rep, K0.ring)
 
-    def from_ExpressionDomain(K1, a, K0) -> Er | None:
+    def from_ExpressionDomain(K1, a, K0):
         """Convert a ``EX`` object to ``dtype``. """
         return K1.from_sympy(a.ex)
 
-    def from_ExpressionRawDomain(K1, a: Expr, K0) -> Er | None:
+    def from_ExpressionRawDomain(K1, a, K0):
         """Convert a ``EX`` object to ``dtype``. """
         return K1.from_sympy(a)
 
-    def from_GlobalPolynomialRing(K1, a, K0) -> Er | None:
+    def from_GlobalPolynomialRing(K1, a, K0):
         """Convert a polynomial to ``dtype``. """
         if a.degree() <= 0:
             return K1.convert(a.LC(), K0.dom)
-        return None
 
-    def from_GeneralizedPolynomialRing(K1, a, K0) -> Er | None:
+    def from_GeneralizedPolynomialRing(K1, a, K0):
         return K1.from_FractionField(a, K0)
 
     def unify_with_symbols(K0, K1, symbols):
@@ -852,39 +672,6 @@ class Domain(Generic[Er]):
             raise UnificationFailed("Cannot unify %s with %s, given %s generators" % (K0, K1, tuple(symbols)))
 
         return K0.unify(K1)
-
-    def unify_composite(K0, K1):
-        """Unify two domains where at least one is composite."""
-        K0_ground = K0.dom if K0.is_Composite else K0
-        K1_ground = K1.dom if K1.is_Composite else K1
-
-        K0_symbols = K0.symbols if K0.is_Composite else ()
-        K1_symbols = K1.symbols if K1.is_Composite else ()
-
-        domain = K0_ground.unify(K1_ground)
-        symbols = _unify_gens(K0_symbols, K1_symbols)
-        order = K0.order if K0.is_Composite else K1.order
-
-        # E.g. ZZ[x].unify(QQ.frac_field(x)) -> ZZ.frac_field(x)
-        if ((K0.is_FractionField and K1.is_PolynomialRing or
-             K1.is_FractionField and K0.is_PolynomialRing) and
-             (not K0_ground.is_Field or not K1_ground.is_Field) and domain.is_Field
-             and domain.has_assoc_Ring):
-            domain = domain.get_ring()
-
-        if K0.is_Composite and (not K1.is_Composite or K0.is_FractionField or K1.is_PolynomialRing):
-            cls = K0.__class__
-        else:
-            cls = K1.__class__
-
-        # Here cls might be PolynomialRing, FractionField, GlobalPolynomialRing
-        # (dense/old Polynomialring) or dense/old FractionField.
-
-        from sympy.polys.domains.old_polynomialring import GlobalPolynomialRing
-        if cls == GlobalPolynomialRing:
-            return cls(domain, symbols)
-
-        return cls(domain, symbols, order)
 
     def unify(K0, K1, symbols=None):
         """
@@ -908,19 +695,6 @@ class Domain(Generic[Er]):
 
         if K0 == K1:
             return K0
-
-        if not (K0.has_CharacteristicZero and K1.has_CharacteristicZero):
-            # Reject unification of domains with different characteristics.
-            if K0.characteristic() != K1.characteristic():
-                raise UnificationFailed("Cannot unify %s with %s" % (K0, K1))
-
-            # We do not get here if K0 == K1. The two domains have the same
-            # characteristic but are unequal so at least one is composite and
-            # we are unifying something like GF(3).unify(GF(3)[x]).
-            return K0.unify_composite(K1)
-
-        # From here we know both domains have characteristic zero and it can be
-        # acceptable to fall back on EX.
 
         if K0.is_EXRAW:
             return K0
@@ -948,17 +722,43 @@ class Domain(Generic[Er]):
                 return K0.set_domain(K1)
 
         if K0.is_Composite or K1.is_Composite:
-            return K0.unify_composite(K1)
+            K0_ground = K0.dom if K0.is_Composite else K0
+            K1_ground = K1.dom if K1.is_Composite else K1
+
+            K0_symbols = K0.symbols if K0.is_Composite else ()
+            K1_symbols = K1.symbols if K1.is_Composite else ()
+
+            domain = K0_ground.unify(K1_ground)
+            symbols = _unify_gens(K0_symbols, K1_symbols)
+            order = K0.order if K0.is_Composite else K1.order
+
+            if ((K0.is_FractionField and K1.is_PolynomialRing or
+                 K1.is_FractionField and K0.is_PolynomialRing) and
+                 (not K0_ground.is_Field or not K1_ground.is_Field) and domain.is_Field
+                 and domain.has_assoc_Ring):
+                domain = domain.get_ring()
+
+            if K0.is_Composite and (not K1.is_Composite or K0.is_FractionField or K1.is_PolynomialRing):
+                cls = K0.__class__
+            else:
+                cls = K1.__class__
+
+            from sympy.polys.domains.old_polynomialring import GlobalPolynomialRing
+            if cls == GlobalPolynomialRing:
+                return cls(domain, symbols)
+
+            return cls(domain, symbols, order)
+
+        def mkinexact(cls, K0, K1):
+            prec = max(K0.precision, K1.precision)
+            tol = max(K0.tolerance, K1.tolerance)
+            return cls(prec=prec, tol=tol)
 
         if K1.is_ComplexField:
             K0, K1 = K1, K0
         if K0.is_ComplexField:
             if K1.is_ComplexField or K1.is_RealField:
-                if K0.precision >= K1.precision:
-                    return K0
-                else:
-                    from sympy.polys.domains.complexfield import ComplexField
-                    return ComplexField(prec=K1.precision)
+                return mkinexact(K0.__class__, K0, K1)
             else:
                 return K0
 
@@ -966,13 +766,10 @@ class Domain(Generic[Er]):
             K0, K1 = K1, K0
         if K0.is_RealField:
             if K1.is_RealField:
-                if K0.precision >= K1.precision:
-                    return K0
-                else:
-                    return K1
+                return mkinexact(K0.__class__, K0, K1)
             elif K1.is_GaussianRing or K1.is_GaussianField:
                 from sympy.polys.domains.complexfield import ComplexField
-                return ComplexField(prec=K0.precision)
+                return ComplexField(prec=K0.precision, tol=K0.tolerance)
             else:
                 return K0
 
@@ -1012,6 +809,9 @@ class Domain(Generic[Er]):
         if K1.is_IntegerRing:
             return K1
 
+        if K0.is_FiniteField and K1.is_FiniteField:
+            return K0.__class__(max(K0.mod, K1.mod, key=default_sort_key))
+
         from sympy.polys.domains import EX
         return EX
 
@@ -1024,7 +824,7 @@ class Domain(Generic[Er]):
         """Returns ``False`` if two domains are equivalent. """
         return not self == other
 
-    def map(self, seq: Iterable[int | Er]) -> list[Er]:
+    def map(self, seq):
         """Rersively apply ``self`` to all elements of ``seq``. """
         result = []
 
@@ -1036,64 +836,50 @@ class Domain(Generic[Er]):
 
         return result
 
-    def get_ring(self) -> Ring:
+    def get_ring(self):
         """Returns a ring associated with ``self``. """
         raise DomainError('there is no ring associated with %s' % self)
 
-    def get_field(self) -> Field:
+    def get_field(self):
         """Returns a field associated with ``self``. """
         raise DomainError('there is no field associated with %s' % self)
 
-    def get_exact(self) -> Domain:
+    def get_exact(self):
         """Returns an exact domain associated with ``self``. """
         return self
 
-    def __getitem__(self, symbols: Expr | Iterable[Expr] | str | Iterable[str]) -> PolynomialRing[Er]:
+    def __getitem__(self, symbols):
         """The mathematical way to make a polynomial ring. """
-        if isinstance(symbols, (str, Expr)):
-            return self.poly_ring(symbols)
-        else:
+        if hasattr(symbols, '__iter__'):
             return self.poly_ring(*symbols)
+        else:
+            return self.poly_ring(symbols)
 
-    def poly_ring(self, *symbols: str | Expr, order: str | MonomialOrder = lex) -> PolynomialRing:
+    def poly_ring(self, *symbols, order=lex):
         """Returns a polynomial ring, i.e. `K[X]`. """
         from sympy.polys.domains.polynomialring import PolynomialRing
         return PolynomialRing(self, symbols, order)
 
-    def _power_series_ring(self, *symbols: str | Expr, prec: int = 6) -> PowerSeriesRing:
-        """Returns a univariate power series ring with specified precision, i.e. `K[[X], <X^prec>]`.
-
-        Notes
-        =====
-        This method is private at the moment because the PowerSeriesRing class
-        needs to be properly integrated into SymPy's domain system.
-
-        """
-        if len(symbols) != 1:
-            raise ValueError("Power series ring supports only univariate series.")
-        from sympy.polys.domains.powerseriesring import PowerSeriesRing
-        return PowerSeriesRing(self, symbols[0], prec)
-
-    def frac_field(self, *symbols: str | Expr, order: str | MonomialOrder = lex) -> FractionField:
+    def frac_field(self, *symbols, order=lex):
         """Returns a fraction field, i.e. `K(X)`. """
         from sympy.polys.domains.fractionfield import FractionField
         return FractionField(self, symbols, order)
 
-    def old_poly_ring(self, *symbols: str | Expr, **kwargs: Any):
+    def old_poly_ring(self, *symbols, **kwargs):
         """Returns a polynomial ring, i.e. `K[X]`. """
         from sympy.polys.domains.old_polynomialring import PolynomialRing
-        return PolynomialRing(self, *symbols, **kwargs) # type: ignore
+        return PolynomialRing(self, *symbols, **kwargs)
 
-    def old_frac_field(self, *symbols: str | Expr, **kwargs: Any):
+    def old_frac_field(self, *symbols, **kwargs):
         """Returns a fraction field, i.e. `K(X)`. """
         from sympy.polys.domains.old_fractionfield import FractionField
         return FractionField(self, *symbols, **kwargs)
 
-    def algebraic_field(self, *extension: Expr, alias: str | None = None) -> AlgebraicField:
+    def algebraic_field(self, *extension, alias=None):
         r"""Returns an algebraic field, i.e. `K(\alpha, \ldots)`. """
         raise DomainError("Cannot create algebraic field over %s" % self)
 
-    def alg_field_from_poly(self, poly: Poly, alias: str | None = None, root_index: int = -1) -> AlgebraicField:
+    def alg_field_from_poly(self, poly, alias=None, root_index=-1):
         r"""
         Convenience method to construct an algebraic extension on a root of a
         polynomial, chosen by root index.
@@ -1135,9 +921,7 @@ class Domain(Generic[Er]):
         alpha = AlgebraicNumber(root, alias=alias)
         return self.algebraic_field(alpha, alias=alias)
 
-    def cyclotomic_field(self, n: int, ss: bool = False, alias: str = "zeta",
-                         gen: Expr | None = None, root_index: int = -1
-                         ) -> AlgebraicField:
+    def cyclotomic_field(self, n, ss=False, alias="zeta", gen=None, root_index=-1):
         r"""
         Convenience method to construct a cyclotomic field.
 
@@ -1179,79 +963,75 @@ class Domain(Generic[Er]):
         return self.alg_field_from_poly(cyclotomic_poly(n, gen), alias=alias,
                                         root_index=root_index)
 
-    def inject(self, *symbols) -> PolynomialRing:
+    def inject(self, *symbols):
         """Inject generators into this domain. """
         raise NotImplementedError
 
-    def drop(self, *symbols: Expr | str) -> Domain:
+    def drop(self, *symbols):
         """Drop generators from this domain. """
         if self.is_Simple:
             return self
         raise NotImplementedError  # pragma: no cover
 
-    def is_zero(self, a: Er) -> bool:
+    def is_zero(self, a):
         """Returns True if ``a`` is zero. """
         return not a
 
-    def is_one(self, a: Er) -> bool:
+    def is_one(self, a):
         """Returns True if ``a`` is one. """
         return a == self.one
 
-    def is_positive(self, a: Er) -> bool:
+    def is_positive(self, a):
         """Returns True if ``a`` is positive. """
-        return a > 0 # type: ignore
+        return a > 0
 
-    def is_negative(self, a: Er) -> bool:
+    def is_negative(self, a):
         """Returns True if ``a`` is negative. """
-        return a < 0 # type: ignore
+        return a < 0
 
-    def is_nonpositive(self, a: Er) -> bool:
+    def is_nonpositive(self, a):
         """Returns True if ``a`` is non-positive. """
-        return a <= 0 # type: ignore
+        return a <= 0
 
-    def is_nonnegative(self, a: Er) -> bool:
+    def is_nonnegative(self, a):
         """Returns True if ``a`` is non-negative. """
-        return a >= 0 # type: ignore
+        return a >= 0
 
-    def is_unit(self, a: Er) -> bool:
-        """Returns True if ``a`` is a unit in this domain. """
-        raise NotImplementedError
-
-    def canonical_unit(self, a: Er) -> Er:
+    def canonical_unit(self, a):
         if self.is_negative(a):
             return -self.one
         else:
             return self.one
 
-    def abs(self, a: Er) -> Er:
+    def abs(self, a):
         """Absolute value of ``a``, implies ``__abs__``. """
-        return abs(a) # type: ignore
+        return abs(a)
 
-    def neg(self, a: Er) -> Er:
+    def neg(self, a):
         """Returns ``a`` negated, implies ``__neg__``. """
         return -a
 
-    def pos(self, a: Er) -> Er:
+    def pos(self, a):
         """Returns ``a`` positive, implies ``__pos__``. """
         return +a
 
-    def add(self, a: Er, b: Er) -> Er:
+    def add(self, a, b):
         """Sum of ``a`` and ``b``, implies ``__add__``.  """
         return a + b
 
-    def sub(self, a: Er, b: Er) -> Er:
+    def sub(self, a, b):
         """Difference of ``a`` and ``b``, implies ``__sub__``.  """
         return a - b
 
-    def mul(self, a: Er, b: Er) -> Er:
+    def mul(self, a, b):
         """Product of ``a`` and ``b``, implies ``__mul__``.  """
         return a * b
 
-    def pow(self, a: Er, b: int) -> Er:
+    def pow(self, a, b):
         """Raise ``a`` to power ``b``, implies ``__pow__``.  """
         return a ** b
 
-    def exquo(self, a: Er, b: Er) -> Er:
+    def exquo(self, a, b):
         """Exact quotient of *a* and *b*. Analogue of ``a / b``.
 
         Explanation
@@ -1328,13 +1108,13 @@ class Domain(Generic[Er]):
         >>> ZZ(5) / ZZ(2) # doctest: +SKIP
         2.5
 
-        On the other hand with ``SYMPY_GROUND_TYPES=flint`` elements of :ref:`ZZ`
-        are ``flint.fmpz`` and inexact division would raise an exception:
+        On the other hand with `SYMPY_GROUND_TYPES=flint` elements of :ref:`ZZ`
+        are ``flint.fmpz`` and division would raise an exception:
 
-        >>> ZZ(4) / ZZ(3) # doctest: +SKIP
+        >>> ZZ(4) / ZZ(2) # doctest: +SKIP
         Traceback (most recent call last):
         ...
-        DomainError: fmpz division is not exact
+        TypeError: unsupported operand type(s) for /: 'fmpz' and 'fmpz'
 
         Using ``/`` with :ref:`ZZ` will lead to incorrect results so
         :py:meth:`~.Domain.exquo` should be used instead.
@@ -1342,7 +1122,7 @@ class Domain(Generic[Er]):
         """
         raise NotImplementedError
 
-    def quo(self, a: Er, b: Er) -> Er:
+    def quo(self, a, b):
         """Quotient of *a* and *b*. Analogue of ``a // b``.
 
         ``K.quo(a, b)`` is equivalent to ``K.div(a, b)[0]``. See
@@ -1357,7 +1137,7 @@ class Domain(Generic[Er]):
         """
         raise NotImplementedError
 
-    def rem(self, a: Er, b: Er) -> Er:
+    def rem(self, a, b):
         """Modulo division of *a* and *b*. Analogue of ``a % b``.
 
         ``K.rem(a, b)`` is equivalent to ``K.div(a, b)[1]``. See
@@ -1372,7 +1152,7 @@ class Domain(Generic[Er]):
         """
         raise NotImplementedError
 
-    def div(self, a: Er, b: Er) -> tuple[Er, Er]:
+    def div(self, a, b):
         """Quotient and remainder for *a* and *b*. Analogue of ``divmod(a, b)``
 
         Explanation
@@ -1458,51 +1238,76 @@ class Domain(Generic[Er]):
         """
         raise NotImplementedError
 
-    def invert(self, a: Er, b: Er) -> Er:
+    def invert(self, a, b):
         """Returns inversion of ``a mod b``, implies something. """
         raise NotImplementedError
 
-    def revert(self, a: Er) -> Er:
+    def revert(self, a):
         """Returns ``a**(-1)`` if possible. """
         raise NotImplementedError
 
-    def numer(self, a: Er) -> Any:
+    def numer(self, a):
         """Returns numerator of ``a``. """
         raise NotImplementedError
 
-    def denom(self, a: Er) -> Any:
+    def denom(self, a):
         """Returns denominator of ``a``. """
         raise NotImplementedError
 
-    def half_gcdex(self, a: Er, b: Er) -> tuple[Er, Er]:
+    def half_gcdex(self, a, b):
         """Half extended GCD of ``a`` and ``b``. """
         s, t, h = self.gcdex(a, b)
         return s, h
 
-    def gcdex(self, a: Er, b: Er) -> tuple[Er, Er, Er]:
+    def gcdex(self, a, b):
         """Extended GCD of ``a`` and ``b``. """
         raise NotImplementedError
 
-    def cofactors(self, a: Er, b: Er) -> tuple[Er, Er, Er]:
+    def cofactors(self, a, b):
         """Returns GCD and cofactors of ``a`` and ``b``. """
         gcd = self.gcd(a, b)
         cfa = self.quo(a, gcd)
         cfb = self.quo(b, gcd)
         return gcd, cfa, cfb
 
-    def gcd(self, a: Er, b: Er) -> Er:
+    def gcd(self, a, b):
         """Returns GCD of ``a`` and ``b``. """
         raise NotImplementedError
 
-    def lcm(self, a: Er, b: Er) -> Er:
+    def gcdn(self, coeff_lst):
+        """
+        Return the greatest common divisor (GCD) of a list of coefficients of a
+        polynomial.
+
+        Examples
+        ========
+
+        >>> from sympy import ZZ
+        >>> coeff_lst = [ZZ(12), ZZ(18), ZZ(24)]
+        >>> domain = ZZ
+        >>> domain.gcdn(coeff_lst)
+        6
+
+        """
+        domain = self
+        coeff_lst = list(coeff_lst)
+        gcd = domain.gcd
+        res = coeff_lst[0]
+        for coeff in coeff_lst[1:]:
+            res = gcd(res, coeff)
+            if res == domain.one:
+                break
+        return res
+
+    def lcm(self, a, b):
         """Returns LCM of ``a`` and ``b``. """
         raise NotImplementedError
 
-    def log(self, a: Er, b: Er) -> Er:
+    def log(self, a, b):
         """Returns b-base logarithm of ``a``. """
         raise NotImplementedError
 
-    def sqrt(self, a: Er) -> Er:
+    def sqrt(self, a):
         """Returns a (possibly inexact) square root of ``a``.
 
         Explanation
@@ -1517,7 +1322,7 @@ class Domain(Generic[Er]):
         """
         raise NotImplementedError
 
-    def is_square(self, a: Er) -> bool:
+    def is_square(self, a):
         """Returns whether ``a`` is a square in the domain.
 
         Explanation
@@ -1533,7 +1338,7 @@ class Domain(Generic[Er]):
         """
         raise NotImplementedError
 
-    def exsqrt(self, a: Er) -> Er | None:
+    def exsqrt(self, a):
         """Principal square root of a within the domain if ``a`` is square.
 
         Explanation
@@ -1550,23 +1355,23 @@ class Domain(Generic[Er]):
         """
         raise NotImplementedError
 
-    def evalf(self, a: Er, prec: int | None = None, **options: Any):
+    def evalf(self, a, prec=None, **options):
         """Returns numerical approximation of ``a``. """
         return self.to_sympy(a).evalf(prec, **options)
 
     n = evalf
 
-    def real(self, a) -> Er:
+    def real(self, a):
         return a
 
-    def imag(self, a) -> Er:
+    def imag(self, a):
         return self.zero
 
-    def almosteq(self, a: Er, b: Er, tolerance: float | None = None):
+    def almosteq(self, a, b, tolerance=None):
         """Check if ``a`` and ``b`` are almost equal. """
         return a == b
 
-    def characteristic(self) -> int:
+    def characteristic(self):
         """Return the characteristic of this domain. """
         raise NotImplementedError('characteristic()')
 
