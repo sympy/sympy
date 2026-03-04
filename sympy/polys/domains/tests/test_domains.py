@@ -881,11 +881,6 @@ def test_Domain_cyclotomic_field():
     assert E.dom == QQ
 
 
-def test_Domain_gcdn():
-    coeff_lst = [ZZ(6), ZZ(8), ZZ(4)]
-    assert ZZ.gcdn(coeff_lst) == 2
-
-
 def test_PolynomialRing_from_FractionField():
     F, x,y = field("x,y", ZZ)
     R, X,Y = ring("x,y", ZZ)
@@ -1438,3 +1433,8 @@ def test_exsqrt():
     assert F7.exsqrt(F7(3)) is None
     assert F7.is_square(F7(0)) is True
     assert F7.exsqrt(F7(0)) == F7(0)
+
+
+def test_Domain_gcdn():
+    coeff_lst = [ZZ(6), ZZ(8), ZZ(4)]
+    assert ZZ.gcdn(coeff_lst) == 2
