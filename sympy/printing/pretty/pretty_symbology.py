@@ -576,6 +576,15 @@ def pretty_symbol(symb_name, bold_name=False):
 
     name = translate(name, bold_name)
 
+    # Only use subscripts for single characters or pure numbers to avoid font issues
+    def should_use_subscripts(items):
+        """Check if subscripts should be used based on item complexity"""
+        for item in items:
+            # Allow single chars or pure numbers, but not multi-char strings
+            if len(item) > 1 and not item.isdigit():
+                return False
+        return True
+
     # Let's prettify sups/subs. If it fails at one of them, pretty sups/subs are
     # not used at all.
     def pretty_list(l, mapping):
@@ -590,8 +599,8 @@ def pretty_symbol(symb_name, bold_name=False):
             result.append(pretty)
         return result
 
-    pretty_sups = pretty_list(sups, sup)
-    if pretty_sups is not None:
+    pretty_sups = pretty_list(sups, sup) if should_use_subscripts(sups) else None
+    if pretty_sups is not None and should_use_subscripts(subs):
         pretty_subs = pretty_list(subs, sub)
     else:
         pretty_subs = None
