@@ -614,8 +614,6 @@ def test_issue_14704():
 
 
 def test_issue_29000():
-    x = symbols('x')
-
     assert re(sqrt(x)).subs(x, 0) == 0
     assert im(sqrt(x)).subs(x, 0) == 0
     assert sqrt(x).as_real_imag()[0].subs(x, 0) == 0
