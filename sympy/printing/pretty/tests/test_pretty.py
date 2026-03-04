@@ -8067,9 +8067,9 @@ def test_deprecated_prettyForm():
         from sympy.printing.pretty.pretty_symbology import xstr
         assert xstr(1) == '1'
 
-        from sympy.printing.pretty.stringpict import prettyForm
     with warns_deprecated_sympy():
-            p = prettyForm('s', unicode='s')
+        from sympy.printing.pretty.stringpict import prettyForm
+        p = prettyForm('s', unicode='s')
 
     with warns_deprecated_sympy():
         assert p.unicode == p.s == 's'
