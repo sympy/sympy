@@ -8068,8 +8068,7 @@ def test_deprecated_prettyForm():
         assert xstr(1) == '1'
 
     with warns_deprecated_sympy():
-        from sympy.printing.pretty.stringpict import prettyForm
-        p = prettyForm('s', unicode='s')
+            p = prettyForm('s', unicode='s')
 
     with warns_deprecated_sympy():
         assert p.unicode == p.s == 's'
@@ -8084,7 +8083,7 @@ def test_center():
 
 def test_pretty_symbol_multichar_subscript():
     """Multi-character subscripts should use underscore notation.
-    
+
     Fixes #20207 - prevents Unicode rendering issues with symbols
     like Symbol('x_input') that would show as boxes or hex codes.
     """
