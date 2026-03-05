@@ -1,10 +1,16 @@
 """Useful utility decorators. """
 
-from typing import TypeVar
+from __future__ import annotations
+
 import sys
 import types
 import inspect
 from functools import wraps
+from typing import TypeVar, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+    from typing import Any, Callable
 
 # Keep this import for backwards compatibility:
 from sympy.external.mpmath import conserve_mpmath_dps # noqa: F401
@@ -16,7 +22,7 @@ T = TypeVar('T')
 """A generic type"""
 
 
-def threaded_factory(func, use_add):
+def threaded_factory(func: Callable[..., Any], use_add: bool) -> Callable[..., Any]:
     """A factory for ``threaded`` decorators. """
     from sympy.core import sympify
     from sympy.matrices import MatrixBase
@@ -45,7 +51,7 @@ def threaded_factory(func, use_add):
     return threaded_func
 
 
-def threaded(func):
+def threaded(func: Callable[..., Any]) -> Callable[..., Any]:
     """Apply ``func`` to sub--elements of an object, including :class:`~.Add`.
 
     This decorator is intended to make it uniformly possible to apply a
@@ -65,7 +71,7 @@ def threaded(func):
     return threaded_factory(func, True)
 
 
-def xthreaded(func):
+def xthreaded(func: Callable[..., Any]) -> Callable[..., Any]:
     """Apply ``func`` to sub--elements of an object, excluding :class:`~.Add`.
 
     This decorator is intended to make it uniformly possible to apply a
@@ -104,11 +110,14 @@ class no_attrs_in_subclass:
     False
 
     """
-    def __init__(self, cls, f):
+    cls: type
+    f: Any
+
+    def __init__(self, cls: type, f: Any) -> None:
         self.cls = cls
         self.f = f
 
-    def __get__(self, instance, owner=None):
+    def __get__(self, instance: Any, owner: type | None = None) -> Any:
         if owner == self.cls:
             if hasattr(self.f, '__get__'):
                 return self.f.__get__(instance, owner)
@@ -116,8 +125,13 @@ class no_attrs_in_subclass:
         raise AttributeError
 
 
-def doctest_depends_on(exe=None, modules=None, disable_viewers=None,
-                       python_version=None, ground_types=None):
+def doctest_depends_on(
+    exe: Iterable[str] | str | None = None,
+    modules: Iterable[str] | str | None = None,
+    disable_viewers: Iterable[str] | str | None = None,
+    python_version: tuple[int, ...] | None = None,
+    ground_types: Iterable[str] | str | None = None,
+) -> Callable[[T], T]:
     """
     Adds metadata about the dependencies which need to be met for doctesting
     the docstrings of the decorated objects.
@@ -131,7 +145,7 @@ def doctest_depends_on(exe=None, modules=None, disable_viewers=None,
     ``python_version`` should be the minimum Python version required, as a tuple
     (like ``(3, 0)``)
     """
-    dependencies = {}
+    dependencies: dict[str, Any] = {}
     if exe is not None:
         dependencies['executables'] = exe
     if modules is not None:
@@ -217,7 +231,7 @@ def public(obj: T) -> T:
     return obj
 
 
-def memoize_property(propfunc):
+def memoize_property(propfunc: Callable[..., Any]) -> property:
     """Property decorator that caches the value of potentially expensive
     ``propfunc`` after the first evaluation. The cached value is stored in
     the corresponding property name with an attached underscore."""
@@ -235,8 +249,13 @@ def memoize_property(propfunc):
     return property(accessor)
 
 
-def deprecated(message, *, deprecated_since_version,
-               active_deprecations_target, stacklevel=3):
+def deprecated(
+    message: str,
+    *,
+    deprecated_since_version: str,
+    active_deprecations_target: str,
+    stacklevel: int = 3,
+) -> Callable[[T], T]:
     '''
     Mark a function as deprecated.
 
