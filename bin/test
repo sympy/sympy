@@ -36,13 +36,7 @@ from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from get_sympy import path_hack
 path_hack()
 
-epilog = """
-"options" are any of the options above.
-"""
-
-parser = ArgumentParser(
-    epilog=epilog,
-    formatter_class=ArgumentDefaultsHelpFormatter)
+parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
 parser.add_argument(
     '-s', '--use-sympy-runner', action='store_true', dest='use_sympy_runner',
     default=False, help='Use the SymPy test runner instead of pytest. This is '
