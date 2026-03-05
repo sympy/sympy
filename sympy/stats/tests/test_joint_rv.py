@@ -37,9 +37,6 @@ from sympy.external import import_module
 
 from sympy.abc import x, y
 
-np = import_module("numpy")
-if np is None:
-    skip("numpy is not installed")
 
 def _is_simplex_sample(vec, tol=1e-12):
     return all(float(v) >= -tol for v in vec) and abs(sum(float(v) for v in vec) - 1.0) <= tol
@@ -324,6 +321,10 @@ def test_joint_vector_expectation():
 
 
 def test_sample_numpy():
+    numpy = import_module("numpy")
+    if not numpy:
+        skip("numpy is not installed. Abort tests for _sample_numpy.")
+
     distribs_numpy = [
         MultivariateNormal("M", [3, 4], [[2, 1], [1, 2]]),
         MultivariateBeta("B", [0.4, 5, 15, 50, 203]),
@@ -382,9 +383,9 @@ def test_sample_pymc():
         Multinomial("N", 4, [0.3, 0.2, 0.1, 0.4])
     ]
     size = 3
-    pymc = import_module('pymc')
-    if not pymc:
-        skip('PyMC is not installed. Abort tests for _sample_pymc.')
+    np = import_module("numpy")
+    if not np:
+        skip("numpy is not installed. Abort tests for _sample_pymc.")
     else:
         for X in distribs_pymc:
             samps = sample(X, size=size, library='pymc')
