@@ -545,6 +545,7 @@ def powdenest(eq, force=False, polar=False):
     sqrt(x**2)
 
     >>> p = symbols('p', positive=True)
+    >>> # sqrt(p**2) simplifies to p because p is positive
     >>> powdenest(sqrt(p**2))
     p
 
