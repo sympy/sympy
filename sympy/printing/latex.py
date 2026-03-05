@@ -3075,8 +3075,8 @@ def latex(expr, **settings):
     order: string, optional
         Any of the supported monomial orderings (currently ``'lex'``,
         ``'grlex'``, or ``'grevlex'``), ``'old'``, and ``'none'``. This
-        parameter does nothing for `~.Mul` objects. Setting order to ``'old'``
-        uses the compatibility ordering for ``~.Add`` defined in Printer. For
+        parameter does nothing for :class:`~.Mul` objects. Setting order to ``'old'``
+        uses the compatibility ordering for :class:`~.Add` defined in Printer. For
         very large expressions, set the ``order`` keyword to ``'none'`` if
         speed is a concern.
     symbol_names : dictionary of strings mapped to symbols, optional
@@ -3086,7 +3086,7 @@ def latex(expr, **settings):
         form. Default is ``True``, to print exponent in root form.
     mat_symbol_style : string, optional
         Can be either ``'plain'`` (default) or ``'bold'``. If set to
-        ``'bold'``, a `~.MatrixSymbol` A will be printed as ``\mathbf{A}``,
+        ``'bold'``, a :class:`~.MatrixSymbol` A will be printed as ``\mathbf{A}``,
         otherwise as ``A``.
     imaginary_unit : string, optional
         String to use for the imaginary unit. Defined options are ``'i'``
