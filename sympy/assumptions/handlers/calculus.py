@@ -291,7 +291,7 @@ def _(expr, assumptions):
                 return None
         elif is_fin:
             fin += 1
-        if is_inf is None and is_fin is None and is_neg_inf is None and is_pos_inf is None:
+        elif is_inf is None and is_fin is None:
             return None
     if neg_inf == 0:
         if (fin > 0 or pos_inf > 0):
@@ -299,13 +299,11 @@ def _(expr, assumptions):
     if neg_inf > 0:
         if (pos_inf > 0):
             return None
-        elif fin > 0:
-            return True
         return True
 
 @NegativeInfinitePredicate.register(Mul)
 def _(expr, assumptions):
-    pos_inf, neg_inf, neg = 0, 0, 0
+    neg_inf, neg = 0, 0
     for a in expr.args:
         is_fin = ask(Q.finite(a), assumptions)
         is_neg = ask(Q.negative(a), assumptions)
@@ -319,21 +317,15 @@ def _(expr, assumptions):
             if is_neg_inf:
                 neg_inf += 1
             elif is_pos_inf:
-                pos_inf += 1
+                neg_inf += 2
             else:
                 return None
         if is_neg:
             neg += 1
-        if (is_fin or is_inf or is_zero) is None:
+        if (is_fin and is_inf and is_zero) is None:
             return None
     total_neg = neg + neg_inf
-    if pos_inf > 0:
-        if total_neg % 2 == 0:
-            return False
-        return True
-    if neg_inf > 0:
-        if total_neg % 2 == 0:
-            return False
-        return True
-    else:
+    if total_neg % 2 == 0:
         return False
+    else:
+        return True
