@@ -86,8 +86,8 @@ def _is_zero_if_zero(P, Q):
     if not P.free_symbols:
         return True
 
-    factors_P = set(f for f, p in factor_list(P)[1])
-    factors_Q = set(f for f, p in factor_list(Q)[1])
+    factors_P = {f for f, p in factor_list(P)[1]}
+    factors_Q = {f for f, p in factor_list(Q)[1]}
 
     return factors_P.issubset(factors_Q)
 
@@ -2468,6 +2468,8 @@ def substitution_rule(integral):
     if substitutions:
         debug("List of Substitution Rules")
         ways = []
+        factored_integrand = integrand.factor()
+        _, denom_integrand = factored_integrand.as_numer_denom()
         for u_func, c, substituted in substitutions:
             subrule = integral_steps(substituted, u_var)
             count = count + 1
@@ -2477,27 +2479,22 @@ def substitution_rule(integral):
                 continue
 
             if simplify(c - 1) != 0:
-                _, denom = c.as_numer_denom()
+                _, denom_c = c.as_numer_denom()
                 if subrule:
                     subrule = ConstantTimesRule(c * substituted, u_var, c, substituted, subrule)
 
-                if denom.free_symbols:
+                if denom_c.free_symbols:
                     piecewise = []
-                    could_be_zero = []
-
-                    if isinstance(denom, Mul):
-                        could_be_zero = denom.args
-                    else:
-                        could_be_zero.append(denom)
-
-                    for expr in could_be_zero:
-                        if not fuzzy_not(expr.is_zero):
-                            substep = integral_steps(manual_subs(integrand, expr, 0), symbol)
+                    factors_denom_c = factor_list(denom_c)[1]
+                    for pole, _ in factors_denom_c:
+                        # only substitute poles introduced by the constant c if they were not already poles of the original integrand
+                        if not fuzzy_not(pole.is_zero) and not _is_zero_if_zero(pole, denom_integrand):
+                            substep = integral_steps(manual_subs(factored_integrand, pole, 0), symbol)
 
                             if substep:
                                 piecewise.append((
                                     substep,
-                                    Eq(expr, 0)
+                                    Eq(pole, 0)
                                 ))
                     piecewise.append((subrule, True))
                     subrule = PiecewiseRule(substituted, symbol, piecewise)
