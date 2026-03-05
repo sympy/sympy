@@ -76,21 +76,19 @@ if TYPE_CHECKING:
 def _is_zero_if_zero(P, Q):
     """
     Returns True if the condition (P == 0) mathematically implies (Q == 0).
-    
-    This is verified by checking if all irreducible factors of P are 
+
+    This is verified by checking if all irreducible factors of P are
     present in Q, which ensures that any root of P is also a root of Q.
     """
-    from sympy import factor_list
 
     if P.is_zero:
         return Q.is_zero
-    
     if not P.free_symbols:
         return True
 
     factors_P = set(f for f, p in factor_list(P)[1])
     factors_Q = set(f for f, p in factor_list(Q)[1])
-    
+
     return factors_P.issubset(factors_Q)
 
 class Rule(ABC):
@@ -1908,7 +1906,7 @@ def quadratic_denom_rule(integral):
             if positive_cond is S.false:
                 return negative_step
             return PiecewiseRule(integrand, symbol, [(general_rule, positive_cond), (negative_step, S.true)])
-        
+
         power = PowerRule(integrand, symbol, symbol, -2)
         if b != 1:
             power = ConstantTimesRule(integrand, symbol, 1/b, symbol**-2, power)
