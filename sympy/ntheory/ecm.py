@@ -1,5 +1,5 @@
 from math import log
-
+from typing import Optional
 from sympy.core.random import _randint
 from sympy.external.gmpy import gcd, invert, sqrt
 from sympy.utilities.misc import as_int
@@ -37,7 +37,7 @@ class Point:
 
     """
 
-    def __init__(self, x_cord, z_cord, a_24, mod):
+    def __init__(self, x_cord: int, z_cord: int, a_24: int, mod: int):
         """
         Initial parameters for the Point class.
 
@@ -54,9 +54,11 @@ class Point:
         self.a_24 = a_24
         self.mod = mod
 
-    def __eq__(self, other):
+    def __eq__(self, other: object):
         """Two points are equal if X/Z of both points are equal
         """
+        if not isinstance(other,Point):
+            return False
         if self.a_24 != other.a_24 or self.mod != other.mod:
             return False
         return self.x_cord * other.z_cord % self.mod ==\
@@ -122,7 +124,7 @@ class Point:
         z_cord = diff*(v + self.a_24*diff) % self.mod
         return Point(x_cord, z_cord, self.a_24, self.mod)
 
-    def mont_ladder(self, k):
+    def mont_ladder(self, k:int):
         """
         Scalar multiplication of a point in Montgomery form
         using Montgomery Ladder Algorithm.
