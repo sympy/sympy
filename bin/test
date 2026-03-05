@@ -38,8 +38,6 @@ path_hack()
 
 epilog = """
 "options" are any of the options above.
-"tests" are 0 or more glob strings of tests to run.
-If no test arguments are given, all tests will be run.
 """
 
 parser = ArgumentParser(
@@ -108,8 +106,12 @@ parser.add_argument(
     '--store-durations', action='store_true', dest='store_durations',
     default=False, help='Update the `.test_durations` file, which helps '
     'pytest-split partition tests into even-sized groups.')
+parser.add_argument(
+    'tests', nargs='*', metavar='tests',
+    help='0 or more glob strings of tests to run. If no test arguments are given, all tests will be run.')
 
 options, args = parser.parse_known_args()
+tests = options.tests + args
 
 if not options.cache:
     os.environ['SYMPY_USE_CACHE'] = 'no'
@@ -118,7 +120,7 @@ if options.types:
 
 import sympy
 
-exit_code = sympy.test(*args, verbose=options.verbose, kw=options.kw,
+exit_code = sympy.test(*tests, verbose=options.verbose, kw=options.kw,
     tb=options.tb, pdb=options.pdb, colors=options.colors,
     force_colors=options.force_colors, sort=options.sort,
     seed=options.seed, slow=options.slow, timeout=options.timeout,
