@@ -383,6 +383,9 @@ def test_sample_pymc():
         Multinomial("N", 4, [0.3, 0.2, 0.1, 0.4])
     ]
     size = 3
+    pymc = import_module('pymc')
+    if not pymc:
+        skip('PyMC is not installed. Abort tests for _sample_pymc.')
     np = import_module("numpy")
     if not np:
         skip("numpy is not installed. Abort tests for _sample_pymc.")
