@@ -61,7 +61,7 @@ from sympy.functions.special.zeta_functions import polylog
 from .integrals import Integral
 from sympy.logic.boolalg import And, Boolean
 from sympy.ntheory.factor_ import primefactors
-from sympy.polys.polytools import degree, lcm_list, gcd_list, Poly
+from sympy.polys.polytools import degree, factor_list, lcm_list, gcd_list, Poly
 from sympy.simplify.radsimp import fraction
 from sympy.simplify.simplify import simplify
 from sympy.simplify.powsimp import powsimp
@@ -73,6 +73,25 @@ from sympy.utilities.misc import debug
 if TYPE_CHECKING:
     from sympy.core.expr import Expr
 
+def _is_zero_if_zero(P, Q):
+    """
+    Returns True if the condition (P == 0) mathematically implies (Q == 0).
+    
+    This is verified by checking if all irreducible factors of P are 
+    present in Q, which ensures that any root of P is also a root of Q.
+    """
+    from sympy import factor_list
+
+    if P.is_zero:
+        return Q.is_zero
+    
+    if not P.free_symbols:
+        return True
+
+    factors_P = set(f for f, p in factor_list(P)[1])
+    factors_Q = set(f for f, p in factor_list(Q)[1])
+    
+    return factors_P.issubset(factors_Q)
 
 class Rule(ABC):
 
@@ -1889,7 +1908,7 @@ def quadratic_denom_rule(integral):
             if positive_cond is S.false:
                 return negative_step
             return PiecewiseRule(integrand, symbol, [(general_rule, positive_cond), (negative_step, S.true)])
-
+        
         power = PowerRule(integrand, symbol, symbol, -2)
         if b != 1:
             power = ConstantTimesRule(integrand, symbol, 1/b, symbol**-2, power)
@@ -2004,30 +2023,31 @@ def sqrt_fractional_linear_rule(integral : IntegralInfo):
     substep = integral_steps(substituted, u)
     if not substep.contains_dont_know():
         step: Rule = URule(integrand, x, u, u_x, substep)
-        # in these cases, deteminant would be 0 only if both c0 and d0 were 0 (null denom), no need of Piecewise
-        if (c0.is_zero and (a0.is_zero is False)) or (d0.is_zero and (b0.is_zero is False)):
+        det = a0*d0 - b0*c0
+        # in this case, if determinant is 0 both c0 and d0 would be 0 (null denom), no need of Piecewise
+        if _is_zero_if_zero(det, c0) and _is_zero_if_zero(det, d0):
             if constant_bases_subs:
                 return RewriteRule(integral.integrand, x, integrand, step)
             else:
                 return step
+        # constant value is possible
         generic_cond = Ne(a0*d0 - b0*c0, 0)
-        if generic_cond is not S.true:
-            pieces: list[tuple[Rule, Boolean]] = [(step, generic_cond)]
-            cond_c0 = Ne(c0, 0)
-            if cond_c0 is not S.false:
-                const_val = a0 / c0
-                subs_a = {base_i: ratio_i * const_val for base_i, ratio_i in zip(bases, ratios)}
-                simplified_a = integrand.subs(subs_a)
-                degenerate_step_a = integral_steps(simplified_a, x)
-                pieces.append((degenerate_step_a, cond_c0))
-            if cond_c0 is not S.true:
-                const_val = b0 / d0
-                subs_b = {base_i: ratio_i * const_val for base_i, ratio_i in zip(bases, ratios)}
-                simplified_b = integrand.subs(subs_b)
-                simplified_b.subs({a0: 0, c0: 0}) # if det=0 and c0=0 and d0!=0, a0=0
-                degenerate_step_b = integral_steps(simplified_b, x)
-                pieces.append((degenerate_step_b, S.true))
-            step = PiecewiseRule(integrand, x, pieces)
+        pieces: list[tuple[Rule, Boolean]] = [(step, generic_cond)]
+        cond_c0 = Ne(c0, 0)
+        if cond_c0 is not S.false and not _is_zero_if_zero(d0, c0): # ((a*x + b)/(3*c*d*x + d)) takes just b/d as costant value
+            const_val = a0 / c0
+            subs_a = {base_i: ratio_i * const_val for base_i, ratio_i in zip(bases, ratios)}
+            simplified_a = integrand.subs(subs_a)
+            degenerate_step_a = integral_steps(simplified_a, x)
+            pieces.append((degenerate_step_a, S.true if (_is_zero_if_zero(c0, d0) or cond_c0 is S.true) else cond_c0))
+        if cond_c0 is not S.true and not _is_zero_if_zero(c0, d0):
+            const_val = b0 / d0
+            subs_b = {base_i: ratio_i * const_val for base_i, ratio_i in zip(bases, ratios)}
+            simplified_b = integrand.subs(subs_b)
+            simplified_b.subs({a0: 0, c0: 0}) # if det=0 and c0=0 and d0!=0, a0=0
+            degenerate_step_b = integral_steps(simplified_b, x)
+            pieces.append((degenerate_step_b, S.true))
+        step = PiecewiseRule(integrand, x, pieces)
         if constant_bases_subs:
             return RewriteRule(integral.integrand, x, integrand, step)
         else:
