@@ -521,7 +521,6 @@ def refine_floor_ceiling(expr, assumptions):
     return expr
 
 
-
 def refine_conjugate(expr, assumptions):
     """
     Handler for the conjugate function.
