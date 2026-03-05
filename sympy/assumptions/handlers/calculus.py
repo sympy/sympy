@@ -325,7 +325,7 @@ def _(expr, assumptions):
         if (is_fin and is_inf and is_zero) is None:
             return None
     total_neg = neg + neg_inf
-    if total_neg % 2 == 0:
-        return False
-    else:
+    if total_neg % 2 != 0 and neg_inf > 0:
         return True
+    else:
+        return False
