@@ -585,12 +585,14 @@ def refine_conjugate(expr, assumptions):
     if isinstance(arg, (asin, acos)):
         asin_acos_arg = arg.args[0]
         if ask(Q.real(asin_acos_arg), assumptions):
-            if ask(~Q.positive(asin_acos_arg - 1), assumptions) and ask(~Q.negative(asin_acos_arg + 1), assumptions):
+            if ask(Q.nonpositive(asin_acos_arg - 1), assumptions) and ask(Q.nonnegative(asin_acos_arg + 1), assumptions):
                 return arg
             else:
                 return expr
         elif ask(~Q.real(asin_acos_arg), assumptions):
             return arg.func(conjugate(asin_acos_arg))
+        else:
+            return expr
 
     # The atan and acot functions have branch cuts along the imaginary axis. For atan,
     # the cuts are from i to i oo and from -i to -i oo. For acot, the cut is on the interval (-i, i).
@@ -601,6 +603,8 @@ def refine_conjugate(expr, assumptions):
             return arg
         elif ask(~Q.imaginary(atan_acot_arg), assumptions):
             return arg.func(conjugate(atan_acot_arg))
+        else:
+            return expr
 
     # The asec and acsc functions have a branch cut along the real axis on the interval [-1, 1].
     # We can safely push the conjugate inside only if the argument is strictly outside this interval.
@@ -613,6 +617,8 @@ def refine_conjugate(expr, assumptions):
                 return expr
         elif ask(~Q.real(asec_acsc_arg), assumptions):
             return arg.func(conjugate(asec_acsc_arg))
+        else:
+            return expr
 
     if ask(Q.real(arg), assumptions):
         return arg

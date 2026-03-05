@@ -334,8 +334,8 @@ def test_conjugate():
     assert refine(conjugate(log(x ** n)), Q.complex(x) & Q.integer(n)) == conjugate(log(x**n))
     assert refine(conjugate(log(x ** S.Half)), Q.real(x) & Q.negative(x)) == conjugate(log(x ** S.Half))
 
-    assert refine(conjugate(asin(x)), Q.real(x) & ~Q.positive(x - 1) & ~Q.negative(x + 1)) == asin(x)
-    assert refine(conjugate(acos(x)), Q.real(x) & ~Q.negative(x + 1) & ~Q.positive(x - 1)) == acos(x)
+    assert refine(conjugate(asin(x)), Q.real(x) & Q.nonpositive(x - 1) & Q.nonnegative(x + 1)) == asin(x)
+    assert refine(conjugate(acos(x)), Q.real(x) & Q.nonnegative(x + 1) & Q.nonpositive(x - 1)) == acos(x)
     assert refine(conjugate(asin(x)), Q.real(x)) == conjugate(asin(x))
     assert refine(conjugate(atan(x)), Q.real(x)) == atan(x)
     assert refine(conjugate(acot(x)), Q.real(x)) == acot(x)
@@ -352,3 +352,5 @@ def test_conjugate():
     assert refine(conjugate(acsc(x)), ~Q.real(x)) == acsc(conjugate(x))
     assert refine(conjugate(asec(x)), Q.real(x)) == conjugate(asec(x))
     assert refine(conjugate(acsc(x)), Q.real(x)) == conjugate(acsc(x))
+    assert refine(conjugate(acos(I))) == acos(conjugate(I))
+    assert refine(conjugate(asin(I))) == asin(conjugate(I))
