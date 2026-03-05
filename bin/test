@@ -104,8 +104,8 @@ parser.add_argument(
     'tests', nargs='*', metavar='tests',
     help='0 or more glob strings of tests to run. If no test arguments are given, all tests will be run.')
 
-options, args = parser.parse_known_args()
-tests = options.tests + args
+options = parser.parse_args()
+tests = options.tests
 
 if not options.cache:
     os.environ['SYMPY_USE_CACHE'] = 'no'
