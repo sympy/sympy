@@ -76,9 +76,7 @@ END_DELIM_REPR = {fr"{END_AMS_MAT}{IGNORE_R}\\right\)": "\\end{matrix}\\right)",
 
 def check_matrix_delimiters(latex_str: str) -> None:
     """Report mismatched, excess, or missing matrix delimiters."""
-    # We explicitly define the type as Optional so Mypy allows None values
     spans: list[tuple[Optional[int], Optional[int], Optional[str], Optional[str]]] = []
-    
     for begin_delim in MATRIX_DELIMS:
         end_delim = MATRIX_DELIMS[begin_delim]
 
@@ -90,21 +88,13 @@ def check_matrix_delimiters(latex_str: str) -> None:
         spans.extend([(*m.span(), m.group(),
                        end_delim) for m in q.finditer(latex_str)])
 
-    # Use a lambda that handles potential None values during sorting
     spans.sort(key=(lambda x: x[0] if x[0] is not None else 0))
-    
     if len(spans) % 2 == 1:
-        # This was causing the "arg-type" error
         spans.append((None, None, None, None))
 
-    # This creates the 8-tuple Mypy was struggling to index
     combined_spans = [(*x, *y) for (x, y) in zip(spans[::2], spans[1::2])]
-    
     for x in combined_spans:
-        # x is now correctly recognized as an 8-tuple
         sellipsis = "..."
-        
-        # Check if x[0] is None before doing math
         s_val = x[0] if x[0] is not None else 0
         s = s_val - 10
         if s < 0:
@@ -112,7 +102,6 @@ def check_matrix_delimiters(latex_str: str) -> None:
             sellipsis = ""
 
         eellipsis = "..."
-        # Check if x[1] is None before doing math
         e_val = x[1] if x[1] is not None else len(latex_str)
         e = e_val + 10
         if e > len(latex_str):
@@ -136,32 +125,17 @@ def check_matrix_delimiters(latex_str: str) -> None:
             raise LaTeXParsingError(err)
 
         correct_end_regex = MATRIX_DELIMS[x[3]]
-        
-        # Safety checks for indices before string slicing
         x0 = x[0] if x[0] is not None else 0
         x5 = x[5] if x[5] is not None else len(latex_str)
-        
         sellipsis = "..." if x0 > 0 else ""
         eellipsis = "..." if x5 < len(latex_str) else ""
-        
+
         if x[7] != correct_end_regex:
             err = ("Expected "
                    f"'{END_DELIM_REPR[correct_end_regex]}' "
                    f"to close the '{x[2]}' at index {x[0]} but "
                    f"found '{x[6]}' at index {x[4]} of LaTeX "
                    f"string instead: {sellipsis}{latex_str[x0:x5]}"
-                   f"{eellipsis}")
-            raise LaTeXParsingError(err)
-
-        correct_end_regex = MATRIX_DELIMS[x[3]]
-        sellipsis = "..." if x[0] > 0 else ""
-        eellipsis = "..." if x[5] < len(latex_str) else ""
-        if x[7] != correct_end_regex:
-            err = ("Expected "
-                   f"'{END_DELIM_REPR[correct_end_regex]}' "
-                   f"to close the '{x[2]}' at index {x[0]} but "
-                   f"found '{x[6]}' at index {x[4]} of LaTeX "
-                   f"string instead: {sellipsis}{latex_str[x[0]:x[5]]}"
                    f"{eellipsis}")
             raise LaTeXParsingError(err)
 
