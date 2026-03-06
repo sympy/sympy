@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Any 
+from typing import Any
 from sympy.external import import_module
 from sympy.utilities.decorator import doctest_depends_on
 from re import compile as rcompile
