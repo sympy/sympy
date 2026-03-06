@@ -1889,6 +1889,15 @@ def quadratic_denom_rule(integral):
     if match:
         a, b, c = match[a], match[b], match[c]
         general_rule = ArctanRule(integrand, symbol, a, b, c)
+        pieces = []
+        if b.is_zero is not S.false and c.is_zero is not S.true and not _is_zero_if_zero(b, c):
+                substituted = integrand.subs(b, 0)
+                substep = integral_steps(substituted, symbol)
+                pieces.append( (RewriteRule(integrand, symbol, substituted, substep), Eq(b, 0)) )
+        if c.is_zero is not S.false and b.is_zero is not S.true and not _is_zero_if_zero(c, b):
+            substituted = integrand.subs(c, 0)
+            substep = integral_steps(substituted, symbol)
+            pieces.append( (RewriteRule(integrand, symbol, substituted, substep), Eq(c, 0)) )
         if b.is_extended_real and c.is_extended_real:
             positive_cond = c/b > 0
             if positive_cond is S.true:
@@ -1906,14 +1915,14 @@ def quadratic_denom_rule(integral):
                 negative_step = ConstantTimesRule(rewritten, symbol, coeff, sub, negative_step)
             negative_step = RewriteRule(integrand, symbol, rewritten, negative_step)
             if positive_cond is S.false:
-                return negative_step
-            return PiecewiseRule(integrand, symbol, [(general_rule, positive_cond), (negative_step, S.true)])
+                pieces.append((negative_step, S.true))
+                return PiecewiseRule(integrand, symbol, pieces)
+            else:
+                pieces.append((negative_step, c / b < 0))
+                
+        pieces.append((general_rule, S.true))
+        return PiecewiseRule(integrand, symbol, pieces)    
 
-        power = PowerRule(integrand, symbol, symbol, -2)
-        if b != 1:
-            power = ConstantTimesRule(integrand, symbol, 1/b, symbol**-2, power)
-
-        return PiecewiseRule(integrand, symbol, [(general_rule, Ne(c, 0)), (power, True)])
 
     d = Wild('d', exclude=[symbol])
     match2 = integrand.match(a / (b * symbol ** 2 + c * symbol + d))
@@ -2040,7 +2049,7 @@ def sqrt_fractional_linear_rule(integral : IntegralInfo):
             simplified_a = integrand.subs(subs_a)
             degenerate_step_a = integral_steps(simplified_a, x)
             pieces.append((degenerate_step_a, S.true if (_is_zero_if_zero(c0, d0) or cond_c0 is S.true) else cond_c0))
-        # c0 can be == 0 and d0 nullity is not implied by c0
+        # c0 can be == 0, d0 is not 0 and d0 nullity is not implied by c0
         if cond_c0 is not S.true and not _is_zero_if_zero(c0, d0):
             const_val = b0 / d0
             subs_b = {base_i: ratio_i * const_val for base_i, ratio_i in zip(bases, ratios)}
@@ -2492,9 +2501,11 @@ def substitution_rule(integral):
                     for pole, _ in factors_denom_c:
                         # only substitute poles introduced by the constant c if they were not already poles of the original integrand
                         if pole.is_zero is None and not _is_zero_if_zero(pole, denom_integrand):
-                            substep = integral_steps(manual_subs(factored_integrand, pole, 0), symbol)
+                            rewritten_integral = manual_subs(factored_integrand, pole, 0)
+                            substep = integral_steps(rewritten_integral, symbol)
 
                             if substep:
+                                substep = RewriteRule(integrand, symbol, rewritten_integral, substep)
                                 piecewise.append((
                                     substep,
                                     Eq(pole, 0)
