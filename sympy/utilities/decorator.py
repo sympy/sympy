@@ -16,13 +16,13 @@ if TYPE_CHECKING:
 from sympy.external.mpmath import conserve_mpmath_dps # noqa: F401
 
 from sympy.utilities.exceptions import sympy_deprecation_warning
-
+F = TypeVar("F",bound=Callable[...,Any])
 
 T = TypeVar('T')
 """A generic type"""
 
 
-def threaded_factory(func: Callable[..., Any], use_add: bool) -> Callable[..., Any]:
+def threaded_factory(func: F, use_add: bool):
     """A factory for ``threaded`` decorators. """
     from sympy.core import sympify
     from sympy.matrices import MatrixBase
@@ -51,7 +51,7 @@ def threaded_factory(func: Callable[..., Any], use_add: bool) -> Callable[..., A
     return threaded_func
 
 
-def threaded(func: Callable[..., Any]) -> Callable[..., Any]:
+def threaded(func: F) -> F:
     """Apply ``func`` to sub--elements of an object, including :class:`~.Add`.
 
     This decorator is intended to make it uniformly possible to apply a
@@ -71,7 +71,7 @@ def threaded(func: Callable[..., Any]) -> Callable[..., Any]:
     return threaded_factory(func, True)
 
 
-def xthreaded(func: Callable[..., Any]) -> Callable[..., Any]:
+def xthreaded(func: F) -> F:
     """Apply ``func`` to sub--elements of an object, excluding :class:`~.Add`.
 
     This decorator is intended to make it uniformly possible to apply a
