@@ -1799,6 +1799,19 @@ def test_nonzero():
     assert ask(Q.nonzero(exp(x*y)), Q.real(x) & Q.real(y)) is True
     assert ask(Q.nonzero(exp((x*y) + y)), Q.real(x)) is None
     assert ask(Q.nonzero(exp((x*y) + y)), Q.negative_infinite(x) & Q.positive(y)) is False
+    assert ask(Q.nonzero(exp(log(x))), Q.positive(x)) is True
+    assert ask(Q.nonzero(exp(log(x))), Q.negative(x)) is True
+    assert ask(Q.nonzero(exp(log(x))), Q.zero(x)) is False
+    assert ask(Q.nonzero(exp(log(x + y)))) is None
+    assert ask(Q.nonzero(exp(log(x + y))), Q.real(x)) is None
+    #assert ask(Q.nonzero(exp(log(x + y))), Q.zero(x) & Q.zero(y)) is False
+    assert ask(Q.nonzero(exp(log(x*y))), Q.zero(x)) is False
+    assert ask(Q.nonzero(exp(log(x*y))), Q.negative(x) & Q.real(y)) is None
+    assert ask(Q.nonzero(exp(log(x*y))), Q.negative(x) & Q.positive(y)) is True
+    assert ask(Q.nonzero(exp(log((x*y) + 2*I))), Q.negative(x) & Q.positive(y)) is None
+    assert ask(Q.nonzero(exp(log((x*y) + 2*I*I))), Q.negative(x) & Q.positive(y)) is True
+    assert ask(Q.nonzero(exp(log(exp(x))))) is None
+    assert ask(Q.nonzero(exp(log(exp(x)))), Q.real(x)) is True
 
 
 def test_zero():
