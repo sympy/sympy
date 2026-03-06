@@ -6,7 +6,7 @@ from re import compile as rcompile
 
 from sympy.parsing.latex.lark import LarkLaTeXParser, TransformToSymPyExpr, parse_latex_lark # noqa
 
-from .errors import LaTeXParsingError  # noqa
+from .errors import LaTeXParsingError # noqa
 
 
 IGNORE_L = r"\s*[{]*\s*"
@@ -144,6 +144,7 @@ def check_matrix_delimiters(latex_str: str) -> None:
                    f"{eellipsis}")
             raise LaTeXParsingError(err)
 
+
 def check_cases_env(latex_str: str) -> None:
     """
     Raises LaTeXParsingError if the cases environment is used.
@@ -154,6 +155,7 @@ def check_cases_env(latex_str: str) -> None:
             "If you're trying to parse a piecewise function or a block of expressions, \n"
             "consider breaking them into separate parse_latex calls."
         )
+
 
 __doctest_requires__ = {('parse_latex',): ['antlr4', 'lark']}
 
@@ -215,6 +217,6 @@ def parse_latex(s: str, strict: bool = False, backend: str = "antlr") -> Any:
     elif backend == "lark":
         return parse_latex_lark(s)
     else:
-        raise NotImplementedError(f"Using the '{backend}' backend in the LaTeX" \
-                                   " parser is not supported, backend must be one of" \
-                                   " ('antlr', 'lark')")
+        raise NotImplementedError(f"Using the '{backend}' backend in the LaTeX"
+                                  " parser is not supported, backend must be one of"
+                                  " ('antlr', 'lark')")
