@@ -6,17 +6,16 @@ import sys
 import types
 import inspect
 from functools import wraps
-from typing import TypeVar, TYPE_CHECKING
+from typing import TypeVar, TYPE_CHECKING, Callable, Any
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
-    from typing import Any, Callable
 
 # Keep this import for backwards compatibility:
 from sympy.external.mpmath import conserve_mpmath_dps # noqa: F401
 
 from sympy.utilities.exceptions import sympy_deprecation_warning
-F = TypeVar("F",bound=callable[...,Any])
+F = TypeVar("F",bound=Callable[...,Any])
 
 T = TypeVar('T')
 """A generic type"""
