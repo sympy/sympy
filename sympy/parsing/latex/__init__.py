@@ -221,4 +221,3 @@ def parse_latex(s: str, strict: bool = False, backend: str = "antlr") -> Any:
                                   " parser is not supported, backend must be one of"
                                   " ('antlr', 'lark')")
 
-
