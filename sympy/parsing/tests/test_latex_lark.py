@@ -20,7 +20,7 @@ from sympy.functions.elementary.trigonometric import asin, cos, csc, sec, sin, t
 from sympy.integrals.integrals import Integral
 from sympy.series.limits import Limit
 from sympy import Matrix, MatAdd, MatMul, Transpose, Trace
-from sympy import I
+from sympy import I, pi
 
 from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
 from sympy.physics.quantum import Bra, Ket, InnerProduct
@@ -253,7 +253,10 @@ UNEVALUATED_POWER_EXPRESSION_PAIRS = [
     (r"x^\frac{1}{2}", _Pow(x, _Mul(1, _Pow(2, -1)))),
     (r"x^{3 + 1}", x ** _Add(3, 1)),
     (r"\pi^{|xy|}", Symbol('pi') ** _Abs(x * y)),
-    (r"5^0 - 4^0", _Add(_Pow(5, 0), _Mul(-1, _Pow(4, 0))))
+    (r"5^0 - 4^0", _Add(_Pow(5, 0), _Mul(-1, _Pow(4, 0)))),
+    (r"x^\circ", _Mul(x, _Mul(pi, _Pow(180, -1)))),
+    (r"x^{\circ}", _Mul(x, _Mul(pi, _Pow(180, -1)))),
+    (r"180^\circ", _Mul(180, _Mul(pi, _Pow(180, -1))))
 ]
 
 EVALUATED_POWER_EXPRESSION_PAIRS = [
@@ -261,7 +264,10 @@ EVALUATED_POWER_EXPRESSION_PAIRS = [
     (r"x^\frac{1}{2}", sqrt(x)),
     (r"x^{3 + 1}", x ** 4),
     (r"\pi^{|xy|}", Symbol('pi') ** _Abs(x * y)),
-    (r"5^0 - 4^0", 0)
+    (r"5^0 - 4^0", 0),
+    (r"x^\circ", pi*x/180),
+    (r"x^{\circ}", pi*x/180),
+    (r"180^\circ", pi)
 ]
 
 UNEVALUATED_INTEGRAL_EXPRESSION_PAIRS = [
