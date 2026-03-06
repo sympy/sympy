@@ -76,7 +76,7 @@ END_DELIM_REPR = {fr"{END_AMS_MAT}{IGNORE_R}\\right\)": "\\end{matrix}\\right)",
 
 def check_matrix_delimiters(latex_str: str) -> None:
     """Report mismatched, excess, or missing matrix delimiters."""
-    # Using Optional allows Mypy to handle the 'None' padding used for odd lengths
+    # Using 'int | None' for modern Python standards
     spans: list[tuple[int | None, int | None, str | None, str | None]] = []
 
     for begin_delim in MATRIX_DELIMS:
@@ -90,18 +90,15 @@ def check_matrix_delimiters(latex_str: str) -> None:
         spans.extend([(*m.span(), m.group(),
                        end_delim) for m in q.finditer(latex_str)])
 
-    # Handle sorting with a safety check for None values
     spans.sort(key=(lambda x: x[0] if x[0] is not None else 0))
 
     if len(spans) % 2 == 1:
         spans.append((None, None, None, None))
 
-    # Zip pairs of 4-tuples into 8-tuples
     combined_spans = [(*x, *y) for (x, y) in zip(spans[::2], spans[1::2])]
 
     for x in combined_spans:
         sellipsis = "..."
-        # Accessing indices with safety checks for Mypy
         start_idx = x[0] if x[0] is not None else 0
         s = start_idx - 10
         if s < 0:
@@ -115,8 +112,9 @@ def check_matrix_delimiters(latex_str: str) -> None:
             e = len(latex_str)
             eellipsis = ""
 
-        # x[3] is the first delimiter regex, x[7] is the second
+        # Mypy Type Guards: Use assert to narrow type from 'str | None' to 'str'
         if x[3] in END_DELIM_REPR:
+            assert isinstance(x[3], str)
             err = (f"Extra '{x[2]}' at index {x[0]} or "
                    "missing corresponding "
                    f"'{BEGIN_DELIM_REPR[MATRIX_DELIMS_INV[x[3]]]}' "
@@ -125,6 +123,7 @@ def check_matrix_delimiters(latex_str: str) -> None:
             raise LaTeXParsingError(err)
 
         if x[7] is None:
+            assert isinstance(x[3], str)
             err = (f"Extra '{x[2]}' at index {x[0]} or "
                    "missing corresponding "
                    f"'{END_DELIM_REPR[MATRIX_DELIMS[x[3]]]}' "
@@ -132,9 +131,9 @@ def check_matrix_delimiters(latex_str: str) -> None:
                    f"{eellipsis}")
             raise LaTeXParsingError(err)
 
+        assert isinstance(x[3], str)
         correct_end_regex = MATRIX_DELIMS[x[3]]
 
-        # Safety fallback for indices used in error display
         x0 = x[0] if x[0] is not None else 0
         x5 = x[5] if x[5] is not None else len(latex_str)
         sellipsis = "..." if x0 > 0 else ""
@@ -151,9 +150,7 @@ def check_matrix_delimiters(latex_str: str) -> None:
 
 
 def check_cases_env(latex_str: str) -> None:
-    """
-    Raises LaTeXParsingError if the cases environment is used.
-    """
+    """Raises LaTeXParsingError if the cases environment is used."""
     if r"\begin{cases}" in latex_str:
         raise LaTeXParsingError(
             "The 'cases' environment is not currently supported by parse_latex. \n"
