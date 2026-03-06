@@ -551,7 +551,9 @@ class FiniteFourierSeries(FourierSeries):
     @property
     def interval(self):
         _length = 1 if self.a0 else 0
-        _length += max(set(self.an.keys()).union(set(self.bn.keys()))) + 1
+        _keys = set(self.an.keys()).union(set(self.bn.keys()))
+        if _keys:
+            _length += max(_keys) + 1
         return Interval(0, _length)
 
     @property
@@ -784,9 +786,6 @@ def fourier_series(f, limits=None, finite=True):
 
     limits = _process_limits(f, limits)
     x = limits[0]
-
-    if x not in f.free_symbols:
-        return f
 
     if finite:
         L = abs(limits[2] - limits[1]) / 2

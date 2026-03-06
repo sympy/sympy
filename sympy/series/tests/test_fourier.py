@@ -25,7 +25,8 @@ def _get_examples():
 def test_FourierSeries():
     fo, fe, fp = _get_examples()
 
-    assert fourier_series(1, (-pi, pi)) == 1
+    assert isinstance(fourier_series(1, (-pi, pi)), FourierSeries)
+    assert fourier_series(1, (-pi, pi)).truncate() == 1
     assert (Piecewise((0, x < 0), (pi, True)).
             fourier_series((x, -pi, pi)).truncate()) == fp.truncate()
     assert isinstance(fo, FourierSeries)
@@ -164,3 +165,16 @@ def test_FourierSeries_finite():
     assert fourier_series(cos(pi*x), (x, -1, 1)).truncate(oo) == cos(pi*x)
     assert fourier_series(cos(3*pi*x + 4) - sin(4*pi*x)*log(pi*y), (x, -1, 1)).truncate(oo) == -log(pi*y)*sin(4*pi*x)\
            - sin(4)*sin(3*pi*x) + cos(4)*cos(3*pi*x)
+
+
+def test_fourier_series_constant():
+    #https://github.com/sympy/sympy/issues/29336
+    s = fourier_series(3, (x, -pi, pi))
+    assert isinstance(s, FourierSeries)
+    assert s.a0 == 3
+    assert s.truncate() == 3
+
+    s0 = fourier_series(S.Zero, (x, -pi, pi))
+    assert isinstance(s0, FourierSeries)
+    assert s0.a0 == 0
+    assert s0.truncate() == 0
