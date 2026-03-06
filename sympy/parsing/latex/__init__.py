@@ -220,3 +220,4 @@ def parse_latex(s: str, strict: bool = False, backend: str = "antlr") -> Any:
         raise NotImplementedError(f"Using the '{backend}' backend in the LaTeX"
                                   " parser is not supported, backend must be one of"
                                   " ('antlr', 'lark')")
+    
