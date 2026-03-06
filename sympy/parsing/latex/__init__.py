@@ -1,4 +1,5 @@
 from __future__ import annotations
+from typing import Any 
 from sympy.external import import_module
 from sympy.utilities.decorator import doctest_depends_on
 from re import compile as rcompile
@@ -73,7 +74,7 @@ END_DELIM_REPR = {fr"{END_AMS_MAT}{IGNORE_R}\\right\)": "\\end{matrix}\\right)",
                   }
 
 
-def check_matrix_delimiters(latex_str):
+def check_matrix_delimiters(latex_str: str) -> None:
     """Report mismatched, excess, or missing matrix delimiters."""
     spans = []
     for begin_delim in MATRIX_DELIMS:
@@ -143,7 +144,7 @@ def check_matrix_delimiters(latex_str):
                    f"{eellipsis}")
             raise LaTeXParsingError(err)
 
-def check_cases_env(latex_str):
+def check_cases_env(latex_str: str) -> None:
     """
     Raises LaTeXParsingError if the cases environment is used.
     """
@@ -158,7 +159,7 @@ __doctest_requires__ = {('parse_latex',): ['antlr4', 'lark']}
 
 
 @doctest_depends_on(modules=('antlr4', 'lark'))
-def parse_latex(s, strict=False, backend="antlr"):
+def parse_latex(s: str, strict: bool = False, backend: str = "antlr") -> Any:
     r"""Converts the input LaTeX string ``s`` to a SymPy ``Expr``.
 
     Parameters
