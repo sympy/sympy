@@ -480,6 +480,90 @@ def refine_sin_cos(expr, assumptions):
         return ((-1)**((k + 1) / 2)) * sin(rem)
 
 
+def refine_tan_cot(expr, assumptions):
+    """
+    Handler for the tan and cot functions.
+
+    Explanation
+    ===========
+
+    Simplifies ``tan`` and ``cot`` by removing integer multiples of ``pi``
+    from their arguments (using the period-``pi`` identity) and converting
+    between ``tan`` and ``cot`` when an odd multiple of ``pi/2`` is present.
+
+    Examples
+    ========
+
+    >>> from sympy.assumptions.refine import refine_tan_cot
+    >>> from sympy import Symbol, Q, tan, cot, pi
+    >>> from sympy.abc import x
+    >>> n = Symbol('n')
+    >>> refine_tan_cot(tan(n*pi), Q.integer(n))
+    0
+    >>> refine_tan_cot(cot(n*pi/2), Q.odd(n))
+    0
+    >>> refine_tan_cot(tan(x + n*pi), Q.integer(n))
+    tan(x)
+    >>> refine_tan_cot(cot(x + n*pi), Q.integer(n))
+    cot(x)
+    >>> refine_tan_cot(tan(x + n*pi/2), Q.odd(n))
+    -cot(x)
+    >>> refine_tan_cot(cot(x + n*pi/2), Q.odd(n))
+    -tan(x)
+    >>> refine_tan_cot(tan(x + n*pi/2), Q.even(n))
+    tan(x)
+
+    """
+    from sympy.functions.elementary.trigonometric import tan, cot
+    arg = expr.args[0]
+
+    integer_coeffs_of_pi_half = []
+    remaining_terms = []
+
+    terms = arg.args if arg.is_Add else (arg,)
+    for term in terms:
+        coeff_of_pi = term.coeff(S.Pi)
+        if coeff_of_pi and ask(Q.integer(2 * coeff_of_pi), assumptions):
+            integer_coeffs_of_pi_half.append(2 * coeff_of_pi)
+        else:
+            remaining_terms.append(term)
+
+    if not integer_coeffs_of_pi_half:
+        return expr
+
+    sum_of_parity_known_coeffs = 0
+    sum_of_parity_unknown_coeffs = 0
+    sum_of_parity_known_coeffs_is_even = True
+
+    for coeff in integer_coeffs_of_pi_half:
+        coeff_is_even = ask(Q.even(coeff), assumptions)
+        if coeff_is_even is None:
+            sum_of_parity_unknown_coeffs += coeff
+        else:
+            sum_of_parity_known_coeffs += coeff
+            sum_of_parity_known_coeffs_is_even = (
+                sum_of_parity_known_coeffs_is_even == coeff_is_even
+            )
+
+    if sum_of_parity_known_coeffs == 0:
+        return expr
+
+    rem = sum(remaining_terms) + sum_of_parity_unknown_coeffs * S.Pi / 2
+
+    if sum_of_parity_known_coeffs_is_even:
+        # Even total of pi/2 shifts: tan(rem + k*pi) = tan(rem) (period pi)
+        if isinstance(expr, tan):
+            return tan(rem)
+        else:
+            return cot(rem)
+    else:
+        # Odd total: tan(rem + pi/2) = -cot(rem), cot(rem + pi/2) = -tan(rem)
+        if isinstance(expr, tan):
+            return -cot(rem)
+        else:
+            return -tan(rem)
+
+
 def refine_floor_ceiling(expr, assumptions):
     """
     Handler for the floor and ceiling functions
@@ -531,6 +615,8 @@ handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'MatrixElement': refine_matrixelement,
     'cos': refine_sin_cos,
     'sin': refine_sin_cos,
+    'tan': refine_tan_cot,
+    'cot': refine_tan_cot,
     'floor': refine_floor_ceiling,
     'ceiling' : refine_floor_ceiling,
 }

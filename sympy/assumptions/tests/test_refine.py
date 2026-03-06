@@ -2,13 +2,13 @@ from __future__ import annotations
 from sympy.assumptions.ask import Q
 from sympy.assumptions.refine import refine
 from sympy.core.expr import Expr
-from sympy.core.numbers import (I, Rational, nan, pi)
+from sympy.core.numbers import (I, Rational, nan, pi, zoo)
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.functions.elementary.complexes import (Abs, arg, im, re, sign)
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.functions.elementary.trigonometric import (atan, atan2, cos, sin)
+from sympy.functions.elementary.trigonometric import (atan, atan2, cos, cot, sin, tan)
 from sympy.abc import w, x, y, z
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.piecewise import Piecewise
@@ -305,3 +305,53 @@ def test_floor_ceiling():
 
     assert refine(floor(floor(x)+ floor(y))) == floor(x) + floor(y)
     assert refine(ceiling(ceiling(x) - ceiling(y))) == ceiling(x) - ceiling(y)
+
+
+def test_tan_cot():
+    n = Symbol('n')
+    m = Symbol('m')
+
+    # tan with integer multiples of pi (period pi -> 0)
+    assert refine(tan(n*pi), Q.integer(n)) == 0
+    assert refine(tan(n*pi), Q.even(n)) == 0
+    assert refine(tan(n*pi), Q.odd(n)) == 0
+
+    # tan with even multiples of pi/2 (equivalent to integer multiples of pi)
+    assert refine(tan(n*pi/2), Q.even(n)) == 0
+
+    # tan with odd multiples of pi/2 (undefined -> zoo)
+    assert refine(tan(n*pi/2), Q.odd(n)) == zoo
+
+    # tan: remove integer-pi shifts from argument
+    assert refine(tan(x + n*pi), Q.integer(n)) == tan(x)
+    assert refine(tan(x + n*pi), Q.even(n)) == tan(x)
+    assert refine(tan(x + n*pi), Q.odd(n)) == tan(x)
+
+    # tan: remove even pi/2 shifts
+    assert refine(tan(x + n*pi/2), Q.even(n)) == tan(x)
+
+    # tan: odd pi/2 shift converts tan -> -cot
+    assert refine(tan(x + n*pi/2), Q.odd(n)) == -cot(x)
+
+    # cot with odd multiples of pi/2 (cot(pi/2) = 0)
+    assert refine(cot(n*pi/2), Q.odd(n)) == 0
+
+    # cot: remove integer-pi shifts from argument
+    assert refine(cot(x + n*pi), Q.integer(n)) == cot(x)
+    assert refine(cot(x + n*pi), Q.even(n)) == cot(x)
+    assert refine(cot(x + n*pi), Q.odd(n)) == cot(x)
+
+    # cot: remove even pi/2 shifts
+    assert refine(cot(x + n*pi/2), Q.even(n)) == cot(x)
+
+    # cot: odd pi/2 shift converts cot -> -tan
+    assert refine(cot(x + n*pi/2), Q.odd(n)) == -tan(x)
+
+    # mixed: integer n*pi and integer m*pi/2 with unknown parity of m
+    assert refine(tan(x + n*pi + m*pi/2), Q.integer(n) & Q.integer(m)) == tan(x + m*pi/2)
+    assert refine(tan(x + n*pi + m*pi/2), Q.integer(n) & Q.even(m)) == tan(x)
+    assert refine(tan(x + n*pi + m*pi/2), Q.integer(n) & Q.odd(m)) == -cot(x)
+
+    # no simplification when parity is unknown
+    assert refine(tan(x + n*pi/2), Q.integer(n)) == tan(x + n*pi/2)
+    assert refine(cot(x + n*pi/2), Q.integer(n)) == cot(x + n*pi/2)
