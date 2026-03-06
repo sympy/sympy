@@ -202,17 +202,40 @@ def _(expr, assumptions):
 def _(expr, assumptions):
     if ask(Q.zero(expr.exp), assumptions):
         return True
-    neg_inf = ask(Q.negative_infinite(expr.exp), assumptions)
-    if neg_inf:
-        return False
-    if neg_inf is None:
-        return None
+    arg = expr.exp.atoms()
+    for a in arg:
+        neg_inf = ask(Q.negative_infinite(a), assumptions)
+        if a.is_number is False:
+            if neg_inf:
+                return False
+            if neg_inf is None:
+                return None
+    arg = expr.exp
     results = []
-    for a in expr.exp.as_ordered_terms():
-        results.append(fuzzy_or([
-            ask(Q.real(exp(a)), assumptions),
-            ask(Q.real(a), assumptions)
-        ]))
+    r = arg/(I*pi)
+    if ask(Q.integer(r), assumptions):
+        return True
+    if ask(Q.real(arg), assumptions):
+        return True
+    if arg.is_Add:
+        terms = arg.args
+    else:
+        terms = (arg,)
+    for a in terms:
+        if a.is_Mul and I in a.args and pi in a.args:
+            coeff = [b for b in a.args if b not in (I, pi)]
+            if coeff:
+                results.append(fuzzy_or([
+                    (ask(Q.integer(coeff[0]), assumptions)),
+                    ask(Q.integer(coeff[0]*I), assumptions)
+                ]))
+            else:
+                results.append(True)
+        else:
+            results.append(fuzzy_or([
+                ask(Q.real(a), assumptions),
+                ask(Q.real(exp(a)), assumptions)
+            ]))
     return fuzzy_and(results)
 
 
