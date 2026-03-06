@@ -75,19 +75,21 @@ if TYPE_CHECKING:
 
 def _is_zero_if_zero(P, Q):
     """
-    Returns True if the condition (P == 0) mathematically implies (Q == 0).
+    Check if it is possible P = 0 and in that case Q = 0.
 
-    This is verified by checking if all irreducible factors of P are
-    present in Q, which ensures that any root of P is also a root of Q.
+    Returns True if Q is zero or if every irreducible factor of the 
+    numerator of P is also a factor of the numerator of Q.
     """
+    num_p, _ = P.as_numer_denom()
+    num_q, _ = Q.as_numer_denom()
 
-    if P.is_zero:
-        return Q.is_zero
-    if not P.free_symbols:
+    if Q.is_zero:
         return True
 
-    factors_P = {f for f, p in factor_list(P)[1]}
-    factors_Q = {f for f, p in factor_list(Q)[1]}
+    factors_P = {f for f, p in factor_list(num_p)[1]}
+    if not factors_P:
+        return False
+    factors_Q = {f for f, p in factor_list(num_q)[1]}
 
     return factors_P.issubset(factors_Q)
 
@@ -2022,22 +2024,23 @@ def sqrt_fractional_linear_rule(integral : IntegralInfo):
     if not substep.contains_dont_know():
         step: Rule = URule(integrand, x, u, u_x, substep)
         det = a0*d0 - b0*c0
-        # in this case, if determinant is 0 both c0 and d0 would be 0 (null denom), no need of Piecewise
-        if _is_zero_if_zero(det, c0) and _is_zero_if_zero(det, d0):
+        # determinant is not 0 or it is 0 if just both c0 and d0 would be 0 (null denom), no need of Piecewise
+        if det.is_zero is S.false or (_is_zero_if_zero(det, c0) and _is_zero_if_zero(det, d0)):
             if constant_bases_subs:
                 return RewriteRule(integral.integrand, x, integrand, step)
             else:
                 return step
-        # constant value is possible
         generic_cond = Ne(a0*d0 - b0*c0, 0)
         pieces: list[tuple[Rule, Boolean]] = [(step, generic_cond)]
         cond_c0 = Ne(c0, 0)
-        if cond_c0 is not S.false and not _is_zero_if_zero(d0, c0): # ((a*x + b)/(3*c*d*x + d)) takes just b/d as costant value
+        # c0 can be != 0 and his nullity is not implied by d0, ((a*x + b)/(3*c*d*x + d)), just b/d as costant value
+        if cond_c0 is not S.false and not _is_zero_if_zero(d0, c0):
             const_val = a0 / c0
             subs_a = {base_i: ratio_i * const_val for base_i, ratio_i in zip(bases, ratios)}
             simplified_a = integrand.subs(subs_a)
             degenerate_step_a = integral_steps(simplified_a, x)
             pieces.append((degenerate_step_a, S.true if (_is_zero_if_zero(c0, d0) or cond_c0 is S.true) else cond_c0))
+        # c0 can be == 0 and d0 nullity is not implied by c0
         if cond_c0 is not S.true and not _is_zero_if_zero(c0, d0):
             const_val = b0 / d0
             subs_b = {base_i: ratio_i * const_val for base_i, ratio_i in zip(bases, ratios)}
@@ -2488,7 +2491,7 @@ def substitution_rule(integral):
                     factors_denom_c = factor_list(denom_c)[1]
                     for pole, _ in factors_denom_c:
                         # only substitute poles introduced by the constant c if they were not already poles of the original integrand
-                        if not fuzzy_not(pole.is_zero) and not _is_zero_if_zero(pole, denom_integrand):
+                        if pole.is_zero is None and not _is_zero_if_zero(pole, denom_integrand):
                             substep = integral_steps(manual_subs(factored_integrand, pole, 0), symbol)
 
                             if substep:
