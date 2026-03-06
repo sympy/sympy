@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Any, Optional
+from typing import Any
 from sympy.external import import_module
 from sympy.utilities.decorator import doctest_depends_on
 from re import compile as rcompile
@@ -77,7 +77,7 @@ END_DELIM_REPR = {fr"{END_AMS_MAT}{IGNORE_R}\\right\)": "\\end{matrix}\\right)",
 def check_matrix_delimiters(latex_str: str) -> None:
     """Report mismatched, excess, or missing matrix delimiters."""
     # Using Optional allows Mypy to handle the 'None' padding used for odd lengths
-    spans: list[tuple[Optional[int], Optional[int], Optional[str], Optional[str]]] = []
+    spans: list[tuple[int | None, int | None, str | None, str | None]] = []
 
     for begin_delim in MATRIX_DELIMS:
         end_delim = MATRIX_DELIMS[begin_delim]
