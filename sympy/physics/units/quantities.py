@@ -150,5 +150,3 @@ class PhysicalConstant(Quantity):
     """Represents a physical constant, eg. `speed_of_light` or `avogadro_constant`."""
 
     is_physical_constant = True
-
-
