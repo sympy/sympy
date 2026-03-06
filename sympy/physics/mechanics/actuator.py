@@ -1146,3 +1146,75 @@ class CoulombKineticFriction(ForceActuator):
         return (f'{self.__class__.__name__}({self._mu_k}, {self._mu_s} '
                 f'{self._f_n}, {self.pathway}, {self._v_s}, '
                 f'{self._sigma})')
+
+class DuffingDamper(ForceActuator):
+    """A nonlinear damper equation.
+
+    Explanation
+    ===========
+
+    Here, ``DuffingDamper`` represents the force exerted by a nonlinear damper:
+    F = -c1*v - c2*v**3, where v is the extension velocity, c1 is the
+    linear damping constant, and c2 is the coefficient for the nonlinear cubic term.
+
+    Parameters
+    ==========
+
+    linear_damping : Expr
+      The linear damper coefficient (c1).
+    nonlinear_damping : Expr
+      The nonlinear damper coefficient (c2).
+    pathway : PathwayBase
+      The pathway that the actuator follows.
+    """
+
+    def __init__(self, linear_damping, nonlinear_damping, pathway):
+      self.linear_damping = linear_damping
+      self.nonlinear_damping = nonlinear_damping
+      self.pathway = pathway
+
+      if not isinstance(pathway, PathwayBase):
+        raise TypeError("pathway must be an instance of PathwayBase.")
+      self._pathway = pathway
+
+    @property
+    def linear_damping(self):
+      return self._linear_damping
+
+    @linear_damping.setter
+    def linear_damping(self, linear_damping):
+      if hasattr(self, '_linear_damping'):
+          msg = (
+              f'Can\'t set attribute `linear_damping` to '
+              f'{repr(linear_damping)} as it is immutable.'
+          )
+          raise AttributeError(msg)
+      self._linear_damping = sympify(linear_damping, strict=True)
+
+    @property
+    def nonlinear_damping(self):
+      return self._nonlinear_damping
+
+    @nonlinear_damping.setter
+    def nonlinear_damping(self, nonlinear_damping):
+      if hasattr(self, '_nonlinear_damping'):
+          msg = (
+              f'Can\'t set attribute `nonlinear_damping` to '
+              f'{repr(nonlinear_damping)} as it is immutable.'
+          )
+          raise AttributeError(msg)
+      self._nonlinear_damping = sympify(nonlinear_damping, strict=True)
+
+    @property
+    def force(self):
+      """The force produced by the Duffing damper."""
+      velocity = self.pathway.extension_velocity
+      return -self.linear_damping*velocity - self.nonlinear_damping*velocity**3
+
+    @force.setter
+    def force(self, force):
+      raise AttributeError('Can\'t set computed attribute `force`.')
+
+    def __repr__(self):
+      return (f"{self.__class__.__name__}("
+              f"{self.linear_damping}, {self.nonlinear_damping}, {self.pathway})")
