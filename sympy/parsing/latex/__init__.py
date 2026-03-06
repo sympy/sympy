@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Any, Optional
+from typing import Any
 from sympy.external import import_module
 from sympy.utilities.decorator import doctest_depends_on
 from re import compile as rcompile
@@ -76,7 +76,7 @@ END_DELIM_REPR = {fr"{END_AMS_MAT}{IGNORE_R}\\right\)": "\\end{matrix}\\right)",
 
 def check_matrix_delimiters(latex_str: str) -> None:
     """Report mismatched, excess, or missing matrix delimiters."""
-    spans: list[tuple[Optional[int], Optional[int], Optional[str], Optional[str]]] = []
+    spans = []
     for begin_delim in MATRIX_DELIMS:
         end_delim = MATRIX_DELIMS[begin_delim]
 
@@ -88,22 +88,30 @@ def check_matrix_delimiters(latex_str: str) -> None:
         spans.extend([(*m.span(), m.group(),
                        end_delim) for m in q.finditer(latex_str)])
 
-    spans.sort(key=(lambda x: x[0] if x[0] is not None else 0))
+    spans.sort(key=(lambda x: x[0]))
     if len(spans) % 2 == 1:
+        # Odd number of delimiters; therefore something
+        # is wrong. We do not complain yet; let's see if
+        # we can pinpoint the actual error.
         spans.append((None, None, None, None))
 
-    combined_spans = [(*x, *y) for (x, y) in zip(spans[::2], spans[1::2])]
-    for x in combined_spans:
+    spans = [(*x, *y) for (x, y) in zip(spans[::2], spans[1::2])]
+    for x in spans:
+        # x is supposed to be an 8-tuple of the following form:
+        #
+        # (begin_delim_span_start, begin_delim_span_end,
+        # begin_delim_match, begin_delim_regex,
+        # end_delim_span_start, end_delim_span_end,
+        # end_delim_match, end_delim_regex)
+
         sellipsis = "..."
-        s_val = x[0] if x[0] is not None else 0
-        s = s_val - 10
+        s = x[0] - 10
         if s < 0:
             s = 0
             sellipsis = ""
 
         eellipsis = "..."
-        e_val = x[1] if x[1] is not None else len(latex_str)
-        e = e_val + 10
+        e = x[1] + 10
         if e > len(latex_str):
             e = len(latex_str)
             eellipsis = ""
@@ -125,17 +133,14 @@ def check_matrix_delimiters(latex_str: str) -> None:
             raise LaTeXParsingError(err)
 
         correct_end_regex = MATRIX_DELIMS[x[3]]
-        x0 = x[0] if x[0] is not None else 0
-        x5 = x[5] if x[5] is not None else len(latex_str)
-        sellipsis = "..." if x0 > 0 else ""
-        eellipsis = "..." if x5 < len(latex_str) else ""
-
+        sellipsis = "..." if x[0] > 0 else ""
+        eellipsis = "..." if x[5] < len(latex_str) else ""
         if x[7] != correct_end_regex:
             err = ("Expected "
                    f"'{END_DELIM_REPR[correct_end_regex]}' "
                    f"to close the '{x[2]}' at index {x[0]} but "
                    f"found '{x[6]}' at index {x[4]} of LaTeX "
-                   f"string instead: {sellipsis}{latex_str[x0:x5]}"
+                   f"string instead: {sellipsis}{latex_str[x[0]:x[5]]}"
                    f"{eellipsis}")
             raise LaTeXParsingError(err)
 
