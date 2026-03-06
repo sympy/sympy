@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 from sympy.external.mpmath import conserve_mpmath_dps # noqa: F401
 
 from sympy.utilities.exceptions import sympy_deprecation_warning
-F = TypeVar("F",bound=Callable[...,Any])
+F = TypeVar("F",bound=callable[...,Any])
 
 T = TypeVar('T')
 """A generic type"""
