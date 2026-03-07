@@ -12,7 +12,7 @@ from .singleton import S
 from .operations import AssocOp, AssocOpDispatcher
 from .cache import cacheit
 from .intfunc import integer_nthroot, trailing
-from .logic import fuzzy_not, _fuzzy_group
+from .logic import fuzzy_not, _fuzzy_group, fuzzy_and, fuzzy_or
 from .expr import Expr
 from .parameters import global_parameters
 from .kind import KindDispatcher
@@ -1498,9 +1498,9 @@ class Mul(Expr, AssocOp):
                     return False
 
     def _eval_is_polar(self):
-        has_polar = any(arg.is_polar for arg in self.args)
-        return has_polar and \
-            all(arg.is_polar or arg.is_positive for arg in self.args)
+        has_polar = fuzzy_or(arg.is_polar for arg in self.args)
+        return fuzzy_and([has_polar, fuzzy_and(
+            fuzzy_or([arg.is_polar, arg.is_positive]) for arg in self.args)])
 
     def _eval_is_extended_real(self):
         return self._eval_real_imag(True)

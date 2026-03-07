@@ -650,8 +650,11 @@ class Pow(Expr):
         '''
         An integer raised to the n(>=2)-th power cannot be a prime.
         '''
-        if self.base.is_integer and self.exp.is_integer and (self.exp - 1).is_positive:
-            return False
+        if self.base.is_integer and self.exp.is_integer:
+            if (self.base - 1).is_zero or (self.base + 1).is_zero:
+                return False
+            if (self.exp - 1).is_positive:
+                return False
 
     def _eval_is_composite(self):
         """
