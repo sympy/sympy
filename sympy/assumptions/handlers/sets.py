@@ -340,6 +340,10 @@ def _(expr, assumptions):
 
     if ask(Q.real(expr.base), assumptions):
         if ask(Q.real(expr.exp), assumptions):
+            if ask(Q.negative(expr.base), assumptions) and \
+                ask(Q.rational(expr.exp), assumptions) and \
+                ask(~Q.integer(expr.exp), assumptions):
+                return False
             if (expr.exp.is_Rational and
                     ask(Q.even(expr.exp.q), assumptions)):
                 return ask(Q.nonnegative(expr.base), assumptions)
@@ -388,7 +392,14 @@ def _(expr, assumptions):
 def _(expr, assumptions):
     return True
 
-@ExtendedRealPredicate.register_many(Add, Mul, Pow) # type:ignore
+@ExtendedRealPredicate.register(Pow)
+def _(expr, assumptions):
+    ret = expr.is_extended_real
+    if ret is not None:
+        return ret
+    raise MDNotImplementedError
+
+@ExtendedRealPredicate.register_many(Add, Mul) # type:ignore
 def _(expr, assumptions):
     return test_closed_group(expr, assumptions, Q.extended_real)
 
