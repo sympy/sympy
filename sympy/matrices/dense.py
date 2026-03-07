@@ -150,7 +150,7 @@ Matrix = MutableDenseMatrix
 ###########
 
 
-def list2numpy(l: list[Any], dtype: Any = object) -> Any:  # pragma: no cover
+def list2numpy(l, dtype=object):  # pragma: no cover
     """Converts Python list of SymPy expressions to a NumPy array.
 
     See Also
@@ -165,7 +165,7 @@ def list2numpy(l: list[Any], dtype: Any = object) -> Any:  # pragma: no cover
     return a
 
 
-def matrix2numpy(m: Any, dtype: Any = object) -> Any:  # pragma: no cover
+def matrix2numpy(m, dtype=object):  # pragma: no cover
     """Converts SymPy's matrix to a NumPy array.
 
     See Also
@@ -187,7 +187,7 @@ def matrix2numpy(m: Any, dtype: Any = object) -> Any:  # pragma: no cover
 ###########
 
 
-def rot_givens(i, j, theta, dim=3):
+def rot_givens(i: int, j: int, theta: Any, dim: int = 3) -> MutableDenseMatrix:
     r"""Returns a a Givens rotation matrix, a a rotation in the
     plane spanned by two coordinates axes.
 
@@ -306,7 +306,7 @@ def rot_givens(i, j, theta, dim=3):
     return M
 
 
-def rot_axis3(theta):
+def rot_axis3(theta: Any) -> MutableDenseMatrix:
     r"""Returns a rotation matrix for a rotation of theta (in radians)
     about the 3-axis.
 
@@ -361,7 +361,7 @@ def rot_axis3(theta):
     return rot_givens(0, 1, theta, dim=3)
 
 
-def rot_axis2(theta):
+def rot_axis2(theta: Any) -> MutableDenseMatrix:
     r"""Returns a rotation matrix for a rotation of theta (in radians)
     about the 2-axis.
 
@@ -416,7 +416,7 @@ def rot_axis2(theta):
     return rot_givens(2, 0, theta, dim=3)
 
 
-def rot_axis1(theta):
+def rot_axis1(theta: Any) -> MutableDenseMatrix:
     r"""Returns a rotation matrix for a rotation of theta (in radians)
     about the 1-axis.
 
@@ -471,7 +471,7 @@ def rot_axis1(theta):
     return rot_givens(1, 2, theta, dim=3)
 
 
-def rot_ccw_axis3(theta):
+def rot_ccw_axis3(theta: Any) -> MutableDenseMatrix:
     r"""Returns a rotation matrix for a rotation of theta (in radians)
     about the 3-axis.
 
@@ -526,7 +526,7 @@ def rot_ccw_axis3(theta):
     return rot_givens(1, 0, theta, dim=3)
 
 
-def rot_ccw_axis2(theta):
+def rot_ccw_axis2(theta: Any) -> MutableDenseMatrix:
     r"""Returns a rotation matrix for a rotation of theta (in radians)
     about the 2-axis.
 
@@ -581,7 +581,7 @@ def rot_ccw_axis2(theta):
     return rot_givens(0, 2, theta, dim=3)
 
 
-def rot_ccw_axis1(theta):
+def rot_ccw_axis1(theta: Any) -> MutableDenseMatrix:
     r"""Returns a rotation matrix for a rotation of theta (in radians)
     about the 1-axis.
 
@@ -756,7 +756,7 @@ def casoratian(seqs, n, zero=True):
     return Matrix(k, k, f).det()
 
 
-def eye(*args: Any, **kwargs: Any) -> MutableDenseMatrix:
+def eye(*args, **kwargs):
     """Create square identity matrix n x n
 
     See Also
@@ -964,7 +964,7 @@ def matrix_multiply_elementwise(A, B):
     return A.multiply_elementwise(B)
 
 
-def ones(*args: Any, **kwargs: Any) -> MutableDenseMatrix:
+def ones(*args, **kwargs):
     """Returns a matrix of ones with ``rows`` rows and ``cols`` columns;
     if ``cols`` is omitted a square matrix will be returned.
 
@@ -1089,7 +1089,7 @@ def wronskian(functions, var, method='bareiss'):
     return W.det(method)
 
 
-def zeros(*args: Any, **kwargs: Any) -> MutableDenseMatrix:
+def zeros(*args, **kwargs):
     """Returns a matrix of zeros with ``rows`` rows and ``cols`` columns;
     if ``cols`` is omitted a square matrix will be returned.
 
