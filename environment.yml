@@ -1,0 +1,16 @@
+channels:
+  - conda-forge
+dependencies:
+  - mpmath
+  - mypy
+  - sphinx-lint
+  - pytest
+  - pytest-xdist
+  - pytest-timeout
+  - pytest-split
+  - pytest-doctestplus
+  - hypothesis
+  - flake8
+  - flake8-comprehensions
+  - ruff
+  - slotscheck

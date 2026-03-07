@@ -177,7 +177,7 @@ You may want to take advantage of using virtual environments to isolate your dev
 If you use `conda`, you can use it to create a virtual environment:
 
 ```bash
-$ conda create -n sympy-dev -c conda-forge --file requirements-dev.txt
+$ conda env create -n sympy-dev -f environment.yml
 ```
 
 If you prefer to use `pip` and `venv`, you can use something like
