@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import random
 
@@ -150,7 +150,7 @@ Matrix = MutableDenseMatrix
 ###########
 
 
-def list2numpy(l, dtype=object):  # pragma: no cover
+def list2numpy(l: list[Any], dtype: Any = object) -> Any:  # pragma: no cover
     """Converts Python list of SymPy expressions to a NumPy array.
 
     See Also
@@ -165,7 +165,7 @@ def list2numpy(l, dtype=object):  # pragma: no cover
     return a
 
 
-def matrix2numpy(m, dtype=object):  # pragma: no cover
+def matrix2numpy(m: Any, dtype: Any = object) -> Any:  # pragma: no cover
     """Converts SymPy's matrix to a NumPy array.
 
     See Also
@@ -723,12 +723,12 @@ def casoratian(seqs, n, zero=True):
 
        Casoratian is defined by k x k determinant::
 
-                  +  a(n)     b(n)     . . . z(n)     +
-                  |  a(n+1)   b(n+1)   . . . z(n+1)   |
-                  |    .         .     .        .     |
-                  |    .         .       .      .     |
-                  |    .         .         .    .     |
-                  +  a(n+k-1) b(n+k-1) . . . z(n+k-1) +
+                 +  a(n)     b(n)     . . . z(n)     +
+                 |  a(n+1)   b(n+1)   . . . z(n+1)   |
+                 |    .        .     .        .      |
+                 |    .        .       .      .      |
+                 |    .        .         .    .      |
+                 +  a(n+k-1) b(n+k-1) . . . z(n+k-1) +
 
        It proves very useful in rsolve_hyper() where it is applied
        to a generating set of a recurrence to factor out linearly
@@ -756,7 +756,7 @@ def casoratian(seqs, n, zero=True):
     return Matrix(k, k, f).det()
 
 
-def eye(*args, **kwargs):
+def eye(*args: Any, **kwargs: Any) -> MutableDenseMatrix:
     """Create square identity matrix n x n
 
     See Also
@@ -862,23 +862,23 @@ def hessian(f, varlist, constraints=()):
     >>> g1 = Function('g')(x, y)
     >>> g2 = x**2 + 3*y
     >>> pprint(hessian(f, (x, y), [g1, g2]))
-    [                   d               d            ]
-    [     0        0    --(g(x, y))     --(g(x, y))  ]
-    [                   dx              dy           ]
-    [                                                ]
-    [     0        0        2*x              3       ]
-    [                                                ]
-    [                     2               2          ]
-    [d                   d               d           ]
-    [--(g(x, y))  2*x   ---(f(x, y))   -----(f(x, y))]
-    [dx                   2            dy dx         ]
-    [                   dx                           ]
-    [                                                ]
-    [                     2               2          ]
-    [d                   d               d           ]
-    [--(g(x, y))   3   -----(f(x, y))   ---(f(x, y)) ]
-    [dy                dy dx              2          ]
-    [                                   dy           ]
+    [                  d               d            ]
+    [    0        0    --(g(x, y))     --(g(x, y))  ]
+    [                  dx              dy           ]
+    [                                               ]
+    [    0        0        2*x              3       ]
+    [                                               ]
+    [                    2               2          ]
+    [d                  d               d           ]
+    [--(g(x, y))  2*x   ---(f(x, y))  -----(f(x, y))]
+    [dx                  2            dy dx         ]
+    [                  dx                           ]
+    [                                               ]
+    [                    2               2          ]
+    [d                  d               d           ]
+    [--(g(x, y))   3  -----(f(x, y))   ---(f(x, y)) ]
+    [dy               dy dx             2           ]
+    [                                 dy            ]
 
     References
     ==========
@@ -964,7 +964,7 @@ def matrix_multiply_elementwise(A, B):
     return A.multiply_elementwise(B)
 
 
-def ones(*args, **kwargs):
+def ones(*args: Any, **kwargs: Any) -> MutableDenseMatrix:
     """Returns a matrix of ones with ``rows`` rows and ``cols`` columns;
     if ``cols`` is omitted a square matrix will be returned.
 
@@ -1089,7 +1089,7 @@ def wronskian(functions, var, method='bareiss'):
     return W.det(method)
 
 
-def zeros(*args, **kwargs):
+def zeros(*args: Any, **kwargs: Any) -> MutableDenseMatrix:
     """Returns a matrix of zeros with ``rows`` rows and ``cols`` columns;
     if ``cols`` is omitted a square matrix will be returned.
 
