@@ -1780,7 +1780,7 @@ def test_nonzero():
     assert ask(Q.nonzero(exp(x)), Q.real(exp(x))) is None
     assert ask(Q.nonzero(exp(x*I*pi)), Q.integer(x)) is True
     assert ask(Q.nonzero(exp(x*I*pi)), Q.imaginary(x)) is True
-    assert ask(Q.nonzero(exp((x*I*pi)/2)), Q.integer(x)) is False
+    assert ask(Q.nonzero(exp((x*I*pi)/2)), Q.integer(x)) is None
     assert ask(Q.nonzero(exp((x*I*pi)/2)), Q.integer(x) & Q.even(x)) is True
     assert ask(Q.nonzero(exp((x*I*pi)/2)), Q.integer(x) & Q.odd(x)) is False
     assert ask(Q.nonzero(exp((x*I*pi)/2)), Q.imaginary(x)) is True

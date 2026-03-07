@@ -210,33 +210,14 @@ def _(expr, assumptions):
                 return False
             if neg_inf is None:
                 return None
-    arg = expr.exp
-    results = []
-    r = arg/(I*pi)
-    if ask(Q.integer(r), assumptions):
-        return True
-    if ask(Q.real(arg), assumptions):
-        return True
-    if arg.is_Add:
-        terms = arg.args
+    if isinstance(expr.exp, Add):
+        results = []
+        for a in expr.exp.args:
+            results.append(ask(Q.real(exp(a)), assumptions))
+        return fuzzy_and(results)
     else:
-        terms = (arg,)
-    for a in terms:
-        if a.is_Mul and I in a.args and pi in a.args:
-            coeff = [b for b in a.args if b not in (I, pi)]
-            if coeff:
-                results.append(fuzzy_or([
-                    (ask(Q.integer(coeff[0]), assumptions)),
-                    ask(Q.integer(coeff[0]*I), assumptions)
-                ]))
-            else:
-                results.append(True)
-        else:
-            results.append(fuzzy_or([
-                ask(Q.real(a), assumptions),
-                ask(Q.real(exp(a)), assumptions)
-            ]))
-    return fuzzy_and(results)
+        return fuzzy_and([ask(Q.real(expr), assumptions),
+                        ask(~Q.zero(expr), assumptions)])
 
 
 # ZeroPredicate
