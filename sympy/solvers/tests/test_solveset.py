@@ -332,6 +332,9 @@ def test_issue_21047():
     assert solveset(f, x, S.Reals) == FiniteSet(
         S.Half - sqrt(2*sqrt(2) + 5)/2, S.Half + sqrt(2*sqrt(2) + 5)/2)
 
+def test_issue_29315():
+    x, y = symbols("x y")
+    assert nonlinsolve([x+y-4, 2**x+2**y-10], x, y) == {(1, 3), (3, 1), (4 - y, S.Complexes)}
 
 def test_is_function_class_equation():
     assert _is_function_class_equation(TrigonometricFunction,
@@ -3545,7 +3548,7 @@ def test_issue_23318():
 
 def test_issue_19814():
     assert nonlinsolve([ 2**m - 2**(2*n), 4*2**m - 2**(4*n)], m, n
-                      ) == FiniteSet((log(2**(2*n))/log(2), S.Complexes))
+                      ) == FiniteSet((log(4)/log(2), 1), (log(2**(2*n))/log(2), S.Complexes))
 
 
 def test_issue_22058():
