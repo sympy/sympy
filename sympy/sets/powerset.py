@@ -106,7 +106,7 @@ class PowerSet(Set):
         if isinstance(other, PowerSet):
             return self.arg.is_subset(other.arg)
         return None
-    
+
     def __len__(self) -> int:
         if isinstance(self.arg, PowerSet):
             return 2 ** len(self.arg)  # recursively compute length
