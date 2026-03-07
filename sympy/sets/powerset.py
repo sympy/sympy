@@ -106,8 +106,12 @@ class PowerSet(Set):
         if isinstance(other, PowerSet):
             return self.arg.is_subset(other.arg)
         return None
-
+    
     def __len__(self) -> int:
+        if isinstance(self.arg, PowerSet):
+            return 2 ** len(self.arg)  # recursively compute length
+        if not self.arg.is_FiniteSet:
+            raise TypeError("PowerSet of infinite set has no finite length")
         return 2 ** len(self.arg)
 
     def __iter__(self) -> Iterator[Set]:

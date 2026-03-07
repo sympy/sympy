@@ -135,3 +135,12 @@ def test_is_subset():
     assert subset.is_subset(pset)
     # assert "bad_set" is subset of pset == False
     assert not pset.is_subset(bad_set)
+
+def test_powerset_len_infinite():
+    import pytest
+    from sympy import PowerSet, S, FiniteSet
+
+    with pytest.raises(TypeError):
+        len(PowerSet(S.Naturals))
+
+    assert len(PowerSet(FiniteSet(1,2,3))) == 8
