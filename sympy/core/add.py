@@ -634,8 +634,35 @@ class Add(Expr, AssocOp):
         (a.is_finite for a in self.args), quick_exit=True)
     _eval_is_hermitian = lambda self: _fuzzy_group(
         (a.is_hermitian for a in self.args), quick_exit=True)
-    _eval_is_integer = lambda self: _fuzzy_group(
-        (a.is_integer for a in self.args), quick_exit=True)
+    def _eval_is_integer(self):
+        non_ints = 0
+        ints = 0
+        unknown_ints = 0
+        for a in self.args:
+            if a.is_integer:
+                ints += 1
+            elif a.is_integer is False:
+                non_ints += 1
+            elif a.is_Mul:
+                a_non_int_nonrat = 0
+                a_unknown = 0
+                for f in a.args:
+                    if f.is_integer is False:
+                        if f.is_rational is False:
+                            a_non_int_nonrat += 1
+                    elif f.is_integer is None:
+                        a_unknown += 1
+                if a_non_int_nonrat == 1 and a_unknown == 0:
+                    non_ints += 1
+                else:
+                    unknown_ints += 1
+            else:
+                unknown_ints += 1
+
+        if non_ints == 1 and unknown_ints == 0:
+            return False
+
+        return _fuzzy_group((a.is_integer for a in self.args), quick_exit=True)
     _eval_is_rational = lambda self: _fuzzy_group(
         (a.is_rational for a in self.args), quick_exit=True)
     _eval_is_algebraic = lambda self: _fuzzy_group(
@@ -689,6 +716,37 @@ class Add(Expr, AssocOp):
             # issue 10528: there is no way to know if a nc symbol
             # is zero or not
             return
+
+        # An integer cannot cancel out a non-integer
+        # If there is exactly one non-integer, and all others are integers,
+        # the sum cannot be zero.
+        non_ints = 0
+        ints = 0
+        unknown_ints = 0
+        for a in self.args:
+            if a.is_integer:
+                ints += 1
+            elif a.is_integer is False:
+                non_ints += 1
+            elif a.is_Mul:
+                a_non_int_nonrat = 0
+                a_unknown = 0
+                for f in a.args:
+                    if f.is_integer is False:
+                        if f.is_rational is False:
+                            a_non_int_nonrat += 1
+                    elif f.is_integer is None:
+                        a_unknown += 1
+                if a_non_int_nonrat == 1 and a_unknown == 0:
+                    non_ints += 1
+                else:
+                    unknown_ints += 1
+            else:
+                unknown_ints += 1
+
+        if non_ints == 1 and unknown_ints == 0:
+            return False
+
         nz = []
         z = 0
         im_or_z = False

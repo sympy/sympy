@@ -1454,6 +1454,15 @@ class Mul(Expr, AssocOp):
                     # x**2, 2**x, or x**y with x and y int-unknown -> unknown
                     return
             else:
+                # If this arg is non-integer and all other args are integers
+                # whose product is +/-1, the whole product is non-integer.
+                if a.is_integer is False:
+                    others_int = all(
+                        o.is_integer for o in self.args if o is not a)
+                    if others_int:
+                        coeff = Mul(*[o for o in self.args if o is not a])
+                        if abs(coeff) is S.One:
+                            return False
                 return
 
         if not denominators and not unknown:
