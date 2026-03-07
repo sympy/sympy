@@ -243,7 +243,7 @@ def MultivariateNormal(name, mu, sigma):
     calculated using a matrix argument, as shown below.
 
     >>> density(X)(obs)
-    (exp(((1/2)*mu.T - (1/2)*obs.T)*Sg**(-1)*(-mu + obs))/sqrt((2*pi)**n*Determinant(Sg)))[0, 0]
+    (exp(((1/2)*mu.T - (1/2)*obs.T)*Sg**(-1)*(-mu + obs))/((2*pi)**(n/2)*sqrt(Determinant(Sg))))[0, 0]
 
     References
     ==========
@@ -706,8 +706,7 @@ def GeneralizedMultivariateLogGamma(syms, delta, v, lamda, mu):
     >>> y = symbols('y_1:4', positive=True)
     >>> Gd = GeneralizedMultivariateLogGamma('G', d, v, l, mu)
     >>> density(Gd)(y[0], y[1], y[2])
-    Sum(exp((n + 1)*(y_1 + y_2 + y_3) - exp(y_1) - exp(y_2) -
-    exp(y_3))/(2**n*gamma(n + 1)**3), (n, 0, oo))/2
+    Sum(exp((n + 1)*(y_1 + y_2 + y_3) - exp(y_1) - exp(y_2) - exp(y_3))/(2**n*gamma(n + 1)**3), (n, 0, oo))/2
 
     References
     ==========
@@ -763,8 +762,7 @@ def GeneralizedMultivariateLogGammaOmega(syms, omega, v, lamda, mu):
     >>> G = GeneralizedMultivariateLogGammaOmega('G', omega, v, l, mu)
     >>> y = symbols('y_1:4', positive=True)
     >>> density(G)(y[0], y[1], y[2])
-    sqrt(2)*Sum((1 - sqrt(2)/2)**n*exp((n + 1)*(y_1 + y_2 + y_3) - exp(y_1) -
-    exp(y_2) - exp(y_3))/gamma(n + 1)**3, (n, 0, oo))/2
+    sqrt(2)*Sum((1 - sqrt(2)/2)**n*exp((n + 1)*(y_1 + y_2 + y_3) - exp(y_1) - exp(y_2) - exp(y_3))/gamma(n + 1)**3, (n, 0, oo))/2
 
     References
     ==========
@@ -854,8 +852,7 @@ def Multinomial(syms, n, *p):
     >>> p1, p2, p3 = symbols('p1, p2, p3', positive=True)
     >>> M = Multinomial('M', 3, p1, p2, p3)
     >>> density(M)(x1, x2, x3)
-    Piecewise((6*p1**x1*p2**x2*p3**x3/(factorial(x1)*factorial(x2)*factorial(x3)),
-    Eq(x1 + x2 + x3, 3)), (0, True))
+    Piecewise((6*p1**x1*p2**x2*p3**x3/(factorial(x1)*factorial(x2)*factorial(x3)), Eq(x1 + x2 + x3, 3)), (0, True))
     >>> marginal_distribution(M, M[0])(x1).subs(x1, 1)
     3*p1*p2**2 + 6*p1*p2*p3 + 3*p1*p3**2
 
@@ -928,8 +925,7 @@ def NegativeMultinomial(syms, k0, *p):
     >>> N = NegativeMultinomial('M', 3, p1, p2, p3)
     >>> N_c = NegativeMultinomial('M', 3, 0.1, 0.1, 0.1)
     >>> density(N)(x1, x2, x3)
-    p1**x1*p2**x2*p3**x3*(-p1 - p2 - p3 + 1)**3*gamma(x1 + x2 +
-    x3 + 3)/(2*factorial(x1)*factorial(x2)*factorial(x3))
+    p1**x1*p2**x2*p3**x3*(-p1 - p2 - p3 + 1)**3*gamma(x1 + x2 + x3 + 3)/(2*factorial(x1)*factorial(x2)*factorial(x3))
     >>> marginal_distribution(N_c, N_c[0])(1).evalf().round(2)
     0.25
 
