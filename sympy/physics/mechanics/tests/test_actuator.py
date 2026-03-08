@@ -32,6 +32,7 @@ from sympy.physics.mechanics import (
     dynamicsymbols,
     DuffingSpring,
     CoulombKineticFriction,
+    DuffingDamper,
 )
 
 from sympy.core.expr import Expr as ExprType
@@ -1083,3 +1084,153 @@ class TestCoulombKineticFriction:
             pathway
         )
         assert friction.force == 0
+
+class TestDuffingDamper:
+  @pytest.fixture(autouse=True)
+  # Set up common variables that will be used in multiple tests
+  def _duffing_damper_fixture(self):
+    self.linear_damper = Symbol('c1')
+    self.nonlinear_damper = Symbol('c2')
+    self.pA = Point('pA')
+    self.pB = Point('pB')
+    self.pathway = LinearPathway(self.pA, self.pB)
+    self.q = dynamicsymbols('q')
+    self.v = dynamicsymbols('q', 1)
+    self.N = ReferenceFrame('N')
+
+  # Simples tests to check that DuffingDamper is a subclass of ForceActuator and ActuatorBase
+  def test_is_force_actuator_subclass(self):
+    assert issubclass(DuffingDamper, ForceActuator)
+
+  def test_is_actuator_base_subclass(self):
+    assert issubclass(DuffingDamper, ActuatorBase)
+
+  @pytest.mark.parametrize(
+  # Create parametrized tests that allows running the same test function multiple times with different sets of arguments
+  (
+    'linear_damper,  '
+    'expected_linear_damper,  '
+    'nonlinear_damper,   '
+    'expected_nonlinear_damper,  '
+    'force'
+  ),
+  [
+      (
+        1,
+        S.One,
+        1,
+        S.One,
+        -(dynamicsymbols('q', 1))-(dynamicsymbols('q', 1))**3,
+      ),
+      (
+        Symbol('c1'),
+        Symbol('c1'),
+        Symbol('c2'),
+        Symbol('c2'),
+        -Symbol('c1')*(dynamicsymbols('q', 1))-Symbol('c2')*(dynamicsymbols('q', 1))**3,
+      ),
+      (
+        0,
+        S.Zero,
+        Symbol('c2'),
+        Symbol('c2'),
+        -Symbol('alpha')*(dynamicsymbols('q', 1))**3,
+      ),
+      (
+        Symbol('c1'),
+        Symbol('c1'),
+        0,
+        S.Zero,
+        -Symbol('c1') * (dynamicsymbols('q', 1)),
+      ),
+    ]
+  )
+
+  # Check if DuffingDamper correctly initializes its attributes
+  # It tests various combinations of linear & nonlinear damper and the force expression
+  def test_valid_constructor(
+    self,
+    linear_damper,
+    expected_linear_damper,
+    nonlinear_damper,
+    expected_nonlinear_damper,
+    force,
+  ):
+    self.pB.set_pos(self.pA, self.q*self.N.x)
+    damper = DuffingDamper(linear_damper, nonlinear_damper, self.pathway)
+
+    assert isinstance(damper, DuffingDamper)
+
+    assert hasattr(damper, 'linear_damper')
+    assert isinstance(damper.linear_damper, ExprType)
+    assert damper.linear_damper == expected_linear_damper
+
+    assert hasattr(damper, 'nonlinear_damper')
+    assert isinstance(damper.nonlinear_damper, ExprType)
+    assert damper.nonlinear_damper == expected_nonlinear_damper
+
+    assert hasattr(damper, 'pathway')
+    assert isinstance(damper.pathway, LinearPathway)
+    assert damper.pathway == self.pathway
+
+    assert hasattr(damper, 'force')
+    assert isinstance(damper.force, ExprType)
+    assert damper.force == force
+
+  @pytest.mark.parametrize('linear_damper', [None, NonSympifyable()])
+  def test_invalid_constructor_linear_damper_not_sympifyable(self, linear_damper):
+    with pytest.raises(SympifyError):
+      _ = DuffingDamper(linear_damper, self.nonlinear_damper, self.pathway)
+
+  @pytest.mark.parametrize('nonlinear_damper', [None, NonSympifyable()])
+  def test_invalid_constructor_nonlinear_damper_not_sympifyable(self, nonlinear_damper):
+    with pytest.raises(SympifyError):
+      _ = DuffingDamper(self.linear_damper, nonlinear_damper, self.pathway)
+
+  def test_invalid_constructor_pathway_not_pathway_base(self):
+    with pytest.raises(TypeError):
+      _ = DuffingDamper(self.linear_damper, self.nonlinear_damper, NonSympifyable())
+
+  @pytest.mark.parametrize(
+    'property_name, fixture_attr_name',
+    [
+      ('linear_damper', 'linear_damper'),
+      ('nonlinear_damper', 'nonlinear_damper'),
+      ('pathway', 'pathway'),
+    ]
+  )
+  # Check if certain properties of DuffingDamper object are immutable after initialization
+  # Ensure that once DuffingDamper is created, its key properties cannot be changed
+  def test_properties_are_immutable(self, property_name, fixture_attr_name):
+    damper = DuffingDamper(self.linear_damper, self.nonlinear_damper, self.pathway)
+    with pytest.raises(AttributeError):
+      setattr(damper, property_name, getattr(self, fixture_attr_name))
+
+  # Check the __repr__ method of DuffingDamper class
+  # Check if the actual string representation of DuffingDamper instance matches the expected string for each provided parameter values
+  def test_repr(self):
+    damper = DuffingDamper(self.linear_damper, self.nonlinear_damper, self.pathway)
+    assert repr(damper) == expected
+
+  def test_to_loads(self):
+    self.pB.set_pos(self.pA, self.q*self.N.x)
+    damper = DuffingDamper(self.linear_damper, self.nonlinear_damper, self.pathway)
+
+    # Make sure this matches the computation in DuffingDamper class
+    force = -self.linear_damper * self.v - self.nonlinear_damper * self.v**3
+
+    # The expected loads on pA and pB due to the spring
+    expected_loads = [Force(self.pA, force * self.N.x), Force(self.pB, -force * self.N.x)]
+
+    # Compare expected loads to what is returned from DuffingDamper.to_loads()
+    calculated_loads = damper.to_loads()
+    for calculated, expected in zip(calculated_loads, expected_loads):
+      assert calculated.point == expected.point
+      for dim in self.N:  # Assuming self.N is the reference frame
+        calculated_component = calculated.vector.dot(dim)
+        expected_component = expected.vector.dot(dim)
+        # Substitute all symbols with numeric values
+        substitutions = {self.u: 1, Symbol('c1'): 1, Symbol('c2'): 1}  # Add other necessary symbols as needed
+        diff = (calculated_component - expected_component).subs(substitutions).evalf()
+        # Check if the absolute value of the difference is below a threshold
+        assert Abs(diff) < 1e-9, f"The forces do not match. Difference: {diff}"
