@@ -1,4 +1,5 @@
 """Tests for user-friendly public interface to polynomial functions. """
+from __future__ import annotations
 
 import pickle
 

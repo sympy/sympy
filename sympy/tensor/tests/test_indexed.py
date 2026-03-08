@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core import symbols, Symbol, Tuple, oo, Dummy
 from sympy.tensor.indexed import IndexException
 from sympy.testing.pytest import raises

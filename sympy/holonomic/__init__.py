@@ -5,6 +5,7 @@ integration and differentiation. The module also implements various kinds of
 conversions such as converting holonomic functions to a different form and the
 other way around.
 """
+from __future__ import annotations
 
 from .holonomic import (DifferentialOperator, HolonomicFunction, DifferentialOperators,
     from_hyper, from_meijerg, expr_to_holonomic)

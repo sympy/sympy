@@ -1,4 +1,5 @@
 """Tools for setting up printing in interactive sessions. """
+from __future__ import annotations
 
 from io import BytesIO
 

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.logic import fuzzy_and, fuzzy_or, fuzzy_not, fuzzy_xor
 
 

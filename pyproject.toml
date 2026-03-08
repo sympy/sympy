@@ -22,6 +22,7 @@ doctest_optionflags = [
 ]
 
 norecursedirs = [
+    ".*",
     "sympy/parsing/autolev/test-examples",
 ]
 
@@ -39,9 +40,11 @@ exclude_lines = [
 ]
 
 [tool.ruff]
+target-version = "py310"
 # Enable Pyflakes `E` and `F` codes by default.
 lint.select = [
     "B015",  # Useless comparison: a == b rather than a = b.
+    "I002",  # `import` statement not at top of file
     "C4",
     "E",
     "F",
@@ -60,6 +63,9 @@ lint.select = [
     "TC005",
     "TRY002",
     "BLE001", # except Exception or except BaseException
+    "UP006", # pyupgrade - non-pep585-annotation
+    "UP007", # pyupgrade - non-pep604-annotation-union
+    "UP045", # pyupgrade - non-pep604-annotation-optional
 ]
 
 # Ignore rules that currently fail on the SymPy codebase
@@ -99,6 +105,9 @@ line-length = 88
 
 # Allow unused variables when underscore-prefixed.
 lint.dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+# Add to all files
+lint.isort.required-imports = ["from __future__ import annotations"]
 
 # Per-file ignores currently specified in the flake8 configuration
 [tool.ruff.lint.per-file-ignores]

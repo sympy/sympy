@@ -1,3 +1,4 @@
+from __future__ import annotations
 from collections import defaultdict
 import itertools
 from sympy.combinatorics.coset_table import modified_coset_enumeration_r

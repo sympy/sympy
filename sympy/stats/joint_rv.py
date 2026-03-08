@@ -8,6 +8,7 @@ sympy.stats.frv
 sympy.stats.crv
 sympy.stats.drv
 """
+from __future__ import annotations
 from math import prod
 
 from sympy.core.basic import Basic

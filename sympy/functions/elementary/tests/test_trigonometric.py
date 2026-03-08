@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.core.add import Add
 from sympy.core.function import (Lambda, diff)

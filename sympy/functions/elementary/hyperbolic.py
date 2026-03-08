@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core import S, sympify, cacheit
 from sympy.core.add import Add
 from sympy.core.function import DefinedFunction, ArgumentIndexError

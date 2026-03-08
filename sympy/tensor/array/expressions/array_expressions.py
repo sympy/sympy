@@ -1699,7 +1699,7 @@ class _EditArrayContraction:
     by calling the ``.to_array_contraction()`` method.
     """
 
-    def __init__(self, base_array: typing.Union[ArrayContraction, ArrayDiagonal, ArrayTensorProduct]):
+    def __init__(self, base_array: ArrayContraction | ArrayDiagonal | ArrayTensorProduct):
 
         expr: Basic
         diagonalized: tuple[tuple[int, ...], ...]
@@ -1933,7 +1933,7 @@ class _EditArrayContraction:
         self._track_permutation[index_destination].extend(self._track_permutation[index_element]) # type: ignore
         self._track_permutation.pop(index_element) # type: ignore
 
-    def get_absolute_free_range(self, arg: _ArgE) -> typing.Tuple[int, int]:
+    def get_absolute_free_range(self, arg: _ArgE) -> tuple[int, int]:
         """
         Return the range of the free indices of the arg as absolute positions
         among all free indices.
@@ -1946,7 +1946,7 @@ class _EditArrayContraction:
             counter += number_free_indices
         raise IndexError("argument not found")
 
-    def get_absolute_range(self, arg: _ArgE) -> typing.Tuple[int, int]:
+    def get_absolute_range(self, arg: _ArgE) -> tuple[int, int]:
         """
         Return the absolute range of indices for arg, disregarding dummy
         indices.

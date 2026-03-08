@@ -5,6 +5,7 @@ TODO:
 * Get represent working with continuous hilbert spaces.
 * Document default basis functionality.
 """
+from __future__ import annotations
 
 from sympy.core.add import Add
 from sympy.core.expr import Expr

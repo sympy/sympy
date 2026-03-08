@@ -1,4 +1,5 @@
 """Tests for high-level polynomials manipulation functions. """
+from __future__ import annotations
 
 from sympy.polys.polyfuncs import (
     symmetrize, horner, interpolate, rational_interpolate, viete,

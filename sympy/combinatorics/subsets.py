@@ -1,3 +1,4 @@
+from __future__ import annotations
 from itertools import combinations
 
 from sympy.combinatorics.graycode import GrayCode

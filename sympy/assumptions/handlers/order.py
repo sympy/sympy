@@ -1,6 +1,7 @@
 """
 Handlers related to order relations: positive, negative, etc.
 """
+from __future__ import annotations
 
 from sympy.assumptions import Q, ask
 from sympy.core import Add, Basic, Expr, Mul, Pow, S

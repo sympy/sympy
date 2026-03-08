@@ -18,7 +18,7 @@ from .kind import NumberKind
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.misc import as_int, func_name, filldedent
 from sympy.utilities.iterables import has_variety, _sift_true_false
-from sympy.external.mpmath import prec_to_dps, giant_steps as _giant_steps, mpf_log
+from sympy.external.mpmath import prec_to_dps, giant_steps as _giant_steps, mpf_ln
 
 
 if TYPE_CHECKING:
@@ -4097,7 +4097,7 @@ def _mag(x):
     try:
         mag_first_dig = int(ceil(log10(xpos)))
     except (ValueError, OverflowError):
-        mag_first_dig = int(ceil(Float(mpf_log(xpos._mpf_, 53))/log(10)))
+        mag_first_dig = int(ceil(Float(mpf_ln(xpos._mpf_, 53))/log(10)))
     # check that we aren't off by 1
     if (xpos/S(10)**mag_first_dig) >= 1:
         assert 1 <= (xpos/S(10)**mag_first_dig) < 10

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.sorting import ordered, default_sort_key
 from sympy.combinatorics.partitions import (Partition, IntegerPartition,
                                             RGS_enum, RGS_unrank, RGS_rank,

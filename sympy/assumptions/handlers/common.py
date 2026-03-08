@@ -2,6 +2,7 @@
 This module defines base class for handlers and some core handlers:
 ``Q.commutative`` and ``Q.is_true``.
 """
+from __future__ import annotations
 
 from sympy.assumptions import Q, ask, AppliedPredicate
 from sympy.core import Basic, Symbol

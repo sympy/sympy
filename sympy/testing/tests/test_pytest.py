@@ -1,3 +1,4 @@
+from __future__ import annotations
 import warnings
 
 from sympy.testing.pytest import (raises, warns, ignore_warnings,
