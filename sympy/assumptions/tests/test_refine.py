@@ -356,6 +356,8 @@ def test_conjugate():
     assert refine(conjugate(acsc(x)), Q.real(x)) == conjugate(acsc(x))
     assert refine(conjugate(acos(I))) == acos(conjugate(I))
     assert refine(conjugate(asin(I))) == asin(conjugate(I))
+
+
 def test_Heaviside():
     assert refine(Heaviside(x), Q.positive(x)) == 1
     assert refine(Heaviside(x), Q.negative(x)) == 0
