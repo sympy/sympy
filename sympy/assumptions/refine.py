@@ -549,7 +549,7 @@ def refine_conjugate(expr, assumptions):
     (-x)**n
     >>> refine(conjugate((x**S.Half)), Q.complex(x) & ~Q.negative(x))
     sqrt(conjugate(x))
-    >>> refine(conjugate(asin(x)), Q.real(x) & ~Q.positive(x - 1) & ~Q.negative(x + 1))
+    >>> refine(conjugate(asin(x)), Q.real(x) & Q.le(x, - 1) & Q.ge(x,  1))
     asin(x)
     >>> refine(conjugate(atan(x)), Q.real(x))
     atan(x)
