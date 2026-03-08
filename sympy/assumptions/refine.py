@@ -533,17 +533,10 @@ def refine_tan_cot(expr, assumptions):
     _, sum_of_parity_known_coeffs_is_even, rem = result
 
     if sum_of_parity_known_coeffs_is_even:
-        # Even total of pi/2 shifts: tan(rem + k*pi) = tan(rem) (period pi)
-        if isinstance(expr, tan):
-            return tan(rem)
-        else:
-            return cot(rem)
+        return expr.func(rem)
     else:
-        # Odd total: tan(rem + pi/2) = -cot(rem), cot(rem + pi/2) = -tan(rem)
-        if isinstance(expr, tan):
-            return -cot(rem)
-        else:
-            return -tan(rem)
+        co_func = cot if isinstance(expr, tan) else tan
+        return -co_func(rem)
 
 
 def refine_floor_ceiling(expr, assumptions):
