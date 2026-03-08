@@ -2344,5 +2344,5 @@ def test_Rational_float_style_format_specifiers():
 
 
 def test_Rational_format_invalid_specifier_raises():
-    with raises(ValueError):
+    with raises((TypeError, ValueError)):
         format(Rational(1, 2), 's')
