@@ -185,6 +185,7 @@
 #
 # See also: 'git shortlog --help' and 'git check-mailmap --help'.
 #
+
 *Chu-Ching Huang <cchuang@mail.cgu.edu.tw>
 *Dan <coolg49964@gmail.com>
 *Marc-Etienne M.Leveille <protonyc@gmail.com>
@@ -1588,7 +1589,6 @@ Sujal Kumar <sujaljayantkumar06@gmail.com> Sujal Kumar <91939382+SujalKumar06@us
 Suman mondal <smondal.qwerty@gmail.com>
 Sumit Kumar <mr.sumitkrr@gmail.com> Sumit Kumar <96618001+sumit-158@users.noreply.github.com>
 Sumit Lakra <lakrasumit633@gmail.com>
-Sumit Lakra <99547820+lakrasumit@users.noreply.github.com>
 Sumith Kulal <sumith1896@gmail.com>
 Suneet Mishra <suee.suneet@gmail.com> Avedeva <suee.suneet@gmail.com>
 Sunny Aggarwal <sunnyaggarwal1994@gmail.com>
@@ -1885,4 +1885,3 @@ zzj <29055749+zjzh@users.noreply.github.com>
 Łukasz Pankowski <lukpank@o2.pl>
 彭于斌 <1931127624@qq.com>
 袁野 (Yuan Ye) <yuanyelele@tutanota.com>
-
