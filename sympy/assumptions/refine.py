@@ -532,6 +532,13 @@ def refine_tan_cot(expr, assumptions):
         return expr
     _, sum_of_parity_known_coeffs_is_even, rem = result
 
+    # If k is even (k*pi/2 is an integer multiple of pi):
+    #    `tan(rem + k*pi/2)` -> `tan(rem)`
+    #    `cot(rem + k*pi/2)` -> `cot(rem)`
+    #
+    # If k is odd:
+    #    `tan(rem + k*pi/2)` -> `-cot(rem)`
+    #    `cot(rem + k*pi/2)` -> `-tan(rem)`
     if sum_of_parity_known_coeffs_is_even:
         return expr.func(rem)
     else:
