@@ -404,6 +404,47 @@ def refine_matrixelement(expr, assumptions):
         return MatrixElement(matrix, j, i)
 
 
+def _trig_pi_half_shift(arg, assumptions):
+    """Parse a trig argument for integer multiples of pi/2 and compute parity.
+
+    Returns ``None`` if no simplification is possible, otherwise returns
+    ``(sum_of_parity_known_coeffs, sum_of_parity_known_coeffs_is_even, rem)``
+    where ``rem`` is the argument with all integer-pi/2 terms removed.
+    """
+    integer_coeffs_of_pi_half = []
+    remaining_terms = []
+
+    terms = arg.args if arg.is_Add else (arg,)
+    for term in terms:
+        coeff_of_pi = term.coeff(S.Pi)
+        if coeff_of_pi and ask(Q.integer(2 * coeff_of_pi), assumptions):
+            integer_coeffs_of_pi_half.append(2 * coeff_of_pi)
+        else:
+            remaining_terms.append(term)
+
+    if not integer_coeffs_of_pi_half:
+        return None
+
+    sum_of_parity_known_coeffs = 0
+    sum_of_parity_unknown_coeffs = 0
+    sum_of_parity_known_coeffs_is_even = True
+    for coeff in integer_coeffs_of_pi_half:
+        coeff_is_even = ask(Q.even(coeff), assumptions)
+        if coeff_is_even is None:
+            sum_of_parity_unknown_coeffs += coeff
+        else:
+            sum_of_parity_known_coeffs += coeff
+            sum_of_parity_known_coeffs_is_even = (
+                sum_of_parity_known_coeffs_is_even == coeff_is_even
+            )
+
+    if sum_of_parity_known_coeffs == 0:
+        return None
+
+    rem = sum(remaining_terms) + sum_of_parity_unknown_coeffs * S.Pi / 2
+    return sum_of_parity_known_coeffs, sum_of_parity_known_coeffs_is_even, rem
+
+
 def refine_sin_cos(expr, assumptions):
     """
     Handler for sin and cos functions.
@@ -427,38 +468,10 @@ def refine_sin_cos(expr, assumptions):
     (-1)**(2*n)*cos(x + y)
     """
     from sympy.functions.elementary.trigonometric import sin, cos
-    arg = expr.args[0]
-
-    integer_coeffs_of_pi_half = []
-    remaining_terms = []
-
-    terms = arg.args if arg.is_Add else (arg,)
-    for term in terms:
-        coeff_of_pi = term.coeff(S.Pi)
-        if coeff_of_pi and ask(Q.integer(2 * coeff_of_pi), assumptions):
-            coeff_of_pi_half = 2 * coeff_of_pi
-            integer_coeffs_of_pi_half.append(coeff_of_pi_half)
-        else:
-            remaining_terms.append(term)
-
-    if not integer_coeffs_of_pi_half:
+    result = _trig_pi_half_shift(expr.args[0], assumptions)
+    if result is None:
         return expr
-
-    sum_of_parity_known_coeffs = 0
-    sum_of_parity_unknown_coeffs = 0
-    sum_of_parity_known_coeffs_is_even = True
-    for coeff in integer_coeffs_of_pi_half:
-        coeff_is_even = ask(Q.even(coeff), assumptions)
-        if coeff_is_even is None:
-            sum_of_parity_unknown_coeffs += coeff
-        else:
-            sum_of_parity_known_coeffs += coeff
-            sum_of_parity_known_coeffs_is_even = (
-                sum_of_parity_known_coeffs_is_even == coeff_is_even
-            )
-
-    if sum_of_parity_known_coeffs == 0:
-        return expr
+    sum_of_parity_known_coeffs, sum_of_parity_known_coeffs_is_even, rem = result
 
     # Treat sin as a phase-shifted cosine so a single logic path can handle both.
     if isinstance(expr, sin):
@@ -473,7 +486,6 @@ def refine_sin_cos(expr, assumptions):
     #
     # If k is odd:
     #    `cos(rem + k*pi/2)` -> `(-1)^((k+1)/2) * sin(rem)`
-    rem = sum(remaining_terms) + sum_of_parity_unknown_coeffs * S.Pi / 2
     if k_is_even:
         return ((-1)**(k / 2)) * cos(rem)
     else:
@@ -515,40 +527,10 @@ def refine_tan_cot(expr, assumptions):
 
     """
     from sympy.functions.elementary.trigonometric import tan, cot
-    arg = expr.args[0]
-
-    integer_coeffs_of_pi_half = []
-    remaining_terms = []
-
-    terms = arg.args if arg.is_Add else (arg,)
-    for term in terms:
-        coeff_of_pi = term.coeff(S.Pi)
-        if coeff_of_pi and ask(Q.integer(2 * coeff_of_pi), assumptions):
-            integer_coeffs_of_pi_half.append(2 * coeff_of_pi)
-        else:
-            remaining_terms.append(term)
-
-    if not integer_coeffs_of_pi_half:
+    result = _trig_pi_half_shift(expr.args[0], assumptions)
+    if result is None:
         return expr
-
-    sum_of_parity_known_coeffs = 0
-    sum_of_parity_unknown_coeffs = 0
-    sum_of_parity_known_coeffs_is_even = True
-
-    for coeff in integer_coeffs_of_pi_half:
-        coeff_is_even = ask(Q.even(coeff), assumptions)
-        if coeff_is_even is None:
-            sum_of_parity_unknown_coeffs += coeff
-        else:
-            sum_of_parity_known_coeffs += coeff
-            sum_of_parity_known_coeffs_is_even = (
-                sum_of_parity_known_coeffs_is_even == coeff_is_even
-            )
-
-    if sum_of_parity_known_coeffs == 0:
-        return expr
-
-    rem = sum(remaining_terms) + sum_of_parity_unknown_coeffs * S.Pi / 2
+    _, sum_of_parity_known_coeffs_is_even, rem = result
 
     if sum_of_parity_known_coeffs_is_even:
         # Even total of pi/2 shifts: tan(rem + k*pi) = tan(rem) (period pi)
