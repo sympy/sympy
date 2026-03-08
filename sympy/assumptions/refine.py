@@ -584,7 +584,7 @@ def refine_conjugate(expr, assumptions):
     if isinstance(arg, (asin, acos)):
         asin_acos_arg = arg.args[0]
         if ask(Q.real(asin_acos_arg), assumptions):
-            if ask(Q.nonpositive(asin_acos_arg - 1), assumptions) and ask(Q.nonnegative(asin_acos_arg + 1), assumptions):
+            if ask(Q.le(asin_acos_arg, - 1), assumptions) and ask(Q.ge(asin_acos_arg,  1), assumptions):
                 return arg
             else:
                 return expr
@@ -610,7 +610,7 @@ def refine_conjugate(expr, assumptions):
     if isinstance(arg, (asec, acsc)):
         asec_acsc_arg = arg.args[0]
         if ask(Q.real(asec_acsc_arg), assumptions):
-            if ask(Q.nonnegative(asec_acsc_arg - 1), assumptions) or ask(Q.nonpositive(asec_acsc_arg +1), assumptions):
+            if ask(Q.le(asec_acsc_arg, - 1), assumptions) or ask(Q.ge(asec_acsc_arg, 1), assumptions):
                 return arg
             else:
                 return expr
