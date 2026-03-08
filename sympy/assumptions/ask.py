@@ -1,4 +1,5 @@
 """Module for querying SymPy objects about assumptions."""
+from __future__ import annotations
 
 from sympy.assumptions.assume import (global_assumptions, Predicate,
         AppliedPredicate)

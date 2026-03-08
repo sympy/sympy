@@ -1,3 +1,4 @@
+from __future__ import annotations
 from .cartan_type import CartanType
 
 def CartanMatrix(ct):

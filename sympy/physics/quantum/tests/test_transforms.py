@@ -1,4 +1,5 @@
 """Tests of transforms of quantum expressions for Mul and Pow."""
+from __future__ import annotations
 
 from sympy.core.symbol import symbols
 from sympy.testing.pytest import raises

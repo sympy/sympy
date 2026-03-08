@@ -15,6 +15,7 @@ It is modified in the following ways:
 A more traditional version can be found here
 http://aima.cs.berkeley.edu/python/logic.html
 """
+from __future__ import annotations
 
 from sympy.utilities.iterables import kbins
 

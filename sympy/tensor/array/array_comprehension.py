@@ -1,3 +1,4 @@
+from __future__ import annotations
 import functools, itertools
 from sympy.core.sympify import _sympify, sympify
 from sympy.core.expr import Expr

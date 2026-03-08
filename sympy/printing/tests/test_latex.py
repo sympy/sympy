@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy import MatAdd, MatMul, Array
 from sympy.algebras.quaternion import Quaternion
 from sympy.calculus.accumulationbounds import AccumBounds

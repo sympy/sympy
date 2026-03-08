@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.numbers import Rational
 from sympy.functions.combinatorial.numbers import fibonacci
 from sympy.core import S, symbols

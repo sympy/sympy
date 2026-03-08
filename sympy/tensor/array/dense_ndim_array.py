@@ -1,5 +1,5 @@
+from __future__ import annotations
 import functools
-from typing import List
 
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
@@ -12,7 +12,7 @@ from sympy.utilities.iterables import flatten
 
 class DenseNDimArray(NDimArray):
 
-    _array: List[Basic]
+    _array: list[Basic]
 
     def __new__(self, *args, **kwargs):
         return ImmutableDenseNDimArray(*args, **kwargs)

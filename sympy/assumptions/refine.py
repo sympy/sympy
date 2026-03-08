@@ -481,6 +481,34 @@ def refine_sin_cos(expr, assumptions):
         return ((-1)**((k + 1) / 2)) * sin(rem)
 
 
+def refine_Heaviside(expr, assumptions):
+    """
+    Handler for the Heaviside step function.
+
+    Examples
+    ========
+
+    >>> from sympy.assumptions.refine import refine_Heaviside
+    >>> from sympy import Q, Heaviside
+    >>> from sympy.abc import x
+    >>> refine_Heaviside(Heaviside(x), Q.positive(x))
+    1
+    >>> refine_Heaviside(Heaviside(x), Q.negative(x))
+    0
+    >>> refine_Heaviside(Heaviside(x), Q.zero(x))
+    1/2
+
+    """
+    arg, H0 = expr.args
+    if ask(Q.positive(arg), assumptions):
+        return S.One
+    if ask(Q.negative(arg), assumptions):
+        return S.Zero
+    if ask(Q.zero(arg), assumptions):
+        return H0
+    return expr
+
+
 def refine_floor_ceiling(expr, assumptions):
     """
     Handler for the floor and ceiling functions
@@ -638,6 +666,7 @@ handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'MatrixElement': refine_matrixelement,
     'cos': refine_sin_cos,
     'sin': refine_sin_cos,
+    'Heaviside': refine_Heaviside,
     'floor': refine_floor_ceiling,
     'ceiling' : refine_floor_ceiling,
     'conjugate': refine_conjugate,

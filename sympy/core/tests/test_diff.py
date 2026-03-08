@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.concrete.summations import Sum
 from sympy.core.expr import Expr
 from sympy.core.function import (Derivative, Function, diff, Subs)

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.combinatorics import Permutation
 from sympy.combinatorics.util import _distribute_gens_by_base
 

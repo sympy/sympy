@@ -1,3 +1,4 @@
+from __future__ import annotations
 from bisect import bisect, bisect_left
 
 from sympy.functions.combinatorial.numbers import mobius, totient

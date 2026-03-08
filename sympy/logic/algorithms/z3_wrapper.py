@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.printing.smtlib import smtlib_code
 from sympy.assumptions.assume import AppliedPredicate
 from sympy.assumptions.cnf import EncodedCNF

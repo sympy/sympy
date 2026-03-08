@@ -60,6 +60,7 @@ Here is a simple 1-D system: minimize `x` given that ``x >= 1``.
     sympy.solvers.simplex.InfeasibleLPError:
     Inconsistent/False constraint
 """
+from __future__ import annotations
 
 from sympy.core import sympify
 from sympy.core.exprtools import factor_terms

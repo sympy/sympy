@@ -1,4 +1,5 @@
 """Implementation of RootOf class and related tools. """
+from __future__ import annotations
 
 
 

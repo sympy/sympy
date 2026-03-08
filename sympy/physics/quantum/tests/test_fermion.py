@@ -1,3 +1,4 @@
+from __future__ import annotations
 from pytest import raises
 
 import sympy
