@@ -2107,7 +2107,7 @@ class PermutationGroup(Basic):
         d_gr = gr.degree
         if self.is_trivial and (d_self == d_gr or not strict):
             return True
-        if self._is_abelian:
+        if gr._is_abelian:
             return True
         new_self = self.copy()
         if not strict and d_self != d_gr:
