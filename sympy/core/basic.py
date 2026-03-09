@@ -580,24 +580,27 @@ class Basic(Printable):
         o = _sympify(other)
         o = o.as_dummy()
 
-        dummy_symbols = [i for i in s.free_symbols if i.is_Dummy]
+        dummy_symbols = [i for i in s.free_symbols | set(getattr(s, 'variables', [])) if i.is_Dummy]
 
-        if len(dummy_symbols) == 1:
-            dummy = dummy_symbols.pop()
+        if len(dummy_symbols) > 0:
+            dummy = dummy_symbols
         else:
             return s == o
 
         if symbol is None:
-            symbols = o.free_symbols
+            symbols = list(o.free_symbols) + list(getattr(o, 'variables', []))
 
-            if len(symbols) == 1:
-                symbol = symbols.pop()
+            if len(symbols) > 0:
+                symbol = symbols
             else:
                 return s == o
 
-        tmp = dummy.__class__()
+        tmp = dummy[0].__class__()
 
-        return s.xreplace({dummy: tmp}) == o.xreplace({symbol: tmp})
+        if not isinstance(symbol, list):
+            symbol = [symbol]
+
+        return s.xreplace(dict.fromkeys(dummy, tmp)) == o.xreplace(dict.fromkeys(symbol, tmp))
 
     @overload
     def atoms(self) -> set[Basic]: ...
