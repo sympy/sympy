@@ -504,13 +504,6 @@ def refine_tan_cot(expr, assumptions):
     """
     Handler for the tan and cot functions.
 
-    Explanation
-    ===========
-
-    Simplifies ``tan`` and ``cot`` by removing integer multiples of ``pi``
-    from their arguments (using the period-``pi`` identity) and converting
-    between ``tan`` and ``cot`` when an odd multiple of ``pi/2`` is present.
-
     Examples
     ========
 
