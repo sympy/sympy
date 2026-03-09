@@ -381,6 +381,33 @@ def refine_sign(expr, assumptions):
     return expr
 
 
+def refine_floor(expr, assumptions):
+    """
+    Handler for floor.
+
+    If the argument is known to be an integer,
+    floor(x) simplifies to x.
+    """
+    arg = expr.args[0]
+    if ask(Q.integer(arg), assumptions):
+        return arg
+    return expr
+
+
+def refine_ceiling(expr, assumptions):
+    """
+    Handler for ceiling.
+
+    If the argument is known to be an integer,
+    ceiling(x) simplifies to x.
+    """
+    arg = expr.args[0]
+    if ask(Q.integer(arg), assumptions):
+        return arg
+    return expr
+
+
+
 def refine_matrixelement(expr, assumptions):
     """
     Handler for symmetric part.
@@ -561,5 +588,5 @@ handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'sin': refine_sin_cos,
     'Heaviside': refine_Heaviside,
     'floor': refine_floor_ceiling,
-    'ceiling' : refine_floor_ceiling,
+    'ceiling': refine_floor_ceiling,
 }
