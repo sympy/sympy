@@ -109,8 +109,8 @@ class no_attrs_in_subclass:
     False
 
     """
-    cls: type
-    f: Any
+    cls: type[C]
+    f: F
 
     def __init__(self, cls: type, f: Any) -> None:
         self.cls = cls
