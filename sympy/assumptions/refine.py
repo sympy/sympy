@@ -391,7 +391,7 @@ def refine_floor(expr, assumptions):
     arg = expr.args[0]
     if ask(Q.integer(arg), assumptions):
         return arg
-    return expr
+    return None
 
 
 def refine_ceiling(expr, assumptions):
@@ -404,7 +404,7 @@ def refine_ceiling(expr, assumptions):
     arg = expr.args[0]
     if ask(Q.integer(arg), assumptions):
         return arg
-    return expr
+    return None
 
 
 
