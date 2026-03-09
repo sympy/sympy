@@ -91,30 +91,8 @@ def xthreaded(func: F) -> F:
 
 
 class no_attrs_in_subclass(Generic[C]):
-    """Don't 'inherit' certain attributes from a base class
-
-    >>> from sympy.utilities.decorator import no_attrs_in_subclass
-
-    >>> class A(object):
-    ...     x = 'test'
-
-    >>> A.x = no_attrs_in_subclass(A, A.x)
-
-    >>> class B(A):
-    ...     pass
-
-    >>> hasattr(A, 'x')
-    True
-    >>> hasattr(B, 'x')
-    False
-
-    """
     cls: type[C]
-<<<<<<< HEAD
     f: Any
-=======
-    f: F
->>>>>>> 0495a2c96c90648fe8512af53f083abea6cc81b8
 
     def __init__(self, cls: type, f: F) -> None:
         self.cls = cls
