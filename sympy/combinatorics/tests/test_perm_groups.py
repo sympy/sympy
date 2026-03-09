@@ -338,6 +338,14 @@ def test_is_normal():
     assert not H_n2_2.is_normal(H)
 
 
+def test_is_normal_after_is_abelian():
+    G = SymmetricGroup(3)#PermutationGroup(Permutation([1, 2, 0]), Permutation([1, 0, 2]))
+    H = PermutationGroup(Permutation([1, 0, 2]))
+
+    assert H.is_abelian is True
+    assert H.is_normal(G) is False
+
+
 def test_eq():
     a = [[1, 2, 0, 3, 4, 5], [1, 0, 2, 3, 4, 5], [2, 1, 0, 3, 4, 5], [
         1, 2, 0, 3, 4, 5]]
