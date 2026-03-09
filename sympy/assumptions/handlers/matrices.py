@@ -5,7 +5,8 @@ Square, Symmetric, Invertible etc.
 from __future__ import annotations
 
 from sympy.logic.boolalg import conjuncts
-from sympy.assumptions import Q, ask
+from sympy.assumptions import Q
+from sympy.assumptions.assume import recursive_ask
 from sympy.assumptions.handlers import test_closed_group
 from sympy.matrices import MatrixBase
 from sympy.matrices.expressions import (BlockMatrix, BlockDiagMatrix, Determinant,
@@ -43,33 +44,33 @@ def _(expr, assumptions):
 @SymmetricPredicate.register(MatMul)
 def _(expr, assumptions):
     factor, mmul = expr.as_coeff_mmul()
-    if all(ask(Q.symmetric(arg), assumptions) for arg in mmul.args):
+    if all(recursive_ask(Q.symmetric(arg), assumptions) for arg in mmul.args):
         return True
     # TODO: implement sathandlers system for the matrices.
     # Now it duplicates the general fact: Implies(Q.diagonal, Q.symmetric).
-    if ask(Q.diagonal(expr), assumptions):
+    if recursive_ask(Q.diagonal(expr), assumptions):
         return True
     if len(mmul.args) >= 2 and mmul.args[0] == mmul.args[-1].T:
         if len(mmul.args) == 2:
             return True
-        return ask(Q.symmetric(MatMul(*mmul.args[1:-1])), assumptions)
+        return recursive_ask(Q.symmetric(MatMul(*mmul.args[1:-1])), assumptions)
 
 @SymmetricPredicate.register(MatPow)
 def _(expr, assumptions):
     # only for integer powers
     base, exp = expr.args
-    int_exp = ask(Q.integer(exp), assumptions)
+    int_exp = recursive_ask(Q.integer(exp), assumptions)
     if not int_exp:
         return None
-    non_negative = ask(~Q.negative(exp), assumptions)
+    non_negative = recursive_ask(~Q.negative(exp), assumptions)
     if (non_negative or non_negative == False
-                        and ask(Q.invertible(base), assumptions)):
-        return ask(Q.symmetric(base), assumptions)
+                        and recursive_ask(Q.invertible(base), assumptions)):
+        return recursive_ask(Q.symmetric(base), assumptions)
     return None
 
 @SymmetricPredicate.register(MatAdd)
 def _(expr, assumptions):
-    return all(ask(Q.symmetric(arg), assumptions) for arg in expr.args)
+    return all(recursive_ask(Q.symmetric(arg), assumptions) for arg in expr.args)
 
 @SymmetricPredicate.register(MatrixSymbol)
 def _(expr, assumptions):
@@ -77,29 +78,29 @@ def _(expr, assumptions):
         return False
     # TODO: implement sathandlers system for the matrices.
     # Now it duplicates the general fact: Implies(Q.diagonal, Q.symmetric).
-    if ask(Q.diagonal(expr), assumptions):
+    if recursive_ask(Q.diagonal(expr), assumptions):
         return True
     if Q.symmetric(expr) in conjuncts(assumptions):
         return True
 
 @SymmetricPredicate.register_many(OneMatrix, ZeroMatrix)
 def _(expr, assumptions):
-    return ask(Q.square(expr), assumptions)
+    return recursive_ask(Q.square(expr), assumptions)
 
 @SymmetricPredicate.register_many(Inverse, Transpose)
 def _(expr, assumptions):
-    return ask(Q.symmetric(expr.arg), assumptions)
+    return recursive_ask(Q.symmetric(expr.arg), assumptions)
 
 @SymmetricPredicate.register(MatrixSlice)
 def _(expr, assumptions):
     # TODO: implement sathandlers system for the matrices.
     # Now it duplicates the general fact: Implies(Q.diagonal, Q.symmetric).
-    if ask(Q.diagonal(expr), assumptions):
+    if recursive_ask(Q.diagonal(expr), assumptions):
         return True
     if not expr.on_diag:
         return None
     else:
-        return ask(Q.symmetric(expr.parent), assumptions)
+        return recursive_ask(Q.symmetric(expr.parent), assumptions)
 
 @SymmetricPredicate.register(Identity)
 def _(expr, assumptions):
@@ -111,9 +112,9 @@ def _(expr, assumptions):
 @InvertiblePredicate.register(MatMul)
 def _(expr, assumptions):
     factor, mmul = expr.as_coeff_mmul()
-    if all(ask(Q.invertible(arg), assumptions) for arg in mmul.args):
+    if all(recursive_ask(Q.invertible(arg), assumptions) for arg in mmul.args):
         return True
-    if any(ask(Q.invertible(arg), assumptions) is False
+    if any(recursive_ask(Q.invertible(arg), assumptions) is False
             for arg in mmul.args):
         return False
 
@@ -121,11 +122,11 @@ def _(expr, assumptions):
 def _(expr, assumptions):
     # only for integer powers
     base, exp = expr.args
-    int_exp = ask(Q.integer(exp), assumptions)
+    int_exp = recursive_ask(Q.integer(exp), assumptions)
     if not int_exp:
         return None
     if exp.is_negative == False:
-        return ask(Q.invertible(base), assumptions)
+        return recursive_ask(Q.invertible(base), assumptions)
     return None
 
 @InvertiblePredicate.register(MatAdd)
@@ -153,14 +154,14 @@ def _(expr, assumptions):
 
 @InvertiblePredicate.register(Transpose)
 def _(expr, assumptions):
-    return ask(Q.invertible(expr.arg), assumptions)
+    return recursive_ask(Q.invertible(expr.arg), assumptions)
 
 @InvertiblePredicate.register(MatrixSlice)
 def _(expr, assumptions):
     if not expr.on_diag:
         return None
     else:
-        return ask(Q.invertible(expr.parent), assumptions)
+        return recursive_ask(Q.invertible(expr.parent), assumptions)
 
 @InvertiblePredicate.register(MatrixBase)
 def _(expr, assumptions):
@@ -179,24 +180,24 @@ def _(expr, assumptions):
     if not expr.is_square:
         return False
     if expr.blockshape == (1, 1):
-        return ask(Q.invertible(expr.blocks[0, 0]), assumptions)
+        return recursive_ask(Q.invertible(expr.blocks[0, 0]), assumptions)
     expr = reblock_2x2(expr)
     if expr.blockshape == (2, 2):
         [[A, B], [C, D]] = expr.blocks.tolist()
-        if ask(Q.invertible(A), assumptions) == True:
-            invertible = ask(Q.invertible(D - C * A.I * B), assumptions)
+        if recursive_ask(Q.invertible(A), assumptions) == True:
+            invertible = recursive_ask(Q.invertible(D - C * A.I * B), assumptions)
             if invertible is not None:
                 return invertible
-        if ask(Q.invertible(B), assumptions) == True:
-            invertible = ask(Q.invertible(C - D * B.I * A), assumptions)
+        if recursive_ask(Q.invertible(B), assumptions) == True:
+            invertible = recursive_ask(Q.invertible(C - D * B.I * A), assumptions)
             if invertible is not None:
                 return invertible
-        if ask(Q.invertible(C), assumptions) == True:
-            invertible = ask(Q.invertible(B - A * C.I * D), assumptions)
+        if recursive_ask(Q.invertible(C), assumptions) == True:
+            invertible = recursive_ask(Q.invertible(B - A * C.I * D), assumptions)
             if invertible is not None:
                 return invertible
-        if ask(Q.invertible(D), assumptions) == True:
-            invertible = ask(Q.invertible(A - B * D.I * C), assumptions)
+        if recursive_ask(Q.invertible(D), assumptions) == True:
+            invertible = recursive_ask(Q.invertible(A - B * D.I * C), assumptions)
             if invertible is not None:
                 return invertible
     return None
@@ -205,7 +206,7 @@ def _(expr, assumptions):
 def _(expr, assumptions):
     if expr.rowblocksizes != expr.colblocksizes:
         return None
-    return fuzzy_and([ask(Q.invertible(a), assumptions) for a in expr.diag])
+    return fuzzy_and([recursive_ask(Q.invertible(a), assumptions) for a in expr.diag])
 
 
 # OrthogonalPredicate
@@ -213,10 +214,10 @@ def _(expr, assumptions):
 @OrthogonalPredicate.register(MatMul)
 def _(expr, assumptions):
     factor, mmul = expr.as_coeff_mmul()
-    if (all(ask(Q.orthogonal(arg), assumptions) for arg in mmul.args) and
+    if (all(recursive_ask(Q.orthogonal(arg), assumptions) for arg in mmul.args) and
             factor == 1):
         return True
-    if any(ask(Q.invertible(arg), assumptions) is False
+    if any(recursive_ask(Q.invertible(arg), assumptions) is False
             for arg in mmul.args):
         return False
 
@@ -224,21 +225,21 @@ def _(expr, assumptions):
 def _(expr, assumptions):
     # only for integer powers
     base, exp = expr.args
-    int_exp = ask(Q.integer(exp), assumptions)
+    int_exp = recursive_ask(Q.integer(exp), assumptions)
     if int_exp:
-        return ask(Q.orthogonal(base), assumptions)
+        return recursive_ask(Q.orthogonal(base), assumptions)
     return None
 
 @OrthogonalPredicate.register(MatAdd)
 def _(expr, assumptions):
     if (len(expr.args) == 1 and
-            ask(Q.orthogonal(expr.args[0]), assumptions)):
+            recursive_ask(Q.orthogonal(expr.args[0]), assumptions)):
         return True
 
 @OrthogonalPredicate.register(MatrixSymbol)
 def _(expr, assumptions):
     if (not expr.is_square or
-                    ask(Q.invertible(expr), assumptions) is False):
+                    recursive_ask(Q.invertible(expr), assumptions) is False):
         return False
     if Q.orthogonal(expr) in conjuncts(assumptions):
         return True
@@ -253,14 +254,14 @@ def _(expr, assumptions):
 
 @OrthogonalPredicate.register_many(Inverse, Transpose)
 def _(expr, assumptions):
-    return ask(Q.orthogonal(expr.arg), assumptions)
+    return recursive_ask(Q.orthogonal(expr.arg), assumptions)
 
 @OrthogonalPredicate.register(MatrixSlice)
 def _(expr, assumptions):
     if not expr.on_diag:
         return None
     else:
-        return ask(Q.orthogonal(expr.parent), assumptions)
+        return recursive_ask(Q.orthogonal(expr.parent), assumptions)
 
 @OrthogonalPredicate.register(Factorization)
 def _(expr, assumptions):
@@ -272,10 +273,10 @@ def _(expr, assumptions):
 @UnitaryPredicate.register(MatMul)
 def _(expr, assumptions):
     factor, mmul = expr.as_coeff_mmul()
-    if (all(ask(Q.unitary(arg), assumptions) for arg in mmul.args) and
+    if (all(recursive_ask(Q.unitary(arg), assumptions) for arg in mmul.args) and
             abs(factor) == 1):
         return True
-    if any(ask(Q.invertible(arg), assumptions) is False
+    if any(recursive_ask(Q.invertible(arg), assumptions) is False
             for arg in mmul.args):
         return False
 
@@ -283,29 +284,29 @@ def _(expr, assumptions):
 def _(expr, assumptions):
     # only for integer powers
     base, exp = expr.args
-    int_exp = ask(Q.integer(exp), assumptions)
+    int_exp = recursive_ask(Q.integer(exp), assumptions)
     if int_exp:
-        return ask(Q.unitary(base), assumptions)
+        return recursive_ask(Q.unitary(base), assumptions)
     return None
 
 @UnitaryPredicate.register(MatrixSymbol)
 def _(expr, assumptions):
     if (not expr.is_square or
-                    ask(Q.invertible(expr), assumptions) is False):
+                    recursive_ask(Q.invertible(expr), assumptions) is False):
         return False
     if Q.unitary(expr) in conjuncts(assumptions):
         return True
 
 @UnitaryPredicate.register_many(Inverse, Transpose)
 def _(expr, assumptions):
-    return ask(Q.unitary(expr.arg), assumptions)
+    return recursive_ask(Q.unitary(expr.arg), assumptions)
 
 @UnitaryPredicate.register(MatrixSlice)
 def _(expr, assumptions):
     if not expr.on_diag:
         return None
     else:
-        return ask(Q.unitary(expr.parent), assumptions)
+        return recursive_ask(Q.unitary(expr.parent), assumptions)
 
 @UnitaryPredicate.register_many(DFT, Identity)
 def _(expr, assumptions):
@@ -324,16 +325,16 @@ def _(expr, assumptions):
 
 @FullRankPredicate.register(MatMul)
 def _(expr, assumptions):
-    if all(ask(Q.fullrank(arg), assumptions) for arg in expr.args):
+    if all(recursive_ask(Q.fullrank(arg), assumptions) for arg in expr.args):
         return True
 
 @FullRankPredicate.register(MatPow)
 def _(expr, assumptions):
     # only for integer powers
     base, exp = expr.args
-    int_exp = ask(Q.integer(exp), assumptions)
-    if int_exp and ask(~Q.negative(exp), assumptions):
-        return ask(Q.fullrank(base), assumptions)
+    int_exp = recursive_ask(Q.integer(exp), assumptions)
+    if int_exp and recursive_ask(~Q.negative(exp), assumptions):
+        return recursive_ask(Q.fullrank(base), assumptions)
     return None
 
 @FullRankPredicate.register(Identity)
@@ -350,11 +351,11 @@ def _(expr, assumptions):
 
 @FullRankPredicate.register_many(Inverse, Transpose)
 def _(expr, assumptions):
-    return ask(Q.fullrank(expr.arg), assumptions)
+    return recursive_ask(Q.fullrank(expr.arg), assumptions)
 
 @FullRankPredicate.register(MatrixSlice)
 def _(expr, assumptions):
-    if ask(Q.orthogonal(expr.parent), assumptions):
+    if recursive_ask(Q.orthogonal(expr.parent), assumptions):
         return True
 
 
@@ -363,24 +364,24 @@ def _(expr, assumptions):
 @PositiveDefinitePredicate.register(MatMul)
 def _(expr, assumptions):
     factor, mmul = expr.as_coeff_mmul()
-    if (all(ask(Q.positive_definite(arg), assumptions)
+    if (all(recursive_ask(Q.positive_definite(arg), assumptions)
             for arg in mmul.args) and factor > 0):
         return True
     if (len(mmul.args) >= 2
             and mmul.args[0] == mmul.args[-1].T
-            and ask(Q.fullrank(mmul.args[0]), assumptions)):
-        return ask(Q.positive_definite(
+            and recursive_ask(Q.fullrank(mmul.args[0]), assumptions)):
+        return recursive_ask(Q.positive_definite(
             MatMul(*mmul.args[1:-1])), assumptions)
 
 @PositiveDefinitePredicate.register(MatPow)
 def _(expr, assumptions):
     # a power of a positive definite matrix is positive definite
-    if ask(Q.positive_definite(expr.args[0]), assumptions):
+    if recursive_ask(Q.positive_definite(expr.args[0]), assumptions):
         return True
 
 @PositiveDefinitePredicate.register(MatAdd)
 def _(expr, assumptions):
-    if all(ask(Q.positive_definite(arg), assumptions)
+    if all(recursive_ask(Q.positive_definite(arg), assumptions)
             for arg in expr.args):
         return True
 
@@ -405,14 +406,14 @@ def _(expr, assumptions):
 
 @PositiveDefinitePredicate.register_many(Inverse, Transpose)
 def _(expr, assumptions):
-    return ask(Q.positive_definite(expr.arg), assumptions)
+    return recursive_ask(Q.positive_definite(expr.arg), assumptions)
 
 @PositiveDefinitePredicate.register(MatrixSlice)
 def _(expr, assumptions):
     if not expr.on_diag:
         return None
     else:
-        return ask(Q.positive_definite(expr.parent), assumptions)
+        return recursive_ask(Q.positive_definite(expr.parent), assumptions)
 
 
 # UpperTriangularPredicate
@@ -420,25 +421,25 @@ def _(expr, assumptions):
 @UpperTriangularPredicate.register(MatMul)
 def _(expr, assumptions):
     factor, matrices = expr.as_coeff_matrices()
-    if all(ask(Q.upper_triangular(m), assumptions) for m in matrices):
+    if all(recursive_ask(Q.upper_triangular(m), assumptions) for m in matrices):
         return True
 
 @UpperTriangularPredicate.register(MatAdd)
 def _(expr, assumptions):
-    if all(ask(Q.upper_triangular(arg), assumptions) for arg in expr.args):
+    if all(recursive_ask(Q.upper_triangular(arg), assumptions) for arg in expr.args):
         return True
 
 @UpperTriangularPredicate.register(MatPow)
 def _(expr, assumptions):
     # only for integer powers
     base, exp = expr.args
-    int_exp = ask(Q.integer(exp), assumptions)
+    int_exp = recursive_ask(Q.integer(exp), assumptions)
     if not int_exp:
         return None
-    non_negative = ask(~Q.negative(exp), assumptions)
+    non_negative = recursive_ask(~Q.negative(exp), assumptions)
     if (non_negative or non_negative == False
-                        and ask(Q.invertible(base), assumptions)):
-        return ask(Q.upper_triangular(base), assumptions)
+                        and recursive_ask(Q.invertible(base), assumptions)):
+        return recursive_ask(Q.upper_triangular(base), assumptions)
     return None
 
 @UpperTriangularPredicate.register(MatrixSymbol)
@@ -456,18 +457,18 @@ def _(expr, assumptions):
 
 @UpperTriangularPredicate.register(Transpose)
 def _(expr, assumptions):
-    return ask(Q.lower_triangular(expr.arg), assumptions)
+    return recursive_ask(Q.lower_triangular(expr.arg), assumptions)
 
 @UpperTriangularPredicate.register(Inverse)
 def _(expr, assumptions):
-    return ask(Q.upper_triangular(expr.arg), assumptions)
+    return recursive_ask(Q.upper_triangular(expr.arg), assumptions)
 
 @UpperTriangularPredicate.register(MatrixSlice)
 def _(expr, assumptions):
     if not expr.on_diag:
         return None
     else:
-        return ask(Q.upper_triangular(expr.parent), assumptions)
+        return recursive_ask(Q.upper_triangular(expr.parent), assumptions)
 
 @UpperTriangularPredicate.register(Factorization)
 def _(expr, assumptions):
@@ -478,25 +479,25 @@ def _(expr, assumptions):
 @LowerTriangularPredicate.register(MatMul)
 def _(expr, assumptions):
     factor, matrices = expr.as_coeff_matrices()
-    if all(ask(Q.lower_triangular(m), assumptions) for m in matrices):
+    if all(recursive_ask(Q.lower_triangular(m), assumptions) for m in matrices):
         return True
 
 @LowerTriangularPredicate.register(MatAdd)
 def _(expr, assumptions):
-    if all(ask(Q.lower_triangular(arg), assumptions) for arg in expr.args):
+    if all(recursive_ask(Q.lower_triangular(arg), assumptions) for arg in expr.args):
         return True
 
 @LowerTriangularPredicate.register(MatPow)
 def _(expr, assumptions):
     # only for integer powers
     base, exp = expr.args
-    int_exp = ask(Q.integer(exp), assumptions)
+    int_exp = recursive_ask(Q.integer(exp), assumptions)
     if not int_exp:
         return None
-    non_negative = ask(~Q.negative(exp), assumptions)
+    non_negative = recursive_ask(~Q.negative(exp), assumptions)
     if (non_negative or non_negative == False
-                        and ask(Q.invertible(base), assumptions)):
-        return ask(Q.lower_triangular(base), assumptions)
+                        and recursive_ask(Q.invertible(base), assumptions)):
+        return recursive_ask(Q.lower_triangular(base), assumptions)
     return None
 
 @LowerTriangularPredicate.register(MatrixSymbol)
@@ -514,18 +515,18 @@ def _(expr, assumptions):
 
 @LowerTriangularPredicate.register(Transpose)
 def _(expr, assumptions):
-    return ask(Q.upper_triangular(expr.arg), assumptions)
+    return recursive_ask(Q.upper_triangular(expr.arg), assumptions)
 
 @LowerTriangularPredicate.register(Inverse)
 def _(expr, assumptions):
-    return ask(Q.lower_triangular(expr.arg), assumptions)
+    return recursive_ask(Q.lower_triangular(expr.arg), assumptions)
 
 @LowerTriangularPredicate.register(MatrixSlice)
 def _(expr, assumptions):
     if not expr.on_diag:
         return None
     else:
-        return ask(Q.lower_triangular(expr.parent), assumptions)
+        return recursive_ask(Q.lower_triangular(expr.parent), assumptions)
 
 @LowerTriangularPredicate.register(Factorization)
 def _(expr, assumptions):
@@ -542,25 +543,25 @@ def _(expr, assumptions):
     if _is_empty_or_1x1(expr):
         return True
     factor, matrices = expr.as_coeff_matrices()
-    if all(ask(Q.diagonal(m), assumptions) for m in matrices):
+    if all(recursive_ask(Q.diagonal(m), assumptions) for m in matrices):
         return True
 
 @DiagonalPredicate.register(MatPow)
 def _(expr, assumptions):
     # only for integer powers
     base, exp = expr.args
-    int_exp = ask(Q.integer(exp), assumptions)
+    int_exp = recursive_ask(Q.integer(exp), assumptions)
     if not int_exp:
         return None
-    non_negative = ask(~Q.negative(exp), assumptions)
+    non_negative = recursive_ask(~Q.negative(exp), assumptions)
     if (non_negative or non_negative == False
-                        and ask(Q.invertible(base), assumptions)):
-        return ask(Q.diagonal(base), assumptions)
+                        and recursive_ask(Q.invertible(base), assumptions)):
+        return recursive_ask(Q.diagonal(base), assumptions)
     return None
 
 @DiagonalPredicate.register(MatAdd)
 def _(expr, assumptions):
-    if all(ask(Q.diagonal(arg), assumptions) for arg in expr.args):
+    if all(recursive_ask(Q.diagonal(arg), assumptions) for arg in expr.args):
         return True
 
 @DiagonalPredicate.register(MatrixSymbol)
@@ -576,7 +577,7 @@ def _(expr, assumptions):
 
 @DiagonalPredicate.register_many(Inverse, Transpose)
 def _(expr, assumptions):
-    return ask(Q.diagonal(expr.arg), assumptions)
+    return recursive_ask(Q.diagonal(expr.arg), assumptions)
 
 @DiagonalPredicate.register(MatrixSlice)
 def _(expr, assumptions):
@@ -585,7 +586,7 @@ def _(expr, assumptions):
     if not expr.on_diag:
         return None
     else:
-        return ask(Q.diagonal(expr.parent), assumptions)
+        return recursive_ask(Q.diagonal(expr.parent), assumptions)
 
 @DiagonalPredicate.register_many(DiagonalMatrix, DiagMatrix, Identity, ZeroMatrix)
 def _(expr, assumptions):
@@ -600,11 +601,11 @@ def _(expr, assumptions):
 
 def BM_elements(predicate, expr, assumptions):
     """ Block Matrix elements. """
-    return all(ask(predicate(b), assumptions) for b in expr.blocks)
+    return all(recursive_ask(predicate(b), assumptions) for b in expr.blocks)
 
 def MS_elements(predicate, expr, assumptions):
     """ Matrix Slice elements. """
-    return ask(predicate(expr.parent), assumptions)
+    return recursive_ask(predicate(expr.parent), assumptions)
 
 def MatMul_elements(matrix_predicate, scalar_predicate, expr, assumptions):
     d = sift(expr.args, lambda x: isinstance(x, MatrixExpr))
@@ -623,11 +624,11 @@ def _(expr, assumptions):
 def _(expr, assumptions):
     # only for integer powers
     base, exp = expr.args
-    int_exp = ask(Q.integer(exp), assumptions)
+    int_exp = recursive_ask(Q.integer(exp), assumptions)
     if not int_exp:
         return None
     if exp.is_negative == False:
-        return ask(Q.integer_elements(base), assumptions)
+        return recursive_ask(Q.integer_elements(base), assumptions)
     return None
 
 @IntegerElementsPredicate.register_many(Identity, OneMatrix, ZeroMatrix)
@@ -658,13 +659,13 @@ def _(expr, assumptions):
 def _(expr, assumptions):
     # only for integer powers
     base, exp = expr.args
-    int_exp = ask(Q.integer(exp), assumptions)
+    int_exp = recursive_ask(Q.integer(exp), assumptions)
     if not int_exp:
         return None
-    non_negative = ask(~Q.negative(exp), assumptions)
+    non_negative = recursive_ask(~Q.negative(exp), assumptions)
     if (non_negative or non_negative == False
-                        and ask(Q.invertible(base), assumptions)):
-        return ask(Q.real_elements(base), assumptions)
+                        and recursive_ask(Q.invertible(base), assumptions)):
+        return recursive_ask(Q.real_elements(base), assumptions)
     return None
 
 @RealElementsPredicate.register(MatMul)
@@ -691,13 +692,13 @@ def _(expr, assumptions):
 def _(expr, assumptions):
     # only for integer powers
     base, exp = expr.args
-    int_exp = ask(Q.integer(exp), assumptions)
+    int_exp = recursive_ask(Q.integer(exp), assumptions)
     if not int_exp:
         return None
-    non_negative = ask(~Q.negative(exp), assumptions)
+    non_negative = recursive_ask(~Q.negative(exp), assumptions)
     if (non_negative or non_negative == False
-                        and ask(Q.invertible(base), assumptions)):
-        return ask(Q.complex_elements(base), assumptions)
+                        and recursive_ask(Q.invertible(base), assumptions)):
+        return recursive_ask(Q.complex_elements(base), assumptions)
     return None
 
 @ComplexElementsPredicate.register(MatMul)

@@ -3,7 +3,8 @@ Handlers for keys related to number theory: prime, even, odd, etc.
 """
 from __future__ import annotations
 
-from sympy.assumptions import Q, ask
+from sympy.assumptions import Q
+from sympy.assumptions.assume import recursive_ask
 from sympy.core import Add, Basic, Expr, Float, Mul, Pow, S
 from sympy.core.numbers import (ImaginaryUnit, Infinity, Integer, NaN,
     NegativeInfinity, NumberSymbol, Rational, int_valued)
@@ -49,7 +50,7 @@ def _(expr, assumptions):
     if expr.is_number:
         return _PrimePredicate_number(expr, assumptions)
     for arg in expr.args:
-        if not ask(Q.integer(arg), assumptions):
+        if not recursive_ask(Q.integer(arg), assumptions):
             return None
     for arg in expr.args:
         if arg.is_number and arg.is_composite:
@@ -62,12 +63,12 @@ def _(expr, assumptions):
     """
     if expr.is_number:
         return _PrimePredicate_number(expr, assumptions)
-    if ask(Q.integer(expr.exp), assumptions) and \
-            ask(Q.integer(expr.base), assumptions):
-        prime_base = ask(Q.prime(expr.base), assumptions)
+    if recursive_ask(Q.integer(expr.exp), assumptions) and \
+            recursive_ask(Q.integer(expr.base), assumptions):
+        prime_base = recursive_ask(Q.prime(expr.base), assumptions)
         if prime_base is False:
             return False
-        is_exp_one = ask(Q.eq(expr.exp, 1), assumptions)
+        is_exp_one = recursive_ask(Q.eq(expr.exp, 1), assumptions)
         if is_exp_one is False:
             return False
         if prime_base is True and is_exp_one is True:
@@ -105,16 +106,16 @@ def _(expr, assumptions):
 
 @CompositePredicate.register(Basic)
 def _(expr, assumptions):
-    _positive = ask(Q.positive(expr), assumptions)
+    _positive = recursive_ask(Q.positive(expr), assumptions)
     if _positive:
-        _integer = ask(Q.integer(expr), assumptions)
+        _integer = recursive_ask(Q.integer(expr), assumptions)
         if _integer:
-            _prime = ask(Q.prime(expr), assumptions)
+            _prime = recursive_ask(Q.prime(expr), assumptions)
             if _prime is None:
                 return
             # Positive integer which is not prime is not
             # necessarily composite
-            _is_one = ask(Q.eq(expr, 1), assumptions)
+            _is_one = recursive_ask(Q.eq(expr, 1), assumptions)
             if _is_one:
                 return False
             if _is_one is None:
@@ -170,15 +171,15 @@ def _(expr, assumptions):
     even, odd, irrational, acc = False, 0, False, 1
     for arg in expr.args:
         # check for all integers and at least one even
-        if ask(Q.integer(arg), assumptions):
-            if ask(Q.even(arg), assumptions):
+        if recursive_ask(Q.integer(arg), assumptions):
+            if recursive_ask(Q.even(arg), assumptions):
                 even = True
-            elif ask(Q.odd(arg), assumptions):
+            elif recursive_ask(Q.odd(arg), assumptions):
                 odd += 1
             elif not even and acc != 1:
-                if ask(Q.odd(acc + arg), assumptions):
+                if recursive_ask(Q.odd(acc + arg), assumptions):
                     even = True
-        elif ask(Q.irrational(arg), assumptions):
+        elif recursive_ask(Q.irrational(arg), assumptions):
             # one irrational makes the result False
             # two makes it undefined
             if irrational:
@@ -207,9 +208,9 @@ def _(expr, assumptions):
         return _EvenPredicate_number(expr, assumptions)
     _result = True
     for arg in expr.args:
-        if ask(Q.even(arg), assumptions):
+        if recursive_ask(Q.even(arg), assumptions):
             pass
-        elif ask(Q.odd(arg), assumptions):
+        elif recursive_ask(Q.odd(arg), assumptions):
             _result = not _result
         else:
             break
@@ -220,10 +221,10 @@ def _(expr, assumptions):
 def _(expr, assumptions):
     if expr.is_number:
         return _EvenPredicate_number(expr, assumptions)
-    if ask(Q.integer(expr.exp), assumptions):
-        if ask(Q.positive(expr.exp), assumptions):
-            return ask(Q.even(expr.base), assumptions)
-        elif ask(~Q.negative(expr.exp) & Q.odd(expr.base), assumptions):
+    if recursive_ask(Q.integer(expr.exp), assumptions):
+        if recursive_ask(Q.positive(expr.exp), assumptions):
+            return recursive_ask(Q.even(expr.base), assumptions)
+        elif recursive_ask(~Q.negative(expr.exp) & Q.odd(expr.base), assumptions):
             return False
         elif expr.base is S.NegativeOne:
             return False
@@ -242,17 +243,17 @@ def _(expr, assumptions):
 
 @EvenPredicate.register(Abs)
 def _(expr, assumptions):
-    if ask(Q.real(expr.args[0]), assumptions):
-        return ask(Q.even(expr.args[0]), assumptions)
+    if recursive_ask(Q.real(expr.args[0]), assumptions):
+        return recursive_ask(Q.even(expr.args[0]), assumptions)
 
 @EvenPredicate.register(re)
 def _(expr, assumptions):
-    if ask(Q.real(expr.args[0]), assumptions):
-        return ask(Q.even(expr.args[0]), assumptions)
+    if recursive_ask(Q.real(expr.args[0]), assumptions):
+        return recursive_ask(Q.even(expr.args[0]), assumptions)
 
 @EvenPredicate.register(im)
 def _(expr, assumptions):
-    if ask(Q.real(expr.args[0]), assumptions):
+    if recursive_ask(Q.real(expr.args[0]), assumptions):
         return True
 
 @EvenPredicate.register(NaN)
@@ -271,9 +272,9 @@ def _(expr, assumptions):
 
 @OddPredicate.register(Basic)
 def _(expr, assumptions):
-    _integer = ask(Q.integer(expr), assumptions)
+    _integer = recursive_ask(Q.integer(expr), assumptions)
     if _integer:
-        _even = ask(Q.even(expr), assumptions)
+        _even = recursive_ask(Q.even(expr), assumptions)
         if _even is None:
             return None
         return not _even
