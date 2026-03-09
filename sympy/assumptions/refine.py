@@ -461,9 +461,8 @@ def refine_sin_cos(expr, assumptions):
     ========
 
     >>> from sympy.assumptions.refine import refine_sin_cos
-    >>> from sympy import Symbol, Q, sin, cos, pi
-    >>> from sympy.abc import x, y
-    >>> n = Symbol('n')
+    >>> from sympy import Q, sin, cos, pi
+    >>> from sympy.abc import x, y, n
     >>> refine_sin_cos(cos(n*pi), Q.even(n))
     (-1)**n
     >>> refine_sin_cos(sin(n*pi/2), Q.odd(n) & Q.odd((n-1)/2))
