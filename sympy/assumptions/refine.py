@@ -508,9 +508,8 @@ def refine_tan_cot(expr, assumptions):
     ========
 
     >>> from sympy.assumptions.refine import refine_tan_cot
-    >>> from sympy import Symbol, Q, tan, cot, pi
-    >>> from sympy.abc import x
-    >>> n = Symbol('n')
+    >>> from sympy import Q, tan, cot, pi
+    >>> from sympy.abc import x, n
     >>> refine_tan_cot(tan(n*pi), Q.integer(n))
     0
     >>> refine_tan_cot(cot(n*pi/2), Q.odd(n))
