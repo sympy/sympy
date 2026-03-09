@@ -1161,8 +1161,6 @@ class Permutation(Atom):
                     unchecked[j] = False
                 if len(cycle) > 1:
                     cyclic_form.append(cycle)
-                    assert cycle == list(minlex(cycle))
-        cyclic_form.sort()
         self._cyclic_form = cyclic_form.copy()
         return cyclic_form
 
