@@ -73,25 +73,24 @@ from sympy.utilities.misc import debug
 if TYPE_CHECKING:
     from sympy.core.expr import Expr
 
-def _is_zero_if_zero(P, Q):
+def _if_zero_implies_zero(P, Q):
     """
-    Check if it is possible P = 0 and in that case Q = 0.
+    Check if expression P = 0 implies Q = 0.
 
-    Returns True if Q is zero or if every irreducible factor of the 
-    numerator of P is also a factor of the numerator of Q.
+    Returns True if P is not zero or if substituting every irreducible 
+    factor of the numerator of P in the numerator of Q makes Q = 0.
     """
     num_p, _ = P.as_numer_denom()
     num_q, _ = Q.as_numer_denom()
-
-    if Q.is_zero:
-        return True
-
+    if P.is_zero:
+        return Q.is_zero
     factors_P = {f for f, p in factor_list(num_p)[1]}
-    if not factors_P:
-        return False
-    factors_Q = {f for f, p in factor_list(num_q)[1]}
-
-    return factors_P.issubset(factors_Q)
+    # use factor() to help find substitutions (eg. (a**2 - 1) is zero if (a + 1) = 0)
+    factored_num_q = num_q.factor()
+    for factor in factors_P:
+        if factored_num_q.subs(factor, 0) != 0:
+            return False
+    return True
 
 class Rule(ABC):
 
@@ -1880,46 +1879,45 @@ def trig_cmplx_exp_rule(integral: IntegralInfo):
 
 def quadratic_denom_rule(integral):
     integrand, symbol = integral
-    a = Wild('a', exclude=[symbol])
-    b = Wild('b', exclude=[symbol])
-    c = Wild('c', exclude=[symbol])
+    a = Wild('a', exclude=[symbol, 0])
+    b = Wild('b', exclude=[symbol, 0])
+    c = Wild('c', exclude=[symbol, 0])
 
     match = integrand.match(a / (b * symbol ** 2 + c))
 
     if match:
         a, b, c = match[a], match[b], match[c]
-        general_rule = ArctanRule(integrand, symbol, a, b, c)
         pieces = []
-        if b.is_zero is not S.false and c.is_zero is not S.true and not _is_zero_if_zero(b, c):
+        # skips degenerate case if b != 0 or if b = 0 would cause null denominator
+        if not _if_zero_implies_zero(b, c):
                 substituted = integrand.subs(b, 0)
                 substep = integral_steps(substituted, symbol)
-                pieces.append( (RewriteRule(integrand, symbol, substituted, substep), Eq(b, 0)) )
-        if c.is_zero is not S.false and b.is_zero is not S.true and not _is_zero_if_zero(c, b):
+                pieces.append((RewriteRule(integrand, symbol, substituted, substep), Eq(b, 0)))
+        if not _if_zero_implies_zero(c, b):
             substituted = integrand.subs(c, 0)
             substep = integral_steps(substituted, symbol)
-            pieces.append( (RewriteRule(integrand, symbol, substituted, substep), Eq(c, 0)) )
+            pieces.append((RewriteRule(integrand, symbol, substituted, substep), Eq(c, 0)))
         if b.is_extended_real and c.is_extended_real:
             positive_cond = c/b > 0
-            if positive_cond is S.true:
-                return general_rule
-            coeff = a/(2*sqrt(-c)*sqrt(b))
-            constant = sqrt(-c/b)
-            r1 = 1/(symbol-constant)
-            r2 = 1/(symbol+constant)
-            log_steps = [ReciprocalRule(r1, symbol, symbol-constant),
-                         ConstantTimesRule(-r2, symbol, -1, r2, ReciprocalRule(r2, symbol, symbol+constant))]
-            rewritten = sub = r1 - r2
-            negative_step = AddRule(sub, symbol, log_steps)
-            if coeff != 1:
-                rewritten = Mul(coeff, sub, evaluate=False)
-                negative_step = ConstantTimesRule(rewritten, symbol, coeff, sub, negative_step)
-            negative_step = RewriteRule(integrand, symbol, rewritten, negative_step)
-            if positive_cond is S.false:
-                pieces.append((negative_step, S.true))
-                return PiecewiseRule(integrand, symbol, pieces)
-            else:
-                pieces.append((negative_step, c / b < 0))
-                
+            if positive_cond is not S.true:
+                coeff = a/(2*sqrt(-c)*sqrt(b))
+                constant = sqrt(-c/b)
+                r1 = 1/(symbol-constant)
+                r2 = 1/(symbol+constant)
+                log_steps = [ReciprocalRule(r1, symbol, symbol-constant),
+                            ConstantTimesRule(-r2, symbol, -1, r2, ReciprocalRule(r2, symbol, symbol+constant))]
+                rewritten = sub = r1 - r2
+                negative_step = AddRule(sub, symbol, log_steps)
+                if coeff != 1:
+                    rewritten = Mul(coeff, sub, evaluate=False)
+                    negative_step = ConstantTimesRule(rewritten, symbol, coeff, sub, negative_step)
+                negative_step = RewriteRule(integrand, symbol, rewritten, negative_step)
+                if positive_cond is S.false:
+                    pieces.append((negative_step, S.true))
+                    return PiecewiseRule(integrand, symbol, pieces)
+                else:
+                    pieces.append((negative_step, c / b < 0))
+        general_rule = ArctanRule(integrand, symbol, a, b, c)
         pieces.append((general_rule, S.true))
         return PiecewiseRule(integrand, symbol, pieces)    
 
@@ -2031,37 +2029,35 @@ def sqrt_fractional_linear_rule(integral : IntegralInfo):
     substituted = integrand.subs(subs_dict).subs(x, x_u) * dx_u
     substep = integral_steps(substituted, u)
     if not substep.contains_dont_know():
-        step: Rule = URule(integrand, x, u, u_x, substep)
+        pieces = []
         det = a0*d0 - b0*c0
-        # determinant is not 0 or it is 0 if just both c0 and d0 would be 0 (null denom), no need of Piecewise
-        if det.is_zero is S.false or (_is_zero_if_zero(det, c0) and _is_zero_if_zero(det, d0)):
-            if constant_bases_subs:
-                return RewriteRule(integral.integrand, x, integrand, step)
-            else:
-                return step
-        generic_cond = Ne(a0*d0 - b0*c0, 0)
-        pieces: list[tuple[Rule, Boolean]] = [(step, generic_cond)]
-        cond_c0 = Ne(c0, 0)
-        # c0 can be != 0 and his nullity is not implied by d0, ((a*x + b)/(3*c*d*x + d)), just b/d as costant value
-        if cond_c0 is not S.false and not _is_zero_if_zero(d0, c0):
-            const_val = a0 / c0
-            subs_a = {base_i: ratio_i * const_val for base_i, ratio_i in zip(bases, ratios)}
-            simplified_a = integrand.subs(subs_a)
-            degenerate_step_a = integral_steps(simplified_a, x)
-            pieces.append((degenerate_step_a, S.true if (_is_zero_if_zero(c0, d0) or cond_c0 is S.true) else cond_c0))
-        # c0 can be == 0, d0 is not 0 and d0 nullity is not implied by c0
-        if cond_c0 is not S.true and not _is_zero_if_zero(c0, d0):
-            const_val = b0 / d0
-            subs_b = {base_i: ratio_i * const_val for base_i, ratio_i in zip(bases, ratios)}
-            simplified_b = integrand.subs(subs_b)
-            simplified_b.subs({a0: 0, c0: 0}) # if det=0 and c0=0 and d0!=0, a0=0
-            degenerate_step_b = integral_steps(simplified_b, x)
-            pieces.append((degenerate_step_b, S.true))
+        _, base0_denom = base0.as_numer_denom()
+        # skips bases where constant value (degenerate case) is not possible (det != 0 or det = 0 implies den = 0)
+        # (eg. (3*x + 2)/(4*x + 3), (3x + b)/(d), (4*x + 3)/(c*x + c)) 
+        if not (_if_zero_implies_zero(det, base0_denom)):
+            d0_implies_c0 = _if_zero_implies_zero(d0, c0)
+            c0_implies_d0 = _if_zero_implies_zero(c0, d0)
+            # skips constant value a/c if d != 0 or d = 0 implies c = 0 (eg. (3*x + 2)/(c*d*x + d), (3*x + 2)/(c*x + 4))
+            # takes a/c if they both imply each other (eg. (a*x + b)/3*x + 4)) (taking b/d would be the same)
+            if not d0_implies_c0 or (c0_implies_d0 and d0_implies_c0):
+                const_val = a0 / c0
+                subs_a = {base_i: ratio_i * const_val for base_i, ratio_i in zip(bases, ratios)}
+                simplified_a = integrand.subs(subs_a)
+                degenerate_step_a = integral_steps(simplified_a, x)
+                pieces.append((degenerate_step_a, (And(Eq(det, 0), Ne(c0, 0)))))
+            if not c0_implies_d0:
+                const_val = b0 / d0
+                subs_b = {base_i: ratio_i * const_val for base_i, ratio_i in zip(bases, ratios)}
+                simplified_b = integrand.subs(subs_b)
+                simplified_b = simplified_b.subs({a0: 0, c0: 0}) # if det = 0, c = 0 and d != 0, a must be 0
+                degenerate_step_b = integral_steps(simplified_b, x)
+                pieces.append((degenerate_step_b, (And(Eq(det, 0), Eq(c0, 0)))))
+        step = URule(integrand, x, u, u_x, substep)
+        pieces.append((step, S.true))
         step = PiecewiseRule(integrand, x, pieces)
         if constant_bases_subs:
             return RewriteRule(integral.integrand, x, integrand, step)
-        else:
-            return step
+        return step
     return None
 
 
@@ -2500,7 +2496,7 @@ def substitution_rule(integral):
                     factors_denom_c = factor_list(denom_c)[1]
                     for pole, _ in factors_denom_c:
                         # only substitute poles introduced by the constant c if they were not already poles of the original integrand
-                        if pole.is_zero is None and not _is_zero_if_zero(pole, denom_integrand):
+                        if not _if_zero_implies_zero(pole, denom_integrand):
                             rewritten_integral = manual_subs(factored_integrand, pole, 0)
                             substep = integral_steps(rewritten_integral, symbol)
 
