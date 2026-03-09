@@ -6,7 +6,7 @@ import sys
 import types
 import inspect
 from functools import wraps
-from typing import TypeVar, TYPE_CHECKING, Callable, Any
+from typing import TypeVar, TYPE_CHECKING, Callable, Any, Generic
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -15,8 +15,8 @@ if TYPE_CHECKING:
 from sympy.external.mpmath import conserve_mpmath_dps # noqa: F401
 
 from sympy.utilities.exceptions import sympy_deprecation_warning
-F = TypeVar("F",bound=Callable[...,Any])
-
+F = TypeVar("F", bound=Callable[..., Any])
+C = TypeVar("C")
 T = TypeVar('T')
 """A generic type"""
 
@@ -90,7 +90,7 @@ def xthreaded(func: F) -> F:
     return threaded_factory(func, False)
 
 
-class no_attrs_in_subclass:
+class no_attrs_in_subclass(Generic[C]):
     """Don't 'inherit' certain attributes from a base class
 
     >>> from sympy.utilities.decorator import no_attrs_in_subclass
@@ -109,10 +109,10 @@ class no_attrs_in_subclass:
     False
 
     """
-    cls: type
+    cls: type[C]
     f: Any
 
-    def __init__(self, cls: type, f: Any) -> None:
+    def __init__(self, cls: type, f: F) -> None:
         self.cls = cls
         self.f = f
 
