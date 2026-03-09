@@ -243,7 +243,7 @@ def _(expr, assumptions):
 
 @InfinitePredicate.register(Expr)
 def _(expr, assumptions):
-    is_finite = Q.finite(expr)._eval_ask(assumptions)
+    is_finite = recursive_ask(Q.finite(expr), assumptions)
     if is_finite is None:
         return None
     return not is_finite
