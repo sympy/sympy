@@ -1638,3 +1638,27 @@ def test_piecewise__eval_is_meromorphic():
     assert f.is_meromorphic(x, 2) == True
     assert f.is_meromorphic(x, Symbol('a')) is None
     assert f.is_meromorphic(x, Symbol('a', real=True)) is None
+
+def test_refine():
+    from sympy.assumptions.refine import refine
+    from sympy.assumptions import Q
+
+    x = symbols('x')
+    # Condition becomes True under the assumptions
+    assert refine(Piecewise((1, x > 0), (-1, x < 0), (0, True)), Q.positive(x)) == 1
+
+    # First condition becomes False and the next branch is selected
+    assert refine(Piecewise((1, x > 0), (2, True)), Q.negative(x)) == 2
+
+     # Condition becomes False through refinement
+    assert refine(Piecewise((x**2, x < 0), (x, True)), Q.positive(x)) == x
+
+    # Relational condition simplified using assumptions
+    assert refine(Piecewise((1/x**2, x != 0), (0, True)), Q.nonzero(x)) == 1/x**2
+    
+    # Undecidable conditions preserve the Piecewise expression
+    p = Piecewise((1, x > 0), (2, x < -5), (3, True))
+    assert refine(p, Q.real(x)) == p
+    assert refine(Piecewise((1, x > 0), (0, True)), Q.real(x)) == Piecewise((1, x > 0), (0, True))
+    
+

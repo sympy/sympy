@@ -259,6 +259,86 @@ class Piecewise(DefinedFunction):
             if cond:
                 return e._eval_is_meromorphic(x, a)
 
+    def _eval_refine(self, assumptions):
+        """
+        Refine a Piecewise expression under the given assumptions.
+
+        Each expression and condition in the Piecewise is refined using
+        ``refine`` with the provided assumptions. Conditions that become
+        False are removed from the Piecewise expression. If a condition
+        becomes True and no earlier branch remains applicable, the
+        corresponding expression is returned directly.
+
+        If the assumptions do not determine any condition, the original
+        Piecewise structure is preserved with the refined expressions
+        and conditions.
+
+        If no part of the expression changes during refinement, ``None``
+        is returned to indicate that no refinement was possible.
+
+        Examples
+        ========
+
+        >>> from sympy import Piecewise, Symbol, Q
+        >>> from sympy.assumptions.refine import refine
+        >>> x = Symbol('x')
+
+        >>> p = Piecewise((1, x > 0), (-1, x < 0), (0, True))
+        >>> refine(p, Q.positive(x))
+        1
+
+        >>> refine(p, Q.negative(x))
+        -1
+
+        >>> refine(Piecewise((x**2, x < 0), (x, True)), Q.positive(x))
+        x
+
+        >>> refine(Piecewise((1/x**2, x != 0), (0, True)), Q.nonzero(x))
+        1/x**2
+        """
+        from sympy.assumptions.refine import refine
+        from sympy.assumptions import ask
+
+        changed = False
+        newargs = []
+
+        for expr, cond in self.args:
+
+            expr_r = refine(expr, assumptions)
+            cond_r = refine(cond, assumptions)
+
+            if expr_r != expr or cond_r != cond:
+                changed = True
+            
+            if cond_r is S.true:
+                if not newargs:
+                    return expr_r
+                newargs.append((expr_r, cond_r))
+                continue
+            
+            if cond_r is S.false:
+                changed = True
+                continue
+
+            truth = ask(cond_r, assumptions)
+            if truth is True:
+                if not newargs:
+                    return expr_r
+                newargs.append((expr_r, cond_r))
+                continue
+
+            if truth is False:
+                changed = True
+                continue
+
+            newargs.append((expr_r , cond_r))
+
+        if not changed:
+            return None
+        
+        return self.func(*newargs)
+
+
     def piecewise_integrate(self, x, **kwargs):
         """Return the Piecewise with each expression being
         replaced with its antiderivative. To obtain a continuous
