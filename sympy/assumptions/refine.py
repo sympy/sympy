@@ -405,11 +405,19 @@ def refine_matrixelement(expr, assumptions):
 
 
 def _trig_pi_half_shift(arg, assumptions):
-    """Parse a trig argument for integer multiples of pi/2 and compute parity.
+    """Extract integer multiples of ``pi/2`` from a trig argument and determine parity.
 
-    Returns ``None`` if no simplification is possible, otherwise returns
-    ``(sum_of_parity_known_coeffs, sum_of_parity_known_coeffs_is_even, rem)``
-    where ``rem`` is the argument with all integer-pi/2 terms removed.
+    Splits ``arg`` into terms that are provably integer multiples of ``pi/2``
+    and a remainder. Returns ``None`` if no such term exists.
+
+    Otherwise returns ``(k, k_is_even, rem)`` where ``k`` is the total integer
+    coefficient (of ``pi/2``) whose parity is known, ``k_is_even`` is ``True``
+    if ``k`` is even and ``False`` if odd, and ``rem`` is the rest of the
+    argument (including any ``pi/2`` terms whose parity could not be determined).
+
+    For example, given ``n*pi`` with ``Q.integer(n)``, returns ``(2*n, True, 0)``
+    since ``2*n`` is always even. Given ``x + n*pi/2`` with ``Q.odd(n)``, returns
+    ``(n, False, x)`` since ``n`` is odd.
     """
     integer_coeffs_of_pi_half = []
     remaining_terms = []
