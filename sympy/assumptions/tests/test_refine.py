@@ -287,7 +287,7 @@ def test_sin_cos():
                   Q.odd(n) & Q.odd(k) & Q.integer(m)) == \
         (-1)**((n + k)/2) * cos(x + m*pi/2)
 
-<<<<<<< HEAD
+
 
 def test_floor_ceiling():
     assert refine(floor(x), Q.integer(x)) == x
@@ -302,10 +302,10 @@ def test_floor_ceiling():
     assert refine(ceiling(x + y), Q.integer(x)) == x + ceiling(y)
     assert refine(floor(x + y + z), Q.integer(x) & Q.integer(y)) == x + y + floor(z)
     assert refine(ceiling(x + y + z), Q.integer(x) & Q.integer(z)) == x + z + ceiling(y)
-    assert refine(floor(x + y - z)) == floor (x + y - z)
+    assert refine(floor(x + y - z)) == floor(x + y - z)
     assert refine(ceiling(ceiling(x) + y + floor(z))) == ceiling(x) + ceiling(y) + floor(z)
 
-    assert refine(floor(floor(x)+ floor(y))) == floor(x) + floor(y)
+    assert refine(floor(floor(x) + floor(y))) == floor(x) + floor(y)
     assert refine(ceiling(ceiling(x) - ceiling(y))) == ceiling(x) - ceiling(y)
 
 
@@ -321,21 +321,3 @@ def test_Heaviside():
     assert refine(Heaviside(x, 1), Q.zero(x)) == 1
     assert refine(Heaviside(x, 1), Q.positive(x)) == 1
     assert refine(Heaviside(x, 1), Q.negative(x)) == 0
-=======
-def test_refine_floor_integer():
-    from sympy import symbols, floor, refine
-    x = symbols('x', integer=True)
-    assert refine(floor(x)) == x
-
-
-def test_refine_ceiling_integer():
-    from sympy import symbols, ceiling, refine
-    x = symbols('x', integer=True)
-    assert refine(ceiling(x)) == x
-
-
-def test_refine_floor_assumption():
-    from sympy import symbols, floor, refine, Q
-    x = symbols('x')
-    assert refine(floor(x), Q.integer(x)) == x
->>>>>>> 68ded6710b (Add refine handlers for floor and ceiling when argument is integer)
