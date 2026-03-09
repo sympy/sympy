@@ -110,7 +110,11 @@ class no_attrs_in_subclass(Generic[C]):
 
     """
     cls: type[C]
+<<<<<<< HEAD
     f: Any
+=======
+    f: F
+>>>>>>> 0495a2c96c90648fe8512af53f083abea6cc81b8
 
     def __init__(self, cls: type, f: F) -> None:
         self.cls = cls
