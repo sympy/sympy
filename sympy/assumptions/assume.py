@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from contextlib import contextmanager
 from sympy.core.symbol import Str
-from sympy.core.sympify import _sympify
+from sympy.core.sympify import _sympify, sympify
 from sympy.logic.boolalg import Boolean, false, true
 from sympy.multipledispatch.dispatcher import Dispatcher, str_signature
 from sympy.utilities.iterables import is_sequence
@@ -426,3 +426,41 @@ def assuming(*assumptions):
     finally:
         global_assumptions.clear()
         global_assumptions.update(old_global_assumptions)
+
+
+def recursive_ask(proposition, assumptions, context=True):
+    from sympy.assumptions.ask import _ask_single_fact, Q, _extract_all_facts
+    from sympy.core.relational import Eq, Ne, Gt, Lt, Ge, Le
+    from sympy.assumptions.cnf import CNF
+    from sympy.core.kind import BooleanKind
+    from sympy.logic.boolalg import And
+
+    proposition = sympify(proposition)
+    assumptions = sympify(assumptions)
+
+    if isinstance(proposition, Predicate) or proposition.kind is not BooleanKind:
+        raise TypeError("proposition must be a valid logical expression")
+
+    if isinstance(assumptions, Predicate) or assumptions.kind is not BooleanKind:
+        raise TypeError("assumptions must be a valid logical expression")
+
+    binrelpreds = {Eq: Q.eq, Ne: Q.ne, Gt: Q.gt, Lt: Q.lt, Ge: Q.ge, Le: Q.le}
+    if isinstance(proposition, AppliedPredicate):
+        key, args = proposition.function, proposition.arguments
+    elif proposition.func in binrelpreds:
+        key, args = binrelpreds[type(proposition)], proposition.args
+    else:
+        key, args = Q.is_true, (proposition,)
+
+    effective_assumptions = And(assumptions, *context) if context is not True else assumptions
+
+    assump_cnf = CNF.from_prop(effective_assumptions)
+    local_facts = _extract_all_facts(assump_cnf, args)
+
+    res = _ask_single_fact(key, local_facts)
+    if res is not None:
+        return res
+
+    res = key(*args)._eval_ask(effective_assumptions)
+    if res is not None:
+        return bool(res)
