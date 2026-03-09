@@ -94,7 +94,7 @@ class no_attrs_in_subclass(Generic[C]):
     cls: type[C]
     f: Any
 
-    def __init__(self, cls: type, f: F) -> None:
+    def __init__(self, cls: type[C], f: F) -> None:
         self.cls = cls
         self.f = f
 
