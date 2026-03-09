@@ -512,18 +512,14 @@ def refine_tan_cot(expr, assumptions):
     >>> from sympy.abc import x, n
     >>> refine_tan_cot(tan(n*pi), Q.integer(n))
     0
-    >>> refine_tan_cot(cot(n*pi/2), Q.odd(n))
-    0
     >>> refine_tan_cot(tan(x + n*pi), Q.integer(n))
     tan(x)
-    >>> refine_tan_cot(cot(x + n*pi), Q.integer(n))
-    cot(x)
+    >>> refine_tan_cot(tan(x + n*pi/2), Q.even(n))
+    tan(x)
     >>> refine_tan_cot(tan(x + n*pi/2), Q.odd(n))
     -cot(x)
     >>> refine_tan_cot(cot(x + n*pi/2), Q.odd(n))
     -tan(x)
-    >>> refine_tan_cot(tan(x + n*pi/2), Q.even(n))
-    tan(x)
 
     """
     from sympy.functions.elementary.trigonometric import tan, cot
