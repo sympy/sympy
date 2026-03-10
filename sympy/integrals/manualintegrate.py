@@ -77,7 +77,7 @@ def _if_zero_implies_zero(P, Q):
     """
     Check if expression P = 0 implies Q = 0.
 
-    Returns True if P is not zero or if substituting every irreducible 
+    Returns True if P is not zero or if substituting every irreducible
     factor of the numerator of P in the numerator of Q makes Q = 0.
     """
     num_p, _ = P.as_numer_denom()
@@ -1919,7 +1919,7 @@ def quadratic_denom_rule(integral):
                     pieces.append((negative_step, c / b < 0))
         general_rule = ArctanRule(integrand, symbol, a, b, c)
         pieces.append((general_rule, S.true))
-        return PiecewiseRule(integrand, symbol, pieces)    
+        return PiecewiseRule(integrand, symbol, pieces)
 
 
     d = Wild('d', exclude=[symbol])
@@ -2033,7 +2033,7 @@ def sqrt_fractional_linear_rule(integral : IntegralInfo):
         det = a0*d0 - b0*c0
         _, base0_denom = base0.as_numer_denom()
         # skips bases where constant value (degenerate case) is not possible (det != 0 or det = 0 implies den = 0)
-        # (eg. (3*x + 2)/(4*x + 3), (3x + b)/(d), (4*x + 3)/(c*x + c)) 
+        # (eg. (3*x + 2)/(4*x + 3), (3x + b)/(d), (4*x + 3)/(c*x + c))
         if not (_if_zero_implies_zero(det, base0_denom)):
             d0_implies_c0 = _if_zero_implies_zero(d0, c0)
             c0_implies_d0 = _if_zero_implies_zero(c0, d0)
