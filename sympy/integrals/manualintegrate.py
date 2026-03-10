@@ -1918,8 +1918,10 @@ def quadratic_denom_rule(integral):
                 else:
                     pieces.append((negative_step, c / b < 0))
         general_rule = ArctanRule(integrand, symbol, a, b, c)
-        pieces.append((general_rule, S.true))
-        return PiecewiseRule(integrand, symbol, pieces)
+        if pieces:
+            pieces.append((general_rule, S.true))
+            return PiecewiseRule(integrand, symbol, pieces)
+        return general_rule
 
 
     d = Wild('d', exclude=[symbol])
@@ -2029,7 +2031,7 @@ def sqrt_fractional_linear_rule(integral : IntegralInfo):
     substituted = integrand.subs(subs_dict).subs(x, x_u) * dx_u
     substep = integral_steps(substituted, u)
     if not substep.contains_dont_know():
-        pieces = []
+        pieces: list[tuple[Rule, Boolean]] = []
         det = a0*d0 - b0*c0
         _, base0_denom = base0.as_numer_denom()
         # skips bases where constant value (degenerate case) is not possible (det != 0 or det = 0 implies den = 0)
@@ -2052,9 +2054,10 @@ def sqrt_fractional_linear_rule(integral : IntegralInfo):
                 simplified_b = simplified_b.subs({a0: 0, c0: 0}) # if det = 0, c = 0 and d != 0, a must be 0
                 degenerate_step_b = integral_steps(simplified_b, x)
                 pieces.append((degenerate_step_b, (And(Eq(det, 0), Eq(c0, 0)))))
-        step = URule(integrand, x, u, u_x, substep)
-        pieces.append((step, S.true))
-        step = PiecewiseRule(integrand, x, pieces)
+        step: Rule = URule(integrand, x, u, u_x, substep)
+        if pieces:
+            pieces.append((step, S.true))
+            step = PiecewiseRule(integrand, x, pieces)
         if constant_bases_subs:
             return RewriteRule(integral.integrand, x, integrand, step)
         return step
@@ -2492,7 +2495,7 @@ def substitution_rule(integral):
                     subrule = ConstantTimesRule(c * substituted, u_var, c, substituted, subrule)
 
                 if denom_c.free_symbols:
-                    piecewise = []
+                    pieces = []
                     factors_denom_c = factor_list(denom_c)[1]
                     for pole, _ in factors_denom_c:
                         # only substitute poles introduced by the constant c if they were not already poles of the original integrand
@@ -2502,12 +2505,13 @@ def substitution_rule(integral):
 
                             if substep:
                                 substep = RewriteRule(integrand, symbol, rewritten_integral, substep)
-                                piecewise.append((
+                                pieces.append((
                                     substep,
                                     Eq(pole, 0)
                                 ))
-                    piecewise.append((subrule, True))
-                    subrule = PiecewiseRule(substituted, symbol, piecewise)
+                    if pieces:
+                        pieces.append((subrule, True))
+                        subrule = PiecewiseRule(substituted, symbol, pieces)
 
             ways.append(URule(integrand, symbol, u_var, u_func, subrule))
 
