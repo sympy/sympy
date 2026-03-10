@@ -91,7 +91,6 @@ def xthreaded(func: F) -> F:
 
 
 class no_attrs_in_subclass(Generic[C]):
-<<<<<<< HEAD
     """Don't 'inherit' certain attributes from a base class
 
     >>> from sympy.utilities.decorator import no_attrs_in_subclass
@@ -112,24 +111,15 @@ class no_attrs_in_subclass(Generic[C]):
     """
     cls: type[C]
     f: object
+
     def __init__(self, cls: type[C], f: object) -> None:
         self.cls = cls
         self.f = f
 
-    def __get__(self, instance: object | None, owner: type | None = None) -> Any:
-=======
-    cls: type[C]
-    f: Any
-
-    def __init__(self, cls: type[C], f: F) -> None:
-        self.cls = cls
-        self.f = f
-
-    def __get__(self, instance: Any, owner: type | None = None) -> Any:
->>>>>>> 3988829ec67b68b9c6749da8b553814b20e57587
+    def __get__(self, instance: object | None, owner: type | None = None) -> object:
         if owner == self.cls:
             if hasattr(self.f, '__get__'):
-                return self.f.__get__(instance, owner)
+                return self.f.__get__(instance, owner) # type: ignore[attr-defined]
             return self.f
         raise AttributeError
 
