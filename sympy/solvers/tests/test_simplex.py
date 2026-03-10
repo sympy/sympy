@@ -262,3 +262,11 @@ def test_28104():
     val, var = lpmax(0, [x >= 0, y >= 0])
     assert var[y] is S.Zero
     assert var[x] is S.Zero
+
+
+def test_29368():
+    assert linprog([1]) == (0, [0])
+    assert linprog([1, 1]) == (0, [0, 0])
+    raises(UnboundedLPError, lambda: linprog([-1]))
+    assert linprog([1], bounds=(0, None)) == (0, [0])
+    raises(UnboundedLPError, lambda: linprog([-1], bounds=(0, None)))
