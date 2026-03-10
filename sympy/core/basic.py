@@ -580,27 +580,43 @@ class Basic(Printable):
         o = _sympify(other)
         o = o.as_dummy()
 
-        dummy_symbols = [i for i in s.free_symbols | set(getattr(s, 'variables', [])) if i.is_Dummy]
+        s_bound = [
+            i for i in set(getattr(s, 'variables', [])) | set(getattr(s, 'bound_symbols', []))
+            if i.is_Dummy
+        ]
+        # don't consider common symbols
+        s_free = [
+            i for i in s.free_symbols
+            if i.is_Dummy and i not in o.free_symbols
+        ]
+        dummy_symbols = s_free + s_bound
 
-        if len(dummy_symbols) > 0:
+        if dummy_symbols:
             dummy = dummy_symbols
         else:
             return s == o
 
         if symbol is None:
-            symbols = list(o.free_symbols) + list(getattr(o, 'variables', []))
+            o_bound = [
+                i for i in set(getattr(o, 'variables', [])) | set(getattr(o, 'bound_symbols', []))
+                if i.is_Dummy
+            ]
+            o_free = list(o.free_symbols - s.free_symbols)
+            symbol = o_bound + o_free
 
-            if len(symbols) > 0:
-                symbol = symbols
-            else:
+            if not symbol:
                 return s == o
+        else:
+            if not isinstance(symbol, list):
+                symbol = [symbol]
 
-        tmp = dummy[0].__class__()
+        replace_s, replace_o = {}, {}
+        for dum, sym in zip(dummy, symbol):
+            tmp = dum.__class__()
+            replace_s[dum] = tmp
+            replace_o[sym] = tmp
 
-        if not isinstance(symbol, list):
-            symbol = [symbol]
-
-        return s.xreplace(dict.fromkeys(dummy, tmp)) == o.xreplace(dict.fromkeys(symbol, tmp))
+        return s.xreplace(replace_s) == o.xreplace(replace_o)
 
     @overload
     def atoms(self) -> set[Basic]: ...
