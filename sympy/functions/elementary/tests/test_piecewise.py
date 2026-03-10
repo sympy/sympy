@@ -1655,7 +1655,7 @@ def test_refine():
     assert refine(Piecewise((x**2, x < 0), (x, True)), Q.positive(x)) == x
 
     # Relational condition simplified using assumptions
-    assert refine(Piecewise((1/x**2, x != 0), (0, True)), Q.nonzero(x)) == 1/x**2
+    assert refine(Piecewise((x**(-2), x != 0), (0, True)), Q.nonzero(x)) == x**(-2)
 
     # Undecidable conditions preserve the Piecewise expression
     p = Piecewise((1, x > 0), (2, x < -5), (3, True))
