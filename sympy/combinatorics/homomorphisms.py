@@ -144,26 +144,44 @@ class GroupHomomorphism:
         G = self.domain
         H = self.codomain
         Ginf = G.order() is S.Infinity
-        if Ginf and isinstance(H, (FpGroup, FreeGroup)):
-            # TODO: Make this work for PermutationGroup codomain by replacing it
-            # with FpGroup using PermutationGroup.presentation()
+        if Ginf and isinstance(H, (FpGroup, FreeGroup, PermutationGroup)):
+            perm_codomain = isinstance(H, PermutationGroup)
             if isinstance(H, FreeGroup):
                 H = FpGroup(H, [])
             preimages = self._is_surjective_cert()
             if preimages is not None:
-                symbol_to_preimage = {
-                    g.ext_rep[0]: preimages[g] for g in H.generators
-                }
+                if perm_codomain:
+                    perm_gens = H.generators
+                    fp_group = H.presentation(eliminate_gens=False)
+                    if isinstance(fp_group, FreeGroup):
+                        return G  # if H is simultaneously a free group and a permutation group, H is trivial
+                    symbol_to_preimage = {
+                        g.ext_rep[0]: preimages[perm_g]
+                        for g, perm_g in zip(fp_group.generators, perm_gens)
+                    }
+                else:
+                    symbol_to_preimage = {
+                        g.ext_rep[0]: preimages[g] for g in H.generators
+                    }
 
                 def _lift_to_domain(word):
                     dtype = type(G.identity)
+                    if perm_codomain and isinstance(word, type(H.identity)):
+                        factors = H.generator_product(
+                            word, original=True)[::-1]
+                        return dtype.prod(
+                            preimages[s] if s in preimages
+                            else preimages[s**-1]**-1
+                            for s in factors if not s.is_identity
+                        )
                     return dtype.prod(
                         symbol_to_preimage[symbol]**power
                         for symbol, power in word.array_form
                     )
 
                 kernel_gens = []
-                for relator in H.relators:
+                relators = fp_group.relators if perm_codomain else H.relators
+                for relator in relators:
                     word = _lift_to_domain(relator)
                     if not word.is_identity:
                         kernel_gens.append(word)
