@@ -309,13 +309,13 @@ class Piecewise(DefinedFunction):
 
             if expr_r != expr or cond_r != cond:
                 changed = True
-            
+
             if cond_r is S.true:
                 if not newargs:
                     return expr_r
                 newargs.append((expr_r, cond_r))
                 break
-            
+
             if cond_r is S.false:
                 changed = True
                 continue
@@ -335,10 +335,10 @@ class Piecewise(DefinedFunction):
 
         if not changed:
             return None
-        
+
         if not newargs:
             return S.NaN
-        
+
         return self.func(*newargs)
 
 
