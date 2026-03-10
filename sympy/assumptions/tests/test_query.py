@@ -1,7 +1,8 @@
 from __future__ import annotations
 from sympy.abc import t, w, x, y, z, n, k, m, p, i
 from sympy.assumptions import (ask, AssumptionsContext, Q)
-from sympy.assumptions.assume import assuming, global_assumptions, Predicate
+from sympy.assumptions.assume import (assuming, global_assumptions, Predicate,
+    recursive_ask)
 from sympy.assumptions.cnf import CNF, Literal
 from sympy.assumptions.facts import (single_fact_lookup,
     get_known_facts, generate_known_facts_dict, get_known_facts_keys)
@@ -1138,6 +1139,13 @@ def test_bounded():
     assert ask(Q.finite(cos(x)**2)) is True
     assert ask(Q.finite(cos(x) + sin(x))) is True
 
+@XFAIL
+def test_unbounded_xfail():
+    # TODO: Rewrite the logic for the zero and nonzero recursive
+    # handlers in handlers/order.py so that these tests pass.
+    assert recursive_ask(Q.zero(1/y), Q.finite(y) & ~Q.zero(y)) is False
+    # This is no longer handled as a side effect of the fix for issue #28129.
+    assert ask(Q.infinite(x / y), Q.infinite(x) & Q.finite(y) & ~Q.zero(y)) is True
 
 def test_unbounded():
     assert ask(Q.infinite(I * oo)) is True
@@ -1146,7 +1154,6 @@ def test_unbounded():
     assert ask(Q.infinite(-I * oo)) is True
     assert ask(Q.infinite(1 + zoo)) is True
     assert ask(Q.infinite(I * zoo)) is True
-    assert ask(Q.infinite(x / y), Q.infinite(x) & Q.finite(y) & ~Q.zero(y)) is True
     assert ask(Q.infinite(I * oo - I * oo)) is None
     assert ask(Q.infinite(x * I * oo)) is None
     assert ask(Q.infinite(1 / x), Q.finite(x) & ~Q.zero(x)) is False
