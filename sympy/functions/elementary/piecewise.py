@@ -294,7 +294,7 @@ class Piecewise(DefinedFunction):
         x
 
         >>> refine(Piecewise((1/x**2, x != 0), (0, True)), Q.nonzero(x))
-        1/x**2
+        x**(-2)
         """
         from sympy.assumptions.refine import refine
         from sympy.assumptions import ask

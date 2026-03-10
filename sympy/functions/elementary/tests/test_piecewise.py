@@ -1651,11 +1651,11 @@ def test_refine():
     # First condition becomes False and the next branch is selected
     assert refine(Piecewise((1, x > 0), (2, True)), Q.negative(x)) == 2
 
-     # Condition becomes False through refinement
+    # Condition becomes False through refinement
     assert refine(Piecewise((x**2, x < 0), (x, True)), Q.positive(x)) == x
 
     # Relational condition simplified using assumptions
-    assert refine(Piecewise((x**(-2), x != 0), (0, True)), Q.nonzero(x)) == x**(-2)
+    assert refine(Piecewise((1/x**2, x != 0), (0, True)), Q.nonzero(x)) == 1/x**2
 
     # Undecidable conditions preserve the Piecewise expression
     p = Piecewise((1, x > 0), (2, x < -5), (3, True))
