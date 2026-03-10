@@ -1661,3 +1661,4 @@ def test_refine():
     p = Piecewise((1, x > 0), (2, x < -5), (3, True))
     assert refine(p, Q.real(x)) == p
     assert refine(Piecewise((1, x > 0), (0, True)), Q.real(x)) == Piecewise((1, x > 0), (0, True))
+
