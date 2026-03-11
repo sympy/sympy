@@ -38,6 +38,7 @@ from sympy.polys.polyerrors import (
     CoercionFailed,
     GeneratorsError,
     ExactQuotientFailed,
+    HeuristicGCDFailed,
     MultivariatePolynomialError,
 )
 from sympy.polys.polyoptions import (
@@ -3167,6 +3168,11 @@ class PolyElement(
     ) -> tuple[PolyElement[Er], PolyElement[Er], PolyElement[Er]]:
         ring = self.ring
 
+        # Fast-path for trivial cases before running expensive algorithms
+        result = self._gcd_trivial(other)
+        if result is not None:
+            return result
+
         if ring.domain.is_QQ:
             return self._gcd_QQ(other)
         elif ring.domain.is_ZZ:
@@ -3174,10 +3180,90 @@ class PolyElement(
         else:  # TODO: don't use dense representation (port PRS algorithms)
             return ring.dmp_inner_gcd(self, other)
 
+    def _gcd_trivial(
+        self, other: PolyElement[Er]
+    ) -> tuple[PolyElement[Er], PolyElement[Er], PolyElement[Er]] | None:
+        """Handle trivial GCD cases efficiently.
+
+        Returns ``None`` if the case is not trivial and a full GCD algorithm
+        is needed. Otherwise returns ``(h, cff, cfg)``.
+
+        Trivial cases handled:
+
+        1. Either polynomial is a ground element (constant). The GCD is then
+           just the ground GCD of the constant and the content of the other.
+        2. The two polynomials have no generators in common. The GCD is then
+           just the GCD of their ground contents.
+        """
+        ring = self.ring
+
+        # Case 1: Either polynomial is a ground element
+        if self.is_ground:
+            # gcd(c, g) where c is a constant
+            ground_gcd = ring.domain.gcd
+            c = self.LC if self else ring.domain.zero
+            gc = c
+            for coeff in other.itercoeffs():
+                gc = ground_gcd(gc, coeff)
+            h = ring.ground_new(gc)
+            if gc:
+                cff = ring.ground_new(ring.domain.quo(c, gc)) if self else ring.zero
+                cfg = other.quo_ground(gc)
+            else:
+                cff = ring.zero
+                cfg = ring.zero
+            return h, cff, cfg
+
+        if other.is_ground:
+            h, cfg, cff = other._gcd_trivial(self)
+            return h, cff, cfg
+
+        # Case 2: No common generators
+        # Determine which generators actually appear in each polynomial
+        ngens = ring.ngens
+        f_gens = set()
+        for monom in self.itermonoms():
+            for i in range(ngens):
+                if monom[i]:
+                    f_gens.add(i)
+
+        g_gens = set()
+        for monom in other.itermonoms():
+            for i in range(ngens):
+                if monom[i]:
+                    g_gens.add(i)
+
+        if not f_gens.intersection(g_gens):
+            # No common generators: gcd is just the ground content gcd
+            fc = self.content()
+            gc = other.content()
+            ground_gcd = ring.domain.gcd
+            h_ground = ground_gcd(fc, gc)
+            h = ring.ground_new(h_ground)
+            if h_ground:
+                cff = self.quo_ground(h_ground)
+                cfg = other.quo_ground(h_ground)
+            else:
+                cff = ring.zero
+                cfg = ring.zero
+            return h, cff, cfg
+
+        return None
+
     def _gcd_ZZ(
         self, other: PolyElement[Er]
     ) -> tuple[PolyElement[Er], PolyElement[Er], PolyElement[Er]]:
-        return heugcd(self, other)
+        try:
+            return heugcd(self, other)
+        except HeuristicGCDFailed:
+            from sympy.polys.modulargcd import (
+                modgcd_univariate,
+                modgcd_multivariate,
+            )
+            if self.ring.ngens == 1:
+                return modgcd_univariate(self, other)
+            else:
+                return modgcd_multivariate(self, other)
 
     def _gcd_QQ(
         self, g: PolyElement[Er]
