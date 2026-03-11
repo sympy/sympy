@@ -965,7 +965,7 @@ def linprog(c, A=None, b=None, A_eq=None, b_eq=None, bounds=None):
             raise ValueError("A and b must both be given")
         # the governing equations will be simple constraints
         # on variables
-        A, b = zeros(0, C.cols), zeros(0, 1)  # FIX: was zeros(C.cols, 1) which is truthy and caused ValueError in _simplex
+        A, b = zeros(0, C.cols), zeros(C.cols, 1)
     else:
         A, b = [Matrix(i) for i in (A, b)]
 
@@ -1032,7 +1032,7 @@ def show_linprog(c, A=None, b=None, A_eq=None, b_eq=None, bounds=None):
             raise ValueError("A and b must both be given")
         # the governing equations will be simple constraints
         # on variables
-        A, b = zeros(0, C.cols), zeros(C.cols, 1)
+        A, b = zeros(0, C.cols), zeros(0, 1)
     else:
         A, b = [Matrix(i) for i in (A, b)]
 
@@ -1066,8 +1066,8 @@ def show_linprog(c, A=None, b=None, A_eq=None, b_eq=None, bounds=None):
             raise ValueError("unexpected bounds %s" % bounds)
 
     x = Matrix(symbols('x1:%s' % (A.cols+1)))
-    eq_constraints = [Eq(i, j) for i, j in zip(A_eq*x, b_eq)] if A_eq is not None else []
-    f, c = (C*x)[0], [i<=j for i, j in zip(A*x, b)] + eq_constraints
+    eq_constraints = [Eq(i,j) for i,j in zip(A_eq*x, b_eq)] if A_eq is not None else []
+    f,c = (C*x)[0], [i<=j for i,j in zip(A*x, b)] + eq_constraints
     if bounds is not None:
         for i, (lo, hi) in enumerate(bounds):
             if lo is not None:
