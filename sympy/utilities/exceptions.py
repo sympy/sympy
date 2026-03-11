@@ -5,7 +5,10 @@ from __future__ import annotations
 
 import warnings
 import contextlib
-import collections.abc as _abc  # noqa: TC003
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    import collections.abc as _abc
 
 from textwrap import dedent
 
