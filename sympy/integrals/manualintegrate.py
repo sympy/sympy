@@ -1890,9 +1890,9 @@ def quadratic_denom_rule(integral):
         pieces = []
         # skips degenerate case if b != 0 or if b = 0 would cause null denominator
         if not _if_zero_implies_zero(b, c):
-                substituted = integrand.subs(b, 0)
-                substep = integral_steps(substituted, symbol)
-                pieces.append((RewriteRule(integrand, symbol, substituted, substep), Eq(b, 0)))
+            substituted = integrand.subs(b, 0)
+            substep = integral_steps(substituted, symbol)
+            pieces.append((RewriteRule(integrand, symbol, substituted, substep), Eq(b, 0)))
         if not _if_zero_implies_zero(c, b):
             substituted = integrand.subs(c, 0)
             substep = integral_steps(substituted, symbol)
