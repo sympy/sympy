@@ -26,6 +26,9 @@ def test_Abs():
     assert refine(Abs(x**2)) != x**2
     assert refine(Abs(x**2), Q.real(x)) == x**2
 
+    # abs of a product should refine individual terms when assumptions allow
+    assert refine(Abs(x*y), Q.positive(x) & Q.real(y)) == x*Abs(y)
+
 
 def test_pow1():
     assert refine((-1)**x, Q.even(x)) == 1
