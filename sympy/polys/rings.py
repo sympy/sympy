@@ -3215,8 +3215,10 @@ class PolyElement(
             return h, cff, cfg
 
         if other.is_ground:
-            h, cfg, cff = other._gcd_trivial(self)
-            return h, cff, cfg
+            result = other._gcd_trivial(self)
+            if result is not None:
+                h, cfg, cff = result
+                return h, cff, cfg
 
         # Case 2: No common generators
         # Determine which generators actually appear in each polynomial
