@@ -1,5 +1,4 @@
 from math import log
-from typing import Optional
 from sympy.core.random import _randint
 from sympy.external.gmpy import gcd, invert, sqrt
 from sympy.utilities.misc import as_int
