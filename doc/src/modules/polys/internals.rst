@@ -66,6 +66,7 @@ may be slightly more efficient.)
 
 .. py:class:: dup
 .. py:class:: dmp
+.. py:class:: idmp
 .. py:class:: dmp_tup
 .. py:class:: monom
 

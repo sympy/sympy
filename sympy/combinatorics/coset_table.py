@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.combinatorics.free_groups import free_group
 from sympy.printing.defaults import DefaultPrinting
 
@@ -82,7 +83,7 @@ class CosetTable(DefaultPrinting):
         H = self.subgroup
         self._grp = free_group(', ' .join(["a_%d" % i for i in range(len(H))]))[0]
         self.P = [[None]*len(self.A)]
-        self.p_p = {}
+        self.p_p = {0:self._grp.identity}
 
     @property
     def omega(self):

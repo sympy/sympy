@@ -1,9 +1,11 @@
 """Core module. Provides the basic operations needed in sympy.
 """
+from __future__ import annotations
 
 from .sympify import sympify, SympifyError
 from .cache import cacheit
-from .assumptions import assumptions, check_assumptions, failing_assumptions, common_assumptions
+from .assumptions import (assumptions, check_assumptions, failing_assumptions,
+                          common_assumptions, all_assumptions)
 from .basic import Basic, Atom
 from .singleton import S
 from .expr import Expr, AtomicExpr, UnevaluatedExpr
@@ -45,7 +47,7 @@ __all__ = [
     'cacheit',
 
     'assumptions', 'check_assumptions', 'failing_assumptions',
-    'common_assumptions',
+    'common_assumptions', 'all_assumptions',
 
     'Basic', 'Atom',
 

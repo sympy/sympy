@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.symbol import symbols
 from sympy.functions.elementary.exponential import exp
 

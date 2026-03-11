@@ -59,6 +59,8 @@ git_whitelist = {
     'requirements-dev.txt',
     'MANIFEST.in',
     'banner.svg',
+    # GitHub Codespace
+    '.devcontainer/devcontainer.json',
     # Code of conduct
     'CODE_OF_CONDUCT.md',
     # Contributing guide

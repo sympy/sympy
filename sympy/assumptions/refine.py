@@ -4,12 +4,12 @@ from typing import TYPE_CHECKING, overload
 
 from sympy.core import S, Add, Expr, Basic, Mul, Pow, Rational
 from sympy.core.logic import fuzzy_not
-from sympy.logic.boolalg import Boolean
 
 from sympy.assumptions import ask, Q  # type: ignore
 
 
 if TYPE_CHECKING:
+    from sympy.logic.boolalg import Boolean
     from typing import Callable
 
 
@@ -403,6 +403,155 @@ def refine_matrixelement(expr, assumptions):
             return expr
         return MatrixElement(matrix, j, i)
 
+
+def refine_sin_cos(expr, assumptions):
+    """
+    Handler for sin and cos functions.
+
+    Examples
+    ========
+
+    >>> from sympy.assumptions.refine import refine_sin_cos
+    >>> from sympy import Symbol, Q, sin, cos, pi
+    >>> from sympy.abc import x, y
+    >>> n = Symbol('n')
+    >>> refine_sin_cos(cos(n*pi), Q.even(n))
+    1
+    >>> refine_sin_cos(sin(n*pi/2), Q.odd(n) & Q.odd((n-1)/2))
+    -1
+    >>> refine_sin_cos(sin(x + n*pi/2), Q.odd(n))
+    (-1)**(n/2 + 3/2)*cos(x)
+    >>> refine_sin_cos(cos(x + n*pi/2), Q.even(n))
+    (-1)**(n/2)*cos(x)
+    >>> refine_sin_cos(cos(x + y + 2*n*pi), Q.integer(n))
+    cos(x + y)
+    """
+    from sympy.functions.elementary.trigonometric import sin, cos
+    arg = expr.args[0]
+
+    integer_coeffs_of_pi_half = []
+    remaining_terms = []
+
+    terms = arg.args if arg.is_Add else (arg,)
+    for term in terms:
+        coeff_of_pi = term.coeff(S.Pi)
+        if coeff_of_pi and ask(Q.integer(2 * coeff_of_pi), assumptions):
+            coeff_of_pi_half = 2 * coeff_of_pi
+            integer_coeffs_of_pi_half.append(coeff_of_pi_half)
+        else:
+            remaining_terms.append(term)
+
+    if not integer_coeffs_of_pi_half:
+        return expr
+
+    sum_of_parity_known_coeffs = 0
+    sum_of_parity_unknown_coeffs = 0
+    sum_of_parity_known_coeffs_is_even = True
+    for coeff in integer_coeffs_of_pi_half:
+        coeff_is_even = ask(Q.even(coeff), assumptions)
+        if coeff_is_even is None:
+            sum_of_parity_unknown_coeffs += coeff
+        else:
+            sum_of_parity_known_coeffs += coeff
+            sum_of_parity_known_coeffs_is_even = (
+                sum_of_parity_known_coeffs_is_even == coeff_is_even
+            )
+
+    if sum_of_parity_known_coeffs == 0:
+        return expr
+
+    # Treat sin as a phase-shifted cosine so a single logic path can handle both.
+    if isinstance(expr, sin):
+        k = sum_of_parity_known_coeffs - 1
+        k_is_even = not sum_of_parity_known_coeffs_is_even
+    else:
+        k = sum_of_parity_known_coeffs
+        k_is_even = sum_of_parity_known_coeffs_is_even
+
+    # If k is even:
+    #    `cos(rem + k*pi/2)` -> `(-1)^(k/2) * cos(rem)`
+    #
+    # If k is odd:
+    #    `cos(rem + k*pi/2)` -> `(-1)^((k+1)/2) * sin(rem)`
+    rem = sum(remaining_terms) + sum_of_parity_unknown_coeffs * S.Pi / 2
+    if k_is_even:
+        pow_expr = (-1)**(k / 2)
+        refined_pow = refine_Pow(pow_expr, assumptions)
+        return (pow_expr if refined_pow is None else refined_pow) * cos(rem)
+    else:
+        pow_expr = (-1)**((k + 1) / 2)
+        refined_pow = refine_Pow(pow_expr, assumptions)
+        return (pow_expr if refined_pow is None else refined_pow) * sin(rem)
+
+
+def refine_Heaviside(expr, assumptions):
+    """
+    Handler for the Heaviside step function.
+
+    Examples
+    ========
+
+    >>> from sympy.assumptions.refine import refine_Heaviside
+    >>> from sympy import Q, Heaviside
+    >>> from sympy.abc import x
+    >>> refine_Heaviside(Heaviside(x), Q.positive(x))
+    1
+    >>> refine_Heaviside(Heaviside(x), Q.negative(x))
+    0
+    >>> refine_Heaviside(Heaviside(x), Q.zero(x))
+    1/2
+
+    """
+    arg, H0 = expr.args
+    if ask(Q.positive(arg), assumptions):
+        return S.One
+    if ask(Q.negative(arg), assumptions):
+        return S.Zero
+    if ask(Q.zero(arg), assumptions):
+        return H0
+    return expr
+
+
+def refine_floor_ceiling(expr, assumptions):
+    """
+    Handler for the floor and ceiling functions
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol, refine, Q, floor, ceiling
+    >>> x = Symbol('x')
+    >>> y = Symbol('y')
+    >>> refine(floor(x), Q.integer(x))
+    x
+    >>> refine(ceiling(x), Q.integer(x))
+    x
+    >>> refine(floor(x + y), Q.integer(x))
+    x + floor(y)
+    >>> refine(ceiling(x + y), Q.integer(x))
+    x + ceiling(y)
+    >>> refine(ceiling(x), Q.infinite(x))
+    x
+    >>> refine(ceiling(ceiling(x) + ceiling(y)))
+    ceiling(x) + ceiling(y)
+    """
+    from sympy.functions.elementary.integers import floor, ceiling
+    arg = expr.args[0]
+    if ask(Q.integer(arg), assumptions) or ask(Q.infinite(arg), assumptions):
+        return arg
+
+    if isinstance(arg, Add):
+        gaussian_integer_terms = []
+        nongausian_intergers_terms = []
+        for term in arg.args:
+            if ask(Q.integer(term), assumptions) or isinstance(term, (floor, ceiling)):
+                gaussian_integer_terms.append(term)
+            else:
+                nongausian_intergers_terms.append(term)
+        return Add(*gaussian_integer_terms) + expr.func(Add(*nongausian_intergers_terms))
+    return expr
+
+
 handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'Abs': refine_abs,
     'Pow': refine_Pow,
@@ -411,5 +560,10 @@ handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'im': refine_im,
     'arg': refine_arg,
     'sign': refine_sign,
-    'MatrixElement': refine_matrixelement
+    'MatrixElement': refine_matrixelement,
+    'cos': refine_sin_cos,
+    'sin': refine_sin_cos,
+    'Heaviside': refine_Heaviside,
+    'floor': refine_floor_ceiling,
+    'ceiling' : refine_floor_ceiling,
 }

@@ -16,7 +16,11 @@ from sympy.utilities.iterables import is_sequence
 
 
 if TYPE_CHECKING:
-    from typing import TypeIs
+    import sys
+    if sys.version_info >= (3, 13):
+        from typing import TypeIs
+    else:
+        from typing_extensions import TypeIs
     from sympy.polys.polytools import Poly
     from sympy.polys.domains.ring import Ring
     from sympy.polys.domains.field import Field
@@ -583,16 +587,16 @@ class Domain(Generic[Er]):
         from sympy.polys.domains import ZZ, QQ, RealField, ComplexField
 
         if ZZ.of_type(element):
-            return self.convert_from(element, ZZ)
+            return self.convert_from(element, ZZ) # type: ignore
 
         if isinstance(element, int):
             return self.convert_from(ZZ(element), ZZ)
 
         if GROUND_TYPES != 'python':
             if isinstance(element, ZZ.tp):
-                return self.convert_from(element, ZZ)
+                return self.convert_from(element, ZZ) # type: ignore
             if isinstance(element, QQ.tp):
-                return self.convert_from(element, QQ)
+                return self.convert_from(element, QQ) # type: ignore
 
         if isinstance(element, float):
             RR = RealField()
@@ -625,7 +629,7 @@ class Domain(Generic[Er]):
         else: # TODO: remove this branch
             if not is_sequence(element):
                 try:
-                    element = sympify(element, strict=True)
+                    element = sympify(element, strict=True) # type: ignore
                     if isinstance(element, Basic):
                         return self.from_sympy(element) # type: ignore
                 except (TypeError, ValueError):
@@ -1558,7 +1562,7 @@ class Domain(Generic[Er]):
     def imag(self, a) -> Er:
         return self.zero
 
-    def almosteq(self, a: Er, b: Er, tolerance: int | None = None):
+    def almosteq(self, a: Er, b: Er, tolerance: float | None = None):
         """Check if ``a`` and ``b`` are almost equal. """
         return a == b
 

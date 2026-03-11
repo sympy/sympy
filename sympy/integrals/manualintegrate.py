@@ -22,16 +22,14 @@ To enable simple substitutions, add the match to find_substitutions.
 """
 
 from __future__ import annotations
-from typing import NamedTuple, Type, Callable, Sequence
+from typing import NamedTuple, Callable, Sequence, TYPE_CHECKING
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
 from collections import defaultdict
 from collections.abc import Mapping
 
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
 from sympy.core.containers import Dict
-from sympy.core.expr import Expr
 from sympy.core.function import Derivative
 from sympy.core.logic import fuzzy_not
 from sympy.core.mul import Mul
@@ -39,6 +37,7 @@ from sympy.core.numbers import Integer, Number, E
 from sympy.core.power import Pow
 from sympy.core.relational import Eq, Ne
 from sympy.core.singleton import S
+from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, Symbol, Wild
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import WildFunction
@@ -62,7 +61,7 @@ from sympy.functions.special.zeta_functions import polylog
 from .integrals import Integral
 from sympy.logic.boolalg import And, Boolean
 from sympy.ntheory.factor_ import primefactors
-from sympy.polys.polytools import degree, lcm_list, gcd_list, Poly
+from sympy.polys.polytools import degree, factor_list, lcm_list, gcd_list, Poly
 from sympy.simplify.radsimp import fraction
 from sympy.simplify.simplify import simplify
 from sympy.simplify.powsimp import powsimp
@@ -71,11 +70,64 @@ from sympy.strategies.core import switch, do_one, null_safe, condition
 from sympy.utilities.iterables import iterable
 from sympy.utilities.misc import debug
 
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
 
-@dataclass
+def _if_zero_implies_zero(P, Q):
+    """
+    Check if expression P = 0 implies Q = 0.
+
+    Returns True if P is not zero or if substituting every irreducible
+    factor of the numerator of P in the numerator of Q makes Q = 0.
+    """
+    num_p, _ = P.as_numer_denom()
+    num_q, _ = Q.as_numer_denom()
+    if P.is_zero:
+        return Q.is_zero
+    factors_P = {f for f, p in factor_list(num_p)[1]}
+    # use factor() to help find substitutions (eg. (a**2 - 1) is zero if (a + 1) = 0)
+    factored_num_q = num_q.factor()
+    for factor in factors_P:
+        if factored_num_q.subs(factor, 0) != 0:
+            return False
+    return True
+
 class Rule(ABC):
+
+    __slots__ = ('integrand', 'variable')
+
     integrand: Expr
     variable: Symbol
+
+    def __init__(self, integrand: Expr, variable: Symbol):
+        self.integrand = integrand
+        self.variable = variable
+
+    def __eq__(self, other):
+        if not isinstance(other, type(self)):
+            return NotImplemented
+        return all(
+            getattr(self, attr) == getattr(other, attr) for attr in self._get_slots()
+        )
+
+    def __repr__(self) -> str:
+        parts = [f"{self.__class__.__name__}("]
+        for i, name in enumerate(self._get_slots()):
+            if i:
+                parts.append(", ")
+            parts.append(f"{name}={getattr(self, name)!r}")
+        parts.append(")")
+        return "".join(parts)
+
+    def _get_slots(self):
+        seen = {()}
+        slots = []
+        for cls in self.__class__.__mro__[::-1]:
+            key = tuple(getattr(cls, "__slots__", ()))
+            if key not in seen:
+                seen.add(key)
+                slots.extend(key)
+        return slots
 
     @abstractmethod
     def eval(self) -> Expr:
@@ -86,26 +138,45 @@ class Rule(ABC):
         pass
 
 
-@dataclass
 class AtomicRule(Rule, ABC):
     """A simple rule that does not depend on other rules"""
+
+    __slots__ = ()
+
     def contains_dont_know(self) -> bool:
         return False
 
 
-@dataclass
 class ConstantRule(AtomicRule):
     """integrate(a, x)  ->  a*x"""
+
+    __slots__ = ()
+
     def eval(self) -> Expr:
         return self.integrand * self.variable
 
 
-@dataclass
 class ConstantTimesRule(Rule):
     """integrate(a*f(x), x)  ->  a*integrate(f(x), x)"""
+
+    __slots__ = ('constant', 'other', 'substep')
+
     constant: Expr
     other: Expr
     substep: Rule
+
+    def __init__(
+        self,
+        integrand: Expr,
+        variable: Symbol,
+        constant: Expr,
+        other: Expr,
+        substep: Rule,
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.constant = constant
+        self.other = other
+        self.substep = substep
 
     def eval(self) -> Expr:
         return self.constant * self.substep.eval()
@@ -114,11 +185,20 @@ class ConstantTimesRule(Rule):
         return self.substep.contains_dont_know()
 
 
-@dataclass
 class PowerRule(AtomicRule):
     """integrate(x**a, x)"""
+
+    __slots__ = ("base", "exp")
+
     base: Expr
     exp: Expr
+
+    def __init__(
+        self, integrand: Expr, variable: Symbol, base: Expr, exp: Expr
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.base = base
+        self.exp = exp
 
     def eval(self) -> Expr:
         return Piecewise(
@@ -127,11 +207,20 @@ class PowerRule(AtomicRule):
         )
 
 
-@dataclass
 class NestedPowRule(AtomicRule):
     """integrate((x**a)**b, x)"""
+
+    __slots__ = ("base", "exp")
+
     base: Expr
     exp: Expr
+
+    def __init__(
+        self, integrand: Expr, variable: Symbol, base: Expr, exp: Expr
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.base = base
+        self.exp = exp
 
     def eval(self) -> Expr:
         m = self.base * self.integrand
@@ -139,10 +228,16 @@ class NestedPowRule(AtomicRule):
                          (m * log(self.base), True))
 
 
-@dataclass
 class AddRule(Rule):
     """integrate(f(x) + g(x), x) -> integrate(f(x), x) + integrate(g(x), x)"""
+
+    __slots__ = ("substeps",)
+
     substeps: list[Rule]
+
+    def __init__(self, integrand: Expr, variable: Symbol, substeps: list[Rule]) -> None:
+        super().__init__(integrand, variable)
+        self.substeps = substeps
 
     def eval(self) -> Expr:
         return Add(*(substep.eval() for substep in self.substeps))
@@ -151,12 +246,27 @@ class AddRule(Rule):
         return any(substep.contains_dont_know() for substep in self.substeps)
 
 
-@dataclass
 class URule(Rule):
     """integrate(f(g(x))*g'(x), x) -> integrate(f(u), u), u = g(x)"""
+
+    __slots__ = ("u_var", "u_func", "substep")
+
     u_var: Symbol
     u_func: Expr
     substep: Rule
+
+    def __init__(
+        self,
+        integrand: Expr,
+        variable: Symbol,
+        u_var: Symbol,
+        u_func: Expr,
+        substep: Rule,
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.u_var = u_var
+        self.u_func = u_func
+        self.substep = substep
 
     def eval(self) -> Expr:
         result = self.substep.eval()
@@ -171,13 +281,30 @@ class URule(Rule):
         return self.substep.contains_dont_know()
 
 
-@dataclass
 class PartsRule(Rule):
     """integrate(u(x)*v'(x), x) -> u(x)*v(x) - integrate(u'(x)*v(x), x)"""
+
+    __slots__ = ("u", "dv", "v_step", "second_step")
+
     u: Symbol
     dv: Expr
     v_step: Rule
     second_step: Rule | None  # None when is a substep of CyclicPartsRule
+
+    def __init__(
+        self,
+        integrand: Expr,
+        variable: Symbol,
+        u: Symbol,
+        dv: Expr,
+        v_step: Rule,
+        second_step: Rule | None = None,
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.u = u
+        self.dv = dv
+        self.v_step = v_step
+        self.second_step = second_step
 
     def eval(self) -> Expr:
         assert self.second_step is not None
@@ -189,11 +316,24 @@ class PartsRule(Rule):
             self.second_step is not None and self.second_step.contains_dont_know())
 
 
-@dataclass
 class CyclicPartsRule(Rule):
     """Apply PartsRule multiple times to integrate exp(x)*sin(x)"""
+
+    __slots__ = ("parts_rules", "coefficient")
+
     parts_rules: list[PartsRule]
     coefficient: Expr
+
+    def __init__(
+        self,
+        integrand: Expr,
+        variable: Symbol,
+        parts_rules: list[PartsRule],
+        coefficient: Expr,
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.parts_rules = parts_rules
+        self.coefficient = coefficient
 
     def eval(self) -> Expr:
         result = []
@@ -207,124 +347,184 @@ class CyclicPartsRule(Rule):
         return any(substep.contains_dont_know() for substep in self.parts_rules)
 
 
-@dataclass
 class TrigRule(AtomicRule, ABC):
-    pass
+    __slots__ = ()
 
 
-@dataclass
 class SinRule(TrigRule):
     """integrate(sin(x), x) -> -cos(x)"""
+
+    __slots__ = ()
+
     def eval(self) -> Expr:
         return -cos(self.variable)
 
 
-@dataclass
 class CosRule(TrigRule):
     """integrate(cos(x), x) -> sin(x)"""
+
+    __slots__ = ()
+
     def eval(self) -> Expr:
         return sin(self.variable)
 
 
-@dataclass
 class SecTanRule(TrigRule):
     """integrate(sec(x)*tan(x), x) -> sec(x)"""
+
+    __slots__ = ()
+
     def eval(self) -> Expr:
         return sec(self.variable)
 
 
-@dataclass
 class CscCotRule(TrigRule):
     """integrate(csc(x)*cot(x), x) -> -csc(x)"""
+
+    __slots__ = ()
+
     def eval(self) -> Expr:
         return -csc(self.variable)
 
 
-@dataclass
 class Sec2Rule(TrigRule):
     """integrate(sec(x)**2, x) -> tan(x)"""
+
+    __slots__ = ()
+
     def eval(self) -> Expr:
         return tan(self.variable)
 
 
-@dataclass
 class Csc2Rule(TrigRule):
     """integrate(csc(x)**2, x) -> -cot(x)"""
+
+    __slots__ = ()
+
     def eval(self) -> Expr:
         return -cot(self.variable)
 
 
-@dataclass
 class HyperbolicRule(AtomicRule, ABC):
-    pass
+    __slots__ = ()
 
 
-@dataclass
 class SinhRule(HyperbolicRule):
     """integrate(sinh(x), x) -> cosh(x)"""
+
+    __slots__ = ()
+
     def eval(self) -> Expr:
         return cosh(self.variable)
 
 
-@dataclass
 class CoshRule(HyperbolicRule):
     """integrate(cosh(x), x) -> sinh(x)"""
+
+    __slots__ = ()
+
     def eval(self):
         return sinh(self.variable)
 
 
-@dataclass
 class ExpRule(AtomicRule):
     """integrate(a**x, x) -> a**x/ln(a)"""
+
+    __slots__ = ("base", "exp")
+
     base: Expr
     exp: Expr
+
+    def __init__(
+        self, integrand: Expr, variable: Symbol, base: Expr, exp: Expr
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.base = base
+        self.exp = exp
 
     def eval(self) -> Expr:
         return self.integrand / log(self.base)
 
 
-@dataclass
 class ReciprocalRule(AtomicRule):
     """integrate(1/x, x) -> ln(x)"""
+
+    __slots__ = ("base",)
+
     base: Expr
+
+    def __init__(self, integrand: Expr, variable: Symbol, base: Expr) -> None:
+        super().__init__(integrand, variable)
+        self.base = base
 
     def eval(self) -> Expr:
         return log(self.base)
 
 
-@dataclass
 class ArcsinRule(AtomicRule):
     """integrate(1/sqrt(1-x**2), x) -> asin(x)"""
+
+    __slots__ = ()
+
     def eval(self) -> Expr:
         return asin(self.variable)
 
 
-@dataclass
 class ArcsinhRule(AtomicRule):
     """integrate(1/sqrt(1+x**2), x) -> asin(x)"""
+
+    __slots__ = ()
+
     def eval(self) -> Expr:
         return asinh(self.variable)
 
 
-@dataclass
 class ReciprocalSqrtQuadraticRule(AtomicRule):
     """integrate(1/sqrt(a+b*x+c*x**2), x) -> log(2*sqrt(c)*sqrt(a+b*x+c*x**2)+b+2*c*x)/sqrt(c)"""
+
+    __slots__ = ("a", "b", "c")
+
     a: Expr
     b: Expr
     c: Expr
+
+    def __init__(
+        self, integrand: Expr, variable: Symbol, a: Expr, b: Expr, c: Expr
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.a = a
+        self.b = b
+        self.c = c
 
     def eval(self) -> Expr:
         a, b, c, x = self.a, self.b, self.c, self.variable
         return log(2*sqrt(c)*sqrt(a+b*x+c*x**2)+b+2*c*x)/sqrt(c)
 
 
-@dataclass
 class SqrtQuadraticDenomRule(AtomicRule):
     """integrate(poly(x)/sqrt(a+b*x+c*x**2), x)"""
+
+    __slots__ = ("a", "b", "c", "coeffs")
+
     a: Expr
     b: Expr
     c: Expr
     coeffs: list[Expr]
+
+    def __init__(
+        self,
+        integrand: Expr,
+        variable: Symbol,
+        a: Expr,
+        b: Expr,
+        c: Expr,
+        coeffs: list[Expr],
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.a = a
+        self.b = b
+        self.c = c
+        self.coeffs = coeffs
 
     def eval(self) -> Expr:
         a, b, c, coeffs, x = self.a, self.b, self.c, self.coeffs.copy(), self.variable
@@ -354,22 +554,40 @@ class SqrtQuadraticDenomRule(AtomicRule):
                      for i in range(len(result_coeffs))), e/c)*s + I0
 
 
-@dataclass
 class SqrtQuadraticRule(AtomicRule):
     """integrate(sqrt(a+b*x+c*x**2), x)"""
+
+    __slots__ = ("a", "b", "c")
+
     a: Expr
     b: Expr
     c: Expr
+
+    def __init__(
+        self, integrand: Expr, variable: Symbol, a: Expr, b: Expr, c: Expr
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.a = a
+        self.b = b
+        self.c = c
 
     def eval(self) -> Expr:
         step = sqrt_quadratic_rule(IntegralInfo(self.integrand, self.variable), degenerate=False)
         return step.eval()
 
 
-@dataclass
 class AlternativeRule(Rule):
     """Multiple ways to do integration."""
+
+    __slots__ = ("alternatives",)
+
     alternatives: list[Rule]
+
+    def __init__(
+        self, integrand: Expr, variable: Symbol, alternatives: list[Rule]
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.alternatives = alternatives
 
     def eval(self) -> Expr:
         return self.alternatives[0].eval()
@@ -378,9 +596,11 @@ class AlternativeRule(Rule):
         return any(substep.contains_dont_know() for substep in self.alternatives)
 
 
-@dataclass
 class DontKnowRule(Rule):
     """Leave the integral as is."""
+
+    __slots__ = ()
+
     def eval(self) -> Expr:
         return Integral(self.integrand, self.variable)
 
@@ -388,9 +608,11 @@ class DontKnowRule(Rule):
         return True
 
 
-@dataclass
 class DerivativeRule(AtomicRule):
     """integrate(f'(x), x) -> f(x)"""
+
+    __slots__ = ()
+
     def eval(self) -> Expr:
         assert isinstance(self.integrand, Derivative)
         variable_count = list(self.integrand.variable_count)
@@ -401,11 +623,20 @@ class DerivativeRule(AtomicRule):
         return Derivative(self.integrand.expr, *variable_count)
 
 
-@dataclass
 class RewriteRule(Rule):
     """Rewrite integrand to another form that is easier to handle."""
+
+    __slots__ = ("rewritten", "substep")
+
     rewritten: Expr
     substep: Rule
+
+    def __init__(
+        self, integrand: Expr, variable: Symbol, rewritten: Expr, substep: Rule
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.rewritten = rewritten
+        self.substep = substep
 
     def eval(self) -> Expr:
         return self.substep.eval()
@@ -414,15 +645,25 @@ class RewriteRule(Rule):
         return self.substep.contains_dont_know()
 
 
-@dataclass
 class CompleteSquareRule(RewriteRule):
     """Rewrite a+b*x+c*x**2 to a-b**2/(4*c) + c*(x+b/(2*c))**2"""
-    pass
+    __slots__ = ()
 
 
-@dataclass
 class PiecewiseRule(Rule):
+
+    __slots__ = ("subfunctions",)
+
     subfunctions: Sequence[tuple[Rule, bool | Boolean]]
+
+    def __init__(
+        self,
+        integrand: Expr,
+        variable: Symbol,
+        subfunctions: Sequence[tuple[Rule, bool | Boolean]],
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.subfunctions = subfunctions
 
     def eval(self) -> Expr:
         return Piecewise(*[(substep.eval(), cond)
@@ -432,11 +673,26 @@ class PiecewiseRule(Rule):
         return any(substep.contains_dont_know() for substep, _ in self.subfunctions)
 
 
-@dataclass
 class HeavisideRule(Rule):
+
+    __slots__ = ("harg", "ibnd", "substep")
+
     harg: Expr
     ibnd: Expr
     substep: Rule
+
+    def __init__(
+        self,
+        integrand: Expr,
+        variable: Symbol,
+        harg: Expr,
+        ibnd: Expr,
+        substep: Rule,
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.harg = harg
+        self.ibnd = ibnd
+        self.substep = substep
 
     def eval(self) -> Expr:
         # If we are integrating over x and the integrand has the form
@@ -450,11 +706,21 @@ class HeavisideRule(Rule):
         return self.substep.contains_dont_know()
 
 
-@dataclass
 class DiracDeltaRule(AtomicRule):
+
+    __slots__ = ("n", "a", "b")
+
     n: Expr
     a: Expr
     b: Expr
+
+    def __init__(
+        self, integrand: Expr, variable: Symbol, n: Expr, a: Expr, b: Expr
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.n = n
+        self.a = a
+        self.b = b
 
     def eval(self) -> Expr:
         n, a, b, x = self.n, self.a, self.b, self.variable
@@ -463,13 +729,32 @@ class DiracDeltaRule(AtomicRule):
         return DiracDelta(a+b*x, n-1)/b
 
 
-@dataclass
 class TrigSubstitutionRule(Rule):
+
+    __slots__ = ("theta", "func", "rewritten", "substep", "restriction")
+
     theta: Expr
     func: Expr
     rewritten: Expr
     substep: Rule
     restriction: bool | Boolean
+
+    def __init__(
+        self,
+        integrand: Expr,
+        variable: Symbol,
+        theta: Expr,
+        func: Expr,
+        rewritten: Expr,
+        substep: Rule,
+        restriction: bool | Boolean,
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.theta = theta
+        self.func = func
+        self.rewritten = rewritten
+        self.substep = substep
+        self.restriction = restriction
 
     def eval(self) -> Expr:
         theta, func, x = self.theta, self.func, self.variable
@@ -514,27 +799,52 @@ class TrigSubstitutionRule(Rule):
         return self.substep.contains_dont_know()
 
 
-@dataclass
 class ArctanRule(AtomicRule):
     """integrate(a/(b*x**2+c), x) -> a/b / sqrt(c/b) * atan(x/sqrt(c/b))"""
+
+    __slots__ = ("a", "b", "c")
+
     a: Expr
     b: Expr
     c: Expr
+
+    def __init__(
+        self, integrand: Expr, variable: Symbol, a: Expr, b: Expr, c: Expr
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.a = a
+        self.b = b
+        self.c = c
 
     def eval(self) -> Expr:
         a, b, c, x = self.a, self.b, self.c, self.variable
         return a/b / sqrt(c/b) * atan(x/sqrt(c/b))
 
 
-@dataclass
 class OrthogonalPolyRule(AtomicRule, ABC):
+
+    __slots__ = ("n",)
+
     n: Expr
 
+    def __init__(self, integrand: Expr, variable: Symbol, n: Expr) -> None:
+        super().__init__(integrand, variable)
+        self.n = n
 
-@dataclass
+
 class JacobiRule(OrthogonalPolyRule):
+
+    __slots__ = ("a", "b")
+
     a: Expr
     b: Expr
+
+    def __init__(
+        self, integrand: Expr, variable: Symbol, n: Expr, a: Expr, b: Expr
+    ) -> None:
+        super().__init__(integrand, variable, n)
+        self.a = a
+        self.b = b
 
     def eval(self) -> Expr:
         n, a, b, x = self.n, self.a, self.b, self.variable
@@ -544,9 +854,15 @@ class JacobiRule(OrthogonalPolyRule):
             ((a + b + 2)*x**2/4 + (a - b)*x/2, Eq(n, 1)))
 
 
-@dataclass
 class GegenbauerRule(OrthogonalPolyRule):
+
+    __slots__ = ("a",)
+
     a: Expr
+
+    def __init__(self, integrand: Expr, variable: Symbol, n: Expr, a: Expr) -> None:
+        super().__init__(integrand, variable, n)
+        self.a = a
 
     def eval(self) -> Expr:
         n, a, x = self.n, self.a, self.variable
@@ -556,8 +872,10 @@ class GegenbauerRule(OrthogonalPolyRule):
             (S.Zero, True))
 
 
-@dataclass
 class ChebyshevTRule(OrthogonalPolyRule):
+
+    __slots__ = ()
+
     def eval(self) -> Expr:
         n, x = self.n, self.variable
         return Piecewise(
@@ -566,8 +884,10 @@ class ChebyshevTRule(OrthogonalPolyRule):
             (x**2/2, True))
 
 
-@dataclass
 class ChebyshevURule(OrthogonalPolyRule):
+
+    __slots__ = ()
+
     def eval(self) -> Expr:
         n, x = self.n, self.variable
         return Piecewise(
@@ -575,88 +895,129 @@ class ChebyshevURule(OrthogonalPolyRule):
             (S.Zero, True))
 
 
-@dataclass
 class LegendreRule(OrthogonalPolyRule):
+
+    __slots__ = ()
+
     def eval(self) -> Expr:
         n, x = self.n, self.variable
         return(legendre(n + 1, x) - legendre(n - 1, x))/(2*n + 1)
 
 
-@dataclass
 class HermiteRule(OrthogonalPolyRule):
+
+    __slots__ = ()
+
     def eval(self) -> Expr:
         n, x = self.n, self.variable
         return hermite(n + 1, x)/(2*(n + 1))
 
 
-@dataclass
 class LaguerreRule(OrthogonalPolyRule):
+
+    __slots__ = ()
+
     def eval(self) -> Expr:
         n, x = self.n, self.variable
         return laguerre(n, x) - laguerre(n + 1, x)
 
 
-@dataclass
 class AssocLaguerreRule(OrthogonalPolyRule):
+
+    __slots__ = ("a",)
+
     a: Expr
+
+    def __init__(self, integrand: Expr, variable: Symbol, n: Expr, a: Expr) -> None:
+        super().__init__(integrand, variable, n)
+        self.a = a
 
     def eval(self) -> Expr:
         return -assoc_laguerre(self.n + 1, self.a - 1, self.variable)
 
 
-@dataclass
 class IRule(AtomicRule, ABC):
+
+    __slots__ = ("a", "b")
+
     a: Expr
     b: Expr
 
+    def __init__(self, integrand: Expr, variable: Symbol, a: Expr, b: Expr) -> None:
+        super().__init__(integrand, variable)
+        self.a = a
+        self.b = b
 
-@dataclass
+
 class CiRule(IRule):
+
+    __slots__ = ()
+
     def eval(self) -> Expr:
         a, b, x = self.a, self.b, self.variable
         return cos(b)*Ci(a*x) - sin(b)*Si(a*x)
 
 
-@dataclass
 class ChiRule(IRule):
+
+    __slots__ = ()
+
     def eval(self) -> Expr:
         a, b, x = self.a, self.b, self.variable
         return cosh(b)*Chi(a*x) + sinh(b)*Shi(a*x)
 
 
-@dataclass
 class EiRule(IRule):
+
+    __slots__ = ()
+
     def eval(self) -> Expr:
         a, b, x = self.a, self.b, self.variable
         return exp(b)*Ei(a*x)
 
 
-@dataclass
 class SiRule(IRule):
+
+    __slots__ = ()
+
     def eval(self) -> Expr:
         a, b, x = self.a, self.b, self.variable
         return sin(b)*Ci(a*x) + cos(b)*Si(a*x)
 
 
-@dataclass
 class ShiRule(IRule):
+
+    __slots__ = ()
+
     def eval(self) -> Expr:
         a, b, x = self.a, self.b, self.variable
         return sinh(b)*Chi(a*x) + cosh(b)*Shi(a*x)
 
 
-@dataclass
 class LiRule(IRule):
+
+    __slots__ = ()
+
     def eval(self) -> Expr:
         a, b, x = self.a, self.b, self.variable
         return li(a*x + b)/a
 
 
-@dataclass
 class ErfRule(AtomicRule):
+
+    __slots__ = ("a", "b", "c")
+
     a: Expr
     b: Expr
     c: Expr
+
+    def __init__(
+        self, integrand: Expr, variable: Symbol, a: Expr, b: Expr, c: Expr
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.a = a
+        self.b = b
+        self.c = c
 
     def eval(self) -> Expr:
         a, b, c, x = self.a, self.b, self.c, self.variable
@@ -670,11 +1031,21 @@ class ErfRule(AtomicRule):
                 erfi((2*a*x + b)/(2*sqrt(a)))
 
 
-@dataclass
 class FresnelCRule(AtomicRule):
+
+    __slots__ = ("a", "b", "c")
+
     a: Expr
     b: Expr
     c: Expr
+
+    def __init__(
+        self, integrand: Expr, variable: Symbol, a: Expr, b: Expr, c: Expr
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.a = a
+        self.b = b
+        self.c = c
 
     def eval(self) -> Expr:
         a, b, c, x = self.a, self.b, self.c, self.variable
@@ -683,11 +1054,21 @@ class FresnelCRule(AtomicRule):
             sin(b**2/(4*a) - c)*fresnels((2*a*x + b)/sqrt(2*a*S.Pi)))
 
 
-@dataclass
 class FresnelSRule(AtomicRule):
+
+    __slots__ = ("a", "b", "c")
+
     a: Expr
     b: Expr
     c: Expr
+
+    def __init__(
+        self, integrand: Expr, variable: Symbol, a: Expr, b: Expr, c: Expr
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.a = a
+        self.b = b
+        self.c = c
 
     def eval(self) -> Expr:
         a, b, c, x = self.a, self.b, self.c, self.variable
@@ -696,16 +1077,22 @@ class FresnelSRule(AtomicRule):
             sin(b**2/(4*a) - c)*fresnelc((2*a*x + b)/sqrt(2*a*S.Pi)))
 
 
-@dataclass
 class PolylogRule(AtomicRule):
+
+    __slots__ = ("a", "b")
+
     a: Expr
     b: Expr
+
+    def __init__(self, integrand: Expr, variable: Symbol, a: Expr, b: Expr) -> None:
+        super().__init__(integrand, variable)
+        self.a = a
+        self.b = b
 
     def eval(self) -> Expr:
         return polylog(self.b + 1, self.a * self.variable)
 
 
-@dataclass
 class DilogRule(AtomicRule):
     a: Expr
     b: Expr
@@ -716,29 +1103,50 @@ class DilogRule(AtomicRule):
         return log(a)*log(abs(x)) - polylog(2, b*x**c/a)/c
 
 
-@dataclass
 class UpperGammaRule(AtomicRule):
+
+    __slots__ = ("a", "e")
+
     a: Expr
     e: Expr
+
+    def __init__(self, integrand: Expr, variable: Symbol, a: Expr, e: Expr) -> None:
+        super().__init__(integrand, variable)
+        self.a = a
+        self.e = e
 
     def eval(self) -> Expr:
         a, e, x = self.a, self.e, self.variable
         return x**e * (-a*x)**(-e) * uppergamma(e + 1, -a*x)/a
 
 
-@dataclass
 class EllipticFRule(AtomicRule):
+
+    __slots__ = ("a", "d")
+
     a: Expr
     d: Expr
+
+    def __init__(self, integrand: Expr, variable: Symbol, a: Expr, d: Expr) -> None:
+        super().__init__(integrand, variable)
+        self.a = a
+        self.d = d
 
     def eval(self) -> Expr:
         return elliptic_f(self.variable, self.d/self.a)/sqrt(self.a)
 
 
-@dataclass
 class EllipticERule(AtomicRule):
+
+    __slots__ = ("a", "d")
+
     a: Expr
     d: Expr
+
+    def __init__(self, integrand: Expr, variable: Symbol, a: Expr, d: Expr) -> None:
+        super().__init__(integrand, variable)
+        self.a = a
+        self.d = d
 
     def eval(self) -> Expr:
         return elliptic_e(self.variable, self.d/self.a)*sqrt(self.a)
@@ -1033,7 +1441,7 @@ def orthogonal_poly_rule(integral):
                     return orthogonal_poly_classes[klass](integrand, symbol, *integrand.args[:var_index])
 
 
-_special_function_patterns: list[tuple[Type, Expr, Callable | None, tuple]] = []
+_special_function_patterns: list[tuple[type, Expr, Callable | None, tuple]] = []
 _wilds = []
 _symbol = Dummy('x')
 
@@ -1191,7 +1599,7 @@ def inverse_trig_rule(integral: IntegralInfo, degenerate=True):
     elif b.is_zero:
         degenerate_step = ConstantRule(a ** exp, symbol)
     else:
-        degenerate_step = sqrt_linear_rule(IntegralInfo((a + b * symbol) ** exp, symbol))
+        degenerate_step = sqrt_fractional_linear_rule(IntegralInfo((a + b * symbol) ** exp, symbol))
 
     if simplify(2*exp + 1) == 0:
         h, k = -b/(2*c), a - b**2/(4*c)  # rewrite base to k + c*(symbol-h)**2
@@ -1482,40 +1890,50 @@ def trig_cmplx_exp_rule(integral: IntegralInfo):
 
 def quadratic_denom_rule(integral):
     integrand, symbol = integral
-    a = Wild('a', exclude=[symbol])
-    b = Wild('b', exclude=[symbol])
-    c = Wild('c', exclude=[symbol])
+    a = Wild('a', exclude=[symbol, 0])
+    b = Wild('b', exclude=[symbol, 0])
+    c = Wild('c', exclude=[symbol, 0])
 
     match = integrand.match(a / (b * symbol ** 2 + c))
 
     if match:
         a, b, c = match[a], match[b], match[c]
-        general_rule = ArctanRule(integrand, symbol, a, b, c)
+        pieces = []
+        # skips degenerate case if b != 0 or if b = 0 would cause null denominator
+        if not _if_zero_implies_zero(b, c):
+            substituted = integrand.subs(b, 0)
+            substep = integral_steps(substituted, symbol)
+            pieces.append((RewriteRule(integrand, symbol, substituted, substep), Eq(b, 0)))
+        if not _if_zero_implies_zero(c, b):
+            substituted = integrand.subs(c, 0)
+            substep = integral_steps(substituted, symbol)
+            pieces.append((RewriteRule(integrand, symbol, substituted, substep), Eq(c, 0)))
         if b.is_extended_real and c.is_extended_real:
             positive_cond = c/b > 0
-            if positive_cond is S.true:
-                return general_rule
-            coeff = a/(2*sqrt(-c)*sqrt(b))
-            constant = sqrt(-c/b)
-            r1 = 1/(symbol-constant)
-            r2 = 1/(symbol+constant)
-            log_steps = [ReciprocalRule(r1, symbol, symbol-constant),
-                         ConstantTimesRule(-r2, symbol, -1, r2, ReciprocalRule(r2, symbol, symbol+constant))]
-            rewritten = sub = r1 - r2
-            negative_step = AddRule(sub, symbol, log_steps)
-            if coeff != 1:
-                rewritten = Mul(coeff, sub, evaluate=False)
-                negative_step = ConstantTimesRule(rewritten, symbol, coeff, sub, negative_step)
-            negative_step = RewriteRule(integrand, symbol, rewritten, negative_step)
-            if positive_cond is S.false:
-                return negative_step
-            return PiecewiseRule(integrand, symbol, [(general_rule, positive_cond), (negative_step, S.true)])
+            if positive_cond is not S.true:
+                coeff = a/(2*sqrt(-c)*sqrt(b))
+                constant = sqrt(-c/b)
+                r1 = 1/(symbol-constant)
+                r2 = 1/(symbol+constant)
+                log_steps = [ReciprocalRule(r1, symbol, symbol-constant),
+                            ConstantTimesRule(-r2, symbol, -1, r2, ReciprocalRule(r2, symbol, symbol+constant))]
+                rewritten = sub = r1 - r2
+                negative_step = AddRule(sub, symbol, log_steps)
+                if coeff != 1:
+                    rewritten = Mul(coeff, sub, evaluate=False)
+                    negative_step = ConstantTimesRule(rewritten, symbol, coeff, sub, negative_step)
+                negative_step = RewriteRule(integrand, symbol, rewritten, negative_step)
+                if positive_cond is S.false:
+                    pieces.append((negative_step, S.true))
+                    return PiecewiseRule(integrand, symbol, pieces)
+                else:
+                    pieces.append((negative_step, c / b < 0))
+        general_rule = ArctanRule(integrand, symbol, a, b, c)
+        if pieces:
+            pieces.append((general_rule, S.true))
+            return PiecewiseRule(integrand, symbol, pieces)
+        return general_rule
 
-        power = PowerRule(integrand, symbol, symbol, -2)
-        if b != 1:
-            power = ConstantTimesRule(integrand, symbol, 1/b, symbol**-2, power)
-
-        return PiecewiseRule(integrand, symbol, [(general_rule, Ne(c, 0)), (power, True)])
 
     d = Wild('d', exclude=[symbol])
     match2 = integrand.match(a / (b * symbol ** 2 + c * symbol + d))
@@ -1557,48 +1975,104 @@ def quadratic_denom_rule(integral):
     return
 
 
-def sqrt_linear_rule(integral: IntegralInfo):
+def sqrt_fractional_linear_rule(integral : IntegralInfo):
     """
-    Substitute common (a+b*x)**(1/n)
+    Substitute common ((a*x + b)/(c*x + d))**(1/n)
     """
     integrand, x = integral
     a = Wild('a', exclude=[x])
-    b = Wild('b', exclude=[x, 0])
-    a0 = b0 = 0
-    bases, qs, bs = [], [], []
-    for pow_ in integrand.find(Pow):  # collect all (a+b*x)**(p/q)
+    b = Wild('b', exclude=[x])
+    c = Wild('c', exclude=[x])
+    d = Wild('d', exclude=[x])
+    base0 = None
+    bases, qs, ratios = [], [], []
+    constant_bases_subs = {}
+    # use ordered() to ensure a selection of the smallest base0 (eg. first sqrt(x), then cbrt(2x), x chosen)
+    for pow_ in ordered(integrand.find((Pow))): # collect all ((a*x + b)/(c*x + d))**(p/q)
         base, exp_ = pow_.base, pow_.exp
-        if exp_.is_Integer or x not in base.free_symbols:  # skip 1/x and sqrt(2)
+        if exp_.is_Integer or x not in base.free_symbols: # skip 1/x and sqrt(2)
             continue
-        if not exp_.is_Rational:  # exclude x**pi
-            return
-        match = base.match(a+b*x)
-        if not match:  # skip non-linear
-            continue  # for sqrt(x+sqrt(x)), although base is non-linear, we can still substitute sqrt(x)
-        a1, b1 = match[a], match[b]
-        if a0*b1 != a1*b0 or not (b0/b1).is_nonnegative:  # cannot transform sqrt(x) to sqrt(x+1) or sqrt(-x)
-            return
-        if b0 == 0 or (b0/b1 > 1) is S.true:  # choose the latter of sqrt(2*x) and sqrt(x) as representative
-            a0, b0 = a1, b1
-        bases.append(base)
-        bs.append(b1)
-        qs.append(exp_.q)
-    if b0 == 0:  # no such pattern found
-        return
+        if not exp_.is_Rational: # exclude x**pi
+            return None
+        num, den = base.as_numer_denom()
+        match_num = num.match(a*x + b)
+        match_den = den.match(c*x + d)
+        if not match_num or not match_den:
+            continue
+        aa, bb = match_num[a], match_num[b]
+        cc, dd = match_den[c], match_den[d]
+        if cc.is_zero and dd.is_zero:
+            return None
+        det = aa*dd - bb*cc
+        if det.is_zero: # constant value as sqrt((5*x + 10)/(2*x +  4))
+            const_val = (S(aa) / cc) if not cc.is_zero else (S(bb) / dd)
+            constant_bases_subs[base] = const_val
+            continue
+        if base0 is None:
+            base0 = base
+            a0, b0, c0, d0 = aa, bb, cc, dd
+            bases.append(base)
+            ratios.append(S.One)
+            qs.append(exp_.q)
+        else:
+            K = (base / base0).cancel()
+            if K.has(x): # cannot substitute both sqrt(x) and sqrt(x + 1)
+                return None
+            bases.append(base)
+            ratios.append(K)
+            qs.append(exp_.q)
+    if base0 is None and not constant_bases_subs:
+        return None
+    if constant_bases_subs:
+        integrand = integrand.subs(constant_bases_subs)
+    if base0 is None:
+        substep = integral_steps(integrand, x)
+        if not substep.contains_dont_know():
+            return RewriteRule(integral.integrand, x, integrand, substep)
+        return None
     q0: Integer = lcm_list(qs)
-    u_x = (a0 + b0*x)**(1/q0)
     u = Dummy("u")
-    substituted = integrand.subs({base**(S.One/q): (b/b0)**(S.One/q)*u**(q0/q)
-                                  for base, b, q in zip(bases, bs, qs)}).subs(x, (u**q0-a0)/b0)
-    substep = integral_steps(substituted*u**(q0-1)*q0/b0, u)
+    u_x = base0**(S.One/q0)
+    u_pow = u**q0
+    x_u = (b0 - d0*u_pow)/(c0*u_pow - a0)
+    dx_u = (q0*(a0*d0 - b0*c0)*u**(q0 - 1))/(c0*u_pow - a0)**2
+    subs_dict = {}
+    for base_i, ratio_i, q_i in zip(bases, ratios, qs):
+        subs_dict[base_i**(S.One/q_i)] = (ratio_i)**(S.One/q_i) * u**(q0/q_i)
+    substituted = integrand.subs(subs_dict).subs(x, x_u) * dx_u
+    substep = integral_steps(substituted, u)
     if not substep.contains_dont_know():
+        pieces: list[tuple[Rule, Boolean]] = []
+        det = a0*d0 - b0*c0
+        _, base0_denom = base0.as_numer_denom()
+        # skips bases where constant value (degenerate case) is not possible (det != 0 or det = 0 implies den = 0)
+        # (eg. (3*x + 2)/(4*x + 3), (3x + b)/(d), (4*x + 3)/(c*x + c))
+        if not (_if_zero_implies_zero(det, base0_denom)):
+            d0_implies_c0 = _if_zero_implies_zero(d0, c0)
+            c0_implies_d0 = _if_zero_implies_zero(c0, d0)
+            # skips constant value a/c if d != 0 or d = 0 implies c = 0 (eg. (3*x + 2)/(c*d*x + d), (3*x + 2)/(c*x + 4))
+            # takes a/c if they both imply each other (eg. (a*x + b)/3*x + 4)) (taking b/d would be the same)
+            if not d0_implies_c0 or (c0_implies_d0 and d0_implies_c0):
+                const_val = a0 / c0
+                subs_a = {base_i: ratio_i * const_val for base_i, ratio_i in zip(bases, ratios)}
+                simplified_a = integrand.subs(subs_a)
+                degenerate_step_a = integral_steps(simplified_a, x)
+                pieces.append((degenerate_step_a, (And(Eq(det, 0), Ne(c0, 0)))))
+            if not c0_implies_d0:
+                const_val = b0 / d0
+                subs_b = {base_i: ratio_i * const_val for base_i, ratio_i in zip(bases, ratios)}
+                simplified_b = integrand.subs(subs_b)
+                simplified_b = simplified_b.subs({a0: 0, c0: 0}) # if det = 0, c = 0 and d != 0, a must be 0
+                degenerate_step_b = integral_steps(simplified_b, x)
+                pieces.append((degenerate_step_b, (And(Eq(det, 0), Eq(c0, 0)))))
         step: Rule = URule(integrand, x, u, u_x, substep)
-        generic_cond = Ne(b0, 0)
-        if generic_cond is not S.true:  # possible degenerate case
-            simplified = integrand.subs(dict.fromkeys(bs, 0))
-            degenerate_step = integral_steps(simplified, x)
-            step = PiecewiseRule(integrand, x, [(step, generic_cond), (degenerate_step, S.true)])
+        if pieces:
+            pieces.append((step, S.true))
+            step = PiecewiseRule(integrand, x, pieces)
+        if constant_bases_subs:
+            return RewriteRule(integral.integrand, x, integrand, step)
         return step
+    return None
 
 
 def sqrt_quadratic_rule(integral: IntegralInfo, degenerate=True):
@@ -1622,7 +2096,7 @@ def sqrt_quadratic_rule(integral: IntegralInfo, degenerate=True):
     elif b.is_zero:
         degenerate_step = integral_steps(f*sqrt(a)**n, x)
     else:
-        degenerate_step = sqrt_linear_rule(IntegralInfo(f*sqrt(a+b*x)**n, x))
+        degenerate_step = sqrt_fractional_linear_rule(IntegralInfo(f*sqrt(a+b*x)**n, x))
 
     def sqrt_quadratic_denom_rule(numer_poly: Poly, integrand: Expr):
         denom = sqrt(a+b*x+c*x**2)
@@ -1656,6 +2130,45 @@ def sqrt_quadratic_rule(integral: IntegralInfo, degenerate=True):
             step = SqrtQuadraticDenomRule(integrand, x, a, b, c, coeffs)
         return step
 
+    def sqrt_quadratic_reduction_rule(integrand: Expr, n: int):
+        # Implementation of Gradshteyn & Ryzhik 2.263.3
+        k = (-n - 1) // 2
+        delta = 4*a*c - b**2
+        R = c*x**2 + b*x + a
+
+        term_denom = (2*k - 1) * delta * (R**(S(2*k - 1)/2))
+        constant_term = f*2*(2*c*x+b) / term_denom
+        coeff = (8*c*(k-1))/((2*k-1) * delta)
+        expr = f * R**(S(1)/2 - k)
+
+        rewrite_expr = Derivative(constant_term, x) + coeff * expr
+        derive_expr = Derivative(constant_term, x)
+        derive_step = integral_steps(derive_expr, x)
+
+        if coeff == 0:
+            substep = derive_step
+        else:
+            next_step = integral_steps(expr, x)
+            if not next_step:
+                next_step = DontKnowRule(expr, x)
+
+            substep = AddRule(
+                rewrite_expr,
+                x,
+                [
+                    derive_step,
+                    ConstantTimesRule(
+                        coeff * expr,
+                        x,
+                        coeff,
+                        expr,
+                        next_step
+                    )
+                ]
+            )
+
+        return RewriteRule(integrand, x, rewrite_expr, substep)
+
     if n > 0:  # rewrite poly * sqrt(s)**(2*k-1) to poly*s**k / sqrt(s)
         numer_poly = f_poly * (a+b*x+c*x**2)**((n+1)/2)
         rewritten = numer_poly.as_expr()/sqrt(a+b*x+c*x**2)
@@ -1663,8 +2176,13 @@ def sqrt_quadratic_rule(integral: IntegralInfo, degenerate=True):
         generic_step = RewriteRule(integrand, x, rewritten, substep)
     elif n == -1:
         generic_step = sqrt_quadratic_denom_rule(f_poly, integrand)
+    elif f_poly.degree() == 0:
+        # The numerator must be a const, the formula assumes this
+        generic_step = sqrt_quadratic_reduction_rule(integrand, n)
     else:
-        return  # todo: handle n < -1 case
+        # Handle non-constant numerators (eg. x / R**(-3/2))
+        # This requires splitting the integral as A*(2ax+b) + B form
+        return None
     return _add_degenerate_step(generic_cond, generic_step, degenerate_step)
 
 
@@ -1972,6 +2490,8 @@ def substitution_rule(integral):
     if substitutions:
         debug("List of Substitution Rules")
         ways = []
+        factored_integrand = integrand.factor()
+        _, denom_integrand = factored_integrand.as_numer_denom()
         for u_func, c, substituted in substitutions:
             subrule = integral_steps(substituted, u_var)
             count = count + 1
@@ -1981,30 +2501,28 @@ def substitution_rule(integral):
                 continue
 
             if simplify(c - 1) != 0:
-                _, denom = c.as_numer_denom()
+                _, denom_c = c.as_numer_denom()
                 if subrule:
                     subrule = ConstantTimesRule(c * substituted, u_var, c, substituted, subrule)
 
-                if denom.free_symbols:
-                    piecewise = []
-                    could_be_zero = []
-
-                    if isinstance(denom, Mul):
-                        could_be_zero = denom.args
-                    else:
-                        could_be_zero.append(denom)
-
-                    for expr in could_be_zero:
-                        if not fuzzy_not(expr.is_zero):
-                            substep = integral_steps(manual_subs(integrand, expr, 0), symbol)
+                if denom_c.free_symbols:
+                    pieces = []
+                    factors_denom_c = factor_list(denom_c)[1]
+                    for pole, _ in factors_denom_c:
+                        # only substitute poles introduced by the constant c if they were not already poles of the original integrand
+                        if not _if_zero_implies_zero(pole, denom_integrand):
+                            rewritten_integral = manual_subs(factored_integrand, pole, 0)
+                            substep = integral_steps(rewritten_integral, symbol)
 
                             if substep:
-                                piecewise.append((
+                                substep = RewriteRule(integrand, symbol, rewritten_integral, substep)
+                                pieces.append((
                                     substep,
-                                    Eq(expr, 0)
+                                    Eq(pole, 0)
                                 ))
-                    piecewise.append((subrule, True))
-                    subrule = PiecewiseRule(substituted, symbol, piecewise)
+                    if pieces:
+                        pieces.append((subrule, True))
+                        subrule = PiecewiseRule(substituted, symbol, pieces)
 
             ways.append(URule(integrand, symbol, u_var, u_func, subrule))
 
@@ -2176,15 +2694,16 @@ def integral_steps(integrand, symbol, **options):
         null_safe(special_function_rule),
         null_safe(switch(key, {
             Pow: do_one(null_safe(power_rule), null_safe(inverse_trig_rule),
-                        null_safe(sqrt_linear_rule),
-                        null_safe(quadratic_denom_rule)),
+                        null_safe(quadratic_denom_rule),
+                        null_safe(sqrt_quadratic_rule),
+                        null_safe(sqrt_fractional_linear_rule)),
             Symbol: power_rule,
             exp: exp_rule,
             Add: add_rule,
             Mul: do_one(null_safe(mul_rule), null_safe(trig_product_rule),
                         null_safe(heaviside_rule), null_safe(quadratic_denom_rule),
-                        null_safe(sqrt_linear_rule),
                         null_safe(sqrt_quadratic_rule),
+                        null_safe(sqrt_fractional_linear_rule),
                         null_safe(powsimp_rule),
                         null_safe(trig_cmplx_exp_rule)),
             Derivative: derivative_rule,
@@ -2252,7 +2771,7 @@ def manualintegrate(f, var):
     >>> manualintegrate(exp(x) / (1 + exp(2 * x)), x)
     atan(exp(x))
     >>> integrate(exp(x) / (1 + exp(2 * x)))
-    RootSum(4*_z**2 + 1, Lambda(_i, _i*log(2*_i + exp(x))))
+    RootSum(4*w**2 + 1, Lambda(w, w*log(2*w + exp(x))))
     >>> manualintegrate(cos(x)**4 * sin(x), x)
     -cos(x)**5/5
     >>> integrate(cos(x)**4 * sin(x), x)

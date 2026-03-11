@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.numbers import (Float, Rational, oo, pi)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
@@ -634,12 +635,12 @@ def test_cut_section():
     t1, t2, t3, t4 = [(0, b), (0, 0), (a, 0), (a, b)]
     p = Polygon(t1, t2, t3, t4)
     p1, p2 = p.cut_section(Line((0, b), slope=0))
-    assert p1 == None
+    assert p1 is None
     assert p2 == Polygon(Point2D(0, 10), Point2D(0, 0), Point2D(20, 0), Point2D(20, 10))
 
     p3, p4 = p.cut_section(Line((0, 0), slope=0))
     assert p3 == Polygon(Point2D(0, 10), Point2D(0, 0), Point2D(20, 0), Point2D(20, 10))
-    assert p4 == None
+    assert p4 is None
 
     # case where the line does not intersect with a polygon at all
     raises(ValueError, lambda: p.cut_section(Line((0, a), slope=0)))
@@ -680,3 +681,8 @@ def test_do_poly_distance():
     with warns(UserWarning, \
                match="Polygons may intersect producing erroneous output", test_stacklevel=False):
         assert triangle2._do_poly_distance(square1) == 0
+
+
+def test_centroid_zero_area():
+    p = Polygon((0, 2), (2, 2), (0, 0), (2, 0))
+    raises(GeometryError, lambda: p.centroid)

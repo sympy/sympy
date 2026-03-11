@@ -1,3 +1,4 @@
+# noqa: I002
 """
 SymPy is a Python library for symbolic mathematics. It aims to become a
 full-featured computer algebra system (CAS) while keeping the code as simple
@@ -72,7 +73,7 @@ from .logic import (to_cnf, to_dnf, to_nnf, And, Or, Not, Xor, Nand, Nor,
         true, false, satisfiable)
 
 from .assumptions import (AppliedPredicate, Predicate, AssumptionsContext,
-        assuming, Q, ask, register_handler, remove_handler, refine)
+        assuming, Q, ask, refine)
 
 from .polys import (Poly, PurePoly, poly_from_expr, parallel_poly_from_expr,
         degree, total_degree, degree_list, LC, LM, LT, pdiv, prem, pquo,
@@ -83,7 +84,7 @@ from .polys import (Poly, PurePoly, poly_from_expr, parallel_poly_from_expr,
         factor_list, factor, intervals, refine_root, count_roots, all_roots,
         real_roots, nroots, ground_roots, nth_power_roots_poly, cancel,
         reduced, groebner, is_zero_dimensional, hurwitz_conditions,
-        GroebnerBasis, poly, symmetrize, horner, interpolate,
+        schur_conditions, GroebnerBasis, poly, symmetrize, horner, interpolate,
         rational_interpolate, viete, together, BasePolynomialError,
         ExactQuotientFailed, PolynomialDivisionFailed,
         OperationNotSupported, HeuristicGCDFailed, HomomorphismFailed,
@@ -291,7 +292,7 @@ __all__ = [
 
     # sympy.assumptions
     'AppliedPredicate', 'Predicate', 'AssumptionsContext', 'assuming', 'Q',
-    'ask', 'register_handler', 'remove_handler', 'refine',
+    'ask',  'refine',
 
     # sympy.polys
     'Poly', 'PurePoly', 'poly_from_expr', 'parallel_poly_from_expr', 'degree',
@@ -303,15 +304,15 @@ __all__ = [
     'sqf_norm', 'sqf_part', 'sqf_list', 'sqf', 'factor_list', 'factor',
     'intervals', 'refine_root', 'count_roots', 'all_roots', 'real_roots',
     'nroots', 'ground_roots', 'nth_power_roots_poly', 'cancel', 'reduced',
-    'groebner', 'is_zero_dimensional', 'hurwitz_conditions', 'GroebnerBasis',
-    'poly', 'symmetrize', 'horner', 'interpolate', 'rational_interpolate',
-    'viete', 'together', 'BasePolynomialError', 'ExactQuotientFailed',
-    'PolynomialDivisionFailed', 'OperationNotSupported', 'HeuristicGCDFailed',
-    'HomomorphismFailed', 'IsomorphismFailed', 'ExtraneousFactors',
-    'EvaluationFailed', 'RefinementFailed', 'CoercionFailed', 'NotInvertible',
-    'NotReversible', 'NotAlgebraic', 'DomainError', 'PolynomialError',
-    'UnificationFailed', 'GeneratorsError', 'GeneratorsNeeded',
-    'ComputationFailed', 'UnivariatePolynomialError',
+    'groebner', 'is_zero_dimensional', 'hurwitz_conditions', 'schur_conditions',
+    'GroebnerBasis', 'poly', 'symmetrize', 'horner', 'interpolate',
+    'rational_interpolate', 'viete', 'together', 'BasePolynomialError',
+    'ExactQuotientFailed', 'PolynomialDivisionFailed', 'OperationNotSupported',
+    'HeuristicGCDFailed', 'HomomorphismFailed', 'IsomorphismFailed',
+    'ExtraneousFactors', 'EvaluationFailed', 'RefinementFailed',
+    'CoercionFailed', 'NotInvertible', 'NotReversible', 'NotAlgebraic',
+    'DomainError', 'PolynomialError', 'UnificationFailed', 'GeneratorsError',
+    'GeneratorsNeeded', 'ComputationFailed', 'UnivariatePolynomialError',
     'MultivariatePolynomialError', 'PolificationFailed', 'OptionError',
     'FlagError', 'minpoly', 'minimal_polynomial', 'primitive_element',
     'field_isomorphism', 'to_number_field', 'isolate', 'round_two',

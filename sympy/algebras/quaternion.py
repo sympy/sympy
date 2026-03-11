@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, overload
 from sympy.core.numbers import Rational
 from sympy.core.singleton import S
 from sympy.core.relational import is_eq
+from sympy.external.mpmath import prec_to_dps
 from sympy.functions.elementary.complexes import (conjugate, im, re, sign)
 from sympy.functions.elementary.exponential import (exp, log as ln)
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -18,12 +19,12 @@ from sympy.core.sympify import sympify, _sympify
 from sympy.core.logic import fuzzy_not, fuzzy_or
 from sympy.utilities.misc import as_int
 
-from mpmath.libmp.libmpf import prec_to_dps
 
 if TYPE_CHECKING:
     from typing import Iterable, Sequence
     from sympy.integrals.integrals import SymbolLimits
     SExpr = Expr | complex
+
 
 def _check_norm(elements: Iterable[Expr], norm: Expr | None) -> None:
     """validate if input norm is consistent"""
@@ -1036,10 +1037,18 @@ class Quaternion(Expr):
         q = self
         vector_norm = sqrt(q.b**2 + q.c**2 + q.d**2)
         q_norm = q.norm()
+        if q_norm.is_zero:
+            raise ValueError("Cannot compute logarithm for a zero quaternion")
         a = ln(q_norm)
-        b = q.b * acos(q.a / q_norm) / vector_norm
-        c = q.c * acos(q.a / q_norm) / vector_norm
-        d = q.d * acos(q.a / q_norm) / vector_norm
+
+        # Handle purely real quaternions to avoid division by zero
+        if vector_norm.is_zero:
+            return Quaternion(a, 0, 0, 0)
+
+        angle_over_norm = acos(q.a / q_norm) / vector_norm
+        b = q.b * angle_over_norm
+        c = q.c * angle_over_norm
+        d = q.d * angle_over_norm
 
         return Quaternion(a, b, c, d)
 

@@ -13,6 +13,7 @@
 # Any new methods added to the DDM, SDM or DFM classes should be tested here
 # and added to all classes.
 #
+from __future__ import annotations
 
 from sympy.external.gmpy import GROUND_TYPES
 

@@ -1,7 +1,7 @@
 from __future__ import annotations
 from itertools import product
 
-from sympy.core import Add, Basic
+from sympy.core import Add, Mul, Basic
 from sympy.core.assumptions import StdFactKB
 from sympy.core.expr import AtomicExpr, Expr
 from sympy.core.power import Pow
@@ -416,21 +416,20 @@ class Vector(BasisDependent):
 
 # The following is adapted from the matrices.expressions.matexpr file
 
-def get_postprocessor(cls):
-    def _postprocessor(expr):
-        vec_class = {Add: VectorAdd}[cls]
-        vectors = []
-        for term in expr.args:
-            if isinstance(term.kind, VectorKind):
-                vectors.append(term)
+def _add_vector_postprocessor(expr: Add) -> Vector:
+    return VectorAdd(*expr.args).doit(deep=False)
 
-        if vec_class == VectorAdd:
-            return VectorAdd(*vectors).doit(deep=False)
-    return _postprocessor
+def _mul_vector_postprocessor(expr: Mul) -> Vector:
+    return VectorMul(*expr.args).doit(deep=False)
+
+def _pow_vector_postprocessor(expr: Pow):
+    raise TypeError("Power operation is not supported for vectors")
 
 
 Basic._constructor_postprocessor_mapping[Vector] = {
-    "Add": [get_postprocessor(Add)],
+    "Add": [_add_vector_postprocessor],
+    "Mul": [_mul_vector_postprocessor],
+    "Pow": [_pow_vector_postprocessor],
 }
 
 class BaseVector(Vector, AtomicExpr):
@@ -551,7 +550,7 @@ class VectorZero(BasisDependentZero, Vector):
         return obj
 
 
-class Cross(Vector):
+class Cross(Expr):
     """
     Represents unevaluated Cross product.
 

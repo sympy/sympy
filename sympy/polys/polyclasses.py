@@ -5,29 +5,44 @@ from __future__ import annotations
 from typing import (
     TYPE_CHECKING,
     Any,
+    Sequence,
     Generic,
     Literal,
     overload,
     Callable,
     TypeVar,
+    cast
 )
 
 if TYPE_CHECKING:
+    from sympy.polys.orderings import MonomialOrder
+    from sympy.polys.domains.polynomialring import PolynomialRing
+    from sympy.core.expr import Expr
     from typing import Self, TypeAlias
     from sympy.polys.rings import PolyElement
+    from sympy.polys.domains.field import Field
+    from sympy.external.gmpy import (
+        FLINT_POLY_P,
+        FMPQ_POLY,
+        FMPZ_MOD_POLY,
+        FMPZ_POLY,
+        NMOD_POLY,
+    )
+
+    FlintPoly: TypeAlias = FMPZ_POLY | FMPQ_POLY | NMOD_POLY | FMPZ_MOD_POLY
+    _TFlintPoly = TypeVar("_TFlintPoly", bound=FlintPoly)
+else:
+    _TFlintPoly = TypeVar("_TFlintPoly")
 
 from sympy.external.gmpy import GROUND_TYPES, MPQ
 
 from sympy.utilities.exceptions import sympy_deprecation_warning
 
-from sympy.core.expr import Expr
 from sympy.core.numbers import oo, NegativeInfinity
 from sympy.core.sympify import CantSympify
 from sympy.polys.polyutils import PicklableWithSlots, _sort_factors
 from sympy.polys.domains import Domain, ZZ, QQ
 from sympy.polys.domains.domain import Er, Es, Et, Eg
-from sympy.polys.domains.polynomialring import PolynomialRing
-from sympy.polys.orderings import MonomialOrder
 
 from sympy.polys.polyerrors import (
     CoercionFailed,
@@ -173,14 +188,14 @@ class DMP(CantSympify, Generic[Er]):
     def __new__(cls, rep: dmp[Er], dom: Domain[Er], lev: int | None = None):
 
         if lev is None:
-            rep, lev = dmp_validate(rep)
+            rep, lev = dmp_validate(rep, dom)
         elif not isinstance(rep, list):
             raise CoercionFailed("expected list, got %s" % type(rep))
 
         return cls.new(rep, dom, lev)
 
     @classmethod
-    def new(cls, rep: dmp[Er], dom: Domain[Er], lev: int) -> DMP_Python[Er] | DUP_Flint[Er]:
+    def new(cls, rep: dmp[Er], dom: Domain[Er], lev: int) -> DMP_Python[Er] | DUP_Flint[Er, FlintPoly]:
         # It would be too slow to call _validate_args always at runtime.
         # Ideally this checking would be handled by a static type checker.
         #
@@ -279,7 +294,7 @@ class DMP(CantSympify, Generic[Er]):
 
     @classmethod
     def zero(cls, lev: int, dom: Domain[Er]) -> DMP[Er]:
-        return DMP(dmp_zero(lev), dom, lev)
+        return DMP(dmp_zero(lev, dom), dom, lev)
 
     @classmethod
     def one(cls, lev: int, dom: Domain[Er]) -> DMP[Er]:
@@ -1164,6 +1179,10 @@ class DMP(CantSympify, Generic[Er]):
         """Computes the Routh Hurwitz criteria of ``f``. """
         raise NotImplementedError
 
+    def schur_conditions(f) -> list[Er]:
+        """Computes the Schur conditions of ``f``. """
+        raise NotImplementedError
+
     @property
     def is_zero(f) -> bool:
         """Returns ``True`` if ``f`` is a zero polynomial. """
@@ -1390,8 +1409,7 @@ class DMP_Python(DMP[Er]):
 
     def ground_new(f, coeff: Er) -> DMP_Python[Er]:
         """Construct a new ground instance of ``f``. """
-        poly: dmp[Er] = dmp_ground(coeff, f.lev) # type: ignore
-        return f._new(poly, f.dom, f.lev)
+        return f._new(dmp_ground(coeff, f.lev, f.dom), f.dom, f.lev)
 
     def _one(f) -> Self:
         return f._new(dmp_one(f.lev, f.dom), f.dom, f.lev) # type: ignore
@@ -1416,7 +1434,7 @@ class DMP_Python(DMP[Er]):
 
             return lev, dom, per, F, G
 
-    def to_DUP_Flint(f) -> DUP_Flint[Er]:
+    def to_DUP_Flint(f) -> DUP_Flint[Er, FlintPoly]:
         """Convert ``f`` to a Flint representation. """
         return DUP_Flint._new(f._rep, f.dom, f.lev)
 
@@ -1630,17 +1648,17 @@ class DMP_Python(DMP[Er]):
 
     def _half_gcdex(f, g: Self) -> tuple[Self, Self]:
         """Half extended Euclidean algorithm, if univariate. """
-        s, h = dup_half_gcdex(f._rep, g._rep, f.dom)
+        s, h = dup_half_gcdex(f._rep, g._rep, f.dom) # type: ignore
         return f.per(s), f.per(h)
 
     def _gcdex(f, g: Self) -> tuple[Self, Self, Self]:
         """Extended Euclidean algorithm, if univariate. """
-        s, t, h = dup_gcdex(f._rep, g._rep, f.dom)
+        s, t, h = dup_gcdex(f._rep, g._rep, cast("Field[Any]", f.dom))
         return f.per(s), f.per(t), f.per(h)
 
     def _invert(f, g: Self) -> Self:
         """Invert ``f`` modulo ``g``, if possible. """
-        s = dup_invert(f._rep, g._rep, f.dom)
+        s = dup_invert(f._rep, g._rep, cast("Field[Any]", f.dom))
         return f.per(s)
 
     def _revert(f, n: int) -> Self:
@@ -1838,6 +1856,13 @@ class DMP_Python(DMP[Er]):
             raise ValueError("Routh-Hurwitz stability is only defined for univariate polynomials.")
         return dup_routh_hurwitz(f._rep, f.dom)
 
+    def schur_conditions(f) -> list[Er]:
+        """Computes the Schur conditions of ``f``. """
+        from sympy.polys.rootconditions import dup_schur_conditions
+        if f.lev:
+            raise ValueError("Schur stability is only defined for univariate polynomials.")
+        return dup_schur_conditions(f._rep, f.dom)
+
     @property
     def is_zero(f) -> bool:
         """Returns ``True`` if ``f`` is a zero polynomial. """
@@ -1902,15 +1927,15 @@ class DMP_Python(DMP[Er]):
             return False
 
 
-class DUP_Flint(DMP[Er]):
+class DUP_Flint(DMP[Er], Generic[Er, _TFlintPoly]):
     """Dense Multivariate Polynomials over `K`. """
 
     lev = 0
 
     if TYPE_CHECKING:
-        _rep: flint.fmpz_poly | flint.fmpq_poly | flint.nmod_poly | flint.fmpz_mod_poly
+        _rep: FLINT_POLY_P[Er]
         dom: Domain[Er]
-        _cls: Any
+        _cls: Callable[[Sequence[Er] | Sequence[int] | FLINT_POLY_P[Er]], FLINT_POLY_P[Er]]
 
     __slots__ = ('_rep', 'dom', '_cls')
 
@@ -1981,10 +2006,12 @@ class DUP_Flint(DMP[Er]):
         """Convert ``f`` to a tuple representation with native coefficients. """
         return tuple(f.to_list())
 
-    def _convert(f, dom: Domain[Es]) -> DUP_Flint[Es] | DMP_Python[Es]:
+    def _convert(f, dom: Domain[Es]) -> DUP_Flint[Es, FlintPoly] | DMP_Python[Es]:
         """Convert the ground domain of ``f``. """
         if dom == QQ and f.dom == ZZ:
-            return f.from_rep(flint.fmpq_poly(f._rep), dom)
+            if isinstance(f._rep, flint.fmpz_poly):
+                return f.from_rep(flint.fmpq_poly(f._rep), dom)
+            raise RuntimeError("DUP_Flint: Expected fmpz_poly representation over ZZ")
         elif _supported_flint_domain(dom) and _supported_flint_domain(f.dom):
             # XXX: python-flint should provide a faster way to do this.
             return f.to_DMP_Python()._convert(dom).to_DUP_Flint()
@@ -2020,7 +2047,7 @@ class DUP_Flint(DMP[Er]):
         # This is for algebraic number fields which DUP_Flint does not support
         raise NotImplementedError
 
-    def deflate(f) -> tuple[monom, DUP_Flint[Er]]:
+    def deflate(f) -> tuple[monom, Self]:
         """Reduce degree of `f` by mapping `x_i^m` to `y_i`. """
         # XXX: Check because otherwise this segfaults with python-flint:
         #
@@ -2038,7 +2065,7 @@ class DUP_Flint(DMP[Er]):
         # Ground domain would need to be a poly ring
         raise NotImplementedError
 
-    def eject(f, dom: PolynomialRing[Er], front: bool = False) -> DUP_Flint[PolyElement[Er]]:
+    def eject(f, dom: PolynomialRing[Er], front: bool = False) -> DUP_Flint[PolyElement[Er], FlintPoly]:
         """Eject selected generators into the ground domain. """
         # Only makes sense for multivariate polynomials
         raise NotImplementedError
@@ -2048,16 +2075,17 @@ class DUP_Flint(DMP[Er]):
         # Only makes sense for multivariate polynomials
         raise NotImplementedError
 
-    def _permute(f, P: list[int]) -> DUP_Flint[Er]:
+    def _permute(f, P: list[int]) -> Self:
         """Returns a polynomial in `K[x_{P(1)}, ..., x_{P(n)}]`. """
         # Only makes sense for multivariate polynomials
         raise NotImplementedError
 
-    def terms_gcd(f) -> tuple[monom, DUP_Flint[Er]]:
+    def terms_gcd(f) -> tuple[monom, Self]:
         """Remove GCD of terms from the polynomial ``f``. """
         # XXX: python-flint should have primitive, content, etc methods.
         J, F = f.to_DMP_Python().terms_gcd()
-        return J, F.to_DUP_Flint()
+        H = F.to_DUP_Flint()
+        return J, f.from_rep(H._rep, f.dom)
 
     def _add_ground(f, c: Er, /) -> Self:
         """Add an element of the ground domain to ``f``. """
@@ -2148,8 +2176,10 @@ class DUP_Flint(DMP[Er]):
             return f.from_rep(q, f.dom), f.from_rep(r, f.dom)
         else:
             # XXX: python-flint defines division in ZZ[x] differently
-            q, r = f.to_DMP_Python()._div(g.to_DMP_Python())
-            return q.to_DUP_Flint(), r.to_DUP_Flint() # type: ignore
+            q_py, r_py = f.to_DMP_Python()._div(g.to_DMP_Python())
+            q_flint = q_py.to_DUP_Flint()
+            r_flint = r_py.to_DUP_Flint()
+            return f.from_rep(q_flint._rep, f.dom), f.from_rep(r_flint._rep, f.dom)
 
     def _rem(f, g: Self, /) -> Self:
         """Computes polynomial remainder of ``f`` and ``g``. """
@@ -2457,17 +2487,18 @@ class DUP_Flint(DMP[Er]):
 
     def factor_list(f) -> tuple[Er, list[tuple[Self, int]]]:
         """Returns a list of irreducible factors of ``f``. """
+        factors: list[tuple[Self, int]]
 
         if f.dom.is_ZZ or f.dom.is_FF:
             # python-flint matches polys here
-            coeff, factors = f._rep.factor()
-            factors = [ (f.from_rep(g, f.dom), k) for g, k in factors ]
+            coeff, factors_raw = f._rep.factor()
+            factors = [ (f.from_rep(g, f.dom), k) for g, k in factors_raw ]
 
         elif f.dom.is_QQ:
             # python-flint returns monic factors over QQ whereas polys returns
             # denominator free factors.
-            coeff, factors = f._rep.factor()
-            factors_monic = [ (f.from_rep(g, f.dom), k) for g, k in factors ]
+            coeff, factors_raw = f._rep.factor()
+            factors_monic = [ (f.from_rep(g, f.dom), k) for g, k in factors_raw ]
 
             # Absorb the denominators into coeff
             factors = []
@@ -2545,6 +2576,10 @@ class DUP_Flint(DMP[Er]):
     def hurwitz_conditions(f) -> list[Er]:
         """Computes the Routh Hurwitz criteria of ``f``. """
         return f.to_DMP_Python().hurwitz_conditions()
+
+    def schur_conditions(f) -> list[Er]:
+        """Computes the Schur conditions of ``f``. """
+        return f.to_DMP_Python().schur_conditions()
 
     @property
     def is_zero(f) -> bool:
@@ -2673,8 +2708,8 @@ class DMF(PicklableWithSlots, CantSympify):
                 if isinstance(den, dict):
                     den = dmp_from_dict(den, lev, dom)
             else:
-                num, num_lev = dmp_validate(num)
-                den, den_lev = dmp_validate(den)
+                num, num_lev = dmp_validate(num, dom)
+                den, den_lev = dmp_validate(den, dom)
 
                 if num_lev == den_lev:
                     lev = num_lev
@@ -2697,9 +2732,9 @@ class DMF(PicklableWithSlots, CantSympify):
                 if isinstance(num, dict):
                     num = dmp_from_dict(num, lev, dom)
                 elif not isinstance(num, list):
-                    num = dmp_ground(dom.convert(num), lev)
+                    num = dmp_ground(dom.convert(num), lev, dom)
             else:
-                num, lev = dmp_validate(num)
+                num, lev = dmp_validate(num, dom)
 
             den = dmp_one(lev, dom)
 
@@ -3057,14 +3092,14 @@ class ANP(CantSympify, Generic[Eg]):
                 rep = [dom.convert(a) for a in rep]
             else:
                 rep = [dom.convert(rep)]
-            rep = DMP(dup_strip(rep), dom, 0)
+            rep = DMP(dup_strip(rep, dom), dom, 0)
 
         if isinstance(mod, DMP):
             pass
         elif isinstance(mod, dict):
             mod = DMP(dup_from_raw_dict(mod, dom), dom, 0)
         else:
-            mod = DMP(dup_strip(mod), dom, 0)
+            mod = DMP(dup_strip(mod, dom), dom, 0)
 
         rep = rep.rem(mod)
 
@@ -3201,7 +3236,7 @@ class ANP(CantSympify, Generic[Eg]):
 
     @classmethod
     def from_list(cls, rep, mod, dom):
-        return ANP(dup_strip(list(map(dom.convert, rep))), mod, dom)
+        return ANP(dup_strip(list(map(dom.convert, rep)), dom), mod, dom)
 
     def add_ground(f, c):
         """Add an element of the ground domain to ``f``. """

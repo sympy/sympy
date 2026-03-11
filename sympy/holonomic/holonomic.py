@@ -2,6 +2,7 @@
 This module implements Holonomic Functions and
 various operations on them.
 """
+from __future__ import annotations
 
 from sympy.core import Add, Mul, Pow
 from sympy.core.numbers import (NaN, Infinity, NegativeInfinity, Float, I, pi,
@@ -10,6 +11,7 @@ from sympy.core.singleton import S
 from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, Symbol
 from sympy.core.sympify import sympify
+from sympy.external.mpmath import mp
 from sympy.functions.combinatorial.factorials import binomial, factorial, rf
 from sympy.functions.elementary.exponential import exp_polar, exp, log
 from sympy.functions.elementary.hyperbolic import (cosh, sinh)
@@ -2535,9 +2537,6 @@ def DMFsubs(frac, x0, mpm=False):
     q = frac.den
     sol_p = S.Zero
     sol_q = S.Zero
-
-    if mpm:
-        from mpmath import mp
 
     for i, j in enumerate(reversed(p)):
         if mpm:

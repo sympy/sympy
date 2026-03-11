@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.external import import_module
 from sympy.utilities.decorator import doctest_depends_on
 from re import compile as rcompile
@@ -214,4 +215,5 @@ def parse_latex(s, strict=False, backend="antlr"):
         return parse_latex_lark(s)
     else:
         raise NotImplementedError(f"Using the '{backend}' backend in the LaTeX" \
-                                   " parser is not supported.")
+                                   " parser is not supported, backend must be one of" \
+                                   " ('antlr', 'lark')")

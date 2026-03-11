@@ -27,6 +27,7 @@ Mathematical Formulae with Two Free Variables.
 Arithmetic. Master's thesis. University of Toronto, 1996
 
 """
+from __future__ import annotations
 
 
 from sympy.core.containers import Tuple

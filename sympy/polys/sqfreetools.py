@@ -615,7 +615,7 @@ def dup_sqf_list_include(f, K, all=False):
         g = dup_mul_ground(factors[0][0], coeff, K)
         return [(g, 1)] + factors[1:]
     else:
-        g = dup_strip([coeff])
+        g = dup_strip([coeff], K)
         return [(g, 1)] + factors
 
 
@@ -754,7 +754,7 @@ def dmp_sqf_list_include(f, u, K, all=False):
         g = dmp_mul_ground(factors[0][0], coeff, u, K)
         return [(g, 1)] + factors[1:]
     else:
-        g = dmp_ground(coeff, u)
+        g = dmp_ground(coeff, u, K)
         return [(g, 1)] + factors
 
 

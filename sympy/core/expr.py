@@ -18,8 +18,7 @@ from .kind import NumberKind
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.misc import as_int, func_name, filldedent
 from sympy.utilities.iterables import has_variety, _sift_true_false
-from mpmath.libmp import mpf_log, prec_to_dps
-from mpmath.libmp.libintmath import giant_steps
+from sympy.external.mpmath import prec_to_dps, giant_steps as _giant_steps, mpf_ln
 
 
 if TYPE_CHECKING:
@@ -435,7 +434,7 @@ class Expr(Basic, EvalfMixin):
         return super().__format__(format_spec)
 
     @staticmethod
-    def _from_mpmath(x, prec):
+    def _from_mpmath(x, prec) -> Expr:
         if hasattr(x, "_mpf_"):
             return Float._new(x._mpf_, prec)
         elif hasattr(x, "_mpc_"):
@@ -597,7 +596,7 @@ class Expr(Basic, EvalfMixin):
             # precision to see if we can get any significance
 
             # evaluate
-            for prec in giant_steps(2, DEFAULT_MAXPREC):
+            for prec in _giant_steps(2, DEFAULT_MAXPREC):
                 nmag = abs(self.evalf(prec, subs=reps))
                 if nmag._prec != 1:
                     break
@@ -3584,6 +3583,12 @@ class Expr(Basic, EvalfMixin):
         c = c.subs(d, log(x))
         return c, e
 
+    @overload
+    def as_coeff_Mul(self, rational: Literal[True]) -> tuple['Rational', Expr]: ...
+
+    @overload
+    def as_coeff_Mul(self, rational: bool = False) -> tuple['Number', Expr]: ...
+
     def as_coeff_Mul(self, rational: bool = False) -> tuple['Number', Expr]:
         """Efficiently extract the coefficient of a product."""
         return S.One, self
@@ -3664,8 +3669,18 @@ class Expr(Basic, EvalfMixin):
         return (expr, hit)
 
     @cacheit
-    def expand(self, deep=True, modulus=None, power_base=True, power_exp=True,
-            mul=True, log=True, multinomial=True, basic=True, **hints):
+    def expand(
+        self,
+        deep=True,
+        modulus=None,
+        power_base=True,
+        power_exp=True,
+        mul=True,
+        log=True,
+        multinomial=True,
+        basic=True,
+        **hints,
+    ) -> Expr:
         """
         Expand an expression using hints.
 
@@ -4082,7 +4097,7 @@ def _mag(x):
     try:
         mag_first_dig = int(ceil(log10(xpos)))
     except (ValueError, OverflowError):
-        mag_first_dig = int(ceil(Float(mpf_log(xpos._mpf_, 53))/log(10)))
+        mag_first_dig = int(ceil(Float(mpf_ln(xpos._mpf_, 53))/log(10)))
     # check that we aren't off by 1
     if (xpos/S(10)**mag_first_dig) >= 1:
         assert 1 <= (xpos/S(10)**mag_first_dig) < 10

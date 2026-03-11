@@ -799,12 +799,16 @@ def test_state():
 
 def test_tensorproduct():
     tp = TensorProduct(JzKet(1, 1), JzKet(1, 0))
-    assert str(tp) == '|1,1>x|1,0>'
-    assert pretty(tp) == '|1,1>x |1,0>'
-    assert upretty(tp) == '❘1,1⟩⨂ ❘1,0⟩'
-    assert latex(tp) == \
-        r'{{\left|1,1\right\rangle }}\otimes {{\left|1,0\right\rangle }}'
+    assert str(tp) == '|1,1>|1,0>'
+    assert pretty(tp) == '|1,1>|1,0>'
+    assert upretty(tp) == '❘1,1⟩❘1,0⟩'
+    assert latex(tp) == r'{{\left|1,1\right\rangle }}{{\left|1,0\right\rangle }}'
     sT(tp, "TensorProduct(JzKet(Integer(1),Integer(1)), JzKet(Integer(1),Integer(0)))")
+    tp = TensorProduct(Operator('A'), Operator('B'))
+    assert str(tp) == 'AxB'
+    assert pretty(tp) == 'Ax B'
+    assert upretty(tp) == 'A⨂ B'
+    assert latex(tp) == r'{A}\otimes {B}'
 
 
 def test_big_expr():

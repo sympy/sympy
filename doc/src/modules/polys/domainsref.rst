@@ -367,6 +367,9 @@ Sparse polynomials are represented as dictionaries.
 .. autoclass:: PolyElement
    :members:
 
+.. py:class:: Mon
+.. py:class:: _str
+
 
 Sparse rational functions
 =========================

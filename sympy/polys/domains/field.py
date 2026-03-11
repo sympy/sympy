@@ -29,7 +29,7 @@ class Field(Ring[Ef]):
         """Returns a field associated with ``self``. """
         return self
 
-    def exquo(self, a, b):
+    def exquo(self, a: Ef, b: Ef) -> Ef:
         """Exact quotient of ``a`` and ``b``, implies ``__truediv__``.  """
         return a / b
 

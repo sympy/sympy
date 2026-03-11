@@ -1132,9 +1132,14 @@ class Pow(Expr):
             from sympy.polys.polytools import poly
 
             exp = self.exp
+            if exp < 0 and self.base.is_zero:
+                return (S.NaN, S.NaN)
+
             re_e, im_e = self.base.as_real_imag(deep=deep)
+
             if not im_e:
                 return self, S.Zero
+
             a, b = symbols('a b', cls=Dummy)
             if exp >= 0:
                 if re_e.is_Number and im_e.is_Number:
@@ -1212,8 +1217,11 @@ class Pow(Expr):
 
     def _eval_derivative(self, s):
         from sympy.functions.elementary.exponential import log
+        if not self.base.is_commutative:
+            return None
         dbase = self.base.diff(s)
         dexp = self.exp.diff(s)
+
         return self * (dexp * log(self.base) + dbase * self.exp/self.base)
 
     def _eval_evalf(self, prec):

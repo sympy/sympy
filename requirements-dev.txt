@@ -1,4 +1,6 @@
 mpmath
+mypy; platform_python_implementation != "PyPy"  # Mypy's librt dependency isn't available on PyPy
+sphinx-lint
 pytest
 pytest-xdist
 pytest-timeout
@@ -7,3 +9,5 @@ pytest-doctestplus
 hypothesis
 flake8
 flake8-comprehensions
+ruff; sys_platform != "emscripten"  # exclude Pyodide
+slotscheck

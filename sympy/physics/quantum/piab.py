@@ -1,4 +1,5 @@
 """1D quantum particle in a box."""
+from __future__ import annotations
 
 from sympy.core.numbers import pi
 from sympy.core.singleton import S

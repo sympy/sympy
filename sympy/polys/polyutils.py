@@ -173,6 +173,8 @@ def _sort_factors(factors, **args):
     def order_key(factor):
         if isinstance(factor, _GF_types):
             return int(factor)
+        elif isinstance(factor, Expr):
+            return factor.sort_key()
         elif isinstance(factor, list):
             return [order_key(f) for f in factor]
         else:
@@ -556,7 +558,7 @@ class IntegerPowerable:
             except NotImplementedError:
                 return NotImplemented
         else:
-            bits = [int(d) for d in reversed(bin(e)[2:])]
+            bits = [int(d) for d in reversed(f'{e:b}')]
             n = len(bits)
             p = self
             first = True
@@ -600,5 +602,5 @@ if GROUND_TYPES == 'flint':
     _GF_types = (flint.nmod, flint.fmpz_mod)
 else:
     from sympy.polys.domains.modularinteger import ModularInteger
-    flint = None
+    flint = None  # type: ignore[assignment]
     _GF_types = (ModularInteger,)

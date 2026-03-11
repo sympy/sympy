@@ -1,3 +1,4 @@
+from __future__ import annotations
 from .add import Add
 from .exprtools import gcd_terms
 from .function import DefinedFunction
@@ -165,7 +166,7 @@ class Mod(DefinedFunction):
 
             if q.is_Integer and q is not S.One:
                 if all(t.is_integer for t in p.args):
-                    non_mod_l = [i % q if i.is_Integer else i for i in p.args]
+                    non_mod_l = [i % q if i.is_Integer else i for i in non_mod_l]
                     if any(iq is S.Zero for iq in non_mod_l):
                         return S.Zero
 

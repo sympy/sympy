@@ -1,4 +1,5 @@
 """Symbolic primitives + unicode/ASCII abstraction for pretty.py"""
+from __future__ import annotations
 
 import sys
 import warnings
@@ -498,6 +499,7 @@ atoms_table = {
     'IdentityMatrix':          U('MATHEMATICAL DOUBLE-STRUCK CAPITAL I'),
     'ZeroMatrix':              U('MATHEMATICAL DOUBLE-STRUCK DIGIT ZERO'),
     'OneMatrix':               U('MATHEMATICAL DOUBLE-STRUCK DIGIT ONE'),
+    'MatrixUnit':              U('MATHEMATICAL DOUBLE-STRUCK CAPITAL E'),
     'Differential':            U('DOUBLE-STRUCK ITALIC SMALL D'),
     'Union':                   U('UNION'),
     'ElementOf':               U('ELEMENT OF'),

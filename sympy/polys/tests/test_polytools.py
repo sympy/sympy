@@ -1,4 +1,5 @@
 """Tests for user-friendly public interface to polynomial functions. """
+from __future__ import annotations
 
 import pickle
 
@@ -72,7 +73,7 @@ from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.hyperbolic import tanh
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.functions.elementary.trigonometric import sin
+from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.matrices.dense import Matrix
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.polys.rootoftools import rootof
@@ -1335,10 +1336,9 @@ def test_Poly_degree():
     assert degree(x*y**2, z) == 0
 
     assert degree(pi) == 1
-
+    raises(TypeError, lambda: degree(I))  # Poly sees a number but no gen -> needs gen
     raises(TypeError, lambda: degree(y**2 + x**3))
     raises(TypeError, lambda: degree(y**2 + x**3, 1))
-    raises(PolynomialError, lambda: degree(x, 1.1))
     raises(PolynomialError, lambda: degree(x**2/(x**3 + 1), x))
 
     assert degree(Poly(0,x),z) is -oo
@@ -1347,6 +1347,40 @@ def test_Poly_degree():
     assert degree(Poly(y**2 + x**3, y, x), 1) == 3
     assert degree(Poly(y**2 + x**3, x), z) == 0
     assert degree(Poly(y**2 + x**3 + z**4, x), z) == 4
+
+
+    # optimization
+    big = 2  # make this number 1000 when full expansion can be avoided
+
+    assert degree((x + 1)**big, x) == big  # Large power (fast-path, no expansion)
+    assert degree((x + 1)**big + x**(big-1), x) == big  # Addition without cancellation
+    assert degree((x + 1)**2 - x**2, x) == 1  # Addition with cancellation (fallback required)
+    assert degree(x*(x + 1)**big, x) == big + 1  # Nested multiplication
+    assert degree(y*(x + 1)**big, x) == big  # Generator independence
+
+    # checking 0 detection
+    Z = pi*(1/pi + 1) - 1 - pi
+    assert degree(Z**big, x) is S.NegativeInfinity
+    assert degree(Z**big, pi) is S.NegativeInfinity
+    Z = Add(0, Mul(0, x, evaluate=False), evaluate=False)
+    assert degree(Z, x) is S.NegativeInfinity
+    assert degree(cos(1)**2 + sin(1)**2 - 1, x) == 0  # should be -oo
+
+    # /!\ user was warned; anything could change as Poly is improved-#
+    eq = x + 1/x**2                                                  #
+    raises(PolynomialError, lambda: degree(eq**big, x))              #
+    assert degree(eq**big, 1/x) == 2*big                             #
+                                                                     #
+    eq = exp(x) + 1/exp(2*x)                                         #
+    assert degree(eq, exp(x)) == 1                                   #
+    assert degree(eq, exp(-x)) == 2                                  #
+                                                                     #
+    one = Pow(x, 0, evaluate=False)                                  #
+    raises(PolynomialError, lambda: degree(one, one))                #
+    assert degree(x, 1.1) == degree(x, pi) == 0                      #
+    assert degree(0, 1.1) == -oo                                     #
+    # end of zoo of warnings-----------------------------------------#
+
 
 def test_Poly_degree_list():
     assert Poly(0, x).degree_list() == (-oo,)
@@ -3574,7 +3608,7 @@ def test_cancel():
         evaluate=False)
     assert cancel(q, _signsimp=False) is S.NaN
     assert q.subs(x, 2) is S.NaN
-    assert signsimp(q) is S.NaN
+    assert signsimp(q) is not S.NaN
 
     # issue 9363
     M = MatrixSymbol('M', 5, 5)
@@ -4203,3 +4237,64 @@ def test_hurwitz_conditions():
     p14 = Poly(x**2 + 1/y, x)
     assert 0 in p14.hurwitz_conditions()
     assert 0 in p14.set_domain(EXRAW).hurwitz_conditions()
+
+
+def test_schur_conditions():
+    raises(ValueError, lambda: Poly(0, x).schur_conditions())
+    raises(NotImplementedError, lambda: Poly(x**2 + (1+I)).schur_conditions())
+    assert Poly(1,x).schur_conditions() == []
+
+    b0, b1, b2, b3, b4 = symbols('b_0 b_1 b_2 b_3 b_4')
+
+    assert Poly(b1 * x + b0, x).schur_conditions() == [-b0**2 + b1**2]
+
+    p1 = Poly(b4 * s**4 + b3 * s**3 + b2 * s**2 + b1 * s + b0, s)
+    p1_ = Poly(b4 * s**4 + b3 * s**3 + b2 * s**2 + b1 * s + b0, s,
+               domain = EXRAW)
+
+    assert p1.schur_conditions() == [
+        (-4*b0**2 + 6*b0*b1 - 4*b0*b2 + 2*b0*b3 - 2*b1**2 + 2*b1*b2 - 2*b1*b4 -
+         2*b2*b3 + 4*b2*b4 + 2*b3**2 - 6*b3*b4 + 4*b4**2),
+        (-20*b0**2 + 10*b0*b1 + 12*b0*b2 - 18*b0*b3 - 2*b1**2 - 2*b1*b2 +
+         18*b1*b4 + 2*b2*b3 - 12*b2*b4 + 2*b3**2 - 10*b3*b4 + 20*b4**2),
+        (64*b0**4 - 64*b0**3*b1 - 64*b0**3*b3 + 64*b0**2*b1*b2 +
+         64*b0**2*b1*b3 + 64*b0**2*b1*b4 - 64*b0**2*b2**2 + 64*b0**2*b2*b3 -
+         64*b0**2*b3**2 + 64*b0**2*b3*b4 - 128*b0**2*b4**2 - 64*b0*b1**2*b3 -
+         64*b0*b1**2*b4 + 64*b0*b1*b2*b3 - 128*b0*b1*b2*b4 + 128*b0*b1*b3*b4 +
+         64*b0*b1*b4**2 + 128*b0*b2**2*b4 - 64*b0*b2*b3**2 - 128*b0*b2*b3*b4 +
+         64*b0*b3**3 - 64*b0*b3**2*b4 + 64*b0*b3*b4**2 + 64*b1**3*b4 -
+         64*b1**2*b2*b4 - 64*b1**2*b4**2 + 64*b1*b2*b3*b4 + 64*b1*b2*b4**2 -
+         64*b1*b3**2*b4 + 64*b1*b3*b4**2 - 64*b1*b4**3 - 64*b2**2*b4**2 +
+         64*b2*b3*b4**2 - 64*b3*b4**3 + 64*b4**4),
+        (b0**2 + 2*b0*b2 + 2*b0*b4 - b1**2 - 2*b1*b3 + b2**2 + 2*b2*b4 -
+         b3**2 + b4**2)]
+    assert p1_.schur_conditions() == [
+        -2*((2*b0 - b1 + b3 - 2*b4)*(b0 - b1 + b2 - b3 + b4)),
+        (-4*((3*b0 - b2 + 3*b4)*(2*b0 - b1 + b3 - 2*b4)) +
+         2*((2*b0 + b1 - b3 - 2*b4)*(b0 - b1 + b2 - b3 + b4))),
+        (-8*(((2*((3*b0 - b2 + 3*b4)*(2*b0 - b1 + b3 - 2*b4)) -
+         (2*b0 + b1 - b3 - 2*b4)*(b0 - b1 + b2 - b3 + b4))*
+         (2*b0 + b1 - b3 - 2*b4) - (2*b0 - b1 + b3 - 2*b4)**2*
+         (b0 + b1 + b2 + b3 + b4))*(2*b0 - b1 + b3 - 2*b4))),
+        -2*((2*b0 - b1 + b3 - 2*b4)*(b0 + b1 + b2 + b3 + b4))]
+
+    p2 = Poly((x+0.4531)*(x-0.98321)*(x+0.2328)*(x+0.4), x)
+    assert all(c > 0 for c in p2.schur_conditions())
+
+    p3 = Poly((x+0.4531)*(x-0.64536)*(x+0.2328)*(x+1.0021), x)
+    assert any(c <= 0 for c in p3.schur_conditions())
+
+    p4 = Poly((x+0.4531)*(x-0.64536)*(x+0.2328)*(x+1), x)
+    assert any(c <= 0 for c in p4.schur_conditions())
+
+    p5 = Poly((x+0.4)*(x+0.012)*(x**2-1.52*x+0.9872), x)
+    assert all(c > 0 for c in p5.schur_conditions())
+
+    assert all(c > 0 for c in p5.set_domain(QQ).schur_conditions())
+    assert all(c > 0 for c in p5.set_domain(EXRAW).schur_conditions())
+
+    p6 = Poly((x+0.3)*(x+0.24)*(x-0.1942)*(x**2-1.6*x+1), x)
+    assert any(c <= 0 for c in p6.schur_conditions())
+
+    assert any(c <= 0 for c in p6.set_domain(QQ).schur_conditions())
+    assert any(c <= 0 for c in p6.set_domain(EXRAW).schur_conditions())

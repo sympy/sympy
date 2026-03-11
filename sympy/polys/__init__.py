@@ -1,4 +1,5 @@
 """Polynomial manipulation algorithms and algebraic objects. """
+from __future__ import annotations
 
 __all__ = [
     'Poly', 'PurePoly', 'poly_from_expr', 'parallel_poly_from_expr', 'degree',
@@ -10,7 +11,7 @@ __all__ = [
     'sqf_norm', 'sqf_part', 'sqf_list', 'sqf', 'factor_list', 'factor',
     'intervals', 'refine_root', 'count_roots', 'all_roots', 'real_roots',
     'nroots', 'ground_roots', 'nth_power_roots_poly', 'cancel', 'reduced',
-    'groebner', 'hurwitz_conditions', 'is_zero_dimensional',
+    'groebner', 'hurwitz_conditions', 'schur_conditions', 'is_zero_dimensional',
     'GroebnerBasis', 'poly',
 
     'symmetrize', 'horner', 'interpolate', 'rational_interpolate', 'viete',
@@ -75,7 +76,7 @@ from .polytools import (Poly, PurePoly, poly_from_expr,
         sqf_list, sqf, factor_list, factor, intervals, refine_root,
         count_roots, all_roots, real_roots, nroots, ground_roots,
         nth_power_roots_poly, cancel, reduced, groebner, is_zero_dimensional,
-        hurwitz_conditions, GroebnerBasis, poly)
+        hurwitz_conditions, schur_conditions, GroebnerBasis, poly)
 
 from .polyfuncs import (symmetrize, horner, interpolate,
         rational_interpolate, viete)

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.containers import Tuple
 from sympy.combinatorics.generators import rubik_cube_generators
 from sympy.combinatorics.homomorphisms import is_isomorphic
@@ -65,6 +66,31 @@ def test_order():
     g = PermutationGroup([a, b])
     assert g.order() == 1814400
     assert PermutationGroup().order() == 1
+
+
+def test_molien():
+    from sympy.abc import t
+    G = PermutationGroup()
+    assert G.molien() == 1
+    assert G.molien(t) == 1
+
+    C3 = CyclicGroup(3)
+    assert C3.molien() == 2*(1 - t**3)**(-1)/3 + (1 - t)**(-3)/3
+
+    S3 = SymmetricGroup(3)
+    assert S3.molien() == (2*(1 - t**3)**(-1) + 3/((1 - t)*(1 - t**2)) + (1 - t)**(-3))/6
+    assert S3.molien(t) == (2*(1 - t**3)**(-1) + 3/((1 - t)*(1 - t**2)) + (1 - t)**(-3))/6
+
+    G = PermutationGroup(Permutation(5))
+    assert G.molien() == 1/(1 - t)**6
+
+
+def test_identity_generators_dups_false():
+    identity = Permutation(3)
+    G = PermutationGroup(identity, identity, dups=False)
+    assert len(G.generators) == 1
+    assert G.generators[0].is_identity
+    assert G.order() == 1
 
 
 def test_equality():
@@ -310,6 +336,14 @@ def test_is_normal():
     assert H_id.is_normal(H)
     assert not H_n2_1.is_normal(H)
     assert not H_n2_2.is_normal(H)
+
+
+def test_is_normal_after_is_abelian():
+    G = SymmetricGroup(3)#PermutationGroup(Permutation([1, 2, 0]), Permutation([1, 0, 2]))
+    H = PermutationGroup(Permutation([1, 0, 2]))
+
+    assert H.is_abelian is True
+    assert H.is_normal(G) is False
 
 
 def test_eq():
@@ -1240,3 +1274,10 @@ def test_symmetricpermutationgroup():
     assert a.degree == 5
     assert a.order() == 120
     assert a.identity() == Permutation(4)
+
+def test_quotient_group():
+    G = SymmetricGroup(4)
+    N = AlternatingGroup(4)
+    Q = G.quotient_group(N)
+    Q_expected = CyclicGroup(2)
+    assert(is_isomorphic(Q, Q_expected) == True)
