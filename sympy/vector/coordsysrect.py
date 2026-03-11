@@ -606,7 +606,7 @@ class CoordSys3D(Basic):
         """
         Returns the change-of-basis matrix from the ``other`` coordinate system
         to this coordinate system. This matrix transforms the components of a
-        vector defined in ``other`` to componenets of a vector defined in
+        vector defined in ``other`` to components of a vector defined in
         this system. The columns of this matrix represent the base vectors of
         the ``other`` system in terms of base vectors of this
         coordinate system.
