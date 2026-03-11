@@ -64,7 +64,7 @@ def satask(proposition, assumptions=True, context=global_assumptions,
     True
 
     """
-    assumptions_argument_was_omitted = (assumptions is True or assumptions == S.true)
+    assumptions_arg_is_true = (assumptions is True or assumptions == S.true)
     props = CNF.from_prop(proposition)
     _props = CNF.from_prop(~proposition)
 
@@ -79,12 +79,18 @@ def satask(proposition, assumptions=True, context=global_assumptions,
     sat.add_from_cnf(assumptions)
     if context:
         sat.add_from_cnf(context_cnf)
-    if not assumptions_argument_was_omitted:
+    try:
+        result = check_satisfiability(props, _props, sat)
+    except ValueError as e:
+        if str(e) == "Inconsistent assumptions":
+            from sympy.core.facts import InconsistentAssumptions
+            raise InconsistentAssumptions("SAT Solver", str(assumptions), False)
+        raise e
+    if result is not None and not assumptions_arg_is_true:
         if not satisfiable(sat):
             from sympy.core.facts import InconsistentAssumptions
             raise InconsistentAssumptions("SAT Solver", str(assumptions), False)
-
-    return check_satisfiability(props, _props, sat)
+    return result
 
 
 def check_satisfiability(prop, _prop, factbase):
