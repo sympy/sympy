@@ -1070,3 +1070,10 @@ def test_issue_18628():
     eq2 = 2*x**2 - 9*x + 4*y**2 - 8*y + 14
     sol = diophantine(eq2)
     assert sol == {(2, 1)}
+
+
+def test_diophantine_syms_subset():
+    x, y, z = symbols('x y z', integer=True)
+    # This should not raise KeyError
+    # It confirms that diophantine() handles syms being a subset of equation symbols.
+    assert diophantine(x + y + z - 3, syms=[x, y]) == {(t_0, t_0 + t_1)}
