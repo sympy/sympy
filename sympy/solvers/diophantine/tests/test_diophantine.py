@@ -1074,6 +1074,11 @@ def test_issue_18628():
 
 def test_diophantine_syms_subset():
     x, y, z = symbols('x y z', integer=True)
-    # This should not raise KeyError
-    # It confirms that diophantine() handles syms being a subset of equation symbols.
-    assert diophantine(x + y + z - 3, syms=[x, y]) == {(t_0, t_0 + t_1)}
+    eq = x + y + z - 3
+    full = diophantine(eq)
+    # This should not raise KeyError, and should project the full solution
+    # tuple onto the requested symbol order.
+    assert diophantine(eq, syms=[x, y]) == {
+        tuple(sol[i] for i in (0, 1)) for sol in full}
+    assert diophantine(eq, syms=[y, x]) == {
+        tuple(sol[i] for i in (1, 0)) for sol in full}
