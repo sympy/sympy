@@ -11,3 +11,5 @@ Polygons
 
 .. autoclass:: Triangle
    :members:
+   
+.. autofunction:: sympy.geometry.polygon.rad
