@@ -79,8 +79,8 @@ jobs:
           source .venv-pyodide/bin/activate
           pip install .
 
-          # Install dependencies and optional test dependencies
-          pip install -r requirements-dev.txt
+          # Install dependencies. Exclude ruff, since Pyodide cannot install it.
+          grep -vx 'ruff' requirements-dev.txt | pip install -r /dev/stdin
           pip install matplotlib numpy scipy
 
           # Trigger test suite (slow and tooslow tests are skipped by default)
