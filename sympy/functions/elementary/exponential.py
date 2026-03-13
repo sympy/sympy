@@ -1103,6 +1103,11 @@ class log(DefinedFunction):
                 res += -2*I*pi*Heaviside(-im(coeff), 0)
         return res
 
+    def _eval_derivative_n_times(self, s, n):
+        if self.args[0] == s and n.is_integer and n.is_positive:
+            return S.NegativeOne**(n-1) * factorial(n - 1) / s**n
+        return super()._eval_derivative_n_times(s, n)
+
 
 class LambertW(DefinedFunction):
     r"""
