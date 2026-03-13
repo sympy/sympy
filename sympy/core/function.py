@@ -63,8 +63,6 @@ from sympy.utilities.misc import as_int, filldedent, func_name
 import mpmath
 from sympy.external.mpmath import (prec_to_dps, mpf, mpc, mp, workprec, diff as
                                    mpmath_diff)
-from sympy.core.singleton import S
-
 import inspect
 from collections import Counter
 
