@@ -1184,7 +1184,6 @@ def test_Pow_is_finite():
     assert (xe**xe).is_finite is None
     assert (xr**xe).is_finite is None
     assert (xe**xr).is_finite is None
-    
     assert (xr**xr).is_finite is True
 
     assert (p**xe).is_finite is None
