@@ -1374,9 +1374,10 @@ class Derivative(Expr):
         # good way to unambiguously print this.
         if len(variable_count) == 0:
             return expr
-
+        from sympy import S
+        if expr.has(S.NaN):
+            return S.NaN
         evaluate = kwargs.get('evaluate', False)
-
         if evaluate:
             if isinstance(expr, Derivative):
                 expr = expr.canonical
