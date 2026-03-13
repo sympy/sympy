@@ -449,13 +449,18 @@ def refine_sin_cos(expr, assumptions):
     sum_of_parity_known_coeffs_is_even = True
     for coeff in integer_coeffs_of_pi_half:
         coeff_is_even = ask(Q.even(coeff), assumptions)
+#fix
         if coeff_is_even is None:
-            sum_of_parity_unknown_coeffs += coeff
-        else:
-            sum_of_parity_known_coeffs += coeff
-            sum_of_parity_known_coeffs_is_even = (
-                sum_of_parity_known_coeffs_is_even == coeff_is_even
-            )
+            coeff_is_odd = ask(Q.odd(coeff), assumptions)
+            if coeff_is_odd:
+                coeff_is_even = False  # odd matlab even nahi!
+                if coeff_is_even is None:
+                    sum_of_parity_unknown_coeffs += coeff
+                else:
+                    sum_of_parity_known_coeffs += coeff
+                    sum_of_parity_known_coeffs_is_even = (
+                        sum_of_parity_known_coeffs_is_even == coeff_is_even
+                    )
 
     if sum_of_parity_known_coeffs == 0:
         return expr
