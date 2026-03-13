@@ -2327,3 +2327,10 @@ def test_issue_28222():
     assert Mod(2 + 3*I, 10) == Mod(2 + 3*I, 10)
     assert Mod(I, exp(1)) == Mod(I, exp(1))
     assert Mod(I, S(1.5)) == Mod(I, S(1.5))
+
+def test_issue_19988_Float_pickle_precision():
+    import pickle
+    from sympy import Float, pi
+    original = Float(pi, dps=100)
+    unpickled = pickle.loads(pickle.dumps(original))
+    assert original._prec == unpickled._prec

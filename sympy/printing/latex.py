@@ -2543,6 +2543,20 @@ class LatexPrinter(Printer):
     def _print_Ordinal(self, expr):
         return " + ".join([self._print(arg) for arg in expr.args])
 
+    def _print_FreeGroupElement(self, elm):
+        if elm.is_identity:
+            return "1"
+
+        str_form = []
+        for g, power in elm.array_form:
+            s = str(g)
+            if power == 1:
+                str_form.append(s)
+            else:
+                str_form.append(s + "^{" + str(power) + "}")
+        mul_symbol = self._settings['mul_symbol_latex'] or ""
+        return mul_symbol.join(str_form)
+
     def _print_PolyElement(self, poly):
         mul_symbol = self._settings['mul_symbol_latex']
         return poly.str(self, PRECEDENCE, "{%s}^{%d}", mul_symbol)

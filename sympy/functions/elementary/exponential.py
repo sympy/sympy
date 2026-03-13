@@ -3,7 +3,6 @@ from itertools import product
 
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
-from sympy.core.expr import Expr
 from sympy.core.function import (DefinedFunction, ArgumentIndexError, expand_log,
     expand_mul, FunctionClass, PoleError, expand_multinomial, expand_complex)
 from sympy.core.logic import fuzzy_and, fuzzy_not, fuzzy_or
@@ -19,6 +18,10 @@ from sympy.functions.elementary.complexes import arg, unpolarify, im, re, Abs
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.ntheory import multiplicity, perfect_power
 from sympy.ntheory.factor_ import factorint
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
 
 # NOTE IMPORTANT
 # The series expansion code in this file is an important part of the gruntz

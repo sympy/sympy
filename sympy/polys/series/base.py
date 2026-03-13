@@ -1,9 +1,11 @@
 from __future__ import annotations
 
-from typing import Protocol, Sequence, TypeVar
-from sympy.polys.domains import Domain
+from typing import Protocol, Sequence, TypeVar, TYPE_CHECKING
 from sympy.polys.domains.domain import Ef, Er
 from sympy.polys.densebasic import dup, dup_pretty
+
+if TYPE_CHECKING:
+    from sympy.polys.domains import Domain
 
 
 TSeries = TypeVar("TSeries")

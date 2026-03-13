@@ -18,6 +18,7 @@ from sympy.functions.special.polynomials import (assoc_laguerre, chebyshevt, che
 from sympy.functions.special.zeta_functions import polylog
 from sympy.integrals.integrals import (Integral, integrate)
 from sympy.logic.boolalg import And
+from sympy import factor
 from sympy.integrals.manualintegrate import (manualintegrate, find_substitutions,
     _parts_rule, integral_steps, manual_subs)
 from sympy.testing.pytest import raises, slow
@@ -786,6 +787,50 @@ def test_manualintegrate_sqrt_quadratic():
     assert_is_integral_of(x*sqrt(x**2+2*x+4),
                           (x**2/3 + x/6 + S(5)/6)*sqrt(x**2 + 2*x + 4) - 3*asinh(sqrt(3)*(x + 1)/3)/2)
 
+
+def test_manualintegrate_sqrt_quadratic_reduction():
+    # Tests for Gradshteyn & Ryzhik 2.263.3 reduction rule (n < -1 odd)
+    a = symbols('a', nonzero=True)
+    b, c, f, x = symbols('b c f x')
+
+    # Base Case: n = -3
+    assert_is_integral_of(
+        1/(x**2 + 1)**(S(3)/2),
+        x/(x**2 + 1)**(S(1)/2)
+    )
+    assert_is_integral_of(
+        8/(x**2 + 1)**(S(3)/2),
+        8*x/(x**2 + 1)**(S(1)/2)
+    )
+
+    # Complex Numeric Case (x^2 + 2x + 2)
+    assert_is_integral_of(
+        1/(x**2 + 2*x + 2)**(S(3)/2),
+        (4*x + 4)/(4*(x**2 + 2*x + 2)**(S(1)/2))
+    )
+
+    # Recursive Case: n = -5
+    assert_is_integral_of(
+        1/(x**2 + 1)**(S(5)/2),
+        x/(3*(x**2 + 1)**(S(3)/2)) + 2*x/(3*(x**2 + 1)**(S(1)/2))
+    )
+    assert_is_integral_of(
+        5/(x**2 + 1)**(S(5)/2),
+        5*x/(3*(x**2 + 1)**(S(3)/2)) + 10*x/(3*(x**2 + 1)**(S(1)/2))
+    )
+
+    # For even larger n
+    assert_is_integral_of(
+        1/(x**2 + 1)**(S(7)/2),
+        x/(5*(x**2 + 1)**(S(5)/2)) +
+        4*x/(15*(x**2 + 1)**(S(3)/2)) +
+        8*x/(15*(x**2 + 1)**(S(1)/2))
+    )
+
+    # Symbolic Verification (General Case)
+    term_n5 = f/(a*x**2 + b*x + c)**(S(5)/2)
+    intg_result = manualintegrate(term_n5, x)
+    assert factor(intg_result.diff(x) - term_n5) == 0
 
 def test_mul_pow_derivative():
     assert_is_integral_of(x*sec(x)*tan(x), x*sec(x) - log(tan(x) + sec(x)))

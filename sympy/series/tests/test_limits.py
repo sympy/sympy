@@ -1468,3 +1468,14 @@ def test_issue_28558():
     # The original problematic case now raises NotImplementedError instead of TypeError
     # This confirms the fix - the TypeError about missing 'cdir' is resolved
     raises(NotImplementedError, lambda: limit(log(x)*cos(x), x, oo, dir='-'))
+
+
+def test_issue_28975():
+    assert limit(2**(1/x), x, 0, dir='-') == 0
+    assert limit(2**(1/x), x, 0, dir='+') == oo
+    assert limit((1/2)**(1/x), x, 0, dir='-') == oo
+    assert limit((1/2)**(1/x), x, 0, dir='+') == 0
+    assert limit(3**(1/(x-1)), x, 1, dir='-') == 0
+    assert limit(3**(1/(x-1)), x, 1, dir='+') == oo
+    assert limit(3**(tan(x)), x, pi/2, dir='-') == oo
+    assert limit(3**(tan(x)), x, pi/2, dir='+') == 0

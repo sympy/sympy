@@ -223,7 +223,6 @@ def reduce_rational_inequalities(exprs, gen, relational=True):
     (-2 < y) & (y < oo)
     """
     exact = True
-    eqs = []
     solution = S.EmptySet  # add pieces for each group
     for _exprs in exprs:
         if not _exprs:
@@ -269,9 +268,6 @@ def reduce_rational_inequalities(exprs, gen, relational=True):
 
         if _eqs:
             _sol &= solve_rational_inequalities([_eqs])
-            exclude = solve_rational_inequalities([[((d, d.one), '==')
-                for i in eqs for ((n, d), _) in i if d.has(gen)]])
-            _sol -= exclude
 
         solution |= _sol
 

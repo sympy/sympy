@@ -631,7 +631,7 @@ class Permutation(Atom):
     >>> Permutation(1, 2)(3)
     Traceback (most recent call last):
     ...
-    IndexError: list index out of range
+    TypeError: 3 should be an integer between 0 and 2
 
     This is ok: only the call to an out of range singleton is prohibited;
     otherwise the permutation autosizes:
@@ -1298,6 +1298,28 @@ class Permutation(Atom):
         return rv
 
     @classmethod
+    def prod(cls, perms: Iterable["Permutation"]) -> "Permutation":
+        """
+        Return the product of an iterable of permutations in multiplication
+        order.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics import Permutation
+        >>> a = Permutation([1, 0, 2])
+        >>> b = Permutation([0, 2, 1])
+        >>> Permutation.prod([a, b]) == a*b
+        True
+        >>> Permutation.prod([])
+        ()
+        """
+        perms = list(perms)
+        if not perms:
+            return cls([])
+        return cls.rmul(*reversed(perms))
+
+    @classmethod
     def rmul_with_af(cls, *args):
         """
         same as rmul, but the elements of args are Permutation objects
@@ -1653,7 +1675,7 @@ class Permutation(Atom):
             i = i[0]
             if not isinstance(i, Iterable):
                 i = as_int(i)
-                if i < 0 or i > self.size:
+                if i < 0 or i >= self.size:
                     raise TypeError(
                         "{} should be an integer between 0 and {}"
                         .format(i, self.size-1))

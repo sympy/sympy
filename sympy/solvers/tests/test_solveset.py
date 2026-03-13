@@ -44,7 +44,7 @@ from sympy.solvers.solveset import (
     solveset_real, domain_check, solveset_complex, linear_eq_to_matrix,
     linsolve, _is_function_class_equation, invert_real, invert_complex,
     _invert_trig_hyp_real, solveset, solve_decomposition, substitution,
-    nonlinsolve, solvify,
+    nonlinsolve, solvify, solveset_to_rules,
     _is_finite_with_finite_vars, _transolve, _is_exponential,
     _solve_exponential, _is_logarithmic, _is_lambert,
     _solve_logarithm, _term_factors, _is_modular, NonlinearError)
@@ -1590,6 +1590,51 @@ def test_abs_invert_solvify():
     assert solvify(sin(Abs(x)), x, S.Reals) is None
 
 
+def test_solveset_to_rules():
+    x, a = symbols('x a')
+
+    # EmptySet: no solutions at all
+    assert solveset_to_rules(S.EmptySet, x) == []
+    assert solveset_to_rules(solveset(x**2 + 1, x, S.Reals), x) == []
+
+    # FiniteSet: simple finite solutions, no parameter, no condition
+    assert solveset_to_rules(solveset(x - 5, x, S.Reals), x) == \
+        [({x: 5}, {}, S.true)]
+    assert solveset_to_rules(solveset(x**2 - 4, x, S.Reals), x) == \
+        [({x: -2}, {}, S.true), ({x: 2}, {}, S.true)]
+
+    # ImageSet: infinitely many solutions with a dummy integer parameter
+    rules = solveset_to_rules(solveset(sin(x), x, S.Reals), x)
+    assert len(rules) == 2
+    n0 = list(rules[0][1].keys())[0]
+    assert isinstance(n0, Dummy)
+    assert rules[0][1][n0] == S.Integers
+    assert rules[1][1][n0] == S.Integers
+    assert rules[0][0][x].has(n0)
+    assert rules[1][0][x].has(n0)
+    assert rules[0][2] == S.true
+    assert rules[1][2] == S.true
+
+    # ConditionSet: symbolic RHS introduces a condition; param_dict is empty
+    rules = solveset_to_rules(solveset(Abs(x) - a, x, S.Reals), x)
+    assert len(rules) == 2
+    assert rules[0][1] == {}
+    assert rules[1][1] == {}
+    assert rules[1][2] == Contains(a, Interval(0, oo))
+
+    # Intersection with non-Reals domains (e.g. Integers)
+    # Checks that Integers is treated as a constraint, not as the primary solution
+    m = Dummy('m')
+    solset1 = Intersection(ImageSet(Lambda(m, 2*m*pi), S.Integers), S.Integers)
+    rules1 = solveset_to_rules(solset1, x)
+    assert len(rules1) == 1
+    m0 = list(rules1[0][1].keys())[0]
+    assert rules1[0][0] == {x: 2*m0*pi}
+    assert rules1[0][1] == {m0: S.Integers}
+    assert rules1[0][2] == Contains(2*m0*pi, S.Integers)
+
+
+
 def test_linear_eq_to_matrix():
     assert linear_eq_to_matrix(0, x) == (Matrix([[0]]), Matrix([[0]]))
     assert linear_eq_to_matrix(1, x) == (Matrix([[0]]), Matrix([[-1]]))
@@ -1870,6 +1915,13 @@ def test_nonlinsolve_abs():
     raises(NotImplementedError, lambda: nonlinsolve([Abs(x) - 1, x - y], x, y))
     raises(NotImplementedError, lambda: nonlinsolve([Abs(x) - 1, y - 2], x, y))
     raises(NotImplementedError, lambda: nonlinsolve([Abs(x) - 2, x + y], x, y))
+
+
+def test_nonlinsolve_sign():
+    raises(NotImplementedError, lambda: nonlinsolve([sign(x) - 1, x*y - 4], [x, y]))
+    raises(NotImplementedError, lambda: nonlinsolve([sign(x) - 1, x - y], [x, y]))
+    result = nonlinsolve([sign(x) - 1], [x])
+    assert isinstance(result, FiniteSet)
 
 
 def test_raise_exception_nonlinsolve():

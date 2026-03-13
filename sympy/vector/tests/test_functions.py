@@ -1,11 +1,13 @@
 from sympy.vector.vector import Vector
 from sympy.vector.coordsysrect import CoordSys3D
-from sympy.vector.functions import express, matrix_to_vector, orthogonalize
+from sympy.vector.functions import (
+    express, matrix_to_vector, matrix_to_dyadic, orthogonalize)
 from sympy.core.numbers import Rational
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.matrices.exceptions import ShapeError
 from sympy.matrices.immutable import ImmutableDenseMatrix as Matrix
 from sympy.testing.pytest import raises
 
@@ -163,6 +165,21 @@ def test_matrix_to_vector():
            Vector.zero
     m = Matrix([[q1], [q2], [q3]])
     assert matrix_to_vector(m, N) == q1*N.i + q2*N.j + q3*N.k
+
+
+def test_matrix_to_dyadic():
+    raises(ShapeError, lambda: matrix_to_dyadic(Matrix([0]), N))
+    raises(
+        ShapeError,
+        lambda: matrix_to_dyadic(Matrix([[0, 1, 2], [3, 4, 5]]), N))
+
+    m = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+    expected = (
+        1 * (N.i | N.i) + 2 * (N.i | N.j) + 3 * (N.i | N.k) +
+        4 * (N.j | N.i) + 5 * (N.j | N.j) + 6 * (N.j | N.k) +
+        7 * (N.k | N.i) + 8 * (N.k | N.j) + 9 * (N.k | N.k)
+    )
+    assert matrix_to_dyadic(m, N) == expected
 
 
 def test_orthogonalize():

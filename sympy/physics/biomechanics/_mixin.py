@@ -44,7 +44,7 @@ class _NamedMixin:
                 f'{type(name)}, must be {str}.'
             )
             raise TypeError(msg)
-        if name in {''}:
+        if name == '':
             msg = (
                 f'Name {repr(name)} is invalid, must be a nonzero length '
                 f'{type(str)}.'

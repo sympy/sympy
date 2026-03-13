@@ -276,6 +276,20 @@ def test_QR_trivial():
     assert A == Q*R
 
 
+def test_QR_symbolic_dependent_columns():
+    a = Symbol('a', real=True)
+    b = Symbol('b', real=True)
+    k = Symbol('k', real=True)
+    A = Matrix([[a, k*a],
+                [b, k*b]])
+    Q, R = A.QRdecomposition()
+    assert A.rank() == 1
+    assert Q.cols == A.rank()
+    QQ = (Q.H * Q).applyfunc(simplify)
+    assert not QQ.has(S.NaN)
+    assert (Q*R - A).applyfunc(simplify) == zeros(2, 2)
+
+
 def test_QR_float():
     A = Matrix([[1, 1], [1, 1.01]])
     Q, R = A.QRdecomposition()

@@ -276,6 +276,8 @@ def centroid(*args):
                 c += g.centroid*a
                 A += a
             den = A
+        else:
+            return None
         c /= den
         return c.func(*[i.simplify() for i in c.args])
 

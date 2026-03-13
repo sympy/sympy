@@ -11,7 +11,7 @@ as unifying matrices with different domains.
 """
 from __future__ import annotations
 
-from typing import overload
+from typing import overload, TYPE_CHECKING
 
 from collections import Counter
 from functools import reduce
@@ -21,7 +21,6 @@ from sympy.utilities.decorator import doctest_depends_on
 
 from sympy.core.sympify import _sympify
 
-from ..domains import Domain
 
 from ..constructor import construct_domain
 
@@ -58,6 +57,9 @@ from .sdm import SDM
 from .dfm import DFM
 
 from .rref import _dm_rref, _dm_rref_den
+
+if TYPE_CHECKING:
+    from ..domains import Domain
 
 
 if GROUND_TYPES != 'flint':

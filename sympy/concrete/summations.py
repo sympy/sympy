@@ -6,7 +6,6 @@ from sympy.calculus.accumulationbounds import AccumulationBounds
 from .expr_with_intlimits import ExprWithIntLimits
 from .expr_with_limits import AddWithLimits
 from .gosper import gosper_sum
-from sympy.core.expr import Expr
 from sympy.core.add import Add
 from sympy.core.containers import Tuple
 from sympy.core.function import Derivative, expand, expand_mul
@@ -38,6 +37,10 @@ from sympy.sets.contains import Contains
 from sympy.sets.sets import FiniteSet, Interval
 from sympy.utilities.iterables import sift
 import itertools
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
 
 
 class Sum(AddWithLimits, ExprWithIntLimits):

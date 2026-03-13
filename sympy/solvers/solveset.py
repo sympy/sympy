@@ -2667,6 +2667,109 @@ def solvify(f, symbol, domain):
     return result
 
 
+def solveset_to_rules(solution_set, symbol):
+    """
+    Convert the output of ``solveset`` into a list of
+    ``(sol_dict, param_dict, condition)`` triples, where
+
+    - ``sol_dict``   : ``{symbol: expr}``, the solution value.
+    - ``param_dict`` : ``{param: domain}``, free parameter(s) with domain,
+      or ``{}`` when there are none.
+    - ``condition``  : ``S.true`` for unconditional solutions, or a SymPy
+      boolean that must hold (e.g. ``Contains(a, Interval(0, oo))``).
+
+    Parameters
+    ==========
+
+    solution_set : Set
+        Output from ``solveset``.
+    symbol : Symbol
+        The variable that was solved for.
+
+    Returns
+    =======
+
+    list of tuple
+        List of ``(sol_dict, param_dict, condition)`` triples.
+        Empty list when there are no solutions.
+
+    Examples
+    ========
+
+    >>> from sympy import symbols, sin, Abs, S, Interval
+    >>> from sympy.solvers.solveset import solveset, solveset_to_rules
+    >>> x, a = symbols('x a')
+    >>> solveset_to_rules(solveset(x**2 - 4, x, S.Reals), x)
+    [({x: -2}, {}, True), ({x: 2}, {}, True)]
+    >>> rules = solveset_to_rules(solveset(Abs(x) - a, x, S.Reals), x)
+    >>> rules[0][2]
+    Contains(a, Interval(0, oo))
+
+    See Also
+    ========
+
+    solveset, solvify
+
+    References
+    ==========
+
+    .. [1] https://github.com/sympy/sympy/issues/10006
+
+    """
+    def _to_rules(solset, cond):
+        if solset is S.EmptySet:
+            return []
+
+        if isinstance(solset, FiniteSet):
+            return [({symbol: s}, {}, cond) for s in solset.args]
+
+        if isinstance(solset, ImageSet):
+            lamda = solset.lamda
+            if len(lamda.variables) == 1:
+                param = lamda.variables[0]
+                expr = lamda.expr
+                base = solset.base_set
+                return [({symbol: expr}, {param: base}, cond)]
+            return [({symbol: solset}, {}, cond)]
+
+        if isinstance(solset, Union):
+            rules = []
+            for arg in solset.args:
+                rules.extend(_to_rules(arg, cond))
+            return rules
+
+        if isinstance(solset, ConditionSet):
+            new_cond = And(cond, solset.condition)
+            return _to_rules(solset.base_set, new_cond)
+
+        if isinstance(solset, Intersection):
+            domain_sets = []
+            primary = None
+            for arg in solset.args:
+                if primary is None and isinstance(arg, (FiniteSet, ImageSet, ConditionSet, Union)):
+                    primary = arg
+                else:
+                    domain_sets.append(arg)
+            if primary is None:
+                primary = solset.args[0]
+                domain_sets = list(solset.args)[1:]
+            rules = _to_rules(primary, cond)
+            if domain_sets:
+                new_rules = []
+                for sol_dict, param_dict, sol_cond in rules:
+                    sol_val = sol_dict[symbol]
+                    domain_cond = And(*[Contains(sol_val, d)
+                                        for d in domain_sets])
+                    new_rules.append((sol_dict, param_dict,
+                                      And(sol_cond, domain_cond)))
+                return new_rules
+            return rules
+
+        return [({symbol: solset}, {}, cond)]
+
+    return _to_rules(solution_set, S.true)
+
+
 ###############################################################################
 ################################ LINSOLVE #####################################
 ###############################################################################
@@ -3603,7 +3706,13 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                             # corresponding complex soln.
                             if not isinstance(soln, (ImageSet, ConditionSet)):
                                 soln += solveset_complex(eq2, sym)  # might give ValueError with Abs
-                    except (NotImplementedError, ValueError):
+
+                        if not isinstance(soln, (FiniteSet, ImageSet, ConditionSet, Union)) and soln is not S.EmptySet:
+                            raise NotImplementedError(
+                                f"nonlinsolve cannot handle solution of type {type(soln).__name__} "
+                                f"for symbol {sym}. Got {soln} from equation {eq2}."
+                            )
+                    except ValueError:
                         # If solveset is not able to solve equation `eq2`. Next
                         # time we may get soln using next equation `eq2`
                         continue

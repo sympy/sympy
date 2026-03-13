@@ -9,7 +9,7 @@
     [-1]
 """
 from sympy.core.assumptions import check_assumptions, failing_assumptions
-
+# /Users/ayushkumarjha/Downloads/WhatsApp Image 2026-03-13 at 02,57,18-Picsart-AiImageEnhancer.jpeg
 from .solvers import solve, solve_linear_system, solve_linear_system_LU, \
     solve_undetermined_coeffs, nsolve, solve_linear, checksol, \
     det_quick, inv_quick
@@ -33,7 +33,7 @@ from .inequalities import reduce_inequalities, reduce_abs_inequality, \
 
 from .decompogen import decompogen
 
-from .solveset import solveset, linsolve, linear_eq_to_matrix, nonlinsolve, substitution
+from .solveset import solveset, linsolve, linear_eq_to_matrix, nonlinsolve, substitution, solveset_to_rules
 
 from .simplex import lpmin, lpmax, linprog
 
@@ -66,7 +66,7 @@ __all__ = [
     'decompogen',
 
     'solveset', 'linsolve', 'linear_eq_to_matrix', 'nonlinsolve',
-    'substitution',
+    'substitution', 'solveset_to_rules',
 
     # This is here instead of sympy/sets/__init__.py to avoid circular import issues
     'Complexes',

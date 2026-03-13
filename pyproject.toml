@@ -53,6 +53,11 @@ lint.select = [
     "PLW0602", # Global statement used but no assignment
     "SIM101",
     "SLOT",
+    "TC001",
+    "TC002",
+    "TC003",
+    "TC004",
+    "TC005",
     "TRY002",
     "BLE001", # except Exception or except BaseException
 ]
@@ -71,9 +76,7 @@ lint.ignore = [
     "E731",  # Do not assign a `lambda` expression, use a `def`
     "E741",  # Ambiguous variable name: `<VARIABLE>`
     "E743",  # Ambiguous function name: `<FUNCTION>`
-    # Rules from the stable "FURB" set that are ignored. See #27897
-    # Just to be safe, we'll ignore FURB161 until we drop support for Python 3.9
-    "FURB161",  # Use of `bin({existing}).count('1')`
+    "FURB110",  # Replace ternary `if` expression with `or` operator
     "FURB187",  # Use of assignment of `reversed` on list `{name}`
 ]
 
