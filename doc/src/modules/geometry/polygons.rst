@@ -13,3 +13,4 @@ Polygons
    :members:
    
 .. autofunction:: sympy.geometry.polygon.rad
+
