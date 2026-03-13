@@ -7242,6 +7242,189 @@ x⋅─\n\
 ''')
     assert upretty(x*he) == ucode_str
 
+    ue1 = UnevaluatedExpr(-2*x**2 - 9*x + 5)
+
+    ucode_str = \
+"""\
+    ⎛     2          ⎞\n\
+1 + ⎝- 2⋅x  - 9⋅x + 5⎠\
+"""
+    assert upretty(1 + ue1) == ucode_str
+
+    ucode_str = \
+"""\
+    ⎛     2          ⎞\n\
+1 - ⎝- 2⋅x  - 9⋅x + 5⎠\
+"""
+    assert upretty(1 - ue1) == ucode_str
+
+    ue2 = UnevaluatedExpr(-2*x**2 + 3*x + 2)
+    ue3 = UnevaluatedExpr(-5*x**2 + 6*x - 7)
+
+    ucode_str = \
+"""\
+⎛     2          ⎞   ⎛     2          ⎞\n\
+⎝- 5⋅x  + 6⋅x - 7⎠ + ⎝- 2⋅x  + 3⋅x + 2⎠\
+"""
+    assert upretty(ue2 + ue3) == ucode_str
+
+    ucode_str = \
+"""\
+  ⎛     2          ⎞   ⎛     2          ⎞\n\
+- ⎝- 5⋅x  + 6⋅x - 7⎠ + ⎝- 2⋅x  + 3⋅x + 2⎠\
+"""
+    assert upretty(ue2 - ue3) == ucode_str
+
+    u = UnevaluatedExpr(2)
+    assert upretty(u) == "2"
+    assert upretty(-u) == "-2"
+    assert upretty(2 * u) == "2⋅2"
+    assert upretty(-2 * u) == "-2⋅2"
+    assert upretty(x**2 * u) == """\
+ 2  \n\
+x ⋅2\
+"""
+    assert upretty(-x**2 * u) == """\
+  2  \n\
+-x ⋅2\
+"""
+
+    u = UnevaluatedExpr(-2)
+    assert upretty(u) == "-2"
+    assert upretty(-u) == "-(-2)"
+    assert upretty(2 * u) == "2⋅(-2)"
+    assert upretty(-2 * u) == "-2⋅(-2)"
+    assert upretty(x**2 * u) == """\
+ 2     \n\
+x ⋅(-2)\
+"""
+    assert upretty(-x**2 * u) == """\
+  2     \n\
+-x ⋅(-2)\
+"""
+
+    u = UnevaluatedExpr(x)
+    assert upretty(u) == "x"
+    assert upretty(-u) == "-x"
+    assert upretty(2 * u) == "2⋅x"
+    assert upretty(-2 * u) == "-2⋅x"
+    assert upretty(x**2 * u) == """\
+ 2  \n\
+x ⋅x\
+"""
+    assert upretty(-x**2 * u) == """\
+  2  \n\
+-x ⋅x\
+"""
+
+    u = UnevaluatedExpr(-x)
+    assert upretty(u) == "-x"
+    assert upretty(-u) == "-(-x)"
+    assert upretty(2 * u) == "2⋅(-x)"
+    assert upretty(-2 * u) == "-2⋅(-x)"
+    assert upretty(x**2 * u) == """\
+ 2     \n\
+x ⋅(-x)\
+"""
+    assert upretty(-x**2 * u) == """\
+  2     \n\
+-x ⋅(-x)\
+"""
+
+    u = UnevaluatedExpr(x**2)
+    assert upretty(u) == """\
+ 2\n\
+x \
+"""
+    assert upretty(-u) == """\
+  2\n\
+-x \
+"""
+    assert upretty(2 * u) == """\
+   2\n\
+2⋅x \
+"""
+    assert upretty(-2 * u) == """\
+    2\n\
+-2⋅x \
+"""
+    assert upretty(x**2 * u) == """\
+ 2  2\n\
+x ⋅x \
+"""
+    assert upretty(-x**2 * u) == """\
+  2  2\n\
+-x ⋅x \
+"""
+
+    u = UnevaluatedExpr(-x**2)
+    assert upretty(u) == """\
+  2\n\
+-x \
+"""
+    assert upretty(-u) == """\
+ ⎛  2⎞\n\
+-⎝-x ⎠\
+"""
+    assert upretty(2 * u) == """\
+  ⎛  2⎞\n\
+2⋅⎝-x ⎠\
+"""
+    assert upretty(-2 * u) == """\
+   ⎛  2⎞\n\
+-2⋅⎝-x ⎠\
+"""
+    assert upretty(x**2 * u) == """\
+ 2 ⎛  2⎞\n\
+x ⋅⎝-x ⎠\
+"""
+    assert upretty(-x**2 * u) == """\
+  2 ⎛  2⎞\n\
+-x ⋅⎝-x ⎠\
+"""
+
+    u = UnevaluatedExpr(x * (x + 2))
+    assert upretty(u) == "x⋅(x + 2)"
+    assert upretty(-u) == "-x⋅(x + 2)"
+    assert upretty(2 * u) == "2⋅x⋅(x + 2)"
+    assert upretty(-2 * u) == "-2⋅x⋅(x + 2)"
+    assert upretty(x**2 * u) == """\
+ 2          \n\
+x ⋅x⋅(x + 2)\
+"""
+    assert upretty(-x**2 * u) == """\
+  2          \n\
+-x ⋅x⋅(x + 2)\
+"""
+
+    u = UnevaluatedExpr(-x * (x + 2))
+    assert upretty(u) == "-x⋅(x + 2)"
+    assert upretty(-u) == "-(-x⋅(x + 2))"
+    assert upretty(2 * u) == "2⋅(-x⋅(x + 2))"
+    assert upretty(-2 * u) == "-2⋅(-x⋅(x + 2))"
+    assert upretty(x**2 * u) == """\
+ 2             \n\
+x ⋅(-x⋅(x + 2))\
+"""
+    assert upretty(-x**2 * u) == """\
+  2             \n\
+-x ⋅(-x⋅(x + 2))\
+"""
+
+    u = UnevaluatedExpr(x + 2)
+    assert upretty(u) == "x + 2"
+    assert upretty(-1 * u) == "-(x + 2)"
+    assert upretty(3 * u) == "3⋅(x + 2)"
+    assert upretty(-3 * u) == "-3⋅(x + 2)"
+    assert upretty(x**2 * u) == """\
+ 2        \n\
+x ⋅(x + 2)\
+"""
+    assert upretty(-x**2 * u) == """\
+  2        \n\
+-x ⋅(x + 2)\
+"""
+
 
 def test_issue_10472():
     M = (Matrix([[0, 0], [0, 0]]), Matrix([0, 0]))
