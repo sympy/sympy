@@ -15,8 +15,8 @@ from sympy.functions.elementary.trigonometric import (cos, cot, sin, tan)
 from sympy.tensor.array.ndim_array import NDimArray
 from sympy.testing.pytest import raises
 from sympy.abc import a, b, c, x, y, z
-from sympy import nan,diff
 
+from sympy import nan,diff
 def test_nan_derivative():
     x = Symbol('x')
     assert diff(nan, x)==nan
