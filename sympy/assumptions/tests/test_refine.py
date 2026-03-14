@@ -8,7 +8,7 @@ from sympy.core.symbol import Symbol
 from sympy.functions.elementary.complexes import (Abs, arg, im, re, sign)
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.functions.elementary.trigonometric import (atan, atan2, cos, sin)
+from sympy.functions.elementary.trigonometric import (atan, atan2, cos, csc, sec, sin)
 from sympy.abc import w, x, y, z
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.piecewise import Piecewise
@@ -286,6 +286,50 @@ def test_sin_cos():
     assert refine(cos(x + n*pi/2 + k*pi/2 + m*pi/2), \
                   Q.odd(n) & Q.odd(k) & Q.integer(m)) == \
         (-1)**((n + k)/2) * cos(x + m*pi/2)
+
+
+def test_sec_csc():
+    n = Symbol('n')
+    m = Symbol('m')
+    # sec with concrete numeric shifts
+    assert refine(sec(n*pi), Q.even(n)) == 1
+    assert refine(sec(n*pi), Q.odd(n)) == -1
+    assert refine(sec(n*pi), Q.integer(n)) == (-1)**n
+    # sec with symbolic remainder
+    assert refine(sec(x + n*pi), Q.even(n)) == sec(x)
+    assert refine(sec(x + n*pi), Q.odd(n)) == -sec(x)
+    assert refine(sec(x + n*pi), Q.integer(n)) == (-1)**n * sec(x)
+    assert refine(sec(x + 2*n*pi), Q.integer(n)) == sec(x)
+    # sec with pi/2 shifts
+    assert refine(sec(n*pi/2), Q.even(n)) == (-1)**(n/2)
+    assert refine(sec(x + n*pi/2), Q.even(n)) == (-1)**(n/2) * sec(x)
+    assert refine(sec(x + n*pi/2), Q.odd(n)) == (-1)**((n + 1)/2) * csc(x)
+    # sec with negative shifts
+    assert refine(sec(x - n*pi), Q.even(n)) == sec(x)
+    assert refine(sec(x - n*pi), Q.odd(n)) == -sec(x)
+    # sec with multiple additive terms
+    assert refine(sec(x + y + 2*n*pi), Q.integer(n)) == sec(x + y)
+    assert refine(sec(x + n*pi + m*pi/2), Q.integer(n) & Q.even(m)) == \
+        (-1)**(n + m/2) * sec(x)
+    assert refine(sec(x + n*pi + m*pi/2), Q.integer(n) & Q.odd(m)) == \
+        (-1)**(n + (m + 1)/2) * csc(x)
+    # csc with concrete numeric shifts
+    assert refine(csc(x + n*pi), Q.even(n)) == csc(x)
+    assert refine(csc(x + n*pi), Q.odd(n)) == -csc(x)
+    assert refine(csc(x + n*pi), Q.integer(n)) == (-1)**n * csc(x)
+    assert refine(csc(x + 2*n*pi), Q.integer(n)) == csc(x)
+    # csc with pi/2 shifts
+    assert refine(csc(x + n*pi/2), Q.even(n)) == (-1)**(n/2) * csc(x)
+    assert refine(csc(x + n*pi/2), Q.odd(n)) == (-1)**((n + 3)/2) * sec(x)
+    # csc with negative shifts
+    assert refine(csc(x - n*pi), Q.odd(n)) == -csc(x)
+    assert refine(csc(x - n*pi), Q.even(n)) == csc(x)
+    # csc with multiple additive terms
+    assert refine(csc(x + y + 2*n*pi), Q.integer(n)) == csc(x + y)
+    assert refine(csc(x + n*pi + m*pi/2), Q.integer(n) & Q.even(m)) == \
+        (-1)**(n + m/2) * csc(x)
+    assert refine(csc(x + n*pi + m*pi/2), Q.integer(n) & Q.odd(m)) == \
+        (-1)**(n + m/2 + Rational(3, 2)) * sec(x)
 
 
 def test_floor_ceiling():
