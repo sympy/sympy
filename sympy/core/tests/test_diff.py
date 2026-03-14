@@ -15,10 +15,13 @@ from sympy.functions.elementary.trigonometric import (cos, cot, sin, tan)
 from sympy.tensor.array.ndim_array import NDimArray
 from sympy.testing.pytest import raises
 from sympy.abc import a, b, c, x, y, z
+
 from sympy import nan,diff
 def test_nan_derivative():
     x = Symbol('x')
     assert diff(nan, x) == nan
+
+    
 def test_diff():
     assert Rational(1, 3).diff(x) is S.Zero
     assert I.diff(x) is S.Zero
