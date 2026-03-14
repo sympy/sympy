@@ -242,6 +242,13 @@ def test_infinite_symbol_inequalities():
             assert (ninf1 <= ninf2) is S.true
             assert (ninf1 >= ninf2) is S.true
 
+    from sympy import ask, Q
+    a = Symbol('a')
+    assert ask(a + 1 > a, Q.extended_real(a)) is None
+    assert ask(a + 1 > a, Q.real(a)) is True
+    assert (oo + 1 > oo) is S.false
+    assert (-oo + 1 > -oo) is S.false
+
 
 def test_bool():
     assert Eq(0, 0) is S.true
