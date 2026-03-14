@@ -580,43 +580,24 @@ class Basic(Printable):
         o = _sympify(other)
         o = o.as_dummy()
 
-        s_bound = [
-            i for i in set(getattr(s, 'variables', [])) | set(getattr(s, 'bound_symbols', []))
-            if i.is_Dummy
-        ]
-        # don't consider common symbols
-        s_free = [
-            i for i in s.free_symbols
-            if i.is_Dummy and i not in o.free_symbols
-        ]
-        dummy_symbols = s_free + s_bound
+        dummy_symbols = [i for i in s.free_symbols if i.is_Dummy]
 
-        if dummy_symbols:
-            dummy = dummy_symbols
+        if len(dummy_symbols) == 1:
+            dummy = dummy_symbols.pop()
         else:
             return s == o
 
         if symbol is None:
-            o_bound = [
-                i for i in set(getattr(o, 'variables', [])) | set(getattr(o, 'bound_symbols', []))
-                if i.is_Dummy
-            ]
-            o_free = list(o.free_symbols - s.free_symbols)
-            symbol = o_bound + o_free
+            symbols = o.free_symbols
 
-            if not symbol:
+            if len(symbols) == 1:
+                symbol = symbols.pop()
+            else:
                 return s == o
-        else:
-            if not isinstance(symbol, list):
-                symbol = [symbol]
 
-        replace_s, replace_o = {}, {}
-        for dum, sym in zip(dummy, symbol):
-            tmp = dum.__class__()
-            replace_s[dum] = tmp
-            replace_o[sym] = tmp
+        tmp = dummy.__class__()
 
-        return s.xreplace(replace_s) == o.xreplace(replace_o)
+        return s.xreplace({dummy: tmp}) == o.xreplace({symbol: tmp})
 
     @overload
     def atoms(self) -> set[Basic]: ...
