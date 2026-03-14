@@ -552,6 +552,82 @@ def refine_floor_ceiling(expr, assumptions):
     return expr
 
 
+def refine_sec_csc(expr, assumptions):
+    """
+    Handler for sec and csc functions.
+
+    Examples
+    ========
+
+    >>> from sympy.assumptions.refine import refine_sec_csc
+    >>> from sympy import Symbol, Q, sec, csc, pi
+    >>> from sympy.abc import x
+    >>> n = Symbol('n')
+    >>> refine_sec_csc(sec(n*pi), Q.even(n))
+    1
+    >>> refine_sec_csc(sec(n*pi), Q.odd(n))
+    -1
+    >>> refine_sec_csc(sec(x + n*pi), Q.even(n))
+    sec(x)
+    >>> refine_sec_csc(csc(x + n*pi), Q.integer(n))
+    (-1)**n*csc(x)
+    >>> refine_sec_csc(csc(x + n*pi/2), Q.odd(n))
+    (-1)**(n/2 + 3/2)*sec(x)
+    """
+    from sympy.functions.elementary.trigonometric import sec, csc
+    arg = expr.args[0]
+
+    integer_coeffs_of_pi_half = []
+    remaining_terms = []
+
+    terms = arg.args if arg.is_Add else (arg,)
+    for term in terms:
+        coeff_of_pi = term.coeff(S.Pi)
+        if coeff_of_pi and ask(Q.integer(2 * coeff_of_pi), assumptions):
+            coeff_of_pi_half = 2 * coeff_of_pi
+            integer_coeffs_of_pi_half.append(coeff_of_pi_half)
+        else:
+            remaining_terms.append(term)
+
+    if not integer_coeffs_of_pi_half:
+        return expr
+
+    sum_of_parity_known_coeffs = 0
+    sum_of_parity_unknown_coeffs = 0
+    sum_of_parity_known_coeffs_is_even = True
+    for coeff in integer_coeffs_of_pi_half:
+        coeff_is_even = ask(Q.even(coeff), assumptions)
+        if coeff_is_even is None:
+            sum_of_parity_unknown_coeffs += coeff
+        else:
+            sum_of_parity_known_coeffs += coeff
+            sum_of_parity_known_coeffs_is_even = (
+                sum_of_parity_known_coeffs_is_even == coeff_is_even
+            )
+
+    if sum_of_parity_known_coeffs == 0:
+        return expr
+
+    # Treat csc as a phase-shifted sec (csc(x) = sec(x - pi/2)),
+    # mirroring how refine_sin_cos treats sin as phase-shifted cos.
+    if isinstance(expr, csc):
+        k = sum_of_parity_known_coeffs - 1
+        k_is_even = not sum_of_parity_known_coeffs_is_even
+    else:
+        k = sum_of_parity_known_coeffs
+        k_is_even = sum_of_parity_known_coeffs_is_even
+
+    rem = sum(remaining_terms) + sum_of_parity_unknown_coeffs * S.Pi / 2
+    if k_is_even:
+        pow_expr = (-1)**(k / 2)
+        refined_pow = refine_Pow(pow_expr, assumptions)
+        return (pow_expr if refined_pow is None else refined_pow) * sec(rem)
+    else:
+        pow_expr = (-1)**((k + 1) / 2)
+        refined_pow = refine_Pow(pow_expr, assumptions)
+        return (pow_expr if refined_pow is None else refined_pow) * csc(rem)
+
+
 handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'Abs': refine_abs,
     'Pow': refine_Pow,
@@ -563,6 +639,8 @@ handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'MatrixElement': refine_matrixelement,
     'cos': refine_sin_cos,
     'sin': refine_sin_cos,
+    'sec': refine_sec_csc,
+    'csc': refine_sec_csc,
     'Heaviside': refine_Heaviside,
     'floor': refine_floor_ceiling,
     'ceiling' : refine_floor_ceiling,
