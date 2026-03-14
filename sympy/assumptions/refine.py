@@ -363,16 +363,21 @@ def refine_sign(expr, assumptions):
     I
     >>> refine_sign(expr, Q.negative(im(y)))
     -I
+    >>> z = Symbol('z')
+    >>> refine_sign(sign(z), Q.positive(z))
+    1
+    >>> refine_sign(sign(z), Q.negative(z))
+    -1
     """
     arg = expr.args[0]
     if ask(Q.zero(arg), assumptions):
         return S.Zero
-    if ask(Q.real(arg)):
+    if ask(Q.real(arg), assumptions):
         if ask(Q.positive(arg), assumptions):
             return S.One
         if ask(Q.negative(arg), assumptions):
             return S.NegativeOne
-    if ask(Q.imaginary(arg)):
+    if ask(Q.imaginary(arg), assumptions):
         arg_re, arg_im = arg.as_real_imag()
         if ask(Q.positive(arg_im), assumptions):
             return S.ImaginaryUnit
