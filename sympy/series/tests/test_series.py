@@ -13,7 +13,7 @@ from sympy.series.series import series
 from sympy.abc import x, y, n, k
 from sympy.testing.pytest import raises
 from sympy.core import EulerGamma
-
+from sympy import symbols, erf, oo, series, exp
 
 def test_sin():
     e1 = sin(x).series(x, 0)
@@ -419,3 +419,12 @@ def test_issue_24266():
 
 def test_issue_26856():
     raises(ValueError, lambda: (2**x).series(x, oo, -1))
+
+
+# Regression test for asymptotic series multiplication with erf at infinity
+def test_series_mul_erf_asymptotics():
+    x = symbols('x', positive=True)
+    s= series(2*erf(x), x, oo, 3)
+    
+    #ensure the exponential asymptotic term is presevered
+    assert s.has(exp(-x**2))
