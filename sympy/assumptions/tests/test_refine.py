@@ -175,6 +175,9 @@ def test_arg():
     x = Symbol('x', complex = True)
     assert refine(arg(x), Q.positive(x)) == 0
     assert refine(arg(x), Q.negative(x)) == pi
+    assert refine(arg(x), Q.zero(x)) is S.NaN
+    assert refine(arg(x), Q.imaginary(x) & Q.positive(im(x))) == pi/2
+    assert refine(arg(x), Q.imaginary(x) & Q.negative(im(x))) == -pi/2
 
 def test_func_args():
     class MyClass(Expr):
