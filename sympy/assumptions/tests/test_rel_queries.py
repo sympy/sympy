@@ -111,19 +111,19 @@ def test_extended_real_number_line():
     a, b, c = symbols("a b c")
 
     # `a + 1 > a` may be false if a=oo.
-    assert ask(a + 1 > a, Q.extended_real(a)) is None
-    assert ask(a + 1 > a, Q.extended_real(a) & Q.extended_real(a + 1)) is None
-    assert ask(a + b > a, Q.extended_real(a) & Q.positive(b)) is None
-    assert ask(a + b > a, Q.extended_real(a) & Q.positive(b) & Q.extended_real(a + b)) is None
-    assert ask(a - 1 >= a, Q.extended_real(a)) is None
+    raises(UnhandledInput, lambda: lra_satask(a + 1 > a, Q.extended_real(a)))
+    raises(UnhandledInput, lambda: lra_satask(a + 1 > a, Q.extended_real(a) & Q.extended_real(a + 1)))
+    raises(UnhandledInput, lambda: lra_satask(a + b > a, Q.extended_real(a) & Q.positive(b)))
+    raises(UnhandledInput, lambda: lra_satask(a + b > a, Q.extended_real(a) & Q.positive(b) & Q.extended_real(a + b)))
+    raises(UnhandledInput, lambda: lra_satask(a - 1 >= a, Q.extended_real(a)))
 
-    assert ask(a > oo, Q.extended_real(a)) is False
-    assert ask(a > b, Q.extended_real(a) & Q.extended_real(b) & (a >= oo)) is None # False would be better
+    raises(UnhandledInput, lambda: lra_satask(a > oo, Q.extended_real(a)))
+    raises(UnhandledInput, lambda: lra_satask(a > b, Q.extended_real(a) & Q.extended_real(b) & (a >= oo)))
 
     # If a = oo and b = -oo, then `a + b` is undefined. Inequalities
     # involving undefined quantities are also undefined so `ask` should
     # give None for expressions that may involve undefined quantities.
-    assert ask(a + b + 1 >= a + b, Q.extended_real(a) & Q.extended_real(b)) is None
+    raises(UnhandledInput, lambda: lra_satask(a + b + 1 >= a + b, Q.extended_real(a) & Q.extended_real(b)))
 
 
 @XFAIL
