@@ -1313,20 +1313,28 @@ def besselsimp(expr):
     def _bessel_simp_recursion(expr):
 
         def _use_recursion(bessel, expr):
+            from sympy.core.sorting import default_sort_key
             while True:
                 bessels = expr.find(lambda x: isinstance(x, bessel))
-                try:
-                    for ba in sorted(bessels, key=lambda x: re(x.args[0])):
-                        a, x = ba.args
-                        bap1 = bessel(a+1, x)
-                        bap2 = bessel(a+2, x)
-                        if expr.has(bap1) and expr.has(bap2):
-                            expr = expr.subs(ba, 2*(a+1)/x*bap1 - bap2)
-                            break
-                    else:
-                        return expr
-                except (ValueError, TypeError):
+                if not bessels:
                     return expr
+                # We need to sort by real part. If symbols are generic, strict inequalities fail.
+                # Use default_sort_key to robustly sort symbolic expressions.
+                try:
+                    sorted_bessels = sorted(bessels, key=lambda x: (re(x.args[0]).as_coeff_Add()[0], default_sort_key(re(x.args[0]))))
+                except TypeError:
+                    sorted_bessels = sorted(bessels, key=lambda x: default_sort_key(re(x.args[0])))
+
+                for ba in sorted_bessels:
+                    a, x = ba.args
+                    bap1 = bessel(a+1, x)
+                    bap2 = bessel(a+2, x)
+                    if expr.has(bap1) and expr.has(bap2):
+                        expr = expr.subs(ba, 2*(a+1)/x*bap1 - bap2)
+                        break
+                else:
+                    return expr
+
         if expr.has(besselj):
             expr = _use_recursion(besselj, expr)
         if expr.has(bessely):

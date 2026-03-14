@@ -2807,6 +2807,7 @@ def test_issue_14223():
 
 def test_issue_10158():
     dom = S.Reals
+    y = Symbol('y', real=True)
     assert solveset(x*Max(x, 15) - 10, x, dom) == FiniteSet(Rational(2, 3))
     assert solveset(x*Min(x, 15) - 10, x, dom) == FiniteSet(-sqrt(10), sqrt(10))
     assert solveset(Max(Abs(x - 3) - 1, x + 2) - 3, x, dom) == FiniteSet(-1, 1)

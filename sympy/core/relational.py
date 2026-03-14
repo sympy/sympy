@@ -1451,6 +1451,11 @@ def is_ge(lhs, rhs, assumptions=None):
                     if diff_inf is not True: # diff is finite or indeterminate
                         if _lhs.is_infinite is not False and _rhs.is_infinite is not False:
                             # Both sides could be infinite, meaning NaN might have been masked.
+                            # However, if their difference is definitively non-negative (rv is True),
+                            # the inequality holds regardless of whether the terms are finite or infinite
+                            # (since both evaluate to the same infinity, yielding oo >= oo or -oo >= -oo).
+                            if rv is True:
+                                return True
                             return None
 
                     return rv
