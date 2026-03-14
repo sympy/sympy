@@ -447,20 +447,25 @@ def refine_sin_cos(expr, assumptions):
     sum_of_parity_known_coeffs = 0
     sum_of_parity_unknown_coeffs = 0
     sum_of_parity_known_coeffs_is_even = True
+
     for coeff in integer_coeffs_of_pi_half:
         coeff_is_even = ask(Q.even(coeff), assumptions)
-#fix
+
         if coeff_is_even is None:
+            # Sirf ek baar odd check karo — duplicate call nahi
             coeff_is_odd = ask(Q.odd(coeff), assumptions)
             if coeff_is_odd:
-                coeff_is_even = False  # odd matlab even nahi!
-                if coeff_is_even is None:
-                    sum_of_parity_unknown_coeffs += coeff
-                else:
-                    sum_of_parity_known_coeffs += coeff
-                    sum_of_parity_known_coeffs_is_even = (
-                        sum_of_parity_known_coeffs_is_even == coeff_is_even
-                    )
+                coeff_is_even = False  # odd hai toh even nahi
+
+        if coeff_is_even is None:
+            # Parity bilkul unknown — unknown sum mein daalo
+            sum_of_parity_unknown_coeffs += coeff
+        else:
+            # Parity pata hai — track karo
+            sum_of_parity_known_coeffs += coeff
+            sum_of_parity_known_coeffs_is_even = (
+                sum_of_parity_known_coeffs_is_even == coeff_is_even
+            )
 
     if sum_of_parity_known_coeffs == 0:
         return expr
@@ -566,5 +571,5 @@ handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'sin': refine_sin_cos,
     'Heaviside': refine_Heaviside,
     'floor': refine_floor_ceiling,
-    'ceiling' : refine_floor_ceiling,
+    'ceiling': refine_floor_ceiling,
 }
