@@ -121,6 +121,11 @@ def lra_satask(proposition, assumptions=True, context=global_assumptions):
     # sat_false.add_from_cnf(_props)
 
 
+    # Preprocess sat_true and sat_false into encoded CNFs containing only
+    # Q.eq, Q.gt, Q.lt, Q.ge, Q.le, Q.real, Q.extended_real predicates.
+    # Converts every unequality into a disjunction of strict inequalities
+    # (e.g. x != 3  =>  x < 3 OR x > 3) and converts negated Q.ne into
+    # equalities.
     sat_true = _preprocess(sat_true)
     sat_false = _preprocess(sat_false)
 
@@ -141,88 +146,49 @@ def lra_satask(proposition, assumptions=True, context=global_assumptions):
 
 
 def _preprocess(enc_cnf):
-    """
-    Returns an encoded cnf with only Q.eq, Q.gt, Q.lt,
-    Q.ge, Q.le, Q.real, Q.extended_real predicate.
-
-    Converts every unequality into a disjunction of strict
-    inequalities. For example, x != 3 would become
-    x < 3 OR x > 3.
-
-    Also converts all negated Q.ne predicates into
-    equalities.
-    """
-
-    # loops through each literal in each clause
-    # to construct a new, preprocessed encodedCNF
-
-    enc_cnf = enc_cnf.copy()
-    cur_enc = 1
     rev_encoding = {value: key for key, value in enc_cnf.encoding.items()}
-
     new_encoding = {}
     new_data = []
+
+    def get_enc(p):
+        if p not in new_encoding:
+            new_encoding[p] = len(new_encoding) + 1
+        return new_encoding[p]
+
     for clause in enc_cnf.data:
         new_clause = []
         for lit in clause:
             if lit == 0:
                 new_clause.append(lit)
-                new_encoding[lit] = False
+                new_encoding[lit] = False # Preserve existing DIMACS zero-terminator behavior
                 continue
+
             prop = rev_encoding[abs(lit)]
-            negated = lit < 0
-            sign = (lit > 0) - (lit < 0)
+            is_negated = lit < 0
+            sign = -1 if is_negated else 1
 
             prop = _pred_to_binrel(prop)
 
             if not isinstance(prop, AppliedPredicate):
-                if prop not in new_encoding:
-                    new_encoding[prop] = cur_enc
-                    cur_enc += 1
-                lit = new_encoding[prop]
-                new_clause.append(sign*lit)
+                new_clause.append(sign * get_enc(prop))
                 continue
 
-
-            if negated and prop.function == Q.eq:
-                negated = False
-                prop = Q.ne(*prop.arguments)
-
-            if prop.function == Q.ne:
+            if (prop.function == Q.eq and is_negated) or (prop.function == Q.ne and not is_negated):
+                # (x != y) -> (x > y) | (x < y)
                 arg1, arg2 = prop.arguments
-                if negated:
-                    new_prop = Q.eq(arg1, arg2)
-                    if new_prop not in new_encoding:
-                        new_encoding[new_prop] = cur_enc
-                        cur_enc += 1
+                new_clause.extend([get_enc(Q.gt(arg1, arg2)), get_enc(Q.lt(arg1, arg2))])
+            elif prop.function == Q.ne and is_negated:
+                # ~(x != y) -> x == y
+                arg1, arg2 = prop.arguments
+                new_clause.append(get_enc(Q.eq(arg1, arg2)))
+            else:
+                # Standard predicates
+                assert prop.function in (Q.gt, Q.lt, Q.ge, Q.le, Q.eq)
+                new_clause.append(sign * get_enc(prop))
 
-                    new_enc = new_encoding[new_prop]
-                    new_clause.append(new_enc)
-                    continue
-                else:
-                    new_props = (Q.gt(arg1, arg2), Q.lt(arg1, arg2))
-                    for new_prop in new_props:
-                        if new_prop not in new_encoding:
-                            new_encoding[new_prop] = cur_enc
-                            cur_enc += 1
-
-                        new_enc = new_encoding[new_prop]
-                        new_clause.append(new_enc)
-                    continue
-
-            if prop.function == Q.eq and negated:
-                assert False
-
-            if prop not in new_encoding:
-                new_encoding[prop] = cur_enc
-                cur_enc += 1
-            new_clause.append(new_encoding[prop]*sign)
         new_data.append(new_clause)
 
-    assert len(new_encoding) >= cur_enc - 1
-
-    enc_cnf = EncodedCNF(new_data, new_encoding)
-    return enc_cnf
+    return EncodedCNF(new_data, new_encoding)
 
 
 def _pred_to_binrel(pred):
