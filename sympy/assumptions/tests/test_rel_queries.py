@@ -5,12 +5,13 @@ from sympy.assumptions.ask import Q, ask
 
 from sympy.core import symbols, Symbol
 from sympy.matrices.expressions.matexpr import MatrixSymbol
-from sympy.core.numbers import I
+from sympy.core.numbers import I, oo
 
 from sympy.testing.pytest import raises, XFAIL
-x, y, z = symbols("x y z", real=True)
+
 
 def test_lra_satask():
+    x = symbols("x", real=True)
     im = Symbol('im', imaginary=True)
 
     # test preprocessing of unequalities is working correctly
@@ -79,6 +80,7 @@ def test_old_assumptions():
 
 
 def test_rel_queries():
+    x, y, z = symbols("x y z", real=True)
     assert ask(Q.lt(x, 2) & Q.gt(x, 3)) is False
     assert ask(Q.positive(x - z), (x > y) & (y > z)) is True
     assert ask(x + y > 2, (x < 0) & (y <0)) is False
@@ -91,6 +93,7 @@ def test_unhandled_queries():
 
 
 def test_all_pred():
+    x= symbols("x", real=True)
     # test usable pred
     assert lra_satask(Q.extended_positive(x), (x > 2)) is True
     assert lra_satask(Q.positive_infinite(x)) is False
@@ -102,6 +105,43 @@ def test_all_pred():
     raises(UnhandledInput, lambda: lra_satask((x > 0), (x > 2) & Q.odd(x)))
     raises(UnhandledInput, lambda: lra_satask((x > 0), (x > 2) & Q.even(x)))
     raises(UnhandledInput, lambda: lra_satask((x > 0), (x > 2) & Q.integer(x)))
+
+
+def test_extended_real_number_line():
+    a, b, c = symbols("a b c")
+
+    # `a + 1 > a` may be false if a=oo.
+    assert ask(a + 1 > a, Q.extended_real(a)) is None
+    assert ask(a + 1 > a, Q.extended_real(a) & Q.extended_real(a + 1)) is None
+    assert ask(a + b > a, Q.extended_real(a) & Q.positive(b)) is None
+    assert ask(a + b > a, Q.extended_real(a) & Q.positive(b) & Q.extended_real(a + b)) is None
+    assert ask(a - 1 >= a, Q.extended_real(a)) is None
+
+    assert ask(a > oo, Q.extended_real(a)) is False
+    assert ask(a > b, Q.extended_real(a) & Q.extended_real(b) & (a >= oo)) is None # False would be better
+
+    # If a = oo and b = -oo, then `a + b` is undefined. Inequalities
+    # involving undefined quantities are also undefined so `ask` should
+    # give None for expressions that may involve undefined quantities.
+    assert ask(a + b + 1 >= a + b, Q.extended_real(a) & Q.extended_real(b)) is None
+
+
+@XFAIL
+def test_extended_real_number_line_xfail():
+    a, b, c = symbols("a b c")
+
+    # Transitivity
+    # If a <= b and b <= c, then a <= c.
+    assert ask(a <= c, (a <= b) & (b <= c)) is True
+    # If a <= b and b < c, then a < c.
+    assert ask(a < c, (a <= b) & (b < c)) is True
+    # If a < b and b <= c, then a < c.
+    assert ask(a < c, (a < b) & (b <= c)) is True
+
+    # Addition and subtraction
+    # If a <= b, then a + c <= b + c and a - c <= b - c.
+    assert ask(a + c <= b + c, (a <= b) & Q.extended_real(a + c) & Q.extended_real(b + c)) is True
+    assert ask(a - c <= b - c, (a <= b) & Q.extended_real(a - c) & Q.extended_real(b - c)) is True
 
 
 def test_number_line_properties():
@@ -151,6 +191,8 @@ def test_failing_number_line_properties():
 
 
 def test_equality():
+    x, y, z = symbols("x y z", real=True)
+
     # test symmetry and reflexivity
     assert ask(Q.eq(x, x)) is True
     assert ask(Q.eq(y, x), Q.eq(x, y)) is True
@@ -162,6 +204,7 @@ def test_equality():
 
 @XFAIL
 def test_equality_failing():
+    x, y, z = symbols("x y z", real=True)
     # Note that implementing the substitution property of equality
     # most likely requires a redesign of the new assumptions.
     # See issue #25485 for why this is the case and general ideas
