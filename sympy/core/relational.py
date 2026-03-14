@@ -1434,19 +1434,20 @@ def is_ge(lhs, rhs, assumptions=None):
                     return True
             elif (_lhs.is_infinite and _lhs.is_extended_positive) or (_rhs.is_infinite and _rhs.is_extended_negative):
                 return True
-            
+
             diff = lhs - rhs
             if diff is not S.NaN:
                 rv = is_extended_nonnegative(diff, assumptions)
                 if rv is not None:
-                    # If the difference is functionally finite, but either lhs or rhs 
-                    # could be infinite, the algebraic subtraction might have 
+                    # If the difference is functionally finite, but either lhs or rhs
+                    # could be infinite, the algebraic subtraction might have
                     # incorrectly cancelled out infinities (e.g., oo + 1 - oo = 1 instead of NaN).
                     # We only trust the finite difference if both sides are definitively finite,
                     # or if the difference itself evaluates to infinite.
                     from sympy.assumptions.wrapper import is_infinite
                     diff_inf = is_infinite(diff, assumptions)
-                    
+
+
                     if diff_inf is not True: # diff is finite or indeterminate
                         if _lhs.is_infinite is not False and _rhs.is_infinite is not False:
                             # Both sides could be infinite, meaning NaN might have been masked.
