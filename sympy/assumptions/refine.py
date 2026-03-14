@@ -320,12 +320,27 @@ def refine_arg(expr, assumptions):
     0
     >>> refine_arg(arg(x), Q.negative(x))
     pi
+    >>> refine_arg(arg(x), Q.zero(x))
+    nan
+    >>> refine_arg(arg(x), Q.imaginary(x) & Q.positive(im(x)))
+    pi/2
+    >>> refine_arg(arg(x), Q.imaginary(x) & Q.negative(im(x)))
+    -pi/2
     """
+    from sympy.functions.elementary.complexes import im
     rg = expr.args[0]
     if ask(Q.positive(rg), assumptions):
         return S.Zero
     if ask(Q.negative(rg), assumptions):
         return S.Pi
+    if ask(Q.zero(rg), assumptions):
+        return S.NaN
+    if ask(Q.imaginary(rg), assumptions):
+        rg_im = im(rg)
+        if ask(Q.positive(rg_im), assumptions):
+            return S.Pi / 2
+        if ask(Q.negative(rg_im), assumptions):
+            return -S.Pi / 2
     return None
 
 
