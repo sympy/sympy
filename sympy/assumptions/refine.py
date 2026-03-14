@@ -552,6 +552,67 @@ def refine_floor_ceiling(expr, assumptions):
     return expr
 
 
+def refine_Min_Max(expr, assumptions):
+    """
+    Handler for Min and Max.
+
+    Removes args that cannot be the minimum (for Min) or maximum (for Max)
+    under the given assumptions.
+
+    Examples
+    ========
+
+    >>> from sympy.assumptions.refine import refine_Min_Max
+    >>> from sympy import Q, Min, Max
+    >>> from sympy.abc import x, y
+    >>> refine_Min_Max(Min(x, 0), Q.positive(x))
+    0
+    >>> refine_Min_Max(Min(x, 0), Q.negative(x))
+    x
+    >>> refine_Min_Max(Max(x, 0), Q.positive(x))
+    x
+    >>> refine_Min_Max(Max(x, 0), Q.negative(x))
+    0
+    >>> refine_Min_Max(Min(x, y), Q.gt(x, y))
+    y
+    >>> refine_Min_Max(Max(x, y), Q.gt(x, y))
+    x
+
+    """
+    from sympy.functions.elementary.miscellaneous import Min, Max
+
+    args = list(expr.args)
+    is_min = isinstance(expr, Min)
+
+    # Mark dominated args: for Min, arg a is dominated if some b satisfies b <= a
+    # (so b is no larger, meaning b is a better candidate for the minimum).
+    # For Max, arg a is dominated if some b satisfies b >= a.
+    dominated = set()
+    for i, a in enumerate(args):
+        for j, b in enumerate(args):
+            if i == j:
+                continue
+            if is_min:
+                # a cannot be the minimum if a >= b (b is at most a)
+                if ask(Q.ge(a, b), assumptions) or ask(Q.gt(a, b), assumptions):
+                    dominated.add(i)
+                    break
+            else:
+                # a cannot be the maximum if a <= b (b is at least a)
+                if ask(Q.le(a, b), assumptions) or ask(Q.lt(a, b), assumptions):
+                    dominated.add(i)
+                    break
+
+    remaining = [a for i, a in enumerate(args) if i not in dominated]
+    if not remaining:
+        return expr
+    if len(remaining) == len(args):
+        return expr
+    if len(remaining) == 1:
+        return remaining[0]
+    return expr.func(*remaining)
+
+
 handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'Abs': refine_abs,
     'Pow': refine_Pow,
@@ -566,4 +627,6 @@ handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'Heaviside': refine_Heaviside,
     'floor': refine_floor_ceiling,
     'ceiling' : refine_floor_ceiling,
+    'Min': refine_Min_Max,
+    'Max': refine_Min_Max,
 }

@@ -7,7 +7,7 @@ from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.functions.elementary.complexes import (Abs, arg, im, re, sign)
 from sympy.functions.elementary.exponential import exp
-from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.miscellaneous import sqrt, Min, Max
 from sympy.functions.elementary.trigonometric import (atan, atan2, cos, sin)
 from sympy.abc import w, x, y, z
 from sympy.core.relational import Eq, Ne
@@ -320,3 +320,30 @@ def test_Heaviside():
     assert refine(Heaviside(x, 1), Q.zero(x)) == 1
     assert refine(Heaviside(x, 1), Q.positive(x)) == 1
     assert refine(Heaviside(x, 1), Q.negative(x)) == 0
+
+
+def test_Min_Max():
+    assert refine(Min(x, 0), Q.positive(x)) == 0
+    assert refine(Min(x, 0), Q.negative(x)) == x
+    assert refine(Min(x, 0), Q.nonnegative(x)) == 0
+    assert refine(Min(x, 0), Q.nonpositive(x)) == Min(x, 0)
+
+    assert refine(Max(x, 0), Q.positive(x)) == x
+    assert refine(Max(x, 0), Q.negative(x)) == 0
+    assert refine(Max(x, 0), Q.nonnegative(x)) == x
+
+    assert refine(Min(x, y), Q.gt(x, y)) == y
+    assert refine(Min(x, y), Q.lt(x, y)) == x
+    assert refine(Min(x, y), Q.ge(x, y)) == y
+    assert refine(Min(x, y), Q.le(x, y)) == x
+
+    assert refine(Max(x, y), Q.gt(x, y)) == x
+    assert refine(Max(x, y), Q.lt(x, y)) == y
+    assert refine(Max(x, y), Q.ge(x, y)) == x
+    assert refine(Max(x, y), Q.le(x, y)) == y
+
+    assert refine(Min(x, y), Q.real(x)) == Min(x, y)
+    assert refine(Max(x, y), Q.real(x)) == Max(x, y)
+
+    assert refine(Min(x, y, z), Q.gt(x, y) & Q.gt(y, z)) == z
+    assert refine(Max(x, y, z), Q.gt(x, y) & Q.gt(x, z)) == x
