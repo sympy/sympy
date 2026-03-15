@@ -210,10 +210,10 @@ def _ecm_one_factor(n: int, B1: int=10000, B2: int=100000, max_curve: int=200, s
     randint = _randint(seed)
 
     # When calculating T, if (B1 - 2*D) is negative, it cannot be calculated.
-    D = min(sqrt(B2), B1 // 2 - 1)
+    D: int = min(sqrt(B2), B1 // 2 - 1)
     sieve.extend(D)
     beta = [0] * D
-    S = [0] * D
+    S: list["Point" | None] = [0] * D
     k = 1
     for p in primerange(2, B1 + 1):
         k *= pow(p, int(log(B1, p)))
@@ -240,7 +240,7 @@ def _ecm_one_factor(n: int, B1: int=10000, B2: int=100000, max_curve: int=200, s
             # where a = pow(v - u, 3, n)*(3*u + v)*invert(4*u_3*v, n) - 2
             # However, we do not declare a because it is more convenient
             # to use a24 = (a + 2)*invert(4, n) in the calculation.
-            a24 = pow(v - u, 3, n)*(3*u + v)*invert(16*u_3*v, n) % n
+            a24 = int(pow(v - u, 3, n)*(3*u + v)*invert(16*u_3*v, n) % n)
         except ZeroDivisionError:
             #If the invert(16*u_3*v, n) doesn't exist (i.e., g != 1)
             g = gcd(2*u_3*v, n)
@@ -322,14 +322,14 @@ def ecm(n: int, B1: int=10000, B2: int=100000, max_curve: int=200, seed: int=123
     if B1 % 2 != 0 or B2 % 2 != 0:
         raise ValueError("both bounds must be even")
     TF_LIMIT = 100000
-    factors = set()
+    factors: set[int] = set()
     for prime in sieve.primerange(2, TF_LIMIT):
         if n % prime == 0:
             factors.add(prime)
             while(n % prime == 0):
                 n //= prime
 
-    queue = []
+    queue: list[int] = []
     def check(m):
         if isprime(m):
             factors.add(m)
