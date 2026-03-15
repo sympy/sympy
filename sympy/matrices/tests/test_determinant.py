@@ -11,7 +11,7 @@ from sympy.abc import x, y, z
 from sympy.testing.pytest import raises
 from sympy.matrices.exceptions import NonSquareMatrixError
 from sympy.functions.combinatorial.factorials import factorial, subfactorial
-from sympy import Symbol, diff
+from sympy import diff
 from sympy.matrices.expressions import MatrixSymbol, det
 
 @pytest.mark.parametrize("method", [
