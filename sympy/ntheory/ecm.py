@@ -123,7 +123,7 @@ class Point:
         z_cord = diff*(v + self.a_24*diff) % self.mod
         return Point(x_cord, z_cord, self.a_24, self.mod)
 
-    def mont_ladder(self, k:int):
+    def mont_ladder(self, k: int):
         """
         Scalar multiplication of a point in Montgomery form
         using Montgomery Ladder Algorithm.
