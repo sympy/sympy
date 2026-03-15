@@ -4,7 +4,7 @@ from sympy.external.gmpy import gcd, invert, sqrt
 from sympy.utilities.misc import as_int
 from .generate import sieve, primerange
 from .primetest import isprime
-
+from typing import Optional
 
 #----------------------------------------------------------------------------#
 #                                                                            #
@@ -53,7 +53,7 @@ class Point:
         self.a_24 = a_24
         self.mod = mod
 
-    def __eq__(self, other: object):
+    def __eq__(self, other: object) -> bool:
         """Two points are equal if X/Z of both points are equal
         """
         if not isinstance(other,Point):
@@ -63,7 +63,7 @@ class Point:
         return self.x_cord * other.z_cord % self.mod ==\
             other.x_cord * self.z_cord % self.mod
 
-    def add(self, Q, diff):
+    def add(self, Q: "Point", diff: "Point") -> "Point":
         """
         Add two points self and Q where diff = self - Q. Moreover the assumption
         is self.x_cord*Q.x_cord*(self.x_cord - Q.x_cord) != 0. This algorithm
@@ -100,7 +100,7 @@ class Point:
         z_cord = diff.x_cord * subt * subt % self.mod
         return Point(x_cord, z_cord, self.a_24, self.mod)
 
-    def double(self):
+    def double(self) -> "Point":
         """
         Doubles a point in an elliptic curve in Montgomery form.
         This algorithm requires 5 multiplications.
@@ -123,7 +123,7 @@ class Point:
         z_cord = diff*(v + self.a_24*diff) % self.mod
         return Point(x_cord, z_cord, self.a_24, self.mod)
 
-    def mont_ladder(self, k: int):
+    def mont_ladder(self, k: int) -> "Point":
         """
         Scalar multiplication of a point in Montgomery form
         using Montgomery Ladder Algorithm.
@@ -158,7 +158,7 @@ class Point:
         return Q
 
 
-def _ecm_one_factor(n, B1=10000, B2=100000, max_curve=200, seed=None):
+def _ecm_one_factor(n: int, B1: int=10000, B2: int=100000, max_curve: int=200, seed: Optional[int]=None):
     """Returns one factor of n using
     Lenstra's 2 Stage Elliptic curve Factorization
     with Suyama's Parameterization. Here Montgomery
@@ -293,7 +293,7 @@ def _ecm_one_factor(n, B1=10000, B2=100000, max_curve=200, seed=None):
             return g
 
 
-def ecm(n, B1=10000, B2=100000, max_curve=200, seed=1234):
+def ecm(n: int, B1: int=10000, B2: int=100000, max_curve: int=200, seed: int=1234):
     """Performs factorization using Lenstra's Elliptic curve method.
 
     This function repeatedly calls ``_ecm_one_factor`` to compute the factors
