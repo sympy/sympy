@@ -4,7 +4,6 @@ from sympy.external.gmpy import gcd, invert, sqrt
 from sympy.utilities.misc import as_int
 from .generate import sieve, primerange
 from .primetest import isprime
-from typing import Optional
 
 #----------------------------------------------------------------------------#
 #                                                                            #
@@ -158,7 +157,7 @@ class Point:
         return Q
 
 
-def _ecm_one_factor(n: int, B1: int=10000, B2: int=100000, max_curve: int=200, seed: Optional[int]=None):
+def _ecm_one_factor(n: int, B1: int=10000, B2: int=100000, max_curve: int=200, seed=None):
     """Returns one factor of n using
     Lenstra's 2 Stage Elliptic curve Factorization
     with Suyama's Parameterization. Here Montgomery
