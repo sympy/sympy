@@ -54,7 +54,6 @@ class Determinant(Expr):
         return self
 
     def _eval_derivative(self, x):
-        from sympy.matrices.expressions.inverse import Inverse
         A = self.args[0]
         return self * A.T.inv()
 

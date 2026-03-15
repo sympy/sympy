@@ -11,7 +11,8 @@ from sympy.abc import x, y, z
 from sympy.testing.pytest import raises
 from sympy.matrices.exceptions import NonSquareMatrixError
 from sympy.functions.combinatorial.factorials import factorial, subfactorial
-
+from sympy import Symbol, diff
+from sympy.matrices.expressions import MatrixSymbol, det
 
 @pytest.mark.parametrize("method", [
     # Evaluating these directly because they are never reached via M.det()
@@ -128,7 +129,7 @@ def test_legacy_det(method, M, sol):
 def test_det_derivative():
     n = Symbol('n', integer=True, positive=True)
     A = MatrixSymbol('A', n, n)
-    result = diff(det(A), A)
+    assert diff(det(A), A) == det(A) * A.T.inv()
 
 def eye_Determinant(n):
     return Matrix(n, n, lambda i, j: int(i == j))
