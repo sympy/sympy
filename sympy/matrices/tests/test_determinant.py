@@ -125,6 +125,10 @@ def test_legacy_det(method, M, sol):
     # Partially copied from test_determinant()
     assert M.det(method=method) == sol
 
+def test_det_derivative():
+    n = Symbol('n', integer=True, positive=True)
+    A = MatrixSymbol('A', n, n)
+    result = diff(det(A), A)
 
 def eye_Determinant(n):
     return Matrix(n, n, lambda i, j: int(i == j))
