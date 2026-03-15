@@ -965,7 +965,7 @@ def linprog(c, A=None, b=None, A_eq=None, b_eq=None, bounds=None):
             raise ValueError("A and b must both be given")
         # the governing equations will be simple constraints
         # on variables
-        A, b = zeros(0, C.cols), zeros(C.cols, 1)
+        A, b = zeros(0, C.cols), zeros(0, 1)
     else:
         A, b = [Matrix(i) for i in (A, b)]
 
