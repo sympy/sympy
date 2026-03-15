@@ -4913,6 +4913,125 @@ def _update_args(args, key, value):
     return args
 
 
+def _mul_profiles (dict_1, dict_2): # add keys, multiply values
+    result = {}
+    for k, v in dict_1.items():
+         for k_, v_ in dict_2.items():
+             result[k + k_] = result.get(k + k_, 0) + v * v_
+             
+             if result[k + k_] == 0:
+                 del result[k + k_]
+    
+    return result
+
+
+def _add_profiles (dict_1, dict_2): # keep keys the same, add values
+    result = dict(dict_1)
+    
+    for deg, coeff in dict_2.items():
+        result[deg] = result.get(deg, 0) + coeff
+        
+        if result[deg] == 0:
+            del result[deg]
+            
+    return result
+
+
+def _pow_profile (dict_, exponent):
+    
+    if exponent == 0:
+        return {0 : 1}
+    
+    result = {}
+    for deg, coeff in dict_.items():
+        k, v = deg*exponent, coeff**exponent
+        result[k] = result.get(k, 0) + v
+        
+    return result
+
+from sympy import postorder_traversal
+
+def __degree_it (f, gen):
+    
+    f   = sympify(f)
+    gen = sympify(gen)
+    
+    if isinstance(f, Poly):
+        f = f.as_expr()
+    
+    profiles_stack = []
+    
+    for expr in postorder_traversal(f):
+        
+        if expr == 0:
+            return S.NegativeInfinity
+        
+        elif not expr.has(gen): 
+            profile = {0 : expr}
+            profiles_stack.append(profile)
+        
+        elif expr == gen: 
+            profile = {1 : 1}
+            profiles_stack.append(profile)
+            
+        # stack "unfolding" cases
+        elif expr.is_Mul:
+            num_factors = len(expr.args)
+            parts       = profiles_stack[-num_factors:]
+            
+            total = {0 : 1}
+            for p in parts:
+                total = _mul_profiles(total, p)
+            
+            del profiles_stack[-num_factors:]
+            del parts
+            
+            profiles_stack.append(total)
+        
+        elif expr.is_Add:
+            num_terms = len(expr.args) 
+            part      = profiles_stack[-num_terms:]
+            final = {}
+            
+            for i in range(0, len(part)):
+                if i + 1 == len(part):
+                    break
+                part[i+1] = _add_profiles(part[i], part[i+1])
+                
+            final = part[-1]
+            
+            del profiles_stack[-num_terms:]
+            del part
+            
+            profiles_stack.append(final)
+            
+        elif expr.is_Pow: 
+            exponent_profile    = profiles_stack.pop()
+            base_profile        = profiles_stack.pop()
+            
+            if len(exponent_profile) != 1 or 0 not in exponent_profile:
+                return None
+            
+            exponent = exponent_profile[0]
+
+            if not exponent.is_Integer or not exponent.is_nonnegative:
+                return None
+            
+            profiles_stack.append(_pow_profile(base_profile, int(exponent)))
+        else:
+            return None
+        
+    if len(profiles_stack) != 1:
+        return None
+    
+    final_profile = profiles_stack[0]
+    
+    if not final_profile:
+        return S.NegativeInfinity
+    
+    return max(final_profile)
+
+
 @public
 def degree(f, gen=0):
     """
@@ -4988,9 +5107,16 @@ def degree(f, gen=0):
         return p.degree(gen)
 
     gen = sympify(gen, strict=True)
+    if isinstance(f, Poly) and gen in f.gens:
+        return _degree(f.degree(gen))
+    
     if not isinstance(f, Poly) or gen not in f.gens:
-        f = poly_from_expr(f, gen)[0]
-    return _degree(f.degree(gen))
+        d = __degree_it(f, gen)
+        if d == S.NegativeInfinity or d == None or d == 0:
+            f = poly_from_expr(f, gen)[0]
+            return _degree(f.degree(gen))
+        else:
+            return _degree(d)
 
 
 @public
