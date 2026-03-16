@@ -229,7 +229,6 @@ def test_reduce_inequalities_boolean():
         reduce_inequalities([x >= -1, x <= 1, x > 0], x)
 
 
-
 def test_reduce_inequalities_multivariate():
     assert reduce_inequalities([Ge(x**2, 1), Ge(y**2, 1)]) == And(
         Or(And(Le(S.One, x), Lt(x, oo)), And(Le(x, -1), Lt(-oo, x))),
