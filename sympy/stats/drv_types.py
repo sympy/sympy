@@ -12,6 +12,7 @@ Skellam
 YuleSimon
 Zeta
 """
+from __future__ import annotations
 
 
 

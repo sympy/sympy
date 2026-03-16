@@ -1,4 +1,5 @@
 """Tests for dense recursive polynomials' arithmetics. """
+from __future__ import annotations
 from random import randint
 
 from sympy.external.gmpy import GROUND_TYPES

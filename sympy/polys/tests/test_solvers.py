@@ -1,4 +1,5 @@
 """Tests for low-level linear systems solver. """
+from __future__ import annotations
 
 from sympy.matrices import Matrix
 from sympy.polys.domains import ZZ, QQ

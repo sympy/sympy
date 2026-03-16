@@ -24,8 +24,6 @@ jobs:
       - run: python -m pip install --upgrade pip setuptools
 
       - run: pip install -r requirements-dev.txt
-      - run: pip install ruff
-
       - name: Basic code quality tests
         run: bin/test quality
 
@@ -41,7 +39,7 @@ jobs:
       - name: Test all modules are listed in setup.py
         run: bin/test_setup.py
 
-      - run: pip install slotscheck .
+      - run: pip install .
 
       - name: Check for incorrect use of ``__slots__`` using slotscheck
         run: python -m slotscheck --no-strict-imports --exclude-modules "(sympy.parsing.autolev._antlr.*|sympy.parsing.latex._antlr.*|sympy.galgebra|sympy.plotting.pygletplot.*)" sympy
@@ -69,7 +67,7 @@ jobs:
         with:
           python-version: '3.14'
       - run: python -m pip install --upgrade pip
-      - run: pip install mpmath mypy hypothesis
+      - run: pip install -r requirements-dev.txt
 
       - name: Run mypy on the sympy package
         run: mypy sympy
@@ -101,7 +99,7 @@ jobs:
         with:
           python-version: '3.14'
       - run: python -m pip install --upgrade pip
-      - run: pip install sphinx-lint
+      - run: pip install -r requirements-dev.txt
 
       - name: Run sphinx-lint on the sympy documentation
         run: sphinx-lint doc/
@@ -120,7 +118,7 @@ jobs:
         with:
           python-version: '3.14'
       - run: python -m pip install --upgrade pip
-      - run: pip install mpmath
+      - run: pip install -r requirements-dev.txt
       - run: bin/mailmap_check.py
 
   # -------------------- Doctests latest Python -------------------- #
@@ -135,7 +133,7 @@ jobs:
         with:
           python-version: '3.14'
       - run: python -m pip install --upgrade pip
-      - run: pip install mpmath
+      - run: pip install -r requirements-dev.txt
       - run: bin/doctest --force-colors
 
   # ------------------------- Test latest Python ------------------- #
@@ -227,7 +225,7 @@ jobs:
 
       - run: pip install -r requirements-dev.txt
       - run: pip install .
-      - run: pytest -n auto
+      - run: pytest -Werror -n auto
 
   # -------------------- FLINT tests -------------------------------- #
 
@@ -356,7 +354,13 @@ jobs:
           python-version: ${{ matrix.python-version }}
           allow-prereleases: true
       - run: python -m pip install --upgrade pip
-      - run: pip install -r requirements-dev.txt
+      - run: |
+          if [[ "${{ matrix.python-version }}" == pypy-* ]]; then
+            # mypy's librt dependency isn't available on PyPy, so exclude it
+            grep -vx 'mypy' requirements-dev.txt | pip install -r /dev/stdin
+          else
+            pip install -r requirements-dev.txt
+          fi
       - run: pytest -n auto
 
   # -------------------- Doctests older (and newer) Python --------------------- #

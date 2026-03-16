@@ -1,3 +1,4 @@
+from __future__ import annotations
 from math import isclose
 from sympy.core.numbers import I, all_close
 from sympy.core.symbol import Dummy

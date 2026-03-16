@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.testing.pytest import raises, XFAIL
 from sympy.external import import_module
 

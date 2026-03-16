@@ -1,5 +1,6 @@
 """Core module. Provides the basic operations needed in sympy.
 """
+from __future__ import annotations
 
 from .sympify import sympify, SympifyError
 from .cache import cacheit

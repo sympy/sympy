@@ -25,6 +25,7 @@
 # though the bulk of the time is spent just preprocessing the inputs and the
 # relative time spent in rref is too small to be noticeable.
 #
+from __future__ import annotations
 
 from collections import defaultdict
 

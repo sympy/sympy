@@ -247,6 +247,7 @@ Contraction of the resulting array: `\sum_m \frac{\partial A^m}{\partial x^m}`
 z*cos(y*z) + exp(x)
 
 """
+from __future__ import annotations
 
 from .dense_ndim_array import MutableDenseNDimArray, ImmutableDenseNDimArray, DenseNDimArray
 from .sparse_ndim_array import MutableSparseNDimArray, ImmutableSparseNDimArray, SparseNDimArray

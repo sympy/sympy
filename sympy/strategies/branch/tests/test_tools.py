@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.strategies.branch.tools import canon
 from sympy.core.basic import Basic
 from sympy.core.numbers import Integer

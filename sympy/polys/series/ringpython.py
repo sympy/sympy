@@ -5,7 +5,7 @@ from typing import Sequence, TYPE_CHECKING
 if TYPE_CHECKING:
     from sympy.polys.domains.field import Field
     from sympy.polys.domains.domain import Er, Ef
-    from typing import TypeAlias, Union
+    from typing import TypeAlias
 
 
 from sympy.polys.densearith import (
@@ -37,7 +37,7 @@ from sympy.external.gmpy import MPZ, MPQ
 from sympy.polys.ring_series import _giant_steps
 
 
-USeries: TypeAlias = "tuple[list[Er], Union[int, None]]"
+USeries: TypeAlias = "tuple[list[Er], int | None]"
 
 
 def _useries(

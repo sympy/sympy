@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy import sympify, Add, ImmutableMatrix as Matrix
 from sympy.core.evalf import EvalfMixin
 from sympy.external.mpmath import prec_to_dps

@@ -210,7 +210,7 @@ an expression when customizing a printer. Mistakes include:
 
 from __future__ import annotations
 import sys
-from typing import Any, Type
+from typing import Any
 import inspect
 from contextlib import contextmanager
 from functools import cmp_to_key, update_wrapper
@@ -389,7 +389,7 @@ class _PrintFunction:
     """
     Function wrapper to replace ``**settings`` in the signature with printer defaults
     """
-    def __init__(self, f, print_cls: Type[Printer]):
+    def __init__(self, f, print_cls: type[Printer]):
         # find all the non-setting arguments
         params = list(inspect.signature(f).parameters.values())
         assert params.pop(-1).kind == inspect.Parameter.VAR_KEYWORD

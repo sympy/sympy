@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.utilities import dict_merge
 from sympy.utilities.iterables import iterable
 from sympy.physics.vector import (Dyadic, Vector, ReferenceFrame,

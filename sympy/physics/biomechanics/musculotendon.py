@@ -9,6 +9,7 @@ These are normalized functions that are dependent on the musculotendon's state
 and are specific to a given musculotendon model.
 
 """
+from __future__ import annotations
 
 from abc import abstractmethod
 from enum import IntEnum, unique

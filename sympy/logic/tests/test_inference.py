@@ -1,4 +1,5 @@
 """For more tests on satisfiability, see test_dimacs"""
+from __future__ import annotations
 
 from sympy.assumptions.ask import Q
 from sympy.core.symbol import symbols

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.evalf import N
 from sympy.core.numbers import (Float, I, Rational, pi)
 from sympy.core.symbol import (Symbol, symbols)

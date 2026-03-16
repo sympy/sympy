@@ -527,7 +527,7 @@ class RisingFactorial(CombinatorialFunction):
     more information check "Concrete mathematics" by Graham, pp. 66
     or visit https://mathworld.wolfram.com/RisingFactorial.html page.
 
-    When `x` is a `~.Poly` instance of degree $\ge 1$ with a single variable,
+    When `x` is a :class:`~.Poly` instance of degree $\ge 1$ with a single variable,
     `(x)^k = x(y) \cdot x(y+1) \cdots x(y+k-1)`, where `y` is the
     variable of `x`. This is as described in [2]_.
 
@@ -699,7 +699,7 @@ class FallingFactorial(CombinatorialFunction):
     more information check "Concrete mathematics" by Graham, pp. 66
     or [1]_.
 
-    When `x` is a `~.Poly` instance of degree $\ge 1$ with single variable,
+    When `x` is a :class:`~.Poly` instance of degree $\ge 1$ with single variable,
     `(x)_k = x(y) \cdot x(y-1) \cdots x(y-k+1)`, where `y` is the
     variable of `x`. This is as described in
 

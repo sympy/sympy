@@ -1,4 +1,5 @@
 """Tests for user-friendly public interface to polynomial functions. """
+from __future__ import annotations
 
 import pickle
 
@@ -2014,7 +2015,7 @@ def test_gcdex_steps():
     f = x**4 - y
     g = x*(x**2 - y)
 
-    # must specifiy the generator for mutivariate polynomials
+    # must specify the generator for multivariate polynomials
     raises(ValueError, lambda: next(gcdex_steps(f, g)))
 
     eea_result = list(gcdex_steps(f, g, gens=x))

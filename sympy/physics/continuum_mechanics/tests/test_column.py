@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.physics.continuum_mechanics.column import Column
 from sympy.functions import SingularityFunction
 from sympy.core.numbers import Rational

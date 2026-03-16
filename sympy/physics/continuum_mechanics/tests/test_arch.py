@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.physics.continuum_mechanics.arch import Arch
 from sympy import Symbol, simplify
 

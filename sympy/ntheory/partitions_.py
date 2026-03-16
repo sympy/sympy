@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.external.mpmath import (fzero, from_int, from_rational,
     fone, fhalf, to_int, mpf_mul, mpf_div, mpf_sub,
     mpf_add, mpf_sqrt, mpf_pi, mpf_cosh_sinh, mpf_cos, mpf_sin)

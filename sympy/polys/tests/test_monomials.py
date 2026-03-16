@@ -1,4 +1,5 @@
 """Tests for tools and arithmetics for monomials of distributed polynomials. """
+from __future__ import annotations
 
 from sympy.polys.monomials import (
     itermonomials, monomial_count,
