@@ -107,8 +107,8 @@ def lra_satask(proposition, assumptions=True, context=global_assumptions):
         if pred.function not in EXTENED_REAL_IMPLYING_PREDICATES and pred.function != Q.ne:
             raise UnhandledInput(f"LRASolver: {pred} is an unhandled predicate")
     for expr in all_exprs:
-        if expr.kind == MatrixKind(NumberKind):
-            raise UnhandledInput(f"LRASolver: {expr} is of MatrixKind")
+        if expr.kind != NumberKind:
+            raise UnhandledInput(f"LRASolver: Only scalar expresions are supported. {expr} must be of {NumberKind} but is of {expr.kind} instead.")
         if expr == S.NaN:
             raise UnhandledInput("LRASolver: nan")
 

@@ -6,13 +6,14 @@ from sympy.assumptions.ask import Q, ask
 from sympy.core import symbols, Symbol
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.core.numbers import I, oo
+from sympy.core.singleton import S
+from sympy.sets.sets import Interval
 
 from sympy.testing.pytest import raises, XFAIL
 
 
 def test_lra_satask():
     x = symbols("x", real=True)
-    im = Symbol('im', imaginary=True)
 
     # test preprocessing of unequalities is working correctly
     assert lra_satask(Q.eq(x, 1), ~Q.ne(x, 0)) is False
@@ -30,13 +31,18 @@ def test_lra_satask():
     assert lra_satask(Q.gt(x, 0), True) is None
     assert raises(ValueError, lambda: lra_satask(Q.gt(x, 0), False))
 
-    # check imaginary numbers are correctly handled
-    # (im * I).is_real returns True so this is an edge case
+
+def test_lra_satask_unhandled():
+    im = Symbol('im', imaginary=True)
+
+    # (im * I).is_real returns True but is not handled
     raises(UnhandledInput, lambda: lra_satask(Q.gt(im * I, 0), Q.gt(im * I, 0)))
 
-    # check matrix inputs
     X = MatrixSymbol("X", 2, 2)
     raises(UnhandledInput, lambda: lra_satask(Q.lt(X, 2) & Q.gt(X, 3)))
+    raises(UnhandledInput, lambda: lra_satask(Q.gt(S.NaN, 0)))
+    raises(UnhandledInput, lambda: lra_satask(Q.gt(Interval(0, 1), 0)))
+    raises(UnhandledInput, lambda: lra_satask(Q.eq(S.Reals, 0)))
 
 
 def test_old_assumptions():
