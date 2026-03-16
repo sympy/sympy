@@ -243,9 +243,9 @@ class Ordinal(Basic):
         return other * self
 
     def _pow(self, other: Ordinal) -> Ordinal:
-        if other is ord0:
+        if other == ord0:
             return Ordinal.convert(1)
-        if self is ord0:
+        if self == ord0:
             return ord0
         if self == Ordinal.convert(1):
             return self
@@ -258,7 +258,7 @@ class Ordinal(Basic):
             finite_part = other.trailing_term.mult
 
         # finite self to arbitrary other
-        if self.degree is ord0:
+        if self.degree == ord0:
             exponent_terms = []
             for term in infinite_terms:
                 if term.exp >= omega:
