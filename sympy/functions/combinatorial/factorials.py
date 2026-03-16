@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Any, Self, Tuple, Type, TYPE_CHECKING, cast, overload
+from typing import Any, Self, Iterable, TYPE_CHECKING, cast, overload
 from functools import reduce
 
 from sympy.core import S, sympify, Dummy, Mod
@@ -578,15 +578,15 @@ class RisingFactorial(CombinatorialFunction):
     """
     @overload
     @classmethod
-    def eval(cls: Type[Self], x: Integer | int, k: Integer | int) -> Number: ...
+    def eval(cls: type[Self], x: Integer | int, k: Integer | int) -> Number: ...
 
     @overload
     @classmethod
-    def eval(cls: Type[Self], x: Float | float, k: Integer | int) -> Float | Integer: ...
+    def eval(cls: type[Self], x: Float | float, k: Integer | int) -> Float | Integer: ...
 
     @overload
     @classmethod
-    def eval(cls: Type[Self], x: Expr | complex , k: Expr) -> Expr | None: ...
+    def eval(cls: type[Self], x: Expr | complex , k: Expr) -> Expr | None: ...
 
     @classmethod
     def eval(cls, x, k):   # type: ignore[override]
@@ -752,15 +752,15 @@ class FallingFactorial(CombinatorialFunction):
 
     @overload
     @classmethod
-    def eval(cls: Type[Self], x: Integer | int, k: Integer | int) -> Number: ...
+    def eval(cls: type[Self], x: Integer | int, k: Integer | int) -> Number: ...
 
     @overload
     @classmethod
-    def eval(cls: Type[Self], x: Float | float, k: Integer | int) -> Float | Integer: ...
+    def eval(cls: type[Self], x: Float | float, k: Integer | int) -> Float | Integer: ...
 
     @overload
     @classmethod
-    def eval(cls: Type[Self], x: Expr | complex , k: Expr) -> Expr | None: ...
+    def eval(cls: type[Self], x: Expr | complex , k: Expr) -> Expr | None: ...
 
     @classmethod
     def eval(cls, x, k):  # type: ignore[override]
@@ -962,12 +962,12 @@ class binomial(CombinatorialFunction):
         from sympy.functions.special.gamma_functions import polygamma
         if argindex == 1:
             # https://functions.wolfram.com/GammaBetaErf/Binomial/20/01/01/
-            n, k = cast(Tuple["Expr", "Expr"], self.args)
+            n, k = cast(Iterable["Expr"], self.args)
             return binomial(n, k)*(polygamma(0, n + 1) - \
                 polygamma(0, n - k + 1))
         elif argindex == 2:
             # https://functions.wolfram.com/GammaBetaErf/Binomial/20/01/02/
-            n, k = cast(Tuple["Expr", "Expr"], self.args)
+            n, k = cast(Iterable["Expr"], self.args)
             return binomial(n, k)*(polygamma(0, n - k + 1) - \
                 polygamma(0, k + 1))
         else:
@@ -975,11 +975,11 @@ class binomial(CombinatorialFunction):
 
     @overload
     @classmethod
-    def _eval(self: Type[Self], n: Integer, k: Integer) -> Integer: ...
+    def _eval(self: type[Self], n: Integer, k: Integer) -> Integer: ...
 
     @overload
     @classmethod
-    def _eval(self: Type[Self], n: Expr, k: Integer) -> Expr: ...
+    def _eval(self: type[Self], n: Expr, k: Integer) -> Expr: ...
 
     @classmethod
     def _eval(self, n, k):
@@ -1014,11 +1014,11 @@ class binomial(CombinatorialFunction):
 
     @overload
     @classmethod
-    def eval(cls: Type[Self], n: Integer, k: Integer) -> Integer: ...
+    def eval(cls: type[Self], n: Integer, k: Integer) -> Integer: ...
 
     @overload
     @classmethod
-    def eval(cls: Type[Self], n: Expr, k: Expr) -> Expr | None: ...
+    def eval(cls: type[Self], n: Expr, k: Expr) -> Expr | None: ...
 
     @classmethod
     def eval(cls, n, k):  # type: ignore[override]
