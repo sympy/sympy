@@ -867,3 +867,7 @@ def test_mul_pow_derivative():
     assert_is_integral_of(x**3*Derivative(f(x), (x, 4)),
                           x**3*Derivative(f(x), (x, 3)) - 3*x**2*Derivative(f(x), (x, 2)) +
                           6*x*Derivative(f(x), x) - 6*f(x))
+    
+def test_sin_cos_product():
+    x = symbols('x')
+    assert manualintegrate(1/(sin(x)*cos(x)), x) == -log(cot(2*x) + csc(2*x))

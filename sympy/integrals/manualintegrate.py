@@ -2563,6 +2563,18 @@ def rewrites_rule(integral):
         rewritten = integrand.subs(1/cos(symbol), sec(symbol))
         return RewriteRule(integrand, symbol, rewritten, integral_steps(rewritten, symbol))
 
+def sin_cos_product_rule(integral):
+    integrand, symbol = integral
+
+    # detect 1/(sin(x)*cos(x))
+    if integrand == 1/(sin(symbol)*cos(symbol)):
+        rewritten = 2*csc(2*symbol)
+
+        substep = integral_steps(rewritten, symbol)
+
+        if substep and not isinstance(substep, DontKnowRule):
+            return RewriteRule(integrand, symbol, rewritten, substep)        
+
 def fallback_rule(integral):
     return DontKnowRule(*integral)
 
@@ -2677,6 +2689,7 @@ def integral_steps(integrand, symbol, **options):
             null_safe(trig_rule),
             null_safe(hyperbolic_rule),
             null_safe(alternatives(
+                sin_cos_product_rule,
                 rewrites_rule,
                 substitution_rule,
                 condition(
