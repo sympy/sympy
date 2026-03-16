@@ -946,6 +946,17 @@ def reduce_inequalities(inequalities, symbols=[]):
         inequalities = [inequalities]
     inequalities = [sympify(i) for i in inequalities]
 
+    # Flatten And/Or boolean expressions into individual args so that
+    # e.g. (x > 0) & (x < 1) is treated the same as [x > 0, x < 1].
+    from sympy.logic.boolalg import And as BoolAnd, Or as BoolOr
+    flat = []
+    for i in inequalities:
+        if isinstance(i, (BoolAnd, BoolOr)):
+            flat.extend(i.args)
+        else:
+            flat.append(i)
+    inequalities = flat
+
     gens = set().union(*[i.free_symbols for i in inequalities])
 
     if not iterable(symbols):
