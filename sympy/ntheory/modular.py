@@ -143,7 +143,7 @@ def crt1(m: list[MPZ]) -> tuple[MPZ, list[MPZ], list[MPZ]]:
 
 def crt2(
         m: list[MPZ],
-        v: list[MPZ], 
+        v: list[MPZ],
         mm: MPZ,
         e: list[MPZ],
         s: list[MPZ], 
