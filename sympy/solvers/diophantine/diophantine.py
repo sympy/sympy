@@ -1327,7 +1327,8 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
             if not is_sequence(syms):
                 raise TypeError(
                     'syms should be given as a sequence, e.g. a list')
-            syms = [i for i in syms if i in var]
+            if set(syms) != set(var):
+                raise ValueError("syms must contain all free symbols of the equation")
             if syms != var:
                 dict_sym_index = dict(zip(var, range(len(var))))
                 return {tuple([t[dict_sym_index[i]] for i in syms])

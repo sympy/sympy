@@ -979,8 +979,8 @@ def test_issue_9538():
 
 
 def test_issue_29269():
-    assert diophantine(x + y + z - 3, syms=[x, y]) == {(t_0, t_0 + t_1)}
-    assert diophantine(x + y + z - 3, syms=[y, x]) == {(t_0 + t_1, t_0)}
+    raises(ValueError, lambda: diophantine(x + y + z - 3, syms=[x, y]))
+    raises(ValueError, lambda: diophantine(x + y + z - 3, syms=[y, x]))
 
 
 def test_ternary_quadratic():
