@@ -461,3 +461,28 @@ def test_factor_sets():
     for _ in range(100):
         system = generate_random_system()
         assert _factor_sets(system) == _factor_sets_slow(system)
+
+
+from sympy import symbols, solve, nsimplify
+
+def test_issue_non_zero_dimensional():
+    x, y, lam, a0, conc = symbols('x y lam a0 conc')
+
+    eqs = [
+        lam + 2*y - a0*(1 - x/2)*x - 0.005*x/2*x,
+        a0*(1 - x/2)*x - y - 0.743436700916726*y,
+        x + y - conc
+    ]
+
+    reqs = [nsimplify(e, rational=True) for e in eqs]
+
+    sol = solve(reqs, [x, y, a0])
+
+    assert sol is not None
+    assert len(sol) >= 1
+
+    vars = [x, y, a0]
+
+    for s in sol:
+        sol_dict = dict(zip(vars, s))
+        assert all(eq.subs(sol_dict).simplify() == 0 for eq in reqs)
