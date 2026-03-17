@@ -142,10 +142,10 @@ def crt1(m: list[MPZ]) -> tuple[MPZ, list[MPZ], list[MPZ]]:
 
 
 def crt2(
-        m: list[MPZ], 
+        m: list[MPZ],
         v: list[MPZ], 
-        mm: MPZ, 
-        e: list[MPZ], 
+        mm: MPZ,
+        e: list[MPZ],
         s: list[MPZ], 
         symmetric: bool = False
         ) -> tuple[int, int]:
