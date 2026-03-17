@@ -942,20 +942,35 @@ def reduce_inequalities(inequalities, symbols=[]):
     >>> reduce_inequalities(0 <= x + y*2 - 1, [x])
     (x < oo) & (x >= 1 - 2*y)
     """
+    from sympy.logic.boolalg import And as BoolAnd, Or as BoolOr, to_dnf, BooleanAtom
+
     if not iterable(inequalities):
         inequalities = [inequalities]
     inequalities = [sympify(i) for i in inequalities]
 
-    # Flatten And/Or boolean expressions into individual args so that
-    # e.g. (x > 0) & (x < 1) is treated the same as [x > 0, x < 1].
-    from sympy.logic.boolalg import And as BoolAnd, Or as BoolOr
-    flat = []
+    normalized = []
     for i in inequalities:
-        if isinstance(i, (BoolAnd, BoolOr)):
-            flat.extend(i.args)
+        if isinstance(i, (Relational, BoolAnd, BoolOr, BooleanAtom)):
+            normalized.append(i)
         else:
-            flat.append(i)
-    inequalities = flat
+            normalized.append(Eq(i, 0))
+    inequalities = normalized
+
+    if len(inequalities) == 1:
+        expr = inequalities[0]
+    else:
+        expr = BoolAnd(*inequalities)
+
+    if isinstance(expr, BoolOr):
+        return BoolOr(*[reduce_inequalities(arg, symbols) for arg in expr.args])
+
+    if isinstance(expr, BoolAnd) and any(arg.has(BoolOr) for arg in expr.args):
+        return reduce_inequalities(to_dnf(expr), symbols)
+
+    if isinstance(expr, BoolAnd):
+        inequalities = list(expr.args)
+    else:
+        inequalities = [expr]
 
     gens = set().union(*[i.free_symbols for i in inequalities])
 
