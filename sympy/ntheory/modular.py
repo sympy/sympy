@@ -141,7 +141,14 @@ def crt1(m: list[MPZ]) -> tuple[MPZ, list[MPZ], list[MPZ]]:
     return gf_crt1(m, ZZ)
 
 
-def crt2(m: list[MPZ], v: list[MPZ], mm: MPZ, e: list[MPZ], s: list[MPZ], symmetric: bool = False) -> tuple[int, int]:
+def crt2(
+        m: list[MPZ], 
+        v: list[MPZ], 
+        mm: MPZ, 
+        e: list[MPZ], 
+        s: list[MPZ], 
+        symmetric: bool = False
+        ) -> tuple[int, int]:
     """Second part of Chinese Remainder Theorem, for multiple application.
 
     See ``crt1`` for usage.
@@ -244,7 +251,7 @@ def solve_congruence(*remainder_modulus_pairs: tuple[int, int], **hint: bool) ->
         a, m = a1 + m1*b, m1*c
         return a, m
 
-    rm: list[tuple[int, int]] | tuple[tuple[int, int], ...] = remainder_modulus_pairs
+    rm: list[tuple[int, int]] = remainder_modulus_pairs
     symmetric = hint.get('symmetric', False)
 
     if hint.get('check', True):
