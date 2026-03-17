@@ -251,7 +251,7 @@ def solve_congruence(*remainder_modulus_pairs: tuple[int, int], **hint: bool) ->
         a, m = a1 + m1*b, m1*c
         return a, m
 
-    rm: list[tuple[int, int]] = remainder_modulus_pairs
+    rm: list[tuple[int, int]] | tuple[tuple[int, int], ...] = remainder_modulus_pairs
     symmetric = hint.get('symmetric', False)
 
     if hint.get('check', True):
