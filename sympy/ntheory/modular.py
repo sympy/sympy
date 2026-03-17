@@ -146,7 +146,7 @@ def crt2(
         v: list[MPZ],
         mm: MPZ,
         e: list[MPZ],
-        s: list[MPZ], 
+        s: list[MPZ],
         symmetric: bool = False
         ) -> tuple[int, int]:
     """Second part of Chinese Remainder Theorem, for multiple application.
