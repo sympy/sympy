@@ -33,6 +33,10 @@ def test_lra_satask():
 
 
 def test_lra_satask_unhandled():
+
+    x, y, z = symbols("x y z", real=True)
+    assert lra_satask(Q.eq(x, z), Q.ne(x, y) & Q.eq(y, z) ) is False
+
     im = Symbol('im', imaginary=True)
 
     # (im * I).is_real returns True but is not handled
@@ -43,6 +47,9 @@ def test_lra_satask_unhandled():
     raises(UnhandledInput, lambda: lra_satask(Q.gt(S.NaN, 0)))
     raises(UnhandledInput, lambda: lra_satask(Q.gt(Interval(0, 1), 0)))
     raises(UnhandledInput, lambda: lra_satask(Q.eq(S.Reals, 0)))
+
+    x, y, z = symbols("x y z", real=True)
+    assert lra_satask(Q.eq(x, z), Q.ne(x, y) & Q.eq(y, z) ) is False
 
 
 def test_old_assumptions():
@@ -116,20 +123,29 @@ def test_all_pred():
 def test_extended_real_number_line():
     a, b, c = symbols("a b c")
 
+
+    assert lra_satask(a > c, (a > b) & (b > c)) is True
+    assert lra_satask(2*a > 0, 2*a > 1) is True
+    assert lra_satask(a**2 > 0, a**2 > 1) is True
+
+    # TODO: Make this give `False` instead of `None`. (Probably very hard).
+    assert ask(a > b, Q.extended_real(a) & Q.extended_real(b) & Q.eq(b, c) & Q.positive_infinite(c)) is None
+
     # `a + 1 > a` may be false if a=oo.
     raises(UnhandledInput, lambda: lra_satask(a + 1 > a, Q.extended_real(a)))
     raises(UnhandledInput, lambda: lra_satask(a + 1 > a, Q.extended_real(a) & Q.extended_real(a + 1)))
     raises(UnhandledInput, lambda: lra_satask(a + b > a, Q.extended_real(a) & Q.positive(b)))
     raises(UnhandledInput, lambda: lra_satask(a + b > a, Q.extended_real(a) & Q.positive(b) & Q.extended_real(a + b)))
     raises(UnhandledInput, lambda: lra_satask(a - 1 >= a, Q.extended_real(a)))
+    raises(UnhandledInput, lambda: lra_satask(a + b + 1 >= a + b, Q.extended_real(a) & Q.extended_real(b)))
+
+    # `2*a > a` assuming `a > 0` may be false if a=oo.
+    raises(UnhandledInput, lambda: lra_satask(2*a > a, a > 0))
+    assert ask((2*a > a), (a > 0)) is None
 
     raises(UnhandledInput, lambda: lra_satask(a > oo, Q.extended_real(a)))
     raises(UnhandledInput, lambda: lra_satask(a > b, Q.extended_real(a) & Q.extended_real(b) & (a >= oo)))
 
-    # If a = oo and b = -oo, then `a + b` is undefined. Inequalities
-    # involving undefined quantities are also undefined so `ask` should
-    # give None for expressions that may involve undefined quantities.
-    raises(UnhandledInput, lambda: lra_satask(a + b + 1 >= a + b, Q.extended_real(a) & Q.extended_real(b)))
 
 
 @XFAIL

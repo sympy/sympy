@@ -2,7 +2,9 @@ from __future__ import annotations
 from sympy.assumptions.assume import global_assumptions
 from sympy.assumptions.cnf import CNF, EncodedCNF
 from sympy.assumptions.ask import Q
+from sympy.core.add import Add
 from sympy.core.numbers import I
+from sympy.core.symbol import Symbol
 from sympy.logic.inference import satisfiable
 from sympy.logic.algorithms.lra_theory import UnhandledInput, ALLOWED_PRED
 from sympy.matrices.kind import MatrixKind
@@ -12,16 +14,12 @@ from sympy.core.mul import Mul
 from sympy.core.singleton import S
 
 
-# Some predicates such as Q.prime can't be handled by lra_satask. For example,
-# (x > 0) & (x < 1) & Q.prime(x) is unsat but lra_satask would think it was sat.
-# WHITE_LIST is a list of predicates that can always be handled.
-WHITE_LIST = ALLOWED_PRED | {Q.positive, Q.negative, Q.zero, Q.nonzero, Q.nonpositive, Q.nonnegative,
-    Q.negative_infinite, Q.positive_infinite}
+REAL_PREDICATES = {Q.real, Q.positive, Q.negative, Q.zero, Q.nonzero, Q.nonpositive, Q.nonnegative}
+EXTENDED_REAL_PREDICATES = {Q.extended_real, Q.extended_positive, Q.extended_negative, Q.extended_nonpositive,
+    Q.extended_nonnegative, Q.extended_nonzero, Q.positive_infinite, Q.negative_infinite, Q.gt, Q.lt, Q.ge, Q.le}
 
-REAL_IMPLYING_PREDICATES = WHITE_LIST | {Q.real}
 
-EXTENED_REAL_IMPLYING_PREDICATES = REAL_IMPLYING_PREDICATES | {Q.extended_real, Q.extended_positive, Q.extended_negative, Q.extended_nonpositive,
-    Q.extended_negative, Q.extended_nonzero}
+HANDLED_PREDICATES = EXTENED_REAL_IMPLYING_PREDICATES | {Q.ne}
 
 def lra_satask(proposition, assumptions=True, context=global_assumptions):
     """
@@ -47,16 +45,17 @@ def lra_satask(proposition, assumptions=True, context=global_assumptions):
 
 
     # Use unit clauses from `assumptions_encoded_cnf` to
-    # deduce some expressions are extened real.
+    # try to deduce if expressions are real or extended real.
     reverse_encoding = {value: key for key, value in assumptions_encoded_cnf.encoding.items()}
     real_exprs = set()
+    extended_real_exprs = set()
     for unit_clause in assumptions_encoded_cnf.data:
         # Check if `unit_clause` is a unit clause.
         if len(unit_clause) != 1:
             continue
 
-        # Continue if negative because negative literals
-        # cannot establish that an expression is entended real.
+        # Negated predicates cannot establish that
+        # an expression is real (or extended real).
         (positive_literal,) = unit_clause
         if not (positive_literal > 0):
             continue
@@ -65,8 +64,11 @@ def lra_satask(proposition, assumptions=True, context=global_assumptions):
         if not isinstance(applied_predicate, AppliedPredicate):
             continue
 
-        if applied_predicate.function in REAL_IMPLYING_PREDICATES:
+        if applied_predicate.function in REAL_PREDICATES:
             real_exprs.update(applied_predicate.arguments)
+        if applied_predicate.function in EXTENDED_REAL_PREDICATES:
+            extended_real_exprs.update(applied_predicate.arguments)
+
 
     # SATIFSIABLE STARTED HERE
 
@@ -78,39 +80,66 @@ def lra_satask(proposition, assumptions=True, context=global_assumptions):
 
 
     # Check old assumptions to:
-    #   1. Deduce some expressions are extened real.
-    #   2. Add relevant inequality assumptions as unit clauses
-    #      to `assumptions_encoded_cnf`.
+    #   1. Check if expressions are assumed to be real or extened real.
+    #   2. Add relevant inequality assumptions to `assumptions_encoded_cnf`.
     all_pred, all_exprs = get_all_pred_and_expr_from_enc_cnf([sat_true])
     for expr in all_exprs:
-        convertable_to_inequality_applied_predicate, is_real  = extract_assumption_from_old_assumption(expr)
+        # If there are any predicates that can be represented as inequalities,
+        # `relevant_applied_predicate` is set to the most specific of those predicates.
+        relevant_applied_predicate, is_real, is_extended_real  = extract_assumption_from_old_assumption(expr)
         if is_real:
             real_exprs.add(expr)
-        if convertable_to_inequality_applied_predicate is None:
+        elif is_extended_real:
+            extended_real_exprs.add(expr)
+
+        if relevant_applied_predicate is None:
             continue
 
 
-        if convertable_to_inequality_applied_predicate not in assumptions_encoded_cnf.encoding:
+        if relevant_applied_predicate not in assumptions_encoded_cnf.encoding:
             applied_predicate_encoding = len(assumptions_encoded_cnf.encoding) + 1
-            assumptions_encoded_cnf.encoding[convertable_to_inequality_applied_predicate] = applied_predicate_encoding
+            assumptions_encoded_cnf.encoding[relevant_applied_predicate] = applied_predicate_encoding
 
         # Add relevant old assumptions to `assumptions`.
-        applied_predicate_encoding = assumptions_encoded_cnf.encoding[convertable_to_inequality_applied_predicate]
+        applied_predicate_encoding = assumptions_encoded_cnf.encoding[relevant_applied_predicate]
         assumptions_encoded_cnf.data.append([applied_predicate_encoding])
 
-    for expr in all_exprs:
-        if expr not in real_exprs:
-            raise UnhandledInput(f"LRASolver: {expr} must be real")
 
+<<<<<<< HEAD
+    all_symbols = set()
+=======
 
     for pred in all_pred:
-        if pred.function not in EXTENED_REAL_IMPLYING_PREDICATES and pred.function != Q.ne:
+        if pred.function not in HANDLED_PREDICATES:
             raise UnhandledInput(f"LRASolver: {pred} is an unhandled predicate")
+>>>>>>> 70850820c1 (Create HANDLED_PREDICATES for readablity)
     for expr in all_exprs:
         if expr.kind != NumberKind:
             raise UnhandledInput(f"LRASolver: Only scalar expresions are supported. {expr} must be of {NumberKind} but is of {expr.kind} instead.")
         if expr == S.NaN:
             raise UnhandledInput("LRASolver: nan")
+        if expr not in real_exprs and expr not in extended_real_exprs:
+            raise UnhandledInput(f"LRASolver: {expr} must be extended real.")
+
+        # If there exist distinct extended real expresions (that may be infinite),
+        # they must be variable disjoint from each other because extended real
+        # arthmatic is not fully handled. For example, the query `ask(x > x + 1)`
+        # is not handled because `x` and `x + 1` are not variable disjoint.
+        # We have to be careful because `x > x + 1` may be False if x=oo.
+        if expr in extended_real_exprs and expr not in real_exprs:
+            if all_symbols.isdisjoint(expr.free_symbols):
+                all_symbols.update(expr.free_symbols)
+                continue
+
+            raise UnhandledInput(f"LRASolver: Extended real expressions are not variable disjoint.")
+
+
+    for pred in all_pred:
+        if (pred.function not in REAL_PREDICATES and
+            pred.function not in EXTENDED_REAL_PREDICATES and
+            pred.function not in (Q.ne, Q.eq)):
+                raise UnhandledInput(f"LRASolver: {pred} is an unhandled predicate")
+
 
     # check satisfiable
 
@@ -122,12 +151,16 @@ def lra_satask(proposition, assumptions=True, context=global_assumptions):
 
 
     # Preprocess sat_true and sat_false into encoded CNFs containing only
-    # Q.eq, Q.gt, Q.lt, Q.ge, Q.le, Q.real, Q.extended_real predicates.
-    # Converts every unequality into a disjunction of strict inequalities
-    # (e.g. x != 3  =>  x < 3 OR x > 3) and converts negated Q.ne into
-    # equalities.
-    sat_true = _preprocess(sat_true)
-    sat_false = _preprocess(sat_false)
+    # Q.eq, Q.gt, Q.lt, Q.ge, Q.le, Q.eq, and Q.real predicates. It does the following
+    # transformations:
+    # - Q.positive -> Q.gt, Q.negative -> Q.lt, Q.zero -> Q.eq, etc.
+    # - Q.extended_positive -> Q.gt, Q.extended_negative -> Q.lt, etc.
+    # - Q.ne, ~Q.eq, Q.nonzero -> disjunction of inequalities (e.g. x != 3  =>  x < 3 OR x > 3)
+    # - Q.extended_real -> True
+    # - Q.real -> True or Q.real depending on whether the expr is known to be real
+    # and converts negated Q.ne into equalities.
+    sat_true = _preprocess(sat_true, real_exprs, extended_real_exprs)
+    sat_false = _preprocess(sat_false, real_exprs, extended_real_exprs)
 
     can_be_true = satisfiable(sat_true, use_lra_theory=True) is not False
     can_be_false = satisfiable(sat_false, use_lra_theory=True) is not False
@@ -145,7 +178,7 @@ def lra_satask(proposition, assumptions=True, context=global_assumptions):
         raise ValueError("Inconsistent assumptions")
 
 
-def _preprocess(enc_cnf):
+def _preprocess(enc_cnf, real_exprs, possibly_infinite_extended_real_exprs):
     rev_encoding = {value: key for key, value in enc_cnf.encoding.items()}
     new_encoding = {}
     new_data = []
@@ -157,8 +190,10 @@ def _preprocess(enc_cnf):
 
     for clause in enc_cnf.data:
         new_clause = []
+        skip_new_clause = False
         for lit in clause:
             if lit == 0:
+                # TODO: Add tests for this and look into if it's actually needed.
                 new_clause.append(lit)
                 new_encoding[lit] = False # Preserve existing DIMACS zero-terminator behavior
                 continue
@@ -167,11 +202,39 @@ def _preprocess(enc_cnf):
             is_negated = lit < 0
             sign = -1 if is_negated else 1
 
-            prop = _pred_to_binrel(prop)
-
             if not isinstance(prop, AppliedPredicate):
                 new_clause.append(sign * get_enc(prop))
                 continue
+
+            if prop.function == Q.real and prop.arguments[0] not in real_exprs:
+                new_clause.append(sign * get_enc(prop))
+                continue
+            elif prop.function in (Q.real, Q.extended_real):
+                prop = True
+
+            if prop not in (True, False) and prop.function in (Q.positive_infinite, Q.negative_infinite):
+                if prop.arguments[0] in real_exprs:
+                    prop = False
+                else:
+                    raise UnhandledInput(f"LRASolver: Q.positive_infinite and Q.negative_infinite are not fully handled yet.")
+
+            if prop in (True, False):
+                new_clause.append(sign * get_enc(prop))
+                continue
+
+            # if prop is False:
+            #     # This might result in new_clause to be empty
+            #     # which is intended. In that case, the sat
+            #     # solver will give unsat.
+            #     continue
+            # if prop is True:
+            #     # This could result in new_data to be empty which
+            #     # is intended. In that case, the sat solver will
+            #     # give sat.
+            #     skip_new_clause = True
+            #     break
+
+            prop = _pred_to_binrel(prop)
 
             if (prop.function == Q.eq and is_negated) or (prop.function == Q.ne and not is_negated):
                 # (x != y) -> (x > y) | (x < y)
@@ -183,9 +246,13 @@ def _preprocess(enc_cnf):
                 new_clause.append(get_enc(Q.eq(arg1, arg2)))
             else:
                 # Standard predicates
+                if prop.function not in (Q.gt, Q.lt, Q.ge, Q.le, Q.eq):
+                    pass
                 assert prop.function in (Q.gt, Q.lt, Q.ge, Q.le, Q.eq)
                 new_clause.append(sign * get_enc(prop))
 
+        if skip_new_clause:
+            continue
         new_data.append(new_clause)
 
     return EncodedCNF(new_data, new_encoding)
@@ -195,37 +262,20 @@ def _pred_to_binrel(pred):
     if not isinstance(pred, AppliedPredicate):
         return pred
 
-    if pred.function in pred_to_pos_neg_zero:
-        f = pred_to_pos_neg_zero[pred.function]
-        if f is False:
-            return False
-        pred = f(pred.arguments[0])
-
-    if pred.function == Q.positive:
+    if pred.function in (Q.positive, Q.extended_positive):
         pred = Q.gt(pred.arguments[0], 0)
-    elif pred.function == Q.negative:
+    elif pred.function in (Q.negative, Q.extended_negative):
         pred = Q.lt(pred.arguments[0], 0)
     elif pred.function == Q.zero:
         pred = Q.eq(pred.arguments[0], 0)
-    elif pred.function == Q.nonpositive:
+    elif pred.function in (Q.nonpositive, Q.extended_nonpositive):
         pred = Q.le(pred.arguments[0], 0)
-    elif pred.function == Q.nonnegative:
+    elif pred.function in (Q.nonnegative, Q.extended_nonnegative):
         pred = Q.ge(pred.arguments[0], 0)
-    elif pred.function == Q.nonzero:
+    elif pred.function in (Q.nonzero, Q.extended_nonzero):
         pred = Q.ne(pred.arguments[0], 0)
 
     return pred
-
-
-pred_to_pos_neg_zero = {
-    Q.extended_positive: Q.positive,
-    Q.extended_negative: Q.negative,
-    Q.extended_nonpositive: Q.nonpositive,
-    Q.extended_negative: Q.negative,
-    Q.extended_nonzero: Q.nonzero,
-    Q.negative_infinite: False,
-    Q.positive_infinite: False
-}
 
 
 def get_all_pred_and_expr_from_enc_cnf(enc_cnfs):
@@ -263,15 +313,17 @@ def extract_assumption_from_old_assumption(expr):
     >>> y = symbols("y", integer=True)
     >>> extract_assumption_from_old_assumption(y) # raises exception
     """
-    if not hasattr(expr, "free_symbols") or len(expr.free_symbols) == 0:
-        if expr.is_real:
-            return None, True
-        return None, None
-
     # Test for I times imaginary variable. Such expressions are considered
     # real but aren't handled.
     if expr.has(I):
         raise UnhandledInput(f"LRASolver: {expr} must not contain I")
+
+    if not hasattr(expr, "free_symbols") or len(expr.free_symbols) == 0:
+        if expr.is_real:
+            return None, True, True
+        if expr.is_extended_real:
+            return None, None, True
+        return None, None, None
 
     if expr.is_integer == True and expr.is_zero != True:
         raise UnhandledInput(f"LRASolver: {expr} is an integer")
@@ -281,81 +333,20 @@ def extract_assumption_from_old_assumption(expr):
         raise UnhandledInput(f"LRASolver: {expr} is irational")
 
     if expr.is_zero:
-        return Q.zero(expr), True
+        return Q.zero(expr), True, True
     if expr.is_positive:
-        return Q.positive(expr), True
+        return Q.positive(expr), True, True
     if expr.is_negative:
-        return Q.negative(expr), True
+        return Q.negative(expr), True, True
     if expr.is_nonzero:
-        return Q.nonzero(expr), True
+        return Q.nonzero(expr), True, True
     if expr.is_nonpositive:
-        return Q.nonpositive(expr), True
+        return Q.nonpositive(expr), True, True
     if expr.is_nonnegative:
-        return Q.nonnegative(expr), True
+        return Q.nonnegative(expr), True, True
     if expr.is_real:
-        return None, True
+        return None, True, True
+    if expr.is_extended_real:
+        return None, None, True
 
-    return None, None
-
-
-def extract_pred_from_old_assum(all_exprs):
-    """
-    Returns a list of relevant new assumption predicate
-    based on any old assumptions.
-
-    Raises an UnhandledInput exception if any of the assumptions are
-    unhandled.
-
-    Ignored predicate:
-    - commutative
-    - complex
-    - algebraic
-    - transcendental
-    - extended_real
-    - real
-    - all matrix predicate
-    - rational
-    - irrational
-
-    Example
-    =======
-    >>> from sympy.assumptions.lra_satask import extract_pred_from_old_assum
-    >>> from sympy import symbols
-    >>> x, y = symbols("x y", positive=True)
-    >>> extract_pred_from_old_assum([x, y, 2])
-    [Q.positive(x), Q.positive(y)]
-    """
-    ret = []
-    for expr in all_exprs:
-        if not hasattr(expr, "free_symbols"):
-            continue
-        if len(expr.free_symbols) == 0:
-            continue
-
-        if expr.is_real is not True:
-            raise UnhandledInput(f"LRASolver: {expr} must be real")
-        # test for I times imaginary variable; such expressions are considered real
-        if isinstance(expr, Mul) and any(arg.is_real is not True for arg in expr.args):
-            raise UnhandledInput(f"LRASolver: {expr} must be real")
-
-        if expr.is_integer == True and expr.is_zero != True:
-            raise UnhandledInput(f"LRASolver: {expr} is an integer")
-        if expr.is_integer == False:
-            raise UnhandledInput(f"LRASolver: {expr} can't be an integer")
-        if expr.is_rational == False:
-            raise UnhandledInput(f"LRASolver: {expr} is irational")
-
-        if expr.is_zero:
-            ret.append(Q.zero(expr))
-        elif expr.is_positive:
-            ret.append(Q.positive(expr))
-        elif expr.is_negative:
-            ret.append(Q.negative(expr))
-        elif expr.is_nonzero:
-            ret.append(Q.nonzero(expr))
-        elif expr.is_nonpositive:
-            ret.append(Q.nonpositive(expr))
-        elif expr.is_nonnegative:
-            ret.append(Q.nonnegative(expr))
-
-    return ret
+    return None, None, None
