@@ -86,6 +86,7 @@ CMD_RANGLE: "\\rangle"
 CMD_MATHIT: "\\mathit"
 
 CMD_INFTY: "\\infty"
+CMD_CIRC: "\\circ"
 
 BANG: "!"
 BAR: "|"
@@ -276,6 +277,8 @@ product: FUNC_PROD group_curly_parentheses_special _expression
 
 superscript: _expression_func CARET (_expression_power | CMD_PRIME | CMD_ASTERISK)
     | _expression_func CARET L_BRACE (PRIMES | STARS | PRIMES_VIA_CMD | STARS_VIA_CMD) R_BRACE
+    | _expression_func CARET L_BRACE CMD_CIRC R_BRACE -> degree
+    | _expression_func CARET CMD_CIRC -> degree
 
 matrix_prime: (matrix | group_round_parentheses) PRIMES
 

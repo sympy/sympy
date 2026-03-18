@@ -13,7 +13,7 @@ from sympy.core.sympify import _sympify
 from sympy.matrices import zeros
 from sympy.polys.polytools import lcm
 from sympy.printing.repr import srepr
-from sympy.utilities.iterables import (flatten, has_variety, minlex,
+from sympy.utilities.iterables import (flatten, has_variety,
     has_dups, runs, is_sequence)
 from sympy.utilities.misc import as_int
 from sympy.external.gmpy import factorial
@@ -1161,8 +1161,6 @@ class Permutation(Atom):
                     unchecked[j] = False
                 if len(cycle) > 1:
                     cyclic_form.append(cycle)
-                    assert cycle == list(minlex(cycle))
-        cyclic_form.sort()
         self._cyclic_form = cyclic_form.copy()
         return cyclic_form
 

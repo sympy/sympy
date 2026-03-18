@@ -81,6 +81,27 @@ class TestUpdateArgsWithPaths:
         assert args == expected
 
     @staticmethod
+    def test_nonexistent_path_raises_error():
+        with pytest.raises(FileNotFoundError, match='doesnotexist'):
+            update_args_with_paths(paths=['doesnotexist'], keywords=None, args=[])
+
+    @staticmethod
+    def test_missing_path_with_other_valid_paths_raises_error():
+        paths = ['sympy/core/tests/test_basic.py', 'doesnotexist']
+        with pytest.raises(FileNotFoundError, match='doesnotexist'):
+            update_args_with_paths(paths=paths, keywords=None, args=[])
+
+    @staticmethod
+    def test_multiple_nested_paths_do_not_raise_error():
+        # Ensure that directory pruning on sympy/core does not cause the second
+        # pattern to fail
+        paths = ['/core', 'test_sympify.py']
+        args = update_args_with_paths(paths=paths, keywords=None, args=[])
+        expected_paths = ['sympy/core', 'sympy/core/tests/test_sympify.py']
+        for expected in expected_paths:
+            assert any(expected in Path(arg).as_posix() for arg in args)
+
+    @staticmethod
     @pytest.mark.parametrize(
         'paths, expected_paths',
         [

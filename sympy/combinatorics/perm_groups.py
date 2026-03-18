@@ -2107,7 +2107,7 @@ class PermutationGroup(Basic):
         d_gr = gr.degree
         if self.is_trivial and (d_self == d_gr or not strict):
             return True
-        if self._is_abelian:
+        if gr._is_abelian:
             return True
         new_self = self.copy()
         if not strict and d_self != d_gr:
@@ -5059,7 +5059,7 @@ class PermutationGroup(Basic):
             C_p = G_p.coset_enumeration([], strategy="coset_table",
                                 draft=C_p, max_cosets=n, incomplete=True)
 
-        self._fp_presentation = simplify_presentation(G_p)
+        self._fp_presentation = simplify_presentation(G_p, change_gens=eliminate_gens)
         return self._fp_presentation
 
     def polycyclic_group(self):

@@ -141,7 +141,7 @@ class Inertia(namedtuple('Inertia', ['dyadic', 'point'])):
         Explanation
         ===========
 
-        This class method uses the :func`~.inertia` to create the Dyadic based
+        This class method uses the :func:`~.inertia` to create the Dyadic based
         on the tensor values.
 
         Parameters
