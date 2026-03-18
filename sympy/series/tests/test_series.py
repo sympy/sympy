@@ -7,13 +7,14 @@ from sympy.functions.elementary.exponential import (LambertW, exp, log)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (atan, cos, sin)
 from sympy.functions.special.gamma_functions import gamma
+from sympy.functions.special.error_functions import erf
 from sympy.integrals.integrals import Integral, integrate
 from sympy.series.order import O
 from sympy.series.series import series
 from sympy.abc import x, y, n, k
 from sympy.testing.pytest import raises
 from sympy.core import EulerGamma
-from sympy import symbols, erf, oo, series, exp
+from sympy import symbols, oo, series, exp
 
 def test_sin():
     e1 = sin(x).series(x, 0)
@@ -423,5 +424,5 @@ def test_issue_26856():
 
 def test_issue_27109():
     x = symbols('x', positive=True)
-    s= series(2*erf(x), x, oo, 3)
+    s = series(2*erf(x), x, oo, 3)
     assert s.has(exp(-x**2)/x)
