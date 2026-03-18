@@ -522,7 +522,6 @@ def ask(proposition, assumptions=True, context=global_assumptions):
 
     proposition = sympify(proposition)
     assumptions = sympify(assumptions)
-    
     if isinstance(proposition, Predicate) or proposition.kind is not BooleanKind:
         raise TypeError("proposition must be a valid logical expression")
 
