@@ -115,6 +115,23 @@ def test_Poly_mixed_operations():
         p + exp(x)
     with warns_deprecated_sympy():
         p - exp(x)
+def test_multivariate_div_ordering_issue_20640():
+    """Test multivariate division generator ordering - fixes #20640"""
+    x, y = symbols('x y')
+    
+    # Failing case
+    p = Poly(x**2 + y, x, y, domain=QQ)
+    p0 = Poly(y, x, y, domain=QQ)
+    q, r = div(p, p0)
+    assert q == Poly(1, x, y, domain=QQ), "Wrong quotient"
+    assert r == Poly(x**2, x, y, domain=QQ), "Wrong remainder"    
+    # Working case (different order)
+    p2 = Poly(x**2 + y, y, x, domain=QQ)
+    p02 = Poly(y, y, x, domain=QQ)
+    q2, r2 = div(p2, p02)
+    assert q2 == Poly(1, y, x, domain=QQ)
+    assert r2 == Poly(x**2, y, x, domain=QQ)
+
 
 
 def test_Poly_from_dict():
