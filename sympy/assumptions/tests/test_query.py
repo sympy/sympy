@@ -24,9 +24,6 @@ from sympy.matrices import Matrix, SparseMatrix
 from sympy.testing.pytest import XFAIL, slow, raises,  _both_exp_pow
 import math
 
-from sympy import ask, Q, pi,oo # for def test_issue_29433_zero_substitution_infinite():
-from sympy.abc import x, n
-
 def test_int_1():
     z = 1
     assert ask(Q.commutative(z)) is True
