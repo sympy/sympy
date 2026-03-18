@@ -118,13 +118,12 @@ def test_Poly_mixed_operations():
 def test_multivariate_div_ordering_issue_20640():
     """Test multivariate division generator ordering - fixes #20640"""
     x, y = symbols('x y')
-    
     # Failing case
     p = Poly(x**2 + y, x, y, domain=QQ)
     p0 = Poly(y, x, y, domain=QQ)
     q, r = div(p, p0)
     assert q == Poly(1, x, y, domain=QQ), "Wrong quotient"
-    assert r == Poly(x**2, x, y, domain=QQ), "Wrong remainder"    
+    assert r == Poly(x**2, x, y, domain=QQ), "Wrong remainder"
     # Working case (different order)
     p2 = Poly(x**2 + y, y, x, domain=QQ)
     p02 = Poly(y, y, x, domain=QQ)
