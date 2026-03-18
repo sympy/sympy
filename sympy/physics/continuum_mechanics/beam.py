@@ -3,7 +3,7 @@ This module can be used to solve 2D beam bending problems with
 singularity functions in mechanics.
 """
 from __future__ import annotations
-from sympy.core import S, Symbol, symbols
+from sympy.core import S, Symbol, diff, symbols
 from sympy.core.add import Add
 from sympy.core.expr import Expr
 from sympy.core.function import (Derivative, Function)
@@ -1388,59 +1388,42 @@ class Beam:
         E = self.elastic_modulus
         I = self.second_moment
 
-        C3, C4 = symbols(self._base_char + '3:5') if self._base_char else symbols("C3 C4")
-        bending_moment_eqn = self.bending_moment()
-        slope_eqn = -integrate(bending_moment_eqn/(E*I), x) + C3
-        deflection_eqn = integrate(slope_eqn, x) + C4
-        eqns = {
-            "bending_moment": bending_moment_eqn,
-            "slope": slope_eqn,
-            "deflection": deflection_eqn
-        }
-
-        if isinstance(I, Piecewise):
-            lower_limit = 0
+        if not self._boundary_conditions['slope']:
+            return diff(self.deflection(), x)
+        if isinstance(I, Piecewise) and self._joined_beam:
+            args = I.args
+            slope = 0
             prev_slope = 0
-            slope_eqn = 0
-            for second_moment in I.args:
-                upper_limit = second_moment[-1].args[-1]
-                M = Add(*[term for term in bending_moment_eqn.args if term.args[-1].args[1] < upper_limit])
-                slope = -integrate(M/(E*second_moment[0]), (x, lower_limit, x)) + prev_slope
-                slope_eqn += slope*SingularityFunction(x, lower_limit, 0)
-                if second_moment != I.args[-1]:
-                    slope_eqn += -slope*SingularityFunction(x, upper_limit, 0)
-                prev_slope = slope.subs(x, upper_limit)
-                lower_limit = upper_limit
+            prev_end = 0
+            for i in range(len(args)):
+                if i != 0:
+                    prev_end = args[i-1][1].args[1]
+                slope_value = -S.One/E*integrate(self.bending_moment()/args[i][0], (x, prev_end, x))
+                if i != len(args) - 1:
+                    slope += (prev_slope + slope_value)*SingularityFunction(x, prev_end, 0) - \
+                        (prev_slope + slope_value)*SingularityFunction(x, args[i][1].args[1], 0)
+                else:
+                    slope += (prev_slope + slope_value)*SingularityFunction(x, prev_end, 0)
+                prev_slope = slope_value.subs(x, args[i][1].args[1])
+            return slope
 
-            return slope_eqn
+        C3 = Symbol('C3')
+        slope_curve = -integrate(S.One/(E*I)*self.bending_moment(), x) + C3
 
-        if not self._boundary_conditions['deflection'] and not self._boundary_conditions['slope']:
-            return slope_eqn
-
-        bc_eqns = []
         C3_eqn = False # Flag for eqn containing C3
-        C4_eqn = False # Flag for eqn containing C4
-        for curve, eqn in eqns.items():
-            if curve in ["slope", "deflection"]:
-                if C3_eqn and C4_eqn:
-                    break
-                for position, value in self._boundary_conditions[curve]:
-                    if C3_eqn and C4_eqn:
-                        break
-                    eq = eqn.subs(x, position) - value
-                    if not Abs(eq).has(oo) and eq not in bc_eqns:
-                        if eq.has(C3) and not C3_eqn:
-                            bc_eqns.append(eq)
-                            C3_eqn = True
-                        elif eq.has(C4) and not C4_eqn:
-                            bc_eqns.append(eq)
-                            C4_eqn = True
+        bc_eqs = []
+        for position, value in self._boundary_conditions['slope']:
+            if C3_eqn:
+                break
+            eqs = slope_curve.subs(x, position) - value
+            if not Abs(eqs).has(oo) and eqs not in bc_eqs:
+                if eqs.has(C3) and not C3_eqn:
+                    bc_eqs.append(eqs)
+                    C3_eqn = True
 
-        constants = linsolve(bc_eqns[:2], (C3, C4)).args[0]
-        slope_eqn = slope_eqn.subs({C3: constants[0]})
-
-        return slope_eqn
-
+        constants = list(linsolve(bc_eqs, C3))
+        slope_curve = slope_curve.subs({C3: constants[0][0]})
+        return slope_curve
 
     def deflection(self):
         """
@@ -1477,62 +1460,116 @@ class Beam:
         x = self.variable
         E = self.elastic_modulus
         I = self.second_moment
-        C3, C4 = symbols(self._base_char + '3:5') if self._base_char else symbols("C3 C4")
-        shear_force = self.shear_force()
-        bending_moment_eqn = self.bending_moment()
-        slope_eqn = -integrate(bending_moment_eqn/(E*I), x) + C3
-        deflection_eqn = integrate(slope_eqn, x) + C4
-        eqns = {
-            "shear_force": shear_force,
-            "bending_moment": bending_moment_eqn,
-            "slope": slope_eqn,
-            "deflection": deflection_eqn
-        }
-
-        if isinstance(I, Piecewise):
-            lower_limit = 0
-            prev_slope = 0
-            prev_deflection = 0
-            deflection_eqn = 0
-            for second_moment in I.args:
-                upper_limit = second_moment[-1].args[-1]
-                M = Add(*[term for term in bending_moment_eqn.args if term.args[-1].args[1] < upper_limit])
-                slope = -integrate(M/(E*second_moment[0]), (x, lower_limit, x)) + prev_slope
-                deflection = integrate(slope, (x, lower_limit, x)) + prev_deflection
-                deflection_eqn += deflection*SingularityFunction(x, lower_limit, 0)
-                if second_moment != I.args[-1]:
-                    deflection_eqn += -deflection*SingularityFunction(x, upper_limit, 0)
-                prev_slope = slope.subs(x, upper_limit)
-                prev_deflection = deflection.subs(x, upper_limit)
-                lower_limit = upper_limit
-
-            return deflection_eqn
-
         if not self._boundary_conditions['deflection'] and not self._boundary_conditions['slope']:
-            return deflection_eqn
-
-        bc_eqns = []
-        C3_eqn = False # Flag for eqn containing C3
-        C4_eqn = False # Flag for eqn containing C4
-        for curve, eqn in eqns.items():
-            if C3_eqn and C4_eqn:
-                break
-            for position, value in self._boundary_conditions[curve]:
+            if isinstance(I, Piecewise) and self._joined_beam:
+                args = I.args
+                prev_slope = 0
+                prev_def = 0
+                prev_end = 0
+                deflection = 0
+                for i in range(len(args)):
+                    if i != 0:
+                        prev_end = args[i-1][1].args[1]
+                    slope_value = -S.One/E*integrate(self.bending_moment()/args[i][0], (x, prev_end, x))
+                    recent_segment_slope = prev_slope + slope_value
+                    deflection_value = integrate(recent_segment_slope, (x, prev_end, x))
+                    if i != len(args) - 1:
+                        deflection += (prev_def + deflection_value)*SingularityFunction(x, prev_end, 0) \
+                            - (prev_def + deflection_value)*SingularityFunction(x, args[i][1].args[1], 0)
+                    else:
+                        deflection += (prev_def + deflection_value)*SingularityFunction(x, prev_end, 0)
+                    prev_slope = slope_value.subs(x, args[i][1].args[1])
+                    prev_def = deflection_value.subs(x, args[i][1].args[1])
+                return deflection
+            base_char = self._base_char
+            constants = symbols(base_char + '3:5')
+            return S.One/(E*I)*integrate(-integrate(self.bending_moment(), x), x) + constants[0]*x + constants[1]
+        elif not self._boundary_conditions['deflection']:
+            base_char = self._base_char
+            constant = symbols(base_char + '4')
+            return integrate(self.slope(), x) + constant
+        elif not self._boundary_conditions['slope'] and self._boundary_conditions['deflection']:
+            if isinstance(I, Piecewise) and self._joined_beam:
+                args = I.args
+                prev_slope = 0
+                prev_def = 0
+                prev_end = 0
+                deflection = 0
+                for i in range(len(args)):
+                    if i != 0:
+                        prev_end = args[i-1][1].args[1]
+                    slope_value = -S.One/E*integrate(self.bending_moment()/args[i][0], (x, prev_end, x))
+                    recent_segment_slope = prev_slope + slope_value
+                    deflection_value = integrate(recent_segment_slope, (x, prev_end, x))
+                    if i != len(args) - 1:
+                        deflection += (prev_def + deflection_value)*SingularityFunction(x, prev_end, 0) \
+                            - (prev_def + deflection_value)*SingularityFunction(x, args[i][1].args[1], 0)
+                    else:
+                        deflection += (prev_def + deflection_value)*SingularityFunction(x, prev_end, 0)
+                    prev_slope = slope_value.subs(x, args[i][1].args[1])
+                    prev_def = deflection_value.subs(x, args[i][1].args[1])
+                return deflection
+            base_char = self._base_char
+            C3, C4 = symbols(base_char + '3:5')    # Integration constants
+            slope_curve = -integrate(self.bending_moment(), x) + C3
+            deflection_curve = integrate(slope_curve, x) + C4
+            bc_eqs = []
+            C3_eqn = False # Flag for eqn containing C3
+            C4_eqn = False # Flag for eqn containing C4
+            for position, value in self._boundary_conditions['deflection']:
                 if C3_eqn and C4_eqn:
                     break
-                eq = eqn.subs(x, position) - value
-                if not Abs(eq).has(oo) and eq not in bc_eqns:
-                    if eq.has(C3) and not C3_eqn:
-                        bc_eqns.append(eq)
+                eqs = deflection_curve.subs(x, position) - value
+                if not Abs(eqs).has(oo) and eqs not in bc_eqs:
+                    if eqs.has(C3) and not C3_eqn:
+                        bc_eqs.append(eqs)
                         C3_eqn = True
-                    elif eq.has(C4) and not C4_eqn:
-                        bc_eqns.append(eq)
+                    elif eqs.has(C4) and not C4_eqn:
+                        bc_eqs.append(eqs)
                         C4_eqn = True
 
-        constants = linsolve(bc_eqns, (C3, C4)).args[0]
-        deflection_eqn = deflection_eqn.subs({C3: constants[0], C4: constants[1]})
+            constants = list(linsolve(bc_eqs, (C3, C4)))
+            deflection_curve = deflection_curve.subs({C3: constants[0][0], C4: constants[0][1]})
+            return S.One/(E*I)*deflection_curve
 
-        return deflection_eqn
+        if isinstance(I, Piecewise) and self._joined_beam:
+            args = I.args
+            prev_slope = 0
+            prev_def = 0
+            prev_end = 0
+            deflection = 0
+            for i in range(len(args)):
+                if i != 0:
+                    prev_end = args[i-1][1].args[1]
+                slope_value = S.One/E*integrate(self.bending_moment()/args[i][0], (x, prev_end, x))
+                recent_segment_slope = prev_slope + slope_value
+                deflection_value = integrate(recent_segment_slope, (x, prev_end, x))
+                if i != len(args) - 1:
+                    deflection += (prev_def + deflection_value)*SingularityFunction(x, prev_end, 0) \
+                        - (prev_def + deflection_value)*SingularityFunction(x, args[i][1].args[1], 0)
+                else:
+                    deflection += (prev_def + deflection_value)*SingularityFunction(x, prev_end, 0)
+                prev_slope = slope_value.subs(x, args[i][1].args[1])
+                prev_def = deflection_value.subs(x, args[i][1].args[1])
+            return deflection
+
+        C4 = Symbol('C4')
+        deflection_curve = integrate(self.slope(), x) + C4
+
+        C4_eqn = False # Flag for eqn containing C4
+        bc_eqs = []
+        for position, value in self._boundary_conditions['deflection']:
+            if C4_eqn:
+                break
+            eqs = deflection_curve.subs(x, position) - value
+            if not Abs(eqs).has(oo) and eqs not in bc_eqs:
+                if eqs.has(C4) and not C4_eqn:
+                    bc_eqs.append(eqs)
+                    C4_eqn = True
+
+        constants = list(linsolve(bc_eqs, C4))
+        deflection_curve = deflection_curve.subs({C4: constants[0][0]})
+        return deflection_curve
 
     def max_deflection(self):
         """
