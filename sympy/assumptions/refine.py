@@ -476,14 +476,16 @@ def refine_sin_cos(expr, assumptions):
     rem = sum(remaining_terms) + sum_of_parity_unknown_coeffs * S.Pi / 2
     if k_is_even:
         pow_expr = (-1)**(k / 2)
-        refined_pow = refine_Pow(pow_expr, assumptions)
-        return (pow_expr if refined_pow is None else refined_pow) * cos(rem)
+        if isinstance(pow_expr, Pow):
+           refined_pow = refine_Pow(pow_expr, assumptions)
+           pow_expr = refined_pow if refined_pow is not None else pow_expr
+        return pow_expr * cos(rem)
     else:
-        pow_expr = (-1)**((k + 1) / 2)
-        refined_pow = refine_Pow(pow_expr, assumptions)
-        return (pow_expr if refined_pow is None else refined_pow) * sin(rem)
-
-
+         pow_expr = (-1)**((k + 1) / 2)
+         if isinstance(pow_expr, Pow):
+           refined_pow = refine_Pow(pow_expr, assumptions)
+           pow_expr = refined_pow if refined_pow is not None else pow_expr
+         return pow_expr * sin(rem)
 def refine_floor_ceiling(expr, assumptions):
     """
     Handler for the floor and ceiling functions
