@@ -46,7 +46,7 @@ def lra_satask(proposition, assumptions=True, context=global_assumptions):
 
     # Use unit clauses from `assumptions_encoded_cnf` to
     # try to deduce if expressions are real or extended real.
-    reverse_encoding = {value: key for key, value in assumptions_encoded_cnf.encoding.items()}
+    reverse_encoding = assumptions_encoded_cnf.reverse_encoding
     real_exprs = set()
     extended_real_exprs = set()
     for unit_clause in assumptions_encoded_cnf.data:
@@ -217,7 +217,7 @@ def _preprocess(enc_cnf, real_exprs):
     >>> Q.gt(x, 0) in r.encoding and Q.lt(y, 0) in r.encoding and len(r.data) == 2
     True
     """
-    rev_encoding = {value: key for key, value in enc_cnf.encoding.items()}
+    rev_encoding = enc_cnf.reverse_encoding
     new_encoding = {}
     new_data = []
 
