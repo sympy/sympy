@@ -127,6 +127,7 @@ def test_extended_real_number_line():
     assert lra_satask(a > c, (a > b) & (b > c)) is True
     assert lra_satask(2*a > 0, 2*a > 1) is True
     assert lra_satask(a**2 > 0, a**2 > 1) is True
+    assert lra_satask(a > b, (a - 2*b > 0) & Q.real(a) & Q.positive(b)) is True
 
     # TODO: Make this give `False` instead of `None`. (Probably very hard).
     assert ask(a > b, Q.extended_real(a) & Q.extended_real(b) & Q.eq(b, c) & Q.positive_infinite(c)) is None
@@ -191,7 +192,7 @@ def test_failing_number_line_properties():
     # From:
     # https://en.wikipedia.org/wiki/Inequality_(mathematics)#Properties_on_the_number_line
 
-    a, b, c = symbols("a b c", real=True)
+    a, b, c, x = symbols("a b c x", real=True)
 
     # Multiplication and division
     # If a <= b and c > 0, then ac <= bc and a/c <= b/c. (True for non-zero c)

@@ -483,7 +483,7 @@ def ask(proposition, assumptions=True, context=global_assumptions):
 
     >>> ask(Q.positive(x), x > 0)
     True
-    >>> ask(x > y, (x - 2*y > 0) & Q.real(x) & Q.real(y))
+    >>> ask(x > y, (x - 2*y > 0) & Q.real(x) & Q.positive(y))
     True
     >>> ask(x + 1 > x, Q.real(x))
     True
@@ -492,7 +492,8 @@ def ask(proposition, assumptions=True, context=global_assumptions):
 
     In some cases, you may need to specify that the variables are real.
 
-    >>> ask(x > y, (x - 2*y > 0)) # Gives `None`
+    >>> print(ask(x > y, (x - 2*y > 0)))
+    None
 
     This happens because the assumption `x - 2*y > 0` does not guarantee
     that `x - 2*y > 0` is finite; `x > y` could be false if x = oo.

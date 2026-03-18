@@ -2,24 +2,17 @@ from __future__ import annotations
 from sympy.assumptions.assume import global_assumptions
 from sympy.assumptions.cnf import CNF, EncodedCNF
 from sympy.assumptions.ask import Q
-from sympy.core.add import Add
 from sympy.core.numbers import I
-from sympy.core.symbol import Symbol
 from sympy.logic.inference import satisfiable
-from sympy.logic.algorithms.lra_theory import UnhandledInput, ALLOWED_PRED
-from sympy.matrices.kind import MatrixKind
+from sympy.logic.algorithms.lra_theory import UnhandledInput
 from sympy.core.kind import NumberKind
 from sympy.assumptions.assume import AppliedPredicate
-from sympy.core.mul import Mul
 from sympy.core.singleton import S
 
 
 REAL_PREDICATES = {Q.real, Q.positive, Q.negative, Q.zero, Q.nonzero, Q.nonpositive, Q.nonnegative}
 EXTENDED_REAL_PREDICATES = {Q.extended_real, Q.extended_positive, Q.extended_negative, Q.extended_nonpositive,
     Q.extended_nonnegative, Q.extended_nonzero, Q.positive_infinite, Q.negative_infinite, Q.gt, Q.lt, Q.ge, Q.le}
-
-
-HANDLED_PREDICATES = EXTENED_REAL_IMPLYING_PREDICATES | {Q.ne}
 
 def lra_satask(proposition, assumptions=True, context=global_assumptions):
     """
@@ -50,9 +43,8 @@ def lra_satask(proposition, assumptions=True, context=global_assumptions):
     real_exprs = set()
     extended_real_exprs = set()
     for unit_clause in assumptions_encoded_cnf.data:
-        # Check if `unit_clause` is a unit clause.
         if len(unit_clause) != 1:
-            continue
+            continue # Not a unit clause.
 
         # Negated predicates cannot establish that
         # an expression is real (or extended real).
@@ -69,8 +61,6 @@ def lra_satask(proposition, assumptions=True, context=global_assumptions):
         if applied_predicate.function in EXTENDED_REAL_PREDICATES:
             extended_real_exprs.update(applied_predicate.arguments)
 
-
-    # SATIFSIABLE STARTED HERE
 
     factbase = assumptions_encoded_cnf
     sat_true = factbase.copy()
@@ -105,14 +95,7 @@ def lra_satask(proposition, assumptions=True, context=global_assumptions):
         assumptions_encoded_cnf.data.append([applied_predicate_encoding])
 
 
-<<<<<<< HEAD
     all_symbols = set()
-=======
-
-    for pred in all_pred:
-        if pred.function not in HANDLED_PREDICATES:
-            raise UnhandledInput(f"LRASolver: {pred} is an unhandled predicate")
->>>>>>> 70850820c1 (Create HANDLED_PREDICATES for readablity)
     for expr in all_exprs:
         if expr.kind != NumberKind:
             raise UnhandledInput(f"LRASolver: Only scalar expresions are supported. {expr} must be of {NumberKind} but is of {expr.kind} instead.")
@@ -127,11 +110,11 @@ def lra_satask(proposition, assumptions=True, context=global_assumptions):
         # is not handled because `x` and `x + 1` are not variable disjoint.
         # We have to be careful because `x > x + 1` may be False if x=oo.
         if expr in extended_real_exprs and expr not in real_exprs:
-            if all_symbols.isdisjoint(expr.free_symbols):
-                all_symbols.update(expr.free_symbols)
-                continue
+            if not all_symbols.isdisjoint(expr.free_symbols):
+                raise UnhandledInput("LRASolver: Extended real expressions are not variable disjoint.")
 
-            raise UnhandledInput(f"LRASolver: Extended real expressions are not variable disjoint.")
+            all_symbols.update(expr.free_symbols)
+
 
 
     for pred in all_pred:
@@ -141,15 +124,6 @@ def lra_satask(proposition, assumptions=True, context=global_assumptions):
                 raise UnhandledInput(f"LRASolver: {pred} is an unhandled predicate")
 
 
-    # check satisfiable
-
-    # factbase = assumptions_encoded_cnf
-    # sat_true = factbase.copy()
-    # sat_false = factbase.copy()
-    # sat_true.add_from_cnf(props)
-    # sat_false.add_from_cnf(_props)
-
-
     # Preprocess sat_true and sat_false into encoded CNFs containing only
     # Q.eq, Q.gt, Q.lt, Q.ge, Q.le, Q.eq, and Q.real predicates. It does the following
     # transformations:
@@ -157,8 +131,8 @@ def lra_satask(proposition, assumptions=True, context=global_assumptions):
     # - Q.extended_positive -> Q.gt, Q.extended_negative -> Q.lt, etc.
     # - Q.ne, ~Q.eq, Q.nonzero -> disjunction of inequalities (e.g. x != 3  =>  x < 3 OR x > 3)
     # - Q.extended_real -> True
-    # - Q.real -> True or Q.real depending on whether the expr is known to be real
-    # and converts negated Q.ne into equalities.
+    # - Q.real -> True or Q.real depending on whether the expr is known to be real.
+    # - ~Q.ne -> Q.eq
     sat_true = _preprocess(sat_true, real_exprs)
     sat_false = _preprocess(sat_false, real_exprs)
 
@@ -187,33 +161,33 @@ def _preprocess(enc_cnf, real_exprs):
     >>> from sympy.assumptions.lra_satask import _preprocess
     >>> x, y = symbols('x y')
 
-    >>> r = _preprocess(EncodedCNF([[1]], {Q.positive(x): 1}), {x}, set())
+    >>> r = _preprocess(EncodedCNF([[1]], {Q.positive(x): 1}), {x})
     >>> Q.gt(x, 0) in r.encoding and Q.positive(x) not in r.encoding
     True
 
-    >>> r = _preprocess(EncodedCNF([[1]], {Q.nonzero(x): 1}), {x}, set())
+    >>> r = _preprocess(EncodedCNF([[1]], {Q.nonzero(x): 1}), {x})
     >>> Q.gt(x, 0) in r.encoding and Q.lt(x, 0) in r.encoding and len(r.data[0]) == 2
     True
 
-    >>> r = _preprocess(EncodedCNF([[-1]], {Q.eq(x, y): 1}), {x, y}, set())
+    >>> r = _preprocess(EncodedCNF([[-1]], {Q.eq(x, y): 1}), {x, y})
     >>> Q.gt(x, y) in r.encoding and Q.lt(x, y) in r.encoding and len(r.data[0]) == 2
     True
 
-    >>> r = _preprocess(EncodedCNF([[-1]], {Q.ne(x, y): 1}), {x, y}, set())
+    >>> r = _preprocess(EncodedCNF([[-1]], {Q.ne(x, y): 1}), {x, y})
     >>> Q.eq(x, y) in r.encoding and len(r.data[0]) == 1
     True
 
-    >>> Q.gt(x, 0) in _preprocess(EncodedCNF([[1]], {Q.extended_positive(x): 1}), set(), {x}).encoding
+    >>> Q.gt(x, 0) in _preprocess(EncodedCNF([[1]], {Q.extended_positive(x): 1}), set()).encoding
     True
 
-    >>> r = _preprocess(EncodedCNF([[1]], {Q.real(x): 1}), {x}, set())
+    >>> r = _preprocess(EncodedCNF([[1]], {Q.real(x): 1}), {x})
     >>> True in r.encoding and Q.real(x) not in r.encoding
     True
 
-    >>> Q.real(x) in _preprocess(EncodedCNF([[1]], {Q.real(x): 1}), set(), {x}).encoding
+    >>> Q.real(x) in _preprocess(EncodedCNF([[1]], {Q.real(x): 1}), set()).encoding
     True
 
-    >>> r = _preprocess(EncodedCNF([[1], [2]], {Q.positive(x): 1, Q.negative(y): 2}), {x, y}, set())
+    >>> r = _preprocess(EncodedCNF([[1], [2]], {Q.positive(x): 1, Q.negative(y): 2}), {x, y})
     >>> Q.gt(x, 0) in r.encoding and Q.lt(y, 0) in r.encoding and len(r.data) == 2
     True
     """
@@ -228,7 +202,6 @@ def _preprocess(enc_cnf, real_exprs):
 
     for clause in enc_cnf.data:
         new_clause = []
-        skip_new_clause = False
         for lit in clause:
             if lit == 0:
                 # TODO: Add tests for this and look into if it's actually needed.
@@ -254,23 +227,11 @@ def _preprocess(enc_cnf, real_exprs):
                 if prop.arguments[0] in real_exprs:
                     prop = False
                 else:
-                    raise UnhandledInput(f"LRASolver: Q.positive_infinite and Q.negative_infinite are not fully handled yet.")
+                    raise UnhandledInput("LRASolver: Q.positive_infinite and Q.negative_infinite are not fully handled yet.")
 
             if prop in (True, False):
                 new_clause.append(sign * get_enc(prop))
                 continue
-
-            # if prop is False:
-            #     # This might result in new_clause to be empty
-            #     # which is intended. In that case, the sat
-            #     # solver will give unsat.
-            #     continue
-            # if prop is True:
-            #     # This could result in new_data to be empty which
-            #     # is intended. In that case, the sat solver will
-            #     # give sat.
-            #     skip_new_clause = True
-            #     break
 
             prop = _pred_to_binrel(prop)
 
@@ -283,14 +244,10 @@ def _preprocess(enc_cnf, real_exprs):
                 arg1, arg2 = prop.arguments
                 new_clause.append(get_enc(Q.eq(arg1, arg2)))
             else:
-                # Standard predicates
                 if prop.function not in (Q.gt, Q.lt, Q.ge, Q.le, Q.eq):
-                    pass
-                assert prop.function in (Q.gt, Q.lt, Q.ge, Q.le, Q.eq)
+                    raise ValueError(f"Unexpected proposition function: {prop.function}")
                 new_clause.append(sign * get_enc(prop))
 
-        if skip_new_clause:
-            continue
         new_data.append(new_clause)
 
     return EncodedCNF(new_data, new_encoding)
@@ -334,8 +291,6 @@ def extract_assumption_from_old_assumption(expr):
     if there are any. Otherwise, it either returns None or raises an exception
     if a dissallowed assumption is present.
 
-    Gives a
-
     Example
     =======
     >>> from sympy.assumptions.lra_satask import extract_assumption_from_old_assumption
@@ -363,11 +318,11 @@ def extract_assumption_from_old_assumption(expr):
             return None, None, True
         return None, None, None
 
-    if expr.is_integer == True and expr.is_zero != True:
+    if expr.is_integer is True and expr.is_zero is not True:
         raise UnhandledInput(f"LRASolver: {expr} is an integer")
-    if expr.is_integer == False:
+    if expr.is_integer is False:
         raise UnhandledInput(f"LRASolver: {expr} can't be an integer")
-    if expr.is_rational == False:
+    if expr.is_rational is False:
         raise UnhandledInput(f"LRASolver: {expr} is irational")
 
     if expr.is_zero:
