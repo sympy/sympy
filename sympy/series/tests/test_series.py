@@ -425,6 +425,5 @@ def test_issue_26856():
 def test_issue_27109():
     x = symbols('x', positive=True)
     s= series(2*erf(x), x, oo, 3)
-    
     #ensure the exponential asymptotic term is presevered
     assert s.has(exp(-x**2)/x)
