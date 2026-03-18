@@ -23,6 +23,8 @@ from sympy.logic.boolalg import Equivalent, Implies, Xor, And, to_cnf
 from sympy.matrices import Matrix, SparseMatrix
 from sympy.testing.pytest import XFAIL, slow, raises,  _both_exp_pow
 import math
+from sympy import ask, Q, pi,oo # for def test_issue_29433_zero_substitution_infinite():
+from sympy.abc import x, n
 
 
 def test_int_1():
@@ -1802,6 +1804,13 @@ def test_zero():
     assert ask(Q.zero(x), Q.even(x)) is None
     assert ask(Q.zero(x), Q.odd(x)) is False
     assert ask(Q.zero(x) | Q.zero(y), Q.zero(x*y)) is True
+
+
+def test_issue_29433_zero_substitution_infinite():
+    # Previously raised ValueError due to inconsistent assumptions(issue #29433)
+    assert ask(Q.infinite(x + n*pi), Q.zero(n)) is None 
+    assert ask(Q.infinite(n*x), Q.zero(n)) is False  #n = 0 ⇒ n*x = 0 ⇒ not infinite
+    assert ask(Q.infinite(oo + n*pi),Q.zero(n)) is True  # oo + 0 ⇒ oo ⇒ infinite
 
 
 def test_odd_query():
