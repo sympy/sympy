@@ -9,7 +9,7 @@ from sympy.core.kind import BooleanKind
 from sympy.core.relational import Eq, Ne, Gt, Lt, Ge, Le
 from sympy.logic.inference import satisfiable
 from sympy.utilities.decorator import memoize_property
-
+from sympy import Function
 
 # Memoization is necessary for the properties of AssumptionKeys to
 # ensure that only one object of Predicate objects are created.
@@ -402,6 +402,30 @@ def _normalize_expr(expr):
     expr = _normalize_applied_predicates(expr)
     return expr
 
+def _extract_substitutions(assumptions):
+    subs = {}
+    if isinstance(assumptions, AppliedPredicate):
+        if assumptions.function == Q.zero:
+            subs[assumptions.arguments[0]] = 0
+
+    elif assumptions.func.__name__ == "And":
+        for arg in assumptions.args:
+            if isinstance(arg, AppliedPredicate) and arg.function == Q.zero:
+                subs[arg.arguments[0]] = 0
+
+    return subs
+
+    if isinstance(assumptions, AppliedPredicate):
+        if assumptions.function == Q.zero:
+            subs[assumptions.arguments[0]] = 0
+
+    elif assumptions.func.__name__ == "And":
+        for arg in assumptions.args:
+            if isinstance(arg, AppliedPredicate) and arg.function == Q.zero:
+                subs[arg.arguments[0]] = 0
+
+    return subs
+
 def ask(proposition, assumptions=True, context=global_assumptions):
     """
     Function to evaluate the proposition with assumptions.
@@ -498,7 +522,7 @@ def ask(proposition, assumptions=True, context=global_assumptions):
 
     proposition = sympify(proposition)
     assumptions = sympify(assumptions)
-
+    
     if isinstance(proposition, Predicate) or proposition.kind is not BooleanKind:
         raise TypeError("proposition must be a valid logical expression")
 
@@ -509,10 +533,16 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     proposition = _normalize_expr(proposition)
     assumptions = _normalize_expr(assumptions)
 
+
     if isinstance(proposition, AppliedPredicate):
         key, args = proposition.function, proposition.arguments
     else:
         key, args = Q.is_true, (proposition,)
+
+    subs = _extract_substitutions(assumptions)
+    args = tuple(a.subs(subs) if not a.has(Function) else a for a in args)
+    if isinstance(proposition, AppliedPredicate):
+        proposition = key(*args)
 
     # convert local and global assumptions to CNF
     assump_cnf = CNF.from_prop(assumptions)
