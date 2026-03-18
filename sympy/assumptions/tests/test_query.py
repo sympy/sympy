@@ -1809,8 +1809,8 @@ def test_zero():
 def test_issue_29433_zero_substitution_infinite():
     # Previously raised ValueError due to inconsistent assumptions(issue #29433)
     assert ask(Q.infinite(x + n*pi), Q.zero(n)) is None
-    assert ask(Q.infinite(n*x), Q.zero(n)) is False  #n = 0 ⇒ n*x = 0 ⇒ not infinite
-    assert ask(Q.infinite(oo + n*pi),Q.zero(n)) is True  # oo + 0 ⇒ oo ⇒ infinite
+    assert ask(Q.infinite(n*x), Q.zero(n)) is False  #n = 0 ⇒ n*x = 0 -> not infinite
+    assert ask(Q.infinite(oo + n*pi),Q.zero(n)) is True  # oo + 0 ⇒ oo -> infinite
 
 def test_odd_query():
     assert ask(Q.odd(x)) is None
