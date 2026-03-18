@@ -250,7 +250,7 @@ def test_moment_generating_function():
     mgf = moment_generating_function(Maxwell('x', 1))(t)
     assert mgf.diff(t).subs(t, Rational(1, 10)) == \
     (301*sqrt(pi)*(2 - erfc(sqrt(2)/20))*exp(Rational(1, 200)) + 2010*sqrt(2))/(1000*sqrt(pi))
-    
+
     mgf = moment_generating_function(Normal('x', a, b))(t)
     assert mgf == exp(a*t + b**2*t**2/2)
 
