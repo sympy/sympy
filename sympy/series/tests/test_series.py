@@ -421,7 +421,6 @@ def test_issue_26856():
     raises(ValueError, lambda: (2**x).series(x, oo, -1))
 
 
-# Regression test for asymptotic series multiplication with erf at infinity
 def test_issue_27109():
     x = symbols('x', positive=True)
     s= series(2*erf(x), x, oo, 3)
