@@ -422,9 +422,9 @@ def test_issue_26856():
 
 
 # Regression test for asymptotic series multiplication with erf at infinity
-def test_series_mul_erf_asymptotics():
+def test_issue_27109():
     x = symbols('x', positive=True)
     s= series(2*erf(x), x, oo, 3)
     
     #ensure the exponential asymptotic term is presevered
-    assert s.has(exp(-x**2))
+    assert s.has(exp(-x**2)/x)
