@@ -159,8 +159,8 @@ def lra_satask(proposition, assumptions=True, context=global_assumptions):
     # - Q.extended_real -> True
     # - Q.real -> True or Q.real depending on whether the expr is known to be real
     # and converts negated Q.ne into equalities.
-    sat_true = _preprocess(sat_true, real_exprs, extended_real_exprs)
-    sat_false = _preprocess(sat_false, real_exprs, extended_real_exprs)
+    sat_true = _preprocess(sat_true, real_exprs)
+    sat_false = _preprocess(sat_false, real_exprs)
 
     can_be_true = satisfiable(sat_true, use_lra_theory=True) is not False
     can_be_false = satisfiable(sat_false, use_lra_theory=True) is not False
@@ -178,7 +178,45 @@ def lra_satask(proposition, assumptions=True, context=global_assumptions):
         raise ValueError("Inconsistent assumptions")
 
 
-def _preprocess(enc_cnf, real_exprs, possibly_infinite_extended_real_exprs):
+def _preprocess(enc_cnf, real_exprs):
+    """
+    Examples
+    ========
+    >>> from sympy import symbols, Q
+    >>> from sympy.assumptions.cnf import EncodedCNF
+    >>> from sympy.assumptions.lra_satask import _preprocess
+    >>> x, y = symbols('x y')
+
+    >>> r = _preprocess(EncodedCNF([[1]], {Q.positive(x): 1}), {x}, set())
+    >>> Q.gt(x, 0) in r.encoding and Q.positive(x) not in r.encoding
+    True
+
+    >>> r = _preprocess(EncodedCNF([[1]], {Q.nonzero(x): 1}), {x}, set())
+    >>> Q.gt(x, 0) in r.encoding and Q.lt(x, 0) in r.encoding and len(r.data[0]) == 2
+    True
+
+    >>> r = _preprocess(EncodedCNF([[-1]], {Q.eq(x, y): 1}), {x, y}, set())
+    >>> Q.gt(x, y) in r.encoding and Q.lt(x, y) in r.encoding and len(r.data[0]) == 2
+    True
+
+    >>> r = _preprocess(EncodedCNF([[-1]], {Q.ne(x, y): 1}), {x, y}, set())
+    >>> Q.eq(x, y) in r.encoding and len(r.data[0]) == 1
+    True
+
+    >>> Q.gt(x, 0) in _preprocess(EncodedCNF([[1]], {Q.extended_positive(x): 1}), set(), {x}).encoding
+    True
+
+    >>> r = _preprocess(EncodedCNF([[1]], {Q.real(x): 1}), {x}, set())
+    >>> True in r.encoding and Q.real(x) not in r.encoding
+    True
+
+    >>> Q.real(x) in _preprocess(EncodedCNF([[1]], {Q.real(x): 1}), set(), {x}).encoding
+    True
+
+    >>> r = _preprocess(EncodedCNF([[1], [2]], {Q.positive(x): 1, Q.negative(y): 2}), {x, y}, set())
+    >>> Q.gt(x, 0) in r.encoding and Q.lt(y, 0) in r.encoding and len(r.data) == 2
+    True
+    """
     rev_encoding = {value: key for key, value in enc_cnf.encoding.items()}
     new_encoding = {}
     new_data = []
