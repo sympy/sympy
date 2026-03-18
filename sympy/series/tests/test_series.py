@@ -14,7 +14,7 @@ from sympy.series.series import series
 from sympy.abc import x, y, n, k
 from sympy.testing.pytest import raises
 from sympy.core import EulerGamma
-from sympy import exp, symbols, oo, series, erf
+
 
 def test_sin():
     e1 = sin(x).series(x, 0)
