@@ -247,10 +247,6 @@ def test_moment_generating_function():
     mgf = moment_generating_function(Logistic('x', a, b))(t)
     assert mgf == exp(a*t)*beta(-b*t + 1, b*t + 1)
 
-    mgf = moment_generating_function(Maxwell('x', 1))(t)
-    assert mgf.diff(t).subs(t, Rational(1, 10)) == \
-    (301*sqrt(pi)*(2 - erfc(sqrt(2)/20))*exp(Rational(1, 200)) + 2010*sqrt(2))/(1000*sqrt(pi))
-
     mgf = moment_generating_function(Normal('x', a, b))(t)
     assert mgf == exp(a*t + b**2*t**2/2)
 
@@ -318,6 +314,11 @@ def test_moment_generating_function():
 
     mgf = moment_generating_function(Logistic('x', 1, 1))(t)
     assert mgf.diff(t).subs(t, 0) == beta(1, 1)
+
+    mgf = moment_generating_function(Maxwell('x', 1))(t)
+    assert simplify(mgf.diff(t).subs(t, Rational(1, 10)) -
+        (301*sqrt(pi)*(2 - erfc(sqrt(2)/20))*exp(Rational(1, 200))
+        + 2010*sqrt(2))/(1000*sqrt(pi))) == 0
 
     mgf = moment_generating_function(Normal('x', 0, 1))(t)
     assert mgf.diff(t).subs(t, 1) == exp(S.Half)
