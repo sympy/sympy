@@ -1972,7 +1972,7 @@ class Mul(Expr, AssocOp):
         from sympy.functions.elementary.integers import ceiling
         from sympy.series.order import Order
         from sympy import exp
-        
+
         def coeff_exp(term, x):
             # if term.has(exp):
             #     raise ValueError
