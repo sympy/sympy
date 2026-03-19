@@ -4939,7 +4939,7 @@ def _add_profiles (dict_1, dict_2): # keep keys the same, add values
     return result, cancellation_flag
 
 
-def _pow_profile (dict_, exponent, cutoff=50):
+def _pow_profile (dict_, exponent, cutoff=550):
     
     if exponent == 0:
         return {0 : 1}
