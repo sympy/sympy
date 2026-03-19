@@ -2574,7 +2574,7 @@ class LatexPrinter(Printer):
     def _print_PolyElement(self, poly):
         mul_symbol = self._settings['mul_symbol_latex']
         return poly.str(self, PRECEDENCE, "{%s}^{%d}", mul_symbol)
-    
+
     def _print_PuiseuxPoly(self, poly):
         return self._print(poly.as_expr())
 
