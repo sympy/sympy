@@ -4916,11 +4916,11 @@ def _update_args(args, key, value):
 def _mul_profiles (dict_1, dict_2): # add keys, multiply values
     result = {}
     for k, v in dict_1.items():
-         for k_, v_ in dict_2.items():
-             result[k + k_] = result.get(k + k_, 0) + v * v_
+        for k_, v_ in dict_2.items():
+            result[k + k_] = result.get(k + k_, 0) + v * v_
              
-             if result[k + k_] == 0:
-                 del result[k + k_]
+            if result[k + k_] == 0:
+                del result[k + k_]
     
     return result
 
