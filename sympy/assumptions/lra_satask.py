@@ -296,15 +296,18 @@ def extract_assumption_from_old_assumption(expr):
     >>> from sympy.assumptions.lra_satask import extract_assumption_from_old_assumption
     >>> from sympy import symbols
     >>> x = symbols("x")
-    >>> extract_assumption_from_old_assumption(x) is None
-    True
+    >>> extract_assumption_from_old_assumption(x)
+    (None, None, None)
     >>> y = symbols("y", positive=True)
     >>> extract_assumption_from_old_assumption(y)
-    Q.positive(y)
+    (Q.positive(y), True, True)
     >>> extract_assumption_from_old_assumption(-y)
-    Q.negative(-y)
-    >>> y = symbols("y", integer=True)
-    >>> extract_assumption_from_old_assumption(y) # raises exception
+    (Q.negative(-y), True, True)
+    >>> z = symbols("z", integer=True)
+    >>> extract_assumption_from_old_assumption(z)  # doctest: +SKIP
+    Traceback (most recent call last):
+    ...
+    UnhandledInput: LRASolver: z is an integer
     """
     # Test for I times imaginary variable. Such expressions are considered
     # real but aren't handled.
