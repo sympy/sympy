@@ -4926,15 +4926,17 @@ def _mul_profiles (dict_1, dict_2): # add keys, multiply values
 
 
 def _add_profiles (dict_1, dict_2): # keep keys the same, add values
-    result = dict(dict_1)
+    result            = dict(dict_1)
+    cancellation_flag = False
     
     for deg, coeff in dict_2.items():
         result[deg] = result.get(deg, 0) + coeff
         
         if result[deg] == 0:
+            cancellation_flag = True
             del result[deg]
             
-    return result
+    return result, cancellation_flag
 
 
 def _pow_profile (dict_, exponent):
@@ -4959,12 +4961,12 @@ def __degree_it (f, gen):
     if isinstance(f, Poly):
         f = f.as_expr()
     
-    profiles_stack = []
+    profiles_stack    = []
     
     for expr in postorder_traversal(f):
         
         if expr == 0:
-            return S.NegativeInfinity
+            profiles_stack.append({})
         
         elif not expr.has(gen): 
             profile = {0 : expr}
@@ -4996,7 +4998,10 @@ def __degree_it (f, gen):
             for i in range(0, len(part)):
                 if i + 1 == len(part):
                     break
-                part[i+1] = _add_profiles(part[i], part[i+1])
+                part[i+1], cancellation_flag = _add_profiles(part[i], part[i+1])
+                
+                if cancellation_flag:
+                    return None
                 
             final = part[-1]
             
@@ -5015,7 +5020,7 @@ def __degree_it (f, gen):
             exponent = exponent_profile[0]
 
             if not exponent.is_Integer or not exponent.is_nonnegative:
-                return None
+                return None 
             
             profiles_stack.append(_pow_profile(base_profile, int(exponent)))
         else:
@@ -5112,7 +5117,7 @@ def degree(f, gen=0):
     
     if not isinstance(f, Poly) or gen not in f.gens:
         d = __degree_it(f, gen)
-        if d == S.NegativeInfinity or d == None or d == 0:
+        if d == None:
             f = poly_from_expr(f, gen)[0]
             return _degree(f.degree(gen))
         else:
