@@ -5124,7 +5124,7 @@ def degree(f, gen=0):
 
     if not isinstance(f, Poly) or gen not in f.gens:
         d = __degree_it(f, gen)
-        if d == None:
+        if d is None:
             f = poly_from_expr(f, gen)[0]
             return _degree(f.degree(gen))
         else:
