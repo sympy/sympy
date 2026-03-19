@@ -64,7 +64,6 @@ def satask(proposition, assumptions=True, context=global_assumptions,
     True
 
     """
-    assumptions_arg_is_true = (assumptions is True or assumptions == S.true)
     props = CNF.from_prop(proposition)
     _props = CNF.from_prop(~proposition)
 
@@ -79,18 +78,8 @@ def satask(proposition, assumptions=True, context=global_assumptions,
     sat.add_from_cnf(assumptions)
     if context:
         sat.add_from_cnf(context_cnf)
-    try:
-        result = check_satisfiability(props, _props, sat)
-    except ValueError as e:
-        if str(e) == "Inconsistent assumptions":
-            from sympy.core.facts import InconsistentAssumptions
-            raise InconsistentAssumptions("SAT Solver", str(assumptions), False)
-        raise e
-    if result is not None and not assumptions_arg_is_true:
-        if not satisfiable(sat):
-            from sympy.core.facts import InconsistentAssumptions
-            raise InconsistentAssumptions("SAT Solver", str(assumptions), False)
-    return result
+
+    return check_satisfiability(props, _props, sat)
 
 
 def check_satisfiability(prop, _prop, factbase):
@@ -335,10 +324,6 @@ def get_all_relevant_facts(proposition, assumptions, context,
     while True:
         if i == 0:
             exprs = extract_predargs(proposition, assumptions, context)
-            if assumptions:
-                for lit in assumptions.all_predicates():
-                    if isinstance(lit, AppliedPredicate):
-                        exprs |= set(lit.arguments)
         all_exprs |= exprs
         exprs, relevant_facts = get_relevant_clsfacts(exprs, relevant_facts)
         i += 1

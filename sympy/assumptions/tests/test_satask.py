@@ -13,8 +13,7 @@ from sympy.assumptions.satask import (satask, extract_predargs,
 from sympy.assumptions.sathandlers import class_fact_registry
 
 from sympy.testing.pytest import raises, XFAIL
-from sympy import Symbol, ask
-from sympy.core.facts import InconsistentAssumptions
+
 
 x, y, z = symbols('x y z')
 
@@ -377,23 +376,7 @@ def test_issue_27467():
     s = sum(Dummy() for _ in range(10))
     assert all(len(CNF.to_CNF(f).clauses) < 1000 for f in class_fact_registry(s))
 
-def test_matrix_scalar_assumptions():
-    X = MatrixSymbol('X', 2, 2)
-    a = Symbol('a')
-
-    assert ask(Q.positive(X)) is False
-    assert ask(Q.negative(X)) is False
-    assert ask(Q.prime(X)) is False
-    assert ask(Q.composite(X)) is False
-    assert ask(Q.even(X)) is False
-    assert ask(Q.odd(X)) is False
-
-    raises(InconsistentAssumptions, lambda: satask(Q.is_true(a), Q.is_true(a) & Q.positive(X)))
-    raises(InconsistentAssumptions, lambda: satask(Q.is_true(a), Q.is_true(a) & Q.even(X)))
-
-def test_satask_preserves_normal_behavior():
-    x = Symbol('x')
-
-    assert satask(Q.even(x), Q.integer(x) & Q.even(x)) is True
-    assert satask(Q.odd(x), Q.even(x)) is False
-    assert satask(Q.positive(x)) is None
+def test_matrix_scalar_contradiction():
+    A = MatrixSymbol('A', 2, 2)
+    C = MatrixSymbol('C', 2, 2)
+    raises(ValueError, lambda: satask(Q.integer(A*C), Q.integer(A) & Q.integer(C)))

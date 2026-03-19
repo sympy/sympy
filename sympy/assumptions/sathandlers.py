@@ -331,5 +331,9 @@ def matrix_scalar_facts(expr):
         ~Q.prime(expr),
         ~Q.composite(expr),
         ~Q.even(expr),
-        ~Q.odd(expr)
+        ~Q.odd(expr),
+        ~Q.integer(expr),
+        ~Q.real(expr),
+        ~Q.rational(expr),
+        ~Q.irrational(expr)
     ]
