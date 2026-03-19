@@ -4939,17 +4939,24 @@ def _add_profiles (dict_1, dict_2): # keep keys the same, add values
     return result, cancellation_flag
 
 
-def _pow_profile (dict_, exponent):
+def _pow_profile (dict_, exponent, cutoff=50):
     
     if exponent == 0:
         return {0 : 1}
+    elif exponent == 1:
+        return dict_
     
-    result = {}
-    for deg, coeff in dict_.items():
-        k, v = deg*exponent, coeff**exponent
-        result[k] = result.get(k, 0) + v
-        
-    return result
+    if exponent > cutoff:
+        result = {}
+        for deg, coeff in dict_.items():
+            k, v = deg*exponent, coeff**exponent
+            result[k] = result.get(k, 0) + v
+        return result
+    else:
+        result = {0 : 1}
+        for _ in range(int(exponent)):
+            result = _mul_profiles(result, dict_)
+        return result
 
 from sympy import postorder_traversal
 
