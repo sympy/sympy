@@ -482,8 +482,10 @@ def refine_sin_cos(expr, assumptions):
         return pow_expr * cos(rem)
     else:
         pow_expr = (-1)**((k + 1) / 2)
-        refined_pow = refine_Pow(pow_expr, assumptions)
-        return (pow_expr if refined_pow is None else refined_pow) * sin(rem)
+        if isinstance(pow_expr, Pow):
+            refined_pow = refine_Pow(pow_expr, assumptions)
+            pow_expr = refined_pow if refined_pow is not None else pow_expr
+        return pow_expr * sin(rem)
 
 
 def refine_Heaviside(expr, assumptions):
