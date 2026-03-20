@@ -159,14 +159,6 @@ def test_float_eigenvals():
         assert abs(x-y) < 10**-9
 
 
-@XFAIL
-def test_eigen_vects():
-    m = Matrix(2, 2, [1, 0, 0, I])
-    # !!! bug because of eigenvects() or roots(x**2 + (-1 - I)*x + I, x)
-    # see issue 5292
-    assert not m.is_diagonalizable(reals_only=True)
-    raises(MatrixError, lambda: m.diagonalize(reals_only=True))
-
 def test_issue_8240():
     # Eigenvalues of large triangular matrices
     x, y = symbols('x y')
@@ -428,6 +420,9 @@ def test_diagonalize():
     P, D = m.diagonalize()
     assert allclose(P*D, m*P)
 
+    m = Matrix([[1, 0], [0, I]])
+    raises(MatrixError, lambda: m.diagonalize(reals_only=True))
+
 
 def test_is_diagonalizable():
     a, b, c = symbols('a b c')
@@ -438,6 +433,9 @@ def test_is_diagonalizable():
 
     m = Matrix(2, 2, [0, -1, 1, 0])
     assert m.is_diagonalizable()
+    assert not m.is_diagonalizable(reals_only=True)
+
+    m = Matrix([[1, 0], [0, I]])
     assert not m.is_diagonalizable(reals_only=True)
 
 
