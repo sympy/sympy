@@ -4982,7 +4982,7 @@ def __degree_it (f, gen):
             profile = {1 : 1}
             profiles_stack.append(profile)
 
-        # stack "unfolding" cases
+        # stack "unfolding" cases 
         elif expr.is_Mul:
             num_factors = len(expr.args)
             parts       = profiles_stack[-num_factors:]
