@@ -21,7 +21,7 @@ from sympy.solvers import solve, linsolve
 from sympy.sets import FiniteSet
 from sympy.solvers.solveset import solveset
 from sympy.utilities.iterables import uniq, is_sequence
-from sympy.utilities.misc import Undecidable, filldedent, func_name
+from sympy.utilities.misc import filldedent, func_name, Undecidable
 
 
 import random
