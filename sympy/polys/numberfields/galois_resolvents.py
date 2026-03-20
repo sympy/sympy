@@ -613,10 +613,10 @@ def generate_lambda_lookup(verbose=False, trial_run=False):
 
         sv = s_vars(len(X))
         head = f'lambda {", ".join(str(v) for v in sv)}:'
-        lambda_lists[k] = ',\n        '.join([
+        lambda_lists[k] = ',\n        '.join(
             f'{head} ({wrap(f)})'
             for f in symmetrized
-        ])
+        )
 
         if trial_run:
             break
@@ -627,13 +627,9 @@ def generate_lambda_lookup(verbose=False, trial_run=False):
         f"# The entire job took {total_time:.2f}s.\n"
         f"# Of this, Case (6, 1) took {time_for_61:.2f}s.\n"
         f"# The final polynomial of Case (6, 1) alone took {time_for_61_last:.2f}s.\n"
-         "resolvent_coeff_lambdas = {\n")
-
-    for k, L in lambda_lists.items():
-        table += f"    {k}: [\n"
-        table +=  "        " + L + '\n'
-        table +=  "    ],\n"
-    table += "}\n"
+         "resolvent_coeff_lambdas = {\n"
+         f"{',\n'.join(f'    {k}: [\n        {L}\n    ]' for k, L in lambda_lists.items())},\n}}\n"
+    )
     return table
 
 
