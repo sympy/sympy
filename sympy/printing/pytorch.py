@@ -14,6 +14,29 @@ import sympy
 torch = import_module('torch')
 
 
+def _torch_tensor(data, *, dtype=None, requires_grad=False):
+    """Build nested torch tensors without detaching existing tensor leaves.
+
+    ``torch.tensor([...])`` reconstructs tensors from values and severs autograd
+    history when elements already require grad. This helper preserves tensor
+    leaves by recursively combining them with ``torch.stack`` while still
+    materializing scalar constants as tensors.
+    """
+
+    if isinstance(data, (list, tuple)):
+        return torch.stack([
+            _torch_tensor(item, dtype=dtype, requires_grad=requires_grad)
+            for item in data
+        ])
+
+    if isinstance(data, torch.Tensor):
+        if dtype is not None and data.dtype != dtype:
+            return data.to(dtype=dtype)
+        return data
+
+    return torch.tensor(data, dtype=dtype, requires_grad=requires_grad)
+
+
 class TorchPrinter(ArrayPrinter, AbstractPythonCodePrinter):
 
     printmethod = "_torchcode"
@@ -229,7 +252,7 @@ class TorchPrinter(ArrayPrinter, AbstractPythonCodePrinter):
             params.append("requires_grad=True")
 
         return "{}({})".format(
-            self._module_format("torch.tensor"),
+            "_torch_tensor",
             ", ".join(params)
         )
 

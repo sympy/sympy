@@ -394,6 +394,24 @@ def test_requires_grad():
     assert abs(y_val.grad.item() - float(-sin(2.0).evalf())) < 1e-6
 
 
+def test_matrix_lambdify_preserves_autograd_graph():
+    if not torch:
+        skip("PyTorch not installed")
+
+    expr = Matrix([[x, sin(y)], [1, 2]])
+    f = lambdify([x, y], expr, 'torch')
+
+    x_val = torch.tensor(1.0, dtype=torch.float64, requires_grad=True)
+    y_val = torch.tensor(2.0, dtype=torch.float64, requires_grad=True)
+    result = f(x_val, y_val)
+
+    assert result.requires_grad
+    result.sum().backward()
+
+    assert abs(x_val.grad.item() - 1.0) < 1e-6
+    assert abs(y_val.grad.item() - float(cos(2.0).evalf())) < 1e-6
+
+
 def test_torch_multi_variable_derivatives():
     if not torch:
         skip("PyTorch not installed")

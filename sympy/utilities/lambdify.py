@@ -138,7 +138,7 @@ MODULES = {
     "cupy": (CUPY, CUPY_DEFAULT, CUPY_TRANSLATIONS, ("import cupy",)),
     "jax": (JAX, JAX_DEFAULT, JAX_TRANSLATIONS, ("import jax",)),
     "tensorflow": (TENSORFLOW, TENSORFLOW_DEFAULT, TENSORFLOW_TRANSLATIONS, ("import tensorflow",)),
-    "torch": (TORCH, TORCH_DEFAULT, TORCH_TRANSLATIONS, ("import torch",)),
+    "torch": (TORCH, TORCH_DEFAULT, TORCH_TRANSLATIONS, ("import torch", "from sympy.printing.pytorch import _torch_tensor")),
     "sympy": (SYMPY, SYMPY_DEFAULT, {}, (
         "from sympy.functions import *",
         "from sympy.matrices import *",
