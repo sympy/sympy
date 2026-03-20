@@ -1,28 +1,39 @@
 from __future__ import annotations
-from sympy.core.numbers import Rational, I, oo
-from sympy.core.relational import Eq
-from sympy.core.symbol import symbols
-from sympy.core.singleton import S
-from sympy.matrices.dense import Matrix
-from sympy.matrices.dense import randMatrix
-from sympy.assumptions.ask import Q
-from sympy.logic.boolalg import And
-from sympy.abc import x, y, z
-from sympy.assumptions.cnf import CNF, EncodedCNF
-from sympy.functions.elementary.trigonometric import cos
-from sympy.external import import_module
 
-from sympy.logic.algorithms.lra_theory import LRASolver, UnhandledInput, LRARational, HANDLE_NEGATION
-from sympy.core.random import random, choice, randint
-from sympy.core.sympify import sympify
-from sympy.ntheory.generate import randprime
-from sympy.core.relational import StrictLessThan, StrictGreaterThan
 import itertools
 
-from sympy.testing.pytest import raises, XFAIL, skip
+from sympy.abc import x, y, z
+from sympy.assumptions.ask import Q
+from sympy.assumptions.cnf import CNF, EncodedCNF
+from sympy.core.numbers import I, Rational, oo
+from sympy.core.random import choice, randint, random
+from sympy.core.relational import Eq, StrictGreaterThan, StrictLessThan
+from sympy.core.singleton import S
+from sympy.core.symbol import symbols
+from sympy.core.sympify import sympify
+from sympy.external import import_module
+from sympy.functions.elementary.trigonometric import cos
+from sympy.logic.algorithms.lra_theory import (
+    HANDLE_NEGATION,
+    LRARational,
+    LRASolver,
+    UnhandledInput,
+)
+from sympy.logic.boolalg import And
+from sympy.matrices.dense import Matrix, randMatrix
+from sympy.ntheory.generate import randprime
+from sympy.testing.pytest import XFAIL, raises, skip
 
-def make_random_problem(num_variables=2, num_constraints=2, sparsity=.1, rational=True,
-                        disable_strict = False, disable_nonstrict=False, disable_equality=False):
+
+def make_random_problem(
+    num_variables=2,
+    num_constraints=2,
+    sparsity=0.1,
+    rational=True,
+    disable_strict=False,
+    disable_nonstrict=False,
+    disable_equality=False,
+):
     def rand(sparsity=sparsity):
         if random() < sparsity:
             return sympify(0)
@@ -32,10 +43,13 @@ def make_random_problem(num_variables=2, num_constraints=2, sparsity=.1, rationa
         else:
             return randint(1, 10) * choice([-1, 1])
 
-    variables = symbols('x1:%s' % (num_variables + 1))
+    variables = symbols("x1:%s" % (num_variables + 1))
     constraints = []
     for _ in range(num_constraints):
-        lhs, rhs = sum(rand() * x for x in variables), rand(sparsity=0) # sparsity=0  bc of bug with smtlib_code
+        lhs, rhs = (
+            sum(rand() * x for x in variables),
+            rand(sparsity=0),
+        )  # sparsity=0  bc of bug with smtlib_code
         options = []
         if not disable_equality:
             options += [Eq(lhs, rhs)]
@@ -48,10 +62,12 @@ def make_random_problem(num_variables=2, num_constraints=2, sparsity=.1, rationa
 
     return constraints
 
+
 def check_if_satisfiable_with_z3(constraints):
     from sympy.external.importtools import import_module
-    from sympy.printing.smtlib import smtlib_code
     from sympy.logic.boolalg import And
+    from sympy.printing.smtlib import smtlib_code
+
     boolean_formula = And(*constraints)
     z3 = import_module("z3")
     if z3:
@@ -59,26 +75,30 @@ def check_if_satisfiable_with_z3(constraints):
         s = z3.Solver()
         s.from_string(smtlib_string)
         res = str(s.check())
-        if res == 'sat':
+        if res == "sat":
             return True
-        elif res == 'unsat':
+        elif res == "unsat":
             return False
         else:
-            raise ValueError(f"z3 was not able to check the satisfiability of {boolean_formula}")
+            raise ValueError(
+                f"z3 was not able to check the satisfiability of {boolean_formula}"
+            )
+
 
 def find_rational_assignment(constr, assignment, iter=20):
     eps = sympify(1)
 
     for _ in range(iter):
-        assign = {key: val[0] + val[1]*eps for key, val in assignment.items()}
+        assign = {key: val[0] + val[1] * eps for key, val in assignment.items()}
         try:
             for cons in constr:
                 assert cons.subs(assign) == True
             return assign
         except AssertionError:
-            eps = eps/2
+            eps = eps / 2
 
     return None
+
 
 def boolean_formula_to_encoded_cnf(bf):
     cnf = CNF.from_prop(bf)
@@ -92,24 +112,33 @@ def test_from_encoded_cnf():
 
     # Test preprocessing
     # Example is from section 3 of paper.
-    phi = (x >= 0) & ((x + y <= 2) | (x + 2 * y - z >= 6)) & (Eq(x + y, 2) | (x + 2 * y - z > 4))
+    phi = (
+        (x >= 0)
+        & ((x + y <= 2) | (x + 2 * y - z >= 6))
+        & (Eq(x + y, 2) | (x + 2 * y - z > 4))
+    )
     enc = boolean_formula_to_encoded_cnf(phi)
     lra, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
     assert lra.A.shape == (2, 5)
-    assert str(lra.slack) == '[_s1, _s2]'
-    assert str(lra.nonslack) == '[x, y, z]'
-    assert lra.A == Matrix([[ 1,  1, 0, -1,  0],
-                            [-1, -2, 1,  0, -1]])
-    assert {(str(b.var), b.bound, b.upper, b.equality, b.strict) for b in lra.enc_to_boundary.values()} == {('_s1', 2, None, True, False),
-    ('_s1', 2, True, False, False),
-    ('_s2', -4, True, False, True),
-    ('_s2', -6, True, False, False),
-    ('x', 0, False, False, False)}
+    assert str(lra.slack) == "[_s1, _s2]"
+    assert str(lra.nonslack) == "[x, y, z]"
+    assert lra.A == Matrix([[1, 1, 0, -1, 0], [-1, -2, 1, 0, -1]])
+    assert {
+        (str(b.var), b.bound, b.upper, b.equality, b.strict)
+        for b in lra.enc_to_boundary.values()
+    } == {
+        ("_s1", 2, None, True, False),
+        ("_s1", 2, True, False, False),
+        ("_s2", -4, True, False, True),
+        ("_s2", -6, True, False, False),
+        ("x", 0, False, False, False),
+    }
 
 
 def test_problem():
-    from sympy.logic.algorithms.lra_theory import LRASolver
     from sympy.assumptions.cnf import CNF, EncodedCNF
+    from sympy.logic.algorithms.lra_theory import LRASolver
+
     cons = [-2 * x - 2 * y >= 7, -9 * y >= 7, -6 * y >= 5]
     cnf = CNF().from_prop(And(*cons))
     enc = EncodedCNF()
@@ -127,8 +156,11 @@ def test_random_problems():
     if z3 is None:
         skip("z3 is not installed")
 
-    special_cases = []; x1, x2, x3 = symbols("x1 x2 x3")
-    special_cases.append([x1 - 3 * x2 <= -5, 6 * x1 + 4 * x2 <= 0, -7 * x1 + 3 * x2 <= 3])
+    special_cases = []
+    x1, x2, x3 = symbols("x1 x2 x3")
+    special_cases.append(
+        [x1 - 3 * x2 <= -5, 6 * x1 + 4 * x2 <= 0, -7 * x1 + 3 * x2 <= 3]
+    )
     special_cases.append([-3 * x1 >= 3, Eq(4 * x1, -1)])
     special_cases.append([-4 * x1 < 4, 6 * x1 <= -6])
     special_cases.append([-3 * x2 >= 7, 6 * x1 <= -5, -3 * x2 <= -4])
@@ -136,29 +168,66 @@ def test_random_problems():
     special_cases.append([x >= 0, x + y <= 2, x + 2 * y - z >= 6])  # from paper example
     special_cases.append([-2 * x1 - 2 * x2 >= 7, -9 * x1 >= 7, -6 * x1 >= 5])
     special_cases.append([2 * x1 > -3, -9 * x1 < -6, 9 * x1 <= 6])
-    special_cases.append([-2*x1 < -4, 9*x1 > -9])
-    special_cases.append([-6*x1 >= -1, -8*x1 + x2 >= 5, -8*x1 + 7*x2 < 4, x1 > 7])
-    special_cases.append([Eq(x1, 2), Eq(5*x1, -2), Eq(-7*x2, -6), Eq(9*x1 + 10*x2, 9)])
-    special_cases.append([Eq(3*x1, 6), Eq(x1 - 8*x2, -9), Eq(-7*x1 + 5*x2, 3), Eq(3*x2, 7)])
-    special_cases.append([-4*x1 < 4, 6*x1 <= -6])
-    special_cases.append([-3*x1 + 8*x2 >= -8, -10*x2 > 9, 8*x1 - 4*x2 < 8, 10*x1 - 9*x2 >= -9])
-    special_cases.append([x1 + 5*x2 >= -6, 9*x1 - 3*x2 >= -9, 6*x1 + 6*x2 < -10, -3*x1 + 3*x2 < -7])
-    special_cases.append([-9*x1 < 7, -5*x1 - 7*x2 < -1, 3*x1 + 7*x2 > 1, -6*x1 - 6*x2 > 9])
-    special_cases.append([9*x1 - 6*x2 >= -7, 9*x1 + 4*x2 < -8, -7*x2 <= 1, 10*x2 <= -7])
+    special_cases.append([-2 * x1 < -4, 9 * x1 > -9])
+    special_cases.append(
+        [-6 * x1 >= -1, -8 * x1 + x2 >= 5, -8 * x1 + 7 * x2 < 4, x1 > 7]
+    )
+    special_cases.append(
+        [Eq(x1, 2), Eq(5 * x1, -2), Eq(-7 * x2, -6), Eq(9 * x1 + 10 * x2, 9)]
+    )
+    special_cases.append(
+        [Eq(3 * x1, 6), Eq(x1 - 8 * x2, -9), Eq(-7 * x1 + 5 * x2, 3), Eq(3 * x2, 7)]
+    )
+    special_cases.append([-4 * x1 < 4, 6 * x1 <= -6])
+    special_cases.append(
+        [
+            -3 * x1 + 8 * x2 >= -8,
+            -10 * x2 > 9,
+            8 * x1 - 4 * x2 < 8,
+            10 * x1 - 9 * x2 >= -9,
+        ]
+    )
+    special_cases.append(
+        [
+            x1 + 5 * x2 >= -6,
+            9 * x1 - 3 * x2 >= -9,
+            6 * x1 + 6 * x2 < -10,
+            -3 * x1 + 3 * x2 < -7,
+        ]
+    )
+    special_cases.append(
+        [-9 * x1 < 7, -5 * x1 - 7 * x2 < -1, 3 * x1 + 7 * x2 > 1, -6 * x1 - 6 * x2 > 9]
+    )
+    special_cases.append(
+        [9 * x1 - 6 * x2 >= -7, 9 * x1 + 4 * x2 < -8, -7 * x2 <= 1, 10 * x2 <= -7]
+    )
 
     feasible_count = 0
     for i in range(50):
         if i % 8 == 0:
-            constraints = make_random_problem(num_variables=1, num_constraints=2, rational=False)
+            constraints = make_random_problem(
+                num_variables=1, num_constraints=2, rational=False
+            )
         elif i % 8 == 1:
-            constraints = make_random_problem(num_variables=2, num_constraints=4, rational=False, disable_equality=True,
-                                              disable_nonstrict=True)
+            constraints = make_random_problem(
+                num_variables=2,
+                num_constraints=4,
+                rational=False,
+                disable_equality=True,
+                disable_nonstrict=True,
+            )
         elif i % 8 == 2:
-            constraints = make_random_problem(num_variables=2, num_constraints=4, rational=False, disable_strict=True)
+            constraints = make_random_problem(
+                num_variables=2, num_constraints=4, rational=False, disable_strict=True
+            )
         elif i % 8 == 3:
-            constraints = make_random_problem(num_variables=3, num_constraints=12, rational=False)
+            constraints = make_random_problem(
+                num_variables=3, num_constraints=12, rational=False
+            )
         else:
-            constraints = make_random_problem(num_variables=3, num_constraints=6, rational=False)
+            constraints = make_random_problem(
+                num_variables=3, num_constraints=6, rational=False
+            )
 
         if i < len(special_cases):
             constraints = special_cases[i]
@@ -169,7 +238,8 @@ def test_random_problems():
         phi = And(*constraints)
         if phi == False:
             continue
-        cnf = CNF.from_prop(phi); enc = EncodedCNF()
+        cnf = CNF.from_prop(phi)
+        enc = EncodedCNF()
         enc.from_cnf(cnf)
         assert all(0 not in clause for clause in enc.data)
 
@@ -181,7 +251,9 @@ def test_random_problems():
         lits = {lit for clause in enc.data for lit in clause}
 
         bounds = [(lra.enc_to_boundary[l], l) for l in lits if l in lra.enc_to_boundary]
-        bounds = sorted(bounds, key=lambda x: (str(x[0].var), x[0].bound, str(x[0].upper))) # to remove nondeterminism
+        bounds = sorted(
+            bounds, key=lambda x: (str(x[0].var), x[0].bound, str(x[0].upper))
+        )  # to remove nondeterminism
 
         for b, l in bounds:
             if lra.result and lra.result[0] == False:
@@ -195,7 +267,7 @@ def test_random_problems():
             assert check_if_satisfiable_with_z3(constraints) is True
             cons_funcs = [cons.func for cons in constraints]
             assignment = feasible[1]
-            assignment = {key.var : value for key, value in assignment.items()}
+            assignment = {key.var: value for key, value in assignment.items()}
             if not (StrictLessThan in cons_funcs or StrictGreaterThan in cons_funcs):
                 assignment = {key: value[0] for key, value in assignment.items()}
                 for cons in constraints:
@@ -214,7 +286,7 @@ def test_random_problems():
             assert check_if_satisfiable_with_z3(conflict) is False
 
             # check that conflict clause is probably minimal
-            for subset in itertools.combinations(conflict, len(conflict)-1):
+            for subset in itertools.combinations(conflict, len(conflict) - 1):
                 assert check_if_satisfiable_with_z3(subset) is True
 
 
@@ -340,7 +412,7 @@ def test_negation():
     assert len(lra.enc_to_boundary) == 2
     assert lra.check()[0] == False
 
-    bf = ~Q.le(x+y, 2) & ~Q.ge(x-y, 2) & ~Q.ge(y, 0)
+    bf = ~Q.le(x + y, 2) & ~Q.ge(x - y, 2) & ~Q.ge(y, 0)
     enc = boolean_formula_to_encoded_cnf(bf)
     lra, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
     for clause in enc.data:
@@ -432,13 +504,13 @@ def test_reset_bounds():
     lra, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
 
     state_variables = [
-        ('lower', LRARational(10, 0), LRARational(-float("inf"), 0)),
-        ('upper', LRARational(10, 0), LRARational(float("inf"), 0)),
-        ('lower_from_eq', True, False),
-        ('lower_from_neg', True, False),
-        ('upper_from_eq', True, False),
-        ('upper_from_neg', True, False),
-        ('assign', LRARational(10, 0), LRARational(0, 0))
+        ("lower", LRARational(10, 0), LRARational(-float("inf"), 0)),
+        ("upper", LRARational(10, 0), LRARational(float("inf"), 0)),
+        ("lower_from_eq", True, False),
+        ("lower_from_neg", True, False),
+        ("upper_from_eq", True, False),
+        ("upper_from_neg", True, False),
+        ("assign", LRARational(10, 0), LRARational(0, 0)),
     ]
 
     for attr_name, test_value, expected_reset_value in state_variables:
@@ -449,8 +521,9 @@ def test_reset_bounds():
 
         for var in lra.all_var:
             actual_value = getattr(var, attr_name)
-            assert actual_value == expected_reset_value, \
+            assert actual_value == expected_reset_value, (
                 f"Failed to reset {attr_name}: expected {expected_reset_value}, got {actual_value}"
+            )
 
 
 def test_empty_cnf():
@@ -460,3 +533,38 @@ def test_empty_cnf():
     lra, conflict = LRASolver.from_encoded_cnf(enc)
     assert len(conflict) == 0
     assert lra.check() == (True, {})
+
+
+def test_conflict_uses_correct_literals():
+    phi = Q.ge(x, 1) & Q.ge(y, 1) & Q.le(x + y, 1)
+    cnf = CNF.from_prop(phi)
+    enc = EncodedCNF()
+    enc.from_cnf(cnf)
+
+    lra, _ = LRASolver.from_encoded_cnf(enc)
+
+    lx = enc.encoding[Q.ge(x, 1)]
+    ly = enc.encoding[Q.ge(y, 1)]
+    ls = enc.encoding[Q.le(x + y, 1)]
+
+    # Add a redundant literal for one of the boundaries to test tracking
+    redundant_lit = 100
+    lra.enc_to_boundary[redundant_lit] = lra.enc_to_boundary[lx]
+    lra.boundary_to_enc[lra.enc_to_boundary[lx]] = redundant_lit
+
+    lra.assert_lit(lx)
+    lra.assert_lit(ly)
+    res = lra.assert_lit(ls)
+
+    if res is None:
+        res = lra.check()
+
+    assert res[0] == False
+    conflict = res[1]
+
+    # We asserted lx, ly, ls. The conflict must contain the literals we actually used.
+    assert -lx in conflict
+    assert -ly in conflict
+    assert -ls in conflict
+    # It should NOT contain the redundant literal that was not asserted.
+    assert -redundant_lit not in conflict

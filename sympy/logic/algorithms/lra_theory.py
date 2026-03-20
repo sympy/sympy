@@ -366,9 +366,11 @@ class LRASolver():
             var.lower = LRARational(-float("inf"), 0)
             var.lower_from_eq = False
             var.lower_from_neg = False
+            var.lower_lit = None
             var.upper = LRARational(float("inf"), 0)
             var.upper_from_eq = False
             var.upper_from_neg = False
+            var.upper_lit = None
             var.assign = LRARational(0, 0)
 
     def assert_lit(self, enc_constraint):
@@ -416,16 +418,16 @@ class LRASolver():
             c = LRARational(c, 0)
 
         if boundary.equality:
-            res1 = self._assert_lower(sym, c, from_equality=True, from_neg=negated)
+            res1 = self._assert_lower(sym, c, enc_constraint, from_equality=True, from_neg=negated)
             if res1 and res1[0] == False:
                 res = res1
             else:
-                res2 = self._assert_upper(sym, c, from_equality=True, from_neg=negated)
+                res2 = self._assert_upper(sym, c, enc_constraint, from_equality=True, from_neg=negated)
                 res =  res2
         elif upper:
-            res = self._assert_upper(sym, c, from_neg=negated)
+            res = self._assert_upper(sym, c, enc_constraint, from_neg=negated)
         else:
-            res = self._assert_lower(sym, c, from_neg=negated)
+            res = self._assert_lower(sym, c, enc_constraint, from_neg=negated)
 
         if self.is_sat and sym not in self.slack_set:
             self.is_sat = res is None
@@ -434,7 +436,7 @@ class LRASolver():
 
         return res
 
-    def _assert_upper(self, xi, ci, from_equality=False, from_neg=False):
+    def _assert_upper(self, xi, ci, lit, from_equality=False, from_neg=False):
         """
         Adjusts the upper bound on variable xi if the new upper bound is
         more limiting. The assignment of variable xi is adjusted to be
@@ -449,22 +451,13 @@ class LRASolver():
         if ci >= xi.upper:
             return None
         if ci < xi.lower:
-            assert (xi.lower[1] >= 0) is True
-            assert (ci[1] <= 0) is True
-
-            lit1, neg1 = Boundary.from_lower(xi)
-
-            lit2 = Boundary(var=xi, const=ci[0], strict=ci[1] != 0, upper=True, equality=from_equality)
-            if from_neg:
-                lit2 = lit2.get_negated()
-            neg2 = -1 if from_neg else 1
-
-            conflict = [-neg1*self.boundary_to_enc[lit1], -neg2*self.boundary_to_enc[lit2]]
+            conflict = [-xi.lower_lit, -lit]
             self.result = False, conflict
             return self.result
         xi.upper = ci
         xi.upper_from_eq = from_equality
         xi.upper_from_neg = from_neg
+        xi.upper_lit = lit
         if xi in self.nonslack and xi.assign > ci:
             self._update(xi, ci)
 
@@ -476,7 +469,7 @@ class LRASolver():
 
         return None
 
-    def _assert_lower(self, xi, ci, from_equality=False, from_neg=False):
+    def _assert_lower(self, xi, ci, lit, from_equality=False, from_neg=False):
         """
         Adjusts the lower bound on variable xi if the new lower bound is
         more limiting. The assignment of variable xi is adjusted to be
@@ -491,22 +484,13 @@ class LRASolver():
         if ci <= xi.lower:
             return None
         if ci > xi.upper:
-            assert (xi.upper[1] <= 0) is True
-            assert (ci[1] >= 0) is True
-
-            lit1, neg1 = Boundary.from_upper(xi)
-
-            lit2 = Boundary(var=xi, const=ci[0], strict=ci[1] != 0, upper=False, equality=from_equality)
-            if from_neg:
-                lit2 = lit2.get_negated()
-            neg2 = -1 if from_neg else 1
-
-            conflict = [-neg1*self.boundary_to_enc[lit1],-neg2*self.boundary_to_enc[lit2]]
+            conflict = [-xi.upper_lit, -lit]
             self.result = False, conflict
             return self.result
         xi.lower = ci
         xi.lower_from_eq = from_equality
         xi.lower_from_neg = from_neg
+        xi.lower_lit = lit
         if xi in self.nonslack and xi.assign < ci:
             self._update(xi, ci)
 
@@ -594,15 +578,14 @@ class LRASolver():
                     N_minus = [nb for nb in nonbasic if M[i, nb.col_idx] < 0]
 
                     conflict = []
-                    conflict += [Boundary.from_upper(nb) for nb in N_plus]
-                    conflict += [Boundary.from_lower(nb) for nb in N_minus]
-                    conflict.append(Boundary.from_lower(xi))
-                    conflict = [-neg*self.boundary_to_enc[c] for c, neg in conflict]
+                    conflict += [-nb.upper_lit for nb in N_plus]
+                    conflict += [-nb.lower_lit for nb in N_minus]
+                    conflict.append(-xi.lower_lit)
                     return False, conflict
                 xj = min(cand, key=str)
                 M = self._pivot_and_update(M, basic, nonbasic, xi, xj, xi.lower)
 
-            if xi.assign > xi.upper:
+            elif xi.assign > xi.upper:
                 cand = [nb for nb in nonbasic
                         if (M[i, nb.col_idx] < 0 and nb.assign < nb.upper)
                         or (M[i, nb.col_idx] > 0 and nb.assign > nb.lower)]
@@ -612,11 +595,10 @@ class LRASolver():
                     N_minus = [nb for nb in nonbasic if M[i, nb.col_idx] < 0]
 
                     conflict = []
-                    conflict += [Boundary.from_upper(nb) for nb in N_minus]
-                    conflict += [Boundary.from_lower(nb) for nb in N_plus]
-                    conflict.append(Boundary.from_upper(xi))
+                    conflict += [-nb.upper_lit for nb in N_minus]
+                    conflict += [-nb.lower_lit for nb in N_plus]
+                    conflict.append(-xi.upper_lit)
 
-                    conflict = [-neg*self.boundary_to_enc[c] for c, neg in conflict]
                     return False, conflict
                 xj = min(cand, key=lambda v: v.col_idx)
                 M = self._pivot_and_update(M, basic, nonbasic, xi, xj, xi.upper)
@@ -894,9 +876,11 @@ class LRAVariable():
         self.upper = LRARational(float("inf"), 0)
         self.upper_from_eq = False
         self.upper_from_neg = False
+        self.upper_lit = None
         self.lower = LRARational(-float("inf"), 0)
         self.lower_from_eq = False
         self.lower_from_neg = False
+        self.lower_lit = None
         self.assign = LRARational(0,0)
         self.var = var
         self.col_idx = None
