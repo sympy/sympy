@@ -1212,6 +1212,11 @@ def test_Pow_is_finite():
 
     assert (1/(i-1)).is_finite is None
 
+def test_Pow_is_finite_same_base_exponent_complex():
+    xc = Symbol('xc', complex=True)
+
+    assert (xc**xc).is_finite is True
+
 
 def test_Pow_is_even_odd():
     x = Symbol('x')
