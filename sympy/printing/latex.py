@@ -2974,7 +2974,19 @@ class LatexPrinter(Printer):
         return self._print(Float(expr))
 
     def _print_int(self, expr):
-        return str(expr)
+        s = str(expr)
+
+    # handle negative numbers
+        sign = ""
+        if s.startswith("-"):
+            sign = "-"
+            s = s[1:]
+
+    # apply thousands separator (only for integers)
+        if s.isdigit() and len(s) > 3:
+            s = "{:,}".format(int(s)).replace(",", r"\,")
+
+        return sign + s
 
     def _print_mpz(self, expr):
         return str(expr)
