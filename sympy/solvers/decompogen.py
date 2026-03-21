@@ -49,6 +49,8 @@ def decompogen(f, symbol):
             arg = f.args[0]
         if arg == symbol:
             return [f]
+        if any(a.has(symbol) for a in f.args[1:]):
+            return [f]
         return [f.subs(arg, symbol)] + decompogen(arg, symbol)
 
     # ===== Min/Max Functions ===== #
