@@ -335,4 +335,3 @@ def test_refine_tan():
 
     # tan(x) without integer pi coefficient — no simplification
     assert refine(tan(x), Q.positive(x)) == tan(x)
-    
