@@ -2542,17 +2542,21 @@ class LatexPrinter(Printer):
         return r"\omega"
 
     def _print_OmegaPower(self, expr):
+        from sympy.sets.ordinals import OmegaPower, OrdinalOmega
         exp, mul = expr.args
+        # Use recursive printing only for ordinal exponents, not plain integers
+        if isinstance(exp, (OmegaPower, OrdinalOmega)):
+            exp_str = self._print(exp)
+        else:
+            exp_str = str(exp)
         if mul != 1:
             if exp != 1:
-                # FIX: use self._print(exp) for recursive printing (power tower support)
-                return r"{} \omega^{{{}}}".format(mul, self._print(exp))
+                return r"{} \omega^{{{}}}".format(mul, exp_str)
             else:
                 return r"{} \omega".format(mul)
         else:
             if exp != 1:
-                # FIX: use self._print(exp) for recursive printing (power tower support)
-                return r"\omega^{{{}}}".format(self._print(exp))
+                return r"\omega^{{{}}}".format(exp_str)
             else:
                 return r"\omega"
 
