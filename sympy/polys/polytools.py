@@ -4906,7 +4906,7 @@ def __degree_it(f, gen):
         for deg_1, coeff_1 in profile_1.items():
             for deg_2, coeff_2 in profile_2.items():
                 result[deg_1 + deg_2] = (
-                    result.get(deg_1 + deg_2, 0) + coeff_1 * coeff_2
+                    result.get(deg_1 + deg_2, S.Zero) + coeff_1 * coeff_2
                 )
 
                 if result[deg_1 + deg_2] == 0:
@@ -4919,7 +4919,7 @@ def __degree_it(f, gen):
         cancellation_flag = False
 
         for deg, coeff in profile_2.items():
-            result[deg] = result.get(deg, 0) + coeff
+            result[deg] = result.get(deg, S.Zero) + coeff
 
             if result[deg] == 0:
                 cancellation_flag = True
@@ -4929,7 +4929,7 @@ def __degree_it(f, gen):
 
     def _pow_profile(profile, exponent, cutoff=550):
         if exponent == 0:
-            return {0: 1}
+            return {0: S.One}
         elif exponent == 1:
             return profile
 
@@ -4938,11 +4938,11 @@ def __degree_it(f, gen):
 
             for deg, coeff in profile.items():
                 new_deg, new_coeff = deg * exponent, coeff**exponent
-                result[new_deg] = result.get(new_deg, 0) + new_coeff
+                result[new_deg] = result.get(new_deg, S.Zero) + new_coeff
 
             return result
 
-        result = {0: 1}
+        result = {0: S.One}
         for _ in range(int(exponent)):
             result = _mul_profiles(result, profile)
 
@@ -4957,6 +4957,12 @@ def __degree_it(f, gen):
     profiles_stack = []
 
     for expr in postorder_traversal(f):
+        if isinstance(expr, Tuple):
+            return None
+
+        if not isinstance(expr, Expr):
+            return None
+
         if expr == 0:
             profiles_stack.append({})
 
@@ -4965,14 +4971,14 @@ def __degree_it(f, gen):
             profiles_stack.append(profile)
 
         elif expr == gen:
-            profile = {1: 1}
+            profile = {1: S.One}
             profiles_stack.append(profile)
 
         elif expr.is_Mul:
             num_factors = len(expr.args)
             parts = profiles_stack[-num_factors:]
 
-            total = {0: 1}
+            total = {0: S.One}
             for p in parts:
                 total = _mul_profiles(total, p)
 
