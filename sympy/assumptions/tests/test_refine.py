@@ -333,5 +333,5 @@ def test_refine_tan():
     assert refine(tan(n*pi + pi/4), Q.even(n)) == 1
     assert refine(tan(n*pi + pi/4), Q.odd(n)) == 1
 
-    # tan(x) without integer pi coefficient — no simplification
+    # tan(x) without integer pi coefficient - no simplification
     assert refine(tan(x), Q.positive(x)) == tan(x)
