@@ -6,7 +6,9 @@ from sympy.core.singleton import S
 from sympy.core.symbol import Dummy
 from sympy.core.sympify import _sympify
 from sympy.utilities.misc import as_int
-
+from sympy.core.expr import Expr
+from sympy import Integer
+from typing import Iterator,Iterable
 
 def continued_fraction(a) -> list:
     """Return the continued fraction representation of a Rational or
@@ -72,7 +74,7 @@ def continued_fraction(a) -> list:
     raise ValueError(f"expecting a rational or quadratic irrational, not {e}")
 
 
-def continued_fraction_periodic(p, q, d=0, s=1) -> list:
+def continued_fraction_periodic(p: int, q: int, d: int =0, s: int =1) -> list:
     r"""
     Find the periodic continued fraction expansion of a quadratic irrational.
 
@@ -143,7 +145,7 @@ def continued_fraction_periodic(p, q, d=0, s=1) -> list:
         d = 0
 
     # check for rational case
-    sd = sqrt(d)
+    sd: Expr = sqrt(d)
     if sd.is_Integer:
         return list(continued_fraction_iterator(Rational(p + s*sd, q)))
 
@@ -151,7 +153,7 @@ def continued_fraction_periodic(p, q, d=0, s=1) -> list:
     if q < 0:
         p, q, s = -p, -q, -s
 
-    n = (p + s*sd)/q
+    n: Expr = (p + s*sd)/q
     if n < 0:
         w = floor(-n)
         f = -n - w
@@ -181,7 +183,7 @@ def continued_fraction_periodic(p, q, d=0, s=1) -> list:
     return terms[:i] + [terms[i:]]  # type: ignore
 
 
-def continued_fraction_reduce(cf):
+def continued_fraction_reduce(cf: list[int])-> Expr:
     """
     Reduce a continued fraction to a rational or quadratic irrational.
 
@@ -243,7 +245,7 @@ def continued_fraction_reduce(cf):
 
     if period:
         y = Dummy('y')
-        solns = solve(continued_fraction_reduce(period + [y]) - y, y)
+        solns: list = solve(continued_fraction_reduce(period + [y]) - y, y)
         solns.sort()
         pure = solns[-1]
         rv = a.subs(x, pure).radsimp()
@@ -256,7 +258,7 @@ def continued_fraction_reduce(cf):
     return rv
 
 
-def continued_fraction_iterator(x):
+def continued_fraction_iterator(x: Expr) -> Iterator[Integer]:
     """
     Return continued fraction expansion of x as iterator.
 
@@ -300,7 +302,7 @@ def continued_fraction_iterator(x):
         x = 1/x
 
 
-def continued_fraction_convergents(cf):
+def continued_fraction_convergents(cf: Iterable):
     """
     Return an iterator over the convergents of a continued fraction (cf).
 
@@ -359,8 +361,10 @@ def continued_fraction_convergents(cf):
     """
     if isinstance(cf, list) and isinstance(cf[-1], list):
         cf = itertools.chain(cf[:-1], itertools.cycle(cf[-1]))
-    p_2, q_2 = S.Zero, S.One
-    p_1, q_1 = S.One, S.Zero
+    p_2: Expr = S.Zero
+    q_2: Expr = S.One
+    p_1: Expr = S.One
+    q_1: Expr = S.Zero
     for a in cf:
         p, q = a*p_1 + p_2, a*q_1 + q_2
         p_2, q_2 = p_1, q_1
