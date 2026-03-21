@@ -423,8 +423,32 @@ class StrPrinter(Printer):
         else:
             return 'O(%s)' % self.stringify(expr.args, ', ', 0)
 
+    def _print_OrdinalZero(self, expr):
+        return "0"
+
+    def _print_OrdinalOmega(self, expr):
+        return "w"
+
+    def _print_OmegaPower(self, expr):
+        exp, mul = expr.args
+        if exp == 0:
+            return f"{mul}"
+
+        output_str = ""
+        if exp == 1:
+            output_str += "w"
+        elif len(exp.terms) > 1 or exp.is_limit_ordinal:
+            output_str += f"w**({self._print(exp)})"
+        else:
+            output_str += f"w**{self._print(exp)}"
+
+        if mul != 1:
+            output_str += f"*{mul}"
+
+        return output_str
+
     def _print_Ordinal(self, expr):
-        return expr.__str__()
+        return " + ".join([self._print(arg) for arg in expr.args])
 
     def _print_Cycle(self, expr):
         return expr.__str__()

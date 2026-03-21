@@ -34,6 +34,7 @@ from sympy.matrices import SparseMatrix
 from sympy.polys.polytools import factor
 from sympy.series.limits import Limit
 from sympy.series.order import O
+from sympy.sets.ordinals import Ordinal, OrdinalOmega, OmegaPower, OrdinalZero
 from sympy.sets.sets import (Complement, FiniteSet, Interval, SymmetricDifference)
 from sympy.stats import (Covariance, Expectation, Probability, Variance)
 from sympy.stats.rv import RandomSymbol
@@ -938,6 +939,16 @@ def test_RandomDomain():
     A = Exponential('a', 1)
     B = Exponential('b', 1)
     assert str(pspace(Tuple(A, B)).domain) == "Domain: (0 <= a) & (0 <= b) & (a < oo) & (b < oo)"
+
+
+def test_ordinals():
+    w = OrdinalOmega()
+    assert str(OrdinalZero()) == "0"
+    assert str(w) == 'w'
+    assert str(Ordinal(OmegaPower(5, 3), OmegaPower(3, 2))) == 'w**5*3 + w**3*2'
+    assert str(Ordinal(OmegaPower(5, 3), OmegaPower(0, 5))) == 'w**5*3 + 5'
+    assert str(Ordinal(OmegaPower(1, 3), OmegaPower(0, 5))) == 'w*3 + 5'
+    assert str(Ordinal(OmegaPower(w + 1, 1), OmegaPower(3, 2))) == 'w**(w + 1) + w**3*2'
 
 
 def test_FiniteSet():
