@@ -85,6 +85,8 @@ def _(expr, assumptions):
     """
     if expr.is_number:
         return _IntegerPredicate_number(expr, assumptions)
+    if ask(Q.zero(expr), assumptions):
+        return True
     _output = True
     for arg in expr.args:
         if not ask(Q.integer(arg), assumptions):
@@ -274,6 +276,8 @@ def _(expr, assumptions):
     """
     if expr.is_number:
         return _RealPredicate_number(expr, assumptions)
+    if ask(Q.zero(expr), assumptions):
+        return True
     result = True
     for arg in expr.args:
         if ask(Q.real(arg), assumptions):
@@ -572,6 +576,8 @@ def _(expr, assumptions):
     """
     if expr.is_number:
         return _Imaginary_number(expr, assumptions)
+    if ask(Q.zero(expr), assumptions):
+        return True
     result = False
     reals = 0
     for arg in expr.args:
