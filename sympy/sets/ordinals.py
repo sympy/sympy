@@ -254,4 +254,5 @@ class OrdinalOmega(Ordinal):
 
 
 ord0 = OrdinalZero()
-omega = OrdinalOmega()
+w = OrdinalOmega()
+omega = w
