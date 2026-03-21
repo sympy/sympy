@@ -234,6 +234,7 @@ EVALUATED_FRACTION_EXPRESSION_PAIRS = [
 RELATION_EXPRESSION_PAIRS = [
     (r"x = y", Eq(x, y)),
     (r"x \neq y", Ne(x, y)),
+    (r"x \ne y", Ne(x, y)),
     (r"x < y", Lt(x, y)),
     (r"x > y", Gt(x, y)),
     (r"x \leq y", Le(x, y)),
@@ -245,6 +246,7 @@ RELATION_EXPRESSION_PAIRS = [
     (r"x > y", StrictGreaterThan(x, y)),
     (r"x \geq y", GreaterThan(x, y)),
     (r"x \neq y", Unequality(x, y)), # same as 2nd one in the list
+    (r"x \ne y", Unequality(x, y)),
     (r"a^2 + b^2 = c^2", Eq(a**2 + b**2, c**2))
 ]
 
@@ -873,12 +875,30 @@ def test_common_function_expressions():
         assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
 
-# unhandled bug causing these to fail
-@XFAIL
 def test_spacing():
     for latex_str, sympy_expr in SPACING_RELATED_EXPRESSION_PAIRS:
         with evaluate(False):
             assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
+def test_negthinspace_not_equal_conflict():
+    assert parse_latex_lark(r"a \negthinspace b") == a * b
+    assert parse_latex_lark(r"x \negthinspace y") == x * y
+    assert parse_latex_lark(r"x \negthinspace + y") == x + y
+
+    assert parse_latex_lark(r"a \negmedspace b") == a * b
+    assert parse_latex_lark(r"x \negmedspace y") == x * y
+    assert parse_latex_lark(r"x \negmedspace + y") == x + y
+
+    assert parse_latex_lark(r"a \negthickspace b") == a * b
+    assert parse_latex_lark(r"x \negthickspace y") == x * y
+    assert parse_latex_lark(r"x \negthickspace + y") == x + y
+
+    assert parse_latex_lark(r"x \ne y") == Ne(x, y)
+    assert parse_latex_lark(r"x \neq y") == Ne(x, y)
+
+    assert parse_latex_lark(r"\negthinspace x \ne y") == Ne(x, y)
+    assert parse_latex_lark(r"x \neq \negmedspace y") == Ne(x, y)
 
 
 def test_binomial_expressions():
