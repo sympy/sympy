@@ -4,8 +4,6 @@ from sympy.external.gmpy import gcd, invert, sqrt
 from sympy.utilities.misc import as_int
 from .generate import sieve, primerange
 from .primetest import isprime
-import typing
-
 #----------------------------------------------------------------------------#
 #                                                                            #
 #                   Lenstra's Elliptic Curve Factorization                   #
