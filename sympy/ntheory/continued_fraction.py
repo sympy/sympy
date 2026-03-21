@@ -6,8 +6,9 @@ from sympy.core.singleton import S
 from sympy.core.symbol import Dummy
 from sympy.core.sympify import _sympify
 from sympy.utilities.misc import as_int
-from sympy.core.expr import Expr
-from sympy import Integer
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
 from typing import Iterator,Iterable
 
 def continued_fraction(a) -> list:
