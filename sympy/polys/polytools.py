@@ -2,28 +2,29 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, overload, Literal, Any, cast, Callable
-
-from functools import wraps, reduce
-from operator import mul
 from collections import Counter, defaultdict
+from functools import reduce, wraps
+from operator import mul
+from typing import TYPE_CHECKING, Any, Callable, Literal, cast, overload
 
-from sympy.core import (
-    S, Expr, Add, Tuple
-)
+# Required to avoid errors
+import sympy.polys
+from sympy import postorder_traversal
+from sympy.core import Add, Expr, S, Tuple
 from sympy.core.basic import Basic
 from sympy.core.decorators import _sympifyit
-from sympy.core.exprtools import Factors, factor_nc, factor_terms
 from sympy.core.evalf import (
-    pure_complex, evalf, fastlog, _evalf_with_bounded_error, quad_to_mpmath)
+    _evalf_with_bounded_error, evalf, fastlog, pure_complex, quad_to_mpmath)
+from sympy.core.exprtools import Factors, factor_nc, factor_terms
 from sympy.core.function import Derivative
-from sympy.core.mul import Mul, _keep_coeff
 from sympy.core.intfunc import ilcm
-from sympy.core.numbers import I, Integer, equal_valued, NegativeInfinity
-from sympy.core.relational import Relational, Equality
+from sympy.core.mul import Mul, _keep_coeff
+from sympy.core.numbers import I, Integer, NegativeInfinity, equal_valued
+from sympy.core.relational import Equality, Relational
 from sympy.core.symbol import Dummy, Symbol
-from sympy.core.sympify import sympify, _sympify
-from sympy.core.traversal import preorder_traversal, bottom_up
+from sympy.core.sympify import _sympify, sympify
+from sympy.core.traversal import bottom_up, preorder_traversal
+from sympy.external.mpmath import NoConvergence, local_workdps
 from sympy.logic.boolalg import BooleanAtom
 from sympy.polys import polyoptions as options
 from sympy.polys.constructor import construct_domain
@@ -33,40 +34,26 @@ from sympy.polys.fglmtools import matrix_fglm
 from sympy.polys.groebnertools import groebner as _groebner
 from sympy.polys.monomials import Monomial
 from sympy.polys.orderings import monomial_key
-from sympy.polys.polyclasses import DMP, DMF, ANP
+from sympy.polys.polyclasses import ANP, DMF, DMP
 from sympy.polys.polyerrors import (
-    OperationNotSupported, DomainError,
-    CoercionFailed, UnificationFailed,
-    GeneratorsNeeded, PolynomialError,
-    MultivariatePolynomialError,
-    ExactQuotientFailed,
-    PolificationFailed,
-    ComputationFailed,
-    GeneratorsError,
-)
+    CoercionFailed, ComputationFailed, DomainError, ExactQuotientFailed,
+    GeneratorsError, GeneratorsNeeded, MultivariatePolynomialError,
+    OperationNotSupported, PolificationFailed, PolynomialError,
+    UnificationFailed)
 from sympy.polys.polyutils import (
-    basic_from_dict,
-    _sort_gens,
-    _unify_gens,
-    _dict_reorder,
-    _dict_from_expr,
-    _parallel_dict_from_expr,
-)
+    _dict_from_expr, _dict_reorder, _parallel_dict_from_expr, _sort_gens,
+    _unify_gens, basic_from_dict)
 from sympy.polys.rationaltools import together
 from sympy.polys.rootisolation import dup_isolate_real_roots_list
-from sympy.utilities import group, public, filldedent
+from sympy.utilities import filldedent, group, public
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import iterable, sift
 
-# Required to avoid errors
-import sympy.polys
-from sympy.external.mpmath import local_workdps, NoConvergence
-
-
 if TYPE_CHECKING:
-    from sympy.polys.domains.domain import Domain
     from collections.abc import Iterator
     from typing import Self
+
+    from sympy.polys.domains.domain import Domain
 
 
 def _polifyit(func):
@@ -4155,8 +4142,7 @@ class Poly(Basic):
         from sympy.polys.numberfields.galoisgroups import (
             _galois_group_degree_3, _galois_group_degree_4_lookup,
             _galois_group_degree_5_lookup_ext_factor,
-            _galois_group_degree_6_lookup,
-        )
+            _galois_group_degree_6_lookup)
         if (not f.is_univariate
             or not f.is_irreducible
             or f.domain not in [ZZ, QQ]
@@ -4913,27 +4899,26 @@ def _update_args(args, key, value):
     return args
 
 
-from sympy import postorder_traversal
-
-def __degree_it (f, gen):
-    
-    def _mul_profiles (dict_1, dict_2): 
+def __degree_it(f, gen):
+    def _mul_profiles(profile_1, profile_2):
         result = {}
-        for k, v in dict_1.items():
-            for k_, v_ in dict_2.items():
-                result[k + k_] = result.get(k + k_, 0) + v * v_
 
-                if result[k + k_] == 0:
-                    del result[k + k_]
+        for deg_1, coeff_1 in profile_1.items():
+            for deg_2, coeff_2 in profile_2.items():
+                result[deg_1 + deg_2] = (
+                    result.get(deg_1 + deg_2, 0) + coeff_1 * coeff_2
+                )
+
+                if result[deg_1 + deg_2] == 0:
+                    del result[deg_1 + deg_2]
 
         return result
 
-
-    def _add_profiles (dict_1, dict_2):
-        result            = dict(dict_1)
+    def _add_profiles(profile_1, profile_2):
+        result = dict(profile_1)
         cancellation_flag = False
 
-        for deg, coeff in dict_2.items():
+        for deg, coeff in profile_2.items():
             result[deg] = result.get(deg, 0) + coeff
 
             if result[deg] == 0:
@@ -4942,69 +4927,70 @@ def __degree_it (f, gen):
 
         return result, cancellation_flag
 
-
-    def _pow_profile (dict_, exponent, cutoff=550):
+    def _pow_profile(profile, exponent, cutoff=550):
         if exponent == 0:
-            return {0 : 1}
+            return {0: 1}
         elif exponent == 1:
-            return dict_
+            return profile
 
         if exponent > cutoff:
             result = {}
-            for deg, coeff in dict_.items():
-                k, v = deg*exponent, coeff**exponent
-                result[k] = result.get(k, 0) + v
-            return result
-        else:
-            result = {0 : 1}
-            for _ in range(int(exponent)):
-                result = _mul_profiles(result, dict_)
+
+            for deg, coeff in profile.items():
+                new_deg, new_coeff = deg * exponent, coeff**exponent
+                result[new_deg] = result.get(new_deg, 0) + new_coeff
+
             return result
 
-    f   = sympify(f)
+        result = {0: 1}
+        for _ in range(int(exponent)):
+            result = _mul_profiles(result, profile)
+
+        return result
+
+    f = sympify(f)
     gen = sympify(gen)
 
     if isinstance(f, Poly):
         f = f.as_expr()
 
-    profiles_stack    = []
+    profiles_stack = []
 
     for expr in postorder_traversal(f):
-
         if expr == 0:
             profiles_stack.append({})
 
         elif not expr.has(gen):
-            profile = {0 : expr}
+            profile = {0: expr}
             profiles_stack.append(profile)
 
         elif expr == gen:
-            profile = {1 : 1}
+            profile = {1: 1}
             profiles_stack.append(profile)
 
-        # stack "unfolding" cases 
         elif expr.is_Mul:
             num_factors = len(expr.args)
-            parts       = profiles_stack[-num_factors:]
+            parts = profiles_stack[-num_factors:]
 
-            total = {0 : 1}
+            total = {0: 1}
             for p in parts:
                 total = _mul_profiles(total, p)
 
             del profiles_stack[-num_factors:]
             del parts
-
             profiles_stack.append(total)
 
         elif expr.is_Add:
             num_terms = len(expr.args)
-            part      = profiles_stack[-num_terms:]
-            final = {}
+            part = profiles_stack[-num_terms:]
 
             for i in range(0, len(part)):
                 if i + 1 == len(part):
                     break
-                part[i+1], cancellation_flag = _add_profiles(part[i], part[i+1])
+
+                part[i + 1], cancellation_flag = (
+                    _add_profiles(part[i], part[i + 1])
+                )
 
                 if cancellation_flag:
                     return None
@@ -5013,12 +4999,11 @@ def __degree_it (f, gen):
 
             del profiles_stack[-num_terms:]
             del part
-
             profiles_stack.append(final)
 
         elif expr.is_Pow:
-            exponent_profile    = profiles_stack.pop()
-            base_profile        = profiles_stack.pop()
+            exponent_profile = profiles_stack.pop()
+            base_profile = profiles_stack.pop()
 
             if len(exponent_profile) != 1 or 0 not in exponent_profile:
                 return None
@@ -5029,6 +5014,7 @@ def __degree_it (f, gen):
                 return None
 
             profiles_stack.append(_pow_profile(base_profile, int(exponent)))
+
         else:
             return None
 
@@ -7837,8 +7823,8 @@ def cancel(f, *gens, _signsimp=True, **args):
     >>> together(_)
     (x + 2)/2
     """
-    from sympy.simplify.simplify import signsimp
     from sympy.polys.rings import sring
+    from sympy.simplify.simplify import signsimp
     options.allowed_flags(args, ['polys'])
 
     f = sympify(f)
