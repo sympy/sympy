@@ -4,6 +4,7 @@ from sympy.external.gmpy import gcd, invert, sqrt
 from sympy.utilities.misc import as_int
 from .generate import sieve, primerange
 from .primetest import isprime
+import typing
 
 #----------------------------------------------------------------------------#
 #                                                                            #
@@ -99,7 +100,7 @@ class Point:
         z_cord = diff.x_cord * subt * subt % self.mod
         return Point(x_cord, z_cord, self.a_24, self.mod)
 
-    def double(self) -> "Point":
+    def double(self):
         """
         Doubles a point in an elliptic curve in Montgomery form.
         This algorithm requires 5 multiplications.
@@ -122,7 +123,7 @@ class Point:
         z_cord = diff*(v + self.a_24*diff) % self.mod
         return Point(x_cord, z_cord, self.a_24, self.mod)
 
-    def mont_ladder(self, k: int) -> "Point":
+    def mont_ladder(self: "Point", k: int) -> "Point":
         """
         Scalar multiplication of a point in Montgomery form
         using Montgomery Ladder Algorithm.
@@ -210,10 +211,10 @@ def _ecm_one_factor(n: int, B1: int=10000, B2: int=100000, max_curve: int=200, s
     randint = _randint(seed)
 
     # When calculating T, if (B1 - 2*D) is negative, it cannot be calculated.
-    D: int = min(sqrt(B2), B1 // 2 - 1)
+    D: int = min(int(sqrt(B2)), B1 // 2 - 1)
     sieve.extend(D)
-    beta = [0] * D
-    S: list["Point" | None] = [0] * D
+    beta: list[int] = [0] * D
+    S: list[Point | None] = [None] * D
     k = 1
     for p in primerange(2, B1 + 1):
         k *= pow(p, int(log(B1, p)))
@@ -222,7 +223,7 @@ def _ecm_one_factor(n: int, B1: int=10000, B2: int=100000, max_curve: int=200, s
     # Using the fact that the x-coordinates of point P and its
     # inverse -P coincide, the number of primes to be checked
     # in stage 2 can be reduced.
-    deltas_list = []
+    deltas_list: list[list[int]] = []
     for r in range(B1 + 2*D, B2 + 2*D, 4*D):
         # d in deltas iff r+(2d+1) and/or r-(2d+1) is prime
         deltas = {abs(q - r) >> 1 for q in primerange(r - 2*D, r + 2*D)}
@@ -243,7 +244,7 @@ def _ecm_one_factor(n: int, B1: int=10000, B2: int=100000, max_curve: int=200, s
             a24 = int(pow(v - u, 3, n)*(3*u + v)*invert(16*u_3*v, n) % n)
         except ZeroDivisionError:
             #If the invert(16*u_3*v, n) doesn't exist (i.e., g != 1)
-            g = gcd(2*u_3*v, n)
+            g = int(gcd(2*u_3*v, n))
             #If g = n, try another curve
             if g == n:
                 continue
@@ -251,7 +252,7 @@ def _ecm_one_factor(n: int, B1: int=10000, B2: int=100000, max_curve: int=200, s
 
         Q = Point(u_3, pow(v, 3, n), a24, n)
         Q = Q.mont_ladder(k)
-        g = gcd(Q.z_cord, n)
+        g = int(gcd(Q.z_cord, n))
 
         #Stage 1 factor
         if g != 1 and g != n:
@@ -264,28 +265,39 @@ def _ecm_one_factor(n: int, B1: int=10000, B2: int=100000, max_curve: int=200, s
         S[0] = Q
         Q2 = Q.double()
         S[1] = Q2.add(Q, Q)
-        beta[0] = (S[0].x_cord*S[0].z_cord) % n
-        beta[1] = (S[1].x_cord*S[1].z_cord) % n
+        P = S[0]
+        assert P is not None
+        beta[0] = (P.x_cord * P.z_cord) % n
+        P = S[1]
+        assert P is not None
+        beta[1] = (P.x_cord * P.z_cord) % n
         for d in range(2, D):
-            S[d] = S[d - 1].add(Q2, S[d - 2])
-            beta[d] = (S[d].x_cord*S[d].z_cord) % n
+            P1 = S[d - 1]
+            P2 = S[d - 2]
+            assert P1 is not None and P2 is not None
+            S[d] = P1.add(Q2, P2)
+            P = S[d]
+            assert P is not None
+            beta[d] = (P.x_cord * P.z_cord) % n
         # i.e., S[i] = Q.mont_ladder(2*i + 1)
 
         g = 1
         W = Q.mont_ladder(4*D)
         T = Q.mont_ladder(B1 - 2*D)
         R = Q.mont_ladder(B1 + 2*D)
-        for deltas in deltas_list:
+        for delta_list in deltas_list:
             # R = Q.mont_ladder(r) where r in range(B1 + 2*D, B2 + 2*D, 4*D)
             alpha = (R.x_cord*R.z_cord) % n
-            for delta in deltas:
+            for delta in delta_list:
                 # We want to calculate
                 # f = R.x_cord * S[delta].z_cord - S[delta].x_cord * R.z_cord
-                f = (R.x_cord - S[delta].x_cord)*\
-                    (R.z_cord + S[delta].z_cord) - alpha + beta[delta]
+                P = S[delta]
+                assert P is not None
+                f = (R.x_cord - P.x_cord) * \
+                (R.z_cord + P.z_cord) - alpha + beta[delta]
                 g = (g*f) % n
             T, R = R, R.add(W, T)
-        g = gcd(n, g)
+        g =int(gcd(n, g))
 
         #Stage 2 Factor found
         if g != 1 and g != n:
@@ -322,14 +334,14 @@ def ecm(n: int, B1: int=10000, B2: int=100000, max_curve: int=200, seed: int=123
     if B1 % 2 != 0 or B2 % 2 != 0:
         raise ValueError("both bounds must be even")
     TF_LIMIT = 100000
-    factors: set[int] = set()
+    factors = set()
     for prime in sieve.primerange(2, TF_LIMIT):
         if n % prime == 0:
             factors.add(prime)
             while(n % prime == 0):
                 n //= prime
 
-    queue: list[int] = []
+    queue= []
     def check(m):
         if isprime(m):
             factors.add(m)
