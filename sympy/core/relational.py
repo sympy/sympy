@@ -439,10 +439,11 @@ class Relational(Boolean, EvalfMixin):
             # allow a definitive comparison with 0
             v = None
             if dif.is_comparable:
-                v = dif.n(2)
-                if any(i._prec == 1 for i in v.as_real_imag()):
-                    rv, iv = [i.n(2) for i in dif.as_real_imag()]
+                rv, iv = [i.n(2) for i in dif.as_real_imag()]
+                if not any(i._prec == 1 for i in (rv, iv)):
                     v = rv + S.ImaginaryUnit*iv
+                else:
+                    v = dif.n(2)
             elif dif.equals(0):  # XXX this is expensive
                 v = S.Zero
             if v is not None:

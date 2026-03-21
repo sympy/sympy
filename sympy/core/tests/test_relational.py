@@ -749,6 +749,11 @@ def test_simplify_relational():
     z = cos(1)**2 + sin(1)**2 - 1  # z.is_zero is None
     assert Eq(z*x, 0).simplify() == S.true
 
+    # sum of cube roots of unity is zero (complex cancellation, issue #25142)
+    from sympy import I, exp, pi as PI
+    cru = 1 + exp(2*I*PI/3) + exp(-2*I*PI/3)
+    assert Eq(cru, 0).simplify() == S.true
+
     assert Ne(y, x).simplify() == Ne(x, y)
     assert Ne(x - 1, 0).simplify() == Ne(x, 1)
     assert Ne(x - 1, x).simplify() == S.true
