@@ -2543,14 +2543,16 @@ class LatexPrinter(Printer):
 
     def _print_OmegaPower(self, expr):
         exp, mul = expr.args
+        if exp == 0:
+            return f"{mul}"
         if mul != 1:
             if exp != 1:
-                return r"{} \omega^{{{}}}".format(mul, exp)
+                return r"\omega^{{{}}} {}".format(self._print(exp), mul)
             else:
-                return r"{} \omega".format(mul)
+                return r"\omega {}".format(mul)
         else:
             if exp != 1:
-                return r"\omega^{{{}}}".format(exp)
+                return r"\omega^{{{}}}".format(self._print(exp))
             else:
                 return r"\omega"
 
