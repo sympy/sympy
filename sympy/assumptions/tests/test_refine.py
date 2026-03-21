@@ -8,7 +8,7 @@ from sympy.core.symbol import Symbol
 from sympy.functions.elementary.complexes import (Abs, arg, im, re, sign)
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.functions.elementary.trigonometric import (atan, atan2, cos, sin)
+from sympy.functions.elementary.trigonometric import (atan, atan2, cos, sin, tan)
 from sympy.abc import w, x, y, z
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.piecewise import Piecewise
@@ -320,3 +320,19 @@ def test_Heaviside():
     assert refine(Heaviside(x, 1), Q.zero(x)) == 1
     assert refine(Heaviside(x, 1), Q.positive(x)) == 1
     assert refine(Heaviside(x, 1), Q.negative(x)) == 0
+
+
+def test_refine_tan():
+    n = Symbol('n')
+
+    # tan(n*pi) = 0 for any integer n (even or odd)
+    assert refine(tan(n*pi), Q.even(n)) == 0
+    assert refine(tan(n*pi), Q.odd(n)) == 0
+
+    # tan(n*pi + pi/4) = 1 for any integer n
+    assert refine(tan(n*pi + pi/4), Q.even(n)) == 1
+    assert refine(tan(n*pi + pi/4), Q.odd(n)) == 1
+
+    # tan(x) without integer pi coefficient — no simplification
+    assert refine(tan(x), Q.positive(x)) == tan(x)
+    

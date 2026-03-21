@@ -552,6 +552,57 @@ def refine_floor_ceiling(expr, assumptions):
     return expr
 
 
+def refine_tan(expr, assumptions):
+    """
+    Handler for the tan function.
+
+    Explanation
+    ===========
+
+    tan has a period of pi, so tan(n*pi + rem) = tan(rem) when n is an integer.
+    In particular, tan(n*pi) = 0 for any integer n.
+
+    Examples
+    ========
+
+    >>> from sympy.assumptions.refine import refine_tan
+    >>> from sympy import Symbol, Q, tan, pi
+    >>> n = Symbol('n')
+    >>> refine_tan(tan(n*pi), Q.even(n))
+    0
+    >>> refine_tan(tan(n*pi), Q.odd(n))
+    0
+    >>> refine_tan(tan(n*pi + pi/4), Q.even(n))
+    1
+    >>> refine_tan(tan(n*pi + pi/4), Q.odd(n))
+    1
+    """
+    from sympy.functions.elementary.trigonometric import tan
+    arg = expr.args[0]
+
+    integer_coeffs_of_pi = []
+    remaining_terms = []
+
+    terms = arg.args if arg.is_Add else (arg,)
+    for term in terms:
+        coeff_of_pi = term.coeff(S.Pi)
+        if coeff_of_pi and ask(Q.integer(coeff_of_pi), assumptions):
+            integer_coeffs_of_pi.append(coeff_of_pi)
+        else:
+            remaining_terms.append(term)
+
+    if not integer_coeffs_of_pi:
+        return expr
+
+    # tan(n*pi + rem) = tan(rem) when n is integer
+    # because tan has period pi
+    rem = sum(remaining_terms) if remaining_terms else S.Zero
+    if rem == S.Zero:
+        return S.Zero
+
+    return tan(rem)
+
+
 handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'Abs': refine_abs,
     'Pow': refine_Pow,
@@ -563,7 +614,8 @@ handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'MatrixElement': refine_matrixelement,
     'cos': refine_sin_cos,
     'sin': refine_sin_cos,
+    'tan': refine_tan,
     'Heaviside': refine_Heaviside,
     'floor': refine_floor_ceiling,
-    'ceiling' : refine_floor_ceiling,
+    'ceiling': refine_floor_ceiling,
 }
