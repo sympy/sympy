@@ -2545,12 +2545,14 @@ class LatexPrinter(Printer):
         exp, mul = expr.args
         if mul != 1:
             if exp != 1:
-                return r"{} \omega^{{{}}}".format(mul, exp)
+                # FIX: use self._print(exp) for recursive printing (power tower support)
+                return r"{} \omega^{{{}}}".format(mul, self._print(exp))
             else:
                 return r"{} \omega".format(mul)
         else:
             if exp != 1:
-                return r"\omega^{{{}}}".format(exp)
+                # FIX: use self._print(exp) for recursive printing (power tower support)
+                return r"\omega^{{{}}}".format(self._print(exp))
             else:
                 return r"\omega"
 
