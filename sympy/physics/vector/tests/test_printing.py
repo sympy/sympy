@@ -52,20 +52,23 @@ def test_vector_pretty_print():
     # TODO : The pretty print division does not print correctly here:
     # w = alpha * N.x + sin(omega) * N.y + alpha / beta * N.z
 
+    assert ascii_vpretty(alpha * N.x) == 'alpha n_x'
+    assert unicode_vpretty(alpha * N.x) == 'α nₓ'
+
     expected = """\
  2                               \n\
 a  n_x + b n_y + c*sin(alpha) n_z\
 """
     uexpected = """\
- 2                           \n\
-a  n_x + b n_y + c⋅sin(α) n_z\
+ 2                          \n\
+a  nₓ + b n_y + c⋅sin(α) n_z\
 """
 
     assert ascii_vpretty(v) == expected
     assert unicode_vpretty(v) == uexpected
 
     expected = 'alpha n_x + sin(omega) n_y + alpha*beta n_z'
-    uexpected = 'α n_x + sin(ω) n_y + α⋅β n_z'
+    uexpected = 'α nₓ + sin(ω) n_y + α⋅β n_z'
 
     assert ascii_vpretty(w) == expected
     assert unicode_vpretty(w) == uexpected
@@ -77,10 +80,10 @@ a       b + c       c     \n\
 b         a         b     \
 """
     uexpected = """\
-                     2    \n\
-a       b + c       c     \n\
-─ n_x + ───── n_y + ── n_z\n\
-b         a         b     \
+                    2    \n\
+a      b + c       c     \n\
+─ nₓ + ───── n_y + ── n_z\n\
+b        a         b     \
 """
 
     assert ascii_vpretty(o) == expected
@@ -283,28 +286,28 @@ def test_issue_13354():
 def test_vector_derivative_printing():
     # First order
     v = omega.diff() * N.x
-    assert unicode_vpretty(v) == 'ω̇ n_x'
+    assert unicode_vpretty(v) == 'ω̇ nₓ'
     assert ascii_vpretty(v) == "omega'(t) n_x"
 
     # Second order
     v = omega.diff().diff() * N.x
 
     assert vlatex(v) == r'\ddot{\omega}\mathbf{\hat{n}_x}'
-    assert unicode_vpretty(v) == 'ω̈ n_x'
+    assert unicode_vpretty(v) == 'ω̈ nₓ'
     assert ascii_vpretty(v) == "omega''(t) n_x"
 
     # Third order
     v = omega.diff().diff().diff() * N.x
 
     assert vlatex(v) == r'\dddot{\omega}\mathbf{\hat{n}_x}'
-    assert unicode_vpretty(v) == 'ω⃛ n_x'
+    assert unicode_vpretty(v) == 'ω⃛ nₓ'
     assert ascii_vpretty(v) == "omega'''(t) n_x"
 
     # Fourth order
     v = omega.diff().diff().diff().diff() * N.x
 
     assert vlatex(v) == r'\ddddot{\omega}\mathbf{\hat{n}_x}'
-    assert unicode_vpretty(v) == 'ω⃜ n_x'
+    assert unicode_vpretty(v) == 'ω⃜ nₓ'
     assert ascii_vpretty(v) == "omega''''(t) n_x"
 
     # Fifth order
@@ -319,11 +322,11 @@ d             \n\
 dt            \
 '''
     uexpected = '''\
- 5        \n\
-d         \n\
-───(ω) n_x\n\
-  5       \n\
-dt        \
+ 5       \n\
+d        \n\
+───(ω) nₓ\n\
+  5      \n\
+dt       \
 '''
     assert unicode_vpretty(v) == uexpected
     assert ascii_vpretty(v) == expected

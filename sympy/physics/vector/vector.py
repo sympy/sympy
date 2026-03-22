@@ -1,6 +1,6 @@
 from __future__ import annotations
 from sympy import (S, sympify, expand, sqrt, Add, zeros, acos,
-                   ImmutableMatrix as Matrix, simplify)
+                   ImmutableMatrix as Matrix, simplify, Symbol)
 from sympy.simplify.trigsimp import trigsimp
 from sympy.printing.defaults import Printable
 from sympy.utilities.misc import filldedent
@@ -277,7 +277,7 @@ class Vector(Printable, EvalfMixin):
                 elif M[i] == -1:
                     terms.append(prettyForm("-1") * prettyForm(N.pretty_vecs[i]))
                 else:
-                    terms.append(juxtapose(M[i], N.pretty_vecs[i]))
+                    terms.append(juxtapose(M[i], Symbol(N.pretty_vecs[i])))
 
         if terms:
             pretty_result = prettyForm.__add__(*terms)
