@@ -575,7 +575,7 @@ def test_physics_constant():
     assert not meter.is_physical_constant
     assert not joule.is_physical_constant
 
-def subs_does_not_modify_abbrev():
+def test_subs_does_not_modify_abbrev():
     from sympy import Symbol
     from sympy.physics.units import meter, kilogram
 
