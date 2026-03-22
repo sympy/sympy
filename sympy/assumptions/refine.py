@@ -560,7 +560,7 @@ def refine_log(expr, assumptions):
     ========
 
     >>> from sympy import Q, log, exp, refine
-    >>> from sympy.abc import x, y
+    >>> from sympy.abc import x
 
     >>> refine(log(exp(x)), Q.real(x))
     x
