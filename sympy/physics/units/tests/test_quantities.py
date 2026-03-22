@@ -584,3 +584,8 @@ def test_subs_does_not_modify_abbrev():
 
     assert q == meter
     assert q.abbrev == m
+
+def test_quantity_replaced():
+    from sympy.physics.units import meter, kilogram
+    assert meter.subs(meter, 1) == 1
+    assert meter.subs(meter, kilogram) == kilogram
