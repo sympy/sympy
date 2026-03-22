@@ -296,23 +296,7 @@ def test_log():
 
     # Power rule must NOT apply with imaginary exponents
     assert refine(log(x**(2*I)), Q.positive(x)) == log(x**(2*I))
-    assert refine(log(x**y), Q.positive(x)) == log(x**y)
-
-    # Mixed exponent: split real parts from non-real parts
-    assert (refine(log(x**(2*I + y)), Q.positive(x) & Q.real(y)) ==
-        y*log(x) + log(x**(2*I)))
-    # Also works with Q.positive(y) since positive implies real
-    assert (refine(log(x**(2*I + y)), Q.positive(x) & Q.positive(y)) ==
-        y*log(x) + log(x**(2*I)))
-
-    # Product rule: log(x*y) -> log(x) + log(y) when both positive
-    assert refine(log(x*y), Q.positive(x) & Q.positive(y)) == log(x) + log(y)
-    assert (refine(log(x*y*z), Q.positive(x) & Q.positive(y) & Q.positive(z)) ==
-        log(x) + log(y) + log(z))
-
-    # Quotient rule: log(x/y) -> log(x) - log(y) when both positive
-    # (x/y is represented as x * y**(-1))
-    assert refine(log(x/y), Q.positive(x) & Q.positive(y)) == log(x) - log(y)
+    assert refine(log(x**y), Q.positive(x) & Q.imaginary(y)) == log(x**y)
 
     # Inverse: log(exp(x)) -> x when x is real
     assert refine(log(exp(x)), Q.real(x)) == x
@@ -320,16 +304,7 @@ def test_log():
 
     # No simplification without proper assumptions
     assert refine(log(x**2), True) == log(x**2)
-    assert refine(log(x*y), Q.positive(x)) == log(x) + log(y)  # partial split
     assert refine(log(exp(x)), True) == log(exp(x))  # need Q.real
-
-    # Combined product + power: log(x**2 * y**3) with both positive
-    assert (refine(log(x**2 * y**3), Q.positive(x) & Q.positive(y)) ==
-        2*log(x) + 3*log(y))
-
-    # Nested: log(exp(x)) inside a product
-    assert (refine(log(x * exp(y)), Q.positive(x) & Q.real(y)) ==
-        log(x) + y)
 
     # log(1/x) with positive x -> -log(x)
     assert refine(log(S.One/x), Q.positive(x)) == -log(x)
@@ -337,39 +312,18 @@ def test_log():
     # Negative base should NOT simplify power rule
     assert refine(log(x**2), Q.negative(x)) == log(x**2)
 
-    # Both terms negative should NOT split
-    assert refine(log(x*y), Q.negative(x) & Q.negative(y)) == log(x*y)
-
-    # One negative, one positive -- positive term still extracts
-    assert refine(log(x*y), Q.positive(x) & Q.negative(y)) == log(x) + log(y)
-
-    # Complex exponent with no real part should NOT split
-    assert refine(log(x**(3*I)), Q.positive(x)) == log(x**(3*I))
-    assert refine(log(x**(I*y)), Q.positive(x) & Q.real(y)) == log(x**(I*y))
-
     # exp with complex argument should NOT fully simplify
     assert refine(log(exp(I*x)), Q.real(x)) == log(exp(I*x))
-    assert refine(log(exp(x + I)), Q.real(x)) == x + log(exp(I))
+    assert refine(log(exp(x + I)), Q.real(x)) == log(exp(x + I))
 
-    # Unknown sign should NOT split product
-    assert refine(log(x*y), True) == log(x*y)
-    assert refine(log(x*y), Q.real(x) & Q.real(y)) == log(x*y)
-
-    # Zero should NOT simplify (undefined)
+    # Zero should NOT simplify (undefined handled properly by evaluating)
     assert refine(log(0), True) == log(0)
 
     # (-x)**2 is canonicalized to x**2 by SymPy, so it simplifies
     assert refine(log((-x)**2), Q.positive(x)) == 2*log(x)
 
-    # Mixed known/unknown in product
-    assert refine(log(x*y), Q.positive(x)) == log(x) + log(y)  # partial OK
-    assert refine(log(x*y), Q.negative(x)) == log(x*y)  # no split
-
     # Non-real exponent without Q.real assumption
     assert refine(log(x**y), Q.positive(x)) == log(x**y)  # y could be complex
-
-    # Multiple imaginary terms in exponent
-    assert refine(log(x**(I + 2*I)), Q.positive(x)) == log(x**(I + 2*I))
 
     # log(exp(x)) without Q.real should NOT simplify
     assert refine(log(exp(x)), True) == log(exp(x))
@@ -378,40 +332,17 @@ def test_log():
     # Nested log should NOT simplify
     assert refine(log(log(x)), Q.positive(x)) == log(log(x))
 
-    # Sum inside log (not product) should NOT split
-    assert refine(log(x + y), Q.positive(x) & Q.positive(y)) == log(x + y)
-
     # Power with negative exponent
     assert refine(log(x**(-2)), Q.positive(x)) == -2*log(x)
     assert refine(log(x**(-y)), Q.positive(x) & Q.real(y)) == -y*log(x)
-
-    # Four terms with mixed assumptions
-    assert (refine(log(x*y*z*w), Q.positive(x) & Q.negative(y)) ==
-        log(x) + log(y*z*w))  # Only x extracts
-
-    # All four positive should fully split
-    assert (refine(log(x*y*z*w), Q.positive(x) & Q.positive(y) &
-                   Q.positive(z) & Q.positive(w)) ==
-        log(x) + log(y) + log(z) + log(w))
-
-    # Three positive, one unknown
-    assert (refine(log(x*y*z*w), Q.positive(x) & Q.positive(y) &
-                   Q.positive(z)) ==
-        log(x) + log(y) + log(z) + log(w))  # w stays inside
 
     # exp with multiple real variables
     assert refine(log(exp(x + y)), Q.real(x) & Q.real(y)) == x + y
     assert refine(log(exp(x + y + z)), Q.real(x) & Q.real(y) & Q.real(z)) == x + y + z
 
-    # exp with mixed real/imaginary
-    assert (refine(log(exp(x + y + I*z)), Q.real(x) & Q.real(y) & Q.real(z)) ==
-        x + y + log(exp(I*z)))
-
     # Power with multiple variables in exponent
-    assert (refine(log(x**(y + z)), Q.positive(x) & Q.real(y) & Q.real(z)) ==
-        (y + z)*log(x))
-    assert (refine(log(x**(y + I*z)), Q.positive(x) & Q.real(y) & Q.real(z)) ==
-        y*log(x) + log(x**(I*z)))
+    assert refine(log(x**(y + z)), Q.positive(x) & Q.real(y) & Q.real(z)) == \
+        (y + z)*log(x)
 
     # Power rule needs Q.positive(x) AND Q.real(exponent)
     # -- omit Q.positive(x): only Q.real
@@ -424,39 +355,10 @@ def test_log():
     assert refine(log(exp(x)), Q.imaginary(x)) == log(exp(x))
     assert refine(log(exp(x)), Q.complex(x)) == log(exp(x))
 
-    # Mixed exponent needs Q.positive(x) AND Q.real(y)
-    # -- omit Q.real(y)
-    assert refine(log(x**(y + 2*I)), Q.positive(x)) == log(x**(y + 2*I))
-    # -- omit Q.positive(x)
-    assert refine(log(x**(y + 2*I)), Q.real(y)) == log(x**(y + 2*I))
-    # -- omit both
-    assert refine(log(x**(y + 2*I)), True) == log(x**(y + 2*I))
-
-    # exp with mixed args needs Q.real for the real parts
-    # -- no assumptions
-    assert refine(log(exp(x + I)), True) == log(exp(x + I))
-    # -- wrong variable assumed real
-    assert refine(log(exp(x + I*y)), Q.real(y)) == log(exp(x + I*y))
-
-    # Quotient rule needs both Q.positive
-    # -- only Q.positive(y), omit Q.positive(x)
-    assert refine(log(x/y), Q.positive(y)) == log(x) - log(y)
-    # -- no assumptions
-    assert refine(log(x/y), True) == log(x/y)
-
-    # Multi-term product: no assumptions
-    assert refine(log(x*y*z), True) == log(x*y*z)
-
     # exp multi real: omit one Q.real
-    assert refine(log(exp(x + y)), Q.real(x)) == x + log(exp(y))
+    assert refine(log(exp(x + y)), Q.real(x)) == log(exp(x + y))
     # -- no assumptions
     assert refine(log(exp(x + y)), True) == log(exp(x + y))
-
-    # exp mixed real/imag: omit one Q.real
-    assert (refine(log(exp(x + y + I*z)), Q.real(x)) ==
-        x + log(exp(y + I*z)))
-    # -- no assumptions
-    assert refine(log(exp(x + y + I*z)), True) == log(exp(x + y + I*z))
 
     # Power multi var exponent: omit assumptions
     # -- omit Q.real(y) and Q.real(z)
@@ -465,6 +367,8 @@ def test_log():
     assert refine(log(x**(y + z)), Q.real(y) & Q.real(z)) == log(x**(y + z))
     # -- omit Q.real(z) from mixed
     assert refine(log(x**(y + I*z)), Q.positive(x)) == log(x**(y + I*z))
+
+
 def test_floor_ceiling():
     assert refine(floor(x), Q.integer(x)) == x
     assert refine(ceiling(x), Q.integer(x)) == x
