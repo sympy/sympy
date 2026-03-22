@@ -3738,15 +3738,17 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
         temp = [r[symb] for symb in all_symbols]
         tup = tuple(temp)
         is_dup = False
-        for seen_tup in seen:
-            try:
-                if all(simplify(a - b) == 0
-                       for a, b in zip(tup, seen_tup)
-                       if isinstance(a, Expr) and isinstance(b, Expr)):
-                    is_dup = True
-                    break
-            except Exception:
-                pass
+        has_set = any(isinstance(x, Set) for x in tup)
+        if not has_set:
+            for seen_tup in seen:
+                try:
+                    if all(simplify(a - b) == 0
+                           for a, b in zip(tup, seen_tup)
+                           if isinstance(a, Expr) and isinstance(b, Expr)):
+                        is_dup = True
+                        break
+                except Exception:
+                    pass
         if not is_dup:
             seen.append(tup)
             result += FiniteSet(tup)
