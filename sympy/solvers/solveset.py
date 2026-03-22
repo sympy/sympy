@@ -3747,7 +3747,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                            if isinstance(a, Expr) and isinstance(b, Expr)):
                         is_dup = True
                         break
-                except Exception:
+                except (TypeError, AttributeError):
                     pass
         if not is_dup:
             seen.append(tup)
