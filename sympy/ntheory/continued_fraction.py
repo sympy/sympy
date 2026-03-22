@@ -9,7 +9,7 @@ from sympy.utilities.misc import as_int
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from sympy.core.expr import Expr
-from typing import Iterator,Iterable,Any,List,Union
+from typing import Iterator,Iterable,Any
 
 def continued_fraction(a) -> list[Any]:
     """Return the continued fraction representation of a Rational or
@@ -75,7 +75,7 @@ def continued_fraction(a) -> list[Any]:
     raise ValueError(f"expecting a rational or quadratic irrational, not {e}")
 
 
-def continued_fraction_periodic(p: int, q: int, d: int =0, s: int =1) -> List[Union[Integer, List[Integer]]]:
+def continued_fraction_periodic(p: int, q: int, d: int =0, s: int =1) -> list[Integer| list[Integer]]:
     r"""
     Find the periodic continued fraction expansion of a quadratic irrational.
 
@@ -184,7 +184,7 @@ def continued_fraction_periodic(p: int, q: int, d: int =0, s: int =1) -> List[Un
     return terms[:i] + [terms[i:]]  # type: ignore
 
 
-def continued_fraction_reduce(cf: list[int])->  List[Union[int, List[int]]]:
+def continued_fraction_reduce(cf: list[int])->  list[int| list[int]]:
     """
     Reduce a continued fraction to a rational or quadratic irrational.
 
