@@ -10,7 +10,6 @@ _desolve
 """
 from typing import Any
 from sympy.core import Pow, Basic
-from sympy.core.expr import Expr
 from sympy.core.function import Derivative, AppliedUndef
 from sympy.core.relational import Equality
 from sympy.core.symbol import Wild
