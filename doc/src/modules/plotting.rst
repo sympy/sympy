@@ -35,6 +35,15 @@ Plotting Function Reference
 ---------------------------
 
 .. autofunction:: plot
+   
+.. plot::
+   :format: doctest
+   :include-source: True
+
+   >>> from sympy import symbols
+   >>> from sympy.plotting import plot
+   >>> x = symbols('x')
+   >>> plot(x**2)
 
 .. autofunction:: plot_parametric
 
