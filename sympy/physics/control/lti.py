@@ -1,4 +1,5 @@
-from typing import Type
+from __future__ import annotations
+
 from sympy import Interval, numer, Rational, solveset
 from sympy.core.add import Add
 from sympy.core.basic import Basic
@@ -404,7 +405,7 @@ def gain_margin(system):
 class LinearTimeInvariant(Basic, EvalfMixin, ABC):
     """A common class for all the Linear Time-Invariant Dynamical Systems."""
 
-    _clstype: Type
+    _clstype: type
 
     # Users should not directly interact with this class.
     def __new__(cls, *system, **kwargs):
@@ -1456,13 +1457,29 @@ class TransferFunctionBase(SISOLinearTimeInvariant, ABC):
 
         num_coeffs = num_poly.all_coeffs()
         den_coeffs = den_poly.all_coeffs()
+
+        if n == 0:
+            return (
+                Matrix([zeros(1)]),
+                Matrix([zeros(1)]),
+                Matrix([zeros(1)]),
+                Matrix([num_coeffs[0] / den_coeffs[0]]),
+            )
+
+        if self.num == self.den:
+            return (
+                Matrix([zeros(1)]), Matrix([zeros(1)]), Matrix([zeros(1)]), Matrix([1])
+            )
+
         diff = n - num_poly.degree()
         num_coeffs = [0]*diff + num_coeffs
 
         a = den_coeffs[1:]
-        a_mat = Matrix([[(-1)*coefficient/den_coeffs[0] for coefficient in reversed(a)]])
-        vert = zeros(n-1, 1)
-        mat = eye(n-1)
+        a_mat = Matrix(
+            [[(-1) * coefficient / den_coeffs[0] for coefficient in reversed(a)]]
+        )
+        vert = zeros(n - 1, 1)
+        mat = eye(n - 1)
         A = vert.row_join(mat)
         A = A.col_join(a_mat)
 
@@ -1472,11 +1489,11 @@ class TransferFunctionBase(SISOLinearTimeInvariant, ABC):
         i = n
         C = []
         while(i > 0):
-            C.append(num_coeffs[i] - den_coeffs[i]*num_coeffs[0])
+            C.append(num_coeffs[i]/den_coeffs[0] - den_coeffs[i]*num_coeffs[0]/(den_coeffs[0]**2))
             i -= 1
         C = Matrix([C])
 
-        D = Matrix([num_coeffs[0]])
+        D = Matrix([num_coeffs[0]/den_coeffs[0]])
 
         return A, B, C, D
 

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from functools import reduce
 
 from sympy import (sympify, diff, sin, cos, Matrix, symbols,

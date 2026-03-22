@@ -56,6 +56,7 @@ Wald
 Weibull
 WignerSemicircle
 """
+from __future__ import annotations
 
 
 

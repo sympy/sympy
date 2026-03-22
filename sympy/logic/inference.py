@@ -1,4 +1,5 @@
 """Inference in propositional logic"""
+from __future__ import annotations
 
 from sympy.logic.boolalg import And, Not, conjuncts, to_cnf, BooleanFunction
 from sympy.core.sorting import ordered

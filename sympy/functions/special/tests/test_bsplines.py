@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.functions import bspline_basis_set, interpolating_spline
 from sympy.core.numbers import Rational
 from sympy.core.singleton import S

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.core import S, Symbol, Add, sympify, Expr, PoleError, Mul
 from sympy.core.exprtools import factor_terms

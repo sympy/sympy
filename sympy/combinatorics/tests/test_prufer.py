@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.combinatorics.prufer import Prufer
 from sympy.testing.pytest import raises
 

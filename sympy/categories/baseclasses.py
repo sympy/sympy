@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core import S, Basic, Dict, Symbol, Tuple, sympify
 from sympy.core.symbol import Str
 from sympy.sets import Set, FiniteSet, EmptySet

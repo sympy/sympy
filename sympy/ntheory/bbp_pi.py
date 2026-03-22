@@ -70,11 +70,12 @@ calculated for the given precision.
 array (perhaps just a matter of preference).
 
 '''
+from __future__ import annotations
 
 from sympy.utilities.misc import as_int
 
 
-def _series(j, n, prec=14):
+def _series(j: int, n: int, prec: int = 14) -> int:
 
     # Left sum from the bbp algorithm
     s = 0
@@ -106,7 +107,7 @@ def _series(j, n, prec=14):
     return total
 
 
-def pi_hex_digits(n, prec=14):
+def pi_hex_digits(n: int, prec: int = 14) -> str:
     """Returns a string containing ``prec`` (default 14) digits
     starting at the nth digit of pi in hex. Counting of digits
     starts at 0 and the decimal is not counted, so for n = 0 the
@@ -179,7 +180,7 @@ def pi_hex_digits(n, prec=14):
     return s
 
 
-def _dn(n, prec):
+def _dn(n: int, prec: int) -> int:
     # controller for n dependence on precision
     # n = starting digit index
     # prec = the number of total digits to compute

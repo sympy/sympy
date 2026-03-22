@@ -22,6 +22,7 @@ if TYPE_CHECKING:
     from typing import ClassVar
     from typing_extensions import Self
     from sympy.logic.boolalg import BooleanTrue, BooleanFalse
+    from sympy.sets.sets import Set
 
 
 __all__ = (
@@ -530,7 +531,7 @@ class Relational(Boolean, EvalfMixin):
             )
         )
 
-    def _eval_as_set(self):
+    def _eval_as_set(self) -> Set:
         # self is univariate and periodicity(self, x) in (0, None)
         from sympy.solvers.inequalities import solve_univariate_inequality
         from sympy.sets.conditionset import ConditionSet

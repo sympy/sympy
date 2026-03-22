@@ -1,3 +1,4 @@
+from __future__ import annotations
 from math import isclose
 
 from sympy.calculus.util import stationary_points

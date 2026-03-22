@@ -1,4 +1,5 @@
 """Test ideals.py code."""
+from __future__ import annotations
 
 from sympy.polys import QQ, ilex
 from sympy.abc import x, y, z

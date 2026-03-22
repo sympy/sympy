@@ -177,6 +177,7 @@ lightweight classes, :py:class:`~.ModuleHomomorphism`,
 to support this.
 
 """
+from __future__ import annotations
 
 from sympy.core.intfunc import igcd, ilcm
 from sympy.core.symbol import Dummy

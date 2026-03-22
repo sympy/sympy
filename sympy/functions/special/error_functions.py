@@ -1,5 +1,6 @@
 """ This module contains various functions that are special cases
     of incomplete gamma functions. It should probably be renamed. """
+from __future__ import annotations
 
 from sympy.core import EulerGamma # Must be imported from core, not core.numbers
 from sympy.core.add import Add
