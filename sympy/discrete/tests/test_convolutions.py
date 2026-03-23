@@ -60,6 +60,15 @@ def test_convolution():
     assert convolution(b, e) == [-9, 10, Rational(239, 15), Rational(34, 3),
                                  Rational(32, 3), Rational(43, 5), Rational(113, 15),
                                  Rational(14, 5)]
+    # sympy Integer/Zero
+    r = convolution(
+        [S.Zero, S.One, S.Zero, Rational(-1, 6), S.Zero, Rational(1, 120)],
+        [S.One,  S.Zero, Rational(-1, 2), S.Zero, Rational(1, 24), S.Zero]
+    )
+    assert not any(x.has(I) or x.has(sqrt) for x in r)
+    assert r[1] == 1
+    assert r[3] == Rational(-2, 3)
+    assert r[5] == Rational(2, 15)
 
 
 def test_cyclic_convolution():
