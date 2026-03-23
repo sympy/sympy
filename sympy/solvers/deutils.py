@@ -15,7 +15,7 @@ from sympy.core.function import Derivative, AppliedUndef
 from sympy.core.relational import Equality
 from sympy.core.symbol import Wild
 
-def _preprocess(expr: Basic, func: Any | None = None, hint: str | None = '_Integral') -> tuple[Basic, Any]:
+def _preprocess(expr: Basic, func: AppliedUndef | None = None, hint: str | None = '_Integral') -> tuple[Basic, AppliedUndef]:
     """Prepare expr for solving by making sure that differentiation
     is done so that only func remains in unevaluated derivatives and
     (if hint does not end with _Integral) that doit is applied to all
@@ -93,7 +93,7 @@ def _preprocess(expr: Basic, func: Any | None = None, hint: str | None = '_Integ
     return eq, func
 
 
-def ode_order(expr: Basic, func: Any) -> int:
+def ode_order(expr: Basic, func: AppliedUndef) -> int:
     """
     Returns the order of a given differential
     equation with respect to func.
@@ -133,7 +133,7 @@ def ode_order(expr: Basic, func: Any) -> int:
         return max(ode_order(_, func) for _ in expr.args) if expr.args else 0
 
 
-def _desolve(eq: Basic | Equality, func: Any | None = None, hint: str = "default", ics: dict[str, Any] | None = None, simplify: bool = True, *, prep: bool = True, **kwargs: Any) -> dict[str, Any]:
+def _desolve(eq: Basic | Equality, func: AppliedUndef | None = None, hint: str = "default", ics: dict[str, Any] | None = None, simplify: bool = True, *, prep: bool = True, **kwargs: Any) -> dict[str, Any]:
     """This is a helper function to dsolve and pdsolve in the ode
     and pde modules.
 
@@ -192,11 +192,11 @@ def _desolve(eq: Basic | Equality, func: Any | None = None, hint: str = "default
     x0 = kwargs.get('x0', 0)
     terms = kwargs.get('n')
 
+    classifier: Any = None
+    allhints: tuple[str, ...] = ()
     if type == 'ode':
         from sympy.solvers.ode import classify_ode, allhints
         classifier = classify_ode
-        string = 'ODE '
-        dummy = ''
 
     elif type == 'pde':
         from sympy.solvers.pde import classify_pde, allhints
@@ -246,7 +246,7 @@ def _desolve(eq: Basic | Equality, func: Any | None = None, hint: str = "default
                       prep=prep, x0=x0, classify=False, order=hints['order'],
                       match=hints[hints['default']], xi=xi, eta=eta, n=terms, type=type)
     elif hint in ('all', 'all_Integral', 'best'):
-        retdict = {}
+        retdict: dict[str, Any] = {}
         gethints = set(hints) - {'order', 'default', 'ordered_hints'}
         if hint == 'all_Integral':
             for i in hints:
