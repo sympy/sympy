@@ -1152,6 +1152,18 @@ class Basic(Printable):
                 for i in reversed(redo):
                     sequence.insert(0, sequence.pop(i))
 
+        # Fast path: when all substitutions are simple Symbol -> finite
+        # nonzero Number, xreplace does the same thing in a single tree walk
+        # instead of N walks. We exclude zero/infinity because sequential
+        # substitution with those can short-circuit (0*anything=0) giving
+        # different results than simultaneous replacement.
+        if not simultaneous and not kwargs:
+            from .numbers import Number
+            if (all(isinstance(old, Symbol) for old, _ in sequence)
+                    and all(isinstance(new, Number) and new.is_finite
+                            and not new.is_zero for _, new in sequence)):
+                return self.xreplace(dict(sequence))
+
         if simultaneous:  # XXX should this be the default for dict subs?
             reps = {}
             rv = self
