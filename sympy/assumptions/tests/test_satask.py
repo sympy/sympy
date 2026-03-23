@@ -156,7 +156,11 @@ def test_rational_irrational():
         Q.rational(z)) is None
     assert satask(Q.irrational(x*y*z), Q.irrational(x) & Q.rational(y) &
         Q.rational(z)) is None
+    assert satask(Q.irrational(x*y*z), Q.irrational(x) & Q.rational(y) &
+        Q.rational(z) & ~Q.zero(y) & ~Q.zero(z)) is True
     assert satask(Q.irrational(pi*x*y), Q.rational(x) & Q.rational(y)) is None
+    assert satask(Q.irrational(pi*x*y), Q.rational(x) & Q.rational(y) &
+                  ~Q.zero(x) & ~Q.zero(y)) is True
 
     assert satask(Q.irrational(x + y + z), Q.irrational(x) & Q.irrational(y) &
         Q.rational(z)) is None
@@ -229,12 +233,18 @@ def test_integer():
 
     assert satask(Q.integer(x*y), Q.integer(x) & ~Q.integer(y)) is None
     assert satask(Q.integer(x*y), Q.integer(x) & ~Q.rational(y)) is None
+    assert satask(Q.integer(x*y), Q.integer(x) & ~Q.rational(y) &
+        ~Q.zero(x)) is False
     assert satask(Q.integer(x*y*z), Q.integer(x) & Q.integer(y) &
         ~Q.rational(z)) is None
+    assert satask(Q.integer(x*y*z), Q.integer(x) & Q.integer(y) &
+        ~Q.rational(z) & ~Q.zero(x) & ~Q.zero(y)) is False
     assert satask(Q.integer(x*y*z), Q.integer(x) & ~Q.rational(y) &
         ~Q.rational(z)) is None
     assert satask(Q.integer(x*y*z), Q.integer(x) & ~Q.rational(y)) is None
     assert satask(Q.integer(x*y), Q.integer(x) & Q.irrational(y)) is None
+    assert satask(Q.integer(x*y), Q.integer(x) & Q.irrational(y) &
+        ~Q.zero(x)) is False
 
 
 def test_abs():

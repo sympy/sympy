@@ -239,7 +239,7 @@ def _(expr):
             allargs(x, Q.real(x), expr) >> Q.real(expr),
             allargs(x, Q.rational(x), expr) >> Q.rational(expr),
             allargs(x, Q.integer(x), expr) >> Q.integer(expr),
-            (~anyarg(x, Q.zero(x), expr) &
+            (allargs(x, ~Q.zero(x), expr) &
              exactlyonearg(x, ~Q.rational(x), expr)) >> ~Q.integer(expr),
             allargs(x, Q.commutative(x), expr) >> Q.commutative(expr),
             ]
@@ -264,7 +264,7 @@ def _(expr):
 def _(expr):
     allargs_real = allargs(x, Q.real(x), expr)
     onearg_irrational = exactlyonearg(x, Q.irrational(x), expr)
-    return Implies(allargs_real & ~anyarg(x, Q.zero(x), expr),
+    return Implies(allargs_real & allargs(x, ~Q.zero(x), expr),
                     Implies(onearg_irrational, Q.irrational(expr)))
 
 @class_fact_registry.register(Mul)
