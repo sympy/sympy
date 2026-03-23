@@ -376,3 +376,8 @@ def test_get_relevant_clsfacts():
 def test_issue_27467():
     s = sum(Dummy() for _ in range(10))
     assert all(len(CNF.to_CNF(f).clauses) < 1000 for f in class_fact_registry(s))
+
+def test_matrix_scalar_contradiction():
+    A = MatrixSymbol('A', 2, 2)
+    C = MatrixSymbol('C', 2, 2)
+    raises(ValueError, lambda: satask(Q.integer(A*C), Q.integer(A) & Q.integer(C)))
