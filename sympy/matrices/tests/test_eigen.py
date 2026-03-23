@@ -405,7 +405,7 @@ def test_diagonalize():
     assert D == Matrix([
                  [-I, 0],
                  [ 0, I]])
-    
+
     m = Matrix(2, 2, [1, 0, 0, I])
     raises(MatrixError, lambda: m.diagonalize(reals_only=True))
 
