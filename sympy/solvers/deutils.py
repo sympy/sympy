@@ -194,9 +194,13 @@ def _desolve(eq: Basic | Equality, func: AppliedUndef | None = None, hint: str =
 
     classifier: Any = None
     allhints: tuple[str, ...] = ()
+    string: str = ''
+    dummy: str = ''
     if type == 'ode':
         from sympy.solvers.ode import classify_ode, allhints
         classifier = classify_ode
+        string = 'ODE '
+        dummy = ''
 
     elif type == 'pde':
         from sympy.solvers.pde import classify_pde, allhints
