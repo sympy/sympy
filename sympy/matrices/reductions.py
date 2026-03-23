@@ -71,7 +71,15 @@ def _row_reduce_list(mat, rows, cols, one, iszerofunc, simpfunc,
         for p in range(i*cols, (i + 1)*cols):
             mat[p] = isimp(a*mat[p] - b*mat[p + q])
 
-    isimp = _get_intermediate_simp(_dotprodsimp)
+    # When normalize_last=True (fraction-free mode), use cancel() instead of
+    # _dotprodsimp as the intermediate simplification. _dotprodsimp does
+    # expand(deep=True) + cancel() which is much more expensive but doesn't
+    # help in fraction-free mode where expressions stay as integer polynomials.
+    if normalize_last:
+        from sympy.polys.polytools import cancel as _cancel
+        isimp = _get_intermediate_simp(_cancel)
+    else:
+        isimp = _get_intermediate_simp(_dotprodsimp)
     piv_row, piv_col = 0, 0
     pivot_cols = []
     swaps = []
@@ -327,11 +335,43 @@ def _rref_dm(dM):
     elif K.is_QQ:
         dM_rref, pivots = dM.rref()
     else:
-        assert False  # pragma: no cover
+        # For other field domains (e.g. ZZ(x), QQ(x), EX), use rref() directly
+        dM_rref, pivots = dM.rref()
 
     M_rref = dM_rref.to_Matrix()
 
     return M_rref, pivots
+
+
+def _to_DM_field(M):
+    """Try to convert a Matrix to a DomainMatrix over a field domain.
+
+    This handles symbolic matrices by converting to the field of fractions
+    (e.g. ZZ(x) for polynomial entries). Returns None if conversion fails.
+
+    Only returns a DomainMatrix if the domain is a proper algebraic field
+    (like ZZ(x), QQ(x)), NOT the EXRAW/EX fallback domain which doesn't
+    simplify expressions well enough for reliable zero-detection in rref.
+    """
+    if not hasattr(M, '_rep'):
+        return None
+
+    try:
+        # to_DM(field=True) converts to the field of fractions,
+        # e.g. ZZ[x] -> ZZ(x), which supports rref()
+        dM = M.to_DM(field=True)
+        K = dM.domain
+        # Reject EXRAW/EX domains - they don't simplify well enough
+        # for reliable rref computation (e.g., can't detect that
+        # (sqrt(2)*x - sqrt(2)*x) == 0)
+        if K.is_EX or getattr(K, 'is_EXRAW', False):
+            return None
+        # Reject if domain is just ZZ or QQ (already handled by _to_DM_ZZ_QQ)
+        if K.is_ZZ or K.is_QQ:
+            return None
+        return dM
+    except Exception:
+        return None
 
 
 @overload
@@ -440,21 +480,36 @@ def _rref(
     if you depend on the form row reduction algorithm leaves entries
     of the matrix, set ``normalize_last=False``
     """
+    # Only use DomainMatrix fast paths when using the default iszerofunc.
+    # Custom iszerofunc (e.g. for numerical tolerance) must go through
+    # _row_reduce which respects the custom zero test.
+    use_default_iszero = iszerofunc is _iszero
+
     # Try to use DomainMatrix for ZZ or QQ
-    dM = _to_DM_ZZ_QQ(M)
+    dM = _to_DM_ZZ_QQ(M) if use_default_iszero else None
 
     if dM is not None:
         # Use DomainMatrix for ZZ or QQ
         mat, pivot_cols = _rref_dm(dM)
     else:
-        # Use the generic Matrix routine.
-        if isinstance(simplify, FunctionType):
-            simpfunc: Callable[[Any], Any] = simplify
-        else:
-            simpfunc = _simplify
+        # Try DomainMatrix with field=True for symbolic matrices
+        # This handles polynomial/rational function entries via ZZ(x), QQ(x), etc.
+        dM_field = _to_DM_field(M) if use_default_iszero else None
+        if dM_field is not None:
+            try:
+                mat, pivot_cols = _rref_dm(dM_field)
+            except Exception:
+                dM_field = None
 
-        mat, pivot_cols, _ = _row_reduce(M, iszerofunc, simpfunc,
-                normalize_last, normalize=True, zero_above=True)
+        if dM_field is None:
+            # Use the generic Matrix routine as last resort.
+            if isinstance(simplify, FunctionType):
+                simpfunc: Callable[[Any], Any] = simplify
+            else:
+                simpfunc = _simplify
+
+            mat, pivot_cols, _ = _row_reduce(M, iszerofunc, simpfunc,
+                    normalize_last, normalize=True, zero_above=True)
 
     if pivots:
         return mat, pivot_cols
