@@ -15,7 +15,7 @@ from sympy.core.function import Derivative, AppliedUndef
 from sympy.core.relational import Equality
 from sympy.core.symbol import Wild
 
-def _preprocess(expr: Basic, func: "AppliedUndef | None" = None, hint: str | None = '_Integral') -> "tuple[Basic, AppliedUndef]":
+def _preprocess(expr: Basic, func: Any | None = None, hint: str | None = '_Integral') -> tuple[Basic, Any]:
     """Prepare expr for solving by making sure that differentiation
     is done so that only func remains in unevaluated derivatives and
     (if hint does not end with _Integral) that doit is applied to all
@@ -93,7 +93,7 @@ def _preprocess(expr: Basic, func: "AppliedUndef | None" = None, hint: str | Non
     return eq, func
 
 
-def ode_order(expr: Basic, func: "AppliedUndef") -> int:
+def ode_order(expr: Basic, func: Any) -> int:
     """
     Returns the order of a given differential
     equation with respect to func.
@@ -133,7 +133,7 @@ def ode_order(expr: Basic, func: "AppliedUndef") -> int:
         return max(ode_order(_, func) for _ in expr.args) if expr.args else 0
 
 
-def _desolve(eq: Basic | Equality, func: "AppliedUndef | None" = None, hint: str = "default", ics: dict[str, Any] | None = None, simplify: bool = True, *, prep: bool = True, **kwargs: Any) -> dict[str, Any]:
+def _desolve(eq: Basic | Equality, func: Any | None = None, hint: str = "default", ics: dict[str, Any] | None = None, simplify: bool = True, *, prep: bool = True, **kwargs: Any) -> dict[str, Any]:
     """This is a helper function to dsolve and pdsolve in the ode
     and pde modules.
 
