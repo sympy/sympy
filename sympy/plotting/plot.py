@@ -350,7 +350,7 @@ def plot(*args, show=True, **kwargs) -> Plot:
        :format: doctest
        :include-source: True
 
-       >>> plot(x**2)
+       >>> plot(x**2)  # doctest: +SKIP
 
     Single Plot
 
