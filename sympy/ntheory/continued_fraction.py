@@ -9,7 +9,7 @@ from sympy.utilities.misc import as_int
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from sympy.core.expr import Expr
-from typing import Iterator,Iterable,Any
+from typing import Iterator,Any
 
 def continued_fraction(a:Any) -> list[int|list[int]]:
     """Return the continued fraction representation of a Rational or
@@ -362,8 +362,8 @@ def continued_fraction_convergents(cf: list[int]) :
     """
     if isinstance(cf, list) and isinstance(cf[-1], list):
         cf = itertools.chain(cf[:-1], itertools.cycle(cf[-1]))
-    p_2, q_2 = S.Zero, S.One  # type: Expr, Expr
-    p_1, q_1 = S.One, S.Zero  # type: Expr, Expr
+    p_2, q_2 = S.Zero, S.One 
+    p_1, q_1 = S.One, S.Zero  
     for a in cf:
         p, q = a*p_1 + p_2, a*q_1 + q_2
         p_2, q_2 = p_1, q_1
