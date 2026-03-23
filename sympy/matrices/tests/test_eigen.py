@@ -7,7 +7,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.matrices import eye, Matrix
 from sympy.core.singleton import S
-from sympy.testing.pytest import raises, XFAIL
+from sympy.testing.pytest import raises
 from sympy.matrices.exceptions import NonSquareMatrixError, MatrixError
 from sympy.matrices.expressions.fourier import DFT
 from sympy.simplify.simplify import simplify
@@ -158,16 +158,6 @@ def test_float_eigenvals():
     for x, y in zip(n_evals, s_evals):
         assert abs(x-y) < 10**-9
 
-
-@XFAIL
-def test_eigen_vects():
-    m = Matrix(2, 2, [1, 0, 0, I])
-    raises(NotImplementedError, lambda: m.is_diagonalizable(True))
-    # !!! bug because of eigenvects() or roots(x**2 + (-1 - I)*x + I, x)
-    # see issue 5292
-    assert not m.is_diagonalizable(True)
-    raises(MatrixError, lambda: m.diagonalize(True))
-    (P, D) = m.diagonalize(True)
 
 def test_issue_8240():
     # Eigenvalues of large triangular matrices
@@ -415,6 +405,9 @@ def test_diagonalize():
     assert D == Matrix([
                  [-I, 0],
                  [ 0, I]])
+    
+    m = Matrix(2, 2, [1, 0, 0, I])
+    raises(MatrixError, lambda: m.diagonalize(reals_only=True))
 
     # make sure we use floats out if floats are passed in
     m = Matrix(2, 2, [0, .5, .5, 0])
@@ -442,6 +435,8 @@ def test_is_diagonalizable():
     assert m.is_diagonalizable()
     assert not m.is_diagonalizable(reals_only=True)
 
+    m = Matrix(2, 2, [1, 0, 0, I])
+    assert not m.is_diagonalizable(reals_only=True)
 
 def test_jordan_form():
     from sympy import nsimplify
