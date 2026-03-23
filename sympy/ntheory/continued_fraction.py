@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from sympy.core.expr import Expr
 from typing import Iterator,Iterable,Any
 
-def continued_fraction(a) -> list[Any]:
+def continued_fraction(a:Any) -> list[int|list[int]]:
     """Return the continued fraction representation of a Rational or
     quadratic irrational.
 
@@ -75,7 +75,7 @@ def continued_fraction(a) -> list[Any]:
     raise ValueError(f"expecting a rational or quadratic irrational, not {e}")
 
 
-def continued_fraction_periodic(p: int, q: int, d: int =0, s: int =1) -> list[Integer| list[Integer]]:
+def continued_fraction_periodic(p: int, q: int, d: int = 0, s: int = 1) -> list[int|list[int]]:
     r"""
     Find the periodic continued fraction expansion of a quadratic irrational.
 
@@ -146,7 +146,7 @@ def continued_fraction_periodic(p: int, q: int, d: int =0, s: int =1) -> list[In
         d = 0
 
     # check for rational case
-    sd: Expr = sqrt(d)
+    sd = sqrt(d)
     if sd.is_Integer:
         return list(continued_fraction_iterator(Rational(p + s*sd, q)))
 
@@ -259,7 +259,7 @@ def continued_fraction_reduce(cf: list[int])->  list[int| list[int]]:
     return rv
 
 
-def continued_fraction_iterator(x: Expr) -> Iterator[Integer]:
+def continued_fraction_iterator(x: Expr) -> Iterator[int]:
     """
     Return continued fraction expansion of x as iterator.
 
@@ -303,7 +303,7 @@ def continued_fraction_iterator(x: Expr) -> Iterator[Integer]:
         x = 1/x
 
 
-def continued_fraction_convergents(cf: Iterable):
+def continued_fraction_convergents(cf: list[int]) :
     """
     Return an iterator over the convergents of a continued fraction (cf).
 
