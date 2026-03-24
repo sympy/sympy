@@ -62,6 +62,8 @@ class BesselBase(DefinedFunction):
 
     @classmethod
     def eval(cls, nu, z):
+        if nu is S.NaN or z is S.NaN:
+            return S.NaN
         return
 
     def fdiff(self, argindex=2):
@@ -186,6 +188,8 @@ class besselj(BesselBase):
             elif re(nu).is_negative and not (nu.is_integer is True):
                 return S.ComplexInfinity
             elif nu.is_imaginary:
+                return S.NaN
+        elif z is S.NaN or nu is S.NaN:
                 return S.NaN
         if z in (S.Infinity, S.NegativeInfinity):
             return S.Zero
@@ -333,6 +337,8 @@ class bessely(BesselBase):
                 return S.ComplexInfinity
             elif re(nu).is_zero:
                 return S.NaN
+        elif z is S.NaN or nu is S.NaN:
+            return S.NaN
         if z in (S.Infinity, S.NegativeInfinity):
             return S.Zero
         if z == I*S.Infinity:
@@ -490,6 +496,8 @@ class besseli(BesselBase):
                 return S.ComplexInfinity
             elif nu.is_imaginary:
                 return S.NaN
+        elif z is S.NaN or nu is S.NaN:
+            return S.NaN
         if im(z) in (S.Infinity, S.NegativeInfinity):
             return S.Zero
         if z is S.Infinity:
@@ -655,6 +663,8 @@ class besselk(BesselBase):
                 return S.ComplexInfinity
             elif re(nu).is_zero:
                 return S.NaN
+        elif z is S.NaN or nu is S.NaN:
+            return S.NaN
         if z in (S.Infinity, I*S.Infinity, I*S.NegativeInfinity):
             return S.Zero
 
@@ -1006,6 +1016,8 @@ class jn(SphericalBesselBase):
                     return S.Zero
                 else:
                     return S.ComplexInfinity
+        elif z is S.NaN or nu is S.NaN:
+            return S.NaN
         if z in (S.NegativeInfinity, S.Infinity):
             return S.Zero
 
