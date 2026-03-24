@@ -441,7 +441,6 @@ if AutolevListener:
             # Write code to import common dependencies.
             self.output_code.append("import sympy.physics.mechanics as _me\n")
             self.output_code.append("import sympy as _sm\n")
-            self.output_code.append("import math as m\n")
             self.output_code.append("import numpy as _np\n")
             self.output_code.append("\n")
 
