@@ -93,6 +93,32 @@ def test_identity_generators_dups_false():
     assert G.order() == 1
 
 
+def test_property_aliasing():
+    G = SymmetricGroup(4)
+    base = G.base
+    base.append(99)
+    assert G.base == [0, 1, 2]
+
+    orbits = G.basic_orbits
+    orbits[0].append(99)
+    assert G.basic_orbits == [[0, 1, 2, 3], [1, 2, 3], [2, 3]]
+
+    transversals = G.basic_transversals
+    transversals[0][99] = Permutation(3)
+    assert 99 not in G.basic_transversals[0]
+
+    H = PermutationGroup(Permutation([1, 0, 2]), Permutation([0, 2, 1]))
+    gens = H.generators
+    gens.pop()
+    assert len(H.generators) == 2
+    assert H.order() == 6
+
+    expected = len(G.strong_gens)
+    strong_gens = G.strong_gens
+    strong_gens.pop()
+    assert len(G.strong_gens) == expected
+
+
 def test_equality():
     p_1 = Permutation(0, 1, 3)
     p_2 = Permutation(0, 2, 3)
