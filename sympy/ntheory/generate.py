@@ -1092,17 +1092,9 @@ def cycle_length(
     f: Callable[[int], int],
     x0: int,
     nmax: SupportsIndex | None = None,
+    *,
     values: Literal[False] = False,
 ) -> Iterator[tuple[int, int | None]]:
-    ...
-
-@overload
-def cycle_length(
-    f: Callable[[int], int],
-    x0: int,
-    nmax: SupportsIndex | None,
-    values: Literal[True],
-) -> Iterator[int]:
     ...
 
 @overload
@@ -1115,10 +1107,12 @@ def cycle_length(
 ) -> Iterator[int]:
     ...
 
+
 def cycle_length(
     f: Callable[[int], int],
     x0: int,
     nmax: SupportsIndex | None = None,
+    *,
     values: bool = False,
 ) -> Iterator[int] | Iterator[tuple[int, int | None]]:
     """For a given iterated sequence, return a generator that gives
