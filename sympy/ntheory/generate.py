@@ -1091,7 +1091,7 @@ def primorial(n: int, nth: bool = True) -> int:
 def cycle_length(
     f: Callable[[int], int],
     x0: int,
-    nmax: int | None = None,
+    nmax: SupportsIndex | None = None,
     values: Literal[False] = False,
 ) -> Iterator[tuple[int, int | None]]:
     ...
@@ -1100,10 +1100,9 @@ def cycle_length(
 def cycle_length(
     f: Callable[[int], int],
     x0: int,
-    nmax: SupportsIndex | None = None,
-    *,
-    values: Literal[False] = False,
-) -> Iterator[tuple[int, int | None]]:
+    nmax: SupportsIndex | None,
+    values: Literal[True],
+) -> Iterator[int]:
     ...
 
 @overload
