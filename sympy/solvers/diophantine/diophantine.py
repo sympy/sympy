@@ -420,12 +420,12 @@ class Linear(DiophantineEquationType):
             for arg in Add.make_args(c):
                 if arg.is_Integer:
                     # example: 5 -> k = 5
-                    k, p = arg, S.One
+                    k, p = arg, S.One   
                     pnew = params[0]
                 else:  # arg is a Mul or Symbol
                     # example: 3*t_1 -> k = 3
                     # example: t_0 -> k = 1
-                    k, p = arg.as_coeff_Mul()
+                    k, p = arg.as_coeff_Mul()   # type: ignore[assignment]
                     pnew = params[params.index(p) + 1]
 
                 sol = sol_x, sol_y = base_solution_linear(k, Ai, Bi, pnew)
@@ -1539,6 +1539,7 @@ def _diop_solve(eq, params=None) -> DiophantineSolutionSet | None:
     for diop_type in all_diop_classes:
         if diop_type(eq).matches():
             return diop_type(eq).solve(parameters=params)
+    return None
 
 
 def diop_solve(eq, param=symbols("t", integer=True)):
