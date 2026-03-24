@@ -2537,6 +2537,8 @@ class LatexPrinter(Printer):
         else:
             return r"\operatorname{%s} {\left(%s\right)}" % (cls,
                                                              ", ".join(args))
+    def _print_OrdinalZero(self, expr):
+        return "0"
 
     def _print_OrdinalOmega(self, expr):
         return r"\omega"

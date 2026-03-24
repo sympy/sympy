@@ -157,29 +157,6 @@ class Ordinal(Basic):
     def __ge__(self, other):
         return not self < other
 
-    def __str__(self):
-        net_str = ""
-        if self == ord0:
-            return 'ord0'
-        for plus_count, i in enumerate(self.terms):
-            if plus_count:
-                net_str += " + "
-
-            if i.exp == ord0:
-                net_str += str(i.mult)
-            elif i.exp == 1:
-                net_str += 'w'
-            elif len(i.exp.terms) > 1 or i.exp.is_limit_ordinal:
-                net_str += 'w**(%s)'%i.exp
-            else:
-                net_str += 'w**%s'%i.exp
-
-            if not i.mult == 1 and not i.exp == ord0:
-                net_str += '*%s'%i.mult
-        return(net_str)
-
-    __repr__ = __str__
-
     def __add__(self, other):
         if not isinstance(other, Ordinal):
             try:
@@ -277,4 +254,5 @@ class OrdinalOmega(Ordinal):
 
 
 ord0 = OrdinalZero()
-omega = OrdinalOmega()
+w = OrdinalOmega()
+omega = w
