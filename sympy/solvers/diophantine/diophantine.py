@@ -420,7 +420,7 @@ class Linear(DiophantineEquationType):
             for arg in Add.make_args(c):
                 if arg.is_Integer:
                     # example: 5 -> k = 5
-                    k, p = arg, S.One   
+                    k, p = arg, S.One
                     pnew = params[0]
                 else:  # arg is a Mul or Symbol
                     # example: 3*t_1 -> k = 3
