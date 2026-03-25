@@ -197,7 +197,7 @@ def test_random_problems():
             assignment = feasible[1]
             assignment = {key.var : value for key, value in assignment.items()}
             if not (StrictLessThan in cons_funcs or StrictGreaterThan in cons_funcs):
-                assignment = {key: value[0] for key, value in assignment.items()}
+                assignment = {key: value.rational for key, value in assignment.items()}
                 for cons in constraints:
                     assert cons.subs(assignment) == True
 
