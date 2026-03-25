@@ -34,10 +34,10 @@ class Subset(Generic[T]):
     _rank_binary: int | None = None
     _rank_lex: int | None  = None
     _rank_graycode: int | None  = None
-    _subset: list[T] | None = None
-    _superset: list[T] | None = None
+    _subset: list[T]
+    _superset: list[T]
 
-    def __new__(cls, subset: list[T], superset: list[T]) -> Subset:
+    def __new__(cls, subset: list[T], superset: list[T]) -> Subset[T]:
         """
         Default constructor.
 
@@ -76,7 +76,7 @@ class Subset(Generic[T]):
             return NotImplemented
         return self.subset == other.subset and self.superset == other.superset
 
-    def iterate_binary(self, k: int) -> Subset:
+    def iterate_binary(self, k: int) -> Subset[T]:
         """
         This is a helper function. It iterates over the
         binary subsets by ``k`` steps. This variable can be
@@ -103,7 +103,7 @@ class Subset(Generic[T]):
         bits = f'{n:b}'.rjust(self.superset_size, '0')
         return Subset.subset_from_bitlist(self.superset, bits)
 
-    def next_binary(self) -> Subset:
+    def next_binary(self) -> Subset[T]:
         """
         Generates the next binary ordered subset.
 
@@ -125,7 +125,7 @@ class Subset(Generic[T]):
         """
         return self.iterate_binary(1)
 
-    def prev_binary(self) -> Subset:
+    def prev_binary(self) -> Subset[T]:
         """
         Generates the previous binary ordered subset.
 
@@ -147,7 +147,7 @@ class Subset(Generic[T]):
         """
         return self.iterate_binary(-1)
 
-    def next_lexicographic(self) -> Subset:
+    def next_lexicographic(self) -> Subset[T]:
         """
         Generates the next lexicographically ordered subset.
 
@@ -192,7 +192,7 @@ class Subset(Generic[T]):
             ret_set.append(super_set[i])
         return Subset(ret_set, super_set)
 
-    def prev_lexicographic(self) -> Subset:
+    def prev_lexicographic(self) -> Subset[T]:
         """
         Generates the previous lexicographically ordered subset.
 
@@ -232,7 +232,7 @@ class Subset(Generic[T]):
             ret_set.append(super_set[i])
         return Subset(ret_set, super_set)
 
-    def iterate_graycode(self, k: int) -> Subset:
+    def iterate_graycode(self, k: int) -> Subset[T]:
         """
         Helper function used for prev_gray and next_gray.
         It performs ``k`` step overs to get the respective Gray codes.
@@ -257,7 +257,7 @@ class Subset(Generic[T]):
         return Subset.subset_from_bitlist(self.superset,
                                           unranked_code)
 
-    def next_gray(self) -> Subset:
+    def next_gray(self) -> Subset[T]:
         """
         Generates the next Gray code ordered subset.
 
@@ -276,7 +276,7 @@ class Subset(Generic[T]):
         """
         return self.iterate_graycode(1)
 
-    def prev_gray(self) -> Subset:
+    def prev_gray(self) -> Subset[T]:
         """
         Generates the previous Gray code ordered subset.
 
