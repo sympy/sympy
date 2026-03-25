@@ -1,6 +1,7 @@
 from __future__ import annotations
 from sympy.assumptions.ask import Q
 from sympy.assumptions.refine import refine
+from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.core.expr import Expr
 from sympy.core.numbers import (I, Rational, nan, pi)
 from sympy.core.singleton import S
@@ -286,6 +287,18 @@ def test_sin_cos():
     assert refine(cos(x + n*pi/2 + k*pi/2 + m*pi/2), \
                   Q.odd(n) & Q.odd(k) & Q.integer(m)) == \
         (-1)**((n + k)/2) * cos(x + m*pi/2)
+
+    assert refine(cos(x), Q.zero(x)) == 1
+    assert refine(sin(x), Q.zero(x)) == 0
+
+    assert (refine(sin(x), Q.infinite(x) & Q.extended_real(x)) ==
+        AccumBounds(-1, 1))
+    assert (refine(cos(x), Q.infinite(x) & Q.extended_real(x)) ==
+        AccumBounds(-1, 1))
+    assert refine(sin(x), Q.infinite(x) & ~Q.extended_real(x)) is nan
+    assert refine(cos(x), Q.infinite(x) & ~Q.extended_real(x)) is nan
+    assert refine(sin(x), Q.infinite(x)) == sin(x)
+    assert refine(cos(x), Q.infinite(x)) == cos(x)
 
 
 def test_floor_ceiling():
