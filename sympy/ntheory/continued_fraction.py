@@ -9,9 +9,9 @@ from sympy.utilities.misc import as_int
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from sympy.core.expr import Expr
-from typing import Iterator,Any
+from typing import Iterator,Any,Iterable
 
-def continued_fraction(a: Any) -> list[int | list[int]]:
+def continued_fraction(a) -> list[int | list[int]]:
     """Return the continued fraction representation of a Rational or
     quadratic irrational.
 
@@ -240,13 +240,13 @@ def continued_fraction_reduce(cf: list[int])->  list[int | list[int]]:
                 break
             yield nxt
 
-    a = S.Zero
+    a:Expr = S.Zero
     for a in continued_fraction_convergents(untillist(cf)):
         pass
 
     if period:
         y = Dummy('y')
-        solns: list = solve(continued_fraction_reduce(period + [y]) - y, y)
+        solns = solve(continued_fraction_reduce(period + [y]) - y, y)
         solns.sort()
         pure = solns[-1]
         rv = a.subs(x, pure).radsimp()
@@ -303,7 +303,7 @@ def continued_fraction_iterator(x: Expr) -> Iterator[int]:
         x = 1/x
 
 
-def continued_fraction_convergents(cf: list[int]) :
+def continued_fraction_convergents(cf: Iterable[Expr | list[int] | int]) -> Iterator[Expr]:
     """
     Return an iterator over the convergents of a continued fraction (cf).
 
