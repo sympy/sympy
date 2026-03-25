@@ -2,9 +2,9 @@ from __future__ import annotations
 from itertools import combinations
 from typing import TypeVar
 
-T = TypeVar('T')
-
 from sympy.combinatorics.graycode import GrayCode
+
+T = TypeVar('T')
 
 
 class Subset():
