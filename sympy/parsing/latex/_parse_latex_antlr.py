@@ -2,6 +2,8 @@
 # https://github.com/augustt198/latex2sympy
 # See license in LICENSE.txt
 from importlib.metadata import version
+import re
+
 import sympy
 from sympy.external import import_module
 from sympy.printing.str import StrPrinter
@@ -11,6 +13,7 @@ from .errors import LaTeXParsingError
 
 
 LaTeXParser = LaTeXLexer = MathErrorListener = None
+_UPRIGHT_DIFF_CMD = re.compile(r"\\(?:mathrm|text)\s*\{\s*d\s*\}")
 
 try:
     LaTeXParser = import_module('sympy.parsing.latex._antlr.latexparser',
@@ -67,7 +70,7 @@ def parse_latex(sympy, strict=False):
                           " provided by pip (antlr4-python3-runtime) or"
                           " conda (antlr-python-runtime), version 4.11")
 
-    sympy = sympy.strip()
+    sympy = _normalize_upright_differential(sympy).strip()
     matherror = MathErrorListener(sympy)
 
     stream = antlr4.InputStream(sympy)
@@ -88,6 +91,18 @@ def parse_latex(sympy, strict=False):
     expr = convert_relation(relation)
 
     return expr
+
+
+def _normalize_upright_differential(latex_str):
+    """Normalize upright differential commands to plain ``d``.
+
+    The ANTLR LaTeX parser recognizes differentials like ``dx`` and
+    ``d\\theta`` in integrals, but not upright forms such as
+    ``\\mathrm{d}x`` or ``\\text{d}x``. Normalize the exact commands
+    ``\\mathrm{d}`` and ``\\text{d}`` to ``d`` before tokenization so
+    they follow the existing differential parsing path.
+    """
+    return _UPRIGHT_DIFF_CMD.sub("d", latex_str)
 
 
 def convert_relation(rel):
