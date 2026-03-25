@@ -31,9 +31,9 @@ class Subset(Generic[T]):
     ['c']
     """
 
-    _rank_binary: int
-    _rank_lex: int
-    _rank_graycode: int
+    _rank_binary: int | None = None
+    _rank_lex: int | None = None
+    _rank_graycode: int | None = None
     _subset: list[T]
     _superset: list[T]
 
@@ -568,7 +568,7 @@ class Subset(Generic[T]):
         return Subset.subset_from_bitlist(superset, graycode_bitlist)
 
     @classmethod
-    def subset_indices(self, subset: list[T], superset: list[T]) -> list[T]:
+    def subset_indices(self, subset: list[T], superset: list[T]) -> list[int]:
         """Return indices of subset in superset in a list; the list is empty
         if all elements of ``subset`` are not in ``superset``.
 
