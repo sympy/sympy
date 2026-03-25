@@ -221,8 +221,12 @@ class RigidBody(BodyBase):
         """
         I = self.central_inertia
         w = self.frame.ang_vel_in(frame)
+        if point == self.masscenter:
+             return I.dot(w)
         m = self.mass
         r = self.masscenter.pos_from(point)
+        if r == 0:
+            return I.dot(w)
         v = self.masscenter.vel(frame)
 
         return I.dot(w) + r.cross(m * v)
