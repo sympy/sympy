@@ -1,13 +1,13 @@
 from __future__ import annotations
 from itertools import combinations
-from typing import TypeVar
+from typing import TypeVar, Generic
 
 from sympy.combinatorics.graycode import GrayCode
 
 T = TypeVar('T')
 
 
-class Subset():
+class Subset(Generic[T]):
     """
     Represents a basic subset object.
 
@@ -34,8 +34,8 @@ class Subset():
     _rank_binary: int | None = None
     _rank_lex: int | None  = None
     _rank_graycode: int | None  = None
-    _subset: list | None = None
-    _superset: list | None = None
+    _subset: list[T] | None = None
+    _superset: list[T] | None = None
 
     def __new__(cls, subset: list[T], superset: list[T]) -> Subset:
         """
