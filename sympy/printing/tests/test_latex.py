@@ -3219,3 +3219,18 @@ def test_latex_disable_split_super_sub():
     assert latex(Symbol('u^a_b')) == 'u^{a}_{b}'
     assert latex(Symbol('u^a_b'), disable_split_super_sub=False) == 'u^{a}_{b}'
     assert latex(Symbol('u^a_b'), disable_split_super_sub=True) == 'u\\^a\\_b'
+def test_root_notation():
+    from sympy import Symbol, Rational, sqrt
+    from sympy.printing.latex import latex
+
+    x = Symbol('x')
+
+    assert latex(x**Rational(1, 3)) == r'\sqrt[3]{x}'
+    assert latex(x**Rational(1, 3), root_notation=False) in (
+        r'x^{1/3}', r'x^{\frac{1}{3}}'
+    )
+
+    assert latex(sqrt(x)) == r'\sqrt{x}'
+    assert latex(sqrt(x), root_notation=False) in (
+        r'x^{1/2}', r'x^{\frac{1}{2}}'
+    )
