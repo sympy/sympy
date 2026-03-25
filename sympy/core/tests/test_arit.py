@@ -1174,6 +1174,7 @@ def test_real_Pow():
 def test_Pow_is_finite():
     xe = Symbol('xe', extended_real=True)
     xr = Symbol('xr', real=True)
+    xc = Symbol('xc', complex=True)
     p = Symbol('p', positive=True)
     n = Symbol('n', negative=True)
     i = Symbol('i', integer=True)
@@ -1185,6 +1186,7 @@ def test_Pow_is_finite():
     assert (xr**xe).is_finite is None
     assert (xe**xr).is_finite is None
     assert (xr**xr).is_finite is True
+    assert (xc**xc).is_finite is True
 
     assert (p**xe).is_finite is None
     assert (p**xr).is_finite is True
@@ -1211,11 +1213,6 @@ def test_Pow_is_finite():
     assert (1/S.Pi).is_finite is True
 
     assert (1/(i-1)).is_finite is None
-
-def test_Pow_is_finite_same_base_exponent_complex():
-    xc = Symbol('xc', complex=True)
-
-    assert (xc**xc).is_finite is True
 
 
 def test_Pow_is_even_odd():
