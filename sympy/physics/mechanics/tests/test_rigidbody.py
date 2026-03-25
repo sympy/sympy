@@ -183,3 +183,20 @@ def test_deprecated_set_potential_energy():
     B = RigidBody('B', P, A, m, (I, P))
     with warns_deprecated_sympy():
         B.set_potential_energy(m*g*h)
+
+
+def test_angular_momentum_masscenter_optimization():
+    from sympy.physics.mechanics import ReferenceFrame, Point, RigidBody
+    from sympy.physics.mechanics import outer
+    from sympy import symbols
+    m, omega = symbols('m omega')
+    N = ReferenceFrame('N')
+    B_frame = ReferenceFrame('B')
+    B_frame.set_ang_vel(N, omega * B_frame.x)
+    P = Point('P')
+    P.set_vel(N, 0)
+    I = outer(B_frame.x, B_frame.x)
+    B = RigidBody('B', P, B_frame, m, (I, P))
+    H1 = B.angular_momentum(P, N)
+    H2 = B.central_inertia.dot(B.frame.ang_vel_in(N))
+    assert H1 == H2
