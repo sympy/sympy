@@ -4,6 +4,7 @@ from sympy.core.add import Add
 from sympy.core.assumptions import check_assumptions
 from sympy.core.containers import Tuple
 from sympy.core.exprtools import factor_terms
+from sympy.core.expr import Expr
 from sympy.core.function import _mexpand
 from sympy.core.mul import Mul
 from sympy.core.numbers import Rational, int_valued
@@ -418,6 +419,8 @@ class Linear(DiophantineEquationType):
             tot_x, tot_y = [], []
 
             for arg in Add.make_args(c):
+                k: Expr
+                p: Expr
                 if arg.is_Integer:
                     # example: 5 -> k = 5
                     k, p = arg, S.One
@@ -425,7 +428,7 @@ class Linear(DiophantineEquationType):
                 else:  # arg is a Mul or Symbol
                     # example: 3*t_1 -> k = 3
                     # example: t_0 -> k = 1
-                    k, p = arg.as_coeff_Mul()   # type: ignore[assignment]
+                    k, p = arg.as_coeff_Mul()
                     pnew = params[params.index(p) + 1]
 
                 sol = sol_x, sol_y = base_solution_linear(k, Ai, Bi, pnew)
