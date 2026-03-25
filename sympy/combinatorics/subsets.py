@@ -60,8 +60,8 @@ class Subset():
                 raise ValueError('The superset provided is invalid as it does '
                                  'not contain the element {}'.format(elem))
         obj = object.__new__(cls)
-        obj._subset = subset
-        obj._superset = superset
+        obj._subset = list(subset)
+        obj._superset = list(superset)
         return obj
 
     def __eq__(self, other):
