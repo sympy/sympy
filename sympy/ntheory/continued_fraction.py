@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from sympy.core.expr import Expr
 from typing import Iterator,Any,Iterable
 
-def continued_fraction(a) -> list[int | list[int]]:
+def continued_fraction(a: Any) -> list[int | list[int]]:
     """Return the continued fraction representation of a Rational or
     quadratic irrational.
 
