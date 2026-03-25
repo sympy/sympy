@@ -1,8 +1,8 @@
-# mypy: disallow-untyped-defs
-
 from __future__ import annotations
+
+from operator import lt
 from typing import Callable, Self
-import operator
+
 from sympy.core import Basic, Integer
 
 
@@ -55,7 +55,7 @@ class OmegaPower(Basic):
                 other = OmegaPower(0, other)
             except TypeError:
                 return NotImplemented
-        return self._compare_term(other, operator.lt)
+        return self._compare_term(other, lt)
 
 
 class Ordinal(Basic):
