@@ -114,6 +114,7 @@ References
        https://link.springer.com/chapter/10.1007/11817963_11
 """
 from __future__ import annotations
+from dataclasses import dataclass
 from sympy.solvers.solveset import linear_eq_to_matrix
 from sympy.matrices.dense import eye
 from sympy.assumptions import Predicate
@@ -363,13 +364,13 @@ class LRASolver():
         """
         self.result = None
         for var in self.all_var:
-            var.lower = LRARational(-float("inf"), 0)
+            var.lower = LRARational(-float("inf"))
             var.lower_from_eq = False
             var.lower_from_neg = False
-            var.upper = LRARational(float("inf"), 0)
+            var.upper = LRARational(float("inf"))
             var.upper_from_eq = False
             var.upper_from_neg = False
-            var.assign = LRARational(0, 0)
+            var.assign = LRARational(0)
 
     def assert_lit(self, enc_constraint):
         """
@@ -449,12 +450,12 @@ class LRASolver():
         if ci >= xi.upper:
             return None
         if ci < xi.lower:
-            assert (xi.lower[1] >= 0) is True
-            assert (ci[1] <= 0) is True
+            assert (xi.lower.delta >= 0) is True
+            assert (ci.delta <= 0) is True
 
             lit1, neg1 = Boundary.from_lower(xi)
 
-            lit2 = Boundary(var=xi, const=ci[0], strict=ci[1] != 0, upper=True, equality=from_equality)
+            lit2 = Boundary(var=xi, const=ci.rational, strict=ci.delta != 0, upper=True, equality=from_equality)
             if from_neg:
                 lit2 = lit2.get_negated()
             neg2 = -1 if from_neg else 1
@@ -468,10 +469,9 @@ class LRASolver():
         if xi in self.nonslack and xi.assign > ci:
             self._update(xi, ci)
 
-        if self.run_checks and all(v.assign[0] != float("inf") and v.assign[0] != -float("inf")
-                                   for v in self.all_var):
+        if self.run_checks and all(not v.assign.is_inf for v in self.all_var):
             M = self.A
-            X = Matrix([v.assign[0] for v in self.all_var])
+            X = Matrix([v.assign.rational for v in self.all_var])
             assert all(abs(val) < 10 ** (-10) for val in M * X)
 
         return None
@@ -491,12 +491,12 @@ class LRASolver():
         if ci <= xi.lower:
             return None
         if ci > xi.upper:
-            assert (xi.upper[1] <= 0) is True
-            assert (ci[1] >= 0) is True
+            assert (xi.upper.delta <= 0) is True
+            assert (ci.delta >= 0) is True
 
             lit1, neg1 = Boundary.from_upper(xi)
 
-            lit2 = Boundary(var=xi, const=ci[0], strict=ci[1] != 0, upper=False, equality=from_equality)
+            lit2 = Boundary(var=xi, const=ci.rational, strict=ci.delta != 0, upper=False, equality=from_equality)
             if from_neg:
                 lit2 = lit2.get_negated()
             neg2 = -1 if from_neg else 1
@@ -510,10 +510,9 @@ class LRASolver():
         if xi in self.nonslack and xi.assign < ci:
             self._update(xi, ci)
 
-        if self.run_checks and all(v.assign[0] != float("inf") and v.assign[0] != -float("inf")
-                                   for v in self.all_var):
+        if self.run_checks and all(not v.assign.is_inf for v in self.all_var):
             M = self.A
-            X = Matrix([v.assign[0] for v in self.all_var])
+            X = Matrix([v.assign.rational for v in self.all_var])
             assert all(abs(val) < 10 ** (-10) for val in M * X)
 
         return None
@@ -563,9 +562,8 @@ class LRASolver():
 
                 # assignments for x must always satisfy Ax = 0
                 # probably have to turn this off when dealing with strict ineq
-                if all(v.assign[0] != float("inf") and v.assign[0] != -float("inf")
-                                   for v in self.all_var):
-                    X = Matrix([v.assign[0] for v in self.all_var])
+                if all(not v.assign.is_inf for v in self.all_var):
+                    X = Matrix([v.assign.rational for v in self.all_var])
                     assert all(abs(val) < 10**(-10) for val in M*X)
 
                 # check upper and lower match this format:
@@ -574,8 +572,8 @@ class LRASolver():
                 # this wouldn't make sense:
                 # x <= rat - delta
                 # x >= rat + delta
-                assert all(x.upper[1] <= 0 for x in self.all_var)
-                assert all(x.lower[1] >= 0 for x in self.all_var)
+                assert all(x.upper.delta <= 0 for x in self.all_var)
+                assert all(x.lower.delta >= 0 for x in self.all_var)
 
             cand = [b for b in basic if b.assign < b.lower or b.assign > b.upper]
 
@@ -629,7 +627,7 @@ class LRASolver():
         """
         i, j = basic[xi], xj.col_idx
         assert M[i, j] != 0
-        theta = (v - xi.assign)*(1/M[i, j])
+        theta = (v - xi.assign)/M[i, j]
         xi.assign = v
         xj.assign = xj.assign + theta
         for xk in basic:
@@ -812,7 +810,7 @@ class Boundary:
     @staticmethod
     def from_upper(var):
         neg = -1 if var.upper_from_neg else 1
-        b = Boundary(var, var.upper[0], True, var.upper_from_eq, var.upper[1] != 0)
+        b = Boundary(var, var.upper.rational, True, var.upper_from_eq, var.upper.delta != 0)
         if neg < 0:
             b = b.get_negated()
         return b, neg
@@ -820,7 +818,7 @@ class Boundary:
     @staticmethod
     def from_lower(var):
         neg = -1 if var.lower_from_neg else 1
-        b = Boundary(var, var.lower[0], False, var.lower_from_eq, var.lower[1] != 0)
+        b = Boundary(var, var.lower.rational, False, var.lower_from_eq, var.lower.delta != 0)
         if neg < 0:
             b = b.get_negated()
         return b, neg
@@ -851,38 +849,30 @@ class Boundary:
         return hash((self.var, self.bound, self.strict, self.upper, self.equality))
 
 
+@dataclass(order=True, frozen=True, slots=True)
 class LRARational():
     """
     Represents a rational plus or minus some amount
     of arbitrary small deltas.
     """
-    def __init__(self, rational, delta):
-        self.value = (rational, delta)
+    rational: float
+    delta: float = 0
 
-    def __lt__(self, other):
-        return self.value < other.value
+    def __add__(self, other: LRARational) -> LRARational:
+        return LRARational(self.rational + other.rational, self.delta + other.delta)
 
-    def __le__(self, other):
-        return self.value <= other.value
+    def __sub__(self, other: LRARational) -> LRARational:
+        return LRARational(self.rational - other.rational, self.delta - other.delta)
 
-    def __eq__(self, other):
-        return self.value == other.value
+    def __mul__(self, other: float) -> LRARational:
+        return LRARational(self.rational * other, self.delta * other)
 
-    def __add__(self, other):
-        return LRARational(self.value[0] + other.value[0], self.value[1] + other.value[1])
+    def __truediv__(self, other: float) -> LRARational:
+        return LRARational(self.rational / other, self.delta / other)
 
-    def __sub__(self, other):
-        return LRARational(self.value[0] - other.value[0], self.value[1] - other.value[1])
-
-    def __mul__(self, other):
-        assert not isinstance(other, LRARational)
-        return LRARational(self.value[0] * other, self.value[1] * other)
-
-    def __getitem__(self, index):
-        return self.value[index]
-
-    def __repr__(self):
-        return repr(self.value)
+    @property
+    def is_inf(self) -> bool:
+        return self.rational == float("inf") or self.rational == -float("inf")
 
 
 class LRAVariable():
@@ -891,13 +881,13 @@ class LRAVariable():
     on `self.var`.
     """
     def __init__(self, var):
-        self.upper = LRARational(float("inf"), 0)
+        self.upper = LRARational(float("inf"))
         self.upper_from_eq = False
         self.upper_from_neg = False
-        self.lower = LRARational(-float("inf"), 0)
+        self.lower = LRARational(-float("inf"))
         self.lower_from_eq = False
         self.lower_from_neg = False
-        self.assign = LRARational(0,0)
+        self.assign = LRARational(0)
         self.var = var
         self.col_idx = None
 

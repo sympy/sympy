@@ -460,3 +460,16 @@ def test_empty_cnf():
     lra, conflict = LRASolver.from_encoded_cnf(enc)
     assert len(conflict) == 0
     assert lra.check() == (True, {})
+
+
+def test_LRARational():
+    r = LRARational(float("inf"))
+    assert r.rational == float("inf")
+    assert r.delta == 0
+    assert LRARational(1, 2) + LRARational(3, 4) == LRARational(4, 6)
+    assert LRARational(6, 5) - LRARational(3, 4) == LRARational(3, 1)
+    assert LRARational(6, 5) * 2 == LRARational(12, 10)
+    assert LRARational(1, 2) / 2 == LRARational(0.5, 1)
+    assert LRARational(float("inf")).is_inf is True
+    assert LRARational(-float("inf")).is_inf is True
+    assert LRARational(3).is_inf is False
