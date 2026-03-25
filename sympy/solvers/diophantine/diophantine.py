@@ -1,10 +1,10 @@
 from __future__ import annotations
+from typing import TYPE_CHECKING
 
 from sympy.core.add import Add
 from sympy.core.assumptions import check_assumptions
 from sympy.core.containers import Tuple
 from sympy.core.exprtools import factor_terms
-from sympy.core.expr import Expr
 from sympy.core.function import _mexpand
 from sympy.core.mul import Mul
 from sympy.core.numbers import Rational, int_valued
@@ -33,6 +33,8 @@ from sympy.utilities.misc import as_int, filldedent
 from sympy.utilities.iterables import (is_sequence, subsets, permute_signs,
                                        signed_permutations, ordered_partitions)
 
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
 
 # these are imported with 'from sympy.solvers.diophantine import *
 __all__ = ['diophantine', 'classify_diop']
