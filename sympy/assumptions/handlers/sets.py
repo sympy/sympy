@@ -582,9 +582,6 @@ def _(expr, assumptions):
     """
     if expr.is_number:
         return _Imaginary_number(expr, assumptions)
-    is_zero = ask(Q.zero(expr), assumptions)
-    if is_zero:
-        return False
     result = False
     reals = 0
     for arg in expr.args:
@@ -595,8 +592,6 @@ def _(expr, assumptions):
     else:
         if reals == len(expr.args):
             return False
-        if result is True:
-            return True if is_zero is False else None
         return result
 
 @ImaginaryPredicate.register(Pow) # type:ignore
