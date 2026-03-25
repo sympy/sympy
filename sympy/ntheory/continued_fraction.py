@@ -154,10 +154,10 @@ def continued_fraction_periodic(p: int, q: int, d: int = 0, s: int = 1) -> list[
     if q < 0:
         p, q, s = -p, -q, -s
 
-    n: Expr = (p + s*sd)/q
+    n = (p + s*sd)/q
     if n < 0:
         w = floor(-n)
-        f:Expr = -n - w
+        f = -n - w
         one_f = continued_fraction(1 - f)  # 1-f < 1 so cf is [0 ... [...]]
         one_f[0] -= w + 1
         return one_f
