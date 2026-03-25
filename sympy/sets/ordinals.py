@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from operator import lt
-from typing import Callable, Self
+from typing import Callable
 
 from sympy.core import Basic, Integer
 
@@ -14,7 +14,7 @@ class OmegaPower(Basic):
     """
     args: tuple[Ordinal, Integer]
 
-    def __new__(cls, a: Ordinal | Integer | int, b: Integer | int) -> Self:
+    def __new__(cls, a: Ordinal | Integer | int, b: Integer | int):
         if isinstance(b, int):
             b = Integer(b)
         if not isinstance(b, Integer) or b <= 0:
@@ -85,7 +85,7 @@ class Ordinal(Basic):
     """
     args: tuple[OmegaPower, ...]
 
-    def __new__(cls, *terms: OmegaPower) -> Self:
+    def __new__(cls, *terms: OmegaPower):
         obj = super().__new__(cls, *terms)
         powers = [i.exp for i in obj.args]
         if not all(powers[i] >= powers[i+1] for i in range(len(powers) - 1)):
@@ -274,7 +274,7 @@ class OrdinalOmega(Ordinal):
     >>> omega + omega
     w*2
     """
-    def __new__(cls) -> Self:
+    def __new__(cls):
         return Ordinal.__new__(cls)
 
     @property
