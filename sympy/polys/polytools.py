@@ -2,29 +2,28 @@
 
 from __future__ import annotations
 
-from collections import Counter, defaultdict
-from functools import reduce, wraps
-from operator import mul
-from typing import TYPE_CHECKING, Any, Callable, Literal, cast, overload
+from typing import TYPE_CHECKING, overload, Literal, Any, cast, Callable
 
-# Required to avoid errors
-import sympy.polys
-from sympy import postorder_traversal
-from sympy.core import Add, Expr, S, Tuple
+from functools import wraps, reduce
+from operator import mul
+from collections import Counter, defaultdict
+
+from sympy.core import (
+    S, Expr, Add, Tuple
+)
 from sympy.core.basic import Basic
 from sympy.core.decorators import _sympifyit
-from sympy.core.evalf import (
-    _evalf_with_bounded_error, evalf, fastlog, pure_complex, quad_to_mpmath)
 from sympy.core.exprtools import Factors, factor_nc, factor_terms
+from sympy.core.evalf import (
+    pure_complex, evalf, fastlog, _evalf_with_bounded_error, quad_to_mpmath)
 from sympy.core.function import Derivative
-from sympy.core.intfunc import ilcm
 from sympy.core.mul import Mul, _keep_coeff
-from sympy.core.numbers import I, Integer, NegativeInfinity, equal_valued
-from sympy.core.relational import Equality, Relational
+from sympy.core.intfunc import ilcm
+from sympy.core.numbers import I, Integer, equal_valued, NegativeInfinity
+from sympy.core.relational import Relational, Equality
 from sympy.core.symbol import Dummy, Symbol
-from sympy.core.sympify import _sympify, sympify
-from sympy.core.traversal import bottom_up, preorder_traversal
-from sympy.external.mpmath import NoConvergence, local_workdps
+from sympy.core.sympify import sympify, _sympify
+from sympy.core.traversal import preorder_traversal, bottom_up
 from sympy.logic.boolalg import BooleanAtom
 from sympy.polys import polyoptions as options
 from sympy.polys.constructor import construct_domain
@@ -34,26 +33,41 @@ from sympy.polys.fglmtools import matrix_fglm
 from sympy.polys.groebnertools import groebner as _groebner
 from sympy.polys.monomials import Monomial
 from sympy.polys.orderings import monomial_key
-from sympy.polys.polyclasses import ANP, DMF, DMP
+from sympy.polys.polyclasses import DMP, DMF, ANP
 from sympy.polys.polyerrors import (
-    CoercionFailed, ComputationFailed, DomainError, ExactQuotientFailed,
-    GeneratorsError, GeneratorsNeeded, MultivariatePolynomialError,
-    OperationNotSupported, PolificationFailed, PolynomialError,
-    UnificationFailed)
+    OperationNotSupported, DomainError,
+    CoercionFailed, UnificationFailed,
+    GeneratorsNeeded, PolynomialError,
+    MultivariatePolynomialError,
+    ExactQuotientFailed,
+    PolificationFailed,
+    ComputationFailed,
+    GeneratorsError,
+)
 from sympy.polys.polyutils import (
-    _dict_from_expr, _dict_reorder, _parallel_dict_from_expr, _sort_gens,
-    _unify_gens, basic_from_dict)
+    basic_from_dict,
+    _sort_gens,
+    _unify_gens,
+    _dict_reorder,
+    _dict_from_expr,
+    _parallel_dict_from_expr,
+)
 from sympy.polys.rationaltools import together
 from sympy.polys.rootisolation import dup_isolate_real_roots_list
-from sympy.utilities import filldedent, group, public
+from sympy.utilities import group, public, filldedent
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import iterable, sift
+from sympy import postorder_traversal
+
+# Required to avoid errors
+import sympy.polys
+from sympy.external.mpmath import local_workdps, NoConvergence
+
 
 if TYPE_CHECKING:
+    from sympy.polys.domains.domain import Domain
     from collections.abc import Iterator
     from typing import Self
-
-    from sympy.polys.domains.domain import Domain
 
 
 def _polifyit(func):
@@ -4142,7 +4156,8 @@ class Poly(Basic):
         from sympy.polys.numberfields.galoisgroups import (
             _galois_group_degree_3, _galois_group_degree_4_lookup,
             _galois_group_degree_5_lookup_ext_factor,
-            _galois_group_degree_6_lookup)
+            _galois_group_degree_6_lookup,
+        )
         if (not f.is_univariate
             or not f.is_irreducible
             or f.domain not in [ZZ, QQ]
@@ -4899,7 +4914,7 @@ def _update_args(args, key, value):
     return args
 
 
-def __degree_it(f, gen):
+def _degree_it(f, gen):
     def _mul_profiles(profile_1, profile_2):
         result = {}
 
@@ -5110,16 +5125,15 @@ def degree(f, gen=0):
         return p.degree(gen)
 
     gen = sympify(gen, strict=True)
-    if isinstance(f, Poly) and gen in f.gens:
-        return _degree(f.degree(gen))
-
     if not isinstance(f, Poly) or gen not in f.gens:
-        d = __degree_it(f, gen)
+        d = _degree_it(f, gen)
         if d is None:
             f = poly_from_expr(f, gen)[0]
             return _degree(f.degree(gen))
         else:
             return _degree(d)
+
+    return _degree(f.degree(gen))
 
 
 @public
@@ -7829,8 +7843,8 @@ def cancel(f, *gens, _signsimp=True, **args):
     >>> together(_)
     (x + 2)/2
     """
-    from sympy.polys.rings import sring
     from sympy.simplify.simplify import signsimp
+    from sympy.polys.rings import sring
     options.allowed_flags(args, ['polys'])
 
     f = sympify(f)
