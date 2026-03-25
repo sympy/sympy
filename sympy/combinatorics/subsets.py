@@ -1,6 +1,6 @@
 from __future__ import annotations
 from itertools import combinations
-from typing import TypeVar, Generic
+from typing import Iterator, TypeVar, Generic
 
 from sympy.combinatorics.graycode import GrayCode
 
@@ -31,9 +31,9 @@ class Subset(Generic[T]):
     ['c']
     """
 
-    _rank_binary: int | None = None
-    _rank_lex: int | None  = None
-    _rank_graycode: int | None  = None
+    _rank_binary: int
+    _rank_lex: int
+    _rank_graycode: int
     _subset: list[T]
     _superset: list[T]
 
@@ -296,7 +296,7 @@ class Subset(Generic[T]):
         return self.iterate_graycode(-1)
 
     @property
-    def rank_binary(self):
+    def rank_binary(self) -> int:
         """
         Computes the binary ordered rank.
 
@@ -323,7 +323,7 @@ class Subset(Generic[T]):
         return self._rank_binary
 
     @property
-    def rank_lexicographic(self):
+    def rank_lexicographic(self) -> int:
         """
         Computes the lexicographic ranking of the subset.
 
@@ -351,7 +351,7 @@ class Subset(Generic[T]):
         return self._rank_lex
 
     @property
-    def rank_gray(self):
+    def rank_gray(self) -> int:
         """
         Computes the Gray code ranking of the subset.
 
@@ -377,7 +377,7 @@ class Subset(Generic[T]):
         return self._rank_graycode
 
     @property
-    def subset(self):
+    def subset(self) -> list[T]:
         """
         Gets the subset represented by the current instance.
 
@@ -397,7 +397,7 @@ class Subset(Generic[T]):
         return self._subset[:]
 
     @property
-    def size(self):
+    def size(self) -> int:
         """
         Gets the size of the subset.
 
@@ -417,7 +417,7 @@ class Subset(Generic[T]):
         return len(self.subset)
 
     @property
-    def superset(self):
+    def superset(self) -> list[T]:
         """
         Gets the superset of the subset.
 
@@ -437,7 +437,7 @@ class Subset(Generic[T]):
         return self._superset[:]
 
     @property
-    def superset_size(self):
+    def superset_size(self) -> int:
         """
         Returns the size of the superset.
 
@@ -457,7 +457,7 @@ class Subset(Generic[T]):
         return len(self.superset)
 
     @property
-    def cardinality(self):
+    def cardinality(self) -> int:
         """
         Returns the number of all possible subsets.
 
@@ -477,7 +477,7 @@ class Subset(Generic[T]):
         return 2**(self.superset_size)
 
     @classmethod
-    def subset_from_bitlist(self, super_set: list[T], bitlist: str):
+    def subset_from_bitlist(self, super_set: list[T], bitlist: str) -> Subset[T]:
         """
         Gets the subset defined by the bitlist.
 
@@ -502,7 +502,7 @@ class Subset(Generic[T]):
         return Subset(ret_set, super_set)
 
     @classmethod
-    def bitlist_from_subset(self, subset: list[T], superset: list[T]):
+    def bitlist_from_subset(self, subset: list[T], superset: list[T]) -> str:
         """
         Gets the bitlist corresponding to a subset.
 
@@ -526,7 +526,7 @@ class Subset(Generic[T]):
         return ''.join(bitlist)
 
     @classmethod
-    def unrank_binary(self, rank: int, superset: list[T]):
+    def unrank_binary(self, rank: int, superset: list[T]) -> Subset[T]:
         """
         Gets the binary ordered subset of the specified rank.
 
@@ -546,7 +546,7 @@ class Subset(Generic[T]):
         return Subset.subset_from_bitlist(superset, bits)
 
     @classmethod
-    def unrank_gray(self, rank: int, superset: list[T]):
+    def unrank_gray(self, rank: int, superset: list[T]) -> Subset[T]:
         """
         Gets the Gray code ordered subset of the specified rank.
 
@@ -568,7 +568,7 @@ class Subset(Generic[T]):
         return Subset.subset_from_bitlist(superset, graycode_bitlist)
 
     @classmethod
-    def subset_indices(self, subset: list[T], superset: list[T]):
+    def subset_indices(self, subset: list[T], superset: list[T]) -> list[T]:
         """Return indices of subset in superset in a list; the list is empty
         if all elements of ``subset`` are not in ``superset``.
 
@@ -599,7 +599,7 @@ class Subset(Generic[T]):
         return [d[bi] for bi in b]
 
 
-def ksubsets(superset: list[T], k: int):
+def ksubsets(superset: list[T], k: int) -> Iterator[tuple[T, ...]]:
     """
     Finds the subsets of size ``k`` in lexicographic order.
 
