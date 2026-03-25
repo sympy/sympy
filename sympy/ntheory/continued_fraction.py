@@ -1,5 +1,7 @@
 from __future__ import annotations
 import itertools
+from typing import TYPE_CHECKING
+
 from sympy.core.exprtools import factor_terms
 from sympy.core.numbers import Integer, Rational
 from sympy.core.singleton import S
@@ -7,8 +9,10 @@ from sympy.core.symbol import Dummy
 from sympy.core.sympify import _sympify
 from sympy.utilities.misc import as_int
 
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
 
-def continued_fraction(a) -> list:
+def continued_fraction(a: object) -> list:
     """Return the continued fraction representation of a Rational or
     quadratic irrational.
 
@@ -57,7 +61,8 @@ def continued_fraction(a) -> list:
                     a = S.Zero
                     bc = p
                 if a.is_Integer:
-                    b = S.NaN
+                    b: Expr = S.NaN
+                    c: Expr = S.NaN
                     if bc.is_Mul and len(bc.args) == 2:
                         b, c = bc.args
                     elif bc.is_Pow:
@@ -72,7 +77,7 @@ def continued_fraction(a) -> list:
     raise ValueError(f"expecting a rational or quadratic irrational, not {e}")
 
 
-def continued_fraction_periodic(p, q, d=0, s=1) -> list:
+def continued_fraction_periodic(p: int | Expr, q: int | Expr, d: int | Expr = 0, s: int | Expr = 1) -> list:
     r"""
     Find the periodic continued fraction expansion of a quadratic irrational.
 
@@ -152,7 +157,7 @@ def continued_fraction_periodic(p, q, d=0, s=1) -> list:
         p, q, s = -p, -q, -s
 
     n = (p + s*sd)/q
-    if n < 0:
+    if n.is_negative:
         w = floor(-n)
         f = -n - w
         one_f = continued_fraction(1 - f)  # 1-f < 1 so cf is [0 ... [...]]
@@ -168,7 +173,7 @@ def continued_fraction_periodic(p, q, d=0, s=1) -> list:
         p *= q
         q *= q
 
-    terms: list[int] = []
+    terms: list[Expr] = []
     pq = {}
 
     while (p, q) not in pq:
@@ -181,7 +186,7 @@ def continued_fraction_periodic(p, q, d=0, s=1) -> list:
     return terms[:i] + [terms[i:]]  # type: ignore
 
 
-def continued_fraction_reduce(cf):
+def continued_fraction_reduce(cf: object) -> Expr:
     """
     Reduce a continued fraction to a rational or quadratic irrational.
 
@@ -256,7 +261,7 @@ def continued_fraction_reduce(cf):
     return rv
 
 
-def continued_fraction_iterator(x):
+def continued_fraction_iterator(x: Expr):
     """
     Return continued fraction expansion of x as iterator.
 
@@ -300,7 +305,7 @@ def continued_fraction_iterator(x):
         x = 1/x
 
 
-def continued_fraction_convergents(cf):
+def continued_fraction_convergents(cf: object):
     """
     Return an iterator over the convergents of a continued fraction (cf).
 
