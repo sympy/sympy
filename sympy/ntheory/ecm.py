@@ -98,7 +98,7 @@ class Point:
         z_cord = diff.x_cord * subt * subt % self.mod
         return Point(x_cord, z_cord, self.a_24, self.mod)
 
-    def double(self):
+    def double(self) -> "Point":
         """
         Doubles a point in an elliptic curve in Montgomery form.
         This algorithm requires 5 multiplications.
@@ -156,7 +156,7 @@ class Point:
         return Q
 
 
-def _ecm_one_factor(n: int, B1: int=10000, B2: int=100000, max_curve: int=200, seed=None):
+def _ecm_one_factor(n: int, B1: int=10000, B2: int=100000, max_curve: int=200, seed=None) ->  int | None:
     """Returns one factor of n using
     Lenstra's 2 Stage Elliptic curve Factorization
     with Suyama's Parameterization. Here Montgomery
@@ -300,9 +300,10 @@ def _ecm_one_factor(n: int, B1: int=10000, B2: int=100000, max_curve: int=200, s
         #Stage 2 Factor found
         if g != 1 and g != n:
             return g
+    return None
 
 
-def ecm(n: int, B1: int=10000, B2: int=100000, max_curve: int=200, seed: int=1234):
+def ecm(n: int, B1: int=10000, B2: int=100000, max_curve: int=200, seed: int=1234) -> set[int]:
     """Performs factorization using Lenstra's Elliptic curve method.
 
     This function repeatedly calls ``_ecm_one_factor`` to compute the factors
