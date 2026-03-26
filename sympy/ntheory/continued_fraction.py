@@ -1,6 +1,6 @@
 from __future__ import annotations
 import itertools
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Iterable
 
 from sympy.core.exprtools import factor_terms
 from sympy.core.numbers import Integer, Rational
@@ -139,7 +139,7 @@ def continued_fraction_periodic(p: int | Expr, q: int | Expr, d: int | Expr = 0,
     """
     from sympy.functions import sqrt, floor
 
-    p, q, d, s = list(map(as_int, [p, q, d, s]))
+    p, q, d, s = as_int(p), as_int(q), as_int(d), as_int(s)
 
     if d < 0:
         raise ValueError(f"expected non-negative for `d` but got {d}")
@@ -308,7 +308,7 @@ def continued_fraction_iterator(x: Expr):
         x = 1/x
 
 
-def continued_fraction_convergents(cf: object):
+def continued_fraction_convergents(cf: Iterable):
     """
     Return an iterator over the convergents of a continued fraction (cf).
 
@@ -367,10 +367,13 @@ def continued_fraction_convergents(cf: object):
     """
     if isinstance(cf, list) and isinstance(cf[-1], list):
         cf = itertools.chain(cf[:-1], itertools.cycle(cf[-1]))
-    p_2, q_2 = S.Zero, S.One
-    p_1, q_1 = S.One, S.Zero
+    p_2: Expr = S.Zero
+    q_2: Expr = S.One
+    p_1: Expr = S.One
+    q_1: Expr = S.Zero
     for a in cf:
         p, q = a*p_1 + p_2, a*q_1 + q_2
         p_2, q_2 = p_1, q_1
         p_1, q_1 = p, q
         yield p/q
+        
