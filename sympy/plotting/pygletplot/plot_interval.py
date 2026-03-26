@@ -1,23 +1,25 @@
+from __future__ import annotations
+from typing import Any, Iterator, Callable, TYPE_CHECKING
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
 from sympy.core.numbers import Integer
 
-
 class PlotInterval:
     """
     """
     _v, _v_min, _v_max, _v_steps = None, None, None, None
-
-    def require_all_args(f):
-        def check(self, *args, **kwargs):
+    
+    @staticmethod
+    def require_all_args(f: Callable[..., Any]) -> Callable[..., Any]:
+        def check(self: Any, *args: Any, **kwargs: Any) -> Any:
             for g in [self._v, self._v_min, self._v_max, self._v_steps]:
                 if g is None:
                     raise ValueError("PlotInterval is incomplete.")
             return f(self, *args, **kwargs)
         return check
 
-    def __init__(self, *args):
+    def __init__(self, *args: Any) -> None:
         if len(args) == 1:
             if isinstance(args[0], PlotInterval):
                 self.fill_from(args[0])
@@ -47,10 +49,10 @@ class PlotInterval:
         elif len(args) == 1:
             self.v_steps = args.pop(0)
 
-    def get_v(self):
+    def get_v(self) -> Symbol | None:
         return self._v
 
-    def set_v(self, v):
+    def set_v(self, v: Symbol | None) -> None:
         if v is None:
             self._v = None
             return
@@ -58,10 +60,10 @@ class PlotInterval:
             raise ValueError("v must be a SymPy Symbol.")
         self._v = v
 
-    def get_v_min(self):
+    def get_v_min(self) -> Any | None:
         return self._v_min
 
-    def set_v_min(self, v_min):
+    def set_v_min(self, v_min: Any | None) -> None:
         if v_min is None:
             self._v_min = None
             return
@@ -71,10 +73,10 @@ class PlotInterval:
         except TypeError:
             raise ValueError("v_min could not be interpreted as a number.")
 
-    def get_v_max(self):
+    def get_v_max(self) -> Any | None:
         return self._v_max
 
-    def set_v_max(self, v_max):
+    def set_v_max(self, v_max: Any | None) -> None:
         if v_max is None:
             self._v_max = None
             return
@@ -84,23 +86,26 @@ class PlotInterval:
         except TypeError:
             raise ValueError("v_max could not be interpreted as a number.")
 
-    def get_v_steps(self):
+    def get_v_steps(self) -> Integer | None:
         return self._v_steps
 
-    def set_v_steps(self, v_steps):
+    def set_v_steps(self, v_steps: int | Integer | None) -> None:
         if v_steps is None:
             self._v_steps = None
             return
+            
         if isinstance(v_steps, int):
             v_steps = Integer(v_steps)
         elif not isinstance(v_steps, Integer):
             raise ValueError("v_steps must be an int or SymPy Integer.")
+            
         if v_steps <= S.Zero:
             raise ValueError("v_steps must be positive.")
+            
         self._v_steps = v_steps
 
     @require_all_args
-    def get_v_len(self):
+    def get_v_len(self) -> Any:
         return self.v_steps + 1
 
     v = property(get_v, set_v)
@@ -109,7 +114,7 @@ class PlotInterval:
     v_steps = property(get_v_steps, set_v_steps)
     v_len = property(get_v_len)
 
-    def fill_from(self, b):
+    def fill_from(self, b: PlotInterval) -> None:
         if b.v is not None:
             self.v = b.v
         if b.v_min is not None:
@@ -120,7 +125,7 @@ class PlotInterval:
             self.v_steps = b.v_steps
 
     @staticmethod
-    def try_parse(*args):
+    def try_parse(*args: Any) -> PlotInterval | None:
         """
         Returns a PlotInterval if args can be interpreted
         as such, otherwise None.
@@ -132,28 +137,28 @@ class PlotInterval:
         except ValueError:
             return None
 
-    def _str_base(self):
+    def _str_base(self) -> str:
         return ",".join([str(self.v), str(self.v_min),
                          str(self.v_max), str(self.v_steps)])
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """
         A string representing the interval in class constructor form.
         """
         return "PlotInterval(%s)" % (self._str_base())
 
-    def __str__(self):
+    def __str__(self) -> str:
         """
         A string representing the interval in list form.
         """
         return "[%s]" % (self._str_base())
 
     @require_all_args
-    def assert_complete(self):
+    def assert_complete(self) -> None:
         pass
 
     @require_all_args
-    def vrange(self):
+    def vrange(self) -> Iterator[Any]:
         """
         Yields v_steps+1 SymPy numbers ranging from
         v_min to v_max.
@@ -164,7 +169,7 @@ class PlotInterval:
             yield a
 
     @require_all_args
-    def vrange2(self):
+    def vrange2(self) -> Iterator[tuple[Any, Any]]:
         """
         Yields v_steps pairs of SymPy numbers ranging from
         (v_min, v_min + step) to (v_max - step, v_max).
@@ -176,6 +181,6 @@ class PlotInterval:
             yield a, b
             a = b
 
-    def frange(self):
+    def frange(self) -> Iterator[float]:
         for i in self.vrange():
             yield float(i.evalf())
