@@ -12,3 +12,4 @@ flake8
 flake8-comprehensions
 ruff
 slotscheck
+numpy
