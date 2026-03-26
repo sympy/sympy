@@ -1982,6 +1982,7 @@ def test_tensor_replacement():
     i, j, k, l = tensor_indices("i j k l", L)
     A, B, C, D = tensor_heads("A B C D", [L])
     H = TensorHead("H", [L, L])
+    J = TensorHead("J", [L, L])
     K = TensorHead("K", [L]*4)
 
     expr = H(i, j)
@@ -2015,10 +2016,19 @@ def test_tensor_replacement():
     assert expr.replace_with_arrays(repl, [-j, i]) == Array([[1, 3], [-2, -4]])
     assert expr.replace_with_arrays(repl, [-j, -i]) == Array([[1, -3], [-2, 4]])
 
+    # Transpose
+    expr = H(j,i)
+    repl = {H(i,j): [[1,2],[3,4]]}
+    assert expr.replace_with_arrays(repl, [i,j]) == Array([[1,3],[2,4]])
+
     # Not the same indices:
     expr = H(i,k)
     repl = {H(i,j): [[1,2],[3,4]], L: diag(1, -1)}
     assert expr._extract_data(repl) == ([i, k], Array([[1, 2], [3, 4]]))
+
+    expr = H(j, k)
+    repl = {H(i,j): [[1,2],[3,4]], L: diag(1, -1)}
+    assert expr.replace_with_arrays(repl, [j,k]) == Array([[1,2],[3,4]])
 
     expr = A(i)*A(-i)
     repl = {A(i): [1,2], L: diag(1, -1)}
@@ -2080,6 +2090,18 @@ def test_tensor_replacement():
         L: Array([[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, -1]]),
     }
     assert expr._extract_data(repl) == ([], 4)
+
+    # Transposed replacement array
+    repl = {
+        H(i, j): [[1, 2], [3, 4]],
+        J(i, j): [[1, 3], [2, 4]], #transpose of above
+        L: diag(1,1),
+        }
+    expr_1 = H(i,k)*H(-k,j)
+    expr_2 = H(i,k)*J(j,-k)
+    arr_1 = expr_1.replace_with_arrays(repl)
+    assert arr_1 == Array([[7,10],[15,22]])
+    assert expr_2.replace_with_arrays(repl) == arr_1
 
     # Replace with array, raise exception if indices are not compatible:
     expr = A(i)*A(j)
