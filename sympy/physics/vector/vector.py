@@ -132,23 +132,7 @@ class Vector(Printable, EvalfMixin):
         If none of the above, only accepts other as a Vector.
 
         """
-
-        if other == 0:
-            other = Vector(0)
-        try:
-            other = _check_vector(other)
-        except TypeError:
-            return False
-        if (self.args == []) and (other.args == []):
-            return True
-        elif (self.args == []) or (other.args == []):
-            return False
-
-        frame = self.args[0][1]
-        for v in frame:
-            if expand((self - other).dot(v)) != 0:
-                return False
-        return True
+        return self.equals(other)
 
     def __mul__(self, other):
         """Multiplies the Vector by a sympifyable expression.
@@ -790,6 +774,46 @@ class Vector(Printable, EvalfMixin):
             mat = mat.xreplace(rule)
             new_args.append([mat, frame])
         return Vector(new_args)
+
+    def equals(self, other):
+        """Tests for symbolic equality.
+
+        It is very import to note that this is only as good as the SymPy
+        equality test; False does not always mean they are not equivalent
+        Vectors.
+        If other is 0, and self is empty, returns True.
+        If other is 0 and self is not empty, returns False.
+        If none of the above, only accepts other as a Vector.
+
+        Examples
+        ========
+
+        >>> from sympy import symbols
+        >>> from sympy.physics.mechanics import ReferenceFrame
+        >>> c = symbols('c')
+        >>> N = ReferenceFrame('N')
+        >>> (N.x * (c + 1)**2).equals(N.x * (c**2 + 2 * c + 1))
+        True
+        >>> (N.x - N.x).equals(0)
+        True
+
+        """
+        if other == 0:
+            other = Vector(0)
+        try:
+            other = _check_vector(other)
+        except TypeError:
+            return False
+        if (self.args == []) and (other.args == []):
+            return True
+        elif (self.args == []) or (other.args == []):
+            return False
+
+        frame = self.args[0][1]
+        for v in frame:
+            if expand((self - other).dot(v)) != 0:
+                return False
+        return True
 
 
 class VectorTypeError(TypeError):

@@ -273,3 +273,85 @@ def test_overloaded_operators():
     assert v1 & v2 == v2 & v1
     assert v1 ^ v2 == v1.cross(v2)
     assert v2 ^ v1 == v2.cross(v1)
+
+def test_equals():
+    a = symbols("a")
+    N = ReferenceFrame("N")
+
+    # 2 expressions which are mathematically but not structurally equal
+    expr1 = (a + 1) ** 2
+    expr2 = a**2 + 2 * a + 1
+    assert expr1 != expr2 # sanity check, so that this test is sensible
+    assert expr1.equals(expr2)
+
+    assert (N.x * expr1).equals(N.x * expr2)
+    assert not (N.x * expr1).equals(N.x * (expr2 - 1))
+    assert not (N.x * expr1).equals(N.y * expr1)
+
+    assert (N.x * expr1 + N.y * expr2).equals(N.x * expr2 + N.y * expr1)
+
+    # A is not linked to N; this comparison shows up in
+    A = ReferenceFrame("A")
+    assert N.x + A.y != 0
+    assert not (N.x + A.y).equals(0)
+
+
+def test_equals_zero_simple():
+    N = ReferenceFrame("N")
+
+    assert Vector(0).equals(N.x - N.x)
+    assert N.x - N.x.equals(Vector(0))
+    assert Vector(0).equals(0)
+    assert (N.x - N.x).equals(0)
+
+    assert Vector(0).equals(Vector(0))
+    assert (N.x - N.x).equals(N.x - N.x)
+
+    assert 0 == N.x - N.x
+    assert 0 == Vector(0)
+
+def test_equals_zero_equal_reference_frames():
+    N = ReferenceFrame("N")
+    A = ReferenceFrame("A")
+    A.orient_axis(N, N.x, 0)
+
+    assert N.x.equals(A.x)
+    assert N.y.equals(A.y)
+    assert N.z.equals(A.z)
+    assert not N.x.equals(A.y)
+    assert not N.x.equals(A.z)
+    assert not N.y.equals(A.x)
+    assert not N.y.equals(A.z)
+    assert not N.z.equals(A.x)
+    assert not N.z.equals(A.y)
+
+# For the following 2 XFAIL tests: See https://github.com/sympy/sympy/issues/29546#issuecomment-4142372261
+from sympy.testing.pytest import XFAIL
+@XFAIL
+def test_equals_zero_nontrivial_zero_component():
+    a = symbols("a")
+    N = ReferenceFrame("N")
+
+    # 2 expressions which are mathematically but not structurally equal
+    expr1 = (a + 1) ** 2
+    expr2 = a**2 + 2 * a + 1
+    assert expr1 != expr2 # sanity check, so that this test is sensible
+    assert expr1.equals(expr2)
+
+    assert (N.x * expr1 - N.x * expr2).equals(0)
+
+@XFAIL
+def test_equals_zero_nontrivial_zero_component_refframe():
+    N = ReferenceFrame("N")
+    A = ReferenceFrame("A")
+    A.orient_axis(N, N.x, 0)
+
+    assert (N.x - A.x).equals(0)
+    assert (N.y - A.y).equals(0)
+    assert (N.z - A.z).equals(0)
+    assert not (N.x - A.y).equals(0)
+    assert not (N.x - A.z).equals(0)
+    assert not (N.y - A.x).equals(0)
+    assert not (N.y - A.z).equals(0)
+    assert not (N.z - A.x).equals(0)
+    assert not (N.z - A.y).equals(0)
