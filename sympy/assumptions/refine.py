@@ -429,6 +429,9 @@ def refine_sin_cos(expr, assumptions):
     from sympy.functions.elementary.trigonometric import sin, cos
     from sympy.calculus.accumulationbounds import AccumBounds
     arg = expr.args[0]
+
+    if not isinstance(expr, (sin, cos)):
+        raise TypeError("refine_sin_cos expects a sin or cos function.")
     expr_is_sin = isinstance(expr, sin)
 
     if ask(Q.infinite(arg), assumptions):
