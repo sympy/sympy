@@ -1807,6 +1807,7 @@ def test_solve_decomposition():
     f5 = exp(x + 2) - 1
     f6 = 1/log(x)
     f7 = 1/x
+    f8 = exp(sin(x) + a) - 1
 
     s1 = ImageSet(Lambda(n, 2*n*pi), S.Integers)
     s2 = ImageSet(Lambda(n, 2*n*pi + pi), S.Integers)
@@ -1822,6 +1823,7 @@ def test_solve_decomposition():
     assert solve_decomposition(f6, x, S.Reals) == S.EmptySet
     assert solve_decomposition(f7, x, S.Reals) == S.EmptySet
     assert solve_decomposition(x, x, Interval(1, 2)) == S.EmptySet
+    assert solve_decomposition(f8, x, S.Reals) == ConditionSet(x, Eq(f8, 0), S.Reals)
 
 
 # nonlinsolve testcases
