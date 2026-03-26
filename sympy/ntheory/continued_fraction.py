@@ -9,9 +9,9 @@ from sympy.utilities.misc import as_int
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from sympy.core.expr import Expr
-from typing import Iterator,Any,Iterable
+from typing import Iterator,Iterable
 
-def continued_fraction(a: Any) -> list[int | list[int]]:
+def continued_fraction(a: Rational | Expr) -> list[int | list[int]]:
     """Return the continued fraction representation of a Rational or
     quadratic irrational.
 
@@ -41,6 +41,8 @@ def continued_fraction(a: Any) -> list[int | list[int]]:
                 e.args[1].base.is_Integer and
                 e.args[1].exp is S.Half):
             a, b = e.args
+            if not isinstance(a, Rational):
+                raise TypeError("Expected Rational")
             return continued_fraction_periodic(0, a.q, b.base, a.p)
         else:
             # this should not have to work very hard- no
@@ -71,7 +73,7 @@ def continued_fraction(a: Any) -> list[int | list[int]]:
                             c.base.is_Integer):
                         # (a + b*sqrt(c))/d
                         c = c.base
-                        return continued_fraction_periodic(a, d, c, b)
+                        return continued_fraction_periodic(int(a), int(d), int(c), int(b))
     raise ValueError(f"expecting a rational or quadratic irrational, not {e}")
 
 
