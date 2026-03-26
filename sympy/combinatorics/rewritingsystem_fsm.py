@@ -56,7 +56,7 @@ class StateMachine:
         '''
         new_state = State(state_name, self, state_type, rh_rule)
         self.states[state_name] = new_state
-        
+
     def accepts(self, words):
         '''
         Check whether the state machine accepts each word in a list.

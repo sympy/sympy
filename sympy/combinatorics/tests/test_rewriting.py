@@ -70,7 +70,6 @@ def test_state_machine_accepts():
 
 
 def test_state_machine_validate():
-    
 
     # Valid machine passes
     M = StateMachine("odd_length", ["0", "1"])
