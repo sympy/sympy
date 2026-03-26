@@ -134,7 +134,7 @@ V_E_F>=EXPRESS(DT(P_O_E>,F),D)
 A_E_F>=EXPRESS(DT(V_E_F>,F),D)\
 """
 
-    sympy_input = parse_autolev(autolev_input, include_numeric=True)
+    sympy_input = parse_autolev(autolev_input)
 
     g = {}
     l = {}
