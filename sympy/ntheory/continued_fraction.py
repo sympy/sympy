@@ -376,4 +376,3 @@ def continued_fraction_convergents(cf: Iterable):
         p_2, q_2 = p_1, q_1
         p_1, q_1 = p, q
         yield p/q
-        
