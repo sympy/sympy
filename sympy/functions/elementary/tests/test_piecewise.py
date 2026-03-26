@@ -1638,3 +1638,23 @@ def test_piecewise__eval_is_meromorphic():
     assert f.is_meromorphic(x, 2) == True
     assert f.is_meromorphic(x, Symbol('a')) is None
     assert f.is_meromorphic(x, Symbol('a', real=True)) is None
+
+def test_piecewise_limit_directional():
+    """Test directional limits of Piecewise functions.
+    See https://github.com/sympy/sympy/issues/27236
+    """
+    from sympy import limit
+    from sympy.testing.pytest import raises
+
+    x = symbols('x')
+
+    # issue #27236: two-sided limit should not exist when left != right
+    f = Piecewise((1, x < 0), (-1, True))
+    assert limit(f, x, 0, '-') == 1
+    assert limit(f, x, 0, '+') == -1
+    raises(ValueError, lambda: limit(f, x, 0, '+-'))
+
+    # directional limits at interior discontinuity
+    p = Piecewise((x**3, x < 3), (-x**2, x > 3), (2, True))
+    assert limit(p, x, 3, '+') == -9
+    assert limit(p, x, 3, '-') == 27
