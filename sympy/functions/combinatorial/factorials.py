@@ -326,7 +326,7 @@ class subfactorial(CombinatorialFunction):
 
     @classmethod
     @cacheit
-    def _eval(self, n):
+    def _eval(cls, n):
         if not n:
             return S.One
         elif n == 1:
@@ -431,7 +431,7 @@ class factorial2(CombinatorialFunction):
             # It also avoids "maximum recursion depth exceeded" runtime error
             if arg.is_nonnegative:
                 if arg.is_even:
-                    k = arg / 2
+                    k = arg // 2
                     return 2**k * factorial(k)
                 return factorial(arg) / factorial2(arg - 1)
 
