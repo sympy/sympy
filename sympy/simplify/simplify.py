@@ -601,7 +601,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     4. :func:`~.logcombine` / :func:`~.expand_log` -- if the expression contains ``log``
     5. :func:`~.combsimp` -- if the expression contains ``CombinatorialFunction``
        or ``gamma``
-    6. ``sum_simplify`` -- if the expression contains ``Sum`` 	
+    6. ``sum_simplify`` -- if the expression contains ``Sum``
     7. ``factor_terms`` on ``Integral`` subexpressions -- if the expression
        contains ``Integral``
     8. ``product_simplify`` -- if the expression contains ``Product``
