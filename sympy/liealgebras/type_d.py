@@ -1,16 +1,18 @@
 from __future__ import annotations
+
 from .cartan_type import Standard_Cartan
-from sympy.core.backend import eye
+from sympy.core.backend import eye, Matrix
+
 
 class TypeD(Standard_Cartan):
 
-    def __new__(cls, n):
+    def __new__(cls, n: int):
         if n < 3:
             raise ValueError("n cannot be less than 3")
         return Standard_Cartan.__new__(cls, "D", n)
 
 
-    def dimension(self):
+    def dimension(self) -> int:
         """Dmension of the vector space V underlying the Lie algebra
 
         Examples
@@ -24,7 +26,7 @@ class TypeD(Standard_Cartan):
 
         return self.n
 
-    def basic_root(self, i, j):
+    def basic_root(self, i: int, j: int) -> list[int]:
         """
         This is a method just to generate roots
         with a 1 iin the ith position and a -1
@@ -38,7 +40,7 @@ class TypeD(Standard_Cartan):
         root[j] = -1
         return root
 
-    def simple_root(self, i):
+    def simple_root(self, i: int) -> list[int]:
         """
         Every lie algebra has a unique root system.
         Given a root system Q, there is a subset of the
@@ -77,7 +79,7 @@ class TypeD(Standard_Cartan):
             return root
 
 
-    def positive_roots(self):
+    def positive_roots(self) -> dict[int, list[int]]:
         """
         This method generates all the positive roots of
         A_n.  This is half of all of the roots of D_n
@@ -107,7 +109,7 @@ class TypeD(Standard_Cartan):
                 posroots[k] = root
         return posroots
 
-    def roots(self):
+    def roots(self) -> int:
         """
         Returns the total number of roots for D_n"
         """
@@ -115,7 +117,7 @@ class TypeD(Standard_Cartan):
         n = self.n
         return 2*n*(n-1)
 
-    def cartan_matrix(self):
+    def cartan_matrix(self) -> Matrix:
         """
         Returns the Cartan matrix for D_n.
         The Cartan matrix matrix for a Lie algebra is
@@ -148,14 +150,14 @@ class TypeD(Standard_Cartan):
         m[0, 1] = -1
         return m
 
-    def basis(self):
+    def basis(self) -> int:
         """
         Returns the number of independent generators of D_n
         """
         n = self.n
-        return n*(n-1)/2
+        return int(n*(n-1)/2)
 
-    def lie_algebra(self):
+    def lie_algebra(self) -> str:
         """
         Returns the Lie algebra associated with D_n"
         """
@@ -163,7 +165,7 @@ class TypeD(Standard_Cartan):
         n = self.n
         return "so(" + str(2*n) + ")"
 
-    def dynkin_diagram(self):
+    def dynkin_diagram(self) -> str:
         n = self.n
         diag = " "*4*(n-3) + str(n-1) + "\n"
         diag += " "*4*(n-3) + "0\n"
