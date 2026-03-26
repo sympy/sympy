@@ -2230,13 +2230,13 @@ class TensExpr(Expr, ABC):
         # Check if variance of indices needs to be fixed:
         pos2up = []
         pos2down = []
+        free1remaining = []
         free2remaining = free_ind2[:]
         for pos1, index1 in enumerate(free_ind1):
             if index1 in free2remaining:
                 pos2 = free2remaining.index(index1)
                 free2remaining[pos2] = None
-                continue
-            if -index1 in free2remaining:
+            elif -index1 in free2remaining:
                 pos2 = free2remaining.index(-index1)
                 free2remaining[pos2] = None
                 free_ind2[pos2] = index1
@@ -2245,16 +2245,26 @@ class TensExpr(Expr, ABC):
                 else:
                     pos2down.append(pos2)
             else:
-                index2 = free2remaining[pos1]
-                if index2 is None:
+                free1remaining.append(pos1)
+
+        for pos1, index1 in enumerate(free_ind1):
+            if pos1 in free1remaining:
+                #Handle indices which have no exact match
+                pos2 = None
+                for i in range(len(free2remaining)):
+                    if free2remaining[i] is not None:
+                        pos2 = i
+                        break
+                if pos2 is None:
                     raise ValueError(f"incompatible indices: {free_ind1} and {free_ind2}")
-                free2remaining[pos1] = None
-                free_ind2[pos1] = index1
+                index2 = free2remaining[pos2]
+                free2remaining[pos2] = None
+                free_ind2[pos2] = index1
                 if index1.is_up ^ index2.is_up:
                     if index1.is_up:
-                        pos2up.append(pos1)
+                        pos2up.append(pos2)
                     else:
-                        pos2down.append(pos1)
+                        pos2down.append(pos2)
 
         if len(set(free_ind1) & set(free_ind2)) < len(free_ind1):
             raise ValueError(f"incompatible indices: {free_ind1} and {free_ind2}")
