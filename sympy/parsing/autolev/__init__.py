@@ -3,7 +3,7 @@ from sympy.external import import_module
 from sympy.utilities.decorator import doctest_depends_on
 
 @doctest_depends_on(modules=('antlr4',))
-def parse_autolev(autolev_code, include_numeric=True):
+def parse_autolev(autolev_code, include_numeric=False):
     """Parses Autolev code (version 4.1) to SymPy code.
 
     Parameters
@@ -50,7 +50,6 @@ def parse_autolev(autolev_code, include_numeric=True):
     >>> print(parse_autolev(my_al_text, include_numeric=True))
     import sympy.physics.mechanics as _me
     import sympy as _sm
-    import math as m
     import numpy as _np
     <BLANKLINE>
     q1, q2, u1, u2 = _me.dynamicsymbols('q1 q2 u1 u2')
