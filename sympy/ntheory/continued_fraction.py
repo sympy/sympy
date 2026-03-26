@@ -33,47 +33,50 @@ def continued_fraction(a: object) -> list:
         if e.is_Integer:
             return continued_fraction_periodic(e, 1, 0)
         elif e.is_Rational:
+            # FIX: narrow type to Rational before accessing .p and .q
+            assert isinstance(e, Rational)
             return continued_fraction_periodic(e.p, e.q, 0)
-        elif e.is_Pow and e.exp is S.Half and e.base.is_Integer:
-            return continued_fraction_periodic(0, 1, e.base)
+        elif e.is_Pow:
+            # FIX: narrow type before accessing .exp and .base
+            from sympy.core.power import Pow
+            assert isinstance(e, Pow)
+            if e.exp is S.Half and e.base.is_Integer:
+                return continued_fraction_periodic(0, 1, e.base)
         elif e.is_Mul and len(e.args) == 2 and (
                 e.args[0].is_Rational and
                 e.args[1].is_Pow and
                 e.args[1].base.is_Integer and
                 e.args[1].exp is S.Half):
-            a, b = e.args
-            return continued_fraction_periodic(0, a.q, b.base, a.p)
+            a_arg, b_arg = e.args
+            assert isinstance(a_arg, Rational)
+            from sympy.core.power import Pow
+            assert isinstance(b_arg, Pow)
+            return continued_fraction_periodic(0, a_arg.q, b_arg.base, a_arg.p)
         else:
-            # this should not have to work very hard- no
-            # simplification, cancel, etc... which should be
-            # done by the user.  e.g. This is a fancy 1 but
-            # the user should simplify it first:
-            # sqrt(2)*(1 + sqrt(2))/(sqrt(2) + 2)
             p, d = e.expand().as_numer_denom()
             if d.is_Integer:
                 if p.is_Rational:
                     return continued_fraction_periodic(p, d)
-                # look for a + b*c
-                # with c = sqrt(s)
                 if p.is_Add and len(p.args) == 2:
-                    a, bc = p.args
+                    a_val, bc = p.args
                 else:
-                    a = S.Zero
+                    a_val = S.Zero
                     bc = p
-                if a.is_Integer:
-                    b: Expr = S.NaN
-                    c: Expr = S.NaN
+                if a_val.is_Integer:
+                    b_val: Expr = S.NaN
+                    c_val: Expr = S.NaN
                     if bc.is_Mul and len(bc.args) == 2:
-                        b, c = bc.args
+                        b_val, c_val = bc.args  # type: ignore[assignment]
                     elif bc.is_Pow:
-                        b = Integer(1)
-                        c = bc
-                    if b.is_Integer and (
-                            c.is_Pow and c.exp is S.Half and
-                            c.base.is_Integer):
+                        b_val = Integer(1)
+                        c_val = bc
+                    from sympy.core.power import Pow
+                    if b_val.is_Integer and (
+                            isinstance(c_val, Pow) and c_val.exp is S.Half and
+                            c_val.base.is_Integer):
                         # (a + b*sqrt(c))/d
-                        c = c.base
-                        return continued_fraction_periodic(a, d, c, b)
+                        c_base = c_val.base
+                        return continued_fraction_periodic(a_val, d, c_base, b_val)
     raise ValueError(f"expecting a rational or quadratic irrational, not {e}")
 
 
@@ -173,12 +176,12 @@ def continued_fraction_periodic(p: int | Expr, q: int | Expr, d: int | Expr = 0,
         p *= q
         q *= q
 
-    terms: list[Expr] = []
-    pq = {}
+    terms: list[int] = []  # FIX: use list[int] instead of list[Expr]
+    pq: dict[tuple[int, int], int] = {}
 
     while (p, q) not in pq:
         pq[(p, q)] = len(terms)
-        terms.append((p + sd)//q)
+        terms.append(int((p + sd)//q))  # FIX: cast to int explicitly
         p = terms[-1]*q - p
         q = (d - p**2)//q
 
