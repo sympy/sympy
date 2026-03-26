@@ -7,7 +7,7 @@ from sympy.core.numbers import Integer, Rational
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy
 from sympy.core.sympify import _sympify
-from sympy.utilities.misc import as_int
+
 
 if TYPE_CHECKING:
     from sympy.core.expr import Expr
