@@ -1,8 +1,8 @@
 from __future__ import annotations
 from sympy.combinatorics.fp_groups import FpGroup
 from sympy.combinatorics.free_groups import free_group
+from sympy.combinatorics.rewritingsystem_fsm import StateMachine
 from sympy.testing.pytest import raises
-
 
 def test_rewriting():
     F, a, b = free_group("a, b")
@@ -48,3 +48,61 @@ def test_rewriting():
     R.add_rule(a**-3, b)
 
     assert R.add_rule(a, a) == set()
+
+def test_state_machine_accepts():
+
+    # Build odd-length DFA over {"0", "1"}
+    M = StateMachine("odd_length", ["0", "1"])
+    M.add_state("q1", state_type="a")
+    start = M.states["start"]
+    q1 = M.states["q1"]
+    start.add_transition("0", q1)
+    start.add_transition("1", q1)
+    q1.add_transition("0", start)
+    q1.add_transition("1", start)
+
+    results = M.accepts(["0", "010", "01", "", "2"])
+    assert results["0"] is True       # length 1
+    assert results["010"] is True     # length 3
+    assert results["01"] is False     # length 2
+    assert results[""] is False       # empty
+    assert results["2"] is False      # not in alphabet
+
+
+def test_state_machine_validate():
+    
+
+    # Valid machine passes
+    M = StateMachine("odd_length", ["0", "1"])
+    M.add_state("q1", state_type="a")
+    start = M.states["start"]
+    q1 = M.states["q1"]
+    start.add_transition("0", q1)
+    start.add_transition("1", q1)
+    q1.add_transition("0", start)
+    q1.add_transition("1", start)
+    assert M.validate() is True
+
+    # No accept states
+    M2 = StateMachine("no_accept", ["0", "1"])
+    raises(ValueError, lambda: M2.validate())
+
+    # Missing transition
+    M3 = StateMachine("missing", ["0", "1"])
+    M3.add_state("q1", state_type="a")
+    M3.states["start"].add_transition("0", M3.states["q1"])
+    raises(ValueError, lambda: M3.validate())
+
+    # Empty alphabet
+    M4 = StateMachine("empty_alpha", [])
+    raises(ValueError, lambda: M4.validate())
+
+    # Extra transition outside alphabet
+    M5 = StateMachine("extra_trans", ["0", "1"])
+    M5.add_state("q1", state_type="a")
+    M5.states["start"].add_transition("0", M5.states["q1"])
+    M5.states["start"].add_transition("1", M5.states["q1"])
+    M5.states["start"].add_transition("2", M5.states["q1"])
+    M5.states["q1"].add_transition("0", M5.states["start"])
+    M5.states["q1"].add_transition("1", M5.states["start"])
+    raises(ValueError, lambda: M5.validate())
