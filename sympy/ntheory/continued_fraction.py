@@ -139,7 +139,7 @@ def continued_fraction_periodic(p: int | Expr, q: int | Expr, d: int | Expr = 0,
     """
     from sympy.functions import sqrt, floor
 
-    p, q, d, s = as_int(p), as_int(q), as_int(d), as_int(s)
+    p, q, d, s = int(p), int(q), int(d), int(s)
 
     if d < 0:
         raise ValueError(f"expected non-negative for `d` but got {d}")
