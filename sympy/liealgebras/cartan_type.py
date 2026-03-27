@@ -110,7 +110,6 @@ class Standard_Cartan(Atom):
         obj.n = n
         obj._series = series.upper()
         return obj
-
     
     def rank(self):
         return self.n
