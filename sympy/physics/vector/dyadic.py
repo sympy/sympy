@@ -537,24 +537,21 @@ class Dyadic(Printable, EvalfMixin):
         It is very import to note that this is only as good as the SymPy
         equality test; False does not always mean they are not equivalent
         Dyadics.
-        If other == 0, it is treated as a zero Dyadic (`Dyadic(0)`).
-        Otherwise, non-Dyadic objects compare False.
+        Non-Dyadic objects compare False.
 
         Examples
         ========
 
         >>> from sympy import symbols
-        >>> from sympy.physics.mechanics import ReferenceFrame
+        >>> from sympy.physics.mechanics import ReferenceFrame, Dyadic
         >>> c = symbols('c')
         >>> N = ReferenceFrame('N')
         >>> (N.xx * (c + 1)**2).equals(N.xx * (c**2 + 2 * c + 1))
         True
-        >>> (N.yy - N.yy).equals(0)
+        >>> (N.yy - N.yy).equals(Dyadic(0))
         True
 
         """
-        if other == 0:
-            other = Dyadic(0)
         if not isinstance(other, Dyadic):
             return False
 
