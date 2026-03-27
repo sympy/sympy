@@ -8,8 +8,7 @@ from sympy.core.numbers import Integer
 class PlotInterval:
     """
     """
-    _v, _v_min, _v_max, _v_steps = None, None, None, None
-    
+    _v, _v_min, _v_max, _v_steps = None, None, None, None 
     @staticmethod
     def require_all_args(f: Callable[..., Any]) -> Callable[..., Any]:
         def check(self: Any, *args: Any, **kwargs: Any) -> Any:
