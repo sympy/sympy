@@ -1291,11 +1291,15 @@ class tan(TrigonometricFunction):
             if (arg/pi - S.Half).is_integer:
                 return False
             return True
+        if arg.is_extended_real is False:
+            return False
 
     def _eval_is_real(self):
         arg = self.args[0]
         if arg.is_real and (arg/pi - S.Half).is_integer is False:
             return True
+        if arg.is_real is False:
+            return False
 
     def _eval_is_finite(self):
         arg = self.args[0]
@@ -1587,7 +1591,13 @@ class cot(TrigonometricFunction):
         return self.func(x0) if x0.is_finite else self
 
     def _eval_is_extended_real(self):
-        return self.args[0].is_extended_real
+        arg = self.args[0]
+        if arg.is_extended_real:
+            if (arg/pi).is_integer:
+                return False
+            return True
+        if arg.is_extended_real is False:
+            return False
 
     def _eval_expand_trig(self, **hints):
         arg = self.args[0]
@@ -1626,6 +1636,8 @@ class cot(TrigonometricFunction):
         arg = self.args[0]
         if arg.is_real and (arg/pi).is_integer is False:
             return True
+        if arg.is_real is False:
+            return False
 
     def _eval_is_complex(self):
         arg = self.args[0]
