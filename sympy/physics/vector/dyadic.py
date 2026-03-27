@@ -148,10 +148,9 @@ class Dyadic(Printable, EvalfMixin):
     def __eq__(self, other):
         """Tests for equality.
 
-        Is currently weak; needs stronger comparison testing
+        Is currently weak; `.equals()` performs stronger symbolic equality testing.
 
         """
-
         if other == 0:
             other = Dyadic(0)
         other = _check_dyadic(other)
@@ -531,6 +530,50 @@ class Dyadic(Printable, EvalfMixin):
             new_inlist[0] = new_inlist[0].xreplace(rule)
             new_args.append(tuple(new_inlist))
         return Dyadic(new_args)
+
+    def equals(self, other):
+        """Tests for symbolic equality.
+
+        It is very import to note that this is only as good as the SymPy
+        equality test; False does not always mean they are not equivalent
+        Dyadics.
+        If other == 0, it is treated as a zero Dyadic (`Dyadic(0)`).
+        Otherwise, non-Dyadic objects compare False.
+
+        Examples
+        ========
+
+        >>> from sympy import symbols
+        >>> from sympy.physics.mechanics import ReferenceFrame
+        >>> c = symbols('c')
+        >>> N = ReferenceFrame('N')
+        >>> (N.xx * (c + 1)**2).equals(N.xx * (c**2 + 2 * c + 1))
+        True
+        >>> (N.yy - N.yy).equals(0)
+        True
+
+        """
+        if other == 0:
+            other = Dyadic(0)
+        if not isinstance(other, Dyadic):
+            return False
+
+        if (self.args == []) and (other.args == []):
+            return True
+
+        if (self.args == []):
+            frame = other.args[0][1].args[0][1]
+        else:
+            frame = self.args[0][1].args[0][1]
+
+        # Note: this will raise errors if any of the frames used in self or other are not oriented
+        diff = self - other
+        for v1 in frame:
+            diff_dot_v1 = diff.dot(v1)
+            for v2 in frame:
+                if not diff_dot_v1.dot(v2).equals(0):
+                    return False
+        return True
 
 
 def _check_dyadic(other):
