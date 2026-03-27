@@ -240,7 +240,7 @@ def continued_fraction_reduce(cf: list[int])->  list[int | list[int]]:
                 break
             yield nxt
 
-    a:Expr = S.Zero
+    a: Expr = S.Zero
     for a in continued_fraction_convergents(untillist(cf)):
         pass
 
