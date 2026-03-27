@@ -290,7 +290,7 @@ def test_equals():
 
     assert (N.x * expr1 + N.y * expr2).equals(N.x * expr2 + N.y * expr1)
 
-    # A is not linked to N; this comparison shows up in
+    # A is not linked to N; this comparison shows up in e.g. partial_velocity() usage
     A = ReferenceFrame("A")
     assert N.x + A.y != 0
     assert not (N.x + A.y).equals(0)
