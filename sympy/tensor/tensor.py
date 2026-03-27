@@ -3026,7 +3026,8 @@ class Tensor(TensExpr):
             return 0
         elif isinstance(other, Tensor):
             return self.component.commutes_with(other.component)
-        return NotImplementedError
+        else:
+            raise NotImplementedError(f"commutes_with between {type(self)} and {type(other)}")
 
     def perm2tensor(self, g, is_canon_bp=False):
         """
