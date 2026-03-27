@@ -132,9 +132,23 @@ class Vector(Printable, EvalfMixin):
         If none of the above, only accepts other as a Vector.
 
         """
+
         if other == 0:
-            return self.args == []
-        return self.equals(other)
+            other = Vector(0)
+        try:
+            other = _check_vector(other)
+        except TypeError:
+            return False
+        if (self.args == []) and (other.args == []):
+            return True
+        elif (self.args == []) or (other.args == []):
+            return False
+
+        frame = self.args[0][1]
+        for v in frame:
+            if expand((self - other).dot(v)) != 0:
+                return False
+        return True
 
     def __mul__(self, other):
         """Multiplies the Vector by a sympifyable expression.
