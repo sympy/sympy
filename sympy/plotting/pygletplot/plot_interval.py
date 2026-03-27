@@ -183,3 +183,4 @@ class PlotInterval:
     def frange(self) -> Iterator[float]:
         for i in self.vrange():
             yield float(i.evalf())
+            
