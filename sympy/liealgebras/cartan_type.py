@@ -105,7 +105,7 @@ class Standard_Cartan(Atom):
             raise TypeError("Series must be a string")
         if not isinstance(n, int):
             raise TypeError("Rank must be an integer")
-        
+    
         obj= Basic.__new__(cls)
         obj.n=n
         obj._series = series.upper()
