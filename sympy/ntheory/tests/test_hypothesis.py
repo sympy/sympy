@@ -71,4 +71,3 @@ def test_binomial_coefficients(n):
         prev_coefficients = binomial_coefficients(n-1)
         for k in range(1,n):
             assert coefficients[k,n-k] == prev_coefficients[k-1,n-k] + prev_coefficients[k,n-k-1]
-
