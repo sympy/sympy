@@ -534,7 +534,7 @@ class Dyadic(Printable, EvalfMixin):
     def equals(self, other):
         """Tests for symbolic equality.
 
-        It is very import to note that this is only as good as the SymPy
+        It is very important to note that this is only as good as the SymPy
         equality test; False does not always mean they are not equivalent
         Dyadics.
         Non-Dyadic objects compare False.
@@ -571,7 +571,7 @@ class Dyadic(Printable, EvalfMixin):
                 for v2 in frame:
                     if not diff_dot_v1.dot(v2).equals(0):
                         return False
-        except ValueError:
+        except ValueError: # Frames disonnected
             return False
         return True
 

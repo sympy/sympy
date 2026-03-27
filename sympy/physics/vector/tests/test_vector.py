@@ -301,8 +301,8 @@ def test_equals_zero_simple():
 
     assert Vector(0).equals(N.x - N.x)
     assert N.x - N.x.equals(Vector(0))
-    assert Vector(0).equals(0)
-    assert (N.x - N.x).equals(0)
+    assert Vector(0).equals(Vector(0))
+    assert (N.x - N.x).equals(Vector(0))
 
     assert Vector(0).equals(Vector(0))
     assert (N.x - N.x).equals(N.x - N.x)
@@ -325,9 +325,6 @@ def test_equals_zero_equal_reference_frames():
     assert not N.z.equals(A.x)
     assert not N.z.equals(A.y)
 
-# For the following 2 XFAIL tests: See https://github.com/sympy/sympy/issues/29546#issuecomment-4142372261
-from sympy.testing.pytest import XFAIL
-@XFAIL
 def test_equals_zero_nontrivial_zero_component():
     a = symbols("a")
     N = ReferenceFrame("N")
@@ -338,20 +335,19 @@ def test_equals_zero_nontrivial_zero_component():
     assert expr1 != expr2 # sanity check, so that this test is sensible
     assert expr1.equals(expr2)
 
-    assert (N.x * expr1 - N.x * expr2).equals(0)
+    assert (N.x * expr1 - N.x * expr2).equals(Vector(0))
 
-@XFAIL
 def test_equals_zero_nontrivial_zero_component_refframe():
     N = ReferenceFrame("N")
     A = ReferenceFrame("A")
     A.orient_axis(N, N.x, 0)
 
-    assert (N.x - A.x).equals(0)
-    assert (N.y - A.y).equals(0)
-    assert (N.z - A.z).equals(0)
-    assert not (N.x - A.y).equals(0)
-    assert not (N.x - A.z).equals(0)
-    assert not (N.y - A.x).equals(0)
-    assert not (N.y - A.z).equals(0)
-    assert not (N.z - A.x).equals(0)
-    assert not (N.z - A.y).equals(0)
+    assert (N.x - A.x).equals(Vector(0))
+    assert (N.y - A.y).equals(Vector(0))
+    assert (N.z - A.z).equals(Vector(0))
+    assert not (N.x - A.y).equals(Vector(0))
+    assert not (N.x - A.z).equals(Vector(0))
+    assert not (N.y - A.x).equals(Vector(0))
+    assert not (N.y - A.z).equals(Vector(0))
+    assert not (N.z - A.x).equals(Vector(0))
+    assert not (N.z - A.y).equals(Vector(0))

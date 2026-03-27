@@ -124,7 +124,7 @@ class Vector(Printable, EvalfMixin):
     def __eq__(self, other):
         """Tests for equality.
 
-        It is very import to note that this is only as good as the SymPy
+        It is very important to note that this is only as good as the SymPy
         equality test; False does not always mean they are not equivalent
         Vectors.
         If other is 0, and self is empty, returns True.
@@ -132,6 +132,8 @@ class Vector(Printable, EvalfMixin):
         If none of the above, only accepts other as a Vector.
 
         """
+        if other == 0:
+            return self.args == []
         return self.equals(other)
 
     def __mul__(self, other):
@@ -778,41 +780,43 @@ class Vector(Printable, EvalfMixin):
     def equals(self, other):
         """Tests for symbolic equality.
 
-        It is very import to note that this is only as good as the SymPy
+        It is very important to note that this is only as good as the SymPy
         equality test; False does not always mean they are not equivalent
         Vectors.
-        If other is 0, and self is empty, returns True.
-        If other is 0 and self is not empty, returns False.
-        If none of the above, only accepts other as a Vector.
+        Non-Vector objects compare false.
 
         Examples
         ========
 
         >>> from sympy import symbols
-        >>> from sympy.physics.mechanics import ReferenceFrame
+        >>> from sympy.physics.mechanics import ReferenceFrame, Vector
         >>> c = symbols('c')
         >>> N = ReferenceFrame('N')
         >>> (N.x * (c + 1)**2).equals(N.x * (c**2 + 2 * c + 1))
         True
-        >>> (N.x - N.x).equals(0)
+        >>> (N.x - N.x).equals(Vector(0))
         True
 
         """
-        if other == 0:
-            other = Vector(0)
-        try:
-            other = _check_vector(other)
-        except TypeError:
-            return False
-        if (self.args == []) and (other.args == []):
-            return True
-        elif (self.args == []) or (other.args == []):
+        if not isinstance(other, Vector):
             return False
 
-        frame = self.args[0][1]
-        for v in frame:
-            if expand((self - other).dot(v)) != 0:
-                return False
+        if (self.args == []) and (other.args == []):
+            return True
+
+        if (self.args == []):
+            frame = other.args[0][1]
+        else:
+            frame = self.args[0][1]
+
+        diff = self - other
+        # Wrap in try-except so that if frames aren't connected, False is returned
+        try:
+            for v in frame:
+                if not diff.dot(v).equals(0):
+                    return False
+        except ValueError: # Frames disconnected
+            return False
         return True
 
 
