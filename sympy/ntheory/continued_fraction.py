@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from sympy.core.expr import Expr
 from typing import Iterator,Iterable
 
-def continued_fraction(a: Rational | Expr) -> list[int | list[int]]:
+def continued_fraction(a: complex | Expr) -> list[int | list[int]]:
     """Return the continued fraction representation of a Rational or
     quadratic irrational.
 
@@ -40,10 +40,8 @@ def continued_fraction(a: Rational | Expr) -> list[int | list[int]]:
                 e.args[1].is_Pow and
                 e.args[1].base.is_Integer and
                 e.args[1].exp is S.Half):
-            a, b = e.args
-            if not isinstance(a, Rational):
-                raise TypeError("Expected Rational")
-            return continued_fraction_periodic(0, a.q, b.base, a.p)
+            r, b = e.args
+            return continued_fraction_periodic(0, r.q, b.base, r.p)
         else:
             # this should not have to work very hard- no
             # simplification, cancel, etc... which should be
@@ -57,11 +55,11 @@ def continued_fraction(a: Rational | Expr) -> list[int | list[int]]:
                 # look for a + b*c
                 # with c = sqrt(s)
                 if p.is_Add and len(p.args) == 2:
-                    a, bc = p.args
+                    t, bc = p.args
                 else:
-                    a = S.Zero
+                    t = S.Zero
                     bc = p
-                if a.is_Integer:
+                if t.is_Integer:
                     b = S.NaN
                     if bc.is_Mul and len(bc.args) == 2:
                         b, c = bc.args
@@ -73,7 +71,7 @@ def continued_fraction(a: Rational | Expr) -> list[int | list[int]]:
                             c.base.is_Integer):
                         # (a + b*sqrt(c))/d
                         c = c.base
-                        return continued_fraction_periodic(int(a), int(d), int(c), int(b))
+                        return continued_fraction_periodic(t, d, c, b)
     raise ValueError(f"expecting a rational or quadratic irrational, not {e}")
 
 
