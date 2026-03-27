@@ -15,7 +15,7 @@ def Abs(x):
         else:
             return interval(abs(x.start), abs(x.end))
     else:
-        raise NotImplementedError
+        raise NotImplementedError(f"Abs for {type(x)}")
 
 #Monotonic
 
@@ -28,7 +28,7 @@ def exp(x):
     elif isinstance(x, interval):
         return interval(np.exp(x.start), np.exp(x.end), is_valid=x.is_valid)
     else:
-        raise NotImplementedError
+        raise NotImplementedError(f"exp for {type(x)}")
 
 
 #Monotonic
@@ -50,7 +50,7 @@ def log(x):
 
         return interval(np.log(x.start), np.log(x.end))
     else:
-        raise NotImplementedError
+        raise NotImplementedError(f"log for {type(x)}")
 
 
 #Monotonic
@@ -71,7 +71,7 @@ def log10(x):
             return interval(-np.inf, np.inf, is_valid=None)
         return interval(np.log10(x.start), np.log10(x.end))
     else:
-        raise NotImplementedError
+        raise NotImplementedError(f"log10 for {type(x)}")
 
 
 #Monotonic
@@ -85,7 +85,7 @@ def atan(x):
         end = np.arctan(x.end)
         return interval(start, end, is_valid=x.is_valid)
     else:
-        raise NotImplementedError
+        raise NotImplementedError(f"atan for {type(x)}")
 
 
 #periodic
@@ -114,7 +114,7 @@ def sin(x):
                 start = -1
             return interval(start, end)
     else:
-        raise NotImplementedError
+        raise NotImplementedError(f"sin for {type(x)}")
 
 
 #periodic
@@ -145,7 +145,7 @@ def cos(x):
                 start = -1
             return interval(start, end, is_valid=x.is_valid)
     else:
-        raise NotImplementedError
+        raise NotImplementedError(f"cos for {type(x)}")
 
 
 def tan(x):
@@ -173,7 +173,7 @@ def sqrt(x):
             return interval(np.sqrt(x.start), np.sqrt(x.end),
                     is_valid=x.is_valid)
     else:
-        raise NotImplementedError
+        raise NotImplementedError(f"sqrt for {type(x)}")
 
 
 def imin(*args):
@@ -228,7 +228,7 @@ def sinh(x):
     elif isinstance(x, interval):
         return interval(np.sinh(x.start), np.sinh(x.end), is_valid=x.is_valid)
     else:
-        raise NotImplementedError
+        raise NotImplementedError(f"sinh for {type(x)}")
 
 
 def cosh(x):
@@ -247,7 +247,7 @@ def cosh(x):
             end = np.cosh(x.end)
             return interval(start, end, is_valid=x.is_valid)
     else:
-        raise NotImplementedError
+        raise NotImplementedError(f"cosh for {type(x)}")
 
 
 #Monotonic
@@ -259,7 +259,7 @@ def tanh(x):
     elif isinstance(x, interval):
         return interval(np.tanh(x.start), np.tanh(x.end), is_valid=x.is_valid)
     else:
-        raise NotImplementedError
+        raise NotImplementedError(f"tanh for {type(x)}")
 
 
 def asin(x):
