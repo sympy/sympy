@@ -151,10 +151,15 @@ def test_dyadic_equals():
 def test_dyadic_equals_different_frames():
     N = ReferenceFrame('N')
     B = ReferenceFrame('B')
+    C = ReferenceFrame('C')
     B.orient_axis(N, N.z, pi / 2)
+    # Intentionally do not orient C
 
     assert B.zz.equals(N.zz)
     assert B.zx.equals(N.zy)
     assert not B.zx.equals(N.zx)
     assert B.zy.equals(-N.zx)
     assert not B.zy.equals(N.zy)
+
+    # Unoriented frames should not error when comparing
+    assert not C.xx.equals(N.xx)

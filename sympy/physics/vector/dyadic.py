@@ -566,13 +566,16 @@ class Dyadic(Printable, EvalfMixin):
         else:
             frame = self.args[0][1].args[0][1]
 
-        # Note: this will raise errors if any of the frames used in self or other are not oriented
-        diff = self - other
-        for v1 in frame:
-            diff_dot_v1 = diff.dot(v1)
-            for v2 in frame:
-                if not diff_dot_v1.dot(v2).equals(0):
-                    return False
+        # Wrap in try-except so that if frames aren't connected, False is returned
+        try:
+            diff = self - other
+            for v1 in frame:
+                diff_dot_v1 = diff.dot(v1)
+                for v2 in frame:
+                    if not diff_dot_v1.dot(v2).equals(0):
+                        return False
+        except ValueError:
+            return False
         return True
 
 
