@@ -180,7 +180,7 @@ def imin(*args):
     """Evaluates the minimum of a list of intervals"""
     np = import_module('numpy')
     if not all(isinstance(arg, (int, float, interval)) for arg in args):
-        return NotImplementedError
+        raise NotImplementedError(f"imin for argument types {[type(arg) for arg in args]}")
     else:
         new_args = [a for a in args if isinstance(a, (int, float))
                     or a.is_valid]
@@ -201,7 +201,7 @@ def imax(*args):
     """Evaluates the maximum of a list of intervals"""
     np = import_module('numpy')
     if not all(isinstance(arg, (int, float, interval)) for arg in args):
-        return NotImplementedError
+        raise NotImplementedError(f"imax for argument types {[type(arg) for arg in args]}")
     else:
         new_args = [a for a in args if isinstance(a, (int, float))
                     or a.is_valid]
@@ -324,7 +324,7 @@ def ceil(x):
                 #Not continuous over the interval
                 return interval(start, end, is_valid=None)
     else:
-        return NotImplementedError
+        raise NotImplementedError(f"ceil for {type(x)}")
 
 
 def floor(x):
@@ -345,7 +345,7 @@ def floor(x):
                 #not continuous over the interval
                 return interval(start, end, is_valid=None)
     else:
-        return NotImplementedError
+        raise NotImplementedError(f"floor for {type(x)}")
 
 
 def acosh(x):
@@ -369,7 +369,7 @@ def acosh(x):
             end = np.arccosh(x.end)
             return interval(start, end, is_valid=x.is_valid)
     else:
-        return NotImplementedError
+        raise NotImplementedError(f"acosh for {type(x)}")
 
 
 #Monotonic
@@ -383,7 +383,7 @@ def asinh(x):
         end = np.arcsinh(x.end)
         return interval(start, end, is_valid=x.is_valid)
     else:
-        return NotImplementedError
+        raise NotImplementedError(f"asinh for {type(x)}")
 
 
 def atanh(x):
@@ -407,7 +407,7 @@ def atanh(x):
             end = np.arctanh(x.end)
             return interval(start, end, is_valid=x.is_valid)
     else:
-        return NotImplementedError
+        raise NotImplementedError(f"atanh for {type(x)}")
 
 
 #Three valued logic for interval plotting.
