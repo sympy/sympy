@@ -105,18 +105,18 @@ class Standard_Cartan(Atom):
             raise TypeError("Series must be a string")
         if not isinstance(n, int):
             raise TypeError("Rank must be an integer")
-
-        obj = Basic.__new__(cls)
-        obj.n = n
+            
+        obj= Basic.__new__(cls)
+        obj.n=n
         obj._series = series.upper()
         return obj
-    
+        
     def rank(self):
         return self.n
-
+        
     def series(self):
         return self._series
-
+        
     # important for tests & debugging
     def __repr__(self):
         return f"{self._series}{self.n}"
