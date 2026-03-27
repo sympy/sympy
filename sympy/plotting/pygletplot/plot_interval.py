@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Any, Iterator, Callable, TYPE_CHECKING
+from typing import Any, Iterator, Callable
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
