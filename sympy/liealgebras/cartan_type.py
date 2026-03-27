@@ -2,7 +2,7 @@ from __future__ import annotations
 from sympy.core import Atom, Basic
 
 
-class CartanType_generator():
+class CartanType_generator:
     """
     Constructor for actually creating Cartan types
     """
@@ -50,7 +50,9 @@ class CartanType_generator():
 
         # -------- Rank validation --------
         if n < 0:
-            raise ValueError(f"Invalid Cartan type '{c}' (rank must be non-negative)")
+            raise ValueError(
+                f"Invalid Cartan type '{c}' (rank must be non-negative)"
+            )
 
         # -------- Dispatch --------
         if letter == "A":
@@ -106,8 +108,8 @@ class Standard_Cartan(Atom):
         if not isinstance(n, int):
             raise TypeError("Rank must be an integer")
 
-        obj= Basic.__new__(cls)
-        obj.n=n
+        obj = Basic.__new__(cls)
+        obj.n = n
         obj._series = series.upper()
         return obj
 
@@ -116,7 +118,7 @@ class Standard_Cartan(Atom):
 
     def series(self):
         return self._series
-        
+
     # important for tests & debugging
     def __repr__(self):
         return f"{self._series}{self.n}"
