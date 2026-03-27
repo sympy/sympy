@@ -130,6 +130,14 @@ def test_puiseux_poly_unify():
     assert repr(1/x + x**QQ(1,2)) == 'x**(-1) + x**(1/2)'
 
 
+def test_puiseux_poly_issue_29363():
+    R, e, b = puiseux_ring('e b', QQ)
+    dz = -1 - b*e
+    neg = b/e*dz
+    dp = dz + neg
+    assert dp == -1 - b/e - b*e - b**2
+
+
 def test_puiseux_poly_arit():
     _, x = puiseux_ring('x', QQ)
     _, y = puiseux_ring('y', QQ)

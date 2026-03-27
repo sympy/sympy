@@ -101,7 +101,7 @@ def encoded_cnf_to_z3_solver(enc_cnf, z3):
 
     for f, arity in uninterpreted_functions_to_arity.items():
         # Rather than defining new types for the domain and range
-        # we assume they are real to avoid unnecesary complexity.
+        # we assume they are real to avoid unnecessary complexity.
         arg_types = " ".join(["Real"] * arity)
         declarations.append(f"(declare-fun {f} ({arg_types}) Real)")
 

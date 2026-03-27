@@ -559,9 +559,9 @@ def _primal_dual(M, factor=True):
 def _rel_as_nonpos(constr, syms):
     """return `(np, d, aux)` where `np` is a list of nonpositive
     expressions that represent the given constraints (possibly
-    rewritten in terms of auxilliary variables) expressible with
+    rewritten in terms of auxiliary variables) expressible with
     nonnegative symbols, and `d` is a dictionary mapping a given
-    symbols to an expression with an auxilliary variable. In some
+    symbols to an expression with an auxiliary variable. In some
     cases a symbol will be used as part of the change of variables,
     e.g. x: x - z1 instead of x: z1 - z2.
 
@@ -590,8 +590,8 @@ def _rel_as_nonpos(constr, syms):
     """
     r = {}  # replacements to handle change of variables
     np = []  # nonpositive expressions
-    aux = []  # auxilliary symbols added
-    ui = numbered_symbols("z", start=1, cls=Dummy)  # auxilliary symbols
+    aux = []  # auxiliary symbols added
+    ui = numbered_symbols("z", start=1, cls=Dummy)  # auxiliary symbols
     univariate = {}  # {x: interval} for univariate constraints
     unbound = []  # symbols designated as unbound
     syms = set(syms)  # the expected syms of the system
@@ -629,7 +629,7 @@ def _rel_as_nonpos(constr, syms):
                 only equalities like Eq(x, y) or non-strict
                 inequalities like x >= y are allowed in lp, not %s""" % i))
 
-    # introduce auxilliary variables as needed for univariate
+    # introduce auxiliary variables as needed for univariate
     # inequalities
     for x in syms:
         i = univariate.get(x, True)
@@ -673,7 +673,7 @@ def _rel_as_nonpos(constr, syms):
 def _lp_matrices(objective, constraints):
     """return A, B, C, D, r, x+X, X for maximizing
     objective = Cx - D with constraints Ax <= B, introducing
-    introducing auxilliary variables, X, as necessary to make
+    introducing auxiliary variables, X, as necessary to make
     replacements of symbols as given in r, {xi: expression with Xj},
     so all variables in x+X will take on nonnegative values.
 
@@ -769,7 +769,7 @@ def _lp(min_max, f, constr):
 
     # restore original variables and remove aux from p
     p = dict(zip(xx, p))
-    if r:  # p has original symbols and auxilliary symbols
+    if r:  # p has original symbols and auxiliary symbols
         # if r has x: x - z1 use values from p to update
         r = {k: v.xreplace(p) for k, v in r.items()}
         # then use the actual value of x (= x - z1) in p
@@ -965,7 +965,7 @@ def linprog(c, A=None, b=None, A_eq=None, b_eq=None, bounds=None):
             raise ValueError("A and b must both be given")
         # the governing equations will be simple constraints
         # on variables
-        A, b = zeros(0, C.cols), zeros(C.cols, 1)
+        A, b = zeros(0, C.cols), zeros(0, 1)
     else:
         A, b = [Matrix(i) for i in (A, b)]
 

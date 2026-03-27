@@ -1200,6 +1200,13 @@ def test_TensorManager():
     assert GHsymbol in TensorManager._comm_symbols2i
 
 
+def test_TensorManager_comm_aliasing():
+    TensorManager.clear()
+    comm = TensorManager.comm
+    comm[1][2] = 1
+    assert TensorManager.get_comm(1, 2) is None
+
+
 def test_hash():
     D = Symbol('D')
     Lorentz = TensorIndexType('Lorentz', dim=D, dummy_name='L')

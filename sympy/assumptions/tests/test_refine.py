@@ -14,6 +14,7 @@ from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.functions.elementary.integers import floor, ceiling
+from sympy.functions.special.delta_functions import Heaviside
 
 
 def test_Abs():
@@ -305,3 +306,17 @@ def test_floor_ceiling():
 
     assert refine(floor(floor(x)+ floor(y))) == floor(x) + floor(y)
     assert refine(ceiling(ceiling(x) - ceiling(y))) == ceiling(x) - ceiling(y)
+
+
+def test_Heaviside():
+    assert refine(Heaviside(x), Q.positive(x)) == 1
+    assert refine(Heaviside(x), Q.negative(x)) == 0
+    assert refine(Heaviside(x), Q.zero(x)) == S.Half
+    assert refine(Heaviside(x), Q.nonnegative(x)) == Heaviside(x)
+    assert refine(Heaviside(x), Q.nonpositive(x)) == Heaviside(x)
+    assert refine(Heaviside(x), True) == Heaviside(x)
+
+    # custom H0 value
+    assert refine(Heaviside(x, 1), Q.zero(x)) == 1
+    assert refine(Heaviside(x, 1), Q.positive(x)) == 1
+    assert refine(Heaviside(x, 1), Q.negative(x)) == 0

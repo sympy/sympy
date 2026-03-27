@@ -145,7 +145,7 @@ def directional_derivative(field, direction_vector):
     The two definitions differs by the magnitude of the direction vector.
     This function does not normalize direction_vector. If the user wants
     to compute the directional derivative according to the first definition,
-    it is the user's resposibility to normalize the direction vector before
+    it is the user's responsibility to normalize the direction vector before
     giving it to this function.
 
     The directional derivative of a vector field $\mathbf{\vec{f}}(\mathbf{x})$
