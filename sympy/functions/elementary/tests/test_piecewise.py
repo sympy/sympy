@@ -1658,3 +1658,25 @@ def test_piecewise_limit_directional():
     p = Piecewise((x**3, x < 3), (-x**2, x > 3), (2, True))
     assert limit(p, x, 3, '+') == -9
     assert limit(p, x, 3, '-') == 27
+
+def test_piecewise_limit_directional():
+    from sympy import limit
+    from sympy.testing.pytest import raises
+    x = symbols('x')
+
+    # issue #27236: two-sided limit should raise when left != right
+    f = Piecewise((1, x < 0), (-1, True))
+    assert limit(f, x, 0, '-') == 1
+    assert limit(f, x, 0, '+') == -1
+    raises(ValueError, lambda: limit(f, x, 0, '+-'))
+
+    # issue #23836: directional limits at interior discontinuity
+    p = Piecewise((x**3, x < 3), (-x**2, x > 3), (2, True))
+    assert limit(p, x, 3, '+') == -9
+    assert limit(p, x, 3, '-') == 27
+    raises(ValueError, lambda: limit(p, x, 3, '+-'))
+
+    # issue #26313: right limit respects strict inequality boundary
+    p2 = Piecewise((x**2, x <= 2), (5*x - 7, x > 2))
+    assert limit(p2, x, 2, '+') == 3
+    assert limit(p2, x, 2, '-') == 4
