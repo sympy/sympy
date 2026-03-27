@@ -391,7 +391,9 @@ def _(expr, assumptions):
 @PositivePredicate.register(acos)
 def _(expr, assumptions):
     x = expr.args[0]
-    if ask(Q.nonpositive(x - 1) & Q.nonnegative(x + 1), assumptions):
+    if ask(Q.zero(x), assumptions):
+        return True
+    if ask(Q.negative(x - 1) & Q.nonnegative(x + 1), assumptions):
         return True
 
 @PositivePredicate.register(acot)
