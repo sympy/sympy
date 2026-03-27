@@ -292,7 +292,9 @@ def _(expr):
         (Q.real(base) & Q.even(exp) & Q.nonnegative(exp)) >> Q.nonnegative(expr),
         (Q.nonnegative(base) & Q.odd(exp) & Q.nonnegative(exp)) >> Q.nonnegative(expr),
         (Q.nonpositive(base) & Q.odd(exp) & Q.nonnegative(exp)) >> Q.nonpositive(expr),
-        Equivalent(Q.zero(expr), Q.zero(base) & Q.positive(exp))
+        Equivalent(Q.zero(expr), Q.zero(base) & Q.positive(exp)),
+        Q.odd(exp) >> Equivalent(Q.positive(base), Q.positive(expr)),
+        Q.odd(exp) >> Equivalent(Q.negative(base), Q.negative(expr))
     ]
 
 
