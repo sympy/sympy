@@ -334,6 +334,9 @@ def test_nichols_expr():
 
 
 def test_issue_29530():
+    if not numpy:
+        skip("NumPy is required for this test")
+
     num = numpy.array([
         3.48799648e-03+0.00000000e+00j,  3.94714557e+00-3.27602726e+02j,
        -1.26370216e+07-8.62936992e+05j, -2.85822924e+10+2.68995812e+11j,
