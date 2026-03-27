@@ -295,17 +295,18 @@ def test_equals():
     assert N.x + A.y != 0
     assert not (N.x + A.y).equals(0)
 
+    # Invalid type
+    assert not N.x.equals(5)
+    assert not N.x.equals('hi')
+
 
 def test_equals_zero_simple():
     N = ReferenceFrame("N")
 
     assert Vector(0).equals(N.x - N.x)
-    assert N.x - N.x.equals(Vector(0))
-    assert Vector(0).equals(Vector(0))
-    assert (N.x - N.x).equals(Vector(0))
-
     assert Vector(0).equals(Vector(0))
     assert (N.x - N.x).equals(N.x - N.x)
+    assert (N.x - N.x).equals(Vector(0))
 
     assert 0 == N.x - N.x
     assert 0 == Vector(0)

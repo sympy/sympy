@@ -147,6 +147,10 @@ def test_dyadic_equals():
 
     assert (N.xx * expr1 + N.yz * expr2).equals(N.xx * expr2 + N.yz * expr1)
 
+    # Invalid type
+    assert not N.xx.equals(5)
+    assert not N.xx.equals('hi')
+
 
 def test_dyadic_equals_different_frames():
     N = ReferenceFrame('N')
