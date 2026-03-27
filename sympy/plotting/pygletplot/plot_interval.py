@@ -8,7 +8,7 @@ from sympy.core.numbers import Integer
 class PlotInterval:
     """
     """
-    _v, _v_min, _v_max, _v_steps = None, None, None, None 
+    _v, _v_min, _v_max, _v_steps = None, None, None, None
     @staticmethod
     def require_all_args(f: Callable[..., Any]) -> Callable[..., Any]:
         def check(self: Any, *args: Any, **kwargs: Any) -> Any:
@@ -92,15 +92,15 @@ class PlotInterval:
         if v_steps is None:
             self._v_steps = None
             return
-            
+
         if isinstance(v_steps, int):
             v_steps = Integer(v_steps)
         elif not isinstance(v_steps, Integer):
             raise ValueError("v_steps must be an int or SymPy Integer.")
-            
+
         if v_steps <= S.Zero:
             raise ValueError("v_steps must be positive.")
-            
+
         self._v_steps = v_steps
 
     @require_all_args
