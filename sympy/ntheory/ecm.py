@@ -1,3 +1,4 @@
+from __future__ import annotations
 from math import log
 from sympy.core.random import _randint
 from sympy.external.gmpy import gcd, invert, sqrt
@@ -61,7 +62,7 @@ class Point:
         return self.x_cord * other.z_cord % self.mod ==\
             other.x_cord * self.z_cord % self.mod
 
-    def add(self, Q: "Point", diff: "Point") -> "Point":
+    def add(self, Q: Point, diff: Point) -> Point:
         """
         Add two points self and Q where diff = self - Q. Moreover the assumption
         is self.x_cord*Q.x_cord*(self.x_cord - Q.x_cord) != 0. This algorithm
@@ -98,7 +99,7 @@ class Point:
         z_cord = diff.x_cord * subt * subt % self.mod
         return Point(x_cord, z_cord, self.a_24, self.mod)
 
-    def double(self) -> "Point":
+    def double(self) -> Point:
         """
         Doubles a point in an elliptic curve in Montgomery form.
         This algorithm requires 5 multiplications.
@@ -121,7 +122,7 @@ class Point:
         z_cord = diff*(v + self.a_24*diff) % self.mod
         return Point(x_cord, z_cord, self.a_24, self.mod)
 
-    def mont_ladder(self: "Point", k: int) -> "Point":
+    def mont_ladder(self, k: int) -> Point:
         """
         Scalar multiplication of a point in Montgomery form
         using Montgomery Ladder Algorithm.
@@ -156,7 +157,13 @@ class Point:
         return Q
 
 
-def _ecm_one_factor(n: int, B1: int=10000, B2: int=100000, max_curve: int=200, seed=None) ->  int | None:
+def _ecm_one_factor(
+        n: int,
+        B1: int=10000,
+        B2: int=100000,
+        max_curve:int=200,
+        seed: int| None | list[int] = None
+        ) ->  int | None:
     """Returns one factor of n using
     Lenstra's 2 Stage Elliptic curve Factorization
     with Suyama's Parameterization. Here Montgomery
@@ -209,9 +216,9 @@ def _ecm_one_factor(n: int, B1: int=10000, B2: int=100000, max_curve: int=200, s
     randint = _randint(seed)
 
     # When calculating T, if (B1 - 2*D) is negative, it cannot be calculated.
-    D: int = min(int(sqrt(B2)), B1 // 2 - 1)
+    D = min(int(sqrt(B2)), B1 // 2 - 1)
     sieve.extend(D)
-    beta: list[int] = [0] * D
+    beta = [0] * D
     S: list[Point | None] = [None] * D
     k = 1
     for p in primerange(2, B1 + 1):
@@ -221,7 +228,7 @@ def _ecm_one_factor(n: int, B1: int=10000, B2: int=100000, max_curve: int=200, s
     # Using the fact that the x-coordinates of point P and its
     # inverse -P coincide, the number of primes to be checked
     # in stage 2 can be reduced.
-    deltas_list: list[list[int]] = []
+    deltas_list = []
     for r in range(B1 + 2*D, B2 + 2*D, 4*D):
         # d in deltas iff r+(2d+1) and/or r-(2d+1) is prime
         deltas = {abs(q - r) >> 1 for q in primerange(r - 2*D, r + 2*D)}
@@ -303,7 +310,12 @@ def _ecm_one_factor(n: int, B1: int=10000, B2: int=100000, max_curve: int=200, s
     return None
 
 
-def ecm(n: int, B1: int=10000, B2: int=100000, max_curve: int=200, seed: int=1234) -> set[int]:
+def ecm(n: int,
+        B1: int=10000,
+        B2: int=100000,
+        max_curve: int=200,
+        seed: int=1234
+        ) -> set[int]:
     """Performs factorization using Lenstra's Elliptic curve method.
 
     This function repeatedly calls ``_ecm_one_factor`` to compute the factors
@@ -340,7 +352,7 @@ def ecm(n: int, B1: int=10000, B2: int=100000, max_curve: int=200, seed: int=123
             while(n % prime == 0):
                 n //= prime
 
-    queue= []
+    queue = []
     def check(m):
         if isprime(m):
             factors.add(m)
