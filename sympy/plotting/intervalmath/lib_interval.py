@@ -282,6 +282,8 @@ def asin(x):
             start = np.arcsin(x.start)
             end = np.arcsin(x.end)
             return interval(start, end, is_valid=x.is_valid)
+    else:
+        raise NotImplementedError(f"asin for {type(x)}")
 
 
 def acos(x):
@@ -304,6 +306,8 @@ def acos(x):
             start = np.arccos(x.start)
             end = np.arccos(x.end)
             return interval(start, end, is_valid=x.is_valid)
+    else:
+        raise NotImplementedError(f"acos for {type(x)}")
 
 
 def ceil(x):
