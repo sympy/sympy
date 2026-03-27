@@ -82,10 +82,23 @@ class Standard_Cartan(Atom):
         """
         return self._series
 
-    # abstract methods needed for type checking
-    if TYPE_CHECKING:
-        # for simple_root type_e is list[int | float], the rest are list[int]
-        def simple_root(self, i: int) -> list: ...
-        def positive_roots(self) -> dict[int, list[int]]: ...
-        def cartan_matrix(self) -> Matrix: ...
-        def dynkin_diagram(self) -> str: ...
+    # for simple_root type_e is list[int | float], the rest are list[int]
+    def simple_root(self, i: int) -> list:
+        raise NotImplementedError(
+            "simple_root is implemented by subclasses of Standard_Cartan"
+        )
+
+    def positive_roots(self) -> dict[int, list[int]]:
+        raise NotImplementedError(
+            "positive_roots is implemented by subclasses of Standard_Cartan"
+        )
+
+    def cartan_matrix(self) -> Matrix:
+        raise NotImplementedError(
+            "cartan_matrix is implemented by subclasses of Standard_Cartan"
+        )
+
+    def dynkin_diagram(self) -> str:
+        raise NotImplementedError(
+            "dynkin_diagram is implemented by subclasses of Standard_Cartan"
+        )
