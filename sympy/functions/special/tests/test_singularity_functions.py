@@ -66,9 +66,11 @@ def test_eval():
     assert SingularityFunction(x, nan, 1) is nan
     assert SingularityFunction(nan, a, n) is nan
 
+    assert SingularityFunction(4, 2, -5) == 0
+    assert SingularityFunction(8, 8, -5) is oo
+
     raises(ValueError, lambda: SingularityFunction(x, a, I))
     raises(ValueError, lambda: SingularityFunction(2*I, I, n))
-    raises(ValueError, lambda: SingularityFunction(x, a, -5))
 
 
 def test_leading_term():

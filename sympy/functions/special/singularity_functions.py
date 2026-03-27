@@ -88,7 +88,7 @@ class SingularityFunction(DefinedFunction):
 
     def fdiff(self, argindex=1):
         """
-        Returns the first derivative of a DiracDelta Function.
+        Returns the first derivative of a Singularity Function.
 
         Explanation
         ===========
@@ -104,10 +104,12 @@ class SingularityFunction(DefinedFunction):
 
         if argindex == 1:
             x, a, n = self.args
-            if n in (S.Zero, S.NegativeOne, S(-2), S(-3)):
-                return self.func(x, a, n-1)
+            if n.is_integer and n.is_nonpositive:
+                return self.func(x, a, n - 1)
+            elif n.is_integer and n.is_positive:
+                return n * self.func(x, a, n - 1)
             elif n.is_positive:
-                return n*self.func(x, a, n-1)
+                return n * self.func(x, a, n - 1)
         else:
             raise ArgumentIndexError(self, argindex)
 
@@ -165,8 +167,11 @@ class SingularityFunction(DefinedFunction):
             raise ValueError("Singularity Functions are not defined for imaginary exponents.")
         if shift is S.NaN or n is S.NaN:
             return S.NaN
-        if (n + 4).is_negative:
-            raise ValueError("Singularity Functions are not defined for exponents less than -4.")
+        if n.is_integer and n.is_negative:
+            if shift.is_negative or shift.is_extended_positive:
+                return S.Zero
+            if shift.is_zero:
+                return oo
         if shift.is_extended_negative:
             return S.Zero
         if n.is_nonnegative:
@@ -174,11 +179,6 @@ class SingularityFunction(DefinedFunction):
                 return S.Zero**n
             if shift.is_extended_nonnegative:
                 return shift**n
-        if n in (S.NegativeOne, -2, -3, -4):
-            if shift.is_negative or shift.is_extended_positive:
-                return S.Zero
-            if shift.is_zero:
-                return oo
 
     def _eval_rewrite_as_Piecewise(self, *args, **kwargs):
         '''
@@ -187,7 +187,7 @@ class SingularityFunction(DefinedFunction):
         '''
         x, a, n = self.args
 
-        if n in (S.NegativeOne, S(-2), S(-3), S(-4)):
+        if n.is_integer and n.is_negative:
             return Piecewise((oo, Eq(x - a, 0)), (0, True))
         elif n.is_nonnegative:
             return Piecewise(((x - a)**n, x - a >= 0), (0, True))
@@ -199,14 +199,8 @@ class SingularityFunction(DefinedFunction):
         '''
         x, a, n = self.args
 
-        if n == -4:
-            return diff(Heaviside(x - a), x.free_symbols.pop(), 4)
-        if n == -3:
-            return diff(Heaviside(x - a), x.free_symbols.pop(), 3)
-        if n == -2:
-            return diff(Heaviside(x - a), x.free_symbols.pop(), 2)
-        if n == -1:
-            return diff(Heaviside(x - a), x.free_symbols.pop(), 1)
+        if n.is_integer and n.is_negative:
+            return diff(Heaviside(x - a), x.free_symbols.pop(), abs(n))
         if n.is_nonnegative:
             return (x - a)**n*Heaviside(x - a, 1)
 
