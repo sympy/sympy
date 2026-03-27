@@ -117,7 +117,7 @@ class ColorScheme:
         elif len(lists) == 3:
             try:
                 (r1, r2), (g1, g2), (b1, b2) = lists
-            except Exception:
+            except (TypeError, ValueError):
                 raise ValueError("If three color arguments are given, "
                                  "they must be given in the format "
                                  "(r1, r2), (g1, g2), (b1, b2). To create "
@@ -133,7 +133,7 @@ class ColorScheme:
         if gargs:
             try:
                 gradient = ColorGradient(*gargs)
-            except Exception as ex:
+            except (TypeError, ValueError) as ex:
                 raise ValueError(("Could not initialize a gradient "
                                   "with arguments %s. Inner "
                                   "exception: %s") % (gargs, str(ex)))
@@ -219,13 +219,13 @@ class ColorScheme:
                              "as arguments even if it doesn't use all of them.")
         except AssertionError:
             raise ValueError("Color function needs to return 3-tuple r,g,b.")
-        except Exception:
+        except (TypeError, ValueError, ZeroDivisionError, AttributeError, NameError):
             pass  # color function probably not valid at 0,0,0,0,0
 
     def __call__(self, x, y, z, u, v):
         try:
             return self.f(x, y, z, u, v)
-        except Exception:
+        except (TypeError, ValueError, ZeroDivisionError, AttributeError, NameError):
             return None
 
     def apply_to_curve(self, verts, u_set, set_len=None, inc_pos=None):

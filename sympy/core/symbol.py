@@ -444,7 +444,7 @@ class Symbol(AtomicExpr, Boolean): # type: ignore
     def sort_key(self, order=None):
         return self.class_key(), (1, (self.name,)), S.One.sort_key(), S.One
 
-    def as_dummy(self):
+    def as_dummy(self) -> Dummy:
         # only put commutativity in explicitly if it is False
         return Dummy(self.name) if self.is_commutative is not False \
             else Dummy(self.name, commutative=self.is_commutative)
@@ -457,7 +457,7 @@ class Symbol(AtomicExpr, Boolean): # type: ignore
             from sympy.functions.elementary.complexes import im, re
             return (re(self), im(self))
 
-    def is_constant(self, *wrt, **flags):
+    def is_constant(self, *wrt: Any, **flags: Any) -> bool:
         if not wrt:
             return False
         return self not in wrt
@@ -468,7 +468,7 @@ class Symbol(AtomicExpr, Boolean): # type: ignore
 
     binary_symbols = free_symbols  # in this case, not always
 
-    def as_set(self):
+    def as_set(self) -> Any:
         return S.UniversalSet
 
 

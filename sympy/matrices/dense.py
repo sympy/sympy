@@ -105,20 +105,6 @@ class DenseMatrix(RepMatrix):
     upper_triangular_solve.__doc__ = _upper_triangular_solve.__doc__
 
 
-# XXX: This function doesn't seem to be used anywhere. Delete it.
-def _force_mutable(x):
-    """Return a matrix as a Matrix, otherwise return x."""
-    if getattr(x, 'is_Matrix', False):
-        return x.as_mutable()
-    elif isinstance(x, Basic):
-        return x
-    elif hasattr(x, '__array__'):
-        a = x.__array__()
-        if len(a.shape) == 0:
-            return sympify(a)
-        return Matrix(x)
-    return x
-
 
 class MutableDenseMatrix(DenseMatrix, MutableRepMatrix):
 
@@ -188,7 +174,7 @@ def matrix2numpy(m, dtype=object):  # pragma: no cover
 
 
 def rot_givens(i, j, theta, dim=3):
-    r"""Returns a a Givens rotation matrix, a a rotation in the
+    r"""Returns a Givens rotation matrix, a rotation in the
     plane spanned by two coordinates axes.
 
     Explanation

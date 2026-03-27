@@ -1066,10 +1066,12 @@ def show_linprog(c, A=None, b=None, A_eq=None, b_eq=None, bounds=None):
             raise ValueError("unexpected bounds %s" % bounds)
 
     x = Matrix(symbols('x1:%s' % (A.cols+1)))
-    f,c = (C*x)[0], [i<=j for i,j in zip(A*x, b)] + [Eq(i,j) for i,j in zip(A_eq*x,b_eq)]
-    for i, (lo, hi) in enumerate(bounds):
-        if lo is not None:
-            c.append(x[i]>=lo)
-        if hi is not None:
-            c.append(x[i]<=hi)
-    return f,c
+    eq_constraints = [Eq(i, j) for i, j in zip(A_eq*x, b_eq)] if A_eq is not None else []
+    f, c = (C*x)[0], [i <= j for i, j in zip(A*x, b)] + eq_constraints
+    if bounds is not None and bounds != {} and bounds != (0, None):
+        for i, (lo, hi) in enumerate(bounds):
+            if lo is not None:
+                c.append(x[i] >= lo)
+            if hi is not None:
+                c.append(x[i] <= hi)
+    return f, c

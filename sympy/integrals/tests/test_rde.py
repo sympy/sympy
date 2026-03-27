@@ -69,7 +69,6 @@ def test_normal_denom():
 
 
 def test_special_denom():
-    # TODO: add more tests here
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t, t)]})
     assert special_denom(Poly(1, t), Poly(t**2, t), Poly(1, t), Poly(t**2 - 1, t),
     Poly(t, t), DE) == \
