@@ -1,8 +1,11 @@
 from __future__ import annotations
 from functools import wraps
+from typing import Any, Callable, TypeVar
+
+_V = TypeVar("_V")
 
 
-def recurrence_memo(initial):
+def recurrence_memo(initial: list[_V]) -> Callable[[Callable[[int, list[_V]], _V]], Any]:
     """
     Memo decorator for sequences defined by recurrence
 
@@ -25,22 +28,25 @@ def recurrence_memo(initial):
     """
     cache = initial
 
-    def decorator(f):
+    def decorator(f: Callable[[int, list[_V]], _V]) -> Any:
         @wraps(f)
-        def g(n):
+        def g(n: int) -> _V:
             L = len(cache)
             if n < L:
                 return cache[n]
             for i in range(L, n + 1):
                 cache.append(f(i, cache))
             return cache[-1]
-        g.cache_length = lambda: len(cache)
-        g.fetch_item = lambda x: cache[x]
+        
+        # We ignore type checks here because we're dynamically setting attributes on a function,
+        # which standard 'Callable' doesn't easily support typing for without a Protocol.
+        g.cache_length = lambda: len(cache)  # type: ignore[attr-defined]
+        g.fetch_item = lambda x: cache[x]  # type: ignore[attr-defined]
         return g
     return decorator
 
 
-def assoc_recurrence_memo(base_seq):
+def assoc_recurrence_memo(base_seq: Callable[[int], _V]) -> Callable[[Callable[[int, int, list[list[_V]]], _V]], Any]:
     """
     Memo decorator for associated sequences defined by recurrence starting from base
 
@@ -50,11 +56,11 @@ def assoc_recurrence_memo(base_seq):
     XXX works only for m <= n cases
     """
 
-    cache = []
+    cache: list[list[_V]] = []
 
-    def decorator(f):
+    def decorator(f: Callable[[int, int, list[list[_V]]], _V]) -> Any:
         @wraps(f)
-        def g(n, m):
+        def g(n: int, m: int) -> _V:
             L = len(cache)
             if n < L:
                 return cache[n][m]
@@ -62,7 +68,7 @@ def assoc_recurrence_memo(base_seq):
             for i in range(L, n + 1):
                 # get base sequence
                 F_i0 = base_seq(i)
-                F_i_cache = [F_i0]
+                F_i_cache: list[_V] = [F_i0]
                 cache.append(F_i_cache)
 
                 # XXX only works for m <= n cases
@@ -75,3 +81,4 @@ def assoc_recurrence_memo(base_seq):
 
         return g
     return decorator
+
