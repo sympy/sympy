@@ -541,14 +541,142 @@ def refine_floor_ceiling(expr, assumptions):
         return arg
 
     if isinstance(arg, Add):
-        gaussian_integer_terms = []
-        nongausian_intergers_terms = []
+        integer_terms = []
+        non_integer_terms = []
         for term in arg.args:
             if ask(Q.integer(term), assumptions) or isinstance(term, (floor, ceiling)):
-                gaussian_integer_terms.append(term)
+                integer_terms.append(term)
             else:
-                nongausian_intergers_terms.append(term)
-        return Add(*gaussian_integer_terms) + expr.func(Add(*nongausian_intergers_terms))
+                non_integer_terms.append(term)
+        return Add(*integer_terms) + expr.func(Add(*non_integer_terms))
+    return expr
+
+
+def refine_exp(expr, assumptions):
+    """
+    Handler for the exponential function.
+
+    Examples
+    ========
+
+    >>> from sympy import exp, pi, I, Q, refine, Symbol
+    >>> n = Symbol('n', integer=True)
+    >>> refine(exp(pi*I*2*n), Q.integer(n))
+    1
+    >>> refine(exp(pi*I*2*n + pi*I), Q.integer(n))
+    -1
+    """
+    from sympy.functions.elementary.exponential import exp as Exp
+    arg = expr.args[0]
+
+    # Look for terms that are integer multiples of I*pi
+    icoeff = arg.as_coefficient(S.ImaginaryUnit)
+    if icoeff is not None:
+        # arg = I * icoeff, check if icoeff/pi is an integer or has integer parts
+        picoeff = icoeff.as_coefficient(S.Pi)
+        if picoeff is not None:
+            if ask(Q.even(picoeff), assumptions):
+                return S.One
+            if ask(Q.odd(picoeff), assumptions):
+                return S.NegativeOne
+
+    # For real arguments, exp is already simplified by SymPy
+    return expr
+
+
+def refine_log(expr, assumptions):
+    """
+    Handler for the logarithm function.
+
+    Examples
+    ========
+
+    >>> from sympy import log, Abs, Q, refine
+    >>> from sympy.abc import x
+    >>> refine(log(Abs(x)), Q.positive(x))
+    log(x)
+    >>> refine(log(x**2), Q.positive(x))
+    2*log(x)
+    """
+    from sympy.functions.elementary.complexes import Abs
+    arg = expr.args[0]
+
+    # log(Abs(x)) -> log(x) when x is positive
+    if isinstance(arg, Abs):
+        inner = arg.args[0]
+        if ask(Q.positive(inner), assumptions):
+            return expr.func(inner)
+
+    return expr
+
+
+def refine_Min_Max(expr, assumptions):
+    """
+    Handler for Min and Max functions.
+
+    Examples
+    ========
+
+    >>> from sympy import Min, Max, Q, refine, Symbol
+    >>> from sympy.abc import x, y
+    >>> refine(Min(x, y), Q.positive(x - y))
+    y
+    >>> refine(Max(x, y), Q.positive(x - y))
+    x
+    >>> refine(Min(x, y), Q.negative(x - y))
+    x
+    >>> refine(Max(x, y), Q.negative(x - y))
+    y
+    """
+    from sympy.functions.elementary.miscellaneous import Min, Max
+    args = expr.args
+    if len(args) != 2:
+        return expr
+    a, b = args
+    diff = a - b
+
+    if isinstance(expr, Min):
+        if ask(Q.nonnegative(diff), assumptions):
+            return b
+        if ask(Q.nonpositive(diff), assumptions):
+            return a
+    elif isinstance(expr, Max):
+        if ask(Q.nonnegative(diff), assumptions):
+            return a
+        if ask(Q.nonpositive(diff), assumptions):
+            return b
+    return expr
+
+
+def refine_Mod(expr, assumptions):
+    """
+    Handler for the Mod function.
+
+    Examples
+    ========
+
+    >>> from sympy import Mod, Q, refine, Symbol
+    >>> x = Symbol('x')
+    >>> refine(Mod(x, 2), Q.even(x))
+    0
+    """
+    from sympy.core.mod import Mod
+    dividend, divisor = expr.args
+
+    # Mod(x, 2) -> 0 when x is even
+    if divisor == 2:
+        if ask(Q.even(dividend), assumptions):
+            return S.Zero
+        if ask(Q.odd(dividend), assumptions):
+            return S.One
+
+    # Mod(k*n, n) -> 0 when k is an integer
+    if isinstance(dividend, Mul):
+        if divisor in dividend.args:
+            remaining = dividend / divisor
+            if ask(Q.integer(remaining), assumptions):
+                return S.Zero
+
     return expr
 
 
@@ -565,5 +693,11 @@ handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'sin': refine_sin_cos,
     'Heaviside': refine_Heaviside,
     'floor': refine_floor_ceiling,
-    'ceiling' : refine_floor_ceiling,
+    'ceiling': refine_floor_ceiling,
+    'exp': refine_exp,
+    'log': refine_log,
+    'Min': refine_Min_Max,
+    'Max': refine_Min_Max,
+    'Mod': refine_Mod,
 }
+
