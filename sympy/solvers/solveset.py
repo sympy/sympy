@@ -3531,6 +3531,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
 
         # sort equations so the one with the fewest potential
         # symbols appears first
+
         for index, eq in enumerate(eqs_in_better_order):
             newresult = []
             # if imageset, expr is used to solve for other symbol
@@ -3603,7 +3604,22 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                             # one symbol's real soln, another symbol may have
                             # corresponding complex soln.
                             if not isinstance(soln, (ImageSet, ConditionSet)):
-                                soln += solveset_complex(eq2, sym)  # might give ValueError with Abs
+                                to_append = solveset_complex(eq2, sym)
+                                if isinstance(to_append, ConditionSet) and to_append.base_set in (S.Reals, S.Complexes):
+                                    to_append = S.EmptySet
+                                elif isinstance(to_append, ConditionSet):
+                                    to_append = to_append.base_set
+                                modified = Union()
+                                if isinstance(to_append, Union):
+                                    for s in to_append.args:
+                                        if isinstance(s, ConditionSet):
+                                            if s.base_set not in (S.Reals, S.Complexes):
+                                                modified += s.base_set
+                                            elif s.base_set == S.Complexes:
+                                                modified += FiniteSet(S.Complexes)
+                                            else:
+                                                modified += s
+                                soln += modified if isinstance(to_append, Union) else to_append  # might give ValueError with Abs
 
                         if not isinstance(soln, (FiniteSet, ImageSet, ConditionSet, Union)) and soln is not S.EmptySet:
                             raise NotImplementedError(
@@ -3614,6 +3630,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                         # If solveset is not able to solve equation `eq2`. Next
                         # time we may get soln using next equation `eq2`
                         continue
+
                     if isinstance(soln, ConditionSet):
                         if soln.base_set in (S.Reals, S.Complexes):
                             soln = S.EmptySet
