@@ -1286,8 +1286,11 @@ class tan(TrigonometricFunction):
         return self.func(x0) if x0.is_finite else self
 
     def _eval_is_extended_real(self):
-        # FIXME: currently tan(pi/2) return zoo
-        return self.args[0].is_extended_real
+        arg = self.args[0]
+        if arg.is_extended_real:
+            if (arg/pi - S.Half).is_integer:
+                return False
+            return True
 
     def _eval_is_real(self):
         arg = self.args[0]
