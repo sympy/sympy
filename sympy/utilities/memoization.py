@@ -1,8 +1,10 @@
 from __future__ import annotations
 from functools import wraps
-from typing import Any, Callable, TypeVar
+from typing import TYPE_CHECKING, Any
 
-_V = TypeVar("_V")
+if TYPE_CHECKING:
+    from typing import Callable, TypeVar
+    _V = TypeVar("_V")
 
 
 def recurrence_memo(initial: list[_V]) -> Callable[[Callable[[int, list[_V]], _V]], Any]:
