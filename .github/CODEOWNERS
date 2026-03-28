@@ -9,8 +9,9 @@
 #
 # https://docs.github.com/en/github/creating-cloning-and-archiving-repositories/about-code-owners
 #
-/.circleci/ @oscarbenjamin
-/.github/workflows/ @oscarbenjamin
+/.github/CODEOWNERS @oscarbenjamin @asmeurer
+/.github/workflows/ @oscarbenjamin @asmeurer
+/.circleci/ @oscarbenjamin @asmeurer
 /sympy/physics/biomechanics/ @moorepants
 /sympy/physics/mechanics/ @moorepants
 /sympy/physics/vector/ @moorepants
