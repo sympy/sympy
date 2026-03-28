@@ -19,6 +19,7 @@ N = ReferenceFrame('N')
 
 v = a ** 2 * N.x + b * N.y + c * sin(alpha) * N.z
 w = alpha * N.x + sin(omega) * N.y + alpha * beta * N.z
+frac_w = alpha * N.x + sin(omega) * N.y + alpha / beta * N.z
 ww = alpha * N.x + asin(omega) * N.y - alpha.diff() * beta * N.z
 o = a/b * N.x + (c+b)/a * N.y + c**2/b * N.z
 
@@ -51,6 +52,19 @@ def test_vector_pretty_print():
 
     # TODO : The pretty print division does not print correctly here:
     # w = alpha * N.x + sin(omega) * N.y + alpha / beta * N.z
+
+    expected = '''\
+                             alpha    
+alpha n_x + sin(omega) n_y + ----- n_z
+                             beta     \
+'''
+    uexpected = '''\
+                    α    
+α nₓ + sin(ω) n_y + ─ n_z
+                    β    \
+'''
+    assert ascii_vpretty(frac_w) == expected
+    assert unicode_vpretty(frac_w) == uexpected
 
     assert ascii_vpretty(alpha * N.x) == 'alpha n_x'
     assert unicode_vpretty(alpha * N.x) == 'α nₓ'
