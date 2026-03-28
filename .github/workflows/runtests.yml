@@ -427,12 +427,33 @@ jobs:
       - run: pip install -r doc/requirements.txt
       - run: bin/test_sphinx.sh
 
+      - name: Upload built docs
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: sphinx-html
+          path: doc/_build/html
+          if-no-files-found: error
+
+  # -------------------- Deploy the html/latex docs ----------------- #
+
+  # Keep this job separate from the sphinx job that installs packages from pypi
+  # to limit exposure to the DEPLOY_KEY secret.
+  sphinx-deploy:
+    needs: sphinx
+    if: ${{ github.ref == 'refs/heads/master' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download built docs
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: sphinx-html
+          path: doc/_build/html
+
       # When run against master, deploy to docs.sympy.org/dev. This requires
       # having an SSH deploy key set up. See
       # https://github.com/marketplace/actions/deploy-to-github-pages#using-an-ssh-deploy-key-
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@d92aa235d04922e8f08b40ce78cc5442fcfbfa2f # v4
-        if: ${{ github.ref == 'refs/heads/master' }}
         with:
           folder: doc/_build/html
           ssh-key: ${{ secrets.DEPLOY_KEY }}
