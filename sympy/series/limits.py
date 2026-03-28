@@ -366,6 +366,20 @@ class Limit(Expr):
                     else:
                         return S.ComplexInfinity
                 else:
+                    from sympy.calculus.util import (
+                        is_positive_over, is_negative_over)
+                    free = ex.free_symbols
+                    if len(free) == 1:
+                        sym, = free
+                        if is_positive_over(ex, sym):
+                            return S.Zero
+                        elif is_negative_over(ex, sym):
+                            if cdir == 1:
+                                return S.Infinity*sign(coeff)
+                            elif cdir == -1:
+                                return S.NegativeInfinity*sign(coeff)*S.NegativeOne**(S.One + ex)
+                            else:
+                                return S.ComplexInfinity
                     raise NotImplementedError("Not sure of sign of %s" % ex)
 
         # gruntz fails on factorials but works with the gamma function

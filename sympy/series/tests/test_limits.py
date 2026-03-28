@@ -1480,3 +1480,11 @@ def test_issue_28975():
     assert limit(3**(1/(x-1)), x, 1, dir='+') == oo
     assert limit(3**(tan(x)), x, pi/2, dir='-') == oo
     assert limit(3**(tan(x)), x, pi/2, dir='+') == 0
+
+def test_issue_29342():
+    x, y = symbols('x y', positive=True)
+    assert limit(x**y / x**(2**y), x, oo) == 0
+    assert limit(x**(2**y) / x**y, x, oo) is oo
+    assert limit(x**y / x**exp(y), x, oo) == 0
+    n, m = symbols('n m', positive=True)
+    assert Limit(Limit(n**m / n**(2*m), n, oo).doit(), m, oo).doit() == 0
