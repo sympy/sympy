@@ -551,6 +551,50 @@ def refine_floor_ceiling(expr, assumptions):
         return Add(*gaussian_integer_terms) + expr.func(Add(*nongausian_intergers_terms))
     return expr
 
+def refine_Relational(expr, assumptions):
+    """
+    Handler for Relational.
+
+    Examples
+    ========
+
+    >>> from sympy.assumptions.refine import refine
+    >>> from sympy.assumptions.ask import Q
+    >>> from sympy import Symbol, sqrt
+    >>> x = Symbol('x', real=True)
+    >>> refine(sqrt(x) >= 0, Q.real(sqrt(x)))
+    True
+    """
+    from sympy.assumptions.ask import ask, Q
+    from sympy.core.relational import LessThan, StrictLessThan, GreaterThan, StrictGreaterThan, Eq, Ne
+    diff = expr.lhs - expr.rhs
+    if isinstance(expr, GreaterThan):
+        res = ask(Q.nonnegative(diff), assumptions)
+        if res: return S.true
+        if res is False: return S.false
+    elif isinstance(expr, StrictGreaterThan):
+        res = ask(Q.positive(diff), assumptions)
+        if res: return S.true
+        if res is False: return S.false
+    elif isinstance(expr, LessThan):
+        res = ask(Q.nonpositive(diff), assumptions)
+        if res: return S.true
+        if res is False: return S.false
+    elif isinstance(expr, StrictLessThan):
+        res = ask(Q.negative(diff), assumptions)
+        if res: return S.true
+        if res is False: return S.false
+    elif isinstance(expr, Eq):
+        res = ask(Q.zero(diff), assumptions)
+        if res: return S.true
+        if res is False: return S.false
+    elif isinstance(expr, Ne):
+        res = ask(Q.zero(diff), assumptions)
+        if res: return S.false
+        if res is False: return S.true
+
+    return expr
+
 
 handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'Abs': refine_abs,
@@ -566,4 +610,10 @@ handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'Heaviside': refine_Heaviside,
     'floor': refine_floor_ceiling,
     'ceiling' : refine_floor_ceiling,
+    'GreaterThan': refine_Relational,
+    'StrictGreaterThan': refine_Relational,
+    'LessThan': refine_Relational,
+    'StrictLessThan': refine_Relational,
+    'Eq': refine_Relational,
+    'Ne': refine_Relational,
 }

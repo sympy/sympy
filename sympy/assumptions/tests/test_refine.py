@@ -320,3 +320,18 @@ def test_Heaviside():
     assert refine(Heaviside(x, 1), Q.zero(x)) == 1
     assert refine(Heaviside(x, 1), Q.positive(x)) == 1
     assert refine(Heaviside(x, 1), Q.negative(x)) == 0
+
+def test_Relational():
+    assert refine(x >= 0, Q.nonnegative(x)) == S.true
+    assert refine(x >= 0, Q.negative(x)) == S.false
+    assert refine(x > 0, Q.positive(x)) == S.true
+    assert refine(x > 0, Q.nonpositive(x)) == S.false
+    assert refine(x <= 0, Q.nonpositive(x)) == S.true
+    assert refine(x <= 0, Q.positive(x)) == S.false
+    assert refine(x < 0, Q.negative(x)) == S.true
+    assert refine(x < 0, Q.nonnegative(x)) == S.false
+    assert refine(Eq(x, 0), Q.zero(x)) == S.true
+    assert refine(Eq(x, 0), Q.nonzero(x)) == S.false
+    assert refine(Ne(x, 0), Q.zero(x)) == S.false
+    assert refine(Ne(x, 0), Q.nonzero(x)) == S.true
+    assert refine(sqrt(x) >= 0, Q.real(sqrt(x))) == S.true
