@@ -342,16 +342,6 @@ def plot(*args, show=True, **kwargs) -> Plot:
        >>> from sympy.plotting import plot
        >>> x = symbols('x')
 
-    Basic example
-    -------------
-
-    .. plot::
-       :context: close-figs
-       :format: doctest
-       :include-source: True
-
-       >>> plot(x**2)  # doctest: +SKIP
-
     Single Plot
 
     .. plot::
