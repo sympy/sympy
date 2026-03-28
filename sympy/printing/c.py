@@ -728,6 +728,14 @@ class C99CodePrinter(C89CodePrinter):
                 'end': self._print(i.upper + 1)})
             close_lines.append("}")
         return open_lines, close_lines
+    def _print_MatrixSolve(self, expr):
+        """
+        Returns the appropriate lapack function call for MatrixSolve expression.
+        """
+        return 'LAPACKE_dgesv(LAPACK_ROW_MAJOR, n, nrhs, {}, n, ipiv, {}, nrhs)'.format(
+            self._print(expr.matrix),
+            self._print(expr.vector)
+        )
 
 
 for k in ('Abs Sqrt exp exp2 expm1 log log10 log2 log1p Cbrt hypot fma'
