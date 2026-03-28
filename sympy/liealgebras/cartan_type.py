@@ -4,7 +4,7 @@ from sympy.core import Atom, Basic
 
 class CartanType_generator():
     """
-    Constructor for actually creating Cartan things
+    Constructor for actually creating Cartan types
     """
 
     def __call__(self, *args):
