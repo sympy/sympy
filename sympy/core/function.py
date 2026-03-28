@@ -1420,9 +1420,9 @@ class Derivative(Expr):
                     else:
                         if not free & vfree:
                             # e.g. v is IndexedBase or Matrix
+
                             zero = True
                             break
-            
             if zero:
                 return cls._get_zero_with_shape_like(expr)
 
