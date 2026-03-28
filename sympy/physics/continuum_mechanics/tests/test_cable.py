@@ -1,6 +1,7 @@
 from __future__ import annotations
 from sympy.physics.continuum_mechanics.cable import Cable
 from sympy.core.symbol import Symbol
+from sympy.testing.pytest import raises
 
 
 def test_cable():
@@ -82,3 +83,40 @@ def test_cable():
     assert abs(c.reaction_loads[Symbol("R_A_y")] + 49793.0000000000) < 10e-11
     assert abs(c.reaction_loads[Symbol("R_B_x")] - 44399.9537590861) < 10e-11
     assert abs(c.reaction_loads[Symbol("R_B_y")] - 42868.2071025955 ) < 10e-11
+
+
+def test_cable_remove_loads_bug():
+    # Test for KeyErrror: 'disrtibuted' fix
+    c = Cable(('A', 0, 10), ('B', 10, 10))
+    c.apply_load(0, ('X', 9))
+    assert 'X' in c.loads['distributed']
+    c.remove_loads('X')
+    assert 'X' not in c.loads['distributed']
+
+    # Test for TypeError with Symbol labels
+    P = Symbol('P')
+    c.apply_load(-1, (P, 5, 5, 12, 30))
+    assert P in c.loads['point_load']
+    # Removing a non-existent load with a Symbol should raise ValueError not TypeError
+    Q = Symbol('Q')
+    with raises(ValueError, match="Error removing load Q: no such load exists"):
+        c.remove_loads(Q)
+
+    # Removing existing Symbol load should work
+    c.remove_loads(P)
+    assert P not in c.loads['point_load']
+
+
+def test_cable_change_support_bug():
+    # Test for TypeError: '>=' not supported between instances of 'str' and 'Integer'
+    c = Cable(('A', 0, 10), ('B', 10, 10))
+    c.apply_load(-1, ('P', 5, 5, 12, 30))
+
+    # This should work now. It checks if P (at x=5) is between A(0) and C(15)
+    c.change_support('B', ('C', 15, 10))
+    assert 'C' in c.supports
+    assert c.supports['C'] == [15, 10]
+
+    # This should raise ValueError because P(5) is outside A(10)-C(15)
+    with raises(ValueError, match="The change in support will throw an existing load out of range"):
+        c.change_support('A', ('D', 10, 10))
