@@ -4,7 +4,7 @@ from sympy.core import Atom, Basic
 
 class CartanType_generator():
     """
-    Constructor for actually creating Cartan types
+    Constructor for actually creating Cartan things
     """
 
     def __call__(self, *args):
@@ -116,6 +116,7 @@ class Standard_Cartan(Atom):
     def rank(self):
         return self.n
 
+    @property
     def series(self):
         return self._series
 
