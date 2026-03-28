@@ -106,8 +106,6 @@ class SingularityFunction(DefinedFunction):
             x, a, n = self.args
             if n.is_integer and n.is_nonpositive:
                 return self.func(x, a, n - 1)
-            elif n.is_integer and n.is_positive:
-                return n * self.func(x, a, n - 1)
             elif n.is_positive:
                 return n * self.func(x, a, n - 1)
         else:
