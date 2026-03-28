@@ -60,26 +60,26 @@ class WeylGroup(Atom):
         192.0
         """
         n = self.cartan_type.rank()
-        if self.cartan_type.series() == "A":
+        if self.cartan_type.series == "A":
             return fac(n+1)
 
-        if self.cartan_type.series() in ("B", "C"):
+        if self.cartan_type.series in ("B", "C"):
             return fac(n)*(2**n)
 
-        if self.cartan_type.series() == "D":
+        if self.cartan_type.series == "D":
             return fac(n)*(2**(n-1))
 
-        if self.cartan_type.series() == "E":
+        if self.cartan_type.series == "E":
             if n == 6:
                 return 51840
             if n == 7:
                 return 2903040
             if n == 8:
                 return 696729600
-        if self.cartan_type.series() == "F":
+        if self.cartan_type.series == "F":
             return 1152
 
-        if self.cartan_type.series() == "G":
+        if self.cartan_type.series == "G":
             return 12
 
     def group_name(self):
@@ -89,16 +89,16 @@ class WeylGroup(Atom):
         it acts on, if relevant.
         """
         n = self.cartan_type.rank()
-        if self.cartan_type.series() == "A":
+        if self.cartan_type.series == "A":
             return "S"+str(n+1) + ": the symmetric group acting on " + str(n+1) + " elements."
 
-        if self.cartan_type.series() in ("B", "C"):
+        if self.cartan_type.series in ("B", "C"):
             return "The hyperoctahedral group acting on " + str(2*n) + " elements."
 
-        if self.cartan_type.series() == "D":
+        if self.cartan_type.series == "D":
             return "The symmetry group of the " + str(n) + "-dimensional demihypercube."
 
-        if self.cartan_type.series() == "E":
+        if self.cartan_type.series == "E":
             if n == 6:
                 return "The symmetry group of the 6-polytope."
 
@@ -108,10 +108,10 @@ class WeylGroup(Atom):
             if n == 8:
                 return "The symmetry group of the 8-polytope."
 
-        if self.cartan_type.series() == "F":
+        if self.cartan_type.series == "F":
             return "The symmetry group of the 24-cell, or icositetrachoron."
 
-        if self.cartan_type.series() == "G":
+        if self.cartan_type.series == "G":
             return "D6, the dihedral group of order 12, and symmetry group of the hexagon."
 
     def element_order(self, weylelt):
@@ -133,7 +133,7 @@ class WeylGroup(Atom):
         4
         """
         n = self.cartan_type.rank()
-        if self.cartan_type.series() == "A":
+        if self.cartan_type.series == "A":
             a = self.matrix_form(weylelt)
             order = 1
             while a != eye(n+1):
@@ -141,7 +141,7 @@ class WeylGroup(Atom):
                 order += 1
             return order
 
-        if self.cartan_type.series() == "D":
+        if self.cartan_type.series == "D":
             a = self.matrix_form(weylelt)
             order = 1
             while a != eye(n):
@@ -149,7 +149,7 @@ class WeylGroup(Atom):
                 order += 1
             return order
 
-        if self.cartan_type.series() == "E":
+        if self.cartan_type.series == "E":
             a = self.matrix_form(weylelt)
             order = 1
             while a != eye(8):
@@ -157,7 +157,7 @@ class WeylGroup(Atom):
                 order += 1
             return order
 
-        if self.cartan_type.series() == "G":
+        if self.cartan_type.series == "G":
             elts = list(weylelt)
             reflections = elts[1::3]
             m = self.delete_doubles(reflections)
@@ -180,7 +180,7 @@ class WeylGroup(Atom):
                 return order
 
 
-        if self.cartan_type.series() == 'F':
+        if self.cartan_type.series == 'F':
             a = self.matrix_form(weylelt)
             order = 1
             while a != eye(4):
@@ -189,7 +189,7 @@ class WeylGroup(Atom):
             return order
 
 
-        if self.cartan_type.series() in ("B", "C"):
+        if self.cartan_type.series in ("B", "C"):
             a = self.matrix_form(weylelt)
             order = 1
             while a != eye(n):
@@ -237,7 +237,7 @@ class WeylGroup(Atom):
         elts = list(weylelt)
         reflections = elts[1::3]
         n = self.cartan_type.rank()
-        if self.cartan_type.series() == 'A':
+        if self.cartan_type.series == 'A':
             matrixform = eye(n+1)
             for elt in reflections:
                 a = int(elt)
@@ -249,7 +249,7 @@ class WeylGroup(Atom):
                 matrixform *= mat
             return matrixform
 
-        if self.cartan_type.series() == 'D':
+        if self.cartan_type.series == 'D':
             matrixform = eye(n)
             for elt in reflections:
                 a = int(elt)
@@ -268,7 +268,7 @@ class WeylGroup(Atom):
                     matrixform *= mat
             return matrixform
 
-        if self.cartan_type.series() == 'G':
+        if self.cartan_type.series == 'G':
             matrixform = eye(3)
             for elt in reflections:
                 a = int(elt)
@@ -282,7 +282,7 @@ class WeylGroup(Atom):
                     matrixform *= gen2
             return matrixform
 
-        if self.cartan_type.series() == 'F':
+        if self.cartan_type.series == 'F':
             matrixform = eye(4)
             for elt in reflections:
                 a = int(elt)
@@ -304,7 +304,7 @@ class WeylGroup(Atom):
                     matrixform *= mat
             return matrixform
 
-        if self.cartan_type.series() == 'E':
+        if self.cartan_type.series == 'E':
             matrixform = eye(8)
             for elt in reflections:
                 a = int(elt)
@@ -343,7 +343,7 @@ class WeylGroup(Atom):
             return matrixform
 
 
-        if self.cartan_type.series() in ("B", "C"):
+        if self.cartan_type.series in ("B", "C"):
             matrixform = eye(n)
             for elt in reflections:
                 a = int(elt)
@@ -382,19 +382,19 @@ class WeylGroup(Atom):
         1   2   3
         """
         n = self.cartan_type.rank()
-        if self.cartan_type.series() in ("A", "D", "E"):
+        if self.cartan_type.series in ("A", "D", "E"):
             return self.cartan_type.dynkin_diagram()
 
-        if self.cartan_type.series() in ("B", "C"):
+        if self.cartan_type.series in ("B", "C"):
             diag = "---".join("0" for i in range(1, n)) + "===0\n"
             diag += "   ".join(str(i) for i in range(1, n+1))
             return diag
 
-        if self.cartan_type.series() == "F":
+        if self.cartan_type.series == "F":
             diag = "0---0===0---0\n"
             diag += "   ".join(str(i) for i in range(1, 5))
             return diag
 
-        if self.cartan_type.series() == "G":
+        if self.cartan_type.series == "G":
             diag = "0≡≡≡0\n1   2"
             return diag
