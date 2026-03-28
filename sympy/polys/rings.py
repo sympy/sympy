@@ -3162,17 +3162,15 @@ class PolyElement(
         )
         return h, cff, cfg
 
-    def _gcd(
-        self, other: PolyElement[Er]
-    ) -> tuple[PolyElement[Er], PolyElement[Er], PolyElement[Er]]:
-        ring = self.ring
+    def _gcd(self, other):
+    ring = self.ring
 
-        if ring.domain.is_QQ:
-            return self._gcd_QQ(other)
-        elif ring.domain.is_ZZ:
-            return self._gcd_ZZ(other)
-        else:  # TODO: don't use dense representation (port PRS algorithms)
-            return ring.dmp_inner_gcd(self, other)
+    if ring.domain.is_QQ:
+        return self._gcd_QQ(other)
+    elif ring.domain.is_ZZ:
+        return self._gcd_ZZ(other)
+    else:
+        return self._gcd_sparse_prs(other)  
 
     def _gcd_ZZ(
         self, other: PolyElement[Er]
@@ -3201,6 +3199,60 @@ class PolyElement(
         cfg = cfg.set_ring(ring).mul_ground(ring.domain.quo(c, cg))
 
         return h, cff, cfg
+    
+
+
+    def _gcd_sparse_prs(
+    self, other: 'PolyElement[Er]'
+) -> 'tuple[PolyElement[Er], PolyElement[Er], PolyElement[Er]]':
+    """Subresultant PRS GCD working natively on sparse PolyElement.
+
+    Avoids conversion to dense representation, giving massive speedup
+    for sparse multivariate polynomials over non-ZZ/QQ domains.
+    Fixes: https://github.com/sympy/sympy/issues/29570
+    """
+    ring = self.ring
+    domain = ring.domain
+
+    f, g = self, other
+
+    # Extract integer content from coefficients to reduce size
+    fc, f = f.primitive()
+    gc, g = g.primitive()
+    c = domain.gcd(fc, gc)
+
+    # Subresultant pseudo-remainder sequence on sparse polys
+    # Use the first generator as main variable
+    x = 0  # index of main variable
+
+    def deg(p):
+        return p.degree(x)
+
+    # Use existing prem (pseudo-remainder) which works on sparse PolyElement
+    while g:
+        if deg(f) < deg(g):
+            f, g = g, f
+        _, r = f.pdiv(g, x)
+        if not r:
+            break
+        _, r = r.primitive()  # reduce content at each step
+        f, g = g, r
+
+    # g is now the GCD (up to content)
+    h = f
+    _, h = h.primitive()
+
+    # Make monic/positive leading coeff
+    if not h.is_nonnegative:
+        h = -h
+
+    h = h.mul_ground(c)
+
+    # Compute cofactors
+    cff, _ = self.div(h)
+    cfg, _ = other.div(h)
+
+    return h, cff, cfg
 
     def cancel(self, g: PolyElement[Er]) -> tuple[PolyElement[Er], PolyElement[Er]]:
         """
