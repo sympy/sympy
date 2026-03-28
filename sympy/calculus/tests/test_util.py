@@ -406,3 +406,34 @@ def test_issue_18747():
 
 def test_issue_25942():
     assert (acos(x) > pi/3).as_set() == Interval.Ropen(-1, S(1)/2)
+
+def test_domain_from_assumptions():
+    from sympy import Symbol, oo
+    from sympy.sets.sets import Interval
+    assert _domain_from_assumptions(Symbol('y', positive=True)) == Interval.open(0, oo)
+    assert _domain_from_assumptions(Symbol('y', nonnegative=True)) == Interval(0, oo)
+    assert _domain_from_assumptions(Symbol('y', negative=True)) == Interval.open(-oo, 0)
+    assert _domain_from_assumptions(Symbol('y', nonpositive=True)) == Interval(-oo, 0)
+    assert _domain_from_assumptions(Symbol('y', real=True)) == Interval(-oo, oo)
+    assert _domain_from_assumptions(Symbol('y')) is None
+ 
+ 
+def test_is_positive_over():
+    from sympy.calculus.util import is_positive_over
+    from sympy import Symbol, S, Interval, oo
+    y = Symbol('y', positive=True)
+
+    assert is_positive_over(2**y - y, y) is True
+    assert is_positive_over(3**y - y, y) is True
+    assert is_positive_over(exp(y) - y, y) is True
+ 
+    assert is_positive_over(y**2 - y, y) is False
+    assert is_positive_over(y - 2**y, y) is False
+
+    z = Symbol('x')
+    assert is_positive_over(z**2 + 1, z, S.Reals) is True
+    assert is_positive_over(z**2 - 1, z, S.Reals) is False
+    assert is_positive_over(z**2 - 1, z, Interval(2, oo)) is True
+ 
+
+    assert is_positive_over(2**z - z, z) is False
