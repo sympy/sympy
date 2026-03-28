@@ -3463,10 +3463,7 @@ class TensMul(TensExpr, AssocOp):
                 newarg = arg
             newargs.append(newarg)
 
-        args = newargs
-
-        # Flatten:
-        args = [i for arg in args for i in (arg.args if isinstance(arg, (TensMul, Mul)) else [arg])]
+        args = cls._flatten_args(newargs)
 
         args, indices, free, dum = TensMul._tensMul_contract_indices(args, replace_indices=False)
 
@@ -3663,6 +3660,16 @@ class TensMul(TensExpr, AssocOp):
         obj._coeff = coeff
         obj._is_canon_bp = is_canon_bp
         return obj
+
+    @staticmethod
+    def _flatten_args(args):
+        flat = []
+        for arg in args:
+            if isinstance(arg, (TensMul, Mul)):
+                flat.extend(arg.args)
+            else:
+                flat.append(arg)
+        return flat
 
     # TODO: this method should be private
     # TODO: should this method be renamed _from_components_free_dum ?
