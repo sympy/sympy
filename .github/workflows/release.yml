@@ -110,7 +110,7 @@ jobs:
         run: mkdir dist && cp dist.all/*.whl dist.all/*.tar.gz dist
 
       - name: Publish package on TestPyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
+        uses: pypa/gh-action-pypi-publish@ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e  # v1.13.0
         with:
           repository-url: https://test.pypi.org/legacy/
 
@@ -119,7 +119,7 @@ jobs:
   pypi-publish:
     name: Publish to PyPI
     needs: [build]
-    # Run when a tag is pushed (not sure if this works)
+    # Run when a tag is pushed
     if: "github.event_name == 'push' && startsWith(github.ref, 'refs/tags')"
     environment:
       name: pypi
@@ -139,9 +139,6 @@ jobs:
         run: mkdir dist && cp dist.all/*.whl dist.all/*.tar.gz dist
 
       - name: Publish package on PyPI
-        # It is recommended to pin a commit hash here for security but it
-        # should be kept up to date. Probably all actions and dependencies
-        # used by the build script should be pinned...
         uses: pypa/gh-action-pypi-publish@ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e  # v1.13.0
 
   # -------------------- Check if this is a final release ---------- #

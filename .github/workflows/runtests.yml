@@ -8,6 +8,10 @@
 
 name: test
 on: [push, pull_request]
+
+permissions:
+  contents: read
+
 jobs:
 
   # -------------------- Code quality ------------------------------ #
@@ -427,7 +431,7 @@ jobs:
       # having an SSH deploy key set up. See
       # https://github.com/marketplace/actions/deploy-to-github-pages#using-an-ssh-deploy-key-
       - name: Deploy
-        uses: JamesIves/github-pages-deploy-action@v4
+        uses: JamesIves/github-pages-deploy-action@d92aa235d04922e8f08b40ce78cc5442fcfbfa2f # v4
         if: ${{ github.ref == 'refs/heads/master' }}
         with:
           folder: doc/_build/html
