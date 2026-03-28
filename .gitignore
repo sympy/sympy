@@ -92,3 +92,4 @@ sample.tex
 .hypothesis
 
 sympy-env/
+venv/

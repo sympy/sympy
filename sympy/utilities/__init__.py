@@ -15,6 +15,8 @@ from .decorator import threaded, xthreaded, public, memoize_property
 
 from .timeutils import timed
 
+from .optimize_derivatives import ( generate_optimized_derivatives, count_operations )
+
 __all__ = [
     'flatten', 'group', 'take', 'subsets', 'variations', 'numbered_symbols',
     'cartes', 'capture', 'dict_merge', 'prefixes', 'postfixes', 'sift',
@@ -28,4 +30,6 @@ __all__ = [
     'threaded', 'xthreaded', 'public', 'memoize_property',
 
     'timed',
+
+    'generate_optimized_derivatives', 'count_operations'
 ]
