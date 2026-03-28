@@ -3630,7 +3630,7 @@ class TensMul(TensExpr, AssocOp):
         else:
             args = self.args
 
-        args = [arg for arg in args if arg != self.identity]
+        args = self._flatten_args([arg for arg in args if arg != self.identity])
 
         # Extract non-tensor coefficients:
         coeff = reduce(lambda a, b: a*b, [arg for arg in args if not isinstance(arg, TensExpr)], S.One)
