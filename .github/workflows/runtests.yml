@@ -8,6 +8,10 @@
 
 name: test
 on: [push, pull_request]
+
+permissions:
+  contents: read
+
 jobs:
 
   # -------------------- Code quality ------------------------------ #
