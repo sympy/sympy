@@ -158,12 +158,12 @@ class Point:
 
 
 def _ecm_one_factor(
-        n: int,
-        B1: int=10000,
-        B2: int=100000,
-        max_curve:int=200,
-        seed: int| None | list[int] = None
-        ) ->  int | None:
+    n: int,
+    B1: int = 10000,
+    B2: int = 100000,
+    max_curve:int = 200,
+    seed: int| None | list[int] = None
+) ->  int | None:
     """Returns one factor of n using
     Lenstra's 2 Stage Elliptic curve Factorization
     with Suyama's Parameterization. Here Montgomery
@@ -302,7 +302,7 @@ def _ecm_one_factor(
                 (R.z_cord + P.z_cord) - alpha + beta[delta]
                 g = (g*f) % n
             T, R = R, R.add(W, T)
-        g =int(gcd(n, g))
+        g = int(gcd(n, g))
 
         #Stage 2 Factor found
         if g != 1 and g != n:
@@ -310,12 +310,13 @@ def _ecm_one_factor(
     return None
 
 
-def ecm(n: int,
-        B1: int=10000,
-        B2: int=100000,
-        max_curve: int=200,
-        seed: int=1234
-        ) -> set[int]:
+def ecm(
+    n: int,
+    B1: int = 10000,
+    B2: int = 100000,
+    max_curve: int = 200,
+    seed: int = 1234
+) -> set[int]:
     """Performs factorization using Lenstra's Elliptic curve method.
 
     This function repeatedly calls ``_ecm_one_factor`` to compute the factors
