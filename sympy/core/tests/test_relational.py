@@ -1265,6 +1265,12 @@ def test_issue_23731():
     nr = symbols('nr', rational=False)
     assert Eq(nr, .1) == False
 
+def test_issue_29413():
+    x = Symbol("x",extended_real = True)
+    assert is_lt(x + 1, x) == None
+    assert is_lt(x - 1, x) == None
+    assert is_gt(x + 1, x) == None
+    assert is_gt(x - 1, x) == None
 
 def test_rewrite_Add():
     from sympy.testing.pytest import warns_deprecated_sympy
