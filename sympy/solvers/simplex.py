@@ -66,7 +66,7 @@ from sympy.core import sympify
 from sympy.core.exprtools import factor_terms
 from sympy.core.relational import Le, Ge, Eq
 from sympy.core.singleton import S
-from sympy.core.symbol import Dummy
+from sympy.core.symbol import Dummy, symbols
 from sympy.core.sorting import ordered
 from sympy.functions.elementary.complexes import sign
 from sympy.matrices.dense import Matrix, zeros
@@ -1018,7 +1018,6 @@ def linprog(c, A=None, b=None, A_eq=None, b_eq=None, bounds=None):
     return o, p[:-aux]  # don't include aux values
 
 def show_linprog(c, A=None, b=None, A_eq=None, b_eq=None, bounds=None):
-    from sympy import symbols
     ## the objective
     C = Matrix(c)
     if C.rows != 1 and C.cols == 1:
@@ -1066,7 +1065,9 @@ def show_linprog(c, A=None, b=None, A_eq=None, b_eq=None, bounds=None):
             raise ValueError("unexpected bounds %s" % bounds)
 
     x = Matrix(symbols('x1:%s' % (A.cols+1)))
-    f,c = (C*x)[0], [i<=j for i,j in zip(A*x, b)] + [Eq(i,j) for i,j in zip(A_eq*x,b_eq)]
+    f,c = (C*x)[0], [i<=j for i,j in zip(A*x, b)]
+    if A_eq is not None:
+        c.extend([Eq(i,j) for i,j in zip(A_eq*x,b_eq)])
     for i, (lo, hi) in enumerate(bounds):
         if lo is not None:
             c.append(x[i]>=lo)

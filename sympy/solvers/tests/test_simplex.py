@@ -11,7 +11,7 @@ from sympy.matrices.dense import Matrix
 from sympy.solvers.solveset import linear_eq_to_matrix
 from sympy.solvers.simplex import (_lp as lp, _primal_dual,
     UnboundedLPError, InfeasibleLPError, lpmin, lpmax,
-    _m, _abcd, _simplex, linprog)
+    _m, _abcd, _simplex, linprog, show_linprog)
 
 from sympy.external.importtools import import_module
 
@@ -271,3 +271,8 @@ def test_29368():
     raises(UnboundedLPError, lambda: linprog([-1]))
     assert linprog([1], bounds=(0, None)) == (0, [0])
     raises(UnboundedLPError, lambda: linprog([-1], bounds=(0, None)))
+
+def test_show_linprog_without_A_eq():
+    # Test that show_linprog works when A_eq is not provided
+    result = show_linprog([-1], bounds=(1, 3))
+    assert result is not None  # or check expected output
