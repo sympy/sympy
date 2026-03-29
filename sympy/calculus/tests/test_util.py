@@ -415,7 +415,7 @@ def test_is_positive_over():
     assert is_positive_over(2**y - y, y) is True
     assert is_positive_over(3**y - y, y) is True
     assert is_positive_over(exp(y) - y, y) is True
- 
+
     assert is_positive_over(y**2 - y, y) is False
     assert is_positive_over(y - 2**y, y) is False
 
