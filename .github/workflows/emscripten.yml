@@ -136,14 +136,17 @@ jobs:
       # via branches from the main repository and PRs from users
       # with write access to the repository will succeed.
       - name: Delete previous cached test durations
-        run: |
-          gh extension install actions/gh-actions-cache
-          gh actions-cache delete ${{ env.DURATIONS_CACHE_NAME }} \
-          -R ${{ github.repository }} \
-          -B ${{ github.head_ref }} \
-          --confirm || true
         env:
           GH_TOKEN: ${{ github.token }}
+          CACHE_NAME: ${{ env.DURATIONS_CACHE_NAME }}
+          REPO: ${{ github.repository }}
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          gh extension install actions/gh-actions-cache
+          gh actions-cache delete "$CACHE_NAME" \
+          -R "$REPO" \
+          -B "$HEAD_REF" \
+          --confirm || true
 
   # We will collect the test durations from all groups in this job
   # and merge them into a single file. Once all groups have finished,
