@@ -101,10 +101,8 @@ git_whitelist = {
     'release/build_docs.py',
     'release/github_release.py',
     'release/helpers.py',
-    'release/releasecheck.py',
     'release/sha256.py',
     'release/authors.py',
-    'release/ci_release_script.sh',
     # pytest stuff
     'conftest.py',
     'requirements-dev.txt',
