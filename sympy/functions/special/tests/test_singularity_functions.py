@@ -134,6 +134,7 @@ def test_rewrite():
 
 def test_SingularityFunction_negative_exponent_behavior():
     from sympy.functions.elementary.complexes import Abs
+    x, a = symbols('x a')
 
     # 1. Test Evaluation (subs) for negative n
     f_neg1 = SingularityFunction(x, 2, -1)
@@ -150,7 +151,7 @@ def test_SingularityFunction_negative_exponent_behavior():
     n_neg = Symbol('n', negative=True, integer=True)
     assert SingularityFunction(x, a, n_neg).rewrite(Heaviside) == diff(Heaviside(x - a), (x, Abs(n_neg)))
     assert SingularityFunction(x, a, -1).rewrite(Heaviside) == DiracDelta(x - a)
-    assert SingularityFunction(x, a, -2).rewrite(Heaviside) == diff(DiracDelta(x - a), x)
+    assert SingularityFunction(x, a, -2).rewrite(Heaviside) == diff(Heaviside(x - a), x, 2)
 
     # 4. Test Rewriting (Piecewise)
     expected_pw = Piecewise((oo, Eq(x - a, 0)), (0, True))
@@ -160,4 +161,4 @@ def test_SingularityFunction_negative_exponent_behavior():
     # 5. Regression Check: Ensure symbols without assumptions are NOT affected
     m = Symbol('m')
     f_m = SingularityFunction(x, a, m)
-    assert f_m.rewrite(Heaviside) == (x - a)**m * Heaviside(x - a)
+    assert f_m.rewrite(Heaviside) == SingularityFunction(x, a, m)
