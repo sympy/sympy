@@ -577,6 +577,17 @@ class Cross(Expr):
         obj._expr1 = expr1
         obj._expr2 = expr2
         return obj
+    
+    def __add__(self, other):
+        if other == -self:
+            return Vector.zero
+        return Expr.__add__(self, other)
+
+    def __radd__(self, other):
+        if other == -self:
+            return Vector.zero
+        return Expr.__radd__(self, other)
+
 
     def doit(self, **hints):
         return cross(self._expr1, self._expr2)
