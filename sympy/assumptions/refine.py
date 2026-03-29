@@ -497,6 +497,62 @@ def refine_sin_cos(expr, assumptions):
         return (pow_expr if refined_pow is None else refined_pow) * sin(rem)
 
 
+def refine_exp(expr, assumptions):
+    """
+    Handler for the exponential function.
+
+    Examples
+    ========
+
+    >>> from sympy.assumptions.refine import refine_exp
+    >>> from sympy import Q, Rational, exp, I, pi
+    >>> from sympy.abc import x
+    >>> refine_exp(exp(2*pi*I*x), Q.integer(x))
+    1
+    >>> refine_exp(exp(pi*I*x), Q.even(x))
+    1
+    >>> refine_exp(exp(pi*I*x), Q.odd(x))
+    -1
+    >>> refine_exp(exp(2*pi*I*(x + Rational(1, 4))), Q.integer(x))
+    I
+    >>> refine_exp(exp(2*pi*I*(x + Rational(3, 4))), Q.integer(x))
+    -I
+
+    """
+    arg = expr.args[0]
+    pi_i = S.Pi * S.ImaginaryUnit
+
+    coeff = arg.coeff(pi_i)
+    if coeff == 0 or (arg - coeff*pi_i).expand() != 0:
+        return expr
+    coeff = coeff.expand()
+
+    if ask(Q.even(coeff), assumptions):
+        return S.One
+    if ask(Q.odd(coeff), assumptions):
+        return S.NegativeOne
+
+    if coeff.is_Add:
+        integer_terms = []
+        remaining_terms = []
+        for term in coeff.args:
+            if ask(Q.integer(term), assumptions):
+                integer_terms.append(term)
+            else:
+                remaining_terms.append(term)
+
+        if integer_terms:
+            integer_part = Add(*integer_terms)
+            remaining_part = Add(*remaining_terms)
+            if remaining_part.is_Rational:
+                phase = expr.func(pi_i*remaining_part)
+                if ask(Q.even(integer_part), assumptions):
+                    return phase
+                if ask(Q.odd(integer_part), assumptions):
+                    return -phase
+    return expr
+
+
 def refine_Heaviside(expr, assumptions):
     """
     Handler for the Heaviside step function.
@@ -576,6 +632,7 @@ handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'MatrixElement': refine_matrixelement,
     'cos': refine_sin_cos,
     'sin': refine_sin_cos,
+    'exp': refine_exp,
     'Heaviside': refine_Heaviside,
     'floor': refine_floor_ceiling,
     'ceiling' : refine_floor_ceiling,
