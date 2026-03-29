@@ -198,7 +198,7 @@ class SingularityFunction(DefinedFunction):
         x, a, n = self.args
 
         if n.is_integer and n.is_negative:
-            return diff(Heaviside(x - a), x.free_symbols.pop(), abs(n))
+            return diff(Heaviside(x - a), (x.free_symbols.pop(), abs(n)))
         if n.is_nonnegative:
             return (x - a)**n*Heaviside(x - a, 1)
 
