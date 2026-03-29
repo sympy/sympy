@@ -435,12 +435,9 @@ def refine_sin_cos(expr, assumptions):
     arg = expr.args[0]
     expr_is_sin = isinstance(expr, sin)
 
-    if ask(Q.infinite(arg), assumptions):
-        expr_is_extended_real = ask(Q.extended_real(arg), assumptions)
-        if expr_is_extended_real:
-            return AccumBounds(-1, 1)
-        elif expr_is_extended_real is False:
-            return S.NaN
+    if (ask(Q.infinite(arg), assumptions) and
+         ask(Q.extended_real(arg), assumptions)):
+        return AccumBounds(-1, 1)
 
     if ask(Q.zero(arg), assumptions):
         if expr_is_sin:

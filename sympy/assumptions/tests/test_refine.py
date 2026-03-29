@@ -297,14 +297,13 @@ def test_sin_cos():
         AccumBounds(-1, 1))
     assert (refine(cos(x), Q.infinite(x) & Q.extended_real(x)) ==
         AccumBounds(-1, 1))
-    assert refine(sin(x), Q.infinite(x) & ~Q.extended_real(x)) is nan
-    assert refine(cos(x), Q.infinite(x) & ~Q.extended_real(x)) is nan
     assert refine(sin(x), Q.infinite(x)) == sin(x)
     assert refine(cos(x), Q.infinite(x)) == cos(x)
 
     raises(TypeError, lambda: refine_sin_cos(tan(x), Q.real(x)))
     raises(TypeError, lambda: refine_sin_cos(exp(x), Q.real(x)))
     raises(TypeError, lambda: refine_sin_cos(x, Q.real(x)))
+
 
 def test_floor_ceiling():
     assert refine(floor(x), Q.integer(x)) == x
