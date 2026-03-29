@@ -904,7 +904,7 @@ def is_positive_over(f, symbol, domain=None):
     Examples
     ========
 
-    >>> from sympy import Symbol, exp
+    >>> from sympy import Symbol
     >>> from sympy.calculus.util import is_positive_over
     >>> y = Symbol('y', positive=True)
     >>> is_positive_over(2**y - y, y)
