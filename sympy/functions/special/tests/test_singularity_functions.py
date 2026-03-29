@@ -130,3 +130,17 @@ def test_rewrite():
     assert expr_in.rewrite(Heaviside) == expr_out
     assert expr_in.rewrite(DiracDelta) == expr_out
     assert expr_in.rewrite('HeavisideDiracDelta') == expr_out
+    
+
+def test_SingularityFunction_negative_exponent_rewrite():
+    n_neg = Symbol('n', negative=True, integer=True)
+    # Symbolic n
+    assert SingularityFunction(x, a, n_neg).rewrite(Heaviside) == diff(Heaviside(x - a), (x, abs(n_neg)))
+    assert SingularityFunction(x, a, n_neg).rewrite(Piecewise) == Piecewise((oo, Eq(x - a, 0)), (0, True))
+
+    # Concrete integers
+    assert SingularityFunction(x, a, -1).rewrite(Heaviside) == diff(Heaviside(x - a), (x, 1))
+    assert SingularityFunction(x, a, -2).rewrite(Heaviside) == diff(Heaviside(x - a), (x, 2))
+
+    assert SingularityFunction(x, a, -1).rewrite(Piecewise) == Piecewise((oo, Eq(x - a, 0)), (0, True))
+    assert SingularityFunction(x, a, -2).rewrite(Piecewise) == Piecewise((oo, Eq(x - a, 0)), (0, True))
