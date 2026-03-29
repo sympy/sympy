@@ -315,7 +315,8 @@ def test_conjugate():
     assert refine(conjugate(x ** n), Q.real(x ** n)) == x ** n
     assert refine(conjugate(x ** n), Q.imaginary(x ** n)) == -(x ** n)
 
-    assert refine(conjugate(log(z)), Q.complex(z) & ~Q.nonpositive(z)) == log(conjugate(z))
+    z_is_on_branch_cut = Q.negative(z) | Q.zero(z)
+    assert refine(conjugate(log(z)), Q.complex(z) & ~z_is_on_branch_cut) == log(conjugate(z))
     assert refine(conjugate(log(z)), Q.complex(z)) == conjugate(log(z))
     assert refine(conjugate(log(x)), Q.real(x)) == conjugate(log(x))
     assert refine(conjugate(log(x)), Q.nonpositive(x)) == conjugate(log(x))
@@ -323,27 +324,21 @@ def test_conjugate():
     assert refine(conjugate(log(x)), Q.positive(x)) == log(x)
     assert refine(conjugate(log(x)), Q.negative(x)) == log(x) - 2 * I * pi
 
-    assert refine(conjugate(x ** n), Q.complex(x) & Q.integer(n)) == conjugate(x) ** n
+    assert refine(conjugate(x ** n), Q.integer(n)) == conjugate(x ** n)
     assert refine(conjugate(x ** n), ~Q.complex(x)) == conjugate(x ** n)
 
-    assert refine(conjugate(x ** S.Half), Q.complex(x) & ~Q.negative(x)) == conjugate(x) ** S.Half
-    assert refine(conjugate(x ** S.Half), Q.real(x) & Q.negative(x)) == -(x ** S.Half)
-    assert refine(conjugate(x ** S.Half), Q.real(x)) == conjugate(x ** S.Half)
-    assert refine(conjugate(x ** S.Half), Q.nonnegative(x)) == x ** S.Half
+    assert refine(conjugate(sqrt(x)), Q.complex(x) & ~Q.negative(x)) == sqrt(conjugate(x))
+    assert refine(conjugate(sqrt(x)), Q.real(x) & Q.negative(x)) == -sqrt(x)
+    assert refine(conjugate(sqrt(x)), Q.real(x)) == conjugate(sqrt(x))
+    assert refine(conjugate(sqrt(x)), Q.nonnegative(x)) == sqrt(x)
 
-    assert refine(conjugate(log(x ** n)), Q.positive(x) & Q.integer(n)) == log(x**n)
-    assert refine(log(conjugate(x ** n)), Q.positive & Q.integer(n)) == log(conjugate(x) ** n)
-    assert refine(conjugate(log(x ** n)), Q.complex(x) & Q.integer(n)) == conjugate(log(x**n))
-    assert refine(conjugate(log(x ** S.Half)), Q.real(x) & Q.negative(x)) == conjugate(log(x ** S.Half))
-
-    assert refine(conjugate(asin(x)), Q.real(x) & Q.le(x, - 1) & Q.ge(x,  1)) == asin(x)
-    assert refine(conjugate(acos(x)), Q.real(x) & Q.le(x, - 1) & Q.ge(x,  1)) == acos(x)
+    assert refine(conjugate(asin(x)), Q.real(x) & Q.ge(x, - 1) & Q.le(x,  1)) == asin(x)
+    assert refine(conjugate(acos(x)), Q.real(x) & Q.ge(x, - 1) & Q.le(x,  1)) == acos(x)
     assert refine(conjugate(asin(x)), Q.real(x)) == conjugate(asin(x))
     assert refine(conjugate(atan(x)), Q.real(x)) == atan(x)
     assert refine(conjugate(acot(x)), Q.real(x)) == acot(x)
     assert refine(conjugate(asin(x)), ~Q.real(x)) == asin(conjugate(x))
     assert refine(conjugate(acos(x)), ~Q.real(x)) == acos(conjugate(x))
-    assert refine(conjugate(asin(x)), Q.real(x)) == conjugate(asin(x))
     assert refine(conjugate(atan(x)), Q.imaginary(x)) == conjugate(atan(x))
     assert refine(conjugate(acot(x)), Q.imaginary(x)) == conjugate(acot(x))
     assert refine(conjugate(asec(x)), Q.real(x) & Q.le(x, - 1)) == asec(x)

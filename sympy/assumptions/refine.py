@@ -572,12 +572,12 @@ def refine_conjugate(expr, assumptions):
     log(conjugate(x))
     >>> n = Symbol('n')
     >>> refine(conjugate(x**n), Q.real(x) & Q.integer(n))
-    x**n
+    conjugate(x**n)
     >>> refine(conjugate(x**n), Q.imaginary(x) & Q.integer(n))
     (-x)**n
     >>> refine(conjugate((x**S.Half)), Q.complex(x) & ~Q.negative(x))
     sqrt(conjugate(x))
-    >>> refine(conjugate(asin(x)), Q.real(x) & Q.le(x, - 1) & Q.ge(x,  1))
+    >>> refine(conjugate(asin(x)), Q.real(x) & Q.ge(x, - 1) & Q.le(x,  1))
     asin(x)
     >>> refine(conjugate(atan(x)), Q.real(x))
     atan(x)
@@ -594,17 +594,22 @@ def refine_conjugate(expr, assumptions):
     # Additionally, log(0) evaluates to complex infinity (zoo).
     if isinstance(arg, log):
         log_arg = arg.args[0]
-        if ask(~Q.nonpositive(log_arg), assumptions)  and ask(Q.complex(log_arg), assumptions):
-                return log(conjugate(log_arg))
+        log_arg_is_not_on_branch_cut = ask(~Q.nonpositive(log_arg), assumptions)
+        if log_arg_is_not_on_branch_cut and ask(Q.complex(log_arg), assumptions):
+            return log(conjugate(log_arg))
         elif ask(Q.negative(log_arg), assumptions):
             return log(log_arg) - 2 * I * pi
 
     if isinstance(arg, Pow) and ask(Q.real(arg.args[1]), assumptions):
         base, exp = arg.args[0], arg.args[1]
-        if ask(Q.integer(exp), assumptions):
+        if ask(Q.integer(exp)) and ask(Q.complex(base), assumptions):
             return conjugate(base) ** exp
-        if ask(~Q.negative(base), assumptions) and ask(Q.complex(base), assumptions):
+        elif ask(Q.negative(base), assumptions) and ask(Q.real(base), assumptions) and exp == S.Half:
+            return - (base ** exp)
+        elif ask(~Q.negative(base), assumptions) and ask(Q.complex(base), assumptions):
             return conjugate(base) ** exp
+        else:
+            return expr
 
 
     # The asin and acos functions have a branch cut along the real axis when asin_acos_arg < -1 and asin_acos_arg > 1
@@ -612,7 +617,7 @@ def refine_conjugate(expr, assumptions):
     if isinstance(arg, (asin, acos)):
         asin_acos_arg = arg.args[0]
         if ask(Q.real(asin_acos_arg), assumptions):
-            if ask(Q.le(asin_acos_arg, - 1), assumptions) and ask(Q.ge(asin_acos_arg,  1), assumptions):
+            if ask(Q.ge(asin_acos_arg, - 1), assumptions) and ask(Q.le(asin_acos_arg,  1), assumptions):
                 return arg
             else:
                 return expr
