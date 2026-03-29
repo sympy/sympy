@@ -15,7 +15,6 @@ from sympy.vector.vector import Cross, Dot, cross
 from sympy.testing.pytest import raises
 from sympy.vector.kind import VectorKind
 from sympy.core.kind import NumberKind
-from sympy.testing.pytest import XFAIL
 
 
 C = CoordSys3D('C')
