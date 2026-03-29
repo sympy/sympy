@@ -439,5 +439,31 @@ class EncodedCNF:
         else:
             return value
 
+
+    def decode_literal(self, literal):
+        """
+        Given an encoded literal, return the corresponding symbol.
+        A negative literal returns the negated symbol.
+
+        Examples
+        ========
+
+        >>> from sympy import Q
+        >>> from sympy.assumptions.cnf import CNF, EncodedCNF
+        >>> from sympy.abc import x
+        >>> cnf = CNF.from_prop(Q.real(x))
+        >>> enc = EncodedCNF()
+        >>> enc.from_cnf(cnf)
+        >>> enc.decode_literal(1)
+        Q.real(x)
+        >>> enc.decode_literal(-1)
+        ~Q.real(x)
+        """
+        from sympy.logic.boolalg import Not
+        symbol = self._symbols[abs(literal) - 1]
+        if literal < 0:
+            return Not(symbol)
+        return symbol
+
     def encode(self, clause):
         return {self.encode_arg(arg) if not arg.lit == S.false else 0 for arg in clause}
