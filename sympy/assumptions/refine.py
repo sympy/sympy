@@ -440,10 +440,7 @@ def refine_sin_cos(expr, assumptions):
         return AccumBounds(-1, 1)
 
     if ask(Q.zero(arg), assumptions):
-        if expr_is_sin:
-            return 0
-        else:
-            return 1
+        return 0 if expr_is_sin else 1
 
     integer_coeffs_of_pi_half = []
     remaining_terms = []
