@@ -423,6 +423,6 @@ def test_is_positive_over():
     assert is_positive_over(z**2 + 1, z, S.Reals) is True
     assert is_positive_over(z**2 - 1, z, S.Reals) is False
     assert is_positive_over(z**2 - 1, z, Interval(2, oo)) is True
- 
+
 
     assert is_positive_over(2**z - z, z) is False
