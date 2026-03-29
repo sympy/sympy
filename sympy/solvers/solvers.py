@@ -585,18 +585,18 @@ def solve(f, *symbols, **flags):
     are ignored):
 
         >>> solve(x < 3)
-        (-oo < x) & (x < 3)
+        x < 3
         >>> solve([x < 3, x**2 > 4], x)
-        ((-oo < x) & (x < -2)) | ((2 < x) & (x < 3))
+        (x < -2) | ((2 < x) & (x < 3))
         >>> solve([x + y - 3, x > 3], x)
-        (3 < x) & (x < oo) & Eq(x, 3 - y)
+        (3 < x) & Eq(x, 3 - y)
 
     Although checking of assumptions on symbols in relationals
     is not done, setting assumptions will affect how certain
     relationals might automatically simplify:
 
         >>> solve(x**2 > 4)
-        ((-oo < x) & (x < -2)) | ((2 < x) & (x < oo))
+        (2 < x) | (x < -2)
 
         >>> r = Symbol('r', real=True)
         >>> solve(r**2 > 4)
@@ -624,7 +624,7 @@ def solve(f, *symbols, **flags):
     the expressions can be processed for multiple symbols:
 
         >>> reduce_inequalities([0 <= x  - 1, y < 3], [x, y])
-        (-oo < y) & (1 <= x) & (x < oo) & (y < 3)
+        (1 <= x) & (y < 3)
 
     But an error is raised if any relationship has more than one
     symbol of interest:
