@@ -1267,10 +1267,10 @@ def test_issue_23731():
 
 def test_issue_29413():
     x = Symbol("x",extended_real = True)
-    assert is_lt(x + 1, x) == None
-    assert is_lt(x - 1, x) == None
-    assert is_gt(x + 1, x) == None
-    assert is_gt(x - 1, x) == None
+    assert is_lt(x + 1, x) is None
+    assert is_lt(x - 1, x) is None
+    assert is_gt(x + 1, x) is None
+    assert is_gt(x - 1, x) is None
 
 def test_rewrite_Add():
     from sympy.testing.pytest import warns_deprecated_sympy

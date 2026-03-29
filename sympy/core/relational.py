@@ -1436,14 +1436,14 @@ def is_ge(lhs, rhs, assumptions=None):
                     return False
                 return True
 
-            if _lhs.is_infinite == None:
+            if _lhs.is_infinite is None:
                 if _rhs.is_infinite and _rhs.is_extended_negative:
                     return True
-            if _rhs.is_infinite == None:
+            if _rhs.is_infinite is None:
                 if _lhs.is_infinite and _lhs.is_extended_positive:
                     return True
 
-            if _lhs.is_infinite == False and _rhs.is_infinite == False:
+            if _lhs.is_infinite is False and _rhs.is_infinite is False:
                 # This difference is mathamatically valid ONLY if none of LHS nor RHS is infinite.
                 diff = lhs - rhs
                 if diff is not S.NaN:
