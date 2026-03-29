@@ -44,15 +44,11 @@ class CartanType_generator():
             n = int(rank_str)
 
         else:
-            raise TypeError(
-                "Argument must be a string (e.g. 'A3') or a list (e.g. ['A', 3])"
-            )
+            raise TypeError("Argument must be a string (e.g. 'A3') or a list (e.g. ['A', 3])")
 
         # -------- Rank validation --------
         if n < 0:
-            raise ValueError(
-                f"Invalid Cartan type '{c}' (rank must be non-negative)"
-            )
+            raise ValueError(f"Invalid Cartan type '{c}' (rank must be non-negative)")
 
         # -------- Dispatch --------
         if letter == "A":
