@@ -16,9 +16,11 @@ on:
   pull_request:
     branches:
       - '1.15'
+permissions:
+  contents: read
 env:
   release_branch: '1.15'
-  release_version: '1.15.0-dev'
+  release_version: '1.15.0.dev'
   final_release_version: '1.15.0'
   previous_version: '1.14.0'
   dev_version: '1.15-dev'
@@ -27,7 +29,7 @@ jobs:
 
   # -------------------- Build artifacts --------------------------- #
 
-  build:
+  build-packages:
 
     runs-on: ubuntu-20.04
     steps:
@@ -42,18 +44,56 @@ jobs:
           python-version: '3.13'
 
       - name: Build release files
-        run: release/ci_release_script.sh ${{ env.release_version }} ${{ env.previous_version }}
+        run: |
+          pip install --upgrade setuptools pip wheel build
+          pip install .
+          bin/mailmap_check.py --update-authors
+          mkdir -p release-${{ env.release_version }}
+          python -m build --wheel
+          mv dist/sympy-${{ env.release_version }}-py3-none-any.whl release-${{ env.release_version }}/
+          python -m build --sdist
+          mv dist/sympy-${{ env.release_version }}.tar.gz release-${{ env.release_version }}/
+          release/compare_tar_against_git.py release-${{ env.release_version }}/sympy-${{ env.release_version }}.tar.gz .
+          release/authors.py ${{ env.release_version }} ${{ env.previous_version }} release-${{ env.release_version }}
 
-      - name: Store release files
+      - name: Store package release files
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
-          name: release_files
+          name: release_files_packages
+          path: release-${{ env.release_version }}
+
+  build-docs:
+
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Setup Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: '3.13'
+
+      - name: Install docs build dependencies
+        run: |
+          doc/aptinstall.sh
+          pip install -r doc/requirements.txt
+          pip install .
+
+      - name: Build release docs
+        run: |
+          mkdir -p release-${{ env.release_version }}
+          python release/build_docs.py ${{ env.release_version }} release-${{ env.release_version }}
+
+      - name: Store docs release files
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: release_files_docs
           path: release-${{ env.release_version }}
 
   # -------------------- Test installation ------------------------- #
 
   test-install:
-    needs: [build]
+    needs: [build-packages]
 
     runs-on: ubuntu-20.04
     strategy:
@@ -71,7 +111,7 @@ jobs:
       - name: Retrieve release files
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          name: release_files
+          name: release_files_packages
 
       - name: List files
         run: ls -R
@@ -89,7 +129,7 @@ jobs:
 
   test-pypi-publish:
     name: Publish to Test-PyPI
-    needs: [build]
+    needs: [build-packages]
     # Run when a pull request is merged into a release branch.
     if: "github.event_name == 'push' && ! startsWith(github.ref, 'refs/tags')"
     environment:
@@ -103,7 +143,7 @@ jobs:
       - name: Download release artifacts
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          name: release_files
+          name: release_files_packages
           path: dist.all
 
       - name: Copy the PyPI files into dist
@@ -118,7 +158,7 @@ jobs:
 
   pypi-publish:
     name: Publish to PyPI
-    needs: [build]
+    needs: [build-packages]
     # Run when a tag is pushed
     if: "github.event_name == 'push' && startsWith(github.ref, 'refs/tags')"
     environment:
@@ -132,7 +172,7 @@ jobs:
       - name: Download release artifacts
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          name: release_files
+          name: release_files_packages
           path: dist.all
 
       - name: Copy the PyPI files into dist
@@ -145,7 +185,7 @@ jobs:
 
   check-final:
     name: Check whether the release is final
-    needs: [build, pypi-publish]
+    needs: [build-packages, build-docs, pypi-publish]
     runs-on: ubuntu-latest
     outputs:
       # The env context is not available in jobs.<job id>.if so we set it here
@@ -166,11 +206,25 @@ jobs:
       - name: Checkout sympy
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
+      - name: Setup Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: '3.13'
+
       - name: Download release artifacts
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          name: release_files
+          name: release_files_packages
           path: dist
+
+      - name: Download docs release artifacts
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: release_files_docs
+          path: dist
+
+      - name: Generate checksums
+        run: python release/sha256.py ${{ env.release_version }} dist
 
       - name: Create GitHub prerelease
         if: ${{ needs.check-final.outputs.is-final != 'true' }}
@@ -219,7 +273,7 @@ jobs:
 
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          name: release_files
+          name: release_files_docs
           path: dist
 
       - name: Update the docs
