@@ -171,6 +171,17 @@ def test_sign():
     x = Symbol('x', complex=True)
     assert refine(sign(x), Q.zero(x)) == 0
 
+    # plain Symbol - assumptions must be inferred from passed context (gh-29603)
+    x = Symbol('x')
+    assert refine(sign(x), Q.positive(x)) == 1
+    assert refine(sign(x), Q.negative(x)) == -1
+    assert refine(sign(x), Q.zero(x)) == 0
+    assert refine(sign(x), Q.real(x) & Q.positive(x)) == 1
+    assert refine(sign(x), True) == sign(x)
+    y = Symbol('y')
+    assert refine(sign(y), Q.imaginary(y) & Q.positive(im(y))) == S.ImaginaryUnit
+    assert refine(sign(y), Q.imaginary(y) & Q.negative(im(y))) == -S.ImaginaryUnit
+
 def test_arg():
     x = Symbol('x', complex = True)
     assert refine(arg(x), Q.positive(x)) == 0
