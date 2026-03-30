@@ -8,10 +8,9 @@ from sympy.external.importtools import import_module
 from sympy.logic.boolalg import Boolean, BooleanFunction
 from typing import cast
 from sympy.core.basic import Basic
-from sympy.core.symbol import Symbol
 
 
-def literal_symbol(literal: Boolean | bool) -> Symbol | bool:
+def literal_symbol(literal):
     """
     The symbol in this literal (without the negation).
 
@@ -27,12 +26,10 @@ def literal_symbol(literal: Boolean | bool) -> Symbol | bool:
 
     """
 
-    if literal is True or literal is False:
-        return literal
-    elif isinstance(literal, Symbol):
+    if literal is True or literal is False or literal.is_Symbol:
         return literal
     elif literal.is_Not:
-        return literal_symbol(cast(Boolean, literal.args[0]))
+        return literal_symbol(literal.args[0])
     else:
         raise ValueError("Argument must be a boolean literal.")
 
