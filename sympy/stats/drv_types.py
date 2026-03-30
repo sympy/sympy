@@ -729,7 +729,7 @@ class YuleSimonDistribution(SingleDiscreteDistribution):
 
     def pdf(self, k):
         rho = self.rho
-    return Piecewise(
+        return Piecewise(
         (rho * beta(k, rho + 1), (k.is_integer & (k >= 1))),
         (0, True))
 
@@ -808,8 +808,8 @@ class ZetaDistribution(SingleDiscreteDistribution):
         _value_check(s > 1, 's should be greater than 1')
 
     def pdf(self, k):
-      s = self.s
-    return Piecewise(
+        s = self.s
+        return Piecewise(
         (1 / (k**s * zeta(s)), (k.is_integer & (k >= 1))),
         (0, True))
 
