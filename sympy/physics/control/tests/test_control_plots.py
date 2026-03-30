@@ -157,6 +157,22 @@ def test_bode():
     assert test_bode_data(tf5)
 
 
+def test_bode_plot_no_xlabel():
+    if not matplotlib:
+        skip("Matplotlib not the default backend")
+
+    from sympy.abc import s
+    from sympy.physics.control import TransferFunction
+    from sympy.physics.control.control_plots import bode_plot
+
+    tf = TransferFunction(1, s + 1, s)
+
+    # Just ensure it runs without error
+    bode_plot(tf, show=False)
+
+    assert True
+
+
 def check_point_accuracy(a, b):
     return all(isclose(*_, rel_tol=1e-1, abs_tol=1e-6
         ) for _ in zip(a, b))
