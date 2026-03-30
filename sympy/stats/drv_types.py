@@ -380,7 +380,7 @@ class LogarithmicDistribution(SingleDiscreteDistribution):
 
     def pdf(self, k):
         p = self.p
-    return Piecewise(
+        return Piecewise(
         ((-1) * p**k / (k * log(1 - p)), (k.is_integer & (k >= 1))),
         (0, True))
 
@@ -459,12 +459,12 @@ class NegativeBinomialDistribution(SingleDiscreteDistribution):
 
     def pdf(self, k):
         r = self.r
-    p = self.p
-    return Piecewise(
+        p = self.p
+        return Piecewise(
         (binomial(k + r - 1, k) * (1 - p)**k * p**r, (k.is_integer & (k >= 0))),
         (0, True))
 
-    return binomial(k + r - 1, k) * (1 - p)**k * p**r
+        return binomial(k + r - 1, k) * (1 - p)**k * p**r
 
     def _characteristic_function(self, t):
         r = self.r
