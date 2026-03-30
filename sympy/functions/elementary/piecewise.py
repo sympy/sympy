@@ -230,21 +230,30 @@ class Piecewise(DefinedFunction):
         the limit point by substituting a small positive dummy ``d`` scaled
         by the approach direction ``cdir``:
 
-        1. cdir > 0 (right, x -> 0+): substitute x = d
-        2. cdir < 0 (left,  x -> 0-): substitute x = -d
-        3. cdir = 0 (no direction): substitute x = 0
+        * ``cdir > 0`` (right, ``x -> 0+``): substitute ``x = d``
+        * ``cdir < 0`` (left,  ``x -> 0-``): substitute ``x = -d``
+        * ``cdir = 0`` (no direction): substitute ``x = 0``
+
+        This ensures that boundary conditions such as ``x >= 0`` are
+        resolved correctly for each direction instead of being evaluated
+        at the boundary point itself. If the direction-aware substitution
+        is inconclusive (e.g. ``x <= 0.5`` gives ``d <= 0.5`` which cannot
+        be resolved for an unbounded Dummy), the condition falls back to
+        being evaluated at ``x = 0``.
 
         Examples
         ========
 
-        >>> from sympy import Piecewise, Symbol
+        >>> from sympy import Piecewise, Symbol, S
         >>> x = Symbol('x')
         >>> p = Piecewise((1, x < 0), (-1, x >= 0))
-        >>> p._eval_as_leading_term(x, None, 1)
+        >>> p._eval_as_leading_term(x, None, S.One)
         -1
-        >>> p._eval_as_leading_term(x, None, -1)
+        >>> p._eval_as_leading_term(x, None, S.NegativeOne)
         1
         """
+        from sympy.core.sympify import sympify
+        cdir = sympify(cdir)
         for e, c in self.args:
             if c == True:
                 return e.as_leading_term(x)
