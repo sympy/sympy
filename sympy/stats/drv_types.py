@@ -138,7 +138,7 @@ class FlorySchulzDistribution(SingleDiscreteDistribution):
 
     def pdf(self, k):
         a = self.a
-    return Piecewise(
+        return Piecewise(
         (a**2 * k * (1 - a)**(k - 1), (k.is_integer & (k >= 1))),
         (0, True))
 
