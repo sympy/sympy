@@ -2341,13 +2341,13 @@ def test_dummify_smart():
     x = symbols('x')
     d = Dummy()
 
-    # Case 1: safe identifier — should NOT be dummified
+    # Case 1: safe identifier - should NOT be dummified
     f = lambdify(x, sin(x), dummify=False)
     src = inspect.getsource(f)
     assert 'Dummy' not in src
     assert '(x)' in src          # readable name preserved
 
-    # Case 2: explicit dummify=True — should dummify everything
+    # Case 2: explicit dummify=True - should dummify everything
     f2 = lambdify(x, sin(x), dummify=True)
     src2 = inspect.getsource(f2)
     assert 'Dummy' in src2
