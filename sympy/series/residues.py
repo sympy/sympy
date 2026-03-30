@@ -8,10 +8,10 @@ from sympy.core.mul import Mul
 from sympy.core.singleton import S
 from sympy.core.sympify import sympify
 from sympy.utilities.timeutils import timethis
-
+from typing import Any
 
 @timethis('residue')
-def residue(expr, x, x0):
+def residue(expr: Any, x: Any, x0: Any) -> Any:
     """
     Finds the residue of ``expr`` at the point x=x0.
 
