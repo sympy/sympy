@@ -318,6 +318,26 @@ def test_nyquist_plot_expr():
     assert i4 == 10/w4**3
 
 
+def test_nyquist_plot_requires_siso():
+    import pytest
+    pytest.importorskip("matplotlib")
+
+    from sympy import Matrix
+    from sympy.physics.control import StateSpace
+    from sympy.physics.control.control_plots import nyquist_plot
+
+    # Create a simple MIMO system (2x2)
+    A = Matrix([[0, 1], [0, 0]])
+    B = Matrix([[1, 0], [0, 1]])
+    C = Matrix([[1, 0], [0, 1]])
+    D = Matrix([[0, 0], [0, 0]])
+
+    ss = StateSpace(A, B, C, D)
+
+    with pytest.raises(NotImplementedError):
+        nyquist_plot(ss, show=False)
+
+
 def test_nichols_expr():
     m1, p1, w1 = nichols_plot_expr(tf1)
     m2, p2, w2 = nichols_plot_expr(tf2)
