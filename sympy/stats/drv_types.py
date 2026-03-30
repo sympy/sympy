@@ -139,7 +139,7 @@ class FlorySchulzDistribution(SingleDiscreteDistribution):
     def pdf(self, k):
         a = self.a
         return Piecewise(
-        (a**2 * k * (1 - a)**(k - 1), (k.is_integer & (k >= 1))),
+        (a**2 * k * (1 - a)**(k - 1), (k.is_integer == True) & (k >= 1)),
         (0, True))
 
     def _characteristic_function(self, t):
@@ -211,7 +211,7 @@ class GeometricDistribution(SingleDiscreteDistribution):
 
     def pdf(self, k):
       return Piecewise(
-        ((1 - self.p)**(k - 1) * self.p, (k.is_integer & (k >= 1))),
+        ((1 - self.p)**(k - 1) * self.p, (k.is_integer == True) & (k >= 1)),
         (0, True))
 
     def _characteristic_function(self, t):
@@ -296,7 +296,7 @@ class HermiteDistribution(SingleDiscreteDistribution):
         den = factorial(k - 2*j) * factorial(j)
 
         return Piecewise(
-        (term1 * Sum(num/den, (j, 0, k//2)).doit(), (k.is_integer & (k >= 0))),
+        (term1 * Sum(num/den, (j, 0, k//2)).doit(), (k.is_integer == True) & (k >= 0)),
         (0, True))
 
     def _moment_generating_function(self, t):
@@ -381,7 +381,7 @@ class LogarithmicDistribution(SingleDiscreteDistribution):
     def pdf(self, k):
         p = self.p
         return Piecewise(
-        ((-1) * p**k / (k * log(1 - p)), (k.is_integer & (k >= 1))),
+        ((-1) * p**k / (k * log(1 - p)), (k.is_integer == True) & (k >= 1)),
         (0, True))
 
     def _characteristic_function(self, t):
@@ -461,7 +461,7 @@ class NegativeBinomialDistribution(SingleDiscreteDistribution):
         r = self.r
         p = self.p
         return Piecewise(
-        (binomial(k + r - 1, k) * (1 - p)**k * p**r, (k.is_integer & (k >= 0))),
+        (binomial(k + r - 1, k) * (1 - p)**k * p**r, (k.is_integer == True) & (k >= 0)),
         (0, True))
 
         return binomial(k + r - 1, k) * (1 - p)**k * p**r
@@ -549,8 +549,8 @@ class PoissonDistribution(SingleDiscreteDistribution):
     def pdf(self, k):
         return self.lamda**k / factorial(k) * exp(-self.lamda)
         return Piecewise(
-        (self.lamda**k / factorial(k) * exp(-self.lamda), (k.is_integer & (k >= 0))),
-        (0, True))
+        (self.lamda**k / factorial(k) * exp(-self.lamda), (k.is_integer == True) & (k >= 0))),
+        (0, True)
     def _characteristic_function(self, t):
         return exp(self.lamda * (exp(I*t) - 1))
 
@@ -730,7 +730,7 @@ class YuleSimonDistribution(SingleDiscreteDistribution):
     def pdf(self, k):
         rho = self.rho
         return Piecewise(
-        (rho * beta(k, rho + 1), (k.is_integer & (k >= 1))),
+        (rho * beta(k, rho + 1), (k.is_integer == True) & (k >= 1)),
         (0, True))
 
     def _cdf(self, x):
@@ -810,7 +810,7 @@ class ZetaDistribution(SingleDiscreteDistribution):
     def pdf(self, k):
         s = self.s
         return Piecewise(
-        (1 / (k**s * zeta(s)), (k.is_integer & (k >= 1))),
+        (1 / (k**s * zeta(s)), (k.is_integer == True) & (k >= 1)),
         (0, True))
 
     def _characteristic_function(self, t):
