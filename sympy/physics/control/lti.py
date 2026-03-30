@@ -5589,6 +5589,22 @@ class StateSpaceBase(LinearTimeInvariant, ABC):
     C = output_matrix
     D = feedforward_matrix
 
+    def eval_frequency(self, other):
+        """
+        Evaluate the system response at a given complex frequency.
+
+        For a state space model, this computes:
+
+            H(s) = C*(s*I - A)**(-1)*B + D
+
+        where `s = other`.
+        """
+        from sympy.matrices import eye
+
+        n = self.A.shape[0]
+        sI_minus_A = other * eye(n) - self.A
+        return self.C * sI_minus_A.inv() * self.B + self.D
+
     @property
     def num_states(self):
         """
