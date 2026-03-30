@@ -138,7 +138,9 @@ class FlorySchulzDistribution(SingleDiscreteDistribution):
 
     def pdf(self, k):
         a = self.a
-        return (a**2 * k * (1 - a)**(k - 1))
+    return Piecewise(
+        (a**2 * k * (1 - a)**(k - 1), (k.is_integer & (k >= 1))),
+        (0, True))
 
     def _characteristic_function(self, t):
         a = self.a
@@ -208,7 +210,9 @@ class GeometricDistribution(SingleDiscreteDistribution):
         _value_check((0 < p, p <= 1), "p must be between 0 and 1")
 
     def pdf(self, k):
-        return (1 - self.p)**(k - 1) * self.p
+      return Piecewise(
+        ((1 - self.p)**(k - 1) * self.p, (k.is_integer & (k >= 1))),
+        (0, True))
 
     def _characteristic_function(self, t):
         p = self.p
@@ -286,11 +290,14 @@ class HermiteDistribution(SingleDiscreteDistribution):
 
     def pdf(self, k):
         a1, a2 = self.a1, self.a2
-        term1 = exp(-(a1 + a2))
-        j = Dummy("j", integer=True)
-        num = a1**(k - 2*j) * a2**j
-        den = factorial(k - 2*j) * factorial(j)
-        return term1 * Sum(num/den, (j, 0, k//2)).doit()
+    term1 = exp(-(a1 + a2))
+    j = Dummy("j", integer=True)
+    num = a1**(k - 2*j) * a2**j
+    den = factorial(k - 2*j) * factorial(j)
+
+    return Piecewise(
+        (term1 * Sum(num/den, (j, 0, k//2)).doit(), (k.is_integer & (k >= 0))),
+        (0, True))
 
     def _moment_generating_function(self, t):
         a1, a2 = self.a1, self.a2
@@ -373,7 +380,9 @@ class LogarithmicDistribution(SingleDiscreteDistribution):
 
     def pdf(self, k):
         p = self.p
-        return (-1) * p**k / (k * log(1 - p))
+    return Piecewise(
+        ((-1) * p**k / (k * log(1 - p)), (k.is_integer & (k >= 1))),
+        (0, True))
 
     def _characteristic_function(self, t):
         p = self.p
@@ -450,9 +459,12 @@ class NegativeBinomialDistribution(SingleDiscreteDistribution):
 
     def pdf(self, k):
         r = self.r
-        p = self.p
+    p = self.p
+    return Piecewise(
+        (binomial(k + r - 1, k) * (1 - p)**k * p**r, (k.is_integer & (k >= 0))),
+        (0, True))
 
-        return binomial(k + r - 1, k) * (1 - p)**k * p**r
+    return binomial(k + r - 1, k) * (1 - p)**k * p**r
 
     def _characteristic_function(self, t):
         r = self.r
@@ -536,7 +548,9 @@ class PoissonDistribution(SingleDiscreteDistribution):
 
     def pdf(self, k):
         return self.lamda**k / factorial(k) * exp(-self.lamda)
-
+        return Piecewise(
+        (self.lamda**k / factorial(k) * exp(-self.lamda), (k.is_integer & (k >= 0))),
+        (0, True))
     def _characteristic_function(self, t):
         return exp(self.lamda * (exp(I*t) - 1))
 
@@ -622,10 +636,13 @@ class SkellamDistribution(SingleDiscreteDistribution):
         _value_check(mu2 >= 0, 'Parameter mu2 must be >= 0')
 
     def pdf(self, k):
-        (mu1, mu2) = (self.mu1, self.mu2)
-        term1 = exp(-(mu1 + mu2)) * (mu1 / mu2) ** (k / 2)
-        term2 = besseli(k, 2 * sqrt(mu1 * mu2))
-        return term1 * term2
+        mu1, mu2 = self.mu1, self.mu2
+    term1 = exp(-(mu1 + mu2)) * (mu1 / mu2) ** (k / 2)
+    term2 = besseli(k, 2 * sqrt(mu1 * mu2))
+
+    return Piecewise(
+        (term1 * term2, k.is_integer),
+        (0, True))
 
     def _cdf(self, x):
         raise NotImplementedError(
@@ -712,7 +729,9 @@ class YuleSimonDistribution(SingleDiscreteDistribution):
 
     def pdf(self, k):
         rho = self.rho
-        return rho * beta(k, rho + 1)
+    return Piecewise(
+        (rho * beta(k, rho + 1), (k.is_integer & (k >= 1))),
+        (0, True))
 
     def _cdf(self, x):
         return Piecewise((1 - floor(x) * beta(floor(x), self.rho + 1), x >= 1), (0, True))
@@ -789,8 +808,10 @@ class ZetaDistribution(SingleDiscreteDistribution):
         _value_check(s > 1, 's should be greater than 1')
 
     def pdf(self, k):
-        s = self.s
-        return 1 / (k**s * zeta(s))
+      s = self.s
+    return Piecewise(
+        (1 / (k**s * zeta(s)), (k.is_integer & (k >= 1))),
+        (0, True))
 
     def _characteristic_function(self, t):
         return polylog(self.s, exp(I*t)) / zeta(self.s)
