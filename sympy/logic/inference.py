@@ -1,12 +1,10 @@
 """Inference in propositional logic"""
 from __future__ import annotations
 
-from sympy.logic.boolalg import And, Not, conjuncts, to_cnf, BooleanFunction
+from sympy.logic.boolalg import And, Not, conjuncts, to_cnf, BooleanFunction, Boolean
 from sympy.core.sorting import ordered
 from sympy.core.sympify import sympify
 from sympy.external.importtools import import_module
-from sympy.logic.boolalg import Boolean, BooleanFunction
-from typing import cast
 from sympy.core.basic import Basic
 
 
