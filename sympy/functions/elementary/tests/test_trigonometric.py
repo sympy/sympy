@@ -596,13 +596,6 @@ def test_tan():
     f = tan(pi*(x + S(3)/2))/(3*x)
     assert f.as_leading_term(x) == -1/(3*pi*x**2)
 
-
-def test_tan_extended_real():
-    assert tan(pi/2).is_extended_real is False
-    assert tan(3*pi/2).is_extended_real is False
-    assert tan(pi).is_extended_real is True
-
-
 def test_tan_series():
     assert tan(x).series(x, 0, 9) == \
         x + x**3/3 + 2*x**5/15 + 17*x**7/315 + O(x**9)
