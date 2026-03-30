@@ -5,7 +5,6 @@ from sympy.logic.boolalg import And, Not, conjuncts, to_cnf, BooleanFunction, Bo
 from sympy.core.sorting import ordered
 from sympy.core.sympify import sympify
 from sympy.external.importtools import import_module
-from sympy.core.basic import Basic
 
 
 def literal_symbol(literal):
@@ -252,7 +251,7 @@ def entails(expr, formula_set=None) -> bool:
 class KB:
     """Base class for all knowledge bases"""
     def __init__(self, sentence: Boolean|None = None) -> None:
-        self.clauses_: set[Basic] = set()
+        self.clauses_ = set()
         if sentence:
             self.tell(sentence)
 
