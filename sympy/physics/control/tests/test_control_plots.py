@@ -1,5 +1,6 @@
 from __future__ import annotations
 from math import isclose
+import pytest
 from sympy.core.numbers import I, all_close
 from sympy.core.symbol import Dummy
 from sympy.functions.elementary.complexes import (Abs, arg)
@@ -158,8 +159,7 @@ def test_bode():
 
 
 def test_bode_plot_no_xlabel():
-    if not matplotlib:
-        skip("Matplotlib not the default backend")
+    pytest.importorskip("matplotlib")
 
     from sympy.abc import s
     from sympy.physics.control import TransferFunction
