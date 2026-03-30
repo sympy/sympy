@@ -4,14 +4,20 @@ with residues.
 """
 from __future__ import annotations
 
+from typing import Any, TYPE_CHECKING
+
 from sympy.core.mul import Mul
 from sympy.core.singleton import S
 from sympy.core.sympify import sympify
 from sympy.utilities.timeutils import timethis
+from sympy.core.power import Pow
 
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
+    from sympy.core.symbol import Symbol
 
 @timethis('residue')
-def residue(expr, x, x0):
+def residue(expr:Any, x:Symbol|Expr, x0:int|Expr)->Expr:
     """
     Finds the residue of ``expr`` at the point x=x0.
 
