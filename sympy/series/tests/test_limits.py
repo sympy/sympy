@@ -1,7 +1,7 @@
 from __future__ import annotations
 from itertools import product
 
-from sympy import Lt, Le, Gt, Ge, Ne, Eq
+from sympy import Ne, Eq
 from sympy.concrete.summations import Sum
 from sympy.core.function import (Function, diff)
 from sympy.core import EulerGamma, GoldenRatio
