@@ -6,10 +6,13 @@ from sympy.core.sorting import ordered
 from sympy.core.sympify import sympify
 from sympy.external.importtools import import_module
 from sympy.logic.boolalg import Boolean, BooleanFunction
-from sympy.core import Symbol
+from typing import TYPE_CHECKING
 from typing import cast
 from sympy.core.basic import Basic
 
+if TYPE_CHECKING:
+    from sympy.core import Symbol
+    
 def literal_symbol(literal: Boolean | bool) -> Symbol | bool:
     """
     The symbol in this literal (without the negation).
