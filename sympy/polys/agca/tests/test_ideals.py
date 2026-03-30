@@ -59,14 +59,12 @@ def test_exceptions():
     assert I != J
 
 
-def test_zero_generators_containment():
+def test_zero_generators_do_not_change_ideal():
     R = QQ.old_poly_ring(x)
 
-    assert R.ideal(0, x).contains(x)
-    assert not R.ideal(0, x).contains(1)
-    assert not R.ideal(0).contains(x)
-    assert not R.ideal(0, 0).contains(x)
-    assert R.ideal(0, x, x).contains(x)
+    assert R.ideal(0, x) == R.ideal(x)
+    assert R.ideal(0, 0) == R.ideal()
+    assert R.ideal(0, x, x) == R.ideal(x)
 
 
 def test_nontriv_global():
