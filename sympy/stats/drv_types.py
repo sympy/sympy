@@ -149,7 +149,7 @@ class FlorySchulzDistribution(SingleDiscreteDistribution):
     def _moment_generating_function(self, t):
         a = self.a
         return a**2*exp(t)/((1 + (a - 1)*exp(t))**2)
-
+ 
 
 def FlorySchulz(name, a):
     r"""
@@ -290,12 +290,12 @@ class HermiteDistribution(SingleDiscreteDistribution):
 
     def pdf(self, k):
         a1, a2 = self.a1, self.a2
-    term1 = exp(-(a1 + a2))
-    j = Dummy("j", integer=True)
-    num = a1**(k - 2*j) * a2**j
-    den = factorial(k - 2*j) * factorial(j)
+        term1 = exp(-(a1 + a2))
+        j = Dummy("j", integer=True)
+        num = a1**(k - 2*j) * a2**j
+        den = factorial(k - 2*j) * factorial(j)
 
-    return Piecewise(
+        return Piecewise(
         (term1 * Sum(num/den, (j, 0, k//2)).doit(), (k.is_integer & (k >= 0))),
         (0, True))
 
