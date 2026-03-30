@@ -367,6 +367,15 @@ class sinh(HyperbolicFunction):
         if rest.is_zero:
             return ipi_mult.is_integer
 
+    def _eval_derivative_n_times(self, s, n):
+        if self.args[0] == s and n.is_integer and n.is_nonnegative:
+            if n.is_even:
+                return sinh(s)
+            if n.is_odd:
+                return cosh(s)
+            return (-I)**n*sinh(s + I*pi*n/2)
+        return super()._eval_derivative_n_times(s, n)
+
 
 class cosh(HyperbolicFunction):
     r"""
@@ -612,6 +621,15 @@ class cosh(HyperbolicFunction):
         rest, ipi_mult = _peeloff_ipi(self.args[0])
         if ipi_mult and rest.is_zero:
             return (ipi_mult - S.Half).is_integer
+
+    def _eval_derivative_n_times(self, s, n):
+        if self.args[0] == s and n.is_integer and n.is_nonnegative:
+            if n.is_even:
+                return cosh(s)
+            if n.is_odd:
+                return sinh(s)
+            return (-I)**n*cosh(s + I*pi*n/2)
+        return super()._eval_derivative_n_times(s, n)
 
 
 class tanh(HyperbolicFunction):

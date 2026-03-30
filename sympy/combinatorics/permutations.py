@@ -13,7 +13,7 @@ from sympy.core.sympify import _sympify
 from sympy.matrices import zeros
 from sympy.polys.polytools import lcm
 from sympy.printing.repr import srepr
-from sympy.utilities.iterables import (flatten, has_variety, minlex,
+from sympy.utilities.iterables import (flatten, has_variety,
     has_dups, runs, is_sequence)
 from sympy.utilities.misc import as_int
 from sympy.external.gmpy import factorial
@@ -1145,7 +1145,7 @@ class Permutation(Atom):
         array_form, full_cyclic_form
         """
         if self._cyclic_form is not None:
-            return list(self._cyclic_form)
+            return [cycle[:] for cycle in self._cyclic_form]
         array_form = self.array_form
         unchecked = [True] * len(array_form)
         cyclic_form = []
@@ -1161,9 +1161,7 @@ class Permutation(Atom):
                     unchecked[j] = False
                 if len(cycle) > 1:
                     cyclic_form.append(cycle)
-                    assert cycle == list(minlex(cycle))
-        cyclic_form.sort()
-        self._cyclic_form = cyclic_form.copy()
+        self._cyclic_form = [cycle[:] for cycle in cyclic_form]
         return cyclic_form
 
     @property

@@ -102,6 +102,14 @@ def test_sinh_series():
 def test_sinh_fdiff():
     x = Symbol('x')
     raises(ArgumentIndexError, lambda: sinh(x).fdiff(2))
+    assert sinh(x).diff((x, 1)) == cosh(x)
+    assert sinh(x).diff((x, 2)) == sinh(x)
+    n = Symbol('n', integer=True, nonnegative=True, odd=True)
+    assert sinh(x).diff((x, n)) == cosh(x)
+    n = Symbol('n', integer=True, nonnegative=True, even=True)
+    assert sinh(x).diff((x, n)) == sinh(x)
+    n = Symbol('n', integer=True, nonnegative=True)
+    assert sinh(x).diff((x, n)) == (-I)**n*sinh(x+I*pi*n/2)
 
 
 def test_cosh():
@@ -186,6 +194,14 @@ def test_cosh_series():
 def test_cosh_fdiff():
     x = Symbol('x')
     raises(ArgumentIndexError, lambda: cosh(x).fdiff(2))
+    assert cosh(x).diff((x, 1)) == sinh(x)
+    assert cosh(x).diff((x, 2)) == cosh(x)
+    n = Symbol('n', integer=True, nonnegative=True, odd=True)
+    assert cosh(x).diff((x, n)) == sinh(x)
+    n = Symbol('n', integer=True, nonnegative=True, even=True)
+    assert cosh(x).diff((x, n)) == cosh(x)
+    n = Symbol('n', integer=True, nonnegative=True)
+    assert cosh(x).diff((x, n)) == (-I)**n*cosh(x+I*pi*n/2)
 
 
 def test_tanh():

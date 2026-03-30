@@ -562,6 +562,21 @@ class sin(TrigonometricFunction):
                 or self.args[0].is_complex:
             return True
 
+    def _eval_derivative_n_times(self, s, n):
+        if self.args[0] == s and n.is_integer and n.is_nonnegative:
+            if n.is_Integer:
+                match n % 4:
+                    case 0:
+                        return sin(s)
+                    case 1:
+                        return cos(s)
+                    case 2:
+                        return -sin(s)
+                    case 3:
+                        return -cos(s)
+            return sin(s + pi*n/2)
+        return super()._eval_derivative_n_times(s, n)
+
 
 class cos(TrigonometricFunction):
     """
@@ -933,6 +948,21 @@ class cos(TrigonometricFunction):
         rest, pi_mult = _peeloff_pi(self.args[0])
         if rest.is_zero and pi_mult:
             return (pi_mult - S.Half).is_integer
+
+    def _eval_derivative_n_times(self, s, n):
+        if self.args[0] == s and n.is_integer and n.is_nonnegative:
+            if n.is_Integer:
+                match n % 4:
+                    case 0:
+                        return cos(s)
+                    case 1:
+                        return -sin(s)
+                    case 2:
+                        return -cos(s)
+                    case 3:
+                        return sin(s)
+            return cos(s + pi*n/2)
+        return super()._eval_derivative_n_times(s, n)
 
 
 class tan(TrigonometricFunction):
