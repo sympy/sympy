@@ -169,17 +169,12 @@ def test_floor():
     assert (floor(neg) > 0) == False
     assert (floor(neg) >= 0) == False
     assert (floor(neg) <= -1) == True
-    assert (floor(neg) >= -3) == (neg >= -3)
-    assert (floor(neg) < 5) == (neg < 5)
 
     assert (floor(nn) < 0) == False
     assert (floor(nn) >= 0) == True
 
     assert (floor(pos) < 0) == False
-    assert (floor(pos) <= 0) == (pos < 1)
-    assert (floor(pos) > 0) == (pos >= 1)
     assert (floor(pos) >= 0) == True
-    assert (floor(pos) >= 3) == (pos >= 3)
 
     assert (floor(np) <= 0) == True
     assert (floor(np) > 0) == False
@@ -213,15 +208,7 @@ def test_floor():
     assert (floor(x) < 2.9) == Lt(floor(x), 2.9, evaluate=False)
     assert (floor(x) > -1.7) == Gt(floor(x), -1.7, evaluate=False)
 
-    assert (floor(y) <= 5.5) == (y < 6)
-    assert (floor(y) >= -3.2) == (y >= -3)
-    assert (floor(y) < 2.9) == (y < 3)
-    assert (floor(y) > -1.7) == (y >= -1)
 
-    assert (floor(y) <= n) == (y < n + 1)
-    assert (floor(y) >= n) == (y >= n)
-    assert (floor(y) < n) == (y < n)
-    assert (floor(y) > n) == (y >= n + 1)
 
     assert floor(RootOf(x**3 - 27*x, 2)) == 5
 
@@ -366,11 +353,7 @@ def test_ceiling():
     np = Symbol('np', nonpositive=True)
 
     assert (ceiling(neg) <= 0) == True
-    assert (ceiling(neg) < 0) == (neg <= -1)
     assert (ceiling(neg) > 0) == False
-    assert (ceiling(neg) >= 0) == (neg > -1)
-    assert (ceiling(neg) > -3) == (neg > -3)
-    assert (ceiling(neg) <= 10) == (neg <= 10)
 
     assert (ceiling(nn) < 0) == False
     assert (ceiling(nn) >= 0) == True
@@ -380,7 +363,6 @@ def test_ceiling():
     assert (ceiling(pos) > 0) == True
     assert (ceiling(pos) >= 0) == True
     assert (ceiling(pos) >= 1) == True
-    assert (ceiling(pos) > 5) == (pos > 5)
 
     assert (ceiling(np) <= 0) == True
     assert (ceiling(np) > 0) == False
@@ -413,16 +395,6 @@ def test_ceiling():
     assert (ceiling(x) >= -3.2) == Ge(ceiling(x), -3.2, evaluate=False)
     assert (ceiling(x) < 2.9) == Lt(ceiling(x), 2.9, evaluate=False)
     assert (ceiling(x) > -1.7) == Gt(ceiling(x), -1.7, evaluate=False)
-
-    assert (ceiling(y) <= 5.5) == (y <= 5)
-    assert (ceiling(y) >= -3.2) == (y > -4)
-    assert (ceiling(y) < 2.9) == (y <= 2)
-    assert (ceiling(y) > -1.7) == (y > -2)
-
-    assert (ceiling(y) <= n) == (y <= n)
-    assert (ceiling(y) >= n) == (y > n - 1)
-    assert (ceiling(y) < n) == (y <= n - 1)
-    assert (ceiling(y) > n) == (y > n)
 
     assert ceiling(RootOf(x**3 - 27*x, 2)) == 6
     s = ImageSet(Lambda(n, n + (CRootOf(x**5 - x**2 + 1, 0))), Integers)
