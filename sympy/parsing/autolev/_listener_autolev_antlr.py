@@ -441,7 +441,7 @@ if AutolevListener:
             # Write code to import common dependencies.
             self.output_code.append("import sympy.physics.mechanics as _me\n")
             self.output_code.append("import sympy as _sm\n")
-            self.output_code.append("import numpy as _np\n")
+            if include_numeric: self.output_code.append("import numpy as _np\n")
             self.output_code.append("\n")
 
             # Just a store for the max degree variable in a line.
