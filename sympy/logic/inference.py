@@ -12,7 +12,7 @@ from sympy.core.basic import Basic
 
 if TYPE_CHECKING:
     from sympy.core import Symbol
-    
+
 def literal_symbol(literal: Boolean | bool) -> Symbol | bool:
     """
     The symbol in this literal (without the negation).
