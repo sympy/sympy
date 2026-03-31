@@ -30,9 +30,9 @@ def _rewrite_trig_as_product(expr):
         # Apply to Add factors inside a Mul
         new_args = []
         changed = False
-        for arg in expr.args:
-            rewritten = _rewrite_trig_as_product(arg)
-            if rewritten != arg:
+        for a in expr.args:
+            rewritten = _rewrite_trig_as_product(a)
+            if rewritten != a:
                 changed = True
             new_args.append(rewritten)
         return Mul(*new_args) if changed else expr
