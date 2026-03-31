@@ -176,7 +176,7 @@ def lagrange_inversion(expr, x, x0=0, n=3, dir="+"):
     w = sympify(expr)
 
     if not w.free_symbols:
-        raise ValueError("The expression provided has no free symbols.") 
+        raise ValueError("The expression provided has no free symbols.")
 
     x = sympify(x)
 
