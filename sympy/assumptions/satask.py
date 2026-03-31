@@ -74,25 +74,30 @@ def satask(proposition, assumptions=True, context=global_assumptions,
     if context:
         context_cnf = context_cnf.extend(context)
 
+    # Check assumptions for contradiction using known facts but a neutral proposition
+    contradiction_check = get_all_relevant_facts(props, assumptions, context_cnf,
+        use_known_facts=use_known_facts, iterations=iterations)
+    contradiction_check.add_from_cnf(assumptions)
+    if context:
+        contradiction_check.add_from_cnf(context_cnf)
+    if not satisfiable(contradiction_check):
+        # Only raise if assumptions alone are contradictory, not the proposition
+        assumptions_only = get_all_relevant_facts(assumptions, assumptions, context_cnf,
+            use_known_facts=use_known_facts, iterations=iterations)
+        assumptions_only.add_from_cnf(assumptions)
+        if context:
+            assumptions_only.add_from_cnf(context_cnf)
+        if not satisfiable(assumptions_only):
+            raise ValueError("Contradictory assumptions")
+
     sat = get_all_relevant_facts(props, assumptions, context_cnf,
         use_known_facts=use_known_facts, iterations=iterations)
     sat.add_from_cnf(assumptions)
-
-   # Check if assumptions themselves are contradictory
-    if not satisfiable(sat.copy()):
-        raise ValueError("Contradictory assumptions")
     if context:
         sat.add_from_cnf(context_cnf)
 
-    return check_satisfiability(props, _props, sat)
-    if result is None:
-        # Check if both proposition and negation are unsatisfiable (indeterminate)
-        pos = check_satisfiability(props, _props, sat)
-        neg = check_satisfiability(~props, _props, sat)
-        if pos is None and neg is None:
-            return None
+    result = check_satisfiability(props, _props, sat)
     return result
-
 def check_satisfiability(prop, _prop, factbase):
     sat_true = factbase.copy()
     sat_false = factbase.copy()
@@ -111,7 +116,7 @@ def check_satisfiability(prop, _prop, factbase):
         return False
 
     if not can_be_true and not can_be_false:
-        raise ValueError("Inconsistent assumptions")
+        return None
 def extract_predargs(proposition, assumptions=None, context=None):
     """
     Extract every expression in the argument of predicates from *proposition*,
