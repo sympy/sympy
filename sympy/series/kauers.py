@@ -1,5 +1,13 @@
 from __future__ import annotations
-def finite_diff(expression, variable, increment=1):
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
+    from sympy.concrete.summations import Sum
+
+
+def finite_diff(expression: Expr, variable: Expr, increment: Expr | complex = 1) -> Expr:
     """
     Takes as input a polynomial expression and the variable used to construct
     it and returns the difference between function's value when the input is
@@ -25,7 +33,7 @@ def finite_diff(expression, variable, increment=1):
     expression2 = expression2.expand()
     return expression2 - expression
 
-def finite_diff_kauers(sum):
+def finite_diff_kauers(sum: Sum) -> Expr:
     """
     Takes as input a Sum instance and returns the difference between the sum
     with the upper index incremented by 1 and the original sum. For example,
