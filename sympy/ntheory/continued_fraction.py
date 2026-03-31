@@ -8,7 +8,7 @@ from sympy.core.sympify import _sympify
 from sympy.utilities.misc import as_int
 
 
-def continued_fraction(a) -> list:
+def continued_fraction(a: object) -> list:
     """Return the continued fraction representation of a Rational or
     quadratic irrational.
 
@@ -72,7 +72,7 @@ def continued_fraction(a) -> list:
     raise ValueError(f"expecting a rational or quadratic irrational, not {e}")
 
 
-def continued_fraction_periodic(p, q, d=0, s=1) -> list:
+def continued_fraction_periodic(p: int, q: int, d: int = 0, s: int = 1) -> list:
     r"""
     Find the periodic continued fraction expansion of a quadratic irrational.
 
@@ -181,7 +181,7 @@ def continued_fraction_periodic(p, q, d=0, s=1) -> list:
     return terms[:i] + [terms[i:]]  # type: ignore
 
 
-def continued_fraction_reduce(cf):
+def continued_fraction_reduce(cf: list) -> object:
     """
     Reduce a continued fraction to a rational or quadratic irrational.
 
@@ -256,7 +256,7 @@ def continued_fraction_reduce(cf):
     return rv
 
 
-def continued_fraction_iterator(x):
+def continued_fraction_iterator(x: object):
     """
     Return continued fraction expansion of x as iterator.
 
@@ -300,7 +300,16 @@ def continued_fraction_iterator(x):
         x = 1/x
 
 
-def continued_fraction_convergents(cf):
+def continued_fraction_convergents(cf: list | object):
+```
+
+---
+
+That's it — just 5 lines changed. After editing, scroll down and use this commit message:
+```
+typ(ntheory): Add type annotations to continued_fraction.py
+
+Related to #28806
     """
     Return an iterator over the convergents of a continued fraction (cf).
 
