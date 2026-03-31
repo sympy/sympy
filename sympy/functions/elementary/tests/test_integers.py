@@ -659,3 +659,75 @@ def test_issue_25230():
     assert ceiling(x/b).as_leading_term(x, cdir = -1) == 0
     assert ceiling(x/c).as_leading_term(x, cdir = 1) == 0
     assert ceiling(x/c).as_leading_term(x, cdir = -1) == 1
+
+
+def test_floor_vs_ceiling():
+    x    = Symbol("x", real=True)
+    n    = Symbol("n", integer=True)
+    posn = Symbol("pos0", nonnegative=True, integer=True)
+    negn = Symbol("neg0", nonpositive=True, integer=True)
+
+    assert (floor(x) <= ceiling(x)) == (ceiling(x) >= floor(x)) == True
+    assert (floor(x) > ceiling(x))  == (ceiling(x) < floor(x))  == False
+    assert (floor(x) >= ceiling(x)) == Ge(floor(x), ceiling(x), evaluate=False)
+    assert (ceiling(x) <= floor(x)) == Le(ceiling(x), floor(x), evaluate=False)
+    assert (floor(x) < ceiling(x))  == Lt(floor(x), ceiling(x), evaluate=False)
+    assert (ceiling(x) > floor(x))  == Gt(ceiling(x), floor(x), evaluate=False)
+
+    for x in [n, posn, negn]:
+        assert (floor(x) >= ceiling(x)) == (ceiling(x) <= floor(x)) == True
+        assert (floor(x) <= ceiling(x)) == (ceiling(x) >= floor(x)) == True
+
+
+def test_floor_vs_frac():
+    x    = Symbol("x", real=True)
+    neg  = Symbol("neg", extended_negative=True)
+    posn = Symbol("pos0", nonnegative=True, integer=True)
+    negn = Symbol("neg0", nonpositive=True, integer=True)
+
+    assert (floor(x) > frac(x))  == Gt(floor(x), frac(x), evaluate=False)
+    assert (frac(x) < floor(x))  == Lt(frac(x), floor(x), evaluate=False)
+    assert (floor(x) >= frac(x)) == Ge(floor(x), frac(x), evaluate=False)
+    assert (frac(x) <= floor(x)) == Le(frac(x), floor(x), evaluate=False)
+    assert (floor(x) < frac(x))  == Lt(floor(x), frac(x), evaluate=False)
+    assert (frac(x) > floor(x))  == Gt(frac(x), floor(x), evaluate=False)
+    assert (floor(x) <= frac(x)) == Le(floor(x), frac(x), evaluate=False)
+    assert (frac(x) >= floor(x)) == Ge(frac(x), floor(x), evaluate=False)
+
+    assert (floor(neg) > frac(neg))  == (frac(neg) < floor(neg))  == False
+    assert (floor(neg) >= frac(neg)) == (frac(neg) <= floor(neg)) == False
+
+    assert (floor(posn) >= frac(posn)) == (frac(posn) <= floor(posn)) == True
+    assert (floor(posn) > frac(posn))  == Gt(floor(posn), frac(posn), evaluate=False)
+
+    assert (floor(negn) <= frac(negn)) == (frac(negn) >= floor(negn)) == True
+    assert (floor(negn) >= frac(negn)) == Ge(floor(negn), frac(negn), evaluate=False)
+
+
+def test_ceiling_vs_frac():
+    x    = Symbol("x", real=True)
+    pos  = Symbol("pos", extended_positive=True)
+    neg  = Symbol("neg", extended_negative=True)
+    posn = Symbol("pos0", nonnegative=True, integer=True)
+    negn = Symbol("neg0", nonpositive=True, integer=True)
+
+    assert (ceiling(x) > frac(x))  == Gt(ceiling(x), frac(x), evaluate=False)
+    assert (frac(x) < ceiling(x))  == Lt(frac(x), ceiling(x), evaluate=False)
+    assert (ceiling(x) >= frac(x)) == Ge(ceiling(x), frac(x), evaluate=False)
+    assert (frac(x) <= ceiling(x)) == Le(frac(x), ceiling(x), evaluate=False)
+    assert (ceiling(x) < frac(x))  == Lt(ceiling(x), frac(x), evaluate=False)
+    assert (frac(x) > ceiling(x))  == Gt(frac(x), ceiling(x), evaluate=False)
+    assert (ceiling(x) <= frac(x)) == Le(ceiling(x), frac(x), evaluate=False)
+    assert (frac(x) >= ceiling(x)) == Ge(frac(x), ceiling(x), evaluate=False)
+
+    assert (ceiling(pos) > frac(pos))  == (frac(pos) < ceiling(pos)) == True
+    assert (ceiling(pos) >= frac(pos)) == (frac(pos) <= ceiling(pos)) == True
+
+    assert (ceiling(neg) < frac(neg))  == (frac(neg) > ceiling(neg)) == True
+    assert (ceiling(neg) <= frac(neg)) == (frac(neg) >= ceiling(neg)) == True
+
+    assert (ceiling(posn) >= frac(posn)) == (frac(posn) <= ceiling(posn)) == True
+    assert (ceiling(posn) > frac(posn))  == Gt(ceiling(posn), frac(posn), evaluate=False)
+
+    assert (ceiling(negn) <= frac(negn)) == (frac(negn) >= ceiling(negn)) == True
+    assert (ceiling(negn) >= frac(negn)) == Ge(ceiling(negn), frac(negn), evaluate=False)

@@ -240,48 +240,33 @@ def _eval_is_eq(lhs, rhs): # noqa:F811
 def _eval_is_ge(lhs,rhs):  # noqa:F811
     x = lhs.args[0]
     y = rhs.args[0]
-    if x.is_real and y.is_real:
+    if x.is_extended_real and y.is_extended_real:
         if x == y:
             return True
         if x.is_integer:
             if y.is_integer:
                 return is_ge(x, y)
-            if y.is_number:
-                return is_ge(x, floor(y))
-        if x.is_number:
-            if y.is_integer:
-                return is_ge(floor(x), y)
-            if y.is_number:
-                return is_ge(floor(x), floor(y))
     return None
 
 @dispatch(floor, Expr)
 def _eval_is_ge(lhs, rhs): # noqa:F811
-    if lhs.args[0].is_real:
+    if lhs.args[0].is_extended_real:
         if rhs.is_integer:
             return is_ge(lhs.args[0], rhs)
-        if rhs.is_number and rhs.is_real:
-            return is_ge(lhs.args[0], ceiling(rhs))
-    if lhs.args[0] == rhs and rhs.is_real:
+    if lhs.args[0] == rhs and rhs.is_extended_real:
         if rhs.is_integer:
             return True
         if rhs.is_noninteger:
             return False
-    if rhs is S.NegativeInfinity and lhs.is_finite:
-        return True
     return None
 
 @dispatch(Expr, floor)
 def _eval_is_ge(lhs, rhs): # noqa:F811
-    if rhs.args[0].is_real and lhs.is_real:
+    if rhs.args[0].is_extended_real and lhs.is_extended_real:
         if lhs.is_integer:
             return is_lt(rhs.args[0], lhs + 1)
-        if lhs.is_number:
-            return is_lt(rhs.args[0], ceiling(lhs))
         if rhs.args[0] == lhs:
             return True
-    if lhs is S.Infinity and rhs.is_finite:
-        return True
     return None
 
 class ceiling(RoundFunction):
@@ -429,64 +414,45 @@ def _eval_is_eq(lhs, rhs): # noqa:F811
 def _eval_is_ge(lhs,rhs): # noqa:F811
     x = lhs.args[0]
     y = rhs.args[0]
-    if x.is_real and y.is_real:
+    if x.is_extended_real and y.is_extended_real:
         if x == y:
             return True
         if x.is_integer:
             if y.is_integer:
                 return is_ge(x, y)
-            if y.is_number:
-                return is_ge(x, ceiling(y))
-        if x.is_number:
-            if y.is_integer:
-                return is_ge(ceiling(x), y)
-            if y.is_number:
-                return is_ge(ceiling(x), ceiling(y))
     return None
 
 @dispatch(ceiling, floor)
 def _eval_is_ge(lhs, rhs): # noqa:F811
-    if lhs.args[0].is_real and rhs.args[0].is_real:
+    if lhs.args[0].is_extended_real and rhs.args[0].is_extended_real:
         return is_ge(lhs.args[0], rhs.args[0])
     return None
 
 @dispatch(floor, ceiling)
 def _eval_is_ge(lhs, rhs): # noqa:F811
-    if lhs.args[0].is_real and rhs.args[0].is_real:
+    if lhs.args[0].is_extended_real and rhs.args[0].is_extended_real:
         if lhs.args[0].is_integer:
             return is_ge(lhs.args[0], rhs)
         if rhs.args[0].is_integer:
             return is_ge(lhs, rhs.args[0])
-        if lhs.args[0].is_number:
-            return is_ge(floor(lhs.args[0]), rhs)
-        if rhs.args[0].is_number:
-            return is_ge(lhs, ceiling(rhs.args[0]))
-    return is_ge(floor(lhs.args[0]) - floor(rhs.args[0]), frac(lhs.args[0]) - frac(rhs.args[0]))
+    return None
 
 @dispatch(ceiling, Expr)
 def _eval_is_ge(lhs, rhs): # noqa:F811
-    if lhs.args[0].is_real and rhs.is_real:
+    if lhs.args[0].is_extended_real and rhs.is_extended_real:
         if rhs.is_integer:
             return is_gt(lhs.args[0], rhs - 1)
-        if rhs.is_number:
-            return is_gt(lhs.args[0], floor(rhs))
         if lhs.args[0] == rhs:
             return True
-    if rhs is S.NegativeInfinity and lhs.is_finite:
-        return True
     return None
 
 @dispatch(Expr, ceiling)
 def _eval_is_ge(lhs, rhs): # noqa:F811
-    if rhs.args[0].is_real and lhs.is_real:
+    if rhs.args[0].is_extended_real and lhs.is_extended_real:
         if lhs.is_integer:
             return is_le(rhs.args[0], lhs)
-        if lhs.is_number:
-            return is_le(rhs.args[0], floor(lhs))
         if rhs.args[0] == lhs  and lhs.is_integer is False:
             return False
-    if lhs is S.NegativeInfinity and rhs.is_finite:
-        return False
     return None
 
 class frac(DefinedFunction):
@@ -655,7 +621,7 @@ def _eval_is_eq(lhs, rhs): # noqa:F811
 
 @dispatch(frac, frac)
 def _eval_is_ge(lhs, rhs): # noqa:F811
-    if lhs.args[0].is_real and rhs.args[0].is_real:
+    if lhs.args[0].is_extended_real and rhs.args[0].is_extended_real:
         if lhs.args[0].is_integer:
             return is_ge(0, rhs)
         if rhs.args[0].is_integer:
@@ -664,26 +630,26 @@ def _eval_is_ge(lhs, rhs): # noqa:F811
 
 @dispatch(frac, floor)
 def _eval_is_ge(lhs, rhs): # noqa:F811
-    if lhs.args[0].is_real and rhs.args[0].is_real:
-        return is_lt(rhs.args[0],1)
+    if lhs.args[0].is_extended_real and rhs.args[0].is_extended_real:
+        return is_lt(rhs.args[0],S(1))
     return None
 
 @dispatch(floor, frac)
 def _eval_is_ge(lhs, rhs): # noqa:F811
-    if lhs.args[0].is_real and rhs.args[0].is_real:
-        return is_ge(lhs.args[0], 1)
+    if lhs.args[0].is_extended_real and rhs.args[0].is_extended_real:
+        return is_ge(lhs.args[0], S(1))
     return None
 
 @dispatch(frac, ceiling)
 def _eval_is_ge(lhs, rhs): # noqa:F811
-    if lhs.args[0].is_real and rhs.args[0].is_real:
-        return is_le(rhs.args[0],0)
+    if lhs.args[0].is_extended_real and rhs.args[0].is_extended_real:
+        return is_le(rhs.args[0],S(0))
     return None
 
 @dispatch(ceiling, frac)
 def _eval_is_ge(lhs, rhs): # noqa:F811
-    if lhs.args[0].is_real and rhs.args[0].is_real:
-        return is_ge(lhs.args[0],0)
+    if lhs.args[0].is_extended_real and rhs.args[0].is_extended_real:
+        return is_ge(lhs.args[0],S(0))
     return None
 
 @dispatch(frac, Expr)
