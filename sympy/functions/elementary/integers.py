@@ -231,12 +231,12 @@ class floor(RoundFunction):
     def _eval_rewrite_as_frac(self, arg, **kwargs):
         return arg - frac(arg)
 
-@dispatch(floor, Expr)
+@dispatch(floor, Expr)  # type:ignore
 def _eval_is_eq(lhs, rhs): # noqa:F811
     return is_eq(lhs.rewrite(ceiling), rhs) or \
         is_eq(lhs.rewrite(frac),rhs)
 
-@dispatch(floor, floor)
+@dispatch(floor, floor)  # type:ignore
 def _eval_is_ge(lhs,rhs):  # noqa:F811
     x = lhs.args[0]
     y = rhs.args[0]
@@ -248,7 +248,7 @@ def _eval_is_ge(lhs,rhs):  # noqa:F811
                 return is_ge(x, y)
     return None
 
-@dispatch(floor, Expr)
+@dispatch(floor, Expr)  # type:ignore
 def _eval_is_ge(lhs, rhs): # noqa:F811
     if lhs.args[0].is_extended_real:
         if rhs.is_integer:
@@ -260,7 +260,7 @@ def _eval_is_ge(lhs, rhs): # noqa:F811
             return False
     return None
 
-@dispatch(Expr, floor)
+@dispatch(Expr, floor)  # type:ignore
 def _eval_is_ge(lhs, rhs): # noqa:F811
     if rhs.args[0].is_extended_real and lhs.is_extended_real:
         if lhs.is_integer:
@@ -410,7 +410,7 @@ class ceiling(RoundFunction):
 def _eval_is_eq(lhs, rhs): # noqa:F811
     return is_eq(lhs.rewrite(floor), rhs) or is_eq(lhs.rewrite(frac),rhs)
 
-@dispatch(ceiling, ceiling)
+@dispatch(ceiling, ceiling)  # type:ignore
 def _eval_is_ge(lhs,rhs): # noqa:F811
     x = lhs.args[0]
     y = rhs.args[0]
@@ -422,13 +422,13 @@ def _eval_is_ge(lhs,rhs): # noqa:F811
                 return is_ge(x, y)
     return None
 
-@dispatch(ceiling, floor)
+@dispatch(ceiling, floor)  # type:ignore
 def _eval_is_ge(lhs, rhs): # noqa:F811
     if lhs.args[0].is_extended_real and rhs.args[0].is_extended_real:
         return is_ge(lhs.args[0], rhs.args[0])
     return None
 
-@dispatch(floor, ceiling)
+@dispatch(floor, ceiling)  # type:ignore
 def _eval_is_ge(lhs, rhs): # noqa:F811
     if lhs.args[0].is_extended_real and rhs.args[0].is_extended_real:
         if lhs.args[0].is_integer:
@@ -437,7 +437,7 @@ def _eval_is_ge(lhs, rhs): # noqa:F811
             return is_ge(lhs, rhs.args[0])
     return None
 
-@dispatch(ceiling, Expr)
+@dispatch(ceiling, Expr)  # type:ignore
 def _eval_is_ge(lhs, rhs): # noqa:F811
     if lhs.args[0].is_extended_real and rhs.is_extended_real:
         if rhs.is_integer:
@@ -446,7 +446,7 @@ def _eval_is_ge(lhs, rhs): # noqa:F811
             return True
     return None
 
-@dispatch(Expr, ceiling)
+@dispatch(Expr, ceiling)  # type:ignore
 def _eval_is_ge(lhs, rhs): # noqa:F811
     if rhs.args[0].is_extended_real and lhs.is_extended_real:
         if lhs.is_integer:
@@ -619,7 +619,7 @@ def _eval_is_eq(lhs, rhs): # noqa:F811
     if res is not None:
         return False
 
-@dispatch(frac, frac)
+@dispatch(frac, frac)  # type:ignore
 def _eval_is_ge(lhs, rhs): # noqa:F811
     if lhs.args[0].is_extended_real and rhs.args[0].is_extended_real:
         if lhs.args[0].is_integer:
@@ -628,31 +628,31 @@ def _eval_is_ge(lhs, rhs): # noqa:F811
             return is_ge(lhs, 0)
     return None
 
-@dispatch(frac, floor)
+@dispatch(frac, floor)  # type:ignore
 def _eval_is_ge(lhs, rhs): # noqa:F811
     if lhs.args[0].is_extended_real and rhs.args[0].is_extended_real:
         return is_lt(rhs.args[0],S(1))
     return None
 
-@dispatch(floor, frac)
+@dispatch(floor, frac)  # type:ignore
 def _eval_is_ge(lhs, rhs): # noqa:F811
     if lhs.args[0].is_extended_real and rhs.args[0].is_extended_real:
         return is_ge(lhs.args[0], S(1))
     return None
 
-@dispatch(frac, ceiling)
+@dispatch(frac, ceiling)  # type:ignore
 def _eval_is_ge(lhs, rhs): # noqa:F811
     if lhs.args[0].is_extended_real and rhs.args[0].is_extended_real:
         return is_le(rhs.args[0],S(0))
     return None
 
-@dispatch(ceiling, frac)
+@dispatch(ceiling, frac)  # type:ignore
 def _eval_is_ge(lhs, rhs): # noqa:F811
     if lhs.args[0].is_extended_real and rhs.args[0].is_extended_real:
         return is_ge(lhs.args[0],S(0))
     return None
 
-@dispatch(frac, Expr)
+@dispatch(frac, Expr)  # type:ignore
 def _eval_is_ge(lhs, rhs): # noqa:F811
     # Check if other <= 0
     if rhs.is_extended_nonpositive:
@@ -663,7 +663,7 @@ def _eval_is_ge(lhs, rhs): # noqa:F811
         return not(res)
     return None
 
-@dispatch(Expr, frac)
+@dispatch(Expr, frac)  # type:ignore
 def _eval_is_ge(lhs, rhs): # noqa:F811
     # Check if other < 0
     if lhs.is_extended_negative:

@@ -734,31 +734,31 @@ def _eval_is_le(lhs, rhs): # noqa: F811
         if is_gt(lhs.min, rhs):
             return False
 
-@dispatch(ceiling, AccumulationBounds)
+@dispatch(ceiling, AccumulationBounds)  # type:ignore
 def _eval_is_ge(lhs,rhs): # noqa:F811
     return is_ge(lhs, rhs.max)
 
-@dispatch(AccumulationBounds, ceiling)
+@dispatch(AccumulationBounds, ceiling)  # type:ignore
 def _eval_is_ge(lhs,rhs): # noqa:F811
     return is_ge(lhs.min, rhs)
 
-@dispatch(AccumulationBounds, floor)
+@dispatch(AccumulationBounds, floor)  # type:ignore
 def _eval_is_ge(lhs,rhs): # noqa:F811
     return is_ge(lhs.min, rhs)
 
-@dispatch(floor, AccumulationBounds)
+@dispatch(floor, AccumulationBounds)  # type:ignore
 def _eval_is_ge(lhs,rhs): # noqa:F811
     return is_ge(lhs, rhs.max)
 
-@dispatch(frac, AccumulationBounds)
+@dispatch(frac, AccumulationBounds)  # type:ignore
 def _eval_is_ge(lhs,rhs): # noqa:F811
     return is_ge(lhs, rhs.max)
 
-@dispatch(AccumulationBounds, frac)
+@dispatch(AccumulationBounds, frac)  # type:ignore
 def _eval_is_ge(lhs,rhs): # noqa:F811
     return is_ge(lhs.min, rhs)
 
-@dispatch(AccumulationBounds, AccumulationBounds)
+@dispatch(AccumulationBounds, AccumulationBounds)  # type:ignore
 def _eval_is_ge(lhs, rhs): # noqa:F811
     if is_ge(lhs.min, rhs.max):
         return True
