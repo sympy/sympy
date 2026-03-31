@@ -5,6 +5,8 @@ from sympy.series.limits import limit
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.core.function import diff
 
+from sympy import Dummy, Add
+
 def series(expr, x=None, x0=0, n=6, dir="+"):
     """Series expansion of expr around point `x = x0`.
 
@@ -119,7 +121,7 @@ def lagrange_inversion(expr, x, x0=0, n=3, dir="+"):
     Examples
     ========
 
-    >>> from sympy.series.series import lagrange_inversion_theorem
+    >>> from sympy.series.series import lagrange_inversion
     >>> from sympy import exp
     >>> from sympy.abc import x
 
@@ -131,27 +133,27 @@ def lagrange_inversion(expr, x, x0=0, n=3, dir="+"):
 
     Here the number of terms required in the expansion is provided.
 
-    >>> lagrange_inversion_theorem(eq, x, 1, 4)
+    >>> lagrange_inversion(eq, x, 1, 4)
     2*(x**2*exp(x) - E)**3*exp(-3)/27 - 7*(x**2*exp(x) - E)**2*exp(-2)/54 + (x**2*exp(x) - E)*exp(-1)/3 + 1
 
     Here the number of terms required is, by default, 3.
 
-    >>> lagrange_inversion_theorem(eq, x, 1)
+    >>> lagrange_inversion(eq, x, 1)
     -7*(x**2*exp(x) - E)**2*exp(-2)/54 + (x**2*exp(x) - E)*exp(-1)/3 + 1
 
     Here the point with respect to which the expansion is found is changed from x=1 to x=2.
 
-    >>> lagrange_inversion_theorem(eq, x, 2)
+    >>> lagrange_inversion(eq, x, 2)
     -7*(x**2*exp(x) - 4*exp(2))**2*exp(-4)/512 + (x**2*exp(x) - 4*exp(2))*exp(-2)/8 + 2
 
     >>> eq = exp(x)
-    >>> lagrange_inversion_theorem(eq, x, 2)
+    >>> lagrange_inversion(eq, x, 2)
     -(exp(x) - exp(2))**2*exp(-4)/2 + (exp(x) - exp(2))*exp(-2) + 2
 
     Here the number of terms and the point with respect to which the inverse expansion will be calculated are both
     not provided explicitly.
 
-    >>> lagrange_inversion_theorem(eq, x)
+    >>> lagrange_inversion(eq, x)
     -(exp(x) - 1)**2/2 + exp(x) - 1
 
     Note
@@ -166,31 +168,38 @@ def lagrange_inversion(expr, x, x0=0, n=3, dir="+"):
     References
     ==========
 
-    .. [1] https://en.wikipedia.org/wiki/Lagrange_inversion_theorem
+    .. [1] https://en.wikipedia.org/wiki/lagrange_inversion
     .. [2] http://mathworld.wolfram.com/LagrangeInversionTheorem.html
     .. [3] http://www.cfm.brown.edu/people/dobrush/am33/Mathematica/lit.html
     """
 
     w = sympify(expr)
 
-    try:
-        not w.free_symbols
-    except AttributeError:
-        raise ValueError("The function provided is not analytic i.e. f' = 0. Lagrange's inversion theorem requires "
-                         "that the function be analytic")
+    if not w.free_symbols:
+        raise ValueError("The expression provided has no free symbols.") 
 
-    if (len(w.free_symbols) == 1) & (x not in w.free_symbols):
-        raise ValueError("The function variable provided does not match the equation variable")
+    x = sympify(x)
 
-    z = x
-    a = x0
+    if x not in w.free_symbols:
+        raise ValueError("The variable provided does not match the expression variable.")
 
-    if diff(w, w).subs(z, a):
-        raise ValueError("The first derivative of the function is zero at the point 'a' provided i.e. f'(a) = 0. "
-                         "Lagrange's inversion theorem requires that the derivative of the function be non zero at "
-                         "the point 'a'.")
+    x0 = sympify(x0)
 
-    if n == 0:
-        return a
-    else:
-        return sum(((limit(diff(((z - a)/(w - w.subs({z: a})))**n , z, i - 1, ), z, a, dir) * ((z - w.subs({z: a}))**n)/factorial(n)) for i in range(1, n + 1)), a)
+    if diff(w, x).subs(x, x0) == 0:
+        raise ValueError("f'(a) = 0. Lagrange's inversion theorem requires "
+                         "that the derivative be non-zero at point 'x0'.")
+
+    if n <= 0:
+        return x0
+    
+    # Precomputing
+    fx0 = w.subs(x, x0)
+    t = Dummy('t')
+    w_t = w.subs(x, t)
+    
+    # Construct the series using a single generator expression
+    # Each term k corresponds to (1/k!) * [ d^(k-1)/dt^(k-1) ((t-x0)/(f(t)-f(x0)))^k ]_{t=x0} * (f(x)-f(x0))^k
+    return Add(x0, *(
+        (limit(diff(((t - x0) / (w_t - fx0))**k, t, k - 1), t, x0, dir=dir) / factorial(k)) * (w - fx0)**k 
+        for k in range(1, n)
+    ), evaluate=True)
