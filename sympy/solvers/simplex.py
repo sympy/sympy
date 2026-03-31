@@ -979,7 +979,6 @@ def linprog(c, A=None, b=None, A_eq=None, b_eq=None, bounds=None):
             A_eq = zeros(0, C.cols)
             b_eq = zeros(0, 1)
     else:
-        # A_eq, b_eq = [Matrix(i) for i in (A_eq, b_eq)]
         A_eq = Matrix(A_eq)
         b_eq = Matrix(b_eq)
         # if x == y then x <= y and x >= y (-x <= -y)
@@ -1024,6 +1023,7 @@ def linprog(c, A=None, b=None, A_eq=None, b_eq=None, bounds=None):
 def show_linprog(c, A=None, b=None, A_eq=None, b_eq=None, bounds=None):
     from sympy import symbols
 
+    # the objective function
     C = Matrix(c)
     if C.rows != 1 and C.cols == 1:
         C = C.T
