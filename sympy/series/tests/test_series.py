@@ -1,7 +1,7 @@
 from __future__ import annotations
 from sympy.core.evalf import N
-from sympy.core.function import (Derivative, Function, PoleError, Subs)
-from sympy.core.numbers import (E, Float, Rational, oo, pi, I)
+from sympy.core.function import Derivative, Function, PoleError, Subs
+from sympy.core.numbers import E, Float, Rational, Integer, oo, pi, I
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
@@ -10,11 +10,13 @@ from sympy.functions.elementary.trigonometric import (atan, cos, sin)
 from sympy.functions.special.gamma_functions import gamma
 from sympy.integrals.integrals import Integral, integrate
 from sympy.series.order import O
-from sympy.series.series import series
-from sympy.abc import x, y, n, k
+from sympy.series.series import series, lagrange_inversion
+from sympy.series.acceleration import richardson, shanks
+from sympy.concrete.summations import Sum
+from sympy.abc import x, y, z, n, k
 from sympy.testing.pytest import raises
 from sympy.core import EulerGamma
-
+from sympy import simplify
 
 def test_sin():
     e1 = sin(x).series(x, 0)
@@ -120,8 +122,6 @@ def test_issue_11313():
 
 
 def test_series_of_Subs():
-    from sympy.abc import z
-
     subs1 = Subs(sin(x), x, y)
     subs2 = Subs(sin(x) * cos(z), x, y)
     subs3 = Subs(sin(x * z), (x, z), (y, x))
@@ -160,11 +160,6 @@ def test_issue_3978():
     assert TestF(x).series(x, 0, 3) ==  TestF(0) + \
             x*Subs(Derivative(TestF(x), x), x, 0) + \
             x**2*Subs(Derivative(TestF(x), x, x), x, 0)/2 + O(x**3)
-
-from sympy.series.acceleration import richardson, shanks
-from sympy.concrete.summations import Sum
-from sympy.core.numbers import Integer
-
 
 def test_acceleration():
     e = (1 + 1/n)**n
@@ -280,20 +275,47 @@ def test_issue_15539():
         + O(x**(-6), (x, oo)))
 
 def test_lagrange_inversion():
-    from sympy.series.series import lagrange_inversion
-    from sympy import exp
-
     raises(ValueError, lambda: lagrange_inversion(2, x, 1, 1))
     raises(ValueError, lambda: lagrange_inversion(2 * y, x, 1, 1))
-    raises(ValueError, lambda: lagrange_inversion(x ** 2, y, 1, 1))
-    assert lagrange_inversion(x ** 2, x, 1, 1) == 1
-    assert lagrange_inversion(x ** 2, x, 1, 2) == x**2/2 + 1/2
-    assert lagrange_inversion(x ** 2, x, 1, 3) == x**2/2 - (x**2 - 1)**2/8 + 1/2
-    assert lagrange_inversion(x ** 2, x, 1, 4) == x**2/2 + (x**2 - 1)**3/16 - (x**2 - 1)**2/8 + 1/2
-    assert lagrange_inversion((x ** 3) * exp(x), x, 1, 2) == (x**3*exp(x) - E)*exp(-1)/4 + 1
-    assert lagrange_inversion((x ** 3) * exp(x), x, 1, 3) == -13*(x**3*exp(x) - E)**2*exp(-2)/128 + (x**3*exp(x) - E)*exp(-1)/4 + 1
-    raises(ValueError, lambda: lagrange_inversion((x ** 3) * exp(x) * y, x, 1, 1))
-    assert lagrange_inversion(sin(x), x, 1, 2) == (sin(x) - sin(1))/cos(1) + 1
+    raises(ValueError, lambda: lagrange_inversion(x**2, y, 1, 1))
+    raises(ValueError, lambda: lagrange_inversion(x**2, x, 0, 1))
+    assert lagrange_inversion(x**2, x, 1, 1) == 1
+    assert simplify(lagrange_inversion(x**2, x, 1, 2) - (x**2 / 2 + 1 / 2)) == 0
+    assert (
+        simplify(
+            lagrange_inversion(x**2, x, 1, 3) - (x**2 / 2 - (x**2 - 1) ** 2 / 8 + 1 / 2)
+        )
+        == 0
+    )
+    assert (
+        simplify(
+            lagrange_inversion(x**2, x, 1, 4)
+            - (x**2 / 2 + (x**2 - 1) ** 3 / 16 - (x**2 - 1) ** 2 / 8 + 1 / 2)
+        )
+        == 0
+    )
+    assert (
+        simplify(
+            lagrange_inversion(x**3 * exp(x), x, 1, 2)
+            - ((x**3 * exp(x) - E) * exp(-1) / 4 + 1)
+        )
+        == 0
+    )
+    assert (
+        simplify(
+            lagrange_inversion(x**3 * exp(x), x, 1, 3)
+            - (
+                -13 * (x**3 * exp(x) - E) ** 2 * exp(-2) / 128
+                + (x**3 * exp(x) - E) * exp(-1) / 4
+                + 1
+            )
+        )
+        == 0
+    )
+    assert (
+        simplify(lagrange_inversion(sin(x), x, 1, 2) - ((sin(x) - sin(1)) / cos(1) + 1))
+        == 0
+    )
     raises(ValueError, lambda: lagrange_inversion(cos(y), x, 1, 1))
 
 def test_issue_7259():

@@ -176,18 +176,19 @@ def lagrange_inversion(expr, x, x0=0, n=3, dir="+"):
     w = sympify(expr)
 
     if not w.free_symbols:
-        raise ValueError("The expression provided has no free symbols.")
+        raise ValueError(f"{w} has no free symbols.")
 
     x = sympify(x)
 
     if x not in w.free_symbols:
-        raise ValueError("The variable provided does not match the expression variable.")
+        raise ValueError(f"Variable {x} not found in {w}.")
 
     x0 = sympify(x0)
 
     if diff(w, x).subs(x, x0) == 0:
-        raise ValueError("f'(a) = 0. Lagrange's inversion theorem requires "
-                         "that the derivative be non-zero at point 'x0'.")
+        raise ValueError(
+            f"Lagrange's inversion theorem requires that the derivative be non-zero at point the chosen 'x0', but f'({x0}) = 0."
+        )
 
     if n <= 0:
         return x0
