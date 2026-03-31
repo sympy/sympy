@@ -5,10 +5,10 @@ from sympy.core.expr import Expr
 from sympy.core.numbers import (I, Rational, nan, pi)
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
-from sympy.functions.elementary.complexes import (Abs, arg, im, re, sign)
-from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.complexes import (Abs, arg, im, re, sign, conjugate)
+from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.functions.elementary.trigonometric import (atan, atan2, cos, sin)
+from sympy.functions.elementary.trigonometric import (atan, atan2, cos, sin, asin, acos, acot, asec, acsc)
 from sympy.abc import w, x, y, z
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.piecewise import Piecewise
@@ -306,6 +306,51 @@ def test_floor_ceiling():
 
     assert refine(floor(floor(x)+ floor(y))) == floor(x) + floor(y)
     assert refine(ceiling(ceiling(x) - ceiling(y))) == ceiling(x) - ceiling(y)
+
+
+def test_conjugate():
+    n = Symbol('n')
+    assert refine(conjugate(x), Q.real(x)) == x
+    assert refine(conjugate(x), Q.imaginary(x)) == -x
+    assert refine(conjugate(x ** n), Q.real(x ** n)) == x ** n
+    assert refine(conjugate(x ** n), Q.imaginary(x ** n)) == -(x ** n)
+
+    z_is_on_branch_cut = Q.negative(z) | Q.zero(z)
+    assert refine(conjugate(log(z)), Q.complex(z) & ~z_is_on_branch_cut) == log(conjugate(z))
+    assert refine(conjugate(log(z)), Q.complex(z)) == conjugate(log(z))
+    assert refine(conjugate(log(x)), Q.real(x)) == conjugate(log(x))
+    assert refine(conjugate(log(x)), Q.nonpositive(x)) == conjugate(log(x))
+    assert refine(conjugate(log(x)), Q.nonnegative(x)) == conjugate(log(x))
+    assert refine(conjugate(log(x)), Q.positive(x)) == log(x)
+    assert refine(conjugate(log(x)), Q.negative(x)) == log(x) - 2 * I * pi
+
+    assert refine(conjugate(x ** n), Q.integer(n)) == conjugate(x ** n)
+    assert refine(conjugate(x ** n), ~Q.complex(x)) == conjugate(x ** n)
+
+    assert refine(conjugate(sqrt(x)), Q.complex(x) & ~Q.negative(x)) == sqrt(conjugate(x))
+    assert refine(conjugate(sqrt(x)), Q.real(x) & Q.negative(x)) == -sqrt(x)
+    assert refine(conjugate(sqrt(x)), Q.real(x)) == conjugate(sqrt(x))
+    assert refine(conjugate(sqrt(x)), Q.nonnegative(x)) == sqrt(x)
+
+    assert refine(conjugate(asin(x)), Q.real(x) & Q.ge(x, - 1) & Q.le(x,  1)) == asin(x)
+    assert refine(conjugate(acos(x)), Q.real(x) & Q.ge(x, - 1) & Q.le(x,  1)) == acos(x)
+    assert refine(conjugate(asin(x)), Q.real(x)) == conjugate(asin(x))
+    assert refine(conjugate(atan(x)), Q.real(x)) == atan(x)
+    assert refine(conjugate(acot(x)), Q.real(x)) == acot(x)
+    assert refine(conjugate(asin(x)), ~Q.real(x)) == asin(conjugate(x))
+    assert refine(conjugate(acos(x)), ~Q.real(x)) == acos(conjugate(x))
+    assert refine(conjugate(atan(x)), Q.imaginary(x)) == conjugate(atan(x))
+    assert refine(conjugate(acot(x)), Q.imaginary(x)) == conjugate(acot(x))
+    assert refine(conjugate(asec(x)), Q.real(x) & Q.le(x, - 1)) == asec(x)
+    assert refine(conjugate(asec(x)), Q.real(x) & Q.ge(x,  1)) == asec(x)
+    assert refine(conjugate(acsc(x)), Q.real(x) & Q.le(x, - 1)) == acsc(x)
+    assert refine(conjugate(acsc(x)), Q.real(x) & Q.ge(x,  1)) == acsc(x)
+    assert refine(conjugate(asec(x)), ~Q.real(x)) == asec(conjugate(x))
+    assert refine(conjugate(acsc(x)), ~Q.real(x)) == acsc(conjugate(x))
+    assert refine(conjugate(asec(x)), Q.real(x)) == conjugate(asec(x))
+    assert refine(conjugate(acsc(x)), Q.real(x)) == conjugate(acsc(x))
+    assert refine(conjugate(acos(I))) == acos(conjugate(I))
+    assert refine(conjugate(asin(I))) == asin(conjugate(I))
 
 
 def test_Heaviside():
