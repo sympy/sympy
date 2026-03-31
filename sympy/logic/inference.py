@@ -5,6 +5,10 @@ from sympy.logic.boolalg import And, Not, conjuncts, to_cnf, BooleanFunction, Bo
 from sympy.core.sorting import ordered
 from sympy.core.sympify import sympify
 from sympy.external.importtools import import_module
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from sympy.core.basic import Basic
 
 
 def literal_symbol(literal):
@@ -31,7 +35,7 @@ def literal_symbol(literal):
         raise ValueError("Argument must be a boolean literal.")
 
 
-def satisfiable(expr, algorithm=None, all_models=False, minimal=False, use_lra_theory=False):
+def satisfiable(expr:Boolean, algorithm=None, all_models=False, minimal=False, use_lra_theory=False) -> Any:
     """
     Check satisfiability of a propositional sentence.
     Returns a model when it succeeds.
@@ -118,7 +122,7 @@ def satisfiable(expr, algorithm=None, all_models=False, minimal=False, use_lra_t
     raise NotImplementedError
 
 
-def valid(expr) -> bool:
+def valid(expr:Boolean) -> bool:
     """
     Check validity of a propositional sentence.
     A valid propositional sentence is True under every assignment.
@@ -142,7 +146,7 @@ def valid(expr) -> bool:
     return not satisfiable(Not(expr))
 
 
-def pl_true(expr, model=None, deep=False) -> bool | None:
+def pl_true(expr:Boolean, model=None, deep=False) -> Boolean | bool | None:
     """
     Returns whether the given assignment is a model or not.
 
@@ -215,7 +219,7 @@ def pl_true(expr, model=None, deep=False) -> bool | None:
     return None
 
 
-def entails(expr, formula_set=None) -> bool:
+def entails(expr:Boolean, formula_set=None) -> bool:
     """
     Check whether the given expr_set entail an expr.
     If formula_set is empty then it returns the validity of expr.
@@ -251,7 +255,7 @@ def entails(expr, formula_set=None) -> bool:
 class KB:
     """Base class for all knowledge bases"""
     def __init__(self, sentence: Boolean|None = None) -> None:
-        self.clauses_ = set()
+        self.clauses_: set[Basic] = set()
         if sentence:
             self.tell(sentence)
 
