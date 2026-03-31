@@ -1243,7 +1243,7 @@ class Add(Expr, AssocOp):
         from .sorting import default_sort_key
         return tuple(sorted(self.args, key=default_sort_key))
 
-    def _eval_difference_delta(self, n: 'Symbol', step: Expr) -> Expr:
+    def _eval_difference_delta(self, n: Symbol, step: Expr) -> Expr:
         from sympy.series.limitseq import difference_delta as dd
         return self.func(*[dd(a, n, step) for a in self.args])
 
