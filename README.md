@@ -12,14 +12,14 @@
 [![SymPy Banner](https://github.com/sympy/sympy/raw/master/banner.svg)](https://sympy.org/)
 
 
-See the [AUTHORS](AUTHORS) file for the list of authors.
+See the [AUTHORS](https://github.com/sympy/sympy/blob/master/AUTHORS) file for the list of authors.
 
 And many more people helped on the SymPy mailing list, reported bugs,
 helped organize SymPy's participation in the Google Summer of Code, the
 Google Highly Open Participation Contest, Google Code-In, wrote and
 blogged about SymPy...
 
-License: New BSD License (see the [LICENSE](LICENSE) file for details) covers all
+License: New BSD License (see the [LICENSE](https://github.com/sympy/sympy/blob/master/LICENSE) file for details) covers all
 files in the sympy repository unless stated otherwise.
 
 Our mailing list is at
@@ -87,12 +87,6 @@ from this directory, if SymPy is not installed or simply:
 if SymPy is installed.
 
 ## Installation
-
-SymPy has a hard dependency on the [mpmath](http://mpmath.org/) library
-(version \>= 0.19). You should install it first, please refer to the
-mpmath installation guide:
-
-<https://github.com/fredrik-johansson/mpmath#1-download--installation>
 
 To install SymPy using PyPI, run the following command:
 

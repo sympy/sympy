@@ -3,13 +3,15 @@ Mathematica code printer
 """
 
 from __future__ import annotations
-from typing import Any
+from typing import Any, TYPE_CHECKING
 
-from sympy.core import Basic, Expr, Float
 from sympy.core.sorting import default_sort_key
 
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence
+
+if TYPE_CHECKING:
+    from sympy.core import Basic, Expr, Float
 
 # Used in MCodePrinter._print_Function(self)
 known_functions = {
@@ -27,7 +29,6 @@ known_functions = {
     "acot": [(lambda x: True, "ArcCot")],
     "asec": [(lambda x: True, "ArcSec")],
     "acsc": [(lambda x: True, "ArcCsc")],
-    "atan2": [(lambda *x: True, "ArcTan")],
     "sinh": [(lambda x: True, "Sinh")],
     "cosh": [(lambda x: True, "Cosh")],
     "tanh": [(lambda x: True, "Tanh")],
@@ -314,6 +315,10 @@ class MCodePrinter(CodePrinter):
         if len(expr.args) == 1:
             return "ProductLog[{}]".format(self._print(expr.args[0]))
         return "ProductLog[{}, {}]".format(
+            self._print(expr.args[1]), self._print(expr.args[0]))
+
+    def _print_atan2(self, expr):
+        return "ArcTan[{}, {}]".format(
             self._print(expr.args[1]), self._print(expr.args[0]))
 
     def _print_Integral(self, expr):

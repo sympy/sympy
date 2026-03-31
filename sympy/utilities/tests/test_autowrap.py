@@ -1,10 +1,12 @@
 # Tests that require installed backends go into
 # sympy/test_external/test_autowrap
+from __future__ import annotations
 
 import os
 import tempfile
 import shutil
 from io import StringIO
+from pathlib import Path
 
 from sympy.core import symbols, Eq
 from sympy.utilities.autowrap import (autowrap, binary_function,
@@ -113,8 +115,7 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
     setup_file_path = os.path.join(temp_dir, 'setup.py')
 
     code_gen._prepare_files(routine, build_dir=temp_dir)
-    with open(setup_file_path) as f:
-        setup_text = f.read()
+    setup_text = Path(setup_file_path).read_text()
     assert setup_text == expected
 
     code_gen = CythonCodeWrapper(CCodeGen(),
@@ -143,8 +144,7 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
 """ % {'num': CodeWrapper._module_counter}
 
     code_gen._prepare_files(routine, build_dir=temp_dir)
-    with open(setup_file_path) as f:
-        setup_text = f.read()
+    setup_text = Path(setup_file_path).read_text()
     assert setup_text == expected
 
     expected = """\
@@ -167,8 +167,7 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
 
     code_gen._need_numpy = True
     code_gen._prepare_files(routine, build_dir=temp_dir)
-    with open(setup_file_path) as f:
-        setup_text = f.read()
+    setup_text = Path(setup_file_path).read_text()
     assert setup_text == expected
 
     TmpFileManager.cleanup()

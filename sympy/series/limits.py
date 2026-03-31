@@ -1,7 +1,10 @@
+from __future__ import annotations
 from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.core import S, Symbol, Add, sympify, Expr, PoleError, Mul
 from sympy.core.exprtools import factor_terms
 from sympy.core.numbers import Float, _illegal
+from sympy.core.function import AppliedUndef
+from sympy.core.symbol import Dummy
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.complexes import (Abs, sign, arg, re)
 from sympy.functions.elementary.exponential import (exp, log)
@@ -77,7 +80,7 @@ def heuristics(e, z, z0, dir):
         rv = limit(e.subs(z, 1/z), z, S.Zero, "+")
         if isinstance(rv, Limit):
             return
-    elif e.is_Mul or e.is_Add or e.is_Pow or e.is_Function:
+    elif (e.is_Mul or e.is_Add or e.is_Pow or (e.is_Function and not isinstance(e, AppliedUndef))):
         r = []
         from sympy.simplify.simplify import together
         for a in e.args:
@@ -93,12 +96,9 @@ def heuristics(e, z, z0, dir):
                         return heuristics(m, z, z0, dir)
                     return
                 return
-            elif isinstance(l, Limit):
+            if isinstance(l, Limit) or l is S.NaN:
                 return
-            elif l is S.NaN:
-                return
-            else:
-                r.append(l)
+            r.append(l)
         if r:
             rv = e.func(*r)
             if rv is S.NaN and e.is_Mul and any(isinstance(rr, AccumBounds) for rr in r):
@@ -178,19 +178,18 @@ class Limit(Expr):
         return isyms
 
 
-    def pow_heuristics(self, e):
-        _, z, z0, _ = self.args
+    def pow_heuristics(self, e, z, z0, dir):
         b1, e1 = e.base, e.exp
         if not b1.has(z):
-            res = limit(e1*log(b1), z, z0)
+            res = limit(e1*log(b1), z, z0, dir=dir)
             return exp(res)
 
-        ex_lim = limit(e1, z, z0)
-        base_lim = limit(b1, z, z0)
+        ex_lim = limit(e1, z, z0, dir=dir)
+        base_lim = limit(b1, z, z0, dir=dir)
 
         if base_lim is S.One:
             if ex_lim in (S.Infinity, S.NegativeInfinity):
-                res = limit(e1*(b1 - 1), z, z0)
+                res = limit(e1*(b1 - 1), z, z0, dir=dir)
                 return exp(res)
         if base_lim is S.NegativeInfinity and ex_lim is S.Infinity:
             return S.ComplexInfinity
@@ -257,11 +256,11 @@ class Limit(Expr):
         if e.is_Order:
             return Order(limit(e.expr, z, z0), *e.args[1:])
 
-        cdir = 0
+        cdir = S.Zero
         if str(dir) == "+":
-            cdir = 1
+            cdir = S.One
         elif str(dir) == "-":
-            cdir = -1
+            cdir = S.NegativeOne
 
         def set_signs(expr):
             if not expr.args:
@@ -273,16 +272,20 @@ class Limit(Expr):
             arg_flag = isinstance(expr, arg)
             sign_flag = isinstance(expr, sign)
             if abs_flag or sign_flag or arg_flag:
-                sig = limit(expr.args[0], z, z0, dir)
-                if sig.is_zero:
-                    sig = limit(1/expr.args[0], z, z0, dir)
-                if sig.is_extended_real:
-                    if (sig < 0) == True:
-                        return (-expr.args[0] if abs_flag else
-                                S.NegativeOne if sign_flag else S.Pi)
-                    elif (sig > 0) == True:
-                        return (expr.args[0] if abs_flag else
-                                S.One if sign_flag else S.Zero)
+                try:
+                    sig = limit(expr.args[0], z, z0, dir)
+                    if sig.is_zero:
+                        sig = limit(1/expr.args[0], z, z0, dir)
+                except NotImplementedError:
+                    return expr
+                else:
+                    if sig.is_extended_real:
+                        if (sig < 0) == True:
+                            return (-expr.args[0] if abs_flag else
+                                    S.NegativeOne if sign_flag else S.Pi)
+                        elif (sig > 0) == True:
+                            return (expr.args[0] if abs_flag else
+                                    S.One if sign_flag else S.Zero)
             return expr
 
         if e.has(Float):
@@ -321,25 +324,28 @@ class Limit(Expr):
         if z0 is S.Infinity:
             if e.is_Mul:
                 e = factor_terms(e)
-            newe = e.subs(z, 1/z)
+            dummy = Dummy('z', positive=z.is_positive, negative=z.is_negative, real=z.is_real)
+            newe = e.subs(z, 1/dummy)
             # cdir changes sign as oo- should become 0+
             cdir = -cdir
+            newz = dummy
         else:
             newe = e.subs(z, z + z0)
+            newz = z
         try:
-            coeff, ex = newe.leadterm(z, cdir=cdir)
+            coeff, ex = newe.leadterm(newz, cdir=cdir)
         except (ValueError, NotImplementedError, PoleError):
             # The NotImplementedError catching is for custom functions
             from sympy.simplify.powsimp import powsimp
             e = powsimp(e)
             if e.is_Pow:
-                r = self.pow_heuristics(e)
+                r = self.pow_heuristics(e, z, z0, dir)
                 if r is not None:
                     return r
             try:
-                coeff = newe.as_leading_term(z, cdir=cdir)
+                coeff = newe.as_leading_term(newz, cdir=cdir)
                 if coeff != newe and (coeff.has(exp) or coeff.has(S.Exp1)):
-                    return gruntz(coeff, z, 0, "-" if re(cdir).is_negative else "+")
+                    return gruntz(coeff, newz, 0, "-" if re(cdir).is_negative else "+")
             except (ValueError, NotImplementedError, PoleError):
                 pass
         else:
@@ -347,7 +353,7 @@ class Limit(Expr):
                 return coeff
             if coeff.has(S.Infinity, S.NegativeInfinity, S.ComplexInfinity, S.NaN):
                 return self
-            if not coeff.has(z):
+            if not coeff.has(newz):
                 if ex.is_positive:
                     return S.Zero
                 elif ex == 0:
@@ -365,8 +371,8 @@ class Limit(Expr):
         # gruntz fails on factorials but works with the gamma function
         # If no factorial term is present, e should remain unchanged.
         # factorial is defined to be zero for negative inputs (which
-        # differs from gamma) so only rewrite for positive z0.
-        if z0.is_extended_positive:
+        # differs from gamma) so only rewrite for non-negative z0.
+        if z0.is_extended_nonnegative:
             e = e.rewrite(factorial, gamma)
 
         l = None

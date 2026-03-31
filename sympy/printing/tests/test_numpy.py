@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.concrete.summations import Sum
 from sympy.core.mod import Mod
 from sympy.core.relational import (Equality, Unequality)
@@ -6,11 +7,12 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.special.gamma_functions import polygamma
 from sympy.functions.special.error_functions import (Si, Ci)
+from sympy.matrices import Matrix
 from sympy.matrices.expressions.blockmatrix import BlockMatrix
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.matrices.expressions.special import Identity
 from sympy.utilities.lambdify import lambdify
-from sympy import symbols, Min, Max
+from sympy import symbols, Min, Max, Contains, S
 
 from sympy.abc import x, i, j, a, b, c, d
 from sympy.core import Pow
@@ -329,8 +331,23 @@ def test_jax_tuple_compatibility():
     assert np.allclose(func(*input_tuple2), func(*input_array2))
 
 def test_numpy_array():
-    assert NumPyPrinter().doprint(Array(((1, 2), (3, 5)))) == 'numpy.array([[1, 2], [3, 5]])'
-    assert NumPyPrinter().doprint(Array((1, 2))) == 'numpy.array((1, 2))'
+    p = NumPyPrinter()
+    assert p.doprint(Array([[1, 2], [3, 5]])) == 'numpy.array([[1, 2], [3, 5]])'
+    assert p.doprint(Array([1, 2])) == 'numpy.array([1, 2])'
+    assert p.doprint(Array([[[1, 2, 3]]])) == 'numpy.array([[[1, 2, 3]]])'
+    assert p.doprint(Array([], (0,))) == 'numpy.zeros((0,))'
+    assert p.doprint(Array([], (0, 0))) == 'numpy.zeros((0, 0))'
+    assert p.doprint(Array([], (0, 1))) == 'numpy.zeros((0, 1))'
+    assert p.doprint(Array([], (1, 0))) == 'numpy.zeros((1, 0))'
+    assert p.doprint(Array([1], ())) == 'numpy.array(1)'
+
+def test_numpy_matrix():
+    p = NumPyPrinter()
+    assert p.doprint(Matrix([[1, 2], [3, 5]])) == 'numpy.array([[1, 2], [3, 5]])'
+    assert p.doprint(Matrix([1, 2])) == 'numpy.array([[1], [2]])'
+    assert p.doprint(Matrix(0, 0, [])) == 'numpy.zeros((0, 0))'
+    assert p.doprint(Matrix(0, 1, [])) == 'numpy.zeros((0, 1))'
+    assert p.doprint(Matrix(1, 0, [])) == 'numpy.zeros((1, 0))'
 
 def test_numpy_known_funcs_consts():
     assert _numpy_known_constants['NaN'] == 'numpy.nan'
@@ -363,3 +380,14 @@ def test_scipy_print_methods():
     assert prntr.doprint(polygamma(k, x)) == "scipy.special.polygamma(k, x)"
     assert prntr.doprint(Si(x)) == "scipy.special.sici(x)[0]"
     assert prntr.doprint(Ci(x)) == "scipy.special.sici(x)[1]"
+
+def test_numpy_contains_integers():
+    if not np:
+        skip("NumPy not installed")
+
+    x = symbols('x')
+    f = lambdify(x, Contains(x, S.Integers), modules="numpy")
+    arr = np.array([1.0, 1.5, 2.0])
+    result = f(arr)
+    expected = np.array([True, False, True])
+    assert np.array_equal(result, expected)

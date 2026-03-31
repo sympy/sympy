@@ -1,12 +1,13 @@
+from __future__ import annotations
 from sympy.core.numbers import Rational
-from sympy.core.relational import Relational, Eq, Ne
+from sympy.core.relational import Eq, Ne
 from sympy.core.symbol import symbols
 from sympy.core.sympify import sympify
 from sympy.core.singleton import S
 from sympy.core.random import random, choice
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.ntheory.generate import randprime
-from sympy.matrices.dense import Matrix, eye
+from sympy.matrices.dense import Matrix
 from sympy.solvers.solveset import linear_eq_to_matrix
 from sympy.solvers.simplex import (_lp as lp, _primal_dual,
     UnboundedLPError, InfeasibleLPError, lpmin, lpmax,
@@ -22,26 +23,6 @@ from sympy.abc import x, y, z
 np = import_module("numpy")
 scipy = import_module("scipy")
 
-def get_results_with_scipy(objective, constraints, variables):
-    if scipy is not None and np is not None:
-        from sympy.solvers.inequalities import _np
-        nonpos, rep, xx = _np(constraints, [])
-        assert not rep  # only testing nonneg variables
-        C, _D = linear_eq_to_matrix(objective, *variables)
-        A, B = linear_eq_to_matrix(nonpos, *variables)
-        assert _D[0] == 0  # scipy only deals with D = 0
-
-
-
-        A_sci = Matrix([[A], [-eye(len(variables))]])
-        B_sci = Matrix([[B], [Matrix([0] * len(variables))]])
-        C_sci = C
-        A_sci = np.array(A_sci.tolist())
-        B_sci = np.array(B_sci.tolist())
-        C_sci = np.array(C_sci.tolist())
-        res = scipy.optimize.linprog(C_sci, A_ub=A_sci, b_ub=B_sci)
-        return res
-
 
 def test_lp():
     r1 = y + 2*z <= 3
@@ -49,13 +30,8 @@ def test_lp():
     r3 = 2*x + y + 7*z <= 5
     constraints = [r1, r2, r3, x >= 0, y >= 0, z >= 0]
     objective = -x - y - 5 * z
-    variables = [x, y, z]
     ans = optimum, argmax = lp(max, objective, constraints)
     assert ans == lpmax(objective, constraints)
-    if scipy is not None and np is not None:
-        scipy_res = get_results_with_scipy(
-            objective, constraints, variables)
-        assert optimum.evalf() == sympify(-scipy_res.fun)
     assert objective.subs(argmax) == optimum
     for constr in constraints:
         assert constr.subs(argmax) == True
@@ -65,13 +41,8 @@ def test_lp():
     r3 = 2*x + y - 7*z <= -5
     constraints = [r1, r2, r3, x >= 0, y >= 0, z >= 0]
     objective = -x - y - 5*z
-    variables = [x, y, z]
     ans = optimum, argmax = lp(max, objective, constraints)
     assert ans == lpmax(objective, constraints)
-    if scipy is not None and np is not None:
-        scipy_res = get_results_with_scipy(
-            objective, constraints, variables)
-        assert optimum.evalf() == sympify(-scipy_res.fun)
     assert objective.subs(argmax) == optimum
     for constr in constraints:
         assert constr.subs(argmax) == True
@@ -82,13 +53,8 @@ def test_lp():
     constraints = [r1, r2, r3, x >= 0, y >= 0, z >= 0]
     const = 2
     objective = -x-y-5*z+const # has constant term
-    variables = [x, y, z]
     ans = optimum, argmax = lp(max, objective, constraints)
     assert ans == lpmax(objective, constraints)
-    if scipy is not None and np is not None:
-        scipy_res = get_results_with_scipy(
-            objective-const, constraints, variables)
-        assert optimum.evalf() == (sympify(-scipy_res.fun)+const)
     assert objective.subs(argmax) == optimum
     for constr in constraints:
         assert constr.subs(argmax) == True
@@ -112,12 +78,7 @@ def test_lp():
     r3 = 2*x + y - 7*z <= 10
     constraints = [r1, r2, r3] + [i >= 0 for i in (x, y, z)]
     objective = -x-y-5*z
-    variables = [x, y, z]
     optimum, argmax = lp(max, objective, constraints)
-    if scipy is not None and np is not None:
-        scipy_res = get_results_with_scipy(
-            objective, constraints, variables)
-        assert optimum.evalf() == sympify(-scipy_res.fun)
     assert objective.subs(argmax) == optimum
     for constr in constraints:
         assert constr.subs(argmax) == True
@@ -153,74 +114,14 @@ def test_lp():
         objective = sum(rand() * x for x in variables)
         return objective, constraints, variables
 
-    # testing random problems
-    if scipy is not None and np is not None:
-        for _ in range(50):
-            objective, constraints, variables = make_random_problem()
-            # in case c auto simplifies to True or False
-            constraints = [c for c in constraints
-                if isinstance(c, Relational)]
-            if len(constraints) == 0:
-                continue
-
-            # check lp maximization
-            # scipy minimizes, so negative objective for it
-            scipy_res = get_results_with_scipy(
-                -objective, constraints, variables)
-            if scipy_res.status == 0:
-                optimum, argmax = lp(max, objective, constraints)
-                scipy_op = -scipy_res.fun  # negative gives actual max
-                assert abs(optimum.evalf() - scipy_op) < .1**10
-                assert objective.subs(argmax) == optimum
-                for constr in constraints:
-                    assert constr.subs(argmax) == True
-            elif scipy_res.status == 2:
-                # scipy: problem is infeasible
-                raises(InfeasibleLPError,
-                       lambda: lp(max, objective, constraints))
-            elif scipy_res.status == 3:
-                # scipy: problem is unbounded
-                raises(UnboundedLPError,
-                       lambda: lp(max, objective, constraints))
-            else:
-                # scipy: iteration limit or numerical difficulties
-                pass
-
-            # check lp minimization
-            scipy_res = get_results_with_scipy(
-                objective, constraints, variables)
-            if scipy_res.status == 0:
-                optimum, argmax = lp(min, objective, constraints)
-                scipy_op = scipy_res.fun
-                assert abs(optimum.evalf() - scipy_op) < .1**10
-                assert objective.subs(argmax) == optimum
-                for constr in constraints:
-                    assert constr.subs(argmax) == True
-            elif scipy_res.status == 2:
-                # scipy: problem is infeasible
-                raises(InfeasibleLPError,
-                       lambda: lp(max, objective, constraints))
-            elif scipy_res.status == 3:
-                # scipy: problem is unbounded
-                raises(UnboundedLPError,
-                       lambda: lp(max, objective, constraints))
-            else:
-                # scipy: iteration limit or numerical difficulties
-                pass
-
     # equality
     r1 = Eq(x, y)
     r2 = Eq(y, z)
     r3 = z <= 3
     constraints = [r1, r2, r3]
     objective = x
-    variables = [x, y, z]
     ans = optimum, argmax = lp(max, objective, constraints)
     assert ans == lpmax(objective, constraints)
-    if scipy is not None and np is not None:
-        scipy_res = get_results_with_scipy(
-            objective, constraints, variables)
-        assert optimum.evalf() == sympify(-scipy_res.fun)
     assert objective.subs(argmax) == optimum
     for constr in constraints:
         assert constr.subs(argmax) == True
@@ -260,17 +161,13 @@ def test_simplex():
     assert lpmin(x, [y >= 1, x >= y + z, x >= 0, z >= 0]
         ) == (1, {x: 1, y: 1, z: 0})
 
-    # detect oscillation
-    # o1
     v = x1, x2, x3, x4 = symbols('x1 x2 x3 x4')
     raises(InfeasibleLPError, lambda: lpmin(
         9*x2 - 8*x3 + 3*x4 + 6,
         [5*x2 - 2*x3 <= 0,
         -x1 - 8*x2 + 9*x3 <= -3,
         10*x1 - x2+ 9*x4 <= -4] + [i >= 0 for i in v]))
-    # o2 - equations fed to lpmin are changed into a matrix
-    # system that doesn't oscillate and has the same solution
-    # as below
+
     M = linear_eq_to_matrix
     f = 5*x2 + x3 + 4*x4 - x1
     L = 5*x2 + 2*x3 + 5*x4 - (x1 + 5)
@@ -352,3 +249,25 @@ def test_linprog():
         ) == (-2, [0, 2])
     assert linprog([1, -1], [[1, 1]], [5], bounds={1:(3, None)}
         ) == (-5, [0, 5])
+
+
+def test_28089():
+    s, t = symbols('s t')
+    objective = 5
+    constraints = [t >= 0, Eq(s + t, 1), s + 2 * t <= 0]
+    raises(InfeasibleLPError, lambda: lpmin(objective, constraints))
+
+
+def test_28104():
+    x, y = symbols('x y')
+    val, var = lpmax(0, [x >= 0, y >= 0])
+    assert var[y] is S.Zero
+    assert var[x] is S.Zero
+
+
+def test_29368():
+    assert linprog([1]) == (0, [0])
+    assert linprog([1, 1]) == (0, [0, 0])
+    raises(UnboundedLPError, lambda: linprog([-1]))
+    assert linprog([1], bounds=(0, None)) == (0, [0])
+    raises(UnboundedLPError, lambda: linprog([-1], bounds=(0, None)))

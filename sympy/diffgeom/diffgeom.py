@@ -882,7 +882,7 @@ class Point(Basic):
         """
         Coordinates of the point in given coordinate system. If coordinate system
         is not passed, it returns the coordinates in the coordinate system in which
-        the poin was defined.
+        the point was defined.
         """
         if sys is None:
             return self._coords
@@ -1122,10 +1122,7 @@ class BaseVectorField(Expr):
 def _find_coords(expr):
     # Finds CoordinateSystems existing in expr
     fields = expr.atoms(BaseScalarField, BaseVectorField)
-    result = set()
-    for f in fields:
-        result.add(f._coord_sys)
-    return result
+    return {f._coord_sys for f in fields}
 
 
 class Commutator(Expr):

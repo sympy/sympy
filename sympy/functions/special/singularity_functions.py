@@ -1,5 +1,6 @@
+from __future__ import annotations
 from sympy.core import S, oo, diff
-from sympy.core.function import Function, ArgumentIndexError
+from sympy.core.function import DefinedFunction, ArgumentIndexError
 from sympy.core.logic import fuzzy_not
 from sympy.core.relational import Eq
 from sympy.functions.elementary.complexes import im
@@ -11,7 +12,7 @@ from sympy.functions.special.delta_functions import Heaviside
 ###############################################################################
 
 
-class SingularityFunction(Function):
+class SingularityFunction(DefinedFunction):
     r"""
     Singularity functions are a class of discontinuous functions.
 
@@ -103,7 +104,7 @@ class SingularityFunction(Function):
 
         if argindex == 1:
             x, a, n = self.args
-            if n in (S.Zero, S.NegativeOne):
+            if n in (S.Zero, S.NegativeOne, S(-2), S(-3)):
                 return self.func(x, a, n-1)
             elif n.is_positive:
                 return n*self.func(x, a, n-1)
@@ -164,8 +165,8 @@ class SingularityFunction(Function):
             raise ValueError("Singularity Functions are not defined for imaginary exponents.")
         if shift is S.NaN or n is S.NaN:
             return S.NaN
-        if (n + 2).is_negative:
-            raise ValueError("Singularity Functions are not defined for exponents less than -2.")
+        if (n + 4).is_negative:
+            raise ValueError("Singularity Functions are not defined for exponents less than -4.")
         if shift.is_extended_negative:
             return S.Zero
         if n.is_nonnegative:
@@ -173,7 +174,7 @@ class SingularityFunction(Function):
                 return S.Zero**n
             if shift.is_extended_nonnegative:
                 return shift**n
-        if n in (S.NegativeOne, -2):
+        if n in (S.NegativeOne, -2, -3, -4):
             if shift.is_negative or shift.is_extended_positive:
                 return S.Zero
             if shift.is_zero:
@@ -186,7 +187,7 @@ class SingularityFunction(Function):
         '''
         x, a, n = self.args
 
-        if n in (S.NegativeOne, S(-2)):
+        if n in (S.NegativeOne, S(-2), S(-3), S(-4)):
             return Piecewise((oo, Eq(x - a, 0)), (0, True))
         elif n.is_nonnegative:
             return Piecewise(((x - a)**n, x - a >= 0), (0, True))
@@ -198,6 +199,10 @@ class SingularityFunction(Function):
         '''
         x, a, n = self.args
 
+        if n == -4:
+            return diff(Heaviside(x - a), x.free_symbols.pop(), 4)
+        if n == -3:
+            return diff(Heaviside(x - a), x.free_symbols.pop(), 3)
         if n == -2:
             return diff(Heaviside(x - a), x.free_symbols.pop(), 2)
         if n == -1:
@@ -205,7 +210,7 @@ class SingularityFunction(Function):
         if n.is_nonnegative:
             return (x - a)**n*Heaviside(x - a, 1)
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         z, a, n = self.args
         shift = (z - a).subs(x, 0)
         if n < 0:

@@ -10,6 +10,7 @@ are_coplanar
 are_similar
 
 """
+from __future__ import annotations
 
 from collections import deque
 from math import sqrt as _sqrt
@@ -25,11 +26,10 @@ from sympy.core.numbers import Float
 from sympy.core.sorting import ordered
 from sympy.core.symbol import Symbol
 from sympy.core.singleton import S
+from sympy.external.mpmath import prec_to_dps
 from sympy.polys.polytools import cancel
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.utilities.iterables import is_sequence
-
-from mpmath.libmp.libmpf import prec_to_dps
 
 
 def find(x, equation):
@@ -277,6 +277,8 @@ def centroid(*args):
                 c += g.centroid*a
                 A += a
             den = A
+        else:
+            return None
         c /= den
         return c.func(*[i.simplify() for i in c.args])
 
@@ -336,10 +338,9 @@ def closest_points(*args):
 
     rv = [(0, 1)]
     best_dist = hypot(p[1].x - p[0].x, p[1].y - p[0].y)
-    i = 2
     left = 0
     box = deque([0, 1])
-    while i < len(p):
+    for i in range(2, len(p)):
         while left < i and p[i][0] - p[left][0] > best_dist:
             box.popleft()
             left += 1
@@ -354,7 +355,6 @@ def closest_points(*args):
                 continue
             best_dist = d
         box.append(i)
-        i += 1
 
     return {tuple([p[i] for i in pair]) for pair in rv}
 

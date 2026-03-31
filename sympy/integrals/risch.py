@@ -23,13 +23,14 @@ which case it will just return a Poly in t, or in k(t), in which case it
 will return the fraction (fa, fd). Other variable names probably come
 from the names used in Bronstein's book.
 """
+from __future__ import annotations
 from types import GeneratorType
 from functools import reduce
 
 from sympy.core.function import Lambda
 from sympy.core.mul import Mul
 from sympy.core.intfunc import ilcm
-from sympy.core.numbers import I, oo
+from sympy.core.numbers import I
 from sympy.core.power import Pow
 from sympy.core.relational import Ne
 from sympy.core.singleton import S
@@ -43,7 +44,7 @@ from sympy.functions.elementary.trigonometric import (atan, sin, cos,
     tan, acot, cot, asin, acos)
 from .integrals import integrate, Integral
 from .heurisch import _symbols
-from sympy.polys.polyerrors import DomainError, PolynomialError
+from sympy.polys.polyerrors import PolynomialError
 from sympy.polys.polytools import (real_roots, cancel, Poly, gcd,
     reduced)
 from sympy.polys.rootoftools import RootSum
@@ -796,7 +797,7 @@ def gcdex_diophantine(a, b, c):
     """
     # Extended Euclidean Algorithm (Diophantine Version) pg. 13
     # TODO: This should go in densetools.py.
-    # XXX: Bettter name?
+    # XXX: Better name?
 
     s, g = a.half_gcdex(b)
     s *= c.exquo(g)  # Inexact division means c is not in (a, b)
@@ -860,26 +861,18 @@ def as_poly_1t(p, t, z):
         # Either way, if you see this (from the Risch Algorithm) it indicates
         # a bug.
         raise PolynomialError("%s is not an element of K[%s, 1/%s]." % (p, t, t))
-    d = pd.degree(t)
-    one_t_part = pa.slice(0, d + 1)
-    r = pd.degree() - pa.degree()
-    t_part = pa - one_t_part
-    try:
-        t_part = t_part.to_field().exquo(pd)
-    except DomainError as e:
-        # issue 4950
-        raise NotImplementedError(e)
-    # Compute the negative degree parts.
-    one_t_part = Poly.from_list(reversed(one_t_part.rep.to_list()), *one_t_part.gens,
-        domain=one_t_part.domain)
-    if 0 < r < oo:
-        one_t_part *= Poly(t**r, t)
 
-    one_t_part = one_t_part.replace(t, z)  # z will be 1/t
-    if pd.nth(d):
-        one_t_part *= Poly(1/pd.nth(d), z, expand=False)
-    ans = t_part.as_poly(t, z, expand=False) + one_t_part.as_poly(t, z,
-        expand=False)
+    t_part, remainder = pa.div(pd)
+
+    ans = t_part.as_poly(t, z, expand=False)
+
+    if remainder:
+        one = remainder.one
+        tp = t*one
+        r = pd.degree() - remainder.degree()
+        z_part = remainder.transform(one, tp) * tp**r
+        z_part = z_part.replace(t, z).to_field().quo_ground(pd.LC())
+        ans += z_part.as_poly(t, z, expand=False)
 
     return ans
 
@@ -1517,7 +1510,13 @@ def integrate_hyperexponential_polynomial(p, DE, z):
             except NonElementaryIntegralException:
                 b = False
             else:
-                qa = qa*vd + va*Poly(t1**i)*qd
+                # q += v*t**i
+                if i > 0:
+                    ti = Poly(t1**i, t1)
+                else:
+                    ti = Poly(z**-i, z)
+
+                qa = qa*vd + va*ti*qd
                 qd *= vd
 
     return (qa, qd, b)
@@ -1542,7 +1541,7 @@ def integrate_hyperexponential(a, d, DE, z=None, conds='piecewise'):
     """
     # XXX: a and d must be canceled, or this might return incorrect results
     z = z or Dummy("z")
-    s = list(zip(reversed(DE.T), reversed([f(DE.x) for f in DE.Tfuncs])))
+    s = [(z, DE.t**-1)] + list(zip(reversed(DE.T), reversed([f(DE.x) for f in DE.Tfuncs])))
 
     g1, h, r = hermite_reduce(a, d, DE)
     g2, b = residue_reduce(h[0], h[1], DE, z=z)

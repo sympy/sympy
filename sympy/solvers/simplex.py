@@ -15,7 +15,7 @@ indicate otherwise.
 
 Errors that might be raised are UnboundedLPError when there is no
 finite solution for the system or InfeasibleLPError when the
-constraints represent impossible conditions (i.e. a non-existant
+constraints represent impossible conditions (i.e. a non-existent
  simplex).
 
 Here is a simple 1-D system: minimize `x` given that ``x >= 1``.
@@ -60,6 +60,7 @@ Here is a simple 1-D system: minimize `x` given that ``x >= 1``.
     sympy.solvers.simplex.InfeasibleLPError:
     Inconsistent/False constraint
 """
+from __future__ import annotations
 
 from sympy.core import sympify
 from sympy.core.exprtools import factor_terms
@@ -76,7 +77,7 @@ from sympy.utilities.misc import filldedent
 
 class UnboundedLPError(Exception):
     """
-    A linear programing problem is said to be unbounded if its objective
+    A linear programming problem is said to be unbounded if its objective
     function can assume arbitrarily large values.
 
     Example
@@ -95,9 +96,9 @@ class UnboundedLPError(Exception):
 
 class InfeasibleLPError(Exception):
     """
-    A linear programing problem is considered infeasible if its
+    A linear programming problem is considered infeasible if its
     constraint set is empty. That is, if the set of all vectors
-    satisfying the contraints is empty, then the problem is infeasible.
+    satisfying the constraints is empty, then the problem is infeasible.
 
     Example
     =======
@@ -149,20 +150,8 @@ def _pivot(M, i, j):
 
 def _choose_pivot_row(A, B, candidate_rows, pivot_col, Y):
     # Choose row with smallest ratio
-    first_row = candidate_rows[0]
-    min_ratio = B[first_row] / A[first_row, pivot_col]
-    min_rows = [first_row]
-    for i in candidate_rows[1:]:
-        ratio = B[i] / A[i, pivot_col]
-        if ratio < min_ratio:
-            min_ratio = ratio
-            min_rows = [i]
-        elif ratio == min_ratio:
-            min_rows.append(i)
-
     # If there are ties, pick using Bland's rule
-    _, row = min((Y[i], i) for i in min_rows)
-    return row
+    return min(candidate_rows, key=lambda i: (B[i] / A[i, pivot_col], Y[i]))
 
 
 def _simplex(A, B, C, D=None, dual=False):
@@ -246,7 +235,7 @@ def _simplex(A, B, C, D=None, dual=False):
     >>> [i <= j for i, j in zip(a*y,b)]
     [2*y <= 1, y <= 1]
 
-    In this 1-dimensional dual system, the more restrictive contraint is
+    In this 1-dimensional dual system, the more restrictive constraint is
     the first which limits ``y`` between 0 and 1/2 and the maximum of
     ``F`` is attained at the nonzero value, hence is ``4*(1/2) + 1 = 3``.
 
@@ -310,9 +299,6 @@ def _simplex(A, B, C, D=None, dual=False):
 
     # Phase 1: find a feasible solution or determine none exist
 
-    ## keep track of last pivot row and column
-    last = None
-
     while True:
         B = M[:-1, -1]
         A = M[:-1, :-1]
@@ -335,31 +321,9 @@ def _simplex(A, B, C, D=None, dual=False):
         _, c = min((X[i], i) for i in piv_cols) # Bland's rule
 
         # Choose pivot row, r
-        piv_rows = [_ for _ in range(A.rows) if A[_, c] > 0 and B[_] > 0]
+        piv_rows = [_ for _ in range(A.rows) if A[_, c] > 0 and B[_] >= 0]
         piv_rows.append(k)
         r = _choose_pivot_row(A, B, piv_rows, c, Y)
-
-        # check for oscillation
-        if (r, c) == last:
-            # Not sure what to do here; it looks like there will be
-            # oscillations; see o1 test added at this commit to
-            # see a system with no solution and the o2 for one
-            # with a solution. In the case of o2, the solution
-            # from linprog is the same as the one from lpmin, but
-            # the matrices created in the lpmin case are different
-            # than those created without replacements in linprog and
-            # the matrices in the linprog case lead to oscillations.
-            # If the matrices could be re-written in linprog like
-            # lpmin does, this behavior could be avoided and then
-            # perhaps the oscillating case would only occur when
-            # there is no solution. For now, the output is checked
-            # before exit if oscillations were detected and an
-            # error is raised there if the solution was invalid.
-            #
-            # cf section 6 of Ferguson for a non-cycling modification
-            last = True
-            break
-        last = r, c
 
         M = _pivot(M, r, c)
         X[c], Y[r] = Y[r], X[c]
@@ -371,7 +335,6 @@ def _simplex(A, B, C, D=None, dual=False):
         C = M[-1, :-1]
 
         # Choose a pivot column, c
-        piv_cols = []
         piv_cols = [_ for _ in range(n) if C[_] < 0]
         if not piv_cols:
             break
@@ -393,21 +356,16 @@ def _simplex(A, B, C, D=None, dual=False):
 
     for i, (v, n) in enumerate(X):
         if v == False:
-            argmax[n] = 0
+            argmax[n] = S.Zero
         else:
             argmin_dual[n] = M[-1, i]
 
     for i, (v, n) in enumerate(Y):
         if v == True:
-            argmin_dual[n] = 0
+            argmin_dual[n] = S.Zero
         else:
             argmax[n] = M[i, -1]
 
-    if last and not all(i >= 0 for i in argmax + argmin_dual):
-        raise InfeasibleLPError(filldedent("""
-            Oscillating system led to invalid solution.
-            If you believe there was a valid solution, please
-            report this as a bug."""))
     return -M[-1, -1], argmax, argmin_dual
 
 
@@ -601,9 +559,9 @@ def _primal_dual(M, factor=True):
 def _rel_as_nonpos(constr, syms):
     """return `(np, d, aux)` where `np` is a list of nonpositive
     expressions that represent the given constraints (possibly
-    rewritten in terms of auxilliary variables) expressible with
+    rewritten in terms of auxiliary variables) expressible with
     nonnegative symbols, and `d` is a dictionary mapping a given
-    symbols to an expression with an auxilliary variable. In some
+    symbols to an expression with an auxiliary variable. In some
     cases a symbol will be used as part of the change of variables,
     e.g. x: x - z1 instead of x: z1 - z2.
 
@@ -632,8 +590,8 @@ def _rel_as_nonpos(constr, syms):
     """
     r = {}  # replacements to handle change of variables
     np = []  # nonpositive expressions
-    aux = []  # auxilliary symbols added
-    ui = numbered_symbols("z", start=1, cls=Dummy)  # auxilliary symbols
+    aux = []  # auxiliary symbols added
+    ui = numbered_symbols("z", start=1, cls=Dummy)  # auxiliary symbols
     univariate = {}  # {x: interval} for univariate constraints
     unbound = []  # symbols designated as unbound
     syms = set(syms)  # the expected syms of the system
@@ -671,7 +629,7 @@ def _rel_as_nonpos(constr, syms):
                 only equalities like Eq(x, y) or non-strict
                 inequalities like x >= y are allowed in lp, not %s""" % i))
 
-    # introduce auxilliary variables as needed for univariate
+    # introduce auxiliary variables as needed for univariate
     # inequalities
     for x in syms:
         i = univariate.get(x, True)
@@ -715,7 +673,7 @@ def _rel_as_nonpos(constr, syms):
 def _lp_matrices(objective, constraints):
     """return A, B, C, D, r, x+X, X for maximizing
     objective = Cx - D with constraints Ax <= B, introducing
-    introducing auxilliary variables, X, as necessary to make
+    introducing auxiliary variables, X, as necessary to make
     replacements of symbols as given in r, {xi: expression with Xj},
     so all variables in x+X will take on nonnegative values.
 
@@ -811,7 +769,7 @@ def _lp(min_max, f, constr):
 
     # restore original variables and remove aux from p
     p = dict(zip(xx, p))
-    if r:  # p has original symbols and auxilliary symbols
+    if r:  # p has original symbols and auxiliary symbols
         # if r has x: x - z1 use values from p to update
         r = {k: v.xreplace(p) for k, v in r.items()}
         # then use the actual value of x (= x - z1) in p
@@ -840,7 +798,7 @@ def lpmin(f, constr):
     (1/3, {x: 1/3, y: 5/9})
 
     Negative values for variables are permitted unless explicitly
-    exluding, so minimizing ``x`` for ``x <= 3`` is an
+    excluding, so minimizing ``x`` for ``x <= 3`` is an
     unbounded problem while the following has a bounded solution:
 
     >>> lpmin(x, [x >= 0, x <= 3])
@@ -878,7 +836,7 @@ def lpmax(f, constr):
     (4/5, {x: 4/5, y: 2/5})
 
     Negative values for variables are permitted unless explicitly
-    exluding:
+    excluding:
 
     >>> lpmax(x, [x <= -1])
     (-1, {x: -1})
@@ -899,87 +857,56 @@ def lpmax(f, constr):
 
 
 def _handle_bounds(bounds):
-    # introduce auxilliary variables as needed for univariate
+    # introduce auxiliary variables as needed for univariate
     # inequalities
 
+    def _make_list(length: int, index_value_pairs):
+        li = [0] * length
+        for idx, val in index_value_pairs:
+            li[idx] = val
+        return li
+
     unbound = []
-    R = [0] * len(bounds)  # a (growing) row of zeros
-
-    def n():
-        return len(R) - 1
-
-    def Arow(inc=1):
-        R.extend([0] * inc)
-        return R[:]
-
     row = []
+    row2 = []
+    b_len = len(bounds)
     for x, (a, b) in enumerate(bounds):
         if a is None and b is None:
             unbound.append(x)
         elif a is None:
             # r[x] = b - u
-            A = Arow()
-            A[x] = 1
-            A[n()] = 1
-            B = [b]
-            row.append((A, B))
-            A = [0] * len(A)
-            A[x] = -1
-            A[n()] = -1
-            B = [-b]
-            row.append((A, B))
+            b_len += 1
+            row.append(_make_list(b_len, [(x, 1), (-1, 1)]))
+            row.append(_make_list(b_len, [(x, -1), (-1, -1)]))
+            row2.extend([[b], [-b]])
         elif b is None:
             if a:
                 # r[x] = a + u
-                A = Arow()
-                A[x] = 1
-                A[n()] = -1
-                B = [a]
-                row.append((A, B))
-                A = [0] * len(A)
-                A[x] = -1
-                A[n()] = 1
-                B = [-a]
-                row.append((A, B))
+                b_len += 1
+                row.append(_make_list(b_len, [(x, 1), (-1, -1)]))
+                row.append(_make_list(b_len, [(x, -1), (-1, 1)]))
+                row2.extend([[a], [-a]])
             else:
                 # standard nonnegative relationship
                 pass
         else:
             # r[x] = u + a
-            A = Arow()
-            A[x] = 1
-            A[n()] = -1
-            B = [a]
-            row.append((A, B))
-            A = [0] * len(A)
-            A[x] = -1
-            A[n()] = 1
-            B = [-a]
-            row.append((A, B))
+            b_len += 1
+            row.append(_make_list(b_len, [(x, 1), (-1, -1)]))
+            row.append(_make_list(b_len, [(x, -1), (-1, 1)]))
             # u <= b - a
-            A = [0] * len(A)
-            A[x] = 0
-            A[n()] = 1
-            B = [b - a]
-            row.append((A, B))
+            row.append(_make_list(b_len, [(-1, 1)]))
+            row2.extend([[a], [-a], [b - a]])
 
     # make change of variables for unbound variables
     for x in unbound:
         # r[x] = u - v
-        A = Arow(2)
-        B = [0]
-        A[x] = 1
-        A[n()] = 1
-        A[n() - 1] = -1
-        row.append((A, B))
-        A = [0] * len(A)
-        A[x] = -1
-        A[n()] = -1
-        A[n() - 1] = 1
-        row.append((A, B))
+        b_len += 2
+        row.append(_make_list(b_len, [(x, 1), (-1, 1), (-2, -1)]))
+        row.append(_make_list(b_len, [(x, -1), (-1, -1), (-2, 1)]))
+        row2.extend([[0], [0]])
 
-    return Matrix([r+[0]*(len(R) - len(r)) for r,_ in row]
-        ), Matrix([i[1] for i in row])
+    return Matrix([r + [0]*(b_len - len(r)) for r in row]), Matrix(row2)
 
 
 def linprog(c, A=None, b=None, A_eq=None, b_eq=None, bounds=None):
@@ -1038,7 +965,7 @@ def linprog(c, A=None, b=None, A_eq=None, b_eq=None, bounds=None):
             raise ValueError("A and b must both be given")
         # the governing equations will be simple constraints
         # on variables
-        A, b = zeros(0, C.cols), zeros(C.cols, 1)
+        A, b = zeros(0, C.cols), zeros(0, 1)
     else:
         A, b = [Matrix(i) for i in (A, b)]
 
@@ -1047,7 +974,7 @@ def linprog(c, A=None, b=None, A_eq=None, b_eq=None, bounds=None):
 
     ## the equalities
     if A_eq is None:
-        if not b_eq is None:
+        if b_eq is not None:
             raise ValueError("A_eq and b_eq must both be given")
     else:
         A_eq, b_eq = [Matrix(i) for i in (A_eq, b_eq)]
@@ -1114,7 +1041,7 @@ def show_linprog(c, A=None, b=None, A_eq=None, b_eq=None, bounds=None):
 
     ## the equalities
     if A_eq is None:
-        if not b_eq is None:
+        if b_eq is not None:
             raise ValueError("A_eq and b_eq must both be given")
     else:
         A_eq, b_eq = [Matrix(i) for i in (A_eq, b_eq)]
@@ -1141,13 +1068,8 @@ def show_linprog(c, A=None, b=None, A_eq=None, b_eq=None, bounds=None):
     x = Matrix(symbols('x1:%s' % (A.cols+1)))
     f,c = (C*x)[0], [i<=j for i,j in zip(A*x, b)] + [Eq(i,j) for i,j in zip(A_eq*x,b_eq)]
     for i, (lo, hi) in enumerate(bounds):
-        if lo is None and hi is None:
-            continue
-        if lo is None:
-            c.append(x[i]<=hi)
-        elif hi is None:
+        if lo is not None:
             c.append(x[i]>=lo)
-        else:
-            c.append(x[i]>=lo)
+        if hi is not None:
             c.append(x[i]<=hi)
     return f,c

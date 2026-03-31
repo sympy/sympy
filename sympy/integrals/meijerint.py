@@ -32,7 +32,6 @@ import itertools
 from sympy import SYMPY_DEBUG
 from sympy.core import S, Expr
 from sympy.core.add import Add
-from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
 from sympy.core.containers import Tuple
 from sympy.core.exprtools import factor_terms
@@ -295,6 +294,10 @@ def _create_lookup_table(table):
 ####################################################################
 
 from sympy.utilities.timeutils import timethis
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from sympy.core.basic import Basic
 timeit = timethis('meijerg')
 
 
@@ -568,6 +571,7 @@ def _inflate_fox_h(g, a):
     bs = [(n + 1)/p for n in range(p)]
     return D, meijerg(g.an, g.aother, g.bm, list(g.bother) + bs, z)
 
+
 _dummies: dict[tuple[str, str], Dummy]  = {}
 
 
@@ -588,7 +592,6 @@ def _dummy_(name, token, **kwargs):
     Return a dummy associated to name and token. Same effect as declaring
     it globally.
     """
-    global _dummies
     if not (name, token) in _dummies:
         _dummies[(name, token)] = Dummy(name, **kwargs)
     return _dummies[(name, token)]

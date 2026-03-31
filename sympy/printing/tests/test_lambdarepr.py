@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.concrete.summations import Sum
 from sympy.core.expr import Expr
 from sympy.core.symbol import symbols
@@ -181,7 +182,7 @@ def test_multiple_sums():
     s = Sum(i * x + j, (i, a, b), (j, c, d))
 
     l = lambdarepr(s)
-    assert l == "(builtins.sum(i*x + j for i in range(a, b+1) for j in range(c, d+1)))"
+    assert l == "(builtins.sum(i*x + j for j in range(c, d+1) for i in range(a, b+1)))"
 
     args = x, a, b, c, d
     f = lambdify(args, s)

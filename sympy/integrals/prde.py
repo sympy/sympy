@@ -14,10 +14,11 @@ right hand side of the equation (i.e., gi in k(t)), and Q is a list of terms on
 the right hand side of the equation (i.e., qi in k[t]).  See the docstring of
 each function for more information.
 """
+from __future__ import annotations
 import itertools
 from functools import reduce
 
-from sympy.core.intfunc import ilcm
+from sympy.core.intfunc import ilcm, igcd
 from sympy.core import Dummy, Add, Mul, Pow, S
 from sympy.integrals.rde import (order_at, order_at_oo, weak_normalizer,
     bound_degree)
@@ -127,7 +128,7 @@ def prde_special_denom(a, ba, bd, G, DE, case='auto'):
             "'base'}, not %s." % case)
 
     nb = order_at(ba, p, DE.t) - order_at(bd, p, DE.t)
-    nc = min([order_at(Ga, p, DE.t) - order_at(Gd, p, DE.t) for Ga, Gd in G])
+    nc = min(order_at(Ga, p, DE.t) - order_at(Gd, p, DE.t) for Ga, Gd in G)
     n = min(0, nc - min(0, nb))
     if not nb:
         # Possible cancellation.
@@ -346,7 +347,7 @@ def prde_no_cancel_b_large(b, Q, n, DE):
     if all(qi.is_zero for qi in Q):
         dc = -1
     else:
-        dc = max([qi.degree(DE.t) for qi in Q])
+        dc = max(qi.degree(DE.t) for qi in Q)
     M = Matrix(dc + 1, m, lambda i, j: Q[j].nth(i), DE.t)
     A, u = constant_system(M, zeros(dc + 1, 1, DE.t), DE)
     c = eye(m, DE.t)
@@ -386,7 +387,7 @@ def prde_no_cancel_b_small(b, Q, n, DE):
         if all(qi.is_zero for qi in Q):
             dc = -1
         else:
-            dc = max([qi.degree(DE.t) for qi in Q])
+            dc = max(qi.degree(DE.t) for qi in Q)
         M = Matrix(dc + 1, m, lambda i, j: Q[j].nth(i), DE.t)
         A, u = constant_system(M, zeros(dc + 1, 1, DE.t), DE)
         c = eye(m, DE.t)
@@ -430,7 +431,7 @@ def prde_no_cancel_b_small(b, Q, n, DE):
         # There are no constraints on d1.
 
     # Coefficients of t^j (j > 0) in Sum(ci*qi) must be zero.
-    d = max([qi.degree(DE.t) for qi in Q])
+    d = max(qi.degree(DE.t) for qi in Q)
     if d > 0:
         M = Matrix(d, m, lambda i, j: Q[j].nth(i + 1), DE.t)
         A, _ = constant_system(M, zeros(d, 1, DE.t), DE)
@@ -524,7 +525,7 @@ def param_poly_rischDE(a, b, q, n, DE):
         if all(qi.is_zero for qi in q):
             return [], zeros(1, m, DE.t)  # No constraints.
 
-        N = max([qi.degree(DE.t) for qi in q])
+        N = max(qi.degree(DE.t) for qi in q)
         M = Matrix(N + 1, m, lambda i, j: q[j].nth(i), DE.t)
         A, _ = constant_system(M, zeros(M.rows, 1, DE.t), DE)
 
@@ -533,7 +534,7 @@ def param_poly_rischDE(a, b, q, n, DE):
     if a.is_ground:
         # Normalization: a = 1.
         a = a.LC()
-        b, q = b.quo_ground(a), [qi.quo_ground(a) for qi in q]
+        b, q = b.to_field().exquo_ground(a), [qi.to_field().exquo_ground(a) for qi in q]
 
         if not b.is_zero and (DE.case == 'base' or
                 b.degree() > max(0, DE.d.degree() - 1)):
@@ -812,8 +813,8 @@ def limited_integrate_reduce(fa, fd, G, DE):
         hs = reduce(lambda i, j: i.lcm(j), (ds,) + Es)  # lcm(ds, es1, ..., esm)
         a = hn*hs
         b -= (hn*derivation(hs, DE)).quo(hs)
-        mu = min(order_at_oo(fa, fd, DE.t), min([order_at_oo(ga, gd, DE.t) for
-            ga, gd in G]))
+        mu = min(order_at_oo(fa, fd, DE.t), min(order_at_oo(ga, gd, DE.t) for
+            ga, gd in G))
         # So far, all the above are also nonlinear or Liouvillian, but if this
         # changes, then this will need to be updated to call bound_degree()
         # as per the docstring of this function (DE.case == 'other_linear').
@@ -849,8 +850,8 @@ def limited_integrate(fa, fd, G, DE):
         r = len(h)
         m = len(v) - r - 1
         C = list(v[1: m + 1])
-        y = -sum([v[m + 1 + i]*h[i][0].as_expr()/h[i][1].as_expr() \
-                for i in range(r)])
+        y = -sum(v[m + 1 + i]*h[i][0].as_expr()/h[i][1].as_expr() \
+                for i in range(r))
         y_num, y_den = y.as_numer_denom()
         Ya, Yd = Poly(y_num, DE.t), Poly(y_den, DE.t)
         Y = Ya*Poly(1/Yd.LC(), DE.t), Yd.monic()
@@ -875,6 +876,31 @@ def parametric_log_deriv_heu(fa, fd, wa, wd, DE, c1=None):
 
     The argument w == Dtheta/theta
     """
+    # Note: ideally the code here should let n = 1 whenever possible, as the
+    # check in special_denom() only succeeds in that case.
+
+    # Special case when f and w are rational numbers (not in the book, but
+    # this fails this heuristic and comes up often enough to add here). In
+    # this case, we can set z = 0.
+    f = fa.as_expr()/fd.as_expr()
+    w = wa.as_expr()/wd.as_expr()
+    if f.is_Rational and w.is_Rational:
+        # solve n*x = m*y in integers, i.e., n=y, m=x (after dividing through
+        # by gcd(x, y))
+        x = f.p*w.q
+        y = w.p*f.q
+        g = igcd(x, y)
+        x //=g
+        y //=g
+        n = y
+        m = x
+        if n == 0:
+            return None
+        if n < 0:
+            n = -n
+            m = -m
+        return (n, m, Poly(1, DE.t))
+
     # TODO: finish writing this and write tests
     c1 = c1 or Dummy('c1')
 
@@ -917,7 +943,7 @@ def parametric_log_deriv_heu(fa, fd, wa, wd, DE, c1=None):
     ln, ls = splitfactor(l, DE)
     z = ls*ln.gcd(ln.diff(DE.t))
 
-    if not z.has(DE.t):
+    if z.degree(DE.t) < 1:
         # TODO: We treat this as 'no solution', until the structure
         # theorem version of parametric_log_deriv is implemented.
         return None

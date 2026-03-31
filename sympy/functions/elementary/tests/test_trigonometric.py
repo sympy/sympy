@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.core.add import Add
 from sympy.core.function import (Lambda, diff)
@@ -260,6 +261,12 @@ def test_sin_AccumBounds():
 def test_sin_fdiff():
     assert sin(x).fdiff() == cos(x)
     raises(ArgumentIndexError, lambda: sin(x).fdiff(2))
+    assert sin(x).diff((x, 0)) == sin(x)
+    assert sin(x).diff((x, 1)) == cos(x)
+    assert sin(x).diff((x, 2)) == -sin(x)
+    assert sin(x).diff((x, 3)) == -cos(x)
+    t = Symbol('t', integer=True, nonnegative=True)
+    assert sin(x).diff((x, t)) == sin(x + t*pi/2)
 
 
 def test_trig_symmetry():
@@ -478,6 +485,12 @@ def test_cos_AccumBounds():
 def test_cos_fdiff():
     assert cos(x).fdiff() == -sin(x)
     raises(ArgumentIndexError, lambda: cos(x).fdiff(2))
+    assert cos(x).diff((x, 0)) == cos(x)
+    assert cos(x).diff((x, 1)) == -sin(x)
+    assert cos(x).diff((x, 2)) == -cos(x)
+    assert cos(x).diff((x, 3)) == sin(x)
+    t = Symbol('t', integer=True, nonnegative=True)
+    assert cos(x).diff((x, t)) == cos(x + t*pi/2)
 
 
 def test_tan():
@@ -1001,10 +1014,13 @@ def test_acos():
     assert acos(-sqrt(2)/2) == pi*Rational(3, 4)
 
     # check round-trip for exact values:
-    for d in [5, 6, 8, 10, 12]:
+    for d in range(5, 13):
         for num in range(d):
             if gcd(num, d) == 1:
                 assert acos(cos(num*pi/d)) == num*pi/d
+                assert acos(-cos(num*pi/d)) == pi - num*pi/d
+                assert acos(sin(num*pi/d)) == pi/2 - asin(sin(num*pi/d))
+                assert acos(-sin(num*pi/d)) == pi/2 - asin(-sin(num*pi/d))
 
     assert acos(2*I) == pi/2 - asin(2*I)
 
@@ -1077,7 +1093,7 @@ def test_atan():
     assert atan.nargs == FiniteSet(1)
     assert atan(oo) == pi/2
     assert atan(-oo) == -pi/2
-    assert atan(zoo) == AccumBounds(-pi/2, pi/2)
+    assert unchanged(atan, zoo)
 
     assert atan(0) == 0
     assert atan(1) == pi/4
@@ -1544,14 +1560,6 @@ def test_real_imag():
         assert cot(a).as_real_imag(deep=deep) == (cot(a), 0)
 
 
-@XFAIL
-def test_sin_cos_with_infinity():
-    # Test for issue 5196
-    # https://github.com/sympy/sympy/issues/5196
-    assert sin(oo) is S.NaN
-    assert cos(oo) is S.NaN
-
-
 @slow
 def test_sincos_rewrite_sqrt():
     # equivalent to testing rewrite(pow)
@@ -1690,7 +1698,7 @@ def test_sec():
     assert sec(2*x).expand(trig=True) == 1/(2*cos(x)**2 - 1)
 
     assert sec(x).is_extended_real == True
-    assert sec(z).is_real == None
+    assert sec(z).is_real is None
 
     assert sec(a).is_algebraic is None
     assert sec(na).is_algebraic is False
@@ -1698,7 +1706,7 @@ def test_sec():
     assert sec(x).as_leading_term() == sec(x)
 
     assert sec(0, evaluate=False).is_finite == True
-    assert sec(x).is_finite == None
+    assert sec(x).is_finite is None
     assert sec(pi/2, evaluate=False).is_finite == False
 
     assert series(sec(x), x, x0=0, n=6) == 1 + x**2/2 + 5*x**4/24 + O(x**6)
@@ -1782,7 +1790,7 @@ def test_csc():
     assert csc(2*x).expand(trig=True) == 1/(2*sin(x)*cos(x))
 
     assert csc(x).is_extended_real == True
-    assert csc(z).is_real == None
+    assert csc(z).is_real is None
 
     assert csc(a).is_algebraic is None
     assert csc(na).is_algebraic is False
@@ -1790,7 +1798,7 @@ def test_csc():
     assert csc(x).as_leading_term() == csc(x)
 
     assert csc(0, evaluate=False).is_finite == False
-    assert csc(x).is_finite == None
+    assert csc(x).is_finite is None
     assert csc(pi/2, evaluate=False).is_finite == True
 
     assert series(csc(x), x, x0=pi/2, n=6) == \
@@ -1824,6 +1832,14 @@ def test_asec():
     assert asec(sqrt(2 + 2*sqrt(5)/5)) == pi*Rational(3, 10)
     assert asec(-sqrt(2 + 2*sqrt(5)/5)) == pi*Rational(7, 10)
     assert asec(sqrt(2) - sqrt(6)) == pi*Rational(11, 12)
+
+    for d in [3, 4, 6]:
+        for num in range(d):
+            if gcd(num, d) == 1:
+                assert asec(sec(num*pi/d)) == num*pi/d
+                assert asec(-sec(num*pi/d)) == pi - num*pi/d
+                assert asec(csc(num*pi/d)) == pi/2 - acsc(csc(num*pi/d))
+                assert asec(-csc(num*pi/d)) == pi/2 - acsc(-csc(num*pi/d))
 
     assert asec(x).diff(x) == 1/(x**2*sqrt(1 - 1/x**2))
 

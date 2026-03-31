@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.combinatorics import Permutation as Perm
 from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy.core import Basic, Tuple, default_sort_key
@@ -687,7 +688,7 @@ def _pgroup_calcs():
                         range(len(ordered_faces))))
         flat_faces = flatten(ordered_faces)
         new_pgroup = []
-        for i, p in enumerate(pgroup):
+        for p in pgroup:
             h = polyh.copy()
             h.rotate(p)
             c = h.corners

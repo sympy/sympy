@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.assumptions.assume import global_assumptions
 from sympy.assumptions.cnf import CNF, EncodedCNF
 from sympy.assumptions.ask import Q
@@ -219,8 +220,7 @@ def get_all_pred_and_expr_from_enc_cnf(enc_cnf):
     for pred in enc_cnf.encoding.keys():
         if isinstance(pred, AppliedPredicate):
             all_pred.add(pred)
-            for expr in pred.arguments:
-                all_exprs.add(expr)
+            all_exprs.update(pred.arguments)
 
     return all_pred, all_exprs
 

@@ -47,6 +47,7 @@ known_functions_C89 = {
     "atan2": "atan2",
     "exp": "exp",
     "log": "log",
+    "log10": "log10",
     "sinh": "sinh",
     "cosh": "cosh",
     "tanh": "tanh",
@@ -58,7 +59,6 @@ known_functions_C89 = {
 known_functions_C99 = dict(known_functions_C89, **{
     'exp2': 'exp2',
     'expm1': 'expm1',
-    'log10': 'log10',
     'log2': 'log2',
     'log1p': 'log1p',
     'Cbrt': 'cbrt',
@@ -327,12 +327,9 @@ class C89CodePrinter(CodePrinter):
                 temp += (shift,)
                 shift *= dims[i]
             strides = temp
-        flat_index = sum([x[0]*x[1] for x in zip(indices, strides)]) + offset
+        flat_index = sum(x[0]*x[1] for x in zip(indices, strides)) + offset
         return "%s[%s]" % (self._print(expr.base.label),
                            self._print(flat_index))
-
-    def _print_Idx(self, expr):
-        return self._print(expr.label)
 
     @_as_macro_if_defined
     def _print_NumberSymbol(self, expr):
@@ -509,7 +506,8 @@ class C89CodePrinter(CodePrinter):
             )
         else:
             raise NotImplementedError("Unknown type of var: %s" % type(var))
-        if val != None: # Must be "!= None", cannot be "is not None"
+        # Must be "!= None", cannot be "is not None"
+        if val != None:  # noqa: E711
             result += ' = %s' % self._print(val)
         return result
 
@@ -535,13 +533,16 @@ class C89CodePrinter(CodePrinter):
         return 'false'
 
     def _print_Element(self, elem):
-        if elem.strides == None: # Must be "== None", cannot be "is None"
-            if elem.offset != None: # Must be "!= None", cannot be "is not None"
+        # Must be "== None", cannot be "is None"
+        if elem.strides == None:  # noqa: E711
+            # Must be "!= None", cannot be "is not None"
+            if elem.offset != None:  # noqa: E711
                 raise ValueError("Expected strides when offset is given")
             idxs = ']['.join((self._print(arg) for arg in elem.indices))
         else:
-            global_idx = sum([i*s for i, s in zip(elem.indices, elem.strides)])
-            if elem.offset != None: # Must be "!= None", cannot be "is not None"
+            global_idx = sum(i*s for i, s in zip(elem.indices, elem.strides))
+            # Must be "!= None", cannot be "is not None"
+            if elem.offset != None:  # noqa: E711
                 global_idx += elem.offset
             idxs = self._print(global_idx)
 

@@ -1,4 +1,5 @@
-from sympy import zeros, Matrix, diff, eye
+from __future__ import annotations
+from sympy import zeros, Matrix, diff, eye, linear_eq_to_matrix
 from sympy.core.sorting import default_sort_key
 from sympy.physics.vector import (ReferenceFrame, dynamicsymbols,
                                   partial_velocity)
@@ -11,6 +12,7 @@ from sympy.physics.mechanics.functions import (msubs, find_dynamicsymbols,
                                                _parse_linear_solver)
 from sympy.physics.mechanics.linearize import Linearizer
 from sympy.utilities.iterables import iterable
+
 
 __all__ = ['KanesMethod']
 
@@ -160,10 +162,10 @@ class KanesMethod(_Methods):
         >>> P.set_vel(N, u * N.x)
 
     Next we need to arrange/store information in the way that KanesMethod
-    requires.  The kinematic differential equations need to be stored in a
-    dict.  A list of forces/torques must be constructed, where each entry in
-    the list is a (Point, Vector) or (ReferenceFrame, Vector) tuple, where the
-    Vectors represent the Force or Torque.
+    requires. The kinematic differential equations should be an iterable of
+    expressions. A list of forces/torques must be constructed, where each entry
+    in the list is a (Point, Vector) or (ReferenceFrame, Vector) tuple, where
+    the Vectors represent the Force or Torque.
     Next a particle needs to be created, and it needs to have a point and mass
     assigned to it.
     Finally, a list of all bodies and particles needs to be created.
@@ -227,7 +229,7 @@ class KanesMethod(_Methods):
         self._bodylist = bodies
 
         self.explicit_kinematics = explicit_kinematics
-
+        self._constraint_solver = constraint_solver
         self._initialize_vectors(q_ind, q_dependent, u_ind, u_dependent,
                 u_auxiliary)
         _validate_coordinates(self.q, self.u)
@@ -290,8 +292,6 @@ class KanesMethod(_Methods):
             raise ValueError('There must be an equal number of dependent '
                              'speeds and acceleration constraints.')
         if vel:
-            u_zero = dict.fromkeys(self.u, 0)
-            udot_zero = dict.fromkeys(self._udot, 0)
 
             # When calling kanes_equations, another class instance will be
             # created if auxiliary u's are present. In this case, the
@@ -300,13 +300,13 @@ class KanesMethod(_Methods):
             # object, and the qd_u_map will not be available.
             if self._qdot_u_map is not None:
                 vel = msubs(vel, self._qdot_u_map)
+            self._k_nh, f_nh_neg = linear_eq_to_matrix(vel, self.u[:])
+            self._f_nh = -f_nh_neg
 
-            self._f_nh = msubs(vel, u_zero)
-            self._k_nh = (vel - self._f_nh).jacobian(self.u)
             # If no acceleration constraints given, calculate them.
             if not acc:
                 _f_dnh = (self._k_nh.diff(dynamicsymbols._t) * self.u +
-                          self._f_nh.diff(dynamicsymbols._t))
+                    self._f_nh.diff(dynamicsymbols._t))
                 if self._qdot_u_map is not None:
                     _f_dnh = msubs(_f_dnh, self._qdot_u_map)
                 self._f_dnh = _f_dnh
@@ -314,9 +314,9 @@ class KanesMethod(_Methods):
             else:
                 if self._qdot_u_map is not None:
                     acc = msubs(acc, self._qdot_u_map)
-                self._f_dnh = msubs(acc, udot_zero)
-                self._k_dnh = (acc - self._f_dnh).jacobian(self._udot)
 
+                self._k_dnh, f_dnh_neg = linear_eq_to_matrix(acc, self._udot[:])
+                self._f_dnh = -f_dnh_neg
             # Form of non-holonomic constraints is B*u + C = 0.
             # We partition B into independent and dependent columns:
             # Ars is then -B_dep.inv() * B_ind, and it relates dependent speeds
@@ -338,8 +338,8 @@ class KanesMethod(_Methods):
         ==========
         kdeqs : sequence of sympy expressions
             Kinematic differential equations in the form of f(u,q',q,t) where
-            f() = 0. The equations have to be linear in the generalized
-            coordinates and generalized speeds.
+            f() = 0. The equations have to be linear in the time-derivatives of
+            the generalized coordinates and in the generalized speeds.
 
         """
         linear_solver = _parse_linear_solver(linear_solver)
@@ -367,7 +367,7 @@ class KanesMethod(_Methods):
             f_k = kdeqs.xreplace(u_zero).xreplace(qdot_zero)
 
             # The kinematic differential equations should be linear in both q'
-            # and u, so check for u and q' in the components.
+            # and u so check for u and q' in the components.
             dy_syms = find_dynamicsymbols(k_ku.row_join(k_kqdot).row_join(f_k))
             nonlin_vars = [vari for vari in u[:] + qdot[:] if vari in dy_syms]
             if nonlin_vars:
@@ -421,7 +421,7 @@ class KanesMethod(_Methods):
         FR = zeros(o, 1)
         partials = partial_velocity(vel_list, self.u, N)
         for i in range(o):
-            FR[i] = sum(partials[j][i] & f_list[j] for j in range(b))
+            FR[i] = sum(partials[j][i].dot(f_list[j]) for j in range(b))
 
         # In case there are dependent speeds
         if self._udep:
@@ -486,19 +486,19 @@ class KanesMethod(_Methods):
                 omega = zero_uaux(body.frame.ang_vel_in(N))
                 acc = zero_udot_uaux(body.masscenter.acc(N))
                 inertial_force = (M.diff(t) * vel + M * acc)
-                inertial_torque = zero_uaux((I.dt(body.frame) & omega) +
-                    msubs(I & body.frame.ang_acc_in(N), udot_zero) +
-                    (omega ^ (I & omega)))
+                inertial_torque = zero_uaux((I.dt(body.frame).dot(omega)) +
+                    msubs(I.dot(body.frame.ang_acc_in(N)), udot_zero) +
+                    (omega.cross(I.dot(omega))))
                 for j in range(o):
                     tmp_vel = zero_uaux(partials[i][0][j])
-                    tmp_ang = zero_uaux(I & partials[i][1][j])
+                    tmp_ang = zero_uaux(I.dot(partials[i][1][j]))
                     for k in range(o):
                         # translational
-                        MM[j, k] += M * (tmp_vel & partials[i][0][k])
+                        MM[j, k] += M*tmp_vel.dot(partials[i][0][k])
                         # rotational
-                        MM[j, k] += (tmp_ang & partials[i][1][k])
-                    nonMM[j] += inertial_force & partials[i][0][j]
-                    nonMM[j] += inertial_torque & partials[i][1][j]
+                        MM[j, k] += tmp_ang.dot(partials[i][1][k])
+                    nonMM[j] += inertial_force.dot(partials[i][0][j])
+                    nonMM[j] += inertial_torque.dot(partials[i][1][j])
             else:
                 M = zero_uaux(body.mass)
                 vel = zero_uaux(body.point.vel(N))
@@ -507,8 +507,8 @@ class KanesMethod(_Methods):
                 for j in range(o):
                     temp = zero_uaux(partials[i][0][j])
                     for k in range(o):
-                        MM[j, k] += M * (temp & partials[i][0][k])
-                    nonMM[j] += inertial_force & partials[i][0][j]
+                        MM[j, k] += M*temp.dot(partials[i][0][k])
+                    nonMM[j] += inertial_force.dot(partials[i][0][j])
         # Compose fr_star out of MM and nonMM
         MM = zero_uaux(msubs(MM, q_ddot_u_map))
         nonMM = msubs(msubs(nonMM, q_ddot_u_map),
@@ -720,14 +720,15 @@ class KanesMethod(_Methods):
         if self._uaux:
             if not self._udep:
                 km = KanesMethod(self._inertial, self.q, self._uaux,
-                             u_auxiliary=self._uaux)
+                             u_auxiliary=self._uaux, constraint_solver=self._constraint_solver)
             else:
                 km = KanesMethod(self._inertial, self.q, self._uaux,
                         u_auxiliary=self._uaux, u_dependent=self._udep,
                         velocity_constraints=(self._k_nh * self.u +
                         self._f_nh),
                         acceleration_constraints=(self._k_dnh * self._udot +
-                        self._f_dnh)
+                        self._f_dnh),
+                        constraint_solver=self._constraint_solver
                         )
             km._qdot_u_map = self._qdot_u_map
             self._km = km

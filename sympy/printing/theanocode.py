@@ -7,6 +7,7 @@
 
 """
 from __future__ import annotations
+import math
 from typing import Any
 
 from sympy.external import import_module
@@ -18,7 +19,12 @@ from functools import partial
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.exceptions import sympy_deprecation_warning
 
+
+__doctest_requires__ = {('theano_function',): ['theano']}
+
+
 theano = import_module('theano')
+
 
 if theano:
     ts = theano.scalar
@@ -224,7 +230,7 @@ class TheanoPrinter(Printer):
                         for i in (expr.start, expr.stop, expr.step)])
 
     def _print_Pi(self, expr, **kwargs):
-        return 3.141592653589793
+        return math.pi
 
     def _print_Exp1(self, expr, **kwargs):
         return ts.exp(1)

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core import Symbol, S, oo
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.polys import poly
@@ -55,7 +56,7 @@ def test_dispersion():
     assert sorted(dispersionset(gp, fp)) == [1, 4]
 
     # There are some difficulties if we compute over Z[a]
-    # and alpha happenes to lie in Z[a] instead of simply Z.
+    # and alpha happens to lie in Z[a] instead of simply Z.
     # Hence we can not decide if alpha is indeed integral
     # in general.
 

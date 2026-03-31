@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.expr import Expr
 from sympy.core.mul import Mul
 from sympy.core.numbers import (I, Integer)
@@ -7,7 +8,7 @@ from sympy.matrices.dense import Matrix
 
 from sympy.physics.quantum.dagger import adjoint, Dagger
 from sympy.external import import_module
-from sympy.testing.pytest import skip
+from sympy.testing.pytest import skip, warns_deprecated_sympy
 from sympy.physics.quantum.operator import Operator, IdentityOperator
 
 
@@ -20,7 +21,7 @@ def test_scalars():
     assert Dagger(i) == i
 
     p = symbols('p')
-    assert isinstance(Dagger(p), adjoint)
+    assert isinstance(Dagger(p), conjugate)
 
     i = Integer(3)
     assert Dagger(i) == i
@@ -37,9 +38,10 @@ def test_matrix():
 
 def test_dagger_mul():
     O = Operator('O')
-    I = IdentityOperator()
     assert Dagger(O)*O == Dagger(O)*O
-    assert Dagger(O)*O*I == Mul(Dagger(O), O)*I
+    with warns_deprecated_sympy():
+        I = IdentityOperator()
+        assert Dagger(O)*O*I == Mul(Dagger(O), O)*I
     assert Dagger(O)*Dagger(O) == Dagger(O)**2
     assert Dagger(O)*Dagger(I) == Dagger(O)
 
@@ -88,7 +90,7 @@ def test_unknown():
     Objects without adjoint or conjugate/transpose methods
     are sympified and wrapped in dagger.
     """
-    x = symbols("x")
+    x = symbols("x", commutative=False)
     result = Dagger(x)
     assert result.args == (x,) and isinstance(result, adjoint)
 

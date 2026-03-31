@@ -1,20 +1,26 @@
 from __future__ import annotations
 
-from sympy.external.gmpy import (gcd, lcm, invert, sqrt, legendre, jacobi,
-                                 kronecker, bit_scan1, remove)
+from typing import Literal, SupportsIndex, cast, overload, TYPE_CHECKING
+
+from sympy.external.gmpy import (MPZ, gcd, lcm, invert, sqrt, jacobi,
+                                 bit_scan1, remove)
 from sympy.polys import Poly
 from sympy.polys.domains import ZZ
 from sympy.polys.galoistools import gf_crt1, gf_crt2, linear_congruence, gf_csolve
 from .primetest import isprime
+from .generate import primerange
 from .factor_ import factorint, _perfect_power
 from .modular import crt
 from sympy.utilities.decorator import deprecated
 from sympy.utilities.memoization import recurrence_memo
 from sympy.utilities.misc import as_int
 from sympy.utilities.iterables import iproduct
-from sympy.core.random import _randint, randint
+from sympy.core.random import _randint
 
 from itertools import product
+
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
 
 
 def n_order(a, n):
@@ -372,7 +378,8 @@ def is_primitive_root(a, p):
     Examples
     ========
 
-    >>> from sympy.ntheory import is_primitive_root, n_order, totient
+    >>> from sympy.functions.combinatorial.numbers import totient
+    >>> from sympy.ntheory import is_primitive_root, n_order
     >>> is_primitive_root(3, 10)
     True
     >>> is_primitive_root(9, 10)
@@ -457,17 +464,18 @@ def _sqrt_mod_tonelli_shanks(a, p):
     s = bit_scan1(p - 1)
     t = p >> s
     # find a non-quadratic residue
-    if p % 12 == 5:
-        # Legendre symbol (3/p) == -1 if p % 12 in [5, 7]
+    # Noting that we are assuming p=1 (mod 8), we have (d/p) = (p/d)
+    # for any odd prime d. Here, (d/p) denotes the Legendre symbol.
+    if p % 3 == 2:
         d = 3
     elif p % 5 in [2, 3]:
-        # Legendre symbol (5/p) == -1 if p % 5 in [2, 3]
         d = 5
     else:
-        while 1:
-            d = randint(6, p - 1)
-            if jacobi(d, p) == -1:
+        for d in primerange(7, p):
+            if jacobi(p, d) == -1:
                 break
+        else:
+            assert False
     #assert legendre_symbol(d, p) == -1
     A = pow(a, t, p)
     D = pow(d, t, p)
@@ -482,7 +490,27 @@ def _sqrt_mod_tonelli_shanks(a, p):
     return x
 
 
-def sqrt_mod(a, p, all_roots=False):
+@overload
+def sqrt_mod(
+    a: SupportsIndex, p: SupportsIndex, all_roots: Literal[False] = False
+) -> int | None: ...
+
+
+@overload
+def sqrt_mod(
+    a: SupportsIndex, p: SupportsIndex, all_roots: Literal[True]
+) -> list[int]: ...
+
+
+@overload
+def sqrt_mod(
+    a: SupportsIndex, p: SupportsIndex, all_roots: bool,
+) -> int | list[int] | None: ...
+
+
+def sqrt_mod(
+    a: SupportsIndex, p: SupportsIndex, all_roots: bool = False
+) -> int | list[int] | None:
     """
     Find a root of ``x**2 = a mod p``.
 
@@ -491,14 +519,14 @@ def sqrt_mod(a, p, all_roots=False):
 
     a : integer
     p : positive integer
-    all_roots : if True the list of roots is returned or None
+    all_roots : if True the list of roots is returned.
 
     Notes
     =====
 
-    If there is no root it is returned None; else the returned root
-    is less or equal to ``p // 2``; in general is not the smallest one.
-    It is returned ``p // 2`` only if it is the only root.
+    If there is no root and all_roots if False, None is returned; else the
+    returned root is less or equal to ``p // 2``; in general is not the
+    smallest one. It is returned ``p // 2`` only if it is the only root.
 
     Use ``all_roots`` only when it is expected that all the roots fit
     in memory; otherwise use ``sqrt_mod_iter``.
@@ -898,7 +926,7 @@ def _nthroot_mod1(s, q, p, all_roots):
     return min(res)
 
 
-def _nthroot_mod_prime_power(a, n, p, k):
+def _nthroot_mod_prime_power(a, n, p, k) -> list[int]:
     """ Root of ``x**n = a mod p**k``.
 
     Parameters
@@ -976,7 +1004,30 @@ def _nthroot_mod_prime_power(a, n, p, k):
     return sorted(tot_roots)
 
 
-def nthroot_mod(a, n, p, all_roots=False):
+@overload
+def nthroot_mod(
+    a: SupportsIndex,
+    n: SupportsIndex,
+    p: SupportsIndex,
+    all_roots: Literal[False] = False,
+) -> int | None: ...
+
+
+@overload
+def nthroot_mod(
+    a: SupportsIndex, n: SupportsIndex, p: SupportsIndex, all_roots: Literal[True]
+) -> list[int]: ...
+
+
+@overload
+def nthroot_mod(
+    a: SupportsIndex, n: SupportsIndex, p: SupportsIndex, all_roots: bool,
+) -> list[int] | int | None: ...
+
+
+def nthroot_mod(
+    a: SupportsIndex, n: SupportsIndex, p: SupportsIndex, all_roots: bool = False
+) -> int | list[int] | None:
     """
     Find the solutions to ``x**n = a mod p``.
 
@@ -1028,32 +1079,40 @@ def nthroot_mod(a, n, p, all_roots=False):
     .. [1] P. Hackman "Elementary Number Theory" (2009), page 76
 
     """
-    a = a % p
-    a, n, p = as_int(a), as_int(n), as_int(p)
+    a = a % p # type: ignore
+    ai = as_int(a)
+    ni = as_int(n)
+    pi = as_int(p)
 
-    if n < 1:
+    if ni < 1:
         raise ValueError("n should be positive")
-    if p < 1:
+    if pi < 1:
         raise ValueError("p should be positive")
-    if n == 1:
-        return [a] if all_roots else a
-    if n == 2:
-        return sqrt_mod(a, p, all_roots)
-    base = []
-    prime_power = []
+    if ni == 1:
+        return [ai] if all_roots else ai
+    if ni == 2:
+        return sqrt_mod(ai, pi, all_roots)
+
+    base: list[list[MPZ]] = []
+    prime_power: list[MPZ] = []
+
     for q, e in factorint(p).items():
-        tot_roots = _nthroot_mod_prime_power(a, n, q, e)
+        tot_roots = _nthroot_mod_prime_power(ai, ni, q, e)
         if not tot_roots:
             return [] if all_roots else None
-        prime_power.append(q**e)
-        base.append(sorted(tot_roots))
+        prime_power.append(ZZ(q)**e)
+        base.append(sorted(map(ZZ, tot_roots)))
+
     P, E, S = gf_crt1(prime_power, ZZ)
-    ret = sorted(map(int, {gf_crt2(c, prime_power, P, E, S, ZZ)
+    ret = sorted(map(int, {gf_crt2(list(c), prime_power, P, E, S, ZZ)
                            for c in product(*base)}))
+
     if all_roots:
         return ret
-    if ret:
+    elif ret:
         return ret[0]
+    else:
+        return None
 
 
 def quadratic_residues(p) -> list[int]:
@@ -1072,9 +1131,19 @@ def quadratic_residues(p) -> list[int]:
     return sorted(r)
 
 
+@deprecated("""\
+The `sympy.ntheory.residue_ntheory.legendre_symbol` has been moved to `sympy.functions.combinatorial.numbers.legendre_symbol`.""",
+deprecated_since_version="1.13",
+active_deprecations_target='deprecated-ntheory-symbolic-functions')
 def legendre_symbol(a, p):
     r"""
     Returns the Legendre symbol `(a / p)`.
+
+    .. deprecated:: 1.13
+
+        The ``legendre_symbol`` function is deprecated. Use :class:`sympy.functions.combinatorial.numbers.legendre_symbol`
+        instead. See its documentation for more information. See
+        :ref:`deprecated-ntheory-symbolic-functions` for details.
 
     For an integer ``a`` and an odd prime ``p``, the Legendre symbol is
     defined as
@@ -1095,7 +1164,7 @@ def legendre_symbol(a, p):
     Examples
     ========
 
-    >>> from sympy.ntheory import legendre_symbol
+    >>> from sympy.functions.combinatorial.numbers import legendre_symbol
     >>> [legendre_symbol(i, 7) for i in range(7)]
     [0, 1, 1, -1, 1, -1, -1]
     >>> sorted(set([i**2 % 7 for i in range(7)]))
@@ -1107,15 +1176,23 @@ def legendre_symbol(a, p):
     is_quad_residue, jacobi_symbol
 
     """
-    a, p = as_int(a), as_int(p)
-    if p == 2 or not isprime(p):
-        raise ValueError("p should be an odd prime")
-    return int(legendre(a, p))
+    from sympy.functions.combinatorial.numbers import legendre_symbol as _legendre_symbol
+    return _legendre_symbol(a, p)
 
 
+@deprecated("""\
+The `sympy.ntheory.residue_ntheory.jacobi_symbol` has been moved to `sympy.functions.combinatorial.numbers.jacobi_symbol`.""",
+deprecated_since_version="1.13",
+active_deprecations_target='deprecated-ntheory-symbolic-functions')
 def jacobi_symbol(m, n):
     r"""
     Returns the Jacobi symbol `(m / n)`.
+
+    .. deprecated:: 1.13
+
+        The ``jacobi_symbol`` function is deprecated. Use :class:`sympy.functions.combinatorial.numbers.jacobi_symbol`
+        instead. See its documentation for more information. See
+        :ref:`deprecated-ntheory-symbolic-functions` for details.
 
     For any integer ``m`` and any positive odd integer ``n`` the Jacobi symbol
     is defined as the product of the Legendre symbols corresponding to the
@@ -1149,7 +1226,7 @@ def jacobi_symbol(m, n):
     Examples
     ========
 
-    >>> from sympy.ntheory import jacobi_symbol, legendre_symbol
+    >>> from sympy.functions.combinatorial.numbers import jacobi_symbol, legendre_symbol
     >>> from sympy import S
     >>> jacobi_symbol(45, 77)
     -1
@@ -1170,41 +1247,9 @@ def jacobi_symbol(m, n):
 
     is_quad_residue, legendre_symbol
     """
-    m, n = as_int(m), as_int(n)
-    return int(jacobi(m, n))
+    from sympy.functions.combinatorial.numbers import jacobi_symbol as _jacobi_symbol
+    return _jacobi_symbol(m, n)
 
-
-def kronecker_symbol(a, n):
-    r"""
-    Returns the Kronecker symbol `(a / n)`.
-
-    Parameters
-    ==========
-
-    a : integer
-    n : integer
-
-    Examples
-    ========
-
-    >>> from sympy.ntheory.residue_ntheory import kronecker_symbol
-    >>> kronecker_symbol(45, 77)
-    -1
-    >>> kronecker_symbol(13, -120)
-    1
-
-    See Also
-    ========
-
-    jacobi_symbol, legendre_symbol
-
-    References
-    ==========
-
-    .. [1] https://en.wikipedia.org/wiki/Kronecker_symbol
-
-    """
-    return int(kronecker(as_int(a), as_int(n)))
 
 @deprecated("""\
 The `sympy.ntheory.residue_ntheory.mobius` has been moved to `sympy.functions.combinatorial.numbers.mobius`.""",
@@ -1239,7 +1284,7 @@ def mobius(n):
     Examples
     ========
 
-    >>> from sympy.ntheory import mobius
+    >>> from sympy.functions.combinatorial.numbers import mobius
     >>> mobius(13*7)
     1
     >>> mobius(1)
@@ -1267,7 +1312,7 @@ def _discrete_log_trial_mul(n, a, b, order=None):
 
     The algorithm finds the discrete logarithm using exhaustive search. This
     naive method is used as fallback algorithm of ``discrete_log`` when the
-    group order is very small.
+    group order is very small. The value ``n`` must be greater than 1.
 
     Examples
     ========
@@ -1445,7 +1490,118 @@ def _discrete_log_pollard_rho(n, a, b, order=None, retries=10, rseed=None):
     raise ValueError("Pollard's Rho failed to find logarithm")
 
 
-def _discrete_log_pohlig_hellman(n, a, b, order=None):
+def _discrete_log_is_smooth(n: int, factorbase: list):
+    """Try to factor n with respect to a given factorbase.
+    Upon success a list of exponents with respect to the factorbase is returned.
+    Otherwise None."""
+    factors = [0]*len(factorbase)
+    for i, p in enumerate(factorbase):
+        while n % p == 0: # divide by p as many times as possible
+            factors[i] += 1
+            n = n // p
+    if n != 1:
+        return None # the number factors if at the end nothing is left
+    return factors
+
+
+def _discrete_log_index_calculus(n, a, b, order, rseed=None):
+    """
+    Index Calculus algorithm for computing the discrete logarithm of ``a`` to
+    the base ``b`` modulo ``n``.
+
+    The group order must be given and prime. It is not suitable for small orders
+    and the algorithm might fail to find a solution in such situations.
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.residue_ntheory import _discrete_log_index_calculus
+    >>> _discrete_log_index_calculus(24570203447, 23859756228, 2, 12285101723)
+    4519867240
+
+    See Also
+    ========
+
+    discrete_log
+
+    References
+    ==========
+
+    .. [1] "Handbook of applied cryptography", Menezes, A. J., Van, O. P. C., &
+        Vanstone, S. A. (1997).
+    """
+    randint = _randint(rseed)
+    from math import sqrt, exp, log
+    a %= n
+    b %= n
+    # assert isprime(order), "The order of the base must be prime."
+    # First choose a heuristic the bound B for the factorbase.
+    # We have added an extra term to the asymptotic value which
+    # is closer to the theoretical optimum for n up to 2^70.
+    B = int(exp(0.5 * sqrt( log(n) * log(log(n)) )*( 1 + 1/log(log(n)) )))
+    max = 5 * B * B  # expected number of tries to find a relation
+    factorbase = list(primerange(B)) # compute the factorbase
+    lf = len(factorbase) # length of the factorbase
+    ordermo = order-1
+    abx = a
+    for x in range(order):
+        if abx == 1:
+            return (order - x) % order
+        relationa = _discrete_log_is_smooth(abx, factorbase)
+        if relationa:
+            relationa = [r % order for r in relationa] + [x]
+            break
+        abx = abx * b % n # abx = a*pow(b, x, n) % n
+
+    else:
+        raise ValueError("Index Calculus failed")
+
+    relations = [None] * lf
+    k = 1  # number of relations found
+    kk = 0
+    while k < 3 * lf and kk < max:  # find relations for all primes in our factor base
+        x = randint(1,ordermo)
+        relation = _discrete_log_is_smooth(pow(b,x,n), factorbase)
+        if relation is None:
+            kk += 1
+            continue
+        k += 1
+        kk = 0
+        relation += [ x ]
+        index = lf  # determine the index of the first nonzero entry
+        for i in range(lf):
+            ri = relation[i] % order
+            if ri> 0 and relations[i] is not None:  # make this entry zero if we can
+                for j in range(lf+1):
+                    relation[j] = (relation[j] - ri*relations[i][j]) % order
+            else:
+                relation[i] = ri
+            if relation[i] > 0 and index == lf:  # is this the index of the first nonzero entry?
+                index = i
+        if index == lf or relations[index] is not None:  # the relation contains no new information
+            continue
+        # the relation contains new information
+        rinv = pow(relation[index],-1,order)  # normalize the first nonzero entry
+        for j in range(index,lf+1):
+            relation[j] = rinv * relation[j] % order
+        relations[index] = relation
+        for i in range(lf):  # subtract the new relation from the one for a
+            if relationa[i] > 0 and relations[i] is not None:
+                rbi = relationa[i]
+                for j in range(lf+1):
+                    relationa[j] = (relationa[j] - rbi*relations[i][j]) % order
+            if relationa[i] > 0:  # the index of the first nonzero entry
+                break  # we do not need to reduce further at this point
+        else:  # all unknowns are gone
+            #print(f"Success after {k} relations out of {lf}")
+            x = (order -relationa[lf]) % order
+            if pow(b,x,n) == a:
+                return x
+            raise ValueError("Index Calculus failed")
+    raise ValueError("Index Calculus failed")
+
+
+def _discrete_log_pohlig_hellman(n, a, b, order=None, order_factors=None):
     """
     Pohlig-Hellman algorithm for computing the discrete logarithm of ``a`` to
     the base ``b`` modulo ``n``.
@@ -1478,18 +1634,18 @@ def _discrete_log_pohlig_hellman(n, a, b, order=None):
 
     if order is None:
         order = n_order(b, n)
+    if order_factors is None:
+        order_factors = factorint(order)
+    l = [0] * len(order_factors)
 
-    f = factorint(order)
-    l = [0] * len(f)
-
-    for i, (pi, ri) in enumerate(f.items()):
+    for i, (pi, ri) in enumerate(order_factors.items()):
         for j in range(ri):
             aj = pow(a * pow(b, -l[i], n), order // pi**(j + 1), n)
             bj = pow(b, order // pi, n)
             cj = discrete_log(n, aj, bj, pi, True)
             l[i] += cj * pi**j
 
-    d, _ = crt([pi**ri for pi, ri in f.items()], l)
+    d, _ = crt([pi**ri for pi, ri in order_factors.items()], l)
     return d
 
 
@@ -1507,6 +1663,7 @@ def discrete_log(n, a, b, order=None, prime_order=None):
         * Trial multiplication
         * Baby-step giant-step
         * Pollard's Rho
+        * Index Calculus
         * Pohlig-Hellman
 
     Examples
@@ -1524,9 +1681,45 @@ def discrete_log(n, a, b, order=None, prime_order=None):
         Vanstone, S. A. (1997).
 
     """
+    from math import sqrt, log
     n, a, b = as_int(n), as_int(a), as_int(b)
+
+    if n < 1:
+        raise ValueError("n should be positive")
+    if n == 1:
+        return 0
+
     if order is None:
-        order = n_order(b, n)
+        # Compute the order and its factoring in one pass
+        # order = totient(n), factors = factorint(order)
+        factors = {}
+        for px, kx in factorint(n).items():
+            if kx > 1:
+                if px in factors:
+                    factors[px] += kx - 1
+                else:
+                    factors[px] = kx - 1
+            for py, ky in factorint(px - 1).items():
+                if py in factors:
+                    factors[py] += ky
+                else:
+                    factors[py] = ky
+        order = 1
+        for px, kx in factors.items():
+            order *= px**kx
+        # Now the `order` is the order of the group and factors = factorint(order)
+        # The order of `b` divides the order of the group.
+        order_factors = {}
+        for p, e in factors.items():
+            i = 0
+            for _ in range(e):
+                if pow(b, order // p, n) == 1:
+                    order //= p
+                    i += 1
+                else:
+                    break
+            if i < e:
+                order_factors[p] = e - i
 
     if prime_order is None:
         prime_order = isprime(order)
@@ -1534,11 +1727,16 @@ def discrete_log(n, a, b, order=None, prime_order=None):
     if order < 1000:
         return _discrete_log_trial_mul(n, a, b, order)
     elif prime_order:
-        if order < 1000000000000:
+        # Shanks and Pollard rho are O(sqrt(order)) while index calculus is O(exp(2*sqrt(log(n)log(log(n)))))
+        # we compare the expected running times to determine the algorithm which is expected to be faster
+        if 4*sqrt(log(n)*log(log(n))) < log(order) - 10:  # the number 10 was determined experimental
+            return _discrete_log_index_calculus(n, a, b, order)
+        elif order < 1000000000000:
+            # Shanks seems typically faster, but uses O(sqrt(order)) memory
             return _discrete_log_shanks_steps(n, a, b, order)
         return _discrete_log_pollard_rho(n, a, b, order)
 
-    return _discrete_log_pohlig_hellman(n, a, b, order)
+    return _discrete_log_pohlig_hellman(n, a, b, order, order_factors)
 
 
 
@@ -1606,11 +1804,14 @@ def quadratic_congruence(a, b, c, n):
         return sorted((i - b) % n for i in sqrt_mod_iter(b**2 - c, n))
     res = set()
     for i in sqrt_mod_iter(b**2 - 4*a*c, 4*a*n):
-        res.update(j % n for j in linear_congruence(2*a, i - b, 4*a*n))
+        q, rem = divmod(i - b, 2*a)
+        if rem == 0:
+            res.add(q % n)
+
     return sorted(res)
 
 
-def _valid_expr(expr):
+def _valid_expr(expr: Expr) -> list[MPZ]:
     """
     return coefficients of expr if it is a univariate polynomial
     with integer coefficients else raise a ValueError.
@@ -1623,10 +1824,10 @@ def _valid_expr(expr):
         raise ValueError("The expression should be univariate")
     if not polynomial.domain == ZZ:
         raise ValueError("The expression should should have integer coefficients")
-    return polynomial.all_coeffs()
+    return cast('list[MPZ]', polynomial.rep.to_list())
 
 
-def polynomial_congruence(expr, m):
+def polynomial_congruence(expr: Expr, m: int) -> list[MPZ]:
     """
     Find the solutions to a polynomial congruence equation modulo m.
 
@@ -1655,11 +1856,13 @@ def polynomial_congruence(expr, m):
     coefficients = [num % m for num in coefficients]
     rank = len(coefficients)
     if rank == 3:
-        return quadratic_congruence(*coefficients, m)
+        a, b, c = coefficients
+        return quadratic_congruence(a, b, c, m)
     if rank == 2:
-        return quadratic_congruence(0, *coefficients, m)
+        a, b = coefficients
+        return quadratic_congruence(0, a, b, m)
     if coefficients[0] == 1 and 1 + coefficients[-1] == sum(coefficients):
-        return nthroot_mod(-coefficients[-1], rank - 1, m, True)
+        return [ZZ(s) for s in nthroot_mod(-coefficients[-1], rank - 1, m, True)]
     return gf_csolve(coefficients, m)
 
 

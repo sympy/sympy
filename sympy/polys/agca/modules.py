@@ -16,6 +16,7 @@ a few non-implemented methods. The concrete base classes supply only these
 non-implemented methods. They may also supply new implementations of the
 convenience methods, for example if there are faster algorithms available.
 """
+from __future__ import annotations
 
 
 from copy import copy
@@ -1186,7 +1187,7 @@ class SubModulePolyRing(SubModule):
         for j, f in enumerate(self.gens):
             m = [0]*(r + k)
             for i, v in enumerate(f):
-                m[i] = f[i]
+                m[i] = v
             for i in range(k):
                 m[r + i] = one if j == i else zero
             m = FreeModuleElement(Rkr, tuple(m))

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.numbers import (Float, Rational, oo, pi)
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
@@ -676,6 +677,24 @@ def test_is_perpendicular():
                                    Line3D(Point3D(0, 1, 0), Point3D(1, 1, 0))) is False
     assert Line3D.is_perpendicular(Line3D(Point3D(0, 0, 0), Point3D(1, 1, 1)),
                                    Line3D(Point3D(x1, x1, x1), Point3D(y1, y1, y1))) is False
+
+
+def test_validation_for_linear_entity_methods():
+    p1 = Point(0, 0)
+    p2 = Point(1, 1)
+    l1 = Line(p1, p2)
+
+    raises(TypeError, lambda: Line.is_parallel(p1, l1))
+    raises(TypeError, lambda: Line.is_parallel(l1, p1))
+
+    raises(TypeError, lambda: Line.is_perpendicular(p1, l1))
+    raises(TypeError, lambda: Line.is_perpendicular(l1, p1))
+
+    raises(TypeError, lambda: Line.angle_between(p1, l1))
+    raises(TypeError, lambda: Line.angle_between(l1, p1))
+
+    raises(TypeError, lambda: Line.smallest_angle_between(p1, l1))
+    raises(TypeError, lambda: Line.smallest_angle_between(l1, p1))
 
 
 def test_is_similar():

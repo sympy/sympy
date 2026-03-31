@@ -27,6 +27,7 @@ Mathematical Formulae with Two Free Variables.
 Arithmetic. Master's thesis. University of Toronto, 1996
 
 """
+from __future__ import annotations
 
 
 from sympy.core.containers import Tuple
@@ -36,6 +37,9 @@ from sympy.plotting.series import ImplicitSeries, _set_discretization_points
 from sympy.plotting.plot import plot_factory
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.iterables import flatten
+
+
+__doctest_requires__ = {'plot_implicit': ['matplotlib']}
 
 
 @doctest_depends_on(modules=('matplotlib',))

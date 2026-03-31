@@ -3,14 +3,14 @@
 
 # This is separate from the GitHub Actions build that builds the docs, which
 # also builds the docs PDF.
-version: 2
+version: 2.1
 
 # Aliases to reuse
 _defaults: &defaults
   docker:
     # CircleCI maintains a library of pre-built images
     # documented at https://circleci.com/docs/2.0/circleci-images/
-    - image: cimg/python:3.10.2
+    - image: cimg/python:3.12
   working_directory: ~/repo
 
 jobs:

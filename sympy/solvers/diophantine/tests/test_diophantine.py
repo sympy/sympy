@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.add import Add
 from sympy.core.mul import Mul
 from sympy.core.numbers import (Rational, oo, pi)
@@ -752,6 +753,18 @@ def test_assumptions():
     diof = diophantine(a*b + 2*a + 3*b - 6)
     assert diof == {(-15, -3), (-9, -4), (-7, -5), (-6, -6), (-5, -8), (-4, -14)}
 
+    x, y = symbols('x y', integer=True)
+    diof = diophantine(10*x**2 + 5*x*y - 3*y)
+    assert diof == {(1, -5), (-3, 5), (0, 0)}
+
+    x, y = symbols('x y', integer=True, positive=True)
+    diof = diophantine(10*x**2 + 5*x*y - 3*y)
+    assert diof == set()
+
+    x, y = symbols('x y', integer=True, negative=False)
+    diof = diophantine(10*x**2 + 5*x*y - 3*y)
+    assert diof == {(0, 0)}
+
 
 def check_solutions(eq):
     """
@@ -790,7 +803,7 @@ def test_diopcoverage():
     assert base_solution_linear(4, 8, 12, t) == ans
     assert base_solution_linear(4, 8, 12, t=None) == tuple(_.subs(t, 0) for _ in ans)
 
-    assert cornacchia(1, 1, 20) is None
+    assert cornacchia(1, 1, 20) == set()
     assert cornacchia(1, 1, 5) == {(2, 1)}
     assert cornacchia(1, 2, 17) == {(3, 2)}
 
@@ -1029,8 +1042,8 @@ def test_diophantine_solution_set():
     assert s3(2, 8) == {(12, -6, 1)}
     assert s3.subs({t: 5, u: -3}) == {(22, 8, 1)}
     assert s3(5, -3) == {(22, 8, 1)}
-    raises(ValueError, lambda: s3.subs(x=1))
-    raises(ValueError, lambda: s3.subs(1, 2, 3))
+    raises(TypeError, lambda: s3.subs(x=1))
+    raises(TypeError, lambda: s3.subs(1, 2, 3))
     raises(ValueError, lambda: s3.add(()))
     raises(ValueError, lambda: s3.add((1, 2, 3, 4)))
     raises(ValueError, lambda: s3.add((1, 2)))
@@ -1049,3 +1062,11 @@ def test_quadratic_parameter_passing():
     # test that parameters are passed all the way to the final solution
     assert solution == {(t, 11*t), (t, -22*t)}
     assert solution(0, 0) == {(0, 0)}
+
+def test_issue_18628():
+    eq1 = x**2 - 15*x + y**2 - 8*y
+    sol = diophantine(eq1)
+    assert sol == {(15, 0), (15, 8), (-1, 4), (0, 0), (0, 8), (16, 4)}
+    eq2 = 2*x**2 - 9*x + 4*y**2 - 8*y + 14
+    sol = diophantine(eq2)
+    assert sol == {(2, 1)}

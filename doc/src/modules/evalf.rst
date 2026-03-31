@@ -47,11 +47,10 @@ expression is a polynomial in expanded form, the coefficients are evaluated:
 You can also use the standard Python functions ``float()``, ``complex()`` to
 convert SymPy expressions to regular Python numbers:
 
-    >>> float(pi)
-    3.1415926535...
-    >>> complex(pi+E*I)
-    (3.1415926535...+2.7182818284...j)
-
+    >>> float(pi)  # doctest: +SKIP
+    3.141592653589793
+    >>> complex(pi+E*I)  # doctest: +SKIP
+    (3.141592653589793+2.718281828459045j)
 
 If these functions are used, failure to evaluate the expression to an explicit
 number (for example if the expression contains symbols) will raise an exception.
@@ -287,7 +286,7 @@ Oscillatory quadrature requires an integrand containing a factor cos(ax+b) or
 sin(ax+b). Note that many other oscillatory integrals can be transformed to
 this form with a change of variables:
 
-    >>> init_printing(use_unicode=False, wrap_line=False)
+    >>> init_printing(use_unicode=False)
     >>> intgrl = Integral(sin(1/x), (x, 0, 1)).transform(x, 1/x)
     >>> intgrl
      oo

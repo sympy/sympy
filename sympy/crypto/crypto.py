@@ -11,27 +11,35 @@ and the Diffie-Hellman key exchange.
    <https://cryptography.io/en/latest/>`_ module.
 
 """
+from __future__ import annotations
 
 from string import whitespace, ascii_uppercase as uppercase, printable
 from functools import reduce
+import string
 import warnings
 
 from itertools import cycle
 
+from sympy.external.gmpy import GROUND_TYPES
 from sympy.core import Symbol
 from sympy.core.numbers import Rational
 from sympy.core.random import _randrange, _randint
 from sympy.external.gmpy import gcd, invert
+from sympy.functions.combinatorial.numbers import (totient as _euler,
+                                                   reduced_totient as _carmichael)
 from sympy.matrices import Matrix
 from sympy.ntheory import isprime, primitive_root, factorint
-from sympy.ntheory import totient as _euler
-from sympy.ntheory import reduced_totient as _carmichael
 from sympy.ntheory.generate import nextprime
 from sympy.ntheory.modular import crt
 from sympy.polys.domains import FF
 from sympy.polys.polytools import Poly
 from sympy.utilities.misc import as_int, filldedent, translate
 from sympy.utilities.iterables import uniq, multiset
+from sympy.utilities.decorator import doctest_depends_on
+
+
+if GROUND_TYPES == 'flint':
+    __doctest_skip__ = ['lfsr_sequence']
 
 
 class NonInvertibleCipherWarning(RuntimeWarning):
@@ -78,7 +86,7 @@ def AZ(s=None):
     return rv
 
 bifid5 = AZ().replace('J', '')
-bifid6 = AZ() + '0123456789'
+bifid6 = AZ() + string.digits
 bifid10 = printable
 
 
@@ -863,8 +871,10 @@ def encipher_hill(msg, key, symbols=None, pad="Q"):
     decipher_hill
 
     """
-    assert key.is_square
-    assert len(pad) == 1
+    if not key.is_square:
+        raise ValueError("key must be a square matrix")
+    if len(pad) != 1:
+        raise ValueError("pad must be a single character")
     msg, pad, A = _prep(msg, pad, symbols)
     map = {c: i for i, c in enumerate(A)}
     P = [map[c] for c in msg]
@@ -932,7 +942,8 @@ def decipher_hill(msg, key, symbols=None):
     encipher_hill
 
     """
-    assert key.is_square
+    if not key.is_square:
+        raise ValueError("key must be a square matrix")
     msg, _, A = _prep(msg, '', symbols)
     map = {c: i for i, c in enumerate(A)}
     C = [map[c] for c in msg]
@@ -1004,7 +1015,7 @@ def encipher_bifid(msg, key, symbols=None):
             'Length of alphabet (%s) is not a square number.' % len(A))
     N = int(n)
     if len(long_key) < N**2:
-      long_key = list(long_key) + [x for x in A if x not in long_key]
+        long_key = list(long_key) + [x for x in A if x not in long_key]
 
     # the fractionalization
     row_col = {ch: divmod(i, N) for i, ch in enumerate(long_key)}
@@ -1543,8 +1554,7 @@ def _rsa_key(*args, public=True, private=True, totient='Euler', index=None, mult
 
     tally = multiset(primes)
     if all(v == 1 for v in tally.values()):
-        multiple = list(tally.keys())
-        phi = _totient._from_distinct_primes(*multiple)
+        phi = int(_totient(tally))
 
     else:
         if not multipower:
@@ -1560,7 +1570,7 @@ def _rsa_key(*args, public=True, private=True, totient='Euler', index=None, mult
                 # stacklevel=4 because most users will call a function that
                 # calls this function
                 ).warn(stacklevel=4)
-        phi = _totient._from_factors(tally)
+        phi = int(_totient(tally))
 
     if gcd(e, phi) == 1:
         if public and not private:
@@ -1632,10 +1642,10 @@ def rsa_public_key(*args, **kwargs):
 
     totient : bool, optional
         If ``'Euler'``, it uses Euler's totient `\phi(n)` which is
-        :meth:`sympy.ntheory.factor_.totient` in SymPy.
+        :meth:`sympy.functions.combinatorial.numbers.totient` in SymPy.
 
         If ``'Carmichael'``, it uses Carmichael's totient `\lambda(n)`
-        which is :meth:`sympy.ntheory.factor_.reduced_totient` in SymPy.
+        which is :meth:`sympy.functions.combinatorial.numbers.reduced_totient` in SymPy.
 
         Unlike private key generation, this is a trivial keyword for
         public key generation because
@@ -1762,11 +1772,11 @@ def rsa_private_key(*args, **kwargs):
 
     totient : bool, optional
         If ``'Euler'``, it uses Euler's totient convention `\phi(n)`
-        which is :meth:`sympy.ntheory.factor_.totient` in SymPy.
+        which is :meth:`sympy.functions.combinatorial.numbers.totient` in SymPy.
 
         If ``'Carmichael'``, it uses Carmichael's totient convention
         `\lambda(n)` which is
-        :meth:`sympy.ntheory.factor_.reduced_totient` in SymPy.
+        :meth:`sympy.functions.combinatorial.numbers.reduced_totient` in SymPy.
 
         There can be some output differences for private key generation
         as examples below.
@@ -2221,7 +2231,8 @@ def encode_morse(msg, sep='|', mapping=None):
     """
 
     mapping = mapping or char_morse
-    assert sep not in mapping
+    if sep in mapping:
+        raise ValueError(f"Separator {sep!r} is already used in the mapping.")
     word_sep = 2*sep
     mapping[" "] = word_sep
     suffix = msg and msg[-1] in whitespace
@@ -2284,6 +2295,7 @@ def decode_morse(msg, sep='|', mapping=None):
 #################### LFSRs  ##########################################
 
 
+@doctest_depends_on(ground_types=['python', 'gmpy'])
 def lfsr_sequence(key, fill, n):
     r"""
     This function creates an LFSR sequence.
@@ -2373,7 +2385,7 @@ def lfsr_sequence(key, fill, n):
         raise TypeError("key must be a list")
     if not isinstance(fill, list):
         raise TypeError("fill must be a list")
-    p = key[0].mod
+    p = key[0].modulus()
     F = FF(p)
     s = fill
     k = len(fill)
@@ -2382,7 +2394,7 @@ def lfsr_sequence(key, fill, n):
         s0 = s[:]
         L.append(s[0])
         s = s[1:k]
-        x = sum([int(key[i]*s0[i]) for i in range(k)])
+        x = sum(int(key[i]*s0[i]) for i in range(k))
         s.append(F(x))
     return L       # use [int(x) for x in L] for int version
 
@@ -2494,7 +2506,7 @@ def lfsr_connection_polynomial(s):
 
     """
     # Initialization:
-    p = s[0].mod
+    p = s[0].modulus()
     x = Symbol("x")
     C = 1*x**0
     B = 1*x**0
@@ -2508,8 +2520,8 @@ def lfsr_connection_polynomial(s):
             r = min(L + 1, dC + 1)
             coeffsC = [C.subs(x, 0)] + [C.coeff(x**i)
                 for i in range(1, dC + 1)]
-            d = (int(s[N]) + sum([coeffsC[i]*int(s[N - i])
-                for i in range(1, r)])) % p
+            d = (int(s[N]) + sum(coeffsC[i]*int(s[N - i])
+                for i in range(1, r))) % p
         if L == 0:
             d = int(s[N])*x**0
         if d == 0:
@@ -2530,8 +2542,8 @@ def lfsr_connection_polynomial(s):
                 N += 1
     dC = Poly(C).degree()
     coeffsC = [C.subs(x, 0)] + [C.coeff(x**i) for i in range(1, dC + 1)]
-    return sum([coeffsC[i] % p*x**i for i in range(dC + 1)
-        if coeffsC[i] is not None])
+    return sum(coeffsC[i] % p*x**i for i in range(dC + 1)
+        if coeffsC[i] is not None)
 
 
 #################### ElGamal  #############################
@@ -2632,7 +2644,7 @@ def encipher_elgamal(i, key, seed=None):
     ``i`` is a plaintext message expressed as an integer.
     ``key`` is public key (p, r, e). In order to encrypt
     a message, a random number ``a`` in ``range(2, p)``
-    is generated and the encryped message is returned as
+    is generated and the encrypted message is returned as
     `c_{1}` and `c_{2}` where:
 
     `c_{1} \equiv r^{a} \pmod p`

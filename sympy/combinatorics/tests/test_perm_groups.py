@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.containers import Tuple
 from sympy.combinatorics.generators import rubik_cube_generators
 from sympy.combinatorics.homomorphisms import is_isomorphic
@@ -65,6 +66,57 @@ def test_order():
     g = PermutationGroup([a, b])
     assert g.order() == 1814400
     assert PermutationGroup().order() == 1
+
+
+def test_molien():
+    from sympy.abc import t
+    G = PermutationGroup()
+    assert G.molien() == 1
+    assert G.molien(t) == 1
+
+    C3 = CyclicGroup(3)
+    assert C3.molien() == 2*(1 - t**3)**(-1)/3 + (1 - t)**(-3)/3
+
+    S3 = SymmetricGroup(3)
+    assert S3.molien() == (2*(1 - t**3)**(-1) + 3/((1 - t)*(1 - t**2)) + (1 - t)**(-3))/6
+    assert S3.molien(t) == (2*(1 - t**3)**(-1) + 3/((1 - t)*(1 - t**2)) + (1 - t)**(-3))/6
+
+    G = PermutationGroup(Permutation(5))
+    assert G.molien() == 1/(1 - t)**6
+
+
+def test_identity_generators_dups_false():
+    identity = Permutation(3)
+    G = PermutationGroup(identity, identity, dups=False)
+    assert len(G.generators) == 1
+    assert G.generators[0].is_identity
+    assert G.order() == 1
+
+
+def test_property_aliasing():
+    G = SymmetricGroup(4)
+    base = G.base
+    base.append(99)
+    assert G.base == [0, 1, 2]
+
+    orbits = G.basic_orbits
+    orbits[0].append(99)
+    assert G.basic_orbits == [[0, 1, 2, 3], [1, 2, 3], [2, 3]]
+
+    transversals = G.basic_transversals
+    transversals[0][99] = Permutation(3)
+    assert 99 not in G.basic_transversals[0]
+
+    H = PermutationGroup(Permutation([1, 0, 2]), Permutation([0, 2, 1]))
+    gens = H.generators
+    gens.pop()
+    assert len(H.generators) == 2
+    assert H.order() == 6
+
+    expected = len(G.strong_gens)
+    strong_gens = G.strong_gens
+    strong_gens.pop()
+    assert len(G.strong_gens) == expected
 
 
 def test_equality():
@@ -195,12 +247,11 @@ def test_coset_rank():
     gens = [Permutation(p) for p in gens_cube]
     G = PermutationGroup(gens)
     i = 0
-    for h in G.generate(af=True):
+    for i, h in enumerate(G.generate(af=True)):
         rk = G.coset_rank(h)
         assert rk == i
         h1 = G.coset_unrank(rk, af=True)
         assert h == h1
-        i += 1
     assert G.coset_unrank(48) is None
     assert G.coset_unrank(G.coset_rank(gens[0])) == gens[0]
 
@@ -311,6 +362,14 @@ def test_is_normal():
     assert H_id.is_normal(H)
     assert not H_n2_1.is_normal(H)
     assert not H_n2_2.is_normal(H)
+
+
+def test_is_normal_after_is_abelian():
+    G = SymmetricGroup(3)#PermutationGroup(Permutation([1, 2, 0]), Permutation([1, 0, 2]))
+    H = PermutationGroup(Permutation([1, 0, 2]))
+
+    assert H.is_abelian is True
+    assert H.is_normal(G) is False
 
 
 def test_eq():
@@ -806,7 +865,7 @@ def test_elements():
     from sympy.sets.sets import FiniteSet
 
     p = Permutation(2, 3)
-    assert PermutationGroup(p).elements == {Permutation(3), Permutation(2, 3)}
+    assert set(PermutationGroup(p).elements) == {Permutation(3), Permutation(2, 3)}
     assert FiniteSet(*PermutationGroup(p).elements) \
         == FiniteSet(Permutation(2, 3), Permutation(3))
 
@@ -833,7 +892,7 @@ def test_coset_transvesal():
 
 def test_coset_table():
     G = PermutationGroup(Permutation(0,1,2,3), Permutation(0,1,2),
-         Permutation(0,4,2,7), Permutation(5,6), Permutation(0,7));
+         Permutation(0,4,2,7), Permutation(5,6), Permutation(0,7))
     H = PermutationGroup(Permutation(0,1,2,3), Permutation(0,7))
     assert G.coset_table(H) == \
         [[0, 0, 0, 0, 1, 2, 3, 3, 0, 0], [4, 5, 2, 5, 6, 0, 7, 7, 1, 1],
@@ -1241,3 +1300,10 @@ def test_symmetricpermutationgroup():
     assert a.degree == 5
     assert a.order() == 120
     assert a.identity() == Permutation(4)
+
+def test_quotient_group():
+    G = SymmetricGroup(4)
+    N = AlternatingGroup(4)
+    Q = G.quotient_group(N)
+    Q_expected = CyclicGroup(2)
+    assert(is_isomorphic(Q, Q_expected) == True)

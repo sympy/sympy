@@ -6,34 +6,39 @@ sequences of rational numbers such as Bernoulli and Fibonacci numbers.
 Factorials, binomial coefficients and related functions are located in
 the separate 'factorials' module.
 """
+from __future__ import annotations
 from math import prod
 from collections import defaultdict
-from typing import Tuple as tTuple
+from typing import Callable
 
 from sympy.core import S, Symbol, Add, Dummy
 from sympy.core.cache import cacheit
+from sympy.core.containers import Dict
 from sympy.core.expr import Expr
-from sympy.core.function import ArgumentIndexError, Function, expand_mul
+from sympy.core.function import ArgumentIndexError, DefinedFunction, expand_mul
 from sympy.core.logic import fuzzy_not
 from sympy.core.mul import Mul
 from sympy.core.numbers import E, I, pi, oo, Rational, Integer
 from sympy.core.relational import Eq, is_le, is_gt, is_lt
-from sympy.external.gmpy import SYMPY_INTS
+from sympy.external.gmpy import (SYMPY_INTS, remove, lcm, legendre, jacobi,
+                                 kronecker, fibonacci as _ifib)
+from sympy.external.mpmath import local_workprec, eulernum, bernfrac
 from sympy.functions.combinatorial.factorials import (binomial,
     factorial, subfactorial)
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.ntheory.factor_ import factorint
+from sympy.ntheory.factor_ import (factorint, _divisor_sigma, is_carmichael,
+                                   find_carmichael_numbers_in_range, find_first_n_carmichaels)
+from sympy.ntheory.generate import _primepi
+from sympy.ntheory.partitions_ import _partition, _partition_rec
 from sympy.ntheory.primetest import isprime, is_square
 from sympy.polys.appellseqs import bernoulli_poly, euler_poly, genocchi_poly
+from sympy.polys.polytools import cancel
 from sympy.utilities.enumerative import MultisetPartitionTraverser
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import multiset, multiset_derangements, iterable
 from sympy.utilities.memoization import recurrence_memo
 from sympy.utilities.misc import as_int
-
-from mpmath import mp, workprec
-from mpmath.libmp import ifib as _ifib
 
 
 def _product(a, b):
@@ -50,10 +55,7 @@ _sym = Symbol('x')
 #                                                                            #
 #----------------------------------------------------------------------------#
 
-def _divides(p, n):
-    return n % p == 0
-
-class carmichael(Function):
+class carmichael(DefinedFunction):
     r"""
     Carmichael Numbers:
 
@@ -86,14 +88,14 @@ class carmichael(Function):
     Examples
     ========
 
-    >>> from sympy import carmichael
-    >>> carmichael.find_first_n_carmichaels(5)
+    >>> from sympy.ntheory.factor_ import find_first_n_carmichaels, find_carmichael_numbers_in_range
+    >>> find_first_n_carmichaels(5)
     [561, 1105, 1729, 2465, 2821]
-    >>> carmichael.find_carmichael_numbers_in_range(0, 562)
+    >>> find_carmichael_numbers_in_range(0, 562)
     [561]
-    >>> carmichael.find_carmichael_numbers_in_range(0,1000)
+    >>> find_carmichael_numbers_in_range(0,1000)
     [561]
-    >>> carmichael.find_carmichael_numbers_in_range(0,2000)
+    >>> find_carmichael_numbers_in_range(0,2000)
     [561, 1105, 1729]
 
     References
@@ -141,49 +143,39 @@ directly instead.
 
     @staticmethod
     def is_carmichael(n):
-        if n >= 0:
-            if (n == 1) or isprime(n) or (n % 2 == 0):
-                return False
-
-            divisors = [1, n]
-
-            # get divisors
-            divisors.extend([i for i in range(3, n // 2 + 1, 2) if n % i == 0])
-
-            for i in divisors:
-                if is_square(i) and i != 1:
-                    return False
-                if isprime(i):
-                    if not _divides(i - 1, n - 1):
-                        return False
-
-            return True
-
-        else:
-            raise ValueError('The provided number must be greater than or equal to 0')
+        sympy_deprecation_warning(
+        """
+is_carmichael is just a wrapper around sympy.ntheory.factor_.is_carmichael so use that
+directly instead.
+        """,
+        deprecated_since_version="1.13",
+        active_deprecations_target='deprecated-ntheory-symbolic-functions',
+        )
+        return is_carmichael(n)
 
     @staticmethod
     def find_carmichael_numbers_in_range(x, y):
-        if 0 <= x <= y:
-            if x % 2 == 0:
-                return [i for i in range(x + 1, y, 2) if carmichael.is_carmichael(i)]
-            else:
-                return [i for i in range(x, y, 2) if carmichael.is_carmichael(i)]
-
-        else:
-            raise ValueError('The provided range is not valid. x and y must be non-negative integers and x <= y')
+        sympy_deprecation_warning(
+        """
+find_carmichael_numbers_in_range is just a wrapper around sympy.ntheory.factor_.find_carmichael_numbers_in_range so use that
+directly instead.
+        """,
+        deprecated_since_version="1.13",
+        active_deprecations_target='deprecated-ntheory-symbolic-functions',
+        )
+        return find_carmichael_numbers_in_range(x, y)
 
     @staticmethod
     def find_first_n_carmichaels(n):
-        i = 1
-        carmichaels = []
-
-        while len(carmichaels) < n:
-            if carmichael.is_carmichael(i):
-                carmichaels.append(i)
-            i += 2
-
-        return carmichaels
+        sympy_deprecation_warning(
+        """
+find_first_n_carmichaels is just a wrapper around sympy.ntheory.factor_.find_first_n_carmichaels so use that
+directly instead.
+        """,
+        deprecated_since_version="1.13",
+        active_deprecations_target='deprecated-ntheory-symbolic-functions',
+        )
+        return find_first_n_carmichaels(n)
 
 
 #----------------------------------------------------------------------------#
@@ -193,7 +185,7 @@ directly instead.
 #----------------------------------------------------------------------------#
 
 
-class fibonacci(Function):
+class fibonacci(DefinedFunction):
     r"""
     Fibonacci numbers / Fibonacci polynomials
 
@@ -281,7 +273,7 @@ class fibonacci(Function):
 #----------------------------------------------------------------------------#
 
 
-class lucas(Function):
+class lucas(DefinedFunction):
     """
     Lucas numbers
 
@@ -322,8 +314,8 @@ class lucas(Function):
             return fibonacci(n + 1) + fibonacci(n - 1)
 
     def _eval_rewrite_as_sqrt(self, n, **kwargs):
-       from sympy.functions.elementary.miscellaneous import sqrt
-       return 2**(-n)*((1 + sqrt(5))**n + (-sqrt(5) + 1)**n)
+        from sympy.functions.elementary.miscellaneous import sqrt
+        return 2**(-n)*((1 + sqrt(5))**n + (-sqrt(5) + 1)**n)
 
 
 #----------------------------------------------------------------------------#
@@ -333,7 +325,7 @@ class lucas(Function):
 #----------------------------------------------------------------------------#
 
 
-class tribonacci(Function):
+class tribonacci(DefinedFunction):
     r"""
     Tribonacci numbers / Tribonacci polynomials
 
@@ -423,7 +415,7 @@ class tribonacci(Function):
 #----------------------------------------------------------------------------#
 
 
-class bernoulli(Function):
+class bernoulli(DefinedFunction):
     r"""
     Bernoulli numbers / Bernoulli polynomials / Bernoulli function
 
@@ -524,7 +516,7 @@ class bernoulli(Function):
 
     """
 
-    args: tTuple[Integer]
+    args: tuple[Integer]
 
     # Calculates B_n for positive even n
     @staticmethod
@@ -567,7 +559,7 @@ class bernoulli(Function):
                 n = int(n)
                 # Use mpmath for enormous Bernoulli numbers
                 if n > 500:
-                    p, q = mp.bernfrac(n)
+                    p, q = bernfrac(n)
                     return Rational(int(p), int(q))
                 case = n % 6
                 highest_cached = cls._highest[case]
@@ -594,15 +586,15 @@ class bernoulli(Function):
             return
         n = self.args[0]._to_mpmath(prec)
         x = (self.args[1] if len(self.args) > 1 else S.One)._to_mpmath(prec)
-        with workprec(prec):
+        with local_workprec(prec) as mp:
             if n == 0:
                 res = mp.mpf(1)
             elif n == 1:
-                res = x - mp.mpf(0.5)
+                res = mp.fsub(x, mp.mpf(0.5))
             elif mp.isint(n) and n >= 0:
                 res = mp.bernoulli(n) if x == 1 else mp.bernpoly(n, x)
             else:
-                res = -n * mp.zeta(1-n, x)
+                res = mp.fmul(mp.fneg(n), mp.zeta(mp.fsub(1, n), x))
         return Expr._from_mpmath(res, prec)
 
 
@@ -613,7 +605,7 @@ class bernoulli(Function):
 #----------------------------------------------------------------------------#
 
 
-class bell(Function):
+class bell(DefinedFunction):
     r"""
     Bell numbers / Bell polynomials
 
@@ -766,7 +758,7 @@ class bell(Function):
 #----------------------------------------------------------------------------#
 
 
-class harmonic(Function):
+class harmonic(DefinedFunction):
     r"""
     Harmonic numbers
 
@@ -898,6 +890,9 @@ class harmonic(Function):
 
     """
 
+    # This prevents redundant recalculations and speeds up harmonic number computations.
+    harmonic_cache: dict[Integer, Callable[[int], Rational]] = {}
+
     @classmethod
     def eval(cls, n, m=None):
         from sympy.functions.special.zeta_functions import zeta
@@ -922,7 +917,14 @@ class harmonic(Function):
             if n.is_negative and (m.is_integer is False or m.is_nonpositive is False):
                 return S.ComplexInfinity if m is S.One else S.NaN
             if n.is_nonnegative:
-                return Add(*(k**(-m) for k in range(1, int(n)+1)))
+                if m.is_Integer:
+                    if m not in cls.harmonic_cache:
+                        @recurrence_memo([0])
+                        def f(n, prev):
+                            return prev[-1] + S.One / n**m
+                        cls.harmonic_cache[m] = f
+                    return cls.harmonic_cache[m](int(n))
+                return Add(*(k**(-m) for k in range(1, int(n) + 1)))
 
     def _eval_rewrite_as_polygamma(self, n, m=S.One, **kwargs):
         from sympy.functions.special.gamma_functions import gamma, polygamma
@@ -1003,13 +1005,13 @@ class harmonic(Function):
             return
         n = self.args[0]._to_mpmath(prec)
         m = (self.args[1] if len(self.args) > 1 else S.One)._to_mpmath(prec)
-        if mp.isint(n) and n < 0:
-            return S.NaN
-        with workprec(prec):
+        with local_workprec(prec) as mp:
+            if mp.isint(n) and n < 0:
+                return S.NaN
             if m == 1:
                 res = mp.harmonic(n)
             else:
-                res = mp.zeta(m) - mp.zeta(m, n+1)
+                res = mp.fsub(mp.zeta(m), mp.zeta(m, mp.fadd(n, 1)))
         return Expr._from_mpmath(res, prec)
 
     def fdiff(self, argindex=1):
@@ -1031,7 +1033,7 @@ class harmonic(Function):
 #----------------------------------------------------------------------------#
 
 
-class euler(Function):
+class euler(DefinedFunction):
     r"""
     Euler numbers / Euler polynomials / Euler function
 
@@ -1129,12 +1131,20 @@ class euler(Function):
             if n.is_odd and n.is_positive:
                 return S.Zero
             elif n.is_Number:
-                from mpmath import mp
-                n = n._to_mpmath(mp.prec)
-                res = mp.eulernum(n, exact=True)
+                n = n._to_mpmath(53)
+                res = eulernum(n, exact=True)
                 return Integer(res)
         # Euler polynomials
         elif n.is_Number:
+            from sympy.core.evalf import pure_complex
+            n = int(n)
+            reim = pure_complex(x, or_real=True)
+            if reim and all(a.is_Float or a.is_Integer for a in reim) \
+                    and any(a.is_Float for a in reim):
+                prec = min([a._prec for a in reim if a.is_Float])
+                with local_workprec(prec) as mp:
+                    res = mp.eulerpoly(n, x)
+                return Expr._from_mpmath(res, prec)
             return euler_poly(n, x)
 
     def _eval_rewrite_as_Sum(self, n, x=None, **kwargs):
@@ -1162,22 +1172,28 @@ class euler(Function):
     def _eval_evalf(self, prec):
         if not all(i.is_number for i in self.args):
             return
-        from mpmath import mp
         m, x = (self.args[0], None) if len(self.args) == 1 else self.args
         m = m._to_mpmath(prec)
         if x is not None:
             x = x._to_mpmath(prec)
-        with workprec(prec):
+        with local_workprec(prec) as mp:
             if mp.isint(m) and m >= 0:
                 res = mp.eulernum(m) if x is None else mp.eulerpoly(m, x)
             else:
                 if m == -1:
-                    res = mp.pi if x is None else mp.digamma((x+1)/2) - mp.digamma(x/2)
+                    if x is None:
+                        res = mp.pi
+                    else:
+                        res = mp.fsub(
+                                mp.digamma(mp.fdiv(mp.fadd(x, 1), 2)),
+                                mp.digamma(mp.fdiv(x, 2)))
                 else:
                     y = 0.5 if x is None else x
-                    res = 2 * (mp.zeta(-m, y) - 2**(m+1) * mp.zeta(-m, (y+1)/2))
+                    res = mp.fmul(2, (mp.fsub(mp.zeta(mp.fneg(m), y),
+                               mp.fmul(mp.power(2, mp.fadd(m, 1)),
+                               mp.zeta(mp.fneg(m), mp.fdiv(mp.fadd(y, 1), 2))))))
                 if x is None:
-                    res *= 2**m
+                    res = mp.fmul(res, mp.power(2, m))
         return Expr._from_mpmath(res, prec)
 
 
@@ -1188,7 +1204,7 @@ class euler(Function):
 #----------------------------------------------------------------------------#
 
 
-class catalan(Function):
+class catalan(DefinedFunction):
     r"""
     Catalan numbers
 
@@ -1334,7 +1350,7 @@ class catalan(Function):
 #----------------------------------------------------------------------------#
 
 
-class genocchi(Function):
+class genocchi(DefinedFunction):
     r"""
     Genocchi numbers / Genocchi polynomials / Genocchi function
 
@@ -1474,7 +1490,7 @@ class genocchi(Function):
 #----------------------------------------------------------------------------#
 
 
-class andre(Function):
+class andre(DefinedFunction):
     r"""
     Andre numbers / Andre function
 
@@ -1576,9 +1592,10 @@ class andre(Function):
         if not self.args[0].is_number:
             return
         s = self.args[0]._to_mpmath(prec+12)
-        with workprec(prec+12):
-            sp, cp = mp.sinpi(s/2), mp.cospi(s/2)
-            res = 2*mp.dirichlet(-s, (-sp, cp, sp, -cp))
+        with local_workprec(prec+12) as mp:
+            s2 = mp.fdiv(s, 2)
+            sp, cp = mp.sinpi(s2), mp.cospi(s2)
+            res = mp.fmul(2, mp.dirichlet(mp.fneg(s), (mp.fneg(sp), cp, sp, mp.fneg(cp))))
         return Expr._from_mpmath(res, prec)
 
 
@@ -1588,8 +1605,7 @@ class andre(Function):
 #                                                                            #
 #----------------------------------------------------------------------------#
 
-_npartition = [1, 1]
-class partition(Function):
+class partition(DefinedFunction):
     r"""
     Partition numbers
 
@@ -1621,63 +1637,330 @@ class partition(Function):
     .. [2] https://en.wikipedia.org/wiki/Pentagonal_number_theorem
 
     """
-
-    @staticmethod
-    def _partition(n):
-        L = len(_npartition)
-        if n < L:
-            return _npartition[n]
-        # lengthen cache
-        for _n in range(L, n + 1):
-            v, p, i = 0, 0, 0
-            while 1:
-                s = 0
-                p += 3*i + 1  # p = pentagonal number: 1, 5, 12, ...
-                if _n >= p:
-                    s += _npartition[_n - p]
-                i += 1
-                gp = p + i  # gp = generalized pentagonal: 2, 7, 15, ...
-                if _n >= gp:
-                    s += _npartition[_n - gp]
-                if s == 0:
-                    break
-                else:
-                    v += s if i%2 == 1 else -s
-            _npartition.append(v)
-        return v
+    is_integer = True
+    is_nonnegative = True
 
     @classmethod
     def eval(cls, n):
-        is_int = n.is_integer
-        if is_int == False:
-            raise ValueError("Partition numbers are defined only for "
-                             "integers")
-        elif is_int:
-            if n.is_negative:
-                return S.Zero
-
-            if n.is_zero or (n - 1).is_zero:
-                return S.One
-
-            if n.is_Integer:
-                return Integer(cls._partition(n))
-
-
-    def _eval_is_integer(self):
-        if self.args[0].is_integer:
-            return True
-
-    def _eval_is_negative(self):
-        if self.args[0].is_integer:
-            return False
+        if n.is_integer is False:
+            raise TypeError("n should be an integer")
+        if n.is_negative is True:
+            return S.Zero
+        if n.is_zero is True or n is S.One:
+            return S.One
+        if n.is_Integer is True:
+            return S(_partition(as_int(n)))
 
     def _eval_is_positive(self):
-        n = self.args[0]
-        if n.is_nonnegative and n.is_integer:
+        if self.args[0].is_nonnegative is True:
             return True
 
+    def _eval_Mod(self, q):
+        # Ramanujan's congruences
+        n = self.args[0]
+        for p, rem in [(5, 4), (7, 5), (11, 6)]:
+            if q == p and n % q == rem:
+                return S.Zero
 
-class mobius(Function):
+
+class divisor_sigma(DefinedFunction):
+    r"""
+    Calculate the divisor function `\sigma_k(n)` for positive integer n
+
+    ``divisor_sigma(n, k)`` is equal to ``sum([x**k for x in divisors(n)])``
+
+    If n's prime factorization is:
+
+    .. math ::
+        n = \prod_{i=1}^\omega p_i^{m_i},
+
+    then
+
+    .. math ::
+        \sigma_k(n) = \prod_{i=1}^\omega (1+p_i^k+p_i^{2k}+\cdots
+        + p_i^{m_ik}).
+
+    Examples
+    ========
+
+    >>> from sympy.functions.combinatorial.numbers import divisor_sigma
+    >>> divisor_sigma(18, 0)
+    6
+    >>> divisor_sigma(39, 1)
+    56
+    >>> divisor_sigma(12, 2)
+    210
+    >>> divisor_sigma(37)
+    38
+
+    See Also
+    ========
+
+    sympy.ntheory.factor_.divisor_count, totient, sympy.ntheory.factor_.divisors, sympy.ntheory.factor_.factorint
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Divisor_function
+
+    """
+    is_integer = True
+    is_positive = True
+
+    @classmethod
+    def eval(cls, n, k=S.One):
+        if n.is_integer is False:
+            raise TypeError("n should be an integer")
+        if n.is_positive is False:
+            raise ValueError("n should be a positive integer")
+        if k.is_integer is False:
+            raise TypeError("k should be an integer")
+        if k.is_nonnegative is False:
+            raise ValueError("k should be a nonnegative integer")
+        if n.is_prime is True:
+            return 1 + n**k
+        if n is S.One:
+            return S.One
+        if n.is_Integer is True:
+            if k.is_zero is True:
+                return Mul(*[e + 1 for e in factorint(n).values()])
+            if k.is_Integer is True:
+                return S(_divisor_sigma(as_int(n), as_int(k)))
+            if k.is_zero is False:
+                return Mul(*[cancel((p**(k*(e + 1)) - 1) / (p**k - 1)) for p, e in factorint(n).items()])
+
+
+class udivisor_sigma(DefinedFunction):
+    r"""
+    Calculate the unitary divisor function `\sigma_k^*(n)` for positive integer n
+
+    ``udivisor_sigma(n, k)`` is equal to ``sum([x**k for x in udivisors(n)])``
+
+    If n's prime factorization is:
+
+    .. math ::
+        n = \prod_{i=1}^\omega p_i^{m_i},
+
+    then
+
+    .. math ::
+        \sigma_k^*(n) = \prod_{i=1}^\omega (1+ p_i^{m_ik}).
+
+    Parameters
+    ==========
+
+    k : power of divisors in the sum
+
+        for k = 0, 1:
+        ``udivisor_sigma(n, 0)`` is equal to ``udivisor_count(n)``
+        ``udivisor_sigma(n, 1)`` is equal to ``sum(udivisors(n))``
+
+        Default for k is 1.
+
+    Examples
+    ========
+
+    >>> from sympy.functions.combinatorial.numbers import udivisor_sigma
+    >>> udivisor_sigma(18, 0)
+    4
+    >>> udivisor_sigma(74, 1)
+    114
+    >>> udivisor_sigma(36, 3)
+    47450
+    >>> udivisor_sigma(111)
+    152
+
+    See Also
+    ========
+
+    sympy.ntheory.factor_.divisor_count, totient, sympy.ntheory.factor_.divisors,
+    sympy.ntheory.factor_.udivisors, sympy.ntheory.factor_.udivisor_count, divisor_sigma,
+    sympy.ntheory.factor_.factorint
+
+    References
+    ==========
+
+    .. [1] https://mathworld.wolfram.com/UnitaryDivisorFunction.html
+
+    """
+    is_integer = True
+    is_positive = True
+
+    @classmethod
+    def eval(cls, n, k=S.One):
+        if n.is_integer is False:
+            raise TypeError("n should be an integer")
+        if n.is_positive is False:
+            raise ValueError("n should be a positive integer")
+        if k.is_integer is False:
+            raise TypeError("k should be an integer")
+        if k.is_nonnegative is False:
+            raise ValueError("k should be a nonnegative integer")
+        if n.is_prime is True:
+            return 1 + n**k
+        if n.is_Integer:
+            return Mul(*[1+p**(k*e) for p, e in factorint(n).items()])
+
+
+class legendre_symbol(DefinedFunction):
+    r"""
+    Returns the Legendre symbol `(a / p)`.
+
+    For an integer ``a`` and an odd prime ``p``, the Legendre symbol is
+    defined as
+
+    .. math ::
+        \genfrac(){}{}{a}{p} = \begin{cases}
+             0 & \text{if } p \text{ divides } a\\
+             1 & \text{if } a \text{ is a quadratic residue modulo } p\\
+            -1 & \text{if } a \text{ is a quadratic nonresidue modulo } p
+        \end{cases}
+
+    Examples
+    ========
+
+    >>> from sympy.functions.combinatorial.numbers import legendre_symbol
+    >>> [legendre_symbol(i, 7) for i in range(7)]
+    [0, 1, 1, -1, 1, -1, -1]
+    >>> sorted(set([i**2 % 7 for i in range(7)]))
+    [0, 1, 2, 4]
+
+    See Also
+    ========
+
+    sympy.ntheory.residue_ntheory.is_quad_residue, jacobi_symbol
+
+    """
+    is_integer = True
+    is_prime = False
+
+    @classmethod
+    def eval(cls, a, p):
+        if a.is_integer is False:
+            raise TypeError("a should be an integer")
+        if p.is_integer is False:
+            raise TypeError("p should be an integer")
+        if p.is_prime is False or p.is_odd is False:
+            raise ValueError("p should be an odd prime integer")
+        if (a % p).is_zero is True:
+            return S.Zero
+        if a is S.One:
+            return S.One
+        if a.is_Integer is True and p.is_Integer is True:
+            return S(legendre(as_int(a), as_int(p)))
+
+
+class jacobi_symbol(DefinedFunction):
+    r"""
+    Returns the Jacobi symbol `(m / n)`.
+
+    For any integer ``m`` and any positive odd integer ``n`` the Jacobi symbol
+    is defined as the product of the Legendre symbols corresponding to the
+    prime factors of ``n``:
+
+    .. math ::
+        \genfrac(){}{}{m}{n} =
+            \genfrac(){}{}{m}{p^{1}}^{\alpha_1}
+            \genfrac(){}{}{m}{p^{2}}^{\alpha_2}
+            ...
+            \genfrac(){}{}{m}{p^{k}}^{\alpha_k}
+            \text{ where } n =
+                p_1^{\alpha_1}
+                p_2^{\alpha_2}
+                ...
+                p_k^{\alpha_k}
+
+    Like the Legendre symbol, if the Jacobi symbol `\genfrac(){}{}{m}{n} = -1`
+    then ``m`` is a quadratic nonresidue modulo ``n``.
+
+    But, unlike the Legendre symbol, if the Jacobi symbol
+    `\genfrac(){}{}{m}{n} = 1` then ``m`` may or may not be a quadratic residue
+    modulo ``n``.
+
+    Examples
+    ========
+
+    >>> from sympy.functions.combinatorial.numbers import jacobi_symbol, legendre_symbol
+    >>> from sympy import S
+    >>> jacobi_symbol(45, 77)
+    -1
+    >>> jacobi_symbol(60, 121)
+    1
+
+    The relationship between the ``jacobi_symbol`` and ``legendre_symbol`` can
+    be demonstrated as follows:
+
+    >>> L = legendre_symbol
+    >>> S(45).factors()
+    {3: 2, 5: 1}
+    >>> jacobi_symbol(7, 45) == L(7, 3)**2 * L(7, 5)**1
+    True
+
+    See Also
+    ========
+
+    sympy.ntheory.residue_ntheory.is_quad_residue, legendre_symbol
+
+    """
+    is_integer = True
+    is_prime = False
+
+    @classmethod
+    def eval(cls, m, n):
+        if m.is_integer is False:
+            raise TypeError("m should be an integer")
+        if n.is_integer is False:
+            raise TypeError("n should be an integer")
+        if n.is_positive is False or n.is_odd is False:
+            raise ValueError("n should be an odd positive integer")
+        if m is S.One or n is S.One:
+            return S.One
+        if (m % n).is_zero is True:
+            return S.Zero
+        if m.is_Integer is True and n.is_Integer is True:
+            return S(jacobi(as_int(m), as_int(n)))
+
+
+class kronecker_symbol(DefinedFunction):
+    r"""
+    Returns the Kronecker symbol `(a / n)`.
+
+    Examples
+    ========
+
+    >>> from sympy.functions.combinatorial.numbers import kronecker_symbol
+    >>> kronecker_symbol(45, 77)
+    -1
+    >>> kronecker_symbol(13, -120)
+    1
+
+    See Also
+    ========
+
+    jacobi_symbol, legendre_symbol
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Kronecker_symbol
+
+    """
+    is_integer = True
+    is_prime = False
+
+    @classmethod
+    def eval(cls, a, n):
+        if a.is_integer is False:
+            raise TypeError("a should be an integer")
+        if n.is_integer is False:
+            raise TypeError("n should be an integer")
+        if a is S.One or n is S.One:
+            return S.One
+        if a.is_Integer is True and n.is_Integer is True:
+            return S(kronecker(as_int(a), as_int(n)))
+
+
+class mobius(DefinedFunction):
     """
     Mobius function maps natural number to {-1, 0, 1}
 
@@ -1757,6 +2040,275 @@ class mobius(Function):
         return result
 
 
+class primenu(DefinedFunction):
+    r"""
+    Calculate the number of distinct prime factors for a positive integer n.
+
+    If n's prime factorization is:
+
+    .. math ::
+        n = \prod_{i=1}^k p_i^{m_i},
+
+    then ``primenu(n)`` or `\nu(n)` is:
+
+    .. math ::
+        \nu(n) = k.
+
+    Examples
+    ========
+
+    >>> from sympy.functions.combinatorial.numbers import primenu
+    >>> primenu(1)
+    0
+    >>> primenu(30)
+    3
+
+    See Also
+    ========
+
+    sympy.ntheory.factor_.factorint
+
+    References
+    ==========
+
+    .. [1] https://mathworld.wolfram.com/PrimeFactor.html
+    .. [2] https://oeis.org/A001221
+
+    """
+    is_integer = True
+    is_nonnegative = True
+
+    @classmethod
+    def eval(cls, n):
+        if n.is_integer is False:
+            raise TypeError("n should be an integer")
+        if n.is_positive is False:
+            raise ValueError("n should be a positive integer")
+        if n.is_prime is True:
+            return S.One
+        if n is S.One:
+            return S.Zero
+        if n.is_Integer is True:
+            return S(len(factorint(n)))
+
+
+class primeomega(DefinedFunction):
+    r"""
+    Calculate the number of prime factors counting multiplicities for a
+    positive integer n.
+
+    If n's prime factorization is:
+
+    .. math ::
+        n = \prod_{i=1}^k p_i^{m_i},
+
+    then ``primeomega(n)``  or `\Omega(n)` is:
+
+    .. math ::
+        \Omega(n) = \sum_{i=1}^k m_i.
+
+    Examples
+    ========
+
+    >>> from sympy.functions.combinatorial.numbers import primeomega
+    >>> primeomega(1)
+    0
+    >>> primeomega(20)
+    3
+
+    See Also
+    ========
+
+    sympy.ntheory.factor_.factorint
+
+    References
+    ==========
+
+    .. [1] https://mathworld.wolfram.com/PrimeFactor.html
+    .. [2] https://oeis.org/A001222
+
+    """
+    is_integer = True
+    is_nonnegative = True
+
+    @classmethod
+    def eval(cls, n):
+        if n.is_integer is False:
+            raise TypeError("n should be an integer")
+        if n.is_positive is False:
+            raise ValueError("n should be a positive integer")
+        if n.is_prime is True:
+            return S.One
+        if n is S.One:
+            return S.Zero
+        if n.is_Integer is True:
+            return S(sum(factorint(n).values()))
+
+
+class totient(DefinedFunction):
+    r"""
+    Calculate the Euler totient function phi(n)
+
+    ``totient(n)`` or `\phi(n)` is the number of positive integers `\leq` n
+    that are relatively prime to n.
+
+    Examples
+    ========
+
+    >>> from sympy.functions.combinatorial.numbers import totient
+    >>> totient(1)
+    1
+    >>> totient(25)
+    20
+    >>> totient(45) == totient(5)*totient(9)
+    True
+
+    See Also
+    ========
+
+    sympy.ntheory.factor_.divisor_count
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Euler%27s_totient_function
+    .. [2] https://mathworld.wolfram.com/TotientFunction.html
+    .. [3] https://oeis.org/A000010
+
+    """
+    is_integer = True
+    is_positive = True
+
+    @classmethod
+    def eval(cls, n):
+        if n.is_integer is False:
+            raise TypeError("n should be an integer")
+        if n.is_positive is False:
+            raise ValueError("n should be a positive integer")
+        if n is S.One:
+            return S.One
+        if n.is_prime is True:
+            return n - 1
+        if isinstance(n, Dict):
+            return S(prod(p**(k-1)*(p-1) for p, k in n.items()))
+        if n.is_Integer is True:
+            return S(prod(p**(k-1)*(p-1) for p, k in factorint(n).items()))
+
+
+class reduced_totient(DefinedFunction):
+    r"""
+    Calculate the Carmichael reduced totient function lambda(n)
+
+    ``reduced_totient(n)`` or `\lambda(n)` is the smallest m > 0 such that
+    `k^m \equiv 1 \mod n` for all k relatively prime to n.
+
+    Examples
+    ========
+
+    >>> from sympy.functions.combinatorial.numbers import reduced_totient
+    >>> reduced_totient(1)
+    1
+    >>> reduced_totient(8)
+    2
+    >>> reduced_totient(30)
+    4
+
+    See Also
+    ========
+
+    totient
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Carmichael_function
+    .. [2] https://mathworld.wolfram.com/CarmichaelFunction.html
+    .. [3] https://oeis.org/A002322
+
+    """
+    is_integer = True
+    is_positive = True
+
+    @classmethod
+    def eval(cls, n):
+        if n.is_integer is False:
+            raise TypeError("n should be an integer")
+        if n.is_positive is False:
+            raise ValueError("n should be a positive integer")
+        if n is S.One:
+            return S.One
+        if n.is_prime is True:
+            return n - 1
+        if isinstance(n, Dict):
+            t = 1
+            if 2 in n:
+                t = (1 << (n[2] - 2)) if 2 < n[2] else n[2]
+            return S(lcm(int(t), *(int(p-1)*int(p)**int(k-1) for p, k in n.items() if p != 2)))
+        if n.is_Integer is True:
+            n, t = remove(int(n), 2)
+            if not t:
+                t = 1
+            elif 2 < t:
+                t = 1 << (t - 2)
+            return S(lcm(t, *((p-1)*p**(k-1) for p, k in factorint(n).items())))
+
+
+class primepi(DefinedFunction):
+    r""" Represents the prime counting function pi(n) = the number
+    of prime numbers less than or equal to n.
+
+    Examples
+    ========
+
+    >>> from sympy.functions.combinatorial.numbers import primepi
+    >>> from sympy import prime, prevprime, isprime
+    >>> primepi(25)
+    9
+
+    So there are 9 primes less than or equal to 25. Is 25 prime?
+
+    >>> isprime(25)
+    False
+
+    It is not. So the first prime less than 25 must be the
+    9th prime:
+
+    >>> prevprime(25) == prime(9)
+    True
+
+    See Also
+    ========
+
+    sympy.ntheory.primetest.isprime : Test if n is prime
+    sympy.ntheory.generate.primerange : Generate all primes in a given range
+    sympy.ntheory.generate.prime : Return the nth prime
+
+    References
+    ==========
+
+    .. [1] https://oeis.org/A000720
+
+    """
+    is_integer = True
+    is_nonnegative = True
+
+    @classmethod
+    def eval(cls, n):
+        if n is S.Infinity:
+            return S.Infinity
+        if n is S.NegativeInfinity:
+            return S.Zero
+        if n.is_real is False:
+            raise TypeError("n should be a real")
+        if is_lt(n, S(2)) is True:
+            return S.Zero
+        try:
+            n = int(n)
+        except TypeError:
+            return
+        return S(_primepi(n))
+
+
 #######################################################################
 ###
 ### Functions for enumerating partitions, permutations and combinations
@@ -1765,7 +2317,7 @@ class mobius(Function):
 
 
 class _MultisetHistogram(tuple):
-    pass
+    __slots__ = ()
 
 
 _N = -1
@@ -1861,6 +2413,9 @@ def nP(n, k=None, replacement=False):
     .. [1] https://en.wikipedia.org/wiki/Permutation
 
     """
+    if k is not None and k < 0:
+        raise ValueError("k cannot be negative")
+
     try:
         n = as_int(n)
     except ValueError:
@@ -2254,10 +2809,10 @@ def _nT(n, k):
         # will be in the cache needed to calculate
         # partition(d), so...
         # update cache
-        tot = partition._partition(d)
+        tot = _partition_rec(d)
         # and correct for values not needed
         if d - k > 0:
-            tot -= sum(_npartition[:d - k])
+            tot -= sum(_partition_rec.fetch_item(slice(d - k)))
         return tot
     # regular exit
     # nT(n, k) = Sum(nT(n - k, m), (m, 1, k));
@@ -2404,7 +2959,7 @@ def nT(n, k=None):
 #-----------------------------------------------------------------------------#
 
 
-class motzkin(Function):
+class motzkin(DefinedFunction):
     """
     The nth Motzkin number is the number
     of ways of drawing non-intersecting chords
@@ -2448,22 +3003,22 @@ class motzkin(Function):
         except ValueError:
             return False
         if n > 0:
-             if n in (1, 2):
+            if n in (1, 2):
                 return True
 
-             tn1 = 1
-             tn = 2
-             i = 3
-             while tn < n:
-                 a = ((2*i + 1)*tn + (3*i - 3)*tn1)/(i + 2)
-                 i += 1
-                 tn1 = tn
-                 tn = a
+            tn1 = 1
+            tn = 2
+            i = 3
+            while tn < n:
+                a = ((2*i + 1)*tn + (3*i - 3)*tn1)/(i + 2)
+                i += 1
+                tn1 = tn
+                tn = a
 
-             if tn == n:
-                 return True
-             else:
-                 return False
+            if tn == n:
+                return True
+            else:
+                return False
 
         else:
             return False

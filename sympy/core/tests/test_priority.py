@@ -1,7 +1,9 @@
+from __future__ import annotations
 from sympy.core.decorators import call_highest_priority
 from sympy.core.expr import Expr
 from sympy.core.mod import Mod
 from sympy.core.numbers import Integer
+from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.functions.elementary.integers import floor
 
@@ -14,7 +16,7 @@ class Higher(Integer):
     '''
 
     _op_priority = 20.0
-    result = 1
+    result: Expr = S.One
 
     def __new__(cls):
         obj = Expr.__new__(cls)
@@ -86,7 +88,7 @@ class Lower(Higher):
     '''
 
     _op_priority = 5.0
-    result = -1
+    result: Expr = S.NegativeOne
 
     def __new__(cls):
         obj = Expr.__new__(cls)

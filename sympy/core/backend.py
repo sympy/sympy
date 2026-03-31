@@ -1,3 +1,4 @@
+from __future__ import annotations
 import os
 USE_SYMENGINE = os.getenv('USE_SYMENGINE', '0')
 USE_SYMENGINE = USE_SYMENGINE.lower() in ('1', 't', 'true')  # type: ignore
@@ -21,7 +22,7 @@ if USE_SYMENGINE:
         SymEngine's ``sympify`` does not accept keyword arguments and is
         therefore not compatible with SymPy's ``sympify`` with ``strict=True``
         (which ensures that only the types for which an explicit conversion has
-        been defined are converted). This wrapper adds an addiotional parameter
+        been defined are converted). This wrapper adds an additional parameter
         ``strict`` (with default ``False``) that will raise a ``SympifyError``
         if ``strict=True`` and the argument passed to the parameter ``a`` is a
         string.
@@ -100,7 +101,8 @@ else:
 
 def _simplify_matrix(M):
     """Return a simplified copy of the matrix M"""
-    assert isinstance(M, (Matrix, ImmutableMatrix))
+    if not isinstance(M, (Matrix, ImmutableMatrix)):
+        raise TypeError("The matrix M must be an instance of Matrix or ImmutableMatrix")
     Mnew = M.as_mutable() # makes a copy if mutable
     Mnew.simplify()
     if isinstance(M, ImmutableMatrix):

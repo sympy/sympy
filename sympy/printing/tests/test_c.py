@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core import (
     S, pi, oo, Symbol, symbols, Rational, Integer, Float, Function, Mod, GoldenRatio, EulerGamma, Catalan,
     Lambda, Dummy, nan, Mul, Pow, UnevaluatedExpr
@@ -19,7 +20,7 @@ from sympy.codegen.ast import (
     While, Scope, Print, FunctionPrototype, FunctionDefinition, FunctionCall, Return,
     real, float32, float64, float80, float128, intc, Comment, CodeBlock, stderr, QuotedString
 )
-from sympy.codegen.cfunctions import expm1, log1p, exp2, log2, fma, log10, Cbrt, hypot, Sqrt
+from sympy.codegen.cfunctions import expm1, log1p, exp2, log2, fma, log10, Cbrt, hypot, Sqrt, isnan, isinf
 from sympy.codegen.cnodes import restrict
 from sympy.utilities.lambdify import implemented_function
 from sympy.tensor import IndexedBase, Idx
@@ -625,6 +626,7 @@ def test_C89CodePrinter():
     assert c89printer.standard == 'C89'
     assert 'void' in c89printer.reserved_words
     assert 'template' not in c89printer.reserved_words
+    assert c89printer.doprint(log10(x)) == 'log10(x)'
 
 
 def test_C99CodePrinter():
@@ -881,3 +883,7 @@ def test_ccode_UnevaluatedExpr():
 def test_ccode_array_like_containers():
     assert ccode([2,3,4]) == "{2, 3, 4}"
     assert ccode((2,3,4)) == "{2, 3, 4}"
+
+def test_ccode__isinf_isnan():
+    assert ccode(isinf(x)) == 'isinf(x)'
+    assert ccode(isnan(x)) == 'isnan(x)'

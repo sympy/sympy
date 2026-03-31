@@ -376,9 +376,6 @@ class FCodePrinter(CodePrinter):
         inds = [ self._print(i) for i in expr.indices ]
         return "%s(%s)" % (self._print(expr.base.label), ", ".join(inds))
 
-    def _print_Idx(self, expr):
-        return self._print(expr.label)
-
     def _print_AugmentedAssignment(self, expr):
         lhs_code = self._print(expr.lhs)
         rhs_code = self._print(expr.rhs)
@@ -387,9 +384,12 @@ class FCodePrinter(CodePrinter):
 
     def _print_sum_(self, sm):
         params = self._print(sm.array)
-        if sm.dim != None: # Must use '!= None', cannot use 'is not None'
+        # Must use '!= None', cannot use 'is not None'
+        if sm.dim != None:  # noqa: E711
             params += ', ' + self._print(sm.dim)
-        if sm.mask != None: # Must use '!= None', cannot use 'is not None'
+
+        # Must use '!= None', cannot use 'is not None'
+        if sm.mask != None:  # noqa: E711
             params += ', mask=' + self._print(sm.mask)
         return '%s(%s)' % (sm.__class__.__name__.rstrip('_'), params)
 
@@ -472,7 +472,8 @@ class FCodePrinter(CodePrinter):
                 alloc=', allocatable' if allocatable in var.attrs else '',
                 s=self._print(var.symbol)
             )
-            if val != None: # Must be "!= None", cannot be "is not None"
+            # Must be "!= None", cannot be "is not None"
+            if val != None:  # noqa: E711
                 result += ' = %s' % self._print(val)
         else:
             if value_const in var.attrs or val:
@@ -759,9 +760,11 @@ class FCodePrinter(CodePrinter):
 
     def _print_use(self, use):
         result = 'use %s' % self._print(use.namespace)
-        if use.rename != None: # Must be '!= None', cannot be 'is not None'
+        # Must be '!= None', cannot be 'is not None'
+        if use.rename != None:  # noqa: E711
             result += ', ' + ', '.join([self._print(rnm) for rnm in use.rename])
-        if use.only != None: # Must be '!= None', cannot be 'is not None'
+        # Must be '!= None', cannot be 'is not None'
+        if use.only != None:  # noqa: E711
             result += ', only: ' + ', '.join([self._print(nly) for nly in use.only])
         return result
 
@@ -774,6 +777,17 @@ class FCodePrinter(CodePrinter):
     def _print_ArrayConstructor(self, ac):
         fmtstr = "[%s]" if self._settings["standard"] >= 2003 else '(/%s/)'
         return fmtstr % ', '.join((self._print(arg) for arg in ac.elements))
+
+    def _print_KeywordFunctionCall(self, expr):
+        args = [self._print(arg) for arg in expr.function_args]
+
+        for key, value in expr.keyword_args.items():
+            args.append(f"{key}={self._print(value)}")
+
+        return '{name}({args})'.format(
+            name=self._print(expr.name),
+            args=', '.join(args)
+        )
 
     def _print_ArrayElement(self, elem):
         return '{symbol}({idxs})'.format(

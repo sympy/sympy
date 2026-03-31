@@ -27,3 +27,5 @@ sudo apt-get install\
   docbook2x\
   graphviz\
   #
+
+sudo dot -c

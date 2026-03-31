@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core import Add, Mul, S
 from sympy.core.containers import Tuple
 from sympy.core.exprtools import factor_terms
@@ -1746,7 +1747,7 @@ def _weak_component_solver(wcc, t):
 
     sol = []
 
-    for j, scc in enumerate(wcc):
+    for scc in wcc:
         eqs = scc
         funcs = _get_funcs_from_canon(eqs)
 

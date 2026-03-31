@@ -21,8 +21,9 @@ pull request, or even before committing a change.
   checks](workflow-process-code-quality) pass.**
 
   ```bash
-  ./bin/test quality
+  python bin/test quality
   flake8 sympy/
+  ruff check sympy
   ```
 
 - [ ] **[Add tests](workflow-process-add-tests).** All new functionality
@@ -37,7 +38,7 @@ pull request, or even before committing a change.
 
 - [ ] **Make sure all tests pass.** [You may want to run a relevant subset of
   the test suite locally](workflow-process-run-tests) before committing (e.g.,
-  `./bin/test solvers`). When you open a pull request, all tests will be run
+  `python bin/test solvers`). When you open a pull request, all tests will be run
   on CI. The CI must be all green before a PR can be merged.
 
 - [ ] **[Write good commit messages](workflow-process-commit-messages).**
@@ -165,7 +166,7 @@ are some code quality checks that will run automatically on the CI once you
 create a pull request, but you can also run them locally with
 
 ```
-./bin/test quality
+python bin/test quality
 flake8 sympy/
 ```
 
@@ -304,13 +305,13 @@ directly as well if you prefer.
 Run all tests by using the command:
 
 ```bash
-$ ./bin/test
+$ python bin/test
 ```
 
 To run tests for a specific file, use:
 
 ```bash
-$ ./bin/test test_basic
+$ python bin/test test_basic
 ```
 
 Where `test_basic` is from file `sympy/core/basic.py`.
@@ -318,15 +319,15 @@ Where `test_basic` is from file `sympy/core/basic.py`.
 To run tests for modules, use:
 
 ```bash
-$ ./bin/test /core /utilities
+$ python bin/test /core /utilities
 ```
 
 This will run tests for the `core` and `utilities` modules.
 
-Similary, run quality tests with:
+Similarly, run quality tests with:
 
 ```bash
-$ ./bin/test code_quality
+$ python bin/test code_quality
 ```
 
 ## Commit the changes
@@ -598,18 +599,19 @@ Every author's name and email address is stored in the
 file should not be edited directly. The AUTHORS file is updated automatically
 when a new version of SymPy is released based on the name and email addresses
 that are recorded in the commits. Every commit made with git stores the name
-and email address that git is configured with (see "Configure git settings"
-above). The [.mailmap](https://github.com/sympy/sympy/blob/master/.mailmap)
+and email address that git is configured with (see [Configure git settings](#configure-git-settings)). The [.mailmap](https://github.com/sympy/sympy/blob/master/.mailmap)
 file is used to associate the name/email recorded in the commits with an
 author name and email address that will be listed in the AUTHORS file.
 
 The first time you make a pull request you will need to add your name and email address to the .mailmap file by adding a line like
 
 ```
-Joe Bloggs <joe@bloggs.com>
+Joe Bloggs <joe@bloggs.com>  joeb <joe@bloggs.com>
 ```
 
-This name and email should exactly match the name and email that you have configured with git before making the commits (see "Configure git settings" above). The `bin/mailmap_check.py` script can check that this has been done correctly. If you have made a commit but not yet added yourself to the .mailmap file then you will see this:
+This line in the .mailmap file associates the author name with the corresponding commits. The first name and email address is what will eventually go in the AUTHORS file. The second entry is what is recorded in the commit metadata. (see [Mapping user names to AUTHORS file entry](#mailmap-mapping-names))
+
+The commit metadata name and email should exactly match the name and email that you have configured with git before making the commits (see [Configure git settings](#configure-git-settings)). The `bin/mailmap_check.py` script can check that this has been done correctly. If you have made a commit but not yet added yourself to the .mailmap file then you will see this:
 
 ```bash
 $ python bin/mailmap_check.py
@@ -638,7 +640,6 @@ index 3af6dc1..7fa63b1 100644
 @@ -1307,3 +1307,4 @@ zsc347 <zsc347@gmail.com>
  Øyvind Jensen <jensen.oyvind@gmail.com>
  Łukasz Pankowski <lukpank@o2.pl>
- 彭于斌 <1931127624@qq.com>
 +Joe Bloggs <joe@bloggs.com>
 ```
 
@@ -694,7 +695,9 @@ git add .mailmap
 git commit -m 'author: add Joe Bloggs to .mailmap'
 ```
 
-Sometimes a commit will be made with an incorrect name or email address or an author will make multiple commits with different names and email addresses. In this case a line should be added to the .mailmap file where the first name and email address is what should be recorded in the AUTHORS file and the others are the name and email address that was incorrectly used in the other commits. For example if the commit was recorded with the name `joeb` and the email address `wrong@email.com` but the AUTHORS file should show `Joe Bloggs` as above then there should be a line in the .mailmap file like:
+(mailmap-mapping-names)=
+### Mapping user names to AUTHORS file entry
+Sometimes a commit will be made with an incorrect name or email address or an author will make multiple commits with different names and email addresses or an author wishes to use a proper name that differs from their github name. In this case a line should be added to the .mailmap file where the first name and email address is what should be recorded in the AUTHORS file and the others are the name and email address that was incorrectly used in the other commits. For example if the commit was recorded with the name `joeb` and the email address `wrong@email.com` but the AUTHORS file should show `Joe Bloggs` as above then there should be a line in the .mailmap file like:
 
 ```
 Joe Bloggs <joe@bloggs.com> joeb <wrong@email.com>

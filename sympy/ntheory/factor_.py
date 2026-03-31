@@ -1,33 +1,32 @@
 """
 Integer factorization
 """
-
-from collections import defaultdict
-from functools import reduce
+from __future__ import annotations
+from typing import Any, Iterator, Literal, overload, SupportsIndex
+from bisect import bisect_left
+from collections import defaultdict, OrderedDict
+from collections.abc import MutableMapping
 import math
 
-from sympy.core import sympify
 from sympy.core.containers import Dict
-from sympy.core.expr import Expr
-from sympy.core.function import Function
-from sympy.core.logic import fuzzy_and
 from sympy.core.mul import Mul
 from sympy.core.numbers import Rational, Integer
 from sympy.core.intfunc import num_digits
 from sympy.core.power import Pow
 from sympy.core.random import _randint
 from sympy.core.singleton import S
-from sympy.external.gmpy import (SYMPY_INTS, gcd, lcm, sqrt as isqrt,
+from sympy.external.gmpy import (SYMPY_INTS, gcd, sqrt as isqrt,
                                  sqrtrem, iroot, bit_scan1, remove)
 from .primetest import isprime, MERSENNE_PRIME_EXPONENTS, is_mersenne_prime
 from .generate import sieve, primerange, nextprime
 from .digits import digits
+from sympy.utilities.decorator import deprecated
 from sympy.utilities.iterables import flatten
 from sympy.utilities.misc import as_int, filldedent
 from .ecm import _ecm_one_factor
 
 
-def smoothness(n):
+def smoothness(n: SupportsIndex) -> tuple[int, int]:
     """
     Return the B-smooth and B-power smooth values of n.
 
@@ -218,10 +217,10 @@ def multiplicity(p, n):
                 isinstance(n.args[0], Integer) and
                 n.args[0] >= 0):
             return multiplicity_in_factorial(p, n.args[0])
-        raise ValueError('expecting ints or fractions, got %s and %s' % (p, n))
+        raise ValueError(f"expecting ints or fractions, got {p} and {n}")
 
     if n == 0:
-        raise ValueError('no such integer exists: multiplicity of %s is not-defined' %(n))
+        raise ValueError(f"no such integer exists: multiplicity of {n} is not-defined")
     return remove(n, p)[1]
 
 
@@ -270,10 +269,10 @@ def multiplicity_in_factorial(p, n):
     p, n = as_int(p), as_int(n)
 
     if p <= 0:
-        raise ValueError('expecting positive integer got %s' % p )
+        raise ValueError(f"expecting positive integer got {p}")
 
     if n < 0:
-        raise ValueError('expecting non-negative integer got %s' % n )
+        raise ValueError(f"expecting non-negative integer got {n}")
 
     # keep only the largest of a given multiplicity since those
     # of a given multiplicity will be goverened by the behavior
@@ -327,7 +326,7 @@ def _perfect_power(n, next_p=2):
         if g == 1:
             return False
         factors[n] = multi
-        return math.prod(p**(e//g) for p, e in factors.items()), g
+        return int(math.prod(p**(e//g) for p, e in factors.items())), int(g)
 
     # If n is small, only trial factoring is faster
     if n <= 1_000_000:
@@ -337,7 +336,7 @@ def _perfect_power(n, next_p=2):
         g = gcd(*factors.values())
         if g == 1:
             return False
-        return math.prod(p**(e//g) for p, e in factors.items()), g
+        return math.prod(p**(e//g) for p, e in factors.items()), int(g)
 
     # divide by 2
     if next_p < 3:
@@ -354,7 +353,7 @@ def _perfect_power(n, next_p=2):
                 # Otherwise, there is no possibility of perfect power, especially if `g` is prime.
                 m, _exact = iroot(n, g)
                 if _exact:
-                    return 2*m, g
+                    return int(2*m), g
                 elif isprime(g):
                     return False
         next_p = 3
@@ -381,19 +380,19 @@ def _perfect_power(n, next_p=2):
             if t:
                 n = m
                 t *= multi
-                _g = gcd(g, t)
+                _g = int(gcd(g, t))
                 if _g == 1:
                     return False
                 factors[p] = t
                 if n == 1:
-                    return math.prod(p**(e//_g)
-                                        for p, e in factors.items()), _g
+                    return int(math.prod(p**(e//_g)
+                                        for p, e in factors.items())), _g
                 elif g == 0 or _g < g: # If g is updated
                     g = _g
                     m, _exact = iroot(n**multi, g)
                     if _exact:
-                        return m * math.prod(p**(e//g)
-                                            for p, e in factors.items()), g
+                        return int(m * math.prod(p**(e//g)
+                                            for p, e in factors.items())), g
                     elif isprime(g):
                         return False
         next_p = tf_max
@@ -506,30 +505,81 @@ def perfect_power(n, candidates=None, big=True, factor=True):
     sympy.core.intfunc.integer_nthroot
     sympy.ntheory.primetest.is_square
     """
-    if isinstance(n, Rational) and not n.is_Integer:
-        p, q = n.as_numer_denom()
-        if p is S.One:
-            pp = perfect_power(q)
-            if pp:
-                pp = (n.func(1, pp[0]), pp[1])
-        else:
-            pp = perfect_power(p)
-            if pp:
-                num, e = pp
-                pq = perfect_power(q, [e])
-                if pq:
-                    den, _ = pq
-                    pp = n.func(num, den), e
-        return pp
-
-    n = as_int(n)
+    # negative handling
     if n < 0:
-        pp = perfect_power(-n)
-        if pp:
+        if candidates is None:
+            pp = perfect_power(-n, big=True, factor=factor)
+            if not pp:
+                return False
+
             b, e = pp
-            if e % 2:
+            e2 = e & (-e)
+            b, e = b ** e2, e // e2
+
+            if e <= 1:
+                return False
+
+            if big or isprime(e):
                 return -b, e
+
+            for p in primerange(3, e + 1):
+                if e % p == 0:
+                    return - b ** (e // p), p
+
+        odd_candidates = {i for i in candidates if i % 2}
+        if not odd_candidates:
+            return False
+
+        pp = perfect_power(-n, odd_candidates, big, factor)
+        if pp:
+            return -pp[0], pp[1]
+
         return False
+
+    # non-integer handling
+    if isinstance(n, Rational) and not isinstance(n, Integer):
+        p, q = n.p, n.q
+
+        if p == 1:
+            qq = perfect_power(q, candidates, big, factor)
+            return (S.One / qq[0], qq[1]) if qq is not False else False
+
+        if not (pp:=perfect_power(p, factor=factor)):
+            return False
+        if not (qq:=perfect_power(q, factor=factor)):
+            return False
+        (num_base, num_exp), (den_base, den_exp) = pp, qq
+
+        def compute_tuple(exponent):
+            """Helper to compute final result given an exponent"""
+            new_num = num_base ** (num_exp // exponent)
+            new_den = den_base ** (den_exp // exponent)
+            return n.func(new_num, new_den), exponent
+
+        if candidates:
+            valid_candidates = [i for i in candidates
+                                if num_exp % i == 0 and den_exp % i == 0]
+            if not valid_candidates:
+                return False
+
+            e = max(valid_candidates) if big else min(valid_candidates)
+            return compute_tuple(e)
+
+        g = math.gcd(num_exp, den_exp)
+        if g == 1:
+            return False
+
+        if big:
+            return compute_tuple(g)
+
+        e = next(p for p in primerange(2, g + 1) if g % p == 0)
+        return compute_tuple(e)
+
+    if candidates is not None:
+        candidates = set(candidates)
+
+    # positive integer handling
+    n = as_int(n)
 
     if candidates is None and big:
         return _perfect_power(n)
@@ -538,7 +588,7 @@ def perfect_power(n, candidates=None, big=True, factor=True):
         # no unique exponent for 0, 1
         # 2 and 3 have exponents of 1
         return False
-    logn = math.log(n, 2)
+    logn = math.log2(n)
     max_possible = int(logn) + 2  # only check values less than this
     not_square = n % 10 in [2, 3, 7, 8]  # squares cannot end in 2, 3, 7, 8
     min_possible = 2 + not_square
@@ -610,6 +660,118 @@ def perfect_power(n, candidates=None, big=True, factor=True):
             return int(r), e
 
     return False
+
+
+class FactorCache(MutableMapping):
+    """ Provides a cache for prime factors.
+    ``factor_cache`` is pre-prepared as an instance of ``FactorCache``,
+    and ``factorint`` internally references it to speed up
+    the factorization of prime factors.
+
+    While cache is automatically added during the execution of ``factorint``,
+    users can also manually add prime factors independently.
+
+    >>> from sympy import factor_cache
+    >>> factor_cache[15] = 5
+
+    Furthermore, by customizing ``get_external``,
+    it is also possible to use external databases.
+    The following is an example using http://factordb.com .
+
+    .. code-block:: python
+
+        import requests
+        from sympy import factor_cache
+
+        def get_external(self, n: int) -> list[int] | None:
+            res = requests.get("http://factordb.com/api", params={"query": str(n)})
+            if res.status_code != requests.codes.ok:
+                return None
+            j = res.json()
+            if j.get("status") in ["FF", "P"]:
+                return list(int(p) for p, _ in j.get("factors"))
+
+        factor_cache.get_external = get_external
+
+    Be aware that writing this code will trigger internet access
+    to factordb.com when calling ``factorint``.
+
+    """
+    def __init__(self, maxsize: int | None = None):
+        self._cache: OrderedDict[int, int] = OrderedDict()
+        self.maxsize = maxsize
+
+    def __len__(self) -> int:
+        return len(self._cache)
+
+    def __contains__(self, n) -> bool:
+        return n in self._cache
+
+    def __getitem__(self, n: int) -> int:
+        factor = self.get(n)
+        if factor is None:
+            raise KeyError(f"{n} does not exist.")
+        return factor
+
+    def __setitem__(self, n: int, factor: int):
+        if not (1 < factor <= n and n % factor == 0 and isprime(factor)):
+            raise ValueError(f"{factor} is not a prime factor of {n}")
+        self._cache[n] = max(self._cache.get(n, 0), factor)
+        if self.maxsize is not None and len(self._cache) > self.maxsize:
+            self._cache.popitem(False)
+
+    def __delitem__(self, n: int):
+        if n not in self._cache:
+            raise KeyError(f"{n} does not exist.")
+        del self._cache[n]
+
+    def __iter__(self):
+        return self._cache.__iter__()
+
+    def cache_clear(self) -> None:
+        """ Clear the cache """
+        self._cache = OrderedDict()
+
+    @property
+    def maxsize(self) -> int | None:
+        """ Returns the maximum cache size; if ``None``, it is unlimited. """
+        return self._maxsize
+
+    @maxsize.setter
+    def maxsize(self, value: int | None) -> None:
+        if value is not None and value <= 0:
+            raise ValueError("maxsize must be None or a non-negative integer.")
+        self._maxsize = value
+        if value is not None:
+            while len(self._cache) > value:
+                self._cache.popitem(False)
+
+    def get(self, n: int, default=None):
+        """ Return the prime factor of ``n``.
+        If it does not exist in the cache, return the value of ``default``.
+        """
+        if n <= sieve._list[-1]:
+            if sieve._list[bisect_left(sieve._list, n)] == n:
+                return n
+        if n in self._cache:
+            self._cache.move_to_end(n)
+            return self._cache[n]
+        if factors := self.get_external(n):
+            self.add(n, factors)
+            return self._cache[n]
+        return default
+
+    def add(self, n: int, factors: list[int]) -> None:
+        for p in sorted(factors, reverse=True):
+            self[n] = p
+            nz, _ = remove(n, p)
+            n = int(nz)
+
+    def get_external(self, n: int) -> list[int] | None:
+        return None
+
+
+factor_cache = FactorCache(maxsize=1000)
 
 
 def pollard_rho(n, s=2, a=1, retries=5, seed=1234, max_steps=None, F=None):
@@ -893,6 +1055,8 @@ def _trial(factors, n, candidates, verbose=False):
     nfactors = len(factors)
     for d in candidates:
         if n % d == 0:
+            if n != d:
+                factor_cache[n] = d
             n, m = remove(n // d, d)
             factors[d] = m + 1
     if verbose:
@@ -914,6 +1078,7 @@ def _check_termination(factors, n, limit, use_trial, use_rho, use_pm1,
             print(complete_msg)
         return True
     if n < next_p**2 or isprime(n):
+        factor_cache[n] = n
         factors[int(n)] = 1
         if verbose:
             print(complete_msg)
@@ -926,6 +1091,7 @@ def _check_termination(factors, n, limit, use_trial, use_rho, use_pm1,
         return False
     base, exp = p
     if base < next_p**2 or isprime(base):
+        factor_cache[n] = base
         factors[base] = exp
     else:
         facs = factorint(base, limit, use_trial, use_rho, use_pm1,
@@ -933,8 +1099,7 @@ def _check_termination(factors, n, limit, use_trial, use_rho, use_pm1,
         for b, e in facs.items():
             if verbose:
                 print(factor_msg % (b, e))
-            # int() can be removed when https://github.com/flintlib/python-flint/issues/92 is resolved
-            factors[b] = int(exp*e)
+            factors[b] = exp*e
     if verbose:
         print(complete_msg)
     return True
@@ -946,7 +1111,7 @@ rho_msg = "Pollard's rho with retries %i, max_steps %i and seed %i"
 pm1_msg = "Pollard's p-1 with smoothness bound %i and seed %i"
 ecm_msg = "Elliptic Curve with B1 bound %i, B2 bound %i, num_curves %i"
 factor_msg = '\t%i ** %i'
-fermat_msg = 'Close factors satisying Fermat condition found.'
+fermat_msg = 'Close factors satisfying Fermat condition found.'
 complete_msg = 'Factorization is complete.'
 
 
@@ -1306,8 +1471,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
     if verbose:
         sn = str(n)
         if len(sn) > 50:
-            print('Factoring %s' % sn[:5] + \
-                  '..(%i other digits)..' % (len(sn) - 10) + sn[-5:])
+            print(f"Factoring {sn[:5]}..({len(sn) - 10} other digits)..{sn[-5:]}")
         else:
             print('Factoring', n)
 
@@ -1329,6 +1493,10 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
         if verbose:
             print(complete_msg)
         return factors
+    # Check if it exists in the cache
+    while p := factor_cache.get(n):
+        n, e = remove(n, p)
+        factors[int(p)] = int(e)
     # first check if the simplistic run didn't finish
     # because of the limit and check for a perfect
     # power before exiting
@@ -1542,7 +1710,12 @@ def factorrat(rat, limit=None, use_trial=True, use_rho=True, use_pm1=True,
         return Mul(*args, evaluate=False)
 
 
-def primefactors(n, limit=None, verbose=False, **kwargs):
+def primefactors(
+    n: int,
+    limit: int | None = None,
+    verbose: bool = False,
+    **kwargs: Any
+) -> list[int]:
     """Return a sorted list of n's prime factors, ignoring multiplicity
     and any composite factor that remains if the limit was set too low
     for complete factorization. Unlike factorint(), primefactors() does
@@ -1601,7 +1774,7 @@ def primefactors(n, limit=None, verbose=False, **kwargs):
     return s
 
 
-def _divisors(n, proper=False):
+def _divisors(n: int, proper: bool = False) -> Iterator[int]:
     """Helper function for divisors which generates the divisors.
 
     Parameters
@@ -1635,8 +1808,30 @@ def _divisors(n, proper=False):
     else:
         yield from rec_gen()
 
+@overload
+def divisors(
+    n: int,
+    generator: Literal[True],
+    proper: bool = False
+) -> Iterator[int]: ...
+@overload
+def divisors(
+    n: int,
+    generator: Literal[False] = False,
+    proper: bool = False
+) -> list[int]: ...
+@overload
+def divisors(
+    n: int,
+    generator: bool = False,
+    proper: bool = False
+) -> Iterator[int] | list[int]: ...
 
-def divisors(n, generator=False, proper=False):
+def divisors(
+    n: int,
+    generator: bool = False,
+    proper: bool = False
+) -> Iterator[int] | list[int]:
     r"""
     Return all divisors of n sorted from 1..n by default.
     If generator is ``True`` an unordered generator is returned.
@@ -1672,7 +1867,7 @@ def divisors(n, generator=False, proper=False):
     return rv if generator else sorted(rv)
 
 
-def divisor_count(n, modulus=1, proper=False):
+def divisor_count(n: int, modulus: int = 1, proper: bool = False) -> int:
     """
     Return the number of divisors of ``n``. If ``modulus`` is not 1 then only
     those that are divisible by ``modulus`` are counted. If ``proper`` is True
@@ -1704,13 +1899,19 @@ def divisor_count(n, modulus=1, proper=False):
             return 0
     if n == 0:
         return 0
-    n = Mul(*[v + 1 for k, v in factorint(n).items() if k > 1])
+    n = math.prod([v + 1 for k, v in factorint(n).items() if k > 1], start=1)
     if n and proper:
         n -= 1
     return n
 
+@overload
+def proper_divisors(n: int, generator: Literal[True]) -> Iterator[int]: ...
+@overload
+def proper_divisors(n: int, generator: Literal[False] = False) -> list[int]: ...
+@overload
+def proper_divisors( n: int, generator: bool = False) -> Iterator[int] | list[int]: ...
 
-def proper_divisors(n, generator=False):
+def proper_divisors(n: int, generator: bool = False) -> Iterator[int] | list[int]:
     """
     Return all divisors of n except n, sorted by default.
     If generator is ``True`` an unordered generator is returned.
@@ -1735,7 +1936,7 @@ def proper_divisors(n, generator=False):
     return divisors(n, generator=generator, proper=True)
 
 
-def proper_divisor_count(n, modulus=1):
+def proper_divisor_count(n: int, modulus: int = 1) -> int:
     """
     Return the number of proper divisors of ``n``.
 
@@ -1757,7 +1958,7 @@ def proper_divisor_count(n, modulus=1):
     return divisor_count(n, modulus=modulus, proper=True)
 
 
-def _udivisors(n):
+def _udivisors(n: int)-> Iterator[int]:
     """Helper function for udivisors which generates the unitary divisors.
 
     Parameters
@@ -1783,8 +1984,14 @@ def _udivisors(n):
             i >>= 1
         yield d
 
+@overload
+def udivisors(n: int, generator: Literal[True]) -> Iterator[int]: ...
+@overload
+def udivisors(n: int, generator: Literal[False] = False) -> list[int]: ...
+@overload
+def udivisors(n: int, generator: bool = False) -> Iterator[int] | list[int]: ...
 
-def udivisors(n, generator=False):
+def udivisors(n: int, generator: bool = False) -> Iterator[int] | list[int]:
     r"""
     Return all unitary divisors of n sorted from 1..n by default.
     If generator is ``True`` an unordered generator is returned.
@@ -1821,7 +2028,7 @@ def udivisors(n, generator=False):
     return rv if generator else sorted(rv)
 
 
-def udivisor_count(n):
+def udivisor_count(n: int) -> int:
     """
     Return the number of unitary divisors of ``n``.
 
@@ -1854,7 +2061,7 @@ def udivisor_count(n):
     return 2**len([p for p in factorint(n) if p > 1])
 
 
-def _antidivisors(n):
+def _antidivisors(n: int) -> Iterator[int]:
     """Helper function for antidivisors which generates the antidivisors.
 
     Parameters
@@ -1877,8 +2084,14 @@ def _antidivisors(n):
         if n > d >= 2 and n % d:
             yield d
 
+@overload
+def antidivisors(n: int, generator: Literal[True]) -> Iterator[int]: ...
+@overload
+def antidivisors(n: int, generator: Literal[False] = False) -> list[int]: ...
+@overload
+def antidivisors(n: int, generator: bool = False) -> Iterator[int] | list[int]: ...
 
-def antidivisors(n, generator=False):
+def antidivisors(n: int, generator: bool = False) -> Iterator[int] | list[int]:
     r"""
     Return all antidivisors of n sorted from 1..n by default.
 
@@ -1946,10 +2159,19 @@ def antidivisor_count(n):
     return divisor_count(2*n - 1) + divisor_count(2*n + 1) + \
         divisor_count(n) - divisor_count(n, 2) - 5
 
-
-class totient(Function):
+@deprecated("""\
+The `sympy.ntheory.factor_.totient` has been moved to `sympy.functions.combinatorial.numbers.totient`.""",
+deprecated_since_version="1.13",
+active_deprecations_target='deprecated-ntheory-symbolic-functions')
+def totient(n):
     r"""
     Calculate the Euler totient function phi(n)
+
+    .. deprecated:: 1.13
+
+        The ``totient`` function is deprecated. Use :class:`sympy.functions.combinatorial.numbers.totient`
+        instead. See its documentation for more information. See
+        :ref:`deprecated-ntheory-symbolic-functions` for details.
 
     ``totient(n)`` or `\phi(n)` is the number of positive integers `\leq` n
     that are relatively prime to n.
@@ -1962,7 +2184,7 @@ class totient(Function):
     Examples
     ========
 
-    >>> from sympy.ntheory import totient
+    >>> from sympy.functions.combinatorial.numbers import totient
     >>> totient(1)
     1
     >>> totient(25)
@@ -1982,53 +2204,23 @@ class totient(Function):
     .. [2] https://mathworld.wolfram.com/TotientFunction.html
 
     """
-    @classmethod
-    def eval(cls, n):
-        if n.is_Integer:
-            if n < 1:
-                raise ValueError("n must be a positive integer")
-            factors = factorint(n)
-            return cls._from_factors(factors)
-        elif not isinstance(n, Expr) or (n.is_integer is False) or (n.is_positive is False):
-            raise ValueError("n must be a positive integer")
-
-    def _eval_is_integer(self):
-        return fuzzy_and([self.args[0].is_integer, self.args[0].is_positive])
-
-    @classmethod
-    def _from_distinct_primes(self, *args):
-        """Subroutine to compute totient from the list of assumed
-        distinct primes
-
-        Examples
-        ========
-
-        >>> from sympy.ntheory.factor_ import totient
-        >>> totient._from_distinct_primes(5, 7)
-        24
-        """
-        return reduce(lambda i, j: i * (j-1), args, 1)
-
-    @classmethod
-    def _from_factors(self, factors):
-        """Subroutine to compute totient from already-computed factors
-
-        Examples
-        ========
-
-        >>> from sympy.ntheory.factor_ import totient
-        >>> totient._from_factors({5: 2})
-        20
-        """
-        t = 1
-        for p, k in factors.items():
-            t *= (p - 1) * p**(k - 1)
-        return t
+    from sympy.functions.combinatorial.numbers import totient as _totient
+    return _totient(n)
 
 
-class reduced_totient(Function):
+@deprecated("""\
+The `sympy.ntheory.factor_.reduced_totient` has been moved to `sympy.functions.combinatorial.numbers.reduced_totient`.""",
+deprecated_since_version="1.13",
+active_deprecations_target='deprecated-ntheory-symbolic-functions')
+def reduced_totient(n):
     r"""
     Calculate the Carmichael reduced totient function lambda(n)
+
+    .. deprecated:: 1.13
+
+        The ``reduced_totient`` function is deprecated. Use :class:`sympy.functions.combinatorial.numbers.reduced_totient`
+        instead. See its documentation for more information. See
+        :ref:`deprecated-ntheory-symbolic-functions` for details.
 
     ``reduced_totient(n)`` or `\lambda(n)` is the smallest m > 0 such that
     `k^m \equiv 1 \mod n` for all k relatively prime to n.
@@ -2036,7 +2228,7 @@ class reduced_totient(Function):
     Examples
     ========
 
-    >>> from sympy.ntheory import reduced_totient
+    >>> from sympy.functions.combinatorial.numbers import reduced_totient
     >>> reduced_totient(1)
     1
     >>> reduced_totient(8)
@@ -2056,41 +2248,23 @@ class reduced_totient(Function):
     .. [2] https://mathworld.wolfram.com/CarmichaelFunction.html
 
     """
-    @classmethod
-    def eval(cls, n):
-        if n.is_Integer:
-            if n < 1:
-                raise ValueError("n must be a positive integer")
-            factors = factorint(n)
-            return cls._from_factors(factors)
-
-    @classmethod
-    def _from_factors(self, factors):
-        """Subroutine to compute totient from already-computed factors
-        """
-        t = 1
-        for p, k in factors.items():
-            if p == 2 and k > 2:
-                t = lcm(t, 2**(k - 2))
-            else:
-                t = lcm(t, (p - 1) * p**(k - 1))
-        return t
-
-    @classmethod
-    def _from_distinct_primes(self, *args):
-        """Subroutine to compute totient from the list of assumed
-        distinct primes
-        """
-        args = [p - 1 for p in args]
-        return lcm(*args)
-
-    def _eval_is_integer(self):
-        return fuzzy_and([self.args[0].is_integer, self.args[0].is_positive])
+    from sympy.functions.combinatorial.numbers import reduced_totient as _reduced_totient
+    return _reduced_totient(n)
 
 
-class divisor_sigma(Function):
+@deprecated("""\
+The `sympy.ntheory.factor_.divisor_sigma` has been moved to `sympy.functions.combinatorial.numbers.divisor_sigma`.""",
+deprecated_since_version="1.13",
+active_deprecations_target='deprecated-ntheory-symbolic-functions')
+def divisor_sigma(n, k=1):
     r"""
     Calculate the divisor function `\sigma_k(n)` for positive integer n
+
+    .. deprecated:: 1.13
+
+        The ``divisor_sigma`` function is deprecated. Use :class:`sympy.functions.combinatorial.numbers.divisor_sigma`
+        instead. See its documentation for more information. See
+        :ref:`deprecated-ntheory-symbolic-functions` for details.
 
     ``divisor_sigma(n, k)`` is equal to ``sum([x**k for x in divisors(n)])``
 
@@ -2122,7 +2296,7 @@ class divisor_sigma(Function):
     Examples
     ========
 
-    >>> from sympy.ntheory import divisor_sigma
+    >>> from sympy.functions.combinatorial.numbers import divisor_sigma
     >>> divisor_sigma(18, 0)
     6
     >>> divisor_sigma(39, 1)
@@ -2143,35 +2317,30 @@ class divisor_sigma(Function):
     .. [1] https://en.wikipedia.org/wiki/Divisor_function
 
     """
+    from sympy.functions.combinatorial.numbers import divisor_sigma as func_divisor_sigma
+    return func_divisor_sigma(n, k)
 
-    @classmethod
-    def eval(cls, n, k=S.One):
-        k = sympify(k)
 
-        if n.is_prime:
-            return 1 + n**k
+def _divisor_sigma(n:int, k:int=1) -> int:
+    r""" Calculate the divisor function `\sigma_k(n)` for positive integer n
 
-        if n.is_Integer:
-            if n <= 0:
-                raise ValueError("n must be a positive integer")
-            elif k.is_Integer:
-                k = int(k)
-                return Integer(math.prod(
-                    (p**(k*(e + 1)) - 1)//(p**k - 1) if k != 0
-                    else e + 1 for p, e in factorint(n).items()))
-            else:
-                return Mul(*[(p**(k*(e + 1)) - 1)/(p**k - 1) if k != 0
-                           else e + 1 for p, e in factorint(n).items()])
+    Parameters
+    ==========
 
-        if n.is_integer:  # symbolic case
-            args = []
-            for p, e in (_.as_base_exp() for _ in Mul.make_args(n)):
-                if p.is_prime and e.is_positive:
-                    args.append((p**(k*(e + 1)) - 1)/(p**k - 1) if
-                                k != 0 else e + 1)
-                else:
-                    return
-            return Mul(*args)
+    n : int
+        positive integer
+    k : int
+        nonnegative integer
+
+    See Also
+    ========
+
+    sympy.functions.combinatorial.numbers.divisor_sigma
+
+    """
+    if k == 0:
+        return math.prod(e + 1 for e in factorint(n).values())
+    return math.prod((p**(k*(e + 1)) - 1)//(p**k - 1) for p, e in factorint(n).items())
 
 
 def core(n, t=2):
@@ -2241,9 +2410,19 @@ def core(n, t=2):
         return y
 
 
-class udivisor_sigma(Function):
+@deprecated("""\
+The `sympy.ntheory.factor_.udivisor_sigma` has been moved to `sympy.functions.combinatorial.numbers.udivisor_sigma`.""",
+deprecated_since_version="1.13",
+active_deprecations_target='deprecated-ntheory-symbolic-functions')
+def udivisor_sigma(n, k=1):
     r"""
     Calculate the unitary divisor function `\sigma_k^*(n)` for positive integer n
+
+    .. deprecated:: 1.13
+
+        The ``udivisor_sigma`` function is deprecated. Use :class:`sympy.functions.combinatorial.numbers.udivisor_sigma`
+        instead. See its documentation for more information. See
+        :ref:`deprecated-ntheory-symbolic-functions` for details.
 
     ``udivisor_sigma(n, k)`` is equal to ``sum([x**k for x in udivisors(n)])``
 
@@ -2271,7 +2450,7 @@ class udivisor_sigma(Function):
     Examples
     ========
 
-    >>> from sympy.ntheory.factor_ import udivisor_sigma
+    >>> from sympy.functions.combinatorial.numbers import udivisor_sigma
     >>> udivisor_sigma(18, 0)
     4
     >>> udivisor_sigma(74, 1)
@@ -2293,22 +2472,23 @@ class udivisor_sigma(Function):
     .. [1] https://mathworld.wolfram.com/UnitaryDivisorFunction.html
 
     """
-
-    @classmethod
-    def eval(cls, n, k=S.One):
-        k = sympify(k)
-        if n.is_prime:
-            return 1 + n**k
-        if n.is_Integer:
-            if n <= 0:
-                raise ValueError("n must be a positive integer")
-            else:
-                return Mul(*[1+p**(k*e) for p, e in factorint(n).items()])
+    from sympy.functions.combinatorial.numbers import udivisor_sigma as _udivisor_sigma
+    return _udivisor_sigma(n, k)
 
 
-class primenu(Function):
+@deprecated("""\
+The `sympy.ntheory.factor_.primenu` has been moved to `sympy.functions.combinatorial.numbers.primenu`.""",
+deprecated_since_version="1.13",
+active_deprecations_target='deprecated-ntheory-symbolic-functions')
+def primenu(n):
     r"""
     Calculate the number of distinct prime factors for a positive integer n.
+
+    .. deprecated:: 1.13
+
+        The ``primenu`` function is deprecated. Use :class:`sympy.functions.combinatorial.numbers.primenu`
+        instead. See its documentation for more information. See
+        :ref:`deprecated-ntheory-symbolic-functions` for details.
 
     If n's prime factorization is:
 
@@ -2323,7 +2503,7 @@ class primenu(Function):
     Examples
     ========
 
-    >>> from sympy.ntheory.factor_ import primenu
+    >>> from sympy.functions.combinatorial.numbers import primenu
     >>> primenu(1)
     0
     >>> primenu(30)
@@ -2340,20 +2520,24 @@ class primenu(Function):
     .. [1] https://mathworld.wolfram.com/PrimeFactor.html
 
     """
-
-    @classmethod
-    def eval(cls, n):
-        if n.is_Integer:
-            if n <= 0:
-                raise ValueError("n must be a positive integer")
-            else:
-                return len(factorint(n).keys())
+    from sympy.functions.combinatorial.numbers import primenu as _primenu
+    return _primenu(n)
 
 
-class primeomega(Function):
+@deprecated("""\
+The `sympy.ntheory.factor_.primeomega` has been moved to `sympy.functions.combinatorial.numbers.primeomega`.""",
+deprecated_since_version="1.13",
+active_deprecations_target='deprecated-ntheory-symbolic-functions')
+def primeomega(n):
     r"""
     Calculate the number of prime factors counting multiplicities for a
     positive integer n.
+
+    .. deprecated:: 1.13
+
+        The ``primeomega`` function is deprecated. Use :class:`sympy.functions.combinatorial.numbers.primeomega`
+        instead. See its documentation for more information. See
+        :ref:`deprecated-ntheory-symbolic-functions` for details.
 
     If n's prime factorization is:
 
@@ -2368,7 +2552,7 @@ class primeomega(Function):
     Examples
     ========
 
-    >>> from sympy.ntheory.factor_ import primeomega
+    >>> from sympy.functions.combinatorial.numbers import primeomega
     >>> primeomega(1)
     0
     >>> primeomega(20)
@@ -2385,14 +2569,8 @@ class primeomega(Function):
     .. [1] https://mathworld.wolfram.com/PrimeFactor.html
 
     """
-
-    @classmethod
-    def eval(cls, n):
-        if n.is_Integer:
-            if n <= 0:
-                raise ValueError("n must be a positive integer")
-            else:
-                return sum(factorint(n).values())
+    from sympy.functions.combinatorial.numbers import primeomega as _primeomega
+    return _primeomega(n)
 
 
 def mersenne_prime_exponent(nth):
@@ -2424,7 +2602,8 @@ def is_perfect(n):
     Examples
     ========
 
-    >>> from sympy.ntheory.factor_ import is_perfect, divisors, divisor_sigma
+    >>> from sympy.functions.combinatorial.numbers import divisor_sigma
+    >>> from sympy.ntheory.factor_ import is_perfect, divisors
     >>> is_perfect(20)
     False
     >>> is_perfect(6)
@@ -2462,7 +2641,7 @@ def is_perfect(n):
     # to see whether it is a perfect number or not. So we
     # skip the structure checks and go straight to the final
     # test below.
-    result = divisor_sigma(n) == 2 * n
+    result = abundance(n) == 0
     if result:
         raise ValueError(filldedent('''In 1888, Sylvester stated: "
             ...a prolonged meditation on the subject has satisfied
@@ -2491,7 +2670,7 @@ def abundance(n):
     >>> is_abundant(10)
     False
     """
-    return divisor_sigma(n, 1) - 2 * n
+    return _divisor_sigma(n) - 2 * n
 
 
 def is_abundant(n):
@@ -2555,7 +2734,8 @@ def is_amicable(m, n):
     Examples
     ========
 
-    >>> from sympy.ntheory.factor_ import is_amicable, divisor_sigma
+    >>> from sympy.functions.combinatorial.numbers import divisor_sigma
+    >>> from sympy.ntheory.factor_ import is_amicable
     >>> is_amicable(220, 284)
     True
     >>> divisor_sigma(220) == divisor_sigma(284)
@@ -2567,10 +2747,71 @@ def is_amicable(m, n):
     .. [1] https://en.wikipedia.org/wiki/Amicable_numbers
 
     """
-    if m == n:
+    return m != n and m + n == _divisor_sigma(m) == _divisor_sigma(n)
+
+
+def is_carmichael(n):
+    """ Returns True if the numbers `n` is Carmichael number, else False.
+
+    Parameters
+    ==========
+
+    n : Integer
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Carmichael_number
+    .. [2] https://oeis.org/A002997
+
+    """
+    if n < 561:
         return False
-    a, b = (divisor_sigma(i) for i in (m, n))
-    return a == b == (m + n)
+    return n % 2 and not isprime(n) and \
+           all(e == 1 and (n - 1) % (p - 1) == 0 for p, e in factorint(n).items())
+
+
+def find_carmichael_numbers_in_range(x, y):
+    """ Returns a list of the number of Carmichael in the range
+
+    See Also
+    ========
+
+    is_carmichael
+
+    """
+    if 0 <= x <= y:
+        if x % 2 == 0:
+            return [i for i in range(x + 1, y, 2) if is_carmichael(i)]
+        else:
+            return [i for i in range(x, y, 2) if is_carmichael(i)]
+    else:
+        raise ValueError('The provided range is not valid. x and y must be non-negative integers and x <= y')
+
+
+def find_first_n_carmichaels(n):
+    """ Returns the first n Carmichael numbers.
+
+    Parameters
+    ==========
+
+    n : Integer
+
+    See Also
+    ========
+
+    is_carmichael
+
+    """
+    i = 561
+    carmichaels = []
+
+    while len(carmichaels) < n:
+        if is_carmichael(i):
+            carmichaels.append(i)
+        i += 2
+
+    return carmichaels
 
 
 def dra(n, b):

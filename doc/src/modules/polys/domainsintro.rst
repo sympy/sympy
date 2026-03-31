@@ -92,7 +92,7 @@ this representation using the :py:func:`~.srepr` function::
   >>> e
   1 + 1/(x**2 + 2)
   >>> print(srepr(e))
-  Add(Integer(1), Pow(Add(Pow(Symbol('x'), Integer(2)), Integer(2)), Integer(-1)))
+  Add(Integer(1), Pow(Add(Integer(2), Pow(Symbol('x'), Integer(2))), Integer(-1)))
 
 Here the expression ``e`` is represented as an :py:class:`~.Add` node which
 has two children ``1`` and ``1/(x**2 + 2)``. The child ``1`` is represented as
@@ -116,12 +116,12 @@ different ways e.g.::
   >>> e.expand()
   x**2 + x
 
-These two expression although equivalent have different tree representations::
+These two expressions, although equivalent, have different tree representations::
 
   >>> print(srepr(e))
-  Mul(Symbol('x'), Add(Symbol('x'), Integer(1)))
+  Mul(Symbol('x'), Add(Integer(1), Symbol('x')))
   >>> print(srepr(e.expand()))
-  Add(Pow(Symbol('x'), Integer(2)), Symbol('x'))
+  Add(Symbol('x'), Pow(Symbol('x'), Integer(2)))
 
 Being able to represent the same expression in different ways is both a
 strength and a weakness. It is useful to be able to convert an
@@ -300,7 +300,7 @@ might give a ``float`` which is not an element of :ref:`ZZ`::
 
 The behaviour of ``/`` for non-fields can also differ for different
 implementations of the ground types of the domain. For example with
-`SYMPY_GROUND_TYPES=flint` dividing two elements of :ref:`ZZ` will raise an
+``SYMPY_GROUND_TYPES=flint`` dividing two elements of :ref:`ZZ` will raise an
 error rather than return a float::
 
    >>> z1 / z1  # doctest: +SKIP
@@ -573,11 +573,11 @@ finite field of prime order `p` can be constructed with :ref:`GF(p)`::
   >>> from sympy import GF
   >>> K = GF(5)
   >>> two = K(2)
-  >>> two
+  >>> two #doctest: +SKIP
   2 mod 5
-  >>> two ** 2
+  >>> two ** 2A #doctest: +SKIP
   4 mod 5
-  >>> two ** 3
+  >>> two ** 3 #doctest: +SKIP
   3 mod 5
 
 There is also ``FF`` as an alias for ``GF`` (standing for "finite field" and
@@ -593,7 +593,7 @@ a field. It is just the integers modulo ``6`` or ``9`` and therefore has zero
 divisors and non-invertible elements::
 
   >>> K = GF(6)
-  >>> K(3) * K(2)
+  >>> K(3) * K(2) #doctest: +SKIP
   0 mod 6
 
 It would be good to have a proper implementation of prime-power order finite
@@ -604,16 +604,16 @@ fields but this is not yet available in SymPy (contributions welcome!).
 Real and complex fields
 =======================
 
-The fields :ref:`RR` and :ref:`CC` are intended mathematically to correspond
-to the `reals`_ and the `complex numbers`_, `\mathbb{R}` and `\mathbb{C}`
+The fields :ref:`RR` and :ref:`CC` are intended mathematically to correspond to
+the `reals`_ and the `complex numbers`_, `\mathbb{R}` and `\mathbb{C}`
 respectively. The implementation of these uses floating point arithmetic. In
 practice this means that these are the domains that are used to represent
 expressions containing floats. Elements of :ref:`RR` are instances of the
-class :py:class:`~.RealElement` and have an ``mpf`` tuple which is used to
-represent a float in ``mpmath``. Elements of :ref:`CC` are instances of
-:py:class:`~.ComplexElement` and have an ``mpc`` tuple which is a pair of
-``mpf`` tuples representing the real and imaginary parts. See the
-`mpmath docs`_ for more about how floating point numbers are represented::
+``mpmath`` class ``mpf`` and have an ``_mpf_`` tuple which is how arbitrary
+floating point real numbers are represented in ``mpmath``. Elements of
+:ref:`CC` are instances of ``mpc`` and have an ``_mpc_`` tuple which is a pair
+of ``_mpf_`` tuples representing the real and imaginary parts. See the `mpmath
+docs`_ for more about how floating point numbers are represented::
 
   >>> from sympy import RR, CC
   >>> xr = RR(3)
@@ -641,7 +641,7 @@ The default domains :ref:`RR` and :ref:`CC` use 53 binary digits of precision
 much like standard `double precision`_ floating point which corresponds to
 approximately 15 decimal digits::
 
-  >>> from sympy.polys.domains.realfield import RealField
+  >>> from sympy import RealField
   >>> RR.precision
   53
   >>> RR.dps
@@ -649,25 +649,12 @@ approximately 15 decimal digits::
   >>> RR(1) / RR(3)
   0.333333333333333
   >>> RR100 = RealField(100)
-  >>> RR100.precision
+  >>> RR100.precision   # precision in binary bits
   100
-  >>> RR100.dps
+  >>> RR100.dps         # precision in decimal places
   29
   >>> RR100(1) / RR100(3)
   0.33333333333333333333333333333
-
-There is however a bug in the implementation of this so that actually a global
-precision setting is used by all :py:class:`~.RealElement`. This means that
-just creating ``RR100`` above has altered the global precision and we will
-need to restore it in the doctest here::
-
-  >>> RR(1) / RR(3)  # wrong result!
-  0.33333333333333333333333333333
-  >>> dummy = RealField(53)  # hack to restore precision
-  >>> RR(1) / RR(3)  # restored
-  0.333333333333333
-
-(Obviously that should be fixed!)
 
 .. _reals: https://en.wikipedia.org/wiki/Real_number
 .. _complex numbers: https://en.wikipedia.org/wiki/Complex_number
@@ -809,7 +796,7 @@ that ordinary sympy (:py:class:`~.Expr`) expressions are represented. The
   >>> p_expr
   x**2 + 2*x + 1
   >>> srepr(p_expr)
-  "Add(Pow(Symbol('x'), Integer(2)), Mul(Integer(2), Symbol('x')), Integer(1))"
+  "Add(Integer(1), Pow(Symbol('x'), Integer(2)), Mul(Integer(2), Symbol('x')))"
 
 Here the expression is a tree where the top node is an :py:class:`~.Add` and
 its children nodes are :py:class:`~.Pow` etc. This tree representation makes

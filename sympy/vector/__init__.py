@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.vector.coordsysrect import CoordSys3D
 from sympy.vector.vector import (Vector, VectorAdd, VectorMul,
                                  BaseVector, VectorZero, Cross, Dot, cross, dot)
@@ -6,6 +7,7 @@ from sympy.vector.dyadic import (Dyadic, DyadicAdd, DyadicMul,
 from sympy.vector.scalar import BaseScalar
 from sympy.vector.deloperator import Del
 from sympy.vector.functions import (express, matrix_to_vector,
+                                    matrix_to_dyadic,
                                     laplacian, is_conservative,
                                     is_solenoidal, scalar_potential,
                                     directional_derivative,
@@ -17,10 +19,13 @@ from sympy.vector.operators import Gradient, Divergence, Curl, Laplacian, gradie
 from sympy.vector.implicitregion import ImplicitRegion
 from sympy.vector.parametricregion import (ParametricRegion, parametric_region_list)
 from sympy.vector.integrals import (ParametricIntegral, vector_integrate)
+from sympy.vector.kind import VectorKind
 
 __all__ = [
     'Vector', 'VectorAdd', 'VectorMul', 'BaseVector', 'VectorZero', 'Cross',
     'Dot', 'cross', 'dot',
+
+    'VectorKind',
 
     'Dyadic', 'DyadicAdd', 'DyadicMul', 'BaseDyadic', 'DyadicZero',
 
@@ -30,7 +35,8 @@ __all__ = [
 
     'CoordSys3D',
 
-    'express', 'matrix_to_vector', 'laplacian', 'is_conservative',
+    'express', 'matrix_to_vector', 'matrix_to_dyadic',
+    'laplacian', 'is_conservative',
     'is_solenoidal', 'scalar_potential', 'directional_derivative',
     'scalar_potential_difference',
 

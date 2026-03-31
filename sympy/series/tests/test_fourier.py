@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.add import Add
 from sympy.core.numbers import (Rational, oo, pi)
 from sympy.core.singleton import S
@@ -53,7 +54,7 @@ def test_FourierSeries():
 
     def _check_iter(f, i):
         for ind, t in enumerate(f):
-            assert t == f[ind]
+            assert t == f[ind]  # noqa: PLR1736
             if ind == i:
                 break
 

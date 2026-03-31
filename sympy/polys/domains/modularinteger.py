@@ -29,6 +29,9 @@ class ModularInteger(PicklableWithSlots, DomainElement):
         else:
             self.val = self.dom.convert(val) % self.mod
 
+    def modulus(self):
+        return self.mod
+
     def __hash__(self):
         return hash((self.val, self.mod))
 

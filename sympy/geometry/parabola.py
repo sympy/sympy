@@ -4,6 +4,7 @@ Contains
 * Parabola
 
 """
+from __future__ import annotations
 
 from sympy.core import S
 from sympy.core.sorting import ordered
@@ -13,7 +14,7 @@ from sympy.geometry.point import Point, Point2D
 from sympy.geometry.line import Line, Line2D, Ray2D, Segment2D, LinearEntity3D
 from sympy.geometry.ellipse import Ellipse
 from sympy.functions import sign
-from sympy.simplify import simplify
+from sympy.simplify.simplify import simplify
 from sympy.solvers.solvers import solve
 
 

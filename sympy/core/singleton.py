@@ -1,9 +1,43 @@
 """Singleton mechanism"""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, overload
 
 from .core import Registry
 from .sympify import sympify
 
+
+if TYPE_CHECKING:
+    from typing import Any, TypeVar
+
+    from sympy.core.numbers import (
+        Zero as _Zero,
+        One as _One,
+        NegativeOne as _NegativeOne,
+        Half as _Half,
+        ImaginaryUnit as _ImaginaryUnit,
+        Exp1 as _Exp1,
+        Pi as _Pi,
+        GoldenRatio as _GoldenRatio,
+        TribonacciConstant as _TribonacciConstant,
+        EulerGamma as _EulerGamma,
+        Catalan as _Catalan,
+        Infinity as _Infinity,
+        NegativeInfinity as _NegativeInfinity,
+        ComplexInfinity as _ComplexInfinity,
+        NaN as _NaN,
+    )
+    from sympy.logic.boolalg import (
+        BooleanTrue as _BooleanTrue,
+        BooleanFalse as _BooleanFalse,
+    )
+
+    from .basic import Basic
+    from .expr import Expr
+    from .numbers import Float, Integer
+
+    Tbasic = TypeVar('Tbasic', bound=Basic)
 
 class SingletonRegistry(Registry):
     """
@@ -83,8 +117,41 @@ class SingletonRegistry(Registry):
     """
     __slots__ = ()
 
+    Zero: _Zero
+    One: _One
+    NegativeOne: _NegativeOne
+    Half: _Half
+    ImaginaryUnit: _ImaginaryUnit
+    Exp1: _Exp1
+    Pi: _Pi
+    GoldenRatio: _GoldenRatio
+    TribonacciConstant: _TribonacciConstant
+    EulerGamma: _EulerGamma
+    Catalan: _Catalan
+    Infinity: _Infinity
+    NegativeInfinity: _NegativeInfinity
+    ComplexInfinity: _ComplexInfinity
+    NaN: _NaN
+
+    true: _BooleanTrue
+    false: _BooleanFalse
+
     # Also allow things like S(5)
-    __call__ = staticmethod(sympify)
+    @overload
+    def __call__(self, a: int, *, strict: bool = False) -> Integer: ... # type: ignore
+    @overload
+    def __call__(self, a: float, *, strict: bool = False) -> Float: ...
+    @overload
+    def __call__(self, a: Expr | complex, *, strict: bool = False) -> Expr: ...
+    @overload
+    def __call__(self, a: Tbasic, *, strict: bool = False) -> Tbasic: ...
+    @overload
+    def __call__(self, a: Any, *, strict: bool = False) -> Basic: ...
+
+    def __call__(self, a, locals=None, convert_xor=True, strict=False, rational=False,
+            evaluate=None):
+        return sympify(a, locals=locals, convert_xor=convert_xor, strict=strict,
+                       rational=rational, evaluate=evaluate) # type: ignore
 
     def __init__(self):
         self._classes_to_install = {}

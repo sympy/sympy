@@ -3,6 +3,7 @@
 
    sympy.utilities.runtests has been renamed to sympy.testing.runtests.
 """
+from __future__ import annotations
 
 from sympy.utilities.exceptions import sympy_deprecation_warning
 
@@ -10,4 +11,4 @@ sympy_deprecation_warning("The sympy.utilities.runtests submodule is deprecated.
     deprecated_since_version="1.6",
     active_deprecations_target="deprecated-sympy-utilities-submodules")
 
-from sympy.testing.runtests import *  # noqa:F401
+from sympy.testing.runtests import * # noqa: F401,F403

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.function import Derivative
 from sympy.core.function import UndefinedFunction, AppliedUndef
 from sympy.core.symbol import Symbol
@@ -18,7 +19,7 @@ class VectorStrPrinter(StrPrinter):
     def _print_Derivative(self, e):
         from sympy.physics.vector.functions import dynamicsymbols
         t = dynamicsymbols._t
-        if (bool(sum([i == t for i in e.variables])) &
+        if (bool(sum(i == t for i in e.variables)) &
                 isinstance(type(e.args[0]), UndefinedFunction)):
             ol = str(e.args[0].func)
             for i, v in enumerate(e.variables):

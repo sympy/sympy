@@ -1,3 +1,4 @@
+from __future__ import annotations
 __all__ = ['Linearizer']
 
 from sympy import Matrix, eye, zeros
@@ -109,7 +110,7 @@ class Linearizer:
         self._qd_dup = Matrix([var if var not in dup_vars else Dummy() for var
                                in self._qd])
 
-        # Derive dimesion terms
+        # Derive dimension terms
         l = len(self.f_c)
         m = len(self.f_v)
         n = len(self.q)

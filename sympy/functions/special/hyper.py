@@ -1,10 +1,11 @@
 """Hypergeometric and Meijer G-functions"""
+from __future__ import annotations
 from collections import Counter
 
 from sympy.core import S, Mod
 from sympy.core.add import Add
 from sympy.core.expr import Expr
-from sympy.core.function import Function, Derivative, ArgumentIndexError
+from sympy.core.function import DefinedFunction, Derivative, ArgumentIndexError
 
 from sympy.core.containers import Tuple
 from sympy.core.mul import Mul
@@ -15,6 +16,7 @@ from sympy.core.sorting import default_sort_key
 from sympy.core.symbol import Dummy
 
 from sympy.external.gmpy import lcm
+from sympy.external.mpmath import local_workprec
 from sympy.functions import (sqrt, exp, log, sin, cos, asin, atan,
         sinh, cosh, asinh, acosh, atanh, acoth)
 from sympy.functions import factorial, RisingFactorial
@@ -68,7 +70,7 @@ def _prep_tuple(v):
     return TupleArg(*[unpolarify(x) for x in v])
 
 
-class TupleParametersBase(Function):
+class TupleParametersBase(DefinedFunction):
     """ Base class that takes care of differentiation, when some of
         the arguments are actually tuples. """
     # This is not deduced automatically since there are Tuples as arguments.
@@ -220,7 +222,7 @@ class hyper(TupleParametersBase):
         else:
             ap = list(ordered(ap))
             bq = list(ordered(bq))
-        return Function.__new__(cls, _prep_tuple(ap), _prep_tuple(bq), z, **kwargs)
+        return super().__new__(cls, _prep_tuple(ap), _prep_tuple(bq), z, **kwargs)
 
     @classmethod
     def eval(cls, ap, bq, z):
@@ -255,7 +257,7 @@ class hyper(TupleParametersBase):
         return Piecewise((Sum(coeff * z**n / factorial(n), (n, 0, oo)),
                          self.convergence_statement), (self, True))
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         arg = self.args[2]
         x0 = arg.subs(x, 0)
         if x0 is S.NaN:
@@ -274,8 +276,12 @@ class hyper(TupleParametersBase):
         ap = self.args[0]
         bq = self.args[1]
 
-        if x0 != 0:
-            return super()._eval_nseries(x, n, logx)
+        if not (arg == x and x0 == 0):
+            # It would be better to do something with arg.nseries here, rather
+            # than falling back on Function._eval_nseries. The code below
+            # though is not sufficient if arg is something like x/(x+1).
+            from sympy.simplify.hyperexpand import hyperexpand
+            return hyperexpand(super()._eval_nseries(x, n, logx))
 
         terms = []
 
@@ -537,7 +543,7 @@ class meijerg(TupleParametersBase):
                          "any b1, ..., bm by a positive integer")
 
         # TODO should we check convergence conditions?
-        return Function.__new__(cls, arg0, arg1, args[2], **kwargs)
+        return super().__new__(cls, arg0, arg1, args[2], **kwargs)
 
     def fdiff(self, argindex=3):
         if argindex != 3:
@@ -695,7 +701,6 @@ class meijerg(TupleParametersBase):
         # less than (say) n*pi, we put r=1/n, compute z' = root(z, n)
         # (carefully so as not to loose the branch information), and evaluate
         # G(z'**(1/r)) = G(z'**n) = G(z).
-        import mpmath
         znum = self.argument._eval_evalf(prec)
         if znum.has(exp_polar):
             znum, branch = znum.as_coeff_mul(exp_polar)
@@ -714,12 +719,13 @@ class meijerg(TupleParametersBase):
         except ValueError:
             return
 
-        with mpmath.workprec(prec):
-            v = mpmath.meijerg(ap, bq, z, r)
+        with local_workprec(prec) as ctx:
+            v = ctx.meijerg(ap, bq, z, r)
+            v_expr = Expr._from_mpmath(v, prec)
 
-        return Expr._from_mpmath(v, prec)
+        return v_expr
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         from sympy.simplify.hyperexpand import hyperexpand
         return hyperexpand(self).as_leading_term(x, logx=logx, cdir=cdir)
 
@@ -789,7 +795,7 @@ class meijerg(TupleParametersBase):
         return not self.free_symbols
 
 
-class HyperRep(Function):
+class HyperRep(DefinedFunction):
     """
     A base class for "hyper representation functions".
 
@@ -1122,7 +1128,7 @@ class HyperRep_sinasin(HyperRep):
     def _expr_big_minus(cls, a, z, n):
         return -1/sqrt(1 + 1/z)*sinh(2*a*asinh(sqrt(z)) + 2*a*pi*I*n)
 
-class appellf1(Function):
+class appellf1(DefinedFunction):
     r"""
     This is the Appell hypergeometric function of two variables as:
 

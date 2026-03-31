@@ -7,6 +7,7 @@ sympy.stats.frv_types
 sympy.stats.rv
 sympy.stats.crv
 """
+from __future__ import annotations
 from itertools import product
 
 from sympy.concrete.summations import Sum
@@ -314,8 +315,8 @@ class FinitePSpace(PSpace):
         else:
             parse_domain = [expr.xreplace(dict(elem)) for elem in self.domain]
             bools = [True for elem in self.domain]
-        return sum([Piecewise((prob * elem, blv), (S.Zero, True))
-                for prob, elem, blv in zip(probs, parse_domain, bools)])
+        return sum(Piecewise((prob * elem, blv), (S.Zero, True))
+                for prob, elem, blv in zip(probs, parse_domain, bools))
 
     def compute_quantile(self, expr):
         cdf = self.compute_cdf(expr)

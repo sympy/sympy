@@ -1,4 +1,5 @@
 """Pauli operators and states"""
+from __future__ import annotations
 
 from sympy.core.add import Add
 from sympy.core.mul import Mul
@@ -278,6 +279,8 @@ class SigmaMinus(SigmaOpBase):
     [1, 0]])
     """
 
+    is_annihilation = True
+
     def __new__(cls, *args, **hints):
         return SigmaOpBase.__new__(cls, *args)
 
@@ -361,6 +364,8 @@ class SigmaPlus(SigmaOpBase):
     [0, 1],
     [0, 0]])
     """
+
+    is_annihilation = False
 
     def __new__(cls, *args, **hints):
         return SigmaOpBase.__new__(cls, *args)

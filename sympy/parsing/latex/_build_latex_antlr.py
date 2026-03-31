@@ -1,3 +1,4 @@
+from __future__ import annotations
 import os
 import subprocess
 import glob
@@ -71,7 +72,7 @@ def build_parser(output_dir=dir_latex_antlr):
 
         new_path = os.path.join(output_dir, os.path.basename(path).lower())
         with open(path, 'r') as f:
-            lines = [line.rstrip() + '\n' for line in f.readlines()]
+            lines = [line.rstrip() + '\n' for line in f]
 
         os.unlink(path)
 

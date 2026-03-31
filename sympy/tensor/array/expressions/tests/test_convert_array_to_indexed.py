@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy import Sum, Dummy, sin
 from sympy.tensor.array.expressions import ArraySymbol, ArrayTensorProduct, ArrayContraction, PermuteDims, \
     ArrayDiagonal, ArrayAdd, OneArray, ZeroArray, convert_indexed_to_array, ArrayElementwiseApplyFunc, Reshape

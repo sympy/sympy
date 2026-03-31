@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.basic import Basic
 from sympy.core.symbol import Str
 from sympy.vector.vector import Vector
@@ -81,13 +82,10 @@ class Point(Basic):
         # Else, use point tree to calculate position
         rootindex, path = _path(self, other)
         result = Vector.zero
-        i = -1
         for i in range(rootindex):
             result += path[i]._pos
-        i += 2
-        while i < len(path):
+        for i in range(rootindex + 1, len(path)):
             result -= path[i]._pos
-            i += 1
         return result
 
     def locate_new(self, name, position):

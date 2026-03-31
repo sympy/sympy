@@ -35,9 +35,6 @@ test_list = [
     # llvmlite
     '*llvm*',
 
-    # aesara
-    '*aesara*',
-
     # jax
     '*jax*',
 
@@ -59,9 +56,11 @@ test_list = [
 
     # codegen
     'sympy/codegen/',
-    'sympy/utilities/tests/test_codegen',
-    'sympy/utilities/_compilation/tests/test_compilation',
-    'sympy/external/tests/test_codegen.py',
+    # Match sympy/utilities/tests/test_codegen*.py and
+    # sympy/external/tests/test_codegen.py. (The pattern matching code currently
+    # only lets us match globs as a basename, so we can't spell out the directories.)
+    'test_codegen*.py',
+    'sympy/utilities/_compilation/tests/test_compilation.py',
 
     # cloudpickle
     'pickling',
@@ -97,9 +96,6 @@ doctest_list = [
     # llvmlite
     '*llvm*',
 
-    # aesara
-    '*aesara*',
-
     # gmpy
     'sympy/ntheory',
     'sympy/polys',
@@ -131,7 +127,7 @@ doctest_list = [
 # This is just needed for the numpy nightly job which does not have matplotlib
 # Otherwise these could be added to doctest_list above
 try:
-    import matplotlib
+    import matplotlib # noqa: F401
     doctest_list.extend([
         'doc/src/tutorials/biomechanics/biomechanical-model-example.rst',
         'doc/src/tutorials/biomechanics/biomechanics.rst',

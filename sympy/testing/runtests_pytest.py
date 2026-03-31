@@ -8,7 +8,7 @@ SymPy historically had its own testing framework that aimed to:
 - have no magic, just import the test file and execute the test functions; and
 - be portable.
 
-To reduce the maintence burden of developing an independent testing framework
+To reduce the maintenance burden of developing an independent testing framework
 and to leverage the benefits of existing Python testing infrastructure, SymPy
 now uses pytest (and various of its plugins) to run the test suite.
 
@@ -20,6 +20,7 @@ match the existing API while thinly wrapping pytest.
 These two key functions are `test` and `doctest`.
 
 """
+from __future__ import annotations
 
 import functools
 import importlib.util
@@ -27,7 +28,6 @@ import os
 import pathlib
 import re
 from fnmatch import fnmatch
-from typing import List, Optional, Tuple
 
 try:
     import pytest
@@ -94,23 +94,11 @@ def sympy_dir() -> pathlib.Path:
     return pathlib.Path(__file__).parents[2]
 
 
-def update_args_with_rootdir(args: List[str]) -> List[str]:
-    """Adds `--rootdir` and path to the args `list` passed to `pytest.main`.
-
-    This is required to ensure that pytest is able to find the SymPy tests in
-    instances where it gets confused determining the root directory, e.g. when
-    running with Pyodide (e.g. `bin/test_pyodide.mjs`).
-
-    """
-    args.extend(['--rootdir', str(sympy_dir())])
-    return args
-
-
 def update_args_with_paths(
-    paths: List[str],
-    keywords: Optional[Tuple[str]],
-    args: List[str],
-) -> List[str]:
+    paths: list[str],
+    keywords: tuple[str] | None,
+    args: list[str],
+) -> list[str]:
     """Appends valid paths and flags to the args `list` passed to `pytest.main`.
 
     The are three different types of "path" that a user may pass to the `paths`
@@ -149,17 +137,23 @@ def update_args_with_paths(
             else:
                 partial_path_file_patterns.append(f'test*{partial_path}*.py')
         matches = []
-        for testpath in valid_testpaths_default:
-            for path, dirs, files in os.walk(testpath, topdown=True):
-                zipped = zip(partial_paths, partial_path_file_patterns)
-                for (partial_path, partial_path_file) in zipped:
+        zipped = zip(partial_paths, partial_path_file_patterns)
+        for partial_path, partial_path_file in zipped:
+            did_match_partial_path = False
+            for testpath in valid_testpaths_default:
+                for path, dirs, files in os.walk(testpath, topdown=True):
                     if fnmatch(path, f'*{partial_path}*'):
                         matches.append(str(pathlib.Path(path)))
+                        did_match_partial_path = True
                         dirs[:] = []
                     else:
                         for file in files:
                             if fnmatch(file, partial_path_file):
                                 matches.append(str(pathlib.Path(path, file)))
+                                did_match_partial_path = True
+            if not did_match_partial_path:
+                msg = f'No test paths matched: {partial_path!r}'
+                raise FileNotFoundError(msg)
         return matches
 
     def is_tests_file(filepath: str) -> bool:
@@ -174,15 +168,14 @@ def update_args_with_paths(
 
     def find_tests_matching_keywords(keywords, filepath):
         matches = []
-        with open(filepath, encoding='utf-8') as tests_file:
-            source = tests_file.read()
-            for line in source.splitlines():
-                if line.lstrip().startswith('def '):
-                    for kw in keywords:
-                        if line.lower().find(kw.lower()) != -1:
-                            test_name = line.split(' ')[1].split('(')[0]
-                            full_test_path = filepath + '::' + test_name
-                            matches.append(full_test_path)
+        source = pathlib.Path(filepath).read_text(encoding='utf-8')
+        for line in source.splitlines():
+            if line.lstrip().startswith('def '):
+                for kw in keywords:
+                    if line.lower().find(kw.lower()) != -1:
+                        test_name = line.split(' ')[1].split('(')[0]
+                        full_test_path = filepath + '::' + test_name
+                        matches.append(full_test_path)
         return matches
 
     valid_testpaths_default = []
@@ -264,7 +257,7 @@ def test(*paths, subprocess=True, rerun=0, **kwargs):
 
     Note that a `pytest.ExitCode`, which is an `enum`, is returned. This is
     different to the legacy SymPy test runner which would return a `bool`. If
-    all tests sucessfully pass the `pytest.ExitCode.OK` with value `0` is
+    all tests successfully pass the `pytest.ExitCode.OK` with value `0` is
     returned, whereas the legacy SymPy test runner would return `True`. In any
     other scenario, a non-zero `enum` value is returned, whereas the legacy
     SymPy test runner would return `False`. Users need to, therefore, be careful
@@ -389,7 +382,6 @@ def test(*paths, subprocess=True, rerun=0, **kwargs):
         pytest.main()
 
     args = []
-    args = update_args_with_rootdir(args)
 
     if kwargs.get('verbose', False):
         args.append('--verbose')
@@ -421,15 +413,11 @@ def test(*paths, subprocess=True, rerun=0, **kwargs):
             raise ModuleNotFoundError(msg)
         args.extend(['--timeout', str(int(timeout))])
 
-    # The use of `bool | None` for the `slow` kwarg allows a configuration file
-    # to take precedence if found by pytest, but if one isn't present (e.g. in
-    # the case when used with Pyodide) then a user can still explicitly ensure
-    # that only the slow tests are run.
-    if slow := kwargs.get('slow', None) is not None:
-        if slow:
-            args.extend(['-m', 'slow'])
-        else:
-            args.extend(['-m', 'not slow'])
+    # Skip slow tests by default and always skip tooslow tests
+    if kwargs.get('slow', False):
+        args.extend(['-m', 'slow and not tooslow'])
+    else:
+        args.extend(['-m', 'not slow and not tooslow'])
 
     if (split := kwargs.get('split')) is not None:
         if not pytest_plugin_manager.has_split:

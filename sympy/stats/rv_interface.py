@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.sets import FiniteSet
 from sympy.core.numbers import Rational
 from sympy.core.relational import Eq
@@ -104,7 +105,7 @@ std = standard_deviation
 
 def entropy(expr, condition=None, **kwargs):
     """
-    Calculuates entropy of a probability distribution.
+    Calculates entropy of a probability distribution.
 
     Parameters
     ==========
@@ -141,7 +142,7 @@ def entropy(expr, condition=None, **kwargs):
     pdf = density(expr, condition, **kwargs)
     base = kwargs.get('b', exp(1))
     if isinstance(pdf, dict):
-            return sum([-prob*log(prob, base) for prob in pdf.values()])
+            return sum(-prob*log(prob, base) for prob in pdf.values())
     return expectation(-log(pdf(expr), base))
 
 def covariance(X, Y, condition=None, **kwargs):
@@ -390,7 +391,7 @@ def factorial_moment(X, n, condition=None, **kwargs):
 
 def median(X, evaluate=True, **kwargs):
     r"""
-    Calculuates the median of the probability distribution.
+    Calculates the median of the probability distribution.
 
     Explanation
     ===========

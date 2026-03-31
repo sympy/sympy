@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.add import Add
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import expand_log, _mexpand
@@ -155,7 +156,7 @@ def _lambert(eq, x):
 
     # There are infinitely many branches for LambertW
     # but only branches for k = -1 and 0 might be real. The k = 0
-    # branch is real and the k = -1 branch is real if the LambertW argumen
+    # branch is real and the k = -1 branch is real if the LambertW argument
     # in in range [-1/e, 0]. Since `solve` does not return infinite
     # solutions we will only include the -1 branch if it tests as real.
     # Otherwise, inclusion of any LambertW in the solution indicates to

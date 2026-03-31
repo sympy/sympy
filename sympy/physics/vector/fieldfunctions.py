@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.function import diff
 from sympy.core.singleton import S
 from sympy.integrals.integrals import integrate
@@ -131,7 +132,7 @@ def gradient(scalar, frame):
     outvec = Vector(0)
     scalar = express(scalar, frame, variables=True)
     for i, x in enumerate(frame):
-        outvec += diff(scalar, frame[i]) * x
+        outvec += diff(scalar, frame[i]) * x  # noqa: PLR1736
     return outvec
 
 

@@ -1,21 +1,22 @@
 """
 Number theory module (primes, etc)
 """
+from __future__ import annotations
 
 from .generate import nextprime, prevprime, prime, primepi, primerange, \
     randprime, Sieve, sieve, primorial, cycle_length, composite, compositepi
 from .primetest import isprime, is_gaussian_prime, is_mersenne_prime
 from .factor_ import divisors, proper_divisors, factorint, multiplicity, \
-    multiplicity_in_factorial, perfect_power, pollard_pm1, pollard_rho, \
-    primefactors, totient, \
+    multiplicity_in_factorial, perfect_power, factor_cache, pollard_pm1, \
+    pollard_rho, primefactors, totient, \
     divisor_count, proper_divisor_count, divisor_sigma, factorrat, \
     reduced_totient, primenu, primeomega, mersenne_prime_exponent, \
-    is_perfect, is_abundant, is_deficient, is_amicable, \
+    is_perfect, is_abundant, is_deficient, is_amicable, is_carmichael, \
     abundance, dra, drm
 
 from .partitions_ import npartitions
 from .residue_ntheory import is_primitive_root, is_quad_residue, \
-    legendre_symbol, jacobi_symbol, kronecker_symbol, n_order, sqrt_mod, quadratic_residues, \
+    legendre_symbol, jacobi_symbol, n_order, sqrt_mod, quadratic_residues, \
     primitive_root, nthroot_mod, is_nthpow_residue, sqrt_mod_iter, mobius, \
     discrete_log, quadratic_congruence, polynomial_congruence
 from .multinomial import binomial_coefficients, binomial_coefficients_list, \
@@ -26,7 +27,7 @@ from .continued_fraction import continued_fraction_periodic, \
 from .digits import count_digits, digits, is_palindromic
 from .egyptian_fraction import egyptian_fraction
 from .ecm import ecm
-from .qs import qs
+from .qs import qs, qs_factor
 __all__ = [
     'nextprime', 'prevprime', 'prime', 'primepi', 'primerange', 'randprime',
     'Sieve', 'sieve', 'primorial', 'cycle_length', 'composite', 'compositepi',
@@ -35,16 +36,16 @@ __all__ = [
 
 
     'divisors', 'proper_divisors', 'factorint', 'multiplicity', 'perfect_power',
-    'pollard_pm1', 'pollard_rho', 'primefactors', 'totient',
+    'pollard_pm1', 'factor_cache', 'pollard_rho', 'primefactors', 'totient',
     'divisor_count', 'proper_divisor_count', 'divisor_sigma', 'factorrat',
     'reduced_totient', 'primenu', 'primeomega', 'mersenne_prime_exponent',
     'is_perfect', 'is_abundant', 'is_deficient', 'is_amicable',
-    'abundance', 'dra', 'drm', 'multiplicity_in_factorial',
+    'is_carmichael', 'abundance', 'dra', 'drm', 'multiplicity_in_factorial',
 
     'npartitions',
 
     'is_primitive_root', 'is_quad_residue', 'legendre_symbol',
-    'jacobi_symbol', 'kronecker_symbol', 'n_order', 'sqrt_mod', 'quadratic_residues',
+    'jacobi_symbol', 'n_order', 'sqrt_mod', 'quadratic_residues',
     'primitive_root', 'nthroot_mod', 'is_nthpow_residue', 'sqrt_mod_iter',
     'mobius', 'discrete_log', 'quadratic_congruence', 'polynomial_congruence',
 
@@ -63,5 +64,5 @@ __all__ = [
 
     'ecm',
 
-    'qs',
+    'qs', 'qs_factor',
 ]

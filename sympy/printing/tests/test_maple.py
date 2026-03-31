@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core import (S, pi, oo, symbols, Function, Rational, Integer,
                         Tuple, Symbol, Eq, Ne, Le, Lt, Gt, Ge)
 from sympy.core import EulerGamma, GoldenRatio, Catalan, Lambda, Mul, Pow
@@ -142,13 +143,13 @@ def test_constants_other():
 
 
 def test_boolean():
-    assert maple_code(x & y) == "x && y"
-    assert maple_code(x | y) == "x || y"
-    assert maple_code(~x) == "!x"
-    assert maple_code(x & y & z) == "x && y && z"
-    assert maple_code(x | y | z) == "x || y || z"
-    assert maple_code((x & y) | z) == "z || x && y"
-    assert maple_code((x | y) & z) == "z && (x || y)"
+    assert maple_code(x & y) == "x and y"
+    assert maple_code(x | y) == "x or y"
+    assert maple_code(~x) == "not x"
+    assert maple_code(x & y & z) == "x and y and z"
+    assert maple_code(x | y | z) == "x or y or z"
+    assert maple_code((x & y) | z) == "z or x and y"
+    assert maple_code((x | y) & z) == "z and (x or y)"
 
 
 def test_Matrices():

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core import Function, S, Mul, Pow, Add
 from sympy.core.sorting import ordered, default_sort_key
 from sympy.core.function import expand_func
@@ -231,11 +232,9 @@ def _gammasimp(expr, as_comb):
                         denom.append(sin(S.Pi*g1))
                         gammas.pop(i)
                         if n > 0:
-                            for k in range(n):
-                                numer.append(1 - g1 + k)
+                            numer.extend(1 - g1 + k for k in range(n))
                         elif n < 0:
-                            for k in range(-n):
-                                denom.append(-g1 - k)
+                            denom.extend(-g1 - k for k in range(-n))
                         break
                     else:
                         new.append(g1)
@@ -266,11 +265,9 @@ def _gammasimp(expr, as_comb):
                     ng.remove(x)
                     dg.remove(y)
                     if n > 0:
-                        for k in range(n):
-                            no.append(2*y + k)
+                        no.extend(2*y + k for k in range(n))
                     elif n < 0:
-                        for k in range(-n):
-                            do.append(2*y - 1 - k)
+                        do.extend(2*y - 1 - k for k in range(-n))
                     ng.append(y + S.Half)
                     no.append(2**(2*y - 1))
                     do.append(sqrt(S.Pi))

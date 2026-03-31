@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.combinatorics.free_groups import free_group, FreeGroup
 from sympy.core import Symbol
 from sympy.testing.pytest import raises
@@ -13,6 +14,11 @@ def test_FreeGroup__init__():
     assert len(FreeGroup(x).generators) == 1
     assert len(FreeGroup(("x", "y", "z"))) == 3
     assert len(FreeGroup((x, y, z)).generators) == 3
+
+
+def test_FreeGroup__getnewargs__():
+    x, y, z = map(Symbol, "xyz")
+    assert FreeGroup("x, y, z").__getnewargs__() == ((x, y, z),)
 
 
 def test_free_group():
@@ -64,6 +70,9 @@ def test_FreeGroup__getitem__():
 
 def test_FreeGroupElm__hash__():
     assert hash(x*y*z)
+    assert hash(x * y) != hash(y * x)
+    assert hash(x * y * x) != hash(x * y)
+    assert hash(x**2 * y) == hash(x * x * y)
 
 
 def test_FreeGroupElm_copy():
@@ -106,6 +115,7 @@ def test_FreeGroupElm_eliminate_word():
     assert w3.eliminate_word(y, x**-1) == x**-3
     assert w3.eliminate_word(x, y*z) == y*z*y*z*y**3*z**-1
     assert (y**-3).eliminate_word(y, x**-1*z**-1) == z*x*z*x*z*x
+    raises(ValueError, lambda: w.eliminate_word(F.identity, x))
     #assert w3.eliminate_word(x, y*x) == y*x*y*x**2*y*x*y*x*y*x*z**3
     #assert w3.eliminate_word(x, x*y) == x*y*x**2*y*x*y*x*y*x*y*z**3
 
@@ -135,6 +145,9 @@ def test_FreeGroupElm__mul__pow__():
     assert x**2 == x1*x
 
     assert (x**2*y*x**-2)**4 == x**2*y**4*x**-2
+    assert (x**2*y*x**-2)**-3 == x**2*y**-3*x**-2
+    assert (x*y*x)**3 == x*y*x**2*y*x**2*y*x
+    assert (x*y*x)**-2 == x**-1*y**-1*x**-2*y**-1*x**-1
     assert (x**2)**2 == x**4
     assert (x**-1)**-1 == x
     assert (x**-1)**0 == F.identity
@@ -151,6 +164,25 @@ def test_FreeGroupElm__mul__pow__():
 
     assert x*(x**-1*y*z*y**-1) == y*z*y**-1
     assert x**2*(x**-2*y**-1*z**2*y) == y**-1*z**2*y
+
+    a = F.identity
+    for n in range(10):
+        assert a == x**n
+        assert a**-1 == x**-n
+        a *= x
+
+
+def test_FreeGroupElm_prod():
+    dtype = F.dtype
+    assert dtype.prod([]) == F.identity
+    assert dtype.prod([F.identity, x, y, x**-1, F.identity]) == x*y*x**-1
+    assert dtype.prod((x**k for k in [3, -1, 5, -2])) == x**5
+    words = [x**2*y*x**-2, x**2, y**-3, x**-2, y**3]
+    naive = F.identity
+    for word in words:
+        naive *= word
+    assert dtype.prod(words) == naive
+    raises(TypeError, lambda: dtype.prod([x, 1]))
 
 
 def test_FreeGroupElm__len__():
@@ -213,3 +245,17 @@ def test_FreeGroupElm_words():
 
     assert w.substituted_word(0, 7, y**-1) == y**-1*x*y**-4*x
     assert w.substituted_word(0, 7, y**2*x) == y**2*x**2*y**-4*x
+
+
+def test_FreeGroupElm_cyclic():
+    F, x, y = free_group("x y")
+    w = x*y*x**-1
+    rot = w.cyclic_subword(1, 1 + len(w))
+    assert rot == y
+    identity = F.identity
+    assert identity.cyclic_subword(3, 7) == identity
+    assert identity.cyclic_conjugates() == {identity}
+    assert x.is_cyclic_conjugate(identity) is False
+    assert identity.is_cyclic_conjugate(x * x**-1)
+    v = x*y*x*y*x
+    assert v.cyclic_conjugates() == {x*y*x**2*y, x**2*y*x*y, y*x*y*x**2, y*x**2*y*x, x*y*x*y*x}

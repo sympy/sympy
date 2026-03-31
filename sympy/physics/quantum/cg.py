@@ -3,6 +3,7 @@
 # -Improve simplification method
 # -Implement new simplifications
 """Clebsch-Gordon Coefficients."""
+from __future__ import annotations
 
 from sympy.concrete.summations import Sum
 from sympy.core.add import Add
@@ -119,7 +120,7 @@ class Wigner3j(Expr):
         vsep = 1
         maxw = [-1]*3
         for j in range(3):
-            maxw[j] = max([ m[j][i].width() for i in range(2) ])
+            maxw[j] = max(m[j][i].width() for i in range(2))
         D = None
         for i in range(2):
             D_row = None
@@ -294,7 +295,7 @@ class Wigner6j(Expr):
         vsep = 1
         maxw = [-1]*3
         for j in range(3):
-            maxw[j] = max([ m[j][i].width() for i in range(2) ])
+            maxw[j] = max(m[j][i].width() for i in range(2))
         D = None
         for i in range(2):
             D_row = None
@@ -398,7 +399,7 @@ class Wigner9j(Expr):
         vsep = 1
         maxw = [-1]*3
         for j in range(3):
-            maxw[j] = max([ m[j][i].width() for i in range(3) ])
+            maxw[j] = max(m[j][i].width() for i in range(3))
         D = None
         for i in range(3):
             D_row = None

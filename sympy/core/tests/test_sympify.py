@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.add import Add
 from sympy.core.containers import Tuple
 from sympy.core.function import (Function, Lambda)
@@ -23,11 +24,11 @@ from sympy.core.sympify import (sympify, _sympify, SympifyError, kernS,
 from sympy.core.decorators import _sympifyit
 from sympy.external import import_module
 from sympy.testing.pytest import raises, XFAIL, skip
-from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.geometry import Point, Line
 from sympy.functions.combinatorial.factorials import factorial, factorial2
 from sympy.abc import _clash, _clash1, _clash2
 from sympy.external.gmpy import gmpy as _gmpy, flint as _flint
+from sympy.external.mpmath import conserve_mpmath_dps
 from sympy.sets import FiniteSet, EmptySet
 from sympy.tensor.array.dense_ndim_array import ImmutableDenseNDimArray
 
@@ -180,7 +181,7 @@ def test_sympify_bool():
     assert sympify(False) is false
 
 
-def test_sympyify_iterables():
+def test_sympify_iterables():
     ans = [Rational(3, 10), Rational(1, 5)]
     assert sympify(['.3', '.2'], rational=True) == ans
     assert sympify({"x": 0, "y": 1}) == {x: 0, y: 1}
@@ -436,7 +437,7 @@ def test_evaluate_false():
         '2**2 / 3': Mul(Pow(2, 2, evaluate=False), Pow(3, -1, evaluate=False), evaluate=False),
         '2 + 3 * 5': Add(2, Mul(3, 5, evaluate=False), evaluate=False),
         '2 - 3 * 5': Add(2, Mul(-1, Mul(3, 5,evaluate=False), evaluate=False), evaluate=False),
-        '1 / 3': Mul(1, Pow(3, -1, evaluate=False), evaluate=False),
+        '1 / 3': Pow(3, -1, evaluate=False),
         'True | False': Or(True, False, evaluate=False),
         '1 + 2 + 3 + 5*3 + integrate(x)': Add(1, 2, 3, Mul(5, 3, evaluate=False), x**2/2, evaluate=False),
         '2 * 4 * 6 + 8': Add(Mul(2, 4, 6, evaluate=False), 8, evaluate=False),
@@ -769,9 +770,9 @@ def test_numpy_sympify_args():
 
 
 def test_issue_5939():
-     a = Symbol('a')
-     b = Symbol('b')
-     assert sympify('''a+\nb''') == a + b
+    a = Symbol('a')
+    b = Symbol('b')
+    assert sympify('''a+\nb''') == a + b
 
 
 def test_issue_16759():
@@ -883,3 +884,10 @@ def test_issue_21536():
     assert u.is_Add and set(u.args) == {4*x, 2}
     assert v.is_Add and set(v.args) == {6*x, 6}
     assert sympify(["x+3*x+2", "2*x+4*x+2+4"]) == [u, v]
+
+def test_issue_27284():
+    if not numpy:
+        skip("numpy not installed.")
+
+    assert Float(numpy.float32(float('inf'))) == S.Infinity
+    assert Float(numpy.float32(float('-inf'))) == S.NegativeInfinity

@@ -1,6 +1,10 @@
 """Implementation of :class:`FiniteField` class. """
+from __future__ import annotations
+
+import operator
 
 from sympy.external.gmpy import GROUND_TYPES
+from sympy.utilities.decorator import doctest_depends_on
 
 from sympy.core.numbers import int_valued
 from sympy.polys.domains.field import Field
@@ -11,45 +15,106 @@ from sympy.polys.galoistools import gf_zassenhaus, gf_irred_p_rabin
 from sympy.polys.polyerrors import CoercionFailed
 from sympy.utilities import public
 from sympy.polys.domains.groundtypes import SymPyInteger
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from types import ModuleType
 
 
 if GROUND_TYPES == 'flint':
-    import flint
+    __doctest_skip__ = ['FiniteField']
+
+
+flint: ModuleType | None
+
+if GROUND_TYPES == 'flint':
+    import flint as _flint
+    flint = _flint
     # Don't use python-flint < 0.5.0 because nmod was missing some features in
     # previous versions of python-flint and fmpz_mod was not yet added.
-    _major, _minor, *_ = flint.__version__.split('.')
+    _major, _minor, *_ = _flint.__version__.split('.')
     if (int(_major), int(_minor)) < (0, 5):
         flint = None
 else:
     flint = None
 
 
+def _modular_int_factory_nmod(mod):
+    # nmod only recognises int
+    index = operator.index
+    mod = index(mod)
+    nmod = flint.nmod
+    nmod_poly = flint.nmod_poly
+
+    # flint's nmod is only for moduli up to 2^64-1 (on a 64-bit machine)
+    try:
+        nmod(0, mod)
+    except OverflowError:
+        return None, None
+
+    def ctx(x):
+        try:
+            return nmod(x, mod)
+        except TypeError:
+            return nmod(index(x), mod)
+
+    def poly_ctx(cs):
+        return nmod_poly(cs, mod)
+
+    return ctx, poly_ctx
+
+
+def _modular_int_factory_fmpz_mod(mod):
+    index = operator.index
+    fctx = flint.fmpz_mod_ctx(mod)
+    fctx_poly = flint.fmpz_mod_poly_ctx(mod)
+    fmpz_mod_poly = flint.fmpz_mod_poly
+
+    def ctx(x):
+        try:
+            return fctx(x)
+        except TypeError:
+            # x might be Integer
+            return fctx(index(x))
+
+    def poly_ctx(cs):
+        return fmpz_mod_poly(cs, fctx_poly)
+
+    return ctx, poly_ctx
+
+
 def _modular_int_factory(mod, dom, symmetric, self):
+    # Convert the modulus to ZZ
+    try:
+        mod = dom.convert(mod)
+    except CoercionFailed:
+        raise ValueError('modulus must be an integer, got %s' % mod)
 
-    # Use flint if available
-    if flint is not None:
-        try:
-            mod = dom.convert(mod)
-        except CoercionFailed:
-            raise ValueError('modulus must be an integer, got %s' % mod)
+    ctx, poly_ctx, is_flint = None, None, False
 
-        # flint's nmod is only for moduli up to 2^64-1 (on a 64-bit machine)
-        try:
-            flint.nmod(0, mod)
-        except OverflowError:
-            # Use fmpz_mod
-            ctx = flint.fmpz_mod_ctx(mod)
-        else:
-            # Use nmod
-            ctx = lambda x: flint.nmod(x, mod)
+    # Don't use flint if the modulus is not prime as it often crashes.
+    if flint is not None and mod.is_prime():
 
-        return ctx
+        is_flint = True
 
-    # Use the Python implementation
-    return ModularIntegerFactory(mod, dom, symmetric, self)
+        # Try to use flint's nmod first
+        ctx, poly_ctx = _modular_int_factory_nmod(mod)
+
+        if ctx is None:
+            # Use fmpz_mod for larger moduli
+            ctx, poly_ctx = _modular_int_factory_fmpz_mod(mod)
+
+    if ctx is None:
+        # Use the Python implementation if flint is not available or the
+        # modulus is not prime.
+        ctx = ModularIntegerFactory(mod, dom, symmetric, self)
+        poly_ctx = None  # not used
+
+    return ctx, poly_ctx, is_flint
 
 
 @public
+@doctest_depends_on(modules=['python', 'gmpy'])
 class FiniteField(Field, SimpleDomain):
     r"""Finite field of prime order :ref:`GF(p)`
 
@@ -158,7 +223,12 @@ class FiniteField(Field, SimpleDomain):
         if mod <= 0:
             raise ValueError('modulus must be a positive integer, got %s' % mod)
 
-        self.dtype = _modular_int_factory(mod, dom, symmetric, self)
+        ctx, poly_ctx, is_flint = _modular_int_factory(mod, dom, symmetric, self)
+
+        self.dtype = ctx
+        self._poly_ctx = poly_ctx
+        self._is_flint = is_flint
+
         self.zero = self.dtype(0)
         self.one = self.dtype(1)
         self.dom = dom
@@ -169,6 +239,14 @@ class FiniteField(Field, SimpleDomain):
     @property
     def tp(self):
         return self._tp
+
+    @property
+    def is_Field(self):
+        is_field = getattr(self, '_is_field', None)
+        if is_field is None:
+            from sympy.ntheory.primetest import isprime
+            self._is_field = is_field = isprime(self.mod)
+        return is_field
 
     def __str__(self):
         return 'GF(%s)' % self.mod
@@ -195,12 +273,9 @@ class FiniteField(Field, SimpleDomain):
 
     def from_sympy(self, a):
         """Convert SymPy's Integer to SymPy's ``Integer``. """
-        if a.is_Integer:
+        if a.is_Integer or int_valued(a):
             return self.dtype(self.dom.dtype(int(a)))
-        elif int_valued(a):
-            return self.dtype(self.dom.dtype(int(a)))
-        else:
-            raise CoercionFailed("expected an integer, got %s" % a)
+        raise CoercionFailed("expected an integer, got %s" % a)
 
     def to_int(self, a):
         """Convert ``val`` to a Python ``int`` object. """

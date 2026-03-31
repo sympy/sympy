@@ -2,6 +2,7 @@
 # A module consisting of deprecated matrix classes. New code should not be
 # added here.
 #
+from __future__ import annotations
 from sympy.core.basic import Basic
 from sympy.core.symbol import Dummy
 
@@ -33,6 +34,15 @@ from .eigen import (
 # sympy.matrices.matrixbase. We import it here for backwards compatibility in
 # case someone was importing it from here.
 from .matrixbase import MatrixBase
+
+
+__doctest_requires__ = {
+    ('MatrixEigen.is_indefinite',
+     'MatrixEigen.is_negative_definite',
+     'MatrixEigen.is_negative_semidefinite',
+     'MatrixEigen.is_positive_definite',
+     'MatrixEigen.is_positive_semidefinite'): ['matplotlib'],
+}
 
 
 class MatrixDeterminant(MatrixCommon):

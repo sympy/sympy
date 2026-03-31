@@ -1,7 +1,7 @@
+from __future__ import annotations
 import random
 import itertools
-from typing import (Sequence as tSequence, Union as tUnion, List as tList,
-        Tuple as tTuple, Set as tSet)
+from typing import Sequence as tSequence
 from sympy.concrete.summations import Sum
 from sympy.core.add import Add
 from sympy.core.basic import Basic
@@ -101,12 +101,12 @@ def _set_converter(itr):
         raise TypeError("%s is not an instance of list/tuple/set."%(itr))
     return itr
 
-def _state_converter(itr: tSequence) -> tUnion[Tuple, Range]:
+def _state_converter(itr: tSequence) -> Tuple | Range:
     """
     Helper function for converting list/tuple/set/Range/Tuple/FiniteSet
     to tuple/Range.
     """
-    itr_ret: tUnion[Tuple, Range]
+    itr_ret: Tuple | Range
 
     if isinstance(itr, (Tuple, set, FiniteSet)):
         itr_ret = Tuple(*(sympify(i) if isinstance(i, str) else i for i in itr))
@@ -192,7 +192,7 @@ class StochasticProcess(Basic):
         return self.args[0]
 
     @property
-    def state_space(self) -> tUnion[FiniteSet, Range]:
+    def state_space(self) -> FiniteSet | Range:
         if not isinstance(self.args[1], (FiniteSet, Range)):
             assert isinstance(self.args[1], Tuple)
             return FiniteSet(*self.args[1])
@@ -376,7 +376,7 @@ class MarkovProcess(StochasticProcess):
     """
 
     @property
-    def number_of_states(self) -> tUnion[Integer, Symbol]:
+    def number_of_states(self) -> Integer | Symbol:
         """
         The number of states in the Markov Chain.
         """
@@ -473,7 +473,7 @@ class MarkovProcess(StochasticProcess):
         """
         # if given condition is None, then there is no need to work out
         # state_space from random variables
-        if given_condition != None:
+        if given_condition is not None:
             rand_var = list(given_condition.atoms(RandomSymbol) -
                         given_condition.atoms(RandomIndexedSymbol))
             if len(rand_var) == 1:
@@ -675,13 +675,13 @@ class MarkovProcess(StochasticProcess):
                 gprob = S.One
 
             if min_key_rv == rv:
-                return sum([prob[FiniteSet(state)] for state in states])
+                return sum(prob[FiniteSet(state)] for state in states)
             if isinstance(self, ContinuousMarkovChain):
-                return gprob * sum([trans_probs(rv.key - min_key_rv.key).__getitem__((gstate, state))
-                                    for state in states])
+                return gprob * sum(trans_probs(rv.key - min_key_rv.key).__getitem__((gstate, state))
+                                    for state in states)
             if isinstance(self, DiscreteMarkovChain):
-                return gprob * sum([(trans_probs**(rv.key - min_key_rv.key)).__getitem__((gstate, state))
-                                    for state in states])
+                return gprob * sum((trans_probs**(rv.key - min_key_rv.key)).__getitem__((gstate, state))
+                                    for state in states)
 
         if isinstance(condition, Not):
             expr = condition.args[0]
@@ -720,8 +720,8 @@ class MarkovProcess(StochasticProcess):
             return prod
 
         if isinstance(condition, Or):
-            return sum([self.probability(expr, given_condition, evaluate, **kwargs)
-                        for expr in condition.args])
+            return sum(self.probability(expr, given_condition, evaluate, **kwargs)
+                        for expr in condition.args)
 
         raise NotImplementedError("Mechanism for handling (%s, %s) queries hasn't been "
                                 "implemented yet."%(condition, given_condition))
@@ -816,7 +816,7 @@ class MarkovProcess(StochasticProcess):
             cond = condition & mat_of & \
                     StochasticStateSpaceOf(self, state_index)
             func = lambda s: self.probability(Eq(rv, s), cond) * expr.subs(rv, self._state_index[s])
-            return sum([func(s) for s in state_index])
+            return sum(func(s) for s in state_index)
 
         raise NotImplementedError("Mechanism for handling (%s, %s) queries hasn't been "
                                 "implemented yet."%(expr, condition))
@@ -961,7 +961,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         """
         return self.args[2]
 
-    def communication_classes(self) -> tList[tTuple[tList[Basic], Boolean, Integer]]:
+    def communication_classes(self) -> list[tuple[list[Basic], Boolean, Integer]]:
         """
         Returns the list of communication classes that partition
         the states of the markov chain.
@@ -1044,7 +1044,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         for class_ in classes:
             # begin recurrent check (similar to self._check_trans_probs())
             submatrix = T[class_, class_]  # get the submatrix with those states
-            is_recurrent = S.true
+            is_recurrent: Boolean = S.true
             rows = submatrix.tolist()
             for row in rows:
                 if (sum(row) - 1) != 0:
@@ -1054,7 +1054,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
             # end recurrent check
 
             # begin breadth-first search
-            non_tree_edge_values: tSet[int] = set()
+            non_tree_edge_values: set[int] = set()
             visited = {class_[0]}
             newly_visited = {class_[0]}
             level = {class_[0]: 0}
@@ -1173,7 +1173,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         r = A.shape[0]
         return And(r > 0, A == Identity(r).as_explicit())
 
-    def stationary_distribution(self, condition_set=False) -> tUnion[ImmutableMatrix, ConditionSet, Lambda]:
+    def stationary_distribution(self, condition_set=False) -> ImmutableMatrix | ConditionSet | Lambda:
         r"""
         The stationary distribution is any row vector, p, that solves p = pP,
         is row stochastic and each element in p must be nonnegative.
@@ -1273,7 +1273,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         """
         return self.fixed_row_vector()
 
-    def decompose(self) -> tTuple[tList[Basic], ImmutableMatrix, ImmutableMatrix, ImmutableMatrix]:
+    def decompose(self) -> tuple[list[Basic], ImmutableMatrix, ImmutableMatrix, ImmutableMatrix]:
         """
         Decomposes the transition matrix into submatrices with
         special properties.
@@ -1333,7 +1333,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
 
         This means that state 2 is the only absorbing state
         (since A is a 1x1 matrix). B is a 4x1 matrix since
-        the 4 remaining transient states all merge into reccurent
+        the 4 remaining transient states all merge into recurrent
         state 2. And C is the 4x4 matrix that shows how the
         transient states 0, 1, 3, 4 all interact.
 
@@ -1375,7 +1375,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
 
         return states, A.as_immutable(), B.as_immutable(), C.as_immutable()
 
-    def canonical_form(self) -> tTuple[tList[Basic], ImmutableMatrix]:
+    def canonical_form(self) -> tuple[list[Basic], ImmutableMatrix]:
         """
         Reorders the one-step transition matrix
         so that recurrent states appear first and transient
@@ -1597,7 +1597,7 @@ class ContinuousMarkovChain(ContinuousTimeStochasticProcess, MarkovProcess):
             # for faster computation use diagonalized generator matrix
             Q, D = gen_mat.diagonalize()
             return Lambda(t, Q*exp(t*D)*Q.inv())
-        if gen_mat != None:
+        if gen_mat is not None:
             return Lambda(t, exp(t*gen_mat))
 
     def limiting_distribution(self):

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from textwrap import dedent
 import sys
 from subprocess import Popen, PIPE
@@ -8,9 +9,6 @@ from sympy.testing.pytest import (raises, warns_deprecated_sympy,
                                   skip_under_pyodide)
 from sympy.utilities.misc import (translate, replace, ordinal, rawlines,
                                   strlines, as_int, find_executable)
-from sympy.external import import_module
-
-pyodide_js = import_module('pyodide_js')
 
 
 def test_translate():

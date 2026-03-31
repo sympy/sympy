@@ -1,3 +1,4 @@
+from __future__ import annotations
 
 from sympy.external import import_module
 import sympy.plotting.backends.base_backend as base_backend
@@ -6,6 +7,11 @@ import sympy.plotting.backends.base_backend as base_backend
 # N.B.
 # When changing the minimum module version for matplotlib, please change
 # the same in the `SymPyDocTestFinder`` in `sympy/testing/runtests.py`
+
+
+__doctest_requires__ = {
+    ("PlotGrid",): ["matplotlib"],
+}
 
 
 class PlotGrid:

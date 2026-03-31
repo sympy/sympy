@@ -1,18 +1,31 @@
 """Implementation of :class:`AlgebraicField` class. """
 
+from __future__ import annotations
 
 from sympy.core.add import Add
 from sympy.core.mul import Mul
 from sympy.core.singleton import S
+from sympy.core.symbol import Dummy, symbols
+from sympy.external.gmpy import MPQ
 from sympy.polys.domains.characteristiczero import CharacteristicZero
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.simpledomain import SimpleDomain
-from sympy.polys.polyclasses import ANP
+from sympy.polys.domains.ringextension import RingExtension
+from sympy.polys.polyclasses import ANP, DMP
 from sympy.polys.polyerrors import CoercionFailed, DomainError, NotAlgebraic, IsomorphismFailed
 from sympy.utilities import public
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from sympy.polys.domains.domain import Domain
+    from sympy.core.expr import Expr
+
+
+Alg = ANP[MPQ]
+
 
 @public
-class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
+class AlgebraicField(Field[Alg], CharacteristicZero, SimpleDomain[Alg], RingExtension[Alg, MPQ]):
     r"""Algebraic number field :ref:`QQ(a)`
 
     A :ref:`QQ(a)` domain represents an `algebraic number field`_
@@ -241,7 +254,7 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
     .. _primitive element: https://en.wikipedia.org/wiki/Primitive_element_theorem
     """
 
-    dtype = ANP
+    dtype: type[Alg] = ANP
 
     is_AlgebraicField = is_Algebraic = True
     is_Numerical = True
@@ -249,7 +262,10 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
     has_assoc_Ring = False
     has_assoc_Field = True
 
-    def __init__(self, dom, *ext, alias=None):
+    dom: Domain[MPQ]
+    mod: DMP[MPQ]
+
+    def __init__(self, dom: Domain[MPQ], *ext: Expr, alias: str | None = None) -> None:
         r"""
         Parameters
         ==========
@@ -321,7 +337,7 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
 
         self._maximal_order = None
         self._discriminant = None
-        self._nilradicals_mod_p = {}
+        self._nilradicals_mod_p: dict = {}
 
     def new(self, element):
         return self.dtype(element, self.mod.to_list(), self.dom)
@@ -342,6 +358,9 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
     def algebraic_field(self, *extension, alias=None):
         r"""Returns an algebraic field, i.e. `\mathbb{Q}(\alpha, \ldots)`. """
         return AlgebraicField(self.dom, *((self.ext,) + extension), alias=alias)
+
+    def to_dict(self, element: Alg) -> dict[tuple[int, ...], MPQ]:
+        return element.to_dict()
 
     def to_alg_num(self, a):
         """Convert ``a`` of ``dtype`` to an :py:class:`~.AlgebraicNumber`. """
@@ -576,16 +595,47 @@ def _make_converter(K):
     # each power of the generator and collect together the resulting algebraic
     # terms and the rational coefficients into a matrix.
 
-    gen = K.ext.as_expr()
+    ext = K.ext.as_expr()
     todom = K.dom.from_sympy
+    toexpr = K.dom.to_sympy
 
-    # We'll let Expr compute the expansions. We won't make any presumptions
-    # about what this results in except that it is QQ-linear in some terms
-    # that we will call algebraics. The final result will be expressed in
-    # terms of those.
-    powers = [S.One, gen]
-    for n in range(2, K.mod.degree()):
-        powers.append((gen * powers[-1]).expand())
+    if not ext.is_Add:
+        powers = [ext**n for n in range(K.mod.degree())]
+    else:
+        # primitive_element generates a QQ-linear combination of lower degree
+        # algebraic numbers to generate the higher degree extension e.g.
+        # QQ<sqrt(2)+sqrt(3)> That means that we end up having high powers of low
+        # degree algebraic numbers that can be reduced. Here we will use the
+        # minimal polynomials of the algebraic numbers to reduce those powers
+        # before converting to Expr.
+        from sympy.polys.numberfields.minpoly import minpoly
+
+        # Decompose ext as a linear combination of gens and make a symbol for
+        # each gen.
+        gens, coeffs = zip(*ext.as_coefficients_dict().items())
+        syms = symbols(f'a:{len(gens)}', cls=Dummy)
+        sym2gen = dict(zip(syms, gens))
+
+        # Make a polynomial ring that can express ext and minpolys of all gens
+        # in terms of syms.
+        R = K.dom[syms]
+        monoms = [R.ring.monomial_basis(i) for i in range(R.ngens)]
+        ext_dict = {m: todom(c) for m, c in zip(monoms, coeffs)}
+        ext_poly = R.ring.from_dict(ext_dict)
+        minpolys = [R.from_sympy(minpoly(g, s)) for s, g in sym2gen.items()]
+
+        # Compute all powers of ext_poly reduced modulo minpolys
+        powers = [R.one, ext_poly]
+        for n in range(2, K.mod.degree()):
+            ext_poly_n = (powers[-1] * ext_poly).rem(minpolys)
+            powers.append(ext_poly_n)
+
+        # Convert the powers back to Expr. This will recombine some things like
+        # sqrt(2)*sqrt(3) -> sqrt(6).
+        powers = [p.as_expr().xreplace(sym2gen) for p in powers]
+
+    # This also expands some rational powers
+    powers = [p.expand() for p in powers]
 
     # Collect the rational coefficients and algebraic Expr that can
     # map the ANP coefficients into an expanded SymPy expression
@@ -598,9 +648,8 @@ def _make_converter(K):
     def converter(a):
         """Convert a to Expr using converter"""
         ai = a.to_list()[::-1]
-        tosympy = K.dom.to_sympy
         coeffs_dom = [sum(mij*aj for mij, aj in zip(mi, ai)) for mi in matrix]
-        coeffs_sympy = [tosympy(c) for c in coeffs_dom]
+        coeffs_sympy = [toexpr(c) for c in coeffs_dom]
         res = Add(*(Mul(c, a) for c, a in zip(coeffs_sympy, algebraics)))
         return res
 

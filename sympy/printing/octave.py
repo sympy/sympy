@@ -339,7 +339,7 @@ class OctaveCodePrinter(CodePrinter):
 
     def _print_SparseRepMatrix(self, A):
         from sympy.matrices import Matrix
-        L = A.col_list();
+        L = A.col_list()
         # make row vectors of the indices and entries
         I = Matrix([[k[0] + 1 for k in L]])
         J = Matrix([[k[1] + 1 for k in L]])
@@ -377,10 +377,6 @@ class OctaveCodePrinter(CodePrinter):
     def _print_Indexed(self, expr):
         inds = [ self._print(i) for i in expr.indices ]
         return "%s(%s)" % (self._print(expr.base.label), ", ".join(inds))
-
-
-    def _print_Idx(self, expr):
-        return self._print(expr.label)
 
 
     def _print_KroneckerDelta(self, expr):

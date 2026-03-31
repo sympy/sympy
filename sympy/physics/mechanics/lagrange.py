@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy import diff, zeros, Matrix, eye, sympify
 from sympy.core.sorting import default_sort_key
 from sympy.physics.vector import dynamicsymbols, ReferenceFrame
@@ -214,7 +215,7 @@ class LagrangesMethod(_Methods):
             self._term4 = zeros(n, 1)
             for i, qd in enumerate(qds):
                 flist = zip(*_f_list_parser(self.forcelist, N))
-                self._term4[i] = sum(v.diff(qd, N) & f for (v, f) in flist)
+                self._term4[i] = sum(v.diff(qd, N).dot(f) for (v, f) in flist)
         else:
             self._term4 = zeros(n, 1)
 

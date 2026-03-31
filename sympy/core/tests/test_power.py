@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core import (
     Basic, Rational, Symbol, S, Float, Integer, Mul, Number, Pow,
     Expr, I, nan, pi, symbols, oo, zoo, N)
@@ -18,6 +19,7 @@ from sympy.core.intfunc import integer_nthroot
 from sympy.testing.pytest import warns, _both_exp_pow
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.abc import a, b, c, x, y
+from sympy.core.numbers import all_close
 
 def test_rational():
     a = Rational(1, 5)
@@ -282,7 +284,7 @@ def test_pow_as_base_exp():
     p = (S(3)/2)**x
     assert p.base, p.exp == p.as_base_exp() == (3*S.Half, x)
     p = (S(2)/3)**x
-    assert p.as_base_exp() == (S(3)/2, -x)
+    assert p.as_base_exp() == (S(2)/3, x)
     assert p.base, p.exp == (S(2)/3, x)
     # issue 8344:
     assert Pow(1, 2, evaluate=False).as_base_exp() == (S.One, S(2))
@@ -495,17 +497,17 @@ def test_better_sqrt():
 
 
 def test_issue_2993():
-    assert str((2.3*x - 4)**0.3) == '1.5157165665104*(0.575*x - 1)**0.3'
-    assert str((2.3*x + 4)**0.3) == '1.5157165665104*(0.575*x + 1)**0.3'
-    assert str((-2.3*x + 4)**0.3) == '1.5157165665104*(1 - 0.575*x)**0.3'
-    assert str((-2.3*x - 4)**0.3) == '1.5157165665104*(-0.575*x - 1)**0.3'
-    assert str((2.3*x - 2)**0.3) == '1.28386201800527*(x - 0.869565217391304)**0.3'
-    assert str((-2.3*x - 2)**0.3) == '1.28386201800527*(-x - 0.869565217391304)**0.3'
-    assert str((-2.3*x + 2)**0.3) == '1.28386201800527*(0.869565217391304 - x)**0.3'
-    assert str((2.3*x + 2)**0.3) == '1.28386201800527*(x + 0.869565217391304)**0.3'
-    assert str((2.3*x - 4)**Rational(1, 3)) == '2**(2/3)*(0.575*x - 1)**(1/3)'
+    assert str((2.3*x - 4)**0.3) == '(2.3*x - 4)**0.3'
+    assert str((2.3*x + 4)**0.3) == '(2.3*x + 4)**0.3'
+    assert str((-2.3*x + 4)**0.3) == '(4 - 2.3*x)**0.3'
+    assert str((-2.3*x - 4)**0.3) == '(-2.3*x - 4)**0.3'
+    assert str((2.3*x - 2)**0.3) == '(2.3*x - 2)**0.3'
+    assert str((-2.3*x - 2)**0.3) == '(-2.3*x - 2)**0.3'
+    assert str((-2.3*x + 2)**0.3) == '(2 - 2.3*x)**0.3'
+    assert str((2.3*x + 2)**0.3) == '(2.3*x + 2)**0.3'
+    assert str((2.3*x - 4)**Rational(1, 3)) == '(2.3*x - 4)**(1/3)'
     eq = (2.3*x + 4)
-    assert eq**2 == 16*(0.575*x + 1)**2
+    assert str(eq**2) == '(2.3*x + 4)**2'
     assert (1/eq).args == (eq, -1)  # don't change trivial power
     # issue 17735
     q=.5*exp(x) - .5*exp(-x) + 0.1
@@ -555,7 +557,7 @@ def test_issue_14815():
     assert sqrt(x).is_extended_negative is False
     x = Symbol('x', extended_real=True)
     assert sqrt(x).is_extended_negative is False
-    assert sqrt(zoo, evaluate=False).is_extended_negative is None
+    assert sqrt(zoo, evaluate=False).is_extended_negative is False
     assert sqrt(nan, evaluate=False).is_extended_negative is None
 
 
@@ -650,4 +652,26 @@ def test_powers_of_I():
 
 def test_issue_23918():
     b = S(2)/3
-    assert (b**x).as_base_exp() == (1/b, -x)
+    assert (b**x).as_base_exp() == (b, x)
+
+
+def test_issue_26546():
+    x = Symbol('x', real=True)
+    assert x.is_extended_real is True
+    assert sqrt(x+I).is_extended_real is False
+    assert Pow(x+I, S.Half).is_extended_real is False
+    assert Pow(x+I, Rational(1,2)).is_extended_real is False
+    assert Pow(x+I, Rational(1,13)).is_extended_real is False
+    assert Pow(x+I, Rational(2,3)).is_extended_real is None
+
+
+def test_issue_25165():
+    e1 = (1/sqrt(( - x + 1)**2 + (x - 0.23)**4)).series(x, 0, 2)
+    e2 = 0.998603724830355 + 1.02004923189934*x + O(x**2)
+    assert all_close(e1, e2)
+
+
+def test_issue_28219():
+    assert Pow(S.Zero, -1, evaluate=False).as_real_imag() == (S.NaN, S.NaN)
+    x = Symbol('x', real=True)
+    assert Pow(x, -1, evaluate=False).as_real_imag() == (1/x, S.Zero)

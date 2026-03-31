@@ -8,6 +8,7 @@ Features:
 References:
   - https://en.wikipedia.org/wiki/DPLL_algorithm
 """
+from __future__ import annotations
 
 from collections import defaultdict
 from heapq import heappush, heappop
@@ -238,6 +239,10 @@ class SATSolver:
                                     lit > 0 for lit in self.var_settings}
                     else:
                         self._simple_add_learned_clause(res[1])
+
+                        # backtrack until we unassign one of the literals causing the conflict
+                        while not any(-lit in res[1] for lit in self._current_level.var_settings):
+                            self._undo()
 
                     while self._current_level.flipped:
                         self._undo()

@@ -7,7 +7,6 @@ import textwrap
 import re
 import pydoc
 from collections.abc import Mapping
-import sys
 
 
 class Reader:
@@ -197,7 +196,7 @@ class NumpyDocString(Mapping):
         return params
 
     _name_rgx = re.compile(r"^\s*(:(?P<role>\w+):`(?P<name>[a-zA-Z0-9_.-]+)`|"
-                           r" (?P<name2>[a-zA-Z0-9_.-]+))\s*", re.X)
+                           r" (?P<name2>[a-zA-Z0-9_.-]+))\s*", re.VERBOSE)
 
     def _parse_see_also(self, content):
         """
@@ -465,7 +464,7 @@ class FunctionDoc(NumpyDocString):
                 argspec = str(inspect.signature(func))
                 argspec = argspec.replace('*', r'\*')
                 signature = '{}{}'.format(func_name, argspec)
-            except TypeError as e:
+            except TypeError:
                 signature = '%s()' % func_name
             self['Signature'] = signature
 
@@ -481,7 +480,6 @@ class FunctionDoc(NumpyDocString):
         out = ''
 
         func, func_name = self.get_func()
-        signature = self['Signature'].replace('*', r'\*')
 
         roles = {'func': 'function',
                  'meth': 'method'}

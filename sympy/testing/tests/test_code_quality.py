@@ -1,4 +1,5 @@
 # coding=utf-8
+from __future__ import annotations
 from os import walk, sep, pardir
 from os.path import split, join, abspath, exists, isfile
 from glob import glob
@@ -309,7 +310,7 @@ def test_files():
         "%(sep)sutilities%(sep)squality_unicode.py" % sepd,
     }
     check_files(top_level_files, test)
-    check_directory_tree(BIN_PATH, test, {"~", ".pyc", ".sh", ".mjs"}, "*")
+    check_directory_tree(BIN_PATH, test, {"~", ".pyc", ".sh"}, "*")
     check_directory_tree(SYMPY_PATH, test, exclude)
     check_directory_tree(EXAMPLES_PATH, test, exclude)
 

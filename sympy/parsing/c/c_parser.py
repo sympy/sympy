@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.external import import_module
 import os
 
@@ -123,7 +124,7 @@ if cin:
             It takes the filename as an attribute and creates a Clang AST
             Translation Unit parsing the file.
             Then the transformation function is called on the translation unit,
-            whose reults are collected into a list which is returned by the
+            whose results are collected into a list which is returned by the
             function.
 
             Parameters
@@ -159,7 +160,7 @@ if cin:
             It takes the source code as an attribute, stores it in a temporary
             file and creates a Clang AST Translation Unit parsing the file.
             Then the transformation function is called on the translation unit,
-            whose reults are collected into a list which is returned by the
+            whose results are collected into a list which is returned by the
             function.
 
             Parameters
@@ -180,6 +181,7 @@ if cin:
             """
             file = tempfile.NamedTemporaryFile(mode = 'w+', suffix = '.cpp')
             file.write(source)
+            file.flush()
             file.seek(0)
             self.tu = self.index.parse(
                 file.name,
@@ -292,9 +294,9 @@ if cin:
                         value = Symbol(val)
                     elif isinstance(val, bool):
                         if node.type.kind in self._data_types["int"]:
-                            value = Integer(0) if val == False else Integer(1)
+                            value = Integer(0) if not val else Integer(1)
                         elif node.type.kind in self._data_types["float"]:
-                            value = Float(0.0) if val == False else Float(1.0)
+                            value = Float(0.0) if not val else Float(1.0)
                         elif node.type.kind in self._data_types["bool"]:
                             value = sympify(val)
                     elif isinstance(val, (Integer, int, Float, float)):
@@ -546,10 +548,10 @@ if cin:
 
             """
             try:
-               value = next(node.get_tokens()).spelling
+                value = next(node.get_tokens()).spelling
             except (StopIteration, ValueError):
                 # No tokens
-               value = node.literal
+                value = node.literal
             return ord(str(value[1]))
 
         def transform_cxx_bool_literal_expr(self, node):
@@ -587,7 +589,7 @@ if cin:
                 the result from the wrapped expression
 
             None : NoneType
-                No childs are found for the node
+                No children are found for the node
 
             Raises
             ======
@@ -657,7 +659,7 @@ if cin:
             return Return(next(node.get_children()).spelling)
 
         def transform_compound_stmt(self, node):
-            """Transformation function for compond statemets
+            """Transformation function for compound statements
 
             Returns
             =======

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from sympy.external.gmpy import GROUND_TYPES
 
 from sympy.core import (S, Add, Mul, Pow, Eq, Expr,
@@ -12,6 +14,11 @@ from sympy.polys.polyerrors import PolynomialError, GeneratorsError
 from sympy.polys.polyoptions import build_options
 
 import re
+
+
+if TYPE_CHECKING:
+    from sympy.polys.domains.domain import Er
+    from sympy.polys.densebasic import dup
 
 
 _gens_order = {
@@ -39,6 +46,8 @@ def _nsort(roots, separated=False):
     """
     if not all(r.is_number for r in roots):
         raise NotImplementedError
+    if not len(roots):
+        return [] if not separated else ([], [])
     # see issue 6137:
     # get the real part of the evaluated real and imaginary parts of each root
     key = [[i.n(2).as_real_imag()[0] for i in r.as_real_imag()] for r in roots]
@@ -164,6 +173,8 @@ def _sort_factors(factors, **args):
     def order_key(factor):
         if isinstance(factor, _GF_types):
             return int(factor)
+        elif isinstance(factor, Expr):
+            return factor.sort_key()
         elif isinstance(factor, list):
             return [order_key(f) for f in factor]
         else:
@@ -180,6 +191,19 @@ def _sort_factors(factors, **args):
         return sorted(factors, key=order_if_multiple_key)
     else:
         return sorted(factors, key=order_no_multiple_key)
+
+
+def _sort_factors_single(factors: list[dup[Er]]) -> list[dup[Er]]:
+    """Sort factors of ordered domain. """
+    return sorted(factors, key=lambda f: (len(f), f))
+
+
+def _sort_factors_multiple(factors: list[tuple[dup[Er], int]]) -> list[tuple[dup[Er], int]]:
+    """Sort factors of ordered domain. """
+    def order(factor: tuple[dup[Er], int]) -> tuple[int, int, dup[Er]]:
+        (f, n) = factor
+        return (len(f), n, f)
+    return sorted(factors, key=order)
 
 
 illegal_types = [type(obj) for obj in _illegal]
@@ -534,7 +558,7 @@ class IntegerPowerable:
             except NotImplementedError:
                 return NotImplemented
         else:
-            bits = [int(d) for d in reversed(bin(e)[2:])]
+            bits = [int(d) for d in reversed(f'{e:b}')]
             n = len(bits)
             p = self
             first = True
@@ -578,5 +602,5 @@ if GROUND_TYPES == 'flint':
     _GF_types = (flint.nmod, flint.fmpz_mod)
 else:
     from sympy.polys.domains.modularinteger import ModularInteger
-    flint = None
+    flint = None  # type: ignore[assignment]
     _GF_types = (ModularInteger,)

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import overload, Literal
+
 import numbers
 import decimal
 import fractions
@@ -17,19 +19,54 @@ from .decorators import _sympifyit
 from .intfunc import num_digits, igcd, ilcm, mod_inverse, integer_nthroot
 from .logic import fuzzy_not
 from .kind import NumberKind
+from .sorting import ordered
 from sympy.external.gmpy import SYMPY_INTS, gmpy, flint
 from sympy.multipledispatch import dispatch
-import mpmath
-import mpmath.libmp as mlib
-from mpmath.libmp import bitcount, round_nearest as rnd
-from mpmath.libmp.backend import MPZ
-from mpmath.libmp import mpf_pow, mpf_pi, mpf_e, phi_fixed
-from mpmath.ctx_mp_python import mpnumeric
-from mpmath.libmp.libmpf import (
-    finf as _mpf_inf, fninf as _mpf_ninf,
-    fnan as _mpf_nan, fzero, _normalize as mpf_normalize,
-    prec_to_dps, dps_to_prec)
-from sympy.utilities.misc import debug
+from sympy.external.mpmath import (
+    mpnumeric,
+    make_mpf as _make_mpf,
+    mpf as _mpf,
+    finf as _mpf_inf,
+    fninf as _mpf_ninf,
+    fnan as _mpf_nan,
+    fzero,
+    normalize as mpf_normalize,
+    prec_to_dps,
+    dps_to_prec,
+    round_nearest as rnd,
+    to_float as _to_float,
+    to_int as _to_int,
+    from_int as _from_int,
+    from_rational as _from_rational,
+    from_float as _from_float,
+    from_str as _from_str,
+    MPZ,
+    mpf_neg as _mpf_neg,
+    mpf_gt as _mpf_gt,
+    mpf_lt as _mpf_lt,
+    mpf_le as _mpf_le,
+    mpf_ge as _mpf_ge,
+    mpf_abs as _mpf_abs,
+    mpf_floor as _mpf_floor,
+    mpf_ceil as _mpf_ceil,
+    mpf_add as _mpf_add,
+    mpf_sub as _mpf_sub,
+    mpf_mul as _mpf_mul,
+    mpf_div as _mpf_div,
+    mpf_mod as _mpf_mod,
+    mpf_pow_int as _mpf_pow_int,
+    mpf_pow,
+    mpf_pi,
+    mpf_e,
+    mpc_pow as _mpc_pow,
+    phi_fixed,
+    from_man_exp as _from_man_exp,
+    catalan_fixed as _catalan_fixed,
+    euler_fixed as _euler_fixed,
+    ComplexResult as _ComplexResult,
+)
+from sympy.utilities.misc import debug, as_int
+from sympy.utilities.exceptions import sympy_deprecation_warning
 from .parameters import global_parameters
 
 _LOG2 = math.log(2)
@@ -122,7 +159,7 @@ def comp(z1, z2, tol=None):
                 ca = pure_complex(a, or_real=True)
                 if not ca:
                     if fa:
-                        a = a.n(prec_to_dps(min([i._prec for i in fa])))
+                        a = a.n(prec_to_dps(min(i._prec for i in fa)))
                         ca = pure_complex(a, or_real=True)
                         break
                     else:
@@ -130,7 +167,7 @@ def comp(z1, z2, tol=None):
                         a, b = b, a
             cb = pure_complex(b)
             if not cb and fb:
-                b = b.n(prec_to_dps(min([i._prec for i in fb])))
+                b = b.n(prec_to_dps(min(i._prec for i in fb)))
                 cb = pure_complex(b, or_real=True)
             if ca and cb and (ca[1] or cb[1]):
                 return all(comp(i, j) for i, j in zip(ca, cb))
@@ -169,7 +206,6 @@ def mpf_norm(mpf, prec):
             return mpf
 
     # Necessary if mpmath is using the gmpy backend
-    from mpmath.libmp.backend import MPZ
     rv = mpf_normalize(sign, MPZ(man), expt, bc, prec, rnd)
     return rv
 
@@ -190,7 +226,7 @@ def seterr(divide=False):
 
 
 def _as_integer_ratio(p):
-    neg_pow, man, expt, _ = getattr(p, '_mpf_', mpmath.mpf(p)._mpf_)
+    neg_pow, man, expt, _ = getattr(p, '_mpf_', _mpf(p)._mpf_)
     p = [1, -1][neg_pow % 2]*man
     if expt < 0:
         q = 2**-expt
@@ -210,7 +246,7 @@ def _decimal_to_Rational_prec(dec):
         rv = Integer(int(dec))
     else:
         s = (-1)**s
-        d = sum([di*10**i for i, di in enumerate(reversed(d))])
+        d = sum(di*10**i for i, di in enumerate(reversed(d)))
         rv = Rational(s*d, 10**-e)
     return rv, prec
 
@@ -323,7 +359,7 @@ class Number(AtomicExpr):
             return Integer(obj)
         if isinstance(obj, tuple) and len(obj) == 2:
             return Rational(*obj)
-        if isinstance(obj, (float, mpmath.mpf, decimal.Decimal)):
+        if isinstance(obj, (float, _mpf, decimal.Decimal)):
             return Float(obj)
         if isinstance(obj, str):
             _obj = obj.lower()  # float('INF') == float('inf')
@@ -402,7 +438,7 @@ class Number(AtomicExpr):
         return self._as_mpf_val(prec), prec
 
     def __float__(self):
-        return mlib.to_float(self._as_mpf_val(53))
+        return _to_float(self._as_mpf_val(53))
 
     def floor(self):
         raise NotImplementedError('%s needs .floor() method' %
@@ -439,8 +475,16 @@ class Number(AtomicExpr):
     def sort_key(self, order=None):
         return self.class_key(), (0, ()), (), self
 
+    def __neg__(self) -> Number:
+        raise NotImplementedError
+
+    @overload
+    def __add__(self, other: Number | int | float) -> Number: ...
+    @overload
+    def __add__(self, other: Expr) -> Expr: ...
+
     @_sympifyit('other', NotImplemented)
-    def __add__(self, other):
+    def __add__(self, other) -> Expr:
         if isinstance(other, Number) and global_parameters.evaluate:
             if other is S.NaN:
                 return S.NaN
@@ -795,15 +839,11 @@ class Float(Number):
             return S.NaN
         elif isinstance(num, (SYMPY_INTS, Integer)):
             num = str(num)
-        elif num is S.Infinity:
-            return num
-        elif num is S.NegativeInfinity:
-            return num
-        elif num is S.NaN:
+        elif num is S.Infinity or num is S.NegativeInfinity or num is S.NaN:
             return num
         elif _is_numpy_instance(num):  # support for numpy datatypes
             num = _convert_numpy_types(num)
-        elif isinstance(num, mpmath.mpf):
+        elif isinstance(num, _mpf):
             if precision is None:
                 if dps is None:
                     precision = num.context.prec
@@ -854,12 +894,12 @@ class Float(Number):
         precision = int(precision)
 
         if isinstance(num, float):
-            _mpf_ = mlib.from_float(num, precision, rnd)
+            _mpf_ = _from_float(num, precision, rnd)
         elif isinstance(num, str):
-            _mpf_ = mlib.from_str(num, precision, rnd)
+            _mpf_ = _from_str(num, precision, rnd)
         elif isinstance(num, decimal.Decimal):
             if num.is_finite():
-                _mpf_ = mlib.from_str(str(num), precision, rnd)
+                _mpf_ = _from_str(str(num), precision, rnd)
             elif num.is_nan():
                 return S.NaN
             elif num.is_infinite():
@@ -875,15 +915,12 @@ class Float(Number):
                 # If we're loading an object pickled in Python 2 into
                 # Python 3, we may need to strip a tailing 'L' because
                 # of a shim for int on Python 3, see issue #13470.
-                if num[1].endswith('L'):
-                    num[1] = num[1][:-1]
                 # Strip leading '0x' - gmpy2 only documents such inputs
                 # with base prefix as valid when the 2nd argument (base) is 0.
                 # When mpmath uses Sage as the backend, however, it
                 # ends up including '0x' when preparing the picklable tuple.
                 # See issue #19690.
-                if num[1].startswith('0x'):
-                    num[1] = num[1][2:]
+                num[1] = num[1].removeprefix('0x').removesuffix('L')
                 # Now we can assume that it is in standard form
                 num[1] = MPZ(num[1], 16)
                 _mpf_ = tuple(num)
@@ -901,12 +938,12 @@ class Float(Number):
                     # don't compute number or else it may
                     # over/underflow
                     return Float._new(
-                        (num[0], num[1], num[2], bitcount(num[1])),
+                        (num[0], num[1], num[2], num[1].bit_length()),
                         precision)
         elif isinstance(num, (Number, NumberSymbol)):
             _mpf_ = num._as_mpf_val(precision)
         else:
-            _mpf_ = mpmath.mpf(num, prec=precision)._mpf_
+            _mpf_ = _mpf(num, prec=precision)._mpf_
 
         return cls._new(_mpf_, precision, zero=False)
 
@@ -927,20 +964,20 @@ class Float(Number):
         obj._prec = _prec
         return obj
 
-    # mpz can't be pickled
     def __getnewargs_ex__(self):
-        return ((mlib.to_pickable(self._mpf_),), {'precision': self._prec})
+        sign, man, exp, bc = self._mpf_
+        arg = (sign, f'{man:x}', exp, bc)
+        kwargs = {'precision': self._prec}
+        return ((arg,), kwargs)
 
     def _hashable_content(self):
         return (self._mpf_, self._prec)
 
     def floor(self):
-        return Integer(int(mlib.to_int(
-            mlib.mpf_floor(self._mpf_, self._prec))))
+        return Integer(int(_to_int(_mpf_floor(self._mpf_, self._prec))))
 
     def ceiling(self):
-        return Integer(int(mlib.to_int(
-            mlib.mpf_ceil(self._mpf_, self._prec))))
+        return Integer(int(_to_int(_mpf_ceil(self._mpf_, self._prec))))
 
     def __floor__(self):
         return self.floor()
@@ -950,7 +987,7 @@ class Float(Number):
 
     @property
     def num(self):
-        return mpmath.mpf(self._mpf_)
+        return _mpf(self._mpf_)
 
     def _as_mpf_val(self, prec):
         rv = mpf_norm(self._mpf_, prec)
@@ -1010,34 +1047,34 @@ class Float(Number):
     def __neg__(self):
         if not self:
             return self
-        return Float._new(mlib.mpf_neg(self._mpf_), self._prec)
+        return Float._new(_mpf_neg(self._mpf_), self._prec)
 
     @_sympifyit('other', NotImplemented)
     def __add__(self, other):
         if isinstance(other, Number) and global_parameters.evaluate:
             rhs, prec = other._as_mpf_op(self._prec)
-            return Float._new(mlib.mpf_add(self._mpf_, rhs, prec, rnd), prec)
+            return Float._new(_mpf_add(self._mpf_, rhs, prec, rnd), prec)
         return Number.__add__(self, other)
 
     @_sympifyit('other', NotImplemented)
     def __sub__(self, other):
         if isinstance(other, Number) and global_parameters.evaluate:
             rhs, prec = other._as_mpf_op(self._prec)
-            return Float._new(mlib.mpf_sub(self._mpf_, rhs, prec, rnd), prec)
+            return Float._new(_mpf_sub(self._mpf_, rhs, prec, rnd), prec)
         return Number.__sub__(self, other)
 
     @_sympifyit('other', NotImplemented)
     def __mul__(self, other):
         if isinstance(other, Number) and global_parameters.evaluate:
             rhs, prec = other._as_mpf_op(self._prec)
-            return Float._new(mlib.mpf_mul(self._mpf_, rhs, prec, rnd), prec)
+            return Float._new(_mpf_mul(self._mpf_, rhs, prec, rnd), prec)
         return Number.__mul__(self, other)
 
     @_sympifyit('other', NotImplemented)
     def __truediv__(self, other):
         if isinstance(other, Number) and other != 0 and global_parameters.evaluate:
             rhs, prec = other._as_mpf_op(self._prec)
-            return Float._new(mlib.mpf_div(self._mpf_, rhs, prec, rnd), prec)
+            return Float._new(_mpf_div(self._mpf_, rhs, prec, rnd), prec)
         return Number.__truediv__(self, other)
 
     @_sympifyit('other', NotImplemented)
@@ -1052,7 +1089,7 @@ class Float(Number):
                 return Float(0, precision=max(self._prec, other._prec))
         if isinstance(other, Number) and global_parameters.evaluate:
             rhs, prec = other._as_mpf_op(self._prec)
-            return Float._new(mlib.mpf_mod(self._mpf_, rhs, prec, rnd), prec)
+            return Float._new(_mpf_mod(self._mpf_, rhs, prec, rnd), prec)
         return Number.__mod__(self, other)
 
     @_sympifyit('other', NotImplemented)
@@ -1061,7 +1098,7 @@ class Float(Number):
             return other.__mod__(self)
         if isinstance(other, Number) and global_parameters.evaluate:
             rhs, prec = other._as_mpf_op(self._prec)
-            return Float._new(mlib.mpf_mod(rhs, self._mpf_, prec, rnd), prec)
+            return Float._new(_mpf_mod(rhs, self._mpf_, prec, rnd), prec)
         return Number.__rmod__(self, other)
 
     def _eval_power(self, expt):
@@ -1079,8 +1116,7 @@ class Float(Number):
         if isinstance(expt, Number):
             if isinstance(expt, Integer):
                 prec = self._prec
-                return Float._new(
-                    mlib.mpf_pow_int(self._mpf_, expt.p, prec, rnd), prec)
+                return Float._new(_mpf_pow_int(self._mpf_, expt.p, prec, rnd), prec)
             elif isinstance(expt, Rational) and \
                     expt.p == 1 and expt.q % 2 and self.is_negative:
                 return Pow(S.NegativeOne, expt, evaluate=False)*(
@@ -1090,19 +1126,17 @@ class Float(Number):
             try:
                 y = mpf_pow(mpfself, expt, prec, rnd)
                 return Float._new(y, prec)
-            except mlib.ComplexResult:
-                re, im = mlib.mpc_pow(
-                    (mpfself, fzero), (expt, fzero), prec, rnd)
-                return Float._new(re, prec) + \
-                    Float._new(im, prec)*S.ImaginaryUnit
+            except _ComplexResult:
+                re, im = _mpc_pow((mpfself, fzero), (expt, fzero), prec, rnd)
+                return Float._new(re, prec) + Float._new(im, prec)*S.ImaginaryUnit
 
     def __abs__(self):
-        return Float._new(mlib.mpf_abs(self._mpf_), self._prec)
+        return Float._new(_mpf_abs(self._mpf_), self._prec)
 
     def __int__(self):
         if self._mpf_ == fzero:
             return 0
-        return int(mlib.to_int(self._mpf_))  # uses round_fast = round_down
+        return int(_to_int(self._mpf_))  # uses round_fast = round_down
 
     def __eq__(self, other):
         if isinstance(other, float):
@@ -1134,11 +1168,11 @@ class Float(Number):
             >>> i = 1234567890
             >>> (f*i)._mpf_
             (0, 471, 18, 9)
-            >>> mlib.mpf_mul(f._mpf_, mlib.from_int(i))
+            >>> mpf_mul(f._mpf_, from_int(i))
             (0, 505555550955, -12, 39)
             '''
-            smpf = mlib.mpf_mul(self._mpf_, mlib.from_int(other.q))
-            ompf = mlib.from_int(other.p)
+            smpf = _mpf_mul(self._mpf_, _from_int(other.q))
+            ompf = _from_int(other.p)
             return _sympify(bool(op(smpf, ompf)))
         elif other.is_Float:
             return _sympify(bool(
@@ -1154,7 +1188,7 @@ class Float(Number):
     def __gt__(self, other):
         if isinstance(other, NumberSymbol):
             return other.__lt__(self)
-        rv = self._Frel(other, mlib.mpf_gt)
+        rv = self._Frel(other, _mpf_gt)
         if rv is None:
             return Expr.__gt__(self, other)
         return rv
@@ -1162,7 +1196,7 @@ class Float(Number):
     def __ge__(self, other):
         if isinstance(other, NumberSymbol):
             return other.__le__(self)
-        rv = self._Frel(other, mlib.mpf_ge)
+        rv = self._Frel(other, _mpf_ge)
         if rv is None:
             return Expr.__ge__(self, other)
         return rv
@@ -1170,7 +1204,7 @@ class Float(Number):
     def __lt__(self, other):
         if isinstance(other, NumberSymbol):
             return other.__gt__(self)
-        rv = self._Frel(other, mlib.mpf_lt)
+        rv = self._Frel(other, _mpf_lt)
         if rv is None:
             return Expr.__lt__(self, other)
         return rv
@@ -1178,7 +1212,7 @@ class Float(Number):
     def __le__(self, other):
         if isinstance(other, NumberSymbol):
             return other.__ge__(self)
-        rv = self._Frel(other, mlib.mpf_le)
+        rv = self._Frel(other, _mpf_le)
         if rv is None:
             return Expr.__le__(self, other)
         return rv
@@ -1276,16 +1310,6 @@ class Rational(Number):
     >>> r.p/r.q
     0.75
 
-    If an unevaluated Rational is desired, ``gcd=1`` can be passed and
-    this will keep common divisors of the numerator and denominator
-    from being eliminated. It is not possible, however, to leave a
-    negative value in the denominator.
-
-    >>> Rational(2, 4, gcd=1)
-    2/4
-    >>> Rational(2, -4, gcd=1).q
-    4
-
     See Also
     ========
     sympy.core.sympify.sympify, sympy.simplify.simplify.nsimplify
@@ -1334,13 +1358,13 @@ class Rational(Number):
                     except ValueError:
                         pass  # error will raise below
                     else:
-                        return Rational(p.numerator, p.denominator, 1)
+                        return cls._new(p.numerator, p.denominator, 1)
 
                 if not isinstance(p, Rational):
                     raise TypeError('invalid input: %s' % p)
 
             q = 1
-            gcd = 1
+
         Q = 1
 
         if not isinstance(p, SYMPY_INTS):
@@ -1358,7 +1382,20 @@ class Rational(Number):
             Q *= int(q)
         q = Q
 
+        if gcd is not None:
+            sympy_deprecation_warning(
+                "gcd is deprecated in Rational, use nsimplify instead",
+                deprecated_since_version="1.11",
+                active_deprecations_target="deprecated-rational-gcd",
+                stacklevel=4,
+            )
+            return cls._new(p, q, gcd)
+
         # p and q are now ints
+        return cls._new(p, q)
+
+    @classmethod
+    def _new(cls, p, q, gcd=None):
         if q == 0:
             if p == 0:
                 if _errdict["divide"]:
@@ -1366,18 +1403,37 @@ class Rational(Number):
                 else:
                     return S.NaN
             return S.ComplexInfinity
+
         if q < 0:
             q = -q
             p = -p
-        if not gcd:
+
+        if gcd is None:
             gcd = igcd(abs(p), q)
+
         if gcd > 1:
             p //= gcd
             q //= gcd
+
+        return cls.from_coprime_ints(p, q)
+
+    @classmethod
+    def from_coprime_ints(cls, p: int, q: int) -> Rational:
+        """Create a Rational from a pair of coprime integers.
+
+        Both ``p`` and ``q`` should be strictly of type ``int``.
+
+        The caller should ensure that ``gcd(p,q) == 1`` and ``q > 0``.
+
+        This may be more efficient than ``Rational(p, q)``. The validity of the
+        arguments may or may not be checked so it should not be relied upon to
+        pass unvalidated or invalid arguments to this function.
+        """
         if q == 1:
             return Integer(p)
         if p == 1 and q == 2:
             return S.Half
+
         obj = Expr.__new__(cls)
         obj.p = p
         obj.q = q
@@ -1418,7 +1474,7 @@ class Rational(Number):
     def __add__(self, other):
         if global_parameters.evaluate:
             if isinstance(other, Integer):
-                return Rational(self.p + self.q*other.p, self.q, 1)
+                return Rational._new(self.p + self.q*other.p, self.q, 1)
             elif isinstance(other, Rational):
                 #TODO: this can probably be optimized more
                 return Rational(self.p*other.q + self.q*other.p, self.q*other.q)
@@ -1433,7 +1489,7 @@ class Rational(Number):
     def __sub__(self, other):
         if global_parameters.evaluate:
             if isinstance(other, Integer):
-                return Rational(self.p - self.q*other.p, self.q, 1)
+                return Rational._new(self.p - self.q*other.p, self.q, 1)
             elif isinstance(other, Rational):
                 return Rational(self.p*other.q - self.q*other.p, self.q*other.q)
             elif isinstance(other, Float):
@@ -1445,7 +1501,7 @@ class Rational(Number):
     def __rsub__(self, other):
         if global_parameters.evaluate:
             if isinstance(other, Integer):
-                return Rational(self.q*other.p - self.p, self.q, 1)
+                return Rational._new(self.q*other.p - self.p, self.q, 1)
             elif isinstance(other, Rational):
                 return Rational(self.q*other.p - self.p*other.q, self.q*other.q)
             elif isinstance(other, Float):
@@ -1457,9 +1513,9 @@ class Rational(Number):
     def __mul__(self, other):
         if global_parameters.evaluate:
             if isinstance(other, Integer):
-                return Rational(self.p*other.p, self.q, igcd(other.p, self.q))
+                return Rational._new(self.p*other.p, self.q, igcd(other.p, self.q))
             elif isinstance(other, Rational):
-                return Rational(self.p*other.p, self.q*other.q, igcd(self.p, other.q)*igcd(self.q, other.p))
+                return Rational._new(self.p*other.p, self.q*other.q, igcd(self.p, other.q)*igcd(self.q, other.p))
             elif isinstance(other, Float):
                 return other*self
             else:
@@ -1474,9 +1530,9 @@ class Rational(Number):
                 if self.p and other.p == S.Zero:
                     return S.ComplexInfinity
                 else:
-                    return Rational(self.p, self.q*other.p, igcd(self.p, other.p))
+                    return Rational._new(self.p, self.q*other.p, igcd(self.p, other.p))
             elif isinstance(other, Rational):
-                return Rational(self.p*other.q, self.q*other.p, igcd(self.p, other.p)*igcd(self.q, other.q))
+                return Rational._new(self.p*other.q, self.q*other.p, igcd(self.p, other.p)*igcd(self.q, other.q))
             elif isinstance(other, Float):
                 return self*(1/other)
             else:
@@ -1486,9 +1542,9 @@ class Rational(Number):
     def __rtruediv__(self, other):
         if global_parameters.evaluate:
             if isinstance(other, Integer):
-                return Rational(other.p*self.q, self.p, igcd(self.p, other.p))
+                return Rational._new(other.p*self.q, self.p, igcd(self.p, other.p))
             elif isinstance(other, Rational):
-                return Rational(other.p*self.q, other.q*self.p, igcd(self.p, other.p)*igcd(self.q, other.q))
+                return Rational._new(other.p*self.q, other.q*self.p, igcd(self.p, other.p)*igcd(self.q, other.q))
             elif isinstance(other, Float):
                 return other*(1/self)
             else:
@@ -1537,7 +1593,7 @@ class Rational(Number):
                 return S.Zero
             if isinstance(expt, Integer):
                 # (4/3)**2 -> 4**2 / 3**2
-                return Rational(self.p**expt.p, self.q**expt.p, 1)
+                return Rational._new(self.p**expt.p, self.q**expt.p, 1)
             if isinstance(expt, Rational):
                 intpart = expt.p // expt.q
                 if intpart:
@@ -1545,14 +1601,14 @@ class Rational(Number):
                     remfracpart = intpart*expt.q - expt.p
                     ratfracpart = Rational(remfracpart, expt.q)
                     if self.p != 1:
-                        return Integer(self.p)**expt*Integer(self.q)**ratfracpart*Rational(1, self.q**intpart, 1)
-                    return Integer(self.q)**ratfracpart*Rational(1, self.q**intpart, 1)
+                        return Integer(self.p)**expt*Integer(self.q)**ratfracpart*Rational._new(1, self.q**intpart, 1)
+                    return Integer(self.q)**ratfracpart*Rational._new(1, self.q**intpart, 1)
                 else:
                     remfracpart = expt.q - expt.p
                     ratfracpart = Rational(remfracpart, expt.q)
                     if self.p != 1:
-                        return Integer(self.p)**expt*Integer(self.q)**ratfracpart*Rational(1, self.q, 1)
-                    return Integer(self.q)**ratfracpart*Rational(1, self.q, 1)
+                        return Integer(self.p)**expt*Integer(self.q)**ratfracpart*Rational._new(1, self.q, 1)
+                    return Integer(self.q)**ratfracpart*Rational._new(1, self.q, 1)
 
         if self.is_extended_negative and expt.is_even:
             return (-self)**expt
@@ -1560,10 +1616,10 @@ class Rational(Number):
         return
 
     def _as_mpf_val(self, prec):
-        return mlib.from_rational(self.p, self.q, prec, rnd)
+        return _from_rational(self.p, self.q, prec, rnd)
 
     def _mpmath_(self, prec, rnd):
-        return mpmath.make_mpf(mlib.from_rational(self.p, self.q, prec, rnd))
+        return _make_mpf(_from_rational(self.p, self.q, prec, rnd))
 
     def __abs__(self):
         return Rational(abs(self.p), self.q)
@@ -1595,8 +1651,6 @@ class Rational(Number):
             # S(0) == S.false is False
             # S(0) == False is True
             return False
-        if not self:
-            return not other
         if other.is_NumberSymbol:
             if other.is_irrational:
                 return False
@@ -1619,9 +1673,7 @@ class Rational(Number):
         if other.is_Number:
             op = None
             s, o = self, other
-            if other.is_NumberSymbol:
-                op = getattr(o, attr)
-            elif other.is_Float:
+            if other.is_NumberSymbol or other.is_Float:
                 op = getattr(o, attr)
             elif other.is_Rational:
                 s, o = Integer(s.p*o.q), Integer(s.q*o.p)
@@ -1666,6 +1718,9 @@ class Rational(Number):
     def __hash__(self):
         return super().__hash__()
 
+    def __format__(self, format_spec):
+        return format(fractions.Fraction(self.p, self.q), format_spec)
+
     def factors(self, limit=None, use_trial=True, use_rho=False,
                 use_pm1=False, verbose=False, visual=False):
         """A wrapper to factorint which return factors of self that are
@@ -1680,10 +1735,32 @@ class Rational(Number):
 
     @property
     def numerator(self):
+        """
+        Returns the numerator of the Rational number.
+
+        Examples
+        ========
+
+        >>> from sympy import Rational
+        >>> r = Rational(3, 4)
+        >>> r.numerator
+        3
+        """
         return self.p
 
     @property
     def denominator(self):
+        """
+        Returns the denominator of the Rational number.
+
+        Examples
+        ========
+
+        >>> from sympy import Rational
+        >>> r = Rational(3, 4)
+        >>> r.denominator
+        4
+        """
         return self.q
 
     @_sympifyit('other', NotImplemented)
@@ -1726,6 +1803,12 @@ class Rational(Number):
                 return self, S.One
             return -self, S.NegativeOne
         return S.One, self
+
+    @overload
+    def as_coeff_Mul(self, rational: Literal[True]) -> tuple[Rational, Expr]: ...
+
+    @overload
+    def as_coeff_Mul(self, rational: bool = False) -> tuple["Number", Expr]: ...
 
     def as_coeff_Mul(self, rational=False):
         """Efficiently extract the coefficient of a product."""
@@ -1772,10 +1855,10 @@ class Integer(Rational):
     __slots__ = ()
 
     def _as_mpf_val(self, prec):
-        return mlib.from_int(self.p, prec, rnd)
+        return _from_int(self.p, prec, rnd)
 
     def _mpmath_(self, prec, rnd):
-        return mpmath.make_mpf(self._as_mpf_val(prec))
+        return _make_mpf(self._as_mpf_val(prec))
 
     @cacheit
     def __new__(cls, i):
@@ -1859,7 +1942,7 @@ class Integer(Rational):
             elif isinstance(other, Integer):
                 return Integer(self.p + other.p)
             elif isinstance(other, Rational):
-                return Rational(self.p*other.q + other.p, other.q, 1)
+                return Rational._new(self.p*other.q + other.p, other.q, 1)
             return Rational.__add__(self, other)
         else:
             return Add(self, other)
@@ -1869,7 +1952,7 @@ class Integer(Rational):
             if isinstance(other, int):
                 return Integer(other + self.p)
             elif isinstance(other, Rational):
-                return Rational(other.p + self.p*other.q, other.q, 1)
+                return Rational._new(other.p + self.p*other.q, other.q, 1)
             return Rational.__radd__(self, other)
         return Rational.__radd__(self, other)
 
@@ -1880,7 +1963,7 @@ class Integer(Rational):
             elif isinstance(other, Integer):
                 return Integer(self.p - other.p)
             elif isinstance(other, Rational):
-                return Rational(self.p*other.q - other.p, other.q, 1)
+                return Rational._new(self.p*other.q - other.p, other.q, 1)
             return Rational.__sub__(self, other)
         return Rational.__sub__(self, other)
 
@@ -1889,7 +1972,7 @@ class Integer(Rational):
             if isinstance(other, int):
                 return Integer(other - self.p)
             elif isinstance(other, Rational):
-                return Rational(other.p - self.p*other.q, other.q, 1)
+                return Rational._new(other.p - self.p*other.q, other.q, 1)
             return Rational.__rsub__(self, other)
         return Rational.__rsub__(self, other)
 
@@ -1900,7 +1983,7 @@ class Integer(Rational):
             elif isinstance(other, Integer):
                 return Integer(self.p*other.p)
             elif isinstance(other, Rational):
-                return Rational(self.p*other.p, other.q, igcd(self.p, other.q))
+                return Rational._new(self.p*other.p, other.q, igcd(self.p, other.q))
             return Rational.__mul__(self, other)
         return Rational.__mul__(self, other)
 
@@ -1909,7 +1992,7 @@ class Integer(Rational):
             if isinstance(other, int):
                 return Integer(other*self.p)
             elif isinstance(other, Rational):
-                return Rational(other.p*self.p, other.q, igcd(self.p, other.q))
+                return Rational._new(other.p*self.p, other.q, igcd(self.p, other.q))
             return Rational.__rmul__(self, other)
         return Rational.__rmul__(self, other)
 
@@ -1930,6 +2013,18 @@ class Integer(Rational):
                 return Integer(other.p % self.p)
             return Rational.__rmod__(self, other)
         return Rational.__rmod__(self, other)
+
+    def __pow__(self, other, mod=None):
+        if mod is not None:
+            try:
+                other_int = as_int(other)
+                mod_int = as_int(mod)
+            except ValueError:
+                pass
+            else:
+                return Integer(pow(self.p, other_int, mod_int))
+
+        return super().__pow__(other, mod)
 
     def __eq__(self, other):
         if isinstance(other, int):
@@ -2017,7 +2112,7 @@ class Integer(Rational):
             # cases -1, 0, 1 are done in their respective classes
             return S.Infinity + S.ImaginaryUnit*S.Infinity
         if expt is S.NegativeInfinity:
-            return Rational(1, self, 1)**S.Infinity
+            return Rational._new(1, self, 1)**S.Infinity
         if not isinstance(expt, Number):
             # simplify when expt is even
             # (-2)**k --> 2**k
@@ -2035,9 +2130,9 @@ class Integer(Rational):
             # invert base and change sign on exponent
             ne = -expt
             if self.is_negative:
-                return S.NegativeOne**expt*Rational(1, -self, 1)**ne
+                return S.NegativeOne**expt*Rational._new(1, -self.p, 1)**ne
             else:
-                return Rational(1, self.p, 1)**ne
+                return Rational._new(1, self.p, 1)**ne
         # see if base is a perfect root, sqrt(4) --> 2
         x, xexact = integer_nthroot(abs(self.p), expt.q)
         if xexact:
@@ -2075,7 +2170,7 @@ class Integer(Rational):
                 # (2**2)**(1/10) -> 2**(1/5)
                 g = igcd(div_m, expt.q)
                 if g != 1:
-                    out_rad *= Pow(prime, Rational(div_m//g, expt.q//g, 1))
+                    out_rad *= Pow(prime, Rational._new(div_m//g, expt.q//g, 1))
                 else:
                     sqr_dict[prime] = div_m
         # identify gcd of remaining powers
@@ -3107,7 +3202,7 @@ class Infinity(Number, metaclass=Singleton):
             return self**expt.evalf()
 
     def _as_mpf_val(self, prec):
-        return mlib.finf
+        return _mpf_inf
 
     def __hash__(self):
         return super().__hash__()
@@ -3273,7 +3368,7 @@ class NegativeInfinity(Number, metaclass=Singleton):
             return s_part*inf_part
 
     def _as_mpf_val(self, prec):
-        return mlib.fninf
+        return _mpf_ninf
 
     def __hash__(self):
         return super().__hash__()
@@ -3836,7 +3931,7 @@ class GoldenRatio(NumberSymbol, metaclass=Singleton):
 
     def _as_mpf_val(self, prec):
          # XXX track down why this has to be increased
-        rv = mlib.from_man_exp(phi_fixed(prec + 10), -prec - 10)
+        rv = _from_man_exp(phi_fixed(prec + 10), -prec - 10)
         return mpf_norm(rv, prec)
 
     def _eval_expand_func(self, **hints):
@@ -3973,8 +4068,8 @@ class EulerGamma(NumberSymbol, metaclass=Singleton):
 
     def _as_mpf_val(self, prec):
          # XXX track down why this has to be increased
-        v = mlib.libhyper.euler_fixed(prec + 10)
-        rv = mlib.from_man_exp(v, -prec - 10)
+        v = _euler_fixed(prec + 10)
+        rv = _from_man_exp(v, -prec - 10)
         return mpf_norm(rv, prec)
 
     def approximation_interval(self, number_cls):
@@ -4025,8 +4120,8 @@ class Catalan(NumberSymbol, metaclass=Singleton):
 
     def _as_mpf_val(self, prec):
         # XXX track down why this has to be increased
-        v = mlib.catalan_fixed(prec + 10)
-        rv = mlib.from_man_exp(v, -prec - 10)
+        v = _catalan_fixed(prec + 10)
+        rv = _from_man_exp(v, -prec - 10)
         return mpf_norm(rv, prec)
 
     def approximation_interval(self, number_cls):
@@ -4189,7 +4284,7 @@ def equal_valued(x, y):
     Explanation
     ===========
 
-    In future SymPy verions Float and Rational might compare unequal and floats
+    In future SymPy versions Float and Rational might compare unequal and floats
     with different precisions might compare unequal. In that context a function
     is needed that can check if a number is equal to 1 or 0 etc. The idea is
     that instead of testing ``if x == 1:`` if we want to accept floats like
@@ -4253,7 +4348,8 @@ def all_close(expr1, expr2, rtol=1e-5, atol=1e-8):
 
     The expressions must have the same structure, but any Rational, Integer, or
     Float numbers they contain are compared approximately using rtol and atol.
-    Any other parts of expressions are compared exactly.
+    Any other parts of expressions are compared exactly. However, allowance is
+    made to allow for the additive and multiplicative identities.
 
     Relative tolerance is measured with respect to expr2 so when used in
     testing expr2 should be the expected correct answer.
@@ -4274,25 +4370,113 @@ def all_close(expr1, expr2, rtol=1e-5, atol=1e-8):
     False
     >>> all_close(expr1, expr2)
     True
+
+    Identities are automatically supplied:
+
+    >>> all_close(x, x + 1e-10)
+    True
+    >>> all_close(x, 1.0*x)
+    True
+    >>> all_close(x, 1.0*x + 1e-10)
+    True
+
     """
     NUM_TYPES = (Rational, Float)
 
-    def _all_close(expr1, expr2, rtol, atol):
+    def _all_close(obj1, obj2):
+        if type(obj1) == type(obj2) and isinstance(obj1, (list, tuple)):
+            if len(obj1) != len(obj2):
+                return False
+            return all(_all_close(e1, e2) for e1, e2 in zip(obj1, obj2))
+        else:
+            return _all_close_expr(_sympify(obj1), _sympify(obj2))
+
+    def _all_close_expr(expr1, expr2):
         num1 = isinstance(expr1, NUM_TYPES)
         num2 = isinstance(expr2, NUM_TYPES)
         if num1 != num2:
             return False
         elif num1:
-            return bool(abs(expr1 - expr2) <= atol + rtol*abs(expr2))
-        elif expr1.is_Atom:
-            return expr1 == expr2
-        elif expr1.func != expr2.func or len(expr1.args) != len(expr2.args):
+            return _close_num(expr1, expr2)
+        if expr1.is_Add or expr1.is_Mul or expr2.is_Add or expr2.is_Mul:
+            return _all_close_ac(expr1, expr2)
+        if expr1.func != expr2.func or len(expr1.args) != len(expr2.args):
             return False
-        else:
-            args = zip(expr1.args, expr2.args)
-            return all(_all_close(a1, a2, rtol, atol) for a1, a2 in args)
+        args = zip(expr1.args, expr2.args)
+        return all(_all_close_expr(a1, a2) for a1, a2 in args)
 
-    return _all_close(_sympify(expr1), _sympify(expr2), rtol, atol)
+    def _close_num(num1, num2):
+        return bool(abs(num1 - num2) <= atol + rtol*abs(num2))
+
+    def _all_close_ac(expr1, expr2):
+        # compare expressions with associative commutative operators for
+        # approximate equality by seeing that all terms have equivalent
+        # coefficients (which are always Rational or Float)
+        if expr1.is_Mul or expr2.is_Mul:
+            # as_coeff_mul automatically will supply coeff of 1
+            c1, e1 = expr1.as_coeff_mul(rational=False)
+            c2, e2 = expr2.as_coeff_mul(rational=False)
+            if not _close_num(c1, c2):
+                return False
+            s1 = set(e1)
+            s2 = set(e2)
+            common = s1 & s2
+            s1 -= common
+            s2 -= common
+            if not s1:
+                return True
+            if not any(i.has(Float) for j in (s1, s2) for i in j):
+                return False
+            # factors might not be matching, e.g.
+            # x != x**1.0, exp(x) != exp(1.0*x), etc...
+            s1 = [i.as_base_exp() for i in ordered(s1)]
+            s2 = [i.as_base_exp() for i in ordered(s2)]
+            unmatched = list(range(len(s1)))
+            for be1 in s1:
+                for i in unmatched:
+                    be2 = s2[i]
+                    if _all_close(be1, be2):
+                        unmatched.remove(i)
+                        break
+                else:
+                    return False
+            return not(unmatched)
+        assert expr1.is_Add or expr2.is_Add
+        cd1 = expr1.as_coefficients_dict()
+        cd2 = expr2.as_coefficients_dict()
+        # this test will assure that the key of 1 is in
+        # each dict and that they have equal values
+        if not _close_num(cd1[1], cd2[1]):
+            return False
+        if len(cd1) != len(cd2):
+            return False
+        for k in list(cd1):
+            if k in cd2:
+                if not _close_num(cd1.pop(k), cd2.pop(k)):
+                    return False
+            # k (or a close version in cd2) might have
+            # Floats in a factor of the term which will
+            # be handled below
+        else:
+            if not cd1:
+                return True
+        for k1 in cd1:
+            for k2 in cd2:
+                if _all_close_expr(k1, k2):
+                    # found a matching key
+                    # XXX there could be a corner case where
+                    # more than 1 might match and the numbers are
+                    # such that one is better than the other
+                    # that is not being considered here
+                    if not _close_num(cd1[k1], cd2[k2]):
+                        return False
+                    break
+            else:
+                # no key matched
+                return False
+        return True
+
+    return _all_close(expr1, expr2)
 
 
 @dispatch(Tuple, Number) # type:ignore
@@ -4301,7 +4485,7 @@ def _eval_is_eq(self, other): # noqa: F811
 
 
 def sympify_fractions(f):
-    return Rational(f.numerator, f.denominator, 1)
+    return Rational._new(f.numerator, f.denominator, 1)
 
 _sympy_converter[fractions.Fraction] = sympify_fractions
 
@@ -4328,13 +4512,6 @@ if flint is not None:
 
     _sympy_converter[type(flint.fmpz(1))] = sympify_fmpz
     _sympy_converter[type(flint.fmpq(1, 2))] = sympify_fmpq
-
-
-def sympify_mpmath_mpq(x):
-    p, q = x._mpq_
-    return Rational(p, q, 1)
-
-_sympy_converter[type(mpmath.rational.mpq(1, 2))] = sympify_mpmath_mpq
 
 
 def sympify_mpmath(x):

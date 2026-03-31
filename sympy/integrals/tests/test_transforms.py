@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.integrals.transforms import (
     mellin_transform, inverse_mellin_transform,
     fourier_transform, inverse_fourier_transform,
@@ -356,10 +357,11 @@ def test_inverse_mellin_transform():
         == (x - 1)**(beta - 1)*Heaviside(x - 1)
     assert simp_pows(IMT(gamma(s)*gamma(rho - s)/gamma(rho), s, x, (0, None))) \
         == (1/(x + 1))**rho
-    assert simp_pows(IMT(d**c*d**(s - 1)*sin(pi*c)
+    expr = IMT(d**c*d**(s - 1)*sin(pi*c)
                          *gamma(s)*gamma(s + c)*gamma(1 - s)*gamma(1 - s - c)/pi,
-                         s, x, (Max(-re(c), 0), Min(1 - re(c), 1)))) \
-        == (x**c - d**c)/(x - d)
+                         s, x, (Max(-re(c), 0), Min(1 - re(c), 1)))
+    assert powsimp(expand_mul(expr, deep=False)).replace(exp_polar, exp).simplify() \
+        == (-d**c + x**c)/(-d + x)
 
     assert simplify(IMT(1/sqrt(pi)*(-c/2)*gamma(s)*gamma((1 - c)/2 - s)
                         *gamma(-c/2 - s)/gamma(1 - c - s),
@@ -611,7 +613,7 @@ def test_hankel_transform():
 
 
 def test_issue_7181():
-    assert mellin_transform(1/(1 - x), x, s) != None
+    assert mellin_transform(1/(1 - x), x, s) != None  # noqa: E711
 
 
 def test_issue_8882():

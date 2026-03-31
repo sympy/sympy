@@ -1,7 +1,8 @@
+from __future__ import annotations
 from sympy.core import AtomicExpr, Symbol, S
 from sympy.core.sympify import _sympify
-from sympy.printing.pretty.stringpict import prettyForm
 from sympy.printing.precedence import PRECEDENCE
+from sympy.core.kind import NumberKind
 
 
 class BaseScalar(AtomicExpr):
@@ -11,6 +12,8 @@ class BaseScalar(AtomicExpr):
     Ideally, users should not instantiate this class.
 
     """
+
+    kind = NumberKind
 
     def __new__(cls, index, system, pretty_str=None, latex_str=None):
         from sympy.vector.coordsysrect import CoordSys3D
@@ -52,12 +55,6 @@ class BaseScalar(AtomicExpr):
         if self == s:
             return S.One
         return S.Zero
-
-    def _latex(self, printer=None):
-        return self._latex_form
-
-    def _pretty(self, printer=None):
-        return prettyForm(self._pretty_form)
 
     precedence = PRECEDENCE['Atom']
 

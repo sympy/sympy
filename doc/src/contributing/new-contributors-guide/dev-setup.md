@@ -53,6 +53,7 @@ terminal.
 If you do decide to use the GitHub GUI, you should make sure that any "sync
 does rebase" option is disabled in the settings.
 
+(configure-git-settings)=
 ### Configure Your Name and Email in Git
 
 Git tracks who makes each commit by checking the user’s name and email.
@@ -148,10 +149,11 @@ Then, on your machine browse to where you would like to store SymPy, and clone (
 $ git clone https://github.com/sympy/sympy
 ```
 
-Then assign your read-and-write repo to a remote called "github" (replace
+Then navigate into the cloned directory and assign your read-and-write repo to a remote called "github" (replace
 `<your-github-username>` with your GitHub username):
 
 ```
+cd sympy
 git remote add github git@github.com:<your-github-username>/sympy.git
 ```
 
@@ -181,7 +183,6 @@ $ conda create -n sympy-dev -c conda-forge --file requirements-dev.txt
 If you prefer to use `pip` and `venv`, you can use something like
 
 ```bash
-cd sympy
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements-dev.txt

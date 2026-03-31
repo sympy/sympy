@@ -1,3 +1,4 @@
+from __future__ import annotations
 from math import gcd
 
 from sympy.ntheory.generate import Sieve, sieve
@@ -9,7 +10,7 @@ from sympy.ntheory.primetest import (mr, _lucas_extrastrong_params, is_lucas_prp
                                      is_mersenne_prime)
 
 from sympy.testing.pytest import slow, raises
-from sympy.core.numbers import I
+from sympy.core.numbers import I, Float
 
 
 def test_is_fermat_pseudoprime():
@@ -209,7 +210,8 @@ def test_isprime():
     sieve.extend(3000)
     assert isprime(2819)
     assert not isprime(2931)
-    assert not isprime(2.0)
+    raises(ValueError, lambda: isprime(2.0))
+    raises(ValueError, lambda: isprime(Float(2)))
 
 
 def test_is_square():
@@ -227,3 +229,8 @@ def test_is_gaussianprime():
     assert is_gaussian_prime(7)
     assert is_gaussian_prime(2 + 3*I)
     assert not is_gaussian_prime(2 + 2*I)
+
+
+def test_issue_27145():
+    #https://github.com/sympy/sympy/issues/27145
+    assert [mr(i,[2,3,5,7]) for i in (1, 2, 6)] == [False, True, False]

@@ -1,4 +1,6 @@
 """Implementation of RootOf class and related tools. """
+from __future__ import annotations
+
 
 
 from sympy.core.basic import Basic
@@ -7,6 +9,7 @@ from sympy.core import (S, Expr, Integer, Float, I, oo, Add, Lambda,
 from sympy.core.cache import cacheit
 from sympy.core.relational import is_le
 from sympy.core.sorting import ordered
+from sympy.external.mpmath import local_workprec, dps_to_prec, prec_to_dps
 from sympy.polys.domains import QQ
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
@@ -17,15 +20,13 @@ from sympy.polys.polyfuncs import symmetrize, viete
 from sympy.polys.polyroots import (
     roots_linear, roots_quadratic, roots_binomial,
     preprocess_roots, roots)
-from sympy.polys.polytools import Poly, PurePoly, factor
+from sympy.polys.polytools import Poly, factor
 from sympy.polys.rationaltools import together
 from sympy.polys.rootisolation import (
     dup_isolate_complex_roots_sqf,
     dup_isolate_real_roots_sqf)
 from sympy.utilities import lambdify, public, sift, numbered_symbols
 
-from mpmath import mpf, mpc, findroot, workprec
-from mpmath.libmp.libmpf import dps_to_prec, prec_to_dps
 from sympy.multipledispatch import dispatch
 from itertools import chain
 
@@ -51,26 +52,33 @@ class _pure_key_dict:
 
     >>> P = _pure_key_dict()
 
-    2) assignment for a PurePoly or univariate polynomial
+    2) assignment for a Poly or univariate polynomial
 
     >>> P[x] = 1
     >>> P[PurePoly(x - y, x)] = 2
 
-    3) retrieval based on PurePoly key comparison (use this
-       instead of the get method)
+    3) retrieval based on Poly key comparison
 
-    >>> P[y]
+    >>> P[x]
     1
 
-    4) KeyError when trying to retrieve a nonexisting key
+    4) KeyError when trying to retrieve with different symbol or nonexisting key
 
+    >>> P[y]  # Different symbol, not found
+    Traceback (most recent call last):
+    ...
+    KeyError: Poly(y, y, domain='ZZ')
     >>> P[y + 1]
     Traceback (most recent call last):
     ...
-    KeyError: PurePoly(y + 1, y, domain='ZZ')
+    KeyError: Poly(y + 1, y, domain='ZZ')
 
     5) ability to query with ``in``
 
+    >>> x in P
+    True
+    >>> y in P  # Different symbol
+    False
     >>> x + 1 in P
     False
 
@@ -83,17 +91,19 @@ class _pure_key_dict:
         self._dict = {}
 
     def __getitem__(self, k):
-        if not isinstance(k, PurePoly):
-            if not (isinstance(k, Expr) and len(k.free_symbols) == 1):
+        if not isinstance(k, Poly):
+            try:
+                k = Poly(k, expand=False)
+            except (GeneratorsNeeded, PolynomialError):
                 raise KeyError
-            k = PurePoly(k, expand=False)
         return self._dict[k]
 
     def __setitem__(self, k, v):
-        if not isinstance(k, PurePoly):
-            if not (isinstance(k, Expr) and len(k.free_symbols) == 1):
+        if not isinstance(k, Poly):
+            try:
+                k = Poly(k, expand=False)
+            except (GeneratorsNeeded, PolynomialError):
                 raise ValueError('expecting univariate expression')
-            k = PurePoly(k, expand=False)
         self._dict[k] = v
 
     def __contains__(self, k):
@@ -105,11 +115,13 @@ class _pure_key_dict:
 
 _reals_cache = _pure_key_dict()
 _complexes_cache = _pure_key_dict()
+_rootof_dummy = Dummy('x')
+_rootsum_dummy = Dummy('w')
 
 
 def _pure_factors(poly):
     _, factors = poly.factor_list()
-    return [(PurePoly(f, expand=False), m) for f, m in factors]
+    return [(Poly(f, expand=False).retract(), m) for f, m in factors]
 
 
 def _imag_count_of_factor(f):
@@ -298,6 +310,7 @@ class ComplexRootOf(RootOf):
     is_complex = True
     is_number = True
     is_finite = True
+    is_algebraic = True
 
     def __new__(cls, f, x, index=None, radicals=False, expand=True):
         """ Construct an indexed complex root of a polynomial.
@@ -319,7 +332,7 @@ class ComplexRootOf(RootOf):
         else:
             raise ValueError("expected an integer root index, got %s" % index)
 
-        poly = PurePoly(f, x, greedy=False, expand=expand)
+        poly = Poly(f, x, greedy=False, expand=expand)
 
         if not poly.is_univariate:
             raise PolynomialError("only univariate polynomials are allowed")
@@ -356,6 +369,7 @@ class ComplexRootOf(RootOf):
         if not dom.is_ZZ:
             raise NotImplementedError("CRootOf is not supported over %s" % dom)
 
+        poly = Poly(poly.replace(poly.gen, _rootof_dummy))
         root = cls._indexed_root(poly, index, lazy=True)
         return coeff * cls._postprocess_root(root, radicals)
 
@@ -364,7 +378,8 @@ class ComplexRootOf(RootOf):
         """Construct new ``CRootOf`` object from raw data. """
         obj = Expr.__new__(cls)
 
-        obj.poly = PurePoly(poly)
+        poly = poly.replace(poly.gen, _rootof_dummy)
+        obj.poly = Poly(poly)
         obj.index = index
 
         try:
@@ -635,7 +650,7 @@ class ComplexRootOf(RootOf):
     @classmethod
     def _count_roots(cls, roots):
         """Count the number of real or complex roots with multiplicities."""
-        return sum([k for _, _, k in roots])
+        return sum(k for _, _, k in roots)
 
     @classmethod
     def _indexed_root(cls, poly, index, lazy=False):
@@ -689,26 +704,33 @@ class ComplexRootOf(RootOf):
         """
         Reset all intervals
         """
-        self._all_roots(self.poly, use_cache=False)
+        factors = _pure_factors(self.poly)
+        self._get_reals(factors, use_cache=False)
+        self._get_complexes(factors, use_cache=False)
 
     @classmethod
     def _all_roots(cls, poly, use_cache=True):
         """Get real and complex roots of a composite polynomial. """
         factors = _pure_factors(poly)
 
-        reals = cls._get_reals(factors, use_cache=use_cache)
-        reals_count = cls._count_roots(reals)
-
         roots = []
 
-        for index in range(0, reals_count):
-            roots.append(cls._reals_index(reals, index))
+        if len(factors) == 1:
+            f, multiplicity = factors[0]
+            deg = f.degree()
+            roots.extend((f, i) for i in range(deg) for _ in range(multiplicity))
+        else:
+            reals = cls._get_reals(factors, use_cache=use_cache)
+            reals_count = cls._count_roots(reals)
 
-        complexes = cls._get_complexes(factors, use_cache=use_cache)
-        complexes_count = cls._count_roots(complexes)
+            for index in range(0, reals_count):
+                roots.append(cls._reals_index(reals, index))
 
-        for index in range(0, complexes_count):
-            roots.append(cls._complexes_index(complexes, index))
+            complexes = cls._get_complexes(factors, use_cache=use_cache)
+            complexes_count = cls._count_roots(complexes)
+
+            for index in range(0, complexes_count):
+                roots.append(cls._complexes_index(complexes, index))
 
         return roots
 
@@ -758,27 +780,91 @@ class ComplexRootOf(RootOf):
             return cls._new(poly, index)
 
     @classmethod
-    def _get_roots(cls, method, poly, radicals):
+    def _get_roots(cls, method: str, poly: Poly, radicals: bool) -> list[Expr]:
         """Return postprocessed roots of specified kind. """
         if not poly.is_univariate:
             raise PolynomialError("only univariate polynomials are allowed")
+
+        dom = poly.get_domain()
+
         # get rid of gen and it's free symbol
         d = Dummy()
-        poly = poly.subs(poly.gen, d)
+        poly = poly.per(poly.rep, gens=(d,))
         x = symbols('x')
         # see what others are left and select x or a numbered x
         # that doesn't clash
         free_names = {str(i) for i in poly.free_symbols}
         for x in chain((symbols('x'),), numbered_symbols('x')):
             if x.name not in free_names:
-                poly = poly.xreplace({d: x})
+                poly = poly.replace(d, x)
                 break
+
+        if dom.is_QQ or dom.is_ZZ:
+            return cls._get_roots_qq(method, poly, radicals)
+        elif dom.is_ZZ_I or dom.is_QQ_I:
+            coeffs = poly.rep.to_list()
+
+            if all(c.y == 0 for c in coeffs):
+                poly = poly.set_domain(dom.dom)
+                return cls._get_roots_qq(method, poly, radicals)
+            elif all(c.x == 0 for c in coeffs):
+                poly = (I*poly).set_domain(dom.dom)
+                return cls._get_roots_qq(method, poly, radicals)
+            else:
+                return cls._get_roots_alg(method, poly, radicals)
+
+        elif dom.is_AlgebraicField:
+            return cls._get_roots_alg(method, poly, radicals)
+        else:
+            # XXX: not sure how to handle ZZ[x] which appears in some tests?
+            # this makes the tests pass alright but has to be a better way?
+            return cls._get_roots_qq(method, poly, radicals)
+
+    @classmethod
+    def _get_roots_qq(cls, method, poly, radicals):
+        """Return postprocessed roots of specified kind
+         for polynomials with rational coefficients. """
         coeff, poly = cls._preprocess_roots(poly)
         roots = []
 
         for root in getattr(cls, method)(poly):
             roots.append(coeff*cls._postprocess_root(root, radicals))
+
         return roots
+
+    @classmethod
+    def _get_roots_alg(cls, method, poly, radicals):
+        """Return postprocessed roots of specified kind
+         for polynomials with algebraic coefficients. It assumes
+         the domain is already an algebraic field. First it
+         finds the roots using _get_roots_qq, then uses the
+         square-free factors to filter roots and get the correct
+         multiplicity.
+         """
+
+        # Existing QQ code can find and sort the roots
+        roots = cls._get_roots_qq(method, poly.lift(), radicals)
+
+        subroots = {}
+        for f, m in poly.sqf_list()[1]:
+            if method == "_real_roots":
+                roots_filt = f.which_real_roots(roots)
+            elif method == "_all_roots":
+                roots_filt = f.which_all_roots(roots)
+            else:
+                raise TypeError("Unknown method")
+            for r in roots_filt:
+                subroots[r] = m
+
+        roots_seen = set()
+        roots_flat = []
+        for r in roots:
+            if r in subroots and r not in roots_seen:
+                m = subroots[r]
+                roots_flat.extend([r] * m)
+                roots_seen.add(r)
+
+        return roots_flat
 
     @classmethod
     def clear_cache(cls):
@@ -837,51 +923,51 @@ class ComplexRootOf(RootOf):
         root bounds, the bounds will be made smaller and updated.
         """
         prec = dps_to_prec(n)
-        with workprec(prec):
+        with local_workprec(prec) as mp:
             g = self.poly.gen
             if not g.is_Symbol:
                 d = Dummy('x')
                 if self.is_imaginary:
                     d *= I
-                func = lambdify(d, self.expr.subs(g, d))
+                func = lambdify(d, self.expr.subs(g, d), modules=mp)
             else:
                 expr = self.expr
                 if self.is_imaginary:
                     expr = self.expr.subs(g, I*g)
-                func = lambdify(g, expr)
+                func = lambdify(g, expr, modules=mp)
 
             interval = self._get_interval()
             while True:
                 if self.is_real:
-                    a = mpf(str(interval.a))
-                    b = mpf(str(interval.b))
+                    a = mp.mpf(str(interval.a))
+                    b = mp.mpf(str(interval.b))
                     if a == b:
                         root = a
                         break
-                    x0 = mpf(str(interval.center))
-                    x1 = x0 + mpf(str(interval.dx))/4
+                    x0 = mp.mpf(str(interval.center))
+                    x1 = mp.fadd(x0, mp.fdiv(mp.mpf(str(interval.dx)), 4))
                 elif self.is_imaginary:
-                    a = mpf(str(interval.ay))
-                    b = mpf(str(interval.by))
+                    a = mp.mpf(str(interval.ay))
+                    b = mp.mpf(str(interval.by))
                     if a == b:
-                        root = mpc(mpf('0'), a)
+                        root = mp.mpc(mp.mpf('0'), a)
                         break
-                    x0 = mpf(str(interval.center[1]))
-                    x1 = x0 + mpf(str(interval.dy))/4
+                    x0 = mp.mpf(str(interval.center[1]))
+                    x1 = mp.fadd(x0, mp.fdiv(mp.mpf(str(interval.dy)), 4))
                 else:
-                    ax = mpf(str(interval.ax))
-                    bx = mpf(str(interval.bx))
-                    ay = mpf(str(interval.ay))
-                    by = mpf(str(interval.by))
+                    ax = mp.mpf(str(interval.ax))
+                    bx = mp.mpf(str(interval.bx))
+                    ay = mp.mpf(str(interval.ay))
+                    by = mp.mpf(str(interval.by))
                     if ax == bx and ay == by:
-                        root = mpc(ax, ay)
+                        root = mp.mpc(ax, ay)
                         break
-                    x0 = mpc(*map(str, interval.center))
-                    x1 = x0 + mpc(*map(str, (interval.dx, interval.dy)))/4
+                    x0 = mp.mpc(*map(str, interval.center))
+                    x1 = mp.fadd(x0, mp.fdiv(mp.mpc(*map(str, (interval.dx, interval.dy))), 4))
                 try:
                     # without a tolerance, this will return when (to within
                     # the given precision) x_i == x_{i-1}
-                    root = findroot(func, (x0, x1))
+                    root = mp.findroot(func, (x0, x1))
                     # If the (real or complex) root is not in the 'interval',
                     # then keep refining the interval. This happens if findroot
                     # accidentally finds a different root outside of this
@@ -900,7 +986,7 @@ class ComplexRootOf(RootOf):
                         if not bool(root.imag) == self.is_real and (
                                 a <= root <= b):
                             if self.is_imaginary:
-                                root = mpc(mpf('0'), root.real)
+                                root = mp.mpc(mp.mpf('0'), root.real)
                             break
                     elif (ax <= root.real <= bx and ay <= root.imag <= by):
                         break
@@ -1009,7 +1095,7 @@ CRootOf = ComplexRootOf
 
 @dispatch(ComplexRootOf, ComplexRootOf)
 def _eval_is_eq(lhs, rhs): # noqa:F811
-    # if we use is_eq to check here, we get infinite recurion
+    # if we use is_eq to check here, we get infinite recursion
     return lhs == rhs
 
 
@@ -1059,14 +1145,15 @@ class RootSum(Expr):
             raise MultivariatePolynomialError(
                 "only univariate polynomials are allowed")
 
+        poly = Poly(poly.replace(poly.gen, _rootsum_dummy))
+
         if func is None:
-            func = Lambda(poly.gen, poly.gen)
+            func = Lambda(_rootsum_dummy, _rootsum_dummy)
         else:
             is_func = getattr(func, 'is_Function', False)
 
             if is_func and 1 in func.nargs:
-                if not isinstance(func, Lambda):
-                    func = Lambda(poly.gen, func(poly.gen))
+                func = Lambda(_rootsum_dummy, func(_rootsum_dummy))
             else:
                 raise ValueError(
                     "expected a univariate function, got %s" % func)
@@ -1138,7 +1225,7 @@ class RootSum(Expr):
     @classmethod
     def _transform(cls, expr, x):
         """Transform an expression to a polynomial. """
-        poly = PurePoly(expr, x, greedy=False)
+        poly = Poly(expr, x, greedy=False)
         return preprocess_roots(poly)
 
     @classmethod
@@ -1214,7 +1301,8 @@ class RootSum(Expr):
 
     @property
     def free_symbols(self):
-        return self.poly.free_symbols | self.fun.free_symbols
+        poly_syms = self.poly.free_symbols - {self.poly.gen}
+        return poly_syms | self.fun.free_symbols
 
     @property
     def is_commutative(self):

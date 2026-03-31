@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core import (S, pi, oo, symbols, Function, Rational, Integer, Tuple,
                         Derivative, Eq, Ne, Le, Lt, Gt, Ge)
 from sympy.integrals import Integral
@@ -45,7 +46,7 @@ def test_Function():
     assert mcode(f(x, y, z)) == "f[x, y, z]"
     assert mcode(sin(x) ** cos(x)) == "Sin[x]^Cos[x]"
     assert mcode(sec(x) * acsc(x)) == "ArcCsc[x]*Sec[x]"
-    assert mcode(atan2(x, y)) == "ArcTan[x, y]"
+    assert mcode(atan2(y, x)) == "ArcTan[x, y]"
     assert mcode(conjugate(x)) == "Conjugate[x]"
     assert mcode(Max(x, y, z)*Min(y, z)) == "Max[x, y, z]*Min[y, z]"
     assert mcode(fresnelc(x)) == "FresnelC[x]"

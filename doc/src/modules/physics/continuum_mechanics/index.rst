@@ -13,7 +13,15 @@ Beam
    :titlesonly:
 
    beam.rst
-   beam_problems.rst
+
+Column
+======
+
+.. toctree::
+   :titlesonly:
+
+   column.rst
+
 
 Truss
 =====
@@ -30,3 +38,11 @@ Cable
    :titlesonly:
 
    cable.rst
+
+Arch
+====
+
+.. toctree::
+   :titlesonly:
+
+   arches.rst

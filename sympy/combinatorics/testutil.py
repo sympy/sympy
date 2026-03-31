@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.combinatorics import Permutation
 from sympy.combinatorics.util import _distribute_gens_by_base
 
@@ -193,8 +194,7 @@ def _verify_normal_closure(group, arg, closure=None):
     elif hasattr(arg, 'array_form'):
         subgr_gens = [arg]
     for el in group.generate_dimino():
-        for gen in subgr_gens:
-            conjugates.add(gen ^ el)
+        conjugates.update(gen ^ el for gen in subgr_gens)
     naive_closure = PermutationGroup(list(conjugates))
     return closure.is_subgroup(naive_closure)
 

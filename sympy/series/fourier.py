@@ -1,4 +1,5 @@
 """Fourier Series"""
+from __future__ import annotations
 
 from sympy.core.numbers import (oo, pi)
 from sympy.core.symbol import Wild
@@ -13,6 +14,9 @@ from sympy.series.series_class import SeriesBase
 from sympy.series.sequences import SeqFormula
 from sympy.sets.sets import Interval
 from sympy.utilities.iterables import is_sequence
+
+
+__doctest_requires__ = {('fourier_series',): ['matplotlib']}
 
 
 def fourier_cos_seq(func, limits, n):
@@ -433,7 +437,7 @@ class FourierSeries(SeriesBase):
 
         return self.func(sfunc, self.args[1], (self.a0, an, bn))
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         for t in self:
             if t is not S.Zero:
                 return t

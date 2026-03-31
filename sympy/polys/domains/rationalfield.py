@@ -1,4 +1,5 @@
 """Implementation of :class:`RationalField` class. """
+from __future__ import annotations
 
 
 from sympy.external.gmpy import MPQ
@@ -12,7 +13,7 @@ from sympy.polys.polyerrors import CoercionFailed
 from sympy.utilities import public
 
 @public
-class RationalField(Field, CharacteristicZero, SimpleDomain):
+class RationalField(Field[MPQ], CharacteristicZero, SimpleDomain):
     r"""Abstract base class for the domain :ref:`QQ`.
 
     The :py:class:`RationalField` class represents the field of rational

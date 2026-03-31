@@ -1,8 +1,16 @@
 '''
 Use llvmlite to create executable functions from SymPy expressions
 
+The primary goal is to significantly accelerate the numerical evaluation of
+expressions, which is especially useful for functions that need to be called
+repeatedly with different arguments (e.g., in numerical integration,
+optimization, or plotting).
+
+The main entry point for users is the llvm_callable function.
+
 This module requires llvmlite (https://github.com/numba/llvmlite).
 '''
+from __future__ import annotations
 
 import ctypes
 
@@ -14,9 +22,11 @@ from sympy.utilities.decorator import doctest_depends_on
 
 llvmlite = import_module('llvmlite')
 if llvmlite:
+    LLVMLITE_VERSION = [int(p) for p in llvmlite.__version__.split('.')[:2]]
     ll = import_module('llvmlite.ir').ir
     llvm = import_module('llvmlite.binding').binding
-    llvm.initialize()
+    if LLVMLITE_VERSION < [0, 45]:
+        llvm.initialize()
     llvm.initialize_native_target()
     llvm.initialize_native_asmprinter()
 
@@ -180,7 +190,7 @@ class LLVMJitCode:
 
     def _create_function_base(self):
         """Create function with name and type signature"""
-        global link_names, current_link_suffix
+        global current_link_suffix
         default_link_name = 'jit_func'
         current_link_suffix += 1
         self.link_name = default_link_name + str(current_link_suffix)
@@ -263,18 +273,25 @@ class LLVMJitCode:
         return vals
 
     def _compile_function(self, strmod):
-        global exe_engines
         llmod = llvm.parse_assembly(strmod)
 
-        pmb = llvm.create_pass_manager_builder()
-        pmb.opt_level = 2
-        pass_manager = llvm.create_module_pass_manager()
-        pmb.populate(pass_manager)
+        target_machine = (llvm.Target.from_default_triple().
+                          create_target_machine())
 
-        pass_manager.run(llmod)
+        if LLVMLITE_VERSION < [0, 45]:
+            pmb = llvm.create_pass_manager_builder()
+            pmb.opt_level = 2
+            pass_manager = llvm.create_module_pass_manager()
+            pmb.populate(pass_manager)
+            pass_manager.run(llmod)
+        else:
+            pto = llvm.create_pipeline_tuning_options(speed_level=2,
+                                                      size_level=0)
+            pto.loop_vectorization = True
+            pass_builder = llvm.create_pass_builder(target_machine, pto)
+            pass_manager = pass_builder.getModulePassManager()
+            pass_manager.run(llmod, pass_builder)
 
-        target_machine = \
-            llvm.Target.from_default_triple().create_target_machine()
         exe_eng = llvm.create_mcjit_compiler(llmod, target_machine)
         exe_eng.finalize_object()
         exe_engines.append(exe_eng)
@@ -377,9 +394,9 @@ def llvm_callable(args, expr, callback_type=None):
     callback_type : string
         Create function with signature appropriate to use as a callback.
         Currently supported:
-           'scipy.integrate'
-           'scipy.integrate.test'
-           'cubature'
+        'scipy.integrate'
+        'scipy.integrate.test'
+        'cubature'
 
     Returns
     =======
@@ -400,6 +417,7 @@ def llvm_callable(args, expr, callback_type=None):
 
 
     Callbacks for integration functions can be JIT compiled.
+
     >>> import sympy.printing.llvmjitcode as jit
     >>> from sympy.abc import a
     >>> from sympy import integrate
@@ -427,6 +445,7 @@ def llvm_callable(args, expr, callback_type=None):
     expressions are given to cse, the compiled function returns a tuple.
     The 'cubature' callback handles multiple expressions (set `fdim`
     to match in the integration call.)
+
     >>> import sympy.printing.llvmjitcode as jit
     >>> from sympy import cse
     >>> from sympy.abc import x,y

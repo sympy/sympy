@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.numbers import Rational
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols
@@ -333,7 +334,7 @@ class ImplicitRegion(Basic):
 
         if len(modified_eq.args) != 0:
             terms = modified_eq.args
-            m = min([total_degree(term) for term in terms])
+            m = min(total_degree(term) for term in terms)
         else:
             terms = modified_eq
             m = total_degree(terms)
@@ -421,7 +422,7 @@ class ImplicitRegion(Basic):
                 rep = dict.fromkeys(syms, 2)
 
                 if len(syms) != 0:
-                   spoint = tuple(s.subs(rep) for s in spoint)
+                    spoint = tuple(s.subs(rep) for s in spoint)
 
                 if self.multiplicity(spoint) == degree - 1:
                     point = spoint

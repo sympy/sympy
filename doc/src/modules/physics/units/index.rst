@@ -1,5 +1,5 @@
 ============
-Unit systems
+Unit Systems
 ============
 
 This module integrates unit systems into SymPy, allowing a user choose which

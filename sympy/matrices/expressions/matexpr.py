@@ -5,7 +5,6 @@ from sympy.core import S, Integer, Basic, Mul, Add
 from sympy.core.assumptions import check_assumptions
 from sympy.core.decorators import call_highest_priority
 from sympy.core.expr import Expr, ExprBuilder
-from sympy.core.logic import FuzzyBool
 from sympy.core.symbol import Str, Dummy, symbols, Symbol
 from sympy.core.sympify import SympifyError, _sympify
 from sympy.external.gmpy import SYMPY_INTS
@@ -16,6 +15,10 @@ from sympy.matrices.kind import MatrixKind
 from sympy.matrices.matrixbase import MatrixBase
 from sympy.multipledispatch import dispatch
 from sympy.utilities.misc import filldedent
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from sympy.core.logic import FuzzyBool
 
 
 def _sympifyit(arg, retval=None):
@@ -85,7 +88,7 @@ class MatrixExpr(Expr):
     # The following is adapted from the core Expr object
 
     @property
-    def shape(self) -> tuple[Expr, Expr]:
+    def shape(self) -> tuple[Expr | int, Expr | int]:
         raise NotImplementedError
 
     @property
@@ -227,7 +230,7 @@ class MatrixExpr(Expr):
 
     def _eval_derivative(self, x):
         # `x` is a scalar:
-        if self.has(x):
+        if self.has(x) or (isinstance(x, MatrixElement) and self.has(x.parent)):
             # See if there are other methods using it:
             return super()._eval_derivative(x)
         else:
@@ -388,7 +391,9 @@ class MatrixExpr(Expr):
         """
         return self.as_explicit().as_mutable()
 
-    def __array__(self):
+    def __array__(self, dtype=object, copy=None):
+        if copy is not None and not copy:
+            raise TypeError("Cannot implement copy=False when converting Matrix to ndarray")
         from numpy import empty
         a = empty(self.shape, dtype=object)
         for i in range(self.rows):
@@ -561,7 +566,7 @@ def _matrix_derivative_old_algorithm(expr, x):
         return 1, 1
 
     def get_rank(parts):
-        return sum([j not in (1, None) for i in parts for j in _get_shape(i)])
+        return sum(j not in (1, None) for i in parts for j in _get_shape(i))
 
     ranks = [get_rank(i) for i in parts]
     rank = ranks[0]
@@ -713,7 +718,13 @@ class MatrixSymbol(MatrixExpr):
 
     def _eval_derivative(self, x):
         # x is a scalar:
-        return ZeroMatrix(self.shape[0], self.shape[1])
+        if self.free_symbols & x.free_symbols:
+            if isinstance(x, MatrixElement) and self == x.parent:
+                from .special import MatrixUnit
+                return MatrixUnit(self.shape[0], self.shape[1], x.i, x.j)
+            return None
+        else:
+            return ZeroMatrix(self.shape[0], self.shape[1])
 
     def _eval_derivative_matrix_lines(self, x):
         if self != x:
@@ -760,7 +771,7 @@ class _LeftRightArgs:
 
     @property
     def first_pointer(self):
-       return self._first_pointer_parent[self._first_pointer_index]
+        return self._first_pointer_parent[self._first_pointer_index]
 
     @first_pointer.setter
     def first_pointer(self, value):
@@ -835,9 +846,9 @@ class _LeftRightArgs:
         """
         rank = 0
         if self.first != 1:
-            rank += sum([i != 1 for i in self.first.shape])
+            rank += sum(i != 1 for i in self.first.shape)
         if self.second != 1:
-            rank += sum([i != 1 for i in self.second.shape])
+            rank += sum(i != 1 for i in self.second.shape)
         if self.higher != 1:
             rank += 2
         return rank

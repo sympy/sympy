@@ -7,6 +7,7 @@ Although the name 'intfunc' was chosen to represent functions that
 work with integers, it can also be thought of as containing
 internal/core functions that are needed by the classes of the core.
 """
+from __future__ import annotations
 
 import math
 import sys
@@ -378,8 +379,6 @@ def igcdex(a, b):
     4
 
     """
-    if (not a) and (not b):
-        return (0, 1, 0)
     g, x, y = gcdext(int(a), int(b))
     return x, y, g
 

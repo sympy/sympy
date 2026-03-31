@@ -1,10 +1,9 @@
+from __future__ import annotations
 from itertools import product
-from typing import Tuple as tTuple
 
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
-from sympy.core.expr import Expr
-from sympy.core.function import (Function, ArgumentIndexError, expand_log,
+from sympy.core.function import (DefinedFunction, ArgumentIndexError, expand_log,
     expand_mul, FunctionClass, PoleError, expand_multinomial, expand_complex)
 from sympy.core.logic import fuzzy_and, fuzzy_not, fuzzy_or
 from sympy.core.mul import Mul
@@ -19,6 +18,10 @@ from sympy.functions.elementary.complexes import arg, unpolarify, im, re, Abs
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.ntheory import multiplicity, perfect_power
 from sympy.ntheory.factor_ import factorint
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
 
 # NOTE IMPORTANT
 # The series expansion code in this file is an important part of the gruntz
@@ -32,7 +35,7 @@ from sympy.ntheory.factor_ import factorint
 # p.is_positive.]
 
 
-class ExpBase(Function):
+class ExpBase(DefinedFunction):
 
     unbranched = True
     _singularities = (S.ComplexInfinity,)
@@ -240,7 +243,7 @@ class exp(ExpBase, metaclass=ExpMeta):
     See Also
     ========
 
-    log
+    sympy.functions.elementary.exponential.log
     """
 
     def fdiff(self, argindex=1):
@@ -447,7 +450,7 @@ class exp(ExpBase, metaclass=ExpMeta):
 
         if old is exp and not new.is_Function:
             return new**self.exp._subs(old, new)
-        return Function._eval_subs(self, old, new)
+        return super()._eval_subs(old, new)
 
     def _eval_is_extended_real(self):
         if self.args[0].is_extended_real:
@@ -534,7 +537,7 @@ class exp(ExpBase, metaclass=ExpMeta):
             l.append(g.removeO())
         return Add(*l)
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         from sympy.calculus.util import AccumBounds
         arg = self.args[0].cancel().as_leading_term(x, logx=logx)
         arg0 = arg.subs(x, 0)
@@ -589,7 +592,7 @@ def match_real_imag(expr):
 
     ``match_real_imag`` returns a tuple containing the real and imaginary
     parts of expr or ``(None, None)`` if direct matching is not possible. Contrary
-    to :func:`~.re()`, :func:`~.im()``, and ``as_real_imag()``, this helper will not force things
+    to :func:`~.re`, :func:`~.im``, and ``as_real_imag()``, this helper will not force things
     by returning expressions themselves containing ``re()`` or ``im()`` and it
     does not expand its argument either.
 
@@ -604,7 +607,7 @@ def match_real_imag(expr):
         return (None, None) # simpler to check for than None
 
 
-class log(Function):
+class log(DefinedFunction):
     r"""
     The natural logarithm function `\ln(x)` or `\log(x)`.
 
@@ -634,11 +637,11 @@ class log(Function):
     See Also
     ========
 
-    exp
+    sympy.functions.elementary.exponential.exp
 
     """
 
-    args: tTuple[Expr]
+    args: tuple[Expr]
 
     _singularities = (S.Zero, S.ComplexInfinity)
 
@@ -691,9 +694,7 @@ class log(Function):
                 return S.ComplexInfinity
             elif arg is S.One:
                 return S.Zero
-            elif arg is S.Infinity:
-                return S.Infinity
-            elif arg is S.NegativeInfinity:
+            elif arg is S.Infinity or arg is S.NegativeInfinity:
                 return S.Infinity
             elif arg is S.NaN:
                 return S.NaN
@@ -739,9 +740,7 @@ class log(Function):
             coeff = arg.as_coefficient(I)
 
             if coeff is not None:
-                if coeff is S.Infinity:
-                    return S.Infinity
-                elif coeff is S.NegativeInfinity:
+                if coeff is S.Infinity or coeff is S.NegativeInfinity:
                     return S.Infinity
                 elif coeff.is_Rational:
                     if coeff.is_nonnegative:
@@ -782,12 +781,6 @@ class log(Function):
                             return cls(modulus) + I * (-atan_table[t1])
                         else:
                             return cls(modulus) + I * (pi - atan_table[t1])
-
-    def as_base_exp(self):
-        """
-        Returns this function in the form (base, exponent).
-        """
-        return self, S.One
 
     @staticmethod
     @cacheit
@@ -1001,7 +994,7 @@ class log(Function):
             except ValueError:
                 a, b = s.removeO().as_leading_term(t, cdir=1), S.Zero
 
-        p = (z/(a*t**b) - 1)._eval_nseries(t, n=n, logx=logx, cdir=1)
+        p = (z/(a*t**b) - 1).cancel()._eval_nseries(t, n=n, logx=logx, cdir=1)
         if p.has(exp):
             p = logcombine(p)
         if isinstance(p, Order):
@@ -1046,14 +1039,13 @@ class log(Function):
         while k*d < n:
             coeff = -S.NegativeOne**k/k
             for ex in pk:
-                _ = terms.get(ex, S.Zero) + coeff*pk[ex]
-                terms[ex] = _.nsimplify()
+                terms[ex] = terms.get(ex, S.Zero) + coeff*pk[ex]
             pk = mul(pk, pterms)
             k += S.One
 
         res = log(a) - b*log(cdir) + b*logx
         for ex in terms:
-            res += terms[ex]*t**(ex)
+            res += terms[ex].cancel()*t**(ex)
 
         if a.is_negative and im(z) != 0:
             from sympy.functions.special.delta_functions import Heaviside
@@ -1067,7 +1059,7 @@ class log(Function):
         res = res.subs(t, x/cdir)
         return res + Order(x**n, x)
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         # NOTE
         # Refer https://github.com/sympy/sympy/pull/23592 for more information
         # on each of the following steps involved in this method.
@@ -1111,8 +1103,13 @@ class log(Function):
                 res += -2*I*pi*Heaviside(-im(coeff), 0)
         return res
 
+    def _eval_derivative_n_times(self, s, n):
+        if self.args[0] == s and n.is_integer and n.is_positive:
+            return S.NegativeOne**(n-1) * factorial(n - 1) / s**n
+        return super()._eval_derivative_n_times(s, n)
 
-class LambertW(Function):
+
+class LambertW(DefinedFunction):
     r"""
     The Lambert W function $W(z)$ is defined as the inverse
     function of $w \exp(w)$ [1]_.
@@ -1173,8 +1170,6 @@ class LambertW(Function):
                 return S.Exp1
             if x is S.Infinity:
                 return S.Infinity
-            if x.is_zero:
-                return S.Zero
 
         if fuzzy_not(k.is_zero):
             if x.is_zero:
@@ -1234,7 +1229,7 @@ class LambertW(Function):
         else:
             return s.is_algebraic
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         if len(self.args) == 1:
             arg = self.args[0]
             arg0 = arg.subs(x, 0).cancel()

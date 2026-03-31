@@ -59,7 +59,7 @@ Here's an example of how that would work:
 
     Note that since EncodedCNF is inherently non-deterministic,
     the int each predicate is encoded as is not consistent. As a
-    result, the code bellow likely does not reflect the assignment
+    result, the code below likely does not reflect the assignment
     given above.
 
     >>> lra.assert_lit(-1) #doctest: +SKIP
@@ -113,6 +113,7 @@ References
        A Fast Linear-Arithmetic Solver for DPLL(T)
        https://link.springer.com/chapter/10.1007/11817963_11
 """
+from __future__ import annotations
 from sympy.solvers.solveset import linear_eq_to_matrix
 from sympy.matrices.dense import eye
 from sympy.assumptions import Predicate
@@ -169,7 +170,7 @@ class LRASolver():
         if self.run_checks:
             assert A[:, n-m:] == -eye(m)
 
-        self.enc_to_boundary = enc_to_boundary  # mapping of int to Boundry objects
+        self.enc_to_boundary = enc_to_boundary  # mapping of int to Boundary objects
         self.boundary_to_enc = {value: key for key, value in enc_to_boundary.items()}
         self.A = A
         self.slack = slack_variables
@@ -230,7 +231,7 @@ class LRASolver():
         """
         # This function has three main jobs:
         # - raise errors if the input formula is not handled
-        # - preprocesses the formula into a matirx and single variable constraints
+        # - preprocesses the formula into a matrix and single variable constraints
         # - create one-literal conflict clauses from predicates that are always True
         #   or always False such as Q.gt(3, 2)
         #
@@ -366,8 +367,8 @@ class LRASolver():
             var.lower_from_eq = False
             var.lower_from_neg = False
             var.upper = LRARational(float("inf"), 0)
-            var.upper_from_eq= False
-            var.lower_from_neg = False
+            var.upper_from_eq = False
+            var.upper_from_neg = False
             var.assign = LRARational(0, 0)
 
     def assert_lit(self, enc_constraint):
@@ -555,10 +556,7 @@ class LRASolver():
         M = self.A.copy()
         basic = {s: i for i, s in enumerate(self.slack)}  # contains the row index associated with each basic variable
         nonbasic = set(self.nonslack)
-        iteration = 0
         while True:
-            iteration += 1
-
             if self.run_checks:
                 # nonbasic variables must always be within bounds
                 assert all(((nb.assign >= nb.lower) == True) and ((nb.assign <= nb.upper) == True) for nb in nonbasic)
@@ -584,7 +582,7 @@ class LRASolver():
             if len(cand) == 0:
                 return True, {var: var.assign for var in self.all_var}
 
-            xi = sorted(cand, key=lambda v: v.col_idx)[0] # Bland's rule
+            xi = min(cand, key=lambda v: v.col_idx) # Bland's rule
             i = basic[xi]
 
             if xi.assign < xi.lower:
@@ -601,7 +599,7 @@ class LRASolver():
                     conflict.append(Boundary.from_lower(xi))
                     conflict = [-neg*self.boundary_to_enc[c] for c, neg in conflict]
                     return False, conflict
-                xj = sorted(cand, key=lambda v: str(v))[0]
+                xj = min(cand, key=str)
                 M = self._pivot_and_update(M, basic, nonbasic, xi, xj, xi.lower)
 
             if xi.assign > xi.upper:
@@ -620,7 +618,7 @@ class LRASolver():
 
                     conflict = [-neg*self.boundary_to_enc[c] for c, neg in conflict]
                     return False, conflict
-                xj = sorted(cand, key=lambda v: v.col_idx)[0]
+                xj = min(cand, key=lambda v: v.col_idx)
                 M = self._pivot_and_update(M, basic, nonbasic, xi, xj, xi.upper)
 
     def _pivot_and_update(self, M, basic, nonbasic, xi, xj, v):
@@ -650,13 +648,13 @@ class LRASolver():
     def _pivot(M, i, j):
         """
         Performs a pivot operation about entry i, j of M by performing
-        a series of row operations on a copy of M and returing the result.
+        a series of row operations on a copy of M and returning the result.
         The original M is left unmodified.
 
         Conceptually, M represents a system of equations and pivoting
         can be thought of as rearranging equation i to be in terms of
         variable j and then substituting in the rest of the equations
-        to get rid of other occurances of variable j.
+        to get rid of other occurrences of variable j.
 
         Example
         =======
@@ -843,7 +841,7 @@ class Boundary:
             return self.var.var >= self.bound
 
     def __repr__(self):
-        return repr("Boundry(" + repr(self.get_inequality()) + ")")
+        return repr("Boundary(" + repr(self.get_inequality()) + ")")
 
     def __eq__(self, other):
         other = (other.var, other.bound, other.strict, other.upper, other.equality)

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core import Add, Mul, Pow, S
 from sympy.core.basic import Basic
 from sympy.core.expr import Expr
@@ -184,7 +185,7 @@ class AccumulationBounds(Expr):
     is_extended_real = True
     is_number = False
 
-    def __new__(cls, min, max):
+    def __new__(cls, min, max) -> Expr: # type: ignore
 
         min = _sympify(min)
         max = _sympify(max)
@@ -350,8 +351,7 @@ class AccumulationBounds(Expr):
                 v = set()
                 for a in self.args:
                     vi = other*a
-                    for i in vi.args or (vi,):
-                        v.add(i)
+                    v.update(vi.args or (vi,))
                 return AccumBounds(Min(*v), Max(*v))
             if other is S.Infinity:
                 if self.min.is_zero:
@@ -680,24 +680,17 @@ class AccumulationBounds(Expr):
                 return other
 
         if other.min <= self.min:
-            if other.max < self.max:
+            if other.max <= self.max:
                 return AccumBounds(self.min, other.max)
             if other.max > self.max:
                 return self
 
     def union(self, other):
-        # TODO : Devise a better method for Union of AccumBounds
-        # this method is not actually correct and
-        # can be made better
         if not isinstance(other, AccumBounds):
             raise TypeError(
-                "Input must be AccumulationBounds or FiniteSet object")
+                "Input must be AccumulationBounds object")
 
-        if self.min <= other.min and self.max >= other.min:
-            return AccumBounds(self.min, Max(self.max, other.max))
-
-        if other.min <= self.min and other.max >= self.min:
-            return AccumBounds(other.min, Max(self.max, other.max))
+        return AccumBounds(Min(self.min, other.min), Max(self.max, other.max))
 
 
 @dispatch(AccumulationBounds, AccumulationBounds) # type: ignore # noqa:F811

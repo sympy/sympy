@@ -1,12 +1,13 @@
 """ This module contains the Mathieu functions.
 """
+from __future__ import annotations
 
-from sympy.core.function import Function, ArgumentIndexError
+from sympy.core.function import DefinedFunction, ArgumentIndexError
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import sin, cos
 
 
-class MathieuBase(Function):
+class MathieuBase(DefinedFunction):
     """
     Abstract base class for Mathieu functions.
 

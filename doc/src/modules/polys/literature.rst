@@ -144,4 +144,16 @@ a theoretical foundation for implementing polynomials manipulation module.
     https://isc.tamu.edu/resources/preprints/1996/1996-02.pdf
 
 .. [Cohen93] Henri Cohen. "A Course in Computational Algebraic Number Theory",
-   Springer, 1993.
+    Springer, 1993.
+
+.. [Trager76] Barry M. Trager. "Algebraic factoriing and rational function
+    integration", Proceedings of SYMSAC 1976, pp. 219-226, ACM, 1976.
+    https://dl.acm.org/doi/abs/10.1145/800205.806338
+
+.. [Yun76] David Y.Y. Yun. "On square-free decomposition algorithms",
+    Proceedings of SYMSAC 1976, pp. 219-226, ACM, 1976.
+    https://dl.acm.org/doi/10.1145/800205.806320
+
+.. [Abbott13] John Abbott. "Bounds on factors in Z[x]".
+    Journal of Symbolic Computation 50 (2013), pp. 532-563
+    https://doi.org/10.1016/j.jsc.2012.09.004

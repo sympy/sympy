@@ -38,7 +38,9 @@
 # Add more methods to python-flint to expose more of Flint's functionality
 # and also to make some of the above methods simpler or more efficient e.g.
 # slicing, fancy indexing etc.
+from __future__ import annotations
 
+from sympy.external.gmpy import GROUND_TYPES
 from sympy.external.importtools import import_module
 from sympy.utilities.decorator import doctest_depends_on
 
@@ -53,6 +55,11 @@ from .exceptions import (
     DMShapeError,
     DMValueError,
 )
+
+
+if GROUND_TYPES != 'flint':
+    __doctest_skip__ = ['*']
+
 
 flint = import_module('flint')
 
@@ -137,13 +144,15 @@ class DFM:
             raise RuntimeError("Rep is not a flint.fmpz_mat")
         elif domain == QQ and not isinstance(rep, flint.fmpq_mat):
             raise RuntimeError("Rep is not a flint.fmpq_mat")
-        elif domain not in (ZZ, QQ):
+        elif domain.is_FF and not isinstance(rep, (flint.fmpz_mod_mat, flint.nmod_mat)):
+            raise RuntimeError("Rep is not a flint.fmpz_mod_mat or flint.nmod_mat")
+        elif domain not in (ZZ, QQ) and not domain.is_FF:
             raise NotImplementedError("Only ZZ and QQ are supported by DFM")
 
     @classmethod
     def _supports_domain(cls, domain):
         """Return True if the given domain is supported by DFM."""
-        return domain in (ZZ, QQ)
+        return domain in (ZZ, QQ) or domain.is_FF and domain._is_flint
 
     @classmethod
     def _get_flint_func(cls, domain):
@@ -152,6 +161,19 @@ class DFM:
             return flint.fmpz_mat
         elif domain == QQ:
             return flint.fmpq_mat
+        elif domain.is_FF:
+            c = domain.characteristic()
+            if isinstance(domain.one, flint.nmod):
+                _cls = flint.nmod_mat
+                def _func(*e):
+                    if len(e) == 1 and isinstance(e[0], flint.nmod_mat):
+                        return _cls(e[0])
+                    else:
+                        return _cls(*e, c)
+            else:
+                m = flint.fmpz_mod_ctx(c)
+                _func = lambda *e: flint.fmpz_mod_mat(*e, m)
+            return _func
         else:
             raise NotImplementedError("Only ZZ and QQ are supported by DFM")
 
@@ -261,14 +283,39 @@ class DFM:
         """Convert to a DOK."""
         return self.to_ddm().to_dok()
 
+    @classmethod
+    def from_dok(cls, dok, shape, domain):
+        """Inverse of :math:`to_dod`."""
+        return DDM.from_dok(dok, shape, domain).to_dfm()
+
+    def iter_values(self):
+        """Iterate over the non-zero values of the matrix."""
+        m, n = self.shape
+        rep = self.rep
+        for i in range(m):
+            for j in range(n):
+                repij = rep[i, j]
+                if repij:
+                    yield rep[i, j]
+
+    def iter_items(self):
+        """Iterate over indices and values of nonzero elements of the matrix."""
+        m, n = self.shape
+        rep = self.rep
+        for i in range(m):
+            for j in range(n):
+                repij = rep[i, j]
+                if repij:
+                    yield ((i, j), repij)
+
     def convert_to(self, domain):
         """Convert to a new domain."""
         if domain == self.domain:
             return self.copy()
         elif domain == QQ and self.domain == ZZ:
             return self._new(flint.fmpq_mat(self.rep), self.shape, domain)
-        elif domain == ZZ and self.domain == QQ:
-            # XXX: python-flint has no fmpz_mat.from_fmpq_mat
+        elif self._supports_domain(domain):
+            # XXX: Use more efficient conversions when possible.
             return self.to_ddm().convert_to(domain).to_dfm()
         else:
             # It is the callers responsibility to convert to DDM before calling
@@ -440,7 +487,7 @@ class DFM:
         """Return ``True`` if the matrix is upper triangular."""
         M = self.rep
         for i in range(self.rows):
-            for j in range(i):
+            for j in range(min(i, self.cols)):
                 if M[i, j]:
                     return False
         return True
@@ -633,7 +680,7 @@ class DFM:
 
         if K == ZZ:
             raise DMDomainError("field expected, got %s" % K)
-        elif K == QQ:
+        elif K == QQ or K.is_FF:
             try:
                 return self._new_rep(self.rep.inv())
             except ZeroDivisionError:
@@ -648,10 +695,15 @@ class DFM:
         L, U, swaps = self.to_ddm().lu()
         return L.to_dfm(), U.to_dfm(), swaps
 
+    def qr(self):
+        """Return the QR decomposition of the matrix."""
+        Q, R = self.to_ddm().qr()
+        return Q.to_dfm(), R.to_dfm()
+
     # XXX: The lu_solve function should be renamed to solve. Whether or not it
     # uses an LU decomposition is an implementation detail. A method called
     # lu_solve would make sense for a situation in which an LU decomposition is
-    # reused several times to solve iwth different rhs but that would imply a
+    # reused several times to solve with different rhs but that would imply a
     # different call signature.
     #
     # The underlying python-flint method has an algorithm= argument so we could
@@ -733,6 +785,39 @@ class DFM:
             raise DMNonInvertibleMatrixError("Matrix det == 0; not invertible.")
 
         return self._new(sol, sol_shape, self.domain)
+
+    def fflu(self):
+        """
+        Fraction-free LU decomposition of DFM.
+
+        Explanation
+        ===========
+
+        Uses `python-flint` if possible for a matrix of
+        integers otherwise uses the DDM method.
+
+        See Also
+        ========
+
+        sympy.polys.matrices.ddm.DDM.fflu
+        """
+        if self.domain == ZZ:
+            fflu = getattr(self.rep, 'fflu', None)
+            if fflu is not None:
+                P, L, D, U = self.rep.fflu()
+                m, n = self.shape
+                return (
+                    self._new(P, (m, m), self.domain),
+                    self._new(L, (m, m), self.domain),
+                    self._new(D, (m, m), self.domain),
+                    self._new(U, self.shape, self.domain)
+                )
+        ddm_p, ddm_l, ddm_d, ddm_u = self.to_ddm().fflu()
+        P = ddm_p.to_dfm()
+        L = ddm_l.to_dfm()
+        D = ddm_d.to_dfm()
+        U = ddm_u.to_dfm()
+        return P, L, D, U
 
     def nullspace(self):
         """Return a basis for the nullspace of the matrix."""

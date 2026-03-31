@@ -46,6 +46,7 @@ For the sake of completeness, `f(n)` can be:
     [2] a rational function        -> rsolve_ratio
     [3] a hypergeometric function  -> rsolve_hyper
 """
+from __future__ import annotations
 from collections import defaultdict
 
 from sympy.concrete import product
@@ -549,6 +550,8 @@ def rsolve_hyper(coeffs, f, n, **hints):
             denoms = [S.One]*(r + 1)
 
             s = hypersimp(g, n)
+            if s is None:
+                return None
 
             for j in range(1, r + 1):
                 coeff *= s.subs(n, n + j - 1)

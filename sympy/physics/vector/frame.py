@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy import (diff, expand, sin, cos, sympify, eye, zeros,
                                 ImmutableMatrix as Matrix, MatrixBase)
 from sympy.core.symbol import Symbol
@@ -334,7 +335,7 @@ class ReferenceFrame:
         possible_connecting_paths = [[self]]
         oldlist = [[]]
         while possible_connecting_paths != oldlist:
-            oldlist = possible_connecting_paths[:]  # make a copy
+            oldlist = possible_connecting_paths.copy()
             for frame_list in possible_connecting_paths:
                 frames_adjacent_to_last = frame_list[-1]._dlist[num].keys()
                 for adjacent_frame in frames_adjacent_to_last:
@@ -1558,8 +1559,10 @@ class ReferenceFrame:
 
         """
 
-        partials = [self.ang_vel_in(frame).diff(speed, frame, var_in_dcm=False)
-                    for speed in gen_speeds]
+        from sympy.physics.vector.functions import partial_velocity
+
+        vel = self.ang_vel_in(frame)
+        partials = partial_velocity([vel], gen_speeds, frame)[0]
 
         if len(partials) == 1:
             return partials[0]

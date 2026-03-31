@@ -11,11 +11,14 @@ TODO:
     - Allow left/center/right alignment options for above/below and
       top/center/bottom alignment options for left/right
 """
+from __future__ import annotations
 
 import shutil
 
 from .pretty_symbology import hobj, vobj, xsym, xobj, pretty_use_unicode, line_width, center
 from sympy.utilities.exceptions import sympy_deprecation_warning
+
+_GLOBAL_WRAP_LINE = None
 
 class stringPict:
     """An ASCII picture.
@@ -251,6 +254,9 @@ class stringPict:
            break the expression in a form that can be printed
            on the terminal without being broken up.
          """
+        if _GLOBAL_WRAP_LINE is not None:
+            kwargs["wrap_line"] = _GLOBAL_WRAP_LINE
+
         if kwargs["wrap_line"] is False:
             return "\n".join(self.picture)
 

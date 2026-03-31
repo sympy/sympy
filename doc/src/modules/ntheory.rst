@@ -4,16 +4,23 @@
 Number Theory
 =============
 
-.. module:: sympy.ntheory.generate
+
 
 Ntheory Class Reference
 =======================
 
-.. autoclass:: Sieve
+.. py:class:: array.array
+
+.. autoclass:: sympy.ntheory.generate.Sieve
+   :members:
+
+.. autoclass:: sympy.ntheory.factor_.FactorCache
    :members:
 
 Ntheory Functions Reference
 ===========================
+
+.. module:: sympy.ntheory.generate
 
 .. autofunction:: prime
 
@@ -71,27 +78,21 @@ Ntheory Functions Reference
 
 .. autofunction:: antidivisor_count
 
-.. autoclass:: totient
-   :members:
+.. autofunction:: totient
 
-.. autoclass:: reduced_totient
-   :members:
+.. autofunction:: reduced_totient
 
-.. autoclass:: divisor_sigma
-   :members:
+.. autofunction:: divisor_sigma
 
-.. autoclass:: udivisor_sigma
-   :members:
+.. autofunction:: udivisor_sigma
 
 .. autofunction:: core
 
 .. autofunction:: digits
 
-.. autoclass:: primenu
-   :members:
+.. autofunction:: primenu
 
-.. autoclass:: primeomega
-   :members:
+.. autofunction:: primeomega
 
 .. autofunction:: mersenne_prime_exponent
 
@@ -104,6 +105,12 @@ Ntheory Functions Reference
 .. autofunction:: is_deficient
 
 .. autofunction:: is_amicable
+
+.. autofunction:: is_carmichael
+
+.. autofunction:: find_carmichael_numbers_in_range
+
+.. autofunction:: find_first_n_carmichaels
 
 .. module:: sympy.ntheory.modular
 
@@ -181,8 +188,6 @@ Ntheory Functions Reference
 
 .. autofunction:: jacobi_symbol
 
-.. autofunction:: kronecker_symbol
-
 .. autofunction:: mobius
 
 .. autofunction:: discrete_log
@@ -252,6 +257,8 @@ For factoring `2709077133180915240135586837960864768806330782747` which is a sem
 with two 25 digit factors. `qs` is able to factorize this in around 248s.
 
 .. autofunction:: qs
+
+.. autofunction:: qs_factor
 
 Examples
 --------

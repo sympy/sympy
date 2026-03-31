@@ -123,7 +123,13 @@ Usage::
 
 .. autofunction:: sympy.printing.codeprinter::cxxcode
 
+.. _printing-llvm:
 
+LLVM JIT Code Printing
+----------------------
+
+.. automodule:: sympy.printing.llvmjitcode
+   :members:
 
 RCodePrinter
 ------------
@@ -392,7 +398,7 @@ Rust code printing
 
    .. autoattribute:: RustCodePrinter.printmethod
 
-.. autofunction:: sympy.printing.rust.rust_code
+.. autofunction:: sympy.printing.codeprinter.rust_code
 
 Aesara Code printing
 --------------------

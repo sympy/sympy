@@ -10,6 +10,7 @@ normalized activation level, can be modeled by the models present in this
 module.
 
 """
+from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from functools import cached_property
@@ -280,7 +281,7 @@ class ZerothOrderActivation(ActivationBase):
     exictation to activation. As a result, no additional state equations are
     introduced to your system. They also remove a potential source of delay
     between the input and dynamics of your system as no (ordinary) differential
-    equations are involed.
+    equations are involved.
 
     """
 

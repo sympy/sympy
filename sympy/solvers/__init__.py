@@ -8,20 +8,21 @@
     >>> solve(((x + 1)**5).expand(), x)
     [-1]
 """
+from __future__ import annotations
 from sympy.core.assumptions import check_assumptions, failing_assumptions
 
 from .solvers import solve, solve_linear_system, solve_linear_system_LU, \
     solve_undetermined_coeffs, nsolve, solve_linear, checksol, \
     det_quick, inv_quick
 
-from .diophantine import diophantine
+from sympy.solvers.diophantine.diophantine import diophantine
 
 from .recurr import rsolve, rsolve_poly, rsolve_ratio, rsolve_hyper
 
 from .ode import checkodesol, classify_ode, dsolve, \
     homogeneous_order
 
-from .polysys import solve_poly_system, solve_triangulated
+from .polysys import solve_poly_system, solve_triangulated, factor_system
 
 from .pde import pde_separate, pde_separate_add, pde_separate_mul, \
     pdsolve, classify_pde, checkpdesol
@@ -52,7 +53,7 @@ __all__ = [
 
     'checkodesol', 'classify_ode', 'dsolve', 'homogeneous_order',
 
-    'solve_poly_system', 'solve_triangulated',
+    'solve_poly_system', 'solve_triangulated', 'factor_system',
 
     'pde_separate', 'pde_separate_add', 'pde_separate_mul', 'pdsolve',
     'classify_pde', 'checkpdesol',

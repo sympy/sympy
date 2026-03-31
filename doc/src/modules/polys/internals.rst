@@ -64,6 +64,19 @@ may be slightly more efficient.)
 
 .. currentmodule:: sympy.polys.densebasic
 
+.. py:class:: dup
+.. py:class:: dmp
+.. py:class:: idmp
+.. py:class:: dmp_tup
+.. py:class:: monom
+
+The ``dup`` representation is a list of coefficients that are themselves domain
+elements. The ``dmp`` type represents dense, multivariate polynomials
+recursively as a list of lists. See :ref:`polys-domainsintro` for an
+introductory explanation of the domain system and the ``dup`` and ``dmp``
+representations. Many functions are available to manipulate polynomials in the
+``dup`` and ``dmp`` representations. This section lists some of them.
+
 .. autofunction:: dmp_LC
 .. autofunction:: dmp_TC
 .. autofunction:: dmp_ground_LC
@@ -108,8 +121,13 @@ may be slightly more efficient.)
 .. autofunction:: dmp_terms_gcd
 .. autofunction:: dmp_list_terms
 .. autofunction:: dmp_apply_pairs
+.. autofunction:: dup_slice
 .. autofunction:: dmp_slice
+.. autofunction:: dup_truncate
 .. autofunction:: dup_random
+.. autofunction:: dup_from_list
+.. autofunction:: dup_pretty
+.. autofunction:: dup_print
 
 **Arithmetic operations:**
 
@@ -131,9 +149,14 @@ may be slightly more efficient.)
 .. autofunction:: dmp_sub
 .. autofunction:: dmp_add_mul
 .. autofunction:: dmp_sub_mul
+.. autofunction:: dup_mul
 .. autofunction:: dmp_mul
+.. autofunction:: dup_series_mul
+.. autofunction:: dup_sqr
 .. autofunction:: dmp_sqr
+.. autofunction:: dup_series_sqr
 .. autofunction:: dmp_pow
+.. autofunction:: dup_series_pow
 .. autofunction:: dmp_pdiv
 .. autofunction:: dmp_prem
 .. autofunction:: dmp_pquo
@@ -175,12 +198,16 @@ may be slightly more efficient.)
 .. autofunction:: dup_scale
 .. autofunction:: dup_shift
 .. autofunction:: dup_transform
+.. autofunction:: dup_compose
 .. autofunction:: dmp_compose
+.. autofunction:: dup_series_compose
 .. autofunction:: dup_decompose
 .. autofunction:: dmp_lift
 .. autofunction:: dup_sign_variations
 .. autofunction:: dmp_clear_denoms
+.. autofunction:: dup_revert
 .. autofunction:: dmp_revert
+.. autofunction:: dup_series_reversion
 
 Manipulation of dense, univariate polynomials with finite field coefficients
 ****************************************************************************
@@ -545,7 +572,9 @@ Polynomial factorization in characteristic zero:
 
 .. currentmodule:: sympy.polys.factortools
 
+.. autofunction:: dup_trial_division
 .. autofunction:: dmp_trial_division
+.. autofunction:: dup_zz_mignotte_bound
 .. autofunction:: dmp_zz_mignotte_bound
 .. autofunction:: dup_zz_hensel_step
 .. autofunction:: dup_zz_hensel_lift
@@ -559,15 +588,48 @@ Polynomial factorization in characteristic zero:
 .. autofunction:: dmp_zz_wang_non_divisors
 .. autofunction:: dmp_zz_wang_test_points
 .. autofunction:: dmp_zz_wang_lead_coeffs
+.. autofunction:: dup_zz_diophantine
 .. autofunction:: dmp_zz_diophantine
 .. autofunction:: dmp_zz_wang_hensel_lifting
 .. autofunction:: dmp_zz_wang
 .. autofunction:: dmp_zz_factor
+.. autofunction:: dup_qq_i_factor
+.. autofunction:: dup_zz_i_factor
+.. autofunction:: dmp_qq_i_factor
+.. autofunction:: dmp_zz_i_factor
+.. autofunction:: dup_ext_factor
 .. autofunction:: dmp_ext_factor
 .. autofunction:: dup_gf_factor
+.. autofunction:: dmp_gf_factor
+.. autofunction:: dup_factor_list
+.. autofunction:: dup_factor_list_include
 .. autofunction:: dmp_factor_list
 .. autofunction:: dmp_factor_list_include
+.. autofunction:: dup_irreducible_p
 .. autofunction:: dmp_irreducible_p
+
+Square-free factorization:
+
+.. currentmodule:: sympy.polys.sqfreetools
+
+.. autofunction:: dup_sqf_p
+.. autofunction:: dmp_sqf_p
+.. autofunction:: dup_sqf_norm
+.. autofunction:: dmp_sqf_norm
+.. autofunction:: dmp_norm
+.. autofunction:: dup_gf_sqf_part
+.. autofunction:: dmp_gf_sqf_part
+.. autofunction:: dup_sqf_part
+.. autofunction:: dmp_sqf_part
+.. autofunction:: dup_gf_sqf_list
+.. autofunction:: dmp_gf_sqf_list
+.. autofunction:: dup_sqf_list
+.. autofunction:: dup_sqf_list_include
+.. autofunction:: dmp_sqf_list
+.. autofunction:: dmp_sqf_list_include
+.. autofunction:: dup_gff_list
+.. autofunction:: dmp_gff_list
+
 
 Groebner basis algorithms
 *************************

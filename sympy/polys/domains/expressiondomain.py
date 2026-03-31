@@ -1,4 +1,5 @@
 """Implementation of :class:`ExpressionDomain` class. """
+from __future__ import annotations
 
 
 from sympy.core import sympify, SympifyError
@@ -55,6 +56,9 @@ class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
 
         def __abs__(f):
             return f.__class__(abs(f.ex))
+
+        def __pos__(f):
+            return f
 
         def __neg__(f):
             return f.__class__(-f.ex)

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.numbers import I, pi
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.polys.partfrac import apart
@@ -7,27 +8,28 @@ from sympy.functions import arg, Abs
 from sympy.integrals.laplace import _fast_inverse_laplace
 from sympy.physics.control.lti import SISOLinearTimeInvariant
 from sympy.plotting.series import LineOver1DRangeSeries
+from sympy.plotting.plot import plot_parametric
+from sympy.polys.domains import ZZ, QQ
 from sympy.polys.polytools import Poly
 from sympy.printing.latex import latex
+from sympy.geometry.polygon import deg
 
 __all__ = ['pole_zero_numerical_data', 'pole_zero_plot',
     'step_response_numerical_data', 'step_response_plot',
     'impulse_response_numerical_data', 'impulse_response_plot',
     'ramp_response_numerical_data', 'ramp_response_plot',
     'bode_magnitude_numerical_data', 'bode_phase_numerical_data',
-    'bode_magnitude_plot', 'bode_phase_plot', 'bode_plot']
+    'bode_magnitude_plot', 'bode_phase_plot', 'bode_plot',
+    'nyquist_plot_expr', 'nyquist_plot', 'nichols_plot_expr',
+    'nichols_plot']
+
 
 matplotlib = import_module(
         'matplotlib', import_kwargs={'fromlist': ['pyplot']},
         catch=(RuntimeError,))
 
-numpy = import_module('numpy')
-
 if matplotlib:
     plt = matplotlib.pyplot
-
-if numpy:
-    np = numpy  # Matplotlib already has numpy as a compulsory dependency. No need to install it separately.
 
 
 def _check_system(system):
@@ -45,6 +47,17 @@ def _check_system(system):
         # Should test that exp is not part of a constant, in which case
         # no exception is required, compare exp(s) with s*exp(1)
         raise NotImplementedError("Time delay terms are not supported.")
+
+
+def _poly_roots(poly):
+    """Function to get the roots of a polynomial."""
+    def _eval(l):
+        return [float(i) if i.is_real else complex(i) for i in l]
+    if poly.domain in (QQ, ZZ):
+        return _eval(poly.all_roots())
+    # XXX: Use all_roots() for irrational coefficients when possible
+    # See https://github.com/sympy/sympy/issues/22943
+    return _eval(poly.nroots())
 
 
 def pole_zero_numerical_data(system):
@@ -65,8 +78,8 @@ def pole_zero_numerical_data(system):
     =======
 
     tuple : (zeros, poles)
-        zeros = Zeros of the system. NumPy array of complex numbers.
-        poles = Poles of the system. NumPy array of complex numbers.
+        zeros = Zeros of the system as a list of Python float/complex.
+        poles = Poles of the system as a list of Python float/complex.
 
     Raises
     ======
@@ -88,8 +101,8 @@ def pole_zero_numerical_data(system):
     >>> from sympy.physics.control.lti import TransferFunction
     >>> from sympy.physics.control.control_plots import pole_zero_numerical_data
     >>> tf1 = TransferFunction(s**2 + 1, s**4 + 4*s**3 + 6*s**2 + 5*s + 2, s)
-    >>> pole_zero_numerical_data(tf1)   # doctest: +SKIP
-    ([-0.+1.j  0.-1.j], [-2. +0.j        -0.5+0.8660254j -0.5-0.8660254j -1. +0.j       ])
+    >>> pole_zero_numerical_data(tf1)
+    ([-1j, 1j], [-2.0, -1.0, (-0.5-0.8660254037844386j), (-0.5+0.8660254037844386j)])
 
     See Also
     ========
@@ -100,16 +113,10 @@ def pole_zero_numerical_data(system):
     _check_system(system)
     system = system.doit()  # Get the equivalent TransferFunction object.
 
-    num_poly = Poly(system.num, system.var).all_coeffs()
-    den_poly = Poly(system.den, system.var).all_coeffs()
+    num_poly = Poly(system.num, system.var)
+    den_poly = Poly(system.den, system.var)
 
-    num_poly = np.array(num_poly, dtype=np.complex128)
-    den_poly = np.array(den_poly, dtype=np.complex128)
-
-    zeros = np.roots(num_poly)
-    poles = np.roots(den_poly)
-
-    return zeros, poles
+    return _poly_roots(num_poly), _poly_roots(den_poly)
 
 
 def pole_zero_plot(system, pole_color='blue', pole_markersize=10,
@@ -177,11 +184,11 @@ def pole_zero_plot(system, pole_color='blue', pole_markersize=10,
     """
     zeros, poles = pole_zero_numerical_data(system)
 
-    zero_real = np.real(zeros)
-    zero_imag = np.imag(zeros)
+    zero_real = [i.real for i in zeros]
+    zero_imag = [i.imag for i in zeros]
 
-    pole_real = np.real(poles)
-    pole_imag = np.imag(poles)
+    pole_real = [i.real for i in poles]
+    pole_imag = [i.imag for i in poles]
 
     plt.plot(pole_real, pole_imag, 'x', mfc='none',
         markersize=pole_markersize, color=pole_color)
@@ -741,7 +748,16 @@ def bode_magnitude_numerical_data(system, initial_exp=-5, final_exp=5, freq_unit
         repl = I*_w
     w_expr = expr.subs({system.var: repl})
 
+    # NOTE: instead of Abs(w_expr), another way would be
+    # sqrt(re(w_expr)**2 + im(w_expr)**2)
+    # but re(), im() are going to evaluate the symbolic expression, potentially
+    # adding a significant overhead for longer transfer functions.
     mag = 20*log(Abs(w_expr), 10)
+
+    # We are computing the magnitude, which must return real data.
+    # However, numerical computation might introduce imaginary parts.
+    # Let's request the data series to discard any imaginary part.
+    kwargs["return"] = "real"
 
     x, y = LineOver1DRangeSeries(mag,
         (_w, 10**initial_exp, 10**final_exp), xscale='log', **kwargs).get_points()
@@ -976,3 +992,154 @@ def bode_plot(system, initial_exp=-5, final_exp=5,
         return
 
     return plt
+
+
+def nyquist_plot_expr(system):
+    """Function to get the expression for Nyquist plot."""
+    s = system.var
+    w = Dummy('w', real=True)
+    repl = I * w
+    expr = system.to_expr()
+    w_expr = expr.subs({s: repl})
+    w_expr = w_expr.as_real_imag()
+    real_expr = w_expr[0]
+    imag_expr = w_expr[1]
+    return real_expr, imag_expr, w
+
+
+def nichols_plot_expr(system):
+    """Function to get the expression for Nichols plot."""
+    s = system.var
+    w = Dummy('w', real=True)
+    sys_expr = system.to_expr()
+    H_jw = sys_expr.subs(s, I*w)
+    mag_expr = Abs(H_jw)
+    mag_dB_expr = 20*log(mag_expr, 10)
+    phase_expr = arg(H_jw)
+    phase_deg_expr = deg(phase_expr)
+    return mag_dB_expr, phase_deg_expr, w
+
+
+def nyquist_plot(system, initial_omega=0.01, final_omega=100, show=True,
+                color='b', **kwargs):
+    r"""
+    Generates the Nyquist plot for a continuous-time system.
+
+    Parameters
+    ==========
+
+    system : SISOLinearTimeInvariant
+        The LTI SISO system for which the Nyquist plot is to be generated.
+    initial_omega : float, optional
+        The starting frequency value. Defaults to 0.01.
+    final_omega : float, optional
+        The ending frequency value. Defaults to 100.
+    show : bool, optional
+        If True, the plot is displayed. Default is True.
+    color : str, optional
+        The color of the Nyquist plot. Default is 'b' (blue).
+    grid : bool, optional
+        If True, grid lines are displayed. Default is False.
+    **kwargs
+        Additional keyword arguments for customization.
+
+    Examples
+    ========
+
+    .. plot::
+        :context: close-figs
+        :format: doctest
+        :include-source: True
+
+        >>> from sympy.abc import s
+        >>> from sympy.physics.control.lti import TransferFunction
+        >>> from sympy.physics.control.control_plots import nyquist_plot
+        >>> tf1 = TransferFunction(2*s**2 + 5*s + 1, s**2 + 2*s + 3, s)
+        >>> nyquist_plot(tf1)   # doctest: +SKIP
+
+    See Also
+    ========
+
+    nichols_plot, bode_plot
+
+    """
+    _check_system(system)
+    real_expr, imag_expr, w = nyquist_plot_expr(system)
+    w_values = [(w, initial_omega, final_omega)]
+    p = plot_parametric(
+        (real_expr, imag_expr),   # The curve
+        (real_expr, -imag_expr),  # Its mirror image
+        *w_values,
+        show=False,
+        line_color=color,
+        adaptive=True,
+        title=f'Nyquist Plot of ${latex(system)}$',
+        xlabel='Real Axis',
+        ylabel='Imaginary Axis',
+        size=(6, 5),
+        kwargs=kwargs)
+    if show:
+        p.show()
+        return
+    return p
+
+
+def nichols_plot(system, initial_omega=0.01, final_omega=100, show=True, color='b', **kwargs):
+    r"""
+    Generates the Nichols plot for a LTI system.
+
+    Parameters
+    ==========
+
+    system : SISOLinearTimeInvariant
+        The LTI SISO system for which the Nyquist plot is to be generated.
+    initial_omega : float, optional
+        The starting frequency value. Defaults to 0.01.
+    final_omega : float, optional
+        The ending frequency value. Defaults to 100.
+    show : bool, optional
+        If True, the plot is displayed. Default is True.
+    color : str, optional
+        The color of the Nyquist plot. Default is 'b' (blue).
+    grid : bool, optional
+        If True, grid lines are displayed. Default is False.
+    **kwargs
+        Additional keyword arguments for customization.
+
+    Examples
+    ========
+
+    .. plot::
+        :context: close-figs
+        :format: doctest
+        :include-source: True
+
+        >>> from sympy.abc import s
+        >>> from sympy.physics.control.lti import TransferFunction
+        >>> from sympy.physics.control.control_plots import nichols_plot
+        >>> tf1 = TransferFunction(1.5, s**2+14*s+40.02, s)
+        >>> nichols_plot(tf1)   # doctest: +SKIP
+
+    See Also
+    ========
+
+    nyquist_plot, bode_plot
+
+    """
+    _check_system(system)
+    magnitude_dB_expr, phase_deg_expr, w = nichols_plot_expr(system)
+    w_values = [(w, initial_omega, final_omega)]
+    p = plot_parametric(
+        (phase_deg_expr, magnitude_dB_expr),
+        *w_values,
+        show=False,
+        line_color=color,
+        title=f'Nichols Plot of ${latex(system)}$',
+        xlabel='Phase [deg]',
+        ylabel='Magnitude [dB]',
+        size=(6,5),
+        kwargs=kwargs)
+    if show:
+        p.show()
+        return
+    return p

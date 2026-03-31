@@ -488,8 +488,8 @@ first basis element `B_0` is set to the expression for `{}_1 F_2`
 from above:
 
 .. math ::
-   B_0 = \frac{ \sqrt{\pi} \exp\left(-\frac{\mathbf{\imath}\pi}{4}\right)
-   C\left( \frac{2}{\sqrt{\pi}} \exp\left(\frac{\mathbf{\imath}\pi}{4}\right) z^{\frac{1}{4}}\right)}
+   B_0 = \frac{ \sqrt{\pi} \exp\left(-\frac{\imath\pi}{4}\right)
+   C\left( \frac{2}{\sqrt{\pi}} \exp\left(\frac{\imath\pi}{4}\right) z^{\frac{1}{4}}\right)}
    {2 z^{\frac{1}{4}}}
 
 Next we compute `z\frac{\mathrm{d}}{\mathrm{d}z} B_0`. For this we can
@@ -510,8 +510,8 @@ Formatting this result nicely we obtain
    B_1^\prime =
    - \frac{1}{4} \frac{
      \sqrt{\pi}
-     \exp\left(-\frac{\mathbf{\imath}\pi}{4}\right)
-     C\left( \frac{2}{\sqrt{\pi}} \exp\left(\frac{\mathbf{\imath}\pi}{4}\right) z^{\frac{1}{4}}\right)
+     \exp\left(-\frac{\imath\pi}{4}\right)
+     C\left( \frac{2}{\sqrt{\pi}} \exp\left(\frac{\imath\pi}{4}\right) z^{\frac{1}{4}}\right)
    }
    {2 z^{\frac{1}{4}}}
    + \frac{1}{4} \cosh{\left( 2 \sqrt{z} \right )}
@@ -534,8 +534,8 @@ which can be printed as
    B_2^\prime =
    \frac{1}{16} \frac{
      \sqrt{\pi}
-     \exp\left(-\frac{\mathbf{\imath}\pi}{4}\right)
-     C\left( \frac{2}{\sqrt{\pi}} \exp\left(\frac{\mathbf{\imath}\pi}{4}\right) z^{\frac{1}{4}}\right)
+     \exp\left(-\frac{\imath\pi}{4}\right)
+     C\left( \frac{2}{\sqrt{\pi}} \exp\left(\frac{\imath\pi}{4}\right) z^{\frac{1}{4}}\right)
    }
    {2 z^{\frac{1}{4}}}
    - \frac{1}{16} \cosh{\left(2\sqrt{z}\right)}
@@ -553,8 +553,8 @@ choose `B_1` and `B_2` as follows
    \left( \begin{matrix}
      \frac{
        \sqrt{\pi}
-       \exp\left(-\frac{\mathbf{\imath}\pi}{4}\right)
-       C\left( \frac{2}{\sqrt{\pi}} \exp\left(\frac{\mathbf{\imath}\pi}{4}\right) z^{\frac{1}{4}}\right)
+       \exp\left(-\frac{\imath\pi}{4}\right)
+       C\left( \frac{2}{\sqrt{\pi}} \exp\left(\frac{\imath\pi}{4}\right) z^{\frac{1}{4}}\right)
      }{2 z^{\frac{1}{4}}} \\
      \cosh\left(2\sqrt{z}\right) \\
      \sinh\left(2\sqrt{z}\right) \sqrt{z}

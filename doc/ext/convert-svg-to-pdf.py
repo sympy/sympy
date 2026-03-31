@@ -11,6 +11,7 @@ import os
 import platform
 from typing import Any  # NOQA
 from sphinx.application import Sphinx  # NOQA
+from pathlib import Path
 
 
 logger = logging.getLogger(__name__)
@@ -65,18 +66,16 @@ class Converter(ImageConverter):
         if not chrome:
             return 1
         command = f'{chrome} --headless --disable-gpu --disable-software-rasterizer --print-to-pdf={_to} {temp_name}'
-        logger.error(command)
+        logger.info(command)
         return os.system(command)
 
     def convert(self, _from: str, _to: str) -> bool:
         """Converts the image from SVG to PDF using chrome."""
-        with open(_from, 'r') as f:
-            svg = f.read()
+        svg = Path(_from).read_text()
 
         HTML = "<html><head><style>body {margin: 0; }</style><script>function init() {const element = document.querySelector('svg');const positionInfo = element.getBoundingClientRect();const height = positionInfo.height;const width = positionInfo.width;const style = document.createElement('style');style.innerHTML = `@page {margin: 0; size: ${width}px ${height}px}`;document.head.appendChild(style); }window.onload = init;</script></head><body>%s</body></html>" % (svg)
         temp_name = f'{_from}.html'
-        with open(temp_name, 'w') as f:
-            f.write(HTML)
+        Path(temp_name).write_text(HTML)
 
         chromium = self.chromium_command()
         code = self.command_runner(chromium, _to, temp_name)
