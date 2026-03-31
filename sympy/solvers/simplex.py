@@ -976,8 +976,11 @@ def linprog(c, A=None, b=None, A_eq=None, b_eq=None, bounds=None):
     if A_eq is None:
         if b_eq is not None:
             raise ValueError("A_eq and b_eq must both be given")
+            A_eq = zeros(0, C.cols)
+            b_eq = zeros(0, 1)
     else:
-        A_eq, b_eq = [Matrix(i) for i in (A_eq, b_eq)]
+        A_eq = Matrix(A_eq)
+        b_eq = Matrix(b_eq)
         # if x == y then x <= y and x >= y (-x <= -y)
         A = A.col_join(A_eq)
         A = A.col_join(-A_eq)
@@ -1019,57 +1022,64 @@ def linprog(c, A=None, b=None, A_eq=None, b_eq=None, bounds=None):
 
 def show_linprog(c, A=None, b=None, A_eq=None, b_eq=None, bounds=None):
     from sympy import symbols
-    ## the objective
+
+    # the objective function
     C = Matrix(c)
     if C.rows != 1 and C.cols == 1:
         C = C.T
     if C.rows != 1:
         raise ValueError("C must be a single row.")
 
-    ## the inequalities
+    # the inequalities
     if not A:
         if b:
             raise ValueError("A and b must both be given")
-        # the governing equations will be simple constraints
-        # on variables
-        A, b = zeros(0, C.cols), zeros(C.cols, 1)
+        A, b = zeros(0, C.cols), zeros(0, 1)
     else:
+        if not b:
+            raise ValueError("A and b must both be given")
         A, b = [Matrix(i) for i in (A, b)]
 
     if A.cols != C.cols:
         raise ValueError("number of columns in A and C must match")
 
-    ## the equalities
+    # the equalities
     if A_eq is None:
         if b_eq is not None:
             raise ValueError("A_eq and b_eq must both be given")
+        A_eq = zeros(0, C.cols)
+        b_eq = zeros(0, 1)
     else:
-        A_eq, b_eq = [Matrix(i) for i in (A_eq, b_eq)]
+        A_eq = Matrix(A_eq)
+        b_eq = Matrix(b_eq)
 
-    if not (bounds is None or bounds == {} or bounds == (0, None)):
-        ## the bounds are interpreted
+    # bounds handling
+    if bounds is None or bounds == {} or bounds == (0, None):
+        bounds = [(0, None)] * C.cols
+    else:
         if type(bounds) is tuple and len(bounds) == 2:
             bounds = [bounds] * A.cols
         elif len(bounds) == A.cols and all(
                 type(i) is tuple and len(i) == 2 for i in bounds):
-            pass # individual bounds
+            pass
         elif type(bounds) is dict and all(
                 type(i) is tuple and len(i) == 2
                 for i in bounds.values()):
-            # sparse bounds
             db = bounds
             bounds = [(0, None)] * A.cols
             while db:
                 i, j = db.popitem()
-                bounds[i] = j  # IndexError if out-of-bounds indices
+                bounds[i] = j
         else:
             raise ValueError("unexpected bounds %s" % bounds)
 
     x = Matrix(symbols('x1:%s' % (A.cols+1)))
-    f,c = (C*x)[0], [i<=j for i,j in zip(A*x, b)] + [Eq(i,j) for i,j in zip(A_eq*x,b_eq)]
+    f, c = (C*x)[0], [i <= j for i, j in zip(A*x, b)] + [Eq(i, j) for i, j in zip(A_eq*x, b_eq)]
+
     for i, (lo, hi) in enumerate(bounds):
         if lo is not None:
-            c.append(x[i]>=lo)
+            c.append(x[i] >= lo)
         if hi is not None:
-            c.append(x[i]<=hi)
-    return f,c
+            c.append(x[i] <= hi)
+
+    return f, c
