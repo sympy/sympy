@@ -191,15 +191,15 @@ def lagrange_inversion(expr, x, x0=0, n=3, dir="+"):
 
     if n <= 0:
         return x0
-    
+
     # Precomputing
     fx0 = w.subs(x, x0)
     t = Dummy('t')
     w_t = w.subs(x, t)
-    
+
     # Construct the series using a single generator expression
     # Each term k corresponds to (1/k!) * [ d^(k-1)/dt^(k-1) ((t-x0)/(f(t)-f(x0)))^k ]_{t=x0} * (f(x)-f(x0))^k
     return Add(x0, *(
-        (limit(diff(((t - x0) / (w_t - fx0))**k, t, k - 1), t, x0, dir=dir) / factorial(k)) * (w - fx0)**k 
+        (limit(diff(((t - x0) / (w_t - fx0))**k, t, k - 1), t, x0, dir=dir) / factorial(k)) * (w - fx0)**k
         for k in range(1, n)
     ), evaluate=True)
