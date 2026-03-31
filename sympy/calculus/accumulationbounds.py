@@ -765,6 +765,7 @@ def _eval_is_ge(lhs, rhs): # noqa:F811
     if is_lt(lhs.max, rhs.min):
         return False
 
+
 @dispatch(AccumulationBounds, Expr)  # type:ignore
 def _eval_is_ge(lhs, rhs): # noqa: F811
     """
