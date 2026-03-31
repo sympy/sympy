@@ -78,14 +78,20 @@ def satask(proposition, assumptions=True, context=global_assumptions,
         use_known_facts=use_known_facts, iterations=iterations)
     sat.add_from_cnf(assumptions)
 
-    # Check if assumptions themselves are contradictory
+   # Check if assumptions themselves are contradictory
     if not satisfiable(sat.copy()):
-        raise ValueError("Inconsistent assumptions")
+        raise ValueError("Contradictory assumptions")
     if context:
         sat.add_from_cnf(context_cnf)
 
     return check_satisfiability(props, _props, sat)
-
+    if result is None:
+        # Check if both proposition and negation are unsatisfiable (indeterminate)
+        pos = check_satisfiability(props, _props, sat)
+        neg = check_satisfiability(~props, _props, sat)
+        if pos is None and neg is None:
+            return None
+    return result
 
 def check_satisfiability(prop, _prop, factbase):
     sat_true = factbase.copy()
@@ -105,9 +111,7 @@ def check_satisfiability(prop, _prop, factbase):
         return False
 
     if not can_be_true and not can_be_false:
-        # If both can't be true and can't be false, the assumptions are contradictory
-        raise ValueError("Contradictory assumptions")
-
+        raise ValueError("Inconsistent assumptions")
 def extract_predargs(proposition, assumptions=None, context=None):
     """
     Extract every expression in the argument of predicates from *proposition*,

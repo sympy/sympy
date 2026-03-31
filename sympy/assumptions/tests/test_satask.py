@@ -376,3 +376,22 @@ def test_get_relevant_clsfacts():
 def test_issue_27467():
     s = sum(Dummy() for _ in range(10))
     assert all(len(CNF.to_CNF(f).clauses) < 1000 for f in class_fact_registry(s))
+
+def test_satask_indeterminate_issue_27662():
+    """Regression test for issue #27662.
+    satask() should return None for indeterminate cases, not raise ValueError.
+    """
+    x, y = symbols('x y')
+
+    # Core regression: inf * 0 is indeterminate, should return None
+    assert satask(Q.finite(x*y), Q.infinite(x) & Q.zero(y)) is None
+
+    # Genuinely contradictory assumptions should still raise ValueError
+    raises(ValueError, lambda: satask(Q.positive(x), Q.positive(x) & Q.negative(x)))
+
+    # Correct False result should still work
+    assert satask(Q.finite(x) & Q.zero(y), Q.infinite(x) & Q.zero(y)) == False
+
+    # Normal cases unaffected
+    assert satask(Q.positive(x), Q.positive(x)) == True
+    assert satask(Q.negative(x), Q.positive(x)) == False
