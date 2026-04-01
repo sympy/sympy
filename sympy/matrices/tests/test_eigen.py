@@ -158,6 +158,9 @@ def test_float_eigenvals():
     for x, y in zip(n_evals, s_evals):
         assert abs(x-y) < 10**-9
 
+    m = Matrix([[1.0, 0.0], [0.0, 2.0]])
+    assert m.eigenvals(rational=True) == {1: 1, 2: 1}
+
 
 @XFAIL
 def test_eigen_vects():
