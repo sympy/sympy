@@ -202,11 +202,11 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     ...
     TypeError: unbound method...
 
-    In order to have ``bitcount`` be recognized it can be imported into a
+    In order to have ``bitcount`` be recognized it can be defined in a
     namespace dictionary and passed as locals:
 
     >>> ns = {}
-    >>> exec('from sympy.core.evalf import bitcount', ns)
+    >>> exec('bitcount = lambda n: int(n).bit_length()', ns)
     >>> sympify(s, locals=ns)
     6
 

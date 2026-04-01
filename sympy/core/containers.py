@@ -10,7 +10,6 @@ from __future__ import annotations
 
 from collections import OrderedDict
 from collections.abc import MutableSet
-from typing import Any, Callable
 
 from .basic import Basic
 from .sorting import default_sort_key, ordered
@@ -331,7 +330,8 @@ class Dict(Basic):
             return self == Dict(other)
         return super().__eq__(other)
 
-    __hash__ : Callable[[Basic], Any] = Basic.__hash__
+    def __hash__(self):
+        return Basic.__hash__(self)
 
 # this handles dict, defaultdict, OrderedDict
 _sympy_converter[dict] = lambda d: Dict(*d.items())
