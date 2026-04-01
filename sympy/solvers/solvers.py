@@ -89,7 +89,7 @@ def recast_to_symbols(eqs, symbols):
     >>> assert [d.get(i, i) for i in s] == syms
 
     """
-    if not iterable(eqs) and iterable(symbols):
+    if not iterable(eqs) or not iterable(symbols):
         raise ValueError('Both eqs and symbols must be iterable')
     orig = list(symbols)
     symbols = list(ordered(symbols))

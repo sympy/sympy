@@ -27,7 +27,7 @@ from sympy.matrices import MatrixSymbol, SparseMatrix
 from sympy.polys.polytools import Poly, groebner
 from sympy.printing.str import sstr
 from sympy.simplify.radsimp import denom
-from sympy.solvers.solvers import (nsolve, solve, solve_linear)
+from sympy.solvers.solvers import (nsolve, solve, solve_linear, recast_to_symbols)
 
 from sympy.core.function import nfloat
 from sympy.solvers import solve_linear_system, solve_linear_system_LU, \
@@ -2734,3 +2734,15 @@ def test_solve_maxmin():
     assert solve(system, variables) == [(5 - sqrt(42), 67 - 10*sqrt(42)), (5 + sqrt(42), 10*sqrt(42) + 67)]
     system = [Eq(y, Max(3*x, -(S(1)/3)*x)), Eq(y, -(x**2)+10)]
     assert solve(system, variables) == [(-3, 1), (2, 6)]
+
+
+def test_recast_to_symbols():
+    e, s, d = recast_to_symbols([x - 1], [x])
+    assert e == [x - 1]
+    raises(ValueError, lambda: recast_to_symbols(x - 1, [x]))
+    raises(ValueError, lambda: recast_to_symbols([x - 1], x))
+    raises(ValueError, lambda: recast_to_symbols(x - 1, x))
+    raises(ValueError, lambda: recast_to_symbols([x - 1], None))
+    raises(ValueError, lambda: recast_to_symbols([x - 1], 42))
+    raises(ValueError, lambda: recast_to_symbols(42, [x]))
+    raises(ValueError, lambda: recast_to_symbols(42, 99))
