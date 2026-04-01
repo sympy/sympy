@@ -424,5 +424,22 @@ def test_is_positive_over():
     assert is_positive_over(z**2 - 1, z, S.Reals) is False
     assert is_positive_over(z**2 - 1, z, Interval(2, oo)) is True
 
-
     assert is_positive_over(2**z - z, z) is False
+
+def test_is_negative_over():
+    from sympy.calculus.util import is_negative_over
+    from sympy import Symbol, S, Interval, oo
+    y = Symbol('y', positive=True)
+
+    assert is_negative_over(y - 2**y, y) is True
+    assert is_negative_over(y - exp(y), y) is True
+
+    assert is_negative_over(2**y - y, y) is False
+    assert is_negative_over(y**2 - y, y) is False
+
+    z = Symbol('x')
+    assert is_negative_over(-z**2 - 1, z, S.Reals) is True
+    assert is_negative_over(-z**2 + 1, z, S.Reals) is False
+    assert is_negative_over(-z**2 + 1, z, Interval(2, oo)) is True
+
+    assert is_negative_over(2**z - z, z) is False

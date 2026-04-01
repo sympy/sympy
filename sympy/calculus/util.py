@@ -937,3 +937,46 @@ def is_positive_over(f, symbol, domain=None):
         return bool(function_range(f, symbol, domain).inf.is_positive)
     except (ValueError, NotImplementedError):
         return False
+
+def is_negative_over(f, symbol, domain=None):
+    """Return True if f < 0 for all values of symbol in domain.
+
+    When domain is None, it is inferred from the symbol's
+    assumptions (e.g. positive=True gives Interval.open(0, oo)).
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol
+    >>> from sympy.calculus.util import is_negative_over
+    >>> y = Symbol('y', positive=True)
+    >>> is_negative_over(y - 2**y, y)
+    True
+    >>> is_negative_over(y**2 - y, y)
+    False
+    """
+    f = _sympify(f)
+    if not isinstance(symbol, Symbol):
+        raise ValueError("%s is not a valid symbol." % symbol)
+
+    if domain is None:
+        if symbol.is_positive:
+            domain = Interval(0, S.Infinity, left_open=True)
+        elif symbol.is_nonnegative:
+            domain = Interval(0, S.Infinity)
+        elif symbol.is_negative:
+            domain = Interval(S.NegativeInfinity, 0, right_open=True)
+        elif symbol.is_nonpositive:
+            domain = Interval(S.NegativeInfinity, 0)
+        elif symbol.is_real:
+            domain = Interval(S.NegativeInfinity, S.Infinity)
+        else:
+            return False
+
+    if domain is S.EmptySet:
+        return False
+
+    try:
+        return bool(function_range(f, symbol, domain).sup.is_negative)
+    except (ValueError, NotImplementedError):
+        return False
