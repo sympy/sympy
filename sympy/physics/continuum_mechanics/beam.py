@@ -386,15 +386,16 @@ class Beam:
         """
         return self._boundary_conditions
 
-    # This converts all the boundary conditions points into rationals
     def bc_setter(self, bc):
-        l = []
-        for j in bc:
-            if iterable(j):
-                l.append(self.bc_setter(j))
-            else:
-                l.append(nsimplify(j))
-        return l
+        """
+        This converts all the boundary conditions points into rationals.
+        """
+        if isinstance(bc, tuple):
+            return tuple(self.bc_setter(e) for e in bc)
+        elif isinstance(bc, list):
+            return [self.bc_setter(e) for e in bc]
+        else:
+            return nsimplify(bc)
 
     @property
     def bc_shear_force(self):
@@ -402,8 +403,7 @@ class Beam:
 
     @bc_shear_force.setter
     def bc_shear_force(self, sf_bcs):
-        for bc in sf_bcs:
-            self._boundary_conditions['shear_force'].append(tuple(self.bc_setter(bc)))
+        self._boundary_conditions['shear_force'].extend(self.bc_setter(sf_bcs))
 
     @property
     def bc_bending_moment(self):
@@ -411,8 +411,7 @@ class Beam:
 
     @bc_bending_moment.setter
     def bc_bending_moment(self, bm_bcs):
-        for bc in bm_bcs:
-            self._boundary_conditions['bending_moment'].append(tuple(self.bc_setter(bc)))
+        self._boundary_conditions['bending_moment'].extend(self.bc_setter(bm_bcs))
 
     @property
     def bc_slope(self):
@@ -420,8 +419,7 @@ class Beam:
 
     @bc_slope.setter
     def bc_slope(self, s_bcs):
-        for bc in s_bcs:
-            self._boundary_conditions['slope'].append(tuple(self.bc_setter(bc)))
+        self._boundary_conditions['slope'].extend(self.bc_setter(s_bcs))
 
     @property
     def bc_deflection(self):
@@ -429,8 +427,7 @@ class Beam:
 
     @bc_deflection.setter
     def bc_deflection(self, d_bcs):
-        for bc in d_bcs:
-            self._boundary_conditions['deflection'].append(tuple(self.bc_setter(bc)))
+        self._boundary_conditions['deflection'].extend(self.bc_setter(d_bcs))
 
     def join(self, beam, via="fixed"):
         """
@@ -2907,7 +2904,7 @@ class Beam3D(Beam):
         >>> from sympy import symbols
         >>> l, E, G, I, A, x = symbols('l, E, G, I, A, x')
         >>> b = Beam3D(30, E, G, I, A, x)
-        >>> b.bc_slope = [(0, (4, 0, 0))]
+        >>> b.bc_slope = [(0, [4, 0, 0])]
         >>> b.bc_deflection = [(4, [0, 0, 0])]
         >>> b.boundary_conditions
         {'bending_moment': [], 'deflection': [(4, [0, 0, 0])], 'shear_force': [], 'slope': [(0, [4, 0, 0])]}
