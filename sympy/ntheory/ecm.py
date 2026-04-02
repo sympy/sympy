@@ -1,10 +1,13 @@
 from __future__ import annotations
 from math import log
+
 from sympy.core.random import _randint
 from sympy.external.gmpy import gcd, invert, sqrt
 from sympy.utilities.misc import as_int
 from .generate import sieve, primerange
 from .primetest import isprime
+
+
 #----------------------------------------------------------------------------#
 #                                                                            #
 #                   Lenstra's Elliptic Curve Factorization                   #
@@ -56,7 +59,7 @@ class Point:
         """Two points are equal if X/Z of both points are equal
         """
         if not isinstance(other,Point):
-            return False
+            raise TypeError("TypeError")
         if self.a_24 != other.a_24 or self.mod != other.mod:
             return False
         return self.x_cord * other.z_cord % self.mod ==\
