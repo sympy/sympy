@@ -126,14 +126,14 @@ def test_Beam():
     q = -4*SingularityFunction(x, 0, 2) + 3*SingularityFunction(x, 10, 2) \
     + 120*SingularityFunction(x, 30, 1) + SingularityFunction(x, 30, 2) \
     + Rational(4000, 3)
-    assert p.equals(q/(E*I))
+    assert p == q/(E*I)
 
     # Test for deflection distribution function
     p = b1.deflection()
     q = x*Rational(4000, 3) - 4*SingularityFunction(x, 0, 3)/3 \
     + SingularityFunction(x, 10, 3) + 60*SingularityFunction(x, 30, 2) \
     + SingularityFunction(x, 30, 3)/3 - 12000
-    assert p.equals(q/(E*I))
+    assert p == q/(E*I)
 
     # Test using symbols
     l = Symbol('l')
@@ -215,15 +215,14 @@ def test_Beam():
     assert p == q
 
     p = b3.slope()
-    q = 2 - (SingularityFunction(x, 2, 5)/30 - SingularityFunction(x, 3, 3)/3 \
-    - SingularityFunction(x, 3, 4)/6 - SingularityFunction(x, 3, 5)/30)/(E*I)
+    q = 2 + (-SingularityFunction(x, 2, 5)/30 + SingularityFunction(x, 3, 3)/3 \
+    + SingularityFunction(x, 3, 4)/6 + SingularityFunction(x, 3, 5)/30)/(E*I)
     assert p == q
 
     p = b3.deflection()
-    q = 2*x - (SingularityFunction(x, 2, 6)/180 \
-    - SingularityFunction(x, 3, 4)/12 - SingularityFunction(x, 3, 5)/30 \
-    - SingularityFunction(x, 3, 6)/180)/(E*I)
-    assert p == q + C4
+    q = C4 + 2*x + (-SingularityFunction(x, 2, 6)/180 + SingularityFunction(x, 3, 4)/12 \
+    + SingularityFunction(x, 3, 5)/30 + SingularityFunction(x, 3, 6)/180)/(E*I)
+    assert p == q
 
     b4 = Beam(4, E, I, 3)
     b4.apply_load(-3, 0, 0, end=3)
@@ -242,12 +241,12 @@ def test_Beam():
     assert p == q
 
     p = b4.slope()
-    q = -3*SingularityFunction(x, 0, 3)/6 + 3*SingularityFunction(x, 3, 3)/6
-    assert p.equals(q/(E*I) + C3)
+    q = C3 - (SingularityFunction(x, 0, 3)/2 - SingularityFunction(x, 3, 3)/2)/(E*I)
+    assert p == q
 
     p = b4.deflection()
-    q = -3*SingularityFunction(x, 0, 4)/24 + 3*SingularityFunction(x, 3, 4)/24
-    assert p.equals(q/(E*I) + C3*x + C4)
+    q = C3*x + C4 - (SingularityFunction(x, 0, 4)/8 - SingularityFunction(x, 3, 4)/8)/(E*I)
+    assert p == q
 
     # can't use end with point loads
     raises(ValueError, lambda: b4.apply_load(-3, 0, -1, end=3))
@@ -255,14 +254,14 @@ def test_Beam():
         b4.variable = 1
 
     b = Beam(length=10000.,
-             elastic_modulus=210000,
-             second_moment=7.3808551e+07)
-    b.apply_support(loc=Rational(7000, 1), type='roller')
-    b.apply_support(loc=Rational(0.), type='pin')
+         elastic_modulus=210000,
+         second_moment=7.3808551e+07)
+    b.apply_support(loc=7000., type='roller')
+    b.apply_support(loc=0., type='pin')
     R_NH = symbols('R_NH')
-    b.apply_load(R_NH, Rational(5000, 1), -1)
-    b.bc_deflection.append((Rational(5000, 1), 0))
-    b.apply_load(Rational(32000, 1), Rational(4000, 1), -1)
+    b.apply_load(R_NH, 5000., -1)
+    b.bc_deflection.append((5000., 0))
+    b.apply_load(32000., 4000., -1)
     b.solve_for_reaction_loads(*(i[0] for i in b.applied_loads))
     q = -1.00277819357512e-10*SingularityFunction(x, 0.0, 2) \
     + 1.03227166985674e-9*SingularityFunction(x, 4000.0, 2) \
@@ -293,22 +292,22 @@ def test_insufficient_bconditions():
     b.solve_for_reaction_loads(R1, R2)
 
     p = b.slope()
-    q = P*SingularityFunction(x, 0, 2)/4 - P*SingularityFunction(x, L/2, 2)/2 + P*SingularityFunction(x, L, 2)/4
-    assert p.equals(q/(E*I) + a3)
+    q = a3 - (-P*SingularityFunction(x, 0, 2)/4 + P*SingularityFunction(x, L/2, 2)/2 - P*SingularityFunction(x, L, 2)/4)/(E*I)
+    assert p == q
 
     p = b.deflection()
-    q = P*SingularityFunction(x, 0, 3)/12 - P*SingularityFunction(x, L/2, 3)/6 + P*SingularityFunction(x, L, 3)/12
-    assert p.equals(q/(E*I) + a3*x + a4)
+    q = a3*x + a4 - (-P*SingularityFunction(x, 0, 3)/12 + P*SingularityFunction(x, L/2, 3)/6 - P*SingularityFunction(x, L, 3)/12)/(E*I)
+    assert p == q
 
     b.bc_deflection = [(0, 0)]
     p = b.deflection()
-    q = P*SingularityFunction(x, 0, 3)/12 - P*SingularityFunction(x, L/2, 3)/6 + P*SingularityFunction(x, L, 3)/12
-    assert p.equals(q/(E*I) + a3*x)
+    q = a3*x + (P*SingularityFunction(x, 0, 3)/12 - P*SingularityFunction(x, L/2, 3)/6 + P*SingularityFunction(x, L, 3)/12)/(E*I)
+    assert p == q
 
     b.bc_deflection = [(0, 0), (L, 0)]
     p = b.deflection()
     q = -L**2*P*x/16 + P*SingularityFunction(x, 0, 3)/12 - P*SingularityFunction(x, L/2, 3)/6 + P*SingularityFunction(x, L, 3)/12
-    assert p.equals(q/(E*I))
+    assert p == q/(E*I)
 
 
 def test_statically_indeterminate():
@@ -723,10 +722,10 @@ def test_apply_support():
     b.apply_load(-8, 0, -1)
     b.apply_load(120, 30, -2)
     b.solve_for_reaction_loads(p0, p1)
-    assert b.slope().equals((-4*SingularityFunction(x, 0, 2) + 3*SingularityFunction(x, 10, 2)
-            + 120*SingularityFunction(x, 30, 1) + SingularityFunction(x, 30, 2) + Rational(4000, 3))/(E*I))
-    assert b.deflection().equals((x*Rational(4000, 3) - 4*SingularityFunction(x, 0, 3)/3 + SingularityFunction(x, 10, 3)
-            + 60*SingularityFunction(x, 30, 2) + SingularityFunction(x, 30, 3)/3 - 12000)/(E*I))
+    assert b.slope() == (-4*SingularityFunction(x, 0, 2) + 3*SingularityFunction(x, 10, 2)
+            + 120*SingularityFunction(x, 30, 1) + SingularityFunction(x, 30, 2) + Rational(4000, 3))/(E*I)
+    assert b.deflection() == (x*Rational(4000, 3) - 4*SingularityFunction(x, 0, 3)/3 + SingularityFunction(x, 10, 3)
+            + 60*SingularityFunction(x, 30, 2) + SingularityFunction(x, 30, 3)/3 - 12000)/(E*I)
     R_10 = Symbol('R_10')
     R_30 = Symbol('R_30')
     assert p0 == R_10
@@ -937,10 +936,11 @@ def test_apply_sliding_hinge():
     assert (b.bending_moment() == l1*q*SingularityFunction(x, 0, 1)/2 + l1*q*SingularityFunction(x, l1, 1)/2
             - q*SingularityFunction(x, 0, 2)/2 + q*SingularityFunction(x, l1, 2)/2
             + (-l1**3*l2*q/24 - l1**3*l3*q/24)*SingularityFunction(x, l1 + l2, -2))
-    assert b.deflection().equals((l1**3*q*x/24 - l1*q*SingularityFunction(x, 0, 3)/12
-                             - l1*q*SingularityFunction(x, l1, 3)/12 + q*SingularityFunction(x, 0, 4)/24
-                             - q*SingularityFunction(x, l1, 4)/24
-                             + (l1**3*l2*q/24 + l1**3*l3*q/24)*SingularityFunction(x, l1 + l2, 0))/(E*I))
+    assert b.deflection() ==(l1**3*l2*q*SingularityFunction(x, l1 + l2, 0)/24 \
+                             + l1**3*l3*q*SingularityFunction(x, l1 + l2, 0)/24 \
+                             + l1**3*q*x/24 - l1*q*SingularityFunction(x, 0, 3)/12 \
+                             - l1*q*SingularityFunction(x, l1, 3)/12 + q*SingularityFunction(x, 0, 4)/24 \
+                             - q*SingularityFunction(x, l1, 4)/24)/(E*I)
 
 def test_max_shear_force():
     E = Symbol('E')
@@ -1359,12 +1359,12 @@ def test_cross_section():
                          + 90*SingularityFunction(x, 45, -2) + 8*SingularityFunction(x, 50, -1)/9)
     assert b1.bending_moment() == (10*SingularityFunction(x, 0, 1) - 82*SingularityFunction(x, 5, 1)/9
                                      - 90*SingularityFunction(x, 45, 0) - 8*SingularityFunction(x, 50, 1)/9)
-    q = (-5*SingularityFunction(x, 0, 2) + 41*SingularityFunction(x, 5, 2)/S(9)
-           + 90*SingularityFunction(x, 45, 1) + 4*SingularityFunction(x, 50, 2)/S(9))/(pi*E*r*Abs(r)**3)
-    assert b1.slope().equals(C3 + 4*q)
-    q = (-5*SingularityFunction(x, 0, 3)/3 + 41*SingularityFunction(x, 5, 3)/27 + 45*SingularityFunction(x, 45, 2)
-           + 4*SingularityFunction(x, 50, 3)/27)/(pi*E*r*Abs(r)**3)
-    assert b1.deflection().equals(C3*x + C4 + 4*q)
+    q = (5*SingularityFunction(x, 0, 2) - 41*SingularityFunction(x, 5, 2)/9 \
+         - 90*SingularityFunction(x, 45, 1) - 4*SingularityFunction(x, 50, 2)/9)/(pi*E*r*Abs(r)**3)
+    assert b1.slope() == C3 - 4*q
+    q = (5*SingularityFunction(x, 0, 3)/3 - 41*SingularityFunction(x, 5, 3)/27 \
+         - 45*SingularityFunction(x, 45, 2) - 4*SingularityFunction(x, 50, 3)/27)/(pi*E*r*Abs(r)**3)
+    assert b1.deflection() == C3*x + C4 - 4*q
 
     # beam with a recatangular cross-section
     b2 = Beam(20, E, Polygon((0, 0), (a, 0), (a, c), (0, c)))

@@ -457,7 +457,7 @@ class Beam:
         >>> b.load
         80*SingularityFunction(x, 0, -2) - 20*SingularityFunction(x, 0, -1) + 20*SingularityFunction(x, 4, -1)
         >>> b.slope()
-        (-((-80*SingularityFunction(x, 0, 1) + 10*SingularityFunction(x, 0, 2) - 10*SingularityFunction(x, 4, 2))/I + 120/I)/E + 80.0/(E*I))*SingularityFunction(x, 2, 0)
+        (-(-80*SingularityFunction(x, 0, 1) + 10*SingularityFunction(x, 0, 2) - 10*SingularityFunction(x, 4, 2))/(E*I) - 40.0/(E*I))*SingularityFunction(x, 2, 0)
         - 0.666666666666667*(-80*SingularityFunction(x, 0, 1) + 10*SingularityFunction(x, 0, 2) - 10*SingularityFunction(x, 4, 2))*SingularityFunction(x, 0, 0)/(E*I)
         + 0.666666666666667*(-80*SingularityFunction(x, 0, 1) + 10*SingularityFunction(x, 0, 2) - 10*SingularityFunction(x, 4, 2))*SingularityFunction(x, 2, 0)/(E*I)
         """
@@ -1392,11 +1392,6 @@ class Beam:
         bending_moment_eqn = self.bending_moment()
         slope_eqn = -integrate(bending_moment_eqn/(E*I), x) + C3
         deflection_eqn = integrate(slope_eqn, x) + C4
-        eqns = {
-            "bending_moment": bending_moment_eqn,
-            "slope": slope_eqn,
-            "deflection": deflection_eqn
-        }
 
         if isinstance(I, Piecewise):
             lower_limit = 0
@@ -1404,8 +1399,7 @@ class Beam:
             slope_eqn = 0
             for second_moment in I.args:
                 upper_limit = second_moment[-1].args[-1]
-                M = Add(*[term for term in bending_moment_eqn.args if term.args[-1].args[1] <= upper_limit])
-                slope = -integrate(M/(E*second_moment[0]), (x, lower_limit, x)) + prev_slope
+                slope = -integrate(bending_moment_eqn/(E*second_moment[0]), (x, lower_limit, x)) + prev_slope
                 slope_eqn += slope*SingularityFunction(x, lower_limit, 0)
                 if second_moment != I.args[-1]:
                     slope_eqn += -slope*SingularityFunction(x, upper_limit, 0)
@@ -1420,24 +1414,23 @@ class Beam:
         bc_eqns = []
         C3_eqn = False # Flag for eqn containing C3
         C4_eqn = False # Flag for eqn containing C4
-        for curve, eqn in eqns.items():
-            if curve in ["slope", "deflection"]:
+        for curve, eqn in [('slope', slope_eqn), ('deflection', deflection_eqn)]:
+            if C3_eqn and C4_eqn:
+                break
+            for position, value in self._boundary_conditions[curve]:
                 if C3_eqn and C4_eqn:
                     break
-                for position, value in self._boundary_conditions[curve]:
-                    if C3_eqn and C4_eqn:
-                        break
-                    eq = eqn.subs(x, position) - value
-                    if not Abs(eq).has(oo) and eq not in bc_eqns:
-                        if eq.has(C3) and not C3_eqn:
-                            bc_eqns.append(eq)
-                            C3_eqn = True
-                        elif eq.has(C4) and not C4_eqn:
-                            bc_eqns.append(eq)
-                            C4_eqn = True
+                eq = eqn.subs(x, position) - value
+                if not Abs(eq).has(oo) and eq not in bc_eqns:
+                    if eq.has(C3) and not C3_eqn:
+                        bc_eqns.append(eq)
+                        C3_eqn = True
+                    elif eq.has(C4) and not C4_eqn:
+                        bc_eqns.append(eq)
+                        C4_eqn = True
 
         constants = linsolve(bc_eqns[:2], (C3, C4)).args[0]
-        slope_eqn = slope_eqn.subs({C3: constants[0]})
+        slope_eqn = slope_eqn.subs({C3: constants[0]}).collect(E*I)
 
         return slope_eqn
 
@@ -1478,16 +1471,9 @@ class Beam:
         E = self.elastic_modulus
         I = self.second_moment
         C3, C4 = symbols(self._base_char + '3:5') if self._base_char else symbols("C3 C4")
-        shear_force = self.shear_force()
         bending_moment_eqn = self.bending_moment()
         slope_eqn = -integrate(bending_moment_eqn/(E*I), x) + C3
         deflection_eqn = integrate(slope_eqn, x) + C4
-        eqns = {
-            "shear_force": shear_force,
-            "bending_moment": bending_moment_eqn,
-            "slope": slope_eqn,
-            "deflection": deflection_eqn
-        }
 
         if isinstance(I, Piecewise):
             lower_limit = 0
@@ -1496,8 +1482,7 @@ class Beam:
             deflection_eqn = 0
             for second_moment in I.args:
                 upper_limit = second_moment[-1].args[-1]
-                M = Add(*[term for term in bending_moment_eqn.args if term.args[-1].args[1] <= upper_limit])
-                slope = -integrate(M/(E*second_moment[0]), (x, lower_limit, x)) + prev_slope
+                slope = -integrate(bending_moment_eqn/(E*second_moment[0]), (x, lower_limit, x)) + prev_slope
                 deflection = integrate(slope, (x, lower_limit, x)) + prev_deflection
                 deflection_eqn += deflection*SingularityFunction(x, lower_limit, 0)
                 if second_moment != I.args[-1]:
@@ -1514,7 +1499,7 @@ class Beam:
         bc_eqns = []
         C3_eqn = False # Flag for eqn containing C3
         C4_eqn = False # Flag for eqn containing C4
-        for curve, eqn in eqns.items():
+        for curve, eqn in [('slope', slope_eqn), ('deflection', deflection_eqn)]:
             if C3_eqn and C4_eqn:
                 break
             for position, value in self._boundary_conditions[curve]:
@@ -1530,7 +1515,7 @@ class Beam:
                         C4_eqn = True
 
         constants = linsolve(bc_eqns, (C3, C4)).args[0]
-        deflection_eqn = deflection_eqn.subs({C3: constants[0], C4: constants[1]})
+        deflection_eqn = deflection_eqn.subs({C3: constants[0], C4: constants[1]}).collect(E*I)
 
         return deflection_eqn
 
