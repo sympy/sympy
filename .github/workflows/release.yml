@@ -146,7 +146,7 @@ jobs:
       name: test-pypi
       url: https://test.pypi.org/p/sympy
     permissions:
-      id-token: write
+      id-token: write # to authenticate with trusted publishing
     runs-on: ubuntu-latest
 
     steps:
@@ -175,7 +175,7 @@ jobs:
       name: pypi
       url: https://pypi.org/p/sympy
     permissions:
-      id-token: write
+      id-token: write # to authenticate with trusted publishing
     runs-on: ubuntu-latest
 
     steps:
@@ -210,7 +210,7 @@ jobs:
     needs: [check-final]
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: write # to create and update GitHub releases
 
     steps:
       - name: Checkout sympy

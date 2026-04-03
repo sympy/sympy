@@ -20,7 +20,7 @@ jobs:
       )
     runs-on: ubuntu-latest
     permissions:
-      statuses: write
+      statuses: write # to update the status check target URL
     name: Run CircleCI artifacts redirector
     steps:
       - name: GitHub Action step

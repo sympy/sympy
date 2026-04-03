@@ -16,8 +16,8 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  pull-requests: read
-  issues: write
+  pull-requests: read # to check if PR is mergeable.
+  issues: write # to add and remove the merge-conflict label
 
 jobs:
   main:
