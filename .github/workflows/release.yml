@@ -272,10 +272,12 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Checkout sympy_doc
+      # XXX: Keep credentials configured here so update_docs.py can git
+      # pull/push via the SSH key in the checked-out sympy_doc repository.
+      - name: Checkout sympy_doc # zizmor: ignore[artipacked]
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
-          persist-credentials: false
+          persist-credentials: true
           repository: sympy/sympy_doc
           ref: gh-pages
           ssh-key: ${{ secrets.SYMPY_DOC_RELEASE_PUSH_TOKEN }} # zizmor: ignore[secrets-outside-env]
