@@ -15,13 +15,14 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
-permissions:
-  pull-requests: read # to check if PR is mergeable.
-  issues: write # to add and remove the merge-conflict label
+permissions: {}
 
 jobs:
   main:
     name: Check Merge Conflicts
+    permissions:
+      pull-requests: read # to check if PR is mergeable.
+      issues: write # to add and remove the merge-conflict label
     runs-on: ubuntu-latest
     steps:
       - name: Check if PRs have merge conflicts
