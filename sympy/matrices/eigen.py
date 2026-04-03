@@ -84,11 +84,19 @@ def _eigenvals_mpmath(M, multiple=False):
 def _eigenvects_mpmath(M):
     from sympy import ImmutableMatrix
     E, ER = _eigenvals_eigenvects_mpmath(M)
+    grouped_eigenvects = {}
     result = []
     for i in range(M.rows):
         eigenval = _sympify(E[i])
         eigenvect = ImmutableMatrix(ER[i])
-        result.append((eigenval, 1, [eigenvect]))
+
+        if eigenval in grouped_eigenvects:
+            grouped_eigenvects[eigenval].append(eigenvect)
+        else:
+            grouped_eigenvects[eigenval] = [eigenvect]
+
+    for eigenval, eigenvects in grouped_eigenvects.items():
+        result.append((eigenval, len(eigenvects), eigenvects))
 
     return result
 
