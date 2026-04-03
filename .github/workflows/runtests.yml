@@ -497,7 +497,7 @@ jobs:
         uses: JamesIves/github-pages-deploy-action@d92aa235d04922e8f08b40ce78cc5442fcfbfa2f # v4
         with:
           folder: doc/_build/html
-          ssh-key: ${{ secrets.DEPLOY_KEY }}
+          ssh-key: ${{ secrets.DEPLOY_KEY }} # zizmor: ignore[secrets-outside-env]
           repository-name: sympy/sympy_doc
           target-folder: dev
 

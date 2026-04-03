@@ -273,7 +273,7 @@ jobs:
           persist-credentials: false
           repository: sympy/sympy_doc
           ref: gh-pages
-          ssh-key: ${{ secrets.SYMPY_DOC_RELEASE_PUSH_TOKEN }}
+          ssh-key: ${{ secrets.SYMPY_DOC_RELEASE_PUSH_TOKEN }} # zizmor: ignore[secrets-outside-env]
           path: sympy_doc
 
       - run: git config --global user.name "SymPy GitHub Actions release bot"
