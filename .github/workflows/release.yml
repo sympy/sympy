@@ -265,8 +265,6 @@ jobs:
     # Only run for a final release
     if: ${{ needs.check-final.outputs.is-final == 'true' }}
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
 
     steps:
       - name: Checkout sympy
