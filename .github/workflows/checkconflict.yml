@@ -11,6 +11,10 @@ on:
   pull_request_target: # zizmor: ignore[dangerous-triggers]
     types: [synchronize]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 permissions:
   pull-requests: read
   issues: write

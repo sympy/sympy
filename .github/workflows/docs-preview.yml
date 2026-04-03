@@ -1,6 +1,10 @@
 name: Docs Preview
 on: [status]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.context }}-${{ github.event.sha || github.run_id }}
+  cancel-in-progress: true
+
 permissions: {}
 
 jobs:
