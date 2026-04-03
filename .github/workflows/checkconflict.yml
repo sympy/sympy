@@ -3,10 +3,12 @@ on:
   # So that PRs touching the same files as the push are updated
   push:
   # So that the `dirtyLabel` is removed if conflicts are resolve
-  # This workflow needs to update labels on fork PRs, so it uses the
+
+  # XXX: This workflow needs to update labels on fork PRs, so it uses the
   # privileged pull_request_target event. Do not add checkout or shell steps
   # that consume PR-controlled data here.
-  pull_request_target:
+
+  pull_request_target: # zizmor: ignore[dangerous-triggers]
     types: [synchronize]
 
 permissions:
