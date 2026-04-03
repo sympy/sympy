@@ -49,13 +49,13 @@ jobs:
           pip install --upgrade setuptools pip wheel build
           pip install .
           bin/mailmap_check.py --update-authors
-          mkdir -p release-${{ env.release_version }}
+          mkdir -p "release-$release_version"
           python -m build --wheel
-          mv dist/sympy-${{ env.release_version }}-py3-none-any.whl release-${{ env.release_version }}/
+          mv "dist/sympy-$release_version-py3-none-any.whl" "release-$release_version/"
           python -m build --sdist
-          mv dist/sympy-${{ env.release_version }}.tar.gz release-${{ env.release_version }}/
-          release/compare_tar_against_git.py release-${{ env.release_version }}/sympy-${{ env.release_version }}.tar.gz .
-          release/authors.py ${{ env.release_version }} ${{ env.previous_version }} release-${{ env.release_version }}
+          mv "dist/sympy-$release_version.tar.gz" "release-$release_version/"
+          release/compare_tar_against_git.py "release-$release_version/sympy-$release_version.tar.gz" .
+          release/authors.py "$release_version" "$previous_version" "release-$release_version"
 
       - name: Store package release files
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
@@ -84,8 +84,8 @@ jobs:
 
       - name: Build release docs
         run: |
-          mkdir -p release-${{ env.release_version }}
-          python release/build_docs.py ${{ env.release_version }} release-${{ env.release_version }}
+          mkdir -p "release-$release_version"
+          python release/build_docs.py "$release_version" "release-$release_version"
 
       - name: Store docs release files
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
@@ -120,7 +120,7 @@ jobs:
         run: ls -R
 
       - name: Install wheel
-        run: pip install sympy-${{ env.release_version }}-py3-none-any.whl
+        run: pip install "sympy-$release_version-py3-none-any.whl"
 
       - name: Install test-only dependencies
         run: pip install pytest pytest-xdist hypothesis
@@ -229,26 +229,26 @@ jobs:
           path: dist
 
       - name: Generate checksums
-        run: python release/sha256.py ${{ env.release_version }} dist
+        run: python release/sha256.py "$release_version" dist
 
       - name: Create GitHub prerelease
         if: ${{ needs.check-final.outputs.is-final != 'true' }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: >
-          gh release create ${{ env.release_version }} dist/*
+          gh release create "$release_version" dist/*
               --prerelease
-              --title "SymPy ${{ env.release_version }}"
-              --notes "See https://github.com/sympy/sympy/wiki/release-notes-for-${{ env.final_release_version }} for release notes"
+              --title "SymPy $release_version"
+              --notes "See https://github.com/sympy/sympy/wiki/release-notes-for-$final_release_version for release notes"
 
       - name: Create Final GitHub release
         if: ${{ needs.check-final.outputs.is-final == 'true' }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: >
-          gh release create ${{ env.release_version }} dist/*
-              --title "SymPy ${{ env.release_version }}"
-              --notes "See https://github.com/sympy/sympy/wiki/release-notes-for-${{ env.final_release_version }} for release notes"
+          gh release create "$release_version" dist/*
+              --title "SymPy $release_version"
+              --notes "See https://github.com/sympy/sympy/wiki/release-notes-for-$final_release_version for release notes"
 
   # -------------------- Update the docs repository ---------------- #
 
@@ -288,7 +288,7 @@ jobs:
         run: >
           release/update_docs.py
           sympy_doc
-          dist/sympy-docs-html-${{ env.release_version }}.zip
-          ${{ env.release_version }}
-          ${{ env.dev_version }}
+          "dist/sympy-docs-html-$release_version.zip"
+          "$release_version"
+          "$dev_version"
           --push

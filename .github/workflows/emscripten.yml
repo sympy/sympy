@@ -72,9 +72,12 @@ jobs:
         run: mv test_durations_merged.json .test_durations
 
       - name: Set up Pyodide virtual environment and test SymPy for Pyodide
+        env:
+          MATRIX_SPLITS: ${{ matrix.splits }}
+          MATRIX_GROUP: ${{ matrix.group }}
         run: |
           # Set up Pyodide virtual environment
-          pyodide xbuildenv install ${{ env.PYODIDE_VERSION }}
+          pyodide xbuildenv install "$PYODIDE_VERSION"
           pyodide venv .venv-pyodide
 
           # Activate the virtual environment and install SymPy
@@ -88,12 +91,14 @@ jobs:
           # Trigger test suite (slow and tooslow tests are skipped by default)
           pytest -svra --pyargs sympy \
           --durations 20 \
-          --splits ${{ matrix.splits }} --group ${{ matrix.group }} \
+          --splits "$MATRIX_SPLITS" --group "$MATRIX_GROUP" \
           --store-durations
 
       - name: Move and rename test duration artifacts
         if: always()
-        run: mv .test_durations test_durations_group_${{ matrix.group }}.json
+        env:
+          MATRIX_GROUP: ${{ matrix.group }}
+        run: mv .test_durations "test_durations_group_${MATRIX_GROUP}.json"
 
       - name: Upload test duration artifacts
         if: always()
