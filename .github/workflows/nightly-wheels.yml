@@ -22,6 +22,7 @@ permissions: {}
 
 jobs:
   nightly-wheel:
+    name: Build Nightly Wheel
     permissions:
       contents: read
     runs-on: ubuntu-latest
@@ -45,6 +46,7 @@ jobs:
   # Keep this job separate from the nightly-wheel job to limit exposure to the
   # secrets.
   nightly-wheel-upload:
+    name: Upload Nightly Wheel
     needs: nightly-wheel
     permissions: {}
     runs-on: ubuntu-latest

@@ -21,6 +21,7 @@ permissions:
 
 jobs:
   main:
+    name: Check Merge Conflicts
     runs-on: ubuntu-latest
     steps:
       - name: Check if PRs have merge conflicts

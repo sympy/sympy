@@ -21,6 +21,7 @@ jobs:
   # -------------------- Code quality ------------------------------ #
 
   code-quality:
+    name: Code Quality
 
     runs-on: ubuntu-latest
     steps:
@@ -68,6 +69,7 @@ jobs:
   # ----------------------------- mypy ----------------------------- #
 
   mypy:
+    name: Mypy
     needs: code-quality
 
     runs-on: ubuntu-latest
@@ -85,6 +87,7 @@ jobs:
         run: mypy sympy
 
   mypy-flint:
+    name: Mypy With python-flint
     needs: code-quality
 
     runs-on: ubuntu-latest
@@ -104,6 +107,7 @@ jobs:
   # ------------------------- sphinx-lint -------------------------- #
 
   sphinx-lint:
+    name: Sphinx Lint
     needs: code-quality
 
     runs-on: ubuntu-latest
@@ -123,6 +127,7 @@ jobs:
   # --------------------------- check authors ---------------------- #
 
   authors:
+    name: Check Authors
     needs: code-quality
     runs-on: ubuntu-latest
     steps:
@@ -141,6 +146,7 @@ jobs:
   # -------------------- Doctests latest Python -------------------- #
 
   doctests-latest:
+    name: Doctests
     needs: code-quality
 
     runs-on: ubuntu-latest
@@ -255,6 +261,7 @@ jobs:
   # -------------------- FLINT tests -------------------------------- #
 
   python-flint:
+    name: python-flint
     needs: [doctests-latest, tests-latest]
 
     runs-on: ubuntu-latest
@@ -274,6 +281,7 @@ jobs:
   # -------------------- FLINT+gmpy2 ------------------------------ #
 
   flint-gmpy2:
+    name: python-flint + gmpy2
     needs: [doctests-latest, tests-latest]
 
     runs-on: ubuntu-latest
@@ -293,6 +301,7 @@ jobs:
   # -------------------- Tensorflow tests -------------------------- #
 
   tensorflow:
+    name: TensorFlow
     needs: [doctests-latest, tests-latest]
 
     runs-on: ubuntu-latest
@@ -313,6 +322,7 @@ jobs:
   # -------------------- PyTorch tests -------------------------- #
 
   pytorch:
+    name: PyTorch
     needs: [doctests-latest, tests-latest]
 
     runs-on: ubuntu-latest
@@ -332,6 +342,7 @@ jobs:
   # -------------------- SymEngine tests --------------------------- #
 
   symengine:
+    name: SymEngine
     needs: [doctests-latest, tests-latest]
 
     runs-on: ubuntu-latest
@@ -353,6 +364,7 @@ jobs:
   # ------------------------- Slow tests --------------------------- #
 
   tests-slow:
+    name: Slow Tests
     needs: code-quality
 
     runs-on: ubuntu-latest
@@ -456,6 +468,7 @@ jobs:
   # -------------------- Build the html/latex docs ----------------- #
 
   sphinx:
+    name: Build Docs
     needs: code-quality
 
     runs-on: ubuntu-latest
@@ -482,6 +495,7 @@ jobs:
   # Keep this job separate from the sphinx job that installs packages from pypi
   # to limit exposure to the DEPLOY_KEY secret.
   sphinx-deploy:
+    name: Deploy Docs
     needs: sphinx
     if: ${{ github.ref == 'refs/heads/master' }}
     runs-on: ubuntu-latest
@@ -510,6 +524,7 @@ jobs:
   # -------------------- Check the error message under py2 --------- #
 
   py2-import:
+    name: Python 2 Import check
     needs: [doctests-latest, tests-latest]
 
     runs-on: ubuntu-latest
@@ -525,6 +540,7 @@ jobs:
   # -------------------- Check the list of files for sdist --------- #
 
   sdist-check:
+    name: sdist Check
     needs: [doctests-latest, tests-latest]
 
     runs-on: ubuntu-latest
@@ -542,6 +558,7 @@ jobs:
   # -------- Run benchmarks against master and previous release ---- #
 
   benchmarks:
+    name: Benchmarks
     needs: [doctests-latest, tests-latest]
 
     runs-on: ubuntu-latest

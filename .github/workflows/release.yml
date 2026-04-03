@@ -35,6 +35,7 @@ jobs:
   # -------------------- Build artifacts --------------------------- #
 
   build-packages:
+    name: Build Packages
 
     runs-on: ubuntu-20.04
     steps:
@@ -69,6 +70,7 @@ jobs:
           path: release-${{ env.release_version }}
 
   build-docs:
+    name: Build Docs
 
     runs-on: ubuntu-20.04
     steps:
