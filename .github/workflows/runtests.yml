@@ -8,6 +8,10 @@
 
 name: test
 on: [push, pull_request]
+
+permissions:
+  contents: read
+
 jobs:
 
   # -------------------- Code quality ------------------------------ #
@@ -16,16 +20,14 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
-          python-version: '3.13'
+          python-version: '3.14'
       - run: python -m pip install --upgrade pip setuptools
 
       - run: pip install -r requirements-dev.txt
-      - run: pip install ruff
-
       - name: Basic code quality tests
         run: bin/test quality
 
@@ -41,10 +43,10 @@ jobs:
       - name: Test all modules are listed in setup.py
         run: bin/test_setup.py
 
-      - run: pip install slotscheck .
+      - run: pip install .
 
       - name: Check for incorrect use of ``__slots__`` using slotscheck
-        run: python -m slotscheck --exclude-modules "(sympy.parsing.autolev._antlr.*|sympy.parsing.latex._antlr.*|sympy.galgebra|sympy.plotting.pygletplot.*)" sympy
+        run: python -m slotscheck --no-strict-imports --exclude-modules "(sympy.parsing.autolev._antlr.*|sympy.parsing.latex._antlr.*|sympy.galgebra|sympy.plotting.pygletplot.*)" sympy
 
       # -- temporarily disabled -- #
       # These checks were too difficult for new contributors. They will
@@ -64,14 +66,29 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
-          python-version: '3.13'
+          python-version: '3.14'
       - run: python -m pip install --upgrade pip
-      - run: pip install mpmath mypy hypothesis
+      - run: pip install -r requirements-dev.txt
 
       - name: Run mypy on the sympy package
+        run: mypy sympy
+
+  mypy-flint:
+    needs: code-quality
+
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: '3.14'
+      - run: python -m pip install --upgrade pip
+      - run: pip install mpmath mypy hypothesis python-flint
+
+      - name: Run mypy on the sympy package with python-flint installed
         run: mypy sympy
 
   # ------------------------- sphinx-lint -------------------------- #
@@ -81,12 +98,12 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
-          python-version: '3.13'
+          python-version: '3.14'
       - run: python -m pip install --upgrade pip
-      - run: pip install sphinx-lint
+      - run: pip install -r requirements-dev.txt
 
       - name: Run sphinx-lint on the sympy documentation
         run: sphinx-lint doc/
@@ -97,15 +114,15 @@ jobs:
     needs: code-quality
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           # Clone full git history (needed for detecting authors)
           fetch-depth: 0
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
-          python-version: '3.13'
+          python-version: '3.14'
       - run: python -m pip install --upgrade pip
-      - run: pip install mpmath
+      - run: pip install -r requirements-dev.txt
       - run: bin/mailmap_check.py
 
   # -------------------- Doctests latest Python -------------------- #
@@ -115,12 +132,12 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
-          python-version: '3.13'
+          python-version: '3.14'
       - run: python -m pip install --upgrade pip
-      - run: pip install mpmath
+      - run: pip install -r requirements-dev.txt
       - run: bin/doctest --force-colors
 
   # ------------------------- Test latest Python ------------------- #
@@ -133,10 +150,10 @@ jobs:
     name: Tests
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
-          python-version: '3.13'
+          python-version: '3.14'
       - run: python -m pip install --upgrade pip
       - run: pip install -r requirements-dev.txt
       - run: pytest -n auto
@@ -151,13 +168,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13']
+        python-version: ['3.10', '3.11', '3.12', '3.13', '3.14']
 
     name: ${{ matrix.python-version }} Optional Dendendencies
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -168,11 +185,6 @@ jobs:
       - run: sudo apt-get install antlr4 clang
       - run: python -m pip install --upgrade pip wheel setuptools
 
-      # XXX: Deprecate and remove support for aesara.
-      # For now it pins the numpy version and so doesn't work on 3.13.
-      - if: ${{ ! contains(matrix.python-version, '3.13') }}
-        run: pip install aesara
-
       # dependencies to install in all Python versions:
       - run: pip install numpy numexpr matplotlib bpython ipython cython  \
                          wurlitzer autowrap lxml lark z3-solver pycosat   \
@@ -181,6 +193,7 @@ jobs:
                          symengine                                        \
                          numba llvmlite pymc                              \
                          gmpy2                                            \
+                         uncertainties                                    \
                          #
 
       # Test external imports
@@ -198,10 +211,10 @@ jobs:
     name: Bleeding edge dependencies
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
-          python-version: '3.13'
+          python-version: '3.14'
       - run: pip install --upgrade pip
       - run: pip install git+https://github.com/mpmath/mpmath.git@master
       - run: |
@@ -216,7 +229,7 @@ jobs:
 
       - run: pip install -r requirements-dev.txt
       - run: pip install .
-      - run: pytest -n auto
+      - run: pytest -Werror -n auto
 
   # -------------------- FLINT tests -------------------------------- #
 
@@ -225,8 +238,8 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: '3.13'
       - run: python -m pip install --upgrade pip
@@ -242,10 +255,10 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
-          python-version: '3.13'
+          python-version: '3.14'
       - run: python -m pip install --upgrade pip
       - run: pip install -r requirements-dev.txt
       - run: pip install python-flint gmpy2
@@ -259,11 +272,11 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
-          # tensorflow not yet available for 3.13
-          python-version: '3.12'
+          # tensorflow not yet available for 3.14
+          python-version: '3.13'
       - run: python -m pip install --upgrade pip
       - run: pip install -r requirements-dev.txt
       - run: pip install numpy scipy tensorflow
@@ -277,10 +290,10 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
-          python-version: '3.13'
+          python-version: '3.14'
       - run: python -m pip install --upgrade pip
       - run: pip install -r requirements-dev.txt
       - run: pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
@@ -294,10 +307,10 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
-          python-version: '3.13'
+          python-version: '3.14'
       - run: python -m pip install --upgrade pip
       - run: pip install -r requirements-dev.txt
       - run: pip install numpy symengine
@@ -314,13 +327,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: '3.13'
       - run: python -m pip install --upgrade pip
       - run: pip install -r requirements-dev.txt
-      - run: pytest -m slow --timeout 595 -n auto -v
+      - run: pytest -m slow --timeout 595 -n auto -v --durations=0
 
   # -------------------- Test older (and newer) Python --------------- #
 
@@ -332,20 +345,26 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13', '3.14', 'pypy-3.11']
+        python-version: ['3.10', '3.11', '3.12', '3.13', '3.14', '3.15', 'pypy-3.11']
         exclude:
-          - python-version: 3.13
+          - python-version: 3.14
 
     name: ${{ matrix.python-version }} Tests
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: ${{ matrix.python-version }}
           allow-prereleases: true
       - run: python -m pip install --upgrade pip
-      - run: pip install -r requirements-dev.txt
+      - run: |
+          if [[ "${{ matrix.python-version }}" == pypy-* ]]; then
+            # mypy's librt dependency isn't available on PyPy, so exclude it
+            grep -vx 'mypy' requirements-dev.txt | pip install -r /dev/stdin
+          else
+            pip install -r requirements-dev.txt
+          fi
       - run: pytest -n auto
 
   # -------------------- Doctests older (and newer) Python --------------------- #
@@ -358,15 +377,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13', '3.14', 'pypy-3.11']
+        python-version: ['3.10', '3.11', '3.12', '3.13', '3.14', '3.15', 'pypy-3.11']
         exclude:
-          - python-version: 3.13
+          - python-version: 3.14
 
     name: ${{ matrix.python-version }} Doctests
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: ${{ matrix.python-version }}
           allow-prereleases: true
@@ -384,10 +403,10 @@ jobs:
     name: mpmath-master Tests
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
-          python-version: '3.13'
+          python-version: '3.14'
       - run: python -m pip install --upgrade pip
       - run: pip install git+https://github.com/mpmath/mpmath.git@master
       - run: pip install -r requirements-dev.txt
@@ -400,20 +419,45 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
-          python-version: '3.13'
+          python-version: '3.14'
       - run: doc/aptinstall.sh
       - run: pip install -r doc/requirements.txt
       - run: bin/test_sphinx.sh
+
+      - name: Upload built docs
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: sphinx-html
+          path: doc/_build/html
+          if-no-files-found: error
+
+  # -------------------- Deploy the html/latex docs ----------------- #
+
+  # Keep this job separate from the sphinx job that installs packages from pypi
+  # to limit exposure to the DEPLOY_KEY secret.
+  sphinx-deploy:
+    needs: sphinx
+    if: ${{ github.ref == 'refs/heads/master' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Download built docs
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: sphinx-html
+          path: doc/_build/html
 
       # When run against master, deploy to docs.sympy.org/dev. This requires
       # having an SSH deploy key set up. See
       # https://github.com/marketplace/actions/deploy-to-github-pages#using-an-ssh-deploy-key-
       - name: Deploy
-        uses: JamesIves/github-pages-deploy-action@v4
-        if: ${{ github.ref == 'refs/heads/master' }}
+        uses: JamesIves/github-pages-deploy-action@d92aa235d04922e8f08b40ce78cc5442fcfbfa2f # v4
         with:
           folder: doc/_build/html
           ssh-key: ${{ secrets.DEPLOY_KEY }}
@@ -427,8 +471,8 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: 'pypy2.7'
       - run: bin/test_py2_import.py
@@ -440,10 +484,10 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
-          python-version: '3.13'
+          python-version: '3.14'
       - run: python -m pip install --upgrade pip build
       - run: python -m build --sdist
       - run: release/compare_tar_against_git.py dist/*.tar.gz .
@@ -455,13 +499,13 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           # Checkout repo with full history
           fetch-depth: 0
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
-          python-version: '3.13'
+          python-version: '3.14'
       - run: pip install asv virtualenv packaging
       - run: git submodule add https://github.com/sympy/sympy_benchmarks.git
 
@@ -493,7 +537,7 @@ jobs:
         # GitHub Actions summary page.
 
       - name: Upload results as artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: benchmarks
           path: |

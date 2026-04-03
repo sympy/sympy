@@ -22,6 +22,11 @@ Examples
 >>> assert a != b  # remote possibility this will fail
 
 """
+
+from __future__ import annotations
+
+from typing import Callable
+
 from sympy.utilities.iterables import is_sequence
 from sympy.utilities.misc import as_int
 
@@ -176,7 +181,7 @@ def _randrange(seed=None):
         raise ValueError('_randrange got an unexpected seed')
 
 
-def _randint(seed=None):
+def _randint(seed: int | None | list[int] = None) -> Callable[[int, int], int]:
     """Return a randint generator.
 
     ``seed`` can be

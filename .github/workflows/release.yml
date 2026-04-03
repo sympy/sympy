@@ -16,9 +16,11 @@ on:
   pull_request:
     branches:
       - '1.15'
+permissions:
+  contents: read
 env:
   release_branch: '1.15'
-  release_version: '1.15.0-dev'
+  release_version: '1.15.0.dev'
   final_release_version: '1.15.0'
   previous_version: '1.14.0'
   dev_version: '1.15-dev'
@@ -27,33 +29,71 @@ jobs:
 
   # -------------------- Build artifacts --------------------------- #
 
-  build:
+  build-packages:
 
     runs-on: ubuntu-20.04
     steps:
       # Check out with full git history for authors check:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: '3.13'
 
       - name: Build release files
-        run: release/ci_release_script.sh ${{ env.release_version }} ${{ env.previous_version }}
+        run: |
+          pip install --upgrade setuptools pip wheel build
+          pip install .
+          bin/mailmap_check.py --update-authors
+          mkdir -p release-${{ env.release_version }}
+          python -m build --wheel
+          mv dist/sympy-${{ env.release_version }}-py3-none-any.whl release-${{ env.release_version }}/
+          python -m build --sdist
+          mv dist/sympy-${{ env.release_version }}.tar.gz release-${{ env.release_version }}/
+          release/compare_tar_against_git.py release-${{ env.release_version }}/sympy-${{ env.release_version }}.tar.gz .
+          release/authors.py ${{ env.release_version }} ${{ env.previous_version }} release-${{ env.release_version }}
 
-      - name: Store release files
-        uses: actions/upload-artifact@v4
+      - name: Store package release files
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
-          name: release_files
+          name: release_files_packages
+          path: release-${{ env.release_version }}
+
+  build-docs:
+
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Setup Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: '3.13'
+
+      - name: Install docs build dependencies
+        run: |
+          doc/aptinstall.sh
+          pip install -r doc/requirements.txt
+          pip install .
+
+      - name: Build release docs
+        run: |
+          mkdir -p release-${{ env.release_version }}
+          python release/build_docs.py ${{ env.release_version }} release-${{ env.release_version }}
+
+      - name: Store docs release files
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: release_files_docs
           path: release-${{ env.release_version }}
 
   # -------------------- Test installation ------------------------- #
 
   test-install:
-    needs: [build]
+    needs: [build-packages]
 
     runs-on: ubuntu-20.04
     strategy:
@@ -64,14 +104,14 @@ jobs:
     name: Python ${{ matrix.python-version }} test install
     steps:
       - name: Setup python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: ${{ matrix.python-version }}
 
       - name: Retrieve release files
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          name: release_files
+          name: release_files_packages
 
       - name: List files
         run: ls -R
@@ -89,7 +129,7 @@ jobs:
 
   test-pypi-publish:
     name: Publish to Test-PyPI
-    needs: [build]
+    needs: [build-packages]
     # Run when a pull request is merged into a release branch.
     if: "github.event_name == 'push' && ! startsWith(github.ref, 'refs/tags')"
     environment:
@@ -101,16 +141,16 @@ jobs:
 
     steps:
       - name: Download release artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          name: release_files
+          name: release_files_packages
           path: dist.all
 
       - name: Copy the PyPI files into dist
         run: mkdir dist && cp dist.all/*.whl dist.all/*.tar.gz dist
 
       - name: Publish package on TestPyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
+        uses: pypa/gh-action-pypi-publish@ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e  # v1.13.0
         with:
           repository-url: https://test.pypi.org/legacy/
 
@@ -118,8 +158,8 @@ jobs:
 
   pypi-publish:
     name: Publish to PyPI
-    needs: [build]
-    # Run when a tag is pushed (not sure if this works)
+    needs: [build-packages]
+    # Run when a tag is pushed
     if: "github.event_name == 'push' && startsWith(github.ref, 'refs/tags')"
     environment:
       name: pypi
@@ -130,25 +170,22 @@ jobs:
 
     steps:
       - name: Download release artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          name: release_files
+          name: release_files_packages
           path: dist.all
 
       - name: Copy the PyPI files into dist
         run: mkdir dist && cp dist.all/*.whl dist.all/*.tar.gz dist
 
       - name: Publish package on PyPI
-        # It is recommended to pin a commit hash here for security but it
-        # should be kept up to date. Probably all actions and dependencies
-        # used by the build script should be pinned...
-        uses: pypa/gh-action-pypi-publish@76f52bc884231f62b9a034ebfe128415bbaabdfc  # v1.12.4
+        uses: pypa/gh-action-pypi-publish@ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e  # v1.13.0
 
   # -------------------- Check if this is a final release ---------- #
 
   check-final:
     name: Check whether the release is final
-    needs: [build, pypi-publish]
+    needs: [build-packages, build-docs, pypi-publish]
     runs-on: ubuntu-latest
     outputs:
       # The env context is not available in jobs.<job id>.if so we set it here
@@ -167,13 +204,27 @@ jobs:
 
     steps:
       - name: Checkout sympy
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Setup Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: '3.13'
 
       - name: Download release artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          name: release_files
+          name: release_files_packages
           path: dist
+
+      - name: Download docs release artifacts
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: release_files_docs
+          path: dist
+
+      - name: Generate checksums
+        run: python release/sha256.py ${{ env.release_version }} dist
 
       - name: Create GitHub prerelease
         if: ${{ needs.check-final.outputs.is-final != 'true' }}
@@ -207,10 +258,10 @@ jobs:
 
     steps:
       - name: Checkout sympy
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Checkout sympy_doc
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           repository: sympy/sympy_doc
           ref: gh-pages
@@ -220,9 +271,9 @@ jobs:
       - run: git config --global user.name "SymPy GitHub Actions release bot"
       - run: git config --global user.email "<>"
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          name: release_files
+          name: release_files_docs
           path: dist
 
       - name: Update the docs

@@ -1,3 +1,4 @@
+from __future__ import annotations
 import tempfile
 from sympy.core.numbers import pi, Rational
 from sympy.core.power import Pow

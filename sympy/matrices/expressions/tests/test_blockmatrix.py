@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.matrices.expressions.trace import Trace
 from sympy.testing.pytest import raises, slow
 from sympy.matrices.expressions.blockmatrix import (
@@ -121,6 +122,9 @@ def test_issue_17624():
 def test_issue_18618():
     A = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
     assert A == Matrix(BlockDiagMatrix(A))
+
+def test_issue_28225():
+    raises(ValueError, lambda: BlockDiagMatrix(2, 2))
 
 def test_BlockMatrix_trace():
     A, B, C, D = [MatrixSymbol(s, 3, 3) for s in 'ABCD']

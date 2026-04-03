@@ -2,14 +2,12 @@
 
 from __future__ import annotations
 
-from typing import Any
-from collections.abc import Sequence, Iterable
+from typing import Any, TYPE_CHECKING
 
 import itertools
 
 from sympy import Dummy
 from sympy.core import S
-from sympy.core.expr import Expr
 from sympy.core.exprtools import factor_terms
 from sympy.core.sorting import default_sort_key
 from sympy.logic.boolalg import Boolean
@@ -30,6 +28,10 @@ from sympy.utilities.iterables import cartes
 from sympy.utilities.misc import filldedent
 from sympy.logic.boolalg import Or, And
 from sympy.core.relational import Eq
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence, Iterable
+    from sympy.core.expr import Expr
 
 
 class SolveFailed(Exception):

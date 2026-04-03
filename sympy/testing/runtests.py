@@ -11,6 +11,7 @@ Goals:
 * portable
 
 """
+from __future__ import annotations
 
 import os
 import sys
@@ -256,8 +257,8 @@ def run_in_subprocess_with_hash_randomization(
                      (module, function, function, repr(function_args),
                       repr(function_kwargs)))
 
+    p = subprocess.Popen([command, "-R", "-c", commandstring], cwd=cwd)
     try:
-        p = subprocess.Popen([command, "-R", "-c", commandstring], cwd=cwd)
         p.communicate()
     except KeyboardInterrupt:
         p.wait()
@@ -268,7 +269,7 @@ def run_in_subprocess_with_hash_randomization(
             del os.environ["PYTHONHASHSEED"]
         else:
             os.environ["PYTHONHASHSEED"] = hash_seed
-        return p.returncode
+    return p.returncode
 
 
 def run_all_tests(test_args=(), test_kwargs=None,
@@ -1234,7 +1235,7 @@ class SymPyTests:
             except ImportError:
                 reporter.import_error(filename, sys.exc_info())
                 return
-            except Exception:
+            except Exception: # noqa: BLE001
                 reporter.test_exception(sys.exc_info())
 
             clear_cache()
@@ -1304,7 +1305,7 @@ class SymPyTests:
                     reporter.test_skip("KeyboardInterrupt")
                 else:
                     raise
-            except Exception:
+            except Exception: # noqa: BLE001
                 if timeout:
                     signal.alarm(0)  # Disable the alarm. It could not be handled before.
                 t, v, tr = sys.exc_info()

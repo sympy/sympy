@@ -1,3 +1,4 @@
+from __future__ import annotations
 from .unit_definitions import (
     percent, percents,
     permille,

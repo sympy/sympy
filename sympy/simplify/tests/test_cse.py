@@ -1,3 +1,4 @@
+from __future__ import annotations
 from functools import reduce
 import itertools
 from operator import add

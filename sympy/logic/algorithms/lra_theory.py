@@ -113,6 +113,7 @@ References
        A Fast Linear-Arithmetic Solver for DPLL(T)
        https://link.springer.com/chapter/10.1007/11817963_11
 """
+from __future__ import annotations
 from sympy.solvers.solveset import linear_eq_to_matrix
 from sympy.matrices.dense import eye
 from sympy.assumptions import Predicate
@@ -653,7 +654,7 @@ class LRASolver():
         Conceptually, M represents a system of equations and pivoting
         can be thought of as rearranging equation i to be in terms of
         variable j and then substituting in the rest of the equations
-        to get rid of other occurances of variable j.
+        to get rid of other occurrences of variable j.
 
         Example
         =======

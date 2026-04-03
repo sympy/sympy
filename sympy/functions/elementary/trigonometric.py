@@ -1,7 +1,6 @@
 from __future__ import annotations
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
-from sympy.core.expr import Expr
 from sympy.core.function import DefinedFunction, ArgumentIndexError, PoleError, expand_mul
 from sympy.core.logic import fuzzy_not, fuzzy_or, FuzzyBool, fuzzy_and
 from sympy.core.mod import Mod
@@ -23,6 +22,10 @@ from sympy.logic.boolalg import And
 from sympy.ntheory import factorint
 from sympy.polys.specialpolys import symmetric_poly
 from sympy.utilities.iterables import numbered_symbols
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
 
 
 ###############################################################################
@@ -275,8 +278,18 @@ class sin(TrigonometricFunction):
     See Also
     ========
 
-    csc, cos, sec, tan, cot
-    asin, acsc, acos, asec, atan, acot, atan2
+    sympy.functions.elementary.trigonometric.csc
+    sympy.functions.elementary.trigonometric.cos
+    sympy.functions.elementary.trigonometric.sec
+    sympy.functions.elementary.trigonometric.tan
+    sympy.functions.elementary.trigonometric.cot
+    sympy.functions.elementary.trigonometric.asin
+    sympy.functions.elementary.trigonometric.acsc
+    sympy.functions.elementary.trigonometric.acos
+    sympy.functions.elementary.trigonometric.asec
+    sympy.functions.elementary.trigonometric.atan
+    sympy.functions.elementary.trigonometric.acot
+    sympy.functions.elementary.trigonometric.atan2
 
     References
     ==========
@@ -549,6 +562,21 @@ class sin(TrigonometricFunction):
                 or self.args[0].is_complex:
             return True
 
+    def _eval_derivative_n_times(self, s, n):
+        if self.args[0] == s and n.is_integer and n.is_nonnegative:
+            if n.is_Integer:
+                match n % 4:
+                    case 0:
+                        return sin(s)
+                    case 1:
+                        return cos(s)
+                    case 2:
+                        return -sin(s)
+                    case 3:
+                        return -cos(s)
+            return sin(s + pi*n/2)
+        return super()._eval_derivative_n_times(s, n)
+
 
 class cos(TrigonometricFunction):
     """
@@ -582,8 +610,18 @@ class cos(TrigonometricFunction):
     See Also
     ========
 
-    sin, csc, sec, tan, cot
-    asin, acsc, acos, asec, atan, acot, atan2
+    sympy.functions.elementary.trigonometric.sin
+    sympy.functions.elementary.trigonometric.csc
+    sympy.functions.elementary.trigonometric.sec
+    sympy.functions.elementary.trigonometric.tan
+    sympy.functions.elementary.trigonometric.cot
+    sympy.functions.elementary.trigonometric.asin
+    sympy.functions.elementary.trigonometric.acsc
+    sympy.functions.elementary.trigonometric.acos
+    sympy.functions.elementary.trigonometric.asec
+    sympy.functions.elementary.trigonometric.atan
+    sympy.functions.elementary.trigonometric.acot
+    sympy.functions.elementary.trigonometric.atan2
 
     References
     ==========
@@ -700,7 +738,7 @@ class cos(TrigonometricFunction):
                 if 0 == q % 2:
                     narg = (pi_coeff*2)*pi
                     nval = cls(narg)
-                    if None == nval:
+                    if None == nval:  # noqa: E711
                         return None
                     x = (2*pi_coeff + 1)/2
                     sign_cos = (-1)**((-1 if x < 0 else 1)*int(abs(x)))
@@ -911,6 +949,21 @@ class cos(TrigonometricFunction):
         if rest.is_zero and pi_mult:
             return (pi_mult - S.Half).is_integer
 
+    def _eval_derivative_n_times(self, s, n):
+        if self.args[0] == s and n.is_integer and n.is_nonnegative:
+            if n.is_Integer:
+                match n % 4:
+                    case 0:
+                        return cos(s)
+                    case 1:
+                        return -sin(s)
+                    case 2:
+                        return -cos(s)
+                    case 3:
+                        return sin(s)
+            return cos(s + pi*n/2)
+        return super()._eval_derivative_n_times(s, n)
+
 
 class tan(TrigonometricFunction):
     """
@@ -938,8 +991,18 @@ class tan(TrigonometricFunction):
     See Also
     ========
 
-    sin, csc, cos, sec, cot
-    asin, acsc, acos, asec, atan, acot, atan2
+    sympy.functions.elementary.trigonometric.sin
+    sympy.functions.elementary.trigonometric.csc
+    sympy.functions.elementary.trigonometric.cos
+    sympy.functions.elementary.trigonometric.sec
+    sympy.functions.elementary.trigonometric.cot
+    sympy.functions.elementary.trigonometric.asin
+    sympy.functions.elementary.trigonometric.acsc
+    sympy.functions.elementary.trigonometric.acos
+    sympy.functions.elementary.trigonometric.asec
+    sympy.functions.elementary.trigonometric.atan
+    sympy.functions.elementary.trigonometric.acot
+    sympy.functions.elementary.trigonometric.atan2
 
     References
     ==========
@@ -1278,8 +1341,18 @@ class cot(TrigonometricFunction):
     See Also
     ========
 
-    sin, csc, cos, sec, tan
-    asin, acsc, acos, asec, atan, acot, atan2
+    sympy.functions.elementary.trigonometric.sin
+    sympy.functions.elementary.trigonometric.csc
+    sympy.functions.elementary.trigonometric.cos
+    sympy.functions.elementary.trigonometric.sec
+    sympy.functions.elementary.trigonometric.tan
+    sympy.functions.elementary.trigonometric.asin
+    sympy.functions.elementary.trigonometric.acsc
+    sympy.functions.elementary.trigonometric.acos
+    sympy.functions.elementary.trigonometric.asec
+    sympy.functions.elementary.trigonometric.atan
+    sympy.functions.elementary.trigonometric.acot
+    sympy.functions.elementary.trigonometric.atan2
 
     References
     ==========
@@ -1713,8 +1786,18 @@ class sec(ReciprocalTrigonometricFunction):
     See Also
     ========
 
-    sin, csc, cos, tan, cot
-    asin, acsc, acos, asec, atan, acot, atan2
+    sympy.functions.elementary.trigonometric.sin
+    sympy.functions.elementary.trigonometric.csc
+    sympy.functions.elementary.trigonometric.cos
+    sympy.functions.elementary.trigonometric.tan
+    sympy.functions.elementary.trigonometric.cot
+    sympy.functions.elementary.trigonometric.asin
+    sympy.functions.elementary.trigonometric.acsc
+    sympy.functions.elementary.trigonometric.acos
+    sympy.functions.elementary.trigonometric.asec
+    sympy.functions.elementary.trigonometric.atan
+    sympy.functions.elementary.trigonometric.acot
+    sympy.functions.elementary.trigonometric.atan2
 
     References
     ==========
@@ -1821,8 +1904,18 @@ class csc(ReciprocalTrigonometricFunction):
     See Also
     ========
 
-    sin, cos, sec, tan, cot
-    asin, acsc, acos, asec, atan, acot, atan2
+    sympy.functions.elementary.trigonometric.sin
+    sympy.functions.elementary.trigonometric.cos
+    sympy.functions.elementary.trigonometric.sec
+    sympy.functions.elementary.trigonometric.tan
+    sympy.functions.elementary.trigonometric.cot
+    sympy.functions.elementary.trigonometric.asin
+    sympy.functions.elementary.trigonometric.acsc
+    sympy.functions.elementary.trigonometric.acos
+    sympy.functions.elementary.trigonometric.asec
+    sympy.functions.elementary.trigonometric.atan
+    sympy.functions.elementary.trigonometric.acot
+    sympy.functions.elementary.trigonometric.atan2
 
     References
     ==========
@@ -1947,7 +2040,7 @@ class sinc(DefinedFunction):
     See also
     ========
 
-    sin
+    sympy.functions.elementary.trigonometric.sin
 
     References
     ==========
@@ -2138,8 +2231,18 @@ class asin(InverseTrigonometricFunction):
     See Also
     ========
 
-    sin, csc, cos, sec, tan, cot
-    acsc, acos, asec, atan, acot, atan2
+    sympy.functions.elementary.trigonometric.sin
+    sympy.functions.elementary.trigonometric.csc
+    sympy.functions.elementary.trigonometric.cos
+    sympy.functions.elementary.trigonometric.sec
+    sympy.functions.elementary.trigonometric.tan
+    sympy.functions.elementary.trigonometric.cot
+    sympy.functions.elementary.trigonometric.acsc
+    sympy.functions.elementary.trigonometric.acos
+    sympy.functions.elementary.trigonometric.asec
+    sympy.functions.elementary.trigonometric.atan
+    sympy.functions.elementary.trigonometric.acot
+    sympy.functions.elementary.trigonometric.atan2
 
     References
     ==========
@@ -2372,8 +2475,18 @@ class acos(InverseTrigonometricFunction):
     See Also
     ========
 
-    sin, csc, cos, sec, tan, cot
-    asin, acsc, asec, atan, acot, atan2
+    sympy.functions.elementary.trigonometric.sin
+    sympy.functions.elementary.trigonometric.csc
+    sympy.functions.elementary.trigonometric.cos
+    sympy.functions.elementary.trigonometric.sec
+    sympy.functions.elementary.trigonometric.tan
+    sympy.functions.elementary.trigonometric.cot
+    sympy.functions.elementary.trigonometric.asin
+    sympy.functions.elementary.trigonometric.acsc
+    sympy.functions.elementary.trigonometric.asec
+    sympy.functions.elementary.trigonometric.atan
+    sympy.functions.elementary.trigonometric.acot
+    sympy.functions.elementary.trigonometric.atan2
 
     References
     ==========
@@ -2667,8 +2780,7 @@ class atan(InverseTrigonometricFunction):
                 return -pi/4
 
         if arg is S.ComplexInfinity:
-            from sympy.calculus.accumulationbounds import AccumBounds
-            return AccumBounds(-pi/2, pi/2)
+            return
 
         if arg.could_extract_minus_sign():
             return -cls(-arg)
@@ -2827,8 +2939,18 @@ class acot(InverseTrigonometricFunction):
     See Also
     ========
 
-    sin, csc, cos, sec, tan, cot
-    asin, acsc, acos, asec, atan, atan2
+    sympy.functions.elementary.trigonometric.sin
+    sympy.functions.elementary.trigonometric.csc
+    sympy.functions.elementary.trigonometric.cos
+    sympy.functions.elementary.trigonometric.sec
+    sympy.functions.elementary.trigonometric.tan
+    sympy.functions.elementary.trigonometric.cot
+    sympy.functions.elementary.trigonometric.asin
+    sympy.functions.elementary.trigonometric.acsc
+    sympy.functions.elementary.trigonometric.acos
+    sympy.functions.elementary.trigonometric.asec
+    sympy.functions.elementary.trigonometric.atan
+    sympy.functions.elementary.trigonometric.atan2
 
     References
     ==========
@@ -3057,8 +3179,18 @@ class asec(InverseTrigonometricFunction):
     See Also
     ========
 
-    sin, csc, cos, sec, tan, cot
-    asin, acsc, acos, atan, acot, atan2
+    sympy.functions.elementary.trigonometric.sin
+    sympy.functions.elementary.trigonometric.csc
+    sympy.functions.elementary.trigonometric.cos
+    sympy.functions.elementary.trigonometric.sec
+    sympy.functions.elementary.trigonometric.tan
+    sympy.functions.elementary.trigonometric.cot
+    sympy.functions.elementary.trigonometric.asin
+    sympy.functions.elementary.trigonometric.acsc
+    sympy.functions.elementary.trigonometric.acos
+    sympy.functions.elementary.trigonometric.atan
+    sympy.functions.elementary.trigonometric.acot
+    sympy.functions.elementary.trigonometric.atan2
 
     References
     ==========
@@ -3272,8 +3404,18 @@ class acsc(InverseTrigonometricFunction):
     See Also
     ========
 
-    sin, csc, cos, sec, tan, cot
-    asin, acos, asec, atan, acot, atan2
+    sympy.functions.elementary.trigonometric.sin
+    sympy.functions.elementary.trigonometric.csc
+    sympy.functions.elementary.trigonometric.cos
+    sympy.functions.elementary.trigonometric.sec
+    sympy.functions.elementary.trigonometric.tan
+    sympy.functions.elementary.trigonometric.cot
+    sympy.functions.elementary.trigonometric.asin
+    sympy.functions.elementary.trigonometric.acos
+    sympy.functions.elementary.trigonometric.asec
+    sympy.functions.elementary.trigonometric.atan
+    sympy.functions.elementary.trigonometric.acot
+    sympy.functions.elementary.trigonometric.atan2
 
     References
     ==========
@@ -3534,8 +3676,18 @@ class atan2(InverseTrigonometricFunction):
     See Also
     ========
 
-    sin, csc, cos, sec, tan, cot
-    asin, acsc, acos, asec, atan, acot
+    sympy.functions.elementary.trigonometric.sin
+    sympy.functions.elementary.trigonometric.csc
+    sympy.functions.elementary.trigonometric.cos
+    sympy.functions.elementary.trigonometric.sec
+    sympy.functions.elementary.trigonometric.tan
+    sympy.functions.elementary.trigonometric.cot
+    sympy.functions.elementary.trigonometric.asin
+    sympy.functions.elementary.trigonometric.acsc
+    sympy.functions.elementary.trigonometric.acos
+    sympy.functions.elementary.trigonometric.asec
+    sympy.functions.elementary.trigonometric.atan
+    sympy.functions.elementary.trigonometric.acot
 
     References
     ==========

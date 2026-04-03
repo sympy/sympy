@@ -39,7 +39,10 @@ doctest_optionflags = [
     "FLOAT_CMP",
 ]
 
-norecursedirs = ["sympy/parsing/autolev/test-examples"]
+norecursedirs = [
+    ".*",
+    "sympy/parsing/autolev/test-examples",
+]
 
 markers = ["nocache_fail", "tooslow"]
 
@@ -48,9 +51,11 @@ markers = ["nocache_fail", "tooslow"]
 exclude_lines = ["pragma: no cover", "if TYPE_CHECKING:", "assert False"]
 
 [tool.ruff]
+target-version = "py310"
 # Enable Pyflakes `E` and `F` codes by default.
 lint.select = [
-    "B015",    # Useless comparison: a == b rather than a = b.
+    "B015",  # Useless comparison: a == b rather than a = b.
+    "I002",  # `import` statement not at top of file
     "C4",
     "E",
     "F",
@@ -62,28 +67,34 @@ lint.select = [
     "PLW0602", # Global statement used but no assignment
     "SIM101",
     "SLOT",
+    "TC001",
+    "TC002",
+    "TC003",
+    "TC004",
+    "TC005",
     "TRY002",
+    "BLE001", # except Exception or except BaseException
+    "UP006", # pyupgrade - non-pep585-annotation
+    "UP007", # pyupgrade - non-pep604-annotation-union
+    "UP045", # pyupgrade - non-pep604-annotation-optional
 ]
 
 # Ignore rules that currently fail on the SymPy codebase
 lint.ignore = [
-    "E401", # Multiple imports on one line
-    "E402", # Module level import not at top of file
-    "E501", # Line too long (<LENGTH> > 88 characters)
-    "E701", # Multiple statements on one line (colon)
-    "E702", # Multiple statements on one line (semicolon)
-    "E711", # Comparison to `None` should be `cond is not None`
-    "E712", # Comparison to `<BOOL>` should be `cond is <BOOL>`
-    "E713", # Test for membership should be `not in`
-    "E714", # Test for object identity should be `is not`
-    "E721", # Do not compare types, use `isinstance()`
-    "E731", # Do not assign a `lambda` expression, use a `def`
-    "E741", # Ambiguous variable name: `<VARIABLE>`
-    "E743", # Ambiguous function name: `<FUNCTION>`
-    # Rules from the stable "FURB" set that are ignored. See #27897
-    # Just to be safe, we'll ignore FURB161 until we drop support for Python 3.9
-    "FURB161", # Use of `bin({existing}).count('1')`
-    "FURB187", # Use of assignment of `reversed` on list `{name}`
+    "E401",  # Multiple imports on one line
+    "E402",  # Module level import not at top of file
+    "E501",  # Line too long (<LENGTH> > 88 characters)
+    "E701",  # Multiple statements on one line (colon)
+    "E702",  # Multiple statements on one line (semicolon)
+    "E712",  # Comparison to `<BOOL>` should be `cond is <BOOL>`
+    "E713",  # Test for membership should be `not in`
+    "E714",  # Test for object identity should be `is not`
+    "E721",  # Do not compare types, use `isinstance()`
+    "E731",  # Do not assign a `lambda` expression, use a `def`
+    "E741",  # Ambiguous variable name: `<VARIABLE>`
+    "E743",  # Ambiguous function name: `<FUNCTION>`
+    "FURB110",  # Replace ternary `if` expression with `or` operator
+    "FURB187",  # Use of assignment of `reversed` on list `{name}`
 ]
 
 # Allow unused variables when underscore-prefixed.
@@ -97,11 +108,20 @@ exclude = [
     "sympy/parsing/latex/_antlr/*",
     "sympy/parsing/autolev/_antlr/*",
     "sympy/parsing/autolev/test-examples/*",
+    "sympy/plotting/pygletplot/*",
+    "sympy/parsing/latex/_parse_latex_antlr.py",
+    "sympy/parsing/autolev/_listener_autolev_antlr.py",
     "sympy/integrals/rubi/*",
 ]
 
 # Black default, although irrelevant with E501 ignored
 line-length = 88
+
+# Allow unused variables when underscore-prefixed.
+lint.dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+# Add to all files
+lint.isort.required-imports = ["from __future__ import annotations"]
 
 # Per-file ignores currently specified in the flake8 configuration
 [tool.ruff.lint.per-file-ignores]
@@ -160,6 +180,13 @@ ignore_missing_imports = true
 # pyright type checker settings:
 [tool.pyright]
 include = ["sympy"]
+exclude = [
+    "sympy/matrices/common.py",
+    "sympy/matrices/matrices.py",
+    "sympy/matrices/tests/test_matrices.py",
+    "sympy/matrices/tests/test_commonmatrix.py",
+    "sympy/matrices/benchmarks",
+]
 
 # This complains when self or cls is not used as the parameter name for an
 # instance method or class method. Since this is used a lot in SymPy we disable

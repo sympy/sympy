@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.liealgebras.root_system import RootSystem
 from sympy.liealgebras.type_a import TypeA
 from sympy.matrices import Matrix

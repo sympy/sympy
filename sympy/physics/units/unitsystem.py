@@ -9,9 +9,12 @@ from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.physics.units.dimensions import _QuantityMapper
-from sympy.physics.units.quantities import Quantity
 
 from .dimensions import Dimension
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from sympy.physics.units.quantities import Quantity
 
 
 class UnitSystem(_QuantityMapper):

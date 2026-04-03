@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.concrete.summations import Sum
 from sympy.core.function import expand_func
 from sympy.core.numbers import (Float, I, Rational, nan, oo, pi, zoo)

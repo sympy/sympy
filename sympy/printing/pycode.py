@@ -3,6 +3,7 @@ Python code printers
 
 This module contains Python code printers for plain Python as well as NumPy & SciPy enabled code.
 """
+from __future__ import annotations
 from collections import defaultdict
 from itertools import chain
 from sympy.core import S
@@ -200,6 +201,16 @@ class AbstractPythonCodePrinter(CodePrinter):
     def _print_ComplexInfinity(self, expr):
         return self._print_NaN(expr)
 
+    def _print_Assignment(self, expr):
+        # Emit a single outer assignment when rhs is piecewise to avoid
+        # invalid python like "((x = a) if cond else (x = b))"
+        from sympy.functions.elementary.piecewise import Piecewise
+        lhs = expr.lhs
+        rhs = expr.rhs
+        if isinstance(rhs, Piecewise):
+            return f"{self._print(lhs)} = {self._print(rhs)}"
+        return super()._print_Assignment(expr)
+
     def _print_Mod(self, expr):
         PREC = precedence(expr)
         return ('{} % {}'.format(*(self.parenthesize(x, PREC) for x in expr.args)))
@@ -329,7 +340,8 @@ class AbstractPythonCodePrinter(CodePrinter):
                 self._print(prnt.format_string),
                 print_args
             )
-        if prnt.file != None: # Must be '!= None', cannot be 'is not None'
+        # Must be '!= None', cannot be 'is not None'
+        if prnt.file != None:  # noqa: E711
             print_args += ', file=%s' % self._print(prnt.file)
         return 'print(%s)' % print_args
 
@@ -417,7 +429,7 @@ class ArrayPrinter:
         from sympy.tensor.array.expressions.from_indexed_to_array import convert_indexed_to_array
         try:
             return convert_indexed_to_array(indexed)
-        except Exception:
+        except Exception: # noqa: BLE001
             return indexed
 
     def _get_einsum_string(self, subranks, contraction_indices):
@@ -463,8 +475,10 @@ class ArrayPrinter:
         raise ValueError("out of letters")
 
     def _print_ArrayTensorProduct(self, expr):
+        from sympy.tensor.array.expressions.array_expressions import _get_sub_ndim_list
+
         letters = self._get_letter_generator_for_einsum()
-        contraction_string = ",".join(["".join([next(letters) for j in range(i)]) for i in expr.subranks])
+        contraction_string = ",".join(["".join([next(letters) for j in range(i)]) for i in _get_sub_ndim_list(expr)])
         return '%s("%s", %s)' % (
                 self._module_format(self._module + "." + self._einsum),
                 contraction_string,
@@ -477,13 +491,14 @@ class ArrayPrinter:
         contraction_indices = expr.contraction_indices
 
         if isinstance(base, ArrayTensorProduct):
+            from sympy.tensor.array.expressions.array_expressions import _get_sub_ndim_list
             elems = ",".join(["%s" % (self._print(arg)) for arg in base.args])
-            ranks = base.subranks
+            ndim_list = _get_sub_ndim_list(base)
         else:
             elems = self._print(base)
-            ranks = [len(base.shape)]
+            ndim_list = [len(base.shape)]
 
-        contraction_string, letters_free, letters_dum = self._get_einsum_string(ranks, contraction_indices)
+        contraction_string, letters_free, letters_dum = self._get_einsum_string(ndim_list, contraction_indices)
 
         if not contraction_indices:
             return self._print(base)
@@ -499,12 +514,14 @@ class ArrayPrinter:
 
     def _print_ArrayDiagonal(self, expr):
         from sympy.tensor.array.expressions.array_expressions import ArrayTensorProduct
+        from sympy.tensor.array.expressions.array_expressions import _get_sub_ndim_list
+
         diagonal_indices = list(expr.diagonal_indices)
         if isinstance(expr.expr, ArrayTensorProduct):
-            subranks = expr.expr.subranks
+            subranks = _get_sub_ndim_list(expr.expr)
             elems = expr.expr.args
         else:
-            subranks = expr.subranks
+            subranks = _get_sub_ndim_list(expr)
             elems = [expr.expr]
         diagonal_string, letters_free, letters_dum = self._get_einsum_string(subranks, diagonal_indices)
         elems = [self._print(i) for i in elems]
@@ -563,7 +580,7 @@ class PythonCodePrinter(AbstractPythonCodePrinter):
     def _print_Indexed(self, expr):
         base = expr.args[0]
         index = expr.args[1:]
-        return "{}[{}]".format(str(base), ", ".join([self._print(ind) for ind in index]))
+        return "{}[{}]".format(self._print(base), ", ".join([self._print(ind) for ind in index]))
 
     def _print_Pow(self, expr, rational=False):
         return self._hprint_Pow(expr, rational=rational)

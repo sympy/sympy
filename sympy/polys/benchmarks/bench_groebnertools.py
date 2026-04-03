@@ -1,4 +1,5 @@
 """Benchmark of the Groebner bases algorithms. """
+from __future__ import annotations
 
 
 from sympy.polys.rings import ring

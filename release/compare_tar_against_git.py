@@ -23,9 +23,6 @@ def main(tarname, gitroot):
 # it is Python, or MANIFEST.in if it is not.  (There is a command at the top
 # of setup.py to gather all the things that should be there).
 
-# TODO: Also check that this whitelist isn't growing out of date from files
-# removed from git.
-
 # Files that are in git that should not be in the tarball
 git_whitelist = {
     # Git specific dotfiles
@@ -34,11 +31,10 @@ git_whitelist = {
     '.mailmap',
     # CI
     '.github/PULL_REQUEST_TEMPLATE.md',
+    '.github/CODEOWNERS',
     '.github/dependabot.yml',
     '.github/workflows/runtests.yml',
     '.github/workflows/emscripten.yml',
-    '.github/workflows/ci-sage.yml',
-    '.github/workflows/comment-on-pr.yml',
     '.github/workflows/release.yml',
     '.github/workflows/docs-preview.yml',
     '.github/workflows/checkconflict.yml',
@@ -49,16 +45,15 @@ git_whitelist = {
     '.ci/blacklisted.json',
     '.ci/README.rst',
     '.circleci/config.yml',
-    '.github/FUNDING.yml',
     '.editorconfig',
-    '.coveragerc',
     '.flake8',
-    'CODEOWNERS',
     'asv.conf.actions.json',
     'codecov.yml',
     'requirements-dev.txt',
     'MANIFEST.in',
     'banner.svg',
+    # GitHub Codespace
+    '.devcontainer/devcontainer.json',
     # Code of conduct
     'CODE_OF_CONDUCT.md',
     # Contributing guide
@@ -69,20 +64,14 @@ git_whitelist = {
     # of this stuff is for development anyway. To run the tests from the
     # tarball, use setup.py test, or import sympy and run sympy.test() or
     # sympy.doctest().
-    'bin/adapt_paths.py',
     'bin/ask_update.py',
-    'bin/authors_update.py',
-    'bin/build_doc.sh',
     'bin/coverage_doctest.py',
     'bin/coverage_report.py',
-    'bin/deploy_doc.sh',
     'bin/diagnose_imports',
     'bin/doctest',
     'bin/generate_module_list.py',
     'bin/generate_test_list.py',
     'bin/get_sympy.py',
-    'bin/mailmap_update.py',
-    'bin/py.bench',
     'bin/strip_whitespace',
     'bin/sympy_time.py',
     'bin/sympy_time_cache.py',
@@ -104,26 +93,6 @@ git_whitelist = {
     # The notebooks are not ready for shipping yet. They need to be cleaned
     # up, and preferably doctested.  See also
     # https://github.com/sympy/sympy/issues/6039.
-    'examples/advanced/identitysearch_example.ipynb',
-    'examples/beginner/plot_advanced.ipynb',
-    'examples/beginner/plot_colors.ipynb',
-    'examples/beginner/plot_discont.ipynb',
-    'examples/beginner/plot_gallery.ipynb',
-    'examples/beginner/plot_intro.ipynb',
-    'examples/intermediate/limit_examples_advanced.ipynb',
-    'examples/intermediate/schwarzschild.ipynb',
-    'examples/notebooks/density.ipynb',
-    'examples/notebooks/fidelity.ipynb',
-    'examples/notebooks/fresnel_integrals.ipynb',
-    'examples/notebooks/qubits.ipynb',
-    'examples/notebooks/sho1d_example.ipynb',
-    'examples/notebooks/spin.ipynb',
-    'examples/notebooks/trace.ipynb',
-    'examples/notebooks/Bezout_Dixon_resultant.ipynb',
-    'examples/notebooks/IntegrationOverPolytopes.ipynb',
-    'examples/notebooks/Macaulay_resultant.ipynb',
-    'examples/notebooks/Sylvester_resultant.ipynb',
-    'examples/notebooks/README.txt',
     # This stuff :)
     'release/.gitignore',
     'release/README.md',
@@ -132,10 +101,8 @@ git_whitelist = {
     'release/build_docs.py',
     'release/github_release.py',
     'release/helpers.py',
-    'release/releasecheck.py',
     'release/sha256.py',
     'release/authors.py',
-    'release/ci_release_script.sh',
     # pytest stuff
     'conftest.py',
     'requirements-dev.txt',
@@ -205,6 +172,12 @@ def compare_tar_against_git(tarname, gitroot):
     # print tar_output
     # print git_lsfiles
     fail = False
+    print()
+    print(blue("Stale entries in git_whitelist:"))
+    print()
+    for line in sorted(git_whitelist - git_lsfiles):
+        fail = True
+        print(line)
     print()
     print(blue("Files in the tarball from git that should not be there:"))
     print()

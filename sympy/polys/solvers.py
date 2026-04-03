@@ -1,4 +1,5 @@
 """Low-level linear systems solver. """
+from __future__ import annotations
 
 
 from sympy.utilities.exceptions import sympy_deprecation_warning
@@ -31,7 +32,7 @@ class RawMatrix(MutableDenseMatrix):
        Matrix should be of type ``Expr``.
 
     """
-    _sympify = staticmethod(lambda x, *args, **kwargs: x)
+    _sympify = staticmethod(lambda x, *args, **kwargs: x) # type: ignore
 
     def __init__(self, *args, **kwargs):
         sympy_deprecation_warning(

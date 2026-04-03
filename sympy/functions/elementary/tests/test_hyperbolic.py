@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.core.function import (expand_mul, expand_trig)
 from sympy.core.numbers import (E, I, Integer, Rational, nan, oo, pi, zoo)
@@ -101,6 +102,14 @@ def test_sinh_series():
 def test_sinh_fdiff():
     x = Symbol('x')
     raises(ArgumentIndexError, lambda: sinh(x).fdiff(2))
+    assert sinh(x).diff((x, 1)) == cosh(x)
+    assert sinh(x).diff((x, 2)) == sinh(x)
+    n = Symbol('n', integer=True, nonnegative=True, odd=True)
+    assert sinh(x).diff((x, n)) == cosh(x)
+    n = Symbol('n', integer=True, nonnegative=True, even=True)
+    assert sinh(x).diff((x, n)) == sinh(x)
+    n = Symbol('n', integer=True, nonnegative=True)
+    assert sinh(x).diff((x, n)) == (-I)**n*sinh(x+I*pi*n/2)
 
 
 def test_cosh():
@@ -185,6 +194,14 @@ def test_cosh_series():
 def test_cosh_fdiff():
     x = Symbol('x')
     raises(ArgumentIndexError, lambda: cosh(x).fdiff(2))
+    assert cosh(x).diff((x, 1)) == sinh(x)
+    assert cosh(x).diff((x, 2)) == cosh(x)
+    n = Symbol('n', integer=True, nonnegative=True, odd=True)
+    assert cosh(x).diff((x, n)) == sinh(x)
+    n = Symbol('n', integer=True, nonnegative=True, even=True)
+    assert cosh(x).diff((x, n)) == cosh(x)
+    n = Symbol('n', integer=True, nonnegative=True)
+    assert cosh(x).diff((x, n)) == (-I)**n*cosh(x+I*pi*n/2)
 
 
 def test_tanh():
@@ -1106,6 +1123,8 @@ def test_atanh():
     assert atanh(tanh(-3 + 7*I)) == -3 - 2*I*pi + 7*I
     assert atanh(tanh(9 - I*2/3)) == 9 - I*2/3
     assert atanh(tanh(-32 - 123*I)) == -32 - 123*I + 39*I*pi
+    x = Symbol('x', real=True)
+    assert atanh(tanh(x)) == x
 
 
 def test_atanh_rewrite():

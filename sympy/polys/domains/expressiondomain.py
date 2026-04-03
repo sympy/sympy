@@ -1,4 +1,5 @@
 """Implementation of :class:`ExpressionDomain` class. """
+from __future__ import annotations
 
 
 from sympy.core import sympify, SympifyError

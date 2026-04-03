@@ -2,7 +2,7 @@
 Integer factorization
 """
 from __future__ import annotations
-
+from typing import Any, Iterator, Literal, overload, SupportsIndex
 from bisect import bisect_left
 from collections import defaultdict, OrderedDict
 from collections.abc import MutableMapping
@@ -26,7 +26,7 @@ from sympy.utilities.misc import as_int, filldedent
 from .ecm import _ecm_one_factor
 
 
-def smoothness(n):
+def smoothness(n: SupportsIndex) -> tuple[int, int]:
     """
     Return the B-smooth and B-power smooth values of n.
 
@@ -764,7 +764,8 @@ class FactorCache(MutableMapping):
     def add(self, n: int, factors: list[int]) -> None:
         for p in sorted(factors, reverse=True):
             self[n] = p
-            n, _ = remove(n, p)
+            nz, _ = remove(n, p)
+            n = int(nz)
 
     def get_external(self, n: int) -> list[int] | None:
         return None
@@ -1535,7 +1536,6 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
                                  verbose=verbose)
                 for k, v in facs.items():
                     factors[k] = factors.get(k, 0) + v
-                factor_cache.add(n, facs)
             if verbose:
                 print(complete_msg)
             return factors
@@ -1710,7 +1710,12 @@ def factorrat(rat, limit=None, use_trial=True, use_rho=True, use_pm1=True,
         return Mul(*args, evaluate=False)
 
 
-def primefactors(n, limit=None, verbose=False, **kwargs):
+def primefactors(
+    n: int,
+    limit: int | None = None,
+    verbose: bool = False,
+    **kwargs: Any
+) -> list[int]:
     """Return a sorted list of n's prime factors, ignoring multiplicity
     and any composite factor that remains if the limit was set too low
     for complete factorization. Unlike factorint(), primefactors() does
@@ -1769,7 +1774,7 @@ def primefactors(n, limit=None, verbose=False, **kwargs):
     return s
 
 
-def _divisors(n, proper=False):
+def _divisors(n: int, proper: bool = False) -> Iterator[int]:
     """Helper function for divisors which generates the divisors.
 
     Parameters
@@ -1803,8 +1808,30 @@ def _divisors(n, proper=False):
     else:
         yield from rec_gen()
 
+@overload
+def divisors(
+    n: int,
+    generator: Literal[True],
+    proper: bool = False
+) -> Iterator[int]: ...
+@overload
+def divisors(
+    n: int,
+    generator: Literal[False] = False,
+    proper: bool = False
+) -> list[int]: ...
+@overload
+def divisors(
+    n: int,
+    generator: bool = False,
+    proper: bool = False
+) -> Iterator[int] | list[int]: ...
 
-def divisors(n, generator=False, proper=False):
+def divisors(
+    n: int,
+    generator: bool = False,
+    proper: bool = False
+) -> Iterator[int] | list[int]:
     r"""
     Return all divisors of n sorted from 1..n by default.
     If generator is ``True`` an unordered generator is returned.
@@ -1840,7 +1867,7 @@ def divisors(n, generator=False, proper=False):
     return rv if generator else sorted(rv)
 
 
-def divisor_count(n, modulus=1, proper=False):
+def divisor_count(n: int, modulus: int = 1, proper: bool = False) -> int:
     """
     Return the number of divisors of ``n``. If ``modulus`` is not 1 then only
     those that are divisible by ``modulus`` are counted. If ``proper`` is True
@@ -1872,13 +1899,19 @@ def divisor_count(n, modulus=1, proper=False):
             return 0
     if n == 0:
         return 0
-    n = Mul(*[v + 1 for k, v in factorint(n).items() if k > 1])
+    n = math.prod([v + 1 for k, v in factorint(n).items() if k > 1], start=1)
     if n and proper:
         n -= 1
     return n
 
+@overload
+def proper_divisors(n: int, generator: Literal[True]) -> Iterator[int]: ...
+@overload
+def proper_divisors(n: int, generator: Literal[False] = False) -> list[int]: ...
+@overload
+def proper_divisors( n: int, generator: bool = False) -> Iterator[int] | list[int]: ...
 
-def proper_divisors(n, generator=False):
+def proper_divisors(n: int, generator: bool = False) -> Iterator[int] | list[int]:
     """
     Return all divisors of n except n, sorted by default.
     If generator is ``True`` an unordered generator is returned.
@@ -1903,7 +1936,7 @@ def proper_divisors(n, generator=False):
     return divisors(n, generator=generator, proper=True)
 
 
-def proper_divisor_count(n, modulus=1):
+def proper_divisor_count(n: int, modulus: int = 1) -> int:
     """
     Return the number of proper divisors of ``n``.
 
@@ -1925,7 +1958,7 @@ def proper_divisor_count(n, modulus=1):
     return divisor_count(n, modulus=modulus, proper=True)
 
 
-def _udivisors(n):
+def _udivisors(n: int)-> Iterator[int]:
     """Helper function for udivisors which generates the unitary divisors.
 
     Parameters
@@ -1951,8 +1984,14 @@ def _udivisors(n):
             i >>= 1
         yield d
 
+@overload
+def udivisors(n: int, generator: Literal[True]) -> Iterator[int]: ...
+@overload
+def udivisors(n: int, generator: Literal[False] = False) -> list[int]: ...
+@overload
+def udivisors(n: int, generator: bool = False) -> Iterator[int] | list[int]: ...
 
-def udivisors(n, generator=False):
+def udivisors(n: int, generator: bool = False) -> Iterator[int] | list[int]:
     r"""
     Return all unitary divisors of n sorted from 1..n by default.
     If generator is ``True`` an unordered generator is returned.
@@ -1989,7 +2028,7 @@ def udivisors(n, generator=False):
     return rv if generator else sorted(rv)
 
 
-def udivisor_count(n):
+def udivisor_count(n: int) -> int:
     """
     Return the number of unitary divisors of ``n``.
 
@@ -2022,7 +2061,7 @@ def udivisor_count(n):
     return 2**len([p for p in factorint(n) if p > 1])
 
 
-def _antidivisors(n):
+def _antidivisors(n: int) -> Iterator[int]:
     """Helper function for antidivisors which generates the antidivisors.
 
     Parameters
@@ -2045,8 +2084,14 @@ def _antidivisors(n):
         if n > d >= 2 and n % d:
             yield d
 
+@overload
+def antidivisors(n: int, generator: Literal[True]) -> Iterator[int]: ...
+@overload
+def antidivisors(n: int, generator: Literal[False] = False) -> list[int]: ...
+@overload
+def antidivisors(n: int, generator: bool = False) -> Iterator[int] | list[int]: ...
 
-def antidivisors(n, generator=False):
+def antidivisors(n: int, generator: bool = False) -> Iterator[int] | list[int]:
     r"""
     Return all antidivisors of n sorted from 1..n by default.
 

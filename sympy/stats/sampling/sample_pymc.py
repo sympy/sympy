@@ -1,3 +1,4 @@
+from __future__ import annotations
 from functools import singledispatch
 from sympy.external import import_module
 from sympy.stats.crv_types import BetaDistribution, CauchyDistribution, ChiSquaredDistribution, ExponentialDistribution, \

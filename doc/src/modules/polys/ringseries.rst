@@ -210,3 +210,6 @@ by ``polys.ring.ring``.
 
 .. autoclass:: PuiseuxPoly
     :members:
+
+.. autoclass:: Map
+.. py:class:: MonQ

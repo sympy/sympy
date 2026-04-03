@@ -37,35 +37,30 @@ jobs:
       NODE_VERSION: 20
     steps:
       - name: Checkout SymPy
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Set up Python ${{ env.PYTHON_VERSION }}
-        uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # v5.0.0
+        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Set up Emscripten toolchain
-        uses: mymindstorm/setup-emsdk@6ab9eb1bda2574c4ddb79809fc9247783eaf9021 # v14
+        uses: pyodide/setup-emsdk@ca2dd8aef8c2a0e11743c5c36f0b430ddb694b5c # v15
         with:
           version: ${{ env.EMSCRIPTEN_VERSION }}
           actions-cache-folder: emsdk-cache
-
-      # XXX: Remove this later...
-      # https://github.com/sympy/sympy/issues/27883
-      - name: Pin the wheel package
-        run: pip install 'wheel != 0.46.0'
 
       - name: Install pyodide-build
         run: pip install pyodide-build
 
       - name: Set up Node.js
-        uses: actions/setup-node@cdca7365b2dadb8aad0a33bc7601856ffabcc48e # v4.3.0
+        uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
         with:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: Retrieve previous test durations from GHA cache
         id: restore-test-durations
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
         with:
           path: test_durations_merged.json
           key: ${{ env.DURATIONS_CACHE_NAME }}
@@ -84,8 +79,8 @@ jobs:
           source .venv-pyodide/bin/activate
           pip install .
 
-          # Install dependencies and optional test dependencies
-          pip install pytest pytest-split hypothesis
+          # Install dependencies. Exclude ruff, since Pyodide cannot install it.
+          grep -vx 'ruff' requirements-dev.txt | pip install -r /dev/stdin
           pip install matplotlib numpy scipy
 
           # Trigger test suite (slow and tooslow tests are skipped by default)
@@ -100,7 +95,7 @@ jobs:
 
       - name: Upload test duration artifacts
         if: always()
-        uses: actions/upload-artifact@v4.4.3
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: pytest_durations_${{ matrix.group }}
           path: test_durations_group_${{ matrix.group }}.json
@@ -136,14 +131,17 @@ jobs:
       # via branches from the main repository and PRs from users
       # with write access to the repository will succeed.
       - name: Delete previous cached test durations
-        run: |
-          gh extension install actions/gh-actions-cache
-          gh actions-cache delete ${{ env.DURATIONS_CACHE_NAME }} \
-          -R ${{ github.repository }} \
-          -B ${{ github.head_ref }} \
-          --confirm || true
         env:
           GH_TOKEN: ${{ github.token }}
+          CACHE_NAME: ${{ env.DURATIONS_CACHE_NAME }}
+          REPO: ${{ github.repository }}
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          gh extension install actions/gh-actions-cache
+          gh actions-cache delete "$CACHE_NAME" \
+          -R "$REPO" \
+          -B "$HEAD_REF" \
+          --confirm || true
 
   # We will collect the test durations from all groups in this job
   # and merge them into a single file. Once all groups have finished,
@@ -156,7 +154,7 @@ jobs:
     if: always()
     steps:
       - name: Download all artifacts
-        uses: actions/download-artifact@v4.1.8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           path: all_test_durations
           merge-multiple: true
@@ -170,14 +168,14 @@ jobs:
           jq -s 'add' test_durations_group_*.json > test_durations_merged.json
 
       - name: Save test durations as an artifact for debugging
-        uses: actions/upload-artifact@v4.4.3
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: test_durations_merged
           path: test_durations_merged.json
           if-no-files-found: error
 
       - name: Cache test durations file for subsequent runs
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
         with:
           path: test_durations_merged.json
           key: ${{ env.DURATIONS_CACHE_NAME }}

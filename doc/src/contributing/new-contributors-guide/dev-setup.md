@@ -149,10 +149,11 @@ Then, on your machine browse to where you would like to store SymPy, and clone (
 $ git clone https://github.com/sympy/sympy
 ```
 
-Then assign your read-and-write repo to a remote called "github" (replace
+Then navigate into the cloned directory and assign your read-and-write repo to a remote called "github" (replace
 `<your-github-username>` with your GitHub username):
 
 ```
+cd sympy
 git remote add github git@github.com:<your-github-username>/sympy.git
 ```
 
@@ -214,7 +215,6 @@ to activate the environment created by conda`conda activate sympy-dev`
 If you prefer to only python to create a venv the command is as follows
 
 ```bash
-cd sympy
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements-dev.txt
