@@ -286,6 +286,25 @@ def test_insufficient_bconditions():
     assert p == q/(E*I)
 
 
+def test_solve_for_reaction_loads_inconsistent():
+    # Issue #28346: ensure solve_for_reaction_loads raises ValueError when system is inconsistent
+    E, I, M = symbols('E I M')
+
+    # 1) Inconsistent numerical system (conflicting supports)
+    b1 = Beam(10, E, I)
+    b1.apply_support(0, type='pin')
+    b1.bc_deflection.append((0, 1))
+    raises(ValueError, lambda: b1.solve_for_reaction_loads())
+
+    # 2) Symbolic loads that cannot be balanced
+    b2 = Beam(10, E, I)
+    R1 = symbols('R1')
+    b2.apply_load(R1, 0, -1)
+    b2.apply_load(M, 5, -2)
+    b2.bc_deflection = [(0, 0)]
+    raises(ValueError, lambda: b2.solve_for_reaction_loads(R1))
+
+
 def test_statically_indeterminate():
     E = Symbol('E')
     I = Symbol('I')

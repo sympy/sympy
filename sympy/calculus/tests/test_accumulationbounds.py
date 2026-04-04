@@ -1,5 +1,5 @@
 from __future__ import annotations
-from sympy.core.numbers import (E, Rational, oo, pi, zoo)
+from sympy.core.numbers import (E, I, Rational, oo, pi, zoo)
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.functions.elementary.exponential import (exp, log)
@@ -59,7 +59,10 @@ def test_AccumBounds():
     assert abs(B(-2, 1)) == B(0, 2)
     assert abs(B(-1, 2)) == B(0, 2)
     c = Symbol('c')
-    raises(ValueError, lambda: B(0, c))
+    # AccumBounds now allows symbolic bounds with unknown realness
+    assert B(0, c) == B(0, c)
+    # Still rejects provably non-real bounds
+    raises(ValueError, lambda: B(0, I))
     raises(ValueError, lambda: B(1, -1))
     r = Symbol('r', real=True)
     raises(ValueError, lambda: B(r, r - 1))

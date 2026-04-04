@@ -3096,12 +3096,17 @@ class Expr(Basic, EvalfMixin):
 
         if x.is_positive is x.is_negative is None or x.is_Symbol is not True:
             # replace x with an x that has a positive assumption
-            xpos = Dummy('x', positive=True)
-            rv = self.subs(x, xpos).series(xpos, x0, n, dir, logx=logx, cdir=cdir)
-            if n is None:
-                return (s.subs(xpos, x) for s in rv)
-            else:
-                return rv.subs(xpos, x)
+            # Skip this substitution for expressions containing AccumBounds,
+            # because the subs-back step would fail when AccumBounds bounds
+            # lose their is_extended_real assumption.
+            from sympy.calculus.accumulationbounds import AccumulationBounds
+            if not self.has(AccumulationBounds):
+                xpos = Dummy('x', positive=True)
+                rv = self.subs(x, xpos).series(xpos, x0, n, dir, logx=logx, cdir=cdir)
+                if n is None:
+                    return (s.subs(xpos, x) for s in rv)
+                else:
+                    return rv.subs(xpos, x)
 
         from sympy.series.order import Order
         if n is not None:  # nseries handling

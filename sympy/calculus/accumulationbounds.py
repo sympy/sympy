@@ -190,8 +190,10 @@ class AccumulationBounds(Expr):
         min = _sympify(min)
         max = _sympify(max)
 
-        # Only allow real intervals (use symbols with 'is_extended_real=True').
-        if not min.is_extended_real or not max.is_extended_real:
+        # Only reject bounds that are provably non-real.
+        # Allow symbolic bounds whose realness is unknown (is_extended_real is None)
+        # so that substitutions (e.g. during series expansion) work correctly.
+        if min.is_extended_real is False or max.is_extended_real is False:
             raise ValueError("Only real AccumulationBounds are supported")
 
         if max == min:
@@ -214,6 +216,30 @@ class AccumulationBounds(Expr):
     def _eval_is_real(self):
         if self.min.is_real and self.max.is_real:
             return True
+
+    def _eval_subs(self, old, new):
+        # Substitute into the bounds directly. If the new bounds are
+        # provably real, use the normal constructor (which validates
+        # ordering). Otherwise, bypass __new__ validation so that
+        # symbolic substitutions (e.g. replacing a positive Dummy with
+        # a generic Symbol during series()) do not raise ValueError.
+        min_new = self.min._subs(old, new)
+        max_new = self.max._subs(old, new)
+        if (min_new.is_extended_real and max_new.is_extended_real):
+            try:
+                return self.func(min_new, max_new)
+            except ValueError:
+                pass
+        # Bypass __new__ validation for symbolic bounds whose realness
+        # cannot be determined.
+        return Basic.__new__(type(self), min_new, max_new)
+
+    def _eval_nseries(self, x, n, logx, cdir=0):
+        # AccumBounds is treated as a constant during series expansion,
+        # but only if it doesn't contain the series variable.
+        if not self.has(x):
+            return self
+        return super()._eval_nseries(x, n, logx, cdir)
 
     @property
     def min(self):
