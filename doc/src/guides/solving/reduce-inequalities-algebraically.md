@@ -149,7 +149,7 @@ the constraints on $y$.
 >>> from sympy import reduce_inequalities, symbols
 >>> x, y = symbols("x y")
 >>> reduce_inequalities([x + y > 1, y > 0], x)
-(0 < y) & (y < oo) & (x > 1 - y)
+(0 < y) & (x > 1 - y)
 ```
 
 (`oo` is {class}`~.Infinity`.)
@@ -161,7 +161,7 @@ the set of inequalities for multiple symbols:
 >>> from sympy import reduce_inequalities, symbols
 >>> x, y = symbols("x y")
 >>> x_y_reduced = reduce_inequalities([x > 1, y > 0], [x, y]); x_y_reduced
-(0 < y) & (1 < x) & (x < oo) & (y < oo)
+(0 < y) & (1 < x)
 ```
 
 Note that this provides no mathematical insight beyond reducing the inequalities
@@ -170,9 +170,9 @@ separately:
 ```py
 >>> from sympy import And
 >>> x_reduced = reduce_inequalities(x > 1, x); x_reduced
-(1 < x) & (x < oo)
+1 < x
 >>> y_reduced = reduce_inequalities(y > 0, y); y_reduced
-(0 < y) & (y < oo)
+0 < y
 >>> And(x_reduced, y_reduced) == x_y_reduced
 True
 ```
@@ -191,7 +191,7 @@ both:
 >>> reduce_inequalities([x ** 2 < 4, x > 0], x)
 (0 < x) & (x < 2)
 >>> reduce_inequalities([x < y, x > 0], x)
-(0 < x) & (x < oo) & (x < y)
+(0 < x) & (x < y)
 >>> reduce_inequalities([x ** 2 - y < 4, x > 0], x)
 Traceback (most recent call last):
 ...
@@ -212,7 +212,7 @@ the equation, here $2\pi$.
 >>> from sympy.abc import x, y
 >>> from sympy.calculus.util import periodicity
 >>> reduce_inequalities([2*cos(x) < 1, x > 0], x)
-(0 < x) & (x < oo) & (pi/3 < x) & (x < 5*pi/3)
+(0 < x) & (pi/3 < x) & (x < 5*pi/3)
 >>> periodicity(2*cos(x), x)
 2*pi
 ```

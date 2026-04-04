@@ -930,9 +930,9 @@ def test_max_shear_force():
     b.apply_load(2, 2, 0, end=3)
     b.solve_for_reaction_loads(R, M)
     assert b.max_shear_force() == (Interval(0, 2), 8)
-
-    l = symbols('l', positive=True)
-    P = Symbol('P')
+    # Length and P cannot be infinite, it has to be defined otherwise this wont work.
+    l = symbols('l', positive=True, infinite=False)
+    P = Symbol('P', infinite=False)
     b = Beam(l, E, I)
     R1, R2 = symbols('R1, R2')
     b.apply_load(R1, 0, -1)

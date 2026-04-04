@@ -221,7 +221,7 @@ def reduce_rational_inequalities(exprs, gen, relational=True):
 
     >>> y = Symbol('y', extended_real=True)
     >>> reduce_rational_inequalities([[y + 2 > 0]], y)
-    (-2 < y) & (y < oo)
+    -2 < y
     """
     exact = True
     solution = S.EmptySet  # add pieces for each group
@@ -363,7 +363,7 @@ def reduce_abs_inequalities(exprs, gen):
 
     >>> reduce_abs_inequalities([(Abs(3*x - 5) - 7, '<'),
     ... (Abs(x + 25) - 13, '>')], x)
-    (-2/3 < x) & (x < 4) & (((-oo < x) & (x < -38)) | ((-12 < x) & (x < oo)))
+    (-2/3 < x) & (x < 4) & ((-12 < x) | (x < -38))
 
     >>> reduce_abs_inequalities([(Abs(x - 4) + Abs(3*x - 5) - 7, '<')], x)
     (1/2 < x) & (x < 4)
@@ -933,10 +933,10 @@ def reduce_inequalities(inequalities, symbols=[]):
     >>> from sympy import reduce_inequalities
 
     >>> reduce_inequalities(0 <= x + 3, [])
-    (-3 <= x) & (x < oo)
+    -3 <= x
 
     >>> reduce_inequalities(0 <= x + y*2 - 1, [x])
-    (x < oo) & (x >= 1 - 2*y)
+    x >= 1 - 2*y
     """
     if not iterable(inequalities):
         inequalities = [inequalities]

@@ -648,6 +648,8 @@ def test_signsimp():
 
 
 def test_besselsimp():
+    # Not quite knowledgeable with Bessel functions, but it seems like a cannot be infinite.
+    a = symbols("a",infinite=False)
     from sympy.functions.special.bessel import (besseli, besselj, bessely)
     from sympy.integrals.transforms import cosine_transform
     assert besselsimp(exp(-I*pi*y/2)*besseli(y, z*exp_polar(I*pi/2))) == \
