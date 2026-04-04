@@ -624,6 +624,13 @@ def test_add1():
     #Test whether TensAdd.doit chokes on subterms that are zero.
     assert TensAdd(p(a), TensMul(0, p(a)) ).doit() == p(a)
 
+    #If none of the arguments of a TensAdd are TensExpr, it should be converted to an add by doit
+    f = Function("f")
+    x = Symbol("x")
+
+    expr = TensAdd(3, f(x))
+    assert isinstance(expr.doit(), Add)
+
 def test_special_eq_ne():
     # test special equality cases:
     Lorentz = TensorIndexType('Lorentz', dummy_name='L')
