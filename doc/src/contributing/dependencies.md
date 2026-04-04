@@ -15,7 +15,7 @@ Every dependency listed below can be installed with conda via
 This page does not list packages which themselves depend on SymPy, only those
 packages that SymPy depends on. An incomplete list of packages that depend on
 SymPy can be found on the [main SymPy
-webpage](https://www.sympy.org/en/index.html), and a more complete list can be
+webpage](https://www.sympy.org//en/index.html), and a more complete list can be
 found on
 [GitHub](https://github.com/sympy/sympy/network/dependents?dependent_type=PACKAGE)
 or [libraries.io](https://libraries.io/pypi/sympy/dependents).
