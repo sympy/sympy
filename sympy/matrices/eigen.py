@@ -347,7 +347,7 @@ def _eigenspace(
 
 
 def _eigenvects_DOM(M: Tmat, **kwargs) -> list[tuple[Expr, int, list[Tmat]]] | None:
-    DOM = DomainMatrix.from_Matrix(M, field=True, extension=True)
+    DOM: DomainMatrix = DomainMatrix.from_Matrix(M, field=True, extension=True)
     DOM = DOM.to_dense()
 
     if DOM.domain != EX:
