@@ -6,46 +6,89 @@ class CartanType_generator():
     """
     Constructor for actually creating things
     """
+
     def __call__(self, *args):
+        if len(args) != 1:
+            raise TypeError("CartanType takes exactly one argument")
+
         c = args[0]
+
+        # -------- Handle list input --------
         if isinstance(c, list):
-            letter, n = c[0], int(c[1])
+            if len(c) != 2:
+                raise ValueError(f"Invalid Cartan type '{c}'")
+
+            letter, n = c
+
+            if not isinstance(letter, str):
+                raise TypeError("Cartan type letter must be a string")
+
+            letter = letter.strip().upper()
+
+            if not isinstance(n, int):
+                raise TypeError("Rank must be an integer")
+
+        # -------- Handle string input --------
         elif isinstance(c, str):
-            letter, n = c[0], int(c[1:])
+            c = c.strip()
+
+            if len(c) < 2:
+                raise ValueError(f"Invalid Cartan type '{c}'")
+
+            letter = c[0].upper()
+            rank_str = c[1:]
+
+            if not rank_str.isdecimal():
+                raise ValueError(f"Invalid Cartan type '{c}'")
+
+            n = int(rank_str)
+
         else:
             raise TypeError("Argument must be a string (e.g. 'A3') or a list (e.g. ['A', 3])")
 
+        # -------- Rank validation --------
         if n < 0:
-            raise ValueError("Lie algebra rank cannot be negative")
+            raise ValueError(f"Invalid Cartan type '{c}' (rank must be non-negative)")
+
+        # -------- Dispatch --------
         if letter == "A":
-            from . import type_a
-            return type_a.TypeA(n)
+            if n < 1:
+                raise ValueError(f"Invalid Cartan type '{c}'")
+            from .type_a import TypeA
+            return TypeA(n)
+
         if letter == "B":
-            from . import type_b
-            return type_b.TypeB(n)
+            if n < 2:
+                raise ValueError(f"Invalid Cartan type '{c}'")
+            from .type_b import TypeB
+            return TypeB(n)
 
         if letter == "C":
-            from . import type_c
-            return type_c.TypeC(n)
+            if n < 2:
+                raise ValueError(f"Invalid Cartan type '{c}'")
+            from .type_c import TypeC
+            return TypeC(n)
 
         if letter == "D":
-            from . import type_d
-            return type_d.TypeD(n)
+            if n < 3:
+                raise ValueError(f"Invalid Cartan type '{c}'")
+            from .type_d import TypeD
+            return TypeD(n)
 
-        if letter == "E":
-            if n >= 6 and n <= 8:
-                from . import type_e
-                return type_e.TypeE(n)
+        if letter == "E" and 6 <= n <= 8:
+            from .type_e import TypeE
+            return TypeE(n)
 
-        if letter == "F":
-            if n == 4:
-                from . import type_f
-                return type_f.TypeF(n)
+        if letter == "F" and n == 4:
+            from .type_f import TypeF
+            return TypeF(n)
 
-        if letter == "G":
-            if n == 2:
-                from . import type_g
-                return type_g.TypeG(n)
+        if letter == "G" and n == 2:
+            from .type_g import TypeG
+            return TypeG(n)
+
+        raise ValueError(f"Invalid Cartan type '{c}'")
+
 
 CartanType = CartanType_generator()
 
@@ -56,9 +99,14 @@ class Standard_Cartan(Atom):
     """
 
     def __new__(cls, series, n):
+        if not isinstance(series, str):
+            raise TypeError("Series must be a string")
+        if not isinstance(n, int):
+            raise TypeError("Rank must be an integer")
+
         obj = Basic.__new__(cls)
         obj.n = n
-        obj.series = series
+        obj._series = series.upper()
         return obj
 
     def rank(self):
@@ -67,8 +115,15 @@ class Standard_Cartan(Atom):
         """
         return self.n
 
+    @property
     def series(self):
         """
         Returns the type of the Lie algebra
         """
-        return self.series
+        return self._series
+
+    # important for tests & debugging
+    def __repr__(self):
+        return f"{self._series}{self.n}"
+
+    __str__ = __repr__
