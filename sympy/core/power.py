@@ -643,6 +643,8 @@ class Pow(Expr):
         if c2 is None:
             return
         if c1 and c2:
+            if(self.base == self.exp and self.base.is_complex):
+                return True
             if self.exp.is_nonnegative or fuzzy_not(self.base.is_zero):
                 return True
 
