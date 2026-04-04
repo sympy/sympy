@@ -5,7 +5,7 @@ from sympy.core.symbol import symbols
 from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.matrices.immutable import ImmutableDenseMatrix as Matrix
 from sympy.physics.vector import ReferenceFrame, dynamicsymbols, outer
-from sympy.physics.vector.dyadic import _check_dyadic
+from sympy.physics.vector.dyadic import _check_dyadic, Dyadic
 from sympy.testing.pytest import raises
 
 A = ReferenceFrame('A')
@@ -124,3 +124,74 @@ def test_dyadic_xreplace():
     assert v.xreplace({x:1, z:0}) == D
     raises(TypeError, lambda: v.xreplace())
     raises(TypeError, lambda: v.xreplace([x, y]))
+
+def test_dyadic_equals():
+    N = ReferenceFrame('N')
+    a = symbols('a')
+
+    assert N.xx.equals(N.xx)
+    assert N.xy.equals(N.xy)
+    assert N.zz.equals(N.zz)
+    assert not N.xx.equals(N.xy)
+    assert not N.xy.equals(N.yz)
+
+    # 2 expressions which are mathematically but not structurally equal
+    expr1 = (a + 1) ** 2
+    expr2 = a**2 + 2 * a + 1
+    assert expr1 != expr2 # sanity check, so that this test is sensible
+    assert expr1.equals(expr2)
+
+    assert (N.xx * expr1).equals(N.xx * expr2)
+    assert not (N.xx * expr1).equals(N.xx * (expr2 + 1))
+    assert not (N.xy * expr1).equals(N.xx * (expr2))
+
+    assert (N.xx * expr1 + N.yz * expr2).equals(N.xx * expr2 + N.yz * expr1)
+
+    # Invalid type
+    assert not N.xx.equals(5)
+    assert not N.xx.equals('hi')
+
+
+def test_dyadic_equals_different_frames():
+    N = ReferenceFrame('N')
+    B = ReferenceFrame('B')
+    C = ReferenceFrame('C')
+    B.orient_axis(N, N.z, pi / 2)
+    # Intentionally do not orient C
+
+    assert B.zz.equals(N.zz)
+    assert B.zx.equals(N.zy)
+    assert not B.zx.equals(N.zx)
+    assert B.zy.equals(-N.zx)
+    assert not B.zy.equals(N.zy)
+
+    # Unoriented frames should not error when comparing
+    assert not C.xx.equals(N.xx)
+
+
+def test_equals_zero_nontrivial_zero_component():
+    a = symbols("a")
+    N = ReferenceFrame("N")
+
+    # 2 expressions which are mathematically but not structurally equal
+    expr1 = (a + 1) ** 2
+    expr2 = a**2 + 2 * a + 1
+    assert expr1 != expr2 # sanity check, so that this test is sensible
+    assert expr1.equals(expr2)
+
+    assert (N.xx * expr1 - N.xx * expr2).equals(Dyadic(0))
+
+def test_equals_zero_nontrivial_zero_component_refframe():
+    N = ReferenceFrame("N")
+    A = ReferenceFrame("A")
+    A.orient_axis(N, N.x, 0)
+
+    assert (N.xx - A.xx).equals(Dyadic(0))
+    assert (N.yz - A.yz).equals(Dyadic(0))
+    assert (N.zy - A.zy).equals(Dyadic(0))
+    assert not (N.xx - A.yz).equals(Dyadic(0))
+    assert not (N.xx - A.zy).equals(Dyadic(0))
+    assert not (N.yy - A.xx).equals(Dyadic(0))
+    assert not (N.yy - A.zy).equals(Dyadic(0))
+    assert not (N.zz - A.xx).equals(Dyadic(0))
+    assert not (N.zz - A.yz).equals(Dyadic(0))
