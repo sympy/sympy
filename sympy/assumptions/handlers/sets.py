@@ -85,6 +85,9 @@ def _(expr, assumptions):
     """
     if expr.is_number:
         return _IntegerPredicate_number(expr, assumptions)
+    is_zero = ask(Q.zero(expr), assumptions)
+    if is_zero:
+        return True
     _output = True
     for arg in expr.args:
         if not ask(Q.integer(arg), assumptions):
@@ -101,6 +104,8 @@ def _(expr, assumptions):
             else:
                 return
 
+    if _output is False:
+        return False if is_zero is False else None
     return _output
 
 @IntegerPredicate.register(Abs)
@@ -274,6 +279,9 @@ def _(expr, assumptions):
     """
     if expr.is_number:
         return _RealPredicate_number(expr, assumptions)
+    is_zero = ask(Q.zero(expr), assumptions)
+    if is_zero:
+        return True
     result = True
     for arg in expr.args:
         if ask(Q.real(arg), assumptions):
@@ -283,6 +291,8 @@ def _(expr, assumptions):
         else:
             break
     else:
+        if result is False:
+            return False if is_zero is False else None
         return result
 
 @RealPredicate.register(Pow)
