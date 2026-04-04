@@ -1802,6 +1802,15 @@ def test_TensMul_data():
         # Test the deleter
         del g.data
 
+def test_TensMul_doit():
+    R3 = TensorIndexType("R3", dim=3)
+    i,j = symbols("i j", cls=TensorIndex, tensor_index_type=R3)
+    K = TensorHead("K", index_types=[R3])
+
+    expr = TensMul(K(j), TensAdd(2, -2, 2*K(i)*K(-i)))
+
+    assert expr.doit() == 2*K(j)*K(i)*K(-i)
+
 def test_issue_11020_TensAdd_data():
     with warns_deprecated_sympy():
         Lorentz = TensorIndexType('Lorentz', metric_symmetry=1, dummy_name='i', dim=2)

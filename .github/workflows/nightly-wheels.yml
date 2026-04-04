@@ -14,11 +14,22 @@ on:
     branches:
       - master
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions: {}
+
 jobs:
   nightly-wheel:
+    name: Build Nightly Wheel
+    permissions:
+      contents: read
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
       - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: '3.13'
@@ -35,7 +46,9 @@ jobs:
   # Keep this job separate from the nightly-wheel job to limit exposure to the
   # secrets.
   nightly-wheel-upload:
+    name: Upload Nightly Wheel
     needs: nightly-wheel
+    permissions: {}
     runs-on: ubuntu-latest
     steps:
       - name: Download built wheel
@@ -50,4 +63,4 @@ jobs:
           artifacts_path: dist
           # This token is generated from anaconda.org
           # https://github.com/scientific-python/upload-nightly-action/issues/111
-          anaconda_nightly_upload_token: ${{ secrets.ANACONDA_ORG_UPLOAD_TOKEN }}
+          anaconda_nightly_upload_token: ${{ secrets.ANACONDA_ORG_UPLOAD_TOKEN }} # zizmor: ignore[secrets-outside-env]
