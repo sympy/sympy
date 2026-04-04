@@ -254,6 +254,25 @@ def test_Beam():
     with raises(TypeError):
         b4.variable = 1
 
+    b = Beam(length=10000.,
+         elastic_modulus=210000,
+         second_moment=7.3808551e+07)
+    b.apply_support(loc=7000., type='roller')
+    b.apply_support(loc=0., type='pin')
+    R_NH = symbols('R_NH')
+    b.apply_load(R_NH, 5000., -1)
+    b.bc_deflection = [(5000., 0)]
+    b.apply_load(32000., 4000., -1)
+    b.solve_for_reaction_loads(*(i[0] for i in b.applied_loads))
+
+    assert b.slope() == -136*SingularityFunction(x, 0, 2)/1356232124625 \
+    + 8*SingularityFunction(x, 4000, 2)/7749897855 - 232*SingularityFunction(x, 5000, 2)/193747446375 \
+    + 24*SingularityFunction(x, 7000, 2)/90415474975 + Rational(8320000, 10849856997)
+
+    assert b.deflection() == 8320000*x/10849856997 - 136*SingularityFunction(x, 0, 3)/4068696373875 \
+    + 8*SingularityFunction(x, 4000, 3)/23249693565 - 232*SingularityFunction(x, 5000, 3)/581242339125 \
+    + 8*SingularityFunction(x, 7000, 3)/90415474975
+
 
 def test_insufficient_bconditions():
     # Test cases when required number of boundary conditions
@@ -381,9 +400,9 @@ def test_composite_beam():
     b.bc_slope = [(0, 0)]
     b.bc_deflection = [(0, 0)]
     assert b.length == 4
-    assert b.second_moment == Piecewise((1.5*I, x <= 2), (I, x <= 4))
-    assert b.slope().subs(x, 4) == 120.0/(E*I)
-    assert b.slope().subs(x, 2) == 80.0/(E*I)
+    assert b.second_moment == Piecewise((3*I/2, x <= 2), (I, x <= 4))
+    assert b.slope().subs(x, 4) == 120/(E*I)
+    assert b.slope().subs(x, 2) == 80/(E*I)
     assert int(b.deflection().subs(x, 4).args[0]) == -302  # Coefficient of 1/(E*I)
 
     l = symbols('l', positive=True)
