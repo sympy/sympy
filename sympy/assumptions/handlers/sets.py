@@ -82,9 +82,13 @@ def _(expr, assumptions):
     * Integer*Irrational   -> !Integer
     * Odd/Even             -> !Integer
     * Integer*Rational     -> ?
+    * 0*anything           -> Integer (0 is an integer)
     """
     if expr.is_number:
         return _IntegerPredicate_number(expr, assumptions)
+    # If the product is zero, it is an integer
+    if ask(Q.zero(expr), assumptions):
+        return True
     _output = True
     for arg in expr.args:
         if not ask(Q.integer(arg), assumptions):
@@ -271,9 +275,13 @@ def _(expr, assumptions):
     * Real*Real               -> Real
     * Real*Imaginary          -> !Real
     * Imaginary*Imaginary     -> Real
+    * 0*anything              -> Real (0 is real)
     """
     if expr.is_number:
         return _RealPredicate_number(expr, assumptions)
+    # If the product is zero, it is real
+    if ask(Q.zero(expr), assumptions):
+        return True
     result = True
     for arg in expr.args:
         if ask(Q.real(arg), assumptions):
@@ -569,9 +577,13 @@ def _(expr, assumptions):
     """
     * Real*Imaginary      -> Imaginary
     * Imaginary*Imaginary -> Real
+    * 0*anything          -> not Imaginary (0 is real)
     """
     if expr.is_number:
         return _Imaginary_number(expr, assumptions)
+    # If the product is zero, it is not imaginary (0 is real)
+    if ask(Q.zero(expr), assumptions):
+        return False
     result = False
     reals = 0
     for arg in expr.args:
