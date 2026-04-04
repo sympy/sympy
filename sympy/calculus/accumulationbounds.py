@@ -10,6 +10,7 @@ from sympy.logic.boolalg import And
 from sympy.multipledispatch import dispatch
 from sympy.series.order import Order
 from sympy.sets.sets import FiniteSet
+from sympy.functions.elementary.integers import floor, ceiling, frac
 
 
 class AccumulationBounds(Expr):
@@ -733,8 +734,31 @@ def _eval_is_le(lhs, rhs): # noqa: F811
         if is_gt(lhs.min, rhs):
             return False
 
+@dispatch(ceiling, AccumulationBounds)  # type:ignore
+def _eval_is_ge(lhs,rhs): # noqa:F811
+    return is_ge(lhs, rhs.max)
 
-@dispatch(AccumulationBounds, AccumulationBounds)
+@dispatch(AccumulationBounds, ceiling)  # type:ignore
+def _eval_is_ge(lhs,rhs): # noqa:F811
+    return is_ge(lhs.min, rhs)
+
+@dispatch(AccumulationBounds, floor)  # type:ignore
+def _eval_is_ge(lhs,rhs): # noqa:F811
+    return is_ge(lhs.min, rhs)
+
+@dispatch(floor, AccumulationBounds)  # type:ignore
+def _eval_is_ge(lhs,rhs): # noqa:F811
+    return is_ge(lhs, rhs.max)
+
+@dispatch(frac, AccumulationBounds)  # type:ignore
+def _eval_is_ge(lhs,rhs): # noqa:F811
+    return is_ge(lhs, rhs.max)
+
+@dispatch(AccumulationBounds, frac)  # type:ignore
+def _eval_is_ge(lhs,rhs): # noqa:F811
+    return is_ge(lhs.min, rhs)
+
+@dispatch(AccumulationBounds, AccumulationBounds)  # type:ignore
 def _eval_is_ge(lhs, rhs): # noqa:F811
     if is_ge(lhs.min, rhs.max):
         return True
