@@ -1,7 +1,7 @@
 from __future__ import annotations
 from sympy.concrete.summations import Sum
 from sympy.core.expr import Expr
-from sympy.core.function import (Derivative, Function, diff, Subs)
+from sympy.core.function import (Derivative, Function, Subs)
 from sympy.core.numbers import (I, Rational, pi)
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
@@ -15,6 +15,12 @@ from sympy.functions.elementary.trigonometric import (cos, cot, sin, tan)
 from sympy.tensor.array.ndim_array import NDimArray
 from sympy.testing.pytest import raises
 from sympy.abc import a, b, c, x, y, z
+
+from sympy import nan,diff
+def test_nan_derivative():
+    x = Symbol('x')
+    assert diff(nan, x)==nan
+
 
 def test_diff():
     assert Rational(1, 3).diff(x) is S.Zero
