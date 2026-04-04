@@ -87,22 +87,52 @@ def refine_abs(expr, assumptions):
 
     >>> from sympy import Q, Abs
     >>> from sympy.assumptions.refine import refine_abs
-    >>> from sympy.abc import x
+    >>> from sympy.abc import x, y, z
+    >>> refine_abs(Abs(x), Q.zero(x))
+    0
     >>> refine_abs(Abs(x), Q.real(x))
     >>> refine_abs(Abs(x), Q.positive(x))
     x
     >>> refine_abs(Abs(x), Q.negative(x))
     -x
-
+    >>> refine_abs(Abs(y-x), Q.positive(y-x))
+    -x + y
+    >>> refine_abs(Abs(y-x), Q.negative(y-x))
+    x - y
+    >>> refine_abs(Abs(x * y), Q.positive(x) & Q.positive(y))
+    x*y
+    >>> refine_abs(Abs(z - y + x), Q.positive(z) & Q.negative(y) & Q.positive(x))
+    x - y + z
     """
     from sympy.functions.elementary.complexes import Abs
     arg = expr.args[0]
+    if ask(Q.zero(arg), assumptions):
+        return 0
     if ask(Q.real(arg), assumptions) and \
             fuzzy_not(ask(Q.negative(arg), assumptions)):
         # if it's nonnegative
         return arg
     if ask(Q.negative(arg), assumptions):
         return -arg
+
+    # arg is Add
+    if isinstance(arg, Add):
+        if ask(Q.positive(arg), assumptions):
+            return arg
+        elif ask(Q.negative(arg), assumptions):
+            return -arg
+        elif ask(Q.zero(arg), assumptions):
+            return 0
+        else:
+            opposite_arg = -arg
+            if ask(Q.positive(opposite_arg), assumptions):
+                return -arg
+            elif ask(Q.negative(opposite_arg), assumptions):
+                return arg
+            elif ask(Q.zero(opposite_arg), assumptions):
+                return 0
+        return expr
+
     # arg is Mul
     if isinstance(arg, Mul):
         r = [refine(abs(a), assumptions) for a in arg.args]
@@ -305,6 +335,7 @@ def refine_im(expr, assumptions):
     if ask(Q.imaginary(arg), assumptions):
         return - S.ImaginaryUnit * arg
     return _refine_reim(expr, assumptions)
+
 
 def refine_arg(expr, assumptions):
     """
