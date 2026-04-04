@@ -794,6 +794,10 @@ class polygamma(DefinedFunction):
         if n == 0 and o.contains(1/x):
             logx = log(x) if logx is None else logx
             return o.getn() * logx
+        elif not o.contains(S.One) and n.is_integer and n.is_nonnegative:
+            # z -> 0: pole of order (n+1), leading Laurent term:
+            # polygamma(n, z) ~ (-1)^(n+1) * n! / z^(n+1)
+            return S.NegativeOne**(n + 1) * factorial(n) / z**(n + 1)
         else:
             return self.func(n, z)
 

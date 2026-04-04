@@ -1426,6 +1426,7 @@ class Mul(Expr, AssocOp):
         numerators = []
         denominators = []
         unknown = False
+        non_integers = []
         for a in self.args:
             hit = False
             if a.is_integer:
@@ -1453,8 +1454,15 @@ class Mul(Expr, AssocOp):
                 else:
                     # x**2, 2**x, or x**y with x and y int-unknown -> unknown
                     return
+            elif a.is_integer is False:
+                non_integers.append(a)
             else:
                 return
+
+        if non_integers:
+            if len(non_integers) == 1 and not numerators and not denominators and not unknown:
+                return False
+            return
 
         if not denominators and not unknown:
             return True
