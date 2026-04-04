@@ -7,7 +7,7 @@ from sympy.core.numbers import (I, Rational, nan, pi)
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.functions.elementary.complexes import (Abs, arg, im, re, sign)
-from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (atan, atan2, cos, sin, tan)
 from sympy.abc import w, x, y, z
@@ -303,6 +303,87 @@ def test_sin_cos():
     raises(TypeError, lambda: refine_sin_cos(tan(x), Q.real(x)))
     raises(TypeError, lambda: refine_sin_cos(exp(x), Q.real(x)))
     raises(TypeError, lambda: refine_sin_cos(x, Q.real(x)))
+
+
+def test_log():
+    # Power rule: log(x**p) -> p*log(x) when x > 0 and p is real
+    assert refine(log(x**2), Q.positive(x)) == 2*log(x)
+    assert refine(log(x**y), Q.positive(x) & Q.real(y)) == y*log(x)
+    assert refine(log(x**3), Q.positive(x)) == 3*log(x)
+
+    # Power rule must NOT apply with imaginary exponents
+    assert refine(log(x**(2*I)), Q.positive(x)) == log(x**(2*I))
+    assert refine(log(x**y), Q.positive(x) & Q.imaginary(y)) == log(x**y)
+
+    # Inverse: log(exp(x)) -> x when x is real
+    assert refine(log(exp(x)), Q.real(x)) == x
+    assert refine(log(exp(y)), Q.real(y)) == y
+
+    # No simplification without proper assumptions
+    assert refine(log(x**2), True) == log(x**2)
+    assert refine(log(exp(x)), True) == log(exp(x))  # need Q.real
+
+    # log(1/x) with positive x -> -log(x)
+    assert refine(log(S.One/x), Q.positive(x)) == -log(x)
+
+    # Negative base should NOT simplify power rule
+    assert refine(log(x**2), Q.negative(x)) == log(x**2)
+
+    # exp with complex argument should NOT fully simplify
+    assert refine(log(exp(I*x)), Q.real(x)) == log(exp(I*x))
+    assert refine(log(exp(x + I)), Q.real(x)) == log(exp(x + I))
+
+    # Zero should NOT simplify (undefined handled properly by evaluating)
+    assert refine(log(0), True) == log(0)
+
+    # (-x)**2 is canonicalized to x**2 by SymPy, so it simplifies
+    assert refine(log((-x)**2), Q.positive(x)) == 2*log(x)
+
+    # Non-real exponent without Q.real assumption
+    assert refine(log(x**y), Q.positive(x)) == log(x**y)  # y could be complex
+
+    # log(exp(x)) without Q.real should NOT simplify
+    assert refine(log(exp(x)), True) == log(exp(x))
+    assert refine(log(exp(x)), Q.positive(x)) == x  # positive implies real
+
+    # Nested log should NOT simplify
+    assert refine(log(log(x)), Q.positive(x)) == log(log(x))
+
+    # Power with negative exponent
+    assert refine(log(x**(-2)), Q.positive(x)) == -2*log(x)
+    assert refine(log(x**(-y)), Q.positive(x) & Q.real(y)) == -y*log(x)
+
+    # exp with multiple real variables
+    assert refine(log(exp(x + y)), Q.real(x) & Q.real(y)) == x + y
+    assert refine(log(exp(x + y + z)), Q.real(x) & Q.real(y) & Q.real(z)) == x + y + z
+
+    # Power with multiple variables in exponent
+    assert refine(log(x**(y + z)), Q.positive(x) & Q.real(y) & Q.real(z)) == \
+        (y + z)*log(x)
+
+    # Power rule needs Q.positive(x) AND Q.real(exponent)
+    # -- omit Q.positive(x): only Q.real
+    assert refine(log(x**2), Q.real(x)) == log(x**2)
+    assert refine(log(x**y), Q.real(y)) == log(x**y)
+    assert refine(log(x**y), Q.real(x) & Q.real(y)) == log(x**y)
+
+    # Inverse rule needs Q.real(x)
+    # -- wrong assumption: imaginary or complex instead of real
+    assert refine(log(exp(x)), Q.imaginary(x)) == log(exp(x))
+    assert refine(log(exp(x)), Q.complex(x)) == log(exp(x))
+
+    # exp multi real: omit one Q.real
+    assert refine(log(exp(x + y)), Q.real(x)) == log(exp(x + y))
+    # -- no assumptions
+    assert refine(log(exp(x + y)), True) == log(exp(x + y))
+
+    # Power multi var exponent: omit assumptions
+    # -- omit Q.real(y) and Q.real(z)
+    assert refine(log(x**(y + z)), Q.positive(x)) == log(x**(y + z))
+    # -- omit Q.positive(x)
+    assert refine(log(x**(y + z)), Q.real(y) & Q.real(z)) == log(x**(y + z))
+    # -- omit Q.real(z) from mixed
+    assert refine(log(x**(y + I*z)), Q.positive(x)) == log(x**(y + I*z))
 
 
 def test_floor_ceiling():
