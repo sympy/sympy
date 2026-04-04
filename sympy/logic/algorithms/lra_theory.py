@@ -270,6 +270,8 @@ class LRASolver():
 
                 raise ValueError(f"Unhandled Predicate: {prop}")
 
+            if prop.function in (Q.real, Q.extended_real):
+                continue
             assert prop.function in ALLOWED_PRED
             if prop.lhs == S.NaN or prop.rhs == S.NaN:
                 raise ValueError(f"{prop} contains nan")

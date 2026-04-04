@@ -415,6 +415,10 @@ class EncodedCNF:
     def variables(self):
         return range(1, len(self._symbols) + 1)
 
+    @property
+    def reverse_encoding(self):
+        return {value: key for key, value in self.encoding.items()}
+
     def copy(self):
         new_data = [set(clause) for clause in self.data]
         return EncodedCNF(new_data, dict(self.encoding))
