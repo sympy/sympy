@@ -2970,6 +2970,12 @@ class MaxwellDistribution(SingleContinuousDistribution):
         a = self.a
         return erf(sqrt(2)*x/(2*a)) - sqrt(2)*x*exp(-x**2/(2*a**2))/(sqrt(pi)*a)
 
+    def _moment_generating_function(self, t):
+        a = self.a
+        return (sqrt(2)*(sqrt(pi)*(2*a*t + sqrt(2)*sqrt(pi)*(a**2*t**2 + 1)
+                *exp(a**2*t**2/2)*erf(sqrt(2)*a*t/2))
+                + sqrt(2)*pi*(a**2*t**2 + 1)*exp(a**2*t**2/2))/(2*pi))
+
 def Maxwell(name, a):
     r"""
     Create a continuous random variable with a Maxwell distribution.
