@@ -292,12 +292,13 @@ def _(expr):
 def _(expr):
     base, exp = expr.base, expr.exp
     return [
-        (Q.real(base) & Q.even(exp) & Q.nonnegative(exp)) >> Q.nonnegative(expr),
-        (Q.nonnegative(base) & Q.odd(exp) & Q.nonnegative(exp)) >> Q.nonnegative(expr),
-        (Q.nonpositive(base) & Q.odd(exp) & Q.nonnegative(exp)) >> Q.nonpositive(expr),
-        Equivalent(Q.zero(expr), Q.zero(base) & Q.positive(exp))
-    ]
-
+            Equivalent(Q.zero(expr), Q.zero(base) & Q.positive(exp)),
+            # Odd powers
+            Q.odd(exp) >> Equivalent(Q.positive(expr), Q.positive(base) & Q.real(base)),
+            Q.odd(exp) >> Equivalent(Q.negative(expr), Q.negative(base) & Q.real(base)),
+            # Even powers
+            (Q.even(exp) & Q.nonzero(exp) & Q.real(base)) >> Equivalent(Q.positive(expr), Q.nonzero(base))
+        ]
 
 ### Numbers ###
 
