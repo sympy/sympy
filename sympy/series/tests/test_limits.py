@@ -354,6 +354,12 @@ def test_series_AccumBounds():
     # not the exact bound
     assert limit(sin(k) - sin(k)*cos(k), k, oo) == AccumBounds(-2, 2)
 
+    # test for issues #29567 and #29576: correlated oscillatory differences
+    assert limit(sin(x + 1/x) - sin(x), x, oo) == 0
+    assert limit(x*(sin(x + 1/x) - sin(x)), x, oo) == AccumBounds(-1, 1)
+    assert limit(cos(x + 1/x) - cos(x), x, oo) == 0
+    assert limit(x*(cos(x + 1/x) - cos(x)), x, oo) == AccumBounds(-1, 1)
+
     # test for issue #9934
     lo = (-3 + cos(1))/2
     hi = (1 + cos(1))/2
