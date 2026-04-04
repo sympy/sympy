@@ -242,6 +242,15 @@ def test_eigenvects():
         assert len(vec_list) == 1
         assert M*vec_list[0] == val*vec_list[0]
 
+    M = Matrix([[5.0, 1.0, 0.0],
+                [0.0, 5.0, 0.0],
+                [0.0, 0.0, 3.0]])
+    vecs = M.eigenvects()
+    assert len(vecs) == 2
+    for val, mult, vec_list in vecs:
+        for v in vec_list:
+            assert M*v == val*v
+
 
 @slow
 def test_eigenvects_slow():
