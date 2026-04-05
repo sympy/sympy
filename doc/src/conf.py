@@ -18,7 +18,6 @@ from datetime import datetime
 
 from intersphinx_registry import get_intersphinx_mapping
 
-
 # Make sure we import sympy from git
 sys.path.insert(0, os.path.abspath('../..'))
 
