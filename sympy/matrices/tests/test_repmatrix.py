@@ -1,8 +1,9 @@
 from __future__ import annotations
 from sympy.testing.pytest import raises
 from sympy.matrices.exceptions import NonSquareMatrixError, NonInvertibleMatrixError
+from sympy.matrices.expressions.matexpr import MatrixElement
 
-from sympy import Matrix, Rational
+from sympy import Matrix, Rational, Symbol
 
 
 def test_lll():
@@ -61,3 +62,19 @@ def test_matrix_inv_mod():
         [14, 1, 15, 1],
         [25, 23, 3, 12],
     ])
+
+
+def test_symbolic_index_bounds():
+    M = Matrix([[1, 2], [3, 4]])
+
+    n = Symbol('n', integer=True)
+    assert M[n, 0] == MatrixElement(M, n, 0)
+
+    n_neg = Symbol('n', integer=True, negative=True)
+    raises(ValueError, lambda: M[n_neg, 0])
+
+    n_pos = Symbol('n', integer=True, positive=True)
+    raises(ValueError, lambda: M[n_pos + 2, 0])
+
+    n_valid = Symbol('n', integer=True, nonnegative=True)
+    assert M[n_valid, 0] == MatrixElement(M, n_valid, 0)
