@@ -310,6 +310,32 @@ def test_create_new():
            (sqrt(a.x**2 + a.y**2 + a.z**2), acos(a.z/sqrt(a.x**2 + a.y**2 + a.z**2)), atan2(a.y, a.x))
 
 
+def test_matrix_location_transformation():
+    a = CoordSys3D('a')
+    displacement = a.i + 2*a.j
+
+    def check_system(system):
+        assert system._parent == a
+        assert system.transformation_to_parent() == (
+            system.x + 1, system.y + 2, system.z
+        )
+        assert system.lame_coefficients() == (1, 1, 1)
+        assert system.origin.position_wrt(a.origin) == displacement
+        assert system.rotation_matrix(a) == eye(3)
+
+    for name, transformation in (
+        ('b', (eye(3), displacement)),
+        ('c', [eye(3), displacement]),
+    ):
+        check_system(CoordSys3D(name, parent=a, transformation=transformation))
+
+    for name, transformation in (
+        ('d', (eye(3), displacement)),
+        ('e', [eye(3), displacement]),
+    ):
+        check_system(a.create_new(name, transformation=transformation))
+
+
 def test_evalf():
     A = CoordSys3D('A')
     v = 3*A.i + 4*A.j + a*A.k

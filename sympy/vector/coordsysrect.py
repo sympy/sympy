@@ -81,6 +81,7 @@ class CoordSys3D(Basic):
                 if isinstance(transformation[0], MatrixBase):
                     rotation_matrix = transformation[0]
                     location = transformation[1]
+                    transformation = None
                 else:
                     transformation = Lambda(transformation[0],
                                             transformation[1])
@@ -393,7 +394,7 @@ class CoordSys3D(Basic):
                 return lambda r, theta, h: (S.One, r, S.One)
             raise ValueError('Wrong set of parameters.'
                              ' Type of coordinate system is not defined')
-        return CoordSys3D._calculate_lame_coefficients(curv_coord_name)
+        return CoordSys3D._calculate_lame_coeff(curv_coord_name)
 
     @staticmethod
     def _calculate_lame_coeff(equations):
