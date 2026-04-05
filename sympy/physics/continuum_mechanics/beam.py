@@ -3,24 +3,25 @@ This module can be used to solve 2D beam bending problems with
 singularity functions in mechanics.
 """
 from __future__ import annotations
-from sympy.core import S, Symbol, diff, symbols
+from sympy.core import S, Symbol, diff, symbols, oo, Integer
 from sympy.core.add import Add
 from sympy.core.expr import Expr
 from sympy.core.function import (Derivative, Function)
 from sympy.core.mul import Mul
 from sympy.core.relational import Eq
 from sympy.core.sympify import sympify
+from sympy.calculus.util import maximum, minimum
 from sympy.solvers import linsolve, solveset
 from sympy.solvers.ode.ode import dsolve
 from sympy.solvers.solvers import solve
 from sympy.printing import sstr
-from sympy.functions import SingularityFunction, Piecewise, factorial
+from sympy.functions import SingularityFunction, Piecewise, factorial, Max, Min, Abs
 from sympy.integrals import integrate
 from sympy.series import limit
 from sympy.plotting import plot, PlotGrid
 from sympy.geometry.entity import GeometryEntity
 from sympy.external import import_module
-from sympy.sets.sets import Interval, FiniteSet
+from sympy.sets.sets import Interval, FiniteSet, Union
 from sympy.utilities.lambdify import lambdify
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.iterables import iterable
@@ -1191,7 +1192,6 @@ class Beam:
         """
         bending_curve = self.bending_moment()
         x = self.variable
-
         terms = bending_curve.args
         singularity = []        # Points at which bending moment changes
         for term in terms:
@@ -1200,45 +1200,40 @@ class Beam:
             singularity.append(term.args[1])
         singularity = list(set(singularity))
         singularity.sort()
+        if singularity[0] != 0:
+            singularity.insert(0, 0)
+        eqns = {} # Stores BM eqn in each intervals.
+        for i in range(len(singularity) - 1):
+            eq=Integer(0)
+            for term in terms:
+                if term.args[-1].args[1] < singularity[i+1]:
+                    term = term.rewrite(Piecewise)
+                    if term.has(oo):
+                        continue
+                    eq += Mul(*term.args[:-1]) * term.args[-1].args[0][0] # Creates algebraic form of eqns.
+            eqns[Interval(singularity[i], singularity[i+1])] = eq
 
-        intervals = []    # List of Intervals with discrete value of bending moment
-        moment_values = []   # List of values of bending moment in each interval
-        for i, s in enumerate(singularity):
-            if s == 0:
-                continue
-            try:
-                moment_slope = Piecewise(
-                    (float("nan"), x <= singularity[i - 1]),
-                    (self.shear_force().rewrite(Piecewise), x < s),
-                    (float("nan"), True))
-                points = solve(moment_slope, x)
-                val = []
-                for point in points:
-                    val.append(abs(bending_curve.subs(x, point)))
-                points.extend([singularity[i-1], s])
-                val += [abs(limit(bending_curve, x, singularity[i-1], '+')), abs(limit(bending_curve, x, s, '-'))]
-                max_moment = max(val)
-                moment_values.append(max_moment)
-                intervals.append(points[val.index(max_moment)])
+        max_bending_moments = {} # Stores local maximum of BM in each intercals.
+        for interval, eq in eqns.items():
+            maxima = maximum(eq, x, interval) # Maximum moment in the given interval
+            maxima = list(maxima.args) if isinstance(maxima, Max) else [maxima]
+            minima = minimum(eq, x, interval) # Minimum moment in the given interval, -ve sign is just the direction of BM, magnitude remain same.
+            minima = list(minima.args) if isinstance(minima, Min) else [minima]
+            for bending_moment in maxima+minima:
+                max_loc = solveset(Eq(eq, bending_moment), x, interval)
+                max_bending_moment = max_bending_moments.get(Abs(bending_moment)) # Gets location of corresponding BM to check if this BM already exist at any location.
+                if not max_bending_moment and max_bending_moment != 0:
+                    max_bending_moments[Abs(bending_moment)] = max_loc
+                else:
+                    max_bending_moments[Abs(bending_moment)] = Union(max_bending_moments[Abs(bending_moment)], max_loc)
 
-            # If bending moment in a particular Interval has zero or constant
-            # slope, then above block gives NotImplementedError as solve
-            # can't represent Interval solutions.
-            except NotImplementedError:
-                initial_moment = limit(bending_curve, x, singularity[i-1], '+')
-                final_moment = limit(bending_curve, x, s, '-')
-                # If bending_curve has a constant slope(it is a line).
-                if bending_curve.subs(x, (singularity[i-1] + s)/2) == (initial_moment + final_moment)/2 and initial_moment != final_moment:
-                    moment_values.extend([initial_moment, final_moment])
-                    intervals.extend([singularity[i-1], s])
-                else:    # bending_curve has same value in whole Interval
-                    moment_values.append(final_moment)
-                    intervals.append(Interval(singularity[i-1], s))
+        abs_max = max(max_bending_moments)
+        abs_max_loc = max_bending_moments[abs_max]
+        if isinstance(abs_max_loc, FiniteSet):
+            if len(abs_max_loc) == 1:
+                abs_max_loc = abs_max_loc.args[0]
 
-        moment_values = list(map(abs, moment_values))
-        maximum_moment = max(moment_values)
-        point = intervals[moment_values.index(maximum_moment)]
-        return (point, maximum_moment)
+        return (abs_max_loc, abs_max)
 
     def point_cflexure(self):
         """
