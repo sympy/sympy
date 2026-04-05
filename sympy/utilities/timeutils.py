@@ -1,4 +1,5 @@
 """Simple tools for timing functions' execution, when IPython is not available. """
+from __future__ import annotations
 
 
 import timeit

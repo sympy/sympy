@@ -1,3 +1,4 @@
+from __future__ import annotations
 from typing import TYPE_CHECKING, Iterator
 from sympy.core.decorators import _sympifyit
 from sympy.core.parameters import global_parameters

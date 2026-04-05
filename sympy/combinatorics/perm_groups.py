@@ -1,3 +1,4 @@
+from __future__ import annotations
 from math import factorial as _factorial, log, prod
 from itertools import chain, product
 
@@ -472,7 +473,7 @@ class PermutationGroup(Basic):
         """
         if self._base == []:
             self.schreier_sims()
-        return self._base
+        return self._base[:]
 
     def baseswap(self, base, strong_gens, pos, randomized=False,
                  transversals=None, basic_orbits=None, strong_gens_distr=None):
@@ -638,7 +639,7 @@ class PermutationGroup(Basic):
         """
         if self._basic_orbits == []:
             self.schreier_sims()
-        return self._basic_orbits
+        return [orbit[:] for orbit in self._basic_orbits]
 
     @property
     def basic_stabilizers(self):
@@ -720,7 +721,7 @@ class PermutationGroup(Basic):
 
         if self._transversals == []:
             self.schreier_sims()
-        return self._transversals
+        return [transversal.copy() for transversal in self._transversals]
 
     def composition_series(self):
         r"""
@@ -1694,7 +1695,7 @@ class PermutationGroup(Basic):
         [(1 2), (2)(0 1)]
 
         """
-        return self._generators
+        return self._generators[:]
 
     def contains(self, g, strict=True):
         """Test if permutation ``g`` belong to self, ``G``.
@@ -2106,7 +2107,7 @@ class PermutationGroup(Basic):
         d_gr = gr.degree
         if self.is_trivial and (d_self == d_gr or not strict):
             return True
-        if self._is_abelian:
+        if gr._is_abelian:
             return True
         new_self = self.copy()
         if not strict and d_self != d_gr:
@@ -4039,7 +4040,7 @@ class PermutationGroup(Basic):
         """
         if self._strong_gens == []:
             self.schreier_sims()
-        return self._strong_gens
+        return self._strong_gens[:]
 
     def subgroup(self, gens):
         """
@@ -5058,7 +5059,7 @@ class PermutationGroup(Basic):
             C_p = G_p.coset_enumeration([], strategy="coset_table",
                                 draft=C_p, max_cosets=n, incomplete=True)
 
-        self._fp_presentation = simplify_presentation(G_p)
+        self._fp_presentation = simplify_presentation(G_p, change_gens=eliminate_gens)
         return self._fp_presentation
 
     def polycyclic_group(self):

@@ -1,9 +1,13 @@
+from __future__ import annotations
 import bisect
 from collections import defaultdict
 
-from sympy.combinatorics import Permutation
 from sympy.core.containers import Tuple
 from sympy.core.numbers import Integer
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from sympy.combinatorics import Permutation
 
 
 def _get_mapping_from_sub_ndim_list(sub_ndim_list):

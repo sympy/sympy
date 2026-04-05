@@ -1,6 +1,7 @@
+from __future__ import annotations
 import itertools
 
-from sympy.core import S
+from sympy.core import S, UnevaluatedExpr
 from sympy.core.add import Add
 from sympy.core.containers import Tuple
 from sympy.core.function import Function
@@ -1978,7 +1979,10 @@ class PrettyPrinter(Printer):
             elif term.is_Number and term < 0:
                 pform = self._print(-term)
                 pforms.append(pretty_negative(pform, i))
-            elif term.is_Relational:
+            elif (
+                term.is_Relational
+                or (isinstance(term, UnevaluatedExpr) and term.args[0].is_Add)
+            ):
                 pforms.append(prettyForm(*self._print(term).parens()))
             else:
                 pforms.append(self._print(term))
@@ -2058,9 +2062,20 @@ class PrettyPrinter(Printer):
             else:
                 a.append(item)
 
-        # Convert to pretty forms. Parentheses are added by `__mul__`.
-        a = [self._print(ai) for ai in a]
-        b = [self._print(bi) for bi in b]
+        # TODO: this should probably be moved into prettyForm.__mul__
+        def add_parens(expr):
+            if isinstance(expr, UnevaluatedExpr):
+                c, e = expr.args[0].as_coeff_Mul()
+                if c < 0:
+                    return True
+            return False
+
+        # Convert to pretty forms.
+        # Parentheses are added by `__mul__`, except for UnevaluatedExpr
+        a = [prettyForm(*self._print(ai).parens()) if add_parens(ai)
+            else self._print(ai) for ai in a]
+        b = [prettyForm(*self._print(bi).parens()) if add_parens(bi)
+            else self._print(bi) for bi in b]
 
         # Construct a pretty form
         if len(b) == 0:

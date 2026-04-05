@@ -8,6 +8,7 @@ Mathematica notebook:
 http://www.emba.uvm.edu/~ddummit/quintics/quintics.nb
 
 """
+from __future__ import annotations
 
 
 from sympy.core import Symbol

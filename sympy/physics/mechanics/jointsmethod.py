@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.physics.mechanics import (Body, Lagrangian, KanesMethod, LagrangesMethod,
                                     RigidBody, Particle)
 from sympy.physics.mechanics.body_base import BodyBase

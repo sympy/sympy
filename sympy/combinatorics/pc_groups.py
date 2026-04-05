@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.ntheory.primetest import isprime
 from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy.printing.defaults import DefaultPrinting

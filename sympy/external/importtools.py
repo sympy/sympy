@@ -1,4 +1,5 @@
 """Tools to assist importing optional external modules."""
+from __future__ import annotations
 
 import sys
 import re

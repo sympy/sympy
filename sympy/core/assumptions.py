@@ -217,6 +217,7 @@ References
 .. [13] https://en.wikipedia.org/wiki/Complex_number
 
 """
+from __future__ import annotations
 
 from sympy.utilities.exceptions import sympy_deprecation_warning
 

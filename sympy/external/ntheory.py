@@ -2,6 +2,7 @@
 #
 # This module provides pure Python implementations of some number theory
 # functions that are alternately used from gmpy2 if it is installed.
+from __future__ import annotations
 
 import math
 
