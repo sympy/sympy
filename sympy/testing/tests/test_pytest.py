@@ -20,7 +20,7 @@ def test_expected_exception_is_silent_callable():
 def test_lack_of_exception_triggers_AssertionError_callable():
     try:
         raises(Exception, lambda: 1 + 1)
-        assert False
+        raise AssertionError()
     except Failed as e:
         assert "DID NOT RAISE" in str(e)
 
@@ -30,7 +30,7 @@ def test_unexpected_exception_is_passed_through_callable():
         raise ValueError("some error message")
     try:
         raises(TypeError, f)
-        assert False
+        raise AssertionError()
     except ValueError as e:
         assert str(e) == "some error message"
 
@@ -45,7 +45,7 @@ def test_lack_of_exception_triggers_AssertionError_with():
     try:
         with raises(Exception):
             1 + 1
-        assert False
+        raise AssertionError()
     except Failed as e:
         assert "DID NOT RAISE" in str(e)
 
@@ -54,7 +54,7 @@ def test_unexpected_exception_is_passed_through_with():
     try:
         with raises(TypeError):
             raise ValueError("some error message")
-        assert False
+        raise AssertionError()
     except ValueError as e:
         assert str(e) == "some error message"
 
