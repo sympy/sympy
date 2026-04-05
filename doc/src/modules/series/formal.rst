@@ -1,3 +1,5 @@
+.. module:: sympy.series.formal
+
 Formal Power Series
 ===================
 
