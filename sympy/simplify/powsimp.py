@@ -544,9 +544,9 @@ def powdenest(eq, force=False, polar=False):
     >>> powdenest(sqrt(x**2))
     sqrt(x**2)
 
-    >>> p = symbols('p', positive=True)
-    >>> powdenest(sqrt(p**2))
-    p
+    >>> i, j = symbols('i j', integer=True)
+    >>> powdenest((x**i)**j)
+    x**(i*j)
 
     No other expansion is done.
 
