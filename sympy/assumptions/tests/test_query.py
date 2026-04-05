@@ -2044,6 +2044,27 @@ def test_real_pow():
     assert ask(Q.real(x**0), Q.imaginary(x)) is True
     assert ask(Q.real(x**y), Q.positive(x) & Q.real(y)) is True
     assert ask(Q.real(x**y), Q.real(x) & Q.rational(y)) is None
+
+    # https://github.com/sympy/sympy/issues/29335
+    nneg = Symbol('nneg', negative=True)
+    q = Symbol('q', rational=True, integer=False)
+    r = Symbol('r', rational=True)
+    kint = Symbol('kint', integer=True)
+    ppos = Symbol('ppos', positive=True)
+    assert (nneg ** q).is_real is False
+    assert (nneg ** q).is_extended_real is False
+    assert ask(Q.real(nneg ** q)) is False
+    assert ask(Q.extended_real(nneg ** q)) is False
+    assert (nneg ** r).is_real is None
+    assert ask(Q.real(nneg ** r)) is None
+    assert ask(Q.extended_real(nneg ** r)) is None
+    assert (nneg ** kint).is_real is True
+    assert ask(Q.real(nneg ** kint)) is True
+    assert ask(Q.extended_real(nneg ** kint)) is True
+    assert (ppos ** q).is_real is True
+    assert ask(Q.real(ppos ** q)) is True
+    assert ask(Q.extended_real(ppos ** q)) is True
+
     assert ask(Q.real(x**y), Q.imaginary(x) & Q.integer(y)) is None
     assert ask(Q.real(x**y), Q.imaginary(x) & Q.odd(y)) is False
     assert ask(Q.real(x**y), Q.imaginary(x) & Q.even(y)) is True
