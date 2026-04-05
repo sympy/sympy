@@ -427,7 +427,20 @@ def refine_sin_cos(expr, assumptions):
     cos(x + y)
     """
     from sympy.functions.elementary.trigonometric import sin, cos
+    from sympy.calculus.accumulationbounds import AccumBounds
+
+    if not isinstance(expr, (sin, cos)):
+        raise TypeError("refine_sin_cos expects a sin or cos function.")
+
     arg = expr.args[0]
+    expr_is_sin = isinstance(expr, sin)
+
+    if (ask(Q.infinite(arg), assumptions) and
+         ask(Q.extended_real(arg), assumptions)):
+        return AccumBounds(-1, 1)
+
+    if ask(Q.zero(arg), assumptions):
+        return 0 if expr_is_sin else 1
 
     integer_coeffs_of_pi_half = []
     remaining_terms = []
@@ -461,7 +474,7 @@ def refine_sin_cos(expr, assumptions):
         return expr
 
     # Treat sin as a phase-shifted cosine so a single logic path can handle both.
-    if isinstance(expr, sin):
+    if expr_is_sin:
         k = sum_of_parity_known_coeffs - 1
         k_is_even = not sum_of_parity_known_coeffs_is_even
     else:

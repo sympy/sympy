@@ -473,7 +473,7 @@ class PermutationGroup(Basic):
         """
         if self._base == []:
             self.schreier_sims()
-        return self._base
+        return self._base[:]
 
     def baseswap(self, base, strong_gens, pos, randomized=False,
                  transversals=None, basic_orbits=None, strong_gens_distr=None):
@@ -639,7 +639,7 @@ class PermutationGroup(Basic):
         """
         if self._basic_orbits == []:
             self.schreier_sims()
-        return self._basic_orbits
+        return [orbit[:] for orbit in self._basic_orbits]
 
     @property
     def basic_stabilizers(self):
@@ -721,7 +721,7 @@ class PermutationGroup(Basic):
 
         if self._transversals == []:
             self.schreier_sims()
-        return self._transversals
+        return [transversal.copy() for transversal in self._transversals]
 
     def composition_series(self):
         r"""
@@ -1695,7 +1695,7 @@ class PermutationGroup(Basic):
         [(1 2), (2)(0 1)]
 
         """
-        return self._generators
+        return self._generators[:]
 
     def contains(self, g, strict=True):
         """Test if permutation ``g`` belong to self, ``G``.
@@ -4040,7 +4040,7 @@ class PermutationGroup(Basic):
         """
         if self._strong_gens == []:
             self.schreier_sims()
-        return self._strong_gens
+        return self._strong_gens[:]
 
     def subgroup(self, gens):
         """
