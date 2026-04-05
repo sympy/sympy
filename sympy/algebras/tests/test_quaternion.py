@@ -6,7 +6,7 @@ from sympy.core.numbers import (E, I, Rational, pi)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.functions.elementary.complexes import (Abs, conjugate, im, re, sign)
-from sympy.functions.elementary.exponential import log
+from sympy.functions.elementary.exponential import log,exp
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (acos, asin, cos, sin, atan2, atan)
 from sympy.integrals.integrals import integrate
@@ -457,3 +457,12 @@ def test_issue_28556():
     q3 = Quaternion(r, 0, 0, 0)
     result3 = q3.log()
     assert result3 == Quaternion(log(r), 0, 0, 0)
+def test_issue_29295():
+    "Tests that Quaternion.exp() handles 0 values correctly"
+    q1=Quaternion(0,0,0,0)
+    result=q1.exp()
+    assert result == Quaternion(1,0,0,0)
+    a = symbols('a')
+    q2=Quaternion(a,0,0,0)
+    result_2 = q2.exp()
+    assert result_2 == Quaternion(exp(a),0,0,0)
