@@ -258,7 +258,7 @@ class Ordinal(Basic):
 
         if other.is_limit_ordinal:
             infinite_terms = other.terms
-            finite_part = ord0
+            finite_part = Integer(0)
         else:
             infinite_terms = other.terms[:-1]
             finite_part = other.trailing_term.mult
