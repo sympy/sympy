@@ -138,6 +138,7 @@ class CodePrinter(StrPrinter):
             If provided, the printed code will set the expression to a variable or multiple variables
             with the name or names given in ``assign_to``.
         """
+
         from sympy.matrices.expressions.matexpr import MatrixSymbol
         from sympy.codegen.ast import CodeBlock, Assignment
 
@@ -371,6 +372,7 @@ class CodePrinter(StrPrinter):
         from sympy.functions.elementary.piecewise import Piecewise
         from sympy.matrices.expressions.matexpr import MatrixSymbol
         from sympy.tensor.indexed import IndexedBase
+        from sympy.codegen.matrix_nodes import MatrixSolve
         lhs = expr.lhs
         rhs = expr.rhs
         # We special case assignments that take multiple lines
@@ -384,6 +386,8 @@ class CodePrinter(StrPrinter):
                 conditions.append(c)
             temp = Piecewise(*zip(expressions, conditions))
             return self._print(temp)
+        elif isinstance(rhs, MatrixSolve):
+            return self._print(rhs)
         elif isinstance(lhs, MatrixSymbol):
             # Here we form an Assignment for each element in the array,
             # printing each one.

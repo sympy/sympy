@@ -586,7 +586,6 @@ class CodeGen:
         OutputArgument and InOutArguments.
 
         """
-
         if self.cse:
             from sympy.simplify.cse_main import cse
 
@@ -1086,6 +1085,74 @@ class C89CodeGen(CCodeGen):
 
 class C99CodeGen(CCodeGen):
     standard = 'C99'
+
+class LAPACKCCodeGen(CCodeGen):
+    """
+    Generator for LAPACK calls in C code.
+
+    Inherits from CCodeGen and overrides methods to generate LAPACK calls
+    for Matrix expressions like MatrixSolve.
+    """
+    def __init__(self, project="project", printer=None,
+                 preprocessor_statements=None, cse=False):
+        super().__init__(project=project, cse=cse)
+
+    def _preprocessor_statements(self, prefix):
+        """
+        Adds lapacke.h header file to the code to access methods like
+        LAPACKE_dgesv().
+        """
+        code_lines = []
+        code_lines.append('#include "{}.h"'.format(os.path.basename(prefix)))
+        code_lines.append('#include <lapacke.h>')
+        code_lines.extend(self.preprocessor_statements)
+        code_lines = ['{}\n'.format(l) for l in code_lines]
+        return code_lines
+
+    def _declare_locals(self, routine):
+        """
+        Declares local variables for the lapacke method.
+        """
+        from sympy.codegen.matrix_nodes import MatrixSolve
+        code_lines = []
+        for result in routine.result_variables:
+            if isinstance(result.expr, MatrixSolve):
+                n = result.expr.matrix.shape[0]
+                code_lines.append("int n = %d;\n" % n)
+                code_lines.append("int nrhs = %d;\n" % result.expr.vector.shape[1])
+                code_lines.append("int ipiv[%d];\n" % n)
+                code_lines.append("int info;\n")
+                return code_lines
+        return super()._declare_locals(routine)
+
+    def routine(self, name, expr, argument_sequence=None, global_vars=None):
+        """
+        Creates a Routine object that is appropriate for lapacke calls.
+        """
+        from sympy.codegen.matrix_nodes import MatrixSolve
+        if isinstance(expr, MatrixSolve):
+            arg_list = [
+                InputArgument(expr.matrix, dimensions=[(S.Zero, expr.matrix.shape[0]-1), (S.Zero, expr.matrix.shape[1]-1)]),
+                InputArgument(expr.vector, dimensions=[(S.Zero, expr.vector.shape[0]-1), (S.Zero, S.Zero)])
+            ]
+            local_vars = []
+            return_val = [Result(expr, datatype=default_datatypes['int'])]
+            global_vars = set() if global_vars is None else set(global_vars)
+            return Routine(name, arg_list, return_val, local_vars, global_vars)
+        else:
+            return super().routine(name, expr, argument_sequence, global_vars)
+
+    def _call_printer(self, routine):
+        """
+        Generates the LAPACK function call for MatrixSolve expressions.
+        """
+        from sympy.codegen.matrix_nodes import MatrixSolve
+        code_lines = []
+        for result in routine.result_variables:
+            if isinstance(result.expr, MatrixSolve):
+                code_lines.append("info = " + self.printer._print_MatrixSolve(result.expr) + ";\n")
+        code_lines.append("   return info;\n")
+        return code_lines
 
 class FCodeGen(CodeGen):
     """Generator for Fortran 95 code
@@ -2120,6 +2187,7 @@ def codegen(name_expr, language=None, prefix=None, project="project",
 
     """
 
+    from sympy.codegen.matrix_nodes import MatrixSolve
     # Initialize the code generator.
     if language is None:
         if code_gen is None:
@@ -2127,7 +2195,10 @@ def codegen(name_expr, language=None, prefix=None, project="project",
     else:
         if code_gen is not None:
             raise ValueError("You cannot specify both language and code_gen.")
-        code_gen = get_code_generator(language, project, standard, printer)
+        elif language.upper() == 'C' and isinstance(name_expr[1], MatrixSolve):
+            code_gen = LAPACKCCodeGen()
+        else:
+            code_gen = get_code_generator(language, project, standard, printer)
 
     if isinstance(name_expr[0], str):
         # single tuple is given, turn it into a singleton list with a tuple.

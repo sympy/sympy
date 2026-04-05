@@ -1631,3 +1631,20 @@ def test_fcode_complex():
         )
     assert source==expected
     sympy.utilities.codegen.COMPLEX_ALLOWED = False
+
+def test_lapack_codegen():
+    from sympy.codegen.matrix_nodes import MatrixSolve
+    from sympy import MatrixSymbol
+    from sympy.utilities.codegen import codegen
+
+    A = MatrixSymbol('A', 3, 3)
+    b = MatrixSymbol('b', 3, 1)
+    [(c_name, c_code), (h_name, c_header)] = codegen(('f', MatrixSolve(A, b)), 'C', 'test', header=False, empty=False)
+
+    assert 'LAPACKE_dgesv' in c_code
+    assert 'lapacke.h' in c_code
+    assert 'int n = 3'in c_code
+    assert 'int nrhs = 1' in c_code
+    assert 'int ipiv[3]' in c_code
+    assert 'int info' in c_code
+    assert 'return info' in c_code
