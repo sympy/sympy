@@ -3,24 +3,25 @@ This module can be used to solve 2D beam bending problems with
 singularity functions in mechanics.
 """
 from __future__ import annotations
-from sympy.core import S, Symbol, diff, symbols
+from sympy.core import S, Symbol, diff, symbols, oo, Integer
 from sympy.core.add import Add
 from sympy.core.expr import Expr
 from sympy.core.function import (Derivative, Function)
 from sympy.core.mul import Mul
 from sympy.core.relational import Eq
 from sympy.core.sympify import sympify
+from sympy.calculus.util import maximum, minimum
 from sympy.solvers import linsolve, solveset
 from sympy.solvers.ode.ode import dsolve
 from sympy.solvers.solvers import solve
 from sympy.printing import sstr
-from sympy.functions import SingularityFunction, Piecewise, factorial
+from sympy.functions import SingularityFunction, Piecewise, factorial, Max, Min, Abs
 from sympy.integrals import integrate
 from sympy.series import limit
 from sympy.plotting import plot, PlotGrid
 from sympy.geometry.entity import GeometryEntity
 from sympy.external import import_module
-from sympy.sets.sets import Interval, FiniteSet
+from sympy.sets.sets import Interval, FiniteSet, Union
 from sympy.utilities.lambdify import lambdify
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.iterables import iterable
@@ -1079,9 +1080,9 @@ class Beam:
     def max_shear_force(self):
         """Returns maximum Shear force and its coordinate
         in the Beam object."""
+
         shear_curve = self.shear_force()
         x = self.variable
-
         terms = shear_curve.args
         singularity = []        # Points at which shear function changes
         for term in terms:
@@ -1090,41 +1091,40 @@ class Beam:
             singularity.append(term.args[1])
         singularity = list(set(singularity))
         singularity.sort()
+        if singularity[0] != 0:
+            singularity.insert(0, 0)
+        eqns = {} # Stores SF eqn in each intervals.
+        for i in range(len(singularity) - 1):
+            eq=Integer(0)
+            for term in terms:
+                if term.args[-1].args[1] < singularity[i+1]:
+                    term = term.rewrite(Piecewise)
+                    if term.has(oo):
+                        continue
+                    eq += Mul(*term.args[:-1]) * term.args[-1].args[0][0] # Creates algebraic form of eqns.
+            eqns[Interval(singularity[i], singularity[i+1])] = eq
 
-        intervals = []    # List of Intervals with discrete value of shear force
-        shear_values = []   # List of values of shear force in each interval
-        for i, s in enumerate(singularity):
-            if s == 0:
-                continue
-            try:
-                shear_slope = Piecewise((float("nan"), x<=singularity[i-1]),(self._load.rewrite(Piecewise), x<s), (float("nan"), True))
-                points = solve(shear_slope, x)
-                val = []
-                for point in points:
-                    val.append(abs(shear_curve.subs(x, point)))
-                points.extend([singularity[i-1], s])
-                val += [abs(limit(shear_curve, x, singularity[i-1], '+')), abs(limit(shear_curve, x, s, '-'))]
-                max_shear = max(val)
-                shear_values.append(max_shear)
-                intervals.append(points[val.index(max_shear)])
-            # If shear force in a particular Interval has zero or constant
-            # slope, then above block gives NotImplementedError as
-            # solve can't represent Interval solutions.
-            except NotImplementedError:
-                initial_shear = limit(shear_curve, x, singularity[i-1], '+')
-                final_shear = limit(shear_curve, x, s, '-')
-                # If shear_curve has a constant slope(it is a line).
-                if shear_curve.subs(x, (singularity[i-1] + s)/2) == (initial_shear + final_shear)/2 and initial_shear != final_shear:
-                    shear_values.extend([initial_shear, final_shear])
-                    intervals.extend([singularity[i-1], s])
-                else:    # shear_curve has same value in whole Interval
-                    shear_values.append(final_shear)
-                    intervals.append(Interval(singularity[i-1], s))
+        max_shears = {} # Stores local maximum of SF in each intercals.
+        for interval, eq in eqns.items():
+            maxima = maximum(eq, x, interval) # Maximum shear in the given interval
+            maxima = list(maxima.args) if isinstance(maxima, Max) else [maxima]
+            minima = minimum(eq, x, interval) # Minimum shear in the given interval, -ve sign is just the direction of SF, magnitude remain same.
+            minima = list(minima.args) if isinstance(minima, Min) else [minima]
+            for shear in maxima+minima:
+                max_loc = solveset(Eq(eq, shear), x, interval)
+                max_shear = max_shears.get(Abs(shear)) # Gets location of corresponding SF to check if this SF already exist at any location.
+                if not max_shear and max_shear != 0:
+                    max_shears[Abs(shear)] = max_loc
+                else:
+                    max_shears[Abs(shear)] = Union(max_shears[Abs(shear)], max_loc)
 
-        shear_values = list(map(abs, shear_values))
-        maximum_shear = max(shear_values)
-        point = intervals[shear_values.index(maximum_shear)]
-        return (point, maximum_shear)
+        abs_max = max(max_shears)
+        abs_max_loc = max_shears[abs_max]
+        if isinstance(abs_max_loc, FiniteSet):
+            if len(abs_max_loc) == 1:
+                abs_max_loc = abs_max_loc.args[0]
+
+        return (abs_max_loc, abs_max)
 
     def bending_moment(self):
         """
@@ -1162,7 +1162,7 @@ class Beam:
 
     def max_bmoment(self):
         """
-        Returns maximum Shear force and its coordinate
+        Returns maximum bending moment and its coordinate
         in the Beam object.
 
         Examples
