@@ -286,6 +286,87 @@ def test_insufficient_bconditions():
     assert p == q/(E*I)
 
 
+def test_solve_for_reaction_loads_inconsistent():
+    E, I, P = symbols('E I P')
+    Q = Symbol('Q')
+
+    # A mechanism with no static reaction loads.
+    # Simply supported beam with a rotation hinge at the load point:
+    # the hinge creates a mechanism (zero-stiffness mode), so no unique
+    # set of static reaction forces exists.
+    b1 = Beam(10, E, I)
+    r1 = b1.apply_support(0, 'pin')
+    r2 = b1.apply_support(10, 'roller')
+    b1.apply_rotation_hinge(4)
+    b1.apply_load(-P, 4, -1)
+    raises(ValueError, lambda: b1.solve_for_reaction_loads(r1, r2))
+
+    # A mechanism with no static reaction loads.
+    # Two internal rotation hinges in a simply supported beam produce
+    # more internal releases than the supports can restrain, resulting
+    # in a kinematic mechanism.
+    b2 = Beam(15, E, I)
+    b2.apply_rotation_hinge(5)
+    b2.apply_rotation_hinge(10)
+    r0 = b2.apply_support(0, 'pin')
+    r15 = b2.apply_support(15, 'roller')
+    b2.apply_load(-Q, 0, 0, end=15)
+    raises(ValueError, lambda: b2.solve_for_reaction_loads(r0, r15))
+
+    # A mechanism with no static reaction loads.
+    # Roller support with a sliding hinge: only vertical reaction is
+    # available, but the sliding hinge releases the shear constraint,
+    # leaving the beam free to translate.
+    b3 = Beam(8, E, I)
+    R1_3 = b3.apply_support(0, 'roller')
+    b3.apply_sliding_hinge(4)
+    b3.apply_load(5, 8, -1)
+    raises(ValueError, lambda: b3.solve_for_reaction_loads(R1_3))
+
+    # A mechanism with no static reaction loads.
+    # Two rotation hinges with multiple symbolic point loads on a simply
+    # supported beam: the extra internal releases make the system a
+    # mechanism regardless of load magnitudes.
+    b4 = Beam(12, E, I)
+    b4.apply_rotation_hinge(3)
+    b4.apply_rotation_hinge(8)
+    r1_4 = b4.apply_support(0, 'pin')
+    r2_4 = b4.apply_support(12, 'roller')
+    b4.apply_load(-P, 6, -1)
+    b4.apply_load(Q, 9, -1)
+    raises(ValueError, lambda: b4.solve_for_reaction_loads(r1_4, r2_4))
+
+    # An over-constrained system with inconsistent boundary conditions.
+    # Pin support enforces zero deflection at x=0, but an additional
+    # boundary condition prescribes unit deflection at the same point;
+    # the two conditions contradict each other.
+    b5 = Beam(10, E, I)
+    b5.apply_support(0, type='pin')
+    b5.bc_deflection.append((0, 1))
+    raises(ValueError, lambda: b5.solve_for_reaction_loads())
+
+    # An over-constrained system with inconsistent boundary conditions.
+    # A single pin support cannot satisfy moment equilibrium when an
+    # external point load acts at a different location; the system has
+    # fewer reaction components than equilibrium equations require.
+    b6 = Beam(10, E, I)
+    R1_6 = b6.apply_support(0, 'pin')
+    b6.apply_load(10, 10, -1)
+    raises(ValueError, lambda: b6.solve_for_reaction_loads(R1_6))
+
+    # Parametric load configuration that violates global static equilibrium.
+    # A single vertical reaction R1 and a moment M applied at different
+    # points cannot simultaneously satisfy both force and moment
+    # equilibrium for arbitrary M.
+    M_sym = symbols('M')
+    b7 = Beam(10, E, I)
+    R1_7 = symbols('R1')
+    b7.apply_load(R1_7, 0, -1)
+    b7.apply_load(M_sym, 5, -2)
+    b7.bc_deflection = [(0, 0)]
+    raises(ValueError, lambda: b7.solve_for_reaction_loads(R1_7))
+
+
 def test_statically_indeterminate():
     E = Symbol('E')
     I = Symbol('I')

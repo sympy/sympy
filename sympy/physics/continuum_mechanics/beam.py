@@ -1027,8 +1027,11 @@ class Beam:
             eqs = deflection_curve.subs(x, position) - value
             deflection_eqs.append(eqs)
         total_supports = tuple(set(applied_supports + reactions))
-        solution = list((linsolve([shear_curve, moment_curve] + shear_force_eqs + bending_moment_eqs + slope_eqs
-                            + deflection_eqs, (C3, C4) + total_supports + rotation_jumps + deflection_jumps).args)[0])
+        system_solution = linsolve([shear_curve, moment_curve] + shear_force_eqs + bending_moment_eqs + slope_eqs
+                            + deflection_eqs, (C3, C4) + total_supports + rotation_jumps + deflection_jumps)
+        if system_solution == S.EmptySet:
+            raise ValueError("The system is inconsistent or over-determined.")
+        solution = list((system_solution.args)[0])
         reaction_index = 2+len(total_supports)
         rotation_index = reaction_index + len(rotation_jumps)
         reaction_solution = solution[2:reaction_index]
