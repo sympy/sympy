@@ -203,7 +203,8 @@ class Order(Expr):
 
             expr = expr.subs(s)
 
-            if expr.is_Add:
+            num, den = expr.as_numer_denom()
+            if expr.is_Add and (expr.is_algebraic_expr() or den != 1):
                 expr = expr.factor()
 
             if s:
