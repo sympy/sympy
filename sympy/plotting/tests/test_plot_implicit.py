@@ -91,6 +91,43 @@ def test_line_color():
     p = plot_implicit(x**2 + y**2 - 1, line_color='r', show=False)
     assert p._series[0].line_color == "r"
 
+def test_label_and_legend():
+    matplotlib = import_module('matplotlib', min_module_version='1.1.0',
+        catch=(RuntimeError,))
+    if not matplotlib:
+        skip("Matplotlib not the default backend")
+
+    x, y = symbols('x, y')
+    p = plot_implicit(x**2 + y**2 - 1, show=False)
+    assert p._series[0].label == 'x**2 + y**2 - 1'
+
+    p = plot_implicit(x**2 + y**2 - 1, label='unit circle', show=False)
+    assert p._series[0].label == 'unit circle'
+
+    p = plot_implicit(x**2 + y**2 - 1, label='circle', legend=True,
+        show=False, adaptive=True)
+    p._backend._create_figure()
+    p._backend._process_series(p._backend._series, p._backend.ax)
+    handles, labels = p._backend.ax.get_legend_handles_labels()
+    assert labels == ['circle']
+    p._backend.close()
+
+    p = plot_implicit(y > x**2, label='region', legend=True,
+        show=False, adaptive=False)
+    p._backend._create_figure()
+    p._backend._process_series(p._backend._series, p._backend.ax)
+    handles, labels = p._backend.ax.get_legend_handles_labels()
+    assert labels == ['region']
+    p._backend.close()
+
+    p = plot_implicit(x**2 + y**2 - 1, label='circle', legend=True,
+        show=False, adaptive=False)
+    p._backend._create_figure()
+    p._backend._process_series(p._backend._series, p._backend.ax)
+    handles, labels = p._backend.ax.get_legend_handles_labels()
+    assert labels == ['circle']
+    p._backend.close()
+
 def test_matplotlib():
     matplotlib = import_module('matplotlib', min_module_version='1.1.0', catch=(RuntimeError,))
     if matplotlib:
