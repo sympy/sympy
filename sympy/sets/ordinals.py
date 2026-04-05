@@ -256,12 +256,12 @@ class Ordinal(Basic):
         if self == Ordinal.convert(1):
             return self
 
-        if other.is_limit_ordinal:
+        if not other.is_limit_ordinal:
+            infinite_terms = other.terms[:-1]
+            finite_part = Ordinal.convert(other.trailing_term.mult)
+        else:
             infinite_terms = other.terms
             finite_part = ord0
-        else:
-            infinite_terms = other.terms[:-1]
-            finite_part = other.trailing_term.mult
 
         # finite self to arbitrary other
         if self.degree == ord0:
