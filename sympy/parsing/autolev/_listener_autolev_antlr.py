@@ -792,8 +792,7 @@ if AutolevListener:
                 else:
                     self.setValue(ctx, expr)
 
-            # Taylor(y, 0:2, w=a, x=0)
-            # TODO: Currently only works with symbols. Make it work for dynamicsymbols.
+           # Taylor(y, 0:2, w=a, x=0)
             elif func_name == "taylor":
                 exp = self.getValue(ch.expr(0))
                 order = self.getValue(ch.expr(1).expr(1))
@@ -802,9 +801,12 @@ if AutolevListener:
                 for i in range(x):
                     index = 2 + i
                     child = ch.expr(index)
-                    l.append(".series(" + self.getValue(child.getChild(0)) +
-                             ", " + self.getValue(child.getChild(2)) +
-                             ", " + order + ").removeO()")
+                    v = self.getValue(child.getChild(0))
+                    a = self.getValue(child.getChild(2))
+                    if v in self.type.keys() and self.type[v] in ("motionvariable", "motionvariable'") or v in self.q_ind + self.q_dep + self.u_ind + self.u_dep:
+                        l.append(".subs(" + v + ", _sm.Symbol('" + v + "_dummy')).series(_sm.Symbol('" + v + "_dummy'), " + a + ", " + order + ").removeO().subs(_sm.Symbol('" + v + "_dummy'), " + v + ")")
+                    else:
+                        l.append(".series(" + v + ", " + a + ", " + order + ").removeO()")
                 self.setValue(ctx, "(" + exp + ")" + "".join(l))
 
             # Evaluate(y, a=x, b=2)
