@@ -1094,13 +1094,36 @@ class PolylogRule(AtomicRule):
 
 
 class DilogRule(AtomicRule):
+
+    __slots__ = ("a", "b", "c")
+
     a: Expr
     b: Expr
     c: Expr
 
+    def __init__(
+        self, integrand: Expr, variable: Symbol, a: Expr, b: Expr, c: Expr
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.a = a
+        self.b = b
+        self.c = c
+
     def eval(self) -> Expr:
         a, b, c, x = self.a, self.b, self.c, self.variable
-        return log(a)*log(abs(x)) - polylog(2, b*x**c/a)/c
+        base = a - b*x**c
+        res_general = log(a)*log(x) - polylog(2, b*x**c/a)/c
+        res_c0 = log(a - b) * log(x)
+        res_a0 = log(-b * x**c)**2 / (2 * c)
+        pieces = []
+        if not _if_zero_implies_zero(c, base):
+            pieces.append((res_c0, Eq(c, 0)))
+        if not _if_zero_implies_zero(a, base):
+            pieces.append((res_a0, Eq(a, 0)))
+        if not pieces:
+            return res_general
+        pieces.append((res_general, True))
+        return Piecewise(*pieces)
 
 
 class UpperGammaRule(AtomicRule):
@@ -1473,7 +1496,7 @@ def special_function_rule(integral):
             (cos, cos(quadratic_pattern, evaluate=False), None, FresnelCRule),
             (Mul, _symbol**e*exp(a*_symbol, evaluate=False), None, UpperGammaRule),
             (Mul, polylog(b, a*_symbol, evaluate=False)/_symbol, None, PolylogRule),
-            (Mul, log(a-b*_symbol**c)/_symbol, None, DilogRule),
+            (Mul, log(a-b*_symbol**c)/_symbol, lambda *args: len(args) == 3 and not args[2].is_zero, DilogRule),
             (Pow, 1/sqrt(a - d*sin(_symbol, evaluate=False)**2),
                 lambda a, d: a != d, EllipticFRule),
             (Pow, sqrt(a - d*sin(_symbol, evaluate=False)**2),
@@ -2549,17 +2572,17 @@ def partial_fractions_rule(integral):
     denom_trans = Mul(*denom_trans_factors)
     numer_poly = Mul(*numer_poly_factors)
     numer_trans = Mul(*numer_trans_factors)
-
     frac = numer_poly / denom_poly
     part_frac = frac.apart(symbol)
 
     if not part_frac.is_Add or part_frac == frac:
         return None
 
-    generic_rewriting = (numer_trans * part_frac / denom_trans).expand()
+    trans_factor = numer_trans / denom_trans
+    generic_rewriting = Add(*[trans_factor * term for term in part_frac.args])
     generic_substep = integral_steps(generic_rewriting, symbol)
     pieces = []
-    if generic_substep:
+    if not generic_substep.contains_dont_know():
         generic_substep = RewriteRule(integrand, symbol, generic_rewriting, generic_substep)
         denom_factored = (denom_poly * denom_trans).factor()
         edge_factors_set = set()
@@ -2581,10 +2604,11 @@ def partial_fractions_rule(integral):
                 if degenerate_step:
                     degenerate_step = RewriteRule(integrand, symbol, subbed_expr, degenerate_step)
                     pieces.append((degenerate_step, condition))
-    if pieces:
-        pieces.append((generic_substep, S.true))
-        return PiecewiseRule(integrand, symbol, pieces)
-    return generic_substep
+        if pieces:
+            pieces.append((generic_substep, S.true))
+            return PiecewiseRule(integrand, symbol, pieces)
+        return generic_substep
+    return None
 
 cancel_rule = rewriter(
     # lambda integrand, symbol: integrand.is_algebraic_expr(),

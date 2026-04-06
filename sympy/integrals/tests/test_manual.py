@@ -212,8 +212,8 @@ def test_manualintegrate_inversetrig():
     # atan
     assert manualintegrate(atan(x), x) == x*atan(x) - log(x**2 + 1)/2
     assert manualintegrate(atan(a*x), x) == Piecewise(((a*x*atan(a*x) - log(a**2*x**2 + 1)/2)/a, Ne(a, 0)), (0, True))
-    assert manualintegrate(x*atan(a*x), x) == -a*(x/a**2 - Piecewise((x, Eq(a**2, 0)),
-                                            (atan(x/sqrt(a**(-2)))/(a**2*sqrt(a**(-2))), True))/a**2)/2 + x**2*atan(a*x)/2
+    assert manualintegrate(x*atan(a*x), x) == -a*Piecewise((x**3/3, Eq(a, 0)),
+                                (x/a**2 - Piecewise((x, Eq(a**2, 0)), (atan(x/sqrt(a**(-2)))/(a**2*sqrt(a**(-2))), True))/a**2, True))/2 + x**2*atan(a*x)/2
     # acsc
     assert manualintegrate(acsc(x), x) == x*acsc(x) + Integral(1/(x*sqrt(1 - 1/x**2)), x)
     assert manualintegrate(acsc(a*x), x) == x*acsc(a*x) + Integral(1/(x*sqrt(1 - 1/(a**2*x**2))), x)/a
@@ -225,8 +225,8 @@ def test_manualintegrate_inversetrig():
     # acot
     assert manualintegrate(acot(x), x) == x*acot(x) + log(x**2 + 1)/2
     assert manualintegrate(acot(a*x), x) == Piecewise(((a*x*acot(a*x) + log(a**2*x**2 + 1)/2)/a, Ne(a, 0)), (pi*x/2, True))
-    assert manualintegrate(x*acot(a*x), x) == a*(x/a**2 - Piecewise((x, Eq(a**2, 0)),
-                                            (atan(x/sqrt(a**(-2)))/(a**2*sqrt(a**(-2))), True))/a**2)/2 + x**2*acot(a*x)/2
+    assert manualintegrate(x*acot(a*x), x) == a*Piecewise((x**3/3, Eq(a, 0)), (x/a**2 - Piecewise((x, Eq(a**2, 0)),
+                                     (atan(x/sqrt(a**(-2)))/(a**2*sqrt(a**(-2))), True))/a**2, True))/2 + x**2*acot(a*x)/2
 
     # piecewise
     assert manualintegrate(1/sqrt(ra-rb*x**2), x) == \
@@ -523,8 +523,8 @@ def test_issue_2850():
             + (x*asin(x) + sqrt(-x**2 + 1))*log(x) - Integral(sqrt(-x**2 + 1)/x, x)
     assert manualintegrate(acos(x)*log(x), x) == -x*acos(x) + sqrt(-x**2 + 1) + \
         (x*acos(x) - sqrt(-x**2 + 1))*log(x) + Integral(sqrt(-x**2 + 1)/x, x)
-    assert manualintegrate(atan(x)*log(x), x) == -x*atan(x) + (x*atan(x) - \
-            log(x**2 + 1)/2)*log(x) + log(x**2 + 1)/2 + Integral(log(x**2 + 1)/x, x)/2
+    assert manualintegrate(atan(x)*log(x), x) == -x*atan(x) + (x*atan(x) - log(x**2 + 1)/2)*log(x) + \
+        log(x**2 + 1)/2 - polylog(2, -x**2)/4
 
 
 def test_issue_9462():
@@ -605,8 +605,7 @@ def test_issue_10847():
     assert manualintegrate(sqrt(2*x + 3) / 2 * x, x) == (2*x + 3)**Rational(5, 2)/20 - (2*x + 3)**Rational(3, 2)/4
     assert manualintegrate(x**Rational(3,2) * log(x), x) == 2*x**Rational(5,2)*log(x)/5 - 4*x**Rational(5,2)/25
     assert manualintegrate(x**(-3) * log(x), x) == -log(x)/(2*x**2) - 1/(4*x**2)
-    assert manualintegrate(log(y)/(y**2*(1 - 1/y)), y) == \
-        log(y)*log(-1 + 1/y) - Integral(log(-1 + 1/y)/y, y)
+    assert manualintegrate(log(y)/(y**2*(1 - 1/y)), y) == log(y)*log(-1 + 1/y) - I*pi*log(y) - polylog(2, 1/y)
 
 
 def test_issue_12899():
@@ -680,7 +679,7 @@ def test_quadratic_denom():
     f = (5*x + 2)/(3*x**2 - 2*x + 8)
     assert manualintegrate(f, x) == 5*log(3*x**2 - 2*x + 8)/6 + 11*sqrt(23)*atan(3*sqrt(23)*(x - Rational(1, 3))/23)/69
     g = 3/(2*x**2 + 3*x + 1)
-    assert manualintegrate(g, x) == 3*log(x + 1/S(2)) - 3*log(x + 1)
+    assert manualintegrate(g, x) == 3*log(4*x + 2) - 3*log(4*x + 4)
 
 def test_issue_22757():
     assert manualintegrate(sin(x), y) == y * sin(x)
@@ -735,7 +734,7 @@ def test_manualintegrate_sqrt_linear():
     assert_is_integral_of((sqrt(3*x+3)+1)/((2*x+2)**(1/S(3))+1),
                           3*sqrt(6)*(2*x + 2)**(S(7)/6)/14 - 3*sqrt(6)*(2*x + 2)**(S(5)/6)/10 -
                           3*sqrt(6)*(2*x + 2)**(S.One/6)/2 + 3*(2*x + 2)**(S(2)/3)/4 - 3*(2*x + 2)**(S.One/3)/2 +
-                          sqrt(6)*sqrt(2*x + 2)/2 + 3*log(2*(2*x + 2)**(S.One/3) + 2)/2 +
+                          sqrt(6)*sqrt(2*x + 2)/2 + 3*log((2*x + 2)**(S.One/3) + 1)/2 +
                           3*sqrt(6)*atan((2*x + 2)**(S.One/6))/2)
     assert_is_integral_of(sqrt(x+sqrt(x)),
                           2*sqrt(sqrt(x) + x)*(sqrt(x)/12 + x/3 - S(1)/8) + log(2*sqrt(x) + 2*sqrt(sqrt(x) + x) + 1)/8)
