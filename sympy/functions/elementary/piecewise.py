@@ -2,12 +2,13 @@ from __future__ import annotations
 from sympy.core import S, diff, Tuple, Dummy, Mul
 from sympy.core.basic import Basic, as_Basic
 from sympy.core.function import DefinedFunction
-from sympy.core.numbers import Rational, NumberSymbol, _illegal
+from sympy.core.numbers import Rational, NumberSymbol, Pi, _illegal
 from sympy.core.parameters import global_parameters
 from sympy.core.relational import (Lt, Gt, Eq, Ne, Relational,
     _canonical, _canonical_coeff)
 from sympy.core.sorting import ordered
 from sympy.functions.elementary.miscellaneous import Max, Min
+from sympy.functions.elementary.trigonometric import cos
 from sympy.logic.boolalg import (And, Boolean, distribute_and_over_or, Not,
     true, false, Or, ITE, simplify_logic, to_cnf, distribute_or_over_and)
 from sympy.utilities.iterables import uniq, sift, common_prefix
@@ -62,6 +63,140 @@ class ExprCondPair(Tuple):
     def _eval_simplify(self, **kwargs):
         return self.func(*[a.simplify(**kwargs) for a in self.args])
 
+class PiecewiseAsSingleExpression:
+    """
+    A container for utility functions used to convert piecewise expressions into non-piecewise expressions. Here, True is represented as 1, and False as 0. This can be used to represent piecewise expressions as a sum of products between the piecewise functions and the condition functions.
+    """
+    @staticmethod
+    def NOT(x):
+        """
+        Returns the boolean negation operation.
+        """
+        return 1 - x
+    
+    @staticmethod
+    def AND(*x):
+        """
+        Returns the boolean AND operation.
+        """
+        A = 1
+        for i in x:
+            A = A * i
+        return A
+    
+    @staticmethod
+    def OR(*x):
+        """
+        Returns the boolean OR operation.
+        """
+        return PASE.NOT(PASE.AND([PASE.NOT(i) for i in x])) # De Morgan's Laws
+    
+    @staticmethod
+    def XOR(*x):
+        """
+        Returns the boolean XOR operation.
+        """
+        return PASE.isEven(sum(x))
+    
+    @staticmethod
+    def NAND(*x):
+        """
+        Returns the boolean NAND operation.
+        """
+        return PASE.NOT(PASE.AND(*x))
+    
+    @staticmethod
+    def NOR(*x):
+        """
+        Returns the boolean NOR operation.
+        """
+        return PASE.NOT(PASE.OR(*x))
+    
+    @staticmethod
+    def XNOR(*x):
+        """
+        Returns the boolean XNOR operation.
+        """
+        return PASE.NOT(PASE.XOR(*x))
+    
+    @staticmethod
+    def IMPLY(a, b):
+        """
+        Returns the boolean IMPLY operation.
+        """
+        return PASE.OR(PASE.NOT(a), b)
+    
+    @staticmethod
+    def EQ(*x):
+        """
+        Returns the boolean EQ operation.
+        """
+        return PASE.OR(PASE.AND(*x), PASE.NOR(*x))
+    
+    @staticmethod
+    def ITE(s, a, b):
+        """
+        Returns the boolean ITE operation.
+        """
+        return s*a + PASE.NOT(s)*b
+    
+    @staticmethod
+    def EX(*x):
+        """
+        Returns the boolean Exclusive operation.
+        """
+        return PASE.LesserEQ(sum(x), 1)
+    
+    @staticmethod
+    def Equal(expr1, expr2):
+        """
+        Returns if two expressions are numerically equal.
+        """
+        return 0**abs(expr1 - expr2) # Horrifying, I know
+    
+    @staticmethod
+    def GreaterEQ(expr1, expr2):
+        """
+        Returns if the first expression is numerically greater than or equal to the second expression.
+        """
+        return PASE.Equal(expr1 - expr2, abs(expr1 - expr2))
+    
+    @staticmethod
+    def Greater(expr1, expr2):
+        """
+        Returns if the first expression is numerically strictly greater than the second expression.
+        """
+        return PASE.AND(PASE.GreaterEQ(expr1, expr2), PASE.NOT(PASE.Equal(expr1, expr2)))
+    
+    @staticmethod
+    def LesserEQ(expr1, expr2):
+        """
+        Returns if the first expression is numerically less than or equal to the second expression.
+        """
+        return PASE.GreaterEQ(expr2, expr1)
+    
+    @staticmethod
+    def Lesser(expr1, expr2):
+        """
+        Returns if the first expression is numerically strictly less than the second expression.
+        """
+        return PASE.Greater(expr2, expr1)
+    
+    @staticmethod
+    def isEven(x):
+        """
+        Returns if the expression is an even integer.
+        """
+        return PASE.Equal(cos(Pi * x), 1)
+    
+    @staticmethod
+    def isInteger(x):
+        """
+        Returns if the expression is an integer.
+        """
+        return PASE.isEven(2*x)
+
+PASE = PiecewiseAsSingleExpression # An alias
 
 class Piecewise(DefinedFunction):
     """
