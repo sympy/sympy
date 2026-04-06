@@ -1115,14 +1115,14 @@ class DilogRule(AtomicRule):
         res_general = log(a)*log(x) - polylog(2, b*x**c/a)/c
         res_c0 = log(a - b) * log(x)
         res_a0 = log(-b * x**c)**2 / (2 * c)
-        pieces = []
+        pieces: list[tuple[Expr, Boolean]] = []
         if not _if_zero_implies_zero(c, base):
             pieces.append((res_c0, Eq(c, 0)))
         if not _if_zero_implies_zero(a, base):
             pieces.append((res_a0, Eq(a, 0)))
         if not pieces:
             return res_general
-        pieces.append((res_general, True))
+        pieces.append((res_general, S.true))
         return Piecewise(*pieces)
 
 
