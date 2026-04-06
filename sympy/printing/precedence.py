@@ -75,7 +75,10 @@ def precedence_Mul(item):
 
 
 def precedence_Rational(item):
-    if item.p < 0:
+    # Some objects might not have the '.p' attribute (numerator).
+    # We check for it to avoid AttributeError while maintaining
+    # correct precedence for negative rational numbers.
+    if hasattr(item, 'p') and item.p < 0:
         return PRECEDENCE["Add"]
     return PRECEDENCE["Mul"]
 
