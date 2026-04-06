@@ -75,9 +75,9 @@ from typing import TYPE_CHECKING
 
 from sympy.utilities.misc import as_int
 
-
 if TYPE_CHECKING:
     from typing import SupportsIndex
+
 
 def _series(j: int, n: int, prec: int = 14) -> int:
 
