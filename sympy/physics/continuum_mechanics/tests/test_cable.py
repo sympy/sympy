@@ -86,7 +86,7 @@ def test_cable():
 
 
 def test_cable_remove_loads_bug():
-    # Test for KeyErrror: 'disrtibuted' fix
+    # Test for KeyErrror: disrtibuted fix
     c = Cable(('A', 0, 10), ('B', 10, 10))
     c.apply_load(0, ('X', 9))
     assert 'X' in c.loads['distributed']
@@ -97,12 +97,9 @@ def test_cable_remove_loads_bug():
     P = Symbol('P')
     c.apply_load(-1, (P, 5, 5, 12, 30))
     assert P in c.loads['point_load']
-    # Removing a non-existent load with a Symbol should raise ValueError not TypeError
     Q = Symbol('Q')
     with raises(ValueError, match="Error removing load Q: no such load exists"):
         c.remove_loads(Q)
-
-    # Removing existing Symbol load should work
     c.remove_loads(P)
     assert P not in c.loads['point_load']
 
@@ -111,12 +108,9 @@ def test_cable_change_support_bug():
     # Test for TypeError: '>=' not supported between instances of 'str' and 'Integer'
     c = Cable(('A', 0, 10), ('B', 10, 10))
     c.apply_load(-1, ('P', 5, 5, 12, 30))
-
-    # This should work now. It checks if P (at x=5) is between A(0) and C(15)
     c.change_support('B', ('C', 15, 10))
     assert 'C' in c.supports
     assert c.supports['C'] == [15, 10]
-
-    # This should raise ValueError because P(5) is outside A(10)-C(15)
+    # Should raise ValueError because P(5) is outside A(10)-C(15)
     with raises(ValueError, match="The change in support will throw an existing load out of range"):
         c.change_support('A', ('D', 10, 10))
