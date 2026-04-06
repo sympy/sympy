@@ -71,9 +71,13 @@ array (perhaps just a matter of preference).
 
 '''
 from __future__ import annotations
+from typing import TYPE_CHECKING
 
 from sympy.utilities.misc import as_int
 
+
+if TYPE_CHECKING:
+    from typing import SupportsIndex
 
 def _series(j: int, n: int, prec: int = 14) -> int:
 
@@ -107,7 +111,7 @@ def _series(j: int, n: int, prec: int = 14) -> int:
     return total
 
 
-def pi_hex_digits(n: int, prec: int = 14) -> str:
+def pi_hex_digits(n: SupportsIndex, prec: int = 14) -> str:
     """Returns a string containing ``prec`` (default 14) digits
     starting at the nth digit of pi in hex. Counting of digits
     starts at 0 and the decimal is not counted, so for n = 0 the
