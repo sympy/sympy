@@ -7,7 +7,7 @@ from sympy.core.expr import unchanged
 from sympy.core.function import (Function, diff, expand)
 from sympy.core.mul import Mul
 from sympy.core.mod import Mod
-from sympy.core.numbers import (Float, I, Rational, oo, pi, zoo)
+from sympy.core.numbers import (Float, I, Rational, Half, oo, pi, zoo, nan)
 from sympy.core.relational import (Eq, Ge, Gt, Ne)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
@@ -1638,3 +1638,13 @@ def test_piecewise__eval_is_meromorphic():
     assert f.is_meromorphic(x, 2) == True
     assert f.is_meromorphic(x, Symbol('a')) is None
     assert f.is_meromorphic(x, Symbol('a', real=True)) is None
+
+def test_piecewise_rewrite_as_single_expression():
+    x = symbols('x')
+    f = Piecewise((1 / x, x > 0), (-1 / x, x < 0))
+    expr1 = f.rewrite_as_single_expression()
+    expr2 = f.rewrite_as_single_expression(use_square_abs = True)
+    for expr in [expr1, expr2]:
+        assert expr.subs(x, 2) == Half()
+        assert expr.subs(x, -2) == Half()
+        assert expr.subs(x, 0) == nan

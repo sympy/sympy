@@ -1175,7 +1175,7 @@ class Piecewise(DefinedFunction):
 
             return result
 
-    def _eval_rewrite_as_single_expression(self, use_square_abs=False):
+    def rewrite_as_single_expression(self, use_square_abs=False):
         """
         Rewrites the piecewise expression as a single expression, using absolute values and powers of zero. If you wish to represent the absolute value function as the square root of the square, pass in the boolean value True.
         """
