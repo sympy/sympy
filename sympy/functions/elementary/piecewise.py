@@ -8,7 +8,6 @@ from sympy.core.relational import (Lt, Le, Gt, Ge, Eq, Ne, Relational,
     _canonical, _canonical_coeff)
 from sympy.core.sorting import ordered
 from sympy.functions.elementary.miscellaneous import Max, Min
-from sympy.functions.elementary.trigonometric import cos
 from sympy.logic.boolalg import (And, Boolean, distribute_and_over_or, Not,
     true, false, Or, ITE, Xor, Nand, Nor, Xnor, Implies,
     Equivalent, Exclusive, simplify_logic, to_cnf, distribute_or_over_and)
@@ -228,7 +227,7 @@ class PiecewiseAsSingleExpression:
         """
         Returns if the expression is an even integer.
         """
-        return PASE.Equal(cos(Pi * x), 1, use_square_abs)
+        return PASE.Equal((-1)**x, 1, use_square_abs)
     
     @staticmethod
     def isInteger(x, use_square_abs=False):
