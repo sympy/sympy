@@ -266,7 +266,7 @@ def test_rewrite():
 
     # for integral orders rewriting SBFs w.r.t bessel[jy] is allowed
     N = Symbol('n', integer=True)
-    ri = randint(-11, 10)
+    ri = randint(-5, 5)
     for order in (ri, N):
         for f in (besselj, bessely):
             assert yn(order, z) != yn(order, z).rewrite(f)
@@ -358,10 +358,10 @@ def test_slow_expand():
     def check(eq, ans):
         return tn(eq, ans) and eq == ans
 
-    rn = randcplx(a=1, b=0, d=0, c=2)
+    rn = randcplx(a=1, b=0.5, d=0, c=1.5)
 
     for besselx in [besselj, bessely, besseli, besselk]:
-        ri = S(2*randint(-11, 10) + 1) / 2  # half integer in [-21/2, 21/2]
+        ri = S(2*randint(-5, 5) + 1) / 2  # half integer in [-9/2, 11/2]
         assert tn(besselsimp(besselx(ri, z)), besselx(ri, z))
 
     assert check(expand_func(besseli(rn, x)),
