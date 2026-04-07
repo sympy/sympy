@@ -96,7 +96,7 @@ UNDERSCORE: "_"
 
 // relational symbols
 EQUAL: "="
-NOT_EQUAL: "\\neq" | "\\ne"
+NOT_EQUAL: /\\neq(?![a-zA-Z])/ | /\\ne(?![a-zA-Z])/
 LT: "<"
 LTE: "\\leq" | "\\le" | "\\leqslant"
 GT: ">"
