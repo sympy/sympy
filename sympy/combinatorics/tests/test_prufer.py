@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.combinatorics.prufer import Prufer
 from sympy.testing.pytest import raises
 
@@ -40,6 +41,20 @@ def test_prufer():
     b = a.next()
     assert b.tree_repr == [[0, 2], [0, 1], [1, 3]]
     assert b.rank == 1
+
+
+def test_prufer_repr_aliasing():
+    p = Prufer([[0, 1], [1, 2], [1, 3]])
+    code = p.prufer_repr
+    code.append(99)
+    assert p.prufer_repr == [1, 1]
+
+
+def test_tree_repr_aliasing():
+    p = Prufer([1, 1])
+    tree = p.tree_repr
+    tree[0].append(99)
+    assert p.tree_repr == [[0, 1], [1, 2], [1, 3]]
 
 
 def test_round_trip():

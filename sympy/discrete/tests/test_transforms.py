@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.core import S, Symbol, symbols, I, Rational
 from sympy.discrete import (fft, ifft, ntt, intt, fwht, ifwht,

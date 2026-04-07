@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.containers import Tuple
 from sympy.combinatorics.generators import rubik_cube_generators
 from sympy.combinatorics.homomorphisms import is_isomorphic
@@ -90,6 +91,32 @@ def test_identity_generators_dups_false():
     assert len(G.generators) == 1
     assert G.generators[0].is_identity
     assert G.order() == 1
+
+
+def test_property_aliasing():
+    G = SymmetricGroup(4)
+    base = G.base
+    base.append(99)
+    assert G.base == [0, 1, 2]
+
+    orbits = G.basic_orbits
+    orbits[0].append(99)
+    assert G.basic_orbits == [[0, 1, 2, 3], [1, 2, 3], [2, 3]]
+
+    transversals = G.basic_transversals
+    transversals[0][99] = Permutation(3)
+    assert 99 not in G.basic_transversals[0]
+
+    H = PermutationGroup(Permutation([1, 0, 2]), Permutation([0, 2, 1]))
+    gens = H.generators
+    gens.pop()
+    assert len(H.generators) == 2
+    assert H.order() == 6
+
+    expected = len(G.strong_gens)
+    strong_gens = G.strong_gens
+    strong_gens.pop()
+    assert len(G.strong_gens) == expected
 
 
 def test_equality():
@@ -335,6 +362,14 @@ def test_is_normal():
     assert H_id.is_normal(H)
     assert not H_n2_1.is_normal(H)
     assert not H_n2_2.is_normal(H)
+
+
+def test_is_normal_after_is_abelian():
+    G = SymmetricGroup(3)#PermutationGroup(Permutation([1, 2, 0]), Permutation([1, 0, 2]))
+    H = PermutationGroup(Permutation([1, 0, 2]))
+
+    assert H.is_abelian is True
+    assert H.is_normal(G) is False
 
 
 def test_eq():

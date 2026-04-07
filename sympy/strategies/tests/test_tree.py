@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.strategies.tree import treeapply, greedy, allresults, brute
 from functools import partial, reduce
 

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.random import randint
 
 from sympy.ntheory.bbp_pi import pi_hex_digits

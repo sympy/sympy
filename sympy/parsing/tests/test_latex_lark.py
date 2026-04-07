@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.testing.pytest import XFAIL
 from sympy.parsing.latex.lark import parse_latex_lark
 from sympy.external import import_module
@@ -19,7 +20,7 @@ from sympy.functions.elementary.trigonometric import asin, cos, csc, sec, sin, t
 from sympy.integrals.integrals import Integral
 from sympy.series.limits import Limit
 from sympy import Matrix, MatAdd, MatMul, Transpose, Trace
-from sympy import I
+from sympy import I, pi
 
 from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
 from sympy.physics.quantum import Bra, Ket, InnerProduct
@@ -233,6 +234,7 @@ EVALUATED_FRACTION_EXPRESSION_PAIRS = [
 RELATION_EXPRESSION_PAIRS = [
     (r"x = y", Eq(x, y)),
     (r"x \neq y", Ne(x, y)),
+    (r"x \ne y", Ne(x, y)),
     (r"x < y", Lt(x, y)),
     (r"x > y", Gt(x, y)),
     (r"x \leq y", Le(x, y)),
@@ -244,6 +246,7 @@ RELATION_EXPRESSION_PAIRS = [
     (r"x > y", StrictGreaterThan(x, y)),
     (r"x \geq y", GreaterThan(x, y)),
     (r"x \neq y", Unequality(x, y)), # same as 2nd one in the list
+    (r"x \ne y", Unequality(x, y)),
     (r"a^2 + b^2 = c^2", Eq(a**2 + b**2, c**2))
 ]
 
@@ -252,7 +255,10 @@ UNEVALUATED_POWER_EXPRESSION_PAIRS = [
     (r"x^\frac{1}{2}", _Pow(x, _Mul(1, _Pow(2, -1)))),
     (r"x^{3 + 1}", x ** _Add(3, 1)),
     (r"\pi^{|xy|}", Symbol('pi') ** _Abs(x * y)),
-    (r"5^0 - 4^0", _Add(_Pow(5, 0), _Mul(-1, _Pow(4, 0))))
+    (r"5^0 - 4^0", _Add(_Pow(5, 0), _Mul(-1, _Pow(4, 0)))),
+    (r"x^\circ", _Mul(x, _Mul(pi, _Pow(180, -1)))),
+    (r"x^{\circ}", _Mul(x, _Mul(pi, _Pow(180, -1)))),
+    (r"180^\circ", _Mul(180, _Mul(pi, _Pow(180, -1))))
 ]
 
 EVALUATED_POWER_EXPRESSION_PAIRS = [
@@ -260,7 +266,10 @@ EVALUATED_POWER_EXPRESSION_PAIRS = [
     (r"x^\frac{1}{2}", sqrt(x)),
     (r"x^{3 + 1}", x ** 4),
     (r"\pi^{|xy|}", Symbol('pi') ** _Abs(x * y)),
-    (r"5^0 - 4^0", 0)
+    (r"5^0 - 4^0", 0),
+    (r"x^\circ", pi*x/180),
+    (r"x^{\circ}", pi*x/180),
+    (r"180^\circ", pi)
 ]
 
 UNEVALUATED_INTEGRAL_EXPRESSION_PAIRS = [
@@ -866,12 +875,30 @@ def test_common_function_expressions():
         assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
 
-# unhandled bug causing these to fail
-@XFAIL
 def test_spacing():
     for latex_str, sympy_expr in SPACING_RELATED_EXPRESSION_PAIRS:
         with evaluate(False):
             assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
+def test_negthinspace_not_equal_conflict():
+    assert parse_latex_lark(r"a \negthinspace b") == a * b
+    assert parse_latex_lark(r"x \negthinspace y") == x * y
+    assert parse_latex_lark(r"x \negthinspace + y") == x + y
+
+    assert parse_latex_lark(r"a \negmedspace b") == a * b
+    assert parse_latex_lark(r"x \negmedspace y") == x * y
+    assert parse_latex_lark(r"x \negmedspace + y") == x + y
+
+    assert parse_latex_lark(r"a \negthickspace b") == a * b
+    assert parse_latex_lark(r"x \negthickspace y") == x * y
+    assert parse_latex_lark(r"x \negthickspace + y") == x + y
+
+    assert parse_latex_lark(r"x \ne y") == Ne(x, y)
+    assert parse_latex_lark(r"x \neq y") == Ne(x, y)
+
+    assert parse_latex_lark(r"\negthinspace x \ne y") == Ne(x, y)
+    assert parse_latex_lark(r"x \neq \negmedspace y") == Ne(x, y)
 
 
 def test_binomial_expressions():

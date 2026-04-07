@@ -6,7 +6,8 @@ from typing import Any, Callable, TYPE_CHECKING
 
 import itertools
 
-from sympy.core import Add, Float, Mod, Mul, Number, S, Symbol, Expr
+from sympy.core import (
+    Add, Float, Mod, Mul, Number, S, Symbol, Expr, UnevaluatedExpr)
 from sympy.core.alphabets import greeks
 from sympy.core.containers import Tuple
 from sympy.core.function import Function, AppliedUndef, Derivative
@@ -322,6 +323,10 @@ class LatexPrinter(Printer):
         from sympy.concrete.summations import Sum
         from sympy.integrals.integrals import Integral
 
+        if isinstance(expr, UnevaluatedExpr):
+            e = expr.args[0]
+            if e.is_Mul and e.could_extract_minus_sign():
+                return True
         if expr.is_Mul:
             if not first and expr.could_extract_minus_sign():
                 return True
@@ -345,6 +350,9 @@ class LatexPrinter(Printer):
         printed as part of an Add, False otherwise.  This is False for most
         things.
         """
+        if isinstance(expr, UnevaluatedExpr):
+            if expr.args[0].is_Add:
+                return True
         if expr.is_Relational:
             return True
         if any(expr.has(x) for x in (Mod,)):
@@ -521,8 +529,13 @@ class LatexPrinter(Printer):
         separator: str = self._settings['mul_symbol_latex']
         numbersep: str = self._settings['mul_symbol_latex_numbers']
 
+        is_Add = lambda e: (e.is_Add or (
+            isinstance(e, UnevaluatedExpr) and e.args[0].is_Add))
+        is_Mul = lambda e: (e.is_Mul or (
+            isinstance(e, UnevaluatedExpr) and e.args[0].is_Mul))
+
         def convert(expr) -> str:
-            if not expr.is_Mul:
+            if not is_Mul(expr):
                 return str(self._print(expr))
             else:
                 if self.order not in ('old', 'none'):
@@ -574,8 +587,9 @@ class LatexPrinter(Printer):
         if expr.could_extract_minus_sign():
             expr = -expr
             tex = "- "
-            if expr.is_Add:
-                tex += "("
+            if is_Add(expr) or (isinstance(expr, UnevaluatedExpr) \
+                    and expr.args[0].is_Number and expr.args[0].is_negative):
+                tex += r"\left("
                 include_parens = True
         else:
             tex = ""
@@ -628,7 +642,7 @@ class LatexPrinter(Printer):
                 tex += r"\frac{%s}{%s}" % (snumer, sdenom)
 
         if include_parens:
-            tex += ")"
+            tex += r"\right)"
         return tex
 
     def _print_AlgebraicNumber(self, expr):
@@ -2529,14 +2543,16 @@ class LatexPrinter(Printer):
 
     def _print_OmegaPower(self, expr):
         exp, mul = expr.args
+        if exp == 0:
+            return f"{mul}"
         if mul != 1:
             if exp != 1:
-                return r"{} \omega^{{{}}}".format(mul, exp)
+                return r"\omega^{{{}}} {}".format(self._print(exp), mul)
             else:
-                return r"{} \omega".format(mul)
+                return r"\omega {}".format(mul)
         else:
             if exp != 1:
-                return r"\omega^{{{}}}".format(exp)
+                return r"\omega^{{{}}}".format(self._print(exp))
             else:
                 return r"\omega"
 
@@ -3075,8 +3091,8 @@ def latex(expr, **settings):
     order: string, optional
         Any of the supported monomial orderings (currently ``'lex'``,
         ``'grlex'``, or ``'grevlex'``), ``'old'``, and ``'none'``. This
-        parameter does nothing for `~.Mul` objects. Setting order to ``'old'``
-        uses the compatibility ordering for ``~.Add`` defined in Printer. For
+        parameter does nothing for :class:`~.Mul` objects. Setting order to ``'old'``
+        uses the compatibility ordering for :class:`~.Add` defined in Printer. For
         very large expressions, set the ``order`` keyword to ``'none'`` if
         speed is a concern.
     symbol_names : dictionary of strings mapped to symbols, optional
@@ -3086,7 +3102,7 @@ def latex(expr, **settings):
         form. Default is ``True``, to print exponent in root form.
     mat_symbol_style : string, optional
         Can be either ``'plain'`` (default) or ``'bold'``. If set to
-        ``'bold'``, a `~.MatrixSymbol` A will be printed as ``\mathbf{A}``,
+        ``'bold'``, a :class:`~.MatrixSymbol` A will be printed as ``\mathbf{A}``,
         otherwise as ``A``.
     imaginary_unit : string, optional
         String to use for the imaginary unit. Defined options are ``'i'``

@@ -1,4 +1,5 @@
-from sympy import sympify, Add, ImmutableMatrix as Matrix
+from __future__ import annotations
+from sympy import sympify, Add, ImmutableMatrix as Matrix, S
 from sympy.core.evalf import EvalfMixin
 from sympy.external.mpmath import prec_to_dps
 from sympy.printing.defaults import Printable
@@ -142,7 +143,7 @@ class Dyadic(Printable, EvalfMixin):
 
     def __truediv__(self, other):
         """Divides the Dyadic by a sympifyable expression. """
-        return self.__mul__(1 / other)
+        return self.__mul__(S.One / other)
 
     def __eq__(self, other):
         """Tests for equality.

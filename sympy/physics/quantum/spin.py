@@ -1,4 +1,5 @@
 """Quantum mechanical angular momentum."""
+from __future__ import annotations
 
 from sympy.concrete.summations import Sum
 from sympy.core.add import Add

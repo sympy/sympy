@@ -1,7 +1,6 @@
 from __future__ import annotations
 import itertools
 from collections import defaultdict
-from typing import FrozenSet
 from functools import singledispatch
 from itertools import accumulate
 
@@ -780,7 +779,7 @@ def identify_hadamard_products(expr: ArrayContraction | ArrayDiagonal):
 
     editor: _EditArrayContraction = _EditArrayContraction(expr)
 
-    map_contr_to_args: dict[FrozenSet, list[_ArgE]] = defaultdict(list)
+    map_contr_to_args: dict[frozenset, list[_ArgE]] = defaultdict(list)
     map_ind_to_inds: dict[int | None, int] = defaultdict(int)
     for arg_with_ind in editor.args_with_ind:
         for ind in arg_with_ind.indices:
@@ -789,7 +788,7 @@ def identify_hadamard_products(expr: ArrayContraction | ArrayDiagonal):
             continue
         map_contr_to_args[frozenset(arg_with_ind.indices)].append(arg_with_ind)
 
-    k: FrozenSet[int]
+    k: frozenset[int]
     v: list[_ArgE]
     for k, v in map_contr_to_args.items():
         make_trace: bool = False

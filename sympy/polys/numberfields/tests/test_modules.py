@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.abc import x, zeta
 from sympy.polys import Poly, cyclotomic_poly
 from sympy.polys.domains import FF, QQ, ZZ
@@ -193,6 +194,14 @@ def test_PowerBasis_mult_tab():
     assert all(is_int(c) for u in M for v in M[u] for c in M[u][v])
 
 
+def test_PowerBasis_mult_tab_aliasing():
+    T = Poly(cyclotomic_poly(5, x))
+    A = PowerBasis(T)
+    M = A.mult_tab()
+    M[0][0].append(99)
+    assert A.mult_tab()[0][0] == [1, 0, 0, 0]
+
+
 def test_PowerBasis_represent():
     T = Poly(cyclotomic_poly(5, x))
     A = PowerBasis(T)
@@ -281,6 +290,15 @@ def test_Submodule_discard_before():
     assert B.is_sq_maxrank_HNF() and not C.is_sq_maxrank_HNF()
     assert C.matrix == B.matrix[:, 2:]
     assert C.mult_tab() == {0: {0: [-2, -2], 1: [0, 0]}, 1: {1: [0, 0]}}
+
+
+def test_Submodule_mult_tab_aliasing():
+    T = Poly(cyclotomic_poly(5, x))
+    A = PowerBasis(T)
+    B = A.whole_submodule()
+    M = B.mult_tab()
+    M[0][0].append(99)
+    assert B.mult_tab()[0][0] == [1, 0, 0, 0]
 
 
 def test_Submodule_QQ_matrix():

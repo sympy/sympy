@@ -1,4 +1,5 @@
 """Symbolic primitives + unicode/ASCII abstraction for pretty.py"""
+from __future__ import annotations
 
 import sys
 import warnings
@@ -252,7 +253,6 @@ _xobj_unicode = {
     '|':                    U('BOX DRAWINGS LIGHT VERTICAL'),
     'Tee':                  U('BOX DRAWINGS LIGHT UP AND HORIZONTAL'),
     'UpTack':               U('BOX DRAWINGS LIGHT DOWN AND HORIZONTAL'),
-    'corner_up_centre'
     '(_ext':                U('LEFT PARENTHESIS EXTENSION'),
     ')_ext':                U('RIGHT PARENTHESIS EXTENSION'),
     '(_lower_hook':         U('LEFT PARENTHESIS LOWER HOOK'),

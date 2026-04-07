@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.printing.tree import tree
 from sympy.testing.pytest import XFAIL
 

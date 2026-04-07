@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.containers import Tuple
 from sympy.core.function import Function
 from sympy.core.numbers import oo, Rational

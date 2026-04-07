@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.concrete.summations import Sum
 from sympy.core.exprtools import gcd_terms
 from sympy.core.function import (diff, expand)

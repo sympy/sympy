@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core import Expr, S, oo, pi, sympify
 from sympy.core.evalf import N
 from sympy.core.sorting import default_sort_key, ordered

@@ -10,6 +10,7 @@ are_coplanar
 are_similar
 
 """
+from __future__ import annotations
 
 from collections import deque
 from math import sqrt as _sqrt
