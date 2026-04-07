@@ -2585,15 +2585,15 @@ def partial_fractions_rule(integral):
     pieces = []
     if not generic_substep.contains_dont_know():
         generic_substep = RewriteRule(integrand, symbol, generic_rewriting, generic_substep)
-        denom_factored = denom_poly * denom_trans
+        denom_factored = (denom_poly * denom_trans).factor()
         edge_factors_set = set()
         for term in terms:
             _, term_denom = term.as_numer_denom()
-            for factor in term_denom.as_ordered_factors():
-                base, exp = factor.as_base_exp()
-                if not base.has_xfree({symbol}) and not base.is_number:
-                    if not _if_zero_implies_zero(base, denom_factored):
-                        edge_factors_set.add(base)
+            term_denom_factors = factor_list(term_denom)[1]
+            for factor, _ in term_denom_factors:
+                if not factor.has_xfree({symbol}):
+                    if not _if_zero_implies_zero(factor, denom_factored):
+                        edge_factors_set.add(factor)
         for edge_factor in edge_factors_set:
             # 1/(x*(x - a)) = 1/a * (1/(x - a) - 1/x) just if a != 0
             substitutions = solve(edge_factor, dict=True)
