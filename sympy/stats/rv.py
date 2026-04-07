@@ -42,7 +42,7 @@ from sympy.external import import_module
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import iterable
-
+from sympy import S
 
 __doctest_requires__ = {('sample',): ['scipy']}
 
@@ -240,6 +240,21 @@ class SinglePSpace(PSpace):
     """
     def __new__(cls, s, distribution):
         s = _symbol_converter(s)
+        assumptions = s.assumptions0.copy()
+        try:
+            domain_set = distribution.set
+            if 'real' not in assumptions and domain_set.is_subset(S.Reals):
+                assumptions['real'] = True
+            if 'integer' not in assumptions and domain_set.is_subset(S.Integers):
+                assumptions['integer'] = True
+            if 'positive' not in assumptions and domain_set.is_subset(S.Naturals):
+                assumptions['positive'] = True
+            if 'nonnegative' not in assumptions and domain_set.is_subset(S.Naturals0):
+                assumptions['nonnegative'] = True
+        except (AttributeError, NotImplementedError):
+            pass
+        # Re-create the symbol with merged assumptions right at the start
+        s = Symbol(s.name, **assumptions)
         return Basic.__new__(cls, s, distribution)
 
     @property
@@ -317,7 +332,7 @@ class RandomSymbol(Expr):
         return self.symbol.is_integer
 
     def _eval_is_real(self):
-        return self.symbol.is_real or self.pspace.is_real
+        return self.symbol.is_real or getattr(self.pspace, 'is_real', False)
 
     @property
     def is_commutative(self):
