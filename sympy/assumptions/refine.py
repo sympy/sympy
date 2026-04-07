@@ -565,6 +565,39 @@ def refine_floor_ceiling(expr, assumptions):
     return expr
 
 
+def refine_log(expr, assumptions):
+    """
+    Handler for the natural logarithm.
+
+    Examples
+    ========
+
+    >>> from sympy import Q, log, exp, refine
+    >>> from sympy.abc import x
+
+    >>> refine(log(exp(x)), Q.real(x))
+    x
+
+    >>> refine(log(x**2), Q.positive(x))
+    2*log(x)
+
+    """
+    from sympy.functions.elementary.exponential import exp
+    from sympy.assumptions import ask, Q
+
+    arg = expr.args[0]
+
+    if arg.is_Pow:
+        base, exponent = arg.base, arg.exp
+        if ask(Q.positive(base), assumptions) and ask(Q.real(exponent), assumptions):
+            return exponent * expr.func(base)
+
+    if isinstance(arg, exp):
+        if ask(Q.real(arg.exp), assumptions):
+            return arg.exp
+
+    return expr
+
 handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'Abs': refine_abs,
     'Pow': refine_Pow,
@@ -576,6 +609,7 @@ handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'MatrixElement': refine_matrixelement,
     'cos': refine_sin_cos,
     'sin': refine_sin_cos,
+    'log': refine_log,
     'Heaviside': refine_Heaviside,
     'floor': refine_floor_ceiling,
     'ceiling' : refine_floor_ceiling,
