@@ -241,6 +241,7 @@ RELATION_EXPRESSION_PAIRS = [
     (r"x \geq y", Ge(x, y)),
     (r"x \le y", Le(x, y)),
     (r"x \ge y", Ge(x, y)),
+    (r"x \leqslant y", Le(x, y)),
     (r"x < y", StrictLessThan(x, y)),
     (r"x \leq y", LessThan(x, y)),
     (r"x > y", StrictGreaterThan(x, y)),
