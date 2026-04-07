@@ -2567,7 +2567,7 @@ def partial_fractions_rule(integral):
     denom_trans_factors = [f for f in denom_factors if not f.is_polynomial(symbol)]
 
     denom_poly = Mul(*denom_poly_factors)
-    if not denom_poly.has(symbol):
+    if not denom_poly.has_xfree({symbol}):
         return None
     denom_trans = Mul(*denom_trans_factors)
     numer_poly = Mul(*numer_poly_factors)
@@ -2575,24 +2575,25 @@ def partial_fractions_rule(integral):
     frac = numer_poly / denom_poly
     part_frac = frac.apart(symbol)
 
-    if not part_frac.is_Add or part_frac == frac:
+    if part_frac == frac:
         return None
 
+    terms = part_frac.args if part_frac.is_Add else [part_frac]
     trans_factor = numer_trans / denom_trans
-    generic_rewriting = Add(*[trans_factor * term for term in part_frac.args])
+    generic_rewriting = Add(*[trans_factor * term for term in terms])
     generic_substep = integral_steps(generic_rewriting, symbol)
     pieces = []
     if not generic_substep.contains_dont_know():
         generic_substep = RewriteRule(integrand, symbol, generic_rewriting, generic_substep)
-        denom_factored = (denom_poly * denom_trans).factor()
+        denom_factored = denom_poly * denom_trans
         edge_factors_set = set()
-        for term in part_frac.args:
+        for term in terms:
             _, term_denom = term.as_numer_denom()
-            term_denom_factors = factor_list(term_denom)[1]
-            for factor, _ in term_denom_factors:
-                if not factor.has(symbol):
-                    if not _if_zero_implies_zero(factor, denom_factored):
-                        edge_factors_set.add(factor)
+            for factor in term_denom.as_ordered_factors():
+                base, exp = factor.as_base_exp()
+                if not base.has_xfree({symbol}) and not base.is_number:
+                    if not _if_zero_implies_zero(base, denom_factored):
+                        edge_factors_set.add(base)
         for edge_factor in edge_factors_set:
             # 1/(x*(x - a)) = 1/a * (1/(x - a) - 1/x) just if a != 0
             substitutions = solve(edge_factor, dict=True)
