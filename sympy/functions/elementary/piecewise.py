@@ -75,7 +75,7 @@ class PiecewiseAsSingleExpression:
         If `False`, it gives the regular python `abs` function.
         """
         return {True: lambda x:(x**2)**0.5, False: abs}[b]
-    
+
     @staticmethod
     def Return_Dict():
         """
@@ -106,7 +106,7 @@ class PiecewiseAsSingleExpression:
         Returns the boolean negation operation.
         """
         return 1 - x
-    
+
     @staticmethod
     def AND(*x, use_square_abs=False):
         """
@@ -116,77 +116,77 @@ class PiecewiseAsSingleExpression:
         for i in x:
             A = A * i
         return A
-    
+
     @staticmethod
     def OR(*x, use_square_abs=False):
         """
         Returns the boolean OR operation.
         """
         return PASE.NOT(PASE.AND(*[PASE.NOT(i) for i in x])) # De Morgan's Laws
-    
+
     @staticmethod
     def XOR(*x, use_square_abs=False):
         """
         Returns the boolean XOR operation.
         """
         return PASE.isEven(sum(x), use_square_abs=use_square_abs)
-    
+
     @staticmethod
     def NAND(*x, use_square_abs=False):
         """
         Returns the boolean NAND operation.
         """
         return PASE.NOT(PASE.AND(*x))
-    
+
     @staticmethod
     def NOR(*x, use_square_abs=False):
         """
         Returns the boolean NOR operation.
         """
         return PASE.NOT(PASE.OR(*x))
-    
+
     @staticmethod
     def XNOR(*x, use_square_abs=False):
         """
         Returns the boolean XNOR operation.
         """
         return PASE.NOT(PASE.XOR(*x, use_square_abs=use_square_abs))
-    
+
     @staticmethod
     def IMPLY(a, b, use_square_abs=False):
         """
         Returns the boolean IMPLY operation.
         """
         return PASE.OR(PASE.NOT(a), b)
-    
+
     @staticmethod
     def EQ(*x, use_square_abs=False):
         """
         Returns the boolean EQ operation.
         """
         return PASE.OR(PASE.AND(*x), PASE.NOR(*x))
-    
+
     @staticmethod
     def ITE(s, a, b, use_square_abs=False):
         """
         Returns the boolean ITE operation.
         """
         return s*a + PASE.NOT(s)*b
-    
+
     @staticmethod
     def EX(*x, use_square_abs=False):
         """
         Returns the boolean Exclusive operation.
         """
         return PASE.LesserEQ(sum(x), 1, use_square_abs)
-    
+
     @staticmethod
     def Equal(expr1, expr2, use_square_abs=False):
         """
         Returns if two expressions are numerically equal.
         """
         return 0**PASE.Get_Abs(use_square_abs)(expr1 - expr2) # Horrifying, I know
-    
+
     @staticmethod
     def NotEqual(expr1, expr2, use_square_abs=False):
         """
@@ -200,42 +200,42 @@ class PiecewiseAsSingleExpression:
         Returns if the first expression is numerically greater than or equal to the second expression.
         """
         return PASE.Equal(expr1 - expr2, PASE.Get_Abs(use_square_abs)(expr1 - expr2), use_square_abs)
-    
+
     @staticmethod
     def Greater(expr1, expr2, use_square_abs=False):
         """
         Returns if the first expression is numerically strictly greater than the second expression.
         """
         return PASE.AND(PASE.GreaterEQ(expr1, expr2, use_square_abs), PASE.NOT(PASE.Equal(expr1, expr2, use_square_abs)))
-    
+
     @staticmethod
     def LesserEQ(expr1, expr2, use_square_abs=False):
         """
         Returns if the first expression is numerically less than or equal to the second expression.
         """
         return PASE.GreaterEQ(expr2, expr1, use_square_abs)
-    
+
     @staticmethod
     def Lesser(expr1, expr2, use_square_abs=False):
         """
         Returns if the first expression is numerically strictly less than the second expression.
         """
         return PASE.Greater(expr2, expr1, use_square_abs)
-    
+
     @staticmethod
     def isEven(x, use_square_abs=False):
         """
         Returns if the expression is an even integer.
         """
         return PASE.Equal((-1)**x, 1, use_square_abs)
-    
+
     @staticmethod
     def isInteger(x, use_square_abs=False):
         """
         Returns if the expression is an integer.
         """
         return PASE.isEven(2*x, use_square_abs)
-    
+
     @staticmethod
     def parse_expression(cond, use_square_abs=False):
         """
@@ -1174,7 +1174,7 @@ class Piecewise(DefinedFunction):
                     return
 
             return result
-        
+
     def _eval_rewrite_as_single_expression(self, use_square_abs=False):
         """
         Rewrites the piecewise expression as a single expression, using absolute values and powers of zero. If you wish to represent the absolute value function as the square root of the square, pass in the boolean value True.
