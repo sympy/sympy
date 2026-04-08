@@ -1177,7 +1177,29 @@ class Piecewise(DefinedFunction):
 
     def rewrite_as_single_expression(self, use_square_abs=False):
         """
-        Rewrites the piecewise expression as a single expression, using absolute values and powers of zero. If you wish to represent the absolute value function as the square root of the square, pass in the boolean value True.
+        Method to rewrite the piecewise expression as a non-piecewise expression.
+
+        Explanation
+        ===========
+        Rewrites the piecewise expression as a single expression, using absolute values
+        and powers of zero.
+        
+        Parameters
+        ==========
+        use_square_abs : bool
+            Whether to use the sub-expression ::sqrt(x**2):: in place of ::abs(x):: in
+            the returned expression.
+        
+        Examples
+        ========
+        >>> from sympy import Piecewise, cos
+        >>> from sympy.abc import x
+        >>> f = Piecewise((1 / x, x > 0), (-1 / x, x < 0))
+        >>> f.rewrite_as_single_expression()
+        0**Abs(x - Abs(x))*(1 - 0**Abs(x))/x - 0**Abs(x + Abs(x))*(1 - 0**Abs(x))/x
+        >>> g = Piecewise((x, cos(x) < 0.1), (x + 1, cos(x) > 0.2), (x + 100, True))
+        >>> g.rewrite_as_single_expression()
+        0**Abs(-cos(x) + Abs(cos(x) - 0.2) + 0.2)*0**Abs(-cos(x) + Abs(cos(x) - 0.1) + 0.1)*(1 - 0**Abs(cos(x) - 0.2))*(x + 1) + 0**Abs(cos(x) + Abs(cos(x) - 0.1) - 0.1)*x*(1 - 0**Abs(cos(x) - 0.1)) + (x + 100)*(-0**Abs(-cos(x) + Abs(cos(x) - 0.2) + 0.2)*(1 - 0**Abs(cos(x) - 0.2)) + 1)*(-0**Abs(cos(x) + Abs(cos(x) - 0.1) - 0.1)*(1 - 0**Abs(cos(x) - 0.1)) + 1)
         """
         exprs, conds = zip(*self.args)
         terms = []
