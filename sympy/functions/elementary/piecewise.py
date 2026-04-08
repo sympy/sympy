@@ -2,12 +2,12 @@ from __future__ import annotations
 from sympy.core import S, diff, Tuple, Dummy, Mul
 from sympy.core.basic import Basic, as_Basic
 from sympy.core.function import DefinedFunction
-from sympy.core.numbers import Rational, NumberSymbol, Pi, _illegal
+from sympy.core.numbers import Rational, NumberSymbol, _illegal
 from sympy.core.parameters import global_parameters
 from sympy.core.relational import (Lt, Le, Gt, Ge, Eq, Ne, Relational,
     _canonical, _canonical_coeff)
 from sympy.core.sorting import ordered
-from sympy.functions.elementary.miscellaneous import Max, Min
+from sympy.functions.elementary.miscellaneous import Max, Min, sqrt
 from sympy.logic.boolalg import (And, Boolean, distribute_and_over_or, Not,
     true, false, Or, ITE, Xor, Nand, Nor, Xnor, Implies,
     Equivalent, Exclusive, simplify_logic, to_cnf, distribute_or_over_and)
@@ -74,7 +74,7 @@ class PiecewiseAsSingleExpression:
         If `True`, it gives the square root of the square.
         If `False`, it gives the regular python `abs` function.
         """
-        return {True: lambda x:(x**2)**0.5, False: abs}[b]
+        return {True: lambda x:sqrt(x**2), False: abs}[b]
 
     @staticmethod
     def Return_Dict():

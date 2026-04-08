@@ -1648,3 +1648,10 @@ def test_piecewise_rewrite_as_single_expression():
         assert expr.subs(x, 2) == Half()
         assert expr.subs(x, -2) == Half()
         assert expr.subs(x, 0) == nan
+    g = Piecewise((x, cos(x) < 0.1), (x+1, cos(x) > 0.2), (x+100, True))
+    expr3 = g.rewrite_as_single_expression()
+    expr4 = g.rewrite_as_single_expression(use_square_abs = True)
+    for expr in [expr3, expr4]:
+        assert expr.subs(x, 0) == 1
+        assert expr.subs(x, 2) == 2
+        assert expr.subs(x, 1000000000000000000) == 1000000000000000100
