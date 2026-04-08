@@ -3,17 +3,26 @@ from __future__ import annotations
 
 import pytest
 
+from sympy import Add
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.core.numbers import Integer
 from sympy.core.function import Function
 from sympy.core import Derivative
-from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.exponential import exp, log
 from sympy.matrices.immutable import ImmutableDenseMatrix
 from sympy.physics.mechanics import dynamicsymbols
-from sympy.simplify._cse_diff import (_forward_jacobian,
+from sympy.simplify._cse_diff import (_DiffCache,
+                                      _PropagationCache,
+                                      _SparseJacobianStats,
+                                      SparseJacobianIR,
+                                      _forward_jacobian,
                                       _remove_cse_from_derivative,
                                       _forward_jacobian_cse,
-                                      _forward_jacobian_norm_in_cse_out)
+                                      _forward_jacobian_norm_in_cse_out,
+                                      _forward_jacobian_sparse_cse,
+                                      _get_dependencies,
+                                      _propagate_support,
+                                      _sparse_derivative)
 from sympy.simplify.simplify import simplify
 from sympy.matrices import Matrix, eye
 
@@ -39,6 +48,13 @@ zero = Integer(0)
 one = Integer(1)
 two = Integer(2)
 neg_one = Integer(-1)
+
+
+def _backsubstitute_matrix(replacements, matrix):
+    sub_rep = dict(replacements)
+    for sym, expr in replacements:
+        sub_rep[sym] = expr.xreplace(sub_rep)
+    return matrix.xreplace(sub_rep)
 
 
 @pytest.mark.parametrize(
@@ -94,6 +110,14 @@ def test_process_cse():
     assert p_reduced == expected_output[1], f"Expected {expected_output[1]}, but got {p_reduced}"
 
 
+def test_get_dependencies_mixed_wrt_types():
+    t = symbols('t')
+    expr = q1 + q2.diff(t) + x
+    wrt = [x, q1, q2.diff(t)]
+
+    assert _get_dependencies(expr, wrt) == {0, 1, 2}
+
+
 def test_io_matrix_type():
     x, y, z = symbols('x y z')
     expr = ImmutableDenseMatrix([
@@ -119,34 +143,266 @@ def test_io_matrix_type():
     assert isinstance(jacobian, type(expr)), "Jacobian should be a Matrix of the same type as the input"
 
 
-def test_forward_jacobian_input_output():
-    x, y, z = symbols('x y z')
-    expr = Matrix([
-        x * y + y * z + x * y * z,
-        x ** 2 + y ** 2 + z ** 2,
-        x * y + x * z + y * z
-    ])
+def test_forward_jacobian_sparse_cse_matches_dense_reduced_output():
+    expr = Matrix([x*y + y*z + x*y*z, x**2 + y**2 + z**2, x*y + x*z + y*z])
     wrt = Matrix([x, y, z])
 
     replacements, reduced_expr = cse(expr)
 
-    # Test _forward_jacobian_core
-    replacements_core, jacobian_core, precomputed_fs_core = _forward_jacobian_cse(replacements, reduced_expr, wrt)
-    assert isinstance(replacements_core, type(replacements)), "Replacements should be a list"
-    assert isinstance(jacobian_core, type(reduced_expr)), "Jacobian should be a list"
-    assert isinstance(precomputed_fs_core, list), "Precomputed free symbols should be a list"
-    assert len(replacements_core) == len(replacements), "Length of replacements does not match"
-    assert len(jacobian_core) == 1, "Jacobian should have one element"
-    assert len(precomputed_fs_core) == len(replacements), "Length of precomputed free symbols does not match"
+    dense_replacements, dense_jacobian, _ = _forward_jacobian_cse(replacements, reduced_expr, wrt)
+    sparse_replacements, sparse_jacobian, _ = _forward_jacobian_sparse_cse(replacements, reduced_expr, wrt)
 
-    # Test _forward_jacobian_norm_in_dag_out
-    replacements_norm, jacobian_norm, precomputed_fs_norm = _forward_jacobian_norm_in_cse_out(expr, wrt)
-    assert isinstance(replacements_norm, type(replacements)), "Replacements should be a list"
-    assert isinstance(jacobian_norm, type(reduced_expr)), "Jacobian should be a list"
-    assert isinstance(precomputed_fs_norm, list), "Precomputed free symbols should be a list"
-    assert len(replacements_norm) == len(replacements), "Length of replacements does not match"
-    assert len(jacobian_norm) == 1, "Jacobian should have one element"
-    assert len(precomputed_fs_norm) == len(replacements), "Length of precomputed free symbols does not match"
+    assert sparse_replacements == dense_replacements
+    assert sparse_jacobian == dense_jacobian
+
+
+def test_forward_jacobian_sparse_cse_handles_dynamicsymbols():
+    expr = Matrix([q1**2 + q2, q2**2 + q3, q3**2 + q1])
+    wrt = Matrix([q1, q2, q3])
+
+    replacements, reduced_expr = cse(expr)
+    _, sparse_jacobian, _ = _forward_jacobian_sparse_cse(replacements, reduced_expr, wrt)
+
+    expanded = _backsubstitute_matrix(replacements, sparse_jacobian[0])
+    assert simplify(expanded - expr.jacobian(wrt)) == Matrix.zeros(3, 3)
+
+
+def test_sparse_cse_matches_public_forward_jacobian_for_basic_case():
+    expr = Matrix([sin(x + y), exp(x*y), log(x + z)])
+    wrt = Matrix([x, y, z])
+
+    replacements, reduced_expr = cse(expr)
+    _, sparse_jacobian, _ = _forward_jacobian_sparse_cse(replacements, reduced_expr, wrt)
+
+    expanded = _backsubstitute_matrix(replacements, sparse_jacobian[0])
+    assert simplify(expanded - _forward_jacobian(expr, wrt)) == Matrix.zeros(3, 3)
+
+
+def test_sparse_cse_derivative_in_wrt_is_treated_as_leaf():
+    t = symbols('t')
+    q1_local, q2_local = dynamicsymbols('q1 q2')
+    expr = Matrix([Derivative(q1_local, t) + q1_local,
+                   q2_local + Derivative(q1_local, t)**2])
+    wrt = Matrix([q1_local, Derivative(q1_local, t)])
+
+    replacements, reduced_expr = cse(expr)
+    _, sparse_jacobian, _ = _forward_jacobian_sparse_cse(replacements, reduced_expr, wrt)
+
+    expanded = _backsubstitute_matrix(replacements, sparse_jacobian[0])
+    assert simplify(expanded - expr.jacobian(wrt)) == Matrix.zeros(2, 2)
+
+
+def test_sparse_cse_derivative_not_in_wrt_is_semantic_boundary():
+    t = symbols('t')
+    q1_local, q2_local = dynamicsymbols('q1 q2')
+    expr = Matrix([Derivative(q1_local, t) + q1_local, q2_local + Derivative(q1_local, t)])
+    wrt = Matrix([q1_local, q2_local])
+
+    replacements, reduced_expr = cse(expr)
+    _, sparse_jacobian, _ = _forward_jacobian_sparse_cse(replacements, reduced_expr, wrt)
+
+    expanded = _backsubstitute_matrix(replacements, sparse_jacobian[0])
+    assert simplify(expanded - expr.jacobian(wrt)) == Matrix.zeros(2, 2)
+
+
+def test_sparse_cse_stats_track_fallback_for_unsupported_function():
+    f_local = Function('f')
+    expr = Matrix([f_local(x, y) + x, f_local(x, y)*z])
+    wrt = Matrix([x, y, z])
+
+    replacements, reduced_expr = cse(expr)
+    ir = _forward_jacobian_sparse_cse(replacements, reduced_expr, wrt, return_mode="ir")
+
+    expanded = _backsubstitute_matrix(replacements, ir.to_matrix(reduced_expr[0].__class__))
+    assert simplify(expanded - expr.jacobian(wrt)) == Matrix.zeros(2, 3)
+    assert ir.stats['fallback_count'] > 0
+
+
+def test_sparse_cse_edge_case_zero_jacobian():
+    expr = Matrix([1, z])
+    wrt = Matrix([x, y])
+
+    replacements, reduced_expr = cse(expr)
+    ir = _forward_jacobian_sparse_cse(replacements, reduced_expr, wrt, return_mode="ir")
+
+    assert ir.to_matrix(reduced_expr[0].__class__) == Matrix.zeros(2, 2)
+    assert ir.stats['row_nnz'] == [0, 0]
+    assert ir.stats['output_nnz'] == 0
+
+
+def test_sparse_cse_with_intern_preserves_result_on_repeated_subexpressions():
+    expr = Matrix([
+        (x + y)*(x + y) + sin(x + y),
+        (x + y)*(x + y)*(x + y),
+    ])
+    wrt = Matrix([x, y])
+
+    replacements, reduced_expr = cse(expr)
+    default_result = _forward_jacobian_sparse_cse(replacements, reduced_expr, wrt)
+    intern_result = _forward_jacobian_sparse_cse(
+        replacements, reduced_expr, wrt, return_mode="ir", use_intern=True)
+
+    assert default_result[:3] == (
+        intern_result.intermediates,
+        [intern_result.to_matrix(reduced_expr[0].__class__)],
+        [],
+    )
+    assert intern_result.stats['intern_hits'] >= 0
+    assert intern_result.stats['intern_misses'] >= 0
+
+
+def test_sparse_cse_stats_track_derivative_cache_hits():
+    f_local = Function('f')
+    shared = f_local(x, y, z)
+    expr = Add(shared, shared, evaluate=False)
+    wrt = [x, y, z]
+    wrt_index = {var: i for i, var in enumerate(wrt)}
+    stats = _SparseJacobianStats()
+
+    result = _sparse_derivative(
+        expr, wrt, wrt_index, {}, _PropagationCache(), _DiffCache(),
+        stats=stats, derivative_cache={},
+    )
+
+    assert result == {0: 2*shared.diff(x), 1: 2*shared.diff(y), 2: 2*shared.diff(z)}
+    assert stats.derivative_cache_hits > 0
+    assert stats.derivative_cache_misses > 0
+
+
+def test_sparse_jacobian_ir_roundtrip_helpers():
+    ir = SparseJacobianIR(
+        shape=(2, 3),
+        rows=[0, 0, 1],
+        cols=[0, 2, 1],
+        vals=[x, y, z],
+        row_slices=[(0, 2), (2, 3)],
+        wrt=[x, y, z],
+        intermediates=[],
+        stats={'output_nnz': 3},
+    )
+
+    assert ir.to_matrix(Matrix) == Matrix([[x, 0, y], [0, z, 0]])
+    assert ir.to_coo_tuple() == ([], (2, 3), [0, 0, 1], [0, 2, 1], [x, y, z])
+    assert ir.row_vals(0) == [(0, x), (2, y)]
+    assert ir.row_vals(1) == [(1, z)]
+
+
+def test_forward_jacobian_sparse_cse_return_mode_ir_matches_matrix_mode():
+    expr = Matrix([x*y + z, x + y])
+    wrt = Matrix([x, y, z])
+    replacements, reduced_expr = cse(expr)
+
+    ir = _forward_jacobian_sparse_cse(replacements, reduced_expr, wrt, return_mode="ir")
+    matrix_result = _forward_jacobian_sparse_cse(replacements, reduced_expr, wrt)
+
+    assert ir.to_matrix(reduced_expr[0].__class__) == matrix_result[1][0]
+    assert ir.intermediates == matrix_result[0]
+    assert ir.stats['output_nnz'] == 5
+
+
+def test_forward_jacobian_sparse_cse_rejects_unknown_return_mode():
+    expr = Matrix([x + y])
+    wrt = Matrix([x, y])
+    replacements, reduced_expr = cse(expr)
+
+    try:
+        _forward_jacobian_sparse_cse(replacements, reduced_expr, wrt, return_mode="bad")
+    except ValueError as exc:
+        assert "return_mode" in str(exc)
+    else:
+        raise AssertionError("Expected ValueError for unsupported return mode")
+
+
+def test_propagate_support_treats_derivative_as_boundary():
+    t = symbols('t')
+    expr = Derivative(q1, t) + x
+
+    assert _propagate_support(expr, {x: 0, q1: 1}, {}) == frozenset((0,))
+    assert _propagate_support(expr, {x: 0, Derivative(q1, t): 1}, {}) == frozenset((0, 1))
+
+
+def test_sparse_cse_structure_prepass_preserves_result():
+    f_local = Function('f')
+    expr = Matrix([f_local(x, y) + z, f_local(x, y)*z + x])
+    wrt = Matrix([x, y, z])
+    replacements, reduced_expr = cse(expr)
+
+    default_result = _forward_jacobian_sparse_cse(replacements, reduced_expr, wrt)
+    prepass_result = _forward_jacobian_sparse_cse(
+        replacements, reduced_expr, wrt, structure_prepass=True)
+
+    default_expanded = _backsubstitute_matrix(replacements, default_result[1][0])
+    prepass_expanded = _backsubstitute_matrix(replacements, prepass_result[1][0])
+    assert simplify(default_expanded - prepass_expanded) == Matrix.zeros(2, 3)
+
+
+def test_sparse_cse_structure_prepass_cache_miss_keeps_fallback_derivatives():
+    expr = Function('f')(x, y) + z
+    wrt = Matrix([x, y, z])
+    replacements, reduced_expr = cse(Matrix([expr]))
+
+    _, sparse_jacobian, _ = _forward_jacobian_sparse_cse(
+        replacements, reduced_expr, wrt, structure_prepass=True)
+
+    assert simplify(
+        _backsubstitute_matrix(replacements, sparse_jacobian[0]) - Matrix([expr]).jacobian(wrt)
+    ) == Matrix.zeros(1, 3)
+
+
+def test_sparse_cse_row_value_cse_preserves_jacobian():
+    expr = Matrix([sin(x + y) + exp(x + y)])
+    wrt = Matrix([x, y])
+    replacements, reduced_expr = cse(expr)
+
+    row_result = _forward_jacobian_sparse_cse(
+        replacements, reduced_expr, wrt, value_cse="row")
+    expanded = _backsubstitute_matrix(row_result[0], row_result[1][0])
+
+    assert simplify(expanded - expr.jacobian(wrt)) == Matrix.zeros(1, 2)
+    assert len(row_result[0]) >= len(replacements)
+
+
+def test_sparse_cse_global_value_cse_preserves_jacobian():
+    expr = Matrix([
+        sin(x + y) + exp(x + y),
+        (sin(x + y) + exp(x + y))**2,
+    ])
+    wrt = Matrix([x, y])
+    replacements, reduced_expr = cse(expr)
+
+    global_result = _forward_jacobian_sparse_cse(
+        replacements, reduced_expr, wrt, value_cse="global")
+    expanded = _backsubstitute_matrix(global_result[0], global_result[1][0])
+
+    assert simplify(expanded - expr.jacobian(wrt)) == Matrix.zeros(2, 2)
+    assert len(global_result[0]) >= len(replacements)
+
+
+def test_sparse_cse_value_cse_return_mode_ir_keeps_intermediates():
+    expr = Matrix([sin(x + y) + exp(x + y)])
+    wrt = Matrix([x, y])
+    replacements, reduced_expr = cse(expr)
+
+    ir = _forward_jacobian_sparse_cse(
+        replacements, reduced_expr, wrt, return_mode="ir", value_cse="row")
+
+    assert ir.intermediates
+    assert simplify(
+        _backsubstitute_matrix(ir.intermediates, ir.to_matrix(Matrix)) - expr.jacobian(wrt)
+    ) == Matrix.zeros(1, 2)
+
+
+def test_sparse_cse_rejects_unknown_value_cse_mode():
+    expr = Matrix([x + y])
+    wrt = Matrix([x, y])
+    replacements, reduced_expr = cse(expr)
+
+    try:
+        _forward_jacobian_sparse_cse(replacements, reduced_expr, wrt, value_cse="bad")
+    except ValueError as exc:
+        assert "value_cse" in str(exc)
+    else:
+        raise AssertionError("Expected ValueError for unsupported value_cse")
 
 
 def test_jacobian_hessian():

@@ -1,8 +1,15 @@
 """Module for differentiation using CSE."""
 from __future__ import annotations
 
-from sympy import cse, Matrix, Derivative, MatrixBase
+from dataclasses import dataclass, replace
+
+from sympy import S, cse, Matrix, Derivative, MatrixBase, Mul, Pow, numbered_symbols
+from sympy.core.function import AppliedUndef
+from sympy.functions.elementary.exponential import exp, log
+from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.utilities.iterables import iterable
+
+from sympy.core import cache
 
 
 def _remove_cse_from_derivative(replacements, reduced_expressions):
@@ -65,6 +72,745 @@ def _remove_cse_from_derivative(replacements, reduced_expressions):
     ]
 
     return processed_replacements, processed_reduced
+
+
+class _PropagationCache:
+    """Cache expression construction during sparse propagation."""
+
+    def __init__(self, interner=None):
+        self._cache = {}
+        self._hits = 0
+        self._misses = 0
+        self._interner = interner
+
+    @property
+    def hits(self):
+        return self._hits
+
+    @property
+    def misses(self):
+        return self._misses
+
+    def make(self, func, *args):
+        key = (func, tuple(id(arg) for arg in args))
+        cached = self._cache.get(key)
+        if cached is not None:
+            self._hits += 1
+            return cached
+
+        self._misses += 1
+        result = func(*args)
+        if self._interner is not None:
+            result = self._interner.intern(result)
+        self._cache[key] = result
+        return result
+
+
+class _DiffCache:
+    """Cache fallback ``diff`` calls during sparse propagation."""
+
+    def __init__(self):
+        self._cache = {}
+        self._hits = 0
+        self._misses = 0
+
+    @property
+    def hits(self):
+        return self._hits
+
+    @property
+    def misses(self):
+        return self._misses
+
+    def diff(self, expr, var):
+        key = (id(expr), id(var))
+        cached = self._cache.get(key)
+        if cached is not None:
+            self._hits += 1
+            return cached
+        self._misses += 1
+        result = expr.diff(var)
+        self._cache[key] = result
+        return result
+
+
+class _ExprIntern:
+    """Optional local interning for structurally equal expressions."""
+
+    def __init__(self):
+        self._table = {}
+        self._hits = 0
+        self._misses = 0
+
+    @property
+    def hits(self):
+        return self._hits
+
+    @property
+    def misses(self):
+        return self._misses
+
+    def intern(self, expr):
+        existing = self._table.get(expr)
+        if existing is not None:
+            self._hits += 1
+            return existing
+        self._misses += 1
+        self._table[expr] = expr
+        return expr
+
+
+class _SparseJacobianStats:
+    """Collect low-risk counters for sparse propagation experiments."""
+
+    def __init__(self):
+        self.fallback_count = 0
+        self.derivative_cache_hits = 0
+        self.derivative_cache_misses = 0
+
+
+@dataclass
+class SparseJacobianIR:
+    """Sparse Jacobian intermediate representation.
+
+    This object is the primary internal result of
+    ``_forward_jacobian_sparse_cse``. It stores the Jacobian in a COO-like
+    sparse form together with row boundaries, the differentiation variables,
+    optional intermediate expressions, and optional diagnostic stats.
+
+    Attributes
+    ==========
+
+    shape : tuple[int, int]
+        Jacobian shape ``(nrows, ncols)``.
+    rows, cols, vals : list
+        Parallel arrays describing nonzero Jacobian entries.
+    row_slices : list[tuple[int, int]]
+        Half-open ``[start, end)`` slices into ``cols`` and ``vals`` for each
+        Jacobian row.
+    wrt : list
+        Differentiation variables in column order.
+    intermediates : list[tuple]
+        Intermediate expressions referenced by ``vals``.
+    stats : dict | None
+        Optional diagnostic counters for sparse propagation experiments.
+    """
+
+    shape: tuple[int, int]
+    rows: list[int]
+    cols: list[int]
+    vals: list
+    row_slices: list[tuple[int, int]]
+    wrt: list
+    intermediates: list[tuple]
+    stats: dict | None = None
+
+    def to_matrix(self, matrix_cls):
+        """Rebuild the Jacobian as a SymPy matrix."""
+        nrows, ncols = self.shape
+        entries = {
+            (row, col): value
+            for row, col, value in zip(self.rows, self.cols, self.vals)
+        }
+        return matrix_cls.from_dok(nrows, ncols, entries)
+
+    def to_coo_tuple(self):
+        """Return a codegen-friendly tuple view."""
+        return (
+            self.intermediates,
+            self.shape,
+            self.rows,
+            self.cols,
+            self.vals,
+        )
+
+    def row_vals(self, row_idx):
+        """Return ``(col, value)`` pairs for one row."""
+        start, end = self.row_slices[row_idx]
+        return list(zip(self.cols[start:end], self.vals[start:end]))
+
+
+def _get_dependencies(expr, wrt):
+    """Return column indices that ``expr`` may depend on."""
+    wrt_index = {var: i for i, var in enumerate(wrt)}
+    wrt_set = set(wrt)
+
+    if all(getattr(var, "is_Symbol", False) for var in wrt_set):
+        return {wrt_index[s] for s in expr.free_symbols & wrt_set}
+
+    applied = expr.atoms(AppliedUndef)
+    derivatives = expr.atoms(Derivative)
+    deps = set()
+    for var in wrt:
+        if getattr(var, "is_Symbol", False):
+            if var in expr.free_symbols:
+                deps.add(wrt_index[var])
+        elif isinstance(var, AppliedUndef):
+            if var in applied:
+                deps.add(wrt_index[var])
+        elif isinstance(var, Derivative):
+            if var in derivatives:
+                deps.add(wrt_index[var])
+    return deps
+
+
+def _accumulate_sparse_row(result, col, deriv):
+    """Add a derivative contribution to a sparse row map."""
+    if deriv is S.Zero:
+        return
+
+    current = result.get(col)
+    if current is None:
+        result[col] = deriv
+        return
+
+    new_value = current + deriv
+    if new_value is S.Zero:
+        result.pop(col, None)
+    else:
+        result[col] = new_value
+
+
+def _propagate_add(child_derivs):
+    """Propagate a sparse derivative map through an ``Add`` node."""
+    result = {}
+    for child_deriv in child_derivs:
+        for col, deriv in child_deriv.items():
+            _accumulate_sparse_row(result, col, deriv)
+    return result
+
+
+def _other_factor_product(node_expr, children, skip_index, cache):
+    """Return the product of all factors except ``children[skip_index]``."""
+    other_args = tuple(children[k] for k in range(len(children)) if k != skip_index)
+    if len(other_args) == 0:
+        return S.One
+    if len(other_args) == 1:
+        return other_args[0]
+    return cache.make(Mul, *other_args)
+
+
+def _propagate_mul(node_expr, children, child_derivs, cache):
+    """Propagate a sparse derivative map through a ``Mul`` node."""
+    active = [(i, child_deriv) for i, child_deriv in enumerate(child_derivs) if child_deriv]
+    if not active:
+        return {}
+
+    if len(active) == 1:
+        idx, child_deriv = active[0]
+        coeff = _other_factor_product(node_expr, children, idx, cache)
+        if coeff is S.One:
+            return child_deriv
+        return {
+            col: cache.make(Mul, coeff, deriv)
+            for col, deriv in child_deriv.items()
+        }
+
+    result = {}
+    for idx, child_deriv in active:
+        coeff = _other_factor_product(node_expr, children, idx, cache)
+        for col, deriv in child_deriv.items():
+            contrib = cache.make(Mul, coeff, deriv)
+            _accumulate_sparse_row(result, col, contrib)
+    return result
+
+
+def _propagate_unary(node_expr, child, child_deriv, cache):
+    """Propagate through common single-argument functions."""
+    if not child_deriv:
+        return {}
+
+    func = node_expr.func
+    if func == exp:
+        phi_prime = node_expr
+    elif func == sin:
+        phi_prime = cache.make(cos, child)
+    elif func == cos:
+        phi_prime = cache.make(Mul, S.NegativeOne, cache.make(sin, child))
+    elif func == log:
+        phi_prime = cache.make(Pow, child, S.NegativeOne)
+    else:
+        phi_prime = node_expr.diff(child)
+
+    if phi_prime is S.Zero:
+        return {}
+    if phi_prime is S.One:
+        return child_deriv
+
+    return {
+        col: cache.make(Mul, phi_prime, deriv)
+        for col, deriv in child_deriv.items()
+    }
+
+
+def _propagate_pow(node_expr, children, child_derivs, cache):
+    """Propagate a sparse derivative map through a ``Pow`` node."""
+    base, exp = children
+    dbase, dexp = child_derivs
+
+    if not dexp:
+        if not dbase:
+            return {}
+        coeff = cache.make(Mul, exp, cache.make(Pow, base, exp - 1))
+        if coeff is S.One:
+            return dbase
+        return {col: cache.make(Mul, coeff, deriv)
+                for col, deriv in dbase.items()}
+
+    if not dbase:
+        log_base = cache.make(log, base)
+        return {
+            col: cache.make(Mul, node_expr, deriv, log_base)
+            for col, deriv in dexp.items()
+        }
+
+    result = {}
+    all_cols = set(dbase) | set(dexp)
+    log_base = cache.make(log, base)
+    base_inverse = cache.make(Pow, base, S.NegativeOne)
+    for col in all_cols:
+        value = S.Zero
+        if col in dexp:
+            value += cache.make(Mul, node_expr, dexp[col], log_base)
+        if col in dbase:
+            value += cache.make(Mul, node_expr, exp, dbase[col], base_inverse)
+        if value is not S.Zero:
+            result[col] = value
+    return result
+
+
+def _fallback_local_diff(node_expr, wrt, dcache, stats=None, columns=None):
+    """Fallback local differentiation for unsupported node shapes."""
+    if stats is not None:
+        stats.fallback_count += 1
+
+    if columns is None:
+        columns = _get_dependencies(node_expr, wrt)
+
+    result = {}
+    for col in columns:
+        deriv = dcache.diff(node_expr, wrt[col])
+        _accumulate_sparse_row(result, col, deriv)
+    return result
+
+
+def _get_leaf_derivative(expr, wrt_index, replacement_derivatives):
+    """"Return sparse derivative for replacement symbols, wrt variables,
+    and zero-derivative leaf-like expressions; otherwise return None."""""
+    if expr in replacement_derivatives:
+        return replacement_derivatives[expr]
+    if expr in wrt_index:
+        return {wrt_index[expr]: S.One}
+    if expr.is_Atom or isinstance(expr, Derivative):
+        return {}
+    return None
+
+
+def _get_leaf_support(expr, wrt_index, replacement_support):
+    """Return support for leaf-like expressions, or ``None`` to recurse."""
+    if expr in replacement_support:
+        return replacement_support[expr]
+    if expr in wrt_index:
+        return frozenset((wrt_index[expr],))
+    if expr.is_Atom or isinstance(expr, Derivative):
+        return frozenset()
+    return None
+
+
+def _propagate_support(expr, wrt_index, replacement_support, cache=None):
+    """Return an over-approximation of the Jacobian support of ``expr``.
+
+    The returned frozenset contains column indices that may be nonzero in the
+    derivative of ``expr`` with respect to ``wrt``. This prepass performs only
+    set propagation; it does not build derivative expressions.
+    """
+    leaf_support = _get_leaf_support(expr, wrt_index, replacement_support)
+    if leaf_support is not None:
+        return leaf_support
+
+    if cache is not None:
+        cached = cache.get(expr)
+        if cached is not None:
+            return cached
+
+    support = frozenset().union(*(
+        _propagate_support(child, wrt_index, replacement_support, cache=cache)
+        for child in expr.args
+    ))
+    if cache is not None:
+        cache[expr] = support
+    return support
+
+
+def _sparse_derivative(
+    expr, wrt, wrt_index, replacement_derivatives, cache, dcache, stats=None,
+    support_map=None, derivative_cache=None,
+):
+    """Differentiate ``expr`` to a sparse row map.
+
+    The result is a dictionary mapping Jacobian column indices to derivative
+    expressions. Known replacement derivatives, sparse propagation rules, local
+    fallback differentiation, and an optional per-call memo cache are used to
+    keep the traversal sparse.
+    """
+    leaf_derivative = _get_leaf_derivative(
+        expr, wrt_index, replacement_derivatives)
+    if leaf_derivative is not None:
+        return leaf_derivative
+
+    if derivative_cache is not None:
+        cached = derivative_cache.get(expr)
+        if cached is not None:
+            if stats is not None:
+                stats.derivative_cache_hits += 1
+            return cached
+        if stats is not None:
+            stats.derivative_cache_misses += 1
+
+    children = expr.args
+    child_derivs = []
+    for child in children:
+        child_deriv = _get_leaf_derivative(
+            child, wrt_index, replacement_derivatives)
+        if child_deriv is None:
+            child_deriv = _sparse_derivative(
+                child, wrt, wrt_index, replacement_derivatives, cache, dcache,
+                stats=stats, support_map=support_map,
+                derivative_cache=derivative_cache)
+        child_derivs.append(child_deriv)
+
+    if expr.is_Add:
+        result = _propagate_add(child_derivs)
+    elif expr.is_Mul:
+        result = _propagate_mul(expr, children, child_derivs, cache)
+    elif expr.is_Pow:
+        result = _propagate_pow(expr, children, child_derivs, cache)
+    elif len(children) == 1:
+        result = _propagate_unary(expr, children[0], child_derivs[0], cache)
+    else:
+        columns = support_map.get(expr) if support_map is not None else None
+        if columns is None:
+            columns = _get_dependencies(expr, wrt)
+        result = _fallback_local_diff(
+            expr, wrt, dcache, stats=stats, columns=columns)
+
+    if derivative_cache is not None:
+        derivative_cache[expr] = result
+    return result
+
+
+def _build_ir(row_maps, wrt_list, intermediates, stats=None):
+    """Build ``SparseJacobianIR`` from sparse row maps."""
+    rows = []
+    cols = []
+    vals = []
+    row_slices = []
+
+    for row_idx, row_map in enumerate(row_maps):
+        start = len(rows)
+        for col in sorted(row_map):
+            rows.append(row_idx)
+            cols.append(col)
+            vals.append(row_map[col])
+        row_slices.append((start, len(rows)))
+
+    return SparseJacobianIR(
+        shape=(len(row_maps), len(wrt_list)),
+        rows=rows,
+        cols=cols,
+        vals=vals,
+        row_slices=row_slices,
+        wrt=wrt_list,
+        intermediates=list(intermediates),
+        stats=stats,
+    )
+
+
+def _finalize_sparse_jacobian_result(ir, matrix_cls, return_mode="matrix"):
+    """Convert the internal IR into the requested external view."""
+    if return_mode == "ir":
+        return ir
+
+    jacobian = ir.to_matrix(matrix_cls)
+    return ir.intermediates, [jacobian], []
+
+
+def _count_symbol_uses(expr, symbols):
+    """Count replacement symbol uses in one expression."""
+    counts = {}
+    if not expr.free_symbols:
+        return counts
+    for arg in expr.args:
+        child_counts = _count_symbol_uses(arg, symbols)
+        for sym, count in child_counts.items():
+            counts[sym] = counts.get(sym, 0) + count
+    if expr in symbols:
+        counts[expr] = counts.get(expr, 0) + 1
+    return counts
+
+
+def _count_all_symbol_uses(replacements, reduced):
+    """Count uses of every replacement symbol in one pass."""
+    symbols = {sym for sym, _ in replacements}
+    counts = {}
+    for _, expr in replacements:
+        for sym, count in _count_symbol_uses(expr, symbols).items():
+            counts[sym] = counts.get(sym, 0) + count
+    for expr in reduced:
+        for sym, count in _count_symbol_uses(expr, symbols).items():
+            counts[sym] = counts.get(sym, 0) + count
+    return counts
+
+
+def _should_extract(expr, reuse_count):
+    """Return ``True`` when a shared expression is worth extracting."""
+    if expr.func in (sin, cos, exp, log):
+        return reuse_count >= 2
+    if expr.is_Pow and expr.exp.is_negative:
+        return reuse_count >= 2
+    if expr.is_Mul and len(expr.args) >= 4:
+        return reuse_count >= 2
+
+    ops = expr.count_ops()
+    if ops >= 6 and reuse_count >= 2:
+        return True
+    if ops >= 3 and reuse_count >= 3:
+        return True
+    return False
+
+
+def _filter_replacements(replacements, reduced, should_extract_fn, max_rounds=5):
+    """Inline low-value CSE replacements back into the outputs."""
+    keep = list(replacements)
+    reduced = list(reduced)
+
+    for _ in range(max_rounds):
+        next_keep = []
+        revert = {}
+        counts = _count_all_symbol_uses(keep, reduced)
+
+        for sym, expr in keep:
+            if should_extract_fn(expr, counts.get(sym, 0)):
+                next_keep.append((sym, expr))
+            else:
+                revert[sym] = expr
+
+        if not revert:
+            return keep, reduced
+
+        expanded_revert = {}
+        # ``cse()`` replacements are topologically ordered, so expanding in
+        # dictionary insertion order is safe here.
+        for sym, expr in revert.items():
+            expanded_revert[sym] = expr.xreplace(expanded_revert)
+
+        keep = [(sym, expr.xreplace(expanded_revert)) for sym, expr in next_keep]
+        reduced = [expr.xreplace(expanded_revert) for expr in reduced]
+    return keep, reduced
+
+
+def _replace_ir_values(ir, vals, intermediates):
+    """Return ``ir`` with updated values and intermediates."""
+    return replace(ir, vals=vals, intermediates=intermediates)
+
+
+def _run_value_cse(values, symbols, should_extract_fn=None):
+    """Run one value-level CSE pass and filter low-value replacements.
+
+    This helper is shared by row-local and global Jacobian value CSE modes.
+    """
+    replacements, reduced = cse(
+        values,
+        order='canonical',
+        symbols=symbols,
+    )
+    if should_extract_fn is not None and replacements:
+        replacements, reduced = _filter_replacements(
+            replacements, reduced, should_extract_fn)
+    return replacements, reduced
+
+
+def _row_level_cse(ir, should_extract_fn=None):
+    """Apply CSE independently to each row of the sparse IR."""
+    row_intermediates = []
+    vals = []
+
+    for row_idx, (start, end) in enumerate(ir.row_slices):
+        row_vals = ir.vals[start:end]
+        if len(row_vals) <= 1:
+            vals.extend(row_vals)
+            continue
+
+        replacements, reduced = _run_value_cse(
+            row_vals,
+            numbered_symbols(prefix=f'_d{row_idx}_'),
+            should_extract_fn=should_extract_fn,
+        )
+        row_intermediates.extend(replacements)
+        vals.extend(reduced)
+
+    return _replace_ir_values(ir, vals, ir.intermediates + row_intermediates)
+
+
+def _global_cse(ir, should_extract_fn=None):
+    """Apply one CSE pass to all sparse Jacobian values."""
+    replacements, reduced = _run_value_cse(
+        ir.vals,
+        numbered_symbols(prefix='_dg_'),
+        should_extract_fn=should_extract_fn,
+    )
+
+    return _replace_ir_values(ir, reduced, ir.intermediates + replacements)
+
+
+def _validate_forward_jacobian_input(reduced_expr, wrt):
+    """Normalize and validate Jacobian inputs shared by multiple paths."""
+    if not isinstance(reduced_expr[0], MatrixBase):
+        raise TypeError("``expr`` must be of matrix type")
+
+    if not (reduced_expr[0].shape[0] == 1 or reduced_expr[0].shape[1] == 1):
+        raise TypeError("``expr`` must be a row or a column matrix")
+
+    if not iterable(wrt):
+        raise TypeError("``wrt`` must be an iterable of variables")
+    if not isinstance(wrt, MatrixBase):
+        wrt = Matrix(wrt)
+
+    if not (wrt.shape[0] == 1 or wrt.shape[1] == 1):
+        raise TypeError("``wrt`` must be a row or a column matrix")
+
+    return wrt
+
+
+def _forward_jacobian_sparse_cse(
+    replacements,
+    reduced_expr,
+    wrt,
+    return_mode="matrix",
+    use_intern=False,
+    structure_prepass=False,
+    value_cse="none",
+):
+    """
+    Compute a sparse forward Jacobian from CSE output.
+
+    This function consumes the ``(replacements, reduced_expr)`` output of
+    ``sympy.cse`` and differentiates the reduced expressions with respect to
+    ``wrt`` using sparse forward propagation. Internally it builds a
+    ``SparseJacobianIR`` and optionally applies value-level CSE on the emitted
+    Jacobian entries.
+
+    Parameters
+    ==========
+
+    replacements : list[tuple]
+        CSE replacement pairs ``(symbol, expr)``.
+    reduced_expr : list
+        Reduced expressions returned by ``cse``. The first element must be a
+        row or column matrix.
+    wrt : iterable
+        Differentiation variables. May be a matrix or any iterable accepted by
+        ``Matrix``.
+    return_mode : {"matrix", "ir"}, optional
+        ``"matrix"`` returns the legacy-compatible tuple
+        ``(replacements, [jacobian_matrix], [])``.
+        ``"ir"`` returns a ``SparseJacobianIR`` instance.
+    use_intern : bool, optional
+        Enable local expression interning during propagation.
+    structure_prepass : bool, optional
+        Run a support prepass before value propagation to prune obviously zero
+        columns for unsupported node shapes.
+    value_cse : {"none", "row", "global"}, optional
+        Optional value-level CSE applied after sparse propagation.
+        ``"row"`` applies CSE independently per Jacobian row.
+        ``"global"`` applies one pass across all Jacobian values.
+
+    Returns
+    =======
+
+    tuple or SparseJacobianIR
+        Return type depends on ``return_mode``.
+
+    Notes
+    =====
+
+    Diagnostic counters are stored on ``SparseJacobianIR.stats``. They are kept
+    for debugging and experiments, but are not exposed as part of the matrix
+    return protocol.
+    """
+    if return_mode not in ("matrix", "ir"):
+        raise ValueError("``return_mode`` must be 'matrix' or 'ir'")
+    if value_cse not in ("none", "row", "global"):
+        raise ValueError("``value_cse`` must be 'none', 'row', or 'global'")
+
+    wrt = _validate_forward_jacobian_input(reduced_expr, wrt)
+    matrix_cls = reduced_expr[0].__class__
+
+    replacements, reduced_expr = _remove_cse_from_derivative(replacements, reduced_expr)
+
+    wrt_list = list(wrt)
+    wrt_index = {var: i for i, var in enumerate(wrt_list)}
+    interner = _ExprIntern() if use_intern else None
+    cache = _PropagationCache(interner=interner)
+    dcache = _DiffCache()
+    sparse_stats = _SparseJacobianStats()
+    replacement_derivatives = {}
+    replacement_support = {}
+    support_cache = {}
+    derivative_cache = {}
+
+    if structure_prepass:
+        for sym, expr in replacements:
+            replacement_support[sym] = _propagate_support(
+                expr, wrt_index, replacement_support, cache=support_cache)
+
+    for sym, expr in replacements:
+        if structure_prepass and not replacement_support[sym]:
+            replacement_derivatives[sym] = {}
+            continue
+        replacement_derivatives[sym] = _sparse_derivative(
+            expr, wrt_list, wrt_index, replacement_derivatives, cache, dcache,
+            stats=sparse_stats,
+            support_map=support_cache if structure_prepass else None,
+            derivative_cache=derivative_cache,
+        )
+
+    row_maps = []
+    for expr in reduced_expr[0]:
+        if structure_prepass:
+            expr_support = _propagate_support(
+                expr, wrt_index, replacement_support, cache=support_cache)
+            if not expr_support:
+                row_maps.append({})
+                continue
+        row_maps.append(_sparse_derivative(
+            expr, wrt_list, wrt_index, replacement_derivatives, cache, dcache,
+            stats=sparse_stats,
+            support_map=support_cache if structure_prepass else None,
+            derivative_cache=derivative_cache,
+        ))
+    row_nnz = [len(row_map) for row_map in row_maps]
+    stats = {
+        'cache_hits': cache.hits,
+        'cache_misses': cache.misses,
+        'diff_cache_hits': dcache.hits,
+        'diff_cache_misses': dcache.misses,
+        'intern_hits': 0 if interner is None else interner.hits,
+        'intern_misses': 0 if interner is None else interner.misses,
+        'replacement_count': len(replacements),
+        'fallback_count': sparse_stats.fallback_count,
+        'derivative_cache_hits': sparse_stats.derivative_cache_hits,
+        'derivative_cache_misses': sparse_stats.derivative_cache_misses,
+        'structure_prepass': structure_prepass,
+        'row_nnz': row_nnz,
+        'output_nnz': sum(row_nnz),
+    }
+    ir = _build_ir(row_maps, wrt_list, replacements, stats=stats)
+    if value_cse == "row":
+        ir = _row_level_cse(ir, should_extract_fn=_should_extract)
+    elif value_cse == "global":
+        ir = _global_cse(ir, should_extract_fn=_should_extract)
+    return _finalize_sparse_jacobian_result(ir, matrix_cls, return_mode=return_mode)
 
 
 def _forward_jacobian_cse(replacements, reduced_expr, wrt):
