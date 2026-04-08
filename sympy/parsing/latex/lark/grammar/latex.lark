@@ -6,7 +6,7 @@
 %ignore "\\vrule" | "\\vcenter" | "\\vbox" | "\\vskip" | "\\vspace" | "\\hfill"
 %ignore "\\*" | "\\-" | "\\." | "\\/" | "\\(" | "\\="
 
-%ignore "\\left" | "\\right"
+%ignore /\\left(?![a-zA-Z])/ | "\\right"
 %ignore "\\limits" | "\\nolimits"
 %ignore "\\displaystyle"
 
