@@ -1183,13 +1183,13 @@ class Piecewise(DefinedFunction):
         ===========
         Rewrites the piecewise expression as a single expression, using absolute values
         and powers of zero.
-        
+
         Parameters
         ==========
         use_square_abs : bool
             Whether to use the sub-expression ::sqrt(x**2):: in place of ::abs(x):: in
             the returned expression.
-        
+
         Examples
         ========
         >>> from sympy import Piecewise, cos
