@@ -6,7 +6,7 @@
 %ignore "\\vrule" | "\\vcenter" | "\\vbox" | "\\vskip" | "\\vspace" | "\\hfill"
 %ignore "\\*" | "\\-" | "\\." | "\\/" | "\\(" | "\\="
 
-%ignore /\\left(?![a-zA-Z])/ | "\\right"
+%ignore "\\left" | "\\right"
 %ignore "\\limits" | "\\nolimits"
 %ignore "\\displaystyle"
 
@@ -98,7 +98,7 @@ UNDERSCORE: "_"
 EQUAL: "="
 NOT_EQUAL: /\\neq(?![a-zA-Z])/ | /\\ne(?![a-zA-Z])/
 LT: "<"
-LTE: "\\leq" | "\\le" | "\\leqslant"
+LTE: /\\leq(?![a-zA-Z])/ | /\\le(?![a-zA-Z])/ | "\\leqslant"
 GT: ">"
 GTE: "\\geq" | "\\ge" | "\\geqslant"
 
