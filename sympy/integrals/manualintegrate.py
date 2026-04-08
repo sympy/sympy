@@ -818,7 +818,11 @@ class ArctanRule(AtomicRule):
 
     def eval(self) -> Expr:
         a, b, c, x = self.a, self.b, self.c, self.variable
-        return a / (sqrt(b) * sqrt(c)) * atan(x * sqrt(b) / sqrt(c))
+        b_num, b_den = b.as_numer_denom()
+        c_num, c_den = c.as_numer_denom()
+        sqrt_b = sqrt(b_num) / sqrt(b_den)
+        sqrt_c = sqrt(c_num) / sqrt(c_den)
+        return a / (sqrt_b * sqrt_c) * atan(x * sqrt_b / sqrt_c)
 
 
 class OrthogonalPolyRule(AtomicRule, ABC):
