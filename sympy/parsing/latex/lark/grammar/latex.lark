@@ -98,7 +98,7 @@ UNDERSCORE: "_"
 EQUAL: "="
 NOT_EQUAL: /\\neq(?![a-zA-Z])/ | /\\ne(?![a-zA-Z])/
 LT: "<"
-LTE: /\\leq(?![a-zA-Z])/ | /\\le(?![a-zA-Z])/ | "\\leqslant"
+LTE: "\\leq" | /\\le(?![a-zA-Z])/ | "\\leqslant"
 GT: ">"
 GTE: "\\geq" | "\\ge" | "\\geqslant"
 
