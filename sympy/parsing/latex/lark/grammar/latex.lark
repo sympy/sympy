@@ -98,7 +98,10 @@ UNDERSCORE: "_"
 EQUAL: "="
 NOT_EQUAL: /\\neq(?![a-zA-Z])/ | /\\ne(?![a-zA-Z])/
 LT: "<"
-LTE: "\\leq" | /\\le(?![a-zA-Z])/ | "\\leqslant"
+
+// \le requires a negative lookahead to avoid matching as a prefix of \left as \left is defined in %ignore.
+
+LTE: "\\leq" | /\\le(?![a-zA-Z])/ | "\\leqslant"   
 GT: ">"
 GTE: "\\geq" | "\\ge" | "\\geqslant"
 
