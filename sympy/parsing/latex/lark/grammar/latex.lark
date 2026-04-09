@@ -98,9 +98,8 @@ UNDERSCORE: "_"
 EQUAL: "="
 NOT_EQUAL: /\\neq(?![a-zA-Z])/ | /\\ne(?![a-zA-Z])/
 LT: "<"
-
-// \le requires a negative lookahead to avoid matching as a prefix of \left as \left is defined in %ignore.
-
+// "\le" requires a negative lookahead to avoid matching as a prefix of "\left". Without the negative lookahead,
+// LTE was matching the "\le" part of "\left", leaving behind "ft" as garbage tokens.
 LTE: "\\leq" | /\\le(?![a-zA-Z])/ | "\\leqslant"   
 GT: ">"
 GTE: "\\geq" | "\\ge" | "\\geqslant"
