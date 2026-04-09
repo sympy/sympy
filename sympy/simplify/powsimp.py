@@ -555,31 +555,13 @@ def powdenest(eq, force=False, polar=False):
     >>> powdenest(sqrt(x**2), force=True)
     x
 
-    Other similar examples:
-
-    >>> expr = (x**(2*a/3))**(3*x)
-    >>> powdenest(expr)
-    (x**(2*a/3))**(3*x)
-    >>> powdenest(expr, force=True)
-    x**(2*a*x)
-
-    >>> expr = ((x**(2*a/3))**(3*y/i))**x
-    >>> powdenest(expr)
-    ((x**(2*a/3))**(3*y/i))**x
-    >>> powdenest(expr, force=True)
-    x**(2*a*x*y/i)
+    Another similar example:
 
     >>> expr = (x**(2*i)*y**(4*i))**z
     >>> powdenest(expr)
     (x**(2*i)*y**(4*i))**z
     >>> powdenest(expr, force=True)
     (x*y**2)**(2*i*z)
-
-    >>> expr = (x**i)**y
-    >>> powdenest(expr)
-    (x**i)**y
-    >>> powdenest(expr, force=True)
-    x**(i*y)
 
     However, assumptions on symbols may prevent denesting. In the following
     example, the base is set to be negative, hence the simplification can't
@@ -592,9 +574,10 @@ def powdenest(eq, force=False, polar=False):
     >>> powdenest(expr, force=True)
     (n**i)**x
 
-    exp() will be denested by moving all non-log terms outside of
-    the function; this may result in the collapsing of the exp to a power
-    with a different base:
+    exp() will be denested by applying logarithmic identities. In particular,
+    expressions of the form exp(k*log(x)) are rewritten as x**k, and
+    logarithmic sums/products inside exponents are combined where possible
+    to produce a single power:
 
     >>> powdenest(exp(3*x*log(2)))
     2**(3*x)
@@ -604,14 +587,6 @@ def powdenest(eq, force=False, polar=False):
     (a*b)**y
     >>> powdenest(exp(3*(log(a) + log(b))))
     a**3*b**3
-
-    If assumptions allow, symbols can also be moved to the outermost exponent:
-
-    >>> expr = ((x**(2*i))**(3*y))**x
-    >>> powdenest(expr)
-    ((x**(2*i))**(3*y))**x
-    >>> powdenest(expr, force=True)
-    x**(6*i*x*y)
 
     Sometime, more denesting can be achieved by setting ``polar=True``:
 
