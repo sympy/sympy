@@ -42,7 +42,7 @@ from sympy.external import import_module
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import iterable
-from sympy import S
+
 
 __doctest_requires__ = {('sample',): ['scipy']}
 
@@ -240,21 +240,6 @@ class SinglePSpace(PSpace):
     """
     def __new__(cls, s, distribution):
         s = _symbol_converter(s)
-        assumptions = s.assumptions0.copy()
-        try:
-            domain_set = distribution.set
-            if 'real' not in assumptions and domain_set.is_subset(S.Reals):
-                assumptions['real'] = True
-            if 'integer' not in assumptions and domain_set.is_subset(S.Integers):
-                assumptions['integer'] = True
-            if 'positive' not in assumptions and domain_set.is_subset(S.Naturals):
-                assumptions['positive'] = True
-            if 'nonnegative' not in assumptions and domain_set.is_subset(S.Naturals0):
-                assumptions['nonnegative'] = True
-        except (AttributeError, NotImplementedError):
-            pass
-        # Re-create the symbol with merged assumptions right at the start
-        s = Symbol(s.name, **assumptions)
         return Basic.__new__(cls, s, distribution)
 
     @property
@@ -303,10 +288,15 @@ class RandomSymbol(Expr):
     convenience functions Normal, Exponential, Coin, Die, FiniteRV, etc....
     """
 
+    is_finite = True
+    is_symbol = True
+    is_Atom = True
+
+    _diff_wrt = True
+
     def __new__(cls, symbol, pspace=None):
         from sympy.stats.joint_rv import JointRandomSymbol
         if pspace is None:
-            # Allow single arg, representing pspace == PSpace()
             pspace = PSpace()
         symbol = _symbol_converter(symbol)
         if not isinstance(pspace, PSpace):
@@ -315,24 +305,49 @@ class RandomSymbol(Expr):
             cls = RandomSymbol
         return Basic.__new__(cls, symbol, pspace)
 
-    is_finite = True
-    is_symbol = True
-    is_Atom = True
-
-    _diff_wrt = True
-
     pspace = property(lambda self: self.args[1])
     symbol = property(lambda self: self.args[0])
     name   = property(lambda self: self.symbol.name)
 
-    def _eval_is_positive(self):
-        return self.symbol.is_positive
+    @property
+    def is_commutative(self):
+        return self.symbol.is_commutative
+
+    @property
+    def free_symbols(self):
+        return {self}
 
     def _eval_is_integer(self):
+        try:
+            if self.pspace.domain.set.is_subset(S.Integers):
+                return True
+        except (AttributeError, NotImplementedError):
+            pass
         return self.symbol.is_integer
 
-    def _eval_is_real(self):
-        return self.symbol.is_real or getattr(self.pspace, 'is_real', False)
+    def _eval_is_positive(self):
+        try:
+            if self.pspace.domain.set.is_subset(S.Naturals):
+                return True
+        except (AttributeError, NotImplementedError):
+            pass
+        return self.symbol.is_positive
+
+    def _eval_is_nonnegative(self):
+        try:
+            if self.pspace.domain.set.is_subset(S.Naturals0):
+                return True
+        except (AttributeError, NotImplementedError):
+            pass
+        return self.symbol.is_nonnegative
+
+    def _eval_is_negative(self):
+        try:
+            if self.pspace.domain.set.is_subset(S.Naturals0):
+                return False
+        except (AttributeError, NotImplementedError):
+            pass
+        return self.symbol.is_negative
 
     @property
     def is_commutative(self):
