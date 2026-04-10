@@ -1312,3 +1312,30 @@ def test_issue_17859():
     r = Range(oo,-oo,-1)
     raises(ValueError,lambda: r[::2])
     raises(ValueError, lambda: r[::-2])
+
+def test_image_set_equality_29054():
+    _n1, _n2, _n3, _n4 = Dummy('n1'), Dummy('n2'), Dummy('n3'), Dummy('n4')
+
+    assert (ImageSet(Lambda(_n1, 2*_n1*pi + pi/2), S.Integers) ==
+            ImageSet(Lambda(_n2, 2*_n2*pi + pi/2), S.Integers))
+
+    assert (ImageSet(Lambda(_n1, 2 * _n1 * pi + pi / 2), S.Integers) !=
+            ImageSet(Lambda(_n2, 2 * _n2 * pi + pi / 2), S.Reals))
+
+    assert (ImageSet(Lambda(_n1, 2 * _n1 * pi + pi / 2), S.Integers) !=
+            ImageSet(Lambda(_n2, 2 * _n2 * pi - pi / 2), S.Integers))
+
+    assert (ImageSet(Lambda((_n1, _n2), 2*_n1 + _n2), S.Reals, S.Reals) ==
+            ImageSet(Lambda((_n3, _n4), 2*_n3 + _n4), S.Reals, S.Reals))
+
+    assert not (ImageSet(Lambda((_n1, _n2), 2 * _n1 + _n2), S.Reals, S.Reals) !=
+            ImageSet(Lambda((_n3, _n4), 2 * _n3 + _n4), S.Reals, S.Reals))
+
+    assert (ImageSet(Lambda((_n1, _n2), 2 * _n1 + _n2), S.Reals, S.Reals) !=
+            ImageSet(Lambda((_n3, _n4), 2 * _n3 + _n4), S.Reals, S.Integers))
+
+    assert (ImageSet(Lambda((_n1, _n2), 2 * _n1 + _n2), S.Reals, S.Reals) !=
+            ImageSet(Lambda((_n3, _n4), 2 * _n3 + _n4), S.Integers, S.Reals))
+
+    assert (ImageSet(Lambda((_n1, _n2), 2 * _n1 + _n2), S.Reals, S.Reals) !=
+            ImageSet(Lambda((_n3, _n4), 2 * _n3 - _n4), S.Reals, S.Reals))

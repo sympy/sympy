@@ -420,6 +420,46 @@ class ImageSet(Set):
                 already_seen.add(val)
                 yield val
 
+    def __eq__(self, other):
+        if not isinstance(other, ImageSet):
+            return False
+
+        if self is other:
+            return True
+
+        return (self.lamda.dummy_eq(other.lamda) and
+            self.base_set == other.base_set)
+
+    def __ne__(self, other):
+        return not(self == other)
+
+    def __hash__(self):
+        return super().__hash__()
+
+    # Overriding the Basic._hashable_content function for the ImageSet class. This will be used in Basic.__hash__ to
+    # compute the hash of an ImageSet object
+    def _hashable_content(self):
+
+        def _get_lambda_string_representation_for_hash(lambda_input):
+            """We reduce the lambda expression by replacing the variables with standard ones(n_0, n_1, ...) and then
+            returning a string value to be used for hash. This ensures that two lambda expressions using different dummy
+            variables but represents the same lambda are marked as equal for image set equality.
+
+            For example: if lambda_input is either `Lambda((x, y), 2*x + y)` or `Lambda((a, b), 2*a + b)`,
+            then output would be the same for both the inputs: `Lambda((n_0, n_1), 2*n_0 + n_1)`.
+            """
+            variables, expr = lambda_input.args
+            dummy_variables_dict = { variable: Dummy(f'n_{i}') for i, variable in enumerate(variables) }
+            new_lambda_expr = lambda_input.copy()
+            for variable in variables:
+                new_lambda_expr = new_lambda_expr.subs(variable, dummy_variables_dict[variable])
+
+            return str(new_lambda_expr)
+
+        lambda_expr, *sets = self.args
+
+        return _get_lambda_string_representation_for_hash(lambda_expr), tuple(sets)
+
     def _is_multivariate(self):
         return len(self.lamda.variables) > 1
 

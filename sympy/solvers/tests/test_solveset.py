@@ -3595,3 +3595,8 @@ def test_issue_26077():
         Complement(S.Reals, excluded_points)
     )
     assert solution.as_dummy() == critical_points.as_dummy()
+
+def test_issue_29054():
+    x = symbols("x")
+
+    assert solveset(Eq(sin(x), 1)) == solveset(Eq(sin(x), 1))
