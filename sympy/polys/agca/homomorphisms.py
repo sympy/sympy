@@ -5,19 +5,18 @@ This module implements classes for representing homomorphisms of rings and
 their modules. Instead of instantiating the classes directly, you should use
 the function ``homomorphism(from, to, matrix)`` to create homomorphism objects.
 """
+from __future__ import annotations
 
-from __future__ import print_function, division
 
 from sympy.polys.agca.modules import (Module, FreeModule, QuotientModule,
     SubModule, SubQuotientModule)
 from sympy.polys.polyerrors import CoercionFailed
-from sympy.core.compatibility import range
 
 # The main computational task for module homomorphisms is kernels.
 # For this reason, the concrete classes are organised by domain module type.
 
 
-class ModuleHomomorphism(object):
+class ModuleHomomorphism:
     """
     Abstract base class for module homomoprhisms. Do not instantiate.
 
@@ -76,6 +75,9 @@ class ModuleHomomorphism(object):
         That is, if ``self`` is the homomorphism `\phi: M \to N`, then compute
         `ker(\phi) = \{x \in M | \phi(x) = 0\}`.  This is a submodule of `M`.
 
+        Examples
+        ========
+
         >>> from sympy import QQ
         >>> from sympy.abc import x
         >>> from sympy.polys.agca import homomorphism
@@ -94,6 +96,9 @@ class ModuleHomomorphism(object):
 
         That is, if ``self`` is the homomorphism `\phi: M \to N`, then compute
         `im(\phi) = \{\phi(x) | x \in M \}`.  This is a submodule of `N`.
+
+        Examples
+        ========
 
         >>> from sympy import QQ
         >>> from sympy.abc import x
@@ -137,6 +142,9 @@ class ModuleHomomorphism(object):
 
         Here ``sm`` has to be a submodule of ``self.domain``.
 
+        Examples
+        ========
+
         >>> from sympy import QQ
         >>> from sympy.abc import x
         >>> from sympy.polys.agca import homomorphism
@@ -174,6 +182,9 @@ class ModuleHomomorphism(object):
         Here ``sm`` has to be a submodule of ``self.codomain`` containing the
         image.
 
+        Examples
+        ========
+
         >>> from sympy import QQ
         >>> from sympy.abc import x
         >>> from sympy.polys.agca import homomorphism
@@ -202,6 +213,9 @@ class ModuleHomomorphism(object):
 
         Here ``sm`` must be a submodule of ``self.kernel()``.
 
+        Examples
+        ========
+
         >>> from sympy import QQ
         >>> from sympy.abc import x
         >>> from sympy.polys.agca import homomorphism
@@ -229,6 +243,9 @@ class ModuleHomomorphism(object):
         Return ``self`` with codomain replaced by ``codomain/sm``.
 
         Here ``sm`` must be a submodule of ``self.codomain``.
+
+        Examples
+        ========
 
         >>> from sympy import QQ
         >>> from sympy.abc import x
@@ -304,13 +321,11 @@ class ModuleHomomorphism(object):
     # NOTE: _compose will never be called from rmul
     __rmul__ = __mul__
 
-    def __div__(self, oth):
+    def __truediv__(self, oth):
         try:
             return self._mul_scalar(1/self.ring.convert(oth))
         except CoercionFailed:
             return NotImplemented
-
-    __truediv__ = __div__
 
     def __add__(self, oth):
         if self._check_hom(oth):
@@ -328,6 +343,9 @@ class ModuleHomomorphism(object):
 
         That is, check if the elements of the domain are mapped to the same
         codomain element.
+
+        Examples
+        ========
 
         >>> from sympy import QQ
         >>> from sympy.abc import x
@@ -349,6 +367,9 @@ class ModuleHomomorphism(object):
         That is, check if every element of the codomain has at least one
         preimage.
 
+        Examples
+        ========
+
         >>> from sympy import QQ
         >>> from sympy.abc import x
         >>> from sympy.polys.agca import homomorphism
@@ -368,6 +389,9 @@ class ModuleHomomorphism(object):
 
         That is, check if every element of the codomain has precisely one
         preimage. Equivalently, ``self`` is both injective and surjective.
+
+        Examples
+        ========
 
         >>> from sympy import QQ
         >>> from sympy.abc import x
@@ -389,6 +413,9 @@ class ModuleHomomorphism(object):
 
         That is, check if every element of the domain is mapped to zero
         under self.
+
+        Examples
+        ========
 
         >>> from sympy import QQ
         >>> from sympy.abc import x
@@ -457,7 +484,7 @@ class MatrixHomomorphism(ModuleHomomorphism):
         self.matrix = tuple(converter(x) for x in matrix)
 
     def _sympy_matrix(self):
-        """Helper function which returns a sympy matrix ``self.matrix``."""
+        """Helper function which returns a SymPy matrix ``self.matrix``."""
         from sympy.matrices import Matrix
         c = lambda x: x
         if isinstance(self.codomain, (QuotientModule, SubQuotientModule)):

@@ -1,9 +1,9 @@
-from sympy.core.compatibility import range
+from __future__ import annotations
 from sympy.core.basic import Basic
+from sympy.core.symbol import Str
 from sympy.vector.vector import Vector
 from sympy.vector.coordsysrect import CoordSys3D
 from sympy.vector.functions import _path
-from sympy import Symbol
 from sympy.core.cache import cacheit
 
 
@@ -26,10 +26,9 @@ class Point(Basic):
                     parent_point))
         # Super class construction
         if parent_point is None:
-            obj = super(Point, cls).__new__(cls, Symbol(name), position)
+            obj = super().__new__(cls, Str(name), position)
         else:
-            obj = super(Point, cls).__new__(cls, Symbol(name),
-                                            position, parent_point)
+            obj = super().__new__(cls, Str(name), position, parent_point)
         # Decide the object parameters
         obj._name = name
         obj._pos = position
@@ -59,7 +58,7 @@ class Point(Basic):
         Examples
         ========
 
-        >>> from sympy.vector import Point, CoordSys3D
+        >>> from sympy.vector import CoordSys3D
         >>> N = CoordSys3D('N')
         >>> p1 = N.origin.locate_new('p1', 10 * N.i)
         >>> N.origin.position_wrt(p1)
@@ -83,13 +82,10 @@ class Point(Basic):
         # Else, use point tree to calculate position
         rootindex, path = _path(self, other)
         result = Vector.zero
-        i = -1
         for i in range(rootindex):
             result += path[i]._pos
-        i += 2
-        while i < len(path):
+        for i in range(rootindex + 1, len(path)):
             result -= path[i]._pos
-            i += 1
         return result
 
     def locate_new(self, name, position):
@@ -111,7 +107,7 @@ class Point(Basic):
         Examples
         ========
 
-        >>> from sympy.vector import Point, CoordSys3D
+        >>> from sympy.vector import CoordSys3D
         >>> N = CoordSys3D('N')
         >>> p1 = N.origin.locate_new('p1', 10 * N.i)
         >>> p1.position_wrt(N.origin)
@@ -135,7 +131,7 @@ class Point(Basic):
         Examples
         ========
 
-        >>> from sympy.vector import Point, CoordSys3D
+        >>> from sympy.vector import CoordSys3D
         >>> N = CoordSys3D('N')
         >>> p1 = N.origin.locate_new('p1', 10 * N.i)
         >>> p2 = p1.locate_new('p2', 5 * N.j)
@@ -149,8 +145,5 @@ class Point(Basic):
         # Express it in the given coordinate system
         return tuple(pos_vect.to_matrix(coordinate_system))
 
-    def __str__(self, printer=None):
+    def _sympystr(self, printer):
         return self._name
-
-    __repr__ = __str__
-    _sympystr = __str__

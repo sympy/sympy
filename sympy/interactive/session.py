@@ -1,14 +1,16 @@
 """Tools for setting up interactive sessions. """
+from __future__ import annotations
+import enum
+from code import InteractiveConsole
 
-from __future__ import print_function, division
+from sympy.external.gmpy import GROUND_TYPES
+from sympy.external.importtools import version_tuple
 
-from distutils.version import LooseVersion as V
-
-from sympy.external import import_module
 from sympy.interactive.printing import init_printing
 
+from sympy.utilities.misc import ARCH
+
 preexec_source = """\
-from __future__ import division
 from sympy import *
 x, y, z, t = symbols('x y z t')
 k, m, n = symbols('k m n', integer=True)
@@ -19,21 +21,25 @@ init_printing()
 verbose_message = """\
 These commands were executed:
 %(source)s
-Documentation can be found at http://docs.sympy.org/%(version)s
+Documentation can be found at https://docs.sympy.org/%(version)s
 """
 
 no_ipython = """\
-Couldn't locate IPython. Having IPython installed is greatly recommended.
+Could not locate IPython. Having IPython installed is greatly recommended.
 See http://ipython.scipy.org for more details. If you use Debian/Ubuntu,
 just install the 'ipython' package and start isympy again.
 """
 
 
+class ConsoleBackend(enum.Enum):
+    PYTHON = "python"
+    IPYTHON = "ipython"
+    BPYTHON = "bpython"
+
+
 def _make_message(ipython=True, quiet=False, source=None):
     """Create a banner for an interactive session. """
     from sympy import __version__ as sympy_version
-    from sympy.polys.domains import GROUND_TYPES
-    from sympy.utilities.misc import ARCH
     from sympy import SYMPY_DEBUG
 
     import sys
@@ -90,15 +96,15 @@ def int_to_Integer(s):
     Wrap integer literals with Integer.
 
     This is based on the decistmt example from
-    http://docs.python.org/library/tokenize.html.
+    https://docs.python.org/3/library/tokenize.html.
 
     Only integer literals are converted.  Float literals are left alone.
+
     Examples
     ========
 
-    >>> from __future__ import division
+    >>> from sympy import Integer # noqa: F401
     >>> from sympy.interactive.session import int_to_Integer
-    >>> from sympy import Integer
     >>> s = '1.2 + 1/2 - 0x12 + a1'
     >>> int_to_Integer(s)
     '1.2 +Integer (1 )/Integer (2 )-Integer (0x12 )+a1 '
@@ -111,7 +117,7 @@ def int_to_Integer(s):
     1/2
     """
     from tokenize import generate_tokens, untokenize, NUMBER, NAME, OP
-    from sympy.core.compatibility import StringIO
+    from io import StringIO
 
     def _is_int(num):
         """
@@ -123,7 +129,7 @@ def int_to_Integer(s):
         return True
 
     result = []
-    g = generate_tokens(StringIO(s).readline)   # tokenize the string
+    g = generate_tokens(StringIO(s).readline)  # tokenize the string
     for toknum, tokval, _, _, _ in g:
         if toknum == NUMBER and _is_int(tokval):  # replace NUMBER tokens
             result.extend([
@@ -137,17 +143,12 @@ def int_to_Integer(s):
     return untokenize(result)
 
 
-def enable_automatic_int_sympification(app):
+def enable_automatic_int_sympification(shell):
     """
     Allow IPython to automatically convert integer literals to Integer.
     """
-    hasshell = hasattr(app, 'shell')
-
     import ast
-    if hasshell:
-        old_run_cell = app.shell.run_cell
-    else:
-        old_run_cell = app.run_cell
+    old_run_cell = shell.run_cell
 
     def my_run_cell(cell, *args, **kwargs):
         try:
@@ -161,16 +162,13 @@ def enable_automatic_int_sympification(app):
             pass
         else:
             cell = int_to_Integer(cell)
-        old_run_cell(cell, *args, **kwargs)
+        return old_run_cell(cell, *args, **kwargs)
 
-    if hasshell:
-        app.shell.run_cell = my_run_cell
-    else:
-        app.run_cell = my_run_cell
+    shell.run_cell = my_run_cell
 
 
-def enable_automatic_symbols(app):
-    """Allow IPython to automatially create symbols (``isympy -a``). """
+def enable_automatic_symbols(shell):
+    """Allow IPython to automatically create symbols (``isympy -a``). """
     # XXX: This should perhaps use tokenize, like int_to_Integer() above.
     # This would avoid re-executing the code, which can lead to subtle
     # issues.  For example:
@@ -220,7 +218,7 @@ def enable_automatic_symbols(app):
             if match is not None:
                 # XXX: Make sure Symbol is in scope. Otherwise you'll get infinite recursion.
                 self.run_cell("%(symbol)s = Symbol('%(symbol)s')" %
-                    {'symbol': match.group("symbol")}, store_history=False)
+                              {'symbol': match.group("symbol")}, store_history=False)
 
                 try:
                     code = self.user_ns['In'][-1]
@@ -237,40 +235,37 @@ def enable_automatic_symbols(app):
             etype, value, tb, tb_offset=tb_offset)
         self._showtraceback(etype, value, stb)
 
-    if hasattr(app, 'shell'):
-        app.shell.set_custom_exc((NameError,), _handler)
-    else:
-        # This was restructured in IPython 0.13
-        app.set_custom_exc((NameError,), _handler)
+    shell.set_custom_exc((NameError,), _handler)
 
 
-def init_ipython_session(argv=[], auto_symbols=False, auto_int_to_Integer=False):
+def init_ipython_session(shell=None, argv=[], auto_symbols=False, auto_int_to_Integer=False):
     """Construct new IPython session. """
     import IPython
 
-    if V(IPython.__version__) >= '0.11':
-        # use an app to parse the command line, and init config
-        # IPython 1.0 deprecates the frontend module, so we import directly
-        # from the terminal module to prevent a deprecation message from being
-        # shown.
-        if V(IPython.__version__) >= '1.0':
-            from IPython.terminal import ipapp
-        else:
-            from IPython.frontend.terminal import ipapp
-        app = ipapp.TerminalIPythonApp()
+    if version_tuple(IPython.__version__) >= version_tuple('0.11'):
+        if not shell:
+            # use an app to parse the command line, and init config
+            # IPython 1.0 deprecates the frontend module, so we import directly
+            # from the terminal module to prevent a deprecation message from being
+            # shown.
+            if version_tuple(IPython.__version__) >= version_tuple('1.0'):
+                from IPython.terminal import ipapp
+            else:
+                from IPython.frontend.terminal import ipapp
+            app = ipapp.TerminalIPythonApp()
 
-        # don't draw IPython banner during initialization:
-        app.display_banner = False
-        app.initialize(argv)
+            # don't draw IPython banner during initialization:
+            app.display_banner = False
+            app.initialize(argv)
+
+            shell = app.shell
 
         if auto_symbols:
-            readline = import_module("readline")
-            if readline:
-                enable_automatic_symbols(app)
+            enable_automatic_symbols(shell)
         if auto_int_to_Integer:
-            enable_automatic_int_sympification(app)
+            enable_automatic_int_sympification(shell)
 
-        return app.shell
+        return shell
     else:
         from IPython.Shell import make_IPython
         return make_IPython(argv)
@@ -284,9 +279,10 @@ def init_python_session():
         """An interactive console with readline support. """
 
         def __init__(self):
-            InteractiveConsole.__init__(self)
-
+            ns_locals = {}
+            InteractiveConsole.__init__(self, locals=ns_locals)
             try:
+                import rlcompleter
                 import readline
             except ImportError:
                 pass
@@ -294,6 +290,7 @@ def init_python_session():
                 import os
                 import atexit
 
+                readline.set_completer(rlcompleter.Completer(ns_locals).complete)
                 readline.parse_and_bind('tab: complete')
 
                 if hasattr(readline, 'read_history_file'):
@@ -301,7 +298,7 @@ def init_python_session():
 
                     try:
                         readline.read_history_file(history)
-                    except IOError:
+                    except OSError:
                         pass
 
                     atexit.register(readline.write_history_file, history)
@@ -309,10 +306,43 @@ def init_python_session():
     return SymPyConsole()
 
 
-def init_session(ipython=None, pretty_print=True, order=None,
-        use_unicode=None, use_latex=None, quiet=False, auto_symbols=False,
-        auto_int_to_Integer=False, str_printer=None, pretty_printer=None,
-        latex_printer=None, argv=[]):
+def init_bpython_session():
+    import bpython
+    import bpython.curtsiesfrontend
+    import bpython.curtsiesfrontend.interpreter
+    import bpython.curtsies
+    import bpython.config
+    import bpython.translations
+
+    bpython.translations.init()
+
+    class SympyBPythonConsole(InteractiveConsole):
+        def __init__(self):
+            super().__init__()
+            self.__local_ns = {}
+            self.__interp = bpython.curtsiesfrontend.interpreter.Interp(locals=self.__local_ns)
+            self.__repl = bpython.curtsies.FullCurtsiesRepl(bpython.config.Config(bpython.config.default_config_path()),
+                                                            interp=self.__interp)
+
+        def interact(self, banner=None, exitmsg=None):
+            if banner is not None:
+                print(banner)
+            with self.__repl.input_generator:
+                with self.__repl.window as win_:
+                    with self.__repl:
+                        self.__repl.height, self.__repl.width = win_.t.height, win_.t.width
+                        self.__repl.mainloop()
+
+        def runsource(self, source, filename="<input>", symbol="single"):
+            self.__interp.runsource(source, filename, symbol)
+
+    return SympyBPythonConsole()
+
+
+def init_session(console_backend=None, pretty_print=True, order=None,
+                 use_unicode=None, use_latex=None, quiet=False, auto_symbols=False,
+                 auto_int_to_Integer=False, str_printer=None, pretty_printer=None,
+                 latex_printer=None, argv=[]):
     """
     Initialize an embedded IPython or Python session. The IPython session is
     initiated with the --pylab option, without the numpy imports, so that
@@ -408,11 +438,12 @@ def init_session(ipython=None, pretty_print=True, order=None,
 
     in_ipython = False
 
-    if ipython is not False:
+    ip = None
+    if console_backend == ConsoleBackend.IPYTHON or console_backend is None:
         try:
             import IPython
         except ImportError:
-            if ipython is True:
+            if console_backend == ConsoleBackend.IPYTHON:
                 raise RuntimeError("IPython is not available on this system")
             ip = None
         else:
@@ -422,26 +453,38 @@ def init_session(ipython=None, pretty_print=True, order=None,
             except ImportError:
                 ip = None
         in_ipython = bool(ip)
-        if ipython is None:
-            ipython = in_ipython
+        if console_backend is None:
+            if in_ipython:
+                console_backend = ConsoleBackend.IPYTHON
+            else:
+                console_backend = ConsoleBackend.PYTHON
 
-    if ipython is False:
+    if console_backend == ConsoleBackend.BPYTHON:
+        try:
+            import bpython
+            import bpython.translations
+            bpython.translations.init()
+        except ImportError:
+            raise RuntimeError("bpython is not available on this system")
+            ip = None
+
+    if console_backend == ConsoleBackend.PYTHON:
         ip = init_python_session()
         mainloop = ip.interact
-    else:
-        ip = init_ipython_session(argv=argv, auto_symbols=auto_symbols,
-            auto_int_to_Integer=auto_int_to_Integer)
+    elif console_backend == ConsoleBackend.IPYTHON:
+        ip = init_ipython_session(ip, argv=argv, auto_symbols=auto_symbols,
+                                  auto_int_to_Integer=auto_int_to_Integer)
 
-        if V(IPython.__version__) >= '0.11':
+        if version_tuple(IPython.__version__) >= version_tuple('0.11'):
             # runsource is gone, use run_cell instead, which doesn't
             # take a symbol arg.  The second arg is `store_history`,
             # and False means don't add the line to IPython's history.
             ip.runsource = lambda src, symbol='exec': ip.run_cell(src, False)
 
-            #Enable interactive plotting using pylab.
+            # Enable interactive plotting using pylab.
             try:
                 ip.enable_pylab(import_all=False)
-            except Exception:
+            except Exception: # noqa: BLE001
                 # Causes an import error if matplotlib is not installed.
                 # Causes other errors (depending on the backend) if there
                 # is no display, or if there is some problem in the
@@ -449,11 +492,18 @@ def init_session(ipython=None, pretty_print=True, order=None,
                 pass
         if not in_ipython:
             mainloop = ip.mainloop
+    elif console_backend == ConsoleBackend.BPYTHON:
+        ip = init_bpython_session()
+        mainloop = ip.interact
+    else:
+        print("Unknown console backend")
+        return
 
-    readline = import_module("readline")
-    if auto_symbols and (not ipython or V(IPython.__version__) < '0.11' or not readline):
-        raise RuntimeError("automatic construction of symbols is possible only in IPython 0.11 or above with readline support")
-    if auto_int_to_Integer and (not ipython or V(IPython.__version__) < '0.11'):
+    if auto_symbols and (
+        console_backend != ConsoleBackend.IPYTHON or version_tuple(IPython.__version__) < version_tuple('0.11')):
+        raise RuntimeError("automatic construction of symbols is possible only in IPython 0.11 or above")
+    if auto_int_to_Integer and (
+        console_backend != ConsoleBackend.IPYTHON or version_tuple(IPython.__version__) < version_tuple('0.11')):
         raise RuntimeError("automatic int to Integer transformation is possible only in IPython 0.11 or above")
 
     _preexec_source = preexec_source
@@ -464,9 +514,9 @@ def init_session(ipython=None, pretty_print=True, order=None,
                   str_printer=str_printer, pretty_printer=pretty_printer,
                   latex_printer=latex_printer)
 
-    message = _make_message(ipython, quiet, _preexec_source)
+    message = _make_message(console_backend == ConsoleBackend.IPYTHON, quiet, _preexec_source)
 
-    if not in_ipython:
+    if not in_ipython or console_backend == ConsoleBackend.BPYTHON:
         print(message)
         mainloop()
         sys.exit('Exiting ...')

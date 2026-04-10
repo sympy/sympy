@@ -1,40 +1,23 @@
+from __future__ import annotations
 import collections
 from sympy.core.expr import Expr
 from sympy.core import sympify, S, preorder_traversal
 from sympy.vector.coordsysrect import CoordSys3D
-from sympy.vector.vector import Vector, VectorMul, VectorAdd, Cross, Dot, dot
-from sympy.vector.scalar import BaseScalar
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.vector.dyadic import Dyadic, DyadicAdd
+from sympy.vector.vector import Vector, VectorMul, VectorAdd, Cross, Dot
 from sympy.core.function import Derivative
-from sympy import Add, Mul
+from sympy.core.add import Add
+from sympy.core.mul import Mul
 
 
 def _get_coord_systems(expr):
     g = preorder_traversal(expr)
-    ret = set([])
+    ret = set()
     for i in g:
         if isinstance(i, CoordSys3D):
             ret.add(i)
             g.skip()
     return frozenset(ret)
-
-
-def _get_coord_sys_from_expr(expr, coord_sys=None):
-    """
-    expr : expression
-        The coordinate system is extracted from this parameter.
-    """
-
-    # TODO: Remove this line when warning from issue #12884 will be removed
-    if coord_sys is not None:
-        SymPyDeprecationWarning(
-            feature="coord_sys parameter",
-            useinstead="do not use it",
-            deprecated_since_version="1.1",
-            issue=12884,
-        ).warn()
-
-    return _get_coord_systems(expr)
 
 
 def _split_mul_args_wrt_coordsys(expr):
@@ -65,7 +48,7 @@ class Gradient(Expr):
         obj._expr = expr
         return obj
 
-    def doit(self, **kwargs):
+    def doit(self, **hints):
         return gradient(self._expr, doit=True)
 
 
@@ -90,7 +73,7 @@ class Divergence(Expr):
         obj._expr = expr
         return obj
 
-    def doit(self, **kwargs):
+    def doit(self, **hints):
         return divergence(self._expr, doit=True)
 
 
@@ -115,11 +98,11 @@ class Curl(Expr):
         obj._expr = expr
         return obj
 
-    def doit(self, **kwargs):
+    def doit(self, **hints):
         return curl(self._expr, doit=True)
 
 
-def curl(vect, coord_sys=None, doit=True):
+def curl(vect, doit=True):
     """
     Returns the curl of a vector field computed wrt the base scalars
     of the given coordinate system.
@@ -129,10 +112,6 @@ def curl(vect, coord_sys=None, doit=True):
 
     vect : Vector
         The vector operand
-
-    coord_sys : CoordSys3D
-        The coordinate system to calculate the gradient in.
-        Deprecated since version 1.1
 
     doit : bool
         If True, the result is returned after calling .doit() on
@@ -153,7 +132,7 @@ def curl(vect, coord_sys=None, doit=True):
 
     """
 
-    coord_sys = _get_coord_sys_from_expr(vect, coord_sys)
+    coord_sys = _get_coord_systems(vect)
 
     if len(coord_sys) == 0:
         return Vector.zero
@@ -195,10 +174,10 @@ def curl(vect, coord_sys=None, doit=True):
         elif isinstance(vect, (Cross, Curl, Gradient)):
             return Curl(vect)
         else:
-            raise Curl(vect)
+            raise ValueError("Invalid argument for curl")
 
 
-def divergence(vect, coord_sys=None, doit=True):
+def divergence(vect, doit=True):
     """
     Returns the divergence of a vector field computed wrt the base
     scalars of the given coordinate system.
@@ -208,10 +187,6 @@ def divergence(vect, coord_sys=None, doit=True):
 
     vector : Vector
         The vector operand
-
-    coord_sys : CoordSys3D
-        The coordinate system to calculate the gradient in
-        Deprecated since version 1.1
 
     doit : bool
         If True, the result is returned after calling .doit() on
@@ -232,7 +207,7 @@ def divergence(vect, coord_sys=None, doit=True):
     2*R.z
 
     """
-    coord_sys = _get_coord_sys_from_expr(vect, coord_sys)
+    coord_sys = _get_coord_systems(vect)
     if len(coord_sys) == 0:
         return S.Zero
     elif len(coord_sys) == 1:
@@ -266,23 +241,35 @@ def divergence(vect, coord_sys=None, doit=True):
         elif isinstance(vect, (Cross, Curl, Gradient)):
             return Divergence(vect)
         else:
-            raise Divergence(vect)
+            raise ValueError("Invalid argument for divergence")
 
 
-def gradient(scalar_field, coord_sys=None, doit=True):
+def _christoffel_symbol_2nd_kind(h, q, i, j, k):
     """
-    Returns the vector gradient of a scalar field computed wrt the
-    base scalars of the given coordinate system.
+    Compute the Christoffel symbol of the second kind, Gamma^{k}_{ij},
+    for an orthogonal system.
+    """
+    if (i == j) and (i == k):
+        return Derivative(h[i], q[i]) / h[i]
+    if (i == k) and (i != j):
+        return Derivative(h[i], q[j]) / h[i]
+    if (j == k) and (i != j):
+        return Derivative(h[j], q[i]) / h[j]
+    if (i == j) and (i != k):
+        return -Derivative(h[i], q[k]) * h[i] / h[k]**2
+    return S.Zero
+
+
+def gradient(field, doit=True):
+    """
+    Returns the gradient of the field computed wrt the base scalars
+    of the given coordinate system.
 
     Parameters
     ==========
 
-    scalar_field : SymPy Expr
-        The scalar field to compute the gradient of
-
-    coord_sys : CoordSys3D
-        The coordinate system to calculate the gradient in
-        Deprecated since version 1.1
+    field : Expr, Vector
+        The scalar-valued or vector-valued function representing the field.
 
     doit : bool
         If True, the result is returned after calling .doit() on
@@ -292,7 +279,11 @@ def gradient(scalar_field, coord_sys=None, doit=True):
     Examples
     ========
 
+    >>> from sympy import Function
     >>> from sympy.vector import CoordSys3D, gradient
+
+    The gradient of a scalar field is a vector field:
+
     >>> R = CoordSys3D('R')
     >>> s1 = R.x*R.y*R.z
     >>> gradient(s1)
@@ -301,30 +292,111 @@ def gradient(scalar_field, coord_sys=None, doit=True):
     >>> gradient(s2)
     10*R.x*R.z*R.i + 5*R.x**2*R.k
 
-    """
-    coord_sys = _get_coord_sys_from_expr(scalar_field, coord_sys)
+    The gradient of a vector field is a dyadic (second order tensor):
 
+    >>> C = CoordSys3D("C", transformation="cylindrical")
+    >>> e_r, e_theta, e_z = C.base_vectors()
+    >>> r, theta, z = C.base_scalars()
+    >>> v_r = Function('v_r')(r, theta, z)
+    >>> v_theta = Function('v_theta')(r, theta, z)
+    >>> v_z = Function('v_z')(r, theta, z)
+    >>> v = v_r * e_r + v_theta * e_theta + v_z * e_z
+    >>> gradient(v)     # doctest: +NORMALIZE_WHITESPACE
+    (Derivative(v_r(C.r, C.theta, C.z), C.r))*(C.i|C.i)
+    + (Derivative(v_theta(C.r, C.theta, C.z), C.r))*(C.i|C.j)
+    + (Derivative(v_z(C.r, C.theta, C.z), C.r))*(C.i|C.k)
+    + (-v_theta(C.r, C.theta, C.z)/C.r + Derivative(v_r(C.r, C.theta, C.z), C.theta)/C.r)*(C.j|C.i)
+    + (v_r(C.r, C.theta, C.z)/C.r + Derivative(v_theta(C.r, C.theta, C.z), C.theta)/C.r)*(C.j|C.j)
+    + (Derivative(v_z(C.r, C.theta, C.z), C.theta)/C.r)*(C.j|C.k)
+    + (Derivative(v_r(C.r, C.theta, C.z), C.z))*(C.k|C.i)
+    + (Derivative(v_theta(C.r, C.theta, C.z), C.z))*(C.k|C.j)
+    + (Derivative(v_z(C.r, C.theta, C.z), C.z))*(C.k|C.k)
+
+    """
+    coord_sys = _get_coord_systems(field)
     if len(coord_sys) == 0:
         return Vector.zero
-    elif len(coord_sys) == 1:
+
+    if not isinstance(field, (Vector, Dyadic)):
+        # scalar field
+        if len(coord_sys) > 1:
+            if isinstance(field, Add):
+                return VectorAdd.fromiter(gradient(i) for i in field.args)
+            if isinstance(field, Mul):
+                s = _split_mul_args_wrt_coordsys(field)
+                return VectorAdd.fromiter(field / i * gradient(i) for i in s)
+            return Gradient(field)
+
         coord_sys = next(iter(coord_sys))
         h1, h2, h3 = coord_sys.lame_coefficients()
         i, j, k = coord_sys.base_vectors()
         x, y, z = coord_sys.base_scalars()
-        vx = Derivative(scalar_field, x) / h1
-        vy = Derivative(scalar_field, y) / h2
-        vz = Derivative(scalar_field, z) / h3
+        vx = Derivative(field, x) / h1
+        vy = Derivative(field, y) / h2
+        vz = Derivative(field, z) / h3
 
         if doit:
             return (vx * i + vy * j + vz * k).doit()
         return vx * i + vy * j + vz * k
-    else:
-        if isinstance(scalar_field, (Add, VectorAdd)):
-            return VectorAdd.fromiter(gradient(i) for i in scalar_field.args)
-        if isinstance(scalar_field, (Mul, VectorMul)):
-            s = _split_mul_args_wrt_coordsys(scalar_field)
-            return VectorAdd.fromiter(scalar_field / i * gradient(i) for i in s)
-        return Gradient(scalar_field)
+
+    elif isinstance(field, Vector):
+        # vector field
+        if len(coord_sys) > 1:
+            if isinstance(field, VectorAdd):
+                return DyadicAdd.fromiter(gradient(i) for i in field.args)
+            if isinstance(field, VectorMul):
+                s = _split_mul_args_wrt_coordsys(field)
+                return DyadicAdd.fromiter(field / i * gradient(i) for i in s)
+            return Gradient(field)
+
+        coord_sys = next(iter(coord_sys))
+        e = coord_sys.base_vectors()
+        q = coord_sys.base_scalars()
+        h = coord_sys.lame_coefficients()
+        A = [field & u for u in e]
+        s = Dyadic.zero
+
+        for i in range(3):
+            for j in range(3):
+                component = Derivative(A[j], q[i]) / h[i] - \
+                    A[j] / (h[i] * h[j]) * Derivative(h[j], q[i])
+
+                for k in range(3):
+                    Gamma = _christoffel_symbol_2nd_kind(h, q, i, k, j)
+                    component += h[j] / (h[i] * h[k]) * A[k] * Gamma
+
+                s += component * (e[i] | e[j])
+        if doit:
+            return s.doit()
+        return s
+
+    return Gradient(field)
+
+
+class Laplacian(Expr):
+    """
+    Represents unevaluated Laplacian.
+
+    Examples
+    ========
+
+    >>> from sympy.vector import CoordSys3D, Laplacian
+    >>> R = CoordSys3D('R')
+    >>> v = 3*R.x**3*R.y**2*R.z**3
+    >>> Laplacian(v)
+    Laplacian(3*R.x**3*R.y**2*R.z**3)
+
+    """
+
+    def __new__(cls, expr):
+        expr = sympify(expr)
+        obj = Expr.__new__(cls, expr)
+        obj._expr = expr
+        return obj
+
+    def doit(self, **hints):
+        from sympy.vector.functions import laplacian
+        return laplacian(self._expr)
 
 
 def _diff_conditional(expr, base_scalar, coeff_1, coeff_2):
@@ -332,10 +404,9 @@ def _diff_conditional(expr, base_scalar, coeff_1, coeff_2):
     First re-expresses expr in the system that base_scalar belongs to.
     If base_scalar appears in the re-expressed form, differentiates
     it wrt base_scalar.
-    Else, returns S(0)
+    Else, returns 0
     """
     from sympy.vector.functions import express
     new_expr = express(expr, base_scalar.system, variables=True)
-    if base_scalar in new_expr.atoms(BaseScalar):
-        return Derivative(coeff_1 * coeff_2 * new_expr, base_scalar)
-    return S(0)
+    arg = coeff_1 * coeff_2 * new_expr
+    return Derivative(arg, base_scalar) if arg else S.Zero

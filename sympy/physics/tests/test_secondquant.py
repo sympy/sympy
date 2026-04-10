@@ -1,3 +1,6 @@
+from __future__ import annotations
+from sympy.functions.elementary.complexes import conjugate
+from sympy.functions.elementary.exponential import exp
 from sympy.physics.secondquant import (
     Dagger, Bd, VarBosonicBasis, BBra, B, BKet, FixedBosonicBasis,
     matrix_rep, apply_operators, InnerProduct, Commutator, KroneckerDelta,
@@ -6,14 +9,20 @@ from sympy.physics.secondquant import (
     evaluate_deltas, AntiSymmetricTensor, contraction, NO, wicks,
     PermutationOperator, simplify_index_permutations,
     _sort_anticommuting_fermions, _get_ordered_dummies,
-    substitute_dummies
+    substitute_dummies, FockStateBosonKet,
+    ContractionAppliesOnlyToFermions
 )
 
-from sympy import (Dummy, expand, Function, I, Rational, simplify, sqrt, Sum,
-                   Symbol, symbols)
+from sympy.concrete.summations import Sum
+from sympy.core.function import (Function, expand)
+from sympy.core.numbers import (I, Rational)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, Symbol, symbols)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.printing.repr import srepr
+from sympy.simplify.simplify import simplify
 
-from sympy.core.compatibility import range
-from sympy.utilities.pytest import XFAIL, slow
+from sympy.testing.pytest import slow, raises
 from sympy.printing.latex import latex
 
 
@@ -31,7 +40,10 @@ def test_PermutationOperator():
     perms = [P(p, q), P(r, s)]
     assert (simplify_index_permutations(expr, perms) ==
         P(p, q)*P(r, s)*f(p)*g(q)*h(r)*i(s))
+    assert latex(P(p, q)) == 'P(pq)'
 
+    p1, p2 = symbols('p1,p2')
+    assert latex(P(p1,p2) == 'P(p_{1}p_{2})')
 
 def test_index_permutations_with_dummies():
     a, b, c, d = symbols('a b c d')
@@ -66,7 +78,7 @@ def test_dagger():
     assert Dagger(1) == 1
     assert Dagger(1.0) == 1.0
     assert Dagger(2*I) == -2*I
-    assert Dagger(Rational(1, 2)*I/3.0) == -Rational(1, 2)*I/3.0
+    assert Dagger(S.Half*I/3.0) == I*Rational(-1, 2)/3.0
     assert Dagger(BKet([n])) == BBra([n])
     assert Dagger(B(0)) == Bd(0)
     assert Dagger(Bd(0)) == B(0)
@@ -76,6 +88,10 @@ def test_dagger():
     assert Dagger(n*m) == Dagger(n)*Dagger(m)  # n, m commute
     assert Dagger(B(n)*B(m)) == Bd(m)*Bd(n)
     assert Dagger(B(n)**10) == Dagger(B(n))**10
+    assert Dagger('a') == Dagger(Symbol('a'))
+    assert Dagger(Dagger('a')) == Symbol('a')
+    assert Dagger(exp(2 * I)) == exp(-2 * I)
+    assert Dagger(i) == conjugate(i)
 
 
 def test_operator():
@@ -89,9 +105,10 @@ def test_operator():
 
 
 def test_create():
-    i, j, n, m = symbols('i,j,n,m')
+    i, j, n, m, p1 = symbols('i,j,n,m,p1')
     o = Bd(i)
-    assert latex(o) == "b^\\dagger_{i}"
+    assert latex(o) == "{b^\\dagger_{i}}"
+    assert latex(Bd(p1)) == "{b^\\dagger_{p_{1}}}"
     assert isinstance(o, CreateBoson)
     o = o.subs(i, j)
     assert o.atoms(Symbol) == {j}
@@ -102,9 +119,10 @@ def test_create():
 
 
 def test_annihilate():
-    i, j, n, m = symbols('i,j,n,m')
+    i, j, n, m, p1 = symbols('i,j,n,m,p1')
     o = B(i)
     assert latex(o) == "b_{i}"
+    assert latex(B(p1)) == "b_{p_{1}}"
     assert isinstance(o, AnnihilateBoson)
     o = o.subs(i, j)
     assert o.atoms(Symbol) == {j}
@@ -129,24 +147,6 @@ def test_basic_state():
     s = BosonState([n, m])
     assert s.down(0) == BosonState([n - 1, m])
     assert s.up(0) == BosonState([n + 1, m])
-
-
-@XFAIL
-def test_move1():
-    i, j = symbols('i,j')
-    A, C = symbols('A,C', cls=Function)
-    o = A(i)*C(j)
-    # This almost works, but has a minus sign wrong
-    assert move(o, 0, 1) == KroneckerDelta(i, j) + C(j)*A(i)
-
-
-@XFAIL
-def test_move2():
-    i, j = symbols('i,j')
-    A, C = symbols('A,C', cls=Function)
-    o = C(j)*A(i)
-    # This almost works, but has a minus sign wrong
-    assert move(o, 0, 1) == -KroneckerDelta(i, j) + A(i)*C(j)
 
 
 def test_basic_apply():
@@ -205,10 +205,23 @@ def test_matrix_elements():
         assert m[i + 1, i] == sqrt(i + 1)
 
 
+def test_fixed_bosonic_basis():
+    b = FixedBosonicBasis(2, 2)
+    # assert b == [FockState((2, 0)), FockState((1, 1)), FockState((0, 2))]
+    state = b.state(1)
+    assert state == FockStateBosonKet((1, 1))
+    assert b.index(state) == 1
+    assert b.state(1) == b[1]
+    assert len(b) == 3
+    assert str(b) == '[FockState((2, 0)), FockState((1, 1)), FockState((0, 2))]'
+    assert repr(b) == '[FockState((2, 0)), FockState((1, 1)), FockState((0, 2))]'
+    assert srepr(b) == '[FockState((2, 0)), FockState((1, 1)), FockState((0, 2))]'
+
+
 @slow
 def test_sho():
     n, m = symbols('n,m')
-    h_n = Bd(n)*B(n)*(n + Rational(1, 2))
+    h_n = Bd(n)*B(n)*(n + S.Half)
     H = Sum(h_n, (n, 0, 5))
     o = H.doit(deep=False)
     b = FixedBosonicBasis(2, 6)
@@ -228,6 +241,8 @@ def test_commutation():
     assert c == -1
     c = Commutator(B(n), Bd(0))
     assert c == KroneckerDelta(n, 0)
+    c = Commutator(B(0), B(0))
+    assert c == 0
     c = Commutator(B(0), Bd(0))
     e = simplify(apply_operators(c*BKet([n])))
     assert e == BKet([n])
@@ -255,6 +270,13 @@ def test_commutation():
     assert C(Fd(j), NO(Fd(a)*F(i))).doit(wicks=True) == -D(j, i)*Fd(a)
     assert C(Fd(a)*F(i), Fd(b)*F(j)).doit(wicks=True) == 0
 
+    c1 = Commutator(F(a), Fd(a))
+    assert Commutator.eval(c1, c1) == 0
+    c = Commutator(Fd(a)*F(i),Fd(b)*F(j))
+    assert latex(c) == r'\left[{a^\dagger_{a}} a_{i},{a^\dagger_{b}} a_{j}\right]'
+    assert repr(c) == 'Commutator(CreateFermion(a)*AnnihilateFermion(i),CreateFermion(b)*AnnihilateFermion(j))'
+    assert str(c) == '[CreateFermion(a)*AnnihilateFermion(i),CreateFermion(b)*AnnihilateFermion(j)]'
+
 
 def test_create_f():
     i, j, n, m = symbols('i,j,n,m')
@@ -274,9 +296,18 @@ def test_create_f():
     i, j, k, l = symbols('i,j,k,l', below_fermi=True)
     a, b, c, d = symbols('a,b,c,d', above_fermi=True)
     p, q, r, s = symbols('p,q,r,s')
+    p1 = symbols("p1")
 
     assert Fd(i).apply_operator(FKet([i, j, k], 4)) == FKet([j, k], 4)
     assert Fd(a).apply_operator(FKet([i, b, k], 4)) == FKet([a, i, b, k], 4)
+
+    assert Dagger(B(p)).apply_operator(q) == q*CreateBoson(p)
+    assert repr(Fd(p)) == 'CreateFermion(p)'
+    assert srepr(Fd(p)) == "CreateFermion(Symbol('p'))"
+    assert latex(Fd(p)) == r'{a^\dagger_{p}}'
+    assert latex(Fd(p1)) == r'{a^\dagger_{p_{1}}}'
+    assert latex(FKet([a,i], 1)) == r"\left|\left( a, \  i\right)\right\rangle"
+    assert latex(FKet([j,i,b,a], 2)) == r"\left|\left( a, \  b, \  i, \  j\right)\right\rangle"
 
 
 def test_annihilate_f():
@@ -294,10 +325,17 @@ def test_annihilate_f():
     i, j, k, l = symbols('i,j,k,l', below_fermi=True)
     a, b, c, d = symbols('a,b,c,d', above_fermi=True)
     p, q, r, s = symbols('p,q,r,s')
+    p1 = symbols('p1')
+
     assert F(i).apply_operator(FKet([i, j, k], 4)) == 0
     assert F(a).apply_operator(FKet([i, b, k], 4)) == 0
     assert F(l).apply_operator(FKet([i, j, k], 3)) == 0
     assert F(l).apply_operator(FKet([i, j, k], 4)) == FKet([l, i, j, k], 4)
+    assert str(F(p)) == 'f(p)'
+    assert repr(F(p)) == 'AnnihilateFermion(p)'
+    assert srepr(F(p)) == "AnnihilateFermion(Symbol('p'))"
+    assert latex(F(p)) == 'a_{p}'
+    assert latex(F(p1)) == 'a_{p_{1}}'
 
 
 def test_create_b():
@@ -401,10 +439,17 @@ def test_NO():
     assert NO(Fd(a)*F(b)) == - NO(F(b)*Fd(a))
 
     no = NO(Fd(a)*F(i)*F(b)*Fd(j))
-    l1 = [ ind for ind in no.iter_q_creators() ]
+    l1 = list(no.iter_q_creators())
     assert l1 == [0, 1]
-    l2 = [ ind for ind in no.iter_q_annihilators() ]
+    l2 = list(no.iter_q_annihilators())
     assert l2 == [3, 2]
+    no = NO(Fd(a)*Fd(i))
+    assert no.has_q_creators == 1
+    assert no.has_q_annihilators == -1
+    assert str(no) == ':CreateFermion(a)*CreateFermion(i):'
+    assert repr(no) == 'NO(CreateFermion(a)*CreateFermion(i))'
+    assert latex(no) == r'\left\{{a^\dagger_{a}} {a^\dagger_{i}}\right\}'
+    raises(NotImplementedError, lambda:  NO(Bd(p)*F(q)))
 
 
 def test_sorting():
@@ -460,6 +505,7 @@ def test_contraction():
     assert restr.is_only_below_fermi
     restr = evaluate_deltas(contraction(F(p), Fd(q)))
     assert restr.is_only_above_fermi
+    raises(ContractionAppliesOnlyToFermions, lambda: contraction(B(a), Fd(b)))
 
 
 def test_evaluate_deltas():
@@ -506,9 +552,18 @@ def test_Tensors():
     assert tabij.has(j)
     assert tabij.subs(b, c) == AT('t', (a, c), (i, j))
     assert (2*tabij).subs(i, c) == 2*AT('t', (a, b), (c, j))
+    assert tabij.symbol == Symbol('t')
+    assert latex(tabij) == '{t^{ab}_{ij}}'
+    assert str(tabij) == 't((_a, _b),(_i, _j))'
 
     assert AT('t', (a, a), (i, j)).subs(a, b) == AT('t', (b, b), (i, j))
     assert AT('t', (a, i), (a, j)).subs(a, b) == AT('t', (b, i), (b, j))
+
+    a1, a2, a3, a4 = symbols('alpha1:5')
+    u_alpha1234 = AntiSymmetricTensor("u", (a1, a2), (a3, a4))
+
+    assert latex(u_alpha1234) == r'{u^{\alpha_{1}\alpha_{2}}_{\alpha_{3}\alpha_{4}}}'
+    assert str(u_alpha1234) == 'u((alpha1, alpha2),(alpha3, alpha4))'
 
 
 def test_fully_contracted():
@@ -620,7 +675,7 @@ def test_dummy_order_inner_outer_lines_VT1T1T1T1():
         # dummy order.  That is because the proximity to external indices
         # has higher influence on the canonical dummy ordering than the
         # position of a dummy on the factors.  In fact, the terms here are
-        # similar in structure as the result of the dummy substitions above.
+        # similar in structure as the result of the dummy substitutions above.
         v(k, l, c, d)*t(c, ii)*t(d, jj)*t(aa, k)*t(bb, l),
         v(l, k, c, d)*t(c, ii)*t(d, jj)*t(aa, k)*t(bb, l),
         v(k, l, d, c)*t(c, ii)*t(d, jj)*t(aa, k)*t(bb, l),
@@ -641,6 +696,13 @@ def test_dummy_order_inner_outer_lines_VT1T1T1T1():
     for permut in exprs[1:]:
         assert dums(exprs[0]) != dums(permut)
         assert substitute_dummies(exprs[0]) == substitute_dummies(permut)
+
+
+def test_get_subNO():
+    p, q, r = symbols('p,q,r')
+    assert NO(F(p)*F(q)*F(r)).get_subNO(1) == NO(F(p)*F(r))
+    assert NO(F(p)*F(q)*F(r)).get_subNO(0) == NO(F(q)*F(r))
+    assert NO(F(p)*F(q)*F(r)).get_subNO(2) == NO(F(p)*F(q))
 
 
 def test_equivalent_internal_lines_VT1T1():
@@ -782,7 +844,7 @@ def test_equivalent_internal_lines_VT2():
         #
         # This test show that the dummy order may not be sensitive to all
         # index permutations.  The following expressions have identical
-        # structure as the resulting terms from of the dummy subsitutions
+        # structure as the resulting terms from of the dummy substitutions
         # in the test above.  Here, all expressions have the same dummy
         # order, so they cannot be simplified by means of dummy
         # substitution.  In order to simplify further, it is necessary to
@@ -1221,15 +1283,20 @@ def test_internal_external_pqrs_AT():
         assert substitute_dummies(exprs[0]) == substitute_dummies(permut)
 
 
+def test_issue_19661():
+    a = Symbol('0')
+    assert latex(Commutator(Bd(a)**2, B(a))
+                 ) == '- \\left[b_{0},{b^\\dagger_{0}}^{2}\\right]'
+
+
 def test_canonical_ordering_AntiSymmetricTensor():
     v = symbols("v")
-    virtual_indices = ('c', 'd')
-    occupied_indices = ('k', 'l')
 
     c, d = symbols(('c','d'), above_fermi=True,
                                    cls=Dummy)
     k, l = symbols(('k','l'), below_fermi=True,
                                    cls=Dummy)
 
-    assert AntiSymmetricTensor(v, (k, l), (d, c)) == -AntiSymmetricTensor(v, (l, k), (d, c))
-    # Gives AntiSymTensor(kl,dc) or -AntiSymTensor(lk,dc) randomly between runs.
+    # formerly, the left gave either the left or the right
+    assert AntiSymmetricTensor(v, (k, l), (d, c)
+        ) == -AntiSymmetricTensor(v, (l, k), (d, c))

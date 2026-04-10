@@ -1,8 +1,8 @@
 .. _holonomic-docs:
 
-===================
-Holonomic Functions
-===================
+=========
+Holonomic
+=========
 
 .. automodule:: sympy.holonomic
 
@@ -10,10 +10,11 @@ Contents
 ========
 
 .. toctree::
-   :maxdepth: 2
+   :titlesonly:
 
    about.rst
    represent.rst
    operations.rst
    convert.rst
    uses.rst
+   internal.rst

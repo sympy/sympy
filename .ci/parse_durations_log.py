@@ -2,6 +2,7 @@
 
 from collections import defaultdict
 import os
+import string
 import json
 import time
 
@@ -15,10 +16,10 @@ def read_log():
         if start_token_seen:
             try:
                 dur, kind, test_id = line.split()
-            except:
+            except ValueError:
                 return
             else:
-                if dur[0] not in '0123456789':
+                if dur[0] not in string.digits:
                     return
             if kind != 'call':
                 continue
@@ -57,7 +58,7 @@ def slow_function():
     t = time.time()
     a = 0
     for i in range(5):
-        a += sum([x**.3 - x**i for x in range(1000000) if x % 3 == 0])
+        a += sum(x**.3 - x**i for x in range(1000000) if x % 3 == 0)
     return time.time() - t
 
 

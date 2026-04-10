@@ -1,10 +1,17 @@
+from __future__ import annotations
 from itertools import permutations
+from copy import copy
 
-from sympy.core.compatibility import range
+from sympy.core.expr import unchanged
+from sympy.core.numbers import Integer
+from sympy.core.relational import Eq
 from sympy.core.symbol import Symbol
-from sympy.combinatorics.permutations import (Permutation, _af_parity,
-    _af_rmul, _af_rmuln, Cycle)
-from sympy.utilities.pytest import raises
+from sympy.core.singleton import S
+from sympy.combinatorics.permutations import \
+    Permutation, _af_parity, _af_rmul, _af_rmuln, AppliedPermutation, Cycle
+from sympy.printing import sstr, srepr, pretty, latex
+from sympy.testing.pytest import raises, warns_deprecated_sympy
+
 
 rmul = Permutation.rmul
 a = Symbol('a', integer=True)
@@ -20,8 +27,13 @@ def test_Permutation():
     assert p(list(range(p.size))) == list(p)
     # call as function
     assert list(p(1, 2)) == [0, 2, 1, 3]
+    raises(TypeError, lambda: p(-1))
+    raises(TypeError, lambda: p(5))
+    raises(TypeError, lambda: p(4))
     # conversion to list
     assert list(p) == list(range(4))
+    assert p.copy() == p
+    assert copy(p) == p
     assert Permutation(size=4) == Permutation(3)
     assert Permutation(Permutation(3), size=5) == Permutation(4)
     # cycle form with size
@@ -60,6 +72,11 @@ def test_Permutation():
     assert q.cyclic_form == [[0, 3, 5, 6, 2, 4]]
     assert q.full_cyclic_form == [[0, 3, 5, 6, 2, 4], [1]]
     assert p.cyclic_form == [[0, 2, 1, 5], [3, 6, 4]]
+    p3 = Permutation([0, 3, 1, 2])
+    cf = p3.cyclic_form
+    cf[0].append(99)
+    assert p3.cyclic_form == [[1, 3, 2]]
+    assert p3.order() == 3
     t = p.transpositions()
     assert t == [(0, 5), (0, 1), (0, 2), (3, 4), (3, 6)]
     assert Permutation.rmul(*[Permutation(Cycle(*ti)) for ti in (t)])
@@ -118,7 +135,7 @@ def test_Permutation():
     assert Permutation.from_inversion_vector(q.inversion_vector()).array_form\
         == q.array_form
     raises(ValueError, lambda: Permutation.from_inversion_vector([0, 2]))
-    assert Permutation([i for i in range(500, -1, -1)]).inversions() == 125250
+    assert Permutation(list(range(500, -1, -1))).inversions() == 125250
 
     s = Permutation([0, 4, 1, 3, 2])
     assert s.parity() == 0
@@ -140,7 +157,6 @@ def test_Permutation():
 
     assert rmul(~p, p).is_Identity
     assert (~p)**13 == Permutation([5, 2, 0, 4, 6, 1, 3])
-    assert ~(r**2).is_Identity
     assert p.max() == 6
     assert p.min() == 0
 
@@ -215,6 +231,9 @@ def test_Permutation():
     b = Permutation(0, 6, 3)(1, 2)
     assert a.cycle_structure == {1: 4}
     assert b.cycle_structure == {2: 1, 3: 1, 1: 2}
+    # issue 11130
+    raises(ValueError, lambda: Permutation(3, size=3))
+    raises(ValueError, lambda: Permutation([1, 2, 0, 3], size=3))
 
 
 def test_Permutation_subclassing():
@@ -222,24 +241,24 @@ def test_Permutation_subclassing():
     class CustomPermutation(Permutation):
         def __call__(self, *i):
             try:
-                return super(CustomPermutation, self).__call__(*i)
+                return super().__call__(*i)
             except TypeError:
                 pass
 
             try:
                 perm_obj = i[0]
                 return [self._array_form[j] for j in perm_obj]
-            except Exception:
+            except TypeError:
                 raise TypeError('unrecognized argument')
 
         def __eq__(self, other):
             if isinstance(other, Permutation):
                 return self._hashable_content() == other._hashable_content()
             else:
-                return super(CustomPermutation, self).__eq__(other)
+                return super().__eq__(other)
 
         def __hash__(self):
-            return super(CustomPermutation, self).__hash__()
+            return super().__hash__()
 
     p = CustomPermutation([1, 2, 3, 0])
     q = Permutation([1, 2, 3, 0])
@@ -357,6 +376,11 @@ def test_mul():
     assert Permutation.rmul(a, b, c) == Permutation([1, 2, 3, 0])
     assert Permutation.rmul(a, c) == Permutation([3, 2, 1, 0])
     raises(TypeError, lambda: Permutation.rmul(b, c))
+    assert Permutation.prod([a, Permutation(b), Permutation(c)]) == (
+        a*Permutation(b)*Permutation(c))
+    assert Permutation.prod((p for p in [a, Permutation(b), Permutation(c)])) == (
+        a*Permutation(b)*Permutation(c))
+    assert Permutation.prod([]) == Permutation()
 
     n = 6
     m = 8
@@ -422,6 +446,10 @@ def test_Cycle():
     assert Cycle(1, 2).list() == [0, 2, 1]
     assert Cycle(1, 2).list(4) == [0, 2, 1, 3]
     assert Cycle().size == 0
+    # Issue #28658: Cycle().list(size=0) should return [] not [0]
+    assert Cycle().list(size=0) == []
+    assert Cycle().list(size=0) == Permutation([]).list(size=0)
+
     raises(ValueError, lambda: Cycle((1, 2)))
     raises(ValueError, lambda: Cycle(1, 2, 1))
     raises(TypeError, lambda: Cycle(1, 2)*{})
@@ -439,8 +467,19 @@ def test_from_sequence():
         Permutation(4)(0, 2)(1, 3)
 
 
+def test_resize():
+    p = Permutation(0, 1, 2)
+    assert p.resize(5) == Permutation(0, 1, 2, size=5)
+    assert p.resize(4) == Permutation(0, 1, 2, size=4)
+    assert p.resize(3) == p
+    raises(ValueError, lambda: p.resize(2))
+
+    p = Permutation(0, 1, 2)(3, 4)(5, 6)
+    assert p.resize(3) == Permutation(0, 1, 2)
+    raises(ValueError, lambda: p.resize(4))
+
+
 def test_printing_cyclic():
-    Permutation.print_cyclic = True
     p1 = Permutation([0, 2, 1])
     assert repr(p1) == 'Permutation(1, 2)'
     assert str(p1) == '(1 2)'
@@ -452,16 +491,90 @@ def test_printing_cyclic():
 
 
 def test_printing_non_cyclic():
-    Permutation.print_cyclic = False
     p1 = Permutation([0, 1, 2, 3, 4, 5])
-    assert repr(p1) == 'Permutation([], size=6)'
-    assert str(p1) == 'Permutation([], size=6)'
+    assert srepr(p1, perm_cyclic=False) == 'Permutation([], size=6)'
+    assert sstr(p1, perm_cyclic=False) == 'Permutation([], size=6)'
     p2 = Permutation([0, 1, 2])
-    assert repr(p2) == 'Permutation([0, 1, 2])'
-    assert str(p2) == 'Permutation([0, 1, 2])'
+    assert srepr(p2, perm_cyclic=False) == 'Permutation([0, 1, 2])'
+    assert sstr(p2, perm_cyclic=False) == 'Permutation([0, 1, 2])'
 
     p3 = Permutation([0, 2, 1])
-    assert repr(p3) == 'Permutation([0, 2, 1])'
-    assert str(p3) == 'Permutation([0, 2, 1])'
+    assert srepr(p3, perm_cyclic=False) == 'Permutation([0, 2, 1])'
+    assert sstr(p3, perm_cyclic=False) == 'Permutation([0, 2, 1])'
     p4 = Permutation([0, 1, 3, 2, 4, 5, 6, 7])
-    assert repr(p4) == 'Permutation([0, 1, 3, 2], size=8)'
+    assert srepr(p4, perm_cyclic=False) == 'Permutation([0, 1, 3, 2], size=8)'
+
+
+def test_deprecated_print_cyclic():
+    p = Permutation(0, 1, 2)
+    try:
+        Permutation.print_cyclic = True
+        with warns_deprecated_sympy():
+            assert sstr(p) == '(0 1 2)'
+        with warns_deprecated_sympy():
+            assert srepr(p) == 'Permutation(0, 1, 2)'
+        with warns_deprecated_sympy():
+            assert pretty(p) == '(0 1 2)'
+        with warns_deprecated_sympy():
+            assert latex(p) == r'\left( 0\; 1\; 2\right)'
+
+        Permutation.print_cyclic = False
+        with warns_deprecated_sympy():
+            assert sstr(p) == 'Permutation([1, 2, 0])'
+        with warns_deprecated_sympy():
+            assert srepr(p) == 'Permutation([1, 2, 0])'
+        with warns_deprecated_sympy():
+            assert pretty(p, use_unicode=False) == '/0 1 2\\\n\\1 2 0/'
+        with warns_deprecated_sympy():
+            assert latex(p) == \
+                r'\begin{pmatrix} 0 & 1 & 2 \\ 1 & 2 & 0 \end{pmatrix}'
+    finally:
+        Permutation.print_cyclic = None
+
+
+def test_permutation_equality():
+    a = Permutation(0, 1, 2)
+    b = Permutation(0, 1, 2)
+    assert Eq(a, b) is S.true
+    c = Permutation(0, 2, 1)
+    assert Eq(a, c) is S.false
+
+    d = Permutation(0, 1, 2, size=4)
+    assert unchanged(Eq, a, d)
+    e = Permutation(0, 2, 1, size=4)
+    assert unchanged(Eq, a, e)
+
+    i = Permutation()
+    assert unchanged(Eq, i, 0)
+    assert unchanged(Eq, 0, i)
+
+
+def test_issue_17661():
+    c1 = Cycle(1,2)
+    c2 = Cycle(1,2)
+    assert c1 == c2
+    assert repr(c1) == 'Cycle(1, 2)'
+    assert c1 == c2
+
+
+def test_permutation_apply():
+    x = Symbol('x')
+    p = Permutation(0, 1, 2)
+    assert p.apply(0) == 1
+    assert isinstance(p.apply(0), Integer)
+    assert p.apply(x) == AppliedPermutation(p, x)
+    assert AppliedPermutation(p, x).subs(x, 0) == 1
+
+    x = Symbol('x', integer=False)
+    raises(NotImplementedError, lambda: p.apply(x))
+    x = Symbol('x', negative=True)
+    raises(NotImplementedError, lambda: p.apply(x))
+
+
+def test_AppliedPermutation():
+    x = Symbol('x')
+    p = Permutation(0, 1, 2)
+    raises(ValueError, lambda: AppliedPermutation((0, 1, 2), x))
+    assert AppliedPermutation(p, 1, evaluate=True) == 2
+    assert AppliedPermutation(p, 1, evaluate=False).__class__ == \
+        AppliedPermutation

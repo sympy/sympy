@@ -1,5 +1,4 @@
-from __future__ import print_function, division
-
+from __future__ import annotations
 from sympy.utilities import dict_merge
 from sympy.utilities.iterables import iterable
 from sympy.physics.vector import (Dyadic, Vector, ReferenceFrame,
@@ -8,13 +7,14 @@ from sympy.physics.vector.printing import (vprint, vsprint, vpprint, vlatex,
                                            init_vprinting)
 from sympy.physics.mechanics.particle import Particle
 from sympy.physics.mechanics.rigidbody import RigidBody
-from sympy import simplify
-from sympy.core.backend import (Matrix, sympify, Mul, Derivative, sin, cos,
-                                tan, AppliedUndef, S)
+from sympy.simplify.simplify import simplify
+from sympy import Matrix, Mul, Derivative, sin, cos, tan, S
+from sympy.core.function import AppliedUndef
+from sympy.physics.mechanics.inertia import (inertia as _inertia,
+    inertia_of_point_mass as _inertia_of_point_mass)
+from sympy.utilities.exceptions import sympy_deprecation_warning
 
-__all__ = ['inertia',
-           'inertia_of_point_mass',
-           'linear_momentum',
+__all__ = ['linear_momentum',
            'angular_momentum',
            'kinetic_energy',
            'potential_energy',
@@ -48,86 +48,34 @@ mechanics_printing.__doc__ = init_vprinting.__doc__
 
 
 def inertia(frame, ixx, iyy, izz, ixy=0, iyz=0, izx=0):
-    """Simple way to create inertia Dyadic object.
-
-    If you don't know what a Dyadic is, just treat this like the inertia
-    tensor. Then, do the easy thing and define it in a body-fixed frame.
-
-    Parameters
-    ==========
-
-    frame : ReferenceFrame
-        The frame the inertia is defined in
-    ixx : Sympifyable
-        the xx element in the inertia dyadic
-    iyy : Sympifyable
-        the yy element in the inertia dyadic
-    izz : Sympifyable
-        the zz element in the inertia dyadic
-    ixy : Sympifyable
-        the xy element in the inertia dyadic
-    iyz : Sympifyable
-        the yz element in the inertia dyadic
-    izx : Sympifyable
-        the zx element in the inertia dyadic
-
-    Examples
-    ========
-
-    >>> from sympy.physics.mechanics import ReferenceFrame, inertia
-    >>> N = ReferenceFrame('N')
-    >>> inertia(N, 1, 2, 3)
-    (N.x|N.x) + 2*(N.y|N.y) + 3*(N.z|N.z)
-
-    """
-
-    if not isinstance(frame, ReferenceFrame):
-        raise TypeError('Need to define the inertia in a frame')
-    ol = sympify(ixx) * (frame.x | frame.x)
-    ol += sympify(ixy) * (frame.x | frame.y)
-    ol += sympify(izx) * (frame.x | frame.z)
-    ol += sympify(ixy) * (frame.y | frame.x)
-    ol += sympify(iyy) * (frame.y | frame.y)
-    ol += sympify(iyz) * (frame.y | frame.z)
-    ol += sympify(izx) * (frame.z | frame.x)
-    ol += sympify(iyz) * (frame.z | frame.y)
-    ol += sympify(izz) * (frame.z | frame.z)
-    return ol
+    sympy_deprecation_warning(
+        """
+        The inertia function has been moved.
+        Import it from "sympy.physics.mechanics".
+        """,
+        deprecated_since_version="1.13",
+        active_deprecations_target="moved-mechanics-functions"
+    )
+    return _inertia(frame, ixx, iyy, izz, ixy, iyz, izx)
 
 
 def inertia_of_point_mass(mass, pos_vec, frame):
-    """Inertia dyadic of a point mass relative to point O.
-
-    Parameters
-    ==========
-
-    mass : Sympifyable
-        Mass of the point mass
-    pos_vec : Vector
-        Position from point O to point mass
-    frame : ReferenceFrame
-        Reference frame to express the dyadic in
-
-    Examples
-    ========
-
-    >>> from sympy import symbols
-    >>> from sympy.physics.mechanics import ReferenceFrame, inertia_of_point_mass
-    >>> N = ReferenceFrame('N')
-    >>> r, m = symbols('r m')
-    >>> px = r * N.x
-    >>> inertia_of_point_mass(m, px, N)
-    m*r**2*(N.y|N.y) + m*r**2*(N.z|N.z)
-
-    """
-
-    return mass * (((frame.x | frame.x) + (frame.y | frame.y) +
-                   (frame.z | frame.z)) * (pos_vec & pos_vec) -
-                   (pos_vec | pos_vec))
+    sympy_deprecation_warning(
+        """
+        The inertia_of_point_mass function has been moved.
+        Import it from "sympy.physics.mechanics".
+        """,
+        deprecated_since_version="1.13",
+        active_deprecations_target="moved-mechanics-functions"
+    )
+    return _inertia_of_point_mass(mass, pos_vec, frame)
 
 
 def linear_momentum(frame, *body):
     """Linear momentum of the system.
+
+    Explanation
+    ===========
 
     This function returns the linear momentum of a system of Particle's and/or
     RigidBody's. The linear momentum of a system is equal to the vector sum of
@@ -177,7 +125,10 @@ def linear_momentum(frame, *body):
 
 
 def angular_momentum(point, frame, *body):
-    """Angular momentum of a system
+    """Angular momentum of a system.
+
+    Explanation
+    ===========
 
     This function returns the angular momentum of a system of Particle's and/or
     RigidBody's. The angular momentum of such a system is equal to the vector
@@ -237,6 +188,9 @@ def angular_momentum(point, frame, *body):
 def kinetic_energy(frame, *body):
     """Kinetic energy of a multibody system.
 
+    Explanation
+    ===========
+
     This function returns the kinetic energy of a system of Particle's and/or
     RigidBody's. The kinetic energy of such a system is equal to the sum of
     the kinetic energies of its constituents. Consider a system, S, comprising
@@ -281,7 +235,7 @@ def kinetic_energy(frame, *body):
 
     if not isinstance(frame, ReferenceFrame):
         raise TypeError('Please enter a valid ReferenceFrame')
-    ke_sys = S(0)
+    ke_sys = S.Zero
     for e in body:
         if isinstance(e, (RigidBody, Particle)):
             ke_sys += e.kinetic_energy(frame)
@@ -292,6 +246,9 @@ def kinetic_energy(frame, *body):
 
 def potential_energy(*body):
     """Potential energy of a multibody system.
+
+    Explanation
+    ===========
 
     This function returns the potential energy of a system of Particle's and/or
     RigidBody's. The potential energy of such a system is equal to the sum of
@@ -333,7 +290,7 @@ def potential_energy(*body):
 
     """
 
-    pe_sys = S(0)
+    pe_sys = S.Zero
     for e in body:
         if isinstance(e, (RigidBody, Particle)):
             pe_sys += e.potential_energy
@@ -342,8 +299,73 @@ def potential_energy(*body):
     return pe_sys
 
 
+def gravity(acceleration, *bodies):
+    from sympy.physics.mechanics.loads import gravity as _gravity
+    sympy_deprecation_warning(
+        """
+        The gravity function has been moved.
+        Import it from "sympy.physics.mechanics.loads".
+        """,
+        deprecated_since_version="1.13",
+        active_deprecations_target="moved-mechanics-functions"
+    )
+    return _gravity(acceleration, *bodies)
+
+
+def center_of_mass(point, *bodies):
+    """
+    Returns the position vector from the given point to the center of mass
+    of the given bodies(particles or rigidbodies).
+
+    Example
+    =======
+
+    >>> from sympy import symbols, S
+    >>> from sympy.physics.vector import Point
+    >>> from sympy.physics.mechanics import Particle, ReferenceFrame, RigidBody, outer
+    >>> from sympy.physics.mechanics.functions import center_of_mass
+    >>> a = ReferenceFrame('a')
+    >>> m = symbols('m', real=True)
+    >>> p1 = Particle('p1', Point('p1_pt'), S(1))
+    >>> p2 = Particle('p2', Point('p2_pt'), S(2))
+    >>> p3 = Particle('p3', Point('p3_pt'), S(3))
+    >>> p4 = Particle('p4', Point('p4_pt'), m)
+    >>> b_f = ReferenceFrame('b_f')
+    >>> b_cm = Point('b_cm')
+    >>> mb = symbols('mb')
+    >>> b = RigidBody('b', b_cm, b_f, mb, (outer(b_f.x, b_f.x), b_cm))
+    >>> p2.point.set_pos(p1.point, a.x)
+    >>> p3.point.set_pos(p1.point, a.x + a.y)
+    >>> p4.point.set_pos(p1.point, a.y)
+    >>> b.masscenter.set_pos(p1.point, a.y + a.z)
+    >>> point_o=Point('o')
+    >>> point_o.set_pos(p1.point, center_of_mass(p1.point, p1, p2, p3, p4, b))
+    >>> expr = 5/(m + mb + 6)*a.x + (m + mb + 3)/(m + mb + 6)*a.y + mb/(m + mb + 6)*a.z
+    >>> point_o.pos_from(p1.point)
+    5/(m + mb + 6)*a.x + (m + mb + 3)/(m + mb + 6)*a.y + mb/(m + mb + 6)*a.z
+
+    """
+    if not bodies:
+        raise TypeError("No bodies(instances of Particle or Rigidbody) were passed.")
+
+    total_mass = 0
+    vec = Vector(0)
+    for i in bodies:
+        total_mass += i.mass
+
+        masscenter = getattr(i, 'masscenter', None)
+        if masscenter is None:
+            masscenter = i.point
+        vec += i.mass*masscenter.pos_from(point)
+
+    return vec/total_mass
+
+
 def Lagrangian(frame, *body):
     """Lagrangian of a multibody system.
+
+    Explanation
+    ===========
 
     This function returns the Lagrangian of a system of Particle's and/or
     RigidBody's. The Lagrangian of such a system is equal to the difference
@@ -399,20 +421,47 @@ def Lagrangian(frame, *body):
     return kinetic_energy(frame, *body) - potential_energy(*body)
 
 
-def find_dynamicsymbols(expression, exclude=None):
+def find_dynamicsymbols(expression, exclude=None, reference_frame=None):
     """Find all dynamicsymbols in expression.
 
+    Explanation
+    ===========
+
+    If the optional ``exclude`` kwarg is used, only dynamicsymbols
+    not in the iterable ``exclude`` are returned.
+    If we intend to apply this function on a vector, the optional
+    ``reference_frame`` is also used to inform about the corresponding frame
+    with respect to which the dynamic symbols of the given vector is to be
+    determined.
+
+    Parameters
+    ==========
+
+    expression : SymPy expression
+
+    exclude : iterable of dynamicsymbols, optional
+
+    reference_frame : ReferenceFrame, optional
+        The frame with respect to which the dynamic symbols of the
+        given vector is to be determined.
+
+    Examples
+    ========
+
     >>> from sympy.physics.mechanics import dynamicsymbols, find_dynamicsymbols
+    >>> from sympy.physics.mechanics import ReferenceFrame
     >>> x, y = dynamicsymbols('x, y')
     >>> expr = x + x.diff()*y
     >>> find_dynamicsymbols(expr)
     {x(t), y(t), Derivative(x(t), t)}
-
-    If the optional ``exclude`` kwarg is used, only dynamicsymbols
-    not in the iterable ``exclude`` are returned.
-
-    >>> find_dynamicsymbols(expr, [x, y])
+    >>> find_dynamicsymbols(expr, exclude=[x, y])
     {Derivative(x(t), t)}
+    >>> a, b, c = dynamicsymbols('a, b, c')
+    >>> A = ReferenceFrame('A')
+    >>> v = a * A.x + b * A.y + c * A.z
+    >>> find_dynamicsymbols(v, reference_frame=A)
+    {a(t), b(t), c(t)}
+
     """
     t_set = {dynamicsymbols._t}
     if exclude:
@@ -422,15 +471,24 @@ def find_dynamicsymbols(expression, exclude=None):
             raise TypeError("exclude kwarg must be iterable")
     else:
         exclude_set = set()
-    return set([i for i in expression.atoms(AppliedUndef, Derivative) if
-            i.free_symbols == t_set]) - exclude_set
+    if isinstance(expression, Vector):
+        if reference_frame is None:
+            raise ValueError("You must provide reference_frame when passing a "
+                             "vector expression, got %s." % reference_frame)
+        else:
+            expression = expression.to_matrix(reference_frame)
+    return {i for i in expression.atoms(AppliedUndef, Derivative) if
+            i.free_symbols == t_set} - exclude_set
 
 
-def msubs(expr, *sub_dicts, **kwargs):
+def msubs(expr, *sub_dicts, smart=False, **kwargs):
     """A custom subs for use on expressions derived in physics.mechanics.
 
     Traverses the expression tree once, performing the subs found in sub_dicts.
     Terms inside ``Derivative`` expressions are ignored:
+
+    Examples
+    ========
 
     >>> from sympy.physics.mechanics import dynamicsymbols, msubs
     >>> x = dynamicsymbols('x')
@@ -464,7 +522,6 @@ def msubs(expr, *sub_dicts, **kwargs):
     """
 
     sub_dict = dict_merge(*sub_dicts)
-    smart = kwargs.pop('smart', False)
     if smart:
         func = _smart_subs
     elif hasattr(expr, 'msubs'):
@@ -513,7 +570,9 @@ def _smart_subs(expr, sub_dict):
     - Second traverse:
         If node is a fraction, check if the denominator evaluates to 0.
         If so, attempt to simplify it out. Then if node is in sub_dict,
-        sub in the corresponding value."""
+        sub in the corresponding value.
+
+    """
     expr = _crawl(expr, _tan_repl_func)
 
     def _recurser(expr, sub_dict):
@@ -540,7 +599,7 @@ def _smart_subs(expr, sub_dict):
 
 
 def _fraction_decomp(expr):
-    """Return num, den such that expr = num/den"""
+    """Return num, den such that expr = num/den."""
     if not isinstance(expr, Mul):
         return expr, 1
     num = []
@@ -566,6 +625,7 @@ def _f_list_parser(fl, ref_frame):
         f_list: The forces.
 
     Used internally in the KanesMethod and LagrangesMethod classes.
+
     """
     def flist_iter():
         for pair in fl:
@@ -584,3 +644,93 @@ def _f_list_parser(fl, ref_frame):
         unzip = lambda l: list(zip(*l)) if l[0] else [(), ()]
         vel_list, f_list = unzip(list(flist_iter()))
     return vel_list, f_list
+
+
+def _validate_coordinates(coordinates=None, speeds=None, check_duplicates=True,
+                          is_dynamicsymbols=True, u_auxiliary=None):
+    """Validate the generalized coordinates and generalized speeds.
+
+    Parameters
+    ==========
+    coordinates : iterable, optional
+        Generalized coordinates to be validated.
+    speeds : iterable, optional
+        Generalized speeds to be validated.
+    check_duplicates : bool, optional
+        Checks if there are duplicates in the generalized coordinates and
+        generalized speeds. If so it will raise a ValueError. The default is
+        True.
+    is_dynamicsymbols : iterable, optional
+        Checks if all the generalized coordinates and generalized speeds are
+        dynamicsymbols. If any is not a dynamicsymbol, a ValueError will be
+        raised. The default is True.
+    u_auxiliary : iterable, optional
+        Auxiliary generalized speeds to be validated.
+
+    """
+    t_set = {dynamicsymbols._t}
+    # Convert input to iterables
+    if coordinates is None:
+        coordinates = []
+    elif not iterable(coordinates):
+        coordinates = [coordinates]
+    if speeds is None:
+        speeds = []
+    elif not iterable(speeds):
+        speeds = [speeds]
+    if u_auxiliary is None:
+        u_auxiliary = []
+    elif not iterable(u_auxiliary):
+        u_auxiliary = [u_auxiliary]
+
+    msgs = []
+    if check_duplicates:  # Check for duplicates
+        seen = set()
+        coord_duplicates = {x for x in coordinates if x in seen or seen.add(x)}
+        seen = set()
+        speed_duplicates = {x for x in speeds if x in seen or seen.add(x)}
+        seen = set()
+        aux_duplicates = {x for x in u_auxiliary if x in seen or seen.add(x)}
+        overlap_coords = set(coordinates).intersection(speeds)
+        overlap_aux = set(coordinates).union(speeds).intersection(u_auxiliary)
+        if coord_duplicates:
+            msgs.append(f'The generalized coordinates {coord_duplicates} are '
+                        f'duplicated, all generalized coordinates should be '
+                        f'unique.')
+        if speed_duplicates:
+            msgs.append(f'The generalized speeds {speed_duplicates} are '
+                        f'duplicated, all generalized speeds should be unique.')
+        if aux_duplicates:
+            msgs.append(f'The auxiliary speeds {aux_duplicates} are duplicated,'
+                        f' all auxiliary speeds should be unique.')
+        if overlap_coords:
+            msgs.append(f'{overlap_coords} are defined as both generalized '
+                        f'coordinates and generalized speeds.')
+        if overlap_aux:
+            msgs.append(f'The auxiliary speeds {overlap_aux} are also defined '
+                        f'as generalized coordinates or generalized speeds.')
+    if is_dynamicsymbols:  # Check whether all coordinates are dynamicsymbols
+        for coordinate in coordinates:
+            if not (isinstance(coordinate, (AppliedUndef, Derivative)) and
+                    coordinate.free_symbols == t_set):
+                msgs.append(f'Generalized coordinate "{coordinate}" is not a '
+                            f'dynamicsymbol.')
+        for speed in speeds:
+            if not (isinstance(speed, (AppliedUndef, Derivative)) and
+                    speed.free_symbols == t_set):
+                msgs.append(
+                    f'Generalized speed "{speed}" is not a dynamicsymbol.')
+        for aux in u_auxiliary:
+            if not (isinstance(aux, (AppliedUndef, Derivative)) and
+                    aux.free_symbols == t_set):
+                msgs.append(
+                    f'Auxiliary speed "{aux}" is not a dynamicsymbol.')
+    if msgs:
+        raise ValueError('\n'.join(msgs))
+
+
+def _parse_linear_solver(linear_solver):
+    """Helper function to retrieve a specified linear solver."""
+    if callable(linear_solver):
+        return linear_solver
+    return lambda A, b: Matrix.solve(A, b, method=linear_solver)

@@ -1,5 +1,8 @@
+from __future__ import annotations
 from sympy.combinatorics.named_groups import (SymmetricGroup, CyclicGroup,
-DihedralGroup, AlternatingGroup, AbelianGroup)
+                                              DihedralGroup, AlternatingGroup,
+                                              AbelianGroup, RubikGroup)
+from sympy.testing.pytest import raises
 
 
 def test_SymmetricGroup():
@@ -56,9 +59,21 @@ def test_AlternatingGroup():
     assert H.order() == 1
     L = AlternatingGroup(2)
     assert L.order() == 1
+    assert L.degree == 2
+    assert SymmetricGroup(2).index(L) == 2
 
 
 def test_AbelianGroup():
     A = AbelianGroup(3, 3, 3)
     assert A.order() == 27
     assert A.is_abelian is True
+
+    B = AbelianGroup(1)
+    assert B.order() == 1
+    assert B.degree == 1
+    r = B.random()
+    assert r == B.identity
+
+
+def test_RubikGroup():
+    raises(ValueError, lambda: RubikGroup(1))

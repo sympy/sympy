@@ -1,8 +1,27 @@
+from __future__ import annotations
 from sympy.physics.mechanics import (dynamicsymbols, ReferenceFrame, Point,
                                     RigidBody, LagrangesMethod, Particle,
                                     inertia, Lagrangian)
-from sympy import symbols, pi, sin, cos, tan, simplify, Function, \
-        Derivative, Matrix
+from sympy.core.function import (Derivative, Function)
+from sympy.core.numbers import pi
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.trigonometric import (cos, sin, tan)
+from sympy.matrices.dense import Matrix
+from sympy.simplify.simplify import simplify
+from sympy.testing.pytest import raises
+
+
+def test_invalid_coordinates():
+    # Simple pendulum, but use symbol instead of dynamicsymbol
+    l, m, g = symbols('l m g')
+    q = symbols('q')  # Generalized coordinate
+    N, O = ReferenceFrame('N'), Point('O')
+    O.set_vel(N, 0)
+    P = Particle('P', Point('P'), m)
+    P.point.set_pos(O, l * (sin(q) * N.x - cos(q) * N.y))
+    P.potential_energy = m * g * P.point.pos_from(O).dot(N.y)
+    L = Lagrangian(N, P)
+    raises(ValueError, lambda: LagrangesMethod(L, [q], bodies=P))
 
 
 def test_disc_on_an_incline_plane():
@@ -28,7 +47,7 @@ def test_disc_on_an_incline_plane():
     # is created. Finally, we create the disc.
     Do = Point('Do')
     Do.set_vel(N, yd * A.x)
-    I = m * R**2 / 2 * B.z | B.z
+    I = m * R**2/2 * B.z | B.z
     D = RigidBody('D', Do, B, m, (I, Do))
 
     # To construct the Lagrangian, 'L', of the disc, we determine its kinetic
@@ -43,7 +62,7 @@ def test_disc_on_an_incline_plane():
     # supply it the necessary arguments and generate the equations of motion.
     # The'rhs' method solves for the q_double_dots (i.e. the second derivative
     # with respect to time  of the generalized coordinates and the lagrange
-    # multiplers.
+    # multipliers.
     q = [y, theta]
     hol_coneqs = [y - R * theta]
     m = LagrangesMethod(L, q, hol_coneqs=hol_coneqs)
@@ -121,7 +140,7 @@ def test_nonminimal_pendulum():
     assert LM.eom == eom_sol
     # Check multiplier solution
     lam_sol = Matrix([(19.6*q1 + 2*q1d**2 + 2*q2d**2)/(4*q1**2/m + 4*q2**2/m)])
-    assert LM.solve_multipliers(sol_type='Matrix') == lam_sol
+    assert simplify(LM.solve_multipliers(sol_type='Matrix')) == simplify(lam_sol)
 
 
 def test_dub_pen():
@@ -203,7 +222,7 @@ def test_rolling_disc():
     Dmc.v2pt_theory(C, N, R)
 
     # Forming the inertia dyadic.
-    I = inertia(L, m / 4 * r**2, m / 2 * r**2, m / 4 * r**2)
+    I = inertia(L, m/4 * r**2, m/2 * r**2, m/4 * r**2)
     BodyD = RigidBody('BodyD', Dmc, R, m, (I, Dmc))
 
     # Finally we form the equations of motion, using the same steps we did
@@ -216,11 +235,11 @@ def test_rolling_disc():
     q3 = Function('q3')
     l = LagrangesMethod(Lag, q)
     l.form_lagranges_equations()
-    RHS = l.rhs().as_mutable()
+    RHS = l.rhs()
     RHS.simplify()
     t = symbols('t')
 
-    assert tuple(l.mass_matrix[3:6]) == (0, 5*m*r**2/4, 0)
+    assert (l.mass_matrix[3:6] == [0, 5*m*r**2/4, 0])
     assert RHS[4].simplify() == (
         (-8*g*sin(q2(t)) + r*(5*sin(2*q2(t))*Derivative(q1(t), t) +
         12*cos(q2(t))*Derivative(q3(t), t))*Derivative(q1(t), t))/(10*r))

@@ -1,17 +1,19 @@
 """Simple tools for timing functions' execution, when IPython is not available. """
+from __future__ import annotations
 
-from __future__ import print_function, division
 
 import timeit
 import math
+from typing import TypeVar, Callable
 
-from sympy.core.compatibility import range
-
+_CallableT = TypeVar("_CallableT", bound=Callable)
 _scales = [1e0, 1e3, 1e6, 1e9]
-_units = [u's', u'ms', u'\N{GREEK SMALL LETTER MU}s', u'ns']
+_units = ['s', 'ms', '\N{GREEK SMALL LETTER MU}s', 'ns']
 
 
-def timed(func, setup="pass", limit=None):
+def timed(
+    func: Callable[[], object], setup: str = "pass", limit: int | None = None
+) -> tuple[int, float, float, str]:
     """Adaptively measure execution time of a function. """
     timer = timeit.Timer(func, setup=setup)
     repeat, number = 3, 1
@@ -52,10 +54,9 @@ def _print_timestack(stack, level=1):
         _print_timestack(s, level + 1)
 
 
-def timethis(name):
+def timethis(name) -> Callable[[_CallableT], _CallableT]:
     def decorator(func):
-        global _do_timings
-        if not name in _do_timings:
+        if name not in _do_timings:
             return func
 
         def wrapper(*args, **kwargs):

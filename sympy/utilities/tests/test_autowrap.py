@@ -1,21 +1,21 @@
 # Tests that require installed backends go into
 # sympy/test_external/test_autowrap
+from __future__ import annotations
 
 import os
 import tempfile
 import shutil
-import warnings
-import tempfile
+from io import StringIO
+from pathlib import Path
 
 from sympy.core import symbols, Eq
-from sympy.core.compatibility import StringIO
-from sympy.utilities.exceptions import SymPyDeprecationWarning
-from sympy.utilities.pytest import raises
 from sympy.utilities.autowrap import (autowrap, binary_function,
-            CythonCodeWrapper, ufuncify, UfuncifyCodeWrapper, CodeWrapper)
+            CythonCodeWrapper, UfuncifyCodeWrapper, CodeWrapper)
 from sympy.utilities.codegen import (
     CCodeGen, C99CodeGen, CodeGenArgumentListError, make_routine
 )
+from sympy.testing.pytest import raises
+from sympy.testing.tmpfiles import TmpFileManager
 
 
 def get_string(dump_fn, routines, prefix="file", **kwargs):
@@ -37,10 +37,8 @@ def test_cython_wrapper_scalar_function():
     x, y, z = symbols('x,y,z')
     expr = (x + y)*z
     routine = make_routine("test", expr)
-    with warnings.catch_warnings():
-        warnings.filterwarnings('ignore', category=SymPyDeprecationWarning)
-        code_gen = CythonCodeWrapper(CCodeGen())
-        source = get_string(code_gen.dump_pyx, [routine])
+    code_gen = CythonCodeWrapper(CCodeGen())
+    source = get_string(code_gen.dump_pyx, [routine])
 
     expected = (
         "cdef extern from 'file.h':\n"
@@ -53,7 +51,7 @@ def test_cython_wrapper_scalar_function():
 
 
 def test_cython_wrapper_outarg():
-    from sympy import Equality
+    from sympy.core.relational import Equality
     x, y, z = symbols('x,y,z')
     code_gen = CythonCodeWrapper(C99CodeGen())
 
@@ -72,7 +70,7 @@ def test_cython_wrapper_outarg():
 
 
 def test_cython_wrapper_inoutarg():
-    from sympy import Equality
+    from sympy.core.relational import Equality
     x, y, z = symbols('x,y,z')
     code_gen = CythonCodeWrapper(C99CodeGen())
     routine = make_routine("test", Equality(z, x + y + z))
@@ -89,21 +87,17 @@ def test_cython_wrapper_inoutarg():
 
 
 def test_cython_wrapper_compile_flags():
-    from sympy import Equality
+    from sympy.core.relational import Equality
     x, y, z = symbols('x,y,z')
     routine = make_routine("test", Equality(z, x + y))
 
     code_gen = CythonCodeWrapper(CCodeGen())
 
     expected = """\
-try:
-    from setuptools import setup
-    from setuptools import Extension
-except ImportError:
-    from distutils.core import setup
-    from distutils.extension import Extension
+from setuptools import setup
+from setuptools import Extension
 from Cython.Build import cythonize
-cy_opts = {}
+cy_opts = {'compiler_directives': {'language_level': '3'}}
 
 ext_mods = [Extension(
     'wrapper_module_%(num)s', ['wrapper_module_%(num)s.pyx', 'wrapped_code_%(num)s.c'],
@@ -117,11 +111,11 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
 """ % {'num': CodeWrapper._module_counter}
 
     temp_dir = tempfile.mkdtemp()
+    TmpFileManager.tmp_folder(temp_dir)
     setup_file_path = os.path.join(temp_dir, 'setup.py')
 
     code_gen._prepare_files(routine, build_dir=temp_dir)
-    with open(setup_file_path) as f:
-        setup_text = f.read()
+    setup_text = Path(setup_file_path).read_text()
     assert setup_text == expected
 
     code_gen = CythonCodeWrapper(CCodeGen(),
@@ -133,12 +127,8 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
                                  cythonize_options={'compiler_directives': {'boundscheck': False}}
                                  )
     expected = """\
-try:
-    from setuptools import setup
-    from setuptools import Extension
-except ImportError:
-    from distutils.core import setup
-    from distutils.extension import Extension
+from setuptools import setup
+from setuptools import Extension
 from Cython.Build import cythonize
 cy_opts = {'compiler_directives': {'boundscheck': False}}
 
@@ -154,17 +144,12 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
 """ % {'num': CodeWrapper._module_counter}
 
     code_gen._prepare_files(routine, build_dir=temp_dir)
-    with open(setup_file_path) as f:
-        setup_text = f.read()
+    setup_text = Path(setup_file_path).read_text()
     assert setup_text == expected
 
     expected = """\
-try:
-    from setuptools import setup
-    from setuptools import Extension
-except ImportError:
-    from distutils.core import setup
-    from distutils.extension import Extension
+from setuptools import setup
+from setuptools import Extension
 from Cython.Build import cythonize
 cy_opts = {'compiler_directives': {'boundscheck': False}}
 import numpy as np
@@ -182,9 +167,31 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
 
     code_gen._need_numpy = True
     code_gen._prepare_files(routine, build_dir=temp_dir)
-    with open(setup_file_path) as f:
-        setup_text = f.read()
+    setup_text = Path(setup_file_path).read_text()
     assert setup_text == expected
+
+    TmpFileManager.cleanup()
+
+def test_cython_wrapper_unique_dummyvars():
+    from sympy.core.relational import Equality
+    from sympy.core.symbol import Dummy
+    x, y, z = Dummy('x'), Dummy('y'), Dummy('z')
+    x_id, y_id, z_id = [str(d.dummy_index) for d in [x, y, z]]
+    expr = Equality(z, x + y)
+    routine = make_routine("test", expr)
+    code_gen = CythonCodeWrapper(CCodeGen())
+    source = get_string(code_gen.dump_pyx, [routine])
+    expected_template = (
+        "cdef extern from 'file.h':\n"
+        "    void test(double x_{x_id}, double y_{y_id}, double *z_{z_id})\n"
+        "\n"
+        "def test_c(double x_{x_id}, double y_{y_id}):\n"
+        "\n"
+        "    cdef double z_{z_id} = 0\n"
+        "    test(x_{x_id}, y_{y_id}, &z_{z_id})\n"
+        "    return z_{z_id}")
+    expected = expected_template.format(x_id=x_id, y_id=y_id, z_id=z_id)
+    assert source == expected
 
 def test_autowrap_dummy():
     x, y, z = symbols('x y z')
@@ -227,28 +234,30 @@ def test_autowrap_args():
     assert f.args == "y, x, z"
     assert f.returns == "z"
 
-
 def test_autowrap_store_files():
     x, y = symbols('x y')
     tmp = tempfile.mkdtemp()
-    try:
-        f = autowrap(x + y, backend='dummy', tempdir=tmp)
-        assert f() == str(x + y)
-        assert os.access(tmp, os.F_OK)
-    finally:
-        shutil.rmtree(tmp)
+    TmpFileManager.tmp_folder(tmp)
 
+    f = autowrap(x + y, backend='dummy', tempdir=tmp)
+    assert f() == str(x + y)
+    assert os.access(tmp, os.F_OK)
+
+    TmpFileManager.cleanup()
 
 def test_autowrap_store_files_issue_gh12939():
     x, y = symbols('x y')
     tmp = './tmp'
+    saved_cwd = os.getcwd()
+    temp_cwd = tempfile.mkdtemp()
     try:
+        os.chdir(temp_cwd)
         f = autowrap(x + y, backend='dummy', tempdir=tmp)
         assert f() == str(x + y)
         assert os.access(tmp, os.F_OK)
     finally:
-        shutil.rmtree(tmp)
-
+        os.chdir(saved_cwd)
+        shutil.rmtree(temp_cwd)
 
 
 def test_binary_function():
@@ -260,7 +269,6 @@ def test_binary_function():
 def test_ufuncify_source():
     x, y, z = symbols('x,y,z')
     code_wrapper = UfuncifyCodeWrapper(C99CodeGen("ufuncify"))
-    CodeWrapper._module_counter = 0
     routine = make_routine("test", x + y + z)
     source = get_string(code_wrapper.dump_c, [routine])
     expected = """\
@@ -271,11 +279,15 @@ def test_ufuncify_source():
 #include "numpy/halffloat.h"
 #include "file.h"
 
-static PyMethodDef wrapper_module_0Methods[] = {
+static PyMethodDef wrapper_module_%(num)sMethods[] = {
         {NULL, NULL, 0, NULL}
 };
 
+#ifdef NPY_1_19_API_VERSION
+static void test_ufunc(char **args, const npy_intp *dimensions, const npy_intp* steps, void* data)
+#else
 static void test_ufunc(char **args, npy_intp *dimensions, npy_intp* steps, void* data)
+#endif
 {
     npy_intp i;
     npy_intp n = dimensions[0];
@@ -302,17 +314,17 @@ static void *test_data[1] = {NULL};
 #if PY_VERSION_HEX >= 0x03000000
 static struct PyModuleDef moduledef = {
     PyModuleDef_HEAD_INIT,
-    "wrapper_module_0",
+    "wrapper_module_%(num)s",
     NULL,
     -1,
-    wrapper_module_0Methods,
+    wrapper_module_%(num)sMethods,
     NULL,
     NULL,
     NULL,
     NULL
 };
 
-PyMODINIT_FUNC PyInit_wrapper_module_0(void)
+PyMODINIT_FUNC PyInit_wrapper_module_%(num)s(void)
 {
     PyObject *m, *d;
     PyObject *ufunc0;
@@ -324,17 +336,17 @@ PyMODINIT_FUNC PyInit_wrapper_module_0(void)
     import_umath();
     d = PyModule_GetDict(m);
     ufunc0 = PyUFunc_FromFuncAndData(test_funcs, test_data, test_types, 1, 3, 1,
-            PyUFunc_None, "wrapper_module_0", "Created in SymPy with Ufuncify", 0);
+            PyUFunc_None, "wrapper_module_%(num)s", "Created in SymPy with Ufuncify", 0);
     PyDict_SetItemString(d, "test", ufunc0);
     Py_DECREF(ufunc0);
     return m;
 }
 #else
-PyMODINIT_FUNC initwrapper_module_0(void)
+PyMODINIT_FUNC initwrapper_module_%(num)s(void)
 {
     PyObject *m, *d;
     PyObject *ufunc0;
-    m = Py_InitModule("wrapper_module_0", wrapper_module_0Methods);
+    m = Py_InitModule("wrapper_module_%(num)s", wrapper_module_%(num)sMethods);
     if (m == NULL) {
         return;
     }
@@ -342,11 +354,11 @@ PyMODINIT_FUNC initwrapper_module_0(void)
     import_umath();
     d = PyModule_GetDict(m);
     ufunc0 = PyUFunc_FromFuncAndData(test_funcs, test_data, test_types, 1, 3, 1,
-            PyUFunc_None, "wrapper_module_0", "Created in SymPy with Ufuncify", 0);
+            PyUFunc_None, "wrapper_module_%(num)s", "Created in SymPy with Ufuncify", 0);
     PyDict_SetItemString(d, "test", ufunc0);
     Py_DECREF(ufunc0);
 }
-#endif"""
+#endif""" % {'num': CodeWrapper._module_counter}
     assert source == expected
 
 
@@ -355,7 +367,6 @@ def test_ufuncify_source_multioutput():
     var_symbols = (x, y, z)
     expr = x + y**3 + 10*z**2
     code_wrapper = UfuncifyCodeWrapper(C99CodeGen("ufuncify"))
-    CodeWrapper._module_counter = 0
     routines = [make_routine("func{}".format(i), expr.diff(var_symbols[i]), var_symbols) for i in range(len(var_symbols))]
     source = get_string(code_wrapper.dump_c, routines, funcname='multitest')
     expected = """\
@@ -366,11 +377,15 @@ def test_ufuncify_source_multioutput():
 #include "numpy/halffloat.h"
 #include "file.h"
 
-static PyMethodDef wrapper_module_0Methods[] = {
+static PyMethodDef wrapper_module_%(num)sMethods[] = {
         {NULL, NULL, 0, NULL}
 };
 
+#ifdef NPY_1_19_API_VERSION
+static void multitest_ufunc(char **args, const npy_intp *dimensions, const npy_intp* steps, void* data)
+#else
 static void multitest_ufunc(char **args, npy_intp *dimensions, npy_intp* steps, void* data)
+#endif
 {
     npy_intp i;
     npy_intp n = dimensions[0];
@@ -405,17 +420,17 @@ static void *multitest_data[1] = {NULL};
 #if PY_VERSION_HEX >= 0x03000000
 static struct PyModuleDef moduledef = {
     PyModuleDef_HEAD_INIT,
-    "wrapper_module_0",
+    "wrapper_module_%(num)s",
     NULL,
     -1,
-    wrapper_module_0Methods,
+    wrapper_module_%(num)sMethods,
     NULL,
     NULL,
     NULL,
     NULL
 };
 
-PyMODINIT_FUNC PyInit_wrapper_module_0(void)
+PyMODINIT_FUNC PyInit_wrapper_module_%(num)s(void)
 {
     PyObject *m, *d;
     PyObject *ufunc0;
@@ -427,17 +442,17 @@ PyMODINIT_FUNC PyInit_wrapper_module_0(void)
     import_umath();
     d = PyModule_GetDict(m);
     ufunc0 = PyUFunc_FromFuncAndData(multitest_funcs, multitest_data, multitest_types, 1, 3, 3,
-            PyUFunc_None, "wrapper_module_0", "Created in SymPy with Ufuncify", 0);
+            PyUFunc_None, "wrapper_module_%(num)s", "Created in SymPy with Ufuncify", 0);
     PyDict_SetItemString(d, "multitest", ufunc0);
     Py_DECREF(ufunc0);
     return m;
 }
 #else
-PyMODINIT_FUNC initwrapper_module_0(void)
+PyMODINIT_FUNC initwrapper_module_%(num)s(void)
 {
     PyObject *m, *d;
     PyObject *ufunc0;
-    m = Py_InitModule("wrapper_module_0", wrapper_module_0Methods);
+    m = Py_InitModule("wrapper_module_%(num)s", wrapper_module_%(num)sMethods);
     if (m == NULL) {
         return;
     }
@@ -445,9 +460,9 @@ PyMODINIT_FUNC initwrapper_module_0(void)
     import_umath();
     d = PyModule_GetDict(m);
     ufunc0 = PyUFunc_FromFuncAndData(multitest_funcs, multitest_data, multitest_types, 1, 3, 3,
-            PyUFunc_None, "wrapper_module_0", "Created in SymPy with Ufuncify", 0);
+            PyUFunc_None, "wrapper_module_%(num)s", "Created in SymPy with Ufuncify", 0);
     PyDict_SetItemString(d, "multitest", ufunc0);
     Py_DECREF(ufunc0);
 }
-#endif"""
+#endif""" % {'num': CodeWrapper._module_counter}
     assert source == expected

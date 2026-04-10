@@ -1,11 +1,15 @@
+from __future__ import annotations
+from sympy.matrices.exceptions import ShapeError
 from sympy.vector.coordsysrect import CoordSys3D
 from sympy.vector.deloperator import Del
 from sympy.vector.scalar import BaseScalar
-from sympy.vector.vector import Vector, BaseVector
-from sympy.vector.operators import gradient, curl, divergence
-from sympy import diff, integrate, S, simplify
+from sympy.vector.vector import Vector, BaseVector, Dot
+from sympy.vector.operators import gradient, curl, divergence, Gradient
+from sympy.core.function import diff
+from sympy.core.singleton import S
+from sympy.integrals.integrals import integrate
 from sympy.core import sympify
-from sympy.vector.dyadic import Dyadic
+from sympy.vector.dyadic import Dyadic, DyadicAdd
 
 
 def express(expr, system, system2=None, variables=False):
@@ -56,7 +60,7 @@ def express(expr, system, system2=None, variables=False):
 
     """
 
-    if expr == 0 or expr == Vector.zero:
+    if expr in (0, Vector.zero):
         return expr
 
     if not isinstance(system, CoordSys3D):
@@ -68,15 +72,11 @@ def express(expr, system, system2=None, variables=False):
             raise ValueError("system2 should not be provided for \
                                 Vectors")
         # Given expr is a Vector
+        subs_dict = {}
         if variables:
             # If variables attribute is True, substitute
             # the coordinate variables in the Vector
-            system_list = []
-            for x in expr.atoms(BaseScalar, BaseVector):
-                if x.system != system:
-                    system_list.append(x.system)
-            system_list = set(system_list)
-            subs_dict = {}
+            system_list = {x.system for x in expr.atoms(BaseScalar, BaseVector)} - {system}
             for f in system_list:
                 subs_dict.update(f.scalar_map(system))
             expr = expr.subs(subs_dict)
@@ -85,10 +85,11 @@ def express(expr, system, system2=None, variables=False):
         parts = expr.separate()
         for x in parts:
             if x != system:
-                temp = system.rotation_matrix(x) * parts[x].to_matrix(x)
+                temp = system.change_of_basis_matrix_from(x) * parts[x].to_matrix(x)
                 outvec += matrix_to_vector(temp, system)
             else:
                 outvec += parts[x]
+        outvec = outvec.subs(subs_dict)
         return outvec
 
     elif isinstance(expr, Dyadic):
@@ -112,9 +113,9 @@ def express(expr, system, system2=None, variables=False):
                                 Vectors")
         if variables:
             # Given expr is a scalar field
-            system_set = set([])
+            system_set = set()
             expr = sympify(expr)
-            # Subsitute all the coordinate variables
+            # Substitute all the coordinate variables
             for x in expr.atoms(BaseScalar):
                 if x.system != system:
                     system_set.add(x.system)
@@ -126,9 +127,34 @@ def express(expr, system, system2=None, variables=False):
 
 
 def directional_derivative(field, direction_vector):
-    """
+    r"""
     Returns the directional derivative of a scalar or vector field computed
-    along a given vector in coordinate system which parameters are expressed.
+    along a given vector in a coordinate system.
+
+    Note that there are two definitions of directional derivative for a
+    differentiable scalar function $f$. Let $\mathbf{\vec{v}}$ be an arbitrary
+    direction vector, and $\mathbf{\hat{v}}$ be the normalized direction
+    vector. Some authors define the directional derivative as:
+
+    $$\nabla_{\mathbf{\vec{v}}} f(\mathbf{x}) = \mathbf{\hat{v}} \cdot \nabla f(\mathbf{x})$$
+
+    Other authors define it as:
+
+    $$\nabla_{\vec{v}} f(\mathbf{x}) = \vec{v} \cdot \nabla f(\mathbf{x})$$
+
+    The two definitions differs by the magnitude of the direction vector.
+    This function does not normalize direction_vector. If the user wants
+    to compute the directional derivative according to the first definition,
+    it is the user's responsibility to normalize the direction vector before
+    giving it to this function.
+
+    The directional derivative of a vector field $\mathbf{\vec{f}}(\mathbf{x})$
+    along the vector $\mathbf{\vec{v}}$ is:
+
+    $$\nabla_{\mathbf{\vec{v}}} f(\mathbf{x}) = \mathbf{\vec{v}} \cdot \nabla \mathbf{\vec{f}}(\mathbf{x})$$
+
+    This term frequently appears in continuum mechanics's partial differential
+    equations, in particular the advection equation.
 
     Parameters
     ==========
@@ -139,39 +165,54 @@ def directional_derivative(field, direction_vector):
     direction_vector : Vector
         The vector to calculated directional derivative along them.
 
-
     Examples
     ========
 
+    >>> from sympy import Function
     >>> from sympy.vector import CoordSys3D, directional_derivative
     >>> R = CoordSys3D('R')
+
+    Directional derivative of a scalar field with an arbitrary direction
+    vector:
+
     >>> f1 = R.x*R.y*R.z
     >>> v1 = 3*R.i + 4*R.j + R.k
     >>> directional_derivative(f1, v1)
     R.x*R.y + 4*R.x*R.z + 3*R.y*R.z
-    >>> f2 = 5*R.x**2*R.z
-    >>> directional_derivative(f2, v1)
-    5*R.x**2 + 30*R.x*R.z
+
+    Directional derivative of a scalar field with a unit vector:
+
+    >>> directional_derivative(f1, v1.normalize())
+    sqrt(26)*R.x*R.y/26 + 2*sqrt(26)*R.x*R.z/13 + 3*sqrt(26)*R.y*R.z/26
+
+    Directional derivate of a vector field in a cylindrical coordinate system:
+
+    >>> C = CoordSys3D("C", transformation="cylindrical")
+    >>> r, theta, z = C.base_scalars()
+    >>> e_r, e_theta, e_z = C.base_vectors()
+    >>> u, v, w = [Function(s)(r, theta, z) for s in ["u", "v", "w"]]
+    >>> vec = u * e_r + v * e_theta + w * e_z
+    >>> direction = e_theta
+    >>> directional_derivative(vec, direction)  # doctest: +NORMALIZE_WHITESPACE
+    (-v(C.r, C.theta, C.z)/C.r + Derivative(u(C.r, C.theta, C.z), C.theta)/C.r)*C.i
+    + (u(C.r, C.theta, C.z)/C.r + Derivative(v(C.r, C.theta, C.z), C.theta)/C.r)*C.j
+    + (Derivative(w(C.r, C.theta, C.z), C.theta)/C.r)*C.k
 
     """
-    from sympy.vector.operators import _get_coord_sys_from_expr
-    coord_sys = _get_coord_sys_from_expr(field)
-    if len(coord_sys) > 0:
-        # TODO: This gets a random coordinate system in case of multiple ones:
-        coord_sys = next(iter(coord_sys))
-        field = express(field, coord_sys, variables=True)
-        i, j, k = coord_sys.base_vectors()
-        x, y, z = coord_sys.base_scalars()
-        out = Vector.dot(direction_vector, i) * diff(field, x)
-        out += Vector.dot(direction_vector, j) * diff(field, y)
-        out += Vector.dot(direction_vector, k) * diff(field, z)
-        if out == 0 and isinstance(field, Vector):
-            out = Vector.zero
-        return out
-    elif isinstance(field, Vector):
-        return Vector.zero
-    else:
-        return S(0)
+    from sympy.vector.operators import _get_coord_systems
+    coord_sys = _get_coord_systems(field)
+    if len(coord_sys) == 0:
+        if isinstance(field, Vector):
+            return Vector.zero
+        return S.Zero
+
+    coord_sys = next(iter(coord_sys))
+    field = express(field, coord_sys, variables=True)
+    grad = gradient(field)
+
+    if isinstance(grad, Gradient):
+        return Dot(direction_vector, grad)
+    return direction_vector & grad
 
 
 def laplacian(expr):
@@ -198,6 +239,7 @@ def laplacian(expr):
     2*R.i + 6*R.y*R.j + 12*R.z**2*R.k
 
     """
+
     delop = Del()
     if expr.is_Vector:
         return (gradient(divergence(expr)) - curl(curl(expr))).doit()
@@ -267,7 +309,7 @@ def is_solenoidal(field):
         raise TypeError("field should be a Vector")
     if field == Vector.zero:
         return True
-    return divergence(field).simplify() == S(0)
+    return divergence(field).simplify() is S.Zero
 
 
 def scalar_potential(field, coord_sys):
@@ -304,9 +346,9 @@ def scalar_potential(field, coord_sys):
     if not is_conservative(field):
         raise ValueError("Field is not conservative")
     if field == Vector.zero:
-        return S(0)
+        return S.Zero
     # Express the field exntirely in coord_sys
-    # Subsitute coordinate variables also
+    # Substitute coordinate variables also
     if not isinstance(coord_sys, CoordSys3D):
         raise TypeError("coord_sys must be a CoordSys3D")
     field = express(field, coord_sys, variables=True)
@@ -353,7 +395,7 @@ def scalar_potential_difference(field, coord_sys, point1, point2):
     Examples
     ========
 
-    >>> from sympy.vector import CoordSys3D, Point
+    >>> from sympy.vector import CoordSys3D
     >>> from sympy.vector import scalar_potential_difference
     >>> R = CoordSys3D('R')
     >>> P = R.origin.locate_new('P', R.x*R.i + R.y*R.j + R.z*R.k)
@@ -429,6 +471,46 @@ def matrix_to_vector(matrix, system):
     return outvec
 
 
+def matrix_to_dyadic(matrix, system):
+    """
+    Converts a 3 x 3 matrix to a Dyadic instance.
+
+    Parameters
+    ==========
+
+    matrix : Matrix, Dimensions: (3, 3)
+        The matrix to be converted to a dyadic
+
+    system : CoordSys3D
+        The coordinate system the dyadic is to be defined in
+
+    Examples
+    ========
+
+    >>> from sympy import Matrix
+    >>> from sympy.vector import CoordSys3D, matrix_to_dyadic
+    >>> C = CoordSys3D('C')
+    >>> m = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+    >>> d = matrix_to_dyadic(m, C)
+    >>> d     # doctest: +NORMALIZE_WHITESPACE
+    (C.i|C.i) + 2*(C.i|C.j) + 3*(C.i|C.k) + 4*(C.j|C.i) + 5*(C.j|C.j)
+    + 6*(C.j|C.k) + 7*(C.k|C.i) + 8*(C.k|C.j) + 9*(C.k|C.k)
+    >>> d.to_matrix(C) == m
+    True
+
+    """
+    n, m = matrix.shape
+    if (n != 3) or (m != 3):
+        raise ShapeError("A 3 x 3 matrix is required.")
+
+    args = []
+    vects = system.base_vectors()
+    for i in range(3):
+        for j in range(3):
+            args.append(matrix[i, j] * (vects[i] | vects[j]))
+    return DyadicAdd(*args)
+
+
 def _path(from_object, to_object):
     """
     Calculates the 'path' of objects starting from 'from_object'
@@ -455,14 +537,11 @@ def _path(from_object, to_object):
         from_path.append(obj)
         obj = obj._parent
     index = len(from_path)
-    i = other_path.index(obj)
-    while i >= 0:
-        from_path.append(other_path[i])
-        i -= 1
+    from_path.extend(other_path[other_path.index(obj)::-1])
     return index, from_path
 
 
-def orthogonalize(*vlist, **kwargs):
+def orthogonalize(*vlist, orthonormal=False):
     """
     Takes a sequence of independent vectors and orthogonalizes them
     using the Gram - Schmidt process. Returns a list of
@@ -474,7 +553,7 @@ def orthogonalize(*vlist, **kwargs):
     vlist : sequence of independent vectors to be made orthogonal.
 
     orthonormal : Optional parameter
-                  Set to True if the the vectors returned should be
+                  Set to True if the vectors returned should be
                   orthonormal.
                   Default: False
 
@@ -482,7 +561,6 @@ def orthogonalize(*vlist, **kwargs):
     ========
 
     >>> from sympy.vector.coordsysrect import CoordSys3D
-    >>> from sympy.vector.vector import Vector, BaseVector
     >>> from sympy.vector.functions import orthogonalize
     >>> C = CoordSys3D('C')
     >>> i, j, k = C.base_vectors()
@@ -497,7 +575,6 @@ def orthogonalize(*vlist, **kwargs):
     .. [1] https://en.wikipedia.org/wiki/Gram-Schmidt_process
 
     """
-    orthonormal = kwargs.get('orthonormal', False)
 
     if not all(isinstance(vec, Vector) for vec in vlist):
         raise TypeError('Each element must be of Type Vector')
@@ -509,7 +586,7 @@ def orthogonalize(*vlist, **kwargs):
         # TODO : The following line introduces a performance issue
         # and needs to be changed once a good solution for issue #10279 is
         # found.
-        if simplify(term).equals(Vector.zero):
+        if term.equals(Vector.zero):
             raise ValueError("Vector set not linearly independent")
         ortho_vlist.append(term)
 

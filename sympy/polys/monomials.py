@@ -1,41 +1,55 @@
 """Tools and arithmetics for monomials of distributed polynomials. """
 
-from __future__ import print_function, division
+from __future__ import annotations
+
 
 from itertools import combinations_with_replacement, product
 from textwrap import dedent
 
+from sympy.core.cache import cacheit
 from sympy.core import Mul, S, Tuple, sympify
-from sympy.core.compatibility import exec_, iterable, range
-from sympy.polys.polyutils import PicklableWithSlots, dict_from_expr
 from sympy.polys.polyerrors import ExactQuotientFailed
+from sympy.polys.polyutils import PicklableWithSlots, dict_from_expr
 from sympy.utilities import public
+from sympy.utilities.iterables import is_sequence, iterable
+
+
+monom = tuple[int, ...]
+
 
 @public
-def itermonomials(variables, degree):
+def itermonomials(variables, max_degrees, min_degrees=None):
     r"""
-    Generate a set of monomials of the given total degree or less.
+    ``max_degrees`` and ``min_degrees`` are either both integers or both lists.
+    Unless otherwise specified, ``min_degrees`` is either ``0`` or
+    ``[0, ..., 0]``.
 
-    Given a set of variables `V` and a total degree `N` generate
-    a set of monomials of degree at most `N`. The total number of
-    monomials in commutative variables is huge and is given by the
-    following formula:
+    A generator of all monomials ``monom`` is returned, such that
+    either
+    ``min_degree <= total_degree(monom) <= max_degree``,
+    or
+    ``min_degrees[i] <= degree_list(monom)[i] <= max_degrees[i]``,
+    for all ``i``.
 
-    .. math::
+    Case I. ``max_degrees`` and ``min_degrees`` are both integers
+    =============================================================
 
-        \frac{(\#V + N)!}{\#V! N!}
+    Given a set of variables $V$ and a min_degree $N$ and a max_degree $M$
+    generate a set of monomials of degree less than or equal to $N$ and greater
+    than or equal to $M$. The total number of monomials in commutative
+    variables is huge and is given by the following formula if $M = 0$:
+
+        .. math::
+            \frac{(\#V + N)!}{\#V! N!}
 
     For example if we would like to generate a dense polynomial of
-    a total degree `N = 50` in 5 variables, assuming that exponents
-    and all of coefficients are 32-bit long and stored in an array we
-    would need almost 80 GiB of memory! Fortunately most polynomials,
-    that we will encounter, are sparse.
+    a total degree $N = 50$ and $M = 0$, which is the worst case, in 5
+    variables, assuming that exponents and all of coefficients are 32-bit long
+    and stored in an array we would need almost 80 GiB of memory! Fortunately
+    most polynomials, that we will encounter, are sparse.
 
-    Examples
-    ========
-
-    Consider monomials in commutative variables `x` and `y`
-    and non-commutative variables `a` and `b`::
+    Consider monomials in commutative variables $x$ and $y$
+    and non-commutative variables $a$ and $b$::
 
         >>> from sympy import symbols
         >>> from sympy.polys.monomials import itermonomials
@@ -49,21 +63,87 @@ def itermonomials(variables, degree):
         [1, x, y, x**2, x*y, y**2, x**3, x**2*y, x*y**2, y**3]
 
         >>> a, b = symbols('a, b', commutative=False)
-        >>> itermonomials([a, b, x], 2)
+        >>> set(itermonomials([a, b, x], 2))
         {1, a, a**2, b, b**2, x, x**2, a*b, b*a, x*a, x*b}
 
+        >>> sorted(itermonomials([x, y], 2, 1), key=monomial_key('grlex', [y, x]))
+        [x, y, x**2, x*y, y**2]
 
+    Case II. ``max_degrees`` and ``min_degrees`` are both lists
+    ===========================================================
+
+    If ``max_degrees = [d_1, ..., d_n]`` and
+    ``min_degrees = [e_1, ..., e_n]``, the number of monomials generated
+    is:
+
+    .. math::
+        (d_1 - e_1 + 1) (d_2 - e_2 + 1) \cdots (d_n - e_n + 1)
+
+    Let us generate all monomials ``monom`` in variables $x$ and $y$
+    such that ``[1, 2][i] <= degree_list(monom)[i] <= [2, 4][i]``,
+    ``i = 0, 1`` ::
+
+        >>> from sympy import symbols
+        >>> from sympy.polys.monomials import itermonomials
+        >>> from sympy.polys.orderings import monomial_key
+        >>> from sympy.abc import x, y
+
+        >>> sorted(itermonomials([x, y], [2, 4], [1, 2]), reverse=True, key=monomial_key('lex', [x, y]))
+        [x**2*y**4, x**2*y**3, x**2*y**2, x*y**4, x*y**3, x*y**2]
     """
-    if degree < 0:
-        return set()
-    if not variables or degree == 0:
-        return {S(1)}
-    # Force to list in case of passed tuple or other incompatible collection
-    variables = list(variables) + [S(1)]
-    if all(variable.is_commutative for variable in variables):
-        return {Mul(*item) for item in combinations_with_replacement(variables, degree)}
+    if is_sequence(max_degrees):
+        n = len(variables)
+        if len(max_degrees) != n:
+            raise ValueError('Argument sizes do not match')
+        if min_degrees is None:
+            min_degrees = [0]*n
+        elif not is_sequence(min_degrees):
+            raise ValueError('min_degrees is not a list')
+        else:
+            if len(min_degrees) != n:
+                raise ValueError('Argument sizes do not match')
+            if any(i < 0 for i in min_degrees):
+                raise ValueError("min_degrees cannot contain negative numbers")
+        if any(min_degrees[i] > max_degrees[i] for i in range(n)):
+            raise ValueError('min_degrees[i] must be <= max_degrees[i] for all i')
+        power_lists = []
+        for var, min_d, max_d in zip(variables, min_degrees, max_degrees):
+            power_lists.append([var**i for i in range(min_d, max_d + 1)])
+        for powers in product(*power_lists):
+            yield Mul(*powers)
     else:
-        return {Mul(*item) for item in product(variables, repeat=degree)}
+        max_degree = max_degrees
+        if max_degree < 0:
+            raise ValueError("max_degrees cannot be negative")
+        if min_degrees is None:
+            min_degree = 0
+        else:
+            if min_degrees < 0:
+                raise ValueError("min_degrees cannot be negative")
+            min_degree = min_degrees
+        if min_degree > max_degree:
+            return
+        if not variables or max_degree == 0:
+            yield S.One
+            return
+        # Force to list in case of passed tuple or other incompatible collection
+        variables = list(variables) + [S.One]
+        if all(variable.is_commutative for variable in variables):
+            it = combinations_with_replacement(variables, max_degree)
+        else:
+            it = product(variables, repeat=max_degree)
+        monomials_set = set()
+        d = max_degree - min_degree
+        for item in it:
+            count = 0
+            for variable in item:
+                if variable == 1:
+                    count += 1
+                    if d < count:
+                        break
+            else:
+                monomials_set.add(Mul(*item))
+        yield from monomials_set
 
 def monomial_count(V, N):
     r"""
@@ -87,7 +167,7 @@ def monomial_count(V, N):
     >>> monomial_count(2, 2)
     6
 
-    >>> M = itermonomials([x, y], 2)
+    >>> M = list(itermonomials([x, y], 2))
 
     >>> sorted(M, key=monomial_key('grlex', [y, x]))
     [1, x, y, x**2, x*y, y**2]
@@ -95,12 +175,15 @@ def monomial_count(V, N):
     6
 
     """
-    from sympy import factorial
+    from sympy.functions.combinatorial.factorials import factorial
     return factorial(V + N) / factorial(V) / factorial(N)
 
 def monomial_mul(A, B):
     """
     Multiplication of tuples representing monomials.
+
+    Examples
+    ========
 
     Lets multiply `x**3*y**4*z` with `x*y**2`::
 
@@ -114,9 +197,12 @@ def monomial_mul(A, B):
     """
     return tuple([ a + b for a, b in zip(A, B) ])
 
-def monomial_div(A, B):
+def monomial_div(A: monom, B: monom) -> monom | None:
     """
     Division of tuples representing monomials.
+
+    Examples
+    ========
 
     Lets divide `x**3*y**4*z` by `x*y**2`::
 
@@ -140,9 +226,12 @@ def monomial_div(A, B):
     else:
         return None
 
-def monomial_ldiv(A, B):
+def monomial_ldiv(A: monom, B: monom) -> monom:
     """
     Division of tuples representing monomials.
+
+    Examples
+    ========
 
     Lets divide `x**3*y**4*z` by `x*y**2`::
 
@@ -169,6 +258,9 @@ def monomial_gcd(A, B):
     """
     Greatest common divisor of tuples representing monomials.
 
+    Examples
+    ========
+
     Lets compute GCD of `x*y**4*z` and `x**3*y**2`::
 
         >>> from sympy.polys.monomials import monomial_gcd
@@ -184,6 +276,9 @@ def monomial_gcd(A, B):
 def monomial_lcm(A, B):
     """
     Least common multiple of tuples representing monomials.
+
+    Examples
+    ========
 
     Lets compute LCM of `x*y**4*z` and `x**3*y**2`::
 
@@ -201,6 +296,9 @@ def monomial_divides(A, B):
     """
     Does there exist a monomial X such that XA == B?
 
+    Examples
+    ========
+
     >>> from sympy.polys.monomials import monomial_divides
     >>> monomial_divides((1, 2), (3, 4))
     True
@@ -212,6 +310,9 @@ def monomial_divides(A, B):
 def monomial_max(*monoms):
     """
     Returns maximal degree for each variable in a set of monomials.
+
+    Examples
+    ========
 
     Consider monomials `x**3*y**4*z**5`, `y**5*z` and `x**6*y**3*z**9`.
     We wish to find out what is the maximal degree for each of `x`, `y`
@@ -231,9 +332,12 @@ def monomial_max(*monoms):
 
     return tuple(M)
 
-def monomial_min(*monoms):
+def monomial_min(*monoms: monom) -> monom:
     """
     Returns minimal degree for each variable in a set of monomials.
+
+    Examples
+    ========
 
     Consider monomials `x**3*y**4*z**5`, `y**5*z` and `x**6*y**3*z**9`.
     We wish to find out what is the minimal degree for each of `x`, `y`
@@ -257,7 +361,10 @@ def monomial_deg(M):
     """
     Returns the total degree of a monomial.
 
-    For example, the total degree of `xy^2` is 3:
+    Examples
+    ========
+
+    The total degree of `xy^2` is 3:
 
     >>> from sympy.polys.monomials import monomial_deg
     >>> monomial_deg((1, 2))
@@ -283,20 +390,27 @@ def term_div(a, b, domain):
         else:
             return None
 
-class MonomialOps(object):
+class MonomialOps:
     """Code generator of fast monomial arithmetic functions. """
 
-    def __init__(self, ngens):
-        self.ngens = ngens
+    @cacheit
+    def __new__(cls, ngens):
+        obj = super().__new__(cls)
+        obj.ngens = ngens
+        return obj
+
+    def __getnewargs__(self):
+        return (self.ngens,)
 
     def _build(self, code, name):
         ns = {}
-        exec_(code, ns)
+        exec(code, ns)
         return ns[name]
 
     def _vars(self, name):
         return [ "%s%s" % (name, i) for i in range(self.ngens) ]
 
+    @cacheit
     def mul(self):
         name = "monomial_mul"
         template = dedent("""\
@@ -308,9 +422,10 @@ class MonomialOps(object):
         A = self._vars("a")
         B = self._vars("b")
         AB = [ "%s + %s" % (a, b) for a, b in zip(A, B) ]
-        code = template % dict(name=name, A=", ".join(A), B=", ".join(B), AB=", ".join(AB))
+        code = template % {"name": name, "A": ", ".join(A), "B": ", ".join(B), "AB": ", ".join(AB)}
         return self._build(code, name)
 
+    @cacheit
     def pow(self):
         name = "monomial_pow"
         template = dedent("""\
@@ -320,9 +435,10 @@ class MonomialOps(object):
         """)
         A = self._vars("a")
         Ak = [ "%s*k" % a for a in A ]
-        code = template % dict(name=name, A=", ".join(A), Ak=", ".join(Ak))
+        code = template % {"name": name, "A": ", ".join(A), "Ak": ", ".join(Ak)}
         return self._build(code, name)
 
+    @cacheit
     def mulpow(self):
         name = "monomial_mulpow"
         template = dedent("""\
@@ -334,9 +450,10 @@ class MonomialOps(object):
         A = self._vars("a")
         B = self._vars("b")
         ABk = [ "%s + %s*k" % (a, b) for a, b in zip(A, B) ]
-        code = template % dict(name=name, A=", ".join(A), B=", ".join(B), ABk=", ".join(ABk))
+        code = template % {"name": name, "A": ", ".join(A), "B": ", ".join(B), "ABk": ", ".join(ABk)}
         return self._build(code, name)
 
+    @cacheit
     def ldiv(self):
         name = "monomial_ldiv"
         template = dedent("""\
@@ -348,9 +465,10 @@ class MonomialOps(object):
         A = self._vars("a")
         B = self._vars("b")
         AB = [ "%s - %s" % (a, b) for a, b in zip(A, B) ]
-        code = template % dict(name=name, A=", ".join(A), B=", ".join(B), AB=", ".join(AB))
+        code = template % {"name": name, "A": ", ".join(A), "B": ", ".join(B), "AB": ", ".join(AB)}
         return self._build(code, name)
 
+    @cacheit
     def div(self):
         name = "monomial_div"
         template = dedent("""\
@@ -362,11 +480,12 @@ class MonomialOps(object):
         """)
         A = self._vars("a")
         B = self._vars("b")
-        RAB = [ "r%(i)s = a%(i)s - b%(i)s\n    if r%(i)s < 0: return None" % dict(i=i) for i in range(self.ngens) ]
+        RAB = [ "r%(i)s = a%(i)s - b%(i)s\n    if r%(i)s < 0: return None" % {"i": i} for i in range(self.ngens) ]
         R = self._vars("r")
-        code = template % dict(name=name, A=", ".join(A), B=", ".join(B), RAB="\n    ".join(RAB), R=", ".join(R))
+        code = template % {"name": name, "A": ", ".join(A), "B": ", ".join(B), "RAB": "\n    ".join(RAB), "R": ", ".join(R)}
         return self._build(code, name)
 
+    @cacheit
     def lcm(self):
         name = "monomial_lcm"
         template = dedent("""\
@@ -378,9 +497,10 @@ class MonomialOps(object):
         A = self._vars("a")
         B = self._vars("b")
         AB = [ "%s if %s >= %s else %s" % (a, a, b, b) for a, b in zip(A, B) ]
-        code = template % dict(name=name, A=", ".join(A), B=", ".join(B), AB=", ".join(AB))
+        code = template % {"name": name, "A": ", ".join(A), "B": ", ".join(B), "AB": ", ".join(AB)}
         return self._build(code, name)
 
+    @cacheit
     def gcd(self):
         name = "monomial_gcd"
         template = dedent("""\
@@ -392,14 +512,14 @@ class MonomialOps(object):
         A = self._vars("a")
         B = self._vars("b")
         AB = [ "%s if %s <= %s else %s" % (a, a, b, b) for a, b in zip(A, B) ]
-        code = template % dict(name=name, A=", ".join(A), B=", ".join(B), AB=", ".join(AB))
+        code = template % {"name": name, "A": ", ".join(A), "B": ", ".join(B), "AB": ", ".join(AB)}
         return self._build(code, name)
 
 @public
 class Monomial(PicklableWithSlots):
     """Class representing a monomial, i.e. a product of powers. """
 
-    __slots__ = ['exponents', 'gens']
+    __slots__ = ('exponents', 'gens')
 
     def __init__(self, monom, gens=None):
         if not iterable(monom):
@@ -407,7 +527,7 @@ class Monomial(PicklableWithSlots):
             if len(rep) == 1 and list(rep.values())[0] == 1:
                 monom = list(rep.keys())[0]
             else:
-                raise ValueError("Expected a monomial got %s" % monom)
+                raise ValueError("Expected a monomial got {}".format(monom))
 
         self.exponents = tuple(map(int, monom))
         self.gens = gens
@@ -439,7 +559,7 @@ class Monomial(PicklableWithSlots):
 
         if not gens:
             raise ValueError(
-                "can't convert %s to an expression without generators" % self)
+                "Cannot convert %s to an expression without generators" % self)
 
         return Mul(*[ gen**exp for gen, exp in zip(gens, self.exponents) ])
 
@@ -462,17 +582,17 @@ class Monomial(PicklableWithSlots):
         elif isinstance(other, (tuple, Tuple)):
             exponents = other
         else:
-            return NotImplementedError
+            raise NotImplementedError
 
         return self.rebuild(monomial_mul(self.exponents, exponents))
 
-    def __div__(self, other):
+    def __truediv__(self, other):
         if isinstance(other, Monomial):
             exponents = other.exponents
         elif isinstance(other, (tuple, Tuple)):
             exponents = other
         else:
-            return NotImplementedError
+            raise NotImplementedError
 
         result = monomial_div(self.exponents, exponents)
 
@@ -481,22 +601,13 @@ class Monomial(PicklableWithSlots):
         else:
             raise ExactQuotientFailed(self, Monomial(other))
 
-    __floordiv__ = __truediv__ = __div__
+    __floordiv__ = __truediv__
 
     def __pow__(self, other):
         n = int(other)
-
-        if not n:
-            return self.rebuild([0]*len(self))
-        elif n > 0:
-            exponents = self.exponents
-
-            for i in range(1, n):
-                exponents = monomial_mul(exponents, self.exponents)
-
-            return self.rebuild(exponents)
-        else:
+        if n < 0:
             raise ValueError("a non-negative integer expected, got %s" % other)
+        return self.rebuild(monomial_pow(self.exponents, n))
 
     def gcd(self, other):
         """Greatest common divisor of monomials. """

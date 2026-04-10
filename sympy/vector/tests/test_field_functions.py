@@ -1,23 +1,59 @@
-from sympy.core.function import Derivative
+from __future__ import annotations
+from sympy.core.function import Derivative, Function, diff
+from sympy.matrices import Matrix
+from sympy.vector.dyadic import Dyadic
 from sympy.vector.vector import Vector
 from sympy.vector.coordsysrect import CoordSys3D
 from sympy.simplify import simplify
 from sympy.core.symbol import symbols
 from sympy.core import S
-from sympy import sin, cos
+from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.vector.vector import Dot
 from sympy.vector.operators import curl, divergence, gradient, Gradient, Divergence, Cross
 from sympy.vector.deloperator import Del
-from sympy.vector.functions import (is_conservative, is_solenoidal,
-                                    scalar_potential, directional_derivative,
-                                    laplacian, scalar_potential_difference)
-from sympy.utilities.pytest import raises
+from sympy.vector.functions import (
+        is_conservative, is_solenoidal,
+        scalar_potential, directional_derivative,
+        laplacian, scalar_potential_difference,
+        matrix_to_dyadic)
+from sympy.testing.pytest import raises
+import functools
 
 C = CoordSys3D('C')
 i, j, k = C.base_vectors()
 x, y, z = C.base_scalars()
 delop = Del()
 a, b, c, q = symbols('a b c q')
+
+
+@functools.cache
+def _setup_cartesian_system():
+    C = CoordSys3D("C")
+    x, y, z = C.base_scalars()
+    i, j, k = C.base_vectors()
+    u, v, w = [Function(s)(x, y, z) for s in ["u", "v", "w"]]
+    vec = u * i + v * j + w * k
+    return C, x, y, z, i, j, k, u, v, w, vec
+
+
+@functools.cache
+def _setup_cylindrical_system():
+    C = CoordSys3D("C", transformation="cylindrical")
+    r, θ, z = C.base_scalars()
+    e_r, e_θ, e_z = C.base_vectors()
+    u, v, w = [Function(s)(r, θ, z) for s in ["u", "v", "w"]]
+    vec = u * e_r + v * e_θ + w * e_z
+    return C, r, θ, z, e_r, e_θ, e_z, u, v, w, vec
+
+
+@functools.cache
+def _setup_spherical_system():
+    S = CoordSys3D("S", transformation="spherical")
+    r, θ, 𐌘 = S.base_scalars()
+    e_r, e_θ, e_𐌘 = S.base_vectors()
+    u, v, w = [Function(s)(r, θ, 𐌘) for s in ["u", "v", "w"]]
+    vec = u * e_r + v * e_θ + w * e_𐌘
+    return S, r, θ, 𐌘, e_r, e_θ, e_𐌘, u, v, w, vec
 
 
 def test_del_operator():
@@ -43,10 +79,10 @@ def test_del_operator():
             curl(2*x**2*j))
 
     #Tests for divergence
-    assert delop & Vector.zero == S(0) == divergence(Vector.zero)
-    assert (delop & Vector.zero).doit() == S(0)
+    assert delop & Vector.zero is S.Zero == divergence(Vector.zero)
+    assert (delop & Vector.zero).doit() is S.Zero
     assert delop.dot(Vector.zero) == delop & Vector.zero
-    assert (delop & i).doit() == S(0)
+    assert (delop & i).doit() is S.Zero
     assert (delop & x**2*i).doit() == 2*x == divergence(x**2*i)
     assert (delop.dot(v, doit=True) == x*y + y*z + z*x ==
             divergence(v))
@@ -64,7 +100,7 @@ def test_del_operator():
     assert (delop.gradient(0, doit=True) == Vector.zero ==
             gradient(0))
     assert delop.gradient(0) == delop(0)
-    assert (delop(S(0))).doit() == Vector.zero
+    assert (delop(S.Zero)).doit() == Vector.zero
     assert (delop(x) == (Derivative(C.x, C.x))*C.i +
             (Derivative(C.x, C.y))*C.j + (Derivative(C.x, C.z))*C.k)
     assert (delop(x)).doit() == i == gradient(x)
@@ -81,10 +117,10 @@ def test_del_operator():
             -a*sin(y)/x**2 * i + a*cos(y)/x * j)
 
     #Tests for directional derivative
-    assert (Vector.zero & delop)(a) == S(0)
-    assert ((Vector.zero & delop)(a)).doit() == S(0)
+    assert (Vector.zero & delop)(a) is S.Zero
+    assert ((Vector.zero & delop)(a)).doit() is S.Zero
     assert ((v & delop)(Vector.zero)).doit() == Vector.zero
-    assert ((v & delop)(S(0))).doit() == S(0)
+    assert ((v & delop)(S.Zero)).doit() is S.Zero
     assert ((i & delop)(x)).doit() == 1
     assert ((j & delop)(y)).doit() == 1
     assert ((k & delop)(z)).doit() == 1
@@ -100,7 +136,7 @@ def test_del_operator():
     assert ((v & delop)(Vector.zero)).doit() == Vector.zero
 
     # Tests for laplacian on scalar fields
-    assert laplacian(x*y*z) == S.Zero
+    assert laplacian(x*y*z) is S.Zero
     assert laplacian(x**2) == S(2)
     assert laplacian(x**2*y**2*z**2) == \
                     2*y**2*z**2 + 2*x**2*z**2 + 2*x**2*y**2
@@ -115,7 +151,6 @@ def test_del_operator():
                             2*x*z*i + 2*x*z*j + 2*x*z*k
 
 
-
 def test_product_rules():
     """
     Tests the six product rules defined with respect to the Del
@@ -124,7 +159,7 @@ def test_product_rules():
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Del
+    .. [1] https://en.wikipedia.org/wiki/Del
 
     """
 
@@ -162,12 +197,12 @@ def test_product_rules():
 
     # Sixth product rule
     lhs = (delop ^ (u ^ v)).doit()
-    rhs = ((u * (delop & v) - v * (delop & u) +
-           (v & delop)(u) - (u & delop)(v))).doit()
+    rhs = (u * (delop & v) - v * (delop & u) +
+           (v & delop)(u) - (u & delop)(v)).doit()
     assert simplify(lhs) == simplify(rhs)
 
 
-P = C.orient_new_axis('P', q, C.k)
+P = C.orient_new_axis('P', q, C.k)  # type: ignore
 scalar_field = 2*x**2*y*z
 grad_field = gradient(scalar_field)
 vector_field = y**2*i + 3*x*j + 5*y*z*k
@@ -205,14 +240,56 @@ def test_solenoidal():
 def test_directional_derivative():
     assert directional_derivative(C.x*C.y*C.z, 3*C.i + 4*C.j + C.k) == C.x*C.y + 4*C.x*C.z + 3*C.y*C.z
     assert directional_derivative(5*C.x**2*C.z, 3*C.i + 4*C.j + C.k) == 5*C.x**2 + 30*C.x*C.z
-    assert directional_derivative(5*C.x**2*C.z, 4*C.j) == S.Zero
+    assert directional_derivative(5*C.x**2*C.z, 4*C.j) is S.Zero
 
     D = CoordSys3D("D", "spherical", variable_names=["r", "theta", "phi"],
                    vector_names=["e_r", "e_theta", "e_phi"])
     r, theta, phi = D.base_scalars()
     e_r, e_theta, e_phi = D.base_vectors()
     assert directional_derivative(r**2*e_r, e_r) == 2*r*e_r
-    assert directional_derivative(5*r**2*phi, 3*e_r + 4*e_theta + e_phi) == 5*r**2 + 30*r*phi
+    assert directional_derivative(5*r**2*phi, 3*e_r + 4*e_theta + e_phi) == 5*r/sin(theta) + 30*r*phi
+
+
+def test_directional_derivative_vector_field_cartesian_systems():
+    C, x, y, z, i, j, k, u, v, w, vec = _setup_cartesian_system()
+    ux, uy, uz = [u.diff(s) for s in [x, y, z]]
+    vx, vy, vz = [v.diff(s) for s in [x, y, z]]
+    wx, wy, wz = [w.diff(s) for s in [x, y, z]]
+    direction = i + j + k
+
+    res = directional_derivative(vec, direction)
+    assert res == (
+        (ux + uy + uz) * i +
+        (vx + vy + vz) * j +
+        (wx + wy + wz) * k)
+
+
+def test_directional_derivative_vector_field_cylindrical_systems():
+    C, r, θ, z, e_r, e_θ, e_z, u, v, w, vec = _setup_cylindrical_system()
+    ur, ut, uz = [u.diff(s) for s in [r, θ, z]]
+    vr, vt, vz = [v.diff(s) for s in [r, θ, z]]
+    wr, wt, wz = [w.diff(s) for s in [r, θ, z]]
+    direction = e_r + e_θ + e_z
+
+    res = directional_derivative(vec, direction)
+    assert res == (
+        (ur + ut / r + uz - v / r) * e_r +
+        (vr + vt / r + vz + u / r) * e_θ +
+        (wr + wt / r + wz) * e_z)
+
+
+def test_directional_derivative_vector_field_spherical_systems():
+    S, r, θ, 𐌘, e_r, e_θ, e_𐌘, u, v, w, vec = _setup_spherical_system()
+    ur, ut, up = [u.diff(s) for s in [r, θ, 𐌘]]
+    vr, vt, vp = [v.diff(s) for s in [r, θ, 𐌘]]
+    wr, wt, wp = [w.diff(s) for s in [r, θ, 𐌘]]
+    direction = e_r + e_θ + e_𐌘
+
+    res = directional_derivative(vec, direction)
+    assert res == (
+        (ur + ut / r + up / (r * sin(θ)) - v / r - w / r) * e_r +
+        (vr + vt / r + vp / (r * sin(θ)) + u / r - w * cos(θ) / (r * sin(θ))) * e_θ +
+        (wr + wt / r + wp / (r * sin(θ)) + u / r + v * cos(θ) / (r * sin(θ))) * e_𐌘)
 
 
 def test_scalar_potential():
@@ -232,7 +309,7 @@ def test_scalar_potential_difference():
     point2 = C.origin.locate_new('P2', 4*i + 5*j + 6*k)
     genericpointC = C.origin.locate_new('RP', x*i + y*j + z*k)
     genericpointP = P.origin.locate_new('PP', P.x*P.i + P.y*P.j + P.z*P.k)
-    assert scalar_potential_difference(S(0), C, point1, point2) == 0
+    assert scalar_potential_difference(S.Zero, C, point1, point2) == 0
     assert (scalar_potential_difference(scalar_field, C, C.origin,
                                         genericpointC) ==
             scalar_field)
@@ -290,7 +367,7 @@ def test_mixed_coordinates():
     b = CoordSys3D('b')
     c = CoordSys3D('c')
     assert gradient(a.x*b.y) == b.y*a.i + a.x*b.j
-    assert gradient(3*cos(q)*a.x*b.x+a.y*(a.x+((cos(q)+b.x)))) ==\
+    assert gradient(3*cos(q)*a.x*b.x+a.y*(a.x+(cos(q)+b.x))) ==\
            (a.y + 3*b.x*cos(q))*a.i + (a.x + b.x + cos(q))*a.j + (3*a.x*cos(q) + a.y)*b.i
     # Some tests need further work:
     # assert gradient(a.x*(cos(a.x+b.x))) == (cos(a.x + b.x))*a.i + a.x*Gradient(cos(a.x + b.x))
@@ -320,3 +397,187 @@ def test_mixed_coordinates():
                 a.x**2*b.x*Dot(a.i, c.i) +\
                 b.x**2*c.x*Dot(b.i, a.i) +\
                 a.x*b.x**2*Dot(b.i, c.i)
+
+
+def test_gradient_of_vector_cartesian_coordinates():
+    C, x, y, z, i, j, k, u, v, w, vec = _setup_cartesian_system()
+
+    res = gradient(vec)
+    assert isinstance(res, Dyadic)
+    assert res.to_matrix(C) == Matrix([
+        [diff(u, x), diff(v, x), diff(w, x)],
+        [diff(u, y), diff(v, y), diff(w, y)],
+        [diff(u, z), diff(v, z), diff(w, z)]
+    ])
+    assert delop(vec).doit() == res
+
+
+def test_gradient_of_vector_cylindrical_coordinates():
+    C, r, θ, z, e_r, e_θ, e_z, u, v, w, vec = _setup_cylindrical_system()
+
+    res = gradient(vec)
+    assert isinstance(res, Dyadic)
+    assert res.to_matrix(C) == Matrix([
+        [diff(u, r), diff(v, r), diff(w, r)],
+        [diff(u, θ) / r - v / r, diff(v, θ) / r + u / r, diff(w, θ) / r],
+        [diff(u, z), diff(v, z), diff(w, z)]
+    ])
+    assert delop(vec).doit() == res
+
+
+def test_gradient_of_vector_spherical_coordinates():
+    S, r, θ, 𐌘, e_r, e_θ, e_𐌘, u, v, w, vec = _setup_spherical_system()
+
+    res = gradient(vec)
+    assert isinstance(res, Dyadic)
+    assert res.to_matrix(S) == Matrix([
+        [diff(u, r), diff(v, r), diff(w, r)],
+        [diff(u, θ) / r - v / r, diff(v, θ) / r + u / r, diff(w, θ) / r],
+        [
+                diff(u, 𐌘) / (r * sin(θ)) - w / r,
+                diff(v, 𐌘) / (r * sin(θ)) - w * cos(θ)  / (r * sin(θ)),
+                u / r + v * cos(θ) / (r * sin(θ)) + diff(w, 𐌘) / (r * sin(θ))
+        ]
+    ])
+    assert delop(vec).doit() == res
+
+
+def test_gradient_of_vector_cartesian_cylindrical():
+    # verify that gradients works as expected for a vector whose
+    # components are defined in multiple coordinate systems
+
+    Cart = CoordSys3D("Cart")
+    x, y, z = Cart.base_scalars()
+    v_x = Function('v_x')(x, y, z)
+    v_y = Function('v_y')(x, y, z)
+    v_z = Function('v_z')(x, y, z)
+    v1 = v_x * Cart.i + v_y * Cart.j + v_z * Cart.k
+    m1 = Matrix([
+        [diff(v_x, x), diff(v_y, x), diff(v_z, x)],
+        [diff(v_x, y), diff(v_y, y), diff(v_z, y)],
+        [diff(v_x, z), diff(v_y, z), diff(v_z, z)]
+    ])
+    d1 = matrix_to_dyadic(m1, Cart)
+
+    C = Cart.create_new("C", transformation="cylindrical")
+    r, θ, z = C.base_scalars()
+    v_r = Function('v_r')(r, θ, z)
+    v_θ = Function('v_θ')(r, θ, z)
+    v_z = Function('v_z')(r, θ, z)
+    v2 = v_r * C.i + v_θ * C.j + v_z * C.k
+    m2 = Matrix([
+        [diff(v_r, r), diff(v_θ, r), diff(v_z, r)],
+        [diff(v_r, θ) / r - v_θ / r, diff(v_θ, θ) / r + v_r / r, diff(v_z, θ) / r],
+        [diff(v_r, z), diff(v_θ, z), diff(v_z, z)]
+    ])
+    d2 = matrix_to_dyadic(m2, C)
+
+    v = v1 + v2
+    res = gradient(v)
+    assert res == d1 + d2
+    assert delop(v).doit() == res
+
+
+def test_issue_27427():
+    C = CoordSys3D('C', transformation='cylindrical')
+    r, theta, z = C.base_scalars()
+    Omega = symbols('Omega')
+    v = Omega * C.j
+    expected = -Omega**2 / r * C.i
+    assert v & gradient(v) == expected
+    assert directional_derivative(v, v) == expected
+
+
+def test_laplacian_vector_field_cartesian_system():
+    C, x, y, z, i, j, k, u, v, w, vec = _setup_cartesian_system()
+
+    assert laplacian(vec) == (
+        (u.diff(x, 2) + u.diff(y, 2) + u.diff(z, 2)) * i +
+        (v.diff(x, 2) + v.diff(y, 2) + v.diff(z, 2)) * j +
+        (w.diff(x, 2) + w.diff(y, 2) + w.diff(z, 2)) * k)
+
+
+def test_laplacian_vector_field_cylindrical_system():
+    C, r, θ, z, e_r, e_θ, e_z, u, v, w, vec = _setup_cylindrical_system()
+
+    assert laplacian(vec).expand() == (
+        (u.diff(r, 2) + u.diff(θ, 2) / r**2 + u.diff(z, 2) + u.diff(r) / r - v.diff(θ) * 2 / r**2 - u / r**2) * e_r +
+        (v.diff(r, 2) + v.diff(θ, 2) / r**2 + v.diff(z, 2) + v.diff(r) / r + u.diff(θ) * 2 / r**2 - v / r**2) * e_θ +
+        (w.diff(r, 2) + w.diff(θ, 2) / r**2 + w.diff(z, 2) + w.diff(r) / r) * e_z)
+
+
+def test_laplacian_vector_field_spherical_system():
+    S, r, θ, 𐌘, e_r, e_θ, e_𐌘, u, v, w, vec = _setup_spherical_system()
+
+    expected_c1 = (
+        ((r**2 * u).diff(r) / r**2).diff(r)
+        + (sin(θ) * u.diff(θ)).diff(θ) / (r**2 * sin(θ))
+        + u.diff(𐌘, 2) / (r**2 * sin(θ)**2)
+        - 2 * (v * sin(θ)).diff(θ) / (r**2 * sin(θ))
+        - 2 * w.diff(𐌘) / (r**2 * sin(θ))).expand()
+    expected_c2 = (
+        (r**2 * v.diff(r)).diff(r) / r**2
+        + ((v * sin(θ)).diff(θ) / sin(θ)).diff(θ) / r**2
+        + v.diff(𐌘, 2) / (r**2 * sin(θ)**2)
+        + 2 * u.diff(θ) / r**2
+        - 2 * cos(θ) / (r**2 * sin(θ)**2) * w.diff(𐌘)).expand()
+    expected_c3 = (
+        (w.diff(r) * r**2).diff(r) / r**2
+        + ((w * sin(θ)).diff(θ) / sin(θ)).diff(θ) / r**2
+        + w.diff(𐌘, 2) / (r**2 * sin(θ)**2)
+        + 2 * u.diff(𐌘) / (r**2 * sin(θ))
+        + 2 * cos(θ) / (r**2 * sin(θ)**2) * v.diff(𐌘)).expand()
+    assert laplacian(vec).expand() == (
+        expected_c1 * e_r +
+        expected_c2 * e_θ +
+        expected_c3 * e_𐌘)
+
+
+def test_divergence_cartesian_system():
+    C, x, y, z, i, j, k, u, v, w, vec = _setup_cartesian_system()
+
+    assert divergence(vec) == u.diff(x) + v.diff(y) + w.diff(z)
+
+
+def test_divergence_cylindrical_system():
+    C, r, θ, z, e_r, e_θ, e_z, u, v, w, vec = _setup_cylindrical_system()
+
+    expected = ((r * u).diff(r) + v.diff(θ) + r * w.diff(z)) / r
+    assert divergence(vec).expand() == expected.expand()
+
+
+def test_divergence_spherical_system():
+    S, r, θ, 𐌘, e_r, e_θ, e_𐌘, u, v, w, vec = _setup_spherical_system()
+
+    expected = (
+        sin(θ) * (r**2 * u).diff(r)
+        + r * (v * sin(θ)).diff(θ)
+        + r * w.diff(𐌘)) / (r**2 * sin(θ))
+    assert divergence(vec).expand() == expected.expand()
+
+
+def test_curl_cartesian_system():
+    C, x, y, z, i, j, k, u, v, w, vec = _setup_cartesian_system()
+
+    assert curl(vec) == (
+        (w.diff(y) - v.diff(z)) * i +
+        (u.diff(z) - w.diff(x)) * j +
+        (v.diff(x) - u.diff(y)) * k)
+
+
+def test_curl_cylindrical_system():
+    C, r, θ, z, e_r, e_θ, e_z, u, v, w, vec = _setup_cylindrical_system()
+
+    assert curl(vec).expand() == (
+        (w.diff(θ) / r - v.diff(z)) * e_r +
+        (u.diff(z) - w.diff(r)) * e_θ +
+        (v / r + v.diff(r) - u.diff(θ) / r) * e_z)
+
+
+def test_curl_spherical_system():
+    S, r, θ, 𐌘, e_r, e_θ, e_𐌘, u, v, w, vec = _setup_spherical_system()
+
+    assert curl(vec).expand() == (
+        (w * cos(θ) / (r * sin(θ)) + w.diff(θ) / r - v.diff(𐌘) / (r * sin(θ))) * e_r +
+        (u.diff(𐌘) / (r * sin(θ)) - w / r - w.diff(r)) * e_θ +
+        (v.diff(r) + v / r - u.diff(θ) / r) * e_𐌘)

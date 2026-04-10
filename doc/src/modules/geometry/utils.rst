@@ -10,3 +10,5 @@ Utils
 .. autofunction:: are_similar
 
 .. autofunction:: centroid
+
+.. autofunction:: idiff

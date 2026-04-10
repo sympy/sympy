@@ -1,5 +1,8 @@
+.. _g-functions:
+
+============================================
 Computing Integrals using Meijer G-Functions
-********************************************
+============================================
 
 This text aims do describe in some detail the steps (and subtleties) involved
 in using Meijer G-functions for computing definite and indefinite integrals.
@@ -115,7 +118,7 @@ Suppose now we want to rewrite as a product of two G-functions. To do this,
 we (try to) find all inequivalent ways of splitting `f(x)` into a product
 `f_1(x) f_2(x)`.
 We could try these splittings in any order, but it is often a good idea to
-minimise (a) the number of powers occurring in `f_i(x)` and (b) the number of
+minimize (a) the number of powers occurring in `f_i(x)` and (b) the number of
 different functions occurring in `f_i(x)`. Thus given e.g.
 `f(x) = \sin{x}\, e^{x} \sin{2x}` we should try `f_1(x) = \sin{x}\, \sin{2x}`,
 `f_2(x) = e^{x}` first.
@@ -161,7 +164,7 @@ is satisfies `G(\operatorname{Exp}(2 \pi i)z) = G(z)` for all `z \in \mathcal{S}
 be used to exploit the information. This is done transparently by the
 integration code.
 
-.. [BlogPost] http://nessgrh.wordpress.com/2011/07/07/tricky-branch-cuts/
+.. [BlogPost] https://nessgrh.wordpress.com/2011/07/07/tricky-branch-cuts/
 
 The G-Function Integration Theorems
 ***********************************
@@ -284,7 +287,7 @@ We introduce the following notation:
 .. math:: \lambda_{s0}(c_1, c_2) = c_1 (q - p)|\omega|^{1/(q - p)} \sin{\psi}
                     + c_2 (v - u)|\sigma|^{1/(v - u)} \sin{\theta}
 .. math:: \lambda_s =
-  \begin{cases} \operatorname{\lambda_{s0}}\left(-1,-1\right) \operatorname{\lambda_{s0}}\left(1,1\right) & \text{for}\: \arg(\omega) = 0 \wedge \arg(\sigma) = 0 \\\operatorname{\lambda_{s0}}\left(\operatorname{sign}\left(\operatorname{\arg}\left(\omega\right)\right),-1\right) \operatorname{\lambda_{s0}}\left(\operatorname{sign}\left(\operatorname{\arg}\left(\omega\right)\right),1\right) & \text{for}\: \arg(\omega) \ne 0 \wedge \arg(\sigma) = 0 \\\operatorname{\lambda_{s0}}\left(-1,\operatorname{sign}\left(\operatorname{\arg}\left(\sigma\right)\right)\right) \operatorname{\lambda_{s0}}\left(1,\operatorname{sign}\left(\operatorname{\arg}\left(\sigma\right)\right)\right) & \text{for}\: \arg(\omega) = 0 \wedge \arg(\sigma) \ne 0) \\\operatorname{\lambda_{s0}}\left(\operatorname{sign}\left(\operatorname{\arg}\left(\omega\right)\right),\operatorname{sign}\left(\operatorname{\arg}\left(\sigma\right)\right)\right) & \text{otherwise} \end{cases}
+  \begin{cases} \lambda_{s0}\left(-1,-1\right) \lambda_{s0}\left(1,1\right) & \text{for}\: \arg(\omega) = 0 \wedge \arg(\sigma) = 0 \\\lambda_{s0}\left(\operatorname{sign}\left(\operatorname{\arg}\left(\omega\right)\right),-1\right) \lambda_{s0}\left(\operatorname{sign}\left(\operatorname{\arg}\left(\omega\right)\right),1\right) & \text{for}\: \arg(\omega) \ne 0 \wedge \arg(\sigma) = 0 \\\lambda_{s0}\left(-1,\operatorname{sign}\left(\operatorname{\arg}\left(\sigma\right)\right)\right) \lambda_{s0}\left(1,\operatorname{sign}\left(\operatorname{\arg}\left(\sigma\right)\right)\right) & \text{for}\: \arg(\omega) = 0 \wedge \arg(\sigma) \ne 0) \\\lambda_{s0}\left(\operatorname{sign}\left(\operatorname{\arg}\left(\omega\right)\right),\operatorname{sign}\left(\operatorname{\arg}\left(\sigma\right)\right)\right) & \text{otherwise} \end{cases}
 .. math:: z_0 = \frac{\omega}{\sigma} e^{-i\pi (b^* + c^*)}
 .. math:: z_1 = \frac{\sigma}{\omega} e^{-i\pi (b^* + c^*)}
 
@@ -362,18 +365,18 @@ as follows:
 21. .. math:: m = 0 \wedge 0 < n \wedge 0 < c^{*} \wedge 0 < \phi \wedge C_{1} \wedge C_{3} \wedge C_{12}
 22. .. math:: s t = 0 \wedge 0 < b^{*} \wedge 0 < c^{*} \wedge C_{1} \wedge C_{2} \wedge C_{3} \wedge C_{10} \wedge C_{12}
 23. .. math:: m n = 0 \wedge 0 < b^{*} \wedge 0 < c^{*} \wedge C_{1} \wedge C_{2} \wedge C_{3} \wedge C_{10} \wedge C_{12}
-24. .. math:: p < m + n \wedge t = 0 \wedge \phi = 0 \wedge 0 < s \wedge 0 < b^{*} \wedge c^{*} < 0 \wedge \lvert{\operatorname{arg}\left(\omega\right)}\rvert < \pi \left(m + n - p + 1\right) \wedge C_{1} \wedge C_{2} \wedge C_{10} \wedge C_{14} \wedge C_{15}
-25. .. math:: q < m + n \wedge s = 0 \wedge \phi = 0 \wedge 0 < t \wedge 0 < b^{*} \wedge c^{*} < 0 \wedge \lvert{\operatorname{arg}\left(\omega\right)}\rvert < \pi \left(m + n - q + 1\right) \wedge C_{1} \wedge C_{3} \wedge C_{10} \wedge C_{14} \wedge C_{15}
+24. .. math:: p < m + n \wedge t = 0 \wedge \phi = 0 \wedge 0 < s \wedge 0 < b^{*} \wedge c^{*} < 0 \wedge \lvert{\operatorname{arg}\left(\omega\right)}\rvert < \\ \pi \left(m + n - p + 1\right) \wedge C_{1} \wedge C_{2} \wedge C_{10} \wedge C_{14} \wedge C_{15}
+25. .. math:: q < m + n \wedge s = 0 \wedge \phi = 0 \wedge 0 < t \wedge 0 < b^{*} \wedge c^{*} < 0 \wedge \lvert{\operatorname{arg}\left(\omega\right)}\rvert < \\ \pi \left(m + n - q + 1\right) \wedge C_{1} \wedge C_{3} \wedge C_{10} \wedge C_{14} \wedge C_{15}
 26. .. math:: p = q -1 \wedge t = 0 \wedge \phi = 0 \wedge 0 < s \wedge 0 < b^{*} \wedge 0 \leq c^{*} \wedge \pi c^{*} < \lvert{\operatorname{arg}\left(\omega\right)}\rvert \wedge C_{1} \wedge C_{2} \wedge C_{10} \wedge C_{14} \wedge C_{15}
 27. .. math:: p = q + 1 \wedge s = 0 \wedge \phi = 0 \wedge 0 < t \wedge 0 < b^{*} \wedge 0 \leq c^{*} \wedge \pi c^{*} < \lvert{\operatorname{arg}\left(\omega\right)}\rvert \wedge C_{1} \wedge C_{3} \wedge C_{10} \wedge C_{14} \wedge C_{15}
-28. .. math:: p < q -1 \wedge t = 0 \wedge \phi = 0 \wedge 0 < s \wedge 0 < b^{*} \wedge 0 \leq c^{*} \wedge \pi c^{*} < \lvert{\operatorname{arg}\left(\omega\right)}\rvert \wedge \lvert{\operatorname{arg}\left(\omega\right)}\rvert < \pi \left(m + n - p + 1\right) \wedge C_{1} \wedge C_{2} \wedge C_{10} \wedge C_{14} \wedge C_{15}
-29. .. math:: q + 1 < p \wedge s = 0 \wedge \phi = 0 \wedge 0 < t \wedge 0 < b^{*} \wedge 0 \leq c^{*} \wedge \pi c^{*} < \lvert{\operatorname{arg}\left(\omega\right)}\rvert \wedge \lvert{\operatorname{arg}\left(\omega\right)}\rvert < \pi \left(m + n - q + 1 \right) \wedge C_{1} \wedge C_{3} \wedge C_{10} \wedge C_{14} \wedge C_{15}
-30. .. math:: n = 0 \wedge \phi = 0 \wedge 0 < s + t \wedge 0 < m \wedge 0 < c^{*} \wedge b^{*} < 0 \wedge \lvert{\operatorname{arg}\left(\sigma\right)}\rvert < \pi \left(s + t - u + 1\right) \wedge C_{1} \wedge C_{2} \wedge C_{12} \wedge C_{14} \wedge C_{15}
-31. .. math:: m = 0 \wedge \phi = 0 \wedge v < s + t \wedge 0 < n \wedge 0 < c^{*} \wedge b^{*} < 0 \wedge \lvert{\operatorname{arg}\left(\sigma\right)}\rvert < \pi \left(s + t - v + 1\right) \wedge C_{1} \wedge C_{3} \wedge C_{12} \wedge C_{14} \wedge C_{15}
-32. .. math:: n = 0 \wedge \phi = 0 \wedge u = v -1 \wedge 0 < m \wedge 0 < c^{*} \wedge 0 \leq b^{*} \wedge \pi b^{*} < \lvert{\operatorname{arg}\left(\sigma\right)}\rvert \wedge \lvert{\operatorname{arg}\left(\sigma\right)}\rvert < \pi \left(b^{*} + 1\right) \wedge C_{1} \wedge C_{2} \wedge C_{12} \wedge C_{14} \wedge C_{15}
-33. .. math:: m = 0 \wedge \phi = 0 \wedge u = v + 1 \wedge 0 < n \wedge 0 < c^{*} \wedge 0 \leq b^{*} \wedge \pi b^{*} < \lvert{\operatorname{arg}\left(\sigma\right)}\rvert \wedge \lvert{\operatorname{arg}\left(\sigma\right)}\rvert < \pi \left(b^{*} + 1\right) \wedge C_{1} \wedge C_{3} \wedge C_{12} \wedge C_{14} \wedge C_{15}
-34. .. math:: n = 0 \wedge \phi = 0 \wedge u < v -1 \wedge 0 < m \wedge 0 < c^{*} \wedge 0 \leq b^{*} \wedge \pi b^{*} < \lvert{\operatorname{arg}\left(\sigma\right)}\rvert \wedge \lvert{\operatorname{arg}\left(\sigma\right)}\rvert < \pi \left(s + t - u + 1\right) \wedge C_{1} \wedge C_{2} \wedge C_{12} \wedge C_{14} \wedge C_{15}
-35. .. math:: m = 0 \wedge \phi = 0 \wedge v + 1 < u \wedge 0 < n \wedge 0 < c^{*} \wedge 0 \leq b^{*} \wedge \pi b^{*} < \lvert{\operatorname{arg}\left(\sigma\right)}\rvert \wedge \lvert{\operatorname{arg}\left(\sigma\right)}\rvert < \pi \left(s + t - v + 1 \right) \wedge C_{1} \wedge C_{3} \wedge C_{12} \wedge C_{14} \wedge C_{15}
+28. .. math:: p < q -1 \wedge t = 0 \wedge \phi = 0 \wedge 0 < s \wedge 0 < b^{*} \wedge 0 \leq c^{*} \wedge \pi c^{*} < \lvert{\operatorname{arg}\left(\omega\right)}\rvert \wedge \lvert{\operatorname{arg}\left(\omega\right)}\rvert < \\ \pi \left(m + n - p + 1\right) \wedge C_{1} \wedge C_{2} \wedge C_{10} \wedge C_{14} \wedge C_{15}
+29. .. math:: q + 1 < p \wedge s = 0 \wedge \phi = 0 \wedge 0 < t \wedge 0 < b^{*} \wedge 0 \leq c^{*} \wedge \pi c^{*} < \lvert{\operatorname{arg}\left(\omega\right)}\rvert \wedge \lvert{\operatorname{arg}\left(\omega\right)}\rvert < \\ \pi \left(m + n - q + 1 \right) \wedge C_{1} \wedge C_{3} \wedge C_{10} \wedge C_{14} \wedge C_{15}
+30. .. math:: n = 0 \wedge \phi = 0 \wedge 0 < s + t \wedge 0 < m \wedge 0 < c^{*} \wedge b^{*} < 0 \wedge \lvert{\operatorname{arg}\left(\sigma\right)}\rvert < \\ \pi \left(s + t - u + 1\right) \wedge C_{1} \wedge C_{2} \wedge C_{12} \wedge C_{14} \wedge C_{15}
+31. .. math:: m = 0 \wedge \phi = 0 \wedge v < s + t \wedge 0 < n \wedge 0 < c^{*} \wedge b^{*} < 0 \wedge \lvert{\operatorname{arg}\left(\sigma\right)}\rvert < \\ \pi \left(s + t - v + 1\right) \wedge C_{1} \wedge C_{3} \wedge C_{12} \wedge C_{14} \wedge C_{15}
+32. .. math:: n = 0 \wedge \phi = 0 \wedge u = v -1 \wedge 0 < m \wedge 0 < c^{*} \wedge 0 \leq b^{*} \wedge \pi b^{*} < \lvert{\operatorname{arg}\left(\sigma\right)}\rvert \wedge \lvert{\operatorname{arg}\left(\sigma\right)}\rvert < \\ \pi \left(b^{*} + 1\right) \wedge C_{1} \wedge C_{2} \wedge C_{12} \wedge C_{14} \wedge C_{15}
+33. .. math:: m = 0 \wedge \phi = 0 \wedge u = v + 1 \wedge 0 < n \wedge 0 < c^{*} \wedge 0 \leq b^{*} \wedge \pi b^{*} < \lvert{\operatorname{arg}\left(\sigma\right)}\rvert \wedge \lvert{\operatorname{arg}\left(\sigma\right)}\rvert < \\ \pi \left(b^{*} + 1\right) \wedge C_{1} \wedge C_{3} \wedge C_{12} \wedge C_{14} \wedge C_{15}
+34. .. math:: n = 0 \wedge \phi = 0 \wedge u < v -1 \wedge 0 < m \wedge 0 < c^{*} \wedge 0 \leq b^{*} \wedge \pi b^{*} < \lvert{\operatorname{arg}\left(\sigma\right)}\rvert \wedge \lvert{\operatorname{arg}\left(\sigma\right)}\rvert < \\ \pi \left(s + t - u + 1\right) \wedge C_{1} \wedge C_{2} \wedge C_{12} \wedge C_{14} \wedge C_{15}
+35. .. math:: m = 0 \wedge \phi = 0 \wedge v + 1 < u \wedge 0 < n \wedge 0 < c^{*} \wedge 0 \leq b^{*} \wedge \pi b^{*} < \lvert{\operatorname{arg}\left(\sigma\right)}\rvert \wedge \lvert{\operatorname{arg}\left(\sigma\right)}\rvert < \\ \pi \left(s + t - v + 1 \right) \wedge C_{1} \wedge C_{3} \wedge C_{12} \wedge C_{14} \wedge C_{15}
 36. .. math:: C_{17} \wedge t = 0 \wedge u < s \wedge 0 < b^{*} \wedge C_{10} \wedge C_{1} \wedge C_{2} \wedge C_{3}
 37. .. math:: C_{17} \wedge s = 0 \wedge v < t \wedge 0 < b^{*} \wedge C_{10} \wedge C_{1} \wedge C_{2} \wedge C_{3}
 38. .. math:: C_{16} \wedge n = 0 \wedge p < m \wedge 0 < c^{*} \wedge C_{12} \wedge C_{1} \wedge C_{2} \wedge C_{3}
@@ -462,7 +465,7 @@ Thus the final computation remains valid as long as the initial integral
 converges, and if there exists a changed set of parameters where the computation
 is valid. If we assume w.l.o.g. that `a > 0`, then the latter condition is
 fulfilled if `G` converges along contours (2) or (3) of [Luke1969]_,
-section 5.2, i.e. either `\delta >= \frac{a}{2}` or `p \ge 1, p \ge q`.
+section 5.2, i.e. either `\delta \ge \frac{a}{2}` or `p \ge 1, p \ge q`.
 
 When the integral exists
 ========================
@@ -506,3 +509,10 @@ of deriving new formulae improve. Of course it has to grow whenever a new class
 of special functions is to be dealt with.
 
 .. automodule:: sympy.integrals.meijerint_doc
+
+Internal API Reference
+**********************
+
+.. automodule:: sympy.integrals.meijerint
+   :members:
+   :private-members:

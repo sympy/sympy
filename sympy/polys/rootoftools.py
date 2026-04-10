@@ -1,61 +1,152 @@
 """Implementation of RootOf class and related tools. """
+from __future__ import annotations
 
-from __future__ import print_function, division
 
-from sympy.core import (S, Expr, Integer, Float, I, Add, Lambda, symbols,
-        sympify, Rational, Dummy)
+
+from sympy.core.basic import Basic
+from sympy.core import (S, Expr, Integer, Float, I, oo, Add, Lambda,
+    symbols, sympify, Rational, Dummy)
 from sympy.core.cache import cacheit
-from sympy.core.function import AppliedUndef
-from sympy.functions.elementary.miscellaneous import root as _root
-
-from sympy.polys.polytools import Poly, PurePoly, factor
-from sympy.polys.rationaltools import together
-from sympy.polys.polyfuncs import symmetrize, viete
-
-from sympy.polys.rootisolation import (
-    dup_isolate_complex_roots_sqf,
-    dup_isolate_real_roots_sqf)
-
-from sympy.polys.polyroots import (
-    roots_linear, roots_quadratic, roots_binomial,
-    preprocess_roots, roots)
-
+from sympy.core.relational import is_le
+from sympy.core.sorting import ordered
+from sympy.external.mpmath import local_workprec, dps_to_prec, prec_to_dps
+from sympy.polys.domains import QQ
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
     GeneratorsNeeded,
     PolynomialError,
     DomainError)
+from sympy.polys.polyfuncs import symmetrize, viete
+from sympy.polys.polyroots import (
+    roots_linear, roots_quadratic, roots_binomial,
+    preprocess_roots, roots)
+from sympy.polys.polytools import Poly, factor
+from sympy.polys.rationaltools import together
+from sympy.polys.rootisolation import (
+    dup_isolate_complex_roots_sqf,
+    dup_isolate_real_roots_sqf)
+from sympy.utilities import lambdify, public, sift, numbered_symbols
 
-from sympy.polys.domains import QQ
+from sympy.multipledispatch import dispatch
+from itertools import chain
 
-from mpmath import mpf, mpc, findroot, workprec
-from mpmath.libmp.libmpf import prec_to_dps
-
-from sympy.utilities import lambdify, public, sift
-
-from sympy.core.compatibility import range
-
-from math import log as mathlog
 
 __all__ = ['CRootOf']
 
-def _ispow2(i):
-    v = mathlog(i, 2)
-    return v == int(v)
 
-_reals_cache = {}
-_complexes_cache = {}
+
+class _pure_key_dict:
+    """A minimal dictionary that makes sure that the key is a
+    univariate PurePoly instance.
+
+    Examples
+    ========
+
+    Only the following actions are guaranteed:
+
+    >>> from sympy.polys.rootoftools import _pure_key_dict
+    >>> from sympy import PurePoly
+    >>> from sympy.abc import x, y
+
+    1) creation
+
+    >>> P = _pure_key_dict()
+
+    2) assignment for a Poly or univariate polynomial
+
+    >>> P[x] = 1
+    >>> P[PurePoly(x - y, x)] = 2
+
+    3) retrieval based on Poly key comparison
+
+    >>> P[x]
+    1
+
+    4) KeyError when trying to retrieve with different symbol or nonexisting key
+
+    >>> P[y]  # Different symbol, not found
+    Traceback (most recent call last):
+    ...
+    KeyError: Poly(y, y, domain='ZZ')
+    >>> P[y + 1]
+    Traceback (most recent call last):
+    ...
+    KeyError: Poly(y + 1, y, domain='ZZ')
+
+    5) ability to query with ``in``
+
+    >>> x in P
+    True
+    >>> y in P  # Different symbol
+    False
+    >>> x + 1 in P
+    False
+
+    NOTE: this is a *not* a dictionary. It is a very basic object
+    for internal use that makes sure to always address its cache
+    via PurePoly instances. It does not, for example, implement
+    ``get`` or ``setdefault``.
+    """
+    def __init__(self):
+        self._dict = {}
+
+    def __getitem__(self, k):
+        if not isinstance(k, Poly):
+            try:
+                k = Poly(k, expand=False)
+            except (GeneratorsNeeded, PolynomialError):
+                raise KeyError
+        return self._dict[k]
+
+    def __setitem__(self, k, v):
+        if not isinstance(k, Poly):
+            try:
+                k = Poly(k, expand=False)
+            except (GeneratorsNeeded, PolynomialError):
+                raise ValueError('expecting univariate expression')
+        self._dict[k] = v
+
+    def __contains__(self, k):
+        try:
+            self[k]
+            return True
+        except KeyError:
+            return False
+
+_reals_cache = _pure_key_dict()
+_complexes_cache = _pure_key_dict()
+_rootof_dummy = Dummy('x')
+_rootsum_dummy = Dummy('w')
+
+
+def _pure_factors(poly):
+    _, factors = poly.factor_list()
+    return [(Poly(f, expand=False).retract(), m) for f, m in factors]
+
+
+def _imag_count_of_factor(f):
+    """Return the number of imaginary roots for irreducible
+    univariate polynomial ``f``.
+    """
+    terms = [(i, j) for (i,), j in f.terms()]
+    if any(i % 2 for i, j in terms):
+        return 0
+    # update signs
+    even = [(i, I**i*j) for i, j in terms]
+    even = Poly.from_dict(dict(even), Dummy('x'))
+    return int(even.count_roots(-oo, oo))
 
 
 @public
 def rootof(f, x, index=None, radicals=True, expand=True):
     """An indexed root of a univariate polynomial.
 
-    Returns either a ``ComplexRootOf`` object or an explicit
+    Returns either a :obj:`ComplexRootOf` object or an explicit
     expression involving radicals.
 
     Parameters
-    ----------
+    ==========
+
     f : Expr
         Univariate polynomial.
     x : Symbol, optional
@@ -77,7 +168,7 @@ class RootOf(Expr):
     Only complex roots are currently supported.
     """
 
-    __slots__ = ['poly']
+    __slots__ = ('poly',)
 
     def __new__(cls, f, x, index=None, radicals=True, expand=True):
         """Construct a new ``CRootOf`` object for ``k``-th root of ``f``."""
@@ -88,14 +179,138 @@ class ComplexRootOf(RootOf):
     """Represents an indexed complex root of a polynomial.
 
     Roots of a univariate polynomial separated into disjoint
-    real or complex intervals and indexed in a fixed order.
+    real or complex intervals and indexed in a fixed order:
+
+    * real roots come first and are sorted in increasing order;
+    * complex roots come next and are sorted primarily by increasing
+      real part, secondarily by increasing imaginary part.
+
     Currently only rational coefficients are allowed.
-    Can be imported as ``CRootOf``.
+    Can be imported as ``CRootOf``. To avoid confusion, the
+    generator must be a Symbol.
+
+
+    Examples
+    ========
+
+    >>> from sympy import CRootOf, rootof
+    >>> from sympy.abc import x
+
+    CRootOf is a way to reference a particular root of a
+    polynomial. If there is a rational root, it will be returned:
+
+    >>> CRootOf.clear_cache()  # for doctest reproducibility
+    >>> CRootOf(x**2 - 4, 0)
+    -2
+
+    Whether roots involving radicals are returned or not
+    depends on whether the ``radicals`` flag is true (which is
+    set to True with rootof):
+
+    >>> CRootOf(x**2 - 3, 0)
+    CRootOf(x**2 - 3, 0)
+    >>> CRootOf(x**2 - 3, 0, radicals=True)
+    -sqrt(3)
+    >>> rootof(x**2 - 3, 0)
+    -sqrt(3)
+
+    The following cannot be expressed in terms of radicals:
+
+    >>> r = rootof(4*x**5 + 16*x**3 + 12*x**2 + 7, 0); r
+    CRootOf(4*x**5 + 16*x**3 + 12*x**2 + 7, 0)
+
+    The root bounds can be seen, however, and they are used by the
+    evaluation methods to get numerical approximations for the root.
+
+    >>> interval = r._get_interval(); interval
+    (-1, 0)
+    >>> r.evalf(2)
+    -0.98
+
+    The evalf method refines the width of the root bounds until it
+    guarantees that any decimal approximation within those bounds
+    will satisfy the desired precision. It then stores the refined
+    interval so subsequent requests at or below the requested
+    precision will not have to recompute the root bounds and will
+    return very quickly.
+
+    Before evaluation above, the interval was
+
+    >>> interval
+    (-1, 0)
+
+    After evaluation it is now
+
+    >>> r._get_interval() # doctest: +SKIP
+    (-165/169, -206/211)
+
+    To reset all intervals for a given polynomial, the :meth:`_reset` method
+    can be called from any CRootOf instance of the polynomial:
+
+    >>> r._reset()
+    >>> r._get_interval()
+    (-1, 0)
+
+    The :meth:`eval_approx` method will also find the root to a given
+    precision but the interval is not modified unless the search
+    for the root fails to converge within the root bounds. And
+    the secant method is used to find the root. (The ``evalf``
+    method uses bisection and will always update the interval.)
+
+    >>> r.eval_approx(2)
+    -0.98
+
+    The interval needed to be slightly updated to find that root:
+
+    >>> r._get_interval()
+    (-1, -1/2)
+
+    The ``evalf_rational`` will compute a rational approximation
+    of the root to the desired accuracy or precision.
+
+    >>> r.eval_rational(n=2)
+    -69629/71318
+
+    >>> t = CRootOf(x**3 + 10*x + 1, 1)
+    >>> t.eval_rational(1e-1)
+    15/256 - 805*I/256
+    >>> t.eval_rational(1e-1, 1e-4)
+    3275/65536 - 414645*I/131072
+    >>> t.eval_rational(1e-4, 1e-4)
+    6545/131072 - 414645*I/131072
+    >>> t.eval_rational(n=2)
+    104755/2097152 - 6634255*I/2097152
+
+    Notes
+    =====
+
+    Although a PurePoly can be constructed from a non-symbol generator
+    RootOf instances of non-symbols are disallowed to avoid confusion
+    over what root is being represented.
+
+    >>> from sympy import exp, PurePoly
+    >>> PurePoly(x) == PurePoly(exp(x))
+    True
+    >>> CRootOf(x - 1, 0)
+    1
+    >>> CRootOf(exp(x) - 1, 0)  # would correspond to x == 0
+    Traceback (most recent call last):
+    ...
+    sympy.polys.polyerrors.PolynomialError: generator must be a Symbol
+
+    See Also
+    ========
+
+    eval_approx
+    eval_rational
+
     """
 
-    __slots__ = ['index']
+    __slots__ = ('index',)
     is_complex = True
     is_number = True
+    is_finite = True
+    is_algebraic = True
 
     def __new__(cls, f, x, index=None, radicals=False, expand=True):
         """ Construct an indexed complex root of a polynomial.
@@ -117,15 +332,20 @@ class ComplexRootOf(RootOf):
         else:
             raise ValueError("expected an integer root index, got %s" % index)
 
-        poly = PurePoly(f, x, greedy=False, expand=expand)
+        poly = Poly(f, x, greedy=False, expand=expand)
 
         if not poly.is_univariate:
             raise PolynomialError("only univariate polynomials are allowed")
 
+        if not poly.gen.is_Symbol:
+            # PurePoly(sin(x) + 1) == PurePoly(x + 1) but the roots of
+            # x for each are not the same: issue 8617
+            raise PolynomialError("generator must be a Symbol")
+
         degree = poly.degree()
 
         if degree <= 0:
-            raise PolynomialError("can't construct CRootOf object for %s" % f)
+            raise PolynomialError("Cannot construct CRootOf object for %s" % f)
 
         if index < -degree or index >= degree:
             raise IndexError("root index out of [%d, %d] range, got %d" %
@@ -149,7 +369,8 @@ class ComplexRootOf(RootOf):
         if not dom.is_ZZ:
             raise NotImplementedError("CRootOf is not supported over %s" % dom)
 
-        root = cls._indexed_root(poly, index)
+        poly = Poly(poly.replace(poly.gen, _rootof_dummy))
+        root = cls._indexed_root(poly, index, lazy=True)
         return coeff * cls._postprocess_root(root, radicals)
 
     @classmethod
@@ -157,7 +378,8 @@ class ComplexRootOf(RootOf):
         """Construct new ``CRootOf`` object from raw data. """
         obj = Expr.__new__(cls)
 
-        obj.poly = PurePoly(poly)
+        poly = poly.replace(poly.gen, _rootof_dummy)
+        obj.poly = Poly(poly)
         obj.index = index
 
         try:
@@ -181,14 +403,23 @@ class ComplexRootOf(RootOf):
 
     @property
     def free_symbols(self):
-        # CRootOf currently only works with univariate expressions and although
-        # the poly attribute is often a PurePoly, sometimes it is a Poly. In
-        # either case no free symbols should be reported.
+        # CRootOf currently only works with univariate expressions
+        # whose poly attribute should be a PurePoly with no free
+        # symbols
         return set()
 
     def _eval_is_real(self):
         """Return ``True`` if the root is real. """
+        self._ensure_reals_init()
         return self.index < len(_reals_cache[self.poly])
+
+    def _eval_is_imaginary(self):
+        """Return ``True`` if the root is imaginary. """
+        self._ensure_reals_init()
+        if self.index >= len(_reals_cache[self.poly]):
+            ivl = self._get_interval()
+            return ivl.ax*ivl.bx <= 0  # all others are on one side or the other
+        return False  # XXX is this necessary?
 
     @classmethod
     def real_roots(cls, poly, radicals=True):
@@ -201,48 +432,64 @@ class ComplexRootOf(RootOf):
         return cls._get_roots("_all_roots", poly, radicals)
 
     @classmethod
-    def _get_reals_sqf(cls, factor):
+    def _get_reals_sqf(cls, currentfactor, use_cache=True):
         """Get real root isolating intervals for a square-free factor."""
-        if factor in _reals_cache:
-            real_part = _reals_cache[factor]
+        if use_cache and currentfactor in _reals_cache:
+            real_part = _reals_cache[currentfactor]
         else:
-            _reals_cache[factor] = real_part = \
+            _reals_cache[currentfactor] = real_part = \
                 dup_isolate_real_roots_sqf(
-                    factor.rep.rep, factor.rep.dom, blackbox=True)
+                    currentfactor.rep.to_list(), currentfactor.rep.dom, blackbox=True)
 
         return real_part
 
     @classmethod
-    def _get_complexes_sqf(cls, factor):
+    def _get_complexes_sqf(cls, currentfactor, use_cache=True):
         """Get complex root isolating intervals for a square-free factor."""
-        if factor in _complexes_cache:
-            complex_part = _complexes_cache[factor]
+        if use_cache and currentfactor in _complexes_cache:
+            complex_part = _complexes_cache[currentfactor]
         else:
-            _complexes_cache[factor] = complex_part = \
+            _complexes_cache[currentfactor] = complex_part = \
                 dup_isolate_complex_roots_sqf(
-                factor.rep.rep, factor.rep.dom, blackbox=True)
+                currentfactor.rep.to_list(), currentfactor.rep.dom, blackbox=True)
         return complex_part
 
     @classmethod
-    def _get_reals(cls, factors):
+    def _get_reals(cls, factors, use_cache=True):
         """Compute real root isolating intervals for a list of factors. """
         reals = []
 
-        for factor, k in factors:
-            real_part = cls._get_reals_sqf(factor)
-            reals.extend([(root, factor, k) for root in real_part])
+        for currentfactor, k in factors:
+            try:
+                if not use_cache:
+                    raise KeyError
+                r = _reals_cache[currentfactor]
+                reals.extend([(i, currentfactor, k) for i in r])
+            except KeyError:
+                real_part = cls._get_reals_sqf(currentfactor, use_cache)
+                new = [(root, currentfactor, k) for root in real_part]
+                reals.extend(new)
 
+        reals = cls._reals_sorted(reals)
         return reals
 
     @classmethod
-    def _get_complexes(cls, factors):
+    def _get_complexes(cls, factors, use_cache=True):
         """Compute complex root isolating intervals for a list of factors. """
         complexes = []
 
-        for factor, k in factors:
-            complex_part = cls._get_complexes_sqf(factor)
-            complexes.extend([(root, factor, k) for root in complex_part])
+        for currentfactor, k in ordered(factors):
+            try:
+                if not use_cache:
+                    raise KeyError
+                c = _complexes_cache[currentfactor]
+                complexes.extend([(i, currentfactor, k) for i in c])
+            except KeyError:
+                complex_part = cls._get_complexes_sqf(currentfactor, use_cache)
+                new = [(root, currentfactor, k) for root in complex_part]
+                complexes.extend(new)
 
+        complexes = cls._complexes_sorted(complexes)
         return complexes
 
     @classmethod
@@ -259,154 +506,103 @@ class ComplexRootOf(RootOf):
 
         reals = sorted(reals, key=lambda r: r[0].a)
 
-        for root, factor, _ in reals:
-            if factor in cache:
-                cache[factor].append(root)
+        for root, currentfactor, _ in reals:
+            if currentfactor in cache:
+                cache[currentfactor].append(root)
             else:
-                cache[factor] = [root]
+                cache[currentfactor] = [root]
 
-        for factor, roots in cache.items():
-            _reals_cache[factor] = roots
+        for currentfactor, root in cache.items():
+            _reals_cache[currentfactor] = root
 
         return reals
 
     @classmethod
-    def _separate_imaginary_from_complex(cls, complexes):
-
-        def is_imag(c):
-            '''
-            return True if all roots are imaginary (ax**2 + b)
-            return False if no roots are imaginary
-            return None if 2 roots are imaginary (ax**N'''
-            u, f, k = c
-            deg = f.degree()
-            if f.length() == 2:
-                if deg == 2:
-                    return True  # both imag
-                elif _ispow2(deg):
-                    if f.LC()*f.TC() < 0:
-                        return None  # 2 are imag
-            return False  # none are imag
-        # separate according to the function
+    def _refine_imaginary(cls, complexes):
         sifted = sift(complexes, lambda c: c[1])
-        del complexes
-        imag = []
         complexes = []
-        for f in sifted:
-            isift = sift(sifted[f], lambda c: is_imag(c))
-            imag.extend(isift.pop(True, []))
-            complexes.extend(isift.pop(False, []))
-            mixed = isift.pop(None, [])
-            assert not isift
-            if not mixed:
-                continue
-            while True:
-                # the non-imaginary ones will be on one side or the other
-                # of the y-axis
-                i = 0
-                while i < len(mixed):
-                    u, f, k = mixed[i]
-                    if u.ax*u.bx > 0:
-                        complexes.append(mixed.pop(i))
-                    else:
-                        i += 1
-                if len(mixed) == 2:
-                    imag.extend(mixed)
-                    break
-                # refine
-                for i, (u, f, k) in enumerate(mixed):
-                    u = u._inner_refine()
-                    mixed[i] = u, f, k
-        return imag, complexes
+        for f in ordered(sifted):
+            nimag = _imag_count_of_factor(f)
+            if nimag == 0:
+                # refine until xbounds are neg or pos
+                for u, f, k in sifted[f]:
+                    while u.ax*u.bx <= 0:
+                        u = u._inner_refine()
+                    complexes.append((u, f, k))
+            else:
+                # refine until all but nimag xbounds are neg or pos
+                potential_imag = list(range(len(sifted[f])))
+                while True:
+                    assert len(potential_imag) > 1
+                    for i in list(potential_imag):
+                        u, f, k = sifted[f][i]
+                        if u.ax*u.bx > 0:
+                            potential_imag.remove(i)
+                        elif u.ax != u.bx:
+                            u = u._inner_refine()
+                            sifted[f][i] = u, f, k
+                    if len(potential_imag) == nimag:
+                        break
+                complexes.extend(sifted[f])
+        return complexes
 
     @classmethod
     def _refine_complexes(cls, complexes):
         """return complexes such that no bounding rectangles of non-conjugate
-        roots would intersect if slid horizontally or vertically/
+        roots would intersect. In addition, assure that neither ay nor by is
+        0 to guarantee that non-real roots are distinct from real roots in
+        terms of the y-bounds.
         """
-        while complexes:  # break when all are distinct
-            # get the intervals pairwise-disjoint.
-            # If rectangles were drawn around the coordinates of the bounding
-            # rectangles, no rectangles would intersect after this procedure.
-            for i, (u, f, k) in enumerate(complexes):
-                for j, (v, g, m) in enumerate(complexes[i + 1:]):
-                    u, v = u.refine_disjoint(v)
-                    complexes[i + j + 1] = (v, g, m)
+        # get the intervals pairwise-disjoint.
+        # If rectangles were drawn around the coordinates of the bounding
+        # rectangles, no rectangles would intersect after this procedure.
+        for i, (u, f, k) in enumerate(complexes):
+            for j, (v, g, m) in enumerate(complexes[i + 1:]):
+                u, v = u.refine_disjoint(v)
+                complexes[i + j + 1] = (v, g, m)
 
-                complexes[i] = (u, f, k)
-            # Although there are no intersecting rectangles, a given rectangle
-            # might intersect another when slid horizontally. We have to refine
-            # intervals until this is not true so we can sort the roots
-            # unambiguously. Since complex roots come in conjugate pairs, we
-            # will always have 2 rectangles above each other but we should not
-            # have more than that.
-            N = len(complexes)//2 - 1
-            # check x (real) parts: there must be N + 1 disjoint x ranges, i.e.
-            # the first one must be different from N others
-            uu = set([(u.ax, u.bx) for u, _, _ in complexes])
-            u = uu.pop()
-            if sum([u[1] <= v[0] or v[1] <= u[0] for v in uu]) < N:
-                # refine
-                for i, (u, f, k) in enumerate(complexes):
-                    u = u._inner_refine()
-                    complexes[i] = u, f, k
-            else:
-                # intervals with identical x-values have disjoint y-values or
-                # else they would not be disjoint so there is no need for
-                # further checks
-                break
+            complexes[i] = (u, f, k)
+
+        # refine until the x-bounds are unambiguously positive or negative
+        # for non-imaginary roots
+        complexes = cls._refine_imaginary(complexes)
+
+        # make sure that all y bounds are off the real axis
+        # and on the same side of the axis
+        for i, (u, f, k) in enumerate(complexes):
+            while u.ay*u.by <= 0:
+                u = u.refine()
+            complexes[i] = u, f, k
         return complexes
 
     @classmethod
     def _complexes_sorted(cls, complexes):
         """Make complex isolating intervals disjoint and sort roots. """
-        if not complexes:
-            return []
-        cache = {}
-
-        # imaginary roots can cause a problem in terms of sorting since
-        # their x-intervals will never refine as distinct from others
-        # so we handle them separately
-        imag, complexes = cls._separate_imaginary_from_complex(complexes)
         complexes = cls._refine_complexes(complexes)
-
-        # sort imaginary roots
-        def key(c):
-            '''return, for ax**n+b, +/-root(abs(b/a), b) according to the
-            apparent sign of the imaginary interval, e.g. if the interval
-            were (0, 3) the positive root would be returned.
-            '''
-            u, f, k = c
-            r = _root(abs(f.TC()/f.LC()), f.degree())
-            if u.ay < 0 or u.by < 0:
-                return -r
-            return r
-        imag = sorted(imag, key=lambda c: key(c))
-
-        # sort complexes and combine with imag
-        if complexes:
-            # key is (x1, y1) e.g. (1, 2)x(3, 4) -> (1,3)
-            complexes = sorted(complexes, key=lambda c: c[0].a)
-            # find insertion point for imaginary
-            for i, c in enumerate(reversed(complexes)):
-                if c[0].bx <= 0:
-                    break
-            i = len(complexes) - i - 1
-            if i:
-                i += 1
-            complexes = complexes[:i] + imag + complexes[i:]
-        else:
-            complexes = imag
+        # XXX don't sort until you are sure that it is compatible
+        # with the indexing method but assert that the desired state
+        # is not broken
+        C, F = 0, 1  # location of ComplexInterval and factor
+        fs = {i[F] for i in complexes}
+        for i in range(1, len(complexes)):
+            if complexes[i][F] != complexes[i - 1][F]:
+                # if this fails the factors of a root were not
+                # contiguous because a discontinuity should only
+                # happen once
+                fs.remove(complexes[i - 1][F])
+        for i, cmplx in enumerate(complexes):
+            # negative im part (conj=True) comes before
+            # positive im part (conj=False)
+            assert cmplx[C].conj is (i % 2 == 0)
 
         # update cache
-        for root, factor, _ in complexes:
-            if factor in cache:
-                cache[factor].append(root)
-            else:
-                cache[factor] = [root]
-
-        for factor, roots in cache.items():
-            _complexes_cache[factor] = roots
+        cache = {}
+        # -- collate
+        for root, currentfactor, _ in complexes:
+            cache.setdefault(currentfactor, []).append(root)
+        # -- store
+        for currentfactor, root in cache.items():
+            _complexes_cache[currentfactor] = root
 
         return complexes
 
@@ -418,12 +614,12 @@ class ComplexRootOf(RootOf):
         """
         i = 0
 
-        for j, (_, factor, k) in enumerate(reals):
+        for j, (_, currentfactor, k) in enumerate(reals):
             if index < i + k:
-                poly, index = factor, 0
+                poly, index = currentfactor, 0
 
-                for _, factor, _ in reals[:j]:
-                    if factor == poly:
+                for _, currentfactor, _ in reals[:j]:
+                    if currentfactor == poly:
                         index += 1
 
                 return poly, index
@@ -436,14 +632,13 @@ class ComplexRootOf(RootOf):
         Map initial complex root index to an index in a factor where
         the root belongs.
         """
-        index, i = index, 0
-
-        for j, (_, factor, k) in enumerate(complexes):
+        i = 0
+        for j, (_, currentfactor, k) in enumerate(complexes):
             if index < i + k:
-                poly, index = factor, 0
+                poly, index = currentfactor, 0
 
-                for _, factor, _ in complexes[:j]:
-                    if factor == poly:
+                for _, currentfactor, _ in complexes[:j]:
+                    if currentfactor == poly:
                         index += 1
 
                 index += len(_reals_cache[poly])
@@ -455,31 +650,47 @@ class ComplexRootOf(RootOf):
     @classmethod
     def _count_roots(cls, roots):
         """Count the number of real or complex roots with multiplicities."""
-        return sum([k for _, _, k in roots])
+        return sum(k for _, _, k in roots)
 
     @classmethod
-    def _indexed_root(cls, poly, index):
+    def _indexed_root(cls, poly, index, lazy=False):
         """Get a root of a composite polynomial by index. """
-        (_, factors) = poly.factor_list()
+        factors = _pure_factors(poly)
+
+        # If the given poly is already irreducible, then the index does not
+        # need to be adjusted, and we can postpone the heavy lifting of
+        # computing and refining isolating intervals until that is needed.
+        # Note, however, that `_pure_factors()` extracts a negative leading
+        # coeff if present, so `factors[0][0]` may differ from `poly`, and
+        # is the "normalized" version of `poly` that we must return.
+        if lazy and len(factors) == 1 and factors[0][1] == 1:
+            return factors[0][0], index
 
         reals = cls._get_reals(factors)
         reals_count = cls._count_roots(reals)
 
         if index < reals_count:
-            reals = cls._reals_sorted(reals)
             return cls._reals_index(reals, index)
         else:
             complexes = cls._get_complexes(factors)
-            complexes = cls._complexes_sorted(complexes)
             return cls._complexes_index(complexes, index - reals_count)
+
+    def _ensure_reals_init(self):
+        """Ensure that our poly has entries in the reals cache. """
+        if self.poly not in _reals_cache:
+            self._indexed_root(self.poly, self.index)
+
+    def _ensure_complexes_init(self):
+        """Ensure that our poly has entries in the complexes cache. """
+        if self.poly not in _complexes_cache:
+            self._indexed_root(self.poly, self.index)
 
     @classmethod
     def _real_roots(cls, poly):
         """Get real roots of a composite polynomial. """
-        (_, factors) = poly.factor_list()
+        factors = _pure_factors(poly)
 
         reals = cls._get_reals(factors)
-        reals = cls._reals_sorted(reals)
         reals_count = cls._count_roots(reals)
 
         roots = []
@@ -489,26 +700,37 @@ class ComplexRootOf(RootOf):
 
         return roots
 
-    @classmethod
-    def _all_roots(cls, poly):
-        """Get real and complex roots of a composite polynomial. """
-        (_, factors) = poly.factor_list()
+    def _reset(self):
+        """
+        Reset all intervals
+        """
+        factors = _pure_factors(self.poly)
+        self._get_reals(factors, use_cache=False)
+        self._get_complexes(factors, use_cache=False)
 
-        reals = cls._get_reals(factors)
-        reals = cls._reals_sorted(reals)
-        reals_count = cls._count_roots(reals)
+    @classmethod
+    def _all_roots(cls, poly, use_cache=True):
+        """Get real and complex roots of a composite polynomial. """
+        factors = _pure_factors(poly)
 
         roots = []
 
-        for index in range(0, reals_count):
-            roots.append(cls._reals_index(reals, index))
+        if len(factors) == 1:
+            f, multiplicity = factors[0]
+            deg = f.degree()
+            roots.extend((f, i) for i in range(deg) for _ in range(multiplicity))
+        else:
+            reals = cls._get_reals(factors, use_cache=use_cache)
+            reals_count = cls._count_roots(reals)
 
-        complexes = cls._get_complexes(factors)
-        complexes = cls._complexes_sorted(complexes)
-        complexes_count = cls._count_roots(complexes)
+            for index in range(0, reals_count):
+                roots.append(cls._reals_index(reals, index))
 
-        for index in range(0, complexes_count):
-            roots.append(cls._complexes_index(complexes, index))
+            complexes = cls._get_complexes(factors, use_cache=use_cache)
+            complexes_count = cls._count_roots(complexes)
+
+            for index in range(0, complexes_count):
+                roots.append(cls._complexes_index(complexes, index))
 
         return roots
 
@@ -558,11 +780,50 @@ class ComplexRootOf(RootOf):
             return cls._new(poly, index)
 
     @classmethod
-    def _get_roots(cls, method, poly, radicals):
+    def _get_roots(cls, method: str, poly: Poly, radicals: bool) -> list[Expr]:
         """Return postprocessed roots of specified kind. """
         if not poly.is_univariate:
             raise PolynomialError("only univariate polynomials are allowed")
 
+        dom = poly.get_domain()
+
+        # get rid of gen and it's free symbol
+        d = Dummy()
+        poly = poly.per(poly.rep, gens=(d,))
+        x = symbols('x')
+        # see what others are left and select x or a numbered x
+        # that doesn't clash
+        free_names = {str(i) for i in poly.free_symbols}
+        for x in chain((symbols('x'),), numbered_symbols('x')):
+            if x.name not in free_names:
+                poly = poly.replace(d, x)
+                break
+
+        if dom.is_QQ or dom.is_ZZ:
+            return cls._get_roots_qq(method, poly, radicals)
+        elif dom.is_ZZ_I or dom.is_QQ_I:
+            coeffs = poly.rep.to_list()
+
+            if all(c.y == 0 for c in coeffs):
+                poly = poly.set_domain(dom.dom)
+                return cls._get_roots_qq(method, poly, radicals)
+            elif all(c.x == 0 for c in coeffs):
+                poly = (I*poly).set_domain(dom.dom)
+                return cls._get_roots_qq(method, poly, radicals)
+            else:
+                return cls._get_roots_alg(method, poly, radicals)
+
+        elif dom.is_AlgebraicField:
+            return cls._get_roots_alg(method, poly, radicals)
+        else:
+            # XXX: not sure how to handle ZZ[x] which appears in some tests?
+            # this makes the tests pass alright but has to be a better way?
+            return cls._get_roots_qq(method, poly, radicals)
+
+    @classmethod
+    def _get_roots_qq(cls, method, poly, radicals):
+        """Return postprocessed roots of specified kind
+         for polynomials with rational coefficients. """
         coeff, poly = cls._preprocess_roots(poly)
         roots = []
 
@@ -571,79 +832,142 @@ class ComplexRootOf(RootOf):
 
         return roots
 
+    @classmethod
+    def _get_roots_alg(cls, method, poly, radicals):
+        """Return postprocessed roots of specified kind
+         for polynomials with algebraic coefficients. It assumes
+         the domain is already an algebraic field. First it
+         finds the roots using _get_roots_qq, then uses the
+         square-free factors to filter roots and get the correct
+         multiplicity.
+         """
+
+        # Existing QQ code can find and sort the roots
+        roots = cls._get_roots_qq(method, poly.lift(), radicals)
+
+        subroots = {}
+        for f, m in poly.sqf_list()[1]:
+            if method == "_real_roots":
+                roots_filt = f.which_real_roots(roots)
+            elif method == "_all_roots":
+                roots_filt = f.which_all_roots(roots)
+            else:
+                raise TypeError("Unknown method")
+            for r in roots_filt:
+                subroots[r] = m
+
+        roots_seen = set()
+        roots_flat = []
+        for r in roots:
+            if r in subroots and r not in roots_seen:
+                m = subroots[r]
+                roots_flat.extend([r] * m)
+                roots_seen.add(r)
+
+        return roots_flat
+
+    @classmethod
+    def clear_cache(cls):
+        """Reset cache for reals and complexes.
+
+        The intervals used to approximate a root instance are updated
+        as needed. When a request is made to see the intervals, the
+        most current values are shown. `clear_cache` will reset all
+        CRootOf instances back to their original state.
+
+        See Also
+        ========
+
+        _reset
+        """
+        global _reals_cache, _complexes_cache
+        _reals_cache = _pure_key_dict()
+        _complexes_cache = _pure_key_dict()
+
     def _get_interval(self):
         """Internal function for retrieving isolation interval from cache. """
+        self._ensure_reals_init()
         if self.is_real:
             return _reals_cache[self.poly][self.index]
         else:
             reals_count = len(_reals_cache[self.poly])
+            self._ensure_complexes_init()
             return _complexes_cache[self.poly][self.index - reals_count]
 
     def _set_interval(self, interval):
         """Internal function for updating isolation interval in cache. """
+        self._ensure_reals_init()
         if self.is_real:
             _reals_cache[self.poly][self.index] = interval
         else:
             reals_count = len(_reals_cache[self.poly])
+            self._ensure_complexes_init()
             _complexes_cache[self.poly][self.index - reals_count] = interval
 
     def _eval_subs(self, old, new):
         # don't allow subs to change anything
         return self
 
-    def _eval_evalf(self, prec):
-        """Evaluate this complex root to the given precision. """
-        with workprec(prec):
+    def _eval_conjugate(self):
+        if self.is_real:
+            return self
+        expr, i = self.args
+        return self.func(expr, i + (1 if self._get_interval().conj else -1))
+
+    def eval_approx(self, n, return_mpmath=False):
+        """Evaluate this complex root to the given precision.
+
+        This uses secant method and root bounds are used to both
+        generate an initial guess and to check that the root
+        returned is valid. If ever the method converges outside the
+        root bounds, the bounds will be made smaller and updated.
+        """
+        prec = dps_to_prec(n)
+        with local_workprec(prec) as mp:
             g = self.poly.gen
             if not g.is_Symbol:
                 d = Dummy('x')
-                func = lambdify(d, self.expr.subs(g, d))
+                if self.is_imaginary:
+                    d *= I
+                func = lambdify(d, self.expr.subs(g, d), modules=mp)
             else:
-                func = lambdify(g, self.expr)
+                expr = self.expr
+                if self.is_imaginary:
+                    expr = self.expr.subs(g, I*g)
+                func = lambdify(g, expr, modules=mp)
 
             interval = self._get_interval()
-            if not self.is_real:
-                # For complex intervals, we need to keep refining until the
-                # imaginary interval is disjunct with other roots, that is,
-                # until both ends get refined.
-                ay = interval.ay
-                by = interval.by
-                while interval.ay == ay or interval.by == by:
-                    interval = interval.refine()
-
             while True:
                 if self.is_real:
-                    a = mpf(str(interval.a))
-                    b = mpf(str(interval.b))
+                    a = mp.mpf(str(interval.a))
+                    b = mp.mpf(str(interval.b))
                     if a == b:
                         root = a
                         break
-                    x0 = mpf(str(interval.center))
-                else:
-                    ax = mpf(str(interval.ax))
-                    bx = mpf(str(interval.bx))
-                    ay = mpf(str(interval.ay))
-                    by = mpf(str(interval.by))
-                    if ax == bx and ay == by:
-                        # the sign of the imaginary part will be assigned
-                        # according to the desired index using the fact that
-                        # roots are sorted with negative imag parts coming
-                        # before positive (and all imag roots coming after real
-                        # roots)
-                        deg = self.poly.degree()
-                        i = self.index  # a positive attribute after creation
-                        if (deg - i) % 2:
-                            if ay < 0:
-                                ay = -ay
-                        else:
-                            if ay > 0:
-                                ay = -ay
-                        root = mpc(ax, ay)
+                    x0 = mp.mpf(str(interval.center))
+                    x1 = mp.fadd(x0, mp.fdiv(mp.mpf(str(interval.dx)), 4))
+                elif self.is_imaginary:
+                    a = mp.mpf(str(interval.ay))
+                    b = mp.mpf(str(interval.by))
+                    if a == b:
+                        root = mp.mpc(mp.mpf('0'), a)
                         break
-                    x0 = mpc(*map(str, interval.center))
-
+                    x0 = mp.mpf(str(interval.center[1]))
+                    x1 = mp.fadd(x0, mp.fdiv(mp.mpf(str(interval.dy)), 4))
+                else:
+                    ax = mp.mpf(str(interval.ax))
+                    bx = mp.mpf(str(interval.bx))
+                    ay = mp.mpf(str(interval.ay))
+                    by = mp.mpf(str(interval.by))
+                    if ax == bx and ay == by:
+                        root = mp.mpc(ax, ay)
+                        break
+                    x0 = mp.mpc(*map(str, interval.center))
+                    x1 = mp.fadd(x0, mp.fdiv(mp.mpc(*map(str, (interval.dx, interval.dy))), 4))
                 try:
-                    root = findroot(func, x0)
+                    # without a tolerance, this will return when (to within
+                    # the given precision) x_i == x_{i-1}
+                    root = mp.findroot(func, (x0, x1))
                     # If the (real or complex) root is not in the 'interval',
                     # then keep refining the interval. This happens if findroot
                     # accidentally finds a different root outside of this
@@ -658,8 +982,11 @@ class ComplexRootOf(RootOf):
                     # successful iterations to process (in which case it
                     # will fail to initialize a variable that is tested
                     # after the iterations and raise an UnboundLocalError).
-                    if self.is_real:
-                        if (a <= root <= b):
+                    if self.is_real or self.is_imaginary:
+                        if not bool(root.imag) == self.is_real and (
+                                a <= root <= b):
+                            if self.is_imaginary:
+                                root = mp.mpc(mp.mpf('0'), root.real)
                             break
                     elif (ax <= root.real <= bx and ay <= root.imag <= by):
                         break
@@ -667,92 +994,148 @@ class ComplexRootOf(RootOf):
                     pass
                 interval = interval.refine()
 
-        return (Float._new(root.real._mpf_, prec)
-                + I*Float._new(root.imag._mpf_, prec))
+        # update the interval so we at least (for this precision or
+        # less) don't have much work to do to recompute the root
+        self._set_interval(interval)
+        if return_mpmath:
+            return root
+        return (Float._new(root.real._mpf_, prec) +
+            I*Float._new(root.imag._mpf_, prec))
 
-    def eval_rational(self, tol):
+    def _eval_evalf(self, prec, **kwargs):
+        """Evaluate this complex root to the given precision."""
+        # all kwargs are ignored
+        return self.eval_rational(n=prec_to_dps(prec))._evalf(prec)
+
+    def eval_rational(self, dx=None, dy=None, n=15):
         """
-        Return a Rational approximation to ``self`` with the tolerance ``tol``.
+        Return a Rational approximation of ``self`` that has real
+        and imaginary component approximations that are within ``dx``
+        and ``dy`` of the true values, respectively. Alternatively,
+        ``n`` digits of precision can be specified.
 
-        This method uses bisection, which is very robust and it will always
-        converge. The returned Rational instance will be at most 'tol' from the
-        exact root.
+        The interval is refined with bisection and is sure to
+        converge. The root bounds are updated when the refinement
+        is complete so recalculation at the same or lesser precision
+        will not have to repeat the refinement and should be much
+        faster.
 
-        The following example first obtains Rational approximation to 1e-7
-        accuracy for all roots of the 4-th order Legendre polynomial, and then
-        evaluates it to 5 decimal digits (so all digits will be correct
-        including rounding):
+        The following example first obtains Rational approximation to
+        1e-8 accuracy for all roots of the 4-th order Legendre
+        polynomial. Since the roots are all less than 1, this will
+        ensure the decimal representation of the approximation will be
+        correct (including rounding) to 6 digits:
 
-        >>> from sympy import S, legendre_poly, Symbol
+        >>> from sympy import legendre_poly, Symbol
         >>> x = Symbol("x")
         >>> p = legendre_poly(4, x, polys=True)
-        >>> roots = [r.eval_rational(S(1)/10**7) for r in p.real_roots()]
-        >>> roots = [str(r.n(5)) for r in roots]
-        >>> roots
-        ['-0.86114', '-0.33998', '0.33998', '0.86114']
+        >>> r = p.real_roots()[-1]
+        >>> r.eval_rational(10**-8).n(6)
+        0.861136
+
+        It is not necessary to a two-step calculation, however: the
+        decimal representation can be computed directly:
+
+        >>> r.evalf(17)
+        0.86113631159405258
 
         """
-
-        if not self.is_real:
-            raise NotImplementedError(
-                "eval_rational() only works for real polynomials so far")
-        func = lambdify(self.poly.gen, self.expr)
+        dy = dy or dx
+        if dx:
+            rtol = None
+            dx = dx if isinstance(dx, Rational) else Rational(str(dx))
+            dy = dy if isinstance(dy, Rational) else Rational(str(dy))
+        else:
+            # 5 binary (or 2 decimal) digits are needed to ensure that
+            # a given digit is correctly rounded
+            # prec_to_dps(dps_to_prec(n) + 5) - n <= 2 (tested for
+            # n in range(1000000)
+            rtol = S(10)**-(n + 2)  # +2 for guard digits
         interval = self._get_interval()
-        a = Rational(str(interval.a))
-        b = Rational(str(interval.b))
-        return bisect(func, a, b, tol)
-
-    def _eval_Eq(self, other):
-        # CRootOf represents a Root, so if other is that root, it should set
-        # the expression to zero *and* it should be in the interval of the
-        # CRootOf instance. It must also be a number that agrees with the
-        # is_real value of the CRootOf instance.
-        if type(self) == type(other):
-            return sympify(self == other)
-        if not (other.is_number and not other.has(AppliedUndef)):
-            return S.false
-        if not other.is_finite:
-            return S.false
-        z = self.expr.subs(self.expr.free_symbols.pop(), other).is_zero
-        if z is False:  # all roots will make z True but we don't know
-                        # whether this is the right root if z is True
-            return S.false
-        o = other.is_real, other.is_imaginary
-        s = self.is_real, self.is_imaginary
-        if o != s and None not in o and None not in s:
-            return S.false
-        i = self._get_interval()
-        was = i.a, i.b
-        need = [True]*2
-        # make sure it would be distinct from others
-        while any(need):
-            i = i.refine()
-            a, b = i.a, i.b
-            if need[0] and a != was[0]:
-                need[0] = False
-            if need[1] and b != was[1]:
-                need[1] = False
-        re, im = other.as_real_imag()
-        if not im:
+        while True:
             if self.is_real:
-                a, b = [Rational(str(i)) for i in (a, b)]
-                return sympify(a < other and other < b)
-            return S.false
-        if self.is_real:
-            return S.false
-        z = r1, r2, i1, i2 = [Rational(str(j)) for j in (
-            i.ax, i.bx, i.ay, i.by)]
-        return sympify((
-            r1 < re and re < r2) and (
-            i1 < im and im < i2))
+                if rtol:
+                    dx = abs(interval.center*rtol)
+                interval = interval.refine_size(dx=dx)
+                c = interval.center
+                real = Rational(c)
+                imag = S.Zero
+                if not rtol or interval.dx < abs(c*rtol):
+                    break
+            elif self.is_imaginary:
+                if rtol:
+                    dy = abs(interval.center[1]*rtol)
+                    dx = 1
+                interval = interval.refine_size(dx=dx, dy=dy)
+                c = interval.center[1]
+                imag = Rational(c)
+                real = S.Zero
+                if not rtol or interval.dy < abs(c*rtol):
+                    break
+            else:
+                if rtol:
+                    dx = abs(interval.center[0]*rtol)
+                    dy = abs(interval.center[1]*rtol)
+                interval = interval.refine_size(dx, dy)
+                c = interval.center
+                real, imag = map(Rational, c)
+                if not rtol or (
+                        interval.dx < abs(c[0]*rtol) and
+                        interval.dy < abs(c[1]*rtol)):
+                    break
+
+        # update the interval so we at least (for this precision or
+        # less) don't have much work to do to recompute the root
+        self._set_interval(interval)
+        return real + I*imag
+
 
 CRootOf = ComplexRootOf
+
+
+@dispatch(ComplexRootOf, ComplexRootOf)
+def _eval_is_eq(lhs, rhs): # noqa:F811
+    # if we use is_eq to check here, we get infinite recursion
+    return lhs == rhs
+
+
+@dispatch(ComplexRootOf, Basic)  # type:ignore
+def _eval_is_eq(lhs, rhs): # noqa:F811
+    # CRootOf represents a Root, so if rhs is that root, it should set
+    # the expression to zero *and* it should be in the interval of the
+    # CRootOf instance. It must also be a number that agrees with the
+    # is_real value of the CRootOf instance.
+    if not rhs.is_number:
+        return None
+    if not rhs.is_finite:
+        return False
+    z = lhs.expr.subs(lhs.expr.free_symbols.pop(), rhs).is_zero
+    if z is False:  # all roots will make z True but we don't know
+        # whether this is the right root if z is True
+        return False
+    o = rhs.is_real, rhs.is_imaginary
+    s = lhs.is_real, lhs.is_imaginary
+    assert None not in s  # this is part of initial refinement
+    if o != s and None not in o:
+        return False
+    re, im = rhs.as_real_imag()
+    if lhs.is_real:
+        if im:
+            return False
+        i = lhs._get_interval()
+        a, b = [Rational(str(_)) for _ in (i.a, i.b)]
+        return sympify(a <= rhs and rhs <= b)
+    i = lhs._get_interval()
+    r1, r2, i1, i2 = [Rational(str(j)) for j in (
+        i.ax, i.bx, i.ay, i.by)]
+    return is_le(r1, re) and is_le(re,r2) and is_le(i1,im) and is_le(im,i2)
+
 
 @public
 class RootSum(Expr):
     """Represents a sum of all roots of a univariate polynomial. """
 
-    __slots__ = ['poly', 'fun', 'auto']
+    __slots__ = ('poly', 'fun', 'auto')
 
     def __new__(cls, expr, func=None, x=None, auto=True, quadratic=False):
         """Construct a new ``RootSum`` instance of roots of a polynomial."""
@@ -762,17 +1145,15 @@ class RootSum(Expr):
             raise MultivariatePolynomialError(
                 "only univariate polynomials are allowed")
 
+        poly = Poly(poly.replace(poly.gen, _rootsum_dummy))
+
         if func is None:
-            func = Lambda(poly.gen, poly.gen)
+            func = Lambda(_rootsum_dummy, _rootsum_dummy)
         else:
-            try:
-                is_func = func.is_Function
-            except AttributeError:
-                is_func = False
+            is_func = getattr(func, 'is_Function', False)
 
             if is_func and 1 in func.nargs:
-                if not isinstance(func, Lambda):
-                    func = Lambda(poly.gen, func(poly.gen))
+                func = Lambda(_rootsum_dummy, func(_rootsum_dummy))
             else:
                 raise ValueError(
                     "expected a univariate function, got %s" % func)
@@ -800,7 +1181,7 @@ class RootSum(Expr):
         func = Lambda(var, expr)
 
         rational = cls._is_func_rational(poly, func)
-        (_, factors), terms = poly.factor_list(), []
+        factors, terms = _pure_factors(poly), []
 
         for poly, k in factors:
             if poly.is_linear:
@@ -844,12 +1225,12 @@ class RootSum(Expr):
     @classmethod
     def _transform(cls, expr, x):
         """Transform an expression to a polynomial. """
-        poly = PurePoly(expr, x, greedy=False)
+        poly = Poly(expr, x, greedy=False)
         return preprocess_roots(poly)
 
     @classmethod
     def _is_func_rational(cls, poly, func):
-        """Check if a lambda is areational function. """
+        """Check if a lambda is a rational function. """
         var, expr = func.variables[0], func.expr
         return expr.is_rational_function(var)
 
@@ -920,7 +1301,8 @@ class RootSum(Expr):
 
     @property
     def free_symbols(self):
-        return self.poly.free_symbols | self.fun.free_symbols
+        poly_syms = self.poly.free_symbols - {self.poly.gen}
+        return poly_syms | self.fun.free_symbols
 
     @property
     def is_commutative(self):
@@ -949,39 +1331,3 @@ class RootSum(Expr):
         var, expr = self.fun.args
         func = Lambda(var, expr.diff(x))
         return self.new(self.poly, func, self.auto)
-
-
-def bisect(f, a, b, tol):
-    """
-    Implements bisection. This function is used in RootOf.eval_rational() and
-    it needs to be robust.
-
-    Examples
-    ========
-
-    >>> from sympy import S
-    >>> from sympy.polys.rootoftools import bisect
-    >>> bisect(lambda x: x**2-1, -10, 0, S(1)/10**2)
-    -1025/1024
-    >>> bisect(lambda x: x**2-1, -10, 0, S(1)/10**4)
-    -131075/131072
-
-    """
-    a = sympify(a)
-    b = sympify(b)
-    fa = f(a)
-    fb = f(b)
-    if fa * fb >= 0:
-        raise ValueError("bisect: f(a) and f(b) must have opposite signs")
-    while (b - a > tol):
-        c = (a + b)/2
-        fc = f(c)
-        if (fc == 0):
-            return c  # We need to make sure f(c) is not zero below
-        if (fa * fc < 0):
-            b = c
-            fb = fc
-        else:
-            a = c
-            fa = fc
-    return (a + b)/2

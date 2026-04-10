@@ -3,12 +3,14 @@
 NOTE
 ----
 
-at present this is mainly needed for facts.py , feel free however to improve
+at present this is mainly needed for facts.py, feel free however to improve
 this stuff for general purpose.
 """
-from __future__ import print_function, division
 
-from sympy.core.compatibility import range
+from __future__ import annotations
+
+# Type of a fuzzy bool
+FuzzyBool = bool | None
 
 
 def _torf(args):
@@ -145,7 +147,7 @@ def fuzzy_and(args):
     return rv
 
 
-def fuzzy_not(v):
+def fuzzy_not(v: bool | None) -> bool | None:
     """
     Not in fuzzy logic
 
@@ -186,13 +188,39 @@ def fuzzy_or(args):
     None
 
     """
-    return fuzzy_not(fuzzy_and(fuzzy_not(i) for i in args))
+    rv = False
+    for ai in args:
+        ai = fuzzy_bool(ai)
+        if ai is True:
+            return True
+        if rv is False:  # this will stop updating if a None is ever trapped
+            rv = ai
+    return rv
 
 
-class Logic(object):
+def fuzzy_xor(args):
+    """Return None if any element of args is not True or False, else
+    True (if there are an odd number of True elements), else False."""
+    t = 0
+    for a in args:
+        ai = fuzzy_bool(a)
+        if ai:
+            t += 1
+        elif ai is None:
+            return
+    return t % 2 == 1
+
+
+def fuzzy_nand(args):
+    """Return False if all args are True, True if they are all False,
+    else None."""
+    return fuzzy_not(fuzzy_and(args))
+
+
+class Logic:
     """Logical expression"""
     # {} 'op' -> LogicClass
-    op_2class = {}
+    op_2class: dict[str, type[Logic]] = {}
 
     def __new__(cls, *args):
         obj = object.__new__(cls)
@@ -203,7 +231,7 @@ class Logic(object):
         return self.args
 
     def __hash__(self):
-        return hash( (type(self).__name__,) + tuple(self.args) )
+        return hash((type(self).__name__,) + tuple(self.args))
 
     def __eq__(a, b):
         if not isinstance(b, type(a)):
@@ -217,22 +245,9 @@ class Logic(object):
         else:
             return a.args != b.args
 
-    def __lt__(self, other):
-        if self.__cmp__(other) == -1:
-            return True
-        return False
-
-    def __cmp__(self, other):
-        if type(self) is not type(other):
-            a = str(type(self))
-            b = str(type(other))
-        else:
-            a = self.args
-            b = other.args
-        return (a > b) - (a < b)
-
     def __str__(self):
-        return '%s(%s)' % (self.__class__.__name__, ', '.join(str(a) for a in self.args))
+        return '%s(%s)' % (self.__class__.__name__,
+                           ', '.join(str(a) for a in self.args))
 
     __repr__ = __str__
 
@@ -337,18 +352,17 @@ class And(AndOr_Base):
 
     def _eval_propagate_not(self):
         # !(a&b&c ...) == !a | !b | !c ...
-        return Or( *[Not(a) for a in self.args] )
+        return Or(*[Not(a) for a in self.args])
 
     # (a|b|...) & c == (a&c) | (b&c) | ...
     def expand(self):
 
         # first locate Or
-        for i in range(len(self.args)):
-            arg = self.args[i]
+        for i, arg in enumerate(self.args):
             if isinstance(arg, Or):
                 arest = self.args[:i] + self.args[i + 1:]
 
-                orterms = [And( *(arest + (a,)) ) for a in arg.args]
+                orterms = [And(*(arest + (a,))) for a in arg.args]
                 for j in range(len(orterms)):
                     if isinstance(orterms[j], Logic):
                         orterms[j] = orterms[j].expand()
@@ -356,8 +370,7 @@ class And(AndOr_Base):
                 res = Or(*orterms)
                 return res
 
-        else:
-            return self
+        return self
 
 
 class Or(AndOr_Base):
@@ -365,7 +378,7 @@ class Or(AndOr_Base):
 
     def _eval_propagate_not(self):
         # !(a|b|c ...) == !a & !b & !c ...
-        return And( *[Not(a) for a in self.args] )
+        return And(*[Not(a) for a in self.args])
 
 
 class Not(Logic):

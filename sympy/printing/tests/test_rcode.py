@@ -1,19 +1,19 @@
+from __future__ import annotations
 from sympy.core import (S, pi, oo, Symbol, symbols, Rational, Integer,
-                        GoldenRatio, EulerGamma, Catalan, Lambda, Dummy, Eq)
+                        GoldenRatio, EulerGamma, Catalan, Lambda, Dummy)
 from sympy.functions import (Piecewise, sin, cos, Abs, exp, ceiling, sqrt,
-                             gamma, sign, Max)
+                             gamma, sign, Max, Min, factorial, beta)
+from sympy.core.relational import (Eq, Ge, Gt, Le, Lt, Ne)
 from sympy.sets import Range
 from sympy.logic import ITE
 from sympy.codegen import For, aug_assign, Assignment
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 from sympy.printing.rcode import RCodePrinter
 from sympy.utilities.lambdify import implemented_function
 from sympy.tensor import IndexedBase, Idx
 from sympy.matrices import Matrix, MatrixSymbol
 
-from sympy import rcode
-from difflib import Differ
-from pprint import pprint
+from sympy.printing.rcode import rcode
 
 x, y, z = symbols('x,y,z')
 
@@ -46,13 +46,12 @@ def test_rcode_Pow():
     assert rcode(x**3.2, user_functions={'Pow': _cond_cfunc}) == 'pow(x, 3.2)'
 
 
-
 def test_rcode_Max():
     # Test for gh-11926
     assert rcode(Max(x,x*x),user_functions={"Max":"my_max", "Pow":"my_pow"}) == 'my_max(x, my_pow(x, 2))'
 
+
 def test_rcode_constants_mathh():
-    p=rcode(exp(1))
     assert rcode(exp(1)) == "exp(1)"
     assert rcode(pi) == "pi"
     assert rcode(oo) == "Inf"
@@ -82,6 +81,8 @@ def test_rcode_Integer():
 
 def test_rcode_functions():
     assert rcode(sin(x) ** cos(x)) == "sin(x)^cos(x)"
+    assert rcode(factorial(x) + gamma(y)) == "factorial(x) + gamma(y)"
+    assert rcode(beta(Min(x, y), Max(x, y))) == "beta(min(x, y), max(x, y))"
 
 
 def test_rcode_inline_function():
@@ -135,7 +136,6 @@ def test_rcode_boolean():
     assert rcode((x | y) & z) == "z & (x | y)"
 
 def test_rcode_Relational():
-    from sympy import Eq, Ne, Le, Lt, Gt, Ge
     assert rcode(Eq(x, y)) == "x == y"
     assert rcode(Ne(x, y)) == "x != y"
     assert rcode(Le(x, y)) == "x <= y"
@@ -167,10 +167,10 @@ def test_rcode_Piecewise():
 
 
 def test_rcode_sinc():
-    from sympy import sinc
+    from sympy.functions.elementary.trigonometric import sinc
     expr = sinc(x)
     res = rcode(expr)
-    ref = "ifelse(x != 0,sin(x)/x,1)"
+    ref = "(ifelse(x != 0,sin(x)/x,1))"
     assert res == ref
 
 
@@ -199,8 +199,6 @@ def test_rcode_settings():
 
 
 def test_rcode_Indexed():
-    from sympy.tensor import IndexedBase, Idx
-    from sympy import symbols
     n, m, o = symbols('n m o', integer=True)
     i, j, k = Idx('i', n), Idx('j', m), Idx('k', o)
     p = RCodePrinter()
@@ -267,8 +265,6 @@ def test_dummy_loops():
 
 
 def test_rcode_loops_add():
-    from sympy.tensor import IndexedBase, Idx
-    from sympy import symbols
     n, m = symbols('n m', integer=True)
     A = IndexedBase('A')
     x = IndexedBase('x')
@@ -292,8 +288,6 @@ def test_rcode_loops_add():
 
 
 def test_rcode_loops_multiple_contractions():
-    from sympy.tensor import IndexedBase, Idx
-    from sympy import symbols
     n, m, o, p = symbols('n m o p', integer=True)
     a = IndexedBase('a')
     b = IndexedBase('b')
@@ -322,8 +316,6 @@ def test_rcode_loops_multiple_contractions():
 
 
 def test_rcode_loops_addfactor():
-    from sympy.tensor import IndexedBase, Idx
-    from sympy import symbols
     n, m, o, p = symbols('n m o p', integer=True)
     a = IndexedBase('a')
     b = IndexedBase('b')
@@ -353,8 +345,6 @@ def test_rcode_loops_addfactor():
 
 
 def test_rcode_loops_multiple_terms():
-    from sympy.tensor import IndexedBase, Idx
-    from sympy import symbols
     n, m, o, p = symbols('n m o p', integer=True)
     a = IndexedBase('a')
     b = IndexedBase('b')
@@ -395,7 +385,7 @@ def test_rcode_loops_multiple_terms():
     c = rcode(
         b[j]*a[i, j] + b[k]*a[i, k] + b[j]*b[k]*c[i, j, k], assign_to=y[i])
 
-    ref=dict()
+    ref={}
     ref[0] = s0 + s1 + s2 + s3[:-1]
     ref[1] = s0 + s1 + s3 + s2[:-1]
     ref[2] = s0 + s2 + s1 + s3[:-1]
@@ -447,8 +437,6 @@ def test_Matrix_printing():
         "M[8] = 0;")
 
 
-
-
 def test_rcode_sgn():
 
     expr = sign(x) * y
@@ -471,7 +459,7 @@ def test_rcode_Assignment():
 def test_rcode_For():
     f = For(x, Range(0, 10, 2), [aug_assign(y, '*', x)])
     sol = rcode(f)
-    assert sol == ("for (x = 0; x < 10; x += 2) {\n"
+    assert sol == ("for(x in seq(from=0, to=9, by=2){\n"
                    "   y *= x;\n"
                    "}")
 
@@ -486,4 +474,4 @@ def test_MatrixElement_printing():
     assert(rcode(3 * A[0, 0]) == "3*A[0]")
 
     F = C[0, 0].subs(C, A - B)
-    assert(rcode(F) == "((-1)*B + A)[0]")
+    assert(rcode(F) == "(A - B)[0]")

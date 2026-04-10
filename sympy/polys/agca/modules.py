@@ -16,17 +16,19 @@ a few non-implemented methods. The concrete base classes supply only these
 non-implemented methods. They may also supply new implementations of the
 convenience methods, for example if there are faster algorithms available.
 """
+from __future__ import annotations
 
-from __future__ import print_function, division
 
 from copy import copy
+from functools import reduce
 
-from sympy.polys.polyerrors import CoercionFailed
-from sympy.polys.orderings import ProductOrder, monomial_key
-from sympy.polys.domains.field import Field
 from sympy.polys.agca.ideals import Ideal
-
-from sympy.core.compatibility import iterable, reduce, range
+from sympy.polys.domains.field import Field
+from sympy.polys.orderings import ProductOrder, monomial_key
+from sympy.polys.polyclasses import DMP
+from sympy.polys.polyerrors import CoercionFailed
+from sympy.core.basic import _aresame
+from sympy.utilities.iterables import iterable
 
 # TODO
 # - module saturation
@@ -40,7 +42,7 @@ from sympy.core.compatibility import iterable, reduce, range
 ##########################################################################
 
 
-class Module(object):
+class Module:
     """
     Abstract base class for modules.
 
@@ -88,12 +90,10 @@ class Module(object):
         """Generate a quotient module."""
         raise NotImplementedError
 
-    def __div__(self, e):
+    def __truediv__(self, e):
         if not isinstance(e, Module):
             e = self.submodule(*e)
         return self.quotient_module(e)
-
-    __truediv__ = __div__
 
     def contains(self, elem):
         """Return True if ``elem`` is an element of this module."""
@@ -109,6 +109,9 @@ class Module(object):
     def subset(self, other):
         """
         Returns True if ``other`` is is a subset of ``self``.
+
+        Examples
+        ========
 
         >>> from sympy.abc import x
         >>> from sympy import QQ
@@ -155,7 +158,7 @@ class Module(object):
         raise NotImplementedError
 
 
-class ModuleElement(object):
+class ModuleElement:
     """
     Base class for module element wrappers.
 
@@ -231,15 +234,13 @@ class ModuleElement(object):
 
     __rmul__ = __mul__
 
-    def __div__(self, o):
+    def __truediv__(self, o):
         if not isinstance(o, self.module.ring.dtype):
             try:
                 o = self.module.ring.convert(o)
             except CoercionFailed:
                 return NotImplemented
         return self.__class__(self.module, self.div(self.data, o))
-
-    __truediv__ = __div__
 
     def __eq__(self, om):
         if not isinstance(om, self.__class__) or om.module != self.module:
@@ -270,8 +271,11 @@ class FreeModuleElement(ModuleElement):
         return tuple(x / p for x in d)
 
     def __repr__(self):
-        from sympy import sstr
-        return '[' + ', '.join(sstr(x) for x in self.data) + ']'
+        from sympy.printing.str import sstr
+        data = self.data
+        if any(isinstance(x, DMP) for x in data):
+            data = [self.module.ring.to_sympy(x) for x in data]
+        return '[' + ', '.join(sstr(x) for x in data) + ']'
 
     def __iter__(self):
         return self.data.__iter__()
@@ -306,6 +310,9 @@ class FreeModule(Module):
         """
         Returns True if ``other`` is a submodule of ``self``.
 
+        Examples
+        ========
+
         >>> from sympy.abc import x
         >>> from sympy import QQ
         >>> F = QQ.old_poly_ring(x).free_module(2)
@@ -330,6 +337,9 @@ class FreeModule(Module):
         This method is called implicitly whenever computations involve elements
         not in the internal representation.
 
+        Examples
+        ========
+
         >>> from sympy.abc import x
         >>> from sympy import QQ
         >>> F = QQ.old_poly_ring(x).free_module(2)
@@ -348,7 +358,7 @@ class FreeModule(Module):
             if len(tpl) != self.rank:
                 raise CoercionFailed
             return FreeModuleElement(self, tpl)
-        elif elem is 0:
+        elif _aresame(elem, 0):
             return FreeModuleElement(self, (self.ring.convert(0),)*self.rank)
         else:
             raise CoercionFailed
@@ -359,6 +369,9 @@ class FreeModule(Module):
 
         (If, as this implementation assumes, the coefficient ring is not the
         zero ring, then this is equivalent to the rank being zero.)
+
+        Examples
+        ========
 
         >>> from sympy.abc import x
         >>> from sympy import QQ
@@ -373,6 +386,9 @@ class FreeModule(Module):
         """
         Return a set of basis elements.
 
+        Examples
+        ========
+
         >>> from sympy.abc import x
         >>> from sympy import QQ
         >>> QQ.old_poly_ring(x).free_module(3).basis()
@@ -385,6 +401,9 @@ class FreeModule(Module):
     def quotient_module(self, submodule):
         """
         Return a quotient module.
+
+        Examples
+        ========
 
         >>> from sympy.abc import x
         >>> from sympy import QQ
@@ -403,6 +422,9 @@ class FreeModule(Module):
         """
         Multiply ``self`` by the ideal ``other``.
 
+        Examples
+        ========
+
         >>> from sympy.abc import x
         >>> from sympy import QQ
         >>> I = QQ.old_poly_ring(x).ideal(x)
@@ -415,6 +437,9 @@ class FreeModule(Module):
     def identity_hom(self):
         """
         Return the identity homomorphism on ``self``.
+
+        Examples
+        ========
 
         >>> from sympy.abc import x
         >>> from sympy import QQ
@@ -432,6 +457,9 @@ class FreeModulePolyRing(FreeModule):
     Free module over a generalized polynomial ring.
 
     Do not instantiate this, use the constructor method of the ring instead:
+
+    Examples
+    ========
 
     >>> from sympy.abc import x
     >>> from sympy import QQ
@@ -458,6 +486,9 @@ class FreeModulePolyRing(FreeModule):
         """
         Generate a submodule.
 
+        Examples
+        ========
+
         >>> from sympy.abc import x, y
         >>> from sympy import QQ
         >>> M = QQ.old_poly_ring(x, y).free_module(2).submodule([x, x + y])
@@ -476,6 +507,9 @@ class FreeModuleQuotientRing(FreeModule):
     Free module over a quotient ring.
 
     Do not instantiate this, use the constructor method of the ring instead:
+
+    Examples
+    ========
 
     >>> from sympy.abc import x
     >>> from sympy import QQ
@@ -504,6 +538,9 @@ class FreeModuleQuotientRing(FreeModule):
         """
         Generate a submodule.
 
+        Examples
+        ========
+
         >>> from sympy.abc import x, y
         >>> from sympy import QQ
         >>> M = (QQ.old_poly_ring(x, y)/[x**2 - y**2]).free_module(2).submodule([x, x + y])
@@ -522,6 +559,9 @@ class FreeModuleQuotientRing(FreeModule):
 
         Note that self.quot is the same set as self, just as an R-module
         and not as an R/I-module, so this makes sense.
+
+        Examples
+        ========
 
         >>> from sympy.abc import x
         >>> from sympy import QQ
@@ -543,6 +583,9 @@ class FreeModuleQuotientRing(FreeModule):
         Push down an element of self.quot to self.
 
         This undoes ``lift``.
+
+        Examples
+        ========
 
         >>> from sympy.abc import x
         >>> from sympy import QQ
@@ -614,6 +657,9 @@ class SubModule(Module):
 
         Mostly called implicitly.
 
+        Examples
+        ========
+
         >>> from sympy.abc import x
         >>> from sympy import QQ
         >>> M = QQ.old_poly_ring(x).free_module(2).submodule([1, x])
@@ -642,6 +688,9 @@ class SubModule(Module):
         """
         Returns the intersection of ``self`` with submodule ``other``.
 
+        Examples
+        ========
+
         >>> from sympy.abc import x, y
         >>> from sympy import QQ
         >>> F = QQ.old_poly_ring(x, y).free_module(2)
@@ -656,7 +705,7 @@ class SubModule(Module):
         generators of ``self`` (``rela``) and ``other`` (``relb``).
 
         >>> F.submodule([x, x]).intersect(F.submodule([y, y]), relations=True)
-        (<[x*y, x*y]>, [(y,)], [(x,)])
+        (<[x*y, x*y]>, [(DMP_Python([[1, 0]], QQ),)], [(DMP_Python([[1], []], QQ),)])
 
         The above result says: the intersection module is generated by the
         single element `(-xy, -xy) = -y (x, x) = -x (y, y)`, where
@@ -677,6 +726,9 @@ class SubModule(Module):
         That is, if ``self`` is the module `M` and ``other`` is `N`, then
         return the ideal `\{f \in R | fN \subset M\}`.
 
+        Examples
+        ========
+
         >>> from sympy import QQ
         >>> from sympy.abc import x, y
         >>> F = QQ.old_poly_ring(x, y).free_module(2)
@@ -694,7 +746,7 @@ class SubModule(Module):
         generators of ``self``.
 
         >>> S.module_quotient(T, relations=True)
-        (<y>, [[1]])
+        (<y>, [[DMP_Python([[1]], QQ)]])
 
         This means that the quotient ideal is generated by the single element
         `y`, and that `y (x, x) = 1 (xy, xy)`, `(x, x)` and `(xy, xy)` being
@@ -710,6 +762,9 @@ class SubModule(Module):
     def union(self, other):
         """
         Returns the module generated by the union of ``self`` and ``other``.
+
+        Examples
+        ========
 
         >>> from sympy.abc import x
         >>> from sympy import QQ
@@ -730,6 +785,9 @@ class SubModule(Module):
         """
         Return True if ``self`` is a zero module.
 
+        Examples
+        ========
+
         >>> from sympy.abc import x
         >>> from sympy import QQ
         >>> F = QQ.old_poly_ring(x).free_module(2)
@@ -744,6 +802,9 @@ class SubModule(Module):
         """
         Generate a submodule.
 
+        Examples
+        ========
+
         >>> from sympy.abc import x
         >>> from sympy import QQ
         >>> M = QQ.old_poly_ring(x).free_module(2).submodule([x, 1])
@@ -757,6 +818,9 @@ class SubModule(Module):
     def is_full_module(self):
         """
         Return True if ``self`` is the entire free module.
+
+        Examples
+        ========
 
         >>> from sympy.abc import x
         >>> from sympy import QQ
@@ -800,6 +864,9 @@ class SubModule(Module):
         sending `(r_1, \ldots, r_n) \to r_1 f_1 + \cdots + r_n f_n`.
         The syzygy module is defined to be the kernel of `\phi`.
 
+        Examples
+        ========
+
         The syzygy module is zero iff the generators generate freely a free
         submodule:
 
@@ -826,12 +893,15 @@ class SubModule(Module):
         """
         Express element ``e`` of ``self`` in terms of the generators.
 
+        Examples
+        ========
+
         >>> from sympy.abc import x
         >>> from sympy import QQ
         >>> F = QQ.old_poly_ring(x).free_module(2)
         >>> M = F.submodule([1, 0], [1, 1])
-        >>> M.in_terms_of_generators([x, x**2])
-        [-x**2 + x, x**2]
+        >>> M.in_terms_of_generators([x, x**2])  # doctest: +SKIP
+        [DMP_Python([-1, 1, 0], QQ), DMP_Python([1, 0, 0], QQ)]
         """
         try:
             e = self.convert(e)
@@ -854,6 +924,9 @@ class SubModule(Module):
 
         This is the same as taking a submodule of a quotient of the containing
         module.
+
+        Examples
+        ========
 
         >>> from sympy.abc import x
         >>> from sympy import QQ
@@ -882,6 +955,9 @@ class SubModule(Module):
         """
         Multiply ``self`` by the ideal ``I``.
 
+        Examples
+        ========
+
         >>> from sympy.abc import x
         >>> from sympy import QQ
         >>> I = QQ.old_poly_ring(x).ideal(x**2)
@@ -897,6 +973,9 @@ class SubModule(Module):
 
         That is, the natural map from ``self`` to ``self.container``.
 
+        Examples
+        ========
+
         >>> from sympy.abc import x
         >>> from sympy import QQ
         >>> QQ.old_poly_ring(x).free_module(2).submodule([x, x]).inclusion_hom()
@@ -909,6 +988,9 @@ class SubModule(Module):
     def identity_hom(self):
         """
         Return the identity homomorphism on ``self``.
+
+        Examples
+        ========
 
         >>> from sympy.abc import x
         >>> from sympy import QQ
@@ -975,6 +1057,9 @@ class SubQuotientModule(SubModule):
         """
         Return True if ``self`` is the entire free module.
 
+        Examples
+        ========
+
         >>> from sympy.abc import x
         >>> from sympy import QQ
         >>> F = QQ.old_poly_ring(x).free_module(2)
@@ -990,6 +1075,9 @@ class SubQuotientModule(SubModule):
         Return the quotient homomorphism to self.
 
         That is, return the natural map from ``self.base`` to ``self``.
+
+        Examples
+        ========
 
         >>> from sympy.abc import x
         >>> from sympy import QQ
@@ -1070,7 +1158,8 @@ class SubModulePolyRing(SubModule):
     def _groebner_vec(self, extended=False):
         """Returns a standard basis in element form."""
         if not extended:
-            return [self.convert(self.ring._sdm_to_vector(x, self.rank))
+            return [FreeModuleElement(self,
+                        tuple(self.ring._sdm_to_vector(x, self.rank)))
                     for x in self._groebner()]
         gb, gbe = self._groebner(extended=True)
         return ([self.convert(self.ring._sdm_to_vector(x, self.rank))
@@ -1087,31 +1176,31 @@ class SubModulePolyRing(SubModule):
         """Compute syzygies. See [SCA, algorithm 2.5.4]."""
         # NOTE if self.gens is a standard basis, this can be done more
         #      efficiently using Schreyer's theorem
-        from sympy.matrices import eye
 
         # First bullet point
         k = len(self.gens)
         r = self.rank
-        im = eye(k)
+        zero = self.ring.convert(0)
+        one = self.ring.convert(1)
         Rkr = self.ring.free_module(r + k)
         newgens = []
         for j, f in enumerate(self.gens):
             m = [0]*(r + k)
             for i, v in enumerate(f):
-                m[i] = f[i]
+                m[i] = v
             for i in range(k):
-                m[r + i] = im[j, i]
-            newgens.append(Rkr.convert(m))
+                m[r + i] = one if j == i else zero
+            m = FreeModuleElement(Rkr, tuple(m))
+            newgens.append(m)
         # Note: we need *descending* order on module index, and TOP=False to
-        #       get an eliminetaion order
+        #       get an elimination order
         F = Rkr.submodule(*newgens, order='ilex', TOP=False)
 
         # Second bullet point: standard basis of F
         G = F._groebner_vec()
 
         # Third bullet point: G0 = G intersect the new k components
-        G0 = [x[r:] for x in G if all(y == self.ring.convert(0)
-                                      for y in x[:r])]
+        G0 = [x[r:] for x in G if all(y == zero for y in x[:r])]
 
         # Fourth and fifth bullet points: we are done
         return G0
@@ -1282,6 +1371,9 @@ class QuotientModule(Module):
         This happens if and only if the base module is the same as the
         submodule being killed.
 
+        Examples
+        ========
+
         >>> from sympy.abc import x
         >>> from sympy import QQ
         >>> F = QQ.old_poly_ring(x).free_module(2)
@@ -1295,6 +1387,9 @@ class QuotientModule(Module):
     def is_submodule(self, other):
         """
         Return True if ``other`` is a submodule of ``self``.
+
+        Examples
+        ========
 
         >>> from sympy.abc import x
         >>> from sympy import QQ
@@ -1319,6 +1414,9 @@ class QuotientModule(Module):
         This is the same as taking a quotient of a submodule of the base
         module.
 
+        Examples
+        ========
+
         >>> from sympy.abc import x
         >>> from sympy import QQ
         >>> Q = QQ.old_poly_ring(x).free_module(2) / [(x, x)]
@@ -1333,6 +1431,9 @@ class QuotientModule(Module):
 
         This method is called implicitly whenever computations involve elements
         not in the internal representation.
+
+        Examples
+        ========
 
         >>> from sympy.abc import x
         >>> from sympy import QQ
@@ -1352,6 +1453,9 @@ class QuotientModule(Module):
         """
         Return the identity homomorphism on ``self``.
 
+        Examples
+        ========
+
         >>> from sympy.abc import x
         >>> from sympy import QQ
         >>> M = QQ.old_poly_ring(x).free_module(2) / [(1, 2), (1, x)]
@@ -1369,6 +1473,9 @@ class QuotientModule(Module):
 
         That is, return a homomorphism representing the natural map from
         ``self.base`` to ``self``.
+
+        Examples
+        ========
 
         >>> from sympy.abc import x
         >>> from sympy import QQ

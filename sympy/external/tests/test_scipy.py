@@ -4,6 +4,7 @@
 # Always write regular SymPy tests for anything, that can be tested in pure
 # Python (without scipy). Here we test everything, that a user may need when
 # using SymPy with SciPy
+from __future__ import annotations
 
 from sympy.external import import_module
 
@@ -12,7 +13,7 @@ if not scipy:
     #bin/test will not execute any tests now
     disabled = True
 
-from sympy import jn_zeros
+from sympy.functions.special.bessel import jn_zeros
 
 
 def eq(a, b, tol=1e-6):

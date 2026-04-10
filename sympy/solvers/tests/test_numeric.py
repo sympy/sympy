@@ -1,10 +1,18 @@
-from sympy import (Eq, Matrix, pi, sin, sqrt, Symbol, Integral, Piecewise,
-    symbols, Float, I)
+from __future__ import annotations
+from sympy.core.function import nfloat
+from sympy.core.numbers import (Float, I, Rational, pi)
+from sympy.core.relational import Eq
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import sin
+from sympy.integrals.integrals import Integral
+from sympy.matrices.dense import Matrix
 from mpmath import mnorm, mpf
 from sympy.solvers import nsolve
 from sympy.utilities.lambdify import lambdify
-from sympy.utilities.pytest import raises, XFAIL
-from sympy.utilities.decorator import conserve_mpmath_dps
+from sympy.testing.pytest import raises, XFAIL
+from sympy.external.mpmath import conserve_mpmath_dps
 
 @XFAIL
 def test_nsolve_fail():
@@ -56,24 +64,22 @@ def test_nsolve():
         root = nsolve(f, (x, y, z), x0)
         assert mnorm(F(*root), 1) <= 1.e-8
         return root
-    assert list(map(round, getroot((1, 1, 1)))) == [2.0, 1.0, 0.0]
+    assert list(map(round, getroot((1, 1, 1)))) == [2, 1, 0]
     assert nsolve([Eq(
-        f1), Eq(f2), Eq(f3)], [x, y, z], (1, 1, 1))  # just see that it works
+        f1, 0), Eq(f2, 0), Eq(f3, 0)], [x, y, z], (1, 1, 1))  # just see that it works
     a = Symbol('a')
     assert abs(nsolve(1/(0.001 + a)**3 - 6/(0.9 - a)**3, a, 0.3) -
         mpf('0.31883011387318591')) < 1e-15
 
 
-
 def test_issue_6408():
     x = Symbol('x')
-    assert nsolve(Piecewise((x, x < 1), (x**2, True)), x, 2) == 0.0
+    assert nsolve(Piecewise((x, x < 1), (x**2, True)), x, 2) == 0
 
 
-@XFAIL
-def test_issue_6408_fail():
+def test_issue_6408_integral():
     x, y = symbols('x y')
-    assert nsolve(Integral(x*y, (x, 0, 5)), y, 2) == 0.0
+    assert nsolve(Integral(x*y, (x, 0, 5)), y, 2) == 0
 
 
 @conserve_mpmath_dps
@@ -120,3 +126,15 @@ def test_nsolve_dict_kwarg():
     # two variables
     assert nsolve([x**2 + y**2 - 5, x**2 - y**2 + 1], [x, y], [1, 1], dict = True) == \
         [{x: sqrt(2.), y: sqrt(3.)}]
+
+def test_nsolve_rational():
+    x = symbols('x')
+    assert nsolve(x - Rational(1, 3), 0, prec=100) == Rational(1, 3).evalf(100)
+
+
+def test_issue_14950():
+    x = Matrix(symbols('t s'))
+    x0 = Matrix([17, 23])
+    eqn = x + x0
+    assert nsolve(eqn, x, x0) == nfloat(-x0)
+    assert nsolve(eqn.T, x.T, x0.T) == nfloat(-x0)

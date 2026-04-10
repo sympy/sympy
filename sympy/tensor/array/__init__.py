@@ -22,7 +22,7 @@ Array construction can detect the shape of nested lists and tuples:
 [[1, 2], [3, 4], [5, 6]]
 >>> a1.shape
 (3, 2)
->>> a1.rank()
+>>> a1.ndim
 2
 >>> from sympy.abc import x, y, z
 >>> a2 = Array([[[x, y], [z, x*z]], [[1, x*y], [1/x, x/y]]])
@@ -30,7 +30,7 @@ Array construction can detect the shape of nested lists and tuples:
 [[[x, y], [z, x*z]], [[1, x*y], [1/x, x/y]]]
 >>> a2.shape
 (2, 2, 2)
->>> a2.rank()
+>>> a2.ndim
 3
 
 Otherwise one could pass a 1-dim array followed by a shape tuple:
@@ -89,7 +89,7 @@ Products and contractions
 -------------------------
 
 Tensor product between arrays `A_{i_1,\ldots,i_n}` and `B_{j_1,\ldots,j_m}`
-creates the combined array `P = A \otimes B` defined as
+creates the combined array `P = A \boxtimes B` defined as
 
 `P_{i_1,\ldots,i_n,j_1,\ldots,j_m} := A_{i_1,\ldots,i_n}\cdot B_{j_1,\ldots,j_m}.`
 
@@ -102,6 +102,19 @@ It is available through ``tensorproduct(...)``:
 >>> tensorproduct(A, B)
 [[x, 2*x, 3*x, 4*x], [y, 2*y, 3*y, 4*y], [z, 2*z, 3*z, 4*z], [t, 2*t, 3*t, 4*t]]
 
+In case you don't want to evaluate the tensor product immediately, you can use
+``ArrayTensorProduct``, which creates an unevaluated tensor product expression:
+
+>>> from sympy.tensor.array.expressions import ArrayTensorProduct
+>>> ArrayTensorProduct(A, B)
+ArrayTensorProduct([x, y, z, t], [1, 2, 3, 4])
+
+Calling ``.as_explicit()`` on ``ArrayTensorProduct`` is equivalent to just calling
+``tensorproduct(...)``:
+
+>>> ArrayTensorProduct(A, B).as_explicit()
+[[x, 2*x, 3*x, 4*x], [y, 2*y, 3*y, 4*y], [z, 2*z, 3*z, 4*z], [t, 2*t, 3*t, 4*t]]
+
 Tensor product between a rank-1 array and a matrix creates a rank-3 array:
 
 >>> from sympy import eye
@@ -109,7 +122,7 @@ Tensor product between a rank-1 array and a matrix creates a rank-3 array:
 >>> p1
 [[[x, 0, 0, 0], [0, x, 0, 0], [0, 0, x, 0], [0, 0, 0, x]], [[y, 0, 0, 0], [0, y, 0, 0], [0, 0, y, 0], [0, 0, 0, y]], [[z, 0, 0, 0], [0, z, 0, 0], [0, 0, z, 0], [0, 0, 0, z]], [[t, 0, 0, 0], [0, t, 0, 0], [0, 0, t, 0], [0, 0, 0, t]]]
 
-Now, to get back `A_0 \otimes \mathbf{1}` one can access `p_{0,m,n}` by slicing:
+Now, to get back `A_0 \boxtimes \mathbf{1}` one can access `p_{0,m,n}` by slicing:
 
 >>> p1[0,:,:]
 [[x, 0, 0, 0], [0, x, 0, 0], [0, 0, x, 0], [0, 0, 0, x]]
@@ -130,6 +143,16 @@ The matrix trace is equivalent to the contraction of a rank-2 array:
 `A_{m,n} \implies \sum_k A_{k,k}`
 
 >>> tensorcontraction(C, (0, 1))
+t + x
+
+To create an expression representing a tensor contraction that does not get
+evaluated immediately, use ``ArrayContraction``, which is equivalent to
+``tensorcontraction(...)`` if it is followed by ``.as_explicit()``:
+
+>>> from sympy.tensor.array.expressions import ArrayContraction
+>>> ArrayContraction(C, (0, 1))
+ArrayContraction([[x, y], [z, t]], (0, 1))
+>>> ArrayContraction(C, (0, 1)).as_explicit()
 t + x
 
 Matrix product is equivalent to a tensor product of two rank-2 arrays, followed
@@ -155,6 +178,31 @@ or equivalently
 Matrix([
 [2*x,  x - y],
 [2*z, -t + z]])
+
+Diagonal operator
+-----------------
+
+The ``tensordiagonal`` function acts in a similar manner as ``tensorcontraction``,
+but the joined indices are not summed over, for example diagonalizing
+positions `a` and `b` means
+
+`A_{i_1,\ldots,i_a,\ldots,i_b,\ldots,i_n} \implies A_{i_1,\ldots,k,\ldots,k,\ldots,i_n}
+\implies \tilde{A}_{i_1,\ldots,i_{a-1},i_{a+1},\ldots,i_{b-1},i_{b+1},\ldots,i_n,k}`
+
+where `\tilde{A}` is the array equivalent to the diagonal of `A` at positions
+`a` and `b` moved to the last index slot.
+
+Compare the difference between contraction and diagonal operators:
+
+>>> from sympy import tensordiagonal
+>>> from sympy.abc import a, b, c, d
+>>> m = Matrix([[a, b], [c, d]])
+>>> tensorcontraction(m, [0, 1])
+a + d
+>>> tensordiagonal(m, [0, 1])
+[a, d]
+
+In short, no summation occurs with ``tensordiagonal``.
 
 
 Derivatives by array
@@ -199,10 +247,26 @@ Contraction of the resulting array: `\sum_m \frac{\partial A^m}{\partial x^m}`
 z*cos(y*z) + exp(x)
 
 """
+from __future__ import annotations
 
 from .dense_ndim_array import MutableDenseNDimArray, ImmutableDenseNDimArray, DenseNDimArray
 from .sparse_ndim_array import MutableSparseNDimArray, ImmutableSparseNDimArray, SparseNDimArray
-from .ndim_array import NDimArray
-from .arrayop import tensorproduct, tensorcontraction, derive_by_array, permutedims
+from .ndim_array import NDimArray, ArrayKind
+from .arrayop import tensorproduct, tensorcontraction, tensordiagonal, derive_by_array, permutedims
+from .array_comprehension import ArrayComprehension, ArrayComprehensionMap
 
 Array = ImmutableDenseNDimArray
+
+__all__ = [
+    'MutableDenseNDimArray', 'ImmutableDenseNDimArray', 'DenseNDimArray',
+
+    'MutableSparseNDimArray', 'ImmutableSparseNDimArray', 'SparseNDimArray',
+
+    'NDimArray', 'ArrayKind',
+
+    'tensorproduct', 'tensorcontraction', 'tensordiagonal', 'derive_by_array',
+
+    'permutedims', 'ArrayComprehension', 'ArrayComprehensionMap',
+
+    'Array',
+]

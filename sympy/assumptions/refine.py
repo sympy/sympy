@@ -1,29 +1,63 @@
-from __future__ import print_function, division
+from __future__ import annotations
 
-from sympy.core import S, Add, Expr, Basic, Mul
-from sympy.assumptions import Q, ask
+from typing import TYPE_CHECKING, overload
 
-def refine(expr, assumptions=True):
+from sympy.core import S, Add, Expr, Basic, Mul, Pow, Rational
+from sympy.core.logic import fuzzy_not
+
+from sympy.assumptions import ask, Q  # type: ignore
+
+
+if TYPE_CHECKING:
+    from sympy.logic.boolalg import Boolean
+    from typing import Callable
+
+
+@overload
+def refine(expr: Expr, assumptions: Boolean | bool = True) -> Expr: ...
+@overload
+def refine(expr: Basic, assumptions: Boolean | bool = True) -> Basic: ...
+
+def refine(expr: Basic, assumptions: Boolean | bool = True) -> Basic:
     """
     Simplify an expression using assumptions.
 
-    Gives the form of expr that would be obtained if symbols
-    in it were replaced by explicit numerical expressions satisfying
-    the assumptions.
+    Explanation
+    ===========
+
+    Unlike :func:`~.simplify` which performs structural simplification
+    without any assumption, this function transforms the expression into
+    the form which is only valid under certain assumptions. Note that
+    ``simplify()`` is generally not done in refining process.
+
+    Refining boolean expression involves reducing it to ``S.true`` or
+    ``S.false``. Unlike :func:`~.ask`, the expression will not be reduced
+    if the truth value cannot be determined.
 
     Examples
     ========
 
-        >>> from sympy import refine, sqrt, Q
-        >>> from sympy.abc import x
-        >>> refine(sqrt(x**2), Q.real(x))
-        Abs(x)
-        >>> refine(sqrt(x**2), Q.positive(x))
-        x
+    >>> from sympy import refine, sqrt, Q
+    >>> from sympy.abc import x
+    >>> refine(sqrt(x**2), Q.real(x))
+    Abs(x)
+    >>> refine(sqrt(x**2), Q.positive(x))
+    x
 
+    >>> refine(Q.real(x), Q.positive(x))
+    True
+    >>> refine(Q.positive(x), Q.real(x))
+    Q.positive(x)
+
+    See Also
+    ========
+
+    sympy.simplify.simplify.simplify : Structural simplification without assumptions.
+    sympy.assumptions.ask.ask : Query for boolean expressions using assumptions.
     """
     if not isinstance(expr, Basic):
         return expr
+
     if not expr.is_Atom:
         args = [refine(arg, assumptions) for arg in expr.args]
         # TODO: this will probably not work with Integral or Polynomial
@@ -51,7 +85,7 @@ def refine_abs(expr, assumptions):
     Examples
     ========
 
-    >>> from sympy import Symbol, Q, refine, Abs
+    >>> from sympy import Q, Abs
     >>> from sympy.assumptions.refine import refine_abs
     >>> from sympy.abc import x
     >>> refine_abs(Abs(x), Q.real(x))
@@ -61,8 +95,7 @@ def refine_abs(expr, assumptions):
     -x
 
     """
-    from sympy.core.logic import fuzzy_not
-    from sympy import Abs
+    from sympy.functions.elementary.complexes import Abs
     arg = expr.args[0]
     if ask(Q.real(arg), assumptions) and \
             fuzzy_not(ask(Q.negative(arg), assumptions)):
@@ -87,7 +120,10 @@ def refine_Pow(expr, assumptions):
     """
     Handler for instances of Pow.
 
-    >>> from sympy import Symbol, Q
+    Examples
+    ========
+
+    >>> from sympy import Q
     >>> from sympy.assumptions.refine import refine_Pow
     >>> from sympy.abc import x,y,z
     >>> refine_Pow((-1)**x, Q.real(x))
@@ -108,7 +144,6 @@ def refine_Pow(expr, assumptions):
     (-1)**(x + 1)
 
     """
-    from sympy.core import Pow, Rational
     from sympy.functions.elementary.complexes import Abs
     from sympy.functions import sign
     if isinstance(expr.base, Abs):
@@ -122,7 +157,7 @@ def refine_Pow(expr, assumptions):
             if ask(Q.odd(expr.exp), assumptions):
                 return sign(expr.base) * abs(expr.base) ** expr.exp
         if isinstance(expr.exp, Rational):
-            if type(expr.base) is Pow:
+            if isinstance(expr.base, Pow):
                 return abs(expr.base.base) ** (expr.base.exp * expr.exp)
 
         if expr.base is S.NegativeOne:
@@ -138,8 +173,8 @@ def refine_Pow(expr, assumptions):
 
                 coeff, terms = expr.exp.as_coeff_add()
                 terms = set(terms)
-                even_terms = set([])
-                odd_terms = set([])
+                even_terms = set()
+                odd_terms = set()
                 initial_number_of_terms = len(terms)
 
                 for t in terms:
@@ -183,12 +218,12 @@ def refine_Pow(expr, assumptions):
 
 def refine_atan2(expr, assumptions):
     """
-    Handler for the atan2 function
+    Handler for the atan2 function.
 
     Examples
     ========
 
-    >>> from sympy import Symbol, Q, refine, atan2
+    >>> from sympy import Q, atan2
     >>> from sympy.assumptions.refine import refine_atan2
     >>> from sympy.abc import x, y
     >>> refine_atan2(atan2(y,x), Q.real(y) & Q.positive(x))
@@ -207,7 +242,6 @@ def refine_atan2(expr, assumptions):
     nan
     """
     from sympy.functions.elementary.trigonometric import atan
-    from sympy.core import S
     y, x = expr.args
     if ask(Q.real(y) & Q.positive(x), assumptions):
         return atan(y / x)
@@ -227,27 +261,322 @@ def refine_atan2(expr, assumptions):
         return expr
 
 
-def refine_Relational(expr, assumptions):
+def refine_re(expr, assumptions):
     """
-    Handler for Relational
+    Handler for real part.
 
-    >>> from sympy.assumptions.refine import refine_Relational
-    >>> from sympy.assumptions.ask import Q
+    Examples
+    ========
+
+    >>> from sympy.assumptions.refine import refine_re
+    >>> from sympy import Q, re
     >>> from sympy.abc import x
-    >>> refine_Relational(x<0, ~Q.is_true(x<0))
-    False
+    >>> refine_re(re(x), Q.real(x))
+    x
+    >>> refine_re(re(x), Q.imaginary(x))
+    0
     """
-    return ask(Q.is_true(expr), assumptions)
+    arg = expr.args[0]
+    if ask(Q.real(arg), assumptions):
+        return arg
+    if ask(Q.imaginary(arg), assumptions):
+        return S.Zero
+    return _refine_reim(expr, assumptions)
 
 
-handlers_dict = {
+def refine_im(expr, assumptions):
+    """
+    Handler for imaginary part.
+
+    Explanation
+    ===========
+
+    >>> from sympy.assumptions.refine import refine_im
+    >>> from sympy import Q, im
+    >>> from sympy.abc import x
+    >>> refine_im(im(x), Q.real(x))
+    0
+    >>> refine_im(im(x), Q.imaginary(x))
+    -I*x
+    """
+    arg = expr.args[0]
+    if ask(Q.real(arg), assumptions):
+        return S.Zero
+    if ask(Q.imaginary(arg), assumptions):
+        return - S.ImaginaryUnit * arg
+    return _refine_reim(expr, assumptions)
+
+def refine_arg(expr, assumptions):
+    """
+    Handler for complex argument
+
+    Explanation
+    ===========
+
+    >>> from sympy.assumptions.refine import refine_arg
+    >>> from sympy import Q, arg
+    >>> from sympy.abc import x
+    >>> refine_arg(arg(x), Q.positive(x))
+    0
+    >>> refine_arg(arg(x), Q.negative(x))
+    pi
+    """
+    rg = expr.args[0]
+    if ask(Q.positive(rg), assumptions):
+        return S.Zero
+    if ask(Q.negative(rg), assumptions):
+        return S.Pi
+    return None
+
+
+def _refine_reim(expr, assumptions):
+    # Helper function for refine_re & refine_im
+    expanded = expr.expand(complex = True)
+    if expanded != expr:
+        refined = refine(expanded, assumptions)
+        if refined != expanded:
+            return refined
+    # Best to leave the expression as is
+    return None
+
+
+def refine_sign(expr, assumptions):
+    """
+    Handler for sign.
+
+    Examples
+    ========
+
+    >>> from sympy.assumptions.refine import refine_sign
+    >>> from sympy import Symbol, Q, sign, im
+    >>> x = Symbol('x', real = True)
+    >>> expr = sign(x)
+    >>> refine_sign(expr, Q.positive(x) & Q.nonzero(x))
+    1
+    >>> refine_sign(expr, Q.negative(x) & Q.nonzero(x))
+    -1
+    >>> refine_sign(expr, Q.zero(x))
+    0
+    >>> y = Symbol('y', imaginary = True)
+    >>> expr = sign(y)
+    >>> refine_sign(expr, Q.positive(im(y)))
+    I
+    >>> refine_sign(expr, Q.negative(im(y)))
+    -I
+    """
+    arg = expr.args[0]
+    if ask(Q.zero(arg), assumptions):
+        return S.Zero
+    if ask(Q.real(arg)):
+        if ask(Q.positive(arg), assumptions):
+            return S.One
+        if ask(Q.negative(arg), assumptions):
+            return S.NegativeOne
+    if ask(Q.imaginary(arg)):
+        arg_re, arg_im = arg.as_real_imag()
+        if ask(Q.positive(arg_im), assumptions):
+            return S.ImaginaryUnit
+        if ask(Q.negative(arg_im), assumptions):
+            return -S.ImaginaryUnit
+    return expr
+
+
+def refine_matrixelement(expr, assumptions):
+    """
+    Handler for symmetric part.
+
+    Examples
+    ========
+
+    >>> from sympy.assumptions.refine import refine_matrixelement
+    >>> from sympy import MatrixSymbol, Q
+    >>> X = MatrixSymbol('X', 3, 3)
+    >>> refine_matrixelement(X[0, 1], Q.symmetric(X))
+    X[0, 1]
+    >>> refine_matrixelement(X[1, 0], Q.symmetric(X))
+    X[0, 1]
+    """
+    from sympy.matrices.expressions.matexpr import MatrixElement
+    matrix, i, j = expr.args
+    if ask(Q.symmetric(matrix), assumptions):
+        if (i - j).could_extract_minus_sign():
+            return expr
+        return MatrixElement(matrix, j, i)
+
+
+def refine_sin_cos(expr, assumptions):
+    """
+    Handler for sin and cos functions.
+
+    Examples
+    ========
+
+    >>> from sympy.assumptions.refine import refine_sin_cos
+    >>> from sympy import Symbol, Q, sin, cos, pi
+    >>> from sympy.abc import x, y
+    >>> n = Symbol('n')
+    >>> refine_sin_cos(cos(n*pi), Q.even(n))
+    1
+    >>> refine_sin_cos(sin(n*pi/2), Q.odd(n) & Q.odd((n-1)/2))
+    -1
+    >>> refine_sin_cos(sin(x + n*pi/2), Q.odd(n))
+    (-1)**(n/2 + 3/2)*cos(x)
+    >>> refine_sin_cos(cos(x + n*pi/2), Q.even(n))
+    (-1)**(n/2)*cos(x)
+    >>> refine_sin_cos(cos(x + y + 2*n*pi), Q.integer(n))
+    cos(x + y)
+    """
+    from sympy.functions.elementary.trigonometric import sin, cos
+    from sympy.calculus.accumulationbounds import AccumBounds
+
+    if not isinstance(expr, (sin, cos)):
+        raise TypeError("refine_sin_cos expects a sin or cos function.")
+
+    arg = expr.args[0]
+    expr_is_sin = isinstance(expr, sin)
+
+    if (ask(Q.infinite(arg), assumptions) and
+         ask(Q.extended_real(arg), assumptions)):
+        return AccumBounds(-1, 1)
+
+    if ask(Q.zero(arg), assumptions):
+        return 0 if expr_is_sin else 1
+
+    integer_coeffs_of_pi_half = []
+    remaining_terms = []
+
+    terms = arg.args if arg.is_Add else (arg,)
+    for term in terms:
+        coeff_of_pi = term.coeff(S.Pi)
+        if coeff_of_pi and ask(Q.integer(2 * coeff_of_pi), assumptions):
+            coeff_of_pi_half = 2 * coeff_of_pi
+            integer_coeffs_of_pi_half.append(coeff_of_pi_half)
+        else:
+            remaining_terms.append(term)
+
+    if not integer_coeffs_of_pi_half:
+        return expr
+
+    sum_of_parity_known_coeffs = 0
+    sum_of_parity_unknown_coeffs = 0
+    sum_of_parity_known_coeffs_is_even = True
+    for coeff in integer_coeffs_of_pi_half:
+        coeff_is_even = ask(Q.even(coeff), assumptions)
+        if coeff_is_even is None:
+            sum_of_parity_unknown_coeffs += coeff
+        else:
+            sum_of_parity_known_coeffs += coeff
+            sum_of_parity_known_coeffs_is_even = (
+                sum_of_parity_known_coeffs_is_even == coeff_is_even
+            )
+
+    if sum_of_parity_known_coeffs == 0:
+        return expr
+
+    # Treat sin as a phase-shifted cosine so a single logic path can handle both.
+    if expr_is_sin:
+        k = sum_of_parity_known_coeffs - 1
+        k_is_even = not sum_of_parity_known_coeffs_is_even
+    else:
+        k = sum_of_parity_known_coeffs
+        k_is_even = sum_of_parity_known_coeffs_is_even
+
+    # If k is even:
+    #    `cos(rem + k*pi/2)` -> `(-1)^(k/2) * cos(rem)`
+    #
+    # If k is odd:
+    #    `cos(rem + k*pi/2)` -> `(-1)^((k+1)/2) * sin(rem)`
+    rem = sum(remaining_terms) + sum_of_parity_unknown_coeffs * S.Pi / 2
+    if k_is_even:
+        pow_expr = (-1)**(k / 2)
+        refined_pow = refine_Pow(pow_expr, assumptions)
+        return (pow_expr if refined_pow is None else refined_pow) * cos(rem)
+    else:
+        pow_expr = (-1)**((k + 1) / 2)
+        refined_pow = refine_Pow(pow_expr, assumptions)
+        return (pow_expr if refined_pow is None else refined_pow) * sin(rem)
+
+
+def refine_Heaviside(expr, assumptions):
+    """
+    Handler for the Heaviside step function.
+
+    Examples
+    ========
+
+    >>> from sympy.assumptions.refine import refine_Heaviside
+    >>> from sympy import Q, Heaviside
+    >>> from sympy.abc import x
+    >>> refine_Heaviside(Heaviside(x), Q.positive(x))
+    1
+    >>> refine_Heaviside(Heaviside(x), Q.negative(x))
+    0
+    >>> refine_Heaviside(Heaviside(x), Q.zero(x))
+    1/2
+
+    """
+    arg, H0 = expr.args
+    if ask(Q.positive(arg), assumptions):
+        return S.One
+    if ask(Q.negative(arg), assumptions):
+        return S.Zero
+    if ask(Q.zero(arg), assumptions):
+        return H0
+    return expr
+
+
+def refine_floor_ceiling(expr, assumptions):
+    """
+    Handler for the floor and ceiling functions
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol, refine, Q, floor, ceiling
+    >>> x = Symbol('x')
+    >>> y = Symbol('y')
+    >>> refine(floor(x), Q.integer(x))
+    x
+    >>> refine(ceiling(x), Q.integer(x))
+    x
+    >>> refine(floor(x + y), Q.integer(x))
+    x + floor(y)
+    >>> refine(ceiling(x + y), Q.integer(x))
+    x + ceiling(y)
+    >>> refine(ceiling(x), Q.infinite(x))
+    x
+    >>> refine(ceiling(ceiling(x) + ceiling(y)))
+    ceiling(x) + ceiling(y)
+    """
+    from sympy.functions.elementary.integers import floor, ceiling
+    arg = expr.args[0]
+    if ask(Q.integer(arg), assumptions) or ask(Q.infinite(arg), assumptions):
+        return arg
+
+    if isinstance(arg, Add):
+        gaussian_integer_terms = []
+        nongausian_intergers_terms = []
+        for term in arg.args:
+            if ask(Q.integer(term), assumptions) or isinstance(term, (floor, ceiling)):
+                gaussian_integer_terms.append(term)
+            else:
+                nongausian_intergers_terms.append(term)
+        return Add(*gaussian_integer_terms) + expr.func(Add(*nongausian_intergers_terms))
+    return expr
+
+
+handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'Abs': refine_abs,
     'Pow': refine_Pow,
     'atan2': refine_atan2,
-    'Equality': refine_Relational,
-    'Unequality': refine_Relational,
-    'GreaterThan': refine_Relational,
-    'LessThan': refine_Relational,
-    'StrictGreaterThan': refine_Relational,
-    'StrictLessThan': refine_Relational
+    're': refine_re,
+    'im': refine_im,
+    'arg': refine_arg,
+    'sign': refine_sign,
+    'MatrixElement': refine_matrixelement,
+    'cos': refine_sin_cos,
+    'sin': refine_sin_cos,
+    'Heaviside': refine_Heaviside,
+    'floor': refine_floor_ceiling,
+    'ceiling' : refine_floor_ceiling,
 }

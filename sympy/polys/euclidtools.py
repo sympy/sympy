@@ -1,17 +1,8 @@
 """Euclidean algorithms, GCDs, LCMs and polynomial remainder sequences. """
 
-from __future__ import print_function, division
+from __future__ import annotations
 
-from sympy.polys.densebasic import (
-    dup_strip, dmp_raise,
-    dmp_zero, dmp_one, dmp_ground,
-    dmp_one_p, dmp_zero_p,
-    dmp_zeros,
-    dup_degree, dmp_degree, dmp_degree_in,
-    dup_LC, dmp_LC, dmp_ground_LC,
-    dmp_multi_deflate, dmp_inflate,
-    dup_convert, dmp_convert,
-    dmp_apply_pairs)
+from typing import overload, Literal, TYPE_CHECKING
 
 from sympy.polys.densearith import (
     dup_sub_mul,
@@ -26,9 +17,21 @@ from sympy.polys.densearith import (
     dup_prem, dmp_prem,
     dup_mul_ground, dmp_mul_ground,
     dmp_mul_term,
-    dup_quo_ground, dmp_quo_ground,
+    dup_exquo_ground,
+    dmp_quo_ground,
+    dmp_exquo_ground,
     dup_max_norm, dmp_max_norm)
-
+from sympy.polys.densebasic import (
+    dup, dmp, _dup, _dmp,
+    dup_strip, dmp_raise,
+    dmp_zero, dmp_one, dmp_ground,
+    dmp_one_p, dmp_zero_p,
+    dmp_zeros,
+    dup_degree, dmp_degree, dmp_degree_in,
+    dup_LC, dmp_LC, dmp_ground_LC,
+    dmp_multi_deflate, dmp_inflate,
+    dup_convert, dmp_convert,
+    dmp_apply_pairs)
 from sympy.polys.densetools import (
     dup_clear_denoms, dmp_clear_denoms,
     dup_diff, dmp_diff,
@@ -37,10 +40,9 @@ from sympy.polys.densetools import (
     dup_monic, dmp_ground_monic,
     dup_primitive, dmp_ground_primitive,
     dup_extract, dmp_ground_extract)
-
 from sympy.polys.galoistools import (
     gf_int, gf_crt)
-
+from sympy.polys.polyconfig import query
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
     HeuristicGCDFailed,
@@ -48,14 +50,12 @@ from sympy.polys.polyerrors import (
     NotInvertible,
     DomainError)
 
-from sympy.polys.polyconfig import query
-
-from sympy.ntheory import nextprime
-
-from sympy.core.compatibility import range
+if TYPE_CHECKING:
+    from sympy.polys.domains.field import Field
+    from sympy.polys.domains.domain import Domain, Er, Ef
 
 
-def dup_half_gcdex(f, g, K):
+def dup_half_gcdex(f: dup[Ef], g: dup[Ef], K: Field[Ef]) -> tuple[dup[Ef], dup[Ef]]:
     """
     Half extended Euclidean algorithm in `F[x]`.
 
@@ -75,7 +75,10 @@ def dup_half_gcdex(f, g, K):
 
     """
     if not K.is_Field:
-        raise DomainError("can't compute half extended GCD over %s" % K)
+        raise DomainError("Cannot compute half extended GCD over %s" % K)
+
+    a: dup[Ef]
+    b: dup[Ef]
 
     a, b = [K.one], []
 
@@ -84,7 +87,7 @@ def dup_half_gcdex(f, g, K):
         f, g = g, r
         a, b = b, dup_sub_mul(a, q, b, K)
 
-    a = dup_quo_ground(a, dup_LC(f, K), K)
+    a = dup_exquo_ground(a, dup_LC(f, K), K)
     f = dup_monic(f, K)
 
     return a, f
@@ -107,7 +110,7 @@ def dmp_half_gcdex(f, g, u, K):
         raise MultivariatePolynomialError(f, g)
 
 
-def dup_gcdex(f, g, K):
+def dup_gcdex(f: dup[Ef], g: dup[Ef], K: Field[Ef]) -> tuple[dup[Ef], dup[Ef], dup[Ef]]:
     """
     Extended Euclidean algorithm in `F[x]`.
 
@@ -134,7 +137,9 @@ def dup_gcdex(f, g, K):
     return s, t, h
 
 
-def dmp_gcdex(f, g, u, K):
+def dmp_gcdex(
+    f: dmp[Ef], g: dmp[Ef], u: int, K: Field[Ef]
+) -> tuple[dmp[Ef], dmp[Ef], dmp[Ef]]:
     """
     Extended Euclidean algorithm in `F[X]`.
 
@@ -151,7 +156,7 @@ def dmp_gcdex(f, g, u, K):
         raise MultivariatePolynomialError(f, g)
 
 
-def dup_invert(f, g, K):
+def dup_invert(f: dup[Ef], g: dup[Ef], K: Field[Ef]) -> dup[Ef]:
     """
     Compute multiplicative inverse of `f` modulo `g` in `F[x]`.
 
@@ -182,7 +187,7 @@ def dup_invert(f, g, K):
         raise NotInvertible("zero divisor")
 
 
-def dmp_invert(f, g, u, K):
+def dmp_invert(f: dmp[Ef], g: dmp[Ef], u: int, K: Field[Ef]) -> dmp[Ef]:
     """
     Compute multiplicative inverse of `f` modulo `g` in `F[X]`.
 
@@ -199,7 +204,7 @@ def dmp_invert(f, g, u, K):
         raise MultivariatePolynomialError(f, g)
 
 
-def dup_euclidean_prs(f, g, K):
+def dup_euclidean_prs(f: dup[Ef], g: dup[Ef], K: Domain[Ef]) -> list[dup[Ef]]:
     """
     Euclidean polynomial remainder sequence (PRS) in `K[x]`.
 
@@ -239,7 +244,7 @@ def dup_euclidean_prs(f, g, K):
     return prs
 
 
-def dmp_euclidean_prs(f, g, u, K):
+def dmp_euclidean_prs(f: dmp[Ef], g: dmp[Ef], u: int, K: Domain[Ef]) -> list[dmp[Ef]]:
     """
     Euclidean polynomial remainder sequence (PRS) in `K[X]`.
 
@@ -296,7 +301,7 @@ def dup_primitive_prs(f, g, K):
     return prs
 
 
-def dmp_primitive_prs(f, g, u, K):
+def dmp_primitive_prs(f: dmp[Ef], g: dmp[Ef], u: int, K: Domain[Ef]) -> list[dmp[Ef]]:
     """
     Primitive polynomial remainder sequence (PRS) in `K[X]`.
 
@@ -313,7 +318,7 @@ def dmp_primitive_prs(f, g, u, K):
         raise MultivariatePolynomialError(f, g)
 
 
-def dup_inner_subresultants(f, g, K):
+def dup_inner_subresultants(f: dup[Er], g: dup[Er], K: Domain[Er]):
     """
     Subresultant PRS algorithm in `K[x]`.
 
@@ -337,8 +342,8 @@ def dup_inner_subresultants(f, g, K):
     References
     ==========
 
-    [1] W.S. Brown, The Subresultant PRS Algorithm.
-    ACM Transaction of Mathematical Software 4 (1978) 237-249
+    .. [1] W.S. Brown, The Subresultant PRS Algorithm.
+           ACM Transaction of Mathematical Software 4 (1978) 237-249
 
     """
     n = dup_degree(f)
@@ -378,7 +383,7 @@ def dup_inner_subresultants(f, g, K):
         b = -lc * c**d
 
         h = dup_prem(f, g, K)
-        h = dup_quo_ground(h, b, K)
+        h = dup_exquo_ground(h, b, K)
 
         lc = dup_LC(g, K)
 
@@ -492,12 +497,12 @@ def dmp_inner_subresultants(f, g, u, K):
 
     v = u - 1
     if dmp_zero_p(g, u):
-        return [f], [dmp_ground(K.one, v)]
+        return [f], [dmp_ground(K.one, v, K)]
 
     R = [f, g]
     d = n - m
 
-    b = dmp_pow(dmp_ground(-K.one, v), d + 1, v, K)
+    b = dmp_pow(dmp_ground(-K.one, v, K), d + 1, v, K)
 
     h = dmp_prem(f, g, u, K)
     h = dmp_mul_term(h, b, 0, u, K)
@@ -505,7 +510,7 @@ def dmp_inner_subresultants(f, g, u, K):
     lc = dmp_LC(g, K)
     c = dmp_pow(lc, d, v, K)
 
-    S = [dmp_ground(K.one, v), c]
+    S = [dmp_ground(K.one, v, K), c]
     c = dmp_neg(c, v, K)
 
     while not dmp_zero_p(h, u):
@@ -587,12 +592,12 @@ def dmp_prs_resultant(f, g, u, K):
         return dup_prs_resultant(f, g, K)
 
     if dmp_zero_p(f, u) or dmp_zero_p(g, u):
-        return (dmp_zero(u - 1), [])
+        return (dmp_zero(u - 1, K), [])
 
     R, S = dmp_inner_subresultants(f, g, u, K)
 
     if dmp_degree(R[-1], u) > 0:
-        return (dmp_zero(u - 1), R)
+        return (dmp_zero(u - 1, K), R)
 
     return S[-1], R
 
@@ -628,7 +633,7 @@ def dmp_zz_modular_resultant(f, g, p, u, K):
     B = n*M + m*N
 
     D, a = [K.one], -K.one
-    r = dmp_zero(v)
+    r = dmp_zero(v, K)
 
     while dup_degree(D) <= B:
         while True:
@@ -649,8 +654,8 @@ def dmp_zz_modular_resultant(f, g, p, u, K):
         e = dmp_eval(r, a, v, K)
 
         if not v:
-            R = dup_strip([R])
-            e = dup_strip([e])
+            R = dup_strip([R], K)
+            e = dup_strip([e], K)
         else:
             R = [R]
             e = [e]
@@ -697,7 +702,7 @@ def dmp_zz_collins_resultant(f, g, u, K):
     m = dmp_degree(g, u)
 
     if n < 0 or m < 0:
-        return dmp_zero(u - 1)
+        return dmp_zero(u - 1, K)
 
     A = dmp_max_norm(f, u, K)
     B = dmp_max_norm(g, u, K)
@@ -708,7 +713,9 @@ def dmp_zz_collins_resultant(f, g, u, K):
     v = u - 1
 
     B = K(2)*K.factorial(K(n + m))*A**m*B**n
-    r, p, P = dmp_zero(v), K.one, K.one
+    r, p, P = dmp_zero(v, K), K.one, K.one
+
+    from sympy.ntheory import nextprime
 
     while P <= B:
         p = K(nextprime(p))
@@ -755,7 +762,7 @@ def dmp_qq_collins_resultant(f, g, u, K0):
     m = dmp_degree(g, u)
 
     if n < 0 or m < 0:
-        return dmp_zero(u - 1)
+        return dmp_zero(u - 1, K0)
 
     K1 = K0.get_ring()
 
@@ -770,10 +777,28 @@ def dmp_qq_collins_resultant(f, g, u, K0):
 
     c = K0.convert(cf**m * cg**n, K1)
 
-    return dmp_quo_ground(r, c, u - 1, K0)
+    return dmp_exquo_ground(r, c, u - 1, K0)
 
 
-def dmp_resultant(f, g, u, K, includePRS=False):
+@overload
+def dmp_resultant(
+    f: dmp[Er], g: dmp[Er], u: int, K: Domain[Er], includePRS: Literal[False] = ...
+) -> dmp[Er] | Er: ...
+
+
+@overload
+def dmp_resultant(
+    f: dmp[Er],
+    g: dmp[Er],
+    u: int,
+    K: Domain[Er],
+    includePRS: Literal[True],
+) -> tuple[dmp[Er] | Er, list[dmp[Er]]]: ...
+
+
+def dmp_resultant(
+    f: dmp[Er], g: dmp[Er], u: int, K: Domain[Er], includePRS: bool = False
+) -> dmp[Er] | Er | tuple[dmp[Er] | Er, list[dmp[Er]]]:
     """
     Computes resultant of two polynomials in `K[X]`.
 
@@ -853,7 +878,7 @@ def dmp_discriminant(f, u, K):
     d, v = dmp_degree(f, u), u - 1
 
     if d <= 0:
-        return dmp_zero(v)
+        return dmp_zero(v, K)
     else:
         s = (-1)**((d*(d - 1)) // 2)
         c = dmp_LC(f, K)
@@ -904,14 +929,14 @@ def _dmp_rr_trivial_gcd(f, g, u, K):
         return tuple(dmp_zeros(3, u, K))
     elif zero_f:
         if K.is_nonnegative(dmp_ground_LC(g, u, K)):
-            return g, dmp_zero(u), dmp_one(u, K)
+            return g, dmp_zero(u, K), dmp_one(u, K)
         else:
-            return dmp_neg(g, u, K), dmp_zero(u), dmp_ground(-K.one, u)
+            return dmp_neg(g, u, K), dmp_zero(u, K), dmp_ground(-K.one, u, K)
     elif zero_g:
         if K.is_nonnegative(dmp_ground_LC(f, u, K)):
-            return f, dmp_one(u, K), dmp_zero(u)
+            return f, dmp_one(u, K), dmp_zero(u, K)
         else:
-            return dmp_neg(f, u, K), dmp_ground(-K.one, u), dmp_zero(u)
+            return dmp_neg(f, u, K), dmp_ground(-K.one, u, K), dmp_zero(u, K)
     elif if_contain_one:
         return dmp_one(u, K), f, g
     elif query('USE_SIMPLIFY_GCD'):
@@ -929,12 +954,12 @@ def _dmp_ff_trivial_gcd(f, g, u, K):
         return tuple(dmp_zeros(3, u, K))
     elif zero_f:
         return (dmp_ground_monic(g, u, K),
-                dmp_zero(u),
-                dmp_ground(dmp_ground_LC(g, u, K), u))
+                dmp_zero(u, K),
+                dmp_ground(dmp_ground_LC(g, u, K), u, K))
     elif zero_g:
         return (dmp_ground_monic(f, u, K),
-                dmp_ground(dmp_ground_LC(f, u, K), u),
-                dmp_zero(u))
+                dmp_ground(dmp_ground_LC(f, u, K), u, K),
+                dmp_zero(u, K))
     elif query('USE_SIMPLIFY_GCD'):
         return _dmp_simplify_gcd(f, g, u, K)
     else:
@@ -999,8 +1024,7 @@ def dup_rr_prs_gcd(f, g, K):
     h = dup_subresultants(F, G, K)[-1]
     _, h = dup_primitive(h, K)
 
-    if K.is_negative(dup_LC(h, K)):
-        c = -c
+    c *= K.canonical_unit(dup_LC(h, K))
 
     h = dup_mul_ground(h, c, K)
 
@@ -1075,11 +1099,13 @@ def dmp_rr_prs_gcd(f, g, u, K):
     h = dmp_subresultants(F, G, u, K)[-1]
     c, _, _ = dmp_rr_prs_gcd(fc, gc, u - 1, K)
 
-    if K.is_negative(dmp_ground_LC(h, u, K)):
-        h = dmp_neg(h, u, K)
-
     _, h = dmp_primitive(h, u, K)
     h = dmp_mul_term(h, c, 0, u, K)
+
+    unit = K.canonical_unit(dmp_ground_LC(h, u, K))
+
+    if unit != K.one:
+        h = dmp_mul_ground(h, unit, u, K)
 
     cff = dmp_quo(f, h, u, K)
     cfg = dmp_quo(g, h, u, K)
@@ -1181,7 +1207,7 @@ def dup_zz_heu_gcd(f, g, K):
     References
     ==========
 
-    1. [Liao95]_
+    .. [1] [Liao95]_
 
     """
     result = _dup_rr_trivial_gcd(f, g, K)
@@ -1204,7 +1230,7 @@ def dup_zz_heu_gcd(f, g, K):
 
     x = max(min(B, 99*K.sqrt(B)),
             2*min(f_norm // abs(dup_LC(f, K)),
-                  g_norm // abs(dup_LC(g, K))) + 2)
+                  g_norm // abs(dup_LC(g, K))) + 4)
 
     for i in range(0, HEU_GCD_MAX):
         ff = dup_eval(f, x, K)
@@ -1309,7 +1335,7 @@ def dmp_zz_heu_gcd(f, g, u, K):
     References
     ==========
 
-    1. [Liao95]_
+    .. [1] [Liao95]_
 
     """
     if not u:
@@ -1329,7 +1355,7 @@ def dmp_zz_heu_gcd(f, g, u, K):
 
     x = max(min(B, 99*K.sqrt(B)),
             2*min(f_norm // abs(dmp_ground_LC(f, u, K)),
-                  g_norm // abs(dmp_ground_LC(g, u, K))) + 2)
+                  g_norm // abs(dmp_ground_LC(g, u, K))) + 4)
 
     for i in range(0, HEU_GCD_MAX):
         ff = dmp_eval(f, x, u, K)
@@ -1494,7 +1520,19 @@ def dup_inner_gcd(f, g, K):
     (x - 1, x + 1, x - 2)
 
     """
-    if not K.is_Exact:
+    # XXX: This used to check for K.is_Exact but leads to awkward results when
+    # the domain is something like RR[z] e.g.:
+    #
+    # >>> g, p, q = Poly(1, x).cancel(Poly(51.05*x*y - 1.0, x))
+    # >>> g
+    # 1.0
+    # >>> p
+    # Poly(17592186044421.0, x, domain='RR[y]')
+    # >>> q
+    # Poly(898081097567692.0*y*x - 17592186044421.0, x, domain='RR[y]'))
+    #
+    # Maybe it would be better to flatten into multivariate polynomials first.
+    if K.is_RR or K.is_CC:
         try:
             exact = K.get_exact()
         except DomainError:
@@ -1646,6 +1684,9 @@ def dup_rr_lcm(f, g, K):
     x**3 - 2*x**2 - x + 2
 
     """
+    if not f or not g:
+        return dmp_zero(0, K)
+
     fc, f = dup_primitive(f, K)
     gc, g = dup_primitive(g, K)
 
@@ -1654,7 +1695,9 @@ def dup_rr_lcm(f, g, K):
     h = dup_quo(dup_mul(f, g, K),
                 dup_gcd(f, g, K), K)
 
-    return dup_mul_ground(h, c, K)
+    u = K.canonical_unit(dup_LC(h, K))
+
+    return dup_mul_ground(h, c*u, K)
 
 
 def dup_ff_lcm(f, g, K):
@@ -1830,7 +1873,21 @@ def dmp_primitive(f, u, K):
         return cont, [ dmp_quo(c, cont, v, K) for c in f ]
 
 
-def dup_cancel(f, g, K, include=True):
+@overload
+def dup_cancel(
+    f: dup[Er], g: dup[Er], K: Domain[Er], include: Literal[True] = ...
+) -> tuple[dup[Er], dup[Er]]: ...
+
+
+@overload
+def dup_cancel(
+    f: dup[Er], g: dup[Er], K: Domain[Er], include: Literal[False]
+) -> tuple[Er, Er, dup[Er], dup[Er]]: ...
+
+
+def dup_cancel(
+    f: dup[Er], g: dup[Er], K: Domain[Er], include: bool = True
+) -> tuple[dup[Er], dup[Er]] | tuple[Er, Er, dup[Er], dup[Er]]:
     """
     Cancel common factors in a rational function `f/g`.
 
@@ -1844,10 +1901,29 @@ def dup_cancel(f, g, K, include=True):
     (2*x + 2, x - 1)
 
     """
-    return dmp_cancel(f, g, 0, K, include=include)
+    if include:
+        F, G = dmp_cancel(_dmp(f), _dmp(g), 0, K, include=True)
+        return _dup(F), _dup(G)
+    else:
+        cf, cg, F, G = dmp_cancel(_dmp(f), _dmp(g), 0, K, include=False)
+        return cf, cg, _dup(F), _dup(G)
 
 
-def dmp_cancel(f, g, u, K, include=True):
+@overload
+def dmp_cancel(
+    f: dmp[Er], g: dmp[Er], u: int, K: Domain[Er], include: Literal[True] = ...
+) -> tuple[dmp[Er], dmp[Er]]: ...
+
+
+@overload
+def dmp_cancel(
+    f: dmp[Er], g: dmp[Er], u: int, K: Domain[Er], include: Literal[False]
+) -> tuple[Er, Er, dmp[Er], dmp[Er]]: ...
+
+
+def dmp_cancel(
+    f: dmp[Er], g: dmp[Er], u: int, K: Domain[Er], include: bool = True
+) -> tuple[dmp[Er], dmp[Er]] | tuple[Er, Er, dmp[Er], dmp[Er]]:
     """
     Cancel common factors in a rational function `f/g`.
 

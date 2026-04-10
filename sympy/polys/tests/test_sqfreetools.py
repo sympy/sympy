@@ -1,10 +1,12 @@
 """Tests for square-free decomposition algorithms and related tools. """
+from __future__ import annotations
 
 from sympy.polys.rings import ring
 from sympy.polys.domains import FF, ZZ, QQ
 from sympy.polys.specialpolys import f_polys
 
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
+from sympy.external.gmpy import MPQ
 
 f_0, f_1, f_2, f_3, f_4, f_5, f_6 = f_polys()
 
@@ -133,6 +135,10 @@ def test_dmp_sqf():
     f = -x**2 + 2*x - 1
     assert R.dmp_sqf_list_include(f) == [(-1, 1), (x - 1, 2)]
 
+    f = (y**2 + 1)**2*(x**2 + 2*x + 2)
+    assert R.dmp_sqf_p(f) is False
+    assert R.dmp_sqf_list(f) == (1, [(x**2 + 2*x + 2, 1), (y**2 + 1, 2)])
+
     R, x, y = ring("x,y", FF(2))
     raises(NotImplementedError, lambda: R.dmp_sqf_list(y**2 + 1))
 
@@ -147,3 +153,9 @@ def test_dup_gff_list():
     assert R.dup_gff_list(g) == [(x**2 - 5*x + 4, 1), (x**2 - 5*x + 4, 2), (x, 3)]
 
     raises(ValueError, lambda: R.dup_gff_list(0))
+
+def test_issue_26178():
+    R, x, y, z = ring(['x', 'y', 'z'], QQ)
+    assert (x**2 - 2*y**2 + 1).sqf_list() == (MPQ(1,1), [(x**2 - 2*y**2 + 1, 1)])
+    assert (x**2 - 2*z**2 + 1).sqf_list() == (MPQ(1,1), [(x**2 - 2*z**2 + 1, 1)])
+    assert (y**2 - 2*z**2 + 1).sqf_list() == (MPQ(1,1), [(y**2 - 2*z**2 + 1, 1)])

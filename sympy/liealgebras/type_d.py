@@ -1,6 +1,6 @@
+from __future__ import annotations
 from .cartan_type import Standard_Cartan
 from sympy.core.backend import eye
-from sympy.core.compatibility import range
 
 class TypeD(Standard_Cartan):
 
@@ -99,12 +99,12 @@ class TypeD(Standard_Cartan):
         k = 0
         for i in range(0, n-1):
             for j in range(i+1, n):
-               k += 1
-               posroots[k] = self.basic_root(i, j)
-               k += 1
-               root = self.basic_root(i, j)
-               root[j] = 1
-               posroots[k] = root
+                k += 1
+                posroots[k] = self.basic_root(i, j)
+                k += 1
+                root = self.basic_root(i, j)
+                root[j] = 1
+                posroots[k] = root
         return posroots
 
     def roots(self):
@@ -139,11 +139,9 @@ class TypeD(Standard_Cartan):
 
         n = self.n
         m = 2*eye(n)
-        i = 1
-        while i < n-2:
-           m[i,i+1] = -1
-           m[i,i-1] = -1
-           i += 1
+        for i in range(1, n - 2):
+            m[i,i+1] = -1
+            m[i,i-1] = -1
         m[n-2, n-3] = -1
         m[n-3, n-1] = -1
         m[n-1, n-3] = -1

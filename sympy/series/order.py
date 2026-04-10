@@ -1,16 +1,19 @@
-from __future__ import print_function, division
-
-from sympy.core import S, sympify, Expr, Rational, Symbol, Dummy
-from sympy.core import Add, Mul, expand_power_base, expand_log
+from __future__ import annotations
+from sympy.core import S, sympify, Expr, Dummy, Add, Mul
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import default_sort_key, is_sequence
 from sympy.core.containers import Tuple
-from sympy.utilities.iterables import uniq
+from sympy.core.function import Function, PoleError, expand_power_base, expand_log
+from sympy.core.sorting import default_sort_key
+from sympy.functions.elementary.exponential import exp, log
 from sympy.sets.sets import Complement
+from sympy.utilities.iterables import uniq, is_sequence
 
 
 class Order(Expr):
-    r""" Represents the limiting behavior of some function
+    r""" Represents the limiting behavior of some function.
+
+    Explanation
+    ===========
 
     The order of a function characterizes the function based on the limiting
     behavior of the function as it goes to some limit. Only taking the limit
@@ -18,10 +21,10 @@ class Order(Expr):
     big O notation [1]_.
 
     The formal definition for the order of a function `g(x)` about a point `a`
-    is such that `g(x) = O(f(x))` as `x \rightarrow a` if and only if for any
-    `\delta > 0` there exists a `M > 0` such that `|g(x)| \leq M|f(x)|` for
-    `|x-a| < \delta`.  This is equivalent to `\lim_{x \rightarrow a}
-    \sup |g(x)/f(x)| < \infty`.
+    is such that `g(x) = O(f(x))` as `x \rightarrow a` if and only if there
+    exists a `\delta > 0` and an `M > 0` such that `|g(x)| \leq M|f(x)|` for
+    `|x-a| < \delta`.  This is equivalent to `\limsup_{x \rightarrow a}
+    |g(x)/f(x)| < \infty`.
 
     Let's illustrate it on the following example by taking the expansion of
     `\sin(x)` about 0:
@@ -30,7 +33,7 @@ class Order(Expr):
         \sin(x) = x - x^3/3! + O(x^5)
 
     where in this case `O(x^5) = x^5/5! - x^7/7! + \cdots`. By the definition
-    of `O`, for any `\delta > 0` there is an `M` such that:
+    of `O`, there is a `\delta > 0` and an `M` such that:
 
     .. math ::
         |x^5/5! - x^7/7! + ....| <= M|x^5| \text{ for } |x| < \delta
@@ -93,7 +96,7 @@ class Order(Expr):
     References
     ==========
 
-    .. [1] `Big O notation <http://en.wikipedia.org/wiki/Big_O_notation>`_
+    .. [1] `Big O notation <https://en.wikipedia.org/wiki/Big_O_notation>`_
 
     Notes
     =====
@@ -123,7 +126,7 @@ class Order(Expr):
 
     is_Order = True
 
-    __slots__ = []
+    __slots__ = ()
 
     @cacheit
     def __new__(cls, expr, *args, **kwargs):
@@ -179,22 +182,29 @@ class Order(Expr):
 
         if variables:
             if any(p != point[0] for p in point):
-                raise NotImplementedError
-            if point[0] is S.Infinity:
+                raise NotImplementedError(
+                    "Multivariable orders at different points are not supported.")
+            if point[0] in (S.Infinity, S.Infinity*S.ImaginaryUnit):
                 s = {k: 1/Dummy() for k in variables}
                 rs = {1/v: 1/k for k, v in s.items()}
+                ps = [S.Zero for p in point]
+            elif point[0] in (S.NegativeInfinity, S.NegativeInfinity*S.ImaginaryUnit):
+                s = {k: -1/Dummy() for k in variables}
+                rs = {-1/v: -1/k for k, v in s.items()}
+                ps = [S.Zero for p in point]
             elif point[0] is not S.Zero:
-                s = dict((k, Dummy() + point[0]) for k in variables)
-                rs = dict((v - point[0], k - point[0]) for k, v in s.items())
+                s = {k: Dummy() + point[0] for k in variables}
+                rs = {(v - point[0]).together(): k - point[0] for k, v in s.items()}
+                ps = [S.Zero for p in point]
             else:
                 s = ()
                 rs = ()
+                ps = list(point)
 
             expr = expr.subs(s)
 
             if expr.is_Add:
-                from sympy import expand_multinomial
-                expr = expand_multinomial(expr)
+                expr = expr.factor()
 
             if s:
                 args = tuple([r[0] for r in rs.items()])
@@ -209,54 +219,93 @@ class Order(Expr):
                 # expand()'ed expr (handled in "if expr.is_Add" branch below).
                 expr = expr.expand()
 
-            if expr.is_Add:
-                lst = expr.extract_leading_order(args)
-                expr = Add(*[f.expr for (e, f) in lst])
+            old_expr = None
+            while old_expr != expr:
+                old_expr = expr
+                if expr.is_Add:
+                    lst = expr.extract_leading_order(args)
+                    expr = Add(*[f.expr for (e, f) in lst])
 
-            elif expr:
-                expr = expr.as_leading_term(*args)
-                expr = expr.as_independent(*args, as_Add=False)[1]
+                elif expr:
+                    try:
+                        expr = expr.as_leading_term(*args)
+                    except PoleError:
+                        if isinstance(expr, Function) or\
+                                all(isinstance(arg, Function) for arg in expr.args):
+                            # It is not possible to simplify an expression
+                            # containing only functions (which raise error on
+                            # call to leading term) further
+                            pass
+                        else:
+                            orders = []
+                            pts = tuple(zip(args, ps))
+                            for arg in expr.args:
+                                try:
+                                    lt = arg.as_leading_term(*args)
+                                except PoleError:
+                                    lt = arg
+                                if lt not in args:
+                                    order = Order(lt)
+                                else:
+                                    order = Order(lt, *pts)
+                                orders.append(order)
+                            if expr.is_Add:
+                                new_expr = Order(Add(*orders), *pts)
+                                if new_expr.is_Add:
+                                    new_expr = Order(Add(*[a.expr for a in new_expr.args]), *pts)
+                                expr = new_expr.expr
+                            elif expr.is_Mul:
+                                expr = Mul(*[a.expr for a in orders])
+                            elif expr.is_Pow:
+                                e = expr.exp
+                                b = expr.base
+                                expr = exp(e * log(b))
 
-                expr = expand_power_base(expr)
-                expr = expand_log(expr)
+                    # It would probably be better to handle this somewhere
+                    # else. This is needed for a testcase in which there is a
+                    # symbol with the assumptions zero=True.
+                    if expr.is_zero:
+                        expr = S.Zero
+                    else:
+                        expr = expr.as_independent(*args, as_Add=False)[1]
 
-                if len(args) == 1:
-                    # The definition of O(f(x)) symbol explicitly stated that
-                    # the argument of f(x) is irrelevant.  That's why we can
-                    # combine some power exponents (only "on top" of the
-                    # expression tree for f(x)), e.g.:
-                    # x**p * (-x)**q -> x**(p+q) for real p, q.
-                    x = args[0]
-                    margs = list(Mul.make_args(
-                        expr.as_independent(x, as_Add=False)[1]))
+                    expr = expand_power_base(expr)
+                    expr = expand_log(expr)
 
-                    for i, t in enumerate(margs):
-                        if t.is_Pow:
-                            b, q = t.args
-                            if b in (x, -x) and q.is_real and not q.has(x):
-                                margs[i] = x**q
-                            elif b.is_Pow and not b.exp.has(x):
-                                b, r = b.args
-                                if b in (x, -x) and r.is_real:
-                                    margs[i] = x**(r*q)
-                            elif b.is_Mul and b.args[0] is S.NegativeOne:
-                                b = -b
-                                if b.is_Pow and not b.exp.has(x):
+                    if len(args) == 1:
+                        # The definition of O(f(x)) symbol explicitly stated that
+                        # the argument of f(x) is irrelevant.  That's why we can
+                        # combine some power exponents (only "on top" of the
+                        # expression tree for f(x)), e.g.:
+                        # x**p * (-x)**q -> x**(p+q) for real p, q.
+                        x = args[0]
+                        margs = list(Mul.make_args(
+                            expr.as_independent(x, as_Add=False)[1]))
+
+                        for i, t in enumerate(margs):
+                            if t.is_Pow:
+                                b, q = t.args
+                                if b in (x, -x) and q.is_real and not q.has(x):
+                                    margs[i] = x**q
+                                elif b.is_Pow and not b.exp.has(x):
                                     b, r = b.args
                                     if b in (x, -x) and r.is_real:
                                         margs[i] = x**(r*q)
+                                elif b.is_Mul and b.args[0] is S.NegativeOne:
+                                    b = -b
+                                    if b.is_Pow and not b.exp.has(x):
+                                        b, r = b.args
+                                        if b in (x, -x) and r.is_real:
+                                            margs[i] = x**(r*q)
 
-                    expr = Mul(*margs)
+                        expr = Mul(*margs)
 
             expr = expr.subs(rs)
-
-        if expr is S.Zero:
-            return expr
 
         if expr.is_Order:
             expr = expr.expr
 
-        if not expr.has(*variables):
+        if not expr.has(*variables) and not expr.is_zero:
             expr = S.One
 
         # create Order instance:
@@ -267,7 +316,7 @@ class Order(Expr):
         obj = Expr.__new__(cls, *args)
         return obj
 
-    def _eval_nseries(self, x, n, logx):
+    def _eval_nseries(self, x, n, logx, cdir=0):
         return self
 
     @property
@@ -306,7 +355,7 @@ class Order(Expr):
             if (not all(o[1] == order_symbols[0][1] for o in order_symbols) and
                     not all(p == self.point[0] for p in self.point)):  # pragma: no cover
                 raise NotImplementedError('Order at points other than 0 '
-                    'or oo not supported, got %s as a point.' % point)
+                    'or oo not supported, got %s as a point.' % self.point)
             if order_symbols and order_symbols[0][1] != self.point[0]:
                 raise NotImplementedError(
                         "Multiplying Order at different points is not supported.")
@@ -331,34 +380,24 @@ class Order(Expr):
         Return None if the inclusion relation cannot be determined
         (e.g. when self and expr have different symbols).
         """
-        from sympy import powsimp
-        if expr is S.Zero:
+        expr = sympify(expr)
+        if expr.is_zero:
             return True
         if expr is S.NaN:
             return False
+        point = self.point[0] if self.point else S.Zero
         if expr.is_Order:
-            if (not all(p == expr.point[0] for p in expr.point) and
-                   not all(p == self.point[0] for p in self.point)):  # pragma: no cover
-                raise NotImplementedError('Order at points other than 0 '
-                    'or oo not supported, got %s as a point.' % point)
-            else:
-                # self and/or expr is O(1):
-                if any(not p for p in [expr.point, self.point]):
-                    point = self.point + expr.point
-                    if point:
-                        point = point[0]
-                    else:
-                        point = S.Zero
-                else:
-                    point = self.point[0]
+            if (any(p != point for p in expr.point) or
+                   any(p != point for p in self.point)):
+                return None
             if expr.expr == self.expr:
                 # O(1) + O(1), O(1) + O(1, x), etc.
-                return all([x in self.args[1:] for x in expr.args[1:]])
+                return all(x in self.args[1:] for x in expr.args[1:])
             if expr.expr.is_Add:
-                return all([self.contains(x) for x in expr.expr.args])
-            if self.expr.is_Add and point == S.Zero:
-                return any([self.func(x, *self.args[1:]).contains(expr)
-                            for x in self.expr.args])
+                return all(self.contains(x) for x in expr.expr.args)
+            if self.expr.is_Add and point.is_zero:
+                return any(self.func(x, *self.args[1:]).contains(expr)
+                            for x in self.expr.args)
             if self.variables and expr.variables:
                 common_symbols = tuple(
                     [s for s in self.variables if s in expr.variables])
@@ -368,17 +407,20 @@ class Order(Expr):
                 common_symbols = expr.variables
             if not common_symbols:
                 return None
-            if (self.expr.is_Pow and self.expr.base.is_symbol
-                and self.expr.exp.is_positive):
-                if expr.expr.is_Pow and self.expr.base == expr.expr.base:
-                    return not (self.expr.exp-expr.expr.exp).is_positive
-                if expr.expr.is_Mul:
-                    for arg in expr.expr.args:
-                        if (arg.is_Pow and self.expr.base == arg.base
-                            and (expr.expr/arg).is_number):
-                            r = (self.expr.exp-arg.exp).is_positive
-                            if not (r is None):
-                                return not r
+            if (self.expr.is_Pow and len(self.variables) == 1
+                and self.variables == expr.variables):
+                    symbol = self.variables[0]
+                    other = expr.expr.as_independent(symbol, as_Add=False)[1]
+                    if (other.is_Pow and other.base == symbol and
+                        self.expr.base == symbol):
+                            if point.is_zero:
+                                rv = (self.expr.exp - other.exp).is_nonpositive
+                            if point.is_infinite:
+                                rv = (self.expr.exp - other.exp).is_nonnegative
+                            if rv is not None:
+                                return rv
+
+            from sympy.simplify.powsimp import powsimp
             r = None
             ratio = self.expr/expr.expr
             ratio = powsimp(ratio, deep=True, combine='exp')
@@ -395,17 +437,19 @@ class Order(Expr):
                     if r != l:
                         return
             return r
-        if (self.expr.is_Pow and self.expr.base.is_symbol
-            and self.expr.exp.is_positive):
-            if expr.is_Pow and self.expr.base == expr.base:
-                return not (self.expr.exp-expr.exp).is_positive
-            if expr.is_Mul:
-                for arg in expr.args:
-                    if (arg.is_Pow and self.expr.base == arg.base
-                        and (expr/arg).is_number):
-                        r = (self.expr.exp-arg.exp).is_positive
-                        if not (r is None):
-                            return not r
+
+        if self.expr.is_Pow and len(self.variables) == 1:
+            symbol = self.variables[0]
+            other = expr.as_independent(symbol, as_Add=False)[1]
+            if (other.is_Pow and other.base == symbol and
+                self.expr.base == symbol):
+                    if point.is_zero:
+                        rv = (self.expr.exp - other.exp).is_nonpositive
+                    if point.is_infinite:
+                        rv = (self.expr.exp - other.exp).is_nonnegative
+                    if rv is not None:
+                        return rv
+
         obj = self.func(expr, *self.args[1:])
         return self.contains(obj)
 
@@ -433,7 +477,12 @@ class Order(Expr):
                     # First, try to substitute self.point in the "new"
                     # expr to see if this is a fixed point.
                     # E.g.  O(y).subs(y, sin(x))
-                    point = new.subs(var, self.point[i])
+                    from sympy import limit
+                    if new.has(Order) and limit(new.getO().expr, var, new.getO().point[0]) == self.point[i]:
+                        point = new.getO().point[0]
+                        return Order(newexpr, *zip([var], [point]))
+                    else:
+                        point = new.subs(var, self.point[i])
                     if point != self.point[i]:
                         from sympy.solvers.solveset import solveset
                         d = Dummy()
@@ -468,8 +517,7 @@ class Order(Expr):
         if expr is not None:
             return self.func(expr, *self.args[1:])
 
-    def _sage_(self):
-        #XXX: SAGE doesn't have Order yet. Let's return 0 instead.
-        return Rational(0)._sage_()
+    def __neg__(self):
+        return self
 
 O = Order

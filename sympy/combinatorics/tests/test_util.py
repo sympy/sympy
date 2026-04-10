@@ -1,4 +1,4 @@
-from sympy.core.compatibility import range
+from __future__ import annotations
 from sympy.combinatorics.named_groups import SymmetricGroup, DihedralGroup,\
     AlternatingGroup
 from sympy.combinatorics.permutations import Permutation

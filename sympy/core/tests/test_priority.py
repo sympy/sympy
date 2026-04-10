@@ -1,7 +1,9 @@
+from __future__ import annotations
 from sympy.core.decorators import call_highest_priority
 from sympy.core.expr import Expr
 from sympy.core.mod import Mod
 from sympy.core.numbers import Integer
+from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.functions.elementary.integers import floor
 
@@ -14,7 +16,7 @@ class Higher(Integer):
     '''
 
     _op_priority = 20.0
-    result = 1
+    result: Expr = S.One
 
     def __new__(cls):
         obj = Expr.__new__(cls)
@@ -53,12 +55,12 @@ class Higher(Integer):
     def __rpow__(self, other):
         return 2*self.result
 
-    @call_highest_priority('__rdiv__')
-    def __div__(self, other):
+    @call_highest_priority('__rtruediv__')
+    def __truediv__(self, other):
         return self.result
 
-    @call_highest_priority('__div__')
-    def __rdiv__(self, other):
+    @call_highest_priority('__truediv__')
+    def __rtruediv__(self, other):
         return 2*self.result
 
     @call_highest_priority('__rmod__')
@@ -77,9 +79,6 @@ class Higher(Integer):
     def __rfloordiv__(self, other):
         return 2*self.result
 
-    __truediv__ = __div__
-    __rtruediv__ = __rdiv__
-
 
 class Lower(Higher):
     '''
@@ -89,7 +88,7 @@ class Lower(Higher):
     '''
 
     _op_priority = 5.0
-    result = -1
+    result: Expr = S.NegativeOne
 
     def __new__(cls):
         obj = Expr.__new__(cls)
@@ -123,8 +122,8 @@ def test_sub():
 def test_pow():
     assert h**l == h**x == 1
     assert l**h == x**h == 2
-    assert x**l == 1/x
-    assert l**x == (-1)**x
+    assert (x**l).args == (1/x).args and (x**l).is_Pow
+    assert (l**x).args == ((-1)**x).args and (l**x).is_Pow
 
 
 def test_div():

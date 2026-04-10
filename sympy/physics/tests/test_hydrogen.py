@@ -1,7 +1,14 @@
-from sympy import exp, integrate, oo, S, simplify, sqrt, symbols, pi, sin, cos, I
-from sympy.core.compatibility import range
-from sympy.physics.hydrogen import R_nl, E_nl, E_nl_dirac, Psi_nlm
-from sympy.utilities.pytest import raises
+from __future__ import annotations
+from sympy.core.numbers import (I, Rational, oo, pi)
+from sympy.core.singleton import S
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.integrals.integrals import integrate
+from sympy.simplify.simplify import simplify
+from sympy.physics.hydrogen import R_nl, E_nl, E_nl_dirac, Psi_nlm, Y_lm, Z_lm
+from sympy.testing.pytest import raises
 
 n, r, Z = symbols('n r Z')
 
@@ -25,19 +32,19 @@ def test_wavefunction():
     R = {
         (1, 0): 2*sqrt(1/a**3) * exp(-r/a),
         (2, 0): sqrt(1/(2*a**3)) * exp(-r/(2*a)) * (1 - r/(2*a)),
-        (2, 1): S(1)/2 * sqrt(1/(6*a**3)) * exp(-r/(2*a)) * r/a,
-        (3, 0): S(2)/3 * sqrt(1/(3*a**3)) * exp(-r/(3*a)) *
-        (1 - 2*r/(3*a) + S(2)/27 * (r/a)**2),
-        (3, 1): S(4)/27 * sqrt(2/(3*a**3)) * exp(-r/(3*a)) *
+        (2, 1): S.Half * sqrt(1/(6*a**3)) * exp(-r/(2*a)) * r/a,
+        (3, 0): Rational(2, 3) * sqrt(1/(3*a**3)) * exp(-r/(3*a)) *
+        (1 - 2*r/(3*a) + Rational(2, 27) * (r/a)**2),
+        (3, 1): Rational(4, 27) * sqrt(2/(3*a**3)) * exp(-r/(3*a)) *
         (1 - r/(6*a)) * r/a,
-        (3, 2): S(2)/81 * sqrt(2/(15*a**3)) * exp(-r/(3*a)) * (r/a)**2,
-        (4, 0): S(1)/4 * sqrt(1/a**3) * exp(-r/(4*a)) *
-        (1 - 3*r/(4*a) + S(1)/8 * (r/a)**2 - S(1)/192 * (r/a)**3),
-        (4, 1): S(1)/16 * sqrt(5/(3*a**3)) * exp(-r/(4*a)) *
-        (1 - r/(4*a) + S(1)/80 * (r/a)**2) * (r/a),
-        (4, 2): S(1)/64 * sqrt(1/(5*a**3)) * exp(-r/(4*a)) *
+        (3, 2): Rational(2, 81) * sqrt(2/(15*a**3)) * exp(-r/(3*a)) * (r/a)**2,
+        (4, 0): Rational(1, 4) * sqrt(1/a**3) * exp(-r/(4*a)) *
+        (1 - 3*r/(4*a) + Rational(1, 8) * (r/a)**2 - Rational(1, 192) * (r/a)**3),
+        (4, 1): Rational(1, 16) * sqrt(5/(3*a**3)) * exp(-r/(4*a)) *
+        (1 - r/(4*a) + Rational(1, 80) * (r/a)**2) * (r/a),
+        (4, 2): Rational(1, 64) * sqrt(1/(5*a**3)) * exp(-r/(4*a)) *
         (1 - r/(12*a)) * (r/a)**2,
-        (4, 3): S(1)/768 * sqrt(1/(35*a**3)) * exp(-r/(4*a)) * (r/a)**3,
+        (4, 3): Rational(1, 768) * sqrt(1/(35*a**3)) * exp(-r/(4*a)) * (r/a)**3,
     }
     for n, l in R:
         assert simplify(R_nl(n, l, r, Z) - R[(n, l)]) == 0
@@ -55,7 +62,7 @@ def test_psi_nlm():
     phi=S('phi')
     theta=S('theta')
     assert (Psi_nlm(1, 0, 0, r, phi, theta) == exp(-r) / sqrt(pi))
-    assert (Psi_nlm(2, 1, -1, r, phi, theta)) == S(1) / 2 * exp(-r / (2)) * r \
+    assert (Psi_nlm(2, 1, -1, r, phi, theta)) == S.Half * exp(-r / (2)) * r \
         * (sin(theta) * exp(-I * phi) / (4 * sqrt(pi)))
     assert (Psi_nlm(3, 2, 1, r, phi, theta, 2) == -sqrt(2) * sin(theta) \
          * exp(I * phi) * cos(theta) / (4 * sqrt(pi)) * S(2) / 81 \
@@ -68,11 +75,11 @@ def test_hydrogen_energies():
     assert E_nl(1, 47) == -S(47)**2/(2*1**2)
     assert E_nl(2, 47) == -S(47)**2/(2*2**2)
 
-    assert E_nl(1) == -S(1)/(2*1**2)
-    assert E_nl(2) == -S(1)/(2*2**2)
-    assert E_nl(3) == -S(1)/(2*3**2)
-    assert E_nl(4) == -S(1)/(2*4**2)
-    assert E_nl(100) == -S(1)/(2*100**2)
+    assert E_nl(1) == -S.One/(2*1**2)
+    assert E_nl(2) == -S.One/(2*2**2)
+    assert E_nl(3) == -S.One/(2*3**2)
+    assert E_nl(4) == -S.One/(2*4**2)
+    assert E_nl(100) == -S.One/(2*100**2)
 
     raises(ValueError, lambda: E_nl(0))
 
@@ -118,3 +125,25 @@ def test_hydrogen_energies_relat():
     raises(ValueError, lambda: E_nl_dirac(0, 0))
     raises(ValueError, lambda: E_nl_dirac(1, -1))
     raises(ValueError, lambda: E_nl_dirac(1, 0, False))
+
+
+def test_y_lm():
+    # https://en.wikipedia.org/wiki/Table_of_spherical_harmonics#
+    l, m, phi, theta = symbols('l, m, phi, theta', real=True)
+    assert Y_lm(1, 0, 0, pi) == -sqrt(3)/(2*sqrt(pi))
+    assert Y_lm(0, 0, 0, 0) == 1/(2*sqrt(pi))
+    assert Y_lm(0, 0, phi, theta) == 1/(2*sqrt(pi))
+    assert Y_lm(1, 0, phi, theta) == sqrt(3)*cos(theta)/(2*sqrt(pi))
+    assert Y_lm(1, 1, phi, theta) == -sqrt(6)*exp(I*phi)*sin(theta)/(4*sqrt(pi))
+    assert Y_lm(1, -1, phi, theta) == sqrt(6)*exp(-I*phi)*sin(theta)/(4*sqrt(pi))
+
+
+def test_z_lm():
+    # https://en.wikipedia.org/wiki/Table_of_spherical_harmonics#
+    l, m, phi, theta = symbols('l, m, phi, theta', real=True)
+    assert Z_lm(2, 0, 0, 0) == sqrt(5)/(2*sqrt(pi))
+    assert Z_lm(1, -1, pi/2, pi/2) == -sqrt(3)/(2*sqrt(pi))
+    assert Z_lm(2, 2, phi, theta).simplify() == (
+        sqrt(15)*sin(theta)**2*cos(2*phi)/(4*sqrt(pi)))
+    assert Z_lm(2, -2, phi, theta).simplify() == (
+        -sqrt(15)*sin(2*phi)*sin(theta)**2/(4*sqrt(pi)))
