@@ -443,6 +443,11 @@ def simplify(expr: Basic, **kwargs) -> Basic: ...
 def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, doit=True, **kwargs):
     """Simplifies the given expression.
 
+    This function attempts to reduce an expression to a simpler form.
+    However, "simpler" is not strictly well-defined and depends on heuristics.
+    For more predictable results, consider using specific simplification
+    functions like ``trigsimp()``, ``cancel()``, or ``factor()``.
+
     Explanation
     ===========
 
