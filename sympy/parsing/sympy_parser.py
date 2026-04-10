@@ -1110,6 +1110,14 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
         ast.BitAnd: 'And',
         ast.BitXor: 'Not',
     }
+    relational_operators = {
+        ast.Lt: 'Lt',
+        ast.Gt: 'Gt',
+        ast.LtE: 'Le',
+        ast.GtE: 'Ge',
+        ast.Eq: 'Eq',
+        ast.NotEq: 'Ne',
+    }
     functions = (
         'Abs', 'im', 're', 'sign', 'arg', 'conjugate',
         'acos', 'acot', 'acsc', 'asec', 'asin', 'atan',
@@ -1185,6 +1193,36 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
 
             return new_node
         return node
+
+    def visit_Compare(self, node):
+        node = self.generic_visit(node)
+        # Build a chain of relational calls for chained comparisons
+        # e.g., 1 < 2 < 3 becomes And(Lt(1, 2, evaluate=False), Lt(2, 3, evaluate=False))
+        left = node.left
+        relations = []
+        for op, comparator in zip(node.ops, node.comparators):
+            op_class = op.__class__
+            if op_class not in self.relational_operators:
+                return node
+            sympy_class = self.relational_operators[op_class]
+            rel = ast.Call(
+                func=ast.Name(id=sympy_class, ctx=ast.Load()),
+                args=[left, comparator],
+                keywords=[ast.keyword(arg='evaluate', value=ast.NameConstant(value=False, ctx=ast.Load()))],
+                starargs=None,
+                kwargs=None
+            )
+            relations.append(rel)
+            left = comparator
+        if len(relations) == 1:
+            return relations[0]
+        return ast.Call(
+            func=ast.Name(id='And', ctx=ast.Load()),
+            args=relations,
+            keywords=[],
+            starargs=None,
+            kwargs=None
+        )
 
     def visit_Call(self, node):
         new_node = self.generic_visit(node)
