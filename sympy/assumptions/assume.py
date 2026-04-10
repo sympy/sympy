@@ -1,15 +1,12 @@
 """A module which implements predicates and assumption context."""
+from __future__ import annotations
 
 from contextlib import contextmanager
-import inspect
-from sympy.core.assumptions import ManagedProperties
 from sympy.core.symbol import Str
 from sympy.core.sympify import _sympify
 from sympy.logic.boolalg import Boolean, false, true
 from sympy.multipledispatch.dispatcher import Dispatcher, str_signature
-from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import is_sequence
-from sympy.utilities.source import get_class
 
 
 class AssumptionsContext(set):
@@ -72,7 +69,7 @@ class AssumptionsContext(set):
 
     def _sympystr(self, printer):
         if not self:
-            return "%s()" % self.__class__.__name__
+            return f"{self.__class__.__name__}()"
         return "{}({})".format(self.__class__.__name__, printer._print_set(self))
 
 global_assumptions = AssumptionsContext()
@@ -111,7 +108,7 @@ class AppliedPredicate(Boolean):
 
     def __new__(cls, predicate, *args):
         if not isinstance(predicate, Predicate):
-            raise TypeError("%s is not a Predicate." % predicate)
+            raise TypeError(f"{predicate} is not a Predicate.")
         args = map(_sympify, args)
         return super().__new__(cls, predicate, *args)
 
@@ -172,12 +169,12 @@ class AppliedPredicate(Boolean):
         return set()
 
 
-class PredicateMeta(ManagedProperties):
+class PredicateMeta(type):
     def __new__(cls, clsname, bases, dct):
         # If handler is not defined, assign empty dispatcher.
         if "handler" not in dct:
             name = f"Ask{clsname.capitalize()}Handler"
-            handler = Dispatcher(name, doc="Handler for key %s" % name)
+            handler = Dispatcher(name, doc=f"Handler for key {name}")
             dct["handler"] = handler
 
         dct["_orig_doc"] = dct.get("__doc__", "")
@@ -193,20 +190,20 @@ class PredicateMeta(ManagedProperties):
             doc += "    =======\n\n"
 
             # Append the handler's doc without breaking sphinx documentation.
-            docs = ["    Multiply dispatched method: %s" % handler.name]
+            docs = [f"    Multiply dispatched method: {handler.name}"]
             if handler.doc:
                 for line in handler.doc.splitlines():
                     if not line:
                         continue
-                    docs.append("    %s" % line)
+                    docs.append(f"    {line}")
             other = []
             for sig in handler.ordering[::-1]:
                 func = handler.funcs[sig]
                 if func.__doc__:
-                    s = '    Inputs: <%s>' % str_signature(sig)
+                    s = f"    Inputs: <{str_signature(sig)}>"
                     lines = []
                     for line in func.__doc__.splitlines():
-                        lines.append("    %s" % line)
+                        lines.append(f"    {line}")
                     s += "\n".join(lines)
                     docs.append(s)
                 else:
@@ -214,7 +211,7 @@ class PredicateMeta(ManagedProperties):
             if other:
                 othersig = "    Other signatures:"
                 for line in other:
-                    othersig += "\n        * %s" % line
+                    othersig += f"\n        * {line}"
                 docs.append(othersig)
 
             doc += '\n\n'.join(docs)
@@ -296,7 +293,7 @@ class Predicate(Boolean, metaclass=PredicateMeta):
     References
     ==========
 
-    .. [1] https://en.wikipedia.org/wiki/Predicate_(mathematical_logic)
+    .. [1] https://en.wikipedia.org/wiki/Predicate_%28mathematical_logic%29
     .. [2] https://en.wikipedia.org/wiki/Sexy_prime
 
     """
@@ -320,7 +317,7 @@ class Predicate(Boolean, metaclass=PredicateMeta):
         Register the signature to the handler.
         """
         if cls.handler is None:
-            raise TypeError("%s cannot be dispatched." % type(cls))
+            raise TypeError(f"{type(cls)} cannot be dispatched.")
         return cls.handler.register(*types, **kwargs)
 
     @classmethod
@@ -402,63 +399,8 @@ class UndefinedPredicate(Predicate):
     def __call__(self, expr):
         return AppliedPredicate(self, expr)
 
-    def add_handler(self, handler):
-        sympy_deprecation_warning(
-            """
-            The AskHandler system is deprecated. Predicate.add_handler()
-            should be replaced with the multipledispatch handler of Predicate.
-            """,
-            deprecated_since_version="1.8",
-            active_deprecations_target='deprecated-askhandler',
-        )
-        self.handlers.append(handler)
-
-    def remove_handler(self, handler):
-        sympy_deprecation_warning(
-            """
-            The AskHandler system is deprecated. Predicate.remove_handler()
-            should be replaced with the multipledispatch handler of Predicate.
-            """,
-            deprecated_since_version="1.8",
-            active_deprecations_target='deprecated-askhandler',
-        )
-        self.handlers.remove(handler)
-
     def eval(self, args, assumptions=True):
-        # Support for deprecated design
-        # When old design is removed, this will always return None
-        sympy_deprecation_warning(
-            """
-            The AskHandler system is deprecated. Evaluating UndefinedPredicate
-            objects should be replaced with the multipledispatch handler of
-            Predicate.
-            """,
-            deprecated_since_version="1.8",
-            active_deprecations_target='deprecated-askhandler',
-            stacklevel=5,
-        )
-        expr, = args
-        res, _res = None, None
-        mro = inspect.getmro(type(expr))
-        for handler in self.handlers:
-            cls = get_class(handler)
-            for subclass in mro:
-                eval_ = getattr(cls, subclass.__name__, None)
-                if eval_ is None:
-                    continue
-                res = eval_(expr, assumptions)
-                # Do not stop if value returned is None
-                # Try to check for higher classes
-                if res is None:
-                    continue
-                if _res is None:
-                    _res = res
-                else:
-                    # only check consistency if both resolutors have concluded
-                    if _res != res:
-                        raise ValueError('incompatible resolutors')
-                break
-        return res
+        return None
 
 
 @contextmanager

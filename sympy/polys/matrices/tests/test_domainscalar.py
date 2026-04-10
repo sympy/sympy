@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.testing.pytest import raises
 
 from sympy.core.symbol import S
@@ -120,6 +121,12 @@ def test_DomainScalar_pos():
     A = DomainScalar(QQ(2), QQ)
     B = DomainScalar(QQ(2), QQ)
     assert  +A == B
+
+
+def test_DomainScalar_neg():
+    A = DomainScalar(QQ(2), QQ)
+    B = DomainScalar(QQ(-2), QQ)
+    assert  -A == B
 
 
 def test_DomainScalar_eq():

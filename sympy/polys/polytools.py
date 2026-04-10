@@ -1,9 +1,12 @@
 """User-friendly public interface to polynomial functions. """
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, overload, Literal, Any, cast, Callable
 
 from functools import wraps, reduce
 from operator import mul
-from typing import Optional
+from collections import Counter, defaultdict
 
 from sympy.core import (
     S, Expr, Add, Tuple
@@ -15,9 +18,9 @@ from sympy.core.evalf import (
     pure_complex, evalf, fastlog, _evalf_with_bounded_error, quad_to_mpmath)
 from sympy.core.function import Derivative
 from sympy.core.mul import Mul, _keep_coeff
-from sympy.core.numbers import ilcm, I, Integer, equal_valued
+from sympy.core.intfunc import ilcm
+from sympy.core.numbers import I, Integer, equal_valued, NegativeInfinity
 from sympy.core.relational import Relational, Equality
-from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, Symbol
 from sympy.core.sympify import sympify, _sympify
 from sympy.core.traversal import preorder_traversal, bottom_up
@@ -55,13 +58,15 @@ from sympy.utilities import group, public, filldedent
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import iterable, sift
 
-
 # Required to avoid errors
 import sympy.polys
+from sympy.external.mpmath import local_workdps, NoConvergence
 
-import mpmath
-from mpmath.libmp.libhyper import NoConvergence
 
+if TYPE_CHECKING:
+    from sympy.polys.domains.domain import Domain
+    from collections.abc import Iterator
+    from typing import Self
 
 
 def _polifyit(func):
@@ -69,6 +74,9 @@ def _polifyit(func):
     def wrapper(f, g):
         g = _sympify(g)
         if isinstance(g, Poly):
+            return func(f, g)
+        elif isinstance(g, Integer):
+            g = f.from_expr(g, *f.gens, domain=f.domain)
             return func(f, g)
         elif isinstance(g, Expr):
             try:
@@ -159,7 +167,10 @@ class Poly(Basic):
     is_Poly = True
     _op_priority = 10.001
 
-    def __new__(cls, rep, *gens, **args):
+    rep: DMP
+    gens: tuple[Expr, ...]
+
+    def __new__(cls, rep, *gens, **args) -> Self:
         """Create a new polynomial instance out of something useful. """
         opt = options.build_options(gens, args)
 
@@ -174,7 +185,7 @@ class Poly(Basic):
             else:
                 return cls._from_list(list(rep), opt)
         else:
-            rep = sympify(rep)
+            rep = sympify(rep, evaluate=type(rep) is not str) # type: ignore
 
             if rep.is_Poly:
                 return cls._from_poly(rep, opt)
@@ -217,7 +228,7 @@ class Poly(Basic):
         return (self.rep,) + self.gens
 
     @classmethod
-    def from_dict(cls, rep, *gens, **args):
+    def from_dict(cls, rep: dict[tuple[int, ...], Any] | dict[int, Any], *gens, **args):
         """Construct a polynomial from a ``dict``. """
         opt = options.build_options(gens, args)
         return cls._from_dict(rep, opt)
@@ -241,7 +252,7 @@ class Poly(Basic):
         return cls._from_expr(rep, opt)
 
     @classmethod
-    def _from_dict(cls, rep, opt):
+    def _from_dict(cls, rep: dict[tuple[int, ...], Any] | dict[int, Any], opt):
         """Construct a polynomial from a ``dict``. """
         gens = opt.gens
 
@@ -253,12 +264,22 @@ class Poly(Basic):
         domain = opt.domain
 
         if domain is None:
-            domain, rep = construct_domain(rep, opt=opt)
+            domain, rep_d = construct_domain(rep, opt=opt)
         else:
-            for monom, coeff in rep.items():
-                rep[monom] = domain.convert(coeff)
+            convert = domain.convert
+            rep_d = {monom: convert(coeff) for monom, coeff in rep.items()}
 
-        return cls.new(DMP.from_dict(rep, level, domain), *gens)
+        # rep_d could be dict[tuple[int, ...], Er] or dict[int, Er]
+        n = None
+        for n in rep_d: # type: ignore
+            break
+
+        if isinstance(n, int):
+            raw_dict = cast(dict[int, Any], rep_d)
+            return cls.new(DMP.from_raw_dict(raw_dict, domain), *gens)
+        else:
+            multi_dict = cast(dict[tuple[int, ...], Any], rep_d)
+            return cls.new(DMP.from_dict(multi_dict, level, domain), *gens)
 
     @classmethod
     def _from_list(cls, rep, opt):
@@ -435,12 +456,7 @@ class Poly(Basic):
         """Return one polynomial with ``self``'s properties. """
         return self.new(self.rep.one(self.rep.lev, self.rep.dom), *self.gens)
 
-    @property
-    def unit(self):
-        """Return unit polynomial with ``self``'s properties. """
-        return self.new(self.rep.unit(self.rep.lev, self.rep.dom), *self.gens)
-
-    def unify(f, g):
+    def unify(f, g: Poly | Expr | complex) -> tuple[Poly, Poly]:
         """
         Make ``f`` and ``g`` belong to the same domain.
 
@@ -468,19 +484,21 @@ class Poly(Basic):
         _, per, F, G = f._unify(g)
         return per(F), per(G)
 
-    def _unify(f, g):
-        g = sympify(g)
+    def _unify(f, g: Poly | Expr | complex) -> tuple[Domain, Callable[[DMP], Poly], DMP, DMP]:
+        gs = cast('Poly | Expr', sympify(g))
 
-        if not g.is_Poly:
+        if not isinstance(gs, Poly):
             try:
-                return f.rep.dom, f.per, f.rep, f.rep.per(f.rep.dom.from_sympy(g))
+                g_coeff = f.rep.dom.from_sympy(gs)
             except CoercionFailed:
-                raise UnificationFailed("Cannot unify %s with %s" % (f, g))
+                raise UnificationFailed("Cannot unify %s with %s" % (f, gs))
+            else:
+                return f.rep.dom, f.per, f.rep, f.rep.ground_new(g_coeff)
 
-        if isinstance(f.rep, DMP) and isinstance(g.rep, DMP):
-            gens = _unify_gens(f.gens, g.gens)
+        if isinstance(f.rep, DMP) and isinstance(gs.rep, DMP):
+            gens = _unify_gens(f.gens, gs.gens)
 
-            dom, lev = f.rep.dom.unify(g.rep.dom, gens), len(gens) - 1
+            dom, lev = f.rep.dom.unify(gs.rep.dom, gens), len(gens) - 1
 
             if f.gens != gens:
                 f_monoms, f_coeffs = _dict_reorder(
@@ -489,22 +507,22 @@ class Poly(Basic):
                 if f.rep.dom != dom:
                     f_coeffs = [dom.convert(c, f.rep.dom) for c in f_coeffs]
 
-                F = DMP(dict(list(zip(f_monoms, f_coeffs))), dom, lev)
+                F = DMP.from_dict(dict(list(zip(f_monoms, f_coeffs))), lev, dom)
             else:
                 F = f.rep.convert(dom)
 
-            if g.gens != gens:
+            if gs.gens != gens:
                 g_monoms, g_coeffs = _dict_reorder(
-                    g.rep.to_dict(), g.gens, gens)
+                    gs.rep.to_dict(), gs.gens, gens)
 
-                if g.rep.dom != dom:
-                    g_coeffs = [dom.convert(c, g.rep.dom) for c in g_coeffs]
+                if gs.rep.dom != dom:
+                    g_coeffs = [dom.convert(c, gs.rep.dom) for c in g_coeffs]
 
-                G = DMP(dict(list(zip(g_monoms, g_coeffs))), dom, lev)
+                G = DMP.from_dict(dict(list(zip(g_monoms, g_coeffs))), lev, dom)
             else:
-                G = g.rep.convert(dom)
+                G = gs.rep.convert(dom)
         else:
-            raise UnificationFailed("Cannot unify %s with %s" % (f, g))
+            raise UnificationFailed("Cannot unify %s with %s" % (f, gs))
 
         cls = f.__class__
 
@@ -519,7 +537,18 @@ class Poly(Basic):
 
         return dom, per, F, G
 
-    def per(f, rep, gens=None, remove=None):
+    @overload
+    def per(
+        f, rep: DMP, gens: tuple[Expr, ...] | None = None, *, remove: int
+    ) -> Poly | Expr: ...
+    @overload
+    def per(
+        f, rep: DMP, gens: tuple[Expr, ...] | None = None, remove: None = None
+    ) -> Poly: ...
+
+    def per(
+        f, rep: DMP, gens: tuple[Expr, ...] | None = None, remove: int | None = None
+    ) -> Poly | Expr:
         """
         Create a Poly out of the given representation.
 
@@ -690,7 +719,7 @@ class Poly(Basic):
 
         rep = dict(list(zip(*_dict_reorder(f.rep.to_dict(), f.gens, gens))))
 
-        return f.per(DMP(rep, f.rep.dom, len(gens) - 1), gens=gens)
+        return f.per(DMP.from_dict(rep, len(gens) - 1, f.rep.dom), gens=gens)
 
     def ltrim(f, gen):
         """
@@ -1861,7 +1890,7 @@ class Poly(Basic):
                 raise PolynomialError(
                     "a valid generator expected, got %s" % gen)
 
-    def degree(f, gen=0):
+    def degree(f, gen: int = 0) -> int | NegativeInfinity:
         """
         Returns degree of ``f`` in ``x_j``.
 
@@ -1884,11 +1913,14 @@ class Poly(Basic):
         j = f._gen_to_level(gen)
 
         if hasattr(f.rep, 'degree'):
-            return f.rep.degree(j)
+            d = f.rep.degree(j)
+            if d < 0:
+                return S.NegativeInfinity
+            return d
         else:  # pragma: no cover
             raise OperationNotSupported(f, 'degree')
 
-    def degree_list(f):
+    def degree_list(f) -> tuple[int | NegativeInfinity, ...]:
         """
         Returns a list of degrees of ``f``.
 
@@ -1903,11 +1935,12 @@ class Poly(Basic):
 
         """
         if hasattr(f.rep, 'degree_list'):
-            return f.rep.degree_list()
+            degrees = f.rep.degree_list()
+            return tuple(d if d >= 0 else S.NegativeInfinity for d in degrees)
         else:  # pragma: no cover
             raise OperationNotSupported(f, 'degree_list')
 
-    def total_degree(f):
+    def total_degree(f) -> int | NegativeInfinity:
         """
         Returns the total degree of ``f``.
 
@@ -1924,7 +1957,8 @@ class Poly(Basic):
 
         """
         if hasattr(f.rep, 'total_degree'):
-            return f.rep.total_degree()
+            d = f.rep.total_degree()
+            return d if d >= 0 else S.NegativeInfinity
         else:  # pragma: no cover
             raise OperationNotSupported(f, 'total_degree')
 
@@ -2569,7 +2603,7 @@ class Poly(Basic):
 
         return per(s), per(t), per(h)
 
-    def invert(f, g, auto=True):
+    def invert(f, g: Poly, auto: bool = True) -> Poly:
         """
         Invert ``f`` modulo ``g`` when possible.
 
@@ -2600,7 +2634,7 @@ class Poly(Basic):
 
         return per(result)
 
-    def revert(f, n):
+    def revert(f, n: int) -> Poly:
         """
         Compute ``f**(-1)`` mod ``x**n``.
 
@@ -2896,7 +2930,7 @@ class Poly(Basic):
 
         return per(h), per(cff), per(cfg)
 
-    def gcd(f, g):
+    def gcd(f, g: Poly | Expr | complex) -> Poly:
         """
         Returns the polynomial GCD of ``f`` and ``g``.
 
@@ -2919,7 +2953,7 @@ class Poly(Basic):
 
         return per(result)
 
-    def lcm(f, g):
+    def lcm(f, g: Poly | Expr | complex) -> Poly:
         """
         Returns polynomial LCM of ``f`` and ``g``.
 
@@ -2942,7 +2976,7 @@ class Poly(Basic):
 
         return per(result)
 
-    def trunc(f, p):
+    def trunc(f, p: Expr | int) -> Poly:
         """
         Reduce ``f`` modulo a constant ``p``.
 
@@ -2965,7 +2999,7 @@ class Poly(Basic):
 
         return f.per(result)
 
-    def monic(self, auto=True):
+    def monic(self, auto: bool = True) -> Poly:
         """
         Divides all coefficients by ``LC(f)``.
 
@@ -3036,7 +3070,7 @@ class Poly(Basic):
 
         return f.rep.dom.to_sympy(cont), f.per(result)
 
-    def compose(f, g):
+    def compose(f, g: Poly | Expr) -> Poly:
         """
         Computes the functional composition of ``f`` and ``g``.
 
@@ -3059,7 +3093,7 @@ class Poly(Basic):
 
         return per(result)
 
-    def decompose(f):
+    def decompose(f) -> list[Poly]:
         """
         Computes a functional decomposition of ``f``.
 
@@ -3080,7 +3114,7 @@ class Poly(Basic):
 
         return list(map(f.per, result))
 
-    def shift(f, a):
+    def shift(f, a: Expr) -> Poly:
         """
         Efficiently compute Taylor shift ``f(x + a)``.
 
@@ -3093,15 +3127,35 @@ class Poly(Basic):
         >>> Poly(x**2 - 2*x + 1, x).shift(2)
         Poly(x**2 + 2*x + 1, x, domain='ZZ')
 
+        See Also
+        ========
+
+        shift_list: Analogous method for multivariate polynomials.
         """
-        if hasattr(f.rep, 'shift'):
-            result = f.rep.shift(a)
-        else:  # pragma: no cover
-            raise OperationNotSupported(f, 'shift')
+        return f.per(f.rep.shift(a))
 
-        return f.per(result)
+    def shift_list(f, a: list[Expr]) -> Poly:
+        """
+        Efficiently compute Taylor shift ``f(X + A)``.
 
-    def transform(f, p, q):
+        Examples
+        ========
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x, y
+
+        >>> Poly(x*y, [x,y]).shift_list([1, 2]) == Poly((x+1)*(y+2), [x,y])
+        True
+
+        See Also
+        ========
+
+        shift: Analogous method for univariate polynomials.
+        """
+        return f.per(f.rep.shift_list(a))
+
+    def transform(f, p: Poly, q: Poly) -> Poly:
+
         """
         Efficiently evaluate the functional transformation ``q**n * f(p/q)``.
 
@@ -3231,7 +3285,7 @@ class Poly(Basic):
         >>> s, f, r = Poly(x**2 + 1, x, extension=[sqrt(3)]).sqf_norm()
 
         >>> s
-        1
+        [1]
         >>> f
         Poly(x**2 - 2*sqrt(3)*x + 4, x, domain='QQ<sqrt(3)>')
         >>> r
@@ -3328,7 +3382,7 @@ class Poly(Basic):
 
         return [(f.per(g), k) for g, k in factors]
 
-    def factor_list(f):
+    def factor_list(f) -> tuple[Expr, list[tuple[Poly, int]]]:
         """
         Returns a list of irreducible factors of ``f``.
 
@@ -3349,7 +3403,10 @@ class Poly(Basic):
             try:
                 coeff, factors = f.rep.factor_list()
             except DomainError:
-                return S.One, [(f, 1)]
+                if f.degree() == 0:
+                    return f.as_expr(), []
+                else:
+                    return S.One, [(f, 1)]
         else:  # pragma: no cover
             raise OperationNotSupported(f, 'factor_list')
 
@@ -3591,6 +3648,8 @@ class Poly(Basic):
         """
         Return a list of real roots with multiplicities.
 
+        See :func:`real_roots` for more explanation.
+
         Examples
         ========
 
@@ -3601,7 +3660,6 @@ class Poly(Basic):
         [-1/2, 2, 2]
         >>> Poly(x**3 + x + 1).real_roots()
         [CRootOf(x**3 + x + 1, 0)]
-
         """
         reals = sympy.polys.rootoftools.CRootOf.real_roots(f, radicals=radicals)
 
@@ -3610,9 +3668,22 @@ class Poly(Basic):
         else:
             return group(reals, multiple=False)
 
-    def all_roots(f, multiple=True, radicals=True):
+    @overload
+    def all_roots(
+        f, multiple: Literal[True] = True, radicals: bool = True
+    ) -> list[Expr]: ...
+    @overload
+    def all_roots(
+        f, multiple: Literal[False], *, radicals: bool = True
+    ) -> list[tuple[Expr, int]]: ...
+
+    def all_roots(
+        f, multiple: bool = True, radicals: bool = True
+    ) -> list[Expr] | list[tuple[Expr, int]]:
         """
         Return a list of real and complex roots with multiplicities.
+
+        See :func:`all_roots` for more explanation.
 
         Examples
         ========
@@ -3677,41 +3748,41 @@ class Poly(Basic):
             fac = ilcm(*denoms)
             coeffs = [int(coeff*fac) for coeff in f.all_coeffs()]
         else:
-            coeffs = [coeff.evalf(n=n).as_real_imag()
-                    for coeff in f.all_coeffs()]
-            try:
-                coeffs = [mpmath.mpc(*coeff) for coeff in coeffs]
-            except TypeError:
-                raise DomainError("Numerical domain expected, got %s" % \
-                        f.rep.dom)
-
-        dps = mpmath.mp.dps
-        mpmath.mp.dps = n
+            coeffs = [coeff.evalf(n=n).as_real_imag() for coeff in f.all_coeffs()]
+            with local_workdps(n) as ctx:
+                try:
+                    coeffs = [ctx.mpc(*coeff) for coeff in coeffs]
+                except TypeError:
+                    raise DomainError("Numerical domain expected, got %s" % f.rep.dom)
 
         from sympy.functions.elementary.complexes import sign
-        try:
-            # We need to add extra precision to guard against losing accuracy.
-            # 10 times the degree of the polynomial seems to work well.
-            roots = mpmath.polyroots(coeffs, maxsteps=maxsteps,
-                    cleanup=cleanup, error=False, extraprec=f.degree()*10)
+        opts = {'maxsteps': maxsteps, 'cleanup': cleanup, 'error': False}
 
-            # Mpmath puts real roots first, then complex ones (as does all_roots)
-            # so we make sure this convention holds here, too.
-            roots = list(map(sympify,
-                sorted(roots, key=lambda r: (1 if r.imag else 0, r.real, abs(r.imag), sign(r.imag)))))
-        except NoConvergence:
+        # mpmath 1.4 deprecates calling polyroots without the 'asc' argument
+        # and apparently prefers asc=True which reverses the order compared to
+        # default behaviour for mpmath < 1.4.
+        from mpmath import __version__ as mpver
+        if not any(mpver.startswith(prefix) for prefix in ('0.', '1.0.', '1.1.', '1.2.', '1.3.')):
+            # This should be the code when mpmath 1.4.0 is the minimum version:
+            opts['asc'] = True
+            coeffs = coeffs[::-1]
+
+        for prec in [f.degree()*10, f.degree()*15]:
             try:
-                # If roots did not converge try again with more extra precision.
-                roots = mpmath.polyroots(coeffs, maxsteps=maxsteps,
-                    cleanup=cleanup, error=False, extraprec=f.degree()*15)
-                roots = list(map(sympify,
-                    sorted(roots, key=lambda r: (1 if r.imag else 0, r.real, abs(r.imag), sign(r.imag)))))
+                with local_workdps(n) as ctx:
+                    roots = ctx.polyroots(coeffs, **opts, extraprec=prec)
+                    # Mpmath puts real roots first, then complex ones (as does
+                    # all_roots) so we make sure this convention holds here,
+                    # too.
+                    key = lambda r: (1 if r.imag else 0, r.real, abs(r.imag), sign(r.imag))
+                    roots = [sympify(r) for r in sorted(roots, key=key)]
+                    break
             except NoConvergence:
-                raise NoConvergence(
-                    'convergence to root failed; try n < %s or maxsteps > %s' % (
-                    n, maxsteps))
-        finally:
-            mpmath.mp.dps = dps
+                continue
+        else:
+            msg = 'convergence to root failed; try n < %s or maxsteps > %s'
+            raise NoConvergence(msg % (n, maxsteps))
+
 
         return roots
 
@@ -3782,6 +3853,153 @@ class Poly(Basic):
 
         return r.replace(t, x)
 
+    def which_real_roots(f, candidates):
+        """
+        Find roots of a square-free polynomial ``f`` from ``candidates``.
+
+        Explanation
+        ===========
+
+        If ``f`` is a square-free polynomial and ``candidates`` is a superset
+        of the roots of ``f``, then ``f.which_real_roots(candidates)`` returns a
+        list containing exactly the set of roots of ``f``. The domain must be
+        :ref:`ZZ`, :ref:`QQ`, or :ref:`QQ(a)` and``f`` must be univariate and
+        square-free.
+
+        The list ``candidates`` must be a superset of the real roots of ``f``
+        and ``f.which_real_roots(candidates)`` returns the set of real roots
+        of ``f``. The output preserves the order of the order of ``candidates``.
+
+        Examples
+        ========
+
+        >>> from sympy import Poly, sqrt
+        >>> from sympy.abc import x
+
+        >>> f = Poly(x**4 - 1)
+        >>> f.which_real_roots([-1, 1, 0, -2, 2])
+        [-1, 1]
+        >>> f.which_real_roots([-1, 1, 1, 1, 1])
+        [-1, 1]
+
+        This method is useful as lifting to rational coefficients
+        produced extraneous roots, which we can filter out with
+        this method.
+
+        >>> f = Poly(sqrt(2)*x**3 + x**2 - 1, x, extension=True)
+        >>> f.lift()
+        Poly(-2*x**6 + x**4 - 2*x**2 + 1, x, domain='QQ')
+        >>> f.lift().real_roots()
+        [-sqrt(2)/2, sqrt(2)/2]
+        >>> f.which_real_roots(f.lift().real_roots())
+        [sqrt(2)/2]
+
+        This procedure is already done internally when calling
+        `.real_roots()` on a polynomial with algebraic coefficients.
+
+        >>> f.real_roots()
+        [sqrt(2)/2]
+
+        See Also
+        ========
+
+        same_root
+        which_all_roots
+        """
+        if f.is_multivariate:
+            raise MultivariatePolynomialError(
+                "Must be a univariate polynomial")
+
+        dom = f.get_domain()
+
+        if not (dom.is_ZZ or dom.is_QQ or dom.is_AlgebraicField):
+            raise NotImplementedError(
+                "root counting not supported over %s" % dom)
+
+        return f._which_roots(candidates, f.count_roots())
+
+    def which_all_roots(f, candidates):
+        """
+        Find roots of a square-free polynomial ``f`` from ``candidates``.
+
+        Explanation
+        ===========
+
+        If ``f`` is a square-free polynomial and ``candidates`` is a superset
+        of the roots of ``f``, then ``f.which_all_roots(candidates)`` returns a
+        list containing exactly the set of roots of ``f``. The polynomial``f``
+        must be univariate and square-free.
+
+        The list ``candidates`` must be a superset of the complex roots of
+        ``f`` and ``f.which_all_roots(candidates)`` returns exactly the
+        set of all complex roots of ``f``. The output preserves the order of
+        the order of ``candidates``.
+
+        Examples
+        ========
+
+        >>> from sympy import Poly, I
+        >>> from sympy.abc import x
+
+        >>> f = Poly(x**4 - 1)
+        >>> f.which_all_roots([-1, 1, -I, I, 0])
+        [-1, 1, -I, I]
+        >>> f.which_all_roots([-1, 1, -I, I, I, I])
+        [-1, 1, -I, I]
+
+        This method is useful as lifting to rational coefficients
+        produced extraneous roots, which we can filter out with
+        this method.
+
+        >>> f = Poly(x**2 + I*x - 1, x, extension=True)
+        >>> f.lift()
+        Poly(x**4 - x**2 + 1, x, domain='ZZ')
+        >>> f.lift().all_roots()
+        [CRootOf(x**4 - x**2 + 1, 0),
+        CRootOf(x**4 - x**2 + 1, 1),
+        CRootOf(x**4 - x**2 + 1, 2),
+        CRootOf(x**4 - x**2 + 1, 3)]
+        >>> f.which_all_roots(f.lift().all_roots())
+        [CRootOf(x**4 - x**2 + 1, 0), CRootOf(x**4 - x**2 + 1, 2)]
+
+        This procedure is already done internally when calling
+        `.all_roots()` on a polynomial with algebraic coefficients,
+        or polynomials with Gaussian domains.
+
+        >>> f.all_roots()
+        [CRootOf(x**4 - x**2 + 1, 0), CRootOf(x**4 - x**2 + 1, 2)]
+
+        See Also
+        ========
+
+        same_root
+        which_real_roots
+        """
+        if f.is_multivariate:
+            raise MultivariatePolynomialError(
+                "Must be a univariate polynomial")
+
+        return f._which_roots(candidates, f.degree())
+
+    def _which_roots(f, candidates, num_roots):
+        fe = f.as_expr()
+        x = f.gens[0]
+        prec = 10
+        candidates = list(Counter(candidates).keys())
+
+        while len(candidates) > num_roots:
+            potential_candidates = []
+            for r in candidates:
+                # If f(r) != 0 then f(r).evalf() gives a float/complex with precision.
+                f_r = fe.xreplace({x: r}).evalf(prec, maxn=2*prec)
+                if abs(f_r)._prec < 2:
+                    potential_candidates.append(r)
+
+            candidates = potential_candidates
+            prec *= 2
+
+        return candidates
+
     def same_root(f, a, b):
         """
         Decide whether two roots of this polynomial are equal.
@@ -3807,6 +4025,11 @@ class Poly(Basic):
         PolynomialError
             If the polynomial is of degree < 2.
 
+        See Also
+        ========
+
+        which_real_roots
+        which_all_roots
         """
         if f.is_multivariate:
             raise MultivariatePolynomialError(
@@ -3869,6 +4092,181 @@ class Poly(Basic):
             return cp/cq, per(p), per(q)
         else:
             return tuple(map(per, result))
+
+    def make_monic_over_integers_by_scaling_roots(f):
+        """
+        Turn any univariate polynomial over :ref:`QQ` or :ref:`ZZ` into a monic
+        polynomial over :ref:`ZZ`, by scaling the roots as necessary.
+
+        Explanation
+        ===========
+
+        This operation can be performed whether or not *f* is irreducible; when
+        it is, this can be understood as determining an algebraic integer
+        generating the same field as a root of *f*.
+
+        Examples
+        ========
+
+        >>> from sympy import Poly, S
+        >>> from sympy.abc import x
+        >>> f = Poly(x**2/2 + S(1)/4 * x + S(1)/8, x, domain='QQ')
+        >>> f.make_monic_over_integers_by_scaling_roots()
+        (Poly(x**2 + 2*x + 4, x, domain='ZZ'), 4)
+
+        Returns
+        =======
+
+        Pair ``(g, c)``
+            g is the polynomial
+
+            c is the integer by which the roots had to be scaled
+
+        """
+        if not f.is_univariate or f.domain not in [ZZ, QQ]:
+            raise ValueError('Polynomial must be univariate over ZZ or QQ.')
+        if f.is_monic and f.domain == ZZ:
+            return f, ZZ.one
+        else:
+            fm = f.monic()
+            c, _ = fm.clear_denoms()
+            return fm.transform(Poly(fm.gen), c).to_ring(), c
+
+    def galois_group(f, by_name=False, max_tries=30, randomize=False):
+        """
+        Compute the Galois group of this polynomial.
+
+        Examples
+        ========
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+        >>> f = Poly(x**4 - 2)
+        >>> G, _ = f.galois_group(by_name=True)
+        >>> print(G)
+        S4TransitiveSubgroups.D4
+
+        See Also
+        ========
+
+        sympy.polys.numberfields.galoisgroups.galois_group
+
+        """
+        from sympy.polys.numberfields.galoisgroups import (
+            _galois_group_degree_3, _galois_group_degree_4_lookup,
+            _galois_group_degree_5_lookup_ext_factor,
+            _galois_group_degree_6_lookup,
+        )
+        if (not f.is_univariate
+            or not f.is_irreducible
+            or f.domain not in [ZZ, QQ]
+        ):
+            raise ValueError('Polynomial must be irreducible and univariate over ZZ or QQ.')
+        gg = {
+            3: _galois_group_degree_3,
+            4: _galois_group_degree_4_lookup,
+            5: _galois_group_degree_5_lookup_ext_factor,
+            6: _galois_group_degree_6_lookup,
+        }
+        max_supported = max(gg.keys())
+        n = f.degree()
+        if n > max_supported:
+            raise ValueError(f"Only polynomials up to degree {max_supported} are supported.")
+        elif n < 1:
+            raise ValueError("Constant polynomial has no Galois group.")
+        elif n == 1:
+            from sympy.combinatorics.galois import S1TransitiveSubgroups
+            name, alt = S1TransitiveSubgroups.S1, True
+        elif n == 2:
+            from sympy.combinatorics.galois import S2TransitiveSubgroups
+            name, alt = S2TransitiveSubgroups.S2, False
+        else:
+            g, _ = f.make_monic_over_integers_by_scaling_roots()
+            name, alt = gg[n](g, max_tries=max_tries, randomize=randomize)
+        G = name if by_name else name.get_perm_group()
+        return G, alt
+
+    def hurwitz_conditions(f):
+        """
+        Compute the conditions that ensure ``f`` is a Hurwitz polynomial of
+        full degree.
+
+        Explanation
+        ===========
+
+        Returns expressions ``[e1, e2, ...]`` such that the leading coefficient
+        is nonzero and all roots of the polynomial have strictly negative real
+        part if and only if ``ei > 0`` for all ``i``.
+
+        Note
+        ====
+
+        If you need a fast computation of the conditions, consider using the
+        domain ``EXRAW``. Conditions may be less simplified, but the computation
+        will be a lot faster.
+
+        Examples
+        ========
+
+        >>> from sympy import symbols, Poly, reduce_inequalities
+        >>> x, k = symbols("x k")
+        >>> p3 = Poly(x**3 + x**2 + 2*k*x + 1 - k, x)
+        >>> conditions = p3.hurwitz_conditions()
+        >>> conditions
+        [1, 3*k - 1, 1 - k]
+        >>> reduce_inequalities([c > 0 for c in conditions])
+        (1/3 < k) & (k < 1)
+
+        References
+        ==========
+
+        .. [1] G. Meinsma: Elementary proof of the Routh-Hurwitz test.
+               Systems & Control Letters, Volume 25, Issue 4, 1995, Pages 237-242,
+               https://courses.washington.edu/mengr471/resources/Routh_Hurwitz_Proof.pdf
+
+
+        """
+        conds = f.rep.hurwitz_conditions()
+        return [f.domain.to_sympy(cond) for cond in conds]
+
+    def schur_conditions(f):
+        """
+        Compute the conditions that ensure ``f`` is a Schur stable polynomial.
+
+        Explanation
+        ===========
+
+        Returns expressions ``[e1, e2, ...]`` such that all roots of the
+        polynomial lie inside the unit circle if and only if ``ei > 0``
+        for all ``i``.
+
+        Note
+        ====
+
+        If you need a fast computation of the conditions, consider using the
+        domain ``EXRAW``. Conditions may be less simplified and there could be
+        some precision issues, but the computation will be a lot faster.
+
+        Examples
+        ========
+
+        >>> from sympy import symbols, Poly, reduce_inequalities
+        >>> x, k = symbols("x k")
+        >>> p3 = Poly(x**3 + x**2 + 2*k*x + 1 - k, x)
+        >>> conditions = p3.schur_conditions()
+        >>> conditions
+        [-15*k**2 + 20*k - 5, -8*k**2 - 8*k + 8, 3*k**2 + 8*k - 3]
+        >>> reduce_inequalities([c > 0 for c in conditions])
+        (1/3 < k) & (k < -1/2 + sqrt(5)/2)
+
+        References
+        ==========
+
+        .. [1] https://faculty.washington.edu/chx/teaching/me547/2_1_stability.pdf#:~:text=2.6%20Routh,plane%20Real
+
+        """
+        conds = f.rep.schur_conditions()
+        return [f.domain.to_sympy(cond) for cond in conds]
 
     @property
     def is_zero(f):
@@ -4519,8 +4917,15 @@ def _update_args(args, key, value):
 def degree(f, gen=0):
     """
     Return the degree of ``f`` in the given variable.
+    When ``f`` is a univariate polynomial, it is not
+    necessary to pass a generator, but if the generator
+    is given as an int it refers to the gen-th generator
+    of the expression which must be passed as a Poly
+    instance.
 
-    The degree of 0 is negative infinity.
+    The degree of 0 with respect to any variable is ``-oo``; if ``f``
+    is a numerical expression equal to 0, but not identically 0,
+    zero may be returned instead (because the variable does not appear).
 
     Examples
     ========
@@ -4528,12 +4933,28 @@ def degree(f, gen=0):
     >>> from sympy import degree
     >>> from sympy.abc import x, y
 
+    >>> degree(x**2)
+    2
     >>> degree(x**2 + y*x + 1, gen=x)
     2
     >>> degree(x**2 + y*x + 1, gen=y)
     1
     >>> degree(0, x)
     -oo
+
+    In contrast to the strict Poly method, if the specified generator is
+    not in Poly's generators, the Poly instance is recast in terms of the
+    generator instead of raising an error.
+
+    >>> from sympy import Poly
+    >>> p = Poly(x + y, x)
+    >>> p.degree(y)
+    Traceback (most recent call last):
+    ...
+    PolynomialError: a valid generator expected, got y
+
+    >>> degree(p, y)
+    1
 
     See also
     ========
@@ -4542,36 +4963,34 @@ def degree(f, gen=0):
     degree_list
     """
 
+    _degree = lambda x: Integer(x) if type(x) is int else x
+
     f = sympify(f, strict=True)
-    gen_is_Num = sympify(gen, strict=True).is_Number
-    if f.is_Poly:
-        p = f
-        isNum = p.as_expr().is_Number
-    else:
-        isNum = f.is_Number
-        if not isNum:
-            if gen_is_Num:
-                p, _ = poly_from_expr(f)
-            else:
-                p, _ = poly_from_expr(f, gen)
+    if type(gen) is int:
+        if isinstance(f, Poly):
+            return _degree(f.degree(gen))
+        if f.is_Number:
+            return S.NegativeInfinity if f.is_zero else S.Zero
+        try:
+            p = Poly(f, expand=False)
+        except GeneratorsNeeded:  # e.g. f = (1+I)**2/2
+            gens = ()  # do not guess what the user intended
+        else:
+            gens = p.gens
+        free = f.free_symbols
+        if not (gen == 0 and len(gens) == 1 and len(free) < 2 and f.is_polynomial(
+                gen := next(iter(gens))) and # <-- assigns gen
+                gen.is_Atom):  # e.g. x or pi
+            raise TypeError(filldedent('''
+                To avoid ambiguity, this expression requires either
+                a symbol (not int) generator or a Poly (which identifies
+                the generators).'''))
+        return p.degree(gen)
 
-    if isNum:
-        return S.Zero if f else S.NegativeInfinity
-
-    if not gen_is_Num:
-        if f.is_Poly and gen not in p.gens:
-            # try recast without explicit gens
-            p, _ = poly_from_expr(f.as_expr())
-        if gen not in p.gens:
-            return S.Zero
-    elif not f.is_Poly and len(f.free_symbols) > 1:
-        raise TypeError(filldedent('''
-         A symbolic generator of interest is required for a multivariate
-         expression like func = %s, e.g. degree(func, gen = %s) instead of
-         degree(func, gen = %s).
-        ''' % (f, next(ordered(f.free_symbols)), gen)))
-    result = p.degree(gen)
-    return Integer(result) if isinstance(result, int) else S.NegativeInfinity
+    gen = sympify(gen, strict=True)
+    if not isinstance(f, Poly) or gen not in f.gens:
+        f = poly_from_expr(f, gen)[0]
+    return _degree(f.degree(gen))
 
 
 @public
@@ -5008,7 +5427,15 @@ def half_gcdex(f, g, *gens, **args):
     >>> half_gcdex(x**4 - 2*x**3 - 6*x**2 + 12*x + 15, x**3 + x**2 - 4*x - 4)
     (3/5 - x/5, x + 1)
 
+    See Also
+    ========
+
+    sympy.polys.polytools.gcdex:
+        Extended Euclidean algorithm.
+    sympy.polys.polytools.gcdex_steps:
+        Intermediate steps of the Extended Euclidean algorithm.
     """
+
     options.allowed_flags(args, ['auto', 'polys'])
 
     try:
@@ -5031,6 +5458,202 @@ def half_gcdex(f, g, *gens, **args):
         return s, h
 
 
+def _gcdex_steps_domain(a, b, K):
+    """
+    Generator for intermediate steps in the extended euclidean algorithm
+    on domain elements. Helper function for `gcdex_steps`.
+    """
+    if not K.is_PID:
+        raise DomainError("gcdex_steps is only for Euclidean domains")
+
+    s1, s2 = K.one, K.zero
+    t1, t2 = K.zero, K.one
+
+    while b:
+        yield s2, t2, b
+
+        quotient, remainder = K.div(a, b)
+
+        a, b = b, remainder
+        s1, s2 = s2, s1 - quotient * s2
+        t1, t2 = t2, t1 - quotient * t2
+
+
+def _gcdex_steps_polynomial(f, g, auto):
+    """
+    Generator for intermediate steps of the extended euclidean algorithm
+    on polynomials. Helper function for `gcdex_steps`.
+    """
+    if auto and f.domain.is_Ring:
+        f, g = f.to_field(), g.to_field()
+
+    if not f.domain.is_Field:
+        raise DomainError("gcdex_steps is only for Euclidean domains")
+
+    if not f.is_univariate:
+        raise ValueError('univariate polynomial expected')
+
+    s1, s2 = f.one, f.zero
+    t1, t2 = f.zero, f.one
+    r1, r2 = f, g
+
+    if f.degree() < g.degree():
+        s1, t1 = t1, s1
+        s2, t2 = t2, s2
+        r1, r2 = r2, r1
+
+    for _ in range(max(f.degree(), g.degree()) + 1):
+        yield s2, t2, r2
+
+        quotient, remainder = divmod(r1, r2)
+        if remainder == 0:
+            break
+
+        r1, r2 = r2, remainder
+        s1, s2 = s2, s1 - quotient * s2
+        t1, t2 = t2, t1 - quotient * t2
+
+
+@overload
+def gcdex_steps(
+    f: Expr, g: Expr, *gens: Expr, polys: Literal[False] = False, **args: Any
+) -> Iterator[tuple[Expr, Expr, Expr]]:
+    ...
+
+@overload
+def gcdex_steps(
+    f: Expr, g: Expr, *gens: Expr, polys: Literal[True], **args: Any
+) -> Iterator[tuple[Poly, Poly, Poly]]:
+    ...
+
+@overload
+def gcdex_steps(
+    f: Poly, g: Poly, *gens: Expr, **args: Any
+) -> Iterator[tuple[Poly, Poly, Poly]]:
+    ...
+
+@public
+def gcdex_steps(
+    f: Expr | Poly, g: Expr | Poly, *gens: Expr, **args: Any
+) -> Iterator[tuple[Expr, Expr, Expr]] | Iterator[tuple[Poly, Poly, Poly]]:
+    """
+    Generator for intermediate steps in the extended Euclidean algorithm.
+
+    Description
+    ===========
+
+    Returns a generator to three polynomial sequences `s`, `t`, and `r` that
+    enumerate all solutions apart from the trivial `(s, t, r) = (1, 0, f)`,
+    and `(g, -f, 0)` (up to multiplicative constants) to the following
+    conditions::
+
+        f*s[i] + g*t[i] = r[i],
+        r[i].deg() > r[i + 1].deg()
+
+    In particular, the final value of `r = gcd(f, g)`, the greatest common
+    divisor of `f` and `g`.
+
+    The sequences `s`, `t`, and `r` also have the following properties (see
+    ref. [1] McEliece and Shearer)::
+
+        t[i]*r[i-1] - t[i-1]*r[i] = (-1)**i*f
+        s[i]*r[i-1] - s[i-1]*r[i] = (-1)**(i+1)*g
+        s[i]*t[i-1]- s[i-1]*t[i] = (-1)**(i+1)
+        s[i].degree() + r[i-1].degree() = b.degree()
+        t[i].degree() + r[i-1].degree() = a.degree()
+
+    Parameters
+    ==========
+
+    f : Poly
+        The first polynomial.
+    g : Poly
+        The second polynomial,
+
+    Returns
+    =======
+
+    steps : Iterator[tuple[Poly, Poly, Poly]] | Iterator[tuple[Expr, Expr, Expr]]
+        A generator to the sequences `s`, `t`, and `r`
+
+    Examples
+    ========
+
+    >>> from sympy.abc import x, y
+    >>> from sympy import simplify
+    >>> from sympy.polys.polytools import gcdex_steps
+
+    >>> f = x**4 - 2*x**3 - 6*x**2 + 12*x + 15
+    >>> g = x**3 + x**2 - 4*x - 4
+    >>> for step in gcdex_steps(f, g): print(step)
+    (0, 1, x**3 + x**2 - 4*x - 4)
+    (1, 3 - x, x**2 + 4*x + 3)
+    (3 - x, x**2 - 6*x + 10, 5*x + 5)
+
+    Each step `(s, t, r)` satisfies `f*s + g*t = r`
+
+    >>> for s, t, r in gcdex_steps(f, g): print(simplify(f*s + g*t - r))
+    0
+    0
+    0
+
+    The final output of `gcdex_steps(f, g)` is equivalent to `gcdex(f, g)`
+
+    >>> from sympy.polys.polytools import gcdex
+    >>> gcdex(f, g)
+    (3/5 - x/5, x**2/5 - 6*x/5 + 2, x + 1)
+
+    For multivariate polynomials, the variable must be specified. This example
+    treats the polynomials as univariate polynomials over `x`
+
+    >>> f = x**2*y - 2*x*y**2 + 1
+    >>> g = x + 2*y
+    >>> for step in gcdex_steps(f, g, gens=x): print(step)
+    (0, 1, x + 2*y)
+    (1, -x*y + 4*y**2, 8*y**3 + 1)
+
+    This example treats the same polynomials as univariate polynomials over `y`
+
+    >>> for step in gcdex_steps(f, g, gens=y): print(step)
+    (0, 1, x + 2*y)
+    (1, -x**2 + x*y, 1 - x**3)
+
+    See Also
+    ========
+
+    sympy.polys.polytools.gcdex:
+        Extended Euclidean algorithm witout intermediate steps.
+    sympy.polys.polytools.half_gcdex:
+        Half extended Euclidean algorithm.
+
+    References
+    ==========
+
+    .. [1] McEliece, R. J., & Shearer, J. B. (1978). A Property of Euclid's
+           Algorithm and an application to Pade Approximation. SIAM Journal on
+           Applied Mathematics, 34(4), 611-615. doi:10.1137/0134048
+    """
+    options.allowed_flags(args, ['auto', 'polys'])
+
+    try:
+        (F, G), opt = parallel_poly_from_expr((f, g), *gens, **args)
+    except PolificationFailed as exc:
+        domain, (a, b) = construct_domain(exc.exprs)
+
+        try:
+            for s, t, r in _gcdex_steps_domain(a, b, domain):
+                yield domain.to_sympy(s), domain.to_sympy(t), domain.to_sympy(r)
+            return
+        except DomainError as exc:
+            raise ComputationFailed('gcdex_steps', 2, exc)
+
+    for s, t, r in _gcdex_steps_polynomial(F, G, auto=opt.auto):
+        if opt.polys:
+            yield s, t, r
+        else:
+            yield s.as_expr(), t.as_expr(), r.as_expr()
+
+
 @public
 def gcdex(f, g, *gens, **args):
     """
@@ -5047,6 +5670,13 @@ def gcdex(f, g, *gens, **args):
     >>> gcdex(x**4 - 2*x**3 - 6*x**2 + 12*x + 15, x**3 + x**2 - 4*x - 4)
     (3/5 - x/5, x**2/5 - 6*x/5 + 2, x + 1)
 
+    See also
+    ========
+
+    sympy.polys.polytools.half_gcdex:
+        Half extended Euclidean algorithm.
+    sympy.polys.polytools.gcdex_steps:
+        Intermediate steps of the extended Euclidean algorithm.
     """
     options.allowed_flags(args, ['auto', 'polys'])
 
@@ -5090,7 +5720,7 @@ def invert(f, g, *gens, **args):
     NotInvertible: zero divisor
 
     For more efficient inversion of Rationals,
-    use the :obj:`~.mod_inverse` function:
+    use the :obj:`sympy.core.intfunc.mod_inverse` function:
 
     >>> mod_inverse(3, 5)
     2
@@ -5099,8 +5729,7 @@ def invert(f, g, *gens, **args):
 
     See Also
     ========
-
-    sympy.core.numbers.mod_inverse
+    sympy.core.intfunc.mod_inverse
 
     """
     options.allowed_flags(args, ['auto', 'polys'])
@@ -5415,7 +6044,7 @@ def lcm_list(seq, *gens, **args):
     """
     seq = sympify(seq)
 
-    def try_non_polynomial_lcm(seq) -> Optional[Expr]:
+    def try_non_polynomial_lcm(seq) -> Expr | None:
         if not gens and not args:
             domain, numbers = construct_domain(seq)
 
@@ -5935,7 +6564,7 @@ def sqf_norm(f, *gens, **args):
     >>> from sympy.abc import x
 
     >>> sqf_norm(x**2 + 1, extension=[sqrt(3)])
-    (1, x**2 - 2*sqrt(3)*x + 4, x**4 - 4*x**2 + 16)
+    ([1], x**2 - 2*sqrt(3)*x + 4, x**4 - 4*x**2 + 16)
 
     """
     options.allowed_flags(args, ['polys'])
@@ -5947,10 +6576,12 @@ def sqf_norm(f, *gens, **args):
 
     s, g, r = F.sqf_norm()
 
+    s_expr = [Integer(si) for si in s]
+
     if not opt.polys:
-        return Integer(s), g.as_expr(), r.as_expr()
+        return s_expr, g.as_expr(), r.as_expr()
     else:
-        return Integer(s), g, r
+        return s_expr, g, r
 
 
 @public
@@ -5983,17 +6614,23 @@ def sqf_part(f, *gens, **args):
         return result
 
 
+def _poly_sort_key(poly):
+    """Sort a list of polys."""
+    rep = poly.rep.to_list()
+    return (len(rep), len(poly.gens), str(poly.domain), rep)
+
+
 def _sorted_factors(factors, method):
     """Sort a list of ``(expr, exp)`` pairs. """
     if method == 'sqf':
         def key(obj):
             poly, exp = obj
-            rep = poly.rep.rep
+            rep = poly.rep.to_list()
             return (exp, len(rep), len(poly.gens), str(poly.domain), rep)
     else:
         def key(obj):
             poly, exp = obj
-            rep = poly.rep.rep
+            rep = poly.rep.to_list()
             return (len(rep), len(poly.gens), exp, str(poly.domain), rep)
 
     return sorted(factors, key=key)
@@ -6058,8 +6695,11 @@ def _symbolic_factor_list(expr, opt, method):
     if method == 'sqf':
         factors = [(reduce(mul, (f for f, _ in factors if _ == k)), k)
                    for k in {i for _, i in factors}]
-
-    return coeff, factors
+    #collect duplicates
+    rv = defaultdict(int)
+    for k, v in factors:
+        rv[k] += v
+    return coeff, list(rv.items())
 
 
 def _symbolic_factor(expr, opt, method):
@@ -6096,7 +6736,7 @@ def _generic_factor_list(expr, gens, args, method):
         if fq and not opt.frac:
             raise PolynomialError("a polynomial expected, got %s" % expr)
 
-        _opt = opt.clone(dict(expand=True))
+        _opt = opt.clone({"expand": True})
 
         for factors in (fp, fq):
             for i, (f, k) in enumerate(factors):
@@ -6447,11 +7087,11 @@ def factor(f, *gens, deep=False, **args):
 
     try:
         return _generic_factor(f, gens, args, method='factor')
-    except PolynomialError as msg:
+    except PolynomialError:
         if not f.is_commutative:
             return factor_nc(f)
         else:
-            raise PolynomialError(msg)
+            raise
 
 
 @public
@@ -6485,7 +7125,7 @@ def intervals(F, all=False, eps=None, inf=None, sup=None, strict=False, fast=Fal
             raise MultivariatePolynomialError
 
         for i, poly in enumerate(polys):
-            polys[i] = poly.rep.rep
+            polys[i] = poly.rep.to_list()
 
         if eps is not None:
             eps = opt.domain.convert(eps)
@@ -6573,21 +7213,161 @@ def count_roots(f, inf=None, sup=None):
 
 
 @public
-def real_roots(f, multiple=True):
+def all_roots(f, multiple=True, radicals=True, extension=False):
     """
-    Return a list of real roots with multiplicities of ``f``.
+    Returns the real and complex roots of ``f`` with multiplicities.
+
+    Explanation
+    ===========
+
+    Finds all real and complex roots of a univariate polynomial with rational
+    coefficients of any degree exactly. The roots are represented in the form
+    given by :func:`~.rootof`. This is equivalent to using :func:`~.rootof` to
+    find each of the indexed roots.
 
     Examples
     ========
 
-    >>> from sympy import real_roots
-    >>> from sympy.abc import x
+    >>> from sympy import all_roots
+    >>> from sympy.abc import x, y
 
-    >>> real_roots(2*x**3 - 7*x**2 + 4*x + 4)
-    [-1/2, 2, 2]
+    >>> print(all_roots(x**3 + 1))
+    [-1, 1/2 - sqrt(3)*I/2, 1/2 + sqrt(3)*I/2]
+
+    Simple radical formulae are used in some cases but the cubic and quartic
+    formulae are avoided. Instead most non-rational roots will be represented
+    as :class:`~.ComplexRootOf`:
+
+    >>> print(all_roots(x**3 + x + 1))
+    [CRootOf(x**3 + x + 1, 0), CRootOf(x**3 + x + 1, 1), CRootOf(x**3 + x + 1, 2)]
+
+    All roots of any polynomial with rational coefficients of any degree can be
+    represented using :py:class:`~.ComplexRootOf`. The use of
+    :py:class:`~.ComplexRootOf` bypasses limitations on the availability of
+    radical formulae for quintic and higher degree polynomials _[1]:
+
+    >>> p = x**5 - x - 1
+    >>> for r in all_roots(p): print(r)
+    CRootOf(x**5 - x - 1, 0)
+    CRootOf(x**5 - x - 1, 1)
+    CRootOf(x**5 - x - 1, 2)
+    CRootOf(x**5 - x - 1, 3)
+    CRootOf(x**5 - x - 1, 4)
+    >>> [r.evalf(3) for r in all_roots(p)]
+    [1.17, -0.765 - 0.352*I, -0.765 + 0.352*I, 0.181 - 1.08*I, 0.181 + 1.08*I]
+
+    Irrational algebraic coefficients are handled by :func:`all_roots`
+    if `extension=True` is set.
+
+    >>> from sympy import sqrt, expand
+    >>> p = expand((x - sqrt(2))*(x - sqrt(3)))
+    >>> print(p)
+    x**2 - sqrt(3)*x - sqrt(2)*x + sqrt(6)
+    >>> all_roots(p)
+    Traceback (most recent call last):
+    ...
+    NotImplementedError: sorted roots not supported over EX
+    >>> all_roots(p, extension=True)
+    [sqrt(2), sqrt(3)]
+
+    Algebraic coefficients can be complex as well.
+
+    >>> from sympy import I
+    >>> all_roots(x**2 - I, extension=True)
+    [-sqrt(2)/2 - sqrt(2)*I/2, sqrt(2)/2 + sqrt(2)*I/2]
+    >>> all_roots(x**2 - sqrt(2)*I, extension=True)
+    [-2**(3/4)/2 - 2**(3/4)*I/2, 2**(3/4)/2 + 2**(3/4)*I/2]
+
+    Transcendental coefficients cannot currently be handled by
+    :func:`all_roots`. In the case of algebraic or transcendental coefficients
+    :func:`~.ground_roots` might be able to find some roots by factorisation:
+
+    >>> from sympy import ground_roots
+    >>> ground_roots(p, x, extension=True)
+    {sqrt(2): 1, sqrt(3): 1}
+
+    If the coefficients are numeric then :func:`~.nroots` can be used to find
+    all roots approximately:
+
+    >>> from sympy import nroots
+    >>> nroots(p, 5)
+    [1.4142, 1.732]
+
+    If the coefficients are symbolic then :func:`sympy.polys.polyroots.roots`
+    or :func:`~.ground_roots` should be used instead:
+
+    >>> from sympy import roots, ground_roots
+    >>> p = x**2 - 3*x*y + 2*y**2
+    >>> roots(p, x)
+    {y: 1, 2*y: 1}
+    >>> ground_roots(p, x)
+    {y: 1, 2*y: 1}
+
+    Parameters
+    ==========
+
+    f : :class:`~.Expr` or :class:`~.Poly`
+        A univariate polynomial with rational (or ``Float``) coefficients.
+    multiple : ``bool`` (default ``True``).
+        Whether to return a ``list`` of roots or a list of root/multiplicity
+        pairs.
+    radicals : ``bool`` (default ``True``)
+        Use simple radical formulae rather than :py:class:`~.ComplexRootOf` for
+        some irrational roots.
+    extension: ``bool`` (default ``False``)
+        Whether to construct an algebraic extension domain before computing
+        the roots. Setting to ``True`` is necessary for finding roots of a
+        polynomial with (irrational) algebraic coefficients but can be slow.
+
+    Returns
+    =======
+
+    A list of :class:`~.Expr` (usually :class:`~.ComplexRootOf`) representing
+    the roots is returned with each root repeated according to its multiplicity
+    as a root of ``f``. The roots are always uniquely ordered with real roots
+    coming before complex roots. The real roots are in increasing order.
+    Complex roots are ordered by increasing real part and then increasing
+    imaginary part.
+
+    If ``multiple=False`` is passed then a list of root/multiplicity pairs is
+    returned instead.
+
+    If ``radicals=False`` is passed then all roots will be represented as
+    either rational numbers or :class:`~.ComplexRootOf`.
+
+    See also
+    ========
+
+    Poly.all_roots:
+        The underlying :class:`Poly` method used by :func:`~.all_roots`.
+    rootof:
+        Compute a single numbered root of a univariate polynomial.
+    real_roots:
+        Compute all the real roots using :func:`~.rootof`.
+    ground_roots:
+        Compute some roots in the ground domain by factorisation.
+    nroots:
+        Compute all roots using approximate numerical techniques.
+    sympy.polys.polyroots.roots:
+        Compute symbolic expressions for roots using radical formulae.
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Abel%E2%80%93Ruffini_theorem
     """
     try:
-        F = Poly(f, greedy=False)
+        if isinstance(f, Poly):
+            if extension and not f.domain.is_AlgebraicField:
+                F = Poly(f.expr, extension=True)
+            else:
+                F = f
+        else:
+            if extension:
+                F = Poly(f, extension=True)
+            else:
+                F = Poly(f, greedy=False)
+
         if not isinstance(f, Poly) and not F.gen.is_Symbol:
             # root of sin(x) + 1 is -1 but when someone
             # passes an Expr instead of Poly they may not expect
@@ -6597,7 +7377,197 @@ def real_roots(f, multiple=True):
         raise PolynomialError(
             "Cannot compute real roots of %s, not a polynomial" % f)
 
-    return F.real_roots(multiple=multiple)
+    return F.all_roots(multiple=multiple, radicals=radicals)
+
+
+@public
+def real_roots(f, multiple=True, radicals=True, extension=False):
+    """
+    Returns the real roots of ``f`` with multiplicities.
+
+    Explanation
+    ===========
+
+    Finds all real roots of a univariate polynomial with rational coefficients
+    of any degree exactly. The roots are represented in the form given by
+    :func:`~.rootof`. This is equivalent to using :func:`~.rootof` or
+    :func:`~.all_roots` and filtering out only the real roots. However if only
+    the real roots are needed then :func:`real_roots` is more efficient than
+    :func:`~.all_roots` because it computes only the real roots and avoids
+    costly complex root isolation routines.
+
+    Examples
+    ========
+
+    >>> from sympy import real_roots
+    >>> from sympy.abc import x, y
+
+    >>> real_roots(2*x**3 - 7*x**2 + 4*x + 4)
+    [-1/2, 2, 2]
+    >>> real_roots(2*x**3 - 7*x**2 + 4*x + 4, multiple=False)
+    [(-1/2, 1), (2, 2)]
+
+    Real roots of any polynomial with rational coefficients of any degree can
+    be represented using :py:class:`~.ComplexRootOf`:
+
+    >>> p = x**9 + 2*x + 2
+    >>> print(real_roots(p))
+    [CRootOf(x**9 + 2*x + 2, 0)]
+    >>> [r.evalf(3) for r in real_roots(p)]
+    [-0.865]
+
+    All rational roots will be returned as rational numbers. Roots of some
+    simple factors will be expressed using radical or other formulae (unless
+    ``radicals=False`` is passed). All other roots will be expressed as
+    :class:`~.ComplexRootOf`.
+
+    >>> p = (x + 7)*(x**2 - 2)*(x**3 + x + 1)
+    >>> print(real_roots(p))
+    [-7, -sqrt(2), CRootOf(x**3 + x + 1, 0), sqrt(2)]
+    >>> print(real_roots(p, radicals=False))
+    [-7, CRootOf(x**2 - 2, 0), CRootOf(x**3 + x + 1, 0), CRootOf(x**2 - 2, 1)]
+
+    All returned root expressions will numerically evaluate to real numbers
+    with no imaginary part. This is in contrast to the expressions generated by
+    the cubic or quartic formulae as used by :func:`~.roots` which suffer from
+    casus irreducibilis [1]_:
+
+    >>> from sympy import roots
+    >>> p = 2*x**3 - 9*x**2 - 6*x + 3
+    >>> [r.evalf(5) for r in roots(p, multiple=True)]
+    [5.0365 - 0.e-11*I, 0.33984 + 0.e-13*I, -0.87636 + 0.e-10*I]
+    >>> [r.evalf(5) for r in real_roots(p, x)]
+    [-0.87636, 0.33984, 5.0365]
+    >>> [r.is_real for r in roots(p, multiple=True)]
+    [None, None, None]
+    >>> [r.is_real for r in real_roots(p)]
+    [True, True, True]
+
+    Using :func:`real_roots` is equivalent to using :func:`~.all_roots` (or
+    :func:`~.rootof`) and filtering out only the real roots:
+
+    >>> from sympy import all_roots
+    >>> r = [r for r in all_roots(p) if r.is_real]
+    >>> real_roots(p) == r
+    True
+
+    If only the real roots are wanted then using :func:`real_roots` is faster
+    than using :func:`~.all_roots`. Using :func:`real_roots` avoids complex root
+    isolation which can be a lot slower than real root isolation especially for
+    polynomials of high degree which typically have many more complex roots
+    than real roots.
+
+    Irrational algebraic coefficients are handled by :func:`real_roots`
+    if `extension=True` is set.
+
+    >>> from sympy import sqrt, expand
+    >>> p = expand((x - sqrt(2))*(x - sqrt(3)))
+    >>> print(p)
+    x**2 - sqrt(3)*x - sqrt(2)*x + sqrt(6)
+    >>> real_roots(p)
+    Traceback (most recent call last):
+    ...
+    NotImplementedError: sorted roots not supported over EX
+    >>> real_roots(p, extension=True)
+    [sqrt(2), sqrt(3)]
+
+    Transcendental coefficients cannot currently be handled by
+    :func:`real_roots`. In the case of algebraic or transcendental coefficients
+    :func:`~.ground_roots` might be able to find some roots by factorisation:
+
+    >>> from sympy import ground_roots
+    >>> ground_roots(p, x, extension=True)
+    {sqrt(2): 1, sqrt(3): 1}
+
+    If the coefficients are numeric then :func:`~.nroots` can be used to find
+    all roots approximately:
+
+    >>> from sympy import nroots
+    >>> nroots(p, 5)
+    [1.4142, 1.732]
+
+    If the coefficients are symbolic then :func:`sympy.polys.polyroots.roots`
+    or :func:`~.ground_roots` should be used instead.
+
+    >>> from sympy import roots, ground_roots
+    >>> p = x**2 - 3*x*y + 2*y**2
+    >>> roots(p, x)
+    {y: 1, 2*y: 1}
+    >>> ground_roots(p, x)
+    {y: 1, 2*y: 1}
+
+    Parameters
+    ==========
+
+    f : :class:`~.Expr` or :class:`~.Poly`
+        A univariate polynomial with rational (or ``Float``) coefficients.
+    multiple : ``bool`` (default ``True``).
+        Whether to return a ``list`` of roots or a list of root/multiplicity
+        pairs.
+    radicals : ``bool`` (default ``True``)
+        Use simple radical formulae rather than :py:class:`~.ComplexRootOf` for
+        some irrational roots.
+    extension: ``bool`` (default ``False``)
+        Whether to construct an algebraic extension domain before computing
+        the roots. Setting to ``True`` is necessary for finding roots of a
+        polynomial with (irrational) algebraic coefficients but can be slow.
+
+    Returns
+    =======
+
+    A list of :class:`~.Expr` (usually :class:`~.ComplexRootOf`) representing
+    the real roots is returned. The roots are arranged in increasing order and
+    are repeated according to their multiplicities as roots of ``f``.
+
+    If ``multiple=False`` is passed then a list of root/multiplicity pairs is
+    returned instead.
+
+    If ``radicals=False`` is passed then all roots will be represented as
+    either rational numbers or :class:`~.ComplexRootOf`.
+
+    See also
+    ========
+
+    Poly.real_roots:
+        The underlying :class:`Poly` method used by :func:`real_roots`.
+    rootof:
+        Compute a single numbered root of a univariate polynomial.
+    all_roots:
+        Compute all real and non-real roots using :func:`~.rootof`.
+    ground_roots:
+        Compute some roots in the ground domain by factorisation.
+    nroots:
+        Compute all roots using approximate numerical techniques.
+    sympy.polys.polyroots.roots:
+        Compute symbolic expressions for roots using radical formulae.
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Casus_irreducibilis
+    """
+    try:
+        if isinstance(f, Poly):
+            if extension and not f.domain.is_AlgebraicField:
+                F = Poly(f.expr, extension=True)
+            else:
+                F = f
+        else:
+            if extension:
+                F = Poly(f, extension=True)
+            else:
+                F = Poly(f, greedy=False)
+
+        if not isinstance(f, Poly) and not F.gen.is_Symbol:
+            # root of sin(x) + 1 is -1 but when someone
+            # passes an Expr instead of Poly they may not expect
+            # that the generator will be sin(x), not x
+            raise PolynomialError("generator must be a Symbol")
+    except GeneratorsNeeded:
+        raise PolynomialError(
+            "Cannot compute real roots of %s, not a polynomial" % f)
+
+    return F.real_roots(multiple=multiple, radicals=radicals)
 
 
 @public
@@ -6741,7 +7711,7 @@ def cancel(f, *gens, _signsimp=True, **args):
     if 'polys' in args:
         opt['polys'] = args['polys']
 
-    if not isinstance(f, (tuple, Tuple)):
+    if not isinstance(f, Tuple):
         if f.is_Number or isinstance(f, Relational) or not isinstance(f, Expr):
             return f
         f = factor_terms(f, radical=True)
@@ -6754,8 +7724,6 @@ def cancel(f, *gens, _signsimp=True, **args):
             opt['domain'] = p.domain
             opt['polys'] = opt.get('polys', True)
         p, q = p.as_expr(), q.as_expr()
-    elif isinstance(f, Tuple):
-        return factor_terms(f)
     else:
         raise ValueError('unexpected argument: %s' % f)
 
@@ -6765,7 +7733,7 @@ def cancel(f, *gens, _signsimp=True, **args):
             raise PolynomialError()
         R, (F, G) = sring((p, q), *gens, **args)
         if not R.ngens:
-            if not isinstance(f, (tuple, Tuple)):
+            if not isinstance(f, Tuple):
                 return f.expand()
             else:
                 return S.One, p, q
@@ -6784,8 +7752,7 @@ def cancel(f, *gens, _signsimp=True, **args):
             pot = preorder_traversal(f)
             next(pot)
             for e in pot:
-                # XXX: This should really skip anything that's not Expr.
-                if isinstance(e, (tuple, Tuple, BooleanAtom)):
+                if isinstance(e, BooleanAtom) or not isinstance(e, Expr):
                     continue
                 try:
                     reps.append((e, cancel(e)))
@@ -6798,7 +7765,7 @@ def cancel(f, *gens, _signsimp=True, **args):
     if opt.get('polys', False) and 'gens' not in opt:
         opt['gens'] = R.symbols
 
-    if not isinstance(f, (tuple, Tuple)):
+    if not isinstance(f, Tuple):
         return c*(P.as_expr()/Q.as_expr())
     else:
         P, Q = P.as_expr(), Q.as_expr()
@@ -6839,7 +7806,7 @@ def reduced(f, G, *gens, **args):
     retract = False
 
     if opt.auto and domain.is_Ring and not domain.is_Field:
-        opt = opt.clone(dict(domain=domain.get_field()))
+        opt = opt.clone({"domain": domain.get_field()})
         retract = True
 
     from sympy.polys.rings import xring
@@ -6938,6 +7905,38 @@ def is_zero_dimensional(F, *gens, **args):
 
     """
     return GroebnerBasis(F, *gens, **args).is_zero_dimensional
+
+
+@public
+def hurwitz_conditions(f, *gens, **args):
+    """
+    See :func:`~.Poly.hurwitz_conditions`.
+
+    """
+    options.allowed_flags(args, ['polys'])
+
+    try:
+        F, opt = poly_from_expr(f, *gens, **args)
+    except PolificationFailed as exc:
+        raise ComputationFailed('hurwitz_conditions', 1, exc)
+
+    return F.hurwitz_conditions()
+
+
+@public
+def schur_conditions(f, *gens, **args):
+    """
+    See :func:`~.Poly.schur_conditions`.
+
+    """
+    options.allowed_flags(args, ['polys'])
+
+    try:
+        F, opt = poly_from_expr(f, *gens, **args)
+    except PolificationFailed as exc:
+        raise ComputationFailed('schur_conditions', 1, exc)
+
+    return F.schur_conditions()
 
 
 @public
@@ -7105,10 +8104,10 @@ class GroebnerBasis(Basic):
         polys = list(self._basis)
         domain = opt.domain
 
-        opt = opt.clone(dict(
-            domain=domain.get_field(),
-            order=dst_order,
-        ))
+        opt = opt.clone({
+            "domain": domain.get_field(),
+            "order": dst_order,
+        })
 
         from sympy.polys.rings import xring
         _ring, _ = xring(opt.gens, opt.domain, src_order)
@@ -7138,7 +8137,7 @@ class GroebnerBasis(Basic):
         Examples
         ========
 
-        >>> from sympy import groebner, expand
+        >>> from sympy import groebner, expand, Poly
         >>> from sympy.abc import x, y
 
         >>> f = 2*x**4 - x**2 + y**3 + y**2
@@ -7153,8 +8152,23 @@ class GroebnerBasis(Basic):
         >>> _ == f
         True
 
+        # Using Poly input
+        >>> f_poly = Poly(f, x, y)
+        >>> G = groebner([Poly(x**3 - x), Poly(y**3 - y)])
+
+        >>> G.reduce(f_poly)
+        ([Poly(2*x, x, y, domain='ZZ'), Poly(1, x, y, domain='ZZ')], Poly(x**2 + y**2 + y, x, y, domain='ZZ'))
+
         """
-        poly = Poly._from_expr(expr, self._options)
+        if isinstance(expr, Poly):
+
+            if expr.gens != self._options.gens:
+                raise ValueError("Polynomial generators don't match Groebner basis generators")
+            poly = expr.set_domain(self._options.domain)
+        else:
+
+            poly = Poly._from_expr(expr, self._options)
+
         polys = [poly] + list(self._basis)
 
         opt = self._options
@@ -7163,7 +8177,7 @@ class GroebnerBasis(Basic):
         retract = False
 
         if auto and domain.is_Ring and not domain.is_Field:
-            opt = opt.clone(dict(domain=domain.get_field()))
+            opt = opt.clone({"domain": domain.get_field()})
             retract = True
 
         from sympy.polys.rings import xring
@@ -7258,7 +8272,7 @@ def poly(expr, *gens, **args):
                     factor = Mul(*factors)
 
                     if factor.is_Number:
-                        product = product.mul(factor)
+                        product *= factor
                     else:
                         product = product.mul(Poly._from_expr(factor, opt))
 
@@ -7276,7 +8290,7 @@ def poly(expr, *gens, **args):
                 term = Add(*terms)
 
                 if term.is_Number:
-                    result = result.add(term)
+                    result += term
                 else:
                     result = result.add(Poly._from_expr(term, opt))
 

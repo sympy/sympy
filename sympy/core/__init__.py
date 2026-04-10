@@ -1,9 +1,11 @@
 """Core module. Provides the basic operations needed in sympy.
 """
+from __future__ import annotations
 
 from .sympify import sympify, SympifyError
 from .cache import cacheit
-from .assumptions import assumptions, check_assumptions, failing_assumptions, common_assumptions
+from .assumptions import (assumptions, check_assumptions, failing_assumptions,
+                          common_assumptions, all_assumptions)
 from .basic import Basic, Atom
 from .singleton import S
 from .expr import Expr, AtomicExpr, UnevaluatedExpr
@@ -11,7 +13,8 @@ from .symbol import Symbol, Wild, Dummy, symbols, var
 from .numbers import Number, Float, Rational, Integer, NumberSymbol, \
     RealNumber, igcd, ilcm, seterr, E, I, nan, oo, pi, zoo, \
     AlgebraicNumber, comp, mod_inverse
-from .power import Pow, integer_nthroot, integer_log
+from .power import Pow
+from .intfunc import integer_nthroot, integer_log, num_digits, trailing
 from .mul import Mul, prod
 from .add import Add
 from .mod import Mod
@@ -44,7 +47,7 @@ __all__ = [
     'cacheit',
 
     'assumptions', 'check_assumptions', 'failing_assumptions',
-    'common_assumptions',
+    'common_assumptions', 'all_assumptions',
 
     'Basic', 'Atom',
 
@@ -58,7 +61,9 @@ __all__ = [
     'igcd', 'ilcm', 'seterr', 'E', 'I', 'nan', 'oo', 'pi', 'zoo',
     'AlgebraicNumber', 'comp', 'mod_inverse',
 
-    'Pow', 'integer_nthroot', 'integer_log',
+    'Pow',
+
+    'integer_nthroot', 'integer_log', 'num_digits', 'trailing',
 
     'Mul', 'prod',
 

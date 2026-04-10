@@ -1,10 +1,8 @@
-import sys
 import re
 import inspect
 import textwrap
 import pydoc
 import sphinx
-import collections
 
 from docscrape import NumpyDocString, FunctionDoc, ClassDoc
 
@@ -129,7 +127,9 @@ class SphinxDocString(NumpyDocString):
             #     out += [''] + autosum
 
             if others:
-                maxlen_0 = max(3, max([len(x[0]) for x in others]))
+                out += [r'.. tabularcolumns:: p{3cm}p{\dimexpr\linewidth-3cm-4\tabcolsep\relax}']
+                out += ['.. rst-class:: longtable']
+                maxlen_0 = max(3, max(len(x[0]) for x in others))
                 hdr = "="*maxlen_0 + "  " + "="*10
                 fmt = '%%%ds  %%s  ' % (maxlen_0,)
                 out += ['', '', hdr]
@@ -199,7 +199,7 @@ class SphinxDocString(NumpyDocString):
                 out += ['.. latexonly::', '']
             items = []
             for line in self['References']:
-                m = re.match(r'.. \[([a-z0-9._-]+)\]', line, re.I)
+                m = re.match(r'.. \[([a-z0-9._-]+)\]', line, re.IGNORECASE)
                 if m:
                     items.append(m.group(1))
             out += ['   ' + ", ".join(["[%s]_" % item for item in items]), '']

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.singleton import S
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
@@ -212,7 +213,7 @@ with
         try:
             lambda_cond = lamda(other)
         except TypeError:
-            return Contains(other, self, evaluate=False)
+            return None
         else:
             return And(base_cond, lambda_cond)
 

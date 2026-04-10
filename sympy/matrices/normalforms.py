@@ -1,10 +1,13 @@
 '''Functions returning normal forms of matrices'''
+from __future__ import annotations
 
 from sympy.polys.domains.integerring import ZZ
 from sympy.polys.polytools import Poly
 from sympy.polys.matrices import DomainMatrix
 from sympy.polys.matrices.normalforms import (
         smith_normal_form as _snf,
+        is_smith_normal_form as _is_snf,
+        smith_normal_decomp as _snd,
         invariant_factors as _invf,
         hermite_normal_form as _hnf,
     )
@@ -36,11 +39,38 @@ def smith_normal_form(m, domain=None):
     >>> from sympy.matrices.normalforms import smith_normal_form
     >>> m = Matrix([[12, 6, 4], [3, 9, 6], [2, 16, 14]])
     >>> print(smith_normal_form(m, domain=ZZ))
-    Matrix([[1, 0, 0], [0, 10, 0], [0, 0, -30]])
+    Matrix([[1, 0, 0], [0, 10, 0], [0, 0, 30]])
 
     '''
     dM = _to_domain(m, domain)
     return _snf(dM).to_Matrix()
+
+
+def is_smith_normal_form(m, domain=None):
+    '''
+    Checks that the matrix is in Smith Normal Form
+    '''
+    dM = _to_domain(m, domain)
+    return _is_snf(dM)
+
+
+def smith_normal_decomp(m, domain=None):
+    '''
+    Return the Smith Normal Decomposition of a matrix `m` over the ring
+    `domain`. This will only work if the ring is a principal ideal domain.
+
+    Examples
+    ========
+
+    >>> from sympy import Matrix, ZZ
+    >>> from sympy.matrices.normalforms import smith_normal_decomp
+    >>> m = Matrix([[12, 6, 4], [3, 9, 6], [2, 16, 14]])
+    >>> a, s, t = smith_normal_decomp(m, domain=ZZ)
+    >>> assert a == s * m * t
+    '''
+    dM = _to_domain(m, domain)
+    a, s, t = _snd(dM)
+    return a.to_Matrix(), s.to_Matrix(), t.to_Matrix()
 
 
 def invariant_factors(m, domain=None):
@@ -52,7 +82,7 @@ def invariant_factors(m, domain=None):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Smith_normal_form#Algorithm
-    .. [2] http://sierra.nmsu.edu/morandi/notes/SmithNormalForm.pdf
+    .. [2] https://web.archive.org/web/20200331143852/https://sierra.nmsu.edu/morandi/notes/SmithNormalForm.pdf
 
     '''
     dM = _to_domain(m, domain)

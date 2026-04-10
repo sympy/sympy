@@ -1,4 +1,5 @@
 """Tests for algorithms for computing symbolic roots of polynomials. """
+from __future__ import annotations
 
 from sympy.core.numbers import (I, Rational, pi)
 from sympy.core.singleton import S
@@ -10,7 +11,6 @@ from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (acos, cos, sin)
 from sympy.polys.domains.integerring import ZZ
 from sympy.sets.sets import Interval
-from sympy.simplify.powsimp import powsimp
 
 from sympy.polys import Poly, cyclotomic_poly, intervals, nroots, rootof
 
@@ -37,8 +37,8 @@ def _check(roots):
     # this is the desired invariant for roots returned
     # by all_roots. It is trivially true for linear
     # polynomials.
-    nreal = sum([1 if i.is_real else 0 for i in roots])
-    assert list(sorted(roots[:nreal])) == list(roots[:nreal])
+    nreal = sum(1 if i.is_real else 0 for i in roots)
+    assert sorted(roots[:nreal]) == list(roots[:nreal])
     for ix in range(nreal, len(roots), 2):
         if not (
                 roots[ix + 1] == roots[ix] or
@@ -230,19 +230,19 @@ def test_roots_quartic():
     z = symbols('z', negative=True)
     eq = x**4 + 2*x**3 + 3*x**2 + x*(z + 11) + 5
     zans = roots_quartic(Poly(eq, x))
-    assert all([verify_numerically(eq.subs(((x, i), (z, -1))), 0) for i in zans])
+    assert all(verify_numerically(eq.subs(((x, i), (z, -1))), 0) for i in zans)
     # but some are (see also issue 4989)
     # it's ok if the solution is not Piecewise, but the tests below should pass
     eq = Poly(y*x**4 + x**3 - x + z, x)
     ans = roots_quartic(eq)
     assert all(type(i) == Piecewise for i in ans)
     reps = (
-        dict(y=Rational(-1, 3), z=Rational(-1, 4)),  # 4 real
-        dict(y=Rational(-1, 3), z=Rational(-1, 2)),  # 2 real
-        dict(y=Rational(-1, 3), z=-2))  # 0 real
+        {"y": Rational(-1, 3), "z": Rational(-1, 4)},  # 4 real
+        {"y": Rational(-1, 3), "z": Rational(-1, 2)},  # 2 real
+        {"y": Rational(-1, 3), "z": -2})  # 0 real
     for rep in reps:
         sol = roots_quartic(Poly(eq.subs(rep), x))
-        assert all([verify_numerically(w.subs(rep) - s, 0) for w, s in zip(ans, sol)])
+        assert all(verify_numerically(w.subs(rep) - s, 0) for w, s in zip(ans, sol))
 
 
 def test_issue_21287():
@@ -325,8 +325,14 @@ def test_roots_binomial():
     r0 = roots_quadratic(Poly(a1*x**2 + b1, x))
     r1 = roots_binomial(Poly(a1*x**2 + b1, x))
 
-    assert powsimp(r0[0]) == powsimp(r1[0])
-    assert powsimp(r0[1]) == powsimp(r1[1])
+    # XXX: roots_quadratic should be improved to handle signs under the radical
+    # like roots_binomial. It is much better to get the minus sign out of the
+    # radical and have an I outside:
+    assert r0 == [-sqrt(b1)*sqrt(-1/a1), sqrt(b1)*sqrt(-1/a1)]
+    assert r1 == [-I*sqrt(b1)/sqrt(a1), I*sqrt(b1)/sqrt(a1)]
+    # assert powsimp(r0[0]) == powsimp(r1[0])
+    # assert powsimp(r0[1]) == powsimp(r1[1])
+
     for a, b, s, n in product((1, 2), (1, 2), (-1, 1), (2, 3, 4, 5)):
         if a == b and a != 1:  # a == b == 1 is sufficient
             continue
@@ -750,9 +756,8 @@ def test_issue_20913():
 
 
 def test_issue_22768():
-    e = Rational(1, 3)
-    r = (-1/a)**e*(a + 1)**(5*e)
     assert roots(Poly(a*x**3 + (a + 1)**5, x)) == {
-        r: 1,
-        -r*(1 + sqrt(3)*I)/2: 1,
-        r*(-1 + sqrt(3)*I)/2: 1}
+        -(a + 1)**(S(5)/3)/a**(S(1)/3): 1,
+        (1 - sqrt(3)*I)*(a + 1)**(S(5)/3)/(2*a**(S(1)/3)): 1,
+        (1 + sqrt(3)*I)*(a + 1)**(S(5)/3)/(2*a**(S(1)/3)): 1,
+    }

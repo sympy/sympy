@@ -1,7 +1,9 @@
+from __future__ import annotations
 from sympy.core import Expr, S, oo, pi, sympify
 from sympy.core.evalf import N
 from sympy.core.sorting import default_sort_key, ordered
 from sympy.core.symbol import _symbol, Dummy, Symbol
+from sympy.external.mpmath import prec_to_dps
 from sympy.functions.elementary.complexes import sign
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import cos, sin, tan
@@ -17,7 +19,6 @@ from sympy.solvers.solvers import solve
 from sympy.utilities.iterables import has_dups, has_variety, uniq, rotate_left, least_rotation
 from sympy.utilities.misc import as_int, func_name
 
-from mpmath.libmp.libmpf import prec_to_dps
 
 import warnings
 
@@ -212,7 +213,7 @@ class Polygon(GeometrySet):
         return simplify(area) / 2
 
     @staticmethod
-    def _isright(a, b, c):
+    def _is_clockwise(a, b, c):
         """Return True/False for cw/ccw orientation.
 
         Examples
@@ -220,9 +221,9 @@ class Polygon(GeometrySet):
 
         >>> from sympy import Point, Polygon
         >>> a, b, c = [Point(i) for i in [(0, 0), (1, 1), (1, 0)]]
-        >>> Polygon._isright(a, b, c)
+        >>> Polygon._is_clockwise(a, b, c)
         True
-        >>> Polygon._isright(a, c, b)
+        >>> Polygon._is_clockwise(a, c, b)
         False
         """
         ba = b - a
@@ -263,18 +264,26 @@ class Polygon(GeometrySet):
 
         """
 
-        # Determine orientation of points
         args = self.vertices
-        cw = self._isright(args[-1], args[0], args[1])
-
+        n = len(args)
         ret = {}
-        for i in range(len(args)):
+        for i in range(n):
             a, b, c = args[i - 2], args[i - 1], args[i]
-            ang = Ray(b, a).angle_between(Ray(b, c))
-            if cw ^ self._isright(a, b, c):
-                ret[b] = 2*S.Pi - ang
+            reflex_ang = Ray(b, a).angle_between(Ray(b, c))
+            if self._is_clockwise(a, b, c):
+                ret[b] = 2*S.Pi - reflex_ang
             else:
-                ret[b] = ang
+                ret[b] = reflex_ang
+
+        # internal sum should be pi*(n - 2), not pi*(n+2)
+        # so if ratio is (n+2)/(n-2) > 1 it is wrong
+        wrong = ((sum(ret.values())/S.Pi-1)/(n - 2) - 1).is_positive
+        if wrong:
+            two_pi = 2*S.Pi
+            for b in ret:
+                ret[b] = two_pi - ret[b]
+        elif wrong is None:
+            raise ValueError("could not determine Polygon orientation.")
         return ret
 
     @property
@@ -355,6 +364,14 @@ class Polygon(GeometrySet):
 
         centroid : Point
 
+        Raises
+        ======
+
+        GeometryError
+            When the polygon has zero area. Note that this check only catches
+            the case where the computed area is zero. Not all self-intersecting
+            polygons are detected, only those that reduce to zero area.
+
         See Also
         ========
 
@@ -370,7 +387,10 @@ class Polygon(GeometrySet):
         Point2D(31/18, 11/18)
 
         """
-        A = 1/(6*self.area)
+        area = self.area
+        if area == 0:
+            raise GeometryError("Centroid is undefined for a polygon with zero area.")
+        A = 1/(6*area)
         cx, cy = 0, 0
         args = self.args
         for i in range(len(args)):
@@ -679,9 +699,9 @@ class Polygon(GeometrySet):
         """
         # Determine orientation of points
         args = self.vertices
-        cw = self._isright(args[-2], args[-1], args[0])
+        cw = self._is_clockwise(args[-2], args[-1], args[0])
         for i in range(1, len(args)):
-            if cw ^ self._isright(args[i - 2], args[i - 1], args[i]):
+            if cw ^ self._is_clockwise(args[i - 2], args[i - 1], args[i]):
                 return False
         # check for intersecting sides
         sides = self.sides
@@ -735,7 +755,7 @@ class Polygon(GeometrySet):
         References
         ==========
 
-        .. [1] http://paulbourke.net/geometry/polygonmesh/#insidepoly
+        .. [1] https://paulbourke.net/geometry/polygonmesh/#insidepoly
 
         """
         p = Point(p, dim=2)
@@ -1113,7 +1133,7 @@ class Polygon(GeometrySet):
         ==========================
 
         Method:
-        [1] http://cgm.cs.mcgill.ca/~orm/mind2p.html
+        [1] https://web.archive.org/web/20150509035744/http://cgm.cs.mcgill.ca/~orm/mind2p.html
         Uses rotating calipers:
         [2] https://en.wikipedia.org/wiki/Rotating_calipers
         and antipodal points:
@@ -1394,7 +1414,7 @@ class Polygon(GeometrySet):
         b = {}
         pts = list(p.args)
         pts.append(pts[0])  # close it
-        cw = Polygon._isright(*pts[:3])
+        cw = Polygon._is_clockwise(*pts[:3])
         if cw:
             pts = list(reversed(pts))
         for v, a in p.angles.items():
@@ -2639,8 +2659,8 @@ class Triangle(Polygon):
         References
         ==========
 
-        .. [1] http://mathworld.wolfram.com/Exradius.html
-        .. [2] http://mathworld.wolfram.com/Excircles.html
+        .. [1] https://mathworld.wolfram.com/Exradius.html
+        .. [2] https://mathworld.wolfram.com/Excircles.html
 
         """
 
@@ -2680,7 +2700,7 @@ class Triangle(Polygon):
         >>> p1, p2, p3 = Point(0, 0), Point(6, 0), Point(0, 2)
         >>> t = Triangle(p1, p2, p3)
         >>> t.excenters[t.sides[0]]
-        Point2D(12*sqrt(10), 2/3 + sqrt(10)/3)
+        Point2D(sqrt(10) + 4, sqrt(10) + 4)
 
         See Also
         ========
@@ -2690,25 +2710,26 @@ class Triangle(Polygon):
         References
         ==========
 
-        .. [1] http://mathworld.wolfram.com/Excircles.html
+        .. [1] https://mathworld.wolfram.com/Excircles.html
+        .. [2] https://www.geeksforgeeks.org/maths/excenter-of-a-triangle/
 
         """
 
         s = self.sides
         v = self.vertices
-        a = s[0].length
-        b = s[1].length
-        c = s[2].length
+        a = s[1].length
+        b = s[2].length
+        c = s[0].length
         x = [v[0].x, v[1].x, v[2].x]
         y = [v[0].y, v[1].y, v[2].y]
 
         exc_coords = {
-            "x1": simplify(-a*x[0]+b*x[1]+c*x[2]/(-a+b+c)),
-            "x2": simplify(a*x[0]-b*x[1]+c*x[2]/(a-b+c)),
-            "x3": simplify(a*x[0]+b*x[1]-c*x[2]/(a+b-c)),
-            "y1": simplify(-a*y[0]+b*y[1]+c*y[2]/(-a+b+c)),
-            "y2": simplify(a*y[0]-b*y[1]+c*y[2]/(a-b+c)),
-            "y3": simplify(a*y[0]+b*y[1]-c*y[2]/(a+b-c))
+            "x1": simplify((-a*x[0]+b*x[1]+c*x[2])/(-a+b+c)),
+            "x2": simplify((a*x[0]-b*x[1]+c*x[2])/(a-b+c)),
+            "x3": simplify((a*x[0]+b*x[1]-c*x[2])/(a+b-c)),
+            "y1": simplify((-a*y[0]+b*y[1]+c*y[2])/(-a+b+c)),
+            "y2": simplify((a*y[0]-b*y[1]+c*y[2])/(a-b+c)),
+            "y3": simplify((a*y[0]+b*y[1]-c*y[2])/(a+b-c))
         }
 
         excenters = {

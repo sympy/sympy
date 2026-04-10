@@ -7,6 +7,7 @@ Maple expressions, using the functions defined in the Maple objects where possib
 
 FIXME: This module is still under actively developed. Some functions may be not completed.
 """
+from __future__ import annotations
 
 from sympy.core import S
 from sympy.core.numbers import Integer, IntegerConstant, equal_valued
@@ -88,13 +89,16 @@ class MapleCodePrinter(CodePrinter):
     printmethod = "_maple"
     language = "maple"
 
-    _default_settings = {
-        'order': None,
-        'full_prec': 'auto',
-        'human': True,
+    _operators = {
+        'and': 'and',
+        'or': 'or',
+        'not': 'not ',
+    }
+
+    _default_settings = dict(CodePrinter._default_settings, **{
         'inline': True,
         'allow_unknown_functions': True,
-    }
+    })
 
     def __init__(self, settings=None):
         if settings is None:
@@ -179,9 +183,6 @@ class MapleCodePrinter(CodePrinter):
 
     def _print_Infinity(self, expr):
         return 'infinity'
-
-    def _print_Idx(self, expr):
-        return self._print(expr.label)
 
     def _print_BooleanTrue(self, expr):
         return "true"

@@ -59,9 +59,8 @@ This is where the meat of code generation is; the translation of SymPy
 actually more like a lightweight version of codegen for Python, and
 Python (:py:func:`sympy.printing.pycode.pycode`), and
 :py:func:`sympy.printing.lambdarepr.lambdarepr`, which supports many libraries
-(like NumPy), and Aesara
-(:py:func:`sympy.printing.aesaracode.aesara_function`). The code printers are
-special cases of the other prints in SymPy (str printer, pretty printer, etc.).
+(like NumPy). The code printers are special cases of the other prints
+in SymPy (str printer, pretty printer, etc.).
 
 An important distinction is that the code printer has to deal with assignments
 (using the :class:`sympy.codegen.ast.Assignment` object). This serves as
@@ -164,8 +163,7 @@ An example of Mathematica code printer::
 
     >>> expr = summation(expr, (n, -1, 1))
     >>> mathematica_code(expr)
-    T*(x[-T]*Sin[(T + t)/T]/(T + t) + x[T]*Sin[(-T + t)/T]/(-T + t) + x[0]*Sin[t/T
-    ]/t)
+    T*(x[-T]*Sin[(T + t)/T]/(T + t) + x[T]*Sin[(-T + t)/T]/(-T + t) + x[0]*Sin[t/T]/t)
 
 We can go through a common expression in different languages we support and see
 how it works::
@@ -486,7 +484,7 @@ implies 'Universal functions' and follows an ideology set by NumPy. The main
 point of ufuncify as compared to autowrap is that it allows arrays as arguments
 and can operate in an element-by-element fashion. The core operation done
 element-wise is in accordance to Numpy's array broadcasting rules. See `this
-<https://docs.scipy.org/doc/numpy/reference/ufuncs.html>`_ for more.
+<https://numpy.org/doc/stable/reference/ufuncs.html>`_ for more.
 
     >>> from sympy import *
     >>> from sympy.abc import x

@@ -1,5 +1,6 @@
+from __future__ import annotations
 from sympy.calculus.accumulationbounds import AccumBounds
-from sympy.core.numbers import (E, Float, I, Rational, nan, oo, pi, zoo)
+from sympy.core.numbers import (E, Float, I, Rational, Integer, nan, oo, pi, zoo)
 from sympy.core.relational import (Eq, Ge, Gt, Le, Lt, Ne)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
@@ -7,15 +8,22 @@ from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.integers import (ceiling, floor, frac)
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.functions.elementary.trigonometric import sin, cos, tan
+from sympy.functions.elementary.trigonometric import sin, cos, tan, asin
+from sympy.polys.rootoftools import RootOf, CRootOf
+from sympy import Integers
+from sympy.sets.sets import Interval
+from sympy.sets.fancysets import ImageSet
+from sympy.core.function import Lambda
 
 from sympy.core.expr import unchanged
-from sympy.testing.pytest import XFAIL
+from sympy.testing.pytest import XFAIL, raises
 
 x = Symbol('x')
 i = Symbol('i', imaginary=True)
 y = Symbol('y', real=True)
 k, n = symbols('k,n', integer=True)
+b = Symbol('b', real=True, noninteger=True)
+m = Symbol('m', positive=True)
 
 
 def test_floor():
@@ -30,6 +38,9 @@ def test_floor():
 
     assert floor(1) == 1
     assert floor(-1) == -1
+
+    assert floor(I*log(asin(5)/abs(asin(5)))) == 0
+    assert floor(-I*log(asin(7)/abs(asin(7)))) == -2
 
     assert floor(E) == 2
     assert floor(-E) == -3
@@ -52,6 +63,11 @@ def test_floor():
 
     assert floor(Float(7.69)) == 7
     assert floor(-Float(7.69)) == -8
+
+    assert floor(1/(m+1)) == S.Zero
+    assert floor((m+2)/(m+1)) == S.One
+    assert floor(-1/(m+1)) == S.NegativeOne
+    assert floor((m+2)/(-m-1)) == Integer(-2)
 
     assert floor(I) == I
     assert floor(-I) == -I
@@ -116,10 +132,10 @@ def test_floor():
     assert floor(factorial(50)/exp(1)) == \
         11188719610782480504630258070757734324011354208865721592720336800
 
-    assert (floor(y) < y) == False
+    assert (floor(y) < y).is_Relational
     assert (floor(y) <= y) == True
     assert (floor(y) > y) == False
-    assert (floor(y) >= y) == False
+    assert (floor(y) >= y).is_Relational
     assert (floor(x) <= x).is_Relational  # x could be non-real
     assert (floor(x) > x).is_Relational
     assert (floor(x) <= y).is_Relational  # arg is not same as rhs
@@ -128,6 +144,10 @@ def test_floor():
     assert (floor(y) < oo) == True
     assert (floor(y) >= -oo) == True
     assert (floor(y) > -oo) == True
+    assert (floor(b) < b) == True
+    assert (floor(b) <= b) == True
+    assert (floor(b) > b) == False
+    assert (floor(b) >= b) == False
 
     assert floor(y).rewrite(frac) == y - frac(y)
     assert floor(y).rewrite(ceiling) == -ceiling(-y)
@@ -203,6 +223,8 @@ def test_floor():
     assert (floor(y) < n) == (y < n)
     assert (floor(y) > n) == (y >= n + 1)
 
+    assert floor(RootOf(x**3 - 27*x, 2)) == 5
+
 
 def test_ceiling():
 
@@ -216,6 +238,9 @@ def test_ceiling():
 
     assert ceiling(1) == 1
     assert ceiling(-1) == -1
+
+    assert ceiling(I*log(asin(5)/abs(asin(5)))) == 1
+    assert ceiling(-I*log(asin(7)/abs(asin(7)))) == -1
 
     assert ceiling(E) == 3
     assert ceiling(-E) == -2
@@ -237,6 +262,11 @@ def test_ceiling():
 
     assert ceiling(Float(7.69)) == 8
     assert ceiling(-Float(7.69)) == -7
+
+    assert ceiling(1/(m+1)) == S.One
+    assert ceiling((m+2)/(m+1)) == Integer(2)
+    assert ceiling(-1/(m+1)) == S.Zero
+    assert ceiling((m+2)/(-m-1)) == S.NegativeOne
 
     assert ceiling(I) == I
     assert ceiling(-I) == -I
@@ -276,6 +306,8 @@ def test_ceiling():
     assert unchanged(ceiling, x + y)
 
     assert ceiling(x + 3) == ceiling(x) + 3
+    assert ceiling(x + 3.0) == ceiling(x) + 3
+    assert ceiling(x + 3.0*I) == ceiling(x) + 3*I
     assert ceiling(x + k) == ceiling(x) + k
 
     assert ceiling(y + 3) == ceiling(y) + 3
@@ -302,9 +334,9 @@ def test_ceiling():
         11188719610782480504630258070757734324011354208865721592720336801
 
     assert (ceiling(y) >= y) == True
-    assert (ceiling(y) > y) == False
+    assert (ceiling(y) > y).is_Relational
     assert (ceiling(y) < y) == False
-    assert (ceiling(y) <= y) == False
+    assert (ceiling(y) <= y).is_Relational
     assert (ceiling(x) >= x).is_Relational  # x could be non-real
     assert (ceiling(x) < x).is_Relational
     assert (ceiling(x) >= y).is_Relational  # arg is not same as rhs
@@ -313,6 +345,10 @@ def test_ceiling():
     assert (ceiling(y) > -oo) == True
     assert (ceiling(y) <= oo) == True
     assert (ceiling(y) < oo) == True
+    assert (ceiling(b) < b) == False
+    assert (ceiling(b) <= b) == False
+    assert (ceiling(b) > b) == True
+    assert (ceiling(b) >= b) == True
 
     assert ceiling(y).rewrite(floor) == -floor(-y)
     assert ceiling(y).rewrite(frac) == y + frac(-y)
@@ -387,6 +423,12 @@ def test_ceiling():
     assert (ceiling(y) >= n) == (y > n - 1)
     assert (ceiling(y) < n) == (y <= n - 1)
     assert (ceiling(y) > n) == (y > n)
+
+    assert ceiling(RootOf(x**3 - 27*x, 2)) == 6
+    s = ImageSet(Lambda(n, n + (CRootOf(x**5 - x**2 + 1, 0))), Integers)
+    f = CRootOf(x**5 - x**2 + 1, 0)
+    s = ImageSet(Lambda(n, n + f), Integers)
+    assert s.intersect(Interval(-10, 10)) == {i + f for i in range(-9, 11)}
 
 
 def test_frac():
@@ -630,3 +672,18 @@ def test_issue_18689():
 def test_issue_18421():
     assert floor(float(0)) is S.Zero
     assert ceiling(float(0)) is S.Zero
+
+def test_issue_25230():
+    a = Symbol('a', real = True)
+    b = Symbol('b', positive = True)
+    c = Symbol('c', negative = True)
+    raises(NotImplementedError, lambda: floor(x/a).as_leading_term(x, cdir = 1))
+    raises(NotImplementedError, lambda: ceiling(x/a).as_leading_term(x, cdir = 1))
+    assert floor(x/b).as_leading_term(x, cdir = 1) == 0
+    assert floor(x/b).as_leading_term(x, cdir = -1) == -1
+    assert floor(x/c).as_leading_term(x, cdir = 1) == -1
+    assert floor(x/c).as_leading_term(x, cdir = -1) == 0
+    assert ceiling(x/b).as_leading_term(x, cdir = 1) == 1
+    assert ceiling(x/b).as_leading_term(x, cdir = -1) == 0
+    assert ceiling(x/c).as_leading_term(x, cdir = 1) == 0
+    assert ceiling(x/c).as_leading_term(x, cdir = -1) == 1

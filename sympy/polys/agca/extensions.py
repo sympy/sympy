@@ -1,9 +1,10 @@
 """Finite extensions of ring domains."""
+from __future__ import annotations
 
 from sympy.polys.domains.domain import Domain
 from sympy.polys.domains.domainelement import DomainElement
 from sympy.polys.polyerrors import (CoercionFailed, NotInvertible,
-        GeneratorsError)
+        GeneratorsError, ExactQuotientFailed)
 from sympy.polys.polytools import Poly
 from sympy.printing.defaults import DefaultPrinting
 
@@ -27,6 +28,9 @@ class ExtensionElement(DomainElement, DefaultPrinting):
 
     def parent(f):
         return f.ext
+
+    def as_expr(f):
+        return f.ext.to_sympy(f)
 
     def __bool__(f):
         return bool(f.rep)
@@ -88,7 +92,7 @@ class ExtensionElement(DomainElement, DefaultPrinting):
             raise NotInvertible('Zero divisor')
         elif f.ext.is_Field:
             return True
-        elif f.rep.is_ground and f.ext.domain.is_unit(f.rep.rep[0]):
+        elif f.rep.is_ground and f.ext.domain.is_unit(f.rep.LC()):
             return True
         else:
             # Some cases like (2*x + 2)/2 over ZZ will fail here. It is
@@ -198,7 +202,7 @@ class ExtensionElement(DomainElement, DefaultPrinting):
 
     def __str__(f):
         from sympy.printing.str import sstr
-        return sstr(f.rep)
+        return sstr(f.as_expr())
 
     __repr__ = __str__
 
@@ -273,7 +277,7 @@ class MonogenicFiniteExtension(Domain):
         self.mod = mod.rep  # DMP representation
 
         self.domain = dom = mod.domain
-        self.ring = mod.rep.ring or dom.old_poly_ring(*mod.gens)
+        self.ring = dom.old_poly_ring(*mod.gens)
 
         self.zero = self.convert(self.ring.zero)
         self.one = self.convert(self.ring.one)
@@ -303,6 +307,13 @@ class MonogenicFiniteExtension(Domain):
 
     __repr__ = __str__
 
+    @property
+    def has_CharacteristicZero(self):
+        return self.domain.has_CharacteristicZero
+
+    def characteristic(self):
+        return self.domain.characteristic()
+
     def convert(self, f, base=None):
         rep = self.ring.convert(f, base)
         return ExtElem(rep % self.mod, self)
@@ -331,7 +342,14 @@ class MonogenicFiniteExtension(Domain):
         return self.exquo(f, g)
 
     def exquo(self, f, g):
-        rep = self.ring.exquo(f.rep, g.rep)
+        ring = self.ring
+        try:
+            rep = ring.exquo(f.rep, g.rep)
+        except ExactQuotientFailed:
+            if not ring.domain.is_Field:
+                raise
+            ginv = ring.invert(g.rep, self.mod)
+            rep = ring.mul(f.rep, ginv)
         return ExtElem(rep % self.mod, self)
 
     def is_negative(self, a):

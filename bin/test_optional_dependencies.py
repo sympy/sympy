@@ -6,6 +6,8 @@ The optional dependencies need to be installed before running this.
 """
 
 
+import pytest
+
 # Add the local sympy to sys.path (needed for CI)
 from get_sympy import path_hack
 path_hack()
@@ -33,13 +35,11 @@ test_list = [
     # llvmlite
     '*llvm*',
 
-    # aesara
-    '*aesara*',
-
     # jax
     '*jax*',
 
     # gmpy
+    'sympy/ntheory',
     'sympy/polys',
 
     # gmpy, numpy, scipy, autowrap, matplotlib
@@ -56,9 +56,11 @@ test_list = [
 
     # codegen
     'sympy/codegen/',
-    'sympy/utilities/tests/test_codegen',
-    'sympy/utilities/_compilation/tests/test_compilation',
-    'sympy/external/tests/test_codegen.py',
+    # Match sympy/utilities/tests/test_codegen*.py and
+    # sympy/external/tests/test_codegen.py. (The pattern matching code currently
+    # only lets us match globs as a basename, so we can't spell out the directories.)
+    'test_codegen*.py',
+    'sympy/utilities/_compilation/tests/test_compilation.py',
 
     # cloudpickle
     'pickling',
@@ -67,9 +69,11 @@ test_list = [
     'sympy/logic',
     'sympy/assumptions',
 
-    #stats
+    # stats
     'sympy/stats',
 
+    # lxml
+    "sympy/utilities/tests/test_mathml.py",
 ]
 
 
@@ -92,10 +96,8 @@ doctest_list = [
     # llvmlite
     '*llvm*',
 
-    # aesara
-    '*aesara*',
-
     # gmpy
+    'sympy/ntheory',
     'sympy/polys',
 
     # autowrap
@@ -117,7 +119,21 @@ doctest_list = [
     #stats
     'sympy/stats',
 
+    # lxml
+    "sympy/utilities/mathml/",
 ]
+
+
+# This is just needed for the numpy nightly job which does not have matplotlib
+# Otherwise these could be added to doctest_list above
+try:
+    import matplotlib # noqa: F401
+    doctest_list.extend([
+        'doc/src/tutorials/biomechanics/biomechanical-model-example.rst',
+        'doc/src/tutorials/biomechanics/biomechanics.rst',
+    ])
+except ImportError:
+    pass
 
 
 print('Testing optional dependencies')
@@ -127,12 +143,14 @@ from sympy import test, doctest
 
 
 tests_passed = test(*test_list, blacklist=blacklist, force_colors=True)
+if tests_passed is True:
+    tests_passed = pytest.ExitCode.OK
 doctests_passed = doctest(*doctest_list, force_colors=True)
 
 
-if not tests_passed and not doctests_passed:
+if (tests_passed != pytest.ExitCode.OK) and not doctests_passed:
     raise TestsFailedError('Tests and doctests failed')
-elif not tests_passed:
+elif tests_passed != pytest.ExitCode.OK:
     raise TestsFailedError('Doctests passed but tests failed')
 elif not doctests_passed:
     raise TestsFailedError('Tests passed but doctests failed')

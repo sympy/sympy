@@ -1,3 +1,4 @@
+from __future__ import annotations
 import os
 import tempfile
 from sympy.core.symbol import (Symbol, symbols)
@@ -8,7 +9,7 @@ from sympy.codegen.ast import (
 from sympy.codegen.fnodes import (
     allocatable, ArrayConstructor, isign, dsign, cmplx, kind, literal_dp,
     Program, Module, use, Subroutine, dimension, assumed_extent, ImpliedDoLoop,
-    intent_out, size, Do, SubroutineCall, sum_, array, bind_C
+    intent_out, size, Do, SubroutineCall, sum_, array, bind_C, reshape
 )
 from sympy.codegen.futils import render_as_module
 from sympy.core.expr import unchanged
@@ -44,7 +45,7 @@ def test_size_assumed_shape():
             'program myprog\n'
             'use mod_rms, only: rms\n'
             'real*8, dimension(4), parameter :: x = [4, 2, 2, 2]\n'
-            'print *, dsqrt(7d0) - rms(x)\n'
+            'print "(f7.5)", dsqrt(7d0) - rms(x)\n'
             'end program\n'
         ))
     ], clean=True)
@@ -182,6 +183,26 @@ def test_kind():
 
 def test_literal_dp():
     assert fcode(literal_dp(0), source_format='free') == '0d0'
+
+
+def test_reshape():
+    """Test reshape function with keyword arguments and essential edge cases."""
+    from sympy.codegen.ast import String
+
+    array, shape, pad, order = symbols('array shape pad order')
+
+    cases = [
+        (reshape(array, shape), 'reshape(array, shape)'),
+        (reshape(array, shape, pad), 'reshape(array, shape, pad=pad)'),
+        (reshape(array, shape, None, order), 'reshape(array, shape, order=order)'),
+        (reshape(array, shape, pad, order), 'reshape(array, shape, pad=pad, order=order)'),
+        (reshape(Symbol('a') + Symbol('b'), [Symbol('n') * 2]), 'reshape(a + b, [2*n])'),
+        (reshape(array, shape, None, String('F')), 'reshape(array, shape, order=F)'),
+        (reshape(array, [Symbol('n'), 3]), 'reshape(array, [n, 3])'),
+    ]
+
+    for expr, expected in cases:
+        assert fcode(expr, source_format='free') == expected
 
 
 @may_xfail

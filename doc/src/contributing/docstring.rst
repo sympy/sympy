@@ -1,8 +1,8 @@
 .. _style_guide_docstring_guidelines:
 
-===============================
-SymPy Docstrings Style Guide
-===============================
+=========================
+Docstrings Style Guide
+=========================
 
 General Guidelines
 --------------------
@@ -47,8 +47,8 @@ module docstring is the docstring at the very top of the file, for example, the
 docstring for `solvers.ode
 <https://github.com/sympy/sympy/blob/85e684f782c71d247b13af71f2f134a9d894507e/sympy/solvers/ode.py>`_.
 
-A public function is one that is intended to be used by the end-
-user, or the public. Documentation is important for public functions because
+A public function is one that is intended to be used by the end-user,
+or the public. Documentation is important for public functions because
 they will be seen and used by many people.
 
 A private function, on the other hand, is one that is only intended to be used
@@ -93,13 +93,13 @@ the end of this guide.
 Formatting
 -------------
 
-Docstrings are are written in `reStructuredText
-<http://docutils.sourceforge.net/rst.html>`_ format extended by `Sphinx
-<http://www.sphinx-doc.org/en/master/>`_. Here is a concise guide to `Quick
-reStructuredText <http://docutils.sourceforge.net/docs/user/rst/quickref.html>`_. More in-depth
+Docstrings are written in `reStructuredText
+<https://docutils.sourceforge.io/rst.html>`_ format extended by `Sphinx
+<https://www.sphinx-doc.org/en/master/>`_. Here is a concise guide to `Quick
+reStructuredText <https://docutils.sourceforge.io/docs/user/rst/quickref.html>`_. More in-depth
 information about using reStructuredText can be found in the `Sphinx
 Documentation
-<http://www.sphinx-doc.org/en/master/usage/restructuredtext/index.html>`_.
+<https://www.sphinx-doc.org/en/master/usage/restructuredtext/index.html>`_.
 
 In order for Sphinx to render docstrings nicely in the HTML documentation, some
 formatting guidelines should be followed when writing docstrings:
@@ -193,6 +193,8 @@ class, or method does when the concise Single-Sentence Summary will not
 suffice. This section should be used to clarify functionality in several
 sentences or paragraphs.
 
+.. _style_guide_docstring_examples_section:
+
 3. Examples Section
 ^^^^^^^^^^^^^^^^^^^^
 
@@ -222,8 +224,8 @@ tested. They should demonstrate the API of the function to the user (i.e., what
 the input parameters look like, what the output looks like, and what it does).
 If you only want to test something, add a test to the relevant ``test_*.py file``.
 
-You can use the ``./bin/coverage_doctest.py`` script to test the doctest
-coverage of a file or module. Run the doctests with ``./bin/doctest``.
+You can use the ``bin/coverage_doctest.py`` script to test the doctest
+coverage of a file or module. Run the doctests with ``python bin/doctest``.
 
 You should only skip the testing of an example if it is impossible to test it.
 If necessary, testing of an example can be skipped by adding a special comment.
@@ -272,7 +274,7 @@ sympy`` or ``from sympy import *``. To define symbols, use ``from sympy.abc
 import x``, unless the name is not in ``sympy.abc`` (for instance, if it has
 assumptions), in which case use ``symbols`` like ``x, y = symbols('x y')``.
 
-In general, you should run ``./bin/doctest`` to make sure your examples run
+In general, you should run ``python bin/doctest`` to make sure your examples run
 correctly, and fix them if they do not.
 
 4. Parameters Section
@@ -443,7 +445,7 @@ Here is a References section that cites printed and online resources::
     .. [2] Luke, Y. L., The Special Functions and Their Approximations,
            Volume 1, (1969)
     .. [3] https://en.wikipedia.org/wiki/Bessel_function
-    .. [4] http://functions.wolfram.com/Bessel-TypeFunctions/BesselJ/
+    .. [4] https://functions.wolfram.com/Bessel-TypeFunctions/BesselJ/
 
 Sample Docstring
 ------------------
@@ -523,9 +525,9 @@ Here is an example of a correctly formatted docstring::
         ==========
 
         .. [1] https://en.wikipedia.org/wiki/Gamma_function
-        .. [2] http://dlmf.nist.gov/5
-        .. [3] http://mathworld.wolfram.com/GammaFunction.html
-        .. [4] http://functions.wolfram.com/GammaBetaErf/Gamma/
+        .. [2] https://dlmf.nist.gov/5
+        .. [3] https://mathworld.wolfram.com/GammaFunction.html
+        .. [4] https://functions.wolfram.com/GammaBetaErf/Gamma/
 
         """
 
@@ -738,9 +740,9 @@ Here are some troubleshooting tips to fix the errors:
   functions like ``int`` or ``NotImplementedError``, functions from other
   modules outside of SymPy like ``matplotlib.plot``, and variable or parameter
   names that are specific to the text at hand. In general, if the object cannot
-  be accessed as ``sympy.something.something.object``, it cannot be cross-
-  referenced and you should not use the ``:obj:`` syntax.
-* If you are using are using one of the `type specific
+  be accessed as ``sympy.something.something.object``, it cannot be
+  cross-referenced and you should not use the ``:obj:`` syntax.
+* If you are using one of the `type specific
   <https://www.sphinx-doc.org/en/master/usage/restructuredtext/domains.html#cross-referencing-python-objects>`_
   identifiers like ``:func:``, be sure that the type for it is correct.
   ``:func:`` only refers to Python functions. For classes, you need to use
@@ -755,7 +757,7 @@ You may also see errors like:
 ::
 
     WARNING: more than one target found for cross-reference 'subs()':
-    sympy.core.basic.Basic.subs, sympy.matrices.common.MatrixCommon.subs,
+    sympy.core.basic.Basic.subs, sympy.matrices.matrixbase.MatrixBase.subs,
     sympy.physics.vector.vector.Vector.subs,
     sympy.physics.vector.dyadic.Dyadic.subs
 

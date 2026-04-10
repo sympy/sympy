@@ -1,13 +1,13 @@
+from __future__ import annotations
 import inspect
 import copy
 import pickle
 
 from sympy.physics.units import meter
 
-from sympy.testing.pytest import XFAIL, raises
+from sympy.testing.pytest import XFAIL, raises, ignore_warnings
 
 from sympy.core.basic import Atom, Basic
-from sympy.core.core import BasicMeta
 from sympy.core.singleton import SingletonRegistry
 from sympy.core.symbol import Str, Dummy, Symbol, Wild
 from sympy.core.numbers import (E, I, pi, oo, zoo, nan, Integer,
@@ -22,7 +22,7 @@ from sympy.core.function import Derivative, Function, FunctionClass, Lambda, \
 from sympy.sets.sets import Interval
 from sympy.core.multidimensional import vectorize
 
-from sympy.external.gmpy import HAS_GMPY
+from sympy.external.gmpy import gmpy as _gmpy
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from sympy.core.singleton import S
@@ -31,17 +31,24 @@ from sympy.core.symbol import symbols
 from sympy.external import import_module
 cloudpickle = import_module('cloudpickle')
 
-excluded_attrs = {
+
+not_equal_attrs = {
     '_assumptions',  # This is a local cache that isn't automatically filled on creation
     '_mhash',   # Cached after __hash__ is called but set to None after creation
+}
+
+
+deprecated_attrs = {
     'is_EmptySet',  # Deprecated from SymPy 1.5. This can be removed when is_EmptySet is removed.
     'expr_free_symbols',  # Deprecated from SymPy 1.9. This can be removed when exr_free_symbols is removed.
-    '_mat', # Deprecated from SymPy 1.9. This can be removed when Matrix._mat is removed
-    '_smat', # Deprecated from SymPy 1.9. This can be removed when SparseMatrix._smat is removed
-    }
+}
+
+dont_check_attrs = {
+    '_sage_',  # Fails because Sage is not installed
+}
 
 
-def check(a, exclude=[], check_attr=True):
+def check(a, exclude=[], check_attr=True, deprecated=()):
     """ Check that pickling and copying round-trips.
     """
     # Pickling with protocols 0 and 1 is disabled for Basic instances:
@@ -58,7 +65,7 @@ def check(a, exclude=[], check_attr=True):
             continue
 
         if callable(protocol):
-            if isinstance(a, BasicMeta):
+            if isinstance(a, type):
                 # Classes can't be copied, but that's okay.
                 continue
             b = protocol(a)
@@ -76,14 +83,21 @@ def check(a, exclude=[], check_attr=True):
 
         def c(a, b, d):
             for i in d:
-                if i in excluded_attrs:
+                if i in dont_check_attrs:
                     continue
-                if not hasattr(a, i):
+                elif i in not_equal_attrs:
+                    if hasattr(a, i):
+                        assert hasattr(b, i), i
+                elif i in deprecated_attrs or i in deprecated:
+                    with ignore_warnings(SymPyDeprecationWarning):
+                        assert getattr(a, i) == getattr(b, i), i
+                elif not hasattr(a, i):
                     continue
-                attr = getattr(a, i)
-                if not hasattr(attr, "__call__"):
-                    assert hasattr(b, i), i
-                    assert getattr(b, i) == attr, "%s != %s, protocol: %s" % (getattr(b, i), attr, protocol)
+                else:
+                    attr = getattr(a, i)
+                    if not hasattr(attr, "__call__"):
+                        assert hasattr(b, i), i
+                        assert getattr(b, i) == attr, "%s != %s, protocol: %s" % (getattr(b, i), attr, protocol)
 
         c(a, b, d1)
         c(b, a, d2)
@@ -94,11 +108,7 @@ def check(a, exclude=[], check_attr=True):
 
 
 def test_core_basic():
-    for c in (Atom, Atom(),
-              Basic, Basic(),
-              # XXX: dynamically created types are not picklable
-              # BasicMeta, BasicMeta("test", (), {}),
-              SingletonRegistry, S):
+    for c in (Atom, Atom(), Basic, Basic(), SingletonRegistry, S):
         check(c)
 
 def test_core_Str():
@@ -163,18 +173,13 @@ def test_core_function():
 
 def test_core_undefinedfunctions():
     f = Function("f")
-    # Full XFAILed test below
-    exclude = list(range(5))
-    # https://github.com/cloudpipe/cloudpickle/issues/65
-    # https://github.com/cloudpipe/cloudpickle/issues/190
-    exclude.append(cloudpickle)
-    check(f, exclude=exclude)
-
-@XFAIL
-def test_core_undefinedfunctions_fail():
-    # This fails because f is assumed to be a class at sympy.basic.function.f
-    f = Function("f")
     check(f)
+
+
+def test_core_appliedundef():
+    x = Symbol("_long_unique_name_1")
+    f = Function("_long_unique_name_2")
+    check(f(x))
 
 
 def test_core_interval():
@@ -201,6 +206,11 @@ def test_Singletons():
         for func in copiers:
             assert func(obj) is obj
 
+#================== combinatorics ===================
+from sympy.combinatorics.free_groups import FreeGroup
+
+def test_free_group():
+    check(FreeGroup("x, y, z"), check_attr=False)
 
 #================== functions ===================
 from sympy.functions import (Piecewise, lowergamma, acosh, chebyshevu,
@@ -280,7 +290,7 @@ from sympy.matrices import Matrix, SparseMatrix
 
 def test_matrices():
     for c in (Matrix, Matrix([1, 2, 3]), SparseMatrix, SparseMatrix([[1, 2], [3, 4]])):
-        check(c)
+        check(c, deprecated=['_smat', '_mat'])
 
 #================== ntheory =====================
 from sympy.ntheory.generate import Sieve
@@ -378,7 +388,7 @@ def test_pickling_polys_polyclasses():
     from sympy.polys.polyclasses import DMP, DMF, ANP
 
     for c in (DMP, DMP([[ZZ(1)], [ZZ(2)], [ZZ(3)]], ZZ)):
-        check(c)
+        check(c, deprecated=['rep'])
     for c in (DMF, DMF(([ZZ(1), ZZ(2)], [ZZ(1), ZZ(3)]), ZZ)):
         check(c)
     for c in (ANP, ANP([QQ(1), QQ(2)], [QQ(1), QQ(2), QQ(3)], QQ)):
@@ -455,7 +465,7 @@ def test_pickling_polys_domains():
     for c in (PythonRationalField, PythonRationalField()):
         check(c, check_attr=False)
 
-    if HAS_GMPY:
+    if _gmpy is not None:
         # from sympy.polys.domains.gmpyfinitefield import GMPYFiniteField
         from sympy.polys.domains.gmpyintegerring import GMPYIntegerRing
         from sympy.polys.domains.gmpyrationalfield import GMPYRationalField
@@ -670,7 +680,6 @@ def test_printing2():
     check(MathMLPresentationPrinter())
 
 
-@XFAIL
 def test_printing3():
     check(PrettyPrinter())
 

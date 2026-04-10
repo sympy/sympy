@@ -80,17 +80,12 @@ class RCodePrinter(CodePrinter):
     printmethod = "_rcode"
     language = "R"
 
-    _default_settings: dict[str, Any] = {
-        'order': None,
-        'full_prec': 'auto',
+    _default_settings: dict[str, Any] = dict(CodePrinter._default_settings, **{
         'precision': 15,
         'user_functions': {},
-        'human': True,
         'contract': True,
         'dereference': set(),
-        'error_on_reserved': False,
-        'reserved_word_suffix': '_',
-    }
+    })
     _operators = {
        'and': '&',
         'or': '|',
@@ -161,9 +156,6 @@ class RCodePrinter(CodePrinter):
     def _print_Indexed(self, expr):
         inds = [ self._print(i) for i in expr.indices ]
         return "%s[%s]" % (self._print(expr.base.label), ", ".join(inds))
-
-    def _print_Idx(self, expr):
-        return self._print(expr.label)
 
     def _print_Exp1(self, expr):
         return "exp(1)"

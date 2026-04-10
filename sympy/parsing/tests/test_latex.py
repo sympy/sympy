@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.testing.pytest import raises, XFAIL
 from sympy.external import import_module
 
@@ -25,8 +26,7 @@ from sympy.abc import x, y, z, a, b, c, t, k, n
 antlr4 = import_module("antlr4")
 
 # disable tests if antlr4-python3-runtime is not present
-if not antlr4:
-    disabled = True
+disabled = antlr4 is None
 
 theta = Symbol('theta')
 f = Function('f')
@@ -350,3 +350,17 @@ def test_failing_not_parseable():
     for latex_str in FAILING_BAD_STRINGS:
         with raises(LaTeXParsingError):
             parse_latex(latex_str)
+
+# In strict mode, FAILING_BAD_STRINGS would fail
+def test_strict_mode():
+    from sympy.parsing.latex import parse_latex, LaTeXParsingError
+    for latex_str in FAILING_BAD_STRINGS:
+        with raises(LaTeXParsingError):
+            parse_latex(latex_str, strict=True)
+
+def test_latex_cases_environment_error():
+    from sympy.parsing.latex import parse_latex, LaTeXParsingError
+    from sympy.testing.pytest import raises
+    latex_string = r"\begin{cases} x=1 \\ y=2 \end{cases}"
+    with raises(LaTeXParsingError, match="The 'cases' environment is not currently supported"):
+        parse_latex(latex_string)

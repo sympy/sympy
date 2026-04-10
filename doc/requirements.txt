@@ -1,4 +1,5 @@
 furo
+intersphinx-registry
 linkify-it-py
 matplotlib
 matplotlib-inline
@@ -14,6 +15,6 @@ sphinxcontrib-applehelp
 sphinxcontrib-devhelp
 sphinxcontrib-htmlhelp
 sphinxcontrib-jsmath
+sphinxcontrib-jquery
 sphinxcontrib-qthelp
 sphinxcontrib-serializinghtml
-sphinx-reredirects

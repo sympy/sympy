@@ -25,6 +25,7 @@
     metric(LorentzIndex,LorentzIndex)
 
 """
+from __future__ import annotations
 from sympy.core.mul import Mul
 from sympy.core.singleton import S
 from sympy.matrices.dense import eye
@@ -694,7 +695,7 @@ def kahane_simplify(expression):
 
     # If `first_dum_pos` is not zero, it means that there are trailing free gamma
     # matrices in front of `expression`, so multiply by them:
-    resulting_indices = list( free_pos[0:first_dum_pos] + ri for ri in resulting_indices )
+    resulting_indices = [ free_pos[0:first_dum_pos] + ri for ri in resulting_indices ]
 
     resulting_expr = S.Zero
     for i in resulting_indices:

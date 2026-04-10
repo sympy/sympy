@@ -1,4 +1,5 @@
 """Implementation of :class:`QuotientRing` class."""
+from __future__ import annotations
 
 
 from sympy.polys.agca.modules import FreeModuleQuotientRing
@@ -28,7 +29,8 @@ class QuotientRingElement:
 
     def __str__(self):
         from sympy.printing.str import sstr
-        return sstr(self.data) + " + " + str(self.ring.base_ideal)
+        data = self.ring.ring.to_sympy(self.data)
+        return sstr(data) + " + " + str(self.ring.base_ideal)
 
     __repr__ = __str__
 

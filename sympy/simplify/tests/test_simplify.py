@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.concrete.summations import Sum
 from sympy.core.add import Add
 from sympy.core.basic import Basic
@@ -232,6 +233,8 @@ def test_issue_5652():
     n = symbols('n', commutative=False)
     assert simplify(n + n**(-n)) == n + n**(-n)
 
+def test_issue_27380():
+    assert simplify(1.0**(x+1)/1.0**x) == 1.0
 
 def test_simplify_fail1():
     x = Symbol('x')
@@ -434,6 +437,23 @@ def test_nsimplify():
     # Make sure nsimplify on expressions uses full precision
     assert nsimplify(pi.evalf(100)*x, rational_conversion='exact').evalf(100) == pi.evalf(100)*x
 
+    # issue 23822 make sure simple integer strings don't result in complicated, fractional outputs
+    assert nsimplify("4678") == 4678
+    assert str(nsimplify("4678")) == "4678"
+    assert all(str(nsimplify(a)) == a for a in map(str, range(-10000,10000)))
+    assert all(nsimplify(f"{a}/10", rational=True) == Rational(a,10) for a in range(-10000,10000))
+    # still behaves the same for different input precisions
+    for expr_str, expr_decimal, expected in [
+        ["1/3", 1/3, "1/3"],
+        [".3333", .3333, "3333/10000"],
+        [".33333333", .33333333, "1/3"],
+        [str(pi.evalf(15)), pi.evalf(15), "314159265358979/100000000000000"],  # precision cutoff at 15
+        [str(pi.evalf(16)), pi.evalf(16), "3141592653589793/1000000000000000"],
+    ]:
+        a = nsimplify(expr_str)
+        b = nsimplify(expr_decimal)
+        assert str(a) == str(b) == str(expected)
+
 
 def test_issue_9448():
     tmp = sympify("1/(1 - (-1)**(2/3) - (-1)**(1/3)) + 1/(1 + (-1)**(2/3) + (-1)**(1/3))")
@@ -546,11 +566,15 @@ def test_posify():
     assert str(Sum(posify(1/x**n)[0], (n,1,3)).expand()) == \
         'Sum(_x**(-n), (n, 1, 3))'
 
+    A = Matrix([[1, 2, 3], [4, 5, 6 * Abs(x)]])
+    Ap, rep = posify(A)
+    assert Ap == A.subs(*reversed(rep.popitem()))
+
     # issue 16438
     k = Symbol('k', finite=True)
     eq, rep = posify(k)
     assert eq.assumptions0 == {'positive': True, 'zero': False, 'imaginary': False,
-     'nonpositive': False, 'commutative': True, 'hermitian': True, 'real': True, 'nonzero': True,
+     'nonpositive': False, 'commutative': True, 'real': True, 'nonzero': True,
      'nonnegative': True, 'negative': False, 'complex': True, 'finite': True,
      'infinite': False, 'extended_real':True, 'extended_negative': False,
      'extended_nonnegative': True, 'extended_nonpositive': False,
@@ -863,6 +887,9 @@ def test_nc_simplify():
     _check(a*b*(c*d)**2, a*b*(c*d)**2)
     expr = b**-1*(a**-1*b**-1 - a**-1*c*b**-1)**-1*a**-1
     assert nc_simplify(expr) == (1-c)**-1
+    # test that powers of adjoint are correctly handled
+    assert nc_simplify(a*a.adjoint()**2*a) == a*a.adjoint()**2*a
+    assert nc_simplify(a.adjoint()*a*a.adjoint()) == a.adjoint()*a*a.adjoint()
     # commutative expressions should be returned without an error
     assert nc_simplify(2*x**2) == 2*x**2
 
@@ -1037,6 +1064,30 @@ def test_issue_23543():
     assert (x*(y + z/2)).simplify() == x*(2*y + z)/2
 
 
+def test_issue_11004():
+
+    def f(n):
+        return sqrt(2*pi*n) * (n/E)**n
+
+    def m(n, k):
+        return  f(n) / (f(n/k)**k)
+
+    def p(n,k):
+        return m(n, k) / (k**n)
+
+    N, k = symbols('N k')
+    half = Float('0.5', 4)
+    z = log(p(n, k) / p(n, k + 1)).expand(force=True)
+    r = simplify(z.subs(n, N).n(4))
+    assert r == (
+        half*k*log(k)
+        - half*k*log(k + 1)
+        + half*log(N)
+        - half*log(k + 1)
+        + Float(0.9189224, 4)
+    )
+
+
 def test_issue_19161():
     polynomial = Poly('x**2').simplify()
     assert (polynomial-x**2).simplify() == 0
@@ -1046,3 +1097,18 @@ def test_issue_22210():
     d = Symbol('d', integer=True)
     expr = 2*Derivative(sin(x), (x, d))
     assert expr.simplify() == expr
+
+
+def test_reduce_inverses_nc_pow():
+    x, y = symbols("x y", commutative=True)
+    Z = symbols("Z", commutative=False)
+    assert simplify(2**Z * y**Z) == 2**Z * y**Z
+    assert simplify(x**Z * y**Z) == x**Z * y**Z
+    x, y = symbols("x y", positive=True)
+    assert expand((x*y)**Z) == x**Z * y**Z
+    assert simplify(x**Z * y**Z) == expand((x*y)**Z)
+
+def test_nc_recursion_coeff():
+    X = symbols("X", commutative = False)
+    assert (2 * cos(pi/3) * X).simplify() == X
+    assert (2.0 * cos(pi/3) * X).simplify() == X

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.basic import Basic
 from sympy.core.containers import (Dict, Tuple)
 from sympy.core.expr import Expr
@@ -10,6 +11,8 @@ from sympy.printing.defaults import Printable
 
 import itertools
 from collections.abc import Iterable
+
+from sympy.utilities.decorator import deprecated
 
 
 class ArrayKind(Kind):
@@ -71,11 +74,11 @@ class ArrayKind(Kind):
         return obj
 
     def __repr__(self):
-        return "ArrayKind(%s)" % self.element_kind
+        return f"ArrayKind({self.element_kind})"
 
     @classmethod
     def _union(cls, kinds) -> 'ArrayKind':
-        elem_kinds = set(e.kind for e in kinds)
+        elem_kinds = {e.kind for e in kinds}
         if len(elem_kinds) == 1:
             elemkind, = elem_kinds
         else:
@@ -155,12 +158,12 @@ class NDimArray(Printable):
         if self._loop_size == 0:
             raise ValueError("Index not valid with an empty array")
 
-        if len(index) != self._rank:
+        if len(index) != self._ndim:
             raise ValueError('Wrong number of array axes')
 
         real_index = 0
         # check if input index can exist in current indexing
-        for i in range(self._rank):
+        for i in range(self._ndim):
             if (index[i] >= self.shape[i]) or (index[i] < -self.shape[i]):
                 raise ValueError('Index ' + str(index) + ' out of border')
             if index[i] < 0:
@@ -171,7 +174,7 @@ class NDimArray(Printable):
 
     def _get_tuple_index(self, integer_index):
         index = []
-        for i, sh in enumerate(reversed(self.shape)):
+        for sh in reversed(self.shape):
             index.append(integer_index % sh)
             integer_index //= sh
         index.reverse()
@@ -189,7 +192,7 @@ class NDimArray(Printable):
         return None
 
     def _setter_iterable_check(self, value):
-        from sympy.matrices.matrices import MatrixBase
+        from sympy.matrices.matrixbase import MatrixBase
         if isinstance(value, (Iterable, MatrixBase, NDimArray)):
             raise NotImplementedError
 
@@ -214,7 +217,7 @@ class NDimArray(Printable):
 
     @classmethod
     def _handle_ndarray_creation_inputs(cls, iterable=None, shape=None, **kwargs):
-        from sympy.matrices.matrices import MatrixBase
+        from sympy.matrices.matrixbase import MatrixBase
         from sympy.tensor.array import SparseNDimArray
 
         if shape is None:
@@ -243,7 +246,7 @@ class NDimArray(Printable):
 
         if isinstance(iterable, (Dict, dict)) and shape is not None:
             new_dict = iterable.copy()
-            for k, v in new_dict.items():
+            for k in new_dict:
                 if isinstance(k, (tuple, Tuple)):
                     new_key = 0
                     for i, idx in enumerate(k):
@@ -291,20 +294,25 @@ class NDimArray(Printable):
         """
         return self._shape
 
+    @deprecated("Use .ndim instead", deprecated_since_version="1.15", active_deprecations_target="ndim-array-rank")
     def rank(self):
+        return self.ndim
+
+    @property
+    def ndim(self):
         """
-        Returns rank of array.
+        Returns number of dimensions of array.
 
         Examples
         ========
 
         >>> from sympy import MutableDenseNDimArray
         >>> a = MutableDenseNDimArray.zeros(3,4,5,6,3)
-        >>> a.rank()
+        >>> a.ndim
         5
 
         """
-        return self._rank
+        return self._ndim
 
     def diff(self, *args, **kwargs):
         """
@@ -360,9 +368,10 @@ class NDimArray(Printable):
             sh //= shape_left[0]
             return "[" + ", ".join([f(sh, shape_left[1:], i+e*sh, i+(e+1)*sh) for e in range(shape_left[0])]) + "]" # + "\n"*len(shape_left)
 
-        if self.rank() == 0:
+        if self.ndim == 0:
             return printer._print(self[()])
-
+        if 0 in self.shape:
+            return f"{self.__class__.__name__}([], {self.shape})"
         return f(self._loop_size, self.shape, 0, self._loop_size)
 
     def tolist(self):
@@ -417,7 +426,7 @@ class NDimArray(Printable):
         return type(self)(result_list, self.shape)
 
     def __mul__(self, other):
-        from sympy.matrices.matrices import MatrixBase
+        from sympy.matrices.matrixbase import MatrixBase
         from sympy.tensor.array import SparseNDimArray
         from sympy.tensor.array.arrayop import Flatten
 
@@ -434,7 +443,7 @@ class NDimArray(Printable):
         return type(self)(result_list, self.shape)
 
     def __rmul__(self, other):
-        from sympy.matrices.matrices import MatrixBase
+        from sympy.matrices.matrixbase import MatrixBase
         from sympy.tensor.array import SparseNDimArray
         from sympy.tensor.array.arrayop import Flatten
 
@@ -451,7 +460,7 @@ class NDimArray(Printable):
         return type(self)(result_list, self.shape)
 
     def __truediv__(self, other):
-        from sympy.matrices.matrices import MatrixBase
+        from sympy.matrices.matrixbase import MatrixBase
         from sympy.tensor.array import SparseNDimArray
         from sympy.tensor.array.arrayop import Flatten
 
@@ -525,7 +534,7 @@ class NDimArray(Printable):
         return not self == other
 
     def _eval_transpose(self):
-        if self.rank() != 2:
+        if self.ndim != 2:
             raise ValueError("array rank not 2")
         from .arrayop import permutedims
         return permutedims(self, (1, 0))
@@ -577,11 +586,11 @@ class NDimArray(Printable):
         if isinstance(index, (SYMPY_INTS, Integer, slice)):
             index = (index,)
 
-        if len(index) < self.rank():
+        if len(index) < self.ndim:
             index = tuple(index) + \
-                          tuple(slice(None) for i in range(len(index), self.rank()))
+                          tuple(slice(None) for i in range(len(index), self.ndim))
 
-        if len(index) > self.rank():
+        if len(index) > self.ndim:
             raise ValueError('Dimension of index greater than rank of array')
 
         return index

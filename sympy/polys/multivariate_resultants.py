@@ -8,6 +8,7 @@ are:
 Multivariate resultants are used to identify whether a multivariate
 system has common roots. That is when the resultant is equal to zero.
 """
+from __future__ import annotations
 from math import prod
 
 from sympy.core.mul import Mul
@@ -127,7 +128,7 @@ class DixonResultant():
 
         for idx in range(self.n):
             temp[idx] = self.dummy_variables[idx]
-            substitution = {var: t for var, t in zip(self.variables, temp)}
+            substitution = dict(zip(self.variables, temp))
             rows.append([f.subs(substitution) for f in self.polynomials])
 
         A = Matrix(rows)

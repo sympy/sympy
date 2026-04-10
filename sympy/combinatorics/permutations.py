@@ -1,3 +1,4 @@
+from __future__ import annotations
 import random
 from collections import defaultdict
 from collections.abc import Iterable
@@ -6,15 +7,16 @@ from functools import reduce
 from sympy.core.parameters import global_parameters
 from sympy.core.basic import Atom
 from sympy.core.expr import Expr
+from sympy.core.numbers import int_valued
 from sympy.core.numbers import Integer
 from sympy.core.sympify import _sympify
 from sympy.matrices import zeros
 from sympy.polys.polytools import lcm
 from sympy.printing.repr import srepr
-from sympy.utilities.iterables import (flatten, has_variety, minlex,
+from sympy.utilities.iterables import (flatten, has_variety,
     has_dups, runs, is_sequence)
 from sympy.utilities.misc import as_int
-from mpmath.libmp.libintmath import ifac
+from sympy.external.gmpy import factorial
 from sympy.multipledispatch import dispatch
 
 def _af_rmul(a, b):
@@ -377,7 +379,7 @@ class Cycle(dict):
         if not self and size is None:
             raise ValueError('must give size for empty Cycle')
         if size is not None:
-            big = max([i for i in self.keys() if self[i] != i] + [0])
+            big = max([i for i in self.keys() if self[i] != i] + [-1])
             size = max(size, big + 1)
         else:
             size = self.size
@@ -630,7 +632,7 @@ class Permutation(Atom):
     >>> Permutation(1, 2)(3)
     Traceback (most recent call last):
     ...
-    IndexError: list index out of range
+    TypeError: 3 should be an integer between 0 and 2
 
     This is ok: only the call to an out of range singleton is prohibited;
     otherwise the permutation autosizes:
@@ -884,7 +886,7 @@ class Permutation(Atom):
            Concrete Mathematics: A Foundation for Computer Science, 2nd ed.
            Reading, MA: Addison-Wesley, 1994.
 
-    .. [6] https://en.wikipedia.org/wiki/Permutation#Product_and_inverse
+    .. [6] https://en.wikipedia.org/w/index.php?oldid=499948155#Product_and_inverse
 
     .. [7] https://en.wikipedia.org/wiki/Lehmer_code
 
@@ -1050,6 +1052,12 @@ class Permutation(Atom):
         p._size = len(perm)
         return p
 
+    def copy(self):
+        return self.__class__(self.array_form)
+
+    def __getnewargs__(self):
+        return (self.array_form,)
+
     def _hashable_content(self):
         # the array_form (a list) is the Permutation arg, so we need to
         # return a tuple, instead
@@ -1137,7 +1145,7 @@ class Permutation(Atom):
         array_form, full_cyclic_form
         """
         if self._cyclic_form is not None:
-            return list(self._cyclic_form)
+            return [cycle[:] for cycle in self._cyclic_form]
         array_form = self.array_form
         unchecked = [True] * len(array_form)
         cyclic_form = []
@@ -1153,9 +1161,7 @@ class Permutation(Atom):
                     unchecked[j] = False
                 if len(cycle) > 1:
                     cyclic_form.append(cycle)
-                    assert cycle == list(minlex(cycle))
-        cyclic_form.sort()
-        self._cyclic_form = cyclic_form[:]
+        self._cyclic_form = [cycle[:] for cycle in cyclic_form]
         return cyclic_form
 
     @property
@@ -1207,7 +1213,7 @@ class Permutation(Atom):
         [0, 1, 2, 3]
         """
         a = self.array_form
-        return [i for i, e in enumerate(a) if a[i] != i]
+        return [i for i, e in enumerate(a) if e != i]
 
     def __add__(self, other):
         """Return permutation that is other higher in rank than self.
@@ -1289,6 +1295,28 @@ class Permutation(Atom):
         for i in range(1, len(args)):
             rv = args[i]*rv
         return rv
+
+    @classmethod
+    def prod(cls, perms: Iterable["Permutation"]) -> "Permutation":
+        """
+        Return the product of an iterable of permutations in multiplication
+        order.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics import Permutation
+        >>> a = Permutation([1, 0, 2])
+        >>> b = Permutation([0, 2, 1])
+        >>> Permutation.prod([a, b]) == a*b
+        True
+        >>> Permutation.prod([])
+        ()
+        """
+        perms = list(perms)
+        if not perms:
+            return cls([])
+        return cls.rmul(*reversed(perms))
 
     @classmethod
     def rmul_with_af(cls, *args):
@@ -1431,7 +1459,7 @@ class Permutation(Atom):
         >>> 2^p == p(2) == 9
         True
         """
-        if int(i) == i:
+        if int_valued(i):
             return self(i)
         else:
             raise NotImplementedError(
@@ -1554,8 +1582,7 @@ class Permutation(Atom):
                 res.append(tuple(x))
             elif nx > 2:
                 first = x[0]
-                for y in x[nx - 1:0:-1]:
-                    res.append((first, y))
+                res.extend((first, y) for y in x[nx - 1:0:-1])
         return res
 
     @classmethod
@@ -1647,7 +1674,7 @@ class Permutation(Atom):
             i = i[0]
             if not isinstance(i, Iterable):
                 i = as_int(i)
-                if i < 0 or i > self.size:
+                if i < 0 or i >= self.size:
                     raise TypeError(
                         "{} should be an integer between 0 and {}"
                         .format(i, self.size-1))
@@ -1796,7 +1823,7 @@ class Permutation(Atom):
 
         id_perm = list(range(n))
         n = int(n)
-        r = r % ifac(n)
+        r = r % factorial(n)
         _unrank1(n, r, id_perm)
         return self._af_new(id_perm)
 
@@ -1860,7 +1887,7 @@ class Permutation(Atom):
         rank_nonlex, unrank_nonlex
         """
         r = self.rank_nonlex()
-        if r == ifac(self.size) - 1:
+        if r == factorial(self.size) - 1:
             return None
         return self.unrank_nonlex(self.size, r + 1)
 
@@ -1890,7 +1917,7 @@ class Permutation(Atom):
         rho = self.array_form[:]
         n = self.size - 1
         size = n + 1
-        psize = int(ifac(n))
+        psize = int(factorial(n))
         for j in range(size - 1):
             rank += rho[j]*psize
             for i in range(j + 1, size):
@@ -1919,7 +1946,7 @@ class Permutation(Atom):
 
         length, order, rank, size
         """
-        return int(ifac(self.size))
+        return int(factorial(self.size))
 
     def parity(self):
         """
@@ -2120,7 +2147,7 @@ class Permutation(Atom):
         pos = [i for i in range(len(a) - 1) if a[i] > a[i + 1]]
         return pos
 
-    def max(self):
+    def max(self) -> int:
         """
         The maximum element moved by the permutation.
 
@@ -2137,14 +2164,12 @@ class Permutation(Atom):
 
         min, descents, ascents, inversions
         """
-        max = 0
         a = self.array_form
-        for i in range(len(a)):
-            if a[i] != i and a[i] > max:
-                max = a[i]
-        return max
+        if not a:
+            return 0
+        return max(_a for i, _a in enumerate(a) if _a != i)
 
-    def min(self):
+    def min(self) -> int:
         """
         The minimum element moved by the permutation.
 
@@ -2162,11 +2187,9 @@ class Permutation(Atom):
         max, descents, ascents, inversions
         """
         a = self.array_form
-        min = len(a)
-        for i in range(len(a)):
-            if a[i] != i and a[i] < min:
-                min = a[i]
-        return min
+        if not a:
+            return 0
+        return min(_a for i, _a in enumerate(a) if _a != i)
 
     def inversions(self):
         """
@@ -2200,7 +2223,7 @@ class Permutation(Atom):
         References
         ==========
 
-        .. [1] http://www.cp.eng.chula.ac.th/~piak/teaching/algo/algo2008/count-inv.htm
+        .. [1] https://www.cp.eng.chula.ac.th/~prabhas//teaching/algo/algo2008/count-inv.htm
 
         """
         inversions = 0
@@ -2423,7 +2446,7 @@ class Permutation(Atom):
         """
         a = self.array_form
 
-        return sum([j for j in range(len(a) - 1) if a[j] > a[j + 1]])
+        return sum(j for j in range(len(a) - 1) if a[j] > a[j + 1])
 
     def runs(self):
         """
@@ -2560,7 +2583,7 @@ class Permutation(Atom):
         """
         perm = [0]*size
         r2 = 0
-        n = ifac(size)
+        n = factorial(size)
         pj = 1
         for j in range(2, size + 1):
             pj *= j
@@ -2822,7 +2845,7 @@ class Permutation(Atom):
         b = other.array_form
         if len(a) != len(b):
             raise ValueError("The permutations must be of the same size.")
-        return sum([abs(a[i] - b[i]) for i in range(len(a))])
+        return sum(abs(a[i] - b[i]) for i in range(len(a)))
 
     @classmethod
     def josephus(cls, m, n, s=1):
@@ -2859,7 +2882,7 @@ class Permutation(Atom):
 
         .. [1] https://en.wikipedia.org/wiki/Flavius_Josephus
         .. [2] https://en.wikipedia.org/wiki/Josephus_problem
-        .. [3] http://www.wou.edu/~burtonl/josephus.html
+        .. [3] https://web.archive.org/web/20171008094331/http://www.wou.edu/~burtonl/josephus.html
 
         """
         from collections import deque

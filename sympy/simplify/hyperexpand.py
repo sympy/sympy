@@ -56,6 +56,7 @@ It is described in great(er) detail in the Sphinx documentation.
 # o Deciding if one index quadruple is reachable from another is tricky. For
 #   this reason, we use hand-built routines to match and instantiate formulas.
 #
+from __future__ import annotations
 from collections import defaultdict
 from itertools import product
 from functools import reduce
@@ -197,7 +198,7 @@ def add_formulae(formulae):
     add([Rational(-1, 2)], [S.Half], exp(z) - sqrt(pi*z)*(-I)*erf(I*sqrt(z)))
 
     # Added to get nice results for Laplace transform of Fresnel functions
-    # http://functions.wolfram.com/07.22.03.6437.01
+    # https://functions.wolfram.com/07.22.03.6437.01
     # Basic rule
     #add([1], [Rational(3, 4), Rational(5, 4)],
     #    sqrt(pi) * (cos(2*sqrt(polar_lift(-1)*z))*fresnelc(2*root(polar_lift(-1)*z,4)/sqrt(pi)) +
@@ -364,7 +365,7 @@ def add_formulae(formulae):
                  [0, 0, 0, 0, 0]]))
 
     # 3F3
-    # This is rule: http://functions.wolfram.com/07.31.03.0134.01
+    # This is rule: https://functions.wolfram.com/07.31.03.0134.01
     # Initial reason to add it was a nice solution for
     # integrate(erf(a*z)/z**2, z) and same for erfc and erfi.
     # Basic rule
@@ -415,7 +416,7 @@ def add_meijerg_formulae(formulae):
         detect_uppergamma)
 
     def detect_3113(func):
-        """http://functions.wolfram.com/07.34.03.0984.01"""
+        """https://functions.wolfram.com/07.34.03.0984.01"""
         x = func.an[0]
         u, v, w = func.bm
         if _mod1((u - v).simplify()) == 0:
@@ -1608,14 +1609,14 @@ def devise_plan(target, origin, z):
         if len(al) != len(nal) or len(bk) != len(nbk):
             raise ValueError('%s not reachable from %s' % (target, origin))
 
-        al, nal, bk, nbk = [sorted(list(w), key=default_sort_key)
+        al, nal, bk, nbk = [sorted(w, key=default_sort_key)
             for w in [al, nal, bk, nbk]]
 
         def others(dic, key):
             l = []
-            for k, value in dic.items():
+            for k in dic:
                 if k != key:
-                    l += list(dic[k])
+                    l.extend(dic[k])
             return l
         aother = others(nabuckets, r)
         bother = others(nbbuckets, r)
@@ -1798,7 +1799,7 @@ def try_lerchphi(func):
             n = dep.exp
             dep = dep.base
         if dep == t:
-            a == 0
+            a = 0
         elif dep.is_Add:
             a, tmp = dep.as_independent(t)
             b = 1
@@ -1840,7 +1841,7 @@ def try_lerchphi(func):
     trans = {}
     for n, b in enumerate([S.One] + list(deriv.keys())):
         trans[b] = n
-    basis = [expand_func(b) for (b, _) in sorted(list(trans.items()),
+    basis = [expand_func(b) for (b, _) in sorted(trans.items(),
                                                  key=lambda x:x[1])]
     B = Matrix(basis)
     C = Matrix([[0]*len(B)])

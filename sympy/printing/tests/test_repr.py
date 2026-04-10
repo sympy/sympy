@@ -1,6 +1,8 @@
 from __future__ import annotations
 from typing import Any
 
+from sympy import Add, Mul
+from sympy.external.gmpy import GROUND_TYPES
 from sympy.testing.pytest import raises, warns_deprecated_sympy
 from sympy.assumptions.ask import Q
 from sympy.core.function import (Function, WildFunction)
@@ -58,9 +60,10 @@ def test_printmethod():
 
 def test_Add():
     sT(x + y, "Add(Symbol('x'), Symbol('y'))")
-    assert srepr(x**2 + 1, order='lex') == "Add(Pow(Symbol('x'), Integer(2)), Integer(1))"
+    assert srepr(x**2 + 1, order='lex') == "Add(Integer(1), Pow(Symbol('x'), Integer(2)))"
     assert srepr(x**2 + 1, order='old') == "Add(Integer(1), Pow(Symbol('x'), Integer(2)))"
     assert srepr(sympify('x + 3 - 2', evaluate=False), order='none') == "Add(Symbol('x'), Integer(3), Mul(Integer(-1), Integer(2)))"
+    assert srepr(Add(Add(Add(Integer(1), Integer(2), evaluate=False), Integer(3), evaluate=False), Integer(4), evaluate=False)) == "Add(Add(Add(Integer(1), Integer(2)), Integer(3)), Integer(4))"
 
 
 def test_more_than_255_args_issue_10259():
@@ -230,9 +233,10 @@ def test_settins():
 
 
 def test_Mul():
-    sT(3*x**3*y, "Mul(Integer(3), Pow(Symbol('x'), Integer(3)), Symbol('y'))")
+    sT(3*x**3*y, "Mul(Integer(3), Symbol('y'), Pow(Symbol('x'), Integer(3)))")
     assert srepr(3*x**3*y, order='old') == "Mul(Integer(3), Symbol('y'), Pow(Symbol('x'), Integer(3)))"
     assert srepr(sympify('(x+4)*2*x*7', evaluate=False), order='none') == "Mul(Add(Symbol('x'), Integer(4)), Integer(2), Symbol('x'), Integer(7))"
+    assert srepr(Mul(Symbol('x'), Integer(2), evaluate=False)) == "Mul(Symbol('x'), Integer(2))"
 
 
 def test_AlgebraicNumber():
@@ -281,9 +285,14 @@ def test_PolynomialRingBase():
 
 
 def test_DMP():
-    assert srepr(DMP([1, 2], ZZ)) == 'DMP([1, 2], ZZ)'
-    assert srepr(ZZ.old_poly_ring(x)([1, 2])) == \
-        "DMP([1, 2], ZZ, ring=GlobalPolynomialRing(ZZ, Symbol('x')))"
+    p1 = DMP([1, 2], ZZ)
+    p2 = ZZ.old_poly_ring(x)([1, 2])
+    if GROUND_TYPES != 'flint':
+        assert srepr(p1) == "DMP_Python([1, 2], ZZ)"
+        assert srepr(p2) == "DMP_Python([1, 2], ZZ)"
+    else:
+        assert srepr(p1) == "DUP_Flint([1, 2], ZZ)"
+        assert srepr(p2) == "DUP_Flint([1, 2], ZZ)"
 
 
 def test_FiniteExtension():
@@ -293,9 +302,11 @@ def test_FiniteExtension():
 
 def test_ExtensionElement():
     A = FiniteExtension(Poly(x**2 + 1, x))
-    assert srepr(A.generator) == \
-        "ExtElem(DMP([1, 0], ZZ, ring=GlobalPolynomialRing(ZZ, Symbol('x'))), FiniteExtension(Poly(x**2 + 1, x, domain='ZZ')))"
-
+    if GROUND_TYPES != 'flint':
+        ans = "ExtElem(DMP_Python([1, 0], ZZ), FiniteExtension(Poly(x**2 + 1, x, domain='ZZ')))"
+    else:
+        ans = "ExtElem(DUP_Flint([1, 0], ZZ), FiniteExtension(Poly(x**2 + 1, x, domain='ZZ')))"
+    assert srepr(A.generator) == ans
 
 def test_BooleanAtom():
     assert srepr(true) == "true"

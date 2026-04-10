@@ -1,3 +1,4 @@
+from __future__ import annotations
 from functools import reduce
 import operator
 
@@ -5,7 +6,7 @@ from sympy.core import Basic, sympify
 from sympy.core.add import add, Add, _could_extract_minus_sign
 from sympy.core.sorting import default_sort_key
 from sympy.functions import adjoint
-from sympy.matrices.matrices import MatrixBase
+from sympy.matrices.matrixbase import MatrixBase
 from sympy.matrices.expressions.transpose import transpose
 from sympy.strategies import (rm_id, unpack, flatten, sort, condition,
     exhaust, do_one, glom)
@@ -99,6 +100,10 @@ class MatAdd(MatrixExpr, Add):
         else:
             args = self.args
         return canonicalize(MatAdd(*args))
+
+    def _eval_derivative(self, x):
+        # MatAdd does not remove ZeroMatrix unless you call .doit():
+        return super()._eval_derivative(x).doit()
 
     def _eval_derivative_matrix_lines(self, x):
         add_lines = [arg._eval_derivative_matrix_lines(x) for arg in self.args]

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import annotations
 
 from sympy.core.function import Function
 from sympy.core.symbol import symbols
@@ -10,6 +11,7 @@ from sympy.physics.vector.printing import (VectorLatexPrinter, vpprint,
 
 
 a, b, c = symbols('a, b, c')
+
 alpha, omega, beta = dynamicsymbols('alpha, omega, beta')
 
 A = ReferenceFrame('A')
@@ -51,11 +53,11 @@ def test_vector_pretty_print():
     # w = alpha * N.x + sin(omega) * N.y + alpha / beta * N.z
 
     expected = """\
- 2
+ 2                               \n\
 a  n_x + b n_y + c*sin(alpha) n_z\
 """
     uexpected = """\
- 2
+ 2                           \n\
 a  n_x + b n_y + c⋅sin(α) n_z\
 """
 
@@ -69,20 +71,28 @@ a  n_x + b n_y + c⋅sin(α) n_z\
     assert unicode_vpretty(w) == uexpected
 
     expected = """\
-                     2
-a       b + c       c
-- n_x + ----- n_y + -- n_z
-b         a         b\
+                     2    \n\
+a       b + c       c     \n\
+- n_x + ----- n_y + -- n_z\n\
+b         a         b     \
 """
     uexpected = """\
-                     2
-a       b + c       c
-─ n_x + ───── n_y + ── n_z
-b         a         b\
+                     2    \n\
+a       b + c       c     \n\
+─ n_x + ───── n_y + ── n_z\n\
+b         a         b     \
 """
 
     assert ascii_vpretty(o) == expected
     assert unicode_vpretty(o) == uexpected
+
+    # https://github.com/sympy/sympy/issues/26731
+    assert ascii_vpretty(-A.x) == '-a_x'
+    assert unicode_vpretty(-A.x) == '-a_x'
+
+    # https://github.com/sympy/sympy/issues/26799
+    assert ascii_vpretty(0*A.x) == '0'
+    assert unicode_vpretty(0*A.x) == '0'
 
 
 def test_vector_latex():
@@ -179,12 +189,12 @@ def test_vector_latex_with_functions():
 def test_dyadic_pretty_print():
 
     expected = """\
- 2
+ 2                                           \n\
 a  n_x|n_y + b n_y|n_y + c*sin(alpha) n_z|n_y\
 """
 
     uexpected = """\
- 2
+ 2                                       \n\
 a  n_x⊗n_y + b n_y⊗n_y + c⋅sin(α) n_z⊗n_y\
 """
     assert ascii_vpretty(y) == expected
@@ -301,8 +311,22 @@ def test_vector_derivative_printing():
     v = omega.diff().diff().diff().diff().diff() * N.x
 
     assert vlatex(v) == r'\frac{d^{5}}{d t^{5}} \omega\mathbf{\hat{n}_x}'
-    assert unicode_vpretty(v) == '  5\n d\n───(ω) n_x\n  5\ndt'
-    assert ascii_vpretty(v) == '  5\n d\n---(omega) n_x\n  5\ndt'
+    expected = '''\
+ 5            \n\
+d             \n\
+---(omega) n_x\n\
+  5           \n\
+dt            \
+'''
+    uexpected = '''\
+ 5        \n\
+d         \n\
+───(ω) n_x\n\
+  5       \n\
+dt        \
+'''
+    assert unicode_vpretty(v) == uexpected
+    assert ascii_vpretty(v) == expected
 
 
 def test_vector_str_printing():
@@ -329,3 +353,78 @@ def test_issue_14041():
         r"\left(\dot{\phi} + \dot{\theta}\right)^{2}\mathbf{\hat{a}_x}"
     assert vlatex((phid*thetad)**a*A_frame.x) == \
         r"\left(\dot{\phi} \dot{\theta}\right)^{a}\mathbf{\hat{a}_x}"
+
+
+def test_issue_12157():
+    """
+    Test for proper pretty printing of vectors with fractions involved.
+    """
+
+    first_test = (a/b) * (N.x | N.y)
+
+    expected = '''\
+a        \n\
+- n_x|n_y\n\
+b        \
+'''
+    uexpected = '''\
+a        \n\
+─ n_x⊗n_y\n\
+b        \
+'''
+
+    assert ascii_vpretty(first_test) == expected
+    assert unicode_vpretty(first_test) == uexpected
+
+    second_test = ((a + b)/c) * (N.x | N.y)
+
+    expected = '''\
+a + b        \n\
+----- n_x|n_y\n\
+  c          \
+'''
+    uexpected = '''\
+a + b        \n\
+───── n_x⊗n_y\n\
+  c          \
+'''
+
+    assert ascii_vpretty(second_test) == expected
+    assert unicode_vpretty(second_test) == uexpected
+
+
+    third_test = (a/b) * (N.x | N.y) + (c/b) * (N.y | N.z)
+
+    expected ='''\
+a           c        \n\
+- n_x|n_y + - n_y|n_z\n\
+b           b        \
+'''
+    uexpected ='''\
+a           c        \n\
+─ n_x⊗n_y + ─ n_y⊗n_z\n\
+b           b        \
+'''
+
+    assert ascii_vpretty(third_test) == expected
+    assert unicode_vpretty(third_test) == uexpected
+
+    d = symbols('d')
+    # This case comes from the correct output example provided by @faze-geek in the issue
+    fourth_test = (d)*(N.x|N.z) + ((a*b**2 + (a*c)**2 + d*b*c)/(b + c))*(N.y|N.y)
+
+    expected = '''\
+             2  2      2                \n\
+            a *c  + a*b  + b*c*d        \n\
+d n_x|n_z + -------------------- n_y|n_y\n\
+                   b + c                \
+'''
+    uexpected = '''\
+             2  2      2                \n\
+            a ⋅c  + a⋅b  + b⋅c⋅d        \n\
+d n_x⊗n_z + ──────────────────── n_y⊗n_y\n\
+                   b + c                \
+'''
+
+    assert ascii_vpretty(fourth_test) == expected
+    assert unicode_vpretty(fourth_test) == uexpected

@@ -1,4 +1,5 @@
 """ A module which handles Matrix Expressions """
+from __future__ import annotations
 
 from .slice import MatrixSlice
 from .blockmatrix import BlockMatrix, BlockDiagMatrix, block_collapse, blockcut
@@ -19,7 +20,7 @@ from .dotproduct import DotProduct
 from .kronecker import kronecker_product, KroneckerProduct, combine_kronecker
 from .permutation import PermutationMatrix, MatrixPermute
 from .sets import MatrixSet
-from .special import ZeroMatrix, Identity, OneMatrix
+from .special import ZeroMatrix, Identity, OneMatrix, MatrixUnit
 
 __all__ = [
     'MatrixSlice',
@@ -34,6 +35,7 @@ __all__ = [
     'MatAdd',
 
     'Identity', 'MatrixExpr', 'MatrixSymbol', 'ZeroMatrix', 'OneMatrix',
+    'MatrixUnit',
     'matrix_symbols', 'MatrixSet',
 
     'MatMul',

@@ -22,10 +22,10 @@ class PlotSurface(PlotModeBase):
         self._calculating_verts_len = float(
             self.u_interval.v_len*self.v_interval.v_len)
 
-        verts = list()
+        verts = []
         b = self.bounds
         for u in self.u_set:
-            column = list()
+            column = []
             for v in self.v_set:
                 try:
                     _e = evaluate(u, v)  # calculate vertex

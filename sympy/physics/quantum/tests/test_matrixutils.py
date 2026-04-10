@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.random import randint
 
 from sympy.core.numbers import Integer
@@ -48,7 +49,7 @@ def test_matrix_tensor_product():
         l3[i] = i
     vec = Matrix([1, 2, 3])
 
-    #test for Matrix known 4x4 matricies
+    #test for Matrix known 4x4 matrices
     numpyl1 = np.array(l1.tolist())
     numpyl2 = np.array(l2.tolist())
     numpy_product = np.kron(numpyl1, numpyl2)

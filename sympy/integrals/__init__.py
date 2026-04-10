@@ -10,10 +10,12 @@
     >>> integrate(sin(x),x)
     -cos(x)
 """
+from __future__ import annotations
 from .integrals import integrate, Integral, line_integrate
 from .transforms import (mellin_transform, inverse_mellin_transform,
                         MellinTransform, InverseMellinTransform,
                         laplace_transform, inverse_laplace_transform,
+                        laplace_correspondence, laplace_initial_conds,
                         LaplaceTransform, InverseLaplaceTransform,
                         fourier_transform, inverse_fourier_transform,
                         FourierTransform, InverseFourierTransform,
@@ -31,6 +33,7 @@ __all__ = [
     'mellin_transform', 'inverse_mellin_transform', 'MellinTransform',
     'InverseMellinTransform', 'laplace_transform',
     'inverse_laplace_transform', 'LaplaceTransform',
+    'laplace_correspondence', 'laplace_initial_conds',
     'InverseLaplaceTransform', 'fourier_transform',
     'inverse_fourier_transform', 'FourierTransform',
     'InverseFourierTransform', 'sine_transform', 'inverse_sine_transform',

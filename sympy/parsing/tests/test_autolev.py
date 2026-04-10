@@ -1,3 +1,4 @@
+from __future__ import annotations
 import os
 
 from sympy.functions.elementary.trigonometric import (cos, sin)
@@ -30,7 +31,7 @@ def _test_examples(in_filename, out_filename, test_name=""):
             try:
                 line2 = generated_code.split('\n')[idx]
                 assert line1.rstrip() == line2.rstrip()
-            except Exception:
+            except (IndexError, AssertionError):
                 msg = 'mismatch in ' + test_name + ' in line no: {0}'
                 raise AssertionError(msg.format(idx+1))
 

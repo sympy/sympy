@@ -1,23 +1,20 @@
+from __future__ import annotations
 from sympy.core import S
-from sympy.core.function import Function, ArgumentIndexError
-from sympy.core.symbol import Dummy
+from sympy.core.expr import Expr
+from sympy.core.function import DefinedFunction, ArgumentIndexError
+from sympy.core.symbol import Dummy, uniquely_named_symbol
+from sympy.external.mpmath import local_workprec
 from sympy.functions.special.gamma_functions import gamma, digamma
 from sympy.functions.combinatorial.numbers import catalan
 from sympy.functions.elementary.complexes import conjugate
 
-# See mpmath #569 and SymPy #20569
-def betainc_mpmath_fix(a, b, x1, x2, reg=0):
-    from mpmath import betainc, mpf
-    if x1 == x2:
-        return mpf(0)
-    else:
-        return betainc(a, b, x1, x2, reg)
 
 ###############################################################################
 ############################ COMPLETE BETA  FUNCTION ##########################
 ###############################################################################
 
-class beta(Function):
+
+class beta(DefinedFunction):
     r"""
     The beta integral is called the Eulerian integral of the first kind by
     Legendre:
@@ -46,9 +43,9 @@ class beta(Function):
     Central Beta function. It satisfies properties like:
 
     .. math::
-        \mathrm{B}(x) = 2^{1 - 2x}\mathrm{B}(x, \frac{1}{2})
-        \mathrm{B}(x) = 2^{1 - 2x} cos(\pi x) \mathrm{B}(\frac{1}{2} - x, x)
-        \mathrm{B}(x) = \int_{0}^{1} \frac{t^x}{(1 + t)^{2x}} dt
+        \mathrm{B}(x) = 2^{1 - 2x}\mathrm{B}(x, \frac{1}{2}) \\
+        \mathrm{B}(x) = 2^{1 - 2x} cos(\pi x) \mathrm{B}(\frac{1}{2} - x, x) \\
+        \mathrm{B}(x) = \int_{0}^{1} \frac{t^x}{(1 + t)^{2x}} dt \\
         \mathrm{B}(x) = \frac{2}{x} \prod_{n = 1}^{\infty} \frac{n(n + 2x)}{(n + x)^2}
 
     Examples
@@ -100,8 +97,8 @@ class beta(Function):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Beta_function
-    .. [2] http://mathworld.wolfram.com/BetaFunction.html
-    .. [3] http://dlmf.nist.gov/5.12
+    .. [2] https://mathworld.wolfram.com/BetaFunction.html
+    .. [3] https://dlmf.nist.gov/5.12
 
     """
     unbranched = True
@@ -163,14 +160,14 @@ class beta(Function):
 
     def _eval_rewrite_as_Integral(self, x, y, **kwargs):
         from sympy.integrals.integrals import Integral
-        t = Dummy('t')
+        t = Dummy(uniquely_named_symbol('t', [x, y]).name)
         return Integral(t**(x - 1)*(1 - t)**(y - 1), (t, 0, 1))
 
 ###############################################################################
 ########################## INCOMPLETE BETA FUNCTION ###########################
 ###############################################################################
 
-class betainc(Function):
+class betainc(DefinedFunction):
     r"""
     The Generalized Incomplete Beta function is defined as
 
@@ -256,8 +253,14 @@ class betainc(Function):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def _eval_mpmath(self):
-        return betainc_mpmath_fix, self.args
+    def _eval_evalf(self, prec):
+        a, b, x1, x2 = [a._to_mpmath(prec) for a in self.args]
+        with local_workprec(prec) as ctx:
+            res = ctx.betainc(a, b, x1, x2, 0)
+            # Workaround for bug in mpmath < 1.4
+            if isinstance(res, int):
+                res = ctx.mpf(res)
+        return Expr._from_mpmath(res, prec)
 
     def _eval_is_real(self):
         if all(arg.is_real for arg in self.args):
@@ -268,7 +271,7 @@ class betainc(Function):
 
     def _eval_rewrite_as_Integral(self, a, b, x1, x2, **kwargs):
         from sympy.integrals.integrals import Integral
-        t = Dummy('t')
+        t = Dummy(uniquely_named_symbol('t', [a, b, x1, x2]).name)
         return Integral(t**(a - 1)*(1 - t)**(b - 1), (t, x1, x2))
 
     def _eval_rewrite_as_hyper(self, a, b, x1, x2, **kwargs):
@@ -279,7 +282,7 @@ class betainc(Function):
 #################### REGULARIZED INCOMPLETE BETA FUNCTION #####################
 ###############################################################################
 
-class betainc_regularized(Function):
+class betainc_regularized(DefinedFunction):
     r"""
     The Generalized Regularized Incomplete Beta function is given by
 
@@ -353,10 +356,16 @@ class betainc_regularized(Function):
     unbranched = True
 
     def __new__(cls, a, b, x1, x2):
-        return Function.__new__(cls, a, b, x1, x2)
+        return super().__new__(cls, a, b, x1, x2)
 
-    def _eval_mpmath(self):
-        return betainc_mpmath_fix, (*self.args, S(1))
+    def _eval_evalf(self, prec):
+        a, b, x1, x2 = [a._to_mpmath(prec) for a in self.args]
+        with local_workprec(prec) as ctx:
+            res = ctx.betainc(a, b, x1, x2, 1)
+            # Workaround for bug in mpmath < 1.4
+            if isinstance(res, int):
+                res = ctx.mpf(res)
+        return Expr._from_mpmath(res, prec)
 
     def fdiff(self, argindex):
         a, b, x1, x2 = self.args
@@ -378,7 +387,7 @@ class betainc_regularized(Function):
 
     def _eval_rewrite_as_Integral(self, a, b, x1, x2, **kwargs):
         from sympy.integrals.integrals import Integral
-        t = Dummy('t')
+        t = Dummy(uniquely_named_symbol('t', [a, b, x1, x2]).name)
         integrand = t**(a - 1)*(1 - t)**(b - 1)
         expr = Integral(integrand, (t, x1, x2))
         return expr / Integral(integrand, (t, 0, 1))

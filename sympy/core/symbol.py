@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING, overload
+
 from .assumptions import StdFactKB, _assume_defined
 from .basic import Basic, Atom
 from .cache import cacheit
@@ -12,14 +14,18 @@ from .singleton import S
 from .sorting import ordered
 from .sympify import sympify
 from sympy.logic.boolalg import Boolean
-from sympy.utilities.iterables import sift, is_sequence
+from sympy.utilities.iterables import is_sequence, _sift_true_false
 from sympy.utilities.misc import filldedent
 
 import string
 import re as _re
 import random
 from itertools import product
-from typing import Any
+
+
+if TYPE_CHECKING:
+    from typing import Any, Literal, Iterable, Callable
+    from typing_extensions import Self
 
 
 class Str(Atom):
@@ -36,10 +42,12 @@ class Str(Atom):
     """
     __slots__ = ('name',)
 
+    name: str
+
     def __new__(cls, name, **kwargs):
         if not isinstance(name, str):
             raise TypeError("name should be a string, not %s" % repr(type(name)))
-        obj = Expr.__new__(cls, **kwargs)
+        obj = super().__new__(cls, **kwargs)
         obj.name = name
         return obj
 
@@ -50,18 +58,22 @@ class Str(Atom):
         return (self.name,)
 
 
-def _filter_assumptions(kwargs):
+def _filter_assumptions(kwargs: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
     """Split the given dict into assumptions and non-assumptions.
     Keys are taken as assumptions if they correspond to an
     entry in ``_assume_defined``.
     """
-    assumptions, nonassumptions = map(dict, sift(kwargs.items(),
-        lambda i: i[0] in _assume_defined,
-        binary=True))
+    true, false = _sift_true_false(kwargs.items(), lambda i: i[0] in _assume_defined)
+    assumptions = dict(true)
+    nonassumptions = dict(false)
     Symbol._sanitize(assumptions)
     return assumptions, nonassumptions
 
-def _symbol(s, matching_symbol=None, **assumptions):
+
+def _symbol(s: str | Symbol,
+            matching_symbol: Symbol | None = None,
+            **assumptions: bool | None,
+            ) -> Symbol:
     """Return s if s is a Symbol, else if s is a string, return either
     the matching_symbol if the names are the same or else a new symbol
     with the same assumptions as the matching symbol (or the
@@ -127,7 +139,8 @@ def _symbol(s, matching_symbol=None, **assumptions):
     else:
         raise ValueError('symbol must be string for symbol name or Symbol')
 
-def uniquely_named_symbol(xname, exprs=(), compare=str, modify=None, **assumptions):
+
+def uniquely_named_symbol(xname, exprs=(), compare=str, modify=None, **assumptions) -> Symbol:
     """
     Return a symbol whose name is derivated from *xname* but is unique
     from any other symbols in *exprs*.
@@ -201,32 +214,77 @@ def uniquely_named_symbol(xname, exprs=(), compare=str, modify=None, **assumptio
     while any(x == compare(s) for s in names):
         x = modify(x)
     return _symbol(x, default, **assumptions)
+
+
 _uniquely_named_symbol = uniquely_named_symbol
 
-class Symbol(AtomicExpr, Boolean):
-    """
-    Assumptions:
-       commutative = True
 
-    You can override the default assumptions in the constructor.
+# XXX: We need type: ignore below because Expr and Boolean are incompatible as
+# superclasses. Really Symbol should not be a subclass of Boolean.
+
+
+class Symbol(AtomicExpr, Boolean): # type: ignore
+    """
+    A symbolic variable.
+
+    Parameters
+    ----------
+    name : str
+
+    **assumptions
+        Boolean keyword arguments specifying mathematical properties of the symbol.
+        See the `assumptions guide <https://docs.sympy.org/latest/guides/assumptions.html#predicates>`_
+        for a complete list of possible assumptions.
 
     Examples
-    ========
+    --------
+    Create a symbol with no assumptions:
 
-    >>> from sympy import symbols
-    >>> A,B = symbols('A,B', commutative = False)
-    >>> bool(A*B != B*A)
-    True
-    >>> bool(A*B*2 == 2*A*B) == True # multiplication by scalars is commutative
+    >>> from sympy import Symbol
+    >>> x = Symbol('x')
+    >>> x.is_real
+    >>> x.is_commutative
     True
 
+    Create a symbol with assumptions:
+
+    >>> y = Symbol('y', positive=True)
+    >>> y.is_real
+    True
+    >>> y.is_positive
+    True
+
+    Assumptions affect simplification:
+
+    >>> from sympy import sqrt
+    >>> z = Symbol('z', positive=True)
+    >>> sqrt(z**2)
+    z
+
+    Greek letters and subscripts:
+
+    >>> alpha = Symbol('alpha')
+    >>> alpha #doctest: +SKIP
+    α
+    >>> alpha_i = Symbol('alpha_i')
+    >>> alpha_i #doctest: +SKIP
+    αᵢ
+
+    See Also
+    --------
+    symbols : Create multiple symbols at once
+    Dummy   : Symbol guaranteed to be distinct from all other symbols, even with the same name
+    Wild    : Symbol that matches expressions in pattern matching
     """
 
     is_comparable = False
 
-    __slots__ = ('name',)
+    __slots__ = ('name', '_assumptions_orig', '_assumptions0')
 
     name: str
+    _assumptions_orig: dict[str, bool | None]
+    _assumptions0: tuple[tuple[str, bool | None], ...]
+    _assumptions: StdFactKB
 
     is_Symbol = True
     is_symbol = True
@@ -238,16 +296,16 @@ class Symbol(AtomicExpr, Boolean):
         return UndefinedKind
 
     @property
-    def _diff_wrt(self):
+    def _diff_wrt(self) -> bool:
         """Allow derivatives wrt Symbols.
 
         Examples
         ========
 
-            >>> from sympy import Symbol
-            >>> x = Symbol('x')
-            >>> x._diff_wrt
-            True
+        >>> from sympy import Symbol
+        >>> x = Symbol('x')
+        >>> x._diff_wrt
+        True
         """
         return True
 
@@ -282,7 +340,7 @@ class Symbol(AtomicExpr, Boolean):
         base.update(assumptions)
         return base
 
-    def __new__(cls, name, **assumptions):
+    def __new__(cls, name: str, **assumptions: bool | None) -> Self:
         """Symbols are identified by name and assumptions::
 
         >>> from sympy import Symbol
@@ -295,29 +353,59 @@ class Symbol(AtomicExpr, Boolean):
         cls._sanitize(assumptions, cls)
         return Symbol.__xnew_cached_(cls, name, **assumptions)
 
+
+    @staticmethod
+    @cacheit
+    def _canonical_assumptions(**assumptions):
+        # This is retained purely so that srepr can include commutative=True if
+        # that was explicitly specified but not if it was not. Ideally srepr
+        # should not distinguish these cases because the symbols otherwise
+        # compare equal and are considered equivalent.
+        #
+        # See https://github.com/sympy/sympy/issues/8873
+        #
+        assumptions_orig = assumptions.copy()
+
+        # The only assumption that is assumed by default is commutative=True:
+        assumptions.setdefault('commutative', True)
+
+        assumptions_kb = StdFactKB(assumptions)
+        assumptions0 = dict(assumptions_kb)
+
+        return assumptions_kb, assumptions_orig, assumptions0
+
     @staticmethod
     def __xnew__(cls, name, **assumptions):  # never cached (e.g. dummy)
         if not isinstance(name, str):
             raise TypeError("name should be a string, not %s" % repr(type(name)))
 
+
         obj = Expr.__new__(cls)
         obj.name = name
 
-        # TODO: Issue #8873: Forcing the commutative assumption here means
-        # later code such as ``srepr()`` cannot tell whether the user
-        # specified ``commutative=True`` or omitted it.  To workaround this,
-        # we keep a copy of the assumptions dict, then create the StdFactKB,
-        # and finally overwrite its ``._generator`` with the dict copy.  This
-        # is a bit of a hack because we assume StdFactKB merely copies the
-        # given dict as ``._generator``, but future modification might, e.g.,
-        # compute a minimal equivalent assumption set.
-        tmp_asm_copy = assumptions.copy()
+        assumptions_kb, assumptions_orig, assumptions0 = Symbol._canonical_assumptions(**assumptions)
 
-        # be strict about commutativity
-        is_commutative = fuzzy_bool(assumptions.get('commutative', True))
-        assumptions['commutative'] = is_commutative
-        obj._assumptions = StdFactKB(assumptions)
-        obj._assumptions._generator = tmp_asm_copy  # Issue #8873
+        obj._assumptions = assumptions_kb
+        obj._assumptions_orig = assumptions_orig
+        obj._assumptions0 = tuple(sorted(assumptions0.items()))
+
+        # The three assumptions dicts are all a little different:
+        #
+        #   >>> from sympy import Symbol
+        #   >>> x = Symbol('x', finite=True)
+        #   >>> x.is_positive  # query an assumption
+        #   >>> x._assumptions
+        #   {'finite': True, 'infinite': False, 'commutative': True, 'positive': None}
+        #   >>> x._assumptions0
+        #   {'finite': True, 'infinite': False, 'commutative': True}
+        #   >>> x._assumptions_orig
+        #   {'finite': True}
+        #
+        # Two symbols with the same name are equal if their _assumptions0 are
+        # the same. Arguably it should be _assumptions_orig that is being
+        # compared because that is more transparent to the user (it is
+        # what was passed to the constructor modulo changes made by _sanitize).
+
         return obj
 
     @staticmethod
@@ -326,7 +414,7 @@ class Symbol(AtomicExpr, Boolean):
         return Symbol.__xnew__(cls, name, **assumptions)
 
     def __getnewargs_ex__(self):
-        return ((self.name,), self.assumptions0)
+        return ((self.name,), self._assumptions_orig)
 
     # NOTE: __setstate__ is not needed for pickles created by __getnewargs_ex__
     # but was used before Symbol was changed to use __getnewargs_ex__ in v1.9.
@@ -338,8 +426,7 @@ class Symbol(AtomicExpr, Boolean):
             setattr(self, name, value)
 
     def _hashable_content(self):
-        # Note: user-specified assumptions not hashed, just derived ones
-        return (self.name,) + tuple(sorted(self.assumptions0.items()))
+        return (self.name,) + self._assumptions0
 
     def _eval_subs(self, old, new):
         if old.is_Pow:
@@ -351,8 +438,7 @@ class Symbol(AtomicExpr, Boolean):
 
     @property
     def assumptions0(self):
-        return {key: value for key, value
-                in self._assumptions.items() if value is not None}
+        return dict(self._assumptions0)
 
     @cacheit
     def sort_key(self, order=None):
@@ -363,9 +449,10 @@ class Symbol(AtomicExpr, Boolean):
         return Dummy(self.name) if self.is_commutative is not False \
             else Dummy(self.name, commutative=self.is_commutative)
 
-    def as_real_imag(self, deep=True, **hints):
+    def as_real_imag(self, deep=True, **hints) -> tuple[Expr, Expr]:
+        # XXX: Remove the ignore flag
         if hints.get('ignore') == self:
-            return None
+            return None # type: ignore
         else:
             from sympy.functions.elementary.complexes import im, re
             return (re(self), im(self))
@@ -376,7 +463,7 @@ class Symbol(AtomicExpr, Boolean):
         return self not in wrt
 
     @property
-    def free_symbols(self):
+    def free_symbols(self) -> set[Basic]:
         return {self}
 
     binary_symbols = free_symbols  # in this case, not always
@@ -423,7 +510,9 @@ class Dummy(Symbol):
 
     is_Dummy = True
 
-    def __new__(cls, name=None, dummy_index=None, **assumptions):
+    def __new__(cls, name: str | None = None,
+                     dummy_index: int | None = None,
+                     **assumptions: bool | None) -> Self:
         if dummy_index is not None:
             assert name is not None, "If you specify a dummy_index, you must also provide a name"
 
@@ -442,7 +531,7 @@ class Dummy(Symbol):
         return obj
 
     def __getnewargs_ex__(self):
-        return ((self.name, self.dummy_index), self.assumptions0)
+        return ((self.name, self.dummy_index), self._assumptions_orig)
 
     @cacheit
     def sort_key(self, order=None):
@@ -546,7 +635,11 @@ class Wild(Symbol):
 
     __slots__ = ('exclude', 'properties')
 
-    def __new__(cls, name, exclude=(), properties=(), **assumptions):
+    def __new__(cls, name: str,
+                exclude: Iterable[Expr | complex] = (),
+                properties: Iterable[Callable[[Expr], bool | None]] = (),
+                **assumptions: bool | None,
+            ) -> Self:
         exclude = tuple([sympify(x) for x in exclude])
         properties = tuple(properties)
         cls._sanitize(assumptions, cls)
@@ -583,7 +676,17 @@ class Wild(Symbol):
 _range = _re.compile('([0-9]*:[0-9]+|[a-zA-Z]?:[a-zA-Z])')
 
 
-def symbols(names, *, cls=Symbol, **args) -> Any:
+@overload
+def symbols(names: str, *, cls: type[Symbol] = Symbol, seq: Literal[True],
+            **kwargs: bool | int) -> tuple[Symbol, ...]: ...
+@overload
+def symbols(names: str, *, cls: Any = Symbol, seq: Literal[True],
+            **kwargs: bool | int) -> tuple[Any, ...]: ...
+@overload
+def symbols(names: str, *, cls: Any = Symbol, seq: Literal[False] = False,
+            **kwargs: bool | int) -> Any: ...
+
+def symbols(names, *, cls: Any = Symbol, **args) -> Any:
     r"""
     Transform strings into instances of :class:`Symbol` class.
 

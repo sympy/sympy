@@ -195,6 +195,7 @@ Step 13 : For each solution in ``sol``, apply an inverse transformation,
 so that the solutions of the original equation are found using the
 solutions of the equation in its normal form.
 """
+from __future__ import annotations
 
 
 from itertools import product
@@ -271,7 +272,7 @@ def linsolve_dict(eq, syms):
     sol = linsolve(eq, syms)
     if not sol:
         return {}
-    return {k:v for k, v in zip(syms, list(sol)[0])}
+    return dict(zip(syms, list(sol)[0]))
 
 
 def match_riccati(eq, f, x):

@@ -103,6 +103,7 @@ See the appropriate docstrings for a detailed explanation of the output.
 #      - Idx with range smaller than dimension of Indexed
 #      - Idx with stepsize != 1
 #      - Idx with step determined by function call
+from __future__ import annotations
 from collections.abc import Iterable
 
 from sympy.core.numbers import Number
@@ -139,14 +140,13 @@ class Indexed(Expr):
     True
 
     """
-    is_commutative = True
     is_Indexed = True
     is_symbol = True
     is_Atom = True
 
     def __new__(cls, base, *args, **kw_args):
         from sympy.tensor.array.ndim_array import NDimArray
-        from sympy.matrices.matrices import MatrixBase
+        from sympy.matrices.matrixbase import MatrixBase
 
         if not args:
             raise IndexException("Indexed needs at least one index.")
@@ -169,10 +169,8 @@ class Indexed(Expr):
 
         obj = Expr.__new__(cls, base, *args, **kw_args)
 
-        try:
-            IndexedBase._set_assumptions(obj, base.assumptions0)
-        except AttributeError:
-            IndexedBase._set_assumptions(obj, {})
+        IndexedBase._set_assumptions(obj, base.assumptions0)
+
         return obj
 
     def _hashable_content(self):
@@ -293,14 +291,14 @@ class Indexed(Expr):
             upper = getattr(i, 'upper', None)
             lower = getattr(i, 'lower', None)
             if None in (upper, lower):
-                raise IndexException(filldedent("""
-                    Range is not defined for all indices in: %s""" % self))
+                raise IndexException(filldedent(f"""
+                    Range is not defined for all indices in: {self}"""))
             try:
                 size = upper - lower + 1
             except TypeError:
-                raise IndexException(filldedent("""
+                raise IndexException(filldedent(f"""
                     Shape cannot be inferred from Idx with
-                    undefined range: %s""" % self))
+                    undefined range: {self}"""))
             sizes.append(size)
         return Tuple(*sizes)
 
@@ -337,7 +335,7 @@ class Indexed(Expr):
 
     def _sympystr(self, p):
         indices = list(map(p.doprint, self.indices))
-        return "%s[%s]" % (p.doprint(self.base), ", ".join(indices))
+        return f"{p.doprint(self.base)}[{', '.join(indices)}]"
 
     @property
     def free_symbols(self):
@@ -428,7 +426,6 @@ class IndexedBase(Expr, NotIterable):
     >>> C_inherit == C_explicit
     True
     """
-    is_commutative = True
     is_symbol = True
     is_Atom = True
 
@@ -442,7 +439,7 @@ class IndexedBase(Expr, NotIterable):
         obj._assumptions._generator = tmp_asm_copy  # Issue #8873
 
     def __new__(cls, label, shape=None, *, offset=S.Zero, strides=None, **kw_args):
-        from sympy.matrices.matrices import MatrixBase
+        from sympy.matrices.matrixbase import MatrixBase
         from sympy.tensor.array.ndim_array import NDimArray
 
         assumptions, kw_args = _filter_assumptions(kw_args)
@@ -661,8 +658,8 @@ class Idx(Expr):
 
         elif is_sequence(range):
             if len(range) != 2:
-                raise ValueError(filldedent("""
-                    Idx range tuple must have length 2, but got %s""" % len(range)))
+                raise ValueError(filldedent(f"""
+                    Idx range tuple must have length 2, but got {len(range)}"""))
             for bound in range:
                 if (bound.is_integer is False and bound is not S.Infinity
                         and bound is not S.NegativeInfinity):

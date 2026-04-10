@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy import MatAdd
 from sympy.algebras.quaternion import Quaternion
 from sympy.assumptions.ask import Q
@@ -27,12 +28,15 @@ from sympy.integrals.integrals import Integral
 from sympy.logic.boolalg import (Equivalent, false, true, Xor)
 from sympy.matrices.dense import Matrix
 from sympy.matrices.expressions.matexpr import MatrixSymbol
+from sympy.matrices.expressions import Identity
 from sympy.matrices.expressions.slice import MatrixSlice
 from sympy.matrices import SparseMatrix
 from sympy.polys.polytools import factor
 from sympy.series.limits import Limit
 from sympy.series.order import O
 from sympy.sets.sets import (Complement, FiniteSet, Interval, SymmetricDifference)
+from sympy.stats import (Covariance, Expectation, Probability, Variance)
+from sympy.stats.rv import RandomSymbol
 from sympy.external import import_module
 from sympy.physics.control.lti import TransferFunction, Series, Parallel, \
     Feedback, TransferFunctionMatrix, MIMOSeries, MIMOParallel, MIMOFeedback
@@ -460,8 +464,6 @@ def test_PolyElement():
     assert str(x - 1) == "x - 1"
     assert str(x + 1) == "x + 1"
     assert str(x**2) == "x**2"
-    assert str(x**(-2)) == "x**(-2)"
-    assert str(x**QQ(1, 2)) == "x**(1/2)"
 
     assert str((u**2 + 3*u*v + 1)*x**2*y + u + 1) == "(u**2 + 3*u*v + 1)*x**2*y + u + 1"
     assert str((u**2 + 3*u*v + 1)*x**2*y + (u + 1)*x) == "(u**2 + 3*u*v + 1)*x**2*y + (u + 1)*x"
@@ -646,9 +648,9 @@ def test_RootSum():
     f = x**5 + 2*x - 1
 
     assert str(
-        RootSum(f, Lambda(z, z), auto=False)) == "RootSum(x**5 + 2*x - 1)"
+        RootSum(f, Lambda(z, z), auto=False)) == "RootSum(w**5 + 2*w - 1)"
     assert str(RootSum(f, Lambda(
-        z, z**2), auto=False)) == "RootSum(x**5 + 2*x - 1, Lambda(z, z**2))"
+        z, z**2), auto=False)) == "RootSum(w**5 + 2*w - 1, Lambda(w, w**2))"
 
 
 def test_GroebnerBasis():
@@ -915,6 +917,11 @@ def test_empty_printer():
     assert str_printer.emptyPrinter(x*y) == "x*y"
     assert str_printer.emptyPrinter(32) == "32"
 
+def test_decimal_printer():
+    dec_printer = StrPrinter(settings={"dps":3})
+    f = Function('f')
+    assert dec_printer.doprint(f(1.329294)) == "f(1.33)"
+
 
 def test_settings():
     raises(TypeError, lambda: sstr(S(4), method="garbage"))
@@ -1038,7 +1045,7 @@ def test_Equivalent():
     assert str(Equivalent(y, x)) == "Equivalent(x, y)"
 
 def test_Xor():
-    assert str(Xor(y, x, evaluate=False)) == "x ^ y"
+    assert str(Xor(y, x, evaluate=False)) == "y ^ x"
 
 def test_Complement():
     assert str(Complement(S.Reals, S.Naturals)) == 'Complement(Reals, Naturals)'
@@ -1052,6 +1059,88 @@ def test_UnevaluatedExpr():
     a, b = symbols("a b")
     expr1 = 2*UnevaluatedExpr(a+b)
     assert str(expr1) == "2*(a + b)"
+
+    x = symbols("x")
+    ue1 = UnevaluatedExpr(-2*x**2 - 9*x + 5)
+    assert str(1 + ue1) == "1 + (-2*x**2 - 9*x + 5)"
+    assert str(1 - ue1) == "1 - (-2*x**2 - 9*x + 5)"
+
+    ue2 = UnevaluatedExpr(-2*x**2 + 3*x + 2)
+    ue3 = UnevaluatedExpr(-5*x**2 + 6*x - 7)
+    assert str(ue2 + ue3) == "(-5*x**2 + 6*x - 7) + (-2*x**2 + 3*x + 2)"
+    assert str(ue2 - ue3) == "-(-5*x**2 + 6*x - 7) + (-2*x**2 + 3*x + 2)"
+
+    u = UnevaluatedExpr(2)
+    assert str(u) == "2"
+    assert str(-u) == "-2"
+    assert str(2 * u) == "2*2"
+    assert str(-2 * u) == "-2*2"
+    assert str(x**2 * u) == "x**2*2"
+    assert str(-x**2 * u) == "-x**2*2"
+
+    u = UnevaluatedExpr(-2)
+    assert str(u) == "-2"
+    assert str(-u) == "-(-2)"
+    assert str(2 * u) == "2*(-2)"
+    assert str(-2 * u) == "-2*(-2)"
+    assert str(x**2 * u) == "x**2*(-2)"
+    assert str(-x**2 * u) == "-x**2*(-2)"
+
+    u = UnevaluatedExpr(x)
+    assert str(u) == "x"
+    assert str(-u) == "-x"
+    assert str(2 * u) == "2*x"
+    assert str(-2 * u) == "-2*x"
+    assert str(x**2 * u) == "x**2*x"
+    assert str(-x**2 * u) == "-x**2*x"
+
+    u = UnevaluatedExpr(-x)
+    assert str(u) == "-x"
+    assert str(-u) == "-(-x)"
+    assert str(2 * u) == "2*(-x)"
+    assert str(-2 * u) == "-2*(-x)"
+    assert str(x**2 * u) == "x**2*(-x)"
+    assert str(-x**2 * u) == "-x**2*(-x)"
+
+    u = UnevaluatedExpr(x**2)
+    assert str(u) == "x**2"
+    assert str(-u) == "-x**2"
+    assert str(2 * u) == "2*x**2"
+    assert str(-2 * u) == "-2*x**2"
+    assert str(x**2 * u) == "x**2*x**2"
+    assert str(-x**2 * u) == "-x**2*x**2"
+
+    u = UnevaluatedExpr(-x**2)
+    assert str(u) == "-x**2"
+    assert str(-u) == "-(-x**2)"
+    assert str(2 * u) == "2*(-x**2)"
+    assert str(-2 * u) == "-2*(-x**2)"
+    assert str(x**2 * u) == "x**2*(-x**2)"
+    assert str(-x**2 * u) == "-x**2*(-x**2)"
+
+    u = UnevaluatedExpr(x * (x + 2))
+    assert str(u) == "x*(x + 2)"
+    assert str(-u) == "-(x*(x + 2))"
+    assert str(2 * u) == "2*(x*(x + 2))"
+    assert str(-2 * u) == "-2*(x*(x + 2))"
+    assert str(x**2 * u) == "x**2*(x*(x + 2))"
+    assert str(-x**2 * u) == "-x**2*(x*(x + 2))"
+
+    u = UnevaluatedExpr(-x * (x + 2))
+    assert str(u) == "-x*(x + 2)"
+    assert str(-u) == "-(-x*(x + 2))"
+    assert str(2 * u) == "2*(-x*(x + 2))"
+    assert str(-2 * u) == "-2*(-x*(x + 2))"
+    assert str(x**2 * u) == "x**2*(-x*(x + 2))"
+    assert str(-x**2 * u) == "-x**2*(-x*(x + 2))"
+
+    u = UnevaluatedExpr(x + 2)
+    assert str(u) == "x + 2"
+    assert str(-1 * u) == "-(x + 2)"
+    assert str(3 * u) == "3*(x + 2)"
+    assert str(-3 * u) == "-3*(x + 2)"
+    assert str(x**2 * u) == "x**2*(x + 2)"
+    assert str(-x**2 * u) == "-x**2*(x + 2)"
 
 
 def test_MatrixElement_printing():
@@ -1160,6 +1249,10 @@ def test_NDimArray():
     assert sstr(NDimArray(1.0), full_prec=False) == '1.0'
     assert sstr(NDimArray([1.0, 2.0]), full_prec=True) == '[1.00000000000000, 2.00000000000000]'
     assert sstr(NDimArray([1.0, 2.0]), full_prec=False) == '[1.0, 2.0]'
+    assert sstr(NDimArray([], (0,))) == 'ImmutableDenseNDimArray([], (0,))'
+    assert sstr(NDimArray([], (0, 0))) == 'ImmutableDenseNDimArray([], (0, 0))'
+    assert sstr(NDimArray([], (0, 1))) == 'ImmutableDenseNDimArray([], (0, 1))'
+    assert sstr(NDimArray([], (1, 0))) == 'ImmutableDenseNDimArray([], (1, 0))'
 
 def test_Predicate():
     assert sstr(Q.even) == 'Q.even'
@@ -1173,3 +1266,24 @@ def test_printing_str_array_expressions():
     M = MatrixSymbol("M", 3, 3)
     N = MatrixSymbol("N", 3, 3)
     assert sstr(ArrayElement(M*N, [x, 0])) == "(M*N)[x, 0]"
+
+def test_printing_stats():
+    # issue 24132
+    x = RandomSymbol("x")
+    y = RandomSymbol("y")
+    z1 = Probability(x > 0)*Identity(2)
+    z2 = Expectation(x)*Identity(2)
+    z3 = Variance(x)*Identity(2)
+    z4 = Covariance(x, y) * Identity(2)
+
+    assert str(z1) == "Probability(x > 0)*I"
+    assert str(z2) == "Expectation(x)*I"
+    assert str(z3) == "Variance(x)*I"
+    assert str(z4) ==  "Covariance(x, y)*I"
+    assert z1.is_commutative == False
+    assert z2.is_commutative == False
+    assert z3.is_commutative == False
+    assert z4.is_commutative == False
+    assert z2._eval_is_commutative() == False
+    assert z3._eval_is_commutative() == False
+    assert z4._eval_is_commutative() == False

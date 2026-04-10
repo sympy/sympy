@@ -1,3 +1,4 @@
+# noqa: I002
 """
 SymPy is a Python library for symbolic mathematics. It aims to become a
 full-featured computer algebra system (CAS) while keeping the code as simple
@@ -12,9 +13,10 @@ See the webpage for more information and documentation:
 """
 
 
+# Keep this in sync with setup.py/pyproject.toml
 import sys
-if sys.version_info < (3, 8):
-    raise ImportError("Python version 3.8 or above is required for SymPy.")
+if sys.version_info < (3, 9):
+    raise ImportError("Python version 3.9 or above is required for SymPy.")
 del sys
 
 
@@ -47,14 +49,16 @@ def __sympy_debug():
     else:
         raise RuntimeError("unrecognized value for SYMPY_DEBUG: %s" %
                            debug_str)
+# Fails py2 test if using type hinting
 SYMPY_DEBUG = __sympy_debug()  # type: bool
+
 
 from .core import (sympify, SympifyError, cacheit, Basic, Atom,
         preorder_traversal, S, Expr, AtomicExpr, UnevaluatedExpr, Symbol,
         Wild, Dummy, symbols, var, Number, Float, Rational, Integer,
         NumberSymbol, RealNumber, igcd, ilcm, seterr, E, I, nan, oo, pi, zoo,
         AlgebraicNumber, comp, mod_inverse, Pow, integer_nthroot, integer_log,
-        Mul, prod, Add, Mod, Rel, Eq, Ne, Lt, Le, Gt, Ge, Equality,
+        trailing, Mul, prod, Add, Mod, Rel, Eq, Ne, Lt, Le, Gt, Ge, Equality,
         GreaterThan, LessThan, Unequality, StrictGreaterThan, StrictLessThan,
         vectorize, Lambda, WildFunction, Derivative, diff, FunctionClass,
         Function, Subs, expand, PoleError, count_ops, expand_mul, expand_log,
@@ -62,14 +66,14 @@ from .core import (sympify, SympifyError, cacheit, Basic, Atom,
         expand_power_base, expand_power_exp, arity, PrecisionExhausted, N,
         evalf, Tuple, Dict, gcd_terms, factor_terms, factor_nc, evaluate,
         Catalan, EulerGamma, GoldenRatio, TribonacciConstant, bottom_up, use,
-        postorder_traversal, default_sort_key, ordered)
+        postorder_traversal, default_sort_key, ordered, num_digits)
 
 from .logic import (to_cnf, to_dnf, to_nnf, And, Or, Not, Xor, Nand, Nor,
         Implies, Equivalent, ITE, POSform, SOPform, simplify_logic, bool_map,
         true, false, satisfiable)
 
 from .assumptions import (AppliedPredicate, Predicate, AssumptionsContext,
-        assuming, Q, ask, register_handler, remove_handler, refine)
+        assuming, Q, ask, refine)
 
 from .polys import (Poly, PurePoly, poly_from_expr, parallel_poly_from_expr,
         degree, total_degree, degree_list, LC, LM, LT, pdiv, prem, pquo,
@@ -77,11 +81,12 @@ from .polys import (Poly, PurePoly, poly_from_expr, parallel_poly_from_expr,
         subresultants, resultant, discriminant, cofactors, gcd_list, gcd,
         lcm_list, lcm, terms_gcd, trunc, monic, content, primitive, compose,
         decompose, sturm, gff_list, gff, sqf_norm, sqf_part, sqf_list, sqf,
-        factor_list, factor, intervals, refine_root, count_roots, real_roots,
-        nroots, ground_roots, nth_power_roots_poly, cancel, reduced, groebner,
-        is_zero_dimensional, GroebnerBasis, poly, symmetrize, horner,
-        interpolate, rational_interpolate, viete, together,
-        BasePolynomialError, ExactQuotientFailed, PolynomialDivisionFailed,
+        factor_list, factor, intervals, refine_root, count_roots, all_roots,
+        real_roots, nroots, ground_roots, nth_power_roots_poly, cancel,
+        reduced, groebner, is_zero_dimensional, hurwitz_conditions,
+        schur_conditions, GroebnerBasis, poly, symmetrize, horner, interpolate,
+        rational_interpolate, viete, together, BasePolynomialError,
+        ExactQuotientFailed, PolynomialDivisionFailed,
         OperationNotSupported, HeuristicGCDFailed, HomomorphismFailed,
         IsomorphismFailed, ExtraneousFactors, EvaluationFailed,
         RefinementFailed, CoercionFailed, NotInvertible, NotReversible,
@@ -91,7 +96,7 @@ from .polys import (Poly, PurePoly, poly_from_expr, parallel_poly_from_expr,
         PolificationFailed, OptionError, FlagError, minpoly,
         minimal_polynomial, primitive_element, field_isomorphism,
         to_number_field, isolate, round_two, prime_decomp, prime_valuation,
-        itermonomials, Monomial, lex, grlex,
+        galois_group, itermonomials, Monomial, lex, grlex,
         grevlex, ilex, igrlex, igrevlex, CRootOf, rootof, RootOf,
         ComplexRootOf, RootSum, roots, Domain, FiniteField, IntegerRing,
         RationalField, RealField, ComplexField, PythonFiniteField,
@@ -106,13 +111,15 @@ from .polys import (Poly, PurePoly, poly_from_expr, parallel_poly_from_expr,
         Options, ring, xring, vring, sring, field, xfield, vfield, sfield)
 
 from .series import (Order, O, limit, Limit, gruntz, series, approximants,
-        residue, EmptySequence, SeqPer, SeqFormula, sequence, SeqAdd, SeqMul,
-        fourier_series, fps, difference_delta, limit_seq)
+        pade_approximant, residue, EmptySequence, SeqPer, SeqFormula, sequence,
+        SeqAdd, SeqMul, fourier_series, fps, difference_delta, limit_seq)
 
 from .functions import (factorial, factorial2, rf, ff, binomial,
         RisingFactorial, FallingFactorial, subfactorial, carmichael,
         fibonacci, lucas, motzkin, tribonacci, harmonic, bernoulli, bell, euler,
-        catalan, genocchi, andre, partition, sqrt, root, Min, Max, Id,
+        catalan, genocchi, andre, partition, divisor_sigma, legendre_symbol,
+        jacobi_symbol, kronecker_symbol, mobius, primenu, primeomega,
+        totient, reduced_totient, primepi, sqrt, root, Min, Max, Id,
         real_root, Rem, cbrt, re, im, sign, Abs, conjugate, arg, polar_lift,
         periodic_argument, unbranched_argument, principal_branch, transpose,
         adjoint, polarify, unpolarify, sin, cos, tan, sec, csc, cot, sinc,
@@ -133,17 +140,17 @@ from .functions import (factorial, factorial2, rf, ff, binomial,
         Znm, elliptic_k, elliptic_f, elliptic_e, elliptic_pi, beta, mathieus,
         mathieuc, mathieusprime, mathieucprime, riemann_xi, betainc, betainc_regularized)
 
-from .ntheory import (nextprime, prevprime, prime, primepi, primerange,
+from .ntheory import (nextprime, prevprime, prime, primerange,
         randprime, Sieve, sieve, primorial, cycle_length, composite,
         compositepi, isprime, divisors, proper_divisors, factorint,
-        multiplicity, perfect_power, pollard_pm1, pollard_rho, primefactors,
-        totient, trailing, divisor_count, proper_divisor_count, divisor_sigma,
-        factorrat, reduced_totient, primenu, primeomega,
+        multiplicity, perfect_power, factor_cache, pollard_pm1, pollard_rho, primefactors,
+        divisor_count, proper_divisor_count,
+        factorrat,
         mersenne_prime_exponent, is_perfect, is_mersenne_prime, is_abundant,
-        is_deficient, is_amicable, abundance, npartitions, is_primitive_root,
-        is_quad_residue, legendre_symbol, jacobi_symbol, n_order, sqrt_mod,
+        is_deficient, is_amicable, is_carmichael, abundance, npartitions, is_primitive_root,
+        is_quad_residue, n_order, sqrt_mod,
         quadratic_residues, primitive_root, nthroot_mod, is_nthpow_residue,
-        sqrt_mod_iter, mobius, discrete_log, quadratic_congruence,
+        sqrt_mod_iter, discrete_log, quadratic_congruence,
         binomial_coefficients, binomial_coefficients_list,
         multinomial_coefficients, continued_fraction_periodic,
         continued_fraction_iterator, continued_fraction_reduce,
@@ -172,7 +179,7 @@ from .solvers import (solve, solve_linear_system, solve_linear_system_LU,
         solve_undetermined_coeffs, nsolve, solve_linear, checksol, det_quick,
         inv_quick, check_assumptions, failing_assumptions, diophantine,
         rsolve, rsolve_poly, rsolve_ratio, rsolve_hyper, checkodesol,
-        classify_ode, dsolve, homogeneous_order, solve_poly_system,
+        classify_ode, dsolve, homogeneous_order, solve_poly_system, factor_system,
         solve_triangulated, pde_separate, pde_separate_add, pde_separate_mul,
         pdsolve, classify_pde, checkpdesol, ode_order, reduce_inequalities,
         reduce_abs_inequality, reduce_abs_inequalities, solve_poly_inequality,
@@ -209,7 +216,8 @@ from .utilities import (flatten, group, take, subsets, variations,
 
 from .integrals import (integrate, Integral, line_integrate, mellin_transform,
         inverse_mellin_transform, MellinTransform, InverseMellinTransform,
-        laplace_transform, inverse_laplace_transform, LaplaceTransform,
+        laplace_transform, laplace_correspondence, laplace_initial_conds,
+        inverse_laplace_transform, LaplaceTransform,
         InverseLaplaceTransform, fourier_transform, inverse_fourier_transform,
         FourierTransform, InverseFourierTransform, sine_transform,
         inverse_sine_transform, SineTransform, InverseSineTransform,
@@ -242,7 +250,7 @@ from .printing import (pager_print, pretty, pretty_print, pprint,
         print_tree, StrPrinter, sstr, sstrrepr, TableForm, dotprint,
         maple_code, print_maple_code)
 
-test = lazy_function('sympy.testing.runtests', 'test')
+test = lazy_function('sympy.testing.runtests_pytest', 'test')
 doctest = lazy_function('sympy.testing.runtests', 'doctest')
 
 # This module causes conflicts with other modules:
@@ -265,7 +273,7 @@ __all__ = [
     'Symbol', 'Wild', 'Dummy', 'symbols', 'var', 'Number', 'Float',
     'Rational', 'Integer', 'NumberSymbol', 'RealNumber', 'igcd', 'ilcm',
     'seterr', 'E', 'I', 'nan', 'oo', 'pi', 'zoo', 'AlgebraicNumber', 'comp',
-    'mod_inverse', 'Pow', 'integer_nthroot', 'integer_log', 'Mul', 'prod',
+    'mod_inverse', 'Pow', 'integer_nthroot', 'integer_log', 'trailing', 'Mul', 'prod',
     'Add', 'Mod', 'Rel', 'Eq', 'Ne', 'Lt', 'Le', 'Gt', 'Ge', 'Equality',
     'GreaterThan', 'LessThan', 'Unequality', 'StrictGreaterThan',
     'StrictLessThan', 'vectorize', 'Lambda', 'WildFunction', 'Derivative',
@@ -275,7 +283,7 @@ __all__ = [
     'expand_power_exp', 'arity', 'PrecisionExhausted', 'N', 'evalf', 'Tuple',
     'Dict', 'gcd_terms', 'factor_terms', 'factor_nc', 'evaluate', 'Catalan',
     'EulerGamma', 'GoldenRatio', 'TribonacciConstant', 'bottom_up', 'use',
-    'postorder_traversal', 'default_sort_key', 'ordered',
+    'postorder_traversal', 'default_sort_key', 'ordered', 'num_digits',
 
     # sympy.logic
     'to_cnf', 'to_dnf', 'to_nnf', 'And', 'Or', 'Not', 'Xor', 'Nand', 'Nor',
@@ -284,7 +292,7 @@ __all__ = [
 
     # sympy.assumptions
     'AppliedPredicate', 'Predicate', 'AssumptionsContext', 'assuming', 'Q',
-    'ask', 'register_handler', 'remove_handler', 'refine',
+    'ask',  'refine',
 
     # sympy.polys
     'Poly', 'PurePoly', 'poly_from_expr', 'parallel_poly_from_expr', 'degree',
@@ -294,25 +302,25 @@ __all__ = [
     'gcd', 'lcm_list', 'lcm', 'terms_gcd', 'trunc', 'monic', 'content',
     'primitive', 'compose', 'decompose', 'sturm', 'gff_list', 'gff',
     'sqf_norm', 'sqf_part', 'sqf_list', 'sqf', 'factor_list', 'factor',
-    'intervals', 'refine_root', 'count_roots', 'real_roots', 'nroots',
-    'ground_roots', 'nth_power_roots_poly', 'cancel', 'reduced', 'groebner',
-    'is_zero_dimensional', 'GroebnerBasis', 'poly', 'symmetrize', 'horner',
-    'interpolate', 'rational_interpolate', 'viete', 'together',
-    'BasePolynomialError', 'ExactQuotientFailed', 'PolynomialDivisionFailed',
-    'OperationNotSupported', 'HeuristicGCDFailed', 'HomomorphismFailed',
-    'IsomorphismFailed', 'ExtraneousFactors', 'EvaluationFailed',
-    'RefinementFailed', 'CoercionFailed', 'NotInvertible', 'NotReversible',
-    'NotAlgebraic', 'DomainError', 'PolynomialError', 'UnificationFailed',
-    'GeneratorsError', 'GeneratorsNeeded', 'ComputationFailed',
-    'UnivariatePolynomialError', 'MultivariatePolynomialError',
-    'PolificationFailed', 'OptionError', 'FlagError', 'minpoly',
-    'minimal_polynomial', 'primitive_element', 'field_isomorphism',
-    'to_number_field', 'isolate', 'round_two', 'prime_decomp',
-    'prime_valuation', 'itermonomials', 'Monomial', 'lex', 'grlex',
-    'grevlex', 'ilex', 'igrlex', 'igrevlex', 'CRootOf', 'rootof', 'RootOf',
-    'ComplexRootOf', 'RootSum', 'roots', 'Domain', 'FiniteField',
-    'IntegerRing', 'RationalField', 'RealField', 'ComplexField',
-    'PythonFiniteField', 'GMPYFiniteField', 'PythonIntegerRing',
+    'intervals', 'refine_root', 'count_roots', 'all_roots', 'real_roots',
+    'nroots', 'ground_roots', 'nth_power_roots_poly', 'cancel', 'reduced',
+    'groebner', 'is_zero_dimensional', 'hurwitz_conditions', 'schur_conditions',
+    'GroebnerBasis', 'poly', 'symmetrize', 'horner', 'interpolate',
+    'rational_interpolate', 'viete', 'together', 'BasePolynomialError',
+    'ExactQuotientFailed', 'PolynomialDivisionFailed', 'OperationNotSupported',
+    'HeuristicGCDFailed', 'HomomorphismFailed', 'IsomorphismFailed',
+    'ExtraneousFactors', 'EvaluationFailed', 'RefinementFailed',
+    'CoercionFailed', 'NotInvertible', 'NotReversible', 'NotAlgebraic',
+    'DomainError', 'PolynomialError', 'UnificationFailed', 'GeneratorsError',
+    'GeneratorsNeeded', 'ComputationFailed', 'UnivariatePolynomialError',
+    'MultivariatePolynomialError', 'PolificationFailed', 'OptionError',
+    'FlagError', 'minpoly', 'minimal_polynomial', 'primitive_element',
+    'field_isomorphism', 'to_number_field', 'isolate', 'round_two',
+    'prime_decomp', 'prime_valuation', 'galois_group', 'itermonomials',
+    'Monomial', 'lex', 'grlex', 'grevlex', 'ilex', 'igrlex', 'igrevlex',
+    'CRootOf', 'rootof', 'RootOf', 'ComplexRootOf', 'RootSum', 'roots',
+    'Domain', 'FiniteField', 'IntegerRing', 'RationalField', 'RealField',
+    'ComplexField', 'PythonFiniteField', 'GMPYFiniteField', 'PythonIntegerRing',
     'GMPYIntegerRing', 'PythonRational', 'GMPYRationalField',
     'AlgebraicField', 'PolynomialRing', 'FractionField', 'ExpressionDomain',
     'FF_python', 'FF_gmpy', 'ZZ_python', 'ZZ_gmpy', 'QQ_python', 'QQ_gmpy',
@@ -320,20 +328,23 @@ __all__ = [
     'construct_domain', 'swinnerton_dyer_poly', 'cyclotomic_poly',
     'symmetric_poly', 'random_poly', 'interpolating_poly', 'jacobi_poly',
     'chebyshevt_poly', 'chebyshevu_poly', 'hermite_poly', 'hermite_prob_poly',
-    'legendre_poly', 'laguerre_poly', 'apart', 'apart_list', 'assemble_partfrac_list',
-    'Options', 'ring', 'xring', 'vring', 'sring', 'field', 'xfield', 'vfield',
-    'sfield',
+    'legendre_poly', 'laguerre_poly', 'apart', 'apart_list',
+    'assemble_partfrac_list', 'Options', 'ring', 'xring', 'vring', 'sring',
+    'field', 'xfield', 'vfield', 'sfield',
 
     # sympy.series
     'Order', 'O', 'limit', 'Limit', 'gruntz', 'series', 'approximants',
-    'residue', 'EmptySequence', 'SeqPer', 'SeqFormula', 'sequence', 'SeqAdd',
-    'SeqMul', 'fourier_series', 'fps', 'difference_delta', 'limit_seq',
+    'pade_approximant', 'residue', 'EmptySequence', 'SeqPer', 'SeqFormula',
+    'sequence', 'SeqAdd', 'SeqMul', 'fourier_series', 'fps', 'difference_delta',
+    'limit_seq',
 
     # sympy.functions
     'factorial', 'factorial2', 'rf', 'ff', 'binomial', 'RisingFactorial',
     'FallingFactorial', 'subfactorial', 'carmichael', 'fibonacci', 'lucas',
     'motzkin', 'tribonacci', 'harmonic', 'bernoulli', 'bell', 'euler', 'catalan',
-    'genocchi', 'andre', 'partition', 'sqrt', 'root', 'Min', 'Max', 'Id', 'real_root',
+    'genocchi', 'andre', 'partition',  'divisor_sigma', 'legendre_symbol', 'jacobi_symbol',
+    'kronecker_symbol', 'mobius', 'primenu', 'primeomega', 'totient', 'primepi',
+    'reduced_totient', 'sqrt', 'root', 'Min', 'Max', 'Id', 'real_root',
     'Rem', 'cbrt', 're', 'im', 'sign', 'Abs', 'conjugate', 'arg', 'polar_lift',
     'periodic_argument', 'unbranched_argument', 'principal_branch',
     'transpose', 'adjoint', 'polarify', 'unpolarify', 'sin', 'cos', 'tan',
@@ -359,18 +370,19 @@ __all__ = [
     'betainc_regularized',
 
     # sympy.ntheory
-    'nextprime', 'prevprime', 'prime', 'primepi', 'primerange', 'randprime',
+    'nextprime', 'prevprime', 'prime', 'primerange', 'randprime',
     'Sieve', 'sieve', 'primorial', 'cycle_length', 'composite', 'compositepi',
     'isprime', 'divisors', 'proper_divisors', 'factorint', 'multiplicity',
-    'perfect_power', 'pollard_pm1', 'pollard_rho', 'primefactors', 'totient',
-    'trailing', 'divisor_count', 'proper_divisor_count', 'divisor_sigma',
-    'factorrat', 'reduced_totient', 'primenu', 'primeomega',
+    'perfect_power', 'pollard_pm1', 'factor_cache', 'pollard_rho', 'primefactors',
+    'divisor_count', 'proper_divisor_count',
+    'factorrat',
     'mersenne_prime_exponent', 'is_perfect', 'is_mersenne_prime',
-    'is_abundant', 'is_deficient', 'is_amicable', 'abundance', 'npartitions',
-    'is_primitive_root', 'is_quad_residue', 'legendre_symbol',
-    'jacobi_symbol', 'n_order', 'sqrt_mod', 'quadratic_residues',
+    'is_abundant', 'is_deficient', 'is_amicable', 'is_carmichael', 'abundance',
+    'npartitions',
+    'is_primitive_root', 'is_quad_residue',
+    'n_order', 'sqrt_mod', 'quadratic_residues',
     'primitive_root', 'nthroot_mod', 'is_nthpow_residue', 'sqrt_mod_iter',
-    'mobius', 'discrete_log', 'quadratic_congruence', 'binomial_coefficients',
+    'discrete_log', 'quadratic_congruence', 'binomial_coefficients',
     'binomial_coefficients_list', 'multinomial_coefficients',
     'continued_fraction_periodic', 'continued_fraction_iterator',
     'continued_fraction_reduce', 'continued_fraction_convergents',
@@ -405,7 +417,7 @@ __all__ = [
     'det_quick', 'inv_quick', 'check_assumptions', 'failing_assumptions',
     'diophantine', 'rsolve', 'rsolve_poly', 'rsolve_ratio', 'rsolve_hyper',
     'checkodesol', 'classify_ode', 'dsolve', 'homogeneous_order',
-    'solve_poly_system', 'solve_triangulated', 'pde_separate',
+    'solve_poly_system', 'factor_system', 'solve_triangulated', 'pde_separate',
     'pde_separate_add', 'pde_separate_mul', 'pdsolve', 'classify_pde',
     'checkpdesol', 'ode_order', 'reduce_inequalities',
     'reduce_abs_inequality', 'reduce_abs_inequalities',
@@ -449,6 +461,7 @@ __all__ = [
     'integrate', 'Integral', 'line_integrate', 'mellin_transform',
     'inverse_mellin_transform', 'MellinTransform', 'InverseMellinTransform',
     'laplace_transform', 'inverse_laplace_transform', 'LaplaceTransform',
+    'laplace_correspondence', 'laplace_initial_conds',
     'InverseLaplaceTransform', 'fourier_transform',
     'inverse_fourier_transform', 'FourierTransform',
     'InverseFourierTransform', 'sine_transform', 'inverse_sine_transform',

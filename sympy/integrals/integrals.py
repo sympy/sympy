@@ -1,9 +1,10 @@
-from typing import Tuple as tTuple
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from sympy.concrete.expr_with_limits import AddWithLimits
 from sympy.core.add import Add
 from sympy.core.basic import Basic
-from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import diff
@@ -19,6 +20,7 @@ from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.complexes import Abs, sign
 from sympy.functions.elementary.miscellaneous import Min, Max
+from sympy.functions.special.singularity_functions import Heaviside
 from .rationaltools import ratint
 from sympy.matrices import MatrixBase
 from sympy.polys import Poly, PolynomialError
@@ -31,14 +33,19 @@ from sympy.utilities.iterables import is_sequence
 from sympy.utilities.misc import filldedent
 
 
+if TYPE_CHECKING:
+    from sympy.core.containers import Tuple
+    SymbolLimits = Expr | tuple[Expr, Expr] | tuple[Expr, Expr, Expr]
+
+
 class Integral(AddWithLimits):
     """Represents unevaluated integral."""
 
     __slots__ = ()
 
-    args: tTuple[Expr, Tuple]
+    args: tuple[Expr, Tuple] # type: ignore
 
-    def __new__(cls, function, *symbols, **assumptions):
+    def __new__(cls, function, *symbols, **assumptions) -> Integral:
         """Create an unevaluated integral.
 
         Explanation
@@ -216,7 +223,8 @@ class Integral(AddWithLimits):
         transform can perform u-substitution as long as a unique
         integrand is obtained:
 
-        >>> i.transform(x**2 - 1, u)
+        >>> ui = i.transform(x**2 - 1, u)
+        >>> ui
         Integral(cos(u)/2, (u, -1, 0))
 
         This attempt fails because x = +/-sqrt(u + 1) and the
@@ -232,8 +240,7 @@ class Integral(AddWithLimits):
         result is transformed back into the original expression
         using "u-substitution":
 
-        >>> ui = _
-        >>> _.transform(sqrt(u + 1), x) == i
+        >>> ui.transform(sqrt(u + 1), x) == i
         True
 
         We can accomplish the same with a regular substitution:
@@ -419,8 +426,8 @@ class Integral(AddWithLimits):
             manual = meijerg = heurisch = False
         elif heurisch:
             manual = meijerg = risch = False
-        eval_kwargs = dict(meijerg=meijerg, risch=risch, manual=manual, heurisch=heurisch,
-            conds=conds)
+        eval_kwargs = {"meijerg": meijerg, "risch": risch, "manual": manual, "heurisch": heurisch,
+            "conds": conds}
 
         if conds not in ('separate', 'piecewise', 'none'):
             raise ValueError('conds must be one of "separate", "piecewise", '
@@ -447,6 +454,12 @@ class Integral(AddWithLimits):
 
         # now compute and check the function
         function = self.function
+
+        # hack to use a consistent Heaviside(x, 1/2)
+        function = function.replace(
+            lambda x: isinstance(x, Heaviside) and x.args[1]*2 != 1,
+            lambda x: Heaviside(x.args[0]))
+
         if deep:
             function = function.doit(**hints)
         if function.is_zero:
@@ -922,8 +935,8 @@ class Integral(AddWithLimits):
             except (ValueError, PolynomialError):
                 pass
 
-        eval_kwargs = dict(meijerg=meijerg, risch=risch, manual=manual,
-            heurisch=heurisch, conds=conds)
+        eval_kwargs = {"meijerg": meijerg, "risch": risch, "manual": manual,
+            "heurisch": heurisch, "conds": conds}
 
         # if it is a poly(x) then let the polynomial integrate itself (fast)
         #
@@ -1167,18 +1180,17 @@ class Integral(AddWithLimits):
             yield integrate(term, *expr.limits)
 
     def _eval_nseries(self, x, n, logx=None, cdir=0):
-        expr = self.as_dummy()
         symb = x
-        for l in expr.limits:
+        for l in self.limits:
             if x in l[1:]:
                 symb = l[0]
                 break
-        terms, order = expr.function.nseries(
+        terms, order = self.function.nseries(
             x=symb, n=n, logx=logx).as_coeff_add(Order)
         order = [o.subs(symb, x) for o in order]
-        return integrate(terms, *expr.limits) + Add(*order)*x
+        return integrate(terms, *self.limits) + Add(*order)*x
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         series_gen = self.args[0].lseries(x)
         for leading_term in series_gen:
             if leading_term != 0:
@@ -1245,9 +1257,10 @@ class Integral(AddWithLimits):
         intervals. This is equivalent to taking the average of the left and
         right hand rule results:
 
-        >>> e.as_sum(2, 'trapezoid')
+        >>> s = e.as_sum(2, 'trapezoid')
+        >>> s
         2*sin(5) + sin(3) + sin(7)
-        >>> (e.as_sum(2, 'left') + e.as_sum(2, 'right'))/2 == _
+        >>> (e.as_sum(2, 'left') + e.as_sum(2, 'right'))/2 == s
         True
 
         Here, the discontinuity at x = 0 can be avoided by using the
@@ -1362,7 +1375,7 @@ class Integral(AddWithLimits):
         ==========
 
         .. [1] https://en.wikipedia.org/wiki/Cauchy_principal_value
-        .. [2] http://mathworld.wolfram.com/CauchyPrincipalValue.html
+        .. [2] https://mathworld.wolfram.com/CauchyPrincipalValue.html
         """
         if len(self.limits) != 1 or len(list(self.limits[0])) != 3:
             raise ValueError("You need to insert a variable, lower_limit, and upper_limit correctly to calculate "
@@ -1396,7 +1409,8 @@ class Integral(AddWithLimits):
 
 
 
-def integrate(*args, meijerg=None, conds='piecewise', risch=None, heurisch=None, manual=None, **kwargs):
+def integrate(function, *symbols: SymbolLimits, meijerg=None, conds='piecewise',
+                        risch=None, heurisch=None, manual=None, **kwargs):
     """integrate(f, var, ...)
 
     .. deprecated:: 1.6
@@ -1561,7 +1575,8 @@ def integrate(*args, meijerg=None, conds='piecewise', risch=None, heurisch=None,
         'heurisch': heurisch,
         'manual': manual
         }
-    integral = Integral(*args, **kwargs)
+
+    integral = Integral(function, *symbols, **kwargs)
 
     if isinstance(integral, Integral):
         return integral.doit(**doit_flags)
@@ -1569,7 +1584,6 @@ def integrate(*args, meijerg=None, conds='piecewise', risch=None, heurisch=None,
         new_args = [a.doit(**doit_flags) if isinstance(a, Integral) else a
             for a in integral.args]
         return integral.func(*new_args)
-
 
 def line_integrate(field, curve, vars):
     """line_integrate(field, Curve, variables)

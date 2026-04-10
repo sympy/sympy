@@ -1,4 +1,5 @@
 """Implementation of :class:`PythonFiniteField` class. """
+from __future__ import annotations
 
 
 from sympy.polys.domains.finitefield import FiniteField
@@ -13,4 +14,4 @@ class PythonFiniteField(FiniteField):
     alias = 'FF_python'
 
     def __init__(self, mod, symmetric=True):
-        return super().__init__(mod, PythonIntegerRing(), symmetric)
+        super().__init__(mod, PythonIntegerRing(), symmetric)

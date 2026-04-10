@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.concrete.summations import Sum
 from sympy.core.containers import Tuple
 from sympy.core.function import Lambda
@@ -80,12 +81,12 @@ def test_DiscreteMarkovChain():
 
         raises(ValueError, lambda: next(sample_stochastic_process(Y)))
 
-    raises(TypeError, lambda: DiscreteMarkovChain("Y", dict((1, 1))))
+    raises(TypeError, lambda: DiscreteMarkovChain("Y", {1: 1}))
     Y = DiscreteMarkovChain("Y", Range(1, t, 2))
     assert Y.number_of_states == ceiling((t-1)/2)
 
     # pass name and transition_probabilities
-    chains = [DiscreteMarkovChain("Y", trans_probs=Matrix([[]])),
+    chains = [DiscreteMarkovChain("Y", trans_probs=Matrix([])),
               DiscreteMarkovChain("Y", trans_probs=Matrix([[0, 1], [1, 0]])),
               DiscreteMarkovChain("Y", trans_probs=Matrix([[pi, 1-pi], [sym, 1-sym]]))]
     for Z in chains:
@@ -169,12 +170,12 @@ def test_DiscreteMarkovChain():
                                                             [Rational(-14, 75), Rational(1, 25), Rational(86, 75)]])
 
     # test for zero-sized matrix functionality
-    X = DiscreteMarkovChain('X', trans_probs=Matrix([[]]))
+    X = DiscreteMarkovChain('X', trans_probs=Matrix([]))
     assert X.number_of_states == 0
     assert X.stationary_distribution() == Matrix([[]])
     assert X.communication_classes() == []
-    assert X.canonical_form() == ([], Matrix([[]]))
-    assert X.decompose() == ([], Matrix([[]]), Matrix([[]]), Matrix([[]]))
+    assert X.canonical_form() == ([], Matrix([]))
+    assert X.decompose() == ([], Matrix([]), Matrix([]), Matrix([]))
     assert X.is_regular() == False
     assert X.is_ergodic() == False
 
@@ -224,7 +225,7 @@ def test_DiscreteMarkovChain():
     assert periods == (1, 1, 1, 1, 1)
 
     # test canonical form
-    # see https://www.dartmouth.edu/~chance/teaching_aids/books_articles/probability_book/Chapter11.pdf
+    # see https://web.archive.org/web/20201230182007/https://www.dartmouth.edu/~chance/teaching_aids/books_articles/probability_book/Chapter11.pdf
     # example 11.13
     T = Matrix([[1, 0, 0, 0, 0],
                 [S(1) / 2, 0, S(1) / 2, 0, 0],
@@ -246,7 +247,7 @@ def test_DiscreteMarkovChain():
                                  [0, S(1)/2, 0, S(1)/2, 0]])
 
     # test regular and ergodic
-    # https://www.dartmouth.edu/~chance/teaching_aids/books_articles/probability_book/Chapter11.pdf
+    # https://web.archive.org/web/20201230182007/https://www.dartmouth.edu/~chance/teaching_aids/books_articles/probability_book/Chapter11.pdf
     T = Matrix([[0, 4, 0, 0, 0],
                 [1, 0, 3, 0, 0],
                 [0, 2, 0, 2, 0],

@@ -1,11 +1,12 @@
+from __future__ import annotations
 from sympy.core.basic import Basic
 from sympy.core.expr import Expr, ExprBuilder
 from sympy.core.singleton import S
 from sympy.core.sorting import default_sort_key
 from sympy.core.symbol import uniquely_named_symbol
 from sympy.core.sympify import sympify
-from sympy.matrices.matrices import MatrixBase
-from sympy.matrices.common import NonSquareMatrixError
+from sympy.matrices.matrixbase import MatrixBase
+from sympy.matrices.exceptions import NonSquareMatrixError
 
 
 class Trace(Expr):
@@ -53,7 +54,7 @@ class Trace(Expr):
         expr = self.doit()
         if isinstance(expr, Trace):
             # Avoid looping infinitely:
-            raise NotImplementedError
+            return trace(expr.arg.diff(v))
         return expr._eval_derivative(v)
 
     def _eval_derivative_matrix_lines(self, x):
@@ -105,9 +106,10 @@ class Trace(Expr):
     def doit(self, **hints):
         if hints.get('deep', True):
             arg = self.arg.doit(**hints)
-            try:
-                return arg._eval_trace()
-            except (AttributeError, NotImplementedError):
+            result = arg._eval_trace()
+            if result is not None:
+                return result
+            else:
                 return Trace(arg)
         else:
             # _eval_trace would go too deep here
@@ -144,7 +146,7 @@ class Trace(Expr):
 
     def _eval_rewrite_as_Sum(self, expr, **kwargs):
         from sympy.concrete.summations import Sum
-        i = uniquely_named_symbol('i', expr)
+        i = uniquely_named_symbol('i', [expr])
         s = Sum(self.arg[i, i], (i, 0, self.arg.rows - 1))
         return s.doit()
 

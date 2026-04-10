@@ -16,6 +16,7 @@ Ray3D
 Segment3D
 
 """
+from __future__ import annotations
 
 from sympy.core.containers import Tuple
 from sympy.core.evalf import N
@@ -201,7 +202,7 @@ class LinearEntity(GeometrySet):
         >>> l1.smallest_angle_between(l2)
         acos(sqrt(2)/3)
         """
-        if not isinstance(l1, LinearEntity) and not isinstance(l2, LinearEntity):
+        if not isinstance(l1, LinearEntity) or not isinstance(l2, LinearEntity):
             raise TypeError('Must pass only LinearEntity objects')
 
         v1, v2 = l1.direction, l2.direction
@@ -236,7 +237,7 @@ class LinearEntity(GeometrySet):
 
         angle_between, is_perpendicular, Ray2D.closing_angle
         """
-        if not isinstance(l1, LinearEntity) and not isinstance(l2, LinearEntity):
+        if not isinstance(l1, LinearEntity) or not isinstance(l2, LinearEntity):
             raise TypeError('Must pass only LinearEntity objects')
 
         v1, v2 = l1.direction, l2.direction
@@ -613,7 +614,7 @@ class LinearEntity(GeometrySet):
         False
 
         """
-        if not isinstance(l1, LinearEntity) and not isinstance(l2, LinearEntity):
+        if not isinstance(l1, LinearEntity) or not isinstance(l2, LinearEntity):
             raise TypeError('Must pass only LinearEntity objects')
 
         return l1.direction.is_scalar_multiple(l2.direction)
@@ -661,7 +662,7 @@ class LinearEntity(GeometrySet):
         False
 
         """
-        if not isinstance(l1, LinearEntity) and not isinstance(l2, LinearEntity):
+        if not isinstance(l1, LinearEntity) or not isinstance(l2, LinearEntity):
             raise TypeError('Must pass only LinearEntity objects')
 
         return S.Zero.equals(l1.direction.dot(l2.direction))
@@ -2587,10 +2588,84 @@ class Line3D(LinearEntity3D, Line):
         # eliminate k from equations by solving first eq with k for k
         for i, e in enumerate(eqs):
             if e.has(k):
-                kk = solve(eqs[i], k)[0]
+                kk = solve(e, k)[0]
                 eqs.pop(i)
                 break
         return Tuple(*[i.subs(k, kk).as_numer_denom()[0] for i in eqs])
+
+    def distance(self, other):
+        """
+        Finds the shortest distance between a line and another object.
+
+        Parameters
+        ==========
+
+        Point3D, Line3D, Plane, tuple, list
+
+        Returns
+        =======
+
+        distance
+
+        Notes
+        =====
+
+        This method accepts only 3D entities as it's parameter
+
+        Tuples and lists are converted to Point3D and therefore must be of
+        length 3, 2 or 1.
+
+        NotImplementedError is raised if `other` is not an instance of one
+        of the specified classes: Point3D, Line3D, or Plane.
+
+        Examples
+        ========
+
+        >>> from sympy.geometry import Line3D
+        >>> l1 = Line3D((0, 0, 0), (0, 0, 1))
+        >>> l2 = Line3D((0, 1, 0), (1, 1, 1))
+        >>> l1.distance(l2)
+        1
+
+        The computed distance may be symbolic, too:
+
+        >>> from sympy.abc import x, y
+        >>> l1 = Line3D((0, 0, 0), (0, 0, 1))
+        >>> l2 = Line3D((0, x, 0), (y, x, 1))
+        >>> l1.distance(l2)
+        Abs(x*y)/Abs(sqrt(y**2))
+
+        """
+
+        from .plane import Plane  # Avoid circular import
+
+        if isinstance(other, (tuple, list)):
+            try:
+                other = Point3D(other)
+            except ValueError:
+                pass
+
+        if isinstance(other, Point3D):
+            return super().distance(other)
+
+        if isinstance(other, Line3D):
+            if self == other:
+                return S.Zero
+            if self.is_parallel(other):
+                return super().distance(other.p1)
+
+            # Skew lines
+            self_direction = Matrix(self.direction_ratio)
+            other_direction = Matrix(other.direction_ratio)
+            normal = self_direction.cross(other_direction)
+            plane_through_self = Plane(p1=self.p1, normal_vector=normal)
+            return other.p1.distance(plane_through_self)
+
+        if isinstance(other, Plane):
+            return other.distance(self)
+
+        msg = f"{other} has type {type(other)}, which is unsupported"
+        raise NotImplementedError(msg)
 
 
 class Ray3D(LinearEntity3D, Ray):

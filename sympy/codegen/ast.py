@@ -85,7 +85,7 @@ It is possible to construct simple algorithms using the AST nodes. Let's constru
 Newton's method::
 
     >>> from sympy import symbols, cos
-    >>> from sympy.codegen.ast import While, Assignment, aug_assign, Print
+    >>> from sympy.codegen.ast import While, Assignment, aug_assign, Print, QuotedString
     >>> t, dx, x = symbols('tol delta val')
     >>> expr = cos(x) - x**3
     >>> whl = While(abs(dx) > t, [
@@ -202,7 +202,7 @@ class Token(CodegenAST):
     def _construct(cls, attr, arg):
         """ Construct an attribute value from argument passed to ``__new__()``. """
         # arg may be ``NoneToken()``, so comparison is done using == instead of ``is`` operator
-        if arg == None:
+        if arg == None:  # noqa: E711
             return cls.defaults.get(attr, none)
         else:
             if isinstance(arg, Dummy):  # SymPy's replace uses Dummy instances
@@ -511,7 +511,7 @@ class AugmentedAssignment(AssignmentBase):
        Symbol for binary operation being applied in the assignment, such as "+",
        "*", etc.
     """
-    binop = None  # type: str
+    binop: str | None
 
     @property
     def op(self):
@@ -1012,7 +1012,7 @@ class Type(Token):
     References
     ==========
 
-    .. [1] https://docs.scipy.org/doc/numpy/user/basics.types.html
+    .. [1] https://numpy.org/doc/stable/user/basics.types.html
 
     """
     __slots__: tuple[str, ...] = ('name',)
@@ -1399,8 +1399,8 @@ class Attribute(Token):
     def _sympystr(self, printer, *args, **kwargs):
         result = str(self.name)
         if self.parameters:
-            result += '(%s)' % ', '.join(map(lambda arg: printer._print(
-                arg, *args, **kwargs), self.parameters))
+            result += '(%s)' % ', '.join((printer._print(
+                arg, *args, **kwargs) for arg in self.parameters))
         return result
 
 value_const = Attribute('value_const')
@@ -1722,7 +1722,7 @@ stderr = Stream('stderr')
 
 
 class Print(Token):
-    """ Represents print command in the code.
+    r""" Represents print command in the code.
 
     Parameters
     ==========
@@ -1735,8 +1735,8 @@ class Print(Token):
 
     >>> from sympy.codegen.ast import Print
     >>> from sympy import pycode
-    >>> print(pycode(Print('x y'.split(), "coordinate: %12.5g %12.5g")))
-    print("coordinate: %12.5g %12.5g" % (x, y))
+    >>> print(pycode(Print('x y'.split(), "coordinate: %12.5g %12.5g\\n")))
+    print("coordinate: %12.5g %12.5g\n" % (x, y), end="")
 
     """
 
@@ -1890,3 +1890,52 @@ class FunctionCall(Token, Expr):
 
     _construct_name = String
     _construct_function_args = staticmethod(lambda args: Tuple(*args))
+
+
+class KeywordFunctionCall(FunctionCall):
+    """ Represents a call to a function with keyword arguments in the code.
+
+    Parameters
+    ==========
+
+    name : str
+    function_args : Tuple
+    keyword_args : dict
+        Dictionary mapping parameter names to their values
+
+    Examples
+    ========
+
+    >>> from sympy.codegen.ast import KeywordFunctionCall, String
+    >>> from sympy.core.containers import Tuple
+    >>> from sympy import fcode
+    >>> fcall = KeywordFunctionCall(String('reshape'), Tuple(String('array'), String('shape')), {'order': String('order_array')})
+    >>> print(fcode(fcall, source_format='free'))
+    reshape(array, shape, order=order_array)
+
+    """
+    __slots__ = ('keyword_args',)
+    _fields = ('name', 'function_args', 'keyword_args')  # type: ignore
+
+    defaults = {'keyword_args': {}}
+
+    @staticmethod
+    def _construct_keyword_args(kwargs):
+        from sympy.core.containers import Dict
+        if kwargs is None:
+            return Dict({})
+        return Dict(kwargs)
+
+
+class Raise(Token):
+    """ Prints as 'raise ...' in Python, 'throw ...' in C++"""
+    __slots__ = _fields = ('exception',)
+
+
+class RuntimeError_(Token):
+    """ Represents 'std::runtime_error' in C++ and 'RuntimeError' in Python.
+
+    Note that the latter is uncommon, and you might want to use e.g. ValueError.
+    """
+    __slots__ = _fields = ('message',)
+    _construct_message = String

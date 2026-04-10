@@ -1,4 +1,5 @@
 """Groebner bases algorithms. """
+from __future__ import annotations
 
 
 from sympy.core.symbol import Dummy
@@ -225,9 +226,6 @@ def _buchberger(f, ring):
         F.remove(ih)
         G, CP = update(G, CP, ih)
 
-    # count the number of critical pairs which reduce to zero
-    reductions_to_zero = 0
-
     while CP:
         ig1, ig2 = select(CP)
         CP.remove((ig1, ig2))
@@ -239,8 +237,6 @@ def _buchberger(f, ring):
 
         if ht:
             G, CP = update(G, CP, ht[1])
-        else:
-            reductions_to_zero += 1
 
     ######################################
     # now G is a Groebner basis; reduce it
@@ -596,7 +592,7 @@ def _f5b(F, ring):
     ==========
 
     .. [1] Yao Sun, Dingkang Wang: "A New Proof for the Correctness of F5
-           (F5-Like) Algorithm", http://arxiv.org/abs/1004.0084 (specifically
+           (F5-Like) Algorithm", https://arxiv.org/abs/1004.0084 (specifically
            v4)
 
     .. [2] Thomas Becker, Volker Weispfenning, Groebner bases: A computational
@@ -629,8 +625,6 @@ def _f5b(F, ring):
     CP.sort(key=lambda cp: cp_key(cp, ring), reverse=True)
 
     k = len(B)
-
-    reductions_to_zero = 0
 
     while len(CP):
         cp = CP.pop()
@@ -686,8 +680,6 @@ def _f5b(F, ring):
             k += 1
 
             #print(len(B), len(CP), "%d critical pairs removed" % len(indices))
-        else:
-            reductions_to_zero += 1
 
     # reduce Groebner basis:
     H = [Polyn(g).monic() for g in B]

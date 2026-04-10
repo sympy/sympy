@@ -1,10 +1,20 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, overload
+
 from sympy.core.function import expand_mul
 from sympy.core.symbol import Dummy, uniquely_named_symbol, symbols
 from sympy.utilities.iterables import numbered_symbols
 
-from .common import ShapeError, NonSquareMatrixError, NonInvertibleMatrixError
+from .exceptions import ShapeError, NonSquareMatrixError, NonInvertibleMatrixError
 from .eigen import _fuzzy_positive_definite
 from .utilities import _get_intermediate_simp, _iszero
+
+
+if TYPE_CHECKING:
+    from typing import TypeVar, Literal
+    from sympy.matrices.matrixbase import MatrixBase
+    Tmat = TypeVar('Tmat', bound=MatrixBase)
 
 
 def _diagonal_solve(M, rhs):
@@ -31,6 +41,7 @@ def _diagonal_solve(M, rhs):
     LUsolve
     QRsolve
     pinv_solve
+    cramer_solve
     """
 
     if not M.is_diagonal():
@@ -56,6 +67,7 @@ def _lower_triangular_solve(M, rhs):
     LUsolve
     QRsolve
     pinv_solve
+    cramer_solve
     """
 
     from .dense import MutableDenseMatrix
@@ -94,6 +106,7 @@ def _lower_triangular_solve_sparse(M, rhs):
     LUsolve
     QRsolve
     pinv_solve
+    cramer_solve
     """
 
     if not M.is_square:
@@ -136,6 +149,7 @@ def _upper_triangular_solve(M, rhs):
     LUsolve
     QRsolve
     pinv_solve
+    cramer_solve
     """
 
     from .dense import MutableDenseMatrix
@@ -174,6 +188,7 @@ def _upper_triangular_solve_sparse(M, rhs):
     LUsolve
     QRsolve
     pinv_solve
+    cramer_solve
     """
 
     if not M.is_square:
@@ -202,7 +217,7 @@ def _upper_triangular_solve_sparse(M, rhs):
     return M._new(X)
 
 
-def _cholesky_solve(M, rhs):
+def _cholesky_solve(M: Tmat, rhs: MatrixBase) -> Tmat:
     """Solves ``Ax = B`` using Cholesky decomposition,
     for a general square non-singular matrix.
     For a non-square matrix with rows > cols,
@@ -219,6 +234,7 @@ def _cholesky_solve(M, rhs):
     LUsolve
     QRsolve
     pinv_solve
+    cramer_solve
     """
 
     if M.rows < M.cols:
@@ -248,7 +264,7 @@ def _cholesky_solve(M, rhs):
         return (L.T).upper_triangular_solve(Y)
 
 
-def _LDLsolve(M, rhs):
+def _LDLsolve(M: Tmat, rhs: MatrixBase) -> Tmat:
     """Solves ``Ax = B`` using LDL decomposition,
     for a general square and non-singular matrix.
 
@@ -276,6 +292,7 @@ def _LDLsolve(M, rhs):
     LUsolve
     QRsolve
     pinv_solve
+    cramer_solve
     """
 
     if M.rows < M.cols:
@@ -324,6 +341,7 @@ def _LUsolve(M, rhs, iszerofunc=_iszero):
     QRsolve
     pinv_solve
     LUdecomposition
+    cramer_solve
     """
 
     if rhs.rows != M.rows:
@@ -338,7 +356,7 @@ def _LUsolve(M, rhs, iszerofunc=_iszero):
 
     try:
         A, perm = M.LUdecomposition_Simple(
-            iszerofunc=_iszero, rankcheck=True)
+            iszerofunc=iszerofunc, rankcheck=True)
     except ValueError:
         raise NonInvertibleMatrixError("Matrix det == 0; not invertible.")
 
@@ -349,7 +367,7 @@ def _LUsolve(M, rhs, iszerofunc=_iszero):
     for i in range(m):
         for j in range(min(i, n)):
             scale = A[i, j]
-            b.zip_row_op(i, j, lambda x, y: dps(x - y * scale))
+            b.zip_row_op(i, j, lambda x, y: dps(x - scale * y))
 
     # consistency check for overdetermined systems
     if m > n:
@@ -364,10 +382,10 @@ def _LUsolve(M, rhs, iszerofunc=_iszero):
     for i in range(n - 1, -1, -1):
         for j in range(i + 1, n):
             scale = A[i, j]
-            b.zip_row_op(i, j, lambda x, y: dps(x - y * scale))
+            b.zip_row_op(i, j, lambda x, y: dps(x - scale * y))
 
         scale = A[i, i]
-        b.row_op(i, lambda x, _: dps(x / scale))
+        b.row_op(i, lambda x, _: dps(scale**-1 * x))
 
     return rhs.__class__(b)
 
@@ -400,6 +418,7 @@ def _QRsolve(M, b):
     LUsolve
     pinv_solve
     QRdecomposition
+    cramer_solve
     """
 
     dps  = _get_intermediate_simp(expand_mul, expand_mul)
@@ -424,8 +443,32 @@ def _QRsolve(M, b):
 
     return M.vstack(*x[::-1])
 
+@overload
+def _gauss_jordan_solve(
+    M: Tmat,
+    B: Tmat,
+    freevar: Literal[False] = False,
+) -> tuple[Tmat, Tmat]:
+    ...
 
-def _gauss_jordan_solve(M, B, freevar=False):
+@overload
+def _gauss_jordan_solve(
+    M: Tmat,
+    B: Tmat,
+    freevar: Literal[True],
+) -> tuple[Tmat, Tmat, list[int]]:
+    ...
+
+@overload
+def _gauss_jordan_solve(
+    M: Tmat,
+    B: Tmat,
+    freevar: bool,
+) -> tuple[Tmat, Tmat] | tuple[Tmat, Tmat, list[int]]:
+    ...
+
+def _gauss_jordan_solve(M: Tmat, B: Tmat, freevar: bool = False,
+                        ) -> tuple[Tmat, Tmat] | tuple[Tmat, Tmat, list[int]]:
     """
     Solves ``Ax = B`` using Gauss Jordan elimination.
 
@@ -562,9 +605,9 @@ def _gauss_jordan_solve(M, B, freevar=False):
     row, col = aug[:, :-B_cols].shape
 
     # solve by reduced row echelon form
-    A, pivots = aug.rref(simplify=True)
+    A, pivots_t = aug.rref(simplify=True)
     A, v      = A[:, :-B_cols], A[:, -B_cols:]
-    pivots    = list(filter(lambda p: p < col, pivots))
+    pivots    = list(filter(lambda p: p < col, pivots_t))
     rank      = len(pivots)
 
     # Get index of free symbols (free parameters)
@@ -581,11 +624,11 @@ def _gauss_jordan_solve(M, B, freevar=False):
 
     # Free parameters
     # what are current unnumbered free symbol names?
-    name = uniquely_named_symbol('tau', aug,
-            compare=lambda i: str(i).rstrip('1234567890'),
+    name = uniquely_named_symbol('tau', [aug],
+            compare=lambda i: str(i).rstrip('1234567890'), # type: ignore
             modify=lambda s: '_' + s).name
     gen  = numbered_symbols(name)
-    tau  = Matrix([next(gen) for k in range((col - rank)*B_cols)]).reshape(
+    tau  = cls._new([next(gen) for k in range((col - rank)*B_cols)]).reshape(
             col - rank, B_cols)
 
     # Full parametric solution
@@ -599,7 +642,7 @@ def _gauss_jordan_solve(M, B, freevar=False):
     for k in range(col):
         sol[permutation[k], :] = free_sol[k,:]
 
-    sol, tau = cls(sol), cls(tau)
+    sol = cls._as_type(sol)
 
     if freevar:
         return sol, tau, free_var_index
@@ -607,7 +650,7 @@ def _gauss_jordan_solve(M, B, freevar=False):
         return sol, tau
 
 
-def _pinv_solve(M, B, arbitrary_matrix=None):
+def _pinv_solve(M: Tmat, B: Tmat, arbitrary_matrix: Tmat | None = None) -> Tmat:
     """Solve ``Ax = B`` using the Moore-Penrose pseudoinverse.
 
     There may be zero, one, or infinite solutions.  If one solution
@@ -693,10 +736,77 @@ def _pinv_solve(M, B, arbitrary_matrix=None):
     if arbitrary_matrix is None:
         rows, cols       = A.cols, B.cols
         w                = symbols('w:{}_:{}'.format(rows, cols), cls=Dummy)
-        arbitrary_matrix = M.__class__(cols, rows, w).T
+        arbitrary_matrix = M._new(cols, rows, w).T
 
     return A_pinv.multiply(B) + (eye(A.cols) -
             A_pinv.multiply(A)).multiply(arbitrary_matrix)
+
+
+def _cramer_solve(M, rhs, det_method="laplace"):
+    """Solves system of linear equations using Cramer's rule.
+
+    This method is relatively inefficient compared to other methods.
+    However it only uses a single division, assuming a division-free determinant
+    method is provided. This is helpful to minimize the chance of divide-by-zero
+    cases in symbolic solutions to linear systems.
+
+    Parameters
+    ==========
+    M : Matrix
+        The matrix representing the left hand side of the equation.
+    rhs : Matrix
+        The matrix representing the right hand side of the equation.
+    det_method : str or callable
+        The method to use to calculate the determinant of the matrix.
+        The default is ``'laplace'``.  If a callable is passed, it should take a
+        single argument, the matrix, and return the determinant of the matrix.
+
+    Returns
+    =======
+    x : Matrix
+        The matrix that will satisfy ``Ax = B``.  Will have as many rows as
+        matrix A has columns, and as many columns as matrix B.
+
+    Examples
+    ========
+
+    >>> from sympy import Matrix
+    >>> A = Matrix([[0, -6, 1], [0, -6, -1], [-5, -2, 3]])
+    >>> B = Matrix([[-30, -9], [-18, -27], [-26, 46]])
+    >>> x = A.cramer_solve(B)
+    >>> x
+    Matrix([
+    [ 0, -5],
+    [ 4,  3],
+    [-6,  9]])
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Cramer%27s_rule#Explicit_formulas_for_small_systems
+
+    """
+    from .dense import zeros
+
+    def entry(i, j):
+        return rhs[i, sol] if j == col else M[i, j]
+
+    if det_method == "bird":
+        from .determinant import _det_bird
+        det = _det_bird
+    elif det_method == "laplace":
+        from .determinant import _det_laplace
+        det = _det_laplace
+    elif isinstance(det_method, str):
+        det = lambda matrix: matrix.det(method=det_method)
+    else:
+        det = det_method
+    det_M = det(M)
+    x = zeros(*rhs.shape)
+    for sol in range(rhs.shape[1]):
+        for col in range(rhs.shape[0]):
+            x[col, sol] = det(M.__class__(*M.shape, entry)) / det_M
+    return M.__class__(x)
 
 
 def _solve(M, rhs, method='GJ'):
@@ -717,6 +827,8 @@ def _solve(M, rhs, method='GJ'):
         If set to ``'QR'``, ``QRsolve`` routine will be used.
 
         If set to ``'PINV'``, ``pinv_solve`` routine will be used.
+
+        If set to ``'CRAMER'``, ``cramer_solve`` routine will be used.
 
         It also supports the methods available for special linear systems
 
@@ -769,11 +881,13 @@ def _solve(M, rhs, method='GJ'):
         return M.LDLsolve(rhs)
     elif method == 'PINV':
         return M.pinv_solve(rhs)
+    elif method == 'CRAMER':
+        return M.cramer_solve(rhs)
     else:
         return M.inv(method=method).multiply(rhs)
 
 
-def _solve_least_squares(M, rhs, method='CH'):
+def _solve_least_squares(M: Tmat, rhs: Tmat, method: str = 'CH') -> Tmat:
     """Return the least-square fit to the data.
 
     Parameters

@@ -1,16 +1,16 @@
+from __future__ import annotations
 from .matexpr import MatrixExpr
 from .special import Identity
 from sympy.core import S
 from sympy.core.expr import ExprBuilder
 from sympy.core.cache import cacheit
-from sympy.core.power import Pow
 from sympy.core.sympify import _sympify
 from sympy.matrices import MatrixBase
-from sympy.matrices.common import NonSquareMatrixError
+from sympy.matrices.exceptions import NonSquareMatrixError
 
 
 class MatPow(MatrixExpr):
-    def __new__(cls, base, exp, evaluate=False, **options):
+    def __new__(cls, base, exp, evaluate=False, **options) -> MatrixExpr: # type: ignore
         base = _sympify(base)
         if not base.is_Matrix:
             raise TypeError("MatPow base should be a matrix")
@@ -89,10 +89,30 @@ class MatPow(MatrixExpr):
 
     def _eval_transpose(self):
         base, exp = self.args
-        return MatPow(base.T, exp)
+        return MatPow(base.transpose(), exp)
+
+    def _eval_adjoint(self):
+        base, exp = self.args
+        return MatPow(base.adjoint(), exp)
+
+    def _eval_conjugate(self):
+        base, exp = self.args
+        return MatPow(base.conjugate(), exp)
 
     def _eval_derivative(self, x):
-        return Pow._eval_derivative(self, x)
+        assert not hasattr(x, "shape")
+        # dbase = self.base.diff(x)
+        dexp = self.exp.diff(x)
+        if dexp != 0:
+            return None
+        if self.exp.is_Integer:
+            if self.exp > 0:
+                from sympy import MatMul
+                return MatMul.fromiter(self.base for _ in range(self.exp))._eval_derivative(x)
+            elif self.exp == 0:
+                from .special import ZeroMatrix
+                return ZeroMatrix(*self.base.shape)
+        return None
 
     def _eval_derivative_matrix_lines(self, x):
         from sympy.tensor.array.expressions.array_expressions import ArrayContraction

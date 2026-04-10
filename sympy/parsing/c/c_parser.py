@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.external import import_module
 import os
 
@@ -67,6 +68,7 @@ if cin:
         def diagnostics(self, out):
             """Diagostics function for the Clang AST"""
             for diag in self.tu.diagnostics:
+                # tu = translation unit
                 print('%s %s (line %s, col %s) %s' % (
                         {
                             4: 'FATAL',
@@ -116,19 +118,19 @@ if cin:
                 }
             }
 
-        def parse(self, filenames, flags):
+        def parse(self, filename, flags):
             """Function to parse a file with C source code
 
             It takes the filename as an attribute and creates a Clang AST
             Translation Unit parsing the file.
             Then the transformation function is called on the translation unit,
-            whose reults are collected into a list which is returned by the
+            whose results are collected into a list which is returned by the
             function.
 
             Parameters
             ==========
 
-            filenames : string
+            filename : string
                 Path to the C file to be parsed
 
             flags: list
@@ -141,19 +143,15 @@ if cin:
                 A list of SymPy AST nodes
 
             """
-            filename = os.path.abspath(filenames)
+            filepath = os.path.abspath(filename)
             self.tu = self.index.parse(
-                filename,
+                filepath,
                 args=flags,
                 options=cin.TranslationUnit.PARSE_DETAILED_PROCESSING_RECORD
             )
             for child in self.tu.cursor.get_children():
-                if child.kind == cin.CursorKind.VAR_DECL:
+                if child.kind == cin.CursorKind.VAR_DECL or child.kind == cin.CursorKind.FUNCTION_DECL:
                     self._py_nodes.append(self.transform(child))
-                elif (child.kind == cin.CursorKind.FUNCTION_DECL):
-                    self._py_nodes.append(self.transform(child))
-                else:
-                    pass
             return self._py_nodes
 
         def parse_str(self, source, flags):
@@ -162,14 +160,14 @@ if cin:
             It takes the source code as an attribute, stores it in a temporary
             file and creates a Clang AST Translation Unit parsing the file.
             Then the transformation function is called on the translation unit,
-            whose reults are collected into a list which is returned by the
+            whose results are collected into a list which is returned by the
             function.
 
             Parameters
             ==========
 
             source : string
-                Path to the C file to be parsed
+                A string containing the C source code to be parsed
 
             flags: list
                 Arguments to be passed to Clang while parsing the C code
@@ -183,6 +181,7 @@ if cin:
             """
             file = tempfile.NamedTemporaryFile(mode = 'w+', suffix = '.cpp')
             file.write(source)
+            file.flush()
             file.seek(0)
             self.tu = self.index.parse(
                 file.name,
@@ -191,12 +190,8 @@ if cin:
             )
             file.close()
             for child in self.tu.cursor.get_children():
-                if child.kind == cin.CursorKind.VAR_DECL:
+                if child.kind == cin.CursorKind.VAR_DECL or child.kind == cin.CursorKind.FUNCTION_DECL:
                     self._py_nodes.append(self.transform(child))
-                elif (child.kind == cin.CursorKind.FUNCTION_DECL):
-                    self._py_nodes.append(self.transform(child))
-                else:
-                    pass
             return self._py_nodes
 
         def transform(self, node):
@@ -212,9 +207,9 @@ if cin:
             is not implemented
 
             """
-            try:
-                handler = getattr(self, 'transform_%s' % node.kind.name.lower())
-            except AttributeError:
+            handler = getattr(self, 'transform_%s' % node.kind.name.lower(), None)
+
+            if handler is None:
                 print(
                     "Ignoring node of type %s (%s)" % (
                         node.kind,
@@ -223,10 +218,8 @@ if cin:
                         ),
                     file=sys.stderr
                 )
-                handler = None
-            if handler:
-                result = handler(node)
-                return result
+
+            return handler(node)
 
         def transform_var_decl(self, node):
             """Transformation Function for Variable Declaration
@@ -279,11 +272,9 @@ if cin:
             try:
                 children = node.get_children()
                 child = next(children)
-                #ignoring namespace and type details for the variable
-                while child.kind == cin.CursorKind.NAMESPACE_REF:
-                    child = next(children)
 
-                while child.kind == cin.CursorKind.TYPE_REF:
+                #ignoring namespace and type details for the variable
+                while child.kind == cin.CursorKind.NAMESPACE_REF or child.kind == cin.CursorKind.TYPE_REF:
                     child = next(children)
 
                 val = self.transform(child)
@@ -303,9 +294,9 @@ if cin:
                         value = Symbol(val)
                     elif isinstance(val, bool):
                         if node.type.kind in self._data_types["int"]:
-                            value = Integer(0) if val == False else Integer(1)
+                            value = Integer(0) if not val else Integer(1)
                         elif node.type.kind in self._data_types["float"]:
-                            value = Float(0.0) if val == False else Float(1.0)
+                            value = Float(0.0) if not val else Float(1.0)
                         elif node.type.kind in self._data_types["bool"]:
                             value = sympify(val)
                     elif isinstance(val, (Integer, int, Float, float)):
@@ -377,36 +368,17 @@ if cin:
                     "and float are supported")
             body = []
             param = []
-            try:
-                children = node.get_children()
-                child = next(children)
 
-                # If the node has any children, the first children will be the
-                # return type and namespace for the function declaration. These
-                # nodes can be ignored.
-                while child.kind == cin.CursorKind.NAMESPACE_REF:
-                    child = next(children)
-
-                while child.kind == cin.CursorKind.TYPE_REF:
-                    child = next(children)
-
-
-                # Subsequent nodes will be the parameters for the function.
-                try:
-                    while True:
-                        decl = self.transform(child)
-                        if (child.kind == cin.CursorKind.PARM_DECL):
-                            param.append(decl)
-                        elif (child.kind == cin.CursorKind.COMPOUND_STMT):
-                            for val in decl:
-                                body.append(val)
-                        else:
-                            body.append(decl)
-                        child = next(children)
-                except StopIteration:
-                    pass
-            except StopIteration:
-                pass
+            # Subsequent nodes will be the parameters for the function.
+            for child in node.get_children():
+                decl = self.transform(child)
+                if child.kind == cin.CursorKind.PARM_DECL:
+                    param.append(decl)
+                elif child.kind == cin.CursorKind.COMPOUND_STMT:
+                    for val in decl:
+                        body.append(val)
+                else:
+                    body.append(decl)
 
             if body == []:
                 function = FunctionPrototype(
@@ -576,10 +548,10 @@ if cin:
 
             """
             try:
-               value = next(node.get_tokens()).spelling
+                value = next(node.get_tokens()).spelling
             except (StopIteration, ValueError):
                 # No tokens
-               value = node.literal
+                value = node.literal
             return ord(str(value[1]))
 
         def transform_cxx_bool_literal_expr(self, node):
@@ -617,7 +589,7 @@ if cin:
                 the result from the wrapped expression
 
             None : NoneType
-                No childs are found for the node
+                No children are found for the node
 
             Raises
             ======
@@ -671,9 +643,9 @@ if cin:
             try:
                 for child in children:
                     arg = self.transform(child)
-                    if (child.kind == cin.CursorKind.INTEGER_LITERAL):
+                    if child.kind == cin.CursorKind.INTEGER_LITERAL:
                         param.append(Integer(arg))
-                    elif (child.kind == cin.CursorKind.FLOATING_LITERAL):
+                    elif child.kind == cin.CursorKind.FLOATING_LITERAL:
                         param.append(Float(arg))
                     else:
                         param.append(arg)
@@ -687,7 +659,7 @@ if cin:
             return Return(next(node.get_children()).spelling)
 
         def transform_compound_stmt(self, node):
-            """Transformation function for compond statemets
+            """Transformation function for compound statements
 
             Returns
             =======
@@ -699,13 +671,11 @@ if cin:
                 if the compound statement is empty
 
             """
-            try:
-                expr = []
-                children = node.get_children()
-                for child in children:
-                    expr.append(self.transform(child))
-            except StopIteration:
-                return None
+            expr = []
+            children = node.get_children()
+
+            for child in children:
+                expr.append(self.transform(child))
             return expr
 
         def transform_decl_stmt(self, node):
@@ -789,7 +759,7 @@ if cin:
             """
             # supported operators list
             operators_list = ['+', '-', '++', '--', '!']
-            tokens = [token for token in node.get_tokens()]
+            tokens = list(node.get_tokens())
 
             # it can be either pre increment/decrement or any other operator from the list
             if tokens[0].spelling in operators_list:
@@ -848,7 +818,7 @@ if cin:
             """
             # get all the tokens of assignment
             # and store it in the tokens list
-            tokens = [token for token in node.get_tokens()]
+            tokens = list(node.get_tokens())
 
             # supported operators list
             operators_list = ['+', '-', '*', '/', '%','=',

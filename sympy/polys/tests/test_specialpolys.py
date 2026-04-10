@@ -1,4 +1,5 @@
 """Tests for functions for generating interesting polynomials. """
+from __future__ import annotations
 
 from sympy.core.add import Add
 from sympy.core.symbol import symbols
@@ -120,33 +121,33 @@ def test_fateman_poly_F_1():
     f, g, h = fateman_poly_F_1(1)
     F, G, H = dmp_fateman_poly_F_1(1, ZZ)
 
-    assert [ t.rep.rep for t in [f, g, h] ] == [F, G, H]
+    assert [ t.rep.to_list() for t in [f, g, h] ] == [F, G, H]
 
     f, g, h = fateman_poly_F_1(3)
     F, G, H = dmp_fateman_poly_F_1(3, ZZ)
 
-    assert [ t.rep.rep for t in [f, g, h] ] == [F, G, H]
+    assert [ t.rep.to_list() for t in [f, g, h] ] == [F, G, H]
 
 
 def test_fateman_poly_F_2():
     f, g, h = fateman_poly_F_2(1)
     F, G, H = dmp_fateman_poly_F_2(1, ZZ)
 
-    assert [ t.rep.rep for t in [f, g, h] ] == [F, G, H]
+    assert [ t.rep.to_list() for t in [f, g, h] ] == [F, G, H]
 
     f, g, h = fateman_poly_F_2(3)
     F, G, H = dmp_fateman_poly_F_2(3, ZZ)
 
-    assert [ t.rep.rep for t in [f, g, h] ] == [F, G, H]
+    assert [ t.rep.to_list() for t in [f, g, h] ] == [F, G, H]
 
 
 def test_fateman_poly_F_3():
     f, g, h = fateman_poly_F_3(1)
     F, G, H = dmp_fateman_poly_F_3(1, ZZ)
 
-    assert [ t.rep.rep for t in [f, g, h] ] == [F, G, H]
+    assert [ t.rep.to_list() for t in [f, g, h] ] == [F, G, H]
 
     f, g, h = fateman_poly_F_3(3)
     F, G, H = dmp_fateman_poly_F_3(3, ZZ)
 
-    assert [ t.rep.rep for t in [f, g, h] ] == [F, G, H]
+    assert [ t.rep.to_list() for t in [f, g, h] ] == [F, G, H]

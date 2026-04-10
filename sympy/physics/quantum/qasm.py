@@ -2,7 +2,7 @@
 
 qasm.py - Functions to parse a set of qasm commands into a SymPy Circuit.
 
-Examples taken from Chuang's page: http://www.media.mit.edu/quanta/qasm2circ/
+Examples taken from Chuang's page: https://web.archive.org/web/20220120121541/https://www.media.mit.edu/quanta/qasm2circ/
 
 The code returns a circuit and an associated list of labels.
 
@@ -15,6 +15,7 @@ CNOT(1,0)*H(1)
 >>> q.get_circuit()
 CNOT(1,0)*CNOT(0,1)*CNOT(1,0)
 """
+from __future__ import annotations
 
 __all__ = [
     'Qasm',

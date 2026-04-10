@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.numbers import (Rational, pi)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, symbols)
@@ -255,6 +256,12 @@ def test_dimension_normalization():
     assert Plane((1, 2, 1), (2, 1, 0), (3, 1, 2)
         ).intersection((2, 1)) == [Point(2, 1, 0)]
 
+    p = Plane(Point3D(0, 0, 0), normal_vector=(10**-7, 0, 1))
+    pt = Point3D(1, 0, 0)
+    proj = p.projection(pt)
+    assert proj in p
+    assert isinstance(proj, Point3D)
+
 
 def test_parameter_value():
     t, u, v = symbols("t, u v")
@@ -266,3 +273,10 @@ def test_parameter_value():
     raises(ValueError, lambda: p.parameter_value((1, 0, 0), t))
     raises(ValueError, lambda: p.parameter_value(Line(Point(0, 0), Point(1, 1)), t))
     raises(ValueError, lambda: p.parameter_value((0, -3, 2), t, 1))
+
+
+def test_plane_equation_symbol_clash():
+    x, y, z, u, v, w = symbols('x y z u v w')
+
+    p = Plane(Point3D(x, y, z), normal_vector=(u, v, w))
+    raises(ValueError, lambda: p.equation(x, y, z))

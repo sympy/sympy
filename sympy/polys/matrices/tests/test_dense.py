@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.testing.pytest import raises
 
 from sympy.polys import ZZ, QQ
@@ -7,8 +8,13 @@ from sympy.polys.matrices.dense import (
         ddm_transpose,
         ddm_iadd, ddm_isub, ddm_ineg, ddm_imatmul, ddm_imul, ddm_irref,
         ddm_idet, ddm_iinv, ddm_ilu, ddm_ilu_split, ddm_ilu_solve, ddm_berk)
+
 from sympy.polys.matrices.exceptions import (
-    DMShapeError, DMNonInvertibleMatrixError, DMNonSquareMatrixError)
+    DMDomainError,
+    DMNonInvertibleMatrixError,
+    DMNonSquareMatrixError,
+    DMShapeError,
+)
 
 
 def test_ddm_transpose():
@@ -143,7 +149,7 @@ def test_ddm_inv():
 
     A = []
     Ainv = []
-    raises(ValueError, lambda: ddm_iinv(Ainv, A, ZZ))
+    raises(DMDomainError, lambda: ddm_iinv(Ainv, A, ZZ))
 
     A = [[QQ(1), QQ(2)]]
     Ainv = [[QQ(0), QQ(0)]]

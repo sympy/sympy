@@ -1,11 +1,11 @@
+from __future__ import annotations
 import keyword as kw
 import sympy
 from .repr import ReprPrinter
 from .str import StrPrinter
 
 # A list of classes that should be printed using StrPrinter
-STRPRINT = ("Add", "Infinity", "Integer", "Mul", "NegativeInfinity",
-            "Pow", "Zero")
+STRPRINT = ("Add", "Infinity", "Integer", "Mul", "NegativeInfinity", "Pow")
 
 
 class PythonPrinter(ReprPrinter, StrPrinter):

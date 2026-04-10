@@ -1,8 +1,9 @@
-from sympy.core.backend import sympify, Add, ImmutableMatrix as Matrix
+from __future__ import annotations
+from sympy import sympify, Add, ImmutableMatrix as Matrix, S
 from sympy.core.evalf import EvalfMixin
+from sympy.external.mpmath import prec_to_dps
 from sympy.printing.defaults import Printable
-
-from mpmath.libmp.libmpf import prec_to_dps
+from sympy.printing.pretty.stringpict import prettyForm
 
 
 __all__ = ['Dyadic']
@@ -71,7 +72,37 @@ class Dyadic(Printable, EvalfMixin):
         other = _check_dyadic(other)
         return Dyadic(self.args + other.args)
 
-    def __and__(self, other):
+    __radd__ = __add__
+
+    def __mul__(self, other):
+        """Multiplies the Dyadic by a sympifyable expression.
+
+        Parameters
+        ==========
+
+        other : Sympafiable
+            The scalar to multiply this Dyadic with
+
+        Examples
+        ========
+
+        >>> from sympy.physics.vector import ReferenceFrame, outer
+        >>> N = ReferenceFrame('N')
+        >>> d = outer(N.x, N.x)
+        >>> 5 * d
+        5*(N.x|N.x)
+
+        """
+        newlist = list(self.args)
+        other = sympify(other)
+        for i in range(len(newlist)):
+            newlist[i] = (other * newlist[i][0], newlist[i][1],
+                          newlist[i][2])
+        return Dyadic(newlist)
+
+    __rmul__ = __mul__
+
+    def dot(self, other):
         """The inner product operator for a Dyadic and a Dyadic or Vector.
 
         Parameters
@@ -97,19 +128,22 @@ class Dyadic(Printable, EvalfMixin):
         if isinstance(other, Dyadic):
             other = _check_dyadic(other)
             ol = Dyadic(0)
-            for i, v in enumerate(self.args):
-                for i2, v2 in enumerate(other.args):
-                    ol += v[0] * v2[0] * (v[2] & v2[1]) * (v[1] | v2[2])
+            for v in self.args:
+                for v2 in other.args:
+                    ol += v[0] * v2[0] * (v[2].dot(v2[1])) * (v[1].outer(v2[2]))
         else:
             other = _check_vector(other)
             ol = Vector(0)
-            for i, v in enumerate(self.args):
-                ol += v[0] * v[1] * (v[2] & other)
+            for v in self.args:
+                ol += v[0] * v[1] * (v[2].dot(other))
         return ol
+
+    # NOTE : supports non-advertised Dyadic & Dyadic, Dyadic & Vector notation
+    __and__ = dot
 
     def __truediv__(self, other):
         """Divides the Dyadic by a sympifyable expression. """
-        return self.__mul__(1 / other)
+        return self.__mul__(S.One / other)
 
     def __eq__(self, other):
         """Tests for equality.
@@ -127,33 +161,6 @@ class Dyadic(Printable, EvalfMixin):
             return False
         return set(self.args) == set(other.args)
 
-    def __mul__(self, other):
-        """Multiplies the Dyadic by a sympifyable expression.
-
-        Parameters
-        ==========
-
-        other : Sympafiable
-            The scalar to multiply this Dyadic with
-
-        Examples
-        ========
-
-        >>> from sympy.physics.vector import ReferenceFrame, outer
-        >>> N = ReferenceFrame('N')
-        >>> d = outer(N.x, N.x)
-        >>> 5 * d
-        5*(N.x|N.x)
-
-        """
-
-        newlist = [v for v in self.args]
-        other = sympify(other)
-        for i, v in enumerate(newlist):
-            newlist[i] = (other * newlist[i][0], newlist[i][1],
-                          newlist[i][2])
-        return Dyadic(newlist)
-
     def __ne__(self, other):
         return not self == other
 
@@ -165,30 +172,30 @@ class Dyadic(Printable, EvalfMixin):
         if len(ar) == 0:
             return str(0)
         ol = []  # output list, to be concatenated to a string
-        for i, v in enumerate(ar):
+        for v in ar:
             # if the coef of the dyadic is 1, we skip the 1
-            if ar[i][0] == 1:
-                ol.append(' + ' + printer._print(ar[i][1]) + r"\otimes " +
-                          printer._print(ar[i][2]))
+            if v[0] == 1:
+                ol.append(' + ' + printer._print(v[1]) + r"\otimes " +
+                          printer._print(v[2]))
             # if the coef of the dyadic is -1, we skip the 1
-            elif ar[i][0] == -1:
+            elif v[0] == -1:
                 ol.append(' - ' +
-                          printer._print(ar[i][1]) +
+                          printer._print(v[1]) +
                           r"\otimes " +
-                          printer._print(ar[i][2]))
+                          printer._print(v[2]))
             # If the coefficient of the dyadic is not 1 or -1,
             # we might wrap it in parentheses, for readability.
-            elif ar[i][0] != 0:
-                arg_str = printer._print(ar[i][0])
-                if isinstance(ar[i][0], Add):
+            elif v[0] != 0:
+                arg_str = printer._print(v[0])
+                if isinstance(v[0], Add):
                     arg_str = '(%s)' % arg_str
                 if arg_str.startswith('-'):
                     arg_str = arg_str[1:]
                     str_start = ' - '
                 else:
                     str_start = ' + '
-                ol.append(str_start + arg_str + printer._print(ar[i][1]) +
-                          r"\otimes " + printer._print(ar[i][2]))
+                ol.append(str_start + arg_str + printer._print(v[1]) +
+                          r"\otimes " + printer._print(v[2]))
         outstr = ''.join(ol)
         if outstr.startswith(' + '):
             outstr = outstr[3:]
@@ -203,111 +210,48 @@ class Dyadic(Printable, EvalfMixin):
             baseline = 0
 
             def render(self, *args, **kwargs):
-                ar = e.args  # just to shorten things
                 mpp = printer
-                if len(ar) == 0:
-                    return str(0)
-                bar = "\N{CIRCLED TIMES}" if printer._use_unicode else "|"
-                ol = []  # output list, to be concatenated to a string
-                for i, v in enumerate(ar):
-                    # if the coef of the dyadic is 1, we skip the 1
-                    if ar[i][0] == 1:
-                        ol.extend([" + ",
-                                  mpp.doprint(ar[i][1]),
-                                  bar,
-                                  mpp.doprint(ar[i][2])])
+                if len(e.args) == 0:
+                    return mpp._print(0)
 
-                    # if the coef of the dyadic is -1, we skip the 1
-                    elif ar[i][0] == -1:
-                        ol.extend([" - ",
-                                  mpp.doprint(ar[i][1]),
-                                  bar,
-                                  mpp.doprint(ar[i][2])])
+                outstr = None
+                bar = prettyForm(u"\N{CIRCLED TIMES}" if mpp._use_unicode else "|")
+                for i, v in enumerate(e.args):
+                    p_v1 = mpp._print(v[1])
+                    p_v2 = mpp._print(v[2])
+                    p_dyad = prettyForm(*p_v1.right(bar, p_v2))
 
-                    # If the coefficient of the dyadic is not 1 or -1,
-                    # we might wrap it in parentheses, for readability.
-                    elif ar[i][0] != 0:
-                        if isinstance(ar[i][0], Add):
-                            arg_str = mpp._print(
-                                ar[i][0]).parens()[0]
+                    c = v[0]
+                    if i == 0:
+                        sign = ""
+                    else:
+                        sign = " + "
+
+                    coeff, rest = c.as_coeff_Mul()
+                    if coeff < 0:
+                        if i == 0:
+                            sign = "- "
                         else:
-                            arg_str = mpp.doprint(ar[i][0])
-                        if arg_str.startswith("-"):
-                            arg_str = arg_str[1:]
-                            str_start = " - "
-                        else:
-                            str_start = " + "
-                        ol.extend([str_start, arg_str, " ",
-                                  mpp.doprint(ar[i][1]),
-                                  bar,
-                                  mpp.doprint(ar[i][2])])
+                            sign = " - "
+                        c = -c
 
-                outstr = "".join(ol)
-                if outstr.startswith(" + "):
-                    outstr = outstr[3:]
-                elif outstr.startswith(" "):
-                    outstr = outstr[1:]
-                return outstr
+                    if c == 1:
+                        p_term = p_dyad
+                    else:
+                        p_c = mpp._print(c)
+                        if isinstance(c, Add):
+                            p_c = prettyForm(*p_c.parens())
+                        p_term = prettyForm(*p_c.right(" ", p_dyad))
+
+                    if outstr is None:
+                        outstr = prettyForm(*p_term.left(sign))
+                    else:
+                        outstr = prettyForm(*outstr.right(sign, p_term))
+                return outstr.__str__()
         return Fake()
-
-    def __rand__(self, other):
-        """The inner product operator for a Vector or Dyadic, and a Dyadic
-
-        This is for: Vector dot Dyadic
-
-        Parameters
-        ==========
-
-        other : Vector
-            The vector we are dotting with
-
-        Examples
-        ========
-
-        >>> from sympy.physics.vector import ReferenceFrame, dot, outer
-        >>> N = ReferenceFrame('N')
-        >>> d = outer(N.x, N.x)
-        >>> dot(N.x, d)
-        N.x
-
-        """
-
-        from sympy.physics.vector.vector import Vector, _check_vector
-        other = _check_vector(other)
-        ol = Vector(0)
-        for i, v in enumerate(self.args):
-            ol += v[0] * v[2] * (v[1] & other)
-        return ol
 
     def __rsub__(self, other):
         return (-1 * self) + other
-
-    def __rxor__(self, other):
-        """For a cross product in the form: Vector x Dyadic
-
-        Parameters
-        ==========
-
-        other : Vector
-            The Vector that we are crossing this Dyadic with
-
-        Examples
-        ========
-
-        >>> from sympy.physics.vector import ReferenceFrame, outer, cross
-        >>> N = ReferenceFrame('N')
-        >>> d = outer(N.x, N.x)
-        >>> cross(N.y, d)
-        - (N.z|N.x)
-
-        """
-
-        from sympy.physics.vector.vector import _check_vector
-        other = _check_vector(other)
-        ol = Dyadic(0)
-        for i, v in enumerate(self.args):
-            ol += v[0] * ((other ^ v[1]) | v[2])
-        return ol
 
     def _sympystr(self, printer):
         """Printing method. """
@@ -315,20 +259,20 @@ class Dyadic(Printable, EvalfMixin):
         if len(ar) == 0:
             return printer._print(0)
         ol = []  # output list, to be concatenated to a string
-        for i, v in enumerate(ar):
+        for v in ar:
             # if the coef of the dyadic is 1, we skip the 1
-            if ar[i][0] == 1:
-                ol.append(' + (' + printer._print(ar[i][1]) + '|' +
-                          printer._print(ar[i][2]) + ')')
+            if v[0] == 1:
+                ol.append(' + (' + printer._print(v[1]) + '|' +
+                          printer._print(v[2]) + ')')
             # if the coef of the dyadic is -1, we skip the 1
-            elif ar[i][0] == -1:
-                ol.append(' - (' + printer._print(ar[i][1]) + '|' +
-                          printer._print(ar[i][2]) + ')')
+            elif v[0] == -1:
+                ol.append(' - (' + printer._print(v[1]) + '|' +
+                          printer._print(v[2]) + ')')
             # If the coefficient of the dyadic is not 1 or -1,
             # we might wrap it in parentheses, for readability.
-            elif ar[i][0] != 0:
-                arg_str = printer._print(ar[i][0])
-                if isinstance(ar[i][0], Add):
+            elif v[0] != 0:
+                arg_str = printer._print(v[0])
+                if isinstance(v[0], Add):
                     arg_str = "(%s)" % arg_str
                 if arg_str[0] == '-':
                     arg_str = arg_str[1:]
@@ -336,8 +280,8 @@ class Dyadic(Printable, EvalfMixin):
                 else:
                     str_start = ' + '
                 ol.append(str_start + arg_str + '*(' +
-                          printer._print(ar[i][1]) +
-                          '|' + printer._print(ar[i][2]) + ')')
+                          printer._print(v[1]) +
+                          '|' + printer._print(v[2]) + ')')
         outstr = ''.join(ol)
         if outstr.startswith(' + '):
             outstr = outstr[3:]
@@ -349,18 +293,17 @@ class Dyadic(Printable, EvalfMixin):
         """The subtraction operator. """
         return self.__add__(other * -1)
 
-    def __xor__(self, other):
-        """For a cross product in the form: Dyadic x Vector.
+    def cross(self, other):
+        """Returns the dyadic resulting from the dyadic vector cross product:
+        Dyadic x Vector.
 
         Parameters
         ==========
-
         other : Vector
-            The Vector that we are crossing this Dyadic with
+            Vector to cross with.
 
         Examples
         ========
-
         >>> from sympy.physics.vector import ReferenceFrame, outer, cross
         >>> N = ReferenceFrame('N')
         >>> d = outer(N.x, N.x)
@@ -368,16 +311,15 @@ class Dyadic(Printable, EvalfMixin):
         (N.x|N.z)
 
         """
-
         from sympy.physics.vector.vector import _check_vector
         other = _check_vector(other)
         ol = Dyadic(0)
-        for i, v in enumerate(self.args):
-            ol += v[0] * (v[1] | (v[2] ^ other))
+        for v in self.args:
+            ol += v[0] * (v[1].outer((v[2].cross(other))))
         return ol
 
-    __radd__ = __add__
-    __rmul__ = __mul__
+    # NOTE : supports non-advertised Dyadic ^ Vector notation
+    __xor__ = cross
 
     def express(self, frame1, frame2=None):
         """Expresses this Dyadic in alternate frame(s)
@@ -436,9 +378,8 @@ class Dyadic(Printable, EvalfMixin):
         Examples
         ========
 
-        >>> from sympy import symbols
-        >>> from sympy.physics.vector import ReferenceFrame, Vector
-        >>> Vector.simp = True
+        >>> from sympy import symbols, trigsimp
+        >>> from sympy.physics.vector import ReferenceFrame
         >>> from sympy.physics.mechanics import inertia
         >>> Ixx, Iyy, Izz, Ixy, Iyz, Ixz = symbols('Ixx, Iyy, Izz, Ixy, Iyz, Ixz')
         >>> N = ReferenceFrame('N')
@@ -450,7 +391,7 @@ class Dyadic(Printable, EvalfMixin):
         [Ixz, Iyz, Izz]])
         >>> beta = symbols('beta')
         >>> A = N.orientnew('A', 'Axis', (beta, N.x))
-        >>> inertia_dyadic.to_matrix(A)
+        >>> trigsimp(inertia_dyadic.to_matrix(A))
         Matrix([
         [                           Ixx,                                           Ixy*cos(beta) + Ixz*sin(beta),                                           -Ixy*sin(beta) + Ixz*cos(beta)],
         [ Ixy*cos(beta) + Ixz*sin(beta), Iyy*cos(2*beta)/2 + Iyy/2 + Iyz*sin(2*beta) - Izz*cos(2*beta)/2 + Izz/2,                 -Iyy*sin(2*beta)/2 + Iyz*cos(2*beta) + Izz*sin(2*beta)/2],
@@ -530,11 +471,8 @@ class Dyadic(Printable, EvalfMixin):
 
         out = Dyadic(0)
         for a, b, c in self.args:
-            out += f(a) * (b | c)
+            out += f(a) * (b.outer(c))
         return out
-
-    dot = __and__
-    cross = __xor__
 
     def _eval_evalf(self, prec):
         if not self.args:

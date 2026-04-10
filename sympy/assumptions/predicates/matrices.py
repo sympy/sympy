@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.assumptions import Predicate
 from sympy.multipledispatch import Dispatcher
 
@@ -269,7 +270,7 @@ class UpperTriangularPredicate(Predicate):
     References
     ==========
 
-    .. [1] http://mathworld.wolfram.com/UpperTriangularMatrix.html
+    .. [1] https://mathworld.wolfram.com/UpperTriangularMatrix.html
 
     """
     name = "upper_triangular"
@@ -298,7 +299,7 @@ class LowerTriangularPredicate(Predicate):
     References
     ==========
 
-    .. [1] http://mathworld.wolfram.com/LowerTriangularMatrix.html
+    .. [1] https://mathworld.wolfram.com/LowerTriangularMatrix.html
 
     """
     name = "lower_triangular"
@@ -427,7 +428,7 @@ class SingularPredicate(Predicate):
     References
     ==========
 
-    .. [1] http://mathworld.wolfram.com/SingularMatrix.html
+    .. [1] https://mathworld.wolfram.com/SingularMatrix.html
 
     """
     name = "singular"

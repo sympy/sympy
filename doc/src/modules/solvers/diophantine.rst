@@ -218,7 +218,7 @@ Here A is a 2 X 2 matrix and B is a 2 X 1 matrix such that the transformation
 
     \begin{bmatrix} X\\Y \end{bmatrix} = A \begin{bmatrix} x\\y \end{bmatrix} + B
 
-gives the equation `X^2 -5Y^2 = 920`. Values of `A` and `B` are as belows.
+gives the equation `X^2 -5Y^2 = 920`. Values of `A` and `B` are as below.
 
 >>> A
 Matrix([
@@ -316,7 +316,7 @@ unit fractions:
 To get a more thorough understanding of the Diophantine module, please
 refer to the following blog.
 
-http://thilinaatsympy.wordpress.com/
+https://thilinaatsympy.wordpress.com/
 
 
 References
@@ -325,11 +325,11 @@ References
 .. [1] Andreescu, Titu. Andrica, Dorin. Cucurezeanu, Ion. An Introduction to
     Diophantine Equations
 .. [2] Diophantine Equation, Wolfram Mathworld, [online]. Available:
-    http://mathworld.wolfram.com/DiophantineEquation.html
+    https://mathworld.wolfram.com/DiophantineEquation.html
 .. [3] Methods to solve Ax^2 + Bxy + Cy^2 + Dx + Ey + F = 0,[online],
-    Available: http://www.alpertron.com.ar/METHODS.HTM
+    Available: https://www.alpertron.com.ar/METHODS.HTM
 .. [4] Solving the equation ax^2+ bxy + cy^2 + dx + ey + f= 0, [online],
-    Available: https://web.archive.org/web/20160323033111/http://www.jpr2718.org/ax2p.pdf
+    Available: https://web.archive.org/web/20160323033111/https://www.jpr2718.org/ax2p.pdf
 
 User Functions
 --------------

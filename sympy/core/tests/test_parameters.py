@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.abc import x, y
 from sympy.core.parameters import evaluate
 from sympy.core import Mul, Add, Pow, S
@@ -88,3 +89,39 @@ def test_nested():
         expr = (x + x) + (y + y)
         assert expr.args == ((x + x), (y + y))
         assert expr.args[0].args == (x, x)
+
+def test_reentrantcy():
+    with evaluate(False):
+        expr = x + x
+        assert expr.args == (x, x)
+        with evaluate(True):
+            expr = x + x
+            assert expr.args == (2, x)
+        expr = x + x
+        assert expr.args == (x, x)
+
+def test_reusability():
+    f = evaluate(False)
+
+    with f:
+        expr = x + x
+        assert expr.args == (x, x)
+
+    expr = x + x
+    assert expr.args == (2, x)
+
+    with f:
+        expr = x + x
+        assert expr.args == (x, x)
+
+    # Assure reentrancy with reusability
+    ctx = evaluate(False)
+    with ctx:
+        expr = x + x
+        assert expr.args == (x, x)
+        with ctx:
+            expr = x + x
+            assert expr.args == (x, x)
+
+    expr = x + x
+    assert expr.args == (2, x)

@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
+from __future__ import annotations
 
 from .cartan_type import CartanType
-from mpmath import fac
+from sympy.external.mpmath import fac
 from sympy.core.backend import Matrix, eye, Rational, igcd
 from sympy.core.basic import Atom
 
@@ -202,16 +203,12 @@ class WeylGroup(Atom):
         Weyl group of G2.  It takes a Weyl element and if repeated simple reflections
         in it, it deletes them.
         """
-        counter = 0
         copy = list(reflections)
-        for elt in copy:
+        for counter, elt in enumerate(copy):
             if counter < len(copy)-1:
                 if copy[counter + 1] == elt:
                     del copy[counter]
                     del copy[counter]
-            counter += 1
-
-
         return copy
 
 

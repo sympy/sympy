@@ -248,20 +248,17 @@ object.
     <... 'int'>
 
 This is usually not a big deal. Python ints work much the same as SymPy
-Integers, but there is one important exception:  division.  In SymPy, the
-division of two Integers gives a Rational:
+Integers, but there is one important exception: division. In SymPy, the
+division of two Integers gives a Rational (which is similar to Python's `Fraction
+<https://docs.python.org/3/library/fractions.html>`_):
 
     >>> Integer(1)/Integer(3)
     1/3
     >>> type(Integer(1)/Integer(3))
     <class 'sympy.core.numbers.Rational'>
 
-But in Python ``/`` represents either integer division or floating point
-division, depending on whether you are in Python 2 or Python 3, and depending
-on whether or not you have run ``from __future__ import division`` in Python 2
-which is no longer supported from versions above SymPy 1.5.1:
+But in Python 3 ``/`` represents  floating point division:
 
-    >>> from __future__ import division
     >>> 1/2
     0.5
 

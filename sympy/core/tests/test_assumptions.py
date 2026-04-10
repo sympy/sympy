@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.mod import Mod
 from sympy.core.numbers import (I, oo, pi)
 from sympy.functions.combinatorial.factorials import factorial
@@ -703,6 +704,18 @@ def test_other_symbol():
     assert x.is_integer is False
 
 
+def test_evaluate_false():
+    # Previously this failed because the assumptions query would make new
+    # expressions and some of the evaluation logic would fail under
+    # evaluate(False).
+    from sympy.core.parameters import evaluate
+    from sympy.abc import x, h
+    f = 2**x**7
+    with evaluate(False):
+        fh = f.xreplace({x: x+h})
+        assert fh.exp.is_rational is None
+
+
 def test_issue_3825():
     """catch: hash instability"""
     x = Symbol("x")
@@ -1029,7 +1042,7 @@ def test_sanitize_assumptions():
         assert x.is_positive is False
         assert cls('', real=True, positive=None).is_positive is None
         raises(ValueError, lambda: cls('', commutative=None))
-    raises(ValueError, lambda: Symbol._sanitize(dict(commutative=None)))
+    raises(ValueError, lambda: Symbol._sanitize({"commutative": None}))
 
 
 def test_special_assumptions():
@@ -1158,9 +1171,11 @@ def test_issue_10302():
     r = Symbol('r', real=True)
     u = -(3*2**pi)**(1/pi) + 2*3**(1/pi)
     i = u + u*I
+
     assert i.is_real is None  # w/o simplification this should fail
     assert (u + i).is_zero is None
     assert (1 + i).is_zero is False
+
     a = Dummy('a', zero=True)
     assert (a + I).is_zero is False
     assert (a + r*I).is_zero is None
@@ -1214,7 +1229,7 @@ def test_issue_21651():
 
 
 def test_assumptions_copy():
-    assert assumptions(Symbol('x'), dict(commutative=True)
+    assert assumptions(Symbol('x'), {"commutative": True}
         ) == {'commutative': True}
     assert assumptions(Symbol('x'), ['integer']) == {}
     assert assumptions(Symbol('x'), ['commutative']
@@ -1274,7 +1289,7 @@ def test_failing_assumptions():
     x = Symbol('x', positive=True)
     y = Symbol('y')
     assert failing_assumptions(6*x + y, **x.assumptions0) == \
-    {'real': None, 'imaginary': None, 'complex': None, 'hermitian': None,
+    {'real': None, 'imaginary': None, 'complex': None,
     'positive': None, 'nonpositive': None, 'nonnegative': None, 'nonzero': None,
     'negative': None, 'zero': None, 'extended_real': None, 'finite': None,
     'infinite': None, 'extended_negative': None, 'extended_nonnegative': None,
@@ -1284,8 +1299,7 @@ def test_failing_assumptions():
 
 def test_common_assumptions():
     assert common_assumptions([0, 1, 2]
-        ) == {'algebraic': True, 'irrational': False, 'hermitian':
-        True, 'extended_real': True, 'real': True, 'extended_negative':
+        ) == {'algebraic': True, 'irrational': False, 'extended_real': True, 'real': True, 'extended_negative':
         False, 'extended_nonnegative': True, 'integer': True,
         'rational': True, 'imaginary': False, 'complex': True,
         'commutative': True,'noninteger': False, 'composite': False,

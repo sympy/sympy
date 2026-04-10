@@ -31,12 +31,14 @@ well:
   $\beta$, decide whether $\alpha \in \mathbb{Q}(\beta)$, and if so write
   $\alpha = f(\beta)$ for some $f(x) \in \mathbb{Q}[x]$.
 """
+from __future__ import annotations
 
 from sympy.core.add import Add
 from sympy.core.numbers import AlgebraicNumber
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy
 from sympy.core.sympify import sympify, _sympify
+from sympy.external.mpmath import local_workprec
 from sympy.ntheory import sieve
 from sympy.polys.densetools import dup_eval
 from sympy.polys.domains import QQ
@@ -44,8 +46,6 @@ from sympy.polys.numberfields.minpoly import _choose_factor, minimal_polynomial
 from sympy.polys.polyerrors import IsomorphismFailed
 from sympy.polys.polytools import Poly, PurePoly, factor_list
 from sympy.utilities import public
-
-from mpmath import MPContext
 
 
 def is_isomorphism_possible(a, b):
@@ -88,51 +88,52 @@ def field_isomorphism_pslq(a, b):
     g = b.minpoly.replace(f.gen)
 
     n, m, prev = 100, b.minpoly.degree(), None
-    ctx = MPContext()
 
-    for i in range(1, 5):
-        A = a.root.evalf(n)
-        B = b.root.evalf(n)
+    with local_workprec(53) as ctx:
 
-        basis = [1, B] + [ B**i for i in range(2, m) ] + [-A]
+        for i in range(1, 5):
+            A = a.root.evalf(n)
+            B = b.root.evalf(n)
 
-        ctx.dps = n
-        coeffs = ctx.pslq(basis, maxcoeff=10**10, maxsteps=1000)
+            basis = [1, B] + [ B**i for i in range(2, m) ] + [-A]
 
-        if coeffs is None:
-            # PSLQ can't find an integer linear combination. Give up.
-            break
+            ctx.dps = n
+            coeffs = ctx.pslq(basis, maxcoeff=10**10, maxsteps=1000)
 
-        if coeffs != prev:
-            prev = coeffs
-        else:
-            # Increasing precision didn't produce anything new. Give up.
-            break
+            if coeffs is None:
+                # PSLQ can't find an integer linear combination. Give up.
+                break
 
-        # We have
-        #   c0 + c1*B + c2*B^2 + ... + cm-1*B^(m-1) - cm*A ~ 0.
-        # So bring cm*A to the other side, and divide through by cm,
-        # for an approximate representation of A as a polynomial in B.
-        # (We know cm != 0 since `b.minpoly` is irreducible.)
-        coeffs = [S(c)/coeffs[-1] for c in coeffs[:-1]]
+            if coeffs != prev:
+                prev = coeffs
+            else:
+                # Increasing precision didn't produce anything new. Give up.
+                break
 
-        # Throw away leading zeros.
-        while not coeffs[-1]:
-            coeffs.pop()
+            # We have
+            #   c0 + c1*B + c2*B^2 + ... + cm-1*B^(m-1) - cm*A ~ 0.
+            # So bring cm*A to the other side, and divide through by cm,
+            # for an approximate representation of A as a polynomial in B.
+            # (We know cm != 0 since `b.minpoly` is irreducible.)
+            coeffs = [S(c)/coeffs[-1] for c in coeffs[:-1]]
 
-        coeffs = list(reversed(coeffs))
-        h = Poly(coeffs, f.gen, domain='QQ')
+            # Throw away leading zeros.
+            while not coeffs[-1]:
+                coeffs.pop()
 
-        # We only have A ~ h(B). We must check whether the relation is exact.
-        if f.compose(h).rem(g).is_zero:
-            # Now we know that h(b) is in fact equal to _some conjugate of_ a.
-            # But from the very precise approximation A ~ h(B) we can assume
-            # the conjugate is a itself.
-            return coeffs
-        else:
-            n *= 2
+            coeffs = list(reversed(coeffs))
+            h = Poly(coeffs, f.gen, domain='QQ')
 
-    return None
+            # We only have A ~ h(B). We must check whether the relation is exact.
+            if f.compose(h).rem(g).is_zero:
+                # Now we know that h(b) is in fact equal to _some conjugate of_ a.
+                # But from the very precise approximation A ~ h(B) we can assume
+                # the conjugate is a itself.
+                return coeffs
+            else:
+                n *= 2
+
+        return None
 
 
 def field_isomorphism_factor(a, b):
@@ -251,7 +252,7 @@ def _switch_domain(g, K):
 
 def _linsolve(p):
     # Compute root of linear polynomial.
-    c, d = p.rep.rep
+    c, d = p.rep.to_list()
     return -d/c
 
 
@@ -347,6 +348,12 @@ def primitive_element(extension, x=None, *, ex=False, polys=False):
     else:
         x, cls = Dummy('x'), PurePoly
 
+    def _canonicalize(f):
+        _, f = f.primitive()
+        if f.LC() < 0:
+            f = -f
+        return f
+
     if not ex:
         gen, coeffs = extension[0], [1]
         g = minimal_polynomial(gen, x, polys=True)
@@ -356,10 +363,11 @@ def primitive_element(extension, x=None, *, ex=False, polys=False):
                 continue
             _, factors = factor_list(g, extension=ext)
             g = _choose_factor(factors, x, gen)
-            s, _, g = g.sqf_norm()
+            [s], _, g = g.sqf_norm()
             gen += s*ext
             coeffs.append(s)
 
+        g = _canonicalize(g)
         if not polys:
             return g.as_expr(), coeffs
         else:
@@ -378,21 +386,23 @@ def primitive_element(extension, x=None, *, ex=False, polys=False):
         L = QQ.algebraic_field((p, ext))
         _, factors = factor_list(f, domain=L)
         f = _choose_factor(factors, x, gen)
-        s, g, f = f.sqf_norm()
+        [s], g, f = f.sqf_norm()
         gen += s*ext
         coeffs.append(s)
         K = QQ.algebraic_field((f, gen))
         h = _switch_domain(g, K)
         erep = _linsolve(h.gcd(p))  # ext as element of K
         ogen = K.unit - s*erep  # old gen as element of K
-        reps = [dup_eval(_.rep, ogen, K) for _ in reps] + [erep]
+        reps = [dup_eval(_.to_list(), ogen, K) for _ in reps] + [erep]
 
     if K.ext.root.is_Rational:  # all extensions are rational
         H = [K.convert(_).rep for _ in extension]
         coeffs = [0]*len(extension)
         f = cls(x, domain=QQ)
     else:
-        H = [_.rep for _ in reps]
+        H = [_.to_list() for _ in reps]
+
+    f = _canonicalize(f)
     if not polys:
         return f.as_expr(), coeffs, H
     else:
@@ -488,7 +498,7 @@ def to_number_field(extension, theta=None, *, gen=None, alias=None):
         return AlgebraicNumber(extension[0], alias=alias)
 
     minpoly, coeffs = primitive_element(extension, gen, polys=True)
-    root = sum([ coeff*ext for coeff, ext in zip(coeffs, extension) ])
+    root = sum(coeff*ext for coeff, ext in zip(coeffs, extension))
 
     if theta is None:
         return AlgebraicNumber((minpoly, root), alias=alias)

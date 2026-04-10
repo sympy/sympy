@@ -13,6 +13,7 @@ descriptions for details.
 TODO List:
 - Update the dictionary with a complete list of state-operator pairs
 """
+from __future__ import annotations
 
 from sympy.physics.quantum.cartesian import (XOp, YOp, ZOp, XKet, PxOp, PxKet,
                                              PositionKet3D)
@@ -98,8 +99,7 @@ def operators_to_state(operators, **options):
     |psi>
     """
 
-    if not (isinstance(operators, Operator)
-            or isinstance(operators, set) or issubclass(operators, Operator)):
+    if not (isinstance(operators, (Operator, set)) or issubclass(operators, Operator)):
         raise NotImplementedError("Argument is not an Operator or a set!")
 
     if isinstance(operators, set):

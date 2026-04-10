@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.function import nfloat
 from sympy.core.numbers import (Float, I, Rational, pi)
 from sympy.core.relational import Eq
@@ -11,7 +12,7 @@ from mpmath import mnorm, mpf
 from sympy.solvers import nsolve
 from sympy.utilities.lambdify import lambdify
 from sympy.testing.pytest import raises, XFAIL
-from sympy.utilities.decorator import conserve_mpmath_dps
+from sympy.external.mpmath import conserve_mpmath_dps
 
 @XFAIL
 def test_nsolve_fail():
@@ -73,12 +74,12 @@ def test_nsolve():
 
 def test_issue_6408():
     x = Symbol('x')
-    assert nsolve(Piecewise((x, x < 1), (x**2, True)), x, 2) == 0.0
+    assert nsolve(Piecewise((x, x < 1), (x**2, True)), x, 2) == 0
 
 
 def test_issue_6408_integral():
     x, y = symbols('x y')
-    assert nsolve(Integral(x*y, (x, 0, 5)), y, 2) == 0.0
+    assert nsolve(Integral(x*y, (x, 0, 5)), y, 2) == 0
 
 
 @conserve_mpmath_dps

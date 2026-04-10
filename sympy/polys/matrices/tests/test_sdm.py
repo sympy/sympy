@@ -1,13 +1,15 @@
 """
 Tests for the basic functionality of the SDM class.
 """
+from __future__ import annotations
 
 from itertools import product
 
 from sympy.core.singleton import S
-from sympy.external.gmpy import HAS_GMPY
+from sympy.external.gmpy import GROUND_TYPES
 from sympy.testing.pytest import raises
 
+from sympy import oo, zoo ,nan
 from sympy.polys.domains import QQ, ZZ, EXRAW
 from sympy.polys.matrices.sdm import SDM
 from sympy.polys.matrices.ddm import DDM
@@ -28,7 +30,7 @@ def test_SDM():
 def test_DDM_str():
     sdm = SDM({0:{0:ZZ(1)}, 1:{1:ZZ(1)}}, (2, 2), ZZ)
     assert str(sdm) == '{0: {0: 1}, 1: {1: 1}}'
-    if HAS_GMPY: # pragma: no cover
+    if GROUND_TYPES == 'gmpy': # pragma: no cover
         assert repr(sdm) == 'SDM({0: {0: mpz(1)}, 1: {1: mpz(1)}}, (2, 2), ZZ)'
     else:        # pragma: no cover
         assert repr(sdm) == 'SDM({0: {0: 1}, 1: {1: 1}}, (2, 2), ZZ)'
@@ -215,11 +217,36 @@ def test_SDM_mul_elementwise():
     assert A.mul_elementwise(B) == C
     assert B.mul_elementwise(A) == C
 
+    D = SDM({}, (1, 1), EXRAW)
+    E = SDM({0: {0: oo}}, (1, 1), EXRAW)
+    F = SDM({0: {1: 1}}, (2, 2), EXRAW)
+    G = SDM({0: {1: 1}, 1: {0: oo}}, (2, 2), EXRAW)
+
+    assert D.mul_elementwise(E) == SDM({0: {0: nan}}, (1, 1), EXRAW)
+    assert F.mul_elementwise(G) == SDM({0: {1: 1}, 1: {0: nan}}, (2, 2), EXRAW)
+
     Aq = A.convert_to(QQ)
     A1 = SDM({0:{0:ZZ(1)}}, (1, 1), ZZ)
 
     raises(DMDomainError, lambda: Aq.mul_elementwise(B))
     raises(DMShapeError, lambda: A1.mul_elementwise(B))
+
+
+def test_SDM_scalar_mul_exraw():
+    A1 = SDM({}, (1, 1), EXRAW)
+    expected1 = SDM({0: {0: nan}}, (1, 1), EXRAW)
+    assert A1.mul(oo) == expected1
+    assert A1.rmul(oo) == expected1
+
+    A2 = SDM({0: {1: EXRAW(5)}}, (1, 2), EXRAW)
+    expected2 = SDM({0: {0: nan, 1: zoo}}, (1, 2), EXRAW)
+    assert A2.mul(zoo) == expected2
+
+    A3 = SDM({0: {0: ZZ(1), 1: ZZ(2)}}, (1, 2), ZZ)
+    expected3 = SDM({0: {0: ZZ(3), 1: ZZ(6)}}, (1, 2), ZZ)
+    scalar = ZZ(3)
+    assert A3.mul(scalar) == expected3
+    assert A3.rmul(scalar) == expected3
 
 
 def test_SDM_matmul():
@@ -371,40 +398,24 @@ def test_SDM_charpoly():
 
 
 def test_SDM_nullspace():
+    # More tests are in test_nullspace.py
     A = SDM({0:{0:QQ(1), 1:QQ(1)}}, (2, 2), QQ)
     assert A.nullspace()[0] == SDM({0:{0:QQ(-1), 1:QQ(1)}}, (1, 2), QQ)
 
 
 def test_SDM_rref():
-    eye2 = SDM({0:{0:QQ(1)}, 1:{1:QQ(1)}}, (2, 2), QQ)
+    # More tests are in test_rref.py
 
-    A = SDM({0:{0:QQ(1), 1:QQ(2)}, 1:{0:QQ(3), 1:QQ(4)}}, (2, 2), QQ)
-    assert A.rref() == (eye2, [0, 1])
+    A = SDM({0:{0:QQ(1), 1:QQ(2)},
+             1:{0:QQ(3), 1:QQ(4)}}, (2, 2), QQ)
+    A_rref = SDM({0:{0:QQ(1)}, 1:{1:QQ(1)}}, (2, 2), QQ)
+    assert A.rref() == (A_rref, [0, 1])
 
-    A = SDM({0:{0:QQ(1)}, 1:{0:QQ(3), 1:QQ(4)}}, (2, 2), QQ)
-    assert A.rref() == (eye2, [0, 1])
-
-    A = SDM({0:{1:QQ(2)}, 1:{0:QQ(3), 1:QQ(4)}}, (2, 2), QQ)
-    assert A.rref() == (eye2, [0, 1])
-
-    A = SDM({0:{0:QQ(1), 1:QQ(2), 2:QQ(3)},
-             1:{0:QQ(4), 1:QQ(5), 2:QQ(6)},
-             2:{0:QQ(7), 1:QQ(8), 2:QQ(9)} }, (3, 3), QQ)
-    Arref = SDM({0:{0:QQ(1), 2:QQ(-1)}, 1:{1:QQ(1), 2:QQ(2)}}, (3, 3), QQ)
-    assert A.rref() == (Arref, [0, 1])
-
-    A = SDM({0:{0:QQ(1), 1:QQ(2), 3:QQ(1)},
-             1:{0:QQ(1), 1:QQ(1), 2:QQ(9)}}, (2, 4), QQ)
-    Arref = SDM({0:{0:QQ(1), 2:QQ(18), 3:QQ(-1)},
-                 1:{1:QQ(1), 2:QQ(-9), 3:QQ(1)}}, (2, 4), QQ)
-    assert A.rref() == (Arref, [0, 1])
-
-    A = SDM({0:{0:QQ(1), 1:QQ(1), 2:QQ(1)},
-             1:{0:QQ(1), 1:QQ(2), 2:QQ(2)}}, (2, 3), QQ)
-    Arref = SDM(
-            {0: {0: QQ(1,1)}, 1: {1: QQ(1,1), 2: QQ(1,1)}},
-            (2, 3), QQ)
-    assert A.rref() == (Arref, [0, 1])
+    A = SDM({0: {0: QQ(1), 1: QQ(2), 2: QQ(2)},
+             1: {0: QQ(3),           2: QQ(4)}}, (2, 3), ZZ)
+    A_rref = SDM({0: {0: QQ(1,1), 2: QQ(4,3)},
+                  1: {1: QQ(1,1), 2: QQ(1,3)}}, (2, 3), QQ)
+    assert A.rref() == (A_rref, [0, 1])
 
 
 def test_SDM_particular():

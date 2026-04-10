@@ -46,6 +46,7 @@ For the sake of completeness, `f(n)` can be:
     [2] a rational function        -> rsolve_ratio
     [3] a hypergeometric function  -> rsolve_hyper
 """
+from __future__ import annotations
 from collections import defaultdict
 
 from sympy.concrete import product
@@ -549,6 +550,8 @@ def rsolve_hyper(coeffs, f, n, **hints):
             denoms = [S.One]*(r + 1)
 
             s = hypersimp(g, n)
+            if s is None:
+                return None
 
             for j in range(1, r + 1):
                 coeff *= s.subs(n, n + j - 1)
@@ -586,8 +589,8 @@ def rsolve_hyper(coeffs, f, n, **hints):
 
     p, q = coeffs[0], coeffs[r].subs(n, n - r + 1)
 
-    p_factors = [z for z in roots(p, n).keys()]
-    q_factors = [z for z in roots(q, n).keys()]
+    p_factors = list(roots(p, n).keys())
+    q_factors = list(roots(q, n).keys())
 
     factors = [(S.One, S.One)]
 
@@ -763,7 +766,7 @@ def rsolve(f, y, init=None):
     common = S.One
 
     if not i_part.is_zero and not i_part.is_hypergeometric(n) and \
-       not (i_part.is_Add and all(map(lambda x: x.is_hypergeometric(n), i_part.expand().args))):
+       not (i_part.is_Add and all((x.is_hypergeometric(n) for x in i_part.expand().args))):
         raise ValueError("The independent term should be a sum of hypergeometric functions, got '%s'" % i_part)
 
     for coeff in h_part.values():

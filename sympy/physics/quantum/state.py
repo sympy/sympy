@@ -1,4 +1,5 @@
 """Dirac notation for states."""
+from __future__ import annotations
 
 from sympy.core.cache import cacheit
 from sympy.core.containers import Tuple
@@ -11,6 +12,8 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.integrals.integrals import integrate
 from sympy.printing.pretty.stringpict import stringPict
 from sympy.physics.quantum.qexpr import QExpr, dispatch_method
+from sympy.physics.quantum.kind import KetKind, BraKind
+
 
 __all__ = [
     'KetBase',
@@ -109,6 +112,9 @@ class StateBase(QExpr):
     def _represent_default_basis(self, **options):
         return self._represent(basis=self.operators)
 
+    def _apply_operator(self, op, **options):
+        return None
+
     #-------------------------------------------------------------------------
     # Dagger/dual
     #-------------------------------------------------------------------------
@@ -205,6 +211,8 @@ class KetBase(StateBase):
     use Ket.
     """
 
+    kind = KetKind
+
     lbracket = _straight_bracket
     rbracket = _rbracket
     lbracket_ucode = _straight_bracket_ucode
@@ -219,22 +227,6 @@ class KetBase(StateBase):
     @classmethod
     def dual_class(self):
         return BraBase
-
-    def __mul__(self, other):
-        """KetBase*other"""
-        from sympy.physics.quantum.operator import OuterProduct
-        if isinstance(other, BraBase):
-            return OuterProduct(self, other)
-        else:
-            return Expr.__mul__(self, other)
-
-    def __rmul__(self, other):
-        """other*KetBase"""
-        from sympy.physics.quantum.innerproduct import InnerProduct
-        if isinstance(other, BraBase):
-            return InnerProduct(other, self)
-        else:
-            return Expr.__rmul__(self, other)
 
     #-------------------------------------------------------------------------
     # _eval_* methods
@@ -284,6 +276,8 @@ class BraBase(StateBase):
     instead use Bra.
     """
 
+    kind = BraKind
+
     lbracket = _lbracket
     rbracket = _straight_bracket
     lbracket_ucode = _lbracket_ucode
@@ -310,22 +304,6 @@ class BraBase(StateBase):
     @classmethod
     def dual_class(self):
         return KetBase
-
-    def __mul__(self, other):
-        """BraBase*other"""
-        from sympy.physics.quantum.innerproduct import InnerProduct
-        if isinstance(other, KetBase):
-            return InnerProduct(self, other)
-        else:
-            return Expr.__mul__(self, other)
-
-    def __rmul__(self, other):
-        """other*BraBase"""
-        from sympy.physics.quantum.operator import OuterProduct
-        if isinstance(other, KetBase):
-            return OuterProduct(other, self)
-        else:
-            return Expr.__rmul__(self, other)
 
     def _represent(self, **options):
         """A default represent that uses the Ket's version."""
@@ -623,7 +601,7 @@ class TimeDepBra(TimeDepState, BraBase):
         return TimeDepKet
 
 
-class OrthogonalState(State, StateBase):
+class OrthogonalState(State):
     """General abstract quantum state used as a base class for Ket and Bra."""
     pass
 
@@ -766,13 +744,11 @@ class Wavefunction(Function):
     #avoid errors from calling is_Float in the constructor
     def __new__(cls, *args, **options):
         new_args = [None for i in args]
-        ct = 0
-        for arg in args:
+        for ct, arg in enumerate(args):
             if isinstance(arg, tuple):
                 new_args[ct] = Tuple(*arg)
             else:
                 new_args[ct] = arg
-            ct += 1
 
         return super().__new__(cls, *new_args, **options)
 
@@ -822,10 +798,6 @@ class Wavefunction(Function):
 
     def _eval_transpose(self):
         return self
-
-    @property
-    def free_symbols(self):
-        return self.expr.free_symbols
 
     @property
     def is_commutative(self):

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core import symbols
 from sympy.crypto.crypto import (cycle_list,
       encipher_shift, encipher_affine, encipher_substitution,
@@ -16,6 +17,7 @@ from sympy.crypto.crypto import (cycle_list,
       bg_private_key, bg_public_key, encipher_rot13, decipher_rot13,
       encipher_atbash, decipher_atbash, NonInvertibleCipherWarning,
       encipher_railfence, decipher_railfence)
+from sympy.external.gmpy import gcd
 from sympy.matrices import Matrix
 from sympy.ntheory import isprime, is_primitive_root
 from sympy.polys.domains import FF
@@ -348,7 +350,6 @@ def test_rsa_multiprime_exhanstive():
 
 
 def test_rsa_multipower_exhanstive():
-    from sympy.core.numbers import igcd
     primes = [5, 5, 7]
     e = 7
     args = primes + [e]
@@ -357,7 +358,7 @@ def test_rsa_multipower_exhanstive():
     n = puk[0]
 
     for msg in range(n):
-        if igcd(msg, n) != 1:
+        if gcd(msg, n) != 1:
             continue
 
         encrypted = encipher_rsa(msg, puk)

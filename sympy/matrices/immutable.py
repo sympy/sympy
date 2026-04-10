@@ -1,12 +1,12 @@
-from mpmath.matrices.matrices import _matrix
-
+from __future__ import annotations
 from sympy.core import Basic, Dict, Tuple
 from sympy.core.numbers import Integer
 from sympy.core.cache import cacheit
 from sympy.core.sympify import _sympy_converter as sympify_converter, _sympify
+from sympy.external.mpmath import _matrix
 from sympy.matrices.dense import DenseMatrix
 from sympy.matrices.expressions import MatrixExpr
-from sympy.matrices.matrices import MatrixBase
+from sympy.matrices.matrixbase import MatrixBase
 from sympy.matrices.repmatrix import RepMatrix
 from sympy.matrices.sparse import SparseRepMatrix
 from sympy.multipledispatch import dispatch
@@ -39,10 +39,14 @@ class ImmutableRepMatrix(RepMatrix, MatrixExpr): # type: ignore
     # both ImmutableDenseMatrix and ImmutableSparseMatrix.
     #
 
+    _cols: int
+    _rows: int
+
     def __new__(cls, *args, **kwargs):
         return cls._new(*args, **kwargs)
 
-    __hash__ = MatrixExpr.__hash__
+    def __hash__(self):
+        return MatrixExpr.__hash__(self)
 
     def copy(self):
         return self
@@ -75,6 +79,8 @@ class ImmutableRepMatrix(RepMatrix, MatrixExpr): # type: ignore
     is_diagonalizable.__doc__ = SparseRepMatrix.is_diagonalizable.__doc__
     is_diagonalizable = cacheit(is_diagonalizable)
 
+    def analytic_func(self, f, x):
+        return self.as_mutable().analytic_func(f, x).as_immutable()
 
 
 class ImmutableDenseMatrix(DenseMatrix, ImmutableRepMatrix):  # type: ignore

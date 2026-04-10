@@ -5,16 +5,21 @@ A Printer for generating readable representation of most SymPy classes.
 from __future__ import annotations
 from typing import Any
 
-from sympy.core import S, Rational, Pow, Basic, Mul, Number
+from sympy.core import S, Rational, Pow, Basic, Mul, Number, UnevaluatedExpr
+from sympy.core.function import Lambda
 from sympy.core.mul import _keep_coeff
+from sympy.core.numbers import Integer
 from sympy.core.relational import Relational
 from sympy.core.sorting import default_sort_key
-from sympy.core.sympify import SympifyError
+from sympy.core.symbol import Symbol
+from sympy.external.mpmath import prec_to_dps, to_str as mlib_to_str
 from sympy.utilities.iterables import sift
 from .precedence import precedence, PRECEDENCE
 from .printer import Printer, print_function
 
-from mpmath.libmp import prec_to_dps, to_str as mlib_to_str
+
+_rootof_x = Symbol('x')
+_rootsum_w = Symbol('w')
 
 
 class StrPrinter(Printer):
@@ -27,6 +32,7 @@ class StrPrinter(Printer):
         "perm_cyclic": True,
         "min": None,
         "max": None,
+        "dps" : None
     }
 
     _relationals: dict[str, str] = {}
@@ -51,16 +57,19 @@ class StrPrinter(Printer):
     def _print_Add(self, expr, order=None):
         terms = self._as_ordered_terms(expr, order=order)
 
+        is_Add = lambda e: e.is_Add or (
+            isinstance(e, UnevaluatedExpr) and e.args[0].is_Add)
+
         prec = precedence(expr)
         l = []
         for term in terms:
             t = self._print(term)
-            if t.startswith('-') and not term.is_Add:
+            if t.startswith('-') and not is_Add(term):
                 sign = "-"
                 t = t[1:]
             else:
                 sign = "+"
-            if precedence(term) < prec or term.is_Add:
+            if precedence(term) < prec or is_Add(term):
                 l.extend([sign, "(%s)" % t])
             else:
                 l.extend([sign, t])
@@ -121,7 +130,7 @@ class StrPrinter(Printer):
     def _print_Derivative(self, expr):
         dexpr = expr.expr
         dvars = [i[0] if i[1] == 1 else i for i in expr.variable_count]
-        return 'Derivative(%s)' % ", ".join(map(lambda arg: self._print(arg), [dexpr] + dvars))
+        return 'Derivative(%s)' % ", ".join((self._print(arg) for arg in [dexpr] + dvars))
 
     def _print_dict(self, d):
         keys = sorted(d.keys(), key=default_sort_key)
@@ -250,7 +259,7 @@ class StrPrinter(Printer):
                 x[0] = ''
             if x[1] == dim:
                 x[1] = ''
-            return ':'.join(map(lambda arg: self._print(arg), x))
+            return ':'.join((self._print(arg) for arg in x))
         return (self.parenthesize(expr.parent, PRECEDENCE["Atom"], strict=True) + '[' +
                 strslice(expr.rowslice, expr.parent.rows) + ', ' +
                 strslice(expr.colslice, expr.parent.cols) + ']')
@@ -259,7 +268,6 @@ class StrPrinter(Printer):
         return expr.name
 
     def _print_Mul(self, expr):
-
         prec = precedence(expr)
 
         # Check for unevaluated Mul. In this case we need to make sure the
@@ -339,6 +347,7 @@ class StrPrinter(Printer):
             if isinstance(i, Pow):
                 return i.func(b, e, evaluate=False)
             return i.func(e, evaluate=False)
+
         for item in args:
             if (item.is_commutative and
                     isinstance(item, Pow) and
@@ -504,12 +513,12 @@ class StrPrinter(Printer):
 
     def _print_PolyRing(self, ring):
         return "Polynomial ring in %s over %s with %s order" % \
-            (", ".join(map(lambda rs: self._print(rs), ring.symbols)),
+            (", ".join((self._print(rs) for rs in ring.symbols)),
             self._print(ring.domain), self._print(ring.order))
 
     def _print_FracField(self, field):
         return "Rational function field in %s over %s with %s order" % \
-            (", ".join(map(lambda fs: self._print(fs), field.symbols)),
+            (", ".join((self._print(fs) for fs in field.symbols)),
             self._print(field.domain), self._print(field.order))
 
     def _print_FreeGroupElement(self, elm):
@@ -651,7 +660,7 @@ class StrPrinter(Printer):
             if -expr.exp is S.Half and not rational:
                 # Note: Don't test "expr.exp == -S.Half" here, because that will
                 # match -0.5, which we don't want.
-                return "%s/sqrt(%s)" % tuple(map(lambda arg: self._print(arg), (S.One, expr.base)))
+                return "%s/sqrt(%s)" % tuple((self._print(arg) for arg in (S.One, expr.base)))
             if expr.exp is -S.One:
                 # Similarly to the S.Half case, don't test with "==" here.
                 return '%s/%s' % (self._print(S.One),
@@ -736,10 +745,9 @@ class StrPrinter(Printer):
 
     def _print_Float(self, expr):
         prec = expr._prec
-        if prec < 5:
-            dps = 0
-        else:
-            dps = prec_to_dps(expr._prec)
+        dps = self._settings.get('dps', None)
+        if dps is None:
+            dps = 0 if prec < 5 else prec_to_dps(expr._prec)
         if self._settings["full_prec"] is True:
             strip = False
         elif self._settings["full_prec"] is False:
@@ -753,9 +761,7 @@ class StrPrinter(Printer):
             rv = '-0.' + rv[3:]
         elif rv.startswith('.0'):
             rv = '0.' + rv[2:]
-        if rv.startswith('+'):
-            # e.g., +inf -> inf
-            rv = rv[1:]
+        rv = rv.removeprefix('+') # e.g., +inf -> inf
         return rv
 
     def _print_Relational(self, expr):
@@ -780,14 +786,15 @@ class StrPrinter(Printer):
                            self.parenthesize(expr.rhs, precedence(expr)))
 
     def _print_ComplexRootOf(self, expr):
-        return "CRootOf(%s, %d)" % (self._print_Add(expr.expr,  order='lex'),
-                                    expr.index)
+        poly_expr = expr.poly(_rootof_x)
+        return "CRootOf(%s, %d)" % (self._print_Add(poly_expr, order='lex'), expr.index)
 
     def _print_RootSum(self, expr):
-        args = [self._print_Add(expr.expr, order='lex')]
+        args = [self._print_Add(expr.poly(_rootsum_w), order='lex')]
 
         if expr.fun is not S.IdentityFunction:
-            args.append(self._print(expr.fun))
+            func = Lambda(_rootsum_w, expr.fun(_rootsum_w))
+            args.append(self._print(func))
 
         return "RootSum(%s)" % ", ".join(args)
 
@@ -908,25 +915,22 @@ class StrPrinter(Printer):
     def _print_Zero(self, expr):
         if self._settings.get("sympy_integers", False):
             return "S(0)"
-        return "0"
+        return self._print_Integer(Integer(0))
 
     def _print_DMP(self, p):
-        try:
-            if p.ring is not None:
-                # TODO incorporate order
-                return self._print(p.ring.to_sympy(p))
-        except SympifyError:
-            pass
-
         cls = p.__class__.__name__
-        rep = self._print(p.rep)
+        rep = self._print(p.to_list())
         dom = self._print(p.dom)
-        ring = self._print(p.ring)
 
-        return "%s(%s, %s, %s)" % (cls, rep, dom, ring)
+        return "%s(%s, %s)" % (cls, rep, dom)
 
     def _print_DMF(self, expr):
-        return self._print_DMP(expr)
+        cls = expr.__class__.__name__
+        num = self._print(expr.num)
+        den = self._print(expr.den)
+        dom = self._print(expr.dom)
+
+        return "%s(%s, %s, %s)" % (cls, num, den, dom)
 
     def _print_Object(self, obj):
         return 'Object("%s")' % obj.name
@@ -1009,7 +1013,6 @@ class StrReprPrinter(StrPrinter):
     def _print_Str(self, s):
         # Str does not to be printed same as str here
         return "%s(%s)" % (s.__class__.__name__, self._print(s.name))
-
 
 @print_function(StrReprPrinter)
 def sstrrepr(expr, **settings):

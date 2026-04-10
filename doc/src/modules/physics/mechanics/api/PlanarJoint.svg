@@ -1,4 +1,4 @@
-<svg width="3108" height="1681" xmlns="http://www.w3.org/2000/svg"
+<svg class="align-center" width="800" viewBox="0 0 3108 1681" xmlns="http://www.w3.org/2000/svg"
      xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve"
      overflow="hidden"><defs><clipPath id="clip0"><rect x="639" y="414" width="3108" height="1681"/></clipPath><clipPath
         id="clip1"><rect x="1227" y="562" width="1844" height="1534"/></clipPath><clipPath
@@ -55,7 +55,7 @@
               fill="none" fill-rule="evenodd"/>
         <path d="M2749 1132.5C2749 1114.55 2763.55 1100 2781.5 1100 2799.45 1100 2814 1114.55 2814 1132.5 2814 1150.45 2799.45 1165 2781.5 1165 2763.55 1165 2749 1150.45 2749 1132.5Z"
               fill="#0070C0" fill-rule="evenodd"/>
-        <path d="M2814 655 3263.65 743.82" stroke="#000000" stroke-width="13.75"
+        <path d="M2814 655 3263.65 743.82" stroke="CurrentColor" stroke-width="13.75"
               stroke-miterlimit="8" stroke-dasharray="55 41.25" fill="none"
               fill-rule="evenodd"/>
         <path d="M2178 1387.5C2178 1369.55 2192.55 1355 2210.5 1355 2228.45 1355 2243 1369.55 2243 1387.5 2243 1405.45 2228.45 1420 2210.5 1420 2192.55 1420 2178 1405.45 2178 1387.5Z"
@@ -128,7 +128,7 @@
               fill="#0070C0"/>
         <path d="M0.543854-5.12749 133.729 8.99901 132.642 19.254-0.543854 5.12749ZM129.69-1.79981 179.333 19.0212 126.426 28.9651Z"
               fill="#0070C0" transform="matrix(1 0 0 -1 2797 874.021)"/>
-        <path d="M0 0 426.306 79.3999" stroke="#000000" stroke-width="13.75"
+        <path d="M0 0 426.306 79.3999" stroke="CurrentColor" stroke-width="13.75"
               stroke-miterlimit="8" stroke-dasharray="55 41.25" fill="none"
               fill-rule="evenodd" transform="matrix(1 0 0 -1 2814 654.4)"/>
         <path d="M5.08042-0.881034 27.3704 127.653 17.2096 129.415-5.08042 0.881034ZM36.6502 120.81 30.2193 174.258 6.16771 126.096Z"

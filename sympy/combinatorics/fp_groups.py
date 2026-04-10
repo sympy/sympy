@@ -1,4 +1,5 @@
 """Finitely Presented Groups and its algorithms. """
+from __future__ import annotations
 
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols
@@ -16,6 +17,7 @@ from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
 from sympy.utilities.magic import pollute
 
+from collections import defaultdict
 from itertools import product
 
 
@@ -157,6 +159,27 @@ class FpGroup(DefaultPrinting):
             from sympy.combinatorics.homomorphisms import homomorphism
             return g, homomorphism(g, self, g.generators, _gens, check=False)
         return g
+
+    def quotient(self, N):
+        '''
+        Return the quotient group of ``self`` by the normal subgroup ``N``.
+
+        ``N`` can be given either as a collection of generators or as a normal
+        ``FpSubgroup``.
+        '''
+        if isinstance(N, FpSubgroup):
+            if not N.normal:
+                raise ValueError("FpSubgroup must be normal")
+            if N.parent not in (self, self.free_group):
+                raise ValueError("Subgroup is not a subgroup of the group")
+            gens = N.generators
+        else:
+            gens = list(N)
+        if not all(isinstance(g, FreeGroupElement) for g in gens):
+            raise ValueError("Generators must be `FreeGroupElement`s")
+        if not all(g.group == self.free_group for g in gens):
+            raise ValueError("Given generators are not members of the group")
+        return FpGroup(self.free_group, list(self.relators) + list(gens))
 
     def coset_enumeration(self, H, strategy="relator_based", max_cosets=None,
                                                         draft=None, incomplete=False):
@@ -325,15 +348,16 @@ class FpGroup(DefaultPrinting):
     def most_frequent_generator(self):
         gens = self.generators
         rels = self.relators
-        freqs = [sum([r.generator_count(g) for r in rels]) for g in gens]
+        freqs = [sum(r.generator_count(g) for r in rels) for g in gens]
         return gens[freqs.index(max(freqs))]
 
     def random(self):
         import random
-        r = self.free_group.identity
-        for i in range(random.randint(2,3)):
-            r = r*random.choice(self.generators)**random.choice([1,-1])
-        return r
+        dtype = type(self.free_group.identity)
+        return dtype.prod(
+            random.choice(self.generators)**random.choice([1, -1])
+            for _ in range(random.randint(2, 3))
+        )
 
     def index(self, H, strategy="relator_based"):
         """
@@ -508,7 +532,7 @@ class FpGroup(DefaultPrinting):
 
         '''
         P, T = self._to_perm_group()
-        return T.invert(P._elements)
+        return T.invert(P.elements)
 
     @property
     def is_cyclic(self):
@@ -565,116 +589,105 @@ class FpSubgroup(DefaultPrinting):
         self.normal = normal
 
     def __contains__(self, g):
+        '''
+        When parent is a FreeGroup, use Stallings folding algorithm described
+        in detail in [1].
+
+        References
+        ==========
+
+        .. [1] Kapovich, I., Myasnikov, A. (2002).
+        Stallings foldings and the subgroup structure of free groups.
+        arXiv preprint math/0202285.
+        '''
+
+        if self.normal:
+            if isinstance(self.parent, FreeGroup):
+                quotient = FpGroup(self.parent, self.generators)
+            else:
+                quotient = self.parent.quotient(self)
+            return quotient.equals(g, quotient.identity)
 
         if isinstance(self.parent, FreeGroup):
-            if self._min_words is None:
-                # make _min_words - a list of subwords such that
-                # g is in the subgroup if and only if it can be
-                # partitioned into these subwords. Infinite families of
-                # subwords are presented by tuples, e.g. (r, w)
-                # stands for the family of subwords r*w**n*r**-1
+            def _inverse_label(label):
+                return -label
 
-                def _process(w):
-                    # this is to be used before adding new words
-                    # into _min_words; if the word w is not cyclically
-                    # reduced, it will generate an infinite family of
-                    # subwords so should be written as a tuple;
-                    # if it is, w**-1 should be added to the list
-                    # as well
-                    p, r = w.cyclic_reduction(removed=True)
-                    if not r.is_identity:
-                        return [(r, p)]
+            def _add_edge(graph, u, v, label):
+                graph[u][label].add(v)
+                graph[v][_inverse_label(label)].add(u)
+
+            def _add_generator_loop(graph, base, word, next_vertex_id):
+                current = base
+                letters = word.letter_form
+                if not letters:
+                    return next_vertex_id
+                for i, label in enumerate(letters):
+                    if i == len(letters) - 1:
+                        nxt = base
                     else:
-                        return [w, w**-1]
+                        nxt = next_vertex_id
+                        next_vertex_id += 1
+                    _add_edge(graph, current, nxt, label)
+                    current = nxt
+                return next_vertex_id
 
-                # make the initial list
-                gens = []
-                for w in self.generators:
-                    if self.normal:
-                        w = w.cyclic_reduction()
-                    gens.extend(_process(w))
+            def _merge_vertices(graph, u, v):
+                if u == v:
+                    return
+                nodes = list(graph.keys())
+                for node in nodes:
+                    if node == v:
+                        for label, targets in list(graph[v].items()):
+                            for target in list(targets):
+                                if target == v:
+                                    target = u
+                                _add_edge(graph, u, target, label)
+                        if v in graph:
+                            del graph[v]
+                    else:
+                        for label, targets in list(graph[node].items()):
+                            if v in targets:
+                                targets.discard(v)
+                                targets.add(u)
+                                _add_edge(graph, node, u, label)
 
-                for w1 in gens:
-                    for w2 in gens:
-                        # if w1 and w2 are equal or are inverses, continue
-                        if w1 == w2 or (not isinstance(w1, tuple)
-                                                        and w1**-1 == w2):
-                            continue
+            def _fold(graph):
+                folded = False
+                while not folded:
+                    folded = True
+                    for u in list(graph.keys()):
+                        for label, targets in list(graph[u].items()):
+                            if len(targets) > 1:
+                                v1, v2 = sorted(targets)[:2]
+                                keep = min(v1, v2)
+                                discard = max(v1, v2)
+                                _merge_vertices(graph, keep, discard)
+                                folded = False
+                                break
+                        if not folded:
+                            break
 
-                        # if the start of one word is the inverse of the
-                        # end of the other, their multiple should be added
-                        # to _min_words because of cancellation
-                        if isinstance(w1, tuple):
-                            # start, end
-                            s1, s2 = w1[0][0], w1[0][0]**-1
-                        else:
-                            s1, s2 = w1[0], w1[len(w1)-1]
+            def _check_membership(graph, base, word):
+                current = base
+                for label in word.letter_form:
+                    targets = graph[current].get(label)
+                    if not targets:
+                        return False
+                    current = next(iter(targets))
+                return current == base
 
-                        if isinstance(w2, tuple):
-                            # start, end
-                            r1, r2 = w2[0][0], w2[0][0]**-1
-                        else:
-                            r1, r2 = w2[0], w2[len(w1)-1]
+            graph = defaultdict(lambda: defaultdict(set))
+            base_vertex = 0
+            next_vertex_id = 1
 
-                        # p1 and p2 are w1 and w2 or, in case when
-                        # w1 or w2 is an infinite family, a representative
-                        p1, p2 = w1, w2
-                        if isinstance(w1, tuple):
-                            p1 = w1[0]*w1[1]*w1[0]**-1
-                        if isinstance(w2, tuple):
-                            p2 = w2[0]*w2[1]*w2[0]**-1
+            gens = list(self.generators)
 
-                        # add the product of the words to the list is necessary
-                        if r1**-1 == s2 and not (p1*p2).is_identity:
-                            new = _process(p1*p2)
-                            if new not in gens:
-                                gens.extend(new)
+            for gen in gens:
+                next_vertex_id = _add_generator_loop(
+                    graph, base_vertex, gen, next_vertex_id)
 
-                        if r2**-1 == s1 and not (p2*p1).is_identity:
-                            new = _process(p2*p1)
-                            if new not in gens:
-                                gens.extend(new)
-
-                self._min_words = gens
-
-            min_words = self._min_words
-
-            def _is_subword(w):
-                # check if w is a word in _min_words or one of
-                # the infinite families in it
-                w, r = w.cyclic_reduction(removed=True)
-                if r.is_identity or self.normal:
-                    return w in min_words
-                else:
-                    t = [s[1] for s in min_words if isinstance(s, tuple)
-                                                                and s[0] == r]
-                    return [s for s in t if w.power_of(s)] != []
-
-            # store the solution of words for which the result of
-            # _word_break (below) is known
-            known = {}
-
-            def _word_break(w):
-                # check if w can be written as a product of words
-                # in min_words
-                if len(w) == 0:
-                    return True
-                i = 0
-                while i < len(w):
-                    i += 1
-                    prefix = w.subword(0, i)
-                    if not _is_subword(prefix):
-                        continue
-                    rest = w.subword(i, len(w))
-                    if rest not in known:
-                        known[rest] = _word_break(rest)
-                    if known[rest]:
-                        return True
-                return False
-
-            if self.normal:
-                g = g.cyclic_reduction()
-            return _word_break(g)
+            _fold(graph)
+            return _check_membership(graph, base_vertex, g)
         else:
             if self.C is None:
                 C = self.parent.coset_enumeration(self.generators)
@@ -984,7 +997,7 @@ def simplify_presentation(*args, change_gens=False):
         while change_gens and not set(prev_gens) == set(gens):
             prev_gens = gens
             gens, rels = elimination_technique_1(gens, rels, identity)
-        rels = _simplify_relators(rels, identity)
+        rels = _simplify_relators(rels)
 
     if change_gens:
         syms = [g.array_form[0][0] for g in gens]
@@ -992,21 +1005,86 @@ def simplify_presentation(*args, change_gens=False):
         identity = F.identity
         gens = F.generators
         subs = dict(zip(syms, gens))
+        dtype = type(identity)
         for j, r in enumerate(rels):
             a = r.array_form
-            rel = identity
-            for sym, p in a:
-                rel = rel*subs[sym]**p
-            rels[j] = rel
+            rels[j] = dtype.prod(subs[sym]**p for sym, p in a)
     return gens, rels
 
-def _simplify_relators(rels, identity):
-    """Relies upon ``_simplification_technique_1`` for its functioning. """
+def _simplify_relators(rels):
+    """
+    Simplifies a set of relators. All relators are checked to see if they are
+    of the form `gen^n`. If any such relators are found then all other relators
+    are processed for strings in the `gen` known order.
+
+    Examples
+    ========
+
+    >>> from sympy.combinatorics import free_group
+    >>> from sympy.combinatorics.fp_groups import _simplify_relators
+    >>> F, x, y = free_group("x, y")
+    >>> w1 = [x**2*y**4, x**3]
+    >>> _simplify_relators(w1)
+    [x**3, x**-1*y**4]
+
+    >>> w2 = [x**2*y**-4*x**5, x**3, x**2*y**8, y**5]
+    >>> _simplify_relators(w2)
+    [x**-1*y**-2, x**-1*y*x**-1, x**3, y**5]
+
+    >>> w3 = [x**6*y**4, x**4]
+    >>> _simplify_relators(w3)
+    [x**4, x**2*y**4]
+
+    >>> w4 = [x**2, x**5, y**3]
+    >>> _simplify_relators(w4)
+    [x, y**3]
+
+    """
     rels = rels[:]
 
-    rels = list(set(_simplification_technique_1(rels)))
-    rels.sort()
+    if not rels:
+        return []
+
+    identity = rels[0].group.identity
+
+    # build dictionary with "gen: n" where gen^n is one of the relators
+    exps = {}
+    for i in range(len(rels)):
+        rel = rels[i]
+        if rel.number_syllables() == 1:
+            g = rel[0]
+            exp = abs(rel.array_form[0][1])
+            if rel.array_form[0][1] < 0:
+                rels[i] = rels[i]**-1
+                g = g**-1
+            if g in exps:
+                exp = gcd(exp, exps[g].array_form[0][1])
+            exps[g] = g**exp
+
+    one_syllables_words = list(exps.values())
+    # decrease some of the exponents in relators, making use of the single
+    # syllable relators
+    for i, rel in enumerate(rels):
+        if rel in one_syllables_words:
+            continue
+        rel = rel.eliminate_words(one_syllables_words, _all = True)
+        # if rels[i] contains g**n where abs(n) is greater than half of the power p
+        # of g in exps, g**n can be replaced by g**(n-p) (or g**(p-n) if n<0)
+        for g in rel.contains_generators():
+            if g in exps:
+                exp = exps[g].array_form[0][1]
+                max_exp = (exp + 1)//2
+                rel = rel.eliminate_word(g**(max_exp), g**(max_exp-exp), _all = True)
+                rel = rel.eliminate_word(g**(-max_exp), g**(-(max_exp-exp)), _all = True)
+        rels[i] = rel
+
     rels = [r.identity_cyclic_reduction() for r in rels]
+
+    rels += one_syllables_words # include one_syllable_words in the list of relators
+    rels = list(set(rels)) # get unique values in rels
+    rels.sort()
+
+    # remove <identity> entries in rels
     try:
         rels.remove(identity)
     except ValueError:
@@ -1054,67 +1132,6 @@ def elimination_technique_1(gens, rels, identity):
         pass
     gens = [g for g in gens if g not in redundant_gens]
     return gens, rels
-
-def _simplification_technique_1(rels):
-    """
-    All relators are checked to see if they are of the form `gen^n`. If any
-    such relators are found then all other relators are processed for strings
-    in the `gen` known order.
-
-    Examples
-    ========
-
-    >>> from sympy.combinatorics import free_group
-    >>> from sympy.combinatorics.fp_groups import _simplification_technique_1
-    >>> F, x, y = free_group("x, y")
-    >>> w1 = [x**2*y**4, x**3]
-    >>> _simplification_technique_1(w1)
-    [x**-1*y**4, x**3]
-
-    >>> w2 = [x**2*y**-4*x**5, x**3, x**2*y**8, y**5]
-    >>> _simplification_technique_1(w2)
-    [x**-1*y*x**-1, x**3, x**-1*y**-2, y**5]
-
-    >>> w3 = [x**6*y**4, x**4]
-    >>> _simplification_technique_1(w3)
-    [x**2*y**4, x**4]
-
-    """
-    rels = rels[:]
-    # dictionary with "gen: n" where gen^n is one of the relators
-    exps = {}
-    for i in range(len(rels)):
-        rel = rels[i]
-        if rel.number_syllables() == 1:
-            g = rel[0]
-            exp = abs(rel.array_form[0][1])
-            if rel.array_form[0][1] < 0:
-                rels[i] = rels[i]**-1
-                g = g**-1
-            if g in exps:
-                exp = gcd(exp, exps[g].array_form[0][1])
-            exps[g] = g**exp
-
-    one_syllables_words = exps.values()
-    # decrease some of the exponents in relators, making use of the single
-    # syllable relators
-    for i in range(len(rels)):
-        rel = rels[i]
-        if rel in one_syllables_words:
-            continue
-        rel = rel.eliminate_words(one_syllables_words, _all = True)
-        # if rels[i] contains g**n where abs(n) is greater than half of the power p
-        # of g in exps, g**n can be replaced by g**(n-p) (or g**(p-n) if n<0)
-        for g in rel.contains_generators():
-            if g in exps:
-                exp = exps[g].array_form[0][1]
-                max_exp = (exp + 1)//2
-                rel = rel.eliminate_word(g**(max_exp), g**(max_exp-exp), _all = True)
-                rel = rel.eliminate_word(g**(-max_exp), g**(-(max_exp-exp)), _all = True)
-        rels[i] = rel
-    rels = [r.identity_cyclic_reduction() for r in rels]
-    return rels
-
 
 ###############################################################################
 #                           SUBGROUP PRESENTATIONS                            #
@@ -1234,12 +1251,14 @@ def rewrite(C, alpha, w):
     x_4*y_2*x_3*x_1*x_2*y_4*x_5
 
     """
-    v = C._schreier_free_group.identity
+    dtype = type(C._schreier_free_group.identity)
+    factors = []
     for i in range(len(w)):
         x_i = w[i]
-        v = v*C.P[alpha][C.A_dict[x_i]]
-        alpha = C.table[alpha][C.A_dict[x_i]]
-    return v
+        j = C.A_dict[x_i]
+        factors.append(C.P[alpha][j])
+        alpha = C.table[alpha][j]
+    return dtype.prod(factors)
 
 # Pg 350, section 2.5.2 from [2]
 def elimination_technique_2(C):
@@ -1274,9 +1293,9 @@ def elimination_technique_2(C):
                 bk = rel.subword(gen_index + 1, len(rel))
                 fw = rel.subword(0, gen_index)
                 rep_by = (bk*fw)**(-1*k)
-                del rels[i]; del gens[j]
-                for l in range(len(rels)):
-                    rels[l] = rels[l].eliminate_word(gen, rep_by)
+                del rels[i]
+                del gens[j]
+                rels = [rel.eliminate_word(gen, rep_by) for rel in rels]
                 break
     C._reidemeister_relators = rels
     C._schreier_generators = gens
@@ -1337,9 +1356,7 @@ def reidemeister_presentation(fp_grp, H, C=None, homomorphism=False):
     C.reidemeister_relators = tuple(rels)
 
     if homomorphism:
-        _gens = []
-        for gen in gens:
-            _gens.append(C._schreier_gen_elem[str(gen)])
+        _gens = [C._schreier_gen_elem[str(gen)] for gen in gens]
         return C.schreier_generators, C.reidemeister_relators, _gens
 
     return C.schreier_generators, C.reidemeister_relators

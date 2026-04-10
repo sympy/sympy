@@ -1,8 +1,10 @@
 """For more tests on satisfiability, see test_dimacs"""
+from __future__ import annotations
 
 from sympy.assumptions.ask import Q
 from sympy.core.symbol import symbols
-from sympy.logic.boolalg import And, Implies, Equivalent, true, false
+from sympy.core.relational import Ne, Eq, Unequality
+from sympy.logic.boolalg import And, Or, Implies, Equivalent, true, false
 from sympy.logic.inference import literal_symbol, \
      pl_true, satisfiable, valid, entails, PropKB
 from sympy.logic.algorithms.dpll import dpll, dpll_satisfiable, \
@@ -10,7 +12,17 @@ from sympy.logic.algorithms.dpll import dpll, dpll_satisfiable, \
     find_pure_symbol_int_repr, find_unit_clause_int_repr, \
     unit_propagate_int_repr
 from sympy.logic.algorithms.dpll2 import dpll_satisfiable as dpll2_satisfiable
-from sympy.testing.pytest import raises
+
+from sympy.logic.algorithms.z3_wrapper import z3_satisfiable
+from sympy.assumptions.cnf import CNF, EncodedCNF
+from sympy.logic.tests.test_lra_theory import make_random_problem
+from sympy.core.random import randint
+
+from sympy.testing.pytest import raises, skip
+from sympy.external import import_module
+
+from sympy.core.function import Function
+
 
 
 def test_literal():
@@ -140,6 +152,7 @@ def test_minisat22_satisfiable():
     assert minisat22_satisfiable( Equivalent(A, B) & A ) == {A: True, B: True}
     assert minisat22_satisfiable( Equivalent(A, B) & ~A ) == {A: False, B: False}
 
+
 def test_minisat22_minimal_satisfiable():
     A, B, C = symbols('A,B,C')
     minisat22_satisfiable = lambda expr, minimal=True: satisfiable(expr, algorithm="minisat22", minimal=True)
@@ -258,6 +271,7 @@ def test_propKB_tolerant():
     A, B, C = symbols('A,B,C')
     assert kb.ask(B) is False
 
+
 def test_satisfiable_non_symbols():
     x, y = symbols('x y')
     assumptions = Q.zero(x*y)
@@ -273,6 +287,7 @@ def test_satisfiable_non_symbols():
     assert satisfiable(And(assumptions, facts, ~query), algorithm='dpll') in refutations
     assert not satisfiable(And(assumptions, facts, query), algorithm='dpll2')
     assert satisfiable(And(assumptions, facts, ~query), algorithm='dpll2') in refutations
+
 
 def test_satisfiable_bool():
     from sympy.core.singleton import S
@@ -313,3 +328,106 @@ def test_satisfiable_all_models():
     result = satisfiable(Or(*X), all_models=True)
     for i in range(10):
         assert next(result)
+
+
+def test_z3():
+    z3 = import_module("z3")
+
+    if not z3:
+        skip("z3 not installed.")
+    A, B, C = symbols('A,B,C')
+    x, y, z = symbols('x,y,z')
+    assert z3_satisfiable((x >= 2) & (x < 1)) is False
+    assert z3_satisfiable( A & ~A ) is False
+
+    model = z3_satisfiable(A & (~A | B | C))
+    assert bool(model) is True
+    assert model[A] is True
+
+    # test nonlinear function
+    assert z3_satisfiable((x ** 2 >= 2) & (x < 1) & (x > -1)) is False
+
+    f = symbols('f1', cls=Function)
+    model = z3_satisfiable(f(A))
+    assert bool(model) is True
+
+    f,h = symbols('f h', cls=Function)
+    x,y,c2 = symbols('x y c2')
+
+    assert z3_satisfiable(Eq(h(x, y), h(y, x))) == {Q.eq(h(x, y), h(y, x)): True}
+
+    expr = And(
+        Ne(x, y),
+        Eq(f(x), f(y)),
+        Ne(h(f(x)), h(f(y)))
+    )
+    assert z3_satisfiable(expr) is False
+
+    expr = And(
+        Eq(x, y),
+        Ne(f(x), f(y))
+    )
+    assert z3_satisfiable(expr) is False
+
+
+def test_z3_vs_lra_dpll2():
+    z3 = import_module("z3")
+    if z3 is None:
+        skip("z3 not installed.")
+
+    def boolean_formula_to_encoded_cnf(bf):
+        cnf = CNF.from_prop(bf)
+        enc = EncodedCNF()
+        enc.from_cnf(cnf)
+        return enc
+
+    def make_random_cnf(num_clauses=5, num_constraints=10, num_var=2):
+        assert num_clauses <= num_constraints
+        constraints = make_random_problem(num_variables=num_var, num_constraints=num_constraints, rational=False)
+        clauses = [[cons] for cons in constraints[:num_clauses]]
+        for cons in constraints[num_clauses:]:
+            if isinstance(cons, Unequality):
+                cons = ~cons
+            i = randint(0, num_clauses-1)
+            clauses[i].append(cons)
+
+        clauses = [Or(*clause) for clause in clauses]
+        cnf = And(*clauses)
+        return boolean_formula_to_encoded_cnf(cnf)
+
+    lra_dpll2_satisfiable = lambda x: dpll2_satisfiable(x, use_lra_theory=True)
+
+    for _ in range(50):
+        cnf = make_random_cnf(num_clauses=10, num_constraints=15, num_var=2)
+
+        try:
+            z3_sat = z3_satisfiable(cnf)
+        except z3.z3types.Z3Exception:
+            continue
+
+        lra_dpll2_sat = lra_dpll2_satisfiable(cnf)
+
+        # z3 and dpll2 may find differend models so we shouldn't
+        # test the models directly for equality
+        assert lra_dpll2_sat is not None
+        assert z3_sat is not None
+        lra_dpll2_is_sat = lra_dpll2_sat is not False
+        z3_is_sat = z3_sat is not False
+
+        assert z3_is_sat == lra_dpll2_is_sat
+
+
+def test_issue_27733():
+    x, y = symbols('x,y')
+    clauses = [[1, -3, -2], [5, 7, -8, -6, -4], [-10, -9, 10, 11, -4], [-12, 13, 14], [-10, 9, -6, 11, -4],
+               [16, -15, 18, -19, -17], [11, -6, 10, -9], [9, 11, -10, -9], [2, -3, -1], [-13, 12], [-15, 3, -17],
+               [-16, -15, 19, -17], [-6, -9, 10, 11, -4], [20, -1, -2], [-23, -22, -21], [10, 11, -10, -9],
+               [9, 11, -4, -10], [24, -6, -4], [-14, 12], [-10, -9, 9, -6, 11], [25, -27, -26], [-15, 19, -18, -17],
+               [5, 8, -7, -6, -4], [-30, -29, 28], [12], [14]]
+
+    encoding = {Q.gt(y, i): i for i in range(1, 31) if i != 11 and i != 12}
+    encoding[Q.gt(x, 0)] = 11
+    encoding[Q.lt(x, 0)] = 12
+
+    cnf = EncodedCNF(clauses, encoding)
+    assert satisfiable(cnf, use_lra_theory=True) is False

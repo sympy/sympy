@@ -1,4 +1,5 @@
 """Tools for constructing domains for expressions. """
+from __future__ import annotations
 from math import prod
 
 from sympy.core import sympify
@@ -103,9 +104,9 @@ def _construct_algebraic(coeffs, opt):
     exts = list(ordered(exts))
 
     g, span, H = primitive_element(exts, ex=True, polys=True)
-    root = sum([ s*ext for s, ext in zip(span, exts) ])
+    root = sum(s*ext for s, ext in zip(span, exts))
 
-    domain, g = QQ.algebraic_field((g, root)), g.rep.rep
+    domain, g = QQ.algebraic_field((g, root)), g.rep.to_list()
 
     exts_dom = [domain.dtype.from_list(h, g, QQ) for h in H]
     exts_map = dict(zip(exts, exts_dom))

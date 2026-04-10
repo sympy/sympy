@@ -1,3 +1,4 @@
+from __future__ import annotations
 from itertools import combinations
 
 from sympy.combinatorics.graycode import GrayCode
@@ -96,7 +97,7 @@ class Subset():
         """
         bin_list = Subset.bitlist_from_subset(self.subset, self.superset)
         n = (int(''.join(bin_list), 2) + k) % 2**self.superset_size
-        bits = bin(n)[2:].rjust(self.superset_size, '0')
+        bits = f'{n:b}'.rjust(self.superset_size, '0')
         return Subset.subset_from_bitlist(self.superset, bits)
 
     def next_binary(self):
@@ -390,7 +391,7 @@ class Subset():
 
         superset, size, superset_size, cardinality
         """
-        return self._subset
+        return self._subset[:]
 
     @property
     def size(self):
@@ -430,7 +431,7 @@ class Subset():
 
         subset, size, superset_size, cardinality
         """
-        return self._superset
+        return self._superset[:]
 
     @property
     def superset_size(self):
@@ -538,7 +539,7 @@ class Subset():
 
         iterate_binary, rank_binary
         """
-        bits = bin(rank)[2:].rjust(len(superset), '0')
+        bits = f'{rank:b}'.rjust(len(superset), '0')
         return Subset.subset_from_bitlist(superset, bits)
 
     @classmethod
@@ -591,7 +592,7 @@ class Subset():
                 if not sb:
                     break
         else:
-            return list()
+            return []
         return [d[bi] for bi in b]
 
 

@@ -1,6 +1,6 @@
-==============
-Control Module
-==============
+=======
+Control
+=======
 
 .. module:: sympy.physics.control
 
@@ -15,3 +15,4 @@ Control Module
    control.rst
    lti.rst
    control_plots.rst
+   routh_table.rst

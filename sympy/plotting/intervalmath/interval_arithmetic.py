@@ -31,7 +31,9 @@ The module uses numpy for speed which cannot be achieved with mpmath.
 # A It will not affect most of the plots. The interval arithmetic
 # module based suffers the same problems as that of floating point
 # arithmetic.
+from __future__ import annotations
 
+from sympy.core.numbers import int_valued
 from sympy.core.logic import fuzzy_and
 from sympy.simplify.simplify import nsimplify
 
@@ -329,7 +331,7 @@ class interval:
             if other < 0:
                 return 1 / self.__pow__(abs(other))
             else:
-                if int(other) == other:
+                if int_valued(other):
                     return _pow_int(self, other)
                 else:
                     return _pow_float(self, other)

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.concrete.summations import (Sum, summation)
 from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
@@ -277,7 +278,7 @@ class DiscretePSpace(PSpace):
         return DiscretePSpace(domain, density)
 
 class ProductDiscreteDomain(ProductDomain, DiscreteDomain):
-     def as_boolean(self):
+    def as_boolean(self):
         return And(*[domain.as_boolean for domain in self.domains])
 
 class SingleDiscretePSpace(DiscretePSpace, SinglePSpace):

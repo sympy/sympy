@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.combinatorics.permutations import Permutation
 from sympy.combinatorics.named_groups import SymmetricGroup, AlternatingGroup, DihedralGroup
 from sympy.matrices import Matrix
@@ -79,9 +80,32 @@ def test_induced_pcgs():
     for g in G:
         PcGroup = g.polycyclic_group()
         collector = PcGroup.collector
-        gens = [gen for gen in g.generators]
+        gens = list(g.generators)
         ipcgs = collector.induced_pcgs(gens)
         m = []
         for i in ipcgs:
             m.append(collector.exponent_vector(i))
         assert Matrix(m).is_upper
+
+
+def test_induced_pcgs_final_depth():
+    G = SymmetricGroup(3)
+    H = G.sylow_subgroup(2)
+    pc_group = H.polycyclic_group()
+    collector = pc_group.collector
+
+    ipcgs = collector.induced_pcgs(H.generators[:])
+    assert len(ipcgs) > 0
+
+    for gen in H.generators:
+        e = collector.constructive_membership_test(ipcgs, gen)
+        assert e != False
+
+        reconstructed = H.identity
+        for i, exp in enumerate(e):
+            reconstructed = reconstructed * ipcgs[i]**exp
+        assert reconstructed == gen
+
+    identity = H.identity
+    e_identity = collector.constructive_membership_test(ipcgs, identity)
+    assert e_identity == [0]

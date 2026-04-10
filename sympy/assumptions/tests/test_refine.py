@@ -1,5 +1,7 @@
+from __future__ import annotations
 from sympy.assumptions.ask import Q
-from sympy.assumptions.refine import refine
+from sympy.assumptions.refine import refine, refine_sin_cos
+from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.core.expr import Expr
 from sympy.core.numbers import (I, Rational, nan, pi)
 from sympy.core.singleton import S
@@ -7,11 +9,15 @@ from sympy.core.symbol import Symbol
 from sympy.functions.elementary.complexes import (Abs, arg, im, re, sign)
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.functions.elementary.trigonometric import (atan, atan2)
+from sympy.functions.elementary.trigonometric import (atan, atan2, cos, sin, tan)
 from sympy.abc import w, x, y, z
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.matrices.expressions.matexpr import MatrixSymbol
+from sympy.functions.elementary.integers import floor, ceiling
+from sympy.functions.special.delta_functions import Heaviside
+
+from sympy.testing.pytest import raises
 
 
 def test_Abs():
@@ -192,6 +198,12 @@ def test_func_args():
     x.my_member = "A very important value"
     assert x.my_member == refine(x).my_member
 
+def test_issue_refine_9384():
+    assert refine(Piecewise((1, x < 0), (0, True)), Q.positive(x)) == 0
+    assert refine(Piecewise((1, x < 0), (0, True)), Q.negative(x)) == 1
+    assert refine(Piecewise((1, x > 0), (0, True)), Q.positive(x)) == 1
+    assert refine(Piecewise((1, x > 0), (0, True)), Q.negative(x)) == 0
+
 
 def test_eval_refine():
     class MockExpr(Expr):
@@ -219,3 +231,109 @@ def test_matrixelement():
     assert refine(x[1, 0], Q.symmetric(x)) == x[0, 1]
     assert refine(x[i, j], Q.symmetric(x)) == x[j, i]
     assert refine(x[j, i], Q.symmetric(x)) == x[j, i]
+
+
+def test_sin_cos():
+    n = Symbol('n')
+    assert refine(cos(n*pi/2), Q.odd(n)) == 0
+    assert refine(cos(n*pi), Q.even(n)) == 1
+    assert refine(cos(n*pi), Q.odd(n)) == -1
+    assert refine(sin(n*pi), Q.integer(n)) == 0
+    assert refine(sin(n*pi/2), Q.odd(n) & Q.even((n-1)/2)) == 1
+    assert refine(sin(n*pi/2), Q.odd(n) & Q.odd((n-1)/2)) == -1
+    assert refine(cos(n*pi), Q.integer(n)) == (-1)**n
+    assert refine(sin(n*pi/2), Q.even(n)) == 0
+    assert refine(cos(n*pi/2), Q.even(n)) == (-1)**(n/2)
+    assert refine(sin(n*pi/2), Q.odd(n)) == (-1)**((n + 3)/2)
+    assert refine(cos(n*pi/2), Q.odd(n)) == 0
+    assert refine(sin(x + n*pi), Q.integer(n)) == ((-1)**n) * sin(x)
+    assert refine(cos(x + n*pi), Q.integer(n)) == ((-1)**n) * cos(x)
+    assert refine(sin(x + n*pi), Q.even(n)) == sin(x)
+    assert refine(cos(x + n*pi), Q.even(n)) == cos(x)
+    assert refine(sin(x + n*pi), Q.odd(n)) == -sin(x)
+    assert refine(cos(x + n*pi), Q.odd(n)) == -cos(x)
+    assert refine(sin(x - n*pi), Q.odd(n)) == -sin(x)
+    assert refine(cos(x - n*pi), Q.even(n)) == cos(x)
+    assert refine(sin(x + n*pi/2), Q.even(n)) == ((-1)**(n/2)) * sin(x)
+    assert refine(cos(x + n*pi/2), Q.even(n)) == ((-1)**(n/2)) * cos(x)
+    assert refine(sin(x + n*pi/2), Q.odd(n)) == ((-1)**((n + 3)/2)) * cos(x)
+    assert refine(cos(x + n*pi/2), Q.odd(n)) == ((-1)**((n + 1)/2)) * sin(x)
+    assert refine(sin(x - n*pi/2), Q.odd(n)) == ((-1)**((n + 3)/2)) * -cos(x)
+    assert refine(cos(x - n*pi / 2), Q.even(n)) == ((-1)**(n/2)) * cos(x)
+    assert refine(sin(x + y + 2*n*pi), Q.integer(n)) == sin(x + y)
+    assert refine(cos(x + y + 2*n*pi), Q.integer(n)) == cos(x + y)
+    assert refine(sin(x + n*pi), Q.zero(n)) == sin(x)
+    assert refine(sin(x + n*pi), Q.zero(-n)) == sin(x)
+    assert refine(cos(x + n*pi/2), Q.integer(n)) == cos(x + n*pi/2)
+    assert refine(cos(x + y + n*pi/2), Q.integer(n)) == cos(x + y + n*pi/2)
+    m = Symbol('m')
+    assert refine(cos(x + n*pi + m*pi / 2), Q.integer(n) & Q.even(m)) == \
+        (-1)**(n + m / 2) * cos(x)
+    assert refine(cos(x + n*pi + m*pi / 2), Q.integer(n) & Q.odd(m)) == \
+        (-1)**(n + (m + 1)/2) * sin(x)
+    assert refine(cos(x + n*pi + m*pi / 2), Q.integer(n) & Q.integer(m)) == \
+        (-1)**(n) * cos(x + m*pi / 2)
+    assert refine(cos(x + (2*n + 1)*pi + m*pi / 2), \
+        Q.integer(n) & Q.integer(m)) == \
+        - cos(x + m*pi / 2)
+    assert refine(sin(x - (2*n)*pi + m*pi/2), \
+        Q.integer(n) & Q.integer(m)) == \
+        sin(x + m*pi / 2)
+    k = Symbol('k')
+    assert refine(cos(x + n*pi + k*pi/2 + m*pi/2), \
+                  Q.integer(n) & Q.odd(k) & Q.integer(m)) == \
+        (-1)**(n + (k + 1)/2) * sin(x + m*pi/2)
+    assert refine(sin(x + n*pi + k*pi/2 + m*pi/2), \
+                  Q.integer(n) & Q.odd(k) & Q.integer(m)) == \
+        (-1)**(n + (k + 3)/2) * cos(x + m*pi/2)
+    assert refine(cos(x + n*pi/2 + k*pi/2 + m*pi/2), \
+                  Q.odd(n) & Q.odd(k) & Q.integer(m)) == \
+        (-1)**((n + k)/2) * cos(x + m*pi/2)
+
+    assert refine(cos(x), Q.zero(x)) == 1
+    assert refine(sin(x), Q.zero(x)) == 0
+
+    assert (refine(sin(x), Q.infinite(x) & Q.extended_real(x)) ==
+        AccumBounds(-1, 1))
+    assert (refine(cos(x), Q.infinite(x) & Q.extended_real(x)) ==
+        AccumBounds(-1, 1))
+    assert refine(sin(x), Q.infinite(x)) == sin(x)
+    assert refine(cos(x), Q.infinite(x)) == cos(x)
+
+    raises(TypeError, lambda: refine_sin_cos(tan(x), Q.real(x)))
+    raises(TypeError, lambda: refine_sin_cos(exp(x), Q.real(x)))
+    raises(TypeError, lambda: refine_sin_cos(x, Q.real(x)))
+
+
+def test_floor_ceiling():
+    assert refine(floor(x), Q.integer(x)) == x
+    assert refine(ceiling(x), Q.integer(x)) == x
+    assert refine(floor(x), Q.infinite(x)) == x
+    assert refine(ceiling(x), Q.infinite(x)) == x
+
+    assert refine(floor(y), Q.real(y)) == floor(y)
+    assert refine(ceiling(y), Q.real(y)) == ceiling(y)
+
+    assert refine(floor(x + y), Q.integer(x)) == x + floor(y)
+    assert refine(ceiling(x + y), Q.integer(x)) == x + ceiling(y)
+    assert refine(floor(x + y + z), Q.integer(x) & Q.integer(y)) == x + y + floor(z)
+    assert refine(ceiling(x + y + z), Q.integer(x) & Q.integer(z)) == x + z + ceiling(y)
+    assert refine(floor(x + y - z)) == floor (x + y - z)
+    assert refine(ceiling(ceiling(x) + y + floor(z))) == ceiling(x) + ceiling(y) + floor(z)
+
+    assert refine(floor(floor(x)+ floor(y))) == floor(x) + floor(y)
+    assert refine(ceiling(ceiling(x) - ceiling(y))) == ceiling(x) - ceiling(y)
+
+
+def test_Heaviside():
+    assert refine(Heaviside(x), Q.positive(x)) == 1
+    assert refine(Heaviside(x), Q.negative(x)) == 0
+    assert refine(Heaviside(x), Q.zero(x)) == S.Half
+    assert refine(Heaviside(x), Q.nonnegative(x)) == Heaviside(x)
+    assert refine(Heaviside(x), Q.nonpositive(x)) == Heaviside(x)
+    assert refine(Heaviside(x), True) == Heaviside(x)
+
+    # custom H0 value
+    assert refine(Heaviside(x, 1), Q.zero(x)) == 1
+    assert refine(Heaviside(x, 1), Q.positive(x)) == 1
+    assert refine(Heaviside(x, 1), Q.negative(x)) == 0

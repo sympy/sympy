@@ -23,6 +23,7 @@ import os
 import sys
 import inspect
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
+from pathlib import Path
 
 try:
     from HTMLParser import HTMLParser
@@ -276,8 +277,7 @@ def find_sphinx(name, mod_path, found={}):
     sphinx_path = os.path.join(sympy_top, 'doc', '_build', 'html', '_modules', *doc_path)
     if not os.path.exists(sphinx_path):
         return False
-    with open(sphinx_path) as f:
-        html_txt = f.read()
+    html_txt = Path(sphinx_path).read_text()
     p = FindInSphinx()
     p.feed(html_txt)
     found[mod_path] = p.is_imported
@@ -569,7 +569,7 @@ def go(sympy_top, file, verbose=False, no_color=False, exact=True, sphinx=True):
             total_sphinx += _total_sphinx
             num_functions += _num_functions
         return doctests, total_sphinx, num_functions
-    if (not (file.endswith('.py') or file.endswith('.pyx')) or
+    if (not (file.endswith((".py", ".pyx"))) or
         file.endswith('__init__.py') or
         not exact and ('test_' in file or 'bench_' in file or
         any(name in file for name in skip_paths))):

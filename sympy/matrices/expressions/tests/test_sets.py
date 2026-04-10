@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols
 from sympy.matrices import Matrix
@@ -6,7 +7,7 @@ from sympy.matrices.expressions.sets import MatrixSet
 from sympy.matrices.expressions.special import ZeroMatrix
 from sympy.testing.pytest import raises
 from sympy.sets.sets import SetKind
-from sympy.matrices.common import MatrixKind
+from sympy.matrices.kind import MatrixKind
 from sympy.core.kind import NumberKind
 
 

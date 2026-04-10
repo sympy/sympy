@@ -1,4 +1,5 @@
 """ Integral Transforms """
+from __future__ import annotations
 from functools import reduce, wraps
 from itertools import repeat
 from sympy.core import S, pi
@@ -6,7 +7,7 @@ from sympy.core.add import Add
 from sympy.core.function import (
     AppliedUndef, count_ops, expand, expand_mul, Function)
 from sympy.core.mul import Mul
-from sympy.core.numbers import igcd, ilcm
+from sympy.core.intfunc import igcd, ilcm
 from sympy.core.sorting import default_sort_key
 from sympy.core.symbol import Dummy
 from sympy.core.traversal import postorder_traversal
@@ -188,7 +189,7 @@ class IntegralTransform(Function):
             try:
                 extra = self._collapse_extra(extra)
                 if iterable(extra):
-                    return tuple([res]) + tuple(extra)
+                    return (res,) + tuple(extra)
                 else:
                     return (res, extra)
             except IntegralTransformError:
@@ -436,8 +437,8 @@ def _rewrite_sin(m_n, s, a, b):
     # (This is a separate function because it is moderately complicated,
     #  and I want to doctest it.)
     # We want to use pi/sin(pi*x) = gamma(x)*gamma(1-x).
-    # But there is one comlication: the gamma functions determine the
-    # inegration contour in the definition of the G-function. Usually
+    # But there is one complication: the gamma functions determine the
+    # integration contour in the definition of the G-function. Usually
     # it would not matter if this is slightly shifted, unless this way
     # we create an undefined function!
     # So we try to write this in such a way that the gammas are
@@ -1584,5 +1585,7 @@ import sympy.integrals.laplace as _laplace
 
 LaplaceTransform = _laplace.LaplaceTransform
 laplace_transform = _laplace.laplace_transform
+laplace_correspondence = _laplace.laplace_correspondence
+laplace_initial_conds = _laplace.laplace_initial_conds
 InverseLaplaceTransform = _laplace.InverseLaplaceTransform
 inverse_laplace_transform = _laplace.inverse_laplace_transform

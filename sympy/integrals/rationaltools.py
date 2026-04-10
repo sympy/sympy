@@ -1,9 +1,10 @@
 """This module implements tools for integrating rational functions. """
+from __future__ import annotations
 
 from sympy.core.function import Lambda
 from sympy.core.numbers import I
 from sympy.core.singleton import S
-from sympy.core.symbol import (Dummy, Symbol, symbols)
+from sympy.core.symbol import (Dummy, Symbol)
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.trigonometric import atan
 from sympy.polys.polyroots import roots
@@ -324,6 +325,40 @@ def log_to_atan(f, g):
         return A + log_to_atan(s, t)
 
 
+def _roots_real_complex(poly):
+    """Try to separate real and complex roots of a polynomial.
+
+    Returns expressions for all roots counting multiplicity or None.
+    """
+    from sympy.core.sorting import ordered
+
+    rs = roots(poly)
+
+    # Incomplete set of roots.
+    if sum(rs.values()) != poly.degree():
+        return None
+
+    reals = {}
+    complexes = {}
+
+    remaining = list(rs)
+
+    while remaining:
+        r = remaining.pop()
+        r_c = r.conjugate()
+        if r != r_c and r_c in rs:
+            assert rs[r_c] == rs[r]
+            remaining.remove(r_c)
+            r_re, r_im = r.as_real_imag()
+            _, r_im = ordered([r_im, -r_im])
+            complexes[(r_re, r_im)] = rs[r]
+        else:
+            # If we didn't find a conjugate just treat as real
+            reals[r] = rs[r]
+
+    return reals, complexes
+
+
 def log_to_real(h, q, x, t):
     r"""
     Convert complex logarithms to real functions.
@@ -358,61 +393,34 @@ def log_to_real(h, q, x, t):
     log_to_atan
     """
     from sympy.simplify.radsimp import collect
-    u, v = symbols('u,v', cls=Dummy)
 
-    H = h.as_expr().subs({t: u + I*v}).expand()
-    Q = q.as_expr().subs({t: u + I*v}).expand()
+    rs = _roots_real_complex(q)
+    if rs is None:
+        return None
+
+    reals, complexes = rs
+
+    u = Dummy('u')
+    v = Dummy('v')
+
+    H = h.as_expr().xreplace({t: u + I*v}).expand()
 
     H_map = collect(H, I, evaluate=False)
-    Q_map = collect(Q, I, evaluate=False)
 
     a, b = H_map.get(S.One, S.Zero), H_map.get(I, S.Zero)
-    c, d = Q_map.get(S.One, S.Zero), Q_map.get(I, S.Zero)
-
-    R = Poly(resultant(c, d, v), u)
-
-    R_u = roots(R, filter='R')
-
-    if len(R_u) != R.count_roots():
-        return None
 
     result = S.Zero
 
-    for r_u in R_u.keys():
-        C = Poly(c.subs({u: r_u}), v)
-        R_v = roots(C, filter='R')
+    for r_u, r_v in complexes:
 
-        if len(R_v) != C.count_roots():
-            return None
+        A = Poly(a.xreplace({u: r_u, v: r_v}), x)
+        B = Poly(b.xreplace({u: r_u, v: r_v}), x)
 
-        R_v_paired = [] # take one from each pair of conjugate roots
-        for r_v in R_v:
-            if r_v not in R_v_paired and -r_v not in R_v_paired:
-                if r_v.is_negative or r_v.could_extract_minus_sign():
-                    R_v_paired.append(-r_v)
-                elif not r_v.is_zero:
-                    R_v_paired.append(r_v)
+        AB = (A**2 + B**2).as_expr()
 
-        for r_v in R_v_paired:
+        result += r_u*log(AB) + r_v*log_to_atan(A, B)
 
-            D = d.subs({u: r_u, v: r_v})
-
-            if D.evalf(chop=True) != 0:
-                continue
-
-            A = Poly(a.subs({u: r_u, v: r_v}), x)
-            B = Poly(b.subs({u: r_u, v: r_v}), x)
-
-            AB = (A**2 + B**2).as_expr()
-
-            result += r_u*log(AB) + r_v*log_to_atan(A, B)
-
-    R_q = roots(q, filter='R')
-
-    if len(R_q) != q.count_roots():
-        return None
-
-    for r in R_q.keys():
+    for r in reals:
         result += r*log(h.as_expr().subs(t, r))
 
     return result

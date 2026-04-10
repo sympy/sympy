@@ -1,39 +1,65 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, overload
+
 from types import FunctionType
 from collections import Counter
 
-from mpmath import mp, workprec
-from mpmath.libmp.libmpf import prec_to_dps
-
+from sympy.core.expr import Expr
 from sympy.core.sorting import default_sort_key
 from sympy.core.evalf import DEFAULT_MAXPREC, PrecisionExhausted
 from sympy.core.logic import fuzzy_and, fuzzy_or
-from sympy.core.numbers import Float
+from sympy.core.numbers import AlgebraicNumber, Float
+from sympy.core.symbol import Dummy
 from sympy.core.sympify import _sympify
+from sympy.external.mpmath import prec_to_dps, local_workprec
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.polys import roots, CRootOf, ZZ, QQ, EX
 from sympy.polys.matrices import DomainMatrix
 from sympy.polys.matrices.eigen import dom_eigenvects, dom_eigenvects_to_sympy
-from sympy.polys.polytools import gcd
+from sympy.polys.factortools import dup_factor_list
+from sympy.polys.polytools import gcd, Poly
 
-from .common import MatrixError, NonSquareMatrixError
+from .exceptions import MatrixError, NonSquareMatrixError
 from .determinant import _find_reasonable_pivot
 
 from .utilities import _iszero, _simplify
+
+
+if TYPE_CHECKING:
+    from typing import TypeVar, Callable, Any, Literal
+    from sympy.matrices.matrixbase import MatrixBase
+    Tmat = TypeVar('Tmat', bound=MatrixBase)
+
+
+__doctest_requires__ = {
+    ('_is_indefinite',
+     '_is_negative_definite',
+     '_is_negative_semidefinite',
+     '_is_positive_definite',
+     '_is_positive_semidefinite'): ['matplotlib'],
+}
 
 
 def _eigenvals_eigenvects_mpmath(M):
     norm2 = lambda v: mp.sqrt(sum(i**2 for i in v))
 
     v1 = None
-    prec = max([x._prec for x in M.atoms(Float)])
-    eps = 2**-prec
+    prec_orig = max(x._prec for x in M.atoms(Float))
+    eps = 2**-prec_orig
+
+    prec = prec_orig
+
+    to_expr = lambda e: Expr._from_mpmath(e, prec_orig)
 
     while prec < DEFAULT_MAXPREC:
-        with workprec(prec):
+        with local_workprec(prec) as mp:
             A = mp.matrix(M.evalf(n=prec_to_dps(prec)))
             E, ER = mp.eig(A)
             v2 = norm2([i for e in E for i in (mp.re(e), mp.im(e))])
             if v1 is not None and mp.fabs(v1 - v2) < eps:
+                E = [to_expr(e) for e in E]
+                ER = [[to_expr(e) for e in row] for row in ER.transpose().tolist()]
                 return E, ER
             v1 = v2
         prec *= 2
@@ -49,28 +75,61 @@ def _eigenvals_eigenvects_mpmath(M):
 
 def _eigenvals_mpmath(M, multiple=False):
     """Compute eigenvalues using mpmath"""
-    E, _ = _eigenvals_eigenvects_mpmath(M)
-    result = [_sympify(x) for x in E]
+    result, _ = _eigenvals_eigenvects_mpmath(M)
     if multiple:
         return result
     return dict(Counter(result))
 
 
 def _eigenvects_mpmath(M):
+    from sympy import ImmutableMatrix
     E, ER = _eigenvals_eigenvects_mpmath(M)
+    grouped_eigenvects = {}
     result = []
     for i in range(M.rows):
         eigenval = _sympify(E[i])
-        eigenvect = _sympify(ER[:, i])
-        result.append((eigenval, 1, [eigenvect]))
+        eigenvect = ImmutableMatrix(ER[i])
+
+        if eigenval in grouped_eigenvects:
+            grouped_eigenvects[eigenval].append(eigenvect)
+        else:
+            grouped_eigenvects[eigenval] = [eigenvect]
+
+    for eigenval, eigenvects in grouped_eigenvects.items():
+        result.append((eigenval, len(eigenvects), eigenvects))
 
     return result
 
 
-# This function is a candidate for caching if it gets implemented for matrices.
-def _eigenvals(
-    M, error_when_incomplete=True, *, simplify=False, multiple=False,
-    rational=False, **flags):
+@overload
+def _eigenvals(M,
+        error_when_incomplete: bool = True,
+        *,
+        simplify: Callable[[Expr], Expr] | bool = False,
+        multiple: Literal[False] = False,
+        rational: bool = False,
+        **flags: Any,
+   ) -> dict[Expr, int]:
+    ...
+@overload
+def _eigenvals(M,
+        error_when_incomplete: bool = True,
+        *,
+        simplify: Callable[[Expr], Expr] | bool = False,
+        multiple: Literal[True],
+        rational: bool = False,
+        **flags: Any,
+) -> list[Expr]:
+    ...
+
+def _eigenvals(M,
+        error_when_incomplete: bool = True,
+        *,
+        simplify: Callable[[Expr], Expr] | bool = False,
+        multiple: bool = False,
+        rational: bool = False,
+        **flags: Any,
+    ) -> dict[Expr, int] | list[Expr]:
     r"""Compute eigenvalues of the matrix.
 
     Parameters
@@ -131,7 +190,7 @@ def _eigenvals(
     See Also
     ========
 
-    MatrixDeterminant.charpoly
+    MatrixBase.charpoly
     eigenvects
 
     Notes
@@ -156,15 +215,15 @@ def _eigenvals(
     if not M.is_square:
         raise NonSquareMatrixError("{} must be a square matrix.".format(M))
 
-    if M._rep.domain not in (ZZ, QQ):
-        # Skip this check for ZZ/QQ because it can be slow
-        if all(x.is_number for x in M) and M.has(Float):
-            return _eigenvals_mpmath(M, multiple=multiple)
-
     if rational:
         from sympy.simplify import nsimplify
         M = M.applyfunc(
             lambda x: nsimplify(x, rational=True) if x.has(Float) else x)
+
+    if M._rep.domain not in (ZZ, QQ):
+        # Skip this check for ZZ/QQ because it can be slow
+        if all(x.is_number for x in M) and M.has(Float):
+            return _eigenvals_mpmath(M, multiple=multiple)
 
     if multiple:
         return _eigenvals_list(
@@ -187,54 +246,31 @@ eigenvals_error_message = \
 
 
 def _eigenvals_list(
-    M, error_when_incomplete=True, simplify=False, **flags):
-    iblocks = M.strongly_connected_components()
-    all_eigs = []
-    is_dom = M._rep.domain in (ZZ, QQ)
-    for b in iblocks:
-
-        # Fast path for a 1x1 block:
-        if is_dom and len(b) == 1:
-            index = b[0]
-            val = M[index, index]
-            all_eigs.append(val)
-            continue
-
-        block = M[b, b]
-
-        if isinstance(simplify, FunctionType):
-            charpoly = block.charpoly(simplify=simplify)
-        else:
-            charpoly = block.charpoly()
-
-        eigs = roots(charpoly, multiple=True, **flags)
-
-        if len(eigs) != block.rows:
-            degree = int(charpoly.degree())
-            f = charpoly.as_expr()
-            x = charpoly.gen
-            try:
-                eigs = [CRootOf(f, x, idx) for idx in range(degree)]
-            except NotImplementedError:
-                if error_when_incomplete:
-                    raise MatrixError(eigenvals_error_message)
-                else:
-                    eigs = []
-
-        all_eigs += eigs
-
-    if not simplify:
-        return all_eigs
-    if not isinstance(simplify, FunctionType):
-        simplify = _simplify
-    return [simplify(value) for value in all_eigs]
+    M: MatrixBase,
+    error_when_incomplete: bool = True,
+    simplify: Callable[[Expr], Expr] | bool = False,
+    **flags,
+) -> list[Expr]:
+    vals_dict = _eigenvals_dict(M, error_when_incomplete, simplify, **flags)
+    vals = []
+    for val, mult in vals_dict.items():
+        vals.extend([val] * mult)
+    return vals
 
 
 def _eigenvals_dict(
-    M, error_when_incomplete=True, simplify=False, **flags):
+        M: MatrixBase,
+        error_when_incomplete: bool = True,
+        simplify: Callable[[Expr], Expr] | bool = False,
+        **flags: Any,
+    ) -> dict[Expr, int]:
+
     iblocks = M.strongly_connected_components()
-    all_eigs = {}
-    is_dom = M._rep.domain in (ZZ, QQ)
+    all_eigs: dict[Expr, int] = {}
+    expanded_eigs: dict[Expr, Expr] = {}
+
+    # XXX: Only RepMatrix has _rep ...
+    is_dom = M._rep.domain in (ZZ, QQ) # type: ignore
     for b in iblocks:
 
         # Fast path for a 1x1 block:
@@ -251,25 +287,37 @@ def _eigenvals_dict(
         else:
             charpoly = block.charpoly()
 
-        eigs = roots(charpoly, multiple=False, **flags)
+        factors = charpoly.factor_list()[1]
 
-        if sum(eigs.values()) != block.rows:
-            degree = int(charpoly.degree())
-            f = charpoly.as_expr()
-            x = charpoly.gen
-            try:
-                eigs = {CRootOf(f, x, idx): 1 for idx in range(degree)}
-            except NotImplementedError:
-                if error_when_incomplete:
-                    raise MatrixError(eigenvals_error_message)
+        for factor, multiplicity in factors:
+            eigs = roots(factor, multiple=False, **flags)
+
+            degree = int(factor.degree())
+            if sum(eigs.values()) != degree:
+                try:
+                    eigs = dict(factor.all_roots(multiple=False))
+                except NotImplementedError:
+                    if error_when_incomplete:
+                        raise MatrixError(eigenvals_error_message)
+                    else:
+                        eigs = {}
+
+            for k, v in eigs.items():
+                # Try a bit to canonicalize the eigenvalue expressions to get
+                # the multiplicity correct. This is not robust enough in general
+                # if different subroutines in roots can return different forms
+                # for the same root.
+                k_expanded = k.expand()
+                if k_expanded in expanded_eigs:
+                    k = expanded_eigs[k_expanded]
                 else:
-                    eigs = {}
+                    expanded_eigs[k_expanded] = k
 
-        for k, v in eigs.items():
-            if k in all_eigs:
-                all_eigs[k] += v
-            else:
-                all_eigs[k] = v
+                v_total = v * multiplicity
+                if k in all_eigs:
+                    all_eigs[k] += v_total
+                else:
+                    all_eigs[k] = v_total
 
     if not simplify:
         return all_eigs
@@ -278,9 +326,14 @@ def _eigenvals_dict(
     return {simplify(key): value for key, value in all_eigs.items()}
 
 
-def _eigenspace(M, eigenval, iszerofunc=_iszero, simplify=False):
+def _eigenspace(
+        M: Tmat,
+        eigenval: Expr,
+        iszerofunc: Callable[[Expr], bool | None] = _iszero,
+        simplify: bool | Callable[[Expr], Expr] = False,
+    ) -> list[Tmat]:
     """Get a basis for the eigenspace for a particular eigenvalue"""
-    m   = M - M.eye(M.rows) * eigenval
+    m   = M._as_type(M - M.eye(M.rows) * eigenval)
     ret = m.nullspace(iszerofunc=iszerofunc)
 
     # The nullspace for a real eigenvalue should be non-trivial.
@@ -293,7 +346,7 @@ def _eigenspace(M, eigenval, iszerofunc=_iszero, simplify=False):
     return ret
 
 
-def _eigenvects_DOM(M, **kwargs):
+def _eigenvects_DOM(M: Tmat, **kwargs) -> list[tuple[Expr, int, list[Tmat]]] | None:
     DOM = DomainMatrix.from_Matrix(M, field=True, extension=True)
     DOM = DOM.to_dense()
 
@@ -307,7 +360,12 @@ def _eigenvects_DOM(M, **kwargs):
     return None
 
 
-def _eigenvects_sympy(M, iszerofunc, simplify=True, **flags):
+def _eigenvects_sympy(
+        M: Tmat,
+        iszerofunc: Callable[[Expr], bool | None] = _iszero,
+        simplify: bool | Callable[[Expr], Expr] = True,
+        **flags: Any,
+    ) -> list[tuple[Expr, int, list[Tmat]]]:
     eigenvals = M.eigenvals(rational=False, **flags)
 
     # Make sure that we have all roots in radical form
@@ -317,16 +375,24 @@ def _eigenvects_sympy(M, iszerofunc, simplify=True, **flags):
                 "Eigenvector computation is not implemented if the matrix have "
                 "eigenvalues in CRootOf form")
 
-    eigenvals = sorted(eigenvals.items(), key=default_sort_key)
+    eigenvals_sorted = sorted(eigenvals.items(), key=default_sort_key)
     ret = []
-    for val, mult in eigenvals:
+    for val, mult in eigenvals_sorted:
         vects = _eigenspace(M, val, iszerofunc=iszerofunc, simplify=simplify)
         ret.append((val, mult, vects))
     return ret
 
 
 # This functions is a candidate for caching if it gets implemented for matrices.
-def _eigenvects(M, error_when_incomplete=True, iszerofunc=_iszero, *, chop=False, **flags):
+def _eigenvects(
+        M: Tmat,
+        error_when_incomplete: bool = True,
+        iszerofunc: Callable[[Expr], bool | None] = _iszero,
+        simplify: bool | Callable[[Expr], Expr] = False,
+        *,
+        chop: bool | int = False,
+        **flags: Any,
+    ) -> list[tuple[Expr, int, list[Tmat]]]:
     """Compute eigenvectors of the matrix.
 
     Parameters
@@ -400,19 +466,18 @@ def _eigenvects(M, error_when_incomplete=True, iszerofunc=_iszero, *, chop=False
     ========
 
     eigenvals
-    MatrixSubspaces.nullspace
+    MatrixBase.nullspace
     """
-    simplify = flags.get('simplify', True)
-    primitive = flags.get('simplify', False)
-    flags.pop('simplify', None)  # remove this if it's there
-    flags.pop('multiple', None)  # remove this if it's there
+    primitive = simplify is not False
 
     if not isinstance(simplify, FunctionType):
         simpfunc = _simplify if simplify else lambda x: x
+    else:
+        simpfunc = simplify
 
     has_floats = M.has(Float)
     if has_floats:
-        if all(x.is_number for x in M):
+        if all(x.is_number for x in M.iter_values()):
             return _eigenvects_mpmath(M)
         from sympy.simplify import nsimplify
         M = M.applyfunc(lambda x: nsimplify(x, rational=True))
@@ -424,8 +489,8 @@ def _eigenvects(M, error_when_incomplete=True, iszerofunc=_iszero, *, chop=False
     if primitive:
         # if the primitive flag is set, get rid of any common
         # integer denominators
-        def denom_clean(l):
-            return [(v / gcd(list(v))).applyfunc(simpfunc) for v in l]
+        def denom_clean(l: list[Tmat]) -> list[Tmat]:
+            return [(v / gcd(v.flat())).applyfunc(simpfunc) for v in l]
 
         ret = [(val, mult, denom_clean(es)) for val, mult, es in ret]
 
@@ -437,7 +502,7 @@ def _eigenvects(M, error_when_incomplete=True, iszerofunc=_iszero, *, chop=False
     return ret
 
 
-def _is_diagonalizable_with_eigen(M, reals_only=False):
+def _is_diagonalizable_with_eigen(M: MatrixBase, reals_only: bool = False) -> tuple[bool, list]:
     """See _is_diagonalizable. This function returns the bool along with the
     eigenvectors to avoid calculating them again in functions like
     ``diagonalize``."""
@@ -456,7 +521,7 @@ def _is_diagonalizable_with_eigen(M, reals_only=False):
 
     return True, eigenvecs
 
-def _is_diagonalizable(M, reals_only=False, **kwargs):
+def _is_diagonalizable(M, reals_only=False, **kwargs) -> bool:
     """Returns ``True`` if a matrix is diagonalizable.
 
     Parameters
@@ -497,7 +562,7 @@ def _is_diagonalizable(M, reals_only=False, **kwargs):
     See Also
     ========
 
-    is_diagonal
+    sympy.matrices.matrixbase.MatrixBase.is_diagonal
     diagonalize
     """
     if not M.is_square:
@@ -683,7 +748,7 @@ def _diagonalize(M, reals_only=False, sort=False, normalize=False):
     See Also
     ========
 
-    is_diagonal
+    sympy.matrices.matrixbase.MatrixBase.is_diagonal
     is_diagonalizable
     """
 
@@ -825,6 +890,8 @@ def _is_positive_semidefinite_cholesky(M):
                     elif iszero is False:
                         return False
             return True
+
+        assert pivot_val is not None
 
         if M[k, k].is_negative or pivot_val.is_negative:
             return False
@@ -999,7 +1066,7 @@ _doc_positive_definite = \
     hermitian) and we can defer most of the studies to symmetric or
     hermitian positive definite matrices.
 
-    But it is a different problem for the existance of Cholesky
+    But it is a different problem for the existence of Cholesky
     decomposition. Because even though a non symmetric or a non
     hermitian matrix can be positive definite, Cholesky or LDL
     decomposition does not exist because the decompositions require the
@@ -1010,7 +1077,7 @@ _doc_positive_definite = \
 
     .. [1] https://en.wikipedia.org/wiki/Definiteness_of_a_matrix#Eigenvalues
 
-    .. [2] http://mathworld.wolfram.com/PositiveDefiniteMatrix.html
+    .. [2] https://mathworld.wolfram.com/PositiveDefiniteMatrix.html
 
     .. [3] Johnson, C. R. "Positive Definite Matrices." Amer.
         Math. Monthly 77, 259-264 1970.
@@ -1023,7 +1090,47 @@ _is_negative_semidefinite.__doc__ = _doc_positive_definite
 _is_indefinite.__doc__            = _doc_positive_definite
 
 
-def _jordan_form(M, calc_transform=True, *, chop=False):
+def _blocks_from_nullity_chain(d):
+    """Return a list of the size of each Jordan block.
+    If d_n is the nullity of E**n, then the number
+    of Jordan blocks of size n is
+        2*d_n - d_(n-1) - d_(n+1)"""
+
+    # d[0] is always the number of columns, so skip past it
+    mid = [2*d[n] - d[n - 1] - d[n + 1] for n in range(1, len(d) - 1)]
+    # d is assumed to plateau with "d[ len(d) ] == d[-1]", so
+    # 2*d_n - d_(n-1) - d_(n+1) == d_n - d_(n-1)
+    end = [d[-1] - d[-2]] if len(d) > 1 else [d[0]]
+
+    return mid + end
+
+
+@overload
+def _jordan_form(
+        M: Tmat,
+        calc_transform: Literal[True] = True,
+        *,
+        chop: bool = False
+    ) -> tuple[Tmat, Tmat]: ...
+@overload
+def _jordan_form(
+        M: Tmat,
+        calc_transform: Literal[False],
+        *,
+        chop: bool = False,
+    ) -> Tmat: ...
+@overload
+def _jordan_form(M: Tmat,
+         calc_transform: bool = True,
+         *,
+         chop: bool = False
+     ) -> tuple[Tmat, Tmat] | Tmat: ...
+
+def _jordan_form(M: Tmat,
+         calc_transform: bool = True,
+         *,
+         chop: bool = False
+     ) -> tuple[Tmat, Tmat] | Tmat:
     """Return $(P, J)$ where $J$ is a Jordan block
     matrix and $P$ is a matrix such that $M = P J P^{-1}$
 
@@ -1075,22 +1182,21 @@ def _jordan_form(M, calc_transform=True, *, chop=False):
         # setting minimum max_dps to 15 to prevent loss of precision in
         # matrix containing non evaluated expressions
         max_dps = max(prec_to_dps(max_prec), 15)
+    else:
+        max_dps = -1
 
-    def restore_floats(*args):
+    def restore_floats1(arg: Tmat) -> Tmat:
         """If ``has_floats`` is `True`, cast all ``args`` as
         matrices of floats."""
+        return arg.evalf(n=max_dps, chop=chop) if has_floats else arg
 
-        if has_floats:
-            args = [m.evalf(n=max_dps, chop=chop) for m in args]
-        if len(args) == 1:
-            return args[0]
-
-        return args
+    def restore_floats2(arg1: Tmat, arg2: Tmat) -> tuple[Tmat, Tmat]:
+        return restore_floats1(arg1), restore_floats1(arg2)
 
     # cache calculations for some speedup
-    mat_cache = {}
+    mat_cache: dict[tuple[Expr, int], Tmat] = {}
 
-    def eig_mat(val, pow):
+    def eig_mat(val: Expr, pow: int) -> Tmat:
         """Cache computations of ``(M - val*I)**pow`` for quick
         retrieval"""
 
@@ -1137,21 +1243,6 @@ def _jordan_form(M, calc_transform=True, *, chop=False):
 
         return ret
 
-    def blocks_from_nullity_chain(d):
-        """Return a list of the size of each Jordan block.
-        If d_n is the nullity of E**n, then the number
-        of Jordan blocks of size n is
-
-            2*d_n - d_(n-1) - d_(n+1)"""
-
-        # d[0] is always the number of columns, so skip past it
-        mid = [2*d[n] - d[n - 1] - d[n + 1] for n in range(1, len(d) - 1)]
-        # d is assumed to plateau with "d[ len(d) ] == d[-1]", so
-        # 2*d_n - d_(n-1) - d_(n+1) == d_n - d_(n-1)
-        end = [d[-1] - d[-2]] if len(d) > 1 else [d[0]]
-
-        return mid + end
-
     def pick_vec(small_basis, big_basis):
         """Picks a vector from big_basis that isn't in
         the subspace spanned by small_basis"""
@@ -1171,6 +1262,17 @@ def _jordan_form(M, calc_transform=True, *, chop=False):
         from sympy.simplify import nsimplify
         mat = mat.applyfunc(lambda x: nsimplify(x, rational=True))
 
+    # check if matrix is rational
+    has_rationals = all(num.is_number and num.is_rational for num in list(mat.iter_values()))
+
+    if has_rationals:
+        if calc_transform:
+            P, J = _jordan_form_rational_matrix(mat, calc_transform=True)
+            return restore_floats2(P, J)
+        else:
+            J = _jordan_form_rational_matrix(mat, calc_transform=False)
+            return restore_floats1(J)
+
     # first calculate the jordan block structure
     eigs = mat.eigenvals()
 
@@ -1185,24 +1287,24 @@ def _jordan_form(M, calc_transform=True, *, chop=False):
     # and so are diagonalizable.  In this case, don't
     # do extra work!
     if len(eigs.keys()) == mat.cols:
-        blocks     = list(sorted(eigs.keys(), key=default_sort_key))
+        blocks     = sorted(eigs.keys(), key=default_sort_key)
         jordan_mat = mat.diag(*blocks)
 
         if not calc_transform:
-            return restore_floats(jordan_mat)
+            return restore_floats1(jordan_mat)
 
         jordan_basis = [eig_mat(eig, 1).nullspace()[0]
                 for eig in blocks]
         basis_mat    = mat.hstack(*jordan_basis)
 
-        return restore_floats(basis_mat, jordan_mat)
+        return restore_floats2(basis_mat, jordan_mat)
 
     block_structure = []
 
     for eig in sorted(eigs.keys(), key=default_sort_key):
         algebraic_multiplicity = eigs[eig]
         chain = nullity_chain(eig, algebraic_multiplicity)
-        block_sizes = blocks_from_nullity_chain(chain)
+        block_sizes = _blocks_from_nullity_chain(chain)
 
         # if block_sizes =       = [a, b, c, ...], then the number of
         # Jordan blocks of size 1 is a, of size 2 is b, etc.
@@ -1223,11 +1325,11 @@ def _jordan_form(M, calc_transform=True, *, chop=False):
             "SymPy had encountered an inconsistent result while "
             "computing Jordan block. : {}".format(M))
 
-    blocks     = (mat.jordan_block(size=size, eigenvalue=eig) for eig, size in block_structure)
-    jordan_mat = mat.diag(*blocks)
+    blocks2     = (mat.jordan_block(size=size, eigenvalue=eig) for eig, size in block_structure)
+    jordan_mat = mat.diag(*blocks2)
 
     if not calc_transform:
-        return restore_floats(jordan_mat)
+        return restore_floats1(jordan_mat)
 
     # For each generalized eigenspace, calculate a basis.
     # We start by looking for a vector in null( (A - eig*I)**n )
@@ -1243,7 +1345,7 @@ def _jordan_form(M, calc_transform=True, *, chop=False):
     jordan_basis = []
 
     for eig in sorted(eigs.keys(), key=default_sort_key):
-        eig_basis = []
+        eig_basis: list[Tmat] = []
 
         for block_eig, size in block_structure:
             if block_eig != eig:
@@ -1257,15 +1359,188 @@ def _jordan_form(M, calc_transform=True, *, chop=False):
             # of any other generalized eigenvectors from a different
             # generalized eigenspace sharing the same eigenvalue.
             vec      = pick_vec(null_small + eig_basis, null_big)
-            new_vecs = [eig_mat(eig, i).multiply(vec, dotprodsimp=None)
-                    for i in range(size)]
+            new_vecs = [eig_mat(eig, i).multiply(vec, dotprodsimp=None) for i in range(size)]
 
             eig_basis.extend(new_vecs)
             jordan_basis.extend(reversed(new_vecs))
 
     basis_mat = mat.hstack(*jordan_basis)
 
-    return restore_floats(basis_mat, jordan_mat)
+    return restore_floats2(basis_mat, jordan_mat)
+
+def _jordan_form_rational_matrix(M, calc_transform):
+    dM = DomainMatrix.from_Matrix(M, field=True)
+
+    def char_mat(algebraic_num):
+        field = domain.algebraic_field(algebraic_num)
+        mat_char = dM.convert_to(field) - (dM.eye(M.shape, field) * field.unit)
+        return mat_char
+
+    def factors_to_eigenvals() :
+        eigenvals_by_factor = {}
+
+        for base, exp in factors:
+            eigenvals = []
+            if len(base) == 2:
+                eigenvals.append(domain.to_sympy(-base[1] / base[0]))
+            else:
+                minpoly = Poly.from_list(base, l, domain=domain)
+                roots_found = list(roots(minpoly.as_expr(), l, quartics=False, cubics=False))
+                degree = minpoly.degree()
+                if len(roots_found) != degree:
+                    roots_found = minpoly.all_roots(multiple=True)
+                eigenvals.extend(roots_found)
+
+            eigenvals_by_factor[(tuple(base), exp)] = eigenvals
+        return eigenvals_by_factor
+
+    def get_alg_number(factor):
+        minpoly = Poly.from_list(factor, l, domain=domain)
+        algebraic_num = AlgebraicNumber((minpoly, eigenvals_by_factor[(factor, multiplicity)][0]),
+                                alias='a')
+        return algebraic_num
+
+    nullspace_cache = {}
+    def nullity_chain(fac, algebraic_multiplicity):
+        """Calculate the sequence  [0, nullity(E), nullity(E**2), ...]
+        until it is constant where ``E = M - val*I``"""
+
+        ret     = [0]
+        algebraic_num = get_alg_number(fac)
+        mat_char = char_mat(algebraic_num)
+
+        mat_pow = mat_char
+        vecs = mat_pow.nullspace()
+        nullity = vecs.shape[0]
+
+        if algebraic_multiplicity == nullity:
+            nullspace_cache[fac] = vecs
+
+        while nullity != ret[-1]:
+            ret.append(nullity)
+
+            if nullity == algebraic_multiplicity:
+                break
+            mat_pow = mat_pow * mat_char
+            nullity = mat_pow.nullspace().shape[0]
+        return ret
+
+    def pick_vec(small_basis, eig_basis, big_basis):
+        """Picks a vector from big_basis that isn't in
+        the subspace spanned by small_basis"""
+
+        if len(eig_basis) == 0 and small_basis.shape[0] == 0:
+            return big_basis[0, :].transpose()
+
+        small_basis = small_basis.transpose()
+        for i in range(big_basis.shape[0]):
+            v = big_basis[i, :].transpose()
+            if len(eig_basis) != 0:
+                _, pivots = DomainMatrix.hstack(small_basis,*eig_basis, v).rref()
+            else:
+                _, pivots = DomainMatrix.hstack(small_basis, v).rref()
+            if pivots[-1] == small_basis.shape[1] + len(eig_basis):
+                return v
+
+    charpoly = dM.charpoly()
+    domain = dM.domain
+    l=Dummy('lambda')
+    _, factors = dup_factor_list(charpoly, domain)
+
+    eigenvals_by_factor = factors_to_eigenvals()
+
+    block_structure = {}
+    for fac, multiplicity in eigenvals_by_factor:
+        if multiplicity == 1:
+            block_sizes = [1]
+        else:
+            nullity = nullity_chain(fac, multiplicity)
+            block_sizes = _blocks_from_nullity_chain(nullity)
+
+        size_nums = [(i+1, num) for i, num in enumerate(block_sizes)]
+
+        # we expect larger Jordan blocks to come earlier
+        size_nums.reverse()
+
+        eigen_vals = eigenvals_by_factor[(fac, multiplicity)]
+        for r in eigen_vals:
+            for size, num in size_nums:
+                block_structure.setdefault(r, []).extend([size] * num)
+
+    jordan_form_size = sum(size for sizes in block_structure.values() for size in sizes)
+
+    assert jordan_form_size == M.rows
+
+    blocks2 = (
+        M.jordan_block(size=size, eigenvalue=eig)
+        for eig, sizes in block_structure.items()
+        for size in sizes
+    )
+
+    jordan_mat = M.diag(*blocks2)
+
+    if not calc_transform:
+        return jordan_mat
+
+    jordan_basis = []
+
+
+    for (factor, multiplicity), eigen_vals in eigenvals_by_factor.items():
+        # check if it have enough vectors
+        if factor in nullspace_cache or multiplicity == 1:
+            algebraic_num = None
+
+            if factor not in nullspace_cache or len(factor) != 2:
+                algebraic_num = get_alg_number(factor)
+
+            if factor not in nullspace_cache:
+                vects = char_mat(algebraic_num).nullspace()
+            else:
+                vects = nullspace_cache[factor]
+
+            mat = vects.to_Matrix().T
+            if len(factor) == 2:
+                vect_lists = [mat]
+            else:
+                vect_lists = [mat.xreplace({algebraic_num: val}) for val in eigen_vals]
+            jordan_basis.extend(vect_lists)
+        else:
+            # Precompute generalized vectors
+            genvecs_per_size = {}
+            eig_basis = []
+
+            algebraic_num = get_alg_number(factor)
+            char_matrix = char_mat(algebraic_num)
+
+            for index, size in enumerate(block_structure.get(eigen_vals[0], [])):
+                null_big = char_matrix.pow(size).nullspace()
+                null_small = char_matrix.pow(size - 1).nullspace()
+                vec = pick_vec(null_small, eig_basis, null_big)
+
+                mat_pow = char_matrix
+                new_vecs = [(DomainMatrix.eye(M.shape, domain)) * vec]
+
+                if size > 1:
+                    new_vecs.append(mat_pow * vec)
+
+                for _ in range(2, size):
+                    mat_pow *= char_matrix
+                    new_vecs.append(mat_pow * vec)
+                eig_basis.extend(new_vecs)
+                genvecs_per_size[(factor, size, index)] = new_vecs
+
+            for eig in eigen_vals:
+                for index, size in enumerate(block_structure.get(eigen_vals[0], [])):
+                    genvecs = genvecs_per_size[(factor, size, index)]
+                    if len(factor) != 2 :
+                        genvecs = [vects.to_Matrix().xreplace({algebraic_num : eig})
+                                   for vects in genvecs]
+                    else:
+                        genvecs = [vects.to_Matrix() for vects in genvecs]
+                    jordan_basis.extend(reversed(genvecs))
+
+    basis_mat = M.hstack(*jordan_basis)
+    return basis_mat, jordan_mat
 
 
 def _left_eigenvects(M, **flags):

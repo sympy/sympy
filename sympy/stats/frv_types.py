@@ -15,6 +15,7 @@ Rademacher
 IdealSoliton
 RobustSoliton
 """
+from __future__ import annotations
 
 
 from sympy.core.cache import cacheit
@@ -149,7 +150,7 @@ class DiscreteUniformDistribution(SingleFiniteDistribution):
     @property  # type: ignore
     @cacheit
     def dict(self):
-        return {k: self.p for k in self.set}
+        return dict.fromkeys(self.set, self.p)
 
     @property
     def set(self):
@@ -196,7 +197,7 @@ def DiscreteUniform(name, items):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Discrete_uniform_distribution
-    .. [2] http://mathworld.wolfram.com/DiscreteUniformDistribution.html
+    .. [2] https://mathworld.wolfram.com/DiscreteUniformDistribution.html
 
     """
     return rv(name, DiscreteUniformDistribution, *items)
@@ -335,7 +336,7 @@ def Bernoulli(name, p, succ=1, fail=0):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Bernoulli_distribution
-    .. [2] http://mathworld.wolfram.com/BernoulliDistribution.html
+    .. [2] https://mathworld.wolfram.com/BernoulliDistribution.html
 
     """
 
@@ -345,6 +346,9 @@ def Bernoulli(name, p, succ=1, fail=0):
 def Coin(name, p=S.Half):
     r"""
     Create a Finite Random Variable representing a Coin toss.
+
+    This is an equivalent of a Bernoulli random variable with
+    "H" and "T" as success and failure events respectively.
 
     Parameters
     ==========
@@ -474,7 +478,7 @@ def Binomial(name, n, p, succ=1, fail=0):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Binomial_distribution
-    .. [2] http://mathworld.wolfram.com/BinomialDistribution.html
+    .. [2] https://mathworld.wolfram.com/BinomialDistribution.html
 
     """
 
@@ -548,7 +552,7 @@ def BetaBinomial(name, n, alpha, beta):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Beta-binomial_distribution
-    .. [2] http://mathworld.wolfram.com/BetaBinomialDistribution.html
+    .. [2] https://mathworld.wolfram.com/BetaBinomialDistribution.html
 
     """
 
@@ -561,11 +565,11 @@ class HypergeometricDistribution(SingleFiniteDistribution):
     @staticmethod
     def check(n, N, m):
         _value_check((N.is_integer, N.is_nonnegative),
-                     "'N' must be nonnegative integer. N = %s." % str(n))
+                     "'N' must be nonnegative integer. N = %s." % str(N))
         _value_check((n.is_integer, n.is_nonnegative),
                      "'n' must be nonnegative integer. n = %s." % str(n))
         _value_check((m.is_integer, m.is_nonnegative),
-                     "'m' must be nonnegative integer. m = %s." % str(n))
+                     "'m' must be nonnegative integer. m = %s." % str(m))
 
     @property
     def is_symbolic(self):
@@ -584,7 +588,7 @@ class HypergeometricDistribution(SingleFiniteDistribution):
         N, m, n = self.N, self.m, self.n
         if self.is_symbolic:
             return Intersection(S.Naturals0, Interval(self.low, self.high))
-        return {i for i in range(max(0, n + m - N), min(n, m) + 1)}
+        return set(range(max(0, n + m - N), min(n, m) + 1))
 
     def pmf(self, k):
         N, m, n = self.N, self.m, self.n
@@ -624,7 +628,7 @@ def Hypergeometric(name, N, m, n):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Hypergeometric_distribution
-    .. [2] http://mathworld.wolfram.com/HypergeometricDistribution.html
+    .. [2] https://mathworld.wolfram.com/HypergeometricDistribution.html
 
     """
     return rv(name, HypergeometricDistribution, N, m, n)
@@ -677,7 +681,7 @@ class IdealSolitonDistribution(SingleFiniteDistribution):
 
     @staticmethod
     def check(k):
-         _value_check(k.is_integer and k.is_positive,
+        _value_check(k.is_integer and k.is_positive,
                     "'k' must be a positive integer.")
 
     @property
@@ -698,7 +702,7 @@ class IdealSolitonDistribution(SingleFiniteDistribution):
         if self.k.is_Symbol:
             return Density(self)
         d = {1: Rational(1, self.k)}
-        d.update(dict((i, Rational(1, i*(i - 1))) for i in range(2, self.k + 1)))
+        d.update({i: Rational(1, i*(i - 1)) for i in range(2, self.k + 1)})
         return d
 
     def pmf(self, x):
@@ -753,7 +757,7 @@ def IdealSoliton(name, k):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Soliton_distribution#Ideal_distribution
-    .. [2] http://pages.cs.wisc.edu/~suman/courses/740/papers/luby02lt.pdf
+    .. [2] https://pages.cs.wisc.edu/~suman/courses/740/papers/luby02lt.pdf
 
     """
     return rv(name, IdealSolitonDistribution, k)
@@ -863,8 +867,8 @@ def RobustSoliton(name, k, delta, c):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Soliton_distribution#Robust_distribution
-    .. [2] http://www.inference.org.uk/mackay/itprnn/ps/588.596.pdf
-    .. [3] http://pages.cs.wisc.edu/~suman/courses/740/papers/luby02lt.pdf
+    .. [2] https://www.inference.org.uk/mackay/itprnn/ps/588.596.pdf
+    .. [3] https://pages.cs.wisc.edu/~suman/courses/740/papers/luby02lt.pdf
 
     '''
     return rv(name, RobustSolitonDistribution, k, delta, c)

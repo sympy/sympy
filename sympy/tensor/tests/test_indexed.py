@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core import symbols, Symbol, Tuple, oo, Dummy
 from sympy.tensor.indexed import IndexException
 from sympy.testing.pytest import raises
@@ -501,3 +502,11 @@ def test_complicated_derivative_with_Indexed():
             ((x[i] - y[i])**2/sigma,)
         )/sigma**2
     )
+
+
+def test_IndexedBase_commutative():
+    t = IndexedBase('t', commutative=False)
+    u = IndexedBase('u', commutative=False)
+    v = IndexedBase('v')
+    assert t[0]*v[0] == v[0]*t[0]
+    assert t[0]*u[0] != u[0]*t[0]

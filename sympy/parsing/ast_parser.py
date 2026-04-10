@@ -18,12 +18,13 @@ e.g. "Integer(1)", parse it, dump it and you'll see that you need to do
 to bother with lineno and col_offset, just call fix_missing_locations()
 before returning the node.
 """
+from __future__ import annotations
 
 from sympy.core.basic import Basic
 from sympy.core.sympify import SympifyError
 
 from ast import parse, NodeTransformer, Call, Name, Load, \
-    fix_missing_locations, Str, Tuple
+    fix_missing_locations, Constant, Tuple
 
 class Transform(NodeTransformer):
 
@@ -52,7 +53,7 @@ class Transform(NodeTransformer):
         elif node.id in ['True', 'False']:
             return node
         return fix_missing_locations(Call(func=Name('Symbol', Load()),
-                args=[Str(node.id)], keywords=[]))
+                args=[Constant(node.id)], keywords=[]))
 
     def visit_Lambda(self, node):
         args = [self.visit(arg) for arg in node.args.args]

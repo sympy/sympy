@@ -1,20 +1,35 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, overload
+
 from collections import defaultdict
+from abc import abstractmethod
 
 from operator import index as index_
 
+from sympy.core.basic import Basic
 from sympy.core.expr import Expr
 from sympy.core.kind import Kind, NumberKind, UndefinedKind
 from sympy.core.numbers import Integer, Rational
 from sympy.core.sympify import _sympify, SympifyError
 from sympy.core.singleton import S
-from sympy.polys.domains import ZZ, QQ, EXRAW
+from sympy.polys.domains import ZZ, QQ, GF, EXRAW
 from sympy.polys.matrices import DomainMatrix
+from sympy.polys.matrices.exceptions import DMNonInvertibleMatrixError
+from sympy.polys.polyerrors import CoercionFailed, NotInvertible
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import is_sequence
-from sympy.utilities.misc import filldedent
+from sympy.utilities.misc import filldedent, as_int
 
-from .common import classof
-from .matrices import MatrixBase, MatrixKind, ShapeError
+from .exceptions import ShapeError, NonSquareMatrixError, NonInvertibleMatrixError
+from .matrixbase import classof, MatrixBase
+from .kind import MatrixKind
+
+
+if TYPE_CHECKING:
+    from typing_extensions import Self
+
+    Slice = slice | list[int]
 
 
 class RepMatrix(MatrixBase):
@@ -47,6 +62,11 @@ class RepMatrix(MatrixBase):
 
     _rep: DomainMatrix
 
+    @classmethod
+    @abstractmethod
+    def _fromrep(cls, rep):
+        raise NotImplementedError("Subclasses must implement this method")
+
     def __eq__(self, other):
         # Skip sympify for mutable matrices...
         if not isinstance(other, RepMatrix):
@@ -58,6 +78,85 @@ class RepMatrix(MatrixBase):
                 return NotImplemented
 
         return self._rep.unify_eq(other._rep)
+
+    def to_DM(self, domain=None, **kwargs):
+        """Convert to a :class:`~.DomainMatrix`.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> M = Matrix([[1, 2], [3, 4]])
+        >>> M.to_DM()
+        DomainMatrix({0: {0: 1, 1: 2}, 1: {0: 3, 1: 4}}, (2, 2), ZZ)
+
+        The :meth:`DomainMatrix.to_Matrix` method can be used to convert back:
+
+        >>> M.to_DM().to_Matrix() == M
+        True
+
+        The domain can be given explicitly or otherwise it will be chosen by
+        :func:`construct_domain`. Any keyword arguments (besides ``domain``)
+        are passed to :func:`construct_domain`:
+
+        >>> from sympy import QQ, symbols
+        >>> x = symbols('x')
+        >>> M = Matrix([[x, 1], [1, x]])
+        >>> M
+        Matrix([
+        [x, 1],
+        [1, x]])
+        >>> M.to_DM().domain
+        ZZ[x]
+        >>> M.to_DM(field=True).domain
+        ZZ(x)
+        >>> M.to_DM(domain=QQ[x]).domain
+        QQ[x]
+
+        See Also
+        ========
+
+        DomainMatrix
+        DomainMatrix.to_Matrix
+        DomainMatrix.convert_to
+        DomainMatrix.choose_domain
+        construct_domain
+        """
+        if domain is not None:
+            if kwargs:
+                raise TypeError("Options cannot be used with domain parameter")
+            return self._rep.convert_to(domain)
+
+        rep = self._rep
+        dom = rep.domain
+
+        # If the internal DomainMatrix is already ZZ or QQ then we can maybe
+        # bypass calling construct_domain or performing any conversions. Some
+        # kwargs might affect this though e.g. field=True (not sure if there
+        # are others).
+        if not kwargs:
+            if dom.is_ZZ:
+                return rep.copy()
+            elif dom.is_QQ:
+                # All elements might be integers
+                try:
+                    return rep.convert_to(ZZ)
+                except CoercionFailed:
+                    pass
+                return rep.copy()
+
+        # Let construct_domain choose a domain
+        rep_dom = rep.choose_domain(**kwargs)
+
+        # XXX: There should be an option to construct_domain to choose EXRAW
+        # instead of EX. At least converting to EX does not initially trigger
+        # EX.simplify which is what we want here but should probably be
+        # considered a bug in EX. Perhaps also this could be handled in
+        # DomainMatrix.choose_domain rather than here...
+        if rep_dom.domain.is_EX:
+            rep_dom = rep_dom.convert_to(EXRAW)
+
+        return rep_dom
 
     @classmethod
     def _unify_element_sympy(cls, rep, element):
@@ -160,8 +259,29 @@ class RepMatrix(MatrixBase):
     def _eval_todok(self):
         return self._rep.to_sympy().to_dok()
 
+    @classmethod
+    def _eval_from_dok(cls, rows, cols, dok):
+        return cls._fromrep(cls._smat_to_DomainMatrix(rows, cols, dok))
+
     def _eval_values(self):
-        return list(self.todok().values())
+        return list(self._eval_iter_values())
+
+    def _eval_iter_values(self):
+        rep = self._rep
+        K = rep.domain
+        values = rep.iter_values()
+        if not K.is_EXRAW:
+            values = map(K.to_sympy, values)
+        return values
+
+    def _eval_iter_items(self):
+        rep = self._rep
+        K = rep.domain
+        to_sympy = K.to_sympy
+        items = rep.iter_items()
+        if not K.is_EXRAW:
+            items = ((i, to_sympy(v)) for i, v in items)
+        return items
 
     def copy(self):
         return self._fromrep(self._rep.copy())
@@ -173,7 +293,7 @@ class RepMatrix(MatrixBase):
         if domain in (ZZ, QQ):
             element_kind = NumberKind
         elif domain == EXRAW:
-            kinds = set(e.kind for e in self.values())
+            kinds = {e.kind for e in self.values()}
             if len(kinds) == 1:
                 [element_kind] = kinds
             else:
@@ -229,7 +349,21 @@ class RepMatrix(MatrixBase):
     def _eval_extract(self, rowsList, colsList):
         return self._fromrep(self._rep.extract(rowsList, colsList))
 
-    def __getitem__(self, key):
+    @overload
+    def __getitem__(self, key: tuple[int, int], /) -> Expr: ...
+    @overload
+    def __getitem__(self, key: tuple[int, Slice], /) -> Self: ...
+    @overload
+    def __getitem__(self, key: tuple[Slice, int], /) -> Self: ...
+    @overload
+    def __getitem__(self, key: tuple[Slice, Slice], /) -> Self: ...
+    @overload
+    def __getitem__(self, key: int, /) -> Expr: ...
+    @overload
+    def __getitem__(self, key: slice, /) -> list[Expr]: ...
+
+    def __getitem__(self, key: tuple[int | Slice, int | Slice] | int | slice, /
+                    ) -> Expr | Self | list[Expr]:
         return _getitem_RepMatrix(self, key)
 
     @classmethod
@@ -245,10 +379,10 @@ class RepMatrix(MatrixBase):
     def _eval_add(self, other):
         return classof(self, other)._fromrep(self._rep + other._rep)
 
-    def _eval_matrix_mul(self, other):
+    def _eval_matrix_mul(self, other: RepMatrix): # type: ignore
         return classof(self, other)._fromrep(self._rep * other._rep)
 
-    def _eval_matrix_mul_elementwise(self, other):
+    def _eval_matrix_mul_elementwise(self, other: RepMatrix): # type: ignore
         selfrep, otherrep = self._rep.unify(other._rep)
         newrep = selfrep.mul_elementwise(otherrep)
         return classof(self, other)._fromrep(newrep)
@@ -313,6 +447,141 @@ class RepMatrix(MatrixBase):
                     rv = ans
         return rv
 
+    def inv_mod(M, m):
+        r"""
+        Returns the inverse of the integer matrix ``M`` modulo ``m``.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> A = Matrix(2, 2, [1, 2, 3, 4])
+        >>> A.inv_mod(5)
+        Matrix([
+        [3, 1],
+        [4, 2]])
+        >>> A.inv_mod(3)
+        Matrix([
+        [1, 1],
+        [0, 1]])
+
+        """
+
+        if not M.is_square:
+            raise NonSquareMatrixError()
+
+        try:
+            m = as_int(m)
+        except ValueError:
+            raise TypeError("inv_mod: modulus m must be an integer")
+
+        K = GF(m, symmetric=False)
+
+        try:
+            dM = M.to_DM(K)
+        except CoercionFailed:
+            raise ValueError("inv_mod: matrix entries must be integers")
+
+        if K.is_Field:
+            try:
+                dMi = dM.inv()
+            except DMNonInvertibleMatrixError as exc:
+                msg = f'Matrix is not invertible (mod {m})'
+                raise NonInvertibleMatrixError(msg) from exc
+        else:
+            dMadj, det = dM.adj_det()
+            try:
+                detinv = 1 / det
+            except NotInvertible:
+                msg = f'Matrix is not invertible (mod {m})'
+                raise NonInvertibleMatrixError(msg)
+            dMi = dMadj * detinv
+
+        return dMi.to_Matrix()
+
+    def lll(self, delta=0.75):
+        """LLL-reduced basis for the rowspace of a matrix of integers.
+
+        Performs the Lenstra–Lenstra–Lovász (LLL) basis reduction algorithm.
+
+        The implementation is provided by :class:`~DomainMatrix`. See
+        :meth:`~DomainMatrix.lll` for more details.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> M = Matrix([[1, 0, 0, 0, -20160],
+        ...             [0, 1, 0, 0, 33768],
+        ...             [0, 0, 1, 0, 39578],
+        ...             [0, 0, 0, 1, 47757]])
+        >>> M.lll()
+        Matrix([
+        [ 10, -3,  -2,  8,  -4],
+        [  3, -9,   8,  1, -11],
+        [ -3, 13,  -9, -3,  -9],
+        [-12, -7, -11,  9,  -1]])
+
+        See Also
+        ========
+
+        lll_transform
+        sympy.polys.matrices.domainmatrix.DomainMatrix.lll
+        """
+        delta = QQ.from_sympy(_sympify(delta))
+        dM = self._rep.convert_to(ZZ)
+        basis = dM.lll(delta=delta)
+        return self._fromrep(basis)
+
+    def lll_transform(self, delta=0.75):
+        """LLL-reduced basis and transformation matrix.
+
+        Performs the Lenstra–Lenstra–Lovász (LLL) basis reduction algorithm.
+
+        The implementation is provided by :class:`~DomainMatrix`. See
+        :meth:`~DomainMatrix.lll_transform` for more details.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> M = Matrix([[1, 0, 0, 0, -20160],
+        ...             [0, 1, 0, 0, 33768],
+        ...             [0, 0, 1, 0, 39578],
+        ...             [0, 0, 0, 1, 47757]])
+        >>> B, T = M.lll_transform()
+        >>> B
+        Matrix([
+        [ 10, -3,  -2,  8,  -4],
+        [  3, -9,   8,  1, -11],
+        [ -3, 13,  -9, -3,  -9],
+        [-12, -7, -11,  9,  -1]])
+        >>> T
+        Matrix([
+        [ 10, -3,  -2,  8],
+        [  3, -9,   8,  1],
+        [ -3, 13,  -9, -3],
+        [-12, -7, -11,  9]])
+
+        The transformation matrix maps the original basis to the LLL-reduced
+        basis:
+
+        >>> T * M == B
+        True
+
+        See Also
+        ========
+
+        lll
+        sympy.polys.matrices.domainmatrix.DomainMatrix.lll_transform
+        """
+        delta = QQ.from_sympy(_sympify(delta))
+        dM = self._rep.convert_to(ZZ)
+        basis, transform = dM.lll_transform(delta=delta)
+        B = self._fromrep(basis)
+        T = self._fromrep(transform)
+        return B, T
+
 
 class MutableRepMatrix(RepMatrix):
     """Mutable matrix based on DomainMatrix as the internal representation"""
@@ -347,7 +616,7 @@ class MutableRepMatrix(RepMatrix):
     @classmethod
     def _fromrep(cls, rep):
         obj = super().__new__(cls)
-        obj.rows, obj.cols = rep.shape
+        obj.rows, obj.cols = rep.shape # type: ignore
         obj._rep = rep
         return obj
 
@@ -403,13 +672,81 @@ class MutableRepMatrix(RepMatrix):
             self._rep, value = self._unify_element_sympy(self._rep, value)
             self._rep.rep.setitem(i, j, value)
 
-    def _eval_col_del(self, col):
-        self._rep = DomainMatrix.hstack(self._rep[:,:col], self._rep[:,col+1:])
-        self.cols -= 1
+    def _setitem(self, key, value):
+        """Helper to set value at location given by key.
 
-    def _eval_row_del(self, row):
+        Examples
+        ========
+
+        >>> from sympy import Matrix, I, zeros, ones
+        >>> m = Matrix(((1, 2+I), (3, 4)))
+        >>> m
+        Matrix([
+        [1, 2 + I],
+        [3,     4]])
+        >>> m[1, 0] = 9
+        >>> m
+        Matrix([
+        [1, 2 + I],
+        [9,     4]])
+        >>> m[1, 0] = [[0, 1]]
+
+        To replace row r you assign to position r*m where m
+        is the number of columns:
+
+        >>> M = zeros(4)
+        >>> m = M.cols
+        >>> M[3*m] = ones(1, m)*2; M
+        Matrix([
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+        [2, 2, 2, 2]])
+
+        And to replace column c you can assign to position c:
+
+        >>> M[2] = ones(m, 1)*4; M
+        Matrix([
+        [0, 0, 4, 0],
+        [0, 0, 4, 0],
+        [0, 0, 4, 0],
+        [2, 2, 4, 2]])
+        """
+        is_slice = isinstance(key, slice)
+        i, j = key = self.key2ij(key)
+        is_mat = isinstance(value, MatrixBase)
+        if isinstance(i, slice) or isinstance(j, slice):
+            if isinstance(value, MatrixBase):
+                self.copyin_matrix(key, value)
+                return
+            if not isinstance(value, Expr) and is_sequence(value):
+                self.copyin_list(key, value)
+                return
+            raise ValueError('unexpected value: %s' % value)
+        else:
+            if (not is_mat and
+                    not isinstance(value, Basic) and is_sequence(value)):
+                value = self._new(value)
+                is_mat = True
+            if isinstance(value, MatrixBase):
+                if is_slice:
+                    key = (slice(*divmod(i, self.cols)),
+                           slice(*divmod(j, self.cols)))
+                else:
+                    key = (slice(i, i + value.rows),
+                           slice(j, j + value.cols))
+                self.copyin_matrix(key, value)
+            else:
+                return i, j, self._sympify(value) # type: ignore
+            return
+
+    def _eval_col_del(self, col): # type: ignore
+        self._rep = DomainMatrix.hstack(self._rep[:,:col], self._rep[:,col+1:])
+        self.cols -= 1 # type: ignore
+
+    def _eval_row_del(self, row): # type: ignore
         self._rep = DomainMatrix.vstack(self._rep[:row,:], self._rep[row+1:, :])
-        self.rows -= 1
+        self.rows -= 1 # type: ignore
 
     def _eval_col_insert(self, col, other):
         other = self._new(other)
@@ -493,6 +830,43 @@ class MutableRepMatrix(RepMatrix):
         """
         for j in range(self.cols):
             self[i, j] = f(self[i, j], j)
+
+    #The next three methods give direct support for the most common row operations inplace.
+    def row_mult(self,i,factor):
+        """Multiply the given row by the given factor in-place.
+
+        Examples
+        ========
+
+        >>> from sympy import eye
+        >>> M = eye(3)
+        >>> M.row_mult(1,7); M
+        Matrix([
+        [1, 0, 0],
+        [0, 7, 0],
+        [0, 0, 1]])
+
+        """
+        for j in range(self.cols):
+            self[i,j] *= factor
+
+    def row_add(self,s,t,k):
+        """Add k times row s (source) to row t (target) in place.
+
+        Examples
+        ========
+
+        >>> from sympy import eye
+        >>> M = eye(3)
+        >>> M.row_add(0, 2,3); M
+        Matrix([
+        [1, 0, 0],
+        [0, 1, 0],
+        [3, 0, 1]])
+        """
+
+        for j in range(self.cols):
+            self[t,j] += k*self[s,j]
 
     def row_swap(self, i, j):
         """Swap the two given rows of the matrix in-place.
@@ -666,7 +1040,7 @@ class MutableRepMatrix(RepMatrix):
         if not value:
             self._rep = DomainMatrix.zeros(self.shape, EXRAW)
         else:
-            elements_dod = {i: {j: value for j in range(self.cols)} for i in range(self.rows)}
+            elements_dod = {i: dict.fromkeys(range(self.cols), value) for i in range(self.rows)}
             self._rep = DomainMatrix(elements_dod, self.shape, EXRAW)
 
 

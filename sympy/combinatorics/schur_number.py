@@ -1,7 +1,8 @@
 """
 The Schur number S(k) is the largest integer n for which the interval [1,n]
-can be partitioned into k sum-free sets.(http://mathworld.wolfram.com/SchurNumber.html)
+can be partitioned into k sum-free sets.(https://mathworld.wolfram.com/SchurNumber.html)
 """
+from __future__ import annotations
 import math
 from sympy.core import S
 from sympy.core.basic import Basic

@@ -8,6 +8,7 @@ TODO:
 * Doctests and documentation of special methods for InnerProduct, Commutator,
   AntiCommutator, represent, apply_operators.
 """
+from __future__ import annotations
 
 from sympy.core.add import Add
 from sympy.core.expr import Expr
@@ -17,8 +18,12 @@ from sympy.core.numbers import oo
 from sympy.core.singleton import S
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.physics.quantum.dagger import Dagger
+from sympy.physics.quantum.kind import OperatorKind
 from sympy.physics.quantum.qexpr import QExpr, dispatch_method
 from sympy.matrices import eye
+from sympy.utilities.exceptions import sympy_deprecation_warning
+
+
 
 __all__ = [
     'Operator',
@@ -100,10 +105,13 @@ class Operator(QExpr):
     .. [1] https://en.wikipedia.org/wiki/Operator_%28physics%29
     .. [2] https://en.wikipedia.org/wiki/Observable
     """
-
+    is_hermitian: bool | None = None
+    is_unitary: bool | None = None
     @classmethod
     def default_args(self):
         return ("O",)
+
+    kind = OperatorKind
 
     #-------------------------------------------------------------------------
     # Printing
@@ -168,6 +176,9 @@ class Operator(QExpr):
     def _apply_operator(self, ket, **options):
         return dispatch_method(self, '_apply_operator', ket, **options)
 
+    def _apply_from_right_to(self, bra, **options):
+        return None
+
     def matrix_element(self, *args):
         raise NotImplementedError('matrix_elements is not defined')
 
@@ -178,13 +189,6 @@ class Operator(QExpr):
 
     def _eval_inverse(self):
         return self**(-1)
-
-    def __mul__(self, other):
-
-        if isinstance(other, IdentityOperator):
-            return self
-
-        return Mul(self, other)
 
 
 class HermitianOperator(Operator):
@@ -244,7 +248,7 @@ class UnitaryOperator(Operator):
     >>> U*Dagger(U)
     1
     """
-
+    is_unitary = True
     def _eval_adjoint(self):
         return self._eval_inverse()
 
@@ -252,6 +256,10 @@ class UnitaryOperator(Operator):
 class IdentityOperator(Operator):
     """An identity operator I that satisfies op * I == I * op == op for any
     operator op.
+
+    .. deprecated:: 1.14.
+        Use the scalar S.One instead as the multiplicative identity for
+        operators and states.
 
     Parameters
     ==========
@@ -264,9 +272,11 @@ class IdentityOperator(Operator):
     ========
 
     >>> from sympy.physics.quantum import IdentityOperator
-    >>> IdentityOperator()
+    >>> IdentityOperator() # doctest: +SKIP
     I
     """
+    is_hermitian = True
+    is_unitary = True
     @property
     def dimension(self):
         return self.N
@@ -276,6 +286,14 @@ class IdentityOperator(Operator):
         return (oo,)
 
     def __init__(self, *args, **hints):
+        sympy_deprecation_warning(
+            """
+            IdentityOperator has been deprecated. In the future, please use
+            S.One as the identity for quantum operators and states.
+            """,
+            deprecated_since_version="1.14",
+            active_deprecations_target='deprecated-operator-identity',
+        )
         if not len(args) in (0, 1):
             raise ValueError('0 or 1 parameters expected, got %s' % args)
 
@@ -311,13 +329,6 @@ class IdentityOperator(Operator):
     def _print_contents_latex(self, printer, *args):
         return r'{\mathcal{I}}'
 
-    def __mul__(self, other):
-
-        if isinstance(other, (Operator, Dagger)):
-            return other
-
-        return Mul(self, other)
-
     def _represent_default_basis(self, **options):
         if not self.N or self.N == oo:
             raise NotImplementedError('Cannot represent infinite dimensional' +
@@ -352,7 +363,6 @@ class OuterProduct(Operator):
     Create a simple outer product by hand and take its dagger::
 
         >>> from sympy.physics.quantum import Ket, Bra, OuterProduct, Dagger
-        >>> from sympy.physics.quantum import Operator
 
         >>> k = Ket('k')
         >>> b = Bra('b')
@@ -368,24 +378,17 @@ class OuterProduct(Operator):
         >>> Dagger(op)
         |b><k|
 
-    In simple products of kets and bras outer products will be automatically
+    In quantum expressions, outer products will be automatically
     identified and created::
 
         >>> k*b
         |k><b|
 
-    But in more complex expressions, outer products are not automatically
-    created::
+    However, the creation of inner products always has higher priority than that of
+    outer products:
 
-        >>> A = Operator('A')
-        >>> A*k*b
-        A*|k>*<b|
-
-    A user can force the creation of an outer product in a complex expression
-    by using parentheses to group the ket and bra::
-
-        >>> A*(k*b)
-        A*|k><b|
+        >>> b*k*b
+        <b|k>*<b|
 
     References
     ==========

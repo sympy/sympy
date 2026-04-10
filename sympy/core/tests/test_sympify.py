@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.add import Add
 from sympy.core.containers import Tuple
 from sympy.core.function import (Function, Lambda)
@@ -22,18 +23,17 @@ from sympy.core.sympify import (sympify, _sympify, SympifyError, kernS,
     CantSympify, converter)
 from sympy.core.decorators import _sympifyit
 from sympy.external import import_module
-from sympy.testing.pytest import raises, XFAIL, skip, warns_deprecated_sympy
-from sympy.utilities.decorator import conserve_mpmath_dps
+from sympy.testing.pytest import raises, XFAIL, skip
 from sympy.geometry import Point, Line
 from sympy.functions.combinatorial.factorials import factorial, factorial2
 from sympy.abc import _clash, _clash1, _clash2
-from sympy.external.gmpy import HAS_GMPY
+from sympy.external.gmpy import gmpy as _gmpy, flint as _flint
+from sympy.external.mpmath import conserve_mpmath_dps
 from sympy.sets import FiniteSet, EmptySet
 from sympy.tensor.array.dense_ndim_array import ImmutableDenseNDimArray
 
 import mpmath
 from collections import defaultdict, OrderedDict
-from mpmath.rational import mpq
 
 
 numpy = import_module('numpy')
@@ -101,16 +101,24 @@ def test_sympify_Fraction():
 
 
 def test_sympify_gmpy():
-    if HAS_GMPY:
-        if HAS_GMPY == 2:
-            import gmpy2 as gmpy
-        elif HAS_GMPY == 1:
-            import gmpy
+    if _gmpy is not None:
+        import gmpy2
 
-        value = sympify(gmpy.mpz(1000001))
+        value = sympify(gmpy2.mpz(1000001))
         assert value == Integer(1000001) and type(value) is Integer
 
-        value = sympify(gmpy.mpq(101, 127))
+        value = sympify(gmpy2.mpq(101, 127))
+        assert value == Rational(101, 127) and type(value) is Rational
+
+
+def test_sympify_flint():
+    if _flint is not None:
+        import flint
+
+        value = sympify(flint.fmpz(1000001))
+        assert value == Integer(1000001) and type(value) is Integer
+
+        value = sympify(flint.fmpq(101, 127))
         assert value == Rational(101, 127) and type(value) is Rational
 
 
@@ -133,8 +141,6 @@ def test_sympify_mpmath():
 
     mpmath.mp.dps = 15
     assert sympify(mpmath.mpc(1.0 + 2.0j)) == Float(1.0) + Float(2.0)*I
-
-    assert sympify(mpq(1, 2)) == S.Half
 
 
 def test_sympify2():
@@ -175,10 +181,10 @@ def test_sympify_bool():
     assert sympify(False) is false
 
 
-def test_sympyify_iterables():
+def test_sympify_iterables():
     ans = [Rational(3, 10), Rational(1, 5)]
     assert sympify(['.3', '.2'], rational=True) == ans
-    assert sympify(dict(x=0, y=1)) == {x: 0, y: 1}
+    assert sympify({"x": 0, "y": 1}) == {x: 0, y: 1}
     assert sympify(['1', '2', ['3', '4']]) == [S(1), S(2), [S(3), S(4)]]
 
 
@@ -189,7 +195,7 @@ def test_issue_16772():
     # along; list, on the other hand, is not converted
     # with a converter so its args are traversed later
     ans = [Rational(3, 10), Rational(1, 5)]
-    assert sympify(tuple(['.3', '.2']), rational=True) == Tuple(*ans)
+    assert sympify(('.3', '.2'), rational=True) == Tuple(*ans)
 
 
 def test_issue_16859():
@@ -281,8 +287,7 @@ def test_sympify_raises():
         def __str__(self):
             return 'x'
 
-    with warns_deprecated_sympy():
-        assert sympify(A()) == Symbol('x')
+    raises(SympifyError, lambda: sympify(A()))
 
 
 def test__sympify():
@@ -432,7 +437,7 @@ def test_evaluate_false():
         '2**2 / 3': Mul(Pow(2, 2, evaluate=False), Pow(3, -1, evaluate=False), evaluate=False),
         '2 + 3 * 5': Add(2, Mul(3, 5, evaluate=False), evaluate=False),
         '2 - 3 * 5': Add(2, Mul(-1, Mul(3, 5,evaluate=False), evaluate=False), evaluate=False),
-        '1 / 3': Mul(1, Pow(3, -1, evaluate=False), evaluate=False),
+        '1 / 3': Pow(3, -1, evaluate=False),
         'True | False': Or(True, False, evaluate=False),
         '1 + 2 + 3 + 5*3 + integrate(x)': Add(1, 2, 3, Mul(5, 3, evaluate=False), x**2/2, evaluate=False),
         '2 * 4 * 6 + 8': Add(Mul(2, 4, 6, evaluate=False), 8, evaluate=False),
@@ -472,6 +477,14 @@ def test_issue_4798_None():
 
 def test_issue_3218():
     assert sympify("x+\ny") == x + y
+
+def test_issue_19399():
+    if not numpy:
+        skip("numpy not installed.")
+
+    a = numpy.array(Rational(1, 2))
+    b = Rational(1, 3)
+    assert (a * b, type(a * b)) == (b * a, type(b * a))
 
 
 def test_issue_4988_builtins():
@@ -576,10 +589,10 @@ def test_issue_10295():
     assert sC[0, 0, 0] == 0
 
     a1 = numpy.array([1, 2, 3])
-    a2 = numpy.array([i for i in range(24)])
+    a2 = numpy.array(list(range(24)))
     a2.resize(2, 4, 3)
     assert sympify(a1) == ImmutableDenseNDimArray([1, 2, 3])
-    assert sympify(a2) == ImmutableDenseNDimArray([i for i in range(24)], (2, 4, 3))
+    assert sympify(a2) == ImmutableDenseNDimArray(list(range(24)), (2, 4, 3))
 
 
 def test_Range():
@@ -635,8 +648,8 @@ def test_sympify_numpy():
     assert equal(sympify(np.complex64(1 + 2j)), S(1.0 + 2.0*I))
     assert equal(sympify(np.complex128(1 + 2j)), S(1.0 + 2.0*I))
 
-    lcprec = np.finfo(np.longcomplex(1)).nmant + 1
-    assert equal(sympify(np.longcomplex(1 + 2j)),
+    lcprec = np.finfo(np.clongdouble(1)).nmant + 1
+    assert equal(sympify(np.clongdouble(1 + 2j)),
                 Float(1.0, precision=lcprec) + Float(2.0, precision=lcprec)*I)
 
     #float96 does not exist on all platforms
@@ -757,9 +770,9 @@ def test_numpy_sympify_args():
 
 
 def test_issue_5939():
-     a = Symbol('a')
-     b = Symbol('b')
-     assert sympify('''a+\nb''') == a + b
+    a = Symbol('a')
+    b = Symbol('b')
+    assert sympify('''a+\nb''') == a + b
 
 
 def test_issue_16759():
@@ -871,3 +884,10 @@ def test_issue_21536():
     assert u.is_Add and set(u.args) == {4*x, 2}
     assert v.is_Add and set(v.args) == {6*x, 6}
     assert sympify(["x+3*x+2", "2*x+4*x+2+4"]) == [u, v]
+
+def test_issue_27284():
+    if not numpy:
+        skip("numpy not installed.")
+
+    assert Float(numpy.float32(float('inf'))) == S.Infinity
+    assert Float(numpy.float32(float('-inf'))) == S.NegativeInfinity

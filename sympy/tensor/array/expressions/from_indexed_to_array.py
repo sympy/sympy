@@ -1,3 +1,4 @@
+from __future__ import annotations
 from collections import defaultdict
 
 from sympy import Function
@@ -109,9 +110,9 @@ def _convert_indexed_to_array(expr):
         summation_indices = expr.variables
         subexpr, subindices = _convert_indexed_to_array(function)
         subindicessets = {j: i for i in subindices if isinstance(i, frozenset) for j in i}
-        summation_indices = sorted(set([subindicessets.get(i, i) for i in summation_indices]), key=default_sort_key)
+        summation_indices = sorted({subindicessets.get(i, i) for i in summation_indices}, key=default_sort_key)
         # TODO: check that Kronecker delta is only contracted to one other element:
-        kronecker_indices = set([])
+        kronecker_indices = set()
         if isinstance(function, Mul):
             for arg in function.args:
                 if not isinstance(arg, KroneckerDelta):
@@ -126,7 +127,7 @@ def _convert_indexed_to_array(expr):
             for ind, istart, iend in expr.limits:
                 i = _get_argindex(subindices, ind)
                 if istart != 0 or iend+1 != shape[i]:
-                    raise ValueError("summation index and array dimension mismatch: %s" % ind)
+                    raise ValueError(f"summation index and array dimension mismatch: {ind}")
         contraction_indices = []
         subindices = list(subindices)
         if isinstance(subexpr, ArrayDiagonal):

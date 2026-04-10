@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.function import expand_func, Subs
 from sympy.core import EulerGamma
 from sympy.core.numbers import (I, Rational, nan, oo, pi, zoo)
@@ -631,8 +632,8 @@ def test_polygamma_expansion():
 
 
 def test_polygamma_leading_term():
-     expr = -log(1/x) + polygamma(0, 1 + 1/x) + S.EulerGamma
-     assert expr.as_leading_term(x, logx=-y) == S.EulerGamma
+    expr = -log(1/x) + polygamma(0, 1 + 1/x) + S.EulerGamma
+    assert expr.as_leading_term(x, logx=-y) == S.EulerGamma
 
 
 def test_issue_8657():

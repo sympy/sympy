@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core import cacheit, Dummy, Ne, Integer, Rational, S, Wild
 from sympy.functions import binomial, sin, cos, Piecewise, Abs
 from .integrals import integrate
@@ -52,7 +53,7 @@ def trigintegrate(f, x, conds='piecewise'):
     References
     ==========
 
-    .. [1] http://en.wikibooks.org/wiki/Calculus/Integration_techniques
+    .. [1] https://en.wikibooks.org/wiki/Calculus/Integration_techniques
 
     See Also
     ========

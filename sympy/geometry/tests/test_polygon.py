@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.numbers import (Float, Rational, oo, pi)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
@@ -12,6 +13,7 @@ from sympy.testing.pytest import raises, slow, warns
 from sympy.core.random import verify_numerically
 from sympy.geometry.polygon import rad, deg
 from sympy.integrals.integrals import integrate
+from sympy.utilities.iterables import rotate_left
 
 
 def feq(a, b):
@@ -79,6 +81,11 @@ def test_polygon():
         Point(0, 0), Point(2, 0))
     p11 = Polygon(Point(0, 0), 1, n=3)
     p12 = Polygon(Point(0, 0), 1, 0, n=3)
+    p13 = Polygon(
+        Point(0, 0),Point(8, 8),
+        Point(23, 20),Point(0, 20))
+    p14 = Polygon(*rotate_left(p13.args, 1))
+
 
     r = Ray(Point(-9, 6.6), Point(-9, 5.5))
     #
@@ -201,6 +208,12 @@ def test_polygon():
     assert feq(angles[Point(5, 2)].evalf(), Float("1.8925468811915388"))
     assert feq(angles[Point(3, 0)].evalf(), Float("2.3561944901923449"))
 
+    # https://github.com/sympy/sympy/issues/24885
+    interior_angles_sum = sum(p13.angles.values())
+    assert feq(interior_angles_sum, (len(p13.angles) - 2)*pi )
+    interior_angles_sum = sum(p14.angles.values())
+    assert feq(interior_angles_sum, (len(p14.angles) - 2)*pi )
+
     #
     # Triangle
     #
@@ -257,7 +270,7 @@ def test_polygon():
     assert t1.exradii[t1.sides[2]] == 5*sqrt(2)/2
 
     # Excenters
-    assert t1.excenters[t1.sides[2]] == Point2D(25*sqrt(2), -5*sqrt(2)/2)
+    assert t1.excenters[t1.sides[2]] == Point2D(5*sqrt(2)/2, -5*sqrt(2)/2)
 
     # Circumcircle
     assert t1.circumcircle.center == Point(2.5, 2.5)
@@ -432,6 +445,12 @@ def test_bisectors():
 def test_incenter():
     assert Triangle(Point(0, 0), Point(1, 0), Point(0, 1)).incenter \
         == Point(1 - sqrt(2)/2, 1 - sqrt(2)/2)
+
+def test_excenters():
+    t = Triangle(Point(0, 0), Point(6, 0), Point(0, 2))
+    assert t.excenters[t.sides[0]] == Point(sqrt(10) + 4, sqrt(10) + 4)
+    assert t.excenters[t.sides[1]] == Point(2 - sqrt(10), -2 + sqrt(10))
+    assert t.excenters[t.sides[2]] == Point(2 + sqrt(10), -sqrt(10) - 2)
 
 def test_inradius():
     assert Triangle(Point(0, 0), Point(4, 0), Point(0, 3)).inradius == 1
@@ -616,12 +635,12 @@ def test_cut_section():
     t1, t2, t3, t4 = [(0, b), (0, 0), (a, 0), (a, b)]
     p = Polygon(t1, t2, t3, t4)
     p1, p2 = p.cut_section(Line((0, b), slope=0))
-    assert p1 == None
+    assert p1 is None
     assert p2 == Polygon(Point2D(0, 10), Point2D(0, 0), Point2D(20, 0), Point2D(20, 10))
 
     p3, p4 = p.cut_section(Line((0, 0), slope=0))
     assert p3 == Polygon(Point2D(0, 10), Point2D(0, 0), Point2D(20, 0), Point2D(20, 10))
-    assert p4 == None
+    assert p4 is None
 
     # case where the line does not intersect with a polygon at all
     raises(ValueError, lambda: p.cut_section(Line((0, a), slope=0)))
@@ -639,7 +658,7 @@ def test_type_of_triangle():
     assert p2.is_scalene() == True
     assert p2.is_equilateral() == False
 
-    # Equilateral triagle
+    # Equilateral triangle
     p3 = Polygon(Point(0, 0), Point(6, 0), Point(3, sqrt(27)))
     assert p3.is_isosceles() == True
     assert p3.is_scalene() == False
@@ -662,3 +681,8 @@ def test_do_poly_distance():
     with warns(UserWarning, \
                match="Polygons may intersect producing erroneous output", test_stacklevel=False):
         assert triangle2._do_poly_distance(square1) == 0
+
+
+def test_centroid_zero_area():
+    p = Polygon((0, 2), (2, 2), (0, 0), (2, 0))
+    raises(GeometryError, lambda: p.centroid)

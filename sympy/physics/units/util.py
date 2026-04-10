@@ -1,9 +1,9 @@
 """
 Several methods to simplify expressions involving unit objects.
 """
+from __future__ import annotations
 from functools import reduce
 from collections.abc import Iterable
-from typing import Optional
 
 from sympy import default_sort_key
 from sympy.core.add import Add
@@ -12,7 +12,8 @@ from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.sorting import ordered
 from sympy.core.sympify import sympify
-from sympy.matrices.common import NonInvertibleMatrixError
+from sympy.core.function import Function
+from sympy.matrices.exceptions import NonInvertibleMatrixError
 from sympy.physics.units.dimensions import Dimension, DimensionSystem
 from sympy.physics.units.prefixes import Prefix
 from sympy.physics.units.quantities import Quantity
@@ -29,7 +30,7 @@ def _get_conversion_matrix_for_expr(expr, target_units, unit_system):
     dim_dependencies = dimension_system.get_dimensional_dependencies(expr_dim, mark_dimensionless=True)
     target_dims = [Dimension(unit_system.get_dimensional_expr(x)) for x in target_units]
     canon_dim_units = [i for x in target_dims for i in dimension_system.get_dimensional_dependencies(x, mark_dimensionless=True)]
-    canon_expr_units = {i for i in dim_dependencies}
+    canon_expr_units = set(dim_dependencies)
 
     if not canon_expr_units.issubset(set(canon_dim_units)):
         return None
@@ -98,12 +99,20 @@ def convert_to(expr, target_units, unit_system="SI"):
     if not isinstance(target_units, (Iterable, Tuple)):
         target_units = [target_units]
 
-    if isinstance(expr, Add):
+    def handle_Adds(expr):
         return Add.fromiter(convert_to(i, target_units, unit_system)
             for i in expr.args)
 
+    if isinstance(expr, Add):
+        return handle_Adds(expr)
+    elif isinstance(expr, Pow) and isinstance(expr.base, Add):
+        return handle_Adds(expr.base) ** expr.exp
+
     expr = sympify(expr)
     target_units = sympify(target_units)
+
+    if isinstance(expr, Function):
+        expr = expr.together()
 
     if not isinstance(expr, Quantity) and expr.has(Quantity):
         expr = expr.replace(lambda x: isinstance(x, Quantity),
@@ -180,7 +189,7 @@ def quantity_simplify(expr, across_dimensions: bool=False, unit_system=None):
         dim_expr = unit_system.get_dimensional_expr(expr)
         dim_deps = dimension_system.get_dimensional_dependencies(dim_expr, mark_dimensionless=True)
 
-        target_dimension: Optional[Dimension] = None
+        target_dimension: Dimension | None = None
         for ds_dim, ds_dim_deps in dimension_system.dimensional_dependencies.items():
             if ds_dim_deps == dim_deps:
                 target_dimension = ds_dim
@@ -216,7 +225,7 @@ def check_dimensions(expr, unit_system="SI"):
         dict3 = {**dict1, **dict2}
         for key, value in dict3.items():
             if key in dict1 and key in dict2:
-                   dict3[key] = value + dict1[key]
+                dict3[key] = value + dict1[key]
         return {key:val for key, val in dict3.items() if val != 0}
 
     adds = expr.atoms(Add)
@@ -242,8 +251,9 @@ def check_dimensions(expr, unit_system="SI"):
             if not skip:
                 deset.add(tuple(sorted(dims, key=default_sort_key)))
                 if len(deset) > 1:
+                    sorted_deps = tuple(ordered(deset)) # make message deterministic
                     raise ValueError(
-                        "addends have incompatible dimensions: {}".format(deset))
+                        "addends have incompatible dimensions: {}".format(sorted_deps))
 
     # clear multiplicative constants on Dimensions which may be
     # left after substitution

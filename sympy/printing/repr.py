@@ -10,7 +10,8 @@ from typing import Any
 
 from sympy.core.function import AppliedUndef
 from sympy.core.mul import Mul
-from mpmath.libmp import repr_dps, to_str as mlib_to_str
+from sympy.core.add import Add
+from sympy.external.mpmath import repr_dps, to_str as mlib_to_str
 
 from .printer import Printer, print_function
 
@@ -48,7 +49,7 @@ class ReprPrinter(Printer):
             return str(expr)
 
     def _print_Add(self, expr, order=None):
-        args = self._as_ordered_terms(expr, order=order)
+        args = Add.make_args(expr)
         args = map(self._print, args)
         clsname = type(expr).__name__
         return clsname + "(%s)" % ", ".join(args)
@@ -193,12 +194,7 @@ class ReprPrinter(Printer):
         return "nan"
 
     def _print_Mul(self, expr, order=None):
-        if self.order not in ('old', 'none'):
-            args = expr.as_ordered_factors()
-        else:
-            # use make_args in case expr was something like -x -> x
-            args = Mul.make_args(expr)
-
+        args = Mul.make_args(expr)
         args = map(self._print, args)
         clsname = type(expr).__name__
         return clsname + "(%s)" % ", ".join(args)
@@ -224,9 +220,10 @@ class ReprPrinter(Printer):
         return "%s(%s)" % (s.__class__.__name__, self._print(s.name))
 
     def _print_Symbol(self, expr):
-        d = expr._assumptions.generator
+        d = expr._assumptions_orig
         # print the dummy_index like it was an assumption
         if expr.is_Dummy:
+            d = d.copy()
             d['dummy_index'] = expr.dummy_index
 
         if d == {}:
@@ -318,13 +315,9 @@ class ReprPrinter(Printer):
 
     def _print_DMP(self, p):
         cls = p.__class__.__name__
-        rep = self._print(p.rep)
+        rep = self._print(p.to_list())
         dom = self._print(p.dom)
-        if p.ring is not None:
-            ringstr = ", ring=" + self._print(p.ring)
-        else:
-            ringstr = ""
-        return "%s(%s, %s%s)" % (cls, rep, dom, ringstr)
+        return "%s(%s, %s)" % (cls, rep, dom)
 
     def _print_MonogenicFiniteExtension(self, ext):
         # The expanded tree shown by srepr(ext.modulus)

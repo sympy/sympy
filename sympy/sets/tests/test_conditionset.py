@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.expr import unchanged
 from sympy.sets import (ConditionSet, Intersection, FiniteSet,
     EmptySet, Union, Contains, ImageSet)
@@ -262,7 +263,7 @@ def test_contains():
 
 def test_as_relational():
     assert ConditionSet((x, y), x > 1, S.Integers**2).as_relational((x, y)
-        ) == (x > 1) & Contains((x, y), S.Integers**2)
+        ) == (x > 1) & Contains(x, S.Integers) & Contains(y, S.Integers)
     assert ConditionSet(x, x > 1, S.Integers).as_relational(x
         ) == Contains(x, S.Integers) & (x > 1)
 

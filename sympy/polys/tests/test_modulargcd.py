@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.polys.rings import ring
 from sympy.polys.domains import ZZ, QQ, AlgebraicField
 from sympy.polys.modulargcd import (
@@ -314,7 +315,7 @@ def test_modgcd_algebraic_field():
     assert func_field_modgcd(f, g) == (A.one, f, g)
 
 
-# when func_field_modgcd suppors function fields, this test can be changed
+# when func_field_modgcd supports function fields, this test can be changed
 def test_modgcd_func_field():
     D, t = ring("t", ZZ)
     R, x, z = ring("x, z", D)

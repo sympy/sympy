@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.liealgebras.weyl_group import WeylGroup
 from sympy.matrices import Matrix
 

@@ -34,19 +34,22 @@ from typing import Any
 from functools import reduce
 from math import prod
 
-from abc import abstractmethod, ABCMeta
+from abc import abstractmethod, ABC
 from collections import defaultdict
 import operator
 import itertools
+
 from sympy.core.numbers import (Integer, Rational)
 from sympy.combinatorics import Permutation
 from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, \
     bsgs_direct_product, canonicalize, riemann_bsgs
 from sympy.core import Basic, Expr, sympify, Add, Mul, S
-from sympy.core.assumptions import ManagedProperties
+from sympy.core.cache import clear_cache
 from sympy.core.containers import Tuple, Dict
+from sympy.core.decorators import call_highest_priority
+from sympy.core.function import WildFunction
 from sympy.core.sorting import default_sort_key
-from sympy.core.symbol import Symbol, symbols
+from sympy.core.symbol import Symbol, symbols, Wild
 from sympy.core.sympify import CantSympify, _sympify
 from sympy.core.operations import AssocOp
 from sympy.external.gmpy import SYMPY_INTS
@@ -187,7 +190,7 @@ class _IndexStructure(CantSympify):
                 # check consistency and update free
                 if is_contr:
                     if contr:
-                        raise ValueError('two equal contravariant indices in slots %d and %d' %(pos, i))
+                        raise ValueError(f"two equal contravariant indices in slots {pos} and {i}")
                     else:
                         free[pos] = False
                         free[i] = False
@@ -196,7 +199,7 @@ class _IndexStructure(CantSympify):
                         free[pos] = False
                         free[i] = False
                     else:
-                        raise ValueError('two equal covariant indices in slots %d and %d' %(pos, i))
+                        raise ValueError(f"two equal covariant indices in slots {pos} and {i}")
                 if contr:
                     dum.append((i, pos))
                 else:
@@ -249,7 +252,7 @@ class _IndexStructure(CantSympify):
     @staticmethod
     def _replace_dummy_names(indices, free, dum):
         dum.sort(key=lambda x: x[0])
-        new_indices = [ind for ind in indices]
+        new_indices = list(indices)
         assert len(indices) == len(free) + 2*len(dum)
         generate_dummy_name = _IndexStructure._get_generator_for_dummy_indices(free)
         for ipos1, ipos2 in dum:
@@ -441,9 +444,9 @@ class _TensorDataLazyEvaluator(CantSympify):
         if not isinstance(dat, NDimArray):
             return dat
 
-        if dat.rank() == 0:
+        if dat.ndim == 0:
             return dat[()]
-        elif dat.rank() == 1 and len(dat) == 1:
+        elif dat.ndim == 1 and len(dat) == 1:
             return dat[0]
         return dat
 
@@ -682,8 +685,8 @@ class _TensorDataLazyEvaluator(CantSympify):
     def _flip_index_by_metric(data, metric, pos):
         from .array import tensorproduct, tensorcontraction
 
-        mdim = metric.rank()
-        ddim = data.rank()
+        mdim = metric.ndim
+        ddim = data.ndim
 
         if pos == 0:
             data = tensorcontraction(
@@ -823,7 +826,7 @@ class _TensorManager:
 
     @property
     def comm(self):
-        return self._comm
+        return [row.copy() for row in self._comm]
 
     def comm_symbols2i(self, i):
         """
@@ -903,6 +906,9 @@ class _TensorManager:
         if c not in (0, 1, None):
             raise ValueError('`c` can assume only the values 0, 1 or None')
 
+        i = sympify(i)
+        j = sympify(j)
+
         if i not in self._comm_symbols2i:
             n = len(self._comm)
             self._comm.append({})
@@ -921,6 +927,14 @@ class _TensorManager:
         nj = self._comm_symbols2i[j]
         self._comm[ni][nj] = c
         self._comm[nj][ni] = c
+
+        """
+        Cached sympy functions (e.g. expand) may have cached the results of
+        expressions involving tensors, but those results may not be valid after
+        changing the commutation properties. To stay on the safe side, we clear
+        the cache of all functions.
+        """
+        clear_cache()
 
     def set_comms(self, *args):
         """
@@ -1160,9 +1174,9 @@ class TensorIndexType(Basic):
         from .array import MutableDenseNDimArray
 
         data = _TensorDataLazyEvaluator.parse_data(data)
-        if data.rank() > 2:
+        if data.ndim > 2:
             raise ValueError("data have to be of rank 1 (diagonal metric) or 2.")
-        if data.rank() == 1:
+        if data.ndim == 1:
             if self.dim.is_number:
                 nda_dim = data.shape[0]
                 if nda_dim != self.dim:
@@ -1334,7 +1348,7 @@ class TensorIndex(Basic):
     def _print(self):
         s = self.name
         if not self.is_up:
-            s = '-%s' % s
+            s = f'-{s}'
         return s
 
     def __lt__(self, other):
@@ -1623,7 +1637,7 @@ class TensorType(Basic):
         return sorted(set(self.index_types), key=lambda x: x.name)
 
     def __str__(self):
-        return 'TensorType(%s)' % ([str(x) for x in self.index_types])
+        return f"TensorType({[str(x) for x in self.index_types]})"
 
     def __call__(self, s, comm=0):
         """
@@ -1806,8 +1820,7 @@ class TensorHead(Basic):
         else:
             assert symmetry.rank == len(index_types)
 
-        obj = Basic.__new__(cls, name_symbol, Tuple(*index_types), symmetry)
-        obj.comm = TensorManager.comm_symbols2i(comm)
+        obj = Basic.__new__(cls, name_symbol, Tuple(*index_types), symmetry, sympify(comm))
         return obj
 
     @property
@@ -1821,6 +1834,10 @@ class TensorHead(Basic):
     @property
     def symmetry(self):
         return self.args[2]
+
+    @property
+    def comm(self):
+        return TensorManager.comm_symbols2i(self.args[3])
 
     @property
     def rank(self):
@@ -1839,7 +1856,7 @@ class TensorHead(Basic):
         return r
 
     def _print(self):
-        return '%s(%s)' %(self.name, ','.join([str(x) for x in self.index_types]))
+        return f"{self.name}({','.join([str(x) for x in self.index_types])})"
 
     def __call__(self, *indices, **kw_args):
         """
@@ -1900,7 +1917,7 @@ class TensorHead(Basic):
             metrics = [_.data for _ in self.index_types]
 
             marray = self.data
-            marraydim = marray.rank()
+            marraydim = marray.ndim
             for metric in metrics:
                 marray = tensorproduct(marray, metric, marray)
                 marray = tensorcontraction(marray, (0, marraydim), (marraydim+1, marraydim+2))
@@ -1965,11 +1982,7 @@ def tensor_heads(s, index_types, symmetry=None, comm=0):
     return thlist
 
 
-class _TensorMetaclass(ManagedProperties, ABCMeta):
-    pass
-
-
-class TensExpr(Expr, metaclass=_TensorMetaclass):
+class TensExpr(Expr, ABC):
     """
     Abstract base class for tensor expressions
 
@@ -2002,18 +2015,23 @@ class TensExpr(Expr, metaclass=_TensorMetaclass):
     def __abs__(self):
         raise NotImplementedError
 
+    @call_highest_priority('__radd__')
     def __add__(self, other):
-        return TensAdd(self, other).doit()
+        return TensAdd(self, other).doit(deep=False)
 
+    @call_highest_priority('__add__')
     def __radd__(self, other):
-        return TensAdd(other, self).doit()
+        return TensAdd(other, self).doit(deep=False)
 
+    @call_highest_priority('__rsub__')
     def __sub__(self, other):
-        return TensAdd(self, -other).doit()
+        return TensAdd(self, -other).doit(deep=False)
 
+    @call_highest_priority('__sub__')
     def __rsub__(self, other):
-        return TensAdd(other, -self).doit()
+        return TensAdd(other, -self).doit(deep=False)
 
+    @call_highest_priority('__rmul__')
     def __mul__(self, other):
         """
         Multiply two tensors using Einstein summation convention.
@@ -2037,16 +2055,18 @@ class TensExpr(Expr, metaclass=_TensorMetaclass):
         >>> t1*t2
         p(L_0)*q(-L_0)
         """
-        return TensMul(self, other).doit()
+        return TensMul(self, other).doit(deep=False)
 
+    @call_highest_priority('__mul__')
     def __rmul__(self, other):
-        return TensMul(other, self).doit()
+        return TensMul(other, self).doit(deep=False)
 
+    @call_highest_priority('__rtruediv__')
     def __truediv__(self, other):
         other = _sympify(other)
         if isinstance(other, TensExpr):
             raise ValueError('cannot divide by a tensor')
-        return TensMul(self, S.One/other).doit()
+        return TensMul(self, S.One/other).doit(deep=False)
 
     def __rtruediv__(self, other):
         raise ValueError('cannot divide by a tensor')
@@ -2059,7 +2079,7 @@ class TensExpr(Expr, metaclass=_TensorMetaclass):
             from .array import tensorproduct, tensorcontraction
             free = self.free
             marray = self.data
-            mdim = marray.rank()
+            mdim = marray.ndim
             for metric in free:
                 marray = tensorcontraction(
                     tensorproduct(
@@ -2131,12 +2151,6 @@ class TensExpr(Expr, metaclass=_TensorMetaclass):
     def _get_indices_permutation(indices1, indices2):
         return [indices1.index(i) for i in indices2]
 
-    def expand(self, **hints):
-        return _expand(self, **hints).doit()
-
-    def _expand(self, **kwargs):
-        return self
-
     def _get_free_indices_set(self):
         indset = set()
         for arg in self.args:
@@ -2204,7 +2218,7 @@ class TensExpr(Expr, metaclass=_TensorMetaclass):
 
         array = tensorcontraction(tensorproduct(metric, array), (1, 2+pos))
         permu = list(range(dim))
-        permu[0], permu[pos] = permu[pos], permu[0]
+        permu.insert(pos, permu.pop(0))
         return permutedims(array, permu)
 
     @staticmethod
@@ -2233,7 +2247,7 @@ class TensExpr(Expr, metaclass=_TensorMetaclass):
             else:
                 index2 = free2remaining[pos1]
                 if index2 is None:
-                    raise ValueError("incompatible indices: %s and %s" % (free_ind1, free_ind2))
+                    raise ValueError(f"incompatible indices: {free_ind1} and {free_ind2}")
                 free2remaining[pos1] = None
                 free_ind2[pos1] = index1
                 if index1.is_up ^ index2.is_up:
@@ -2243,8 +2257,7 @@ class TensExpr(Expr, metaclass=_TensorMetaclass):
                         pos2down.append(pos1)
 
         if len(set(free_ind1) & set(free_ind2)) < len(free_ind1):
-            raise ValueError("incompatible indices: %s and %s" % (free_ind1, free_ind2))
-
+            raise ValueError(f"incompatible indices: {free_ind1} and {free_ind2}")
         # Raise indices:
         for pos in pos2up:
             index_type_pos = index_types1[pos]
@@ -2265,7 +2278,7 @@ class TensExpr(Expr, metaclass=_TensorMetaclass):
             permutation = TensExpr._get_indices_permutation(free_ind2, free_ind1)
             array = permutedims(array, permutation)
 
-        if hasattr(array, "rank") and array.rank() == 0:
+        if hasattr(array, "ndim") and array.ndim == 0:
             array = array[()]
 
         return free_ind2, array
@@ -2355,12 +2368,11 @@ class TensExpr(Expr, metaclass=_TensorMetaclass):
                 expected_shape = [tensor.dim for i in range(2)]
             else:
                 expected_shape = [index_type.dim for index_type in tensor.index_types]
-            if len(expected_shape) != array.rank() or (not all(dim1 == dim2 if
+            if len(expected_shape) != array.ndim or (not all(dim1 == dim2 if
                 dim1.is_number else True for dim1, dim2 in zip(expected_shape,
                 array.shape))):
-                raise ValueError("shapes for tensor %s expected to be %s, "\
-                    "replacement array shape is %s" % (tensor, expected_shape,
-                    array.shape))
+                raise ValueError(f"shapes for tensor {tensor} expected to be {expected_shape}, "\
+                    "replacement array shape is {array.shape}")
 
         ret_indices, array = self._extract_data(replacement_dict)
 
@@ -2384,6 +2396,28 @@ class TensExpr(Expr, metaclass=_TensorMetaclass):
                     a._expand_partial_derivative()
                     if isinstance(a, TensExpr) else a
                     for a in self.args])
+
+    def _matches_simple(self, expr, repl_dict=None, old=False):
+        """
+        Matches assuming there are no wild objects in self.
+        """
+        if repl_dict is None:
+            repl_dict = {}
+        else:
+            repl_dict = repl_dict.copy()
+
+        if not isinstance(expr, TensExpr):
+            if len(self.get_free_indices()) > 0:
+                #self has indices, but expr does not.
+                return None
+        elif set(self.get_free_indices()) != set(expr.get_free_indices()):
+                #If there are no wilds and the free indices are not the same, they cannot match.
+                return None
+
+        if canon_bp(self - expr) == S.Zero:
+            return repl_dict
+        else:
+            return None
 
 
 class TensAdd(TensExpr, AssocOp):
@@ -2475,12 +2509,12 @@ class TensAdd(TensExpr, AssocOp):
         else:
             return set()
 
-    def doit(self, **hints):
+    def doit(self, **hints) -> Expr:
         deep = hints.get('deep', True)
         if deep:
             args = [arg.doit(**hints) for arg in self.args]
         else:
-            args = self.args
+            args = self.args # type: ignore
 
         # if any of the args are zero (after doit), drop them. Otherwise, _tensAdd_check will complain about non-matching indices, even though the TensAdd is correctly formed.
         args = [arg for arg in args if arg != S.Zero]
@@ -2563,7 +2597,7 @@ class TensAdd(TensExpr, AssocOp):
             # needs an implementation similar to .as_coeff_Mul()
             terms_dict[arg.nocoeff].append(arg.coeff)
 
-        new_args = [TensMul(Add(*coeff), t).doit() for t, coeff in terms_dict.items() if Add(*coeff) != 0]
+        new_args = [TensMul(Add(*coeff), t).doit(deep=False) for t, coeff in terms_dict.items() if Add(*coeff) != 0]
         if isinstance(scalars, Add):
             new_args = list(scalars.args) + new_args
         elif scalars != 0:
@@ -2576,8 +2610,6 @@ class TensAdd(TensExpr, AssocOp):
             indices.extend([i for i in get_indices(arg) if i not in indices])
         return indices
 
-    def _expand(self, **hints):
-        return TensAdd(*[_expand(i, **hints) for i in self.args])
 
     def __call__(self, *indices):
         deprecate_call()
@@ -2589,7 +2621,7 @@ class TensAdd(TensExpr, AssocOp):
             return self
         index_tuples = list(zip(free_args, indices))
         a = [x.func(*x.substitute_indices(*index_tuples).args) for x in self.args]
-        res = TensAdd(*a).doit()
+        res = TensAdd(*a).doit(deep=False)
         return res
 
     def canon_bp(self):
@@ -2598,9 +2630,12 @@ class TensAdd(TensExpr, AssocOp):
         under monoterm symmetries.
         """
         expr = self.expand()
-        args = [canon_bp(x) for x in expr.args]
-        res = TensAdd(*args).doit()
-        return res
+        if isinstance(expr, self.func):
+            args = [canon_bp(x) for x in expr.args]
+            res = TensAdd(*args).doit(deep=False)
+            return res
+        else:
+            return canon_bp(expr)
 
     def equals(self, other):
         other = _sympify(other)
@@ -2629,8 +2664,8 @@ class TensAdd(TensExpr, AssocOp):
             return self.data[item]
 
     def contract_delta(self, delta):
-        args = [x.contract_delta(delta) for x in self.args]
-        t = TensAdd(*args).doit()
+        args = [x.contract_delta(delta) if isinstance(x, TensExpr) else x for x in self.args]
+        t = TensAdd(*args).doit(deep=False)
         return canon_bp(t)
 
     def contract_metric(self, g):
@@ -2651,7 +2686,7 @@ class TensAdd(TensExpr, AssocOp):
         """
 
         args = [contract_metric(x, g) for x in self.args]
-        t = TensAdd(*args).doit()
+        t = TensAdd(*args).doit(deep=False)
         return canon_bp(t)
 
     def substitute_indices(self, *index_tuples):
@@ -2660,7 +2695,7 @@ class TensAdd(TensExpr, AssocOp):
             if isinstance(arg, TensExpr):
                 arg = arg.substitute_indices(*index_tuples)
             new_args.append(arg)
-        return TensAdd(*new_args).doit()
+        return TensAdd(*new_args).doit(deep=False)
 
     def _print(self):
         a = []
@@ -2711,7 +2746,7 @@ class TensAdd(TensExpr, AssocOp):
             raise ValueError("No iteration on abstract tensors")
         return self.data.flatten().__iter__()
 
-    def _eval_rewrite_as_Indexed(self, *args):
+    def _eval_rewrite_as_Indexed(self, *args, **kwargs):
         return Add.fromiter(args)
 
     def _eval_partial_derivative(self, s):
@@ -2724,7 +2759,93 @@ class TensAdd(TensExpr, AssocOp):
             elif s._diff_wrt:
                 list_addends.append(a._eval_derivative(s))
 
-        return self.func(*list_addends)
+        return self.func(*list_addends).doit(deep=False)
+
+    def matches(self, expr, repl_dict=None, old=False):
+        expr = sympify(expr)
+
+        if repl_dict is None:
+            repl_dict = {}
+        else:
+            repl_dict = repl_dict.copy()
+
+        if not isinstance(expr, TensAdd):
+            return None
+
+        if len(_get_wilds(self)) == 0:
+            return self._matches_simple(expr, repl_dict, old)
+
+        def siftkey(arg):
+            wildatoms = _get_wilds(arg)
+            wildatom_types = sift(wildatoms, type)
+            if len(wildatoms) == 0:
+                return "nonwild"
+            elif WildTensor in wildatom_types.keys():
+                for w in wildatom_types["WildTensor"]:
+                    if len(w.get_indices()) == 0:
+                        return "indexless_wildtensor"
+                return "wildtensor"
+            else:
+                return "otherwild"
+
+        query_sifted = sift(self.args, siftkey)
+        expr_sifted = sift(expr.args, siftkey)
+
+        #First try to match the terms without WildTensors
+        matched_e_tensors = [] #Used to make sure that the same tensor in expr is not matched with more than one tensor in self.
+        for q_tensor in query_sifted["nonwild"]:
+            matched_this_q = False
+            for e_tensor in expr_sifted["nonwild"]:
+                if e_tensor in matched_e_tensors:
+                    continue
+
+                m = q_tensor.matches(e_tensor, repl_dict=repl_dict, old=old)
+                if m is None:
+                    continue
+                else:
+                    matched_this_q = True
+                    repl_dict.update(m)
+                    matched_e_tensors.append(e_tensor)
+                    break
+
+            if not matched_this_q:
+                return None
+
+        remaining_e_tensors = [t for t in expr_sifted["nonwild"] if t not in matched_e_tensors]
+        for w in query_sifted["otherwild"]:
+            for e in remaining_e_tensors:
+                m = w.matches(e)
+                if m is not None:
+                    matched_e_tensors.append(e)
+                    if w in repl_dict.keys():
+                        repl_dict[w] += m.pop(w)
+                    repl_dict.update(m)
+
+        remaining_e_tensors = [t for t in expr_sifted["nonwild"] if t not in matched_e_tensors]
+        for w in query_sifted["wildtensor"]:
+            for e in remaining_e_tensors:
+                m = w.matches(e)
+                if m is not None:
+                    matched_e_tensors.append(e)
+                    if w.component in repl_dict.keys():
+                        repl_dict[w.component] += m.pop(w.component)
+                    repl_dict.update(m)
+
+        remaining_e_tensors = [t for t in expr_sifted["nonwild"] if t not in matched_e_tensors]
+        for w in query_sifted["indexless_wildtensor"]:
+            for e in remaining_e_tensors:
+                m = w.matches(e)
+                if m is not None:
+                    matched_e_tensors.append(e)
+                    if w.component in repl_dict.keys():
+                        repl_dict[w.component] += m.pop(w.component)
+                    repl_dict.update(m)
+
+        remaining_e_tensors = [t for t in expr_sifted["nonwild"] if t not in matched_e_tensors]
+        if len(remaining_e_tensors) > 0:
+            return None
+        else:
+            return repl_dict
 
 
 class Tensor(TensExpr):
@@ -2765,7 +2886,7 @@ class Tensor(TensExpr):
 
     is_commutative = False
 
-    _index_structure = None  # type: _IndexStructure
+    _index_structure: _IndexStructure
     args: tuple[TensorHead, Tuple]
 
     def __new__(cls, tensor_head, indices, *, is_canon_bp=False, **kw_args):
@@ -2847,7 +2968,7 @@ class Tensor(TensExpr):
     @staticmethod
     def _parse_indices(tensor_head, indices):
         if not isinstance(indices, (tuple, list, Tuple)):
-            raise TypeError("indices should be an array, got %s" % type(indices))
+            raise TypeError(f"indices should be an array, got {type(indices)}")
         indices = list(indices)
         for i, index in enumerate(indices):
             if isinstance(index, Symbol):
@@ -2857,9 +2978,9 @@ class Tensor(TensExpr):
                 if c == -1 and isinstance(e, Symbol):
                     indices[i] = TensorIndex(e, tensor_head.index_types[i], False)
                 else:
-                    raise ValueError("index not understood: %s" % index)
+                    raise ValueError(f"index not understood: {index}")
             elif not isinstance(index, TensorIndex):
-                raise TypeError("wrong type for index: %s is %s" % (index, type(index)))
+                raise TypeError(f"wrong type for index: {index} is {type(index)}")
         return indices
 
     def _set_new_index_structure(self, im, is_canon_bp=False):
@@ -2905,7 +3026,8 @@ class Tensor(TensExpr):
             return 0
         elif isinstance(other, Tensor):
             return self.component.commutes_with(other.component)
-        return NotImplementedError
+        else:
+            raise NotImplementedError(f"commutes_with between {type(self)} and {type(other)}")
 
     def perm2tensor(self, g, is_canon_bp=False):
         """
@@ -2929,9 +3051,6 @@ class Tensor(TensExpr):
 
     def split(self):
         return [self]
-
-    def _expand(self, **kwargs):
-        return self
 
     def sorted_components(self):
         return self
@@ -2988,6 +3107,90 @@ class Tensor(TensExpr):
                 indices.append(index)
         return self.head(*indices)
 
+    def _get_symmetrized_forms(self):
+        """
+        Return a list giving all possible permutations of self that are allowed by its symmetries.
+        """
+        comp = self.component
+        gens = comp.symmetry.generators
+        rank = comp.rank
+
+        old_perms = None
+        new_perms = {self}
+        while new_perms != old_perms:
+            old_perms = new_perms.copy()
+            for tens in old_perms:
+                for gen in gens:
+                    inds = tens.get_indices()
+                    per = [gen.apply(i) for i in range(0,rank)]
+                    sign = (-1)**(gen.apply(rank) - rank)
+                    ind_map = dict(zip(inds, [inds[i] for i in per]))
+                    new_perms.add( sign * tens._replace_indices(ind_map) )
+
+        return new_perms
+
+    def matches(self, expr, repl_dict=None, old=False):
+        expr = sympify(expr)
+
+        if repl_dict is None:
+            repl_dict = {}
+        else:
+            repl_dict = repl_dict.copy()
+
+        #simple checks
+        if self == expr:
+            return repl_dict
+        if not isinstance(expr, Tensor):
+            return None
+        if self.head != expr.head:
+            return None
+
+        #Now consider all index symmetries of expr, and see if any of them allow a match.
+        for new_expr in expr._get_symmetrized_forms():
+            m = self._matches(new_expr, repl_dict, old=old)
+            if m is not None:
+                repl_dict.update(m)
+                return repl_dict
+
+        return None
+
+    def _matches(self, expr, repl_dict=None, old=False):
+        """
+        This does not account for index symmetries of expr
+        """
+        expr = sympify(expr)
+
+        if repl_dict is None:
+            repl_dict = {}
+        else:
+            repl_dict = repl_dict.copy()
+
+        #simple checks
+        if self == expr:
+            return repl_dict
+        if not isinstance(expr, Tensor):
+            return None
+        if self.head != expr.head:
+            return None
+
+        s_indices = self.get_indices()
+        e_indices = expr.get_indices()
+
+        if len(s_indices) != len(e_indices):
+            return None
+
+        for i in range(len(s_indices)):
+            s_ind = s_indices[i]
+            m = s_ind.matches(e_indices[i])
+            if m is None:
+                return None
+            elif -s_ind in repl_dict.keys() and -repl_dict[-s_ind] != m[s_ind]:
+                return None
+            else:
+                repl_dict.update(m)
+
+        return repl_dict
+
     def __call__(self, *indices):
         deprecate_call()
         free_args = self.free_args
@@ -3024,7 +3227,7 @@ class Tensor(TensExpr):
                 array = v
                 break
         else:
-            raise ValueError("%s not found in %s" % (self, replacement_dict))
+            raise ValueError(f"{self} not found in {replacement_dict}")
 
         # TODO: inefficient, this should be done at root level only:
         replacement_dict = {k: Array(v) for k, v in replacement_dict.items()}
@@ -3037,7 +3240,7 @@ class Tensor(TensExpr):
             for pair in dum2:
                 # allow `dum2` if the contained values are also in `dum1`.
                 if pair not in dum1:
-                    raise NotImplementedError("%s with contractions is not implemented" % other)
+                    raise NotImplementedError(f"{other} with contractions is not implemented")
             # Remove elements in `dum2` from `dum1`:
             dum1 = [pair for pair in dum1 if pair not in dum2]
         if len(dum1) > 0:
@@ -3086,9 +3289,9 @@ class Tensor(TensExpr):
         indices = [str(ind) for ind in self.indices]
         component = self.component
         if component.rank > 0:
-            return ('%s(%s)' % (component.name, ', '.join(indices)))
+            return (f"{component.name}({', '.join(indices)})")
         else:
-            return ('%s' % component.name)
+            return (f"{component.name}")
 
     def equals(self, other):
         if other == 0:
@@ -3143,14 +3346,14 @@ class Tensor(TensExpr):
     def contract_delta(self, metric):
         return self.contract_metric(metric)
 
-    def _eval_rewrite_as_Indexed(self, tens, indices):
+    def _eval_rewrite_as_Indexed(self, tens, indices, **kwargs):
         from sympy.tensor.indexed import Indexed
         # TODO: replace .args[0] with .name:
         index_symbols = [i.args[0] for i in self.get_indices()]
         expr = Indexed(tens.args[0], *index_symbols)
         return self._check_add_Sum(expr, index_symbols)
 
-    def _eval_partial_derivative(self, s):  # type: (Tensor) -> Expr
+    def _eval_partial_derivative(self, s: Tensor) -> Expr:
 
         if not isinstance(s, Tensor):
             return S.Zero
@@ -3191,7 +3394,7 @@ class Tensor(TensExpr):
                                     tensor_index_type.delta(-dummy, -iother))
                         )
                     kronecker_delta_list.append(kroneckerdelta)
-            return TensMul.fromiter(kronecker_delta_list).doit()
+            return TensMul.fromiter(kronecker_delta_list).doit(deep=False)
             # doit necessary to rename dummy indices accordingly
 
 
@@ -3236,7 +3439,7 @@ class TensMul(TensExpr, AssocOp):
     """
     identity = S.One
 
-    _index_structure = None  # type: _IndexStructure
+    _index_structure: _IndexStructure
 
     def __new__(cls, *args, **kw_args):
         is_canon_bp = kw_args.get('is_canon_bp', False)
@@ -3261,10 +3464,7 @@ class TensMul(TensExpr, AssocOp):
                 newarg = arg
             newargs.append(newarg)
 
-        args = newargs
-
-        # Flatten:
-        args = [i for arg in args for i in (arg.args if isinstance(arg, (TensMul, Mul)) else [arg])]
+        args = cls._flatten_args(newargs)
 
         args, indices, free, dum = TensMul._tensMul_contract_indices(args, replace_indices=False)
 
@@ -3274,7 +3474,7 @@ class TensMul(TensExpr, AssocOp):
 
         obj = TensExpr.__new__(cls, *args)
         obj._indices = indices
-        obj._index_types = index_types[:]
+        obj._index_types = index_types.copy()
         obj._index_structure = index_structure
         obj._free = index_structure.free[:]
         obj._dum = index_structure.dum[:]
@@ -3313,7 +3513,7 @@ class TensMul(TensExpr, AssocOp):
 
         for pos1, arg_indices in enumerate(args_indices):
 
-            for index_pos, index in enumerate(arg_indices):
+            for index in arg_indices:
                 if not isinstance(index, TensorIndex):
                     raise TypeError("expected TensorIndex")
                 if -index in free2pos1:
@@ -3326,14 +3526,14 @@ class TensMul(TensExpr, AssocOp):
                         dummy_data.append((-index, other_pos1, pos1, other_pos2, pos2))
                     indices.append(index)
                 elif index in free2pos1:
-                    raise ValueError("Repeated index: %s" % index)
+                    raise ValueError(f"Repeated index: {index}")
                 else:
                     free2pos1[index] = pos1
                     free2pos2[index] = pos2
                     indices.append(index)
                 pos2 += 1
 
-        free = [(i, p) for (i, p) in free2pos2.items()]
+        free = list(free2pos2.items())
         free_names = [i.name for i in free2pos2.keys()]
 
         dummy_data.sort(key=lambda x: x[3])
@@ -3366,7 +3566,7 @@ class TensMul(TensExpr, AssocOp):
                     dummy_name = dummy_name_gen(index_type)
                     if dummy_name not in free_names:
                         break
-                dummy = TensorIndex(dummy_name, index_type, True)
+                dummy = old_index.func(dummy_name, index_type, *old_index.args[2:])
                 replacements[pos1cov][old_index] = dummy
                 replacements[pos1contra][-old_index] = -dummy
                 indices[pos2cov] = dummy
@@ -3374,6 +3574,13 @@ class TensMul(TensExpr, AssocOp):
             args = [
                 arg._replace_indices(repl) if isinstance(arg, TensExpr) else arg
                 for arg, repl in zip(args, replacements)]
+
+            """
+            The order of indices might've changed due to the replacements (e.g. if one of the args is a TensAdd, replacing an index can change the sort order of the terms, thus changing the order of indices returned by its get_indices() method).
+            To stay on the safe side, we calculate these quantities again.
+            """
+            args_indices = [get_indices(arg) for arg in args]
+            indices, free, free_names, dummy_data = TensMul._indices_to_free_dum(args_indices)
 
         dum = TensMul._dummy_data_to_dum(dummy_data)
         return args, indices, free, dum
@@ -3424,7 +3631,7 @@ class TensMul(TensExpr, AssocOp):
         else:
             args = self.args
 
-        args = [arg for arg in args if arg != self.identity]
+        args = self._flatten_args([arg for arg in args if arg != self.identity])
 
         # Extract non-tensor coefficients:
         coeff = reduce(lambda a, b: a*b, [arg for arg in args if not isinstance(arg, TensExpr)], S.One)
@@ -3455,11 +3662,21 @@ class TensMul(TensExpr, AssocOp):
         obj._is_canon_bp = is_canon_bp
         return obj
 
+    @staticmethod
+    def _flatten_args(args):
+        flat = []
+        for arg in args:
+            if isinstance(arg, (TensMul, Mul)):
+                flat.extend(arg.args)
+            else:
+                flat.append(arg)
+        return flat
+
     # TODO: this method should be private
     # TODO: should this method be renamed _from_components_free_dum ?
     @staticmethod
     def from_data(coeff, components, free, dum, **kw_args):
-        return TensMul(coeff, *TensMul._get_tensors_from_components_free_dum(components, free, dum), **kw_args).doit()
+        return TensMul(coeff, *TensMul._get_tensors_from_components_free_dum(components, free, dum), **kw_args).doit(deep=False)
 
     @staticmethod
     def _get_tensors_from_components_free_dum(components, free, dum):
@@ -3488,7 +3705,7 @@ class TensMul(TensExpr, AssocOp):
     def _get_position_offset_for_indices(self):
         arg_offset = [None for i in range(self.ext_rank)]
         counter = 0
-        for i, arg in enumerate(self.args):
+        for arg in self.args:
             if not isinstance(arg, TensExpr):
                 continue
             for j in range(arg.ext_rank):
@@ -3517,7 +3734,7 @@ class TensMul(TensExpr, AssocOp):
 
     @property
     def nocoeff(self):
-        return self.func(*[t for t in self.args if isinstance(t, TensExpr)]).doit()
+        return self.func(*self.args, 1/self.coeff).doit(deep=False)
 
     @property
     def dum_in_args(self):
@@ -3630,17 +3847,14 @@ class TensMul(TensExpr, AssocOp):
                 res *= arg
         return splitp
 
-    def _expand(self, **hints):
-        # TODO: temporary solution, in the future this should be linked to
-        # `Expr.expand`.
-        args = [_expand(arg, **hints) for arg in self.args]
-        args1 = [arg.args if isinstance(arg, (Add, TensAdd)) else (arg,) for arg in args]
+    def _eval_expand_mul(self, **hints):
+        args1 = [arg.args if isinstance(arg, (Add, TensAdd)) else (arg,) for arg in self.args]
         return TensAdd(*[
-            TensMul(*i) for i in itertools.product(*args1)]
+            TensMul(*i).doit(deep=False) for i in itertools.product(*args1)]
         )
 
     def __neg__(self):
-        return TensMul(S.NegativeOne, self, is_canon_bp=self._is_canon_bp).doit()
+        return TensMul(S.NegativeOne, self, is_canon_bp=self._is_canon_bp).doit(deep=False)
 
     def __getitem__(self, item):
         deprecate_data()
@@ -3697,7 +3911,7 @@ class TensMul(TensExpr, AssocOp):
         """
         Returns a tensor product with sorted components.
         """
-        return TensMul(*self._sort_args_for_sorted_components()).doit()
+        return TensMul(*self._sort_args_for_sorted_components()).doit(deep=False)
 
     def perm2tensor(self, g, is_canon_bp=False):
         """
@@ -3733,6 +3947,7 @@ class TensMul(TensExpr, AssocOp):
             return expr.canon_bp()
         if not expr.components:
             return expr
+        expr = expr.doit(deep=False) #make sure self.coeff is populated correctly
         t = expr.sorted_components()
         g, dummies, msym = t._index_structure.indices_canon_args()
         v = components_canon_args(t.components)
@@ -3789,7 +4004,7 @@ class TensMul(TensExpr, AssocOp):
         >>> t.contract_metric(g).canon_bp()
         p(L_0)*q(-L_0)
         """
-        expr = self.expand()
+        expr = self.expand().doit(deep=False)
         if self != expr:
             expr = canon_bp(expr)
             return contract_metric(expr, g)
@@ -3917,9 +4132,9 @@ class TensMul(TensExpr, AssocOp):
                 continue
             shifts[i] = shift
         free = [(ind, p - shifts[pos_map[p]]) for (ind, p) in free if pos_map[p] not in elim]
-        dum = [(p0 - shifts[pos_map[p0]], p1 - shifts[pos_map[p1]]) for i, (p0, p1) in enumerate(dum) if pos_map[p0] not in elim and pos_map[p1] not in elim]
+        dum = [(p0 - shifts[pos_map[p0]], p1 - shifts[pos_map[p1]]) for p0, p1 in dum if pos_map[p0] not in elim and pos_map[p1] not in elim]
 
-        res = sign*TensMul(*args).doit()
+        res = ( sign*TensMul(*args) ).doit(deep=False)
         if not isinstance(res, TensExpr):
             return res
         im = _IndexStructure.from_components_free_dum(res.components, free, dum)
@@ -3932,7 +4147,7 @@ class TensMul(TensExpr, AssocOp):
     def _set_indices(self, *indices, is_canon_bp=False, **kw_args):
         if len(indices) != self.ext_rank:
             raise ValueError("indices length mismatch")
-        args = list(self.args)[:]
+        args = list(self.args)
         pos = 0
         for i, arg in enumerate(args):
             if not isinstance(arg, TensExpr):
@@ -3941,7 +4156,7 @@ class TensMul(TensExpr, AssocOp):
             ext_rank = arg.ext_rank
             args[i] = arg._set_indices(*indices[pos:pos+ext_rank])
             pos += ext_rank
-        return TensMul(*args, is_canon_bp=is_canon_bp).doit()
+        return TensMul(*args, is_canon_bp=is_canon_bp).doit(deep=False)
 
     @staticmethod
     def _index_replacement_for_contract_metric(args, free, dum):
@@ -3956,7 +4171,7 @@ class TensMul(TensExpr, AssocOp):
             if isinstance(arg, TensExpr):
                 arg = arg.substitute_indices(*index_tuples)
             new_args.append(arg)
-        return TensMul(*new_args).doit()
+        return TensMul(*new_args).doit(deep=False)
 
     def __call__(self, *indices):
         deprecate_call()
@@ -4075,7 +4290,22 @@ class TensMul(TensExpr, AssocOp):
                 exclude.update(get_indices(new_renamed))
         return newrule
 
-    def _eval_rewrite_as_Indexed(self, *args):
+    def _eval_subs(self, old, new):
+        """
+        If new is an index which is already present in self as a dummy, the dummies in self should be renamed.
+        """
+
+        if not isinstance(new, TensorIndex):
+            return None
+
+        exclude = {new}
+        self_renamed = self._dedupe_indices(self, exclude)
+        if self_renamed is None:
+            return None
+        else:
+            return self_renamed._subs(old, new).doit(deep=False)
+
+    def _eval_rewrite_as_Indexed(self, *args, **kwargs):
         from sympy.concrete.summations import Sum
         index_symbols = [i.args[0] for i in self.get_indices()]
         args = [arg.args[0] if isinstance(arg, Sum) else arg for arg in args]
@@ -4097,9 +4327,177 @@ class TensMul(TensExpr, AssocOp):
                 else:
                     d = S.Zero
             if d:
-                terms.append(TensMul.fromiter(self.args[:i] + (d,) + self.args[i + 1:]))
-        return TensAdd.fromiter(terms)
+                terms.append(TensMul.fromiter(self.args[:i] + (d,) + self.args[i + 1:]).doit(deep=False))
+        return TensAdd.fromiter(terms).doit(deep=False)
 
+
+    def _matches_commutative(self, expr, repl_dict=None, old=False):
+        """
+        Match assuming all tensors commute. But note that we are not assuming anything about their symmetry under index permutations.
+        """
+        #Take care of the various possible types for expr.
+        if not isinstance(expr, TensMul):
+            if isinstance(expr, (TensExpr, Expr)):
+                expr = TensMul(expr)
+            else:
+                return None
+
+        #The code that follows assumes expr is a TensMul
+
+        if repl_dict is None:
+            repl_dict = {}
+        else:
+            repl_dict = repl_dict.copy()
+
+            #Make sure that none of the dummy indices in self, expr conflict with the values already present in repl_dict. This may happen due to automatic index relabelling when rem_query and rem_expr are formed later on in this function (it calls itself recursively).
+            indices = [k for k in repl_dict.values() if isinstance(k ,TensorIndex)]
+
+            def dedupe(expr):
+                renamed = TensMul._dedupe_indices(expr, indices)
+                if renamed is not None:
+                    return renamed
+                else:
+                    return expr
+
+            self = dedupe(self)
+            expr = dedupe(expr)
+
+        #Find the non-tensor part of expr. This need not be the same as expr.coeff when expr.doit() has not been called.
+        expr_coeff = reduce(lambda a, b: a*b, [arg for arg in expr.args if not isinstance(arg, TensExpr)], S.One)
+
+        # handle simple patterns
+        if self == expr:
+            return repl_dict
+
+        if len(_get_wilds(self)) == 0:
+            return self._matches_simple(expr, repl_dict, old)
+
+        def siftkey(arg):
+            if isinstance(arg, WildTensor):
+                return "WildTensor"
+            elif isinstance(arg, (Tensor, TensExpr)):
+                return "Tensor"
+            else:
+                return "coeff"
+
+        query_sifted = sift(self.args, siftkey)
+        expr_sifted = sift(expr.args, siftkey)
+
+        #Sanity checks
+        if "coeff" in query_sifted.keys():
+            if TensMul(*query_sifted["coeff"]).doit(deep=False) != self.coeff:
+                raise NotImplementedError(f"Found something that we do not know to handle: {query_sifted['coeff']}")
+        if "coeff" in expr_sifted.keys():
+            if TensMul(*expr_sifted["coeff"]).doit(deep=False) != expr_coeff:
+                raise NotImplementedError(f"Found something that we do not know to handle: {expr_sifted['coeff']}")
+
+        query_tens_heads = {tuple(getattr(x, "components", [])) for x in query_sifted["Tensor"]} #We use getattr because, e.g. TensAdd does not have the 'components' attribute.
+        expr_tens_heads = {tuple(getattr(x, "components", [])) for x in expr_sifted["Tensor"]}
+        if not query_tens_heads.issubset(expr_tens_heads):
+            #Some tensorheads in self are not present in the expr
+            return None
+
+        #Try to match all non-wild tensors of self with tensors that compose expr
+        if len(query_sifted["Tensor"]) > 0:
+            q_tensor = query_sifted["Tensor"][0]
+            """
+            We need to iterate over all possible symmetrized forms of q_tensor since the matches given by some of them may map dummy indices to free indices; the information about which indices are dummy/free will only be available later, when we are doing rem_q.matches(rem_e)
+            """
+            for q_tens in q_tensor._get_symmetrized_forms():
+                for e in expr_sifted["Tensor"]:
+                    if isinstance(q_tens, TensMul):
+                        #q_tensor got a minus sign due to this permutation.
+                        sign = -1
+                    else:
+                        sign = 1
+
+                    """
+                    _matches is used here since we are already iterating over index permutations of q_tensor. Also note that the sign is removed from q_tensor, and will later be put into rem_q.
+                    """
+                    m = (sign*q_tens)._matches(e)
+                    if m is None:
+                        continue
+
+                    rem_query = self.func(sign, *[a for a in self.args if a != q_tensor]).doit(deep=False)
+                    rem_expr = expr.func(*[a for a in expr.args if a != e]).doit(deep=False)
+                    tmp_repl = {}
+                    tmp_repl.update(repl_dict)
+                    tmp_repl.update(m)
+                    rem_m = rem_query.matches(rem_expr, repl_dict=tmp_repl)
+                    if rem_m is not None:
+                        #Check that contracted indices are not mapped to different indices.
+                        internally_consistent = True
+                        for k in rem_m.keys():
+                            if isinstance(k,TensorIndex):
+                                if -k in rem_m.keys() and rem_m[-k] != -rem_m[k]:
+                                    internally_consistent = False
+                                    break
+                        if internally_consistent:
+                            repl_dict.update(rem_m)
+                            return repl_dict
+
+            return None
+
+        #Try to match WildTensor instances which have indices
+        matched_e_tensors = []
+        remaining_e_tensors = expr_sifted["Tensor"]
+        indexless_wilds, wilds = sift(query_sifted["WildTensor"], lambda x: len(x.get_free_indices()) == 0, binary=True)
+
+        for w in wilds:
+            free_this_wild = set(w.get_free_indices())
+            tensors_to_try = []
+            for t in remaining_e_tensors:
+                free = t.get_free_indices()
+                shares_indices_with_wild = True
+                for i in free:
+                    if all(j.matches(i) is None for j in free_this_wild):
+                        #The index i matches none of the indices in free_this_wild
+                        shares_indices_with_wild = False
+                if shares_indices_with_wild:
+                    tensors_to_try.append(t)
+
+            m = w.matches(TensMul(*tensors_to_try).doit(deep=False) )
+            if m is None:
+                return None
+            else:
+                for tens in tensors_to_try:
+                    matched_e_tensors.append(tens)
+                repl_dict.update(m)
+
+        #Try to match indexless WildTensor instances
+        remaining_e_tensors = [t for t in expr_sifted["Tensor"] if t not in matched_e_tensors]
+        if len(indexless_wilds) > 0:
+            #If there are any remaining tensors, match them with the indexless WildTensor
+            m =  indexless_wilds[0].matches( TensMul(1,*remaining_e_tensors).doit(deep=False) )
+            if m is None:
+                return None
+            else:
+                repl_dict.update(m)
+        elif len(remaining_e_tensors) > 0:
+            return None
+
+        #Try to match the non-tensorial coefficient
+        m = self.coeff.matches(expr_coeff, old=old)
+        if m is None:
+            return None
+        else:
+            repl_dict.update(m)
+
+        return repl_dict
+
+    def matches(self, expr, repl_dict=None, old=False):
+        expr = sympify(expr)
+
+        if repl_dict is None:
+            repl_dict = {}
+        else:
+            repl_dict = repl_dict.copy()
+
+        commute = all(arg.component.comm == 0 for arg in expr.args if isinstance(arg, Tensor))
+        if commute:
+            return self._matches_commutative(expr, repl_dict, old)
+        else:
+            raise NotImplementedError("Tensor matching not implemented for non-commuting tensors")
 
 class TensorElement(TensExpr):
     """
@@ -4133,7 +4531,7 @@ class TensorElement(TensExpr):
         if not isinstance(expr, Tensor):
             # remap
             if not isinstance(expr, TensExpr):
-                raise TypeError("%s is not a tensor expression" % expr)
+                raise TypeError(f"{expr} is not a tensor expression")
             return expr.func(*[TensorElement(arg, index_map) for arg in expr.args])
         expr_free_indices = expr.get_free_indices()
         name_translation = {i.args[0]: i for i in expr_free_indices}
@@ -4267,10 +4665,12 @@ class WildTensorHead(TensorHead):
             raise NotImplementedError("Wild matching based on symmetry is not implemented.")
 
         obj = Basic.__new__(cls, name_symbol, Tuple(*index_types), sympify(symmetry), sympify(comm), sympify(unordered_indices))
-        obj.comm = TensorManager.comm_symbols2i(comm)
-        obj.unordered_indices = unordered_indices
 
         return obj
+
+    @property
+    def unordered_indices(self):
+        return self.args[4]
 
     def __call__(self, *indices, **kwargs):
         tensor = WildTensor(self, indices, **kwargs)
@@ -4671,7 +5071,7 @@ def riemann_cyclic(t2):
     a1 = [x.split() for x in args]
     a2 = [[riemann_cyclic_replace(tx) for tx in y] for y in a1]
     a3 = [tensor_mul(*v) for v in a2]
-    t3 = TensAdd(*a3).doit()
+    t3 = TensAdd(*a3).doit(deep=False)
     if not t3:
         return t3
     else:
@@ -4739,7 +5139,7 @@ def get_lines(ex, index_type):
             if index_types[i] is index_type:
                 a.append(i)
         if len(a) > 2:
-            raise ValueError('at most two indices of type %s allowed' % index_type)
+            raise ValueError(f"at most two indices of type {index_type} allowed")
         if len(a) == 2:
             dt[c] = a
     #dum = ex.dum
@@ -4768,7 +5168,7 @@ def get_lines(ex, index_type):
         # if p0 == ta0[0] then G in pos c1 is mult on the right by G in c0
         ta0 = dt[arguments[c0]]
         b0, b1 = (c0, c1) if p0 == ta0[1]  else (c1, c0)
-        lines1 = lines[:]
+        lines1 = lines.copy()
         for line in lines:
             if line[-1] == b0:
                 if line[0] == b1:
@@ -4836,7 +5236,6 @@ def contract_metric(t, g):
         return t.contract_metric(g)
     return t
 
-
 def perm2tensor(t, g, is_canon_bp=False):
     """
     Returns the tensor corresponding to the permutation ``g``
@@ -4861,8 +5260,20 @@ def substitute_indices(t, *index_tuples):
     return t.substitute_indices(*index_tuples)
 
 
-def _expand(expr, **kwargs):
-    if isinstance(expr, TensExpr):
-        return expr._expand(**kwargs)
-    else:
-        return expr.expand(**kwargs)
+def _get_wilds(expr):
+    return list(expr.atoms(Wild, WildFunction, WildTensor, WildTensorIndex, WildTensorHead))
+
+
+def get_postprocessor(cls):
+    def _postprocessor(expr):
+        tens_class = {Mul: TensMul, Add: TensAdd}[cls]
+        if any(isinstance(a, TensExpr) for a in expr.args):
+            return tens_class(*expr.args)
+        else:
+            return expr
+
+    return _postprocessor
+
+Basic._constructor_postprocessor_mapping[TensExpr] = {
+    "Mul": [get_postprocessor(Mul)],
+}

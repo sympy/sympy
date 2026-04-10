@@ -1,7 +1,7 @@
 '''
 This implementation is a heavily modified fixed point implementation of
 BBP_formula for calculating the nth position of pi. The original hosted
-at: http://en.literateprograms.org/Pi_with_the_BBP_formula_(Python)
+at: https://web.archive.org/web/20151116045029/http://en.literateprograms.org/Pi_with_the_BBP_formula_(Python)
 
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -70,19 +70,22 @@ calculated for the given precision.
 array (perhaps just a matter of preference).
 
 '''
+from __future__ import annotations
+from typing import TYPE_CHECKING
 
-import math
 from sympy.utilities.misc import as_int
 
+if TYPE_CHECKING:
+    from typing import SupportsIndex
 
-def _series(j, n, prec=14):
+
+def _series(j: int, n: int, prec: int = 14) -> int:
 
     # Left sum from the bbp algorithm
     s = 0
     D = _dn(n, prec)
     D4 = 4 * D
-    k = 0
-    d = 8 * k + j
+    d = j
     for k in range(n + 1):
         s += (pow(16, n - k, d) << D4) // d
         d += 8
@@ -93,7 +96,7 @@ def _series(j, n, prec=14):
 
     t = 0
     k = n + 1
-    e = 4*(D + n - k)
+    e = D4 - 4 # 4*(D + n - k)
     d = 8 * k + j
     while True:
         dt = (1 << e) // d
@@ -108,12 +111,32 @@ def _series(j, n, prec=14):
     return total
 
 
-def pi_hex_digits(n, prec=14):
+def pi_hex_digits(n: SupportsIndex, prec: int = 14) -> str:
     """Returns a string containing ``prec`` (default 14) digits
     starting at the nth digit of pi in hex. Counting of digits
     starts at 0 and the decimal is not counted, so for n = 0 the
     returned value starts with 3; n = 1 corresponds to the first
     digit past the decimal point (which in hex is 2).
+
+    Parameters
+    ==========
+
+    n : non-negative integer
+    prec : non-negative integer. default = 14
+
+    Returns
+    =======
+
+    str : Returns a string containing ``prec`` digits
+          starting at the nth digit of pi in hex.
+          If ``prec`` = 0, returns empty string.
+
+    Raises
+    ======
+
+    ValueError
+        If ``n`` < 0 or ``prec`` < 0.
+        Or ``n`` or ``prec`` is not an integer.
 
     Examples
     ========
@@ -124,6 +147,14 @@ def pi_hex_digits(n, prec=14):
     >>> pi_hex_digits(0, 3)
     '324'
 
+    These are consistent with the following results
+
+    >>> import math
+    >>> hex(int(math.pi * 2**((14-1)*4)))
+    '0x3243f6a8885a30'
+    >>> hex(int(math.pi * 2**((3-1)*4)))
+    '0x324'
+
     References
     ==========
 
@@ -132,6 +163,8 @@ def pi_hex_digits(n, prec=14):
     n, prec = as_int(n), as_int(prec)
     if n < 0:
         raise ValueError('n cannot be negative')
+    if prec < 0:
+        raise ValueError('prec cannot be negative')
     if prec == 0:
         return ''
 
@@ -151,9 +184,12 @@ def pi_hex_digits(n, prec=14):
     return s
 
 
-def _dn(n, prec):
+def _dn(n: int, prec: int) -> int:
     # controller for n dependence on precision
     # n = starting digit index
     # prec = the number of total digits to compute
     n += 1  # because we subtract 1 for _series
-    return int(math.log(n + prec)/math.log(16) + prec + 3)
+
+    # assert int(math.log(n + prec)/math.log(16)) ==\
+    #  ((n + prec).bit_length() - 1) // 4
+    return ((n + prec).bit_length() - 1) // 4 + prec + 3

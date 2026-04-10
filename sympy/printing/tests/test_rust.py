@@ -1,17 +1,19 @@
-from sympy.core import (S, pi, oo, symbols, Rational, Integer,
+from __future__ import annotations
+from sympy.core import (S, pi, oo, symbols, Rational, Integer, Symbol,
                         GoldenRatio, EulerGamma, Catalan, Lambda, Dummy,
                         Eq, Ne, Le, Lt, Gt, Ge, Mod)
 from sympy.functions import (Piecewise, sin, cos, Abs, exp, ceiling, sqrt,
-                             sign, floor)
+                             sign, floor, log)
 from sympy.logic import ITE
 from sympy.testing.pytest import raises
 from sympy.utilities.lambdify import implemented_function
 from sympy.tensor import IndexedBase, Idx
 from sympy.matrices import MatrixSymbol, SparseMatrix, Matrix
 
-from sympy.printing.rust import rust_code
+from sympy.printing.codeprinter import rust_code
 
-x, y, z = symbols('x,y,z')
+x, y, z = symbols('x,y,z', integer=False, real=True)
+k, m, n = symbols('k,m,n', integer=True)
 
 
 def test_Integer():
@@ -41,9 +43,11 @@ def test_basic_ops():
     assert rust_code(x + y) == "x + y"
     assert rust_code(x - y) == "x - y"
     assert rust_code(x * y) == "x*y"
-    assert rust_code(x / y) == "x/y"
+    assert rust_code(x / y) == "x*y.recip()"
     assert rust_code(-x) == "-x"
-
+    assert rust_code(2 * x) == "2.0*x"
+    assert rust_code(y + 2) == "y + 2.0"
+    assert rust_code(x + n) == "n as f64 + x"
 
 def test_printmethod():
     class fabs(Abs):
@@ -61,7 +65,7 @@ def test_Functions():
     assert rust_code(floor(x)) == "x.floor()"
 
     # Automatic rewrite
-    assert rust_code(Mod(x, 3)) == 'x - 3*((1_f64/3.0)*x).floor()'
+    assert rust_code(Mod(x, 3)) == 'x - 3.0*((1_f64/3.0)*x).floor()'
 
 
 def test_Pow():
@@ -86,7 +90,7 @@ def test_Pow():
 
     g = implemented_function('g', Lambda(x, 2*x))
     assert rust_code(1/(g(x)*3.5)**(x - y**x)/(x**2 + y)) == \
-        "(3.5*2*x).powf(-x + y.powf(x))/(x.powi(2) + y)"
+        "(3.5*2.0*x).powf(-x + y.powf(x))/(x.powi(2) + y)"
     _cond_cfunc = [(lambda base, exp: exp.is_integer, "dpowi", 1),
                    (lambda base, exp: not exp.is_integer, "pow", 1)]
     assert rust_code(x**3, user_functions={'Pow': _cond_cfunc}) == 'x.dpowi(3)'
@@ -105,10 +109,10 @@ def test_constants():
 
 
 def test_constants_other():
-    assert rust_code(2*GoldenRatio) == "const GoldenRatio: f64 = %s;\n2*GoldenRatio" % GoldenRatio.evalf(17)
+    assert rust_code(2*GoldenRatio) == "const GoldenRatio: f64 = %s;\n2.0*GoldenRatio" % GoldenRatio.evalf(17)
     assert rust_code(
-            2*Catalan) == "const Catalan: f64 = %s;\n2*Catalan" % Catalan.evalf(17)
-    assert rust_code(2*EulerGamma) == "const EulerGamma: f64 = %s;\n2*EulerGamma" % EulerGamma.evalf(17)
+            2*Catalan) == "const Catalan: f64 = %s;\n2.0*Catalan" % Catalan.evalf(17)
+    assert rust_code(2*EulerGamma) == "const EulerGamma: f64 = %s;\n2.0*EulerGamma" % EulerGamma.evalf(17)
 
 
 def test_boolean():
@@ -116,50 +120,50 @@ def test_boolean():
     assert rust_code(S.true) == "true"
     assert rust_code(False) == "false"
     assert rust_code(S.false) == "false"
-    assert rust_code(x & y) == "x && y"
-    assert rust_code(x | y) == "x || y"
-    assert rust_code(~x) == "!x"
-    assert rust_code(x & y & z) == "x && y && z"
-    assert rust_code(x | y | z) == "x || y || z"
-    assert rust_code((x & y) | z) == "z || x && y"
-    assert rust_code((x | y) & z) == "z && (x || y)"
+    assert rust_code(k & m) == "k && m"
+    assert rust_code(k | m) == "k || m"
+    assert rust_code(~k) == "!k"
+    assert rust_code(k & m & n) == "k && m && n"
+    assert rust_code(k | m | n) == "k || m || n"
+    assert rust_code((k & m) | n) == "n || k && m"
+    assert rust_code((k | m) & n) == "n && (k || m)"
 
 
 def test_Piecewise():
     expr = Piecewise((x, x < 1), (x + 2, True))
     assert rust_code(expr) == (
-            "if (x < 1) {\n"
+            "if (x < 1.0) {\n"
             "    x\n"
             "} else {\n"
-            "    x + 2\n"
+            "    x + 2.0\n"
             "}")
     assert rust_code(expr, assign_to="r") == (
-        "r = if (x < 1) {\n"
+        "r = if (x < 1.0) {\n"
         "    x\n"
         "} else {\n"
-        "    x + 2\n"
+        "    x + 2.0\n"
         "};")
     assert rust_code(expr, assign_to="r", inline=True) == (
-        "r = if (x < 1) { x } else { x + 2 };")
+        "r = if (x < 1.0) { x } else { x + 2.0 };")
     expr = Piecewise((x, x < 1), (x + 1, x < 5), (x + 2, True))
     assert rust_code(expr, inline=True) == (
-        "if (x < 1) { x } else if (x < 5) { x + 1 } else { x + 2 }")
+        "if (x < 1.0) { x } else if (x < 5.0) { x + 1.0 } else { x + 2.0 }")
     assert rust_code(expr, assign_to="r", inline=True) == (
-        "r = if (x < 1) { x } else if (x < 5) { x + 1 } else { x + 2 };")
+        "r = if (x < 1.0) { x } else if (x < 5.0) { x + 1.0 } else { x + 2.0 };")
     assert rust_code(expr, assign_to="r") == (
-        "r = if (x < 1) {\n"
+        "r = if (x < 1.0) {\n"
         "    x\n"
-        "} else if (x < 5) {\n"
-        "    x + 1\n"
+        "} else if (x < 5.0) {\n"
+        "    x + 1.0\n"
         "} else {\n"
-        "    x + 2\n"
+        "    x + 2.0\n"
         "};")
     expr = 2*Piecewise((x, x < 1), (x + 1, x < 5), (x + 2, True))
     assert rust_code(expr, inline=True) == (
-        "2*if (x < 1) { x } else if (x < 5) { x + 1 } else { x + 2 }")
+        "2.0*if (x < 1.0) { x } else if (x < 5.0) { x + 1.0 } else { x + 2.0 }")
     expr = 2*Piecewise((x, x < 1), (x + 1, x < 5), (x + 2, True)) - 42
     assert rust_code(expr, inline=True) == (
-        "2*if (x < 1) { x } else if (x < 5) { x + 1 } else { x + 2 } - 42")
+        "2.0*if (x < 1.0) { x } else if (x < 5.0) { x + 1.0 } else { x + 2.0 } - 42.0")
     # Check that Piecewise without a True (default) condition error
     expr = Piecewise((x, x < 1), (x**2, x > 1), (sin(x), x > 0))
     raises(ValueError, lambda: rust_code(expr))
@@ -172,15 +176,15 @@ def test_dereference_printing():
 
 def test_sign():
     expr = sign(x) * y
-    assert rust_code(expr) == "y*x.signum()"
-    assert rust_code(expr, assign_to='r') == "r = y*x.signum();"
+    assert rust_code(expr) == "y*(if (x == 0.0) { 0.0 } else { (x).signum() }) as f64"
+    assert rust_code(expr, assign_to='r') == "r = y*(if (x == 0.0) { 0.0 } else { (x).signum() }) as f64;"
 
     expr = sign(x + y) + 42
-    assert rust_code(expr) == "(x + y).signum() + 42"
-    assert rust_code(expr, assign_to='r') == "r = (x + y).signum() + 42;"
+    assert rust_code(expr) == "(if (x + y == 0.0) { 0.0 } else { (x + y).signum() }) + 42"
+    assert rust_code(expr, assign_to='r') == "r = (if (x + y == 0.0) { 0.0 } else { (x + y).signum() }) + 42;"
 
     expr = sign(cos(x))
-    assert rust_code(expr) == "x.cos().signum()"
+    assert rust_code(expr) == "(if (x.cos() == 0.0) { 0.0 } else { (x.cos()).signum() })"
 
 
 def test_reserved_words():
@@ -197,12 +201,12 @@ def test_reserved_words():
 
 
 def test_ITE():
-    expr = ITE(x < 1, y, z)
-    assert rust_code(expr) == (
-            "if (x < 1) {\n"
-            "    y\n"
+    ekpr = ITE(k < 1, m, n)
+    assert rust_code(ekpr) == (
+            "if (k < 1) {\n"
+            "    m\n"
             "} else {\n"
-            "    z\n"
+            "    n\n"
             "}")
 
 
@@ -325,7 +329,7 @@ def test_inline_function():
 
     g = implemented_function('g', Lambda(x, 2*x/Catalan))
     assert rust_code(g(x)) == (
-        "const Catalan: f64 = %s;\n2*x/Catalan" % Catalan.evalf(17))
+        "const Catalan: f64 = %s;\n2.0*x/Catalan" % Catalan.evalf(17))
 
     A = IndexedBase('A')
     i = Idx('i', symbols('n', integer=True))
@@ -356,4 +360,10 @@ def test_matrix():
 
 def test_sparse_matrix():
     # gh-15791
-    assert 'Not supported in Rust' in rust_code(SparseMatrix([[1, 2, 3]]))
+    with raises(NotImplementedError):
+        rust_code(SparseMatrix([[1, 2, 3]]))
+
+def test_parenthesize_typecast():
+    modulus = Symbol("modulus")
+    exp = (2 ** (2.0 * ceiling(-y + log(x) / log(2.0) + 4)) + 0.5) / (3 * modulus**2)
+    assert(rust_code(exp) == '(1_f64/3.0)*(0.5 + (2.0*(-y + 1.44269504088896*x.ln()).ceil() + 8.0).exp2())*modulus.powi(-2)')

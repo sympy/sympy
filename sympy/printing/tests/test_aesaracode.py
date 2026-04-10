@@ -6,11 +6,12 @@ keyword argument each time, this module uses the aesara_code_ and
 aesara_function_ functions defined below which default to using a new, empty
 cache instead.
 """
+from __future__ import annotations
 
 import logging
 
 from sympy.external import import_module
-from sympy.testing.pytest import raises, SKIP
+from sympy.testing.pytest import raises, SKIP, warns_deprecated_sympy
 
 from sympy.utilities.exceptions import ignore_warnings
 
@@ -24,11 +25,13 @@ aesaralogger.setLevel(logging.WARNING)
 if aesara:
     import numpy as np
     aet = aesara.tensor
-    from aesara.scalar.basic import Scalar
+    from aesara.scalar.basic import ScalarType
     from aesara.graph.basic import Variable
     from aesara.tensor.var import TensorVariable
     from aesara.tensor.elemwise import Elemwise, DimShuffle
     from aesara.tensor.math import Dot
+
+    from sympy.printing.aesaracode import true_divide
 
     xt, yt, zt = [aet.scalar(name, 'floatX') for name in 'xyz']
     Xt, Yt, Zt = [aet.tensor('floatX', (False, False), name=n) for n in 'XYZ']
@@ -54,12 +57,14 @@ f_t = sy.Function('f')(t)
 def aesara_code_(expr, **kwargs):
     """ Wrapper for aesara_code that uses a new, empty cache by default. """
     kwargs.setdefault('cache', {})
-    return aesara_code(expr, **kwargs)
+    with warns_deprecated_sympy():
+        return aesara_code(expr, **kwargs)
 
 def aesara_function_(inputs, outputs, **kwargs):
     """ Wrapper for aesara_function that uses a new, empty cache by default. """
     kwargs.setdefault('cache', {})
-    return aesara_function(inputs, outputs, **kwargs)
+    with warns_deprecated_sympy():
+        return aesara_function(inputs, outputs, **kwargs)
 
 
 def fgraph_of(*exprs):
@@ -93,7 +98,7 @@ def aesara_simplify(fgraph):
     """
     mode = aesara.compile.get_default_mode().excluding("fusion")
     fgraph = fgraph.clone()
-    mode.optimizer.optimize(fgraph)
+    mode.optimizer.rewrite(fgraph)
     return fgraph
 
 
@@ -264,8 +269,8 @@ def test_MatAdd():
 
 
 def test_Rationals():
-    assert theq(aesara_code_(sy.Integer(2) / 3), aet.true_div(2, 3))
-    assert theq(aesara_code_(S.Half), aet.true_div(1, 2))
+    assert theq(aesara_code_(sy.Integer(2) / 3), true_divide(2, 3))
+    assert theq(aesara_code_(S.Half), true_divide(1, 2))
 
 def test_Integers():
     assert aesara_code_(sy.Integer(3)) == 3
@@ -419,7 +424,7 @@ def test_MatrixSlice():
     Y = X[1:2:3, 4:5:6]
     Yt = aesara_code_(Y, cache=cache)
 
-    s = Scalar('int64')
+    s = ScalarType('int64')
     assert tuple(Yt.owner.op.idx_list) == (slice(s, s, s), slice(s, s, s))
     assert Yt.owner.inputs[0] == aesara_code_(X, cache=cache)
     # == doesn't work in Aesara like it does in SymPy. You have to use
@@ -513,8 +518,9 @@ def test_global_cache():
         global_cache.clear()
 
         for s in [x, X, f_t]:
-            st = aesara_code(s)
-            assert aesara_code(s) is st
+            with warns_deprecated_sympy():
+                st = aesara_code(s)
+                assert aesara_code(s) is st
 
     finally:
         # Restore global cache
@@ -541,7 +547,8 @@ def test_cache_types_distinct():
 
     # Check retrieving
     for s, st in printed.items():
-        assert aesara_code(s, cache=cache) is st
+        with warns_deprecated_sympy():
+            assert aesara_code(s, cache=cache) is st
 
 def test_symbols_are_created_once():
     """
@@ -611,14 +618,17 @@ def test_Relationals():
 
 def test_complexfunctions():
     dtypes = {x:'complex128', y:'complex128'}
-    xt, yt = aesara_code(x, dtypes=dtypes), aesara_code(y, dtypes=dtypes)
+    with warns_deprecated_sympy():
+        xt, yt = aesara_code(x, dtypes=dtypes), aesara_code(y, dtypes=dtypes)
     from sympy.functions.elementary.complexes import conjugate
     from aesara.tensor import as_tensor_variable as atv
     from aesara.tensor import complex as cplx
-    assert theq(aesara_code(y*conjugate(x), dtypes=dtypes), yt*(xt.conj()))
-    assert theq(aesara_code((1+2j)*x), xt*(atv(1.0)+atv(2.0)*cplx(0,1)))
+    with warns_deprecated_sympy():
+        assert theq(aesara_code(y*conjugate(x), dtypes=dtypes), yt*(xt.conj()))
+        assert theq(aesara_code((1+2j)*x), xt*(atv(1.0)+atv(2.0)*cplx(0,1)))
 
 
 def test_constantfunctions():
-    tf = aesara_function([],[1+1j])
+    with warns_deprecated_sympy():
+        tf = aesara_function([],[1+1j])
     assert(tf()==1+1j)

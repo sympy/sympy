@@ -59,10 +59,8 @@ respect to :math:`A`'s Z-axis by an angle :math:`\theta`.
 
 The orientation is shown in the diagram below:
 
-.. image:: coordsys_rot.*
-   :height: 250
-   :width: 250
-   :align: center
+.. raw:: html
+   :file: coordsys_rot.svg
 
 There are two ways to achieve this.
 
@@ -116,7 +114,7 @@ appear in the iterable.
   >>> C = A.orient_new('C', (axis_orienter, body_orienter))
 
 The :mod:`sympy.vector` API provides the following four ``Orienter``
-classes for orientation purposes-
+classes for orientation purposes:
 
 1. ``AxisOrienter``
 
@@ -137,15 +135,15 @@ coincides with the origin of the 'parent' system.
   0
 
 To compute the rotation matrix of any coordinate system with respect
-to another one, use the ``rotation_matrix`` method.
+to another one, use the ``change_of_basis_matrix_from`` method.
 
   >>> B = A.orient_new_axis('B', a, A.k)
-  >>> B.rotation_matrix(A)
+  >>> B.change_of_basis_matrix_from(A)
   Matrix([
   [ cos(a), sin(a), 0],
   [-sin(a), cos(a), 0],
   [      0,      0, 1]])
-  >>> B.rotation_matrix(B)
+  >>> B.change_of_basis_matrix_from(B)
   Matrix([
   [1, 0, 0],
   [0, 1, 0],
@@ -194,12 +192,23 @@ rotate system by setting appropriate transformation equations.
   >>> B = CoordSys3D('A', transformation=lambda x,y,z: (x*sin(y), x*cos(y), z))
 
 
-In ``CoordSys3D`` is also dedicated method, ``create_new`` which works
+In ``CoordSys3D`` there is also a dedicated method, ``create_new`` which works
 similarly to methods like ``locate_new``, ``orient_new_axis`` etc.
 
   >>> from sympy.vector import CoordSys3D
   >>> A = CoordSys3D('A')
   >>> B = A.create_new('B', transformation='spherical')
+
+To compute the change-of-basis matrix of any coordinate system with respect
+to another one, use the ``change_of_basis_matrix_from`` method. For example,
+the change-of-basis matrix from spherical coordinates to Cartesian is:
+
+  >>> A.change_of_basis_matrix_from(B)
+  Matrix([
+  [sin(B.theta)*cos(B.phi), cos(B.phi)*cos(B.theta), -sin(B.phi)],
+  [sin(B.phi)*sin(B.theta), sin(B.phi)*cos(B.theta),  cos(B.phi)],
+  [           cos(B.theta),           -sin(B.theta),           0]])
+
 
 Expression of quantities in different coordinate systems
 ========================================================
@@ -214,7 +223,7 @@ expressions and dyadic tensors.
 :mod:`sympy.vector` supports the expression of vector/scalar quantities
 in different coordinate systems using the ``express`` function.
 
-For purposes of this section, assume the following initializations-
+For purposes of this section, assume the following initializations:
 
   >>> from sympy.vector import CoordSys3D, express
   >>> from sympy.abc import a, b, c

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.numbers import (I, pi)
 from sympy.core.symbol import Symbol
 from sympy.functions.elementary.exponential import exp
@@ -11,6 +12,8 @@ from sympy.physics.quantum.qubit import Qubit
 from sympy.physics.quantum.qapply import qapply
 from sympy.physics.quantum.represent import represent
 
+from sympy.functions.elementary.complexes import sign
+
 
 def test_RkGate():
     x = Symbol('x')
@@ -21,7 +24,7 @@ def test_RkGate():
     assert RkGate(3, 3) == TGate(3)
 
     assert represent(
-        RkGate(0, x), nqubits=1) == Matrix([[1, 0], [0, exp(2*I*pi/2**x)]])
+        RkGate(0, x), nqubits=1) == Matrix([[1, 0], [0, exp(sign(x)*2*pi*I/(2**abs(x)))]])
 
 
 def test_quantum_fourier():

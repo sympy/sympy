@@ -4,6 +4,7 @@ only and should not be used anywhere else as these do not possess the
 signatures common to SymPy objects. For general use of logic constructs
 please refer to sympy.logic classes And, Or, Not, etc.
 """
+from __future__ import annotations
 from itertools import combinations, product, zip_longest
 from sympy.assumptions.assume import AppliedPredicate, Predicate
 from sympy.core.relational import Eq, Ne, Gt, Lt, Ge, Le
@@ -54,10 +55,7 @@ class Literal:
         if callable(self.lit):
             lit = self.lit(expr)
         else:
-            try:
-                lit = self.lit.apply(expr)
-            except AttributeError:
-                lit = self.lit.rcall(expr)
+            lit = self.lit.apply(expr)
         return type(self)(lit, self.is_Not)
 
     def __invert__(self):
@@ -284,9 +282,7 @@ class CNF:
     >>> from sympy.abc import x
     >>> cnf = CNF.from_prop(Q.real(x) & ~Q.zero(x))
     >>> cnf.clauses
-    {frozenset({Literal(Q.zero(x), True)}),
-    frozenset({Literal(Q.negative(x), False),
-    Literal(Q.positive(x), False), Literal(Q.zero(x), False)})}
+    {frozenset({Literal(Q.real(x), False)}), frozenset({Literal(Q.zero(x), True)})}
     """
     def __init__(self, clauses=None):
         if not clauses:
@@ -335,8 +331,7 @@ class CNF:
         clauses = set()
         for a, b in product(self.clauses, cnf.clauses):
             tmp = set(a)
-            for t in b:
-                tmp.add(t)
+            tmp.update(b)
             clauses.add(frozenset(tmp))
         return CNF(clauses)
 
@@ -346,20 +341,16 @@ class CNF:
 
     def _not(self):
         clss = list(self.clauses)
-        ll = set()
-        for x in clss[-1]:
-            ll.add(frozenset((~x,)))
+        ll = {frozenset((~x,)) for x in clss[-1]}
         ll = CNF(ll)
 
         for rest in clss[:-1]:
-            p = set()
-            for x in rest:
-                p.add(frozenset((~x,)))
+            p = {frozenset((~x,)) for x in rest}
             ll = ll._or(CNF(p))
         return ll
 
     def rcall(self, expr):
-        clause_list = list()
+        clause_list = []
         for clause in self.clauses:
             lits = [arg.rcall(expr) for arg in clause]
             clause_list.append(OR(*lits))
@@ -382,8 +373,7 @@ class CNF:
 
     @classmethod
     def to_CNF(cls, expr):
-        from sympy.assumptions.facts import get_composite_predicates
-        expr = to_NNF(expr, get_composite_predicates())
+        expr = to_NNF(expr)
         expr = distribute_AND_over_OR(expr)
         return expr
 

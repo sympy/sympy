@@ -12,6 +12,7 @@ Skellam
 YuleSimon
 Zeta
 """
+from __future__ import annotations
 
 
 
@@ -23,7 +24,7 @@ from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy
 from sympy.core.sympify import sympify
-from sympy.functions.combinatorial.factorials import (binomial, factorial)
+from sympy.functions.combinatorial.factorials import (binomial, factorial, FallingFactorial)
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -179,7 +180,7 @@ def FlorySchulz(name, a):
     >>> X = FlorySchulz("x", a)
 
     >>> density(X)(z)
-    (5/4)**(1 - z)*z/25
+    (4/5)**(z - 1)*z/25
 
     >>> E(X)
     9
@@ -252,7 +253,7 @@ def Geometric(name, p):
     >>> X = Geometric("x", p)
 
     >>> density(X)(z)
-    (5/4)**(1 - z)/5
+    (4/5)**(z - 1)/5
 
     >>> E(X)
     5
@@ -264,7 +265,7 @@ def Geometric(name, p):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Geometric_distribution
-    .. [2] http://mathworld.wolfram.com/GeometricDistribution.html
+    .. [2] https://mathworld.wolfram.com/GeometricDistribution.html
 
     """
     return rv(name, GeometricDistribution, p)
@@ -429,7 +430,7 @@ def Logarithmic(name, p):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Logarithmic_distribution
-    .. [2] http://mathworld.wolfram.com/LogarithmicDistribution.html
+    .. [2] https://mathworld.wolfram.com/LogarithmicDistribution.html
 
     """
     return rv(name, LogarithmicDistribution, p)
@@ -451,19 +452,19 @@ class NegativeBinomialDistribution(SingleDiscreteDistribution):
         r = self.r
         p = self.p
 
-        return binomial(k + r - 1, k) * (1 - p)**r * p**k
+        return binomial(k + r - 1, k) * (1 - p)**k * p**r
 
     def _characteristic_function(self, t):
         r = self.r
         p = self.p
 
-        return ((1 - p) / (1 - p * exp(I*t)))**r
+        return (p / (1 - (1 - p) * exp(I*t)))**r
 
     def _moment_generating_function(self, t):
         r = self.r
         p = self.p
 
-        return ((1 - p) / (1 - p * exp(t)))**r
+        return (p / (1 - (1 - p) * exp(t)))**r
 
 def NegativeBinomial(name, r, p):
     r"""
@@ -475,13 +476,15 @@ def NegativeBinomial(name, r, p):
     The density of the Negative Binomial distribution is given by
 
     .. math::
-        f(k) := \binom{k + r - 1}{k} (1 - p)^r p^k
+        f(k) := \binom{k + r - 1}{k} (1 - p)^k p^r
 
     Parameters
     ==========
 
     r : A positive value
+        Number of successes until the experiment is stopped.
     p : A value between 0 and 1
+        Probability of success.
 
     Returns
     =======
@@ -495,25 +498,25 @@ def NegativeBinomial(name, r, p):
     >>> from sympy import Symbol, S
 
     >>> r = 5
-    >>> p = S.One / 5
+    >>> p = S.One / 3
     >>> z = Symbol("z")
 
     >>> X = NegativeBinomial("x", r, p)
 
     >>> density(X)(z)
-    1024*binomial(z + 4, z)/(3125*5**z)
+    (2/3)**z*binomial(z + 4, z)/243
 
     >>> E(X)
-    5/4
+    10
 
     >>> variance(X)
-    25/16
+    30
 
     References
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Negative_binomial_distribution
-    .. [2] http://mathworld.wolfram.com/NegativeBinomialDistribution.html
+    .. [2] https://mathworld.wolfram.com/NegativeBinomialDistribution.html
 
     """
     return rv(name, NegativeBinomialDistribution, r, p)
@@ -540,6 +543,18 @@ class PoissonDistribution(SingleDiscreteDistribution):
     def _moment_generating_function(self, t):
         return exp(self.lamda * (exp(t) - 1))
 
+    def expectation(self, expr, var, evaluate=True, **kwargs):
+        if evaluate:
+            if expr == var:
+                return self.lamda
+            if (
+                isinstance(expr, FallingFactorial)
+                and expr.args[1].is_integer
+                and expr.args[1].is_positive
+                and expr.args[0] == var
+            ):
+                return self.lamda ** expr.args[1]
+        return super().expectation(expr, var, evaluate, **kwargs)
 
 def Poisson(name, lamda):
     r"""
@@ -587,7 +602,7 @@ def Poisson(name, lamda):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Poisson_distribution
-    .. [2] http://mathworld.wolfram.com/PoissonDistribution.html
+    .. [2] https://mathworld.wolfram.com/PoissonDistribution.html
 
     """
     return rv(name, PoissonDistribution, lamda)

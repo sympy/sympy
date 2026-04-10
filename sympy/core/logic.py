@@ -8,10 +8,9 @@ this stuff for general purpose.
 """
 
 from __future__ import annotations
-from typing import Optional
 
 # Type of a fuzzy bool
-FuzzyBool = Optional[bool]
+FuzzyBool = bool | None
 
 
 def _torf(args):
@@ -148,7 +147,7 @@ def fuzzy_and(args):
     return rv
 
 
-def fuzzy_not(v):
+def fuzzy_not(v: bool | None) -> bool | None:
     """
     Not in fuzzy logic
 
@@ -202,14 +201,12 @@ def fuzzy_or(args):
 def fuzzy_xor(args):
     """Return None if any element of args is not True or False, else
     True (if there are an odd number of True elements), else False."""
-    t = f = 0
+    t = 0
     for a in args:
         ai = fuzzy_bool(a)
         if ai:
             t += 1
-        elif ai is False:
-            f += 1
-        else:
+        elif ai is None:
             return
     return t % 2 == 1
 
@@ -247,20 +244,6 @@ class Logic:
             return True
         else:
             return a.args != b.args
-
-    def __lt__(self, other):
-        if self.__cmp__(other) == -1:
-            return True
-        return False
-
-    def __cmp__(self, other):
-        if type(self) is not type(other):
-            a = str(type(self))
-            b = str(type(other))
-        else:
-            a = self.args
-            b = other.args
-        return (a > b) - (a < b)
 
     def __str__(self):
         return '%s(%s)' % (self.__class__.__name__,

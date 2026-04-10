@@ -14,6 +14,7 @@ Computational Mechanics 56.6 (2015): 967-981
 
 PDF link : http://dilbert.engr.ucdavis.edu/~suku/quadrature/cls-integration.pdf
 """
+from __future__ import annotations
 
 from functools import cmp_to_key
 
@@ -157,15 +158,13 @@ def _polynomial_integrate(polynomials, facets, hp_params):
     integral_value = S.Zero
     for deg in polynomials:
         poly_contribute = S.Zero
-        facet_count = 0
-        for hp in hp_params:
+        for facet_count, hp in enumerate(hp_params):
             value_over_boundary = integration_reduction(facets,
                                                         facet_count,
                                                         hp[0], hp[1],
                                                         polynomials[deg],
                                                         dims, deg)
             poly_contribute += value_over_boundary * (hp[1] / norm(hp[0]))
-            facet_count += 1
         poly_contribute /= (dim_length + deg)
         integral_value += poly_contribute
 
@@ -406,7 +405,7 @@ def distance_to_side(point, line_seg, A):
 
     n_side = cross_product((0, 0, 0), rev_normal, vector)
     vectorx0 = [line_seg[0][i] - point[i] for i in range(0, 3)]
-    dot_product = sum([vectorx0[i] * n_side[i] for i in range(0, 3)])
+    dot_product = sum(vectorx0[i] * n_side[i] for i in range(0, 3))
 
     return dot_product
 
@@ -808,7 +807,7 @@ def hyperplane_parameters(poly, vertices=None):
         for i, polygon in enumerate(poly):
             v1, v2, v3 = [vertices[vertex] for vertex in polygon[:3]]
             normal = cross_product(v1, v2, v3)
-            b = sum([normal[j] * v1[j] for j in range(0, 3)])
+            b = sum(normal[j] * v1[j] for j in range(0, 3))
             fac = gcd_list(normal)
             if fac.is_zero:
                 fac = 1
@@ -1100,12 +1099,12 @@ def point_sort(poly, normal=None, clockwise=True):
     order = S.One if clockwise else S.NegativeOne
     dim = len(pts[0])
     if dim == 2:
-        center = Point(sum(map(lambda vertex: vertex.x, pts)) / n,
-                        sum(map(lambda vertex: vertex.y, pts)) / n)
+        center = Point(sum((vertex.x for vertex in pts)) / n,
+                        sum((vertex.y for vertex in pts)) / n)
     else:
-        center = Point(sum(map(lambda vertex: vertex.x, pts)) / n,
-                        sum(map(lambda vertex: vertex.y, pts)) / n,
-                        sum(map(lambda vertex: vertex.z, pts)) / n)
+        center = Point(sum((vertex.x for vertex in pts)) / n,
+                        sum((vertex.y for vertex in pts)) / n,
+                        sum((vertex.z for vertex in pts)) / n)
 
     def compare(a, b):
         if a.x - center.x >= S.Zero and b.x - center.x < S.Zero:
@@ -1132,7 +1131,7 @@ def point_sort(poly, normal=None, clockwise=True):
 
     def compare3d(a, b):
         det = cross_product(center, a, b)
-        dot_product = sum([det[i] * normal[i] for i in range(0, 3)])
+        dot_product = sum(det[i] * normal[i] for i in range(0, 3))
         if dot_product < 0:
             return -order
         elif dot_product > 0:
@@ -1160,7 +1159,7 @@ def norm(point):
     """
     half = S.Half
     if isinstance(point, (list, tuple)):
-        return sum([coord ** 2 for coord in point]) ** half
+        return sum(coord ** 2 for coord in point) ** half
     elif isinstance(point, Point):
         if isinstance(point, Point2D):
             return (point.x ** 2 + point.y ** 2) ** half
@@ -1273,8 +1272,8 @@ def plot_polytope(poly):
     """
     from sympy.plotting.plot import Plot, List2DSeries
 
-    xl = list(map(lambda vertex: vertex.x, poly.vertices))
-    yl = list(map(lambda vertex: vertex.y, poly.vertices))
+    xl = [vertex.x for vertex in poly.vertices]
+    yl = [vertex.y for vertex in poly.vertices]
 
     xl.append(poly.vertices[0].x)  # Closing the polygon
     yl.append(poly.vertices[0].y)

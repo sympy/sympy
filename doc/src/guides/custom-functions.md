@@ -357,6 +357,7 @@ avoided.
   function unevaluated in `eval()` and define a [`doit()`
   method](custom-functions-doit) to evaluate it.
 
+(custom-functions-automatic-evaluation)=
 - **Avoid too much automatic evaluation.**
 
   It is recommended to minimize what is evaluated automatically by `eval()`.
@@ -895,7 +896,8 @@ To implement rewriting, define a method `_eval_rewrite(self, rule, args,
 
 - `**hints` are additional keyword arguments which may be used to specify the
   behavior of the rewrite. Unknown hints should be ignored as they may be
-  passed to other `_eval_rewrite()` methods.
+  passed to other `_eval_rewrite()` methods. If you recursively call rewrite,
+  you should pass the `**hints` through.
 
 
 The method should return a rewritten expression, using `args` as the

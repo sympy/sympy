@@ -1,4 +1,5 @@
 """Various algorithms for helping identifying numbers and sequences."""
+from __future__ import annotations
 
 
 from sympy.concrete.products import (Product, product)
@@ -50,8 +51,7 @@ def find_simple_recurrence_vector(l):
     See Also
     ========
 
-    See the function sympy.concrete.guess.find_simple_recurrence which is more
-    user-friendly.
+    sympy.concrete.guess.find_simple_recurrence: a more user-friendly version.
 
     """
     q1 = [0]
@@ -137,17 +137,14 @@ def rationalize(x, maxcoeff=10000):
     >>> rationalize(pi, maxcoeff = 250)
     355/113
 
-    See Also
-    ========
-
     Several other methods can approximate a real number as a rational, like:
 
-      * fractions.Fraction.from_decimal
-      * fractions.Fraction.from_float
-      * mpmath.identify
-      * mpmath.pslq by using the following syntax: mpmath.pslq([x, 1])
-      * mpmath.findpoly by using the following syntax: mpmath.findpoly(x, 1)
-      * sympy.simplify.nsimplify (which is a more general function)
+    * ``fractions.Fraction.from_decimal``
+    * ``fractions.Fraction.from_float``
+    * ``mpmath.identify``
+    * ``mpmath.pslq`` by using the following syntax: ``mpmath.pslq([x, 1])``
+    * ``mpmath.findpoly by using the following syntax: mpmath.findpoly(x, 1)``
+    * ``sympy.simplify.nsimplify`` (which is a more general function)
 
     The main difference between the current function and all these variants is
     that control focuses on magnitude of partial quotients here rather than on
@@ -191,9 +188,7 @@ def guess_generating_function_rational(v, X=Symbol('x')):
     See Also
     ========
 
-    sympy.series.approximants
-    mpmath.pade
-
+    sympy.series.approximants.approximants
     """
     #   a) compute the denominator as q
     q = find_simple_recurrence_vector(v)
@@ -218,16 +213,23 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'], maxsqrtn=2):
     The function returns a dictionary where keys are the name of a given type of
     generating function. Six types are currently implemented:
 
-         type  |  formal definition
-        -------+----------------------------------------------------------------
-        ogf    | f(x) = Sum(            a_k * x^k       ,  k: 0..infinity )
-        egf    | f(x) = Sum(            a_k * x^k / k!  ,  k: 0..infinity )
-        lgf    | f(x) = Sum( (-1)^(k+1) a_k * x^k / k   ,  k: 1..infinity )
-               |        (with initial index being hold as 1 rather than 0)
-        hlgf   | f(x) = Sum(            a_k * x^k / k   ,  k: 1..infinity )
-               |        (with initial index being hold as 1 rather than 0)
-        lgdogf | f(x) = derivate( log(Sum( a_k * x^k, k: 0..infinity )), x)
-        lgdegf | f(x) = derivate( log(Sum( a_k * x^k / k!, k: 0..infinity )), x)
+    +--------+---------------------------------------------------------------------+
+    | type   |  formal definition                                                  |
+    +--------+---------------------------------------------------------------------+
+    | ogf    | ``f(x) = Sum(            a_k * x^k       ,  k: 0..infinity )``      |
+    +--------+---------------------------------------------------------------------+
+    | egf    | ``f(x) = Sum(            a_k * x^k / k!  ,  k: 0..infinity )``      |
+    +--------+---------------------------------------------------------------------+
+    | lgf    | ``f(x) = Sum( (-1)^(k+1) a_k * x^k / k   ,  k: 1..infinity )``      |
+    |        |        ``(with initial index being hold as 1 rather than 0)``       |
+    +--------+---------------------------------------------------------------------+
+    | hlgf   | ``f(x) = Sum(            a_k * x^k / k   ,  k: 1..infinity )``      |
+    |        |        ``(with initial index being hold as 1 rather than 0)``       |
+    +--------+---------------------------------------------------------------------+
+    | lgdogf | ``f(x) = derivate( log(Sum( a_k * x^k, k: 0..infinity )), x)``      |
+    +--------+---------------------------------------------------------------------+
+    | lgdegf | ``f(x) = derivate( log(Sum( a_k * x^k / k!, k: 0..infinity )), x)`` |
+    +--------+---------------------------------------------------------------------+
 
     In order to spare time, the user can select only some types of generating
     functions (default being ['all']). While forgetting to use a list in the
@@ -267,7 +269,7 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'], maxsqrtn=2):
     {'egf': (x + 1)*exp(x), 'lgdegf': (x + 2)/(x + 1)}
 
     N-th root of a rational function can also be detected (below is an example
-    coming from the sequence A108626 from http://oeis.org).
+    coming from the sequence A108626 from https://oeis.org).
     The greatest n-th root to be tested is specified as maxsqrtn (default 2).
 
     >>> ggf([1, 2, 5, 14, 41, 124, 383, 1200, 3799, 12122, 38919])['ogf']
@@ -462,11 +464,11 @@ def guess(l, all=False, evaluate=True, niter=2, variables=None):
             if ((denom(ri).subs({s:n}) != 0)
                     and (ri.subs({s:n}) - g[k][-1] == 0)
                     and ri not in r):
-              r.append(ri)
+                r.append(ri)
         if r:
             for i in range(k-1, -1, -1):
-                r = list(map(lambda v: g[i][0]
-                      * myprod(v, (symb[i+1], 1, symb[i]-1)), r))
+                r = [g[i][0]
+                      * myprod(v, (symb[i+1], 1, symb[i]-1)) for v in r]
             if not all: return r
             res += r
         l = [Rational(l[i+1], l[i]) for i in range(N-k-1)]

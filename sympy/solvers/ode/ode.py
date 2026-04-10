@@ -227,13 +227,13 @@ code is tested extensively in ``test_ode.py``, so if anything is broken, one
 of those tests will surely fail.
 
 """
+from __future__ import annotations
 
 from sympy.core import Add, S, Mul, Pow, oo
 from sympy.core.containers import Tuple
 from sympy.core.expr import AtomicExpr, Expr
 from sympy.core.function import (Function, Derivative, AppliedUndef, diff,
     expand, expand_mul, Subs)
-from sympy.core.multidimensional import vectorize
 from sympy.core.numbers import nan, zoo, Number
 from sympy.core.relational import Equality, Eq
 from sympy.core.sorting import default_sort_key, ordered
@@ -300,6 +300,7 @@ allhints = (
     "Liouville",
     "2nd_linear_airy",
     "2nd_linear_bessel",
+    "2nd_linear_bessel_transform",
     "2nd_hypergeometric",
     "2nd_hypergeometric_Integral",
     "nth_order_reducible",
@@ -639,6 +640,7 @@ def dsolve(eq, func=None, hint="default", simplify=True,
             hint = hints['hint']
             return _helper_simplify(eq, hint, hints, simplify, ics=ics)
 
+
 def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
     r"""
     Helper function of dsolve that calls the respective
@@ -653,10 +655,8 @@ def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
 
     if isinstance(match, SingleODESolver):
         solvefunc = match
-    elif hint.endswith('_Integral'):
-        solvefunc = globals()['ode_' + hint[:-len('_Integral')]]
     else:
-        solvefunc = globals()['ode_' + hint]
+        solvefunc = globals()['ode_' + hint.removesuffix('_Integral')]
 
     free = eq.free_symbols
     cons = lambda s: s.free_symbols.difference(free)
@@ -670,9 +670,15 @@ def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
         else:
             sols = solvefunc(eq, func, order, match)
         if iterable(sols):
-            rv = [odesimp(eq, s, func, hint) for s in sols]
+            rv = []
+            for s in sols:
+                simp = odesimp(eq, s, func, hint)
+                if iterable(simp):
+                    rv.extend(simp)
+                else:
+                    rv.append(simp)
         else:
-            rv =  odesimp(eq, sols, func, hint)
+            rv = odesimp(eq, sols, func, hint)
     else:
         # We still want to integrate (you can disable it separately with the hint)
         if isinstance(solvefunc, SingleODESolver):
@@ -686,6 +692,7 @@ def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
             rv = _handle_Integral(exprs, func, hint)
 
     if isinstance(rv, list):
+        assert all(isinstance(i, Eq) for i in rv), rv  # if not => internal error
         if simplify:
             rv = _remove_redundant_solutions(eq, rv, order, func.args[0])
         if len(rv) == 1:
@@ -706,6 +713,7 @@ def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
                 return rv1[0]
             rv = rv1
     return rv
+
 
 def solve_ics(sols, funcs, constants, ics):
     """
@@ -931,7 +939,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
     '1st_homogeneous_coeff_subs_indep_div_dep_Integral',
     '1st_homogeneous_coeff_subs_dep_div_indep_Integral')
     >>> classify_ode(f(x).diff(x, 2) + 3*f(x).diff(x) + 2*f(x) - 4)
-    ('factorable', 'nth_linear_constant_coeff_undetermined_coefficients',
+    ('nth_linear_constant_coeff_undetermined_coefficients',
     'nth_linear_constant_coeff_variation_of_parameters',
     'nth_linear_constant_coeff_variation_of_parameters_Integral')
 
@@ -1020,8 +1028,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
     # Used when dsolve is called without an explicit hint.
     # We exit early to return the first valid match
     early_exit = (user_hint=='default')
-    if user_hint.endswith('_Integral'):
-        user_hint = user_hint[:-len('_Integral')]
+    user_hint = user_hint.removesuffix('_Integral')
     user_map = solver_map
     # An explicit hint has been given to dsolve
     # Skip matching code for other hints
@@ -1179,7 +1186,7 @@ def classify_sysode(eq, funcs=None, **kwargs):
 
     References
     ==========
-    -http://eqworld.ipmnet.ru/en/solutions/sysode/sode-toc1.htm
+    -https://eqworld.ipmnet.ru/en/solutions/sysode/sode-toc1.htm
     -A. D. Polyanin and A. V. Manzhirov, Handbook of Mathematics for Engineers and Scientists
 
     Examples
@@ -1560,7 +1567,6 @@ def check_nonlinear_3eq_order2(eq, func, func_coef):
     return None
 
 
-@vectorize(0)
 def odesimp(ode, eq, func, hint):
     r"""
     Simplifies solutions of ODEs, including trying to solve for ``func`` and
@@ -1629,6 +1635,9 @@ def odesimp(ode, eq, func, hint):
         eq = simplify(eq)
     if not isinstance(eq, Equality):
         raise TypeError("eq should be an instance of Equality")
+
+    # allow simplifications under assumption that symbols are nonzero
+    eq = eq.xreplace((_:={i: Dummy(nonzero=True) for i in constants})).xreplace({_[i]: i for i in _})
 
     # Second, clean up the arbitrary constants.
     # Right now, nth linear hints can put as many as 2*order constants in an
@@ -1913,7 +1922,7 @@ def __remove_linear_redundancies(expr, Cs):
     else:
         return _recursive_walk(expr)
 
-@vectorize(0)
+
 def constantsimp(expr, constants):
     r"""
     Simplifies an expression with arbitrary constants in it.
@@ -2159,7 +2168,7 @@ def constant_renumber(expr, variables=None, newconstants=None):
     constants_found = [c for c in constants_found if c not in variables]
 
     # Renumbering happens here
-    subs_dict = {var: cons for var, cons in zip(constants_found, iter_constants)}
+    subs_dict = dict(zip(constants_found, iter_constants))
     expr = expr.subs(subs_dict, simultaneous=True)
 
     return expr
@@ -2306,7 +2315,7 @@ def ode_2nd_power_series_ordinary(eq, func, order, match):
 
     References
     ==========
-    - http://tutorial.math.lamar.edu/Classes/DE/SeriesSolutions.aspx
+    - https://tutorial.math.lamar.edu/Classes/DE/SeriesSolutions.aspx
     - George E. Simmons, "Differential Equations with Applications and
       Historical Notes", p.p 176 - 184
 
@@ -2460,10 +2469,10 @@ def ode_2nd_power_series_regular(eq, func, order, match):
     >>> f = Function("f")
     >>> eq = x*(f(x).diff(x, 2)) + 2*(f(x).diff(x)) + x*f(x)
     >>> pprint(dsolve(eq, hint='2nd_power_series_regular'))
-                                  /    6    4    2    \
-                                  |   x    x    x     |
-              /  4    2    \   C1*|- --- + -- - -- + 1|
-              | x    x     |      \  720   24   2     /    / 6\
+                                  /   6     4    2    \
+                                  |  x     x    x     |
+              / 4     2    \   C1*|- --- + -- - -- + 1|
+              |x     x     |      \  720   24   2     /    / 6\
     f(x) = C2*|--- - -- + 1| + ------------------------ + O\x /
               \120   6     /              x
 
@@ -2508,7 +2517,7 @@ def ode_2nd_power_series_regular(eq, func, order, match):
             # Only one series solution exists in this case.
             m1 = m2 = sollist.pop()
             if terms-m1-1 <= 0:
-              return Eq(f(x), Order(terms))
+                return Eq(f(x), Order(terms))
             serdict1 = _frobenius(terms-m1-1, m1, p0, q0, p, q, x0, x, C0)
 
         else:
@@ -2623,7 +2632,7 @@ def _remove_redundant_solutions(eq, solns, order, var):
 
     unique_solns = []
     for soln1 in solns:
-        for soln2 in unique_solns[:]:
+        for soln2 in unique_solns.copy():
             if is_special_case_of(soln1, soln2):
                 break
             elif is_special_case_of(soln2, soln1):
@@ -3302,7 +3311,7 @@ def _nonlinear_3eq_order1_type1(x, y, z, t, eq):
 
     References
     ==========
-    -http://eqworld.ipmnet.ru/en/solutions/sysode/sode0401.pdf
+    -https://eqworld.ipmnet.ru/en/solutions/sysode/sode0401.pdf
 
     """
     C1, C2 = get_numbered_constants(eq, num=2)
@@ -3356,7 +3365,7 @@ def _nonlinear_3eq_order1_type2(x, y, z, t, eq):
 
     References
     ==========
-    -http://eqworld.ipmnet.ru/en/solutions/sysode/sode0402.pdf
+    -https://eqworld.ipmnet.ru/en/solutions/sysode/sode0402.pdf
 
     """
     C1, C2 = get_numbered_constants(eq, num=2)
@@ -3413,7 +3422,7 @@ def _nonlinear_3eq_order1_type3(x, y, z, t, eq):
 
     References
     ==========
-    -http://eqworld.ipmnet.ru/en/solutions/sysode/sode0404.pdf
+    -https://eqworld.ipmnet.ru/en/solutions/sysode/sode0404.pdf
 
     """
     C1 = get_numbered_constants(eq, num=1)
@@ -3473,7 +3482,7 @@ def _nonlinear_3eq_order1_type4(x, y, z, t, eq):
 
     References
     ==========
-    -http://eqworld.ipmnet.ru/en/solutions/sysode/sode0405.pdf
+    -https://eqworld.ipmnet.ru/en/solutions/sysode/sode0405.pdf
 
     """
     C1 = get_numbered_constants(eq, num=1)
@@ -3523,7 +3532,7 @@ def _nonlinear_3eq_order1_type5(x, y, z, t, eq):
 
     References
     ==========
-    -http://eqworld.ipmnet.ru/en/solutions/sysode/sode0406.pdf
+    -https://eqworld.ipmnet.ru/en/solutions/sysode/sode0406.pdf
 
     """
     C1 = get_numbered_constants(eq, num=1)

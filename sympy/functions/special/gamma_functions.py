@@ -1,11 +1,13 @@
+from __future__ import annotations
 from math import prod
 
 from sympy.core import Add, S, Dummy, expand_func
 from sympy.core.expr import Expr
-from sympy.core.function import Function, ArgumentIndexError, PoleError
+from sympy.core.function import DefinedFunction, ArgumentIndexError, PoleError
 from sympy.core.logic import fuzzy_and, fuzzy_not
 from sympy.core.numbers import Rational, pi, oo, I
 from sympy.core.power import Pow
+from sympy.external.mpmath import prec_to_dps, local_workprec
 from sympy.functions.special.zeta_functions import zeta
 from sympy.functions.special.error_functions import erf, erfc, Ei
 from sympy.functions.elementary.complexes import re, unpolarify
@@ -17,8 +19,6 @@ from sympy.functions.combinatorial.numbers import bernoulli, harmonic
 from sympy.functions.combinatorial.factorials import factorial, rf, RisingFactorial
 from sympy.utilities.misc import as_int
 
-from mpmath import mp, workprec
-from mpmath.libmp.libmpf import prec_to_dps
 
 def intlike(n):
     try:
@@ -31,7 +31,7 @@ def intlike(n):
 ############################ COMPLETE GAMMA FUNCTION ##########################
 ###############################################################################
 
-class gamma(Function):
+class gamma(DefinedFunction):
     r"""
     The gamma function
 
@@ -96,15 +96,15 @@ class gamma(Function):
     loggamma: Log Gamma function.
     digamma: Digamma function.
     trigamma: Trigamma function.
-    beta: Euler Beta function.
+    sympy.functions.special.beta_functions.beta: Euler Beta function.
 
     References
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Gamma_function
-    .. [2] http://dlmf.nist.gov/5
-    .. [3] http://mathworld.wolfram.com/GammaFunction.html
-    .. [4] http://functions.wolfram.com/GammaBetaErf/Gamma/
+    .. [2] https://dlmf.nist.gov/5
+    .. [3] https://mathworld.wolfram.com/GammaFunction.html
+    .. [4] https://functions.wolfram.com/GammaBetaErf/Gamma/
 
     """
 
@@ -202,7 +202,7 @@ class gamma(Function):
         t = self.args[0] - x0
         return (self.func(t + 1)/rf(self.args[0], -x0 + 1))._eval_nseries(x, n, logx)
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         arg = self.args[0]
         x0 = arg.subs(x, 0)
 
@@ -219,7 +219,7 @@ class gamma(Function):
 ################## LOWER and UPPER INCOMPLETE GAMMA FUNCTIONS #################
 ###############################################################################
 
-class lowergamma(Function):
+class lowergamma(DefinedFunction):
     r"""
     The lower incomplete gamma function.
 
@@ -259,7 +259,7 @@ class lowergamma(Function):
     loggamma: Log Gamma function.
     digamma: Digamma function.
     trigamma: Trigamma function.
-    beta: Euler Beta function.
+    sympy.functions.special.beta_functions.beta: Euler Beta function.
 
     References
     ==========
@@ -268,9 +268,9 @@ class lowergamma(Function):
     .. [2] Abramowitz, Milton; Stegun, Irene A., eds. (1965), Chapter 6,
            Section 5, Handbook of Mathematical Functions with Formulas, Graphs,
            and Mathematical Tables
-    .. [3] http://dlmf.nist.gov/8
-    .. [4] http://functions.wolfram.com/GammaBetaErf/Gamma2/
-    .. [5] http://functions.wolfram.com/GammaBetaErf/Gamma3/
+    .. [3] https://dlmf.nist.gov/8
+    .. [4] https://functions.wolfram.com/GammaBetaErf/Gamma2/
+    .. [5] https://functions.wolfram.com/GammaBetaErf/Gamma3/
 
     """
 
@@ -342,8 +342,8 @@ class lowergamma(Function):
         if all(x.is_number for x in self.args):
             a = self.args[0]._to_mpmath(prec)
             z = self.args[1]._to_mpmath(prec)
-            with workprec(prec):
-                res = mp.gammainc(a, 0, z)
+            with local_workprec(prec) as ctx:
+                res = ctx.gammainc(a, 0, z)
             return Expr._from_mpmath(res, prec)
         else:
             return self
@@ -395,7 +395,7 @@ class lowergamma(Function):
             return True
 
 
-class uppergamma(Function):
+class uppergamma(DefinedFunction):
     r"""
     The upper incomplete gamma function.
 
@@ -444,7 +444,7 @@ class uppergamma(Function):
     loggamma: Log Gamma function.
     digamma: Digamma function.
     trigamma: Trigamma function.
-    beta: Euler Beta function.
+    sympy.functions.special.beta_functions.beta: Euler Beta function.
 
     References
     ==========
@@ -453,9 +453,9 @@ class uppergamma(Function):
     .. [2] Abramowitz, Milton; Stegun, Irene A., eds. (1965), Chapter 6,
            Section 5, Handbook of Mathematical Functions with Formulas, Graphs,
            and Mathematical Tables
-    .. [3] http://dlmf.nist.gov/8
-    .. [4] http://functions.wolfram.com/GammaBetaErf/Gamma2/
-    .. [5] http://functions.wolfram.com/GammaBetaErf/Gamma3/
+    .. [3] https://dlmf.nist.gov/8
+    .. [4] https://functions.wolfram.com/GammaBetaErf/Gamma2/
+    .. [5] https://functions.wolfram.com/GammaBetaErf/Gamma3/
     .. [6] https://en.wikipedia.org/wiki/Exponential_integral#Relation_with_other_functions
 
     """
@@ -476,8 +476,8 @@ class uppergamma(Function):
         if all(x.is_number for x in self.args):
             a = self.args[0]._to_mpmath(prec)
             z = self.args[1]._to_mpmath(prec)
-            with workprec(prec):
-                res = mp.gammainc(a, z, mp.inf)
+            with local_workprec(prec) as ctx:
+                res = ctx.gammainc(a, z, ctx.inf)
             return Expr._from_mpmath(res, prec)
         return self
 
@@ -561,7 +561,7 @@ class uppergamma(Function):
 ###################### POLYGAMMA and LOGGAMMA FUNCTIONS #######################
 ###############################################################################
 
-class polygamma(Function):
+class polygamma(DefinedFunction):
     r"""
     The function ``polygamma(n, z)`` returns ``log(gamma(z)).diff(n + 1)``.
 
@@ -654,15 +654,15 @@ class polygamma(Function):
     loggamma: Log Gamma function.
     digamma: Digamma function.
     trigamma: Trigamma function.
-    beta: Euler Beta function.
+    sympy.functions.special.beta_functions.beta: Euler Beta function.
 
     References
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Polygamma_function
-    .. [2] http://mathworld.wolfram.com/PolygammaFunction.html
-    .. [3] http://functions.wolfram.com/GammaBetaErf/PolyGamma/
-    .. [4] http://functions.wolfram.com/GammaBetaErf/PolyGamma2/
+    .. [2] https://mathworld.wolfram.com/PolygammaFunction.html
+    .. [3] https://functions.wolfram.com/GammaBetaErf/PolyGamma/
+    .. [4] https://functions.wolfram.com/GammaBetaErf/PolyGamma2/
     .. [5] O. Espinosa and V. Moll, "A generalized polygamma function",
            *Integral Transforms and Special Functions* (2004), 101-115.
 
@@ -787,7 +787,7 @@ class polygamma(Function):
             else:
                 return S.NegativeOne**(n+1) * factorial(n) * (zeta(n+1) - harmonic(z-1, n+1))
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         from sympy.series.order import Order
         n, z = [a.as_leading_term(x) for a in self.args]
         o = Order(z, x)
@@ -850,19 +850,22 @@ class polygamma(Function):
             return
         s = self.args[0]._to_mpmath(prec+12)
         z = self.args[1]._to_mpmath(prec+12)
-        if mp.isint(z) and z <= 0:
-            return S.ComplexInfinity
-        with workprec(prec+12):
+        with local_workprec(prec+12) as mp:
+            if mp.isint(z) and z <= 0:
+                return S.ComplexInfinity
             if mp.isint(s) and s >= 0:
                 res = mp.polygamma(s, z)
             else:
-                zt = mp.zeta(s+1, z)
-                dzt = mp.zeta(s+1, z, 1)
-                res = (dzt + (mp.euler + mp.digamma(-s)) * zt) * mp.rgamma(-s)
+                zt = mp.zeta(mp.fadd(s,1), z)
+                dzt = mp.zeta(mp.fadd(s,1), z, 1)
+                res = mp.fmul(
+                    mp.fadd(dzt, mp.fmul(mp.fadd(mp.euler, mp.digamma(mp.fneg(s))), zt)),
+                    mp.rgamma(mp.fneg(s))
+                )
         return Expr._from_mpmath(res, prec)
 
 
-class loggamma(Function):
+class loggamma(DefinedFunction):
     r"""
     The ``loggamma`` function implements the logarithm of the
     gamma function (i.e., $\log\Gamma(x)$).
@@ -961,15 +964,15 @@ class loggamma(Function):
     polygamma: Polygamma function.
     digamma: Digamma function.
     trigamma: Trigamma function.
-    beta: Euler Beta function.
+    sympy.functions.special.beta_functions.beta: Euler Beta function.
 
     References
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Gamma_function
-    .. [2] http://dlmf.nist.gov/5
-    .. [3] http://mathworld.wolfram.com/LogGammaFunction.html
-    .. [4] http://functions.wolfram.com/GammaBetaErf/LogGamma/
+    .. [2] https://dlmf.nist.gov/5
+    .. [3] https://mathworld.wolfram.com/LogGammaFunction.html
+    .. [4] https://functions.wolfram.com/GammaBetaErf/LogGamma/
 
     """
     @classmethod
@@ -1057,7 +1060,7 @@ class loggamma(Function):
             raise ArgumentIndexError(self, argindex)
 
 
-class digamma(Function):
+class digamma(DefinedFunction):
     r"""
     The ``digamma`` function is the first derivative of the ``loggamma``
     function
@@ -1095,14 +1098,14 @@ class digamma(Function):
     polygamma: Polygamma function.
     loggamma: Log Gamma function.
     trigamma: Trigamma function.
-    beta: Euler Beta function.
+    sympy.functions.special.beta_functions.beta: Euler Beta function.
 
     References
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Digamma_function
-    .. [2] http://mathworld.wolfram.com/DigammaFunction.html
-    .. [3] http://functions.wolfram.com/GammaBetaErf/PolyGamma2/
+    .. [2] https://mathworld.wolfram.com/DigammaFunction.html
+    .. [3] https://functions.wolfram.com/GammaBetaErf/PolyGamma2/
 
     """
     def _eval_evalf(self, prec):
@@ -1145,13 +1148,13 @@ class digamma(Function):
     def _eval_rewrite_as_polygamma(self, z, **kwargs):
         return polygamma(0, z)
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         z = self.args[0]
         return polygamma(0, z).as_leading_term(x)
 
 
 
-class trigamma(Function):
+class trigamma(DefinedFunction):
     r"""
     The ``trigamma`` function is the second derivative of the ``loggamma``
     function
@@ -1189,14 +1192,14 @@ class trigamma(Function):
     polygamma: Polygamma function.
     loggamma: Log Gamma function.
     digamma: Digamma function.
-    beta: Euler Beta function.
+    sympy.functions.special.beta_functions.beta: Euler Beta function.
 
     References
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Trigamma_function
-    .. [2] http://mathworld.wolfram.com/TrigammaFunction.html
-    .. [3] http://functions.wolfram.com/GammaBetaErf/PolyGamma2/
+    .. [2] https://mathworld.wolfram.com/TrigammaFunction.html
+    .. [3] https://functions.wolfram.com/GammaBetaErf/PolyGamma2/
 
     """
     def _eval_evalf(self, prec):
@@ -1242,7 +1245,7 @@ class trigamma(Function):
     def _eval_rewrite_as_harmonic(self, z, **kwargs):
         return -harmonic(z - 1, 2) + pi**2 / 6
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         z = self.args[0]
         return polygamma(1, z).as_leading_term(x)
 
@@ -1252,7 +1255,7 @@ class trigamma(Function):
 ###############################################################################
 
 
-class multigamma(Function):
+class multigamma(DefinedFunction):
     r"""
     The multivariate gamma function is a generalization of the gamma function
 
@@ -1301,7 +1304,7 @@ class multigamma(Function):
     ========
 
     gamma, lowergamma, uppergamma, polygamma, loggamma, digamma, trigamma,
-    beta
+    sympy.functions.special.beta_functions.beta
 
     References
     ==========

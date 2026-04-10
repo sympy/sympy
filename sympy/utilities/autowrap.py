@@ -79,11 +79,13 @@ When is this module NOT the best approach?
        do not need the binaries for another project.
 
 """
+from __future__ import annotations
 
 import sys
 import os
 import shutil
 import tempfile
+from pathlib import Path
 from subprocess import STDOUT, CalledProcessError, check_output
 from string import Template
 from warnings import warn
@@ -335,10 +337,9 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
         else:
             np_import = ''
 
-        with open(os.path.join(build_dir, 'setup.py'), 'w') as f:
-            includes = str(self._include_dirs).replace("'np.get_include()'",
-                                                       'np.get_include()')
-            f.write(self.setup_template.format(
+        includes = str(self._include_dirs).replace("'np.get_include()'",
+                                                    'np.get_include()')
+        code = self.setup_template.format(
                 ext_args=", ".join(ext_args),
                 np_import=np_import,
                 include_dirs=includes,
@@ -346,8 +347,8 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
                 libraries=self._libraries,
                 extra_compile_args=self._extra_compile_args,
                 extra_link_args=self._extra_link_args,
-                cythonize_options=self._cythonize_options
-            ))
+                cythonize_options=self._cythonize_options)
+        Path(os.path.join(build_dir, 'setup.py')).write_text(code)
 
     @classmethod
     def _get_wrapped_function(cls, mod, name):
@@ -572,13 +573,13 @@ def autowrap(expr, language=None, backend='f2py', tempdir=None, args=None,
         If True, autowrap will not mute the command line backends. This can be
         helpful for debugging.
     helpers : 3-tuple or iterable of 3-tuples, optional
-        Used to define auxiliary expressions needed for the main expr. If the
-        main expression needs to call a specialized function it should be
-        passed in via ``helpers``. Autowrap will then make sure that the
-        compiled main expression can link to the helper routine. Items should
-        be 3-tuples with (<function_name>, <sympy_expression>,
-        <argument_tuple>). It is mandatory to supply an argument sequence to
-        helper routines.
+        Used to define auxiliary functions needed for the main expression.
+        Each tuple should be of the form (name, expr, args) where:
+
+        - name : str, the function name
+        - expr : sympy expression, the function
+        - args : iterable, the function arguments (can be any iterable of symbols)
+
     code_gen : CodeGen instance
         An instance of a CodeGen subclass. Overrides ``language``.
     include_dirs : [string]
@@ -602,12 +603,43 @@ def autowrap(expr, language=None, backend='f2py', tempdir=None, args=None,
     Examples
     ========
 
+    Basic usage:
+
     >>> from sympy.abc import x, y, z
     >>> from sympy.utilities.autowrap import autowrap
     >>> expr = ((x - y + z)**(13)).expand()
     >>> binary_func = autowrap(expr)
     >>> binary_func(1, 4, 2)
     -1.0
+
+    Using helper functions:
+
+    >>> from sympy.abc import x, t
+    >>> from sympy import Function
+    >>> helper_func = Function('helper_func')  # Define symbolic function
+    >>> expr = 3*x + helper_func(t)  # Main expression using helper function
+    >>> # Define helper_func(x) = 4*x using f2py backend
+    >>> binary_func = autowrap(expr, args=[x, t],
+    ...                       helpers=('helper_func', 4*x, [x]))
+    >>> binary_func(2, 5)  # 3*2 + helper_func(5) = 6 + 20
+    26.0
+    >>> # Same example using cython backend
+    >>> binary_func = autowrap(expr, args=[x, t], backend='cython',
+    ...                       helpers=[('helper_func', 4*x, [x])])
+    >>> binary_func(2, 5)  # 3*2 + helper_func(5) = 6 + 20
+    26.0
+
+    Type handling example:
+
+    >>> import numpy as np
+    >>> expr = x + y
+    >>> f_cython = autowrap(expr, backend='cython')
+    >>> f_cython(1, 2)  # doctest: +ELLIPSIS
+    Traceback (most recent call last):
+      ...
+    TypeError: Argument '_x' has incorrect type (expected numpy.ndarray, got int)
+    >>> f_cython(np.array([1.0]), np.array([2.0]))
+    array([ 3.])
 
     """
     if language:
@@ -714,7 +746,11 @@ static PyMethodDef ${module}Methods[] = {
 _ufunc_outcalls = Template("*((double *)out${outnum}) = ${funcname}(${call_args});")
 
 _ufunc_body = Template("""\
+#ifdef NPY_1_19_API_VERSION
+static void ${funcname}_ufunc(char **args, const npy_intp *dimensions, const npy_intp* steps, void* data)
+#else
 static void ${funcname}_ufunc(char **args, npy_intp *dimensions, npy_intp* steps, void* data)
+#endif
 {
     npy_intp i;
     npy_intp n = dimensions[0];
@@ -1019,14 +1055,14 @@ def ufuncify(args, expr, language=None, backend='numpy', tempdir=None,
     verbose : bool, optional
         If True, autowrap will not mute the command line backends. This can
         be helpful for debugging.
-    helpers : iterable, optional
-        Used to define auxiliary expressions needed for the main expr. If
-        the main expression needs to call a specialized function it should
-        be put in the ``helpers`` iterable. Autowrap will then make sure
-        that the compiled main expression can link to the helper routine.
-        Items should be tuples with (<funtion_name>, <sympy_expression>,
-        <arguments>). It is mandatory to supply an argument sequence to
-        helper routines.
+    helpers : 3-tuple or iterable of 3-tuples, optional
+        Used to define auxiliary functions needed for the main expression.
+        Each tuple should be of the form (name, expr, args) where:
+
+        - name : str, the function name
+        - expr : sympy expression, the function
+        - args : iterable, the function arguments (can be any iterable of symbols)
+
     kwargs : dict
         These kwargs will be passed to autowrap if the `f2py` or `cython`
         backend is used and ignored if the `numpy` backend is used.
@@ -1043,10 +1079,12 @@ def ufuncify(args, expr, language=None, backend='numpy', tempdir=None,
     References
     ==========
 
-    .. [1] http://docs.scipy.org/doc/numpy/reference/ufuncs.html
+    .. [1] https://numpy.org/doc/stable/reference/ufuncs.html
 
     Examples
     ========
+
+    Basic usage:
 
     >>> from sympy.utilities.autowrap import ufuncify
     >>> from sympy.abc import x, y
@@ -1058,6 +1096,18 @@ def ufuncify(args, expr, language=None, backend='numpy', tempdir=None,
     array([  3.,   6.,  11.])
     >>> f(np.arange(5), 3)
     array([  3.,   4.,   7.,  12.,  19.])
+
+    Using helper functions:
+
+    >>> from sympy import Function
+    >>> helper_func = Function('helper_func')  # Define symbolic function
+    >>> expr = x**2 + y*helper_func(x)  # Main expression using helper function
+    >>> # Define helper_func(x) = x**3
+    >>> f = ufuncify((x, y), expr, helpers=[('helper_func', x**3, [x])])
+    >>> f([1, 2], [3, 4])
+    array([  4.,  36.])
+
+    Type handling with different backends:
 
     For the 'f2py' and 'cython' backends, inputs are required to be equal length
     1-dimensional arrays. The 'f2py' backend will perform type conversion, but

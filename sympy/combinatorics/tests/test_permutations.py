@@ -1,4 +1,6 @@
+from __future__ import annotations
 from itertools import permutations
+from copy import copy
 
 from sympy.core.expr import unchanged
 from sympy.core.numbers import Integer
@@ -27,8 +29,11 @@ def test_Permutation():
     assert list(p(1, 2)) == [0, 2, 1, 3]
     raises(TypeError, lambda: p(-1))
     raises(TypeError, lambda: p(5))
+    raises(TypeError, lambda: p(4))
     # conversion to list
     assert list(p) == list(range(4))
+    assert p.copy() == p
+    assert copy(p) == p
     assert Permutation(size=4) == Permutation(3)
     assert Permutation(Permutation(3), size=5) == Permutation(4)
     # cycle form with size
@@ -67,6 +72,11 @@ def test_Permutation():
     assert q.cyclic_form == [[0, 3, 5, 6, 2, 4]]
     assert q.full_cyclic_form == [[0, 3, 5, 6, 2, 4], [1]]
     assert p.cyclic_form == [[0, 2, 1, 5], [3, 6, 4]]
+    p3 = Permutation([0, 3, 1, 2])
+    cf = p3.cyclic_form
+    cf[0].append(99)
+    assert p3.cyclic_form == [[1, 3, 2]]
+    assert p3.order() == 3
     t = p.transpositions()
     assert t == [(0, 5), (0, 1), (0, 2), (3, 4), (3, 6)]
     assert Permutation.rmul(*[Permutation(Cycle(*ti)) for ti in (t)])
@@ -125,7 +135,7 @@ def test_Permutation():
     assert Permutation.from_inversion_vector(q.inversion_vector()).array_form\
         == q.array_form
     raises(ValueError, lambda: Permutation.from_inversion_vector([0, 2]))
-    assert Permutation([i for i in range(500, -1, -1)]).inversions() == 125250
+    assert Permutation(list(range(500, -1, -1))).inversions() == 125250
 
     s = Permutation([0, 4, 1, 3, 2])
     assert s.parity() == 0
@@ -147,7 +157,6 @@ def test_Permutation():
 
     assert rmul(~p, p).is_Identity
     assert (~p)**13 == Permutation([5, 2, 0, 4, 6, 1, 3])
-    assert ~(r**2).is_Identity
     assert p.max() == 6
     assert p.min() == 0
 
@@ -367,6 +376,11 @@ def test_mul():
     assert Permutation.rmul(a, b, c) == Permutation([1, 2, 3, 0])
     assert Permutation.rmul(a, c) == Permutation([3, 2, 1, 0])
     raises(TypeError, lambda: Permutation.rmul(b, c))
+    assert Permutation.prod([a, Permutation(b), Permutation(c)]) == (
+        a*Permutation(b)*Permutation(c))
+    assert Permutation.prod((p for p in [a, Permutation(b), Permutation(c)])) == (
+        a*Permutation(b)*Permutation(c))
+    assert Permutation.prod([]) == Permutation()
 
     n = 6
     m = 8
@@ -432,6 +446,10 @@ def test_Cycle():
     assert Cycle(1, 2).list() == [0, 2, 1]
     assert Cycle(1, 2).list(4) == [0, 2, 1, 3]
     assert Cycle().size == 0
+    # Issue #28658: Cycle().list(size=0) should return [] not [0]
+    assert Cycle().list(size=0) == []
+    assert Cycle().list(size=0) == Permutation([]).list(size=0)
+
     raises(ValueError, lambda: Cycle((1, 2)))
     raises(ValueError, lambda: Cycle(1, 2, 1))
     raises(TypeError, lambda: Cycle(1, 2)*{})

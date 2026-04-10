@@ -1,8 +1,10 @@
 from __future__ import annotations
+import math
 from typing import Any
 
 from sympy.external import import_module
 from sympy.printing.printer import Printer
+from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import is_sequence
 import sympy
 from functools import partial
@@ -16,6 +18,13 @@ if aesara:
     from aesara.tensor import nlinalg
     from aesara.tensor.elemwise import Elemwise
     from aesara.tensor.elemwise import DimShuffle
+
+    # `true_divide` replaced `true_div` in Aesara 2.8.11 (released 2023) to
+    # match NumPy
+    # XXX: Remove this when not needed to support older versions.
+    true_divide = getattr(aet, 'true_divide', None)
+    if true_divide is None:
+        true_divide = aet.true_div
 
     mapping = {
             sympy.Add: aet.add,
@@ -71,7 +80,12 @@ if aesara:
 
 
 class AesaraPrinter(Printer):
-    """ Code printer which creates Aesara symbolic expression graphs.
+    """
+    .. deprecated:: 1.14.
+        The ``Aesara Code printing`` is deprecated.See its documentation for
+        more information. See :ref:`deprecated-aesaraprinter` for details.
+
+    Code printer which creates Aesara symbolic expression graphs.
 
     Parameters
     ==========
@@ -140,7 +154,7 @@ class AesaraPrinter(Printer):
         if key in self.cache:
             return self.cache[key]
 
-        value = aet.tensor(name=name, dtype=dtype, broadcastable=broadcastable)
+        value = aet.tensor(name=name, dtype=dtype, shape=broadcastable)
         self.cache[key] = value
         return value
 
@@ -218,7 +232,7 @@ class AesaraPrinter(Printer):
                         for i in (expr.start, expr.stop, expr.step)])
 
     def _print_Pi(self, expr, **kwargs):
-        return 3.141592653589793
+        return math.pi
 
     def _print_Piecewise(self, expr, **kwargs):
         import numpy as np
@@ -238,8 +252,8 @@ class AesaraPrinter(Printer):
         return aet.switch(p_cond, p_e, p_remaining)
 
     def _print_Rational(self, expr, **kwargs):
-        return aet.true_div(self._print(expr.p, **kwargs),
-                            self._print(expr.q, **kwargs))
+        return true_divide(self._print(expr.p, **kwargs),
+                           self._print(expr.q, **kwargs))
 
     def _print_Integer(self, expr, **kwargs):
         return expr.p
@@ -271,7 +285,8 @@ class AesaraPrinter(Printer):
         See the corresponding `documentation page`__ for more information on
         broadcasting in Aesara.
 
-        .. __: https://aesara.readthedocs.io/en/latest/tutorial/broadcasting.html
+
+        .. __: https://aesara.readthedocs.io/en/latest/reference/tensor/shapes.html#broadcasting
 
         Parameters
         ==========
@@ -338,6 +353,14 @@ def aesara_code(expr, cache=None, **kwargs):
         expression graph.
 
     """
+    sympy_deprecation_warning(
+        """
+        The aesara_code function is deprecated.
+        """,
+        deprecated_since_version="1.14",
+        active_deprecations_target='deprecated-aesaraprinter',
+    )
+
     if not aesara:
         raise ImportError("aesara is required for aesara_code")
 
@@ -379,7 +402,7 @@ def dim_handling(inputs, dim=None, dims=None, broadcastables=None):
         values (tuple of ``bool``\ s).
     """
     if dim is not None:
-        return {s: (False,) * dim for s in inputs}
+        return dict.fromkeys(inputs, (False,) * dim)
 
     if dims is not None:
         maxdim = max(dims.values())
@@ -483,6 +506,14 @@ def aesara_function(inputs, outputs, scalar=False, *,
     dim_handling
 
     """
+    sympy_deprecation_warning(
+        """
+        The aesara_function function is deprecated.
+        """,
+        deprecated_since_version="1.14",
+        active_deprecations_target='deprecated-aesaraprinter',
+    )
+
     if not aesara:
         raise ImportError("Aesara is required for aesara_function")
 

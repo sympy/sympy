@@ -1,8 +1,7 @@
-from typing import Tuple as tTuple
+from __future__ import annotations
 
 from .expr_with_intlimits import ExprWithIntLimits
 from .summations import Sum, summation, _dummy_with_inherited_properties_concrete
-from sympy.core.expr import Expr
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import Derivative
 from sympy.core.mul import Mul
@@ -12,6 +11,10 @@ from sympy.functions.combinatorial.factorials import RisingFactorial
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.polys import quo, roots
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
 
 
 class Product(ExprWithIntLimits):
@@ -184,14 +187,14 @@ class Product(ExprWithIntLimits):
 
     .. [1] Michael Karr, "Summation in Finite Terms", Journal of the ACM,
            Volume 28 Issue 2, April 1981, Pages 305-350
-           http://dl.acm.org/citation.cfm?doid=322248.322255
+           https://dl.acm.org/doi/10.1145/322248.322255
     .. [2] https://en.wikipedia.org/wiki/Multiplication#Capital_Pi_notation
     .. [3] https://en.wikipedia.org/wiki/Empty_product
     """
 
     __slots__ = ()
 
-    limits: tTuple[tTuple[Symbol, Expr, Expr]]
+    limits: tuple[tuple[Symbol, Expr, Expr]]
 
     def __new__(cls, function, *symbols, **assumptions):
         obj = ExprWithIntLimits.__new__(cls, function, *symbols, **assumptions)
@@ -284,11 +287,6 @@ class Product(ExprWithIntLimits):
             return f.doit(**hints)
         else:
             return powsimp(f)
-
-    def _eval_adjoint(self):
-        if self.is_commutative:
-            return self.func(self.function.adjoint(), *self.limits)
-        return None
 
     def _eval_conjugate(self):
         return self.func(self.function.conjugate(), *self.limits)
@@ -544,7 +542,7 @@ class Product(ExprWithIntLimits):
 
         .. [1] Michael Karr, "Summation in Finite Terms", Journal of the ACM,
                Volume 28 Issue 2, April 1981, Pages 305-350
-               http://dl.acm.org/citation.cfm?doid=322248.322255
+               https://dl.acm.org/doi/10.1145/322248.322255
 
         """
         l_indices = list(indices)

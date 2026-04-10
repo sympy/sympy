@@ -99,6 +99,7 @@ exp(-x)
 >>> dist.pmf(x)
 Lambda(x, Piecewise((1/3, Eq(x, 1)), (1/6, Eq(x, 2)), (1/4, Eq(x, 3) | Eq(x, 4)), (0, True)))
 """
+from __future__ import annotations
 
 __all__ = [
     'P', 'E', 'H', 'density', 'where', 'given', 'sample', 'cdf','median',
@@ -113,7 +114,7 @@ __all__ = [
     'FiniteDistributionHandmade',
 
     'ContinuousRV', 'Arcsin', 'Benini', 'Beta', 'BetaNoncentral', 'BetaPrime',
-    'BoundedPareto', 'Cauchy', 'Chi', 'ChiNoncentral', 'ChiSquared', 'Dagum', 'Erlang',
+    'BoundedPareto', 'Cauchy', 'Chi', 'ChiNoncentral', 'ChiSquared', 'Dagum', 'Davis', 'Erlang',
     'ExGaussian', 'Exponential', 'ExponentialPower', 'FDistribution',
     'FisherZ', 'Frechet', 'Gamma', 'GammaInverse', 'Gompertz', 'Gumbel',
     'Kumaraswamy', 'Laplace', 'Levy', 'Logistic','LogCauchy', 'LogLogistic', 'LogitNormal', 'LogNormal', 'Lomax',
@@ -163,7 +164,7 @@ from .frv_types import (FiniteRV, DiscreteUniform, Die, Bernoulli, Coin,
 
 from .crv_types import (ContinuousRV, Arcsin, Benini, Beta, BetaNoncentral,
         BetaPrime, BoundedPareto, Cauchy, Chi, ChiNoncentral, ChiSquared,
-        Dagum, Erlang, ExGaussian, Exponential, ExponentialPower,
+        Dagum, Davis, Erlang, ExGaussian, Exponential, ExponentialPower,
         FDistribution, FisherZ, Frechet, Gamma, GammaInverse, GaussianInverse,
         Gompertz, Gumbel, Kumaraswamy, Laplace, Levy, Logistic, LogCauchy,
         LogLogistic, LogitNormal, LogNormal, Lomax, Maxwell, Moyal, Nakagami,
