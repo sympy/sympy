@@ -3276,7 +3276,7 @@ class PolyElement(
 
         return poly
 
-    # XXX: implement the same algorith for div from CLO
+    # XXX: implement the same algorithm for div from CLO
     # for python-flint
     def _div(self, fv: PolyElement[Er]) -> tuple[PolyElement[Er], PolyElement[Er]]:
         [q], r = self._div_list([fv])

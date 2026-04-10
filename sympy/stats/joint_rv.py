@@ -364,7 +364,7 @@ class MarginalDistribution(Distribution):
             rvs = tuple(rvs[0])
         if not all(isinstance(rv, (Indexed, RandomSymbol)) for rv in rvs):
             raise ValueError(filldedent('''Marginal distribution can be
-             intitialised only in terms of random variables or indexed random
+             initialised only in terms of random variables or indexed random
              variables'''))
         rvs = Tuple.fromiter(rv for rv in rvs)
         if not isinstance(dist, JointDistribution) and len(random_symbols(dist)) == 0:

@@ -261,6 +261,12 @@ def test_sin_AccumBounds():
 def test_sin_fdiff():
     assert sin(x).fdiff() == cos(x)
     raises(ArgumentIndexError, lambda: sin(x).fdiff(2))
+    assert sin(x).diff((x, 0)) == sin(x)
+    assert sin(x).diff((x, 1)) == cos(x)
+    assert sin(x).diff((x, 2)) == -sin(x)
+    assert sin(x).diff((x, 3)) == -cos(x)
+    t = Symbol('t', integer=True, nonnegative=True)
+    assert sin(x).diff((x, t)) == sin(x + t*pi/2)
 
 
 def test_trig_symmetry():
@@ -479,6 +485,12 @@ def test_cos_AccumBounds():
 def test_cos_fdiff():
     assert cos(x).fdiff() == -sin(x)
     raises(ArgumentIndexError, lambda: cos(x).fdiff(2))
+    assert cos(x).diff((x, 0)) == cos(x)
+    assert cos(x).diff((x, 1)) == -sin(x)
+    assert cos(x).diff((x, 2)) == -cos(x)
+    assert cos(x).diff((x, 3)) == sin(x)
+    t = Symbol('t', integer=True, nonnegative=True)
+    assert cos(x).diff((x, t)) == cos(x + t*pi/2)
 
 
 def test_tan():

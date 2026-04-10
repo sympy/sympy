@@ -1,6 +1,7 @@
 from __future__ import annotations
 from sympy.assumptions.ask import Q
-from sympy.assumptions.refine import refine
+from sympy.assumptions.refine import refine, refine_sin_cos
+from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.core.expr import Expr
 from sympy.core.numbers import (I, Rational, nan, pi)
 from sympy.core.singleton import S
@@ -8,13 +9,15 @@ from sympy.core.symbol import Symbol
 from sympy.functions.elementary.complexes import (Abs, arg, im, re, sign, conjugate)
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.functions.elementary.trigonometric import (atan, atan2, cos, sin, asin, acos, acot, asec, acsc)
+from sympy.functions.elementary.trigonometric import (atan, atan2, cos, sin, tan)
 from sympy.abc import w, x, y, z
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.functions.elementary.integers import floor, ceiling
 from sympy.functions.special.delta_functions import Heaviside
+
+from sympy.testing.pytest import raises
 
 
 def test_Abs():
@@ -286,6 +289,20 @@ def test_sin_cos():
     assert refine(cos(x + n*pi/2 + k*pi/2 + m*pi/2), \
                   Q.odd(n) & Q.odd(k) & Q.integer(m)) == \
         (-1)**((n + k)/2) * cos(x + m*pi/2)
+
+    assert refine(cos(x), Q.zero(x)) == 1
+    assert refine(sin(x), Q.zero(x)) == 0
+
+    assert (refine(sin(x), Q.infinite(x) & Q.extended_real(x)) ==
+        AccumBounds(-1, 1))
+    assert (refine(cos(x), Q.infinite(x) & Q.extended_real(x)) ==
+        AccumBounds(-1, 1))
+    assert refine(sin(x), Q.infinite(x)) == sin(x)
+    assert refine(cos(x), Q.infinite(x)) == cos(x)
+
+    raises(TypeError, lambda: refine_sin_cos(tan(x), Q.real(x)))
+    raises(TypeError, lambda: refine_sin_cos(exp(x), Q.real(x)))
+    raises(TypeError, lambda: refine_sin_cos(x, Q.real(x)))
 
 
 def test_floor_ceiling():

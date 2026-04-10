@@ -1200,6 +1200,13 @@ def test_TensorManager():
     assert GHsymbol in TensorManager._comm_symbols2i
 
 
+def test_TensorManager_comm_aliasing():
+    TensorManager.clear()
+    comm = TensorManager.comm
+    comm[1][2] = 1
+    assert TensorManager.get_comm(1, 2) is None
+
+
 def test_hash():
     D = Symbol('D')
     Lorentz = TensorIndexType('Lorentz', dim=D, dummy_name='L')
@@ -1794,6 +1801,15 @@ def test_TensMul_data():
 
         # Test the deleter
         del g.data
+
+def test_TensMul_doit():
+    R3 = TensorIndexType("R3", dim=3)
+    i,j = symbols("i j", cls=TensorIndex, tensor_index_type=R3)
+    K = TensorHead("K", index_types=[R3])
+
+    expr = TensMul(K(j), TensAdd(2, -2, 2*K(i)*K(-i)))
+
+    assert expr.doit() == 2*K(j)*K(i)*K(-i)
 
 def test_issue_11020_TensAdd_data():
     with warns_deprecated_sympy():

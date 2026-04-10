@@ -72,6 +72,11 @@ def test_Permutation():
     assert q.cyclic_form == [[0, 3, 5, 6, 2, 4]]
     assert q.full_cyclic_form == [[0, 3, 5, 6, 2, 4], [1]]
     assert p.cyclic_form == [[0, 2, 1, 5], [3, 6, 4]]
+    p3 = Permutation([0, 3, 1, 2])
+    cf = p3.cyclic_form
+    cf[0].append(99)
+    assert p3.cyclic_form == [[1, 3, 2]]
+    assert p3.order() == 3
     t = p.transpositions()
     assert t == [(0, 5), (0, 1), (0, 2), (3, 4), (3, 6)]
     assert Permutation.rmul(*[Permutation(Cycle(*ti)) for ti in (t)])

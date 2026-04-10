@@ -96,9 +96,11 @@ UNDERSCORE: "_"
 
 // relational symbols
 EQUAL: "="
-NOT_EQUAL: "\\neq" | "\\ne"
+NOT_EQUAL: /\\neq(?![a-zA-Z])/ | /\\ne(?![a-zA-Z])/
 LT: "<"
-LTE: "\\leq" | "\\le" | "\\leqslant"
+// "\le" requires a negative lookahead to avoid matching as a prefix of "\left". Without the negative lookahead,
+// LTE was matching the "\le" part of "\left", leaving behind "ft" as garbage tokens.
+LTE: "\\leq" | /\\le(?![a-zA-Z])/ | "\\leqslant"   
 GT: ">"
 GTE: "\\geq" | "\\ge" | "\\geqslant"
 

@@ -127,6 +127,8 @@ from sympy.core.sympify import sympify
 from sympy.core.singleton import S
 from sympy.core.numbers import Rational, oo
 from sympy.matrices.dense import Matrix
+from sympy.utilities.iterables import sift
+
 
 class UnhandledInput(Exception):
     """
@@ -314,7 +316,7 @@ class LRASolver():
             vars, var_coeff = _sep_const_coeff(vars)  # examples: (2x) --> (x, 2); (2x + 3y) --> (2x + 3y), (1)
             const = const / var_coeff
 
-            terms = _list_terms(vars)  # example: (2x + 3y) --> [2x, 3y]
+            terms = Add.make_args(vars)  # example: (2x + 3y) --> [2x, 3y]
             for term in terms:
                 term, _ = _sep_const_coeff(term)
                 assert len(term.free_symbols) > 0
@@ -654,7 +656,7 @@ class LRASolver():
         Conceptually, M represents a system of equations and pivoting
         can be thought of as rearranging equation i to be in terms of
         variable j and then substituting in the rest of the equations
-        to get rid of other occurances of variable j.
+        to get rid of other occurrences of variable j.
 
         Example
         =======
@@ -712,27 +714,10 @@ def _sep_const_coeff(expr):
     """
     if isinstance(expr, Add):
         return expr, sympify(1)
-
-    if isinstance(expr, Mul):
-        coeffs = expr.args
-    else:
-        coeffs = [expr]
-
-    var, const = [], []
-    for c in coeffs:
-        c = sympify(c)
-        if len(c.free_symbols)==0:
-            const.append(c)
-        else:
-            var.append(c)
+    const, var = sift(Mul.make_args(expr),
+                      lambda c: len(sympify(c).free_symbols) == 0,
+                      binary=True)
     return Mul(*var), Mul(*const)
-
-
-def _list_terms(expr):
-    if not isinstance(expr, Add):
-        return [expr]
-
-    return expr.args
 
 
 def _sep_const_terms(expr):
@@ -745,18 +730,10 @@ def _sep_const_terms(expr):
     >>> _sep_const_terms(2*x + 3*y + 2)
     (2*x + 3*y, 2)
     """
-    if isinstance(expr, Add):
-        terms = expr.args
-    else:
-        terms = [expr]
-
-    var, const = [], []
-    for t in terms:
-        if len(t.free_symbols) == 0:
-            const.append(t)
-        else:
-            var.append(t)
-    return sum(var), sum(const)
+    const, var = sift(Add.make_args(expr),
+                      lambda t: len(t.free_symbols) == 0,
+                      binary=True)
+    return Add(*var), Add(*const)
 
 
 def _eval_binrel(binrel):

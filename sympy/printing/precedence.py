@@ -65,6 +65,10 @@ def precedence_Mul(item):
            arg.precedence < PRECEDENCE["Mul"] for arg in item.args):
         return PRECEDENCE["Mul"]
 
+    from sympy.core.expr import UnevaluatedExpr
+    if any(isinstance(a, UnevaluatedExpr) for a in item.args):
+        return PRECEDENCE["Mul"]
+
     if item.could_extract_minus_sign():
         return PRECEDENCE["Add"]
     return PRECEDENCE["Mul"]
