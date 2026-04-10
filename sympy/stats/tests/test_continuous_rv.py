@@ -1604,6 +1604,8 @@ def test_continuous_distribution_call_vs_pdf():
 
     assert density(Y).pdf(x) == 2*exp(-2*x)
 
+    assert density(Y)(-1) is S.Zero
+
     z_pos = Symbol('z', positive=True)
     assert density(Y)(z_pos) == 2*exp(-2*z_pos)
 

@@ -906,9 +906,18 @@ def density(expr, condition=None, evaluate=True, numsamples=None, **kwargs):
     Explanation
     ===========
 
-    This density will take on different forms for different types of
-    probability spaces. Discrete variables produce Dicts. Continuous
-    variables produce Lambdas.
+    For a simple random variable, this returns the distribution object.
+    The returned object supports two ways of evaluating the density:
+
+    - ``density(X)(x)`` evaluates the density with support checking.
+      For concrete values outside the support it returns 0. For symbolic
+      values it returns a Piecewise that is 0 outside the support.
+    - ``density(X).pdf(x)`` (or ``.pmf(x)`` for finite distributions)
+      returns the raw formula without support checking, which is more
+      convenient for symbolic manipulation.
+
+    For transformed expressions the return type varies: finite
+    expressions produce dicts, continuous expressions produce Lambdas.
 
     Parameters
     ==========

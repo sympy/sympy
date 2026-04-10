@@ -93,13 +93,11 @@ def test_GeometricDistribution():
     assert coskewness(X, X + Y, X + 2*Y).simplify() == sqrt(230)*Rational(81, 1150)
 
     # Test that density returns 0 for values outside the support (issue #20031)
-    # The support for Geometric is positive integers {1, 2, 3, ...}
-    assert density(X)(0) == 0  # zero is not in support
-    assert density(X)(-1) == 0  # negative integers not in support
-    assert density(X)(-5) == 0  # negative integers not in support
-    assert density(X)(S(1)/2) == 0  # non-integer not in support
-    assert density(X)(S(5)/2) == 0  # non-integer not in support
-    # Test that density is correct for values inside the support
+    assert density(X)(0) == 0
+    assert density(X)(-1) == 0
+    assert density(X)(-5) == 0
+    assert density(X)(S(1)/2) == 0
+    assert density(X)(S(5)/2) == 0
     assert density(X)(1) == Rational(1, 5)
     assert density(X)(2) == Rational(4, 25)
     assert density(X)(3) == Rational(16, 125)

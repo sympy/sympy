@@ -502,11 +502,11 @@ def NegativeBinomial(name, r, p):
 
     >>> r = 5
     >>> p = S.One / 3
-    >>> z = Symbol("z", nonnegative=True, integer=True)
+    >>> z = Symbol("z")
 
     >>> X = NegativeBinomial("x", r, p)
 
-    >>> density(X)(z)
+    >>> density(X).pdf(z)
     (2/3)**z*binomial(z + 4, z)/243
 
     >>> E(X)
@@ -588,11 +588,11 @@ def Poisson(name, lamda):
     >>> from sympy import Symbol, simplify
 
     >>> rate = Symbol("lambda", positive=True)
-    >>> z = Symbol("z", nonnegative=True, integer=True)
+    >>> z = Symbol("z")
 
     >>> X = Poisson("x", rate)
 
-    >>> density(X)(z)
+    >>> density(X).pdf(z)
     lambda**z*exp(-lambda)/factorial(z)
 
     >>> E(X)

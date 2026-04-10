@@ -205,9 +205,12 @@ class SingleFiniteDistribution(Distribution, NamedArgsMixin):
        the pmf formula when x is in the support, and 0 otherwise.
 
     2. ``distribution.pmf(x)``:
-       Returns the raw probability mass formula without support checking.
-       This is useful for symbolic manipulation where the Piecewise wrapper
-       would be cumbersome.
+       Returns the probability mass formula as defined by the subclass.
+       For distributions with a single closed-form formula (Die, Binomial),
+       this returns the raw formula without support checking. For
+       distributions whose formula is inherently piecewise (Bernoulli,
+       IdealSoliton), the returned Piecewise includes the formula's
+       natural structure.
     """
 
     def __new__(cls, *args):

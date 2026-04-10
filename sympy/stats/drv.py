@@ -56,13 +56,15 @@ class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
     2. ``distribution.pdf(x)``:
        Returns the raw probability mass formula without support checking.
        This is useful for symbolic manipulation and summation where the
-       Piecewise wrapper would be cumbersome.
+       Piecewise wrapper would be cumbersome. The method is named
+       ``.pdf()`` for historical reasons, but for discrete distributions
+       it computes the probability mass function (PMF).
 
     Examples
     ========
 
     >>> from sympy.stats import Geometric, density
-    >>> from sympy import Symbol, Rational
+    >>> from sympy import Symbol, S, Rational
     >>> X = Geometric('X', Rational(1, 5))
     >>> z = Symbol('z')
 
@@ -87,13 +89,13 @@ class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
 
     >>> density(X)(0)
     0
-    >>> density(X)(1/2)
+    >>> density(X)(S(1)/2)
     0
 
     See Also
     ========
 
-    sympy.stats.crv_types
+    sympy.stats.drv_types
     """
 
     set = S.Integers
