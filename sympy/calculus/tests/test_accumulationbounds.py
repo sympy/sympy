@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.numbers import (E, Rational, oo, pi, zoo)
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
@@ -9,6 +10,8 @@ from sympy.core import Add, Mul, Pow
 from sympy.core.expr import unchanged
 from sympy.testing.pytest import raises, XFAIL
 from sympy.abc import x
+from sympy.sets.sets import FiniteSet
+
 
 a = Symbol('a', real=True)
 B = AccumBounds
@@ -336,3 +339,4 @@ def test_union_AccumBounds():
     assert B(0, 3).union(B(-1, 2)) == B(-1, 3)
     assert B(0, 3).union(B(-1, 4)) == B(-1, 4)
     raises(TypeError, lambda: B(0, 3).union(1))
+    raises(TypeError, lambda: B(0, 3).union(FiniteSet(1)))

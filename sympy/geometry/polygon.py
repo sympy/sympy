@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core import Expr, S, oo, pi, sympify
 from sympy.core.evalf import N
 from sympy.core.sorting import default_sort_key, ordered
@@ -363,6 +364,14 @@ class Polygon(GeometrySet):
 
         centroid : Point
 
+        Raises
+        ======
+
+        GeometryError
+            When the polygon has zero area. Note that this check only catches
+            the case where the computed area is zero. Not all self-intersecting
+            polygons are detected, only those that reduce to zero area.
+
         See Also
         ========
 
@@ -378,7 +387,10 @@ class Polygon(GeometrySet):
         Point2D(31/18, 11/18)
 
         """
-        A = 1/(6*self.area)
+        area = self.area
+        if area == 0:
+            raise GeometryError("Centroid is undefined for a polygon with zero area.")
+        A = 1/(6*area)
         cx, cy = 0, 0
         args = self.args
         for i in range(len(args)):

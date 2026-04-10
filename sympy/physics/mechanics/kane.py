@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy import zeros, Matrix, diff, eye, linear_eq_to_matrix
 from sympy.core.sorting import default_sort_key
 from sympy.physics.vector import (ReferenceFrame, dynamicsymbols,

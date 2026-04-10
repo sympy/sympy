@@ -22,6 +22,7 @@ doctest_optionflags = [
 ]
 
 norecursedirs = [
+    ".*",
     "sympy/parsing/autolev/test-examples",
 ]
 
@@ -39,9 +40,11 @@ exclude_lines = [
 ]
 
 [tool.ruff]
+target-version = "py310"
 # Enable Pyflakes `E` and `F` codes by default.
 lint.select = [
     "B015",  # Useless comparison: a == b rather than a = b.
+    "I002",  # `import` statement not at top of file
     "C4",
     "E",
     "F",
@@ -53,8 +56,16 @@ lint.select = [
     "PLW0602", # Global statement used but no assignment
     "SIM101",
     "SLOT",
+    "TC001",
+    "TC002",
+    "TC003",
+    "TC004",
+    "TC005",
     "TRY002",
     "BLE001", # except Exception or except BaseException
+    "UP006", # pyupgrade - non-pep585-annotation
+    "UP007", # pyupgrade - non-pep604-annotation-union
+    "UP045", # pyupgrade - non-pep604-annotation-optional
 ]
 
 # Ignore rules that currently fail on the SymPy codebase
@@ -71,9 +82,7 @@ lint.ignore = [
     "E731",  # Do not assign a `lambda` expression, use a `def`
     "E741",  # Ambiguous variable name: `<VARIABLE>`
     "E743",  # Ambiguous function name: `<FUNCTION>`
-    # Rules from the stable "FURB" set that are ignored. See #27897
-    # Just to be safe, we'll ignore FURB161 until we drop support for Python 3.9
-    "FURB161",  # Use of `bin({existing}).count('1')`
+    "FURB110",  # Replace ternary `if` expression with `or` operator
     "FURB187",  # Use of assignment of `reversed` on list `{name}`
 ]
 
@@ -96,6 +105,9 @@ line-length = 88
 
 # Allow unused variables when underscore-prefixed.
 lint.dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+# Add to all files
+lint.isort.required-imports = ["from __future__ import annotations"]
 
 # Per-file ignores currently specified in the flake8 configuration
 [tool.ruff.lint.per-file-ignores]

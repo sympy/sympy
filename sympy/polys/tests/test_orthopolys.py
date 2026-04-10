@@ -1,4 +1,5 @@
 """Tests for efficient functions for generating orthogonal polynomials. """
+from __future__ import annotations
 
 from sympy.core.numbers import Rational as Q
 from sympy.core.singleton import S

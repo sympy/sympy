@@ -33,14 +33,16 @@ References
 .. [*] https://resources.wolframcloud.com/FunctionRepository/resources/Cos2PiOverFermatPrime
 """
 from __future__ import annotations
-from typing import Callable
+from typing import Callable, TYPE_CHECKING
 from functools import reduce
-from sympy.core.expr import Expr
 from sympy.core.singleton import S
 from sympy.core.intfunc import igcdex
 from sympy.core.numbers import Integer
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.core.cache import cacheit
+
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
 
 
 def migcdex(*x: int) -> tuple[tuple[int, ...], int]:

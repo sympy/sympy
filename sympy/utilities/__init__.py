@@ -1,6 +1,7 @@
 """This module contains some general purpose utilities that are used across
 SymPy.
 """
+from __future__ import annotations
 from .iterables import (flatten, group, take, subsets,
     variations, numbered_symbols, cartes, capture, dict_merge,
     prefixes, postfixes, sift, topological_sort, unflatten,

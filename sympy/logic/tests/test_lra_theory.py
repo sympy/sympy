@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.numbers import Rational, I, oo
 from sympy.core.relational import Eq
 from sympy.core.symbol import symbols

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.numbers import (Float, Rational, oo, pi)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
@@ -680,3 +681,8 @@ def test_do_poly_distance():
     with warns(UserWarning, \
                match="Polygons may intersect producing erroneous output", test_stacklevel=False):
         assert triangle2._do_poly_distance(square1) == 0
+
+
+def test_centroid_zero_area():
+    p = Polygon((0, 2), (2, 2), (0, 0), (2, 0))
+    raises(GeometryError, lambda: p.centroid)

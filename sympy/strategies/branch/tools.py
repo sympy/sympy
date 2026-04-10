@@ -1,3 +1,4 @@
+from __future__ import annotations
 from .core import exhaust, multiplex
 from .traverse import top_down
 

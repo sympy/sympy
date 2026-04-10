@@ -1,23 +1,27 @@
+from __future__ import annotations
 import bisect
 from collections import defaultdict
 
-from sympy.combinatorics import Permutation
 from sympy.core.containers import Tuple
 from sympy.core.numbers import Integer
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from sympy.combinatorics import Permutation
 
 
-def _get_mapping_from_subranks(subranks):
+def _get_mapping_from_sub_ndim_list(sub_ndim_list):
     mapping = {}
     counter = 0
-    for i, rank in enumerate(subranks):
+    for i, rank in enumerate(sub_ndim_list):
         for j in range(rank):
             mapping[counter] = (i, j)
             counter += 1
     return mapping
 
 
-def _get_contraction_links(args, subranks, *contraction_indices):
-    mapping = _get_mapping_from_subranks(subranks)
+def _get_contraction_links(args, sub_ndim_list, *contraction_indices):
+    mapping = _get_mapping_from_sub_ndim_list(sub_ndim_list)
     contraction_tuples = [[mapping[j] for j in i] for i in contraction_indices]
     dlinks = defaultdict(dict)
     for links in contraction_tuples:

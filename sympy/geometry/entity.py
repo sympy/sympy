@@ -132,13 +132,16 @@ class GeometryEntity(Basic, EvalfMixin):
     def _eval_subs(self, old, new):
         from sympy.geometry.point import Point, Point3D
         if is_sequence(old) or is_sequence(new):
+            if isinstance(old, (Point, Point3D)) and isinstance(new, (Point, Point3D)):
+                return None
+
             if isinstance(self, Point3D):
                 old = Point3D(old)
                 new = Point3D(new)
             else:
                 old = Point(old)
                 new = Point(new)
-            return  self._subs(old, new)
+            return self._subs(old, new)
 
     def _repr_svg_(self):
         """SVG representation of a GeometryEntity suitable for IPython"""

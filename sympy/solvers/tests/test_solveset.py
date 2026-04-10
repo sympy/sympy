@@ -1,3 +1,4 @@
+from __future__ import annotations
 from math import isclose
 
 from sympy.calculus.util import stationary_points
@@ -1870,6 +1871,13 @@ def test_nonlinsolve_abs():
     raises(NotImplementedError, lambda: nonlinsolve([Abs(x) - 1, x - y], x, y))
     raises(NotImplementedError, lambda: nonlinsolve([Abs(x) - 1, y - 2], x, y))
     raises(NotImplementedError, lambda: nonlinsolve([Abs(x) - 2, x + y], x, y))
+
+
+def test_nonlinsolve_sign():
+    raises(NotImplementedError, lambda: nonlinsolve([sign(x) - 1, x*y - 4], [x, y]))
+    raises(NotImplementedError, lambda: nonlinsolve([sign(x) - 1, x - y], [x, y]))
+    result = nonlinsolve([sign(x) - 1], [x])
+    assert isinstance(result, FiniteSet)
 
 
 def test_raise_exception_nonlinsolve():

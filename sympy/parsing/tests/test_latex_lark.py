@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.testing.pytest import XFAIL
 from sympy.parsing.latex.lark import parse_latex_lark
 from sympy.external import import_module
@@ -19,7 +20,7 @@ from sympy.functions.elementary.trigonometric import asin, cos, csc, sec, sin, t
 from sympy.integrals.integrals import Integral
 from sympy.series.limits import Limit
 from sympy import Matrix, MatAdd, MatMul, Transpose, Trace
-from sympy import I
+from sympy import I, pi
 
 from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
 from sympy.physics.quantum import Bra, Ket, InnerProduct
@@ -233,17 +234,20 @@ EVALUATED_FRACTION_EXPRESSION_PAIRS = [
 RELATION_EXPRESSION_PAIRS = [
     (r"x = y", Eq(x, y)),
     (r"x \neq y", Ne(x, y)),
+    (r"x \ne y", Ne(x, y)),
     (r"x < y", Lt(x, y)),
     (r"x > y", Gt(x, y)),
     (r"x \leq y", Le(x, y)),
     (r"x \geq y", Ge(x, y)),
     (r"x \le y", Le(x, y)),
     (r"x \ge y", Ge(x, y)),
+    (r"x \leqslant y", Le(x, y)),
     (r"x < y", StrictLessThan(x, y)),
     (r"x \leq y", LessThan(x, y)),
     (r"x > y", StrictGreaterThan(x, y)),
     (r"x \geq y", GreaterThan(x, y)),
     (r"x \neq y", Unequality(x, y)), # same as 2nd one in the list
+    (r"x \ne y", Unequality(x, y)),
     (r"a^2 + b^2 = c^2", Eq(a**2 + b**2, c**2))
 ]
 
@@ -252,7 +256,10 @@ UNEVALUATED_POWER_EXPRESSION_PAIRS = [
     (r"x^\frac{1}{2}", _Pow(x, _Mul(1, _Pow(2, -1)))),
     (r"x^{3 + 1}", x ** _Add(3, 1)),
     (r"\pi^{|xy|}", Symbol('pi') ** _Abs(x * y)),
-    (r"5^0 - 4^0", _Add(_Pow(5, 0), _Mul(-1, _Pow(4, 0))))
+    (r"5^0 - 4^0", _Add(_Pow(5, 0), _Mul(-1, _Pow(4, 0)))),
+    (r"x^\circ", _Mul(x, _Mul(pi, _Pow(180, -1)))),
+    (r"x^{\circ}", _Mul(x, _Mul(pi, _Pow(180, -1)))),
+    (r"180^\circ", _Mul(180, _Mul(pi, _Pow(180, -1))))
 ]
 
 EVALUATED_POWER_EXPRESSION_PAIRS = [
@@ -260,7 +267,10 @@ EVALUATED_POWER_EXPRESSION_PAIRS = [
     (r"x^\frac{1}{2}", sqrt(x)),
     (r"x^{3 + 1}", x ** 4),
     (r"\pi^{|xy|}", Symbol('pi') ** _Abs(x * y)),
-    (r"5^0 - 4^0", 0)
+    (r"5^0 - 4^0", 0),
+    (r"x^\circ", pi*x/180),
+    (r"x^{\circ}", pi*x/180),
+    (r"180^\circ", pi)
 ]
 
 UNEVALUATED_INTEGRAL_EXPRESSION_PAIRS = [
@@ -528,6 +538,38 @@ MISCELLANEOUS_EXPRESSION_PAIRS = [
     (r"\left(x + y\right) z", _Mul(_Add(x, y), z)),
     (r"\left( x + y\right ) z", _Mul(_Add(x, y), z)),
     (r"\left(  x + y\right ) z", _Mul(_Add(x, y), z)),
+]
+
+SQUARE_BRACKET_EXPRESSION_PAIRS = [
+    (r"[x+y]z", _Mul(_Add(x, y), z)),
+    (r"[a+b]c", _Mul(_Add(a, b), c)),
+    (r"[x]y", _Mul(x, y)),
+    (r"[a+b][c+d]", _Mul(_Add(a, b), _Add(c, d))),
+    (r"[x][y]", _Mul(x, y)),
+    (r"[x+y]a", _Mul(_Add(x, y), a)),
+    (r"[a]b", _Mul(a, b)),
+]
+
+EVALUATED_SQUARE_BRACKET_EXPRESSION_PAIRS = [
+    (r"[x+y]z", (x + y) * z),
+    (r"[a+b]c", (a + b) * c),
+    (r"[x]y", x * y),
+    (r"[a+b][c+d]", (a + b) * (c + d)),
+    (r"[x][y]", x * y),
+    (r"[2+3]x", 5 * x),
+]
+
+LITERAL_BRACE_EXPRESSION_PAIRS = [
+    (r"\{x+y\}z", _Mul(_Add(x, y), z)),
+    (r"\{a\}b", _Mul(a, b)),
+    (r"\{x+y\}\{a+b\}", _Mul(_Add(x, y), _Add(a, b))),
+]
+
+MIXED_BRACKET_BRACE_EXPRESSION_PAIRS = [
+    (r"[x+y]\{a+b\}", _Mul(_Add(x, y), _Add(a, b))),
+    (r"\{a+b\}[x+y]", _Mul(_Add(a, b), _Add(x, y))),
+    (r"[x]\{y\}", _Mul(x, y)),
+    (r"\{a\}[b]", _Mul(a, b)),
 ]
 
 UNEVALUATED_LITERAL_COMPLEX_NUMBER_EXPRESSION_PAIRS = [
@@ -834,12 +876,30 @@ def test_common_function_expressions():
         assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
 
-# unhandled bug causing these to fail
-@XFAIL
 def test_spacing():
     for latex_str, sympy_expr in SPACING_RELATED_EXPRESSION_PAIRS:
         with evaluate(False):
             assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
+def test_negthinspace_not_equal_conflict():
+    assert parse_latex_lark(r"a \negthinspace b") == a * b
+    assert parse_latex_lark(r"x \negthinspace y") == x * y
+    assert parse_latex_lark(r"x \negthinspace + y") == x + y
+
+    assert parse_latex_lark(r"a \negmedspace b") == a * b
+    assert parse_latex_lark(r"x \negmedspace y") == x * y
+    assert parse_latex_lark(r"x \negmedspace + y") == x + y
+
+    assert parse_latex_lark(r"a \negthickspace b") == a * b
+    assert parse_latex_lark(r"x \negthickspace y") == x * y
+    assert parse_latex_lark(r"x \negthickspace + y") == x + y
+
+    assert parse_latex_lark(r"x \ne y") == Ne(x, y)
+    assert parse_latex_lark(r"x \neq y") == Ne(x, y)
+
+    assert parse_latex_lark(r"\negthinspace x \ne y") == Ne(x, y)
+    assert parse_latex_lark(r"x \neq \negmedspace y") == Ne(x, y)
 
 
 def test_binomial_expressions():
@@ -855,6 +915,32 @@ def test_miscellaneous_expressions():
     for latex_str, sympy_expr in MISCELLANEOUS_EXPRESSION_PAIRS:
         with evaluate(False):
             assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
+def test_square_bracket_multiplication():
+    for latex_str, sympy_expr in SQUARE_BRACKET_EXPRESSION_PAIRS:
+        with evaluate(False):
+            result = parse_latex_lark(latex_str)
+            assert result == sympy_expr, f"Failed for {latex_str}: got {result}, expected {sympy_expr}"
+
+    for latex_str, sympy_expr in EVALUATED_SQUARE_BRACKET_EXPRESSION_PAIRS:
+        result = parse_latex_lark(latex_str)
+        assert result == sympy_expr, f"Failed for {latex_str}: got {result}, expected {sympy_expr}"
+
+
+def test_literal_brace_multiplication():
+    for latex_str, sympy_expr in LITERAL_BRACE_EXPRESSION_PAIRS:
+        with evaluate(False):
+            result = parse_latex_lark(latex_str)
+            assert result == sympy_expr, f"Failed for {latex_str}"
+
+
+def test_mixed_bracket_brace_multiplication():
+    for latex_str, sympy_expr in MIXED_BRACKET_BRACE_EXPRESSION_PAIRS:
+        with evaluate(False):
+            result = parse_latex_lark(latex_str)
+            assert result == sympy_expr, \
+                f"Failed for {latex_str}: got {result}, expected {sympy_expr}"
 
 
 def test_literal_complex_number_expressions():

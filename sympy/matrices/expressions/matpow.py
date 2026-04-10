@@ -1,3 +1,4 @@
+from __future__ import annotations
 from .matexpr import MatrixExpr
 from .special import Identity
 from sympy.core import S

@@ -16,7 +16,11 @@ from sympy.utilities.iterables import is_sequence
 
 
 if TYPE_CHECKING:
-    from typing import TypeIs
+    import sys
+    if sys.version_info >= (3, 13):
+        from typing import TypeIs
+    else:
+        from typing_extensions import TypeIs
     from sympy.polys.polytools import Poly
     from sympy.polys.domains.ring import Ring
     from sympy.polys.domains.field import Field

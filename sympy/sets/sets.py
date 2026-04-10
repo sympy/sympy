@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import Any, TYPE_CHECKING, overload
 from functools import reduce
 from collections import defaultdict
-from collections.abc import Mapping, Iterable
 import inspect
 
 from sympy.core.kind import Kind, UndefinedKind, NumberKind
@@ -32,6 +31,9 @@ from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import (iproduct, sift, roundrobin, iterable,
                                        subsets)
 from sympy.utilities.misc import func_name, filldedent
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping, Iterable
 
 
 tfn: dict[bool | Boolean | None, Boolean | None] = defaultdict(lambda: None, {
@@ -842,6 +844,10 @@ class Set(Basic, EvalfMixin):
             # result with Set use y.contains(x)
             raise TypeError('did not evaluate to a bool: %r' % c)
         return b
+
+    def as_relational(self, symbol):
+        """Rewrites the set as a relational."""
+        raise NotImplementedError("as_relational is not implemented for this set type.")
 
 
 class ProductSet(Set):

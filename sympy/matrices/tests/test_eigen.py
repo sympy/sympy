@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.evalf import N
 from sympy.core.numbers import (Float, I, Rational, pi)
 from sympy.core.symbol import (Symbol, symbols)
@@ -157,6 +158,9 @@ def test_float_eigenvals():
     for x, y in zip(n_evals, s_evals):
         assert abs(x-y) < 10**-9
 
+    m = Matrix([[1.0, 0.0], [0.0, 2.0]])
+    assert m.eigenvals(rational=True) == {1: 1, 2: 1}
+
 
 @XFAIL
 def test_eigen_vects():
@@ -237,6 +241,34 @@ def test_eigenvects():
     for val, mult, vec_list in vecs:
         assert len(vec_list) == 1
         assert M*vec_list[0] == val*vec_list[0]
+
+    M = Matrix([[5.0, 1.0, 0.0],
+                [0.0, 5.0, 0.0],
+                [0.0, 0.0, 3.0]])
+    vecs = M.eigenvects()
+    assert len(vecs) == 2
+    for val, mult, vec_list in vecs:
+        for v in vec_list:
+            assert M*v == val*v
+
+
+@slow
+def test_eigenvects_slow():
+    # https://github.com/sympy/sympy/issues/28507
+    # This test is slow because of issues/28486
+    # After the fix, this test should be moved to test_eigenvects
+    M = Matrix([
+        [123, 45, 67, 89, sqrt(13)/2],
+        [45, 234, 56, 78, Rational(19, 43)],
+        [67, 56, 345, 90, 5*sqrt(7)/3],
+        [Rational(17, 3), 12, 34, 456, sqrt(11)/7],
+        [Rational(55, 17), sqrt(11)/5, 12, 34, 56]
+    ])
+    vecs = M.eigenvects()
+    for val, mult, vec_list in vecs:
+        assert len(vec_list) == 1
+        diff = (M*vec_list[0]).n() - (val*vec_list[0]).n()
+        assert all(abs(x) < 1e-10 for x in diff)
 
 
 def test_left_eigenvects():
