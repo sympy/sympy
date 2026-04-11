@@ -26,7 +26,6 @@ from sympy.physics.control.lti import (
     DiscreteStateSpace, create_state_space, gbt, bilinear, forward_diff,
     backward_diff, phase_margin, gain_margin)
 from sympy.testing.pytest import raises, XFAIL
-from sympy.logic.boolalg import false, true
 
 from math import isclose
 
@@ -359,8 +358,8 @@ def test_TransferFunction_functions():
         b3*b4 > 0, -b1*b4 + b2*b3 > 0,
         -b0*b3**2*b4 -b1**2*b4**2 + b1*b2*b3*b4 > 0,
         b0*b4 > 0]
-    assert TransferFunction(1, (s+1)*(s+2*I)*(s-2*I), s).get_asymptotic_stability_conditions() == [false]
-    assert TransferFunction(1, (s+1)*(s+2)*(s+1/2), s).get_asymptotic_stability_conditions() == [true, true, true]
+    assert TransferFunction(1, (s+1)*(s+2*I)*(s-2*I), s).get_asymptotic_stability_conditions() == [False]
+    assert TransferFunction(1, (s+1)*(s+2)*(s+1/2), s).get_asymptotic_stability_conditions() == [True]
     assert stable_tf.get_asymptotic_stability_conditions() == [True]
 
     # Zeros of a transfer function.
