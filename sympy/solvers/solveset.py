@@ -1254,6 +1254,7 @@ def _solveset(f, symbol, domain, _check=False):
 
     if isinstance(f, BooleanTrue):
         return domain
+
     orig_f = f
     if f.is_Mul:
         coeff, f = f.as_independent(symbol, as_Add=False)
