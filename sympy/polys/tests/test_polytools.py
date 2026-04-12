@@ -4155,7 +4155,7 @@ def test_hurwitz_conditions():
     p5_ = Poly(b0 + b1*s**2 + b1*s + b3*s**4 + b3*s**3, s, domain = EXRAW)
 
     assert p5.hurwitz_conditions() == [-1]
-    assert p5_.hurwitz_conditions() == [1, 0, 1, 1, b3**2]
+    assert p5_.hurwitz_conditions() == [1, -1]
 
     p6 = Poly(b0 * s**2 + b1**2 * s + b2, s)
     p6_ = Poly(b0 * s**2 + b1**2 * s + b2, s, domain = EXRAW)
@@ -4236,7 +4236,7 @@ def test_hurwitz_conditions():
 
     p14 = Poly(x**2 + 1/y, x)
     assert 0 in p14.hurwitz_conditions()
-    assert 0 in p14.set_domain(EXRAW).hurwitz_conditions()
+    assert p14.set_domain(EXRAW).hurwitz_conditions() == [-1]
 
 
 def test_schur_conditions():
