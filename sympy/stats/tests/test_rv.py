@@ -29,7 +29,6 @@ from sympy.core.numbers import comp
 from sympy.stats.frv_types import BernoulliDistribution
 from sympy.core.symbol import Dummy
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy import Rational
 
 def test_where():
     X, Y = Die('X'), Die('Y')

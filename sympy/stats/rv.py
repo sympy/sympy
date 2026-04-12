@@ -321,7 +321,7 @@ class RandomSymbol(Expr):
         try:
             if self.pspace.domain.set.is_subset(S.Integers):
                 return True
-        except (AttributeError, NotImplementedError):
+        except (AttributeError, NotImplementedError, IndexError):
             pass
         return self.symbol.is_integer
 
@@ -337,7 +337,7 @@ class RandomSymbol(Expr):
         try:
             if self.pspace.domain.set.is_subset(S.Naturals0):
                 return True
-        except (AttributeError, NotImplementedError):
+        except (AttributeError, NotImplementedError, IndexError):
             pass
         return self.symbol.is_nonnegative
 
@@ -345,17 +345,12 @@ class RandomSymbol(Expr):
         try:
             if self.pspace.domain.set.is_subset(S.Naturals0):
                 return False
-        except (AttributeError, NotImplementedError):
+        except (AttributeError, NotImplementedError, IndexError):
             pass
         return self.symbol.is_negative
 
-    @property
-    def is_commutative(self):
-        return self.symbol.is_commutative
-
-    @property
-    def free_symbols(self):
-        return {self}
+    def _eval_is_real(self):
+        return self.symbol.is_real or getattr(self.pspace, 'is_real', False)
 
 class RandomIndexedSymbol(RandomSymbol):
 
