@@ -3600,4 +3600,9 @@ def test_issue_26077():
         Eq(x*(-5*cot(5*x)**2 - 5) + cot(5*x), 0),
         Complement(S.Reals, excluded_points)
     )
-    assert solution.as_dummy() == critical_points.as_dummy()
+    assert solution.as_dummy() == critical_points.as_dummy()\
+
+def test_issue_29674():
+    dumeq(solveset(sin(exp(x)), x, domain=S.Reals),
+          Union(ImageSet(Lambda(n, log(2*n*pi + pi)), Range(0, oo, 1)),
+                ImageSet(Lambda(n, log(2*n*pi + 2*pi)) , Range(0, oo, 1))))
