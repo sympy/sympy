@@ -3,7 +3,7 @@ from sympy.assumptions.ask import Q
 from sympy.assumptions.refine import refine, refine_sin_cos
 from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.core.expr import Expr
-from sympy.core.numbers import (I, Rational, nan, pi)
+from sympy.core.numbers import (E, I, Rational, nan, pi)
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.functions.elementary.complexes import (Abs, arg, im, re, sign)
@@ -93,6 +93,10 @@ def test_exp():
     assert refine(exp(2*pi*I*(x + y + Rational(1, 4))),
         Q.integer(x) & Q.integer(y)) == I
     assert refine(exp(pi*I*x), Q.integer(x)) == exp(pi*I*x)
+
+    assert refine(sqrt(E**x), Q.real(x)) == exp(x/2)
+    assert refine((E**x)**Rational(3, 2), Q.real(x)) == exp(3*x/2)
+    assert refine(sqrt(E**x)) == sqrt(exp(x))
 
 
 def test_Piecewise():

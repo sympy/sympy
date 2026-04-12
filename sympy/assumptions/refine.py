@@ -143,9 +143,51 @@ def refine_Pow(expr, assumptions):
     >>> refine_Pow((-1)**(x+3), True)
     (-1)**(x + 1)
 
+    Exponential expressions are also handled here:
+
+    >>> from sympy import E, exp, I, pi, sqrt
+    >>> refine_Pow(exp(2*pi*I*x), Q.integer(x))
+    1
+    >>> refine_Pow(sqrt(E**x), Q.real(x))
+    exp(x/2)
+
     """
     from sympy.functions.elementary.complexes import Abs
+    from sympy.functions.elementary.exponential import exp
     from sympy.functions import sign
+
+    if isinstance(expr, exp):
+        coeff = expr.exp.as_coefficient(S.Pi * S.ImaginaryUnit)
+
+        if coeff is not None:
+            if ask(Q.even(coeff), assumptions):
+                return S.One
+            if ask(Q.odd(coeff), assumptions):
+                return S.NegativeOne
+
+            if coeff.is_Add:
+                integer_terms = []
+                remaining_terms = []
+                for term in coeff.args:
+                    if ask(Q.integer(term), assumptions):
+                        integer_terms.append(term)
+                    else:
+                        remaining_terms.append(term)
+
+                if integer_terms:
+                    integer_part = Add(*integer_terms)
+                    remaining_part = Add(*remaining_terms)
+                    if remaining_part.is_Rational:
+                        phase = expr.func(S.Pi * S.ImaginaryUnit * remaining_part)
+                        if ask(Q.even(integer_part), assumptions):
+                            return phase
+                        if ask(Q.odd(integer_part), assumptions):
+                            return -phase
+
+    if isinstance(expr.base, exp) and isinstance(expr.exp, Rational):
+        if ask(Q.real(expr.base.exp), assumptions):
+            return expr.base.func(expr.base.exp * expr.exp)
+
     if isinstance(expr.base, Abs):
         if ask(Q.real(expr.base.args[0]), assumptions) and \
                 ask(Q.even(expr.exp), assumptions):
@@ -495,64 +537,6 @@ def refine_sin_cos(expr, assumptions):
         pow_expr = (-1)**((k + 1) / 2)
         refined_pow = refine_Pow(pow_expr, assumptions)
         return (pow_expr if refined_pow is None else refined_pow) * sin(rem)
-
-
-def refine_exp(expr, assumptions):
-    """
-    Handler for the exponential function.
-
-    Examples
-    ========
-
-    >>> from sympy.assumptions.refine import refine_exp
-    >>> from sympy import Q, Rational, exp, I, pi
-    >>> from sympy.abc import x
-    >>> refine_exp(exp(2*pi*I*x), Q.integer(x))
-    1
-    >>> refine_exp(exp(pi*I*x), Q.even(x))
-    1
-    >>> refine_exp(exp(pi*I*x), Q.odd(x))
-    -1
-    >>> refine_exp(exp(2*pi*I*(x + Rational(1, 4))), Q.integer(x))
-    I
-    >>> refine_exp(exp(2*pi*I*(x + Rational(3, 4))), Q.integer(x))
-    -I
-
-    """
-    arg = expr.args[0]
-    pi_i = S.Pi * S.ImaginaryUnit
-
-    coeff = arg.coeff(pi_i)
-    if coeff == 0 or (arg - coeff*pi_i).expand() != 0:
-        return expr
-    coeff = coeff.expand()
-
-    if ask(Q.even(coeff), assumptions):
-        return S.One
-    if ask(Q.odd(coeff), assumptions):
-        return S.NegativeOne
-
-    if coeff.is_Add:
-        integer_terms = []
-        remaining_terms = []
-        for term in coeff.args:
-            if ask(Q.integer(term), assumptions):
-                integer_terms.append(term)
-            else:
-                remaining_terms.append(term)
-
-        if integer_terms:
-            integer_part = Add(*integer_terms)
-            remaining_part = Add(*remaining_terms)
-            if remaining_part.is_Rational:
-                phase = expr.func(pi_i*remaining_part)
-                if ask(Q.even(integer_part), assumptions):
-                    return phase
-                if ask(Q.odd(integer_part), assumptions):
-                    return -phase
-    return expr
-
-
 def refine_Heaviside(expr, assumptions):
     """
     Handler for the Heaviside step function.
@@ -632,7 +616,7 @@ handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'MatrixElement': refine_matrixelement,
     'cos': refine_sin_cos,
     'sin': refine_sin_cos,
-    'exp': refine_exp,
+    'exp': refine_Pow,
     'Heaviside': refine_Heaviside,
     'floor': refine_floor_ceiling,
     'ceiling' : refine_floor_ceiling,
