@@ -359,7 +359,7 @@ def test_TransferFunction_functions():
         -b0*b3**2*b4 -b1**2*b4**2 + b1*b2*b3*b4 > 0,
         b0*b4 > 0]
     assert TransferFunction(1, (s+1)*(s+2*I)*(s-2*I), s).get_asymptotic_stability_conditions() == [False]
-    assert TransferFunction(1, (s+1)*(s+2)*(s+1/2), s).get_asymptotic_stability_conditions() == [True]
+    assert TransferFunction(1, (s+1)*(s+2)*(s+1/2), s).get_asymptotic_stability_conditions() == [True, True, True]
     assert stable_tf.get_asymptotic_stability_conditions() == [True]
 
     # Zeros of a transfer function.
