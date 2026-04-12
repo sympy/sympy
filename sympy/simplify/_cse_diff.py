@@ -9,9 +9,6 @@ from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.utilities.iterables import iterable
 
-from sympy.core import cache
-
-
 def _remove_cse_from_derivative(replacements, reduced_expressions):
     """
     This function is designed to postprocess the output of a common subexpression
