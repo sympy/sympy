@@ -303,7 +303,6 @@ def _invert_real(f, g_ys, symbol):
                 pass  # use default return
 
         if not base_has_sym:
-            print('base_has_sym')
             rhs = g_ys.args[0]
             if base.is_positive:
                 return _invert_real(expo,
@@ -323,7 +322,6 @@ def _invert_real(f, g_ys, symbol):
                     return (expo, S.EmptySet)
 
     if isinstance(f, (TrigonometricFunction, HyperbolicFunction)):
-        print("trig")
         return _invert_trig_hyp_real(f, g_ys, symbol)
 
     return (f, g_ys)
@@ -431,7 +429,9 @@ def _invert_trig_hyp_real(f, g_ys, symbol):
             # returns ConditionSet that will be part of the final (x, set) tuple
             invsimg = Union(*[
                 imageset(n, period*n + inv(g), S.Integers) for inv in invs])
-            invsimg = invsimg.intersect(imageset(symbol, f.args[0], S.Reals))
+            innerimg = function_range(f.args[0], symbol, S.Reals)
+            if innerimg != Interval(-oo,oo):
+                invsimg = Intersection(invsimg, innerimg)
             inv_f, inv_g_ys = _invert_real(f.args[0], invsimg, symbol)
             if inv_f == symbol:     # inversion successful
                 conds = rng.contains(g)
@@ -1313,7 +1313,6 @@ def _solveset(f, symbol, domain, _check=False):
     elif _is_modular(f, symbol):
         result = _solve_modular(f, symbol, domain)
     else:
-        print("trig")
         lhs, rhs_s = inverter(f, 0, symbol)
         if lhs == symbol:
             # do some very minimal simplification since

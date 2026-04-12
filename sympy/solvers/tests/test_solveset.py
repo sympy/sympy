@@ -138,8 +138,9 @@ def test_invert_real():
 
     assert dumeq(invert_real(sin(exp(x)), y, x), (x,
         ConditionSet(x, (S(-1) <= y) & (y <= S(1)), Union(
-            ImageSet(Lambda(n, log(2*n*pi + asin(y))), S.Integers),
-            ImageSet(Lambda(n, log(pi*2*n + pi - asin(y))), S.Integers)))))
+            ImageSet(Lambda(x, log(x)), Intersection(
+                ImageSet(Lambda(n, 2*n*pi + asin(y)), S.Integers), Interval.open(0, oo))),
+            ImageSet(Lambda(x, log(x)), Intersection(ImageSet(Lambda(n, 2*n*pi - asin(y) + pi), S.Integers), Interval.open(0, oo)))))))
 
     assert dumeq(invert_real(csc(x), y, x), (x,
         ConditionSet(x, ((S(1) <= y) & (y < oo)) | ((-oo < y) & (y <= S(-1))),
@@ -147,9 +148,10 @@ def test_invert_real():
                 ImageSet(Lambda(n, 2*n*pi - acsc(y) + pi), S.Integers)))))
 
     assert dumeq(invert_real(csc(exp(x)), y, x), (x,
-        ConditionSet(x, ((S(1) <= y) & (y < oo)) | ((-oo < y) & (y <= S(-1))),
-            Union(ImageSet(Lambda(n, log(2*n*pi + acsc(y))), S.Integers),
-                ImageSet(Lambda(n, log(2*n*pi - acsc(y) + pi)), S.Integers)))))
+        ConditionSet(x, ((S(1) <= y) & (y < oo)) | ((-oo < y) & (y <= S(-1))), Union(
+            ImageSet(Lambda(x, log(x)), Intersection(
+                ImageSet(Lambda(n, 2*n*pi + acsc(y)), S.Integers), Interval.open(0, oo))),
+            ImageSet(Lambda(x, log(x)), Intersection(ImageSet(Lambda(n, 2*n*pi - acsc(y) + pi), S.Integers), Interval.open(0, oo)))))))
 
     assert dumeq(invert_real(cos(x), y, x), (x,
         ConditionSet(x, (S(-1) <= y) & (y <= S(1)), Union(
@@ -158,8 +160,9 @@ def test_invert_real():
 
     assert dumeq(invert_real(cos(exp(x)), y, x), (x,
         ConditionSet(x, (S(-1) <= y) & (y <= S(1)), Union(
-            ImageSet(Lambda(n, log(2*n*pi + acos(y))), S.Integers),
-            ImageSet(Lambda(n, log(2*n*pi - acos(y))), S.Integers)))))
+            ImageSet(Lambda(x, log(x)), Intersection(
+                ImageSet(Lambda(n, 2*n*pi - acos(y)), S.Integers), Interval.open(0, oo))),
+            ImageSet(Lambda(x, log(x)), Intersection(ImageSet(Lambda(n, 2*n*pi + acos(y)), S.Integers), Interval.open(0, oo)))))))
 
     assert dumeq(invert_real(sec(x), y, x), (x,
         ConditionSet(x, ((S(1) <= y) & (y < oo)) | ((-oo < y) & (y <= S(-1))),
@@ -167,9 +170,11 @@ def test_invert_real():
                 ImageSet(Lambda(n, 2*n*pi - asec(y)), S.Integers)))))
 
     assert dumeq(invert_real(sec(exp(x)), y, x), (x,
-        ConditionSet(x, ((S(1) <= y) & (y < oo)) | ((-oo < y) & (y <= S(-1))),
-            Union(ImageSet(Lambda(n, log(2*n*pi - asec(y))), S.Integers),
-                ImageSet(Lambda(n, log(2*n*pi + asec(y))), S.Integers)))))
+        ConditionSet(x, ((S(1) <= y) & (y < oo)) | ((-oo < y) & (y <=S(-1))), Union(
+            ImageSet(Lambda(x, log(x)), Intersection(
+                ImageSet(Lambda(n, 2*n*pi - asec(y)), S.Integers),
+                Interval.open(0, oo))),
+            ImageSet(Lambda(x, log(x)), Intersection(ImageSet(Lambda(n, 2*n*pi + asec(y)), S.Integers), Interval.open(0, oo)))))))
 
     assert dumeq(invert_real(tan(x), y, x), (x,
         ConditionSet(x, (-oo < y) & (y < oo),
@@ -177,15 +182,16 @@ def test_invert_real():
 
     assert dumeq(invert_real(tan(exp(x)), y, x), (x,
         ConditionSet(x, (-oo < y) & (y < oo),
-            ImageSet(Lambda(n, log(n*pi + atan(y))), S.Integers))))
+                     ImageSet(Lambda(x, log(x)), Intersection(
+                         ImageSet(Lambda(n, n*pi + atan(y)), S.Integers), Interval.open(0, oo))))))
 
     assert dumeq(invert_real(cot(x), y, x), (x,
         ConditionSet(x, (-oo < y) & (y < oo),
             ImageSet(Lambda(n, n*pi + acot(y)), S.Integers))))
 
     assert dumeq(invert_real(cot(exp(x)), y, x), (x,
-        ConditionSet(x, (-oo < y) & (y < oo),
-            ImageSet(Lambda(n, log(n*pi + acot(y))), S.Integers))))
+        ConditionSet(x, (-oo < y) & (y < oo), ImageSet(Lambda(x, log(x)),
+            Intersection(ImageSet(Lambda(n, n*pi + acot(y)), S.Integers), Interval.open(0, oo))))))
 
     assert dumeq(invert_real(tan(tan(x)), y, x),
         (x, ConditionSet(x, Eq(tan(tan(x)), y), S.Reals)))
