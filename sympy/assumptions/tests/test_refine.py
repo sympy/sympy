@@ -89,6 +89,7 @@ def test_exp():
     assert refine(exp(pi*I*(x + Rational(1, 2))), Q.even(x)) == I
     assert refine(exp(pi*I*(x + Rational(1, 2))), Q.odd(x)) == -I
     assert refine(exp(pi*I*(x + Rational(3, 2))), Q.odd(x)) == I
+    assert refine(exp(pi*I*(x + Rational(1, 2))), Q.integer(x)) == I*(-1)**x
 
     assert refine(exp(2*pi*I*(x + y + Rational(1, 4))),
         Q.integer(x) & Q.integer(y)) == I

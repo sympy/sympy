@@ -158,31 +158,31 @@ def refine_Pow(expr, assumptions):
 
     if isinstance(expr, exp):
         coeff = expr.exp.as_coefficient(S.Pi * S.ImaginaryUnit)
+        if coeff is None:
+            return expr
+        elif ask(Q.even(coeff), assumptions):
+            return S.One
+        elif ask(Q.odd(coeff), assumptions):
+            return S.NegativeOne
+        elif coeff.is_Add:
+            integer_terms = []
+            remaining_terms = []
+            for term in coeff.args:
+                if ask(Q.integer(term), assumptions):
+                    integer_terms.append(term)
+                else:
+                    remaining_terms.append(term)
 
-        if coeff is not None:
-            if ask(Q.even(coeff), assumptions):
-                return S.One
-            if ask(Q.odd(coeff), assumptions):
-                return S.NegativeOne
-
-            if coeff.is_Add:
-                integer_terms = []
-                remaining_terms = []
-                for term in coeff.args:
-                    if ask(Q.integer(term), assumptions):
-                        integer_terms.append(term)
-                    else:
-                        remaining_terms.append(term)
-
-                if integer_terms:
-                    integer_part = Add(*integer_terms)
-                    remaining_part = Add(*remaining_terms)
-                    if remaining_part.is_Rational:
-                        phase = expr.func(S.Pi * S.ImaginaryUnit * remaining_part)
-                        if ask(Q.even(integer_part), assumptions):
-                            return phase
-                        if ask(Q.odd(integer_part), assumptions):
-                            return -phase
+            if integer_terms:
+                integer_part = Add(*integer_terms)
+                remaining_part = Add(*remaining_terms)
+                if remaining_part.is_Rational:
+                    phase = expr.func(S.Pi * S.ImaginaryUnit * remaining_part)
+                    if ask(Q.even(integer_part), assumptions):
+                        return phase
+                    if ask(Q.odd(integer_part), assumptions):
+                        return -phase
+                    return (-1)**integer_part * phase
 
     if isinstance(expr.base, exp) and isinstance(expr.exp, Rational):
         if ask(Q.real(expr.base.exp), assumptions):
@@ -537,6 +537,8 @@ def refine_sin_cos(expr, assumptions):
         pow_expr = (-1)**((k + 1) / 2)
         refined_pow = refine_Pow(pow_expr, assumptions)
         return (pow_expr if refined_pow is None else refined_pow) * sin(rem)
+    
+    
 def refine_Heaviside(expr, assumptions):
     """
     Handler for the Heaviside step function.
