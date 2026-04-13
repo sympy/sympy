@@ -537,8 +537,8 @@ def refine_sin_cos(expr, assumptions):
         pow_expr = (-1)**((k + 1) / 2)
         refined_pow = refine_Pow(pow_expr, assumptions)
         return (pow_expr if refined_pow is None else refined_pow) * sin(rem)
-    
-    
+
+
 def refine_Heaviside(expr, assumptions):
     """
     Handler for the Heaviside step function.
