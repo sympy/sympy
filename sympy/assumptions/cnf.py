@@ -322,17 +322,10 @@ class CNF:
         return self
 
     def all_predicates(self):
-        predicates = set()
-        for c in self.clauses:
-            predicates |= {arg.lit for arg in c}
-        return predicates
+        return {arg.lit for clause in self.clauses for arg in clause}
 
     def _or(self, cnf):
-        clauses = set()
-        for a, b in product(self.clauses, cnf.clauses):
-            tmp = set(a)
-            tmp.update(b)
-            clauses.add(frozenset(tmp))
+        clauses = {a | b for a in self.clauses for b in cnf.clauses}
         return CNF(clauses)
 
     def _and(self, cnf):
@@ -366,10 +359,8 @@ class CNF:
 
     @classmethod
     def all_and(cls, *cnfs):
-        b = cnfs[0].copy()
-        for rest in cnfs[1:]:
-            b = b._and(rest)
-        return b
+        clauses = {clause for cnf in cnfs for clause in cnf.clauses}
+        return CNF(clauses)
 
     @classmethod
     def to_CNF(cls, expr):
