@@ -27,12 +27,13 @@ def test_dmp_trial_division():
 
 def test_dup_zz_mignotte_bound():
     R, x = ring("x", ZZ)
-    assert R.dup_zz_mignotte_bound(2*x**2 + 3*x + 4) == 32
+    assert R.dup_zz_mignotte_bound(2*x**2 + 3*x + 4) == 6
+    assert R.dup_zz_mignotte_bound(x**3 + 14*x**2 + 56*x + 64) == 152
 
 
 def test_dmp_zz_mignotte_bound():
     R, x, y = ring("x,y", ZZ)
-    assert R.dmp_zz_mignotte_bound(2*x**2 + 3*x + 4) == 32
+    assert R.dmp_zz_mignotte_bound(2*x**2 + 3*x + 4) == 6
 
 
 def test_dup_zz_hensel_step():
@@ -254,7 +255,7 @@ def test_dmp_zz_wang():
     UV, _x = ring("x", ZZ)
 
     p = ZZ(nextprime(R.dmp_zz_mignotte_bound(w_1)))
-    assert p == 6291469
+    assert p == 1597
 
     t_1, k_1, e_1 = y, 1, ZZ(-14)
     t_2, k_2, e_2 = z, 2, ZZ(3)
@@ -300,7 +301,7 @@ def test_dmp_zz_wang_fail():
     UV, _x = ring("x", ZZ)
 
     p = ZZ(nextprime(R.dmp_zz_mignotte_bound(w_1)))
-    assert p == 6291469
+    assert p == 1597
 
     H_1 = [44*x**2 + 42*x + 1, 126*x**2 - 9*x + 28, 187*x**2 - 23]
     H_2 = [-4*x**2*y - 12*x**2 - 3*x*y + 1, -9*x**2*y - 9*x - 2*y, x**2*y**2 - 9*x**2 + y - 9]
