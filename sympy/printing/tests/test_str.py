@@ -929,7 +929,7 @@ def test_settings():
 def test_RandomDomain():
     from sympy.stats import Normal, Die, Exponential, pspace, where
     X = Normal('x1', 0, 1)
-    assert str(where(X > 0)) == "Domain: (0 < x1) & (x1 < oo)"
+    assert str(where(X > 0)) == "Domain: 0 < x1"
 
     D = Die('d1', 6)
     assert str(where(D > 4)) == "Domain: Eq(d1, 5) | Eq(d1, 6)"

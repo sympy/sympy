@@ -290,6 +290,7 @@ class RandomSymbol(Expr):
 
     is_finite = True
     is_symbol = True
+    is_Symbol = True
     is_Atom = True
 
     _diff_wrt = True
@@ -350,7 +351,12 @@ class RandomSymbol(Expr):
         return self.symbol.is_negative
 
     def _eval_is_real(self):
-        return self.symbol.is_real or getattr(self.pspace, 'is_real', False)
+        try:
+            if self.pspace.domain.set.is_subset(S.Reals):
+                return True
+        except (AttributeError, NotImplementedError, IndexError):
+            pass
+        return self.symbol.is_real
 
 class RandomIndexedSymbol(RandomSymbol):
 
