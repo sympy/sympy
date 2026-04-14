@@ -122,7 +122,7 @@ from sympy.assumptions.ask import Q
 from sympy.core import Dummy
 from sympy.core.mul import Mul
 from sympy.core.add import Add
-from sympy.core.relational import Eq, Ne
+from sympy.core.relational import Eq
 from sympy.core.sympify import sympify
 from sympy.core.singleton import S
 from sympy.core.numbers import Rational, oo
