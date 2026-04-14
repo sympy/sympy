@@ -279,16 +279,15 @@ class LRASolver():
                 raise UnhandledInput(f"{prop} contains an imaginary component")
             if prop.lhs == oo or prop.rhs == oo:
                 raise UnhandledInput(f"{prop} contains infinity")
-
-            prop = _eval_binrel(prop)  # simplify variable-less quantities to True / False if possible
-            if prop == True:
-                conflicts.append([enc])
+            if len(prop.lhs.free_symbols) == len(prop.rhs.free_symbols) == 0:
+                match prop.function.eval([prop.lhs, prop.rhs]):
+                    case True:
+                        conflicts.append([enc])
+                    case False:
+                        conflicts.append([-enc])
+                    case _:
+                        raise UnhandledInput(f"{prop} could not be simplified")
                 continue
-            elif prop == False:
-                conflicts.append([-enc])
-                continue
-            elif prop is None:
-                raise UnhandledInput(f"{prop} could not be simplified")
 
             expr = prop.lhs - prop.rhs
             if prop.function in [Q.ge, Q.gt]:
@@ -734,31 +733,6 @@ def _sep_const_terms(expr):
                       lambda t: len(t.free_symbols) == 0,
                       binary=True)
     return Add(*var), Add(*const)
-
-
-def _eval_binrel(binrel):
-    """
-    Simplify binary relation to True / False if possible.
-    """
-    if not (len(binrel.lhs.free_symbols) == 0 and len(binrel.rhs.free_symbols) == 0):
-        return binrel
-    if binrel.function == Q.lt:
-        res = binrel.lhs < binrel.rhs
-    elif binrel.function == Q.gt:
-        res = binrel.lhs > binrel.rhs
-    elif binrel.function == Q.le:
-        res = binrel.lhs <= binrel.rhs
-    elif binrel.function == Q.ge:
-        res = binrel.lhs >= binrel.rhs
-    elif binrel.function == Q.eq:
-        res = Eq(binrel.lhs, binrel.rhs)
-    elif binrel.function == Q.ne:
-        res = Ne(binrel.lhs, binrel.rhs)
-
-    if res == True or res == False:
-        return res
-    else:
-        return None
 
 
 class Boundary:
