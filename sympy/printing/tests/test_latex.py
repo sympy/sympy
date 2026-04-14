@@ -3306,3 +3306,22 @@ def test_latex_disable_split_super_sub():
     assert latex(Symbol('u^a_b')) == 'u^{a}_{b}'
     assert latex(Symbol('u^a_b'), disable_split_super_sub=False) == 'u^{a}_{b}'
     assert latex(Symbol('u^a_b'), disable_split_super_sub=True) == 'u\\^a\\_b'
+
+def test_issue_29690():
+    f = Function('f')
+    assert latex(f(x)**2) == r'f{\left(x \right)}^{2}'
+    assert latex(f(x)**2, trig_pow_outside = False) == r'f{\left(x \right)}^{2}'
+    assert latex(f(x)**y) == r'f{\left(x \right)}^{y}'
+    assert latex(f(x)**y, trig_pow_outside = False) == r'f{\left(x \right)}^{y}'
+
+    assert latex(sin(x)**2) == r'\sin{\left(x \right)}^{2}'
+    assert latex(sin(x)**2, trig_pow_outside = False) == r'\sin^{2}{\left(x \right)}'
+
+    assert latex(asin(x)**2) == r'\operatorname{asin}{\left(x \right)}^{2}'
+    assert latex(asin(x)**2, trig_pow_outside = False) == r'\operatorname{asin}^{2}{\left(x \right)}'
+    assert latex(asin(x)**2, trig_pow_outside = False, inv_trig_style = "power") == \
+                                                        r'\sin^{-1}{\left(x \right)}^{2}'
+    assert latex(asin(x)**2, inv_trig_style = "power") ==  r'\sin^{-1}{\left(x \right)}^{2}'
+
+
+

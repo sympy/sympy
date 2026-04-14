@@ -1009,7 +1009,7 @@ class LatexPrinter(Printer):
                 "csc", "sec", "cot",
                 "sinh", "cosh", "tanh",
                 "csch", "sech", "coth",
-            ]
+            ] + inv_trig_table
             trig_pow_outside = self._settings['trig_pow_outside']
 
             if inv_trig_power_case:
@@ -1040,7 +1040,7 @@ class LatexPrinter(Printer):
             if inv_trig_power_case and exp is not None:
                 name += r"^{%s}" % exp
             elif exp is not None:
-                if trig_pow_outside or func not in trig_table:
+                if trig_pow_outside or func not in trig_table :
                     name += r"^{%s}" % exp
 
             return name % ",".join(args)
