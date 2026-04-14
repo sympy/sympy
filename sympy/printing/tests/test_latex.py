@@ -1207,7 +1207,7 @@ def test_latex_ordinals():
     assert latex(Ordinal(OmegaPower(2, 1), OmegaPower(1, 2))) == r'\omega^{2} + \omega 2'
     assert latex(w**(w + 1) + 1) == r'\omega^{\omega + 1} + 1'
     assert latex(OmegaPower(0,1)) == '1'
-    assert latex(Ordinal()) == "0"
+    assert latex(OrdinalZero()) == "0"
 
 
 def test_set_operators_parenthesis():
