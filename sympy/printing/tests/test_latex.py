@@ -3322,6 +3322,3 @@ def test_issue_29690():
     assert latex(asin(x)**2, trig_pow_outside = False, inv_trig_style = "power") == \
                                                         r'\sin^{-1}{\left(x \right)}^{2}'
     assert latex(asin(x)**2, inv_trig_style = "power") ==  r'\sin^{-1}{\left(x \right)}^{2}'
-
-
-
