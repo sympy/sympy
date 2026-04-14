@@ -1039,8 +1039,9 @@ class LatexPrinter(Printer):
 
             if inv_trig_power_case and exp is not None:
                 name += r"^{%s}" % exp
-            elif exp is not None and func and trig_pow_outside:
-                name += r"^{%s}" % exp
+            elif exp is not None:
+                if trig_pow_outside or func not in trig_table:
+                    name += r"^{%s}" % exp
 
             return name % ",".join(args)
 
