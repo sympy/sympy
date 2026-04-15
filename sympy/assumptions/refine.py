@@ -143,50 +143,9 @@ def refine_Pow(expr, assumptions):
     >>> refine_Pow((-1)**(x+3), True)
     (-1)**(x + 1)
 
-    Exponential expressions are also handled here:
-
-    >>> from sympy import E, exp, I, pi, sqrt
-    >>> refine_Pow(exp(2*pi*I*x), Q.integer(x))
-    1
-    >>> refine_Pow(sqrt(E**x), Q.real(x))
-    exp(x/2)
-
     """
     from sympy.functions.elementary.complexes import Abs
-    from sympy.functions.elementary.exponential import exp
     from sympy.functions import sign
-
-    if isinstance(expr, exp):
-        coeff = expr.exp.as_coefficient(S.Pi * S.ImaginaryUnit)
-        if coeff is None:
-            return expr
-        elif ask(Q.even(coeff), assumptions):
-            return S.One
-        elif ask(Q.odd(coeff), assumptions):
-            return S.NegativeOne
-        elif coeff.is_Add:
-            integer_terms = []
-            remaining_terms = []
-            for term in coeff.args:
-                if ask(Q.integer(term), assumptions):
-                    integer_terms.append(term)
-                else:
-                    remaining_terms.append(term)
-
-            if integer_terms:
-                integer_part = Add(*integer_terms)
-                remaining_part = Add(*remaining_terms)
-                if remaining_part.is_Rational:
-                    phase = expr.func(S.Pi * S.ImaginaryUnit * remaining_part)
-                    if ask(Q.even(integer_part), assumptions):
-                        return phase
-                    if ask(Q.odd(integer_part), assumptions):
-                        return -phase
-                    return (-1)**integer_part * phase
-
-    if isinstance(expr.base, exp) and isinstance(expr.exp, Rational):
-        if ask(Q.real(expr.base.exp), assumptions):
-            return expr.base.func(expr.base.exp * expr.exp)
 
     if isinstance(expr.base, Abs):
         if ask(Q.real(expr.base.args[0]), assumptions) and \
@@ -256,6 +215,43 @@ def refine_Pow(expr, assumptions):
 
                 if old != expr:
                     return expr
+
+
+def refine_exp(expr, assumptions):
+    """
+    Handler for exponential functions.
+
+    Examples
+    ========
+
+    >>> from sympy import Q, exp, I, pi
+    >>> from sympy.assumptions.refine import refine_exp
+    >>> from sympy.abc import x
+    >>> refine_exp(exp(2*pi*I*x), Q.integer(x))
+    1
+    >>> refine_exp(exp(pi*I*(x + 1/2)), Q.integer(x))
+    I*(-1)**x
+    """
+    coeff = expr.exp.as_coefficient(S.Pi * S.ImaginaryUnit)
+    if coeff is None:
+        return expr
+
+    integer_terms = []
+    remaining_terms = []
+    terms = coeff.args if coeff.is_Add else (coeff,)
+    for term in terms:
+        if ask(Q.integer(term), assumptions):
+            integer_terms.append(term)
+        else:
+            remaining_terms.append(term)
+
+    if not integer_terms:
+        return expr
+
+    integer_part = Add(*integer_terms)
+    remaining_part = Add(*remaining_terms)
+    phase = expr.func(S.Pi * S.ImaginaryUnit * remaining_part)
+    return (-1)**integer_part * phase
 
 
 def refine_atan2(expr, assumptions):
@@ -618,7 +614,7 @@ handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'MatrixElement': refine_matrixelement,
     'cos': refine_sin_cos,
     'sin': refine_sin_cos,
-    'exp': refine_Pow,
+    'exp': refine_exp,
     'Heaviside': refine_Heaviside,
     'floor': refine_floor_ceiling,
     'ceiling' : refine_floor_ceiling,
