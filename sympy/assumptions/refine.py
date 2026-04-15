@@ -224,13 +224,12 @@ def refine_exp(expr, assumptions):
     Examples
     ========
 
-    >>> from sympy import Q, exp, I, pi
-    >>> from sympy.assumptions.refine import refine_exp
+    >>> from sympy import Q, S, exp, I, pi, refine
     >>> from sympy.abc import x
-    >>> refine_exp(exp(2*pi*I*x), Q.integer(x))
+    >>> refine(exp(2*pi*I*x), Q.integer(x))
     1
-    >>> refine_exp(exp(pi*I*(x + 1/2)), Q.integer(x))
-    I*(-1)**x
+    >>> refine(exp(pi*I*(x + S.Half)), Q.integer(x))
+    (-1)**x*I
     """
     coeff = expr.exp.as_coefficient(S.Pi * S.ImaginaryUnit)
     if coeff is None:
