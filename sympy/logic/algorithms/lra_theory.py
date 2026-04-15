@@ -279,37 +279,21 @@ class LRASolver():
                 raise UnhandledInput(f"{prop} contains an imaginary component")
             if prop.lhs == oo or prop.rhs == oo:
                 raise UnhandledInput(f"{prop} contains infinity")
-            if len(prop.lhs.free_symbols) == len(prop.rhs.free_symbols) == 0:
-                match prop.function.eval([prop.lhs, prop.rhs]):
-                    case True:
-                        conflicts.append([enc])
-                    case False:
-                        conflicts.append([-enc])
-                    case _:
-                        raise UnhandledInput(f"{prop} could not be simplified")
-                continue
 
             expr = prop.lhs - prop.rhs
+            match prop.function.eval([expr, S.Zero]):
+                case True:
+                    conflicts.append([enc])
+                    continue
+                case False:
+                    conflicts.append([-enc])
+                    continue
+                case _:
+                    if len(expr.free_symbols) == 0:
+                        raise UnhandledInput(f"{prop} could not be simplified")
+
             if prop.function in [Q.ge, Q.gt]:
                 expr = -expr
-
-            # expr should be less than (or equal to) 0
-            # otherwise prop is False
-            if prop.function in [Q.le, Q.ge]:
-                bool = (expr <= 0)
-            elif prop.function in [Q.lt, Q.gt]:
-                bool = (expr < 0)
-            else:
-                assert prop.function == Q.eq
-                bool = Eq(expr, 0)
-
-            if bool == True:
-                conflicts.append([enc])
-                continue
-            elif bool == False:
-                conflicts.append([-enc])
-                continue
-
 
             vars, const = _sep_const_terms(expr)  # example: (2x + 3y + 2) --> (2x + 3y), (2)
             vars, var_coeff = _sep_const_coeff(vars)  # examples: (2x) --> (x, 2); (2x + 3y) --> (2x + 3y), (1)
