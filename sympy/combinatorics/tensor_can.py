@@ -952,7 +952,7 @@ def get_symmetric_group_sgs(n, antisym=False):
     """
     if n == 1:
         return [], [_af_new(list(range(3)))]
-    gens = [Permutation(n - 1)(i, i + 1)._array_form for i in range(n - 1)]
+    gens = [Permutation(n - 1)(i, i + 1).array_form for i in range(n - 1)]
     if antisym == 0:
         gens = [x + [n, n + 1] for x in gens]
     else:
