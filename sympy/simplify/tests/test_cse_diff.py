@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import pytest
 
-from sympy import Add
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.core.numbers import Integer
 from sympy.core.function import Function
@@ -11,18 +10,14 @@ from sympy.core import Derivative
 from sympy.functions.elementary.exponential import exp, log
 from sympy.matrices.immutable import ImmutableDenseMatrix
 from sympy.physics.mechanics import dynamicsymbols
-from sympy.simplify._cse_diff import (_DiffCache,
-                                      _PropagationCache,
-                                      _SparseJacobianStats,
-                                      SparseJacobianIR,
+from sympy.simplify._cse_diff import (SparseJacobianIR,
                                       _forward_jacobian,
                                       _remove_cse_from_derivative,
                                       _forward_jacobian_cse,
                                       _forward_jacobian_norm_in_cse_out,
                                       _forward_jacobian_sparse_cse,
                                       _get_dependencies,
-                                      _propagate_support,
-                                      _sparse_derivative)
+                                      _propagate_support)
 from sympy.simplify.simplify import simplify
 from sympy.matrices import Matrix, eye
 
@@ -205,7 +200,7 @@ def test_sparse_cse_derivative_not_in_wrt_is_semantic_boundary():
     assert simplify(expanded - expr.jacobian(wrt)) == Matrix.zeros(2, 2)
 
 
-def test_sparse_cse_stats_track_fallback_for_unsupported_function():
+def test_sparse_cse_unsupported_function_preserves_jacobian():
     f_local = Function('f')
     expr = Matrix([f_local(x, y) + x, f_local(x, y)*z])
     wrt = Matrix([x, y, z])
@@ -215,7 +210,6 @@ def test_sparse_cse_stats_track_fallback_for_unsupported_function():
 
     expanded = _backsubstitute_matrix(replacements, ir.to_matrix(reduced_expr[0].__class__))
     assert simplify(expanded - expr.jacobian(wrt)) == Matrix.zeros(2, 3)
-    assert ir.stats['fallback_count'] > 0
 
 
 def test_sparse_cse_edge_case_zero_jacobian():
@@ -226,47 +220,6 @@ def test_sparse_cse_edge_case_zero_jacobian():
     ir = _forward_jacobian_sparse_cse(replacements, reduced_expr, wrt, return_mode="ir")
 
     assert ir.to_matrix(reduced_expr[0].__class__) == Matrix.zeros(2, 2)
-    assert ir.stats['row_nnz'] == [0, 0]
-    assert ir.stats['output_nnz'] == 0
-
-
-def test_sparse_cse_with_intern_preserves_result_on_repeated_subexpressions():
-    expr = Matrix([
-        (x + y)*(x + y) + sin(x + y),
-        (x + y)*(x + y)*(x + y),
-    ])
-    wrt = Matrix([x, y])
-
-    replacements, reduced_expr = cse(expr)
-    default_result = _forward_jacobian_sparse_cse(replacements, reduced_expr, wrt)
-    intern_result = _forward_jacobian_sparse_cse(
-        replacements, reduced_expr, wrt, return_mode="ir", use_intern=True)
-
-    assert default_result[:3] == (
-        intern_result.intermediates,
-        [intern_result.to_matrix(reduced_expr[0].__class__)],
-        [],
-    )
-    assert intern_result.stats['intern_hits'] >= 0
-    assert intern_result.stats['intern_misses'] >= 0
-
-
-def test_sparse_cse_stats_track_derivative_cache_hits():
-    f_local = Function('f')
-    shared = f_local(x, y, z)
-    expr = Add(shared, shared, evaluate=False)
-    wrt = [x, y, z]
-    wrt_index = {var: i for i, var in enumerate(wrt)}
-    stats = _SparseJacobianStats()
-
-    result = _sparse_derivative(
-        expr, wrt, wrt_index, {}, _PropagationCache(), _DiffCache(),
-        stats=stats, derivative_cache={},
-    )
-
-    assert result == {0: 2*shared.diff(x), 1: 2*shared.diff(y), 2: 2*shared.diff(z)}
-    assert stats.derivative_cache_hits > 0
-    assert stats.derivative_cache_misses > 0
 
 
 def test_sparse_jacobian_ir_roundtrip_helpers():
@@ -278,7 +231,6 @@ def test_sparse_jacobian_ir_roundtrip_helpers():
         row_slices=[(0, 2), (2, 3)],
         wrt=[x, y, z],
         intermediates=[],
-        stats={'output_nnz': 3},
     )
 
     assert ir.to_matrix(Matrix) == Matrix([[x, 0, y], [0, z, 0]])
@@ -297,7 +249,6 @@ def test_forward_jacobian_sparse_cse_return_mode_ir_matches_matrix_mode():
 
     assert ir.to_matrix(reduced_expr[0].__class__) == matrix_result[1][0]
     assert ir.intermediates == matrix_result[0]
-    assert ir.stats['output_nnz'] == 5
 
 
 def test_forward_jacobian_sparse_cse_rejects_unknown_return_mode():

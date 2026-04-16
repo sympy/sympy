@@ -74,11 +74,10 @@ def _remove_cse_from_derivative(replacements, reduced_expressions):
 class _PropagationCache:
     """Cache expression construction during sparse propagation."""
 
-    def __init__(self, interner=None):
+    def __init__(self):
         self._cache = {}
         self._hits = 0
         self._misses = 0
-        self._interner = interner
 
     @property
     def hits(self):
@@ -97,8 +96,6 @@ class _PropagationCache:
 
         self._misses += 1
         result = func(*args)
-        if self._interner is not None:
-            result = self._interner.intern(result)
         self._cache[key] = result
         return result
 
@@ -131,41 +128,6 @@ class _DiffCache:
         return result
 
 
-class _ExprIntern:
-    """Optional local interning for structurally equal expressions."""
-
-    def __init__(self):
-        self._table = {}
-        self._hits = 0
-        self._misses = 0
-
-    @property
-    def hits(self):
-        return self._hits
-
-    @property
-    def misses(self):
-        return self._misses
-
-    def intern(self, expr):
-        existing = self._table.get(expr)
-        if existing is not None:
-            self._hits += 1
-            return existing
-        self._misses += 1
-        self._table[expr] = expr
-        return expr
-
-
-class _SparseJacobianStats:
-    """Collect low-risk counters for sparse propagation experiments."""
-
-    def __init__(self):
-        self.fallback_count = 0
-        self.derivative_cache_hits = 0
-        self.derivative_cache_misses = 0
-
-
 @dataclass
 class SparseJacobianIR:
     """Sparse Jacobian intermediate representation.
@@ -173,7 +135,7 @@ class SparseJacobianIR:
     This object is the primary internal result of
     ``_forward_jacobian_sparse_cse``. It stores the Jacobian in a COO-like
     sparse form together with row boundaries, the differentiation variables,
-    optional intermediate expressions, and optional diagnostic stats.
+    optional intermediate expressions.
 
     Attributes
     ==========
@@ -189,8 +151,6 @@ class SparseJacobianIR:
         Differentiation variables in column order.
     intermediates : list[tuple]
         Intermediate expressions referenced by ``vals``.
-    stats : dict | None
-        Optional diagnostic counters for sparse propagation experiments.
     """
 
     shape: tuple[int, int]
@@ -200,7 +160,6 @@ class SparseJacobianIR:
     row_slices: list[tuple[int, int]]
     wrt: list
     intermediates: list[tuple]
-    stats: dict | None = None
 
     def to_matrix(self, matrix_cls):
         """Rebuild the Jacobian as a SymPy matrix."""
@@ -376,11 +335,8 @@ def _propagate_pow(node_expr, children, child_derivs, cache):
     return result
 
 
-def _fallback_local_diff(node_expr, wrt, dcache, stats=None, columns=None):
+def _fallback_local_diff(node_expr, wrt, dcache, columns=None):
     """Fallback local differentiation for unsupported node shapes."""
-    if stats is not None:
-        stats.fallback_count += 1
-
     if columns is None:
         columns = _get_dependencies(node_expr, wrt)
 
@@ -440,7 +396,7 @@ def _propagate_support(expr, wrt_index, replacement_support, cache=None):
 
 
 def _sparse_derivative(
-    expr, wrt, wrt_index, replacement_derivatives, cache, dcache, stats=None,
+    expr, wrt, wrt_index, replacement_derivatives, cache, dcache,
     support_map=None, derivative_cache=None,
 ):
     """Differentiate ``expr`` to a sparse row map.
@@ -458,11 +414,7 @@ def _sparse_derivative(
     if derivative_cache is not None:
         cached = derivative_cache.get(expr)
         if cached is not None:
-            if stats is not None:
-                stats.derivative_cache_hits += 1
             return cached
-        if stats is not None:
-            stats.derivative_cache_misses += 1
 
     children = expr.args
     child_derivs = []
@@ -472,7 +424,7 @@ def _sparse_derivative(
         if child_deriv is None:
             child_deriv = _sparse_derivative(
                 child, wrt, wrt_index, replacement_derivatives, cache, dcache,
-                stats=stats, support_map=support_map,
+                support_map=support_map,
                 derivative_cache=derivative_cache)
         child_derivs.append(child_deriv)
 
@@ -489,14 +441,14 @@ def _sparse_derivative(
         if columns is None:
             columns = _get_dependencies(expr, wrt)
         result = _fallback_local_diff(
-            expr, wrt, dcache, stats=stats, columns=columns)
+            expr, wrt, dcache, columns=columns)
 
     if derivative_cache is not None:
         derivative_cache[expr] = result
     return result
 
 
-def _build_ir(row_maps, wrt_list, intermediates, stats=None):
+def _build_ir(row_maps, wrt_list, intermediates):
     """Build ``SparseJacobianIR`` from sparse row maps."""
     rows = []
     cols = []
@@ -519,7 +471,6 @@ def _build_ir(row_maps, wrt_list, intermediates, stats=None):
         row_slices=row_slices,
         wrt=wrt_list,
         intermediates=list(intermediates),
-        stats=stats,
     )
 
 
@@ -684,7 +635,6 @@ def _forward_jacobian_sparse_cse(
     reduced_expr,
     wrt,
     return_mode="matrix",
-    use_intern=False,
     structure_prepass=False,
     value_cse="none",
 ):
@@ -712,8 +662,6 @@ def _forward_jacobian_sparse_cse(
         ``"matrix"`` returns the legacy-compatible tuple
         ``(replacements, [jacobian_matrix], [])``.
         ``"ir"`` returns a ``SparseJacobianIR`` instance.
-    use_intern : bool, optional
-        Enable local expression interning during propagation.
     structure_prepass : bool, optional
         Run a support prepass before value propagation to prune obviously zero
         columns for unsupported node shapes.
@@ -728,12 +676,6 @@ def _forward_jacobian_sparse_cse(
     tuple or SparseJacobianIR
         Return type depends on ``return_mode``.
 
-    Notes
-    =====
-
-    Diagnostic counters are stored on ``SparseJacobianIR.stats``. They are kept
-    for debugging and experiments, but are not exposed as part of the matrix
-    return protocol.
     """
     if return_mode not in ("matrix", "ir"):
         raise ValueError("``return_mode`` must be 'matrix' or 'ir'")
@@ -747,10 +689,8 @@ def _forward_jacobian_sparse_cse(
 
     wrt_list = list(wrt)
     wrt_index = {var: i for i, var in enumerate(wrt_list)}
-    interner = _ExprIntern() if use_intern else None
-    cache = _PropagationCache(interner=interner)
+    cache = _PropagationCache()
     dcache = _DiffCache()
-    sparse_stats = _SparseJacobianStats()
     replacement_derivatives = {}
     replacement_support = {}
     support_cache = {}
@@ -767,7 +707,6 @@ def _forward_jacobian_sparse_cse(
             continue
         replacement_derivatives[sym] = _sparse_derivative(
             expr, wrt_list, wrt_index, replacement_derivatives, cache, dcache,
-            stats=sparse_stats,
             support_map=support_cache if structure_prepass else None,
             derivative_cache=derivative_cache,
         )
@@ -782,27 +721,10 @@ def _forward_jacobian_sparse_cse(
                 continue
         row_maps.append(_sparse_derivative(
             expr, wrt_list, wrt_index, replacement_derivatives, cache, dcache,
-            stats=sparse_stats,
             support_map=support_cache if structure_prepass else None,
             derivative_cache=derivative_cache,
         ))
-    row_nnz = [len(row_map) for row_map in row_maps]
-    stats = {
-        'cache_hits': cache.hits,
-        'cache_misses': cache.misses,
-        'diff_cache_hits': dcache.hits,
-        'diff_cache_misses': dcache.misses,
-        'intern_hits': 0 if interner is None else interner.hits,
-        'intern_misses': 0 if interner is None else interner.misses,
-        'replacement_count': len(replacements),
-        'fallback_count': sparse_stats.fallback_count,
-        'derivative_cache_hits': sparse_stats.derivative_cache_hits,
-        'derivative_cache_misses': sparse_stats.derivative_cache_misses,
-        'structure_prepass': structure_prepass,
-        'row_nnz': row_nnz,
-        'output_nnz': sum(row_nnz),
-    }
-    ir = _build_ir(row_maps, wrt_list, replacements, stats=stats)
+    ir = _build_ir(row_maps, wrt_list, replacements)
     if value_cse == "row":
         ir = _row_level_cse(ir, should_extract_fn=_should_extract)
     elif value_cse == "global":
