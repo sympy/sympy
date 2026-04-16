@@ -6,6 +6,7 @@ from functools import reduce
 
 from sympy.core.parameters import global_parameters
 from sympy.core.basic import Atom
+from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.numbers import int_valued
 from sympy.core.numbers import Integer
@@ -894,10 +895,8 @@ class Permutation(Atom):
 
     is_Permutation = True
 
-    _array_form = None
     _cyclic_form = None
     _cycle_structure = None
-    _size = None
     _rank = None
 
     def __new__(cls, *args, size=None, **kwargs):
@@ -1047,10 +1046,7 @@ class Permutation(Atom):
         Permutation([2, 1, 3, 0])
 
         """
-        p = super().__new__(cls)
-        p._array_form = perm
-        p._size = len(perm)
-        return p
+        return super().__new__(cls, Tuple(*perm))
 
     def copy(self):
         return self.__class__(self.array_form)
@@ -1062,6 +1058,14 @@ class Permutation(Atom):
         # the array_form (a list) is the Permutation arg, so we need to
         # return a tuple, instead
         return tuple(self.array_form)
+
+    @property
+    def _array_form(self):
+        return self.args[0]
+
+    @property
+    def _size(self):
+        return len(self._array_form)
 
     @property
     def array_form(self):
@@ -1081,7 +1085,7 @@ class Permutation(Atom):
         >>> Permutation([[1, 2], [4, 5]]).array_form
         [0, 2, 1, 3, 5, 4]
         """
-        return self._array_form[:]
+        return list(self._array_form)
 
     def list(self, size=None):
         """Return the permutation as an explicit list, possibly
