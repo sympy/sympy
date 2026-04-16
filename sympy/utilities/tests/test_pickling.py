@@ -208,9 +208,14 @@ def test_Singletons():
 
 #================== combinatorics ===================
 from sympy.combinatorics.free_groups import FreeGroup
+from sympy.combinatorics.permutations import Permutation
 
 def test_free_group():
     check(FreeGroup("x, y, z"), check_attr=False)
+
+def test_Permutation():
+    #fails with check_attr=True because Permutation uses attributes to cache properties (e.g. _cyclic_form)
+    check(Permutation([0,3,2,1,4]), check_attr=False)
 
 #================== functions ===================
 from sympy.functions import (Piecewise, lowergamma, acosh, chebyshevu,
