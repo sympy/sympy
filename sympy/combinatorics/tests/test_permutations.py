@@ -247,7 +247,7 @@ def test_Permutation_subclassing():
 
             try:
                 perm_obj = i[0]
-                return [self._array_form[j] for j in perm_obj]
+                return [self.array_form[j] for j in perm_obj]
             except TypeError:
                 raise TypeError('unrecognized argument')
 
@@ -397,10 +397,10 @@ def test_args():
     assert p._cyclic_form is None
     assert Permutation(p) == p
     assert p.cyclic_form == [[0, 3, 1, 2], [4, 5]]
-    assert p._array_form == [3, 2, 0, 1, 5, 4]
+    assert p.array_form == [3, 2, 0, 1, 5, 4]
     p = Permutation((0, 3, 1, 2))
     assert p._cyclic_form is None
-    assert p._array_form == [0, 3, 1, 2]
+    assert p.array_form == [0, 3, 1, 2]
     assert Permutation([0]) == Permutation((0, ))
     assert Permutation([[0], [1]]) == Permutation(((0, ), (1, ))) == \
         Permutation(((0, ), [1]))
