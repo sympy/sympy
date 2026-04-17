@@ -719,6 +719,14 @@ def test_deprecation_warning():
 def test_issue_18438():
     assert pickle.loads(pickle.dumps(S.Half)) == S.Half
 
+#================= tensor ======================
+import sympy.tensor.tensor as tens
+
+def test_epsilon():
+    R3 = tens.TensorIndexType("R", dim=3)
+    i, j, k = tens.tensor_indices("i j k", R3)
+
+    check(R3.epsilon(i,j,k), check_attr=False, check_eq=True)
 
 #================= old pickles =================
 def test_unpickle_from_older_versions():
