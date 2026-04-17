@@ -122,7 +122,7 @@ from sympy.assumptions.ask import Q
 from sympy.core import Dummy
 from sympy.core.mul import Mul
 from sympy.core.add import Add
-from sympy.core.relational import Eq
+from sympy.core.relational import Eq, Ge, Gt, Le, Lt
 from sympy.core.sympify import sympify
 from sympy.core.singleton import S
 from sympy.core.numbers import Rational, oo
@@ -137,7 +137,7 @@ class UnhandledInput(Exception):
     """
 
 # predicates that LRASolver understands and makes use of
-ALLOWED_PRED = {Q.eq, Q.gt, Q.lt, Q.le, Q.ge}
+ALLOWED_PRED = {Q.eq: Eq, Q.gt: Gt, Q.lt: Lt, Q.le: Le, Q.ge: Ge}
 
 # if true ~Q.gt(x, y) implies Q.le(x, y)
 HANDLE_NEGATION = True
@@ -281,16 +281,15 @@ class LRASolver():
                 raise UnhandledInput(f"{prop} contains infinity")
 
             expr = prop.lhs - prop.rhs
-            match prop.function.eval([expr, S.Zero]):
-                case True:
-                    conflicts.append([enc])
-                    continue
-                case False:
-                    conflicts.append([-enc])
-                    continue
-                case _:
-                    if len(expr.free_symbols) == 0:
-                        raise UnhandledInput(f"{prop} could not be simplified")
+            pred = ALLOWED_PRED[prop.function](expr, S.Zero)
+            if pred == True:
+                conflicts.append([enc])
+                continue
+            if pred == False:
+                conflicts.append([-enc])
+                continue
+            if not expr.free_symbols:
+                raise UnhandledInput(f"{prop} could not be simplified")
 
             if prop.function in [Q.ge, Q.gt]:
                 expr = -expr
