@@ -48,7 +48,7 @@ dont_check_attrs = {
 }
 
 
-def check(a, exclude=[], check_attr=True, deprecated=()):
+def check(a, exclude=[], check_attr=True, deprecated=(), check_eq=False):
     """ Check that pickling and copying round-trips.
     """
     # Pickling with protocols 0 and 1 is disabled for Basic instances:
@@ -77,6 +77,9 @@ def check(a, exclude=[], check_attr=True, deprecated=()):
         d1 = dir(a)
         d2 = dir(b)
         assert set(d1) == set(d2)
+
+        if check_eq:
+            assert a == b
 
         if not check_attr:
             continue
