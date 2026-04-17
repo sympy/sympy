@@ -714,6 +714,33 @@ def test_deprecation_warning():
 def test_issue_18438():
     assert pickle.loads(pickle.dumps(S.Half)) == S.Half
 
+#================= tensor ======================
+import sympy.tensor.tensor as tens
+from sympy.combinatorics.tensor_can import get_symmetric_group_sgs
+
+def test_get_symmetric_group_sgs():
+    base, sgs = get_symmetric_group_sgs(S(3), antisym=True)
+    check(base, check_attr=False, check_eq=True)
+    check(sgs, check_attr=False, check_eq=True)
+
+def test_TensorSymmetry():
+    t = tens.TensorSymmetry.fully_symmetric(-S(3))
+    check(t, check_attr=False, check_eq=True)
+
+def test_TensorHead():
+    R3 = tens.TensorIndexType("R", dim=3)
+    check(R3.epsilon, check_attr=False, check_eq=True)
+
+def test_TensorHead_2():
+    R3 = tens.TensorIndexType("R", dim=3)
+    K = tens.TensorHead("K", [R3,R3,R3])
+    check(K, check_attr=False, check_eq=True)
+
+def test_epsilon():
+    R3 = tens.TensorIndexType("R", dim=3)
+    i, j, k = tens.tensor_indices("i j k", R3)
+
+    check(R3.epsilon(i,j,k), check_attr=False, check_eq=True)
 
 #================= old pickles =================
 def test_unpickle_from_older_versions():
