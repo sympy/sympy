@@ -1387,11 +1387,8 @@ class Beam:
         x = self.variable
         E = self.elastic_modulus
         I = self.second_moment
-
         C3, C4 = symbols(self._base_char + '3:5') if self._base_char else symbols("C3 C4")
         bending_moment_eqn = self.bending_moment()
-        slope_eqn = -integrate(bending_moment_eqn/(E*I), x) + C3
-        deflection_eqn = integrate(slope_eqn, x) + C4
 
         if isinstance(I, Piecewise):
             lower_limit = 0
@@ -1408,9 +1405,8 @@ class Beam:
 
             return slope_eqn
 
-        if not self._boundary_conditions['deflection'] and not self._boundary_conditions['slope']:
-            return slope_eqn
-
+        slope_eqn = -integrate(bending_moment_eqn/(E*I), x) + C3
+        deflection_eqn = integrate(slope_eqn, x) + C4
         bc_eqns = []
         C3_eqn = False # Flag for eqn containing C3
         C4_eqn = False # Flag for eqn containing C4
@@ -1429,9 +1425,8 @@ class Beam:
                         bc_eqns.append(eq)
                         C4_eqn = True
 
-        constants = linsolve(bc_eqns[:2], (C3, C4)).args[0]
-        slope_eqn = slope_eqn.subs({C3: constants[0]}).collect(E*I)
-
+        constants = solve(bc_eqns, (C3, C4))
+        slope_eqn = slope_eqn.subs(constants).collect(E*I)
         return slope_eqn
 
 
@@ -1472,8 +1467,6 @@ class Beam:
         I = self.second_moment
         C3, C4 = symbols(self._base_char + '3:5') if self._base_char else symbols("C3 C4")
         bending_moment_eqn = self.bending_moment()
-        slope_eqn = -integrate(bending_moment_eqn/(E*I), x) + C3
-        deflection_eqn = integrate(slope_eqn, x) + C4
 
         if isinstance(I, Piecewise):
             lower_limit = 0
@@ -1493,9 +1486,8 @@ class Beam:
 
             return deflection_eqn
 
-        if not self._boundary_conditions['deflection'] and not self._boundary_conditions['slope']:
-            return deflection_eqn
-
+        slope_eqn = -integrate(bending_moment_eqn/(E*I), x) + C3
+        deflection_eqn = integrate(slope_eqn, x) + C4
         bc_eqns = []
         C3_eqn = False # Flag for eqn containing C3
         C4_eqn = False # Flag for eqn containing C4
@@ -1514,8 +1506,8 @@ class Beam:
                         bc_eqns.append(eq)
                         C4_eqn = True
 
-        constants = linsolve(bc_eqns, (C3, C4)).args[0]
-        deflection_eqn = deflection_eqn.subs({C3: constants[0], C4: constants[1]}).collect(E*I)
+        constants = solve(bc_eqns, (C3, C4))
+        deflection_eqn = deflection_eqn.subs(constants).expand().collect(E*I)
 
         return deflection_eqn
 

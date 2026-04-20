@@ -241,11 +241,11 @@ def test_Beam():
     assert p == q
 
     p = b4.slope()
-    q = C3 - (SingularityFunction(x, 0, 3)/2 - SingularityFunction(x, 3, 3)/2)/(E*I)
+    q = C3 + (-SingularityFunction(x, 0, 3)/2 + SingularityFunction(x, 3, 3)/2)/(E*I)
     assert p == q
 
     p = b4.deflection()
-    q = C3*x + C4 - (SingularityFunction(x, 0, 4)/8 - SingularityFunction(x, 3, 4)/8)/(E*I)
+    q = C3*x + C4 + (-SingularityFunction(x, 0, 4)/8 + SingularityFunction(x, 3, 4)/8)/(E*I)
     assert p == q
 
     # can't use end with point loads
@@ -292,11 +292,11 @@ def test_insufficient_bconditions():
     b.solve_for_reaction_loads(R1, R2)
 
     p = b.slope()
-    q = a3 - (-P*SingularityFunction(x, 0, 2)/4 + P*SingularityFunction(x, L/2, 2)/2 - P*SingularityFunction(x, L, 2)/4)/(E*I)
+    q = a3 + (P*SingularityFunction(x, 0, 2)/4 - P*SingularityFunction(x, L/2, 2)/2 + P*SingularityFunction(x, L, 2)/4)/(E*I)
     assert p == q
 
     p = b.deflection()
-    q = a3*x + a4 - (-P*SingularityFunction(x, 0, 3)/12 + P*SingularityFunction(x, L/2, 3)/6 - P*SingularityFunction(x, L, 3)/12)/(E*I)
+    q = a3*x + a4 + (P*SingularityFunction(x, 0, 3)/12 - P*SingularityFunction(x, L/2, 3)/6 + P*SingularityFunction(x, L, 3)/12)/(E*I)
     assert p == q
 
     b.bc_deflection = [(0, 0)]
@@ -1359,12 +1359,12 @@ def test_cross_section():
                          + 90*SingularityFunction(x, 45, -2) + 8*SingularityFunction(x, 50, -1)/9)
     assert b1.bending_moment() == (10*SingularityFunction(x, 0, 1) - 82*SingularityFunction(x, 5, 1)/9
                                      - 90*SingularityFunction(x, 45, 0) - 8*SingularityFunction(x, 50, 1)/9)
-    q = (5*SingularityFunction(x, 0, 2) - 41*SingularityFunction(x, 5, 2)/9 \
-         - 90*SingularityFunction(x, 45, 1) - 4*SingularityFunction(x, 50, 2)/9)/(pi*E*r*Abs(r)**3)
-    assert b1.slope() == C3 - 4*q
-    q = (5*SingularityFunction(x, 0, 3)/3 - 41*SingularityFunction(x, 5, 3)/27 \
-         - 45*SingularityFunction(x, 45, 2) - 4*SingularityFunction(x, 50, 3)/27)/(pi*E*r*Abs(r)**3)
-    assert b1.deflection() == C3*x + C4 - 4*q
+    q = C3 + (-20*SingularityFunction(x, 0, 2) + 164*SingularityFunction(x, 5, 2)/9 + 360*SingularityFunction(x, 45, 1)\
+        + 16*SingularityFunction(x, 50, 2)/9)/(pi*E*r*Abs(r)**3)
+    assert b1.slope() == q
+    q = C3*x + C4 - 20*SingularityFunction(x, 0, 3)/(3*pi*E*r*Abs(r)**3) + 164*SingularityFunction(x, 5, 3)/(27*pi*E*r*Abs(r)**3)\
+        + 180*SingularityFunction(x, 45, 2)/(pi*E*r*Abs(r)**3) + 16*SingularityFunction(x, 50, 3)/(27*pi*E*r*Abs(r)**3)
+    assert b1.deflection() == q
 
     # beam with a recatangular cross-section
     b2 = Beam(20, E, Polygon((0, 0), (a, 0), (a, c), (0, c)))
