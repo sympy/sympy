@@ -2186,6 +2186,25 @@ def test_jacobian2():
     assert X.jacobian(Y) == J
 
 
+def test_coeff():
+    rho, phi = symbols("rho, phi")
+    X = Matrix([rho*cos(phi), rho*sin(phi), phi*rho**2])
+    Y = Matrix([rho, phi])
+    J = Matrix([
+        [cos(phi), 0],
+        [sin(phi), 0],
+        [0, rho**2],
+    ])
+    assert X.coeff(Y) == J
+    Y = Matrix([rho**2, phi*rho])
+    J = Matrix([
+        [0, 0],
+        [0, 0],
+        [phi, 0],
+    ])
+    assert X.coeff(Y) == J
+
+
 def test_issue_4564():
     X = Matrix([exp(x + y + z), exp(x + y + z), exp(x + y + z)])
     Y = Matrix([x, y, z])
