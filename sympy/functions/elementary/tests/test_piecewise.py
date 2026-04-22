@@ -1638,3 +1638,14 @@ def test_piecewise__eval_is_meromorphic():
     assert f.is_meromorphic(x, 2) == True
     assert f.is_meromorphic(x, Symbol('a')) is None
     assert f.is_meromorphic(x, Symbol('a', real=True)) is None
+
+def test_refine_relational_failure():
+    from sympy import sqrt, symbols, Q, S
+    from sympy.assumptions.refine import refine
+    x = symbols('x')
+    
+    # If sqrt(x) is real, then mathematically sqrt(x) MUST be >= 0.
+    # Current SymPy behavior returns the inequality (sqrt(x) >= 0)
+    # Desired behavior should return True (i.e., S.true or equivalent).
+    expr = sqrt(x) >= 0
+    assert refine(expr, Q.real(sqrt(x))) == S.true

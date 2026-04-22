@@ -562,6 +562,80 @@ def refine_Heaviside(expr, assumptions):
     return expr
 
 
+def refine_Relational(expr, assumptions):
+    """
+    Handler for relational operators (==, !=, <, <=, >, >=).
+
+    Translates the relational expression into Q predicates on the
+    difference between the two sides, then uses assumption queries
+    to simplify to True or False when possible.
+
+    Examples
+    ========
+
+    >>> from sympy import sqrt, Q, refine
+    >>> from sympy.abc import x
+    >>> refine(sqrt(x) >= 0, Q.real(sqrt(x)))
+    True
+    >>> refine(x > 0, Q.negative(x))
+    False
+    >>> refine(x > 0, Q.positive(x))
+    True
+    >>> refine(x == 0, Q.positive(x))
+    False
+
+    """
+    from sympy.core.relational import Equality, Unequality, StrictLessThan, LessThan, StrictGreaterThan, GreaterThan
+    
+    # Compute the difference between lhs and rhs
+    diff = expr.lhs - expr.rhs
+    
+    # Map relational type to corresponding Q predicate applied to the difference
+    if isinstance(expr, Equality):
+        q_predicate = Q.zero(diff)
+    elif isinstance(expr, Unequality):
+        q_predicate = Q.nonzero(diff)
+    elif isinstance(expr, StrictGreaterThan):
+        q_predicate = Q.positive(diff)
+    elif isinstance(expr, StrictLessThan):
+        q_predicate = Q.negative(diff)
+    elif isinstance(expr, GreaterThan):
+        q_predicate = Q.nonnegative(diff)
+    elif isinstance(expr, LessThan):
+        q_predicate = Q.nonpositive(diff)
+    else:
+        return expr
+    
+    # First, try the direct ask() approach
+    result = ask(q_predicate, assumptions)
+    if result is not None:
+        if result is True:
+            return S.true
+        elif result is False:
+            return S.false
+    
+    # Special case: if we're checking nonnegative(sqrt(...)) or similar inherently
+    # nonnegative functions, and the function is real/defined under the assumptions,
+    # we can infer it's nonnegative
+    if isinstance(expr, (GreaterThan, LessThan)) and diff.is_Pow:
+        # Check if this is likely a nonnegative power (like sqrt)
+        base, exp = diff.base, diff.exp
+        # For even powers: base^(2n) is always nonnegative (when defined, i.e., real)
+        # For roots (|exp| < 1): the result is nonnegative when real
+        try:
+            if isinstance(expr, GreaterThan):  # diff >= 0
+                # Check if diff is nonnegative by nature
+                if exp == Rational(1, 2) or exp == S.Half:  # Check for sqrt
+                    if ask(Q.real(diff), assumptions):
+                        return S.true
+                elif ask(Q.even(exp), assumptions):  # Even power
+                    return S.true  # diff^(2n) >= 0 always
+        except Exception:
+            pass
+    
+    return expr
+
+
 def refine_floor_ceiling(expr, assumptions):
     """
     Handler for the floor and ceiling functions
@@ -616,5 +690,12 @@ handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'exp': refine_exp,
     'Heaviside': refine_Heaviside,
     'floor': refine_floor_ceiling,
-    'ceiling' : refine_floor_ceiling,
+    'ceiling': refine_floor_ceiling,
+    # Relational operators
+    'Equality': refine_Relational,
+    'Unequality': refine_Relational,
+    'LessThan': refine_Relational,
+    'StrictLessThan': refine_Relational,
+    'GreaterThan': refine_Relational,
+    'StrictGreaterThan': refine_Relational,
 }
