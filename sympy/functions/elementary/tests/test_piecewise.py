@@ -1643,7 +1643,7 @@ def test_refine_relational_failure():
     from sympy import sqrt, symbols, Q, S
     from sympy.assumptions.refine import refine
     x = symbols('x')
-    
+
     # If sqrt(x) is real, then mathematically sqrt(x) MUST be >= 0.
     # Current SymPy behavior returns the inequality (sqrt(x) >= 0)
     # Desired behavior should return True (i.e., S.true or equivalent).
