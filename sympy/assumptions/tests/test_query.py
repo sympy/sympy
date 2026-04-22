@@ -2045,7 +2045,6 @@ def test_real_pow():
     assert ask(Q.real(x**y), Q.positive(x) & Q.real(y)) is True
     assert ask(Q.real(x**y), Q.real(x) & Q.rational(y)) is None
 
-    # https://github.com/sympy/sympy/issues/29335
     nneg = Symbol('nneg', negative=True)
     q = Symbol('q', rational=True, integer=False)
     r = Symbol('r', rational=True)
