@@ -619,19 +619,17 @@ def refine_Relational(expr, assumptions):
     # we can infer it's nonnegative
     if isinstance(expr, (GreaterThan, LessThan)) and diff.is_Pow:
         # Check if this is likely a nonnegative power (like sqrt)
-        base, exp = diff.base, diff.exp
+        exp = diff.exp
+
         # For even powers: base^(2n) is always nonnegative (when defined, i.e., real)
         # For roots (|exp| < 1): the result is nonnegative when real
-        try:
-            if isinstance(expr, GreaterThan):  # diff >= 0
-                # Check if diff is nonnegative by nature
-                if exp == Rational(1, 2) or exp == S.Half:  # Check for sqrt
-                    if ask(Q.real(diff), assumptions):
-                        return S.true
-                elif ask(Q.even(exp), assumptions):  # Even power
-                    return S.true  # diff^(2n) >= 0 always
-        except Exception:
-            pass
+        if isinstance(expr, GreaterThan):  # diff >= 0
+            # Check if diff is nonnegative by nature
+            if exp == Rational(1, 2) or exp == S.Half:  # Check for sqrt
+                if ask(Q.real(diff), assumptions):
+                    return S.true
+            elif ask(Q.even(exp), assumptions):  # Even power
+                return S.true  # diff^(2n) >= 0 always
 
     return expr
 
