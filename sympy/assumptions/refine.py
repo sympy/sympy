@@ -586,10 +586,10 @@ def refine_Relational(expr, assumptions):
 
     """
     from sympy.core.relational import Equality, Unequality, StrictLessThan, LessThan, StrictGreaterThan, GreaterThan
-    
+
     # Compute the difference between lhs and rhs
     diff = expr.lhs - expr.rhs
-    
+
     # Map relational type to corresponding Q predicate applied to the difference
     if isinstance(expr, Equality):
         q_predicate = Q.zero(diff)
@@ -605,7 +605,7 @@ def refine_Relational(expr, assumptions):
         q_predicate = Q.nonpositive(diff)
     else:
         return expr
-    
+
     # First, try the direct ask() approach
     result = ask(q_predicate, assumptions)
     if result is not None:
@@ -613,7 +613,7 @@ def refine_Relational(expr, assumptions):
             return S.true
         elif result is False:
             return S.false
-    
+
     # Special case: if we're checking nonnegative(sqrt(...)) or similar inherently
     # nonnegative functions, and the function is real/defined under the assumptions,
     # we can infer it's nonnegative
@@ -632,7 +632,7 @@ def refine_Relational(expr, assumptions):
                     return S.true  # diff^(2n) >= 0 always
         except Exception:
             pass
-    
+
     return expr
 
 
