@@ -3901,8 +3901,8 @@ class MatrixBase(Printable):
         See Also
         ========
 
-        Expr.coeff
-        Matrix.jacobian
+        coeff
+        jacobian
 
         """
         if not isinstance(X, MatrixBase):
