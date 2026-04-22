@@ -1407,6 +1407,9 @@ class Beam:
 
         slope_eqn = -integrate(bending_moment_eqn/(E*I), x) + C3
         deflection_eqn = integrate(slope_eqn, x) + C4
+
+        # Collects at most two equations to determine the constants C3 and C4. Inspite of being consistent system,
+        # it becomes inconsistent due to floating imprecision which is negligible practically.
         bc_eqns = []
         C3_eqn = False # Flag for eqn containing C3
         C4_eqn = False # Flag for eqn containing C4
@@ -1488,6 +1491,9 @@ class Beam:
 
         slope_eqn = -integrate(bending_moment_eqn/(E*I), x) + C3
         deflection_eqn = integrate(slope_eqn, x) + C4
+
+        # Collects at most two equations to determine the constants C3 and C4. Inspite of being consistent system,
+        # it becomes inconsistent due to floating imprecision which is negligible practically.
         bc_eqns = []
         C3_eqn = False # Flag for eqn containing C3
         C4_eqn = False # Flag for eqn containing C4
