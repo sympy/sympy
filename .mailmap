@@ -1,377 +1,377 @@
 # The .mailmap file
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+#
 
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
+
 #
-#
+
 # ".patch" to the end of the page URL.
+
 # # DO NOT DO THIS (it will be treated as two unrelated authors):
+
 # # DO THIS:
+
 # # DO THIS:
+
 # $ git config --global user.email
+
 # $ git config --global user.name
+
 # $ git config --global user.name
+
 # $ git config --global user.name "Jane Doe"
+
 # $ python bin/mailmap_check.py
+
 # $ python bin/mailmap_check.py
+
 # $ python bin/mailmap_check.py
+
 # --------- ---------------------- -----------
+
 # ...
+
 # ...
+
 # ...
+
 # 1. Before committing make sure that git config records your name and email
+
 # 2. After committing run the bin/mailmap_check.py script. It will check the
+
 # 3. Add a line to this file with that same name and email address like:
+
 # 4. Run the bin/mailmap_check.py script. This time it will find your name and
+
 # 5. You should be ready now but just to be sure run the bin/mailmap_check.py
+
 # 6. All done. Commit the change to the .mailmap file. When you open a pull
+
 # 7. Once you have been added to the .mailmap file it is not necessary to do
+
 # <Email> <email>
+
 # ===============
+
 # =================
+
 # ==================================
+
 # ======================================
+
 # A <Email> ---------------------> A <Email>
+
 # A <Email> ---------------------> Foo <Email>
+
 # A <Email> ---------------------> Foo <Email>
+
 # A <Email> ---------------------> same
+
 # A <Liame> ---------------------> Foo <Email>
+
 # AUTHORS file directly as it will be updated at the time of the next release
+
 # AUTHORS file so do _NOT_ add separate entries that begin with different names
+
 # Associating different names and emails
+
 # B <Email> ---------------------> Foo <EMAIL>
+
 # B <Email> ---------------------> Foo <Email>
+
 # B <eMAIL> ---------------------> B <Email>
+
 # B <eMAIL> ---------------------> Foo <Email>
+
 # B <eMAIL> ---------------------> Foo <eMAIL>
+
 # Configuring git
+
 # Entries in this file can also be used to associate commits made under a
+
 # Foo <EMAIL> b <email>
+
 # Foo <Email>
+
 # Foo <Email> <email>
+
 # Foo <Email> <liame>
+
 # Foo <Email> b <email>
+
 # For example if Joe Bloggs made a commit through the GitHub web UI then it
+
 # For instructions on updating the .mailmap file see:
+
 # For instructions on updating the .mailmap file see:
+
 # If it fails, you may need to replace `python` by `python3`, here and below, if
+
 # If the script succeeded locally then it should also succeed in CI.
+
 # If you are contributing to SymPy for the first time then first make sure that
+
 # If you are unsure what name and email address has been used in your commits
+
 # In this case Joe should add the following line to .mailmap:
+
 # It is important to make sure that each author is listed only once in the
+
 # Jane Doe
+
 # Joe Bloggs
+
 # Joe Bloggs <joe@bloggs.com>
+
 # Joe Bloggs <joe@bloggs.com>
+
 # Joe Bloggs <joe@bloggs.com>
+
 # Joe Bloggs <joe@bloggs.com>
+
 # Joe Bloggs <joe@bloggs.com> Joe <joe@gmail.com>
+
 # Joe Bloggs <joe@bloggs.com> joeb <12345+joeb@users.noreply.github.com>
+
 # Joe Bloggs <joe@bloggs.com> joeb <12345+joeb@users.noreply.github.com>
+
 # New contributors quick description
+
 # No changes needed in .mailmap
+
 # Other Author <other@author.com>
+
 # Proper Name <Proper@email> commit name <commit@email>
+
 # See also: 'git shortlog --help' and 'git check-mailmap --help'.
+
 # That tells the .mailmap script that any commits with the second name and
+
 # The .mailmap file needs to be updated because there are commits with
+
 # The email (or name and email) in the "find" part of the entry will
+
 # The following authors will be added to the AUTHORS file at the time of
+
 # The mailmap file was reordered
+
 # This author is not included in the .mailmap file:
+
 # This file records the name and email address of each contributor to SymPy as
+
 # This name and email address is what will be recorded in any commits that you
+
 # You can check this using the git config command:
+
 # You can use the git log command to see what name and email address were used
+
 # \-----------+------------/ \----------+-------------/
+
 # address and it will also reorder the lines in this file to be in alphabetical
+
 # address correctly as you would like it to be recorded in the AUTHORS file.
+
 # address that will be used in your commits then you can do also that with the
+
 # address to this file so that there is a record of how they would like to be
+
 # address you use to make your commits (see Associating different commits
+
 # also possible to see this on GitHub if you click on a commit and then add
+
 # an error message like "This author is not included ...":
+
 # and email address from the one that you use with git locally. To associate
+
 # as the first entry but having different second entries e.g.:
+
 # author author
+
 # b <eMAIL> ---------------------> Foo <EMAIL>
+
 # b <eMAIL> ---------------------> Foo <Email>
+
 # be used in a case-insensitive way to identify a git author and
+
 # before .mailmap entry after
+
 # below) or want to be recorded under a different name in the AUTHORS file.
+
 # bin/mailmap_check.py script to check that no changes are needed in .mailmap.
+
 # c <eMAIL> ---------------------> same
+
 # commits and look for your name and email address in this file. You should see
+
 # config will not change the name that is _already_ recorded in any commits
+
 # correctly record their name and email address so this file is used to be
+
 # different name and email address with your own name and email as you would
+
 # email are from the same author as the first name and email. This means that
+
 # email. You can add multiple lines like this all using the same name and email
+
 # example the GitHub web UI will usually record commits under a different name
+
 # explicit about who has contributed to SymPy and what name and email address
+
 # git config command e.g. you can change the name with:
+
 # https://docs.sympy.org/dev/contributing/new-contributors-guide/workflow-process.html#add-your-name-and-email-address-to-the-mailmap-file
+
 # https://docs.sympy.org/dev/contributing/new-contributors-guide/workflow-process.html#add-your-name-and-email-address-to-the-mailmap-file
+
 # in any commits that you have made. Note that changing your name with git
+
 # it should appear in the AUTHORS file. Contributors should not update the
+
 # joe@bloggs.com
+
 # joeb <12345+joeb@users.noreply.github.com>
+
 # like it to be recorded in the AUTHORS file. This is useful because for
+
 # make with the git commit command. If you want to change the name and or email
+
 # might be recorded with name/email "joeb <12345+joeb@users.noreply.github.com>".
+
 # names and email addresses that will be added to the AUTHORS file later (make
+
 # of SymPy. Instead any new contributors need to add their name and email
+
 # only one entry will be added to the AUTHORS file using the first name and
+
 # or email addresses:
+
 # order and it will say "the mailmap file was reordered".
+
 # output will show that your name and email address is included in the list of
+
 # recorded in the AUTHORS file. Contributors often do not use git config to
+
 # replace find
+
 # replace it with whatever is included in the "replace" part:
+
 # request the AUTHORS check will run in CI and it will run the
+
 # script one last time and it should say "No changes needed in .mailmap". The
+
 # sure that your name only appears once):
+
 # that other name and email address with your own add a line like:
+
 # that you have made: you have to amend or redo the commits to change that.
+
 # the next SymPy release.
+
 # then make sure that your local branch is up to date and run git log. It is
+
 # these steps in any future pull requests unless you change the name and email
+
 # they would like to be known by.
+
 # unrecognised author/email metadata.
+
 # you have configured your name and email address in your local git install.
+
 # you're on a system that still uses python2 by default.
+
 # | |
+
 *Chu-Ching Huang <cchuang@mail.cgu.edu.tw>
 *Dan <coolg49964@gmail.com>
 *Marc-Etienne M.Leveille <protonyc@gmail.com>
@@ -1889,7 +1889,7 @@ ViacheslavP <public.viacheslav@gmail.com>
 Victor Brebenar <v.brebenar@gmail.com>
 Victor Immanuel <chrollolucilfer1402@gmail.com> victor immanuel <89346667+victorchrollo14@users.noreply.github.com>
 Victoria Koval <bictoriakoval16@gmail.com> vicoolchik <bictoriakoval16@gmail.com>
-Victoria Koval <bictoriakoval16@gmail.com> viktoria_koval <78905683+vicoolchik@users.noreply.github.com>
+Victoria Koval <bictoriakoval16@gmail.com> viktoria*koval <78905683+vicoolchik@users.noreply.github.com>
 Victory Omole <vtomole2@gmail.com>
 Vighnesh Shenoy <vighneshq@gmail.com>
 Vijairam Ganesh Moorthy <vijairamg@gmail.com> vijair <vijair@umich.edu>
@@ -2085,3 +2085,7 @@ zzj <29055749+zjzh@users.noreply.github.com>
 Łukasz Pankowski <lukpank@o2.pl>
 彭于斌 <1931127624@qq.com>
 袁野 (Yuan Ye) <yuanyelele@tutanota.com>
+Abhay Dhiman <abhaysdhimans@gmail.com> Abhay_Dhiman <abhaysdhimans@gmail.com>
+Abhay Dhiman <abhaysdhimans@gmail.com> Abhay\*Dhiman <abhaysdhimans@gmail.com>
+GitRay <pix2@\_nospam*.cathcart.us> GitRay <pix2@_nospam_.cathcart.us>
+KIRTAN MALI <43683545+kmm555@users.noreply.github.com> KIRTAN MALI <43683545+kmm555@users.noreply.github.com>
