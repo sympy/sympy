@@ -3248,7 +3248,7 @@ class asec(InverseTrigonometricFunction):
             ang = narg.args[0]
             if ang.is_comparable:
                 if minus:
-                    pi/2 + acsc(narg)
+                    return pi/2 + acsc(narg)
                 return pi/2 - acsc(narg)
 
     def fdiff(self, argindex=1):
