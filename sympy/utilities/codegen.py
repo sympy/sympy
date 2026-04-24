@@ -86,7 +86,7 @@ from io import StringIO
 
 from sympy import __version__ as sympy_version
 from sympy.core import Symbol, S, Tuple, Equality, Function, Basic
-from sympy.printing.c import c_code_printers
+from sympy.printing.c import LAPACKCCodePrinter, c_code_printers
 from sympy.printing.codeprinter import AssignmentError
 from sympy.printing.fortran import FCodePrinter
 from sympy.printing.julia import JuliaCodePrinter
@@ -96,6 +96,9 @@ from sympy.tensor import Idx, Indexed, IndexedBase
 from sympy.matrices import (MatrixSymbol, ImmutableMatrix, MatrixBase,
                             MatrixExpr, MatrixSlice)
 from sympy.utilities.iterables import is_sequence
+
+from sympy.codegen.lapack_nodes import Dgesv
+from sympy.codegen.matrix_nodes import MatrixSolve
 
 
 __all__ = [
@@ -1092,10 +1095,37 @@ class LAPACKCCodeGen(CCodeGen):
 
     Inherits from CCodeGen and overrides methods to generate LAPACK calls
     for Matrix expressions like MatrixSolve.
+
+    Examples
+    ========
+
+    >>> from sympy import MatrixSymbol
+    >>> from sympy.codegen.matrix_nodes import MatrixSolve
+    >>> from sympy.utilities.codegen import codegen, LAPACKCCodeGen
+    >>> A = MatrixSymbol('A', 3, 3)
+    >>> b = MatrixSymbol('b', 3, 1)
+    >>> [(c_name, c_code), (h_name, c_header)] = codegen(('f', MatrixSolve(A, b)), code_gen=LAPACKCCodeGen(), prefix='test', header=False)
+    >>> print(c_code)
+    #include "test.h"
+    #include <lapacke.h>
+    #include <math.h>
+
+    int f(double *A, double *b) {
+    int n = 3;
+    int nrhs = 1;
+    int ipiv[3];
+    int info;
+
+    info = LAPACKE_dgesv(LAPACK_ROW_MAJOR, 3, 1, A, 3, ipiv, b, 3);
+    return info;
+
+    }
     """
+
     def __init__(self, project="project", printer=None,
                  preprocessor_statements=None, cse=False):
         super().__init__(project=project, cse=cse)
+        self.printer = LAPACKCCodePrinter()
 
     def _preprocessor_statements(self, prefix):
         """
@@ -1113,10 +1143,10 @@ class LAPACKCCodeGen(CCodeGen):
         """
         Declares local variables for the lapacke method.
         """
-        from sympy.codegen.matrix_nodes import MatrixSolve
+
         code_lines = []
         for result in routine.result_variables:
-            if isinstance(result.expr, MatrixSolve):
+            if isinstance(result.expr, Dgesv):
                 n = result.expr.matrix.shape[0]
                 code_lines.append("int n = %d;\n" % n)
                 code_lines.append("int nrhs = %d;\n" % result.expr.vector.shape[1])
@@ -1129,14 +1159,15 @@ class LAPACKCCodeGen(CCodeGen):
         """
         Creates a Routine object that is appropriate for lapacke calls.
         """
-        from sympy.codegen.matrix_nodes import MatrixSolve
+
         if isinstance(expr, MatrixSolve):
+            dgesv_node = Dgesv(expr.matrix, expr.vector)
             arg_list = [
                 InputArgument(expr.matrix, dimensions=[(S.Zero, expr.matrix.shape[0]-1), (S.Zero, expr.matrix.shape[1]-1)]),
                 InputArgument(expr.vector, dimensions=[(S.Zero, expr.vector.shape[0]-1), (S.Zero, S.Zero)])
             ]
             local_vars = []
-            return_val = [Result(expr, datatype=default_datatypes['int'])]
+            return_val = [Result(dgesv_node, datatype=default_datatypes['int'])]
             global_vars = set() if global_vars is None else set(global_vars)
             return Routine(name, arg_list, return_val, local_vars, global_vars)
         else:
@@ -1146,11 +1177,10 @@ class LAPACKCCodeGen(CCodeGen):
         """
         Generates the LAPACK function call for MatrixSolve expressions.
         """
-        from sympy.codegen.matrix_nodes import MatrixSolve
         code_lines = []
         for result in routine.result_variables:
-            if isinstance(result.expr, MatrixSolve):
-                code_lines.append("info = " + self.printer._print_MatrixSolve(result.expr) + ";\n")
+            if isinstance(result.expr, Dgesv):
+                code_lines.append("info = " + self.printer._print_Dgesv(result.expr) + ";\n")
         code_lines.append("   return info;\n")
         return code_lines
 
@@ -2195,8 +2225,6 @@ def codegen(name_expr, language=None, prefix=None, project="project",
     else:
         if code_gen is not None:
             raise ValueError("You cannot specify both language and code_gen.")
-        elif language.upper() == 'C' and isinstance(name_expr[1], MatrixSolve):
-            code_gen = LAPACKCCodeGen()
         else:
             code_gen = get_code_generator(language, project, standard, printer)
 

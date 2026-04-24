@@ -386,8 +386,6 @@ class CodePrinter(StrPrinter):
                 conditions.append(c)
             temp = Piecewise(*zip(expressions, conditions))
             return self._print(temp)
-        elif isinstance(rhs, MatrixSolve):
-            return self._print(rhs)
         elif isinstance(lhs, MatrixSymbol):
             # Here we form an Assignment for each element in the array,
             # printing each one.
