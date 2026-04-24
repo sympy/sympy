@@ -1832,6 +1832,7 @@ def test_asec():
     assert asec(sqrt(2 + 2*sqrt(5)/5)) == pi*Rational(3, 10)
     assert asec(-sqrt(2 + 2*sqrt(5)/5)) == pi*Rational(7, 10)
     assert asec(sqrt(2) - sqrt(6)) == pi*Rational(11, 12)
+    assert asec(-csc(S.One)) == pi/2 + 1
 
     for d in [3, 4, 6]:
         for num in range(d):
