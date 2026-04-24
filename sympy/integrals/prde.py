@@ -464,6 +464,7 @@ def prde_cancel_liouvillian(b, Q, n, DE):
 
     # Why use DecrementLevel? Below line answers that:
     # Assuming that we can solve such problems over 'k' (not k[t])
+    ba = bd = None
     if DE.case == 'primitive':
         with DecrementLevel(DE):
             ba, bd = frac_in(b, DE.t, field=True)
