@@ -2217,7 +2217,6 @@ def codegen(name_expr, language=None, prefix=None, project="project",
 
     """
 
-    from sympy.codegen.matrix_nodes import MatrixSolve
     # Initialize the code generator.
     if language is None:
         if code_gen is None:

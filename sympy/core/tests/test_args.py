@@ -5560,3 +5560,11 @@ def test_sympy__combinatorics__perm_groups__Coset():
     b = Permutation(0, 1)
     G = PermutationGroup([a, b])
     assert _test_args(Coset(a, G))
+
+
+def test_sympy_codegen_lapack_nodes_Dgesv():
+    from sympy.codegen.lapack_nodes import Dgesv
+    from sympy import MatrixSymbol
+    A = MatrixSymbol('A', 3, 3)
+    b = MatrixSymbol('b', 3, 1)
+    assert _test_args(Dgesv(A, b))

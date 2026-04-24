@@ -372,7 +372,6 @@ class CodePrinter(StrPrinter):
         from sympy.functions.elementary.piecewise import Piecewise
         from sympy.matrices.expressions.matexpr import MatrixSymbol
         from sympy.tensor.indexed import IndexedBase
-        from sympy.codegen.matrix_nodes import MatrixSolve
         lhs = expr.lhs
         rhs = expr.rhs
         # We special case assignments that take multiple lines
