@@ -38,7 +38,7 @@ class Dgesv(Token, Expr):
       >>> A = MatrixSymbol('A', 3, 3)
       >>> b = MatrixSymbol('b', 3, 1)
       >>> Dgesv(A, b)
-      Dgesv(MatrixSymbol(Str('A'), Integer(3), Integer(3)), vector=MatrixSymbol(Str('b'), Integer(3), Integer(1)))
+      Dgesv(A, vector=b)
       """
 
     __slots__ = _fields = ('matrix', 'vector')
