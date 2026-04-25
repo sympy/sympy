@@ -215,13 +215,14 @@ add: _expression ADD _expression_mul
     | ADD _expression_mul
 sub: _expression SUB _expression_mul
     | SUB _expression_mul
-mul: _expression_mul MUL_SYMBOL _expression_power
-div: _expression_mul DIV_SYMBOL _expression_power
+mul: _expression_mul MUL_SYMBOL (_expression_power | adjacent_expressions)
+div: _expression_mul DIV_SYMBOL (_expression_power | adjacent_expressions)
 
 adjacent_expressions: (_one_letter_symbol | number) _expression_mul
     | (group_round_parentheses | group_square_brackets | group_curly_literal_parentheses) (group_round_parentheses | group_square_brackets | group_curly_parentheses | group_curly_literal_parentheses | _one_letter_symbol)
     | _function _function
     | fraction _expression_mul
+    | superscript _expression_mul
 
 _expression_func: _expression_core
     | group_round_parentheses
