@@ -13,6 +13,98 @@ from sympy.polys import PolynomialError, factor
 from sympy.series.order import Order
 from .gruntz import gruntz
 
+
+def _rewrite_trig_as_product(expr):
+    """Rewrite differences of sin/cos with related arguments using
+    sum-to-product identities.
+
+    sin(a) - sin(b) = 2*cos((a+b)/2)*sin((a-b)/2)
+    cos(a) - cos(b) = -2*sin((a+b)/2)*sin((a-b)/2)
+
+    This avoids the loss of correlation when sin/cos terms with infinite
+    arguments are bounded independently as AccumBounds(-1, 1).
+    """
+    from sympy.functions.elementary.trigonometric import sin, cos
+
+    if isinstance(expr, Mul):
+        # Apply to Add factors inside a Mul
+        new_args = []
+        changed = False
+        for a in expr.args:
+            rewritten = _rewrite_trig_as_product(a)
+            if rewritten != a:
+                changed = True
+            new_args.append(rewritten)
+        return Mul(*new_args) if changed else expr
+
+    if not isinstance(expr, Add):
+        return expr
+
+    # Collect sin and cos terms with their coefficients
+    sin_terms = {}  # {argument: coefficient}
+    cos_terms = {}
+    other = S.Zero
+
+    for term in Add.make_args(expr):
+        coeff, rest = term.as_coeff_Mul()
+        if isinstance(rest, sin):
+            arg = rest.args[0]
+            sin_terms[arg] = sin_terms.get(arg, S.Zero) + coeff
+        elif isinstance(rest, cos):
+            arg = rest.args[0]
+            cos_terms[arg] = cos_terms.get(arg, S.Zero) + coeff
+        else:
+            other += term
+
+    result = other
+    sin_args = list(sin_terms.keys())
+    cos_args = list(cos_terms.keys())
+    used_sin = set()
+    used_cos = set()
+
+    # Try to pair sin terms: c1*sin(a) + c2*sin(b) where c1 = -c2
+    for i in range(len(sin_args)):
+        if i in used_sin:
+            continue
+        for j in range(i + 1, len(sin_args)):
+            if j in used_sin:
+                continue
+            a, b = sin_args[i], sin_args[j]
+            ci, cj = sin_terms[a], sin_terms[b]
+            if ci + cj == 0 and ci != 0:
+                # ci*sin(a) - ci*sin(b) = ci * 2*cos((a+b)/2)*sin((a-b)/2)
+                result += ci * 2 * cos((a + b) / 2) * sin((a - b) / 2)
+                used_sin.add(i)
+                used_sin.add(j)
+                break
+
+    # Try to pair cos terms: c1*cos(a) + c2*cos(b) where c1 = -c2
+    for i in range(len(cos_args)):
+        if i in used_cos:
+            continue
+        for j in range(i + 1, len(cos_args)):
+            if j in used_cos:
+                continue
+            a, b = cos_args[i], cos_args[j]
+            ci, cj = cos_terms[a], cos_terms[b]
+            if ci + cj == 0 and ci != 0:
+                # ci*cos(a) - ci*cos(b) = ci * (-2)*sin((a+b)/2)*sin((a-b)/2)
+                result += ci * (-2) * sin((a + b) / 2) * sin((a - b) / 2)
+                used_cos.add(i)
+                used_cos.add(j)
+                break
+
+    # Add back unpaired terms
+    for i, arg in enumerate(sin_args):
+        if i not in used_sin:
+            result += sin_terms[arg] * sin(arg)
+    for i, arg in enumerate(cos_args):
+        if i not in used_cos:
+            result += cos_terms[arg] * cos(arg)
+
+    return result
+
+
 def limit(e, z, z0, dir="+"):
     """Computes the limit of ``e(z)`` at the point ``z0``.
 
@@ -349,8 +441,26 @@ class Limit(Expr):
             except (ValueError, NotImplementedError, PoleError):
                 pass
         else:
-            if isinstance(coeff, AccumBounds) and ex == S.Zero:
-                return coeff
+            if isinstance(coeff, AccumBounds):
+                # Try rewriting trig differences using sum-to-product
+                # identities to preserve correlation between oscillatory terms.
+                # E.g. sin(x+1/x) - sin(x) -> 2*cos(...)*sin(1/(2x))
+                newe2 = _rewrite_trig_as_product(newe)
+                if newe2 != newe:
+                    try:
+                        coeff2, ex2 = newe2.leadterm(newz, cdir=cdir)
+                    except (ValueError, NotImplementedError, PoleError):
+                        pass
+                    else:
+                        # Only use the rewritten result if it strictly
+                        # improves the exponent (e.g. 0 -> positive means
+                        # the limit is now 0 instead of AccumBounds) or
+                        # eliminates the AccumBounds entirely.
+                        if (ex2 - ex).is_positive or \
+                                (ex2 == ex and not coeff2.has(AccumBounds)):
+                            coeff, ex = coeff2, ex2
+                if isinstance(coeff, AccumBounds) and ex == S.Zero:
+                    return coeff
             if coeff.has(S.Infinity, S.NegativeInfinity, S.ComplexInfinity, S.NaN):
                 return self
             if not coeff.has(newz):
