@@ -2231,3 +2231,11 @@ def test_issue_15566():
     assert isinstance(result, Piecewise)
 
     assert result.has(erf)
+
+
+def test_issue_19639():
+    r, a, b = symbols('r a b', real=True)
+    f = sqrt(1 - r**2)*(a*r**3 + b*r**4)
+    ans = integrate(f, (r, 0, 1))
+    expected = Rational(2, 15)*a + pi*b/32
+    assert ans == expected
