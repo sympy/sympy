@@ -2749,8 +2749,8 @@ def test_MIMOFeedback_functions():
         (-2*s**4 + s**2)*(s**2 - s + 1), s*(s**2 - s + 1)**2, s), TransferFunction(-2*s**4 + 2*s**3, s**2 - s + 1, s)),
         (TransferFunction(0, 1, s), TransferFunction(-s**2 + s, 1, s))))
     assert F_2.doit() == \
-        TransferFunctionMatrix(((TransferFunction(s*(-2*s**2 + s*(2*s - 1) + 1), s**2 - s + 1, s),
-        TransferFunction(-2*s**3*(s - 1), s**2 - s + 1, s)), (TransferFunction(0, 1, s), TransferFunction(s*(1 - s), 1, s))))
+        TransferFunctionMatrix(((TransferFunction(-s**2 + s, s**2 - s + 1, s), TransferFunction(-2*s**4 + 2*s**3, s**2 - s + 1, s)),
+        (TransferFunction(0, 1, s), TransferFunction(-s**2 + s, 1, s))))
     assert F_2.doit(expand=True) == \
         TransferFunctionMatrix(((TransferFunction(-s**2 + s, s**2 - s + 1, s), TransferFunction(-2*s**4 + 2*s**3, s**2 - s + 1, s)),
         (TransferFunction(0, 1, s), TransferFunction(-s**2 + s, 1, s))))
@@ -2792,11 +2792,10 @@ def test_MIMOFeedback_functions():
              DiscreteTransferFunction(-s**2 + s, 1, s, 0.4))))
     assert dF_2.doit() == \
         TransferFunctionMatrix(((
-            DiscreteTransferFunction(s*(-2*s**2 + s*(2*s - 1) + 1),
-                               s**2 - s + 1, s, 0.4),
-            DiscreteTransferFunction(-2*s**3*(s - 1), s**2 - s + 1, s, 0.4)),
-            (DiscreteTransferFunction(0, 1, s, 0.4), DiscreteTransferFunction(s*(1 - s),
-                                                                  1, s, 0.4))))
+            DiscreteTransferFunction(-s**2 + s, s**2 - s + 1, s, 0.4),
+            DiscreteTransferFunction(-2*s**4 + 2*s**3, s**2 - s + 1, s, 0.4)),
+            (DiscreteTransferFunction(0, 1, s, 0.4),
+             DiscreteTransferFunction(-s**2 + s, 1, s, 0.4))))
     assert dF_2.doit(expand=True) == \
         TransferFunctionMatrix(((
             DiscreteTransferFunction(-s**2 + s, s**2 - s + 1, s, 0.4),
