@@ -1881,7 +1881,7 @@ class LatexPrinter(Printer):
         prec = PRECEDENCE['Pow']
         parens = self.parenthesize
 
-        return r' \otimes '.join(
+        return r' \boxtimes '.join(
             (parens(arg, prec, strict=True) for arg in args))
 
     def _print_MatPow(self, expr):
@@ -2058,6 +2058,14 @@ class LatexPrinter(Printer):
         return "{{%s}_{%s}}" % (
             self.parenthesize(expr.name, PRECEDENCE["Func"], True),
             ", ".join([f"{self._print(i)}" for i in expr.indices]))
+
+    def _print_ArrayTensorProduct(self, expr):
+        args = expr.args
+        prec = PRECEDENCE['Pow']
+        parens = self.parenthesize
+
+        return r' \otimes '.join(
+            (parens(arg, prec, strict=True) for arg in args))
 
     def _print_UniversalSet(self, expr):
         return r"\mathbb{U}"
