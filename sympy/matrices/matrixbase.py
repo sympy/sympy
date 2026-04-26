@@ -3867,6 +3867,63 @@ class MatrixBase(Printable):
         # computing the Jacobian is now easy:
         return self._new(m, n, lambda j, i: self[j].diff(X[i]))
 
+    def coeff(self, X):
+        """Extracts the coefficients of the provided expressions into a linear
+        coefficient matrix.
+
+        Parameters
+        ==========
+        self : Matrix, shape(m, 1) or Matrix, shape(1, m)
+            Vector of expressions representing functions ``f_i(x_1, ..., x_n)``
+            for ``i=1, ..., m``.
+        X : iterable of Expr
+            The ``x_i``'s in order. Matrices of shape (n, 1) or (1, n) are
+            acceptable.
+
+        Examples
+        ========
+
+        >>> from sympy import sin, cos, Matrix
+        >>> from sympy.abc import a, b, c, x, y, rho, phi
+        >>> X = Matrix([rho*cos(phi), rho*sin(phi), phi*rho**2])
+        >>> Y = Matrix([rho, phi])
+        >>> X.coeff(Y)
+        Matrix([
+        [cos(phi),      0],
+        [sin(phi),      0],
+        [       0, rho**2]])
+        >>> F = Matrix([a*x + b*y + a*c, b*x + b*c])
+        >>> F.coeff([x, y])
+        Matrix([
+        [a, b],
+        [b, 0]])
+
+        See Also
+        ========
+
+        coeff
+        jacobian
+
+        """
+        if not isinstance(X, MatrixBase):
+            X = self._new(X)
+
+        if self.shape[0] == 1:
+            m = self.shape[1]
+        elif self.shape[1] == 1:
+            m = self.shape[0]
+        else:
+            raise TypeError("The matrix must be a row or a column matrix.")
+
+        if X.shape[0] == 1:
+            n_ = X.shape[1]
+        elif X.shape[1] == 1:
+            n_ = X.shape[0]
+        else:
+            raise TypeError("X must be a row or a column matrix")
+
+        return self._new(m, n_, lambda j, i: self[j].coeff(X[i]))
+
     def limit(self, x: Expr, xlim: Expr, dir: str = '+') -> Self:
         """Calculate the limit of each element in the matrix.
         ``args`` will be passed to the ``limit`` function.
