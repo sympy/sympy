@@ -5297,6 +5297,14 @@ def test_sympy__codegen__fnodes__literal_dp():
     assert _test_args(literal_dp(1))
 
 
+def test_sympy__codegen__lapack_nodes__Dgesv():
+    from sympy.codegen.lapack_nodes import Dgesv
+    from sympy import MatrixSymbol
+    A = MatrixSymbol('A', 3, 3)
+    b = MatrixSymbol('b', 3, 1)
+    assert _test_args(Dgesv(A, b))
+
+
 def test_sympy__codegen__matrix_nodes__MatrixSolve():
     from sympy.matrices import MatrixSymbol
     from sympy.codegen.matrix_nodes import MatrixSolve

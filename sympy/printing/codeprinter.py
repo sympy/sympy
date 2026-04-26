@@ -138,6 +138,7 @@ class CodePrinter(StrPrinter):
             If provided, the printed code will set the expression to a variable or multiple variables
             with the name or names given in ``assign_to``.
         """
+
         from sympy.matrices.expressions.matexpr import MatrixSymbol
         from sympy.codegen.ast import CodeBlock, Assignment
 

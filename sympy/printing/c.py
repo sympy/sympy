@@ -749,3 +749,14 @@ c_code_printers = {
     'c99': C99CodePrinter,
     'c11': C11CodePrinter
 }
+
+class LAPACKCCodePrinter(C99CodePrinter):
+    def _print_Dgesv(self, expr):
+        return 'LAPACKE_dgesv(LAPACK_ROW_MAJOR, {}, {}, {}, {}, ipiv, {}, {})'.format(
+            expr.matrix.shape[0],
+            expr.vector.shape[1],
+            self._print(expr.matrix),
+            expr.matrix.shape[0],
+            self._print(expr.vector),
+            expr.matrix.shape[0]
+        )
