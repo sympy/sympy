@@ -122,7 +122,7 @@ from sympy.assumptions.ask import Q
 from sympy.core import Dummy
 from sympy.core.mul import Mul
 from sympy.core.add import Add
-from sympy.core.relational import Eq, Ne
+from sympy.core.relational import Eq, Ge, Gt, Le, Lt
 from sympy.core.sympify import sympify
 from sympy.core.singleton import S
 from sympy.core.numbers import Rational, oo
@@ -137,7 +137,7 @@ class UnhandledInput(Exception):
     """
 
 # predicates that LRASolver understands and makes use of
-ALLOWED_PRED = {Q.eq, Q.gt, Q.lt, Q.le, Q.ge}
+ALLOWED_PRED = {Q.eq: Eq, Q.gt: Gt, Q.lt: Lt, Q.le: Le, Q.ge: Ge}
 
 # if true ~Q.gt(x, y) implies Q.le(x, y)
 HANDLE_NEGATION = True
@@ -280,37 +280,19 @@ class LRASolver():
             if prop.lhs == oo or prop.rhs == oo:
                 raise UnhandledInput(f"{prop} contains infinity")
 
-            prop = _eval_binrel(prop)  # simplify variable-less quantities to True / False if possible
-            if prop == True:
+            expr = prop.lhs - prop.rhs
+            pred = ALLOWED_PRED[prop.function](expr, S.Zero)
+            if pred == True:
                 conflicts.append([enc])
                 continue
-            elif prop == False:
+            if pred == False:
                 conflicts.append([-enc])
                 continue
-            elif prop is None:
+            if not expr.free_symbols:
                 raise UnhandledInput(f"{prop} could not be simplified")
 
-            expr = prop.lhs - prop.rhs
             if prop.function in [Q.ge, Q.gt]:
                 expr = -expr
-
-            # expr should be less than (or equal to) 0
-            # otherwise prop is False
-            if prop.function in [Q.le, Q.ge]:
-                bool = (expr <= 0)
-            elif prop.function in [Q.lt, Q.gt]:
-                bool = (expr < 0)
-            else:
-                assert prop.function == Q.eq
-                bool = Eq(expr, 0)
-
-            if bool == True:
-                conflicts.append([enc])
-                continue
-            elif bool == False:
-                conflicts.append([-enc])
-                continue
-
 
             vars, const = _sep_const_terms(expr)  # example: (2x + 3y + 2) --> (2x + 3y), (2)
             vars, var_coeff = _sep_const_coeff(vars)  # examples: (2x) --> (x, 2); (2x + 3y) --> (2x + 3y), (1)
@@ -734,31 +716,6 @@ def _sep_const_terms(expr):
                       lambda t: len(t.free_symbols) == 0,
                       binary=True)
     return Add(*var), Add(*const)
-
-
-def _eval_binrel(binrel):
-    """
-    Simplify binary relation to True / False if possible.
-    """
-    if not (len(binrel.lhs.free_symbols) == 0 and len(binrel.rhs.free_symbols) == 0):
-        return binrel
-    if binrel.function == Q.lt:
-        res = binrel.lhs < binrel.rhs
-    elif binrel.function == Q.gt:
-        res = binrel.lhs > binrel.rhs
-    elif binrel.function == Q.le:
-        res = binrel.lhs <= binrel.rhs
-    elif binrel.function == Q.ge:
-        res = binrel.lhs >= binrel.rhs
-    elif binrel.function == Q.eq:
-        res = Eq(binrel.lhs, binrel.rhs)
-    elif binrel.function == Q.ne:
-        res = Ne(binrel.lhs, binrel.rhs)
-
-    if res == True or res == False:
-        return res
-    else:
-        return None
 
 
 class Boundary:
