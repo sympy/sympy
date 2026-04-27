@@ -83,15 +83,16 @@ in a shorter form.
 
     from sympy.core.symbol import Symbol
     from sympy.printing.latex import LatexPrinter, print_latex
-    from sympy.core.function import UndefinedFunction, Function
+    from sympy.core.function import AppliedUndef, Function
 
 
     class MyLatexPrinter(LatexPrinter):
         \"\"\"Print derivative of a function of symbols in a shorter form.
         \"\"\"
         def _print_Derivative(self, expr):
-            function, *vars = expr.args
-            if not isinstance(type(function), UndefinedFunction) or \\
+            function = expr.expr
+            vars = expr.variables
+            if not isinstance(function, AppliedUndef) or \\
                not all(isinstance(i, Symbol) for i in vars):
                 return super()._print_Derivative(expr)
 
