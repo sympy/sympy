@@ -1,9 +1,10 @@
 from __future__ import annotations
+from sympy import srepr, sstr
 from sympy.core.mul import Mul
 from sympy.core.numbers import Rational
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
-from sympy.physics.units import Quantity, length, meter, W
+from sympy.physics.units import Quantity, gram, length, meter, W
 from sympy.physics.units.prefixes import PREFIXES, Prefix, prefix_unit, kilo, \
     kibi
 from sympy.physics.units.systems import SI
@@ -83,5 +84,30 @@ def test_bases():
 
 
 def test_repr():
-    assert eval(repr(kilo)) == kilo
-    assert eval(repr(kibi)) == kibi
+    assert repr(kilo) == "kilo"
+    assert repr(kibi) == "kibi"
+
+
+def test_prefix_printing():
+    dodeca = Prefix('dodeca', 'dd', 1, base=12)
+
+    assert str(kilo) == "k"
+    assert repr(kilo) == "kilo"
+    assert sstr(kilo) == "kilo"
+    assert srepr(kilo) == "kilo"
+    assert sstr(kilo, abbrev=True) == "k"
+
+    assert str(dodeca) == "dd"
+    assert repr(dodeca) == "dodeca"
+    assert sstr(dodeca) == "dodeca"
+    assert srepr(dodeca) == "dodeca"
+    assert sstr(dodeca, abbrev=True) == "dd"
+
+
+def test_prefix_mul_printing():
+    expr = Mul(kilo, gram, evaluate=False)
+
+    assert repr(expr) == "gram*kilo"
+    assert sstr(expr) == "gram*kilo"
+    assert srepr(expr) == "Mul(kilo, gram)"
+    assert sstr(expr, abbrev=True) == "g*k"

@@ -58,6 +58,13 @@ def test_printmethod():
     assert srepr(R(x)) == "foo(Symbol('x'))"
 
 
+def test_prefix():
+    from sympy.physics.units import gram, kilo
+    sT(kilo, "kilo", import_stmt="from sympy.physics.units import *")
+    sT(Mul(kilo, gram, evaluate=False), "Mul(kilo, gram)",
+       import_stmt="from sympy.physics.units import *")
+
+
 def test_Add():
     sT(x + y, "Add(Symbol('x'), Symbol('y'))")
     assert srepr(x**2 + 1, order='lex') == "Add(Integer(1), Pow(Symbol('x'), Integer(2)))"

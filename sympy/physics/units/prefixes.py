@@ -71,13 +71,13 @@ class Prefix(Expr):
     def __str__(self):
         return str(self._abbrev)
 
-    def __repr__(self):
-        if self.base == 10:
-            return "Prefix(%r, %r, %r)" % (
-                str(self.name), str(self.abbrev), self._exponent)
-        else:
-            return "Prefix(%r, %r, %r, %r)" % (
-                str(self.name), str(self.abbrev), self._exponent, self.base)
+    def _sympyrepr(self, printer):
+        return str(self.name)
+
+    def _sympystr(self, printer):
+        if printer._settings.get("abbrev", False):
+            return printer._print(self.abbrev)
+        return printer._print(self.name)
 
     def __mul__(self, other):
         from sympy.physics.units import Quantity
