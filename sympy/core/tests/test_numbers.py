@@ -2335,3 +2335,14 @@ def test_issue_19988_Float_pickle_precision():
     original = Float(pi, dps=100)
     unpickled = pickle.loads(pickle.dumps(original))
     assert original._prec == unpickled._prec
+
+
+def test_Rational_float_style_format_specifiers():
+    assert format(Rational(1, 2), '1.2f') == '0.50'
+    assert format(Rational(3, 1), '+3.0f') == ' +3'
+    assert format(Rational(1, 4), '.1%') == '25.0%'
+
+
+def test_Rational_format_invalid_specifier_raises():
+    with raises((TypeError, ValueError)):
+        format(Rational(1, 2), 's')
