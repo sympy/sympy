@@ -5,6 +5,7 @@ from sympy.core.symbol import Symbol
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import (Max, Min, sqrt)
 from sympy.functions.elementary.trigonometric import (cos, sin, tan)
+from sympy.functions.elementary.integers import (floor, ceiling, frac)
 from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.core import Add, Mul, Pow
 from sympy.core.expr import unchanged
@@ -340,3 +341,18 @@ def test_union_AccumBounds():
     assert B(0, 3).union(B(-1, 4)) == B(-1, 4)
     raises(TypeError, lambda: B(0, 3).union(1))
     raises(TypeError, lambda: B(0, 3).union(FiniteSet(1)))
+
+
+def test_floor_ineq():
+    x = Symbol("x", real = True)
+    assert (B(0, oo) <= floor(x)) == False
+
+
+def test_ceiling_ineq():
+    x = Symbol("x", real = True)
+    assert (B(0, oo) <= ceiling(x)) == False
+
+
+def test_frac_ineq():
+    x = Symbol("x", real = True)
+    assert B(1,2) >= frac(x)
