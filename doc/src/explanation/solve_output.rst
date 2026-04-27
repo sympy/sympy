@@ -130,7 +130,7 @@ Boolean or Relational
     flags are ignored).
 
     >>> solve([x**2 > 4, x > 0])
-    (2 < x) & (x < oo)
+    2 < x
 
     >>> from sympy import Unequality as Ne
     >>> solve([x**2 - 4, Ne(x, -2)])

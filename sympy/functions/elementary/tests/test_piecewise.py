@@ -1146,8 +1146,7 @@ def test_issue_6900():
 
 def test_issue_10122():
     assert solve(abs(x) + abs(x - 1) - 1 > 0, x
-        ) == Or(And(-oo < x, x < S.Zero), And(S.One < x, x < oo))
-
+        ) == Or(x < S.Zero, S.One < x)
 
 def test_issue_4313():
     u = Piecewise((0, x <= 0), (1, x >= a), (x/a, True))
@@ -1161,7 +1160,7 @@ def test_issue_4313():
             (-y**2/(-a**2*y + a**2*M) + 1/(-y + M) -
                 1/(x - y) - 2*y*log(-y)/a**2 + 2*y*log(-y +
                 M)/a**2 - y/a**2 + M/a**2, True)),
-        ((a <= y) & (y <= 0)) | ((y <= 0) & (y > -oo))),
+        ((a <= y) & (y <= 0)) | ((y <= 0) )),
         (Piecewise(
             (-1/(x - y), x <= 0),
             (-a**2/(a**2*x - a**2*y) + 2*a*y/(a**2*x - a**2*y) -
@@ -1298,7 +1297,7 @@ def test_unevaluated_integrals():
     # solve_univariate_inequality fails
     assert p.integrate(y) == Piecewise(
         (y, Eq(f(x), 1) | ((x < 10) & Eq(f(x), 1))),
-        (2*y, (x > -oo) & (x < 10)), (0, True))
+        (2*y, (x < 10)), (0, True))
 
 
 def test_conditions_as_alternate_booleans():

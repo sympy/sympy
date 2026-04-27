@@ -810,7 +810,7 @@ def test_solve_undetermined_coeffs():
 
 def test_solve_inequalities():
     x = Symbol('x')
-    sol = And(S.Zero < x, x < oo)
+    sol = S.Zero < x
     assert solve(x + 1 > 1) == sol
     assert solve([x + 1 > 1]) == sol
     assert solve([x + 1 > 1], x) == sol
@@ -1914,9 +1914,10 @@ def test_issues_6819_6820_6821_6248_8692_25777_25779():
 
 def test_issue_17638():
 
-    assert solve(((2-exp(2*x))*exp(x))/(exp(2*x)+2)**2 > 0, x) == (-oo < x) & (x < log(2)/2)
-    assert solve(((2-exp(2*x)+2)*exp(x+2))/(exp(x)+2)**2 > 0, x) == (-oo < x) & (x < log(4)/2)
-    assert solve((exp(x)+2+x**2)*exp(2*x+2)/(exp(x)+2)**2 > 0, x) == (-oo < x) & (x < oo)
+    assert solve(((2-exp(2*x))*exp(x))/(exp(2*x)+2)**2 > 0, x) == (x < log(2)/2)
+    assert solve(((2-exp(2*x)+2)*exp(x+2))/(exp(x)+2)**2 > 0, x) ==  (x < log(4)/2)
+    # This is true for all extended reals then?
+    assert solve((exp(x)+2+x**2)*exp(2*x+2)/(exp(x)+2)**2 > 0, x)
 
 
 

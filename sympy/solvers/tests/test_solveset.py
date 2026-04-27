@@ -2820,6 +2820,8 @@ def test_issue_10158():
     raises(ValueError, lambda: solveset(Abs(x - 1) - Abs(y), x, dom))
     raises(ValueError, lambda: solveset(Abs(x + 4*Abs(x + 1)), x, dom))
 
+    assert solve(x*Max(x, 15) - 10, x) == [Rational(2,3)]
+
 
 def test_issue_14300():
     f = 1 - exp(-18000000*x) - y

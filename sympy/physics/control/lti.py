@@ -1307,7 +1307,7 @@ class TransferFunctionBase(SISOLinearTimeInvariant, ABC):
         >>> ineq
         [2*k**2 > 0, 200*k**2 - 60*k > 0, 20*k > 0]
         >>> reduce_inequalities(ineq)
-        (3/10 < k) & (k < oo)
+        3/10 < k
 
         """
         pass

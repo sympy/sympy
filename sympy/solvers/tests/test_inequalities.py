@@ -198,8 +198,8 @@ def test_reduce_abs_inequalities():
     assert reduce_inequalities(e, x) == ans
     assert reduce_inequalities(abs(x - 5)) == Eq(x, 5)
     assert reduce_inequalities(
-        abs(2*x + 3) >= 8) == Or(And(Le(Rational(5, 2), x), Lt(x, oo)),
-        And(Le(x, Rational(-11, 2)), Lt(-oo, x)))
+        abs(2*x + 3) >= 8) == Or(Le(Rational(5, 2), x),
+        Le(x, Rational(-11, 2)))
     assert reduce_inequalities(abs(x - 4) + abs(
         3*x - 5) < 7) == And(Lt(S.Half, x), Lt(x, 4))
     assert reduce_inequalities(abs(x - 4) + abs(3*abs(x) - 5) < 7) == \
@@ -207,12 +207,12 @@ def test_reduce_abs_inequalities():
 
     nr = Symbol('nr', extended_real=False)
     raises(TypeError, lambda: reduce_inequalities(abs(nr - 5) < 3))
-    assert reduce_inequalities(x < 3, symbols=[x, nr]) == And(-oo < x, x < 3)
+    assert reduce_inequalities(x < 3, symbols=[x, nr]) == (x < 3)
 
 
 def test_reduce_inequalities_general():
-    assert reduce_inequalities(Ge(sqrt(2)*x, 1)) == And(sqrt(2)/2 <= x, x < oo)
-    assert reduce_inequalities(x + 1 > 0) == And(S.NegativeOne < x, x < oo)
+    assert reduce_inequalities(Ge(sqrt(2)*x, 1)) == (sqrt(2)/2 <= x)
+    assert reduce_inequalities(x + 1 > 0) == (S.NegativeOne < x)
 
 
 def test_reduce_inequalities_boolean():
@@ -224,8 +224,8 @@ def test_reduce_inequalities_boolean():
 
 def test_reduce_inequalities_multivariate():
     assert reduce_inequalities([Ge(x**2, 1), Ge(y**2, 1)]) == And(
-        Or(And(Le(S.One, x), Lt(x, oo)), And(Le(x, -1), Lt(-oo, x))),
-        Or(And(Le(S.One, y), Lt(y, oo)), And(Le(y, -1), Lt(-oo, y))))
+        Or(Le(S.One, x), Le(x, -1)),
+        Or(Le(S.One, y), Le(y, -1)))
 
 
 def test_reduce_inequalities_errors():
@@ -235,7 +235,7 @@ def test_reduce_inequalities_errors():
 
 def test__solve_inequalities():
     assert reduce_inequalities(x + y < 1, symbols=[x]) == (x < 1 - y)
-    assert reduce_inequalities(x + y >= 1, symbols=[x]) == (x < oo) & (x >= -y + 1)
+    assert reduce_inequalities(x + y >= 1, symbols=[x]) == (x >= -y + 1)
     assert reduce_inequalities(Eq(0, x - y), symbols=[x]) == Eq(x, y)
     assert reduce_inequalities(Ne(0, x - y), symbols=[x]) == Ne(x, y)
 
@@ -252,13 +252,13 @@ def test_issue_8235():
     assert reduce_inequalities(x**2 - 1 <= 0) == \
         And(S.NegativeOne <= x, x <= 1)
     assert reduce_inequalities(x**2 - 1 > 0) == \
-        Or(And(-oo < x, x < -1), And(x < oo, S.One < x))
+        Or(x < -1,  S.One < x)
     assert reduce_inequalities(x**2 - 1 >= 0) == \
-        Or(And(-oo < x, x <= -1), And(S.One <= x, x < oo))
+        Or(x <= -1, S.One <= x)
 
     eq = x**8 + x - 9  # we want CRootOf solns here
     sol = solve(eq >= 0)
-    tru = Or(And(rootof(eq, 1) <= x, x < oo), And(-oo < x, x <= rootof(eq, 0)))
+    tru = Or(rootof(eq, 1) <= x,  x <= rootof(eq, 0))
     assert sol == tru
 
     # recast vanilla as real
@@ -379,7 +379,7 @@ def test_issue_8545():
     ans = And(Lt(1, x), Lt(x, oo))
     assert reduce_abs_inequality(eq, '<', x) == ans
     eq = 1 - x - sqrt((1 - x)**2)
-    assert reduce_inequalities(eq < 0) == ans
+    assert reduce_inequalities(eq < 0) == Lt(1, x)
 
 
 def test_issue_8974():
@@ -389,7 +389,7 @@ def test_issue_8974():
 
 def test_issue_10198():
     assert reduce_inequalities(
-        -1 + 1/abs(1/x - 1) < 0) == (x > -oo) & (x < S(1)/2) & Ne(x, 0)
+        -1 + 1/abs(1/x - 1) < 0) == (x < S(1)/2) & Ne(x, 0)
 
     assert reduce_inequalities(abs(1/sqrt(x)) - 1, x) == Eq(x, 1)
     assert reduce_abs_inequality(-3 + 1/abs(1 - 1/x), '<', x) == \
@@ -498,4 +498,4 @@ def test_issue_25738():
 
 
 def test_issue_25983():
-    assert(reduce_inequalities(pi/Abs(x) <= 1) == ((pi <= x) & (x < oo)) | ((-oo < x) & (x <= -pi)))
+    assert(reduce_inequalities(pi/Abs(x) <= 1) == ((pi <= x) ) | ( (x <= -pi)))

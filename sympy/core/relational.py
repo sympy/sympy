@@ -1408,7 +1408,6 @@ def is_ge(lhs, rhs, assumptions=None):
 
     if not (isinstance(lhs, Expr) and isinstance(rhs, Expr)):
         raise TypeError("Can only compare inequalities with Expr")
-
     retval = _eval_is_ge(lhs, rhs)
 
     if retval is not None:
@@ -1425,13 +1424,38 @@ def is_ge(lhs, rhs, assumptions=None):
         _lhs = AssumptionsWrapper(lhs, assumptions)
         _rhs = AssumptionsWrapper(rhs, assumptions)
         if _lhs.is_extended_real and _rhs.is_extended_real:
-            if (_lhs.is_infinite and _lhs.is_extended_positive) or (_rhs.is_infinite and _rhs.is_extended_negative):
-                return True
-            diff = lhs - rhs
-            if diff is not S.NaN:
-                rv = is_extended_nonnegative(diff, assumptions)
-                if rv is not None:
-                    return rv
+            if _lhs.is_infinite:
+                if _rhs.is_infinite:
+                # This checks all 9 possibilities of fuzz bool values
+                    if _lhs.is_extended_positive or _rhs.is_extended_negative:
+                        return True
+                    if _lhs.is_extended_positive is None:
+                        return None
+                    if _rhs.is_extended_negative is None:
+                        return None
+                return _lhs.is_extended_positive
+
+            if _rhs.is_infinite:
+                return _rhs.is_extended_negative
+
+            if _lhs.is_infinite is None:
+                if _rhs.is_infinite and _rhs.is_extended_negative:
+                    return True
+                return None
+
+            if _rhs.is_infinite is None:
+                if _lhs.is_infinite and _lhs.is_extended_positive:
+                    return True
+                return None
+
+            if _lhs.is_infinite is False and _rhs.is_infinite is False:
+                # This difference is mathamatically valid ONLY if none of LHS nor RHS is infinite.
+                diff = lhs - rhs
+                if diff is not S.NaN:
+                    rv = is_extended_nonnegative(diff, assumptions)
+                    if rv is not None:
+                        return rv
+    return None
 
 
 def is_neq(lhs, rhs, assumptions=None):

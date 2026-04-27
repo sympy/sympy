@@ -71,7 +71,10 @@ class CompoundPSpace(PSpace):
         return self._get_newpspace().domain
 
     def _get_newpspace(self, evaluate=False):
-        x = Dummy('x')
+        if isinstance(self.distribution.args[0], DiscreteDistribution):
+            x = Dummy('x', integer=True, nonnegative=True)
+        else:
+            x = Dummy('x')
         parent_dist = self.distribution.args[0]
         func = Lambda(x, self.distribution.pdf(x, evaluate))
         new_pspace = self._transform_pspace(self.symbol, parent_dist, func)
@@ -188,6 +191,9 @@ class CompoundDistribution(Distribution, NamedArgsMixin):
         if isinstance(dist, SingleFiniteDistribution):
             y = Dummy('y', integer=True, negative=False)
             expr = dist.pmf(y)
+        elif isinstance(dist, DiscreteDistribution):
+            y = Dummy('y', integer=True)
+            expr = dist.pdf(y)
         else:
             y = Dummy('y')
             expr = dist.pdf(y)
