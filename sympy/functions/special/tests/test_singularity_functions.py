@@ -66,9 +66,11 @@ def test_eval():
     assert SingularityFunction(x, nan, 1) is nan
     assert SingularityFunction(nan, a, n) is nan
 
+    assert SingularityFunction(4, 2, -5) == 0
+    assert SingularityFunction(8, 8, -5) is oo
+
     raises(ValueError, lambda: SingularityFunction(x, a, I))
     raises(ValueError, lambda: SingularityFunction(2*I, I, n))
-    raises(ValueError, lambda: SingularityFunction(x, a, -5))
 
 
 def test_leading_term():
@@ -128,3 +130,35 @@ def test_rewrite():
     assert expr_in.rewrite(Heaviside) == expr_out
     assert expr_in.rewrite(DiracDelta) == expr_out
     assert expr_in.rewrite('HeavisideDiracDelta') == expr_out
+
+
+def test_SingularityFunction_negative_exponent_behavior():
+    from sympy.functions.elementary.complexes import Abs
+    x, a = symbols('x a')
+
+    # 1. Test Evaluation (subs) for negative n
+    f_neg1 = SingularityFunction(x, 2, -1)
+    assert f_neg1.subs(x, 2) == oo
+    assert f_neg1.subs(x, 5) == 0
+    assert f_neg1.subs(x, 0) == 0
+
+    # 2. Test Differentiation (fdiff) generalization
+    f_diff = SingularityFunction(x, a, -1)
+    assert diff(f_diff, x) == SingularityFunction(x, a, -2)
+    assert diff(f_diff, x, 2) == SingularityFunction(x, a, -3)
+
+    # 3. Test Rewriting (Heaviside)
+    n_neg = Symbol('n', negative=True, integer=True)
+    assert SingularityFunction(x, a, n_neg).rewrite(Heaviside) == diff(Heaviside(x - a), (x, Abs(n_neg)))
+    assert SingularityFunction(x, a, -1).rewrite(Heaviside) == DiracDelta(x - a)
+    assert SingularityFunction(x, a, -2).rewrite(Heaviside) == diff(Heaviside(x - a), x, 2)
+
+    # 4. Test Rewriting (Piecewise)
+    expected_pw = Piecewise((oo, Eq(x - a, 0)), (0, True))
+    assert SingularityFunction(x, a, n_neg).rewrite(Piecewise) == expected_pw
+    assert SingularityFunction(x, a, -1).rewrite(Piecewise) == expected_pw
+
+    # 5. Regression Check: Ensure symbols without assumptions are NOT affected
+    m = Symbol('m')
+    f_m = SingularityFunction(x, a, m)
+    assert f_m.rewrite(Heaviside) == SingularityFunction(x, a, m)
