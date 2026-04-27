@@ -74,7 +74,10 @@ def _(f, x):
 
     try:
         from sympy.polys.polyutils import _nsort
-        sing = list(singularities(expr, var, x))
+        raw_sing = singularities(expr, var, x)
+        if not isinstance(raw_sing, FiniteSet):
+            return None   # we can only handle finitely many singularities
+        sing = list(raw_sing)
         if len(sing) > 1:
             sing = _nsort(sing)
     except NotImplementedError:
