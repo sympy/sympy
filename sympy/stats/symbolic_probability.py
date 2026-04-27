@@ -113,7 +113,17 @@ class Probability(Expr):
             return sampling_P(condition, given_condition, numsamples=numsamples)
         if given_condition is not None:  # If there is a condition
             # Recompute on new conditional expr
-            return Probability(given(condition, given_condition)).doit()
+            return self.func(given(condition, given_condition)).doit(**hints) 
+            # another issue I think is, 
+            # 1. Condition gets lost 
+            # Initially we had: Probability(condition, given_condition)
+            # But after this line: Probability(given(condition, given_condition)), The given_condition will be no longer tracked
+
+            # 2. Ignores hints
+            # .doit() is called without **hints
+            # But after this line: Probability(given(condition, given_condition)), The given_condition will be no longer tracked
+            # My fix - self.func(...) - [Keeps the same class (Probability)] and [Keeps behavior unifrm]
+            # .doit(**hints) - Preserves user settings
 
         # Otherwise pass work off to the ProbabilitySpace
         if pspace(condition) == PSpace():
@@ -312,11 +322,14 @@ class Expectation(Expr):
 
         if rv.pspace.is_Continuous:
             return Integral(arg.replace(rv, symbol)*Probability(Eq(rv, symbol), condition), (symbol, rv.pspace.domain.set.inf, rv.pspace.domain.set.sup))
+            # ok so the issue here is "rv.pspace.set.sup" does not exist right
+            # that means the correct path is: pspace - domain - set - sup
+
         else:
             if rv.pspace.is_Finite:
                 raise NotImplementedError
             else:
-                return Sum(arg.replace(rv, symbol)*Probability(Eq(rv, symbol), condition), (symbol, rv.pspace.domain.set.inf, rv.pspace.set.sup))
+                return Sum(arg.replace(rv, symbol)*Probability(Eq(rv, symbol), condition), (symbol, rv.pspace.domain.set.inf, rv.pspace.domain.set.sup))
 
     def _eval_rewrite_as_Integral(self, arg, condition=None, evaluate=False, **kwargs):
         return self.func(arg, condition=condition).doit(deep=False, evaluate=evaluate)
