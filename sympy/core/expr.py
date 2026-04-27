@@ -720,7 +720,7 @@ class Expr(Basic, EvalfMixin):
             try:
                 a = expr.subs(list(zip(free, [0]*len(free))),
                     simultaneous=True)
-                if a is S.NaN:
+                if a is S.NaN or a.has(S.NaN):
                     # evaluation may succeed when substitution fails
                     a = expr._random(None, 0, 0, 0, 0)
             except ZeroDivisionError:
@@ -729,7 +729,7 @@ class Expr(Basic, EvalfMixin):
                 try:
                     b = expr.subs(list(zip(free, [1]*len(free))),
                         simultaneous=True)
-                    if b is S.NaN:
+                    if b is S.NaN or b.has(S.NaN):
                         # evaluation may succeed when substitution fails
                         b = expr._random(None, 1, 0, 1, 0)
                 except ZeroDivisionError:
