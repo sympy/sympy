@@ -574,3 +574,14 @@ def test_physics_constant():
 
     assert not meter.is_physical_constant
     assert not joule.is_physical_constant
+
+def test_quantity_subs_does_not_modify_abbrev():
+    from sympy import Symbol
+    from sympy.physics.units import meter, kilogram
+
+    m = Symbol("m")
+
+    q = meter.subs({m: 950 * kilogram})
+
+    assert q == meter
+    assert q.abbrev == m
