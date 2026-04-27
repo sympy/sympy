@@ -1174,6 +1174,8 @@ def test_real_Pow():
 def test_Pow_is_finite():
     xe = Symbol('xe', extended_real=True)
     xr = Symbol('xr', real=True)
+    xc = Symbol('xc', complex=True)
+    x = Symbol('x')
     p = Symbol('p', positive=True)
     n = Symbol('n', negative=True)
     i = Symbol('i', integer=True)
@@ -1184,9 +1186,9 @@ def test_Pow_is_finite():
     assert (xe**xe).is_finite is None
     assert (xr**xe).is_finite is None
     assert (xe**xr).is_finite is None
-    # FIXME: The line below should be True rather than None
-    # assert (xr**xr).is_finite is True
-    assert (xr**xr).is_finite is None
+    assert (xr**xr).is_finite is True
+    assert (xc**xc).is_finite is True
+    assert (x**x).is_finite is None
 
     assert (p**xe).is_finite is None
     assert (p**xr).is_finite is True
