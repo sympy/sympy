@@ -2577,6 +2577,9 @@ class LatexPrinter(Printer):
         mul_symbol = self._settings['mul_symbol_latex']
         return poly.str(self, PRECEDENCE, "{%s}^{%d}", mul_symbol)
 
+    def _print_PuiseuxPoly(self, poly):
+        return self._print(poly.as_expr())
+
     def _print_FracElement(self, frac):
         if frac.denom == 1:
             return self._print(frac.numer)
