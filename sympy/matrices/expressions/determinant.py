@@ -54,9 +54,8 @@ class Determinant(Expr):
         return self
 
     def _eval_derivative(self, x):
-        # Derivative currently implements `hasattr(..., "_eval_derivative")` to proceed:
-        return None
-
+        A = self.args[0]
+        return self * A.T.inv()
 
 def det(matexpr):
     """ Matrix Determinant
