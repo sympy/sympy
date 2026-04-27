@@ -5,13 +5,15 @@ from sympy.assumptions.ask import Q, ask
 
 from sympy.core import symbols, Symbol
 from sympy.matrices.expressions.matexpr import MatrixSymbol
-from sympy.core.numbers import I
+from sympy.core.numbers import I, oo
+from sympy.core.singleton import S
+from sympy.sets.sets import Interval
 
 from sympy.testing.pytest import raises, XFAIL
-x, y, z = symbols("x y z", real=True)
+
 
 def test_lra_satask():
-    im = Symbol('im', imaginary=True)
+    x = symbols("x", real=True)
 
     # test preprocessing of unequalities is working correctly
     assert lra_satask(Q.eq(x, 1), ~Q.ne(x, 0)) is False
@@ -29,13 +31,25 @@ def test_lra_satask():
     assert lra_satask(Q.gt(x, 0), True) is None
     assert raises(ValueError, lambda: lra_satask(Q.gt(x, 0), False))
 
-    # check imaginary numbers are correctly handled
-    # (im * I).is_real returns True so this is an edge case
+
+def test_lra_satask_unhandled():
+
+    x, y, z = symbols("x y z", real=True)
+    assert lra_satask(Q.eq(x, z), Q.ne(x, y) & Q.eq(y, z) ) is False
+
+    im = Symbol('im', imaginary=True)
+
+    # (im * I).is_real returns True but is not handled
     raises(UnhandledInput, lambda: lra_satask(Q.gt(im * I, 0), Q.gt(im * I, 0)))
 
-    # check matrix inputs
     X = MatrixSymbol("X", 2, 2)
     raises(UnhandledInput, lambda: lra_satask(Q.lt(X, 2) & Q.gt(X, 3)))
+    raises(UnhandledInput, lambda: lra_satask(Q.gt(S.NaN, 0)))
+    raises(UnhandledInput, lambda: lra_satask(Q.gt(Interval(0, 1), 0)))
+    raises(UnhandledInput, lambda: lra_satask(Q.eq(S.Reals, 0)))
+
+    x, y, z = symbols("x y z", real=True)
+    assert lra_satask(Q.eq(x, z), Q.ne(x, y) & Q.eq(y, z) ) is False
 
 
 def test_old_assumptions():
@@ -79,6 +93,7 @@ def test_old_assumptions():
 
 
 def test_rel_queries():
+    x, y, z = symbols("x y z", real=True)
     assert ask(Q.lt(x, 2) & Q.gt(x, 3)) is False
     assert ask(Q.positive(x - z), (x > y) & (y > z)) is True
     assert ask(x + y > 2, (x < 0) & (y <0)) is False
@@ -91,6 +106,7 @@ def test_unhandled_queries():
 
 
 def test_all_pred():
+    x= symbols("x", real=True)
     # test usable pred
     assert lra_satask(Q.extended_positive(x), (x > 2)) is True
     assert lra_satask(Q.positive_infinite(x)) is False
@@ -102,6 +118,53 @@ def test_all_pred():
     raises(UnhandledInput, lambda: lra_satask((x > 0), (x > 2) & Q.odd(x)))
     raises(UnhandledInput, lambda: lra_satask((x > 0), (x > 2) & Q.even(x)))
     raises(UnhandledInput, lambda: lra_satask((x > 0), (x > 2) & Q.integer(x)))
+
+
+def test_extended_real_number_line():
+    a, b, c = symbols("a b c")
+
+
+    assert lra_satask(a > c, (a > b) & (b > c)) is True
+    assert lra_satask(2*a > 0, 2*a > 1) is True
+    assert lra_satask(a**2 > 0, a**2 > 1) is True
+    assert lra_satask(a > b, (a - 2*b > 0) & Q.real(a) & Q.positive(b)) is True
+
+    # TODO: Make this give `False` instead of `None`. (Probably very hard).
+    assert ask(a > b, Q.extended_real(a) & Q.extended_real(b) & Q.eq(b, c) & Q.positive_infinite(c)) is None
+
+    # `a + 1 > a` may be false if a=oo.
+    raises(UnhandledInput, lambda: lra_satask(a + 1 > a, Q.extended_real(a)))
+    raises(UnhandledInput, lambda: lra_satask(a + 1 > a, Q.extended_real(a) & Q.extended_real(a + 1)))
+    raises(UnhandledInput, lambda: lra_satask(a + b > a, Q.extended_real(a) & Q.positive(b)))
+    raises(UnhandledInput, lambda: lra_satask(a + b > a, Q.extended_real(a) & Q.positive(b) & Q.extended_real(a + b)))
+    raises(UnhandledInput, lambda: lra_satask(a - 1 >= a, Q.extended_real(a)))
+    raises(UnhandledInput, lambda: lra_satask(a + b + 1 >= a + b, Q.extended_real(a) & Q.extended_real(b)))
+
+    # `2*a > a` assuming `a > 0` may be false if a=oo.
+    raises(UnhandledInput, lambda: lra_satask(2*a > a, a > 0))
+    assert ask((2*a > a), (a > 0)) is None
+
+    raises(UnhandledInput, lambda: lra_satask(a > oo, Q.extended_real(a)))
+    raises(UnhandledInput, lambda: lra_satask(a > b, Q.extended_real(a) & Q.extended_real(b) & (a >= oo)))
+
+
+
+@XFAIL
+def test_extended_real_number_line_xfail():
+    a, b, c = symbols("a b c")
+
+    # Transitivity
+    # If a <= b and b <= c, then a <= c.
+    assert ask(a <= c, (a <= b) & (b <= c)) is True
+    # If a <= b and b < c, then a < c.
+    assert ask(a < c, (a <= b) & (b < c)) is True
+    # If a < b and b <= c, then a < c.
+    assert ask(a < c, (a < b) & (b <= c)) is True
+
+    # Addition and subtraction
+    # If a <= b, then a + c <= b + c and a - c <= b - c.
+    assert ask(a + c <= b + c, (a <= b) & Q.extended_real(a + c) & Q.extended_real(b + c)) is True
+    assert ask(a - c <= b - c, (a <= b) & Q.extended_real(a - c) & Q.extended_real(b - c)) is True
 
 
 def test_number_line_properties():
@@ -129,7 +192,7 @@ def test_failing_number_line_properties():
     # From:
     # https://en.wikipedia.org/wiki/Inequality_(mathematics)#Properties_on_the_number_line
 
-    a, b, c = symbols("a b c", real=True)
+    a, b, c, x = symbols("a b c x", real=True)
 
     # Multiplication and division
     # If a <= b and c > 0, then ac <= bc and a/c <= b/c. (True for non-zero c)
@@ -151,6 +214,8 @@ def test_failing_number_line_properties():
 
 
 def test_equality():
+    x, y, z = symbols("x y z", real=True)
+
     # test symmetry and reflexivity
     assert ask(Q.eq(x, x)) is True
     assert ask(Q.eq(y, x), Q.eq(x, y)) is True
@@ -162,6 +227,7 @@ def test_equality():
 
 @XFAIL
 def test_equality_failing():
+    x, y, z = symbols("x y z", real=True)
     # Note that implementing the substitution property of equality
     # most likely requires a redesign of the new assumptions.
     # See issue #25485 for why this is the case and general ideas

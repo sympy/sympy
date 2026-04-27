@@ -455,7 +455,7 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     ========
 
     >>> from sympy import ask, Q, pi
-    >>> from sympy.abc import x, y
+    >>> from sympy.abc import x, y, z
     >>> ask(Q.rational(pi))
     False
     >>> ask(Q.even(x*y), Q.even(x) & Q.integer(y))
@@ -478,12 +478,25 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     Notes
     =====
 
-    Relations in assumptions are not implemented (yet), so the following
-    will not give a meaningful result.
+    Queries involving real linear inequalities are handled in most cases.
+    For example:
 
     >>> ask(Q.positive(x), x > 0)
+    True
+    >>> ask(x > y, (x - 2*y > 0) & Q.real(x) & Q.positive(y))
+    True
+    >>> ask(x + 1 > x, Q.real(x))
+    True
+    >>> ask(x > z, (x > y) & (y > z))
+    True
 
-    It is however a work in progress.
+    In some cases, you may need to specify that the variables are real.
+
+    >>> print(ask(x > y, (x - 2*y > 0)))
+    None
+
+    This happens because the assumption `x - 2*y > 0` does not guarantee
+    that `x - 2*y > 0` is finite; `x > y` could be false if x = oo.
 
     See Also
     ========
