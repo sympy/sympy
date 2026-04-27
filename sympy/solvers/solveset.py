@@ -429,6 +429,9 @@ def _invert_trig_hyp_real(f, g_ys, symbol):
             # returns ConditionSet that will be part of the final (x, set) tuple
             invsimg = Union(*[
                 imageset(n, period*n + inv(g), S.Integers) for inv in invs])
+            innerimg = function_range(f.args[0], symbol, S.Reals)
+            if innerimg != Interval(-oo,oo):
+                invsimg = Intersection(invsimg, innerimg)
             inv_f, inv_g_ys = _invert_real(f.args[0], invsimg, symbol)
             if inv_f == symbol:     # inversion successful
                 conds = rng.contains(g)
