@@ -92,6 +92,9 @@ def test_mathematica():
         'a + b\\[Gamma]\\[CapitalGamma]d': 'a + bγΓd',
         'a + b \\[Gamma] \\[CapitalGamma] d': 'a + b*γ*Γ*d',
         'a\\[LongEqual]b': 'Eq(a,b)',
+        'Global`x': 'x', # test cases for issue 26748
+        'Sin[Global`x]': 'sin(x)',
+        'Plus[Times[Rational[1,3], Power[Global`x,3]], Times[-1, Cos[Global`x]]]': 'x**3/3 - cos(x)',
         }
 
     for e in d:
@@ -378,3 +381,13 @@ def test_mathematica_not_operator():
     # Factorial with implicit multiplication
     assert parse_mathematica("x!y") == y*factorial(x)
     assert parse_mathematica("x!y!") == factorial(x)*factorial(y)
+
+def test_mathematica_global_prefix():
+    # Test that the Global` prefix is removed correctly
+    assert parse_mathematica("Global`x") == x
+    assert parse_mathematica("Plus[Global`x, Global`y]") == x + y
+    assert parse_mathematica("Sin[Global`x]") == sin(x)
+    # Test robustness: should NOT remove 'Global' if it's part of a variable name
+    # (This requires the re.sub(r'\bGlobal`', '', s) fix)
+    MyGlobalVar = symbols('MyGlobalVar')
+    assert parse_mathematica("MyGlobalVar") == MyGlobalVar

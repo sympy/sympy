@@ -78,7 +78,19 @@ def parse_mathematica(s):
     Apply(Plus, (x, y, z))
     >>> parse_mathematica("f[x_, 3] := x^3 /; x > 0")
     SetDelayed(f(Pattern(x, Blank()), 3), Condition(x**3, x > 0))
+
+    Notes
+    =====
+    Mathematica's default namespace prefix "Global`" is automatically
+    removed from identifiers during parsing to ensure correct variable
+    naming in SymPy.
     """
+
+    # Remove Mathematica's 'Global`' prefix from identifiers to prevent
+    # it from being interpreted as a multiplication (Global * identifier).
+    if isinstance(s, str):
+        s = re.sub(r'\bGlobal`([a-zA-Z0-9])', r'\1', s)
+
     parser = MathematicaParser()
     return parser.parse(s)
 
