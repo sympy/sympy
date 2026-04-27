@@ -1,14 +1,14 @@
 from __future__ import annotations
 from math import prod
 
-from sympy.external.gmpy import gcd, gcdext
+from sympy.external.gmpy import gcd, gcdext, MPZ
 from sympy.ntheory.primetest import isprime
 from sympy.polys.domains import ZZ
 from sympy.polys.galoistools import gf_crt, gf_crt1, gf_crt2
 from sympy.utilities.misc import as_int
 
 
-def symmetric_residue(a, m):
+def symmetric_residue(a: MPZ, m: int | MPZ) -> MPZ:
     """Return the residual mod m such that it is within half of the modulus.
 
     >>> from sympy.ntheory.modular import symmetric_residue
@@ -22,7 +22,7 @@ def symmetric_residue(a, m):
     return a - m
 
 
-def crt(m, v, symmetric=False, check=True):
+def crt(m, v, symmetric = False, check=True):
     r"""Chinese Remainder Theorem.
 
     The moduli in m are assumed to be pairwise coprime.  The output
@@ -100,7 +100,7 @@ def crt(m, v, symmetric=False, check=True):
     return int(result), int(mm)
 
 
-def crt1(m):
+def crt1(m: list[MPZ]) -> tuple[MPZ, list[MPZ], list[MPZ]]:
     """First part of Chinese Remainder Theorem, for multiple application.
 
     Examples
@@ -141,7 +141,10 @@ def crt1(m):
     return gf_crt1(m, ZZ)
 
 
-def crt2(m, v, mm, e, s, symmetric=False):
+def crt2(
+        m: list[MPZ], v: list[MPZ], mm: MPZ,
+        e: list[MPZ], s: list[MPZ], symmetric: bool = False
+        ) -> tuple[int, int]:
     """Second part of Chinese Remainder Theorem, for multiple application.
 
     See ``crt1`` for usage.
@@ -170,7 +173,7 @@ def crt2(m, v, mm, e, s, symmetric=False):
     return int(result), int(mm)
 
 
-def solve_congruence(*remainder_modulus_pairs, **hint):
+def solve_congruence(*remainder_modulus_pairs: tuple[int, int], **hint: bool) -> tuple[MPZ, int] | None:
     """Compute the integer ``n`` that has the residual ``ai`` when it is
     divided by ``mi`` where the ``ai`` and ``mi`` are given as pairs to
     this function: ((a1, m1), (a2, m2), ...). If there is no solution,
@@ -244,7 +247,7 @@ def solve_congruence(*remainder_modulus_pairs, **hint):
         a, m = a1 + m1*b, m1*c
         return a, m
 
-    rm = remainder_modulus_pairs
+    rm: list[tuple[int, int]] | tuple[tuple[int, int], ...] = remainder_modulus_pairs
     symmetric = hint.get('symmetric', False)
 
     if hint.get('check', True):
@@ -261,7 +264,7 @@ def solve_congruence(*remainder_modulus_pairs, **hint):
         # which, being 0 mod 3, is inconsistent with 1 mod 3. But to
         # preprocess the input beyond checking of another pair with 42
         # or 3 as the modulus (for this example) is not necessary.
-        uniq = {}
+        uniq: dict[int, int] = {}
         for r, m in rm:
             r %= m
             if m in uniq:
@@ -276,8 +279,8 @@ def solve_congruence(*remainder_modulus_pairs, **hint):
         # checking all pairs for being co-prime gets to be slow but a prime
         # test is a good trade-off
         if all(isprime(m) for r, m in rm):
-            r, m = list(zip(*rm))
-            return crt(m, r, symmetric=symmetric, check=False)
+            rs, ms = list(zip(*rm))
+            return crt(ms, rs, symmetric=symmetric, check=False)
 
     rv = (0, 1)
     for rmi in rm:
@@ -290,3 +293,4 @@ def solve_congruence(*remainder_modulus_pairs, **hint):
         if symmetric:
             return symmetric_residue(n, m), m
         return n, m
+    return None
