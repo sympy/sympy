@@ -172,11 +172,12 @@ class MatplotlibBackend(base_backend.Plot):
                 ylims.append(s._ylim)
                 zlims.append(s._zlim)
             elif s.is_implicit:
+                lbl = _str_or_latex(s.label)
                 points = s.get_data()
                 if len(points) == 2:
                     # interval math plotting
                     x, y = _matplotlib_list(points[0])
-                    ax.fill(x, y, facecolor=s.line_color, edgecolor='None')
+                    ax.fill(x, y, facecolor=s.line_color, edgecolor='None', label=lbl)
                 else:
                     # use contourf or contour depending on whether it is
                     # an inequality or equality.
@@ -188,6 +189,7 @@ class MatplotlibBackend(base_backend.Plot):
                         ax.contour(xarray, yarray, zarray, cmap=colormap)
                     else:
                         ax.contourf(xarray, yarray, zarray, cmap=colormap)
+                    ax.plot([], [], color=s.line_color, label=lbl)
             elif s.is_generic:
                 if s.type == "markers":
                     # s.rendering_kw["color"] = s.line_color

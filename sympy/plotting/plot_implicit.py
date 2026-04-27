@@ -217,9 +217,10 @@ def plot_implicit(expr, x_var=None, y_var=None, adaptive=True, depth=0,
     var_start_end_y = _range_tuple(xyvar[1])
 
     kwargs = _set_discretization_points(kwargs, ImplicitSeries)
+    label = kwargs.pop("label", None)
     series_argument = ImplicitSeries(
         expr, var_start_end_x, var_start_end_y,
-        adaptive=adaptive, depth=depth,
+        label=label, adaptive=adaptive, depth=depth,
         n=n, line_color=line_color)
 
     #set the x and y limits
