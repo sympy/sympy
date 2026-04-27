@@ -624,8 +624,27 @@ class Add(Expr, AssocOp):
     # assumption methods
     _eval_is_real = lambda self: _fuzzy_group(
         (a.is_real for a in self.args), quick_exit=True)
-    _eval_is_extended_real = lambda self: _fuzzy_group(
-        (a.is_extended_real for a in self.args), quick_exit=True)
+    def _eval_is_extended_real(self):
+        rv = _fuzzy_group(
+            (a.is_extended_real for a in self.args), quick_exit=True)
+        if rv is True:
+            # oo + (-oo) is nan which is not extended_real. We only need
+            # to worry when two *different* args could produce opposite-
+            # sign infinities that cancel.  A single arg with unknown
+            # sign cannot cause oo - oo by itself.
+            could_pos = []  # indices of args that could be +oo
+            could_neg = []  # indices of args that could be -oo
+            for i, a in enumerate(self.args):
+                if a.is_infinite is True:
+                    if a.is_extended_nonpositive is not True:
+                        could_pos.append(i)
+                    if a.is_extended_nonnegative is not True:
+                        could_neg.append(i)
+            if could_pos and could_neg:
+                # need at least two different args involved
+                if set(could_pos) != set(could_neg) or len(could_pos) > 1:
+                    return None
+        return rv
     _eval_is_complex = lambda self: _fuzzy_group(
         (a.is_complex for a in self.args), quick_exit=True)
     _eval_is_antihermitian = lambda self: _fuzzy_group(
