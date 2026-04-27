@@ -1177,24 +1177,24 @@ class Pow(Expr):
 
         if self.exp.is_Rational:
             re_e, im_e = self.base.as_real_imag(deep=deep)
+            if not self.base.free_symbols or (re_e.is_zero or im_e.is_zero):
+                if im_e.is_zero and self.exp is S.Half:
+                    if re_e.is_extended_nonnegative:
+                        return self, S.Zero
+                    if re_e.is_extended_nonpositive:
+                        return S.Zero, (-self.base)**self.exp
 
-            if im_e.is_zero and self.exp is S.Half:
-                if re_e.is_extended_nonnegative:
-                    return self, S.Zero
-                if re_e.is_extended_nonpositive:
-                    return S.Zero, (-self.base)**self.exp
+                # XXX: This is not totally correct since for x**(p/q) with
+                #      x being imaginary there are actually q roots, but
+                #      only a single one is returned from here.
+                r = self.func(self.func(re_e, 2) + self.func(im_e, 2), S.Half)
 
-            # XXX: This is not totally correct since for x**(p/q) with
-            #      x being imaginary there are actually q roots, but
-            #      only a single one is returned from here.
-            r = self.func(self.func(re_e, 2) + self.func(im_e, 2), S.Half)
+                t = atan2(im_e, re_e)
 
-            t = atan2(im_e, re_e)
+                rp, tp = self.func(r, self.exp), t*self.exp
 
-            rp, tp = self.func(r, self.exp), t*self.exp
-
-            return rp*cos(tp), rp*sin(tp)
-        elif self.base is S.Exp1:
+                return rp*cos(tp), rp*sin(tp)
+        if self.base is S.Exp1:
             from sympy.functions.elementary.exponential import exp
             re_e, im_e = self.exp.as_real_imag()
             if deep:
