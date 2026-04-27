@@ -58,27 +58,27 @@ def test_cable():
     c.apply_load(-1, ('X', 4, 6, 8, 270))
     c.solve()
     #assert c.tension == {Symbol("Z_X"): 4.79150773600774, Symbol("X_B"): 6.78571428571429, Symbol("A_Z"): 6.89488895397307}
-    assert abs(c.tension[Symbol("A_Z")] - 6.89488895397307) < 10e-12
-    assert abs(c.tension[Symbol("Z_X")] - 4.79150773600774) < 10e-12
-    assert abs(c.tension[Symbol("X_B")] - 6.78571428571429) < 10e-12
+    assert abs(c.tension[Symbol("A_Z")] - 6.89488895397307) < 1e-11
+    assert abs(c.tension[Symbol("Z_X")] - 4.79150773600774) < 1e-11
+    assert abs(c.tension[Symbol("X_B")] - 6.78571428571429) < 1e-11
     #assert c.reaction_loads == {Symbol("R_A_x"): -4.06504065040650, Symbol("R_A_y"): 5.56910569105691, Symbol("R_B_x"): 4.06504065040650, Symbol("R_B_y"): 5.43089430894309}
-    assert abs(c.reaction_loads[Symbol("R_A_x")] + 4.06504065040650) < 10e-12
-    assert abs(c.reaction_loads[Symbol("R_A_y")] - 5.56910569105691) < 10e-12
-    assert abs(c.reaction_loads[Symbol("R_B_x")] - 4.06504065040650) < 10e-12
-    assert abs(c.reaction_loads[Symbol("R_B_y")] - 5.43089430894309) < 10e-12
-    assert abs(c.length - 8.25609584845190) < 10e-12
+    assert abs(c.reaction_loads[Symbol("R_A_x")] + 4.06504065040650) < 1e-11
+    assert abs(c.reaction_loads[Symbol("R_A_y")] - 5.56910569105691) < 1e-11
+    assert abs(c.reaction_loads[Symbol("R_B_x")] - 4.06504065040650) < 1e-11
+    assert abs(c.reaction_loads[Symbol("R_B_y")] - 5.43089430894309) < 1e-11
+    assert abs(c.length - 8.25609584845190) < 1e-11
 
     del c
     # tests for solve method
     # for distributed loads
     c=Cable(("A", 0, 40),("B", 100, 20))
     c.apply_load(0, ("X", 850))
-    c.solve(58.58, 0)
+    c.solve(58.58)
 
     # assert c.tension['distributed'] == 36456.8485*sqrt(0.000543529004799705*(X + 0.00135624381275735)**2 + 1)
-    assert abs(c.tension_at(0) - 61717.4130533677) < 10e-11
-    assert abs(c.tension_at(40) - 39738.0809048449) < 10e-11
-    assert abs(c.reaction_loads[Symbol("R_A_x")] - 36465.0000000000) < 10e-11
-    assert abs(c.reaction_loads[Symbol("R_A_y")] + 49793.0000000000) < 10e-11
-    assert abs(c.reaction_loads[Symbol("R_B_x")] - 44399.9537590861) < 10e-11
-    assert abs(c.reaction_loads[Symbol("R_B_y")] - 42868.2071025955 ) < 10e-11
+    assert abs(c.tension_at(0) - 61717.4130533677) < 1e-10
+    assert abs(c.tension_at(40) - 39738.0809048449) < 1e-10
+    assert abs(c.reaction_loads[Symbol("R_A_x")] - 36465.0000000000) < 1e-10
+    assert abs(c.reaction_loads[Symbol("R_A_y")] + 49793.0000000000) < 1e-10
+    assert abs(c.reaction_loads[Symbol("R_B_x")] - 44399.9537590861) < 1e-10
+    assert abs(c.reaction_loads[Symbol("R_B_y")] - 42868.2071025955 ) < 1e-10
