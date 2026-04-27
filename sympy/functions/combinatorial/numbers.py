@@ -2499,7 +2499,7 @@ def _AOP_product(n):
     True
 
     The generating poly used here is the same as that listed in
-    https://tinyurl.com/cep849r, but in a refactored form.
+    https://math.stackexchange.com/questions/4643/an-efficient-method-for-computing-the-number-of-submultisets-of-size-n-of-a-giv/4654#4654, but in a refactored form.
 
     """
 
@@ -2590,7 +2590,7 @@ def nC(n, k=None, replacement=False):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Combination
-    .. [2] https://tinyurl.com/cep849r
+    .. [2] https://math.stackexchange.com/questions/4643/an-efficient-method-for-computing-the-number-of-submultisets-of-size-n-of-a-giv/4654#4654
 
     """
 
