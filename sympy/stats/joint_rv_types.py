@@ -6,7 +6,8 @@ from sympy.core.function import Lambda
 from sympy.core.mul import Mul
 from sympy.core.numbers import (Integer, Rational, pi)
 from sympy.core.power import Pow
-from sympy.core.relational import Eq
+from sympy.core.relational import Eq, Ge
+from sympy.logic.boolalg import And
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.core.sympify import sympify
@@ -19,6 +20,7 @@ from sympy.functions.special.gamma_functions import gamma
 from sympy.matrices.dense import (Matrix, ones)
 from sympy.sets.fancysets import Range
 from sympy.sets.sets import (Intersection, Interval)
+from sympy.sets.conditionset import ConditionSet
 from sympy.tensor.indexed import (Indexed, IndexedBase)
 from sympy.matrices import ImmutableMatrix, MatrixSymbol
 from sympy.matrices.expressions.determinant import det
@@ -495,14 +497,50 @@ class MultivariateBetaDistribution(JointDistribution):
                                             " should be positive.")
 
     @property
+    def dimension(self):
+        return len(self.alpha)
+
+    @property
     def set(self):
         k = len(self.alpha)
-        return Interval(0, 1)**k
+        xs = tuple(Symbol(f'_x{i}', real=True) for i in range(k))
+        cond = And(*[Ge(x, 0) for x in xs], Eq(Add(*xs), 1))
+        return ConditionSet(xs, cond, S.Reals ** k)
 
     def pdf(self, *syms):
         alpha = self.alpha
         B = Mul.fromiter(map(gamma, alpha))/gamma(Add(*alpha))
-        return Mul.fromiter(sym**(a_k - 1) for a_k, sym in zip(alpha, syms))/B
+        return Mul.fromiter(sym ** (a_k - 1) for a_k, sym in zip(alpha, syms)) / B
+
+    def _marginal_distribution(self, indices, sym):
+        if len(indices) != 1:
+            return None
+        i = indices[0]
+        alpha = self.alpha
+        A = Add(*alpha)
+        ai = alpha[i]
+        bi = A - ai
+        x = Symbol(f"{sym}[{i}]", real=True)
+        return Lambda(x, gamma(A) / (gamma(ai) * gamma(bi)) * x ** (ai - 1) * (1 - x) ** (bi - 1))
+
+    def _compute_expectation(self, expr, syms, rvs=None, **kwargs):
+        alpha = self.alpha
+        A = Add(*alpha)
+        means = {}
+        for rv in syms:
+            if not isinstance(rv, Indexed):
+                return None
+            i = rv.args[1]
+            means[rv] = alpha[i] / A
+        const_part = expr
+        for rv in syms:
+            const_part -= expr.coeff(rv) * rv
+        if any(const_part.has(rv) for rv in syms):
+            return None
+        result = const_part
+        for rv in syms:
+            result += expr.coeff(rv) * means[rv]
+        return result
 
 def MultivariateBeta(syms, *alpha):
     """
@@ -536,7 +574,7 @@ def MultivariateBeta(syms, *alpha):
     >>> density(B)(x, y)
     x**(a1 - 1)*y**(a2 - 1)*gamma(a1 + a2)/(gamma(a1)*gamma(a2))
     >>> marginal_distribution(C, C[0])(x)
-    x**(a1 - 1)*gamma(a1 + a2)/(a2*gamma(a1)*gamma(a2))
+    x**(a1 - 1)*(1 - x)**(a2 - 1)*gamma(a1 + a2)/(gamma(a1)*gamma(a2))
 
     References
     ==========
