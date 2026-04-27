@@ -91,4 +91,5 @@ sample.tex
 # Ignore hypothesis files
 .hypothesis
 
-sympy-env/
+# Ignore uv lock files
+uv.lock
