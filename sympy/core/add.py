@@ -19,7 +19,7 @@ from sympy.utilities.iterables import is_sequence, sift
 if TYPE_CHECKING:
     from sympy.core.numbers import Number
     from sympy.series.order import Order
-
+    from sympy.core.symbol import Symbol
 
 def _could_extract_minus_sign(expr):
     # assume expr is Add-like
@@ -1243,7 +1243,7 @@ class Add(Expr, AssocOp):
         from .sorting import default_sort_key
         return tuple(sorted(self.args, key=default_sort_key))
 
-    def _eval_difference_delta(self, n, step):
+    def _eval_difference_delta(self, n: Symbol, step: Expr) -> Expr:
         from sympy.series.limitseq import difference_delta as dd
         return self.func(*[dd(a, n, step) for a in self.args])
 
