@@ -1,8 +1,9 @@
 from __future__ import annotations
+
 from .cartan_type import CartanType
 
 
-def DynkinDiagram(t):
+def DynkinDiagram(t:  str | list[str | int]) -> str:
     """Display the Dynkin diagram of a given Lie algebra
 
     Works by generating the CartanType for the input, t, and then returning the
