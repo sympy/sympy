@@ -1564,18 +1564,24 @@ class FormalPowerSeriesProduct(FiniteFormalPowerSeries):
     """
 
     def __init__(self, *args):
-        ffps, gfps = self.ffps, self.gfps
-
-        k = ffps.ak.variables[0]
-        self.coeff1 = sequence(ffps.ak.formula, (k, 0, oo))
-
-        k = gfps.ak.variables[0]
-        self.coeff2 = sequence(gfps.ak.formula, (k, 0, oo))
+        pass
 
     @property
     def function(self):
         """Function of the product of two formal power series."""
         return self.f * self.g
+
+    @staticmethod
+    def _fps_coeffs(fps_obj, n):
+        """Extract the first n coefficients [c_0, c_1, ..., c_{n-1}] of a
+        FormalPowerSeries, where c_k is the coefficient of x**k."""
+        x = fps_obj.x
+        coeffs = []
+        for i, term in enumerate(fps_obj):
+            if i >= n:
+                break
+            coeffs.append(term.coeff(x, i))
+        return coeffs
 
     def _eval_terms(self, n):
         """
@@ -1600,13 +1606,21 @@ class FormalPowerSeriesProduct(FiniteFormalPowerSeries):
         sympy.series.formal.FormalPowerSeries.product
 
         """
-        coeff1, coeff2 = self.coeff1, self.coeff2
+        ffps = self.ffps
+        gfps = self.gfps
+        x = ffps.x
 
-        aks = convolution(coeff1[:n], coeff2[:n])
+        # Extract true coefficients of x**k from each FPS
+        c1 = self._fps_coeffs(ffps, n)
+        c2 = self._fps_coeffs(gfps, n)
 
+        # Manual discrete convolution (supports symbolic coefficients)
         terms = []
-        for i in range(0, n):
-            terms.append(aks[i] * self.ffps.xk.coeff(i))
+        for i in range(n):
+            s = S.Zero
+            for j in range(i + 1):
+                s += c1[j] * c2[i - j]
+            terms.append(s * x**i)
 
         return Add(*terms)
 
