@@ -279,6 +279,15 @@ def _(self, other):
         except (TypeError, NotImplementedError):
             # TypeError if equation not polynomial with rational coeff.
             # NotImplementedError if correct format but no solver.
+            if other is S.Integers:
+                p = fn.as_poly(n)
+                if p is not None and p.is_linear:
+                    a, b = p.all_coeffs()
+                    if a.is_irrational:
+                        if b.is_integer:
+                            return FiniteSet(b)
+                        if b.is_rational:
+                            return S.EmptySet
             return
         # 3 cases are possible for solns:
         # - empty set,
