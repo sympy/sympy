@@ -139,11 +139,23 @@ def entropy(expr, condition=None, **kwargs):
     .. [2] https://www.crmarsh.com/static/pdf/Charles_Marsh_Continuous_Entropy.pdf
     .. [3] https://kconrad.math.uconn.edu/blurbs/analysis/entropypost.pdf
     """
+    from sympy.core.function import Lambda
+    from .crv import SingleContinuousDistribution
+    from .drv import SingleDiscreteDistribution
+    from .frv import SingleFiniteDistribution
+
     pdf = density(expr, condition, **kwargs)
     base = kwargs.get('b', exp(1))
     if isinstance(pdf, dict):
-            return sum(-prob*log(prob, base) for prob in pdf.values())
-    return expectation(-log(pdf(expr), base))
+        return sum(-prob*log(prob, base) for prob in pdf.values())
+    if isinstance(pdf, (SingleContinuousDistribution, SingleDiscreteDistribution)):
+        return expectation(-log(pdf.pdf(expr), base))
+    elif isinstance(pdf, SingleFiniteDistribution):
+        return expectation(-log(pdf.pmf(expr), base))
+    elif isinstance(pdf, Lambda):
+        return expectation(-log(pdf(expr), base))
+    else:
+        raise NotImplementedError("Entropy not implemented for density type %s" % type(pdf))
 
 def covariance(X, Y, condition=None, **kwargs):
     """
