@@ -2857,8 +2857,8 @@ class Tensor(TensExpr):
     ===========
 
     This object is usually created from a ``TensorHead``, by attaching indices
-    to it. Indices preceded by a minus sign are considered contravariant,
-    otherwise covariant.
+    to it. Indices preceded by a minus sign are considered covariant,
+    otherwise contravariant.
 
     Examples
     ========
