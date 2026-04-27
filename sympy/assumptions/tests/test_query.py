@@ -1666,7 +1666,8 @@ def test_integer():
     assert ask(Q.integer(2*x), Q.prime(x)) is True
     assert ask(Q.integer(2*x), Q.rational(x)) is None
     assert ask(Q.integer(2*x), Q.real(x)) is None
-    assert ask(Q.integer(sqrt(2)*x), Q.integer(x)) is False
+    assert ask(Q.integer(sqrt(2)*x), Q.integer(x)) is None
+    assert ask(Q.integer(sqrt(2)*x), Q.integer(x) & ~Q.zero(x)) is False
     assert ask(Q.integer(sqrt(2)*x), Q.irrational(x)) is None
 
     assert ask(Q.integer(x/2), Q.odd(x)) is False
@@ -1694,6 +1695,8 @@ def test_integer():
     assert ask(Q.integer(pi**x), Q.zero(x)) is True
     assert ask(Q.integer(x**y), Q.imaginary(x) & Q.zero(y)) is True
 
+    # https://github.com/sympy/sympy/issues/29480
+    assert ask(Q.integer(n * pi), Q.zero(n)) is True
 
 def test_negative():
     assert ask(Q.negative(x), Q.negative(x)) is True
@@ -2020,7 +2023,8 @@ def test_real_basic():
     assert ask(Q.real(x), Q.prime(x)) is True
 
     assert ask(Q.real(x/sqrt(2)), Q.real(x)) is True
-    assert ask(Q.real(x/sqrt(-2)), Q.real(x)) is False
+    assert ask(Q.real(x/sqrt(-2)), Q.real(x)) is None
+    assert ask(Q.real(x/sqrt(-2)), Q.real(x) & ~Q.zero(x)) is False
 
     assert ask(Q.real(x + 1), Q.real(x)) is True
     assert ask(Q.real(x + I), Q.real(x)) is False
@@ -2030,6 +2034,9 @@ def test_real_basic():
     assert ask(Q.real(I*x), Q.real(x)) is False
     assert ask(Q.real(I*x), Q.imaginary(x)) is True
     assert ask(Q.real(I*x), Q.complex(x)) is None
+
+    # https://github.com/sympy/sympy/issues/29480
+    assert ask(Q.real(n * pi), Q.zero(n)) is True
 
 
 def test_real_pow():
