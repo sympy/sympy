@@ -34,6 +34,10 @@ from .parameters import evaluate
 from .kind import UndefinedKind, NumberKind, BooleanKind
 from .traversal import preorder_traversal, bottom_up, use, postorder_traversal
 from .sorting import default_sort_key, ordered
+from .symbol import (
+    Symbol, Wild, Dummy, symbols, var, disambiguate,
+    dummy_like,  # Add this line
+)
 
 # expose singletons
 Catalan = S.Catalan
@@ -102,4 +106,5 @@ __all__ = [
     'preorder_traversal', 'bottom_up', 'use', 'postorder_traversal',
 
     'default_sort_key', 'ordered',
+    'dummy_like',
 ]
