@@ -8,7 +8,7 @@ from sympy.concrete.products import Product
 from sympy.concrete.summations import Sum
 from sympy.core import (Basic, S, Add, Mul, Pow, Symbol, sympify,
                         expand_func, Function, Dummy, Expr, factor_terms,
-                        expand_power_exp, Eq)
+                        expand_power_exp, Eq, Wild)
 from sympy.core.exprtools import factor_nc
 from sympy.core.parameters import global_parameters
 from sympy.core.function import (expand_log, count_ops, _mexpand,
@@ -1401,7 +1401,7 @@ def nthroot(expr, n, max_len=4, prec=15):
 
 
 def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
-    rational_conversion='base10'):
+    rational_conversion='base10', shortcut_integers=True, magnitude_offsets=None):
     """
     Find a simple representation for a number or, if there are free symbols or
     if ``rational=True``, then replace Floats with their Rational equivalents. If
@@ -1430,10 +1430,23 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
     convert floats to rationals using their base-10 (string) representation.
     When rational_conversion='exact' it uses the exact, base-2 representation.
 
+    In order to get better results from mpmath.identify(), nsimplify will also
+    try to normalize values, dividing off their order of magnitude, trying to
+    identify, and multiplying the factor back again afterwards. Then it chooses
+    the "best" result from the resulting collection. ``magnitude_offsets`` can
+    be given as either a collection of integers and/or None, with a default of
+    [None,0,-1,1,2], where None means no normalization is performed and integers
+    are offsets from the essential power-of-ten. For example, 50000.5 will be tried
+    at 50000.5 (itself), 5.00005, 50.0005, 0.500005, and 0.0500005, with each result
+    then rescaled back after attempting to simplify it. This is especially helpful
+    for large floating-point numbers which may appear to be an integer-valued float,
+    but can actually be constructed from a simple expression multiplied by a simple
+    power-of-ten scaling factor.
+
     Examples
     ========
 
-    >>> from sympy import nsimplify, sqrt, GoldenRatio, exp, I, pi
+    >>> from sympy import nsimplify, N, sqrt, GoldenRatio, exp, I, pi
     >>> nsimplify(4/(1+sqrt(5)), [GoldenRatio])
     -2 + 2*GoldenRatio
     >>> nsimplify((1/(exp(3*pi*I/5)+1)))
@@ -1448,6 +1461,13 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
     >>> nsimplify(0.333333333333333, rational=True)
     1/3
 
+    >>> nsimplify(N(10**20*sqrt(2)), magnitude_offsets=False)
+    141421356237310000000
+    >>> nsimplify(N(10**20*sqrt(2)), magnitude_offsets=[0])
+    100000000000000000000*sqrt(2)
+    >>> nsimplify(N(10**20*sqrt(2)), tolerance=10**-22)  # detects as Integer
+    141421356237309509632
+
     See Also
     ========
 
@@ -1455,13 +1475,13 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
 
     """
     expr = sympify(expr)
-    if isinstance(expr, Integer):
+    if shortcut_integers and isinstance(expr, Integer):
         return expr
     expr = expr.xreplace({
         Float('inf'): S.Infinity,
         Float('-inf'): S.NegativeInfinity,
     })
-    if expr is S.Infinity or expr is S.NegativeInfinity:
+    if expr is S.Infinity or expr is S.NegativeInfinity or expr is S.NaN:
         return expr
     if rational or expr.free_symbols:
         return _real_to_rational(expr, tolerance, rational_conversion)
@@ -1476,12 +1496,26 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
     prec = 30
     bprec = int(prec*3.33)
 
+    if magnitude_offsets is None:  # use default
+        magnitude_offsets = [None,0,-1,1,2]  # None means no normalization
+    elif isinstance(magnitude_offsets, int) and not isinstance(magnitude_offsets, bool):
+        # pass in a list like `[offset]` to omit default
+        magnitude_offsets = [magnitude_offsets, None]
+    elif not magnitude_offsets:  # False or empty collection: disabled
+         magnitude_offsets = False
+    elif not isinstance(magnitude_offsets, (list, tuple, set)):
+        # NOTE decimal offsets are not explicitly blocked here as they might be useful to somebody
+        #   though it might make sense to warn for silly offsets
+        raise TypeError("magnitude_offsets must be False (disabled), or a list/tuple/set of None or integers")
+
+    constants_sym = []
     constants_dict = {}
     for constant in constants:
         constant = sympify(constant)
         v = constant.evalf(prec)
         if not v.is_Float:
             raise ValueError("constants must be real-valued")
+        constants_sym.append(constant)
         constants_dict[str(constant)] = v._to_mpmath(bprec)
 
     exprval = expr.evalf(prec, chop=True)
@@ -1491,33 +1525,123 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
     if not (re.is_Number and im.is_Number):
         return expr
 
-    def nsimplify_real(x):
+    def count_constants(expr):
+        # TODO is this any better/worse than `sum(expr.count(s) for s in constants_sym)`?
+        return expr.subs({s: Dummy() for s in constants_sym}).count(Dummy)
+
+    def nsimplify_real(ctx, x):
         xv = x._to_mpmath(bprec)
-        with local_workprec(prec) as ctx:
-            # We'll be happy with low precision if a simple fraction
-            if not (tolerance or full):
-                ctx.dps = 15
-                rat = ctx.pslq([xv, 1])
-                if rat is not None:
-                    return Rational(-int(rat[1]), int(rat[0]))
-            ctx.dps = prec
-            newexpr = ctx.identify(xv, constants=constants_dict,
-                tol=tolerance, full=full)
-            if not newexpr:
-                raise ValueError
-            if full:
-                newexpr = newexpr[0]
-            expr = sympify(newexpr)
-            if x and not expr:  # don't let x become 0
-                raise ValueError
-            if expr.is_finite is False and xv not in [_mpmath_inf, _mpmath_ninf]:
-                raise ValueError
+        newexpr = ctx.identify(xv, constants=constants_dict,
+            tol=tolerance, full=full)
+        if not newexpr:
+            raise ValueError
+        if full:
+            newexpr = newexpr[0]
+        expr = sympify(newexpr)
+        if x and not expr:  # don't let x become 0
+            raise ValueError
+        if expr.is_finite is False and xv not in [_mpmath_inf, _mpmath_ninf]:
+            raise ValueError
+
+        if full:  # user definitely wants the nsimplify_real() result if full is passed
             return expr
+
+        # attempt to classify "complicated" expressions to throw out the spurious results from
+        # `mpmath.identify()` (such as noted in issue 23822), while still allowing well-formed
+        # results, especially when reasonable given constants and irrational values like
+        # `sqrt(2)` are present in the result
+
+        # allow anything with a "reasonable" Nth-root of Integer
+        # `mpmath.identify()` can generate sqrt(2) and sqrt(3)
+        # in the future, consider more values like `sympy.ntheory.generate.primerange(20)`?
+        match_expr = Pow(
+            Wild("a", properties=[lambda a: a.is_Integer]),
+            Wild("b", properties=[lambda b: b in (2,3,5,7)])**-1)
+        if expr.count(match_expr):
+            return expr
+        # TODO should this similarly allow logarithms? I doubt it, user should provide give as constants
+
+        # 5+ atoms, but only Rationals
+        # TODO constants can be Rational, but are they ever meaningfully used?
+        if expr.atoms() == expr.atoms(Rational) and (len(expr.atoms()) - count_constants(expr)) > 4:
+            raise ValueError  # "expression is too complicated"
+
+        return expr
+
+    def nsimplify_real_spread(ctx, x):
+        """ `nsimplify_real()` relies heavily on `mpmath.identify()` to determine
+            reasonable constructions of floats from an expression (especially
+            with constant values) and seems to work best for floats under 1000.
+            To help it out out, attempt to normalize and try a spread of
+            offsets (of that base magnitude) in addition to the original value,
+            then choose the "best" from the resulting collection.
+        """
+        if not x:  # nothing to do for 0
+            return x
+        # dedicated integer shortcut
+        # this is especially helpful to catch a small, but troublesome proportion
+        # of integer-valued floats, which identify fails to give a good result
+        # for and/or fail with the default nsimplify tolerance/precision
+        #   >>> mpmath.identify(4679.)
+        #   '(5**3*7**(23/3))/(2**(20/27)*3**(265/27))'
+        #   >>> mpmath.identify(23591.)
+        #   '(2**(32/5)*3**(61/15)*5**(197/45))/(7**(136/45))'
+        #   >>> nsimplify(23591., shortcut_integers=False)
+        #   55361684267444749690566057...643 / 23467290181613452053139535...000
+        # only offer integer shortcutting within tolerance to avoid preemptively
+        # dropping very large values which appear to be an integer-valued float,
+        # but can actually be constructed from a simple expression multiplied
+        # by a large scaling factor
+        # users can increase the tolerance to change this behavior or call
+        # `mpmath.isint()` themselves
+        if shortcut_integers and tolerance != 0 and abs(x) < (.1/tolerance) and ctx.isint(x):
+            return Integer(int(x))
+        if not magnitude_offsets:  # offsetting disabled (False)
+            return nsimplify_real(ctx, x)
+
+        # get the base order of magnitude
+        magnitude = int(log(abs(x), 10).evalf())
+        trials = []
+        # TODO should prec or tolerance be rescaled?
+        for offset in magnitude_offsets:  # try to identify with a window of orders of magnitude
+            try:
+                if offset is None:  # begin with unscaled value
+                    expr = nsimplify_real(ctx, x)
+                else:  # attempt when dynamically normalized
+                    scale_factor = 10**(magnitude + offset)
+                    expr = nsimplify_real(ctx, x / scale_factor) * scale_factor
+            except ValueError:  # nsimplify_real failed to give a good result
+                continue
+            trials.append((
+                expr,  # expr itself, rest are in order of sort importance
+                # constant count: more total constant members are preferred
+                -count_constants(expr),
+                # Float component: sort later and by-count
+                # NOTE constants can be Float
+                expr.count(Float),
+                # complexity: less complexity sorts earlier, but beware Floats vs Rationals
+                # for example C(.3)=1, but C(3/10)=2 so this should come after Float check
+                expr.count_ops(),
+            ))
+
+        if not trials:  # mirror inner nsimplify_real behavior
+            raise ValueError("no trial succeeded!")
+
+        # sort to select the "best" value from the successful trials
+        # prefer instances as more constant(s), no/less floats, lower ops
+        # if the values are all the same, the original ordering will remain,
+        # preferring the first, non-normalized result, but in practice this
+        # both represents success and is unlikely or impossible, as it means
+        # all 5 (or user-provided) trials succeeded with the same counts!
+        trials = sorted(trials, key=lambda x: x[1:])
+        best = trials[0][0]
+        return best
+
     try:
-        if re:
-            re = nsimplify_real(re)
-        if im:
-            im = nsimplify_real(im)
+        with local_workprec(prec) as mp:
+            mp.dps = prec  # TODO understand this option
+            re = nsimplify_real_spread(mp, re)
+            im = nsimplify_real_spread(mp, im)
     except ValueError:
         if rational is None:
             return _real_to_rational(expr, rational_conversion=rational_conversion)
