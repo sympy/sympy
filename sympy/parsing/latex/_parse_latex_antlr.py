@@ -130,6 +130,9 @@ def convert_add(add):
 
 
 def convert_mp(mp):
+    if hasattr(mp, 'unary_nofunc') and not hasattr(mp, 'mp'):
+        return convert_unary(mp.unary_nofunc())
+
     if hasattr(mp, 'mp'):
         mp_left = mp.mp(0)
         mp_right = mp.mp(1)
@@ -507,12 +510,11 @@ def convert_func(func):
     elif func.FUNC_LIM():
         return handle_limit(func)
 
-
 def convert_func_arg(arg):
     if hasattr(arg, 'expr'):
         return convert_expr(arg.expr())
     else:
-        return convert_mp(arg.mp_nofunc())
+        return convert_unary(arg.unary_nofunc())
 
 
 def handle_integral(func):
