@@ -71,7 +71,7 @@ from sympy.series.sequences import (SeqAdd, SeqFormula, SeqMul, SeqPer)
 from sympy.sets.conditionset import ConditionSet
 from sympy.sets.contains import Contains
 from sympy.sets.fancysets import (ComplexRegion, ImageSet, Range)
-from sympy.sets.ordinals import Ordinal, OrdinalOmega, OmegaPower
+from sympy.sets.ordinals import Ordinal, OrdinalOmega, OmegaPower, OrdinalZero
 from sympy.sets.powerset import PowerSet
 from sympy.sets.sets import (FiniteSet, Interval, Union, Intersection, Complement, SymmetricDifference, ProductSet)
 from sympy.sets.setexpr import SetExpr
@@ -1207,6 +1207,7 @@ def test_latex_ordinals():
     assert latex(Ordinal(OmegaPower(2, 1), OmegaPower(1, 2))) == r'\omega^{2} + \omega 2'
     assert latex(w**(w + 1) + 1) == r'\omega^{\omega + 1} + 1'
     assert latex(OmegaPower(0,1)) == '1'
+    assert latex(OrdinalZero()) == "0"
 
 
 def test_set_operators_parenthesis():
