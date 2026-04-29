@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.add import Add
 from sympy.core.expr import unchanged
 from sympy.core.mul import Mul

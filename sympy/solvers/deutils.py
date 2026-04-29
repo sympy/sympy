@@ -8,6 +8,7 @@ ode_order
 _desolve
 
 """
+from __future__ import annotations
 from sympy.core import Pow
 from sympy.core.function import Derivative, AppliedUndef
 from sympy.core.relational import Equality

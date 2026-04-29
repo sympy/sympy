@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.external import import_module
 from sympy.core.mul import Mul
 from sympy.core.numbers import Integer

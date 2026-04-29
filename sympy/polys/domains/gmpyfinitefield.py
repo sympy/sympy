@@ -1,4 +1,5 @@
 """Implementation of :class:`GMPYFiniteField` class. """
+from __future__ import annotations
 
 
 from sympy.polys.domains.finitefield import FiniteField

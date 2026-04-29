@@ -1,3 +1,4 @@
+from __future__ import annotations
 from collections import defaultdict
 import itertools
 from sympy.combinatorics.coset_table import modified_coset_enumeration_r
@@ -48,19 +49,18 @@ class GroupHomomorphism:
             gens = image.strong_gens
         else:
             gens = image.generators
+        dtype = type(self.domain.identity)
         for g in gens:
             if g in inverses or g.is_identity:
                 continue
-            w = self.domain.identity
             if isinstance(self.codomain, PermutationGroup):
                 parts = image._strong_gens_slp[g][::-1]
             else:
                 parts = g
-            for s in parts:
-                if s in inverses:
-                    w = w*inverses[s]
-                else:
-                    w = w*inverses[s**-1]**-1
+            w = dtype.prod(
+                inverses[s] if s in inverses else inverses[s**-1]**-1
+                for s in parts
+            )
             inverses[g] = w
 
         return inverses
@@ -93,21 +93,21 @@ class GroupHomomorphism:
                 if g not in image:
                     raise ValueError("Given element is not in the image of the homomorphism.")
                 gens = image.generator_product(g)[::-1]
-                for i in range(len(gens)):
-                    s = gens[i]
-                    if s.is_identity:
-                        continue
-                    if s in self._inverses:
-                        w = w*self._inverses[s]
-                    else:
-                        w = w*self._inverses[s**-1]**-1
-                return w
+                dtype = type(w)
+                return dtype.prod(
+                    itertools.chain([w], (
+                        self._inverses[s] if s in self._inverses
+                        else self._inverses[s**-1]**-1
+                        for s in gens if not s.is_identity
+                    ))
+                )
 
             else:
                 current_coset = 0
                 im_gens = list(self._inverses)
                 C = modified_coset_enumeration_r(self.codomain, im_gens)
-                total_word = w
+                dtype = type(w)
+                factors = []
                 preimages = list(self._inverses.values())
                 temp_symbols = [gen.array_form[0][0] for gen in C._grp.generators]
                 transl_map = dict(zip(temp_symbols, preimages))
@@ -121,12 +121,14 @@ class GroupHomomorphism:
                     for _ in range(abs(exp)):
                         word_intermediate = C.P[current_coset][j]
                         if word_intermediate is not None:
-                            for s,exp in word_intermediate.array_form:
-                                total_word = total_word * transl_map[s]**exp
+                            factors.extend(
+                                transl_map[s]**exp
+                                for s, exp in word_intermediate.array_form
+                            )
                         current_coset = C.table[current_coset][j]
                 if current_coset != 0:
                     raise ValueError("Given element is not in the image of the homomorphism.")
-                return total_word
+                return dtype.prod(factors)
 
         elif isinstance(g, list):
             return [self.invert(e) for e in g]
@@ -144,23 +146,44 @@ class GroupHomomorphism:
         G = self.domain
         H = self.codomain
         Ginf = G.order() is S.Infinity
-        if Ginf and isinstance(H, (FpGroup, FreeGroup)):
+        if Ginf and isinstance(H, (FpGroup, FreeGroup, PermutationGroup)):
+            perm_codomain = isinstance(H, PermutationGroup)
             if isinstance(H, FreeGroup):
                 H = FpGroup(H, [])
             preimages = self._is_surjective_cert()
             if preimages is not None:
-                symbol_to_preimage = {
-                    g.ext_rep[0]: preimages[g] for g in H.generators
-                }
+                if perm_codomain:
+                    perm_gens = H.generators
+                    fp_group = H.presentation(eliminate_gens=False)
+                    if isinstance(fp_group, FreeGroup):
+                        return G  # if H is simultaneously a free group and a permutation group, H is trivial
+                    symbol_to_preimage = {
+                        g.ext_rep[0]: preimages[perm_g]
+                        for g, perm_g in zip(fp_group.generators, perm_gens)
+                    }
+                else:
+                    symbol_to_preimage = {
+                        g.ext_rep[0]: preimages[g] for g in H.generators
+                    }
 
                 def _lift_to_domain(word):
-                    lifted = G.identity
-                    for symbol, power in word.array_form:
-                        lifted = lifted * symbol_to_preimage[symbol]**power
-                    return lifted
+                    dtype = type(G.identity)
+                    if perm_codomain and isinstance(word, type(H.identity)):
+                        factors = H.generator_product(
+                            word, original=True)[::-1]
+                        return dtype.prod(
+                            preimages[s] if s in preimages
+                            else preimages[s**-1]**-1
+                            for s in factors if not s.is_identity
+                        )
+                    return dtype.prod(
+                        symbol_to_preimage[symbol]**power
+                        for symbol, power in word.array_form
+                    )
 
                 kernel_gens = []
-                for relator in H.relators:
+                relators = fp_group.relators if perm_codomain else H.relators
+                for relator in relators:
                     word = _lift_to_domain(relator)
                     if not word.is_identity:
                         kernel_gens.append(word)
@@ -171,10 +194,6 @@ class GroupHomomorphism:
                     if not word.is_identity:
                         kernel_gens.append(word)
 
-                if isinstance(G, PermutationGroup):
-                    if not kernel_gens:
-                        return PermutationGroup([G.identity])
-                    return G.normal_closure(kernel_gens)
                 return FpSubgroup(G, kernel_gens, normal=True)
             else:
                 return self.factor()[0].kernel()
@@ -470,13 +489,13 @@ def _check_homomorphism(domain, codomain, images):
     symbols = [g.ext_rep[0] for g in gens]
     symbols_to_domain_generators = dict(zip(symbols, domain.generators))
     identity = codomain.identity
+    dtype = type(identity)
 
     def _image(r):
-        w = identity
-        for symbol, power in r.array_form:
-            g = symbols_to_domain_generators[symbol]
-            w *= images[g]**power
-        return w
+        return dtype.prod(
+            images[symbols_to_domain_generators[symbol]]**power
+            for symbol, power in r.array_form
+        )
 
     for r in rels:
         if isinstance(codomain, FpGroup):

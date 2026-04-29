@@ -14,7 +14,7 @@ from .sympify import SympifyError, sympify
 
 
 if TYPE_CHECKING:
-    from typing import Callable, TypeVar, Union
+    from typing import Callable, TypeVar
     T1 = TypeVar('T1')
     T2 = TypeVar('T2')
     T3 = TypeVar('T3')
@@ -112,7 +112,7 @@ def call_highest_priority(method_name: str
         def binary_op_wrapper(self: T1, other: T2) -> T3:
             if hasattr(other, '_op_priority'):
                 if other._op_priority > self._op_priority:  # type: ignore
-                    f: Union[Callable[[T1], T3], None] = getattr(other, method_name, None)
+                    f: Callable[[T1], T3] | None = getattr(other, method_name, None)
                     if f is not None:
                         return f(self)
             return func(self, other)

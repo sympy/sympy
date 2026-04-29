@@ -227,6 +227,7 @@ code is tested extensively in ``test_ode.py``, so if anything is broken, one
 of those tests will surely fail.
 
 """
+from __future__ import annotations
 
 from sympy.core import Add, S, Mul, Pow, oo
 from sympy.core.containers import Tuple

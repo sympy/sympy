@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.random import randrange
 
 from sympy.simplify.hyperexpand import (ShiftA, ShiftB, UnShiftA, UnShiftB,

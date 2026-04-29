@@ -5,7 +5,7 @@ A Printer for generating readable representation of most SymPy classes.
 from __future__ import annotations
 from typing import Any
 
-from sympy.core import S, Rational, Pow, Basic, Mul, Number
+from sympy.core import S, Rational, Pow, Basic, Mul, Number, UnevaluatedExpr
 from sympy.core.function import Lambda
 from sympy.core.mul import _keep_coeff
 from sympy.core.numbers import Integer
@@ -57,16 +57,19 @@ class StrPrinter(Printer):
     def _print_Add(self, expr, order=None):
         terms = self._as_ordered_terms(expr, order=order)
 
+        is_Add = lambda e: e.is_Add or (
+            isinstance(e, UnevaluatedExpr) and e.args[0].is_Add)
+
         prec = precedence(expr)
         l = []
         for term in terms:
             t = self._print(term)
-            if t.startswith('-') and not term.is_Add:
+            if t.startswith('-') and not is_Add(term):
                 sign = "-"
                 t = t[1:]
             else:
                 sign = "+"
-            if precedence(term) < prec or term.is_Add:
+            if precedence(term) < prec or is_Add(term):
                 l.extend([sign, "(%s)" % t])
             else:
                 l.extend([sign, t])
@@ -265,7 +268,6 @@ class StrPrinter(Printer):
         return expr.name
 
     def _print_Mul(self, expr):
-
         prec = precedence(expr)
 
         # Check for unevaluated Mul. In this case we need to make sure the
@@ -345,6 +347,7 @@ class StrPrinter(Printer):
             if isinstance(i, Pow):
                 return i.func(b, e, evaluate=False)
             return i.func(e, evaluate=False)
+
         for item in args:
             if (item.is_commutative and
                     isinstance(item, Pow) and

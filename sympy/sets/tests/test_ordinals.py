@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.sets.ordinals import Ordinal, OmegaPower, ord0, omega
 from sympy.testing.pytest import raises
 

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy import sin, Function, symbols, Dummy, Lambda, cos, Symbol, factorial, S
 from sympy.parsing.mathematica import parse_mathematica, MathematicaParser
 from sympy.core.sympify import sympify

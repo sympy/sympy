@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.function import Lambda
 from sympy.core.numbers import (E, I, Rational, oo, pi)
 from sympy.core.relational import Eq

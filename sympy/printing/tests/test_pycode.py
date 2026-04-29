@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy import Not
 from sympy.codegen import Assignment
 from sympy.codegen.ast import none

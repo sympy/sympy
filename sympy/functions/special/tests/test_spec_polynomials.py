@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.concrete.summations import Sum
 from sympy.core.function import (Derivative, diff)
 from sympy.core.numbers import (Rational, oo, pi, zoo)

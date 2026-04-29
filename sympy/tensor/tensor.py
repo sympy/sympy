@@ -444,9 +444,9 @@ class _TensorDataLazyEvaluator(CantSympify):
         if not isinstance(dat, NDimArray):
             return dat
 
-        if dat.rank() == 0:
+        if dat.ndim == 0:
             return dat[()]
-        elif dat.rank() == 1 and len(dat) == 1:
+        elif dat.ndim == 1 and len(dat) == 1:
             return dat[0]
         return dat
 
@@ -685,8 +685,8 @@ class _TensorDataLazyEvaluator(CantSympify):
     def _flip_index_by_metric(data, metric, pos):
         from .array import tensorproduct, tensorcontraction
 
-        mdim = metric.rank()
-        ddim = data.rank()
+        mdim = metric.ndim
+        ddim = data.ndim
 
         if pos == 0:
             data = tensorcontraction(
@@ -826,7 +826,7 @@ class _TensorManager:
 
     @property
     def comm(self):
-        return self._comm
+        return [row.copy() for row in self._comm]
 
     def comm_symbols2i(self, i):
         """
@@ -1174,9 +1174,9 @@ class TensorIndexType(Basic):
         from .array import MutableDenseNDimArray
 
         data = _TensorDataLazyEvaluator.parse_data(data)
-        if data.rank() > 2:
+        if data.ndim > 2:
             raise ValueError("data have to be of rank 1 (diagonal metric) or 2.")
-        if data.rank() == 1:
+        if data.ndim == 1:
             if self.dim.is_number:
                 nda_dim = data.shape[0]
                 if nda_dim != self.dim:
@@ -1917,7 +1917,7 @@ class TensorHead(Basic):
             metrics = [_.data for _ in self.index_types]
 
             marray = self.data
-            marraydim = marray.rank()
+            marraydim = marray.ndim
             for metric in metrics:
                 marray = tensorproduct(marray, metric, marray)
                 marray = tensorcontraction(marray, (0, marraydim), (marraydim+1, marraydim+2))
@@ -2079,7 +2079,7 @@ class TensExpr(Expr, ABC):
             from .array import tensorproduct, tensorcontraction
             free = self.free
             marray = self.data
-            mdim = marray.rank()
+            mdim = marray.ndim
             for metric in free:
                 marray = tensorcontraction(
                     tensorproduct(
@@ -2278,7 +2278,7 @@ class TensExpr(Expr, ABC):
             permutation = TensExpr._get_indices_permutation(free_ind2, free_ind1)
             array = permutedims(array, permutation)
 
-        if hasattr(array, "rank") and array.rank() == 0:
+        if hasattr(array, "ndim") and array.ndim == 0:
             array = array[()]
 
         return free_ind2, array
@@ -2368,7 +2368,7 @@ class TensExpr(Expr, ABC):
                 expected_shape = [tensor.dim for i in range(2)]
             else:
                 expected_shape = [index_type.dim for index_type in tensor.index_types]
-            if len(expected_shape) != array.rank() or (not all(dim1 == dim2 if
+            if len(expected_shape) != array.ndim or (not all(dim1 == dim2 if
                 dim1.is_number else True for dim1, dim2 in zip(expected_shape,
                 array.shape))):
                 raise ValueError(f"shapes for tensor {tensor} expected to be {expected_shape}, "\
@@ -3026,7 +3026,8 @@ class Tensor(TensExpr):
             return 0
         elif isinstance(other, Tensor):
             return self.component.commutes_with(other.component)
-        return NotImplementedError
+        else:
+            raise NotImplementedError(f"commutes_with between {type(self)} and {type(other)}")
 
     def perm2tensor(self, g, is_canon_bp=False):
         """
@@ -3463,10 +3464,7 @@ class TensMul(TensExpr, AssocOp):
                 newarg = arg
             newargs.append(newarg)
 
-        args = newargs
-
-        # Flatten:
-        args = [i for arg in args for i in (arg.args if isinstance(arg, (TensMul, Mul)) else [arg])]
+        args = cls._flatten_args(newargs)
 
         args, indices, free, dum = TensMul._tensMul_contract_indices(args, replace_indices=False)
 
@@ -3633,7 +3631,7 @@ class TensMul(TensExpr, AssocOp):
         else:
             args = self.args
 
-        args = [arg for arg in args if arg != self.identity]
+        args = self._flatten_args([arg for arg in args if arg != self.identity])
 
         # Extract non-tensor coefficients:
         coeff = reduce(lambda a, b: a*b, [arg for arg in args if not isinstance(arg, TensExpr)], S.One)
@@ -3663,6 +3661,16 @@ class TensMul(TensExpr, AssocOp):
         obj._coeff = coeff
         obj._is_canon_bp = is_canon_bp
         return obj
+
+    @staticmethod
+    def _flatten_args(args):
+        flat = []
+        for arg in args:
+            if isinstance(arg, (TensMul, Mul)):
+                flat.extend(arg.args)
+            else:
+                flat.append(arg)
+        return flat
 
     # TODO: this method should be private
     # TODO: should this method be renamed _from_components_free_dum ?

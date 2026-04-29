@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.numbers import I
 from sympy.core.symbol import symbols
 from sympy.physics.paulialgebra import Pauli

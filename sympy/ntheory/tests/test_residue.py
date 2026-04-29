@@ -1,3 +1,4 @@
+from __future__ import annotations
 from collections import defaultdict
 from sympy.core.containers import Tuple
 from sympy.core.singleton import S

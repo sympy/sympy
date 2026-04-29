@@ -15,6 +15,7 @@ CNOT(1,0)*H(1)
 >>> q.get_circuit()
 CNOT(1,0)*CNOT(0,1)*CNOT(1,0)
 """
+from __future__ import annotations
 
 __all__ = [
     'Qasm',

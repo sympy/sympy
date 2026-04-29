@@ -1,4 +1,5 @@
 """Most of these tests come from the examples in Bronstein's book."""
+from __future__ import annotations
 from sympy.core.numbers import (I, Rational, oo)
 from sympy.core.symbol import symbols
 from sympy.polys.polytools import Poly

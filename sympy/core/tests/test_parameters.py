@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.abc import x, y
 from sympy.core.parameters import evaluate
 from sympy.core import Mul, Add, Pow, S

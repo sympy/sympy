@@ -3,6 +3,7 @@
 Routines for computing eigenvectors with DomainMatrix.
 
 """
+from __future__ import annotations
 from sympy.core.symbol import Dummy
 
 from ..agca.extensions import FiniteExtension

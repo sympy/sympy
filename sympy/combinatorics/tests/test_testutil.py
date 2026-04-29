@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.combinatorics.named_groups import SymmetricGroup, AlternatingGroup,\
     CyclicGroup
 from sympy.combinatorics.testutil import _verify_bsgs, _cmp_perm_lists,\

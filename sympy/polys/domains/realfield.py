@@ -1,4 +1,5 @@
 """Implementation of :class:`RealField` class. """
+from __future__ import annotations
 
 
 from sympy.external.gmpy import SYMPY_INTS, MPQ

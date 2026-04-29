@@ -1,3 +1,4 @@
+from __future__ import annotations
 
 from sympy.printing.pycode import AbstractPythonCodePrinter, ArrayPrinter
 from sympy.matrices.expressions import MatrixExpr

@@ -1,4 +1,5 @@
 """Polynomial manipulation algorithms and algebraic objects. """
+from __future__ import annotations
 
 __all__ = [
     'Poly', 'PurePoly', 'poly_from_expr', 'parallel_poly_from_expr', 'degree',

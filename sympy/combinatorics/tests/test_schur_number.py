@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core import S, Rational
 from sympy.combinatorics.schur_number import schur_partition, SchurNumber
 from sympy.core.random import _randint

@@ -1,4 +1,5 @@
 """Functions for reordering operator expressions."""
+from __future__ import annotations
 
 import warnings
 

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.physics.units import DimensionSystem, joule, second, ampere
 
 from sympy.core.numbers import Rational

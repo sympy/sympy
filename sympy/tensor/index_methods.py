@@ -9,6 +9,7 @@
     objects instead.  When things stabilize this could be a useful
     refactoring.
 """
+from __future__ import annotations
 
 from functools import reduce
 

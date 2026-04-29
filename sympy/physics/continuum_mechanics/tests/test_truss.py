@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.symbol import Symbol, symbols
 from sympy.physics.continuum_mechanics.truss import Truss
 from sympy import sqrt

@@ -1,4 +1,5 @@
 """Ground types for various mathematical domains in SymPy. """
+from __future__ import annotations
 
 import builtins
 from sympy.external.gmpy import GROUND_TYPES, factorial, sqrt, is_square, sqrtrem

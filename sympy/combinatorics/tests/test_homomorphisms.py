@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.combinatorics import Permutation
 from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy.combinatorics.homomorphisms import homomorphism, group_isomorphism, is_isomorphic
@@ -50,6 +51,8 @@ def test_homomorphism():
     assert T.is_injective()
     assert not T.is_isomorphism()
     assert T.invert(p**3) == p**3
+    assert T.invert(T.image().identity) == T.domain.identity
+    assert T(T.invert(T.image().identity)) == T.image().identity
 
     T2 = homomorphism(F, P, [F.generators[0]], P.generators)
     T = T.compose(T2)
@@ -159,6 +162,31 @@ def test_fpgroup_kernel():
     kernel = T.kernel()
     assert kernel.normal
     assert b*a**-1 in kernel
+
+def test_infinite_kernel_with_permutation_codomain():
+    F, a, b = free_group("a, b")
+    c = Permutation(0, 1, 2)
+    C3 = PermutationGroup(c)
+
+    T = homomorphism(F, C3, [a, b], [c, c])
+    kernel = T.kernel()
+    assert kernel.normal
+    assert b*a**-1 in kernel
+    assert a**3 in kernel
+
+    G = FpGroup(F, [a*b*a**-1*b**-1])
+    T = homomorphism(G, C3, G.generators, [c, c])
+    kernel = T.kernel()
+    assert kernel.normal
+    assert b*a**-1 in kernel
+    assert a**3 in kernel
+
+    D4 = PermutationGroup(Permutation(0, 1, 2, 3), Permutation(0, 3)(1, 2))
+    T = homomorphism(F, D4, [a], [Permutation(0, 1, 2, 3)])
+    kernel = T.kernel()
+    assert kernel.normal
+    assert b in kernel
+    assert a**4 in kernel
 
 def test_homomorphism_factor():
     F, a, b = free_group("a, b")

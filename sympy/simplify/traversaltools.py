@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.traversal import use as _use
 from sympy.utilities.decorator import deprecated
 

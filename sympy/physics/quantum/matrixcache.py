@@ -1,4 +1,5 @@
 """A cache for storing small matrices in multiple formats."""
+from __future__ import annotations
 
 from sympy.core.numbers import (I, Rational, pi)
 from sympy.core.power import Pow

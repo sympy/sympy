@@ -1,3 +1,4 @@
+from __future__ import annotations
 import pytest
 
 from sympy.core.symbol import symbols

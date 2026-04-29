@@ -1,3 +1,4 @@
+from __future__ import annotations
 import math
 
 from sympy.concrete.products import (Product, product)

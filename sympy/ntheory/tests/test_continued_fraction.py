@@ -1,3 +1,4 @@
+from __future__ import annotations
 import itertools
 from sympy.core import GoldenRatio as phi
 from sympy.core.numbers import (Rational, pi)

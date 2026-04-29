@@ -1,4 +1,5 @@
 """Implementation of :class:`IntegerRing` class. """
+from __future__ import annotations
 
 from sympy.external.gmpy import MPZ, GROUND_TYPES
 

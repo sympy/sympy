@@ -3,6 +3,7 @@
 Module for the SDM class.
 
 """
+from __future__ import annotations
 
 from operator import add, neg, pos, sub, mul
 from collections import defaultdict

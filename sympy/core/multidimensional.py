@@ -3,6 +3,7 @@ Provides functionality for multidimensional usage of scalar-functions.
 
 Read the vectorize docstring for more details.
 """
+from __future__ import annotations
 
 from functools import wraps
 

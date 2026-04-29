@@ -1,4 +1,5 @@
 """Tests for functions for generating interesting polynomials. """
+from __future__ import annotations
 
 from sympy.core.add import Add
 from sympy.core.symbol import symbols

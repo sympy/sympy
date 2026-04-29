@@ -1,4 +1,5 @@
 """Tests for Groebner bases. """
+from __future__ import annotations
 
 from sympy.polys.groebnertools import (
     groebner, sig, sig_key,

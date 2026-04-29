@@ -4,6 +4,7 @@ This module is named with a leading underscore to signify to users that it's
 "private" and only intended for internal use by the biomechanics module.
 
 """
+from __future__ import annotations
 
 
 __all__ = ['_NamedMixin']

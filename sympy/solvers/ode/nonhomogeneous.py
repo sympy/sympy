@@ -8,6 +8,7 @@ All the functions in this file are used by more than one solvers so, instead of 
 instances in other classes for using them it is better to keep it here as separate helpers.
 
 """
+from __future__ import annotations
 from collections import Counter
 from sympy.core import Add, S
 from sympy.core.function import diff, expand, _mexpand, expand_mul

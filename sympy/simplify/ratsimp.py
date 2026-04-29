@@ -1,3 +1,4 @@
+from __future__ import annotations
 from itertools import combinations_with_replacement
 from sympy.core import symbols, Add, Dummy
 from sympy.core.numbers import Rational

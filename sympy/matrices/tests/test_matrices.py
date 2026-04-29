@@ -5,6 +5,7 @@
 # This entire test module and the corresponding sympy/matrices/matrices.py
 # module will be removed in a future release.
 #
+from __future__ import annotations
 import random
 import concurrent.futures
 from collections.abc import Hashable

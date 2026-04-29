@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.numbers import (Float, pi)
 from sympy.core.symbol import symbols
 from sympy.core.sorting import ordered

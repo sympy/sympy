@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core import Function, S, Mul, Pow, Add
 from sympy.core.sorting import ordered, default_sort_key
 from sympy.core.function import expand_func

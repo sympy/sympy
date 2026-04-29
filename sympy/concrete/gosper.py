@@ -1,4 +1,5 @@
 """Gosper's algorithm for hypergeometric summation. """
+from __future__ import annotations
 
 from sympy.core import S, Dummy, symbols
 from sympy.polys import Poly, parallel_poly_from_expr, factor

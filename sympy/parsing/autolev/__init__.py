@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.external import import_module
 from sympy.utilities.decorator import doctest_depends_on
 

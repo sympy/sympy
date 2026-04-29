@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.concrete.summations import Sum
 from sympy.core.basic import Basic, _aresame
 from sympy.core.cache import clear_cache

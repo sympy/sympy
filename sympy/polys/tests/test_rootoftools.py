@@ -1,4 +1,5 @@
 """Tests for the implementation of RootOf class and related tools. """
+from __future__ import annotations
 
 from sympy.polys.polytools import Poly
 import sympy.polys.rootoftools as rootoftools

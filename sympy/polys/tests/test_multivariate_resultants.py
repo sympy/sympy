@@ -1,4 +1,5 @@
 """Tests for Dixon's and Macaulay's classes. """
+from __future__ import annotations
 
 from sympy.matrices.dense import Matrix
 from sympy.polys.polytools import factor

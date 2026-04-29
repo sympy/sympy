@@ -1,4 +1,5 @@
 """Laplace Transforms"""
+from __future__ import annotations
 import sys
 import sympy
 from sympy.core import S, pi, I

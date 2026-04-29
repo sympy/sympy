@@ -1,4 +1,5 @@
 """Implementation of :class:`ComplexField` class. """
+from __future__ import annotations
 
 
 from sympy.core.numbers import Float, I

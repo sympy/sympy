@@ -1,3 +1,4 @@
+from __future__ import annotations
 import collections
 from sympy.core.expr import Expr
 from sympy.core import sympify, S, preorder_traversal

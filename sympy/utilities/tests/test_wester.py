@@ -5,6 +5,7 @@ http://www.math.unm.edu/~wester/cas/book/Wester.pdf
 See also http://math.unm.edu/~wester/cas_review.html for detailed output of
 each tested system.
 """
+from __future__ import annotations
 
 from sympy.assumptions.ask import Q, ask
 from sympy.assumptions.refine import refine
@@ -899,7 +900,7 @@ def test_M2():
     # The roots of this equation should all be real. Note that this
     # doesn't test that they are correct.
     sol = solveset(3*x**3 - 18*x**2 + 33*x - 19, x)
-    assert all(s.is_real for s in sol)
+    assert all(s.expand(complex=True).is_real for s in sol)
 
 
 @XFAIL

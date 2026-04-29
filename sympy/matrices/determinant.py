@@ -376,8 +376,6 @@ def _charpoly(M, x: str | Expr = 'lambda',
     PurePoly(lambda**2 - lambda - 6, lambda, domain='ZZ')
     >>> M.charpoly(x) == M.charpoly(y)
     True
-    >>> M.charpoly(x) == M.charpoly(y)
-    True
 
     Specifying ``x`` is optional; a symbol named ``lambda`` is used by
     default (which looks good when pretty-printed in unicode):

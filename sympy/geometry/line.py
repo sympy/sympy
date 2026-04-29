@@ -16,6 +16,7 @@ Ray3D
 Segment3D
 
 """
+from __future__ import annotations
 
 from sympy.core.containers import Tuple
 from sympy.core.evalf import N

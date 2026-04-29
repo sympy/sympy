@@ -2,6 +2,7 @@
 This module implements Holonomic Functions and
 various operations on them.
 """
+from __future__ import annotations
 
 from sympy.core import Add, Mul, Pow
 from sympy.core.numbers import (NaN, Infinity, NegativeInfinity, Float, I, pi,

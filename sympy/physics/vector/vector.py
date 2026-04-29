@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy import (S, sympify, expand, sqrt, Add, zeros, acos,
                    ImmutableMatrix as Matrix, simplify)
 from sympy.simplify.trigsimp import trigsimp

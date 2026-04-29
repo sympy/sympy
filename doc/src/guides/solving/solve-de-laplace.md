@@ -80,19 +80,19 @@ we call the Laplace transform of $y(t, x)$ from $t$ to $s$ simply $Y(x)$,
 omitting the $s$ variable in the function argument. Then `e3` is the same
 with the $x$ axis transformed to the $p$ domain. After this step,
 {func}`~.laplace_correspondence` can be used to rewrite the Laplace
-transform of $Y(x)$ to $Z(p)$ (both with the $s$ variable not explicitely
+transform of $Y(x)$ to $Z(p)$ (both with the $s$ variable not explicitly
 written out), resulting in `e4`, which can be solved for $Z$, giving `e5`.
 
 The first {func}`~.inverse_laplace_transform` from $p$ to $x$ gives the
 result `e6`. It contains the expression `exp(-x*(s**2 + 2*s + 1)/(s + 1))`
 which can be simplified if $s \neq 1$. The {func}`~.inverse_laplace_transform`
-from $s$ to $t$ to be done later can easily be calculted with a convergence
+from $s$ to $t$ to be done later can easily be calculated with a convergence
 plane that excludes the point $s=1$, but SymPy does not know this, so we
 rewrite that expression `p1` to `p2` and substitute it, giving `e7`.
 
 Then we apply the initial conditions: $Y(0)$ is the Laplace transform of $y(0, t) = f(t)$, and $f(0)=0$, which we substitute to obtain `e8`. This can then be transformed back to the $t$ domain, resulting in `e9`.
 
-It is posible to simplify this further, but only by giving SymPy the
+It is possible to simplify this further, but only by giving SymPy the
 information that $x$ is strictly positive. So we define a variable `xp` that
 is strictly positive, and reach the goal `e11` using {func}`~.expand` and
 two substitutions.

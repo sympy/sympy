@@ -1,3 +1,4 @@
+from __future__ import annotations
 import math
 from sympy.core.containers import Tuple
 from sympy.core.numbers import nan, oo, Float, Integer

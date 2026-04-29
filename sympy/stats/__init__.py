@@ -99,6 +99,7 @@ exp(-x)
 >>> dist.pmf(x)
 Lambda(x, Piecewise((1/3, Eq(x, 1)), (1/6, Eq(x, 2)), (1/4, Eq(x, 3) | Eq(x, 4)), (0, True)))
 """
+from __future__ import annotations
 
 __all__ = [
     'P', 'E', 'H', 'density', 'where', 'given', 'sample', 'cdf','median',

@@ -60,44 +60,49 @@ class Sum(AddWithLimits, ExprWithIntLimits):
     Finite sums
     ===========
 
-    For finite sums (and sums with symbolic limits assumed to be finite) we
-    follow the summation convention described by Karr [1], especially
-    definition 3 of section 1.4. The sum:
+    For finite sums (and sums with symbolic limits assumed to be finite), the
+    sum
 
     .. math::
 
-        \sum_{m \leq i < n} f(i)
+        S_a^b = \sum_{a \leq i \leq b} f(i)
 
-    has *the obvious meaning* for `m < n`, namely:
-
-    .. math::
-
-        \sum_{m \leq i < n} f(i) = f(m) + f(m+1) + \ldots + f(n-2) + f(n-1)
-
-    with the upper limit value `f(n)` excluded. The sum over an empty set is
-    zero if and only if `m = n`:
+    has *the obvious meaning* for `a \leq b`, namely:
 
     .. math::
 
-        \sum_{m \leq i < n} f(i) = 0  \quad \mathrm{for} \quad  m = n
+        S_a^b = \sum_{a \leq i \leq b} f(i) = f(a) + f(a+1) + \cdots + f(b-1) + f(b) \quad \mathrm{for} \quad a \leq b
 
-    Finally, for all other sums over empty sets we assume the following
-    definition:
+    with the lower and upper limit values `f(a)` and `f(b)` included.
 
-    .. math::
-
-        \sum_{m \leq i < n} f(i) = - \sum_{n \leq i < m} f(i)  \quad \mathrm{for} \quad  m > n
-
-    It is important to note that Karr defines all sums with the upper
-    limit being exclusive. This is in contrast to the usual mathematical notation,
-    but does not affect the summation convention. Indeed we have:
+    The convention for summations is built upon a single, elegant objective:
+    for any summation `S_a^b`, the following additivity rule must hold true for
+    all integers `a`, `b` and `c`:
 
     .. math::
 
-        \sum_{m \leq i < n} f(i) = \sum_{i = m}^{n - 1} f(i)
+        S_a^{b-1} + S_b^c = S_a^c
 
-    where the difference in notation is intentional to emphasize the meaning,
-    with limits typeset on the top being inclusive.
+    This property is directly analogous to the additivity rule for definite
+    integrals.  By enforcing this consistency, the convention naturally extends
+    the definition of a sum to cases where the lower bound is not strictly less
+    than the upper bound, i.e. `a \nless b`, resulting in the following
+    generalizations:
+
+    .. math::
+        S_b^{b-1} = 0 \quad \mbox{because} \quad S_a^{b-1} + S_b^{b-1} = S_a^{b-1}
+
+    and
+
+    .. math::
+        S_a^b = -S_{b+1}^{a-1} \quad \mbox{because} \quad S_a^b + S_{b+1}^{a-1} = S_a^{a-1} = 0
+
+    therefore, in case `a > b`:
+
+    .. math::
+        S_a^b = -S_{b+1}^{a-1} = - \sum_{b + 1 \leq i \leq a - 1} f(i) = - f(b+1) - f(b+2) - \cdots - f(a-1)
+
+    with the lower and upper limit values `f(b)` and `f(a)` excluded.
 
     Examples
     ========

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core import S, sympify
 from sympy.core.symbol import (Dummy, symbols)
 from sympy.functions import Piecewise, piecewise_fold

@@ -140,6 +140,8 @@ def _group_parentheses(recursor: TRANS):
                     stacks.append(ParenthesisGroup([]))
                     stacklevel += 1
                 elif token[1] == ')':
+                    if not stacklevel:
+                        raise TokenError("Mismatched parentheses")
                     stacks[-1].append(token)
                     stack = stacks.pop()
 

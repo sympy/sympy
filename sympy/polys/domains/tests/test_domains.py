@@ -1,4 +1,5 @@
 """Tests for classes defining properties of ground domains, e.g. ZZ, QQ, ZZ[x] ... """
+from __future__ import annotations
 
 from sympy.external.gmpy import GROUND_TYPES
 

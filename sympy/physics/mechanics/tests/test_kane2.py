@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy import cos, Matrix, sin, zeros, tan, pi, symbols
 from sympy.simplify.simplify import simplify
 from sympy.simplify.trigsimp import trigsimp

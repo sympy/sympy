@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy import MatAdd
 from sympy.algebras.quaternion import Quaternion
 from sympy.assumptions.ask import Q
@@ -1058,6 +1059,88 @@ def test_UnevaluatedExpr():
     a, b = symbols("a b")
     expr1 = 2*UnevaluatedExpr(a+b)
     assert str(expr1) == "2*(a + b)"
+
+    x = symbols("x")
+    ue1 = UnevaluatedExpr(-2*x**2 - 9*x + 5)
+    assert str(1 + ue1) == "1 + (-2*x**2 - 9*x + 5)"
+    assert str(1 - ue1) == "1 - (-2*x**2 - 9*x + 5)"
+
+    ue2 = UnevaluatedExpr(-2*x**2 + 3*x + 2)
+    ue3 = UnevaluatedExpr(-5*x**2 + 6*x - 7)
+    assert str(ue2 + ue3) == "(-5*x**2 + 6*x - 7) + (-2*x**2 + 3*x + 2)"
+    assert str(ue2 - ue3) == "-(-5*x**2 + 6*x - 7) + (-2*x**2 + 3*x + 2)"
+
+    u = UnevaluatedExpr(2)
+    assert str(u) == "2"
+    assert str(-u) == "-2"
+    assert str(2 * u) == "2*2"
+    assert str(-2 * u) == "-2*2"
+    assert str(x**2 * u) == "x**2*2"
+    assert str(-x**2 * u) == "-x**2*2"
+
+    u = UnevaluatedExpr(-2)
+    assert str(u) == "-2"
+    assert str(-u) == "-(-2)"
+    assert str(2 * u) == "2*(-2)"
+    assert str(-2 * u) == "-2*(-2)"
+    assert str(x**2 * u) == "x**2*(-2)"
+    assert str(-x**2 * u) == "-x**2*(-2)"
+
+    u = UnevaluatedExpr(x)
+    assert str(u) == "x"
+    assert str(-u) == "-x"
+    assert str(2 * u) == "2*x"
+    assert str(-2 * u) == "-2*x"
+    assert str(x**2 * u) == "x**2*x"
+    assert str(-x**2 * u) == "-x**2*x"
+
+    u = UnevaluatedExpr(-x)
+    assert str(u) == "-x"
+    assert str(-u) == "-(-x)"
+    assert str(2 * u) == "2*(-x)"
+    assert str(-2 * u) == "-2*(-x)"
+    assert str(x**2 * u) == "x**2*(-x)"
+    assert str(-x**2 * u) == "-x**2*(-x)"
+
+    u = UnevaluatedExpr(x**2)
+    assert str(u) == "x**2"
+    assert str(-u) == "-x**2"
+    assert str(2 * u) == "2*x**2"
+    assert str(-2 * u) == "-2*x**2"
+    assert str(x**2 * u) == "x**2*x**2"
+    assert str(-x**2 * u) == "-x**2*x**2"
+
+    u = UnevaluatedExpr(-x**2)
+    assert str(u) == "-x**2"
+    assert str(-u) == "-(-x**2)"
+    assert str(2 * u) == "2*(-x**2)"
+    assert str(-2 * u) == "-2*(-x**2)"
+    assert str(x**2 * u) == "x**2*(-x**2)"
+    assert str(-x**2 * u) == "-x**2*(-x**2)"
+
+    u = UnevaluatedExpr(x * (x + 2))
+    assert str(u) == "x*(x + 2)"
+    assert str(-u) == "-(x*(x + 2))"
+    assert str(2 * u) == "2*(x*(x + 2))"
+    assert str(-2 * u) == "-2*(x*(x + 2))"
+    assert str(x**2 * u) == "x**2*(x*(x + 2))"
+    assert str(-x**2 * u) == "-x**2*(x*(x + 2))"
+
+    u = UnevaluatedExpr(-x * (x + 2))
+    assert str(u) == "-x*(x + 2)"
+    assert str(-u) == "-(-x*(x + 2))"
+    assert str(2 * u) == "2*(-x*(x + 2))"
+    assert str(-2 * u) == "-2*(-x*(x + 2))"
+    assert str(x**2 * u) == "x**2*(-x*(x + 2))"
+    assert str(-x**2 * u) == "-x**2*(-x*(x + 2))"
+
+    u = UnevaluatedExpr(x + 2)
+    assert str(u) == "x + 2"
+    assert str(-1 * u) == "-(x + 2)"
+    assert str(3 * u) == "3*(x + 2)"
+    assert str(-3 * u) == "-3*(x + 2)"
+    assert str(x**2 * u) == "x**2*(x + 2)"
+    assert str(-x**2 * u) == "-x**2*(x + 2)"
 
 
 def test_MatrixElement_printing():

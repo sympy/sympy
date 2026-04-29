@@ -1,4 +1,5 @@
 # A collection of failing integrals from the issues.
+from __future__ import annotations
 
 from sympy.core.numbers import (I, Rational, oo, pi)
 from sympy.core.singleton import S

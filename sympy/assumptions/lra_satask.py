@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.assumptions.assume import global_assumptions
 from sympy.assumptions.cnf import CNF, EncodedCNF
 from sympy.assumptions.ask import Q

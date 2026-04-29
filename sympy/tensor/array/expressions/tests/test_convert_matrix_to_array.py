@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy import Lambda, KroneckerProduct, sqrt, sin
 from sympy.core.symbol import symbols, Dummy
 from sympy.matrices.expressions.hadamard import (HadamardPower, HadamardProduct)

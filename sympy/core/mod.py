@@ -1,3 +1,4 @@
+from __future__ import annotations
 from .add import Add
 from .exprtools import gcd_terms
 from .function import DefinedFunction

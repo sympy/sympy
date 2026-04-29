@@ -1,4 +1,5 @@
 """Tests of transforms of quantum expressions for Mul and Pow."""
+from __future__ import annotations
 
 from sympy.core.symbol import symbols
 from sympy.testing.pytest import raises
@@ -32,7 +33,7 @@ def test_bra_ket():
 
 
 def test_tensor_product():
-    # We are attempting to be rigourous and raise TypeError when a user tries
+    # We are attempting to be rigorous and raise TypeError when a user tries
     # to combine bras, kets, and operators in a manner that doesn't make sense.
     # In particular, we are not trying to interpret regular ``*`` multiplication
     # as a tensor product.

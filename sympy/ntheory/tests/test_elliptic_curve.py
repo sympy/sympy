@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.ntheory.elliptic_curve import EllipticCurve, EllipticCurvePoint
 
 

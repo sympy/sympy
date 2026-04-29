@@ -5,6 +5,7 @@ Contains
 Curve
 
 """
+from __future__ import annotations
 
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.core import diff

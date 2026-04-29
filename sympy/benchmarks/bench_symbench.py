@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import annotations
 from sympy.core.random import random
 from sympy.core.numbers import (I, Integer, pi)
 from sympy.core.symbol import Symbol

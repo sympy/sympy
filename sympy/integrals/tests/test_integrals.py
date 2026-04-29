@@ -1,3 +1,4 @@
+from __future__ import annotations
 import math
 from sympy.concrete.summations import (Sum, summation)
 from sympy.core.add import Add
@@ -2030,6 +2031,7 @@ def test_sqrt_quadratic():
     assert integrate(1/sqrt(a+b*x+c*x**2), x) == \
         Piecewise((log(b + 2*sqrt(c)*sqrt(a + b*x + c*x**2) + 2*c*x)/sqrt(c), Ne(c, 0) & Ne(a - b**2/(4*c), 0)),
                   ((b/(2*c) + x)*log(b/(2*c) + x)/sqrt(c*(b/(2*c) + x)**2), Ne(c, 0)),
+                  (x/sqrt(a), Eq(b, 0)),
                   (2*sqrt(a + b*x)/b, Ne(b, 0)), (x/sqrt(a), True))
 
     assert integrate((7*x+6)/sqrt(3*x**2+4*x+5)) == \
@@ -2043,7 +2045,8 @@ def test_sqrt_quadratic():
                    Piecewise((log(b + 2*sqrt(c)*sqrt(a + b*x + c*x**2) + 2*c*x)/sqrt(c), Ne(a - b**2/(4*c), 0)),
                              ((b/(2*c) + x)*log(b/(2*c) + x)/sqrt(c*(b/(2*c) + x)**2), True)) +
                    e*sqrt(a + b*x + c*x**2)/c, Ne(c, 0)),
-                  ((2*d*sqrt(a + b*x) + 2*e*(-a*sqrt(a + b*x) + (a + b*x)**(S(3)/2)/3)/b)/b, Ne(b, 0)),
+                   ((d*x + e*x**2/2)/sqrt(a), Eq(b, 0)),
+                  (2*((d*sqrt(a + b*x) - e*(a*sqrt(a + b*x) - (a + b*x)**(S(3)/2)/3)/b)/b), Ne(b, 0)),
                   ((d*x + e*x**2/2)/sqrt(a), True))
 
     assert integrate((3*x**3-x**2+2*x-4)/sqrt(x**2-3*x+2)) == \
@@ -2057,6 +2060,7 @@ def test_sqrt_quadratic():
                    Piecewise((log(b + 2*sqrt(c)*sqrt(a + b*x + c*x**2) + 2*c*x)/sqrt(c), Ne(a - b**2/(4*c), 0)),
                              ((b/(2*c) + x)*log(b/(2*c) + x)/sqrt(c*(b/(2*c) + x)**2), True)) +
                    (b/(4*c) + x/2)*sqrt(a + b*x + c*x**2), Ne(c, 0)),
+                   (sqrt(a)*x, Eq(b, 0)),
                   (2*(a + b*x)**(S(3)/2)/(3*b), Ne(b, 0)),
                   (sqrt(a)*x, True))
 

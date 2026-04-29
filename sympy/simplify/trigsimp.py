@@ -1,3 +1,4 @@
+from __future__ import annotations
 from collections import defaultdict
 from functools import reduce
 
@@ -471,7 +472,6 @@ def trigsimp(expr, inverse=False, **opts):
         functions, such as sin and asin, can be cancelled in any order.
         For example, ``asin(sin(x))`` will yield ``x`` without checking whether
         x belongs to the set where this relation is true. The default is False.
-        Default : True
 
     method : string, optional
         Specifies the method to use. Valid choices are:

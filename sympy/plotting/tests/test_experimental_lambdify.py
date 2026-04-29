@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.symbol import symbols, Symbol
 from sympy.functions import Max
 from sympy.plotting.experimental_lambdify import experimental_lambdify

@@ -1,3 +1,4 @@
+from __future__ import annotations
 __all__ = [
     "power_series_ring",
     "PowerSeriesRingRing",
