@@ -49,7 +49,7 @@ def z3_satisfiable(expr, all_models=False):
 
 
 def z3_model_to_sympy_model(z3_model, enc_cnf):
-    rev_enc = {value: key for key, value in enc_cnf.encoding.items()}
+    rev_enc = enc_cnf.reverse_encoding
     result = {}
     for var in z3_model:
         var_name = var.name()
