@@ -51,6 +51,8 @@ def test_homomorphism():
     assert T.is_injective()
     assert not T.is_isomorphism()
     assert T.invert(p**3) == p**3
+    assert T.invert(T.image().identity) == T.domain.identity
+    assert T(T.invert(T.image().identity)) == T.image().identity
 
     T2 = homomorphism(F, P, [F.generators[0]], P.generators)
     T = T.compose(T2)

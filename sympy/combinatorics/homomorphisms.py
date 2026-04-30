@@ -95,9 +95,11 @@ class GroupHomomorphism:
                 gens = image.generator_product(g)[::-1]
                 dtype = type(w)
                 return dtype.prod(
-                    self._inverses[s] if s in self._inverses
-                    else self._inverses[s**-1]**-1
-                    for s in gens if not s.is_identity
+                    itertools.chain([w], (
+                        self._inverses[s] if s in self._inverses
+                        else self._inverses[s**-1]**-1
+                        for s in gens if not s.is_identity
+                    ))
                 )
 
             else:

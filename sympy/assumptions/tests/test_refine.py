@@ -1,6 +1,7 @@
 from __future__ import annotations
 from sympy.assumptions.ask import Q
-from sympy.assumptions.refine import refine
+from sympy.assumptions.refine import refine, refine_sin_cos
+from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.core.expr import Expr
 from sympy.core.numbers import (I, Rational, nan, pi)
 from sympy.core.singleton import S
@@ -8,13 +9,15 @@ from sympy.core.symbol import Symbol
 from sympy.functions.elementary.complexes import (Abs, arg, im, re, sign)
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.functions.elementary.trigonometric import (atan, atan2, cos, sin)
+from sympy.functions.elementary.trigonometric import (atan, atan2, cos, sin, tan)
 from sympy.abc import w, x, y, z
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.functions.elementary.integers import floor, ceiling
 from sympy.functions.special.delta_functions import Heaviside
+
+from sympy.testing.pytest import raises
 
 
 def test_Abs():
@@ -75,6 +78,22 @@ def test_exp():
     assert refine(exp(pi*I*2*(x + Rational(1, 4)))) == I
     assert refine(exp(pi*I*2*(x + Rational(3, 4)))) == -I
 
+    x = Symbol('x')
+    assert refine(exp(pi*I*2*x), Q.integer(x)) == 1
+    assert refine(exp(pi*I*x), Q.even(x)) == 1
+    assert refine(exp(pi*I*2*(x + S.Half)), Q.integer(x)) == -1
+    assert refine(exp(pi*I*x), Q.odd(x)) == -1
+    assert refine(exp(pi*I*2*(x + Rational(1, 4))), Q.integer(x)) == I
+    assert refine(exp(pi*I*2*(x + Rational(3, 4))), Q.integer(x)) == -I
+
+    assert refine(exp(pi*I*(x + Rational(1, 2))), Q.even(x)) == I
+    assert refine(exp(pi*I*(x + Rational(1, 2))), Q.odd(x)) == -I
+    assert refine(exp(pi*I*(x + Rational(3, 2))), Q.odd(x)) == I
+    assert refine(exp(pi*I*(x + Rational(1, 2))), Q.integer(x)) == I*(-1)**x
+
+    assert refine(exp(2*pi*I*(x + y + Rational(1, 4))),
+        Q.integer(x) & Q.integer(y)) == I
+    assert refine(exp(pi*I*x), Q.integer(x)) == (-1)**x
 
 def test_Piecewise():
     assert refine(Piecewise((1, x < 0), (3, True)), (x < 0)) == 1
@@ -286,6 +305,20 @@ def test_sin_cos():
     assert refine(cos(x + n*pi/2 + k*pi/2 + m*pi/2), \
                   Q.odd(n) & Q.odd(k) & Q.integer(m)) == \
         (-1)**((n + k)/2) * cos(x + m*pi/2)
+
+    assert refine(cos(x), Q.zero(x)) == 1
+    assert refine(sin(x), Q.zero(x)) == 0
+
+    assert (refine(sin(x), Q.infinite(x) & Q.extended_real(x)) ==
+        AccumBounds(-1, 1))
+    assert (refine(cos(x), Q.infinite(x) & Q.extended_real(x)) ==
+        AccumBounds(-1, 1))
+    assert refine(sin(x), Q.infinite(x)) == sin(x)
+    assert refine(cos(x), Q.infinite(x)) == cos(x)
+
+    raises(TypeError, lambda: refine_sin_cos(tan(x), Q.real(x)))
+    raises(TypeError, lambda: refine_sin_cos(exp(x), Q.real(x)))
+    raises(TypeError, lambda: refine_sin_cos(x, Q.real(x)))
 
 
 def test_floor_ceiling():

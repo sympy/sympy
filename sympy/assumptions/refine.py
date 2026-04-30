@@ -146,6 +146,7 @@ def refine_Pow(expr, assumptions):
     """
     from sympy.functions.elementary.complexes import Abs
     from sympy.functions import sign
+
     if isinstance(expr.base, Abs):
         if ask(Q.real(expr.base.args[0]), assumptions) and \
                 ask(Q.even(expr.exp), assumptions):
@@ -214,6 +215,42 @@ def refine_Pow(expr, assumptions):
 
                 if old != expr:
                     return expr
+
+
+def refine_exp(expr, assumptions):
+    """
+    Handler for exponential functions.
+
+    Examples
+    ========
+
+    >>> from sympy import Q, S, exp, I, pi, refine
+    >>> from sympy.abc import x
+    >>> refine(exp(2*pi*I*x), Q.integer(x))
+    1
+    >>> refine(exp(pi*I*(x + S.Half)), Q.integer(x))
+    (-1)**x*I
+    """
+    coeff = expr.exp.as_coefficient(S.Pi * S.ImaginaryUnit)
+    if coeff is None:
+        return expr
+
+    integer_terms = []
+    remaining_terms = []
+    terms = coeff.args if coeff.is_Add else (coeff,)
+    for term in terms:
+        if ask(Q.integer(term), assumptions):
+            integer_terms.append(term)
+        else:
+            remaining_terms.append(term)
+
+    if not integer_terms:
+        return expr
+
+    integer_part = Add(*integer_terms)
+    remaining_part = Add(*remaining_terms)
+    phase = expr.func(S.Pi * S.ImaginaryUnit * remaining_part)
+    return (-1)**integer_part * phase
 
 
 def refine_atan2(expr, assumptions):
@@ -427,7 +464,20 @@ def refine_sin_cos(expr, assumptions):
     cos(x + y)
     """
     from sympy.functions.elementary.trigonometric import sin, cos
+    from sympy.calculus.accumulationbounds import AccumBounds
+
+    if not isinstance(expr, (sin, cos)):
+        raise TypeError("refine_sin_cos expects a sin or cos function.")
+
     arg = expr.args[0]
+    expr_is_sin = isinstance(expr, sin)
+
+    if (ask(Q.infinite(arg), assumptions) and
+         ask(Q.extended_real(arg), assumptions)):
+        return AccumBounds(-1, 1)
+
+    if ask(Q.zero(arg), assumptions):
+        return 0 if expr_is_sin else 1
 
     integer_coeffs_of_pi_half = []
     remaining_terms = []
@@ -461,7 +511,7 @@ def refine_sin_cos(expr, assumptions):
         return expr
 
     # Treat sin as a phase-shifted cosine so a single logic path can handle both.
-    if isinstance(expr, sin):
+    if expr_is_sin:
         k = sum_of_parity_known_coeffs - 1
         k_is_even = not sum_of_parity_known_coeffs_is_even
     else:
@@ -563,6 +613,7 @@ handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'MatrixElement': refine_matrixelement,
     'cos': refine_sin_cos,
     'sin': refine_sin_cos,
+    'exp': refine_exp,
     'Heaviside': refine_Heaviside,
     'floor': refine_floor_ceiling,
     'ceiling' : refine_floor_ceiling,

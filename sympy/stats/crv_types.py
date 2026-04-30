@@ -1313,7 +1313,7 @@ def ExGaussian(name, mean, std, rate):
 
     .. math::
         f(x) := \frac{\lambda}{2}e^{\frac{\lambda}{2}(2\mu+\lambda\sigma^2-2x)}
-            \text{erfc}(\frac{\mu + \lambda\sigma^2 - x}{\sqrt{2}\sigma})
+            \text{erfc}\left(\frac{\mu + \lambda\sigma^2 - x}{\sqrt{2}\sigma}\right)
 
     with $x > 0$. Note that the expected value is `1/\lambda`.
 
@@ -2405,7 +2405,8 @@ def Levy(name, mu, c):
     The density of the Levy distribution is given by
 
     .. math::
-        f(x) := \sqrt(\frac{c}{2 \pi}) \frac{\exp -\frac{c}{2 (x - \mu)}}{(x - \mu)^{3/2}}
+        f(x) := \sqrt{\frac{c}{2 \pi}} \frac{\exp\left(-\frac{c}{2 (x - \mu)}\right)}
+                                            {(x - \mu)^{3/2}}
 
     Parameters
     ==========
@@ -3065,7 +3066,8 @@ def Moyal(name, mu, sigma):
     The density of the Moyal distribution is given by
 
     .. math::
-        f(x) := \frac{\exp-\frac{1}{2}\exp-\frac{x-\mu}{\sigma}-\frac{x-\mu}{2\sigma}}{\sqrt{2\pi}\sigma}
+        f(x) := \frac{\exp\left(-\frac{1}{2}\left(\frac{x-\mu}{\sigma}+\exp\left(\frac{x-\mu}{\sigma}\right)\right)\right)}
+                     {\sqrt{2\pi}\sigma}
 
     with :math:`x \in \mathbb{R}`.
 
@@ -3959,7 +3961,7 @@ def ShiftedGompertz(name, b, eta):
     The density of the Shifted Gompertz distribution is given by
 
     .. math::
-        f(x) := b e^{-b x} e^{-\eta \exp(-b x)} \left[1 + \eta(1 - e^(-bx)) \right]
+        f(x) := b e^{-b x} e^{-\eta \exp(-b x)} \left[1 + \eta(1 - e^{-bx}) \right]
 
     with :math:`x \in [0, \infty)`.
 
