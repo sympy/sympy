@@ -9,10 +9,10 @@ within matrix expressions.
 from __future__ import annotations
 
 from .ast import Token
-from sympy import Expr
+from sympy import MatrixExpr
 from sympy.core.sympify import sympify
 
-class Dgesv(Token, Expr):
+class Dgesv(Token):
     """
     Represents a symbolic node for the DGESV LAPACK operation.
 
@@ -45,7 +45,3 @@ class Dgesv(Token, Expr):
 
     _construct_matrix = staticmethod(sympify)
     _construct_vector = staticmethod(sympify)
-
-    @property
-    def shape(self):
-        return self.vector.shape
