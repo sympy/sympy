@@ -472,7 +472,7 @@ class SingleFinitePSpace(SinglePSpace, FinitePSpace):
         symbolic dimensions is currently not possible.
         """
         if self._is_symbolic:
-            self
+            pass
         domain = self.where(condition)
         prob = self.probability(condition)
         density = {key: val / prob
