@@ -9,7 +9,6 @@ within matrix expressions.
 from __future__ import annotations
 
 from .ast import Token
-from sympy import MatrixExpr
 from sympy.core.sympify import sympify
 
 class Dgesv(Token):
