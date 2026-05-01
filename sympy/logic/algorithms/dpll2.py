@@ -435,6 +435,9 @@ class SATSolver:
         (0, {1}, False)
 
         """
+        if len(self.levels) == 1:
+            raise IndexError("Cannot pop base decision level 0.")
+
         # Undo the variable settings
         for lit in self._current_level.var_settings:
             self.var_settings.remove(lit)
