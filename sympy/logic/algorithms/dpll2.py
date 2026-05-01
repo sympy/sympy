@@ -240,8 +240,16 @@ class SATSolver:
                     else:
                         self._simple_add_learned_clause(res[1])
 
-                        # backtrack until we unassign one of the literals causing the conflict
-                        while not any(-lit in res[1] for lit in self._current_level.var_settings):
+                        # Backtrack until reaching a level with one of the conflict causing literals.
+                        inconsistent_literals = [-lit for lit in res[1]]
+                        while True:
+                            if len(self.levels) == 1:
+                                # If theory-inconsistent literals were set right off the bat
+                                # at level 0, the formula is unsat.
+                                return
+
+                            if any(inconsistent_lit in self._current_level.var_settings for inconsistent_lit in inconsistent_literals):
+                                break
                             self._undo()
 
                     while self._current_level.flipped:
