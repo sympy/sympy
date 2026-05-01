@@ -695,3 +695,7 @@ class Level:
         self.decision = decision
         self.var_settings = set()
         self.flipped = flipped
+
+    def __repr__(self):
+        return "<Level decision=%s, flipped=%s, var_settings=%s>" % (
+            self.decision, self.flipped, self.var_settings)
