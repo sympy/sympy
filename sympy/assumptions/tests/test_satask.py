@@ -1,15 +1,17 @@
+from __future__ import annotations
 from sympy.assumptions.ask import Q
 from sympy.assumptions.assume import assuming
-from sympy.core.numbers import (I, pi)
+from sympy.core.numbers import (I, pi, E)
 from sympy.core.relational import (Eq, Gt)
 from sympy.core.singleton import S
-from sympy.core.symbol import symbols
+from sympy.core.symbol import symbols, Dummy
 from sympy.functions.elementary.complexes import Abs
 from sympy.logic.boolalg import Implies
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.assumptions.cnf import CNF, Literal
 from sympy.assumptions.satask import (satask, extract_predargs,
     get_relevant_clsfacts)
+from sympy.assumptions.sathandlers import class_fact_registry
 
 from sympy.testing.pytest import raises, XFAIL
 
@@ -153,8 +155,12 @@ def test_rational_irrational():
     assert satask(Q.irrational(x*y*z), Q.irrational(x) & Q.irrational(y) &
         Q.rational(z)) is None
     assert satask(Q.irrational(x*y*z), Q.irrational(x) & Q.rational(y) &
-        Q.rational(z)) is True
-    assert satask(Q.irrational(pi*x*y), Q.rational(x) & Q.rational(y)) is True
+        Q.rational(z)) is None
+    assert satask(Q.irrational(x*y*z), Q.irrational(x) & Q.rational(y) &
+        Q.rational(z) & ~Q.zero(y) & ~Q.zero(z)) is True
+    assert satask(Q.irrational(pi*x*y), Q.rational(x) & Q.rational(y)) is None
+    assert satask(Q.irrational(pi*x*y), Q.rational(x) & Q.rational(y) &
+                  ~Q.zero(x) & ~Q.zero(y)) is True
 
     assert satask(Q.irrational(x + y + z), Q.irrational(x) & Q.irrational(y) &
         Q.rational(z)) is None
@@ -226,13 +232,19 @@ def test_integer():
     assert satask(Q.integer(x*y), Q.integer(x)) is None
 
     assert satask(Q.integer(x*y), Q.integer(x) & ~Q.integer(y)) is None
-    assert satask(Q.integer(x*y), Q.integer(x) & ~Q.rational(y)) is False
+    assert satask(Q.integer(x*y), Q.integer(x) & ~Q.rational(y)) is None
+    assert satask(Q.integer(x*y), Q.integer(x) & ~Q.rational(y) &
+        ~Q.zero(x)) is False
     assert satask(Q.integer(x*y*z), Q.integer(x) & Q.integer(y) &
-        ~Q.rational(z)) is False
+        ~Q.rational(z)) is None
+    assert satask(Q.integer(x*y*z), Q.integer(x) & Q.integer(y) &
+        ~Q.rational(z) & ~Q.zero(x) & ~Q.zero(y)) is False
     assert satask(Q.integer(x*y*z), Q.integer(x) & ~Q.rational(y) &
         ~Q.rational(z)) is None
     assert satask(Q.integer(x*y*z), Q.integer(x) & ~Q.rational(y)) is None
-    assert satask(Q.integer(x*y), Q.integer(x) & Q.irrational(y)) is False
+    assert satask(Q.integer(x*y), Q.integer(x) & Q.irrational(y)) is None
+    assert satask(Q.integer(x*y), Q.integer(x) & Q.irrational(y) &
+        ~Q.zero(x)) is False
 
 
 def test_abs():
@@ -364,15 +376,21 @@ def test_get_relevant_clsfacts():
     exprs, facts = get_relevant_clsfacts(exprs)
     assert exprs == {x*y}
     assert facts.clauses == \
-        {frozenset({Literal(Q.odd(Abs(x*y)), False), Literal(Q.odd(x*y), True)}),
-        frozenset({Literal(Q.zero(Abs(x*y)), False), Literal(Q.zero(x*y), True)}),
-        frozenset({Literal(Q.even(Abs(x*y)), False), Literal(Q.even(x*y), True)}),
-        frozenset({Literal(Q.zero(Abs(x*y)), True), Literal(Q.zero(x*y), False)}),
-        frozenset({Literal(Q.even(Abs(x*y)), False),
-                    Literal(Q.odd(Abs(x*y)), False),
-                    Literal(Q.odd(x*y), True)}),
-        frozenset({Literal(Q.even(Abs(x*y)), False),
-                    Literal(Q.even(x*y), True),
-                    Literal(Q.odd(Abs(x*y)), False)}),
-        frozenset({Literal(Q.positive(Abs(x*y)), False),
-                    Literal(Q.zero(Abs(x*y)), False)})}
+        {frozenset({Literal(Q.nonnegative(Abs(x*y)), False)}),
+         frozenset({Literal(Q.even(Abs(x*y)), False), Literal(Q.even(x*y), True)}),
+         frozenset({Literal(Q.integer(Abs(x*y)), False), Literal(Q.integer(x*y), True)}),
+         frozenset({Literal(Q.odd(Abs(x*y)), False), Literal(Q.odd(x*y), True)}),
+         frozenset({Literal(Q.zero(Abs(x*y)), False), Literal(Q.zero(x*y), True)}),
+         frozenset({Literal(Q.zero(Abs(x*y)), True), Literal(Q.zero(x*y), False)})}
+
+def test_issue_27467():
+    s = sum(Dummy() for _ in range(10))
+    assert all(len(CNF.to_CNF(f).clauses) < 1000 for f in class_fact_registry(s))
+
+def test_issue_29433():
+    assert satask(Q.infinite(x+y*pi), Q.zero(y)) is None
+    assert satask(Q.rational(x + y*E), Q.zero(y)) is None
+    assert satask(Q.integer(x + y*pi), Q.zero(y)) is None
+    assert satask(Q.even(x + y*(3**0.5)), Q.zero(y)) is None
+    assert satask(Q.odd(x + y*(3**0.5)), Q.zero(y)) is None
+    assert satask(Q.positive(x + y*pi), Q.zero(y)) is None

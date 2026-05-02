@@ -1,3 +1,4 @@
+from __future__ import annotations
 from .accumulationbounds import AccumBounds, AccumulationBounds # noqa: F401
 from .singularities import singularities
 from sympy.core import Pow, S

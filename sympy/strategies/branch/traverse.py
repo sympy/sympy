@@ -1,4 +1,5 @@
 """ Branching Strategies to Traverse a Tree """
+from __future__ import annotations
 from itertools import product
 from sympy.strategies.util import basic_fns
 from .core import chain, identity, do_one

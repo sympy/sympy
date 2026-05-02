@@ -1,3 +1,4 @@
+from __future__ import annotations
 import tempfile
 from sympy import log, Min, Max, sqrt
 from sympy.core.numbers import Float

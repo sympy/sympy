@@ -283,7 +283,7 @@ def rot_givens(i, j, theta, dim=3):
         about the 3-axis (counterclockwise around the z axis)
     """
     if not isinstance(dim, int) or dim < 2:
-        raise ValueError('dim must be an integer biggen than one, '
+        raise ValueError('dim must be an integer bigger than one, '
                          'got {}.'.format(dim))
 
     if i == j:

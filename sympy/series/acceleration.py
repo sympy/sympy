@@ -8,6 +8,7 @@ Scientists and Engineers: Asymptotic Methods and Perturbation Theory",
 Springer 1999. (Shanks transformation: pp. 368-375, Richardson
 extrapolation: pp. 375-377.)
 """
+from __future__ import annotations
 
 from sympy.core.numbers import Integer
 from sympy.core.singleton import S

@@ -38,6 +38,7 @@
 # Add more methods to python-flint to expose more of Flint's functionality
 # and also to make some of the above methods simpler or more efficient e.g.
 # slicing, fancy indexing etc.
+from __future__ import annotations
 
 from sympy.external.gmpy import GROUND_TYPES
 from sympy.external.importtools import import_module

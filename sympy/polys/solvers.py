@@ -1,4 +1,5 @@
 """Low-level linear systems solver. """
+from __future__ import annotations
 
 
 from sympy.utilities.exceptions import sympy_deprecation_warning

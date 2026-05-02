@@ -1,4 +1,5 @@
 """Tests for minimal polynomials. """
+from __future__ import annotations
 
 from sympy.core.function import expand
 from sympy.core import (GoldenRatio, TribonacciConstant)

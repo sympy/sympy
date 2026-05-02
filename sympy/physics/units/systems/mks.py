@@ -3,6 +3,7 @@ MKS unit system.
 
 MKS stands for "meter, kilogram, second".
 """
+from __future__ import annotations
 
 from sympy.physics.units import UnitSystem
 from sympy.physics.units.definitions import gravitational_constant, hertz, joule, newton, pascal, watt, speed_of_light, gram, kilogram, meter, second

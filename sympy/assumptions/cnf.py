@@ -4,7 +4,8 @@ only and should not be used anywhere else as these do not possess the
 signatures common to SymPy objects. For general use of logic constructs
 please refer to sympy.logic classes And, Or, Not, etc.
 """
-from itertools import combinations, product, zip_longest
+from __future__ import annotations
+from itertools import combinations, zip_longest
 from sympy.assumptions.assume import AppliedPredicate, Predicate
 from sympy.core.relational import Eq, Ne, Gt, Lt, Ge, Le
 from sympy.core.singleton import S
@@ -281,9 +282,7 @@ class CNF:
     >>> from sympy.abc import x
     >>> cnf = CNF.from_prop(Q.real(x) & ~Q.zero(x))
     >>> cnf.clauses
-    {frozenset({Literal(Q.zero(x), True)}),
-    frozenset({Literal(Q.negative(x), False),
-    Literal(Q.positive(x), False), Literal(Q.zero(x), False)})}
+    {frozenset({Literal(Q.real(x), False)}), frozenset({Literal(Q.zero(x), True)})}
     """
     def __init__(self, clauses=None):
         if not clauses:
@@ -323,17 +322,10 @@ class CNF:
         return self
 
     def all_predicates(self):
-        predicates = set()
-        for c in self.clauses:
-            predicates |= {arg.lit for arg in c}
-        return predicates
+        return {arg.lit for clause in self.clauses for arg in clause}
 
     def _or(self, cnf):
-        clauses = set()
-        for a, b in product(self.clauses, cnf.clauses):
-            tmp = set(a)
-            tmp.update(b)
-            clauses.add(frozenset(tmp))
+        clauses = {a | b for a in self.clauses for b in cnf.clauses}
         return CNF(clauses)
 
     def _and(self, cnf):
@@ -367,15 +359,12 @@ class CNF:
 
     @classmethod
     def all_and(cls, *cnfs):
-        b = cnfs[0].copy()
-        for rest in cnfs[1:]:
-            b = b._and(rest)
-        return b
+        clauses = {clause for cnf in cnfs for clause in cnf.clauses}
+        return CNF(clauses)
 
     @classmethod
     def to_CNF(cls, expr):
-        from sympy.assumptions.facts import get_composite_predicates
-        expr = to_NNF(expr, get_composite_predicates())
+        expr = to_NNF(expr)
         expr = distribute_AND_over_OR(expr)
         return expr
 

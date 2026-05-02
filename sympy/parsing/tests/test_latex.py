@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.testing.pytest import raises, XFAIL
 from sympy.external import import_module
 
@@ -201,6 +202,9 @@ GOOD_PAIRS = [
     (r"h_{\theta}", Symbol('h_{theta}')),
     (r"h_{\theta}(x_0, x_1)",
      Function('h_{theta}')(Symbol('x_{0}'), Symbol('x_{1}'))),
+    (r"a_{n+k}", Symbol('a_{k + n}')),
+    (r"a_{2n}", Symbol('a_{2*n}')),
+    (r"a_{n^2}", Symbol('a_{n**2}')),
     (r"x!", _factorial(x)),
     (r"100!", _factorial(100)),
     (r"\theta!", _factorial(theta)),
@@ -356,3 +360,10 @@ def test_strict_mode():
     for latex_str in FAILING_BAD_STRINGS:
         with raises(LaTeXParsingError):
             parse_latex(latex_str, strict=True)
+
+def test_latex_cases_environment_error():
+    from sympy.parsing.latex import parse_latex, LaTeXParsingError
+    from sympy.testing.pytest import raises
+    latex_string = r"\begin{cases} x=1 \\ y=2 \end{cases}"
+    with raises(LaTeXParsingError, match="The 'cases' environment is not currently supported"):
+        parse_latex(latex_string)

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.function import (Derivative, Function)
 from sympy.core.numbers import (I, Rational, oo, pi)
 from sympy.core.relational import (Eq, Ge, Gt, Le, Lt, Ne)

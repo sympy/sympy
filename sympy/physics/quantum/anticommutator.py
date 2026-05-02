@@ -1,4 +1,5 @@
 """The anti-commutator: ``{A,B} = A*B + B*A``."""
+from __future__ import annotations
 
 from sympy.core.expr import Expr
 from sympy.core.kind import KindDispatcher
@@ -31,7 +32,7 @@ class AntiCommutator(Expr):
 
     Canonical ordering of an anticommutator is ``{A, B}`` for ``A < B``. The
     arguments of the anticommutator are put into canonical order using
-    ``__cmp__``. If ``B < A``, then ``{A, B}`` is returned as ``{B, A}``.
+    comparison operators. If ``B < A``, then ``{A, B}`` is returned as ``{B, A}``.
 
     Parameters
     ==========

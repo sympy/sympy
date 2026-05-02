@@ -78,7 +78,7 @@ def _is_zero_after_expand_mul(x):
     return expand_mul(x) == 0
 
 
-def _simplify(expr):
+def _simplify(expr: Expr) -> Expr:
     """ Wrapper to avoid circular imports. """
     from sympy.simplify.simplify import simplify
     return simplify(expr)

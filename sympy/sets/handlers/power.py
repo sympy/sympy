@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core import Basic, Expr
 from sympy.core.function import Lambda
 from sympy.core.numbers import oo, Infinity, NegativeInfinity, Zero, Integer

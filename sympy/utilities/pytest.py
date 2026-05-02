@@ -3,6 +3,7 @@
 
    sympy.utilities.pytest has been renamed to sympy.testing.pytest.
 """
+from __future__ import annotations
 from sympy.utilities.exceptions import sympy_deprecation_warning
 
 sympy_deprecation_warning("The sympy.utilities.pytest submodule is deprecated. Use sympy.testing.pytest instead.",

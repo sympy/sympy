@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING
 from sympy.concrete.expr_with_limits import AddWithLimits
 from sympy.core.add import Add
 from sympy.core.basic import Basic
-from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import diff
@@ -35,6 +34,7 @@ from sympy.utilities.misc import filldedent
 
 
 if TYPE_CHECKING:
+    from sympy.core.containers import Tuple
     SymbolLimits = Expr | tuple[Expr, Expr] | tuple[Expr, Expr, Expr]
 
 

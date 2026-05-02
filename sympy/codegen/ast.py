@@ -202,7 +202,7 @@ class Token(CodegenAST):
     def _construct(cls, attr, arg):
         """ Construct an attribute value from argument passed to ``__new__()``. """
         # arg may be ``NoneToken()``, so comparison is done using == instead of ``is`` operator
-        if arg == None:
+        if arg == None:  # noqa: E711
             return cls.defaults.get(attr, none)
         else:
             if isinstance(arg, Dummy):  # SymPy's replace uses Dummy instances

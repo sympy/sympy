@@ -112,7 +112,7 @@ if __name__ == "__main__":
 
     def in_module(a, b):
         """Is a the same module as or a submodule of b?"""
-        return a == b or a != None and b != None and a.startswith(b + '.')
+        return a == b or a is not None and b is not None and a.startswith(b + '.')
 
     def relevant(module):
         """Is module relevant for import checking?
@@ -169,7 +169,7 @@ if __name__ == "__main__":
                 else:
                     msg('Error: %s contains package import %s',
                         importer_reference, module)
-            if fromlist != None:
+            if fromlist is not None:
                 symbol_list = fromlist
                 if '*' in symbol_list:
                     if (importer_filename.endswith(("__init__.py", "__init__.pyc", "__init__.pyo"))):

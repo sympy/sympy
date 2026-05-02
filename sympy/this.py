@@ -1,6 +1,7 @@
 """
 The Zen of SymPy.
 """
+from __future__ import annotations
 
 s = """The Zen of SymPy
 

@@ -115,7 +115,7 @@ class CodePrinter(StrPrinter):
 
     def __init__(self, settings=None):
         super().__init__(settings=settings)
-        if self._settings.get('strict', True) == None:
+        if self._settings.get('strict', True) is None:
             # for backwards compatibility, human=False need not to throw:
             self._settings['strict'] = self._settings.get('human', True) == True
         if not hasattr(self, 'reserved_words'):

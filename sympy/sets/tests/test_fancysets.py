@@ -1,3 +1,4 @@
+from __future__ import annotations
 
 from sympy.core.expr import unchanged
 from sympy.sets.contains import Contains

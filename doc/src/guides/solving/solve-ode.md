@@ -480,9 +480,3 @@ NotImplementedError
 
 For such cases, you can solve the equations numerically as mentioned in
 [](#alternatives-to-consider).
-
-## Report a Bug
-
-If you find a bug with {func}`~.dsolve`, please post the problem on the [SymPy mailing
-list](https://groups.google.com/g/sympy). Until the issue is resolved, you can
-use a different method listed in [](#alternatives-to-consider).

@@ -1,13 +1,15 @@
 """Implementation of :class:`Ring` class. """
+from __future__ import annotations
 
 
-from sympy.polys.domains.domain import Domain
+from sympy.polys.domains.domain import Domain, Er
 from sympy.polys.polyerrors import ExactQuotientFailed, NotInvertible, NotReversible
 
 from sympy.utilities import public
 
+
 @public
-class Ring(Domain):
+class Ring(Domain[Er]):
     """Represents a ring domain. """
 
     is_Ring = True

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy import symbols
 from sympy.physics.mechanics import dynamicsymbols
 from sympy.physics.mechanics import ReferenceFrame, Point, Particle

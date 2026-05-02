@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.numbers import (I, nan, oo, pi)
 from sympy.core.relational import (Eq, Ne)
 from sympy.core.singleton import S

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core import S
 from sympy.core.function import Lambda
 from sympy.core.power import Pow
@@ -74,6 +75,12 @@ class NumPyPrinter(ArrayPrinter, PythonCodePrinter):
             expr_list = expr.as_coeff_matrices()[1]+[(expr.as_coeff_matrices()[0])]
             return '({})'.format(').dot('.join(self._print(i) for i in expr_list))
         return '({})'.format(').dot('.join(self._print(i) for i in expr.args))
+
+    def _print_Contains(self, expr):
+        item, s = expr.args
+        if s == S.Integers:
+            return "equal(mod({}, 1), 0)".format(self._print(item))
+        raise NotImplementedError(f"NumPy printing for Contains({item}, {s}) not implemented")
 
     def _print_MatPow(self, expr):
         "Matrix power printer"
@@ -283,7 +290,7 @@ class NumPyPrinter(ArrayPrinter, PythonCodePrinter):
                                  self._print(expr.args[0].tolist()))
 
     def _print_NDimArray(self, expr):
-        if expr.rank() == 0:
+        if expr.ndim == 0:
             func = self._module_format(f'{self._module}.array')
             return f"{func}({self._print(expr[()])})"
         if 0 in expr.shape:

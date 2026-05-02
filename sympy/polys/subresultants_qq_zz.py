@@ -241,6 +241,7 @@ res(f, g, x)
 res_q(f, g, x)
 res_z(f, g, x)
 """
+from __future__ import annotations
 
 
 from sympy.concrete.summations import summation

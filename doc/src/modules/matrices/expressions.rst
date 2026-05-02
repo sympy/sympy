@@ -70,6 +70,10 @@ Matrix Expressions Core Reference
    :members:
 .. autoclass:: ZeroMatrix
    :members:
+.. autoclass:: OneMatrix
+   :members:
+.. autoclass:: MatrixUnit
+   :members:
 .. autoclass:: CompanionMatrix
    :members:
 .. autoclass:: MatrixSet

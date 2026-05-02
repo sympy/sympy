@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.assumptions.ask import Q
 from sympy.assumptions.wrapper import (AssumptionsWrapper, is_infinite,
     is_extended_real)

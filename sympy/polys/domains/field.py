@@ -1,12 +1,21 @@
 """Implementation of :class:`Field` class. """
 
+from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
+from sympy.polys.domains.domain import Ef
 from sympy.polys.domains.ring import Ring
 from sympy.polys.polyerrors import NotReversible, DomainError
 from sympy.utilities import public
 
+
+if TYPE_CHECKING:
+    from typing import Self
+
+
 @public
-class Field(Ring):
+class Field(Ring[Ef]):
     """Represents a field domain. """
 
     is_Field = True
@@ -16,11 +25,11 @@ class Field(Ring):
         """Returns a ring associated with ``self``. """
         raise DomainError('there is no ring associated with %s' % self)
 
-    def get_field(self):
+    def get_field(self) -> Self:
         """Returns a field associated with ``self``. """
         return self
 
-    def exquo(self, a, b):
+    def exquo(self, a: Ef, b: Ef) -> Ef:
         """Exact quotient of ``a`` and ``b``, implies ``__truediv__``.  """
         return a / b
 
@@ -36,7 +45,7 @@ class Field(Ring):
         """Division of ``a`` and ``b``, implies ``__truediv__``. """
         return a / b, self.zero
 
-    def gcd(self, a, b):
+    def gcd(self, a, b) -> Ef:
         """
         Returns GCD of ``a`` and ``b``.
 
@@ -68,7 +77,7 @@ class Field(Ring):
 
         return self.convert(p, ring)/q
 
-    def gcdex(self, a, b):
+    def gcdex(self, a, b) -> tuple[Ef, Ef, Ef]:
         """
         Returns x, y, g such that a * x + b * y == g == gcd(a, b)
         """

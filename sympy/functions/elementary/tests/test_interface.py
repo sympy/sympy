@@ -4,6 +4,7 @@
 # We test that it works with both Function and DefinedFunction. New code should
 # use DefinedFunction because it has better type inference. Old code still
 # using Function should continue to work though.
+from __future__ import annotations
 from sympy.core.function import Function, DefinedFunction
 from sympy.core.sympify import sympify
 from sympy.functions.elementary.hyperbolic import tanh

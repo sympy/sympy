@@ -1363,17 +1363,24 @@ def _QRdecomposition_optional(M, normalize=True):
 
     for j in range(A.cols):
         for i in range(j):
-            if Q[:, i].is_zero_matrix:
+            z = Q[:, i].is_zero_matrix
+            if z is True:
                 continue
 
-            R[i, j] = dot(Q[:, i], Q[:, j]) / dot(Q[:, i], Q[:, i])
+            norm = dps(dot(Q[:, i], Q[:, i]))
+            if z is None and norm.equals(0):
+                continue
+
+            R[i, j] = dot(Q[:, i], Q[:, j]) / norm
             R[i, j] = dps(R[i, j])
             Q[:, j] -= Q[:, i] * R[i, j]
 
         Q[:, j] = dps(Q[:, j])
-        if Q[:, j].is_zero_matrix is not True:
-            ranked.append(j)
-            R[j, j] = M.one
+        z = Q[:, j].is_zero_matrix
+        if z is True or dps(dot(Q[:, j], Q[:, j])).equals(0):
+            continue
+        ranked.append(j)
+        R[j, j] = M.one
 
     Q = Q.extract(range(Q.rows), ranked)
     R = R.extract(ranked, range(R.cols))

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.assumptions import Predicate, AppliedPredicate, Q
 from sympy.core.relational import Eq, Ne, Gt, Lt, Ge, Le
 from sympy.multipledispatch import Dispatcher
@@ -13,8 +14,22 @@ class CommutativePredicate(Predicate):
     ``ask(Q.commutative(x))`` is true iff ``x`` commutes with any other
     object with respect to multiplication operation.
 
+    Examples
+    ========
+
+    >>> from sympy import Q, ask, Symbol
+    >>> x = Symbol('x')
+    >>> ask(Q.commutative(x))
+    True
+    >>> ask(Q.commutative(2))
+    True
+    >>> nc = Symbol('nc', commutative=False)
+    >>> ask(Q.commutative(nc))
+    False
+    >>> ask(Q.commutative(x * nc))
+    False
+
     """
-    # TODO: Add examples
     name = 'commutative'
     handler = Dispatcher("CommutativeHandler", doc="Handler for key 'commutative'.")
 

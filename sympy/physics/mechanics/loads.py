@@ -1,3 +1,4 @@
+from __future__ import annotations
 from abc import ABC
 from collections import namedtuple
 from sympy.physics.mechanics.body_base import BodyBase
