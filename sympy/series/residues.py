@@ -4,6 +4,7 @@ with residues.
 """
 from __future__ import annotations
 
+from sympy.core.expr import Expr
 from sympy.core.mul import Mul
 from sympy.core.singleton import S
 from sympy.core.sympify import sympify
@@ -11,7 +12,7 @@ from sympy.utilities.timeutils import timethis
 
 
 @timethis('residue')
-def residue(expr, x, x0):
+def residue(expr, x, x0) -> Expr:
     """
     Finds the residue of ``expr`` at the point x=x0.
 
@@ -67,7 +68,7 @@ def residue(expr, x, x0):
     for arg in args:
         c, m = arg.as_coeff_mul(x)
         m = Mul(*m)
-        if not (m in (S.One, x) or (m.is_Pow and m.exp.is_Integer)):
+        if not (m in (S.One, x) or (m.is_Pow and m.exp.is_Integer)):  # type: ignore
             raise NotImplementedError('term of unexpected form: %s' % m)
         if m == 1/x:
             res += c
