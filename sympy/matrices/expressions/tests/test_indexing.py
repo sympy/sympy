@@ -182,9 +182,6 @@ def test_slicing():
 
 
 def test_ellipsis_indexing():
-    # https://github.com/sympy/sympy/issues/XXXXX
-    # Ellipsis should be treated as slice(None) (select all), not raise
-    # IndexError or SympifyError
     X_all = X[...]
     assert isinstance(X_all, MatrixSlice)
     assert X_all.shape == X.shape
