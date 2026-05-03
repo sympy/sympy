@@ -242,3 +242,5 @@ def test_issue_25337():
     assert construct_domain([oo]) == (EX, [EX(oo)])
     assert construct_domain([-oo]) == (EX, [EX(-oo)])
     assert construct_domain([nan]) == (EX, [EX(nan)])
+    assert construct_domain([x + oo]) == (EX, [EX(x + oo)])
+    assert construct_domain([x + zoo]) == (EX, [EX(x + zoo)])

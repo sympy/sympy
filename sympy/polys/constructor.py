@@ -3,6 +3,7 @@ from __future__ import annotations
 from math import prod
 
 from sympy.core import sympify
+from sympy.core.singleton import S
 from sympy.core.evalf import pure_complex
 from sympy.core.sorting import ordered
 from sympy.polys.domains import ZZ, QQ, ZZ_I, QQ_I, EX
@@ -54,8 +55,6 @@ def _construct_simple(coeffs, opt):
                     # there are both algebraics and reals -> EX
                     return False
                 algebraics = True
-            elif coeff.is_number and not coeff.is_finite:
-                return False
             else:
                 # this is a composite domain, e.g. ZZ[X], EX
                 return None
@@ -363,6 +362,10 @@ def construct_domain(obj, **args):
         coeffs = [obj]
 
     coeffs = list(map(sympify, coeffs))
+    if any(a.is_finite is False or a is S.NaN
+           for coeff in coeffs
+           for a in coeff.atoms()):
+        return _construct_expression(coeffs, opt)
     result = _construct_simple(coeffs, opt)
 
     if result is not None:
