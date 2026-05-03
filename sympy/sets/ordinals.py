@@ -143,11 +143,11 @@ class Ordinal(Basic):
         return self.terms == other.terms
 
     def __hash__(self) -> int:
-        if len(self.args)==0:
+        if len(self.terms)==0:
             return hash(0)
-        if len(self.args)==1 and self.args[0].exp==ord0:
-            return hash(int(self.args[0].mult))
-        return hash(self.args)
+        if len(self.terms)==1 and self.terms[0].exp==ord0:
+            return hash(int(self.terms[0].mult))
+        return hash(self.terms)
 
     def __lt__(self, other: Ordinal | Integer | int) -> bool:
         if not isinstance(other, Ordinal):

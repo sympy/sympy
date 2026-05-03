@@ -1,5 +1,5 @@
 from __future__ import annotations
-from sympy.sets.ordinals import Ordinal, OmegaPower, ord0, omega
+from sympy.sets.ordinals import Ordinal, OmegaPower, ord0, omega, OrdinalOmega
 from sympy.testing.pytest import raises
 
 def test_string_ordinals():
@@ -76,3 +76,7 @@ def test_hash_consistency():
     assert hash(b)==hash(5)
     assert ord0==0
     assert hash(ord0)==hash(0)
+    o=OrdinalOmega()
+    r=Ordinal(OmegaPower(1,1))
+    assert o==r
+    assert hash(o)==hash(r)
