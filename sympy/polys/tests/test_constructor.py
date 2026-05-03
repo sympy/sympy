@@ -9,7 +9,7 @@ from sympy.polys.domains.realfield import RealField
 from sympy.polys.domains.complexfield import ComplexField
 
 from sympy.core import (Catalan, GoldenRatio)
-from sympy.core.numbers import (E, Float, I, Rational, pi)
+from sympy.core.numbers import (E, Float, I, Rational, pi, zoo, nan, oo)
 from sympy.core.singleton import S
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -235,3 +235,10 @@ def test_issue_11538():
         assert construct_domain(x + n)[0] == ZZ[x, n]
     assert construct_domain(GoldenRatio)[0] == EX
     assert construct_domain(x + GoldenRatio)[0] == EX
+
+
+def test_issue_25337():
+    assert construct_domain([zoo]) == (EX, [EX(zoo)])
+    assert construct_domain([oo]) == (EX, [EX(oo)])
+    assert construct_domain([-oo]) == (EX, [EX(-oo)])
+    assert construct_domain([nan]) == (EX, [EX(nan)])
