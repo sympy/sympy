@@ -54,6 +54,8 @@ def _construct_simple(coeffs, opt):
                     # there are both algebraics and reals -> EX
                     return False
                 algebraics = True
+            elif coeff.is_number and not coeff.is_finite:
+                return False
             else:
                 # this is a composite domain, e.g. ZZ[X], EX
                 return None
