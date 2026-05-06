@@ -7027,7 +7027,7 @@ def factor(
     options: ``extension``, ``modulus`` or ``domain``.
 
     Parameters
-    ========== 
+    ==========
 
     f : Expr | Poly
         Expression to be factored.
