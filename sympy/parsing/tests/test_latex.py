@@ -17,6 +17,7 @@ from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.integers import (ceiling, floor)
 from sympy.functions.elementary.miscellaneous import (root, sqrt)
 from sympy.functions.elementary.trigonometric import (asin, cos, csc, sec, sin, tan)
+from sympy.functions.elementary.hyperbolic import (sinh, cosh, tanh)
 from sympy.integrals.integrals import Integral
 from sympy.series.limits import Limit
 
@@ -276,7 +277,10 @@ GOOD_PAIRS = [
     (r"\log_2 x", _log(x, 2)),
     (r"\log_a x", _log(x, a)),
     (r"5^0 - 4^0", _Add(_Pow(5, 0), _Mul(-1, _Pow(4, 0)))),
-    (r"3x - 1", _Add(_Mul(3, x), -1))
+    (r"3x - 1", _Add(_Mul(3, x), -1)),
+    (r"\sinh x", sinh(x)),
+    (r"\cosh x", cosh(x)),
+    (r"\tanh x", tanh(x))
 ]
 
 
