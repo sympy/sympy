@@ -16,6 +16,7 @@ from sympy.functions.elementary.piecewise import Piecewise
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.functions.elementary.integers import floor, ceiling
 from sympy.functions.special.delta_functions import Heaviside
+from sympy.core.mod import Mod
 
 from sympy.testing.pytest import raises
 
@@ -353,3 +354,11 @@ def test_Heaviside():
     assert refine(Heaviside(x, 1), Q.zero(x)) == 1
     assert refine(Heaviside(x, 1), Q.positive(x)) == 1
     assert refine(Heaviside(x, 1), Q.negative(x)) == 0
+
+
+def test_Mod():
+    assert refine(Mod(x, 1), Q.integer(x)) == 0
+    assert refine(Mod(5*x, 5), Q.integer(x)) == 0
+    assert refine(Mod(x, 3), Q.integer(x)) == Mod(x, 3)
+    assert refine(Mod(x, y)) == Mod(x, y)
+

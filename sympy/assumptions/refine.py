@@ -562,6 +562,28 @@ def refine_Heaviside(expr, assumptions):
     return expr
 
 
+def refine_Mod(expr, assumptions):
+    """
+    Handler for the Mod function.
+
+    Examples
+    ========
+
+    >>> from sympy import Q, Mod, refine
+    >>> from sympy.abc import x
+    >>> refine(Mod(x, 1), Q.integer(x))
+    0
+    >>> refine(Mod(5*x, 5), Q.integer(x))
+    0
+    """
+    from sympy.core.mod import Mod
+    args = expr.args
+    p, q = args
+    if ask(Q.integer(p / q), assumptions):
+        return S.Zero
+    return expr
+
+
 def refine_floor_ceiling(expr, assumptions):
     """
     Handler for the floor and ceiling functions
@@ -617,4 +639,5 @@ handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'Heaviside': refine_Heaviside,
     'floor': refine_floor_ceiling,
     'ceiling' : refine_floor_ceiling,
+    'Mod': refine_Mod,
 }
