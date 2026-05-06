@@ -6997,7 +6997,7 @@ def factor_list(f, *gens, **args):
 
 @public
 def factor(
-    f: object,
+    f: Expr,
     *gens: Expr | Sequence[Expr],
     deep: bool = False,
     fraction: bool = True,
