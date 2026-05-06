@@ -7007,6 +7007,7 @@ def factor(
     gaussian: bool | None = None,
     symmetric: bool | None = None,
     domain: Domain | str | None = None,
+    split: bool | None = None,
     polys: bool | None = None,
 ):
     """
@@ -7082,6 +7083,10 @@ def factor(
         options machinery (typically rational-domain behavior unless other
         options force a different domain).
 
+    split : bool, optional
+        If ``True``, currently raises ``NotImplementedError``.
+        If ``None`` (default), this option is omitted.
+
     polys : bool, optional
         Accepted for backward compatibility only. This is a flag option that
         is not allowed in ``factor`` and will raise ``FlagError`` when passed.
@@ -7151,6 +7156,8 @@ def factor(
         args['symmetric'] = symmetric
     if domain is not None:
         args['domain'] = domain
+    if split is not None:
+        args['split'] = split
     if polys is not None:
         args['polys'] = polys
 
@@ -7170,17 +7177,18 @@ def factor(
                 gaussian=gaussian,
                 symmetric=symmetric,
                 domain=domain,
+                split=split,
                 polys=polys,
             )
             if fac.is_Mul or fac.is_Pow:
                 return fac
             return expr
 
-        f = bottom_up(f, _try_factor)
+        f_bot = cast(Basic, bottom_up(f, _try_factor))
         # clean up any subexpressions that may have been expanded
         # while factoring out a larger expression
         partials = {}
-        muladd = f.atoms(Mul, Add)
+        muladd = f_bot.atoms(Mul, Add)
         for p in muladd:
             fac = factor(
                 p,
@@ -7192,11 +7200,12 @@ def factor(
                 gaussian=gaussian,
                 symmetric=symmetric,
                 domain=domain,
+                split=split,
                 polys=polys,
             )
             if (fac.is_Mul or fac.is_Pow) and fac != p:
                 partials[p] = fac
-        return f.xreplace(partials)
+        return f_bot.xreplace(partials)
 
     try:
         return _generic_factor(f, gens, args, method='factor')

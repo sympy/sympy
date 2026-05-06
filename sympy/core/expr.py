@@ -3846,6 +3846,7 @@ class Expr(Basic, EvalfMixin):
         gaussian: bool | None = None,
         symmetric: bool | None = None,
         domain: Domain | str | None = None,
+        split: bool | None = None,
         polys: bool | None = None,
     ):
         """See the factor() function in sympy.polys.polytools"""
@@ -3861,6 +3862,7 @@ class Expr(Basic, EvalfMixin):
             gaussian=gaussian,
             symmetric=symmetric,
             domain=domain,
+            split=split,
             polys=polys,
         )
 
