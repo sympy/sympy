@@ -576,9 +576,7 @@ def refine_Mod(expr, assumptions):
     >>> refine(Mod(5*x, 5), Q.integer(x))
     0
     """
-    from sympy.core.mod import Mod
-    args = expr.args
-    p, q = args
+    p, q = expr.args
     if ask(Q.integer(p / q), assumptions):
         return S.Zero
     return expr
