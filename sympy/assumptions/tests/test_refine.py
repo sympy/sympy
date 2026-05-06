@@ -14,7 +14,7 @@ from sympy.abc import w, x, y, z
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.matrices.expressions.matexpr import MatrixSymbol
-from sympy.functions.elementary.integers import floor, ceiling
+from sympy.functions.elementary.integers import floor, ceiling, frac
 from sympy.functions.special.delta_functions import Heaviside
 
 from sympy.testing.pytest import raises
@@ -353,3 +353,11 @@ def test_Heaviside():
     assert refine(Heaviside(x, 1), Q.zero(x)) == 1
     assert refine(Heaviside(x, 1), Q.positive(x)) == 1
     assert refine(Heaviside(x, 1), Q.negative(x)) == 0
+
+
+def test_frac():
+    assert refine(frac(x), Q.integer(x)) == 0
+    assert refine(frac(x + y), Q.integer(x)) == frac(y)
+    assert refine(frac(x + y + z), Q.integer(x) & Q.integer(z)) == frac(y)
+    assert refine(frac(x), Q.real(x)) == frac(x)
+    assert refine(frac(x + S.Half), Q.integer(x)) == S.Half

@@ -602,6 +602,34 @@ def refine_floor_ceiling(expr, assumptions):
     return expr
 
 
+def refine_frac(expr, assumptions):
+    """
+    Handler for the fractional part function.
+
+    Examples
+    ========
+
+    >>> from sympy import Q, frac, refine
+    >>> from sympy.abc import x
+    >>> refine(frac(x), Q.integer(x))
+    0
+    """
+    arg = expr.args[0]
+    if ask(Q.integer(arg), assumptions):
+        return S.Zero
+    if isinstance(arg, Add):
+        integer_terms = []
+        remaining_terms = []
+        for term in arg.args:
+            if ask(Q.integer(term), assumptions):
+                integer_terms.append(term)
+            else:
+                remaining_terms.append(term)
+        if integer_terms:
+            return expr.func(Add(*remaining_terms))
+    return expr
+
+
 handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'Abs': refine_abs,
     'Pow': refine_Pow,
@@ -617,4 +645,5 @@ handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'Heaviside': refine_Heaviside,
     'floor': refine_floor_ceiling,
     'ceiling' : refine_floor_ceiling,
+    'frac': refine_frac,
 }
