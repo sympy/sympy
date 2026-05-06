@@ -359,5 +359,7 @@ def test_frac():
     assert refine(frac(x), Q.integer(x)) == 0
     assert refine(frac(x + y), Q.integer(x)) == frac(y)
     assert refine(frac(x + y + z), Q.integer(x) & Q.integer(z)) == frac(y)
+    assert refine(frac(floor(x) + y)) == frac(y)
+    assert refine(frac(ceiling(x) + y)) == frac(y)
     assert refine(frac(x), Q.real(x)) == frac(x)
     assert refine(frac(x + S.Half), Q.integer(x)) == S.Half

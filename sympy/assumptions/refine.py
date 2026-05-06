@@ -614,6 +614,7 @@ def refine_frac(expr, assumptions):
     >>> refine(frac(x), Q.integer(x))
     0
     """
+    from sympy.functions.elementary.integers import floor, ceiling
     arg = expr.args[0]
     if ask(Q.integer(arg), assumptions):
         return S.Zero
@@ -621,7 +622,7 @@ def refine_frac(expr, assumptions):
         integer_terms = []
         remaining_terms = []
         for term in arg.args:
-            if ask(Q.integer(term), assumptions):
+            if ask(Q.integer(term), assumptions) or isinstance(term, (floor, ceiling)):
                 integer_terms.append(term)
             else:
                 remaining_terms.append(term)
