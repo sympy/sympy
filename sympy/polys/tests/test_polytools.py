@@ -2891,6 +2891,13 @@ def test_factor():
     f = 5*x + 3*exp(2 - 7*x)
     assert factor(f, deep=True) == factor(f, deep=True, fraction=True)
     assert factor(f, deep=True, fraction=False) == 5*x + 3*exp(2)*exp(-7*x)
+    assert f.factor(deep=True, fraction=False) == 5*x + 3*exp(2)*exp(-7*x)
+
+    # explicit False-valued options should still participate in validation
+    raises(OptionError, lambda: factor(x**2 + 1, extension=I, gaussian=False))
+
+    # Expr.factor forwards explicit named options
+    assert (x**2 - 2).factor(extension=sqrt(2)) == (x - sqrt(2))*(x + sqrt(2))
 
     assert factor_list(x**3 - x*y**2, t, w, x) == (
         1, [(x, 1), (x - y, 1), (x + y, 1)])

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, overload, Literal, Any, cast, Callable
+from typing import TYPE_CHECKING, overload, Literal, Any, cast, Callable, Sequence
 
 from functools import wraps, reduce
 from operator import mul
@@ -6996,7 +6996,19 @@ def factor_list(f, *gens, **args):
 
 
 @public
-def factor(f, *gens, deep=False, **args):
+def factor(
+    f: object,
+    *gens: Expr | Sequence[Expr],
+    deep: bool = False,
+    fraction: bool = True,
+    expand: bool = True,
+    extension: Expr | bool | list[Expr] | tuple[Expr, ...] | None = None,
+    modulus: int | None = None,
+    gaussian: bool | None = None,
+    symmetric: bool | None = None,
+    domain: Domain | str | None = None,
+    polys: bool | None = None,
+):
     """
     Compute the factorization of expression, ``f``, into irreducibles. (To
     factor an integer into primes, use ``factorint``.)
@@ -7013,6 +7025,67 @@ def factor(f, *gens, deep=False, **args):
     By default, the factorization is computed over the rationals. To factor
     over other domain, e.g. an algebraic or finite field, use appropriate
     options: ``extension``, ``modulus`` or ``domain``.
+
+    Parameters
+    ========== 
+
+    f : Expr | Poly
+        Expression to be factored.
+
+    gens : Expr or sequence of Expr
+        Optional generators. When omitted, symbolic factorization is used for
+        non-``Poly`` input. Supplying generators forces formal polynomial
+        factorization with respect to those generators.
+
+    deep : bool, optional
+        If ``True``, recursively factor subexpressions. If ``False`` (default),
+        factorization is applied to the top-level expression structure.
+
+    fraction : bool, optional
+        Controls whether rational expressions are combined before factoring.
+        Default is ``True``.
+
+    expand : bool, optional
+        Passed to polynomial conversion options. If ``False``, automatic
+        expansion prior to formal polynomial factoring is disabled. Default is
+        ``True``.
+
+    extension : Expr, sequence[Expr], bool, optional
+        Request factorization over an algebraic extension field.
+
+        - ``extension=<alpha>`` (or a sequence) adjoins the given algebraic
+          element(s).
+        - ``extension=True`` asks SymPy to infer a suitable algebraic
+          extension when possible.
+                - ``extension=None`` (default) leaves algebraic extension handling
+                    disabled.
+
+    modulus : int, optional
+        If given, factor over the finite field GF(``modulus``).
+        If ``None`` (default), no finite-field modulus is used.
+
+    gaussian : bool, optional
+        If ``True``, factor over Gaussian rationals (equivalent to using a
+        domain containing ``I``).
+        If ``None`` (default), this option is not applied (equivalent to the
+        usual ``gaussian=False`` behavior).
+
+    symmetric : bool, optional
+        Controls symmetric representation for finite-field coefficients when
+        ``modulus`` is used.
+        If ``None`` (default), no explicit choice is made; when ``modulus`` is
+        set, the finite-field default ``symmetric=True`` is used.
+
+    domain : Domain | str, optional
+        Explicitly set the polynomial ground domain.
+        If ``None`` (default), the domain is inferred by SymPy's polynomial
+        options machinery (typically rational-domain behavior unless other
+        options force a different domain).
+
+    polys : bool, optional
+        Accepted for backward compatibility only. This is a flag option that
+        is not allowed in ``factor`` and will raise ``FlagError`` when passed.
+        The default ``None`` means this compatibility flag is omitted.
 
     Examples
     ========
@@ -7063,13 +7136,42 @@ def factor(f, *gens, deep=False, **args):
     sympy.ntheory.factor_.factorint
 
     """
+    args: dict[str, object] = {'expand': expand}
+    args['fraction'] = fraction
+
+    # Only pass options that were explicitly provided so exclusions/defaults
+    # from poly options are preserved.
+    if extension is not None:
+        args['extension'] = extension
+    if modulus is not None:
+        args['modulus'] = modulus
+    if gaussian is not None:
+        args['gaussian'] = gaussian
+    if symmetric is not None:
+        args['symmetric'] = symmetric
+    if domain is not None:
+        args['domain'] = domain
+    if polys is not None:
+        args['polys'] = polys
+
     f = sympify(f)
     if deep:
         def _try_factor(expr):
             """
             Factor, but avoid changing the expression when unable to.
             """
-            fac = factor(expr, *gens, **args)
+            fac = factor(
+                expr,
+                *gens,
+                fraction=fraction,
+                expand=expand,
+                extension=extension,
+                modulus=modulus,
+                gaussian=gaussian,
+                symmetric=symmetric,
+                domain=domain,
+                polys=polys,
+            )
             if fac.is_Mul or fac.is_Pow:
                 return fac
             return expr
@@ -7080,7 +7182,18 @@ def factor(f, *gens, deep=False, **args):
         partials = {}
         muladd = f.atoms(Mul, Add)
         for p in muladd:
-            fac = factor(p, *gens, **args)
+            fac = factor(
+                p,
+                *gens,
+                fraction=fraction,
+                expand=expand,
+                extension=extension,
+                modulus=modulus,
+                gaussian=gaussian,
+                symmetric=symmetric,
+                domain=domain,
+                polys=polys,
+            )
             if (fac.is_Mul or fac.is_Pow) and fac != p:
                 partials[p] = fac
         return f.xreplace(partials)
