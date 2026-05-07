@@ -3837,23 +3837,24 @@ class Expr(Basic, EvalfMixin):
 
     def factor(
         self,
-        *gens: Expr | Sequence[Expr],
+        *args: Expr | Sequence[Expr],
         deep: bool = False,
         fraction: bool = True,
         expand: bool = True,
-        extension: Expr | bool | list[Expr] | tuple[Expr, ...] | None = None,
+        extension: Expr | bool | Sequence[Expr] | None = None,
         modulus: int | None = None,
         gaussian: bool | None = None,
         symmetric: bool | None = None,
         domain: Domain | str | None = None,
         split: bool | None = None,
         polys: bool | None = None,
+        gens: Expr | Sequence[Expr] = (),
     ):
         """See the factor() function in sympy.polys.polytools"""
         from sympy.polys.polytools import factor
         return factor(
             self,
-            *gens,
+            *args,
             deep=deep,
             fraction=fraction,
             expand=expand,
@@ -3864,6 +3865,7 @@ class Expr(Basic, EvalfMixin):
             domain=domain,
             split=split,
             polys=polys,
+            gens=gens,
         )
 
     def cancel(self, *gens, **args):

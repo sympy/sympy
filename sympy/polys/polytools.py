@@ -6998,17 +6998,19 @@ def factor_list(f, *gens, **args):
 @public
 def factor(
     f: Expr,
-    *gens: Expr | Sequence[Expr],
+    *args: Expr | Sequence[Expr] | set[Expr],
     deep: bool = False,
     fraction: bool = True,
     expand: bool = True,
-    extension: Expr | bool | list[Expr] | tuple[Expr, ...] | None = None,
+    extension: Expr | bool | Sequence[Expr] | None = None,
     modulus: int | None = None,
     gaussian: bool | None = None,
     symmetric: bool | None = None,
     domain: Domain | str | None = None,
     split: bool | None = None,
     polys: bool | None = None,
+    gens: Expr | Sequence[Expr] | set[Expr]= (),
+    
 ):
     """
     Compute the factorization of expression, ``f``, into irreducibles. (To
@@ -7033,7 +7035,7 @@ def factor(
     f : Expr | Poly
         Expression to be factored.
 
-    gens : Expr or sequence of Expr
+    args : Expr or sequence of Expr
         Optional generators. When omitted, symbolic factorization is used for
         non-``Poly`` input. Supplying generators forces formal polynomial
         factorization with respect to those generators.
@@ -7058,8 +7060,8 @@ def factor(
           element(s).
         - ``extension=True`` asks SymPy to infer a suitable algebraic
           extension when possible.
-                - ``extension=None`` (default) leaves algebraic extension handling
-                    disabled.
+        - ``extension=None`` (default) leaves algebraic extension handling
+          disabled.
 
     modulus : int, optional
         If given, factor over the finite field GF(``modulus``).
@@ -7092,6 +7094,10 @@ def factor(
         is not allowed in ``factor`` and will raise ``FlagError`` when passed.
         The default ``None`` means this compatibility flag is omitted.
 
+    gens : Expr or sequence of Expr
+        Optional generators. The same as args but this is for backward compatibility
+        allowing it to be used as a named keyword argument still.
+        
     Examples
     ========
 
@@ -7141,25 +7147,43 @@ def factor(
     sympy.ntheory.factor_.factorint
 
     """
-    args: dict[str, object] = {'expand': expand}
-    args['fraction'] = fraction
+    # Backward compatibility: historically ``factor`` accepted ``gens`` as a
+    # keyword argument in addition to positional generators.
+    flat_args: list[Expr] = []
+    for arg in args:
+        if isinstance(arg, (Sequence, set)) and not isinstance(arg, str):
+            flat_args.extend(arg)
+        elif isinstance(arg, Expr):
+            flat_args.append(arg)
+        else:
+            raise TypeError(f"Generators cannot be {type(arg)}")
+            
+    if isinstance(gens, (Sequence, set)) and not isinstance(gens, str):
+        flat_args.extend(gens)
+    elif isinstance(gens, Expr):
+        flat_args.append(gens)
+    else:
+        raise TypeError(f"Generators cannot be {type(gens)}")
+
+    kwargs: dict[str, object] = {'expand': expand}
+    kwargs['fraction'] = fraction
 
     # Only pass options that were explicitly provided so exclusions/defaults
     # from poly options are preserved.
     if extension is not None:
-        args['extension'] = extension
+        kwargs['extension'] = extension
     if modulus is not None:
-        args['modulus'] = modulus
+        kwargs['modulus'] = modulus
     if gaussian is not None:
-        args['gaussian'] = gaussian
+        kwargs['gaussian'] = gaussian
     if symmetric is not None:
-        args['symmetric'] = symmetric
+        kwargs['symmetric'] = symmetric
     if domain is not None:
-        args['domain'] = domain
+        kwargs['domain'] = domain
     if split is not None:
-        args['split'] = split
+        kwargs['split'] = split
     if polys is not None:
-        args['polys'] = polys
+        kwargs['polys'] = polys
 
     f = sympify(f)
     if deep:
@@ -7169,7 +7193,7 @@ def factor(
             """
             fac = factor(
                 expr,
-                *gens,
+                *flat_args,
                 fraction=fraction,
                 expand=expand,
                 extension=extension,
@@ -7192,7 +7216,7 @@ def factor(
         for p in muladd:
             fac = factor(
                 p,
-                *gens,
+                *flat_args,
                 fraction=fraction,
                 expand=expand,
                 extension=extension,
@@ -7208,7 +7232,7 @@ def factor(
         return f_bot.xreplace(partials)
 
     try:
-        return _generic_factor(f, gens, args, method='factor')
+        return _generic_factor(f, flat_args, kwargs, method='factor')
     except PolynomialError:
         if not f.is_commutative:
             return factor_nc(f)
