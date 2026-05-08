@@ -773,3 +773,13 @@ def test_issue_25949():
     from sympy.core.symbol import symbols
     y = symbols("y", nonzero=True)
     assert integrate(cosh(y*(x + 1)), (x, -1, -0.25), meijerg=True) == sinh(0.75*y)/y
+
+
+def test_issue_29751():
+    # Beta-type integral on [0,1]: meijerint_definite must be tried first so
+    # that branch-cut issues in the indefinite antiderivative don't produce a
+    # numerically wrong (negative) result for a non-negative integrand.
+    from sympy.functions.special.beta_functions import beta
+    result = integrate(x**Rational(1, 3) * (1 - x)**Rational(1, 2), (x, 0, 1))
+    expected = beta(Rational(4, 3), Rational(3, 2))
+    assert simplify(result - expected) == 0

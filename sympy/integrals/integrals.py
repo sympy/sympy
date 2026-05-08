@@ -16,7 +16,7 @@ from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, Wild)
 from sympy.core.sympify import sympify
 from sympy.functions import Piecewise, sqrt, piecewise_fold, tan, cot, atan
-from sympy.functions.elementary.exponential import log
+from sympy.functions.elementary.exponential import exp_polar, log
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.complexes import Abs, sign
 from sympy.functions.elementary.miscellaneous import Min, Max
@@ -629,6 +629,19 @@ class Integral(AddWithLimits):
                         if ret is not None:
                             function = ret
                             continue
+                    # If the antiderivative contains exp_polar it was built
+                    # with branch-tracking that may not cancel when limits are
+                    # substituted, producing a wrong definite result.  Try
+                    # meijerint_definite, which handles branch cuts correctly.
+                    if (antideriv is not None and
+                            meijerg is not False and
+                            len(xab) == 3 and
+                            not (xab[1].has(oo, -oo) or xab[2].has(oo, -oo))):
+                        if antideriv.has(exp_polar):
+                            ret = try_meijerg(function, xab)
+                            if ret is not None:
+                                function = ret
+                                continue
 
             final = hints.get('final', True)
             # dotit may be iterated but floor terms making atan and acot
