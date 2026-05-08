@@ -148,7 +148,7 @@ class LatexPrinter(Printer):
         "fold_func_brackets": False,
         "fold_short_frac": None,
         "inv_trig_style": "abbreviated",
-        "trig_pow_outside": True,
+        "trig_pow_outside": False,
         "itex": False,
         "ln_notation": False,
         "long_frac_ratio": None,
@@ -990,6 +990,13 @@ class LatexPrinter(Printer):
                 "acsch", "asech", "acoth",
             ]
 
+            inv_trig_table_full = [
+                "arcsin", "arccos", "arctan",
+                "arccsc", "arcsec", "arccot",
+                "arsinh", "arcosh", "artanh",
+                "arcsch", "arsech", "arcoth",
+            ]
+
             # If the function is an inverse trig function, handle the style
             if func in inv_trig_table:
                 if inv_trig_style == "abbreviated":
@@ -1009,7 +1016,7 @@ class LatexPrinter(Printer):
                 "csc", "sec", "cot",
                 "sinh", "cosh", "tanh",
                 "csch", "sech", "coth",
-            ] + inv_trig_table
+            ] + inv_trig_table + inv_trig_table_full
             trig_pow_outside = self._settings['trig_pow_outside']
 
             if inv_trig_power_case:
@@ -1037,10 +1044,10 @@ class LatexPrinter(Printer):
             else:
                 name += r"{\left(%s \right)}"
 
-            if inv_trig_power_case and exp is not None:
-                name += r"^{%s}" % exp
-            elif exp is not None:
-                if trig_pow_outside or func not in trig_table :
+            if exp is not None:
+                if inv_trig_power_case:
+                    name += r"^{%s}" % exp
+                elif trig_pow_outside or func not in trig_table:
                     name += r"^{%s}" % exp
 
             return name % ",".join(args)

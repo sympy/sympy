@@ -234,9 +234,9 @@ def test_latex_basic():
     assert latex(1/sin(x)) == r"\frac{1}{\sin{\left(x \right)}}"
     assert latex(sin(x)**-1) == r"\frac{1}{\sin{\left(x \right)}}"
     assert latex(sin(x)**Rational(3, 2)) == \
-        r"\sin{\left(x \right)}^{\frac{3}{2}}"
+        r"\sin^{\frac{3}{2}}{\left(x \right)}"
     assert latex(sin(x)**Rational(3, 2), fold_frac_powers=True) == \
-        r"\sin{\left(x \right)}^{3/2}"
+        r"\sin^{3/2}{\left(x \right)}"
 
     assert latex(~x) == r"\neg x"
     assert latex(x & y) == r"x \wedge y"
@@ -602,9 +602,9 @@ def test_latex_functions():
     assert latex(sin(x**2), fold_func_brackets=True) == \
         r"\sin {x^{2}}"
 
-    assert latex(asin(x)**2) == r"\operatorname{asin}{\left(x \right)}^{2}"
+    assert latex(asin(x)**2) == r"\operatorname{asin}^{2}{\left(x \right)}"
     assert latex(asin(x)**2, inv_trig_style="full") == \
-        r"\arcsin{\left(x \right)}^{2}"
+        r"\arcsin^{2}{\left(x \right)}"
     assert latex(asin(x)**2, inv_trig_style="power") == \
         r"\sin^{-1}{\left(x \right)}^{2}"
     assert latex(asin(x**2), inv_trig_style="power",
@@ -614,6 +614,21 @@ def test_latex_functions():
         r"\operatorname{arccsc}{\left(x \right)}"
     assert latex(asinh(x), inv_trig_style="full") == \
         r"\operatorname{arsinh}{\left(x \right)}"
+
+    f = Function('f')
+    assert latex(f(x)**2) == r'f{\left(x \right)}^{2}'
+    assert latex(f(x)**2, trig_pow_outside = True) == r'f{\left(x \right)}^{2}'
+    assert latex(f(x)**y) == r'f{\left(x \right)}^{y}'
+    assert latex(f(x)**y, trig_pow_outside = True) == r'f{\left(x \right)}^{y}'
+
+    assert latex(sin(x)**2) == r'\sin^{2}{\left(x \right)}'
+    assert latex(sin(x)**2, trig_pow_outside = True) == r'\sin{\left(x \right)}^{2}'
+
+    assert latex(asin(x)**2) == r'\operatorname{asin}^{2}{\left(x \right)}'
+    assert latex(asin(x)**2, trig_pow_outside = True) == r'\operatorname{asin}{\left(x \right)}^{2}'
+    assert latex(asin(x)**2, trig_pow_outside = True, inv_trig_style = "power") == \
+                                                        r'\sin^{-1}{\left(x \right)}^{2}'
+    assert latex(asin(x)**2, inv_trig_style = "power") ==  r'\sin^{-1}{\left(x \right)}^{2}'
 
     assert latex(factorial(k)) == r"k!"
     assert latex(factorial(-k)) == r"\left(- k\right)!"
@@ -3306,19 +3321,3 @@ def test_latex_disable_split_super_sub():
     assert latex(Symbol('u^a_b')) == 'u^{a}_{b}'
     assert latex(Symbol('u^a_b'), disable_split_super_sub=False) == 'u^{a}_{b}'
     assert latex(Symbol('u^a_b'), disable_split_super_sub=True) == 'u\\^a\\_b'
-
-def test_issue_29690():
-    f = Function('f')
-    assert latex(f(x)**2) == r'f{\left(x \right)}^{2}'
-    assert latex(f(x)**2, trig_pow_outside = False) == r'f{\left(x \right)}^{2}'
-    assert latex(f(x)**y) == r'f{\left(x \right)}^{y}'
-    assert latex(f(x)**y, trig_pow_outside = False) == r'f{\left(x \right)}^{y}'
-
-    assert latex(sin(x)**2) == r'\sin{\left(x \right)}^{2}'
-    assert latex(sin(x)**2, trig_pow_outside = False) == r'\sin^{2}{\left(x \right)}'
-
-    assert latex(asin(x)**2) == r'\operatorname{asin}{\left(x \right)}^{2}'
-    assert latex(asin(x)**2, trig_pow_outside = False) == r'\operatorname{asin}^{2}{\left(x \right)}'
-    assert latex(asin(x)**2, trig_pow_outside = False, inv_trig_style = "power") == \
-                                                        r'\sin^{-1}{\left(x \right)}^{2}'
-    assert latex(asin(x)**2, inv_trig_style = "power") ==  r'\sin^{-1}{\left(x \right)}^{2}'
