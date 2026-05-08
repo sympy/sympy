@@ -606,7 +606,7 @@ def test_latex_functions():
     assert latex(asin(x)**2, inv_trig_style="full") == \
         r"\arcsin^{2}{\left(x \right)}"
     assert latex(asin(x)**2, inv_trig_style="power") == \
-        r"\sin^{-1}{\left(x \right)}^{2}"
+        r"\left(\sin^{-1}{\left(x \right)}\right)^{2}"
     assert latex(asin(x**2), inv_trig_style="power",
                  fold_func_brackets=True) == \
         r"\sin^{-1} {x^{2}}"
@@ -627,8 +627,8 @@ def test_latex_functions():
     assert latex(asin(x)**2) == r'\operatorname{asin}^{2}{\left(x \right)}'
     assert latex(asin(x)**2, trig_pow_outside = True) == r'\operatorname{asin}{\left(x \right)}^{2}'
     assert latex(asin(x)**2, trig_pow_outside = True, inv_trig_style = "power") == \
-                                                        r'\sin^{-1}{\left(x \right)}^{2}'
-    assert latex(asin(x)**2, inv_trig_style = "power") ==  r'\sin^{-1}{\left(x \right)}^{2}'
+                                                        r'\left(\sin^{-1}{\left(x \right)}\right)^{2}'
+    assert latex(asin(x)**2, inv_trig_style = "power") ==  r'\left(\sin^{-1}{\left(x \right)}\right)^{2}'
 
     assert latex(factorial(k)) == r"k!"
     assert latex(factorial(-k)) == r"\left(- k\right)!"

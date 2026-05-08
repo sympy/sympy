@@ -1046,6 +1046,7 @@ class LatexPrinter(Printer):
 
             if exp is not None:
                 if inv_trig_power_case:
+                    name = self._add_parens(name)
                     name += r"^{%s}" % exp
                 elif trig_pow_outside or func not in trig_table:
                     name += r"^{%s}" % exp
