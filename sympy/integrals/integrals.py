@@ -629,14 +629,19 @@ class Integral(AddWithLimits):
                         if ret is not None:
                             function = ret
                             continue
-                    # If the antiderivative contains exp_polar it was built
-                    # with branch-tracking that may not cancel when limits are
-                    # substituted, producing a wrong definite result.  Try
-                    # meijerint_definite, which handles branch cuts correctly.
+                    # If the antiderivative introduced exp_polar (a branch-
+                    # tracking marker injected by the meijerint machinery),
+                    # that branch information may not cancel when limits are
+                    # substituted, producing a wrong definite result.  Fall
+                    # back to meijerint_definite, which handles branch cuts
+                    # correctly at the Meijer G level.  Only trigger when
+                    # exp_polar was absent from the original integrand so we
+                    # don't interfere with user-supplied exp_polar expressions.
                     if (antideriv is not None and
                             meijerg is not False and
                             len(xab) == 3 and
-                            not (xab[1].has(oo, -oo) or xab[2].has(oo, -oo))):
+                            not (xab[1].has(oo, -oo) or xab[2].has(oo, -oo)) and
+                            not function.has(exp_polar)):
                         if antideriv.has(exp_polar):
                             ret = try_meijerg(function, xab)
                             if ret is not None:

@@ -150,10 +150,10 @@ class LLVMJitCallbackPrinter(LLVMJitPrinter):
 
 # ensure lifetime of the execution engine persists (else call to compiled
 #   function will seg fault)
-exe_engines = []
+exe_engines: list[object] = []
 
 # ensure names for generated functions are unique
-link_names = set()
+link_names: set[str] = set()
 current_link_suffix = 0
 
 

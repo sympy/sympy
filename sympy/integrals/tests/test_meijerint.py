@@ -776,9 +776,9 @@ def test_issue_25949():
 
 
 def test_issue_29751():
-    # Beta-type integral on [0,1]: meijerint_definite must be tried first so
-    # that branch-cut issues in the indefinite antiderivative don't produce a
-    # numerically wrong (negative) result for a non-negative integrand.
+    # Beta-type integral on [0,1]: when the antiderivative contains exp_polar
+    # (branch-tracking introduced by meijerint), substituting limits can give
+    # the wrong sign.  The fallback to meijerint_definite fixes this.
     from sympy.functions.special.beta_functions import beta
     result = integrate(x**Rational(1, 3) * (1 - x)**Rational(1, 2), (x, 0, 1))
     expected = beta(Rational(4, 3), Rational(3, 2))
