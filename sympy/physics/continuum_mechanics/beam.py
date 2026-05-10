@@ -1008,23 +1008,23 @@ class Beam:
         deflection_eqs = []
 
         for position, value in self._boundary_conditions['shear_force']:
-            eqs = self.shear_force().subs(x, position) - value
+            eqs = self.shear_force().subs(x, position) - (value *self.second_moment * self.elastic_modulus)
             new_eqs = sum(arg for arg in eqs.args if not any(num.is_infinite for num in arg.args))
             shear_force_eqs.append(new_eqs)
 
         for position, value in self._boundary_conditions['bending_moment']:
-            eqs = self.bending_moment().subs(x, position) - value
+            eqs = self.bending_moment().subs(x, position) - (value *self.second_moment * self.elastic_modulus)
             new_eqs = sum(arg for arg in eqs.args if not any(num.is_infinite for num in arg.args))
             bending_moment_eqs.append(new_eqs)
 
         slope_curve = integrate(self.bending_moment(), x) + C3
         for position, value in self._boundary_conditions['slope']:
-            eqs = slope_curve.subs(x, position) - value
+            eqs = slope_curve.subs(x, position) - (value *self.second_moment * self.elastic_modulus)
             slope_eqs.append(eqs)
 
         deflection_curve = integrate(slope_curve, x) + C4
         for position, value in self._boundary_conditions['deflection']:
-            eqs = deflection_curve.subs(x, position) - value
+            eqs = deflection_curve.subs(x, position) - (value *self.second_moment * self.elastic_modulus)
             deflection_eqs.append(eqs)
         total_supports = tuple(set(applied_supports + reactions))
         solution = list((linsolve([shear_curve, moment_curve] + shear_force_eqs + bending_moment_eqs + slope_eqs
@@ -1041,7 +1041,18 @@ class Beam:
         self._load = self._load.subs(self._reaction_loads)
         self._load = self._load.subs(self._rotation_jumps)
         self._load = self._load.subs(self._deflection_jumps)
-
+        reactkey = list(self.reaction_loads.keys())
+        reactvalue = list(self.reaction_loads.values())
+        am = -1
+        for position, value in self.bc_deflection:
+            am = am +1
+            if value != 0:
+                for reac in range(len(reactkey)):
+                    if reactkey[reac] == list(value.free_symbols)[0]:
+                        self.bc_deflection[am] = list(self.bc_deflection[am])
+                        self.bc_deflection[am][1]= (value.subs(reactkey[reac],reactvalue[reac]))
+                        self.bc_deflection[am] = tuple(self.bc_deflection[am])
+        
     def shear_force(self):
         """
         Returns a Singularity Function expression which represents
@@ -1507,7 +1518,7 @@ class Beam:
             deflection_curve = integrate(slope_curve, x) + C4
             bc_eqs = []
             for position, value in self._boundary_conditions['deflection']:
-                eqs = deflection_curve.subs(x, position) - value
+                eqs = deflection_curve.subs(x, position) + (value *self.second_moment * self.elastic_modulus)
                 bc_eqs.append(eqs)
             constants = list(linsolve(bc_eqs, (C3, C4)))
             deflection_curve = deflection_curve.subs({C3: constants[0][0], C4: constants[0][1]})
@@ -1539,7 +1550,7 @@ class Beam:
 
         bc_eqs = []
         for position, value in self._boundary_conditions['deflection']:
-            eqs = deflection_curve.subs(x, position) - value
+            eqs = deflection_curve.subs(x, position) + (value *self.second_moment * self.elastic_modulus)
             bc_eqs.append(eqs)
 
         constants = list(linsolve(bc_eqs, C4))
