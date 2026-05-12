@@ -64,7 +64,7 @@ jobs:
           release/authors.py "$release_version" "$previous_version" "release-$release_version"
 
       - name: Store package release files
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: release_files_packages
           path: release-${{ env.release_version }}
@@ -95,7 +95,7 @@ jobs:
           python release/build_docs.py "$release_version" "release-$release_version"
 
       - name: Store docs release files
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: release_files_docs
           path: release-${{ env.release_version }}
@@ -160,7 +160,7 @@ jobs:
         run: mkdir dist && cp dist.all/*.whl dist.all/*.tar.gz dist
 
       - name: Publish package on TestPyPI
-        uses: pypa/gh-action-pypi-publish@ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e  # v1.13.0
+        uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b  # v1.14.0
         with:
           repository-url: https://test.pypi.org/legacy/
 
@@ -189,7 +189,7 @@ jobs:
         run: mkdir dist && cp dist.all/*.whl dist.all/*.tar.gz dist
 
       - name: Publish package on PyPI
-        uses: pypa/gh-action-pypi-publish@ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e  # v1.13.0
+        uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b  # v1.14.0
 
   # -------------------- Check if this is a final release ---------- #
 
