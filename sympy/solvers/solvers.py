@@ -1317,6 +1317,14 @@ def _solve(f, *symbols, **flags):
 
     not_impl_msg = "No algorithms are implemented to solve equation %s"
 
+
+    # don't allow solutions when there are added or multiplied infinities
+    for m in Mul.make_args(f):
+        for a in Add.make_args(m):
+            for _ in Mul.make_args(a):
+                if _ in _illegal:
+                    return []
+
     if len(symbols) != 1:
         # look for solutions for desired symbols that are independent
         # of symbols already solved for, e.g. if we solve for x = y
@@ -1382,15 +1390,34 @@ def _solve(f, *symbols, **flags):
     # captured here (for reference below) in case flag value changes
     flags['check'] = checkdens = check = flags.pop('check', True)
 
+    if f.is_Add:
+        # give it a light touch of factoring
+        _f = factor_terms(f)
+        # only keep if it identified more than 1 factor with symbol
+        if _f.is_Mul:
+            hit = False
+            for i in _f.args:
+                if i.has_free(symbol):
+                    if hit:
+                        f = _f
+                        break
+                    hit = True
+
     # build up solutions if f is a Mul
     if f.is_Mul:
         result = set()
         for m in f.args:
-            if m in {S.NegativeInfinity, S.ComplexInfinity, S.Infinity}:
-                result = set()
-                break
-            soln = _vsolve(m, symbol, **flags)
-            result.update(set(soln))
+            soln = set(_vsolve(m, symbol, **flags)) - result
+            reject = set()
+            if check:
+                # we must also check solution in f in
+                # case there are values at which functions cannot be
+                # evaluated (like x=0 in equation with log(x))
+                for s in soln:
+                    if checksol(f, {symbol: s}, **flags) is False:
+                        reject.add(s)
+                        break
+            result.update(soln - reject)
         result = [{symbol: v} for v in result]
         if check:
             # all solutions have been checked but now we must
@@ -2190,9 +2217,11 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
         if dnewn_dxi and (not free or any(dnewn_dxi.diff(s) for s in free) or free == symbols):
             all_zero = False
             if dnewn_dxi is S.NaN:
-                break
+                break  # not going to handle
             if xi not in dnewn_dxi.free_symbols:
                 vi = -1/dnewn_dxi*(newn.subs(xi, 0))
+                if vi is S.NaN:
+                    break  # not going to handle
                 if dens is None:
                     dens = _simple_dens(eq, symbols)
                 if not any(checksol(di, {xi: vi}, minimal=True) is True
