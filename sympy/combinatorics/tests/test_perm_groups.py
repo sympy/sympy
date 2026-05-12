@@ -831,8 +831,11 @@ def test_is_nilpotent():
         assert Ab.is_nilpotent
     Ab = AbelianGroup(5, 7, 10)
     assert Ab.is_nilpotent
-    # A_5 is not solvable and thus not nilpotent
-    assert AlternatingGroup(5).is_nilpotent is False
+    # A_i is not solvable for i>=5, and thus not nilpotent
+    # it follows that S_i are also not nilpotent for i>=5
+    for i in (5, 6, 7):
+        assert AlternatingGroup(i).is_nilpotent is False
+        assert SymmetricGroup(i).is_nilpotent is False
 
 
 def test_is_trivial():
@@ -888,6 +891,9 @@ def test_coset_transvesal():
          Permutation(1, 2, 4), Permutation(4)(1, 2, 3), Permutation(1, 3)(2, 4),
          Permutation(0, 1, 2, 3, 4), Permutation(0, 1, 2, 4, 3),
          Permutation(0, 1, 3, 2, 4), Permutation(0, 2, 4, 1, 3)]
+    # transversals of a group G in itself are all singletons from G
+    assert len(G.coset_transversal(G)) == 1
+    assert len(H.coset_transversal(H)) == 1
 
 
 def test_coset_table():
@@ -901,12 +907,27 @@ def test_coset_table():
          [6, 6, 6, 6, 2, 1, 11, 11, 2, 2], [9, 10, 8, 10, 11, 3, 1, 1, 7, 7],
          [10, 9, 10, 7, 3, 11, 2, 2, 11, 11], [8, 7, 9, 9, 9, 9, 4, 4, 9, 9],
          [7, 8, 7, 8, 10, 10, 5, 5, 10, 10], [11, 11, 11, 11, 8, 7, 6, 6, 8, 8]]
+    S = SymmetricGroup(4)
+    K = PermutationGroup(Permutation(2, 3))
+    assert S.coset_table(K) == \
+            [[1, 2, 3, 3], [4, 0, 5, 5], [0, 4, 6, 6], [7, 8, 0, 0], [2, 1, 4, 4],
+             [9, 6, 1, 1], [5, 10, 2, 2], [11, 3, 10, 10], [3, 11, 9, 9],
+             [10, 5, 8, 8], [6, 9, 7, 7], [8, 7, 11, 11]]
+    # coset table of G in G is always one element
+    assert len(G.coset_table(G)) == 1
+    assert len(S.coset_table(S)) == 1
 
 
 def test_subgroup():
     G = PermutationGroup(Permutation(0,1,2), Permutation(0,2,3))
     H = G.subgroup([Permutation(0,1,3)])
+    K = G.subgroup([Permutation(0,2,3)])
     assert H.is_subgroup(G)
+    assert K.is_subgroup(G)
+    assert G.is_subgroup(H) is False
+    assert G.is_subgroup(K) is False
+    assert K.is_subgroup(H) is False
+    assert H.is_subgroup(K) is False
 
 
 def test_generator_product():
