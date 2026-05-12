@@ -1938,6 +1938,42 @@ class Derivative(Expr):
         # `_eval_derivative`:
         return expr._eval_derivative_n_times(v, count)
 
+    def _eval_rewrite_as_Piecewise(self, *args, **kwargs):
+        from sympy import gamma, Piecewise, And, Eq, floor, factorial
+
+        # Only handle single variable derivatives
+        if len(self.variable_count) != 1:
+            return self
+
+        # Get variable and count directly from variable_count
+        x, n = self.variable_count[0]
+
+        expr = self.expr
+
+        # Handle x**m
+        if expr.is_Pow and expr.base == x:
+            m = expr.exp
+
+            # Create piecewise conditions
+            int_cond = Eq(floor(m), m)  # m is integer
+            nonneg_cond = (m >= 0)
+            n_gt_m = (n > m)
+
+            # Condition when result is 0
+            cond_zero = And(int_cond, nonneg_cond, n_gt_m)
+
+            # General formula
+            general = gamma(m + 1)/gamma(m - n + 1) * x**(m - n)
+
+            return Piecewise((0, cond_zero), (general, True))
+
+        # Handle log(x)
+        from sympy.functions.elementary.exponential import log
+        if expr.is_Function and expr.func == log and len(expr.args) == 1 and expr.args[0] == x:
+            return (-1)**(n-1) * factorial(n-1) * x**(-n)
+
+        return self
+
 
 def _derivative_dispatch(expr, *variables, **kwargs):
     from sympy.matrices.matrixbase import MatrixBase
