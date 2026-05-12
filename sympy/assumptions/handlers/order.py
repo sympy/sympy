@@ -205,6 +205,27 @@ def _(expr, assumptions):
 def _(expr, assumptions):
     return None
 
+@NonZeroPredicate.register(exp)
+def _(expr, assumptions):
+    if ask(Q.zero(expr.exp), assumptions):
+        return True
+    arg = expr.exp.atoms()
+    for a in arg:
+        neg_inf = ask(Q.negative_infinite(a), assumptions)
+        if a.is_number is False:
+            if neg_inf:
+                return False
+            if neg_inf is None:
+                return None
+    if isinstance(expr.exp, Add):
+        results = []
+        for a in expr.exp.args:
+            results.append(ask(Q.real(exp(a)), assumptions))
+        return fuzzy_and(results)
+    else:
+        return fuzzy_and([ask(Q.real(expr), assumptions),
+                        ask(~Q.zero(expr), assumptions)])
+
 
 # ZeroPredicate
 
