@@ -2545,6 +2545,8 @@ class TensAdd(TensExpr, AssocOp):
         # it there is only a component tensor return it
         if len(args) == 1:
             return args[0]
+        if not any(isinstance(a, TensExpr) for a in args):
+            return Add(*args)
 
         obj = self.func(*args)
         return obj
