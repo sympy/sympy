@@ -31,9 +31,15 @@ def _init_python_printing(stringify_func, **settings):
     sys.displayhook = _displayhook
 
 
+try:
+    from IPython.core.kitty import supports_kitty_graphics
+except ImportError:
+    supports_kitty_graphics = False
+
+
 def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
                            backcolor, fontsize, latex_mode, print_builtin,
-                           latex_printer, scale, **settings):
+                           latex_printer, scale, printable_only, **settings):
     """Setup printing in IPython interactive session. """
     IPython = import_module("IPython", min_module_version="1.0")
     try:
@@ -223,6 +229,8 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
     # packages to override the methods in their own subclasses of Printable,
     # which avoids the effects of gh-16002.
     printable_types = [float, tuple, list, set, frozenset, dict, int]
+    if printable_only:
+        printable_types = []
 
     plaintext_formatter = ip.display_formatter.formatters['text/plain']
 
@@ -309,7 +317,7 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
                   backcolor='Transparent', fontsize='10pt',
                   latex_mode='plain', print_builtin=True,
                   str_printer=None, pretty_printer=None,
-                  latex_printer=None, scale=1.0, **settings):
+                  latex_printer=None, scale=1.0, printable_only=False, **settings):
     r"""
     Initializes pretty-printer depending on the environment.
 
@@ -389,6 +397,9 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
     settings :
         Any additional settings for the ``latex`` and ``pretty`` commands can
         be used to fine-tune the output.
+    printable_only :
+         If ``True`` then ``use_latex`` will not affect built-in types like
+         ``int`` or ``list``.
 
     Examples
     ========
@@ -494,13 +505,18 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
         else:
             # This will be True if we are in the qtconsole or notebook
             if not isinstance(ip, (InteractiveConsole, TerminalInteractiveShell)) \
-                    and 'ipython-console' not in ''.join(sys.argv):
+                    and 'ipython-console' not in ''.join(sys.argv) \
+                    or supports_kitty_graphics:
                 if use_unicode is None:
                     debug("init_printing: Setting use_unicode to True")
                     use_unicode = True
                 if use_latex is None:
                     debug("init_printing: Setting use_latex to True")
                     use_latex = True
+                    if supports_kitty_graphics:
+                        debug("init_printing: Detected Kitty graphics")
+                        forecolor = 'White'
+                        printable_only = True
 
     if not NO_GLOBAL and not no_global:
         Printer.set_global_settings(order=order, use_unicode=use_unicode,
@@ -527,7 +543,7 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
                   "of IPython printing")
         _init_ipython_printing(ip, stringify_func, use_latex, euler,
                                forecolor, backcolor, fontsize, latex_mode,
-                               print_builtin, latex_printer, scale,
+                               print_builtin, latex_printer, scale, printable_only,
                                **settings)
     else:
         _init_python_printing(stringify_func, **settings)
