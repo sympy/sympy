@@ -1719,7 +1719,16 @@ class Rational(Number):
         return super().__hash__()
 
     def __format__(self, format_spec):
-        return format(fractions.Fraction(self.p, self.q), format_spec)
+        frac = fractions.Fraction(self.p, self.q)
+        try:
+            return format(frac, format_spec)
+        except TypeError:
+            # Older Python versions (<3.12) do not support float-style
+            # format specifiers (eEfFgG%) for fractions.Fraction.
+            # Fall back to formatting the float representation.
+            if format_spec and format_spec[-1] in "eEfFgG%":
+                return format(float(frac), format_spec)
+            raise
 
     def factors(self, limit=None, use_trial=True, use_rho=False,
                 use_pm1=False, verbose=False, visual=False):
