@@ -21,6 +21,7 @@ from sympy.functions.special.error_functions import (erf, erfc, erfi, expint)
 from sympy.functions.special.gamma_functions import (gamma, lowergamma, uppergamma)
 from sympy.functions.special.zeta_functions import zeta
 from sympy.functions.special.hyper import hyper
+from sympy.series.limits import limit
 from sympy.integrals.integrals import Integral
 from sympy.logic.boolalg import (And, Or)
 from sympy.sets.sets import Interval
@@ -313,6 +314,11 @@ def test_moment_generating_function():
 
     mgf = moment_generating_function(Logistic('x', 1, 1))(t)
     assert mgf.diff(t).subs(t, 0) == beta(1, 1)
+
+    mgf = moment_generating_function(Maxwell('x', 1))(t)
+    assert simplify((mgf.diff(t).subs(t, Rational(1, 10)) -
+        (301*sqrt(pi)*(2 - erfc(sqrt(2)/20))*exp(Rational(1, 200))
+        + 2010*sqrt(2))/(1000*sqrt(pi))).rewrite(erf)) == 0
 
     mgf = moment_generating_function(Normal('x', 0, 1))(t)
     assert mgf.diff(t).subs(t, 1) == exp(S.Half)
@@ -962,6 +968,7 @@ def test_Lomax():
 
 def test_maxwell():
     a = Symbol("a", positive=True)
+    t = Symbol("t", positive=True)
 
     X = Maxwell('x', a)
 
@@ -972,6 +979,8 @@ def test_maxwell():
     assert cdf(X)(x) == erf(sqrt(2)*x/(2*a)) - sqrt(2)*x*exp(-x**2/(2*a**2))/(sqrt(pi)*a)
     assert diff(cdf(X)(x), x) == density(X)(x)
 
+    assert limit(moment_generating_function(X)(t).diff(t), t, 0) == 2*sqrt(2)*a/sqrt(pi)
+    assert limit(moment_generating_function(X)(t), t, 0) == 1
 
 @slow
 def test_Moyal():
