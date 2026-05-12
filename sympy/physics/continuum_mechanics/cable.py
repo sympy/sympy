@@ -251,7 +251,7 @@ class Cable:
         y = sympify(new_support[2])
 
         for l in self._loads_position:
-            if l[0] >= max(x, x1) or l[0] <= min(x, x1):
+            if self._loads_position[l][0] >= max(x, x1) or self._loads_position[l][0] <= min(x, x1):
                 raise ValueError("The change in support will throw an existing load out of range")
 
         self._supports.pop(label)
@@ -405,14 +405,14 @@ class Cable:
         for i in args:
             if len(self._loads_position) == 0:
                 if i not in self._loads['distributed']:
-                    raise ValueError("Error removing load " + i + ": no such load exists")
+                    raise ValueError(f"Error removing load {i}: no such load exists")
 
                 else:
-                    self._loads['disrtibuted'].pop(i)
+                    self._loads['distributed'].pop(i)
 
             else:
                 if i not in self._loads['point_load']:
-                    raise ValueError("Error removing load " + i + ": no such load exists")
+                    raise ValueError(f"Error removing load {i}: no such load exists")
 
                 else:
                     self._loads['point_load'].pop(i)
