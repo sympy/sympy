@@ -8263,3 +8263,13 @@ def test_center():
     assert center('1', 3) == ' 1 '
     assert center('1', 3, '-') == '-1-'
     assert center('1', 5, '-') == '--1--'
+
+
+def test_pretty_symbol_multichar_subscript():
+    """Multi-character subscripts should use underscore notation.
+
+    Fixes #20207 - prevents Unicode rendering issues with symbols
+    like Symbol('x_input') that would show as boxes or hex codes.
+    """
+    x_input = Symbol('x_input')
+    assert pretty(x_input) == 'x_input'
