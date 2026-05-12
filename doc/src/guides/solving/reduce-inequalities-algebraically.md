@@ -199,24 +199,6 @@ NotImplementedError: The inequality, -_y + x**2 - 4 < 0, cannot be solved using
 solve_univariate_inequality.
 ```
 
-### Not All Results Are Returned for Periodic Functions
-
-The results returned for trigonometric inequalities are restricted in its
-periodic interval. {func}`~.reduce_inequalities` tries to return just enough
-solutions so that all (infinitely many) solutions can generated from the
-returned solutions by adding integer multiples of the {func}`~.periodicity` of
-the equation, here $2\pi$.
-
-```py
->>> from sympy import reduce_inequalities, cos
->>> from sympy.abc import x, y
->>> from sympy.calculus.util import periodicity
->>> reduce_inequalities([2*cos(x) < 1, x > 0], x)
-(0 < x) & (x < oo) & (pi/3 < x) & (x < 5*pi/3)
->>> periodicity(2*cos(x), x)
-2*pi
-```
-
 ## Not All Systems of Inequalities Can Be Reduced
 
 ### Systems of Inequalities Which Cannot Be Satisfied
