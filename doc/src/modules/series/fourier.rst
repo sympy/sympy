@@ -1,3 +1,5 @@
+.. module:: sympy.series.fourier
+
 Fourier Series
 ==============
 
