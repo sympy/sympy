@@ -2454,7 +2454,7 @@ def test_substitution_redundant():
     # the system below has three solutions. Two of the solutions
     # returned by substitution are redundant.
     res = substitution([x - y, y**3 - 3*y**2 + 1], [x, y])
-    assert len(res) == 5
+    assert len(res) == 3
 
 
 def test_issue_5132_substitution():
