@@ -590,7 +590,20 @@ class Function(Application, Expr):
             if any(bad(a) for a in args):
                 raise ValueError  # one or more args failed to compute with significance
         except ValueError:
-            return
+            if all(isinstance(arg, Expr) for arg in self.args): # mpmath will not handle symbols
+                dps = prec_to_dps(prec) # Needed to match evalf behavior (May lead to precision mismatch without it.)
+                new_args = []
+                for arg in args:
+                    try:
+                        new_arg = arg.evalf(dps, maxn=1)
+                        if new_arg is None or new_arg == arg: # could not evalf hence fallback to original
+                            new_args.append(arg)
+                        else:
+                            new_args.append(new_arg)
+                    except (TypeError, ValueError, AttributeError):
+                        new_args.append(arg) # Use original args even in case of exception.
+                return self.func(*new_args)
+            return  # Not all args are Expr (might be tuples, etc.), so just return from here.
 
         # XXX: This should really use local_workprec rather than
         # mpmath.workprec to avoid messing with mpmath's global precision. That
