@@ -7,7 +7,7 @@ from sympy.core.sorting import default_sort_key
 from sympy.functions.elementary.exponential import exp, log
 from sympy.sets.sets import Complement
 from sympy.utilities.iterables import uniq, is_sequence
-
+from sympy.tensor.indexed import Indexed
 
 class Order(Expr):
     r""" Represents the limiting behavior of some function.
@@ -137,8 +137,15 @@ class Order(Expr):
                 variables = expr.variables
                 point = expr.point
             else:
-                variables = list(expr.free_symbols)
-                point = [S.Zero]*len(variables)
+                if isinstance(expr, Indexed):
+                    variables = [expr]
+                    point = [S.Zero]
+                elif expr.has(Indexed):
+                    variables = [atom for atom in expr.atoms() if isinstance(atom, Indexed)]
+                    point = [S.Zero] * len(variables)
+                else:
+                    variables = list(expr.free_symbols)
+                    point = [S.Zero] * len(variables)
         else:
             args = list(args if is_sequence(args) else [args])
             variables, point = [], []
