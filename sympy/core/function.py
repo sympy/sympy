@@ -1384,6 +1384,9 @@ class Derivative(Expr):
                 (v.canonical if isinstance(v, Derivative) else v, c)
                 for v, c in variable_count]
 
+            if expr is S.NaN:
+                return S.NaN
+
             # Look for a quick exit if there are symbols that don't appear in
             # expression at all. Note, this cannot check non-symbols like
             # Derivatives as those can be created by intermediate
