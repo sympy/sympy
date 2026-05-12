@@ -71,7 +71,7 @@ The following lists the processing tools:
     modified fork of numpydoc, which is included in the SymPy source code.)
   * ``sphinx_math_dollar``: Allows math to be delimited with dollar signs
     instead of reStructuredText directives (e.g., ``$a^2$`` instead of
-    ``:math:`a^2```). See https://www.sympy.org/sphinx-math-dollar/ for more info.
+    ``:math:`a^2```). See https://www.sympy.org//sphinx-math-dollar/ for more info.
   * ``matplotlib.sphinxext.plot_directive``: Provides directives for included
     matplotlib generated figures in reStructuredText. See
     https://matplotlib.org/devel/plot_directive.html for more info.
@@ -90,7 +90,7 @@ Types of Documentation
 
 There are four main locations where SymPy’s documentation can be found:
 
-**SymPy Website** https://www.sympy.org/
+**SymPy Website** https://www.sympy.org//
 
 The SymPy website’s primary function is to advertise the software to users and
 developers. It also serves as an initial location to point viewers to other
@@ -135,7 +135,7 @@ The purpose of these docstrings are to explain the API of that class or
 function. The doctests examples are tested as part of the test suite, so that we
 know that they always produce the output that they say that they do. Here is an
 `example docstring
-<https://github.com/sympy/sympy/blob/b176f6a1d9890b42dc361857c887992315e3d5ad/sympy/functions/elementary/complexes.py#L22-L47>`_.
+<https://github.com/sympy/sympy/blob/master/sympy/functions/elementary/complexes.py>`_.
 Most docstrings are also automatically included in the Sphinx documentation
 above, so that they appear on the SymPy Documentation website. Here is that
 :obj:`same docstring <.im>` on the SymPy website. The docstrings are formatted

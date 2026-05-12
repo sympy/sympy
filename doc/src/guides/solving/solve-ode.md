@@ -336,7 +336,7 @@ solving is
    `solve_ivp`](https://docs.scipy.org/doc/scipy/reference/integrate.html#solving-initial-value-problems-for-ode-systems).
 
 Here is an [example from the field of chemical
-kinetics](https://www.sympy.org/scipy-2017-codegen-tutorial/notebooks/25-chemical-kinetics-intro.html)
+kinetics](https://www.sympy.org//scipy-2017-codegen-tutorial/notebooks/25-chemical-kinetics-intro.html)
 where the nonlinear ordinary differential equations take this form:
 
 $$ r_f = & k_f y_0(t)^2  y_1(t) \\

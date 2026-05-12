@@ -123,7 +123,7 @@ nitpick_ignore = [
 # To stop docstrings inheritance.
 autodoc_inherit_docstrings = False
 
-# See https://www.sympy.org/sphinx-math-dollar/
+# See https://www.sympy.org//sphinx-math-dollar/
 mathjax3_config = {
   "tex": {
     "inlineMath": [['\\(', '\\)']],
