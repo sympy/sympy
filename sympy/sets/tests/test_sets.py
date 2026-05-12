@@ -11,7 +11,7 @@ from sympy.core.symbol import (Symbol, symbols)
 from sympy.core.sympify import sympify
 from sympy.functions.elementary.miscellaneous import (Max, Min, sqrt)
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.functions.elementary.trigonometric import (cos, cot, sin, tan)
 from sympy.logic.boolalg import (false, true)
 from sympy.matrices.kind import MatrixKind
 from sympy.matrices.dense import Matrix
@@ -1801,3 +1801,13 @@ def test_issue_24726():
     expected_case_6 = Union(ImageSet(Lambda(n, 2*n*pi + 4*pi), Range(0, oo, 1)),
                             ImageSet(Lambda(n, 2*n*pi + 5*pi), Range(0, oo, 1)))
     assert sin_zeros.intersect(Interval(10, oo)).dummy_eq(expected_case_6)
+
+def test_imageset_periodic():
+    # issue #29675 - imageset on periodic functions with infinite singularities
+    # should return the correct image over one period instead of hanging
+    x = Symbol('x', real=True)
+    assert imageset(x, tan(x), S.Reals) == S.Reals
+    assert imageset(x, cot(x), S.Reals) == S.Reals
+    assert imageset(x, tan(x), Interval(-100, 100)) == S.Reals
+    assert imageset(x, sin(x), S.Reals) == Interval(-1, 1)
+    assert imageset(x, cos(x), S.Reals) == Interval(-1, 1)
