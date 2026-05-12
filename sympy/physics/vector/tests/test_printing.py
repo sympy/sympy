@@ -214,7 +214,14 @@ a  n_x⊗n_y + b n_y⊗n_y + c⋅sin(α) n_z⊗n_y\
     assert ascii_vpretty(xx2) == 'n_x|n_y + n_x|n_z'
     assert unicode_vpretty(xx2) == 'n_x⊗n_y + n_x⊗n_z'
 
-
+def test_dyadic_pretty_int_coeff():
+    # Github issue #29434 - Dyadic._pretty() crashed with AttributeError
+    # when coefficients were plain Python ints instead of SymPy types
+    N = ReferenceFrame('N')
+    d = Dyadic([[1, N.x, N.y]])
+    # these should not raise AttributeError
+    assert ascii_vpretty(d) == 'n_x|n_y'
+    assert unicode_vpretty(d) == 'n_x⊗n_y'
 def test_dyadic_latex():
 
     expected = (r'a^{2}\mathbf{\hat{n}_x}\otimes \mathbf{\hat{n}_y} + '
