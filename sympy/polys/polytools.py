@@ -8344,3 +8344,20 @@ def named_poly(n, f, K, name, x, polys):
     else:
         poly = Poly.new(poly, head)
     return poly if polys else poly.as_expr()
+
+def test_sparse_gcd_perf_regression():
+    """Current sparse->dense fallback is unusably slow on real cases (#23131)."""
+    from sympy import symbols, Poly, gcd
+    import time
+
+    x = symbols('x')
+    f = Poly(x**10 + x**40, x, sparse=True, domain='ZZ')
+    g = Poly(x**20 + 1, x, sparse=True, domain='ZZ')
+
+    # Benchmark: takes >3s now, target <0.1s post-GSoC
+    start = time.time()
+    result = gcd(f, g)
+    elapsed = time.time() - start
+
+    assert result == Poly(1, x, domain='ZZ')
+    assert elapsed < 5.0, f"perf regression: {elapsed:.2f}s (target <0.1s)"
