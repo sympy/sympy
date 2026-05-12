@@ -361,4 +361,4 @@ def test_log():
     assert refine(log(exp(x)), Q.real(x)) == x
     assert refine(log(1), True) == S.Zero
     assert refine(log(x), Q.positive(x)) == log(x)
-    
+
