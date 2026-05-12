@@ -400,16 +400,14 @@ class LRASolver():
             c = LRARational(c, 0)
 
         if boundary.equality:
-            res1 = self._assert_lower(sym, c, from_equality=True, from_neg=negated)
-            if res1 and res1[0] == False:
+            res1 = self._assert_bound(sym, c, upper=False, from_equality=True, from_neg=negated)
+            if res1 and res1[0] is False:
                 res = res1
             else:
-                res2 = self._assert_upper(sym, c, from_equality=True, from_neg=negated)
+                res2 = self._assert_bound(sym, c, upper=True, from_equality=True, from_neg=negated)
                 res =  res2
-        elif upper:
-            res = self._assert_upper(sym, c, from_neg=negated)
         else:
-            res = self._assert_lower(sym, c, from_neg=negated)
+            res = self._assert_bound(sym, c, upper=upper, from_neg=negated)
 
         if self.is_sat and sym not in self.slack_set:
             self.is_sat = res is None
@@ -418,9 +416,9 @@ class LRASolver():
 
         return res
 
-    def _assert_upper(self, xi, ci, from_equality=False, from_neg=False):
+    def _assert_bound(self, xi, ci, upper=True, from_equality=False, from_neg=False):
         """
-        Adjusts the upper bound on variable xi if the new upper bound is
+        Adjusts the upper or lower bound on variable xi if the new bound is
         more limiting. The assignment of variable xi is adjusted to be
         within the new bound if needed.
 
@@ -430,15 +428,20 @@ class LRASolver():
         if self.result:
             assert self.result[0] != False
         self.result = None
-        if ci >= xi.upper:
+
+        s = 1 if upper else -1
+        current_bound = xi.upper if upper else xi.lower
+        if ci * s >= current_bound * s:
             return None
-        if ci < xi.lower:
-            assert (xi.lower[1] >= 0) is True
-            assert (ci[1] <= 0) is True
 
-            lit1, neg1 = Boundary.from_lower(xi)
+        other_bound = xi.lower if upper else xi.upper
+        if ci * s < other_bound * s:
+            assert (other_bound[1] * s >= 0) is True
+            assert (ci[1] * s <= 0) is True
+            factory = Boundary.from_lower if upper else Boundary.from_upper
+            lit1, neg1 = factory(xi)
 
-            lit2 = Boundary(var=xi, const=ci[0], strict=ci[1] != 0, upper=True, equality=from_equality)
+            lit2 = Boundary(var=xi, const=ci[0], strict=ci[1] != 0, upper=upper, equality=from_equality)
             if from_neg:
                 lit2 = lit2.get_negated()
             neg2 = -1 if from_neg else 1
@@ -446,52 +449,17 @@ class LRASolver():
             conflict = [-neg1*self.boundary_to_enc[lit1], -neg2*self.boundary_to_enc[lit2]]
             self.result = False, conflict
             return self.result
-        xi.upper = ci
-        xi.upper_from_eq = from_equality
-        xi.upper_from_neg = from_neg
-        if xi in self.nonslack and xi.assign > ci:
-            self._update(xi, ci)
 
-        if self.run_checks and all(v.assign[0] != float("inf") and v.assign[0] != -float("inf")
-                                   for v in self.all_var):
-            M = self.A
-            X = Matrix([v.assign[0] for v in self.all_var])
-            assert all(abs(val) < 10 ** (-10) for val in M * X)
+        if upper:
+            xi.upper = ci
+            xi.upper_from_eq = from_equality
+            xi.upper_from_neg = from_neg
+        else:
+            xi.lower = ci
+            xi.lower_from_eq = from_equality
+            xi.lower_from_neg = from_neg
 
-        return None
-
-    def _assert_lower(self, xi, ci, from_equality=False, from_neg=False):
-        """
-        Adjusts the lower bound on variable xi if the new lower bound is
-        more limiting. The assignment of variable xi is adjusted to be
-        within the new bound if needed.
-
-        Also calls `self._update` to update the assignment for slack variables
-        to keep all equalities satisfied.
-        """
-        if self.result:
-            assert self.result[0] != False
-        self.result = None
-        if ci <= xi.lower:
-            return None
-        if ci > xi.upper:
-            assert (xi.upper[1] <= 0) is True
-            assert (ci[1] >= 0) is True
-
-            lit1, neg1 = Boundary.from_upper(xi)
-
-            lit2 = Boundary(var=xi, const=ci[0], strict=ci[1] != 0, upper=False, equality=from_equality)
-            if from_neg:
-                lit2 = lit2.get_negated()
-            neg2 = -1 if from_neg else 1
-
-            conflict = [-neg1*self.boundary_to_enc[lit1],-neg2*self.boundary_to_enc[lit2]]
-            self.result = False, conflict
-            return self.result
-        xi.lower = ci
-        xi.lower_from_eq = from_equality
-        xi.lower_from_neg = from_neg
-        if xi in self.nonslack and xi.assign < ci:
+        if xi in self.nonslack and xi.assign * s > ci * s:
             self._update(xi, ci)
 
         if self.run_checks and all(v.assign[0] != float("inf") and v.assign[0] != -float("inf")
