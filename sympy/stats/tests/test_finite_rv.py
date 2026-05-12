@@ -16,7 +16,8 @@ from sympy.functions.elementary.trigonometric import cos
 from sympy.functions.special.beta_functions import beta
 from sympy.logic.boolalg import (And, Or)
 from sympy.polys.polytools import cancel
-from sympy.sets.sets import FiniteSet
+from sympy.sets.contains import Contains
+from sympy.sets.sets import (FiniteSet, Interval, Intersection)
 from sympy.simplify.simplify import simplify
 from sympy.matrices import Matrix
 from sympy.stats import (DiscreteUniform, Die, Bernoulli, Coin, Binomial, BetaBinomial,
@@ -137,9 +138,7 @@ def test_dice():
     assert dens == Density(DieDistribution(n))
     assert set(dens.subs(n, 4).doit().keys()) == {1, 2, 3, 4}
     assert set(dens.subs(n, 4).doit().values()) == {Rational(1, 4)}
-    k = Dummy('k', integer=True)
-    assert E(D).dummy_eq(
-        Sum(Piecewise((k/n, k <= n), (0, True)), (k, 1, n)))
+    assert simplify(E(D)) == Rational(1, 2) + n/2
     assert variance(D).subs(n, 6).doit() == Rational(35, 12)
 
     ki = Dummy('ki')
@@ -314,8 +313,8 @@ def test_binomial_symbolic():
     {(1 - p)**4, 4*p*(1 - p)**3, 6*p**2*(1 - p)**2, 4*p**3*(1 - p), p**4}
     k = Dummy('k', integer=True)
     assert E(B > 2).dummy_eq(
-        Sum(Piecewise((k*p**k*(1 - p)**(-k + n)*binomial(n, k), (k >= 0)
-        & (k <= n) & (k > 2)), (0, True)), (k, 0, n)))
+        Sum(Piecewise((k*p**k*(1 - p)**(-k + n)*binomial(n, k),
+        k > 2), (0, True)), (k, 0, n)))
 
 def test_beta_binomial():
     # verify parameters
@@ -483,13 +482,21 @@ def test_density_call():
 def test_DieDistribution():
     from sympy.abc import x
     X = DieDistribution(6)
-    assert X.pmf(S.Half) is S.Zero
-    assert X.pmf(x).subs({x: 1}).doit() == Rational(1, 6)
-    assert X.pmf(x).subs({x: 7}).doit() == 0
-    assert X.pmf(x).subs({x: -1}).doit() == 0
-    assert X.pmf(x).subs({x: Rational(1, 3)}).doit() == 0
+    # .pmf() returns the raw formula without support checking
+    assert X.pmf(1) == Rational(1, 6)
+    assert X.pmf(S.Half) == Rational(1, 6)
+    # __call__ performs support checking
+    assert X(S.Half) is S.Zero
+    assert X(1) == Rational(1, 6)
+    assert X(7) is S.Zero
+    assert X(-1) is S.Zero
+    assert X(Rational(1, 3)) is S.Zero
     raises(ValueError, lambda: X.pmf(Matrix([0, 0])))
     raises(ValueError, lambda: X.pmf(x**2 - 1))
+    # symbolic Die must reject 0 (die faces start at 1)
+    n = Symbol('n', positive=True, integer=True)
+    Dn = DieDistribution(n)
+    assert Dn(0) is S.Zero
 
 def test_FinitePSpace():
     X = Die('X', 6)
@@ -508,3 +515,35 @@ def test_symbolic_conditions():
     assert Z == \
     Piecewise((Rational(1, 4), n < 1), (0, True)) + Piecewise((S.Half, n < 2), (0, True)) + \
     Piecewise((Rational(3, 4), n < 3), (0, True)) + Piecewise((S.One, n < 4), (0, True))
+
+def test_finite_distribution_call_vs_pmf():
+    X = Bernoulli('X', Rational(1, 4))
+    z = Symbol('z')
+
+    assert density(X)(z) == Piecewise(
+        (Piecewise((Rational(1, 4), Eq(z, 1)), (Rational(3, 4), Eq(z, 0)), (0, True)), Contains(z, FiniteSet(0, 1))),
+        (0, True)
+    )
+
+    assert density(X).pmf(z) == Piecewise((Rational(1, 4), Eq(z, 1)), (Rational(3, 4), Eq(z, 0)), (0, True))
+
+    assert density(X)(0) == Rational(3, 4)
+    assert density(X).pmf(0) == Rational(3, 4)
+
+    assert density(X)(1) == Rational(1, 4)
+    assert density(X).pmf(1) == Rational(1, 4)
+
+    # Binomial: .pmf() returns raw formula, __call__ adds support checking
+    n = symbols('n', positive=True, integer=True)
+    p = symbols('p', positive=True)
+    B = Binomial('B', n, p)
+    k = Symbol('k')
+    assert density(B).pmf(k) == p**k*(1 - p)**(-k + n)*binomial(n, k)
+    assert density(B)(k) == Piecewise(
+        (p**k*(1 - p)**(-k + n)*binomial(n, k),
+         Contains(k, Intersection(Interval(0, n), S.Naturals0))),
+        (0, True)
+    )
+    B5 = Binomial('B5', 5, Rational(1, 2))
+    assert density(B5)(3) == Rational(5, 16)
+    assert density(B5)(-1) is S.Zero
