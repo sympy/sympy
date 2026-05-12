@@ -3,24 +3,25 @@ This module can be used to solve 2D beam bending problems with
 singularity functions in mechanics.
 """
 from __future__ import annotations
-from sympy.core import S, Symbol, diff, symbols
+from sympy.core import S, Symbol, diff, symbols, Integer, Pow
 from sympy.core.add import Add
 from sympy.core.expr import Expr
 from sympy.core.function import (Derivative, Function)
 from sympy.core.mul import Mul
 from sympy.core.relational import Eq
 from sympy.core.sympify import sympify
+from sympy.calculus.util import maximum, minimum
 from sympy.solvers import linsolve, solveset
 from sympy.solvers.ode.ode import dsolve
 from sympy.solvers.solvers import solve
 from sympy.printing import sstr
-from sympy.functions import SingularityFunction, Piecewise, factorial
+from sympy.functions import SingularityFunction, Piecewise, factorial, Max, Min, Abs
 from sympy.integrals import integrate
 from sympy.series import limit
 from sympy.plotting import plot, PlotGrid
 from sympy.geometry.entity import GeometryEntity
 from sympy.external import import_module
-from sympy.sets.sets import Interval, FiniteSet
+from sympy.sets.sets import Interval, FiniteSet, Union
 from sympy.utilities.lambdify import lambdify
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.iterables import iterable
@@ -1552,21 +1553,74 @@ class Beam:
         in a Beam object.
         """
 
-        # To restrict the range within length of the Beam
-        slope_curve = Piecewise((float("nan"), self.variable<=0),
-                (self.slope(), self.variable<self.length),
-                (float("nan"), True))
+        I = self.second_moment
+        x = self.variable
+        bending_moment_eqn = self.bending_moment()
+        terms = bending_moment_eqn.args
+        singularity = []
+        for term in terms:
+            if isinstance(term, Mul):
+                if isinstance(term.args[-1], SingularityFunction):
+                    singularity.append(term.args[-1].args[1])
+            elif isinstance(term, SingularityFunction):
+                singularity.append(term.args[1])
+        singularity = list(set(singularity))
+        singularity.sort()
+        if singularity[0] != 0:
+            singularity.insert(0, 0)
+        if singularity[-1] != self.length:
+            singularity.insert(len(singularity), self.length)
+        if isinstance(I, Piecewise):
+            for second_moment in I.args:
+                if second_moment[-1].args[-1] not in singularity:
+                    singularity.append(second_moment[-1].args[-1])
+            singularity.sort()
 
-        points = solve(slope_curve.rewrite(Piecewise), self.variable,
-                        domain=S.Reals)
-        deflection_curve = self.deflection()
-        deflections = [deflection_curve.subs(self.variable, x) for x in points]
-        deflections = list(map(abs, deflections))
-        if len(deflections) != 0:
-            max_def = max(deflections)
-            return (points[deflections.index(max_def)], max_def)
-        else:
-            return None
+        eqns = {}
+        deflection_curve = self.deflection().expand()
+        for i in range(len(singularity) - 1):
+            eq=Integer(0)
+            for term in deflection_curve.args:
+                if isinstance(term, Mul):
+                    if isinstance(term.args[-1], SingularityFunction) and term.args[-1].args[1] < singularity[i+1]:
+                        if isinstance(term.args[-2], SingularityFunction) and term.args[-1].args[1] < singularity[i+1]:
+                            term = term.rewrite(Piecewise)
+                            eq += Mul(*term.args[:-2]) * term.args[-1].args[0][0]
+                        else:
+                            term = term.rewrite(Piecewise)
+                            eq += Mul(*term.args[:-1]) * term.args[-1].args[0][0]
+                    elif isinstance(term.args[-1], (Symbol, Pow)):
+                            eq += term
+                elif isinstance(term, SingularityFunction):
+                    if term.args[1] < singularity[i+1]:
+                        term = term.rewrite(Piecewise)
+                        eq += term.args[0].args[0]
+                else:
+                    eq += term
+
+            eqns[Interval(singularity[i], singularity[i+1])] = eq
+
+        max_deflections = {}
+        for interval, eq in eqns.items():
+            maxima = maximum(eq, x, interval) # Maximum deflection in the given interval
+            maxima = list(maxima.args) if isinstance(maxima, Max) else [maxima]
+            minima = minimum(eq, x, interval) # Minimum deflection in the given interval, -ve sign is just the direction of deflection, magnitude remain same.
+            minima = list(minima.args) if isinstance(minima, Min) else [minima]
+            for deflection in maxima+minima:
+                max_loc = solveset(Eq(eq, deflection), x, interval)
+                max_deflection = max_deflections.get(Abs(deflection)) # Gets location of corresponding deflection to check if this deflection already exist at any location.
+                if not max_deflection and max_deflection != 0:
+                    max_deflections[Abs(deflection.simplify())] = max_loc.simplify()
+                else:
+                    max_deflections[Abs(deflection)] = Union(max_deflections[Abs(deflection.simplify())], max_loc.simplify())
+
+        abs_max = max(max_deflections, key=lambda x: x.n())
+        abs_max_loc = max_deflections[abs_max]
+        if isinstance(abs_max_loc, FiniteSet):
+            if len(abs_max_loc) == 1:
+                abs_max_loc = abs_max_loc.args[0]
+
+        return (abs_max_loc, abs_max)
 
     def shear_stress(self):
         """
