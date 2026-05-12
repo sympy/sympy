@@ -63,7 +63,6 @@ from sympy.utilities.misc import as_int, filldedent, func_name
 import mpmath
 from sympy.external.mpmath import (prec_to_dps, mpf, mpc, mp, workprec, diff as
                                    mpmath_diff)
-
 import inspect
 from collections import Counter
 
@@ -1374,9 +1373,9 @@ class Derivative(Expr):
         # good way to unambiguously print this.
         if len(variable_count) == 0:
             return expr
-
+        if expr.has(S.NaN):
+            return S.NaN
         evaluate = kwargs.get('evaluate', False)
-
         if evaluate:
             if isinstance(expr, Derivative):
                 expr = expr.canonical
