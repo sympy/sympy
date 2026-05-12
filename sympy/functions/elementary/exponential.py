@@ -120,7 +120,11 @@ class ExpBase(DefinedFunction):
             return s.is_rational
 
     def _eval_is_zero(self):
-        return self.exp is S.NegativeInfinity
+        if self.exp is S.NegativeInfinity:
+            return True
+        if self.exp.is_extended_real:
+            if self.exp.is_real or self.exp.is_extended_nonnegative:
+                return False
 
     def _eval_power(self, other):
         """exp(arg)**e -> exp(arg*e) if assumptions allow it.
@@ -476,7 +480,8 @@ class exp(ExpBase, metaclass=ExpMeta):
 
     def _eval_is_extended_positive(self):
         if self.exp.is_extended_real:
-            return self.args[0] is not S.NegativeInfinity
+            if self.args[0].is_real or self.args[0].is_extended_nonnegative:
+                return True
         elif self.exp.is_imaginary:
             arg2 = -I * self.args[0] / pi
             return arg2.is_even

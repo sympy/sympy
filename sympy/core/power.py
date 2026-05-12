@@ -456,7 +456,11 @@ class Pow(Expr):
             elif self.exp.is_extended_nonpositive:
                 return False
         elif self.base == S.Exp1:
-            return self.exp is S.NegativeInfinity
+            if self.exp is S.NegativeInfinity:
+                return True
+            if self.exp.is_extended_real:
+                if self.exp.is_real or self.exp.is_extended_nonnegative:
+                    return False
         elif self.base.is_zero is False:
             if self.base.is_finite and self.exp.is_finite:
                 return False
