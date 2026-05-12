@@ -107,8 +107,9 @@ class Quantity(AtomicExpr):
         return self
 
     def _eval_subs(self, old, new):
-        if isinstance(new, Quantity) and self != old:
-            return self
+        if self == old:
+            return new
+        return self
 
     def _latex(self, printer):
         if self._latex_repr:
