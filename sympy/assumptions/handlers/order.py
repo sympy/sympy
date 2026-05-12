@@ -225,6 +225,18 @@ def _(expr, assumptions):
     # TODO: This should be deducible from the nonzero handler
     return fuzzy_or(ask(Q.zero(arg), assumptions) for arg in expr.args)
 
+@ZeroPredicate.register(asin)
+def _(expr, assumptions):
+    return ask(Q.zero(expr.args[0]), assumptions)
+
+@ZeroPredicate.register(atan)
+def _(expr, assumptions):
+    return ask(Q.zero(expr.args[0]), assumptions)
+
+@ZeroPredicate.register(acos)
+def _(expr, assumptions):
+    x = expr.args[0]
+    return ask(Q.zero(x - 1), assumptions)
 
 # NonPositivePredicate
 
@@ -398,7 +410,9 @@ def _(expr, assumptions):
 @PositivePredicate.register(acos)
 def _(expr, assumptions):
     x = expr.args[0]
-    if ask(Q.nonpositive(x - 1) & Q.nonnegative(x + 1), assumptions):
+    if ask(Q.zero(x), assumptions):
+        return True
+    if ask(Q.negative(x - 1) & Q.nonnegative(x + 1), assumptions):
         return True
 
 @PositivePredicate.register(acot)
