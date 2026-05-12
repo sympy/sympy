@@ -35,7 +35,32 @@ __doctest_requires__ = {('llvm_callable'): ['llvmlite']}
 
 
 class LLVMJitPrinter(Printer):
-    '''Convert expressions to LLVM IR'''
+    '''Convert SymPy expressions into LLVM IR instructions.
+
+    This printer lowers supported SymPy expression nodes into `llvmlite.ir`
+    values using the provided IR builder and function context.
+
+    Parameters
+    ==========
+
+    module : llvmlite.ir.Module
+        LLVM module that owns the generated function and referenced external
+        function declarations.
+    builder : llvmlite.ir.IRBuilder
+        Active builder used to emit LLVM instructions.
+    fn : llvmlite.ir.Function
+        Function currently being generated.
+    func_arg_map : dict, optional
+        Mapping from symbolic arguments to LLVM values that represent function
+        parameters.
+
+    Notes
+    =====
+
+    This class is primarily an implementation detail used by
+    `llvm_callable`. It supports arithmetic expressions and selected
+    single-argument math functions.
+    '''
     def __init__(self, module, builder, fn, *args, **kwargs):
         self.func_arg_map = kwargs.pop("func_arg_map", {})
         if not llvmlite:
@@ -122,6 +147,13 @@ class LLVMJitPrinter(Printer):
 # Used when parameters are passed by array.  Often used in callbacks to
 # handle a variable number of parameters.
 class LLVMJitCallbackPrinter(LLVMJitPrinter):
+    '''Printer variant for callback signatures with array-style arguments.
+
+    Callback-oriented numerical APIs often pass input values through pointer
+    arguments rather than positional scalar parameters. This subclass resolves
+    symbols and indexed expressions from those array-like callback inputs.
+    '''
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -158,6 +190,19 @@ current_link_suffix = 0
 
 
 class LLVMJitCode:
+    '''Build and compile LLVM IR for a SymPy expression.
+
+    This helper manages function signature conversion, IR module/function
+    creation, expression lowering, and JIT compilation to a callable function
+    pointer.
+
+    Parameters
+    ==========
+
+    signature : CodeSignature
+        C/ctypes signature information for the generated function.
+    '''
+
     def __init__(self, signature):
         self.signature = signature
         self.fp_type = ll.DoubleType()
@@ -306,6 +351,12 @@ class LLVMJitCode:
 
 
 class LLVMJitCodeCallback(LLVMJitCode):
+    '''Build and compile LLVM IR for callback-style signatures.
+
+    This subclass adapts parameter mapping and return-value handling for APIs
+    that exchange inputs and outputs through pointer arguments.
+    '''
+
     def __init__(self, signature):
         super().__init__(signature)
 
@@ -344,6 +395,26 @@ class LLVMJitCodeCallback(LLVMJitCode):
 
 
 class CodeSignature:
+    '''Describe the ctypes-level function signature for JIT-generated code.
+
+    Parameters
+    ==========
+
+    ret_type : ctypes type
+        Return type expected by the generated function.
+
+    Attributes
+    ==========
+
+    arg_ctypes : list
+        ctypes argument types for the generated function.
+    input_arg : int
+        Index of the argument that stores input values for callback layouts.
+    ret_arg : int or None
+        Index of the argument that stores output values when the callback
+        writes results by reference.
+    '''
+
     def __init__(self, ret_type):
         self.ret_type = ret_type
         self.arg_ctypes = []
