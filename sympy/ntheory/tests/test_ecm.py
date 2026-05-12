@@ -2,6 +2,7 @@ from __future__ import annotations
 from sympy.external.gmpy import invert
 from sympy.ntheory.ecm import ecm, Point
 from sympy.testing.pytest import slow
+import pytest
 
 @slow
 def test_ecm():
@@ -62,3 +63,12 @@ def test_Point():
     assert p9 == p1.mont_ladder(9)
     assert p16 == p1.mont_ladder(16)
     assert p9 == p3.mont_ladder(3)
+    assert p1.__eq__(Point(10, 17, a_24, mod))
+    with pytest.raises(TypeError):
+        p1.__eq__("strPoint")
+    with pytest.raises(TypeError):
+        p1.__eq__(5)
+    with pytest.raises(TypeError):
+        p1.__eq__(2.3)
+    with pytest.raises(TypeError):
+        p1.__eq__([1,2,6,5])
