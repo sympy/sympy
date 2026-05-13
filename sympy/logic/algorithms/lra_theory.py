@@ -400,14 +400,14 @@ class LRASolver():
             c = LRARational(c, 0)
 
         if boundary.equality:
-            res1 = self._assert_bound(sym, c, upper=False, from_equality=True, from_negated_literal=is_literal_negated)
+            res1 = self._assert_bound(sym, c, upper=False, from_equality=True, literal=literal)
             if res1 and res1[0] is False:
                 res = res1
             else:
-                res2 = self._assert_bound(sym, c, upper=True, from_equality=True, from_negated_literal=is_literal_negated)
+                res2 = self._assert_bound(sym, c, upper=True, from_equality=True, literal=literal)
                 res =  res2
         else:
-            res = self._assert_bound(sym, c, upper=upper, from_negated_literal=is_literal_negated)
+            res = self._assert_bound(sym, c, upper=upper, literal=literal)
 
         if self.is_sat and sym not in self.slack_set:
             self.is_sat = res is None
@@ -416,7 +416,7 @@ class LRASolver():
 
         return res
 
-    def _assert_bound(self, xi, ci, upper=True, from_equality=False, from_negated_literal=False):
+    def _assert_bound(self, xi, ci, upper=True, from_equality=False, literal=None):
         """
         Adjusts the upper or lower bound on variable xi if the new bound is
         more limiting. The assignment of variable xi is adjusted to be
@@ -441,16 +441,11 @@ class LRASolver():
             # get conflicting boundary
             lit1, lit1_sign = xi.get_active_lower_boundary() if upper else xi.get_active_upper_boundary()
 
-            lit2 = Boundary(var=xi, const=ci[0], strict=ci[1] != 0, upper=upper, equality=from_equality)
-            if from_negated_literal:
-                lit2 = lit2.get_negated()
-            lit2_sign = -1 if from_negated_literal else 1
-
-            conflict = [-lit1_sign*self.boundary_to_atom_id[lit1], -lit2_sign*self.boundary_to_atom_id[lit2]]
+            conflict = [-lit1_sign*self.boundary_to_atom_id[lit1], -literal]
             self.result = False, conflict
             return self.result
 
-        xi.set_bound(ci, upper, from_equality, from_negated_literal)
+        xi.set_bound(ci, upper, from_equality, literal < 0)
 
         if xi in self.nonslack and xi.assign * s > ci * s:
             self._update(xi, ci)
