@@ -155,7 +155,7 @@ class LRASolver():
            https://link.springer.com/chapter/10.1007/11817963_11
     """
 
-    def __init__(self, A, slack_variables, nonslack_variables, enc_to_boundary, s_subs, testing_mode):
+    def __init__(self, A, slack_variables, nonslack_variables, atom_id_to_boundary, s_subs, testing_mode):
         """
         Use the "from_encoded_cnf" method to create a new LRASolver.
         """
@@ -164,7 +164,7 @@ class LRASolver():
 
         if any(not isinstance(a, Rational) for a in A):
             raise UnhandledInput("Non-rational numbers are not handled")
-        if any(not isinstance(b.bound, Rational) for b in enc_to_boundary.values()):
+        if any(not isinstance(b.bound, Rational) for b in atom_id_to_boundary.values()):
             raise UnhandledInput("Non-rational numbers are not handled")
         m, n = len(slack_variables), len(slack_variables)+len(nonslack_variables)
         if m != 0:
@@ -172,8 +172,8 @@ class LRASolver():
         if self.run_checks:
             assert A[:, n-m:] == -eye(m)
 
-        self.enc_to_boundary = enc_to_boundary  # mapping of int to Boundary objects
-        self.boundary_to_enc = {value: key for key, value in enc_to_boundary.items()}
+        self.atom_id_to_boundary = atom_id_to_boundary  # mapping of int to Boundary objects
+        self.boundary_to_atom_id = {value: key for key, value in atom_id_to_boundary.items()}
         self.A = A
         self.slack = slack_variables
         self.nonslack = nonslack_variables
@@ -241,7 +241,7 @@ class LRASolver():
         # for an explanation of how the formula is converted into a matrix
         # and a set of single variable constraints.
 
-        encoding = {}  # maps int to boundary
+        atom_id_to_boundary = {}
         A = []
 
         basic = []
@@ -259,15 +259,15 @@ class LRASolver():
         var_to_lra_var = {}
         conflicts = []
 
-        for prop, enc in encoded_cnf_items:
+        for prop, atom_id in encoded_cnf_items:
             if isinstance(prop, Predicate):
                 prop = prop(empty_var)
             if not isinstance(prop, AppliedPredicate):
                 if prop == True:
-                    conflicts.append([enc])
+                    conflicts.append([atom_id])
                     continue
                 if prop == False:
-                    conflicts.append([-enc])
+                    conflicts.append([-atom_id])
                     continue
 
                 raise ValueError(f"Unhandled Predicate: {prop}")
@@ -283,10 +283,10 @@ class LRASolver():
             expr = prop.lhs - prop.rhs
             pred = ALLOWED_PRED[prop.function](expr, S.Zero)
             if pred == True:
-                conflicts.append([enc])
+                conflicts.append([atom_id])
                 continue
             if pred == False:
-                conflicts.append([-enc])
+                conflicts.append([-atom_id])
                 continue
             if not expr.free_symbols:
                 raise UnhandledInput(f"{prop} could not be simplified")
@@ -324,7 +324,7 @@ class LRASolver():
             upper = var_coeff > 0 if not equality else None
             strict = prop.function in [Q.gt, Q.lt]
             b = Boundary(var_to_lra_var[var], -const, upper, equality, strict)
-            encoding[enc] = b
+            atom_id_to_boundary[atom_id] = b
 
         fs = [v.free_symbols for v in nonbasic + basic]
         assert all(len(syms) > 0 for syms in fs)
@@ -338,7 +338,7 @@ class LRASolver():
         for idx, var in enumerate(nonbasic + basic):
             var.col_idx = idx
 
-        return LRASolver(A, basic, nonbasic, encoding, s_subs, testing_mode), conflicts
+        return LRASolver(A, basic, nonbasic, atom_id_to_boundary, s_subs, testing_mode), conflicts
 
     def reset_bounds(self):
         """
@@ -355,7 +355,7 @@ class LRASolver():
             var.upper_from_negated_literal = False
             var.assign = LRARational(0, 0)
 
-    def assert_lit(self, enc_constraint):
+    def assert_lit(self, literal):
         """
         Assert a literal representing a constraint
         and update the internal state accordingly.
@@ -367,9 +367,9 @@ class LRASolver():
         Parameters
         ==========
 
-        enc_constraint : int
-            A mapping of encodings to constraints
-            can be found in `self.enc_to_boundary`.
+        literal : int
+            A mapping of IDs to constraints
+            can be found in `self.atom_id_to_boundary`.
 
         Returns
         =======
@@ -380,14 +380,14 @@ class LRASolver():
             A conflict clause that "explains" why
             the literals asserted so far are unsatisfiable.
         """
-        if abs(enc_constraint) not in self.enc_to_boundary:
+        if abs(literal) not in self.atom_id_to_boundary:
             return None
 
-        if not HANDLE_NEGATION and enc_constraint < 0:
+        if not HANDLE_NEGATION and literal < 0:
             return None
 
-        boundary = self.enc_to_boundary[abs(enc_constraint)]
-        sym, c, is_literal_negated = boundary.var, boundary.bound, enc_constraint < 0
+        boundary = self.atom_id_to_boundary[abs(literal)]
+        sym, c, is_literal_negated = boundary.var, boundary.bound, literal < 0
 
         if boundary.equality and is_literal_negated:
             return None # negated equality is not handled and should only appear in conflict clauses
@@ -446,7 +446,7 @@ class LRASolver():
                 lit2 = lit2.get_negated()
             lit2_sign = -1 if from_negated_literal else 1
 
-            conflict = [-lit1_sign*self.boundary_to_enc[lit1], -lit2_sign*self.boundary_to_enc[lit2]]
+            conflict = [-lit1_sign*self.boundary_to_atom_id[lit1], -lit2_sign*self.boundary_to_atom_id[lit2]]
             self.result = False, conflict
             return self.result
 
@@ -542,7 +542,7 @@ class LRASolver():
                     conflict += [nb.get_active_upper_boundary() for nb in N_plus]
                     conflict += [nb.get_active_lower_boundary() for nb in N_minus]
                     conflict.append(xi.get_active_lower_boundary())
-                    conflict = [-literal_sign*self.boundary_to_enc[c] for c, literal_sign in conflict]
+                    conflict = [-literal_sign*self.boundary_to_atom_id[c] for c, literal_sign in conflict]
                     return False, conflict
                 xj = min(cand, key=str)
                 M = self._pivot_and_update(M, basic, nonbasic, xi, xj, xi.lower)
@@ -561,7 +561,7 @@ class LRASolver():
                     conflict += [nb.get_active_lower_boundary() for nb in N_plus]
                     conflict.append(xi.get_active_upper_boundary())
 
-                    conflict = [-literal_sign*self.boundary_to_enc[c] for c, literal_sign in conflict]
+                    conflict = [-literal_sign*self.boundary_to_atom_id[c] for c, literal_sign in conflict]
                     return False, conflict
                 xj = min(cand, key=lambda v: v.col_idx)
                 M = self._pivot_and_update(M, basic, nonbasic, xi, xj, xi.upper)
