@@ -450,14 +450,7 @@ class LRASolver():
             self.result = False, conflict
             return self.result
 
-        if upper:
-            xi.upper = ci
-            xi.upper_from_eq = from_equality
-            xi.upper_from_neg = from_neg
-        else:
-            xi.lower = ci
-            xi.lower_from_eq = from_equality
-            xi.lower_from_neg = from_neg
+        xi.set_bound(ci, upper, from_equality, from_neg)
 
         if xi in self.nonslack and xi.assign * s > ci * s:
             self._update(xi, ci)
@@ -805,6 +798,39 @@ class LRAVariable():
 
     def __repr__(self):
         return repr(self.var)
+
+    def set_bound(self, ci, upper=True, from_equality=False, from_neg=False):
+        """
+        Set the upper or lower bound and record the sign of its origin literal.
+
+        Example
+        =======
+
+        >>> from sympy.logic.algorithms.lra_theory import LRAVariable, LRARational
+        >>> from sympy.abc import x
+        >>> v = LRAVariable(x)
+        >>> # Asserting a lower bound x >= 10 from a direct assertion
+        >>> v.set_bound(LRARational(10, 0), upper=False, from_neg=False)
+        >>> v.lower
+        (10, 0)
+        >>> v.lower_from_neg
+        False
+
+        >>> # Asserting an upper bound x <= 5 derived from a negated atom ~(x > 5)
+        >>> v.set_bound(LRARational(5, 0), upper=True, from_neg=True)
+        >>> v.upper
+        (5, 0)
+        >>> v.upper_from_neg
+        True
+        """
+        if upper:
+            self.upper = ci
+            self.upper_from_eq = from_equality
+            self.upper_from_neg = from_neg
+        else:
+            self.lower = ci
+            self.lower_from_eq = from_equality
+            self.lower_from_neg = from_neg
 
     def __eq__(self, other):
         if not isinstance(other, LRAVariable):
