@@ -1159,6 +1159,29 @@ def test_issue_3940():
         sqrt(pi)*exp(d**2/a)/sqrt(a)
 
 
+def test_gaussian_quadratic_antideriv_roundtrip():
+    # diff(integrate(exp(quadratic), x), x) should equal the integrand
+    # semantically. The factored-form exp(x*(-x + I)) exercises the
+    # shape-independent recognizer: simplify() may rewrite the exponent
+    # either way, so compare via simplify(diff - f).
+    cases = [
+        exp(-x**2 + I*x),
+        exp(x*(-x + I)),
+        3*exp(x*(-x + I)),
+        exp(-(x - 1)**2),
+        exp(-x**2)*sin(x),
+        exp(-x**2)*cos(x),
+    ]
+    for f in cases:
+        assert simplify(diff(integrate(f, x), x) - f) == 0
+
+    # Assumption-sensitive: with a declared negative, the Gaussian
+    # recognizer's a.is_negative branch fires and yields a real erf form.
+    a_neg = Symbol('a_neg', negative=True)
+    f = exp(a_neg*x**2 + x)
+    assert simplify(diff(integrate(f, x), x) - f) == 0
+
+
 def test_issue_5413():
     # Note that this is not the same as testing ratint() because integrate()
     # pulls out the coefficient.
