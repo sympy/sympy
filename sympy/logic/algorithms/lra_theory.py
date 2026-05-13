@@ -738,6 +738,18 @@ class LRARational():
     def __init__(self, rational, delta):
         self.value = (rational, delta)
 
+    @property
+    def q(self):
+        return self.value[0]
+
+    @property
+    def d(self):
+        return self.value[1]
+
+    @property
+    def is_strict(self):
+        return self.value[1] != 0
+
     def __lt__(self, other):
         return self.value < other.value
 
@@ -748,14 +760,14 @@ class LRARational():
         return self.value == other.value
 
     def __add__(self, other):
-        return LRARational(self.value[0] + other.value[0], self.value[1] + other.value[1])
+        return LRARational(self.q + other.q, self.d + other.d)
 
     def __sub__(self, other):
-        return LRARational(self.value[0] - other.value[0], self.value[1] - other.value[1])
+        return LRARational(self.q - other.q, self.d - other.d)
 
     def __mul__(self, other):
         assert not isinstance(other, LRARational)
-        return LRARational(self.value[0] * other, self.value[1] * other)
+        return LRARational(self.q * other, self.d * other)
 
     def __getitem__(self, index):
         return self.value[index]
