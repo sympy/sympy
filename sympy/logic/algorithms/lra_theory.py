@@ -438,8 +438,8 @@ class LRASolver():
         if ci * s < other_bound * s:
             assert (other_bound[1] * s >= 0) is True
             assert (ci[1] * s <= 0) is True
-            factory = Boundary.from_lower if upper else Boundary.from_upper
-            lit1, neg1 = factory(xi)
+            # get conflicting boundary
+            lit1, neg1 = xi.get_active_lower_boundary() if upper else xi.get_active_upper_boundary()
 
             lit2 = Boundary(var=xi, const=ci[0], strict=ci[1] != 0, upper=upper, equality=from_equality)
             if from_neg:
@@ -539,9 +539,9 @@ class LRASolver():
                     N_minus = [nb for nb in nonbasic if M[i, nb.col_idx] < 0]
 
                     conflict = []
-                    conflict += [Boundary.from_upper(nb) for nb in N_plus]
-                    conflict += [Boundary.from_lower(nb) for nb in N_minus]
-                    conflict.append(Boundary.from_lower(xi))
+                    conflict += [nb.get_active_upper_boundary() for nb in N_plus]
+                    conflict += [nb.get_active_lower_boundary() for nb in N_minus]
+                    conflict.append(xi.get_active_lower_boundary())
                     conflict = [-neg*self.boundary_to_enc[c] for c, neg in conflict]
                     return False, conflict
                 xj = min(cand, key=str)
@@ -557,9 +557,9 @@ class LRASolver():
                     N_minus = [nb for nb in nonbasic if M[i, nb.col_idx] < 0]
 
                     conflict = []
-                    conflict += [Boundary.from_upper(nb) for nb in N_minus]
-                    conflict += [Boundary.from_lower(nb) for nb in N_plus]
-                    conflict.append(Boundary.from_upper(xi))
+                    conflict += [nb.get_active_upper_boundary() for nb in N_minus]
+                    conflict += [nb.get_active_lower_boundary() for nb in N_plus]
+                    conflict.append(xi.get_active_upper_boundary())
 
                     conflict = [-neg*self.boundary_to_enc[c] for c, neg in conflict]
                     return False, conflict
@@ -704,22 +704,6 @@ class Boundary:
         self.strict = strict
         assert self.strict is not None
 
-    @staticmethod
-    def from_upper(var):
-        neg = -1 if var.upper_from_neg else 1
-        b = Boundary(var, var.upper[0], True, var.upper_from_eq, var.upper[1] != 0)
-        if neg < 0:
-            b = b.get_negated()
-        return b, neg
-
-    @staticmethod
-    def from_lower(var):
-        neg = -1 if var.lower_from_neg else 1
-        b = Boundary(var, var.lower[0], False, var.lower_from_eq, var.lower[1] != 0)
-        if neg < 0:
-            b = b.get_negated()
-        return b, neg
-
     def get_negated(self):
         return Boundary(self.var, self.bound, not self.upper, self.equality, not self.strict)
 
@@ -831,6 +815,39 @@ class LRAVariable():
             self.lower = ci
             self.lower_from_eq = from_equality
             self.lower_from_neg = from_neg
+
+    def _build_active_boundary(self, bound, from_eq, from_neg, is_upper):
+        neg = -1 if from_neg else 1
+        b = Boundary(self, bound[0], is_upper, from_eq, bound[1] != 0)
+        if neg < 0:
+            b = b.get_negated()
+        return b, neg
+
+    def get_active_upper_boundary(self):
+        """
+        Return the active upper Boundary object and the sign of the literal responsible for asserting it.
+
+        Example
+        =======
+
+        >>> from sympy.logic.algorithms.lra_theory import LRAVariable, LRARational
+        >>> from sympy.abc import x
+        >>> v = LRAVariable(x)
+        >>> # Internal state representing the assertion ~(x > 5)
+        >>> v.set_bound(LRARational(5, 0), upper=True, from_neg=True)
+        >>> b, neg = v.get_active_upper_boundary()
+        >>> b
+        'Boundary(x > 5)'
+        >>> neg
+        -1
+        """
+        return self._build_active_boundary(self.upper, self.upper_from_eq, self.upper_from_neg, True)
+
+    def get_active_lower_boundary(self):
+        """
+        Return the active lower Boundary object and the sign of the literal responsible for asserting it.
+        """
+        return self._build_active_boundary(self.lower, self.lower_from_eq, self.lower_from_neg, False)
 
     def __eq__(self, other):
         if not isinstance(other, LRAVariable):
