@@ -435,9 +435,9 @@ def test_reset_bounds():
         ('lower', LRARational(10, 0), LRARational(-float("inf"), 0)),
         ('upper', LRARational(10, 0), LRARational(float("inf"), 0)),
         ('lower_from_eq', True, False),
-        ('lower_from_neg', True, False),
+        ('lower_from_negated_literal', True, False),
         ('upper_from_eq', True, False),
-        ('upper_from_neg', True, False),
+        ('upper_from_negated_literal', True, False),
         ('assign', LRARational(10, 0), LRARational(0, 0))
     ]
 
