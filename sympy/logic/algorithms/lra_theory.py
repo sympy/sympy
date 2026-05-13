@@ -436,8 +436,8 @@ class LRASolver():
 
         other_bound = xi.lower if upper else xi.upper
         if ci * s < other_bound * s:
-            assert (other_bound[1] * s >= 0) is True
-            assert (ci[1] * s <= 0) is True
+            assert (other_bound.d * s >= 0) is True
+            assert (ci.d * s <= 0) is True
             # get conflicting boundary
             lit1, lit1_sign = xi.get_active_lower_boundary() if upper else xi.get_active_upper_boundary()
 
@@ -455,10 +455,10 @@ class LRASolver():
         if xi in self.nonslack and xi.assign * s > ci * s:
             self._update(xi, ci)
 
-        if self.run_checks and all(v.assign[0] != float("inf") and v.assign[0] != -float("inf")
+        if self.run_checks and all(v.assign.q != float("inf") and v.assign.q != -float("inf")
                                    for v in self.all_var):
             M = self.A
-            X = Matrix([v.assign[0] for v in self.all_var])
+            X = Matrix([v.assign.q for v in self.all_var])
             assert all(abs(val) < 10 ** (-10) for val in M * X)
 
         return None
@@ -508,9 +508,9 @@ class LRASolver():
 
                 # assignments for x must always satisfy Ax = 0
                 # probably have to turn this off when dealing with strict ineq
-                if all(v.assign[0] != float("inf") and v.assign[0] != -float("inf")
+                if all(v.assign.q != float("inf") and v.assign.q != -float("inf")
                                    for v in self.all_var):
-                    X = Matrix([v.assign[0] for v in self.all_var])
+                    X = Matrix([v.assign.q for v in self.all_var])
                     assert all(abs(val) < 10**(-10) for val in M*X)
 
                 # check upper and lower match this format:
@@ -519,8 +519,8 @@ class LRASolver():
                 # this wouldn't make sense:
                 # x <= rat - delta
                 # x >= rat + delta
-                assert all(x.upper[1] <= 0 for x in self.all_var)
-                assert all(x.lower[1] >= 0 for x in self.all_var)
+                assert all(x.upper.d <= 0 for x in self.all_var)
+                assert all(x.lower.d >= 0 for x in self.all_var)
 
             cand = [b for b in basic if b.assign < b.lower or b.assign > b.upper]
 
@@ -830,7 +830,7 @@ class LRAVariable():
 
     def _build_active_boundary(self, bound, from_eq, from_negated_literal, is_upper):
         literal_sign = -1 if from_negated_literal else 1
-        b = Boundary(self, bound[0], is_upper, from_eq, bound[1] != 0)
+        b = Boundary(self, bound.q, is_upper, from_eq, bound.d != 0)
         if literal_sign < 0:
             b = b.get_negated()
         return b, literal_sign
