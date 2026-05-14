@@ -704,6 +704,43 @@ def dot(vect1, vect2):
 
     return Dot(vect1, vect2)
 
+from sympy import acos
+
+def angle_between(self, other):
+    """
+    Returns the angle between two vectors in radians.
+
+    Formula used:
+    
+                 A · B
+    angle = acos( ----------- )
+               |A| * |B|
+
+    where:
+    - A · B  = dot product
+    - |A|    = magnitude of vector A
+    - |B|    = magnitude of vector B
+    """
+
+    # Calculate the dot product of the two vectors
+    dot_product = self.dot(other)
+
+    # Calculate magnitude (length) of first vector
+    magnitude_self = self.magnitude()
+
+    # Calculate magnitude (length) of second vector
+    magnitude_other = other.magnitude()
+
+    # Divide dot product by product of magnitudes
+    # This gives cos(theta)
+    cos_theta = dot_product / (magnitude_self * magnitude_other)
+
+    # Apply inverse cosine to get angle in radians
+    angle = acos(cos_theta)
+
+    # Return the final angle
+    return angle
+
 
 Vector._expr_type = Vector
 Vector._mul_func = VectorMul
