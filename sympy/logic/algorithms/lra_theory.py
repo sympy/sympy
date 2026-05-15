@@ -437,7 +437,7 @@ class LRASolver():
             assert (other_bound.d * s >= 0) is True
             assert (ci.d * s <= 0) is True
             # get conflicting boundary
-            conflicting_lit = xi.get_active_lower_literal() if upper else xi.get_active_upper_literal()
+            conflicting_lit = xi.get_lower_bound_source_literal() if upper else xi.get_upper_bound_source_literal()
 
             conflict = [-conflicting_lit, -literal]
             self.result = False, conflict
@@ -533,9 +533,9 @@ class LRASolver():
                     N_minus = [nb for nb in nonbasic if M[i, nb.col_idx] < 0]
 
                     conflict = []
-                    conflict += [nb.get_active_upper_literal() for nb in N_plus]
-                    conflict += [nb.get_active_lower_literal() for nb in N_minus]
-                    conflict.append(xi.get_active_lower_literal())
+                    conflict += [nb.get_upper_bound_source_literal() for nb in N_plus]
+                    conflict += [nb.get_lower_bound_source_literal() for nb in N_minus]
+                    conflict.append(xi.get_lower_bound_source_literal())
                     conflict = [-conflicting_lit for conflicting_lit in conflict]
                     return False, conflict
                 xj = min(cand, key=str)
@@ -551,9 +551,9 @@ class LRASolver():
                     N_minus = [nb for nb in nonbasic if M[i, nb.col_idx] < 0]
 
                     conflict_bounds = []
-                    conflict_bounds += [nb.get_active_upper_literal() for nb in N_minus]
-                    conflict_bounds += [nb.get_active_lower_literal() for nb in N_plus]
-                    conflict_bounds.append(xi.get_active_upper_literal())
+                    conflict_bounds += [nb.get_upper_bound_source_literal() for nb in N_minus]
+                    conflict_bounds += [nb.get_lower_bound_source_literal() for nb in N_plus]
+                    conflict_bounds.append(xi.get_upper_bound_source_literal())
 
                     conflict = [-conflicting_lit for conflicting_lit in conflict_bounds]
                     return False, conflict
@@ -837,16 +837,16 @@ class LRAVariable():
             self.lower = ci
             self.lower_literal = literal
 
-    def get_active_upper_literal(self) -> int:
+    def get_upper_bound_source_literal(self) -> int:
         """
-        Return the literal responsible for asserting the active upper bound.
+        Return the literal responsible for setting the current upper bound.
         """
         assert self.upper_literal is not None
         return self.upper_literal
 
-    def get_active_lower_literal(self) -> int:
+    def get_lower_bound_source_literal(self) -> int:
         """
-        Return the literal responsible for asserting the active lower bound.
+        Return the literal responsible for setting the current lower bound.
         """
         assert self.lower_literal is not None
         return self.lower_literal
