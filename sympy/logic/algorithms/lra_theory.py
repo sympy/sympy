@@ -114,6 +114,7 @@ References
        https://link.springer.com/chapter/10.1007/11817963_11
 """
 from __future__ import annotations
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 from sympy.solvers.solveset import linear_eq_to_matrix
 from sympy.matrices.dense import eye
 from sympy.assumptions import Predicate
@@ -155,7 +156,8 @@ class LRASolver():
            https://link.springer.com/chapter/10.1007/11817963_11
     """
 
-    def __init__(self, A, slack_variables, nonslack_variables, atom_id_to_boundary, s_subs, testing_mode):
+    def __init__(self, A: Matrix, slack_variables: List[LRAVariable], nonslack_variables: List[LRAVariable],
+        atom_id_to_boundary: Dict[int, List[Boundary]], s_subs: Dict[Any, LRAVariable], testing_mode: bool) -> None:
         """
         Use the "from_encoded_cnf" method to create a new LRASolver.
         """
@@ -189,7 +191,7 @@ class LRASolver():
         self.result = None  # always one of: (True, assignment), (False, conflict clause), None
 
     @staticmethod
-    def from_encoded_cnf(encoded_cnf, testing_mode=False):
+    def from_encoded_cnf(encoded_cnf: EncodedCNF, testing_mode: bool=False) -> Tuple[LRASolver, List[List[int]]]:
         """
         Creates an LRASolver from an EncodedCNF object
         and a list of conflict clauses for propositions
@@ -349,7 +351,7 @@ class LRASolver():
 
         return LRASolver(A, basic, nonbasic, atom_id_to_boundary, s_subs, testing_mode), conflicts
 
-    def reset_bounds(self):
+    def reset_bounds(self) -> None:
         """
         Resets the state of the LRASolver to before
         anything was asserted.
@@ -364,7 +366,7 @@ class LRASolver():
             var.upper_literal_sign = None
             var.assign = LRARational(0, 0)
 
-    def assert_lit(self, literal):
+    def assert_lit(self, literal: int) -> Optional[Tuple[bool, List[int]]]:
         """
         Assert a literal representing a constraint
         and update the internal state accordingly.
@@ -414,7 +416,7 @@ class LRASolver():
 
         return res
 
-    def _assert_bound(self, boundary, literal):
+    def _assert_bound(self, boundary: Boundary, literal: int) -> Optional[Tuple[bool, List[int]]]:
         """
         Adjusts the upper or lower bound on variable xi if the new bound is
         more limiting. The assignment of variable xi is adjusted to be
@@ -460,18 +462,19 @@ class LRASolver():
 
         return None
 
-    def _update(self, xi, v):
+    def _update(self, xi: LRAVariable, v: LRARational) -> None:
         """
         Updates all slack variables that have equations that contain
         variable xi so that they stay satisfied given xi is equal to v.
         """
         i = xi.col_idx
+        assert i is not None
         for j, b in enumerate(self.slack):
             aji = self.A[j, i]
             b.assign = b.assign + (v - xi.assign)*aji
         xi.assign = v
 
-    def check(self):
+    def check(self) -> Union[Tuple[bool, Dict[LRAVariable, LRARational]], Tuple[bool, List[int]]]:
         """
         Searches for an assignment that satisfies all constraints
         or determines that no such assignment exists and gives
@@ -553,23 +556,29 @@ class LRASolver():
                     N_plus = [nb for nb in nonbasic if M[i, nb.col_idx] > 0]
                     N_minus = [nb for nb in nonbasic if M[i, nb.col_idx] < 0]
 
-                    conflict = []
-                    conflict += [nb.get_active_upper_boundary() for nb in N_minus]
-                    conflict += [nb.get_active_lower_boundary() for nb in N_plus]
-                    conflict.append(xi.get_active_upper_boundary())
+                    conflict_bounds = []
+                    conflict_bounds += [nb.get_active_upper_boundary() for nb in N_minus]
+                    conflict_bounds += [nb.get_active_lower_boundary() for nb in N_plus]
+                    conflict_bounds.append(xi.get_active_upper_boundary())
 
-                    conflict = [-literal_sign*self.boundary_to_atom_id[c] for c, literal_sign in conflict]
+                    conflict = []
+                    for c_source, literal_sign in conflict_bounds:
+                        assert c_source is not None
+                        assert literal_sign is not None
+                        conflict.append(-literal_sign*self.boundary_to_atom_id[c_source])
                     return False, conflict
                 xj = min(cand, key=lambda v: v.col_idx)
                 M = self._pivot_and_update(M, basic, nonbasic, xi, xj, xi.upper)
 
-    def _pivot_and_update(self, M, basic, nonbasic, xi, xj, v):
+    def _pivot_and_update(self, M: Matrix, basic: Dict[LRAVariable, int], nonbasic: Set[LRAVariable],
+        xi: LRAVariable, xj: LRAVariable, v: LRARational) -> Matrix:
         """
         Pivots basic variable xi with nonbasic variable xj,
         and sets value of xi to v and adjusts the values of all basic variables
         to keep equations satisfied.
         """
         i, j = basic[xi], xj.col_idx
+        assert j is not None
         assert M[i, j] != 0
         theta = (v - xi.assign)*(1/M[i, j])
         xi.assign = v
@@ -587,7 +596,7 @@ class LRASolver():
         return self._pivot(M, i, j)
 
     @staticmethod
-    def _pivot(M, i, j):
+    def _pivot(M: Matrix, i: int, j: int) -> Matrix:
         """
         Performs a pivot operation about entry i, j of M by performing
         a series of row operations on a copy of M and returning the result.
@@ -640,7 +649,7 @@ class LRASolver():
         return A
 
 
-def _sep_const_coeff(expr):
+def _sep_const_coeff(expr: Any) -> Tuple[Any, Any]:
     """
     Example
     =======
@@ -660,7 +669,7 @@ def _sep_const_coeff(expr):
     return Mul(*var), Mul(*const)
 
 
-def _sep_const_terms(expr):
+def _sep_const_terms(expr: Any) -> Tuple[Any, Any]:
     """
     Example
     =======
@@ -696,7 +705,7 @@ class Boundary:
     >>> b2.get_inequality()
     x > 10
     """
-    def __init__(self, var, const, upper, strict=None):
+    def __init__(self, var: LRAVariable, const: Union[Rational, Tuple[Rational, int]], upper: bool, strict: Optional[bool]=None) -> None:
         self.var = var
         if isinstance(const, tuple):
             s = const[1] != 0
@@ -710,7 +719,7 @@ class Boundary:
         self.upper = upper
         assert self.strict is not None
 
-    def to_rational(self, is_negated):
+    def to_rational(self, is_negated: bool) -> Tuple[LRARational, bool]:
         """
         Return the LRARational bound and effective direction (upper=True)
         considering whether the boundary is negated.
@@ -721,10 +730,10 @@ class Boundary:
             delta = -1 if upper else 1
         return LRARational(self.bound, delta), upper
 
-    def get_negated(self):
+    def get_negated(self) -> Boundary:
         return Boundary(self.var, self.bound, not self.upper, not self.strict)
 
-    def get_inequality(self):
+    def get_inequality(self) -> Any:
         if self.upper and self.strict:
             return self.var.var < self.bound
         elif not self.upper and self.strict:
@@ -734,14 +743,15 @@ class Boundary:
         else:
             return self.var.var >= self.bound
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return repr("Boundary(" + repr(self.get_inequality()) + ")")
 
-    def __eq__(self, other):
-        other = (other.var, other.bound, other.strict, other.upper)
-        return (self.var, self.bound, self.strict, self.upper) == other
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Boundary):
+            return NotImplemented
+        return (self.var, self.bound, self.strict, self.upper) == (other.var, other.bound, other.strict, other.upper)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash((self.var, self.bound, self.strict, self.upper))
 
 
@@ -750,44 +760,46 @@ class LRARational():
     Represents a rational plus or minus some amount
     of arbitrary small deltas.
     """
-    def __init__(self, rational, delta):
+    def __init__(self, rational: Union[Rational, float], delta: int) -> None:
         self.value = (rational, delta)
 
     @property
-    def q(self):
+    def q(self) -> Union[Rational, float]:
         return self.value[0]
 
     @property
-    def d(self):
+    def d(self) -> int:
         return self.value[1]
 
     @property
-    def is_strict(self):
+    def is_strict(self) -> bool:
         return self.value[1] != 0
 
-    def __lt__(self, other):
+    def __lt__(self, other: LRARational) -> bool:
         return self.value < other.value
 
-    def __le__(self, other):
+    def __le__(self, other: LRARational) -> bool:
         return self.value <= other.value
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, LRARational):
+            return NotImplemented
         return self.value == other.value
 
-    def __add__(self, other):
+    def __add__(self, other: LRARational) -> LRARational:
         return LRARational(self.q + other.q, self.d + other.d)
 
-    def __sub__(self, other):
+    def __sub__(self, other: LRARational) -> LRARational:
         return LRARational(self.q - other.q, self.d - other.d)
 
-    def __mul__(self, other):
+    def __mul__(self, other: Union[Rational, int]) -> LRARational:
         assert not isinstance(other, LRARational)
         return LRARational(self.q * other, self.d * other)
 
-    def __getitem__(self, index):
+    def __getitem__(self, index: int) -> Union[Rational, float, int]:
         return self.value[index]
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return repr(self.value)
 
 
@@ -796,7 +808,7 @@ class LRAVariable():
     Object to keep track of upper and lower bounds
     on `self.var`.
     """
-    def __init__(self, var):
+    def __init__(self, var: Any) -> None:
         self.upper = LRARational(float("inf"), 0)
         self.upper_source = None
         self.upper_literal_sign = None
@@ -807,10 +819,10 @@ class LRAVariable():
         self.var = var
         self.col_idx = None
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return repr(self.var)
 
-    def set_bound(self, boundary, literal_sign):
+    def set_bound(self, boundary: Boundary, literal_sign: int) -> None:
         """
         Set the upper or lower bound and record its source.
 
@@ -838,22 +850,22 @@ class LRAVariable():
             self.lower_source = boundary
             self.lower_literal_sign = literal_sign
 
-    def get_active_upper_boundary(self):
+    def get_active_upper_boundary(self) -> Tuple[Optional[Boundary], Optional[int]]:
         """
         Return the active upper Boundary object and the sign of the literal responsible for asserting it.
         """
         return self.upper_source, self.upper_literal_sign
 
-    def get_active_lower_boundary(self):
+    def get_active_lower_boundary(self) -> Tuple[Optional[Boundary], Optional[int]]:
         """
         Return the active lower Boundary object and the sign of the literal responsible for asserting it.
         """
         return self.lower_source, self.lower_literal_sign
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, LRAVariable):
             return False
         return other.var == self.var
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(self.var)
