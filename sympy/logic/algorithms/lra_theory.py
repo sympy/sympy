@@ -120,6 +120,7 @@ from sympy.matrices.dense import eye
 from sympy.assumptions import Predicate
 from sympy.assumptions.assume import AppliedPredicate
 from sympy.assumptions.ask import Q
+from sympy.assumptions.cnf import EncodedCNF
 from sympy.core import Dummy
 from sympy.core.mul import Mul
 from sympy.core.add import Add
@@ -816,7 +817,7 @@ class LRAVariable():
         Example
         =======
 
-        >>> from sympy.logic.algorithms.lra_theory import LRAVariable, LRARational, Boundary
+        >>> from sympy.logic.algorithms.lra_theory import LRAVariable, Boundary
         >>> from sympy.abc import x
         >>> v = LRAVariable(x)
         >>> b = Boundary(v, 10, upper=False, strict=False)
