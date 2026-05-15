@@ -120,7 +120,6 @@ from sympy.matrices.dense import eye
 from sympy.assumptions import Predicate
 from sympy.assumptions.assume import AppliedPredicate
 from sympy.assumptions.ask import Q
-from sympy.assumptions.cnf import EncodedCNF
 from sympy.core import Dummy
 from sympy.core.mul import Mul
 from sympy.core.add import Add
