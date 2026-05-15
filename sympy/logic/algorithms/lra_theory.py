@@ -186,7 +186,7 @@ class LRASolver():
         self.result = None  # always one of: (True, assignment), (False, conflict clause), None
 
     @staticmethod
-    def from_encoded_cnf(encoded_cnf: EncodedCNF, testing_mode: bool=False) -> tuple[LRASolver, list[list[int]]]:
+    def from_encoded_cnf(encoded_cnf, testing_mode: bool=False) -> tuple[LRASolver, list[list[int]]]:
         """
         Creates an LRASolver from an EncodedCNF object
         and a list of conflict clauses for propositions
