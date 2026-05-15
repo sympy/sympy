@@ -100,11 +100,15 @@ def test_from_encoded_cnf():
     assert str(lra.nonslack) == '[x, y, z]'
     assert lra.A == Matrix([[ 1,  1, 0, -1,  0],
                             [-1, -2, 1,  0, -1]])
-    assert {(str(b.var), b.bound, b.upper, b.equality, b.strict) for b in lra.atom_id_to_boundary.values()} == {('_s1', 2, None, True, False),
-    ('_s1', 2, True, False, False),
-    ('_s2', -4, True, False, True),
-    ('_s2', -6, True, False, False),
-    ('x', 0, False, False, False)}
+    actual = {tuple(sorted((str(b.var), b.bound, b.upper, b.strict) for b in bs)) for bs in lra.atom_id_to_boundary.values()}
+    expected = {
+        (('_s1', 2, False, False), ('_s1', 2, True, False)), # Eq(x + y, 2)
+        (('_s1', 2, True, False),),                          # x + y <= 2
+        (('_s2', -4, True, True),),                          # x + 2*y - z > 4 -> _s2 < -4
+        (('_s2', -6, True, False),),                         # x + 2*y - z >= 6 -> _s2 <= -6
+        (('x', 0, False, False),)                            # x >= 0
+    }
+    assert actual == expected
 
 
 def test_problem():
@@ -181,7 +185,7 @@ def test_random_problems():
         lits = {lit for clause in enc.data for lit in clause}
 
         bounds = [(lra.atom_id_to_boundary[l], l) for l in lits if l in lra.atom_id_to_boundary]
-        bounds = sorted(bounds, key=lambda x: (str(x[0].var), x[0].bound, str(x[0].upper))) # to remove nondeterminism
+        bounds = sorted(bounds, key=lambda x: (str(x[0][0].var), x[0][0].bound, str(x[0][0].upper))) # to remove nondeterminism
 
         for b, l in bounds:
             if lra.result and lra.result[0] == False:
@@ -209,7 +213,12 @@ def test_random_problems():
 
             conflict = feasible[1]
             assert len(conflict) >= 2
-            conflict = {lra.atom_id_to_boundary[-l].get_inequality() for l in conflict}
+            def get_expr(bs):
+                if len(bs) == 2:
+                    return Eq(bs[0].var.var, bs[0].bound)
+                return bs[0].get_inequality()
+
+            conflict = {get_expr(lra.atom_id_to_boundary[abs(l)]) for l in conflict}
             conflict = {clause.subs(s_subs_rev) for clause in conflict}
             assert check_if_satisfiable_with_z3(conflict) is False
 
@@ -434,9 +443,7 @@ def test_reset_bounds():
     state_variables = [
         ('lower', LRARational(10, 0), LRARational(-float("inf"), 0)),
         ('upper', LRARational(10, 0), LRARational(float("inf"), 0)),
-        ('lower_from_eq', True, False),
         ('lower_from_negated_literal', True, False),
-        ('upper_from_eq', True, False),
         ('upper_from_negated_literal', True, False),
         ('assign', LRARational(10, 0), LRARational(0, 0))
     ]
