@@ -175,11 +175,6 @@ class LRASolver():
             assert A[:, n-m:] == -eye(m)
 
         self.atom_id_to_boundary = atom_id_to_boundary  # mapping of int to lists of Boundary objects
-        self.boundary_to_atom_id = {}
-        for aid, bs in atom_id_to_boundary.items():
-            for b in bs:
-                # assert b not in self.boundary_to_atom_id
-                self.boundary_to_atom_id[b] = aid
         self.A = A
         self.slack = slack_variables
         self.nonslack = nonslack_variables
@@ -359,11 +354,9 @@ class LRASolver():
         self.result = None
         for var in self.all_var:
             var.lower = LRARational(-float("inf"), 0)
-            var.lower_source = None
-            var.lower_literal_sign = None
+            var.lower_literal = None
             var.upper = LRARational(float("inf"), 0)
-            var.upper_source = None
-            var.upper_literal_sign = None
+            var.upper_literal = None
             var.assign = LRARational(0, 0)
 
     def assert_lit(self, literal: int) -> Optional[Tuple[bool, List[int]]]:
@@ -443,13 +436,13 @@ class LRASolver():
             assert (other_bound.d * s >= 0) is True
             assert (ci.d * s <= 0) is True
             # get conflicting boundary
-            lit1, lit1_sign = xi.get_active_lower_boundary() if upper else xi.get_active_upper_boundary()
+            conflicting_lit = xi.get_active_lower_literal() if upper else xi.get_active_upper_literal()
 
-            conflict = [-lit1_sign*self.boundary_to_atom_id[lit1], -literal]
+            conflict = [-conflicting_lit, -literal]
             self.result = False, conflict
             return self.result
 
-        xi.set_bound(boundary, -1 if is_literal_negated else 1)
+        xi.set_bound(boundary, literal)
 
         if xi in self.nonslack and xi.assign * s > ci * s:
             self._update(xi, ci)
@@ -539,10 +532,10 @@ class LRASolver():
                     N_minus = [nb for nb in nonbasic if M[i, nb.col_idx] < 0]
 
                     conflict = []
-                    conflict += [nb.get_active_upper_boundary() for nb in N_plus]
-                    conflict += [nb.get_active_lower_boundary() for nb in N_minus]
-                    conflict.append(xi.get_active_lower_boundary())
-                    conflict = [-literal_sign*self.boundary_to_atom_id[c] for c, literal_sign in conflict]
+                    conflict += [nb.get_active_upper_literal() for nb in N_plus]
+                    conflict += [nb.get_active_lower_literal() for nb in N_minus]
+                    conflict.append(xi.get_active_lower_literal())
+                    conflict = [-conflicting_lit for conflicting_lit in conflict]
                     return False, conflict
                 xj = min(cand, key=str)
                 M = self._pivot_and_update(M, basic, nonbasic, xi, xj, xi.lower)
@@ -557,15 +550,11 @@ class LRASolver():
                     N_minus = [nb for nb in nonbasic if M[i, nb.col_idx] < 0]
 
                     conflict_bounds = []
-                    conflict_bounds += [nb.get_active_upper_boundary() for nb in N_minus]
-                    conflict_bounds += [nb.get_active_lower_boundary() for nb in N_plus]
-                    conflict_bounds.append(xi.get_active_upper_boundary())
+                    conflict_bounds += [nb.get_active_upper_literal() for nb in N_minus]
+                    conflict_bounds += [nb.get_active_lower_literal() for nb in N_plus]
+                    conflict_bounds.append(xi.get_active_upper_literal())
 
-                    conflict = []
-                    for c_source, literal_sign in conflict_bounds:
-                        assert c_source is not None
-                        assert literal_sign is not None
-                        conflict.append(-literal_sign*self.boundary_to_atom_id[c_source])
+                    conflict = [-conflicting_lit for conflicting_lit in conflict_bounds]
                     return False, conflict
                 xj = min(cand, key=lambda v: v.col_idx)
                 M = self._pivot_and_update(M, basic, nonbasic, xi, xj, xi.upper)
@@ -810,11 +799,9 @@ class LRAVariable():
     """
     def __init__(self, var: Any) -> None:
         self.upper = LRARational(float("inf"), 0)
-        self.upper_source = None
-        self.upper_literal_sign = None
+        self.upper_literal = None
         self.lower = LRARational(-float("inf"), 0)
-        self.lower_source = None
-        self.lower_literal_sign = None
+        self.lower_literal = None
         self.assign = LRARational(0,0)
         self.var = var
         self.col_idx = None
@@ -822,7 +809,7 @@ class LRAVariable():
     def __repr__(self) -> str:
         return repr(self.var)
 
-    def set_bound(self, boundary: Boundary, literal_sign: int) -> None:
+    def set_bound(self, boundary: Boundary, literal: int) -> None:
         """
         Set the upper or lower bound and record its source.
 
@@ -833,34 +820,35 @@ class LRAVariable():
         >>> from sympy.abc import x
         >>> v = LRAVariable(x)
         >>> b = Boundary(v, 10, upper=False, strict=False)
-        >>> # Asserting a lower bound x >= 10
-        >>> v.set_bound(b, literal_sign=1)
+        >>> # Asserting a lower bound x >= 10 using literal 5
+        >>> v.set_bound(b, 5)
         >>> v.lower
         (10, 0)
-        >>> v.lower_source == b
-        True
+        >>> v.lower_literal
+        5
         """
-        ci, upper = boundary.to_rational(literal_sign == -1)
+        is_negated = literal < 0
+        ci, upper = boundary.to_rational(is_negated)
         if upper:
             self.upper = ci
-            self.upper_source = boundary
-            self.upper_literal_sign = literal_sign
+            self.upper_literal = literal
         else:
             self.lower = ci
-            self.lower_source = boundary
-            self.lower_literal_sign = literal_sign
+            self.lower_literal = literal
 
-    def get_active_upper_boundary(self) -> Tuple[Optional[Boundary], Optional[int]]:
+    def get_active_upper_literal(self) -> int:
         """
-        Return the active upper Boundary object and the sign of the literal responsible for asserting it.
+        Return the literal responsible for asserting the active upper bound.
         """
-        return self.upper_source, self.upper_literal_sign
+        assert self.upper_literal is not None
+        return self.upper_literal
 
-    def get_active_lower_boundary(self) -> Tuple[Optional[Boundary], Optional[int]]:
+    def get_active_lower_literal(self) -> int:
         """
-        Return the active lower Boundary object and the sign of the literal responsible for asserting it.
+        Return the literal responsible for asserting the active lower bound.
         """
-        return self.lower_source, self.lower_literal_sign
+        assert self.lower_literal is not None
+        return self.lower_literal
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, LRAVariable):

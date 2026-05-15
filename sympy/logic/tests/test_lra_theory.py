@@ -443,10 +443,8 @@ def test_reset_bounds():
     state_variables = [
         ('lower', LRARational(10, 0), LRARational(-float("inf"), 0)),
         ('upper', LRARational(10, 0), LRARational(float("inf"), 0)),
-        ('lower_source', "some source", None),
-        ('lower_literal_sign', 1, None),
-        ('upper_source', "some source", None),
-        ('upper_literal_sign', -1, None),
+        ('lower_literal', 5, None),
+        ('upper_literal', -5, None),
         ('assign', LRARational(10, 0), LRARational(0, 0))
     ]
 
