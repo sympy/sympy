@@ -22,3 +22,9 @@ def test_elliptic_curve():
     # Issue 28546: -O should return canonical infinity point
     O = EllipticCurvePoint.point_at_infinity(e3)
     assert (-O).x == O.x and (-O).y == O.y and (-O).z == O.z
+    # Issue 28529: P + (-P) must return point at infinity on general Weierstrass curves.
+    # The curve y^2 + y = x^3 + x^2 has a3=1, so the additive inverse of (x, y)
+    # is (x, -y - a3) = (x, -y - 1), not (x, -y). The check y1+y2==0 was wrong.
+    e4 = EllipticCurve(0, 0, 0, 1, 1)
+    P = e4(0, 0)
+    assert (P + (-P)).z == 0
