@@ -676,12 +676,16 @@ def test_besselsimp():
     - 9*besselj(Rational(4, 3), 9*x)/2) + b*(9*bessely(Rational(-2, 3), 9*x)/2 - 9*bessely(Rational(4, 3), 9*x)/2)) +
     (81*x**2 - Rational(1, 9))*(a*besselj(Rational(1, 3), 9*x) + b*bessely(Rational(1, 3), 9*x))) == 0
 
-    assert besselsimp(besselj(a-1,x) + besselj(a+1, x) - 2*a*besselj(a, x)/x) == 0
+    # The recurrence-based simplifications below sort bessel terms by re(nu),
+    # which needs the index to be comparable: an infinite alpha would make
+    # re(nu)-1 < re(nu) indeterminate (oo - oo).
+    nu = Symbol('nu', finite=True)
+    assert besselsimp(besselj(nu-1, x) + besselj(nu+1, x) - 2*nu*besselj(nu, x)/x) == 0
 
-    assert besselsimp(besselj(a-1,x) + besselj(a+1, x) + besselj(a, x)) == (2*a + x)*besselj(a, x)/x
+    assert besselsimp(besselj(nu-1, x) + besselj(nu+1, x) + besselj(nu, x)) == (2*nu + x)*besselj(nu, x)/x
 
-    assert besselsimp(x**2* besselj(a,x) + x**3*besselj(a+1, x) + besselj(a+2, x)) == \
-    2*a*x*besselj(a + 1, x) + x**3*besselj(a + 1, x) - x**2*besselj(a + 2, x) + 2*x*besselj(a + 1, x) + besselj(a + 2, x)
+    assert besselsimp(x**2*besselj(nu, x) + x**3*besselj(nu+1, x) + besselj(nu+2, x)) == \
+    2*nu*x*besselj(nu + 1, x) + x**3*besselj(nu + 1, x) - x**2*besselj(nu + 2, x) + 2*x*besselj(nu + 1, x) + besselj(nu + 2, x)
 
 def test_Piecewise():
     e1 = x*(x + y) - y*(x + y)

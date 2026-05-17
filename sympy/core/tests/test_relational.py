@@ -1236,6 +1236,18 @@ def test_is_ge_le():
     assert is_lt(PowTest(3, 2), PowTest(3,9))
 
 
+def test_is_ge_extended_real_infinite_cancellation():
+    a = Symbol('a', extended_real=True)
+    assert is_ge(a + 1, a) is True
+    assert is_ge(a, a + 1) is None
+    assert is_gt(a + 1, a) is None
+    assert is_lt(a, a + 1) is None
+    assert is_le(a + 1, a) is None
+    b = Symbol('b', real=True)
+    assert is_gt(b + 1, b) is True
+    assert is_ge(b + 1, b) is True
+
+
 def test_weak_strict():
     for func in (Eq, Ne):
         eq = func(x, 1)
