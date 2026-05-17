@@ -704,6 +704,63 @@ def dot(vect1, vect2):
 
     return Dot(vect1, vect2)
 
+from sympy import acos
+from sympy.core.singleton import S
+
+def angle_between(self, other):
+    """
+    Returns the angle between two vectors in radians.
+
+    Formula:
+    
+                 A · B
+    angle = acos( ----------- )
+               |A| * |B|
+
+    Parameters
+    ==========
+    
+    other : Vector
+        The vector with which the angle is to be calculated.
+
+    Returns
+    =======
+    
+    angle : Expr
+        The angle between the two vectors in radians.
+
+    Examples
+    ========
+
+    >>> from sympy.vector import CoordSys3D
+    >>> from sympy import pi
+    >>> C = CoordSys3D('C')
+
+    >>> v1 = C.i
+    >>> v2 = C.j
+
+    >>> v1.angle_between(v2)
+    pi/2
+    """
+
+    # Ensure the input is a Vector
+    if not isinstance(other, Vector):
+        raise TypeError("Input must be a Vector")
+
+    # Compute magnitudes
+    mag1 = self.magnitude()
+    mag2 = other.magnitude()
+
+    # Prevent division by zero
+    if mag1 == S.Zero or mag2 == S.Zero:
+        raise ValueError("Cannot calculate angle with zero vector")
+
+    # Compute cosine of angle
+    cos_theta = self.dot(other) / (mag1 * mag2)
+
+    # Return inverse cosine
+    return acos(cos_theta)
+
 
 Vector._expr_type = Vector
 Vector._mul_func = VectorMul
