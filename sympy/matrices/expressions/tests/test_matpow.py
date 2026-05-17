@@ -91,6 +91,24 @@ def test_doit_symbol():
         assert MatPow(C, r).doit() == MatPow(C, r)
 
 
+def test_doit_MatMul_scalar_power():
+    a = symbols('a')
+    p = symbols('p')
+    pos = symbols('pos', positive=True)
+
+    assert MatPow(a*C, 2).doit() == a**2*C**2
+    assert (a*C)**2 == a**2*C**2
+    assert (a*C*D)**2 == a**2*(C*D)**2
+    assert (a*C*D)**-2 == a**-2*(C*D)**-2
+
+    assert MatPow(pos*C, S.Half).doit() == pos**S.Half*C**S.Half
+    assert (pos*C*D)**S.Half == pos**S.Half*(C*D)**S.Half
+
+    assert MatPow(a*C, S.Half).doit() == MatPow(a*C, S.Half)
+    assert (a*C)**p == MatPow(a*C, p)
+    assert (pos*C)**p == MatPow(pos*C, p)
+
+
 def test_doit_matrix():
     X = ImmutableMatrix([[1, 2], [3, 4]])
     assert MatPow(X, 0).doit() == ImmutableMatrix(Identity(2))

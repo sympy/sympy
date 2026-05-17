@@ -140,6 +140,28 @@ class MatMul(MatrixExpr, Mul):
         expanded = super(MatMul, self).expand(**kwargs)
         return self._evaluate(expanded)
 
+    def _eval_power(self, exp):
+        # Match Mul._eval_power by separating only the commutative scalar
+        # coefficient and keeping the ordered matrix product intact.
+        coeff, matrices = self.as_coeff_matrices()
+        # The S.One guard avoids recursing on coefficient-free MatMul
+        # expressions such as (A*B)**2.
+        if coeff is S.One:
+            return MatPow(self, exp)
+        matrix_part = matrices[0] if len(matrices) == 1 else MatMul(*matrices)
+
+        # Unlike Mul, keep unevaluated 0*A powers intact rather than
+        # extracting scalar infinities from negative powers of the zero
+        # coefficient. Evaluated 0*A is handled by ZeroMatrix._eval_power.
+        exp_is_number = exp.is_Integer or exp.is_Rational or exp.is_Float
+        coeff_can_be_extracted = (
+            (exp.is_Integer and coeff.is_zero is not True) or
+            (not exp.is_Integer and coeff.is_positive is True)
+        )
+        if exp_is_number and coeff_can_be_extracted:
+            return coeff**exp * MatPow(matrix_part, exp).doit(deep=False)
+        return MatPow(self, exp)
+
     def _eval_transpose(self):
         """Transposition of matrix multiplication.
 
