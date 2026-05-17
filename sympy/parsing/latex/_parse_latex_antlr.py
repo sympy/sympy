@@ -90,6 +90,20 @@ def parse_latex(sympy, strict=False):
     return expr
 
 
+def _strip_leading_d(text):
+    """Return the text after a leading differential marker, or None if absent.
+
+    Handles plain 'd' and upright forms '\\mathrm{d}', '\\text{d}', '\\textrm{d}'.
+    The caller is responsible for stripping any remaining leading whitespace.
+    """
+    if text.startswith('d'):
+        return text[1:]
+    for prefix in ('\\mathrm', '\\text', '\\textrm'):
+        if text.startswith(prefix):
+            return text[text.find('}', len(prefix)) + 1:]
+    return None
+
+
 def convert_relation(rel):
     if rel.expr():
         return convert_expr(rel.expr())
@@ -371,6 +385,11 @@ def convert_frac(frac):
                     and frac.upper.start.type == LaTeXLexer.LETTER
                     and frac.upper.start.text == 'd'):
                 return [wrt]
+            elif (diff_op and frac.upper.start == frac.upper.stop
+                    and frac.upper.start.type == LaTeXLexer.DIFFERENTIAL):
+                d_remainder = _strip_leading_d(frac.upper.start.text)
+                if d_remainder is not None and not d_remainder.strip():
+                    return [wrt]
             elif (partial_op and frac.upper.start == frac.upper.stop
                   and frac.upper.start.type == LaTeXLexer.SYMBOL
                   and frac.upper.start.text == '\\partial'):
@@ -378,8 +397,10 @@ def convert_frac(frac):
             upper_text = rule2text(frac.upper)
 
             expr_top = None
-            if diff_op and upper_text.startswith('d'):
-                expr_top = parse_latex(upper_text[1:])
+            if diff_op:
+                d_stripped = _strip_leading_d(upper_text)
+                if d_stripped is not None:
+                    expr_top = parse_latex(d_stripped.lstrip())
             elif partial_op and frac.upper.start.text == '\\partial':
                 expr_top = parse_latex(upper_text[len('\\partial'):])
             if expr_top:
@@ -596,12 +617,10 @@ def get_differential_var(d):
 
 
 def get_differential_var_str(text):
-    for i in range(1, len(text)):
-        c = text[i]
-        if not (c == " " or c == "\r" or c == "\n" or c == "\t"):
-            idx = i
-            break
-    text = text[idx:]
-    if text[0] == "\\":
-        text = text[1:]
-    return text
+    remainder = _strip_leading_d(text)
+    if remainder is None:
+        raise LaTeXParsingError("Invalid differential token: " + text)
+    remainder = remainder.lstrip()
+    if remainder.startswith('\\'):
+        remainder = remainder[1:]
+    return remainder
