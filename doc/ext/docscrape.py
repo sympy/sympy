@@ -464,7 +464,7 @@ class FunctionDoc(NumpyDocString):
                 argspec = str(inspect.signature(func))
                 argspec = argspec.replace('*', r'\*')
                 signature = '{}{}'.format(func_name, argspec)
-            except TypeError:
+            except (TypeError, ValueError):
                 signature = '%s()' % func_name
             self['Signature'] = signature
 
