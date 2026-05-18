@@ -3,15 +3,20 @@ This module implements the Residue function and related tools for working
 with residues.
 """
 from __future__ import annotations
+from typing import TYPE_CHECKING, cast
 
 from sympy.core.mul import Mul
+from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.sympify import sympify
 from sympy.utilities.timeutils import timethis
 
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
+    from sympy.core.symbol import Symbol
 
 @timethis('residue')
-def residue(expr, x, x0):
+def residue(expr: Expr | complex, x: Symbol, x0: Expr | complex) -> Expr:
     """
     Finds the residue of ``expr`` at the point x=x0.
 
@@ -49,13 +54,14 @@ def residue(expr, x, x0):
     # For the definition of a resultant, see section 1.4 (and any
     # previous sections for more review).
 
+    
     from sympy.series.order import Order
     from sympy.simplify.radsimp import collect
-    expr = sympify(expr)
+    _expr: Expr = cast("Expr", sympify(expr))
     if x0 != 0:
-        expr = expr.subs(x, x + x0)
+        _expr = cast("Expr", _expr.subs(x, x + x0))
     for n in (0, 1, 2, 4, 8, 16, 32):
-        s = expr.nseries(x, n=n)
+        s = _expr.nseries(x, n=n)
         if not s.has(Order) or s.getn() >= 0:
             break
     s = collect(s.removeO(), x)
@@ -67,7 +73,7 @@ def residue(expr, x, x0):
     for arg in args:
         c, m = arg.as_coeff_mul(x)
         m = Mul(*m)
-        if not (m in (S.One, x) or (m.is_Pow and m.exp.is_Integer)):
+        if not (m in (S.One, x) or (isinstance(m, Pow) and m.exp.is_Integer)):
             raise NotImplementedError('term of unexpected form: %s' % m)
         if m == 1/x:
             res += c
