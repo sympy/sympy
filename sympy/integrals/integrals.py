@@ -38,6 +38,72 @@ if TYPE_CHECKING:
     SymbolLimits = Expr | tuple[Expr, Expr] | tuple[Expr, Expr, Expr]
 
 
+def _try_exp_quadratic_integral(f, x):
+    """Recognize ``exp(quadratic in x)`` integrands and return an
+    ``erf``/``erfi`` antiderivative, or ``None``.
+
+    The exponent is normalized with :func:`expand` before being read as a
+    polynomial in ``x``, so factored forms such as ``exp(x*(-x + I))`` are
+    integrated identically to ``exp(-x**2 + I*x)``. Trig factors of the
+    form ``sin(...)*exp(quadratic)`` / ``cos(...)*exp(quadratic)`` are
+    rewritten via ``rewrite(exp)`` and dispatched term-wise.
+    """
+    from sympy.core.function import expand
+    from sympy.functions.elementary.exponential import exp
+    from sympy.functions.elementary.trigonometric import sin, cos
+    from sympy.functions.special.error_functions import erf, erfi
+    from sympy.simplify.powsimp import powsimp
+
+    if f.is_Add:
+        parts = []
+        for term in f.args:
+            h = _try_exp_quadratic_integral(term, x)
+            if h is None:
+                return None
+            parts.append(h)
+        return Add(*parts)
+
+    coeff, rest = f.as_independent(x, as_Add=False)
+    if not rest.has(x):
+        return None
+    # Merge adjacent exp() factors so exp(-x**2)*exp(I*x) is recognized
+    # as exp(-x**2 + I*x). This is what makes the trig branch (which
+    # expands sin/cos via the Euler rewrite) reach a single exp factor.
+    rest = powsimp(rest, combine='exp')
+
+    def _pure_exp_quadratic(g):
+        if not isinstance(g, exp):
+            return None
+        try:
+            p = Poly(expand(g.args[0]), x)
+        except (PolynomialError, ValueError):
+            return None
+        if p.degree() != 2:
+            return None
+        a, b, c = p.all_coeffs()
+        completion = c - b**2 / (4*a)
+        shifted = x + b/(2*a)
+        if a.is_negative:
+            s = sqrt(-a)
+            return sqrt(pi)/(2*s) * exp(completion) * erf(s*shifted)
+        if a.is_positive:
+            s = sqrt(a)
+            return sqrt(pi)/(2*s) * exp(completion) * erfi(s*shifted)
+        return None
+
+    h = _pure_exp_quadratic(rest)
+    if h is not None:
+        return coeff * h
+
+    if rest.is_Mul and any(isinstance(t, (sin, cos)) for t in rest.args):
+        rewritten = expand(rest.rewrite(exp))
+        if rewritten != rest:
+            sub = _try_exp_quadratic_integral(rewritten, x)
+            if sub is not None:
+                return coeff * sub
+    return None
+
+
 class Integral(AddWithLimits):
     """Represents unevaluated integral."""
 
@@ -962,6 +1028,14 @@ class Integral(AddWithLimits):
         poly = f.as_poly(x)
         if poly is not None and not (manual or meijerg or risch):
             return poly.integrate().as_expr()
+
+        # Recognize exp(quadratic in x) regardless of how the exponent is
+        # factored, so the antiderivative is shape-independent across
+        # upstream simplifications.
+        if not (manual or meijerg or risch):
+            h = _try_exp_quadratic_integral(f, x)
+            if h is not None:
+                return h
 
         if risch is not False:
             try:
