@@ -434,7 +434,7 @@ class LRASolver():
             assert (other_bound.d * s >= 0) is True
             assert (ci.d * s <= 0) is True
             # get conflicting boundary
-            conflicting_lit = xi.get_lower_bound_source_literal() if upper else xi.get_upper_bound_source_literal()
+            conflicting_lit = xi.lower_literal if upper else xi.upper_literal
 
             conflict = [-conflicting_lit, -literal]
             self.result = False, conflict
@@ -530,9 +530,9 @@ class LRASolver():
                     N_minus = [nb for nb in nonbasic if M[i, nb.col_idx] < 0]
 
                     conflict = []
-                    conflict += [nb.get_upper_bound_source_literal() for nb in N_plus]
-                    conflict += [nb.get_lower_bound_source_literal() for nb in N_minus]
-                    conflict.append(xi.get_lower_bound_source_literal())
+                    conflict += [nb.upper_literal for nb in N_plus]
+                    conflict += [nb.lower_literal for nb in N_minus]
+                    conflict.append(xi.lower_literal)
                     conflict = [-conflicting_lit for conflicting_lit in conflict]
                     return False, conflict
                 xj = min(cand, key=str)
@@ -548,9 +548,9 @@ class LRASolver():
                     N_minus = [nb for nb in nonbasic if M[i, nb.col_idx] < 0]
 
                     conflict_bounds = []
-                    conflict_bounds += [nb.get_upper_bound_source_literal() for nb in N_minus]
-                    conflict_bounds += [nb.get_lower_bound_source_literal() for nb in N_plus]
-                    conflict_bounds.append(xi.get_upper_bound_source_literal())
+                    conflict_bounds += [nb.upper_literal for nb in N_minus]
+                    conflict_bounds += [nb.lower_literal for nb in N_plus]
+                    conflict_bounds.append(xi.upper_literal)
 
                     conflict = [-conflicting_lit for conflicting_lit in conflict_bounds]
                     return False, conflict
@@ -716,9 +716,6 @@ class Boundary:
             delta = -1 if upper else 1
         return LRARational(self.bound, delta), upper
 
-    def get_negated(self):
-        return Boundary(self.var, self.bound, not self.upper, not self.strict)
-
     def get_inequality(self):
         if self.upper and self.strict:
             return self.var.var < self.bound
@@ -756,10 +753,6 @@ class LRARational():
     @property
     def d(self):
         return self.value[1]
-
-    @property
-    def is_strict(self):
-        return self.value[1] != 0
 
     def __lt__(self, other):
         return self.value < other.value
@@ -832,20 +825,6 @@ class LRAVariable():
         else:
             self.lower = ci
             self.lower_literal = literal
-
-    def get_upper_bound_source_literal(self):
-        """
-        Return the literal responsible for setting the current upper bound.
-        """
-        assert self.upper_literal is not None
-        return self.upper_literal
-
-    def get_lower_bound_source_literal(self):
-        """
-        Return the literal responsible for setting the current lower bound.
-        """
-        assert self.lower_literal is not None
-        return self.lower_literal
 
     def __eq__(self, other):
         if not isinstance(other, LRAVariable):
