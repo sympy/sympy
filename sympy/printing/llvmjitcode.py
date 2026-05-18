@@ -13,6 +13,7 @@ This module requires llvmlite (https://github.com/numba/llvmlite).
 from __future__ import annotations
 
 import ctypes
+from typing import Any
 
 from sympy.external import import_module
 from sympy.printing.printer import Printer
@@ -150,10 +151,10 @@ class LLVMJitCallbackPrinter(LLVMJitPrinter):
 
 # ensure lifetime of the execution engine persists (else call to compiled
 #   function will seg fault)
-exe_engines = []
+exe_engines: list[Any] = []
 
 # ensure names for generated functions are unique
-link_names = set()
+link_names: set[str] = set()
 current_link_suffix = 0
 
 
