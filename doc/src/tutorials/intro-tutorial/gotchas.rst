@@ -36,17 +36,17 @@ Oops! What happened here?  We tried to use the variable ``x``, but it tells us
 that ``x`` is not defined.  In Python, variables have no meaning until they
 are defined.  SymPy is no different.  Unlike many symbolic manipulation
 systems you may have used, in SymPy, variables are not defined automatically.
-To define variables, we must use ``symbols``.
+To define variables, we must use :func:`~sympy.core.symbol.symbols`.
 
     >>> x = symbols('x')
     >>> x + 1
     x + 1
 
-``symbols`` takes a string of variable names separated by spaces or commas,
-and creates Symbols out of them.  We can then assign these to variable names.
-Later, we will investigate some convenient ways we can work around this issue.
-For now, let us just define the most common variable names, ``x``, ``y``, and
-``z``, for use through the rest of this section
+:func:`~sympy.core.symbol.symbols` takes a string of variable names separated
+by spaces or commas, and creates Symbols out of them.  We can then assign these
+to variable names. Later, we will investigate some convenient ways we can work
+around this issue. For now, let us just define the most common variable names,
+``x``, ``y``, and ``z``, for use through the rest of this section
 
     >>> x, y, z = symbols('x y z')
 
@@ -118,7 +118,8 @@ do not change automatically.  For example
 
 .. sidebar:: Quick Tip
 
-   To change the value of a Symbol in an expression, use ``subs``
+   To change the value of a Symbol in an expression, use
+   :func:`~sympy.core.basic.Basic.subs`
 
      >>> x = symbols('x')
      >>> expr = x + 1
@@ -130,7 +131,8 @@ In this example, if we want to know what ``expr`` is with the new value of
 x + 1``.  This can be complicated if several lines created ``expr``.  One
 advantage of using a symbolic computation system like SymPy is that we can
 build a symbolic representation for ``expr``, and then substitute ``x`` with
-values.  The correct way to do this in SymPy is to use ``subs``, which will be
+values.  The correct way to do this in SymPy is to use
+:func:`~sympy.core.basic.Basic.subs`, which will be
 discussed in more detail later.
 
     >>> x = symbols('x')
@@ -160,8 +162,9 @@ us see what happens when we use ``==``.
 Instead of treating ``x + 1 == 4`` symbolically, we just got ``False``.  In
 SymPy, ``==`` represents exact structural equality testing.  This means that
 ``a == b`` means that we are *asking* if `a = b`.  We always get a ``bool`` as
-the result of ``==``.  There is a separate object, called ``Eq``, which can be
-used to create symbolic equalities
+the result of ``==``.  There is a separate object, called
+:func:`~sympy.core.relational.Eq`, which can be used to create symbolic
+equalities
 
     >>> Eq(x + 1, 4)
     Eq(x + 1, 4)
@@ -186,15 +189,16 @@ It turns out that when using SymPy as a library, having ``==`` test for exact
 structural equality is far more useful than having it represent symbolic
 equality, or having it test for mathematical equality.  However, as a new
 user, you will probably care more about the latter two.  We have already seen
-an alternative to representing equalities symbolically, ``Eq``.  To test if
-two things are equal, it is best to recall the basic fact that if `a = b`,
-then `a - b = 0`.  Thus, the best way to check if `a = b` is to take `a - b`
-and simplify it, and see if it goes to 0.  We will learn :ref:`later
-<tutorial-simplify>` that the function to do this is called ``simplify``. This
-method is not infallible---in fact, it can be `theoretically proven
-<https://en.wikipedia.org/wiki/Richardson%27s_theorem>`_ that it is impossible
-to determine if two symbolic expressions are identically equal in
-general---but for most common expressions, it works quite well.
+an alternative to representing equalities symbolically,
+:func:`~sympy.core.relational.Eq`.  To test if two things are equal, it is best
+to recall the basic fact that if `a = b`, then `a - b = 0`.  Thus, the best way
+to check if `a = b` is to take `a - b` and simplify it, and see if it goes to 0
+.  We will learn :ref:`later <tutorial-simplify>` that the function to do this 
+is called :func:`~sympy.simplify.simplify.simplify`. This method is not 
+infallible---in fact, it can be 
+`theoretically proven <https://en.wikipedia.org/wiki/Richardson%27s_theorem>`_ 
+that it is impossible to determine if two symbolic expressions are identically 
+equal in general---but for most common expressions, it works quite well.
 
     >>> a = (x + 1)**2
     >>> b = x**2 + 2*x + 1
@@ -204,8 +208,8 @@ general---but for most common expressions, it works quite well.
     >>> simplify(a - c)
     4*x
 
-There is also a method called ``equals`` that tests if two expressions are
-equal by evaluating them numerically at random points.
+There is also a method called :func:`~sympy.core.expr.Expr.equals` that tests
+if two expressions are equal by evaluating them numerically at random points.
 
     >>> a = cos(x)**2 - sin(x)**2
     >>> b = cos(2*x)
