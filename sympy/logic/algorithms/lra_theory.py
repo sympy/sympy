@@ -421,28 +421,34 @@ class LRASolver():
         self.result = None
 
         xi = boundary.var
-        is_literal_negated = literal < 0
-        ci, upper = boundary.to_rational(is_literal_negated)
+        ci, upper = boundary.to_rational(is_negated=literal < 0)
 
         s = 1 if upper else -1
-        current_bound = xi.upper if upper else xi.lower
-        if ci * s >= current_bound * s:
+        target_bound = xi.upper if upper else xi.lower
+        opposing_bound = xi.lower if upper else xi.upper
+        conflicting_lit = xi.lower_literal if upper else xi.upper_literal
+
+        # If asserting lower bound, convert to equivalent upper bound situation
+        # to simplify logic.
+        c_norm = ci * s
+        target_norm = target_bound * s
+        opposing_norm = opposing_bound * s
+
+        # Return `None` if new constraint is weaker than existing constraint.
+        if c_norm >= target_norm:
             return None
 
-        other_bound = xi.lower if upper else xi.upper
-        if ci * s < other_bound * s:
-            assert (other_bound.d * s >= 0) is True
+        # Return conflict if new constraint directly conflicts with opposing constraint.
+        if c_norm < opposing_norm:
+            assert (opposing_bound.d * s >= 0) is True
             assert (ci.d * s <= 0) is True
-            # get conflicting boundary
-            conflicting_lit = xi.lower_literal if upper else xi.upper_literal
 
-            conflict = [-conflicting_lit, -literal]
-            self.result = False, conflict
+            self.result = False, [-conflicting_lit, -literal]
             return self.result
 
         xi.set_bound(boundary, literal)
 
-        if xi in self.nonslack and xi.assign * s > ci * s:
+        if xi in self.nonslack and xi.assign * s > c_norm:
             self._update(xi, ci)
 
         if self.run_checks and all(v.assign.q != float("inf") and v.assign.q != -float("inf")
