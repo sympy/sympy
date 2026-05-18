@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from contextlib import contextmanager
 from sympy.core.symbol import Str
-from sympy.core.sympify import _sympify
+from sympy.core.sympify import _sympify, sympify
 from sympy.logic.boolalg import Boolean, false, true
 from sympy.multipledispatch.dispatcher import Dispatcher, str_signature
 from sympy.utilities.iterables import is_sequence
@@ -426,3 +426,61 @@ def assuming(*assumptions):
     finally:
         global_assumptions.clear()
         global_assumptions.update(old_global_assumptions)
+
+
+def recursive_ask(proposition, assumptions):
+    # if rec > 0:
+    #     from sympy.assumptions.ask import ask
+    #     return ask(proposition, assumptions, rec=rec-1)
+
+
+    from sympy.assumptions.ask import _ask_single_fact, Q, _extract_all_facts
+    from sympy.core.relational import Eq, Ne, Gt, Lt, Ge, Le
+    from sympy.assumptions.cnf import CNF, EncodedCNF, Literal
+    from sympy.core.kind import BooleanKind
+
+
+
+    proposition = sympify(proposition)
+    assumptions = sympify(assumptions)
+
+    if isinstance(proposition, Predicate) or proposition.kind is not BooleanKind:
+        raise TypeError("proposition must be a valid logical expression")
+
+    if isinstance(assumptions, Predicate) or assumptions.kind is not BooleanKind:
+        raise TypeError("assumptions must be a valid logical expression")
+
+    binrelpreds = {Eq: Q.eq, Ne: Q.ne, Gt: Q.gt, Lt: Q.lt, Ge: Q.ge, Le: Q.le}
+    if isinstance(proposition, AppliedPredicate):
+        key, args = proposition.function, proposition.arguments
+    elif proposition.func in binrelpreds:
+        key, args = binrelpreds[type(proposition)], proposition.args
+    else:
+        key, args = Q.is_true, (proposition,)
+
+    # convert local and global assumptions to CNF
+    assump_cnf = CNF.from_prop(assumptions)
+    # assump_cnf.extend(context)
+
+    # extract the relevant facts from assumptions with respect to args
+    local_facts = _extract_all_facts(assump_cnf, args)
+
+    # convert default facts and assumed facts to encoded CNF
+    # known_facts_cnf = get_all_known_facts()
+    # enc_cnf = EncodedCNF()
+    # enc_cnf.from_cnf(CNF(known_facts_cnf))
+    # enc_cnf.add_from_cnf(local_facts)
+
+    # check the satisfiability of given assumptions
+    # if local_facts.clauses and satisfiable(enc_cnf) is False:
+    #     raise ValueError(f"inconsistent assumptions {assumptions}")
+
+    # quick computation for single fact
+    res = _ask_single_fact(key, local_facts)
+    if res is not None:
+        return res
+
+    # direct resolution method, no logic
+    res = key(*args)._eval_ask(assumptions)
+    if res is not None:
+        return bool(res)
