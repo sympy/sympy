@@ -3966,7 +3966,7 @@ def nonlinsolve(system, *symbols):
     ========
 
     >>> from sympy import symbols, nonlinsolve
-    >>> x, y, z = symbols('x, y, z', real=True)
+    >>> x, y = symbols('x, y', real=True)
     >>> nonlinsolve([x*y - 1, 4*x**2 + y**2 - 5], [x, y])
     {(-1, -1), (-1/2, -2), (1/2, 2), (1, 1)}
 
@@ -4012,6 +4012,7 @@ def nonlinsolve(system, *symbols):
     new `system`). But it is not recommended to solve linear system using
     ``nonlinsolve``, because :func:`~.linsolve` is better for general linear systems.
 
+    >>> x, y, z = symbols('x, y, z')
     >>> nonlinsolve([x + 2*y -z - 3, x - y - 4*z + 9, y + z - 4], [x, y, z])
     {(3*z - 5, 4 - z, z)}
 
