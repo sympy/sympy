@@ -47,6 +47,8 @@ class OmegaPower(Basic):
         return self.args == other.args
 
     def __hash__(self) -> int:
+        if self.exp==ord0:
+            return hash(int(self.mult))
         return Basic.__hash__(self)
 
     def __lt__(self, other: OmegaPower | Integer | int) -> bool:
@@ -141,7 +143,11 @@ class Ordinal(Basic):
         return self.terms == other.terms
 
     def __hash__(self) -> int:
-        return hash(self.args)
+        if len(self.terms)==0:
+            return hash(0)
+        if len(self.terms)==1 and self.terms[0].exp==ord0:
+            return hash(int(self.terms[0].mult))
+        return hash(self.terms)
 
     def __lt__(self, other: Ordinal | Integer | int) -> bool:
         if not isinstance(other, Ordinal):
