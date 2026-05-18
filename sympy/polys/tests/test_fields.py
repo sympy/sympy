@@ -351,4 +351,25 @@ def test_FracField_index():
 
     raises(ValueError, lambda: F.index(1))
     raises(ValueError, lambda: F.index(a))
-    pass
+
+
+def test_FracField_from_expr_EXRAW():
+    """from_expr should not recurse infinitely when domain is EXRAW (#29761)."""
+    from sympy.polys.domains import EXRAW
+    from sympy.core.singleton import S
+
+    s = symbols('s')
+    ff = EXRAW.frac_field(s)
+
+    # Building a FracElement from a plain integer should work
+    # without triggering RecursionError.
+    elem = ff.field.from_expr(S.One)
+    assert elem == ff.field.one
+
+    # Also test via FractionField.from_sympy
+    elem2 = ff.from_sympy(S(1))
+    assert elem2 == ff.one
+
+    # Non-trivial expression should also work
+    elem3 = ff.field.from_expr(s + 1)
+    assert elem3.as_expr() == s + 1
