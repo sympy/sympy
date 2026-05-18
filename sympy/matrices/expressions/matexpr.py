@@ -295,6 +295,10 @@ class MatrixExpr(Expr):
                 (j >= -self.cols) != False and (j < self.cols) != False)
 
     def __getitem__(self, key):
+        if key is Ellipsis:
+            key = (slice(None), slice(None))
+        if isinstance(key, tuple) and len(key) == 2:
+            key = tuple(slice(None) if v is Ellipsis else v for v in key)
         if not isinstance(key, tuple) and isinstance(key, slice):
             from sympy.matrices.expressions.slice import MatrixSlice
             return MatrixSlice(self, key, (0, None, 1))
