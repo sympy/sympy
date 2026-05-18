@@ -231,6 +231,95 @@ filled with `0`\ s.
     ⎢           ⎥
     ⎣0   0  0  5⎦
 
+
+Random Matrices
+---------------
+
+To create Matrices with specific properties use one of
+the random matrix generation functions, e.g.
+``invertible`` or ``triangular``
+Find a :ref:`full list of random matrices <matrices-random>`.
+
+    .. ..testsetup::
+
+       >>> from sympy.core.random import rng, seed
+       >>> _rng_state = rng.getstate()
+       >>> seed(0)
+
+    >>> from sympy.matrices.random import square, triangular
+    >>> from sympy import simplify
+
+    >>> M = square(3)  # only integer entries
+    >>> M
+    ⎡1  1  0⎤
+    ⎢       ⎥
+    ⎢1  2  0⎥
+    ⎢       ⎥
+    ⎣0  2  1⎦
+    >>> M.inv()
+    ⎡2   -1  0⎤
+    ⎢         ⎥
+    ⎢-1  1   0⎥
+    ⎢         ⎥
+    ⎣2   -2  1⎦
+
+    >>> M = square(3, scalars=(sqrt(2),))  # entries as sums and products of sqrt(2) and 1
+    >>> M
+    ⎡1   0   0 ⎤
+    ⎢          ⎥
+    ⎢0   1  -√2⎥
+    ⎢          ⎥
+    ⎣√2  0  -1 ⎦
+    >>> simplify(M.inv()*M)
+    ⎡1  0  0⎤
+    ⎢       ⎥
+    ⎢0  1  0⎥
+    ⎢       ⎥
+    ⎣0  0  1⎦
+
+
+    >>> M = triangular(3, scalars=(1, sqrt(2)))
+    >>> M
+    ⎡-1  0  0 ⎤
+    ⎢         ⎥
+    ⎢0   1  1 ⎥
+    ⎢         ⎥
+    ⎣0   0  -1⎦
+    >>> M.inv()
+    ⎡-1  0  0 ⎤
+    ⎢         ⎥
+    ⎢0   1  1 ⎥
+    ⎢         ⎥
+    ⎣0   0  -1⎦
+
+
+Using matrices to construct a matrix with integer entries
+which has an inverse with integer entries, too.
+
+    .. ..testsetup::
+
+       >>> seed(0)
+
+    >>> from sympy.matrices.random import square
+
+    >>> A = square(4, scalars=(1,-1))
+    >>> A
+    ⎡1   0  0   0 ⎤
+    ⎢             ⎥
+    ⎢0   1  1   -1⎥
+    ⎢             ⎥
+    ⎢1   0  -1  0 ⎥
+    ⎢             ⎥
+    ⎣-1  0  1   -1⎦
+    >>> A.inv()
+    ⎡1   0  0   0 ⎤
+    ⎢             ⎥
+    ⎢-1  1  0   -1⎥
+    ⎢             ⎥
+    ⎢1   0  -1  0 ⎥
+    ⎢             ⎥
+    ⎣0   0  -1  -1⎦
+
 Advanced Methods
 ================
 
