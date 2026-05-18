@@ -235,37 +235,48 @@ def find_unit(quantity, unit_system="SI"):
     >>> u.find_unit(u.charge)
     ['C', 'coulomb', 'coulombs', 'planck_charge', 'elementary_charge']
     >>> u.find_unit("ampere")
-    ['ampere', 'amperes']
-    >>> u.find_unit('angstrom')
-    ['angstrom', 'angstroms']
+    ['A', 'ampere', 'amperes', 'planck_current']
     >>> u.find_unit('volt')
-    ['volt', 'volts', 'electronvolt', 'electronvolts', 'planck_voltage']
+    ['V', 'v', 'volt', 'volts', 'planck_voltage']
     >>> u.find_unit(u.inch**3)[:9]
     ['L', 'l', 'cL', 'cl', 'dL', 'dl', 'mL', 'ml', 'liter']
     """
     unit_system = UnitSystem.get_unit_system(unit_system)
 
     import sympy.physics.units as u
-    rv = []
+    rv = set()
+    IA = [(i, getattr(u, i)) for i in dir(u)]
+    IA = [(i, a) for i, a in IA if isinstance(a, (Quantity, Dimension))]
     if isinstance(quantity, str):
-        rv = [i for i in dir(u) if quantity in i and isinstance(getattr(u, i), Quantity)]
-        dim = getattr(u, quantity)
-        if isinstance(dim, Dimension):
-            rv.extend(find_unit(dim))
+        rv.update([i for i, _ in IA if i[0].startswith(quantity)])
+        if quantity == '':
+            return []
+        dim = getattr(u, quantity, None)
+        if dim is not None:
+            for i, a in IA:
+                if i[0].startswith(quantity):
+                    rv.add(i)
+            if isinstance(dim, Quantity):
+                dim = dim.dimension
+            for i, quant_attr in IA:
+                if i[0].startswith(quantity) or (isinstance(quant_attr, Quantity)
+                        and quant_attr.dimension == dim):
+                    if not isinstance(quant_attr, Dimension):
+                        rv.add(i)
     else:
-        for i in sorted(dir(u)):
-            other = getattr(u, i)
-            if not isinstance(other, Quantity):
-                continue
+        for i, other in IA:
             if isinstance(quantity, Quantity):
-                if quantity.dimension == other.dimension:
-                    rv.append(str(i))
+                if isinstance(other, Quantity) and quantity.dimension == other.dimension:
+                    rv.add(i)
             elif isinstance(quantity, Dimension):
-                if other.dimension == quantity:
-                    rv.append(str(i))
-            elif other.dimension == Dimension(unit_system.get_dimensional_expr(quantity)):
-                rv.append(str(i))
-    return sorted(set(rv), key=lambda x: (len(x), x))
+                if isinstance(other, Quantity) and other.dimension == quantity:
+                    rv.add(i)
+            elif isinstance(other, Quantity) and other.dimension == Dimension(unit_system.get_dimensional_expr(quantity)):
+                rv.add(i)
+
+    if not rv:
+        return []
+    return list(list(zip(*sorted(zip([len(i) for i in rv], rv))))[1])
 
 # NOTE: the old units module had additional variables:
 # 'density', 'illuminance', 'resistance'.
