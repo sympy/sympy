@@ -128,6 +128,7 @@ from sympy.core.singleton import S
 from sympy.core.numbers import Rational, oo
 from sympy.matrices.dense import Matrix
 from sympy.utilities.iterables import sift
+import math
 
 
 class UnhandledInput(Exception):
@@ -155,7 +156,8 @@ class LRASolver():
            https://link.springer.com/chapter/10.1007/11817963_11
     """
 
-    def __init__(self, A, slack_variables, nonslack_variables, atom_id_to_boundaries, s_subs, testing_mode):
+    def __init__(self, A, slack_variables, nonslack_variables,
+                 atom_id_to_boundaries, s_subs, testing_mode):
         """
         Use the "from_encoded_cnf" method to create a new LRASolver.
         """
@@ -164,7 +166,8 @@ class LRASolver():
 
         if any(not isinstance(a, Rational) for a in A):
             raise UnhandledInput("Non-rational numbers are not handled")
-        if any(not isinstance(b.bound, Rational) for bs in atom_id_to_boundaries.values() for b in bs):
+        if not all(isinstance(b.bound, Rational)
+               for bs in atom_id_to_boundaries.values() for b in bs):
             raise UnhandledInput("Non-rational numbers are not handled")
         m, n = len(slack_variables), len(slack_variables)+len(nonslack_variables)
         if m != 0:
@@ -172,7 +175,7 @@ class LRASolver():
         if self.run_checks:
             assert A[:, n-m:] == -eye(m)
 
-        self.atom_id_to_boundaries = atom_id_to_boundaries  # mapping of int to lists of Boundary objects
+        self.atom_id_to_boundaries = atom_id_to_boundaries
         self.A = A
         self.slack = slack_variables
         self.nonslack = nonslack_variables
@@ -250,7 +253,8 @@ class LRASolver():
 
         if testing_mode:
             # sort to reduce nondeterminism
-            encoded_cnf_items = sorted(encoded_cnf.encoding.items(), key=lambda x: str(x))
+            encoded_cnf_items = sorted(encoded_cnf.encoding.items(),
+                                       key=lambda x: str(x))
         else:
             encoded_cnf_items = encoded_cnf.encoding.items()
 
@@ -293,11 +297,15 @@ class LRASolver():
             if prop.function in [Q.ge, Q.gt]:
                 expr = -expr
 
-            vars, const = _sep_const_terms(expr)  # example: (2x + 3y + 2) --> (2x + 3y), (2)
-            vars, var_coeff = _sep_const_coeff(vars)  # examples: (2x) --> (x, 2); (2x + 3y) --> (2x + 3y), (1)
+            # Example: 2x + 3y, 2 <- _sep_const_terms(2x + 3y + 2)
+            vars, const = _sep_const_terms(expr)
+            # Examples:
+            # x, 2 <- _sep_const_coeff(2x)
+            # 2x + 3y, 1 <- _sep_const_coeff(2x + 3y + 2)
+            vars, var_coeff = _sep_const_coeff(vars)
             const = const / var_coeff
-
-            terms = Add.make_args(vars)  # example: (2x + 3y) --> [2x, 3y]
+            # Example: [2x, 3y] <- Add.make_args(2x + 3y)
+            terms = Add.make_args(vars)
             for term in terms:
                 term, _ = _sep_const_coeff(term)
                 assert len(term.free_symbols) > 0
@@ -342,7 +350,11 @@ class LRASolver():
         for idx, var in enumerate(nonbasic + basic):
             var.col_idx = idx
 
-        return LRASolver(A, basic, nonbasic, atom_id_to_boundaries, s_subs, testing_mode), conflicts
+
+
+        solver = LRASolver(A, basic, nonbasic, atom_id_to_boundaries,
+                           s_subs, testing_mode)
+        return solver, conflicts
 
     def reset_bounds(self):
         """
@@ -392,7 +404,9 @@ class LRASolver():
         is_literal_negated = literal < 0
 
         if len(boundaries) > 1 and is_literal_negated:
-            return None # negated equality is not handled and should only appear in conflict clauses
+            # Negated equality is not handled and should only appear in
+            # conflict clauses.
+            return None
 
         res = None
         for boundary in boundaries:
@@ -451,7 +465,7 @@ class LRASolver():
         if xi in self.nonslack and xi.assign * s > c_norm:
             self._update(xi, ci)
 
-        if self.run_checks and all(v.assign.q != float("inf") and v.assign.q != -float("inf")
+        if self.run_checks and all(not math.isinf(v.assign.q)
                                    for v in self.all_var):
             M = self.A
             X = Matrix([v.assign.q for v in self.all_var])
@@ -505,8 +519,7 @@ class LRASolver():
 
                 # assignments for x must always satisfy Ax = 0
                 # probably have to turn this off when dealing with strict ineq
-                if all(v.assign.q != float("inf") and v.assign.q != -float("inf")
-                                   for v in self.all_var):
+                if all(not math.isinf(v.assign.q) for v in self.all_var):
                     X = Matrix([v.assign.q for v in self.all_var])
                     assert all(abs(val) < 10**(-10) for val in M*X)
 
@@ -738,7 +751,8 @@ class Boundary:
     def __eq__(self, other):
         if not isinstance(other, Boundary):
             return NotImplemented
-        return (self.var, self.bound, self.strict, self.upper) == (other.var, other.bound, other.strict, other.upper)
+        return ((self.var, self.bound, self.strict, self.upper)
+            == (other.var, other.bound, other.strict, other.upper))
 
     def __hash__(self):
         return hash((self.var, self.bound, self.strict, self.upper))
