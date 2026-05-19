@@ -240,7 +240,7 @@ class LRASolver():
         # for an explanation of how the formula is converted into a matrix
         # and a set of single variable constraints.
 
-        atom_id_to_boundary = {}
+        atom_id_to_boundaries = {}
         A = []
 
         basic = []
@@ -324,11 +324,11 @@ class LRASolver():
             if equality:
                 b1 = Boundary(var_to_lra_var[var], -const, True, False)  # x <= c
                 b2 = Boundary(var_to_lra_var[var], -const, False, False) # x >= c
-                atom_id_to_boundary[atom_id] = [b1, b2]
+                atom_id_to_boundaries[atom_id] = [b1, b2]
             else:
                 upper = var_coeff > 0
                 b = Boundary(var_to_lra_var[var], -const, upper, strict)
-                atom_id_to_boundary[atom_id] = [b]
+                atom_id_to_boundaries[atom_id] = [b]
 
         fs = [v.free_symbols for v in nonbasic + basic]
         assert all(len(syms) > 0 for syms in fs)
@@ -342,7 +342,7 @@ class LRASolver():
         for idx, var in enumerate(nonbasic + basic):
             var.col_idx = idx
 
-        return LRASolver(A, basic, nonbasic, atom_id_to_boundary, s_subs, testing_mode), conflicts
+        return LRASolver(A, basic, nonbasic, atom_id_to_boundaries, s_subs, testing_mode), conflicts
 
     def reset_bounds(self):
         """
@@ -371,7 +371,7 @@ class LRASolver():
 
         literal : int
             A mapping of IDs to constraints
-            can be found in `self.atom_id_to_boundary`.
+            can be found in `self.atom_id_to_boundaries`.
 
         Returns
         =======
