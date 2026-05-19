@@ -155,7 +155,7 @@ class LRASolver():
            https://link.springer.com/chapter/10.1007/11817963_11
     """
 
-    def __init__(self, A, slack_variables, nonslack_variables, enc_to_boundary, s_subs, testing_mode):
+    def __init__(self, A, slack_variables, nonslack_variables, atom_id_to_boundaries, s_subs, testing_mode):
         """
         Use the "from_encoded_cnf" method to create a new LRASolver.
         """
@@ -164,7 +164,7 @@ class LRASolver():
 
         if any(not isinstance(a, Rational) for a in A):
             raise UnhandledInput("Non-rational numbers are not handled")
-        if any(not isinstance(b.bound, Rational) for b in enc_to_boundary.values()):
+        if any(not isinstance(b.bound, Rational) for bs in atom_id_to_boundaries.values() for b in bs):
             raise UnhandledInput("Non-rational numbers are not handled")
         m, n = len(slack_variables), len(slack_variables)+len(nonslack_variables)
         if m != 0:
@@ -172,8 +172,7 @@ class LRASolver():
         if self.run_checks:
             assert A[:, n-m:] == -eye(m)
 
-        self.enc_to_boundary = enc_to_boundary  # mapping of int to Boundary objects
-        self.boundary_to_enc = {value: key for key, value in enc_to_boundary.items()}
+        self.atom_id_to_boundaries = atom_id_to_boundaries  # mapping of int to lists of Boundary objects
         self.A = A
         self.slack = slack_variables
         self.nonslack = nonslack_variables
@@ -241,7 +240,7 @@ class LRASolver():
         # for an explanation of how the formula is converted into a matrix
         # and a set of single variable constraints.
 
-        encoding = {}  # maps int to boundary
+        atom_id_to_boundary = {}
         A = []
 
         basic = []
@@ -259,15 +258,15 @@ class LRASolver():
         var_to_lra_var = {}
         conflicts = []
 
-        for prop, enc in encoded_cnf_items:
+        for prop, atom_id in encoded_cnf_items:
             if isinstance(prop, Predicate):
                 prop = prop(empty_var)
             if not isinstance(prop, AppliedPredicate):
                 if prop == True:
-                    conflicts.append([enc])
+                    conflicts.append([atom_id])
                     continue
                 if prop == False:
-                    conflicts.append([-enc])
+                    conflicts.append([-atom_id])
                     continue
 
                 raise ValueError(f"Unhandled Predicate: {prop}")
@@ -283,10 +282,10 @@ class LRASolver():
             expr = prop.lhs - prop.rhs
             pred = ALLOWED_PRED[prop.function](expr, S.Zero)
             if pred == True:
-                conflicts.append([enc])
+                conflicts.append([atom_id])
                 continue
             if pred == False:
-                conflicts.append([-enc])
+                conflicts.append([-atom_id])
                 continue
             if not expr.free_symbols:
                 raise UnhandledInput(f"{prop} could not be simplified")
@@ -321,10 +320,15 @@ class LRASolver():
             assert var_coeff != 0
 
             equality = prop.function == Q.eq
-            upper = var_coeff > 0 if not equality else None
             strict = prop.function in [Q.gt, Q.lt]
-            b = Boundary(var_to_lra_var[var], -const, upper, equality, strict)
-            encoding[enc] = b
+            if equality:
+                b1 = Boundary(var_to_lra_var[var], -const, True, False)  # x <= c
+                b2 = Boundary(var_to_lra_var[var], -const, False, False) # x >= c
+                atom_id_to_boundary[atom_id] = [b1, b2]
+            else:
+                upper = var_coeff > 0
+                b = Boundary(var_to_lra_var[var], -const, upper, strict)
+                atom_id_to_boundary[atom_id] = [b]
 
         fs = [v.free_symbols for v in nonbasic + basic]
         assert all(len(syms) > 0 for syms in fs)
@@ -338,7 +342,7 @@ class LRASolver():
         for idx, var in enumerate(nonbasic + basic):
             var.col_idx = idx
 
-        return LRASolver(A, basic, nonbasic, encoding, s_subs, testing_mode), conflicts
+        return LRASolver(A, basic, nonbasic, atom_id_to_boundary, s_subs, testing_mode), conflicts
 
     def reset_bounds(self):
         """
@@ -348,14 +352,12 @@ class LRASolver():
         self.result = None
         for var in self.all_var:
             var.lower = LRARational(-float("inf"), 0)
-            var.lower_from_eq = False
-            var.lower_from_neg = False
+            var.lower_literal = None
             var.upper = LRARational(float("inf"), 0)
-            var.upper_from_eq = False
-            var.upper_from_neg = False
+            var.upper_literal = None
             var.assign = LRARational(0, 0)
 
-    def assert_lit(self, enc_constraint):
+    def assert_lit(self, literal):
         """
         Assert a literal representing a constraint
         and update the internal state accordingly.
@@ -367,9 +369,9 @@ class LRASolver():
         Parameters
         ==========
 
-        enc_constraint : int
-            A mapping of encodings to constraints
-            can be found in `self.enc_to_boundary`.
+        literal : int
+            A mapping of IDs to constraints
+            can be found in `self.atom_id_to_boundary`.
 
         Returns
         =======
@@ -380,47 +382,34 @@ class LRASolver():
             A conflict clause that "explains" why
             the literals asserted so far are unsatisfiable.
         """
-        if abs(enc_constraint) not in self.enc_to_boundary:
+        if abs(literal) not in self.atom_id_to_boundaries:
             return None
 
-        if not HANDLE_NEGATION and enc_constraint < 0:
+        if not HANDLE_NEGATION and literal < 0:
             return None
 
-        boundary = self.enc_to_boundary[abs(enc_constraint)]
-        sym, c, negated = boundary.var, boundary.bound, enc_constraint < 0
+        boundaries = self.atom_id_to_boundaries[abs(literal)]
+        is_literal_negated = literal < 0
 
-        if boundary.equality and negated:
+        if len(boundaries) > 1 and is_literal_negated:
             return None # negated equality is not handled and should only appear in conflict clauses
 
-        upper = boundary.upper != negated
-        if boundary.strict != negated:
-            delta = -1 if upper else 1
-            c = LRARational(c, delta)
-        else:
-            c = LRARational(c, 0)
+        res = None
+        for boundary in boundaries:
+            res = self._assert_bound(boundary, literal)
+            if res and res[0] is False:
+                break
 
-        if boundary.equality:
-            res1 = self._assert_lower(sym, c, from_equality=True, from_neg=negated)
-            if res1 and res1[0] == False:
-                res = res1
-            else:
-                res2 = self._assert_upper(sym, c, from_equality=True, from_neg=negated)
-                res =  res2
-        elif upper:
-            res = self._assert_upper(sym, c, from_neg=negated)
-        else:
-            res = self._assert_lower(sym, c, from_neg=negated)
-
-        if self.is_sat and sym not in self.slack_set:
+        if self.is_sat and all(b.var not in self.slack_set for b in boundaries):
             self.is_sat = res is None
         else:
             self.is_sat = False
 
         return res
 
-    def _assert_upper(self, xi, ci, from_equality=False, from_neg=False):
+    def _assert_bound(self, boundary, literal):
         """
-        Adjusts the upper bound on variable xi if the new upper bound is
+        Adjusts the upper or lower bound on variable xi if the new bound is
         more limiting. The assignment of variable xi is adjusted to be
         within the new bound if needed.
 
@@ -430,74 +419,42 @@ class LRASolver():
         if self.result:
             assert self.result[0] != False
         self.result = None
-        if ci >= xi.upper:
+
+        xi = boundary.var
+        ci, upper = boundary.to_rational(is_negated=literal < 0)
+
+        s = 1 if upper else -1
+        target_bound = xi.upper if upper else xi.lower
+        opposing_bound = xi.lower if upper else xi.upper
+        conflicting_lit = xi.lower_literal if upper else xi.upper_literal
+
+        # If asserting lower bound, convert to equivalent upper bound situation
+        # to simplify logic.
+        c_norm = ci * s
+        target_norm = target_bound * s
+        opposing_norm = opposing_bound * s
+
+        # Return `None` if new constraint is weaker than existing constraint.
+        if c_norm >= target_norm:
             return None
-        if ci < xi.lower:
-            assert (xi.lower[1] >= 0) is True
-            assert (ci[1] <= 0) is True
 
-            lit1, neg1 = Boundary.from_lower(xi)
+        # Return conflict if new constraint directly conflicts with opposing constraint.
+        if c_norm < opposing_norm:
+            assert (opposing_bound.d * s >= 0) is True
+            assert (ci.d * s <= 0) is True
 
-            lit2 = Boundary(var=xi, const=ci[0], strict=ci[1] != 0, upper=True, equality=from_equality)
-            if from_neg:
-                lit2 = lit2.get_negated()
-            neg2 = -1 if from_neg else 1
-
-            conflict = [-neg1*self.boundary_to_enc[lit1], -neg2*self.boundary_to_enc[lit2]]
-            self.result = False, conflict
+            self.result = False, [-conflicting_lit, -literal]
             return self.result
-        xi.upper = ci
-        xi.upper_from_eq = from_equality
-        xi.upper_from_neg = from_neg
-        if xi in self.nonslack and xi.assign > ci:
+
+        xi.set_bound(boundary, literal)
+
+        if xi in self.nonslack and xi.assign * s > c_norm:
             self._update(xi, ci)
 
-        if self.run_checks and all(v.assign[0] != float("inf") and v.assign[0] != -float("inf")
+        if self.run_checks and all(v.assign.q != float("inf") and v.assign.q != -float("inf")
                                    for v in self.all_var):
             M = self.A
-            X = Matrix([v.assign[0] for v in self.all_var])
-            assert all(abs(val) < 10 ** (-10) for val in M * X)
-
-        return None
-
-    def _assert_lower(self, xi, ci, from_equality=False, from_neg=False):
-        """
-        Adjusts the lower bound on variable xi if the new lower bound is
-        more limiting. The assignment of variable xi is adjusted to be
-        within the new bound if needed.
-
-        Also calls `self._update` to update the assignment for slack variables
-        to keep all equalities satisfied.
-        """
-        if self.result:
-            assert self.result[0] != False
-        self.result = None
-        if ci <= xi.lower:
-            return None
-        if ci > xi.upper:
-            assert (xi.upper[1] <= 0) is True
-            assert (ci[1] >= 0) is True
-
-            lit1, neg1 = Boundary.from_upper(xi)
-
-            lit2 = Boundary(var=xi, const=ci[0], strict=ci[1] != 0, upper=False, equality=from_equality)
-            if from_neg:
-                lit2 = lit2.get_negated()
-            neg2 = -1 if from_neg else 1
-
-            conflict = [-neg1*self.boundary_to_enc[lit1],-neg2*self.boundary_to_enc[lit2]]
-            self.result = False, conflict
-            return self.result
-        xi.lower = ci
-        xi.lower_from_eq = from_equality
-        xi.lower_from_neg = from_neg
-        if xi in self.nonslack and xi.assign < ci:
-            self._update(xi, ci)
-
-        if self.run_checks and all(v.assign[0] != float("inf") and v.assign[0] != -float("inf")
-                                   for v in self.all_var):
-            M = self.A
-            X = Matrix([v.assign[0] for v in self.all_var])
+            X = Matrix([v.assign.q for v in self.all_var])
             assert all(abs(val) < 10 ** (-10) for val in M * X)
 
         return None
@@ -508,6 +465,7 @@ class LRASolver():
         variable xi so that they stay satisfied given xi is equal to v.
         """
         i = xi.col_idx
+        assert i is not None
         for j, b in enumerate(self.slack):
             aji = self.A[j, i]
             b.assign = b.assign + (v - xi.assign)*aji
@@ -547,9 +505,9 @@ class LRASolver():
 
                 # assignments for x must always satisfy Ax = 0
                 # probably have to turn this off when dealing with strict ineq
-                if all(v.assign[0] != float("inf") and v.assign[0] != -float("inf")
+                if all(v.assign.q != float("inf") and v.assign.q != -float("inf")
                                    for v in self.all_var):
-                    X = Matrix([v.assign[0] for v in self.all_var])
+                    X = Matrix([v.assign.q for v in self.all_var])
                     assert all(abs(val) < 10**(-10) for val in M*X)
 
                 # check upper and lower match this format:
@@ -558,8 +516,8 @@ class LRASolver():
                 # this wouldn't make sense:
                 # x <= rat - delta
                 # x >= rat + delta
-                assert all(x.upper[1] <= 0 for x in self.all_var)
-                assert all(x.lower[1] >= 0 for x in self.all_var)
+                assert all(x.upper.d <= 0 for x in self.all_var)
+                assert all(x.lower.d >= 0 for x in self.all_var)
 
             cand = [b for b in basic if b.assign < b.lower or b.assign > b.upper]
 
@@ -578,10 +536,10 @@ class LRASolver():
                     N_minus = [nb for nb in nonbasic if M[i, nb.col_idx] < 0]
 
                     conflict = []
-                    conflict += [Boundary.from_upper(nb) for nb in N_plus]
-                    conflict += [Boundary.from_lower(nb) for nb in N_minus]
-                    conflict.append(Boundary.from_lower(xi))
-                    conflict = [-neg*self.boundary_to_enc[c] for c, neg in conflict]
+                    conflict += [nb.upper_literal for nb in N_plus]
+                    conflict += [nb.lower_literal for nb in N_minus]
+                    conflict.append(xi.lower_literal)
+                    conflict = [-conflicting_lit for conflicting_lit in conflict]
                     return False, conflict
                 xj = min(cand, key=str)
                 M = self._pivot_and_update(M, basic, nonbasic, xi, xj, xi.lower)
@@ -595,12 +553,12 @@ class LRASolver():
                     N_plus = [nb for nb in nonbasic if M[i, nb.col_idx] > 0]
                     N_minus = [nb for nb in nonbasic if M[i, nb.col_idx] < 0]
 
-                    conflict = []
-                    conflict += [Boundary.from_upper(nb) for nb in N_minus]
-                    conflict += [Boundary.from_lower(nb) for nb in N_plus]
-                    conflict.append(Boundary.from_upper(xi))
+                    conflict_bounds = []
+                    conflict_bounds += [nb.upper_literal for nb in N_minus]
+                    conflict_bounds += [nb.lower_literal for nb in N_plus]
+                    conflict_bounds.append(xi.upper_literal)
 
-                    conflict = [-neg*self.boundary_to_enc[c] for c, neg in conflict]
+                    conflict = [-conflicting_lit for conflicting_lit in conflict_bounds]
                     return False, conflict
                 xj = min(cand, key=lambda v: v.col_idx)
                 M = self._pivot_and_update(M, basic, nonbasic, xi, xj, xi.upper)
@@ -612,6 +570,7 @@ class LRASolver():
         to keep equations satisfied.
         """
         i, j = basic[xi], xj.col_idx
+        assert j is not None
         assert M[i, j] != 0
         theta = (v - xi.assign)*(1/M[i, j])
         xi.assign = v
@@ -719,53 +678,52 @@ def _sep_const_terms(expr):
 
 
 class Boundary:
-    """
-    Represents an upper or lower bound or an equality between a symbol
+    r"""
+    Represents an upper or lower bound between a symbol
     and some constant.
+
+    Example
+    =======
+
+    >>> from sympy.logic.algorithms.lra_theory import Boundary, LRAVariable
+    >>> from sympy.abc import x
+    >>> var = LRAVariable(x)
+    >>> # x <= 5
+    >>> b1 = Boundary(var, 5, upper=True, strict=False)
+    >>> b1.get_inequality()
+    x <= 5
+    >>> # x > 10 (represented as a lower bound with strict=True)
+    >>> b2 = Boundary(var, 10, upper=False, strict=True)
+    >>> b2.get_inequality()
+    x > 10
     """
-    def __init__(self, var, const, upper, equality, strict=None):
-        if not equality in [True, False]:
-            assert equality in [True, False]
-
-
+    def __init__(self, var, const, upper, strict=None):
         self.var = var
         if isinstance(const, tuple):
             s = const[1] != 0
-            if strict:
+            if strict is not None:
                 assert s == strict
             self.bound = const[0]
             self.strict = s
         else:
             self.bound = const
             self.strict = strict
-        self.upper = upper if not equality else None
-        self.equality = equality
-        self.strict = strict
+        self.upper = upper
         assert self.strict is not None
 
-    @staticmethod
-    def from_upper(var):
-        neg = -1 if var.upper_from_neg else 1
-        b = Boundary(var, var.upper[0], True, var.upper_from_eq, var.upper[1] != 0)
-        if neg < 0:
-            b = b.get_negated()
-        return b, neg
-
-    @staticmethod
-    def from_lower(var):
-        neg = -1 if var.lower_from_neg else 1
-        b = Boundary(var, var.lower[0], False, var.lower_from_eq, var.lower[1] != 0)
-        if neg < 0:
-            b = b.get_negated()
-        return b, neg
-
-    def get_negated(self):
-        return Boundary(self.var, self.bound, not self.upper, self.equality, not self.strict)
+    def to_rational(self, is_negated):
+        """
+        Return the LRARational bound and effective direction (upper=True)
+        considering whether the boundary is negated.
+        """
+        upper = self.upper != is_negated
+        delta = 0
+        if self.strict != is_negated:
+            delta = -1 if upper else 1
+        return LRARational(self.bound, delta), upper
 
     def get_inequality(self):
-        if self.equality:
-            return Eq(self.var.var, self.bound)
-        elif self.upper and self.strict:
+        if self.upper and self.strict:
             return self.var.var < self.bound
         elif not self.upper and self.strict:
             return self.var.var > self.bound
@@ -778,11 +736,12 @@ class Boundary:
         return repr("Boundary(" + repr(self.get_inequality()) + ")")
 
     def __eq__(self, other):
-        other = (other.var, other.bound, other.strict, other.upper, other.equality)
-        return (self.var, self.bound, self.strict, self.upper, self.equality) == other
+        if not isinstance(other, Boundary):
+            return NotImplemented
+        return (self.var, self.bound, self.strict, self.upper) == (other.var, other.bound, other.strict, other.upper)
 
     def __hash__(self):
-        return hash((self.var, self.bound, self.strict, self.upper, self.equality))
+        return hash((self.var, self.bound, self.strict, self.upper))
 
 
 class LRARational():
@@ -793,6 +752,14 @@ class LRARational():
     def __init__(self, rational, delta):
         self.value = (rational, delta)
 
+    @property
+    def q(self):
+        return self.value[0]
+
+    @property
+    def d(self):
+        return self.value[1]
+
     def __lt__(self, other):
         return self.value < other.value
 
@@ -800,17 +767,19 @@ class LRARational():
         return self.value <= other.value
 
     def __eq__(self, other):
+        if not isinstance(other, LRARational):
+            return NotImplemented
         return self.value == other.value
 
     def __add__(self, other):
-        return LRARational(self.value[0] + other.value[0], self.value[1] + other.value[1])
+        return LRARational(self.q + other.q, self.d + other.d)
 
     def __sub__(self, other):
-        return LRARational(self.value[0] - other.value[0], self.value[1] - other.value[1])
+        return LRARational(self.q - other.q, self.d - other.d)
 
     def __mul__(self, other):
         assert not isinstance(other, LRARational)
-        return LRARational(self.value[0] * other, self.value[1] * other)
+        return LRARational(self.q * other, self.d * other)
 
     def __getitem__(self, index):
         return self.value[index]
@@ -826,17 +795,42 @@ class LRAVariable():
     """
     def __init__(self, var):
         self.upper = LRARational(float("inf"), 0)
-        self.upper_from_eq = False
-        self.upper_from_neg = False
+        self.upper_literal = None
         self.lower = LRARational(-float("inf"), 0)
-        self.lower_from_eq = False
-        self.lower_from_neg = False
+        self.lower_literal = None
         self.assign = LRARational(0,0)
         self.var = var
         self.col_idx = None
 
     def __repr__(self):
         return repr(self.var)
+
+    def set_bound(self, boundary, literal):
+        """
+        Set the upper or lower bound and record its source.
+
+        Example
+        =======
+
+        >>> from sympy.logic.algorithms.lra_theory import LRAVariable, Boundary
+        >>> from sympy.abc import x
+        >>> v = LRAVariable(x)
+        >>> b = Boundary(v, 10, upper=False, strict=False)
+        >>> # Asserting a lower bound x >= 10 using literal 5
+        >>> v.set_bound(b, 5)
+        >>> v.lower
+        (10, 0)
+        >>> v.lower_literal
+        5
+        """
+        is_negated = literal < 0
+        ci, upper = boundary.to_rational(is_negated)
+        if upper:
+            self.upper = ci
+            self.upper_literal = literal
+        else:
+            self.lower = ci
+            self.lower_literal = literal
 
     def __eq__(self, other):
         if not isinstance(other, LRAVariable):

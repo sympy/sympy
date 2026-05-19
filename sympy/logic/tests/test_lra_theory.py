@@ -100,11 +100,15 @@ def test_from_encoded_cnf():
     assert str(lra.nonslack) == '[x, y, z]'
     assert lra.A == Matrix([[ 1,  1, 0, -1,  0],
                             [-1, -2, 1,  0, -1]])
-    assert {(str(b.var), b.bound, b.upper, b.equality, b.strict) for b in lra.enc_to_boundary.values()} == {('_s1', 2, None, True, False),
-    ('_s1', 2, True, False, False),
-    ('_s2', -4, True, False, True),
-    ('_s2', -6, True, False, False),
-    ('x', 0, False, False, False)}
+    actual = {tuple(sorted((str(b.var), b.bound, b.upper, b.strict) for b in bs)) for bs in lra.atom_id_to_boundary.values()}
+    expected = {
+        (('_s1', 2, False, False), ('_s1', 2, True, False)), # Eq(x + y, 2)
+        (('_s1', 2, True, False),),                          # x + y <= 2
+        (('_s2', -4, True, True),),                          # x + 2*y - z > 4 -> _s2 < -4
+        (('_s2', -6, True, False),),                         # x + 2*y - z >= 6 -> _s2 <= -6
+        (('x', 0, False, False),)                            # x >= 0
+    }
+    assert actual == expected
 
 
 def test_problem():
@@ -180,8 +184,8 @@ def test_random_problems():
         s_subs_rev = {value: key for key, value in s_subs.items()}
         lits = {lit for clause in enc.data for lit in clause}
 
-        bounds = [(lra.enc_to_boundary[l], l) for l in lits if l in lra.enc_to_boundary]
-        bounds = sorted(bounds, key=lambda x: (str(x[0].var), x[0].bound, str(x[0].upper))) # to remove nondeterminism
+        bounds = [(lra.atom_id_to_boundary[l], l) for l in lits if l in lra.atom_id_to_boundary]
+        bounds = sorted(bounds, key=lambda x: (str(x[0][0].var), x[0][0].bound, str(x[0][0].upper))) # to remove nondeterminism
 
         for b, l in bounds:
             if lra.result and lra.result[0] == False:
@@ -209,7 +213,12 @@ def test_random_problems():
 
             conflict = feasible[1]
             assert len(conflict) >= 2
-            conflict = {lra.enc_to_boundary[-l].get_inequality() for l in conflict}
+            def get_expr(bs):
+                if len(bs) == 2:
+                    return Eq(bs[0].var.var, bs[0].bound)
+                return bs[0].get_inequality()
+
+            conflict = {get_expr(lra.atom_id_to_boundary[abs(l)]) for l in conflict}
             conflict = {clause.subs(s_subs_rev) for clause in conflict}
             assert check_if_satisfiable_with_z3(conflict) is False
 
@@ -226,7 +235,7 @@ def test_pos_neg_zero():
     for lit in enc.encoding.values():
         if lra.assert_lit(lit) is not None:
             break
-    assert len(lra.enc_to_boundary) == 3
+    assert len(lra.atom_id_to_boundary) == 3
     assert lra.check()[0] == False
 
     bf = Q.positive(x) & Q.lt(x, -1)
@@ -235,7 +244,7 @@ def test_pos_neg_zero():
     for lit in enc.encoding.values():
         if lra.assert_lit(lit) is not None:
             break
-    assert len(lra.enc_to_boundary) == 2
+    assert len(lra.atom_id_to_boundary) == 2
     assert lra.check()[0] == False
 
     bf = Q.positive(x) & Q.zero(x)
@@ -244,7 +253,7 @@ def test_pos_neg_zero():
     for lit in enc.encoding.values():
         if lra.assert_lit(lit) is not None:
             break
-    assert len(lra.enc_to_boundary) == 2
+    assert len(lra.atom_id_to_boundary) == 2
     assert lra.check()[0] == False
 
     bf = Q.positive(x) & Q.zero(y)
@@ -253,7 +262,7 @@ def test_pos_neg_zero():
     for lit in enc.encoding.values():
         if lra.assert_lit(lit) is not None:
             break
-    assert len(lra.enc_to_boundary) == 2
+    assert len(lra.atom_id_to_boundary) == 2
     assert lra.check()[0] == True
 
 
@@ -265,7 +274,7 @@ def test_pos_neg_infinite():
     for lit in enc.encoding.values():
         if lra.assert_lit(lit) is not None:
             break
-    assert len(lra.enc_to_boundary) == 3
+    assert len(lra.atom_id_to_boundary) == 3
     assert lra.check()[0] == False
 
     bf = Q.positive_infinite(x) & Q.gt(x, 10000000) & Q.positive_infinite(y)
@@ -274,7 +283,7 @@ def test_pos_neg_infinite():
     for lit in enc.encoding.values():
         if lra.assert_lit(lit) is not None:
             break
-    assert len(lra.enc_to_boundary) == 3
+    assert len(lra.atom_id_to_boundary) == 3
     assert lra.check()[0] == True
 
     bf = Q.positive_infinite(x) & Q.negative_infinite(x)
@@ -283,7 +292,7 @@ def test_pos_neg_infinite():
     for lit in enc.encoding.values():
         if lra.assert_lit(lit) is not None:
             break
-    assert len(lra.enc_to_boundary) == 2
+    assert len(lra.atom_id_to_boundary) == 2
     assert lra.check()[0] == False
 
 
@@ -291,13 +300,13 @@ def test_binrel_evaluation():
     bf = Q.gt(3, 2)
     enc = boolean_formula_to_encoded_cnf(bf)
     lra, conflicts = LRASolver.from_encoded_cnf(enc, testing_mode=True)
-    assert len(lra.enc_to_boundary) == 0
+    assert len(lra.atom_id_to_boundary) == 0
     assert conflicts == [[1]]
 
     bf = Q.lt(3, 2)
     enc = boolean_formula_to_encoded_cnf(bf)
     lra, conflicts = LRASolver.from_encoded_cnf(enc, testing_mode=True)
-    assert len(lra.enc_to_boundary) == 0
+    assert len(lra.atom_id_to_boundary) == 0
     assert conflicts == [[-1]]
 
 
@@ -309,7 +318,7 @@ def test_negation():
     for clause in enc.data:
         for lit in clause:
             lra.assert_lit(lit)
-    assert len(lra.enc_to_boundary) == 2
+    assert len(lra.atom_id_to_boundary) == 2
     assert lra.check()[0] == False
     assert sorted(lra.check()[1]) in [[-1, 2], [-2, 1]]
 
@@ -319,7 +328,7 @@ def test_negation():
     for clause in enc.data:
         for lit in clause:
             lra.assert_lit(lit)
-    assert len(lra.enc_to_boundary) == 2
+    assert len(lra.atom_id_to_boundary) == 2
     assert lra.check()[0] == True
 
     bf = ~Q.gt(x, 0) & ~Q.lt(x, 1)
@@ -328,7 +337,7 @@ def test_negation():
     for clause in enc.data:
         for lit in clause:
             lra.assert_lit(lit)
-    assert len(lra.enc_to_boundary) == 2
+    assert len(lra.atom_id_to_boundary) == 2
     assert lra.check()[0] == False
 
     bf = ~Q.gt(x, 0) & ~Q.le(x, 0)
@@ -337,7 +346,7 @@ def test_negation():
     for clause in enc.data:
         for lit in clause:
             lra.assert_lit(lit)
-    assert len(lra.enc_to_boundary) == 2
+    assert len(lra.atom_id_to_boundary) == 2
     assert lra.check()[0] == False
 
     bf = ~Q.le(x+y, 2) & ~Q.ge(x-y, 2) & ~Q.ge(y, 0)
@@ -346,7 +355,7 @@ def test_negation():
     for clause in enc.data:
         for lit in clause:
             lra.assert_lit(lit)
-    assert len(lra.enc_to_boundary) == 3
+    assert len(lra.atom_id_to_boundary) == 3
     assert lra.check()[0] == False
     assert len(lra.check()[1]) == 3
     assert all(i > 0 for i in lra.check()[1])
@@ -395,7 +404,7 @@ def test_infinite_strict_inequalities():
     for lit in sorted(enc.encoding.values()):
         if lra.assert_lit(lit) is not None:
             break
-    assert len(lra.enc_to_boundary) == 3
+    assert len(lra.atom_id_to_boundary) == 3
     assert lra.check()[0] == True
 
 
@@ -434,10 +443,8 @@ def test_reset_bounds():
     state_variables = [
         ('lower', LRARational(10, 0), LRARational(-float("inf"), 0)),
         ('upper', LRARational(10, 0), LRARational(float("inf"), 0)),
-        ('lower_from_eq', True, False),
-        ('lower_from_neg', True, False),
-        ('upper_from_eq', True, False),
-        ('upper_from_neg', True, False),
+        ('lower_literal', 5, None),
+        ('upper_literal', -5, None),
         ('assign', LRARational(10, 0), LRARational(0, 0))
     ]
 
