@@ -155,7 +155,7 @@ class LRASolver():
            https://link.springer.com/chapter/10.1007/11817963_11
     """
 
-    def __init__(self, A, slack_variables, nonslack_variables, atom_id_to_boundary, s_subs, testing_mode):
+    def __init__(self, A, slack_variables, nonslack_variables, atom_id_to_boundaries, s_subs, testing_mode):
         """
         Use the "from_encoded_cnf" method to create a new LRASolver.
         """
@@ -164,7 +164,7 @@ class LRASolver():
 
         if any(not isinstance(a, Rational) for a in A):
             raise UnhandledInput("Non-rational numbers are not handled")
-        if any(not isinstance(b.bound, Rational) for bs in atom_id_to_boundary.values() for b in bs):
+        if any(not isinstance(b.bound, Rational) for bs in atom_id_to_boundaries.values() for b in bs):
             raise UnhandledInput("Non-rational numbers are not handled")
         m, n = len(slack_variables), len(slack_variables)+len(nonslack_variables)
         if m != 0:
@@ -172,7 +172,7 @@ class LRASolver():
         if self.run_checks:
             assert A[:, n-m:] == -eye(m)
 
-        self.atom_id_to_boundary = atom_id_to_boundary  # mapping of int to lists of Boundary objects
+        self.atom_id_to_boundaries = atom_id_to_boundaries  # mapping of int to lists of Boundary objects
         self.A = A
         self.slack = slack_variables
         self.nonslack = nonslack_variables
@@ -382,13 +382,13 @@ class LRASolver():
             A conflict clause that "explains" why
             the literals asserted so far are unsatisfiable.
         """
-        if abs(literal) not in self.atom_id_to_boundary:
+        if abs(literal) not in self.atom_id_to_boundaries:
             return None
 
         if not HANDLE_NEGATION and literal < 0:
             return None
 
-        boundaries = self.atom_id_to_boundary[abs(literal)]
+        boundaries = self.atom_id_to_boundaries[abs(literal)]
         is_literal_negated = literal < 0
 
         if len(boundaries) > 1 and is_literal_negated:
