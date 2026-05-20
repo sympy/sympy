@@ -6,6 +6,7 @@ with residues.
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
+from sympy.core.expr import Expr
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.singleton import S
@@ -13,7 +14,6 @@ from sympy.core.sympify import sympify
 from sympy.utilities.timeutils import timethis
 
 if TYPE_CHECKING:
-    from sympy.core.expr import Expr
     from sympy.core.symbol import Symbol
 
 
@@ -71,7 +71,7 @@ def residue(expr: Expr | complex, x: Symbol, x0: Expr | complex) -> Expr:
         args = s.args
     else:
         args = [s]
-    res = S.Zero
+    res: Expr = S.Zero                    
     for arg in args:
         c, m = arg.as_coeff_mul(x)
         m = Mul(*m)
