@@ -13,7 +13,7 @@ from sympy.core.sympify import sympify
 from sympy.utilities.timeutils import timethis
 
 if TYPE_CHECKING:
-    from sympy.core.expr import Expr   
+    from sympy.core.expr import Expr
     from sympy.core.symbol import Symbol
 
 
