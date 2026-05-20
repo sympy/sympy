@@ -1057,7 +1057,6 @@ class Beam:
                         self.bc_deflection[am] = list(self.bc_deflection[am])
                         self.bc_deflection[am][1]= (value.subs(reactkey[reac],reactvalue[reac]))
                         self.bc_deflection[am] = tuple(self.bc_deflection[am])
-        
     def shear_force(self):
         """
         Returns a Singularity Function expression which represents
