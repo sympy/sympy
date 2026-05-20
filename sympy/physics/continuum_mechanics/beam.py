@@ -490,7 +490,7 @@ class Beam:
             new_beam.apply_rotation_hinge(self.length)
             return new_beam
 
-    def apply_support(self, loc, type="fixed"):
+    def apply_support(self, loc, type="fixed", spring_constant=None):
         """
         This method applies support to a particular beam object and returns
         the symbol of the unknown reaction load(s).
@@ -543,11 +543,11 @@ class Beam:
         """
         loc = sympify(loc)
 
-        if type == "fixed" or type=="roller" or type=="pin":
+        if type == "fixed" or type=="roller" or type=="pin" or type=="spring":
             pass
         else:
             raise ValueError(
-                "Invalid support type. Choose from 'pin', 'roller', or 'fixed'."
+                "Invalid support type. Choose from 'pin', 'roller', 'fixed' or 'spring '."
             )
 
         self._applied_supports.append((loc, type))
@@ -556,6 +556,11 @@ class Beam:
             self._applied_support_symbols.append(reaction_load)
             self.apply_load(reaction_load, loc, -1)
             self.bc_deflection.append((loc, 0))
+        elif type in ("spring"):
+            reaction_load = Symbol('R_'+str(loc))
+            self._applied_support_symbols.append(reaction_load)
+            self.apply_load(reaction_load, loc, -1)
+            self.bc_deflection.append((loc, reaction_load/spring_constant))
         else:
             reaction_load = Symbol('R_'+str(loc))
             self._applied_support_symbols.append(reaction_load)
@@ -569,7 +574,7 @@ class Beam:
 
         self._support_as_loads.append((reaction_load, loc, -1, None))
 
-        if type in ("pin", "roller"):
+        if type in ("pin", "roller", "spring"):
             return reaction_load
         else:
             return reaction_load, reaction_moment
