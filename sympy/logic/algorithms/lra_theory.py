@@ -350,8 +350,6 @@ class LRASolver():
         for idx, var in enumerate(nonbasic + basic):
             var.col_idx = idx
 
-
-
         solver = LRASolver(A, basic, nonbasic, atom_id_to_boundaries,
                            s_subs, testing_mode)
         return solver, conflicts
@@ -691,7 +689,7 @@ def _sep_const_terms(expr):
 
 
 class Boundary:
-    r"""
+    """
     Represents an upper or lower bound between a symbol
     and some constant.
 
