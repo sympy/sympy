@@ -2,8 +2,9 @@
 This module implements the Residue function and related tools for working
 with residues.
 """
+
 from __future__ import annotations
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
@@ -15,7 +16,8 @@ if TYPE_CHECKING:
     from sympy.core.expr import Expr
     from sympy.core.symbol import Symbol
 
-@timethis('residue')
+
+@timethis("residue")
 def residue(expr: Expr | complex, x: Symbol, x0: Expr | complex) -> Expr:
     """
     Finds the residue of ``expr`` at the point x=x0.
@@ -54,12 +56,12 @@ def residue(expr: Expr | complex, x: Symbol, x0: Expr | complex) -> Expr:
     # For the definition of a resultant, see section 1.4 (and any
     # previous sections for more review).
 
-    
     from sympy.series.order import Order
     from sympy.simplify.radsimp import collect
-    _expr: Expr = cast("Expr", sympify(expr))
+
+    _expr = sympify(expr)
     if x0 != 0:
-        _expr = cast("Expr", _expr.subs(x, x + x0))
+        _expr = _expr.subs(x, x + x0)
     for n in (0, 1, 2, 4, 8, 16, 32):
         s = _expr.nseries(x, n=n)
         if not s.has(Order) or s.getn() >= 0:
@@ -74,7 +76,7 @@ def residue(expr: Expr | complex, x: Symbol, x0: Expr | complex) -> Expr:
         c, m = arg.as_coeff_mul(x)
         m = Mul(*m)
         if not (m in (S.One, x) or (isinstance(m, Pow) and m.exp.is_Integer)):
-            raise NotImplementedError('term of unexpected form: %s' % m)
-        if m == 1/x:
+            raise NotImplementedError("term of unexpected form: %s" % m)
+        if m == 1 / x:
             res += c
     return res
