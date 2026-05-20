@@ -71,7 +71,7 @@ def residue(expr: Expr | complex, x: Symbol, x0: Expr | complex) -> Expr:
         args = s.args
     else:
         args = [s]
-    res: Expr = S.Zero                    
+    res: Expr = S.Zero
     for arg in args:
         c, m = arg.as_coeff_mul(x)
         m = Mul(*m)
