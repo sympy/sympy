@@ -2022,6 +2022,11 @@ def test_Mod():
     expr_int = 8*Mod(floor(x1_int/64), 4).xreplace({x1_int: x1})
     assert expr == expr_int
 
+    # from issue 29757: Mod(n * Mod(x, q), q) should simplify to Mod(n*x, q)
+    x1_int = Symbol('x1_int', integer=True)
+
+    assert Mod(3 * Mod(x1_int, 7), 7) == Mod(3 * x1_int, 7)
+    assert Mod(5 * Mod(x1_int, 3), 3) == Mod(2 * x1_int, 3)
 
 def test_Mod_Pow():
     # modular exponentiation
