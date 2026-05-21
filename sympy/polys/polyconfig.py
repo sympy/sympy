@@ -25,7 +25,7 @@ _default_config = {
     'GROEBNER':                   'buchberger',
 }
 
-_current_config = {}
+_current_config: dict[str, bool | int | str] = {}
 
 @contextmanager
 def using(**kwargs):
@@ -73,7 +73,7 @@ def query(key: Literal['GROEBNER']) -> str | None: ...
 
 def query(key: str) -> bool | int | str | None:
     """Ask for a value of the given configuration item. """
-    return _current_config.get(key.upper(), None)
+    return _current_config.get(key.upper())
 
 
 def configure():

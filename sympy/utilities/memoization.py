@@ -1,8 +1,16 @@
 from __future__ import annotations
 from functools import wraps
+from typing import Any, Callable, Protocol
+
+class _MemoizedFunc(Protocol):
+    def __call__(self, n: int) -> Any: ...
+    def cache_length(self) -> int: ...
+    def fetch_item(self, x: Any) -> Any:...
 
 
-def recurrence_memo(initial):
+
+
+def recurrence_memo(initial: list[Any])-> Callable:
     """
     Memo decorator for sequences defined by recurrence
 
@@ -25,22 +33,22 @@ def recurrence_memo(initial):
     """
     cache = initial
 
-    def decorator(f):
+    def decorator(f: Callable) -> _MemoizedFunc:
         @wraps(f)
-        def g(n):
+        def g(n: int) -> Any:
             L = len(cache)
             if n < L:
                 return cache[n]
             for i in range(L, n + 1):
                 cache.append(f(i, cache))
             return cache[-1]
-        g.cache_length = lambda: len(cache)
-        g.fetch_item = lambda x: cache[x]
-        return g
+        g.cache_length = lambda: len(cache)  # type: ignore[attr-defined]
+        g.fetch_item = lambda x: cache[x]  # type: ignore[attr-defined]
+        return g  # type: ignore[return-value]
     return decorator
 
 
-def assoc_recurrence_memo(base_seq):
+def assoc_recurrence_memo(base_seq: Callable) -> Callable:
     """
     Memo decorator for associated sequences defined by recurrence starting from base
 
@@ -50,11 +58,11 @@ def assoc_recurrence_memo(base_seq):
     XXX works only for m <= n cases
     """
 
-    cache = []
+    cache: list [list[Any]] = []
 
-    def decorator(f):
+    def decorator(f:Callable) -> Callable:
         @wraps(f)
-        def g(n, m):
+        def g(n: int, m:int)-> Any:
             L = len(cache)
             if n < L:
                 return cache[n][m]
