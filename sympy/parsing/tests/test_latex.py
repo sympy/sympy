@@ -16,7 +16,8 @@ from sympy.functions.elementary.complexes import (Abs, conjugate)
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.integers import (ceiling, floor)
 from sympy.functions.elementary.miscellaneous import (root, sqrt)
-from sympy.functions.elementary.trigonometric import (asin, cos, csc, sec, sin, tan)
+from sympy.functions.elementary.trigonometric import (
+    acos, asin, atan, cos, csc, sec, sin, tan)
 from sympy.integrals.integrals import Integral
 from sympy.series.limits import Limit
 
@@ -129,7 +130,13 @@ GOOD_PAIRS = [
     (r"| x \rangle", Ket('x')),
     (r"\sin \theta", sin(theta)),
     (r"\sin(\theta)", sin(theta)),
+    (r"\sin^{2}(x)", sin(x)**2),
+    (r"\cos^{2}(x)", cos(x)**2),
+    (r"\tan^{2}(x)", tan(x)**2),
     (r"\sin^{-1} a", asin(a)),
+    (r"\arcsin(x)", asin(x)),
+    (r"\arccos(x)", acos(x)),
+    (r"\arctan(x)", atan(x)),
     (r"\sin a \cos b", _Mul(sin(a), cos(b))),
     (r"\sin \cos \theta", sin(cos(theta))),
     (r"\sin(\cos \theta)", sin(cos(theta))),
