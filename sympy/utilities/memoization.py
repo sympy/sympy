@@ -7,7 +7,7 @@ class _MemoizedFunc(Protocol):
     def cache_length(self) -> int: ...
     def fetch_item(self, x: Any) -> Any:...
 
-    
+
 
 
 def recurrence_memo(initial: list[Any])-> Callable:
