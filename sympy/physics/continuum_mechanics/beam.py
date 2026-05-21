@@ -2736,6 +2736,11 @@ class Beam:
             elif support[1] == "roller":
                 support_markers.append({'args':[pos, [-height/2.5]], 'marker':'o', 'markersize':11, 'color':"black"})
 
+            elif support[1] == "spring":
+                support_markers.extend([{'args':[pos, [-height/3]], 'marker':"x", 'markersize':10, 'color':"black"} , 
+                                       {'args':[pos, [-height]], 'marker':"x", 'markersize':10, 'color':"black"},
+                                       {'args':[pos, [-height/1.1]], 'marker':6, 'markersize':13, 'color':"black"}])
+
             elif support[1] == "fixed":
                 if pos == 0:
                     support_rectangles.append({'xy':(0, -3*height), 'width':-length/20, 'height':6*height + height, 'fill':False, 'hatch':'/////'})
