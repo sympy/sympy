@@ -1,7 +1,7 @@
 from __future__ import annotations
 from functools import wraps
 from typing import Callable, Any
-#from mimetypes import init
+
 
 def recurrence_memo(initial: list[Any])-> Callable:
     """
