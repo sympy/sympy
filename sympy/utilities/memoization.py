@@ -1,8 +1,9 @@
 from __future__ import annotations
 from functools import wraps
+from typing import Callable, Any
+#from mimetypes import init
 
-
-def recurrence_memo(initial):
+def recurrence_memo(initial: list[Any])-> Callable:
     """
     Memo decorator for sequences defined by recurrence
 
@@ -25,9 +26,9 @@ def recurrence_memo(initial):
     """
     cache = initial
 
-    def decorator(f):
+    def decorator(f: Callable) -> Callable:
         @wraps(f)
-        def g(n):
+        def g(n: int) -> Any:
             L = len(cache)
             if n < L:
                 return cache[n]
@@ -40,7 +41,7 @@ def recurrence_memo(initial):
     return decorator
 
 
-def assoc_recurrence_memo(base_seq):
+def assoc_recurrence_memo(base_seq: Callable) -> Callable:
     """
     Memo decorator for associated sequences defined by recurrence starting from base
 
@@ -50,11 +51,11 @@ def assoc_recurrence_memo(base_seq):
     XXX works only for m <= n cases
     """
 
-    cache = []
+    cache: list [list[Any]] = []
 
-    def decorator(f):
+    def decorator(f:Callable) -> Callable:
         @wraps(f)
-        def g(n, m):
+        def g(n: int, m:int)-> Any:
             L = len(cache)
             if n < L:
                 return cache[n][m]
