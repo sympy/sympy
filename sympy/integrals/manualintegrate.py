@@ -1432,7 +1432,7 @@ def orthogonal_poly_rule(integral):
 
 
 _special_function_patterns: list[tuple[type, Expr, Callable | None, tuple]] = []
-_wilds = []
+_wilds: list[type] = []
 _symbol = Dummy('x')
 
 
