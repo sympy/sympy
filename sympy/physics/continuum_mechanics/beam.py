@@ -2737,7 +2737,7 @@ class Beam:
                 support_markers.append({'args':[pos, [-height/2.5]], 'marker':'o', 'markersize':11, 'color':"black"})
 
             elif support[1] == "spring":
-                support_markers.extend([{'args':[pos, [-height/3]], 'marker':"x", 'markersize':10, 'color':"black"} , 
+                support_markers.extend([{'args':[pos, [-height/3]], 'marker':"x", 'markersize':10, 'color':"black"},
                                        {'args':[pos, [-height]], 'marker':"x", 'markersize':10, 'color':"black"},
                                        {'args':[pos, [-height/1.1]], 'marker':6, 'markersize':13, 'color':"black"}])
 
