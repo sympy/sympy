@@ -547,7 +547,7 @@ class Beam:
             pass
         else:
             raise ValueError(
-                "Invalid support type. Choose from 'pin', 'roller', 'fixed' or 'spring '."
+                "Invalid support type. Choose from 'pin', 'roller', 'fixed' or 'spring'."
             )
 
         self._applied_supports.append((loc, type))
