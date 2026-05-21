@@ -180,7 +180,7 @@ def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
     # or tan(n*x), with n an integer. Suppose first there are no tan terms.
     # The ideal [sin(x)**2 + cos(x)**2 - 1] is geometrically prime, since
     # X**2 + Y**2 - 1 is irreducible over CC.
-    # Now, if we have a generator sin(n*x), than we can, using trig identities,
+    # Now, if we have a generator sin(n*x), then we can, using trig identities,
     # express sin(n*x) as a polynomial in sin(x) and cos(x). We can add this
     # relation to the ideal, preserving geometric primality, since the quotient
     # ring is unchanged.
@@ -286,7 +286,7 @@ def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
         res = [] # the ideal
 
         for key, val in trigdict.items():
-            # We have now assembeled a dictionary. Its keys are common
+            # We have now assembled a dictionary. Its keys are common
             # arguments in trigonometric expressions, and values are lists of
             # pairs (fn, coeff). x0, (fn, coeff) in trigdict means that we
             # need to deal with fn(coeff*x0). We take the rational gcd of the
@@ -1133,7 +1133,7 @@ def __trigsimp(expr, deep=False):
 def futrig(e, *, hyper=True, **kwargs):
     """Return simplified ``e`` using Fu-like transformations.
     This is not the "Fu" algorithm. This is called by default
-    from ``trigsimp``. By default, hyperbolics subexpressions
+    from ``trigsimp``. By default, hyperbolic subexpressions
     will be simplified, but this can be disabled by setting
     ``hyper=False``.
 

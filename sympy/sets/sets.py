@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any, TYPE_CHECKING, overload
 from functools import reduce
 from collections import defaultdict
+from itertools import pairwise
 import inspect
 
 from sympy.core.kind import Kind, UndefinedKind, NumberKind
@@ -2053,7 +2054,7 @@ class FiniteSet(Set):
                 nums.sort()
                 intervals = []  # Build up a list of intervals between the elements
                 intervals += [Interval(S.NegativeInfinity, nums[0], True, True)]
-                for a, b in zip(nums[:-1], nums[1:]):
+                for a, b in pairwise(nums):
                     intervals.append(Interval(a, b, True, True))  # both open
                 intervals.append(Interval(nums[-1], S.Infinity, True, True))
                 if syms != []:
