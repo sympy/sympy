@@ -211,6 +211,6 @@ if __name__ == "__main__":
     builtins.__import__ = tracking_import
     __import__('sympy')
 
-    sorted_messages.sort()
+    sorted_messages.sort(key=str)
     for message in sorted_messages:
         print(message)
