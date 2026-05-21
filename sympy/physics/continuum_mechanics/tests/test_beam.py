@@ -769,7 +769,7 @@ def test_apply_support():
     E = Symbol('E')
     I = Symbol('I')
     b=Beam(6, E, I)
-    with raises(ValueError, match="Invalid support type. Choose from 'pin', 'roller', 'fixed' or 'spring '."):
+    with raises(ValueError, match="Invalid support type. Choose from 'pin', 'roller', 'fixed' or 'spring'."):
         b.apply_support(0,"pen")
 
 
