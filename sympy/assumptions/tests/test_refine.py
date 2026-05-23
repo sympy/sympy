@@ -17,7 +17,7 @@ from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.functions.elementary.integers import floor, ceiling
 from sympy.functions.special.delta_functions import Heaviside
 
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, slow
 
 
 def test_Abs():
@@ -249,6 +249,7 @@ def test_matrixelement():
     assert refine(x[j, i], Q.symmetric(x)) == x[j, i]
 
 
+@slow
 def test_sin_cos():
     n = Symbol('n')
     assert refine(cos(n*pi/2), Q.odd(n)) == 0

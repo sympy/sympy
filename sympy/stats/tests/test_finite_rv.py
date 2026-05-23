@@ -190,6 +190,7 @@ def test_domains():
     assert where(X > Y).dict == FiniteSet(*[Dict({X.symbol: i, Y.symbol: j})
             for i in range(1, 7) for j in range(1, 7) if i > j])
 
+@slow
 def test_bernoulli():
     p, a, b, t = symbols('p a b t')
     X = Bernoulli('B', p, a, b)

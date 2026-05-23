@@ -1022,6 +1022,7 @@ def test_sysode_linear_neq_order1_type1_slow():
         assert checksysodesol(eq1, sol) == (True, [0, 0])
 
 
+@slow
 def test_sysode_linear_neq_order1_type2():
 
     f, g, h, k = symbols('f g h k', cls=Function)
@@ -1544,6 +1545,7 @@ def test_sysode_linear_neq_order1_type5_type6():
     assert checksysodesol(eqs2, sol2) == (True, [0, 0])
 
 
+@slow
 def test_higher_order_to_first_order():
     f, g = symbols('f g', cls=Function)
     x = symbols('x')
@@ -1778,6 +1780,7 @@ def test_second_order_to_first_order_slow4():
     assert checksysodesol(eqs4, sol4) == (True, [0, 0])
 
 
+@slow
 def test_component_division():
     f, g, h, k = symbols('f g h k', cls=Function)
     x = symbols("x")

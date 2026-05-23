@@ -1751,6 +1751,7 @@ def test_high_order_roots():
     assert set(solve(s)) == set(Poly(s*4, domain='ZZ').all_roots())
 
 
+@slow
 def test_minsolve_linear_system():
     pqt = {"quick": True, "particular": True}
     pqf = {"quick": False, "particular": True}

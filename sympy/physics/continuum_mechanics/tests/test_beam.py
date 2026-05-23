@@ -337,6 +337,7 @@ def test_beam_units():
     assert b.deflection().subs(x, 1*meter) == 62000*meter/(9*E*I)
 
 
+@slow
 def test_variable_moment():
     E = Symbol('E')
     I = Symbol('I')

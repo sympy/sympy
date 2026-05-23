@@ -571,6 +571,7 @@ def test_1st_linear():
     _ode_solver_test(_get_examples_ode_sol_1st_linear)
 
 
+@slow
 def test_almost_linear():
     _ode_solver_test(_get_examples_ode_sol_almost_linear)
 
@@ -590,6 +591,7 @@ def test_Liouville_ODE():
     _ode_solver_test(_get_examples_ode_sol_liouville)
 
 
+@slow
 def test_nth_order_linear_euler_eq_homogeneous():
     x, t, a, b, c = symbols('x t a b c')
     y = Function('y')

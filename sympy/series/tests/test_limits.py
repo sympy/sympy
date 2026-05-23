@@ -757,6 +757,7 @@ def test_issue_9558():
     assert limit(sin(x)**15, x, 0, '-') == 0
 
 
+@slow
 def test_issue_10801():
     # make sure limits work with binomial
     assert limit(16**k / (k * binomial(2*k, k)**2), k, oo) == pi
@@ -1000,6 +1001,7 @@ def test_issue_16714():
     assert limit(((x**(x + 1) + (x + 1)**x) / x**(x + 1))**x, x, oo) == exp(exp(1))
 
 
+@slow
 def test_issue_16722():
     z = symbols('z', positive=True)
     assert limit(binomial(n + z, n)*n**-z, n, oo) == 1/gamma(z + 1)

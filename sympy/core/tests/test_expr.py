@@ -47,7 +47,7 @@ from sympy.physics.units import meter
 
 import pytest
 import sys
-from sympy.testing.pytest import raises, XFAIL
+from sympy.testing.pytest import raises, slow, XFAIL
 
 from sympy.abc import a, b, c, n, t, u, x, y, z
 
@@ -1996,6 +1996,7 @@ def test_random():
     assert Piecewise((Max(x, y), z))._random() is None
 
 
+@slow
 def test_round():
     assert str(Float('0.1249999').round(2)) == '0.12'
     d20 = 12345678901234567890

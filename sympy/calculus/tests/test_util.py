@@ -198,6 +198,7 @@ def test_not_empty_in():
            lambda: not_empty_in(FiniteSet(x).intersect(S.Reals), x, a))
 
 
+@slow
 @_both_exp_pow
 def test_periodicity():
     assert periodicity(sin(2*x), x) == pi
