@@ -2099,6 +2099,18 @@ def test_nonlinsolve_issue_25182():
         -1.0*b1*(ca - 1)*(ca + 1)/a1 - 1.0*ca*sqrt(a1**2 + b1**2*ca**2 - b1**2)/a1))
 
 
+def test_nonlinsolve_issue_29750():
+    s, c = symbols('s c')
+    eq1 = 2*s*c - 2*sqrt(3)*c**2 + sqrt(3)*s - 3*c
+    eq2 = s**2 + c**2 - 1
+    sol = nonlinsolve([eq1, eq2], [s, c])
+    expected = FiniteSet(
+        (-sqrt(3)/2, -S.Half), (sqrt(3)/2, S.Half),
+        (-S.Half, -sqrt(3)/2), (S.Half, -sqrt(3)/2),
+    )
+    assert sol == expected
+
+
 def test_issue_14642():
     x = Symbol('x')
     n1 = 0.5*x**3+x**2+0.5+I #add I in the Polynomials
