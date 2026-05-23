@@ -2,6 +2,7 @@ from __future__ import annotations
 from sympy.core.numbers import oo
 from sympy.core.symbol import Symbol
 from sympy.functions.elementary.exponential import exp
+from sympy.functions.special.delta_functions import DiracDelta
 from sympy.sets.sets import Interval
 from sympy.external import import_module
 from sympy.stats import Beta, Chi, Normal, Gamma, Exponential, LogNormal, Pareto, ChiSquared, Uniform, sample, \
@@ -180,3 +181,15 @@ def test_sample_continuous():
                 assert all(s1 != s2)
         except NotImplementedError:
             continue
+
+
+def test_sample_continuous_dirac_delta():
+    scipy = import_module('scipy')
+    if not scipy:
+        skip('Scipy is not installed. Abort tests')
+    z = Symbol('z')
+    Z = ContinuousRV(z, DiracDelta(z - 3))
+
+    samps = sample(Z, size=3, library='scipy')
+
+    assert list(samps) == [3.0, 3.0, 3.0]

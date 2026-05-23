@@ -3,6 +3,10 @@ from functools import singledispatch
 
 from sympy.core.symbol import Dummy
 from sympy.functions.elementary.exponential import exp
+from sympy.functions.special.delta_functions import DiracDelta
+from sympy.functions.elementary.piecewise import ExprCondPair, Piecewise
+from sympy.sets.sets import FiniteSet
+from sympy.solvers.solveset import solveset
 from sympy.utilities.lambdify import lambdify
 from sympy.external import import_module
 from sympy.stats import DiscreteDistributionHandmade
@@ -25,12 +29,37 @@ def do_sample_scipy(dist, size, seed):
 
 # CRV
 
+def _sample_dirac_delta(dist: SingleContinuousDistribution, z, size):
+    pdf = dist.pdf(z)
+    if isinstance(pdf, Piecewise):
+        nonzero_args = [
+            arg.expr for arg in pdf.args
+            if isinstance(arg, ExprCondPair) and arg.expr != 0
+        ]
+        if len(nonzero_args) != 1:
+            return None
+        pdf = nonzero_args[0]
+    if not isinstance(pdf, DiracDelta):
+        return None
+    roots = solveset(pdf.args[0], z, domain=dist.set)
+    if not isinstance(roots, FiniteSet) or len(roots) != 1:
+        return None
+    root = float(next(iter(roots)))
+    if size == ():
+        return root
+    import numpy as np
+    return np.full(size, root)
+
+
 @do_sample_scipy.register(SingleContinuousDistribution)
 def _(dist: SingleContinuousDistribution, size, seed):
     # if we don't need to make a handmade pdf, we won't
     import scipy.stats
 
     z = Dummy('z')
+    dirac_sample = _sample_dirac_delta(dist, z, size)
+    if dirac_sample is not None:
+        return dirac_sample
     handmade_pdf = lambdify(z, dist.pdf(z), ['numpy', 'scipy'])
 
     class scipy_pdf(scipy.stats.rv_continuous):
