@@ -4,7 +4,7 @@ from sympy.testing.pytest import raises
 from sympy.core.expr import unchanged
 from sympy.core import symbols, S
 from sympy.matrices import Identity, MatrixSymbol, ImmutableMatrix, ZeroMatrix, OneMatrix, Matrix
-from sympy.matrices.exceptions import NonSquareMatrixError
+from sympy.matrices.exceptions import NonInvertibleMatrixError, NonSquareMatrixError
 from sympy.matrices.expressions import MatPow, MatAdd, MatMul
 from sympy.matrices.expressions.inverse import Inverse
 from sympy.matrices.expressions.matexpr import MatrixElement
@@ -167,6 +167,7 @@ def test_zero_power():
     assert MatPow(z2, 2).doit() == z2
     assert MatPow(z2, 0).doit() == Identity(4)
     raises(ValueError, lambda:MatPow(z2, -1).doit())
+    raises(NonInvertibleMatrixError, lambda: MatMul(0, C)**-1)
 
 
 def test_OneMatrix_power():
