@@ -154,8 +154,7 @@ class MatMul(MatrixExpr, Mul):
         # coefficient. Evaluated 0*A is handled by ZeroMatrix._eval_power.
         exp_is_number = exp.is_Integer or exp.is_Rational or exp.is_Float
         coeff_can_be_extracted = (
-            (exp.is_Integer and coeff.is_zero is not True) or
-            (not exp.is_Integer and coeff.is_positive is True)
+            (exp.is_Integer and coeff.is_zero is not True) or coeff.is_positive
         )
         if exp_is_number and coeff_can_be_extracted:
             return coeff**exp * MatPow(matrix_part, exp).doit(deep=False)
