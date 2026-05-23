@@ -3902,12 +3902,21 @@ class Expr(Basic, EvalfMixin):
                     'Expected a number but got %s:' % func_name(x))
         elif x in _illegal:
             return x
-        if not (xr := x.is_extended_real):
-            r, i = x.as_real_imag()
-            if xr is False:
-                return r.round(n) + S.ImaginaryUnit*i.round(n)
-            if i.equals(0):
-                return r.round(n)
+        xr = x.is_extended_real
+        if xr is True:
+            return x._round_real(n)
+        if xr is None:
+            try:
+                return x._round_real(n)
+            except TypeError:
+                pass
+
+        r, i = x.as_real_imag()
+        return r._round_real(n) + S.ImaginaryUnit*i._round_real(n)
+
+    def _round_real(self, n=None):
+        x = self
+
         if not x:
             return S.Zero if n is None else x
 
@@ -3985,7 +3994,7 @@ class Expr(Basic, EvalfMixin):
         xi = Integer(xf)
         # use the last digit to select the value of xi
         # nearest to x before rounding at the desired digit
-        sign = 1 if x > 0 else -1
+        sign = 1 if xf > 0 else -1
         dif2 = sign*(xf - xi).n(extra)
         if dif2 < 0:
             raise NotImplementedError(
