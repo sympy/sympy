@@ -27,7 +27,7 @@ from sympy.stats import (DiscreteUniform, Die, Bernoulli, Coin, Binomial, BetaBi
 from sympy.stats.frv_types import DieDistribution, BinomialDistribution, \
     HypergeometricDistribution
 from sympy.stats.rv import Density
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, slow
 
 
 def BayesTest(A, B):
@@ -392,6 +392,7 @@ def test_rademacher():
     assert characteristic_function(X)(t) == exp(I*t)/2 + exp(-I*t)/2
     assert moment_generating_function(X)(t) == exp(t) / 2 + exp(-t) / 2
 
+@slow
 def test_ideal_soliton():
     raises(ValueError, lambda : IdealSoliton('sol', -12))
     raises(ValueError, lambda : IdealSoliton('sol', 13.2))

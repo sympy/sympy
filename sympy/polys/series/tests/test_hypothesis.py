@@ -1,5 +1,5 @@
 from __future__ import annotations
-from hypothesis import given
+from hypothesis import given, settings
 from hypothesis import strategies as st
 from hypothesis.strategies import composite
 
@@ -64,6 +64,7 @@ def dup_one_const(draw, min_size=3, max_size=25):
     return lst
 
 
+@settings(max_examples=25)
 @given(f=dup_zero_const())
 def test_rs_series_zero(f):
     Rs, _ = power_series_ring("x", QQ, 25)

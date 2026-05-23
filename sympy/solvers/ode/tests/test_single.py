@@ -465,6 +465,7 @@ def test_slow_examples_nth_linear_constant_coeff_var_of_parameters():
     _ode_solver_test(_get_examples_ode_sol_nth_linear_var_of_parameters, run_slow_test=True)
 
 
+@slow
 def test_nth_linear_constant_coeff_var_of_parameters():
     _ode_solver_test(_get_examples_ode_sol_nth_linear_var_of_parameters)
 
@@ -603,6 +604,7 @@ def test_nth_order_linear_euler_eq_homogeneous():
     _ode_solver_test(_get_examples_ode_sol_euler_homogeneous)
 
 
+@slow
 def test_nth_order_linear_euler_eq_nonhomogeneous_undetermined_coefficients():
     x, t = symbols('x t')
     a, b, c, d = symbols('a b c d', integer=True)

@@ -6,7 +6,7 @@ from sympy.simplify.simplify import simplify
 from sympy.physics.mechanics import (dynamicsymbols, ReferenceFrame, Point,
                                      RigidBody, KanesMethod, inertia, Particle,
                                      dot, find_dynamicsymbols)
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, slow
 
 
 def test_invalid_coordinates():
@@ -527,6 +527,7 @@ def test_implicit_kinematics():
     lhs_candidate = simplify(mass_matrix_kin_implicit * qdot_candidate).subs({q_att_vec[0]: lambda_0_sol})
     assert lhs_candidate == forcing_kin_implicit
 
+@slow
 def test_issue_24887():
     # Spherical pendulum
     g, l, m, c = symbols('g l m c')

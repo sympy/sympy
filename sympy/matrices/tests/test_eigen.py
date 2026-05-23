@@ -219,6 +219,9 @@ def test_eigenvals():
     # CRootOf may not be unique.
     assert m.eigenvals()
 
+
+@slow
+def test_eigenvals_7x7():
     A = Matrix([
         [1, 1, 0, 1, -1, 0, 1],
         [0, 2, 1, 0, 1, -1, 0],

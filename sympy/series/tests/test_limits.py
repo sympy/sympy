@@ -31,7 +31,7 @@ from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.core.mul import Mul
 from sympy.series.limits import heuristics
 from sympy.series.order import Order
-from sympy.testing.pytest import XFAIL, raises
+from sympy.testing.pytest import XFAIL, raises, slow
 
 from sympy import elliptic_e, elliptic_k
 
@@ -684,6 +684,11 @@ def test_issue_6052():
 def test_issue_7224():
     expr = sqrt(x)*besseli(1,sqrt(8*x))
     assert limit(x*diff(expr, x, x)/expr, x, 0) == 2
+
+
+@slow
+def test_issue_7224_at_one():
+    expr = sqrt(x)*besseli(1,sqrt(8*x))
     assert limit(x*diff(expr, x, x)/expr, x, 1).evalf() == 2.0
 
 

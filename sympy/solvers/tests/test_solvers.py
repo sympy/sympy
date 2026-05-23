@@ -117,6 +117,7 @@ def test_guess_transcendental():
     assert guess_solve_strategy(a*x**b - y, x)  # == GS_TRANSCENDENTAL
 
 
+@slow
 def test_solve_args():
     # equation container, issue 5113
     ans = {x: -3, y: 1}
@@ -423,6 +424,7 @@ def test_linear_system_function():
         a(0, 0), a(0, 1), a(1, 0), a(1, 1)) == {a(1, 0): -a(1, 1), a(0, 0): -a(0, 1)}
 
 
+@slow
 def test_linear_system_symbols_doesnt_hang_1():
 
     def _mk_eqs(wy):
