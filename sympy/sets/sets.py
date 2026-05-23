@@ -2202,7 +2202,7 @@ class FiniteSet(Set):
             return NotImplemented
         return self.is_proper_subset(other)
 
-    def __eq__(self, other: object) -> bool:
+    def __eq__(self, other):
         if isinstance(other, (set, frozenset)):
             return self._args_set == other
         return super().__eq__(other)
