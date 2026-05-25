@@ -1,7 +1,6 @@
-from sympy.core import Rational
-from sympy.core.compatibility import range
+from __future__ import annotations
 from .cartan_type import Standard_Cartan
-from sympy.matrices import Matrix
+from sympy.core.backend import Matrix, Rational
 
 
 class TypeF(Standard_Cartan):
@@ -27,7 +26,7 @@ class TypeF(Standard_Cartan):
 
 
     def basic_root(self, i, j):
-        """Generate roots with 1 in ith position and -1 in jth postion
+        """Generate roots with 1 in ith position and -1 in jth position
 
         """
 
@@ -60,7 +59,7 @@ class TypeF(Standard_Cartan):
         """
 
         if i < 3:
-            return basic_root(i-1, i)
+            return self.basic_root(i-1, i)
         if i == 3:
             root = [0]*4
             root[3] = 1
@@ -91,12 +90,12 @@ class TypeF(Standard_Cartan):
         k = 0
         for i in range(0, n-1):
             for j in range(i+1, n):
-               k += 1
-               posroots[k] = self.basic_root(i, j)
-               k += 1
-               root = self.basic_root(i, j)
-               root[j] = 1
-               posroots[k] = root
+                k += 1
+                posroots[k] = self.basic_root(i, j)
+                k += 1
+                root = self.basic_root(i, j)
+                root[j] = 1
+                posroots[k] = root
 
         for i in range(0, n):
             k += 1

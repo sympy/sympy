@@ -1,8 +1,8 @@
 .. _tensor_module:
 
-=============
-Tensor Module
-=============
+======
+Tensor
+======
 
 .. automodule:: sympy.tensor
 
@@ -10,9 +10,11 @@ Contents
 ========
 
 .. toctree::
-    :maxdepth: 3
+   :titlesonly:
 
-    array.rst
-    indexed.rst
-    index_methods.rst
-    tensor.rst
+   array.rst
+   array_expressions.rst
+   indexed.rst
+   index_methods.rst
+   tensor.rst
+   toperators.rst

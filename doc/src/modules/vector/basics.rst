@@ -5,17 +5,18 @@ Basic Implementation details
 Coordinate Systems and Vectors
 ==============================
 
-As of now, :mod:`sympy.vector` only deals with the Cartesian (also called
-rectangular) coordinate systems. A 3D Cartesian coordinate system can
-be initialized in :mod:`sympy.vector` as
+Currently, :mod:`sympy.vector` is able to deal with the Cartesian (also called
+rectangular), spherical and other curvilinear coordinate systems.
 
-  >>> from sympy.vector import CoordSysCartesian
-  >>> N = CoordSysCartesian('N')
+A 3D Cartesian coordinate system can be initialized in :mod:`sympy.vector` as
+
+  >>> from sympy.vector import CoordSys3D
+  >>> N = CoordSys3D('N')
 
 The string parameter to the constructor denotes the name assigned to the
 system, and will primarily be used for printing purposes.
 
-Once a coordinate system (in essence, a ``CoordSysCartesian`` instance)
+Once a coordinate system (in essence, a ``CoordSys3D`` instance)
 has been defined, we can access the orthonormal unit vectors (i.e. the
 :math:`\mathbf{\hat{i}}`, :math:`\mathbf{\hat{j}}` and
 :math:`\mathbf{\hat{k}}` vectors) and coordinate variables/base
@@ -76,7 +77,7 @@ All the classes shown above - ``BaseVector``, ``VectorMul``,
 
 You should never have to instantiate objects of any of the
 subclasses of ``Vector``. Using the ``BaseVector`` instances assigned to a
-``CoordSysCartesian`` instance and (if needed) ``Vector.zero``
+``CoordSys3D`` instance and (if needed) ``Vector.zero``
 as building blocks, any sort of vectorial expression can be constructed
 with the basic mathematical operators ``+``, ``-``, ``*``.
 and ``/``.
@@ -164,10 +165,10 @@ point. Points, in general, have been implemented in :mod:`sympy.vector` in the
 form of the ``Point`` class.
 
 To access the origin of system, use the ``origin`` property of the
-``CoordSysCartesian`` class.
+``CoordSys3D`` class.
 
-  >>> from sympy.vector import CoordSysCartesian
-  >>> N = CoordSysCartesian('N')
+  >>> from sympy.vector import CoordSys3D
+  >>> N = CoordSys3D('N')
   >>> N.origin
   N.origin
   >>> type(N.origin)
@@ -184,7 +185,7 @@ new ``Point``, and its position vector with respect to the
 
 Like ``Vector``, a user never has to expressly instantiate an object of
 ``Point``. This is because any location in space (albeit relative) can be
-pointed at by using the ``origin`` of a ``CoordSysCartesian`` as the
+pointed at by using the ``origin`` of a ``CoordSys3D`` as the
 reference, and then using ``locate_new`` on it and subsequent
 ``Point`` instances.
 
@@ -197,7 +198,7 @@ be computed using the ``position_wrt`` method.
   a*N.i + c*N.k
 
 Additionally, it is possible to obtain the :math:`X`, :math:`Y` and :math:`Z`
-coordinates of a ``Point`` with respect to a ``CoordSysCartesian``
+coordinates of a ``Point`` with respect to a ``CoordSys3D``
 in the form of a tuple. This is done using the ``express_coordinates``
 method.
 
@@ -218,8 +219,8 @@ The outer products of vectors can be computed using the ``outer``
 method of ``Vector``. The ``|`` operator has been overloaded for
 ``outer``.
 
-  >>> from sympy.vector import CoordSysCartesian
-  >>> N = CoordSysCartesian('N')
+  >>> from sympy.vector import CoordSys3D
+  >>> N = CoordSys3D('N')
   >>> N.i.outer(N.j)
   (N.i|N.j)
   >>> N.i|N.j

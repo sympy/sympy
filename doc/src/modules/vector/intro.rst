@@ -59,7 +59,7 @@ units of measurement, the expression of vectorial and scalar quantities
 differs according to the coordinate system a certain observer deals with.
 
 Consider two points :math:`P` and :math:`Q` in space. Assuming units to
-be common throughtout, the distance between these points remains
+be common throughout, the distance between these points remains
 the same regardless of the coordinate system in which the measurements are
 being made. However, the 3-D coordinates of each of the two points, as well
 as the position vector of any of the points with respect to the other,
@@ -73,7 +73,7 @@ of a coordinate system define the way different quantities will be expressed
 with respect to it.  Neither of the two properties can be measured on an
 absolute scale, but rather with respect to another coordinate system. The
 orientation of one system with respect to another is measured using the
-the rotation matrix, while the relative position can be quantified via
+rotation matrix, while the relative position can be quantified via
 the position vector of one system's origin with respect to the other.
 
 Fields

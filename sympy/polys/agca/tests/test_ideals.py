@@ -1,8 +1,9 @@
 """Test ideals.py code."""
+from __future__ import annotations
 
 from sympy.polys import QQ, ilex
 from sympy.abc import x, y, z
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 
 def test_ideal_operations():
@@ -56,6 +57,14 @@ def test_exceptions():
     raises(ValueError, lambda: I.union(J))
     assert (I == J) is False
     assert I != J
+
+
+def test_zero_generators_do_not_change_ideal():
+    R = QQ.old_poly_ring(x)
+
+    assert R.ideal(0, x) == R.ideal(x)
+    assert R.ideal(0, 0) == R.ideal()
+    assert R.ideal(0, x, x) == R.ideal(x)
 
 
 def test_nontriv_global():

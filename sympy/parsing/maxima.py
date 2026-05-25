@@ -1,7 +1,9 @@
-from __future__ import print_function, division
-
+from __future__ import annotations
 import re
-from sympy import sympify, Sum, product, sin, cos
+from sympy.concrete.products import product
+from sympy.concrete.summations import Sum
+from sympy.core.sympify import sympify
+from sympy.functions.elementary.trigonometric import (cos, sin)
 
 
 class MaximaHelpers:
@@ -27,10 +29,10 @@ class MaximaHelpers:
         return 1/cos(expr)
 
 sub_dict = {
-    'pi': re.compile('%pi'),
-    'E': re.compile('%e'),
-    'I': re.compile('%i'),
-    '**': re.compile('\^'),
+    'pi': re.compile(r'%pi'),
+    'E': re.compile(r'%e'),
+    'I': re.compile(r'%i'),
+    '**': re.compile(r'\^'),
     'oo': re.compile(r'\binf\b'),
     '-oo': re.compile(r'\bminf\b'),
     "'-'": re.compile(r'\bminus\b'),
@@ -44,7 +46,7 @@ sub_dict = {
     'maxima_sec': re.compile(r'\bsec\b')
 }
 
-var_name = re.compile('^\s*(\w+)\s*:')
+var_name = re.compile(r'^\s*(\w+)\s*:')
 
 
 def parse_maxima(str, globals=None, name_dict={}):

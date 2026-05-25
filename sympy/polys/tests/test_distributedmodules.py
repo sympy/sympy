@@ -1,4 +1,5 @@
 """Tests for sparse distributed modules. """
+from __future__ import annotations
 
 from sympy.polys.distributedmodules import (
     sdm_monomial_mul, sdm_monomial_deg, sdm_monomial_divides,
@@ -12,7 +13,6 @@ from sympy.polys.orderings import lex, grlex, InverseOrder
 from sympy.polys.domains import QQ
 
 from sympy.abc import x, y, z
-from sympy.core.compatibility import range
 
 
 def test_sdm_monomial_mul():

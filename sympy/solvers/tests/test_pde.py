@@ -1,9 +1,13 @@
-from sympy import (Derivative as D, Eq, exp, sin,
-    Function, Symbol, symbols, cos, log)
+from __future__ import annotations
+from sympy.core.function import (Derivative as D, Function)
+from sympy.core.relational import Eq
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.core import S
-from sympy.solvers.pde import (pde_separate_add, pde_separate_mul,
+from sympy.solvers.pde import (pde_separate, pde_separate_add, pde_separate_mul,
     pdsolve, classify_pde, checkpdesol)
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 
 a, b, c, x, y = symbols('a b c x y')
@@ -17,6 +21,14 @@ def test_pde_separate_add():
     assert res == [D(X(x), x)*exp(-X(x)), D(T(t), t)*exp(T(t))]
 
 
+def test_pde_separate():
+    x, y, z, t = symbols("x,y,z,t")
+    F, T, X, Y, Z, u = map(Function, 'FTXYZu')
+
+    eq = Eq(D(u(x, t), x), D(u(x, t), t)*exp(u(x, t)))
+    raises(ValueError, lambda: pde_separate(eq, u(x, t), [X(x), T(t)], 'div'))
+
+
 def test_pde_separate_mul():
     x, y, z, t = symbols("x,y,z,t")
     c = Symbol("C", real=True)
@@ -25,7 +37,7 @@ def test_pde_separate_mul():
     r, theta, z = symbols('r,theta,z')
 
     # Something simple :)
-    eq = Eq(D(F(x, y, z), x) + D(F(x, y, z), y) + D(F(x, y, z), z))
+    eq = Eq(D(F(x, y, z), x) + D(F(x, y, z), y) + D(F(x, y, z), z), 0)
 
     # Duplicate arguments in functions
     raises(
@@ -48,7 +60,7 @@ def test_pde_separate_mul():
 
     # Laplace equation in cylindrical coords
     eq = Eq(1/r * D(Phi(r, theta, z), r) + D(Phi(r, theta, z), r, 2) +
-            1/r**2 * D(Phi(r, theta, z), theta, 2) + D(Phi(r, theta, z), z, 2))
+            1/r**2 * D(Phi(r, theta, z), theta, 2) + D(Phi(r, theta, z), z, 2), 0)
     # Separate z
     res = pde_separate_mul(eq, Phi(r, theta, z), [Z(z), u(theta, r)])
     assert res == [D(Z(z), z, z)/Z(z),
@@ -65,6 +77,18 @@ def test_pde_separate_mul():
     res = pde_separate_mul(eq, u(theta, r), [R(r), T(theta)])
     assert res == [r*D(R(r), r)/R(r) + r**2*D(R(r), r, r)/R(r) + c*r**2,
             -D(T(theta), theta, theta)/T(theta)]
+
+
+def test_issue_11726():
+    x, t = symbols("x t")
+    f  = symbols("f", cls=Function)
+    X, T = symbols("X T", cls=Function)
+
+    u = f(x, t)
+    eq = u.diff(x, 2) - u.diff(t, 2)
+    res = pde_separate(eq, u, [T(x), X(t)])
+    assert res == [D(T(x), x, x)/T(x),D(X(t), t, t)/X(t)]
+
 
 def test_pde_classify():
     # When more number of hints are added, add tests for classifying here.
@@ -135,20 +159,21 @@ def test_pde_1st_linear_constant_coeff_homogeneous():
     sol = pdsolve(eq)
     assert checkpdesol(eq, sol)[0]
 
+
 def test_pde_1st_linear_constant_coeff():
     f, F = map(Function, ['f', 'F'])
     u = f(x,y)
     eq = -2*u.diff(x) + 4*u.diff(y) + 5*u - exp(x + 3*y)
     sol = pdsolve(eq)
     assert sol == Eq(f(x,y),
-    (F(4*x + 2*y) + exp(x/S(2) + 4*y)/S(15))*exp(x/S(2) - y))
+    (F(4*x + 2*y)*exp(x/2) + exp(x + 4*y)/15)*exp(-y))
     assert classify_pde(eq) == ('1st_linear_constant_coeff',
     '1st_linear_constant_coeff_Integral')
     assert checkpdesol(eq, sol)[0]
 
     eq = (u.diff(x)/u) + (u.diff(y)/u) + 1 - (exp(x + y)/u)
     sol = pdsolve(eq)
-    assert sol == Eq(f(x, y), F(x - y)*exp(-x/2 - y/2) + exp(x + y)/S(3))
+    assert sol == Eq(f(x, y), F(x - y)*exp(-x/2 - y/2) + exp(x + y)/3)
     assert classify_pde(eq) == ('1st_linear_constant_coeff',
     '1st_linear_constant_coeff_Integral')
     assert checkpdesol(eq, sol)[0]
@@ -156,22 +181,22 @@ def test_pde_1st_linear_constant_coeff():
     eq = 2*u + -u.diff(x) + 3*u.diff(y) + sin(x)
     sol = pdsolve(eq)
     assert sol == Eq(f(x, y),
-         F(3*x + y)*exp(x/S(5) - 3*y/S(5)) - 2*sin(x)/S(5) - cos(x)/S(5))
+         F(3*x + y)*exp(x/5 - 3*y/5) - 2*sin(x)/5 - cos(x)/5)
     assert classify_pde(eq) == ('1st_linear_constant_coeff',
     '1st_linear_constant_coeff_Integral')
     assert checkpdesol(eq, sol)[0]
 
     eq = u + u.diff(x) + u.diff(y) + x*y
     sol = pdsolve(eq)
-    assert sol == Eq(f(x, y),
-        -x*y + x + y + F(x - y)*exp(-x/S(2) - y/S(2)) - 2)
+    assert sol.expand() == Eq(f(x, y),
+        x + y + (x - y)**2/4 - (x + y)**2/4 + F(x - y)*exp(-x/2 - y/2) - 2).expand()
     assert classify_pde(eq) == ('1st_linear_constant_coeff',
     '1st_linear_constant_coeff_Integral')
     assert checkpdesol(eq, sol)[0]
-
     eq = u + u.diff(x) + u.diff(y) + log(x)
     assert classify_pde(eq) == ('1st_linear_constant_coeff',
     '1st_linear_constant_coeff_Integral')
+
 
 def test_pdsolve_all():
     f, F = map(Function, ['f', 'F'])
@@ -183,8 +208,9 @@ def test_pdsolve_all():
     assert sorted(sol.keys()) == keys
     assert sol['order'] == 1
     assert sol['default'] == '1st_linear_constant_coeff'
-    assert sol['1st_linear_constant_coeff'] == Eq(f(x, y),
-        -x**2*y + x**2 + 2*x*y - 4*x - 2*y + F(x - y)*exp(-x/S(2) - y/S(2)) + 6)
+    assert sol['1st_linear_constant_coeff'].expand() == Eq(f(x, y),
+        -x**2*y + x**2 + 2*x*y - 4*x - 2*y + F(x - y)*exp(-x/2 - y/2) + 6).expand()
+
 
 def test_pdsolve_variable_coeff():
     f, F = map(Function, ['f', 'F'])

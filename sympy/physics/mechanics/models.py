@@ -1,18 +1,17 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 """This module contains some sample symbolic models used for testing and
 examples."""
 
 # Internal imports
-import sympy as sm
+from __future__ import annotations
+from sympy.core import backend as sm
 import sympy.physics.mechanics as me
 
 
 def multi_mass_spring_damper(n=1, apply_gravity=False,
                              apply_external_forces=False):
-    """Returns a system containing the symbolic equations of motion and
-    associated variables for a simple mutli-degree of freedom point mass,
+    r"""Returns a system containing the symbolic equations of motion and
+    associated variables for a simple multi-degree of freedom point mass,
     spring, damper system with optional gravitational and external
     specified forces. For example, a two mass system under the influence of
     gravity and external forces looks like:
@@ -38,7 +37,8 @@ def multi_mass_spring_damper(n=1, apply_gravity=False,
            V
 
     Parameters
-    ----------
+    ==========
+
     n : integer
         The number of masses in the serial chain.
     apply_gravity : boolean
@@ -47,7 +47,8 @@ def multi_mass_spring_damper(n=1, apply_gravity=False,
         If true, a time varying external force will be applied to each mass.
 
     Returns
-    -------
+    =======
+
     kane : sympy.physics.mechanics.kane.KanesMethod
         A KanesMethod object.
 
@@ -110,7 +111,7 @@ def multi_mass_spring_damper(n=1, apply_gravity=False,
 
 
 def n_link_pendulum_on_cart(n=1, cart_force=True, joint_torques=False):
-    """Returns the system containing the symbolic first order equations of
+    r"""Returns the system containing the symbolic first order equations of
     motion for a 2D n-link pendulum on a sliding cart under the influence of
     gravity.
 
@@ -128,7 +129,8 @@ def n_link_pendulum_on_cart(n=1, cart_force=True, joint_torques=False):
            o     o
 
     Parameters
-    ----------
+    ==========
+
     n : integer
         The number of links in the pendulum.
     cart_force : boolean, default=True
@@ -138,12 +140,14 @@ def n_link_pendulum_on_cart(n=1, cart_force=True, joint_torques=False):
         joint.
 
     Returns
-    -------
+    =======
+
     kane : sympy.physics.mechanics.kane.KanesMethod
         A KanesMethod object.
 
     Notes
-    -----
+    =====
+
     The degrees of freedom of the system are n + 1, i.e. one for each
     pendulum link and one for the lateral motion of the cart.
 

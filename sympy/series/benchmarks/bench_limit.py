@@ -1,6 +1,7 @@
-from __future__ import print_function, division
-
-from sympy import Symbol, limit, oo
+from __future__ import annotations
+from sympy.core.numbers import oo
+from sympy.core.symbol import Symbol
+from sympy.series.limits import limit
 
 x = Symbol('x')
 

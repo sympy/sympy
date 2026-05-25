@@ -1,5 +1,10 @@
-from sympy import symbols, S, log
-from sympy.core.trace import Tr
+from __future__ import annotations
+from sympy import I
+from sympy.core.numbers import Rational
+from sympy.core.singleton import S
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.exponential import log
+from sympy.matrices import Matrix
 from sympy.external import import_module
 from sympy.physics.quantum.density import Density, entropy, fidelity
 from sympy.physics.quantum.state import Ket, TimeDepKet
@@ -9,11 +14,13 @@ from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.cartesian import XKet, PxKet, PxOp, XOp
 from sympy.physics.quantum.spin import JzKet
 from sympy.physics.quantum.operator import OuterProduct
+from sympy.physics.quantum.trace import Tr
 from sympy.functions import sqrt
-from sympy.utilities.pytest import raises, slow
+from sympy.testing.pytest import raises
 from sympy.physics.quantum.matrixutils import scipy_sparse_matrix
 from sympy.physics.quantum.tensorproduct import TensorProduct
 
+from sympy.testing.pytest import XFAIL
 
 def test_eval_args():
     # check instance created
@@ -86,7 +93,7 @@ def test_doit():
     assert t.doit() == JzKet(1, 1) * Dagger(JzKet(1, 1))
 
     # with another spin state
-    tp2 = TensorProduct(JzKet(S(1)/2, S(1)/2), JzKet(S(1)/2, -S(1)/2))
+    tp2 = TensorProduct(JzKet(S.Half, S.Half), JzKet(S.Half, Rational(-1, 2)))
     d = Density([tp2, 1])
 
     #full trace
@@ -95,9 +102,9 @@ def test_doit():
 
     #Partial trace on density operators with spin states
     t = Tr(d, [0])
-    assert t.doit() == JzKet(S(1)/2, -S(1)/2) * Dagger(JzKet(S(1)/2, -S(1)/2))
+    assert t.doit() == JzKet(S.Half, Rational(-1, 2)) * Dagger(JzKet(S.Half, Rational(-1, 2)))
     t = Tr(d, [1])
-    assert t.doit() == JzKet(S(1)/2, S(1)/2) * Dagger(JzKet(S(1)/2, S(1)/2))
+    assert t.doit() == JzKet(S.Half, S.Half) * Dagger(JzKet(S.Half, S.Half))
 
 
 def test_apply_op():
@@ -157,25 +164,25 @@ def test_get_prob():
 
 
 def test_entropy():
-    up = JzKet(S(1)/2, S(1)/2)
-    down = JzKet(S(1)/2, -S(1)/2)
-    d = Density((up, 0.5), (down, 0.5))
+    up = JzKet(S.Half, S.Half)
+    down = JzKet(S.Half, Rational(-1, 2))
+    d = Density((up, S.Half), (down, S.Half))
 
     # test for density object
     ent = entropy(d)
-    assert entropy(d) == 0.5*log(2)
-    assert d.entropy() == 0.5*log(2)
+    assert entropy(d) == log(2)/2
+    assert d.entropy() == log(2)/2
 
     np = import_module('numpy', min_module_version='1.4.0')
     if np:
         #do this test only if 'numpy' is available on test machine
         np_mat = represent(d, format='numpy')
         ent = entropy(np_mat)
-        assert isinstance(np_mat, np.matrixlib.defmatrix.matrix)
+        assert isinstance(np_mat, np.ndarray)
         assert ent.real == 0.69314718055994529
         assert ent.imag == 0
 
-    scipy = import_module('scipy', __import__kwargs={'fromlist': ['sparse']})
+    scipy = import_module('scipy', import_kwargs={'fromlist': ['sparse']})
     if scipy and np:
         #do this test only if numpy and scipy are available
         mat = represent(d, format="scipy.sparse")
@@ -185,12 +192,12 @@ def test_entropy():
 
 
 def test_eval_trace():
-    up = JzKet(S(1)/2, S(1)/2)
-    down = JzKet(S(1)/2, -S(1)/2)
+    up = JzKet(S.Half, S.Half)
+    down = JzKet(S.Half, Rational(-1, 2))
     d = Density((up, 0.5), (down, 0.5))
 
     t = Tr(d)
-    assert t.doit() == 1
+    assert t.doit() == 1.0
 
     #test dummy time dependent states
     class TestTimeDepKet(TimeDepKet):
@@ -205,15 +212,14 @@ def test_eval_trace():
                         0.5 * OuterProduct(k2, k2.dual))
 
     t = Tr(d)
-    assert t.doit() == 1
+    assert t.doit() == 1.0
 
 
-@slow
 def test_fidelity():
     #test with kets
-    up = JzKet(S(1)/2, S(1)/2)
-    down = JzKet(S(1)/2, -S(1)/2)
-    updown = (S(1)/sqrt(2))*up + (S(1)/sqrt(2))*down
+    up = JzKet(S.Half, S.Half)
+    down = JzKet(S.Half, Rational(-1, 2))
+    updown = (S.One/sqrt(2))*up + (S.One/sqrt(2))*down
 
     #check with matrices
     up_dm = represent(up * Dagger(up))
@@ -222,8 +228,8 @@ def test_fidelity():
 
     assert abs(fidelity(up_dm, up_dm) - 1) < 1e-3
     assert fidelity(up_dm, down_dm) < 1e-3
-    assert abs(fidelity(up_dm, updown_dm) - (S(1)/sqrt(2))) < 1e-3
-    assert abs(fidelity(updown_dm, down_dm) - (S(1)/sqrt(2))) < 1e-3
+    assert abs(fidelity(up_dm, updown_dm) - (S.One/sqrt(2))) < 1e-3
+    assert abs(fidelity(updown_dm, down_dm) - (S.One/sqrt(2))) < 1e-3
 
     #check with density
     up_dm = Density([up, 1.0])
@@ -232,11 +238,11 @@ def test_fidelity():
 
     assert abs(fidelity(up_dm, up_dm) - 1) < 1e-3
     assert abs(fidelity(up_dm, down_dm)) < 1e-3
-    assert abs(fidelity(up_dm, updown_dm) - (S(1)/sqrt(2))) < 1e-3
-    assert abs(fidelity(updown_dm, down_dm) - (S(1)/sqrt(2))) < 1e-3
+    assert abs(fidelity(up_dm, updown_dm) - (S.One/sqrt(2))) < 1e-3
+    assert abs(fidelity(updown_dm, down_dm) - (S.One/sqrt(2))) < 1e-3
 
     #check mixed states with density
-    updown2 = (sqrt(3)/2)*up + (S(1)/2)*down
+    updown2 = sqrt(3)/2*up + S.Half*down
     d1 = Density([updown, 0.25], [updown2, 0.75])
     d2 = Density([updown, 0.75], [updown2, 0.25])
     assert abs(fidelity(d1, d2) - 0.991) < 1e-3
@@ -245,8 +251,8 @@ def test_fidelity():
     #using qubits/density(pure states)
     state1 = Qubit('0')
     state2 = Qubit('1')
-    state3 = (S(1)/sqrt(2))*state1 + (S(1)/sqrt(2))*state2
-    state4 = (sqrt(S(2)/3))*state1 + (S(1)/sqrt(3))*state2
+    state3 = S.One/sqrt(2)*state1 + S.One/sqrt(2)*state2
+    state4 = sqrt(Rational(2, 3))*state1 + S.One/sqrt(3)*state2
 
     state1_dm = Density([state1, 1])
     state2_dm = Density([state2, 1])
@@ -264,24 +270,80 @@ def test_fidelity():
     assert abs(fidelity(d1, d2) - 0.996) < 1e-3
     assert abs(fidelity(d1, d2) - fidelity(d2, d1)) < 1e-3
 
-    #TODO: test for invalid arguments
     # non-square matrix
-    mat1 = [[0, 0],
-            [0, 0],
-            [0, 0]]
+    mat1 = Matrix(
+        [[0, 0],
+        [0, 0],
+        [0, 0]]
+    )
 
-    mat2 = [[0, 0],
-            [0, 0]]
+    mat2 = Matrix(
+        [[0, 0],
+        [0, 0]]
+    )
     raises(ValueError, lambda: fidelity(mat1, mat2))
 
     # unequal dimensions
-    mat1 = [[0, 0],
-            [0, 0]]
-    mat2 = [[0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]]
+    mat1 = Matrix(
+        [[0, 0],
+        [0, 0]]
+    )
+    mat2 = Matrix(
+        [[0, 0, 0],
+        [0, 0, 0],
+        [0, 0, 0]]
+    )
     raises(ValueError, lambda: fidelity(mat1, mat2))
 
     # unsupported data-type
     x, y = 1, 2  # random values that is not a matrix
     raises(ValueError, lambda: fidelity(x, y))
+
+    # check density objs of different sizes
+    d1 = Density([Qubit('0'), 1])
+    d2 = Density([Qubit('00'), 1])
+    raises(ValueError, lambda: fidelity(d1, d2))
+
+    raises(ValueError, lambda: fidelity(d1, 123))
+
+    state_h = sqrt(x)*Qubit('0') + sqrt(1-x)*Qubit('1')
+    d1 = Density([state_h, 1])
+    state_h = sqrt(y)*Qubit('0') + sqrt(1-y)*Qubit('1')
+    d2 = Density([state_h, 1])
+
+    assert fidelity(d1, d2) == sqrt(x*y) + sqrt((1-x)*(1-y))
+
+
+@XFAIL
+def test_fidelity_physical_validations():
+    # fidelity assumes proper physical quantum states, this is
+    # potentially unsafe, these tests show the fails
+    m1 = Matrix(
+        [[0.5, I],
+        [0, 0.5]]
+    )
+    m2 = Matrix(
+        [[1, 0],
+        [0, 0]]
+    )
+    raises(ValueError, lambda: fidelity(m1, m2))
+
+    m1 = Matrix(
+        [[1, 0],
+        [0, 1]]
+    )
+    m2 = Matrix(
+        [[0.5, I/4],
+        [-I/4, 0.5]]
+    )
+    raises(ValueError, lambda: fidelity(m1, m2))
+
+    m1 = Matrix(
+        [[1.2, 0],
+        [0, -0.2]]
+    )
+    m2 = Matrix(
+        [[1, 0],
+        [0, 0]]
+    )
+    raises(ValueError, lambda: fidelity(m1, m2))
