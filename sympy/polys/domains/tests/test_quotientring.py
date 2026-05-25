@@ -1,12 +1,13 @@
 """Tests for quotient rings."""
+from __future__ import annotations
 
-from sympy import QQ, ZZ
+from sympy.polys.domains.integerring import ZZ
+from sympy.polys.domains.rationalfield import QQ
 from sympy.abc import x, y
 
 from sympy.polys.polyerrors import NotReversible
 
-from sympy.utilities.pytest import raises
-from sympy.core.compatibility import range
+from sympy.testing.pytest import raises
 
 
 def test_QuotientRingElement():

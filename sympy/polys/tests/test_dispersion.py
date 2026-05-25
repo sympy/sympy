@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core import Symbol, S, oo
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.polys import poly
@@ -8,7 +9,7 @@ def test_dispersion():
     x = Symbol("x")
     a = Symbol("a")
 
-    fp = poly(S(0), x)
+    fp = poly(S.Zero, x)
     assert sorted(dispersionset(fp)) == [0]
 
     fp = poly(S(2), x)
@@ -35,7 +36,7 @@ def test_dispersion():
     assert sorted(dispersionset(fp, gp)) == [2, 3, 4]
     assert dispersion(fp, gp) == 4
     assert sorted(dispersionset(gp, fp)) == []
-    assert dispersion(gp, fp) == -oo
+    assert dispersion(gp, fp) is -oo
 
     fp = poly(x*(3*x**2+a)*(x-2536)*(x**3+a), x)
     gp = fp.as_expr().subs(x, x-345).as_poly(x)
@@ -55,7 +56,7 @@ def test_dispersion():
     assert sorted(dispersionset(gp, fp)) == [1, 4]
 
     # There are some difficulties if we compute over Z[a]
-    # and alpha happenes to lie in Z[a] instead of simply Z.
+    # and alpha happens to lie in Z[a] instead of simply Z.
     # Hence we can not decide if alpha is indeed integral
     # in general.
 

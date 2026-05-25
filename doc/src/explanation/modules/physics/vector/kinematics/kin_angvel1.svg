@@ -1,0 +1,28 @@
+<svg class="align-center" width="250" version="1.1" viewBox="0 0 209.36937 289.22903" xmlns="http://www.w3.org/2000/svg">
+ <defs>
+  <marker id="Arrow1Mend" overflow="visible" orient="auto">
+   <path transform="scale(.4) rotate(180) translate(10)" d="m0 0 5-5-17.5 5 17.5 5-5-5z" fill="context-stroke" fill-rule="evenodd" stroke="context-stroke" stroke-width="1pt"/>
+  </marker>
+ </defs>
+ <path d="m54.734993 120.05011v-106.01218z" fill="none" stroke="CurrentColor" stroke-width="1px"/>
+ <path d="m54.202269 121.64828-53.805175 70.31963z" fill="none" stroke="CurrentColor" stroke-width="1px"/>
+ <path d="m54.734993 121.11556 66.590567 15.44901z" fill="none" stroke="CurrentColor" stroke-width="1px"/>
+ <path d="m129.31642 190.36974c-28.8055-13.84755-62.813061 5.00438-27.16895 28.76712 9.35254 6.23503 26.00574 0.48385 35.69255 5.32725 12.13599 6.068 5.67475 37.29072 40.48706 37.29072 2.08327 0 9.07068 1.05108 10.65449-0.53273 29.50943-29.50943 24.73344-85.9716-23.9726-90.03044-1.76853-0.14738-12.51148-2.93754-14.38357-1.06545-5.03744 5.03744-12.97884 21.90956-21.30898 20.24353z" fill="none" stroke="CurrentColor" stroke-width="1px"/>
+ <path d="m116.25525 212.41439c-29.393494 12.55126-37.610981 50.55629 3.74731 39.39107 10.85187-2.9296 17.49454-19.24769 27.51955-23.34549 12.55971-5.13386 31.79518 20.29453 54.72674-5.89785 1.37229-1.56742 6.76585-6.1323 6.6175-8.36723-2.7641-41.641-48.39161-75.24035-83.52907-41.26814-1.27585 1.23354-10.45173 7.47847-10.27638 10.1202 0.47185 7.10837 7.93508 24.19739 1.19435 29.36744z" fill="none" stroke="CurrentColor" stroke-dasharray="4, 1"/>
+ <text x="182.76808" y="152.40636" fill="CurrentColor" font-family="Sans" font-size="22px" letter-spacing="0px" word-spacing="0px" style="line-height:125%" xml:space="preserve"><tspan x="182.76808" y="152.40636">B</tspan></text>
+ <text x="68.251961" y="107.78271" fill="CurrentColor" font-family="Sans" font-size="15px" letter-spacing="0px" word-spacing="0px" style="line-height:125%" xml:space="preserve"><tspan x="68.251961" y="107.78271">N</tspan></text>
+ <text x="1.5852898" y="206.1698" fill="CurrentColor" font-family="Sans" font-size="15px" letter-spacing="0px" word-spacing="0px" style="line-height:125%" xml:space="preserve"><tspan x="1.5852898" y="206.1698">n<tspan baseline-shift="sub" font-size="65%">y</tspan></tspan></text>
+ <text x="62.337978" y="16.922499" fill="CurrentColor" font-family="Sans" font-size="15px" letter-spacing="0px" word-spacing="0px" style="line-height:125%" xml:space="preserve"><tspan x="62.337978" y="16.922499">n<tspan baseline-shift="sub" font-size="65%">x</tspan></tspan></text>
+ <text x="123.6283" y="128.75046" fill="CurrentColor" font-family="Sans" font-size="15px" letter-spacing="0px" word-spacing="0px" style="line-height:125%" xml:space="preserve"><tspan x="123.6283" y="128.75046">n<tspan baseline-shift="sub" font-size="65%">z</tspan></tspan></text>
+ <path d="m162.87561 192.72895v-85.48387" fill="none" stroke="CurrentColor" stroke-width="1px"/>
+ <text x="167.71431" y="99.718201" fill="CurrentColor" font-family="Sans" font-size="15px" letter-spacing="0px" word-spacing="0px" style="line-height:125%" xml:space="preserve"><tspan x="167.71431" y="99.718201">n<tspan baseline-shift="sub" font-size="65%">x</tspan></tspan></text>
+ <path d="m3.735828 195.41712c2.150537-4.83871 2.150537-4.83871 2.150537-4.83871l3.225807 3.76344" fill="none" stroke="CurrentColor" stroke-width="1px"/>
+ <path d="m62.337978 5.094541 3.763441-4.3010749 3.225807 4.3010749" fill="none" stroke="CurrentColor" stroke-width="1px"/>
+ <path d="m124.70357 116.38486 2.68817-3.76344 3.76344 3.22581" fill="none" stroke="CurrentColor" stroke-width="1px"/>
+ <path d="m168.25196 87.89024 3.76344-3.763441 3.2258 3.763441" fill="none" stroke="CurrentColor" stroke-width="1px"/>
+ <text x="80.617554" y="286.81497" fill="CurrentColor" xml:space="preserve"><tspan x="80.617554" y="286.81497"><tspan baseline-shift="super" font-size="65.0009%">N</tspan>w<tspan baseline-shift="super" font-size="65.0009%">B</tspan>=q n<tspan baseline-shift="sub" font-size="65%">x</tspan></tspan></text>
+ <circle cx="115.56378" cy="277.13751" r="1.5" fill="CurrentColor"/>
+ <path d="m124.16594 278.75046 2.15053-3.22581 1.61291 3.22581" fill="none" stroke="CurrentColor" stroke-width="1px"/>
+ <path d="m85.993892 208.32035c-2.440326 7.91832 0.615813 14.64637 5.545915 20.45003" fill="none" marker-end="url(#Arrow1Mend)" stroke="CurrentColor" stroke-width="1px"/>
+ <path d="m178.43677 252.53689c7.94251-0.22868 15.20869-10.09814 19.51889-20.69081" fill="none" marker-end="url(#Arrow1Mend)" stroke="CurrentColor" stroke-width="1px"/>
+</svg>

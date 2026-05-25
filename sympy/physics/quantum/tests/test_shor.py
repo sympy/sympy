@@ -1,4 +1,5 @@
-from sympy.utilities.pytest import XFAIL
+from __future__ import annotations
+from sympy.testing.pytest import XFAIL
 
 from sympy.physics.quantum.qapply import qapply
 from sympy.physics.quantum.qubit import Qubit

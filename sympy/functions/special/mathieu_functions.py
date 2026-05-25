@@ -1,19 +1,18 @@
 """ This module contains the Mathieu functions.
 """
+from __future__ import annotations
 
-from __future__ import print_function, division
-
-from sympy.core import S
-from sympy.core.function import Function, ArgumentIndexError
+from sympy.core.function import DefinedFunction, ArgumentIndexError
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import sin, cos
 
 
-class MathieuBase(Function):
+class MathieuBase(DefinedFunction):
     """
     Abstract base class for Mathieu functions.
 
     This class is meant to reduce code duplication.
+
     """
 
     unbranched = True
@@ -25,8 +24,12 @@ class MathieuBase(Function):
 
 class mathieus(MathieuBase):
     r"""
-    The Mathieu Sine function `S(a,q,z)`. This function is one solution
-    of the Mathieu differential equation:
+    The Mathieu Sine function $S(a,q,z)$.
+
+    Explanation
+    ===========
+
+    This function is one solution of the Mathieu differential equation:
 
     .. math ::
         y(x)^{\prime\prime} + (a - 2 q \cos(2 x)) y(x) = 0
@@ -58,10 +61,11 @@ class mathieus(MathieuBase):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Mathieu_function
-    .. [2] http://dlmf.nist.gov/28
-    .. [3] http://mathworld.wolfram.com/MathieuBase.html
-    .. [4] http://functions.wolfram.com/MathieuandSpheroidalFunctions/MathieuS/
+    .. [1] https://en.wikipedia.org/wiki/Mathieu_function
+    .. [2] https://dlmf.nist.gov/28
+    .. [3] https://mathworld.wolfram.com/MathieuFunction.html
+    .. [4] https://functions.wolfram.com/MathieuandSpheroidalFunctions/MathieuS/
+
     """
 
     def fdiff(self, argindex=1):
@@ -73,7 +77,7 @@ class mathieus(MathieuBase):
 
     @classmethod
     def eval(cls, a, q, z):
-        if q.is_Number and q is S.Zero:
+        if q.is_Number and q.is_zero:
             return sin(sqrt(a)*z)
         # Try to pull out factors of -1
         if z.could_extract_minus_sign():
@@ -82,8 +86,12 @@ class mathieus(MathieuBase):
 
 class mathieuc(MathieuBase):
     r"""
-    The Mathieu Cosine function `C(a,q,z)`. This function is one solution
-    of the Mathieu differential equation:
+    The Mathieu Cosine function $C(a,q,z)$.
+
+    Explanation
+    ===========
+
+    This function is one solution of the Mathieu differential equation:
 
     .. math ::
         y(x)^{\prime\prime} + (a - 2 q \cos(2 x)) y(x) = 0
@@ -115,10 +123,11 @@ class mathieuc(MathieuBase):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Mathieu_function
-    .. [2] http://dlmf.nist.gov/28
-    .. [3] http://mathworld.wolfram.com/MathieuBase.html
-    .. [4] http://functions.wolfram.com/MathieuandSpheroidalFunctions/MathieuC/
+    .. [1] https://en.wikipedia.org/wiki/Mathieu_function
+    .. [2] https://dlmf.nist.gov/28
+    .. [3] https://mathworld.wolfram.com/MathieuFunction.html
+    .. [4] https://functions.wolfram.com/MathieuandSpheroidalFunctions/MathieuC/
+
     """
 
     def fdiff(self, argindex=1):
@@ -130,7 +139,7 @@ class mathieuc(MathieuBase):
 
     @classmethod
     def eval(cls, a, q, z):
-        if q.is_Number and q is S.Zero:
+        if q.is_Number and q.is_zero:
             return cos(sqrt(a)*z)
         # Try to pull out factors of -1
         if z.could_extract_minus_sign():
@@ -139,7 +148,11 @@ class mathieuc(MathieuBase):
 
 class mathieusprime(MathieuBase):
     r"""
-    The derivative `S^{\prime}(a,q,z)` of the Mathieu Sine function.
+    The derivative $S^{\prime}(a,q,z)$ of the Mathieu Sine function.
+
+    Explanation
+    ===========
+
     This function is one solution of the Mathieu differential equation:
 
     .. math ::
@@ -172,10 +185,11 @@ class mathieusprime(MathieuBase):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Mathieu_function
-    .. [2] http://dlmf.nist.gov/28
-    .. [3] http://mathworld.wolfram.com/MathieuBase.html
-    .. [4] http://functions.wolfram.com/MathieuandSpheroidalFunctions/MathieuSPrime/
+    .. [1] https://en.wikipedia.org/wiki/Mathieu_function
+    .. [2] https://dlmf.nist.gov/28
+    .. [3] https://mathworld.wolfram.com/MathieuFunction.html
+    .. [4] https://functions.wolfram.com/MathieuandSpheroidalFunctions/MathieuSPrime/
+
     """
 
     def fdiff(self, argindex=1):
@@ -187,7 +201,7 @@ class mathieusprime(MathieuBase):
 
     @classmethod
     def eval(cls, a, q, z):
-        if q.is_Number and q is S.Zero:
+        if q.is_Number and q.is_zero:
             return sqrt(a)*cos(sqrt(a)*z)
         # Try to pull out factors of -1
         if z.could_extract_minus_sign():
@@ -196,7 +210,11 @@ class mathieusprime(MathieuBase):
 
 class mathieucprime(MathieuBase):
     r"""
-    The derivative `C^{\prime}(a,q,z)` of the Mathieu Cosine function.
+    The derivative $C^{\prime}(a,q,z)$ of the Mathieu Cosine function.
+
+    Explanation
+    ===========
+
     This function is one solution of the Mathieu differential equation:
 
     .. math ::
@@ -229,10 +247,11 @@ class mathieucprime(MathieuBase):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Mathieu_function
-    .. [2] http://dlmf.nist.gov/28
-    .. [3] http://mathworld.wolfram.com/MathieuBase.html
-    .. [4] http://functions.wolfram.com/MathieuandSpheroidalFunctions/MathieuCPrime/
+    .. [1] https://en.wikipedia.org/wiki/Mathieu_function
+    .. [2] https://dlmf.nist.gov/28
+    .. [3] https://mathworld.wolfram.com/MathieuFunction.html
+    .. [4] https://functions.wolfram.com/MathieuandSpheroidalFunctions/MathieuCPrime/
+
     """
 
     def fdiff(self, argindex=1):
@@ -244,7 +263,7 @@ class mathieucprime(MathieuBase):
 
     @classmethod
     def eval(cls, a, q, z):
-        if q.is_Number and q is S.Zero:
+        if q.is_Number and q.is_zero:
             return -sqrt(a)*sin(sqrt(a)*z)
         # Try to pull out factors of -1
         if z.could_extract_minus_sign():

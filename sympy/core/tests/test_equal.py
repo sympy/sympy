@@ -1,4 +1,7 @@
-from sympy import Symbol, Dummy, Rational, exp
+from __future__ import annotations
+from sympy.core.numbers import Rational
+from sympy.core.symbol import (Dummy, Symbol)
+from sympy.functions.elementary.exponential import exp
 
 
 def test_equal():
@@ -43,7 +46,7 @@ def test_expevalbug():
 
 
 def test_cmp_bug1():
-    class T(object):
+    class T:
         pass
 
     t = T()
@@ -54,7 +57,7 @@ def test_cmp_bug1():
 
 
 def test_cmp_bug2():
-    class T(object):
+    class T:
         pass
 
     t = T()

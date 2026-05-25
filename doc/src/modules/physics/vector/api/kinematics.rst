@@ -1,9 +1,8 @@
+.. _kinematics:
+
 =======================
 Kinematics (Docstrings)
 =======================
-
-Point
-=====
 
 .. automodule:: sympy.physics.vector.point
    :members:
