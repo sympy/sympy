@@ -2710,6 +2710,25 @@ def eliminate(eqs, *symbols):
                         if isinstance(sym_value, Intersection) \
                                 and sym_value.args[0] == S.Reals:
                             sym_value = sym_value.args[1]
+                        elif isinstance(sym_value, ImageSet):
+                            # ImageSet with a FiniteSet base inside an
+                            # Intersection: apply the lambda to extract value
+                            base = sym_value.base_set
+                            if isinstance(base, Intersection):
+                                finite_sets = [a for a in base.args
+                                               if isinstance(a, FiniteSet)]
+                                if len(finite_sets) == 1:
+                                    el = list(finite_sets[0])[0]
+                                    sym_value = FiniteSet(sym_value.lamda(el))
+                                else:
+                                    msg = 'Unable to eliminate the symbol:  %s'
+                                    raise NotImplementedError(msg % sym)
+                            elif isinstance(base, FiniteSet):
+                                el = list(base)[0]
+                                sym_value = FiniteSet(sym_value.lamda(el))
+                            else:
+                                msg = 'Unable to eliminate the symbol:  %s'
+                                raise NotImplementedError(msg % sym)
                         else:
                             msg = 'Unable to eliminate the symbol:  %s'
                             raise NotImplementedError(msg % sym)
