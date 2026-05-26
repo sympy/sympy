@@ -499,10 +499,13 @@ class C89CodePrinter(CodePrinter):
                 s=self._print(var.symbol)
             )
         elif isinstance(var, Variable):
-            result = '{vc}{t} {s}'.format(
+            dim = var.attr_params('dimension') if hasattr(var, 'attr_params') else []
+            dim_str = ''.join(f'[{self._print(arg)}]' for arg in dim) if dim else ''
+            result = '{vc}{t} {s}{d}'.format(
                 vc='const ' if value_const in var.attrs else '',
                 t=self._print(var.type),
-                s=self._print(var.symbol)
+                s=self._print(var.symbol),
+                d=dim_str
             )
         else:
             raise NotImplementedError("Unknown type of var: %s" % type(var))
@@ -729,6 +732,13 @@ class C99CodePrinter(C89CodePrinter):
             close_lines.append("}")
         return open_lines, close_lines
 
+    @requires(headers={'lapacke.h'})
+    def _print_Dgesv(self, expr):
+        return 'info = LAPACKE_dgesv(LAPACK_ROW_MAJOR, n, nrhs, {}, n, ipiv, {}, n)'.format(
+            self._print(expr.matrix),
+            self._print(expr.vector)
+        )
+
 
 for k in ('Abs Sqrt exp exp2 expm1 log log10 log2 log1p Cbrt hypot fma'
           ' loggamma sin cos tan asin acos atan atan2 sinh cosh tanh asinh acosh '
@@ -749,14 +759,3 @@ c_code_printers = {
     'c99': C99CodePrinter,
     'c11': C11CodePrinter
 }
-
-class LAPACKCCodePrinter(C99CodePrinter):
-    def _print_Dgesv(self, expr):
-        return 'LAPACKE_dgesv(LAPACK_ROW_MAJOR, {}, {}, {}, {}, ipiv, {}, {})'.format(
-            expr.matrix.shape[0],
-            expr.vector.shape[1],
-            self._print(expr.matrix),
-            expr.matrix.shape[0],
-            self._print(expr.vector),
-            expr.matrix.shape[0]
-        )
