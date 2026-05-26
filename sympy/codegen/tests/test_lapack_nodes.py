@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from sympy import MatrixSymbol, ccode, fcode
 from sympy.codegen.lapack_nodes import dgesv_function
 
