@@ -857,7 +857,15 @@ def test_manualintegrate_sqrt_quadratic_reduction():
     term_n5 = f/(a*x**2 + b*x + c)**(S(5)/2)
     intg_result = piecewise_fold(manualintegrate(term_n5, x))
     assert (intg_result.args[0][0].diff(x) - term_n5).cancel() == 0
+    # case delta = 0
     assert (intg_result.args[1][0].subs(c, b**2/(4*a)).diff(x) - term_n5.subs(c, b**2/(4*a))).cancel() == 0
+
+def test_manualintegrate_sqrt_quadratic_polynomial_reduction_rule():
+    f = (d*x**3 + x)/(3*x**2 + b*x + c)**(S(5)/2)
+    result = piecewise_fold(manualintegrate(f, x))
+    assert (result.args[0][0].diff(x) - f).cancel() == 0
+    # case delta = 0
+    assert (result.args[1][0].subs(c, b**2/12).diff(x) - f.subs(c, b**2/12)).cancel() == 0
 
 def test_mul_pow_derivative():
     assert_is_integral_of(x*sec(x)*tan(x), x*sec(x) - log(tan(x) + sec(x)))
