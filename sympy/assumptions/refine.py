@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, overload
 
-from sympy.core import S, Add, Expr, Basic, Mul, Pow, Rational
+from sympy.core import S, Add, Expr, Basic, Mul, Pow
 from sympy.core.logic import fuzzy_not
 
 from sympy.assumptions import ask, Q  # type: ignore
