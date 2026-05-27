@@ -151,15 +151,34 @@ def refine_Pow(expr, assumptions):
         if ask(Q.real(expr.base.args[0]), assumptions) and \
                 ask(Q.even(expr.exp), assumptions):
             return expr.base.args[0] ** expr.exp
+
+    if isinstance(expr.base, Pow):
+        # (z1**z2)**z3 admits a few sound simplifications. In each case the
+        # remaining variables (those not constrained) may be any complex
+        # number; outside these cases the rewrite is unsound due to branch
+        # cuts (e.g. ((-2)**3)**(1/2) = 2*sqrt(2)*I != Abs(-2)**(3/2)).
+        #
+        # (i)   z3 is an integer            =>  z1**(z2*z3)
+        # (ii)  z1 > 0 and z2 is real       =>  z1**(z2*z3)
+        # (iii) z1 is real and z2 is an
+        #       even integer                =>  Abs(z1)**(z2*z3)
+        inner_base, inner_exp = expr.base.base, expr.base.exp
+        outer_exp = expr.exp
+        if ask(Q.integer(outer_exp), assumptions):
+            return inner_base ** (inner_exp * outer_exp)
+        if ask(Q.positive(inner_base), assumptions) and \
+                ask(Q.real(inner_exp), assumptions):
+            return inner_base ** (inner_exp * outer_exp)
+        if ask(Q.real(inner_base), assumptions) and \
+                ask(Q.even(inner_exp), assumptions):
+            return Abs(inner_base) ** (inner_exp * outer_exp)
+
     if ask(Q.real(expr.base), assumptions):
         if expr.base.is_number:
             if ask(Q.even(expr.exp), assumptions):
                 return abs(expr.base) ** expr.exp
             if ask(Q.odd(expr.exp), assumptions):
                 return sign(expr.base) * abs(expr.base) ** expr.exp
-        if isinstance(expr.exp, Rational):
-            if isinstance(expr.base, Pow):
-                return abs(expr.base.base) ** (expr.base.exp * expr.exp)
 
         if expr.base is S.NegativeOne:
             if expr.exp.is_Add:
