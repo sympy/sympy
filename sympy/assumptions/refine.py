@@ -153,15 +153,12 @@ def refine_Pow(expr, assumptions):
             return expr.base.args[0] ** expr.exp
 
     if isinstance(expr.base, Pow):
-        # (z1**z2)**z3 admits a few sound simplifications. In each case the
-        # remaining variables (those not constrained) may be any complex
-        # number; outside these cases the rewrite is unsound due to branch
-        # cuts (e.g. ((-2)**3)**(1/2) = 2*sqrt(2)*I != Abs(-2)**(3/2)).
-        #
+        #we simplify (z1**z2)**z3 depending on the assumptions on z1, z2, and z3.
         # (i)   z3 is an integer            =>  z1**(z2*z3)
         # (ii)  z1 > 0 and z2 is real       =>  z1**(z2*z3)
         # (iii) z1 is real and z2 is an
-        #       even integer                =>  In this case, z1**z2 = |z1|**z2, and so this reduces to case (ii).
+        #       even integer                =>  In this case, z1**z2 = |z1|**z2.
+        #So then (z1**z2)**z3 = (|z1|**z2)**z3 = |z1|**(z2*z3), where the last equality follows from case (ii).
         inner_base, inner_exp = expr.base.base, expr.base.exp
         outer_exp = expr.exp
         if ask(Q.integer(outer_exp), assumptions):
