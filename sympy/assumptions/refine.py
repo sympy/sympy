@@ -161,7 +161,7 @@ def refine_Pow(expr, assumptions):
         # (i)   z3 is an integer            =>  z1**(z2*z3)
         # (ii)  z1 > 0 and z2 is real       =>  z1**(z2*z3)
         # (iii) z1 is real and z2 is an
-        #       even integer                =>  Abs(z1)**(z2*z3)
+        #       even integer                =>  In this case, z1**z2 = |z1|**z2, and so this reduces to case (ii).
         inner_base, inner_exp = expr.base.base, expr.base.exp
         outer_exp = expr.exp
         if ask(Q.integer(outer_exp), assumptions):
