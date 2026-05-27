@@ -2342,8 +2342,8 @@ class MatrixOperations(MatrixRequired):
         [sqrt(x**2),  Abs(x)**2]])
         >>> _.refine(Q.real(x))
         Matrix([
-        [  x**2, Abs(x)],
-        [Abs(x),   x**2]])
+        [  x**2, x],
+        [x,   x**2]])
 
         """
         return self.applyfunc(lambda x: refine(x, assumptions))
