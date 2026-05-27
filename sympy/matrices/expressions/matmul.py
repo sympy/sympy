@@ -158,8 +158,10 @@ class MatMul(MatrixExpr, Mul):
             # (0*A)**-1 should raise rather than extract zoo*A**-1.
             # Maybe-zero symbolic coefficients follow SymPy's generic
             # convention of being treated as nonzero.
-            if coeff.is_zero and exp.is_negative:
-                return MatPow(self, exp)
+            if coeff.is_zero:
+                if exp.is_negative:
+                    return MatPow(self, exp)
+                return ZeroMatrix(*self.shape)
         elif not coeff.is_positive:
             # For noninteger numeric powers, only extract a positive scalar
             # coefficient to avoid branch cut issues.
