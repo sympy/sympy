@@ -147,18 +147,28 @@ class MatMul(MatrixExpr, Mul):
         # expressions such as (A*B)**2.
         if coeff is S.One:
             return MatPow(self, exp)
-        matrix_part = matrices[0] if len(matrices) == 1 else MatMul(*matrices)
+        # Follow Mul._eval_power's design: split only concrete integer powers
+        # and exact rational/float powers. Symbolic exponents, including
+        # symbolic integers, remain unchanged.
+        if not (exp.is_Rational or exp.is_Float):
+            return MatPow(self, exp)
 
-        # Unlike Mul, keep unevaluated 0*A powers intact rather than
-        # extracting scalar infinities from negative powers of the zero
-        # coefficient. Evaluated 0*A is handled by ZeroMatrix._eval_power.
-        exp_is_number = exp.is_Integer or exp.is_Rational or exp.is_Float
-        coeff_can_be_extracted = (
-            (exp.is_Integer and coeff.is_zero is not True) or coeff.is_positive
-        )
-        if exp_is_number and coeff_can_be_extracted:
-            return coeff**exp * MatPow(matrix_part, exp).doit(deep=False)
-        return MatPow(self, exp)
+        if exp.is_Integer:
+            # Preserve matrix singularity for definite zero coefficients:
+            # (0*A)**-1 should raise rather than extract zoo*A**-1.
+            # Maybe-zero symbolic coefficients follow SymPy's generic
+            # convention of being treated as nonzero.
+            if coeff.is_zero and exp.is_negative:
+                return MatPow(self, exp)
+        elif not coeff.is_positive:
+            # For noninteger numeric powers, only extract a positive scalar
+            # coefficient to avoid branch cut issues.
+            return MatPow(self, exp)
+
+        # Only extraction cases remain: integer powers, and noninteger
+        # rational/float powers with positive scalar coefficient.
+        matrix_part = matrices[0] if len(matrices) == 1 else MatMul(*matrices)
+        return coeff**exp * MatPow(matrix_part, exp).doit(deep=False)
 
     def _eval_transpose(self):
         """Transposition of matrix multiplication.
