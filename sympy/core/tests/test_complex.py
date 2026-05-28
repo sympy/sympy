@@ -247,6 +247,6 @@ def test_conjugate_product_is_real():
     assert (z*conjugate(z)*r).is_real is True
 
     # Complex numbers always have is_real evaluated
-    from sympy import re, im
+    from sympy import im
     # This tests the as_real_imag path
     assert im(z*conjugate(z)) == 0
