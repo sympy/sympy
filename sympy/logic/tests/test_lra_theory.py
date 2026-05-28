@@ -467,3 +467,32 @@ def test_empty_cnf():
     lra, conflict = LRASolver.from_encoded_cnf(enc)
     assert len(conflict) == 0
     assert lra.check() == (True, {})
+
+
+@XFAIL
+def test_backtracking():
+    # Example from the section 4 of the paper.
+    cons = [x >= -8, x <= -4, x >= -2]
+    cnf = CNF().from_prop(And(*cons))
+    enc = EncodedCNF()
+    enc.from_cnf(cnf)
+    lra, _ = LRASolver.from_encoded_cnf(enc)
+
+    lra.assert_lit(1)
+    lra.assert_lit(2)
+    is_sat, _ = lra.check()
+    # TODO: should also have a check for assignment
+    assert is_sat is True
+
+    res = lra.assert_lit(3)
+    if res is None:
+        is_sat, conflict = lra.check()
+    else:
+        is_sat, conflict = res
+
+    assert is_sat is False
+
+    lra.backtrack()
+    # TODO: should also have a check for assignment
+    is_sat, _ = lra.check()
+    assert is_sat is True
