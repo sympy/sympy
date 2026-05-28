@@ -18,9 +18,7 @@ from sympy.external.mpmath import (MPZ_ONE, fzero, fone, finf, fninf, fnan,
 
 @public
 class RealElement(_mpf, DomainElement):
-    """An element of a real domain. """
-
-    __slots__ = ('__mpf__',)
+    """An element of a real domain."""
 
     def _set_mpf(self, val):
         self.__mpf__ = val
@@ -30,11 +28,10 @@ class RealElement(_mpf, DomainElement):
     def parent(self):
         return self.context._parent
 
+
 @public
 class ComplexElement(_mpc, DomainElement):
-    """An element of a complex domain. """
-
-    __slots__ = ('__mpc__',)
+    """An element of a complex domain."""
 
     def _set_mpc(self, val):
         self.__mpc__ = val

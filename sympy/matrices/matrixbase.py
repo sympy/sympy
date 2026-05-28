@@ -102,7 +102,6 @@ if TYPE_CHECKING:
     from typing import Literal, TypeVar, Iterator, Mapping, Any
     from typing_extensions import Self
     from sympy.combinatorics import Permutation
-    from sympy.logic.boolalg import Boolean
     from sympy.integrals.integrals import SymbolLimits
     from sympy.matrices.expressions.matexpr import MatrixExpr
     from sympy.matrices.expressions.permutation import PermutationMatrix
@@ -2589,7 +2588,7 @@ class MatrixBase(Printable):
         """
         return self.permute(swaps, orientation='rows', direction=direction)
 
-    def refine(self, assumptions: Boolean | bool = True) -> Self:
+    def refine(self, assumptions=True):
         """Apply refine to each element of the matrix.
 
         Examples
@@ -2603,8 +2602,8 @@ class MatrixBase(Printable):
         [sqrt(x**2),  Abs(x)**2]])
         >>> _.refine(Q.real(x))
         Matrix([
-        [  x**2, x],
-        [x,   x**2]])
+        [  x**2, Abs(x)],
+        [Abs(x),   x**2]])
 
         """
         return self.applyfunc(lambda x: refine(x, assumptions))

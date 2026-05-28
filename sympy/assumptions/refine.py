@@ -40,7 +40,7 @@ def refine(expr: Basic, assumptions: Boolean | bool = True) -> Basic:
     >>> from sympy import refine, sqrt, Q
     >>> from sympy.abc import x
     >>> refine(sqrt(x**2), Q.real(x))
-    x
+    Abs(x)
     >>> refine(sqrt(x**2), Q.positive(x))
     x
 
@@ -77,29 +77,21 @@ def refine(expr: Basic, assumptions: Boolean | bool = True) -> Basic:
         return new_expr
     return refine(new_expr, assumptions)
 
-
 def refine_abs(expr, assumptions):
-    """
-    Handler for the absolute value.
-    """
+    """Handler for the absolute value."""
     from sympy.functions.elementary.complexes import Abs
     arg = expr.args[0]
 
-    # Improved logic for real numbers
     if ask(Q.real(arg), assumptions):
-        # If we know it's real, then |x| = x if x is nonnegative
-        # or |x| = -x if x is negative
         if ask(Q.negative(arg), assumptions):
             return -arg
-        else:
-            # This covers positive, zero, and "real but unknown sign"
-            # For real numbers, refine should return the arg itself in most cases
+        if ask(Q.positive(arg), assumptions):
             return arg
+        return Abs(arg)   # real but sign unknown
 
     if ask(Q.negative(arg), assumptions):
         return -arg
 
-    # Keep the old Mul handling
     if isinstance(arg, Mul):
         r = [refine(abs(a), assumptions) for a in arg.args]
         non_abs = []
@@ -112,7 +104,6 @@ def refine_abs(expr, assumptions):
         return Mul(*non_abs) * Abs(Mul(*in_abs))
 
     return None
-
 
 def refine_Pow(expr, assumptions):
     """
@@ -402,12 +393,16 @@ def refine_sign(expr, assumptions):
     arg = expr.args[0]
     if ask(Q.zero(arg), assumptions):
         return S.Zero
-    if ask(Q.real(arg)):
-        if ask(Q.positive(arg), assumptions):
+    if ask(Q.real(arg), assumptions):
+        if ask(Q.positive(arg), assumptions) or (
+                ask(Q.nonnegative(arg), assumptions) and
+                ask(Q.nonzero(arg), assumptions)):
             return S.One
-        if ask(Q.negative(arg), assumptions):
+        if ask(Q.negative(arg), assumptions) or (
+                ask(Q.nonpositive(arg), assumptions) and
+                ask(Q.nonzero(arg), assumptions)):
             return S.NegativeOne
-    if ask(Q.imaginary(arg)):
+    if ask(Q.imaginary(arg), assumptions):
         arg_re, arg_im = arg.as_real_imag()
         if ask(Q.positive(arg_im), assumptions):
             return S.ImaginaryUnit
