@@ -112,8 +112,6 @@ def test_from_encoded_cnf():
 
 
 def test_problem():
-    from sympy.logic.algorithms.lra_theory import LRASolver
-    from sympy.assumptions.cnf import CNF, EncodedCNF
     cons = [-2 * x - 2 * y >= 7, -9 * y >= 7, -6 * y >= 5]
     cnf = CNF().from_prop(And(*cons))
     enc = EncodedCNF()
