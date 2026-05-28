@@ -469,10 +469,10 @@ def test_empty_cnf():
 
 def test_backtracking():
     # Example from the section 4 of the paper.
-    cons = [x >= -8, x <= -4, x >= -2]
-    cnf = CNF().from_prop(And(*cons))
     enc = EncodedCNF()
-    enc.from_cnf(cnf)
+    enc.add_prop(x >= -8)
+    enc.add_prop(x <= -4)
+    enc.add_prop(x >= -2)
     lra, _ = LRASolver.from_encoded_cnf(enc)
 
     lra.assert_lit(1)
