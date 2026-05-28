@@ -225,3 +225,28 @@ def test_issue_11518():
     assert conjugate(r) == r
     s = abs(x + I * y)
     assert conjugate(s) == r
+
+
+def test_conjugate_product_is_real():
+    """Test that z*conjugate(z) is recognized as real."""
+    z = symbols('z', complex=True)
+    
+    # Basic case: z*conjugate(z) is real
+    assert (z*conjugate(z)).is_real is True
+    
+    # Reverse order should also work
+    assert (conjugate(z)*z).is_real is True
+    
+    # Multiple conjugate pairs
+    w = symbols('w', complex=True)
+    assert (z*conjugate(z)*w*conjugate(w)).is_real is True
+    
+    # With real multipliers
+    r = symbols('r', real=True)
+    assert (r*z*conjugate(z)).is_real is True
+    assert (z*conjugate(z)*r).is_real is True
+    
+    # Complex numbers always have is_real evaluated
+    from sympy import re, im
+    # This tests the as_real_imag path
+    assert im(z*conjugate(z)) == 0

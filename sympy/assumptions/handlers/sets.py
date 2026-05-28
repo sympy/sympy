@@ -283,7 +283,7 @@ def _(expr, assumptions):
     for i, arg in enumerate(args):
         if isinstance(arg, conjugate):
             conj_of = arg.args[0]
-            if conj_of in args:
+            if conj_of in args and conj_of.is_commutative:
                 args_to_remove.extend([i, args.index(conj_of)])
 
     if args_to_remove:

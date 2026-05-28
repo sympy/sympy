@@ -255,14 +255,14 @@ def _(expr):
 
 @class_fact_registry.register(Mul)
 def _(expr):
-    """Recognize z*conjugate(z) as a real product."""
+    """Recognize z*conjugate(z) as a real product (commutative only)."""
     if len(expr.args) != 2:
         return None
 
     a, b = expr.args
-    if isinstance(a, conjugate) and a.args[0] == b:
+    if isinstance(a, conjugate) and a.args[0] == b and b.is_commutative:
         return Q.real(expr)
-    if isinstance(b, conjugate) and b.args[0] == a:
+    if isinstance(b, conjugate) and b.args[0] == a and a.is_commutative:
         return Q.real(expr)
     return None
 

@@ -1308,6 +1308,10 @@ class Mul(Expr, AssocOp):
 
         This preserves the existing conservative behavior for ambiguous
         products while fixing cases like ``z*conjugate(z)``.
+
+        Note: this optimization only applies to commutative factors.
+        For non-commutative symbols X, X*conjugate(X) is not necessarily
+        equal to |X|^2 and cannot be assumed real.
         """
         from sympy.functions.elementary.complexes import conjugate
 
@@ -1316,7 +1320,10 @@ class Mul(Expr, AssocOp):
         for i, arg in enumerate(args):
             if isinstance(arg, conjugate):
                 conj_of = arg.args[0]
-                if conj_of in args:
+                # Only apply the conjugate-pair optimization if both the
+                # conjugate and its argument are commutative. For non-commutative
+                # symbols, X*conjugate(X) != |X|^2, so it is not necessarily real.
+                if conj_of in args and conj_of.is_commutative:
                     args_to_remove.extend([i, args.index(conj_of)])
 
         if args_to_remove:

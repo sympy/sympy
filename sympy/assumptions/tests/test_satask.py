@@ -289,6 +289,67 @@ def test_real_conjugate_product():
     assert (y*conjugate(y)).is_real is True
 
 
+def test_real_conjugate_product_multiple_pairs():
+    """Test products with multiple conjugate pairs."""
+    z = symbols('z', complex=True)
+    w = symbols('w', complex=True)
+    
+    # Two separate conjugate pairs should be real
+    expr = z*conjugate(z)*w*conjugate(w)
+    assert (expr).is_real is True
+    assert ask(Q.real(expr)) is True
+    
+    # With real factors added
+    expr2 = 2*z*conjugate(z)*3*w*conjugate(w)
+    assert (expr2).is_real is True
+
+
+def test_real_conjugate_product_with_real_factors():
+    """Test conjugate product mixed with real factors."""
+    z = symbols('z', complex=True)
+    r = symbols('r', real=True, positive=True)
+    
+    # z*conjugate(z)*r should be real
+    expr = z*conjugate(z)*r
+    assert (expr).is_real is True
+    assert ask(Q.real(expr)) is True
+    # Note: Cannot guarantee positive without more complex reasoning
+    # (z*conjugate(z) = |z|^2 >= 0 but could be zero)
+
+
+def test_real_conjugate_product_order():
+    """Test that conjugate pair recognition works regardless of order."""
+    z = symbols('z', complex=True)
+    
+    # Both orders should recognize the product as real
+    expr1 = z*conjugate(z)
+    expr2 = conjugate(z)*z
+    
+    assert (expr1).is_real is True
+    assert (expr2).is_real is True
+    assert ask(Q.real(expr1)) is True
+    assert ask(Q.real(expr2)) is True
+
+
+def test_real_conjugate_product_noncommutative():
+    """Test that non-commutative symbols behavior is conservative."""
+    X, Y = symbols('X Y', commutative=False)
+    
+    # Non-commutative X*conjugate(X) is NOT guaranteed to be real
+    # because X*conj(X) != |X|^2 for non-commutative symbols
+    expr = X*conjugate(X)
+    # The system conservatively returns False (not proven to be real)
+    assert (expr).is_real is False or (expr).is_real is None
+
+
+def test_real_conjugate_product_with_imaginary():
+    """Test that conjugate product with imaginary factor is not real."""
+    z = symbols('z', complex=True)
+    # z*conjugate(z)*I should not be real
+    expr = z*conjugate(z)*I
+    assert (expr).is_real is False or (expr).is_imaginary is True
+
+
 def test_pos_neg():
     assert satask(~Q.positive(x), Q.negative(x)) is True
     assert satask(~Q.negative(x), Q.positive(x)) is True
