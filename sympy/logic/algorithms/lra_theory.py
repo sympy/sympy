@@ -186,6 +186,9 @@ class LRASolver():
         self.is_sat = True  # While True, all constraints asserted so far are satisfiable
         self.result = None  # always one of: (True, assignment), (False, conflict clause), None
 
+        self.bound_history = []
+        self.last_assign_snapshot = {var: var.assign for var in self.all_var}
+
     @staticmethod
     def from_encoded_cnf(encoded_cnf, testing_mode=False):
         """
@@ -458,6 +461,8 @@ class LRASolver():
             self.result = False, [-conflicting_lit, -literal]
             return self.result
 
+        self.bound_history.append((xi, target_bound, upper))
+
         xi.set_bound(boundary, literal)
 
         if xi in self.nonslack and xi.assign * s > c_norm:
@@ -502,7 +507,8 @@ class LRASolver():
         explanation : set of ints
         """
         if self.is_sat:
-            return True, {var: var.assign for var in self.all_var}
+            self.last_assign_snapshot = {var: var.assign for var in self.all_var}
+            return True, self.last_assign_snapshot
         if self.result:
             return self.result
 
@@ -533,7 +539,8 @@ class LRASolver():
             cand = [b for b in basic if b.assign < b.lower or b.assign > b.upper]
 
             if len(cand) == 0:
-                return True, {var: var.assign for var in self.all_var}
+                self.last_assign_snapshot = {var: var.assign for var in self.all_var}
+                return True, self.last_assign_snapshot
 
             xi = min(cand, key=lambda v: v.col_idx) # Bland's rule
             i = basic[xi]
@@ -651,6 +658,8 @@ class LRASolver():
 
         return A
 
+    def backtrack(self):
+        pass
 
 def _sep_const_coeff(expr):
     """
