@@ -22,6 +22,7 @@ References
        linear ODEs, (2004).
        https://arxiv.org/abs/math-ph/0402063
 '''
+from __future__ import annotations
 
 from sympy.core import S, Pow
 from sympy.core.function import expand

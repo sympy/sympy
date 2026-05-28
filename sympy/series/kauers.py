@@ -1,3 +1,4 @@
+from __future__ import annotations
 def finite_diff(expression, variable, increment=1):
     """
     Takes as input a polynomial expression and the variable used to construct

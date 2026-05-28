@@ -1,5 +1,6 @@
 """Tests for algorithms for partial fraction decomposition of rational
 functions. """
+from __future__ import annotations
 
 from sympy.polys.partfrac import (
     apart_undetermined_coeffs,

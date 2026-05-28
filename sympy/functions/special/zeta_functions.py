@@ -1,4 +1,5 @@
 """ Riemann zeta and related function. """
+from __future__ import annotations
 
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
@@ -752,9 +753,7 @@ class stieltjes(DefinedFunction):
         if n.is_Number:
             if n is S.NaN:
                 return S.NaN
-            elif n < 0:
-                return S.ComplexInfinity
-            elif not n.is_Integer:
+            elif n < 0 or not n.is_Integer:
                 return S.ComplexInfinity
             elif n is S.Zero and a in [None, 1]:
                 return S.EulerGamma

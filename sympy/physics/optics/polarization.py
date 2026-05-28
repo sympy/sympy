@@ -83,6 +83,7 @@ References
 .. [3] https://en.wikipedia.org/wiki/Stokes_parameters
 
 """
+from __future__ import annotations
 
 from sympy.core.numbers import (I, pi)
 from sympy.functions.elementary.complexes import (Abs, im, re)

@@ -1,3 +1,4 @@
+from __future__ import annotations
 
 from sympy.external import import_module
 import sympy.plotting.backends.base_backend as base_backend

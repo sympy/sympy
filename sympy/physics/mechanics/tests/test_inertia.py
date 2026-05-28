@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy import symbols
 from sympy.testing.pytest import raises
 from sympy.physics.mechanics import (inertia, inertia_of_point_mass,

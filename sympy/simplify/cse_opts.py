@@ -1,6 +1,7 @@
 """ Optimizations of the expression tree representation for better CSE
 opportunities.
 """
+from __future__ import annotations
 from sympy.core import Add, Basic, Mul
 from sympy.core.singleton import S
 from sympy.core.sorting import default_sort_key

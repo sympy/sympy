@@ -1,4 +1,5 @@
 """Tests for tools for solving inequalities and systems of inequalities. """
+from __future__ import annotations
 
 from sympy.concrete.summations import Sum
 from sympy.core.function import Function

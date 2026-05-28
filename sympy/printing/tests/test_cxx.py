@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.numbers import Float, Integer, Rational
 from sympy.core.symbol import symbols
 from sympy.functions import beta, Ei, zeta, Max, Min, sqrt, riemann_xi, frac

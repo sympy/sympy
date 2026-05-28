@@ -1,13 +1,15 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, overload, cast
 from collections import Counter, defaultdict, OrderedDict
 from itertools import (
     chain, combinations, combinations_with_replacement, cycle, islice,
     permutations, product, groupby
 )
+
 # For backwards compatibility
 from itertools import product as cartes # noqa: F401
 from operator import gt
-
-
 
 # this is the logical location of these functions
 from sympy.utilities.enumerative import (
@@ -17,7 +19,17 @@ from sympy.utilities.misc import as_int
 from sympy.utilities.decorator import deprecated
 
 
-def is_palindromic(s, i=0, j=None):
+if TYPE_CHECKING:
+    from typing import (
+        Any, Iterable, Callable, Literal, Sequence, Iterator, TypeVar,
+    )
+    from typing_extensions import TypeIs
+    T = TypeVar("T")
+    T1 = TypeVar("T1")
+    T2 = TypeVar("T2")
+
+
+def is_palindromic(s: Sequence[T], i: int = 0, j: int | None = None) -> bool:
     """
     Return True if the sequence is the same from left to right as it
     is from right to left in the whole sequence (default) or in the
@@ -189,7 +201,14 @@ def reshape(seq, how):
     return type(seq)(rv)
 
 
-def group(seq, multiple=True):
+@overload
+def group(seq: Iterable[T], multiple: Literal[True] = True) -> list[list[T]]: ...
+@overload
+def group(seq: Iterable[T], multiple: Literal[False]) -> list[tuple[T, int]]: ...
+
+def group(
+    seq: Iterable[T], multiple: bool = True
+) -> list[list[T]] | list[tuple[T, int]]:
     """
     Splits a sequence into a list of lists of equal, adjacent elements.
 
@@ -216,20 +235,23 @@ def group(seq, multiple=True):
     return [(k, len(list(g))) for k, g in groupby(seq)]
 
 
-def _iproduct2(iterable1, iterable2):
+def _iproduct2(
+    iterable1: Iterable[T1],
+    iterable2: Iterable[T2],
+) -> Iterator[tuple[T1, T2]]:
     '''Cartesian product of two possibly infinite iterables'''
 
     it1 = iter(iterable1)
     it2 = iter(iterable2)
 
-    elems1 = []
-    elems2 = []
+    elems1: list[T1] = []
+    elems2: list[T2] = []
 
     sentinel = object()
-    def append(it, elems):
+    def append(it: Iterator[T], elems: list[T]) -> None:
         e = next(it, sentinel)
         if e is not sentinel:
-            elems.append(e)
+            elems.append(cast("T", e))
 
     n = 0
     append(it1, elems1)
@@ -285,7 +307,7 @@ def iproduct(*iterables):
             yield (ef,) + eo
 
 
-def multiset(seq):
+def multiset(seq: Sequence[T]) -> dict[T, int]:
     """Return the hashable sequence in multiset form with values being the
     multiplicity of the item in the sequence.
 
@@ -305,9 +327,44 @@ def multiset(seq):
     return dict(Counter(seq).items())
 
 
+@overload
+def ibin(
+    n: int,
+    bits: int | None,
+    str: Literal[False],
+ ) -> list[int]: ...
 
+@overload
+def ibin(
+    n: int,
+    bits: int,
+    str: Literal[True],
+) -> str: ...
 
-def ibin(n, bits=None, str=False):
+@overload
+def ibin(
+    n: int,
+    bits: None = None,
+    str: Literal[False]=False,
+) -> Iterator[tuple[int, ...]]: ...
+
+@overload
+def ibin(
+    n: int,
+    bits: None,
+    str: Literal[True],
+) -> Iterator[str]: ...
+
+def ibin(
+    n: int,
+    bits: int | None = None,
+    str: bool = False,
+) ->(
+    list[int]
+    | str
+    | Iterator[tuple[int, ...]]
+    | Iterator[str]
+):
     """Return a list of length ``bits`` corresponding to the binary value
     of ``n`` with small bits to the right (last). If bits is omitted, the
     length will be the number required to represent ``n``. If the bits are
@@ -369,17 +426,21 @@ def ibin(n, bits=None, str=False):
 
     if not str:
         if bits >= 0:
-            return [1 if i == "1" else 0 for i in bin(n)[2:].rjust(bits, "0")]
+            return [1 if i == "1" else 0 for i in f'{n:b}'.rjust(bits, "0")]
         else:
             return variations(range(2), n, repetition=True)
     else:
         if bits >= 0:
-            return bin(n)[2:].rjust(bits, "0")
+            return f'{n:b}'.rjust(bits, "0")
         else:
-            return (bin(i)[2:].rjust(n, "0") for i in range(2**n))
+            return (f'{i:b}'.rjust(n, "0") for i in range(2**n))
 
 
-def variations(seq, n, repetition=False):
+def variations(
+    seq: Sequence[T],
+    n: int,
+    repetition: bool = False,
+) -> Iterator[tuple[T,...]]:
     r"""Returns an iterator over the n-sized variations of ``seq`` (size N).
     ``repetition`` controls whether items in ``seq`` can appear more than once;
 
@@ -426,7 +487,11 @@ def variations(seq, n, repetition=False):
             return product(seq, repeat=n)
 
 
-def subsets(seq, k=None, repetition=False):
+def subsets(
+    seq: Sequence[T],
+    k: int | None = None,
+    repetition: bool = False,
+) -> Iterator[tuple[T,...]]:
     r"""Generates all `k`-subsets (combinations) from an `n`-element set, ``seq``.
 
     A `k`-subset of an `n`-element set is any subset of length exactly `k`. The
@@ -667,6 +732,18 @@ def sift(seq, keyfunc, binary=False):
         except (IndexError, TypeError):
             raise ValueError('keyfunc gave non-binary output')
     return T, F
+
+
+def _sift_true_false(seq: Iterable[T], keyfunc: Callable[[T], bool]) -> tuple[list[T], list[T]]:
+    """Sift iterable for items with keyfunc(item) = True/False."""
+    true: list[T] = []
+    false: list[T] = []
+    for i in seq:
+        if keyfunc(i):
+            true.append(i)
+        else:
+            false.append(i)
+    return true, false
 
 
 def take(iter, n):
@@ -3080,7 +3157,24 @@ def iterable(i, exclude=(str, dict, NotIterable)):
     return True
 
 
-def is_sequence(i, include=None):
+@overload
+def is_sequence(
+    i: Sequence[T] | Iterable[T],
+    include: type | tuple[type, ...] | None = None,
+) -> TypeIs[Sequence[T]]: ...
+
+
+@overload
+def is_sequence(
+    i: object,
+    include: type | tuple[type, ...] | None = None,
+) -> TypeIs[Sequence[Any]]: ...
+
+
+def is_sequence(
+    i: object,
+    include: type | tuple[type, ...] | None = None,
+) -> TypeIs[Sequence[Any]]:
     """
     Return a boolean indicating whether ``i`` is a sequence in the SymPy
     sense. If anything that fails the test below should be included as
@@ -3114,10 +3208,10 @@ def is_sequence(i, include=None):
     True
 
     """
-    return (hasattr(i, '__getitem__') and
-            iterable(i) or
-            bool(include) and
-            isinstance(i, include))
+    return (
+        (hasattr(i, '__getitem__') and iterable(i))
+        or (include is not None and isinstance(i, include))
+    )
 
 
 @deprecated(

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.holonomic.recurrence import RecurrenceOperators, RecurrenceOperator
 from sympy.core.symbol import symbols
 from sympy.polys.domains.rationalfield import QQ

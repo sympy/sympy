@@ -1,4 +1,5 @@
 """The commutator: [A,B] = A*B - B*A."""
+from __future__ import annotations
 
 from sympy.core.add import Add
 from sympy.core.expr import Expr
@@ -32,7 +33,7 @@ class Commutator(Expr):
     commutator, use the ``.doit()`` method.
 
     Canonical ordering of a commutator is ``[A, B]`` for ``A < B``. The
-    arguments of the commutator are put into canonical order using ``__cmp__``.
+    arguments of the commutator are put into canonical order using comparison operators.
     If ``B < A``, then ``[B, A]`` is returned as ``-[A, B]``.
 
     Parameters

@@ -3,10 +3,10 @@ Immutable Matrices
 
 .. currentmodule:: sympy
 
-The standard :obj:`~.Matrix` class in SymPy is mutable. This is important for
-performance reasons but means that standard matrices cannot interact well with
-the rest of SymPy. This is because the :class:`~.Basic` object, from which most
-SymPy classes inherit, is immutable.
+The standard :obj:`~.sympy.matrices.dense.Matrix` class in SymPy is mutable.
+This is important for performance reasons but means that standard matrices
+cannot interact well with the rest of SymPy. This is because the
+:class:`~.Basic` object, from which most SymPy classes inherit, is immutable.
 
 The mission of the :class:`~.ImmutableDenseMatrix` class, which is aliased as
 :obj:`~.ImmutableMatrix` for short, is to bridge the tension

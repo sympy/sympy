@@ -1,3 +1,4 @@
+from __future__ import annotations
 __all__ = [
     'vector',
 
@@ -35,7 +36,7 @@ __all__ = [
 
     'JointsMethod',
 
-    'WrappingCylinder', 'WrappingGeometryBase', 'WrappingSphere',
+    'WrappingCylinder', 'WrappingGeometryBase', 'WrappingSphere', 'WrappingCone',
 
     'PathwayBase', 'LinearPathway', 'ObstacleSetPathway', 'WrappingPathway',
 
@@ -81,7 +82,7 @@ from .joint import (PinJoint, PrismaticJoint, CylindricalJoint, PlanarJoint,
                     SphericalJoint, WeldJoint)
 
 from .wrapping_geometry import (WrappingCylinder, WrappingGeometryBase,
-                                WrappingSphere)
+                                WrappingSphere, WrappingCone)
 
 from .pathway import (PathwayBase, LinearPathway, ObstacleSetPathway,
                       WrappingPathway)

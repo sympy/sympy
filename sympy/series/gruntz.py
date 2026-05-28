@@ -116,6 +116,7 @@ And check manually which line is wrong. Then go to the source code and
 debug this function to figure out the exact problem.
 
 """
+from __future__ import annotations
 from functools import reduce
 
 from sympy.core import Basic, S, Mul, PoleError
@@ -523,7 +524,7 @@ def mrv_leadterm(e, x):
         _series = Order(1)
         incr = S.One
         while _series.is_Order:
-            _series = f._eval_nseries(w, n=n0+incr, logx=logw)
+            _series = f._eval_nseries(w, n=n0+incr, logx=logw, cdir=0)
             incr *= 2
         series = _series.expand().removeO()
         try:

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.external import import_module
 import os
 
@@ -293,9 +294,9 @@ if cin:
                         value = Symbol(val)
                     elif isinstance(val, bool):
                         if node.type.kind in self._data_types["int"]:
-                            value = Integer(0) if val == False else Integer(1)
+                            value = Integer(0) if not val else Integer(1)
                         elif node.type.kind in self._data_types["float"]:
-                            value = Float(0.0) if val == False else Float(1.0)
+                            value = Float(0.0) if not val else Float(1.0)
                         elif node.type.kind in self._data_types["bool"]:
                             value = sympify(val)
                     elif isinstance(val, (Integer, int, Float, float)):

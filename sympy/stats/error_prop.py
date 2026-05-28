@@ -1,4 +1,5 @@
 """Tools for arithmetic error propagation."""
+from __future__ import annotations
 
 from itertools import repeat, combinations
 

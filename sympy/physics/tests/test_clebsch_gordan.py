@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.numbers import (I, pi, Rational)
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols

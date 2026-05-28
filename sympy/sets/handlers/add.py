@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.numbers import oo, Infinity, NegativeInfinity
 from sympy.core.singleton import S
 from sympy.core import Basic, Expr

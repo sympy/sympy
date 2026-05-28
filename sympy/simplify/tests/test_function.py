@@ -1,4 +1,5 @@
 """ Unit tests for Hyper_Function"""
+from __future__ import annotations
 from sympy.core import symbols, Dummy, Tuple, S, Rational
 from sympy.functions import hyper
 

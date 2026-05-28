@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.assumptions.ask import ask, Q
 from sympy.assumptions.refine import handlers_dict
 from sympy.core import Basic, sympify, S

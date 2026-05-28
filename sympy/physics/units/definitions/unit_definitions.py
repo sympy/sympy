@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.physics.units.definitions.dimension_definitions import current, temperature, amount_of_substance, \
     luminous_intensity, angle, charge, voltage, impedance, conductance, capacitance, inductance, magnetic_density, \
     magnetic_flux, information

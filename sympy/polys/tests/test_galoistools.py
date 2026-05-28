@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.polys.galoistools import (
     gf_crt, gf_crt1, gf_crt2, gf_int,
     gf_degree, gf_strip, gf_trunc, gf_normal,

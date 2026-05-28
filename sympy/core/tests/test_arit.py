@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.add import Add
 from sympy.core.basic import Basic
 from sympy.core.mod import Mod
@@ -28,7 +29,7 @@ from sympy.functions.elementary.trigonometric import asin
 
 from itertools import product
 
-a, c, x, y, z = symbols('a,c,x,y,z')
+a, c, x, y, z = symbols('a,c,x,y,z', seq=True)
 b = Symbol("b", positive=True)
 
 
@@ -1096,6 +1097,10 @@ def test_Pow_is_integer():
     o = Symbol('o', odd=True, prime=True)
     assert (k/o).is_integer is False
 
+    x = Symbol('x', integer=True)
+    assert ((2*x + 2*x**3)*x/10).is_integer is None
+    assert ((2*x + 2*x**3)*x/2).is_integer
+
 
 def test_Pow_is_real():
     x = Symbol('x', real=True)
@@ -2004,6 +2009,24 @@ def test_Mod():
     assert Mod(3*xi, 2) == Mod(xi, 2)
     assert unchanged(Mod, 3*x, 2)
 
+    # issue 28744
+    x0 = Symbol('x0')
+    x0_int = Symbol('x0', integer=True)
+    expr = Mod(2*Mod(x0, 3), 5)
+    expr_int = Mod(2*Mod(x0_int, 3), 5).xreplace({x0_int: x0})
+    assert expr == expr_int
+
+    x1 = Symbol('x1')
+    x1_int = Symbol('x1', integer=True)
+    expr = 8*Mod(floor(x1/64), 4)
+    expr_int = 8*Mod(floor(x1_int/64), 4).xreplace({x1_int: x1})
+    assert expr == expr_int
+
+    # from issue 29757: Mod(n * Mod(x, q), q) should simplify to Mod(n*x, q)
+    x1_int = Symbol('x1_int', integer=True)
+
+    assert Mod(3 * Mod(x1_int, 7), 7) == Mod(3 * x1_int, 7)
+    assert Mod(5 * Mod(x1_int, 3), 3) == Mod(2 * x1_int, 3)
 
 def test_Mod_Pow():
     # modular exponentiation
@@ -2481,3 +2504,24 @@ def test_issue_22613():
 
 def test_issue_25176():
     assert sqrt(-4*3**(S(3)/4)*I/3) == 2*3**(S(7)/8)*sqrt(-I)/3
+
+
+def test_Mul_is_zero_with_zero_factor():
+    # When evaluate=False, 0 * unknown should return None (conservative)
+    # since the unknown could potentially be infinite
+    x = symbols('x')
+    assert Mul(0, x, evaluate=False).is_zero is None
+    assert Mul(x, 0, evaluate=False).is_zero is None
+    # Definite cases
+    assert Mul(0, 1, evaluate=False).is_zero is True
+    assert Mul(0, 0, evaluate=False).is_zero is True
+    assert Mul(0, oo, evaluate=False).is_zero is None
+    assert Mul(0, -oo, evaluate=False).is_zero is None
+    assert Mul(0, zoo, evaluate=False).is_zero is None
+    # Multiple args with unknowns
+    assert Mul(0, x, x, evaluate=False).is_zero is None
+    assert Mul(x, 0, x, evaluate=False).is_zero is None
+    assert Mul(x, x, 0, evaluate=False).is_zero is None
+    # No zero
+    assert Mul(x, x, evaluate=False).is_zero is None
+    assert Mul(1, x, evaluate=False).is_zero is None

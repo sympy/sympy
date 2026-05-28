@@ -1,4 +1,5 @@
 """Tests for the PolynomialRing classes. """
+from __future__ import annotations
 
 from sympy.polys.domains import QQ, ZZ
 from sympy.polys.polyerrors import ExactQuotientFailed, CoercionFailed, NotReversible

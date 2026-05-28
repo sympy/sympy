@@ -1,3 +1,4 @@
+from __future__ import annotations
 from abc import ABC, abstractmethod
 from sympy import Symbol, sympify
 from sympy.physics.vector import Point

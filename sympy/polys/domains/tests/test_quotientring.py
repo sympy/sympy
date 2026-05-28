@@ -1,4 +1,5 @@
 """Tests for quotient rings."""
+from __future__ import annotations
 
 from sympy.polys.domains.integerring import ZZ
 from sympy.polys.domains.rationalfield import QQ

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from .ode import (allhints, checkinfsol, classify_ode,
         constantsimp, dsolve, homogeneous_order)
 

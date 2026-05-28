@@ -76,7 +76,13 @@ SymPy deprecation warnings.
 
 ## Version 1.15
 
-There are no deprecations yet for SymPy 1.15.
+(ndim-array-rank)=
+### Use .ndim instead of .rank for the number of dimensions of arrays.
+
+N-dimensional arrays have used to method `rank` to return the number of
+dimensions.  Unfortunately this not the proper term and it can be confused with
+the concept of matrix rank.  From now on, please use `.ndim` property or the
+`get_ndim(...)` function instead.
 
 ## Version 1.14
 
@@ -1225,43 +1231,6 @@ into a new project called [Aesara](https://github.com/aesara-devs/aesara). The
 {mod}`sympy.printing.aesaracode`, and all the corresponding functions have
 been renamed (e.g., `theano_code` has been renamed to {func}`~.aesara_code`,
 `TheanoPrinter` has been renamed to {class}`~.AesaraPrinter`, and so on).
-
-(deprecated-askhandler)=
-### `sympy.assumptions.handlers.AskHandler` and related methods
-
-`Predicate` has experienced a big design change. Previously, its handler was a
-list of `AskHandler` classes and registration was done by `add_handler()` and
-`remove_handler()` functions. Now, its handler is a multipledispatch instance
-and registration is done by `register()` or `register_many()` methods. Users
-must define a predicate class to introduce a new one.
-
-Previously, handlers were defined and registered this way:
-
-```python
-class AskPrimeHandler(AskHandler):
-    @staticmethod
-    def Integer(expr, assumptions):
-        return expr.is_prime
-
-register_handler('prime', AskPrimeHandler)
-```
-
-It should be changed to this:
-
-```python
-# Predicate definition.
-# Not needed if you are registering the handler to existing predicate.
-class PrimePredicate(Predicate):
-    name = 'prime'
-Q.prime = PrimePredicate()
-
-# Handler registration
-@Q.prime.register(Integer)
-def _(expr, assumptions):
-    return expr.is_prime
-```
-
-See GitHub issue [#20209](https://github.com/sympy/sympy/issues/20209).
 
 ## Version 1.7.1
 

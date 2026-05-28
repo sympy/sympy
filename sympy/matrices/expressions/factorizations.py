@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.matrices.expressions import MatrixExpr
 from sympy.assumptions.ask import Q
 

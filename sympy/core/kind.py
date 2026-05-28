@@ -24,6 +24,7 @@ This module defines basic kinds for core objects. Other kinds such as
        This approach is experimental, and can be replaced or deleted in the future.
        See https://github.com/sympy/sympy/pull/20549.
 """
+from __future__ import annotations
 
 from collections import defaultdict
 

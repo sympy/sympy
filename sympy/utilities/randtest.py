@@ -3,6 +3,7 @@
 
    sympy.utilities.randtest has been renamed to sympy.core.random.
 """
+from __future__ import annotations
 from sympy.utilities.exceptions import sympy_deprecation_warning
 
 sympy_deprecation_warning("The sympy.utilities.randtest submodule is deprecated. Use sympy.core.random instead.",

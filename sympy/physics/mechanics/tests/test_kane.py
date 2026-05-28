@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy import solve
 from sympy import (cos, expand, Matrix, sin, symbols, tan, sqrt, S,
                                 zeros, eye)

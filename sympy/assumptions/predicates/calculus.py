@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.assumptions import Predicate
 from sympy.multipledispatch import Dispatcher
 
@@ -50,11 +51,28 @@ class InfinitePredicate(Predicate):
     """
     Infinite number predicate.
 
+    Explanation
+    ===========
+
     ``Q.infinite(x)`` is true iff the absolute value of ``x`` is
     infinity.
 
+    Examples
+    ========
+
+    >>> from sympy import Q, ask, oo, zoo, I
+    >>> ask(Q.infinite(oo))
+    True
+    >>> ask(Q.infinite(-oo))
+    True
+    >>> ask(Q.infinite(zoo))
+    True
+    >>> ask(Q.infinite(1))
+    False
+    >>> ask(Q.infinite(I*oo))
+    True
+
     """
-    # TODO: Add examples
     name = 'infinite'
     handler = Dispatcher(
         "InfiniteHandler",

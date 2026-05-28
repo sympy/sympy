@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy import Symbol
 from sympy.physics.vector import Point, Vector, ReferenceFrame, Dyadic
 from sympy.physics.mechanics import RigidBody, Particle, Inertia
