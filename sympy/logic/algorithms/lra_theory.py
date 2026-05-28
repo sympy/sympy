@@ -659,7 +659,21 @@ class LRASolver():
         return A
 
     def backtrack(self):
-        pass
+        if self.bound_history:
+            xi, old_bound, upper = self.bound_history.pop()
+        else:
+            return None
+
+        if upper:
+            xi.upper = old_bound
+        else:
+            xi.lower = old_bound
+
+        for var in self.all_var:
+            var.assign = self.last_assign_snapshot[var]
+
+        self.is_sat = True
+        self.result = None
 
 def _sep_const_coeff(expr):
     """

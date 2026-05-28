@@ -469,7 +469,6 @@ def test_empty_cnf():
     assert lra.check() == (True, {})
 
 
-@XFAIL
 def test_backtracking():
     # Example from the section 4 of the paper.
     cons = [x >= -8, x <= -4, x >= -2]
