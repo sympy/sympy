@@ -1,11 +1,11 @@
 from __future__ import annotations
-from sympy.assumptions.ask import Q
+from sympy.assumptions.ask import Q, ask
 from sympy.assumptions.assume import assuming
 from sympy.core.numbers import (I, pi, E)
 from sympy.core.relational import (Eq, Gt)
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols, Dummy
-from sympy.functions.elementary.complexes import Abs
+from sympy.functions.elementary.complexes import Abs, conjugate
 from sympy.logic.boolalg import Implies
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.assumptions.cnf import CNF, Literal
@@ -274,6 +274,19 @@ def test_real():
     assert satask(Q.real(x*y*z), Q.real(x) & Q.real(y) & Q.imaginary(z)) is False
     assert satask(Q.real(x + y + z), Q.real(x) & Q.real(y) & Q.real(z)) is True
     assert satask(Q.real(x + y + z), Q.real(x) & Q.real(y)) is None
+
+
+def test_real_conjugate_product():
+    z = symbols('z', complex=True)
+    assert satask(Q.real(z*conjugate(z))) is True
+    assert ask(Q.real(z*conjugate(z))) is True
+    assert (z*conjugate(z)).is_real is True
+
+    r = symbols('r', real=True)
+    phi = symbols('phi', real=True)
+    y = r*E**(I*phi)
+    assert ask(Q.real(y*conjugate(y))) is True
+    assert (y*conjugate(y)).is_real is True
 
 
 def test_pos_neg():

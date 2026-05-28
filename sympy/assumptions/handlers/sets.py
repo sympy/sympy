@@ -271,9 +271,30 @@ def _(expr, assumptions):
     * Real*Real               -> Real
     * Real*Imaginary          -> !Real
     * Imaginary*Imaginary     -> Real
+    * z*conjugate(z)          -> Real (for any complex z)
     """
     if expr.is_number:
         return _RealPredicate_number(expr, assumptions)
+
+    from sympy.functions.elementary.complexes import conjugate
+
+    args = list(expr.args)
+    args_to_remove = []
+    for i, arg in enumerate(args):
+        if isinstance(arg, conjugate):
+            conj_of = arg.args[0]
+            if conj_of in args:
+                args_to_remove.extend([i, args.index(conj_of)])
+
+    if args_to_remove:
+        args_to_remove = sorted(set(args_to_remove), reverse=True)
+        for idx in args_to_remove:
+            args.pop(idx)
+        if not args:
+            return True
+        remaining_expr = args[0] if len(args) == 1 else Mul(*args)
+        return ask(Q.real(remaining_expr), assumptions)
+
     result = True
     for arg in expr.args:
         if ask(Q.real(arg), assumptions):

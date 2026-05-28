@@ -1303,6 +1303,32 @@ class Mul(Expr, AssocOp):
                 return False
         return comp
 
+    def _eval_is_real(self):
+        """Recognize conjugate-pair products as real.
+
+        This preserves the existing conservative behavior for ambiguous
+        products while fixing cases like ``z*conjugate(z)``.
+        """
+        from sympy.functions.elementary.complexes import conjugate
+
+        args = list(self.args)
+        args_to_remove = []
+        for i, arg in enumerate(args):
+            if isinstance(arg, conjugate):
+                conj_of = arg.args[0]
+                if conj_of in args:
+                    args_to_remove.extend([i, args.index(conj_of)])
+
+        if args_to_remove:
+            args_to_remove = sorted(set(args_to_remove), reverse=True)
+            remaining = [arg for i, arg in enumerate(args) if i not in args_to_remove]
+            if not remaining:
+                return True
+            if len(remaining) == 1:
+                return remaining[0].is_real
+            return _fuzzy_group(arg.is_real for arg in remaining)
+        return None
+
     def _eval_is_zero_infinite_helper(self):
         #
         # Helper used by _eval_is_zero and _eval_is_infinite.

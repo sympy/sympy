@@ -4,7 +4,7 @@ from collections import defaultdict
 from sympy.assumptions.ask import Q
 from sympy.core import (Add, Mul, Pow, Number, NumberSymbol, Symbol)
 from sympy.core.numbers import ImaginaryUnit
-from sympy.functions.elementary.complexes import Abs
+from sympy.functions.elementary.complexes import Abs, conjugate
 from sympy.logic.boolalg import (Equivalent, And, Or, Implies)
 from sympy.matrices.expressions import MatMul
 
@@ -252,6 +252,20 @@ def _(expr):
     # a corner case.
     allargs_prime = allargs(x, Q.prime(x), expr)
     return Implies(allargs_prime, ~Q.prime(expr))
+
+@class_fact_registry.register(Mul)
+def _(expr):
+    """Recognize z*conjugate(z) as a real product."""
+    if len(expr.args) != 2:
+        return None
+
+    a, b = expr.args
+    if isinstance(a, conjugate) and a.args[0] == b:
+        return Q.real(expr)
+    if isinstance(b, conjugate) and b.args[0] == a:
+        return Q.real(expr)
+    return None
+
 
 @class_fact_registry.register(Mul)
 def _(expr):
