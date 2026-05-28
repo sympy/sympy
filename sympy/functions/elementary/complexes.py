@@ -85,7 +85,9 @@ class re(DefinedFunction):
             ...
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg, evaluate=True):
+        if evaluate is False:
+            return None
         if arg is S.NaN or arg is S.ComplexInfinity:
             return S.NaN
         elif arg.is_extended_real:
@@ -205,7 +207,9 @@ class im(DefinedFunction):
     _singularities = True  # non-holomorphic
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg, evaluate=True):
+        if evaluate is False:
+            return None
         if arg is S.NaN or arg is S.ComplexInfinity:
             return S.NaN
         elif arg.is_extended_real:
