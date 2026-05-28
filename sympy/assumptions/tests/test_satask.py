@@ -293,12 +293,12 @@ def test_real_conjugate_product_multiple_pairs():
     """Test products with multiple conjugate pairs."""
     z = symbols('z', complex=True)
     w = symbols('w', complex=True)
-    
+
     # Two separate conjugate pairs should be real
     expr = z*conjugate(z)*w*conjugate(w)
     assert (expr).is_real is True
     assert ask(Q.real(expr)) is True
-    
+
     # With real factors added
     expr2 = 2*z*conjugate(z)*3*w*conjugate(w)
     assert (expr2).is_real is True
@@ -308,7 +308,7 @@ def test_real_conjugate_product_with_real_factors():
     """Test conjugate product mixed with real factors."""
     z = symbols('z', complex=True)
     r = symbols('r', real=True, positive=True)
-    
+
     # z*conjugate(z)*r should be real
     expr = z*conjugate(z)*r
     assert (expr).is_real is True
@@ -320,11 +320,11 @@ def test_real_conjugate_product_with_real_factors():
 def test_real_conjugate_product_order():
     """Test that conjugate pair recognition works regardless of order."""
     z = symbols('z', complex=True)
-    
+
     # Both orders should recognize the product as real
     expr1 = z*conjugate(z)
     expr2 = conjugate(z)*z
-    
+
     assert (expr1).is_real is True
     assert (expr2).is_real is True
     assert ask(Q.real(expr1)) is True
@@ -334,7 +334,7 @@ def test_real_conjugate_product_order():
 def test_real_conjugate_product_noncommutative():
     """Test that non-commutative symbols behavior is conservative."""
     X, Y = symbols('X Y', commutative=False)
-    
+
     # Non-commutative X*conjugate(X) is NOT guaranteed to be real
     # because X*conj(X) != |X|^2 for non-commutative symbols
     expr = X*conjugate(X)
