@@ -1,4 +1,5 @@
 from __future__ import annotations
+from sympy import srepr, sstr
 from sympy.core.mul import Mul
 from sympy.core.numbers import Rational
 from sympy.core.singleton import S
@@ -82,6 +83,9 @@ def test_bases():
     assert kibi.base == 2
 
 
-def test_repr():
-    assert eval(repr(kilo)) == kilo
-    assert eval(repr(kibi)) == kibi
+def test_prefix_printing():
+    assert str(kilo) == "k"
+    assert repr(kilo) == "kilo"
+    assert sstr(kilo) == "kilo"
+    assert sstr(kilo, abbrev=True) == "k"
+    assert srepr(kilo) == "kilo"

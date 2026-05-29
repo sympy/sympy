@@ -254,6 +254,9 @@ class ReprPrinter(Printer):
     def _print_Predicate(self, expr):
         return "Q.%s" % expr.name
 
+    def _print_Prefix(self, expr):
+        return str(expr.name)
+
     def _print_AppliedPredicate(self, expr):
         # will be changed to just expr.args when args overriding is removed
         args = expr._args
