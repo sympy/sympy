@@ -673,6 +673,8 @@ class Piecewise(DefinedFunction):
 
             cond = to_cnf(cond)
             if isinstance(cond, And):
+                cond = _remove_subsumed_clauses(cond)
+            if isinstance(cond, And):
                 cond = distribute_or_over_and(cond)
 
             if isinstance(cond, Or):
