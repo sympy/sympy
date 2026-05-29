@@ -467,12 +467,12 @@ def test_empty_cnf():
     assert lra.check() == (True, {})
 
 
-def test_backtracking():
+def test_backtracking_1():
     # Example from the section 4 of the paper.
+    cons = [x >= -8, x <= -4, x >= -2]
     enc = EncodedCNF()
-    enc.add_prop(x >= -8)
-    enc.add_prop(x <= -4)
-    enc.add_prop(x >= -2)
+    for con in cons:
+        enc.add_prop(con)
     lra, _ = LRASolver.from_encoded_cnf(enc)
 
     lra.assert_lit(1)
@@ -491,5 +491,34 @@ def test_backtracking():
 
     lra.backtrack()
     # TODO: should also have a check for assignment
+    is_sat, _ = lra.check()
+    assert is_sat is True
+
+
+@XFAIL
+def test_backtracking_2():
+    # This test is for checking the correctness over multiple variables
+    enc = EncodedCNF()
+    cons = [2*x + 3*y <= 12, x >= 3, y >= 3]
+    for con in cons:
+        enc.add_prop(con)
+
+    lra, _ = LRASolver.from_encoded_cnf(enc)
+    lra.assert_lit(1)
+    lra.assert_lit(2)
+    is_sat, _ = lra.check()
+    assert is_sat is True
+
+    # If 2x+3y <= 12 and x >= 3, then y <= 2
+    # We are asserting y >= 3 which is wrong
+    res = lra.assert_lit(3)
+    if res is None:
+        is_sat, _ = lra.check()
+    else:
+        is_sat, _ = res
+    assert is_sat is False
+
+    # backtracking to remove the faulty assert
+    lra.backtrack()
     is_sat, _ = lra.check()
     assert is_sat is True
