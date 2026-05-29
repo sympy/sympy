@@ -483,9 +483,9 @@ def test_backtracking_1():
 
     res = lra.assert_lit(3)
     if res is None:
-        is_sat, conflict = lra.check()
+        is_sat, _ = lra.check()
     else:
-        is_sat, conflict = res
+        is_sat, _ = res
 
     assert is_sat is False
 
@@ -495,7 +495,6 @@ def test_backtracking_1():
     assert is_sat is True
 
 
-@XFAIL
 def test_backtracking_2():
     # This test is for checking the correctness over multiple variables
     enc = EncodedCNF()
@@ -520,5 +519,43 @@ def test_backtracking_2():
 
     # backtracking to remove the faulty assert
     lra.backtrack()
+    is_sat, _ = lra.check()
+    assert is_sat is True
+
+
+def test_backtracking_3():
+    # This test is for checking correctness over multiple backtracking
+    # Range of x should be [0, 2]
+    enc = EncodedCNF()
+    cons = [x <= 10, x >= 0, x >= 5, x <= 2]
+    for con in cons:
+        enc.add_prop(con)
+    lra, _ = LRASolver.from_encoded_cnf(enc)
+
+    # Setting 5 <= x <= 10
+    lra.assert_lit(1)
+    lra.assert_lit(2)
+    lra.assert_lit(3)
+
+    # x <= 2 is impossible while x >= 5 is present
+    res = lra.assert_lit(4)
+    if res is None:
+        is_sat, _ = lra.check()
+    else:
+        is_sat, _ = res
+    assert is_sat is False
+
+    # First backtrack: Undo x <= 2 to resolve the conflict
+    lra.backtrack()
+    is_sat, _ = lra.check()
+    assert is_sat is True
+
+    # Second backtrack: Erase the x >= 5 constraint.
+    # This widens the valid domain back to [0, 10],
+    # allowing to accept the previously conflicting x <= 2 rule.
+    lra.backtrack()
+
+    # Setting 0 <= x <= 2
+    lra.assert_lit(4)
     is_sat, _ = lra.check()
     assert is_sat is True
