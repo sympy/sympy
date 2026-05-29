@@ -1638,3 +1638,14 @@ def test_piecewise__eval_is_meromorphic():
     assert f.is_meromorphic(x, 2) == True
     assert f.is_meromorphic(x, Symbol('a')) is None
     assert f.is_meromorphic(x, Symbol('a', real=True)) is None
+
+def test_piecewise_integrate_29064():
+    """Product of non-overlapping Piecewise functions should integrate
+    to zero without hanging due to an exponential blow-up in the
+    condition simplification (see #29064)."""
+    x = symbols('x', real=True)
+    b1 = Piecewise((0, x < Rational(3, 8)), (8, x < Rational(1, 2)),
+                   (-8, x < Rational(5, 8)), (0, True))
+    b2 = Piecewise((0, x < Rational(5, 8)), (8, x < Rational(3, 4)),
+                   (-8, x < Rational(7, 8)), (0, True))
+    assert integrate(b1*b2, (x, 0, 1)) == 0
