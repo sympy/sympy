@@ -1202,6 +1202,22 @@ def test_sympy__stats__compound_rv__CompoundPSpace():
     assert _test_args(CompoundPSpace('C', C))
 
 
+def test_sympy__stats__mixture_rv__MixtureDistribution():
+    from sympy.stats.mixture_rv import MixtureDistribution
+    from sympy.stats.crv_types import NormalDistribution
+    M = MixtureDistribution([1, 1],
+                            [NormalDistribution(0, 1), NormalDistribution(5, 1)])
+    assert _test_args(M)
+
+
+def test_sympy__stats__mixture_rv__MixturePSpace():
+    from sympy.stats.mixture_rv import MixtureDistribution, MixturePSpace
+    from sympy.stats.crv_types import NormalDistribution
+    M = MixtureDistribution([1, 1],
+                            [NormalDistribution(0, 1), NormalDistribution(5, 1)])
+    assert _test_args(MixturePSpace('M', M))
+
+
 @SKIP("abstract class")
 def test_sympy__stats__drv__SingleDiscreteDistribution():
     pass
