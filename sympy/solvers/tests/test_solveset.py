@@ -1663,6 +1663,7 @@ def test_issue_10085():
     assert invert_real(exp(x),0,x) == (x, S.EmptySet)
 
 
+
 def test_linsolve():
     x1, x2, x3, x4 = symbols('x1, x2, x3, x4')
 
@@ -3602,7 +3603,10 @@ def test_issue_26077():
     )
     assert solution.as_dummy() == critical_points.as_dummy()
 
-def test_issue_29674():
-    dumeq(solveset(sin(exp(x)), x, domain=S.Reals),
+def test_invert_exp():
+    # issue 20674
+    assert dumeq(solveset(sin(exp(x)), x, domain=S.Reals),
           Union(ImageSet(Lambda(n, log(2*n*pi + pi)), Range(0, oo, 1)),
-                ImageSet(Lambda(n, log(2*n*pi + 2*pi)) , Range(0, oo, 1))))
+                ImageSet(Lambda(n, log(2*n*pi + 2*pi)), Range(0, oo, 1))))
+    assert invert_real(exp(x), -1, x) == (x, S.EmptySet)
+    assert invert_real(exp(x), 1, x) == (x, FiniteSet(0))
