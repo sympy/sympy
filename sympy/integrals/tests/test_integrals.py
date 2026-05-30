@@ -1160,10 +1160,13 @@ def test_issue_3940():
 
 
 def test_gaussian_quadratic_antideriv_roundtrip():
-    # diff(integrate(exp(quadratic), x), x) should equal the integrand
-    # semantically. The factored-form exp(x*(-x + I)) exercises the
-    # shape-independent recognizer: simplify() may rewrite the exponent
-    # either way, so compare via simplify(diff - f).
+    # exp(quadratic in x) should integrate to an erf/erfi antiderivative
+    # regardless of how the exponent is factored. heurisch normalizes the
+    # exp generator (Poly normal form), so the factored exp(x*(-x + I)) is
+    # integrated identically to exp(-x**2 + I*x). Each result must be a
+    # genuine antiderivative (no leftover Integral) and round-trip under
+    # diff; we compare via simplify(diff - f) since simplify() may rewrite
+    # the exponent either way.
     cases = [
         exp(-x**2 + I*x),
         exp(x*(-x + I)),
@@ -1173,13 +1176,17 @@ def test_gaussian_quadratic_antideriv_roundtrip():
         exp(-x**2)*cos(x),
     ]
     for f in cases:
-        assert simplify(diff(integrate(f, x), x) - f) == 0
+        F = integrate(f, x)
+        assert not F.has(Integral), f
+        assert simplify(diff(F, x) - f) == 0, f
 
-    # Assumption-sensitive: with a declared negative, the Gaussian
-    # recognizer's a.is_negative branch fires and yields a real erf form.
+    # Assumption-sensitive: with a declared negative, the exp-quadratic
+    # hint's a.is_negative branch fires and yields a real erf form.
     a_neg = Symbol('a_neg', negative=True)
     f = exp(a_neg*x**2 + x)
-    assert simplify(diff(integrate(f, x), x) - f) == 0
+    F = integrate(f, x)
+    assert not F.has(Integral)
+    assert simplify(diff(F, x) - f) == 0
 
 
 def test_issue_5413():
