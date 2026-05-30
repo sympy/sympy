@@ -467,8 +467,9 @@ def test_empty_cnf():
     assert lra.check() == (True, {})
 
 
-def test_backtracking_1():
+def test_backtracking_example_from_paper():
     # Example from the section 4 of the paper.
+    # https://link.springer.com/chapter/10.1007/11817963_11
     cons = [x >= -8, x <= -4, x >= -2]
     enc = EncodedCNF()
     for con in cons:
@@ -495,7 +496,7 @@ def test_backtracking_1():
     assert is_sat is True
 
 
-def test_backtracking_2():
+def test_backtracking_multiple_variables():
     # This test is for checking the correctness over multiple variables
     enc = EncodedCNF()
     cons = [2*x + 3*y <= 12, x >= 3, y >= 3]
@@ -523,7 +524,7 @@ def test_backtracking_2():
     assert is_sat is True
 
 
-def test_backtracking_3():
+def test_backtracking_multiple_backtracks():
     # This test is for checking correctness over multiple backtracking
     # Range of x should be [0, 2]
     enc = EncodedCNF()
