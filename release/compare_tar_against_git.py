@@ -88,6 +88,7 @@ git_whitelist = {
     'bin/test_optional_dependencies.py',
     'bin/test_sphinx.sh',
     'bin/mailmap_check.py',
+    'bin/slotscheck',
     'bin/test_symengine.py',
     'bin/test_tensorflow.py',
     'bin/test_pytorch.py',
