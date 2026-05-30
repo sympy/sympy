@@ -71,14 +71,6 @@ class Prefix(Expr):
     def __str__(self):
         return str(self._abbrev)
 
-    def __repr__(self):
-        if self.base == 10:
-            return "Prefix(%r, %r, %r)" % (
-                str(self.name), str(self.abbrev), self._exponent)
-        else:
-            return "Prefix(%r, %r, %r, %r)" % (
-                str(self.name), str(self.abbrev), self._exponent, self.base)
-
     def __mul__(self, other):
         from sympy.physics.units import Quantity
         if not isinstance(other, (Quantity, Prefix)):
