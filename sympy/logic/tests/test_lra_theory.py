@@ -468,8 +468,51 @@ def test_empty_cnf():
 
 
 def test_backtracking_example_from_paper():
-    # Example from the section 4 of the paper.
+    # Example from the section 4.6 of the paper.
     # https://link.springer.com/chapter/10.1007/11817963_11
+    enc = EncodedCNF()
+    cons = [
+        x <= -4,
+        x >= -8,
+        -x + y <= 1,
+        x + y >= -3
+    ]
+    for con in cons:
+        enc.add_prop(con)
+
+    lra, _ = LRASolver.from_encoded_cnf(enc)
+
+    # Sets x's range as [-8, -4]
+    lra.assert_lit(1)
+    lra.assert_lit(2)
+    is_sat, _ = lra.check()
+    assert is_sat is True
+
+    # Asserts -x + y <= 1
+    # Check is invoked to pivot s1 and y
+    # y's range is (-inf, -3]
+    lra.assert_lit(3)
+    is_sat, _ = lra.check()
+    assert is_sat is True
+
+    # Assert x + y >= -3 (s2)
+    # s2 and s1 are conflicting assertions as for both to be true
+    # x >= -2 but x's range is [-8, -4]
+    res = lra.assert_lit(4)
+    if res is None:
+        is_sat, _ = lra.check()
+    else:
+        is_sat, _ = res
+    assert is_sat is False
+
+    # Backtrack to remove the conflicted assertion
+    lra.backtrack()
+    is_sat, _ = lra.check()
+    assert is_sat is True
+
+
+def test_backtracking_single_variable():
+    # This test is for checking the correctness over a single variable
     cons = [x >= -8, x <= -4, x >= -2]
     enc = EncodedCNF()
     for con in cons:
@@ -524,7 +567,7 @@ def test_backtracking_multiple_variables():
     assert is_sat is True
 
 
-def test_backtracking_multiple_backtracks():
+def test_backtracking_single_variable_multiple_backtracks():
     # This test is for checking correctness over multiple backtracking
     # Range of x should be [0, 2]
     enc = EncodedCNF()
