@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.sorting import ordered, default_sort_key
 from sympy.combinatorics.partitions import (Partition, IntegerPartition,
                                             RGS_enum, RGS_unrank, RGS_rank,
@@ -54,6 +55,13 @@ def test_partition():
     assert b.RGS == (0, 0, 1, 1)
 
 
+def test_partition_aliasing():
+    p = Partition([1, 2], [3, 4])
+    blocks = p.partition
+    blocks[0].append(99)
+    assert p.partition == [[1, 2], [3, 4]]
+
+
 def test_integer_partition():
     # no zeros in partition
     raises(ValueError, lambda: IntegerPartition(list(range(3))))
@@ -97,6 +105,13 @@ def test_integer_partition():
     assert random_integer_partition(1) == [1]
     assert random_integer_partition(10, seed=[1, 3, 2, 1, 5, 1]
             ) == [5, 2, 1, 1, 1]
+
+
+def test_integer_partition_as_dict_aliasing():
+    p = IntegerPartition([1, 1, 2, 3])
+    d = p.as_dict()
+    d[99] = 1
+    assert p.as_dict() == {1: 2, 2: 1, 3: 1}
 
 
 def test_rgs():

@@ -1,3 +1,4 @@
+from __future__ import annotations
 import pickle
 
 from sympy.core.relational import (Eq, Ne)

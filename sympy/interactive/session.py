@@ -1,4 +1,5 @@
 """Tools for setting up interactive sessions. """
+from __future__ import annotations
 import enum
 from code import InteractiveConsole
 
@@ -483,7 +484,7 @@ def init_session(console_backend=None, pretty_print=True, order=None,
             # Enable interactive plotting using pylab.
             try:
                 ip.enable_pylab(import_all=False)
-            except Exception:
+            except Exception: # noqa: BLE001
                 # Causes an import error if matplotlib is not installed.
                 # Causes other errors (depending on the backend) if there
                 # is no display, or if there is some problem in the

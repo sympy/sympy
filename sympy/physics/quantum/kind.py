@@ -13,6 +13,7 @@ The resolution calculation of kinds for compound expressions can be found
 either in container classes or in functions that are registered with
 kind dispatchers.
 """
+from __future__ import annotations
 
 from sympy.core.mul import Mul
 from sympy.core.kind import Kind, _NumberKind

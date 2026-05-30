@@ -249,10 +249,8 @@ def decompose_power(expr: Expr) -> tuple[Expr, int]:
         if exp is S.NegativeOne:
             base, e = Pow(base, tail), -1
         elif exp is not S.One:
-            # todo: after dropping python 3.7 support, use overload and Literal
-            #  in as_coeff_Mul to make exp Rational, and remove these 2 ignores
-            tail = _keep_coeff(Rational(1, exp.q), tail)  # type: ignore
-            base, e = Pow(base, tail), exp.p  # type: ignore
+            tail = _keep_coeff(Rational(1, exp.q), tail)
+            base, e = Pow(base, tail), exp.p
         else:
             base, e = expr, 1
 

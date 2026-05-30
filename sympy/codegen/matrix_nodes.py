@@ -18,6 +18,7 @@ transform matrix multiplication under certain assumptions:
     ...     optimize(expr, [matinv_opt])
     MatrixSolve(A, vector=x)
 """
+from __future__ import annotations
 
 from .ast import Token
 from sympy.matrices import MatrixExpr

@@ -9,6 +9,7 @@ These are normalized functions that are dependent on the musculotendon's state
 and are specific to a given musculotendon model.
 
 """
+from __future__ import annotations
 
 from abc import abstractmethod
 from enum import IntEnum, unique
@@ -1413,7 +1414,7 @@ class MusculotendonDeGroote2016(MusculotendonBase):
 
     """
 
-    curves = CharacteristicCurveCollection(
+    curves = CharacteristicCurveCollection( # type: ignore
         tendon_force_length=TendonForceLengthDeGroote2016,
         tendon_force_length_inverse=TendonForceLengthInverseDeGroote2016,
         fiber_force_length_passive=FiberForceLengthPassiveDeGroote2016,

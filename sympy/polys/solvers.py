@@ -1,5 +1,7 @@
 """Low-level linear systems solver. """
+from __future__ import annotations
 
+from itertools import pairwise
 
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import connected_components
@@ -31,7 +33,7 @@ class RawMatrix(MutableDenseMatrix):
        Matrix should be of type ``Expr``.
 
     """
-    _sympify = staticmethod(lambda x, *args, **kwargs: x)
+    _sympify = staticmethod(lambda x, *args, **kwargs: x) # type: ignore
 
     def __init__(self, *args, **kwargs):
         sympy_deprecation_warning(
@@ -335,7 +337,7 @@ def _solve_lin_sys(eqs_coeffs, eqs_rhs, ring):
     E = []
     for eq_coeffs in eqs_coeffs:
         syms = list(eq_coeffs)
-        E.extend(zip(syms[:-1], syms[1:]))
+        E.extend(pairwise(syms))
     G = V, E
 
     components = connected_components(G)

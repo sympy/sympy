@@ -1,4 +1,5 @@
 """Inference in propositional logic"""
+from __future__ import annotations
 
 from sympy.logic.boolalg import And, Not, conjuncts, to_cnf, BooleanFunction
 from sympy.core.sorting import ordered
@@ -22,9 +23,7 @@ def literal_symbol(literal):
 
     """
 
-    if literal is True or literal is False:
-        return literal
-    elif literal.is_Symbol:
+    if literal is True or literal is False or literal.is_Symbol:
         return literal
     elif literal.is_Not:
         return literal_symbol(literal.args[0])

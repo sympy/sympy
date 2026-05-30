@@ -1,4 +1,5 @@
 """ Elliptic Integrals. """
+from __future__ import annotations
 
 from sympy.core import S, pi, I, Rational
 from sympy.core.function import DefinedFunction, ArgumentIndexError

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.function import (diff, expand, expand_func)
 from sympy.core import EulerGamma
 from sympy.core.numbers import (E, Float, I, Rational, nan, oo, pi)
@@ -352,6 +353,9 @@ def test_erfcinv():
 
     assert erfcinv(z).rewrite('erfinv') == erfinv(1-z)
     assert erfcinv(z).inverse() == erfc
+
+    # issue sympy/sympy#24684
+    assert abs( erfcinv(Float(0.4)) - 0.59511608144999484) < 1E-13
 
 
 def test_erf2inv():

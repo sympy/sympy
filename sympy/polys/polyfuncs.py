@@ -1,4 +1,5 @@
 """High-level polynomials manipulation functions. """
+from __future__ import annotations
 
 
 from sympy.core import S, Basic, symbols, Dummy

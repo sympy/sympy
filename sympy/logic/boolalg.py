@@ -4,7 +4,6 @@ Boolean algebra module for SymPy
 
 from __future__ import annotations
 from typing import TYPE_CHECKING, overload, Any
-from collections.abc import Iterable, Mapping
 
 from collections import defaultdict
 from itertools import chain, combinations, product, permutations
@@ -16,12 +15,17 @@ from sympy.core.decorators import sympify_method_args, sympify_return
 from sympy.core.function import Application, Derivative
 from sympy.core.kind import BooleanKind, NumberKind
 from sympy.core.numbers import Number
-from sympy.core.operations import LatticeOp
+from sympy.core.operations import AssocOp, LatticeOp
+from sympy.core.parameters import global_parameters
 from sympy.core.singleton import Singleton, S
 from sympy.core.sorting import ordered
 from sympy.core.sympify import _sympy_converter, _sympify, sympify
 from sympy.utilities.iterables import sift, ibin
 from sympy.utilities.misc import filldedent
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+    from sympy.core.basic import _SupportsItems
 
 
 def as_Boolean(e):
@@ -74,24 +78,25 @@ class Boolean(Basic):
     kind = BooleanKind
 
     if TYPE_CHECKING:
+        from sympy.sets.sets import Set
 
         def __new__(cls, *args: Basic | complex) -> Boolean:
             ...
 
         @overload # type: ignore
-        def subs(self, arg1: Mapping[Basic | complex, Boolean | complex], arg2: None=None) -> Boolean: ...
-        @overload
-        def subs(self, arg1: Iterable[tuple[Basic | complex, Boolean | complex]], arg2: None=None, **kwargs: Any) -> Boolean: ...
+        def subs(self, arg1: _SupportsItems[Basic | complex, Boolean | complex]
+                 | Iterable[tuple[Basic | complex, Boolean | complex]],
+                 arg2: None=None, **kwargs: Any) -> Boolean: ...
         @overload
         def subs(self, arg1: Boolean | complex, arg2: Boolean | complex) -> Boolean: ...
         @overload
-        def subs(self, arg1: Mapping[Basic | complex, Basic | complex], arg2: None=None, **kwargs: Any) -> Basic: ...
-        @overload
-        def subs(self, arg1: Iterable[tuple[Basic | complex, Basic | complex]], arg2: None=None, **kwargs: Any) -> Basic: ...
+        def subs(self, arg1: _SupportsItems[Basic | complex, Basic | complex]
+                 | Iterable[tuple[Basic | complex, Basic | complex]],
+                 arg2: None=None, **kwargs: Any) -> Basic: ...
         @overload
         def subs(self, arg1: Basic | complex, arg2: Basic | complex, **kwargs: Any) -> Basic: ...
 
-        def subs(self, arg1: Mapping[Basic | complex, Basic | complex] | Basic | complex, # type: ignore
+        def subs(self, arg1: _SupportsItems[Basic | complex, Basic | complex] | Basic | complex, # type: ignore
                  arg2: Basic | complex | None = None, **kwargs: Any) -> Basic:
             ...
 
@@ -99,34 +104,34 @@ class Boolean(Basic):
             ...
 
     @sympify_return([('other', 'Boolean')], NotImplemented)
-    def __and__(self, other):
+    def __and__(self, other: Boolean | bool) -> Boolean:
         return And(self, other)
 
     __rand__ = __and__
 
     @sympify_return([('other', 'Boolean')], NotImplemented)
-    def __or__(self, other):
+    def __or__(self, other: Boolean | bool) -> Boolean:
         return Or(self, other)
 
     __ror__ = __or__
 
-    def __invert__(self):
+    def __invert__(self) -> Boolean:
         """Overloading for ~"""
         return Not(self)
 
     @sympify_return([('other', 'Boolean')], NotImplemented)
-    def __rshift__(self, other):
+    def __rshift__(self, other: Boolean | bool) -> Boolean:
         return Implies(self, other)
 
     @sympify_return([('other', 'Boolean')], NotImplemented)
-    def __lshift__(self, other):
+    def __lshift__(self, other: Boolean | bool) -> Boolean:
         return Implies(other, self)
 
     __rrshift__ = __lshift__
     __rlshift__ = __rshift__
 
     @sympify_return([('other', 'Boolean')], NotImplemented)
-    def __xor__(self, other):
+    def __xor__(self, other: Boolean | bool) -> Boolean:
         return Xor(self, other)
 
     __rxor__ = __xor__
@@ -157,11 +162,11 @@ class Boolean(Basic):
         return self.atoms() == other.atoms() and \
             not satisfiable(Not(Equivalent(self, other)))
 
-    def to_nnf(self, simplify=True):
+    def to_nnf(self, simplify=True, form=None):
         # override where necessary
         return self
 
-    def as_set(self):
+    def as_set(self) -> Set:
         """
         Rewrites Boolean expression in terms of real sets.
 
@@ -211,13 +216,12 @@ class Boolean(Basic):
                                       " expressions")
 
     @property
-    def binary_symbols(self):
-        from sympy.core.relational import Eq, Ne
+    def binary_symbols(self) -> set[Basic]:
+        from sympy.core.symbol import Symbol
         return set().union(*[i.binary_symbols for i in self.args
-                           if i.is_Boolean or i.is_Symbol
-                           or isinstance(i, (Eq, Ne))])
+                           if isinstance(i, (Boolean, Symbol))])
 
-    def _eval_refine(self, assumptions):
+    def _eval_refine(self, assumptions) -> Boolean | None:
         from sympy.assumptions import ask
         ret = ask(self, assumptions)
         if ret is True:
@@ -225,6 +229,9 @@ class Boolean(Basic):
         elif ret is False:
             return false
         return None
+
+    def _eval_as_set(self) -> Set:
+        raise NotImplementedError("Subclasses of Boolean should implement this")
 
 
 class BooleanAtom(Boolean):
@@ -512,8 +519,8 @@ class BooleanFunction(Application, Boolean):
     def binary_check_and_simplify(self, *args):
         return [as_Boolean(i) for i in args]
 
-    def to_nnf(self, simplify=True):
-        return self._to_nnf(*self.args, simplify=simplify)
+    def to_nnf(self, simplify=True, form=None):
+        return self._to_nnf(*self.args, simplify=simplify, form=form)
 
     def to_anf(self, deep=True):
         return self._to_anf(*self.args, deep=deep)
@@ -521,10 +528,11 @@ class BooleanFunction(Application, Boolean):
     @classmethod
     def _to_nnf(cls, *args, **kwargs):
         simplify = kwargs.get('simplify', True)
+        form = kwargs.get('form', None)
         argset = set()
         for arg in args:
             if not is_literal(arg):
-                arg = arg.to_nnf(simplify)
+                arg = arg.to_nnf(simplify, form=form)
             if simplify:
                 if isinstance(arg, cls):
                     arg = arg.args
@@ -603,12 +611,16 @@ class And(LatticeOp, BooleanFunction):
 
     if TYPE_CHECKING:
 
-        def __new__(cls, *args: Boolean | bool) -> Boolean: # type: ignore
+        def __new__(cls, *args: Boolean | bool, evaluate: bool | None = None) -> Boolean: # type: ignore
             ...
 
         @property
         def args(self) -> tuple[Boolean, ...]:
             ...
+
+    @classmethod
+    def _from_args(cls, args, is_commutative=None):
+        return super(AssocOp, cls).__new__(cls, *args)
 
     @classmethod
     def _new_args_filter(cls, args):
@@ -770,12 +782,16 @@ class Or(LatticeOp, BooleanFunction):
 
     if TYPE_CHECKING:
 
-        def __new__(cls, *args: Boolean | bool) -> Boolean: # type: ignore
+        def __new__(cls, *args: Boolean | bool, evaluate: bool | None = None) -> Boolean: # type: ignore
             ...
 
         @property
         def args(self) -> tuple[Boolean, ...]:
             ...
+
+    @classmethod
+    def _from_args(cls, args, is_commutative=None):
+        return super(AssocOp, cls).__new__(cls, *args)
 
     @classmethod
     def _new_args_filter(cls, args):
@@ -929,7 +945,7 @@ class Not(BooleanFunction):
         """
         return self.args[0].as_set().complement(S.Reals)
 
-    def to_nnf(self, simplify=True):
+    def to_nnf(self, simplify=True, form=None):
         if is_literal(self):
             return self
 
@@ -938,18 +954,18 @@ class Not(BooleanFunction):
         func, args = expr.func, expr.args
 
         if func == And:
-            return Or._to_nnf(*[Not(arg) for arg in args], simplify=simplify)
+            return Or._to_nnf(*[Not(arg) for arg in args], simplify=simplify, form=form)
 
         if func == Or:
-            return And._to_nnf(*[Not(arg) for arg in args], simplify=simplify)
+            return And._to_nnf(*[Not(arg) for arg in args], simplify=simplify, form=form)
 
         if func == Implies:
             a, b = args
-            return And._to_nnf(a, Not(b), simplify=simplify)
+            return And._to_nnf(a, Not(b), simplify=simplify, form=form)
 
         if func == Equivalent:
             return And._to_nnf(Or(*args), Or(*[Not(arg) for arg in args]),
-                               simplify=simplify)
+                               simplify=simplify, form=form)
 
         if func == Xor:
             result = []
@@ -957,11 +973,11 @@ class Not(BooleanFunction):
                 for neg in combinations(args, i):
                     clause = [Not(s) if s in neg else s for s in args]
                     result.append(Or(*clause))
-            return And._to_nnf(*result, simplify=simplify)
+            return And._to_nnf(*result, simplify=simplify, form=form)
 
         if func == ITE:
             a, b, c = args
-            return And._to_nnf(Or(a, Not(c)), Or(Not(a), Not(b)), simplify=simplify)
+            return And._to_nnf(Or(a, Not(c)), Or(Not(a), Not(b)), simplify=simplify, form=form)
 
         raise ValueError("Illegal operator %s in expression" % func)
 
@@ -1009,10 +1025,14 @@ class Xor(BooleanFunction):
     x
 
     """
-    def __new__(cls, *args, remove_true=True, **kwargs):
+    def __new__(cls, *args, remove_true=True, evaluate=None, **kwargs):
+        if evaluate is None:
+            evaluate = global_parameters.evaluate
+        if not evaluate:
+            return super().__new__(cls, *args, evaluate=evaluate, **kwargs)
+
         argset = set()
-        obj = super().__new__(cls, *args, **kwargs)
-        for arg in obj._args:
+        for arg in map(_sympify, args):
             if isinstance(arg, Number) or arg in (True, False):
                 if arg:
                     arg = true
@@ -1052,25 +1072,23 @@ class Xor(BooleanFunction):
         elif True in argset and remove_true:
             argset.remove(True)
             return Not(Xor(*argset))
+        return super().__new__(cls, *ordered(argset))
+
+    def to_nnf(self, simplify=True, form=None):
+        if form == 'dnf':
+            terms = []
+            for mask in _get_odd_parity_terms(len(self.args)):
+                conj = [self.args[i] if mask[i] == 1 else Not(self.args[i])
+                        for i in range(len(self.args))]
+                terms.append(And(*conj, evaluate=False))
+            return Or._to_nnf(*terms, simplify=simplify)
         else:
-            obj._args = tuple(ordered(argset))
-            obj._argset = frozenset(argset)
-            return obj
-
-    # XXX: This should be cached on the object rather than using cacheit
-    # Maybe it can be computed in __new__?
-    @property  # type: ignore
-    @cacheit
-    def args(self):
-        return tuple(ordered(self._argset))
-
-    def to_nnf(self, simplify=True):
-        args = []
-        for i in range(0, len(self.args)+1, 2):
-            for neg in combinations(self.args, i):
-                clause = [Not(s) if s in neg else s for s in self.args]
-                args.append(Or(*clause))
-        return And._to_nnf(*args, simplify=simplify)
+            args = []
+            for i in range(0, len(self.args)+1, 2):
+                for neg in combinations(self.args, i):
+                    clause = [Not(s) if s in neg else s for s in self.args]
+                    args.append(Or(*clause, evaluate=False))
+            return And._to_nnf(*args, simplify=simplify)
 
     def _eval_rewrite_as_Or(self, *args, **kwargs):
         a = self.args
@@ -1274,9 +1292,9 @@ class Implies(BooleanFunction):
         else:
             return Basic.__new__(cls, *args)
 
-    def to_nnf(self, simplify=True):
+    def to_nnf(self, simplify=True, form=None):
         a, b = self.args
-        return Or._to_nnf(Not(a), b, simplify=simplify)
+        return Or._to_nnf(Not(a), b, simplify=simplify, form=form)
 
     def to_anf(self, deep=True):
         a, b = self.args
@@ -1307,7 +1325,12 @@ class Equivalent(BooleanFunction):
     True
 
     """
-    def __new__(cls, *args, **options):
+    def __new__(cls, *args, evaluate=None, **kwargs):
+        if evaluate is None:
+            evaluate = global_parameters.evaluate
+        if not evaluate:
+            return super().__new__(cls, *args, evaluate=evaluate, **kwargs)
+
         from sympy.core.relational import Relational
         args = [_sympify(arg) for arg in args]
 
@@ -1341,24 +1364,14 @@ class Equivalent(BooleanFunction):
         if False in argset:
             argset.discard(False)
             return And(*[Not(arg) for arg in argset])
-        _args = frozenset(argset)
-        obj = super().__new__(cls, _args)
-        obj._argset = _args
-        return obj
+        return super().__new__(cls, *ordered(argset))
 
-    # XXX: This should be cached on the object rather than using cacheit
-    # Maybe it can be computed in __new__?
-    @property  # type: ignore
-    @cacheit
-    def args(self):
-        return tuple(ordered(self._argset))
-
-    def to_nnf(self, simplify=True):
+    def to_nnf(self, simplify=True, form=None):
         args = []
         for a, b in zip(self.args, self.args[1:]):
             args.append(Or(Not(a), b))
         args.append(Or(Not(self.args[-1]), self.args[0]))
-        return And._to_nnf(*args, simplify=simplify)
+        return And._to_nnf(*args, simplify=simplify, form=form)
 
     def to_anf(self, deep=True):
         a = And(*self.args)
@@ -1472,9 +1485,9 @@ class ITE(BooleanFunction):
         if [a, b, c] != args:
             return cls(a, b, c, evaluate=False)
 
-    def to_nnf(self, simplify=True):
+    def to_nnf(self, simplify=True, form=None):
         a, b, c = self.args
-        return And._to_nnf(Or(Not(a), b), Or(a, c), simplify=simplify)
+        return And._to_nnf(Or(Not(a), b), Or(a, c), simplify=simplify, form=form)
 
     def _eval_as_set(self):
         return self.to_nnf().as_set()
@@ -1672,7 +1685,7 @@ def to_anf(expr, deep=True):
     return expr.to_anf(deep=deep)
 
 
-def to_nnf(expr, simplify=True):
+def to_nnf(expr, simplify=True, form=None):
     """
     Converts ``expr`` to Negation Normal Form (NNF).
 
@@ -1680,6 +1693,18 @@ def to_nnf(expr, simplify=True):
     contains only :py:class:`~.And`, :py:class:`~.Or` and :py:class:`~.Not`,
     and :py:class:`~.Not` is applied only to literals.
     If ``simplify`` is ``True``, the result contains no redundant clauses.
+
+    Parameters
+    ==========
+
+    expr : boolean expression
+        The expression to convert to NNF.
+    simplify : bool, optional
+        If True, simplify the result. Default is True.
+    form : str, optional
+        Target form hint: 'cnf' for conjunctive normal form bias,
+        'dnf' for disjunctive normal form bias, or None (default).
+        This hint optimizes XOR conversions.
 
     Examples
     ========
@@ -1694,7 +1719,7 @@ def to_nnf(expr, simplify=True):
     """
     if is_nnf(expr, simplify):
         return expr
-    return expr.to_nnf(simplify)
+    return expr.to_nnf(simplify, form=form)
 
 
 def to_cnf(expr, simplify=False, force=False):
@@ -1733,7 +1758,7 @@ def to_cnf(expr, simplify=False, force=False):
     if is_cnf(expr):
         return expr
 
-    expr = eliminate_implications(expr)
+    expr = eliminate_implications(expr, form='cnf')
     res = distribute_and_over_or(expr)
 
     return res
@@ -1775,7 +1800,7 @@ def to_dnf(expr, simplify=False, force=False):
     if is_dnf(expr):
         return expr
 
-    expr = eliminate_implications(expr)
+    expr = eliminate_implications(expr, form='dnf')
     return distribute_or_over_and(expr)
 
 
@@ -1946,13 +1971,21 @@ def _is_form(expr, function1, function2):
     return True
 
 
-def eliminate_implications(expr):
+def eliminate_implications(expr, form=None):
     """
     Change :py:class:`~.Implies` and :py:class:`~.Equivalent` into
     :py:class:`~.And`, :py:class:`~.Or`, and :py:class:`~.Not`.
     That is, return an expression that is equivalent to ``expr``, but has only
     ``&``, ``|``, and ``~`` as logical
     operators.
+
+    Parameters
+    ==========
+
+    expr : boolean expression
+        The expression to eliminate implications from.
+    form : str, optional
+        Target form hint: 'cnf' or 'dnf'. Passed to to_nnf for optimization.
 
     Examples
     ========
@@ -1968,7 +2001,7 @@ def eliminate_implications(expr):
     (A | ~C) & (B | ~A) & (C | ~B)
 
     """
-    return to_nnf(expr, simplify=False)
+    return to_nnf(expr, simplify=False, form=form)
 
 
 def is_literal(expr):
@@ -2188,7 +2221,8 @@ def _get_odd_parity_terms(n):
     Returns a list of lists, with all possible combinations of n zeros and ones
     with an odd number of ones.
     """
-    return [e for e in [ibin(i, n) for i in range(2**n)] if sum(e) % 2 == 1]
+    return [[1 if (mask >> i) & 1 else 0 for i in range(n)]
+            for mask in range(1 << n) if mask.bit_count() % 2 == 1]
 
 
 def _get_even_parity_terms(n):
@@ -2196,7 +2230,8 @@ def _get_even_parity_terms(n):
     Returns a list of lists, with all possible combinations of n zeros and ones
     with an even number of ones.
     """
-    return [e for e in [ibin(i, n) for i in range(2**n)] if sum(e) % 2 == 0]
+    return [[1 if (mask >> i) & 1 else 0 for i in range(n)]
+            for mask in range(1 << n) if mask.bit_count() % 2 == 0]
 
 
 def _simplified_pairs(terms):
@@ -2840,16 +2875,16 @@ def simplify_logic(expr, form=None, deep=True, force=False, dontcare=None):
         elif form == 'dnf':
             form_ok = is_dnf(expr)
 
-        if form_ok and all(is_literal(a)
-                for a in expr.args):
-            return expr
+        if form_ok and dontcare is None and all(is_literal(a)
+               for a in expr.args):
+           return expr
     from sympy.core.relational import Relational
     if deep:
         variables = expr.atoms(Relational)
         from sympy.simplify.simplify import simplify
         s = tuple(map(simplify, variables))
         expr = expr.xreplace(dict(zip(variables, s)))
-    if not isinstance(expr, BooleanFunction):
+    if not isinstance(expr, BooleanFunction) and dontcare is None:
         return expr
     # Replace Relationals with Dummys to possibly
     # reduce the number of variables

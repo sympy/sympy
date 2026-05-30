@@ -40,6 +40,7 @@ To make a function work with rs_series you need to do two things::
 Look at rs_sin and rs_series for further reference.
 
 """
+from __future__ import annotations
 
 from sympy.polys.domains import QQ, EX
 from sympy.polys.rings import PolyElement, ring, sring
@@ -47,14 +48,14 @@ from sympy.polys.puiseux import PuiseuxPoly
 from sympy.polys.polyerrors import DomainError
 from sympy.polys.monomials import (monomial_min, monomial_mul, monomial_div,
                                    monomial_ldiv)
-from mpmath.libmp.libintmath import ifac
+from sympy.external.gmpy import factorial as ifac
+from sympy.external.mpmath import giant_steps
 from sympy.core import PoleError, Function, Expr
 from sympy.core.numbers import Rational
 from sympy.core.intfunc import igcd
 from sympy.functions import (sin, cos, tan, atan, exp, atanh, asinh, tanh, log,
                              ceiling, sinh, cosh)
 from sympy.utilities.misc import as_int
-from mpmath.libmp.libintmath import giant_steps
 import math
 
 
@@ -233,7 +234,7 @@ def rs_mul(p1, p2, x, prec):
     """
     R = p1.ring
     p = {}
-    if R.__class__ != p2.ring.__class__ or R != p2.ring:
+    if R != p2.ring:
         raise ValueError('p1 and p2 must have the same ring')
     iv = R.gens.index(x)
     if not isinstance(p2, (PolyElement, PuiseuxPoly)):
@@ -398,7 +399,7 @@ def rs_subs(p, rules, x, prec):
     """
     R = p.ring
     ngens = R.ngens
-    d = R(0)
+    d = {}
     for i in range(ngens):
         d[(i, 1)] = R.gens[i]
     for var in rules:
@@ -1056,7 +1057,7 @@ def rs_LambertW(p, x, prec):
     See Also
     ========
 
-    LambertW
+    sympy.functions.elementary.exponential.LambertW
     """
     if rs_is_puiseux(p, x):
         return rs_puiseux(rs_LambertW, p, x, prec)
@@ -1170,7 +1171,7 @@ def rs_atan(p, x, prec):
     See Also
     ========
 
-    atan
+    sympy.functions.elementary.trigonometric.atan
     """
     if rs_is_puiseux(p, x):
         return rs_puiseux(rs_atan, p, x, prec)
@@ -1216,7 +1217,7 @@ def rs_asin(p, x, prec):
     See Also
     ========
 
-    asin
+    sympy.functions.elementary.trigonometric.asin
     """
     if rs_is_puiseux(p, x):
         return rs_puiseux(rs_asin, p, x, prec)
@@ -1282,7 +1283,8 @@ def rs_tan(p, x, prec):
    See Also
    ========
 
-   _tan1, tan
+   _tan1
+   sympy.functions.elementary.trigonometric.tan
    """
     if rs_is_puiseux(p, x):
         r = rs_puiseux(rs_tan, p, x, prec)
@@ -1333,7 +1335,7 @@ def rs_cot(p, x, prec):
     See Also
     ========
 
-    cot
+    sympy.functions.elementary.trigonometric.cot
     """
     # It can not handle series like `p = x + x*y` where the coefficient of the
     # linear term in the series variable is symbolic.
@@ -1371,7 +1373,7 @@ def rs_sin(p, x, prec):
     See Also
     ========
 
-    sin
+    sympy.functions.elementary.trigonometric.sin
     """
     if rs_is_puiseux(p, x):
         return rs_puiseux(rs_sin, p, x, prec)
@@ -1433,7 +1435,7 @@ def rs_cos(p, x, prec):
     See Also
     ========
 
-    cos
+    sympy.functions.elementary.trigonometric.cos
     """
     if rs_is_puiseux(p, x):
         return rs_puiseux(rs_cos, p, x, prec)
@@ -1567,7 +1569,7 @@ def rs_atanh(p, x, prec):
     See Also
     ========
 
-    atanh
+    sympy.functions.elementary.hyperbolic.atanh
     """
     if rs_is_puiseux(p, x):
         return rs_puiseux(rs_atanh, p, x, prec)
@@ -1610,7 +1612,7 @@ def rs_asinh(p, x, prec):
     See Also
     ========
 
-    asinh
+    sympy.functions.elementary.hyperbolic.asinh
     """
     if rs_is_puiseux(p, x):
         return rs_puiseux(rs_asinh, p, x, prec)
@@ -1654,7 +1656,7 @@ def rs_sinh(p, x, prec):
     See Also
     ========
 
-    sinh
+    sympy.functions.elementary.hyperbolic.sinh
     """
     if rs_is_puiseux(p, x):
         return rs_puiseux(rs_sinh, p, x, prec)
@@ -1700,13 +1702,13 @@ def rs_cosh(p, x, prec):
     See Also
     ========
 
-    cosh
+    sympy.functions.elementary.hyperbolic.cosh
     """
     if rs_is_puiseux(p, x):
         return rs_puiseux(rs_cosh, p, x, prec)
     R = p.ring
     if not p:
-        return R(0)
+        return R(1)
     c = _get_constant_term(p, x)
     if c:
         try:
@@ -1817,7 +1819,7 @@ def rs_tanh(p, x, prec):
     See Also
     ========
 
-    tanh
+    sympy.functions.elementary.hyperbolic.tanh
     """
     if rs_is_puiseux(p, x):
         return rs_puiseux(rs_tanh, p, x, prec)
@@ -1891,10 +1893,10 @@ def rs_hadamard_exp(p1, inverse=False):
     p = R.zero
     if not inverse:
         for exp1, v1 in p1.items():
-            p[exp1] = v1/int(ifac(exp1[0]))
+            p[exp1] = v1/int(ifac(int(exp1[0])))
     else:
         for exp1, v1 in p1.items():
-            p[exp1] = v1*int(ifac(exp1[0]))
+            p[exp1] = v1*int(ifac(int(exp1[0])))
     return p
 
 def rs_compose_add(p1, p2):

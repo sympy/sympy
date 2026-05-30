@@ -10,6 +10,9 @@ as unifying matrices with different domains.
 
 """
 from __future__ import annotations
+
+from typing import overload, TYPE_CHECKING
+
 from collections import Counter
 from functools import reduce
 
@@ -18,7 +21,6 @@ from sympy.utilities.decorator import doctest_depends_on
 
 from sympy.core.sympify import _sympify
 
-from ..domains import Domain
 
 from ..constructor import construct_domain
 
@@ -36,11 +38,10 @@ from .domainscalar import DomainScalar
 
 from sympy.polys.domains import ZZ, EXRAW, QQ
 
-from sympy.polys.densearith import dup_mul
+from sympy.polys.densearith import dup_mul, dup_exquo_ground
 from sympy.polys.densebasic import dup_convert
 from sympy.polys.densetools import (
     dup_mul_ground,
-    dup_quo_ground,
     dup_content,
     dup_clear_denoms,
     dup_primitive,
@@ -56,6 +57,9 @@ from .sdm import SDM
 from .dfm import DFM
 
 from .rref import _dm_rref, _dm_rref_den
+
+if TYPE_CHECKING:
+    from ..domains import Domain
 
 
 if GROUND_TYPES != 'flint':
@@ -188,7 +192,16 @@ class DomainMatrix:
         args = (arg, rep.shape, rep.domain)
         return (self.__class__, args)
 
-    def __getitem__(self, key):
+    @overload
+    def __getitem__(self, key: tuple[int, int]) -> DomainScalar: ...
+    @overload
+    def __getitem__(self, key: tuple[slice, int]) -> DomainMatrix: ...
+    @overload
+    def __getitem__(self, key: tuple[int, slice]) -> DomainMatrix: ...
+    @overload
+    def __getitem__(self, key: tuple[slice, slice]) -> DomainMatrix: ...
+
+    def __getitem__(self, key: tuple[slice | int, slice | int]) -> DomainMatrix | DomainScalar:
         i, j = key
         m, n = self.shape
         if not (isinstance(i, slice) or isinstance(j, slice)):
@@ -456,7 +469,7 @@ class DomainMatrix:
         See Also
         ========
 
-        Matrix
+        sympy.matrices.dense.Matrix
 
         """
         if fmt == 'dense':
@@ -1601,7 +1614,7 @@ class DomainMatrix:
         return A.from_rep(A.rep.matmul(B.rep))
 
     def _scalarmul(A, lamda, reverse):
-        if lamda == A.domain.zero:
+        if lamda == A.domain.zero and (not (A.domain.is_EXRAW)):
             return DomainMatrix.zeros(A.shape, A.domain)
         elif lamda == A.domain.one:
             return A.copy()
@@ -2002,7 +2015,7 @@ class DomainMatrix:
             common = K.gcd(content, denom)
 
             if not K.is_one(common):
-                elements = dup_quo_ground(elements, common, K)
+                elements = dup_exquo_ground(elements, common, K)
                 denom = K.quo(denom, common)
 
         if not K.is_one(u):

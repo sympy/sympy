@@ -1,3 +1,4 @@
+from __future__ import annotations
 import math
 from sympy.concrete.summations import (Sum, summation)
 from sympy.core.add import Add
@@ -2030,6 +2031,7 @@ def test_sqrt_quadratic():
     assert integrate(1/sqrt(a+b*x+c*x**2), x) == \
         Piecewise((log(b + 2*sqrt(c)*sqrt(a + b*x + c*x**2) + 2*c*x)/sqrt(c), Ne(c, 0) & Ne(a - b**2/(4*c), 0)),
                   ((b/(2*c) + x)*log(b/(2*c) + x)/sqrt(c*(b/(2*c) + x)**2), Ne(c, 0)),
+                  (x/sqrt(a), Eq(b, 0)),
                   (2*sqrt(a + b*x)/b, Ne(b, 0)), (x/sqrt(a), True))
 
     assert integrate((7*x+6)/sqrt(3*x**2+4*x+5)) == \
@@ -2043,7 +2045,8 @@ def test_sqrt_quadratic():
                    Piecewise((log(b + 2*sqrt(c)*sqrt(a + b*x + c*x**2) + 2*c*x)/sqrt(c), Ne(a - b**2/(4*c), 0)),
                              ((b/(2*c) + x)*log(b/(2*c) + x)/sqrt(c*(b/(2*c) + x)**2), True)) +
                    e*sqrt(a + b*x + c*x**2)/c, Ne(c, 0)),
-                  ((2*d*sqrt(a + b*x) + 2*e*(-a*sqrt(a + b*x) + (a + b*x)**(S(3)/2)/3)/b)/b, Ne(b, 0)),
+                   ((d*x + e*x**2/2)/sqrt(a), Eq(b, 0)),
+                  (2*((d*sqrt(a + b*x) - e*(a*sqrt(a + b*x) - (a + b*x)**(S(3)/2)/3)/b)/b), Ne(b, 0)),
                   ((d*x + e*x**2/2)/sqrt(a), True))
 
     assert integrate((3*x**3-x**2+2*x-4)/sqrt(x**2-3*x+2)) == \
@@ -2057,6 +2060,7 @@ def test_sqrt_quadratic():
                    Piecewise((log(b + 2*sqrt(c)*sqrt(a + b*x + c*x**2) + 2*c*x)/sqrt(c), Ne(a - b**2/(4*c), 0)),
                              ((b/(2*c) + x)*log(b/(2*c) + x)/sqrt(c*(b/(2*c) + x)**2), True)) +
                    (b/(4*c) + x/2)*sqrt(a + b*x + c*x**2), Ne(c, 0)),
+                   (sqrt(a)*x, Eq(b, 0)),
                   (2*(a + b*x)**(S(3)/2)/(3*b), Ne(b, 0)),
                   (sqrt(a)*x, True))
 
@@ -2185,3 +2189,45 @@ def test_issue_27374():
     Ec = diff(u, z, z).subs([(x, sqrt(b*b-z*z))])
     expected_result = -2*sqrt(2)*b*a**3*exp(-b**2*a**2/2)/(3*sqrt(pi))
     assert simplify(integrate(Ec, (z, -b, b))) == expected_result
+
+
+def test_integration_of_piecewise_with_simbolic_boundaries():
+    # issue 28469
+    a1, a2, a3 = symbols( 'a1 a2 a3' )
+    t, t1, t2, t3 = symbols( 't t1 t2 t3' )
+    p = [ ( a1, t<1 ), ( a2, t<2 ), ( a3, t<3 )]
+    f1 = Piecewise( *p ).subs( {t:t1} )
+    f2 = Piecewise( *p ).subs( {t:t2} )
+    f3 = Piecewise( *p ).subs( {t:t3} )
+
+    I2 = integrate(f2 * integrate(f3, (t3, 0, t2)), (t2, 0, t1))
+    assert I2 == Piecewise((a1**2*t1**2/2, t1 < 0),
+        (a1**2*Min(1, t1)**2/2
+        - a2**2*Min(1, t1)**2/2
+        + a2**2*Min(2, t1)**2/2
+        - a3**2*Min(2, t1)**2/2
+        + a3**2*Min(3, t1)**2/2
+        - (a1*a2 - a2**2)*Min(1, t1)
+        + (a1*a2 - a2**2)*Min(2, t1)
+        - (a1*a3 + a2*a3 - 2*a3**2)*Min(2, t1)
+        + (a1*a3 + a2*a3 - 2*a3**2)*Min(3, t1), t1 <= Min(3, t1)
+        ),
+        (nan, True))
+
+    assert integrate(f1 * I2, (t1, 0, 3)) == a1**3/6 + a1**2*a2/2 \
+        + a1**2*a3/2 + a1*a2**2/2 + a1*a2*a3 + a1*a3**2/2 + a2**3/6 + a2**2*a3/2 + a2*a3**2/2 + a3**3/6
+
+    assert integrate( Piecewise( (2,t2<1) , (nan , True)) , (t2,0,t1) ) == \
+        Piecewise((2*t1, t1 < 0), (2*Min(1, t1), t1 <= Min(1, t1)), (nan, True))
+
+
+def test_issue_15566():
+    a, m, s = symbols('a m s', real=True)
+    t = symbols('t')
+
+    expr = (S(1) / sqrt(2 * pi * s**2)) * (t + m) * exp(-t**2 / (2 * s**2))
+    result = integrate(expr, (t, a - m, oo))
+
+    assert isinstance(result, Piecewise)
+
+    assert result.has(erf)

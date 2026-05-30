@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.assumptions.ask import Q
 from sympy.core.basic import Basic
 from sympy.core.expr import Expr

@@ -552,12 +552,9 @@ class frac(DefinedFunction):
             if arg.is_integer:
                 return S.Zero
             if arg.is_number:
-                if arg is S.NaN:
+                if arg is S.NaN or arg is S.ComplexInfinity:
                     return S.NaN
-                elif arg is S.ComplexInfinity:
-                    return S.NaN
-                else:
-                    return arg - floor(arg)
+                return arg - floor(arg)
             return cls(arg, evaluate=False)
 
         real, imag = S.Zero, S.Zero

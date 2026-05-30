@@ -1,6 +1,7 @@
 """
 Handlers for keys related to number theory: prime, even, odd, etc.
 """
+from __future__ import annotations
 
 from sympy.assumptions import Q, ask
 from sympy.core import Add, Basic, Expr, Float, Mul, Pow, S

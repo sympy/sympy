@@ -5,6 +5,7 @@ TODO:
 * Add 3D classes to mappings in operatorset.py
 
 """
+from __future__ import annotations
 
 from sympy.core.numbers import (I, pi)
 from sympy.core.singleton import S

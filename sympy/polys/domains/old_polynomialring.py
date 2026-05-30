@@ -1,4 +1,5 @@
 """Implementation of :class:`PolynomialRing` class. """
+from __future__ import annotations
 
 
 from sympy.polys.agca.modules import FreeModulePolyRing
@@ -45,11 +46,11 @@ class PolynomialRingBase(Ring, CompositeDomain):
         # NOTE 'order' may not be set if inject was called through CompositeDomain
         self.order = opts.get('order', monomial_key(self.default_order))
 
-    def set_domain(self, dom):
+    def set_domain(self, dom, /):
         """Return a new polynomial ring with given domain. """
         return self.__class__(dom, *self.gens, order=self.order)
 
-    def new(self, element):
+    def new(self, element, /):
         return self.dtype(element, self.dom, len(self.gens) - 1)
 
     def _ground_new(self, element):

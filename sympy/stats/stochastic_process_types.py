@@ -473,7 +473,7 @@ class MarkovProcess(StochasticProcess):
         """
         # if given condition is None, then there is no need to work out
         # state_space from random variables
-        if given_condition != None:
+        if given_condition is not None:
             rand_var = list(given_condition.atoms(RandomSymbol) -
                         given_condition.atoms(RandomIndexedSymbol))
             if len(rand_var) == 1:
@@ -1044,7 +1044,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         for class_ in classes:
             # begin recurrent check (similar to self._check_trans_probs())
             submatrix = T[class_, class_]  # get the submatrix with those states
-            is_recurrent = S.true
+            is_recurrent: Boolean = S.true
             rows = submatrix.tolist()
             for row in rows:
                 if (sum(row) - 1) != 0:
@@ -1597,7 +1597,7 @@ class ContinuousMarkovChain(ContinuousTimeStochasticProcess, MarkovProcess):
             # for faster computation use diagonalized generator matrix
             Q, D = gen_mat.diagonalize()
             return Lambda(t, Q*exp(t*D)*Q.inv())
-        if gen_mat != None:
+        if gen_mat is not None:
             return Lambda(t, exp(t*gen_mat))
 
     def limiting_distribution(self):

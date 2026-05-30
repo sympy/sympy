@@ -5,6 +5,7 @@ This module defines the facts between unary predicates in ``get_known_facts()``,
 and supports functions to generate the contents in
 ``sympy.assumptions.ask_generated`` file.
 """
+from __future__ import annotations
 
 from sympy.assumptions.ask import Q
 from sympy.assumptions.assume import AppliedPredicate
@@ -13,26 +14,6 @@ from sympy.core.symbol import Symbol
 from sympy.logic.boolalg import (to_cnf, And, Not, Implies, Equivalent,
     Exclusive,)
 from sympy.logic.inference import satisfiable
-
-
-@cacheit
-def get_composite_predicates():
-    # To reduce the complexity of sat solver, these predicates are
-    # transformed into the combination of primitive predicates.
-    return {
-        Q.real : Q.negative | Q.zero | Q.positive,
-        Q.integer : Q.even | Q.odd,
-        Q.nonpositive : Q.negative | Q.zero,
-        Q.nonzero : Q.negative | Q.positive,
-        Q.nonnegative : Q.zero | Q.positive,
-        Q.extended_real : Q.negative_infinite | Q.negative | Q.zero | Q.positive | Q.positive_infinite,
-        Q.extended_positive: Q.positive | Q.positive_infinite,
-        Q.extended_negative: Q.negative | Q.negative_infinite,
-        Q.extended_nonzero: Q.negative_infinite | Q.negative | Q.positive | Q.positive_infinite,
-        Q.extended_nonpositive: Q.negative_infinite | Q.negative | Q.zero,
-        Q.extended_nonnegative: Q.zero | Q.positive | Q.positive_infinite,
-        Q.complex : Q.algebraic | Q.transcendental
-    }
 
 
 @cacheit
@@ -83,6 +64,22 @@ def get_number_facts(x = None):
         x = Symbol('x')
 
     fact = And(
+
+        # Composite predicates
+        Equivalent(Q.real(x), Q.negative(x) | Q.zero(x) | Q.positive(x)),
+        Equivalent(Q.integer(x), Q.even(x) | Q.odd(x)),
+        Equivalent(Q.nonpositive(x), Q.negative(x) | Q.zero(x)),
+        Equivalent(Q.nonzero(x), Q.negative(x) | Q.positive(x)),
+        Equivalent(Q.nonnegative(x), Q.zero(x) | Q.positive(x)),
+        Equivalent(Q.extended_real(x),
+                   Q.negative_infinite(x) | Q.negative(x) | Q.zero(x) | Q.positive(x) | Q.positive_infinite(x)),
+        Equivalent(Q.extended_positive(x), Q.positive(x) | Q.positive_infinite(x)),
+        Equivalent(Q.extended_negative(x), Q.negative(x) | Q.negative_infinite(x)),
+        Equivalent(Q.extended_nonzero(x), Q.negative_infinite(x) | Q.negative(x) | Q.positive(x) | Q.positive_infinite(x)),
+        Equivalent(Q.extended_nonpositive(x), Q.negative_infinite(x) | Q.negative(x) | Q.zero(x)),
+        Equivalent(Q.extended_nonnegative(x), Q.zero(x) | Q.positive(x) | Q.positive_infinite(x)),
+        Equivalent(Q.complex(x), Q.algebraic(x) | Q.transcendental(x)),
+
         # primitive predicates for extended real exclude each other.
         Exclusive(Q.negative_infinite(x), Q.negative(x), Q.zero(x),
             Q.positive(x), Q.positive_infinite(x)),

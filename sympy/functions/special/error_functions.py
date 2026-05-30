@@ -1,5 +1,6 @@
 """ This module contains various functions that are special cases
     of incomplete gamma functions. It should probably be renamed. """
+from __future__ import annotations
 
 from sympy.core import EulerGamma # Must be imported from core, not core.numbers
 from sympy.core.add import Add
@@ -984,6 +985,9 @@ class erfcinv (DefinedFunction):
     def _eval_rewrite_as_erfinv(self, z, **kwargs):
         return erfinv(1-z)
 
+    def _eval_evalf(self, prec):
+        return self.rewrite(erfinv)._eval_evalf(prec)
+
     def _eval_is_zero(self):
         return (self.args[0] - 1).is_zero
 
@@ -1318,7 +1322,7 @@ class expint(DefinedFunction):
     >>> expint(nu, z).diff(nu)
     -z**(nu - 1)*meijerg(((), (1, 1)), ((0, 0, 1 - nu), ()), z)
 
-    At non-postive integer orders, the exponential integral reduces to the
+    At non-positive integer orders, the exponential integral reduces to the
     exponential function:
 
     >>> expint(0, z)
@@ -1746,7 +1750,7 @@ class Li(DefinedFunction):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_evalf(self, prec):
-        return self.rewrite(li).evalf(prec)
+        return self.rewrite(li)._eval_evalf(prec)
 
     def _eval_rewrite_as_li(self, z, **kwargs):
         return li(z) - li(2)

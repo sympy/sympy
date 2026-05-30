@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.concrete.summations import Sum
 from sympy.core.numbers import (I, Rational, oo, pi)
 from sympy.core.singleton import S

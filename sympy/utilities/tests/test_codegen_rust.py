@@ -1,3 +1,4 @@
+from __future__ import annotations
 from io import StringIO
 
 from sympy.core import S, symbols, pi, Catalan, EulerGamma, Function

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.testing.pytest import raises, XFAIL
 from sympy.external import import_module
 
@@ -15,7 +16,8 @@ from sympy.functions.elementary.complexes import (Abs, conjugate)
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.integers import (ceiling, floor)
 from sympy.functions.elementary.miscellaneous import (root, sqrt)
-from sympy.functions.elementary.trigonometric import (asin, cos, csc, sec, sin, tan)
+from sympy.functions.elementary.trigonometric import (
+    acos, asin, atan, cos, csc, sec, sin, tan)
 from sympy.integrals.integrals import Integral
 from sympy.series.limits import Limit
 
@@ -128,7 +130,13 @@ GOOD_PAIRS = [
     (r"| x \rangle", Ket('x')),
     (r"\sin \theta", sin(theta)),
     (r"\sin(\theta)", sin(theta)),
+    (r"\sin^{2}(x)", sin(x)**2),
+    (r"\cos^{2}(x)", cos(x)**2),
+    (r"\tan^{2}(x)", tan(x)**2),
     (r"\sin^{-1} a", asin(a)),
+    (r"\arcsin(x)", asin(x)),
+    (r"\arccos(x)", acos(x)),
+    (r"\arctan(x)", atan(x)),
     (r"\sin a \cos b", _Mul(sin(a), cos(b))),
     (r"\sin \cos \theta", sin(cos(theta))),
     (r"\sin(\cos \theta)", sin(cos(theta))),
@@ -201,6 +209,9 @@ GOOD_PAIRS = [
     (r"h_{\theta}", Symbol('h_{theta}')),
     (r"h_{\theta}(x_0, x_1)",
      Function('h_{theta}')(Symbol('x_{0}'), Symbol('x_{1}'))),
+    (r"a_{n+k}", Symbol('a_{k + n}')),
+    (r"a_{2n}", Symbol('a_{2*n}')),
+    (r"a_{n^2}", Symbol('a_{n**2}')),
     (r"x!", _factorial(x)),
     (r"100!", _factorial(100)),
     (r"\theta!", _factorial(theta)),
@@ -356,3 +367,10 @@ def test_strict_mode():
     for latex_str in FAILING_BAD_STRINGS:
         with raises(LaTeXParsingError):
             parse_latex(latex_str, strict=True)
+
+def test_latex_cases_environment_error():
+    from sympy.parsing.latex import parse_latex, LaTeXParsingError
+    from sympy.testing.pytest import raises
+    latex_string = r"\begin{cases} x=1 \\ y=2 \end{cases}"
+    with raises(LaTeXParsingError, match="The 'cases' environment is not currently supported"):
+        parse_latex(latex_string)

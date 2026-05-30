@@ -603,3 +603,11 @@ Numpy Utility Functions
 .. autofunction:: sympy.matrices.dense::symarray
 
 .. autofunction:: a2idx
+
+Type Aliases
+^^^^^^^^^^^^
+
+.. class:: collections.abc.Callable
+.. class:: SBasic
+.. class:: Slice
+.. class:: Tmat

@@ -177,6 +177,7 @@ lightweight classes, :py:class:`~.ModuleHomomorphism`,
 to support this.
 
 """
+from __future__ import annotations
 
 from sympy.core.intfunc import igcd, ilcm
 from sympy.core.symbol import Dummy
@@ -740,7 +741,10 @@ class PowerBasis(Module):
     def mult_tab(self):
         if self._mult_tab is None:
             self.compute_mult_tab()
-        return self._mult_tab
+        return {
+            i: {j: coeffs[:] for j, coeffs in row.items()}
+            for i, row in self._mult_tab.items()
+        }
 
     def compute_mult_tab(self):
         theta_pow = AlgIntPowers(self.T)
@@ -920,7 +924,10 @@ class Submodule(Module, IntegerPowerable):
     def mult_tab(self):
         if self._mult_tab is None:
             self.compute_mult_tab()
-        return self._mult_tab
+        return {
+            i: {j: coeffs[:] for j, coeffs in row.items()}
+            for i, row in self._mult_tab.items()
+        }
 
     def compute_mult_tab(self):
         gens = self.basis_element_pullbacks()

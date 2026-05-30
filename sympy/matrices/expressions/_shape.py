@@ -1,10 +1,16 @@
+from __future__ import annotations
+
+from itertools import pairwise
+
 from sympy.core.relational import Eq
-from sympy.core.expr import Expr
 from sympy.core.numbers import Integer
 from sympy.logic.boolalg import Boolean, And
 from sympy.matrices.expressions.matexpr import MatrixExpr
 from sympy.matrices.exceptions import ShapeError
-from typing import Union
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
 
 
 def is_matadd_valid(*args: MatrixExpr) -> Boolean:
@@ -31,12 +37,12 @@ def is_matadd_valid(*args: MatrixExpr) -> Boolean:
     """
     rows, cols = zip(*(arg.shape for arg in args))
     return And(
-        *(Eq(i, j) for i, j in zip(rows[:-1], rows[1:])),
-        *(Eq(i, j) for i, j in zip(cols[:-1], cols[1:])),
+        *(Eq(i, j) for i, j in pairwise(rows)),
+        *(Eq(i, j) for i, j in pairwise(cols)),
     )
 
 
-def is_matmul_valid(*args: Union[MatrixExpr, Expr]) -> Boolean:
+def is_matmul_valid(*args: MatrixExpr | Expr) -> Boolean:
     """Return the symbolic condition how ``MatMul`` makes sense
 
     Parameters
@@ -96,7 +102,7 @@ def validate_matadd_integer(*args: MatrixExpr) -> None:
 
 def validate_matmul_integer(*args: MatrixExpr) -> None:
     """Validate matrix shape for multiplication only for integer values"""
-    for A, B in zip(args[:-1], args[1:]):
+    for A, B in pairwise(args):
         i, j = A.cols, B.rows
         if isinstance(i, (int, Integer)) and isinstance(j, (int, Integer)) and i != j:
             raise ShapeError("Matrices are not aligned", i, j)

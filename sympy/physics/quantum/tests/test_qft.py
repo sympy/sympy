@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.numbers import (I, pi)
 from sympy.core.symbol import Symbol
 from sympy.functions.elementary.exponential import exp

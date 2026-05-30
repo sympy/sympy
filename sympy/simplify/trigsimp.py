@@ -1,3 +1,4 @@
+from __future__ import annotations
 from collections import defaultdict
 from functools import reduce
 
@@ -56,8 +57,8 @@ def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
     A number is used to indicate that the search space should be increased.
     A function is used to indicate that said function is likely to occur in a
     simplified expression.
-    An iterable is used indicate that func(var1 + var2 + ...) is likely to
-    occur in a simplified .
+    An iterable is used to indicate that func(var1 + var2 + ...) is likely to
+    occur in a simplified expression.
     An additional generator also indicates that it is likely to occur.
     (See examples below).
 
@@ -179,7 +180,7 @@ def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
     # or tan(n*x), with n an integer. Suppose first there are no tan terms.
     # The ideal [sin(x)**2 + cos(x)**2 - 1] is geometrically prime, since
     # X**2 + Y**2 - 1 is irreducible over CC.
-    # Now, if we have a generator sin(n*x), than we can, using trig identities,
+    # Now, if we have a generator sin(n*x), then we can, using trig identities,
     # express sin(n*x) as a polynomial in sin(x) and cos(x). We can add this
     # relation to the ideal, preserving geometric primality, since the quotient
     # ring is unchanged.
@@ -285,7 +286,7 @@ def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
         res = [] # the ideal
 
         for key, val in trigdict.items():
-            # We have now assembeled a dictionary. Its keys are common
+            # We have now assembled a dictionary. Its keys are common
             # arguments in trigonometric expressions, and values are lists of
             # pairs (fn, coeff). x0, (fn, coeff) in trigdict means that we
             # need to deal with fn(coeff*x0). We take the rational gcd of the
@@ -471,7 +472,6 @@ def trigsimp(expr, inverse=False, **opts):
         functions, such as sin and asin, can be cancelled in any order.
         For example, ``asin(sin(x))`` will yield ``x`` without checking whether
         x belongs to the set where this relation is true. The default is False.
-        Default : True
 
     method : string, optional
         Specifies the method to use. Valid choices are:
@@ -590,7 +590,13 @@ def exptrigsimp(expr):
         # functions
         choices = [e]
         if e.has(*_trigs):
-            choices.append(e.rewrite(exp))
+            op = e.rewrite(exp)
+            # if e is an Add, we can try to factor it
+            # helps with expressions with leading factors
+            if e.is_Add:
+                choices.append(factor_terms(op))
+            else:
+                choices.append(op)
         choices.append(e.rewrite(cos))
         return min(*choices, key=count_ops)
     newexpr = bottom_up(expr, exp_trig)
@@ -1127,7 +1133,7 @@ def __trigsimp(expr, deep=False):
 def futrig(e, *, hyper=True, **kwargs):
     """Return simplified ``e`` using Fu-like transformations.
     This is not the "Fu" algorithm. This is called by default
-    from ``trigsimp``. By default, hyperbolics subexpressions
+    from ``trigsimp``. By default, hyperbolic subexpressions
     will be simplified, but this can be disabled by setting
     ``hyper=False``.
 

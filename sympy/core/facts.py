@@ -45,6 +45,7 @@ https://en.wikipedia.org/wiki/Propositional_formula
 https://en.wikipedia.org/wiki/Inference_rule
 https://en.wikipedia.org/wiki/List_of_rules_of_inference
 """
+from __future__ import annotations
 
 from collections import defaultdict
 from typing import Iterator

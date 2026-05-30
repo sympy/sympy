@@ -1,3 +1,4 @@
+from __future__ import annotations
 import random
 from sympy.core.function import Derivative
 from sympy.core.symbol import symbols

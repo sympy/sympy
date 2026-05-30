@@ -153,7 +153,7 @@ solvers if they are installed. Note that `satisfiable()` is also used by
 
 - **pysat**: [Pysat](https://pysathq.github.io/) is a library which wraps many
   SAT solvers. It can also be used as a backend to `satisfiable()`. Presently,
-  only [Minisat](http://minisat.se/MiniSat.html) is implemented, using
+  only [Minisat](https://github.com/niklasso/minisat) is implemented, using
   `satisfiable(algorithm=minisat22')`.
 
 ### Plotting

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.singleton import S
 from sympy.strategies.rl import (
     rm_id, glom, flatten, unpack, sort, distribute, subs, rebuild)

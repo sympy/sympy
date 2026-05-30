@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.simplify.powsimp import powsimp
 from sympy.testing.pytest import raises

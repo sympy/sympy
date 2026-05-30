@@ -1,3 +1,4 @@
+from __future__ import annotations
 from functools import partial
 from sympy.strategies import chain, minimize
 from sympy.strategies.core import identity

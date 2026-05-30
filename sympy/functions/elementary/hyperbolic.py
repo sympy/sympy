@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core import S, sympify, cacheit
 from sympy.core.add import Add
 from sympy.core.function import DefinedFunction, ArgumentIndexError
@@ -110,7 +111,10 @@ class HyperbolicFunction(DefinedFunction):
     See Also
     ========
 
-    sinh, cosh, tanh, coth
+    sympy.functions.elementary.hyperbolic.sinh
+    sympy.functions.elementary.hyperbolic.cosh
+    sympy.functions.elementary.hyperbolic.tanh
+    sympy.functions.elementary.hyperbolic.coth
     """
 
     unbranched = True
@@ -167,7 +171,9 @@ class sinh(HyperbolicFunction):
     See Also
     ========
 
-    cosh, tanh, asinh
+    sympy.functions.elementary.hyperbolic.cosh
+    sympy.functions.elementary.hyperbolic.tanh
+    sympy.functions.elementary.hyperbolic.asinh
     """
 
     def fdiff(self, argindex=1):
@@ -361,6 +367,15 @@ class sinh(HyperbolicFunction):
         if rest.is_zero:
             return ipi_mult.is_integer
 
+    def _eval_derivative_n_times(self, s, n):
+        if self.args[0] == s and n.is_integer and n.is_nonnegative:
+            if n.is_even:
+                return sinh(s)
+            if n.is_odd:
+                return cosh(s)
+            return (-I)**n*sinh(s + I*pi*n/2)
+        return super()._eval_derivative_n_times(s, n)
+
 
 class cosh(HyperbolicFunction):
     r"""
@@ -379,7 +394,9 @@ class cosh(HyperbolicFunction):
     See Also
     ========
 
-    sinh, tanh, acosh
+    sympy.functions.elementary.hyperbolic.sinh
+    sympy.functions.elementary.hyperbolic.tanh
+    sympy.functions.elementary.hyperbolic.acosh
     """
 
     def fdiff(self, argindex=1):
@@ -394,9 +411,7 @@ class cosh(HyperbolicFunction):
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
-            elif arg is S.Infinity:
-                return S.Infinity
-            elif arg is S.NegativeInfinity:
+            elif arg is S.Infinity or arg is S.NegativeInfinity:
                 return S.Infinity
             elif arg.is_zero:
                 return S.One
@@ -607,6 +622,15 @@ class cosh(HyperbolicFunction):
         if ipi_mult and rest.is_zero:
             return (ipi_mult - S.Half).is_integer
 
+    def _eval_derivative_n_times(self, s, n):
+        if self.args[0] == s and n.is_integer and n.is_nonnegative:
+            if n.is_even:
+                return cosh(s)
+            if n.is_odd:
+                return sinh(s)
+            return (-I)**n*cosh(s + I*pi*n/2)
+        return super()._eval_derivative_n_times(s, n)
+
 
 class tanh(HyperbolicFunction):
     r"""
@@ -625,7 +649,9 @@ class tanh(HyperbolicFunction):
     See Also
     ========
 
-    sinh, cosh, atanh
+    sympy.functions.elementary.hyperbolic.sinh
+    sympy.functions.elementary.hyperbolic.cosh
+    sympy.functions.elementary.hyperbolic.atanh
     """
 
     def fdiff(self, argindex=1):
@@ -838,7 +864,9 @@ class coth(HyperbolicFunction):
     See Also
     ========
 
-    sinh, cosh, acoth
+    sympy.functions.elementary.hyperbolic.sinh
+    sympy.functions.elementary.hyperbolic.cosh
+    sympy.functions.elementary.hyperbolic.acoth
     """
 
     def fdiff(self, argindex=1):
@@ -1084,7 +1112,12 @@ class csch(ReciprocalHyperbolicFunction):
     See Also
     ========
 
-    sinh, cosh, tanh, sech, asinh, acosh
+    sympy.functions.elementary.hyperbolic.sinh
+    sympy.functions.elementary.hyperbolic.cosh
+    sympy.functions.elementary.hyperbolic.tanh
+    sympy.functions.elementary.hyperbolic.sech
+    sympy.functions.elementary.hyperbolic.asinh
+    sympy.functions.elementary.hyperbolic.acosh
     """
 
     _reciprocal_of = sinh
@@ -1155,7 +1188,13 @@ class sech(ReciprocalHyperbolicFunction):
     See Also
     ========
 
-    sinh, cosh, tanh, coth, csch, asinh, acosh
+    sympy.functions.elementary.hyperbolic.sinh
+    sympy.functions.elementary.hyperbolic.cosh
+    sympy.functions.elementary.hyperbolic.tanh
+    sympy.functions.elementary.hyperbolic.coth
+    sympy.functions.elementary.hyperbolic.csch
+    sympy.functions.elementary.hyperbolic.asinh
+    sympy.functions.elementary.hyperbolic.acosh
     """
 
     _reciprocal_of = cosh
@@ -1222,7 +1261,9 @@ class asinh(InverseHyperbolicFunction):
     See Also
     ========
 
-    acosh, atanh, sinh
+    sympy.functions.elementary.hyperbolic.acosh
+    sympy.functions.elementary.hyperbolic.atanh
+    sympy.functions.elementary.hyperbolic.sinh
     """
 
     def fdiff(self, argindex=1):
@@ -1400,7 +1441,9 @@ class acosh(InverseHyperbolicFunction):
     See Also
     ========
 
-    asinh, atanh, cosh
+    sympy.functions.elementary.hyperbolic.asinh
+    sympy.functions.elementary.hyperbolic.atanh
+    sympy.functions.elementary.hyperbolic.cosh
     """
 
     def fdiff(self, argindex=1):
@@ -1415,9 +1458,7 @@ class acosh(InverseHyperbolicFunction):
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
-            elif arg is S.Infinity:
-                return S.Infinity
-            elif arg is S.NegativeInfinity:
+            elif arg is S.Infinity or arg is S.NegativeInfinity:
                 return S.Infinity
             elif arg.is_zero:
                 return pi*I / 2
@@ -1586,7 +1627,9 @@ class atanh(InverseHyperbolicFunction):
     See Also
     ========
 
-    asinh, acosh, tanh
+    sympy.functions.elementary.hyperbolic.asinh
+    sympy.functions.elementary.hyperbolic.acosh
+    sympy.functions.elementary.hyperbolic.tanh
     """
 
     def fdiff(self, argindex=1):
@@ -1628,19 +1671,20 @@ class atanh(InverseHyperbolicFunction):
         if arg.is_zero:
             return S.Zero
 
-        if isinstance(arg, tanh) and arg.args[0].is_number:
+        if isinstance(arg, tanh):
             z = arg.args[0]
             if z.is_real:
                 return z
-            r, i = match_real_imag(z)
-            if r is not None and i is not None:
-                f = floor(2*i/pi)
-                even = f.is_even
-                m = z - I*f*pi/2
-                if even is True:
-                    return m
-                elif even is False:
-                    return m - I*pi/2
+            if z.is_number:
+                r, i = match_real_imag(z)
+                if r is not None and i is not None:
+                    f = floor(2*i/pi)
+                    even = f.is_even
+                    m = z - I*f*pi/2
+                    if even is True:
+                        return m
+                    elif even is False:
+                        return m - I*pi/2
 
     @staticmethod
     @cacheit
@@ -1751,7 +1795,9 @@ class acoth(InverseHyperbolicFunction):
     See Also
     ========
 
-    asinh, acosh, coth
+    sympy.functions.elementary.hyperbolic.asinh
+    sympy.functions.elementary.hyperbolic.acosh
+    sympy.functions.elementary.hyperbolic.coth
     """
 
     def fdiff(self, argindex=1):
@@ -1765,9 +1811,7 @@ class acoth(InverseHyperbolicFunction):
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
-            elif arg is S.Infinity:
-                return S.Zero
-            elif arg is S.NegativeInfinity:
+            elif arg is S.Infinity or arg is S.NegativeInfinity:
                 return S.Zero
             elif arg.is_zero:
                 return pi*I / 2
@@ -1908,7 +1952,10 @@ class asech(InverseHyperbolicFunction):
     See Also
     ========
 
-    asinh, atanh, cosh, acoth
+    sympy.functions.elementary.hyperbolic.asinh
+    sympy.functions.elementary.hyperbolic.atanh
+    sympy.functions.elementary.hyperbolic.cosh
+    sympy.functions.elementary.hyperbolic.acoth
 
     References
     ==========
@@ -1931,9 +1978,7 @@ class asech(InverseHyperbolicFunction):
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
-            elif arg is S.Infinity:
-                return pi*I / 2
-            elif arg is S.NegativeInfinity:
+            elif arg is S.Infinity or arg is S.NegativeInfinity:
                 return pi*I / 2
             elif arg.is_zero:
                 return S.Infinity
@@ -2104,7 +2149,7 @@ class acsch(InverseHyperbolicFunction):
     See Also
     ========
 
-    asinh
+    sympy.functions.elementary.hyperbolic.asinh
 
     References
     ==========
@@ -2127,9 +2172,7 @@ class acsch(InverseHyperbolicFunction):
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
-            elif arg is S.Infinity:
-                return S.Zero
-            elif arg is S.NegativeInfinity:
+            elif arg is S.Infinity or arg is S.NegativeInfinity:
                 return S.Zero
             elif arg.is_zero:
                 return S.ComplexInfinity

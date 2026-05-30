@@ -1,4 +1,5 @@
 """Heuristic polynomial GCD algorithm (HEUGCD). """
+from __future__ import annotations
 
 from .polyerrors import HeuristicGCDFailed
 

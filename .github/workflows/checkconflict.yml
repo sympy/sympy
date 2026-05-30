@@ -3,17 +3,30 @@ on:
   # So that PRs touching the same files as the push are updated
   push:
   # So that the `dirtyLabel` is removed if conflicts are resolve
-  # We recommend `pull_request_target` so that Github secrets are available.
-  # In `pull_request` we wouldn't be able to change labels of fork PRs
-  pull_request_target:
+
+  # XXX: This workflow needs to update labels on fork PRs, so it uses the
+  # privileged pull_request_target event. Do not add checkout or shell steps
+  # that consume PR-controlled data here.
+
+  pull_request_target: # zizmor: ignore[dangerous-triggers]
     types: [synchronize]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions: {}
 
 jobs:
   main:
+    name: Check Merge Conflicts
+    permissions:
+      pull-requests: read # to check if PR is mergeable.
+      issues: write # to add and remove the merge-conflict label
     runs-on: ubuntu-latest
     steps:
       - name: Check if PRs have merge conflicts
-        uses: eps1lon/actions-label-merge-conflict@releases/2.x
+        uses: eps1lon/actions-label-merge-conflict@1df065ebe6e3310545d4f4c4e862e43bdca146f0 # v3.0.3
         with:
           dirtyLabel: "Merge conflict"
-          repoToken: "${{ secrets.GITHUB_TOKEN }}"
+          repoToken: "${{ github.token }}"

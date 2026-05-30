@@ -7,6 +7,7 @@ sympy.stats.crv_types
 sympy.stats.rv
 sympy.stats.frv
 """
+from __future__ import annotations
 
 
 from sympy.core.basic import Basic

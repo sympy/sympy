@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy import MatrixSymbol, symbols, Sum
 from sympy.tensor.array.expressions import conv_array_to_indexed, from_array_to_indexed, ArrayTensorProduct, \
     ArrayContraction, conv_array_to_matrix, from_array_to_matrix, conv_matrix_to_array, from_matrix_to_array, \

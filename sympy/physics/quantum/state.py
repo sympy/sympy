@@ -1,4 +1,5 @@
 """Dirac notation for states."""
+from __future__ import annotations
 
 from sympy.core.cache import cacheit
 from sympy.core.containers import Tuple

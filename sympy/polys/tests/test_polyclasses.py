@@ -1,4 +1,5 @@
 """Tests for OO layer of several polynomial representations. """
+from __future__ import annotations
 
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.polys.domains import ZZ, QQ
@@ -484,6 +485,10 @@ def test_ANP___init__():
     assert all(QQ.of_type(a) for a in f.to_list())
 
     raises(CoercionFailed, lambda: ANP([sqrt(2)], mod, QQ))
+
+    # https://github.com/sympy/sympy/issues/28182
+    f = ANP({(0,): -2, (2,): 1}, [1, 0, -2], QQ)
+    assert f.to_list() == []
 
 
 def test_ANP___eq__():

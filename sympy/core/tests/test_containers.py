@@ -1,3 +1,4 @@
+from __future__ import annotations
 from collections import defaultdict
 
 from sympy.core.basic import Basic
