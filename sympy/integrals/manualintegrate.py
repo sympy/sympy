@@ -2085,7 +2085,12 @@ def sqrt_quadratic_rule(integral: IntegralInfo, degenerate=True):
     elif b.is_zero:
         degenerate_step = integral_steps(f*sqrt(a)**n, x)
     else:
-        degenerate_step = sqrt_fractional_linear_rule(IntegralInfo(f*sqrt(a+b*x)**n, x))
+        degenerate_integrand = f*sqrt(a + b*x)**n
+        degenerate_step = sqrt_fractional_linear_rule(IntegralInfo(degenerate_integrand, x))
+        if degenerate_step is None:
+            # since  sqrt_fractional_linear_rule does not guarantee a solution
+            # we create a DontKnowRule so that _add_degenerate_step adds the degenerate condition
+            degenerate_step = DontKnowRule(degenerate_integrand, x)
 
     def sqrt_quadratic_denom_rule(numer_poly: Poly, integrand: Expr):
         denom = sqrt(a+b*x+c*x**2)
