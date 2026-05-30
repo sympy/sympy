@@ -21,7 +21,7 @@ def test_invalid_coordinates():
     P.point.set_pos(O, l * (sin(q) * N.x - cos(q) * N.y))
     P.potential_energy = m * g * P.point.pos_from(O).dot(N.y)
     L = Lagrangian(N, P)
-    raises(ValueError, lambda: LagrangesMethod(L, [q], bodies=P))
+    raises(ValueError, lambda: LagrangesMethod(L, [q], bodies=[P]))
 
 
 def test_disc_on_an_incline_plane():
