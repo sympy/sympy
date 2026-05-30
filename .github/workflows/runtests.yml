@@ -53,7 +53,7 @@ jobs:
       - run: pip install .
 
       - name: Check for incorrect use of ``__slots__`` using slotscheck
-        run: python -m slotscheck --no-strict-imports --exclude-modules "(sympy.parsing.autolev._antlr.*|sympy.parsing.latex._antlr.*|sympy.galgebra|sympy.plotting.pygletplot.*)" sympy
+        run: python bin/slotscheck
 
       # -- temporarily disabled -- #
       # These checks were too difficult for new contributors. They will
