@@ -603,3 +603,57 @@ def test_backtracking_single_variable_multiple_backtracks():
     lra.assert_lit(4)
     is_sat, _ = lra.check()
     assert is_sat is True
+
+
+def test_backtracking_multiple_variables_multiple_backtracks():
+    # This test is for checking correctness over multiple backtracking
+    # for multiple variables, we need to constraint 6 to be True
+    enc = EncodedCNF()
+    cons = [
+        x <= 10,
+        x >= 0,
+        y >= 0,
+        x >= 5,
+        y >= 5,
+        x + y <= 4
+    ]
+
+    for con in cons:
+        enc.add_prop(con)
+    lra, _ = LRASolver.from_encoded_cnf(enc)
+
+    # Establish the base valid state (x in [0, 10], y>=0)
+    lra.assert_lit(1)
+    lra.assert_lit(2)
+    lra.assert_lit(3)
+    is_sat, _ = lra.check()
+    assert is_sat is True
+
+    # Now x >= 5 and y >= 5, x + y >= 10
+    lra.assert_lit(4)
+    lra.assert_lit(5)
+    is_sat, _ = lra.check()
+    assert is_sat is True
+
+    # x + y <= 4 is mathematically impossible when x>=5 and y>=5
+    res = lra.assert_lit(6)
+    if res is None:
+        is_sat, _ = lra.check()
+    else:
+        is_sat, _ = res
+    assert is_sat is False
+
+    # First backtrack: Pop the conflicting rule (Rule 6)
+    lra.backtrack()
+    is_sat, _ = lra.check()
+    assert is_sat is True
+
+    # Second and Third backtrack: pop the restrictive constraints
+    # This restores the domain to x >= 0, y >= 0
+    lra.backtrack()
+    lra.backtrack()
+
+    # x + y <= 4 is mathematically possible now
+    lra.assert_lit(6)
+    is_sat, _ = lra.check()
+    assert is_sat is True
