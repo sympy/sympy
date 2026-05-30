@@ -18,43 +18,28 @@ __all__ = ['KanesMethod']
 
 
 class KanesMethod(_Methods):
-    r"""Kane's method object.
+    r"""Kane's method for forming the equations of motion of a multibody
+    system.
 
     Explanation
     ===========
 
-    This object is used to do the "book-keeping" as you go through and form
-    equations of motion in the way Kane presents in:
-    Kane, T., Levinson, D. Dynamics Theory and Applications. 1985 McGraw-Hill
+    This class is used to do the bookkeeping as you form equations of motion in
+    method presented in [1]_.
 
-    The attributes are for equations in the form [M] udot = forcing.
+    Kane's dynamical differential equations are given as:
 
-    Attributes
-    ==========
+    .. math::
 
-    q, u : Matrix
-        Matrices of the generalized coordinates and speeds
-    bodies : iterable
-        Iterable of Particle and RigidBody objects in the system.
-    loads : iterable
-        Iterable of (Point, vector) or (ReferenceFrame, vector) tuples
-        describing the forces on the system.
-    auxiliary_eqs : Matrix
-        If applicable, the set of auxiliary Kane's
-        equations used to solve for non-contributing
-        forces.
-    mass_matrix : Matrix
-        The system's dynamics mass matrix: [k_d; k_dnh]
-    forcing : Matrix
-        The system's dynamics forcing vector: -[f_d; f_dnh]
-    mass_matrix_kin : Matrix
-        The "mass matrix" for kinematic differential equations: k_kqdot
-    forcing_kin : Matrix
-        The forcing vector for kinematic differential equations: -(k_ku*u + f_k)
-    mass_matrix_full : Matrix
-        The "mass matrix" for the u's and q's with dynamics and kinematics
-    forcing_full : Matrix
-        The "forcing vector" for the u's and q's with dynamics and kinematics
+       F_r + F_r^* = 0
+
+    For :math:`r = 1, ..., p` of :math:`p` independent generalized speeds.
+
+    These can be expressed in a linear form::
+
+    .. math::
+
+       \mathbf{M} \dot{\vec{u}} = \mathbf{F}
 
     Parameters
     ==========
@@ -106,39 +91,79 @@ class KanesMethod(_Methods):
         equations and returns the solution. The default utilizes LU solve. See
         the notes for more information.
 
+    Attributes
+    ==========
+
+    Specific to Kane's method:
+
+    mass_matrix_kin : Matrix
+        The "mass matrix" for kinematic differential equations: k_kqdot
+    forcing_kin : Matrix
+        The forcing vector for kinematic differential equations: -(k_ku*u + f_k)
+    auxiliary_eqs : Matrix
+        If applicable, the set of auxiliary Kane's
+        equations used to solve for non-contributing
+        forces.
+    bodylist : list
+        List of the particles and rigid bodies in the system.
+    forcelist : list
+        List of the forces and torques acting on the system.
+
+    Shared by all methods:
+
+    q : Matrix
+        Column matrix of the generalized coordinates.
+    u : Matrix
+        Column matrx of the generalized speeds.
+    bodies : iterable
+        Iterable of Particle and RigidBody objects in the system.
+    loads : iterable
+        Iterable of (Point, vector) or (ReferenceFrame, vector) tuples
+        describing the forces on the system.
+    mass_matrix : Matrix
+        The system's dynamics mass matrix: [k_d; k_dnh]
+    forcing : Matrix
+        The system's dynamics forcing vector: -[f_d; f_dnh]
+    mass_matrix_full : Matrix
+        The "mass matrix" for the u's and q's with dynamics and kinematics
+    forcing_full : Matrix
+        The "forcing vector" for the u's and q's with dynamics and kinematics
+
     Notes
     =====
 
-    The mass matrices and forcing vectors related to kinematic equations
-    are given in the explicit form by default. In other words, the kinematic
-    mass matrix is $\mathbf{k_{k\dot{q}}} = \mathbf{I}$.
-    In order to get the implicit form of those matrices/vectors, you can set the
-    ``explicit_kinematics`` attribute to ``False``. So $\mathbf{k_{k\dot{q}}}$
-    is not necessarily an identity matrix. This can provide more compact
-    equations for non-simple kinematics.
+    The mass matrices and forcing vectors related to kinematic equations are
+    given in the explicit form by default. In other words, the kinematic mass
+    matrix is :math:`\mathbf{k_{k\dot{q}}} = \mathbf{I}`. In order to get the
+    implicit form of those matrices/vectors, you can set the
+    ``explicit_kinematics`` attribute to ``False``. So
+    :math:`\mathbf{k_{k\dot{q}}}` is not necessarily an identity matrix. This
+    can provide more compact equations for non-simple kinematics.
 
     Two linear solvers can be supplied to ``KanesMethod``: one for solving the
     kinematic differential equations and one to solve the velocity constraints.
-    Both of these sets of equations can be expressed as a linear system ``Ax = rhs``,
-    which have to be solved in order to obtain the equations of motion.
+    Both of these sets of equations can be expressed as a linear system ``Ax =
+    rhs``, which have to be solved in order to obtain the equations of motion.
 
-    The default solver ``'LU'``, which stands for LU solve, results relatively low
-    number of operations. The weakness of this method is that it can result in zero
-    division errors.
+    The default solver ``'LU'``, which stands for LU solve, results relatively
+    low number of operations. The weakness of this method is that it can result
+    in zero division errors.
 
-    If zero divisions are encountered, a possible solver which may solve the problem
-    is ``"CRAMER"``. This method uses Cramer's rule to solve the system. This method
-    is slower and results in more operations than the default solver. However it only
-    uses a single division by default per entry of the solution.
+    If zero divisions are encountered, a possible solver which may solve the
+    problem is ``"CRAMER"``. This method uses Cramer's rule to solve the
+    system. This method is slower and results in more operations than the
+    default solver. However it only uses a single division by default per entry
+    of the solution.
 
     While a valid list of solvers can be found at
-    :meth:`sympy.matrices.matrixbase.MatrixBase.solve`, it is also possible to supply a
-    `callable`. This way it is possible to use a different solver routine. If the
-    kinematic differential equations are not too complex it can be worth it to simplify
-    the solution by using ``lambda A, b: simplify(Matrix.LUsolve(A, b))``. Another
-    option solver one may use is :func:`sympy.solvers.solveset.linsolve`. This can be
-    done using `lambda A, b: tuple(linsolve((A, b)))[0]`, where we select the first
-    solution as our system should have only one unique solution.
+    :py::meth:`~sympy.matrices.matrixbase.MatrixBase.solve`, it is also
+    possible to supply a `callable`. This way it is possible to use a different
+    solver routine. If the kinematic differential equations are not too complex
+    it can be worth it to simplify the solution by using ``lambda A, b:
+    simplify(Matrix.LUsolve(A, b))``. Another option solver one may use is
+    :func:`~sympy.solvers.solveset.linsolve`. This can be done using ``lambda
+    A, b: tuple(linsolve((A, b)))[0]``, where we select the first solution as
+    our system should have only one unique solution.
 
     Examples
     ========
@@ -204,16 +229,19 @@ class KanesMethod(_Methods):
     perform linearization and how to deal with dependent coordinates & speeds,
     and how do deal with bringing non-contributing forces into evidence.
 
-    """
+    References
+    ==========
 
+    .. [1] Kane, T., Levinson, D. Dynamics Theory and Applications. 1985
+       McGraw-Hill
+
+    """
     def __init__(self, frame, q_ind, u_ind, kd_eqs=None, q_dependent=None,
                  configuration_constraints=None, u_dependent=None,
                  velocity_constraints=None, acceleration_constraints=None,
                  u_auxiliary=None, bodies=None, forcelist=None,
                  explicit_kinematics=True, kd_eqs_solver='LU',
                  constraint_solver='LU'):
-
-        """Please read the online documentation. """
         if not q_ind:
             q_ind = [dynamicsymbols('dummy_q')]
             kd_eqs = [dynamicsymbols('dummy_kd')]
