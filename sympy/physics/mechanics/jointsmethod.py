@@ -230,6 +230,9 @@ class JointsMethod(Method):
                 bodylist.append(part)
         return bodylist
 
+    def _form_eoms(self):
+        self.form_eoms()
+
     def form_eoms(self, method=KanesMethod):
         """Method to form system's equation of motions.
 
