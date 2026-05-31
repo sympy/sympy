@@ -435,7 +435,7 @@ class MinMaxBase(Expr, LatticeOp):
         if not args:
             return args
         args = list(ordered(args))
-        if cls == Min:
+        if issubclass(cls, Min):
             other = Max
         else:
             other = Min
@@ -463,20 +463,20 @@ class MinMaxBase(Expr, LatticeOp):
             # there may be more than one numeric arg present since
             # local zeros have not been handled yet, so look through
             # more than the first arg
-            if cls == Min:
+            if issubclass(cls, Min):
                 for arg in args:
                     if not arg.is_number:
                         break
                     if (arg < small) == True:
                         small = arg
-            elif cls == Max:
+            elif issubclass(cls, Max):
                 for arg in args:
                     if not arg.is_number:
                         break
                     if (arg > big) == True:
                         big = arg
             T = None
-            if cls == Min:
+            if issubclass(cls, Min):
                 if small != Min.identity:
                     other = Max
                     T = small
@@ -588,7 +588,7 @@ class MinMaxBase(Expr, LatticeOp):
                     con = cls._is_connected(v, z)
                     if con:
                         is_newzero = False
-                        if con is True or con == cls:
+                        if con is True or issubclass(cls, con):
                             localzeros.remove(z)
                             localzeros.update([v])
             if is_newzero:
