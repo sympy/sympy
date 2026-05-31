@@ -95,6 +95,7 @@ def test_complete_simple_double_pendulum():
 
     with warns_deprecated_sympy():
         method = JointsMethod(C, J1, J2)
+    assert method.holonomic_constraints == Matrix()
     method.form_eoms()
 
     assert expand(method.mass_matrix_full) == Matrix([[1, 0, 0, 0],

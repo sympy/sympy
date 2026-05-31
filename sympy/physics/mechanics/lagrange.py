@@ -63,6 +63,9 @@ class LagrangesMethod(_Methods):
         Inertial reference frame for the system.
     coneqs : m + M
         Velocity constraints [time differentiated holonomic, nonholonomic].
+    lam_vec : Matrix, shape(m + M, 1)
+        Column matrix of functions of time representing the Lagrange
+        multipliers λ , one for each constraint in ``velocity_constraints``.
     lam_coeffs : Matrix, shape(m + M, n)
         Jacobian of the constraints, i.e. linear coefficients of the speeds in
         the velocity constraints.
@@ -83,15 +86,11 @@ class LagrangesMethod(_Methods):
         Column matrix of the n generalized coordinates.
     u : Matrix, shape(n, 1)
         Column matrix of the n generalized speeds: u = q'.
-    lam_vec : Matrix, shape(m + M, 1)
-        Column matrix of functions of time representing the Lagrange
-        multipliers λ , one for each constraint in ``velocity_constraints``.
-    configuration_contraints
-        Column matrix of shape(M, 1) of holonomic configuration constraint
-        residuals.
-    nonholonomic_constraints
+    holonomic_contraints : Matrix, shape(M, 1)
+        Column matrix of holonomic configuration constraint residuals.
+    nonholonomic_constraints : Matrix, shape(m, 1)
         Column matrix of shape(m, 1) of nonholonomic constraint residuals.
-    velocity_constraints
+    velocity_constraints : Matrix, shape(M + m, 1)
         Column matrix of shape(M + m, 1) velocity constraint residuals
         comprised of the time differentiated configruation constraints stacked
         on top of the nonholonomic constraints.
@@ -635,3 +634,9 @@ class LagrangesMethod(_Methods):
         """Inertial reference frame that the equations of motion were
         formulated with respect to."""
         return self.inertial
+
+    @property
+    def holonomic_constraints(self):
+        """Column matrix of shape(M, 1) of configuration constraint
+        residuals."""
+        return self._hol_coneqs

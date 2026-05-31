@@ -120,7 +120,9 @@ class KanesMethod(_Methods):
     q : Matrix
         Column matrix of the generalized coordinates.
     u : Matrix
-        Column matrx of the generalized speeds.
+        Column matrix of the generalized speeds.
+    holonomic_constraints : Matrix, shape(len(q_dependent), 1)
+        Column matrix of the holonomic constraint residuals.
     bodies : list
         List of Particle and RigidBody objects in the system.
     loads : list
@@ -938,3 +940,9 @@ class KanesMethod(_Methods):
         """Inertial reference frame that the equations of motion were
         formulated with respect to."""
         return self._inertial
+
+    @property
+    def holonomic_constraints(self):
+        """Column matrix of shape(M, 1) of configuration constraint
+        residuals."""
+        return self._f_h

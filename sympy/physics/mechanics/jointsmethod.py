@@ -27,8 +27,15 @@ class JointsMethod(_Methods):
     Attributes
     ==========
 
-    q, u : iterable
-        Iterable of the generalized coordinates and speeds
+    frame : ReferenceFrame
+        Inertial reference frame that the equations of motion were formulated
+        with respect to.
+    q : list
+        List of the generalized coordinates.
+    u : list
+        List of the generalized speeds.
+    holonomic_constraints : Matrix, shape(0, 0)
+        Column matrix of the holonomic constraint residuals.
     bodies : iterable
         Iterable of Body objects in the system.
     loads : iterable
@@ -102,9 +109,9 @@ class JointsMethod(_Methods):
             active_deprecations_target="deprecated-mechanics-jointsmethod"
         )
         if isinstance(newtonion, BodyBase):
-            self.frame = newtonion.frame
+            self._frame = newtonion.frame
         else:
-            self.frame = newtonion
+            self._frame = newtonion
 
         self._joints = joints
         self._bodies = self._generate_bodylist()
@@ -317,3 +324,14 @@ class JointsMethod(_Methods):
         """
 
         return self.method.rhs(inv_method=inv_method)
+
+    @property
+    def frame(self):
+        """Inertial reference frame that the equations of motion were
+        formulated with respect to."""
+        return self._frame
+
+    @property
+    def holonomic_constraints(self):
+        """JointsMethod does not support constraints."""
+        return Matrix()

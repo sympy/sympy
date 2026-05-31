@@ -179,6 +179,8 @@ def test_aux_dep():
         u_auxiliary=ua
         )
 
+    assert kane.holonomic_constraints == f_c
+
     # fr, frstar, frstar_steady and kdd(kinematic differential equations).
     (fr, frstar)= kane.kanes_equations(bodyList, forceList)
     frstar_steady = frstar.subs(ud_zero).subs(u_dep_dict).subs(steady_conditions)\

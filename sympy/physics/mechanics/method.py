@@ -83,15 +83,13 @@ class _Methods(ABC):
         tuple(ReferenceFrame, Vector) loads applied to multibody system."""
         pass
 
-    # KanesMethod: (init) configuration_constraints, (attr) _f_h
-    # LagrangesMethod: (init) hol_coneqs, (attr) _hol_coneqs
-    # JointsMethod: NA
+    # KanesMethod: (init) configuration_constraints, (attr) _f_h, holonomic_constraints
+    # LagrangesMethod: (init) hol_coneqs, (attr) _hol_coneqs, holonomic_constraints
+    # JointsMethod: (attr) holonomic_constraints
     # System: (attr) holonomic_constraints
-    # TODO : Either add configuration_constraints to System or
-    # holonomic_constrants to KanesMethod (or just have both redundant).
     @property
-    #@abstractmethod
-    def configuration_constraints(self):
+    @abstractmethod
+    def holonomic_constraints(self):
         """Column matrix of shape(M, 1) of configuration constraint residuals f
         where:
 

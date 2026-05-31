@@ -66,6 +66,7 @@ def test_disc_on_an_incline_plane():
     q = [y, theta]
     hol_coneqs = [y - R * theta]
     m = LagrangesMethod(L, q, hol_coneqs=hol_coneqs)
+    assert m.holonomic_constraints == Matrix(hol_coneqs)
     m.form_lagranges_equations()
     rhs = m.rhs()
     rhs.simplify()
@@ -109,6 +110,7 @@ def test_simp_pen():
     # The 'LagrangesMethod' class is invoked to obtain equations of motion.
     lm = LagrangesMethod(L, [q])
     assert lm.frame is None
+    assert lm.holonomic_constraints == Matrix()
     lm.form_lagranges_equations()
     RHS = lm.rhs()
     assert RHS[1] == -g*sin(q)/l
