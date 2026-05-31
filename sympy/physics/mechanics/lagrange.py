@@ -7,6 +7,7 @@ from sympy.physics.mechanics.functions import (
     find_dynamicsymbols, msubs, _f_list_parser, _validate_coordinates)
 from sympy.physics.mechanics.linearize import Linearizer
 from sympy.utilities.iterables import iterable
+from sympy.utilities.exceptions import sympy_deprecation_warning
 
 __all__ = ['LagrangesMethod']
 
@@ -69,6 +70,12 @@ class LagrangesMethod(_Methods):
         Second order ordinary differential equations in q. Includes constraint
         forces that are functions of the Lagrange multipliers λ if constraints
         are present.
+    forcelist : list
+        List of the forces and torques acting on the system.
+
+        .. deprecated:: 1.15
+
+           Use :py:attr:`~LagrangesMethod.loads` instead.
 
     Shared by all methods classes:
 
@@ -266,11 +273,11 @@ class LagrangesMethod(_Methods):
             self._term3 = zeros(n, 1)
 
         # Fourth term
-        if self.forcelist:
+        if self.loads:
             N = self.inertial
             self._term4 = zeros(n, 1)
             for i, qd in enumerate(qds):
-                flist = zip(*_f_list_parser(self.forcelist, N))
+                flist = zip(*_f_list_parser(self.loads, N))
                 self._term4[i] = sum(v.diff(qd, N).dot(f) for (v, f) in flist)
         else:
             self._term4 = zeros(n, 1)
@@ -596,7 +603,20 @@ class LagrangesMethod(_Methods):
         :py:class:`~sympy.physics.vector.vector.Vector`),
         tuple(:py:class:`~sympy.physics.vector.frame.ReferenceFrame`,
         :py:class:`~sympy.physics.vector.vector.Vector`) loads applied to
-        multibody system."""
+        multibody system.
+
+        .. deprecated:: 1.15
+
+           LagrangesMethod now uses consistent attribute names among all
+           methods classes. Use :py:attr:`~LagrangesMethod.loads` instead.
+
+        """
+        sympy_deprecation_warning(
+            ("'forcelist' is deprecated, use 'loads' instead. LagrangesMethod"
+             " now uses consistent attribute names among all methods classes."),
+            deprecated_since_version='1.15',
+            active_deprecations_target='deprecated-mechanics-bodyforcelist',
+        )
         return self._forcelist
 
     @property

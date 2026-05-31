@@ -12,6 +12,7 @@ from sympy.physics.mechanics.functions import (msubs, find_dynamicsymbols,
                                                _parse_linear_solver)
 from sympy.physics.mechanics.linearize import Linearizer
 from sympy.utilities.iterables import iterable
+from sympy.utilities.exceptions import sympy_deprecation_warning
 
 
 __all__ = ['KanesMethod']
@@ -106,8 +107,17 @@ class KanesMethod(_Methods):
         forces.
     bodylist : list
         List of the particles and rigid bodies in the system.
+
+        .. deprecated:: 1.15
+
+           Use :py:attr:`~KanesMethod.bodies` instead.
+
     forcelist : list
         List of the forces and torques acting on the system.
+
+        .. deprecated:: 1.15
+
+           Use :py:attr:`~KanesMethod.loads` instead.
 
     Shared by all methods:
 
@@ -115,11 +125,11 @@ class KanesMethod(_Methods):
         Column matrix of the generalized coordinates.
     u : Matrix
         Column matrx of the generalized speeds.
-    bodies : iterable
-        Iterable of Particle and RigidBody objects in the system.
-    loads : iterable
-        Iterable of (Point, vector) or (ReferenceFrame, vector) tuples
-        describing the forces on the system.
+    bodies : list
+        List of Particle and RigidBody objects in the system.
+    loads : list
+        List of (Point, vector) or (ReferenceFrame, vector) tuples describing
+        the forces on the system.
     mass_matrix : Matrix
         The system's dynamics mass matrix: [k_d; k_dnh]
     forcing : Matrix
@@ -768,7 +778,7 @@ class KanesMethod(_Methods):
         return (self._fr, self._frstar)
 
     def _form_eoms(self):
-        fr, frstar = self.kanes_equations(self.bodylist, self.forcelist)
+        fr, frstar = self.kanes_equations(self.bodies, self.loads)
         return fr + frstar
 
     def rhs(self, inv_method=None):
@@ -873,16 +883,56 @@ class KanesMethod(_Methods):
 
     @property
     def bodylist(self):
+        """List of particles and/or rigid bodies in the system.
+
+        .. deprecated:: 1.15
+
+           KanesMethod now uses consistent attribute names among all methods
+           classes. Use :py:attr:`~KanesMethod.bodies` instead.
+
+        """
+        sympy_deprecation_warning(
+            ("'bodylist' is deprecated, use 'bodies' instead. KanesMethod now"
+             " uses consistent attribute names among all methods classes."),
+            deprecated_since_version='1.15',
+            active_deprecations_target='deprecated-mechanics-bodyforcelist',
+        )
         return self._bodylist
 
     @property
     def forcelist(self):
+        """List of (Point, Vector) or (ReferenceFrame, Vector) tuples
+        representing forces and torques applied to the system.
+
+        .. deprecated:: 1.15
+
+           KanesMethod now uses consistent attribute names among all methods
+           classes. Use :py:attr:`~KanesMethod.loads` instead.
+
+        """
+        sympy_deprecation_warning(
+            ("'forcelist' is deprecated, use 'loads' instead. KanesMethod"
+             " now uses consistent attribute names among all methods classes."),
+            deprecated_since_version='1.15',
+            active_deprecations_target='deprecated-mechanics-bodyforcelist',
+        )
         return self._forcelist
 
     @property
     def bodies(self):
+        """List of :py:class:`~sympy.physics.mechanics.particle.Particle`,
+        :py:class:`~sympy.physics.mechanics.rigidbody.RigidBody`, or
+        :py:class:`~sympy.physics.mechanics.body.Body` objects that make up the
+        multibody system."""
         return self._bodylist
 
     @property
     def loads(self):
+        """List of :py:class:`~sympy.physics.mechanics.loads.Force`,
+        :py:class:`~sympy.physics.mechanics.loads.Torque`,
+        tuple(:py:class:`~sympy.physics.vector.point.Point`,
+        :py:class:`~sympy.physics.vector.vector.Vector`),
+        tuple(:py:class:`~sympy.physics.vector.frame.ReferenceFrame`,
+        :py:class:`~sympy.physics.vector.vector.Vector`) loads applied to
+        multibody system."""
         return self._forcelist

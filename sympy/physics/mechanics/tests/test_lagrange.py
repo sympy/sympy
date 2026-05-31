@@ -8,7 +8,7 @@ from sympy.core.symbol import symbols
 from sympy.functions.elementary.trigonometric import (cos, sin, tan)
 from sympy.matrices.dense import Matrix
 from sympy.simplify.simplify import simplify
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, warns_deprecated_sympy
 
 
 def test_invalid_coordinates():
@@ -141,6 +141,10 @@ def test_nonminimal_pendulum():
     # Check multiplier solution
     lam_sol = Matrix([(19.6*q1 + 2*q1d**2 + 2*q2d**2)/(4*q1**2/m + 4*q2**2/m)])
     assert simplify(LM.solve_multipliers(sol_type='Matrix')) == simplify(lam_sol)
+
+    assert LM.loads == [(P, m*g*N.x)]
+    with warns_deprecated_sympy():
+        assert LM.forcelist == [(P, m*g*N.x)]
 
 
 def test_dub_pen():

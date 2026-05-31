@@ -6,8 +6,7 @@ from sympy.simplify.simplify import simplify
 from sympy.physics.mechanics import (dynamicsymbols, ReferenceFrame, Point,
                                      RigidBody, KanesMethod, inertia, Particle,
                                      dot, find_dynamicsymbols)
-from sympy.testing.pytest import raises
-
+from sympy.testing.pytest import raises, warns_deprecated_sympy
 
 def test_invalid_coordinates():
     # Simple pendulum, but use symbols instead of dynamicsymbols
@@ -43,6 +42,10 @@ def test_one_dof():
 
     assert KM.bodies == BL
     assert KM.loads == FL
+    with warns_deprecated_sympy():
+        assert KM.bodylist == BL
+    with warns_deprecated_sympy():
+        assert KM.forcelist == FL
 
     MM = KM.mass_matrix
     forcing = KM.forcing

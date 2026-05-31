@@ -39,8 +39,8 @@ class _Methods(ABC):
     # LagrangesMethod: (init) NA, (attr) u
     # JointsMethod: (attr) u
     # System: (attr) u
-    # TODO : Lagranges should all u to be set to symbols and not simply return
-    # q'
+    # TODO : Lagranges should have the option to use defined symbols for u. It
+    # does not really put the equations in first order form now.
     @property
     @abstractmethod
     def u(self):
@@ -52,6 +52,7 @@ class _Methods(ABC):
     # LagrangesMethod: (attr) lam_vec
     # JointsMethod: NA
     # System: NA
+    # TODO : Add to all methods.
     # TODO : This is not a great name. Better is lam or lagrange_multipliers or
     # lambda or even l.
     #@property
@@ -60,7 +61,7 @@ class _Methods(ABC):
         """Column matrix of Lagrange multipliers."""
         pass
 
-    # KanesMethod: (init) bodies, (attr) bodies & bodylist, (kanes_equations) bodies
+    # KanesMethod: (init) bodies, (attr) bodies & bodylist [deprecated], (kanes_equations) bodies
     # LagrangesMethod: (init) bodies, (attr) bodies
     # JointsMethod: (attr) bodies
     # System: (attr) bodies
@@ -71,10 +72,9 @@ class _Methods(ABC):
         :py:class:`Body` objects that make up the multibody system."""
         pass
 
-    # KanesMethod: (init) forcelist, (attr) loads & forcelist, (kanes_equations) loads
-    # LagrangesMethod: (init) forcelist, (attr) loads & forcelist, does not
-    # include conservative forces
-    # JointsMethod: (attr) bodies
+    # KanesMethod: (init) forcelist, (attr) loads & forcelist [deprecated], (kanes_equations) loads
+    # LagrangesMethod: (init) forcelist, (attr) loads & forcelist [deprecated], does not include conservative forces
+    # JointsMethod: (attr) loads
     # System: (attr) loads
     @property
     @abstractmethod
