@@ -13,7 +13,7 @@ from sympy.physics.mechanics.joint import Joint
 from sympy.physics.mechanics.kane import KanesMethod
 from sympy.physics.mechanics.lagrange import LagrangesMethod
 from sympy.physics.mechanics.loads import _parse_load, gravity
-from sympy.physics.mechanics.method import _Methods
+from sympy.physics.mechanics.method import Method
 from sympy.physics.mechanics.particle import Particle
 from sympy.physics.vector import Point, ReferenceFrame, dynamicsymbols
 from sympy.utilities.iterables import iterable
@@ -33,7 +33,7 @@ def _reset_eom_method(method):
     return wrapper
 
 
-class System(_Methods):
+class System(Method):
     """Class to define a multibody system and form its equations of motion.
 
     Explanation

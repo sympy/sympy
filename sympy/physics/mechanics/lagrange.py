@@ -2,7 +2,7 @@ from __future__ import annotations
 from sympy import diff, zeros, Matrix, eye, sympify
 from sympy.core.sorting import default_sort_key
 from sympy.physics.vector import dynamicsymbols, ReferenceFrame
-from sympy.physics.mechanics.method import _Methods
+from sympy.physics.mechanics.method import Method
 from sympy.physics.mechanics.functions import (
     find_dynamicsymbols, msubs, _f_list_parser, _validate_coordinates)
 from sympy.physics.mechanics.linearize import Linearizer
@@ -12,7 +12,7 @@ from sympy.utilities.exceptions import sympy_deprecation_warning
 __all__ = ['LagrangesMethod']
 
 
-class LagrangesMethod(_Methods):
+class LagrangesMethod(Method):
     """Lagrange's method for forming the equations of motion of a multibody
     system.
 

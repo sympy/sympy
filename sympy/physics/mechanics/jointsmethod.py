@@ -2,14 +2,14 @@ from __future__ import annotations
 from sympy.physics.mechanics import (Body, Lagrangian, KanesMethod, LagrangesMethod,
                                     RigidBody, Particle)
 from sympy.physics.mechanics.body_base import BodyBase
-from sympy.physics.mechanics.method import _Methods
+from sympy.physics.mechanics.method import Method
 from sympy import Matrix
 from sympy.utilities.exceptions import sympy_deprecation_warning
 
 __all__ = ['JointsMethod']
 
 
-class JointsMethod(_Methods):
+class JointsMethod(Method):
     """Method for formulating the equations of motion using a set of interconnected bodies with joints.
 
     .. deprecated:: 1.13
