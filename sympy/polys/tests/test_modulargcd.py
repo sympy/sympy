@@ -2,6 +2,8 @@ from __future__ import annotations
 from sympy.polys.rings import ring
 from sympy.polys.domains import ZZ, QQ, AlgebraicField
 from sympy.polys.modulargcd import (
+    from_newt_to_poly,
+    incremental_newton_interp,
     modgcd_univariate,
     modgcd_bivariate,
     _chinese_remainder_reconstruction_multivariate,
@@ -9,7 +11,8 @@ from sympy.polys.modulargcd import (
     _to_ZZ_poly,
     _to_ANP_poly,
     func_field_modgcd,
-    _func_field_modgcd_m)
+    _func_field_modgcd_m,
+    skeleton_sorter)
 from sympy.functions.elementary.miscellaneous import sqrt
 
 
@@ -324,3 +327,48 @@ def test_modgcd_func_field():
     f, g = x + 1, x - 1
 
     assert _func_field_modgcd_m(f, g, minpoly) == R.one
+
+
+def test_incremental_newton_interp():
+    # Polynomial to dinterpolate: P(x) = 3x^3 - 2x^2 + 17x - 5
+    x = [0, 1, 2]
+    v = [96, 18, 7]
+    xk = 3
+    uk = 8
+    p = 101
+
+    assert incremental_newton_interp(x, v, xk, uk, p) == 3
+
+
+def test_from_newt_to_poly():
+    x = [0, 1, 2, 3]
+    v = [96, 18, 7, 3]
+    p = 101
+
+    assert from_newt_to_poly(x, v, p) == [96, 17, 99, 3]
+
+
+def test_skeleton_sorter():
+    R, x, y, z, w = ring("x, y, z, w", ZZ)
+    G = 4*x**3*y**2*w - 2*x**3*z**5*w**2 + 7*x*y*z*w
+    S, h = skeleton_sorter(G)
+
+    assert S == {
+        1: [[(1, 1, 1, 1), (0, 1), (1, 1), (2, 1)]],
+        3: [
+            [(3, 2, 0, 1), (0, 2), (2, 1)],
+            [(3, 0, 5, 2), (1, 5), (2, 2)]
+        ]
+    }
+    assert h == [[7], [4], [-2]]
+
+    R, x, y, z = ring("x, y, z", ZZ)
+    G = 5*x**2*y**2 + 7*x*y**5*z**3 + 8*x*z**4
+    S, h = skeleton_sorter(G)
+
+    assert S == {
+        2: [[(2, 2, 0), (0, 2)]],
+        1: [[(1, 5, 3), (0, 5), (1, 3)], [(1, 0, 4), (1, 4)]]
+    }
+    assert list(S.keys()) == [2, 1]
+    assert h == [[5], [7], [8]]

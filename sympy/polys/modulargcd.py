@@ -1,11 +1,13 @@
 from __future__ import annotations
+from collections import defaultdict
 from sympy.core.symbol import Dummy
 from sympy.external.mpmath import sqrt
 from sympy.ntheory import nextprime
 from sympy.ntheory.modular import crt
 from sympy.polys.domains import PolynomialRing
+from sympy.polys.domains.integerring import ZZ
 from sympy.polys.galoistools import (
-    gf_gcd, gf_from_dict, gf_gcdex, gf_div, gf_lcm)
+    gf_add, gf_gcd, gf_from_dict, gf_gcdex, gf_div, gf_lcm, gf_mul)
 from sympy.polys.polyerrors import ModularGCDFailed
 
 import random
@@ -2277,3 +2279,111 @@ def func_field_modgcd(f, g):
     h = h.quo_ground(h.LC)
 
     return h, f.quo(h), g.quo(h)
+
+
+def incremental_newton_interp(x, v, xk, uk, p):
+    """
+    Computes the next Newton interpolation coefficient v_k over Z_p.
+
+    Given a list of k evaluation points x = [x_0, ..., x_{k-1}] and the
+    corresponding coefficients v = [v_0, ..., v_{k-1}] of the Newton
+    interpolation polynomial P_{k-1}(x), this function calculates the new
+    coefficient v_k required to interpolate a new point (x_k, u_k).
+
+    References
+    ==========
+
+    1. [Geddes92] p. 186.
+
+    Examples
+    ========
+
+    >>> from sympy.polys.modulargcd import incremental_newton_interp
+    >>> x = [0, 1]
+    >>> v = [67, 47]
+    >>> xk = 2
+    >>> uk = 66
+    >>> p = 97
+    >>> v2 = incremental_newton_interp(x, v, xk, uk, p)
+    >>> v2
+    1
+
+    """
+    s = v[0]
+    c = 1
+    for i, el in enumerate(v[1:]):
+        c = (c * (xk - x[i])) % p
+        s = (s + el * c) % p
+    return ((uk - s) * pow(c * (xk - x[len(v) - 1]), -1, p)) % p
+
+
+def from_newt_to_poly(x, v, p):
+    """
+    Given k evaluation points x = [x_0, ..., x_{k-1}] and the
+    corresponding coefficients v = [v_0, ..., v_{k-1}] of the Newton
+    interpolation polynomial P_{k-1}(x), this function calculates explicitly
+    and returns the interpolation polynomial P_{k-1}(x) over Z_p.
+
+    References
+    ==========
+
+    1. [Geddes92] p. 186.
+
+    Examples
+    ========
+
+    >>> from sympy.polys.modulargcd import from_newt_to_poly
+    >>> x = [0, 1, 2]
+    >>> v = [67, 47, 1]
+    >>> p = 97
+    >>> from_newt_to_poly(x, v, p)
+    [67, 46, 1]
+
+    """
+    pol = [v[-1]]
+    for i in range(len(v) - 2, -1, -1):
+        binomial = [1, -x[i]]
+        pol = gf_mul(pol, binomial, p, ZZ)
+        pol = gf_add(pol, [v[i]], p, ZZ)
+
+    return pol[::-1]
+
+
+def skeleton_sorter(G):
+    """
+    Reorganizes the skeleton of a sparse polynomial for multivariate interpolation.
+
+    This function extracts the monomials of a sparse polynomial.
+    It groups the monomials by the degree of the first variable,
+    sorts these groups by the number of monomials they contain
+    (in ascending order), and builds a compact representation of the non-zero
+    degrees for the remaining variables, useful to evaluate quickly the monomials.
+
+    It also saves the coefficients of each monomial in a list of lists.
+
+    Examples
+    ========
+
+    If we take the sparse polynomial G = 5*x**2*y**2 + 7*x*y**5*z**3 + 8*x*z**4
+    in ZZ[x, y, z], skeleton_sorter(G) returns the following ouputs:
+
+    S = {
+        2: [[(2, 2, 0), (0, 2)]],
+        1: [[(1, 5, 3), (0, 5), (1, 3)], [(1, 0, 4), (1, 4)]]
+    }
+
+    h = [[5], [7], [8]]
+
+    """
+    S = defaultdict(list)
+    for mon, _ in G.items():
+        S[mon[0]].append([mon])
+    S = {deg: S[deg] for deg in sorted(S.keys(), key=lambda x: len(S[x]))}
+    h = []
+    for _, mons in S.items():
+        for mon in mons:
+            h.append([G[mon[0]]])
+            for i, el in enumerate(mon[0][1:]):
+                if el != 0:
+                    mon.append((i, el))
+    return S, h
