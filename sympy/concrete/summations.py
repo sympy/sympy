@@ -1064,6 +1064,31 @@ def eval_sum(f, limits):
                     return None
                 newargs.append((newexpr, arg.cond))
             return f.func(*newargs)
+        # Piecewise conditions depend on the dummy summation variable
+        # This logic is only possible if the summation is well defined for all values
+        # of the dummy variable
+        elif f.args[-1].cond is S.true:
+            try:
+                from sympy.solvers.solveset import solveset
+                total = S.Zero
+                for expr_i, cond_i in f.args:
+                    if expr_i.is_zero:
+                        continue
+                    if cond_i is S.true:
+                        a_i, b_i = a, b
+                    else:
+                        cond_set = solveset(cond_i, i, S.Reals)
+                        a_i = a if cond_set.inf <= a else cond_set.inf
+                        b_i = b if cond_set.sup >= b else cond_set.sup
+                    if b_i < a_i:
+                        continue
+                    val = eval_sum(expr_i, (i, a_i, b_i))
+                    if val is None:
+                        raise NotImplementedError
+                    total += val
+                return total
+            except Exception:
+                pass
 
     if f.has(KroneckerDelta):
         from .delta import deltasummation, _has_simple_delta
