@@ -305,6 +305,6 @@ def test_conditional():
 def test_product_spaces():
     X1 = Geometric('X1', S.Half)
     X2 = Geometric('X2', Rational(1, 3))
-    assert P(X1 + X2 < 3) == S(1/6)
-    assert P(X1 + X2 > 3) == S(23/26)
+    assert P(X1 + X2 < 3) == Rational(1, 6)
+    assert P(X1 + X2 > 3) == Rational(23, 36)
     assert P(Eq(X1 + X2, 3)) == Rational(1, 12)
