@@ -108,6 +108,7 @@ def test_simp_pen():
 
     # The 'LagrangesMethod' class is invoked to obtain equations of motion.
     lm = LagrangesMethod(L, [q])
+    assert lm.frame is None
     lm.form_lagranges_equations()
     RHS = lm.rhs()
     assert RHS[1] == -g*sin(q)/l
@@ -132,6 +133,7 @@ def test_nonminimal_pendulum():
     Lag = Lagrangian(N, pP)
     LM = LagrangesMethod(Lag, [q1, q2], hol_coneqs=f_c,
             forcelist=[(P, m*g*N.x)], frame=N)
+    assert LM.frame == N
     LM.form_lagranges_equations()
     # Check solution
     lam1 = LM.lam_vec[0, 0]

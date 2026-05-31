@@ -36,7 +36,7 @@ class KanesMethod(_Methods):
 
     For :math:`r = 1, ..., p` of :math:`p` independent generalized speeds.
 
-    These can be expressed in a linear form::
+    These can be expressed in a matrix for with the linear mass matrix exposed:
 
     .. math::
 
@@ -106,21 +106,17 @@ class KanesMethod(_Methods):
         equations used to solve for non-contributing
         forces.
     bodylist : list
-        List of the particles and rigid bodies in the system.
-
-        .. deprecated:: 1.15
-
-           Use :py:attr:`~KanesMethod.bodies` instead.
-
+        List of the particles and rigid bodies in the system. Deprecated: use
+        :py:attr:`~KanesMethod.bodies` instead.
     forcelist : list
-        List of the forces and torques acting on the system.
-
-        .. deprecated:: 1.15
-
-           Use :py:attr:`~KanesMethod.loads` instead.
+        List of the forces and torques acting on the system. Deprecated: use
+        :py:attr:`~KanesMethod.loads` instead.
 
     Shared by all methods:
 
+    frame : ReferenceFrame
+        Inertial reference frame that the equations of motion were formulated
+        with respect to.
     q : Matrix
         Column matrix of the generalized coordinates.
     u : Matrix
@@ -936,3 +932,9 @@ class KanesMethod(_Methods):
         :py:class:`~sympy.physics.vector.vector.Vector`) loads applied to
         multibody system."""
         return self._forcelist
+
+    @property
+    def frame(self):
+        """Inertial reference frame that the equations of motion were
+        formulated with respect to."""
+        return self._inertial

@@ -12,16 +12,16 @@ class _Methods(ABC):
 
 
     """
-
     # System: (init, attr) frame
-    # KanesMethod: (init) frame, (attr) _inertial
-    # LagrangesMethod: (init) frame, (attr) inertial
+    # KanesMethod: (init) frame, (attr) _inertial & frame
+    # LagrangesMethod: (init) frame, (attr) inertial & frame
     # JointsMethod: (init) newtonian, (attr) frame
-    #@property
-    #@abstractmethod
+    # TODO : Deprecate LagrangesMethod.inertial
+    @property
+    @abstractmethod
     def frame(self):
         """Inertial reference frame that the equations of motion were
-        formluated with respect to."""
+        formulated with respect to."""
         pass
 
     # KanesMethod: (init) q_ind & q_dependent, (attr) q
@@ -123,19 +123,20 @@ class _Methods(ABC):
     # LagrangesMethod: (init) hol_coneqs & nonhol_eqs, (attr) coneqs
     # JointsMethod: NA
     # System: (attr) velocity_constraints
-    # TODO : Add velocity_constraints to LagrangesMethod
+    # TODO : Add velocity_constraints to LagrangesMethod and KanesMethod.
     @property
     #@abstractmethod
     def velocity_constraints(self):
         """Column matrix of shape(m + M, 1) motion constraint residuals f
-        where:
+        where::
 
-        f(q', q, t) = [fh'(q', q, t)] = 0
-                      [fn(q', q, t) ]
-        or
+            f(q', q, t) = [fh'(q', q, t)] = 0
+                          [fn(q', q, t) ]
 
-        f(u, q, t) = [fh'(u, q, t)] = 0
-                     [fn(u, q, t) ]
+        or::
+
+            f(u, q, t) = [fh'(u, q, t)] = 0
+                         [fn(u, q, t) ]
 
         This includes the time differentiated configuration constraints.
 

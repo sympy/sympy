@@ -71,14 +71,14 @@ class LagrangesMethod(_Methods):
         forces that are functions of the Lagrange multipliers λ if constraints
         are present.
     forcelist : list
-        List of the forces and torques acting on the system.
-
-        .. deprecated:: 1.15
-
-           Use :py:attr:`~LagrangesMethod.loads` instead.
+        List of the forces and torques acting on the system. Deprecated: use
+        :py:attr:`~LagrangesMethod.loads` instead.
 
     Shared by all methods classes:
 
+    frame : ReferenceFrame
+        Inertial reference frame that the equations of motion were formulated
+        with respect to.
     q : Matrix, shape(n, 1)
         Column matrix of the n generalized coordinates.
     u : Matrix, shape(n, 1)
@@ -629,3 +629,9 @@ class LagrangesMethod(_Methods):
         :py:class:`~sympy.physics.vector.vector.Vector`) loads applied to
         multibody system."""
         return self._forcelist
+
+    @property
+    def frame(self):
+        """Inertial reference frame that the equations of motion were
+        formulated with respect to."""
+        return self.inertial

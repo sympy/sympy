@@ -40,6 +40,7 @@ def test_one_dof():
     KM = KanesMethod(N, [q], [u], kd)
     KM.kanes_equations(BL, FL)
 
+    assert KM.frame == N
     assert KM.bodies == BL
     assert KM.loads == FL
     with warns_deprecated_sympy():
