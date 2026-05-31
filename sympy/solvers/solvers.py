@@ -3010,6 +3010,8 @@ def nsolve(*args, dict=False, **kwargs):
     0.46792545969349058
 
     """
+    # adding user_lambdify based on the issue 27799
+    user_lambdify = kwargs.pop("lambdify", lambdify)
     # there are several other SymPy functions that use method= so
     # guard against that here
     if 'method' in kwargs:
@@ -3077,7 +3079,7 @@ def nsolve(*args, dict=False, **kwargs):
         # the function is better behaved when the denominator is present
         # e.g., issue 11768
 
-        f = lambdify(fargs, f, modules)
+        f = user_lambdify(fargs, f, modules)
         x = sympify(findroot(f, x0, **kwargs))
         if as_dict:
             return [{fargs: x}]
@@ -3096,8 +3098,8 @@ def nsolve(*args, dict=False, **kwargs):
         print('J(x):')
         print(J)
     # create functions
-    f = lambdify(fargs, f.T, modules)
-    J = lambdify(fargs, J, modules)
+    f = user_lambdify(fargs, f.T, modules)
+    J = user_lambdify(fargs, J, modules)
     # solve the system numerically
     x = findroot(f, x0, J=J, **kwargs)
     if as_dict:
