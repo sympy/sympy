@@ -2324,6 +2324,10 @@ def test_latex_greek_functions():
     assert latex(c(x)) == r'\chi{\left(x \right)}'
     assert latex(c) == r'\chi'
 
+    # make sure arguments to beta function are rendered as latex
+    alpha_, beta_ = symbols("alpha beta")
+    assert r'\operatorname{B}\left(\alpha, \beta\right)' == latex(beta(alpha_, beta_))
+
 
 def test_translate():
     s = 'Alpha'

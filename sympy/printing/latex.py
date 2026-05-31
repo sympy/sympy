@@ -1258,7 +1258,7 @@ class LatexPrinter(Printer):
         x = expr.args[0]
         # Deal with unevaluated single argument beta
         y = expr.args[0] if len(expr.args) == 1 else expr.args[1]
-        tex = rf"\left({x}, {y}\right)"
+        tex = r"\left(%s, %s\right)" % (self._print(x), self._print(y))
 
         if exp is not None:
             return r"\operatorname{B}^{%s}%s" % (exp, tex)
