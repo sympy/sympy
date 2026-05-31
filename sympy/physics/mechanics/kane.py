@@ -134,8 +134,11 @@ class KanesMethod(_Methods):
     nonholonomic_constraints : Matrix, shape(len(u_dependent), 1)
         Column matrix of the nonholonomic constraint residuals.
     velocity_constraints : Matrix, shape(len(q_dependent) + len(u_dependent), 1)
-        Columan matrix of the time differentiated holonomic constraint
+        Column matrix of the time differentiated holonomic constraint
         residuals stacked on top of the nonholonomic constraint residuals.
+    acceleration_constraints : Matrix, shape(len(q_dependent) + len(u_dependent), 1)
+        Column matrix of the time differentiated velocity constraints or user
+        supplied.
     bodies : list
         List of Particle and RigidBody objects in the system.
     loads : list
@@ -387,10 +390,12 @@ class KanesMethod(_Methods):
                     _f_dnh = msubs(_f_dnh, self._qdot_u_map)
                 self._f_dnh = _f_dnh
                 self._k_dnh = self._k_nh
+                self._acceleration_constraints = (self._k_dnh*self._udot +
+                                                  self._f_dnh)
             else:
                 if self._qdot_u_map is not None:
                     acc = msubs(acc, self._qdot_u_map)
-
+                self._acceleration_constraints = acc
                 self._k_dnh, f_dnh_neg = linear_eq_to_matrix(acc, self._udot[:])
                 self._f_dnh = -f_dnh_neg
             # Form of non-holonomic constraints is B*u + C = 0.
@@ -997,3 +1002,8 @@ class KanesMethod(_Methods):
         holonomic constraint residules stacked on top of the nonholonomic
         constraint residuals."""
         return self._velocity_constraints
+
+    @property
+    def acceleration_constraints(self):
+        """Column matrix of acceleration constraint residuals."""
+        return self._acceleration_constraints

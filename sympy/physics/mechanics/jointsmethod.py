@@ -345,3 +345,8 @@ class JointsMethod(_Methods):
     def velocity_constraints(self):
         """JointsMethod does not support constraints."""
         return Matrix()
+
+    @property
+    def acceleration_constraints(self):
+        """JointsMethod does not support constraints."""
+        return Matrix()

@@ -94,9 +94,9 @@ class LagrangesMethod(_Methods):
         Column matrix of shape(M + m, 1) velocity constraint residuals
         comprised of the time differentiated configruation constraints stacked
         on top of the nonholonomic constraints.
-    acceleration_constraints
-        Column matrix of shape(M + m, 1) acceleration constraint residuals
-        which are the time differentiated velocity constraints.
+    acceleration_constraints : Matrix, shape(M + m, 1)
+        Column matrix acceleration constraint residuals which are the time
+        differentiated velocity constraints.
     loads : list
         List of (Point, vector) or (ReferenceFrame, vector) tuples or,
         similarily, Force or Torque objects describing the nonconservative
@@ -576,6 +576,11 @@ class LagrangesMethod(_Methods):
         of the M time differentiated holonomic constraints stacked on the m
         nonholonomic constraints."""
         return self.coneqs
+
+    @property
+    def acceleration_constraints(self):
+        """Column matrix of acceleration constraint residuals."""
+        return self.velocity_constraints.diff(dynamicsymbols._t)
 
     def constraints_jacobian(self):
         """Jacobian of the constraints. A matrix of shape(M + m, n) which are

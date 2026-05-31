@@ -141,13 +141,12 @@ class _Methods(ABC):
         """
         pass
 
-    # KanesMethod: (init) acceleration_constraints, (attr) _f_dnh, _k_dnh
-    # LagrangesMethod: (attr) _m_cd, _f_cd
-    # JointsMethod: NA
-    # System: NA
-    # TODO : Add acceleration_constraints to LagrangesMethod and System.
+    # KanesMethod: (init) acceleration_constraints, (attr) _f_dnh, _k_dnh, acceleration_constraints
+    # LagrangesMethod: (attr) _m_cd, _f_cd, acceleration_constraints
+    # JointsMethod: (attr) acceleration_constraints
+    # System: (attr) acceleration_constraints
     @property
-    #@abstractmethod
+    @abstractmethod
     def acceleration_constraints(self):
         """Column matrix of shape(m, 1) or shape(m + M, 1) acceleration
         constraint residuals f where:

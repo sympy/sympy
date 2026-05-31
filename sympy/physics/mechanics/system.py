@@ -96,6 +96,8 @@ class System(_Methods):
         Matrix with the velocity constraints as expressions equated to the zero
         matrix. These are by default derived as the time derivatives of the
         holonomic constraints extended with the nonholonomic constraints.
+    acceleration_constraints : ImmutableMatrix
+        Matrix of the time differentiated velocity constraints.
     eom_method : subclass of KanesMethod or LagrangesMethod
         Backend for forming the equations of motion.
 
@@ -473,6 +475,11 @@ class System(_Methods):
             return self.holonomic_constraints.diff(dynamicsymbols._t).col_join(
                 self.nonholonomic_constraints)
         return self._vel_constrs
+
+    @property
+    def acceleration_constraints(self):
+        """Column matrix of acceleration constraint residuals."""
+        return self.velocity_constraints.diff(dynamicsymbols._t)
 
     @velocity_constraints.setter
     @_reset_eom_method
