@@ -162,7 +162,7 @@ class _Methods(ABC):
 
     # KanesMethod: (attr) mass_matrix
     # LagrangesMethod: (attr) mass_matrix, but can also be [Md C.T]
-    # JointsMethod: NA
+    # JointsMethod: (attr) returns the *Method's method
     # System: (attr) returns the *Method's method
     # TODO : Deprecate the augmented form in LagrangesMethod
     @property
@@ -182,7 +182,7 @@ class _Methods(ABC):
 
     # KanesMethod: (attr) forcing
     # LagrangesMethod: (attr) forcing
-    # JointsMethod: (attr) forcing
+    # JointsMethod: (attr) returns the *Method's method
     # System: (attr) returns the *Method's method
     @property
     @abstractmethod
@@ -203,7 +203,7 @@ class _Methods(ABC):
     # KanesMethod: (attr) mass_matrix_full
     # LagrangesMethod: (attr) mass_matrix_full, same as Kane's except if there
     # are constraints, then is gives the fully augmented form
-    # JointsMethod: (attr) mass_matrix_full
+    # JointsMethod: (attr) returns the *Method's method
     # System: (attr) returns the *Method's method
     # TODO : Deprecate the augmented form in LagrangesMethod
     @property
@@ -226,7 +226,7 @@ class _Methods(ABC):
     # KanesMethod: (attr) forcing_full
     # LagrangesMethod: (attr) forcing_full, same as Kane's except if there
     # are constraints, then is gives the fully augmented form
-    # JointsMethod: (attr) forcing_full
+    # JointsMethod: (attr) returns the *Method's method
     # System: (attr) returns the *Method's method
     # TODO : Deprecate the augmented form in LagrangesMethod
     @property
@@ -246,7 +246,7 @@ class _Methods(ABC):
 
     @property
     #@abstractmethod
-    def mass_matrix_aug(self):
+    def _mass_matrix_aug(self):
         """Returns the mass matrix augmented when Lagrange multipliers and/or
         noncontributing forces are included in the system.
 
@@ -268,7 +268,7 @@ class _Methods(ABC):
 
     @property
     #@abstractmethod
-    def forcing_aug(self):
+    def _forcing_aug(self):
         """Returns the augmented forcing vector when Lagrange multipliers
         and/or noncontributing forces are included in the system.
 
