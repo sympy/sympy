@@ -97,9 +97,6 @@ class LagrangesMethod(_Methods):
     acceleration_constraints
         Column matrix of shape(M + m, 1) acceleration constraint residuals
         which are the time differentiated velocity constraints.
-    constraints_jacobian
-        Returns a shape(M + m, n) linear coefficient matrix with respect to q',
-        extracted from the velocity constraints.
     loads : list
         List of (Point, vector) or (ReferenceFrame, vector) tuples or,
         similarily, Force or Torque objects describing the nonconservative
@@ -580,7 +577,6 @@ class LagrangesMethod(_Methods):
         nonholonomic constraints."""
         return self.coneqs
 
-    @property
     def constraints_jacobian(self):
         """Jacobian of the constraints. A matrix of shape(M + m, n) which are
         equivalently the linear coefficients of q' in the velocity constraints

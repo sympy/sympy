@@ -1,5 +1,7 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
+from sympy import linear_eq_to_matrix
+
 
 class _Methods(ABC):
     """Abstract Base Class for all methods for forming the equations of motion
@@ -159,26 +161,6 @@ class _Methods(ABC):
         """
         pass
 
-    # KanesMethod: NA
-    # LagrangesMethod: (attr) -lam_coeffs
-    # JointsMethod: NA
-    # System: NA
-    # TODO : Add constraints_jacobian to KanesMethod and System.
-    @property
-    #@abstractmethod
-    def constraints_jacobian(self):
-        """Returns a shape(M + m, n) coefficient matrix for the motion level
-        constraints.
-
-        C in C*q' + f(q, t) = 0
-
-        or
-
-        C in C*u + f(q, t) = 0
-
-        """
-        pass
-
     # KanesMethod: (attr) mass_matrix
     # LagrangesMethod: (attr) mass_matrix, but can also be [Md C.T]
     # JointsMethod: NA
@@ -298,6 +280,24 @@ class _Methods(ABC):
                [lam]
         """
         pass
+
+    # KanesMethod: NA
+    # LagrangesMethod: (attr) -lam_coeffs
+    # JointsMethod: NA
+    # System: NA
+    def constraints_jacobian(self):
+        """Returns a shape(M + m, n) coefficient matrix for the motion level
+        constraints.
+
+        C in C*q' + f(q, t) = 0
+
+        or
+
+        C in C*u + f(q, t) = 0
+
+        """
+        C, _ = linear_eq_to_matrix(self.velocity_constraints, self.u[:])
+        return C
 
     def rhs(self, inv_method=None, **kwargs):
         """Returns equations that can be solved numerically.
