@@ -67,6 +67,7 @@ def test_disc_on_an_incline_plane():
     hol_coneqs = [y - R * theta]
     m = LagrangesMethod(L, q, hol_coneqs=hol_coneqs)
     assert m.holonomic_constraints == Matrix(hol_coneqs)
+    assert m.velocity_constraints == Matrix(hol_coneqs).diff(dynamicsymbols._t)
     m.form_lagranges_equations()
     rhs = m.rhs()
     rhs.simplify()
@@ -242,6 +243,7 @@ def test_rolling_disc():
     q2 = Function('q2')
     q3 = Function('q3')
     l = LagrangesMethod(Lag, q)
+    assert l.nonholonomic_constraints == Matrix()
     l.form_lagranges_equations()
     RHS = l.rhs()
     RHS.simplify()
@@ -254,3 +256,17 @@ def test_rolling_disc():
     assert RHS[5] == (-5*cos(q2(t))*Derivative(q1(t), t) + 6*tan(q2(t)
         )*Derivative(q3(t), t) + 4*Derivative(q1(t), t)/cos(q2(t))
         )*Derivative(q2(t), t)
+
+    # This test never added the nonholonmic constraints. Below the constraints
+    # are tested.
+    contact_point_vel = C.vel(N) + R.ang_vel_in(N).cross(-r*L.z)
+    nonholonomic = [contact_point_vel.dot(Y.x), contact_point_vel.dot(Y.y)]
+    l = LagrangesMethod(Lag, q, nonhol_coneqs=nonholonomic)
+    assert l.nonholonomic_constraints == Matrix(nonholonomic)
+    assert l.velocity_constraints == Matrix(nonholonomic)
+    l.form_lagranges_equations()
+    assert l.mass_matrix.shape == (3, 5)
+    assert l.mass_matrix == Matrix([
+        [3*m*r**2*sin(q2(t))**2/2 + m*r**2*cos(q2(t))**2/4,          0, 3*m*r**2*sin(q2(t))/2, r*sin(q2(t)),             0],
+        [                                                0, 5*m*r**2/4,                     0,            0, -r*cos(q2(t))],
+        [                            3*m*r**2*sin(q2(t))/2,          0,            3*m*r**2/2,            r,             0]])

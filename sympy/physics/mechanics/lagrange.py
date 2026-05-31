@@ -229,6 +229,7 @@ class LagrangesMethod(_Methods):
             nonhol_coneqs,
         ])
         self._hol_coneqs = hol_coneqs
+        self._nonhol_coneqs = nonhol_coneqs
 
     def form_lagranges_equations(self):
         """Method to form Lagrange's equations of motion.
@@ -637,6 +638,17 @@ class LagrangesMethod(_Methods):
 
     @property
     def holonomic_constraints(self):
-        """Column matrix of shape(M, 1) of configuration constraint
-        residuals."""
+        """Column matrix holonomic configuration constraint residuals."""
         return self._hol_coneqs
+
+    @property
+    def nonholonomic_constraints(self):
+        """Column matrix of nonholonomic constraint residuals."""
+        return self._nonhol_coneqs
+
+    @property
+    def velocity_constraints(self):
+        """Column matrix of velocity constraint residuals. Time differentiated
+        holonomic constraint residules stacked on top of the nonholonomic
+        constraint residuals."""
+        return self.coneqs
