@@ -9,11 +9,51 @@ class Method(ABC):
     """Abstract Base Class for all methods for forming the equations of motion
     of multiody systems.
 
-    Minimal coordinate equations of motion take this first order form:
+    Minimal coordinate equations of motion take this form as first order
+    ordinary differential equations.
 
-    N(q, t) q' = G(u, q, t)
-    M(q, t) u' = F(u, q, t)
+    Kinematical differential equations:
 
+    .. code:: raw
+
+        Mk(q, t) q' = Fk(u, q, t)
+
+    Dynamical differential equations:
+
+    .. code:: raw
+
+        Md(q, t) u' = Fd(u, q, t)
+
+    Combined they take this full form:
+
+    .. code:: raw
+
+        M = [Mk 0] [q'] = [Fk] = F
+            [0 Md] [u']   [Fd]
+
+    If there are additional holonomic or nonholonomic constraints, these
+    equations can be augmented with the Lagrange multipliers:
+
+    .. code:: raw
+
+        M = [Mk 0  0  ] [q'] = [Fk] = F
+            [0  Md MjT] [u']   [Fd]
+            [0  Mj 0  ] [j']   [Fj]
+
+    where ``Mj`` is the "Jacobian of the constraints" and ``MjT`` is its
+    transpose. ``j'=lambda`` are the Lagrange multipliers representing the the
+    constraint forces and then ``j`` are generalized impulses of these forces.
+
+    The equations of motion can also be augmented to reveal any noncontributing
+    force and take this form:
+
+    .. code:: raw
+
+        M = [Mk 0  0] [q'] = [Fk] = F
+            [0  Md 0] [u']   [Fd]
+            [0  Mj I] [j']   [Fj]
+
+    With ``j'`` being the measure number of a noncontributing force.
 
     """
     # System: (init, attr) frame
@@ -56,12 +96,12 @@ class Method(ABC):
     # LagrangesMethod: (attr) lam_vec
     # JointsMethod: NA
     # System: NA
-    # TODO : Add to all methods.
+    # TODO : Add to all methods or only have on Lagrange/TMT?
     # TODO : This is not a great name. Better is lam or lagrange_multipliers or
     # lambda or even l.
     #@property
     #@abstractmethod
-    def lam_vec(self):
+    def _lam_vec(self):
         """Column matrix of Lagrange multipliers."""
         pass
 
@@ -94,10 +134,12 @@ class Method(ABC):
     @property
     @abstractmethod
     def holonomic_constraints(self):
-        """Column matrix of shape(M, 1) of configuration constraint residuals f
-        where:
+        """M x 1 column matrix of holonomic configuration constraint residual
+        expressions ``fh`` where:
 
-        f(q, t) = 0
+        .. code:: raw
+
+            fh(q, t) = 0
 
         """
         pass
@@ -109,13 +151,12 @@ class Method(ABC):
     @property
     @abstractmethod
     def nonholonomic_constraints(self):
-        """Column matrix of shape(m, 1) nonholonomic residuals f where:
+        """m x 1 column matrix of nonholonomic residual expressions ``fn``
+        where:
 
-        f(q', q, t) = 0
+        .. code:: raw
 
-        or
-
-        f(u, q, t) = 0
+            fn(q', q, t) = fn(u, q, t) = 0
 
         """
         pass
@@ -127,18 +168,16 @@ class Method(ABC):
     @property
     @abstractmethod
     def velocity_constraints(self):
-        """Column matrix of shape(m + M, 1) motion constraint residuals f
-        where::
+        """m + M x 1 column matrix of motion/velocity constraint residual
+        expressions ``fv`` where:
 
-            f(q', q, t) = [fh'(q', q, t)] = 0
-                          [fn(q', q, t) ]
+        .. code:: raw
 
-        or::
+            fv(q', q, t) = [fh'(q', q, t)] = fv(u, q, t) = [fh'(u, q, t)] = 0
+                           [fn(q', q, t) ]                 [fn(u, q, t) ]
 
-            f(u, q, t) = [fh'(u, q, t)] = 0
-                         [fn(u, q, t) ]
-
-        This includes the time differentiated configuration constraints.
+        The time differentiated holonomic configuration constraints should be
+        stacked on top of the nonholonomic constraints.
 
         """
         pass
@@ -150,14 +189,16 @@ class Method(ABC):
     @property
     @abstractmethod
     def acceleration_constraints(self):
-        """Column matrix of shape(m, 1) or shape(m + M, 1) acceleration
-        constraint residuals f where:
+        """m + M x 1 column matrix of acceleration constraint residual
+        expressions ``fa`` where:
 
-        f(q'', q', q, t) = 0
+        .. code:: raw
 
-        or
+            fv' = fa(q'', q', q, t) = fa(u', u, q, t) = 0
 
-        f(u', u, q, t) = 0
+        The twice time differentiated holonomic configuration constraints
+        should be stacked on top of time differentieated nonholonomic
+        constraints.
 
         """
         pass
@@ -170,14 +211,12 @@ class Method(ABC):
     @property
     @abstractmethod
     def mass_matrix(self):
-        """Linear coefficient matrix for the second time derivative of the
-        coordiantes or the first time derivative of the speeds.
+        """Linear coefficient matrix ``Md`` for the second time derivative of
+        the coordinates or the first time derivative of the speeds:
 
-        M in M*q'' = F
+        .. code:: raw
 
-        or
-
-        M in M*u' = F
+            Md q'' = Md u' = Fd
 
         """
         pass
@@ -189,14 +228,12 @@ class Method(ABC):
     @property
     @abstractmethod
     def forcing(self):
-        """Terms that are not linear in the the second time derivative of the
-        coordiantes or the first time derivative of the speeds.
+        """Nonlinear forcing terms ``Fd`` in the dynamical differential
+        equations:
 
-        F in M*q'' = F
+        .. code:: raw
 
-        or
-
-        F in M*u' = F
+            Md q'' = Md u' = Fd
 
         """
         pass
@@ -211,16 +248,13 @@ class Method(ABC):
     @property
     @abstractmethod
     def mass_matrix_full(self):
-        """Linear coefficient matrix for the first order form.
+        """Linear coefficient matrix ``M`` for the full first order form of the
+        equations of motion:
 
-        M in M*[q' ] = F
-               [q'']
+        .. code:: raw
 
-        or
-
-        M in M*[q'] = F
-               [u']
-
+            M [q' ] = M [q'] =  F
+              [q'']     [u']
 
         """
         pass
@@ -234,15 +268,14 @@ class Method(ABC):
     @property
     @abstractmethod
     def forcing_full(self):
-        """Linear coefficient matrix for the first order form.
+        """Nonlinear forcing terms ``F`` in the full first order form of the
+        equations of motion:
 
-        M in M*[q' ] = F
-               [q'']
+        .. code:: raw
 
-        or
+            M [q' ] = M [q'] =  F
+              [q'']     [u']
 
-        M in M*[q'] = F
-               [u']
         """
         pass
 
@@ -287,21 +320,24 @@ class Method(ABC):
     # JointsMethod: NA
     # System: NA
     def constraints_jacobian(self):
-        """Returns a shape(M + m, n) coefficient matrix for the motion level
-        constraints.
+        """Returns an M + m x N coefficient matrix ``C`` which is the Jacobian
+        of the constraints.
 
-        C in C*q' + f(q, t) = 0
+        .. code:: raw
 
-        or
-
-        C in C*u + f(q, t) = 0
+            fv = C*q' + gv(q, t) = C*u + gv(q, t) = 0
 
         """
         C, _ = linear_eq_to_matrix(self.velocity_constraints, self.u[:])
         return C
 
     def rhs(self, inv_method=None, **kwargs):
-        """Returns equations that can be solved numerically.
+        """Returns the right hand side of the full first order form of the
+        equations of motion in explicit form:
+
+        .. code:: raw
+
+            rhs(u, q, t) = Inv(M) F
 
         Parameters
         ==========
@@ -320,5 +356,6 @@ class Method(ABC):
                          try_block_diag=True) * self.forcing_full)
         return self._rhs
 
+    @abstractmethod
     def _form_eoms(self):
         raise NotImplementedError("Subclasses must implement this.")
