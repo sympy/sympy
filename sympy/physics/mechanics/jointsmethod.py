@@ -335,3 +335,13 @@ class JointsMethod(_Methods):
     def holonomic_constraints(self):
         """JointsMethod does not support constraints."""
         return Matrix()
+
+    @property
+    def nonholonomic_constraints(self):
+        """JointsMethod does not support constraints."""
+        return Matrix()
+
+    @property
+    def velocity_constraints(self):
+        """JointsMethod does not support constraints."""
+        return Matrix()

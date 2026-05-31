@@ -7,6 +7,7 @@ from sympy.physics.mechanics import (cross, dot, dynamicsymbols,
                                      find_dynamicsymbols, KanesMethod, inertia,
                                      inertia_of_point_mass, Point,
                                      ReferenceFrame, RigidBody)
+from sympy.testing.pytest import raises
 
 
 def test_aux_dep():
@@ -197,6 +198,26 @@ def test_aux_dep():
     syms_in_forcing = find_dynamicsymbols(kane.forcing)
     for qdi in qd:
         assert qdi not in syms_in_forcing
+
+    # KanesMethod using nonholonomic instead of velocity_constraints.
+    with raises(ValueError):  # can't pass motion constraints in two ways
+        kane = KanesMethod(
+            N, q_ind= q[:3], u_ind= u[:3], kd_eqs=kindiffs,
+            q_dependent=q[3:], configuration_constraints=-f_c,
+            u_dependent=u[3:], velocity_constraints= f_v,
+            u_auxiliary=ua, nonholonomic_constraints=f_v[:2, :])
+    kane = KanesMethod(
+        N, q_ind= q[:3], u_ind= u[:3], kd_eqs=kindiffs,
+        q_dependent=q[3:], configuration_constraints=-f_c,
+        u_dependent=u[3:],
+        u_auxiliary=ua, nonholonomic_constraints=f_v[:2, :])
+    assert kane.holonomic_constraints == -f_c
+    assert kane.nonholonomic_constraints == f_v[:2, :]
+    # holonomic first when automatically generated
+    # the aux speeds will not be present in the automatically generated form
+    assert kane.velocity_constraints == Matrix([f_v[2, 0].xreplace({ua[2]: 0}),
+                                                f_v[0, 0],
+                                                f_v[1, 0]])
 
 
 def test_non_central_inertia():

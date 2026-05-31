@@ -98,13 +98,12 @@ class _Methods(ABC):
         """
         pass
 
-    # KanesMethod: (init) velocity_constraints (only if there are no configuration constraints)
-    # LagrangesMethod: (init) nonhol_coneqs, (attr) coneqs[M:]
-    # JointsMethod: NA
+    # KanesMethod: (init, attr) nonholonomic_constraints
+    # LagrangesMethod: (init) nonhol_coneqs, (attr) coneqs[M:], nonholonomic_constraints
+    # JointsMethod: (attr) nonholonomic_constraints
     # System: (attr) nonholonomic_constraints
-    # TODO : Add nonholonomic_constraints to KanesMethod and LagrangesMethod.
     @property
-    #@abstractmethod
+    @abstractmethod
     def nonholonomic_constraints(self):
         """Column matrix of shape(m, 1) nonholonomic residuals f where:
 
@@ -117,13 +116,12 @@ class _Methods(ABC):
         """
         pass
 
-    # KanesMethod: (init) velocity_constraints, (attr) _k_nh, _f_nh
-    # LagrangesMethod: (init) hol_coneqs & nonhol_eqs, (attr) coneqs
-    # JointsMethod: NA
+    # KanesMethod: (init) velocity_constraints, (attr) _k_nh, _f_nh, velocity_constraints
+    # LagrangesMethod: (init) hol_coneqs & nonhol_eqs, (attr) coneqs, velocity_constraints
+    # JointsMethod: (attr) velocity_constraints
     # System: (attr) velocity_constraints
-    # TODO : Add velocity_constraints to LagrangesMethod and KanesMethod.
     @property
-    #@abstractmethod
+    @abstractmethod
     def velocity_constraints(self):
         """Column matrix of shape(m + M, 1) motion constraint residuals f
         where::
