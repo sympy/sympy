@@ -2423,6 +2423,7 @@ def test_V15():
     assert simplify(r1 - (x*y + (x**2 + y**2)*acot(x/y))/2) == 0
 
 
+@slow
 @XFAIL
 def test_V16():
     # Integral not calculated

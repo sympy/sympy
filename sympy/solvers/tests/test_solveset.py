@@ -475,6 +475,11 @@ def test_solve_polynomial():
     assert solveset_real(x**Rational(1, 3) - 3, x) == FiniteSet(27)
     assert len(solveset_real(x**5 + x**3 + 1, x)) == 1
     assert len(solveset_real(-2*x**3 + 4*x**2 - 2*x + 6, x)) > 0
+
+
+@slow
+def test_solve_polynomial_complex_coeff():
+    x = Symbol('x', real=True)
     assert solveset_real(x**6 + x**4 + I, x) is S.EmptySet
 
 
@@ -923,6 +928,7 @@ def test_solveset_complex_tan():
         imageset(Lambda(n, pi*n + pi/2), S.Integers))
 
 
+@slow
 @_both_exp_pow
 def test_solve_trig():
     assert dumeq(solveset_real(sin(x), x),
@@ -2433,6 +2439,7 @@ def test_substitution_basic():
         {x + 1}, [y, x]) == S.EmptySet
 
 
+@slow
 def test_substitution_incorrect():
     # the solutions in the following two tests are incorrect. The
     # correct result is EmptySet in both cases.
@@ -3291,6 +3298,7 @@ def test_solve_modular():
 
 # end of modular tests
 
+@slow
 def test_issue_17276():
     assert nonlinsolve([Eq(x, 5**(S(1)/5)), Eq(x*y, 25*sqrt(5))], x, y) == \
      FiniteSet((5**(S(1)/5), 25*5**(S(3)/10)))

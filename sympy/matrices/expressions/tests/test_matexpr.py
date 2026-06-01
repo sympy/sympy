@@ -19,7 +19,7 @@ from sympy.matrices.exceptions import NonSquareMatrixError
 from sympy.matrices.expressions.determinant import Determinant, det
 from sympy.matrices.expressions.matexpr import MatrixElement
 from sympy.matrices.expressions.special import ZeroMatrix, Identity
-from sympy.testing.pytest import raises, XFAIL, skip
+from sympy.testing.pytest import raises, XFAIL, skip, slow
 from importlib.metadata import version
 
 n, m, l, k, p = symbols('n m l k p', integer=True)
@@ -384,6 +384,7 @@ def test_numpy_conversion():
     if(int(version('numpy').split('.')[0]) >= 2): #run this test only if numpy is new enough that copy variable is passed properly.
         raises(TypeError, lambda: array(A, copy=False))
 
+@slow
 def test_issue_2749():
     A = MatrixSymbol("A", 5, 2)
     assert (A.T * A).I.as_explicit() == Matrix([[(A.T * A).I[0, 0], (A.T * A).I[0, 1]], \
