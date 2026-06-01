@@ -1078,16 +1078,16 @@ def eval_sum(f, limits):
                         a_i, b_i = a, b
                     else:
                         cond_set = solveset(cond_i, i, S.Reals)
-                        a_i = a if cond_set.inf <= a else cond_set.inf
-                        b_i = b if cond_set.sup >= b else cond_set.sup
+                        a_i = max(a, cond_set.inf)
+                        b_i = min(b, cond_set.sup)
                     if b_i < a_i:
                         continue
                     val = eval_sum(expr_i, (i, a_i, b_i))
                     if val is None:
-                        raise NotImplementedError
+                        val = Sum(expr_i, (i, a_i, b_i))
                     total += val
                 return total
-            except Exception:
+            except (NotImplementedError, TypeError, ValueError):
                 pass
 
     if f.has(KroneckerDelta):
