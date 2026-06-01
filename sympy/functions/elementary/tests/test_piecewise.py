@@ -16,7 +16,8 @@ from sympy.functions.elementary.complexes import (Abs, adjoint, arg, conjugate, 
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import (Max, Min, sqrt)
 from sympy.functions.elementary.piecewise import (Piecewise,
-    piecewise_fold, piecewise_exclusive, Undefined, ExprCondPair)
+    piecewise_fold, piecewise_exclusive, Undefined, ExprCondPair,
+    _remove_subsumed_clauses)
 from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.functions.special.delta_functions import (DiracDelta, Heaviside)
 from sympy.functions.special.tensor_functions import KroneckerDelta
@@ -1649,3 +1650,59 @@ def test_piecewise_integrate_29064():
     b2 = Piecewise((0, x < Rational(5, 8)), (8, x < Rational(3, 4)),
                    (-8, x < Rational(7, 8)), (0, True))
     assert integrate(b1*b2, (x, 0, 1)) == 0
+
+def test_remove_subsumed_clauses_basic():
+    """All larger clauses are supersets of the smallest."""
+    a, b, c, d = symbols('a b c d')
+    # (a|b) AND (a|b|c) AND (a|b|d) → only (a|b) survives
+    expr = And(Or(a, b), Or(a, b, c), Or(a, b, d))
+    result = _remove_subsumed_clauses(expr)
+    assert result == Or(a, b)
+ 
+ 
+def test_remove_subsumed_clauses_no_redundant():
+    """No clause is a subset of another — all kept."""
+    a, b, c, d = symbols('a b c d')
+    # (a|b) AND (c|d) → neither is subset → keep both
+    expr = And(Or(a, b), Or(c, d))
+    result = _remove_subsumed_clauses(expr)
+    assert result == And(Or(a, b), Or(c, d))
+ 
+def test_remove_subsumed_clauses_two_kept():
+    """Two independent small clauses subsume everything else."""
+    a, b, c, d, e = symbols('a b c d e')
+    # Simulates the actual 12-clause scenario simplified
+    expr = And(
+        Or(a, b),           # size 2 — kept
+        Or(a, c),           # size 2 — kept (b not in {a,c})
+        Or(a, b, c),        # {a,b} subset → skip
+        Or(a, b, d),        # {a,b} subset → skip
+        Or(a, c, d),        # {a,c} subset → skip
+        Or(a, b, c, d, e),  # {a,b} subset → skip
+    )
+    result = _remove_subsumed_clauses(expr)
+    assert result == And(Or(a, b), Or(a, c))
+
+def test_piecewise_integrate_disjoint_simple():
+    """Completely disjoint intervals [0,1] and [2,3]."""
+    x = symbols('x', real=True)
+    p1 = Piecewise((1, (x >= 0) & (x < 1)), (0, True))
+    p2 = Piecewise((1, (x >= 2) & (x < 3)), (0, True))
+    assert integrate(p1 * p2, (x, 0, 4)) == 0
+ 
+def test_piecewise_integrate_overlapping():
+    """Overlapping intervals — must give non-zero result."""
+    x = symbols('x', real=True)
+    p1 = Piecewise((1, (x >= 0) & (x < 2)), (0, True))
+    p2 = Piecewise((1, (x >= 1) & (x < 3)), (0, True))
+    # Overlap is [1, 2), length 1
+    assert integrate(p1 * p2, (x, 0, 3)) == 1
+ 
+def test_piecewise_integrate_adjacent_triangles():
+    """Different non-overlapping triangular functions."""
+    x = symbols('x', real=True)
+    t1 = Piecewise((0, x < 0), (4*x, x < Rational(1, 4)),
+                   (2 - 4*x, x < Rational(1, 2)), (0, True))
+    t2 = Piecewise((0, x < Rational(1, 2)), (4*x - 2, x < Rational(3, 4)),
+                   (4 - 4*x, x < 1), (0, True))
+    assert integrate(t1 * t2, (x, 0, 1)) == 0
