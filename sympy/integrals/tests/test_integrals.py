@@ -2231,3 +2231,12 @@ def test_issue_15566():
     assert isinstance(result, Piecewise)
 
     assert result.has(erf)
+
+
+def test_integrate_sqrt_reciprocal():
+    # Regression test for issue #29792
+    # meijerint should not return -1 when shift crosses a branch point
+    x = symbols('x')
+    f = sqrt(2 - x) * sqrt(1 / (2 - x))
+    result = integrate(f, (x, 0, 1), meijerg=True)
+    assert result != -1

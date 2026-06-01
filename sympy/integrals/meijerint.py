@@ -1668,7 +1668,24 @@ def meijerint_indefinite(f, x):
     """
     f = sympify(f)
     results = []
+
+    # Find branch points of fractional powers to avoid crossing branch cuts
+    from sympy.core.power import Pow
+    branch_points = set()
+    for term in f.atoms(Pow):
+        if term.exp.is_Rational and term.exp.q != 1:
+            from sympy.solvers import solve
+            try:
+                sols = solve(term.base, x)
+                branch_points.update(s for s in sols if s.is_finite)
+            except (NotImplementedError, ValueError):
+                pass
+
     for a in sorted(_find_splitting_points(f, x) | {S.Zero}, key=default_sort_key):
+        # Skip splitting points that are branch points to avoid sign errors
+        if a in branch_points and a != 0:
+            _debug('meijerint: skipping branch point %s' % a)
+            continue
         res = _meijerint_indefinite_1(f.subs(x, x + a), x)
         if not res:
             continue
