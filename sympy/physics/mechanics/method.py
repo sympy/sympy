@@ -14,19 +14,19 @@ class Method(ABC):
 
     Kinematical differential equations:
 
-    .. code:: raw
+    .. code:: text
 
         Mk(q, t) q' = Fk(u, q, t)
 
     Dynamical differential equations:
 
-    .. code:: raw
+    .. code:: text
 
         Md(q, t) u' = Fd(u, q, t)
 
     Combined they take this full form:
 
-    .. code:: raw
+    .. code:: text
 
         M = [Mk 0] [q'] = [Fk] = F
             [0 Md] [u']   [Fd]
@@ -34,7 +34,7 @@ class Method(ABC):
     If there are additional holonomic or nonholonomic constraints, these
     equations can be augmented with the Lagrange multipliers:
 
-    .. code:: raw
+    .. code:: text
 
         M = [Mk 0  0  ] [q'] = [Fk] = F
             [0  Md MjT] [u']   [Fd]
@@ -47,7 +47,7 @@ class Method(ABC):
     The equations of motion can also be augmented to reveal any noncontributing
     force and take this form:
 
-    .. code:: raw
+    .. code:: text
 
         M = [Mk 0  0] [q'] = [Fk] = F
             [0  Md 0] [u']   [Fd]
@@ -137,7 +137,7 @@ class Method(ABC):
         """M x 1 column matrix of holonomic configuration constraint residual
         expressions ``fh`` where:
 
-        .. code:: raw
+        .. code:: text
 
             fh(q, t) = 0
 
@@ -154,7 +154,7 @@ class Method(ABC):
         """m x 1 column matrix of nonholonomic residual expressions ``fn``
         where:
 
-        .. code:: raw
+        .. code:: text
 
             fn(q', q, t) = fn(u, q, t) = 0
 
@@ -171,7 +171,7 @@ class Method(ABC):
         """m + M x 1 column matrix of motion/velocity constraint residual
         expressions ``fv`` where:
 
-        .. code:: raw
+        .. code:: text
 
             fv(q', q, t) = [fh'(q', q, t)] = fv(u, q, t) = [fh'(u, q, t)] = 0
                            [fn(q', q, t) ]                 [fn(u, q, t) ]
@@ -192,7 +192,7 @@ class Method(ABC):
         """m + M x 1 column matrix of acceleration constraint residual
         expressions ``fa`` where:
 
-        .. code:: raw
+        .. code:: text
 
             fv' = fa(q'', q', q, t) = fa(u', u, q, t) = 0
 
@@ -214,7 +214,7 @@ class Method(ABC):
         """Linear coefficient matrix ``Md`` for the second time derivative of
         the coordinates or the first time derivative of the speeds:
 
-        .. code:: raw
+        .. code:: text
 
             Md q'' = Md u' = Fd
 
@@ -231,7 +231,7 @@ class Method(ABC):
         """Nonlinear forcing terms ``Fd`` in the dynamical differential
         equations:
 
-        .. code:: raw
+        .. code:: text
 
             Md q'' = Md u' = Fd
 
@@ -251,7 +251,7 @@ class Method(ABC):
         """Linear coefficient matrix ``M`` for the full first order form of the
         equations of motion:
 
-        .. code:: raw
+        .. code:: text
 
             M [q' ] = M [q'] =  F
               [q'']     [u']
@@ -271,7 +271,7 @@ class Method(ABC):
         """Nonlinear forcing terms ``F`` in the full first order form of the
         equations of motion:
 
-        .. code:: raw
+        .. code:: text
 
             M [q' ] = M [q'] =  F
               [q'']     [u']
@@ -323,7 +323,7 @@ class Method(ABC):
         """Returns an M + m x N coefficient matrix ``C`` which is the Jacobian
         of the constraints.
 
-        .. code:: raw
+        .. code:: text
 
             fv = C*q' + gv(q, t) = C*u + gv(q, t) = 0
 
@@ -335,7 +335,7 @@ class Method(ABC):
         """Returns the right hand side of the full first order form of the
         equations of motion in explicit form:
 
-        .. code:: raw
+        .. code:: text
 
             rhs(u, q, t) = Inv(M) F
 
