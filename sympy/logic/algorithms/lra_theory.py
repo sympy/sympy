@@ -659,10 +659,10 @@ class LRASolver():
         return A
 
     def backtrack(self):
-        if self.bound_history:
-            xi, old_bound, upper = self.bound_history.pop()
-        else:
+        if not self.bound_history:
             raise ValueError("Cannot backtrack, bound_history stack is empty")
+
+        xi, old_bound, upper = self.bound_history.pop()
 
         if upper:
             xi.upper = old_bound

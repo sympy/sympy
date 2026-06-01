@@ -657,3 +657,10 @@ def test_backtracking_multiple_variables_multiple_backtracks():
     lra.assert_lit(6)
     is_sat, _ = lra.check()
     assert is_sat is True
+
+
+def test_backtracking_empty_history():
+    enc = EncodedCNF()
+    lra, _ = LRASolver.from_encoded_cnf(enc)
+
+    raises(ValueError, lambda: lra.backtrack())
