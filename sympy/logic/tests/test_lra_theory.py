@@ -480,15 +480,17 @@ def test_example_from_paper():
     for con in cons:
         enc.add_prop(con)
 
-    lra, _ = LRASolver.from_encoded_cnf(enc)
+    lra, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
 
     # Extracts the variables stored in the solver
     var_x = next(v for v in lra.all_var if str(v.var) == 'x')
     var_y = next(v for v in lra.all_var if str(v.var) == 'y')
     # var_s1 is a slack variable which corresponds for -x + y <= 1
     # var_s2 is a slack variable which corresponds for -x - y <= 3
-    var_s1 = next(v for v in lra.all_var if str(v.var) == '_s1')
-    var_s2 = next(v for v in lra.all_var if str(v.var) == '_s2')
+    _s1 = lra.s_subs[-x + y]
+    _s2 = lra.s_subs[-x - y]
+    var_s1 = next(v for v in lra.all_var if v.var == _s1)
+    var_s2 = next(v for v in lra.all_var if v.var == _s2)
 
     # State A_0
     assert var_x.assign == LRARational(0, 0)
@@ -541,10 +543,8 @@ def test_example_from_paper():
     # s2 and s1 are conflicting assertions as for both to be true
     # x >= -2 but x's range is [-8, -4]
     res = lra.assert_lit(4)
-    if res is None:
-        is_sat, _ = lra.check()
-    else:
-        is_sat, _ = res
+    assert res is None
+    is_sat, _ = lra.check()
     assert is_sat is False
 
     # Backtrack to remove the conflicted assertion
@@ -568,24 +568,22 @@ def test_backtracking_single_variable():
     enc = EncodedCNF()
     for con in cons:
         enc.add_prop(con)
-    lra, _ = LRASolver.from_encoded_cnf(enc)
+    lra, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
 
+    # Assert x in [-8, -4]
     lra.assert_lit(1)
     lra.assert_lit(2)
     is_sat, _ = lra.check()
-    # TODO: should also have a check for assignment
     assert is_sat is True
 
+    # Asserts x >= -2
     res = lra.assert_lit(3)
-    if res is None:
-        is_sat, _ = lra.check()
-    else:
-        is_sat, _ = res
-
+    # This directly contradicts x <= -4 which `assert_lit` catches instantly
+    assert res is not None
+    is_sat, _ = res
     assert is_sat is False
 
     lra.backtrack()
-    # TODO: should also have a check for assignment
     is_sat, _ = lra.check()
     assert is_sat is True
 
@@ -597,19 +595,17 @@ def test_backtracking_multiple_variables():
     for con in cons:
         enc.add_prop(con)
 
-    lra, _ = LRASolver.from_encoded_cnf(enc)
+    lra, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
     lra.assert_lit(1)
     lra.assert_lit(2)
     is_sat, _ = lra.check()
     assert is_sat is True
 
-    # If 2x+3y <= 12 and x >= 3, then y <= 2
+    # If 2x + 3y <= 12 and x >= 3, then y <= 2
     # We are asserting y >= 3 which is wrong
     res = lra.assert_lit(3)
-    if res is None:
-        is_sat, _ = lra.check()
-    else:
-        is_sat, _ = res
+    assert res is None
+    is_sat, _ = lra.check()
     assert is_sat is False
 
     # backtracking to remove the faulty assert
@@ -625,7 +621,7 @@ def test_backtracking_single_variable_multiple_backtracks():
     cons = [x <= 10, x >= 0, x >= 5, x <= 2]
     for con in cons:
         enc.add_prop(con)
-    lra, _ = LRASolver.from_encoded_cnf(enc)
+    lra, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
 
     # Setting 5 <= x <= 10
     lra.assert_lit(1)
@@ -634,10 +630,8 @@ def test_backtracking_single_variable_multiple_backtracks():
 
     # x <= 2 is impossible while x >= 5 is present
     res = lra.assert_lit(4)
-    if res is None:
-        is_sat, _ = lra.check()
-    else:
-        is_sat, _ = res
+    assert res is not None
+    is_sat, _ = res
     assert is_sat is False
 
     # First backtrack: Undo x <= 2 to resolve the conflict
@@ -671,7 +665,7 @@ def test_backtracking_multiple_variables_multiple_backtracks():
 
     for con in cons:
         enc.add_prop(con)
-    lra, _ = LRASolver.from_encoded_cnf(enc)
+    lra, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
 
     # Establish the base valid state (x in [0, 10], y>=0)
     lra.assert_lit(1)
@@ -688,10 +682,8 @@ def test_backtracking_multiple_variables_multiple_backtracks():
 
     # x + y <= 4 is mathematically impossible when x>=5 and y>=5
     res = lra.assert_lit(6)
-    if res is None:
-        is_sat, _ = lra.check()
-    else:
-        is_sat, _ = res
+    assert res is None
+    is_sat, _ = lra.check()
     assert is_sat is False
 
     # First backtrack: Pop the conflicting rule (Rule 6)
@@ -712,6 +704,6 @@ def test_backtracking_multiple_variables_multiple_backtracks():
 
 def test_backtracking_empty_history():
     enc = EncodedCNF()
-    lra, _ = LRASolver.from_encoded_cnf(enc)
+    lra, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
 
     raises(ValueError, lambda: lra.backtrack())
