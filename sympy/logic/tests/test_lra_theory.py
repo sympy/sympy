@@ -467,7 +467,7 @@ def test_empty_cnf():
     assert lra.check() == (True, {})
 
 
-def test_backtracking_example_from_paper():
+def test_example_from_paper():
     # Example from the section 4.6 of the paper.
     # https://link.springer.com/chapter/10.1007/11817963_11
     enc = EncodedCNF()
@@ -482,11 +482,44 @@ def test_backtracking_example_from_paper():
 
     lra, _ = LRASolver.from_encoded_cnf(enc)
 
-    # Sets x's range as [-8, -4]
+    # Extracts the variables stored in the solver
+    var_x = next(v for v in lra.all_var if str(v.var) == 'x')
+    var_y = next(v for v in lra.all_var if str(v.var) == 'y')
+    # var_s1 is a slack variable which corresponds for -x + y <= 1
+    # var_s2 is a slack variable which corresponds for -x - y <= 3
+    var_s1 = next(v for v in lra.all_var if str(v.var) == '_s1')
+    var_s2 = next(v for v in lra.all_var if str(v.var) == '_s2')
+
+    # State A_0
+    assert var_x.assign == LRARational(0, 0)
+    assert var_y.assign == LRARational(0, 0)
+    assert var_s1.assign == LRARational(0, 0)
+    assert var_s2.assign == LRARational(0, 0)
+
+    # Assert x <= -4
     lra.assert_lit(1)
+    is_sat, _ = lra.check()
+    assert is_sat is True
+
+    # State A_1
+    assert var_x.upper == LRARational(-4, 0)
+    assert var_x.assign == LRARational(-4, 0)
+    assert var_y.assign == LRARational(0, 0)
+    assert var_s1.assign == LRARational(4, 0)
+    assert var_s2.assign == LRARational(4, 0)
+
+    # Assert x >= -8
     lra.assert_lit(2)
     is_sat, _ = lra.check()
     assert is_sat is True
+
+    # State A_2
+    assert var_x.lower == LRARational(-8, 0)
+    assert var_x.upper == LRARational(-4, 0)
+    assert var_x.assign == LRARational(-4, 0)
+    assert var_y.assign == LRARational(0, 0)
+    assert var_s1.assign == LRARational(4, 0)
+    assert var_s2.assign == LRARational(4, 0)
 
     # Asserts -x + y <= 1
     # Check is invoked to pivot s1 and y
@@ -495,7 +528,16 @@ def test_backtracking_example_from_paper():
     is_sat, _ = lra.check()
     assert is_sat is True
 
-    # Assert x + y >= -3 (s2)
+    # State A_3
+    assert var_s1.upper == LRARational(1, 0)
+    assert var_x.lower == LRARational(-8, 0)
+    assert var_x.upper == LRARational(-4, 0)
+    assert var_x.assign == LRARational(-4, 0)
+    assert var_y.assign == LRARational(-3, 0)
+    assert var_s1.assign == LRARational(1, 0)
+    assert var_s2.assign == LRARational(7, 0)
+
+    # Assert -x - y <= 3 (s2)
     # s2 and s1 are conflicting assertions as for both to be true
     # x >= -2 but x's range is [-8, -4]
     res = lra.assert_lit(4)
@@ -509,6 +551,15 @@ def test_backtracking_example_from_paper():
     lra.backtrack()
     is_sat, _ = lra.check()
     assert is_sat is True
+
+    # State A_3 after backtracking
+    assert var_s1.upper == LRARational(1, 0)
+    assert var_x.lower == LRARational(-8, 0)
+    assert var_x.upper == LRARational(-4, 0)
+    assert var_x.assign == LRARational(-4, 0)
+    assert var_y.assign == LRARational(-3, 0)
+    assert var_s1.assign == LRARational(1, 0)
+    assert var_s2.assign == LRARational(7, 0)
 
 
 def test_backtracking_single_variable():
