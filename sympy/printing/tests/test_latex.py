@@ -189,6 +189,9 @@ def test_latex_basic():
     assert latex(x_star**2, parenthesize_super=False) == r"{x^{*}}^{2}"
     assert latex(Derivative(f(x_star), x_star,2)) == r"\frac{d^{2}}{d \left(x^{*}\right)^{2}} f{\left(x^{*} \right)}"
     assert latex(Derivative(f(x_star), x_star,2), parenthesize_super=False) == r"\frac{d^{2}}{d {x^{*}}^{2}} f{\left(x^{*} \right)}"
+    assert latex(x**(x**x)) == r"x^{\left(x^{x}\right)}"
+    assert latex((x**x)**(x**x)) == \
+        r"\left(x^{x}\right)^{\left(x^{x}\right)}"
 
     assert latex(2*Integral(x, x)/3) == r"\frac{2 \int x\, dx}{3}"
     assert latex(2*Integral(x, x)/3, fold_short_frac=True) == \
@@ -2862,7 +2865,7 @@ def test_issue_9216():
     assert latex(expr_1) == r"1^{-1}"
 
     expr_2 = Pow(1, Pow(1, -1, evaluate=False), evaluate=False)
-    assert latex(expr_2) == r"1^{1^{-1}}"
+    assert latex(expr_2) == r"1^{\left(1^{-1}\right)}"
 
     expr_3 = Pow(3, -2, evaluate=False)
     assert latex(expr_3) == r"\frac{1}{3^{2}}"
@@ -3206,7 +3209,7 @@ def test_latex_decimal_separator():
     x = symbols('x')
     y = symbols('y')
     z = symbols('z')
-    assert(latex(x*5.3 + 2**y**3.4 + 4.5 + z, decimal_separator = 'comma') == r'2^{y^{3{,}4}} + 5{,}3 x + z + 4{,}5')
+    assert(latex(x*5.3 + 2**y**3.4 + 4.5 + z, decimal_separator = 'comma') == r'2^{\left(y^{3{,}4}\right)} + 5{,}3 x + z + 4{,}5')
 
     assert(latex(0.987, decimal_separator='comma') == r'0{,}987')
     assert(latex(S(0.987), decimal_separator='comma') == r'0{,}987')
