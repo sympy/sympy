@@ -476,11 +476,6 @@ class System(Method):
                 self.nonholonomic_constraints)
         return self._vel_constrs
 
-    @property
-    def acceleration_constraints(self):
-        """Column matrix of acceleration constraint residuals."""
-        return self.velocity_constraints.diff(dynamicsymbols._t)
-
     @velocity_constraints.setter
     @_reset_eom_method
     def velocity_constraints(self, constraints):
@@ -490,6 +485,11 @@ class System(Method):
         constraints = self._objects_to_list(constraints)
         self._vel_constrs = self._parse_expressions(
             constraints, [], 'velocity constraints')
+
+    @property
+    def acceleration_constraints(self):
+        """Column matrix of acceleration constraint residuals."""
+        return self.velocity_constraints.diff(dynamicsymbols._t)
 
     @property
     def eom_method(self):
