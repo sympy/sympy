@@ -438,7 +438,7 @@ class Number(AtomicExpr):
         return self._as_mpf_val(prec), prec
 
     def __float__(self):
-        return _to_float(self._as_mpf_val(53))
+        return _to_float(self._as_mpf_val(53), False, rnd)
 
     def floor(self):
         raise NotImplementedError('%s needs .floor() method' %

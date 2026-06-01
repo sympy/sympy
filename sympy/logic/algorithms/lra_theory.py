@@ -364,11 +364,7 @@ class LRASolver():
         """
         self.result = None
         for var in self.all_var:
-            var.lower = LRARational(-float("inf"), 0)
-            var.lower_literal = None
-            var.upper = LRARational(float("inf"), 0)
-            var.upper_literal = None
-            var.assign = LRARational(0, 0)
+            var.initialize()
 
     def assert_lit(self, literal):
         """
@@ -647,7 +643,7 @@ class LRASolver():
         0 = -x + (-e/d)*y + (-f/d)*z
         0 = 0 + (h - e*g/d)*y + (i - f*g/d)*z
         """
-        _, _, Mij = M[i, :], M[:, j], M[i, j]
+        Mij = M[i, j]
         if Mij == 0:
             raise ZeroDivisionError("Tried to pivot about zero-valued entry.")
         A = M.copy()
@@ -844,13 +840,16 @@ class LRAVariable():
     on `self.var`.
     """
     def __init__(self, var):
+        self.initialize()
+        self.var = var
+        self.col_idx = None
+
+    def initialize(self):
         self.upper = LRARational(float("inf"), 0)
         self.upper_literal = None
         self.lower = LRARational(-float("inf"), 0)
         self.lower_literal = None
         self.assign = LRARational(0,0)
-        self.var = var
-        self.col_idx = None
 
     def __repr__(self):
         return repr(self.var)
