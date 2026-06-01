@@ -112,8 +112,6 @@ def test_from_encoded_cnf():
 
 
 def test_problem():
-    from sympy.logic.algorithms.lra_theory import LRASolver
-    from sympy.assumptions.cnf import CNF, EncodedCNF
     cons = [-2 * x - 2 * y >= 7, -9 * y >= 7, -6 * y >= 5]
     cnf = CNF().from_prop(And(*cons))
     enc = EncodedCNF()
@@ -467,3 +465,245 @@ def test_empty_cnf():
     lra, conflict = LRASolver.from_encoded_cnf(enc)
     assert len(conflict) == 0
     assert lra.check() == (True, {})
+
+
+def test_example_from_paper():
+    # Example from the section 4.6 of the paper.
+    # https://link.springer.com/chapter/10.1007/11817963_11
+    enc = EncodedCNF()
+    cons = [
+        x <= -4,
+        x >= -8,
+        -x + y <= 1,
+        x + y >= -3
+    ]
+    for con in cons:
+        enc.add_prop(con)
+
+    lra, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
+
+    # Extracts the variables stored in the solver
+    var_x = next(v for v in lra.all_var if str(v.var) == 'x')
+    var_y = next(v for v in lra.all_var if str(v.var) == 'y')
+    # var_s1 is a slack variable which corresponds for -x + y <= 1
+    # var_s2 is a slack variable which corresponds for -x - y <= 3
+    _s1 = lra.s_subs[-x + y]
+    _s2 = lra.s_subs[-x - y]
+    var_s1 = next(v for v in lra.all_var if v.var == _s1)
+    var_s2 = next(v for v in lra.all_var if v.var == _s2)
+
+    # State A_0
+    assert var_x.assign == LRARational(0, 0)
+    assert var_y.assign == LRARational(0, 0)
+    assert var_s1.assign == LRARational(0, 0)
+    assert var_s2.assign == LRARational(0, 0)
+
+    # Assert x <= -4
+    lra.assert_lit(1)
+    is_sat, _ = lra.check()
+    assert is_sat is True
+
+    # State A_1
+    assert var_x.upper == LRARational(-4, 0)
+    assert var_x.assign == LRARational(-4, 0)
+    assert var_y.assign == LRARational(0, 0)
+    assert var_s1.assign == LRARational(4, 0)
+    assert var_s2.assign == LRARational(4, 0)
+
+    # Assert x >= -8
+    lra.assert_lit(2)
+    is_sat, _ = lra.check()
+    assert is_sat is True
+
+    # State A_2
+    assert var_x.lower == LRARational(-8, 0)
+    assert var_x.upper == LRARational(-4, 0)
+    assert var_x.assign == LRARational(-4, 0)
+    assert var_y.assign == LRARational(0, 0)
+    assert var_s1.assign == LRARational(4, 0)
+    assert var_s2.assign == LRARational(4, 0)
+
+    # Asserts -x + y <= 1
+    # Check is invoked to pivot s1 and y
+    # y's range is (-inf, -3]
+    lra.assert_lit(3)
+    is_sat, _ = lra.check()
+    assert is_sat is True
+
+    # State A_3
+    assert var_s1.upper == LRARational(1, 0)
+    assert var_x.lower == LRARational(-8, 0)
+    assert var_x.upper == LRARational(-4, 0)
+    assert var_x.assign == LRARational(-4, 0)
+    assert var_y.assign == LRARational(-3, 0)
+    assert var_s1.assign == LRARational(1, 0)
+    assert var_s2.assign == LRARational(7, 0)
+
+    # Assert -x - y <= 3 (s2)
+    # s2 and s1 are conflicting assertions as for both to be true
+    # x >= -2 but x's range is [-8, -4]
+    res = lra.assert_lit(4)
+    assert res is None
+    is_sat, _ = lra.check()
+    assert is_sat is False
+
+    # Backtrack to remove the conflicted assertion
+    lra.backtrack()
+    is_sat, _ = lra.check()
+    assert is_sat is True
+
+    # State A_3 after backtracking
+    assert var_s1.upper == LRARational(1, 0)
+    assert var_x.lower == LRARational(-8, 0)
+    assert var_x.upper == LRARational(-4, 0)
+    assert var_x.assign == LRARational(-4, 0)
+    assert var_y.assign == LRARational(-3, 0)
+    assert var_s1.assign == LRARational(1, 0)
+    assert var_s2.assign == LRARational(7, 0)
+
+
+def test_backtracking_single_variable():
+    # This test is for checking the correctness over a single variable
+    cons = [x >= -8, x <= -4, x >= -2]
+    enc = EncodedCNF()
+    for con in cons:
+        enc.add_prop(con)
+    lra, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
+
+    # Assert x in [-8, -4]
+    lra.assert_lit(1)
+    lra.assert_lit(2)
+    is_sat, _ = lra.check()
+    assert is_sat is True
+
+    # Asserts x >= -2
+    res = lra.assert_lit(3)
+    # This directly contradicts x <= -4 which `assert_lit` catches instantly
+    assert res is not None
+    is_sat, _ = res
+    assert is_sat is False
+
+    lra.backtrack()
+    is_sat, _ = lra.check()
+    assert is_sat is True
+
+
+def test_backtracking_multiple_variables():
+    # This test is for checking the correctness over multiple variables
+    enc = EncodedCNF()
+    cons = [2*x + 3*y <= 12, x >= 3, y >= 3]
+    for con in cons:
+        enc.add_prop(con)
+
+    lra, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
+    lra.assert_lit(1)
+    lra.assert_lit(2)
+    is_sat, _ = lra.check()
+    assert is_sat is True
+
+    # If 2x + 3y <= 12 and x >= 3, then y <= 2
+    # We are asserting y >= 3 which is wrong
+    res = lra.assert_lit(3)
+    assert res is None
+    is_sat, _ = lra.check()
+    assert is_sat is False
+
+    # backtracking to remove the faulty assert
+    lra.backtrack()
+    is_sat, _ = lra.check()
+    assert is_sat is True
+
+
+def test_backtracking_single_variable_multiple_backtracks():
+    # This test is for checking correctness over multiple backtracking
+    # Range of x should be [0, 2]
+    enc = EncodedCNF()
+    cons = [x <= 10, x >= 0, x >= 5, x <= 2]
+    for con in cons:
+        enc.add_prop(con)
+    lra, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
+
+    # Setting 5 <= x <= 10
+    lra.assert_lit(1)
+    lra.assert_lit(2)
+    lra.assert_lit(3)
+
+    # x <= 2 is impossible while x >= 5 is present
+    res = lra.assert_lit(4)
+    assert res is not None
+    is_sat, _ = res
+    assert is_sat is False
+
+    # First backtrack: Undo x <= 2 to resolve the conflict
+    lra.backtrack()
+    is_sat, _ = lra.check()
+    assert is_sat is True
+
+    # Second backtrack: Erase the x >= 5 constraint.
+    # This widens the valid domain back to [0, 10],
+    # allowing to accept the previously conflicting x <= 2 rule.
+    lra.backtrack()
+
+    # Setting 0 <= x <= 2
+    lra.assert_lit(4)
+    is_sat, _ = lra.check()
+    assert is_sat is True
+
+
+def test_backtracking_multiple_variables_multiple_backtracks():
+    # This test is for checking correctness over multiple backtracking
+    # for multiple variables, we need to constraint 6 to be True
+    enc = EncodedCNF()
+    cons = [
+        x <= 10,
+        x >= 0,
+        y >= 0,
+        x >= 5,
+        y >= 5,
+        x + y <= 4
+    ]
+
+    for con in cons:
+        enc.add_prop(con)
+    lra, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
+
+    # Establish the base valid state (x in [0, 10], y>=0)
+    lra.assert_lit(1)
+    lra.assert_lit(2)
+    lra.assert_lit(3)
+    is_sat, _ = lra.check()
+    assert is_sat is True
+
+    # Now x >= 5 and y >= 5, x + y >= 10
+    lra.assert_lit(4)
+    lra.assert_lit(5)
+    is_sat, _ = lra.check()
+    assert is_sat is True
+
+    # x + y <= 4 is mathematically impossible when x>=5 and y>=5
+    res = lra.assert_lit(6)
+    assert res is None
+    is_sat, _ = lra.check()
+    assert is_sat is False
+
+    # First backtrack: Pop the conflicting rule (Rule 6)
+    lra.backtrack()
+    is_sat, _ = lra.check()
+    assert is_sat is True
+
+    # Second and Third backtrack: pop the restrictive constraints
+    # This restores the domain to x >= 0, y >= 0
+    lra.backtrack()
+    lra.backtrack()
+
+    # x + y <= 4 is mathematically possible now
+    lra.assert_lit(6)
+    is_sat, _ = lra.check()
+    assert is_sat is True
+
+
+def test_backtracking_empty_history():
+    enc = EncodedCNF()
+    lra, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
+
+    raises(ValueError, lambda: lra.backtrack())

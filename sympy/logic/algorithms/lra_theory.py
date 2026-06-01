@@ -186,6 +186,9 @@ class LRASolver():
         self.is_sat = True  # While True, all constraints asserted so far are satisfiable
         self.result = None  # always one of: (True, assignment), (False, conflict clause), None
 
+        self.bound_history = []
+        self.last_assign_snapshot = {var: var.assign for var in self.all_var}
+
     @staticmethod
     def from_encoded_cnf(encoded_cnf, testing_mode=False):
         """
@@ -454,6 +457,8 @@ class LRASolver():
             self.result = False, [-conflicting_lit, -literal]
             return self.result
 
+        self.bound_history.append((xi, target_bound, upper))
+
         xi.set_bound(boundary, literal)
 
         if xi in self.nonslack and xi.assign * s > c_norm:
@@ -498,7 +503,8 @@ class LRASolver():
         explanation : set of ints
         """
         if self.is_sat:
-            return True, {var: var.assign for var in self.all_var}
+            self.last_assign_snapshot = {var: var.assign for var in self.all_var}
+            return True, self.last_assign_snapshot
         if self.result:
             return self.result
 
@@ -529,7 +535,8 @@ class LRASolver():
             cand = [b for b in basic if b.assign < b.lower or b.assign > b.upper]
 
             if len(cand) == 0:
-                return True, {var: var.assign for var in self.all_var}
+                self.last_assign_snapshot = {var: var.assign for var in self.all_var}
+                return True, self.last_assign_snapshot
 
             xi = min(cand, key=lambda v: v.col_idx) # Bland's rule
             i = basic[xi]
@@ -647,6 +654,37 @@ class LRASolver():
 
         return A
 
+    def backtrack(self):
+        """
+        Revert the most recent bound update to resolve a conflict.
+
+        Pops the last state from the ``bound_history`` stack and restores the
+        variable's previous upper or lower bound. It also reverts all variable
+        assignments to their previous valid state using a dictionary,
+        thus clearing the current conflict and restoring satisfiability.
+
+        Raises
+        ======
+
+        ValueError
+            If called when the ``bound_history`` stack is empty, indicating
+            the solver's internal state is out of sync.
+        """
+        if not self.bound_history:
+            raise ValueError("Cannot backtrack, bound_history stack is empty")
+
+        xi, old_bound, upper = self.bound_history.pop()
+
+        if upper:
+            xi.upper = old_bound
+        else:
+            xi.lower = old_bound
+
+        for var in self.all_var:
+            var.assign = self.last_assign_snapshot[var]
+
+        self.is_sat = True
+        self.result = None
 
 def _sep_const_coeff(expr):
     """
