@@ -659,6 +659,21 @@ class LRASolver():
         return A
 
     def backtrack(self):
+        """
+        Revert the most recent bound update to resolve a conflict.
+
+        Pops the last state from the ``bound_history`` stack and restores the
+        variable's previous upper or lower bound. It also reverts all variable
+        assignments to their previous valid state using a dictionary,
+        thus clearing the current conflict and restoring satisfiability.
+
+        Raises
+        ======
+
+        ValueError
+            If called when the ``bound_history`` stack is empty, indicating
+            the solver's internal state is out of sync.
+        """
         if not self.bound_history:
             raise ValueError("Cannot backtrack, bound_history stack is empty")
 
