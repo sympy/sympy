@@ -53,7 +53,7 @@ jobs:
       - run: pip install .
 
       - name: Check for incorrect use of ``__slots__`` using slotscheck
-        run: python -m slotscheck --no-strict-imports --exclude-modules "(sympy.parsing.autolev._antlr.*|sympy.parsing.latex._antlr.*|sympy.galgebra|sympy.plotting.pygletplot.*)" sympy
+        run: python bin/slotscheck
 
       # -- temporarily disabled -- #
       # These checks were too difficult for new contributors. They will
@@ -179,7 +179,7 @@ jobs:
           python-version: '3.14'
       - run: python -m pip install --upgrade pip
       - run: pip install -r requirements-dev.txt
-      - run: pytest -n auto
+      - run: pytest -n auto --timeout 10 --durations=50 --durations-min=5
 
   # -------------------- Optional dependency tests ----------------- #
 
@@ -484,7 +484,7 @@ jobs:
       - run: bin/test_sphinx.sh
 
       - name: Upload built docs
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: sphinx-html
           path: doc/_build/html
@@ -602,7 +602,7 @@ jobs:
         # GitHub Actions summary page.
 
       - name: Upload results as artifacts
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: benchmarks
           path: |

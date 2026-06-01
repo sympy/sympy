@@ -426,6 +426,7 @@ def test_reflect():
     assert Polygon((1, 0), (2, 0), (2, 2)).reflect(Line((3, 0), slope=0)) \
         == Triangle(Point(1, 0), Point(2, 0), Point(2, -2))
 
+@slow
 def test_bisectors():
     p1, p2, p3 = Point(0, 0), Point(1, 0), Point(0, 1)
     p = Polygon(Point(0, 0), Point(2, 0), Point(1, 1), Point(0, 3))

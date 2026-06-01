@@ -15,7 +15,7 @@ from sympy.ntheory.residue_ntheory import _primitive_root_prime_iter, \
     _discrete_log_pollard_rho, _discrete_log_index_calculus, _discrete_log_pohlig_hellman, \
     _binomial_mod_prime_power, binomial_mod
 from sympy.polys.domains import ZZ
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, slow
 from sympy.core.random import randint, choice
 
 
@@ -273,7 +273,6 @@ def test_residue():
     assert discrete_log(2456747, 3**51, 3) == 51
     assert discrete_log(32942478, 11**127, 11) == 127
     assert discrete_log(432751500361, 7**324, 7) == 324
-    assert discrete_log(265390227570863,184500076053622, 2) == 17835221372061
     assert discrete_log(22708823198678103974314518195029102158525052496759285596453269189798311427475159776411276642277139650833937,
                         17463946429475485293747680247507700244427944625055089103624311227422110546803452417458985046168310373075327,
                         123456) == 2068031853682195777930683306640554533145512201725884603914601918777510185469769997054750835368413389728895
@@ -316,6 +315,13 @@ def test_residue():
     assert binomial_mod(10**3, 500, 3**6) == 567
     assert binomial_mod(10**18 - 1, 123456789, 4) == 0
     assert binomial_mod(10**18, 10**12, (10**5 + 3)**2) == 3744312326
+
+
+@slow
+def test_discrete_log_large_prime_order():
+    # XXX: This case is much faster with _discrete_log_pohlig_hellman, but
+    # discrete_log does not choose that algorithm for this case.
+    assert discrete_log(265390227570863, 184500076053622, 2) == 17835221372061
 
 
 def test_binomial_p_pow():

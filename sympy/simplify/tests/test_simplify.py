@@ -370,6 +370,7 @@ def test_hypersimp():
     assert hypersimp(term, k) == (k - n)/(k + 1)**2
 
 
+@slow
 def test_nsimplify():
     x = Symbol("x")
     assert nsimplify(0) == 0

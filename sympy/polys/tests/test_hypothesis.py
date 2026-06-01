@@ -139,8 +139,11 @@ def test_dup_series_pow_int(f, pow, n):
     assert series_pow == Dup_pow
 
 
+@settings(max_examples=25)
 @given(
-    f=dup_any(dom=QQ), g=dup_zero_TC(dom=QQ), n=st.integers(min_value=3, max_value=200)
+    f=dup_any(dom=QQ, max_len=20),
+    g=dup_zero_TC(dom=QQ, max_len=20),
+    n=st.integers(min_value=3, max_value=20),
 )
 def test_dup_series_compose_rational(f, g, n):
     expected = dup_truncate(dup_compose(f, g, QQ), n, QQ)
@@ -165,6 +168,21 @@ def test_dup_series_mul_rational(f, g, n):
     Dup_mul = dup_truncate(dup_mul(f, g, QQ), n, QQ)
 
     assert series_mul == Dup_mul
+    assert base == karatsuba
+
+
+def test_dup_series_mul_rational_karatsuba_boundary():
+    # dup_series_mul switches to Karatsuba once min(len(f), len(g)) >= 100.
+    # Keep this as a separate test so the compose Hypothesis test can stay small
+    # and avoid paying for large exact dup_compose() oracles.
+    f = dup_from_list([QQ(1)] + [QQ(1, 2)] * 98 + [QQ(1, 3)], QQ)
+    g = dup_from_list([QQ(2)] + [QQ(-1, 3)] * 98 + [QQ(1, 5)], QQ)
+
+    base = _dup_series_mul_base(f, g, 100, QQ)
+    karatsuba = _dup_series_mul_karatsuba(f, g, 100, QQ)
+    series_mul = dup_series_mul(f, g, 100, QQ)
+
+    assert series_mul == karatsuba
     assert base == karatsuba
 
 

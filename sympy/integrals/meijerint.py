@@ -411,21 +411,18 @@ def _find_splitting_points(expr, x):
     {-3, 0}
     """
     p, q = [Wild(n, exclude=[x]) for n in 'pq']
-
-    def compute_innermost(expr, res):
+    res = set()
+    stack = [expr]
+    while stack:
+        expr = stack.pop()
         if not isinstance(expr, Expr):
-            return
+            continue
         m = expr.match(p*x + q)
         if m and m[p] != 0:
             res.add(-m[q]/m[p])
-            return
-        if expr.is_Atom:
-            return
-        for argument in expr.args:
-            compute_innermost(argument, res)
-    innermost = set()
-    compute_innermost(expr, innermost)
-    return innermost
+        elif not expr.is_Atom:
+            stack.extend(expr.args)
+    return res
 
 
 def _split_mul(f, x):

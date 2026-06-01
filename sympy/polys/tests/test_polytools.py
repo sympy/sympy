@@ -82,7 +82,7 @@ from sympy.utilities.iterables import iterable
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from sympy.testing.pytest import (
-    raises, warns_deprecated_sympy, warns, tooslow, XFAIL
+    raises, warns_deprecated_sympy, warns, slow, tooslow, XFAIL
 )
 
 from sympy.abc import a, b, c, d, p, q, t, w, x, y, z, s
@@ -1620,6 +1620,7 @@ def test_Poly_rat_clear_denoms():
     assert f.rat_clear_denoms(g) == (f, g)
 
 
+@slow
 def test_issue_20427():
     f = Poly(-117968192370600*18**(S(1)/3)/(217603955769048*(24201 +
         253*sqrt(9165))**(S(1)/3) + 2273005839412*sqrt(9165)*(24201 +
