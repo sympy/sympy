@@ -1,4 +1,5 @@
 from __future__ import annotations
+from collections import defaultdict
 from sympy.core.symbol import Dummy
 from sympy.external.mpmath import sqrt
 from sympy.ntheory import nextprime
@@ -9,6 +10,10 @@ from sympy.polys.galoistools import (
 from sympy.polys.polyerrors import ModularGCDFailed
 
 import random
+
+from sympy.polys.domains.finitefield import FF
+from sympy.polys.domains.integerring import ZZ
+from sympy.polys.galoistools import gf_add, gf_eval, gf_mul
 
 
 def _trivial_gcd(f, g):
@@ -2277,3 +2282,410 @@ def func_field_modgcd(f, g):
     h = h.quo_ground(h.LC)
 
     return h, f.quo(h), g.quo(h)
+
+
+def zippel_interp_monic(A, B, G, p):
+
+    """
+    I assume that the skeleton G is passed like this:
+    {2: ([(2,2,0), (2,2)]), 1: ([(1,5,3), (0, 5), (1,3)], [(1,0,4), (1, 4)])}
+    the key of the outer dictionary represents the degree in x1, then each element of the dictionary is a tuple
+    that stores a list for each monomial associated with that degree of x1. The first element of the list is the monomial
+    represented as a tuple, and the subsequent elements provide a compact representation of this element,
+    NOTE THAT THE COMPACT REPRESENTATION IGNORES THE INITIAL ZERO (MAYBE THE LONG ONE CAN IGNORE IT TOO)
+    useful to immediately get the non-zero elements and evaluate them.
+    TODO the very first lines could be rewritten so that the function accepts dictionaries for A and B
+    and not sympy polynomials, allowing to avoid using eval in the outer loop
+    """
+    ngens = A.ring.ngens
+    x1 = A.ring.gens[0]
+    deg_a = A.degree(x1)
+    lc_A = A.coeff_wrt(x1, deg_a)
+    nt = len(next(reversed(G.values())))
+
+    while True:
+        t = tuple(random.randint(-p//2, p//2) for _ in range(ngens-1))
+        is_bad_tuple = False
+        lc_A_ev = {}
+        # checking that the leading coeff of A isn't zero in the chosen tuple
+        for mon, coeff in lc_A.items():
+            j=1
+            for i, k in enumerate(mon[1:]):
+                j = (j *pow(t[i], k, p)) %p
+            lc_A_ev[j] = (lc_A_ev.get(j, 0) + coeff) %p
+        for i in range(nt):
+            j = 0
+            for val, coeff in lc_A_ev.items():
+                j = (j + pow(val, i, p) * coeff) %p
+            if j == 0:
+                is_bad_tuple = True
+                break
+        if is_bad_tuple:
+            continue
+
+        all_vand_basis = []
+        for deg, el in G.items():
+            vand_bas = []
+            for mon in el:
+                j = 1
+                for i in mon[1:]:
+                    j =  (j * pow(t[i[0]], i[1], p)) %p
+                if j in vand_bas:
+                    is_bad_tuple = True
+                    break
+            
+                vand_bas.append(j)
+            if is_bad_tuple:
+                break
+            all_vand_basis.append(vand_bas)
+        if is_bad_tuple:
+            continue
+        else:
+            break
+
+    x1 = A.ring.gens[0]
+    A_flat = list({} for _ in range(deg_a +1))
+    B_flat = list({} for _ in range(B.degree(x1) +1))
+
+    for mon, coeff in A.items():
+        j = 1
+        for i, k in enumerate(mon[1:]):
+            if k != 0:
+                j = (j * pow(t[i], k, p)) %p
+        A_flat[mon[0]][j] = (A_flat[mon[0]].get(j, 0) + coeff) %p
+
+    for mon, coeff in B.items():
+        j = 1
+        for i, k in enumerate(mon[1:]):
+            if k != 0:
+                j = (j * pow(t[i], k, p)) %p
+        B_flat[mon[0]][j] = (B_flat[mon[0]].get(j, 0) + coeff) %p
+
+    # represented A, B as lists (list index is corresponding power of x1)
+    # containing dicts with as keys the evaluated monomials
+    # and as values the related coeffs. example: {t1: c1,..., tn: cn}
+    # so that to evaluate in powers of the tuple I can do a linear combination t1**k*c1+...+tn**k*cn
+
+    eval_points = {deg:[] for deg in G.keys()}
+    for i in range(nt):
+        A_ev = []
+        B_ev = []
+        for pol in A_flat:
+            if pol == {}:
+                A_ev.append(0)
+            else:
+                h = 0
+                for j, k in pol.items():
+                    # this i+1 is for the modification suggested by gemini
+                    # to prevent the first evaluation point from always being
+                    # (1,..,1), I start the powers of the tuple from 1 and not from 0
+                    h = (h + pow(j, (i+1), p) *k) %p
+                A_ev.append(h)
+        
+        for pol in B_flat:
+            if pol == {}:
+                B_ev.append(0)
+            else:
+                h = 0
+                for j, k in pol.items():
+                    h = (h+ pow(j, (i+1), p) *k) %p
+                B_ev.append(h)
+        G_ev = gf_gcd(A_ev[::-1], B_ev[::-1], p, A.ring.domain)
+        G_ev.reverse()
+        #print(A_ev, B_ev, "      A_ev and B_ev")
+        # TODO add check: max degree in x1 of the skeleton and the evaluated poly
+        # must coincide
+        for j, el in enumerate(G_ev):
+            if el != 0 and j not in G.keys():
+                #print(G_ev)
+                #print(G)
+                return None
+        for deg in G.keys():
+            eval_points[deg].append(G_ev[deg])
+    
+    C = {}
+    # TODO have an extra evaluation point available, and after having computed the coefficients of the
+    # skeletal gcd check if the skeletal gcd is coherent with this extra eval point
+    for i, (deg, monoms) in enumerate(G.items()):
+        v = lag_basis(all_vand_basis[i], p)
+        c = vandermonde_interp(v, eval_points[deg][:len(v)], p, trans=True)
+        for j, mon in enumerate(monoms):
+            #print(G)
+            #print(c)
+            C[mon[0]] = (c[j] * pow(all_vand_basis[i][j], -1, p) ) %p
+
+    return C
+
+
+def incremental_newton_interp(x, v, xk, uk, p):
+    """
+    Computes the next Newton interpolation coefficient v_k over Z_p.
+
+    Given a list of k evaluation points x = [x_0, ..., x_{k-1}] and the
+    corresponding coefficients v = [v_0, ..., v_{k-1}] of the Newton
+    interpolation polynomial P_{k-1}(x), this function calculates the new
+    coefficient v_k required to interpolate a new point (x_k, u_k).
+
+    References
+    ==========
+
+    1. [Geddes92] p. 186.
+
+    Examples
+    ========
+
+    >>> from sympy.polys.modulargcd import incremental_newton_interp
+    >>> x = [0, 1]
+    >>> v = [67, 47]
+    >>> xk = 2
+    >>> uk = 66
+    >>> p = 97
+    >>> v2 = incremental_newton_interp(x, v, xk, uk, p)
+    >>> v2
+    1
+
+    """
+    s = v[0]
+    c = 1
+    for i, el in enumerate(v[1:]):
+        c = (c * (xk - x[i])) % p
+        s = (s + el * c) % p
+    return ((uk - s) * pow(c * (xk - x[len(v) - 1]), -1, p)) % p
+
+
+def from_newt_to_poly(x, v, p):
+    """
+    Given k evaluation points x = [x_0, ..., x_{k-1}] and the
+    corresponding coefficients v = [v_0, ..., v_{k-1}] of the Newton
+    interpolation polynomial P_{k-1}(x), this function calculates explicitly
+    and returns the interpolation polynomial P_{k-1}(x) over Z_p.
+
+    References
+    ==========
+
+    1. [Geddes92] p. 186.
+
+    Examples
+    ========
+
+    >>> from sympy.polys.modulargcd import from_newt_to_poly
+    >>> x = [0, 1, 2]
+    >>> v = [67, 47, 1]
+    >>> p = 97
+    >>> from_newt_to_poly(x, v, p)
+    [67, 46, 1]
+
+    """
+    pol = [v[-1]]
+    for i in range(len(v) - 2, -1, -1):
+        binomial = [1, -x[i]]
+        pol = gf_mul(pol, binomial, p, ZZ)
+        pol = gf_add(pol, [v[i]], p, ZZ)
+
+    return pol[::-1]
+
+def sparse_gcd(A, B, p):
+    ring = A.ring
+    if ring.ngens == 1:
+        x1 = ring.gens[0]
+        G = _gf_gcd(A, B, p)
+        if G.degree(x1) == 0:
+            G = 1
+        return G
+    a, A = _primitive(A, p)
+    b, B = _primitive(B, p)
+    c = _gf_gcd(a, b, p)
+    g = _gf_gcd(_LC(A), _LC(B), p)
+    M = []
+    h = []
+    skippable = set()
+
+    while True:
+        t = random.randint(1, p - 1)
+        gk = g._evaluate({0:t}) %p
+        if t in M or gk == 0:
+            continue
+        xk = ring.gens[-1]
+        # here variables of the ring are reduced by one
+        A_ = A.evaluate(xk, t).trunc_ground(p)
+        B_ = B.evaluate(xk, t).trunc_ground(p)
+        G = sparse_gcd(A_, B_, p)
+
+        if G == None:
+            M = []
+            h = []
+            skippable = set()
+        else:
+            lc_mon = G.leading_expv()
+            if (max(sum(mon) for mon in G.keys())) == 0:
+                return c
+            M.append(t)
+            # normalization
+            G = (G.monic() * gk).trunc_ground(p)  
+    
+            G_s, h = skeleton_sorter(G)
+        while True:
+            t = random.randint(1, p - 1)
+            gk = g._evaluate({0:t}) %p
+            if t in M or gk == 0:
+                continue
+            # TODO gli evaluate qua sotto si potrebbero riscrivere a mano
+            # evitando un grosso overhead. Attenzione che però
+            # al momento zippel_interp() si aspetta dei veri polinomi
+            A_ = A.evaluate(xk, t).trunc_ground(p)
+            B_ = B.evaluate(xk, t).trunc_ground(p)
+            G_ = zippel_interp_monic(A_, B_, G_s, p)
+            if G_ == None:
+                continue
+            # normalization at this stage can't be performed using .monic()
+            # since zippel_interp only returns a raw dict and not a sympy poly.
+            # this is done because the order of the dict is used, and converting
+            # to poly would destroy the order
+            G_k = pow(G_[lc_mon], -1, p) # inverse of leading coeff
+            for mon in G_:
+                G_[mon] = ((G_[mon] * G_k) * gk) %p
+            repeat = False
+            for i, (_, coeff) in enumerate(G_.items()):
+                # if a coefficient is zero it means the poly has reached its deg:
+                # every coefficient from that point on will be zero
+                if i in skippable:
+                    continue
+                vk = incremental_newton_interp(M[:len(h[i])], h[i], t, coeff, p)
+                if vk != 0:
+                    repeat = True
+                    h[i].append(vk)
+                else:
+                    skippable.add(i)
+            M.append(t)
+            if not repeat:
+                gcd = {}
+                for i, mon in enumerate(G_.keys()):
+                    pol = from_newt_to_poly(M[:len(h[i])], h[i], p)
+                    for j, el in enumerate(pol):
+                        gcd[mon + (j,)] = el
+                gcd = ring.from_dict(gcd)
+                _, gcd = _primitive(gcd, p)
+                R_mod = ring.clone(domain=FF(p))
+    
+                # modular conversion to perform test divisions
+                A_mod = A.set_ring(R_mod)
+                B_mod = B.set_ring(R_mod)
+                gcd_mod = gcd.set_ring(R_mod)
+                if A_mod.rem(gcd_mod) == 0 and B_mod.rem(gcd_mod) == 0:
+                    return (gcd * c).trunc_ground(p)
+
+
+def skeleton_sorter(G):
+    """
+    Reorganizes the skeleton of a sparse polynomial for multivariate interpolation.
+
+    This function extracts the monomials of a sparse polynomial.
+    It groups the monomials by the degree of the first variable,
+    sorts these groups by the number of monomials they contain
+    (in ascending order), and builds a compact representation of the non-zero
+    degrees for the remaining variables, useful to evaluate quickly the monomials.
+
+    It also saves the coefficients of each monomial in a list of lists.
+
+    Examples
+    ========
+
+    If we take the sparse polynomial G = 5*x**2*y**2 + 7*x*y**5*z**3 + 8*x*z**4
+    in ZZ[x, y, z], skeleton_sorter(G) returns the following ouputs:
+
+    S = {
+        2: [[(2, 2, 0), (0, 2)]],
+        1: [[(1, 5, 3), (0, 5), (1, 3)], [(1, 0, 4), (1, 4)]]
+    }
+
+    h = [[5], [7], [8]]
+
+    """
+    S = defaultdict(list)
+    for mon, _ in G.items():
+        S[mon[0]].append([mon])
+    S = {deg: S[deg] for deg in sorted(S.keys(), key=lambda x: len(S[x]))}
+    h = []
+    for _, mons in S.items():
+        for mon in mons:
+            h.append([G[mon[0]]])
+            for i, el in enumerate(mon[0][1:]):
+                if el != 0:
+                    mon.append((i, el))
+    return S, h
+
+
+def lag_basis(evalpoints, p):
+    """
+    Computes the Lagrange basis associated to the given
+    list of evaluation points over Z_p.
+
+    Example
+    =======
+
+    >>> from sympy.polys.modulargcd import lag_basis
+    >>> evalpoints = [1, 2, 5]
+    >>> p = 11
+    >>> lag_basis(evalpoints, p)
+    [[3, 1, 8], [7, 2, 2], [1, 8, 2]]
+
+    """
+    master_pol = [1]
+    for k in evalpoints:
+        master_pol = gf_mul(master_pol, [1, -k], p, ZZ)
+
+    v = [gf_div(master_pol, [1, -k], p, ZZ)[0] for k in evalpoints]
+    for i, poly in enumerate(v):
+        c = gf_eval(poly, evalpoints[i], p, ZZ)
+        c = pow(c, -1, p)
+        v[i] = [(c*el) % p for el in v[i]]
+    return v
+
+
+def vandermonde_interp(basis, values, p, trans=True):
+    """
+    Solves for x the linear system A^T * x = values in Z_p,
+    where A is the Vandermonde matrix such that a_{i,j} = k[i]^j.
+    If trans = False, it solves the linear system A*x = values.
+    Both systems are solved in O(n^2) time.
+
+    The parameter basis can be computed using lag_basis(k, p).
+
+    Note that solving a linear system with associated Vandermonde matrix is
+    equivalent to interpolating an univariate polynomial.
+    Note also that the interpolation of a multivariate polynomial in
+    Z_p[x1,...,xn], can be made equivalent to the resolution of a linear system
+    with the transposed of a Vandermonde matrix as the associated matrix.
+    It is sufficient to choose a random tuple (t1,...,tn),
+    and to use (t1^j,...,tn^j) for j in {0,1,...} as evaluation points.
+
+    Example
+    =======
+
+    >>> from sympy.polys.modulargcd import vandermonde_interp, lag_basis
+    >>> from sympy import Matrix
+
+    >>> k = [1, 2, 5]
+    >>> p = 9973
+    >>> values = [4, 9, 36]
+    >>> A = Matrix([[1, 1, 1], [1, 2, 4], [1, 5, 25]])
+
+    >>> bas = lag_basis(k, p)
+
+    >>> x = vandermonde_interp(bas, values, p, trans = False)
+
+    >>> A * Matrix(x) == Matrix(values)
+    True
+
+    """
+    deg = len(values)-1
+    if trans:
+        sol = []
+        for poly in basis:
+            sol.append(sum(val * poly[deg-i] for i, val in enumerate(values)) % p)
+    else:
+        sol = []
+        for i in range(len(values)):
+            sol.append(sum(values[j] * basis[j][deg-i] for j in range(len(values))) % p)
+
+    return sol
