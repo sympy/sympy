@@ -224,10 +224,7 @@ def _invert_real(f, g_ys, symbol):
     n = Dummy('n', real=True)
 
     if isinstance(f, exp) or (f.is_Pow and f.base == S.Exp1):
-        if isinstance(g_ys, FiniteSet):
-            g_ys = FiniteSet(*[e for e in g_ys if e.is_nonpositive is not True])
-        else:
-            g_ys = g_ys.intersect(Interval.open(0, oo))
+        g_ys = g_ys.intersect(Interval.open(0, oo))
         return _invert_real(f.exp, imageset(Lambda(n, log(n)), g_ys), symbol)
 
     if hasattr(f, 'inverse') and f.inverse() is not None and not isinstance(f, (
