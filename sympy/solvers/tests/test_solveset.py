@@ -86,7 +86,7 @@ def assert_close_nl(sol1, sol2):
 def test_invert_real():
     x = Symbol('x', real=True)
 
-    assert invert_real(exp(x), z, x) == (x, ImageSet(Lambda(x, log(x)), Intersection(FiniteSet(z), Interval.open(0, oo))))
+    assert dumeq(invert_real(exp(x), z, x), (x, ImageSet(Lambda(x, log(x)), Intersection(FiniteSet(z), Interval.open(0, oo)))))
 
     y = Symbol('y', positive=True)
     n = Symbol('n', real=True)
@@ -97,7 +97,7 @@ def test_invert_real():
     assert invert_real(exp(3*x), y, x) == (x, FiniteSet(log(y) / 3))
     assert invert_real(exp(x + 3), y, x) == (x, FiniteSet(log(y) - 3))
 
-    assert invert_real(exp(x) + 3, y, x) == (x, ImageSet(Lambda(x, log(x)), Intersection(FiniteSet(y - 3), Interval.open(0, oo))))
+    assert dumeq(invert_real(exp(x) + 3, y, x), (x, ImageSet(Lambda(x, log(x)), Intersection(FiniteSet(y - 3), Interval.open(0, oo)))))
     assert invert_real(exp(x)*3, y, x) == (x, FiniteSet(log(y / 3)))
 
     assert invert_real(log(x), y, x) == (x, FiniteSet(exp(y)))
@@ -107,7 +107,7 @@ def test_invert_real():
     assert invert_real(Abs(x), y, x) == (x, FiniteSet(y, -y))
 
     assert invert_real(2**x, y, x) == (x, FiniteSet(log(y)/log(2)))
-    assert invert_real(2**exp(x), y, x) == (x, ImageSet(Lambda(x, log(x)), Intersection(FiniteSet(log(y)/log(2)), Interval.open(0, oo))))
+    assert dumeq(invert_real(2**exp(x), y, x), (x, ImageSet(Lambda(x, log(x)), Intersection(FiniteSet(log(y)/log(2)), Interval.open(0, oo)))))
 
     assert invert_real(x**2, y, x) == (x, FiniteSet(sqrt(y), -sqrt(y)))
     assert invert_real(x**S.Half, y, x) == (x, FiniteSet(y**2))
@@ -3597,7 +3597,7 @@ def test_issue_26077():
     assert solution.as_dummy() == critical_points.as_dummy()
 
 def test_invert_exp():
-    # issue 20674
+    # issue 29674
     assert dumeq(solveset(sin(exp(x)), x, domain=S.Reals),
           Union(ImageSet(Lambda(n, log(2*n*pi + pi)), Range(0, oo, 1)),
                 ImageSet(Lambda(n, log(2*n*pi + 2*pi)), Range(0, oo, 1))))
