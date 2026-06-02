@@ -715,6 +715,8 @@ class LatexPrinter(Printer):
 
     def _helper_print_standard_power(self, expr, template: str) -> str:
         exp = self._print(expr.exp)
+        if expr.exp.is_Pow:
+            exp = self.parenthesize_super(exp)
         # issue #12886: add parentheses around superscripts raised
         # to powers
         base = self.parenthesize(expr.base, PRECEDENCE['Pow'])
@@ -1258,7 +1260,7 @@ class LatexPrinter(Printer):
         x = expr.args[0]
         # Deal with unevaluated single argument beta
         y = expr.args[0] if len(expr.args) == 1 else expr.args[1]
-        tex = rf"\left({x}, {y}\right)"
+        tex = r"\left(%s, %s\right)" % (self._print(x), self._print(y))
 
         if exp is not None:
             return r"\operatorname{B}^{%s}%s" % (exp, tex)
