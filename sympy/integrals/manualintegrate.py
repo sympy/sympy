@@ -2063,6 +2063,105 @@ def sqrt_fractional_linear_rule(integral : IntegralInfo):
         return step
     return None
 
+def euler_substitution_rule(integral : IntegralInfo):
+    """
+    Substitute common sqrt(a + b*x + c*x**2) terms using Euler substitution.
+    """
+    integrand, x = integral
+    base0 = None
+    powers, exps, ratios = [], [], []
+    a0 = b0 = c0 = None
+    # use ordered() to ensure a selection of the smallest base0 (eg. first sqrt(x**2 + 1), then sqrt(2*x**2 + 2), x**2 + 1 chosen)
+    for pow_ in ordered(integrand.find(Pow)): # collect all (a + b*x + c*x**2)**(p/2)
+        base, exp_ = pow_.base, pow_.exp
+        if exp_.is_Integer or x not in base.free_symbols: # skip 1/x and sqrt(2)
+            continue
+        if not exp_.is_Rational: # exclude (x**2 + 1)**pi
+            return None
+        if exp_.q != 2:
+            return None
+        base_poly = base.as_poly(x)
+        if base_poly is None or base_poly.degree() != 2: # exclude cube roots and other radicals
+            return None
+        aa = base_poly.nth(0)
+        bb = base_poly.nth(1)
+        cc = base_poly.nth(2)
+        R = base_poly.as_expr()
+        if base0 is None:
+            base0 = R
+            a0, b0, c0 = aa, bb, cc
+            powers.append(pow_)
+            exps.append(exp_)
+            ratios.append(S.One)
+        else:
+            ratio = (R/base0).cancel()
+            if ratio.has(x):
+                return None
+            powers.append(pow_)
+            exps.append(exp_)
+            ratios.append(ratio)
+    if base0 is None:
+        return None
+
+    pieces: list[tuple[Rule, Boolean]] = []
+    delta = 4*a0*c0 - b0**2
+    # substitution not valid for c0 = 0 and delta = 0
+    c_zero_cond = Eq(c0, 0)
+    delta_zero_cond = Eq(delta, 0)
+
+    def _delta_zero_step():
+        shift = x + b0/(2*c0)
+        rewritten_base = c0*shift**2
+        subs_dict = {pow_i: (ratio_i*rewritten_base)**exp_i for pow_i, exp_i, ratio_i in zip(powers, exps, ratios)}
+        rewritten = integrand.subs(subs_dict)
+        step = integral_steps(rewritten, x)
+        return RewriteRule(integrand, x, rewritten, step)
+
+    def _c_zero_step():
+        degenerate_integrand = integrand.subs(c0, 0)
+        if b0.is_zero:
+            step = integral_steps(degenerate_integrand, x)
+        else:
+            step = sqrt_fractional_linear_rule(degenerate_integrand, x)
+            if step is None:
+            # since calling directly sqrt_fractional_linear_rule could return None we create a DontKnowRule
+                step = DontKnowRule(degenerate_integrand, x)
+        return step
+
+    def _general_euler_step():
+        s = Dummy("s")
+        subs_dict = { pow_i: ratio_i**exp_i * s**(2*exp_i) for pow_i, exp_i, ratio_i in zip(powers, exps, ratios)}
+        rewritten = integrand.subs(subs_dict)
+        numer, denom = rewritten.as_numer_denom()
+        if numer.as_poly(x, s) is None or denom.as_poly(x, s) is None:
+            return None
+        # Euler's second substitution (u = sqrt(R) + sqrt(c)*x)
+        u = Dummy("u")
+        sqrt_c0 = sqrt(c0)
+        x_u = (u**2 - a0)/(b0 + 2*sqrt_c0*u)
+        s_u = u - sqrt_c0*x_u
+        dx_u = 2*(b0*u + sqrt_c0*(u**2 + a0))/(b0 + 2*sqrt_c0*u)**2
+        substituted = rewritten.subs({x: x_u, s: s_u}) * dx_u
+        substep = integral_steps(substituted, u)
+        u_func = sqrt(base0) + sqrt_c0*x
+        return URule(integrand, x, u, u_func, substep)
+
+    if delta_zero_cond is S.true:
+        general_step = _delta_zero_step()
+        if general_step.contains_dont_know():
+            return None
+    else:
+        general_step = _general_euler_step()
+        if general_step is None or general_step.contains_dont_know():
+            return None
+    if c0.is_zero is None:
+        pieces.append((_c_zero_step(), c_zero_cond))
+    if delta.is_zero is None:
+        pieces.append((_delta_zero_step(), delta_zero_cond))
+    if pieces:
+        pieces.append((general_step, S.true))
+        general_step = PiecewiseRule(integrand, x, pieces)
+    return general_step
 
 def sqrt_quadratic_rule(integral: IntegralInfo, degenerate=True):
     integrand, x = integral
@@ -2664,6 +2763,7 @@ def integral_steps(integrand, symbol, **options):
                         null_safe(heaviside_rule), null_safe(quadratic_denom_rule),
                         null_safe(sqrt_quadratic_rule),
                         null_safe(sqrt_fractional_linear_rule),
+                        null_safe(euler_substitution_rule),
                         null_safe(powsimp_rule),
                         null_safe(trig_cmplx_exp_rule)),
             Derivative: derivative_rule,
