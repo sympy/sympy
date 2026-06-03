@@ -197,9 +197,12 @@ class Beam:
         self._applied_support_symbols = []
         self._applied_rotation_hinges = []
         self._applied_sliding_hinges = []
+        self._applied_rotation_springs = []
         self._rotation_hinge_symbols = []
         self._sliding_hinge_symbols = []
         self._support_as_loads = []
+        self._rotation_spring_symbols = []
+        self._rotation_spring_eqs = []
         self._applied_loads = []
         self._reaction_loads = {}
         self._ild_reactions = {}
@@ -504,13 +507,16 @@ class Beam:
             with
             - zero degree of freedom, type = "fixed"
             - one degree of freedom, type = "pin"
+            - two degrees of freedom, type = "spring"
             - two degrees of freedom, type = "roller"
+        spring_constant : Sympifyable
+            The strengh of the spring in kN/m
 
         Returns
         =======
         Symbol or tuple of Symbol
             The unknown reaction load as a symbol.
-            - Symbol(reaction_force) if type = "pin" or "roller"
+            - Symbol(reaction_force) if type = "pin", "roller" or "spring"
             - Symbol(reaction_force), Symbol(reaction_moment) if type = "fixed"
 
         Examples
@@ -651,6 +657,84 @@ class Beam:
         self.apply_load(E * I * rotation_jump, loc, -3)
         self.bc_bending_moment.append((loc, 0))
         return rotation_jump
+    
+    def apply_rotation_spring(self, loc, spring_constant):
+        """
+        This method applies a rotation spring at a single location on the beam.
+
+        Parameters
+        ----------
+        loc : Sympifyable
+            Location of point at which hinge is applied.
+        spring_constant : Sympifyable
+            Strengh of the rotation spring in kNm / rad
+
+        Returns
+        =======
+        Symbol
+            The moment the rotation spring will resist.
+
+        Examples
+        ========
+        There is a beam of length 8 meters. Pin supports are placed at distances
+        of 0 and 8 meters.  There are two rotation springs in the structure, 
+        one at 0 meters and one at 4 meters. A pointload of magnitude
+        100 kN is applied on the rotation spring at 4 meters.
+
+        Using the sign convention of downward forces and anti-clockwise moment
+        being positive.
+
+        >>> from sympy.physics.continuum_mechanics.beam import Beam
+        >>> from sympy import Symbol
+        >>> E = Symbol('E')
+        >>> I = Symbol('I')
+        >>> b = Beam(8, E, I)
+        >>> r0 = b.apply_support(0, type='pin')
+        >>> r8 = b.apply_support(8, type='pin')
+        >>> b.apply_rotation_spring(0, k)
+        >>> b.apply_rotation_spring(4, k)
+        >>> b.apply_load(100, 5, -1)
+        >>> b.solve_for_reaction_loads(r0, r8)
+        >>> b.reaction_loads
+        {R_8: (-600*E*I - 1000*k)/(15*E*I + 32*k), R_0: (-900*E*I - 2200*k)/(15*E*I + 32*k)}
+        >>> b.moment_jumps
+        {S_0: (1200*E*I + 4800*k)/(15*E*I + 32*k), S_4: (2400*E*I + 4000*k)/(15*E*I + 32*k)}
+        >>> b.load
+        E*I*(-2400*E*I - 4000*k)*SingularityFunction(x, 4, -3)/(15*E*I*k + 32*k**2) + 
+        (-900*E*I - 2200*k)*SingularityFunction(x, 0, -1)/(15*E*I + 32*k) + 
+        (-600*E*I - 1000*k)*SingularityFunction(x, 8, -1)/(15*E*I + 32*k) + 
+        100*SingularityFunction(x, 4, -1) + 
+        (1200*E*I + 4800*k)*SingularityFunction(x, 0, -2)/(15*E*I + 32*k)
+        """
+        loc = sympify(loc)
+        E = self.elastic_modulus
+        I = self._get_I(loc)
+        spring_moment = Symbol('S_'+str(loc))
+
+        if loc == 0:
+            self.apply_load(spring_moment, loc, -2)
+            self.bc_slope.append((loc,-spring_moment / spring_constant))
+            self._rotation_spring_symbols.append(spring_moment)
+            self._applied_rotation_springs.append(loc)
+        elif loc == self.length:
+            self.apply_load(spring_moment, loc, -2)
+            self.bc_slope.append((loc,-spring_moment / spring_constant))
+            self._rotation_spring_symbols.append(spring_moment)
+            self._applied_rotation_springs.append(loc)
+        else:
+            rotation_jump = Symbol('P_'+str(loc))
+            rotation_spring_bc = -rotation_jump - spring_moment / spring_constant
+        
+            self._applied_rotation_springs.append(loc)
+            self._rotation_hinge_symbols.append(rotation_jump)
+            self._rotation_spring_symbols.append(spring_moment)
+            self._rotation_spring_eqs.append(rotation_spring_bc)
+
+            self.apply_load(E * I * rotation_jump, loc, -3)
+            self.apply_load(spring_moment, loc, -2)
+            self.apply_load(-spring_moment, loc, -2)
+            self.bc_bending_moment.append((loc,spring_moment))
+        return spring_moment
 
     def apply_sliding_hinge(self, loc):
         """
@@ -1003,6 +1087,8 @@ class Beam:
         rotation_jumps = tuple(self._rotation_hinge_symbols)
         deflection_jumps = tuple(self._sliding_hinge_symbols)
         applied_supports = tuple(self._applied_support_symbols)
+        spring_moments = tuple(self._rotation_spring_symbols)
+        rotation_spring_eqs = list(self._rotation_spring_eqs)
 
         shear_curve = limit(self.shear_force(), x, l)
         moment_curve = limit(self.bending_moment(), x, l)
@@ -1013,12 +1099,12 @@ class Beam:
         deflection_eqs = []
 
         for position, value in self._boundary_conditions['shear_force']:
-            eqs = self.shear_force().subs(x, position) - (value *self.second_moment * self.elastic_modulus)
+            eqs = self.shear_force().subs(x, position) - value
             new_eqs = sum(arg for arg in eqs.args if not any(num.is_infinite for num in arg.args))
             shear_force_eqs.append(new_eqs)
 
         for position, value in self._boundary_conditions['bending_moment']:
-            eqs = self.bending_moment().subs(x, position) - (value *self.second_moment * self.elastic_modulus)
+            eqs = self.bending_moment().subs(x, position) - value
             new_eqs = sum(arg for arg in eqs.args if not any(num.is_infinite for num in arg.args))
             bending_moment_eqs.append(new_eqs)
 
@@ -1033,30 +1119,54 @@ class Beam:
             deflection_eqs.append(eqs)
         total_supports = tuple(set(applied_supports + reactions))
         solution = list((linsolve([shear_curve, moment_curve] + shear_force_eqs + bending_moment_eqs + slope_eqs
-                            + deflection_eqs, (C3, C4) + total_supports + rotation_jumps + deflection_jumps).args)[0])
+                            + deflection_eqs + rotation_spring_eqs, (C3, C4) + total_supports + rotation_jumps
+                              + deflection_jumps + spring_moments).args)[0])
         reaction_index = 2+len(total_supports)
         rotation_index = reaction_index + len(rotation_jumps)
+        deflection_index = rotation_index + len(deflection_jumps)
         reaction_solution = solution[2:reaction_index]
         rotation_solution = solution[reaction_index:rotation_index]
-        deflection_solution = solution[rotation_index:]
-
+        deflection_solution = solution[rotation_index:deflection_index]
+        rotation_spring_solution = solution[deflection_index:]
         self._reaction_loads = dict(zip(total_supports, reaction_solution))
         self._rotation_jumps = dict(zip(rotation_jumps, rotation_solution))
         self._deflection_jumps = dict(zip(deflection_jumps, deflection_solution))
+        self._moment_jumps = dict(zip(spring_moments, rotation_spring_solution))
         self._load = self._load.subs(self._reaction_loads)
         self._load = self._load.subs(self._rotation_jumps)
         self._load = self._load.subs(self._deflection_jumps)
-        reactkey = list(self.reaction_loads.keys())
-        reactvalue = list(self.reaction_loads.values())
+        self._load = self._load.subs(self._moment_jumps)
+        
         am = -1
         for position, value in self.bc_deflection:
             am = am +1
             if value != 0:
-                for reac in range(len(reactkey)):
-                    if reactkey[reac] == list(value.free_symbols)[0]:
+                for reac in range(len(total_supports)):
+                    if total_supports[reac] == list(value.free_symbols)[0]:
                         self.bc_deflection[am] = list(self.bc_deflection[am])
-                        self.bc_deflection[am][1]= (value.subs(reactkey[reac],reactvalue[reac]))
+                        self.bc_deflection[am][1]= (value.subs(total_supports[reac],reaction_solution[reac]))
                         self.bc_deflection[am] = tuple(self.bc_deflection[am])
+
+        am = -1
+        for position, value in self.bc_bending_moment:
+            am = am +1
+            if value != 0:
+                for spring in range(len(spring_moments)):
+                    if spring_moments[spring] == list(value.free_symbols)[0]:
+                        self.bc_bending_moment[am] = list(self.bc_bending_moment[am])
+                        self.bc_bending_moment[am][1]= (value.subs(spring_moments[spring],rotation_spring_solution[spring]))
+                        self.bc_bending_moment[am] = tuple(self.bc_bending_moment[am])
+
+        am = -1
+        for position, value in self.bc_slope:
+            am = am +1
+            if value != 0:
+                for spring in range(len(spring_moments)):
+                    if spring_moments[spring] == list(value.free_symbols)[0]:
+                        self.bc_slope[am] = list(self.bc_slope[am])
+                        self.bc_slope[am][1]= (value.subs(spring_moments[spring],rotation_spring_solution[spring]))
+                        self.bc_slope[am] = tuple(self.bc_slope[am])  
+
     def shear_force(self):
         """
         Returns a Singularity Function expression which represents
@@ -1426,7 +1536,7 @@ class Beam:
 
         bc_eqs = []
         for position, value in self._boundary_conditions['slope']:
-            eqs = slope_curve.subs(x, position) - value
+            eqs = slope_curve.subs(x, position) + value
             bc_eqs.append(eqs)
         constants = list(linsolve(bc_eqs, C3))
         slope_curve = slope_curve.subs({C3: constants[0][0]})
@@ -1556,8 +1666,8 @@ class Beam:
         for position, value in self._boundary_conditions['deflection']:
             eqs = deflection_curve.subs(x, position) + (value *self.second_moment * self.elastic_modulus)
             bc_eqs.append(eqs)
-
         constants = list(linsolve(bc_eqs, C4))
+
         deflection_curve = deflection_curve.subs({C4: constants[0][0]})
         return deflection_curve
 
@@ -2564,6 +2674,15 @@ class Beam:
             ratio = loc / self.length
             x_pos = float(ratio) * length
             markers += [{'args': [[x_pos], [height / 2]], 'marker':'|', 'markersize':12, 'color':"white"}]
+
+        for loc in self._applied_rotation_springs:
+            ratio = loc / self.length
+            x_pos = float(ratio) * length
+            markers += [{'args':[[x_pos], [height / 2]], 'marker':'o', 'markersize':18, 'color':"white"},
+                        {'args':[[x_pos], [height / 2]], 'marker':'+', 'markersize':18, 'color':"black"},
+                        #{'args':[[x_pos], [height / 2]], 'marker':'2', 'markersize':18, 'color':"black"},
+                        #{'args':[[x_pos], [height / 2]], 'marker':'3', 'markersize':18, 'color':"black"},
+                        {'args':[[x_pos], [height / 2]], 'marker':'x', 'markersize':15, 'color':"black"}]
 
         ylim = (-length, 1.25*length)
         if fill:
