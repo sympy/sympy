@@ -582,6 +582,7 @@ class LagrangesMethod(MethodBase):
         """Column matrix of acceleration constraint residuals."""
         return self.velocity_constraints.diff(dynamicsymbols._t)
 
+    @property
     def constraints_jacobian(self):
         """Jacobian of the constraints. A matrix of shape(M + m, n) which are
         equivalently the linear coefficients of q' in the velocity constraints

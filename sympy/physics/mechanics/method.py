@@ -277,9 +277,10 @@ class MethodBase(ABC):
     # LagrangesMethod: (attr) -lam_coeffs
     # JointsMethod: NA
     # System: NA
+    @property
     def constraints_jacobian(self):
-        """Returns an M + m x N coefficient matrix ``C`` which is the Jacobian
-        of the constraints.
+        """M + m x N coefficient matrix ``C`` which is the Jacobian of the
+        constraints.
 
         .. code:: text
 
