@@ -1,6 +1,6 @@
 from __future__ import annotations
-from sympy.physics.mechanics.method import Method
+from sympy.physics.mechanics.method import MethodBase
 from sympy.testing.pytest import raises
 
 def test_method():
-    raises(TypeError, lambda: Method())
+    raises(TypeError, lambda: MethodBase())

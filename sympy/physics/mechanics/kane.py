@@ -3,7 +3,7 @@ from sympy import zeros, Matrix, diff, eye, linear_eq_to_matrix
 from sympy.core.sorting import default_sort_key
 from sympy.physics.vector import (ReferenceFrame, dynamicsymbols,
                                   partial_velocity)
-from sympy.physics.mechanics.method import Method
+from sympy.physics.mechanics.method import MethodBase
 from sympy.physics.mechanics.particle import Particle
 from sympy.physics.mechanics.rigidbody import RigidBody
 from sympy.physics.mechanics.functions import (msubs, find_dynamicsymbols,
@@ -18,7 +18,7 @@ from sympy.utilities.exceptions import sympy_deprecation_warning
 __all__ = ['KanesMethod']
 
 
-class KanesMethod(Method):
+class KanesMethod(MethodBase):
     r"""Kane's method for forming the equations of motion of a multibody
     system.
 

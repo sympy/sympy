@@ -2,10 +2,10 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from sympy import linear_eq_to_matrix
 
-__all__ = ['Method']
+__all__ = ['MethodBase']
 
 
-class Method(ABC):
+class MethodBase(ABC):
     """Abstract Base Class for all methods for forming the equations of motion
     of multiody systems.
 
