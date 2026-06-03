@@ -585,6 +585,9 @@ class exp(ExpBase, metaclass=ExpMeta):
             if logs:
                 return Pow(logs[0].args[0], arg.coeff(logs[0]))
 
+    def _eval_rewrite_as_EML(self, arg, **kwargs):
+        return EML(arg, S.One, evaluate=False)
+
 
 def match_real_imag(expr):
     r"""
@@ -1107,6 +1110,412 @@ class log(DefinedFunction):
         if self.args[0] == s and n.is_integer and n.is_positive:
             return S.NegativeOne**(n-1) * factorial(n - 1) / s**n
         return super()._eval_derivative_n_times(s, n)
+
+    def _eval_rewrite_as_EML(self, arg, **kwargs):
+        # Pure-EML grammar (Odrzywolek 2026): the result is a binary tree whose
+        # only constant leaf is 1 and whose only internal node is EML, namely
+        #
+        #     log(x) = EML(1, EML(EML(1, x), 1)).
+        #
+        # Each EML below is constructed with ``evaluate=False`` to preserve
+        # the tree structure; otherwise the inner ``EML(_, 1)`` would auto-
+        # collapse to ``exp(_)`` and the recursive form would be lost.
+        inner = EML(S.One, arg, evaluate=False)
+        middle = EML(inner, S.One, evaluate=False)
+        return EML(S.One, middle, evaluate=False)
+
+
+class EML(DefinedFunction):
+    r"""
+    The two-argument function ``EML(x, y) = exp(x) - log(y)``.
+
+    Explanation
+    ===========
+
+    ``EML`` combines the exponential and (natural) logarithm into a single
+    binary primitive. It is defined by
+
+    .. math::
+
+        \operatorname{EML}(x, y) = e^{x} - \log(y),
+
+    where :math:`\log` denotes the principal branch of the natural logarithm.
+
+    Following Odrzywolek (arXiv:2603.21852), every elementary expression
+    can be written as a binary tree whose internal nodes are ``EML`` and whose
+    only constant leaf is ``1`` (together with the free symbols of the
+    expression). The recursive grammar of these trees is
+
+    .. math::
+
+        S \;\to\; 1 \;\mid\; \operatorname{EML}(S, S).
+
+    The conversion is obtained with ``expr.rewrite(EML)``. The key building
+    blocks given by the paper are
+
+    .. math::
+
+        e^{x} = \operatorname{EML}(x, 1), \qquad
+        \log(x) = \operatorname{EML}(1, \operatorname{EML}(\operatorname{EML}(1, x), 1)).
+
+    Examples
+    ========
+
+    >>> from sympy import EML, exp, log, symbols, simplify
+    >>> x, y = symbols('x y')
+
+    Basic algebraic identities (these come from the eval simplifications):
+
+    >>> EML(0, 1)
+    1
+    >>> EML(x, 1)
+    exp(x)
+    >>> EML(1, 1)
+    E
+
+    Round-tripping through ``exp`` and ``log``:
+
+    >>> EML(x, y).rewrite(exp)
+    exp(x) - log(y)
+    >>> EML(x, y).rewrite(log)
+    exp(x) - log(y)
+
+    Differentiation in either argument:
+
+    >>> EML(x, y).diff(x)
+    exp(x)
+    >>> EML(x, y).diff(y)
+    -1/y
+
+    Rewriting elementary expressions in pure-EML recursive form:
+
+    >>> exp(x).rewrite(EML)
+    EML(x, 1)
+    >>> log(x).rewrite(EML)
+    EML(1, EML(EML(1, x), 1))
+
+    The recursive form round-trips back to the original (for positive ``x``):
+
+    >>> from sympy import Symbol
+    >>> xp = Symbol('x', positive=True)
+    >>> simplify(log(xp).rewrite(EML).rewrite(exp) - log(xp))
+    0
+
+    See Also
+    ========
+
+    sympy.functions.elementary.exponential.exp
+    sympy.functions.elementary.exponential.log
+    """
+
+    @property
+    def exp_arg(self):
+        """Argument that enters the function under ``exp``."""
+        return self.args[0]
+
+    @property
+    def log_arg(self):
+        """Argument that enters the function under ``log``."""
+        return self.args[1]
+
+    @classmethod
+    def eval(cls, x, y):
+        if x is S.NaN or y is S.NaN:
+            return S.NaN
+        if y is S.Zero:
+            # log(0) = ComplexInfinity, so EML(x, 0) = exp(x) - (-oo on the real
+            # line) which is +oo; defer to the exp - log form.
+            return exp(x) - log(y)
+        if y is S.One:
+            # log(1) = 0, so EML(x, 1) = exp(x).
+            return exp(x)
+        if x is S.NegativeInfinity:
+            # exp(-oo) = 0, so EML(-oo, y) = -log(y).
+            return -log(y)
+        if x is S.Infinity:
+            return S.Infinity - log(y)
+        if x.is_Number and y.is_Number:
+            return exp(x) - log(y)
+
+    def fdiff(self, argindex=1):
+        """
+        Returns the first derivative of this function with respect to the
+        argument selected by *argindex*.
+        """
+        x, y = self.args
+        if argindex == 1:
+            return exp(x)
+        elif argindex == 2:
+            return -1/y
+        raise ArgumentIndexError(self, argindex)
+
+    def _eval_derivative_n_times(self, s, n):
+        """
+        Closed-form nth derivative when *s* is exactly one of the arguments
+        and the other does not depend on it.
+        """
+        x, y = self.args
+        if n.is_integer and n.is_positive:
+            if x == s and not y.has(s):
+                return exp(x)
+            if y == s and not x.has(s):
+                return S.NegativeOne**n * factorial(n - 1) / y**n
+        return super()._eval_derivative_n_times(s, n)
+
+    def _eval_rewrite_as_exp(self, x, y, **kwargs):
+        return exp(x) - log(y)
+
+    def _eval_rewrite_as_log(self, x, y, **kwargs):
+        return exp(x) - log(y)
+
+    def _eval_rewrite_as_sinh(self, x, y, **kwargs):
+        from sympy.functions.elementary.hyperbolic import sinh, cosh
+        return sinh(x) + cosh(x) - log(y)
+
+    def _eval_rewrite_as_cosh(self, x, y, **kwargs):
+        from sympy.functions.elementary.hyperbolic import sinh, cosh
+        return cosh(x) + sinh(x) - log(y)
+
+    def _eval_rewrite_as_Pow(self, x, y, **kwargs):
+        return S.Exp1**x - log(y)
+
+    def _eval_rewrite_as_tractable(self, x, y, limitvar=None, **kwargs):
+        return exp(x) - log(y)
+
+    def _eval_expand_func(self, **hints):
+        x, y = self.args
+        return exp(x) - log(y)
+
+    def _eval_conjugate(self):
+        x, y = self.args
+        return self.func(x.conjugate(), y.conjugate())
+
+    def as_real_imag(self, deep=True, **hints):
+        """
+        Return the real and imaginary parts of ``EML(x, y)``.
+
+        The decomposition follows from ``exp(x) - log(y)`` together with the
+        standard real/imag splits of ``exp`` and ``log``.
+
+        Examples
+        ========
+
+        >>> from sympy import EML, symbols
+        >>> x, y = symbols('x y', real=True)
+        >>> EML(x, y).as_real_imag()
+        (exp(x) - log(Abs(y)), -arg(y))
+        """
+        x, y = self.args
+        return (exp(x) - log(y)).as_real_imag(deep=deep, **hints)
+
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        xa, ya = self.args
+        return (exp(xa) - log(ya)).as_leading_term(x, logx=logx, cdir=cdir)
+
+    def _eval_nseries(self, x, n, logx, cdir=0):
+        xa, ya = self.args
+        return (exp(xa) - log(ya))._eval_nseries(x, n=n, logx=logx, cdir=cdir)
+
+    def _eval_is_extended_real(self):
+        x, y = self.args
+        return fuzzy_and([x.is_extended_real, y.is_extended_positive])
+
+    def _eval_is_extended_positive(self):
+        x, y = self.args
+        if x.is_extended_real and (y - 1).is_extended_nonpositive and y.is_extended_positive:
+            # exp(x) > 0 always; -log(y) >= 0 when 0 < y <= 1.
+            return True
+        # exp(x) > log(y) iff y < exp(exp(x)); hard to test in general.
+        return None
+
+    def _eval_is_extended_negative(self):
+        x, y = self.args
+        if x is S.NegativeInfinity and (y - 1).is_extended_positive:
+            # -log(y) < 0 when y > 1.
+            return True
+        return None
+
+    def _eval_is_zero(self):
+        # EML(x, y) = 0 iff log(y) = exp(x), i.e. y = exp(exp(x)).
+        # Handle the easy case of two concrete numbers via evalf-free equality.
+        x, y = self.args
+        if x.is_extended_real and y.is_extended_real:
+            # Detect the only real-real solution: y == exp(exp(x)).
+            if y == exp(exp(x)):
+                return True
+            if (y - exp(exp(x))).is_extended_nonzero:
+                return False
+        return None
+
+    def _eval_is_finite(self):
+        x, y = self.args
+        return fuzzy_and([x.is_finite, y.is_finite, fuzzy_not(y.is_zero)])
+
+    def _eval_is_complex(self):
+        x, y = self.args
+        return fuzzy_and([x.is_complex, y.is_complex, fuzzy_not(y.is_zero)])
+
+    def _eval_is_rational(self):
+        # exp(x) - log(y) is rational only in degenerate cases
+        # (e.g. EML(0, 1) = 1). Otherwise transcendental.
+        x, y = self.args
+        if x.is_zero and (y - 1).is_zero:
+            return True
+        if (x.is_rational and fuzzy_not(x.is_zero)) or \
+           (y.is_rational and fuzzy_not((y - 1).is_zero)):
+            return False
+        return None
+
+    def _eval_is_algebraic(self):
+        # By Lindemann-Weierstrass, exp(x) is transcendental for nonzero
+        # algebraic x; log(y) is transcendental for algebraic y != 1.
+        x, y = self.args
+        if x.is_zero and (y - 1).is_zero:
+            return True
+        if (x.is_algebraic and fuzzy_not(x.is_zero)) or \
+           (y.is_algebraic and fuzzy_not((y - 1).is_zero)):
+            return False
+        return None
+
+    def _eval_evalf(self, prec):
+        x, y = self.args
+        return (exp(x) - log(y))._eval_evalf(prec)
+
+
+def to_eml(expr, deep=True, numbers=False):
+    r"""Rewrite the elementary functions in *expr* using the ``EML`` primitive.
+
+    ``EML(x, y) = exp(x) - log(y)`` is the binary primitive of Odrzywolek
+    (arXiv:2603.21852).  ``to_eml`` is the public entry point for the
+    ``expr.rewrite(EML)`` machinery: it walks *expr* and rewrites every
+    elementary function it understands -- ``exp``, ``log``, powers, and the
+    trigonometric, hyperbolic and inverse functions -- into ``EML`` form.
+
+    The surrounding arithmetic structure (``Add``, ``Mul``, ``Pow`` with the
+    base/exponent themselves converted) is preserved: ``EML`` generates
+    ``exp``, ``log`` and subtraction, but not the addition or multiplication of
+    independent terms, so an expression collapses to ``EML`` *nodes* embedded
+    in its ordinary arithmetic, not to a single ``EML`` tree.
+
+    Numeric values are kept as leaves by default.  The only constant the
+    grammar singles out is ``1``; on top of it ``EML(1, 1) = e`` is the one
+    numeric value with a finite ``EML`` encoding, which *numbers=True*
+    substitutes in.  Other integers and rationals (``2``, ``3``, ``1/2``, ...)
+    have no finite ``EML`` encoding -- building them would require addition,
+    which ``EML`` composition cannot express -- so they are left untouched.
+
+    Parameters
+    ==========
+
+    expr : Expr or iterable of Expr
+        The expression (or a list/tuple of expressions) to convert.
+    deep : bool, optional
+        If ``True`` (the default) the rewrite descends into all
+        subexpressions; if ``False`` only the top level is rewritten.
+    numbers : bool, optional
+        If ``True``, replace Euler's number ``e`` by its ``EML`` encoding
+        ``EML(1, 1)``.  Defaults to ``False``.
+
+    Examples
+    ========
+
+    >>> from sympy import to_eml, exp, log, E, symbols
+    >>> x, y = symbols('x y', positive=True)
+
+    Elementary functions, including powers, are rewritten:
+
+    >>> to_eml(exp(x))
+    EML(x, 1)
+    >>> to_eml(log(x))
+    EML(1, EML(EML(1, x), 1))
+    >>> to_eml(x**y)
+    EML(y*EML(1, EML(EML(1, x), 1)), 1)
+
+    Arithmetic structure is kept while each function becomes ``EML``:
+
+    >>> to_eml(exp(x) + log(y))
+    EML(1, EML(EML(1, y), 1)) + EML(x, 1)
+
+    A list (or tuple) of expressions is converted element-wise:
+
+    >>> to_eml([exp(x), log(x)])
+    [EML(x, 1), EML(1, EML(EML(1, x), 1))]
+
+    With ``numbers=True`` the constant ``e`` is encoded as ``EML(1, 1)``:
+
+    >>> to_eml(E, numbers=True)
+    EML(1, 1)
+
+    See Also
+    ========
+
+    EML
+    sympy.functions.elementary.exponential.exp
+    sympy.functions.elementary.exponential.log
+    """
+    from sympy.core.basic import Basic
+    from sympy.utilities.iterables import iterable
+    if not isinstance(expr, Basic) and iterable(expr):
+        return type(expr)(to_eml(e, deep=deep, numbers=numbers) for e in expr)
+    result = sympify(expr).rewrite(EML, deep=deep)
+    if numbers:
+        result = result.xreplace({S.Exp1: EML(S.One, S.One, evaluate=False)})
+    return result
+
+
+def from_eml(expr):
+    r"""Expand every ``EML`` node in *expr* back to ``exp(x) - log(y)`` form.
+
+    ``from_eml`` is the inverse of :func:`to_eml`: it replaces each
+    ``EML(x, y)`` by ``exp(x) - log(y)`` (recursively), recovering an ordinary
+    expression in terms of ``exp`` and ``log``.  It is a thin, named wrapper
+    around ``expr.rewrite(exp)`` that also accepts lists and tuples.
+
+    Round-tripping ``to_eml`` then ``from_eml`` returns a mathematically
+    equivalent expression (it is literally an identity on the EML nodes; only
+    the usual ``exp``/``log`` simplifications such as ``log(1) = 0`` are
+    applied).
+
+    Parameters
+    ==========
+
+    expr : Expr or iterable of Expr
+        The expression (or a list/tuple of expressions) to expand.
+
+    Examples
+    ========
+
+    >>> from sympy import EML, to_eml, from_eml, exp, log, simplify, symbols
+    >>> x, y = symbols('x y', positive=True)
+
+    >>> from_eml(EML(x, y))
+    exp(x) - log(y)
+    >>> from_eml(to_eml(exp(x)))
+    exp(x)
+
+    No ``EML`` nodes remain; the result equals the original up to the branch
+    simplifications SymPy applies (so a ``log`` round-trip matches only after
+    ``simplify`` for positive arguments):
+
+    >>> simplify(from_eml(to_eml(log(x))) - log(x))
+    0
+
+    A list (or tuple) is expanded element-wise:
+
+    >>> from_eml([EML(x, 1, evaluate=False), EML(1, y, evaluate=False)])
+    [exp(x), E - log(y)]
+
+    See Also
+    ========
+
+    to_eml
+    EML
+    """
+    from sympy.core.basic import Basic
+    from sympy.utilities.iterables import iterable
+    if not isinstance(expr, Basic) and iterable(expr):
+        return type(expr)(from_eml(e) for e in expr)
+    return sympify(expr).rewrite(exp)
 
 
 class LambertW(DefinedFunction):
