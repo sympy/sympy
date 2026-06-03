@@ -92,19 +92,6 @@ class MethodBase(ABC):
         system's (generalized) speeds."""
         pass
 
-    # KanesMethod: NA
-    # LagrangesMethod: (attr) lam_vec
-    # JointsMethod: NA
-    # System: NA
-    # TODO : Add to all methods or only have on Lagrange/TMT?
-    # TODO : This is not a great name. Better is lam or lagrange_multipliers or
-    # lambda or even l.
-    #@property
-    #@abstractmethod
-    def _lam_vec(self):
-        """Column matrix of Lagrange multipliers."""
-        pass
-
     # KanesMethod: (init) bodies, (attr) bodies & bodylist [deprecated], (kanes_equations) bodies
     # LagrangesMethod: (init) bodies, (attr) bodies
     # JointsMethod: (attr) bodies
@@ -283,42 +270,6 @@ class MethodBase(ABC):
             M [q' ] = M [q'] =  F
               [q'']     [u']
 
-        """
-        pass
-
-    @property
-    #@abstractmethod
-    def _mass_matrix_aug(self):
-        """Returns the mass matrix augmented when Lagrange multipliers and/or
-        noncontributing forces are included in the system.
-
-        M in M*[q''] = F
-               [lam]
-
-        M in M*[u' ] = F
-               [lam]
-
-        """
-        """
-        [Mk 0  0    0 ][qd ] = [Fk]
-        [0  Md Ml.T 0 ][ud ]   [Fd]
-        [0  Ml 0    0 ][lam]   [Fl]
-        [0  Mu 0    Mf][f  ]   [Ff]
-
-        """
-        pass
-
-    @property
-    #@abstractmethod
-    def _forcing_aug(self):
-        """Returns the augmented forcing vector when Lagrange multipliers
-        and/or noncontributing forces are included in the system.
-
-        F in M*[q''] = F
-               [lam]
-
-        F in M*[u' ] = F
-               [lam]
         """
         pass
 
