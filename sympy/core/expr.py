@@ -25,6 +25,7 @@ if TYPE_CHECKING:
     from typing import Any, Hashable
     from typing_extensions import Self
     from .numbers import Number
+    from sympy.logic.boolalg import Boolean
 
 from collections import defaultdict
 
@@ -247,7 +248,7 @@ class Expr(Basic, EvalfMixin):
 
     @sympify_return([('other', 'Expr')], NotImplemented)
     @call_highest_priority('__radd__')
-    def __add__(self, other: complex) -> Expr:
+    def __add__(self, other: Expr | complex) -> Expr:
         return Add(self, other)
 
     @sympify_return([('other', 'Expr')], NotImplemented)
@@ -257,7 +258,7 @@ class Expr(Basic, EvalfMixin):
 
     @sympify_return([('other', 'Expr')], NotImplemented)
     @call_highest_priority('__rsub__')
-    def __sub__(self, other: complex) -> Expr:
+    def __sub__(self, other: Expr | complex) -> Expr:
         return Add(self, -other)
 
     @sympify_return([('other', 'Expr')], NotImplemented)
@@ -267,7 +268,7 @@ class Expr(Basic, EvalfMixin):
 
     @sympify_return([('other', 'Expr')], NotImplemented)
     @call_highest_priority('__rmul__')
-    def __mul__(self, other: complex) -> Expr:
+    def __mul__(self, other: Expr | complex) -> Expr:
         return Mul(self, other)
 
     @sympify_return([('other', 'Expr')], NotImplemented)
@@ -396,22 +397,22 @@ class Expr(Basic, EvalfMixin):
         return complex(float(re), float(im))
 
     @sympify_return([('other', 'Expr')], NotImplemented)
-    def __ge__(self, other):
+    def __ge__(self, other) -> Boolean:
         from .relational import GreaterThan
         return GreaterThan(self, other)
 
     @sympify_return([('other', 'Expr')], NotImplemented)
-    def __le__(self, other):
+    def __le__(self, other) -> Boolean:
         from .relational import LessThan
         return LessThan(self, other)
 
     @sympify_return([('other', 'Expr')], NotImplemented)
-    def __gt__(self, other):
+    def __gt__(self, other) -> Boolean:
         from .relational import StrictGreaterThan
         return StrictGreaterThan(self, other)
 
     @sympify_return([('other', 'Expr')], NotImplemented)
-    def __lt__(self, other):
+    def __lt__(self, other) -> Boolean:
         from .relational import StrictLessThan
         return StrictLessThan(self, other)
 
