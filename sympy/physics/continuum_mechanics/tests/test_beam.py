@@ -765,7 +765,23 @@ def test_apply_support():
     R_0, R_L, M_0, M_L = symbols('R_0, R_L, M_0, M_L')
     c.solve_for_reaction_loads()
     assert c.reaction_loads == {R_0: P/2, R_L: P/2, M_0: -L*P/8, M_L: L*P/8}
-
+    
+    b = Beam(9, 20, 20)
+    R_0 = b.apply_support(0, "pin")
+    R_5 = b.apply_support(5, "spring", 1000)
+    R_9 = b.apply_support(9, "spring", 1000)
+    b.apply_load(-100, 0, 0)
+    b.solve_for_reaction_loads(R_0, R_5, R_9)
+    assert b.reaction_loads == {R_5: 1724625/3106, R_0: 315600/1553, R_9: 439575/3106}
+    asser b.bending_moment() == -315600*SingularityFunction(x, 0, 1)/1553
+        + 50*SingularityFunction(x, 0, 2) - 1724625*SingularityFunction(x, 5, 1)/3106
+        - 439575*SingularityFunction(x, 9, 1)/3106
+    assert b.slope() == 789*SingularityFunction(x, 0, 2)/3106
+        - SingularityFunction(x, 0, 3)/24 + 68985*SingularityFunction(x, 5, 2)/99392
+        + 17583*SingularityFunction(x, 9, 2)/99392 - 690157/745440
+    assert b.deflection() == -690157*x/745440 + 263*SingularityFunction(x, 0, 3)/3106
+        - SingularityFunction(x, 0, 4)/96 + 22995*SingularityFunction(x, 5, 3)/99392
+        + 5861*SingularityFunction(x, 9, 3)/99392
     E = Symbol('E')
     I = Symbol('I')
     b=Beam(6, E, I)
@@ -864,6 +880,62 @@ def test_apply_rotation_hinge():
             - (-2*F*l1**3*l3 - 3*F*l1**2*l2*l3 - 3*F*l1**2*l3**2 + F*l2**3*l3 + 3*F*l2**2*l3**2 + 2*F*l2*l3**3)
             *SingularityFunction(x, l1, -1)/(6*l2**2 + 12*l2*l3 + 6*l3**2))
     assert simplify(b.bending_moment().expand()) == simplify(expected_bending_moment.expand())
+def test_apply_rotation_spring():
+    b = Beam(12, 50, 10)
+    r0 = b.apply_support(0, type='fixed')
+    r8 = b.apply_support(8, type='pin')
+    r12, m12 = b.apply_support(12, type='fixed')
+    b.apply_rotation_spring(4, 1000)
+    b.apply_rotation_spring(8, 1000)
+    b.apply_load(-100,4,-1)
+    b.apply_load(-50,6,0)
+    b.solve_for_reaction_loads(r0, r8, r12, m12)
+    R_0, R_8, R_12, M_12 = symbols('R_0, R_8, R_12, M_12')
+    expected_reactions = {M_12: 1500/103, R_0: 8475/206, R_12: 6275/103, R_8: 61375/206}
+    reaction_symbols = [r0, r8, r12, m12]
+    tolerance = 1e-6
+    assert all(abs(b.reaction_loads[r] - expected_reactions[r]) < tolerance for r in reaction_symbols)
+    expected_bending_moment = -8475*SingularityFunction(x, 0, 1)/206
+        - 8475*SingularityFunction(x, 4, -1)/103 + 100*SingularityFunction(x, 4, 1)
+        + 25*SingularityFunction(x, 6, 2) + 8800*SingularityFunction(x, 8, -1)/103
+        - 61375*SingularityFunction(x, 8, 1)/206 - 1500*SingularityFunction(x, 12, 0)/103
+        - 6275*SingularityFunction(x, 12, 1)/103
+    assert b.bending_moment().expand() == expected_bending_moment.expand()
+    expected_slope = 339*SingularityFunction(x, 0, 2)/8240
+        + 339*SingularityFunction(x, 4, 0)/2060 - SingularityFunction(x, 4, 2)/10
+        - SingularityFunction(x, 6, 3)/60 - 88*SingularityFunction(x, 8, 0)/515
+        + 491*SingularityFunction(x, 8, 2)/1648 + 3*SingularityFunction(x, 12, 1)/103
+        + 251*SingularityFunction(x, 12, 2)/4120 - 1411/2060
+    assert b.slope().expand() == expected_slope.expand()
+    expected_deflection = -1411*x/2060 + 113*SingularityFunction(x, 0, 3)/8240
+        + 339*SingularityFunction(x, 4, 1)/2060 - SingularityFunction(x, 4, 3)/30
+        - SingularityFunction(x, 6, 4)/240 - 88*SingularityFunction(x, 8, 1)/515
+        + 491*SingularityFunction(x, 8, 3)/4944 + 3*SingularityFunction(x, 12, 2)/206
+        + 251*SingularityFunction(x, 12, 3)/12360
+    assert b.deflection().expand() == expected_deflection.expand()
+
+    F = Symbol('F')
+    b = Beam(9, 20, 20)
+    r0 = b.apply_support(0, type="pin")
+    r9 = b.apply_support(9, type="pin")
+    b.apply_rotation_spring(0,1000)
+    b.apply_rotation_spring(9,2000)
+    b.apply_load(F, 5, -1)
+    b.solve_for_reaction_loads(r0, r9)
+    assert b.reaction_loads == {R_0: -28568*F/69903, R_9: -41335*F/69903}
+    assert (b.bending_moment() == -20600*F*SingularityFunction(x, 0, 0)/23301
+            + 28568*F*SingularityFunction(x, 0, 1)/69903 - F*SingularityFunction(x, 5, 1)
+            + 28100*F*SingularityFunction(x, 9, 0)/23301
+            + 41335*F*SingularityFunction(x, 9, 1)/69903)
+    expected_slope = 103*F*SingularityFunction(x, 0, 1)/46602
+        - 3571*F*SingularityFunction(x, 0, 2)/6990300
+        + F*SingularityFunction(x, 5, 2)/800 - 281*F*SingularityFunction(x, 9, 1)/93204
+        - 8267*F*SingularityFunction(x, 9, 2)/11184480 + 103*F/116505
+    assert b.slope().expand() == expected_slope.expand()
+    expected_deflection = 103*F*x/116505 + 103*F*SingularityFunction(x, 0, 2)/93204
+        - 3571*F*SingularityFunction(x, 0, 3)/20970900 + F*SingularityFunction(x, 5, 3)/2400
+        - 281*F*SingularityFunction(x, 9, 2)/186408 - 8267*F*SingularityFunction(x, 9, 3)/33553440
+    assert b.deflection().expand() == expected_deflection.expand()
 
 def test_apply_sliding_hinge():
     b = Beam(13, 20, 20)

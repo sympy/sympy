@@ -1142,30 +1142,33 @@ class Beam:
             am = am +1
             if value != 0:
                 for reac in range(len(total_supports)):
-                    if total_supports[reac] == list(value.free_symbols)[0]:
-                        self.bc_deflection[am] = list(self.bc_deflection[am])
-                        self.bc_deflection[am][1]= (value.subs(total_supports[reac],reaction_solution[reac]))
-                        self.bc_deflection[am] = tuple(self.bc_deflection[am])
+                    for syms in range(len(list(value.free_symbols))):
+                        if total_supports[reac] == list(value.free_symbols)[syms]:
+                            self.bc_deflection[am] = list(self.bc_deflection[am])
+                            self.bc_deflection[am][1]= (value.subs(total_supports[reac],reaction_solution[reac]))
+                            self.bc_deflection[am] = tuple(self.bc_deflection[am])
 
         am = -1
         for position, value in self.bc_bending_moment:
             am = am +1
             if value != 0:
                 for spring in range(len(spring_moments)):
-                    if spring_moments[spring] == list(value.free_symbols)[0]:
-                        self.bc_bending_moment[am] = list(self.bc_bending_moment[am])
-                        self.bc_bending_moment[am][1]= (value.subs(spring_moments[spring],rotation_spring_solution[spring]))
-                        self.bc_bending_moment[am] = tuple(self.bc_bending_moment[am])
+                    for syms in range(len(list(value.free_symbols))):
+                        if spring_moments[spring] == list(value.free_symbols)[syms]:
+                            self.bc_bending_moment[am] = list(self.bc_bending_moment[am])
+                            self.bc_bending_moment[am][1]= (value.subs(spring_moments[spring],rotation_spring_solution[spring]))
+                            self.bc_bending_moment[am] = tuple(self.bc_bending_moment[am])
 
         am = -1
         for position, value in self.bc_slope:
             am = am +1
             if value != 0:
                 for spring in range(len(spring_moments)):
-                    if spring_moments[spring] == list(value.free_symbols)[0]:
-                        self.bc_slope[am] = list(self.bc_slope[am])
-                        self.bc_slope[am][1]= (value.subs(spring_moments[spring],rotation_spring_solution[spring]))
-                        self.bc_slope[am] = tuple(self.bc_slope[am])  
+                    for syms in range(len(list(value.free_symbols))):
+                        if spring_moments[spring] == list(value.free_symbols)[syms]:
+                            self.bc_slope[am] = list(self.bc_slope[am])
+                            self.bc_slope[am][1]= (value.subs(spring_moments[spring],rotation_spring_solution[spring]))
+                            self.bc_slope[am] = tuple(self.bc_slope[am])  
 
     def shear_force(self):
         """
@@ -1647,7 +1650,7 @@ class Beam:
             for i in range(len(args)):
                 if i != 0:
                     prev_end = args[i-1][1].args[1]
-                slope_value = S.One/E*integrate(self.bending_moment()/args[i][0], (x, prev_end, x))
+                slope_value = S.One/(E*I)*integrate(self.bending_moment()/args[i][0], (x, prev_end, x))
                 recent_segment_slope = prev_slope + slope_value
                 deflection_value = integrate(recent_segment_slope, (x, prev_end, x))
                 if i != len(args) - 1:
@@ -1664,10 +1667,9 @@ class Beam:
 
         bc_eqs = []
         for position, value in self._boundary_conditions['deflection']:
-            eqs = deflection_curve.subs(x, position) + (value *self.second_moment * self.elastic_modulus)
+            eqs = deflection_curve.subs(x, position) + value
             bc_eqs.append(eqs)
         constants = list(linsolve(bc_eqs, C4))
-
         deflection_curve = deflection_curve.subs({C4: constants[0][0]})
         return deflection_curve
 
@@ -1744,7 +1746,6 @@ class Beam:
             - 5000*SingularityFunction(x, 4, 1) + 15625*SingularityFunction(x, 8, 0)
             + 5000*SingularityFunction(x, 8, 1) for x over (0.0, 8.0)
         """
-
         shear_stress = self.shear_stress()
         x = self.variable
         length = self.length
