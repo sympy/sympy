@@ -35,7 +35,24 @@ __doctest_requires__ = {('llvm_callable'): ['llvmlite']}
 
 
 class LLVMJitPrinter(Printer):
-    '''Convert expressions to LLVM IR'''
+    """
+    Convert SymPy expressions to LLVM IR using an llvmlite IR builder.
+
+    This printer is used internally by :class:`LLVMJitCode` when compiling
+    expressions to native code. See :func:`llvm_callable` for the public API.
+
+    Parameters
+    ==========
+
+    module : llvmlite.ir.Module
+        LLVM module that will contain the generated function.
+    builder : llvmlite.ir.IRBuilder
+        Builder used to emit instructions in the current basic block.
+    fn : llvmlite.ir.Function
+        LLVM function being constructed.
+    func_arg_map : dict
+        Mapping from SymPy symbols (or indexed bases) to LLVM values.
+    """
     def __init__(self, module, builder, fn, *args, **kwargs):
         self.func_arg_map = kwargs.pop("func_arg_map", {})
         if not llvmlite:
@@ -122,6 +139,12 @@ class LLVMJitPrinter(Printer):
 # Used when parameters are passed by array.  Often used in callbacks to
 # handle a variable number of parameters.
 class LLVMJitCallbackPrinter(LLVMJitPrinter):
+    """
+    LLVM printer for callback signatures that pass vector arguments.
+
+    This subclass is used by :class:`LLVMJitCodeCallback` when compiling
+    functions for numerical libraries (for example ``scipy.integrate``).
+    """
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -158,6 +181,12 @@ current_link_suffix = 0
 
 
 class LLVMJitCode:
+    """
+    Compile a SymPy expression to a native function via LLVM.
+
+    Instances are created internally during JIT compilation and are not part
+    of the public API. Use :func:`llvm_callable` instead.
+    """
     def __init__(self, signature):
         self.signature = signature
         self.fp_type = ll.DoubleType()
@@ -306,6 +335,12 @@ class LLVMJitCode:
 
 
 class LLVMJitCodeCallback(LLVMJitCode):
+    """
+    LLVM JIT compiler for callback-style function signatures.
+
+    This variant uses :class:`LLVMJitCallbackPrinter` so that integration
+    callbacks can receive array arguments.
+    """
     def __init__(self, signature):
         super().__init__(signature)
 
@@ -344,6 +379,22 @@ class LLVMJitCodeCallback(LLVMJitCode):
 
 
 class CodeSignature:
+    """
+    Ctypes signature description for a JIT-compiled function.
+
+    Attributes
+    ==========
+
+    ret_type : ctypes type
+        Return type of the compiled function.
+    arg_ctypes : list
+        Ctypes types of the formal arguments.
+    input_arg : int
+        Index of the array argument for callback signatures.
+    ret_arg : int or None
+        Index of the output array when the return value is written via a
+        parameter instead of the function return value.
+    """
     def __init__(self, ret_type):
         self.ret_type = ret_type
         self.arg_ctypes = []
