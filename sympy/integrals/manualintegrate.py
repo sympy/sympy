@@ -2070,7 +2070,6 @@ def euler_substitution_rule(integral : IntegralInfo):
     integrand, x = integral
     base0 = None
     powers, exps, ratios = [], [], []
-    a0 = b0 = c0 = None
     # use ordered() to ensure a selection of the smallest base0 (eg. first sqrt(x**2 + 1), then sqrt(2*x**2 + 2), x**2 + 1 chosen)
     for pow_ in ordered(integrand.find(Pow)): # collect all (a + b*x + c*x**2)**(p/2)
         base, exp_ = pow_.base, pow_.exp
@@ -2081,7 +2080,7 @@ def euler_substitution_rule(integral : IntegralInfo):
         if exp_.q != 2:
             return None
         base_poly = base.as_poly(x)
-        if base_poly is None or base_poly.degree() != 2: # exclude cube roots and other radicals
+        if base_poly is None or base_poly.degree() != 2: # exclude cube polynomial roots and other radicals
             return None
         aa = base_poly.nth(0)
         bb = base_poly.nth(1)
@@ -2124,7 +2123,7 @@ def euler_substitution_rule(integral : IntegralInfo):
         else:
             step = sqrt_fractional_linear_rule(degenerate_integrand, x)
             if step is None:
-            # since calling directly sqrt_fractional_linear_rule could return None we create a DontKnowRule
+                # since calling directly sqrt_fractional_linear_rule could return None we create a DontKnowRule
                 step = DontKnowRule(degenerate_integrand, x)
         return step
 
@@ -2600,6 +2599,9 @@ def substitution_rule(integral):
                         # only substitute poles introduced by the constant c if they were not already poles of the original integrand
                         if not _if_zero_implies_zero(pole, denom_integrand):
                             rewritten_integral = manual_subs(factored_integrand, pole, 0)
+                            # additional check not to replace a if it is not valid (for example ln(a*x))
+                            if rewritten_integral.has(S.ComplexInfinity, S.Infinity, S.NegativeInfinity, S.NaN):
+                                continue
                             substep = integral_steps(rewritten_integral, symbol)
 
                             if substep:
