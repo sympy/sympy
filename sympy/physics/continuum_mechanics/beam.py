@@ -677,7 +677,7 @@ class Beam:
         Examples
         ========
         There is a beam of length 8 meters. Pin supports are placed at distances
-        of 0 and 8 meters.  There are two rotation springs in the structure, 
+        of 0 and 8 meters.  There are two rotation springs in the structure,
         one at 0 meters and one at 4 meters. A pointload of magnitude
         100 kN is applied on the rotation spring at 4 meters.
 
@@ -724,7 +724,7 @@ class Beam:
         else:
             rotation_jump = Symbol('P_'+str(loc))
             rotation_spring_bc = -rotation_jump - spring_moment / spring_constant
-        
+
             self._applied_rotation_springs.append(loc)
             self._rotation_hinge_symbols.append(rotation_jump)
             self._rotation_spring_symbols.append(spring_moment)
