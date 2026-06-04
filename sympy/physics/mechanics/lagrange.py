@@ -8,6 +8,7 @@ from sympy.physics.mechanics.functions import (
 from sympy.physics.mechanics.linearize import Linearizer
 from sympy.utilities.iterables import iterable
 from sympy.utilities.exceptions import sympy_deprecation_warning
+from sympy.solvers.solveset import linear_eq_to_matrix
 
 __all__ = ['LagrangesMethod']
 
@@ -65,7 +66,7 @@ class LagrangesMethod(MethodBase):
         Velocity constraints [time differentiated holonomic, nonholonomic].
     lam_vec : Matrix, shape(m + M, 1)
         Column matrix of functions of time representing the Lagrange
-        multipliers λ , one for each constraint in ``velocity_constraints``.
+        multipliers λ, one for each constraint in ``velocity_constraints``.
     lam_coeffs : Matrix, shape(m + M, n)
         Jacobian of the constraints, i.e. linear coefficients of the speeds in
         the velocity constraints.
@@ -229,12 +230,38 @@ class LagrangesMethod(MethodBase):
         self._nonhol_coneqs = nonhol_coneqs
 
     def form_lagranges_equations(self):
-        """Method to form Lagrange's equations of motion.
+        """Returns a column matrix containing Lagrange's equations of motion as
+        coupled second order ordinary differential equations. If there are
+        holonomic or nonholonomic constraints the generalized constraint forces
+        that are linear functions of the Lagrange multipliers are included.
 
-        Returns a vector of equations of motion using Lagrange's equations of
-        the second kind.
+        Explanation
+        ===========
+
+        Given the ``n`` generalized coordinates ``q``, specified functions of
+        time ``r``, and the ``m`` Lagrange multipliers ``λ`` the equations of
+        motion will be one of the following forms.
+
+        Without holonomic or nonholonomic constraints:
+
+        .. code:: text
+
+            fd(q'', q', q, r, t) = Md*q'' + gd(q', q, r, t) =  0
+
+        With holonomic or nonholonomic constraints:
+
+        .. code:: text
+
+            fd(q'', λ, q', q, r, t) = Md*q'' + CT*λ + gd(q', q, r, t) = 0
+
+        ``CT`` is the transpose of the Jacobian of the constraints from the
+        velocity constraints:
+
+        .. code:: text
+
+            fv(q', q, t) = C*q' + gv(q, t) = 0
+
         """
-
         qds = self._qdots
         qdd_zero = dict.fromkeys(self._qdoubledots, 0)
         n = len(self.q)
@@ -243,8 +270,7 @@ class LagrangesMethod(MethodBase):
         # EOM = term1 - term2 - term3 - term4 = 0
 
         # First term
-        self._term1 = self._L.jacobian(qds)
-        self._term1 = self._term1.diff(dynamicsymbols._t).T
+        self._term1 = self._L.jacobian(qds).diff(dynamicsymbols._t).T
 
         # Second term
         self._term2 = self._L.jacobian(self.q).T
@@ -255,16 +281,20 @@ class LagrangesMethod(MethodBase):
             m = len(coneqs)
             # Creating the multipliers
             self.lam_vec = Matrix(dynamicsymbols('lam1:' + str(m + 1)))
-            # TODO : Use linear_eq_to_matrix here, less costly. coneques are
-            # already at velocity level.
-            self.lam_coeffs = -coneqs.jacobian(qds)
+            # NOTE : It is odd that the negative of the Jacobian of the
+            # constraints is stored and then below - self._term3 is used. It
+            # would make more sense to store the positive value and add the
+            # term3.
+            self.lam_coeffs = linear_eq_to_matrix(-coneqs, qds[:])[0]
             self._term3 = self.lam_coeffs.T * self.lam_vec
-            # Extracting the coeffecients of the qdds from the diff coneqs
-            diffconeqs = coneqs.diff(dynamicsymbols._t)
-            # TODO : _m_cd should be equal to lam_coeffs, no need to take the
-            # Jacobian again.
-            self._m_cd = diffconeqs.jacobian(self._qdoubledots)
+            # Extracting the coeffecients of the qdds from the diff coneqs,
+            # which, due to the chain rule, is the same as the constraints
+            # Jacobian.
+            # Mcd*q'' = f_cd = -(-C.T)*q'' = C.T*q''
+            self._m_cd = -self.lam_coeffs
             # The remaining terms i.e. the 'forcing' terms in diff coneqs
+            diffconeqs = coneqs.diff(dynamicsymbols._t)
+            self._diffconeqs = diffconeqs
             self._f_cd = -diffconeqs.subs(qdd_zero)
         else:
             self._term3 = zeros(n, 1)
@@ -281,11 +311,12 @@ class LagrangesMethod(MethodBase):
 
         # Form the dynamic mass and forcing matrices
         without_lam = self._term1 - self._term2 - self._term4
-        # TODO : Use linear_eq_to_matrix here.
-        self._m_d = without_lam.jacobian(self._qdoubledots)
-        self._f_d = -without_lam.subs(qdd_zero)
+        # Md*q'' = Fd
+        self._m_d, self._f_d = linear_eq_to_matrix(without_lam,
+                                                   self._qdoubledots[:])
 
         # Form the EOM
+        # Md*q'' + gd(q', q, r, t) - (-C.T*λ)
         self.eom = without_lam - self._term3
         return self.eom
 
@@ -294,51 +325,97 @@ class LagrangesMethod(MethodBase):
 
     @property
     def mass_matrix(self):
-        """Returns the mass matrix, which is augmented by the Lagrange
-        multipliers, if necessary.
+        """Mass matrix of the second order equations of motion which is
+        augmented by the transpose of the Jacobian of the constraints if the
+        system has holonomic or nonholonomic constraints.
 
         Explanation
         ===========
 
-        If the system is described by 'n' generalized coordinates and there are
-        no constraint equations then an n X n matrix is returned.
+        Given the ``n`` second order equations of motion:
 
-        If there are 'n' generalized coordinates and 'm' constraint equations
-        have been supplied during initialization then an n X (n+m) matrix is
-        returned. The (n + m - 1)th and (n + m)th columns contain the
-        coefficients of the Lagrange multipliers.
+        .. code:: text
+
+            fd(q'', λ, q', q, r, t) = Md*q'' + CT*λ + gd(q', q, r, t) = 0
+
+        The n x n mass matrix ``Md`` is returned if there are no constraints
+        and the n x (n + m) augmented mass matrix ``[Md -CT]`` is returned if
+        there are constraints.
+
         """
-
         if self.eom is None:
             raise ValueError('Need to compute the equations of motion first')
         if self.coneqs:
+            # TODO : This seems possibly incorrect because lam_coeffs = -C.T.
+            # [Md -C.T]
             return (self._m_d).row_join(self.lam_coeffs.T)
         else:
             return self._m_d
 
     @property
     def mass_matrix_full(self):
-        """Augments the coefficients of qdots to the mass_matrix."""
+        """Mass matrix ``M`` of the first order form of the equations of
+        motion. Augmented with the time differentiated constraints and
+        constraint forces if the system has constraints.
 
+        Explanation
+        ===========
+
+        Without holonomic or nonholonomic constraints:
+
+        .. code:: text
+
+            M[q' ] = [I  0 ][q' ] = [q'] = F
+             [q'']   [0  Md][q'']   [Fd]
+
+        With holonomic or nonholonomic constraints:
+
+        .. code:: text
+
+            M[q' ] = [I  0   0 ][q' ] = [q'] = F
+             [q'']   [0  Md -CT][q'']   [Fd]
+             [λ  ]   [0  C   0 ][λ  ]   [Fc]
+
+        """
         if self.eom is None:
             raise ValueError('Need to compute the equations of motion first')
         n = len(self.q)
         m = len(self.coneqs)
         row1 = eye(n).row_join(zeros(n, n + m)) # [I 0] or [I 0 0]
-        row2 = zeros(n, n).row_join(self.mass_matrix) # [0 M] or [0 M C.T]
+        row2 = zeros(n, n).row_join(self.mass_matrix) # [0 M] or [0 M -C.T]
         if self.coneqs:
             # [0 C 0]
             row3 = zeros(m, n).row_join(self._m_cd).row_join(zeros(m, m))
-            # [I 0 0  ]
-            # [0 M C.T]
-            # [0 C 0]
+            # [I  0  0  ]
+            # [0  M -C.T]
+            # [0  C  0  ]
             return row1.col_join(row2).col_join(row3)
         else:
             return row1.col_join(row2)
 
     @property
     def forcing(self):
-        """Returns the forcing vector from 'lagranges_equations' method."""
+        """Forcing vector ``F`` of the second order equations of motion.
+
+        Explanation
+        ===========
+
+        Given the ``n`` second order equations of motion:
+
+        .. code:: text
+
+            f(q'', q', q, r, t) = Md*q'' + gd(q', q, r, t) = 0
+
+        rewritten as:
+
+        .. code:: text
+
+            Md*q'' = -gd(q', q, r, t) = F
+
+        ``F`` of ``shape(n, 1)`` is returned. This is the same regardless is
+        the system has constraints.
+
+        """
 
         if self.eom is None:
             raise ValueError('Need to compute the equations of motion first')
@@ -346,8 +423,29 @@ class LagrangesMethod(MethodBase):
 
     @property
     def forcing_full(self):
-        """Augments qdots to the forcing vector above."""
+        """Forcing vector ``F`` of the first order equations of motion.
+        Augmented with the time differentiated constraints if the system has
+        constraints.
 
+        Explanation
+        ===========
+
+        Without holonomic or nonholonomic constraints:
+
+        .. code:: text
+
+            M[q' ] = [I  0 ][q' ] = [q'] = F
+             [q'']   [0  Md][q'']   [Fd]
+
+        With holonomic or nonholonomic constraints:
+
+        .. code:: text
+
+            M[q' ] = [I  0   0 ][q' ] = [q'] = F
+             [q'']   [0  Md -CT][q'']   [Fd]
+             [λ  ]   [0  C   0 ][λ  ]   [Fc]
+
+        """
         if self.eom is None:
             raise ValueError('Need to compute the equations of motion first')
         if self.coneqs:
@@ -580,7 +678,10 @@ class LagrangesMethod(MethodBase):
     @property
     def acceleration_constraints(self):
         """Column matrix of acceleration constraint residuals."""
-        return self.velocity_constraints.diff(dynamicsymbols._t)
+        if hasattr(self, '_diffconeqs'):
+            return self._diffconeqs
+        else:
+            return self.velocity_constraints.diff(dynamicsymbols._t)
 
     def constraints_jacobian(self):
         """Jacobian of the constraints. A matrix of shape(M + m, n) which are
