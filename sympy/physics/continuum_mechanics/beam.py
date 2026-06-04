@@ -700,11 +700,11 @@ class Beam:
         >>> b.moment_jumps
         {S_0: (1200*E*I + 4800*k)/(15*E*I + 32*k), S_4: (2400*E*I + 4000*k)/(15*E*I + 32*k)}
         >>> b.load
-        E*I*(-2400*E*I - 4000*k)*SingularityFunction(x, 4, -3)/(15*E*I*k + 32*k**2) + 
-        (-900*E*I - 2200*k)*SingularityFunction(x, 0, -1)/(15*E*I + 32*k) + 
-        (-600*E*I - 1000*k)*SingularityFunction(x, 8, -1)/(15*E*I + 32*k) + 
-        100*SingularityFunction(x, 4, -1) + 
-        (1200*E*I + 4800*k)*SingularityFunction(x, 0, -2)/(15*E*I + 32*k)
+        E*I*(-2400*E*I - 4000*k)*SingularityFunction(x, 4, -3)/(15*E*I*k + 32*k**2)
+        + (-900*E*I - 2200*k)*SingularityFunction(x, 0, -1)/(15*E*I + 32*k)
+        + (-600*E*I - 1000*k)*SingularityFunction(x, 8, -1)/(15*E*I + 32*k)
+        + 100*SingularityFunction(x, 4, -1)
+        + (1200*E*I + 4800*k)*SingularityFunction(x, 0, -2)/(15*E*I + 32*k)
         """
         loc = sympify(loc)
         E = self.elastic_modulus
