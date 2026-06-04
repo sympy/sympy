@@ -57,7 +57,7 @@ def _find_reasonable_pivot(
     if all(isinstance(x, (Float, Integer)) for x in col) and any(
             isinstance(x, Float) for x in col):
         col_abs = [abs(x) for x in col]
-        max_value = max(col_abs)
+        max_value = max(col_abs) # type: ignore[type-var]
         if iszerofunc(max_value):
             # just because iszerofunc returned True, doesn't
             # mean the value is numerically zero.  Make sure
