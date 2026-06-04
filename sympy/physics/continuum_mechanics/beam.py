@@ -657,7 +657,7 @@ class Beam:
         self.apply_load(E * I * rotation_jump, loc, -3)
         self.bc_bending_moment.append((loc, 0))
         return rotation_jump
-    
+
     def apply_rotation_spring(self, loc, spring_constant):
         """
         This method applies a rotation spring at a single location on the beam.
