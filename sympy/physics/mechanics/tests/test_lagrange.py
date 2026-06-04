@@ -69,6 +69,8 @@ def test_disc_on_an_incline_plane():
     assert m.holonomic_constraints == Matrix(hol_coneqs)
     assert m.velocity_constraints == Matrix(hol_coneqs).diff(dynamicsymbols._t)
     m.form_lagranges_equations()
+    assert m.lam_coeffs == -m.velocity_constraints.jacobian(m.u)
+    assert m.lam_coeffs == -m.constraints_jacobian
     rhs = m.rhs()
     rhs.simplify()
     assert rhs[2] == 2*g*sin(alpha)/3

@@ -99,7 +99,7 @@ def test_complete_simple_double_pendulum():
     assert method.nonholonomic_constraints == Matrix()
     assert method.velocity_constraints == Matrix()
     assert method.acceleration_constraints == Matrix()
-    assert method.constraints_jacobian() == Matrix(0, 2, [])
+    assert method.constraints_jacobian == Matrix(0, 2, [])
     method.form_eoms()
 
     assert expand(method.mass_matrix_full) == Matrix([[1, 0, 0, 0],

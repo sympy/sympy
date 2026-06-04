@@ -218,7 +218,7 @@ def test_aux_dep():
     assert kane.velocity_constraints == Matrix([f_v[2, 0].xreplace({ua[2]: 0}),
                                                 f_v[0, 0],
                                                 f_v[1, 0]])
-    assert kane.constraints_jacobian() == Matrix([
+    assert kane.constraints_jacobian == Matrix([
         [-r*sin(q[1]),                                0,                                      0, 0, 0, 1],
         [            0, r*sin(q[1])**2 - q[3]*cos(q[1]), r*sin(q[1])*cos(q[1]) + q[3]*sin(q[1]), 1, 0, 0],
         [        q[3],                                0,                                      0, 0, 1, 0]])
