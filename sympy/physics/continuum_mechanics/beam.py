@@ -1144,10 +1144,7 @@ class Beam:
                 for reac in range(len(total_supports)):
                     for syms in range(len(list(value.free_symbols))):
                         if total_supports[reac] == list(value.free_symbols)[syms]:
-                            self.bc_deflection[am] = list(self.bc_deflection[am])
-                            self.bc_deflection[am][1]= (value.subs(total_supports[reac],reaction_solution[reac]))
-                            self.bc_deflection[am] = tuple(self.bc_deflection[am])
-
+                            self.bc_deflection[am][1].subs(total_supports[reac],reaction_solution[reac])
         am = -1
         for position, value in self.bc_bending_moment:
             am = am +1
@@ -1155,10 +1152,7 @@ class Beam:
                 for spring in range(len(spring_moments)):
                     for syms in range(len(list(value.free_symbols))):
                         if spring_moments[spring] == list(value.free_symbols)[syms]:
-                            self.bc_bending_moment[am] = list(self.bc_bending_moment[am])
-                            self.bc_bending_moment[am][1]= (value.subs(spring_moments[spring],rotation_spring_solution[spring]))
-                            self.bc_bending_moment[am] = tuple(self.bc_bending_moment[am])
-
+                            self.bc_bending_moment[am][1].subs(spring_moments[spring],rotation_spring_solution[spring])
         am = -1
         for position, value in self.bc_slope:
             am = am +1
@@ -1166,9 +1160,7 @@ class Beam:
                 for spring in range(len(spring_moments)):
                     for syms in range(len(list(value.free_symbols))):
                         if spring_moments[spring] == list(value.free_symbols)[syms]:
-                            self.bc_slope[am] = list(self.bc_slope[am])
-                            self.bc_slope[am][1]= (value.subs(spring_moments[spring],rotation_spring_solution[spring]))
-                            self.bc_slope[am] = tuple(self.bc_slope[am])  
+                            self.bc_slope[am][1].subs(spring_moments[spring],rotation_spring_solution[spring])
 
     def shear_force(self):
         """
