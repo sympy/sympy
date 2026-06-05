@@ -416,7 +416,12 @@ class KanesMethod(MethodBase):
     def constraints_jacobian(self):
         """Coefficient matrix ``C`` which is the Jacobian of the constraints
         with respect to the generalized speeds :py:attr:`~.KanesMethod.u`.
-        Extracted from :py:meth:`~.KanesMethod.velocity_contraints`.
+
+        Explanation
+        ===========
+
+        The matrix is extracted from
+        :py:meth:`~.KanesMethod.velocity_contraints`.
 
         .. code:: text
 
