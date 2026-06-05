@@ -11,7 +11,7 @@ from sympy.functions.special.zeta_functions import (dirichlet_eta, lerchphi, pol
 from sympy.series.order import O
 from sympy.core.function import ArgumentIndexError
 from sympy.functions.combinatorial.numbers import bernoulli, factorial, genocchi, harmonic
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, slow
 from sympy.core.random import (test_derivative_numerically as td,
                       random_complex_number as randcplx, verify_numerically)
 
@@ -181,7 +181,7 @@ def test_polylog_series():
     assert polylog(S(3)/2, -z).series(z, 0, 5) == -z + sqrt(2)*z**2/4\
         - sqrt(3)*z**3/9 + z**4/8 + O(z**5)
 
-
+@slow
 def test_issue_8404():
     i = Symbol('i', integer=True)
     assert Abs(Sum(1/(3*i + 1)**2, (i, 0, S.Infinity)).doit().n(4)
