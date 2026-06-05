@@ -115,10 +115,10 @@ class KanesMethod(MethodBase):
         forces.
     bodylist : list
         List of the particles and rigid bodies in the system. Deprecated: use
-        :py:attr:`~KanesMethod.bodies` instead.
+        :py:attr:`~.KanesMethod.bodies` instead.
     forcelist : list
         List of the forces and torques acting on the system. Deprecated: use
-        :py:attr:`~KanesMethod.loads` instead.
+        :py:attr:`~.KanesMethod.loads` instead.
 
     Shared by all methods:
 
@@ -931,7 +931,7 @@ class KanesMethod(MethodBase):
         .. deprecated:: 1.15
 
            KanesMethod now uses consistent attribute names among all methods
-           classes. Use :py:attr:`~KanesMethod.bodies` instead.
+           classes. Use :py:attr:`~.KanesMethod.bodies` instead.
 
         """
         sympy_deprecation_warning(
@@ -950,7 +950,7 @@ class KanesMethod(MethodBase):
         .. deprecated:: 1.15
 
            KanesMethod now uses consistent attribute names among all methods
-           classes. Use :py:attr:`~KanesMethod.loads` instead.
+           classes. Use :py:attr:`~.KanesMethod.loads` instead.
 
         """
         sympy_deprecation_warning(
@@ -963,21 +963,18 @@ class KanesMethod(MethodBase):
 
     @property
     def bodies(self):
-        """List of :py:class:`~sympy.physics.mechanics.particle.Particle`,
-        :py:class:`~sympy.physics.mechanics.rigidbody.RigidBody`, or
-        :py:class:`~sympy.physics.mechanics.body.Body` objects that make up the
-        multibody system."""
+        """List of :py:class:`~.Particle`, :py:class:`~.RigidBody`, or
+        :py:class:`~.Body` objects that make up the multibody system."""
         return self._bodylist
 
     @property
     def loads(self):
-        """List of :py:class:`~sympy.physics.mechanics.loads.Force`,
-        :py:class:`~sympy.physics.mechanics.loads.Torque`,
-        tuple(:py:class:`~sympy.physics.vector.point.Point`,
-        :py:class:`~sympy.physics.vector.vector.Vector`),
-        tuple(:py:class:`~sympy.physics.vector.frame.ReferenceFrame`,
-        :py:class:`~sympy.physics.vector.vector.Vector`) loads applied to
-        multibody system."""
+        """List of :py:class:`~.Force`, :py:class:`~.Torque`,
+        tuple(:py:class:`~.vector.point.Point`,
+        :py:class:`~.physics.vector.vector.Vector`),
+        tuple(:py:class:`~.ReferenceFrame`,
+        :py:class:`~.physics.vector.vector.Vector`) loads applied to multibody
+        system."""
         return self._forcelist
 
     @property
