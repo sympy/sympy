@@ -98,6 +98,9 @@ class System(MethodBase):
         holonomic constraints extended with the nonholonomic constraints.
     acceleration_constraints : ImmutableMatrix
         Matrix of the time differentiated velocity constraints.
+    constraints_jacobian : Matrix, shape(len(velocity_constraints), len(u))
+        Linear coefficient matrix with respect to the generalized speeds is
+        extracted from the velocity constraints.
     eom_method : subclass of KanesMethod or LagrangesMethod
         Backend for forming the equations of motion.
 

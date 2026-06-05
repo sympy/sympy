@@ -139,6 +139,9 @@ class KanesMethod(MethodBase):
     acceleration_constraints : Matrix, shape(len(q_dependent) + len(u_dependent), 1)
         Column matrix of the time differentiated velocity constraints or user
         supplied.
+    constraints_jacobian : Matrix, shape(len(u_dependent), len(u))
+        Linear coefficient matrix with respect to the generalized speeds is
+        extracted from the velocity constraints.
     bodies : list
         List of Particle and RigidBody objects in the system.
     loads : list
