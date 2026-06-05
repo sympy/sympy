@@ -99,10 +99,8 @@ class MethodBase(ABC):
     @property
     @abstractmethod
     def bodies(self):
-        """List of :py:class:`~sympy.physics.mechanics.particle.Particle`,
-        :py:class:`~sympy.physics.mechanics.rigidbody.RigidBody`, or
-        :py:class:`~sympy.physics.mechanics.body.Body` objects that make up the
-        multibody system."""
+        """List of :py:class:`~.Particle`, :py:class:`~.RigidBody`, or
+        :py:class:`~.Body` objects that make up the multibody system."""
         pass
 
     # KanesMethod: (init) forcelist, (attr) loads & forcelist [deprecated], (kanes_equations) loads
@@ -112,13 +110,12 @@ class MethodBase(ABC):
     @property
     @abstractmethod
     def loads(self):
-        """List of :py:class:`~sympy.physics.mechanics.loads.Force`,
-        :py:class:`~sympy.physics.mechanics.loads.Torque`,
-        tuple(:py:class:`~sympy.physics.vector.point.Point`,
-        :py:class:`~sympy.physics.vector.vector.Vector`),
-        tuple(:py:class:`~sympy.physics.vector.frame.ReferenceFrame`,
-        :py:class:`~sympy.physics.vector.vector.Vector`) loads applied to
-        multibody system."""
+        """List of :py:class:`~.Force`, :py:class:`~.Torque`,
+        tuple(:py:class:`~.vector.point.Point`,
+        :py:class:`~.physics.vector.vector.Vector`),
+        tuple(:py:class:`~.ReferenceFrame`,
+        :py:class:`~.physics.vector.vector.Vector`) loads applied to multibody
+        system."""
         pass
 
     # KanesMethod: (init) configuration_constraints, (attr) _f_h, holonomic_constraints

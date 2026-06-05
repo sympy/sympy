@@ -46,10 +46,8 @@ class LagrangesMethod(MethodBase):
         frame. Only nonconservative forces and/or torques should be included if
         the conservative forces are already present in the Lagrangian.
     bodies : iterable, optional
-        Iterable of :py:class:`~sympy.physics.mechanics.particle.Particle`,
-        :py:class:`~sympy.physics.mechanics.rigidbody.RigidBody`, or
-        :py:class:`~sympy.physics.mechanics.body.Body` objects that make up the
-        multibody system.
+        Iterable of :py:class:`~.Particle`, :py:class:`~.RigidBody`, or
+        :py:class:`~.Body` objects that make up the multibody system.
     frame : ReferenceFrame, optional
         Inerital reference frame that should match the one used to form the
         Lagrangian. Only required if ``forceslist`` is provided.
@@ -591,21 +589,18 @@ class LagrangesMethod(MethodBase):
 
     @property
     def bodies(self):
-        """List of :py:class:`~sympy.physics.mechanics.particle.Particle`,
-        :py:class:`~sympy.physics.mechanics.rigidbody.RigidBody`, or
-        :py:class:`~sympy.physics.mechanics.body.Body` objects that make up the
-        multibody system."""
+        """List of :py:class:`~.Particle`, :py:class:`~.RigidBody`, or
+        :py:class:`~.Body` objects that make up the multibody system."""
         return self._bodies
 
     @property
     def forcelist(self):
-        """List of :py:class:`~sympy.physics.mechanics.loads.Force`,
-        :py:class:`~sympy.physics.mechanics.loads.Torque`,
-        tuple(:py:class:`~sympy.physics.vector.point.Point`,
-        :py:class:`~sympy.physics.vector.vector.Vector`),
-        tuple(:py:class:`~sympy.physics.vector.frame.ReferenceFrame`,
-        :py:class:`~sympy.physics.vector.vector.Vector`) loads applied to
-        multibody system.
+        """List of :py:class:`~.Force`, :py:class:`~.Torque`,
+        tuple(:py:class:`~.vector.point.Point`,
+        :py:class:`~.physics.vector.vector.Vector`),
+        tuple(:py:class:`~.ReferenceFrame`,
+        :py:class:`~.physics.vector.vector.Vector`) loads applied to multibody
+        system.
 
         .. deprecated:: 1.15
 
@@ -623,13 +618,12 @@ class LagrangesMethod(MethodBase):
 
     @property
     def loads(self):
-        """List of :py:class:`~sympy.physics.mechanics.loads.Force`,
-        :py:class:`~sympy.physics.mechanics.loads.Torque`,
-        tuple(:py:class:`~sympy.physics.vector.point.Point`,
-        :py:class:`~sympy.physics.vector.vector.Vector`),
-        tuple(:py:class:`~sympy.physics.vector.frame.ReferenceFrame`,
-        :py:class:`~sympy.physics.vector.vector.Vector`) loads applied to
-        multibody system."""
+        """List of :py:class:`~.Force`, :py:class:`~.Torque`,
+        tuple(:py:class:`~.vector.point.Point`,
+        :py:class:`~.physics.vector.vector.Vector`),
+        tuple(:py:class:`~.ReferenceFrame`,
+        :py:class:`~.physics.vector.vector.Vector`) loads applied to multibody
+        system."""
         return self._forcelist
 
     @property
