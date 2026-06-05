@@ -181,7 +181,7 @@ class KanesMethod(MethodBase):
 
     While a valid list of solvers can be found at
     :py::meth:`~sympy.matrices.matrixbase.MatrixBase.solve`, it is also
-    possible to supply a `callable`. This way it is possible to use a different
+    possible to supply a "callable". This way it is possible to use a different
     solver routine. If the kinematic differential equations are not too complex
     it can be worth it to simplify the solution by using ``lambda A, b:
     simplify(Matrix.LUsolve(A, b))``. Another option solver one may use is
@@ -402,15 +402,30 @@ class KanesMethod(MethodBase):
             # We partition B into independent and dependent columns:
             # Ars is then -B_dep.inv() * B_ind, and it relates dependent speeds
             # to independent speeds as: udep = Ars*uind, neglecting the C term.
-            B_ind = self._k_nh[:, :p]
-            B_dep = self._k_nh[:, p:o]
-            self._Ars = -linear_solver(B_dep, B_ind)
+            self._B_ind = self._k_nh[:, :p]
+            self._B_dep = self._k_nh[:, p:o]
+            self._Ars = -linear_solver(self._B_dep, self._B_ind)
         else:
             self._f_nh = Matrix()
             self._k_nh = Matrix()
             self._f_dnh = Matrix()
             self._k_dnh = Matrix()
             self._Ars = Matrix()
+
+    @property
+    def constraints_jacobian(self):
+        """Coefficient matrix ``C`` which is the Jacobian of the constraints
+        with respect to the generalized speeds :py:attr:`~.KanesMethod.u`.
+        Extracted from :py:meth:`~.KanesMethod.velocity_contraints`.
+
+        .. code:: text
+
+            fv = C*u + gv(q, t) = C*u + gv(q, t) = 0
+
+        """
+        # u = [uind]
+        #     [udep]
+        return self._B_ind.row_join(self._B_dep)
 
     def _initialize_kindiffeq_matrices(self, kdeqs, linear_solver='LU'):
         """Initialize the kinematic differential equation matrices.
