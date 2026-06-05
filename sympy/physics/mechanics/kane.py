@@ -421,7 +421,7 @@ class KanesMethod(MethodBase):
         ===========
 
         The matrix is extracted from
-        :py:meth:`~.KanesMethod.velocity_contraints`.
+        :py:attr:`~.KanesMethod.velocity_constraints`.
 
         .. code:: text
 
@@ -938,10 +938,14 @@ class KanesMethod(MethodBase):
 
     @property
     def q(self):
+        """Column matrix of the independent generalized coordinates followed by
+        the dependent coordinates."""
         return self._q
 
     @property
     def u(self):
+        """Column matrix of the independent generalized speeds followed by the
+        dependent generalized speeds."""
         return self._u
 
     @property
