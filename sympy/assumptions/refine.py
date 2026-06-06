@@ -601,6 +601,32 @@ def refine_floor_ceiling(expr, assumptions):
         return Add(*gaussian_integer_terms) + expr.func(Add(*nongausian_intergers_terms))
     return expr
 
+def refine_GreaterThan(expr, assumptions):
+    """
+    Handler for GreaterThan (>=) relational expressions.
+
+    Examples
+    ========
+
+    >>> from sympy.assumptions.refine import refine_GreaterThan
+    >>> from sympy import Q, sqrt
+    >>> from sympy.abc import x
+    >>> refine_GreaterThan(sqrt(x) >= 0, Q.real(sqrt(x)))
+    True
+
+    """
+    from sympy.core import Pow, Rational
+    lhs, rhs = expr.args
+    if rhs == S.Zero:
+        if ask(Q.nonnegative(lhs), assumptions):
+            return S.true
+        if isinstance(lhs, Pow) and lhs.exp == Rational(1, 2):
+            if ask(Q.real(lhs), assumptions):
+                return S.true
+        if ask(Q.negative(lhs), assumptions):
+            return S.false
+    return expr
+
 
 handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'Abs': refine_abs,
@@ -617,4 +643,5 @@ handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'Heaviside': refine_Heaviside,
     'floor': refine_floor_ceiling,
     'ceiling' : refine_floor_ceiling,
+    'GreaterThan': refine_GreaterThan,
 }
