@@ -393,7 +393,7 @@ class TupleKind(Kind):
     Examples
     ========
 
-    >>> from sympy import Tuple
+    >>> from sympy import Tuple, Matrix
     >>> Tuple(1, 2).kind
     TupleKind(NumberKind, NumberKind)
     >>> Tuple(Matrix([1, 2]), 1).kind
