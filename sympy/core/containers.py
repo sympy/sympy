@@ -407,7 +407,6 @@ class TupleKind(Kind):
     sympy.sets.sets.SetKind
     """
     element_kind: tuple[Kind, ...]
-    
     def __new__(cls, *args: Kind) -> TupleKind:
         obj = super().__new__(cls, *args)  # type: ignore[call-arg]
         obj.element_kind = args            # type: ignore[attr-defined]
