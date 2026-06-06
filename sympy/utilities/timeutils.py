@@ -71,6 +71,5 @@ def timethis(name: str) -> Callable[[_CallableT], _CallableT]:
                 _print_timestack(_timestack)
                 _timestack = None
             return r
-        
         return cast(_CallableT, wrapper)
     return decorator
