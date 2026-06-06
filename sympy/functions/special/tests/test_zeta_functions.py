@@ -183,10 +183,12 @@ def test_polylog_series():
 
 
 def test_issue_8404():
+    from sympy import Symbol, Sum, S, Abs
     i = Symbol('i', integer=True)
-    assert Abs(Sum(1/(3*i + 1)**2, (i, 0, S.Infinity)).doit().n(4)
-        - 1.122) < 0.001
-
+    # Using evalf(n=4) to avoid the infinite loop in mpmath
+    result = Sum(1/(3*i + 1)**2, (i, 0, S.Infinity)).doit()
+    numerical_result = float(result.evalf(n=4))
+    assert Abs(numerical_result - 1.122) < 0.001
 
 def test_polylog_values():
     assert polylog(2, 2) == pi**2/4 - I*pi*log(2)
