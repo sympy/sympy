@@ -759,17 +759,42 @@ def bc_matadd(expr):
         return block
 
 def bc_block_plus_ident(expr):
-    idents = [arg for arg in expr.args if arg.is_Identity]
-    if not idents:
+    # Handle both Identity and scaled Identity (like a*Identity(n))
+    idents = []
+    scaled_idents = []  # list of (factor, identity)
+    for arg in expr.args:
+        if arg.is_Identity:
+            idents.append(arg)
+        else:
+            if hasattr(arg, 'as_coeff_matrices'):
+                factor, matrices = arg.as_coeff_matrices()
+                if len(matrices) == 1 and matrices[0].is_Identity:
+                    scaled_idents.append((factor, matrices[0]))
+    if not idents and not scaled_idents:
         return expr
 
     blocks = [arg for arg in expr.args if isinstance(arg, BlockMatrix)]
     if (blocks and all(b.structurally_equal(blocks[0]) for b in blocks)
                and blocks[0].is_structurally_symmetric):
+        # Calculate total scaled identity
+        total_factor = len(idents)
+        for factor, _ in scaled_idents:
+            total_factor += factor
+        
         block_id = BlockDiagMatrix(*[Identity(k)
                                         for k in blocks[0].rowblocksizes])
-        rest = [arg for arg in expr.args if not arg.is_Identity and not isinstance(arg, BlockMatrix)]
-        return MatAdd(block_id * len(idents), *blocks, *rest).doit()
+        rest = []
+        for arg in expr.args:
+            if arg.is_Identity:
+                continue
+            if isinstance(arg, BlockMatrix):
+                continue
+            if hasattr(arg, 'as_coeff_matrices'):
+                factor, matrices = arg.as_coeff_matrices()
+                if len(matrices) == 1 and matrices[0].is_Identity:
+                    continue
+            rest.append(arg)
+        return MatAdd(block_id * total_factor, *blocks, *rest).doit()
 
     return expr
 
