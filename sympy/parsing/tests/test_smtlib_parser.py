@@ -9,6 +9,7 @@ from sympy.core.mul import Mul
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.core.function import Function
 from sympy.testing.pytest import raises
+from sympy.assumptions import Q
 from sympy.parsing.smtlib.smtlib_parser import parse_smtlib, SMTLibSyntaxError
 
 def test_parse_qf_uf_equalities_or_chain():
@@ -54,8 +55,10 @@ def test_parse_qf_lra_implies_and_lessthan():
     x1 = symbols['x1']
     x2 = symbols['x2']
 
-    assert len(assertions) == 1
-    assert assertions[0] == Not(
+    assert len(assertions) == 3
+    assert assertions[0] == Q.real(x2)
+    assert assertions[1] == Q.real(x1)
+    assert assertions[2] == Not(
         Implies(And(Eq(0, x1), Eq(16, x2)), LessThan(x2, 16))
     )
 
@@ -75,8 +78,10 @@ def test_parse_qf_lra_implies_and_greaterthan():
     x1 = symbols['x1']
     x2 = symbols['x2']
 
-    assert len(assertions) == 1
-    assert assertions[0] == Not(
+    assert len(assertions) == 3
+    assert assertions[0] == Q.real(x2)
+    assert assertions[1] == Q.real(x1)
+    assert assertions[2] == Not(
         Implies(And(Eq(0, x1), Eq(16, x2)), GreaterThan(x1, 0))
     )
 
@@ -98,7 +103,9 @@ def test_parse_qf_lra_nested_conditions():
     x1 = symbols['x1']
     x2 = symbols['x2']
 
-    assert len(assertions) == 1
+    assert len(assertions) == 3
+    assert assertions[0] == Q.real(x2)
+    assert assertions[1] == Q.real(x1)
 
     expected_condition = Not(
         Implies(
@@ -112,7 +119,7 @@ def test_parse_qf_lra_nested_conditions():
             )
         )
     )
-    assert assertions[0] == expected_condition
+    assert assertions[2] == expected_condition
 
 
 def test_parse_qf_uf_double_negations():
@@ -196,8 +203,10 @@ def test_parse_let_bindings():
     symbols, assertions = parse_smtlib(source)
     x = symbols['x']
     y = symbols['y']
-    assert len(assertions) == 1
-    assert assertions[0] == And(
+    assert len(assertions) == 3
+    assert assertions[0] == Q.real(x)
+    assert assertions[1] == Q.real(y)
+    assert assertions[2] == And(
         StrictGreaterThan(Add(x, 1), 0), StrictLessThan(y - 1, 0)
     )
 
@@ -214,14 +223,15 @@ def test_parse_quantifiers():
     a = Symbol('a')
     b = Symbol('b')
     c = Symbol('c')
-    assert len(assertions) == 2
-    assert assertions[0] == Function('forall')(
+    assert len(assertions) == 3
+    assert assertions[0] == Q.real(x)
+    assert assertions[1] == Function('forall')(
         (a, b),
         Implies(
             StrictGreaterThan(a, b), StrictGreaterThan(Add(a, x), Add(b, x))
         )
     )
-    assert assertions[1] == Function('exists')((c,), Eq(c, Mul(x, 2)))
+    assert assertions[2] == Function('exists')((c,), Eq(c, Mul(x, 2)))
 
 
 def test_parse_macro_definition():
@@ -235,8 +245,10 @@ def test_parse_macro_definition():
     symbols, assertions = parse_smtlib(source)
     x = symbols['x']
     y = symbols['y']
-    assert len(assertions) == 1
-    assert assertions[0] == Eq(
+    assert len(assertions) == 3
+    assert assertions[0] == Q.real(x)
+    assert assertions[1] == Q.real(y)
+    assert assertions[2] == Eq(
         Piecewise((x, StrictGreaterThan(x, y)), (y, True)), 10
     )
 

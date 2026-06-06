@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from sympy.core.symbol import Symbol
 from sympy.core.function import Function
+from sympy.assumptions import Q
 from sympy.core.numbers import Integer, Float
 from sympy.logic.boolalg import (
     And, Or, Not, Implies, Xor, Equivalent
@@ -591,7 +592,7 @@ class SMTLibParser:
 
     def _create_symbol(self, name, sort):
         """
-        Generate a SymPy Symbol carrying strict SMT-LIB type traits.
+        Generate a SymPy Symbol and append its SMT-LIB type as a new assumption.
 
         Parameters
         ==========
@@ -605,15 +606,14 @@ class SMTLibParser:
         =======
 
         result : Symbol
-            A SymPy symbol customized with necessary assumptions
+            A bare SymPy symbol without old assumptions
         """
+        sym = Symbol(name)
         if sort == 'Real':
-            return Symbol(name, real=True)
-        if sort == 'Int':
-            return Symbol(name, integer=True)
-        if sort == 'Bool':
-            return Symbol(name, boolean=True)
-        return Symbol(name)
+            self._assertions.append(Q.real(sym))
+        elif sort == 'Int':
+            self._assertions.append(Q.integer(sym))
+        return sym
 
     def transform_declare_const(self, expr):
         """
