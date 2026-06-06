@@ -76,7 +76,15 @@ def trigintegrate(f, x, conds='piecewise'):
 
     a = M[a]
 
+    # If parity of exponents cannot be determined (symbolic integer without known odd/even),
+    # delegate to the generic integrator to avoid infinite recursion or stalls.
+    if n.is_odd is None or m.is_odd is None:
+        return integrate(f, x)
+
     if n.is_odd or m.is_odd:
+        u = _u
+        n_, m_ = n.is_odd, m.is_odd
+
         u = _u
         n_, m_ = n.is_odd, m.is_odd
 
