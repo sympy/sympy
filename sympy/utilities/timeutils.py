@@ -5,7 +5,7 @@ from __future__ import annotations
 import os
 import timeit
 import math
-from typing import TypeVar, Callable, ParamSpec
+from typing import TypeVar, Callable, ParamSpec, Any
 
 _scales: list[float] = [1e0, 1e3, 1e6, 1e9]
 _units: list[str] = ['s', 'ms', '\N{GREEK SMALL LETTER MU}s', 'ns']
@@ -34,15 +34,15 @@ def __do_timings() -> set[str]:
     res_list = [x.strip() for x in env_str.split(',')]
     return set(res_list)
 
+
+
 _do_timings: set[str] = __do_timings()
-_timestack: list[object] | None = None
+_timestack: list[Any] | None = None
 
-def _print_timestack(stack: list[object], level: int = 1) -> None:
-    # Use type: ignore because mypy doesn't know the exact index types of this mixed list
-    print('-' * level, '%.2f %s%s' % (stack[2], stack[0], stack[3]))  # type: ignore[misc]
-    for s in stack[1]:  # type: ignore[index]
-        _print_timestack(s, level + 1)  # type: ignore[arg-type]
-
+def _print_timestack(stack: list[Any], level: int = 1) -> None:
+    print('-' * level, '%.2f %s%s' % (stack[2], stack[0], stack[3]))
+    for s in stack[1]:
+        _print_timestack(s, level + 1)
 
 P = ParamSpec('P')
 R = TypeVar('R')
