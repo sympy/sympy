@@ -183,9 +183,9 @@ def test_polylog_series():
 
 
 def test_issue_8404():
-    from sympy import Symbol, Sum, S, Abs
+    from sympy import Symbol, S, Abs  # REMOVED 'Sum' from here!
     i = Symbol('i', integer=True)
-    # Using evalf(n=4) to avoid the infinite loop in mpmath
+    # Now it will use the 'Sum' imported at the top of the file
     result = Sum(1/(3*i + 1)**2, (i, 0, S.Infinity)).doit()
     numerical_result = float(result.evalf(n=4))
     assert Abs(numerical_result - 1.122) < 0.001
