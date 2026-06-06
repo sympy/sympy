@@ -71,7 +71,7 @@ The complete equations of motion take the final form:
 
 .. math::
 
-   \mathbf{M}(\mathbf{q}, t) x = \mathbf{F}(\dot{\mathbf{q}}, \mathbf{q}, t)`
+   \mathbf{M}(\mathbf{q}, t) x = \mathbf{F}(\dot{\mathbf{q}}, \mathbf{q}, t)
 
 where:
 
@@ -215,4 +215,4 @@ This is shown below by modifying the example above::
   [2*q2'' + 4]])
 
 Exploration of the provided :ref:`examples <mechanics_tutorial>` is encouraged
-in order to gain more understanding of the ``LagrangesMethod`` class.
+in order to gain more understanding of the :py:class:`~.LagrangesMethod` class.
