@@ -780,7 +780,7 @@ def bc_block_plus_ident(expr):
         total_factor = len(idents)
         for factor, _ in scaled_idents:
             total_factor += factor
-        
+
         block_id = BlockDiagMatrix(*[Identity(k)
                                         for k in blocks[0].rowblocksizes])
         rest = []
