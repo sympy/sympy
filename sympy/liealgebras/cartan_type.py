@@ -46,7 +46,7 @@ class CartanType_generator():
             if n == 2:
                 from . import type_g
                 return type_g.TypeG(n)
-
+        raise ValueError(f"Invalid Cartan type: {c}")
 CartanType = CartanType_generator()
 
 
