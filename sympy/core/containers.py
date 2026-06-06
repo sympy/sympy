@@ -9,7 +9,7 @@
 from __future__ import annotations
 
 from collections import OrderedDict
-from collections.abc import MutableSet, KeysView, ValuesView, ItemsView
+from collections.abc import MutableSet
 from typing import Callable, Iterable, Iterator, TypeVar, ParamSpec, overload, Any
 
 from .basic import Basic
@@ -277,18 +277,18 @@ class Dict(Basic):
     def __setitem__(self, key: object, value: object) -> None:
         raise NotImplementedError("SymPy Dicts are Immutable")
 
-    def items(self) -> ItemsView[Any, Any]:
-        '''Returns a set-like object providing a view on dict's items.
-        '''
-        return self._dict.items()
+    def items(self) -> Any:
+     '''Returns a set-like object providing a view on dict's items.
+     '''
+     return self._dict.items()
 
-    def keys(self) -> KeysView[Any]:
-        '''Returns the list of the dict's keys.'''
-        return self._dict.keys()
+    def keys(self) -> Any:
+     '''Returns the list of the dict's keys.'''
+     return self._dict.keys()
 
-    def values(self) -> ValuesView[Any]:
-        '''Returns the list of the dict's values.'''
-        return self._dict.values()
+    def values(self) -> Any:
+     '''Returns the list of the dict's values.'''
+     return self._dict.values()
 
     def __iter__(self) -> Iterator[Any]:
         '''x.__iter__() <==> iter(x)'''
