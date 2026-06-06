@@ -615,7 +615,6 @@ def refine_GreaterThan(expr, assumptions):
     True
 
     """
-    from sympy.core import Pow, Rational
     lhs, rhs = expr.args
     if rhs == S.Zero:
         if ask(Q.nonnegative(lhs), assumptions):
