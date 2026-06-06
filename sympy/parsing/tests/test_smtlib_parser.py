@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.symbol import Symbol
 from sympy.logic.boolalg import And, Or, Not, Implies
 from sympy.core.relational import (
@@ -8,8 +9,7 @@ from sympy.core.mul import Mul
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.core.function import Function
 from sympy.testing.pytest import raises
-
-from sympy.parsing.smtlib_parser import parse_smtlib, SMTLibSyntaxError
+from sympy.parsing.smtlib.smtlib_parser import parse_smtlib, SMTLibSyntaxError
 
 def test_parse_qf_uf_equalities_or_chain():
     source = """
@@ -27,7 +27,7 @@ def test_parse_qf_uf_equalities_or_chain():
     (exit)
     """
     symbols, assertions = parse_smtlib(source)
-    
+
     x4 = symbols['x4']
     x2 = symbols['x2']
     x1 = symbols['x1']
@@ -50,7 +50,7 @@ def test_parse_qf_lra_implies_and_lessthan():
     (exit)
     """
     symbols, assertions = parse_smtlib(source)
-    
+
     x1 = symbols['x1']
     x2 = symbols['x2']
 
@@ -71,7 +71,7 @@ def test_parse_qf_lra_implies_and_greaterthan():
     (exit)
     """
     symbols, assertions = parse_smtlib(source)
-    
+
     x1 = symbols['x1']
     x2 = symbols['x2']
 
@@ -94,20 +94,20 @@ def test_parse_qf_lra_nested_conditions():
     (exit)
     """
     symbols, assertions = parse_smtlib(source)
-    
+
     x1 = symbols['x1']
     x2 = symbols['x2']
 
     assert len(assertions) == 1
-    
+
     expected_condition = Not(
         Implies(
             And(
-                And(GreaterThan(x2, 1), And(Eq(10, x2), Eq(0, x1))), 
+                And(GreaterThan(x2, 1), And(Eq(10, x2), Eq(0, x1))),
                 LessThan(x2, 12)
-            ), 
+            ),
             Or(
-                Or(Eq(3, x1), Eq(x1, 1)), 
+                Or(Eq(3, x1), Eq(x1, 1)),
                 GreaterThan(10, x2)
             )
         )
@@ -131,7 +131,7 @@ def test_parse_qf_uf_double_negations():
     (exit)
     """
     symbols, assertions = parse_smtlib(source)
-    
+
     x1 = symbols['x1']
     x2 = symbols['x2']
     x3 = symbols['x3']
@@ -162,7 +162,7 @@ def test_parse_qf_uf_implies_double_negations_equalities():
     (exit)
     """
     symbols, assertions = parse_smtlib(source)
-    
+
     x1 = symbols['x1']
     x2 = symbols['x2']
     x4 = symbols['x4']
@@ -180,7 +180,7 @@ def test_parse_smtlib_syntax_errors():
     # Missing closing parenthesis
     with raises(SMTLibSyntaxError):
         parse_smtlib("(assert (= x 1)")
-        
+
     # Unmatched closing parenthesis
     with raises(SMTLibSyntaxError):
         parse_smtlib("(assert (= x 1)))")

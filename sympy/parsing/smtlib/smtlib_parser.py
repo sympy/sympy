@@ -3,6 +3,8 @@ This module contains the classes and functions used to parse SMT-LIB 2.7
 code into native SymPy expressions.
 """
 
+from __future__ import annotations
+
 from sympy.core.symbol import Symbol
 from sympy.core.function import Function
 from sympy.core.numbers import Integer, Float
@@ -330,9 +332,9 @@ class SMTLibParser:
 
         # Check standard SMT-LIB hex and binary numeric literals
         if atom_str.startswith('#x'):
-            return Integer(int(atom[2:], 16))
+            return Integer(int(atom_str.replace('#x', '0x'), 0))
         if atom_str.startswith('#b'):
-            return Integer(int(atom[2:], 2))
+            return Integer(int(atom_str.replace('#b', '0b'), 0))
 
         try:
             # Attempt to parse as a real/float or an integer
