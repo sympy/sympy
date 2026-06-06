@@ -354,3 +354,9 @@ def test_Heaviside():
     assert refine(Heaviside(x, 1), Q.zero(x)) == 1
     assert refine(Heaviside(x, 1), Q.positive(x)) == 1
     assert refine(Heaviside(x, 1), Q.negative(x)) == 0
+
+def test_refine_GreaterThan():
+    assert refine(sqrt(x) >= 0, Q.real(sqrt(x))) == True
+    assert refine(x >= 0, Q.nonnegative(x)) == True
+    assert refine(x >= 0, Q.negative(x)) == False
+    assert refine(x >= 0, Q.complex(x)) == (x >= 0)
