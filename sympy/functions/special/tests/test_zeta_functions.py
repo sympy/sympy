@@ -183,13 +183,13 @@ def test_polylog_series():
 
 
 def test_issue_8404():
-    from sympy import Symbol, S, Abs  # REMOVED 'Sum' from here!
+    from sympy import Symbol, Sum, S, Abs
     i = Symbol('i', integer=True)
-    # Now it will use the 'Sum' imported at the top of the file
+    # Let SymPy handle the evaluation without forcing it into a Python float
     result = Sum(1/(3*i + 1)**2, (i, 0, S.Infinity)).doit()
-    numerical_result = float(result.evalf(n=4))
+    numerical_result = result.evalf(n=4)
     assert Abs(numerical_result - 1.122) < 0.001
-
+    
 def test_polylog_values():
     assert polylog(2, 2) == pi**2/4 - I*pi*log(2)
     assert polylog(2, S.Half) == pi**2/12 - log(2)**2/2
