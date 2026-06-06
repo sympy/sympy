@@ -332,10 +332,48 @@ Here is an example of a correctly formatted Parameters section::
             expressions where speed is a concern, use the setting order='none'.
 
         """
+.. _style_guide_attributes_section:
+
+5. Attributes Section
+^^^^^^^^^^^^^^^^^^^^^^
+
+This section is encouraged for classes that expose public attributes. If you
+choose to include an Attributes section in your docstring, it should be labeled
+with the heading “Attributes” underlined with the same length in equals signs.
+
+::
+
+    Attributes
+    ==========
+
+
+This section consists of descriptions of public class attributes and their
+respective types.
+
+The formatting should follow the same conventions as the Parameters section.
+
+**Example**
+
+Here is an example of a correctly formatted Attributes section::
+
+    class Example:
+        r"""
+        Example class.
+
+        Attributes
+        ==========
+
+        value : int
+            Stores the current value.
+        name : str
+            Stores the object name.
+
+        """
 
 .. _style_guide_see_also:
 
-5. See Also Section
+
+6. See Also Section
 ^^^^^^^^^^^^^^^^^^^^^^
 
 This section is encouraged. If you choose to include a See Also section in your
@@ -392,7 +430,7 @@ Here is a correctly formatted See Also section with just a list of names::
 
         """
 
-6. References Section
+7. References Section
 ^^^^^^^^^^^^^^^^^^^^^^
 
 This section is encouraged. If you choose to include a References section in
