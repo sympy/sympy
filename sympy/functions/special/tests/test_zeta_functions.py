@@ -185,7 +185,6 @@ def test_issue_8404():
     from sympy.core.symbol import Symbol
     from sympy.concrete.summations import Sum
     from sympy.core.numbers import S
-    
     i = Symbol('i', integer=True)
     result = Sum(1/(3*i + 1)**2, (i, 0, S.Infinity)).doit()
     
