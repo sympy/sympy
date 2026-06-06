@@ -100,6 +100,7 @@ modules = [
     'sympy.parsing.latex',
     'sympy.parsing.latex._antlr',
     'sympy.parsing.latex.lark',
+    'sympy.parsing.smtlib',
     'sympy.physics',
     'sympy.physics.biomechanics',
     'sympy.physics.continuum_mechanics',
