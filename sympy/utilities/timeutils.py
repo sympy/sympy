@@ -1,79 +1,75 @@
-"""Simple tools for timing functions' execution, when IPython is not available. """
+"""Simple tools for timing functions' execution, when IPython is not available."""
+
 from __future__ import annotations
 
-
+import os
 import timeit
 import math
-from typing import TypeVar, Callable
+from typing import TypeVar, Callable, ParamSpec
 
-_CallableT = TypeVar("_CallableT", bound=Callable)
-_scales = [1e0, 1e3, 1e6, 1e9]
-_units = ['s', 'ms', '\N{GREEK SMALL LETTER MU}s', 'ns']
+_scales: list[float] = [1e0, 1e3, 1e6, 1e9]
+_units: list[str] = ['s', 'ms', '\N{GREEK SMALL LETTER MU}s', 'ns']
 
-
-def timed(
-    func: Callable[[], object], setup: str = "pass", limit: int | None = None
-) -> tuple[int, float, float, str]:
-    """Adaptively measure execution time of a function. """
+def timed(func: Callable[[], object], setup: str = "pass", limit: int | None = None) -> tuple[int, float, float, str]:
+    """Adaptively measure execution time of a function."""
     timer = timeit.Timer(func, setup=setup)
     repeat, number = 3, 1
-
-    for i in range(1, 10):
+    for _ in range(1, 10):
         if timer.timeit(number) >= 0.2:
             break
         elif limit is not None and number >= limit:
             break
         else:
             number *= 10
-
-    time = min(timer.repeat(repeat, number)) / number
-
-    if time > 0.0:
-        order = min(-int(math.floor(math.log10(time)) // 3), 3)
+    time_taken = min(timer.repeat(repeat, number)) / number
+    if time_taken > 0.0:
+        order = min(-int(math.floor(math.log10(time_taken)) // 3), 3)
     else:
         order = 3
-
-    return (number, time, time*_scales[order], _units[order])
-
+    return (number, time_taken, time_taken * _scales[order], _units[order])
 
 # Code for doing inline timings of recursive algorithms.
+def __do_timings() -> set[str]:
+    env_str = os.getenv('SYMPY_TIMINGS', '')
+    res_list = [x.strip() for x in env_str.split(',')]
+    return set(res_list)
 
-def __do_timings():
-    import os
-    res = os.getenv('SYMPY_TIMINGS', '')
-    res = [x.strip() for x in res.split(',')]
-    return set(res)
+_do_timings: set[str] = __do_timings()
+_timestack: list[object] | None = None
 
-_do_timings = __do_timings()
-_timestack = None
-
-
-def _print_timestack(stack, level=1):
-    print('-'*level, '%.2f %s%s' % (stack[2], stack[0], stack[3]))
-    for s in stack[1]:
-        _print_timestack(s, level + 1)
+def _print_timestack(stack: list[object], level: int = 1) -> None:
+    # Use type: ignore because mypy doesn't know the exact index types of this mixed list
+    print('-' * level, '%.2f %s%s' % (stack[2], stack[0], stack[3]))  # type: ignore[misc]
+    for s in stack[1]:  # type: ignore[index]
+        _print_timestack(s, level + 1)  # type: ignore[arg-type]
 
 
-def timethis(name) -> Callable[[_CallableT], _CallableT]:
-    def decorator(func):
+P = ParamSpec('P')
+R = TypeVar('R')
+
+def timethis(name: str) -> Callable[[Callable[P, R]], Callable[P, R]]:
+    def decorator(func: Callable[P, R]) -> Callable[P, R]:
         if name not in _do_timings:
             return func
 
-        def wrapper(*args, **kwargs):
+        def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
             from time import time
             global _timestack
             oldtimestack = _timestack
-            _timestack = [func.func_name, [], 0, args]
+            _timestack = [getattr(func, '__name__', 'unknown'), [], 0.0, args]
+            
             t1 = time()
             r = func(*args, **kwargs)
             t2 = time()
+            
             _timestack[2] = t2 - t1
             if oldtimestack is not None:
-                oldtimestack[1].append(_timestack)
+                oldtimestack[1].append(_timestack)  # type: ignore[index, attr-defined]
                 _timestack = oldtimestack
             else:
                 _print_timestack(_timestack)
                 _timestack = None
             return r
+
         return wrapper
     return decorator
