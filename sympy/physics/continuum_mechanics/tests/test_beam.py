@@ -767,9 +767,9 @@ def test_apply_support():
     assert c.reaction_loads == {R_0: P/2, R_L: P/2, M_0: -L*P/8, M_L: L*P/8}
     
     b = Beam(9, 20, 20)
-    R_0 = b.apply_support(0, "pin")
-    R_5 = b.apply_support(5, "spring", 1000)
-    R_9 = b.apply_support(9, "spring", 1000)
+    R_0 = b.apply_support(0, type="pin")
+    R_5 = b.apply_support(5, type="spring", spring_constant=1000)
+    R_9 = b.apply_support(9, type="spring", spring_constant=1000)
     b.apply_load(-100, 0, 0)
     b.solve_for_reaction_loads(R_0, R_5, R_9)
     assert b.reaction_loads == {R_5: 1724625/3106, R_0: 315600/1553, R_9: 439575/3106}
@@ -882,9 +882,9 @@ def test_apply_rotation_hinge():
     assert simplify(b.bending_moment().expand()) == simplify(expected_bending_moment.expand())
 def test_apply_rotation_spring():
     b = Beam(12, 50, 10)
-    r0 = b.apply_support(0, 'fixed')
+    r0 = b.apply_support(0, type='fixed')
     r8 = b.apply_support(8, type='pin')
-    r12, m12 = b.apply_support(12, 'fixed')
+    r12, m12 = b.apply_support(12, type='fixed')
     b.apply_rotation_spring(4, 1000)
     b.apply_rotation_spring(8, 1000)
     b.apply_load(-100,4,-1)
