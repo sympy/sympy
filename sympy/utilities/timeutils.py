@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import timeit
 import math
-from typing import TypeVar, Callable, Any, cast, Optional
+from typing import TypeVar, Callable, Any, cast
 
 # Define TypeVar once at the top
 _CallableT = TypeVar("_CallableT", bound=Callable[..., Any])
@@ -43,7 +43,7 @@ def __do_timings() -> set[str]:
     return set(res_list)
 
 _do_timings: set[str] = __do_timings()
-_timestack: Optional[list[Any]] = None
+_timestack: list[Any] | None = None
 
 def _print_timestack(stack: Any, level: int = 1) -> None:
     print('-' * level, '%.2f %s%s' % (stack[2], stack[0], stack[3]))
