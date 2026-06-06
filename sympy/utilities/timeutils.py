@@ -1,18 +1,18 @@
 """Simple tools for timing functions' execution, when IPython is not available. """
 from __future__ import annotations
 
-
 import timeit
 import math
-from typing import TypeVar, Callable
+from typing import TypeVar, Callable, Any, cast, Optional
 
-_CallableT = TypeVar("_CallableT", bound=Callable)
+# Define TypeVar once at the top
+_CallableT = TypeVar("_CallableT", bound=Callable[..., Any])
+
 _scales = [1e0, 1e3, 1e6, 1e9]
 _units = ['s', 'ms', '\N{GREEK SMALL LETTER MU}s', 'ns']
 
-
 def timed(
-    func: Callable[[], object], setup: str = "pass", limit: int | None = None
+    func: Callable[[], Any], setup: str = "pass", limit: int | None = None
 ) -> tuple[int, float, float, str]:
     """Adaptively measure execution time of a function. """
     timer = timeit.Timer(func, setup=setup)
@@ -35,35 +35,31 @@ def timed(
 
     return (number, time, time*_scales[order], _units[order])
 
-
 # Code for doing inline timings of recursive algorithms.
-
-def __do_timings():
+def __do_timings() -> set[str]:
     import os
-    res = os.getenv('SYMPY_TIMINGS', '')
-    res = [x.strip() for x in res.split(',')]
-    return set(res)
+    env_str = os.getenv('SYMPY_TIMINGS', '')
+    res_list = [x.strip() for x in env_str.split(',')]
+    return set(res_list)
 
-_do_timings = __do_timings()
-_timestack = None
+_do_timings: set[str] = __do_timings()
+_timestack: Optional[list[Any]] = None
 
-
-def _print_timestack(stack, level=1):
-    print('-'*level, '%.2f %s%s' % (stack[2], stack[0], stack[3]))
+def _print_timestack(stack: Any, level: int = 1) -> None:
+    print('-' * level, '%.2f %s%s' % (stack[2], stack[0], stack[3]))
     for s in stack[1]:
         _print_timestack(s, level + 1)
 
-
-def timethis(name) -> Callable[[_CallableT], _CallableT]:
-    def decorator(func):
+def timethis(name: str) -> Callable[[_CallableT], _CallableT]:
+    def decorator(func: _CallableT) -> _CallableT:
         if name not in _do_timings:
             return func
 
-        def wrapper(*args, **kwargs):
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
             from time import time
             global _timestack
             oldtimestack = _timestack
-            _timestack = [func.func_name, [], 0, args]
+            _timestack = [getattr(func, '__name__', 'unknown'), [], 0, args]
             t1 = time()
             r = func(*args, **kwargs)
             t2 = time()
@@ -75,5 +71,6 @@ def timethis(name) -> Callable[[_CallableT], _CallableT]:
                 _print_timestack(_timestack)
                 _timestack = None
             return r
-        return wrapper
+        
+        return cast(_CallableT, wrapper)
     return decorator
