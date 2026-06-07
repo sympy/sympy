@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from collections import OrderedDict
 from collections.abc import MutableSet
-from typing import Callable, Iterable, Iterator, TypeVar, overload, Generic, TYPE_CHECKING
+from typing import Iterable, Iterator, TypeVar, overload, Generic, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from sympy.core.expr import Expr
@@ -289,7 +289,7 @@ class Dict(Basic, Generic[_K, _V]):
         elements = frozenset(items)
         obj = Basic.__new__(cls, *ordered(items))
         obj.elements = elements
-        obj._dict = dict((item.args[0], item.args[1]) for item in items)  # In case Tuple decides it wants to sympify
+        obj._dict = {item.args[0]: item.args[1] for item in items}
         return obj
 
     def __getitem__(self, key):
@@ -440,3 +440,4 @@ class TupleKind(Kind):
 
     def __repr__(self) -> str:
         return "TupleKind{}".format(self.element_kind)
+    
