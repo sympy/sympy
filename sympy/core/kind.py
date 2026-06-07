@@ -26,6 +26,7 @@ This module defines basic kinds for core objects. Other kinds such as
 """
 from __future__ import annotations
 
+from typing import ClassVar, Self
 from collections import defaultdict
 
 from .cache import cacheit
@@ -73,7 +74,9 @@ class Kind(object, metaclass=KindMeta):
     return the same object.
 
     """
-    def __new__(cls, *args):
+    _inst: ClassVar[dict[tuple[Kind, ...], Self]]
+
+    def __new__(cls, *args: Kind) -> Self:
         if args in cls._inst:
             inst = cls._inst[args]
         else:

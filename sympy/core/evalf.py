@@ -1701,7 +1701,7 @@ class EvalfMixin:
     def _eval_evalf(self, prec: int) -> Expr | None:
         return None
 
-    def _to_mpmath(self, prec, allow_ints=True):
+    def _to_mpmath(self: Any, prec: int, allow_ints: bool = True) -> int | mpf | mpc:
         # mpmath functions accept ints as input
         errmsg = "cannot convert to mpmath number"
         if allow_ints and self.is_Integer:

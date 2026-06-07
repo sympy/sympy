@@ -62,11 +62,8 @@ class Tuple(Basic, Generic[_T]):
 
     if TYPE_CHECKING:
         @property
-        def args(self) -> tuple[_T, ...]: ...
-    else:
-        @property
-        def args(self):
-            return self._args
+        def args(self) -> tuple[_T, ...]:
+            ...
 
     def __new__(cls, *args: _T, **kwargs: bool) -> Tuple[_T]:
         if kwargs.get('sympify', True):
@@ -170,34 +167,31 @@ class Tuple(Basic, Generic[_T]):
         else:
             return self.args.index(value, start, stop)
 
-    if TYPE_CHECKING:
-        kind: Kind
-    else:
-        @property
-        def kind(self):
-            """
-            The kind of a Tuple instance.
+    @property
+    def kind(self) -> TupleKind: # type: ignore
+        """
+        The kind of a Tuple instance.
 
-            The kind of a Tuple is always of :class:`TupleKind` but
-            parametrised by the number of elements and the kind of each element.
+        The kind of a Tuple is always of :class:`TupleKind` but
+        parametrised by the number of elements and the kind of each element.
 
-            Examples
-            ========
+        Examples
+        ========
 
-            >>> from sympy import Tuple
-            >>> Tuple(1, 2).kind
-            TupleKind(NumberKind, NumberKind)
-            >>> Tuple(1, 2).kind.element_kind
-            (NumberKind, NumberKind)
+        >>> from sympy import Tuple
+        >>> Tuple(1, 2).kind
+        TupleKind(NumberKind, NumberKind)
+        >>> Tuple(1, 2).kind.element_kind
+        (NumberKind, NumberKind)
 
-            See Also
-            ========
+        See Also
+        ========
 
-            sympy.core.kind.NumberKind
-            MatrixKind
-            sympy.sets.sets.SetKind
-            """
-            return TupleKind(*(i.kind for i in self.args))
+        sympy.core.kind.NumberKind
+        MatrixKind
+        sympy.sets.sets.SetKind
+        """
+        return TupleKind(*(i.kind for i in self.args))
 
 _sympy_converter[tuple] = lambda tup: Tuple(*tup)
 
@@ -279,7 +273,7 @@ class Dict(Basic, Generic[_K, _V]):
     elements: frozenset[Tuple[Basic]]
     _dict: dict[_K, _V]
 
-    def __new__(cls, *args) -> Dict:
+    def __new__(cls, *args) -> Dict[_K, _V]:
         if len(args) == 1 and isinstance(args[0], (dict, Dict)):
             items = [Tuple(k, v) for k, v in args[0].items()]
         elif iterable(args) and all(len(arg) == 2 for arg in args):
@@ -433,11 +427,10 @@ class TupleKind(Kind):
     """
     element_kind: tuple[Kind, ...]
 
-    def __new__(cls, *args: Kind):
+    def __new__(cls, *args: Kind) -> TupleKind:
         obj = super().__new__(cls, *args)
         obj.element_kind = args
         return obj
 
     def __repr__(self) -> str:
         return "TupleKind{}".format(self.element_kind)
-    
