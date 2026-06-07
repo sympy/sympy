@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from collections import OrderedDict
 from collections.abc import MutableSet
-from typing import Callable, Iterable, Iterator, TypeVar, ParamSpec, overload, Any
+from typing import Callable, Iterable, Iterator, TypeVar, ParamSpec, overload, Any, Generic
 
 from .basic import Basic
 from .sorting import default_sort_key, ordered
@@ -21,9 +21,10 @@ from sympy.utilities.misc import as_int
 
 P = ParamSpec('P')
 R = TypeVar('R')
+T = T = TypeVar('T', bound=Basic)
 
 
-class Tuple(Basic):
+class Tuple(Basic, Generic[T]):
     """
     Wrapper around the builtin tuple object.
 
@@ -55,22 +56,22 @@ class Tuple(Basic):
     """
 
     @property
-    def args(self) -> tuple[Any, ...]:
-        return self._args
-
-    def __new__(cls, *args: Any, **kwargs: Any) -> Tuple:
+    def args(self) -> tuple[T, ...]:  # type: ignore[override]
+        return self._args  # type: ignore[return-value]
+    
+    def __new__(cls, *args: T, **kwargs: Any) -> Tuple[T]:
         if kwargs.get('sympify', True):
-            args = tuple(sympify(arg) for arg in args)
+            args = tuple(sympify(arg) for arg in args)  # type: ignore[assignment]
         obj = Basic.__new__(cls, *args)
         return obj
 
     @overload
-    def __getitem__(self, i: int) -> Any: ...
+    def __getitem__(self, i: int) -> T: ...
 
     @overload
-    def __getitem__(self, i: slice) -> Tuple: ...
+    def __getitem__(self, i: slice) -> Tuple[T]: ...
 
-    def __getitem__(self, i: int | slice) -> Any:
+    def __getitem__(self, i: int | slice) -> T | Tuple[T]:
         if isinstance(i, slice):
             indices = i.indices(len(self))
             return Tuple(*(self.args[j] for j in range(*indices)))
@@ -82,26 +83,26 @@ class Tuple(Basic):
     def __contains__(self, item: object) -> bool:
         return item in self.args
 
-    def __iter__(self) -> Iterator[Any]:
+    def __iter__(self) -> Iterator[T]:
         return iter(self.args)
 
-    def __add__(self, other: Tuple | tuple[Any, ...]) -> Tuple:
+    def __add__(self, other: Tuple[T] | tuple[T, ...]) -> Tuple[T]:
         if isinstance(other, Tuple):
             return Tuple(*(self.args + other.args))
         elif isinstance(other, tuple):
             return Tuple(*(self.args + other))
         else:
-            return NotImplemented
+            return NotImplemented  # type: ignore[return-value]
 
-    def __radd__(self, other: Tuple | tuple[Any, ...]) -> Tuple:
+    def __radd__(self, other: Tuple[T] | tuple[T, ...]) -> Tuple[T]:
         if isinstance(other, Tuple):
             return Tuple(*(other.args + self.args))
         elif isinstance(other, tuple):
             return Tuple(*(other + self.args))
         else:
-            return NotImplemented
+            return NotImplemented  # type: ignore[return-value]
 
-    def __mul__(self, other: int) -> Tuple:
+    def __mul__(self, other: int) -> Tuple[T]:
         try:
             n = as_int(other)
         except ValueError:
@@ -126,10 +127,10 @@ class Tuple(Basic):
     def _to_mpmath(self, prec: int) -> tuple[Any, ...]:
         return tuple(a._to_mpmath(prec) for a in self.args)  # type: ignore[attr-defined]
 
-    def __lt__(self, other: Tuple) -> Basic:
+    def __lt__(self, other: Tuple[Any]) -> Basic:
         return _sympify(self.args < other.args)
 
-    def __le__(self, other: Tuple) -> Basic:
+    def __le__(self, other: Tuple[Any]) -> Basic:
         return _sympify(self.args <= other.args)
 
     def tuple_count(self, value: object) -> int:
@@ -249,7 +250,7 @@ class Dict(Basic):
 
     """
 
-    elements: frozenset[Tuple]
+    elements: frozenset[Tuple[Any]]
     _dict: dict[Any, Any]
 
     def __new__(cls, *args: Any) -> Dict:
@@ -277,18 +278,18 @@ class Dict(Basic):
     def __setitem__(self, key: object, value: object) -> None:
         raise NotImplementedError("SymPy Dicts are Immutable")
 
-    def items(self) -> Any:
-     '''Returns a set-like object providing a view on dict's items.
-     '''
-     return self._dict.items()
+    def items(self):
+        '''Returns a set-like object providing a view on dict's items.
+        '''
+        return self._dict.items()
 
-    def keys(self) -> Any:
-     '''Returns the list of the dict's keys.'''
-     return self._dict.keys()
+    def keys(self):
+        '''Returns the list of the dict's keys.'''
+        return self._dict.keys()
 
-    def values(self) -> Any:
-     '''Returns the list of the dict's values.'''
-     return self._dict.values()
+    def values(self):
+        '''Returns the list of the dict's values.'''
+        return self._dict.values()
 
     def __iter__(self) -> Iterator[Any]:
         '''x.__iter__() <==> iter(x)'''
@@ -333,10 +334,10 @@ class Dict(Basic):
 _sympy_converter[dict] = lambda d: Dict(*d.items())
 
 
-class OrderedSet(MutableSet[Any]):
-    def __init__(self, iterable: Iterable[Any] | None = None) -> None:
+class OrderedSet(MutableSet[T]):
+    def __init__(self, iterable: Iterable[T] | None = None) -> None:
         if iterable:
-            self.map: OrderedDict[Any, None] = OrderedDict((item, None) for item in iterable)
+            self.map: OrderedDict[T, None] = OrderedDict((item, None) for item in iterable)
         else:
             self.map = OrderedDict()
 
@@ -346,16 +347,16 @@ class OrderedSet(MutableSet[Any]):
     def __contains__(self, key: object) -> bool:
         return key in self.map
 
-    def add(self, value: Any) -> None:
+    def add(self, value: T) -> None:
         self.map[value] = None
 
-    def discard(self, value: Any) -> None:
+    def discard(self, value: T) -> None:
         self.map.pop(value, None)
 
-    def pop(self, last: bool = True) -> Any:
+    def pop(self, last: bool = True) -> T:
         return self.map.popitem(last=last)[0]
 
-    def __iter__(self) -> Iterator[Any]:
+    def __iter__(self) -> Iterator[T]:
         yield from self.map.keys()
 
     def __repr__(self) -> str:
@@ -363,13 +364,13 @@ class OrderedSet(MutableSet[Any]):
             return '%s()' % (self.__class__.__name__,)
         return '%s(%r)' % (self.__class__.__name__, list(self.map.keys()))
 
-    def intersection(self, other: Iterable[Any]) -> OrderedSet:
+    def intersection(self, other: Iterable[T]) -> OrderedSet[T]:
         return self.__class__([val for val in self if val in other])
 
-    def difference(self, other: Iterable[Any]) -> OrderedSet:
+    def difference(self, other: Iterable[T]) -> OrderedSet[T]:
         return self.__class__([val for val in self if val not in other])
 
-    def update(self, iterable: Iterable[Any]) -> None:
+    def update(self, iterable: Iterable[T]) -> None:
         for val in iterable:
             self.add(val)
 
