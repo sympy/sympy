@@ -21,7 +21,7 @@ from sympy.utilities.misc import as_int
 
 P = ParamSpec('P')
 R = TypeVar('R')
-T = T = TypeVar('T', bound=Basic)
+T = TypeVar('T', bound=Basic)
 
 
 class Tuple(Basic, Generic[T]):
