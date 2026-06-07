@@ -57,11 +57,11 @@ def timethis(name: str) -> Callable[[Callable[P, R]], Callable[P, R]]:
             global _timestack
             oldtimestack = _timestack
             _timestack = [getattr(func, '__name__', 'unknown'), [], 0.0, args]
-            
+
             t1 = time()
             r = func(*args, **kwargs)
             t2 = time()
-            
+
             _timestack[2] = t2 - t1
             if oldtimestack is not None:
                 oldtimestack[1].append(_timestack)  # type: ignore[index, attr-defined]
