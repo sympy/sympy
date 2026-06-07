@@ -54,8 +54,8 @@ def test_evaluate_pauli_product():
 def test_evaluate_pauli_product_ordering():
     from sympy.physics.paulialgebra import evaluate_pauli_product
 
-    a1 = Pauli(1, label = "a")
-    b3 = Pauli(3, label = "b")
+    a1 = Pauli(1, label="a")
+    b3 = Pauli(3, label="b")
 
     # Simpler case where ordering is already present
     assert evaluate_pauli_product((a1 * b3) + (a1 * b3)) == 2 * a1 * b3
@@ -69,7 +69,7 @@ def test_evaluate_pauli_product_empty():
     from sympy.physics.paulialgebra import evaluate_pauli_product
 
     assert evaluate_pauli_product(1) == 1
-    a1 = Pauli(1, label = "a")
+    a1 = Pauli(1, label="a")
     assert evaluate_pauli_product(a1) == a1
     labelmissing = Pauli(1)
     assert evaluate_pauli_product(labelmissing) == labelmissing
