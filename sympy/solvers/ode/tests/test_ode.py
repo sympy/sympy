@@ -20,7 +20,8 @@ from sympy.solvers.ode import (classify_ode,
 
 from sympy.solvers.ode.subscheck import checkodesol
 from sympy.solvers.ode.ode import (classify_sysode,
-    constant_renumber, constantsimp, get_numbered_constants, solve_ics)
+    constant_renumber, constantsimp, get_numbered_constants, solve_ics,
+    _get_constant_solutions)
 
 from sympy.solvers.ode.nonhomogeneous import _undetermined_coefficients_match
 from sympy.solvers.ode.single import LinearCoefficients
@@ -572,6 +573,18 @@ def test_solve_ics():
     ics = {f(x).diff(x).subs(x, 0): f(x).diff(x).subs(x, 0), f(0): f(0)}
     assert dsolve(f(x).diff(x, x) + f(x), f(x), ics=ics) == \
         Eq(f(x), f(0)*cos(x) + f(x).diff(x).subs(x, 0)*sin(x))
+
+
+def test_get_constant_solutions():
+    eq = Derivative(f(x), (x, 2)) - f(x)*(f(x) - 1)
+    assert _get_constant_solutions(eq, f(x),
+        {f(0): 1, Derivative(f(x), x).subs(x, 0): 0}) == [Eq(f(x), 1)]
+    assert _get_constant_solutions(eq, f(x),
+        {f(0): 0, Derivative(f(x), x).subs(x, 0): 0}) == [Eq(f(x), 0)]
+    assert _get_constant_solutions(eq, f(x),
+        {f(0): 1, Derivative(f(x), x).subs(x, 0): 1}) == []
+    assert _get_constant_solutions(eq, f(x), {f(0): 2}) == []
+
 
 def test_ode_order():
     f = Function('f')
@@ -1149,3 +1162,15 @@ def test_issue_28438():
     expected3 = Eq(y(x), sqrt(x)*(C1*besselj(S(1)/4, x**2/2) +
                                    C2*bessely(S(1)/4, x**2/2)))
     assert sol3 == expected3
+
+
+def test_issue_29827():
+    ode = Eq(Derivative(f(x), x), log(f(x)))
+    result = dsolve(ode, func=f(x), ics={f(1): 1})
+    # `result` should basically match `Eq(f(x), 1)`.
+    # However, with the current implementation, when `x` is real,
+    # the solution includes `Eq(li(f(x)), -oo)`.
+    assert result == Eq(f(x), 1) or Eq(f(x), 1) in result
+
+    ode = Eq(Derivative(f(x), x), f(x)*(1 - f(x)))
+    assert dsolve(ode, f(x), ics={f(0): 0}) == Eq(f(x), 0)
