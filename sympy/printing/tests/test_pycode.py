@@ -1,3 +1,4 @@
+from sympy import Not
 from sympy.codegen import Assignment
 from sympy.codegen.ast import none
 from sympy.codegen.cfunctions import expm1, log1p
@@ -40,6 +41,7 @@ def test_PythonCodePrinter():
     assert prntr.doprint(And(x, y)) == 'x and y'
     assert prntr.doprint(Or(x, y)) == 'x or y'
     assert prntr.doprint(1/(x+y)) == '1/(x + y)'
+    assert prntr.doprint(Not(x)) == 'not x'
     assert not prntr.module_imports
 
     assert prntr.doprint(pi) == 'math.pi'
