@@ -641,10 +641,3 @@ class LagrangesMethod(MethodBase):
     def nonholonomic_constraints(self):
         """Column matrix of nonholonomic constraint residuals."""
         return self._nonhol_coneqs
-
-    @property
-    def velocity_constraints(self):
-        """Column matrix of velocity constraint residuals. Time differentiated
-        holonomic constraint residules stacked on top of the nonholonomic
-        constraint residuals."""
-        return self.coneqs
