@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from collections import OrderedDict
 from collections.abc import MutableSet
-from typing import Callable, Iterable, Iterator, TypeVar, overload, Generic, TYPE_CHECKING
+from typing import Iterable, Iterator, TypeVar, overload, Generic, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from sympy.core.expr import Expr
