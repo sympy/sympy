@@ -187,10 +187,8 @@ def test_issue_8404():
     from sympy.core.numbers import S
     i = Symbol('i', integer=True)
     result = Sum(1/(3*i + 1)**2, (i, 0, S.Infinity)).doit()
-    
     # Force into a native Python complex number to prevent symbolic hanging
     val = complex(result.evalf())
-    
     # Use standard Python 'abs' and '.real' (instantly evaluates)
     assert abs(val.real - 1.122) < 0.001
 
