@@ -183,9 +183,6 @@ def test_polylog_series():
 
 
 def test_issue_8404():
-    from sympy.core.symbol import Symbol
-    from sympy.concrete.summations import Sum
-    from sympy.core.numbers import S
     i = Symbol('i', integer=True)
     # We MUST keep .doit() because that is what issue 8404 tests.
     # We use .n(4) to only calculate 4 digits, which evaluates instantly!
