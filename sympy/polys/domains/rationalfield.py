@@ -37,6 +37,7 @@ class RationalField(Field[MPQ], CharacteristicZero, SimpleDomain):
 
     has_assoc_Ring = True
     has_assoc_Field = True
+    has_conjugate = True
 
     dtype = MPQ
     zero = dtype(0)
@@ -197,5 +198,18 @@ class RationalField(Field[MPQ], CharacteristicZero, SimpleDomain):
         if q_rem != 0:
             return None
         return MPQ(p_sqrt, q_sqrt)
+
+    def conjugate(self, a: MPQ) -> MPQ:
+        """Returns the complex conjugate of ``a``."""
+        return a
+
+    def real(self, a: MPQ) -> MPQ:
+        """Returns the real part of ``a``."""
+        return a
+
+    def imag(self, a: MPQ) -> MPQ:
+        """Returns the imaginary part of ``a``."""
+        return self.zero
+
 
 QQ = RationalField()

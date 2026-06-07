@@ -26,6 +26,7 @@ class ComplexField(Field, CharacteristicZero, SimpleDomain):
 
     has_assoc_Ring = False
     has_assoc_Field = True
+    has_conjugate = True
 
     _default_precision = 53
 
@@ -194,5 +195,15 @@ class ComplexField(Field, CharacteristicZero, SimpleDomain):
         slightly inaccurate due to floating point rounding error.
         """
         return a ** 0.5
+
+    def conjugate(self, a):
+        return self.dtype(a.real, -a.imag)
+
+    def real(self, a):
+        return self.dtype(a.real, 0)
+
+    def imag(self, a):
+        return self.dtype(a.imag, 0)
+
 
 CC = ComplexField()

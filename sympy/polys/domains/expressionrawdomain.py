@@ -25,6 +25,7 @@ class ExpressionRawDomain(Field, CharacteristicZero, SimpleDomain):
 
     has_assoc_Ring = False
     has_assoc_Field = True
+    has_conjugate = True
 
     def __init__(self):
         pass
@@ -53,6 +54,17 @@ class ExpressionRawDomain(Field, CharacteristicZero, SimpleDomain):
 
     def sum(self, items):
         return Add(*items)
+
+    def conjugate(self, a):
+        return a.conjugate()
+
+    def real(self, a):
+        from sympy.functions.elementary.complexes import re
+        return re(a)
+
+    def imag(self, a):
+        from sympy.functions.elementary.complexes import im
+        return im(a)
 
 
 EXRAW = ExpressionRawDomain()

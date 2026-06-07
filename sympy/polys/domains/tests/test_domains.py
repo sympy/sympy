@@ -1163,6 +1163,9 @@ def test_gaussian_domains():
         assert 2*i + r == q
         i, r = divmod(2, q)
         assert q*i + r == G(2, 0)
+        assert G.conjugate(q) == G(3, -4)
+        assert G.real(q) == G(3)
+        assert G.imag(q) == G(4)
 
         a, b = G(2, 0), G(1, -1)
         c, d, g = G.gcdex(a, b)
@@ -1433,3 +1436,57 @@ def test_exsqrt():
     assert F7.exsqrt(F7(3)) is None
     assert F7.is_square(F7(0)) is True
     assert F7.exsqrt(F7(0)) == F7(0)
+
+
+def test_Domain_conjugate():
+    domains = [ZZ, QQ, RR, CC, ZZ_I, QQ_I, EX, EXRAW]
+    for domain in domains:
+        a = domain(7)
+        assert domain.has_conjugate
+        assert domain.conjugate(a) == a
+        assert domain.real(a) == a
+        assert domain.imag(a) == domain.zero
+
+        assert all(domain.of_type(elt) for elt in [
+            domain.conjugate(a), domain.real(a), domain.imag(a)
+        ])
+
+        if domain.is_Field:
+            b = domain(-5)
+            assert domain.conjugate(a / b) == domain(a / b)
+            assert domain.real(a / b) == domain(a / b)
+            assert domain.imag(a / b) == domain.zero
+
+    domains = [CC, ZZ_I, QQ_I, EX, EXRAW]
+    for domain in domains:
+        a = domain.from_sympy(7 + 3*I)
+        b = domain.from_sympy(7 - 3*I)
+        assert domain.conjugate(b) == a
+        assert domain.conjugate(a) == b
+        assert domain.real(a) == domain(7)
+        assert domain.imag(b) == domain(-3)
+
+        assert all(domain.of_type(elt) for elt in [
+            domain.conjugate(a), domain.real(a), domain.imag(b)
+        ])
+
+    domains = [
+        ZZ[x], QQ[x], QQ[x, y], RR[z], CC[z],
+        ZZ_I[x], QQ_I[x, y], QQ_I.frac_field(x, y), EXRAW[z],
+    ]
+    for domain in domains:
+        assert not domain.has_conjugate
+        a = domain(7) + domain.gens[0]
+        raises(NotImplementedError, lambda: domain.conjugate(a))
+        raises(NotImplementedError, lambda: domain.real(a))
+        raises(NotImplementedError, lambda: domain.imag(a))
+
+    K = FF(11)
+    raises(NotImplementedError, lambda: K.conjugate(K(7)))
+
+    r = Poly(x**3 - x + 1, x, domain=ZZ).all_roots()[-1]
+    ALG = QQ.algebraic_field(r)
+    raises(NotImplementedError, lambda: ALG.conjugate(r))
+    raises(NotImplementedError, lambda: ALG.real(r))
+    raises(NotImplementedError, lambda: ALG.imag(r))
+

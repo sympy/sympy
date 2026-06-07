@@ -47,6 +47,7 @@ class IntegerRing(Ring[MPZ], CharacteristicZero, SimpleDomain):
 
     has_assoc_Ring = True
     has_assoc_Field = True
+    has_conjugate = True
 
     def __init__(self):
         """Allow instantiation of this domain. """
@@ -271,6 +272,18 @@ class IntegerRing(Ring[MPZ], CharacteristicZero, SimpleDomain):
     def factorial(self, a):
         """Compute factorial of ``a``. """
         return factorial(a)
+
+    def conjugate(self, a: MPZ) -> MPZ:
+        """Returns the complex conjugate of ``a``."""
+        return a
+
+    def real(self, a: MPZ) -> MPZ:
+        """Returns the real part of ``a``."""
+        return a
+
+    def imag(self, a: MPZ) -> MPZ:
+        """Returns the imaginary part of ``a``."""
+        return self.zero
 
 
 ZZ = IntegerRing()

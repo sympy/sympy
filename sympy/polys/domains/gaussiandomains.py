@@ -285,6 +285,7 @@ class GaussianDomain(RingExtension[Telem, Tdom]):
 
     has_assoc_Ring = True
     has_assoc_Field = True
+    has_conjugate = True
 
     def to_dict(self, element: Telem) -> dict[tuple[int, ...], Tdom]:
         return {(0,): element.x, (1,): element.y}
@@ -360,6 +361,18 @@ class GaussianDomain(RingExtension[Telem, Tdom]):
         if K0.ext.args[0] == I:
             return K1.from_sympy(K0.to_sympy(a))
         return None
+
+    def conjugate(self, a: Telem) -> Telem:
+        """Returns the complex conjugate of ``a``."""
+        return self.dtype(a.x, -a.y)
+
+    def real(self, a: Telem) -> Telem:
+        """Returns the real part of ``a``."""
+        return self.dtype(a.x, 0)
+
+    def imag(self, a: Telem) -> Telem:
+        """Returns the imaginary part of ``a``."""
+        return self.dtype(a.y, 0)
 
 
 class GaussianIntegerRing(GaussianDomain[GaussianInteger, MPZ], Ring[MPZ]):

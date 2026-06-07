@@ -19,6 +19,8 @@ class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
 
     is_SymbolicDomain = is_EX = True
 
+    has_conjugate = True
+
     class Expression(DomainElement, PicklableWithSlots):
         """An arbitrary expression. """
 
@@ -277,6 +279,17 @@ class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
 
     def lcm(self, a, b):
         return a.lcm(b)
+
+    def conjugate(self, a):
+        return self.dtype(a.ex.conjugate())
+
+    def real(self, a):
+        from sympy.functions.elementary.complexes import re
+        return self.dtype(re(a.ex))
+
+    def imag(self, a):
+        from sympy.functions.elementary.complexes import im
+        return self.dtype(im(a.ex))
 
 
 EX = ExpressionDomain()

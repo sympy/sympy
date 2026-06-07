@@ -64,6 +64,7 @@ class RealField(Field, CharacteristicZero, SimpleDomain):
 
     has_assoc_Ring = False
     has_assoc_Field = True
+    has_conjugate = True
 
     _default_precision = 53
 
@@ -214,6 +215,18 @@ class RealField(Field, CharacteristicZero, SimpleDomain):
         rounding error.
         """
         return a ** 0.5 if a >= 0 else None
+
+    def conjugate(self, a):
+        """Returns the complex conjugate of ``a``."""
+        return a
+
+    def real(self, a):
+        """Returns the real part of ``a``."""
+        return a
+
+    def imag(self, a):
+        """Returns the imaginary part of ``a``."""
+        return self.zero
 
 
 RR = RealField()

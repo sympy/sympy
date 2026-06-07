@@ -520,6 +520,9 @@ class Domain(Generic[Er]):
     has_CharacteristicZero: bool = False
     """Boolean flag indicating if the domain has characteristic zero."""
 
+    has_conjugate: bool = False
+    """Boolean flag indicating if the domain supports complex conjugation."""
+
     rep: str
     alias: str | None = None
 
@@ -1556,11 +1559,28 @@ class Domain(Generic[Er]):
 
     n = evalf
 
-    def real(self, a) -> Er:
-        return a
+    def conjugate(self, a: Er) -> Er:
+        """Returns the complex conjugate of ``a``.
 
-    def imag(self, a) -> Er:
-        return self.zero
+        Explanation
+        ===========
+        For domains that are closed under complex conjugation (e.g., ZZ, QQ, RR,
+        CC), this returns the complex conjugate of ``a``. For domains where complex
+        conjugation is not defined, this raises NotImplementedError.
+
+        See also
+        ========
+        real, imag
+        """
+        raise NotImplementedError(f"conjugate not defined for domain {self}")
+
+    def real(self, a: Er) -> Er:
+        """Returns the real part of ``a``. """
+        raise NotImplementedError(f"real not defined for domain {self}")
+
+    def imag(self, a: Er) -> Er:
+        """Returns the imaginary part of ``a``. """
+        raise NotImplementedError(f"imag not defined for domain {self}")
 
     def almosteq(self, a: Er, b: Er, tolerance: float | None = None):
         """Check if ``a`` and ``b`` are almost equal. """
