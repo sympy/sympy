@@ -84,7 +84,7 @@ class LagrangesMethod(MethodBase):
         Column matrix of the n generalized coordinates.
     u : Matrix, shape(n, 1)
         Column matrix of the n generalized speeds: u = q'.
-    holonomic_contraints : Matrix, shape(M, 1)
+    holonomic_constraints : Matrix, shape(M, 1)
         Column matrix of holonomic configuration constraint residuals.
     nonholonomic_constraints : Matrix, shape(m, 1)
         Column matrix of shape(m, 1) of nonholonomic constraint residuals.
@@ -569,7 +569,7 @@ class LagrangesMethod(MethodBase):
         return self._qdots
 
     @property
-    def velocity_contraints(self):
+    def velocity_constraints(self):
         """Column matrix of shape(M + m, 1) motion constraint residuals made up
         of the M time differentiated holonomic constraints stacked on the m
         nonholonomic constraints."""
