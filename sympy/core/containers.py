@@ -10,7 +10,11 @@ from __future__ import annotations
 
 from collections import OrderedDict
 from collections.abc import MutableSet
-from typing import Callable, Iterable, Iterator, TypeVar, ParamSpec, overload, Any, Generic
+from typing import Callable, Iterable, Iterator, TypeVar, ParamSpec, overload, Any, Generic, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
+    from sympy.logic.boolalg import Boolean
 
 from .basic import Basic
 from .sorting import default_sort_key, ordered
@@ -22,6 +26,7 @@ from sympy.utilities.misc import as_int
 P = ParamSpec('P')
 R = TypeVar('R')
 T = TypeVar('T', bound=Basic)
+Texpr = TypeVar('Texpr', bound='Expr')
 
 
 class Tuple(Basic, Generic[T]):
@@ -55,10 +60,14 @@ class Tuple(Basic, Generic[T]):
 
     """
 
-    @property
-    def args(self) -> tuple[T, ...]:  # type: ignore[override]
-        return self._args  # type: ignore[return-value]
-    
+    if TYPE_CHECKING:
+        @property
+        def args(self) -> tuple[T, ...]: ...
+    else:
+        @property
+        def args(self):
+            return self._args
+
     def __new__(cls, *args: T, **kwargs: Any) -> Tuple[T]:
         if kwargs.get('sympify', True):
             args = tuple(sympify(arg) for arg in args)  # type: ignore[assignment]
@@ -80,7 +89,7 @@ class Tuple(Basic, Generic[T]):
     def __len__(self) -> int:
         return len(self.args)
 
-    def __contains__(self, item: object) -> bool:
+    def __contains__(self, item: Any) -> bool:
         return item in self.args
 
     def __iter__(self) -> Iterator[T]:
@@ -111,12 +120,12 @@ class Tuple(Basic, Generic[T]):
 
     __rmul__ = __mul__
 
-    def __eq__(self, other: object) -> bool:
+    def __eq__(self, other: Any) -> bool:
         if isinstance(other, Basic):
             return super().__eq__(other)
         return self.args == other
 
-    def __ne__(self, other: object) -> bool:
+    def __ne__(self, other: Any) -> bool:
         if isinstance(other, Basic):
             return super().__ne__(other)
         return self.args != other
@@ -124,20 +133,20 @@ class Tuple(Basic, Generic[T]):
     def __hash__(self) -> int:
         return hash(self.args)
 
-    def _to_mpmath(self, prec: int) -> tuple[Any, ...]:
-        return tuple(a._to_mpmath(prec) for a in self.args)  # type: ignore[attr-defined]
+    def _to_mpmath(self: Tuple[Texpr], prec: int) -> tuple[Any, ...]:
+        return tuple(a._to_mpmath(prec) for a in self.args)
 
-    def __lt__(self, other: Tuple[Any]) -> Basic:
+    def __lt__(self: Tuple[T], other: Tuple[T]) -> Boolean:
         return _sympify(self.args < other.args)
 
-    def __le__(self, other: Tuple[Any]) -> Basic:
+    def __le__(self: Tuple[T], other: Tuple[T]) -> Boolean:
         return _sympify(self.args <= other.args)
 
-    def tuple_count(self, value: object) -> int:
+    def tuple_count(self, value: Any) -> int:
         """Return number of occurrences of value."""
         return self.args.count(value)
 
-    def index(self, value: object, start: int | None = None, stop: int | None = None) -> int:
+    def index(self, value: Any, start: int | None = None, stop: int | None = None) -> int:
         """Searches and returns the first index of the value."""
         if start is None:
             return self.args.index(value)
@@ -266,7 +275,7 @@ class Dict(Basic):
         obj._dict = dict(items)  # type: ignore[arg-type]
         return obj
 
-    def __getitem__(self, key: object) -> Any:
+    def __getitem__(self, key: Any) -> Any:
         """x.__getitem__(y) <==> x[y]"""
         try:
             key = _sympify(key)
@@ -275,7 +284,7 @@ class Dict(Basic):
 
         return self._dict[key]
 
-    def __setitem__(self, key: object, value: object) -> None:
+    def __setitem__(self, key: Any, value: Any) -> None:
         raise NotImplementedError("SymPy Dicts are Immutable")
 
     def items(self):
@@ -299,7 +308,7 @@ class Dict(Basic):
         '''x.__len__() <==> len(x)'''
         return self._dict.__len__()
 
-    def get(self, key: object, default: Any = None) -> Any:
+    def get(self, key: Any, default: Any = None) -> Any:
         '''Returns the value for key if the key is in the dictionary.'''
         try:
             key = _sympify(key)
@@ -307,7 +316,7 @@ class Dict(Basic):
             return default
         return self._dict.get(key, default)
 
-    def __contains__(self, key: object) -> bool:
+    def __contains__(self, key: Any) -> bool:
         '''D.__contains__(k) -> True if D has a key k, else False'''
         try:
             key = _sympify(key)
@@ -315,14 +324,14 @@ class Dict(Basic):
             return False
         return key in self._dict
 
-    def __lt__(self, other: Dict) -> Basic:
+    def __lt__(self, other: Dict) -> Boolean:
         return _sympify(self.args < other.args)
 
     @property
     def _sorted_args(self) -> tuple[Any, ...]:
         return tuple(sorted(self.args, key=default_sort_key))
 
-    def __eq__(self, other: object) -> bool:
+    def __eq__(self, other: Any) -> bool:
         if isinstance(other, dict):
             return self == Dict(other)
         return super().__eq__(other)
@@ -344,7 +353,7 @@ class OrderedSet(MutableSet[T]):
     def __len__(self) -> int:
         return len(self.map)
 
-    def __contains__(self, key: object) -> bool:
+    def __contains__(self, key: Any) -> bool:
         return key in self.map
 
     def add(self, value: T) -> None:
