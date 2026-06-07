@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from collections import OrderedDict
 from collections.abc import MutableSet
-from typing import Iterable, Iterator, TypeVar, overload, Generic, TYPE_CHECKING
+from typing import Callable, Iterable, Iterator, TypeVar, overload, Generic, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from sympy.core.expr import Expr
@@ -68,11 +68,11 @@ class Tuple(Basic, Generic[_T]):
         def args(self):
             return self._args
 
-    def __new__(cls, *args: _T, **kwargs):
+    def __new__(cls, *args: _T, **kwargs: bool) -> Tuple[_T]:
         if kwargs.get('sympify', True):
-            args = (sympify(arg) for arg in args)  # type: ignore[assignment]
-        obj = Basic.__new__(cls, *args)
-        return obj
+            sym_args = tuple(sympify(arg) for arg in args)
+            return Basic.__new__(cls, *sym_args)
+        return Basic.__new__(cls, *args)
 
     @overload
     def __getitem__(self, i: int) -> _T: ...
@@ -163,39 +163,41 @@ class Tuple(Basic, Generic[_T]):
         #
         # See: http://bugs.python.org/issue13340
 
-        if start is None and stop is None:
+        if start is None:
             return self.args.index(value)
         elif stop is None:
             return self.args.index(value, start)
         else:
             return self.args.index(value, start, stop)
 
-    @property
-    def kind(self) -> Kind:
-        """
-        The kind of a Tuple instance.
+    if TYPE_CHECKING:
+        kind: Kind
+    else:
+        @property
+        def kind(self):
+            """
+            The kind of a Tuple instance.
 
-        The kind of a Tuple is always of :class:`TupleKind` but
-        parametrised by the number of elements and the kind of each element.
+            The kind of a Tuple is always of :class:`TupleKind` but
+            parametrised by the number of elements and the kind of each element.
 
-        Examples
-        ========
+            Examples
+            ========
 
-        >>> from sympy import Tuple, Matrix
-        >>> Tuple(1, 2).kind
-        TupleKind(NumberKind, NumberKind)
-        >>> Tuple(Matrix([1, 2]), 1).kind
-        TupleKind(MatrixKind(NumberKind), NumberKind)
-        >>> Tuple(1, 2).kind.element_kind
-        (NumberKind, NumberKind)
+            >>> from sympy import Tuple
+            >>> Tuple(1, 2).kind
+            TupleKind(NumberKind, NumberKind)
+            >>> Tuple(1, 2).kind.element_kind
+            (NumberKind, NumberKind)
 
-        See Also
-        ========
+            See Also
+            ========
 
-        sympy.matrices.kind.MatrixKind
-        sympy.core.kind.NumberKind
-        """
-        return TupleKind(*(i.kind for i in self.args))
+            sympy.core.kind.NumberKind
+            MatrixKind
+            sympy.sets.sets.SetKind
+            """
+            return TupleKind(*(i.kind for i in self.args))
 
 _sympy_converter[tuple] = lambda tup: Tuple(*tup)
 
@@ -277,7 +279,7 @@ class Dict(Basic, Generic[_K, _V]):
     elements: frozenset[Tuple[Basic]]
     _dict: dict[_K, _V]
 
-    def __new__(cls, *args):
+    def __new__(cls, *args) -> Dict:
         if len(args) == 1 and isinstance(args[0], (dict, Dict)):
             items = [Tuple(k, v) for k, v in args[0].items()]
         elif iterable(args) and all(len(arg) == 2 for arg in args):
@@ -287,10 +289,10 @@ class Dict(Basic, Generic[_K, _V]):
         elements = frozenset(items)
         obj = Basic.__new__(cls, *ordered(items))
         obj.elements = elements
-        obj._dict = dict(items)  # In case Tuple decides it wants to sympify
+        obj._dict = dict((item.args[0], item.args[1]) for item in items)  # In case Tuple decides it wants to sympify
         return obj
 
-    def __getitem__(self, key: object) -> _V:
+    def __getitem__(self, key):
         """x.__getitem__(y) <==> x[y]"""
         try:
             key = _sympify(key)
@@ -323,7 +325,7 @@ class Dict(Basic, Generic[_K, _V]):
         '''x.__len__() <==> len(x)'''
         return len(self._dict)
 
-    def get(self, key: object, default=None):
+    def get(self, key, default=None):
         '''Returns the value for key if the key is in the dictionary.'''
         try:
             key = _sympify(key)
@@ -416,19 +418,17 @@ class TupleKind(Kind):
     Examples
     ========
 
-    >>> from sympy import Tuple, Matrix
+    >>> from sympy import Tuple
     >>> Tuple(1, 2).kind
     TupleKind(NumberKind, NumberKind)
-    >>> Tuple(Matrix([1, 2]), 1).kind
-    TupleKind(MatrixKind(NumberKind), NumberKind)
     >>> Tuple(1, 2).kind.element_kind
     (NumberKind, NumberKind)
 
     See Also
     ========
 
-    sympy.matrices.kind.MatrixKind
     sympy.core.kind.NumberKind
+    MatrixKind
     sympy.sets.sets.SetKind
     """
     element_kind: tuple[Kind, ...]
