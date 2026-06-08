@@ -1489,4 +1489,3 @@ def test_Domain_conjugate():
     raises(NotImplementedError, lambda: ALG.conjugate(r))
     raises(NotImplementedError, lambda: ALG.real(r))
     raises(NotImplementedError, lambda: ALG.imag(r))
-
