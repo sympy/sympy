@@ -2,7 +2,6 @@ from __future__ import annotations
 from sympy.sets.ordinals import Ordinal, OmegaPower, ord0, omega
 from sympy.testing.pytest import raises
 from sympy.sets.ordinals import OrdinalZero
-import pytest
 
 def test_string_ordinals():
     assert str(omega) == 'w'
