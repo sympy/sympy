@@ -25,10 +25,12 @@ This module defines basic kinds for core objects. Other kinds such as
        See https://github.com/sympy/sympy/pull/20549.
 """
 from __future__ import annotations
-
-from typing import ClassVar, Self
+from typing import ClassVar
+try:
+    from typing import Self
+except ImportError:
+    from typing_extensions import Self
 from collections import defaultdict
-
 from .cache import cacheit
 from sympy.multipledispatch.dispatcher import (Dispatcher,
     ambiguity_warn, ambiguity_register_error_ignore_dup,
