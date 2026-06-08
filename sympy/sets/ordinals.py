@@ -257,10 +257,15 @@ class Ordinal(Basic):
 class OrdinalZero(Ordinal):
     """The ordinal zero.
 
-    OrdinalZero can be imported as ``ord0``.
-    """
-    pass
+    OrdinalZero can be imported as
+    ``from sympy import OrdinalZero``."""
 
+    def __new__(cls, *args, **kwargs):
+        if args:
+            raise TypeError(
+                "OrdinalZero takes no arguments"
+            )
+        return super(Ordinal, cls).__new__(cls)
 
 class OrdinalOmega(Ordinal):
     """The ordinal omega which forms the base of all ordinals in cantor normal form.

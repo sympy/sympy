@@ -1,6 +1,8 @@
 from __future__ import annotations
 from sympy.sets.ordinals import Ordinal, OmegaPower, ord0, omega
 from sympy.testing.pytest import raises
+from sympy.sets.ordinals import OrdinalZero
+import pytest
 
 def test_string_ordinals():
     assert str(omega) == 'w'
@@ -66,3 +68,8 @@ def test_comapre_not_instance():
 def test_is_successort():
     w = Ordinal(OmegaPower(5, 1))
     assert not w.is_successor_ordinal
+
+def test_ordinal_zero_no_args():
+    assert OrdinalZero() == OrdinalZero()
+    raises(TypeError, lambda: OrdinalZero(OmegaPower(1, 1)))
+    raises(TypeError, lambda: OrdinalZero(OmegaPower(0, 1), OmegaPower(1, 1)))
