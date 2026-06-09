@@ -181,6 +181,7 @@ def test_polylog_series():
     assert polylog(S(3)/2, -z).series(z, 0, 5) == -z + sqrt(2)*z**2/4\
         - sqrt(3)*z**3/9 + z**4/8 + O(z**5)
 
+
 @slow
 def test_issue_8404():
     i = Symbol('i', integer=True)
