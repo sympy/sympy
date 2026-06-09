@@ -863,9 +863,9 @@ def _get_constant_solutions(eq, func, ics):
             else:
                 raise NotImplementedError("Unrecognized initial condition")
 
-    d = Dummy("d")
     eq = eq.lhs - eq.rhs if isinstance(eq, Equality) else eq
-    eq = eq.subs(func, d).doit()
+    eq = eq.replace(lambda e: isinstance(e, Derivative) and e.expr == func,
+                    lambda e: S.Zero)
     if eq is S.Zero:
         # e.g., y' = 0
         if const_val is None:
@@ -874,7 +874,7 @@ def _get_constant_solutions(eq, func, ics):
         else:
             return [Eq(func, const_val)]
     result = []
-    for sol in solve(eq, d):
+    for sol in solve(eq, func):
         if not sol.has(x) and (const_val is None or sol == const_val):
             result.append(Eq(func, sol))
     return result
