@@ -1225,7 +1225,7 @@ class Beam:
         am = -1
         for position, value in self.bc_deflection:
             am = am +1
-            if value != 0:
+            if sympify(value).free_symbols:
                 for reac in range(len(total_supports)):
                     for syms in range(len(list(value.free_symbols))):
                         if total_supports[reac] == list(value.free_symbols)[syms]:
@@ -1235,7 +1235,7 @@ class Beam:
         am = -1
         for position, value in self.bc_bending_moment:
             am = am +1
-            if value != 0:
+            if sympify(value).free_symbols:
                 for spring in range(len(spring_moments)):
                     for syms in range(len(list(value.free_symbols))):
                         if spring_moments[spring] == list(value.free_symbols)[syms]:
@@ -1245,7 +1245,7 @@ class Beam:
         am = -1
         for position, value in self.bc_slope:
             am = am +1
-            if value != 0:
+            if sympify(value).free_symbols:
                 for spring in range(len(spring_moments)):
                     for syms in range(len(list(value.free_symbols))):
                         if spring_moments[spring] == list(value.free_symbols)[syms]:
@@ -1255,7 +1255,7 @@ class Beam:
         am = -1
         for position, value in self.bc_shear_force:
             am = am +1
-            if value != 0:
+            if sympify(value).free_symbols:
                 for spring in range(len(spring_forces)):
                     for syms in range(len(list(value.free_symbols))):
                         if spring_forces[spring] == list(value.free_symbols)[syms]:
@@ -1728,7 +1728,7 @@ class Beam:
             deflection_curve = integrate(slope_curve, x) + C4
             bc_eqs = []
             for position, value in self._boundary_conditions['deflection']:
-                eqs = deflection_curve.subs(x, position) + (value *self.second_moment * self.elastic_modulus)
+                eqs = deflection_curve.subs(x, position) + (value *self.second_moment * E)
                 bc_eqs.append(eqs)
             constants = list(linsolve(bc_eqs, (C3, C4)))
             deflection_curve = deflection_curve.subs({C3: constants[0][0], C4: constants[0][1]})

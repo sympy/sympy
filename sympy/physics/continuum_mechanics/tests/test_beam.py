@@ -802,7 +802,6 @@ def test_for_duplicate_symbols_to_solve_for_reaction_loads():
     with raises(ValueError, match="Duplicate Symbols passed into solve_for_reaction_loads()"):
         b.solve_for_reaction_loads(R,R)
 
-
 def test_apply_rotation_hinge():
     b = Beam(15, 20, 20)
     r0, m0 = b.apply_support(0, type='fixed')
@@ -1248,7 +1247,18 @@ def test_apply_load_symbolic_start_end():
     )
 
     assert simplify(beam.load - expected_load) == 0
-
+def test_non_zero_bc():
+    b = Beam(6,20,20)
+    R1,R2 = symbols('R1, R2')
+    b.apply_load(R1,0,-1)
+    b.apply_load(R2,6,-1)
+    b.apply_load(-5,3,-1)
+    b.bc_deflection = [(0,0.002), (6,0)]
+    b.solve_for_reaction_loads(R1, R2)
+    assert b.deflection() ==-0.0247916666666667*x
+            + 0.00104166666666667*SingularityFunction(x, 0, 3)
+            - SingularityFunction(x, 3, 3)/480
+            + 0.00104166666666667*SingularityFunction(x, 6, 3) - 0.02
 
 def test_Beam3D():
     l, E, G, I, A = symbols('l, E, G, I, A')
