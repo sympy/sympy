@@ -50,6 +50,7 @@ from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
     cos, sin, tan, cot, csc, sec, acos, asin, atan, acot, acsc, asec)
 from sympy.functions.special.delta_functions import Heaviside, DiracDelta
+from sympy.functions.special.singularity_functions import SingularityFunction
 from sympy.functions.special.error_functions import (erf, erfc, erfi, fresnelc,
     fresnels, Ci, Chi, Si, Shi, Ei, li)
 from sympy.functions.special.gamma_functions import uppergamma
@@ -1143,6 +1144,40 @@ class EllipticERule(AtomicRule):
 
     def eval(self) -> Expr:
         return elliptic_e(self.variable, self.d/self.a)*sqrt(self.a)
+
+
+class SingularityRule(AtomicRule):
+
+    __slots__ = ("offset", "order")
+
+    offset: Expr
+    order: Expr
+
+    def __init__(
+        self,
+        integrand: Expr,
+        variable: Symbol,
+        offset: Expr,
+        order: Expr,
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.offset = offset
+        self.order = order
+
+    def eval(self) -> Expr:
+        x = self.variable
+        a = self.offset
+        n = self.order
+
+        if n.is_nonnegative:
+            return SingularityFunction(x, a, n + 1)/(n + 1)
+
+        if n in (-1, -2, -3, -4):
+            return SingularityFunction(x, a, n + 1)
+
+        raise ValueError(
+            f"Unsupported singularity order for SingularityRule: {n}"
+        )
 
 
 class IntegralInfo(NamedTuple):
@@ -2441,6 +2476,43 @@ def trig_substitution_rule(integral):
                     return TrigSubstitutionRule(integrand, symbol,
                         theta, x_func, replaced, substep, restriction)
 
+
+def singularity_rule(integral: IntegralInfo):
+    integrand, symbol = integral
+    s_var, offset, order = integrand.args
+
+    # Only apply if the singularity is with respect to the variable of
+    # integration
+    if s_var != symbol:
+        return
+
+    # Only apply if the order of the singularity is a nonnegative integer or
+    # -1, -2, -3, or -4 (corresponding to delta functions and their
+    # derivatives)
+    if not (order.is_nonnegative or order in (-1, -2, -3, -4)):
+        return
+
+    return SingularityRule(integrand, s_var, offset, order)
+
+
+def singularity_rewrite_rule(integral: IntegralInfo):
+    """
+    Rewrite a SingularityFunction in terms of Heaviside/DiracDelta functions.
+    This should only be triggered when we cannot integrate the
+    SingularityFunction directly, usually in a multiplication or an exponent
+    node.
+    """
+    integrand, symbol = integral
+
+    if not integrand.has(SingularityFunction) or isinstance(integrand, SingularityFunction):
+        return None
+
+    rewritten = integrand.rewrite(DiracDelta)
+    if rewritten != integrand:
+        substep = integral_steps(rewritten, symbol)
+        return RewriteRule(integrand, symbol, rewritten, substep)
+
+
 def heaviside_rule(integral):
     integrand, symbol = integral
     pattern, m, b, g, k = heaviside_pattern(symbol)
@@ -2661,7 +2733,9 @@ def integral_steps(integrand, symbol, **options):
             Pow: do_one(null_safe(power_rule), null_safe(inverse_trig_rule),
                         null_safe(quadratic_denom_rule),
                         null_safe(sqrt_quadratic_rule),
-                        null_safe(sqrt_fractional_linear_rule)),
+                        null_safe(sqrt_fractional_linear_rule),
+                        null_safe(singularity_rewrite_rule)
+                        ),
             Symbol: power_rule,
             exp: exp_rule,
             Add: add_rule,
@@ -2670,11 +2744,13 @@ def integral_steps(integrand, symbol, **options):
                         null_safe(sqrt_quadratic_rule),
                         null_safe(sqrt_fractional_linear_rule),
                         null_safe(powsimp_rule),
-                        null_safe(trig_cmplx_exp_rule)),
+                        null_safe(trig_cmplx_exp_rule),
+                        null_safe(singularity_rewrite_rule)),
             Derivative: derivative_rule,
             TrigonometricFunction: trig_rule,
             Heaviside: heaviside_rule,
             DiracDelta: dirac_delta_rule,
+            SingularityFunction: singularity_rule,
             OrthogonalPolynomial: orthogonal_poly_rule,
             Number: constant_rule
         })),
