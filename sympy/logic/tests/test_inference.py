@@ -1,7 +1,7 @@
 """For more tests on satisfiability, see test_dimacs"""
 from __future__ import annotations
-from ast import expr
 
+from ast import expr
 from sympy.assumptions.ask import Q
 from sympy.core.symbol import symbols
 from sympy.core.relational import Ne, Eq, Unequality
