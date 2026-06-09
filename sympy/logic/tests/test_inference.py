@@ -1,6 +1,7 @@
 """For more tests on satisfiability, see test_dimacs"""
 from __future__ import annotations
 
+import pytest
 from sympy.assumptions.ask import Q
 from sympy.core.symbol import symbols
 from sympy.core.relational import Ne, Eq, Unequality
@@ -445,6 +446,9 @@ def test_issue_27733_second_fix():
 
 
 def test_issue_z3_predicate_equivalence():
+    z3 = import_module("z3")
+    if z3 is None:
+        pytest.skip("Z3 is not installed")
     x = symbols('x')
     expr = Not(Implies(Q.eq(x, 0),Q.ge(x, 0)))
     assert z3_satisfiable(expr) is False
