@@ -1254,10 +1254,10 @@ def test_non_zero_bc():
     b.apply_load(-5,3,-1)
     b.bc_deflection = [(0,0.002), (6,0)]
     b.solve_for_reaction_loads(R1, R2)
-    assert b.deflection() ==-0.0247916666666667*x
+    assert b.deflection() ==-0.0284583333333333*x
             + 0.00104166666666667*SingularityFunction(x, 0, 3)
-            - SingularityFunction(x, 3, 3)/480
-            + 0.00104166666666667*SingularityFunction(x, 6, 3) - 0.02
+            - SingularityFunction(x, 3, 3)/480 + 0.00104166666666667*SingularityFunction(x, 6, 3)
+            + 0.002
 
 def test_Beam3D():
     l, E, G, I, A = symbols('l, E, G, I, A')
