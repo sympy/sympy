@@ -569,7 +569,7 @@ class Beam:
             reaction_load = Symbol('R_'+str(loc))
             self._applied_support_symbols.append(reaction_load)
             self.apply_load(reaction_load, loc, -1)
-            self.bc_deflection.append((loc, reaction_load/spring_constant))
+            self.bc_deflection.append((loc, -reaction_load/spring_constant))
         else:
             reaction_load = Symbol('R_'+str(loc))
             self._applied_support_symbols.append(reaction_load)
@@ -858,7 +858,7 @@ class Beam:
 
         spring_force = Symbol('SF_'+str(loc))
         deflection_jump = Symbol('W_' + str(loc))
-        spring_bc = deflection_jump - spring_force / spring_constant
+        spring_bc = -deflection_jump - spring_force / spring_constant
 
         self._applied_spring.append(loc)
         self._sliding_hinge_symbols.append(deflection_jump)
@@ -1189,7 +1189,7 @@ class Beam:
             new_eqs = sum(arg for arg in eqs.args if not any(num.is_infinite for num in arg.args))
             bending_moment_eqs.append(new_eqs)
 
-        slope_curve = integrate(self.bending_moment(), x) + C3
+        slope_curve = -integrate(self.bending_moment(), x) + C3
         for position, value in self._boundary_conditions['slope']:
             eqs = slope_curve.subs(x, position) - (value *self.second_moment * self.elastic_modulus)
             slope_eqs.append(eqs)
@@ -1728,7 +1728,7 @@ class Beam:
             deflection_curve = integrate(slope_curve, x) + C4
             bc_eqs = []
             for position, value in self._boundary_conditions['deflection']:
-                eqs = deflection_curve.subs(x, position) + (value *self.second_moment * E)
+                eqs = deflection_curve.subs(x, position) - (value *self.second_moment * E)
                 bc_eqs.append(eqs)
             constants = list(linsolve(bc_eqs, (C3, C4)))
             deflection_curve = deflection_curve.subs({C3: constants[0][0], C4: constants[0][1]})
