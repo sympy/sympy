@@ -675,11 +675,12 @@ class PiecewiseRule(Rule):
 
 class HeavisideRule(Rule):
 
-    __slots__ = ("harg", "ibnd", "substep")
+    __slots__ = ("harg", "ibnd", "substep", "h0")
 
     harg: Expr
     ibnd: Expr
     substep: Rule
+    h0: Expr
 
     def __init__(
         self,
@@ -687,11 +688,13 @@ class HeavisideRule(Rule):
         variable: Symbol,
         harg: Expr,
         ibnd: Expr,
+        h0: Expr,
         substep: Rule,
     ) -> None:
         super().__init__(integrand, variable)
         self.harg = harg
         self.ibnd = ibnd
+        self.h0 = h0
         self.substep = substep
 
     def eval(self) -> Expr:
@@ -700,7 +703,7 @@ class HeavisideRule(Rule):
         # then there needs to be continuity at -b/m == ibnd,
         # so we subtract the appropriate term.
         result = self.substep.eval()
-        return Heaviside(self.harg) * (result - result.subs(self.variable, self.ibnd))
+        return Heaviside(self.harg, self.h0) * (result - result.subs(self.variable, self.ibnd))
 
     def contains_dont_know(self) -> bool:
         return self.substep.contains_dont_know()
@@ -2237,9 +2240,10 @@ def heaviside_pattern(symbol):
     m = Wild('m', exclude=[symbol])
     b = Wild('b', exclude=[symbol])
     g = Wild('g')
-    pattern = Heaviside(m*symbol + b) * g
+    k = Wild('k')
+    pattern = Heaviside(m*symbol + b, k) * g
 
-    return pattern, m, b, g
+    return pattern, m, b, g, k
 
 def uncurry(func):
     def uncurry_rl(args):
@@ -2439,13 +2443,14 @@ def trig_substitution_rule(integral):
 
 def heaviside_rule(integral):
     integrand, symbol = integral
-    pattern, m, b, g = heaviside_pattern(symbol)
+    pattern, m, b, g, k = heaviside_pattern(symbol)
     match = integrand.match(pattern)
     if match and 0 != match[g]:
         # f = Heaviside(m*x + b)*g
         substep = integral_steps(match[g], symbol)
         m, b = match[m], match[b]
-        return HeavisideRule(integrand, symbol, m*symbol + b, -b/m, substep)
+        k = match[k]
+        return HeavisideRule(integrand, symbol, m*symbol + b, -b/m, k, substep)
 
 
 def dirac_delta_rule(integral: IntegralInfo):
