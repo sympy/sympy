@@ -987,33 +987,32 @@ def test_apply_sliding_hinge():
                              - l1*q*SingularityFunction(x, l1, 3)/12 + q*SingularityFunction(x, 0, 4)/24
                              - q*SingularityFunction(x, l1, 4)/24
                              + (l1**3*l2*q/24 + l1**3*l3*q/24)*SingularityFunction(x, l1 + l2, 0))/(E*I)
+def test_apply_spring:
+    b = Beam(13, 20, 20)
+    r0, m0 = b.apply_support(0, type="fixed")
+        b.apply_spring(8, 100)
+    r13 = b.apply_support(13, type="pin")
+    b.apply_load(-10, 9, -1)
+    b.solve_for_reaction_loads(r0, m0, r13)
+    R_0, M_0, R_13 = symbols('R_0, M_0, R_13')
+    assert b.reaction_loads == {R_0: 9820/2209, R_13: 12270/2209, M_0: -39300/2209}
+    assert (b.deflection() == -393*SingularityFunction(x, 0, 2)/17672
+            + 491*SingularityFunction(x, 0, 3)/265080 - 491*SingularityFunction(x, 8, 0)/11045
+            - SingularityFunction(x, 9, 3)/240 + 409*SingularityFunction(x, 13, 3)/176720
 
-def test_max_shear_force():
-    E = Symbol('E')
-    I = Symbol('I')
+    b = Beam(13, 20, 20)
+    r0, m0 = b.apply_support(0, type="fixed")
+    r8 = b.apply_support(8, type='pin')
+    b.apply_spring(8, 100)
+    r13 = b.apply_support(13, type="pin")
 
-    b = Beam(3, E, I)
-    R, M = symbols('R, M')
-    b.apply_load(R, 0, -1)
-    b.apply_load(M, 0, -2)
-    b.apply_load(2, 3, -1)
-    b.apply_load(4, 2, -1)
-    b.apply_load(2, 2, 0, end=3)
-    b.solve_for_reaction_loads(R, M)
-    assert b.max_shear_force() == (Interval(0, 2), 8)
-
-    l = symbols('l', positive=True)
-    P = Symbol('P')
-    b = Beam(l, E, I)
-    R1, R2 = symbols('R1, R2')
-    b.apply_load(R1, 0, -1)
-    b.apply_load(R2, l, -1)
-    b.apply_load(P, 0, 0, end=l)
-    b.solve_for_reaction_loads(R1, R2)
-    max_shear = b.max_shear_force()
-    assert max_shear[0] == 0
-    assert simplify(max_shear[1] - (l*Abs(P)/2)) == 0
-
+    b.apply_load(-10, 4, 0)
+    b.solve_for_reaction_loads(r0, m0, r8, r13)
+    assert b.reaction_loads == {R_0: 159625/27008, R_13: 3545/211, R_8: 1817335/27008, M_0: -27945/3376}
+    assert (b.deflection() == -5589*SingularityFunction(x, 0, 2)/540160
+            + 6385*SingularityFunction(x, 0, 3)/2592768 - SingularityFunction(x, 4, 4)/960
+            - 1401*SingularityFunction(x, 8, 0)/4220 + 363467*SingularityFunction(x, 8, 3)/12963840
+            + 709*SingularityFunction(x, 13, 3)/101280
 
 def test_max_bmoment():
     E = Symbol('E')
