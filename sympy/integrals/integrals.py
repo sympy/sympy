@@ -1056,6 +1056,13 @@ class Integral(AddWithLimits):
 
             if not (manual or meijerg or risch):
                 # g(x) = Mul(trig)
+                #safety check so it doesnt give TLE or hangs while dealing with symbols
+                from sympy import sin, cos
+                from sympy.core.symbol import Symbol
+                if any(b.has(sin, cos) and e.has(Symbol) for b, e in g.as_powers_dict().items()):
+                    parts.append(coeff * self.func(g,x))
+                    continue
+
                 h = trigintegrate(g, x, conds=conds)
                 if h is not None:
                     parts.append(coeff * h)
