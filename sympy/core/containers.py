@@ -58,7 +58,6 @@ class Tuple(Basic, Generic[T]):
     @property
     def args(self) -> tuple[T, ...]:  # type: ignore[override]
         return self._args  # type: ignore[return-value]
-    
     def __new__(cls, *args: T, **kwargs: Any) -> Tuple[T]:
         if kwargs.get('sympify', True):
             args = tuple(sympify(arg) for arg in args)  # type: ignore[assignment]
