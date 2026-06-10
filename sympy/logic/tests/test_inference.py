@@ -371,7 +371,7 @@ def test_z3():
 
 
 def test_z3_predicate_equivalence():
-    #Regression Test for Issue 29851
+    # https://github.com/sympy/sympy/issues/29851
     z3 = import_module("z3")
     if z3 is None:
         skip("Z3 is not installed")
