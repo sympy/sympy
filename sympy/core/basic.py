@@ -1802,7 +1802,51 @@ class Basic(Printable):
         return (rv, mapping) if map else rv # type: ignore
 
     def find(self, query, group=False):
-        """Find all subexpressions matching a query."""
+        """
+        Find all subexpressions matching a query.
+
+        Explanation
+        ===========
+
+        Performs a preorder traversal of ``self`` and collects every
+        subexpression that matches ``query``. ``query`` may be a
+        :class:`Basic` subclass (e.g. ``sin``), a concrete expression,
+        a :class:`Wild` pattern, or a callable predicate that takes a
+        single expression and returns ``True`` for a match.
+
+        Parameters
+        ==========
+
+        query : Basic, type, or callable
+            Pattern to match against subexpressions of ``self``.
+
+        group : bool, optional
+            If ``False`` (the default), returns a :class:`set` of the
+            unique matches. If ``True``, returns a :class:`dict` mapping
+            each unique match to the number of times it occurs.
+
+        Returns
+        =======
+
+        set or dict
+            A :class:`set` of unique matches when ``group=False``; a
+            :class:`dict` of ``{match: count}`` when ``group=True``.
+
+        Examples
+        ========
+
+        >>> from sympy import sin, symbols
+        >>> x, y = symbols('x y')
+        >>> expr = sin(x) + sin(x)*sin(y) + x**2 + x
+        >>> expr.find(sin)
+        {sin(x), sin(y)}
+        >>> expr.find(sin, group=True)
+        {sin(x): 2, sin(y): 1}
+        >>> expr.find(x, group=True)
+        {x: 4}
+        >>> expr.find(lambda e: e.is_Pow)
+        {x**2}
+        """
         query = _make_find_query(query)
         results = list(filter(query, _preorder_traversal(self)))
 
