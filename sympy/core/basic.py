@@ -1811,7 +1811,7 @@ class Basic(Printable):
         Performs a preorder traversal of ``self`` and collects every
         subexpression that matches ``query``. ``query`` may be a
         :class:`Basic` subclass (e.g. ``sin``), a concrete expression,
-        a :class:`Wild` pattern, or a callable predicate that takes a
+        a :class:`~.Wild` pattern, or a callable predicate that takes a
         single expression and returns ``True`` for a match.
 
         Parameters
