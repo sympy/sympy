@@ -712,25 +712,31 @@ class HeavisideRule(Rule):
 
 class DiracDeltaRule(AtomicRule):
 
-    __slots__ = ("n", "a", "b")
+    __slots__ = ("n", "a", "b", "f")
 
     n: Expr
     a: Expr
     b: Expr
+    f: Expr
 
     def __init__(
-        self, integrand: Expr, variable: Symbol, n: Expr, a: Expr, b: Expr
+        self, integrand: Expr, variable: Symbol, n: Expr, a: Expr, b: Expr, f: Expr
     ) -> None:
         super().__init__(integrand, variable)
         self.n = n
         self.a = a
         self.b = b
+        self.f = f
 
     def eval(self) -> Expr:
-        n, a, b, x = self.n, self.a, self.b, self.variable
-        if n == 0:
-            return Heaviside(a+b*x)/b
-        return DiracDelta(a+b*x, n-1)/b
+        n, a, b, f, x = self.n, self.a, self.b, self.f, self.variable
+        x0 = -a/b
+
+        if S(f).is_constant() and n > 0:
+            return DiracDelta(a + b*x, n-1)/b
+
+        df = Derivative(f, x, n).doit().subs(x, x0)
+        return (-1)**n * df * Heaviside(a + b*x) / Abs(b)**(n+1)
 
 
 class TrigSubstitutionRule(Rule):
@@ -2495,24 +2501,6 @@ def singularity_rule(integral: IntegralInfo):
     return SingularityRule(integrand, s_var, offset, order)
 
 
-def singularity_rewrite_rule(integral: IntegralInfo):
-    """
-    Rewrite a SingularityFunction in terms of Heaviside/DiracDelta functions.
-    This should only be triggered when we cannot integrate the
-    SingularityFunction directly, usually in a multiplication or an exponent
-    node.
-    """
-    integrand, symbol = integral
-
-    if not integrand.has(SingularityFunction) or isinstance(integrand, SingularityFunction):
-        return None
-
-    rewritten = integrand.rewrite(DiracDelta)
-    if rewritten != integrand:
-        substep = integral_steps(rewritten, symbol)
-        return RewriteRule(integrand, symbol, rewritten, substep)
-
-
 def heaviside_rule(integral):
     integrand, symbol = integral
     pattern, m, b, g, k = heaviside_pattern(symbol)
@@ -2527,14 +2515,26 @@ def heaviside_rule(integral):
 
 def dirac_delta_rule(integral: IntegralInfo):
     integrand, x = integral
-    if len(integrand.args) == 1:
+
+    if not integrand.has(DiracDelta):
+        return
+
+    coeff = S.One
+    delta = integrand
+
+    if integrand.is_Mul:
+        factors = integrand.args
+        delta = next(iter(integrand.atoms(DiracDelta)))
+        coeff = Mul(*[f for f in factors if f is not delta])
+
+    if len(delta.args) == 1:
         n = S.Zero
     else:
-        n = integrand.args[1] # type: ignore
+        n = delta.args[1] # type: ignore
     if not n.is_Integer or n < 0:
         return
     a, b = Wild('a', exclude=[x]), Wild('b', exclude=[x, 0])
-    match = integrand.args[0].match(a+b*x)
+    match = delta.args[0].match(a+b*x)
     if not match:
         return
     a, b = match[a], match[b]
@@ -2543,7 +2543,7 @@ def dirac_delta_rule(integral: IntegralInfo):
         degenerate_step = None
     else:
         degenerate_step = ConstantRule(DiracDelta(a, n), x)
-    generic_step = DiracDeltaRule(integrand, x, n, a, b)
+    generic_step = DiracDeltaRule(delta, x, n, a, b, coeff)
     return _add_degenerate_step(generic_cond, generic_step, degenerate_step)
 
 
@@ -2618,6 +2618,14 @@ trig_expand_rule = rewriter(
     lambda integrand, symbol: (
         len({a.args[0] for a in integrand.atoms(TrigonometricFunction)}) > 1),
     lambda integrand, symbol: integrand.expand(trig=True))
+
+singularity_rewrite_rule = rewriter(
+    lambda integrand, symbol: integrand.has(SingularityFunction) and not isinstance(integrand, SingularityFunction),
+    lambda integrand, symbol: integrand.expand(singularity=True, wrt=symbol))
+
+dirac_delta_expand_rule = rewriter(
+    lambda integrand, symbol: integrand.has(DiracDelta),
+    lambda integrand, symbol: integrand.expand(diracdelta=True, wrt=symbol))
 
 def derivative_rule(integral):
     integrand = integral[0]
@@ -2734,8 +2742,7 @@ def integral_steps(integrand, symbol, **options):
                         null_safe(quadratic_denom_rule),
                         null_safe(sqrt_quadratic_rule),
                         null_safe(sqrt_fractional_linear_rule),
-                        null_safe(singularity_rewrite_rule)
-                        ),
+                        null_safe(singularity_rewrite_rule)),
             Symbol: power_rule,
             exp: exp_rule,
             Add: add_rule,
@@ -2745,11 +2752,13 @@ def integral_steps(integrand, symbol, **options):
                         null_safe(sqrt_fractional_linear_rule),
                         null_safe(powsimp_rule),
                         null_safe(trig_cmplx_exp_rule),
-                        null_safe(singularity_rewrite_rule)),
+                        null_safe(singularity_rewrite_rule),
+                        null_safe(dirac_delta_rule)),
             Derivative: derivative_rule,
             TrigonometricFunction: trig_rule,
             Heaviside: heaviside_rule,
-            DiracDelta: dirac_delta_rule,
+            DiracDelta: do_one(null_safe(dirac_delta_rule),
+                               null_safe(dirac_delta_expand_rule)),
             SingularityFunction: singularity_rule,
             OrthogonalPolynomial: orthogonal_poly_rule,
             Number: constant_rule
