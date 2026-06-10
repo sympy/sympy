@@ -4,7 +4,7 @@ from __future__ import annotations
 from sympy.assumptions.ask import Q
 from sympy.core.symbol import symbols
 from sympy.core.relational import Ne, Eq, Unequality
-from sympy.logic.boolalg import And, Or, Implies, Equivalent, true, false
+from sympy.logic.boolalg import And, Or, Implies, Equivalent, true, false, Not
 from sympy.logic.inference import literal_symbol, \
      pl_true, satisfiable, valid, entails, PropKB
 from sympy.logic.algorithms.dpll import dpll, dpll_satisfiable, \
@@ -367,6 +367,16 @@ def test_z3():
         Eq(x, y),
         Ne(f(x), f(y))
     )
+    assert z3_satisfiable(expr) is False
+
+
+def test_z3_predicate_equivalence():
+    # https://github.com/sympy/sympy/issues/29851
+    z3 = import_module("z3")
+    if z3 is None:
+        skip("Z3 is not installed")
+    x = symbols('x')
+    expr = Not(Implies(Q.eq(x, 0),Q.ge(x, 0)))
     assert z3_satisfiable(expr) is False
 
 
