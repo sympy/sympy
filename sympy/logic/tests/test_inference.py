@@ -1,11 +1,10 @@
 """For more tests on satisfiability, see test_dimacs"""
 from __future__ import annotations
 
-import pytest
 from sympy.assumptions.ask import Q
 from sympy.core.symbol import symbols
 from sympy.core.relational import Ne, Eq, Unequality
-from sympy.logic.boolalg import And, Or, Implies, Equivalent, true, false,Not
+from sympy.logic.boolalg import And, Or, Implies, Equivalent, true, false, Not
 from sympy.logic.inference import literal_symbol, \
      pl_true, satisfiable, valid, entails, PropKB
 from sympy.logic.algorithms.dpll import dpll, dpll_satisfiable, \
@@ -23,7 +22,6 @@ from sympy.testing.pytest import raises, skip
 from sympy.external import import_module
 
 from sympy.core.function import Function
-
 
 
 
@@ -372,6 +370,16 @@ def test_z3():
     assert z3_satisfiable(expr) is False
 
 
+def test_z3_predicate_equivalence():
+    #Regression Test for Issue 29851
+    z3 = import_module("z3")
+    if z3 is None:
+        skip("Z3 is not installed")
+    x = symbols('x')
+    expr = Not(Implies(Q.eq(x, 0),Q.ge(x, 0)))
+    assert z3_satisfiable(expr) is False
+
+
 def test_z3_vs_lra_dpll2():
     z3 = import_module("z3")
     if z3 is None:
@@ -443,12 +451,3 @@ def test_issue_27733_second_fix():
     encoding = {Q.gt(x0, x1): 1, Q.lt(x1, x0): 2, Q.le(x1, x0): 3, Q.ge(x0, x1): 4}
     cnf = EncodedCNF(clauses, encoding)
     assert satisfiable(cnf, use_lra_theory=True) is False
-
-
-def test_issue_z3_predicate_equivalence():
-    z3 = import_module("z3")
-    if z3 is None:
-        pytest.skip("Z3 is not installed")
-    x = symbols('x')
-    expr = Not(Implies(Q.eq(x, 0),Q.ge(x, 0)))
-    assert z3_satisfiable(expr) is False
