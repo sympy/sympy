@@ -2628,7 +2628,7 @@ trig_expand_rule = rewriter(
 
 singularity_rewrite_rule = rewriter(
     lambda integrand, symbol: integrand.has(SingularityFunction) and not isinstance(integrand, SingularityFunction),
-    lambda integrand, symbol: integrand.expand(singularity=True, wrt=symbol))
+    lambda integrand, symbol: integrand.rewrite(DiracDelta))
 
 dirac_delta_expand_rule = rewriter(
     lambda integrand, symbol: integrand.has(DiracDelta),
