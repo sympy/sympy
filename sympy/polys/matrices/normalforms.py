@@ -200,13 +200,13 @@ def _smith_normal_decomp(m, domain, shape, full):
 
     # permute the rows and columns until m[0,0] is non-zero if possible
     ind = [i for i in range(rows) if m[i][0] != zero]
-    if ind and ind[0] != zero:
+    if ind and ind[0] != 0:
         m[0], m[ind[0]] = m[ind[0]], m[0]
         if full:
             s[0], s[ind[0]] = s[ind[0]], s[0]
     else:
         ind = [j for j in range(cols) if m[0][j] != zero]
-        if ind and ind[0] != zero:
+        if ind and ind[0] != 0:
             for row in m:
                 row[0], row[ind[0]] = row[ind[0]], row[0]
             if full:
