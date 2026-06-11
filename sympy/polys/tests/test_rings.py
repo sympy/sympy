@@ -5,7 +5,7 @@ import pytest
 from functools import reduce
 from operator import add, mul
 
-from sympy.polys.domains import ZZ_I
+from sympy.polys.domains import ZZ_I, QQ_I
 from sympy.polys.rings import ring, xring, sring, PolyRing, PolyElement, vring, ninf
 from sympy.polys.fields import field, FracField
 from sympy.polys.domains import ZZ, QQ, RR, FF, EX
@@ -411,6 +411,23 @@ def test_PolyElement___eq__():
 
     assert (t**3*x/x == t**3) == True
     assert (t**3*x/x == t**4) == False
+
+
+def test_PolyElement___eq___cross_type_ground():
+    for K in [QQ.algebraic_field(sqrt(2)), ZZ_I, QQ_I]:
+        R, x = ring("x", K)
+
+        assert (R.one == 1) == True
+        assert (1 == R.one) == True
+        assert (R.one != 1) == False
+        assert (1 != R.one) == False
+
+        assert (R.zero == 0) == True
+        assert (R(2) == 2) == True
+        assert (R(2) == 3) == False
+
+        assert (x == 1) == False
+        assert (x != 1) == True
 
 
 def test_PolyElement__lt_le_gt_ge__():
@@ -1838,6 +1855,18 @@ def test_PolyElement_is_():
     R, = ring("", ZZ)
     assert R(4).is_squarefree is True
     assert R(6).is_irreducible is True
+
+
+def test_PolyElement_is_monomial_cross_type_ground():
+    for K in [QQ.algebraic_field(sqrt(2)), ZZ_I, QQ_I]:
+        R, x = ring("x", K)
+
+        assert R.zero.is_monomial is True
+        assert R.one.is_monomial is True
+        assert x.is_monomial is True
+        assert (x**2).is_monomial is True
+        assert (2*x).is_monomial is False
+        assert (x + 1).is_monomial is False
 
 
 def test_PolyElement_drop():

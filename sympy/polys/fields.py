@@ -347,7 +347,7 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify, Generic[Er]):
         return f.raw_new(*numer.cancel(denom))
 
     def to_poly(f):
-        if f.denom != 1:
+        if f.denom != f.field.ring.one:
             raise ValueError("f.denom should be 1")
         return f.numer
 

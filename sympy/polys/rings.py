@@ -1233,7 +1233,7 @@ class PolyElement(
 
     @property
     def is_monomial(self) -> bool:
-        return not self or (len(self) == 1 and self.LC == 1)
+        return not self or (len(self) == 1 and self.ring.domain.is_one(self.LC))
 
     @property
     def is_term(self) -> bool:
@@ -2173,8 +2173,11 @@ class PolyElement(
             return dict.__eq__(self, other)
         elif len(self) > 1:
             return False
-        else:
-            return self.get(self.ring.zero_monom) == other
+        try:
+            other = self.ring.domain_new(other)
+        except CoercionFailed:
+            pass
+        return self.get(self.ring.zero_monom) == other
 
     def __neg__(self) -> PolyElement[Er]:
         # Return (-1) * self in case of python-flint

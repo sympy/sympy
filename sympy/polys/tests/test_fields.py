@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from sympy.polys.fields import field, sfield, FracField, FracElement
 from sympy.polys.rings import ring
-from sympy.polys.domains import ZZ, QQ
+from sympy.polys.domains import ZZ, QQ, QQ_I
 from sympy.polys.orderings import lex
 
 from sympy.testing.pytest import raises, XFAIL
@@ -315,6 +315,14 @@ def test_FracElement_diff():
     F, x,y,z = field("x,y,z", ZZ)
 
     assert ((x**2 + y)/(z + 1)).diff(x) == 2*x/(z + 1)
+
+def test_FracElement_to_poly_cross_type_ground():
+    for K in [QQ.algebraic_field(sqrt(2)), QQ_I]:
+        F, z = field("z", K)
+
+        assert z.to_poly() == F.ring.gens[0]
+        assert (z**2).diff(z) == 2*z
+        assert (z**2 + z).subs(z, 1) == 2
 
 @XFAIL
 def test_FracElement___call__():
