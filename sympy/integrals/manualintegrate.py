@@ -2498,7 +2498,7 @@ def singularity_rule(integral: IntegralInfo):
     if not (order.is_nonnegative or order in (-1, -2, -3, -4)):
         return
 
-    return SingularityRule(integrand, s_var, offset, order)
+    return SingularityRule(integrand, symbol, offset, order)  # type: ignore
 
 
 def heaviside_rule(integral):
@@ -2526,7 +2526,7 @@ def dirac_delta_rule(integral: IntegralInfo):
         factors = integrand.args
         # delta = next(iter(integrand.atoms(DiracDelta)))  # find the first delta in Mul node
         delta = [f for f in factors if isinstance(f, DiracDelta)][0]  # find a delta in Mul node
-        coeff = Mul(*[f for f in factors if f is not delta])
+        coeff = Mul(*[f for f in factors if f is not delta])  # type: ignore
 
     if integrand.is_Pow:
         base, exp = integrand.as_base_exp()
