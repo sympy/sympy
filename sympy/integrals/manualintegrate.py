@@ -2524,7 +2524,8 @@ def dirac_delta_rule(integral: IntegralInfo):
 
     if integrand.is_Mul:
         factors = integrand.args
-        delta = next(iter(integrand.atoms(DiracDelta)))
+        # delta = next(iter(integrand.atoms(DiracDelta)))  # find the first delta in Mul node
+        delta = list([f for f in factors if f.has(DiracDelta)])[0]  # find a delta in Mul node
         coeff = Mul(*[f for f in factors if f is not delta])
 
     if integrand.is_Pow:
@@ -2760,6 +2761,7 @@ def integral_steps(integrand, symbol, **options):
                         null_safe(powsimp_rule),
                         null_safe(trig_cmplx_exp_rule),
                         null_safe(singularity_rewrite_rule),
+                        null_safe(dirac_delta_expand_rule),
                         null_safe(dirac_delta_rule)),
             Derivative: derivative_rule,
             TrigonometricFunction: trig_rule,
