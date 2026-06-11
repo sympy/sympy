@@ -858,7 +858,7 @@ class Beam:
 
         spring_force = Symbol('SF_'+str(loc))
         deflection_jump = Symbol('W_' + str(loc))
-        spring_bc = -deflection_jump - spring_force / spring_constant
+        spring_bc = deflection_jump - spring_force / spring_constant
 
         self._applied_spring.append(loc)
         self._sliding_hinge_symbols.append(deflection_jump)
@@ -1632,7 +1632,7 @@ class Beam:
 
         bc_eqs = []
         for position, value in self._boundary_conditions['slope']:
-            eqs = slope_curve.subs(x, position) + value
+            eqs = slope_curve.subs(x, position) - value
             bc_eqs.append(eqs)
         constants = list(linsolve(bc_eqs, C3))
         slope_curve = slope_curve.subs({C3: constants[0][0]})
@@ -1760,7 +1760,7 @@ class Beam:
 
         bc_eqs = []
         for position, value in self._boundary_conditions['deflection']:
-            eqs = deflection_curve.subs(x, position) + value
+            eqs = deflection_curve.subs(x, position) - value
             bc_eqs.append(eqs)
         constants = list(linsolve(bc_eqs, C4))
         deflection_curve = deflection_curve.subs({C4: constants[0][0]})
