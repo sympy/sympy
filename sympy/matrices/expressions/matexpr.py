@@ -5,7 +5,6 @@ from sympy.core import S, Integer, Basic, Mul, Add
 from sympy.core.assumptions import check_assumptions
 from sympy.core.decorators import call_highest_priority
 from sympy.core.expr import Expr, ExprBuilder
-from sympy.core.logic import FuzzyBool
 from sympy.core.symbol import Str, Dummy, symbols, Symbol
 from sympy.core.sympify import SympifyError, _sympify
 from sympy.external.gmpy import SYMPY_INTS
@@ -16,6 +15,10 @@ from sympy.matrices.kind import MatrixKind
 from sympy.matrices.matrixbase import MatrixBase
 from sympy.multipledispatch import dispatch
 from sympy.utilities.misc import filldedent
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from sympy.core.logic import FuzzyBool
 
 
 def _sympifyit(arg, retval=None):
@@ -227,7 +230,7 @@ class MatrixExpr(Expr):
 
     def _eval_derivative(self, x):
         # `x` is a scalar:
-        if self.has(x):
+        if self.has(x) or (isinstance(x, MatrixElement) and self.has(x.parent)):
             # See if there are other methods using it:
             return super()._eval_derivative(x)
         else:
@@ -715,7 +718,13 @@ class MatrixSymbol(MatrixExpr):
 
     def _eval_derivative(self, x):
         # x is a scalar:
-        return ZeroMatrix(self.shape[0], self.shape[1])
+        if self.free_symbols & x.free_symbols:
+            if isinstance(x, MatrixElement) and self == x.parent:
+                from .special import MatrixUnit
+                return MatrixUnit(self.shape[0], self.shape[1], x.i, x.j)
+            return None
+        else:
+            return ZeroMatrix(self.shape[0], self.shape[1])
 
     def _eval_derivative_matrix_lines(self, x):
         if self != x:

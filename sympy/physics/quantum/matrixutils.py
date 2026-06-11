@@ -1,4 +1,5 @@
 """Utilities to deal with sympy.Matrix, numpy and scipy.sparse."""
+from __future__ import annotations
 
 from sympy.core.expr import Expr
 from sympy.core.numbers import I

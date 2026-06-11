@@ -97,13 +97,14 @@ def _row_reduce_list(mat, rows, cols, one, iszerofunc, simpfunc,
             row_swap(piv_row, pivot_offset + piv_row)
             swaps.append((piv_row, pivot_offset + piv_row))
 
-        # if we aren't normalizing last, we normalize
-        # before we zero the other rows
-        if normalize_last is False:
+        # if we aren't normalizing last
+        # or the pivot_val is non-commutative,
+        # we normalize before we zero the other rows
+        if normalize_last is False or not pivot_val.is_commutative:
             i, j = piv_row, piv_col
             mat[i*cols + j] = one
             for p in range(i*cols + j + 1, (i + 1)*cols):
-                mat[p] = isimp(mat[p] / pivot_val)
+                mat[p] = isimp(pivot_val**(-1) * mat[p])
             # after normalizing, the pivot value is 1
             pivot_val = one
 
@@ -129,7 +130,7 @@ def _row_reduce_list(mat, rows, cols, one, iszerofunc, simpfunc,
             pivot_val = mat[piv_i*cols + piv_j]
             mat[piv_i*cols + piv_j] = one
             for p in range(piv_i*cols + piv_j + 1, (piv_i + 1)*cols):
-                mat[p] = isimp(mat[p] / pivot_val)
+                mat[p] = isimp(pivot_val**(-1) * mat[p])
 
     return mat, tuple(pivot_cols), tuple(swaps)
 
@@ -164,28 +165,28 @@ def _is_echelon(M, iszerofunc=_iszero):
 @overload
 def _echelon_form(M: Tmat,
         iszerofunc: Callable[[Expr], bool | None] = _iszero,
-        simplify: bool = False,
+        simplify: bool | Callable[[Expr], Expr] = False,
         *,
         with_pivots: Literal[False] = False
     ) -> Tmat: ...
 @overload
 def _echelon_form(M: Tmat,
         iszerofunc: Callable[[Expr], bool | None] = _iszero,
-        simplify: bool = False,
+        simplify: bool | Callable[[Expr], Expr] = False,
         *,
         with_pivots: Literal[True],
     ) -> tuple[Tmat, tuple[int]]: ...
 @overload
 def _echelon_form(M: Tmat,
         iszerofunc: Callable[[Expr], bool | None] = _iszero,
-        simplify: bool = False,
+        simplify: bool | Callable[[Expr], Expr] = False,
         *,
         with_pivots: bool = False,
     ) -> Tmat | tuple[Tmat, tuple[int]]: ...
 
 def _echelon_form(M: Tmat,
         iszerofunc: Callable[[Expr], bool | None] = _iszero,
-        simplify: bool = False,
+        simplify: bool | Callable[[Expr], Expr] = False,
         *,
         with_pivots: bool = False,
     ) -> Tmat | tuple[Tmat, tuple[int]]:

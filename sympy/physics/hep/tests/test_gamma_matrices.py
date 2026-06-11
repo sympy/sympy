@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.matrices.dense import eye, Matrix
 from sympy.tensor.tensor import tensor_indices, TensorHead, tensor_heads, \
     TensExpr, canon_bp

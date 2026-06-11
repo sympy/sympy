@@ -216,7 +216,7 @@ class BaseDyadic(Dyadic, AtomicExpr):
         obj._sys = vector1._sys
         obj._pretty_form = ('(' + vector1._pretty_form + '|' +
                              vector2._pretty_form + ')')
-        obj._latex_form = (r'\left(' + vector1._latex_form + r"{\middle|}" +
+        obj._latex_form = (r'\left(' + vector1._latex_form + r"\middle|" +
                            vector2._latex_form + r'\right)')
 
         return obj

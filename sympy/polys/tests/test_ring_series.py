@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.polys.domains import ZZ, QQ, EX, RR
 from sympy.polys.rings import ring
 from sympy.polys.puiseux import puiseux_ring
@@ -499,6 +500,7 @@ def test_sinh():
 
 def test_cosh():
     R, x, y = ring('x, y', QQ)
+    assert rs_cosh(R(0), x, 9) == 1
     assert rs_cosh(x, x, 9) == 1 + x**2/2 + x**4/24 + x**6/720 + x**8/40320
     assert rs_cosh(x*y + x**2*y**3, x, 9) == x**8*y**12/24 + \
         x**8*y**10/48 + x**8*y**8/40320 + x**7*y**10/6 + \

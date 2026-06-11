@@ -1,11 +1,13 @@
+from __future__ import annotations
 from sympy.concrete.summations import Sum
 from sympy.core.function import expand
 from sympy.core.numbers import Integer
 from sympy.matrices.dense import (Matrix, eye)
 from sympy.tensor.indexed import Indexed
 from sympy.combinatorics import Permutation
-from sympy.core import S, Rational, Symbol, Basic, Add, Wild, Function
+from sympy.core import S, Rational, Symbol, Basic, Add, Mul, Wild, Function, Expr
 from sympy.core.containers import Tuple
+from sympy.core.decorators import call_highest_priority
 from sympy.core.symbol import symbols
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.integrals import integrate
@@ -1198,6 +1200,13 @@ def test_TensorManager():
     assert GHsymbol in TensorManager._comm_symbols2i
 
 
+def test_TensorManager_comm_aliasing():
+    TensorManager.clear()
+    comm = TensorManager.comm
+    comm[1][2] = 1
+    assert TensorManager.get_comm(1, 2) is None
+
+
 def test_hash():
     D = Symbol('D')
     Lorentz = TensorIndexType('Lorentz', dim=D, dummy_name='L')
@@ -1254,6 +1263,77 @@ def test_hash():
     assert tsymmetry.func(*tsymmetry.args) == tsymmetry
     assert hash(tsymmetry.func(*tsymmetry.args)) == hash(tsymmetry)
     assert check_all(tsymmetry)
+
+def test_op_priority():
+    class NewExpr(Expr):
+        _op_priority = 100
+        is_commutative = False
+
+        def __neg__(self):
+            return self*S.NegativeOne
+
+        @call_highest_priority('__radd__')
+        def __add__(self, other):
+            return NewAdd(self, other)
+
+        @call_highest_priority('__add__')
+        def __radd__(self, other):
+            return NewAdd(other, self)
+
+        @call_highest_priority('__rsub__')
+        def __sub__(self, other):
+            return NewAdd(self, -other)
+
+        @call_highest_priority('__sub__')
+        def __rsub__(self, other):
+            return NewAdd(other, -self)
+
+        @call_highest_priority('__rmul__')
+        def __mul__(self, other):
+            return NewMul(self, other)
+
+        @call_highest_priority('__mul__')
+        def __rmul__(self, other):
+            return NewMul(other, self)
+
+        @call_highest_priority('__rtruediv__')
+        def __truediv__(self, other):
+            return NewMul(self, other)
+
+        @call_highest_priority('__truediv__')
+        def __rtruediv__(self, other):
+            return NewMul(other, self)
+
+    class NewAdd(NewExpr, Add):
+        pass
+
+    class NewMul(NewExpr, Mul):
+        pass
+
+    class NewSymbol(NewExpr, Symbol):
+        def __init__(self, name):
+            self.name = name
+
+        # The following definitions are required to satisfy mypy.
+
+        def subs():
+            pass
+
+        def simplify():
+            pass
+
+    Lorentz = TensorIndexType('Lorentz', dim=4, dummy_name='L')
+    a = tensor_indices('a', Lorentz)
+    p = tensor_heads('p', [Lorentz])
+    n = NewSymbol('n')
+
+    assert isinstance(n + p(a), NewAdd)
+    assert isinstance(p(a) + n, NewAdd)
+    assert isinstance(n - p(a), NewAdd)
+    assert isinstance(p(a) - n, NewAdd)
+    assert isinstance(n * p(a), NewMul)
+    assert isinstance(p(a) * n, NewMul)
+    assert isinstance(p(a) / n, NewMul)
 
 
 ### TEST VALUED TENSORS ###
@@ -1722,6 +1802,15 @@ def test_TensMul_data():
         # Test the deleter
         del g.data
 
+def test_TensMul_doit():
+    R3 = TensorIndexType("R3", dim=3)
+    i,j = symbols("i j", cls=TensorIndex, tensor_index_type=R3)
+    K = TensorHead("K", index_types=[R3])
+
+    expr = TensMul(K(j), TensAdd(2, -2, 2*K(i)*K(-i)))
+
+    assert expr.doit() == 2*K(j)*K(i)*K(-i)
+
 def test_issue_11020_TensAdd_data():
     with warns_deprecated_sympy():
         Lorentz = TensorIndexType('Lorentz', metric_symmetry=1, dummy_name='i', dim=2)
@@ -1938,7 +2027,11 @@ def test_tensor_replacement():
 
     expr = K(i, j, -j, k)*A(-i)*A(-k)
     repl = {A(i): [1, 2], K(i,j,k,l): Array([1]*2**4).reshape(2,2,2,2), L: diag(1, -1)}
-    assert expr._extract_data(repl)
+    assert expr._extract_data(repl) == ([], 0)
+
+    expr = K(i, j, k, -l)
+    repl = {K(i,j,k,l): Array([ (i+1) for i in range(2**4)]).reshape(2,2,2,2), L: diag(1, -1)}
+    assert expr.replace_with_arrays(repl) == Array([(i+1)*(-1)**i for i in range(2**4)]).reshape(2,2,2,2)
 
     expr = H(j, k)
     repl = {H(i,j): [[1,2],[3,4]], L: diag(1, -1)}
@@ -2053,9 +2146,9 @@ def test_tensor_matching():
 
     assert a.matches(q) == {a:q}
     assert a.matches(-q) == {a:-q}
-    assert g.matches(-q) == None
+    assert g.matches(-q) is None
     assert g.matches(q) == {g:q}
-    assert eps(p,-a,a).matches( eps(p,q,r) ) == None
+    assert eps(p,-a,a).matches( eps(p,q,r) ) is None
     assert eps(p,-b,a).matches( eps(p,q,r) ) == {a: r, -b: q}
     assert eps(p,-q,r).replace(eps(a,b,c), 1) == 1
     assert W().matches( K(p)*V(q) ) == {W(): K(p)*V(q)}
@@ -2063,7 +2156,7 @@ def test_tensor_matching():
     assert W(a,p).matches( K(p)*V(q) ) == {a:q, W(a,p).head: _WildTensExpr(K(p)*V(q))}
     assert W(p,q).matches( K(p)*V(q) ) == {W(p,q).head: _WildTensExpr(K(p)*V(q))}
     assert W(p,q).matches( A(q,p) ) == {W(p,q).head: _WildTensExpr(A(q, p))}
-    assert U(p,q).matches( A(q,p) ) == None
+    assert U(p,q).matches( A(q,p) ) is None
     assert ( K(q)*K(p) ).replace( W(q,p), 1) == 1
 
     #Some tests for matching without Wild

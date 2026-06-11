@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.solvers.decompogen import decompogen, compogen
 from sympy.core.symbol import symbols
 from sympy.functions.elementary.complexes import Abs

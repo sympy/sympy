@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.assumptions.ask import (Q, ask)
 from sympy.core.add import Add
 from sympy.core.containers import Tuple
@@ -15,7 +16,7 @@ from sympy.functions.elementary.complexes import (Abs, arg, conjugate, im, re)
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
 from sympy.functions.elementary.hyperbolic import (atanh, cosh, sinh, tanh)
 from sympy.functions.elementary.integers import floor
-from sympy.functions.elementary.miscellaneous import (cbrt, root, sqrt)
+from sympy.functions.elementary.miscellaneous import (cbrt, root, sqrt, Max, Min)
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (acos, asin, atan, atan2, cos, sec, sin, tan)
 from sympy.functions.special.error_functions import (erf, erfc, erfcinv, erfinv)
@@ -116,6 +117,7 @@ def test_guess_transcendental():
     assert guess_solve_strategy(a*x**b - y, x)  # == GS_TRANSCENDENTAL
 
 
+@slow
 def test_solve_args():
     # equation container, issue 5113
     ans = {x: -3, y: 1}
@@ -422,6 +424,7 @@ def test_linear_system_function():
         a(0, 0), a(0, 1), a(1, 0), a(1, 1)) == {a(1, 0): -a(1, 1), a(0, 0): -a(0, 1)}
 
 
+@slow
 def test_linear_system_symbols_doesnt_hang_1():
 
     def _mk_eqs(wy):
@@ -1748,6 +1751,7 @@ def test_high_order_roots():
     assert set(solve(s)) == set(Poly(s*4, domain='ZZ').all_roots())
 
 
+@slow
 def test_minsolve_linear_system():
     pqt = {"quick": True, "particular": True}
     pqf = {"quick": False, "particular": True}
@@ -2691,6 +2695,7 @@ def test_solve_undetermined_coeffs_issue_23927():
         r: (A**2 + A*sqrt(A**2 + B**2) + B**2)/(A + sqrt(A**2 + B**2))/-1
         }]
 
+
 def test_issue_24368():
     # Ideally these would produce a solution, but for now just check that they
     # don't fail with a RuntimeError
@@ -2720,3 +2725,15 @@ def test_solve_Piecewise():
         (46*x - 3*(x - 6)**2/2 - 276, (x >= 6) & (x < 10)),
         (0, x < 10),  # this will simplify away
         (S.NaN,True)))
+
+
+def test_solve_maxmin():
+    variables = (x, y)
+    system = [Eq(y, Max(x, -x)), Eq(y, 1)]
+    assert solve(system, variables) == [(-1, 1), (1, 1)]
+    system = [Eq(y, Min(x, -x)), Eq(y, 2*x+3)]
+    assert solve(system, variables) == [(-3, -3)]
+    system = [Eq(y, Max(x ** 2, x)), Eq(y, 10 * x + 17)]
+    assert solve(system, variables) == [(5 - sqrt(42), 67 - 10*sqrt(42)), (5 + sqrt(42), 10*sqrt(42) + 67)]
+    system = [Eq(y, Max(3*x, -(S(1)/3)*x)), Eq(y, -(x**2)+10)]
+    assert solve(system, variables) == [(-3, 1), (2, 6)]

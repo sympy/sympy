@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.interactive.session import int_to_Integer
 
 

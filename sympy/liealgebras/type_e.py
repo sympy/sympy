@@ -1,3 +1,4 @@
+from __future__ import annotations
 import itertools
 
 from .cartan_type import Standard_Cartan

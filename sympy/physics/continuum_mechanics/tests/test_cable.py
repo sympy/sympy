@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.physics.continuum_mechanics.cable import Cable
 from sympy.core.symbol import Symbol
 

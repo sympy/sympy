@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Callable, Optional
+from typing import Callable
 
 from collections import OrderedDict
 import os
@@ -63,7 +63,7 @@ class CompilerRunner:
     standards: tuple[None | str, ...]
 
     # Subclass to dict of binary/formater-callback
-    std_formater: dict[str, Callable[[Optional[str]], str]]
+    std_formater: dict[str, Callable[[str | None], str]]
 
     # subclass to be e.g. {'gcc': 'gnu', ...}
     compiler_name_vendor_mapping: dict[str, str]

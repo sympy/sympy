@@ -1,4 +1,5 @@
 """Special exception classes for numberfields. """
+from __future__ import annotations
 
 
 class ClosureFailure(Exception):

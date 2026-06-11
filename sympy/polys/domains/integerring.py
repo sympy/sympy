@@ -1,4 +1,5 @@
 """Implementation of :class:`IntegerRing` class. """
+from __future__ import annotations
 
 from sympy.external.gmpy import MPZ, GROUND_TYPES
 
@@ -222,7 +223,7 @@ class IntegerRing(Ring[MPZ], CharacteristicZero, SimpleDomain):
         if a.is_Integer:
             return K1.from_sympy(a)
 
-    def gcdex(self, a, b):
+    def gcdex(self, a: MPZ, b: MPZ) -> tuple[MPZ, MPZ, MPZ]:
         """Compute extended GCD of ``a`` and ``b``. """
         h, s, t = gcdex(a, b)
         # XXX: This conditional logic should be handled somewhere else.

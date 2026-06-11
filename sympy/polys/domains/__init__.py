@@ -1,4 +1,5 @@
 """Implementation of mathematical domains. """
+from __future__ import annotations
 
 __all__ = [
     'Domain', 'FiniteField', 'IntegerRing', 'RationalField', 'RealField',

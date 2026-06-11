@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.containers import Tuple
 from sympy.core.numbers import oo
 from sympy.core.relational import (Gt, Lt)

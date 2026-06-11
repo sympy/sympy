@@ -31,6 +31,7 @@ The module uses numpy for speed which cannot be achieved with mpmath.
 # A It will not affect most of the plots. The interval arithmetic
 # module based suffers the same problems as that of floating point
 # arithmetic.
+from __future__ import annotations
 
 from sympy.core.numbers import int_valued
 from sympy.core.logic import fuzzy_and

@@ -1,4 +1,5 @@
 # conceal the implicit import from the code quality tester
+from __future__ import annotations
 from sympy.core.numbers import (oo, pi)
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.functions.elementary.exponential import exp

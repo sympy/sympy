@@ -2,6 +2,7 @@
 This module contains query handlers responsible for calculus queries:
 infinitesimal, finite, etc.
 """
+from __future__ import annotations
 
 from sympy.assumptions import Q, ask
 from sympy.core import Expr, Add, Mul, Pow, Symbol

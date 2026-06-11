@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.polys.domains import ZZ, QQ
 from sympy.polys.matrices import DM
 from sympy.polys.matrices.domainmatrix import DomainMatrix

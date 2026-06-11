@@ -1,4 +1,5 @@
 """Tests for computing Galois groups. """
+from __future__ import annotations
 
 from sympy.abc import x
 from sympy.combinatorics.galois import (

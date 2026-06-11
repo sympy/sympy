@@ -1,4 +1,5 @@
 """Implementation of :class:`ExpressionRawDomain` class. """
+from __future__ import annotations
 
 
 from sympy.core import Expr, S, sympify, Add

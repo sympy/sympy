@@ -1,3 +1,5 @@
+from __future__ import annotations
+import pytest
 from sympy.core.containers import Dict
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
@@ -205,6 +207,7 @@ def test_perfect_power():
     assert perfect_power(Rational(-3, 2)**3) == (-3*S.Half, 3)
 
 
+@pytest.mark.thread_unsafe(reason="test relies on mutating a global cache")
 def test_factor_cache():
     factor_cache.cache_clear()
     raises(ValueError, lambda: factor_cache.__setitem__(1, 5))
@@ -266,6 +269,10 @@ def test_factorint():
     assert factorint(28300421052393658575) == {3: 1, 5: 2, 11: 2, 43: 1, 2063: 2, 4127: 1, 4129: 1}
     assert factorint(2063**2 * 4127**1 * 4129**1) == {2063: 2, 4127: 1, 4129: 1}
     assert factorint(2347**2 * 7039**1 * 7043**1) == {2347: 2, 7039: 1, 7043: 1}
+    #issue 28621
+    assert factorint(978188756923448938700236182276357436, limit=2**15,
+                     use_trial=True, use_rho=False, use_pm1=False) ==\
+                          {2: 2, 494517127261244783: 1, 494517127415229473: 1}
 
     assert factorint(0, multiple=True) == [0]
     assert factorint(1, multiple=True) == []

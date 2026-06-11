@@ -46,6 +46,7 @@ from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, \
 from sympy.core import Basic, Expr, sympify, Add, Mul, S
 from sympy.core.cache import clear_cache
 from sympy.core.containers import Tuple, Dict
+from sympy.core.decorators import call_highest_priority
 from sympy.core.function import WildFunction
 from sympy.core.sorting import default_sort_key
 from sympy.core.symbol import Symbol, symbols, Wild
@@ -189,7 +190,7 @@ class _IndexStructure(CantSympify):
                 # check consistency and update free
                 if is_contr:
                     if contr:
-                        raise ValueError('two equal contravariant indices in slots %d and %d' %(pos, i))
+                        raise ValueError(f"two equal contravariant indices in slots {pos} and {i}")
                     else:
                         free[pos] = False
                         free[i] = False
@@ -198,7 +199,7 @@ class _IndexStructure(CantSympify):
                         free[pos] = False
                         free[i] = False
                     else:
-                        raise ValueError('two equal covariant indices in slots %d and %d' %(pos, i))
+                        raise ValueError(f"two equal covariant indices in slots {pos} and {i}")
                 if contr:
                     dum.append((i, pos))
                 else:
@@ -443,9 +444,9 @@ class _TensorDataLazyEvaluator(CantSympify):
         if not isinstance(dat, NDimArray):
             return dat
 
-        if dat.rank() == 0:
+        if dat.ndim == 0:
             return dat[()]
-        elif dat.rank() == 1 and len(dat) == 1:
+        elif dat.ndim == 1 and len(dat) == 1:
             return dat[0]
         return dat
 
@@ -684,8 +685,8 @@ class _TensorDataLazyEvaluator(CantSympify):
     def _flip_index_by_metric(data, metric, pos):
         from .array import tensorproduct, tensorcontraction
 
-        mdim = metric.rank()
-        ddim = data.rank()
+        mdim = metric.ndim
+        ddim = data.ndim
 
         if pos == 0:
             data = tensorcontraction(
@@ -825,7 +826,7 @@ class _TensorManager:
 
     @property
     def comm(self):
-        return self._comm
+        return [row.copy() for row in self._comm]
 
     def comm_symbols2i(self, i):
         """
@@ -1173,9 +1174,9 @@ class TensorIndexType(Basic):
         from .array import MutableDenseNDimArray
 
         data = _TensorDataLazyEvaluator.parse_data(data)
-        if data.rank() > 2:
+        if data.ndim > 2:
             raise ValueError("data have to be of rank 1 (diagonal metric) or 2.")
-        if data.rank() == 1:
+        if data.ndim == 1:
             if self.dim.is_number:
                 nda_dim = data.shape[0]
                 if nda_dim != self.dim:
@@ -1347,7 +1348,7 @@ class TensorIndex(Basic):
     def _print(self):
         s = self.name
         if not self.is_up:
-            s = '-%s' % s
+            s = f'-{s}'
         return s
 
     def __lt__(self, other):
@@ -1636,7 +1637,7 @@ class TensorType(Basic):
         return sorted(set(self.index_types), key=lambda x: x.name)
 
     def __str__(self):
-        return 'TensorType(%s)' % ([str(x) for x in self.index_types])
+        return f"TensorType({[str(x) for x in self.index_types]})"
 
     def __call__(self, s, comm=0):
         """
@@ -1855,7 +1856,7 @@ class TensorHead(Basic):
         return r
 
     def _print(self):
-        return '%s(%s)' %(self.name, ','.join([str(x) for x in self.index_types]))
+        return f"{self.name}({','.join([str(x) for x in self.index_types])})"
 
     def __call__(self, *indices, **kw_args):
         """
@@ -1916,7 +1917,7 @@ class TensorHead(Basic):
             metrics = [_.data for _ in self.index_types]
 
             marray = self.data
-            marraydim = marray.rank()
+            marraydim = marray.ndim
             for metric in metrics:
                 marray = tensorproduct(marray, metric, marray)
                 marray = tensorcontraction(marray, (0, marraydim), (marraydim+1, marraydim+2))
@@ -2014,18 +2015,23 @@ class TensExpr(Expr, ABC):
     def __abs__(self):
         raise NotImplementedError
 
+    @call_highest_priority('__radd__')
     def __add__(self, other):
         return TensAdd(self, other).doit(deep=False)
 
+    @call_highest_priority('__add__')
     def __radd__(self, other):
         return TensAdd(other, self).doit(deep=False)
 
+    @call_highest_priority('__rsub__')
     def __sub__(self, other):
         return TensAdd(self, -other).doit(deep=False)
 
+    @call_highest_priority('__sub__')
     def __rsub__(self, other):
         return TensAdd(other, -self).doit(deep=False)
 
+    @call_highest_priority('__rmul__')
     def __mul__(self, other):
         """
         Multiply two tensors using Einstein summation convention.
@@ -2051,9 +2057,11 @@ class TensExpr(Expr, ABC):
         """
         return TensMul(self, other).doit(deep=False)
 
+    @call_highest_priority('__mul__')
     def __rmul__(self, other):
         return TensMul(other, self).doit(deep=False)
 
+    @call_highest_priority('__rtruediv__')
     def __truediv__(self, other):
         other = _sympify(other)
         if isinstance(other, TensExpr):
@@ -2071,7 +2079,7 @@ class TensExpr(Expr, ABC):
             from .array import tensorproduct, tensorcontraction
             free = self.free
             marray = self.data
-            mdim = marray.rank()
+            mdim = marray.ndim
             for metric in free:
                 marray = tensorcontraction(
                     tensorproduct(
@@ -2210,7 +2218,7 @@ class TensExpr(Expr, ABC):
 
         array = tensorcontraction(tensorproduct(metric, array), (1, 2+pos))
         permu = list(range(dim))
-        permu[0], permu[pos] = permu[pos], permu[0]
+        permu.insert(pos, permu.pop(0))
         return permutedims(array, permu)
 
     @staticmethod
@@ -2239,7 +2247,7 @@ class TensExpr(Expr, ABC):
             else:
                 index2 = free2remaining[pos1]
                 if index2 is None:
-                    raise ValueError("incompatible indices: %s and %s" % (free_ind1, free_ind2))
+                    raise ValueError(f"incompatible indices: {free_ind1} and {free_ind2}")
                 free2remaining[pos1] = None
                 free_ind2[pos1] = index1
                 if index1.is_up ^ index2.is_up:
@@ -2249,8 +2257,7 @@ class TensExpr(Expr, ABC):
                         pos2down.append(pos1)
 
         if len(set(free_ind1) & set(free_ind2)) < len(free_ind1):
-            raise ValueError("incompatible indices: %s and %s" % (free_ind1, free_ind2))
-
+            raise ValueError(f"incompatible indices: {free_ind1} and {free_ind2}")
         # Raise indices:
         for pos in pos2up:
             index_type_pos = index_types1[pos]
@@ -2271,7 +2278,7 @@ class TensExpr(Expr, ABC):
             permutation = TensExpr._get_indices_permutation(free_ind2, free_ind1)
             array = permutedims(array, permutation)
 
-        if hasattr(array, "rank") and array.rank() == 0:
+        if hasattr(array, "ndim") and array.ndim == 0:
             array = array[()]
 
         return free_ind2, array
@@ -2361,12 +2368,11 @@ class TensExpr(Expr, ABC):
                 expected_shape = [tensor.dim for i in range(2)]
             else:
                 expected_shape = [index_type.dim for index_type in tensor.index_types]
-            if len(expected_shape) != array.rank() or (not all(dim1 == dim2 if
+            if len(expected_shape) != array.ndim or (not all(dim1 == dim2 if
                 dim1.is_number else True for dim1, dim2 in zip(expected_shape,
                 array.shape))):
-                raise ValueError("shapes for tensor %s expected to be %s, "\
-                    "replacement array shape is %s" % (tensor, expected_shape,
-                    array.shape))
+                raise ValueError(f"shapes for tensor {tensor} expected to be {expected_shape}, "\
+                    "replacement array shape is {array.shape}")
 
         ret_indices, array = self._extract_data(replacement_dict)
 
@@ -2962,7 +2968,7 @@ class Tensor(TensExpr):
     @staticmethod
     def _parse_indices(tensor_head, indices):
         if not isinstance(indices, (tuple, list, Tuple)):
-            raise TypeError("indices should be an array, got %s" % type(indices))
+            raise TypeError(f"indices should be an array, got {type(indices)}")
         indices = list(indices)
         for i, index in enumerate(indices):
             if isinstance(index, Symbol):
@@ -2972,9 +2978,9 @@ class Tensor(TensExpr):
                 if c == -1 and isinstance(e, Symbol):
                     indices[i] = TensorIndex(e, tensor_head.index_types[i], False)
                 else:
-                    raise ValueError("index not understood: %s" % index)
+                    raise ValueError(f"index not understood: {index}")
             elif not isinstance(index, TensorIndex):
-                raise TypeError("wrong type for index: %s is %s" % (index, type(index)))
+                raise TypeError(f"wrong type for index: {index} is {type(index)}")
         return indices
 
     def _set_new_index_structure(self, im, is_canon_bp=False):
@@ -3020,7 +3026,8 @@ class Tensor(TensExpr):
             return 0
         elif isinstance(other, Tensor):
             return self.component.commutes_with(other.component)
-        return NotImplementedError
+        else:
+            raise NotImplementedError(f"commutes_with between {type(self)} and {type(other)}")
 
     def perm2tensor(self, g, is_canon_bp=False):
         """
@@ -3220,7 +3227,7 @@ class Tensor(TensExpr):
                 array = v
                 break
         else:
-            raise ValueError("%s not found in %s" % (self, replacement_dict))
+            raise ValueError(f"{self} not found in {replacement_dict}")
 
         # TODO: inefficient, this should be done at root level only:
         replacement_dict = {k: Array(v) for k, v in replacement_dict.items()}
@@ -3233,7 +3240,7 @@ class Tensor(TensExpr):
             for pair in dum2:
                 # allow `dum2` if the contained values are also in `dum1`.
                 if pair not in dum1:
-                    raise NotImplementedError("%s with contractions is not implemented" % other)
+                    raise NotImplementedError(f"{other} with contractions is not implemented")
             # Remove elements in `dum2` from `dum1`:
             dum1 = [pair for pair in dum1 if pair not in dum2]
         if len(dum1) > 0:
@@ -3282,9 +3289,9 @@ class Tensor(TensExpr):
         indices = [str(ind) for ind in self.indices]
         component = self.component
         if component.rank > 0:
-            return ('%s(%s)' % (component.name, ', '.join(indices)))
+            return (f"{component.name}({', '.join(indices)})")
         else:
-            return ('%s' % component.name)
+            return (f"{component.name}")
 
     def equals(self, other):
         if other == 0:
@@ -3457,10 +3464,7 @@ class TensMul(TensExpr, AssocOp):
                 newarg = arg
             newargs.append(newarg)
 
-        args = newargs
-
-        # Flatten:
-        args = [i for arg in args for i in (arg.args if isinstance(arg, (TensMul, Mul)) else [arg])]
+        args = cls._flatten_args(newargs)
 
         args, indices, free, dum = TensMul._tensMul_contract_indices(args, replace_indices=False)
 
@@ -3522,7 +3526,7 @@ class TensMul(TensExpr, AssocOp):
                         dummy_data.append((-index, other_pos1, pos1, other_pos2, pos2))
                     indices.append(index)
                 elif index in free2pos1:
-                    raise ValueError("Repeated index: %s" % index)
+                    raise ValueError(f"Repeated index: {index}")
                 else:
                     free2pos1[index] = pos1
                     free2pos2[index] = pos2
@@ -3627,7 +3631,7 @@ class TensMul(TensExpr, AssocOp):
         else:
             args = self.args
 
-        args = [arg for arg in args if arg != self.identity]
+        args = self._flatten_args([arg for arg in args if arg != self.identity])
 
         # Extract non-tensor coefficients:
         coeff = reduce(lambda a, b: a*b, [arg for arg in args if not isinstance(arg, TensExpr)], S.One)
@@ -3657,6 +3661,16 @@ class TensMul(TensExpr, AssocOp):
         obj._coeff = coeff
         obj._is_canon_bp = is_canon_bp
         return obj
+
+    @staticmethod
+    def _flatten_args(args):
+        flat = []
+        for arg in args:
+            if isinstance(arg, (TensMul, Mul)):
+                flat.extend(arg.args)
+            else:
+                flat.append(arg)
+        return flat
 
     # TODO: this method should be private
     # TODO: should this method be renamed _from_components_free_dum ?
@@ -4517,7 +4531,7 @@ class TensorElement(TensExpr):
         if not isinstance(expr, Tensor):
             # remap
             if not isinstance(expr, TensExpr):
-                raise TypeError("%s is not a tensor expression" % expr)
+                raise TypeError(f"{expr} is not a tensor expression")
             return expr.func(*[TensorElement(arg, index_map) for arg in expr.args])
         expr_free_indices = expr.get_free_indices()
         name_translation = {i.args[0]: i for i in expr_free_indices}
@@ -5125,7 +5139,7 @@ def get_lines(ex, index_type):
             if index_types[i] is index_type:
                 a.append(i)
         if len(a) > 2:
-            raise ValueError('at most two indices of type %s allowed' % index_type)
+            raise ValueError(f"at most two indices of type {index_type} allowed")
         if len(a) == 2:
             dt[c] = a
     #dum = ex.dum

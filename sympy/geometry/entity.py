@@ -39,7 +39,7 @@ from sympy.utilities.misc import func_name
 from sympy.utilities.iterables import is_sequence
 
 
-# How entities are ordered; used by __cmp__ in GeometryEntity
+# How entities are ordered; used for comparison in GeometryEntity
 ordering_of_classes = [
     "Point2D",
     "Point3D",
@@ -77,36 +77,6 @@ class GeometryEntity(Basic, EvalfMixin):
     """
 
     __slots__: tuple[str, ...] = ()
-
-    def __cmp__(self, other):
-        """Comparison of two GeometryEntities."""
-        n1 = self.__class__.__name__
-        n2 = other.__class__.__name__
-        c = (n1 > n2) - (n1 < n2)
-        if not c:
-            return 0
-
-        i1 = -1
-        for cls in self.__class__.__mro__:
-            try:
-                i1 = ordering_of_classes.index(cls.__name__)
-                break
-            except ValueError:
-                i1 = -1
-        if i1 == -1:
-            return c
-
-        i2 = -1
-        for cls in other.__class__.__mro__:
-            try:
-                i2 = ordering_of_classes.index(cls.__name__)
-                break
-            except ValueError:
-                i2 = -1
-        if i2 == -1:
-            return c
-
-        return (i1 > i2) - (i1 < i2)
 
     def __contains__(self, other):
         """Subclasses should implement this method for anything more complex than equality."""
@@ -162,13 +132,16 @@ class GeometryEntity(Basic, EvalfMixin):
     def _eval_subs(self, old, new):
         from sympy.geometry.point import Point, Point3D
         if is_sequence(old) or is_sequence(new):
+            if isinstance(old, (Point, Point3D)) and isinstance(new, (Point, Point3D)):
+                return None
+
             if isinstance(self, Point3D):
                 old = Point3D(old)
                 new = Point3D(new)
             else:
                 old = Point(old)
                 new = Point(new)
-            return  self._subs(old, new)
+            return self._subs(old, new)
 
     def _repr_svg_(self):
         """SVG representation of a GeometryEntity suitable for IPython"""

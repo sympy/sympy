@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.series.kauers import finite_diff
 from sympy.series.kauers import finite_diff_kauers
 from sympy.abc import x, y, z, m, n, w

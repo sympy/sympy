@@ -1,6 +1,7 @@
 """
 Replacement rules.
 """
+from __future__ import annotations
 
 class Transform:
     """

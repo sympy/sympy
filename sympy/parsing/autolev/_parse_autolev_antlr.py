@@ -1,3 +1,4 @@
+from __future__ import annotations
 from importlib.metadata import version
 from sympy.external import import_module
 

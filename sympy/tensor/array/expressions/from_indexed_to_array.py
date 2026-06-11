@@ -1,3 +1,4 @@
+from __future__ import annotations
 from collections import defaultdict
 
 from sympy import Function
@@ -126,7 +127,7 @@ def _convert_indexed_to_array(expr):
             for ind, istart, iend in expr.limits:
                 i = _get_argindex(subindices, ind)
                 if istart != 0 or iend+1 != shape[i]:
-                    raise ValueError("summation index and array dimension mismatch: %s" % ind)
+                    raise ValueError(f"summation index and array dimension mismatch: {ind}")
         contraction_indices = []
         subindices = list(subindices)
         if isinstance(subexpr, ArrayDiagonal):

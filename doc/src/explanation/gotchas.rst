@@ -259,7 +259,7 @@ To get a full list of all default names in SymPy do:
 If you have `IPython <https://ipython.org/>`_ installed and
 use :command:`isympy`, you can also press the TAB key to get a list of
 all built-in names and to autocomplete.  Also, see `this page
-<https://kogs-www.informatik.uni-hamburg.de/~meine/python_tricks>`_ for a
+<https://web.archive.org/web/20240226142546/https://kogs-www.informatik.uni-hamburg.de/~meine/python_tricks>`_ for a
 trick for getting tab completion in the regular Python console.
 
 .. note::
@@ -581,9 +581,10 @@ Inverse Trig Functions
 
 SymPy uses different names for some functions than most computer algebra
 systems.  In particular, the inverse trig functions use the python names
-of :obj:`~.asin`, :obj:`~.acos` and so on instead of the usual ``arcsin``
-and ``arccos``.  Use the methods described in :ref:`Symbols <symbols>`
-above to see the names of all SymPy functions.
+of :obj:`~sympy.functions.elementary.trigonometric.asin`,
+:obj:`~sympy.functions.elementary.trigonometric.acos` and so on instead
+of the usual ``arcsin`` and ``arccos``.  Use the methods described in
+:ref:`Symbols <symbols>` above to see the names of all SymPy functions.
 
 Sqrt is not a Function
 ----------------------

@@ -1,4 +1,5 @@
 """Tests for classes defining properties of ground domains, e.g. ZZ, QQ, ZZ[x] ... """
+from __future__ import annotations
 
 from sympy.external.gmpy import GROUND_TYPES
 
@@ -1134,7 +1135,7 @@ def test_gaussian_domains():
         q = G(3, 4)
         assert str(q) == '3 + 4*I'
         assert q.parent() == G
-        assert q._get_xy(pi) == (None, None)
+        assert q._get_xy(pi) is None
         assert q._get_xy(2) == (2, 0)
         assert q._get_xy(2*I) == (0, 2)
 

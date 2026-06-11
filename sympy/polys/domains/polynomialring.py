@@ -1,13 +1,11 @@
 """Implementation of :class:`PolynomialRing` class. """
 
 from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
-from sympy.core.expr import Expr
-from sympy.polys.orderings import MonomialOrder
 from sympy.polys.domains.domain import Er, Domain
 from sympy.polys.domains.ring import Ring
+from sympy.polys.domains.ringextension import RingExtension
 from sympy.polys.domains.compositedomain import CompositeDomain
 
 from sympy.polys.polyerrors import CoercionFailed, GeneratorsError
@@ -15,12 +13,20 @@ from sympy.utilities import public
 
 
 if TYPE_CHECKING:
-    from typing import TypeIs
+    from sympy.polys.orderings import MonomialOrder
+    from sympy.core.expr import Expr
+    import sys
+    if sys.version_info >= (3, 13):
+        from typing import TypeIs
+    else:
+        from typing_extensions import TypeIs
     from sympy.polys.rings import PolyRing, PolyElement
 
 
 @public
-class PolynomialRing(Ring['PolyElement[Er]'], CompositeDomain):
+class PolynomialRing(
+    Ring["PolyElement[Er]"], RingExtension["PolyElement[Er]", Er], CompositeDomain
+):
     """A class for representing multivariate polynomial rings. """
 
     is_PolynomialRing = is_Poly = True
@@ -50,6 +56,9 @@ class PolynomialRing(Ring['PolyElement[Er]'], CompositeDomain):
 
         # TODO: remove this
         self.dom = self.domain
+
+    def to_dict(self, element: PolyElement[Er]) -> dict[tuple[int, ...], Er]:
+        return element.to_dict()
 
     def new(self, element) -> PolyElement[Er]:
         return self.ring.ring_new(element)

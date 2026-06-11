@@ -1,4 +1,5 @@
 '''Functions returning normal forms of matrices'''
+from __future__ import annotations
 
 from sympy.polys.domains.integerring import ZZ
 from sympy.polys.polytools import Poly

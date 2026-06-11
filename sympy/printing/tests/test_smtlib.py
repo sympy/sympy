@@ -1,3 +1,4 @@
+from __future__ import annotations
 import contextlib
 import itertools
 import re
@@ -26,7 +27,7 @@ class _W(Enum):
 
 @contextlib.contextmanager
 def _check_warns(expected: typing.Iterable[_W]):
-    warns: typing.List[str] = []
+    warns: list[str] = []
     log_warn = warns.append
     yield log_warn
 

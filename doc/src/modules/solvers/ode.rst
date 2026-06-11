@@ -81,6 +81,9 @@ the various ODE solving methods. For this reason, they are documented here.
 .. autoclass:: sympy.solvers.ode.single::SecondLinearBessel
    :members:
 
+.. autoclass:: sympy.solvers.ode.single::SecondLinearBesselTransform
+   :members:
+
 .. autoclass:: sympy.solvers.ode.single::Bernoulli
    :members:
 

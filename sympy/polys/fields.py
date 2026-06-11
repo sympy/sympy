@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Generic, Protocol, Any
+from typing import Generic, Protocol, Any, TYPE_CHECKING
 
 from functools import reduce
 
@@ -29,6 +29,9 @@ from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
 from sympy.utilities.iterables import is_sequence
 from sympy.utilities.magic import pollute
+
+if TYPE_CHECKING:
+    from sympy.polys.domains.field import Field
 
 
 class FracElementConstructor(Protocol[Er]):
@@ -221,7 +224,7 @@ class FracField(DefaultPrinting, Generic[Er]):
 
             if not domain.is_Field and domain.has_assoc_Field:
                 ring = self.ring
-                ground_field = domain.get_field()
+                ground_field: Field = domain.get_field()
                 element = ground_field.convert(element)
                 numer = ring.ground_new(ground_field.numer(element))
                 denom = ring.ground_new(ground_field.denom(element))

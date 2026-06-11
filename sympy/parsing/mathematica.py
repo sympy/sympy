@@ -1,5 +1,4 @@
 from __future__ import annotations
-import sys
 import re
 import typing
 from itertools import product
@@ -10,7 +9,7 @@ from sympy import Mul, Add, Pow, Rational, log, exp, sqrt, cos, sin, tan, asin, 
     acosh, atanh, acoth, asech, acsch, expand, im, flatten, polylog, cancel, expand_trig, sign, simplify, \
     UnevaluatedExpr, S, atan, atan2, Mod, Max, Min, rf, Ei, Si, Ci, airyai, airyaiprime, airybi, primepi, prime, \
     isprime, cot, sec, csc, csch, sech, coth, Function, E, I, pi, Tuple, GreaterThan, StrictGreaterThan, StrictLessThan, \
-    LessThan, Equality, Or, And, Lambda, Integer, Dummy, symbols
+    LessThan, Equality, Or, And, Lambda, Integer, Dummy, symbols, Not, factorial
 from sympy.core.sympify import sympify, _sympify
 from sympy.functions.special.bessel import airybiprime
 from sympy.functions.special.error_functions import li
@@ -106,6 +105,66 @@ def _parse_Function(*args):
 def _deco(cls):
     cls._initialize_class()
     return cls
+
+
+def _literal_character_ranges(initial):
+    """List all characters that may be used in identifiers
+
+    Mathematica identifiers cannot contain underscores.  This function
+    returns a regex range matching all characters that may be used in
+    a Python identifier, excluding underscores.  The `initial` argument
+    is a bool indicating whether this range describes valid initial
+    characters (True) or valid subsequent characters (False).
+    """
+    import sys
+    def valid(character):
+        if character == "_":
+            return False
+        elif initial:
+            return character.isidentifier()
+        else:
+            return ("x" + character).isidentifier()
+
+    # Note that 0 corresponds to the NUL character, which is not an
+    # identifier, so we can use it as a signal that we haven't found a
+    # valid character yet.
+    characters = ""
+    range_begin_character = ""
+    range_begin_index = 0
+    range_end_character = ""
+    range_end_index = 0
+
+    for codepoint in range(sys.maxunicode + 1):
+        character = chr(codepoint)
+        if valid(character):
+            if range_begin_index == 0:
+                range_begin_character = character
+                range_begin_index = codepoint
+            range_end_character = character
+            range_end_index = codepoint
+        elif range_begin_index != 0:
+            # We have reached the end of a range (length 1, 2, or n),
+            # so we add it to our list of characters.
+            if range_begin_index == range_end_index:
+                characters += range_begin_character
+            elif range_begin_index + 1 == range_end_index:
+                characters += range_begin_character + range_end_character
+            else:
+                characters += f"{range_begin_character}-{range_end_character}"
+            # Reset the range
+            range_begin_character = ""
+            range_begin_index = 0
+
+    # In case the loop above ended on a valid character we add it / close the range here
+    if range_begin_index != 0:
+        if range_begin_index == range_end_index:
+            characters += range_begin_character
+        elif range_begin_index + 1 == range_end_index:
+            characters += range_begin_character + range_end_character
+        else:
+            characters += f"{range_begin_character}-{range_end_character}"
+
+    return characters
 
 
 @_deco
@@ -599,9 +658,9 @@ class MathematicaParser:
     # unicode combining characters.
     _literal = (
         "["
-        + "".join(c for c in map(chr, range(sys.maxunicode+1)) if c!="_" and c.isidentifier())
+        + _literal_character_ranges(True)
         + "]["
-        + "".join(c for c in map(chr, range(sys.maxunicode+1)) if c!="_" and ("x"+c).isidentifier())
+        + _literal_character_ranges(False)
         + "]*"
     )
 
@@ -853,6 +912,11 @@ class MathematicaParser:
                         if pointer == 0 or pointer == size - 1 or self._is_op(tokens[pointer - 1]) or self._is_op(tokens[pointer + 1]):
                             pointer += 1
                             continue
+                    # Special case: "!" without preceding operand is PREFIX Not, not POSTFIX Factorial
+                    if token == "!" and op_type == self.POSTFIX:
+                        if pointer == 0 or self._is_op(tokens[pointer - 1]):
+                            pointer += 1
+                            continue
                     changed = True
                     tokens[pointer] = node
                     if op_type == self.INFIX:
@@ -1076,8 +1140,9 @@ class MathematicaParser:
         "Equal": Equality,
         "Or": Or,
         "And": And,
-
+        "Not": Not,
         "Function": _parse_Function,
+        "Factorial": factorial,
     }
 
     _atom_conversions = {

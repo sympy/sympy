@@ -1,6 +1,14 @@
 """Square-free decomposition algorithms and related tools. """
 
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Iterator
+
+if TYPE_CHECKING:
+    from sympy.polys.domains.algebraicfield import AlgebraicField, Alg
+    from sympy.external.gmpy import MPQ
+
 from sympy.polys.densearith import (
     dup_neg, dmp_neg,
     dup_sub, dmp_sub,
@@ -8,6 +16,7 @@ from sympy.polys.densearith import (
     dup_quo, dmp_quo,
     dup_mul_ground, dmp_mul_ground)
 from sympy.polys.densebasic import (
+    dup, dmp, _dup, _dmp,
     dup_strip,
     dup_LC, dmp_ground_LC,
     dmp_zero_p,
@@ -102,7 +111,7 @@ def dmp_sqf_p(f, u, K):
     return True
 
 
-def dup_sqf_norm(f, K):
+def dup_sqf_norm(f: dup[Alg], K: AlgebraicField) -> tuple[int, dup[Alg], dup[MPQ]]:
     r"""
     Find a shift of `f` in `K[x]` that has square-free norm.
 
@@ -173,18 +182,20 @@ def dup_sqf_norm(f, K):
     s, g = 0, dmp_raise(K.mod.to_list(), 1, 0, K.dom)
 
     while True:
-        h, _ = dmp_inject(f, 0, K, front=True)
+        h, _ = dmp_inject(_dmp(f), 0, K, front=True)
         r = dmp_resultant(g, h, 1, K.dom)
 
-        if dup_sqf_p(r, K.dom):
+        r2: dmp[MPQ] = r # type: ignore
+
+        if dup_sqf_p(r2, K.dom):
             break
         else:
             f, s = dup_shift(f, -K.unit, K), s + 1
 
-    return s, f, r
+    return s, f, _dup(r2)
 
 
-def _dmp_sqf_norm_shifts(f, u, K):
+def _dmp_sqf_norm_shifts(f: dmp[Alg], u: int, K: AlgebraicField) -> Iterator[tuple[list[int], dmp[Alg]]]:
     """Generate a sequence of candidate shifts for dmp_sqf_norm."""
     #
     # We want to find a minimal shift if possible because shifting high degree
@@ -224,7 +235,9 @@ def _dmp_sqf_norm_shifts(f, u, K):
         yield sj, fj
 
 
-def dmp_sqf_norm(f, u, K):
+def dmp_sqf_norm(
+    f: dmp[Alg], u: int, K: AlgebraicField
+) -> tuple[list[int], dmp[Alg], dmp[MPQ]]:
     r"""
     Find a shift of ``f`` in ``K[X]`` that has square-free norm.
 
@@ -291,23 +304,27 @@ def dmp_sqf_norm(f, u, K):
         High-level interface for using this function.
     """
     if not u:
-        s, g, r = dup_sqf_norm(f, K)
-        return [s], g, r
+        s, g, r = dup_sqf_norm(_dup(f), K)
+        return [s], _dmp(g), _dmp(r)
 
     if not K.is_Algebraic:
         raise DomainError("ground domain must be algebraic")
 
     g = dmp_raise(K.mod.to_list(), u + 1, 0, K.dom)
 
-    for s, f in _dmp_sqf_norm_shifts(f, u, K):
+    for ss, f in _dmp_sqf_norm_shifts(f, u, K):
 
         h, _ = dmp_inject(f, u, K, front=True)
         r = dmp_resultant(g, h, u + 1, K.dom)
 
-        if dmp_sqf_p(r, u, K.dom):
-            break
+        r2: dmp[MPQ] = r # type: ignore
 
-    return s, f, r
+        if dmp_sqf_p(r2, u, K.dom):
+            break
+    else:
+        assert False
+
+    return ss, f, r2
 
 
 def dmp_norm(f, u, K):
@@ -598,7 +615,7 @@ def dup_sqf_list_include(f, K, all=False):
         g = dup_mul_ground(factors[0][0], coeff, K)
         return [(g, 1)] + factors[1:]
     else:
-        g = dup_strip([coeff])
+        g = dup_strip([coeff], K)
         return [(g, 1)] + factors
 
 
@@ -737,7 +754,7 @@ def dmp_sqf_list_include(f, u, K, all=False):
         g = dmp_mul_ground(factors[0][0], coeff, u, K)
         return [(g, 1)] + factors[1:]
     else:
-        g = dmp_ground(coeff, u)
+        g = dmp_ground(coeff, u, K)
         return [(g, 1)] + factors
 
 

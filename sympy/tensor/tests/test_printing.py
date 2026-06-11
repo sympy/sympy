@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorHead
 from sympy import I
 

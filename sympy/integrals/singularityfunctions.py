@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.functions import SingularityFunction, DiracDelta
 from sympy.integrals import integrate
 

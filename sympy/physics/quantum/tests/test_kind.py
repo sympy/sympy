@@ -1,4 +1,5 @@
 """Tests for sympy.physics.quantum.kind."""
+from __future__ import annotations
 
 from sympy.core.kind import NumberKind, UndefinedKind
 from sympy.core.symbol import symbols
@@ -73,3 +74,6 @@ def test_tensorproduct_kind():
     assert TensorProduct(A, B).kind == OperatorKind
     assert TensorProduct(A, x*B).kind == OperatorKind
     assert TensorProduct(x*A, B).kind == OperatorKind
+    assert TensorProduct(x, k).kind == KetKind
+    assert TensorProduct(b, y).kind == BraKind
+    assert TensorProduct(x, A).kind == OperatorKind

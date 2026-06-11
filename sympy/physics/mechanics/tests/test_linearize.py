@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy import symbols, Matrix, cos, sin, atan, sqrt, Rational
 from sympy.core.sympify import sympify
 from sympy.simplify.simplify import simplify

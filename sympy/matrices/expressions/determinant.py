@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.basic import Basic
 from sympy.core.expr import Expr
 from sympy.core.singleton import S
@@ -51,6 +52,10 @@ class Determinant(Expr):
             return result
 
         return self
+
+    def _eval_derivative(self, x):
+        # Derivative currently implements `hasattr(..., "_eval_derivative")` to proceed:
+        return None
 
 
 def det(matexpr):

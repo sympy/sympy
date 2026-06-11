@@ -15,6 +15,10 @@ the following function types in the given ``Interval``:
 
 """
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
@@ -26,7 +30,19 @@ from sympy.functions.elementary.hyperbolic import (
 from sympy.utilities.misc import filldedent
 
 
-def singularities(expression, symbol, domain=None):
+if TYPE_CHECKING:
+    from typing import Callable
+    from sympy.core.expr import Expr
+    from sympy.sets.sets import Set
+    from sympy.core.basic import Basic
+    from sympy.logic.boolalg import Boolean
+
+
+def singularities(
+    expression: Expr | complex,
+    symbol: Symbol | Basic,
+    domain: Set | None = None,
+) -> set[Symbol]:
     """
     Find singularities of a given function.
 
@@ -45,7 +61,8 @@ def singularities(expression, symbol, domain=None):
     Set
         A set of values for ``symbol`` for which ``expression`` has a
         singularity. An ``EmptySet`` is returned if ``expression`` has no
-        singularities for any given value of ``Symbol``.
+        singularities for any given value of ``Symbol``. An ``Interval`` is returned
+        if ``expression`` has uncountably many singularities.
 
     Raises
     ======
@@ -84,9 +101,14 @@ def singularities(expression, symbol, domain=None):
     {-1, 1/2 - sqrt(3)*I/2, 1/2 + sqrt(3)*I/2}
     >>> singularities(log(x), x)
     {0}
+    >>> singularities(0**x, x)
+    Interval.open(-oo, 0)
 
     """
     from sympy.solvers.solveset import solveset
+    from sympy.sets.sets import Interval
+
+    expression = sympify(expression)
 
     if domain is None:
         domain = S.Reals if symbol.is_real else S.Complexes
@@ -95,6 +117,13 @@ def singularities(expression, symbol, domain=None):
         e = expression.rewrite([sec, csc, cot, tan], cos)
         e = e.rewrite([sech, csch, coth, tanh], cosh)
         for i in e.atoms(Pow):
+            if i.base == S.Zero:
+                sing_interval = solveset(i.exp <= 0, symbol, domain)
+                # Since in Sympy we assume that 0**0 = 1,
+                # we can't have a singularity at i.exp == 0 and therefore
+                # we must return an open interval.
+                sing_interval = Interval.open(sing_interval.inf, sing_interval.sup)
+                sings += sing_interval
             if i.exp.is_infinite:
                 raise NotImplementedError
             if i.exp.is_negative:
@@ -117,7 +146,12 @@ def singularities(expression, symbol, domain=None):
 ###########################################################################
 
 
-def monotonicity_helper(expression, predicate, interval=S.Reals, symbol=None):
+def monotonicity_helper(
+    expression: Expr | complex,
+    predicate: Callable[[Expr], Boolean],
+    interval: Set = S.Reals,
+    symbol: Symbol | None = None,
+) -> bool:
     """
     Helper function for functions checking function monotonicity.
 
@@ -161,12 +195,27 @@ def monotonicity_helper(expression, predicate, interval=S.Reals, symbol=None):
             )
 
     variable = symbol or (free.pop() if free else Symbol('x'))
+
+    try:
+        sings = singularities(expression, variable, interval)
+    except NotImplementedError:
+        pass
+    else:
+        if interval.is_subset(S.Reals):
+            interior_sings = interval.interior.intersection(sings)
+            if interior_sings != S.EmptySet:
+                return False
+
     derivative = expression.diff(variable)
     predicate_interval = solveset(predicate(derivative), variable, S.Reals)
     return interval.is_subset(predicate_interval)
 
 
-def is_increasing(expression, interval=S.Reals, symbol=None):
+def is_increasing(
+    expression: Expr | complex,
+    interval: Set = S.Reals,
+    symbol: Symbol | None = None,
+) -> bool:
     """
     Return whether the function is increasing in the given interval.
 
@@ -209,7 +258,11 @@ def is_increasing(expression, interval=S.Reals, symbol=None):
     return monotonicity_helper(expression, lambda x: x >= 0, interval, symbol)
 
 
-def is_strictly_increasing(expression, interval=S.Reals, symbol=None):
+def is_strictly_increasing(
+    expression: Expr | complex,
+    interval: Set = S.Reals,
+    symbol: Symbol | None = None,
+) -> bool:
     """
     Return whether the function is strictly increasing in the given interval.
 
@@ -252,7 +305,11 @@ def is_strictly_increasing(expression, interval=S.Reals, symbol=None):
     return monotonicity_helper(expression, lambda x: x > 0, interval, symbol)
 
 
-def is_decreasing(expression, interval=S.Reals, symbol=None):
+def is_decreasing(
+    expression: Expr | complex,
+    interval: Set = S.Reals,
+    symbol: Symbol | None = None,
+) -> bool:
     """
     Return whether the function is decreasing in the given interval.
 
@@ -299,7 +356,11 @@ def is_decreasing(expression, interval=S.Reals, symbol=None):
     return monotonicity_helper(expression, lambda x: x <= 0, interval, symbol)
 
 
-def is_strictly_decreasing(expression, interval=S.Reals, symbol=None):
+def is_strictly_decreasing(
+    expression: Expr | complex,
+    interval: Set = S.Reals,
+    symbol: Symbol | None = None,
+) -> bool:
     """
     Return whether the function is strictly decreasing in the given interval.
 
@@ -342,7 +403,11 @@ def is_strictly_decreasing(expression, interval=S.Reals, symbol=None):
     return monotonicity_helper(expression, lambda x: x < 0, interval, symbol)
 
 
-def is_monotonic(expression, interval=S.Reals, symbol=None):
+def is_monotonic(
+    expression: Expr | complex,
+    interval: Set = S.Reals,
+    symbol: Symbol | None = None,
+) -> bool:
     """
     Return whether the function is monotonic in the given interval.
 
@@ -370,24 +435,80 @@ def is_monotonic(expression, interval=S.Reals, symbol=None):
     NotImplementedError
         Monotonicity check has not been implemented for the queried function.
 
+    Explanation
+    ===========
+
+    A real-valued function f is monotonic on an interval I if it is either
+    monotonically increasing or monotonically decreasing throughout I:
+
+    - **Monotonically increasing**: For all x1, x2 in I where x1 < x2,
+      we have f(x1) <= f(x2)
+    - **Monotonically decreasing**: For all x1, x2 in I where x1 < x2,
+      we have f(x1) >= f(x2)
+
+    According to Rudin (Theorem 4.30), monotonic functions can have jump
+    discontinuities (first kind) but NOT poles (second kind). Poles violate
+    the ordering property. Example: tan(x) on [0,5] has poles at pi/2, 3*pi/2
+    causing transitions between +-infinity, which breaks monotonicity.
+
     Examples
     ========
 
-    >>> from sympy import is_monotonic
+    Basic monotonicity tests:
+
+    >>> from sympy import is_monotonic, tan, Interval, pi, oo
     >>> from sympy.abc import x, y
-    >>> from sympy import S, Interval, oo
-    >>> is_monotonic(1/(x**2 - 3*x), Interval.open(S(3)/2, 3))
-    True
-    >>> is_monotonic(1/(x**2 - 3*x), Interval.open(1.5, 3))
-    True
-    >>> is_monotonic(1/(x**2 - 3*x), Interval.Lopen(3, oo))
-    True
+    >>> from sympy import S
     >>> is_monotonic(x**3 - 3*x**2 + 4*x, S.Reals)
     True
     >>> is_monotonic(-x**2, S.Reals)
     False
+
+    Functions with poles (interior singularities) are not monotonic:
+
+    >>> is_monotonic(tan(x), Interval(0, 5), x)
+    False
+    >>> is_monotonic(1/x, Interval(-1, 1), x)
+    False
+
+    But the same functions are monotonic on intervals that exclude the poles:
+
+    >>> is_monotonic(tan(x), Interval.open(-pi/2, pi/2), x)
+    True
+    >>> is_monotonic(1/x, Interval.open(0, 1), x)
+    True
+
+    Piecewise constant intervals:
+
+    >>> is_monotonic(1/(x**2 - 3*x), Interval.open(S(3)/2, 3), x)
+    True
+    >>> is_monotonic(1/(x**2 - 3*x), Interval.Lopen(3, oo), x)
+    True
+
+    Multivariate expressions:
+
     >>> is_monotonic(x**2 + y + 1, Interval(1, 2), x)
     True
+
+    See Also
+    ========
+
+    is_increasing : Test if function is non-decreasing
+    is_decreasing : Test if function is non-increasing
+    is_strictly_increasing : Test if function is strictly increasing
+    is_strictly_decreasing : Test if function is strictly decreasing
+    singularities : Find singularities of a function
+    continuous_domain : Find the domain where function is continuous
+
+    References
+    ==========
+
+    .. [1] Rudin, W. (1976). "Principles of Mathematical Analysis" (3rd ed.),
+           McGraw-Hill. Theorem 4.30: A monotonic function has at most
+           countably many discontinuities, and all are of the first kind
+           (jump discontinuities).
+
+    .. [2] https://en.wikipedia.org/wiki/Monotonic_function
 
     """
     from sympy.solvers.solveset import solveset
@@ -402,5 +523,16 @@ def is_monotonic(expression, interval=S.Reals, symbol=None):
         )
 
     variable = symbol or (free.pop() if free else Symbol('x'))
+
+    try:
+        sings = singularities(expression, variable, interval)
+    except NotImplementedError:
+        pass
+    else:
+        if interval.is_subset(S.Reals):
+            interior_sings = interval.interior.intersection(sings)
+            if interior_sings != S.EmptySet:
+                return False
+
     turning_points = solveset(expression.diff(variable), variable, interval)
     return interval.intersection(turning_points) is S.EmptySet

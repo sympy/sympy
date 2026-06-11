@@ -1,6 +1,7 @@
+from __future__ import annotations
 import itertools
 
-from sympy.core import S
+from sympy.core import S, UnevaluatedExpr
 from sympy.core.add import Add
 from sympy.core.containers import Tuple
 from sympy.core.function import Function
@@ -928,6 +929,13 @@ class PrettyPrinter(Printer):
         else:
             return prettyForm('1')
 
+    def _print_MatrixUnit(self, expr):
+        if self._use_unicode:
+            s = self._print(Symbol(f'{pretty_atom("MatrixUnit")}_{expr._i}{expr._j}'))
+        else:
+            s = self._print(Symbol(f'E_{expr._i}{expr._j}'))
+        return s
+
     def _print_DotProduct(self, expr):
         args = list(expr.args)
 
@@ -992,6 +1000,19 @@ class PrettyPrinter(Printer):
             return self._print_Mul(res)
         else:
             return self._print(1)/self._print(expr.den)
+
+    def _print_DiscreteTransferFunction(self, expr):
+        if not expr.num == 1:
+            res = Mul(expr.num, Pow(expr.den, -1, evaluate=False),
+                      evaluate=False)
+            result = self._print_Mul(res)
+        else:
+            result =  self._print(1)/self._print(expr.den)
+
+        result = prettyForm(\
+            *result.right(f" [st: {expr.sampling_time}]"))
+        return result
+
 
     def _print_Series(self, expr):
         args = list(expr.args)
@@ -1101,9 +1122,16 @@ class PrettyPrinter(Printer):
     def _print_TransferFunctionMatrix(self, expr):
         mat = self._print(expr._expr_mat)
         mat.baseline = mat.height() - 1
-        subscript = greek_unicode['tau'] if self._use_unicode else r'{t}'
+        if expr.sampling_time == 0:
+            subscript = greek_unicode['tau'] if self._use_unicode else r'{t}'
+        else:
+            subscript = r'{k}'
         mat = prettyForm(*mat.right(subscript))
-        return mat
+
+        if expr.sampling_time == 0:
+            return mat
+
+        return prettyForm(*mat.below(f"[st: {expr.sampling_time}]"))
 
     def _print_StateSpace(self, expr):
         from sympy.matrices.expressions.blockmatrix import BlockMatrix
@@ -1113,6 +1141,16 @@ class PrettyPrinter(Printer):
         D = expr._D
         mat = BlockMatrix([[A, B], [C, D]])
         return self._print(mat.blocks)
+
+    def _print_DiscreteStateSpace(self, expr):
+        from sympy.matrices.expressions.blockmatrix import BlockMatrix
+        A = expr._A
+        B = expr._B
+        C = expr._C
+        D = expr._D
+        mat = BlockMatrix([[A, B], [C, D]])
+        mat = self._print(mat)
+        return prettyForm(*mat.below(f"\n[st: {expr.sampling_time}]"))
 
     def _print_BasisDependent(self, expr):
         from sympy.vector import Vector
@@ -1219,17 +1257,17 @@ class PrettyPrinter(Printer):
     def _print_NDimArray(self, expr):
         from sympy.matrices.immutable import ImmutableMatrix
 
-        if expr.rank() == 0:
+        if expr.ndim == 0:
             return self._print(expr[()])
 
-        level_str = [[]] + [[] for i in range(expr.rank())]
+        level_str = [[]] + [[] for i in range(expr.ndim)]
         shape_ranges = [list(range(i)) for i in expr.shape]
         # leave eventual matrix elements unflattened
         mat = lambda x: ImmutableMatrix(x, evaluate=False)
         for outer_i in itertools.product(*shape_ranges):
             level_str[-1].append(expr[outer_i])
             even = True
-            for back_outer_i in range(expr.rank()-1, -1, -1):
+            for back_outer_i in range(expr.ndim-1, -1, -1):
                 if len(level_str[back_outer_i+1]) < expr.shape[back_outer_i]:
                     break
                 if even:
@@ -1244,13 +1282,13 @@ class PrettyPrinter(Printer):
                 level_str[back_outer_i+1] = []
 
         out_expr = level_str[0][0]
-        if expr.rank() % 2 == 1:
+        if expr.ndim % 2 == 1:
             out_expr = mat([out_expr])
 
         return self._print(out_expr)
 
     def _printer_tensor_indices(self, name, indices, index_map={}):
-        center = stringPict(name)
+        center = stringPict(pretty_symbol(name))
         top = stringPict(" "*center.width())
         bot = stringPict(" "*center.width())
 
@@ -1941,7 +1979,10 @@ class PrettyPrinter(Printer):
             elif term.is_Number and term < 0:
                 pform = self._print(-term)
                 pforms.append(pretty_negative(pform, i))
-            elif term.is_Relational:
+            elif (
+                term.is_Relational
+                or (isinstance(term, UnevaluatedExpr) and term.args[0].is_Add)
+            ):
                 pforms.append(prettyForm(*self._print(term).parens()))
             else:
                 pforms.append(self._print(term))
@@ -2021,9 +2062,20 @@ class PrettyPrinter(Printer):
             else:
                 a.append(item)
 
-        # Convert to pretty forms. Parentheses are added by `__mul__`.
-        a = [self._print(ai) for ai in a]
-        b = [self._print(bi) for bi in b]
+        # TODO: this should probably be moved into prettyForm.__mul__
+        def add_parens(expr):
+            if isinstance(expr, UnevaluatedExpr):
+                c, e = expr.args[0].as_coeff_Mul()
+                if c < 0:
+                    return True
+            return False
+
+        # Convert to pretty forms.
+        # Parentheses are added by `__mul__`, except for UnevaluatedExpr
+        a = [prettyForm(*self._print(ai).parens()) if add_parens(ai)
+            else self._print(ai) for ai in a]
+        b = [prettyForm(*self._print(bi).parens()) if add_parens(bi)
+            else self._print(bi) for bi in b]
 
         # Construct a pretty form
         if len(b) == 0:
@@ -2781,6 +2833,12 @@ class PrettyPrinter(Printer):
 
     def _print_CoordSystem(self, coords):
         return self._print(coords.name)
+
+    def _print_BaseScalar(self, expr):
+        coord_sys_name, scalar_name = expr.name.split(".")
+        if scalar_name in greek_unicode:
+            scalar_name = greek_unicode[scalar_name]
+        return self._print(pretty_symbol(scalar_name + "_" + coord_sys_name))
 
     def _print_BaseScalarField(self, field):
         string = field._coord_sys.symbols[field._index].name

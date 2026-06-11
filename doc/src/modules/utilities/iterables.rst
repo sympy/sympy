@@ -2,6 +2,8 @@
 Iterables
 =========
 
+.. py:class:: T
+.. py:class:: collections.defaultdict
 
 .. automodule:: sympy.utilities.iterables
    :members:

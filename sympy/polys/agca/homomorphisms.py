@@ -5,6 +5,7 @@ This module implements classes for representing homomorphisms of rings and
 their modules. Instead of instantiating the classes directly, you should use
 the function ``homomorphism(from, to, matrix)`` to create homomorphism objects.
 """
+from __future__ import annotations
 
 
 from sympy.polys.agca.modules import (Module, FreeModule, QuotientModule,

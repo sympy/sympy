@@ -6,7 +6,7 @@ from typing import Any, Generic, TypeVar, Protocol, Callable, Iterable, TYPE_CHE
 from sympy.core.numbers import AlgebraicNumber
 from sympy.core import Basic, Expr, sympify
 from sympy.core.sorting import ordered
-from sympy.external.gmpy import GROUND_TYPES
+from sympy.external.gmpy import GROUND_TYPES, MPZ
 from sympy.polys.domains.domainelement import DomainElement
 from sympy.polys.orderings import lex, MonomialOrder
 from sympy.polys.polyerrors import UnificationFailed, CoercionFailed, DomainError
@@ -16,7 +16,11 @@ from sympy.utilities.iterables import is_sequence
 
 
 if TYPE_CHECKING:
-    from typing import TypeIs
+    import sys
+    if sys.version_info >= (3, 13):
+        from typing import TypeIs
+    else:
+        from typing_extensions import TypeIs
     from sympy.polys.polytools import Poly
     from sympy.polys.domains.ring import Ring
     from sympy.polys.domains.field import Field
@@ -27,6 +31,7 @@ if TYPE_CHECKING:
     from sympy.polys.domains.realfield import RealField
     from sympy.polys.domains.complexfield import ComplexField
     from sympy.polys.domains.polynomialring import PolynomialRing
+    from sympy.polys.domains.powerseriesring import PowerSeriesRing
     from sympy.polys.domains.fractionfield import FractionField
     from sympy.polys.rings import PolyElement
     from sympy.polys.fields import FracElement
@@ -35,34 +40,75 @@ if TYPE_CHECKING:
 T = TypeVar('T')
 
 
-class RingElement(Protocol[T]):
+if TYPE_CHECKING:
+    from typing import Self
+
+
+class RingElement(Protocol):
     """A ring element.
 
     Must support ``+``, ``-``, ``*``, ``**`` and ``-``.
     """
-    def __pos__(self, /) -> T: ...
-    def __neg__(self, /) -> T: ...
-    def __add__(self, other: T | int, /) -> T: ...
-    def __radd__(self, other: int, /) -> T: ...
-    def __sub__(self, other: T | int, /) -> T: ...
-    def __rsub__(self, other: int, /) -> T: ...
-    def __mul__(self, other: T | int, /) -> T: ...
-    def __rmul__(self, other: int, /) -> T: ...
-    def __pow__(self, other: int, /) -> T: ...
+    def __pos__(self, /) -> Self: ...
+    def __neg__(self, /) -> Self: ...
+    def __add__(self, other: Self | int, /) -> Self: ...
+    def __radd__(self, other: int, /) -> Self: ...
+    def __sub__(self, other: Self | int, /) -> Self: ...
+    def __rsub__(self, other: int, /) -> Self: ...
+    def __mul__(self, other: Self | int, /) -> Self: ...
+    def __rmul__(self, other: int, /) -> Self: ...
+    def __pow__(self, other: int, /) -> Self: ...
 
 
-class FieldElement(RingElement[T], Protocol[T]):
+class FieldElement(RingElement, Protocol):
     """A field element.
 
-    Must support ``/``, ``//``, ``%`` and ``**``.
+    Must support ``/``.
     """
-    def __truediv__(self, other: T | int, /) -> T: ...
-    def __rtruediv__(self, other: int, /) -> T: ...
+    def __truediv__(self, other: Self | int, /) -> Self: ...
+    def __rtruediv__(self, other: int, /) -> Self: ...
+
+
+class EuclidElement(RingElement, Protocol):
+    """An Euclidean domain element.
+
+    Must support ``//``, ``%`` and ``divmod``.
+    """
+    def __floordiv__(self, other: Self | int, /) -> Self: ...
+    def __rfloordiv__(self, other: int, /) -> Self: ...
+    def __mod__(self, other: Self | int, /) -> Self: ...
+    def __rmod__(self, other: int, /) -> Self: ...
+    def __divmod__(self, other: Self | int, /) -> tuple[Self, Self]: ...
+    def __rdivmod__(self, other: int, /) -> tuple[Self, Self]: ...
+
+
+class AbsElement(RingElement, Protocol):
+    """An element that can be made positive or negative.
+
+    Must support ``abs``.
+    """
+    def __abs__(self, /) -> Self: ...
+
+
+class OrderedElement(AbsElement, Protocol):
+    """An element that can be compared to other elements.
+
+    Must support ``<``, ``<=``, ``>``, ``>=``.
+    """
+    def __lt__(self, other: Self, /) -> bool: ...
+    def __le__(self, other: Self, /) -> bool: ...
+    def __gt__(self, other: Self, /) -> bool: ...
+    def __ge__(self, other: Self, /) -> bool: ...
 
 
 Er = TypeVar('Er', bound=RingElement)
 Es = TypeVar('Es', bound=RingElement)
+Et = TypeVar('Et', bound=RingElement)
+Eg = TypeVar('Eg', bound=RingElement)
 Ef = TypeVar('Ef', bound=FieldElement)
+Eeuclid = TypeVar('Eeuclid', bound=EuclidElement)
+Eabs = TypeVar('Eabs', bound=AbsElement)
+Eordered = TypeVar('Eordered', bound=OrderedElement)
 
 
 @public
@@ -237,6 +283,7 @@ class Domain(Generic[Er]):
 
     """
 
+    # XXX: Should this be Callable[[int | MPZ], Er]?
     dtype: type[Er] | Callable[..., Er]
     """The type (class) of the elements of this :py:class:`~.Domain`:
 
@@ -451,6 +498,9 @@ class Domain(Generic[Er]):
     is_Composite: bool = False
     """Boolean flag indicating if the domain is a composite domain."""
 
+    is_RingExtension: bool = False
+    """Boolean flag indicating if the domain is a ring extension domain."""
+
     is_PID: bool = False
     """Boolean flag indicating if the domain is a `principal ideal domain`_.
 
@@ -497,7 +547,7 @@ class Domain(Generic[Er]):
         """Construct an element of ``self`` domain from ``args``. """
         return self.new(*args)
 
-    def normal(self, *args) -> Er:
+    def normal(self, *args: int | MPZ) -> Er:
         return self.dtype(*args)
 
     def convert_from(self, element: Es, base: Domain[Es]) -> Er:
@@ -537,16 +587,16 @@ class Domain(Generic[Er]):
         from sympy.polys.domains import ZZ, QQ, RealField, ComplexField
 
         if ZZ.of_type(element):
-            return self.convert_from(element, ZZ)
+            return self.convert_from(element, ZZ) # type: ignore
 
         if isinstance(element, int):
             return self.convert_from(ZZ(element), ZZ)
 
         if GROUND_TYPES != 'python':
             if isinstance(element, ZZ.tp):
-                return self.convert_from(element, ZZ)
+                return self.convert_from(element, ZZ) # type: ignore
             if isinstance(element, QQ.tp):
-                return self.convert_from(element, QQ)
+                return self.convert_from(element, QQ) # type: ignore
 
         if isinstance(element, float):
             RR = RealField()
@@ -579,7 +629,7 @@ class Domain(Generic[Er]):
         else: # TODO: remove this branch
             if not is_sequence(element):
                 try:
-                    element = sympify(element, strict=True)
+                    element = sympify(element, strict=True) # type: ignore
                     if isinstance(element, Basic):
                         return self.from_sympy(element) # type: ignore
                 except (TypeError, ValueError):
@@ -1009,6 +1059,20 @@ class Domain(Generic[Er]):
         """Returns a polynomial ring, i.e. `K[X]`. """
         from sympy.polys.domains.polynomialring import PolynomialRing
         return PolynomialRing(self, symbols, order)
+
+    def _power_series_ring(self, *symbols: str | Expr, prec: int = 6) -> PowerSeriesRing:
+        """Returns a univariate power series ring with specified precision, i.e. `K[[X], <X^prec>]`.
+
+        Notes
+        =====
+        This method is private at the moment because the PowerSeriesRing class
+        needs to be properly integrated into SymPy's domain system.
+
+        """
+        if len(symbols) != 1:
+            raise ValueError("Power series ring supports only univariate series.")
+        from sympy.polys.domains.powerseriesring import PowerSeriesRing
+        return PowerSeriesRing(self, symbols[0], prec)
 
     def frac_field(self, *symbols: str | Expr, order: str | MonomialOrder = lex) -> FractionField:
         """Returns a fraction field, i.e. `K(X)`. """
@@ -1498,7 +1562,7 @@ class Domain(Generic[Er]):
     def imag(self, a) -> Er:
         return self.zero
 
-    def almosteq(self, a: Er, b: Er, tolerance: int | None = None):
+    def almosteq(self, a: Er, b: Er, tolerance: float | None = None):
         """Check if ``a`` and ``b`` are almost equal. """
         return a == b
 

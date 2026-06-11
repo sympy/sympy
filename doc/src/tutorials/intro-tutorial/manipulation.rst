@@ -127,8 +127,7 @@ broad.  Here is a more complicated example
 
     >>> expr = sin(x*y)/2 - x**2 + 1/y
     >>> srepr(expr)
-    "Add(Mul(Integer(-1), Pow(Symbol('x'), Integer(2))), Mul(Rational(1, 2),
-    sin(Mul(Symbol('x'), Symbol('y')))), Pow(Symbol('y'), Integer(-1)))"
+    "Add(Pow(Symbol('y'), Integer(-1)), Mul(Rational(1, 2), sin(Mul(Symbol('x'), Symbol('y')))), Mul(Integer(-1), Pow(Symbol('x'), Integer(2))))"
 
 Here is a diagram
 

@@ -10,6 +10,7 @@ Todo:
 * Decide if we want upper index to be inclusive in the constructor.
 * Fix the printing of Rk gates in plotting.
 """
+from __future__ import annotations
 
 from sympy.core.expr import Expr
 from sympy.core.numbers import (I, Integer, pi)
