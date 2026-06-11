@@ -222,7 +222,7 @@ def _smith_normal_decomp(m, domain, shape, full):
     def to_domain_matrix(m):
         return DomainMatrix(m, shape=(len(m), len(m[0])), domain=domain)
 
-    if m[0][0] != 0:
+    if m[0][0] != zero:
         c = domain.canonical_unit(m[0][0])
         if domain.is_Field:
             c = 1 / m[0][0]
