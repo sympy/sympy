@@ -27,6 +27,7 @@ if TYPE_CHECKING:
     from sympy.core.expr import Expr
 
 x, y, z, u, n, a, b, c, d, e = symbols('x y z u n a b c d e')
+x_1, x_2 = symbols("x_1 x_2")
 f = Function('f')
 
 
@@ -418,6 +419,64 @@ def test_manualintegrate_Heaviside():
 
     assert manualintegrate(sin(y + x)*Heaviside(3*x - y), x) == \
             (cos(y*Rational(4, 3)) - cos(x + y))*Heaviside(3*x - y)
+
+
+def test_manualintegrate_DiracDelta():
+    assert manualintegrate(DiracDelta(x, 0), x) == Heaviside(x)
+    for n in range(10):
+        assert manualintegrate(DiracDelta(x, n + 1), x) == DiracDelta(x, n)
+    assert manualintegrate(DiracDelta(x), x) == Heaviside(x)
+    assert manualintegrate(DiracDelta(-x), x) == Heaviside(x)
+    assert manualintegrate(DiracDelta(x - y), x) == Heaviside(x - y)
+
+    assert manualintegrate(x*DiracDelta(x), x) == 0
+    assert manualintegrate((x - y)*DiracDelta(x - y), x) == 0
+
+    assert manualintegrate(DiracDelta(x)**2, x) == DiracDelta(0)*Heaviside(x)
+    assert manualintegrate(y*DiracDelta(x)**2, x) == \
+        y*DiracDelta(0)*Heaviside(x)
+    assert manualintegrate(DiracDelta(x, 1), x) == DiracDelta(x, 0)
+    assert manualintegrate(y*DiracDelta(x, 1), x) == y*DiracDelta(x, 0)
+    assert manualintegrate(DiracDelta(x, 1)**2, x) == -DiracDelta(0, 2)*Heaviside(x)
+    assert manualintegrate(y*DiracDelta(x, 1)**2, x) == -y*DiracDelta(0, 2)*Heaviside(x)
+
+
+    assert manualintegrate(DiracDelta(x) * f(x), x) == f(0) * Heaviside(x)
+    assert manualintegrate(DiracDelta(-x) * f(x), x) == f(0) * Heaviside(x)
+    assert manualintegrate(DiracDelta(x - 1) * f(x), x) == f(1) * Heaviside(x - 1)
+    assert manualintegrate(DiracDelta(x**2 + x - 2), x) == \
+        Heaviside(x - 1)/3 + Heaviside(x + 2)/3
+
+    p = cos(x)*(DiracDelta(x) + DiracDelta(x**2 - 1))*sin(x)*(x - pi)
+    assert manualintegrate(p, x) == -pi*sin(1)*cos(1)*Heaviside(x - 1)/2 \
+        + sin(1)*cos(1)*Heaviside(x - 1)/2  \
+        + sin(1)*cos(1)*Heaviside(x + 1)/2 \
+        + pi*sin(1)*cos(1)*Heaviside(x + 1)/2
+
+
+    # # TODO: the following test is currently failing because of the way the code
+    # # handles the DiracDelta. The problem is that the code does not recognize
+    # # that the delta function is zero unless its argument is zero, and so it
+    # # does not simplify the expression correctly.
+    # p = x_2*DiracDelta(x - x_2)*DiracDelta(x_2 - x_1)
+    # assert manualintegrate(p, x_2) == x*DiracDelta(x - x_1)*Heaviside(x_2 - x)
+
+    p = x*y**2*z*DiracDelta(y - x)*DiracDelta(y - z)*DiracDelta(x - z)
+    assert manualintegrate(p, y) == x**3*z*DiracDelta(x - z)**2*Heaviside(y - x)
+    assert manualintegrate((x + 1)*DiracDelta(2*x), x) == S.Half * Heaviside(x)
+    assert manualintegrate((x + 1)*DiracDelta(x*Rational(2, 3) + Rational(4, 9)), x) == \
+        S.Half * Heaviside(x + Rational(2, 3))
+
+    a, b, c = symbols('a b c', commutative=False)
+    assert manualintegrate(DiracDelta(x - y)*f(x - b)*f(x - a), x) == \
+        f(y - b)*f(y - a)*Heaviside(x - y)
+
+    p = f(x - a)*DiracDelta(x - y)*f(x - c)*f(x - b)
+    assert manualintegrate(p, x) == f(y - a)*f(y - c)*f(y - b)*Heaviside(x - y)
+
+    p = DiracDelta(x - z)*f(x - b)*f(x - a)*DiracDelta(x - y)
+    assert manualintegrate(p, x) == DiracDelta(y - z)*f(y - b)*f(y - a) * \
+        Heaviside(x - y)
 
 
 def test_manualintegrate_orthogonal_poly():
