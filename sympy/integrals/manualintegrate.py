@@ -2527,6 +2527,12 @@ def dirac_delta_rule(integral: IntegralInfo):
         delta = next(iter(integrand.atoms(DiracDelta)))
         coeff = Mul(*[f for f in factors if f is not delta])
 
+    if integrand.is_Pow:
+        base, exp = integrand.as_base_exp()
+        if isinstance(base, DiracDelta):
+            delta = base
+            coeff = base**(exp - 1)
+
     if len(delta.args) == 1:
         n = S.Zero
     else:
@@ -2742,7 +2748,8 @@ def integral_steps(integrand, symbol, **options):
                         null_safe(quadratic_denom_rule),
                         null_safe(sqrt_quadratic_rule),
                         null_safe(sqrt_fractional_linear_rule),
-                        null_safe(singularity_rewrite_rule)),
+                        null_safe(singularity_rewrite_rule),
+                        null_safe(dirac_delta_rule)),
             Symbol: power_rule,
             exp: exp_rule,
             Add: add_rule,
