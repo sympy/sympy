@@ -2525,7 +2525,7 @@ def dirac_delta_rule(integral: IntegralInfo):
     if integrand.is_Mul:
         factors = integrand.args
         # delta = next(iter(integrand.atoms(DiracDelta)))  # find the first delta in Mul node
-        delta = list([f for f in factors if isinstance(f, DiracDelta)])[0]  # find a delta in Mul node
+        delta = [f for f in factors if isinstance(f, DiracDelta)][0]  # find a delta in Mul node
         coeff = Mul(*[f for f in factors if f is not delta])
 
     if integrand.is_Pow:
