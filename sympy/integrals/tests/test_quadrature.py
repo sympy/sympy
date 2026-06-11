@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core import S, Rational
 from sympy.integrals.quadrature import (gauss_legendre, gauss_laguerre,
                                         gauss_hermite, gauss_gen_laguerre,

@@ -3,6 +3,7 @@ Some examples have been taken from:
 
 http://www.math.uwaterloo.ca/~hwolkowi//matrixcookbook.pdf
 """
+from __future__ import annotations
 from sympy import KroneckerProduct, Matrix, diff, eye, Array, MatPow
 from sympy.combinatorics import Permutation
 from sympy.concrete.summations import Sum
@@ -135,11 +136,31 @@ def test_matrix_derivative_of_determinant():
     assert expr.diff(X) == X.T.inv()
 
     # Cookbook example 58:
-    # Not yet supported with symbolic exponent:
-    # expr = Determinant(X**j)
-    # assert expr.diff(X) == j*Determinant(X**j)*X.inv().T
+    expr = Determinant(X**j)
+    assert expr.diff(X).doit() == j*Determinant(X**j)*X.inv().T
     expr = Determinant(X**5)
     assert expr.diff(X) == 5*Determinant(X**5)*X.inv().T
+
+
+def test_issue_28708():
+    # This is a variant of cookbook example 58 with null exponent:
+    expr = Determinant((X**j).subs(j, 0))
+    assert expr.diff(X) == ZeroMatrix(k, k)
+
+    expr = Determinant((X**j).subs(j, -1))
+    assert expr.diff(X) == - X.T.inv()/Determinant(X)
+
+
+def test_issue_28838_det_in_non_matrix_expr():
+
+    expr = k * Determinant(X)
+    assert expr.diff(X) == k * Determinant(X) * X.T ** (-1)
+
+    expr = 1 / Determinant(X)
+    assert expr.diff(X) == -1 / Determinant(X) * X.T ** (-1)
+
+    expr = k / Determinant(X)
+    assert expr.diff(X) == -k / Determinant(X) * X.T ** (-1)
 
 
 def test_matrix_derivative_with_inverse():
@@ -416,7 +437,7 @@ def test_derivatives_matrix_norms():
     assert expr.diff(X) == a/(2*sqrt(a.T*X*b))*b.T
 
     expr = d.T*x*(a.T*X*b)**S.Half*y.T*c
-    assert expr.diff(X) == a/(2*sqrt(a.T*X*b))*x.T*d*y.T*c*b.T
+    assert expr.diff(X) == a*x.T*d*y.T*c/(2*sqrt(b.T*X.T*a))*b.T
 
     # Fixes issue https://github.com/sympy/sympy/issues/28615
     expr = sqrt(Trace(X.T*X))

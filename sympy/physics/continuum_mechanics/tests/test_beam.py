@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.function import expand
 from sympy.core.numbers import (Rational, pi)
 from sympy.core.singleton import S
@@ -6,7 +7,7 @@ from sympy.sets.sets import Interval
 from sympy.simplify.simplify import simplify
 from sympy.physics.continuum_mechanics.beam import Beam
 from sympy.functions import SingularityFunction, Piecewise, meijerg, Abs, log, sqrt, factorial
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, slow
 from sympy.physics.units import meter, newton, kilo, giga, milli
 from sympy.physics.continuum_mechanics.beam import Beam3D
 from sympy.geometry import Circle, Polygon, Point2D, Triangle
@@ -336,6 +337,7 @@ def test_beam_units():
     assert b.deflection().subs(x, 1*meter) == 62000*meter/(9*E*I)
 
 
+@slow
 def test_variable_moment():
     E = Symbol('E')
     I = Symbol('I')
@@ -429,7 +431,7 @@ def test_composite_beam():
     with raises(ValueError, match="Invalid joining method. Choose from 'fixed' or 'hinge'."):
         b.join(c, "hige")
 
-def test_point_cflexure():
+def test_point_cflexure_single():
     #single contraflexure
     E = Symbol('E')
     I = Symbol('I')
@@ -441,6 +443,8 @@ def test_point_cflexure():
     b.apply_load(3, 6, 0)
     assert b.point_cflexure() == [Rational(10, 3)]
 
+
+def test_point_cflexure_multiple():
     # Multiple contraflexure points
     E = Symbol('E')
     I = Symbol('I')
@@ -454,6 +458,9 @@ def test_point_cflexure():
     b.solve_for_reaction_loads(r0, r10, r15, m15)
     assert b.point_cflexure() == [Rational(1200, 163), 12, Rational(163, 12)]
 
+
+@slow
+def test_point_cflexure_slow_cases():
     # constant zero region in the end
     E = Symbol('E')
     I = Symbol('I')
@@ -930,6 +937,11 @@ def test_max_shear_force():
     b.solve_for_reaction_loads(R, M)
     assert b.max_shear_force() == (Interval(0, 2), 8)
 
+
+@slow
+def test_max_shear_force_symbolic_load():
+    E = Symbol('E')
+    I = Symbol('I')
     l = symbols('l', positive=True)
     P = Symbol('P')
     b = Beam(l, E, I)
@@ -1309,13 +1321,13 @@ def test_cross_section():
     # test for second_moment and cross_section setter
     b0 = Beam(l, E, I)
     assert b0.second_moment == I
-    assert b0.cross_section == None
+    assert b0.cross_section is None
     b0.cross_section = Circle((0, 0), 5)
     assert b0.second_moment == pi*Rational(625, 4)
     assert b0.cross_section == Circle((0, 0), 5)
     b0.second_moment = 2*n - 6
     assert b0.second_moment == 2*n-6
-    assert b0.cross_section == None
+    assert b0.cross_section is None
     with raises(ValueError):
         b0.second_moment = Circle((0, 0), 5)
 
@@ -1358,7 +1370,7 @@ def test_cross_section():
     b.bc_deflection = [(0, 0)]
 
     assert b.second_moment == Piecewise((a*c**3/12, x <= 20), (g*h**3/36, x <= 35))
-    assert b.cross_section == None
+    assert b.cross_section is None
     assert b.length == 35
     assert b.slope().subs(x, 7) == 8400/(E*a*c**3)
     assert b.slope().subs(x, 25) == 52200/(E*g*h**3) + 39600/(E*a*c**3)

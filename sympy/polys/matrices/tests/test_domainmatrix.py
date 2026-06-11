@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.external.gmpy import GROUND_TYPES
 
 from sympy import Integer, Rational, S, sqrt, Matrix, symbols

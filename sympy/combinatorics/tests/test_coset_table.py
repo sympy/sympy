@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.combinatorics.fp_groups import FpGroup
 from sympy.combinatorics.coset_table import (CosetTable,
                     coset_enumeration_r, coset_enumeration_c)

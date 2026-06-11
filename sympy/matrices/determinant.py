@@ -57,7 +57,7 @@ def _find_reasonable_pivot(
     if all(isinstance(x, (Float, Integer)) for x in col) and any(
             isinstance(x, Float) for x in col):
         col_abs = [abs(x) for x in col]
-        max_value = max(col_abs)
+        max_value = max(col_abs) # type: ignore[type-var]
         if iszerofunc(max_value):
             # just because iszerofunc returned True, doesn't
             # mean the value is numerically zero.  Make sure
@@ -376,8 +376,6 @@ def _charpoly(M, x: str | Expr = 'lambda',
     PurePoly(lambda**2 - lambda - 6, lambda, domain='ZZ')
     >>> M.charpoly(x) == M.charpoly(y)
     True
-    >>> M.charpoly(x) == M.charpoly(y)
-    True
 
     Specifying ``x`` is optional; a symbol named ``lambda`` is used by
     default (which looks good when pretty-printed in unicode):
@@ -561,6 +559,8 @@ def _per(M):
     import itertools
 
     m, n = M.shape
+    if m == 0 or n == 0:
+        return S.One
     if m > n:
         M = M.T
         m, n = n, m
@@ -758,7 +758,7 @@ def _det_bareiss(
     """
 
     # Recursively implemented Bareiss' algorithm as per Deanna Richelle Leggett's
-    # thesis http://www.math.usm.edu/perry/Research/Thesis_DRL.pdf
+    # thesis https://aquila.usm.edu/cgi/viewcontent.cgi?article=1001&context=masters_theses
     def bareiss(mat: MatrixBase, cumm: Expr = S.One):
         if mat.rows == 0:
             return mat.one

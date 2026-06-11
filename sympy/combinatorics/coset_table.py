@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.combinatorics.free_groups import free_group
 from sympy.printing.defaults import DefaultPrinting
 

@@ -1,4 +1,5 @@
 """Tests for useful utilities for higher level polynomial classes. """
+from __future__ import annotations
 
 from sympy.core.mul import Mul
 from sympy.core.numbers import (Integer, pi)

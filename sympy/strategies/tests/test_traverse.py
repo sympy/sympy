@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.strategies.traverse import (
     top_down, bottom_up, sall, top_down_once, bottom_up_once, basic_fns)
 from sympy.strategies.rl import rebuild

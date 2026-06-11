@@ -5,7 +5,6 @@ from sympy.core import S, Integer, Basic, Mul, Add
 from sympy.core.assumptions import check_assumptions
 from sympy.core.decorators import call_highest_priority
 from sympy.core.expr import Expr, ExprBuilder
-from sympy.core.logic import FuzzyBool
 from sympy.core.symbol import Str, Dummy, symbols, Symbol
 from sympy.core.sympify import SympifyError, _sympify
 from sympy.external.gmpy import SYMPY_INTS
@@ -16,6 +15,10 @@ from sympy.matrices.kind import MatrixKind
 from sympy.matrices.matrixbase import MatrixBase
 from sympy.multipledispatch import dispatch
 from sympy.utilities.misc import filldedent
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from sympy.core.logic import FuzzyBool
 
 
 def _sympifyit(arg, retval=None):

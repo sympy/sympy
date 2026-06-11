@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.symbol import Symbol
 from sympy.codegen.ast import Type
 from sympy.codegen.cxxnodes import using

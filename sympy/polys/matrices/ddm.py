@@ -61,6 +61,7 @@ domain checking and also shape checking so that the list of lists
 representation is friendlier.
 
 """
+from __future__ import annotations
 from itertools import chain
 
 from sympy.external.gmpy import GROUND_TYPES

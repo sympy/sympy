@@ -116,6 +116,7 @@ And check manually which line is wrong. Then go to the source code and
 debug this function to figure out the exact problem.
 
 """
+from __future__ import annotations
 from functools import reduce
 
 from sympy.core import Basic, S, Mul, PoleError

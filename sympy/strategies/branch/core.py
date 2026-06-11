@@ -1,4 +1,5 @@
 """ Generic SymPy-Independent Strategies """
+from __future__ import annotations
 
 
 def identity(x):

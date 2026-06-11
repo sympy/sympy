@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.numbers import oo
 from sympy.core.symbol import symbols
 from sympy.polys.domains import FiniteField, QQ, RationalField, FF

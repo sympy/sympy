@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Generic, Protocol, Any
+from typing import Generic, Protocol, Any, TYPE_CHECKING
 
 from functools import reduce
 
@@ -17,7 +17,6 @@ from sympy.core.sympify import CantSympify, sympify
 from sympy.functions.elementary.exponential import ExpBase
 from sympy.polys.domains.domain import Domain, Er, Es
 from sympy.polys.domains.domainelement import DomainElement
-from sympy.polys.domains.field import Field
 from sympy.polys.domains.fractionfield import FractionField
 from sympy.polys.domains.polynomialring import PolynomialRing
 from sympy.polys.constructor import construct_domain
@@ -30,6 +29,9 @@ from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
 from sympy.utilities.iterables import is_sequence
 from sympy.utilities.magic import pollute
+
+if TYPE_CHECKING:
+    from sympy.polys.domains.field import Field
 
 
 class FracElementConstructor(Protocol[Er]):

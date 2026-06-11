@@ -1,4 +1,5 @@
 """Limits of sequences"""
+from __future__ import annotations
 
 from sympy.calculus.accumulationbounds import AccumulationBounds
 from sympy.core.add import Add

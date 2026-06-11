@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.numbers import Rational
 from sympy.core.symbol import symbols
 from sympy.functions.combinatorial.factorials import (FallingFactorial, RisingFactorial, binomial, factorial)

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.assumptions.ask import (Q, ask)
 from sympy.core.add import Add
 from sympy.core.containers import Tuple
@@ -116,6 +117,7 @@ def test_guess_transcendental():
     assert guess_solve_strategy(a*x**b - y, x)  # == GS_TRANSCENDENTAL
 
 
+@slow
 def test_solve_args():
     # equation container, issue 5113
     ans = {x: -3, y: 1}
@@ -422,6 +424,7 @@ def test_linear_system_function():
         a(0, 0), a(0, 1), a(1, 0), a(1, 1)) == {a(1, 0): -a(1, 1), a(0, 0): -a(0, 1)}
 
 
+@slow
 def test_linear_system_symbols_doesnt_hang_1():
 
     def _mk_eqs(wy):
@@ -1748,6 +1751,7 @@ def test_high_order_roots():
     assert set(solve(s)) == set(Poly(s*4, domain='ZZ').all_roots())
 
 
+@slow
 def test_minsolve_linear_system():
     pqt = {"quick": True, "particular": True}
     pqf = {"quick": False, "particular": True}

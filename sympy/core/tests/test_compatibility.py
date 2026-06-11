@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.testing.pytest import warns_deprecated_sympy
 
 def test_compatibility_submodule():

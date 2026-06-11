@@ -47,7 +47,7 @@ extra_kwargs = {
 }
 
 # Keep in sync with sympy/__init__.py and python_requires below
-if sys.version_info < (3, 9):
+if sys.version_info < (3, 10):
     print("SymPy requires Python 3.9 or newer. Python %d.%d detected"
           % sys.version_info[:2])
     sys.exit(-1)
@@ -347,7 +347,7 @@ if __name__ == '__main__':
                     'sdist': sdist_sympy,
                     },
           # Keep in sync with version check above and sympy/__init__.py
-          python_requires='>=3.9',
+          python_requires='>=3.10',
           classifiers=[
             'License :: OSI Approved :: BSD License',
             'Operating System :: OS Independent',

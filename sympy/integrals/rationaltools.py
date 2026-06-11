@@ -1,4 +1,5 @@
 """This module implements tools for integrating rational functions. """
+from __future__ import annotations
 
 from sympy.core.function import Lambda
 from sympy.core.numbers import I

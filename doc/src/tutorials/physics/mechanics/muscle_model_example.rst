@@ -112,7 +112,7 @@ The kinetic energy expression reveals the characteristic form for motion on a sp
 
    T = \frac{1}{2}mR^2\left(\dot{\theta}^2 + \sin^2\theta \cdot \dot{\phi}^2\right)
 
-This is the familiar form for motion constrainted to a sphere:
+This is the familiar form for motion constrained to a sphere:
 
 - The $\dot{\theta}^2$ term represents kinetic energy from changes in the polar angle (north-south motion on the sphere)
 - The $\sin^2\theta \cdot \dot{\phi}^2$ term represents kinetic energy from changes in the azimuthal angle (east-west motion)

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.logic import fuzzy_and
 from sympy.core.sympify import _sympify
 from sympy.multipledispatch import dispatch

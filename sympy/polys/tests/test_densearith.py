@@ -1,4 +1,5 @@
 """Tests for dense recursive polynomials' arithmetics. """
+from __future__ import annotations
 from random import randint
 
 from sympy.external.gmpy import GROUND_TYPES
@@ -189,6 +190,8 @@ def test_dup_mul_ground():
 
 
 def test_dmp_mul_ground():
+    assert dmp_mul_ground(f_0, ZZ(0), 2, ZZ) == [[[]]]
+
     assert dmp_mul_ground(f_0, ZZ(2), 2, ZZ) == [
         [[ZZ(2), ZZ(4), ZZ(6)], [ZZ(4)]],
         [[ZZ(6)]],

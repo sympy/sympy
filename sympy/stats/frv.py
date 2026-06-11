@@ -7,6 +7,7 @@ sympy.stats.frv_types
 sympy.stats.rv
 sympy.stats.crv
 """
+from __future__ import annotations
 from itertools import product
 
 from sympy.concrete.summations import Sum

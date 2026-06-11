@@ -1,4 +1,5 @@
 '''Functions returning normal forms of matrices'''
+from __future__ import annotations
 
 from collections import defaultdict
 

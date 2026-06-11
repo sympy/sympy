@@ -1,8 +1,10 @@
 """ Generic SymPy-Independent Strategies """
 from __future__ import annotations
-from collections.abc import Callable, Mapping
-from typing import TypeVar
+from typing import TypeVar, TYPE_CHECKING
 from sys import stdout
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Mapping
 
 
 _S = TypeVar('_S')

@@ -6,6 +6,7 @@ sympy.external.pythonmpq
 
 This module is just left here for backwards compatibility.
 """
+from __future__ import annotations
 
 
 from sympy.core.numbers import Rational

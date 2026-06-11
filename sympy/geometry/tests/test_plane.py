@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.numbers import (Rational, pi)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, symbols)
@@ -272,3 +273,10 @@ def test_parameter_value():
     raises(ValueError, lambda: p.parameter_value((1, 0, 0), t))
     raises(ValueError, lambda: p.parameter_value(Line(Point(0, 0), Point(1, 1)), t))
     raises(ValueError, lambda: p.parameter_value((0, -3, 2), t, 1))
+
+
+def test_plane_equation_symbol_clash():
+    x, y, z, u, v, w = symbols('x y z u v w')
+
+    p = Plane(Point3D(x, y, z), normal_vector=(u, v, w))
+    raises(ValueError, lambda: p.equation(x, y, z))

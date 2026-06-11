@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core import symbols
 from sympy.crypto.crypto import (cycle_list,
       encipher_shift, encipher_affine, encipher_substitution,

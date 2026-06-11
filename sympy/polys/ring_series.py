@@ -40,6 +40,7 @@ To make a function work with rs_series you need to do two things::
 Look at rs_sin and rs_series for further reference.
 
 """
+from __future__ import annotations
 
 from sympy.polys.domains import QQ, EX
 from sympy.polys.rings import PolyElement, ring, sring
@@ -47,14 +48,14 @@ from sympy.polys.puiseux import PuiseuxPoly
 from sympy.polys.polyerrors import DomainError
 from sympy.polys.monomials import (monomial_min, monomial_mul, monomial_div,
                                    monomial_ldiv)
-from mpmath.libmp.libintmath import ifac
+from sympy.external.gmpy import factorial as ifac
+from sympy.external.mpmath import giant_steps
 from sympy.core import PoleError, Function, Expr
 from sympy.core.numbers import Rational
 from sympy.core.intfunc import igcd
 from sympy.functions import (sin, cos, tan, atan, exp, atanh, asinh, tanh, log,
                              ceiling, sinh, cosh)
 from sympy.utilities.misc import as_int
-from mpmath.libmp.libintmath import giant_steps
 import math
 
 

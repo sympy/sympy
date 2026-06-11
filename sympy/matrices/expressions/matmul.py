@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.assumptions.ask import ask, Q
 from sympy.assumptions.refine import handlers_dict
 from sympy.core import Basic, sympify, S
@@ -138,6 +139,39 @@ class MatMul(MatrixExpr, Mul):
     def expand(self, **kwargs):
         expanded = super(MatMul, self).expand(**kwargs)
         return self._evaluate(expanded)
+
+    def _eval_power(self, exp):
+        # Match Mul._eval_power by separating only the commutative scalar
+        # coefficient and keeping the ordered matrix product intact.
+        coeff, matrices = self.as_coeff_matrices()
+        # The S.One guard avoids recursing on coefficient-free MatMul
+        # expressions such as (A*B)**2.
+        if coeff is S.One:
+            return MatPow(self, exp)
+        # Follow Mul._eval_power's design: split only concrete integer powers
+        # and exact rational/float powers. Symbolic exponents, including
+        # symbolic integers, remain unchanged.
+        if not (exp.is_Rational or exp.is_Float):
+            return MatPow(self, exp)
+
+        if exp.is_Integer:
+            # Preserve matrix singularity for definite zero coefficients:
+            # (0*A)**-1 should raise rather than extract zoo*A**-1.
+            # Maybe-zero symbolic coefficients follow SymPy's generic
+            # convention of being treated as nonzero.
+            if coeff.is_zero:
+                if exp.is_negative:
+                    return MatPow(self, exp)
+                return ZeroMatrix(*self.shape)
+        elif not coeff.is_positive:
+            # For noninteger numeric powers, only extract a positive scalar
+            # coefficient to avoid branch cut issues.
+            return MatPow(self, exp)
+
+        # Only extraction cases remain: integer powers, and noninteger
+        # rational/float powers with positive scalar coefficient.
+        matrix_part = matrices[0] if len(matrices) == 1 else MatMul(*matrices)
+        return coeff**exp * MatPow(matrix_part, exp).doit(deep=False)
 
     def _eval_transpose(self):
         """Transposition of matrix multiplication.

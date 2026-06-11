@@ -1,3 +1,4 @@
+from __future__ import annotations
 from .vector import Vector, _check_vector
 from .frame import _check_frame
 from warnings import warn

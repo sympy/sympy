@@ -9,6 +9,7 @@ convenience routines for unifying elements with different domains.
 It assists in Scalar Multiplication and getitem for DomainMatrix.
 
 """
+from __future__ import annotations
 from ..constructor import construct_domain
 
 from sympy.polys.domains import Domain, ZZ

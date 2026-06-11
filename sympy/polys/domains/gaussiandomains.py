@@ -5,14 +5,11 @@ from typing import Generic, TypeVar, Any, TYPE_CHECKING
 
 from sympy.external.gmpy import MPZ, MPQ
 from sympy.core.numbers import I
-from sympy.core.expr import Expr
 from sympy.polys.polyclasses import DMP
 from sympy.polys.polyerrors import CoercionFailed
 from sympy.polys.domains.integerring import ZZ, IntegerRing
 from sympy.polys.domains.rationalfield import QQ, RationalField
-from sympy.polys.domains.polynomialring import PolynomialRing
 from sympy.polys.domains.algebraicfield import AlgebraicField
-from sympy.polys.domains.domain import Domain
 from sympy.polys.domains.domainelement import DomainElement
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.ring import Ring
@@ -24,6 +21,9 @@ Telem = TypeVar('Telem', bound="GaussianElement")
 
 
 if TYPE_CHECKING:
+    from sympy.core.expr import Expr
+    from sympy.polys.domains.polynomialring import PolynomialRing
+    from sympy.polys.domains.domain import Domain
     from typing import Self
 
 

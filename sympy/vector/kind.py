@@ -1,4 +1,5 @@
 #sympy.vector.kind
+from __future__ import annotations
 
 from sympy.core.kind import Kind, _NumberKind, NumberKind
 from sympy.core.mul import Mul

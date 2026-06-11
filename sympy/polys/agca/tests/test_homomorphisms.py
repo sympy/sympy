@@ -1,4 +1,5 @@
 """Tests for homomorphisms."""
+from __future__ import annotations
 
 from sympy.core.singleton import S
 from sympy.polys.domains.rationalfield import QQ

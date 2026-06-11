@@ -1,3 +1,4 @@
+from __future__ import annotations
 from itertools import permutations
 
 from sympy.external.ntheory import (bit_scan1, remove, bit_scan0, is_fermat_prp,

@@ -5,10 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, TypeVar, Callable, Any, cast
 from typing import Iterable # noqa: F401
 
-from sympy.external.gmpy import MPZ
 from sympy.core import igcd
-from sympy.core.expr import Expr
-from sympy.polys.domains.domain import Domain, Er, Es, Eg
 from sympy.polys.monomials import monomial_min, monomial_ldiv
 from sympy.polys.orderings import monomial_key, MonomialOrder
 
@@ -37,6 +34,9 @@ monom: TypeAlias = "tuple[int, ...]"
 
 
 if TYPE_CHECKING:
+    from sympy.external.gmpy import MPZ
+    from sympy.polys.domains.domain import Domain, Er, Es, Eg
+    from sympy.core.expr import Expr
     from typing import TypeAlias
     from sympy.polys.rings import PolyElement
     from sympy.polys.domains.polynomialring import PolynomialRing

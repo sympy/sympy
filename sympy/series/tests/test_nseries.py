@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.calculus.util import AccumBounds
 from sympy.core.function import (Derivative, PoleError)
 from sympy.core.numbers import (E, I, Integer, Rational, pi)

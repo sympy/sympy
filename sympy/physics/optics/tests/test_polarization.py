@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.physics.optics.polarization import (jones_vector, stokes_vector,
     jones_2_stokes, linear_polarizer, phase_retarder, half_wave_retarder,
     quarter_wave_retarder, transmissive_filter, reflective_filter,

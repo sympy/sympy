@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core import (S, pi, oo, symbols, Function, Rational, Integer,
                         Tuple, Symbol, Eq, Ne, Le, Lt, Gt, Ge)
 from sympy.core import EulerGamma, GoldenRatio, Catalan, Lambda, Mul, Pow

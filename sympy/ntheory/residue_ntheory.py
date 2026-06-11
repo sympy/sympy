@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-from typing import Literal, SupportsIndex, cast, overload
+from typing import Literal, SupportsIndex, cast, overload, TYPE_CHECKING
 
 from sympy.external.gmpy import (MPZ, gcd, lcm, invert, sqrt, jacobi,
                                  bit_scan1, remove)
-from sympy.core.expr import Expr
 from sympy.polys import Poly
 from sympy.polys.domains import ZZ
 from sympy.polys.galoistools import gf_crt1, gf_crt2, linear_congruence, gf_csolve
@@ -19,6 +18,9 @@ from sympy.utilities.iterables import iproduct
 from sympy.core.random import _randint
 
 from itertools import product
+
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
 
 
 def n_order(a, n):

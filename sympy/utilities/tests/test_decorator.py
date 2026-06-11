@@ -1,3 +1,4 @@
+from __future__ import annotations
 from functools import wraps
 
 from sympy.utilities.decorator import threaded, xthreaded, memoize_property, deprecated

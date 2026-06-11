@@ -1,4 +1,5 @@
 # This file contains tests that exercise multiple AST nodes
+from __future__ import annotations
 
 import tempfile
 

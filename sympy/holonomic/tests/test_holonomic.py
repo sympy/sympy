@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.holonomic import (DifferentialOperator, HolonomicFunction,
                              DifferentialOperators, from_hyper,
                              from_meijerg, expr_to_holonomic)

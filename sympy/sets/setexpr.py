@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core import Expr
 from sympy.core.decorators import call_highest_priority, _sympifyit
 from .fancysets import ImageSet

@@ -18,7 +18,6 @@ from operator import add, mul, lt, le, gt, ge
 from functools import reduce
 from types import GeneratorType
 
-from sympy.external.gmpy import MPQ
 from sympy.core.cache import cacheit
 from sympy.core.expr import Expr
 from sympy.core.intfunc import igcd
@@ -58,7 +57,12 @@ from sympy.utilities.magic import pollute
 
 
 if TYPE_CHECKING:
-    from typing import TypeIs
+    from sympy.external.gmpy import MPQ
+    import sys
+    if sys.version_info >= (3, 13):
+        from typing import TypeIs
+    else:
+        from typing_extensions import TypeIs
     from sympy.polys.fields import FracField
     from types import NotImplementedType
 
@@ -2285,8 +2289,7 @@ class PolyElement(
 
         for multinomial, multinomial_coeff in multinomials:
             product_monom = zero_monom
-            product_coeff = multinomial_coeff
-
+            product_coeff = self.ring.domain_new(multinomial_coeff)
             for exp, (monom, coeff) in zip(multinomial, terms):
                 if exp:
                     product_monom = monomial_mulpow(product_monom, monom, exp)
@@ -3273,7 +3276,7 @@ class PolyElement(
 
         return poly
 
-    # XXX: implement the same algorith for div from CLO
+    # XXX: implement the same algorithm for div from CLO
     # for python-flint
     def _div(self, fv: PolyElement[Er]) -> tuple[PolyElement[Er], PolyElement[Er]]:
         [q], r = self._div_list([fv])

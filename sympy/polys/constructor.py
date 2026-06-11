@@ -1,4 +1,5 @@
 """Tools for constructing domains for expressions. """
+from __future__ import annotations
 from math import prod
 
 from sympy.core import sympify

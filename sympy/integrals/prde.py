@@ -14,6 +14,7 @@ right hand side of the equation (i.e., gi in k(t)), and Q is a list of terms on
 the right hand side of the equation (i.e., qi in k[t]).  See the docstring of
 each function for more information.
 """
+from __future__ import annotations
 import itertools
 from functools import reduce
 

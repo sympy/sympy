@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.basic import Basic
 from sympy.printing import pprint
 

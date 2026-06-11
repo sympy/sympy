@@ -1,3 +1,4 @@
+from __future__ import annotations
 from collections import defaultdict
 
 from sympy.core import sympify, S, Mul, Derivative, Pow

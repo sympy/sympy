@@ -1,7 +1,7 @@
 """
 General binary relations.
 """
-from typing import Optional
+from __future__ import annotations
 
 from sympy.core.singleton import S
 from sympy.assumptions import AppliedPredicate, ask, Predicate, Q  # type: ignore
@@ -74,8 +74,8 @@ class BinaryRelation(Predicate):
     .. [1] https://en.wikipedia.org/wiki/Reflexive_relation
     """
 
-    is_reflexive: Optional[bool] = None
-    is_symmetric: Optional[bool] = None
+    is_reflexive: bool | None = None
+    is_symmetric: bool | None = None
 
     def __call__(self, *args):
         if not len(args) == 2:

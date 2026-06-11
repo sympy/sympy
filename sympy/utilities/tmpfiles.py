@@ -3,6 +3,7 @@
 
    sympy.utilities.tmpfiles has been renamed to sympy.testing.tmpfiles.
 """
+from __future__ import annotations
 from sympy.utilities.exceptions import sympy_deprecation_warning
 
 sympy_deprecation_warning("The sympy.utilities.tmpfiles submodule is deprecated. Use sympy.testing.tmpfiles instead.",

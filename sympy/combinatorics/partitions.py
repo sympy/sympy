@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core import Basic, Dict, sympify, Tuple
 from sympy.core.numbers import Integer
 from sympy.core.sorting import default_sort_key
@@ -131,7 +132,7 @@ class Partition(FiniteSet):
         if self._partition is None:
             self._partition = sorted([sorted(p, key=default_sort_key)
                                       for p in self.args])
-        return self._partition
+        return [part[:] for part in self._partition]
 
     def __add__(self, other):
         """
@@ -499,7 +500,7 @@ class IntegerPartition(Basic):
             groups = group(self.partition, multiple=False)
             self._keys = [g[0] for g in groups]
             self._dict = dict(groups)
-        return self._dict
+        return self._dict.copy()
 
     @property
     def conjugate(self):

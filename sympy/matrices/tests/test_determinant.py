@@ -1,3 +1,4 @@
+from __future__ import annotations
 import random
 import pytest
 from sympy.core.numbers import I
@@ -177,6 +178,15 @@ def test_permanent():
     a1, a2, a3, a4, a5 = symbols('a_1 a_2 a_3 a_4 a_5')
     M = Matrix([a1, a2, a3, a4, a5])
     assert M.per() == M.T.per() == a1 + a2 + a3 + a4 + a5
+
+    M = Matrix.zeros(0,0)
+    assert M.per() == 1
+
+    M = Matrix.zeros(0,1)
+    assert M.per() == 1
+
+    M = Matrix.zeros(1,0)
+    assert M.per() == 1
 
 def test_adjugate():
     x = Symbol('x')

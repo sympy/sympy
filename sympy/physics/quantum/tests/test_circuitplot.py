@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.physics.quantum.circuitplot import labeller, render_label, Mz, CreateOneQubitGate,\
      CreateCGate
 from sympy.physics.quantum.gate import CNOT, H, SWAP, CGate, S, T
