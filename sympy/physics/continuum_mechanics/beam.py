@@ -1629,7 +1629,6 @@ class Beam:
 
         C3 = Symbol('C3')
         slope_curve = -integrate(S.One/(E*I)*self.bending_moment(), x) + C3
-
         bc_eqs = []
         for position, value in self._boundary_conditions['slope']:
             eqs = slope_curve.subs(x, position) - value
@@ -1757,7 +1756,6 @@ class Beam:
 
         C4 = Symbol('C4')
         deflection_curve = integrate(self.slope(), x) + C4
-
         bc_eqs = []
         for position, value in self._boundary_conditions['deflection']:
             eqs = deflection_curve.subs(x, position) - value
