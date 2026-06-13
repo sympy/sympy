@@ -11,7 +11,10 @@ References
 """
 from __future__ import annotations
 
+import threading
+
 from sympy.core.add import Add
+from sympy.core.basic import Basic
 from sympy.core.mul import Mul
 from sympy.core.numbers import I
 from sympy.core.power import Pow
@@ -78,14 +81,6 @@ class Pauli(Symbol):
     optional parameter ``label="sigma"``. Pauli matrices with different
     ``label`` attributes cannot multiply together.
 
-    If the left multiplication of symbol or number with Pauli matrix is needed,
-    please use parentheses  to separate Pauli and symbolic multiplication
-    (for example: 2*I*(Pauli(3)*Pauli(2))).
-
-    Another variant is to use evaluate_pauli_product function to evaluate
-    the product of Pauli matrices and other symbols (with commutative
-    multiply rules).
-
     See Also
     ========
 
@@ -115,14 +110,7 @@ class Pauli(Symbol):
     I*tau3
 
     >>> from sympy import I
-    >>> I*(Pauli(2)*Pauli(3))
-    -sigma1
-
-    >>> from sympy.physics.paulialgebra import evaluate_pauli_product
-    >>> f = I*Pauli(2)*Pauli(3)
-    >>> f
-    I*sigma2*sigma3
-    >>> evaluate_pauli_product(f)
+    >>> I*Pauli(2)*Pauli(3)
     -sigma1
     """
 
@@ -142,7 +130,6 @@ class Pauli(Symbol):
     def _hashable_content(self):
         return (self.i, self.label)
 
-    # FIXME don't work for -I*Pauli(2)*Pauli(3)
     def __mul__(self, other):
         if isinstance(other, Pauli):
             j = self.i
@@ -176,9 +163,6 @@ def evaluate_pauli_product(arg):
 
     >>> from sympy.physics.paulialgebra import Pauli, evaluate_pauli_product
     >>> from sympy import I
-    >>> evaluate_pauli_product(I*Pauli(1)*Pauli(2))
-    -sigma3
-
     >>> from sympy.abc import x
     >>> evaluate_pauli_product(x**2*Pauli(2)*Pauli(1))
     -I*x**2*sigma3
@@ -230,3 +214,21 @@ def evaluate_pauli_product(arg):
         end = tmp[0]*keeper*sigma_product*com_product
         if end == arg: break
     return end
+
+
+_pauli_postprocessor_guard = threading.local()
+
+
+def _pauli_mul_postprocessor(expr):
+    if getattr(_pauli_postprocessor_guard, 'active', False):
+        return expr
+    _pauli_postprocessor_guard.active = True
+    try:
+        return evaluate_pauli_product(expr)
+    finally:
+        _pauli_postprocessor_guard.active = False
+
+
+Basic._constructor_postprocessor_mapping[Pauli] = {
+    "Mul": [_pauli_mul_postprocessor],
+}
