@@ -162,7 +162,6 @@ def evaluate_pauli_product(arg):
     ========
 
     >>> from sympy.physics.paulialgebra import Pauli, evaluate_pauli_product
-    >>> from sympy import I
     >>> from sympy.abc import x
     >>> evaluate_pauli_product(x**2*Pauli(2)*Pauli(1))
     -I*x**2*sigma3
