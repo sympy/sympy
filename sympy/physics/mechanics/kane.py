@@ -417,6 +417,7 @@ class KanesMethod(MethodBase):
             self._k_nh = Matrix()
             self._f_dnh = Matrix()
             self._k_dnh = Matrix()
+            self._acceleration_constraints = Matrix()
             self._B_ind = Matrix()
             self._B_dep = Matrix()
             self._Ars = Matrix()
