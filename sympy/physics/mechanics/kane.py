@@ -1030,7 +1030,7 @@ class KanesMethod(MethodBase):
     @property
     def velocity_constraints(self):
         """Column matrix of velocity constraint residuals. Time differentiated
-        holonomic constraint residules stacked on top of the nonholonomic
+        holonomic constraint residuals stacked on top of the nonholonomic
         constraint residuals."""
         return self._velocity_constraints
 
