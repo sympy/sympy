@@ -335,22 +335,23 @@ class KanesMethod(MethodBase):
         self._udot = self.u.diff(dynamicsymbols._t)
         self._uaux = none_handler(u_aux)
 
-    def _initialize_constraint_matrices(self, config, vel, acc,  nonholonomic,
+    def _initialize_constraint_matrices(self, config, vel, acc, nonholonomic,
                                         linear_solver='LU'):
         """Initializes constraint matrices."""
-        linear_solver = _parse_linear_solver(linear_solver)
-        # Define vector dimensions
-        o = len(self.u)
-        m = len(self._udep)
-        p = o - m
         none_handler = lambda x: Matrix(x) if x else Matrix()
+        linear_solver = _parse_linear_solver(linear_solver)
+        t = dynamicsymbols._t
+
+        # Define vector dimensions
+        num_speeds = len(self.u)
+        num_dep_speeds = len(self._udep)
+        num_dof = num_speeds - num_dep_speeds
 
         # Initialize configuration constraints
-        config = none_handler(config)
-        if len(self._qdep) != len(config):
+        self._f_h = none_handler(config)
+        if len(self._qdep) != len(self.holonomic_constraints):
             raise ValueError('There must be an equal number of dependent '
                              'coordinates and configuration constraints.')
-        self._f_h = none_handler(config)
 
         if nonholonomic is not None and vel is not None:
             msg = ('Only one of of the kwargs velocity_constraints or '
@@ -358,59 +359,56 @@ class KanesMethod(MethodBase):
             raise ValueError(msg)
 
         # Initialize velocity and acceleration constraints
-        non = none_handler(nonholonomic)
-        self._nonholonomic_constraints = non
-        if non:
-            if self._qdot_u_map is not None:
-                con_diff = msubs(config.diff(dynamicsymbols._t),
-                                 self._qdot_u_map)
-            else:
-                con_diff = config.diff(dynamicsymbols._t)
-            vel = con_diff.col_join(non)
+        self._nonholonomic_constraints = none_handler(nonholonomic)
+        if self.nonholonomic_constraints:
+            con_diff = msubs(
+                self.holonomic_constraints.diff(t),
+                self._qdot_u_map)
+            self._velocity_constraints = con_diff.col_join(
+                self.nonholonomic_constraints)
         else:
-            vel = none_handler(vel)
-        self._velocity_constraints = vel
+            self._velocity_constraints = msubs(none_handler(vel),
+                                               self._qdot_u_map)
+
         acc = none_handler(acc)
-        if len(vel) != m:
+        if len(self.velocity_constraints) != num_dep_speeds:
             raise ValueError('There must be an equal number of dependent '
                              'speeds and velocity constraints.')
-        if acc and (len(acc) != m):
+        if acc and (len(acc) != num_dep_speeds):
             raise ValueError('There must be an equal number of dependent '
                              'speeds and acceleration constraints.')
-        if vel:
-
+        if self.velocity_constraints:
             # When calling kanes_equations, another class instance will be
             # created if auxiliary u's are present. In this case, the
-            # computation of kinetic differential equation matrices will be
+            # computation of kinematic differential equation matrices will be
             # skipped as this was computed during the original KanesMethod
             # object, and the qd_u_map will not be available.
-            if self._qdot_u_map is not None:
-                vel = msubs(vel, self._qdot_u_map)
-            self._k_nh, f_nh_neg = linear_eq_to_matrix(vel, self.u[:])
+            self._k_nh, f_nh_neg = linear_eq_to_matrix(
+                self.velocity_constraints, self.u[:])
             self._f_nh = -f_nh_neg
 
             # If no acceleration constraints given, calculate them.
             if not acc:
-                _f_dnh = (self._k_nh.diff(dynamicsymbols._t) * self.u +
-                    self._f_nh.diff(dynamicsymbols._t))
-                if self._qdot_u_map is not None:
-                    _f_dnh = msubs(_f_dnh, self._qdot_u_map)
+                _f_dnh = self._k_nh.diff(t)*self.u + self._f_nh.diff(t)
+                _f_dnh = msubs(_f_dnh, self._qdot_u_map)
                 self._f_dnh = _f_dnh
                 self._k_dnh = self._k_nh
                 self._acceleration_constraints = (self._k_dnh*self._udot +
                                                   self._f_dnh)
             else:
-                if self._qdot_u_map is not None:
-                    acc = msubs(acc, self._qdot_u_map)
+                qdd_repl = {qi.diff(t): msubs(expr.diff(t), self._qdot_u_map)
+                            for qi, expr in self._qdot_u_map.items()}
+                acc = msubs(acc, qdd_repl, self._qdot_u_map)
                 self._acceleration_constraints = acc
-                self._k_dnh, f_dnh_neg = linear_eq_to_matrix(acc, self._udot[:])
+                self._k_dnh, f_dnh_neg = linear_eq_to_matrix(acc,
+                                                             self._udot[:])
                 self._f_dnh = -f_dnh_neg
             # Form of non-holonomic constraints is B*u + C = 0.
             # We partition B into independent and dependent columns:
             # Ars is then -B_dep.inv() * B_ind, and it relates dependent speeds
             # to independent speeds as: udep = Ars*uind, neglecting the C term.
-            self._B_ind = self._k_nh[:, :p]
-            self._B_dep = self._k_nh[:, p:o]
+            self._B_ind = self._k_nh[:, :num_dof]
+            self._B_dep = self._k_nh[:, num_dof:num_speeds]
             self._Ars = -linear_solver(self._B_dep, self._B_ind)
         else:
             self._f_nh = Matrix()
@@ -502,14 +500,15 @@ class KanesMethod(MethodBase):
             # implicit form.
             f_k_explicit = linear_solver(k_kqdot, f_k)
             k_ku_explicit = linear_solver(k_kqdot, k_ku)
-            self._qdot_u_map = dict(zip(qdot, -(k_ku_explicit*u + f_k_explicit)))
+            self._qdot_u_map = dict(zip(qdot,
+                                        -(k_ku_explicit*u + f_k_explicit)))
 
             self._f_k = f_k_explicit.xreplace(uaux_zero)
             self._k_ku = k_ku_explicit.xreplace(uaux_zero)
             self._k_kqdot = eye(len(qdot))
 
         else:
-            self._qdot_u_map = None
+            self._qdot_u_map = {}
             self._f_k_implicit = self._f_k = Matrix()
             self._k_ku_implicit = self._k_ku = Matrix()
             self._k_kqdot_implicit = self._k_kqdot = Matrix()

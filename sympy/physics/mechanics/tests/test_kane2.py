@@ -466,6 +466,10 @@ def test_sub_qdot2():
     u_expr = [C.ang_vel_in(A) & uv for uv in B]
     u_expr += qd[3:]
     kde = [ui - e for ui, e in zip(u, u_expr)]
+    # check that passing empties for constraints works same as passing None
+    km1 = KanesMethod(A, q, u, kde,
+                      velocity_constraints=[], acceleration_constraints=[])
+    fr1, _ = km1.kanes_equations([], forces)
     km1 = KanesMethod(A, q, u, kde)
     fr1, _ = km1.kanes_equations([], forces)
 

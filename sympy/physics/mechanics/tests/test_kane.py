@@ -449,14 +449,17 @@ def test_implicit_kinematics():
     kinematic_eqs = kinematic_eqs + [(q_att_vec.T * q_att_vec.diff())[0]]
 
     try:
-        KM = KanesMethod(NED, q_ind, u_ind,
-          q_dependent= q_dep,
-          kd_eqs = kinematic_eqs,
-          configuration_constraints = config_cons,
-          velocity_constraints= [],
-          u_dependent= [], #no dependent speeds
-          u_auxiliary = [], # No auxiliary speeds
-          explicit_kinematics = False # implicit kinematics
+        KM = KanesMethod(
+            NED,
+            q_ind,
+            u_ind,
+            q_dependent=q_dep,
+            kd_eqs=kinematic_eqs,
+            configuration_constraints=config_cons,
+            velocity_constraints=[],
+            u_dependent=[],  # no dependent speeds
+            u_auxiliary=[],  # no auxiliary speeds
+            explicit_kinematics=False  # implicit kinematics
         )
     except Exception as e:
         raise e
