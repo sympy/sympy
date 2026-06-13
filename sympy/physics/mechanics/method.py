@@ -188,7 +188,7 @@ class MethodBase(ABC):
             fv' = fa(q'', q', q, t) = fa(u', u, q, t) = 0
 
         The twice time differentiated holonomic configuration constraints
-        should be stacked on top of time differentieated nonholonomic
+        should be stacked on top of time-differentiated nonholonomic
         constraints.
 
         """
