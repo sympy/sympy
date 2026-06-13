@@ -41,7 +41,7 @@ class MethodBase(ABC):
             [0  Mj 0  ] [j']   [Fj]
 
     where ``Mj`` is the "Jacobian of the constraints" and ``MjT`` is its
-    transpose. ``j'=lambda`` are the Lagrange multipliers representing the the
+    transpose. ``j'=lambda`` are the Lagrange multipliers representing the
     constraint forces and then ``j`` are generalized impulses of these forces.
 
     The equations of motion can also be augmented to reveal any noncontributing
