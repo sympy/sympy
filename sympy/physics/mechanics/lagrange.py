@@ -49,7 +49,7 @@ class LagrangesMethod(MethodBase):
         Iterable of :py:class:`~.Particle`, :py:class:`~.RigidBody`, or
         :py:class:`~.Body` objects that make up the multibody system.
     frame : ReferenceFrame, optional
-        Inerital reference frame that should match the one used to form the
+        Inertial reference frame that should match the one used to form the
         Lagrangian. Only required if ``forcelist`` is provided.
 
     Attributes
