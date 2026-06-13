@@ -939,10 +939,8 @@ class System(MethodBase):
         See Also
         ========
 
-        sympy.physics.mechanics.kane.KanesMethod.rhs:
-            KanesMethod's ``rhs`` function.
-        sympy.physics.mechanics.lagrange.LagrangesMethod.rhs:
-            LagrangesMethod's ``rhs`` function.
+        sympy.physics.mechanics.method.MethodBase.rhs:
+            Standard form and behavior of the ``rhs()`` method.
 
         """
         return self.eom_method.rhs(inv_method=inv_method, **kwargs)
