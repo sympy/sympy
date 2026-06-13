@@ -20,7 +20,7 @@ from sympy.core.sorting import ordered
 from sympy.core.sympify import _sympify
 from sympy.core.traversal import bottom_up as _bottom_up, walk as _walk
 from sympy.functions import gamma, exp, sqrt, log, exp_polar, re
-from sympy.functions.combinatorial.factorials import CombinatorialFunction
+from sympy.functions.combinatorial.factorials import (CombinatorialFunction, RisingFactorial)
 from sympy.functions.elementary.complexes import unpolarify, Abs, sign
 from sympy.functions.elementary.exponential import ExpBase
 from sympy.functions.elementary.hyperbolic import HyperbolicFunction
@@ -35,6 +35,8 @@ from sympy.integrals.integrals import Integral
 from sympy.matrices.expressions import (MatrixExpr, MatAdd, MatMul,
                                             MatPow, MatrixSymbol)
 from sympy.polys import together, cancel, factor
+from sympy.polys.matrices.linsolve import _lin_eq2dict
+from sympy.polys.solvers import PolyNonlinearError
 from sympy.polys.numberfields.minpoly import _is_sum_surds, _minimal_polynomial_sq
 from sympy.simplify.combsimp import combsimp
 from sympy.simplify.cse_opts import sub_pre, sub_post
@@ -323,18 +325,79 @@ def hypersimp(f, k):
     """
     f = sympify(f)
 
-    g = f.subs(k, k + 1) / f
+    if not f.is_commutative:
+        return None
 
-    g = g.rewrite(gamma)
-    if g.has(Piecewise):
-        g = piecewise_fold(g)
-        g = g.args[-1][0]
-    g = expand_func(g)
-    g = powsimp(g, deep=True, combine='exp')
+    f = f.rewrite(gamma)
 
-    if g.is_rational_function(k):
-        return simplify(g, ratio=S.Infinity)
+    f = expand_func(f)
+    f = factor_terms(f)
+
+    return _get_term_ratio(f, k)
+
+
+def _get_term_ratio(f, k):
+    if f.is_rational_function(k):
+        # If f is a rational function then its term ratio is as well
+        return together(f.subs(k, k+1) / f)
+
+    elif isinstance(f, Mul):
+        # Compute term ratio for each factor
+        ratios = []
+        for a in f.args:
+            r = _get_term_ratio(a, k)
+            if r is None:
+                return None
+            ratios.append(r)
+        return Mul(*ratios)
+
+    elif isinstance(f, (Pow, exp)):
+        b, e = f.as_base_exp()
+        if e.is_Integer:
+            # f(k)**e, Compute term ratio for f(k)
+            r = _get_term_ratio(b, k)
+            if r is not None:
+                return r**e
+        elif not b.has_xfree({k}):
+            # b**(c*k + ...), ratio is b**c
+            c = _linear_coeff(e, k)
+            if c is not None:
+                return b**c
+
+    elif isinstance(f, gamma):
+        a = f.args[0]
+        c = _linear_coeff(a, k)
+        if c is not None and c.is_Integer:
+            # gamma(a) = gamma(c*k + ...)
+            return RisingFactorial(a, c)
+
     else:
+        g = f.subs(k, k+1)/f
+        if g.is_rational_function(k):
+            return together(g)
+
+        elif isinstance(f, Piecewise):
+            # Compute term ratio for each piece
+            ratios = []
+            for a in f.args:
+                r = _get_term_ratio(a[0], k)
+                if r is None:
+                    return None
+                ratios.append((r, a[1]))
+            res = Piecewise(*ratios).simplify()
+            if isinstance(res, Piecewise) and any(interval.has_xfree({k}) for _, interval in res.args):
+                return None
+
+            return res
+
+    return None
+
+
+def _linear_coeff(e, k):
+    try:
+        return _lin_eq2dict(e, {k})[1].get(k, S.Zero)
+    except (PolyNonlinearError, ValueError):
+        # e is not linear in k
         return None
 
 
