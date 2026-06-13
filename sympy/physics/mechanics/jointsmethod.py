@@ -308,7 +308,7 @@ class JointsMethod(MethodBase):
         inv_method : str
             The specific sympy inverse matrix calculation method to use. For a
             list of valid methods, see
-            :py::meth:`~sympy.matrices.matrixbase.MatrixBase.inv`.
+            :py:meth:`~sympy.matrices.matrixbase.MatrixBase.inv`.
 
         Returns
         ========
