@@ -361,8 +361,12 @@ class KanesMethod(MethodBase):
         non = none_handler(nonholonomic)
         self._nonholonomic_constraints = non
         if non:
-            vel = msubs(config.diff(dynamicsymbols._t),
-                        self._qdot_u_map).col_join(non)
+            if self._qdot_u_map is not None:
+                con_diff = msubs(config.diff(dynamicsymbols._t),
+                                 self._qdot_u_map)
+            else:
+                con_diff = config.diff(dynamicsymbols._t)
+            vel = con_diff.col_join(non)
         else:
             vel = none_handler(vel)
         self._velocity_constraints = vel
@@ -413,6 +417,8 @@ class KanesMethod(MethodBase):
             self._k_nh = Matrix()
             self._f_dnh = Matrix()
             self._k_dnh = Matrix()
+            self._B_ind = Matrix()
+            self._B_dep = Matrix()
             self._Ars = Matrix()
 
     @property

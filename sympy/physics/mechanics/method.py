@@ -7,7 +7,7 @@ __all__ = ['MethodBase']
 
 class MethodBase(ABC):
     """Abstract Base Class for all methods for forming the equations of motion
-    of multiody systems.
+    of multibody systems.
 
     Minimal coordinate equations of motion take this form as first order
     ordinary differential equations.
@@ -301,17 +301,24 @@ class MethodBase(ABC):
         inv_method : str
             The specific sympy inverse matrix calculation method to use. For a
             list of valid methods, see
-            :meth:`~sympy.matrices.matrixbase.MatrixBase.inv`
+            :py::meth:`~sympy.matrices.matrixbase.MatrixBase.inv`
 
         """
 
         if inv_method is None:
-            self._rhs = self.mass_matrix_full.LUsolve(self.forcing_full)
+            rhs = self.mass_matrix_full.LUsolve(self.forcing_full)
         else:
-            self._rhs = (self.mass_matrix_full.inv(inv_method,
-                         try_block_diag=True) * self.forcing_full)
-        return self._rhs
+            rhs = self.mass_matrix_full.inv(
+                inv_method, try_block_diag=True)*self.forcing_full
+        return rhs
 
     @abstractmethod
     def _form_eoms(self):
+        """Returns the dynamical differential equations.
+
+        Common method for consumers of any MethodBase to call to populate all
+        of the equation of motion related attributes, e.g. ``mass_matrix`` and
+        ``forcing``.
+
+        """
         raise NotImplementedError("Subclasses must implement this.")
