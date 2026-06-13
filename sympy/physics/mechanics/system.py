@@ -98,6 +98,9 @@ class System(MethodBase):
         holonomic constraints extended with the nonholonomic constraints.
     acceleration_constraints : ImmutableMatrix
         Matrix of the time differentiated velocity constraints.
+    constraints_jacobian : Matrix, shape(len(velocity_constraints), len(u))
+        Linear coefficient matrix with respect to the generalized speeds is
+        extracted from the velocity constraints.
     eom_method : subclass of KanesMethod or LagrangesMethod
         Backend for forming the equations of motion.
 
@@ -914,7 +917,7 @@ class System(MethodBase):
             raise NotImplementedError(f'{eom_method} has not been implemented.')
         return self.eom_method._form_eoms()
 
-    def rhs(self, inv_method=None):
+    def rhs(self, inv_method=None, **kwargs):
         """Compute the equations of motion in the explicit form.
 
         Parameters
@@ -924,6 +927,8 @@ class System(MethodBase):
             The specific sympy inverse matrix calculation method to use. For a
             list of valid methods, see
             :meth:`~sympy.matrices.matrixbase.MatrixBase.inv`
+        kwargs : dict
+            Passed along to ``eom_method.rhs(**kwargs)``.
 
         Returns
         ========
@@ -934,13 +939,11 @@ class System(MethodBase):
         See Also
         ========
 
-        sympy.physics.mechanics.kane.KanesMethod.rhs:
-            KanesMethod's ``rhs`` function.
-        sympy.physics.mechanics.lagrange.LagrangesMethod.rhs:
-            LagrangesMethod's ``rhs`` function.
+        sympy.physics.mechanics.method.MethodBase.rhs:
+            Standard form and behavior of the ``rhs()`` method.
 
         """
-        return self.eom_method.rhs(inv_method=inv_method)
+        return self.eom_method.rhs(inv_method=inv_method, **kwargs)
 
     @property
     def mass_matrix(self):

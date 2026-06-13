@@ -47,13 +47,11 @@ class LagrangesMethod(MethodBase):
         frame. Only nonconservative forces and/or torques should be included if
         the conservative forces are already present in the Lagrangian.
     bodies : iterable, optional
-        Iterable of :py:class:`~sympy.physics.mechanics.particle.Particle`,
-        :py:class:`~sympy.physics.mechanics.rigidbody.RigidBody`, or
-        :py:class:`~sympy.physics.mechanics.body.Body` objects that make up the
-        multibody system.
+        Iterable of :py:class:`~.Particle`, :py:class:`~.RigidBody`, or
+        :py:class:`~.Body` objects that make up the multibody system.
     frame : ReferenceFrame, optional
-        Inerital reference frame that should match the one used to form the
-        Lagrangian. Only required if ``forceslist`` is provided.
+        Inertial reference frame that should match the one used to form the
+        Lagrangian. Only required if ``forcelist`` is provided.
 
     Attributes
     ==========
@@ -87,20 +85,20 @@ class LagrangesMethod(MethodBase):
         Column matrix of the n generalized coordinates.
     u : Matrix, shape(n, 1)
         Column matrix of the n generalized speeds: u = q'.
-    holonomic_contraints : Matrix, shape(M, 1)
+    holonomic_constraints : Matrix, shape(M, 1)
         Column matrix of holonomic configuration constraint residuals.
     nonholonomic_constraints : Matrix, shape(m, 1)
         Column matrix of shape(m, 1) of nonholonomic constraint residuals.
     velocity_constraints : Matrix, shape(M + m, 1)
         Column matrix of shape(M + m, 1) velocity constraint residuals
-        comprised of the time differentiated configruation constraints stacked
+        comprised of the time differentiated configuration constraints stacked
         on top of the nonholonomic constraints.
     acceleration_constraints : Matrix, shape(M + m, 1)
         Column matrix acceleration constraint residuals which are the time
         differentiated velocity constraints.
     loads : list
         List of (Point, vector) or (ReferenceFrame, vector) tuples or,
-        similarily, Force or Torque objects describing the nonconservative
+        similarly, Force or Torque objects describing the nonconservative
         loads applied to the system.
     bodies : list
         List containing the rigid bodies and particles of the system.
@@ -164,7 +162,8 @@ class LagrangesMethod(MethodBase):
         >>> print(l.form_lagranges_equations())
         Matrix([[b*Derivative(q(t), t) + k*q(t) + m*Derivative(q(t), (t, 2))]])
 
-    We can also solve for the states using the 'rhs' method.
+    We can also solve for the states using the :py:meth:`~.MethodBase.rhs`
+    method.
 
         >>> print(l.rhs())
         Matrix([[Derivative(q(t), t)], [(-b*Derivative(q(t), t) - k*q(t))/m]])
@@ -191,7 +190,6 @@ class LagrangesMethod(MethodBase):
         else:
             self._forcelist = []
 
-        # TODO : How can there be equations of motion if bodies is None?
         if bodies is None:
             self._bodies = []
         else:
@@ -636,26 +634,6 @@ class LagrangesMethod(MethodBase):
         else:
             raise ValueError("Unknown sol_type {:}.".format(sol_type))
 
-    def rhs(self, inv_method=None, **kwargs):
-        """Returns equations that can be solved numerically.
-
-        Parameters
-        ==========
-
-        inv_method : str
-            The specific sympy inverse matrix calculation method to use. For a
-            list of valid methods, see
-            :meth:`~sympy.matrices.matrixbase.MatrixBase.inv`
-
-        """
-
-        if inv_method is None:
-            self._rhs = self.mass_matrix_full.LUsolve(self.forcing_full)
-        else:
-            self._rhs = (self.mass_matrix_full.inv(inv_method,
-                         try_block_diag=True) * self.forcing_full)
-        return self._rhs
-
     @property
     def q(self):
         """Column matrix of shape(n, 1) containing the generalized
@@ -665,11 +643,11 @@ class LagrangesMethod(MethodBase):
     @property
     def u(self):
         """Column matrix of shape(n, 1) containing the time derivatives of the
-        generalizd coordinates."""
+        generalized coordinates."""
         return self._qdots
 
     @property
-    def velocity_contraints(self):
+    def velocity_constraints(self):
         """Column matrix of shape(M + m, 1) motion constraint residuals made up
         of the M time differentiated holonomic constraints stacked on the m
         nonholonomic constraints."""
@@ -683,6 +661,7 @@ class LagrangesMethod(MethodBase):
         else:
             return self.velocity_constraints.diff(dynamicsymbols._t)
 
+    @property
     def constraints_jacobian(self):
         """Jacobian of the constraints. A matrix of shape(M + m, n) which are
         equivalently the linear coefficients of q' in the velocity constraints
@@ -691,21 +670,18 @@ class LagrangesMethod(MethodBase):
 
     @property
     def bodies(self):
-        """List of :py:class:`~sympy.physics.mechanics.particle.Particle`,
-        :py:class:`~sympy.physics.mechanics.rigidbody.RigidBody`, or
-        :py:class:`~sympy.physics.mechanics.body.Body` objects that make up the
-        multibody system."""
+        """List of :py:class:`~.Particle`, :py:class:`~.RigidBody`, or
+        :py:class:`~.Body` objects that make up the multibody system."""
         return self._bodies
 
     @property
     def forcelist(self):
-        """List of :py:class:`~sympy.physics.mechanics.loads.Force`,
-        :py:class:`~sympy.physics.mechanics.loads.Torque`,
-        tuple(:py:class:`~sympy.physics.vector.point.Point`,
-        :py:class:`~sympy.physics.vector.vector.Vector`),
-        tuple(:py:class:`~sympy.physics.vector.frame.ReferenceFrame`,
-        :py:class:`~sympy.physics.vector.vector.Vector`) loads applied to
-        multibody system.
+        """List of :py:class:`~.Force`, :py:class:`~.Torque`,
+        tuple(:py:class:`~.vector.point.Point`,
+        :py:class:`~.physics.vector.vector.Vector`),
+        tuple(:py:class:`~.ReferenceFrame`,
+        :py:class:`~.physics.vector.vector.Vector`) loads applied to multibody
+        system.
 
         .. deprecated:: 1.15
 
@@ -723,13 +699,12 @@ class LagrangesMethod(MethodBase):
 
     @property
     def loads(self):
-        """List of :py:class:`~sympy.physics.mechanics.loads.Force`,
-        :py:class:`~sympy.physics.mechanics.loads.Torque`,
-        tuple(:py:class:`~sympy.physics.vector.point.Point`,
-        :py:class:`~sympy.physics.vector.vector.Vector`),
-        tuple(:py:class:`~sympy.physics.vector.frame.ReferenceFrame`,
-        :py:class:`~sympy.physics.vector.vector.Vector`) loads applied to
-        multibody system."""
+        """List of :py:class:`~.Force`, :py:class:`~.Torque`,
+        tuple(:py:class:`~.vector.point.Point`,
+        :py:class:`~.physics.vector.vector.Vector`),
+        tuple(:py:class:`~.ReferenceFrame`,
+        :py:class:`~.physics.vector.vector.Vector`) loads applied to multibody
+        system."""
         return self._forcelist
 
     @property
@@ -747,10 +722,3 @@ class LagrangesMethod(MethodBase):
     def nonholonomic_constraints(self):
         """Column matrix of nonholonomic constraint residuals."""
         return self._nonhol_coneqs
-
-    @property
-    def velocity_constraints(self):
-        """Column matrix of velocity constraint residuals. Time differentiated
-        holonomic constraint residules stacked on top of the nonholonomic
-        constraint residuals."""
-        return self.coneqs

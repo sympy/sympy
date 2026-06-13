@@ -193,7 +193,8 @@ def sympify_method_args(cls: type[T1]) -> type[T1]:
     return cls
 
 
-def sympify_return(*args):
+def sympify_return(*args
+    ) -> Callable[[Callable[[T1, T2], T3]], Callable[[T1, T2], T3]]:
     '''Function/method decorator to sympify arguments automatically
 
     See the docstring of sympify_method_args for explanation.

@@ -7,7 +7,7 @@ __all__ = ['MethodBase']
 
 class MethodBase(ABC):
     """Abstract Base Class for all methods for forming the equations of motion
-    of multiody systems.
+    of multibody systems.
 
     Minimal coordinate equations of motion take this form as first order
     ordinary differential equations.
@@ -41,7 +41,7 @@ class MethodBase(ABC):
             [0  Mj 0  ] [j']   [Fj]
 
     where ``Mj`` is the "Jacobian of the constraints" and ``MjT`` is its
-    transpose. ``j'=lambda`` are the Lagrange multipliers representing the the
+    transpose. ``j'=lambda`` are the Lagrange multipliers representing the
     constraint forces and then ``j`` are generalized impulses of these forces.
 
     The equations of motion can also be augmented to reveal any noncontributing
@@ -99,10 +99,8 @@ class MethodBase(ABC):
     @property
     @abstractmethod
     def bodies(self):
-        """List of :py:class:`~sympy.physics.mechanics.particle.Particle`,
-        :py:class:`~sympy.physics.mechanics.rigidbody.RigidBody`, or
-        :py:class:`~sympy.physics.mechanics.body.Body` objects that make up the
-        multibody system."""
+        """List of :py:class:`~.Particle`, :py:class:`~.RigidBody`, or
+        :py:class:`~.Body` objects that make up the multibody system."""
         pass
 
     # KanesMethod: (init) forcelist, (attr) loads & forcelist [deprecated], (kanes_equations) loads
@@ -112,13 +110,12 @@ class MethodBase(ABC):
     @property
     @abstractmethod
     def loads(self):
-        """List of :py:class:`~sympy.physics.mechanics.loads.Force`,
-        :py:class:`~sympy.physics.mechanics.loads.Torque`,
-        tuple(:py:class:`~sympy.physics.vector.point.Point`,
-        :py:class:`~sympy.physics.vector.vector.Vector`),
-        tuple(:py:class:`~sympy.physics.vector.frame.ReferenceFrame`,
-        :py:class:`~sympy.physics.vector.vector.Vector`) loads applied to
-        multibody system."""
+        """List of :py:class:`~.Force`, :py:class:`~.Torque`,
+        tuple(:py:class:`~.vector.point.Point`,
+        :py:class:`~.physics.vector.vector.Vector`),
+        tuple(:py:class:`~.ReferenceFrame`,
+        :py:class:`~.physics.vector.vector.Vector`) loads applied to multibody
+        system."""
         pass
 
     # KanesMethod: (init) configuration_constraints, (attr) _f_h, holonomic_constraints
@@ -191,7 +188,7 @@ class MethodBase(ABC):
             fv' = fa(q'', q', q, t) = fa(u', u, q, t) = 0
 
         The twice time differentiated holonomic configuration constraints
-        should be stacked on top of time differentieated nonholonomic
+        should be stacked on top of time-differentiated nonholonomic
         constraints.
 
         """
@@ -277,9 +274,10 @@ class MethodBase(ABC):
     # LagrangesMethod: (attr) -lam_coeffs
     # JointsMethod: NA
     # System: NA
+    @property
     def constraints_jacobian(self):
-        """Returns an M + m x N coefficient matrix ``C`` which is the Jacobian
-        of the constraints.
+        """M + m x N coefficient matrix ``C`` which is the Jacobian of the
+        constraints.
 
         .. code:: text
 
@@ -303,17 +301,24 @@ class MethodBase(ABC):
         inv_method : str
             The specific sympy inverse matrix calculation method to use. For a
             list of valid methods, see
-            :meth:`~sympy.matrices.matrixbase.MatrixBase.inv`
+            :py:meth:`~sympy.matrices.matrixbase.MatrixBase.inv`
 
         """
 
         if inv_method is None:
-            self._rhs = self.mass_matrix_full.LUsolve(self.forcing_full)
+            rhs = self.mass_matrix_full.LUsolve(self.forcing_full)
         else:
-            self._rhs = (self.mass_matrix_full.inv(inv_method,
-                         try_block_diag=True) * self.forcing_full)
-        return self._rhs
+            rhs = self.mass_matrix_full.inv(
+                inv_method, try_block_diag=True)*self.forcing_full
+        return rhs
 
     @abstractmethod
     def _form_eoms(self):
+        """Returns the dynamical differential equations.
+
+        Common method for consumers of any MethodBase to call to populate all
+        of the equation of motion related attributes, e.g. ``mass_matrix`` and
+        ``forcing``.
+
+        """
         raise NotImplementedError("Subclasses must implement this.")

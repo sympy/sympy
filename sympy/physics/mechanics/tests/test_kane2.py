@@ -218,7 +218,7 @@ def test_aux_dep():
     assert kane.velocity_constraints == Matrix([f_v[2, 0].xreplace({ua[2]: 0}),
                                                 f_v[0, 0],
                                                 f_v[1, 0]])
-    assert kane.constraints_jacobian() == Matrix([
+    assert kane.constraints_jacobian == Matrix([
         [-r*sin(q[1]),                                0,                                      0, 0, 0, 1],
         [            0, r*sin(q[1])**2 - q[3]*cos(q[1]), r*sin(q[1])*cos(q[1]) + q[3]*sin(q[1]), 1, 0, 0],
         [        q[3],                                0,                                      0, 0, 1, 0]])
@@ -466,6 +466,10 @@ def test_sub_qdot2():
     u_expr = [C.ang_vel_in(A) & uv for uv in B]
     u_expr += qd[3:]
     kde = [ui - e for ui, e in zip(u, u_expr)]
+    # check that passing empties for constraints works same as passing None
+    km1 = KanesMethod(A, q, u, kde,
+                      velocity_constraints=[], acceleration_constraints=[])
+    fr1, _ = km1.kanes_equations([], forces)
     km1 = KanesMethod(A, q, u, kde)
     fr1, _ = km1.kanes_equations([], forces)
 

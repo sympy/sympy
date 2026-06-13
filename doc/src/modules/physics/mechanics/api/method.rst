@@ -1,8 +1,8 @@
 .. _method:
 
-======
-Method
-======
+=======================================
+Method Abstract Base Class (Docstrings)
+=======================================
 
 .. automodule:: sympy.physics.mechanics.method
    :members:
