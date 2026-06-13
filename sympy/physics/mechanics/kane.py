@@ -183,7 +183,7 @@ class KanesMethod(MethodBase):
     of the solution.
 
     While a valid list of solvers can be found at
-    :py::meth:`~sympy.matrices.matrixbase.MatrixBase.solve`, it is also
+    :py:meth:`~sympy.matrices.matrixbase.MatrixBase.solve`, it is also
     possible to supply a "callable". This way it is possible to use a different
     solver routine. If the kinematic differential equations are not too complex
     it can be worth it to simplify the solution by using ``lambda A, b:
