@@ -1463,3 +1463,23 @@ def test_Domain_conjugate():
     ]
     for domain in domains:
         assert not domain.is_ConjugateDomain
+
+    # algebraic fields
+    K = QQ.algebraic_field(sqrt(2))
+    a = K.from_sympy(sqrt(2) + 1)
+    assert K.is_ConjugateDomain
+    assert K.conjugate(a) == a
+
+    K = QQ.algebraic_field((-1 + sqrt(5)*I)/4)
+    a = K.from_sympy((-7 + 3*sqrt(5)*I)/2)
+    b = K.from_sympy((-7 - 3*sqrt(5)*I)/2)
+    assert K.conjugate(a) == b
+
+    K = QQ.cyclotomic_field(7)
+    a = K.dtype([0, 1, 2, 3, 4, 5, 6], K.mod.to_list(), QQ)
+    b = K.dtype([5, 4, 3, 2, 1, 0, 6], K.mod.to_list(), QQ)
+    assert K.conjugate(a) == b
+
+    a = Poly(x**3 - x + 1, x, domain=ZZ).all_roots()[-1]
+    K = QQ.algebraic_field(a)
+    raises(CoercionFailed, lambda: K.conjugate(K.from_sympy(a)))
