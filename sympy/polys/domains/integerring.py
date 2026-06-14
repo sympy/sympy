@@ -13,13 +13,14 @@ from sympy.polys.domains.groundtypes import (
 from sympy.polys.domains.characteristiczero import CharacteristicZero
 from sympy.polys.domains.ring import Ring
 from sympy.polys.domains.simpledomain import SimpleDomain
+from sympy.polys.domains.conjugatedomain import ConjugateDomain
 from sympy.polys.polyerrors import CoercionFailed
 from sympy.utilities import public
 
 import math
 
 @public
-class IntegerRing(Ring[MPZ], CharacteristicZero, SimpleDomain):
+class IntegerRing(Ring[MPZ], CharacteristicZero, SimpleDomain, ConjugateDomain):
     r"""The domain ``ZZ`` representing the integers `\mathbb{Z}`.
 
     The :py:class:`IntegerRing` class represents the ring of integers as a
@@ -271,6 +272,10 @@ class IntegerRing(Ring[MPZ], CharacteristicZero, SimpleDomain):
     def factorial(self, a):
         """Compute factorial of ``a``. """
         return factorial(a)
+
+    def conjugate(self, a: MPZ) -> MPZ:
+        """Returns the complex conjugate of ``a``."""
+        return a
 
 
 ZZ = IntegerRing()
