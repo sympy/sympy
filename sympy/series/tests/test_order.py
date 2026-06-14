@@ -399,6 +399,19 @@ def test_mixing_order_at_zero_and_infinity():
     assert Order(x, (x, 0)) + Order(x, (x, oo)) == Order(x, (x, oo)) + Order(x, (x, 0))
     assert Order(Order(x, (x, oo))) == Order(x, (x, oo))
 
+
+def test_issue_29832():
+    # Minimal reproduction for issue #29832: multiplying an Add
+    # containing an Order by (x - a) should scale the Order.
+    a = 5
+    from sympy import symbols
+    x = symbols('x')
+    err = O((x - a)**3, (x, a))
+    # direct multiplication
+    assert (err*(x - a)).expand() == O((x - a)**4, (x, a))
+    # multiplication when part of an Add
+    assert ((1 + err)*(x - a)).expand() == O((x - a)**4, (x, a))
+
     # not supported (yet)
     raises(NotImplementedError, lambda: Order(x, (x, 0))*Order(x, (x, oo)))
     raises(NotImplementedError, lambda: Order(x, (x, oo))*Order(x, (x, 0)))
