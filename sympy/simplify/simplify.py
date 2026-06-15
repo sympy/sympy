@@ -16,7 +16,7 @@ from sympy.core.function import (expand_log, count_ops, _mexpand,
 from sympy.core.numbers import Float, I, Integer, pi, Rational, equal_valued
 from sympy.core.relational import Relational
 from sympy.core.rules import Transform
-from sympy.core.sorting import ordered
+from sympy.core.sorting import default_sort_key, ordered
 from sympy.core.sympify import _sympify
 from sympy.core.traversal import bottom_up as _bottom_up, walk as _walk
 from sympy.functions import gamma, exp, sqrt, log, exp_polar, re
@@ -1315,8 +1315,45 @@ def besselsimp(expr):
         def _use_recursion(bessel, expr):
             while True:
                 bessels = expr.find(lambda x: isinstance(x, bessel))
+                # Apply the recurrence lowest-order first.
+                #
+                # We must not trigger SymPy's relational machinery
+                # (is_ge / __lt__) to compare symbolic orders: for a
+                # Symbol a with no finiteness assumption, re(a) could
+                # be oo, so is_ge(re(a), re(a)+1) correctly returns
+                # None, and bool() of the resulting unevaluated
+                # Relational raises TypeError.
+                #
+                # Strategy:
+                #  1. Concrete numeric orders (int, Rational, sqrt(17)/4,
+                #     5*I, ...): evalf() yields a plain float; sort numerically.
+                #  2. Symbolic orders of the form (base +/- integer_offset),
+                #     e.g. a-1, a, a+1 or sqrt(b**2)+/-1: extract the offset
+                #     via as_coeff_Add() and sort as
+                #     (canonical_key_of_base, offset).  Pure Python tuple
+                #     comparison -- no SymPy relational involved, never raises.
+                #  3. Everything else: structural canonical key, offset 0.
+                #
+                # The outer try/except is a safety valve for any unexpected
+                # error inside the loop body.
+                def _order_key(b):
+                    v = re(b.args[0])
+                    f = v.evalf()
+                    if f.is_number:
+                        return (0, float(f))
+                    # Symbolic: split off any concrete additive constant
+                    # so that e.g. a-1, a, a+1 sort by offset.
+                    offset = 0.0
+                    base = v
+                    if v.is_Add:
+                        c, base = v.as_coeff_Add()
+                        if c.is_number:
+                            offset = float(c)
+                        else:
+                            base, offset = v, 0.0
+                    return (1, default_sort_key(base), offset)
                 try:
-                    for ba in sorted(bessels, key=lambda x: re(x.args[0])):
+                    for ba in sorted(bessels, key=_order_key):
                         a, x = ba.args
                         bap1 = bessel(a+1, x)
                         bap2 = bessel(a+2, x)
