@@ -1022,21 +1022,6 @@ However, this new behavior was considered confusing, as discussed in issue
 Now, `sample_iter` should be used if a iterator is needed. Consequently, the
 `numsamples` parameter is no longer needed for `sample()`.
 
-(deprecated-rawmatrix)=
-### `sympy.polys.solvers.RawMatrix`
-
-The `RawMatrix` class is deprecated. The `RawMatrix` class was a subclass
-of `Matrix` that used domain elements instead of `Expr` as the elements of
-the matrix. This breaks a key internal invariant of `Matrix` and this kind
-of subclassing limits improvements to the `Matrix` class.
-
-The only part of SymPy that documented the use of the `RawMatrix` class was
-the Smith normal form code, and that has now been changed to use
-`DomainMatrix` instead. It is recommended that anyone using `RawMatrix` with
-the previous Smith Normal Form code should switch to using `DomainMatrix` as
-shown in issue [#21402](https://github.com/sympy/sympy/pull/21402). A better
-API for the Smith normal form will be added later.
-
 (deprecated-non-expr-in-matrix)=
 ### Non-`Expr` objects in a Matrix
 
