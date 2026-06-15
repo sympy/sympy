@@ -52,8 +52,17 @@ def check_satisfiability(prop, _prop, factbase):
 
     all_pred, all_exprs = get_all_pred_and_expr_from_enc_cnf(sat_true)
 
+    # Predicates that are informational only and can be safely ignored by the
+    # LRA solver. Q.real in particular was being raised as an unhandled input
+    # even though it is documented as an "Ignored predicate" -- this caused
+    # inconsistent behaviour for ask() depending on whether reality was
+    # supplied as Q.real(x) or as symbols(..., real=True). See #27834.
+    SILENT_IGNORE = {Q.real, Q.complex, Q.irrational, Q.rational, Q.algebraic,
+                     Q.transcendental, Q.extended_real, Q.commutative}
+
     for pred in all_pred:
-        if pred.function not in WHITE_LIST and pred.function != Q.ne:
+        if (pred.function not in WHITE_LIST and pred.function != Q.ne
+                and pred.function not in SILENT_IGNORE):
             raise UnhandledInput(f"LRASolver: {pred} is an unhandled predicate")
     for expr in all_exprs:
         if expr.kind == MatrixKind(NumberKind):
@@ -61,9 +70,12 @@ def check_satisfiability(prop, _prop, factbase):
         if expr == S.NaN:
             raise UnhandledInput("LRASolver: nan")
 
+    # Infer real variables from relational assumptions like Q.eq(x, 1) or
+    # Q.lt(x, 0) -- see https://github.com/sympy/sympy/issues/27834.
+    inferred_real = _infer_real_variables(factbase)
     # convert old assumptions into predicates and add them to sat_true and sat_false
     # also check for unhandled predicates
-    for assm in extract_pred_from_old_assum(all_exprs):
+    for assm in extract_pred_from_old_assum(all_exprs, inferred_real=inferred_real):
         n = len(sat_true.encoding)
         if assm not in sat_true.encoding:
             sat_true.encoding[assm] = n+1
@@ -74,6 +86,13 @@ def check_satisfiability(prop, _prop, factbase):
             sat_false.encoding[assm] = n+1
         sat_false.data.append([sat_false.encoding[assm]])
 
+
+    # Strip the silent-ignore predicates (Q.real etc.) from the encoding
+    # because the downstream LRA solver asserts all predicates are
+    # Q.eq/Q.lt/Q.gt/Q.le/Q.ge. We have already extracted the reality info
+    # we need from them into ``inferred_real`` above.
+    _strip_ignored_predicates(sat_true)
+    _strip_ignored_predicates(sat_false)
 
     sat_true = _preprocess(sat_true)
     sat_false = _preprocess(sat_false)
@@ -224,10 +243,114 @@ def get_all_pred_and_expr_from_enc_cnf(enc_cnf):
 
     return all_pred, all_exprs
 
-def extract_pred_from_old_assum(all_exprs):
+
+def _infer_real_variables(enc_cnf):
+    """Infer which variables must be real from relational assumptions.
+
+    Walks the encoded factbase and returns the set of free Symbols that are
+    forced to be real by the given assumptions. The rules are:
+
+    - ``Q.eq(v, c)`` or ``Q.eq(c, v)`` where ``c`` is a real constant implies
+      ``v`` is real (since ``c`` is real and equality is transitive with
+      reals).
+    - ``Q.lt`` / ``Q.gt`` / ``Q.le`` / ``Q.ge`` between a variable and a real
+      constant also implies the variable is real, because strict/non-strict
+      ordering is only defined on the reals.
+
+    This lets ``ask`` work correctly when the user provides the realness of a
+    variable indirectly through a relational, rather than via ``Q.real(v)``
+    or ``symbols(..., real=True)`` -- see sympy/sympy#27834.
+
+    Parameters
+    ==========
+
+    enc_cnf : EncodedCNF
+        The encoded factbase of assumptions to scan.
+
+    Returns
+    =======
+
+    set of Symbol
+        The set of variables that are forced to be real by the assumptions.
+
+    Examples
+    ========
+
+    >>> from sympy.assumptions.lra_satask import _infer_real_variables
+    >>> from sympy.assumptions.cnf import CNF, EncodedCNF
+    >>> from sympy import Q, symbols
+    >>> y = symbols('y')
+    >>> cnf = CNF.from_prop(Q.eq(y, 1))
+    >>> enc = EncodedCNF()
+    >>> enc.from_cnf(cnf)
+    >>> _infer_real_variables(enc)
+    {y}
+    """
+    inferred = set()
+    for pred in enc_cnf.encoding.keys():
+        if not isinstance(pred, AppliedPredicate):
+            continue
+        if pred.function not in (Q.eq, Q.lt, Q.gt, Q.le, Q.ge):
+            continue
+        args = pred.arguments
+        if len(args) != 2:
+            continue
+        lhs, rhs = args
+        # Equality / strict-or-non-strict ordering between a free symbol and
+        # a real constant forces the symbol to be real.
+        if (isinstance(lhs, AppliedPredicate)):
+            continue
+        if getattr(lhs, "is_real", None) is True and hasattr(rhs, "free_symbols"):
+            inferred.update(rhs.free_symbols)
+        if getattr(rhs, "is_real", None) is True and hasattr(lhs, "free_symbols"):
+            inferred.update(lhs.free_symbols)
+    return inferred
+
+
+def _strip_ignored_predicates(enc_cnf):
+    """Remove silently-ignored predicates (Q.real, Q.complex, ...) from the
+    encoded CNF. The reality info from Q.real(v) should already have been
+    extracted via :func:`_infer_real_variables` into the ``inferred_real`` set
+    before this function is called.
+
+    The LRA solver's preprocessing asserts that every literal refers to one
+    of Q.eq/Q.lt/Q.gt/Q.le/Q.ge, so any other predicate has to be removed
+    before the CNF is handed to it.
+    """
+    silent = {Q.real, Q.complex, Q.irrational, Q.rational, Q.algebraic,
+              Q.transcendental, Q.extended_real, Q.commutative}
+    ignored_codes = set()
+    for pred, code in list(enc_cnf.encoding.items()):
+        if isinstance(pred, AppliedPredicate) and pred.function in silent:
+            ignored_codes.add(abs(code))
+    if not ignored_codes:
+        return
+    # Remove from encoding
+    for pred, code in list(enc_cnf.encoding.items()):
+        if abs(code) in ignored_codes:
+            del enc_cnf.encoding[pred]
+    # Remove from data (clauses). If a clause becomes empty after removal, the
+    # factbase is unsatisfiable -- but this should not happen for well-formed
+    # inputs because the silent-ignore predicates are always positive and
+    # we only strip clauses consisting of a single such literal.
+    new_data = []
+    for clause in enc_cnf.data:
+        new_clause = [lit for lit in clause if abs(lit) not in ignored_codes]
+        if new_clause:
+            new_data.append(new_clause)
+    enc_cnf.data = new_data
+
+
+def extract_pred_from_old_assum(all_exprs, inferred_real=()):
     """
     Returns a list of relevant new assumption predicate
     based on any old assumptions.
+
+    *inferred_real* is an optional iterable of free Symbols that have been
+    forced to be real by the relational assumptions (see :func:`_infer_real_variables`).
+    These symbols are accepted as real even if their ``is_real`` flag is not
+    explicitly set -- this is what allows ``ask(Q.zero(x - 1), Q.eq(x, 1))``
+    to return ``True`` for an unconstrained symbol ``x``.
 
     Raises an UnhandledInput exception if any of the assumptions are
     unhandled.
@@ -252,13 +375,19 @@ def extract_pred_from_old_assum(all_exprs):
     [Q.positive(x), Q.positive(y)]
     """
     ret = []
+    inferred_real_set = set(inferred_real)
     for expr in all_exprs:
         if not hasattr(expr, "free_symbols"):
             continue
         if len(expr.free_symbols) == 0:
             continue
 
-        if expr.is_real is not True:
+        # A Symbol is treated as real if it is real by flag, OR if it was
+        # forced to be real by a relational assumption (e.g. Q.eq(x, 1)).
+        is_expr_real = expr.is_real is True or (
+            expr.free_symbols and expr.free_symbols.issubset(inferred_real_set)
+        )
+        if not is_expr_real:
             raise UnhandledInput(f"LRASolver: {expr} must be real")
         # test for I times imaginary variable; such expressions are considered real
         if isinstance(expr, Mul) and any(arg.is_real is not True for arg in expr.args):

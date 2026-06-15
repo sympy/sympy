@@ -478,12 +478,15 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     Notes
     =====
 
-    Relations in assumptions are not implemented (yet), so the following
-    will not give a meaningful result.
+    Relations in assumptions are now supported. For example:
 
     >>> ask(Q.positive(x), x > 0)
+    True
 
-    It is however a work in progress.
+    Relations that involve real-valued symbols are resolved through
+    the LRA satisfiability checker, which can give a definitive answer
+    for queries about positivity, negativity, zero, and related
+    predicates.
 
     See Also
     ========
