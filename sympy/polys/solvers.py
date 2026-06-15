@@ -5,7 +5,6 @@ from itertools import pairwise
 
 from sympy.utilities.iterables import connected_components
 
-from sympy.polys.domains import ZZ
 
 from sympy.polys.domains import EX
 from sympy.polys.rings import sring
