@@ -1046,7 +1046,7 @@ The main reason for making this possible was that there were a number of
 `Matrix` subclasses in the SymPy codebase that wanted to work with objects
 from the polys module, e.g.
 
-1. `RawMatrix` (see [above](deprecated-rawmatrix)) was used in `solve_lin_sys`
+1. `RawMatrix` was used in `solve_lin_sys`
    which was part of `heurisch` and was also used by `smith_normal_form`. The
    `NewMatrix` class used domain elements as the elements of the Matrix rather
    than `Expr`.
