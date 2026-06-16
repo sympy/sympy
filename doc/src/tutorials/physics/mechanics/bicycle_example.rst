@@ -139,18 +139,14 @@ Setup the constraints
 ---------------------
 
 The nonholonomic constraints are the velocity of the front wheel contact point
-dotted into the X, Y, and Z directions; the yaw frame is used as it is "closer"
-to the front wheel (one fewer direction cosine matrix connecting them). These
-constraints force the velocity of the front wheel contact point to be zero in
-the inertial frame; the X and Y direction constraints enforce a "no-slip"
-condition, and the Z direction constraint forces the front wheel contact point
-to not move away from the ground frame, essentially replicating the holonomic
-constraint which does not allow the frame pitch to change in an invalid
-fashion. ::
+dotted into the X and Y directions; the yaw frame is used as it is closest in
+adjacency to the front wheel (one fewer direction cosine matrix connecting
+them). These constraints force the velocity of the front wheel contact point to
+be zero in the inertial frame; the X and Y direction constraints enforce a
+"no-slip" condition. ::
 
   >>> conlist_speed = [me.dot(WF_cont.vel(N), Y.x),
-  ...                  me.dot(WF_cont.vel(N), Y.y),
-  ...                  me.dot(WF_cont.vel(N), Y.z)]
+  ...                  me.dot(WF_cont.vel(N), Y.y)]
 
 The holonomic constraint is that the position from the rear wheel contact point
 to the front wheel contact point when dotted into the normal-to-ground plane
@@ -218,7 +214,7 @@ linearization to correctly work. ::
   ...     configuration_constraints=conlist_coord,
   ...     u_ind=[u2, u3, u5],
   ...     u_dependent=[u1, u4, u6],
-  ...     velocity_constraints=conlist_speed,
+  ...     nonholonomic_constraints=conlist_speed,
   ...     kd_eqs=kd,
   ...     constraint_solver='CRAMER')
   >>> fr, frstar = kane.kanes_equations(bodies, loads=forces)
