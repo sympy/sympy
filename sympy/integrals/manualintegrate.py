@@ -485,7 +485,11 @@ class TrigPowerRule(AtomicRule):
         return total / 2**(r+s)
 
     def eval(self) -> Expr:
-        n, m, a, b, x = self.n, self.m, self.a, self.b, self.variable
+        n, m = self.n, self.m
+        a, b, = self.a, self.b
+        x = self.variable
+
+        constant_case = x * sin((b))**n * cos((b))**m
 
         is_integer = n.is_integer and m.is_integer
         is_number = n.is_number and m.is_number
@@ -494,32 +498,40 @@ class TrigPowerRule(AtomicRule):
                 sin((a*x+b))**(n + 1) / (n+1)
             hypergeo = hyper(((1 - m)/2, (n + 1)/2), ((n + 3)/2,),
                              sin((a*x+b))**2)
-            return prefactor * hypergeo / a
+            result = prefactor * hypergeo / a
 
-        terms = []
-        r = m // 2
-        s = n // 2
+        else:
 
-        # if m is odd
-        if m % 2 == 1:
-            for k in range(r + 1):
-                t = (-1)**k * binomial(r, k) * sin((a*x+b))**(n + 2*k + 1) / (n + 2*k + 1)
-                terms.append(t)
-            return Add(*terms)/a
+            r = m // 2
+            s = n // 2
 
-        # if n is odd
-        if n % 2 == 1:
-            for k in range(s + 1):
-                t = (-1)**k * binomial(s, k) * cos((a*x+b))**(m + 2*k + 1) / (m + 2*k + 1)
-                terms.append(t)
-            return -Add(*terms)/a
+            # if m is odd
+            if m % 2 == 1:
+                terms = [
+                    (-1)**k * binomial(r, k) * sin((a*x+b))**(n + 2*k + 1) / (n + 2*k + 1)
+                    for k in range(r + 1)
+                ]
+                result = Add(*terms)/a
+                # return Piecewise((Add(*terms)/a, Ne(a, 0)), (constant_case, True))
 
-        # if both m and n are even
-        terms.append(self._A(r, s, 0) * (a*x+b)/2)
-        for j in range(1, r + s + 1):
-            t = self._A(r, s, j) * sin(2*j*(a*x+b)) / (2*j)
-            terms.append(t)
-        return Add(*terms)/a
+            # if n is odd
+            elif n % 2 == 1:
+                terms = [
+                    (-1)**k * binomial(s, k) * cos((a*x+b))**(m + 2*k + 1) / (m + 2*k + 1)
+                    for k in range(s + 1)
+                ]
+                result = -Add(*terms)/a
+                # return Piecewise((-Add(*terms)/a, Ne(a, 0)), (Integral(self.integrand, self.variable), True))
+
+            # if both m and n are even
+            else:
+                terms = [self._A(r, s, 0) * (a*x+b)/2] + [
+                    self._A(r, s, j) * sin(2*j*(a*x+b)) / (2*j)
+                    for j in range(1, r + s + 1)
+                ]
+                result = Add(*terms)/a
+
+        return Piecewise((result, Ne(a, 0)), (constant_case, True))
 
 
 class ExpRule(AtomicRule):
