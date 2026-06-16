@@ -531,7 +531,7 @@ class TrigPowerRule(AtomicRule):
                 ]
                 result = Add(*terms)/a
 
-        return Piecewise((result, Ne(a, 0)), (constant_case, True))
+        return Piecewise((result.expand(), Ne(a, 0)), (constant_case, True))
 
 
 class ExpRule(AtomicRule):
