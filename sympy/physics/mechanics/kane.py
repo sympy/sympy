@@ -362,11 +362,15 @@ class KanesMethod(MethodBase):
         self._nonholonomic_constraints = none_handler(nonholonomic)
         if self.nonholonomic_constraints:
             con_diff = msubs(
-                self.holonomic_constraints.diff(t),
+                self.holonomic_constraints.diff(t),  # could be empty
                 self._qdot_u_map)
             self._velocity_constraints = con_diff.col_join(
                 self.nonholonomic_constraints)
-        else:
+        elif self.holonomic_constraints:  # no nonholonomic supplied
+            self._velocity_cosntraints = msubs(
+                self.holonomic_constraints.diff(t),
+                self._qdot_u_map)
+        else:  # use user supplied velocity constraints
             self._velocity_constraints = msubs(none_handler(vel),
                                                self._qdot_u_map)
 
