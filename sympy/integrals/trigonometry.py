@@ -1,5 +1,5 @@
 from __future__ import annotations
-from sympy.core import cacheit, Dummy, Ne, Integer, Rational, S, Wild
+from sympy.core import cacheit, Dummy, Ne, Rational, S, Wild
 from sympy.functions import binomial, sin, cos, Piecewise, Abs
 from .integrals import integrate
 
@@ -11,16 +11,10 @@ from .integrals import integrate
 #
 # so we cache the pattern
 
-# need to use a function instead of lamda since hash of lambda changes on
-# each call to _pat_sincos
-def _integer_instance(n):
-    return isinstance(n, Integer)
-
 @cacheit
 def _pat_sincos(x):
     a = Wild('a', exclude=[x])
-    n, m = [Wild(s, exclude=[x], properties=[_integer_instance])
-                for s in 'nm']
+    n, m = [Wild(s, exclude=[x]) for s in 'nm']
     pat = sin(a*x)**n * cos(a*x)**m
     return pat, a, n, m
 
@@ -75,6 +69,18 @@ def trigintegrate(f, x, conds='piecewise'):
     zz = x if n.is_zero else S.Zero
 
     a = M[a]
+
+    # A non-integer power is still integrable when the other power is a
+    # positive odd integer: the odd-power substitution below then gives a
+    # finite sum of powers of u. The later branches need both powers to be
+    # concrete integers, so bail out on any other non-integer case.
+    if not (n.is_Integer and m.is_Integer):
+        n_pos_odd = bool(n.is_Integer and n.is_odd and n.is_positive)
+        m_pos_odd = bool(m.is_Integer and m.is_odd and m.is_positive)
+        other = m if n_pos_odd else n
+        if not ((n_pos_odd or m_pos_odd)
+                and other.is_number and other.is_integer is False):
+            return None
 
     if n.is_odd or m.is_odd:
         u = _u

@@ -97,3 +97,23 @@ def test_trigintegrate_symbolic():
     assert trigintegrate(cos(x)**n, x) is None
     assert trigintegrate(sin(x)**n, x) is None
     assert trigintegrate(cot(x)**n, x) is None
+
+
+def test_trigintegrate_noninteger_power():
+    # issue #29882: one power a positive odd integer, the other non-integer
+    assert trigintegrate(sin(x)**3*cos(x)**Rational(3, 2), x) == \
+        2*cos(x)**Rational(9, 2)/9 - 2*cos(x)**Rational(5, 2)/5
+    assert trigintegrate(sin(x)**Rational(3, 2)*cos(x)**3, x) == \
+        -2*sin(x)**Rational(9, 2)/9 + 2*sin(x)**Rational(5, 2)/5
+    assert trigintegrate(sin(x)**5*cos(x)**Rational(5, 2), x) == \
+        -2*cos(x)**Rational(15, 2)/15 + 4*cos(x)**Rational(11, 2)/11 \
+        - 2*cos(x)**Rational(7, 2)/7
+    assert trigintegrate(sin(x)**3*cos(x)**Rational(-1, 2), x) == \
+        2*cos(x)**Rational(5, 2)/5 - 2*cos(x)**Rational(1, 2)
+
+    # other non-integer combinations are not handled here, must return None
+    assert trigintegrate(sin(x)**2*cos(x)**Rational(3, 2), x) is None
+    assert trigintegrate(
+        sin(x)**Rational(7, 2)*cos(x)**Rational(3, 2), x) is None
+    k = Symbol('k')
+    assert trigintegrate(sin(x)**3*cos(x)**k, x) is None
