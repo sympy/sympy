@@ -307,6 +307,10 @@ class Add(Expr, AssocOp):
                 # everything else
                 c = S.One
                 s = o
+            if s.is_Pow:
+                b, e = s.as_base_exp()
+                if e == 1.0:
+                    s = b
 
             # now we have:
             # o = c*s, where

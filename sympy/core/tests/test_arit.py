@@ -2525,3 +2525,9 @@ def test_Mul_is_zero_with_zero_factor():
     # No zero
     assert Mul(x, x, evaluate=False).is_zero is None
     assert Mul(1, x, evaluate=False).is_zero is None
+
+def test_pow_float_one_in_add():
+    # Pow(x, Float(1.0)) should be treated as x during Add.flatten
+    x = Symbol('x')
+    assert x + Pow(x, Float(1.0)) == 2*x
+    assert x**0.5 * x**0.5 + x == 2*x
