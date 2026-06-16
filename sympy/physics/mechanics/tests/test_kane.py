@@ -441,28 +441,23 @@ def test_implicit_kinematics():
                       B_ref_vel_kd & B.z,
                      ]
 
-    u_ind = [U, V, W, P, Q, R]
+    u_ind = [U, V, W, Q, R]
 
     # constraints
     q_att_vec = Matrix(q_att)
     config_cons = [(q_att_vec.T*q_att_vec)[0] - 1] #unit norm
     kinematic_eqs = kinematic_eqs + [(q_att_vec.T * q_att_vec.diff())[0]]
 
-    try:
-        KM = KanesMethod(
-            NED,
-            q_ind,
-            u_ind,
-            q_dependent=q_dep,
-            kd_eqs=kinematic_eqs,
-            configuration_constraints=config_cons,
-            velocity_constraints=[],
-            u_dependent=[],  # no dependent speeds
-            u_auxiliary=[],  # no auxiliary speeds
-            explicit_kinematics=False  # implicit kinematics
-        )
-    except Exception as e:
-        raise e
+    KM = KanesMethod(
+        NED,
+        q_ind,
+        u_ind,
+        q_dependent=q_dep,
+        kd_eqs=kinematic_eqs,
+        configuration_constraints=config_cons,
+        u_dependent=[P],
+        explicit_kinematics=False  # implicit kinematics
+    )
 
     # mass and inertia dyadic relative to CM
     M_B = symbols('M_B')
@@ -561,3 +556,142 @@ def test_issue_24887():
     assert find_dynamicsymbols(kane.forcing).issubset({q1, q2, q3, u1, u2, u3})
     assert simplify(kane.mass_matrix - expected_md) == zeros(3, 3)
     assert simplify(kane.forcing - expected_fd) == zeros(3, 1)
+
+
+def test_constraint_combos():
+    # This tests the combinations of ways you can supply the constraints.
+
+    l, m, c = symbols('l m c')
+    q1, q2, q3, u1, u2, u3 = dynamicsymbols('q1:4 u1:4')
+    N, A = ReferenceFrame('N'), ReferenceFrame('A')
+    A.orient_body_fixed(N, (q1, q2, q3), 'zxy')
+    N_w_A = A.ang_vel_in(N)
+    kdes = [N_w_A.dot(A.x) - u1, N_w_A.dot(A.y) - u2, N_w_A.dot(A.z) - u3]
+    O = Point('O')
+    O.set_vel(N, 0)
+    Po = O.locatenew('Po', -l*A.y)
+    Po.set_vel(A, 0)
+    P = Particle('P', Po, m)
+
+    # no constraints
+    kane = KanesMethod(
+        N,
+        [q1, q2, q3],
+        [u1, u2, u3],
+        kdes, bodies=[P]
+    )
+    assert kane.holonomic_constraints == Matrix([])
+    assert kane.nonholonomic_constraints == Matrix([])
+    assert kane.velocity_constraints == Matrix([])
+
+    # empty constraints
+    kane = KanesMethod(
+        N,
+        [q1, q2, q3],
+        [u1, u2, u3],
+        kdes, bodies=[P],
+        configuration_constraints=[],
+        nonholonomic_constraints=[],
+    )
+    assert kane.holonomic_constraints == Matrix([])
+    assert kane.nonholonomic_constraints == Matrix([])
+    assert kane.velocity_constraints == Matrix([])
+
+    # only holonomic constraints
+    kane = KanesMethod(
+        N,
+        [q2, q3],
+        [u2, u3],
+        kdes, bodies=[P],
+        q_dependent=[q1],
+        configuration_constraints=[q1 - q2],
+        u_dependent=[u1],
+    )
+    assert kane.holonomic_constraints == Matrix([q1 - q2])
+    assert kane.nonholonomic_constraints == Matrix([])
+    assert kane.velocity_constraints == Matrix([kane.kindiffdict()[q1.diff()] -
+                                                kane.kindiffdict()[q2.diff()]])
+
+    # only nonholonomic constraints
+    kane = KanesMethod(
+        N,
+        [q1, q2, q3],
+        [u2, u3],
+        kdes, bodies=[P],
+        nonholonomic_constraints=[u1 - u2],
+        u_dependent=[u1],
+    )
+    assert kane.holonomic_constraints == Matrix([])
+    assert kane.nonholonomic_constraints == Matrix([u1 - u2])
+    assert kane.velocity_constraints == Matrix([u1 - u2])
+
+    # holonomic and nonholonomic constraints
+    kane = KanesMethod(
+        N,
+        [q2, q3],
+        [u2],
+        kdes, bodies=[P],
+        configuration_constraints=[q1 - q2],
+        q_dependent=[q1],
+        nonholonomic_constraints=[u2 - u3],
+        u_dependent=[u1, u3],
+    )
+    assert kane.holonomic_constraints == Matrix([q1 - q2])
+    assert kane.nonholonomic_constraints == Matrix([u2 - u3])
+    assert kane.velocity_constraints == Matrix([kane.kindiffdict()[q1.diff()] -
+                                                kane.kindiffdict()[q2.diff()],
+                                                u2 - u3])
+
+    # holonomic and velocity constraints
+    kane = KanesMethod(
+        N,
+        [q2, q3],
+        [u2],
+        kdes, bodies=[P],
+        configuration_constraints=[q1 - q2],
+        q_dependent=[q1],
+        velocity_constraints=[q1.diff() - q2.diff(), u2 - u3],
+        u_dependent=[u1, u3],
+    )
+    assert kane.holonomic_constraints == Matrix([q1 - q2])
+    assert kane.nonholonomic_constraints == Matrix([])
+    assert kane.velocity_constraints == Matrix([kane.kindiffdict()[q1.diff()] -
+                                                kane.kindiffdict()[q2.diff()],
+                                                u2 - u3])
+
+    # nonholonomic and velocity not simultaneously allowed
+    with raises(ValueError):
+        kane = KanesMethod(
+            N,
+            [q1, q2, q3],
+            [u1, u2, u3],
+            kdes, bodies=[P],
+            velocity_constraints=[],
+            nonholonomic_constraints=[],
+        )
+
+    # incorrect number of dependent coordinates
+    with raises(ValueError):
+        kane = KanesMethod(
+            N,
+            [q1, q2, q3],
+            [u2],
+            kdes, bodies=[P],
+            configuration_constraints=[q1 - q2],
+            q_dependent=[],
+            nonholonomic_constraints=[u2 - u3],
+            u_dependent=[u1, u3],
+        )
+
+    # incorrect number of dependent speeds
+    with raises(ValueError):
+        kane = KanesMethod(
+            N,
+            [q1, q2, q3],
+            [u1, u2],
+            kdes, bodies=[P],
+            configuration_constraints=[q1 - q2],
+            q_dependent=[q1],
+            nonholonomic_constraints=[u2 - u3],
+            u_dependent=[u3],
+        )
