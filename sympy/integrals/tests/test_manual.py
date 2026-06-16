@@ -15,6 +15,7 @@ from sympy.functions.special.error_functions import (Chi, Ci, Ei, Shi, Si, erf, 
 from sympy.functions.special.gamma_functions import uppergamma
 from sympy.functions.special.polynomials import (assoc_laguerre, chebyshevt, chebyshevu, gegenbauer, hermite, jacobi, laguerre, legendre)
 from sympy.functions.special.zeta_functions import polylog
+from sympy.functions.special.hyper import hyper
 from sympy.integrals.integrals import (Integral, integrate)
 from sympy.logic.boolalg import And
 from sympy import factor
@@ -118,6 +119,53 @@ def test_manualintegrate_trigonometry():
     f, F = csch(x), log(tanh(x/2))
     assert manualintegrate(f, x) == F
     assert (F.diff(x) - f).rewrite(exp).simplify() == 0
+
+
+def test_manualintegrate_trigpowers_odd():
+    assert manualintegrate(sin(x)**3, x) == -cos(x) + cos(x)**3/3
+    assert manualintegrate(cos(x)**3, x) == sin(x) - sin(x)**3/3
+    assert manualintegrate(sin(x)**5, x) == -cos(x) + 2*cos(x)**3/3 - cos(x)**5/5
+    assert manualintegrate(cos(x)**5, x) == sin(x) - 2*sin(x)**3/3 + sin(x)**5/5
+
+    assert manualintegrate(sin(x)**3 * cos(x)**2, x) == -cos(x)**3/3 + cos(x)**5/5
+    assert manualintegrate(sin(x)**2 * cos(x)**3, x) == sin(x)**3/3 - sin(x)**5/5
+
+    y = Symbol('y')
+    assert manualintegrate(sin(y*x)**3 * cos(y*x)**2, x) == Piecewise(
+        (-cos(y*x)**3/(3*y) + cos(y*x)**5/(5*y), Ne(y, 0)), (0, True))
+    assert manualintegrate(sin(y*x)**2 * cos(y*x)**3, x) == Piecewise(
+        (sin(y*x)**3/(3*y) - sin(y*x)**5/(5*y), Ne(y, 0)), (0, True))
+
+
+def test_manualintegrate_trigpowers_even():
+    assert manualintegrate(sin(x)**2, x) == x/2 - sin(2*x)/4
+    assert manualintegrate(cos(x)**2, x) == x/2 + sin(2*x)/4
+    assert manualintegrate(sin(x)**4, x) == 3*x/8 - sin(2*x)/4 + sin(4*x)/32
+    assert manualintegrate(cos(x)**4, x) == 3*x/8 + sin(2*x)/4 + sin(4*x)/32
+
+    assert manualintegrate(sin(x)**2 * cos(x)**2, x) == x/8 - sin(4*x)/32
+    assert manualintegrate(sin(x)**4 * cos(x)**2, x) == x/16 - sin(2*x)/64 - sin(4*x)/64 + sin(6*x)/192
+
+    y = Symbol('y')
+    assert manualintegrate(sin(y*x)**2 * cos(y*x)**2, x) == Piecewise(
+        (x/8 - sin(4*y*x)/(32*y), Ne(y, 0)), (0, True))
+    assert manualintegrate(sin(y*x)**4 * cos(y*x)**2, x) == Piecewise(
+        (x/16 - sin(2*y*x)/(64*y) - sin(4*y*x)/(64*y) + sin(6*y*x)/(192*y), Ne(y, 0)), (0, True))
+
+
+def test_manualintegrate_trigpowers_mixed():
+    assert manualintegrate(sin(x)**1.5 * cos(x), x) == \
+        0.4*sin(x)**2.5*hyper((1.25, 0), (2.25,), sin(x)**2)
+    assert manualintegrate(sin(x) * cos(x)**1.5, x) == \
+        sin(x)**2*hyper((-0.25, 1), (2,), sin(x)**2)/2
+    assert manualintegrate(sin(x)**1.5 * cos(x)**2.5, x) == \
+        0.4*sin(x)**2.5*hyper((-0.75, 1.25), (2.25,), sin(x)**2)
+    assert manualintegrate(sin(x)**-1.5 * cos(x)**2.5, x) == \
+        -2.0*hyper((-0.75, -0.25), (0.75,), sin(x)**2)/sin(x)**0.5
+    assert manualintegrate(sin(x)**1.5 * cos(x)**-2.5, x) == \
+        0.4*sin(x)**2.5*hyper((1.25, 1.75), (2.25,), sin(x)**2)
+    assert manualintegrate(sin(x)**-1.5 * cos(x)**-2.5, x) == \
+        -2.0*hyper((-0.25, 1.75), (0.75,), sin(x)**2)/sin(x)**0.5
 
 
 @slow
