@@ -502,8 +502,8 @@ class TrigPowerRule(AtomicRule):
 
         else:
 
-            r = m // 2
-            s = n // 2
+            r = int(m // 2)
+            s = int(n // 2)
 
             # if m is odd
             if m % 2 == 1:
@@ -1990,8 +1990,8 @@ def trig_power_rule(integral: IntegralInfo):
     a_ = Wild('a', exclude=[symbol])
     b_ = Wild('b', exclude=[symbol])
     # Avoid negative integer powers, which would lead to singularities in the integrand
-    n_ = Wild('n', exclude=[symbol], properties=[lambda n: not (n.is_integer and n < 0) or (n >= 0)])
-    m_ = Wild('m', exclude=[symbol], properties=[lambda m: not (m.is_integer and m < 0) or (m >= 0)])
+    n_ = Wild('n', exclude=[symbol], properties=[lambda n: not (n.is_integer and n.is_negative) or (n.is_nonnegative)])
+    m_ = Wild('m', exclude=[symbol], properties=[lambda m: not (m.is_integer and m.is_negative) or (m.is_nonnegative)])
 
     match = integrand.match(sin(a_*symbol+b_)**n_ * cos(a_*symbol+b_)**m_)
     if not match:
