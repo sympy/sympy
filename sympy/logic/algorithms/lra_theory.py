@@ -512,6 +512,10 @@ class LRASolver():
         M = self.A.copy()
         basic = {s: i for i, s in enumerate(self.slack)}  # contains the row index associated with each basic variable
         nonbasic = set(self.nonslack)
+
+        # Save snapshot before simplex changes assignments
+        snapshot = {var: var.assign for var in self.all_var}
+
         while True:
             if self.run_checks:
                 # nonbasic variables must always be within bounds
@@ -554,6 +558,9 @@ class LRASolver():
                     conflict += [nb.lower_literal for nb in N_minus]
                     conflict.append(xi.lower_literal)
                     conflict = [-conflicting_lit for conflicting_lit in conflict]
+                    # Restore assignments before returning failure
+                    for var in self.all_var:
+                        var.assign = snapshot[var]
                     return False, conflict
                 xj = min(cand, key=str)
                 M = self._pivot_and_update(M, basic, nonbasic, xi, xj, xi.lower)
@@ -573,6 +580,9 @@ class LRASolver():
                     conflict_bounds.append(xi.upper_literal)
 
                     conflict = [-conflicting_lit for conflicting_lit in conflict_bounds]
+                    # Restore assignments before returning failure
+                    for var in self.all_var:
+                        var.assign = snapshot[var]
                     return False, conflict
                 xj = min(cand, key=lambda v: v.col_idx)
                 M = self._pivot_and_update(M, basic, nonbasic, xi, xj, xi.upper)
@@ -680,10 +690,7 @@ class LRASolver():
         else:
             xi.lower = old_bound
 
-        for var in self.all_var:
-            var.assign = self.last_assign_snapshot[var]
-
-        self.is_sat = True
+        self.is_sat = False
         self.result = None
 
 def _sep_const_coeff(expr):
