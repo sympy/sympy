@@ -410,7 +410,10 @@ class SATSolver:
         self.heur_lit_assigned(lit)
 
         if self.lra and not (self.lra.result and self.lra.result[0] is False):
-            self.lra.assert_lit(lit)
+            res = self.lra.assert_lit(lit)
+            if res and res[0] is False:
+                self.is_unsatisfied = True
+                self._simple_add_learned_clause(res[1])
 
         sentinel_list = list(self.sentinels[-lit])
 
@@ -527,6 +530,9 @@ class SATSolver:
                 return False
             else:
                 self._assign_literal(next_lit)
+                if self.is_unsatisfied:
+                    self._unit_prop_queue = []
+                    return False
 
         return result
 
