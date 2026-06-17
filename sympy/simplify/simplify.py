@@ -1315,7 +1315,7 @@ def besselsimp(expr):
         def _use_recursion(bessel, expr):
             def _order_key(b):
                c, base = re(b.args[0]).as_coeff_Add()
-               return (default_sort_key(base), float(c))
+               return (default_sort_key(base), c)
             while True:
                 bessels = expr.find(lambda x: isinstance(x, bessel))
                 for ba in sorted(bessels, key=_order_key):
