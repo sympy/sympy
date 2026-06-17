@@ -7,6 +7,7 @@ from sympy.external.mpmath import local_workprec
 from sympy.functions.special.gamma_functions import gamma, digamma
 from sympy.functions.combinatorial.numbers import catalan
 from sympy.functions.elementary.complexes import conjugate
+from sympy.functions.elementary.exponential import log
 
 
 ###############################################################################
@@ -244,7 +245,17 @@ class betainc(DefinedFunction):
 
     def fdiff(self, argindex):
         a, b, x1, x2 = self.args
-        if argindex == 3:
+        if argindex == 1:
+            # Diff wrt a: integral of t^{a-1}*(1-t)^{b-1}*ln(t) dt
+            from sympy.integrals.integrals import Integral
+            t = Dummy(uniquely_named_symbol('t', [a, b, x1, x2]).name)
+            return Integral(t**(a - 1)*(1 - t)**(b - 1)*log(t), (t, x1, x2))
+        elif argindex == 2:
+            # Diff wrt b: integral of t^{a-1}*(1-t)^{b-1}*ln(1-t) dt
+            from sympy.integrals.integrals import Integral
+            t = Dummy(uniquely_named_symbol('t', [a, b, x1, x2]).name)
+            return Integral(t**(a - 1)*(1 - t)**(b - 1)*log(1 - t), (t, x1, x2))
+        elif argindex == 3:
             # Diff wrt x1
             return -(1 - x1)**(b - 1)*x1**(a - 1)
         elif argindex == 4:
@@ -263,7 +274,13 @@ class betainc(DefinedFunction):
         return Expr._from_mpmath(res, prec)
 
     def _eval_is_real(self):
+        a, b, x1, x2 = self.args
+        # If all args are real, the integral is real
         if all(arg.is_real for arg in self.args):
+            return True
+        # If a, b are known positive and x1, x2 are real,
+        # the integrand t^{a-1}*(1-t)^{b-1} is real-valued
+        if a.is_positive and b.is_positive and x1.is_real and x2.is_real:
             return True
 
     def _eval_conjugate(self):

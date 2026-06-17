@@ -97,3 +97,38 @@ def test_trigintegrate_symbolic():
     assert trigintegrate(cos(x)**n, x) is None
     assert trigintegrate(sin(x)**n, x) is None
     assert trigintegrate(cot(x)**n, x) is None
+
+
+def test_trigintegrate_rational_exponents():
+    """Regression test for issue #29882:
+    trigintegrate should handle Rational exponents via Incomplete Beta."""
+    from sympy.functions.special.beta_functions import betainc
+
+    # Basic case from the issue report: sin(x)**(1/2) * cos(x)**(3/2)
+    result = trigintegrate(sin(x)**Rational(1, 2) * cos(x)**Rational(3, 2), x)
+    assert result is not None
+    expected = betainc(Rational(3, 4), Rational(5, 4), 0, sin(x)**2) / 2
+    assert result == expected
+
+    # Both exponents rational: sin(x)**(1/3) * cos(x)**(2/3)
+    result2 = trigintegrate(sin(x)**Rational(1, 3) * cos(x)**Rational(2, 3), x)
+    assert result2 is not None
+    expected2 = betainc(Rational(2, 3), Rational(5, 6), 0, sin(x)**2) / 2
+    assert result2 == expected2
+
+    # One integer, one rational: sin(x)**2 * cos(x)**(1/2)
+    result3 = trigintegrate(sin(x)**2 * cos(x)**Rational(1, 2), x)
+    assert result3 is not None
+    expected3 = betainc(Rational(3, 2), Rational(3, 4), 0, sin(x)**2) / 2
+    assert result3 == expected3
+
+    # Negative rational exponent (still > -1): sin(x)**(-1/2) * cos(x)**(3/2)
+    result4 = trigintegrate(sin(x)**Rational(-1, 2) * cos(x)**Rational(3, 2), x)
+    assert result4 is not None
+    expected4 = betainc(Rational(1, 4), Rational(5, 4), 0, sin(x)**2) / 2
+    assert result4 == expected4
+
+    # Integer exponents should NOT be rerouted (still handled by original path)
+    assert trigintegrate(sin(x)**2 * cos(x)**3, x) == \
+        sin(x)**3/3 - sin(x)**5/5
+

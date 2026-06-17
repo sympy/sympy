@@ -73,6 +73,36 @@ def test_betainc():
 
     assert betainc(1, 2, 3, 3).evalf() == 0
 
+    # fdiff: derivatives wrt x1 (argindex=3) and x2 (argindex=4) return closed-form
+    assert betainc(a, b, x1, x2).fdiff(3) == -(1 - x1)**(b - 1)*x1**(a - 1)
+    assert betainc(a, b, x1, x2).fdiff(4) == (1 - x2)**(b - 1)*x2**(a - 1)
+
+    # fdiff: derivatives wrt a (argindex=1) and b (argindex=2) return Integral
+    da = betainc(a, b, x1, x2).fdiff(1)
+    assert isinstance(da, Integral)
+    db = betainc(a, b, x1, x2).fdiff(2)
+    assert isinstance(db, Integral)
+
+    # fdiff: invalid argindex raises
+    raises(ArgumentIndexError, lambda: betainc(a, b, x1, x2).fdiff(5))
+
+    # diff through chain rule still works for the integration use case
+    from sympy.functions.elementary.trigonometric import sin
+    x = symbols('x')
+    expr = betainc(Rational(3, 4), Rational(5, 4), 0, sin(x)**2) / 2
+    d = diff(expr, x)
+    assert d is not None
+    # Numeric check: d/dx at pi/6 should equal sin^(1/2)*cos^(3/2) at pi/6
+    from sympy.core.numbers import pi as sym_pi
+    val = float(d.subs(x, sym_pi / 6).evalf())
+    expected = float((sin(x)**Rational(1, 2) * (1 - sin(x)**2)**Rational(3, 4)).subs(x, sym_pi / 6).evalf())
+    assert abs(val - expected) < 1e-10
+
+    # _eval_is_real: positive a, b with real limits
+    xr = symbols('xr', real=True)
+    assert betainc(Rational(3, 4), Rational(5, 4), 0, xr).is_real == True
+    assert betainc(Rational(3, 4), Rational(5, 4), 0, sin(xr)**2).is_real == True
+
 
 def test_betainc_regularized():
     a, b, x1, x2 = symbols('a b x1 x2')

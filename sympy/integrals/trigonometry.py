@@ -1,6 +1,7 @@
 from __future__ import annotations
 from sympy.core import cacheit, Dummy, Ne, Integer, Rational, S, Wild
 from sympy.functions import binomial, sin, cos, Piecewise, Abs
+from sympy.functions.special.beta_functions import betainc
 from .integrals import integrate
 
 # TODO sin(a*x)*cos(b*x) -> sin((a+b)x) + sin((a-b)x) ?
@@ -20,6 +21,17 @@ def _integer_instance(n):
 def _pat_sincos(x):
     a = Wild('a', exclude=[x])
     n, m = [Wild(s, exclude=[x], properties=[_integer_instance])
+                for s in 'nm']
+    pat = sin(a*x)**n * cos(a*x)**m
+    return pat, a, n, m
+
+def _rational_instance(n):
+    return isinstance(n, (Integer, Rational))
+
+@cacheit
+def _pat_sincos_rational(x):
+    a = Wild('a', exclude=[x])
+    n, m = [Wild(s, exclude=[x], properties=[_rational_instance])
                 for s in 'nm']
     pat = sin(a*x)**n * cos(a*x)**m
     return pat, a, n, m
@@ -67,7 +79,8 @@ def trigintegrate(f, x, conds='piecewise'):
     M = f.match(pat)
 
     if M is None:
-        return
+        # Integer pattern failed; try rational exponents
+        return _trigintegrate_rational(f, x, conds)
 
     n, m = M[n], M[m]
     if n.is_zero and m.is_zero:
@@ -334,3 +347,45 @@ def _cos_pow_integrate(n, x):
         # n == 0
         #Recursion Break.
         return x
+
+
+def _trigintegrate_rational(f, x, conds='piecewise'):
+    """Handle sin(a*x)**n * cos(a*x)**m for non-integer (Rational) exponents.
+
+    Uses the substitution u = sin^2(x) to convert the integral into the
+    Incomplete Beta function:
+
+        integrate(sin(x)**n * cos(x)**m, x)
+            = (1/2) * betainc((n+1)/2, (m+1)/2, 0, sin(a*x)**2) / a
+
+    This is valid when (n+1)/2 > 0 and (m+1)/2 > 0, i.e. n > -1 and m > -1.
+    """
+    pat, a, n, m = _pat_sincos_rational(x)
+    M = f.match(pat)
+    if M is None:
+        return None
+
+    n, m = M[n], M[m]
+    a = M[a]
+
+    # If both are integers, the main trigintegrate path should have handled it.
+    # Return None so other integration strategies can try.
+    if n.is_Integer and m.is_Integer:
+        return None
+
+    # We need at least Rational exponents for this strategy.
+    if not (n.is_Rational and m.is_Rational):
+        return None
+
+    # Convergence guard: need (n+1)/2 > 0 and (m+1)/2 > 0
+    alpha = (n + S.One) / 2
+    beta_param = (m + S.One) / 2
+    if not (alpha.is_positive and beta_param.is_positive):
+        return None
+
+    result = betainc(alpha, beta_param, S.Zero, sin(a*x)**2) / 2
+
+    if conds == 'piecewise':
+        zz = x if n.is_zero else S.Zero
+        return Piecewise((result / a, Ne(a, 0)), (zz, True))
+    return result / a
