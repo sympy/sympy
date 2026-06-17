@@ -73,6 +73,12 @@ def test_more_than_255_args_issue_10259():
         expr = op(*symbols('x:256'))
         assert eval(srepr(expr)) == expr
 
+def test_Equation():
+    from sympy.core.equation import Equation
+    x, y, z = symbols('x y z')
+    sT(Equation(x,y/z), "Equation(Symbol('x'), Mul(Symbol('y'), Pow(Symbol("
+                       "'z'), Integer(-1))))")
+
 
 def test_Function():
     sT(Function("f")(x), "Function('f')(Symbol('x'))")
