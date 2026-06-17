@@ -1703,3 +1703,18 @@ def test_issue_23952():
     expr = Sum(abs(k1 - k2)*p**k1 *(1 - q)**(n - k2),
         (k1, 0, n), (k2, 0, n))
     assert expr.subs(p,0).subs(q,1).subs(n, 3).doit() == 3
+
+def test_issue_29794_piecewise_sum_simplify_dummy_index():
+    i = symbols("i", integer=True)
+
+    s = Sum(
+        Piecewise(
+            (i**2, i >= S(174) / 25),
+            (0, True),
+        ),
+        (i, 0, 12),
+    )
+
+    assert s.simplify() == 559
+    assert (-s).simplify() == -559
+    assert i not in (-s).simplify().free_symbols
