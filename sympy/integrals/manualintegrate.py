@@ -489,13 +489,12 @@ class TrigPowerRule(AtomicRule):
         a, b, = self.a, self.b
         x = self.variable
 
-        constant_case = x * sin((b))**n * cos((b))**m
+        constant_case = x * sin(b)**n * cos(b)**m
 
         is_integer = n.is_integer and m.is_integer
         is_number = n.is_number and m.is_number
         if not is_integer or not is_number:
-            prefactor = cos((a*x+b))**(m - 1) * cos((a*x+b))**(1 - m) * \
-                sin((a*x+b))**(n + 1) / (n+1)
+            prefactor = sin(a*x+b)**(n + 1) / (n+1)
             hypergeo = hyper(((1 - m)/2, (n + 1)/2), ((n + 3)/2,),
                              sin((a*x+b))**2)
             result = prefactor * hypergeo / a
@@ -508,20 +507,18 @@ class TrigPowerRule(AtomicRule):
             # if m is odd
             if m % 2 == 1:
                 terms = [
-                    (-1)**k * binomial(r, k) * sin((a*x+b))**(n + 2*k + 1) / (n + 2*k + 1)
+                    (-1)**k * binomial(r, k) * sin(a*x+b)**(n + 2*k + 1) / (n + 2*k + 1)
                     for k in range(r + 1)
                 ]
                 result = Add(*terms)/a
-                # return Piecewise((Add(*terms)/a, Ne(a, 0)), (constant_case, True))
 
             # if n is odd
             elif n % 2 == 1:
                 terms = [
-                    (-1)**k * binomial(s, k) * cos((a*x+b))**(m + 2*k + 1) / (m + 2*k + 1)
+                    (-1)**k * binomial(s, k) * cos(a*x+b)**(m + 2*k + 1) / (m + 2*k + 1)
                     for k in range(s + 1)
                 ]
                 result = -Add(*terms)/a
-                # return Piecewise((-Add(*terms)/a, Ne(a, 0)), (Integral(self.integrand, self.variable), True))
 
             # if both m and n are even
             else:
