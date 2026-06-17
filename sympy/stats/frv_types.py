@@ -29,7 +29,6 @@ from sympy.functions.combinatorial.factorials import binomial
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.logic.boolalg import Or
-from sympy.sets.contains import Contains
 from sympy.sets.fancysets import Range
 from sympy.sets.sets import (Intersection, Interval)
 from sympy.functions.special.beta_functions import beta as beta_fn
@@ -226,7 +225,7 @@ class DieDistribution(SingleFiniteDistribution):
     @property
     def set(self):
         if self.is_symbolic:
-            return Intersection(S.Naturals0, Interval(0, self.sides))
+            return Intersection(S.Naturals, Interval(1, self.sides))
         return set(map(Integer, range(1, self.sides + 1)))
 
     def pmf(self, x):
@@ -234,8 +233,7 @@ class DieDistribution(SingleFiniteDistribution):
         if not (x.is_number or x.is_Symbol or is_random(x)):
             raise ValueError("'x' expected as an argument of type 'number', 'Symbol', or "
                         "'RandomSymbol' not %s" % (type(x)))
-        cond = Ge(x, 1) & Le(x, self.sides) & Contains(x, S.Integers)
-        return Piecewise((S.One/self.sides, cond), (S.Zero, True))
+        return S.One / self.sides
 
 def Die(name, sides=6):
     r"""
@@ -423,8 +421,7 @@ class BinomialDistribution(SingleFiniteDistribution):
         if not (x.is_number or x.is_Symbol or is_random(x)):
             raise ValueError("'x' expected as an argument of type 'number', 'Symbol', or "
                         "'RandomSymbol' not %s" % (type(x)))
-        cond = Ge(x, 0) & Le(x, n) & Contains(x, S.Integers)
-        return Piecewise((binomial(n, x) * p**x * (1 - p)**(n - x), cond), (S.Zero, True))
+        return binomial(n, x) * p**x * (1 - p)**(n - x)
 
     @property  # type: ignore
     @cacheit
