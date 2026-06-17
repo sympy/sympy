@@ -208,11 +208,6 @@ class SATSolver:
         if self.is_unsatisfied:
             return
 
-        if self.lra:
-            res = self.lra.check()
-            if res and res[0] is False:
-                return
-
         # While the theory still has clauses remaining
         while True:
             # Perform cleanup / fixup at regular intervals
@@ -232,55 +227,63 @@ class SATSolver:
 
                 # Stopping condition for a satisfying theory
                 if 0 == lit:
-                    yield {self.symbols[abs(lit) - 1]:
-                                lit > 0 for lit in self.var_settings}
+                    res = None
+                    if self.lra and not self.is_unsatisfied:
+                        res = self.lra.check()
 
-                    while self._current_level.flipped:
+                    if res is None or res[0]:
+                        yield {self.symbols[abs(lit) - 1]:
+                                    lit > 0 for lit in self.var_settings}
+
+                        while self._current_level.flipped:
+                            self._undo()
+                        if len(self.levels) == 1:
+                            return
+                        flip_lit = -self._current_level.decision
                         self._undo()
-                    if len(self.levels) == 1:
-                        return
-                    flip_lit = -self._current_level.decision
-                    self._undo()
-                    self.levels.append(self._create_level(flip_lit, flipped=True))
-                    flip_var = True
-                    continue
+                        self.levels.append(
+                            self._create_level(flip_lit, flipped=True))
+                        flip_var = True
+                        continue
+                    else:
+                        self._simple_add_learned_clause(res[1])
+
+                        # Backtrack until reaching a level with one of the
+                        # conflict causing literals.
+                        inconsistent_literals = [
+                            -lit for lit in res[1]
+                        ]
+                        while True:
+                            if len(self.levels) == 1:
+                                return
+
+                            level_vars = self._current_level.var_settings
+                            if any(
+                                lit in level_vars
+                                for lit in inconsistent_literals):
+                                break
+                            self._undo()
+
+                        while self._current_level.flipped:
+                            self._undo()
+                        if len(self.levels) == 1:
+                            return
+                        flip_lit = -self._current_level.decision
+                        self._undo()
+                        self.levels.append(
+                            self._create_level(flip_lit, flipped=True))
+                        flip_var = True
+                        continue
 
                 # Start the new decision level
                 self.levels.append(self._create_level(lit))
 
+            # Update the set of satisfied clauses and add the variable to the
+            # current level's variable assignments
             self._assign_literal(lit)
 
             # _simplify the theory
             self._simplify()
-
-            if self.lra and not self.is_unsatisfied:
-                res = self.lra.check()
-                if res and res[0] is False:
-                    self._simple_add_learned_clause(res[1])
-
-                    # Backtrack until reaching a level with one of the conflict causing literals.
-                    inconsistent_literals = [-lit for lit in res[1]]
-                    while True:
-                        if len(self.levels) == 1:
-                            return
-
-                        level_vars = self._current_level.var_settings
-                        if any(
-                            lit in level_vars
-                            for lit in inconsistent_literals):
-                            break
-                        self._undo()
-
-                    while self._current_level.flipped:
-                        self._undo()
-                    if len(self.levels) == 1:
-                        return
-                    flip_lit = -self._current_level.decision
-                    self._undo()
-                    self.levels.append(
-                        self._create_level(flip_lit, flipped=True))
-                    flip_var = True
-                    continue
 
             # Check if we've made the theory unsat
             if self.is_unsatisfied:
