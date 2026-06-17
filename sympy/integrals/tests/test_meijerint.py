@@ -773,3 +773,13 @@ def test_issue_25949():
     from sympy.core.symbol import symbols
     y = symbols("y", nonzero=True)
     assert integrate(cosh(y*(x + 1)), (x, -1, -0.25), meijerg=True) == sinh(0.75*y)/y
+
+
+def test_issue_29751():
+    # Beta-type integral on [0,1]: when the antiderivative contains exp_polar
+    # (branch-tracking introduced by meijerint), substituting limits can give
+    # the wrong sign.  The fallback to meijerint_definite fixes this.
+    from sympy.functions.special.beta_functions import beta
+    result = integrate(x**Rational(1, 3) * (1 - x)**Rational(1, 2), (x, 0, 1))
+    expected = beta(Rational(4, 3), Rational(3, 2))
+    assert simplify(result - expected) == 0
