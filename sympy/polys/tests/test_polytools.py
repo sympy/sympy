@@ -4309,3 +4309,11 @@ def test_schur_conditions():
 
     assert any(c <= 0 for c in p6.set_domain(QQ).schur_conditions())
     assert any(c <= 0 for c in p6.set_domain(EXRAW).schur_conditions())
+
+
+def test_groebner_reduce_scalar():
+
+    # test for issue https://github.com/sympy/sympy/issues/29828
+    B = groebner([t**2], t, order="lex")
+    assert B.reduce(7) == ([0], 7)
+    assert B.reduce(Integer(7)) == ([0], Integer(7))
