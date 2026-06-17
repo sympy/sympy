@@ -118,6 +118,13 @@ known_functions = {
     "Heaviside": [(lambda x: True, "HeavisideTheta")],
     "KroneckerDelta": [(lambda *x: True, "KroneckerDelta")],
     "sqrt": [(lambda x: True, "Sqrt")],  # For automatic rewrites
+    "floor": [(lambda x: True, "Floor")],
+    "ceiling": [(lambda x: True, "Ceiling")],
+    "sign": [(lambda x: True, "Sign")],
+    "re": [(lambda x: True, "Re")],
+    "im": [(lambda x: True, "Im")],
+    "frac": [(lambda x: True, "FractionalPart")],
+    "Abs": [(lambda x: True, "Abs")],
 }
 
 

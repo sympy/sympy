@@ -11,7 +11,8 @@ from sympy.functions import (exp, sin, cos, fresnelc, fresnels, conjugate, Max,
                              FallingFactorial, harmonic, atan2, sec, acsc,
                              hermite, laguerre, assoc_laguerre, jacobi,
                              gegenbauer, chebyshevt, chebyshevu, legendre,
-                             assoc_legendre, Li, LambertW)
+                             assoc_legendre, Li, LambertW,
+                             floor, ceiling, sign, re, im, frac, Abs)
 
 from sympy.printing.mathematica import mathematica_code as mcode
 
@@ -82,6 +83,14 @@ def test_Function():
     assert mcode(LambertW(x)) == "ProductLog[x]"
     assert mcode(LambertW(x, -1)) == "ProductLog[-1, x]"
     assert mcode(LambertW(x, y)) == "ProductLog[y, x]"
+    assert mcode(floor(x)) == "Floor[x]"
+    assert mcode(ceiling(x)) == "Ceiling[x]"
+    assert mcode(sign(x)) == "Sign[x]"
+    assert mcode(re(x)) == "Re[x]"
+    assert mcode(im(x)) == "Im[x]"
+    assert mcode(frac(x)) == "FractionalPart[x]"
+    assert mcode(Abs(x)) == "Abs[x]"
+
 
 
 def test_special_polynomials():
