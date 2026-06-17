@@ -208,6 +208,11 @@ class SATSolver:
         if self.is_unsatisfied:
             return
 
+        if self.lra:
+            res = self.lra.check()
+            if res and res[0] is False:
+                return
+
         # While the theory still has clauses remaining
         while True:
             # Perform cleanup / fixup at regular intervals
