@@ -9,6 +9,7 @@ from sympy.functions.elementary.hyperbolic import (asinh, csch, cosh, coth, sech
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise, piecewise_fold
 from sympy.functions.elementary.trigonometric import (acos, acot, acsc, asec, asin, atan, cos, cot, csc, sec, sin, tan)
+from sympy.functions.elementary.complexes import sign
 from sympy.functions.special.delta_functions import Heaviside, DiracDelta
 from sympy.functions.special.elliptic_integrals import (elliptic_e, elliptic_f)
 from sympy.functions.special.error_functions import (Chi, Ci, Ei, Shi, Si, erf, erfc, erfi, fresnelc, fresnels, li)
@@ -156,16 +157,21 @@ def test_manualintegrate_trigpowers_even():
 def test_manualintegrate_trigpowers_mixed():
     assert manualintegrate(sin(x)**1.5 * cos(x), x) == \
         0.4*sin(x)**2.5*hyper((1.25, 0), (2.25,), sin(x)**2)
+
     assert manualintegrate(sin(x) * cos(x)**1.5, x) == \
-        sin(x)**2*hyper((-0.25, 1), (2,), sin(x)**2)/2
+        sign(cos(x))**0.5*sin(x)**2*hyper((-0.25, 1), (2,), sin(x)**2)/2
+
     assert manualintegrate(sin(x)**1.5 * cos(x)**2.5, x) == \
-        0.4*sin(x)**2.5*hyper((-0.75, 1.25), (2.25,), sin(x)**2)
+        0.4*sign(cos(x))**1.5*sin(x)**2.5*hyper((-0.75, 1.25), (2.25,), sin(x)**2)
+
     assert manualintegrate(sin(x)**-1.5 * cos(x)**2.5, x) == \
-        -2.0*hyper((-0.75, -0.25), (0.75,), sin(x)**2)/sin(x)**0.5
+        -2.0*sign(cos(x))**1.5*hyper((-0.75, -0.25), (0.75,), sin(x)**2)/sin(x)**0.5
+
     assert manualintegrate(sin(x)**1.5 * cos(x)**-2.5, x) == \
-        0.4*sin(x)**2.5*hyper((1.25, 1.75), (2.25,), sin(x)**2)
+        0.4*sign(cos(x))**(-3.5)*sin(x)**2.5*hyper((1.25, 1.75), (2.25,), sin(x)**2)
+
     assert manualintegrate(sin(x)**-1.5 * cos(x)**-2.5, x) == \
-        -2.0*hyper((-0.25, 1.75), (0.75,), sin(x)**2)/sin(x)**0.5
+        -2.0*sign(cos(x))**(-3.5)*hyper((-0.25, 1.75), (0.75,), sin(x)**2)/sin(x)**0.5
 
 
 @slow
