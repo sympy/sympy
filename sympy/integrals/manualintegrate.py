@@ -504,29 +504,27 @@ class TrigPowerRule(AtomicRule):
             r = int(m // 2)
             s = int(n // 2)
 
-            # if m is odd
-            if m % 2 == 1:
+            # If both odd, take the smallest
+            if m.is_odd and (not n.is_odd or m < n):
                 terms = [
                     (-1)**k * binomial(r, k) * sin(a*x+b)**(n + 2*k + 1) / (n + 2*k + 1)
                     for k in range(r + 1)
                 ]
                 result = Add(*terms)/a
 
-            # if n is odd
-            elif n % 2 == 1:
+            elif n.is_odd:
                 terms = [
                     (-1)**k * binomial(s, k) * cos(a*x+b)**(m + 2*k + 1) / (m + 2*k + 1)
                     for k in range(s + 1)
                 ]
                 result = -Add(*terms)/a
 
-            # if both m and n are even
             else:
                 terms = [self._A(r, s, 0) * (a*x+b)/2] + [
                     self._A(r, s, j) * sin(2*j*(a*x+b)) / (2*j)
                     for j in range(1, r + s + 1)
                 ]
-                result = Add(*terms)/a
+                result = Add(*terms) / a
 
         return Piecewise((result.expand(), Ne(a, 0)), (constant_case, True))
 
