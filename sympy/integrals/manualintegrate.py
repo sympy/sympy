@@ -41,7 +41,7 @@ from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, Symbol, Wild
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import WildFunction
-from sympy.functions.elementary.complexes import Abs
+from sympy.functions.elementary.complexes import Abs, sign
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.hyperbolic import (HyperbolicFunction, csch,
     cosh, coth, sech, sinh, tanh, asinh)
@@ -494,7 +494,8 @@ class TrigPowerRule(AtomicRule):
         is_integer = n.is_integer and m.is_integer
         is_number = n.is_number and m.is_number
         if not is_integer or not is_number:
-            prefactor = sin(a*x+b)**(n + 1) / (n+1)
+            prefactor = sign(cos(a*x+b))**(m - 1) * \
+                sin(a*x+b)**(n + 1) / (n+1)
             hypergeo = hyper(((1 - m)/2, (n + 1)/2), ((n + 3)/2,),
                              sin((a*x+b))**2)
             result = prefactor * hypergeo / a
