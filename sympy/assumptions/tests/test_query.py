@@ -2095,6 +2095,8 @@ def test_real_functions():
     assert ask(Q.real(exp(2*pi*I, evaluate=False))) is True
     assert ask(Q.real(exp(pi*I, evaluate=False))) is True
     assert ask(Q.real(exp(pi*I/2, evaluate=False))) is False
+    assert ask(Q.real(exp(x*pi*I + 2)), Q.integer(x)) is True
+    assert ask(Q.real(exp(x*pi*I + 2))) is None
 
     # logarithm
     assert ask(Q.real(log(I))) is False

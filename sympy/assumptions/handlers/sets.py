@@ -307,8 +307,10 @@ def _(expr, assumptions):
         return _RealPredicate_number(expr, assumptions)
 
     if expr.base == E:
+        c = expr.exp.coeff(I)
+        r = expr.exp - I*c
         return ask(
-            Q.integer(expr.exp/I/pi) | Q.real(expr.exp), assumptions
+            (Q.integer(c/pi) & Q.real(r)) | Q.real(expr.exp), assumptions
         )
 
     if expr.base.func == exp or (expr.base.is_Pow and expr.base.base == E):
@@ -360,8 +362,10 @@ def _(expr, assumptions):
 
 @RealPredicate.register(exp)
 def _(expr, assumptions):
+    c = expr.exp.coeff(I)
+    r = expr.exp - I*c
     return ask(
-        Q.integer(expr.exp/I/pi) | Q.real(expr.exp), assumptions
+        (Q.integer(c/pi) & Q.real(r)) | Q.real(expr.exp), assumptions
     )
 
 @RealPredicate.register(log)
