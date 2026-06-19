@@ -773,3 +773,10 @@ def test_issue_25949():
     from sympy.core.symbol import symbols
     y = symbols("y", nonzero=True)
     assert integrate(cosh(y*(x + 1)), (x, -1, -0.25), meijerg=True) == sinh(0.75*y)/y
+
+
+def test_issue_29900():
+    from sympy.core.symbol import Symbol
+    xn = Symbol('x', negative=True)
+    xu = Symbol('x')
+    assert integrate(sin(xn**3), xn) == integrate(sin(xu**3), xu).subs(xu, xn)
