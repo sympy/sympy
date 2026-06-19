@@ -41,7 +41,7 @@ from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, Symbol, Wild
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import WildFunction
-from sympy.functions.elementary.complexes import Abs, sign
+from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.hyperbolic import (HyperbolicFunction, csch,
     cosh, coth, sech, sinh, tanh, asinh)
@@ -433,7 +433,7 @@ class TrigPowerRule(AtomicRule):
     r"""
     General formula
     ===============
-    \int sin^n(x) cos^m(x) dx = \frac{\cos^{m - 1}(x) \cos^2(x)^{\frac{1}{2} - \frac{m}{2}} \sin^{n + 1}(x) \, _2F_1\left(\frac{1 - m}{2}, \frac{n + 1}{2}; \frac{n + 3}{2}; \sin^2(x)\right)}{n + 1} ; n, m != 0
+    \int sin^n(x) cos^m(x) dx = \frac{\cos^{m - 1}(x) \cos^2(x)^{\frac{1}{2} - \frac{m}{2}} \sin^{n + 1}(x) \, _2F_1\left(\frac{1 - m}{2}, \frac{n + 1}{2}; \frac{n + 3}{2}; \sin^2(x)\right)}{n + 1}
 
     Integer special cases
     =============
@@ -494,7 +494,7 @@ class TrigPowerRule(AtomicRule):
         is_integer = n.is_integer and m.is_integer
         is_number = n.is_number and m.is_number
         if not is_integer or not is_number:
-            prefactor = sign(cos(a*x+b))**(m - 1) * \
+            prefactor = cos(a*x+b)**(m - 1) * (cos(a*x+b)**2)**((1 - m)/2) * \
                 sin(a*x+b)**(n + 1) / (n+1)
             hypergeo = hyper(((1 - m)/2, (n + 1)/2), ((n + 3)/2,),
                              sin((a*x+b))**2)
