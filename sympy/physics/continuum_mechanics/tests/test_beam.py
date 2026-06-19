@@ -982,7 +982,7 @@ def test_apply_sliding_hinge():
                              - l1*q*SingularityFunction(x, l1, 3)/12 + q*SingularityFunction(x, 0, 4)/24
                              - q*SingularityFunction(x, l1, 4)/24
                              + (l1**3*l2*q/24 + l1**3*l3*q/24)*SingularityFunction(x, l1 + l2, 0))/(E*I)
-def test_apply_spring:
+def test_apply_spring():
     b = Beam(13, 20, 20)
     r0, m0 = b.apply_support(0, type="fixed")
     b.apply_spring(8, 100)

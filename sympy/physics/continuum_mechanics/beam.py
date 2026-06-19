@@ -714,14 +714,7 @@ class Beam:
         I = self._get_I(loc)
         spring_moment = Symbol('S_'+str(loc))
 
-        if loc == 0:
-            self.apply_load(spring_moment, loc, -2)
-            self.bc_slope.append((loc,-spring_moment / spring_constant))
-            self._rotation_spring_symbols.append(spring_moment)
-            self._applied_rotation_springs.append(loc)
-            return spring_moment
-
-        elif loc == self.length:
+        if loc == 0 or loc == self.length:
             self.apply_load(spring_moment, loc, -2)
             self.bc_slope.append((loc,-spring_moment / spring_constant))
             self._rotation_spring_symbols.append(spring_moment)
@@ -855,7 +848,6 @@ class Beam:
         loc = sympify(loc)
         E = self.elastic_modulus
         I = self._get_I(loc)
-
         spring_force = Symbol('SF_'+str(loc))
         deflection_jump = Symbol('W_' + str(loc))
         spring_bc = deflection_jump - spring_force / spring_constant
@@ -864,7 +856,6 @@ class Beam:
         self._sliding_hinge_symbols.append(deflection_jump)
         self._spring_force_symbols.append(spring_force)
         self._spring_eqs.append(spring_bc)
-
         self.apply_load(E * I * deflection_jump, loc, -4)
         self.bc_shear_force.append((loc, spring_force))
         return deflection_jump, spring_force
