@@ -7,6 +7,9 @@ Calculus
 .. automodule:: sympy.calculus.euler
     :members:
 
+.. automodule:: sympy.calculus.even_odd
+    :members:
+
 .. automodule:: sympy.calculus.singularities
     :members:
 
