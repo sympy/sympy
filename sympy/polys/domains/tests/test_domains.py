@@ -1433,3 +1433,8 @@ def test_exsqrt():
     assert F7.exsqrt(F7(3)) is None
     assert F7.is_square(F7(0)) is True
     assert F7.exsqrt(F7(0)) == F7(0)
+
+
+def test_Domain_gcdn():
+    coeff_lst = [ZZ(6), ZZ(8), ZZ(4)]
+    assert ZZ.gcdn(coeff_lst) == 2
