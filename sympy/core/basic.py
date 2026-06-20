@@ -1807,13 +1807,13 @@ class Basic(Printable):
         Parameters
         ==========
         
-        The ``query`` argument can be:
+        query : type, Basic, or callable
 
-        - a class such as ``Pow`` or ``exp``, to match all instances of that class
-        - a specific expression, to match occurrences equal to it
-        - a :class:`~.Wild`-containing pattern
-        - any callable taking one argument and returning a bool, used as a custom
-        test on each subexpression
+            - a class such as ``Pow`` or ``exp``, to match all instances of that class
+            - a specific expression, to match occurrences equal to it
+            - a :class:`~.Wild`-containing pattern
+            - any callable taking one argument and returning a bool, used as a custom
+              test on each subexpression
 
         group : bool, optional
 
