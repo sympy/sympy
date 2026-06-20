@@ -126,14 +126,14 @@ def test_number_line_properties():
 
 @slow
 def test_extended_real_infinite_cancellation():
-    a = Symbol('a', extended_real=True)
+    a = Symbol('a')
     assert ask(a + 1 > a, Q.extended_real(a)) is None
     assert ask(a + 1 >= a, Q.extended_real(a)) is True
     assert ask(a >= a + 1, Q.extended_real(a)) is None
     assert ask(a + 1 <= a, Q.extended_real(a)) is None
     assert ask(a < a + 1, Q.extended_real(a)) is None
 
-    b = Symbol('b', real=True)
+    b = Symbol('b')
     assert ask(b + 1 > b, Q.real(b)) is True
     assert ask(b + 1 >= b, Q.real(b)) is True
     assert ask(b >= b + 1, Q.real(b)) is False
