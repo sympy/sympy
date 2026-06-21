@@ -665,23 +665,7 @@ class LRASolver():
 
         return A
 
-    def push_level(self):
-        """
-        Save the current state of the LRA solver so it can be restored later.
-        Called when the SAT solver starts a new decision level.
-        """
-        self.level_history.append((len(self.bound_history), self.is_sat, self.result))
-
-    def pop_level(self):
-        """
-        Restore the LRA solver to its state at the most recent push_level().
-        Called when the SAT solver backtracks a decision level.
-        """
-        target_len, self.is_sat, self.result = self.level_history.pop()
-        while len(self.bound_history) > target_len:
-            self.backtrack()
-
-    def backtrack(self):
+    def _backtrack(self):
         """
         Revert the most recent bound update to resolve a conflict.
 
@@ -709,6 +693,22 @@ class LRASolver():
 
         self.is_sat = False
         self.result = None
+
+    def push_level(self):
+        """
+        Save the current state of the LRA solver so it can be restored later.
+        Called when the SAT solver starts a new decision level.
+        """
+        self.level_history.append((len(self.bound_history), self.is_sat, self.result))
+
+    def pop_level(self):
+        """
+        Restore the LRA solver to its state at the most recent push_level().
+        Called when the SAT solver backtracks a decision level.
+        """
+        target_len, self.is_sat, self.result = self.level_history.pop()
+        while len(self.bound_history) > target_len:
+            self._backtrack()
 
 def _sep_const_coeff(expr):
     """

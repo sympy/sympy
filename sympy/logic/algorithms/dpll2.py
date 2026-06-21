@@ -134,12 +134,14 @@ class SATSolver:
         # Create the base level
         if self.lra:
             self.lra.push_level()
-        self.levels = [Level(0, False)]
+        self.levels = [Level(0)]
         self._current_level.var_settings = set(var_settings)
         if self.lra:
             for lit in self._current_level.var_settings:
-                if not (self.lra.result and self.lra.result[0] is False):
-                    self.lra.assert_lit(lit)
+                res = self.lra.assert_lit(lit)
+                if res and res[0] is False:
+                    self.is_unsatisfied = True
+                    break
 
         # Keep stats
         self.num_decisions = 0
@@ -247,8 +249,7 @@ class SATSolver:
                                 # at level 0, the formula is unsat.
                                 return
 
-                            level_vars = self._current_level.var_settings
-                            if any(lit in level_vars for lit in inconsistent_literals):
+                            if any(inconsistent_lit in self._current_level.var_settings for inconsistent_lit in inconsistent_literals):
                                 break
                             self._undo()
 
@@ -403,7 +404,7 @@ class SATSolver:
         self.variable_set[abs(lit)] = True
         self.heur_lit_assigned(lit)
 
-        if self.lra and not (self.lra.result and self.lra.result[0] is False):
+        if self.lra:
             res = self.lra.assert_lit(lit)
             if res and res[0] is False:
                 self.is_unsatisfied = True
@@ -463,7 +464,6 @@ class SATSolver:
 
         # Pop the level off the stack
         self.levels.pop()
-
 
     #########################
     #      Propagation      #
