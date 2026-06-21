@@ -1164,13 +1164,16 @@ class EML(DefinedFunction):
     >>> from sympy import EML, exp, log, symbols, simplify
     >>> x, y = symbols('x y')
 
-    Basic algebraic identities (these come from the eval simplifications):
+    ``EML`` does not auto-evaluate into ``exp``/``log`` form; the conversion
+    is explicit, through ``rewrite``, ``expand_func`` or :func:`from_eml`:
 
-    >>> EML(0, 1)
-    1
     >>> EML(x, 1)
+    EML(x, 1)
+    >>> EML(x, 1).rewrite(exp)
     exp(x)
-    >>> EML(1, 1)
+    >>> EML(0, 1).rewrite(exp)
+    1
+    >>> EML(1, 1).rewrite(exp)
     E
 
     Round-tripping through ``exp`` and ``log``:
@@ -1220,22 +1223,16 @@ class EML(DefinedFunction):
 
     @classmethod
     def eval(cls, x, y):
-        if x is S.NaN or y is S.NaN:
+        # ``EML`` deliberately does not auto-evaluate into ``exp``/``log``
+        # form.  That conversion is explicit, via ``rewrite``, ``expand_func``
+        # or :func:`from_eml`, so that the pure-EML tree structure is
+        # preserved (e.g. ``EML(x, 1)`` stays ``EML(x, 1)`` rather than
+        # collapsing to ``exp(x)``).  Only genuine ``NaN`` results are folded
+        # here -- ``exp`` is ``NaN`` at ``zoo``/``NaN`` and ``log`` is ``NaN``
+        # at ``NaN`` -- so that invalid expressions do not survive as live
+        # ``EML`` nodes.
+        if x is S.NaN or x is S.ComplexInfinity or y is S.NaN:
             return S.NaN
-        if y is S.Zero:
-            # log(0) = ComplexInfinity, so EML(x, 0) = exp(x) - (-oo on the real
-            # line) which is +oo; defer to the exp - log form.
-            return exp(x) - log(y)
-        if y is S.One:
-            # log(1) = 0, so EML(x, 1) = exp(x).
-            return exp(x)
-        if x is S.NegativeInfinity:
-            # exp(-oo) = 0, so EML(-oo, y) = -log(y).
-            return -log(y)
-        if x is S.Infinity:
-            return S.Infinity - log(y)
-        if x.is_Number and y.is_Number:
-            return exp(x) - log(y)
 
     def fdiff(self, argindex=1):
         """
@@ -1515,7 +1512,18 @@ def from_eml(expr):
     from sympy.utilities.iterables import iterable
     if not isinstance(expr, Basic) and iterable(expr):
         return type(expr)(from_eml(e) for e in expr)
-    return sympify(expr).rewrite(exp)
+    expr = sympify(expr)
+    # Convert *only* ``EML`` nodes back to ``exp(x) - log(y)`` (bottom-up),
+    # leaving every other function untouched -- unlike ``rewrite(exp)``, which
+    # would also expand e.g. ``sin`` into its exponential form.
+    expr = expr.replace(
+        lambda e: isinstance(e, EML),
+        lambda e: exp(e.args[0]) - log(e.args[1]))
+    # The pure-EML encoding of ``log`` introduces nested ``log(exp(...))``
+    # terms; ``expand_log`` folds them so the recursive log/exp grammar
+    # collapses back to its closed form (e.g. ``EML(1, EML(EML(1, x), 1))``
+    # becomes ``log(x)``).
+    return expand_log(expr, force=True)
 
 
 class LambertW(DefinedFunction):

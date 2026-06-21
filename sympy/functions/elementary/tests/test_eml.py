@@ -50,26 +50,31 @@ def test_eml_basic_construction():
 # ---------------------------------------------------------------------------
 
 def test_eml_eval_simplifications():
-    # log(1) = 0 => EML(x, 1) = exp(x)
-    assert EML(x, 1) == exp(x)
-    assert EML(0, 1) == 1
-    assert EML(1, 1) == E
-    assert EML(2, 1) == exp(2)
+    # EML does not auto-evaluate into exp/log form: that conversion is manual
+    # (via rewrite / expand_func / from_eml), so these all stay as EML nodes.
+    assert EML(x, 1) == EML(x, 1)
+    assert isinstance(EML(x, 1), EML)
+    assert isinstance(EML(0, 1), EML)
+    assert isinstance(EML(1, 1), EML)
+    assert isinstance(EML(2, 1), EML)
+    assert isinstance(EML(-oo, y), EML)
+    assert isinstance(EML(-oo, 2), EML)
+    assert isinstance(EML(x, 0), EML)
+    # Even two concrete Numbers stay unevaluated.
+    assert isinstance(EML(2, 3), EML)
+    assert isinstance(EML(0, 2), EML)
 
-    # exp(-oo) = 0 => EML(-oo, y) = -log(y)
-    assert EML(-oo, y) == -log(y)
-    assert EML(-oo, 2) == -log(2)
+    # The manual conversion still gives the expected exp/log form.
+    assert EML(x, 1).rewrite(exp) == exp(x)
+    assert EML(-oo, y).rewrite(exp) == -log(y)
+    assert EML(2, 3).rewrite(exp) == exp(2) - log(3)
 
-    # NaN propagation in either argument.
+    # NaN must still propagate from either argument...
     assert EML(nan, y) is nan
     assert EML(x, nan) is nan
-
-    # log(0) = ComplexInfinity => defer to exp(x) - log(y).
-    assert EML(x, 0) == exp(x) + zoo
-
-    # Both arguments are concrete Numbers => reduce.
-    assert EML(2, 3) == exp(2) - log(3)
-    assert EML(0, 2) == 1 - log(2)
+    # ... and from genuine NaN results: exp(zoo) is NaN.
+    assert EML(zoo, 1) is nan
+    assert EML(zoo, x) is nan
 
 
 def test_eml_no_overzealous_eval():
@@ -311,8 +316,9 @@ def test_rewrite_compositions():
 
 
 def test_rewrite_constants():
-    # 1 = EML(0, 1) (auto-evaluated).
-    assert EML(0, 1) == 1
+    # EML(0, 1) stays an EML node; its exp/log form is 1.
+    assert isinstance(EML(0, 1), EML)
+    assert EML(0, 1).rewrite(exp) == 1
     # exp(1) auto-evaluates to E (NumberSymbol singleton) at construction, so
     # `.rewrite(EML)` on the bare literal `exp(1)` cannot reach an EML form.
     # Within a non-collapsing expression, exp(x) rewrites to EML(x, 1).
@@ -621,7 +627,7 @@ def test_to_eml_sympifies_input():
 def test_to_eml_numbers_flag():
     # e = EML(1, 1) is the one numeric constant with a finite EML encoding.
     assert to_eml(E, numbers=True) == EML(S.One, S.One, evaluate=False)
-    assert to_eml(E, numbers=True).equals(E)
+    assert to_eml(E, numbers=True).expand(func=True) == E
     # Off by default: e is left as-is.
     assert to_eml(E) == E
     # General integers have no finite EML encoding and are left untouched.
@@ -670,6 +676,36 @@ def test_to_from_eml_numbers_roundtrip():
     assert from_eml(to_eml(E, numbers=True)) == E
 
 
+def test_from_eml_only_rewrites_eml():
+    # from_eml must convert *only* EML nodes; non-EML functions (here sin)
+    # are left untouched rather than expanded into exponential form.
+    assert from_eml(sin(y) + EML(x, y)) == sin(y) + exp(x) - log(y)
+    assert from_eml(cos(x) * EML(x, 1, evaluate=False)) == cos(x) * exp(x)
+
+
+def test_eml_rewrite_then_subs():
+    # With manual (non-eager) evaluation, substituting into the pure-EML form
+    # of log keeps the tree intact instead of mangling it into exp(E)/2.
+    r = log(x).rewrite(EML).subs(x, 2)
+    assert r == EML(1, EML(EML(1, 2, evaluate=False), 1, evaluate=False),
+                    evaluate=False)
+    # ... and it expands back to log(2).
+    assert from_eml(r) == log(2)
+    assert from_eml(-EML(-oo, 2, evaluate=False)) == log(2)
+
+
+def test_eml_nested_recursive_reduction():
+    # A nested EML expression must keep its structure (no eager collapse into
+    # exp(EML(...))) and round-trip cleanly back to log(x).
+    nested = EML(1, EML(EML(1, x), 1))
+    assert nested == log(x).rewrite(EML)
+    assert from_eml(nested) == log(x)
+    # Full round trip: to_eml(ln(x)) -> from_eml -> log(x).
+    assert to_eml(log(x)) == EML(1, EML(EML(1, x, evaluate=False),
+                                        1, evaluate=False), evaluate=False)
+    assert from_eml(to_eml(log(x))) == log(x)
+
+
 # ---------------------------------------------------------------------------
 # Numeric evaluation and code generation (lambdify / code printers)
 # ---------------------------------------------------------------------------
@@ -683,11 +719,7 @@ def test_eml_lambdify():
     assert abs(f(1.0, 2.0) - expected) < 1e-9
 
 
-def test_eml_code_printers():
-    from sympy import ccode, fcode, octave_code
-    from sympy.printing.numpy import NumPyPrinter
-    e = EML(x, y)
-    assert ccode(e) == '(exp(x) - log(y))'
-    assert fcode(e).strip() == '(exp(x) - log(y))'
-    assert octave_code(e) == '(exp(x) - log(y))'
-    assert NumPyPrinter().doprint(e) == '(numpy.exp(x) - numpy.log(y))'
+# NB: the code-printer assertions for EML now live alongside each printer's
+# own tests -- see test_ccode_EML (printing/tests/test_c.py),
+# test_fcode_EML (test_fortran.py), test_octave_EML (test_octave.py) and
+# test_numpy_EML (test_numpy.py).

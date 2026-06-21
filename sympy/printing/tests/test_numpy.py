@@ -3,6 +3,7 @@ from sympy.concrete.summations import Sum
 from sympy.core.mod import Mod
 from sympy.core.relational import (Equality, Unequality)
 from sympy.core.symbol import Symbol
+from sympy.functions.elementary.exponential import EML
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.special.gamma_functions import polygamma
@@ -14,7 +15,7 @@ from sympy.matrices.expressions.special import Identity
 from sympy.utilities.lambdify import lambdify
 from sympy import symbols, Min, Max, Contains, S
 
-from sympy.abc import x, i, j, a, b, c, d
+from sympy.abc import x, y, i, j, a, b, c, d
 from sympy.core import Pow
 from sympy.codegen.matrix_nodes import MatrixSolve
 from sympy.codegen.numpy_nodes import logaddexp, logaddexp2
@@ -53,6 +54,11 @@ def test_numpy_logaddexp():
     assert NumPyPrinter().doprint(lae) == 'numpy.logaddexp(a, b)'
     lae2 = logaddexp2(a, b)
     assert NumPyPrinter().doprint(lae2) == 'numpy.logaddexp2(a, b)'
+
+
+def test_numpy_EML():
+    # EML(x, y) is printed via its exp/log rewrite.
+    assert NumPyPrinter().doprint(EML(x, y)) == '(numpy.exp(x) - numpy.log(y))'
 
 
 def test_sum():
