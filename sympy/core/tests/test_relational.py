@@ -1200,6 +1200,11 @@ def test_is_eq():
     assert is_neq(x, S(0), assumptions=~Q.zero(x))
     assert is_neq(x, S(0), assumptions=Q.nonzero(x))
 
+    # issue 29861
+    assert is_eq(x, x + 1) is None
+    assert is_eq(x, x + 1, Q.finite(x)) is False
+    assert is_eq(oo, oo + 1)
+
     # test registration
     class PowTest(Expr):
         def __new__(cls, base, exp):
