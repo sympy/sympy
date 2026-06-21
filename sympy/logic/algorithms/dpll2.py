@@ -132,11 +132,10 @@ class SATSolver:
         self.lra = lra_theory
 
         # Create the base level
-        if self.lra:
-            self.lra.push_level()
         self.levels = [Level(0)]
         self._current_level.var_settings = set(var_settings)
         if self.lra:
+            self.lra.push_level()
             for lit in self._current_level.var_settings:
                 res = self.lra.assert_lit(lit)
                 if res and res[0] is False:
@@ -404,7 +403,7 @@ class SATSolver:
         self.variable_set[abs(lit)] = True
         self.heur_lit_assigned(lit)
 
-        if self.lra:
+        if self.lra and not self.is_unsatisfied:
             res = self.lra.assert_lit(lit)
             if res and res[0] is False:
                 self.is_unsatisfied = True
