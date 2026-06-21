@@ -665,7 +665,7 @@ class LRASolver():
 
         return A
 
-    def _backtrack(self):
+    def backtrack(self):
         """
         Revert the most recent bound update to resolve a conflict.
 
@@ -708,7 +708,7 @@ class LRASolver():
         """
         target_len, self.is_sat, self.result = self.level_history.pop()
         while len(self.bound_history) > target_len:
-            self._backtrack()
+            self.backtrack()
 
 def _sep_const_coeff(expr):
     """

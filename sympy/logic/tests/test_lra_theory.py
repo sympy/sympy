@@ -548,7 +548,7 @@ def test_example_from_paper():
     assert is_sat is False
 
     # Backtrack to remove the conflicted assertion
-    lra._backtrack()
+    lra.backtrack()
     is_sat, _ = lra.check()
     assert is_sat is True
 
@@ -583,7 +583,7 @@ def test_backtracking_single_variable():
     is_sat, _ = res
     assert is_sat is False
 
-    lra._backtrack()
+    lra.backtrack()
     is_sat, _ = lra.check()
     assert is_sat is True
 
@@ -609,7 +609,7 @@ def test_backtracking_multiple_variables():
     assert is_sat is False
 
     # backtracking to remove the faulty assert
-    lra._backtrack()
+    lra.backtrack()
     is_sat, _ = lra.check()
     assert is_sat is True
 
@@ -635,14 +635,14 @@ def test_backtracking_single_variable_multiple_backtracks():
     assert is_sat is False
 
     # First backtrack: Undo x <= 2 to resolve the conflict
-    lra._backtrack()
+    lra.backtrack()
     is_sat, _ = lra.check()
     assert is_sat is True
 
     # Second backtrack: Erase the x >= 5 constraint.
     # This widens the valid domain back to [0, 10],
     # allowing to accept the previously conflicting x <= 2 rule.
-    lra._backtrack()
+    lra.backtrack()
 
     # Setting 0 <= x <= 2
     lra.assert_lit(4)
@@ -687,14 +687,14 @@ def test_backtracking_multiple_variables_multiple_backtracks():
     assert is_sat is False
 
     # First backtrack: Pop the conflicting rule (Rule 6)
-    lra._backtrack()
+    lra.backtrack()
     is_sat, _ = lra.check()
     assert is_sat is True
 
     # Second and Third backtrack: pop the restrictive constraints
     # This restores the domain to x >= 0, y >= 0
-    lra._backtrack()
-    lra._backtrack()
+    lra.backtrack()
+    lra.backtrack()
 
     # x + y <= 4 is mathematically possible now
     lra.assert_lit(6)
@@ -706,4 +706,4 @@ def test_backtracking_empty_history():
     enc = EncodedCNF()
     lra, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
 
-    raises(ValueError, lambda: lra._backtrack())
+    raises(ValueError, lambda: lra.backtrack())
