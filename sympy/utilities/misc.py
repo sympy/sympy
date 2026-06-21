@@ -38,7 +38,7 @@ def filldedent(s: str, w: int = 70, **kwargs: Any) -> str:
     return '\n' + fill(dedent(str(s)).strip('\n'), width=w, **kwargs)
 
 
-def strlines(s, c=64, short=False):
+def strlines(s: str, c: int = 64, short: bool = False) -> str:
     """Return a cut-and-pastable string that, when printed, is
     equivalent to the input.  The lines will be surrounded by
     parentheses and no line will be longer than c (default 64)
@@ -71,8 +71,8 @@ def strlines(s, c=64, short=False):
         raise ValueError('expecting string input')
     if '\n' in s:
         return rawlines(s)
-    q = '"' if repr(s).startswith('"') else "'"
-    q = (q,)*2
+    q_char = '"' if repr(s).startswith('"') else "'"
+    q = (q_char, q_char)
     if '\\' in s:  # use r-string
         m = '(\nr%s%%s%s\n)' % q
         j = '%s\nr%s' % q
@@ -81,16 +81,16 @@ def strlines(s, c=64, short=False):
         m = '(\n%s%%s%s\n)' % q
         j = '%s\n%s' % q
         c -= 2
-    out = []
+    out: list[str] = []
     while s:
         out.append(s[:c])
-        s=s[c:]
+        s = s[c:]
     if short and len(out) == 1:
         return (m % out[0]).splitlines()[1]  # strip bounding (\n...\n)
     return m % j.join(out)
 
 
-def rawlines(s):
+def rawlines(s: str) -> str:
     """Return a cut-and-pastable string that, when printed, is equivalent
     to the input. Use this when there is more than one line in the
     string. The string returned is formatted so it can be indented
@@ -155,7 +155,7 @@ def rawlines(s):
         return repr(lines[0])
     triple = ["'''" in s, '"""' in s]
     if any(li.endswith(' ') for li in lines) or '\\' in s or all(triple):
-        rv = []
+        rv: list[str] = []
         # add on the newlines
         trailing = s.endswith('\n')
         last = len(lines) - 1
@@ -166,11 +166,11 @@ def rawlines(s):
                 rv.append(repr(li))
         return '(\n    %s\n)' % '\n    '.join(rv)
     else:
-        rv = '\n    '.join(lines)
+        rv_str = '\n    '.join(lines)
         if triple[0]:
-            return 'dedent("""\\\n    %s""")' % rv
+            return 'dedent("""\\\n    %s""")' % rv_str
         else:
-            return "dedent('''\\\n    %s''')" % rv
+            return "dedent('''\\\n    %s''')" % rv_str
 
 ARCH = str(struct.calcsize('P') * 8) + "-bit"
 
@@ -242,7 +242,7 @@ def debug_decorator(func: _CallableT) -> _CallableT:
     return decorated  # type: ignore
 
 
-def debug(*args):
+def debug(*args: object) -> None:
     """
     Print ``*args`` if SYMPY_DEBUG is True, else do nothing.
     """
@@ -251,7 +251,7 @@ def debug(*args):
         print(*args, file=sys.stderr)
 
 
-def debugf(string, args):
+def debugf(string: str, args: object) -> None:
     """
     Print ``string%args`` if SYMPY_DEBUG is True, else do nothing. This is
     intended for debug messages using formatted strings.
@@ -260,8 +260,7 @@ def debugf(string, args):
     if SYMPY_DEBUG:
         print(string%args, file=sys.stderr)
 
-
-def find_executable(executable, path=None):
+def find_executable(executable: str, path: str | None = None) -> str | None:
     """Try to find 'executable' in the directories listed in 'path' (a
     string listing directories separated by 'os.pathsep'; defaults to
     os.environ['PATH']).  Returns the complete filename or None if not
