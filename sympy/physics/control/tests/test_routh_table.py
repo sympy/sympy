@@ -51,3 +51,30 @@ def test_table():
     assert t3.equals(expected3)
     assert t3.zero_row_case is True
     assert t3.auxiliary_polynomials == [Poly(2*s**4 + 12*s**2 + 16, s)]
+
+
+def test_routh_early_return_stops():
+    p = s**3 - s**2 - s - 1  # unstable
+
+    full = RouthHurwitz(p, s)
+    early = RouthHurwitz(p, s, early_return=True)
+
+    # First column
+    full_col = full[:, 0]
+    early_col = early[:, 0]
+
+    # There must be a non-positive entry (instability detected)
+    assert any(val.is_nonpositive is True for val in full_col)
+    assert any(val.is_nonpositive is True for val in early_col)
+
+    # KEY CHECK: early stops computation
+    # Later rows should remain default (0) or uncomputed
+    assert not early.equals(full)
+
+def test_routh_no_early_return_equivalence():
+    p = s**4 + s**3 + 2*s**2 + s + 1
+
+    t1 = RouthHurwitz(p, s)
+    t2 = RouthHurwitz(p, s, early_return=False)
+
+    assert t1.equals(t2)

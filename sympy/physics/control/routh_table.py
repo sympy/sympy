@@ -147,14 +147,14 @@ class RouthHurwitz(MutableDenseMatrix):
     .. [3] https://www.circuitbread.com/tutorials/routh-hurwitz-criterion-part-2-3-3
 
     """
-    def __new__(cls, polynomial, var):
+    def __new__(cls, polynomial, var, early_return=False):
         if not isinstance(var, Symbol):
             raise ValueError("var must be a Symbol")
         n = Poly(polynomial, var).degree()
 
         return super().__new__(cls, n + 1, n//2 + 1, [0]*(n + 1)*(n//2 + 1))
 
-    def __init__(self, polynomial, var):
+    def __init__(self, polynomial, var, early_return=False):
         self._var = var
         self._polynomial = Poly(polynomial, var)
         self._poly_degree = self._polynomial.degree()
@@ -168,12 +168,11 @@ class RouthHurwitz(MutableDenseMatrix):
             self[0, 0] = self._coeffs[0]
             return
 
-        self._build_table()
+        self._build_table(early_return=early_return)
 
-    def _build_table(self):
-        """Build the Routh-Hurwitz table."""
+    def _build_table(self, early_return=False):
         self._initialize()
-        self._calculate()
+        self._calculate(early_return=early_return)
 
     def _initialize(self):
         """"Initialize the table with the coefficients of the polynomial."""
@@ -189,20 +188,38 @@ class RouthHurwitz(MutableDenseMatrix):
 
         self._handle_special_cases(1)
 
-    def _calculate(self):
+    def _calculate(self, early_return=False):
         """Calculate the table using the first 2 rows."""
         for i in range(2, self.rows):
-            self._calculate_row(i)
+            stop = self._calculate_row(i, early_return=early_return)
+
+            if stop:
+                return
+
             self._handle_special_cases(i)
 
-    def _calculate_row(self, i):
+    def _calculate_row(self, i, early_return=False):
         active_row_length = self.cols - i//2
-        for j in range(active_row_length):
+
+        if active_row_length > 0:
+            num = (self[i-1, 0] * self[i-2, 1]
+                   - self[i-2, 0] * self[i-1, 1])
+            den = self[i-1, 0]
+
+            val = num / den
+            self[i, 0] = val
+
+            if early_return and val.is_nonpositive:
+                return True
+
+        for j in range(1, active_row_length):
             num = (self[i-1, 0] * self[i-2, j+1]
                    - self[i-2, 0] * self[i-1, j+1])
             den = self[i-1, 0]
 
             self[i, j] = num / den
+
+        return False
 
     def _handle_special_cases(self, i):
         active_row_length = self.cols - i//2
