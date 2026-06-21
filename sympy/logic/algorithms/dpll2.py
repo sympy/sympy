@@ -132,7 +132,9 @@ class SATSolver:
         self.lra = lra_theory
 
         # Create the base level
-        self.levels = [self._create_level(0, False)]
+        if self.lra:
+            self.lra.push_level()
+        self.levels = [Level(0, False)]
         self._current_level.var_settings = set(var_settings)
         if self.lra:
             for lit in self._current_level.var_settings:
@@ -228,58 +230,48 @@ class SATSolver:
                 # Stopping condition for a satisfying theory
                 if 0 == lit:
                     res = None
-                    if self.lra and not self.is_unsatisfied:
+                    if self.lra:
                         res = self.lra.check()
 
                     if res is None or res[0]:
                         yield {self.symbols[abs(lit) - 1]:
                                     lit > 0 for lit in self.var_settings}
-
-                        while self._current_level.flipped:
-                            self._undo()
-                        if len(self.levels) == 1:
-                            return
-                        flip_lit = -self._current_level.decision
-                        self._undo()
-                        self.levels.append(
-                            self._create_level(flip_lit, flipped=True))
-                        flip_var = True
-                        continue
                     else:
                         self._simple_add_learned_clause(res[1])
 
-                        # Backtrack until reaching a level with one of the
-                        # conflict causing literals.
-                        inconsistent_literals = [
-                            -lit for lit in res[1]
-                        ]
+                        # Backtrack until reaching a level with one of the conflict causing literals.
+                        inconsistent_literals = [-lit for lit in res[1]]
                         while True:
                             if len(self.levels) == 1:
+                                # If theory-inconsistent literals were set right off the bat
+                                # at level 0, the formula is unsat.
                                 return
 
                             level_vars = self._current_level.var_settings
-                            if any(
-                                lit in level_vars
-                                for lit in inconsistent_literals):
+                            if any(lit in level_vars for lit in inconsistent_literals):
                                 break
                             self._undo()
 
-                        while self._current_level.flipped:
-                            self._undo()
-                        if len(self.levels) == 1:
-                            return
-                        flip_lit = -self._current_level.decision
+                    # To find the next model after yield, or after adding a conflict clause,
+                    # simulate a conflict and backtrack to the most recent unflipped decision.
+                    while self._current_level.flipped:
                         self._undo()
-                        self.levels.append(
-                            self._create_level(flip_lit, flipped=True))
-                        flip_var = True
-                        continue
+                    if len(self.levels) == 1:
+                        return
+                    flip_lit = -self._current_level.decision
+                    self._undo()
+                    if self.lra:
+                        self.lra.push_level()
+                    self.levels.append(Level(flip_lit, flipped=True))
+                    flip_var = True
+                    continue
 
                 # Start the new decision level
-                self.levels.append(self._create_level(lit))
+                if self.lra:
+                    self.lra.push_level()
+                self.levels.append(Level(lit))
 
-            # Update the set of satisfied clauses and add the variable to the
-            # current level's variable assignments
+            # Assign the literal, updating the clauses it satisfies
             self._assign_literal(lit)
 
             # _simplify the theory
@@ -304,7 +296,9 @@ class SATSolver:
                 # Try the opposite setting of the most recent decision
                 flip_lit = -self._current_level.decision
                 self._undo()
-                self.levels.append(self._create_level(flip_lit, flipped=True))
+                if self.lra:
+                    self.lra.push_level()
+                self.levels.append(Level(flip_lit, flipped=True))
                 flip_var = True
 
     ########################
@@ -465,21 +459,10 @@ class SATSolver:
             self.variable_set[abs(lit)] = False
 
         if self.lra:
-            target_len = self._current_level.lra_bound_history_len
-            while len(self.lra.bound_history) > target_len:
-                self.lra.backtrack()
-            self.lra.is_sat = self._current_level.lra_is_sat
-            self.lra.result = self._current_level.lra_result
+            self.lra.pop_level()
 
         # Pop the level off the stack
         self.levels.pop()
-
-    def _create_level(self, decision, flipped=False):
-        if self.lra:
-            return Level(
-                decision, flipped, len(self.lra.bound_history),
-                self.lra.is_sat, self.lra.result)
-        return Level(decision, flipped)
 
 
     #########################
@@ -732,14 +715,10 @@ class Level:
     enough information for a sound backtracking procedure.
     """
 
-    def __init__(self, decision, flipped=False, lra_bound_history_len=0,
-                 lra_is_sat=True, lra_result=None):
+    def __init__(self, decision, flipped=False):
         self.decision = decision
         self.var_settings = set()
         self.flipped = flipped
-        self.lra_bound_history_len = lra_bound_history_len
-        self.lra_is_sat = lra_is_sat
-        self.lra_result = lra_result
 
     def __repr__(self):
         return "<Level decision=%s, flipped=%s, var_settings=%s>" % (

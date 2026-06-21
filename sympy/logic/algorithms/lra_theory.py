@@ -187,6 +187,7 @@ class LRASolver():
         self.result = None  # always one of: (True, assignment), (False, conflict clause), None
 
         self.bound_history = []
+        self.level_history = []
         self.last_assign_snapshot = {var: var.assign for var in self.all_var}
 
     @staticmethod
@@ -663,6 +664,22 @@ class LRASolver():
                 A[row, :] = A[row, :] + A[row, j] * A[i, :]
 
         return A
+
+    def push_level(self):
+        """
+        Save the current state of the LRA solver so it can be restored later.
+        Called when the SAT solver starts a new decision level.
+        """
+        self.level_history.append((len(self.bound_history), self.is_sat, self.result))
+
+    def pop_level(self):
+        """
+        Restore the LRA solver to its state at the most recent push_level().
+        Called when the SAT solver backtracks a decision level.
+        """
+        target_len, self.is_sat, self.result = self.level_history.pop()
+        while len(self.bound_history) > target_len:
+            self.backtrack()
 
     def backtrack(self):
         """
