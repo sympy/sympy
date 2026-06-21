@@ -177,6 +177,8 @@ def test_solve_triangulated():
     assert solve_triangulated([f_1, f_2, f_3], x, y, z, extension=True) == \
         [(0, 0, 1), (0, 1, 0), (1, 0, 0), (a, a, a), (b, b, b)]
 
+    raises(NotImplementedError, lambda: solve_triangulated([x*y, y**2 - y], x, y))
+
 
 def test_solve_issue_3686():
     roots = solve_poly_system([((x - 5)**2/250000 + (y - Rational(5, 10))**2/250000) - 1, x], x, y)
