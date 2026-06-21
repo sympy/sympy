@@ -150,6 +150,27 @@ def _(expr, assumptions):
         raise MDNotImplementedError
     return ret
 
+@NonNegativePredicate.register(Pow)
+def _(expr, assumptions):
+    if expr.is_number:
+        notnegative = fuzzy_not(_NegativePredicate_number(expr, assumptions))
+        if notnegative:
+            return ask(Q.real(expr), assumptions)
+        else:
+            return notnegative
+
+    r = ask(Q.real(expr), assumptions)
+    if r:
+        if ask(Q.even(expr.exp), assumptions):
+            return True
+        if expr.exp == S.Half:
+            return True
+
+    ret = expr.is_nonnegative
+    if ret is None:
+        raise MDNotImplementedError
+    return ret
+
 
 # NonZeroPredicate
 
