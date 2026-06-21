@@ -11,7 +11,7 @@ from .numbers import int_valued
 from .singleton import S
 from .sympify import _sympify, SympifyError
 from .parameters import global_parameters
-from .logic import fuzzy_bool, fuzzy_xor, fuzzy_and, fuzzy_not
+from .logic import fuzzy_bool, fuzzy_xor, fuzzy_and, fuzzy_not, fuzzy_or
 from sympy.logic.boolalg import Boolean, BooleanAtom
 from sympy.utilities.iterables import sift
 from sympy.utilities.misc import filldedent
@@ -1592,19 +1592,20 @@ def is_eq(lhs: Basic, rhs: Basic, assumptions=None) -> bool | None:
             return fuzzy_bool(is_eq(arglhs, argrhs, assumptions))
 
     if isinstance(lhs, Expr) and isinstance(rhs, Expr):
+        finite = fuzzy_or([_lhs.is_finite, _rhs.is_finite])
         # see if the difference evaluates
         dif = lhs - rhs
         _dif = AssumptionsWrapper(dif, assumptions)
         z = _dif.is_zero
         if z is not None:
-            if z is False and _dif.is_commutative:  # issue 10728
+            if z is False and _dif.is_commutative and finite:
                 return False
             if z:
                 return True
 
         # is_zero cannot help decide integer/rational with Float
         c, t = dif.as_coeff_Add()
-        if c.is_Float:
+        if c.is_Float and finite:
             if int_valued(c):
                 if t.is_integer is False:
                     return False
@@ -1643,6 +1644,8 @@ def is_eq(lhs: Basic, rhs: Basic, assumptions=None) -> bool | None:
             # (inf or nan)/x != 0
             rv = False
         if rv is not None:
+            if rv is False and not finite:
+                return None
             return rv
 
     return None
