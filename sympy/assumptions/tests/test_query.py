@@ -1949,6 +1949,8 @@ def test_positive():
     assert ask(Q.positive(x**2), Q.positive(x)) is True
     assert ask(Q.positive(x**2), Q.negative(x)) is True
     assert ask(Q.positive(x**3), Q.negative(x)) is False
+    assert ask(Q.positive(x), Q.positive(x**3)) is True
+    assert ask(Q.negative(x), Q.negative(x**3)) is True
     assert ask(Q.positive(1/(1 + x**2)), Q.real(x)) is True
     assert ask(Q.positive(2**I)) is False
     assert ask(Q.positive(2 + I)) is False
