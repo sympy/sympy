@@ -831,3 +831,15 @@ def test_issue():
     a, b = symbols('a b')
     assert rs_series(sin(a**QQ(3,7))*exp(a + b**QQ(6,7)), a,2).as_expr() == \
         a**QQ(10,7)*exp(b**QQ(6,7)) - a**QQ(9,7)*exp(b**QQ(6,7))/6 + a**QQ(3,7)*exp(b**QQ(6,7))
+
+def test_rs_series_pow():
+    x, a = symbols('x, a')
+
+    assert rs_series(1/(x+2), x, 5).as_expr() == (1/(x+2)).series(x, 0, 5).removeO()
+    assert rs_series(sqrt(x+1), x, 5).as_expr() == sqrt(x+1).series(x, 0, 5).removeO()
+    assert rs_series(1/(x+2) + 1/(x+3), x, 5).as_expr() == (1/(x+2) + 1/(x+3)).series(x, 0, 5).removeO()
+    assert rs_series(1/((x+1)*(x+2)), x, 5).as_expr() == (1/((x+1)*(x+2))).series(x, 0, 5).removeO()
+    assert expand(rs_series(sin(1/(x+1)), x, 5).as_expr()) == expand(sin(1/(x+1)).series(x, 0, 5).removeO())
+    assert expand(rs_series(sin((x+1)**2), x, 5).as_expr()) == expand(sin((x+1)**2).series(x, 0, 5).removeO())
+    assert rs_series(1/(1 + 1/(x+1)), x, 5).as_expr() == (1/(1 + 1/(x+1))).series(x, 0, 5).removeO()
+    assert rs_series(sin(x+a), x, 5).as_expr() == sin(x+a).series(x, 0, 5).removeO()
