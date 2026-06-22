@@ -1,10 +1,14 @@
 from __future__ import annotations
-from sympy import sin, Function, symbols, Dummy, Lambda, cos, Symbol, factorial, S
+from sympy import sin, Function, symbols, Dummy, Lambda, cos, Symbol, factorial, S, \
+    Derivative, Integral, Limit, Sum, Product, Abs
 from sympy.parsing.mathematica import parse_mathematica, MathematicaParser
 from sympy.core.sympify import sympify
 from sympy.abc import n, w, x, y, z
 from sympy.testing.pytest import raises
 from sympy.logic.boolalg import And, Or, Not
+from sympy.functions.elementary.integers import floor, ceiling
+from sympy.functions.special.gamma_functions import gamma
+from sympy.functions.combinatorial.factorials import binomial
 
 
 def test_mathematica():
@@ -339,6 +343,37 @@ def test_parser_mathematica_exp_alt():
     assert convert_chain3(full_form1) == sin(x*y)
     assert convert_chain3(full_form2) == x*y + z
     assert convert_chain3(full_form3) == sin(x*(y + z)*w**n)
+
+def test_mathematica_operators():
+    x, n, k, i = symbols('x n k i')
+
+    assert parse_mathematica("D[x^2, x]") == Derivative(x**2, x)
+    assert parse_mathematica("Integrate[x^2, x]") == Integral(x**2, x)
+    assert parse_mathematica("Integrate[x^2, {x, 0, 1}]") == Integral(x**2, (x, 0, 1))
+    assert parse_mathematica("Sum[i, {i, 1, n}]") == Sum(i, (i, 1, n))
+    assert parse_mathematica("Product[i, {i, 1, n}]") == Product(i, (i, 1, n))
+    assert parse_mathematica("Limit[Sin[x]/x, x -> 0]") == Limit(sin(x)/x, x, 0)
+    assert parse_mathematica("Floor[x]") == floor(x)
+    assert parse_mathematica("Ceiling[x]") == ceiling(x)
+    assert parse_mathematica("Gamma[x]") == gamma(x)
+    assert parse_mathematica("Binomial[n, k]") == binomial(n, k)
+    assert parse_mathematica("Abs[x]") == Abs(x)
+
+def test_mathematica_operators_out_of_scope():
+    x, y, n = symbols('x y n')
+
+    assert parse_mathematica("F[7, 5, 3]") == Function('F')(7, 5, 3)
+    assert parse_mathematica("5!") == 120
+    assert parse_mathematica("x + y") == x + y
+    assert parse_mathematica("x * y") == x * y
+
+    # nth-order D falls back to Function node
+    result = parse_mathematica("D[x^2, {x, 2}]")
+    assert result.func.__name__ == 'D'
+
+    # multi-iterator Sum falls back to Function node
+    result = parse_mathematica("Sum[i, {i, 1, n}, {j, 1, n}]")
+    assert result.func.__name__ == 'Sum'
 
 
 def test_Mathematica_literal_regex():

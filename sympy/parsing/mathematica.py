@@ -9,11 +9,14 @@ from sympy import Mul, Add, Pow, Rational, log, exp, sqrt, cos, sin, tan, asin, 
     acosh, atanh, acoth, asech, acsch, expand, im, flatten, polylog, cancel, expand_trig, sign, simplify, \
     UnevaluatedExpr, S, atan, atan2, Mod, Max, Min, rf, Ei, Si, Ci, airyai, airyaiprime, airybi, primepi, prime, \
     isprime, cot, sec, csc, csch, sech, coth, Function, E, I, pi, Tuple, GreaterThan, StrictGreaterThan, StrictLessThan, \
-    LessThan, Equality, Or, And, Lambda, Integer, Dummy, symbols, Not, factorial
+    LessThan, Equality, Or, And, Lambda, Integer, Dummy, symbols, Not, factorial, Abs, Derivative, Integral, Limit, Sum, Product
 from sympy.core.sympify import sympify, _sympify
 from sympy.functions.special.bessel import airybiprime
 from sympy.functions.special.error_functions import li
 from sympy.utilities.exceptions import sympy_deprecation_warning
+from sympy.functions.elementary.integers import floor, ceiling
+from sympy.functions.combinatorial.factorials import binomial
+from sympy.functions.special.gamma_functions import gamma
 
 
 def mathematica(s, additional_translations=None):
@@ -100,6 +103,40 @@ def _parse_Function(*args):
         return Lambda(variables, body)
     else:
         raise SyntaxError("Function node expects 1 or 2 arguments")
+
+def _parse_D(*args):
+    if len(args) == 2 and not isinstance(args[1], Tuple):
+        return Derivative(args[0], args[1])
+    return Function('D')(*args)
+
+
+def _parse_Integrate(*args):
+    f = args[0]
+    if len(args) == 2 and isinstance(args[1], Tuple):
+        return Integral(f, tuple(args[1]))
+    return Integral(f, *args[1:])
+
+
+def _parse_Sum(*args):
+    f = args[0]
+    if len(args) == 2 and isinstance(args[1], Tuple):
+        return Sum(f, tuple(args[1]))
+    return Function('Sum')(*args)
+
+
+def _parse_Product(*args):
+    f = args[0]
+    if len(args) == 2 and isinstance(args[1], Tuple):
+        return Product(f, tuple(args[1]))
+    return Function('Product')(*args)
+
+
+def _parse_Limit(*args):
+    if len(args) == 2:
+        f = args[0]
+        rule = args[1]
+        return Limit(f, rule.args[0], rule.args[1])
+    return Function('Limit')(*args)
 
 
 def _deco(cls):
@@ -1143,6 +1180,17 @@ class MathematicaParser:
         "Not": Not,
         "Function": _parse_Function,
         "Factorial": factorial,
+
+        "D":         _parse_D,
+        "Integrate": _parse_Integrate,
+        "Sum":       _parse_Sum,
+        "Product":   _parse_Product,
+        "Limit":     _parse_Limit,
+        "Abs":       Abs,
+        "Floor":     floor,
+        "Ceiling":   ceiling,
+        "Gamma":     gamma,
+        "Binomial":  binomial,
     }
 
     _atom_conversions = {
