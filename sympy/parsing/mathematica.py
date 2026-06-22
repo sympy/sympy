@@ -105,38 +105,27 @@ def _parse_Function(*args):
         raise SyntaxError("Function node expects 1 or 2 arguments")
 
 def _parse_D(*args):
-    if len(args) == 2 and not isinstance(args[1], Tuple):
-        return Derivative(args[0], args[1])
-    return Function('D')(*args)
+    return Derivative(args[0], *args[1:])
 
 
 def _parse_Integrate(*args):
-    f = args[0]
-    if len(args) == 2 and isinstance(args[1], Tuple):
-        return Integral(f, tuple(args[1]))
-    return Integral(f, *args[1:])
+    return Integral(args[0], *args[1:])
 
 
 def _parse_Sum(*args):
-    f = args[0]
-    if len(args) == 2 and isinstance(args[1], Tuple):
-        return Sum(f, tuple(args[1]))
-    return Function('Sum')(*args)
+    return Sum(args[0], *args[1:])
 
 
 def _parse_Product(*args):
-    f = args[0]
-    if len(args) == 2 and isinstance(args[1], Tuple):
-        return Product(f, tuple(args[1]))
-    return Function('Product')(*args)
+    return Product(args[0], *args[1:])
 
 
 def _parse_Limit(*args):
-    if len(args) == 2:
-        f = args[0]
-        rule = args[1]
-        return Limit(f, rule.args[0], rule.args[1])
-    return Function('Limit')(*args)
+    f = args[0]
+    point = args[1]
+    if isinstance(point, Tuple):
+        return Limit(f, point[0], point[1])
+    return Limit(f, point.args[0], point.args[1])
 
 
 def _deco(cls):
