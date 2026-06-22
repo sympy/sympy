@@ -208,7 +208,12 @@ class GeometricDistribution(SingleDiscreteDistribution):
         _value_check((0 < p, p <= 1), "p must be between 0 and 1")
 
     def pdf(self, k):
-        return (1 - self.p)**(k - 1) * self.p
+        k = sympify(k)
+        p = self.p
+        # support: integer k >= 1
+        cond = Eq(k, floor(k)) & (k >= 1)
+        return Piecewise(((1 - p)**(k - 1) * p, cond), (S.Zero, True))
+
 
     def _characteristic_function(self, t):
         p = self.p
