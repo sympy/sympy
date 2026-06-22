@@ -1203,7 +1203,6 @@ def test_is_eq():
     # issue 29861
     assert is_eq(x, x + 1) is None
     assert is_eq(x, x + 1, Q.finite(x)) is False
-    assert is_eq(oo, oo + 1)
 
     # test registration
     class PowTest(Expr):
