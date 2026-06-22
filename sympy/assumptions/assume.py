@@ -428,9 +428,8 @@ def assuming(*assumptions):
         global_assumptions.update(old_global_assumptions)
 
 
-def _ask_recursive(proposition, assumptions, context=True):
-    from sympy.assumptions.ask import _ask_single_fact, Q, _extract_all_facts
-    from sympy.core.relational import Eq, Ne, Gt, Lt, Ge, Le
+def _ask_recursive(proposition, assumptions, context=()):
+    from sympy.assumptions.ask import _ask_single_fact, Q, _extract_all_facts, _normalize_expr
     from sympy.assumptions.cnf import CNF
     from sympy.core.kind import BooleanKind
     from sympy.logic.boolalg import And
@@ -444,15 +443,14 @@ def _ask_recursive(proposition, assumptions, context=True):
     if isinstance(assumptions, Predicate) or assumptions.kind is not BooleanKind:
         raise TypeError("assumptions must be a valid logical expression")
 
-    binrelpreds = {Eq: Q.eq, Ne: Q.ne, Gt: Q.gt, Lt: Q.lt, Ge: Q.ge, Le: Q.le}
+    proposition = _normalize_expr(proposition)
     if isinstance(proposition, AppliedPredicate):
         key, args = proposition.function, proposition.arguments
-    elif proposition.func in binrelpreds:
-        key, args = binrelpreds[type(proposition)], proposition.args
     else:
         key, args = Q.is_true, (proposition,)
 
-    effective_assumptions = And(assumptions, *context) if context is not True else assumptions
+    effective_assumptions = And(assumptions, *context)
+    effective_assumptions = _normalize_expr(effective_assumptions)
 
     assump_cnf = CNF.from_prop(effective_assumptions)
     local_facts = _extract_all_facts(assump_cnf, args)
