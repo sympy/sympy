@@ -380,7 +380,7 @@ and a minimum numerical tolerance. Here are some elementary examples:
     635
     ---
     504
-    >>> nsimplify(2.0**(1/3.), tolerance=0.001, full=True)
+    >>> nsimplify(2.0**(1/3.))
     3 ___
     \/ 2
 
@@ -424,3 +424,8 @@ Here are several more advanced examples:
     >>> nsimplify(gamma('1/4')*gamma('3/4'), [pi])
       ___
     \/ 2 *pi
+    >>> nsimplify((100*sqrt(7)/30*pi*E*log(2)).evalf(), [pi,E,log(2)], full=true)
+         ___
+    10*\/ 7 *e*pi*log(2)
+    --------------------
+             3
