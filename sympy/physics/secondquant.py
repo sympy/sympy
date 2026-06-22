@@ -112,7 +112,7 @@ class KroneckerDelta(KroneckerDeltaBase):
     .. note::
 
         These methods should eventually be removed from second quantization
-        when it is migrated to :mod:`sympy.physics.quantum`. They live here, on
+        when it is migrated to ``sympy.physics.quantum``. They live here, on
         a subclass, so that the general-purpose ``KroneckerDelta`` stays free of
         second-quantization-specific logic.
 
