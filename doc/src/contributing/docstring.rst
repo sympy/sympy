@@ -137,8 +137,9 @@ docstrings consist of the following sections in this order:
 2. Explanation
 3. Examples
 4. Parameters
-5. See Also
-6. References
+5. Attributes
+6. See Also
+7. References
 
 The Single-Sentence Summary and Examples sections are **required** for every
 docstring. Docstrings will not pass review if these sections are not included.
@@ -333,9 +334,49 @@ Here is an example of a correctly formatted Parameters section::
 
         """
 
+5. Attributes Section
+^^^^^^^^^^^^^^^^^^^^^^
+
+This section is encouraged for classes that expose public attributes. If you
+choose to include an Attributes section in your docstring, it should be labeled
+with the heading “Attributes” underlined with the same length in equals signs.
+
+::
+
+    Attributes
+    ==========
+
+Use this section for attributes that users are expected to access directly,
+including important read-only properties. Do not include private attributes or
+implementation details that are only useful to SymPy developers. If a class has
+no public attributes, do not add an Attributes section.
+
+The formatting should follow the same style as the Parameters section. Enclose
+attribute names in double backticks when referring to them in descriptions, put
+the type after a colon when it is useful, and indent the description on the
+following line.
+
+**Example**
+
+Here is an example of a correctly formatted Attributes section::
+
+    class Point2D(Point):
+        """
+        A point in a two-dimensional Euclidean space.
+
+        Attributes
+        ==========
+
+        x : number or symbolic expression
+            The horizontal coordinate.
+        y : number or symbolic expression
+            The vertical coordinate.
+
+        """
+
 .. _style_guide_see_also:
 
-5. See Also Section
+6. See Also Section
 ^^^^^^^^^^^^^^^^^^^^^^
 
 This section is encouraged. If you choose to include a See Also section in your
@@ -392,7 +433,7 @@ Here is a correctly formatted See Also section with just a list of names::
 
         """
 
-6. References Section
+7. References Section
 ^^^^^^^^^^^^^^^^^^^^^^
 
 This section is encouraged. If you choose to include a References section in
