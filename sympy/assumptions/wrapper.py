@@ -44,7 +44,7 @@ False
 """
 from __future__ import annotations
 
-from sympy.assumptions import ask, Q
+from sympy.assumptions import Q
 from sympy.assumptions.ask import _ask_recursive
 from sympy.core.basic import Basic
 from sympy.core.sympify import _sympify
