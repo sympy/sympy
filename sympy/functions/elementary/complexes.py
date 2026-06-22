@@ -1258,8 +1258,12 @@ class periodic_argument(DefinedFunction):
 
 
 def unbranched_argument(arg):
-    '''
-    Returns periodic argument of arg with period as infinity.
+    """
+    Return the unbranched argument of a polar number.
+
+    This is the argument on the full Riemann surface of the logarithm, without
+    reducing it to a finite branch interval. Equivalently, this returns
+    ``periodic_argument(arg, oo)``.
 
     Examples
     ========
@@ -1271,11 +1275,11 @@ def unbranched_argument(arg):
     >>> unbranched_argument(exp_polar(7*I*pi))
     7*pi
 
-    See also
+    See Also
     ========
 
     periodic_argument
-    '''
+    """
     return periodic_argument(arg, oo)
 
 
