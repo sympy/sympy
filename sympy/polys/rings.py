@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections import defaultdict
+from itertools import compress
 from typing import (
     Generic,
     overload,
@@ -51,6 +53,7 @@ from sympy.polys.polyutils import (
     _parallel_dict_from_expr,
 )
 from sympy.printing.defaults import DefaultPrinting
+from sympy.polys.modulargcd import gcd_extract
 from sympy.utilities import public, subsets
 from sympy.utilities.iterables import is_sequence
 from sympy.utilities.magic import pollute
@@ -3631,3 +3634,156 @@ class PolyElement(
 
     def factor_list(self) -> tuple[Er, list[tuple[PolyElement[Er], int]]]:
         return self.ring.dmp_factor_list(self)
+
+
+    def primitive_wrt(self, x):
+        """
+        Returns the content and primitive part of a polynomial with respect to a
+        specified variable. 
+        x can be a generator or a generator index.
+
+        Examples
+        ========
+
+        >>> from sympy.polys import ring, ZZ
+        >>> R, x, y = ring("x, y", ZZ)
+        >>> p = 6*x**2*y - 9*x**3*y**2 + 3*x*y
+        >>> p.primitive_wrt(x)
+        (3*y, -3*x**3*y + 2*x**2 + x)
+
+        >>> p.primitive() # Distinguishing primitive and primitive_wrt outcomes
+        (3, -3*x**3*y**2 + 2*x**2*y + x*y)
+        """
+        p = self
+        coeffs = p.coeff_split({x})
+        cont = gcd_extract(coeffs)
+        prim = p.exquo(cont)
+        return cont, prim
+
+
+    def _coeff_split_syms(self, syms):
+        """
+        Reorganize a polynomial over multiple variables into a polynomial over a
+        subset of those variables with coefficients being polynomials over the
+        remaining variables.
+        """
+        p1 = self
+        p2 = defaultdict(dict)
+        r = range(len(p1.ring.gens))
+
+        # Convert symbols to indices if they are not integers
+        if not all(isinstance(s, int) for s in syms):
+            syms = {p1.ring.gens.index(s) if isinstance(s, (str, Symbol)) else s for s in syms}
+
+        # Iterate through the terms and coefficients of the input polynomial
+        for m1, c1 in p1.items():
+            sym_indices = set(compress(r, m1))
+            m21 = [0] * len(r)
+            m22 = [0] * len(r)
+
+            # Separate variables into symbol and non-symbol categories
+            for i in sym_indices & syms:
+                m21[i] = m1[i]
+            for i in sym_indices - syms:
+                m22[i] = m1[i]
+
+            p2[tuple(m21)][tuple(m22)] = c1
+
+        return p2
+
+
+    def coeff_split(self, syms):
+        """
+        Get the coefficients of a polynomial with respect to the specified
+        ``syms``.
+
+        For example, given a polynomial in ``p`` in ``K[x,y,z,t]``, ``p.
+        coeff_split({y, t})`` converts ``p`` to an element of ``K[x, z][y, t]``
+        and returns the coefficients as elements of ``K[x, z]``
+
+        Parameters
+        ==========
+
+        syms : set or symbols
+            A set of symbols or generator objects representing symbol variables
+
+        Returns
+        =======
+
+        list
+            A list of polynomials resulting from splitting the input
+            polynomial.
+
+        Examples
+        ========
+
+        >>> from sympy.polys import ring, ZZ
+        >>> R, x, y, z = ring("x, y, z", ZZ)
+
+        >>> f = 2*x**4 + 3*y**4 + 10*z**2 + 10*x*z**2
+        >>> syms = {z} # Using generator
+        >>> f.coeff_split(syms)
+        [2*x**4 + 3*y**4, 10*x + 10]
+
+        >>> syms = {2} # Using generator index
+        >>> f.coeff_split(syms)
+        [2*x**4 + 3*y**4, 10*x + 10]
+
+        See Also
+        ========
+
+        coeff, coeffs, coeff_wrt, drop_to_ground
+        """
+        p1 = self
+        syms = {x if isinstance(x, int) else p1.ring.gens.index(x) for x in syms}
+        p2 = p1._coeff_split_syms(syms)
+        return [p1.ring(pi) for pi in p2.values()]
+
+
+    def coeff_wrt(self, x: int | str | PolyElement[Er], deg: int) -> PolyElement[Er]:
+        """
+        Coefficient of ``self`` with respect to ``x**deg``.
+
+        Treating ``self`` as a univariate polynomial in ``x`` this finds the
+        coefficient of ``x**deg`` as a polynomial in the other generators.
+
+        Parameters
+        ==========
+
+        x : generator or generator index
+            The generator or generator index to compute the expression for.
+        deg : int
+            The degree of the monomial to compute the expression for.
+
+        Returns
+        =======
+
+        :py:class:`~.PolyElement`
+            The coefficient of ``x**deg`` as a polynomial in the same ring.
+
+        Examples
+        ========
+
+        >>> from sympy.polys import ring, ZZ
+        >>> R, x, y, z = ring("x, y, z", ZZ)
+
+        >>> p = 2*x**4 + 3*y**4 + 10*z**2 + 10*x*z**2
+        >>> deg = 2
+        >>> p.coeff_wrt(2, deg) # Using the generator index
+        10*x + 10
+        >>> p.coeff_wrt(z, deg) # Using the generator
+        10*x + 10
+        >>> p.coeff(z**2) # shows the difference between coeff and coeff_wrt
+        10
+
+        See Also
+        ========
+
+        coeff, coeffs, coeff_split
+        """
+        p1 = self
+        x = x if isinstance(x, int) else p1.ring.gens.index(x)
+        p2 = p1._coeff_split_syms({x})
+        m = [0] * len(p1.ring.gens)
+        m[x] = deg
+        return p1.ring(p2.get(tuple(m), 0))
