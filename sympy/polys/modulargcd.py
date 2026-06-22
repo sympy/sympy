@@ -2451,7 +2451,7 @@ def modgcd_multivariate(f, g, tag):
             return h, cff, cfg
 
 
-def zippel_interp_monic(A, B, G, p, monic, pseudomonic):
+def zippel_interp(A, B, G, p, monic, pseudomonic):
 
     """
     I assume that the skeleton G is passed like this:
@@ -2791,7 +2791,7 @@ def sparse_gcd(A, B, p):
             # but right now zippel_interp expects sympy polys 
             A_ = A.evaluate(xk, t).trunc_ground(p)
             B_ = B.evaluate(xk, t).trunc_ground(p)
-            G_ = zippel_interp_monic(A_, B_, G_s, p, monic, pseudomonic)
+            G_ = zippel_interp(A_, B_, G_s, p, monic, pseudomonic)
             if G_ == None:
                 continue
             # normalization at this stage can't be performed using .monic()
