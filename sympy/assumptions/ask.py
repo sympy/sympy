@@ -496,6 +496,44 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     from sympy.assumptions.lra_satask import lra_satask
     from sympy.logic.algorithms.lra_theory import UnhandledInput
 
+    # Cheap path first (normalization + known-facts lookup + direct handler
+    # dispatch). This is the same code AssumptionsWrapper uses internally
+    # via _ask_recursive, so is_eq/is_ge/etc. (called from inside
+    # _eval_ask for Q.eq/Q.ge/...) never trigger a nested satask call.
+    # See issue #29863.
+    res = _ask_recursive(proposition, assumptions, context)
+    if res is not None:
+        return res
+
+    proposition = sympify(proposition)
+    assumptions = sympify(assumptions)
+
+    # using satask (still costly) -- the ONLY place satask is invoked
+    res = satask(proposition, assumptions=assumptions, context=context)
+    if res is not None:
+        return res
+
+    try:
+        res = lra_satask(proposition, assumptions=assumptions, context=context)
+    except UnhandledInput:
+        return None
+
+    return res
+
+
+def _ask_recursive(proposition, assumptions=True, context=global_assumptions):
+    """
+    Cheap evaluation of *proposition*: normalization, single-fact lookup
+    against known_facts, and direct (multiple-dispatch) handler resolution.
+
+    This function deliberately never falls through to ``satask`` or
+    ``lra_satask``. It is the function ``AssumptionsWrapper`` (and
+    therefore ``is_eq``, ``is_ge``, etc. in ``sympy.core.relational``)
+    calls internally, so that those functions cannot re-enter the costly
+    SAT solving path of ``ask()`` while ``ask()`` itself is busy
+    evaluating a ``Q.eq``/``Q.ge``/... proposition via those very
+    functions. See #29863.
+    """
     proposition = sympify(proposition)
     assumptions = sympify(assumptions)
 
@@ -536,22 +574,12 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     if res is not None:
         return res
 
-    # direct resolution method, no logic
+    # direct resolution method, no logic, no SAT solver
     res = key(*args)._eval_ask(assumptions)
     if res is not None:
         return bool(res)
 
-    # using satask (still costly)
-    res = satask(proposition, assumptions=assumptions, context=context)
-    if res is not None:
-        return res
-
-    try:
-        res = lra_satask(proposition, assumptions=assumptions, context=context)
-    except UnhandledInput:
-        return None
-
-    return res
+    return None
 
 
 def _ask_single_fact(key, local_facts):

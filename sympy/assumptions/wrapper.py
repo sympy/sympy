@@ -45,6 +45,7 @@ False
 from __future__ import annotations
 
 from sympy.assumptions import ask, Q
+from sympy.assumptions.ask import _ask_recursive
 from sympy.core.basic import Basic
 from sympy.core.sympify import _sympify
 
@@ -52,7 +53,8 @@ from sympy.core.sympify import _sympify
 def make_eval_method(fact):
     def getit(self):
         pred = getattr(Q, fact)
-        ret = ask(pred(self.expr), self.assumptions)
+        # _ask_recursive (not ask) so is_eq/is_ge can't recurse back  into the costly satask path of ask() (issue #29863 )
+        ret = _ask_recursive(pred(self.expr), self.assumptions)
         return ret
     return getit
 
@@ -150,16 +152,16 @@ class AssumptionsWrapper(Basic):
 def is_infinite(obj, assumptions=None):
     if assumptions is None:
         return obj.is_infinite
-    return ask(Q.infinite(obj), assumptions)
+    return _ask_recursive(Q.infinite(obj), assumptions)
 
 
 def is_extended_real(obj, assumptions=None):
     if assumptions is None:
         return obj.is_extended_real
-    return ask(Q.extended_real(obj), assumptions)
+    return _ask_recursive(Q.extended_real(obj), assumptions)
 
 
 def is_extended_nonnegative(obj, assumptions=None):
     if assumptions is None:
         return obj.is_extended_nonnegative
-    return ask(Q.extended_nonnegative(obj), assumptions)
+    return _ask_recursive(Q.extended_nonnegative(obj), assumptions)
