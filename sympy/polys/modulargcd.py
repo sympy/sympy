@@ -5,7 +5,7 @@ from sympy.ntheory import nextprime
 from sympy.ntheory.modular import crt
 from sympy.polys.domains import PolynomialRing
 from sympy.polys.galoistools import (
-    gf_gcd, gf_from_dict, gf_gcdex, gf_div, gf_lcm)
+    gf_gcd, gf_from_dict, gf_gcdex, gf_div, gf_lcm, gf_quo)
 from sympy.polys.polyerrors import ModularGCDFailed
 
 import random
@@ -38,22 +38,12 @@ def _gf_gcd(fp, gp, p):
     Compute the GCD of two univariate polynomials in `\mathbb{Z}_p[x]`.
     """
     dom = fp.ring.domain
+    f_list = fp.to_dense()
+    g_list = gp.to_dense()
 
-    while gp:
-        rem = fp
-        deg = gp.degree()
-        lcinv = dom.invert(gp.LC, p)
+    gcd_list = gf_gcd(f_list, g_list, p, dom)
 
-        while True:
-            degrem = rem.degree()
-            if degrem < deg:
-                break
-            rem = (rem - gp.mul_monom((degrem - deg,)).mul_ground(lcinv * rem.LC)).trunc_ground(p)
-
-        fp = gp
-        gp = rem
-
-    return fp.mul_ground(dom.invert(fp.LC, p)).trunc_ground(p)
+    return fp.ring.from_dense(gcd_list).trunc_ground(p)
 
 
 def _degree_bound_univariate(f, g):
@@ -322,8 +312,8 @@ def _primitive(f, p):
     >>> f = x*y*z - y**2*z**2
     >>> _primitive(f, p)
     (z, x*y - y**2*z)
-
     """
+
     ring = f.ring
     dom = ring.domain
     k = ring.ngens
@@ -335,13 +325,23 @@ def _primitive(f, p):
         coeffs[monom[:-1]][monom[-1]] = coeff
 
     cont = []
-    for coeff in iter(coeffs.values()):
-        cont = gf_gcd(cont, gf_from_dict(coeff, p, dom), p, dom)
+    for mon, coeff in coeffs.items():
+        coeff = gf_from_dict(coeff, p, dom)
+        coeffs[mon] = coeff
+        cont = gf_gcd(cont, coeff, p, dom)
 
-    yring = ring.clone(symbols=ring.symbols[k-1])
+    prim = {}
+    for mon, coeff in coeffs.items():
+        coeff = gf_quo(coeff, cont, p, dom)
+        deg = len(coeff)
+        for i, el in enumerate(coeff):
+            if el != 0:
+                prim[mon + (deg-1-i,)] = el
+
+    yring = ring.clone(symbols=[ring.symbols[k-1]])
     contf = yring.from_dense(cont).trunc_ground(p)
 
-    return contf, f.quo(contf.set_ring(ring))
+    return contf, ring.from_dict(prim).trunc_ground(p)
 
 
 def _deg(f):
