@@ -1460,9 +1460,9 @@ class TransferFunctionBase(SISOLinearTimeInvariant, ABC):
 
         if n == 0:
             return (
-                Matrix([zeros(1)]),
-                Matrix([zeros(1)]),
-                Matrix([zeros(1)]),
+                zeros(0, 0),
+                zeros(0, 1),
+                zeros(1, 0),
                 Matrix([num_coeffs[0] / den_coeffs[0]]),
             )
 
@@ -6607,8 +6607,11 @@ class StateSpace(StateSpaceBase):
         """
         s = Symbol('s')
         n = self.A.shape[0]
-        I = eye(n)
-        G = self.C*(s*I - self.A).solve(self.B) + self.D
+        if n == 0:
+            G = self.D
+        else:
+            I = eye(n)
+            G = self.C*(s*I - self.A).solve(self.B) + self.D
         G = G.simplify()
         to_tf = lambda expr: TransferFunction.from_rational_expression(expr, s)
         tf_mat = [[to_tf(expr) for expr in sublist] for sublist in G.tolist()]
@@ -6744,8 +6747,11 @@ class DiscreteStateSpace(StateSpaceBase):
         """
         z = Symbol('z')
         n = self.A.shape[0]
-        I = eye(n)
-        G = self.C*(z*I - self.A).solve(self.B) + self.D
+        if n == 0:
+            G = self.D
+        else:
+            I = eye(n)
+            G = self.C*(z*I - self.A).solve(self.B) + self.D
         G = G.simplify()
         to_tf = lambda expr: DiscreteTransferFunction.\
             from_rational_expression(expr, z, self.sampling_time)
