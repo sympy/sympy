@@ -1,0 +1,99 @@
+// SMT-LIB v2.6 Grammar for Lark
+// Based on the standard SMT-LIB v2 specification
+
+start: script
+
+script: command*
+
+command: "(" "assert" term ")"                 -> cmd_assert
+       | "(" "check-sat" ")"                   -> cmd_check_sat
+       | "(" "declare-const" symbol sort ")"   -> cmd_declare_const
+       | "(" "declare-fun" symbol "(" sort* ")" sort ")" -> cmd_declare_fun
+       | "(" "declare-sort" symbol numeral ")" -> cmd_declare_sort
+       | "(" "define-fun" symbol "(" sorted_var* ")" sort term ")" -> cmd_define_fun
+       | "(" "define-fun-rec" symbol "(" sorted_var* ")" sort term ")" -> cmd_define_fun_rec
+       | "(" "declare-datatype" symbol datatype_dec ")" -> cmd_declare_datatype
+       | "(" "declare-datatypes" "(" sort_dec* ")" "(" datatype_dec* ")" ")" -> cmd_declare_datatypes
+       | "(" "exit" ")"                        -> cmd_exit
+       | "(" "get-assertions" ")"              -> cmd_get_assertions
+       | "(" "get-assignment" ")"              -> cmd_get_assignment
+       | "(" "get-info" keyword ")"            -> cmd_get_info
+       | "(" "get-model" ")"                   -> cmd_get_model
+       | "(" "get-option" keyword ")"          -> cmd_get_option
+       | "(" "get-proof" ")"                   -> cmd_get_proof
+       | "(" "get-unsat-assumptions" ")"       -> cmd_get_unsat_assumptions
+       | "(" "get-unsat-core" ")"              -> cmd_get_unsat_core
+       | "(" "get-value" "(" term+ ")" ")"     -> cmd_get_value
+       | "(" "pop" numeral ")"                 -> cmd_pop
+       | "(" "push" numeral ")"                -> cmd_push
+       | "(" "reset" ")"                       -> cmd_reset
+       | "(" "reset-assertions" ")"            -> cmd_reset_assertions
+       | "(" "set-info" attribute ")"          -> cmd_set_info
+       | "(" "set-logic" symbol ")"            -> cmd_set_logic
+       | "(" "set-option" option ")"           -> cmd_set_option
+       | "(" symbol s_expr* ")"                -> cmd_generic
+
+// Basic tokens
+symbol: SYMBOL | QUOTED_SYMBOL
+keyword: KEYWORD
+numeral: NUMERAL
+decimal: DECIMAL
+hexadecimal: HEXADECIMAL
+binary: BINARY
+string: STRING
+
+s_expr: spec_constant
+      | symbol
+      | keyword
+      | "(" s_expr* ")" -> list
+
+spec_constant: numeral | decimal | hexadecimal | binary | string
+
+sort: symbol -> sort_simple
+    | "(" symbol sort+ ")" -> sort_param
+    | "(" "_" symbol numeral+ ")" -> sort_indexed
+
+sorted_var: "(" symbol sort ")"
+var_binding: "(" symbol term ")"
+
+qual_identifier: symbol
+               | "(" "_" symbol numeral+ ")"
+               | "(" "as" symbol sort ")"
+               | "(" "as" "(" "_" symbol numeral+ ")" sort ")"
+
+term: spec_constant                       -> term_spec_constant
+    | qual_identifier                     -> term_qual_identifier
+    | "(" qual_identifier term+ ")"       -> term_apply
+    | "(" "let" "(" var_binding+ ")" term ")" -> term_let
+    | "(" "forall" "(" sorted_var+ ")" term ")" -> term_forall
+    | "(" "exists" "(" sorted_var+ ")" term ")" -> term_exists
+    | "(" "match" term "(" match_case+ ")" ")" -> term_match
+    | "(" "!" term attribute+ ")"         -> term_annotate
+
+match_case: "(" pattern term ")"
+pattern: symbol | "(" symbol symbol+ ")"
+
+attribute: keyword | keyword attribute_value
+attribute_value: spec_constant | symbol | "(" s_expr* ")"
+
+option: keyword | keyword attribute_value
+
+sort_dec: "(" symbol numeral ")"
+selector_dec: "(" symbol sort ")"
+constructor_dec: "(" symbol selector_dec* ")"
+datatype_dec: "(" constructor_dec+ ")" | "(" "par" "(" symbol+ ")" "(" constructor_dec+ ")" ")"
+
+// Lexer tokens
+SYMBOL: /[a-zA-Z_+\-*\/%?!$&~^<>=@.][a-zA-Z0-9_+\-*\/%?!$&~^<>=@.]*/
+QUOTED_SYMBOL: /\|[^|\\]*\|/
+KEYWORD: /:[a-zA-Z0-9_+\-*\/%?!$&~^<>=@.]+/
+NUMERAL: /0|[1-9][0-9]*/
+DECIMAL: /(0|[1-9][0-9]*)\.[0-9]+/
+HEXADECIMAL: /#x[0-9a-fA-F]+/
+BINARY: /#b[01]+/
+STRING: /"[^"\\]*"/
+
+COMMENT: /;[^\n]*/
+%ignore COMMENT
+%import common.WS
+%ignore WS
