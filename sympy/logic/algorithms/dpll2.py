@@ -135,7 +135,7 @@ class SATSolver:
         self.levels = [Level(0)]
         self._current_level.var_settings = set(var_settings)
         if self.lra:
-            self.lra.push_level()
+            self.lra.bound_history.append([])
             for lit in self._current_level.var_settings:
                 res = self.lra.assert_lit(lit)
                 if res and res[0] is False:
@@ -261,14 +261,14 @@ class SATSolver:
                     flip_lit = -self._current_level.decision
                     self._undo()
                     if self.lra:
-                        self.lra.push_level()
+                        self.lra.bound_history.append([])
                     self.levels.append(Level(flip_lit, flipped=True))
                     flip_var = True
                     continue
 
                 # Start the new decision level
                 if self.lra:
-                    self.lra.push_level()
+                    self.lra.bound_history.append([])
                 self.levels.append(Level(lit))
 
             # Assign the literal, updating the clauses it satisfies
@@ -297,7 +297,7 @@ class SATSolver:
                 flip_lit = -self._current_level.decision
                 self._undo()
                 if self.lra:
-                    self.lra.push_level()
+                    self.lra.bound_history.append([])
                 self.levels.append(Level(flip_lit, flipped=True))
                 flip_var = True
 
