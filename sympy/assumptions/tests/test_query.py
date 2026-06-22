@@ -2,7 +2,7 @@ from __future__ import annotations
 from sympy.abc import t, w, x, y, z, n, k, m, p, i
 from sympy.assumptions import (ask, AssumptionsContext, Q)
 from sympy.assumptions.assume import (assuming, global_assumptions, Predicate,
-    recursive_ask)
+    _ask_recursive)
 from sympy.assumptions.cnf import CNF, Literal
 from sympy.assumptions.facts import (single_fact_lookup,
     get_known_facts, generate_known_facts_dict, get_known_facts_keys)
@@ -1161,7 +1161,7 @@ def test_bounded():
 def test_unbounded_xfail():
     # TODO: Rewrite the logic for the zero and nonzero recursive
     # handlers in handlers/order.py so that these tests pass.
-    assert recursive_ask(Q.zero(1/y), Q.finite(y) & ~Q.zero(y)) is False
+    assert _ask_recursive(Q.zero(1/y), Q.finite(y) & ~Q.zero(y)) is False
     # This is no longer handled as a side effect of the fix for issue #28129.
     assert ask(Q.infinite(x / y), Q.infinite(x) & Q.finite(y) & ~Q.zero(y)) is True
 

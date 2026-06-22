@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from sympy.assumptions.assume import (global_assumptions, Predicate,
-        AppliedPredicate, recursive_ask)
+        AppliedPredicate, _ask_recursive)
 from sympy.assumptions.cnf import CNF, EncodedCNF, Literal
 from sympy.core import sympify
 from sympy.core.kind import BooleanKind
@@ -537,7 +537,7 @@ def ask(proposition, assumptions=True, context=global_assumptions):
         return res
 
     # direct resolution method, no logic
-    res = recursive_ask(proposition, assumptions, context=context)
+    res = _ask_recursive(proposition, assumptions, context=context)
     if res is not None:
         return res
 

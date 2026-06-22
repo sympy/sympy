@@ -4,7 +4,7 @@ Handlers for predicates related to set membership: integer, rational, etc.
 from __future__ import annotations
 
 from sympy.assumptions import Q
-from sympy.assumptions.assume import recursive_ask
+from sympy.assumptions.assume import _ask_recursive
 from sympy.core import Add, Basic, Expr, Mul, Pow, S
 from sympy.core.numbers import (AlgebraicNumber, ComplexInfinity, Exp1, Float,
     GoldenRatio, ImaginaryUnit, Infinity, Integer, NaN, NegativeInfinity,
@@ -73,7 +73,7 @@ def _(expr, assumptions):
     if ask_all(~Q.zero(expr.base), Q.finite(expr.base), Q.zero(expr.exp), assumptions=assumptions):
         return True
     if ask_all(Q.integer(expr.base), Q.integer(expr.exp), assumptions=assumptions):
-        neg_exp = recursive_ask(Q.negative(expr.exp), assumptions)
+        neg_exp = _ask_recursive(Q.negative(expr.exp), assumptions)
         if neg_exp is False:
             return True
         base_pm_1 = ask_any(Q.zero(expr.base - 1), Q.zero(expr.base + 1), assumptions=assumptions)
@@ -94,13 +94,13 @@ def _(expr, assumptions):
         return _IntegerPredicate_number(expr, assumptions)
     _output = True
     for arg in expr.args:
-        if not recursive_ask(Q.integer(arg), assumptions):
+        if not _ask_recursive(Q.integer(arg), assumptions):
             if arg.is_Rational:
                 if arg.q == 2:
-                    return recursive_ask(Q.even(2*expr), assumptions)
+                    return _ask_recursive(Q.even(2*expr), assumptions)
                 if ~(arg.q & 1):
                     return None
-            elif recursive_ask(Q.irrational(arg), assumptions):
+            elif _ask_recursive(Q.irrational(arg), assumptions):
                 if _output:
                     _output = False
                 else:
@@ -112,12 +112,12 @@ def _(expr, assumptions):
 
 @IntegerPredicate.register(Abs)
 def _(expr, assumptions):
-    if recursive_ask(Q.integer(expr.args[0]), assumptions):
+    if _ask_recursive(Q.integer(expr.args[0]), assumptions):
         return True
 
 @IntegerPredicate.register_many(Determinant, MatrixElement, Trace)
 def _(expr, assumptions):
-    return recursive_ask(Q.integer_elements(expr.args[0]), assumptions)
+    return _ask_recursive(Q.integer_elements(expr.args[0]), assumptions)
 
 
 # RationalPredicate
@@ -163,55 +163,55 @@ def _(expr, assumptions):
     """
     if expr.base == E:
         x = expr.exp
-        if recursive_ask(Q.rational(x), assumptions):
-            return recursive_ask(Q.zero(x), assumptions)
+        if _ask_recursive(Q.rational(x), assumptions):
+            return _ask_recursive(Q.zero(x), assumptions)
         return
 
-    is_exp_integer = recursive_ask(Q.integer(expr.exp), assumptions)
+    is_exp_integer = _ask_recursive(Q.integer(expr.exp), assumptions)
     if is_exp_integer:
-        is_base_rational = recursive_ask(Q.rational(expr.base), assumptions)
+        is_base_rational = _ask_recursive(Q.rational(expr.base), assumptions)
         if is_base_rational:
-            is_base_zero = recursive_ask(Q.zero(expr.base), assumptions)
+            is_base_zero = _ask_recursive(Q.zero(expr.base), assumptions)
             if is_base_zero is False:
                 return True
-            if is_base_zero and recursive_ask(Q.positive(expr.exp), assumptions):
+            if is_base_zero and _ask_recursive(Q.positive(expr.exp), assumptions):
                 return True
-        if recursive_ask(Q.algebraic(expr.base), assumptions) is False:
-            return recursive_ask(Q.zero(expr.exp), assumptions)
-        if recursive_ask(Q.irrational(expr.base), assumptions) and recursive_ask(Q.eq(expr.exp, -1), assumptions):
+        if _ask_recursive(Q.algebraic(expr.base), assumptions) is False:
+            return _ask_recursive(Q.zero(expr.exp), assumptions)
+        if _ask_recursive(Q.irrational(expr.base), assumptions) and _ask_recursive(Q.eq(expr.exp, -1), assumptions):
             return False
         return
-    elif recursive_ask(Q.rational(expr.exp), assumptions):
-        if recursive_ask(Q.prime(expr.base), assumptions) and is_exp_integer is False:
+    elif _ask_recursive(Q.rational(expr.exp), assumptions):
+        if _ask_recursive(Q.prime(expr.base), assumptions) and is_exp_integer is False:
             return False
-        if recursive_ask(Q.zero(expr.base), assumptions) and recursive_ask(Q.positive(expr.exp), assumptions):
+        if _ask_recursive(Q.zero(expr.base), assumptions) and _ask_recursive(Q.positive(expr.exp), assumptions):
             return True
-        if recursive_ask(Q.eq(expr.base, 1), assumptions):
+        if _ask_recursive(Q.eq(expr.base, 1), assumptions):
             return True
 
 @RationalPredicate.register_many(asin, atan, cos, sin, tan)
 def _(expr, assumptions):
     x = expr.args[0]
-    if recursive_ask(Q.rational(x), assumptions):
-        return recursive_ask(~Q.nonzero(x), assumptions)
+    if _ask_recursive(Q.rational(x), assumptions):
+        return _ask_recursive(~Q.nonzero(x), assumptions)
 
 @RationalPredicate.register(exp)
 def _(expr, assumptions):
     x = expr.exp
-    if recursive_ask(Q.rational(x), assumptions):
-        return recursive_ask(~Q.nonzero(x), assumptions)
+    if _ask_recursive(Q.rational(x), assumptions):
+        return _ask_recursive(~Q.nonzero(x), assumptions)
 
 @RationalPredicate.register_many(acot, cot)
 def _(expr, assumptions):
     x = expr.args[0]
-    if recursive_ask(Q.rational(x), assumptions):
+    if _ask_recursive(Q.rational(x), assumptions):
         return False
 
 @RationalPredicate.register_many(acos, log)
 def _(expr, assumptions):
     x = expr.args[0]
-    if recursive_ask(Q.rational(x), assumptions):
-        return recursive_ask(~Q.nonzero(x - 1), assumptions)
+    if _ask_recursive(Q.rational(x), assumptions):
+        return _ask_recursive(~Q.nonzero(x - 1), assumptions)
 
 
 # IrrationalPredicate
@@ -225,9 +225,9 @@ def _(expr, assumptions):
 
 @IrrationalPredicate.register(Basic)
 def _(expr, assumptions):
-    _real = recursive_ask(Q.real(expr), assumptions)
+    _real = _ask_recursive(Q.real(expr), assumptions)
     if _real:
-        _rational = recursive_ask(Q.rational(expr), assumptions)
+        _rational = _ask_recursive(Q.rational(expr), assumptions)
         if _rational is None:
             return None
         return not _rational
@@ -283,9 +283,9 @@ def _(expr, assumptions):
         return _RealPredicate_number(expr, assumptions)
     result = True
     for arg in expr.args:
-        if recursive_ask(Q.real(arg), assumptions):
+        if _ask_recursive(Q.real(arg), assumptions):
             pass
-        elif recursive_ask(Q.imaginary(arg), assumptions):
+        elif _ask_recursive(Q.imaginary(arg), assumptions):
             result = result ^ True
         else:
             break
@@ -314,77 +314,77 @@ def _(expr, assumptions):
         return _RealPredicate_number(expr, assumptions)
 
     if expr.base == E:
-        return recursive_ask(
+        return _ask_recursive(
             Q.integer(expr.exp/I/pi) | Q.real(expr.exp), assumptions
         )
 
     if expr.base.func == exp or (expr.base.is_Pow and expr.base.base == E):
-        if recursive_ask(Q.imaginary(expr.base.exp), assumptions):
-            if recursive_ask(Q.imaginary(expr.exp), assumptions):
+        if _ask_recursive(Q.imaginary(expr.base.exp), assumptions):
+            if _ask_recursive(Q.imaginary(expr.exp), assumptions):
                 return True
         # If the i = (exp's arg)/(I*pi) is an integer or half-integer
         # multiple of I*pi then 2*i will be an integer. In addition,
         # exp(i*I*pi) = (-1)**i so the overall realness of the expr
         # can be determined by replacing exp(i*I*pi) with (-1)**i.
         i = expr.base.exp/I/pi
-        if recursive_ask(Q.integer(2*i), assumptions):
-            return recursive_ask(Q.real((S.NegativeOne**i)**expr.exp), assumptions)
+        if _ask_recursive(Q.integer(2*i), assumptions):
+            return _ask_recursive(Q.real((S.NegativeOne**i)**expr.exp), assumptions)
         return
 
-    if recursive_ask(Q.imaginary(expr.base), assumptions):
-        if recursive_ask(Q.integer(expr.exp), assumptions):
-            odd = recursive_ask(Q.odd(expr.exp), assumptions)
+    if _ask_recursive(Q.imaginary(expr.base), assumptions):
+        if _ask_recursive(Q.integer(expr.exp), assumptions):
+            odd = _ask_recursive(Q.odd(expr.exp), assumptions)
             if odd is not None:
                 return not odd
             return
 
-    if recursive_ask(Q.imaginary(expr.exp), assumptions):
-        imlog = recursive_ask(Q.imaginary(log(expr.base)), assumptions)
+    if _ask_recursive(Q.imaginary(expr.exp), assumptions):
+        imlog = _ask_recursive(Q.imaginary(log(expr.base)), assumptions)
         if imlog is not None:
             # I**i -> real, log(I) is imag;
             # (2*I)**i -> complex, log(2*I) is not imag
             return imlog
 
-    if recursive_ask(Q.real(expr.base), assumptions):
-        if recursive_ask(Q.real(expr.exp), assumptions):
+    if _ask_recursive(Q.real(expr.base), assumptions):
+        if _ask_recursive(Q.real(expr.exp), assumptions):
             if (expr.exp.is_Rational and
-                    recursive_ask(Q.even(expr.exp.q), assumptions)):
-                return recursive_ask(Q.nonnegative(expr.base), assumptions)
-            base_is_zero = recursive_ask(Q.zero(expr.base), assumptions)
-            if base_is_zero or recursive_ask(Q.integer(expr.exp), assumptions):
+                    _ask_recursive(Q.even(expr.exp.q), assumptions)):
+                return _ask_recursive(Q.nonnegative(expr.base), assumptions)
+            base_is_zero = _ask_recursive(Q.zero(expr.base), assumptions)
+            if base_is_zero or _ask_recursive(Q.integer(expr.exp), assumptions):
                 # Division by zero : If the base is 0 and the exponent
                 # is negative, ``expr`` evaluates to complex infinity.
                 expr_is_complex_infinity = fuzzy_and([base_is_zero,
-                                recursive_ask(Q.negative(expr.exp), assumptions)])
+                                _ask_recursive(Q.negative(expr.exp), assumptions)])
                 return fuzzy_not(expr_is_complex_infinity)
-            elif recursive_ask(Q.positive(expr.base), assumptions):
+            elif _ask_recursive(Q.positive(expr.base), assumptions):
                 return True
 
 @RealPredicate.register_many(cos, sin)
 def _(expr, assumptions):
-    if recursive_ask(Q.real(expr.args[0]), assumptions):
+    if _ask_recursive(Q.real(expr.args[0]), assumptions):
             return True
 
 @RealPredicate.register(exp)
 def _(expr, assumptions):
-    return recursive_ask(
+    return _ask_recursive(
         Q.integer(expr.exp/I/pi) | Q.real(expr.exp), assumptions
     )
 
 @RealPredicate.register(log)
 def _(expr, assumptions):
-    return recursive_ask(Q.positive(expr.args[0]), assumptions)
+    return _ask_recursive(Q.positive(expr.args[0]), assumptions)
 
 @RealPredicate.register_many(Determinant, MatrixElement, Trace)
 def _(expr, assumptions):
-    return recursive_ask(Q.real_elements(expr.args[0]), assumptions)
+    return _ask_recursive(Q.real_elements(expr.args[0]), assumptions)
 
 
 # ExtendedRealPredicate
 
 @ExtendedRealPredicate.register(object)
 def _(expr, assumptions):
-    return recursive_ask(Q.negative_infinite(expr)
+    return _ask_recursive(Q.negative_infinite(expr)
                | Q.negative(expr)
                | Q.zero(expr)
                | Q.positive(expr)
@@ -406,7 +406,7 @@ def _(expr, assumptions):
 def _(expr, assumptions):
     if isinstance(expr, MatrixBase):
         return None
-    return recursive_ask(Q.real(expr), assumptions)
+    return _ask_recursive(Q.real(expr), assumptions)
 
 @HermitianPredicate.register(Add) # type:ignore
 def _(expr, assumptions):
@@ -432,11 +432,11 @@ def _(expr, assumptions):
     nccount = 0
     result = True
     for arg in expr.args:
-        if recursive_ask(Q.antihermitian(arg), assumptions):
+        if _ask_recursive(Q.antihermitian(arg), assumptions):
             result = result ^ True
-        elif not recursive_ask(Q.hermitian(arg), assumptions):
+        elif not _ask_recursive(Q.hermitian(arg), assumptions):
             break
-        if recursive_ask(~Q.commutative(arg), assumptions):
+        if _ask_recursive(~Q.commutative(arg), assumptions):
             nccount += 1
             if nccount > 1:
                 break
@@ -451,23 +451,23 @@ def _(expr, assumptions):
     if expr.is_number:
         raise MDNotImplementedError
     if expr.base == E:
-        if recursive_ask(Q.hermitian(expr.exp), assumptions):
+        if _ask_recursive(Q.hermitian(expr.exp), assumptions):
             return True
         raise MDNotImplementedError
-    if recursive_ask(Q.hermitian(expr.base), assumptions):
-        if recursive_ask(Q.integer(expr.exp), assumptions):
+    if _ask_recursive(Q.hermitian(expr.base), assumptions):
+        if _ask_recursive(Q.integer(expr.exp), assumptions):
             return True
     raise MDNotImplementedError
 
 @HermitianPredicate.register_many(cos, sin) # type:ignore
 def _(expr, assumptions):
-    if recursive_ask(Q.hermitian(expr.args[0]), assumptions):
+    if _ask_recursive(Q.hermitian(expr.args[0]), assumptions):
         return True
     raise MDNotImplementedError
 
 @HermitianPredicate.register(exp) # type:ignore
 def _(expr, assumptions):
-    if recursive_ask(Q.hermitian(expr.exp), assumptions):
+    if _ask_recursive(Q.hermitian(expr.exp), assumptions):
         return True
     raise MDNotImplementedError
 
@@ -517,7 +517,7 @@ def _(expr, assumptions):
 
 @ComplexPredicate.register_many(Determinant, MatrixElement, Trace) # type:ignore
 def _(expr, assumptions):
-    return recursive_ask(Q.complex_elements(expr.args[0]), assumptions)
+    return _ask_recursive(Q.complex_elements(expr.args[0]), assumptions)
 
 @ComplexPredicate.register(NaN) # type:ignore
 def _(expr, assumptions):
@@ -558,9 +558,9 @@ def _(expr, assumptions):
 
     reals = 0
     for arg in expr.args:
-        if recursive_ask(Q.imaginary(arg), assumptions):
+        if _ask_recursive(Q.imaginary(arg), assumptions):
             pass
-        elif recursive_ask(Q.real(arg), assumptions):
+        elif _ask_recursive(Q.real(arg), assumptions):
             reals += 1
         else:
             break
@@ -582,9 +582,9 @@ def _(expr, assumptions):
     result = False
     reals = 0
     for arg in expr.args:
-        if recursive_ask(Q.imaginary(arg), assumptions):
+        if _ask_recursive(Q.imaginary(arg), assumptions):
             result = result ^ True
-        elif not recursive_ask(Q.real(arg), assumptions):
+        elif not _ask_recursive(Q.real(arg), assumptions):
             break
     else:
         if reals == len(expr.args):
@@ -609,65 +609,65 @@ def _(expr, assumptions):
 
     if expr.base == E:
         a = expr.exp/I/pi
-        return recursive_ask(Q.integer(2*a) & ~Q.integer(a), assumptions)
+        return _ask_recursive(Q.integer(2*a) & ~Q.integer(a), assumptions)
 
     if expr.base.func == exp or (expr.base.is_Pow and expr.base.base == E):
-        if recursive_ask(Q.imaginary(expr.base.exp), assumptions):
-            if recursive_ask(Q.imaginary(expr.exp), assumptions):
+        if _ask_recursive(Q.imaginary(expr.base.exp), assumptions):
+            if _ask_recursive(Q.imaginary(expr.exp), assumptions):
                 return False
             i = expr.base.exp/I/pi
-            if recursive_ask(Q.integer(2*i), assumptions):
-                return recursive_ask(Q.imaginary((S.NegativeOne**i)**expr.exp), assumptions)
+            if _ask_recursive(Q.integer(2*i), assumptions):
+                return _ask_recursive(Q.imaginary((S.NegativeOne**i)**expr.exp), assumptions)
 
-    if recursive_ask(Q.imaginary(expr.base), assumptions):
-        if recursive_ask(Q.integer(expr.exp), assumptions):
-            odd = recursive_ask(Q.odd(expr.exp), assumptions)
+    if _ask_recursive(Q.imaginary(expr.base), assumptions):
+        if _ask_recursive(Q.integer(expr.exp), assumptions):
+            odd = _ask_recursive(Q.odd(expr.exp), assumptions)
             if odd is not None:
                 return odd
             return
 
-    if recursive_ask(Q.imaginary(expr.exp), assumptions):
-        imlog = recursive_ask(Q.imaginary(log(expr.base)), assumptions)
+    if _ask_recursive(Q.imaginary(expr.exp), assumptions):
+        imlog = _ask_recursive(Q.imaginary(log(expr.base)), assumptions)
         if imlog is not None:
             # I**i -> real; (2*I)**i -> complex ==> not imaginary
             return False
 
-    if recursive_ask(Q.real(expr.base) & Q.real(expr.exp), assumptions):
-        if recursive_ask(Q.positive(expr.base), assumptions):
+    if _ask_recursive(Q.real(expr.base) & Q.real(expr.exp), assumptions):
+        if _ask_recursive(Q.positive(expr.base), assumptions):
             return False
         else:
-            rat = recursive_ask(Q.rational(expr.exp), assumptions)
+            rat = _ask_recursive(Q.rational(expr.exp), assumptions)
             if not rat:
                 return rat
-            if recursive_ask(Q.integer(expr.exp), assumptions):
+            if _ask_recursive(Q.integer(expr.exp), assumptions):
                 return False
             else:
-                half = recursive_ask(Q.integer(2*expr.exp), assumptions)
+                half = _ask_recursive(Q.integer(2*expr.exp), assumptions)
                 if half:
-                    return recursive_ask(Q.negative(expr.base), assumptions)
+                    return _ask_recursive(Q.negative(expr.base), assumptions)
                 return half
 
 @ImaginaryPredicate.register(log) # type:ignore
 def _(expr, assumptions):
-    if recursive_ask(Q.real(expr.args[0]), assumptions):
-        if recursive_ask(Q.positive(expr.args[0]), assumptions):
+    if _ask_recursive(Q.real(expr.args[0]), assumptions):
+        if _ask_recursive(Q.positive(expr.args[0]), assumptions):
             return False
         return
     # XXX it should be enough to do
-    # return recursive_ask(Q.nonpositive(expr.args[0]), assumptions)
-    # but recursive_ask(Q.nonpositive(exp(x)), Q.imaginary(x)) -> None;
+    # return _ask_recursive(Q.nonpositive(expr.args[0]), assumptions)
+    # but _ask_recursive(Q.nonpositive(exp(x)), Q.imaginary(x)) -> None;
     # it should return True since exp(x) will be either 0 or complex
     if expr.args[0].func == exp or (expr.args[0].is_Pow and expr.args[0].base == E):
         if expr.args[0].exp in [I, -I]:
             return True
-    im = recursive_ask(Q.imaginary(expr.args[0]), assumptions)
+    im = _ask_recursive(Q.imaginary(expr.args[0]), assumptions)
     if im is False:
         return False
 
 @ImaginaryPredicate.register(exp) # type:ignore
 def _(expr, assumptions):
     a = expr.exp/I/pi
-    return recursive_ask(Q.integer(2*a) & ~Q.integer(a), assumptions)
+    return _ask_recursive(Q.integer(2*a) & ~Q.integer(a), assumptions)
 
 @ImaginaryPredicate.register_many(Number, NumberSymbol) # type:ignore
 def _(expr, assumptions):
@@ -684,9 +684,9 @@ def _(expr, assumptions):
 def _(expr, assumptions):
     if isinstance(expr, MatrixBase):
         return None
-    if recursive_ask(Q.zero(expr), assumptions):
+    if _ask_recursive(Q.zero(expr), assumptions):
         return True
-    return recursive_ask(Q.imaginary(expr), assumptions)
+    return _ask_recursive(Q.imaginary(expr), assumptions)
 
 @AntihermitianPredicate.register(Add) # type:ignore
 def _(expr, assumptions):
@@ -712,11 +712,11 @@ def _(expr, assumptions):
     nccount = 0
     result = False
     for arg in expr.args:
-        if recursive_ask(Q.antihermitian(arg), assumptions):
+        if _ask_recursive(Q.antihermitian(arg), assumptions):
             result = result ^ True
-        elif not recursive_ask(Q.hermitian(arg), assumptions):
+        elif not _ask_recursive(Q.hermitian(arg), assumptions):
             break
-        if recursive_ask(~Q.commutative(arg), assumptions):
+        if _ask_recursive(~Q.commutative(arg), assumptions):
             nccount += 1
             if nccount > 1:
                 break
@@ -732,13 +732,13 @@ def _(expr, assumptions):
     """
     if expr.is_number:
         raise MDNotImplementedError
-    if recursive_ask(Q.hermitian(expr.base), assumptions):
-        if recursive_ask(Q.integer(expr.exp), assumptions):
+    if _ask_recursive(Q.hermitian(expr.base), assumptions):
+        if _ask_recursive(Q.integer(expr.exp), assumptions):
             return False
-    elif recursive_ask(Q.antihermitian(expr.base), assumptions):
-        if recursive_ask(Q.even(expr.exp), assumptions):
+    elif _ask_recursive(Q.antihermitian(expr.base), assumptions):
+        if _ask_recursive(Q.even(expr.exp), assumptions):
             return False
-        elif recursive_ask(Q.odd(expr.exp), assumptions):
+        elif _ask_recursive(Q.odd(expr.exp), assumptions):
             return True
     raise MDNotImplementedError
 
@@ -781,26 +781,26 @@ def _(expr, assumptions):
 @AlgebraicPredicate.register(Pow) # type:ignore
 def _(expr, assumptions):
     if expr.base == E:
-        if recursive_ask(Q.algebraic(expr.exp), assumptions):
-            return recursive_ask(~Q.nonzero(expr.exp), assumptions)
+        if _ask_recursive(Q.algebraic(expr.exp), assumptions):
+            return _ask_recursive(~Q.nonzero(expr.exp), assumptions)
         return
     if expr.base == pi:
-        if recursive_ask(Q.integer(expr.exp), assumptions) and recursive_ask(Q.positive(expr.exp), assumptions):
+        if _ask_recursive(Q.integer(expr.exp), assumptions) and _ask_recursive(Q.positive(expr.exp), assumptions):
             return False
         return
-    exp_rational = recursive_ask(Q.rational(expr.exp), assumptions)
-    base_algebraic = recursive_ask(Q.algebraic(expr.base), assumptions)
-    exp_algebraic = recursive_ask(Q.algebraic(expr.exp), assumptions)
+    exp_rational = _ask_recursive(Q.rational(expr.exp), assumptions)
+    base_algebraic = _ask_recursive(Q.algebraic(expr.base), assumptions)
+    exp_algebraic = _ask_recursive(Q.algebraic(expr.exp), assumptions)
     if base_algebraic and exp_algebraic:
         if exp_rational:
             return True
         # Check based on the Gelfond-Schneider theorem:
         # If the base is algebraic and not equal to 0 or 1, and the exponent
         # is irrational,then the result is transcendental.
-        if recursive_ask(Q.ne(expr.base, 0) & Q.ne(expr.base, 1), assumptions) and exp_rational is False:
+        if _ask_recursive(Q.ne(expr.base, 0) & Q.ne(expr.base, 1), assumptions) and exp_rational is False:
             return False
 
-    exp_integer = recursive_ask(Q.integer(expr.exp), assumptions)
+    exp_integer = _ask_recursive(Q.integer(expr.exp), assumptions)
     if base_algebraic is False and exp_integer:
         if expr.exp > 0:
             return False
@@ -812,26 +812,26 @@ def _(expr, assumptions):
 @AlgebraicPredicate.register_many(asin, atan, cos, sin, tan) # type:ignore
 def _(expr, assumptions):
     x = expr.args[0]
-    if recursive_ask(Q.algebraic(x), assumptions):
-        return recursive_ask(~Q.nonzero(x), assumptions)
+    if _ask_recursive(Q.algebraic(x), assumptions):
+        return _ask_recursive(~Q.nonzero(x), assumptions)
 
 @AlgebraicPredicate.register(exp) # type:ignore
 def _(expr, assumptions):
     x = expr.exp
-    if recursive_ask(Q.algebraic(x), assumptions):
-        return recursive_ask(~Q.nonzero(x), assumptions)
+    if _ask_recursive(Q.algebraic(x), assumptions):
+        return _ask_recursive(~Q.nonzero(x), assumptions)
 
 @AlgebraicPredicate.register_many(acot, cot) # type:ignore
 def _(expr, assumptions):
     x = expr.args[0]
-    if recursive_ask(Q.algebraic(x), assumptions):
+    if _ask_recursive(Q.algebraic(x), assumptions):
         return False
 
 @AlgebraicPredicate.register_many(acos, log) # type:ignore
 def _(expr, assumptions):
     x = expr.args[0]
-    if recursive_ask(Q.algebraic(x), assumptions):
-        return recursive_ask(~Q.nonzero(x - 1), assumptions)
+    if _ask_recursive(Q.algebraic(x), assumptions):
+        return _ask_recursive(~Q.nonzero(x - 1), assumptions)
 
 
 # TranscendentalPredicate
@@ -842,8 +842,8 @@ def _(expr, assumptions):
     if ret is not None:
         return ret
 
-    is_complex = recursive_ask(Q.complex(expr), assumptions)
+    is_complex = _ask_recursive(Q.complex(expr), assumptions)
     if is_complex:
-        is_algebraic = recursive_ask(Q.algebraic(expr), assumptions)
+        is_algebraic = _ask_recursive(Q.algebraic(expr), assumptions)
         return fuzzy_not(is_algebraic)
     return is_complex

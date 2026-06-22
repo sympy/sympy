@@ -428,7 +428,7 @@ def assuming(*assumptions):
         global_assumptions.update(old_global_assumptions)
 
 
-def recursive_ask(proposition, assumptions, context=True):
+def _ask_recursive(proposition, assumptions, context=True):
     from sympy.assumptions.ask import _ask_single_fact, Q, _extract_all_facts
     from sympy.core.relational import Eq, Ne, Gt, Lt, Ge, Le
     from sympy.assumptions.cnf import CNF
