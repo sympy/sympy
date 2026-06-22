@@ -53,7 +53,7 @@ from sympy.core.sympify import _sympify
 def make_eval_method(fact):
     def getit(self):
         pred = getattr(Q, fact)
-        # _ask_recursive (not ask) so is_eq/is_ge can't recurse back  into the costly satask path of ask() (issue #29863 )
+        # _ask_recursive (not ask) so is_eq/is_ge can't recurse back  into the costly satask path of ask() (issue #29863)
         ret = _ask_recursive(pred(self.expr), self.assumptions)
         return ret
     return getit
