@@ -256,6 +256,24 @@ def test_complex_infinity():
     assert ask(Q.transcendental(zoo)) is False
 
 
+def test_positive_infinite_symbolic():
+    assert ask(Q.positive_infinite(x), Q.positive(x)) is False
+    assert ask(Q.positive_infinite(x), Q.finite(x)) is False
+    assert ask(Q.positive_infinite(x), Q.complex(x)) is False
+    assert ask(Q.positive_infinite(x + I), Q.real(x)) is False
+    assert ask(Q.positive_infinite(x*I), Q.real(x)) is False
+    assert ask(Q.positive_infinite(x + y), Q.real(x) & Q.imaginary(y)) is False
+
+
+def test_negative_infinite_symbolic():
+    assert ask(Q.negative_infinite(x), Q.positive(x)) is False
+    assert ask(Q.negative_infinite(x), Q.finite(x)) is False
+    assert ask(Q.negative_infinite(x), Q.complex(x)) is False
+    assert ask(Q.negative_infinite(x + I), Q.real(x)) is False
+    assert ask(Q.negative_infinite(x*I), Q.real(x)) is False
+    assert ask(Q.negative_infinite(x + y), Q.real(x) & Q.imaginary(y)) is False
+
+
 def test_nan():
     nan = S.NaN
     assert ask(Q.commutative(nan)) is True
