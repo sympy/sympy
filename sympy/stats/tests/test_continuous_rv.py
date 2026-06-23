@@ -1582,3 +1582,12 @@ def test_issue_16318():
 def test_compute_density():
     X = Normal('X', 0, Symbol("sigma")**2)
     raises(ValueError, lambda: density(X**5 + X))
+
+def test_conditional_space_normalize_false():
+    from sympy.stats import Normal
+    from sympy.stats.rv import pspace
+    X = Normal('X', 0, 1)
+    pspace(X).conditional_space(X > 0, normalize=True)
+    # normalize=False should raise NotImplementedError, not UnboundLocalError
+    raises(NotImplementedError,
+           lambda: pspace(X).conditional_space(X > 0, normalize=False))
