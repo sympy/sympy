@@ -289,7 +289,11 @@ def _(expr, assumptions):
         else:
             break
     else:
-        return result
+        if result:
+            return True
+        # if we cannot deduce expr is real,
+        # expr is imaginary only if no arg is zero
+        return ask(Q.zero(expr), assumptions)
 
 @RealPredicate.register(Pow)
 def _(expr, assumptions):
