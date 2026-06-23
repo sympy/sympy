@@ -522,7 +522,7 @@ class Pow(Expr):
             elif self.exp.is_integer and self.exp.is_nonnegative:
                 return True
             elif self.base.is_extended_negative:
-                if self.exp.is_Rational:
+                if self.exp.is_rational and self.exp.is_integer is False:
                     return False
         if real_e and self.exp.is_extended_negative and self.base.is_zero is False:
             return Pow(self.base, -self.exp).is_extended_real
