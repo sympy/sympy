@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from sympy.logic.boolalg import conjuncts
 from sympy.assumptions import Q
-from sympy.assumptions.assume import _ask_recursive
+from sympy.assumptions.ask import _ask_recursive
 from sympy.assumptions.handlers import test_closed_group
 from sympy.matrices import MatrixBase
 from sympy.matrices.expressions import (BlockMatrix, BlockDiagMatrix, Determinant,

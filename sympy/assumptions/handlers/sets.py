@@ -4,7 +4,7 @@ Handlers for predicates related to set membership: integer, rational, etc.
 from __future__ import annotations
 
 from sympy.assumptions import Q
-from sympy.assumptions.assume import _ask_recursive
+from sympy.assumptions.ask import _ask_recursive
 from sympy.core import Add, Basic, Expr, Mul, Pow, S
 from sympy.core.numbers import (AlgebraicNumber, ComplexInfinity, Exp1, Float,
     GoldenRatio, ImaginaryUnit, Infinity, Integer, NaN, NegativeInfinity,

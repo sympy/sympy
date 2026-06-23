@@ -5,7 +5,7 @@ This module defines base class for handlers and some core handlers:
 from __future__ import annotations
 
 from sympy.assumptions import Q, AppliedPredicate
-from sympy.assumptions.assume import _ask_recursive
+from sympy.assumptions.ask import _ask_recursive
 from sympy.core import Basic, Symbol
 from sympy.core.logic import _fuzzy_group, fuzzy_and, fuzzy_or
 from sympy.core.numbers import NaN, Number

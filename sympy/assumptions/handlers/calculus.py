@@ -5,7 +5,7 @@ infinitesimal, finite, etc.
 from __future__ import annotations
 
 from sympy.assumptions import Q
-from sympy.assumptions.assume import _ask_recursive
+from sympy.assumptions.ask import _ask_recursive
 from sympy.core import Expr, Add, Mul, Pow, Symbol
 from sympy.core.numbers import (NegativeInfinity, GoldenRatio,
     Infinity, Exp1, ComplexInfinity, ImaginaryUnit, NaN, Number, Pi, E,

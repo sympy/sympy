@@ -639,5 +639,23 @@ def _ask_single_fact(key, local_facts):
     return None
 
 
+def _ask_recursive(proposition, assumptions):
+    if isinstance(proposition, AppliedPredicate):
+        key, args = proposition.function, proposition.arguments
+    else:
+        key, args = Q.is_true, (proposition,)
+
+    assump_cnf = CNF.from_prop(assumptions)
+    local_facts = _extract_all_facts(assump_cnf, args)
+
+    res = _ask_single_fact(key, local_facts)
+    if res is not None:
+        return res
+
+    res = key(*args)._eval_ask(assumptions)
+    if res is not None:
+        return bool(res)
+
+
 from sympy.assumptions.ask_generated import (get_all_known_facts,
     get_known_facts_dict)

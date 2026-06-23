@@ -1,8 +1,8 @@
 from __future__ import annotations
 from sympy.abc import t, w, x, y, z, n, k, m, p, i
 from sympy.assumptions import (ask, AssumptionsContext, Q)
-from sympy.assumptions.assume import (assuming, global_assumptions, Predicate,
-    _ask_recursive)
+from sympy.assumptions.assume import (assuming, global_assumptions, Predicate)
+from sympy.assumptions.ask import _ask_recursive
 from sympy.assumptions.cnf import CNF, Literal
 from sympy.assumptions.facts import (single_fact_lookup,
     get_known_facts, generate_known_facts_dict, get_known_facts_keys)

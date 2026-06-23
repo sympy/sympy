@@ -4,7 +4,7 @@ Handlers related to order relations: positive, negative, etc.
 from __future__ import annotations
 
 from sympy.assumptions import Q
-from sympy.assumptions.assume import _ask_recursive
+from sympy.assumptions.ask import _ask_recursive
 from sympy.core import Add, Basic, Expr, Mul, Pow, S
 from sympy.core.logic import fuzzy_not, fuzzy_and, fuzzy_or
 from sympy.core.numbers import E, ImaginaryUnit, NaN, I, pi

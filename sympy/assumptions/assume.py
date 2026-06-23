@@ -426,24 +426,3 @@ def assuming(*assumptions):
     finally:
         global_assumptions.clear()
         global_assumptions.update(old_global_assumptions)
-
-
-def _ask_recursive(proposition, assumptions):
-    from sympy.assumptions.ask import _ask_single_fact, Q, _extract_all_facts
-    from sympy.assumptions.cnf import CNF
-
-    if isinstance(proposition, AppliedPredicate):
-        key, args = proposition.function, proposition.arguments
-    else:
-        key, args = Q.is_true, (proposition,)
-
-    assump_cnf = CNF.from_prop(assumptions)
-    local_facts = _extract_all_facts(assump_cnf, args)
-
-    res = _ask_single_fact(key, local_facts)
-    if res is not None:
-        return res
-
-    res = key(*args)._eval_ask(assumptions)
-    if res is not None:
-        return bool(res)

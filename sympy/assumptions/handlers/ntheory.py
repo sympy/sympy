@@ -4,7 +4,7 @@ Handlers for keys related to number theory: prime, even, odd, etc.
 from __future__ import annotations
 
 from sympy.assumptions import Q
-from sympy.assumptions.assume import _ask_recursive
+from sympy.assumptions.ask import _ask_recursive
 from sympy.core import Add, Basic, Expr, Float, Mul, Pow, S
 from sympy.core.numbers import (ImaginaryUnit, Infinity, Integer, NaN,
     NegativeInfinity, NumberSymbol, Rational, int_valued)
