@@ -1338,7 +1338,12 @@ def besselsimp(expr):
     if expr != orig_expr:
         bessels = list(expr.find(
             lambda x: isinstance(x, (besselj, bessely, besseli, besselk))))
-        expr = collect(expand(expr), bessels, func=factor)
+        factored = expr.factor()
+        if len(bessels) > 1:
+            collected = collect(expand(expr), bessels, func=factor)
+            expr = collected if collected != factored else factored
+        else:
+            expr = factored
 
     return expr
 
