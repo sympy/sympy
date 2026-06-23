@@ -148,10 +148,27 @@ def get_sympy_dir():
     """
     Returns the root SymPy directory and set the global value
     indicating whether the system is case sensitive or not.
+
+    When sympy is installed (e.g. into site-packages) and the tests are run
+    from a git checkout that has no local ``sympy/`` directory, the path
+    derived from ``__file__`` points into site-packages rather than the git
+    repo, so ``doc/src`` cannot be found.  In that case we fall back to the
+    directory that contains the script being executed (``sys.argv[0]``), which
+    is the repo root when invoked as ``bin/doctest``.
     """
     this_file = os.path.abspath(__file__)
     sympy_dir = os.path.join(os.path.dirname(this_file), "..", "..")
     sympy_dir = os.path.normpath(sympy_dir)
+
+    # If doc/ does not exist under the path derived from __file__ (which
+    # happens when sympy is installed and the local sympy/ dir has been
+    # removed), try the directory containing the entry-point script instead.
+    if not os.path.isdir(os.path.join(sympy_dir, "doc")):
+        script_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
+        candidate = os.path.normpath(os.path.join(script_dir, ".."))
+        if os.path.isdir(os.path.join(candidate, "doc")):
+            sympy_dir = candidate
+
     return os.path.normcase(sympy_dir)
 
 
