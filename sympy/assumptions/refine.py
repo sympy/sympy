@@ -557,11 +557,16 @@ def refine_tan_cot(expr, assumptions):
     zoo
     """
     from sympy.functions.elementary.trigonometric import tan, cot
+    from sympy.calculus.accumulationbounds import AccumBounds
 
     if not isinstance(expr, (tan, cot)):
         raise TypeError("refine_tan_cot expects a tan or cot function.")
 
     arg = expr.args[0]
+    if (ask(Q.infinite(arg), assumptions) and
+            ask(Q.extended_real(arg), assumptions)):
+        return AccumBounds(S.NegativeInfinity, S.Infinity)
+
     if ask(Q.zero(arg), assumptions):
         return S.Zero if isinstance(expr, tan) else S.ComplexInfinity
 

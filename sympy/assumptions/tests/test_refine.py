@@ -335,8 +335,6 @@ def test_tan_cot():
     assert refine(tan(x - n*pi), Q.integer(n)) == tan(x)
     assert refine(tan(x + y + 2*n*pi), Q.integer(n)) == tan(x + y)
 
-    assert refine(tan(x + m*pi)) == tan(x)
-
     assert refine(tan(n*pi/2), Q.even(n)) == 0
     assert refine(tan(n*pi/2), Q.odd(n)) == zoo
     assert refine(cot(n*pi/2), Q.even(n)) == zoo
@@ -346,6 +344,12 @@ def test_tan_cot():
     assert refine(tan(x + n*pi)) == tan(x + n*pi)
     assert refine(tan(x + n*pi/2), Q.odd(n)) == tan(x + n*pi/2)
     assert refine(tan(x + n*pi/2 + m*pi), Q.integer(m)) == tan(x + n*pi/2)
+
+    assert refine(tan(x), Q.infinite(x) & Q.extended_real(x)) == \
+        AccumBounds(S.NegativeInfinity, S.Infinity)
+    assert refine(cot(x), Q.infinite(x) & Q.extended_real(x)) == \
+        AccumBounds(S.NegativeInfinity, S.Infinity)
+    assert refine(tan(x), Q.infinite(x)) == tan(x)
 
     raises(TypeError, lambda: refine_tan_cot(sin(x), Q.real(x)))
 
