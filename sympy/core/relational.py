@@ -631,7 +631,7 @@ class Equality(Relational):
 
     is_Equality = True
 
-    def __new__(cls, lhs, rhs, **options) -> Equality | BooleanFalse | BooleanTrue: # type: ignore
+    def __new__(cls, lhs, rhs, **options) -> Boolean: # type:ignore[misc]
         evaluate = options.pop('evaluate', global_parameters.evaluate)
         lhs = _sympify(lhs)
         rhs = _sympify(rhs)

@@ -50,9 +50,9 @@ class GrayCode(Basic):
 
     """
 
-    _skip = False
-    _current = 0
-    _rank = None
+    _skip: bool = False
+    _current: str = '0'
+    _rank: int | None = None
 
     def __new__(cls: type[GrayCode], n: int, *args: Any, **kw_args: Any) -> GrayCode:
         """
@@ -90,10 +90,11 @@ class GrayCode(Basic):
         args = (n,) + args
         obj = Basic.__new__(cls, *args)
         if 'start' in kw_args:
-            obj._current = kw_args["start"]
-            if len(obj._current) > n:
+            start = kw_args["start"]
+            obj._current = start
+            if len(start) > n:
                 raise ValueError('Gray code start has length %i but '
-                'should not be greater than %i' % (len(obj._current), n))
+                'should not be greater than %i' % (len(start), n))
         elif 'rank' in kw_args:
             if int(kw_args["rank"]) != kw_args["rank"]:
                 raise ValueError('Gray code rank must be a positive integer, '
@@ -191,7 +192,7 @@ class GrayCode(Basic):
         if len(graycode_bin) > self.n:
             raise ValueError('Gray code start has length %i but should '
             'not be greater than %i' % (len(graycode_bin), bits))
-        self._current = int(current, 2)
+        current_int = int(current, 2)
         graycode_int = int(''.join(graycode_bin), 2)
         for i in range(graycode_int, 1 << bits):
             if self._skip:
@@ -200,8 +201,9 @@ class GrayCode(Basic):
                 yield self.current
             bbtc = (i ^ (i + 1))
             gbtc = (bbtc ^ (bbtc >> 1))
-            self._current = (self._current ^ gbtc)
-        self._current = 0
+            current_int ^= gbtc
+            self._current = f'{current_int:b}'
+        self._current = '0'
 
     def skip(self):
         """
@@ -283,10 +285,7 @@ class GrayCode(Basic):
         >>> GrayCode(3, start='100').current
         '100'
         """
-        rv = self._current or '0'
-        if not isinstance(rv, str):
-            rv = f'{rv:b}'
-        return rv.rjust(self.n, '0')
+        return self._current.rjust(self.n, '0')
 
     @classmethod
     def unrank(cls, n: int | Basic, rank: int) -> str:
