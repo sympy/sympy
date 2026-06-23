@@ -1,15 +1,15 @@
 from __future__ import annotations
 from sympy.assumptions.ask import Q
-from sympy.assumptions.refine import refine, refine_sin_cos
+from sympy.assumptions.refine import refine, refine_sin_cos, refine_tan_cot
 from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.core.expr import Expr
-from sympy.core.numbers import (I, Rational, nan, pi)
+from sympy.core.numbers import (I, Rational, nan, pi, zoo)
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.functions.elementary.complexes import (Abs, arg, im, re, sign)
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.functions.elementary.trigonometric import (atan, atan2, cos, sin, tan)
+from sympy.functions.elementary.trigonometric import (atan, atan2, cos, cot, sin, tan)
 from sympy.abc import w, x, y, z
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.piecewise import Piecewise
@@ -320,6 +320,34 @@ def test_sin_cos():
     raises(TypeError, lambda: refine_sin_cos(tan(x), Q.real(x)))
     raises(TypeError, lambda: refine_sin_cos(exp(x), Q.real(x)))
     raises(TypeError, lambda: refine_sin_cos(x, Q.real(x)))
+
+
+def test_tan_cot():
+    n = Symbol('n')
+    m = Symbol('m')
+    assert refine(tan(x), Q.zero(x)) == 0
+    assert refine(cot(x), Q.zero(x)) == zoo
+
+    assert refine(tan(n*pi), Q.integer(n)) == 0
+    assert refine(cot(n*pi), Q.integer(n)) == zoo
+    assert refine(tan(x + n*pi), Q.integer(n)) == tan(x)
+    assert refine(cot(x + n*pi), Q.integer(n)) == cot(x)
+    assert refine(tan(x - n*pi), Q.integer(n)) == tan(x)
+    assert refine(tan(x + y + 2*n*pi), Q.integer(n)) == tan(x + y)
+
+    assert refine(tan(x + m*pi)) == tan(x)
+
+    assert refine(tan(n*pi/2), Q.even(n)) == 0
+    assert refine(tan(n*pi/2), Q.odd(n)) == zoo
+    assert refine(cot(n*pi/2), Q.even(n)) == zoo
+    assert refine(cot(n*pi/2), Q.odd(n)) == 0
+
+    assert refine(tan(n*pi/2), Q.integer(n)) == tan(n*pi/2)
+    assert refine(tan(x + n*pi)) == tan(x + n*pi)
+    assert refine(tan(x + n*pi/2), Q.odd(n)) == tan(x + n*pi/2)
+    assert refine(tan(x + n*pi/2 + m*pi), Q.integer(m)) == tan(x + n*pi/2)
+
+    raises(TypeError, lambda: refine_tan_cot(sin(x), Q.real(x)))
 
 
 def test_floor_ceiling():
