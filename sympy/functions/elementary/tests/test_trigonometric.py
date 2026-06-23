@@ -1709,6 +1709,16 @@ def test_sec():
     assert sec(x).is_finite is None
     assert sec(pi/2, evaluate=False).is_finite == False
 
+    assert sec(z).is_zero is False
+    assert sec(z).is_positive is None
+    assert sec(z).is_negative is None
+    assert sec(pi/4, evaluate=False).is_positive is True
+    assert sec(pi/4, evaluate=False).is_nonnegative is True
+    assert sec(pi/4, evaluate=False).is_nonpositive is False
+    assert sec(pi*Rational(3, 4), evaluate=False).is_negative is True
+    assert sec(pi*Rational(3, 4), evaluate=False).is_nonpositive is True
+    assert sec(pi*Rational(3, 4), evaluate=False).is_extended_negative is True
+
     assert series(sec(x), x, x0=0, n=6) == 1 + x**2/2 + 5*x**4/24 + O(x**6)
 
     # https://github.com/sympy/sympy/issues/7166
@@ -1800,6 +1810,14 @@ def test_csc():
     assert csc(0, evaluate=False).is_finite == False
     assert csc(x).is_finite is None
     assert csc(pi/2, evaluate=False).is_finite == True
+
+    assert csc(z).is_zero is False
+    assert csc(z).is_positive is None
+    assert csc(z).is_negative is None
+    assert csc(pi/4, evaluate=False).is_positive is True
+    assert csc(pi/4, evaluate=False).is_extended_positive is True
+    assert csc(-pi/4, evaluate=False).is_negative is True
+    assert csc(-pi/4, evaluate=False).is_extended_negative is True
 
     assert series(csc(x), x, x0=pi/2, n=6) == \
         1 + (x - pi/2)**2/2 + 5*(x - pi/2)**4/24 + O((x - pi/2)**6, (x, pi/2))
