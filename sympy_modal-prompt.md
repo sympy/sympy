@@ -40,6 +40,8 @@ Replace SymPy's untyped predicate logic with a stratified type universe supporti
 **Test:** The following must be expressible as a well-typed term:
 
 ```python
+from sympy import symbols
+x = symbols('x')
 P = PredicateVariable('P', type=FunctionType(Universe(0), BoolType()))
 lob_type = ForAllPredicates(P,
     Box(Box(P(x)) >> P(x)) >> Box(P(x))
@@ -114,9 +116,10 @@ This is the most critical component. It must be small, auditable, and complete. 
 kernel = TrustedKernel(frame=KripkeFrame.GL())
 
 # Modus ponens
-ab   = kernel.check_axiom(A >> B)
-a    = kernel.check_axiom(A)
-b    = kernel.verify_rule(ModusPonens, ab, a)
+# Use hypotheses explicitly instead of blessing arbitrary formulas as axioms
+ab   = ProofTerm(A >> B, derivation=None, source='hypothesis', hypotheses=[A >> B])
+a    = ProofTerm(A, derivation=None, source='hypothesis', hypotheses=[A])
+b    = kernel.verify_rule(ModusPonens, [ab, a])
 assert b.formula == B
 
 # Necessitation refused on hypothesis
@@ -201,7 +204,7 @@ The natural language front end. This is explicitly the hardest layer and the one
 **Language and dependencies:**
 
 - Python 3.11+
-- SymPy 1.13+ as the base; extend, do not replace. The new package must be in `sympy_modal/` but integrated back into `sympy/__init__.py` to allow seamless imports (e.g. `from sympy import Box` instead of `from sympy_modal import Box`).
+- SymPy 1.13+ as the base; extend, do not replace. The new package must be in `sympy_modal/` (as a distinct in-tree module for this implementation pass) but integrated back into `sympy/__init__.py` to allow seamless imports (e.g. `from sympy import Box` instead of `from sympy_modal import Box`).
 - No dependencies on existing proof assistants (Lean, Rocq) in the core; these may be added as optional backends in a later phase
 - `pytest` for testing; `pytest-cov` for coverage in the build pipeline; `mypy` for type checking; all public interfaces must be fully typed
 
@@ -231,7 +234,7 @@ sympy_modal/
 
 - The kernel (Layer 3) must achieve 100% test coverage; all other layers 80% minimum
 - All public methods must have docstrings stating: the logical rule or semantic condition being implemented, preconditions, postconditions, and which layer of the Curry–Howard correspondence the method inhabits
-- `mypy --strict` must pass on all files
+- `mypy --strict sympy_modal/` must pass, targeting the new module specifically rather than the entire SymPy repository.
 - Every `FrameViolationError`, `NecessitationError`, `InvalidInferenceError`, and `FormalisationError` must include a human-readable explanation of the precise logical condition that was violated, suitable for display to a user who understands modal logic but may not know the implementation
 
 ---
