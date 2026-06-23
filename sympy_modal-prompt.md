@@ -40,6 +40,8 @@ Replace SymPy's untyped predicate logic with a stratified type universe supporti
 **Test:** The following must be expressible as a well-typed term:
 
 ```python
+from sympy import symbols
+x = symbols('x')
 P = PredicateVariable('P', type=FunctionType(Universe(0), BoolType()))
 lob_type = ForAllPredicates(P,
     Box(Box(P(x)) >> P(x)) >> Box(P(x))
@@ -114,9 +116,10 @@ This is the most critical component. It must be small, auditable, and complete. 
 kernel = TrustedKernel(frame=KripkeFrame.GL())
 
 # Modus ponens
-ab   = kernel.check_axiom(A >> B)
-a    = kernel.check_axiom(A)
-b    = kernel.verify_rule(ModusPonens, ab, a)
+# Use hypotheses explicitly instead of blessing arbitrary formulas as axioms
+ab   = ProofTerm(A >> B, derivation=None, source='hypothesis', hypotheses=[A >> B])
+a    = ProofTerm(A, derivation=None, source='hypothesis', hypotheses=[A])
+b    = kernel.verify_rule(ModusPonens, [ab, a])
 assert b.formula == B
 
 # Necessitation refused on hypothesis
@@ -146,6 +149,7 @@ The stateful proof environment that accumulates lemmas, manages hypotheses, and 
   - `ctx.lemma(name, proof_term)` → registers a proved theorem for reuse
   - `ctx.prove(formula, strategy=None)` → `ProofTerm | ProofFailure`; attempts proof search
   - `ctx.save()` / `ctx.restore()` → checkpoint and rollback for backtracking proof search
+- Produce warnings for classical axioms (such as Law of Excluded Middle and double negation elimination) within the Proof Context, allowing natural deductive intuitionistic interpretations without hard-rejecting them.
 - Implement `ProofFailure(formula, obstacle, missing_axioms)` — a precise account of why proof search failed, including which additional axioms would suffice
 - Implement at minimum the following proof search strategies:
   - `Strategy.Backward` — goal-directed backward chaining
@@ -184,14 +188,14 @@ The natural language front end. This is explicitly the hardest layer and the one
 **Requirements:**
 
 - Implement `FormalisationInterface` with:
-  - `fi.resolve_modality(text)` → `ModalSignature` identifying which operators are present and which frame they require. Must distinguish at minimum: alethic (S5), deontic (D), epistemic (K45), provability (GL), temporal (S4). Ambiguous cases must return `AmbiguousModalityError` with the candidate readings listed explicitly.
-  - `fi.resolve_quantifier_scope(text)` → `ScopeResolution` distinguishing de re from de dicto readings. For "necessarily someone wins": must return both `□∃x Wins(x)` (de dicto) and `∃x □Wins(x)` (de re) as distinct candidates with a flag indicating they are not equivalent in any normal modal logic.
-  - `fi.resolve_order(text)` → `QuantifierOrder` identifying whether quantification is first-order (over individuals) or second-order (over predicates). Ambiguous cases must be flagged.
+  - `fi.resolve_modality(code_str)` → `ModalSignature` identifying which operators are present and which frame they require. This must parse strings representing code, leveraging named modal operators (e.g. `AlethicBox`, `EpistemicBox`) to explicitly identify the modality, and fallback to inferring the modality by analyzing the axioms present in the text if possible. Ambiguous cases must return `AmbiguousModalityError` with the candidate readings listed explicitly.
+  - `fi.resolve_quantifier_scope(code_str)` → `ScopeResolution` distinguishing de re from de dicto readings.
+  - `fi.resolve_order(code_str)` → `QuantifierOrder` identifying whether quantification is first-order (over individuals) or second-order (over predicates). Ambiguous cases must be flagged.
   - `fi.infer_frame(modal_signature)` → `KripkeFrame`; selects the most conservative frame consistent with the detected modality
-  - `fi.formalise(text, frame=None)` → `ModalFormula | FormalisationError`; composes the above into a complete formalisation or returns a structured error with the precise point of failure
+  - `fi.formalise(code_str, frame=None)` → `ModalFormula | FormalisationError`; composes the above into a complete formalisation or returns a structured error with the precise point of failure
 
 - This layer must fail loudly and precisely rather than silently produce incorrect formalisations. A wrong formalisation that passes into the proof kernel is worse than a formalisation error.
-- Stub implementations returning `NotImplemented` with a descriptive message are acceptable for complex cases in a first version. Mark all stubs with `# TODO: requires LLM integration` so a downstream system can identify where LLM assistance is needed.
+- All methods must be fully implemented to handle valid SymPy/sympy_modal syntax strings. Stubs are not acceptable.
 
 ---
 
@@ -200,9 +204,9 @@ The natural language front end. This is explicitly the hardest layer and the one
 **Language and dependencies:**
 
 - Python 3.11+
-- SymPy 1.13+ as the base; extend, do not replace
+- SymPy 1.13+ as the base; extend, do not replace. The new package must be in `sympy_modal/` (as a distinct in-tree module for this implementation pass) but integrated back into `sympy/__init__.py` to allow seamless imports (e.g. `from sympy import Box` instead of `from sympy_modal import Box`).
 - No dependencies on existing proof assistants (Lean, Rocq) in the core; these may be added as optional backends in a later phase
-- `pytest` for testing; `mypy` for type checking; all public interfaces must be fully typed
+- `pytest` for testing; `pytest-cov` for coverage in the build pipeline; `mypy` for type checking; all public interfaces must be fully typed
 
 **Code organisation:**
 
@@ -230,7 +234,7 @@ sympy_modal/
 
 - The kernel (Layer 3) must achieve 100% test coverage; all other layers 80% minimum
 - All public methods must have docstrings stating: the logical rule or semantic condition being implemented, preconditions, postconditions, and which layer of the Curry–Howard correspondence the method inhabits
-- `mypy --strict` must pass on all files
+- `mypy --strict sympy_modal/` must pass, targeting the new module specifically rather than the entire SymPy repository.
 - Every `FrameViolationError`, `NecessitationError`, `InvalidInferenceError`, and `FormalisationError` must include a human-readable explanation of the precise logical condition that was violated, suitable for display to a user who understands modal logic but may not know the implementation
 
 ---
