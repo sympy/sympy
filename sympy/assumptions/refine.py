@@ -534,6 +534,72 @@ def refine_sin_cos(expr, assumptions):
         return (pow_expr if refined_pow is None else refined_pow) * sin(rem)
 
 
+def refine_tan_cot(expr, assumptions):
+    """
+    Handler for the tan and cot functions.
+
+    Examples
+    ========
+
+    >>> from sympy.assumptions.refine import refine_tan_cot
+    >>> from sympy import Symbol, Q, tan, cot, pi
+    >>> from sympy.abc import x
+    >>> n = Symbol('n')
+    >>> refine_tan_cot(tan(n*pi), Q.integer(n))
+    0
+    >>> refine_tan_cot(tan(x + n*pi), Q.integer(n))
+    tan(x)
+    >>> refine_tan_cot(cot(x + n*pi), Q.integer(n))
+    cot(x)
+    >>> refine_tan_cot(tan(n*pi/2), Q.even(n))
+    0
+    >>> refine_tan_cot(tan(n*pi/2), Q.odd(n))
+    zoo
+    """
+    from sympy.functions.elementary.trigonometric import tan, cot
+
+    if not isinstance(expr, (tan, cot)):
+        raise TypeError("refine_tan_cot expects a tan or cot function.")
+
+    arg = expr.args[0]
+    if ask(Q.zero(arg), assumptions):
+        return S.Zero if isinstance(expr, tan) else S.ComplexInfinity
+
+    half_units = []
+    rest = []
+    terms = arg.args if arg.is_Add else (arg,)
+    for term in terms:
+        c = term.coeff(S.Pi)
+        if c and ask(Q.integer(2 * c), assumptions):
+            half_units.append(2 * c)
+        else:
+            rest.append(term)
+
+    if not half_units:
+        return expr
+
+    known = 0
+    unknown = 0
+    known_is_even = True
+    for c in half_units:
+        c_is_even = ask(Q.even(c), assumptions)
+        if c_is_even is None:
+            unknown += c
+        else:
+            known += c
+            known_is_even = (known_is_even == c_is_even)
+
+    if known == 0:
+        return expr
+
+    rem = Add(*rest) + unknown * S.Pi / 2
+    if known_is_even:
+        return expr.func(rem)
+    if rem.is_zero:
+        return S.ComplexInfinity if isinstance(expr, tan) else S.Zero
+    return expr
+
+
 def refine_Heaviside(expr, assumptions):
     """
     Handler for the Heaviside step function.
@@ -613,6 +679,8 @@ handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'MatrixElement': refine_matrixelement,
     'cos': refine_sin_cos,
     'sin': refine_sin_cos,
+    'tan': refine_tan_cot,
+    'cot': refine_tan_cot,
     'exp': refine_exp,
     'Heaviside': refine_Heaviside,
     'floor': refine_floor_ceiling,
