@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from contextlib import contextmanager
 from sympy.core.symbol import Str
-from sympy.core.sympify import _sympify, sympify
+from sympy.core.sympify import _sympify
 from sympy.logic.boolalg import Boolean, false, true
 from sympy.multipledispatch.dispatcher import Dispatcher, str_signature
 from sympy.utilities.iterables import is_sequence
@@ -431,19 +431,7 @@ def assuming(*assumptions):
 def _ask_recursive(proposition, assumptions):
     from sympy.assumptions.ask import _ask_single_fact, Q, _extract_all_facts
     from sympy.assumptions.cnf import CNF
-    from sympy.core.kind import BooleanKind
-    from sympy.logic.boolalg import And
 
-    proposition = sympify(proposition)
-    assumptions = sympify(assumptions)
-
-    if isinstance(proposition, Predicate) or proposition.kind is not BooleanKind:
-        raise TypeError("proposition must be a valid logical expression")
-
-    if isinstance(assumptions, Predicate) or assumptions.kind is not BooleanKind:
-        raise TypeError("assumptions must be a valid logical expression")
-
-    proposition = _normalize_expr(proposition)
     if isinstance(proposition, AppliedPredicate):
         key, args = proposition.function, proposition.arguments
     else:
