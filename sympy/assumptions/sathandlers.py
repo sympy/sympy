@@ -258,7 +258,7 @@ def _(expr):
     # General Case: Odd number of imaginary args implies mul is imaginary(To be implemented)
     allargs_imag_or_real = allargs(x, Q.imaginary(x) | Q.real(x), expr)
     onearg_imaginary = exactlyonearg(x, Q.imaginary(x), expr)
-    return Implies(allargs_imag_or_real, Implies(onearg_imaginary, Q.imaginary(expr)))
+    return Implies(allargs_imag_or_real & allargs(x, ~Q.zero(x), expr), Implies(onearg_imaginary, Q.imaginary(expr)))
 
 @class_fact_registry.register(Mul)
 def _(expr):
