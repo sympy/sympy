@@ -2,6 +2,7 @@ from __future__ import annotations
 from sympy.polys.rings import ring
 from sympy.polys.domains import ZZ, QQ, AlgebraicField
 from sympy.polys.modulargcd import (
+    lag_basis,
     modgcd_univariate,
     modgcd_bivariate,
     _chinese_remainder_reconstruction_multivariate,
@@ -9,8 +10,10 @@ from sympy.polys.modulargcd import (
     _to_ZZ_poly,
     _to_ANP_poly,
     func_field_modgcd,
-    _func_field_modgcd_m)
+    _func_field_modgcd_m,
+    vandermonde_interp)
 from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.matrices import Matrix
 
 
 def test_modgcd_univariate_integers():
@@ -324,3 +327,18 @@ def test_modgcd_func_field():
     f, g = x + 1, x - 1
 
     assert _func_field_modgcd_m(f, g, minpoly) == R.one
+
+
+def test_vandermonde_interpolate():
+    p = 100003
+    k = [3, 6, 12, 33]
+    A = Matrix([[el**j for j in range(len(k))] for el in k])
+    x = Matrix([12, 2, 1, 27])
+    v = A * x
+    v_t = A.T * x
+
+    bas = lag_basis(k, p)
+    sol_t = vandermonde_interp(bas, v_t, p)
+    sol = vandermonde_interp(bas, v, p, trans = False)
+
+    assert sol == sol_t == list(x)
