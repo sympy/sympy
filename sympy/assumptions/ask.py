@@ -2,12 +2,13 @@
 from __future__ import annotations
 
 from sympy.assumptions.assume import (global_assumptions, Predicate,
-        AppliedPredicate, _ask_recursive)
+        AppliedPredicate)
 from sympy.assumptions.cnf import CNF, EncodedCNF, Literal
 from sympy.core import sympify
 from sympy.core.kind import BooleanKind
 from sympy.core.relational import Eq, Ne, Gt, Lt, Ge, Le
 from sympy.logic.inference import satisfiable
+from sympy.logic.boolalg import And
 from sympy.utilities.decorator import memoize_property
 
 
@@ -496,6 +497,8 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     from sympy.assumptions.lra_satask import lra_satask
     from sympy.logic.algorithms.lra_theory import UnhandledInput
 
+    assumptions = And(assumptions, *context)
+
     proposition = sympify(proposition)
     assumptions = sympify(assumptions)
 
@@ -516,7 +519,6 @@ def ask(proposition, assumptions=True, context=global_assumptions):
 
     # convert local and global assumptions to CNF
     assump_cnf = CNF.from_prop(assumptions)
-    assump_cnf.extend(context)
 
     # extract the relevant facts from assumptions with respect to args
     local_facts = _extract_all_facts(assump_cnf, args)
@@ -537,17 +539,17 @@ def ask(proposition, assumptions=True, context=global_assumptions):
         return res
 
     # direct resolution method, no logic
-    res = _ask_recursive(proposition, assumptions, context=context)
+    res = key(*args)._eval_ask(assumptions)
     if res is not None:
-        return res
+        return bool(res)
 
     # using satask (still costly)
-    res = satask(proposition, assumptions=assumptions, context=context)
+    res = satask(proposition, assumptions=assumptions)
     if res is not None:
         return res
 
     try:
-        res = lra_satask(proposition, assumptions=assumptions, context=context)
+        res = lra_satask(proposition, assumptions=assumptions)
     except UnhandledInput:
         return None
 

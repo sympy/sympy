@@ -428,8 +428,8 @@ def assuming(*assumptions):
         global_assumptions.update(old_global_assumptions)
 
 
-def _ask_recursive(proposition, assumptions, context=()):
-    from sympy.assumptions.ask import _ask_single_fact, Q, _extract_all_facts, _normalize_expr
+def _ask_recursive(proposition, assumptions):
+    from sympy.assumptions.ask import _ask_single_fact, Q, _extract_all_facts
     from sympy.assumptions.cnf import CNF
     from sympy.core.kind import BooleanKind
     from sympy.logic.boolalg import And
@@ -449,16 +449,13 @@ def _ask_recursive(proposition, assumptions, context=()):
     else:
         key, args = Q.is_true, (proposition,)
 
-    effective_assumptions = And(assumptions, *context)
-    effective_assumptions = _normalize_expr(effective_assumptions)
-
-    assump_cnf = CNF.from_prop(effective_assumptions)
+    assump_cnf = CNF.from_prop(assumptions)
     local_facts = _extract_all_facts(assump_cnf, args)
 
     res = _ask_single_fact(key, local_facts)
     if res is not None:
         return res
 
-    res = key(*args)._eval_ask(effective_assumptions)
+    res = key(*args)._eval_ask(assumptions)
     if res is not None:
         return bool(res)
