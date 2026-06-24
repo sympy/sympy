@@ -565,14 +565,15 @@ def refine_sec_csc(expr, assumptions):
     if ask(Q.zero(refined), assumptions):
         return S.ComplexInfinity
 
+    result = (S.One / refined).rewrite(expr.func)
     sign = S.One
     rest = S.One
-    for factor in Mul.make_args(refined):
-        if factor is S.NegativeOne or (factor.is_Pow and factor.base is S.NegativeOne):
-            sign *= factor
-        else:
+    for factor in Mul.make_args(result):
+        if isinstance(factor, expr.func):
             rest *= factor
-    return sign * (1 / rest).rewrite(expr.func)
+        else:
+            sign *= factor
+    return rest / sign
 
 
 def refine_Heaviside(expr, assumptions):
