@@ -1,4 +1,5 @@
 """Algorithms for partial fraction decomposition of rational functions. """
+from __future__ import annotations
 
 
 from sympy.core import S, Add, sympify, Function, Lambda, Dummy

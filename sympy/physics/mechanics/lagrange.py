@@ -1,17 +1,20 @@
+from __future__ import annotations
 from sympy import diff, zeros, Matrix, eye, sympify
 from sympy.core.sorting import default_sort_key
 from sympy.physics.vector import dynamicsymbols, ReferenceFrame
-from sympy.physics.mechanics.method import _Methods
+from sympy.physics.mechanics.method import MethodBase
 from sympy.physics.mechanics.functions import (
     find_dynamicsymbols, msubs, _f_list_parser, _validate_coordinates)
 from sympy.physics.mechanics.linearize import Linearizer
 from sympy.utilities.iterables import iterable
+from sympy.utilities.exceptions import sympy_deprecation_warning
 
 __all__ = ['LagrangesMethod']
 
 
-class LagrangesMethod(_Methods):
-    """Lagrange's method object.
+class LagrangesMethod(MethodBase):
+    """Lagrange's method for forming the equations of motion of a multibody
+    system.
 
     Explanation
     ===========
@@ -23,29 +26,93 @@ class LagrangesMethod(_Methods):
     The Lagrange multipliers are automatically generated and are equal in
     number to the constraint equations. Similarly any non-conservative forces
     can be supplied in an iterable (as described below and also shown in the
-    example) along with a ReferenceFrame. This is also discussed further in the
-    __init__ method.
+    example) along with a ReferenceFrame.
+
+    Parameters
+    ==========
+
+    Lagrangian : Sympifyable
+        Scalar expression comprised of the sum of the system's kinetic energy
+        and potential energy that is a function of q and q'.
+    qs : iterable of functions of time
+        Generalized coordinates q of the multibody system.
+    hol_coneqs : iterable of Expr, optional
+        Holonomic constraint residuals.
+    nonhol_coneqs : iterable of Expr, optional
+        Nonholonomic constraint residuals.
+    forcelist : iterable, optional
+        Iterable of (Point, Vector) or (ReferenceFrame, Vector) tuples or Force
+        and Torque objects which represent the force at a point or torque on a
+        frame. Only nonconservative forces and/or torques should be included if
+        the conservative forces are already present in the Lagrangian.
+    bodies : iterable, optional
+        Iterable of :py:class:`~.Particle`, :py:class:`~.RigidBody`, or
+        :py:class:`~.Body` objects that make up the multibody system.
+    frame : ReferenceFrame, optional
+        Inertial reference frame that should match the one used to form the
+        Lagrangian. Only required if ``forcelist`` is provided.
 
     Attributes
     ==========
 
-    q, u : Matrix
-        Matrices of the generalized coordinates and speeds
-    loads : iterable
-        Iterable of (Point, vector) or (ReferenceFrame, vector) tuples
-        describing the forces on the system.
-    bodies : iterable
-        Iterable containing the rigid bodies and particles of the system.
+    Specific to LagrangesMethod:
+
+    inertial : None or ReferenceFrame
+        Inertial reference frame for the system.
+    coneqs : m + M
+        Velocity constraints [time differentiated holonomic, nonholonomic].
+    lam_vec : Matrix, shape(m + M, 1)
+        Column matrix of functions of time representing the Lagrange
+        multipliers λ , one for each constraint in ``velocity_constraints``.
+    lam_coeffs : Matrix, shape(m + M, n)
+        Jacobian of the constraints, i.e. linear coefficients of the speeds in
+        the velocity constraints.
+    eom : None or Matrix, shape(n,)
+        Second order ordinary differential equations in q. Includes constraint
+        forces that are functions of the Lagrange multipliers λ if constraints
+        are present.
+    forcelist : list
+        List of the forces and torques acting on the system. Deprecated: use
+        :py:attr:`~LagrangesMethod.loads` instead.
+
+    Shared by all methods classes:
+
+    frame : ReferenceFrame
+        Inertial reference frame that the equations of motion were formulated
+        with respect to.
+    q : Matrix, shape(n, 1)
+        Column matrix of the n generalized coordinates.
+    u : Matrix, shape(n, 1)
+        Column matrix of the n generalized speeds: u = q'.
+    holonomic_constraints : Matrix, shape(M, 1)
+        Column matrix of holonomic configuration constraint residuals.
+    nonholonomic_constraints : Matrix, shape(m, 1)
+        Column matrix of shape(m, 1) of nonholonomic constraint residuals.
+    velocity_constraints : Matrix, shape(M + m, 1)
+        Column matrix of shape(M + m, 1) velocity constraint residuals
+        comprised of the time differentiated configuration constraints stacked
+        on top of the nonholonomic constraints.
+    acceleration_constraints : Matrix, shape(M + m, 1)
+        Column matrix acceleration constraint residuals which are the time
+        differentiated velocity constraints.
+    loads : list
+        List of (Point, vector) or (ReferenceFrame, vector) tuples or,
+        similarly, Force or Torque objects describing the nonconservative
+        loads applied to the system.
+    bodies : list
+        List containing the rigid bodies and particles of the system.
     mass_matrix : Matrix
-        The system's mass matrix
+        The system's mass matrix representing the linear coefficients of x =
+        q'' or x = [q'', λ] if constraints are present: ``mass_matrix*x =
+        forcing``.
     forcing : Matrix
-        The system's forcing vector
+        The system's forcing vector representing all terms not linear in q'' or
+        [q'', λ] if constraints are present.
     mass_matrix_full : Matrix
-        The "mass matrix" for the qdot's, qdoubledot's, and the
-        lagrange multipliers (lam)
+        The mass matrix for the first order form of the equations of motion
+        with state vector [q', u', λ].
     forcing_full : Matrix
-        The forcing vector for the qdot's, qdoubledot's and
-        lagrange multipliers (lam)
+        The forcing vector for the first order form of the equations of motion.
 
     Examples
     ========
@@ -78,7 +145,7 @@ class LagrangesMethod(_Methods):
     with the Vectors representing the nonconservative forces or torques.
 
         >>> Pa = Particle('Pa', P, m)
-        >>> Pa.potential_energy = k * q**2 / 2.0
+        >>> Pa.potential_energy = k * q**2 / 2
         >>> L = Lagrangian(N, Pa)
         >>> fl = [(P, -b * qd * N.x)]
 
@@ -92,62 +159,47 @@ class LagrangesMethod(_Methods):
 
         >>> l = LagrangesMethod(L, [q], forcelist = fl, frame = N)
         >>> print(l.form_lagranges_equations())
-        Matrix([[b*Derivative(q(t), t) + 1.0*k*q(t) + m*Derivative(q(t), (t, 2))]])
+        Matrix([[b*Derivative(q(t), t) + k*q(t) + m*Derivative(q(t), (t, 2))]])
 
-    We can also solve for the states using the 'rhs' method.
+    We can also solve for the states using the :py:meth:`~.MethodBase.rhs`
+    method.
 
         >>> print(l.rhs())
-        Matrix([[Derivative(q(t), t)], [(-b*Derivative(q(t), t) - 1.0*k*q(t))/m]])
+        Matrix([[Derivative(q(t), t)], [(-b*Derivative(q(t), t) - k*q(t))/m]])
 
     Please refer to the docstrings on each method for more details.
-    """
 
+    """
     def __init__(self, Lagrangian, qs, forcelist=None, bodies=None, frame=None,
                  hol_coneqs=None, nonhol_coneqs=None):
-        """Supply the following for the initialization of LagrangesMethod.
 
-        Lagrangian : Sympifyable
-
-        qs : array_like
-            The generalized coordinates
-
-        hol_coneqs : array_like, optional
-            The holonomic constraint equations
-
-        nonhol_coneqs : array_like, optional
-            The nonholonomic constraint equations
-
-        forcelist : iterable, optional
-            Takes an iterable of (Point, Vector) or (ReferenceFrame, Vector)
-            tuples which represent the force at a point or torque on a frame.
-            This feature is primarily to account for the nonconservative forces
-            and/or moments.
-
-        bodies : iterable, optional
-            Takes an iterable containing the rigid bodies and particles of the
-            system.
-
-        frame : ReferenceFrame, optional
-            Supply the inertial frame. This is used to determine the
-            generalized forces due to non-conservative forces.
-        """
-
-        self._L = Matrix([sympify(Lagrangian)])
-        self.eom = None
+        self._L = Matrix([sympify(Lagrangian)])  # shape(1, 1)
+        self.eom = None  # TODO : why not an empy matrix?
         self._m_cd = Matrix()           # Mass Matrix of differentiated coneqs
         self._m_d = Matrix()            # Mass Matrix of dynamic equations
         self._f_cd = Matrix()           # Forcing part of the diff coneqs
         self._f_d = Matrix()            # Forcing part of the dynamic equations
         self.lam_coeffs = Matrix()      # The coeffecients of the multipliers
 
-        forcelist = forcelist if forcelist else []
-        if not iterable(forcelist):
-            raise TypeError('Force pairs must be supplied in an iterable.')
-        self._forcelist = forcelist
+        if forcelist is not None:
+            if not iterable(forcelist):
+                raise TypeError('Force pairs must be supplied in an iterable.')
+            else:
+                self._forcelist = list(forcelist)
+        else:
+            self._forcelist = []
+
+        if bodies is None:
+            self._bodies = []
+        else:
+            if not iterable(bodies):
+                raise TypeError('bodies should be an iterable.')
+            else:
+                self._bodies = list(bodies)
+
         if frame and not isinstance(frame, ReferenceFrame):
             raise TypeError('frame must be a valid ReferenceFrame')
-        self._bodies = bodies
-        self.inertial = frame
+        self.inertial = frame  # can be None
 
         self.lam_vec = Matrix()
 
@@ -167,9 +219,12 @@ class LagrangesMethod(_Methods):
         mat_build = lambda x: Matrix(x) if x else Matrix()
         hol_coneqs = mat_build(hol_coneqs)
         nonhol_coneqs = mat_build(nonhol_coneqs)
-        self.coneqs = Matrix([hol_coneqs.diff(dynamicsymbols._t),
-                nonhol_coneqs])
+        self.coneqs = Matrix([
+            hol_coneqs.diff(dynamicsymbols._t),
+            nonhol_coneqs,
+        ])
         self._hol_coneqs = hol_coneqs
+        self._nonhol_coneqs = nonhol_coneqs
 
     def form_lagranges_equations(self):
         """Method to form Lagrange's equations of motion.
@@ -198,10 +253,14 @@ class LagrangesMethod(_Methods):
             m = len(coneqs)
             # Creating the multipliers
             self.lam_vec = Matrix(dynamicsymbols('lam1:' + str(m + 1)))
+            # TODO : Use linear_eq_to_matrix here, less costly. coneques are
+            # already at velocity level.
             self.lam_coeffs = -coneqs.jacobian(qds)
             self._term3 = self.lam_coeffs.T * self.lam_vec
             # Extracting the coeffecients of the qdds from the diff coneqs
             diffconeqs = coneqs.diff(dynamicsymbols._t)
+            # TODO : _m_cd should be equal to lam_coeffs, no need to take the
+            # Jacobian again.
             self._m_cd = diffconeqs.jacobian(self._qdoubledots)
             # The remaining terms i.e. the 'forcing' terms in diff coneqs
             self._f_cd = -diffconeqs.subs(qdd_zero)
@@ -209,17 +268,18 @@ class LagrangesMethod(_Methods):
             self._term3 = zeros(n, 1)
 
         # Fourth term
-        if self.forcelist:
+        if self.loads:
             N = self.inertial
             self._term4 = zeros(n, 1)
             for i, qd in enumerate(qds):
-                flist = zip(*_f_list_parser(self.forcelist, N))
+                flist = zip(*_f_list_parser(self.loads, N))
                 self._term4[i] = sum(v.diff(qd, N).dot(f) for (v, f) in flist)
         else:
             self._term4 = zeros(n, 1)
 
         # Form the dynamic mass and forcing matrices
         without_lam = self._term1 - self._term2 - self._term4
+        # TODO : Use linear_eq_to_matrix here.
         self._m_d = without_lam.jacobian(self._qdoubledots)
         self._f_d = -without_lam.subs(qdd_zero)
 
@@ -262,10 +322,14 @@ class LagrangesMethod(_Methods):
             raise ValueError('Need to compute the equations of motion first')
         n = len(self.q)
         m = len(self.coneqs)
-        row1 = eye(n).row_join(zeros(n, n + m))
-        row2 = zeros(n, n).row_join(self.mass_matrix)
+        row1 = eye(n).row_join(zeros(n, n + m)) # [I 0] or [I 0 0]
+        row2 = zeros(n, n).row_join(self.mass_matrix) # [0 M] or [0 M C.T]
         if self.coneqs:
+            # [0 C 0]
             row3 = zeros(m, n).row_join(self._m_cd).row_join(zeros(m, m))
+            # [I 0 0  ]
+            # [0 M C.T]
+            # [0 C 0]
             return row1.col_join(row2).col_join(row3)
         else:
             return row1.col_join(row2)
@@ -472,41 +536,88 @@ class LagrangesMethod(_Methods):
         else:
             raise ValueError("Unknown sol_type {:}.".format(sol_type))
 
-    def rhs(self, inv_method=None, **kwargs):
-        """Returns equations that can be solved numerically.
-
-        Parameters
-        ==========
-
-        inv_method : str
-            The specific sympy inverse matrix calculation method to use. For a
-            list of valid methods, see
-            :meth:`~sympy.matrices.matrixbase.MatrixBase.inv`
-        """
-
-        if inv_method is None:
-            self._rhs = self.mass_matrix_full.LUsolve(self.forcing_full)
-        else:
-            self._rhs = (self.mass_matrix_full.inv(inv_method,
-                         try_block_diag=True) * self.forcing_full)
-        return self._rhs
-
     @property
     def q(self):
+        """Column matrix of shape(n, 1) containing the generalized
+        coordinates."""
         return self._q
 
     @property
     def u(self):
+        """Column matrix of shape(n, 1) containing the time derivatives of the
+        generalized coordinates."""
         return self._qdots
 
     @property
+    def velocity_constraints(self):
+        """Column matrix of shape(M + m, 1) motion constraint residuals made up
+        of the M time differentiated holonomic constraints stacked on the m
+        nonholonomic constraints."""
+        return self.coneqs
+
+    @property
+    def acceleration_constraints(self):
+        """Column matrix of acceleration constraint residuals."""
+        return self.velocity_constraints.diff(dynamicsymbols._t)
+
+    @property
+    def constraints_jacobian(self):
+        """Jacobian of the constraints. A matrix of shape(M + m, n) which are
+        equivalently the linear coefficients of q' in the velocity constraints
+        and the linear coefficients of q'' in the acceleration constraints."""
+        return -self.lam_coeffs
+
+    @property
     def bodies(self):
+        """List of :py:class:`~.Particle`, :py:class:`~.RigidBody`, or
+        :py:class:`~.Body` objects that make up the multibody system."""
         return self._bodies
 
     @property
     def forcelist(self):
+        """List of :py:class:`~.Force`, :py:class:`~.Torque`,
+        tuple(:py:class:`~.vector.point.Point`,
+        :py:class:`~.physics.vector.vector.Vector`),
+        tuple(:py:class:`~.ReferenceFrame`,
+        :py:class:`~.physics.vector.vector.Vector`) loads applied to multibody
+        system.
+
+        .. deprecated:: 1.15
+
+           LagrangesMethod now uses consistent attribute names among all
+           methods classes. Use :py:attr:`~LagrangesMethod.loads` instead.
+
+        """
+        sympy_deprecation_warning(
+            ("'forcelist' is deprecated, use 'loads' instead. LagrangesMethod"
+             " now uses consistent attribute names among all methods classes."),
+            deprecated_since_version='1.15',
+            active_deprecations_target='deprecated-mechanics-bodyforcelist',
+        )
         return self._forcelist
 
     @property
     def loads(self):
+        """List of :py:class:`~.Force`, :py:class:`~.Torque`,
+        tuple(:py:class:`~.vector.point.Point`,
+        :py:class:`~.physics.vector.vector.Vector`),
+        tuple(:py:class:`~.ReferenceFrame`,
+        :py:class:`~.physics.vector.vector.Vector`) loads applied to multibody
+        system."""
         return self._forcelist
+
+    @property
+    def frame(self):
+        """Inertial reference frame that the equations of motion were
+        formulated with respect to."""
+        return self.inertial
+
+    @property
+    def holonomic_constraints(self):
+        """Column matrix holonomic configuration constraint residuals."""
+        return self._hol_coneqs
+
+    @property
+    def nonholonomic_constraints(self):
+        """Column matrix of nonholonomic constraint residuals."""
+        return self._nonhol_coneqs

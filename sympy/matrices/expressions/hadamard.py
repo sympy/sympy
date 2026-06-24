@@ -1,3 +1,4 @@
+from __future__ import annotations
 from collections import Counter
 
 from sympy.core import Mul, sympify

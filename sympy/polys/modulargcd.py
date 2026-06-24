@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.symbol import Dummy
 from sympy.external.mpmath import sqrt
 from sympy.ntheory import nextprime

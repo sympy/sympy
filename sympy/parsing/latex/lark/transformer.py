@@ -1,3 +1,4 @@
+from __future__ import annotations
 import re
 
 import sympy
@@ -263,6 +264,10 @@ class TransformToSymPyExpr(Transformer):
             raise LaTeXParsingError(f"{base} with superscript {sup} is not understood.")
 
         return sympy.Pow(base, sup)
+
+    def degree(self, args):
+        base = args[0]
+        return base * (sympy.pi / 180)
 
     def matrix_prime(self, tokens):
         base = tokens[0]

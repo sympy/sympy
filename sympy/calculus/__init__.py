@@ -1,4 +1,5 @@
 """Calculus-related methods."""
+from __future__ import annotations
 
 from .euler import euler_equations
 from .singularities import (singularities, is_increasing,

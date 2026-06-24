@@ -1,4 +1,5 @@
 """Tests for the ``sympy.physics.biomechanics._mixin.py`` module."""
+from __future__ import annotations
 
 import pytest
 

@@ -21,12 +21,20 @@ from sympy.utilities.misc import filldedent, func_name
 
 
 if TYPE_CHECKING:
-    from typing import ClassVar, TypeVar, Any, Hashable
+    from typing import ClassVar, Any, Hashable, TypeVar, Protocol
     from typing_extensions import Self
     from .assumptions import StdFactKB
     from .symbol import Symbol
 
     Tbasic = TypeVar("Tbasic", bound='Basic')
+
+
+    _K_co = TypeVar("_K_co", covariant=True)
+    _V_co = TypeVar("_V_co", covariant=True)
+
+    class _SupportsItems(Protocol[_K_co, _V_co]):
+        def items(self) -> Iterable[tuple[_K_co, _V_co]]:
+            ...
 
 
 def as_Basic(expr):
@@ -954,13 +962,13 @@ class Basic(Printable):
         return S.One, self
 
     @overload
-    def subs(self, arg1: Mapping[Basic | complex, Basic | complex], arg2: None=None, **kwargs: Any) -> Basic: ...
-    @overload
-    def subs(self, arg1: Iterable[tuple[Basic | complex, Basic | complex]], arg2: None=None, **kwargs: Any) -> Basic: ...
+    def subs(self, arg1: _SupportsItems[Basic | complex, Basic | complex]
+            | Iterable[tuple[Basic | complex, Basic | complex]],
+              arg2: None=None, **kwargs: Any) -> Basic: ...
     @overload
     def subs(self, arg1: Basic | complex, arg2: Basic | complex, **kwargs: Any) -> Basic: ...
 
-    def subs(self, arg1: Mapping[Basic | complex, Basic | complex]
+    def subs(self, arg1: _SupportsItems[Basic | complex, Basic | complex]
             | Iterable[tuple[Basic | complex, Basic | complex]] | Basic | complex,
              arg2: Basic | complex | None = None, **kwargs: Any) -> Basic:
         """

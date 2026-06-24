@@ -57,7 +57,7 @@ def _find_reasonable_pivot(
     if all(isinstance(x, (Float, Integer)) for x in col) and any(
             isinstance(x, Float) for x in col):
         col_abs = [abs(x) for x in col]
-        max_value = max(col_abs)
+        max_value = max(col_abs) # type: ignore[type-var]
         if iszerofunc(max_value):
             # just because iszerofunc returned True, doesn't
             # mean the value is numerically zero.  Make sure
@@ -374,8 +374,6 @@ def _charpoly(M, x: str | Expr = 'lambda',
     >>> M = Matrix([[1, 3], [2, 0]])
     >>> M.charpoly()
     PurePoly(lambda**2 - lambda - 6, lambda, domain='ZZ')
-    >>> M.charpoly(x) == M.charpoly(y)
-    True
     >>> M.charpoly(x) == M.charpoly(y)
     True
 

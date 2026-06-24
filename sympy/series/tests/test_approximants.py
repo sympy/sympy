@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.series import approximants
 from sympy.series.approximants import pade_approximants_gcdex, pade_approximant, pade_approximant_gcdex
 from sympy.core.symbol import symbols

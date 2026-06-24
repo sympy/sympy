@@ -1,3 +1,4 @@
+from __future__ import annotations
 import typing
 
 import sympy
@@ -9,17 +10,19 @@ from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import exp, log, Pow
 from sympy.functions.elementary.hyperbolic import sinh, cosh, tanh
 from sympy.functions.elementary.miscellaneous import Min, Max
-from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import sin, cos, tan, asin, acos, atan, atan2
 from sympy.logic.boolalg import And, Or, Xor, Implies, Boolean
 from sympy.logic.boolalg import BooleanTrue, BooleanFalse, BooleanFunction, Not, ITE
 from sympy.printing.printer import Printer
-from sympy.sets import Interval
 from sympy.external.mpmath import prec_to_dps, to_str as mlib_to_str
-from sympy.assumptions.assume import AppliedPredicate
 from sympy.assumptions.relation.binrel import AppliedBinaryRelation
 from sympy.assumptions.ask import Q
 from sympy.assumptions.relation.equality import StrictGreaterThanPredicate, StrictLessThanPredicate, GreaterThanPredicate, LessThanPredicate, EqualityPredicate
+
+if typing.TYPE_CHECKING:
+    from sympy.functions.elementary.piecewise import Piecewise
+    from sympy.sets import Interval
+    from sympy.assumptions.assume import AppliedPredicate
 
 
 class SMTLibPrinter(Printer):
@@ -81,7 +84,7 @@ class SMTLibPrinter(Printer):
 
     symbol_table: dict
 
-    def __init__(self, settings: typing.Optional[dict] = None,
+    def __init__(self, settings: dict | None = None,
                  symbol_table=None):
         settings = settings or {}
         self.symbol_table = symbol_table or {}
@@ -100,7 +103,7 @@ class SMTLibPrinter(Printer):
         if s[0].isnumeric(): return False
         return all(_.isalnum() or _ == '_' for _ in s)
 
-    def _s_expr(self, op: str, args: typing.Union[list, tuple]) -> str:
+    def _s_expr(self, op: str, args: list | tuple) -> str:
         args_str = ' '.join(
             a if isinstance(a, str)
             else self._print(a)
@@ -141,7 +144,7 @@ class SMTLibPrinter(Printer):
             return self._s_expr(not_op, [self._s_expr(eq_op, e.args)])
 
     def _print_Piecewise(self, e: Piecewise):
-        def _print_Piecewise_recursive(args: typing.Union[list, tuple]):
+        def _print_Piecewise_recursive(args: list | tuple):
             e, c = args[0]
             if len(args) == 1:
                 assert (c is True) or isinstance(c, BooleanTrue)
@@ -451,7 +454,7 @@ def smtlib_code(
     ])
 
 
-def _auto_declare_smtlib(sym: typing.Union[Symbol, Function], p: SMTLibPrinter, log_warn: typing.Callable[[str], None]):
+def _auto_declare_smtlib(sym: Symbol | Function, p: SMTLibPrinter, log_warn: typing.Callable[[str], None]):
     if sym.is_Symbol:
         type_signature = p.symbol_table[sym]
         assert isinstance(type_signature, type)
@@ -488,7 +491,7 @@ def _auto_assert_smtlib(e: Expr, p: SMTLibPrinter, log_warn: typing.Callable[[st
 
 def _auto_infer_smtlib_types(
     *exprs: Basic,
-    symbol_table: typing.Optional[dict] = None
+    symbol_table: dict | None = None
 ) -> dict:
     # [TYPE INFERENCE RULES]
     # X is alone in an expr => X is bool

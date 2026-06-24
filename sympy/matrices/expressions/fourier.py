@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.sympify import _sympify
 from sympy.matrices.expressions import MatrixExpr
 from sympy.core.numbers import I

@@ -1,4 +1,5 @@
 """Tests for tools for constructing domains for expressions. """
+from __future__ import annotations
 
 from sympy.testing.pytest import tooslow
 

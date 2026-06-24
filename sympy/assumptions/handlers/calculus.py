@@ -2,6 +2,7 @@
 This module contains query handlers responsible for calculus queries:
 infinitesimal, finite, etc.
 """
+from __future__ import annotations
 
 from sympy.assumptions import Q, ask
 from sympy.core import Expr, Add, Mul, Pow, Symbol
@@ -260,6 +261,14 @@ def _(expr, assumptions):
     return False
 
 
+@PositiveInfinitePredicate.register(Expr)
+def _(expr, assumptions):
+    if ask(Q.complex(expr), assumptions) is True:
+        return False
+    if ask(Q.finite(expr), assumptions) is True:
+        return False
+
+
 # NegativeInfinitePredicate
 
 
@@ -271,3 +280,11 @@ def _(expr, assumptions):
 @NegativeInfinitePredicate.register_many(Infinity, ComplexInfinity)
 def _(expr, assumptions):
     return False
+
+
+@NegativeInfinitePredicate.register(Expr)
+def _(expr, assumptions):
+    if ask(Q.complex(expr), assumptions) is True:
+        return False
+    if ask(Q.finite(expr), assumptions) is True:
+        return False

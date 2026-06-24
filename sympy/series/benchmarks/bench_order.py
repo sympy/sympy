@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.add import Add
 from sympy.core.symbol import Symbol
 from sympy.series.order import O

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.physics.vector import dynamicsymbols, Point, ReferenceFrame
 from sympy.testing.pytest import raises, ignore_warnings
 import warnings

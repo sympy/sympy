@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from contextlib import contextmanager
-from typing import Sequence, Union, TYPE_CHECKING
+from typing import Sequence, TYPE_CHECKING
 
 from sympy.polys.densebasic import dup, dup_reverse
 from sympy.polys.domains import Domain, QQ, ZZ
@@ -14,8 +14,14 @@ from sympy.polys.polyerrors import NotReversible
 _require_flint_version = False
 
 if TYPE_CHECKING:
-    from flint import fmpq_poly, fmpq_series, fmpz_poly, fmpz_series, ctx  # type: ignore
-    from flint.utils.flint_exceptions import DomainError  # type: ignore
+    from flint import ctx
+    from flint.utils.flint_exceptions import DomainError
+    from sympy.external.gmpy import FMPQ_POLY as fmpq_poly
+    from sympy.external.gmpy import FMPQ_SERIES as fmpq_series
+    from sympy.external.gmpy import FMPZ_POLY as fmpz_poly
+    from sympy.external.gmpy import FMPZ_SERIES as fmpz_series
+    ZZSeries = fmpz_series | fmpz_poly
+    QQSeries = fmpq_series | fmpq_poly
 elif GROUND_TYPES == "flint":
     from flint import fmpq_poly, fmpq_series, fmpz_poly, fmpz_series, ctx
     from flint.utils.flint_exceptions import DomainError
@@ -28,12 +34,11 @@ elif GROUND_TYPES == "flint":
     _major, _minor, *_ = flint.__version__.split(".")
     if (int(_major), int(_minor)) >= (0, 8):
         _require_flint_version = True
+    ZZSeries = fmpz_series | fmpz_poly
+    QQSeries = fmpq_series | fmpq_poly
 else:
     fmpq_poly = fmpq_series = fmpz_poly = fmpz_series = ctx = None
-
-
-ZZSeries = Union[fmpz_series, fmpz_poly]
-QQSeries = Union[fmpq_series, fmpq_poly]
+    ZZSeries = QQSeries = None
 
 
 def _get_series_precision(s: fmpz_series | fmpq_series) -> int:

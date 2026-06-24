@@ -1,5 +1,6 @@
 """ This module cooks up a docstring when imported. Its only purpose is to
     be displayed in the sphinx documentation. """
+from __future__ import annotations
 
 def _generate_doc():
     from sympy import Eq, hyper

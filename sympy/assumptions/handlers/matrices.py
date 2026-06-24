@@ -2,6 +2,7 @@
 This module contains query handlers responsible for Matrices queries:
 Square, Symmetric, Invertible etc.
 """
+from __future__ import annotations
 
 from sympy.logic.boolalg import conjuncts
 from sympy.assumptions import Q, ask

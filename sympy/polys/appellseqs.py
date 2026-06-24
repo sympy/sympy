@@ -21,6 +21,7 @@ References
 .. [2] Peter Luschny, "An introduction to the Bernoulli function",
        https://arxiv.org/abs/2009.06743
 """
+from __future__ import annotations
 from sympy.polys.densearith import dup_mul_ground, dup_sub_ground, dup_exquo_ground
 from sympy.polys.densetools import dup_eval, dup_integrate
 from sympy.polys.domains import ZZ, QQ

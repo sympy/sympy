@@ -2289,8 +2289,7 @@ class PolyElement(
 
         for multinomial, multinomial_coeff in multinomials:
             product_monom = zero_monom
-            product_coeff = multinomial_coeff
-
+            product_coeff = self.ring.domain_new(multinomial_coeff)
             for exp, (monom, coeff) in zip(multinomial, terms):
                 if exp:
                     product_monom = monomial_mulpow(product_monom, monom, exp)
@@ -3277,7 +3276,7 @@ class PolyElement(
 
         return poly
 
-    # XXX: implement the same algorith for div from CLO
+    # XXX: implement the same algorithm for div from CLO
     # for python-flint
     def _div(self, fv: PolyElement[Er]) -> tuple[PolyElement[Er], PolyElement[Er]]:
         [q], r = self._div_list([fv])

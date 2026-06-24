@@ -1,4 +1,5 @@
 """Tests for noncommutative symbols and expressions."""
+from __future__ import annotations
 
 from sympy.core.function import expand
 from sympy.core.numbers import I

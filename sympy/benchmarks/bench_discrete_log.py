@@ -1,3 +1,4 @@
+from __future__ import annotations
 import sys
 from time import time
 from sympy.ntheory.residue_ntheory import (discrete_log,

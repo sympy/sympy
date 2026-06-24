@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.function import expand_complex
 from sympy.core.numbers import (I, Integer, Rational, pi)
 from sympy.core.power import Pow

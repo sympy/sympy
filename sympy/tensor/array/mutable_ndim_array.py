@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.tensor.array.ndim_array import NDimArray
 
 

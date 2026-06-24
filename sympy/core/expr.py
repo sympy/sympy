@@ -18,13 +18,14 @@ from .kind import NumberKind
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.misc import as_int, func_name, filldedent
 from sympy.utilities.iterables import has_variety, _sift_true_false
-from sympy.external.mpmath import prec_to_dps, giant_steps as _giant_steps, mpf_log
+from sympy.external.mpmath import prec_to_dps, giant_steps as _giant_steps, mpf_ln
 
 
 if TYPE_CHECKING:
     from typing import Any, Hashable
     from typing_extensions import Self
     from .numbers import Number
+    from sympy.logic.boolalg import Boolean
 
 from collections import defaultdict
 
@@ -247,7 +248,7 @@ class Expr(Basic, EvalfMixin):
 
     @sympify_return([('other', 'Expr')], NotImplemented)
     @call_highest_priority('__radd__')
-    def __add__(self, other: complex) -> Expr:
+    def __add__(self, other: Expr | complex) -> Expr:
         return Add(self, other)
 
     @sympify_return([('other', 'Expr')], NotImplemented)
@@ -257,7 +258,7 @@ class Expr(Basic, EvalfMixin):
 
     @sympify_return([('other', 'Expr')], NotImplemented)
     @call_highest_priority('__rsub__')
-    def __sub__(self, other: complex) -> Expr:
+    def __sub__(self, other: Expr | complex) -> Expr:
         return Add(self, -other)
 
     @sympify_return([('other', 'Expr')], NotImplemented)
@@ -267,7 +268,7 @@ class Expr(Basic, EvalfMixin):
 
     @sympify_return([('other', 'Expr')], NotImplemented)
     @call_highest_priority('__rmul__')
-    def __mul__(self, other: complex) -> Expr:
+    def __mul__(self, other: Expr | complex) -> Expr:
         return Mul(self, other)
 
     @sympify_return([('other', 'Expr')], NotImplemented)
@@ -396,22 +397,22 @@ class Expr(Basic, EvalfMixin):
         return complex(float(re), float(im))
 
     @sympify_return([('other', 'Expr')], NotImplemented)
-    def __ge__(self, other):
+    def __ge__(self, other) -> Boolean:
         from .relational import GreaterThan
         return GreaterThan(self, other)
 
     @sympify_return([('other', 'Expr')], NotImplemented)
-    def __le__(self, other):
+    def __le__(self, other) -> Boolean:
         from .relational import LessThan
         return LessThan(self, other)
 
     @sympify_return([('other', 'Expr')], NotImplemented)
-    def __gt__(self, other):
+    def __gt__(self, other) -> Boolean:
         from .relational import StrictGreaterThan
         return StrictGreaterThan(self, other)
 
     @sympify_return([('other', 'Expr')], NotImplemented)
-    def __lt__(self, other):
+    def __lt__(self, other) -> Boolean:
         from .relational import StrictLessThan
         return StrictLessThan(self, other)
 
@@ -3902,12 +3903,21 @@ class Expr(Basic, EvalfMixin):
                     'Expected a number but got %s:' % func_name(x))
         elif x in _illegal:
             return x
-        if not (xr := x.is_extended_real):
-            r, i = x.as_real_imag()
-            if xr is False:
-                return r.round(n) + S.ImaginaryUnit*i.round(n)
-            if i.equals(0):
-                return r.round(n)
+        xr = x.is_extended_real
+        if xr is True:
+            return x._round_real(n)
+        if xr is None:
+            try:
+                return x._round_real(n)
+            except TypeError:
+                pass
+
+        r, i = x.as_real_imag()
+        return r._round_real(n) + S.ImaginaryUnit*i._round_real(n)
+
+    def _round_real(self, n=None):
+        x = self
+
         if not x:
             return S.Zero if n is None else x
 
@@ -3985,7 +3995,7 @@ class Expr(Basic, EvalfMixin):
         xi = Integer(xf)
         # use the last digit to select the value of xi
         # nearest to x before rounding at the desired digit
-        sign = 1 if x > 0 else -1
+        sign = 1 if xf > 0 else -1
         dif2 = sign*(xf - xi).n(extra)
         if dif2 < 0:
             raise NotImplementedError(
@@ -4097,7 +4107,7 @@ def _mag(x):
     try:
         mag_first_dig = int(ceil(log10(xpos)))
     except (ValueError, OverflowError):
-        mag_first_dig = int(ceil(Float(mpf_log(xpos._mpf_, 53))/log(10)))
+        mag_first_dig = int(ceil(Float(mpf_ln(xpos._mpf_, 53))/log(10)))
     # check that we aren't off by 1
     if (xpos/S(10)**mag_first_dig) >= 1:
         assert 1 <= (xpos/S(10)**mag_first_dig) < 10

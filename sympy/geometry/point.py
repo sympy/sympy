@@ -16,6 +16,7 @@ False
 False
 
 """
+from __future__ import annotations
 
 import warnings
 

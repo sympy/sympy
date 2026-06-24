@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.mod import Mod
 from sympy.core.numbers import (I, oo, pi)
 from sympy.functions.combinatorial.factorials import factorial

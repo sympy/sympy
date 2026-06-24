@@ -7,6 +7,7 @@ References
 .. [1] https://en.wikipedia.org/wiki/Finitary_relation
 
 """
+from __future__ import annotations
 
 __all__ = ['BinaryRelation', 'AppliedBinaryRelation']
 

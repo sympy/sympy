@@ -103,6 +103,7 @@ See the appropriate docstrings for a detailed explanation of the output.
 #      - Idx with range smaller than dimension of Indexed
 #      - Idx with stepsize != 1
 #      - Idx with step determined by function call
+from __future__ import annotations
 from collections.abc import Iterable
 
 from sympy.core.numbers import Number

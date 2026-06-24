@@ -1,4 +1,5 @@
 """Most of these tests come from the examples in Bronstein's book."""
+from __future__ import annotations
 from sympy.core.function import (Function, Lambda, diff, expand_log)
 from sympy.core.numbers import (I, Rational, pi)
 from sympy.core.relational import Ne

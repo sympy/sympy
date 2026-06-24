@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.symbol import Symbol
 from sympy.plotting.intervalmath import interval
 from sympy.plotting.intervalmath.interval_membership import intervalMembership

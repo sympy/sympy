@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.concrete.tests.test_sums_products import NS
 
 from sympy.core.singleton import S

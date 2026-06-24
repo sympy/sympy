@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.combinatorics.named_groups import (SymmetricGroup, CyclicGroup,
                                               DihedralGroup, AlternatingGroup,
                                               AbelianGroup, RubikGroup)

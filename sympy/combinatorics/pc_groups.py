@@ -1,3 +1,5 @@
+from __future__ import annotations
+from itertools import pairwise
 from sympy.ntheory.primetest import isprime
 from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy.printing.defaults import DefaultPrinting
@@ -127,10 +129,7 @@ class Collector(DefaultPrinting):
             if re[index[s1]] and (e1 < 0 or e1 > re[index[s1]]-1):
                 return ((s1, e1), )
 
-        for i in range(len(array)-1):
-            s1, e1 = array[i]
-            s2, e2 = array[i+1]
-
+        for (s1, e1), (s2, e2) in pairwise(array):
             if index[s1] > index[s2]:
                 e = 1 if e2 > 0 else -1
                 return ((s1, e1), (s2, e))
@@ -456,6 +455,7 @@ class Collector(DefaultPrinting):
         pc_relators = {}
         perm_to_free = {}
         pcgs = self.pcgs
+        dtype = type(free_group.identity)
 
         for gen, s in zip(pcgs, free_group.generators):
             perm_to_free[gen**-1] = s**-1
@@ -474,9 +474,7 @@ class Collector(DefaultPrinting):
             l = G.generator_product(gen**re, original = True)
             l.reverse()
 
-            word = free_group.identity
-            for g in l:
-                word = word*perm_to_free[g]
+            word = dtype.prod(perm_to_free[g] for g in l)
 
             word = self.collected_word(word)
             pc_relators[relation] = word if word else ()
@@ -495,9 +493,7 @@ class Collector(DefaultPrinting):
 
                     l = G.generator_product(gens, original = True)
                     l.reverse()
-                    word = free_group.identity
-                    for g in l:
-                        word = word*perm_to_free[g]
+                    word = dtype.prod(perm_to_free[g] for g in l)
 
                     word = self.collected_word(word)
                     pc_relators[relation] = word if word else ()
@@ -561,9 +557,8 @@ class Collector(DefaultPrinting):
         for sym, g in zip(free_group.generators, self.pcgs):
             perm_to_free[g**-1] = sym**-1
             perm_to_free[g] = sym
-        w = free_group.identity
-        for g in gens:
-            w = w*perm_to_free[g]
+        dtype = type(free_group.identity)
+        w = dtype.prod(perm_to_free[g] for g in gens)
 
         word = self.collected_word(w)
 

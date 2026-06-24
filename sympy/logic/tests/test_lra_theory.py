@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.numbers import Rational, I, oo
 from sympy.core.relational import Eq
 from sympy.core.symbol import symbols
@@ -99,16 +100,18 @@ def test_from_encoded_cnf():
     assert str(lra.nonslack) == '[x, y, z]'
     assert lra.A == Matrix([[ 1,  1, 0, -1,  0],
                             [-1, -2, 1,  0, -1]])
-    assert {(str(b.var), b.bound, b.upper, b.equality, b.strict) for b in lra.enc_to_boundary.values()} == {('_s1', 2, None, True, False),
-    ('_s1', 2, True, False, False),
-    ('_s2', -4, True, False, True),
-    ('_s2', -6, True, False, False),
-    ('x', 0, False, False, False)}
+    actual = {tuple(sorted((str(b.var), b.bound, b.upper, b.strict) for b in bs)) for bs in lra.atom_id_to_boundaries.values()}
+    expected = {
+        (('_s1', 2, False, False), ('_s1', 2, True, False)), # Eq(x + y, 2)
+        (('_s1', 2, True, False),),                          # x + y <= 2
+        (('_s2', -4, True, True),),                          # x + 2*y - z > 4 -> _s2 < -4
+        (('_s2', -6, True, False),),                         # x + 2*y - z >= 6 -> _s2 <= -6
+        (('x', 0, False, False),)                            # x >= 0
+    }
+    assert actual == expected
 
 
 def test_problem():
-    from sympy.logic.algorithms.lra_theory import LRASolver
-    from sympy.assumptions.cnf import CNF, EncodedCNF
     cons = [-2 * x - 2 * y >= 7, -9 * y >= 7, -6 * y >= 5]
     cnf = CNF().from_prop(And(*cons))
     enc = EncodedCNF()
@@ -144,6 +147,15 @@ def test_random_problems():
     special_cases.append([x1 + 5*x2 >= -6, 9*x1 - 3*x2 >= -9, 6*x1 + 6*x2 < -10, -3*x1 + 3*x2 < -7])
     special_cases.append([-9*x1 < 7, -5*x1 - 7*x2 < -1, 3*x1 + 7*x2 > 1, -6*x1 - 6*x2 > 9])
     special_cases.append([9*x1 - 6*x2 >= -7, 9*x1 + 4*x2 < -8, -7*x2 <= 1, 10*x2 <= -7])
+    special_cases.append([x1 >= 0, x1 <= 10, x2 >= -5, x2 <= 5, x1 + x2 >= -3, x1 - x2 <= 12])
+    special_cases.append([x1 + x2 <= 20, x1 - x2 >= -10, x1 >= 0])
+    special_cases.append([Eq(x1, 3), x2 >= 0, x2 <= 10])
+    special_cases.append([x1 > 0, x1 < 1, x2 > -1, x2 < 1])
+    special_cases.append([x1 >= -1, x1 <= 5, x2 >= -3, x1 + x2 <= 10, 2*x1 - x2 >= -8, x2 <= 6])
+    special_cases.append([3*x1 - 2*x2 <= 10, x1 >= 0, x2 >= 0, x1 + x2 >= 1])
+    special_cases.append([Eq(2*x1, 4), x2 > -1, x2 < 5])
+    special_cases.append([x1 + x2 + x3 <= 10, x1 >= 0, x2 >= 0, x3 >= 0, x1 - x3 >= -5])
+    special_cases.append([5*x1 - 3*x2 >= -6, x1 <= 4, x2 >= -2, x2 <= 7])
 
     feasible_count = 0
     for i in range(50):
@@ -156,6 +168,8 @@ def test_random_problems():
             constraints = make_random_problem(num_variables=2, num_constraints=4, rational=False, disable_strict=True)
         elif i % 8 == 3:
             constraints = make_random_problem(num_variables=3, num_constraints=12, rational=False)
+        elif i % 8 == 4:
+            constraints = make_random_problem(num_variables=3, num_constraints=4, rational=False)
         else:
             constraints = make_random_problem(num_variables=3, num_constraints=6, rational=False)
 
@@ -179,8 +193,8 @@ def test_random_problems():
         s_subs_rev = {value: key for key, value in s_subs.items()}
         lits = {lit for clause in enc.data for lit in clause}
 
-        bounds = [(lra.enc_to_boundary[l], l) for l in lits if l in lra.enc_to_boundary]
-        bounds = sorted(bounds, key=lambda x: (str(x[0].var), x[0].bound, str(x[0].upper))) # to remove nondeterminism
+        bounds = [(lra.atom_id_to_boundaries[l], l) for l in lits if l in lra.atom_id_to_boundaries]
+        bounds = sorted(bounds, key=lambda x: (str(x[0][0].var), x[0][0].bound, str(x[0][0].upper))) # to remove nondeterminism
 
         for b, l in bounds:
             if lra.result and lra.result[0] == False:
@@ -208,7 +222,12 @@ def test_random_problems():
 
             conflict = feasible[1]
             assert len(conflict) >= 2
-            conflict = {lra.enc_to_boundary[-l].get_inequality() for l in conflict}
+            def get_expr(bs):
+                if len(bs) == 2:
+                    return Eq(bs[0].var.var, bs[0].bound)
+                return bs[0].get_inequality()
+
+            conflict = {get_expr(lra.atom_id_to_boundaries[abs(l)]) for l in conflict}
             conflict = {clause.subs(s_subs_rev) for clause in conflict}
             assert check_if_satisfiable_with_z3(conflict) is False
 
@@ -225,7 +244,7 @@ def test_pos_neg_zero():
     for lit in enc.encoding.values():
         if lra.assert_lit(lit) is not None:
             break
-    assert len(lra.enc_to_boundary) == 3
+    assert len(lra.atom_id_to_boundaries) == 3
     assert lra.check()[0] == False
 
     bf = Q.positive(x) & Q.lt(x, -1)
@@ -234,7 +253,7 @@ def test_pos_neg_zero():
     for lit in enc.encoding.values():
         if lra.assert_lit(lit) is not None:
             break
-    assert len(lra.enc_to_boundary) == 2
+    assert len(lra.atom_id_to_boundaries) == 2
     assert lra.check()[0] == False
 
     bf = Q.positive(x) & Q.zero(x)
@@ -243,7 +262,7 @@ def test_pos_neg_zero():
     for lit in enc.encoding.values():
         if lra.assert_lit(lit) is not None:
             break
-    assert len(lra.enc_to_boundary) == 2
+    assert len(lra.atom_id_to_boundaries) == 2
     assert lra.check()[0] == False
 
     bf = Q.positive(x) & Q.zero(y)
@@ -252,7 +271,7 @@ def test_pos_neg_zero():
     for lit in enc.encoding.values():
         if lra.assert_lit(lit) is not None:
             break
-    assert len(lra.enc_to_boundary) == 2
+    assert len(lra.atom_id_to_boundaries) == 2
     assert lra.check()[0] == True
 
 
@@ -264,7 +283,7 @@ def test_pos_neg_infinite():
     for lit in enc.encoding.values():
         if lra.assert_lit(lit) is not None:
             break
-    assert len(lra.enc_to_boundary) == 3
+    assert len(lra.atom_id_to_boundaries) == 3
     assert lra.check()[0] == False
 
     bf = Q.positive_infinite(x) & Q.gt(x, 10000000) & Q.positive_infinite(y)
@@ -273,7 +292,7 @@ def test_pos_neg_infinite():
     for lit in enc.encoding.values():
         if lra.assert_lit(lit) is not None:
             break
-    assert len(lra.enc_to_boundary) == 3
+    assert len(lra.atom_id_to_boundaries) == 3
     assert lra.check()[0] == True
 
     bf = Q.positive_infinite(x) & Q.negative_infinite(x)
@@ -282,7 +301,7 @@ def test_pos_neg_infinite():
     for lit in enc.encoding.values():
         if lra.assert_lit(lit) is not None:
             break
-    assert len(lra.enc_to_boundary) == 2
+    assert len(lra.atom_id_to_boundaries) == 2
     assert lra.check()[0] == False
 
 
@@ -290,13 +309,13 @@ def test_binrel_evaluation():
     bf = Q.gt(3, 2)
     enc = boolean_formula_to_encoded_cnf(bf)
     lra, conflicts = LRASolver.from_encoded_cnf(enc, testing_mode=True)
-    assert len(lra.enc_to_boundary) == 0
+    assert len(lra.atom_id_to_boundaries) == 0
     assert conflicts == [[1]]
 
     bf = Q.lt(3, 2)
     enc = boolean_formula_to_encoded_cnf(bf)
     lra, conflicts = LRASolver.from_encoded_cnf(enc, testing_mode=True)
-    assert len(lra.enc_to_boundary) == 0
+    assert len(lra.atom_id_to_boundaries) == 0
     assert conflicts == [[-1]]
 
 
@@ -308,7 +327,7 @@ def test_negation():
     for clause in enc.data:
         for lit in clause:
             lra.assert_lit(lit)
-    assert len(lra.enc_to_boundary) == 2
+    assert len(lra.atom_id_to_boundaries) == 2
     assert lra.check()[0] == False
     assert sorted(lra.check()[1]) in [[-1, 2], [-2, 1]]
 
@@ -318,7 +337,7 @@ def test_negation():
     for clause in enc.data:
         for lit in clause:
             lra.assert_lit(lit)
-    assert len(lra.enc_to_boundary) == 2
+    assert len(lra.atom_id_to_boundaries) == 2
     assert lra.check()[0] == True
 
     bf = ~Q.gt(x, 0) & ~Q.lt(x, 1)
@@ -327,7 +346,7 @@ def test_negation():
     for clause in enc.data:
         for lit in clause:
             lra.assert_lit(lit)
-    assert len(lra.enc_to_boundary) == 2
+    assert len(lra.atom_id_to_boundaries) == 2
     assert lra.check()[0] == False
 
     bf = ~Q.gt(x, 0) & ~Q.le(x, 0)
@@ -336,7 +355,7 @@ def test_negation():
     for clause in enc.data:
         for lit in clause:
             lra.assert_lit(lit)
-    assert len(lra.enc_to_boundary) == 2
+    assert len(lra.atom_id_to_boundaries) == 2
     assert lra.check()[0] == False
 
     bf = ~Q.le(x+y, 2) & ~Q.ge(x-y, 2) & ~Q.ge(y, 0)
@@ -345,7 +364,7 @@ def test_negation():
     for clause in enc.data:
         for lit in clause:
             lra.assert_lit(lit)
-    assert len(lra.enc_to_boundary) == 3
+    assert len(lra.atom_id_to_boundaries) == 3
     assert lra.check()[0] == False
     assert len(lra.check()[1]) == 3
     assert all(i > 0 for i in lra.check()[1])
@@ -394,7 +413,7 @@ def test_infinite_strict_inequalities():
     for lit in sorted(enc.encoding.values()):
         if lra.assert_lit(lit) is not None:
             break
-    assert len(lra.enc_to_boundary) == 3
+    assert len(lra.atom_id_to_boundaries) == 3
     assert lra.check()[0] == True
 
 
@@ -433,10 +452,8 @@ def test_reset_bounds():
     state_variables = [
         ('lower', LRARational(10, 0), LRARational(-float("inf"), 0)),
         ('upper', LRARational(10, 0), LRARational(float("inf"), 0)),
-        ('lower_from_eq', True, False),
-        ('lower_from_neg', True, False),
-        ('upper_from_eq', True, False),
-        ('upper_from_neg', True, False),
+        ('lower_literal', 5, None),
+        ('upper_literal', -5, None),
         ('assign', LRARational(10, 0), LRARational(0, 0))
     ]
 
@@ -459,3 +476,245 @@ def test_empty_cnf():
     lra, conflict = LRASolver.from_encoded_cnf(enc)
     assert len(conflict) == 0
     assert lra.check() == (True, {})
+
+
+def test_example_from_paper():
+    # Example from the section 4.6 of the paper.
+    # https://link.springer.com/chapter/10.1007/11817963_11
+    enc = EncodedCNF()
+    cons = [
+        x <= -4,
+        x >= -8,
+        -x + y <= 1,
+        x + y >= -3
+    ]
+    for con in cons:
+        enc.add_prop(con)
+
+    lra, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
+
+    # Extracts the variables stored in the solver
+    var_x = next(v for v in lra.all_var if str(v.var) == 'x')
+    var_y = next(v for v in lra.all_var if str(v.var) == 'y')
+    # var_s1 is a slack variable which corresponds for -x + y <= 1
+    # var_s2 is a slack variable which corresponds for -x - y <= 3
+    _s1 = lra.s_subs[-x + y]
+    _s2 = lra.s_subs[-x - y]
+    var_s1 = next(v for v in lra.all_var if v.var == _s1)
+    var_s2 = next(v for v in lra.all_var if v.var == _s2)
+
+    # State A_0
+    assert var_x.assign == LRARational(0, 0)
+    assert var_y.assign == LRARational(0, 0)
+    assert var_s1.assign == LRARational(0, 0)
+    assert var_s2.assign == LRARational(0, 0)
+
+    # Assert x <= -4
+    lra.assert_lit(1)
+    is_sat, _ = lra.check()
+    assert is_sat is True
+
+    # State A_1
+    assert var_x.upper == LRARational(-4, 0)
+    assert var_x.assign == LRARational(-4, 0)
+    assert var_y.assign == LRARational(0, 0)
+    assert var_s1.assign == LRARational(4, 0)
+    assert var_s2.assign == LRARational(4, 0)
+
+    # Assert x >= -8
+    lra.assert_lit(2)
+    is_sat, _ = lra.check()
+    assert is_sat is True
+
+    # State A_2
+    assert var_x.lower == LRARational(-8, 0)
+    assert var_x.upper == LRARational(-4, 0)
+    assert var_x.assign == LRARational(-4, 0)
+    assert var_y.assign == LRARational(0, 0)
+    assert var_s1.assign == LRARational(4, 0)
+    assert var_s2.assign == LRARational(4, 0)
+
+    # Asserts -x + y <= 1
+    # Check is invoked to pivot s1 and y
+    # y's range is (-inf, -3]
+    lra.assert_lit(3)
+    is_sat, _ = lra.check()
+    assert is_sat is True
+
+    # State A_3
+    assert var_s1.upper == LRARational(1, 0)
+    assert var_x.lower == LRARational(-8, 0)
+    assert var_x.upper == LRARational(-4, 0)
+    assert var_x.assign == LRARational(-4, 0)
+    assert var_y.assign == LRARational(-3, 0)
+    assert var_s1.assign == LRARational(1, 0)
+    assert var_s2.assign == LRARational(7, 0)
+
+    # Assert -x - y <= 3 (s2)
+    # s2 and s1 are conflicting assertions as for both to be true
+    # x >= -2 but x's range is [-8, -4]
+    res = lra.assert_lit(4)
+    assert res is None
+    is_sat, _ = lra.check()
+    assert is_sat is False
+
+    # Backtrack to remove the conflicted assertion
+    lra.backtrack()
+    is_sat, _ = lra.check()
+    assert is_sat is True
+
+    # State A_3 after backtracking
+    assert var_s1.upper == LRARational(1, 0)
+    assert var_x.lower == LRARational(-8, 0)
+    assert var_x.upper == LRARational(-4, 0)
+    assert var_x.assign == LRARational(-4, 0)
+    assert var_y.assign == LRARational(-3, 0)
+    assert var_s1.assign == LRARational(1, 0)
+    assert var_s2.assign == LRARational(7, 0)
+
+
+def test_backtracking_single_variable():
+    # This test is for checking the correctness over a single variable
+    cons = [x >= -8, x <= -4, x >= -2]
+    enc = EncodedCNF()
+    for con in cons:
+        enc.add_prop(con)
+    lra, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
+
+    # Assert x in [-8, -4]
+    lra.assert_lit(1)
+    lra.assert_lit(2)
+    is_sat, _ = lra.check()
+    assert is_sat is True
+
+    # Asserts x >= -2
+    res = lra.assert_lit(3)
+    # This directly contradicts x <= -4 which `assert_lit` catches instantly
+    assert res is not None
+    is_sat, _ = res
+    assert is_sat is False
+
+    lra.backtrack()
+    is_sat, _ = lra.check()
+    assert is_sat is True
+
+
+def test_backtracking_multiple_variables():
+    # This test is for checking the correctness over multiple variables
+    enc = EncodedCNF()
+    cons = [2*x + 3*y <= 12, x >= 3, y >= 3]
+    for con in cons:
+        enc.add_prop(con)
+
+    lra, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
+    lra.assert_lit(1)
+    lra.assert_lit(2)
+    is_sat, _ = lra.check()
+    assert is_sat is True
+
+    # If 2x + 3y <= 12 and x >= 3, then y <= 2
+    # We are asserting y >= 3 which is wrong
+    res = lra.assert_lit(3)
+    assert res is None
+    is_sat, _ = lra.check()
+    assert is_sat is False
+
+    # backtracking to remove the faulty assert
+    lra.backtrack()
+    is_sat, _ = lra.check()
+    assert is_sat is True
+
+
+def test_backtracking_single_variable_multiple_backtracks():
+    # This test is for checking correctness over multiple backtracking
+    # Range of x should be [0, 2]
+    enc = EncodedCNF()
+    cons = [x <= 10, x >= 0, x >= 5, x <= 2]
+    for con in cons:
+        enc.add_prop(con)
+    lra, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
+
+    # Setting 5 <= x <= 10
+    lra.assert_lit(1)
+    lra.assert_lit(2)
+    lra.assert_lit(3)
+
+    # x <= 2 is impossible while x >= 5 is present
+    res = lra.assert_lit(4)
+    assert res is not None
+    is_sat, _ = res
+    assert is_sat is False
+
+    # First backtrack: Undo x <= 2 to resolve the conflict
+    lra.backtrack()
+    is_sat, _ = lra.check()
+    assert is_sat is True
+
+    # Second backtrack: Erase the x >= 5 constraint.
+    # This widens the valid domain back to [0, 10],
+    # allowing to accept the previously conflicting x <= 2 rule.
+    lra.backtrack()
+
+    # Setting 0 <= x <= 2
+    lra.assert_lit(4)
+    is_sat, _ = lra.check()
+    assert is_sat is True
+
+
+def test_backtracking_multiple_variables_multiple_backtracks():
+    # This test is for checking correctness over multiple backtracking
+    # for multiple variables, we need to constraint 6 to be True
+    enc = EncodedCNF()
+    cons = [
+        x <= 10,
+        x >= 0,
+        y >= 0,
+        x >= 5,
+        y >= 5,
+        x + y <= 4
+    ]
+
+    for con in cons:
+        enc.add_prop(con)
+    lra, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
+
+    # Establish the base valid state (x in [0, 10], y>=0)
+    lra.assert_lit(1)
+    lra.assert_lit(2)
+    lra.assert_lit(3)
+    is_sat, _ = lra.check()
+    assert is_sat is True
+
+    # Now x >= 5 and y >= 5, x + y >= 10
+    lra.assert_lit(4)
+    lra.assert_lit(5)
+    is_sat, _ = lra.check()
+    assert is_sat is True
+
+    # x + y <= 4 is mathematically impossible when x>=5 and y>=5
+    res = lra.assert_lit(6)
+    assert res is None
+    is_sat, _ = lra.check()
+    assert is_sat is False
+
+    # First backtrack: Pop the conflicting rule (Rule 6)
+    lra.backtrack()
+    is_sat, _ = lra.check()
+    assert is_sat is True
+
+    # Second and Third backtrack: pop the restrictive constraints
+    # This restores the domain to x >= 0, y >= 0
+    lra.backtrack()
+    lra.backtrack()
+
+    # x + y <= 4 is mathematically possible now
+    lra.assert_lit(6)
+    is_sat, _ = lra.check()
+    assert is_sat is True
+
+
+def test_backtracking_empty_history():
+    enc = EncodedCNF()
+    lra, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
+
+    raises(ValueError, lambda: lra.backtrack())

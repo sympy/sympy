@@ -10,6 +10,7 @@ References
 .. [1] Cohen, H. *A Course in Computational Algebraic Number Theory*.
 
 """
+from __future__ import annotations
 
 from collections import defaultdict
 import random

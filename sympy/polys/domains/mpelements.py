@@ -3,6 +3,7 @@
 # implementation of RR and CC now uses mpmath's mpf and mpc types directly.
 #
 """Real and complex elements. """
+from __future__ import annotations
 
 
 from sympy.external.gmpy import MPQ

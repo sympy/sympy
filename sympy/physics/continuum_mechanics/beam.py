@@ -2,6 +2,7 @@
 This module can be used to solve 2D beam bending problems with
 singularity functions in mechanics.
 """
+from __future__ import annotations
 from sympy.core import S, Symbol, diff, symbols
 from sympy.core.add import Add
 from sympy.core.expr import Expr

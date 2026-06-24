@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.testing.pytest import slow
 from sympy.core.function import diff
 from sympy.core.function import expand

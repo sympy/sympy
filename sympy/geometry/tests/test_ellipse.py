@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core import expand
 from sympy.core.numbers import (Rational, oo, pi)
 from sympy.core.relational import Eq

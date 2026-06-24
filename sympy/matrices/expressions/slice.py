@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.matrices.expressions.matexpr import MatrixExpr
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple

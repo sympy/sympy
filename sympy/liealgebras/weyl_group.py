@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import annotations
 
 from .cartan_type import CartanType
 from sympy.external.mpmath import fac

@@ -1,9 +1,10 @@
 """For more tests on satisfiability, see test_dimacs"""
+from __future__ import annotations
 
 from sympy.assumptions.ask import Q
 from sympy.core.symbol import symbols
 from sympy.core.relational import Ne, Eq, Unequality
-from sympy.logic.boolalg import And, Or, Implies, Equivalent, true, false
+from sympy.logic.boolalg import And, Or, Implies, Equivalent, true, false, Not
 from sympy.logic.inference import literal_symbol, \
      pl_true, satisfiable, valid, entails, PropKB
 from sympy.logic.algorithms.dpll import dpll, dpll_satisfiable, \
@@ -369,6 +370,16 @@ def test_z3():
     assert z3_satisfiable(expr) is False
 
 
+def test_z3_predicate_equivalence():
+    # https://github.com/sympy/sympy/issues/29851
+    z3 = import_module("z3")
+    if z3 is None:
+        skip("Z3 is not installed")
+    x = symbols('x')
+    expr = Not(Implies(Q.eq(x, 0),Q.ge(x, 0)))
+    assert z3_satisfiable(expr) is False
+
+
 def test_z3_vs_lra_dpll2():
     z3 = import_module("z3")
     if z3 is None:
@@ -417,6 +428,7 @@ def test_z3_vs_lra_dpll2():
 
 
 def test_issue_27733():
+    # original regression
     x, y = symbols('x,y')
     clauses = [[1, -3, -2], [5, 7, -8, -6, -4], [-10, -9, 10, 11, -4], [-12, 13, 14], [-10, 9, -6, 11, -4],
                [16, -15, 18, -19, -17], [11, -6, 10, -9], [9, 11, -10, -9], [2, -3, -1], [-13, 12], [-15, 3, -17],
@@ -428,5 +440,14 @@ def test_issue_27733():
     encoding[Q.gt(x, 0)] = 11
     encoding[Q.lt(x, 0)] = 12
 
+    cnf = EncodedCNF(clauses, encoding)
+    assert satisfiable(cnf, use_lra_theory=True) is False
+
+
+def test_issue_27733_second_fix():
+    # regression for flawed initial fix of issue 27733
+    x0, x1 = symbols('x0 x1')
+    clauses = [[1, 2], [-3, -4]]
+    encoding = {Q.gt(x0, x1): 1, Q.lt(x1, x0): 2, Q.le(x1, x0): 3, Q.ge(x0, x1): 4}
     cnf = EncodedCNF(clauses, encoding)
     assert satisfiable(cnf, use_lra_theory=True) is False

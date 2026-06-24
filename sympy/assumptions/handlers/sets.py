@@ -1,13 +1,14 @@
 """
 Handlers for predicates related to set membership: integer, rational, etc.
 """
+from __future__ import annotations
 
 from sympy.assumptions import Q, ask
 from sympy.core import Add, Basic, Expr, Mul, Pow, S
 from sympy.core.numbers import (AlgebraicNumber, ComplexInfinity, Exp1, Float,
     GoldenRatio, ImaginaryUnit, Infinity, Integer, NaN, NegativeInfinity,
     Number, NumberSymbol, Pi, pi, Rational, TribonacciConstant, E)
-from sympy.core.logic import fuzzy_bool, fuzzy_not
+from sympy.core.logic import fuzzy_bool, fuzzy_not, fuzzy_and
 from sympy.functions import (Abs, acos, acot, asin, atan, cos, cot, exp, im,
     log, re, sin, tan)
 from sympy.core.numbers import I
@@ -71,8 +72,14 @@ def _(expr, assumptions):
     if ask_all(~Q.zero(expr.base), Q.finite(expr.base), Q.zero(expr.exp), assumptions=assumptions):
         return True
     if ask_all(Q.integer(expr.base), Q.integer(expr.exp), assumptions=assumptions):
-        if ask_any(Q.positive(expr.exp), Q.nonnegative(expr.exp) & ~Q.zero(expr.base), Q.zero(expr.base-1), Q.zero(expr.base+1), assumptions=assumptions):
+        neg_exp = ask(Q.negative(expr.exp), assumptions)
+        if neg_exp is False:
             return True
+        base_pm_1 = ask_any(Q.zero(expr.base - 1), Q.zero(expr.base + 1), assumptions=assumptions)
+        if base_pm_1:
+            return True
+        if neg_exp and base_pm_1 is False:
+            return False
 
 @IntegerPredicate.register(Mul)
 def _(expr, assumptions):
@@ -339,15 +346,16 @@ def _(expr, assumptions):
 
     if ask(Q.real(expr.base), assumptions):
         if ask(Q.real(expr.exp), assumptions):
-            if ask(Q.zero(expr.base), assumptions) is not False:
-                if ask(Q.positive(expr.exp), assumptions):
-                    return True
-                return
-            if expr.exp.is_Rational and \
-                    ask(Q.even(expr.exp.q), assumptions):
-                return ask(Q.positive(expr.base), assumptions)
-            elif ask(Q.integer(expr.exp), assumptions):
-                return True
+            if (expr.exp.is_Rational and
+                    ask(Q.even(expr.exp.q), assumptions)):
+                return ask(Q.nonnegative(expr.base), assumptions)
+            base_is_zero = ask(Q.zero(expr.base), assumptions)
+            if base_is_zero or ask(Q.integer(expr.exp), assumptions):
+                # Division by zero : If the base is 0 and the exponent
+                # is negative, ``expr`` evaluates to complex infinity.
+                expr_is_complex_infinity = fuzzy_and([base_is_zero,
+                                ask(Q.negative(expr.exp), assumptions)])
+                return fuzzy_not(expr_is_complex_infinity)
             elif ask(Q.positive(expr.base), assumptions):
                 return True
 

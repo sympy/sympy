@@ -4,6 +4,7 @@ Module defining unit prefixe class and some constants.
 Constant dict for SI and binary prefixes are defined as PREFIXES and
 BIN_PREFIXES.
 """
+from __future__ import annotations
 from sympy.core.expr import Expr
 from sympy.core.sympify import sympify
 from sympy.core.singleton import S
@@ -69,14 +70,6 @@ class Prefix(Expr):
 
     def __str__(self):
         return str(self._abbrev)
-
-    def __repr__(self):
-        if self.base == 10:
-            return "Prefix(%r, %r, %r)" % (
-                str(self.name), str(self.abbrev), self._exponent)
-        else:
-            return "Prefix(%r, %r, %r, %r)" % (
-                str(self.name), str(self.abbrev), self._exponent, self.base)
 
     def __mul__(self, other):
         from sympy.physics.units import Quantity

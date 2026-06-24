@@ -6,6 +6,7 @@
 # More functions could be added here if needed but these are the ones that were
 # used in the sympy codebase when this module was added.
 #
+from __future__ import annotations
 from functools import update_wrapper as _update_wrapper
 
 
@@ -76,7 +77,6 @@ from mpmath.libmp import (
     mpf_ge,
     mpf_gt,
     mpf_le,
-    mpf_log,
     mpf_lt,
     mpf_mod,
     mpf_mul,
@@ -100,6 +100,12 @@ from mpmath.libmp import (
     to_rational,
     to_str,
 )
+try:
+    from mpmath.libmp import mpf_ln
+except ImportError:
+    # mpmath < 1.4.0
+    from mpmath.libmp import mpf_log as mpf_ln
+
 from mpmath.libmp.libintmath import giant_steps
 from mpmath.matrices.matrices import _matrix
 
@@ -164,7 +170,7 @@ __all__ = [
     "mpf_ge",
     "mpf_gt",
     "mpf_le",
-    "mpf_log",
+    "mpf_ln",
     "mpf_lt",
     "mpf_mod",
     "mpf_mul",

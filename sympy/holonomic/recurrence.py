@@ -1,4 +1,5 @@
 """Recurrence Operators"""
+from __future__ import annotations
 
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)

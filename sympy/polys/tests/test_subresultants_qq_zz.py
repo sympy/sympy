@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.symbol import Symbol
 from sympy.polys.polytools import (pquo, prem, sturm, subresultants)
 from sympy.matrices import Matrix

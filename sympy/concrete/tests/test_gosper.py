@@ -1,4 +1,5 @@
 """Tests for Gosper's algorithm for hypergeometric summation. """
+from __future__ import annotations
 
 from sympy.core.numbers import (Rational, pi)
 from sympy.core.singleton import S

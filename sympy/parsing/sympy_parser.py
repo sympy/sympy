@@ -12,6 +12,7 @@ import builtins
 import types
 from typing import Any, Callable
 from functools import reduce
+from itertools import pairwise
 from sympy.assumptions.ask import AssumptionKeys
 from sympy.core.basic import Basic
 from sympy.core import Symbol
@@ -140,6 +141,8 @@ def _group_parentheses(recursor: TRANS):
                     stacks.append(ParenthesisGroup([]))
                     stacklevel += 1
                 elif token[1] == ')':
+                    if not stacklevel:
+                        raise TokenError("Mismatched parentheses")
                     stacks[-1].append(token)
                     stack = stacks.pop()
 
@@ -211,7 +214,7 @@ def _implicit_multiplication(tokens: list[TOKEN | AppliedFunction], local_dict: 
     """
     result: list[TOKEN | AppliedFunction] = []
     skip = False
-    for tok, nextTok in zip(tokens, tokens[1:]):
+    for tok, nextTok in pairwise(tokens):
         result.append(tok)
         if skip:
             skip = False
@@ -266,7 +269,7 @@ def _implicit_application(tokens: list[TOKEN | AppliedFunction], local_dict: DIC
               # capture **, ^, etc.)
     exponentSkip = False  # skipping tokens before inserting parentheses to
                           # work with function exponentiation
-    for tok, nextTok in zip(tokens, tokens[1:]):
+    for tok, nextTok in pairwise(tokens):
         result.append(tok)
         if (tok[0] == NAME and nextTok[0] not in [OP, ENDMARKER, NEWLINE]):
             if _token_callable(tok, local_dict, global_dict, nextTok):  # type: ignore
@@ -325,7 +328,7 @@ def function_exponentiation(tokens: list[TOKEN], local_dict: DICT, global_dict: 
     exponent: list[TOKEN] = []
     consuming_exponent = False
     level = 0
-    for tok, nextTok in zip(tokens, tokens[1:]):
+    for tok, nextTok in pairwise(tokens):
         if tok[0] == NAME and nextTok[0] == OP and nextTok[1] == '**':
             if _token_callable(tok, local_dict, global_dict):
                 consuming_exponent = True
@@ -536,7 +539,7 @@ def auto_symbol(tokens: list[TOKEN], local_dict: DICT, global_dict: DICT):
     prevTok = (-1, '')
 
     tokens.append((-1, ''))  # so zip traverses all tokens
-    for tok, nextTok in zip(tokens, tokens[1:]):
+    for tok, nextTok in pairwise(tokens):
         tokNum, tokVal = tok
         nextTokNum, nextTokVal = nextTok
         if tokNum == NAME:

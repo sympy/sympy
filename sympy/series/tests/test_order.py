@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.add import Add
 from sympy.core.function import (Function, expand)
 from sympy.core.numbers import (I, Rational, nan, oo, pi)

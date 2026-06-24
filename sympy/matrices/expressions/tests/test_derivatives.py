@@ -3,6 +3,7 @@ Some examples have been taken from:
 
 http://www.math.uwaterloo.ca/~hwolkowi//matrixcookbook.pdf
 """
+from __future__ import annotations
 from sympy import KroneckerProduct, Matrix, diff, eye, Array, MatPow
 from sympy.combinatorics import Permutation
 from sympy.concrete.summations import Sum

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.ntheory import count_digits, digits, is_palindromic
 from sympy.core.intfunc import num_digits
 

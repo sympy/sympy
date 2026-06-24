@@ -1,4 +1,5 @@
 """Tools for manipulation of expressions using paths. """
+from __future__ import annotations
 
 from sympy.core import Basic
 

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.matrices.expressions import MatrixSymbol, MatAdd, MatPow, MatMul
 from sympy.matrices.expressions.special import GenericZeroMatrix, ZeroMatrix
 from sympy.matrices.exceptions import ShapeError

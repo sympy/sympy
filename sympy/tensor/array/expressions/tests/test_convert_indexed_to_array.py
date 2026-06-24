@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy import tanh
 from sympy.concrete.summations import Sum
 from sympy.core.symbol import symbols

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.evalf import N
 from sympy.core.numbers import (Float, I, Rational, pi)
 from sympy.core.symbol import (Symbol, symbols)
@@ -157,6 +158,9 @@ def test_float_eigenvals():
     for x, y in zip(n_evals, s_evals):
         assert abs(x-y) < 10**-9
 
+    m = Matrix([[1.0, 0.0], [0.0, 2.0]])
+    assert m.eigenvals(rational=True) == {1: 1, 2: 1}
+
 
 @XFAIL
 def test_eigen_vects():
@@ -215,6 +219,9 @@ def test_eigenvals():
     # CRootOf may not be unique.
     assert m.eigenvals()
 
+
+@slow
+def test_eigenvals_7x7():
     A = Matrix([
         [1, 1, 0, 1, -1, 0, 1],
         [0, 2, 1, 0, 1, -1, 0],
@@ -237,6 +244,15 @@ def test_eigenvects():
     for val, mult, vec_list in vecs:
         assert len(vec_list) == 1
         assert M*vec_list[0] == val*vec_list[0]
+
+    M = Matrix([[5.0, 1.0, 0.0],
+                [0.0, 5.0, 0.0],
+                [0.0, 0.0, 3.0]])
+    vecs = M.eigenvects()
+    assert len(vecs) == 2
+    for val, mult, vec_list in vecs:
+        for v in vec_list:
+            assert M*v == val*v
 
 
 @slow

@@ -1,6 +1,7 @@
 """A module to manipulate symbolic objects with indices including tensors
 
 """
+from __future__ import annotations
 from .indexed import IndexedBase, Idx, Indexed
 from .index_methods import get_contraction_structure, get_indices
 from .functions import shape

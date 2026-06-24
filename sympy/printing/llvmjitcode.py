@@ -10,6 +10,7 @@ The main entry point for users is the llvm_callable function.
 
 This module requires llvmlite (https://github.com/numba/llvmlite).
 '''
+from __future__ import annotations
 
 import ctypes
 
@@ -149,10 +150,10 @@ class LLVMJitCallbackPrinter(LLVMJitPrinter):
 
 # ensure lifetime of the execution engine persists (else call to compiled
 #   function will seg fault)
-exe_engines = []
+exe_engines: list[object] = []
 
 # ensure names for generated functions are unique
-link_names = set()
+link_names: set[str] = set()
 current_link_suffix = 0
 
 

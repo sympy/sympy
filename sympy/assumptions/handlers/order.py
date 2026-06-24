@@ -1,6 +1,7 @@
 """
 Handlers related to order relations: positive, negative, etc.
 """
+from __future__ import annotations
 
 from sympy.assumptions import Q, ask
 from sympy.core import Add, Basic, Expr, Mul, Pow, S
@@ -188,7 +189,13 @@ def _(expr, assumptions):
 
 @NonZeroPredicate.register(Pow)
 def _(expr, assumptions):
-    return ask(Q.nonzero(expr.base), assumptions)
+    return fuzzy_and([
+        fuzzy_or([
+            ask(Q.nonzero(expr.base), assumptions),
+            ask(Q.zero(expr.exp), assumptions)
+        ]),
+        ask(Q.real(expr), assumptions)
+    ])
 
 @NonZeroPredicate.register(Abs)
 def _(expr, assumptions):

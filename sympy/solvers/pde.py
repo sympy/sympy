@@ -32,6 +32,7 @@ more information on each (run help(pde)):
     variable coefficients.
 
 """
+from __future__ import annotations
 from functools import reduce
 
 from itertools import combinations_with_replacement

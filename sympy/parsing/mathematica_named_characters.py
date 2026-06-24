@@ -1,3 +1,4 @@
+from __future__ import annotations
 mathematica_named_characters = {
     "AAcute":"á",
     "ABar":"ā",

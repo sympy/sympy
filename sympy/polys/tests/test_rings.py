@@ -1,4 +1,5 @@
 """Test sparse polynomials. """
+from __future__ import annotations
 import pickle
 import pytest
 from functools import reduce

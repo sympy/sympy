@@ -5,6 +5,7 @@ Contains
 * Circle
 
 """
+from __future__ import annotations
 
 from sympy.core.expr import Expr
 from sympy.core.relational import Eq

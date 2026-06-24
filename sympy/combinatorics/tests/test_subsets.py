@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.combinatorics.subsets import Subset, ksubsets
 from sympy.testing.pytest import raises
 
@@ -56,6 +57,16 @@ def test_subset():
 
     assert Subset(['a'], ['a', 'b']) != Subset(['b'], ['a', 'b'])
     assert Subset(['a'], ['a', 'b']) != Subset(['a'], ['a', 'c'])
+
+
+def test_subset_aliasing():
+    a = Subset(['c'], ['a', 'b', 'c'])
+    subset = a.subset
+    superset = a.superset
+    subset.append('a')
+    superset.append('d')
+    assert a.subset == ['c']
+    assert a.superset == ['a', 'b', 'c']
 
 def test_ksubsets():
     assert list(ksubsets([1, 2, 3], 2)) == [(1, 2), (1, 3), (2, 3)]

@@ -13,6 +13,7 @@ submodules is a tricky and partly undocumented process. To avoid these issues,
 the actual diagnostic code is in bin/diagnose_imports, which is run as a
 separate, pristine Python process.
 """
+from __future__ import annotations
 
 import subprocess
 import sys

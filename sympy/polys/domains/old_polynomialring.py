@@ -1,4 +1,5 @@
 """Implementation of :class:`PolynomialRing` class. """
+from __future__ import annotations
 
 
 from sympy.polys.agca.modules import FreeModulePolyRing

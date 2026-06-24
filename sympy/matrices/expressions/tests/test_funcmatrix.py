@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core import symbols, Lambda
 from sympy.core.sympify import SympifyError
 from sympy.functions import KroneckerDelta

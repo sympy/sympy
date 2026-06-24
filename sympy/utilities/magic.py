@@ -1,4 +1,5 @@
 """Functions that involve magic. """
+from __future__ import annotations
 
 def pollute(names: list[str], objects: list[object]) -> None:
     """Pollute the global namespace with symbols -> objects mapping. """

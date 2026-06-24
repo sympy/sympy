@@ -1,4 +1,5 @@
 """Primitive circuit operations on quantum circuits."""
+from __future__ import annotations
 
 from functools import reduce
 

@@ -3041,10 +3041,10 @@ class MatrixBase(Printable):
     @overload
     def __mul__(self, other: MatrixBase) -> MatrixBase: ... # type: ignore
     @overload
-    def __mul__(self, other: Expr) -> MatrixBase: ...
+    def __mul__(self, other: SExpr) -> Self: ...
 
     @call_highest_priority('__rmul__')
-    def __mul__(self, other: MatrixBase | Expr) -> MatrixBase | Expr:
+    def __mul__(self, other: MatrixBase | SExpr) -> MatrixBase | Self:
         """Return self*other where other is either a scalar or a matrix
         of compatible dimensions.
 
@@ -3078,12 +3078,12 @@ class MatrixBase(Printable):
     @overload
     def multiply(self, other: MatrixBase, dotprodsimp: bool | None = None) -> MatrixBase: ... # type: ignore
     @overload
-    def multiply(self, other: Expr, dotprodsimp: bool | None = None) -> Expr: ...
+    def multiply(self, other: SExpr, dotprodsimp: bool | None = None) -> Self: ...
 
     def multiply(self,
-                 other: MatrixBase | Expr,
+                 other: MatrixBase | SExpr,
                  dotprodsimp: bool | None = None
-             ) -> MatrixBase | Expr:
+             ) -> MatrixBase | Self:
         """Same as __mul__() but with optional simplification.
 
         Parameters
@@ -3097,14 +3097,14 @@ class MatrixBase(Printable):
 
         isimpbool = _get_intermediate_simp_bool(False, dotprodsimp)
 
-        self, other, T = _unify_with_other(self, other)
+        self_mat, other, T = _unify_with_other(self, other)
 
         if isinstance(other, MatrixBase):
 
-            if self.shape[1] != other.shape[0]:
-                raise ShapeError(f"Matrix size mismatch: {self.shape} * {other.shape}.")
+            if self_mat.shape[1] != other.shape[0]:
+                raise ShapeError(f"Matrix size mismatch: {self_mat.shape} * {other.shape}.")
 
-            m = self._eval_matrix_mul(other)
+            m = self_mat._eval_matrix_mul(other)
 
             if isimpbool:
                 m = m._new(m.rows, m.cols, [_dotprodsimp(e) for e in m.flat()])
@@ -3264,11 +3264,21 @@ class MatrixBase(Printable):
 
         return self.__rmul__(other)
 
+    @overload
+    def __rmul__(self, other: MatrixBase) -> MatrixBase: ...
+    @overload
+    def __rmul__(self, other: SExpr) -> Self: ...
+
     @call_highest_priority('__mul__')
-    def __rmul__(self, other: MatrixBase | SExpr) -> MatrixBase:
+    def __rmul__(self, other: MatrixBase | SExpr) -> MatrixBase | Self:
         return self.rmultiply(other)
 
-    def rmultiply(self, other: MatrixBase | SExpr, dotprodsimp: bool | None = None) -> MatrixBase:
+    @overload
+    def rmultiply(self, other: MatrixBase, dotprodsimp: bool | None = None) -> MatrixBase: ...
+    @overload
+    def rmultiply(self, other: SExpr, dotprodsimp: bool | None = None) -> Self: ...
+
+    def rmultiply(self, other: MatrixBase | SExpr, dotprodsimp: bool | None = None) -> MatrixBase | Self:
         """Same as __rmul__() but with optional simplification.
 
         Parameters
@@ -3280,14 +3290,14 @@ class MatrixBase(Printable):
             speed up calculation. Default is off.
         """
         isimpbool = _get_intermediate_simp_bool(False, dotprodsimp)
-        self, other_mat, T = _unify_with_other(self, other)
+        self_mat, other_mat, T = _unify_with_other(self, other)
 
         if isinstance(other_mat, MatrixBase):
 
-            if self.shape[0] != other_mat.shape[1]:
+            if self_mat.shape[0] != other_mat.shape[1]:
                 raise ShapeError("Matrix size mismatch.")
 
-            m = self._eval_matrix_rmul(other_mat)
+            m = self_mat._eval_matrix_rmul(other_mat)
 
             if isimpbool:
                 return m._new(m.rows, m.cols, [_dotprodsimp(e) for e in m.flat()])

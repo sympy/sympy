@@ -18,6 +18,7 @@ e.g. "Integer(1)", parse it, dump it and you'll see that you need to do
 to bother with lineno and col_offset, just call fix_missing_locations()
 before returning the node.
 """
+from __future__ import annotations
 
 from sympy.core.basic import Basic
 from sympy.core.sympify import SympifyError

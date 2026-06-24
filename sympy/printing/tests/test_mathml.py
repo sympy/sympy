@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.concrete.summations import Sum
 from sympy.core.basic import Basic

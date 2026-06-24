@@ -1,4 +1,5 @@
 # A collection of failing integrals from the issues.
+from __future__ import annotations
 
 from sympy.core.numbers import (I, Rational, oo, pi)
 from sympy.core.singleton import S
@@ -134,6 +135,7 @@ def test_issue_15925a():
     assert not integrate(sqrt((1+sin(x))**2+(cos(x))**2), (x, -pi/2, pi/2)).has(Integral)
 
 
+@slow
 def test_issue_15925b():
     f = sqrt((-12*cos(x)**2*sin(x))**2+(12*cos(x)*sin(x)**2)**2)
     assert integrate(f, (x, 0, pi/6)) == Rational(3, 2)

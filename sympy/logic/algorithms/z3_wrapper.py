@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.printing.smtlib import smtlib_code
 from sympy.assumptions.assume import AppliedPredicate
 from sympy.assumptions.cnf import EncodedCNF
@@ -92,7 +93,7 @@ def encoded_cnf_to_z3_solver(enc_cnf, z3):
 
         symbols |= pred.free_symbols
         pred = pred_str
-        assertion = f"(assert  (implies d{enc} {pred}))"
+        assertion = f"(assert (= d{enc} {pred}))"
         assertions.append(assertion)
 
     for sym in symbols:
@@ -100,7 +101,7 @@ def encoded_cnf_to_z3_solver(enc_cnf, z3):
 
     for f, arity in uninterpreted_functions_to_arity.items():
         # Rather than defining new types for the domain and range
-        # we assume they are real to avoid unnecesary complexity.
+        # we assume they are real to avoid unnecessary complexity.
         arg_types = " ".join(["Real"] * arity)
         declarations.append(f"(declare-fun {f} ({arg_types}) Real)")
 

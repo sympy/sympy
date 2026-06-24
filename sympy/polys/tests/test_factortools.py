@@ -1,4 +1,5 @@
 """Tools for polynomial factorization routines in characteristic zero. """
+from __future__ import annotations
 
 from sympy.polys.rings import ring, xring
 from sympy.polys.domains import FF, ZZ, QQ, ZZ_I, QQ_I, RR, EX

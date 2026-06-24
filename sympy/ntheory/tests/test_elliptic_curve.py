@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.ntheory.elliptic_curve import EllipticCurve, EllipticCurvePoint
 
 
@@ -21,3 +22,6 @@ def test_elliptic_curve():
     # Issue 28546: -O should return canonical infinity point
     O = EllipticCurvePoint.point_at_infinity(e3)
     assert (-O).x == O.x and (-O).y == O.y and (-O).z == O.z
+    # Issue 28529
+    curv = EllipticCurve(0, 0, 0, 1, 1, 0)
+    assert (curv(0,0,1) + -curv(0,0,1)).z == 0

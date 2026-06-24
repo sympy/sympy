@@ -1,6 +1,7 @@
 """
 Module to evaluate the proposition with assumptions using SAT algorithm.
 """
+from __future__ import annotations
 
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol

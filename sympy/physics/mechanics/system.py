@@ -1,3 +1,4 @@
+from __future__ import annotations
 from functools import wraps
 
 from sympy.core.basic import Basic
@@ -12,7 +13,7 @@ from sympy.physics.mechanics.joint import Joint
 from sympy.physics.mechanics.kane import KanesMethod
 from sympy.physics.mechanics.lagrange import LagrangesMethod
 from sympy.physics.mechanics.loads import _parse_load, gravity
-from sympy.physics.mechanics.method import _Methods
+from sympy.physics.mechanics.method import MethodBase
 from sympy.physics.mechanics.particle import Particle
 from sympy.physics.vector import Point, ReferenceFrame, dynamicsymbols
 from sympy.utilities.iterables import iterable
@@ -32,7 +33,7 @@ def _reset_eom_method(method):
     return wrapper
 
 
-class System(_Methods):
+class System(MethodBase):
     """Class to define a multibody system and form its equations of motion.
 
     Explanation
@@ -95,6 +96,11 @@ class System(_Methods):
         Matrix with the velocity constraints as expressions equated to the zero
         matrix. These are by default derived as the time derivatives of the
         holonomic constraints extended with the nonholonomic constraints.
+    acceleration_constraints : ImmutableMatrix
+        Matrix of the time differentiated velocity constraints.
+    constraints_jacobian : Matrix, shape(len(velocity_constraints), len(u))
+        Linear coefficient matrix with respect to the generalized speeds is
+        extracted from the velocity constraints.
     eom_method : subclass of KanesMethod or LagrangesMethod
         Backend for forming the equations of motion.
 
@@ -482,6 +488,11 @@ class System(_Methods):
         constraints = self._objects_to_list(constraints)
         self._vel_constrs = self._parse_expressions(
             constraints, [], 'velocity constraints')
+
+    @property
+    def acceleration_constraints(self):
+        """Column matrix of acceleration constraint residuals."""
+        return self.velocity_constraints.diff(dynamicsymbols._t)
 
     @property
     def eom_method(self):
@@ -906,7 +917,7 @@ class System(_Methods):
             raise NotImplementedError(f'{eom_method} has not been implemented.')
         return self.eom_method._form_eoms()
 
-    def rhs(self, inv_method=None):
+    def rhs(self, inv_method=None, **kwargs):
         """Compute the equations of motion in the explicit form.
 
         Parameters
@@ -916,6 +927,8 @@ class System(_Methods):
             The specific sympy inverse matrix calculation method to use. For a
             list of valid methods, see
             :meth:`~sympy.matrices.matrixbase.MatrixBase.inv`
+        kwargs : dict
+            Passed along to ``eom_method.rhs(**kwargs)``.
 
         Returns
         ========
@@ -926,13 +939,11 @@ class System(_Methods):
         See Also
         ========
 
-        sympy.physics.mechanics.kane.KanesMethod.rhs:
-            KanesMethod's ``rhs`` function.
-        sympy.physics.mechanics.lagrange.LagrangesMethod.rhs:
-            LagrangesMethod's ``rhs`` function.
+        sympy.physics.mechanics.method.MethodBase.rhs:
+            Standard form and behavior of the ``rhs()`` method.
 
         """
-        return self.eom_method.rhs(inv_method=inv_method)
+        return self.eom_method.rhs(inv_method=inv_method, **kwargs)
 
     @property
     def mass_matrix(self):

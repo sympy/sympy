@@ -2,6 +2,7 @@
 This module implements Holonomic Functions and
 various operations on them.
 """
+from __future__ import annotations
 
 from sympy.core import Add, Mul, Pow
 from sympy.core.numbers import (NaN, Infinity, NegativeInfinity, Float, I, pi,
@@ -1938,7 +1939,7 @@ class HolonomicFunction:
                 continue
 
             # if the coefficient u0[i] is zero, then the
-            # independent hypergeomtric series starting with
+            # independent hypergeometric series starting with
             # x**i is not a part of the answer.
             if S(u0[i]) == 0:
                 continue

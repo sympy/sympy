@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.concrete.summations import Sum
 from sympy.core.symbol import symbols, Symbol, Dummy
 from sympy.functions.elementary.miscellaneous import sqrt
