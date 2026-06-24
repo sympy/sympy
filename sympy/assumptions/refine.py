@@ -534,6 +534,57 @@ def refine_sin_cos(expr, assumptions):
         return (pow_expr if refined_pow is None else refined_pow) * sin(rem)
 
 
+def refine_sec_csc(expr, assumptions):
+    """
+    Handler for the sec and csc functions.
+
+    Explanation
+    ===========
+
+    Since ``sec`` and ``csc`` are the reciprocals of ``cos`` and ``sin``,
+    the simplification is delegated to :func:`refine_sin_cos` and the
+    result is reciprocated. Any ``(-1)**k`` sign factor is kept rather than
+    inverted, since it is a unit under the assumptions that produced it.
+
+    Examples
+    ========
+
+    >>> from sympy.assumptions.refine import refine_sec_csc
+    >>> from sympy import Symbol, Q, sec, csc, pi
+    >>> from sympy.abc import x
+    >>> n = Symbol('n')
+    >>> refine_sec_csc(sec(x + n*pi), Q.integer(n))
+    (-1)**n*sec(x)
+    >>> refine_sec_csc(csc(x + n*pi), Q.integer(n))
+    (-1)**n*csc(x)
+    >>> refine_sec_csc(sec(n*pi/2), Q.odd(n))
+    zoo
+    >>> refine_sec_csc(csc(n*pi/2), Q.even(n))
+    zoo
+    """
+    from sympy.functions.elementary.trigonometric import sec, csc, cos, sin
+
+    if not isinstance(expr, (sec, csc)):
+        raise TypeError("refine_sec_csc expects a sec or csc function.")
+
+    arg = expr.args[0]
+    co = cos(arg) if isinstance(expr, sec) else sin(arg)
+    refined = refine_sin_cos(co, assumptions)
+    if refined == co:
+        return expr
+    if ask(Q.zero(refined), assumptions):
+        return S.ComplexInfinity
+
+    sign = S.One
+    rest = S.One
+    for factor in Mul.make_args(refined):
+        if factor is S.NegativeOne or (factor.is_Pow and factor.base is S.NegativeOne):
+            sign *= factor
+        else:
+            rest *= factor
+    return sign * (1 / rest).rewrite(expr.func)
+
+
 def refine_Heaviside(expr, assumptions):
     """
     Handler for the Heaviside step function.
@@ -613,6 +664,8 @@ handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'MatrixElement': refine_matrixelement,
     'cos': refine_sin_cos,
     'sin': refine_sin_cos,
+    'sec': refine_sec_csc,
+    'csc': refine_sec_csc,
     'exp': refine_exp,
     'Heaviside': refine_Heaviside,
     'floor': refine_floor_ceiling,
