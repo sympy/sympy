@@ -32,7 +32,6 @@ def test_Abs():
 def test_refine_conjugate():
     from sympy import conjugate, Q, refine
     from sympy.abc import x
-    
 
     assert refine(conjugate(x), Q.real(x)) == x
     assert refine(conjugate(x), Q.imaginary(x)) == -x
