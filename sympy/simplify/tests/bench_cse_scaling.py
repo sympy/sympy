@@ -20,6 +20,8 @@ The benchmark was used to evaluate two performance changes:
 Neither changes the output of ``cse``.
 """
 
+from __future__ import annotations
+
 import time
 
 from sympy import symbols, sqrt, log, exp, cbrt, Rational, cse, count_ops
