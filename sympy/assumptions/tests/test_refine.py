@@ -1,15 +1,15 @@
 from __future__ import annotations
 from sympy.assumptions.ask import Q
-from sympy.assumptions.refine import refine, refine_sin_cos
+from sympy.assumptions.refine import refine, refine_sin_cos, refine_sec_csc
 from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.core.expr import Expr
-from sympy.core.numbers import (I, Rational, nan, pi)
+from sympy.core.numbers import (I, Rational, nan, pi, zoo)
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.functions.elementary.complexes import (Abs, arg, im, re, sign)
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.functions.elementary.trigonometric import (atan, atan2, cos, sin, tan)
+from sympy.functions.elementary.trigonometric import (atan, atan2, cos, csc, sec, sin, tan)
 from sympy.abc import w, x, y, z
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.piecewise import Piecewise
@@ -320,6 +320,32 @@ def test_sin_cos():
     raises(TypeError, lambda: refine_sin_cos(tan(x), Q.real(x)))
     raises(TypeError, lambda: refine_sin_cos(exp(x), Q.real(x)))
     raises(TypeError, lambda: refine_sin_cos(x, Q.real(x)))
+
+
+def test_sec_csc():
+    n = Symbol('n')
+
+    assert refine(sec(x + n*pi), Q.integer(n)) == (-1)**n*sec(x)
+    assert refine(csc(x + n*pi), Q.integer(n)) == (-1)**n*csc(x)
+    assert refine(sec(x + n*pi), Q.odd(n)) == -sec(x)
+    assert refine(sec(x + n*pi/2), Q.even(n)) == (-1)**(n/2)*sec(x)
+    assert refine(csc(x + n*pi/2), Q.even(n)) == (-1)**(n/2)*csc(x)
+    assert refine(sec(n*pi/2), Q.even(n)) == (-1)**(n/2)
+
+    assert refine(sec(n*pi/2), Q.odd(n)) == zoo
+    assert refine(csc(n*pi/2), Q.even(n)) == zoo
+    assert refine(csc(n*pi), Q.integer(n)) == zoo
+    assert refine(csc(x), Q.zero(x)) == zoo
+
+    assert refine(sec(x), Q.infinite(x) & Q.extended_real(x)) == \
+        AccumBounds(S.NegativeInfinity, S.Infinity)
+    assert refine(csc(x), Q.infinite(x) & Q.extended_real(x)) == \
+        AccumBounds(S.NegativeInfinity, S.Infinity)
+
+    assert refine(sec(x)) == sec(x)
+    assert refine(sec(x + n*pi)) == sec(x + n*pi)
+
+    raises(TypeError, lambda: refine_sec_csc(sin(x), Q.real(x)))
 
 
 def test_floor_ceiling():

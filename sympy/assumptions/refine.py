@@ -559,8 +559,6 @@ def refine_sec_csc(expr, assumptions):
     (-1)**n*csc(x)
     >>> refine_sec_csc(sec(n*pi/2), Q.odd(n))
     zoo
-    >>> refine_sec_csc(csc(n*pi/2), Q.even(n))
-    zoo
     """
     from sympy.functions.elementary.trigonometric import sec, csc, cos, sin
 
