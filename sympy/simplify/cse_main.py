@@ -7,7 +7,8 @@ from sympy.core import Basic, Mul, Add, Pow, sympify
 from sympy.core.containers import Tuple, OrderedSet
 from sympy.core.exprtools import factor_terms
 from sympy.core.singleton import S
-from sympy.core.sorting import ordered
+from sympy.core.function import Derivative
+from sympy.core.sorting import ordered, default_sort_key
 from sympy.core.symbol import symbols, Symbol
 from sympy.matrices import (MatrixBase, Matrix, ImmutableMatrix,
                             SparseMatrix, ImmutableSparseMatrix)
@@ -659,6 +660,44 @@ def tree_cse(exprs, symbols, opt_subs=None, order='canonical', ignore=()):
 
     subs = {}
 
+    # Memoized node counter used as the ``ordered`` sort key below.  The
+    # default key (``sympy.core.sorting._nodes``) recomputes the node count
+    # of a subexpression every time it appears as an argument, so shared
+    # subexpressions (exactly what CSE deals with) get recounted at every
+    # Add/Mul during _rebuild.  Caching the counts -- which are pure
+    # functions of immutable expressions -- makes the whole pass count each
+    # distinct subtree once.  This mirrors ``_nodes``/``_node_count``: the
+    # Derivative special case is only applied at the top level, with the
+    # plain (cached) node count used for the subtree.
+    _node_count_cache = {}
+
+    def _cached_node_count(e):
+        v = _node_count_cache.get(e)
+        if v is None:
+            if e.is_Float:
+                v = 0.5
+            else:
+                v = 1 + sum(_cached_node_count(a) for a in e.args)
+            _node_count_cache[e] = v
+        return v
+
+    def _cached_nodes(e):
+        if isinstance(e, Basic):
+            if isinstance(e, Derivative):
+                return _cached_nodes(e.expr) + sum(
+                    i[1] if i[1].is_Number else _cached_nodes(i[1])
+                    for i in e.variable_count)
+            return _cached_node_count(e)
+        elif iterable(e):
+            return 1 + sum(_cached_nodes(ei) for ei in e)
+        elif isinstance(e, dict):
+            return 1 + sum(_cached_nodes(k) + _cached_nodes(v)
+                           for k, v in e.items())
+        else:
+            return 1
+
+    _node_key = (_cached_nodes, default_sort_key)
+
     def _rebuild(expr):
         if not isinstance(expr, (Basic, Unevaluated)):
             return expr
@@ -685,9 +724,9 @@ def tree_cse(exprs, symbols, opt_subs=None, order='canonical', ignore=()):
                 if c == [1]:
                     args = nc
                 else:
-                    args = list(ordered(c)) + nc
+                    args = list(ordered(c, _node_key, default=False)) + nc
             elif isinstance(expr, (Add, MatAdd)):
-                args = list(ordered(expr.args))
+                args = list(ordered(expr.args, _node_key, default=False))
             else:
                 args = expr.args
         else:

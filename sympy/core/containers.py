@@ -8,7 +8,6 @@
 
 from __future__ import annotations
 
-from collections import OrderedDict
 from collections.abc import MutableSet
 
 from .basic import Basic
@@ -338,10 +337,14 @@ _sympy_converter[dict] = lambda d: Dict(*d.items())
 
 class OrderedSet(MutableSet):
     def __init__(self, iterable=None):
+        # A plain dict preserves insertion order (Python >= 3.7) and is
+        # faster to build and iterate than OrderedDict; the only ordered
+        # operation that needs special handling is popping the first item
+        # (see ``pop`` below).
         if iterable:
-            self.map = OrderedDict((item, None) for item in iterable)
+            self.map = dict.fromkeys(iterable)
         else:
-            self.map = OrderedDict()
+            self.map = {}
 
     def __len__(self):
         return len(self.map)
@@ -356,7 +359,13 @@ class OrderedSet(MutableSet):
         self.map.pop(key)
 
     def pop(self, last=True):
-        return self.map.popitem(last=last)[0]
+        if not self.map:
+            raise KeyError('pop from an empty set')
+        if last:
+            return self.map.popitem()[0]
+        key = next(iter(self.map))
+        del self.map[key]
+        return key
 
     def __iter__(self):
         yield from self.map.keys()

@@ -1216,9 +1216,24 @@ def factor_terms(expr: Expr | complex, radical=False, clear=False, fraction=Fals
     gcd_terms, sympy.polys.polytools.terms_gcd
 
     """
+    # SymPy expressions are DAGs: a subexpression shared k times is the same
+    # object encountered k times during recursion.  ``do`` is a pure function
+    # of its argument, so memoizing it makes each distinct subexpression be
+    # processed once instead of once per occurrence -- a large win for the
+    # highly shared expressions produced by e.g. repeated differentiation.
+    # The cache is keyed by the (non-atomic) Basic argument and the result is
+    # stored at the single exit below; atoms are cheap and left uncached.
+    _memo: dict = {}
+
     def do(expr):
         from sympy.concrete.summations import Sum
         from sympy.integrals.integrals import Integral
+
+        if isinstance(expr, Basic):
+            cached = _memo.get(expr)
+            if cached is not None:
+                return cached
+
         is_iterable = iterable(expr)
 
         if not isinstance(expr, Basic) or expr.is_Atom:
@@ -1231,13 +1246,18 @@ def factor_terms(expr: Expr | complex, radical=False, clear=False, fraction=Fals
             args = expr.args
             newargs = tuple([do(i) for i in args])
             if newargs == args:
-                return expr
-            return expr.func(*newargs)
+                rv = expr
+            else:
+                rv = expr.func(*newargs)
+            _memo[expr] = rv
+            return rv
 
         if isinstance(expr, (Sum, Integral)):
-            return _factor_sum_int(expr,
+            rv = _factor_sum_int(expr,
                 radical=radical, clear=clear,
                 fraction=fraction, sign=sign)
+            _memo[expr] = rv
+            return rv
 
         cont, p = expr.as_content_primitive(radical=radical, clear=clear)
         if p.is_Add:
@@ -1264,6 +1284,7 @@ def factor_terms(expr: Expr | complex, radical=False, clear=False, fraction=Fals
             p = p.func(
                 *[do(a) for a in p.args])
         rv = _keep_coeff(cont, p, clear=clear, sign=sign)
+        _memo[expr] = rv
         return rv
     expr2 = sympify(expr)
     return do(expr2)
