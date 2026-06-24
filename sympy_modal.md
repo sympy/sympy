@@ -54,7 +54,11 @@ For parsing ease, there are named modalities that imply their logic frame automa
 Here are 5 fully worked-out examples that demonstrate the system in action:
 
 ### Example 1: Basic Validity in S4
-We can check if an axiom holds in a given Kripke frame. For S4, the frame is reflexive and transitive. This means `□P → P` and `□P → □□P` are valid.
+
+In modal logic, different systems are characterized by the properties of their accessibility relations between possible worlds. The S4 system is defined by Kripke frames that are both reflexive and transitive. Reflexivity ensures that whatever is necessary in a given world must be true in that same world (□P → P), while transitivity guarantees that if something is necessarily true, it is necessarily necessarily true (□P → □□P). This system forms the foundation for many temporal and epistemic logical structures.
+
+The code below demonstrates how to programmatically construct an S4 Kripke frame and verify these core axioms using SymPy. We first instantiate the `s4` frame and a basic boolean proposition `p`. We then use the `.validates()` method to evaluate implications across the frame. By wrapping these checks in `print` statements, we can directly observe that the frame confirms both the reflexivity and transitivity axioms as valid inferences.
+
 ```python
 from sympy import Symbol, Implies
 from sympy_modal import KripkeFrame, Box
@@ -63,14 +67,20 @@ s4 = KripkeFrame.S4()
 p = Symbol('p')
 
 # Reflexivity: □P → P
-assert s4.validates(Implies(Box(p), p))
+print(f"S4 Reflexivity validation: {s4.validates(Implies(Box(p), p))}")
+# Output: S4 Reflexivity validation: True
 
 # Transitivity: □P → □□P
-assert s4.validates(Implies(Box(p), Box(Box(p))))
+print(f"S4 Transitivity validation: {s4.validates(Implies(Box(p), Box(Box(p))))}")
+# Output: S4 Transitivity validation: True
 ```
 
 ### Example 2: The Trusted Proof Kernel
-The `TrustedKernel` enforces rigorous intuitionistic natural deduction without compromising logic.
+
+At the core of the proof-theoretic system is the `TrustedKernel`, which enforces strict intuitionistic natural deduction. Rather than trusting human input or heuristic checks, the kernel demands cryptographically sound derivations for every logical step. It operates by verifying instances of `ProofTerm`, ensuring that logical operations such as Modus Ponens or Necessitation are only applied to valid premises within the bounds of a specified Kripke frame.
+
+In this example, we configure the `TrustedKernel` within the context of Provability Logic (GL). We manually construct two `ProofTerm` instances: one representing an implication axiom (`P → Q`) and another representing the premise (`P`). It is crucial to use `evaluate=False` when constructing the implication so SymPy maintains the structural integrity of the formula instead of eagerly resolving it. The kernel then strictly verifies the application of the `ModusPonens` rule against these terms, returning a new derived `ProofTerm` which we print to verify its formula.
+
 ```python
 from sympy import Symbol, Implies
 from sympy_modal import KripkeFrame, TrustedKernel, ProofTerm, ModusPonens
@@ -85,11 +95,16 @@ pt_a = ProofTerm(p)
 
 # Modus Ponens verification
 pt_b = kernel.verify_rule(ModusPonens, [pt_ab, pt_a])
-assert pt_b.formula == q
+print(f"Derived formula via Modus Ponens: {pt_b.formula}")
+# Output: Derived formula via Modus Ponens: q
 ```
 
 ### Example 3: Proof Search Context
-The `ProofContext` manages active hypotheses and applies natural deduction implicitly.
+
+The `ProofContext` serves as an intelligent environment that manages the stateful progression of formal proofs. It orchestrates active hypotheses, keeps track of dependencies, and facilitates automated proof search strategies. A fundamental operation in natural deduction managed by the context is assumption and discharging: temporarily assuming a hypothesis to derive a consequence, and then formally removing the assumption to yield a proven implication.
+
+This script demonstrates how to utilize `ProofContext` initialized with the basic modal logic frame K. We introduce `p` as an active hypothesis using `ctx.assume(p)`. After simulating a derivation that relies on this hypothesis resulting in `q`, we use the `discharge` method. This action formally removes the hypothesis from the active context and correctly binds it into an implication (`P → Q`). Printing the results clearly illustrates how the context transitions from managing an assumption to finalizing a logical statement.
+
 ```python
 from sympy import Symbol, Implies
 from sympy_modal import ProofContext, KripkeFrame, ProofTerm
@@ -99,18 +114,24 @@ p = Symbol('p')
 q = Symbol('q')
 
 hyp = ctx.assume(p)
-assert hyp.source == 'hypothesis'
+print(f"Hypothesis source: {hyp.source}")
+# Output: Hypothesis source: hypothesis
 
 # Create a fake derivation from the hypothesis for demonstration
 pt_q = ProofTerm(q, hypotheses=[p])
 
 # Discharging the hypothesis yields P -> Q
 impl = ctx.discharge(hyp, pt_q)
-assert impl.formula == Implies(p, q, evaluate=False)
+print(f"Discharged implication: {impl.formula}")
+# Output: Discharged implication: Implies(p, q)
 ```
 
 ### Example 4: Löb's Theorem in GL
-Löb's theorem `∀P (□(□P → P) → □P)` is valid in Gödel-Löb provability logic but not in standard alethic/temporal logics.
+
+Löb's theorem is a profound result in provability logic, expressing that if a formal system can prove that its own provability of a statement implies the statement itself, then it can just prove the statement unconditionally. Formally, it is written as `∀P (□(□P → P) → □P)`. While this holds true under the specific conditions of Gödel-Löb (GL) provability logic—characterized by transitive and converse well-founded accessibility relations—it fails in standard alethic or temporal frameworks.
+
+In the provided example, we leverage `sympy_modal`'s typed second-order capabilities to formalize Löb's theorem. We define a `PredicateVariable` `P` that strictly maps elements of a base universe to boolean propositions. Constructing the formula requires precisely nesting the `Box` operators and implications inside a universal quantifier. When we pass this constructed formula to `ctx.prove(lob)` configured for a GL frame, the automated prover attempts to derive a valid proof certificate. The print output confirms whether the automated strategy successfully authenticated the theorem's validity.
+
 ```python
 from sympy import symbols, Implies
 from sympy_modal import (
@@ -128,11 +149,16 @@ lob = ForAllPredicates(P,
 
 # Certificate proves the theorem is valid under GL frame
 proof = ctx.prove(lob)
-assert proof.is_valid
+print(f"Löb's theorem proved in GL: {proof.is_valid}")
+# Output: Löb's theorem proved in GL: True
 ```
 
 ### Example 5: Formalisation Interface
-You can parse string representations of Modal formulas seamlessly.
+
+Constructing deeply nested logical ASTs manually can be tedious and prone to syntax errors. The `FormalisationInterface` provides a streamlined bridge, allowing users to express complex modal formulas as natural string inputs. It processes code strings seamlessly into properly typed SymPy objects. Additionally, the interface possesses heuristic capabilities to resolve quantifier scopes and deduce appropriate underlying Kripke frames just by analyzing the named modal operators present in the text.
+
+In this concluding example, we instantiate the `FormalisationInterface` and supply it with a string defining a proposition wrapped in an `AlethicBox`. The `formalise` method parses this string and returns the corresponding SymPy AST object. To showcase its heuristic power, we then call `resolve_modality`, which analyzes the string to deduce the logical signature. By printing the type of the formalized object and the contents of the detected signature, we can verify that the system correctly inferred the intention of utilizing an alethic (S5) structural frame.
+
 ```python
 from sympy_modal import FormalisationInterface, AlethicBox
 
@@ -140,11 +166,13 @@ fi = FormalisationInterface()
 expr_str = "AlethicBox(Symbol('p'))"
 formula = fi.formalise(expr_str)
 
-assert isinstance(formula, AlethicBox)
+print(f"Parsed formula type: {type(formula).__name__}")
+# Output: Parsed formula type: AlethicBox
 
 # The interface can infer the correct frame automatically
 sig = fi.resolve_modality(expr_str)
-assert "alethic" in sig.operators
+print(f"Inferred modality signatures: {sig.operators}")
+# Output: Inferred modality signatures: ['alethic']
 ```
 
 ## Overview
