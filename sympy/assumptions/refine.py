@@ -600,6 +600,27 @@ def refine_floor_ceiling(expr, assumptions):
                 nongausian_intergers_terms.append(term)
         return Add(*gaussian_integer_terms) + expr.func(Add(*nongausian_intergers_terms))
     return expr
+def refine_conjugate(expr, assumptions):
+    """
+    Handler for complex conjugation.
+
+    Examples
+    ========
+
+    >>> from sympy import Q, conjugate
+    >>> from sympy.assumptions.refine import refine_conjugate
+    >>> from sympy.abc import x
+    >>> refine_conjugate(conjugate(x), Q.real(x))
+    x
+    >>> refine_conjugate(conjugate(x), Q.imaginary(x))
+    -x
+    """
+    arg = expr.args[0]
+    if ask(Q.real(arg), assumptions):
+        return arg
+    if ask(Q.imaginary(arg), assumptions):
+        return -arg
+    return expr
 
 
 handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
@@ -617,4 +638,5 @@ handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'Heaviside': refine_Heaviside,
     'floor': refine_floor_ceiling,
     'ceiling' : refine_floor_ceiling,
+    'conjugate': refine_conjugate,
 }

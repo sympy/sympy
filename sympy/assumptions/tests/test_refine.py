@@ -29,6 +29,14 @@ def test_Abs():
     assert refine(Abs(x**2)) != x**2
     assert refine(Abs(x**2), Q.real(x)) == x**2
 
+def test_refine_conjugate():
+    from sympy import conjugate, Q, refine
+    from sympy.abc import x
+    
+
+    assert refine(conjugate(x), Q.real(x)) == x
+    assert refine(conjugate(x), Q.imaginary(x)) == -x
+
 
 def test_pow1():
     assert refine((-1)**x, Q.even(x)) == 1
