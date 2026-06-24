@@ -542,12 +542,12 @@ def ask(proposition, assumptions=True, context=global_assumptions):
         return bool(res)
 
     # using satask (still costly)
-    res = satask(proposition, assumptions=assumptions, context=context)
+    res = satask(proposition, assumptions=assumptions)
     if res is not None:
         return res
 
     try:
-        res = lra_satask(proposition, assumptions=assumptions, context=context)
+        res = lra_satask(proposition, assumptions=assumptions)
     except UnhandledInput:
         return None
 
