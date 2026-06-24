@@ -1380,6 +1380,11 @@ class Derivative(Expr):
         if evaluate:
             if isinstance(expr, Derivative):
                 expr = expr.canonical
+                free = expr.free_symbols
+            else:
+                # expr is unchanged since __new__ computed its free_symbols
+                # above, so reuse that set rather than traversing again.
+                free = symbols_or_none
             variable_count = [
                 (v.canonical if isinstance(v, Derivative) else v, c)
                 for v, c in variable_count]
@@ -1389,7 +1394,6 @@ class Derivative(Expr):
             # Derivatives as those can be created by intermediate
             # derivatives.
             zero = False
-            free = expr.free_symbols
             from sympy.matrices.expressions.matexpr import MatrixExpr, MatrixElement
 
             for v, c in variable_count:
@@ -1496,9 +1500,13 @@ class Derivative(Expr):
             expr = obj
 
         # what we have so far can be made canonical
-        expr = expr.replace(
-            lambda x: isinstance(x, Derivative),
-            lambda x: x.canonical)
+        # (only walk/rebuild the tree if it actually contains a
+        # Derivative subexpression; for fully evaluated derivatives of
+        # elementary expressions this avoids a full traversal+rebuild)
+        if expr.has(Derivative):
+            expr = expr.replace(
+                lambda x: isinstance(x, Derivative),
+                lambda x: x.canonical)
 
         if unhandled:
             if isinstance(expr, Derivative):
