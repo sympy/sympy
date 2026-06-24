@@ -543,8 +543,7 @@ def refine_sec_csc(expr, assumptions):
 
     >>> from sympy.assumptions.refine import refine_sec_csc
     >>> from sympy import Symbol, Q, sec, csc, pi
-    >>> from sympy.abc import x
-    >>> n = Symbol('n')
+    >>> from sympy.abc import x, n
     >>> refine_sec_csc(sec(x + n*pi), Q.integer(n))
     (-1)**n*sec(x)
     >>> refine_sec_csc(csc(x + n*pi), Q.integer(n))
@@ -553,11 +552,16 @@ def refine_sec_csc(expr, assumptions):
     zoo
     """
     from sympy.functions.elementary.trigonometric import sec, csc, cos, sin
+    from sympy.calculus.accumulationbounds import AccumBounds
 
     if not isinstance(expr, (sec, csc)):
         raise TypeError("refine_sec_csc expects a sec or csc function.")
 
     arg = expr.args[0]
+    if (ask(Q.infinite(arg), assumptions) and
+            ask(Q.extended_real(arg), assumptions)):
+        return AccumBounds(S.NegativeInfinity, S.Infinity)
+
     co = cos(arg) if isinstance(expr, sec) else sin(arg)
     refined = refine_sin_cos(co, assumptions)
     if refined == co:
@@ -565,15 +569,7 @@ def refine_sec_csc(expr, assumptions):
     if ask(Q.zero(refined), assumptions):
         return S.ComplexInfinity
 
-    result = (S.One / refined).rewrite(expr.func)
-    sign = S.One
-    rest = S.One
-    for factor in Mul.make_args(result):
-        if isinstance(factor, expr.func):
-            rest *= factor
-        else:
-            sign *= factor
-    return rest / sign
+    return S(refined).replace(cos, sec).replace(sin, csc)
 
 
 def refine_Heaviside(expr, assumptions):
