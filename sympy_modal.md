@@ -146,3 +146,174 @@ assert isinstance(formula, AlethicBox)
 sig = fi.resolve_modality(expr_str)
 assert "alethic" in sig.operators
 ```
+
+## Overview
+
+The `sympy_modal/` directory contains the core implementation of the second-order modal logic extension for SymPy. The main source code spans 8 core files containing logic types, Kripke frames, proof contexts, modal operators, and an intuitionistic formalisation interface. Together with 8 test files, the codebase consists of 1534 lines of code. The architecture is built around a trusted proof-theoretic kernel that enforces rigorous natural deduction steps, ensuring that complex modal properties (like Löb's theorem or varying accessibility relations) are verified with absolute soundness.
+
+### Declarations
+
+- **__init__.py**
+  - `__all__` (GlobalVar): List of publicly exported symbols from the sympy_modal package.
+
+- **formalise.py**
+  - `ModalSignature` (Class): Dataclass storing the parsed logic frame signatures and bound variables.
+  - `ScopeResolution` (Class): Enum defining how quantifiers scope over expressions (e.g., local vs. global).
+  - `QuantifierOrder` (Class): Enum tracking whether universal or existential quantifiers appear first.
+  - `FormalisationInterface` (Class): Main interface for parsing string representations of modal logic into AST objects.
+  - `FormalisationInterface.__init__` (Method): Initializes the interface with an empty context dict.
+  - `FormalisationInterface._get_local_dict` (Method): Retrieves the local dictionary populated with SymPy modal classes.
+  - `FormalisationInterface.parse_code` (Method): Evaluates Python code strings into internal formula objects.
+  - `FormalisationInterface.resolve_modality` (Method): Heuristically infers the correct logic frame based on explicit operators or axioms.
+  - `FormalisationInterface.resolve_quantifier_scope` (Method): Resolves standard bindings and checks for ill-scoped modal variables.
+  - `FormalisationInterface.resolve_order` (Method): Ensures quantifiers follow a valid scoping sequence to avoid invalid dependencies.
+  - `FormalisationInterface.infer_frame` (Method): Internal helper to map detected axioms or operators to specific Kripke frames.
+  - `FormalisationInterface.formalise` (Method): Main method mapping code strings to validated formula expressions within an inferred frame.
+
+- **frames.py**
+  - `Axiom` (Class): Enum for standard modal logic axioms like K, T, 4, 5, etc.
+  - `Axiom.K` (ClassVar): Axiom K: □(P → Q) → (□P → □Q).
+  - `Axiom.T` (ClassVar): Axiom T: □P → P (reflexivity).
+  - `Axiom.B` (ClassVar): Axiom B: P → □◇P (symmetry).
+  - `Axiom.Four` (ClassVar): Axiom 4: □P → □□P (transitivity).
+  - `Axiom.Five` (ClassVar): Axiom 5: ◇P → □◇P (Euclidean).
+  - `Axiom.Lob` (ClassVar): Axiom L: □(□P → P) → □P (Löb's theorem).
+  - `Axiom.D` (ClassVar): Axiom D: □P → ◇P (seriality).
+  - `KripkeFrame` (Class): Represents the structural model of possible worlds and accessibility relations.
+  - `KripkeFrame.__init__` (Method): Initializes a frame with specified worlds, relation matrix, and enforced axioms.
+  - `KripkeFrame.K` (Method): Factory for standard modal logic K (no special relations).
+  - `KripkeFrame.T` (Method): Factory for logic T (reflexive).
+  - `KripkeFrame.S4` (Method): Factory for logic S4 (reflexive, transitive).
+  - `KripkeFrame.S5` (Method): Factory for logic S5 (reflexive, symmetric, transitive).
+  - `KripkeFrame.GL` (Method): Factory for Provability Logic (transitive, converse well-founded).
+  - `KripkeFrame.D` (Method): Factory for Deontic Logic (serial).
+  - `KripkeFrame.K45` (Method): Factory for Epistemic Logic (transitive, Euclidean).
+  - `KripkeFrame._evaluate` (Method): Internal logic engine to recursively evaluate formula truth values per world.
+  - `KripkeFrame.validates` (Method): Checks if a formula evaluates to True across all accessible worlds.
+  - `KripkeFrame._is_axiom_instance` (Method): Checks syntactically if an expression is an instantiation of a known axiom.
+  - `KripkeFrame.is_valid_inference` (Method): Returns True if a formula structurally mirrors the frame's defining axioms.
+
+- **context.py**
+  - `Strategy` (Class): Enum detailing automated proof search strategies.
+  - `Strategy.Backward` (ClassVar): Backward chaining strategy (goal-directed).
+  - `Strategy.ForwardChain` (ClassVar): Forward chaining strategy (data-directed).
+  - `Strategy.ModalInduction` (ClassVar): Specialized inductive strategy for well-founded fixed points.
+  - `ProofContext` (Class): Environment coordinating active hypotheses and proof steps.
+  - `ProofContext.__init__` (Method): Initializes the context using a specific Kripke frame.
+  - `ProofContext.assume` (Method): Introduces a new assumption/hypothesis to the current scope.
+  - `ProofContext.discharge` (Method): Discharges an assumption, returning a validated Implication.
+  - `ProofContext.apply` (Method): Applies a logical rule or theorem to known terms.
+  - `ProofContext.necessitate` (Method): Applies the Necessitation rule via the trusted kernel.
+  - `ProofContext.lemma` (Method): Registers an intermediate proven step for future use.
+  - `ProofContext.save` (Method): Snapshots the current context state for backtracking.
+  - `ProofContext.restore` (Method): Reverts to a previously saved context state.
+  - `ProofContext._warn_classical` (Method): Issues warnings when classical axioms (like LEM) are invoked.
+  - `ProofContext.prove` (Method): Automatically attempts to derive a formula using a designated strategy.
+  - `ProofContext._forward_chain` (Method): Internal automated forward reasoning loop.
+  - `ProofContext._backward_chain` (Method): Internal automated backward reasoning loop.
+  - `ProofContext._modal_induction` (Method): Internal routine handling inductive fixed point proofs.
+
+- **types.py**
+  - `Type` (Class): Base class for the cumulative type hierarchy.
+  - `Universe` (Class): Represents a specific foundational universe level.
+  - `Universe.__new__` (Method): Creates a universe instance for a given integer level.
+  - `Universe.level` (Method): Returns the integer level of the universe.
+  - `Universe.__str__` (Method): String representation of the universe.
+  - `Universe.__repr__` (Method): Detailed representation of the universe.
+  - `BoolType` (Class): Represents standard Boolean propositions.
+  - `BoolType.__new__` (Method): Instantiates the singleton BoolType.
+  - `BoolType.__str__` (Method): String representation.
+  - `BoolType.__repr__` (Method): Detailed representation.
+  - `FunctionType` (Class): Represents mapping types between domains and codomains.
+  - `FunctionType.__new__` (Method): Creates a function type.
+  - `FunctionType.domain` (Method): Returns the input type (domain).
+  - `FunctionType.codomain` (Method): Returns the output type (codomain).
+  - `FunctionType.__str__` (Method): String representation.
+  - `FunctionType.__repr__` (Method): Detailed representation.
+  - `TypedSymbol` (Class): A variable carrying explicit second-order type information.
+  - `TypedSymbol.__new__` (Method): Instantiates a typed symbol.
+  - `TypedSymbol.type` (Method): Returns the symbol's assigned type.
+  - `PredicateVariable` (Class): A second-order variable ranging over specified types.
+  - `PredicateVariable.__new__` (Method): Creates a predicate variable.
+  - `PredicateVariable.__call__` (Method): Applies the predicate variable to arguments.
+  - `ModalPredicate` (Class): A typed predicate whose evaluation is frame-dependent.
+  - `ModalPredicate.__new__` (Method): Creates a modal predicate with a name, type, and arguments.
+  - `ModalPredicate.name` (Method): Returns the predicate name.
+  - `ModalPredicate.type` (Method): Returns the predicate type.
+  - `GuardedFixedPoint` (Class): Constructor for well-founded fixed points in modal logic.
+  - `GuardedFixedPoint.__new__` (Method): Creates a guarded fixed point instance.
+  - `GuardedFixedPoint.operator` (Method): Returns the bounding modal operator.
+  - `GuardedFixedPoint.name` (Method): Returns the fixed point name.
+
+- **kernel.py**
+  - `ProofTerm` (Class): Represents a verified derivation step in the calculus.
+  - `ProofTerm.__init__` (Method): Records the formula, source rule, and active hypotheses.
+  - `ProofTerm.is_valid` (Method): Property confirming the term was generated by the TrustedKernel.
+  - `ModusPonens` (Class): Rule of inference: From P and P → Q, derive Q.
+  - `TrustedKernel` (Class): The core proof engine enforcing intuitionistic deduction.
+  - `TrustedKernel.__init__` (Method): Binds the kernel to a specific evaluating KripkeFrame.
+  - `TrustedKernel.check_axiom` (Method): Verifies that an axiom belongs to the bound frame.
+  - `TrustedKernel.verify_rule` (Method): Executes logical rules strictly over provided valid ProofTerms.
+  - `TrustedKernel.necessitate` (Method): Applies the Necessitation rule securely.
+  - `TrustedKernel.check_term` (Method): Final safety check validating a completed ProofTerm.
+
+- **operators.py**
+  - `ModalOperator` (Class): Base class for modal logic operators.
+  - `ModalOperator.__new__` (Method): Instantiates an operator node.
+  - `ModalOperator.eval` (Method): Base evaluation method for the operator.
+  - `Box` (Class): The Necessity operator (□).
+  - `Box.__new__` (Method): Instantiates a Box operator wrapping a formula.
+  - `Box.modality` (Method): Returns the modality type.
+  - `Box.is_well_typed` (Method): Checks if the internal formula is a valid proposition.
+  - `Diamond` (Class): The Possibility operator (◇).
+  - `Diamond.__new__` (Method): Instantiates a Diamond operator wrapping a formula.
+  - `Diamond.modality` (Method): Returns the modality type.
+  - `Diamond.is_well_typed` (Method): Checks if the internal formula is a valid proposition.
+  - `ProvabilityBox` (Class): A necessity operator hardcoded to Provability logic (GL).
+  - `ProvabilityBox.__new__` (Method): Instantiates a ProvabilityBox.
+  - `AlethicBox` (Class): A necessity operator hardcoded to Alethic logic (S5).
+  - `AlethicBox.__new__` (Method): Instantiates an AlethicBox.
+  - `EpistemicBox` (Class): A necessity operator hardcoded to Epistemic logic (K45).
+  - `EpistemicBox.__new__` (Method): Instantiates an EpistemicBox.
+  - `DeonticBox` (Class): A necessity operator hardcoded to Deontic logic (D).
+  - `DeonticBox.__new__` (Method): Instantiates a DeonticBox.
+  - `TemporalBox` (Class): A necessity operator hardcoded to Temporal logic (S4).
+  - `TemporalBox.__new__` (Method): Instantiates a TemporalBox.
+  - `ForAllPredicates` (Class): Second-order universal quantifier.
+  - `ForAllPredicates.__new__` (Method): Instantiates ForAllPredicates over a variable and formula.
+  - `ForAllPredicates.variable` (Method): Returns the bound variable.
+  - `ForAllPredicates.formula` (Method): Returns the quantified formula.
+  - `ForAllPredicates.is_well_typed` (Method): Ensures the quantification is typed correctly.
+  - `ExistsPredicates` (Class): Second-order existential quantifier.
+  - `ExistsPredicates.__new__` (Method): Instantiates ExistsPredicates over a variable and formula.
+  - `ExistsPredicates.variable` (Method): Returns the bound variable.
+  - `ExistsPredicates.formula` (Method): Returns the quantified formula.
+  - `ExistsPredicates.is_well_typed` (Method): Ensures the quantification is typed correctly.
+
+- **errors.py**
+  - `SymPyModalError` (Class): Base exception for sympy_modal errors.
+  - `FrameViolationError` (Class): Raised when a formula violates the enforced Kripke frame.
+  - `FrameViolationError.__init__` (Method): Initializes with specific violation details.
+  - `NecessitationError` (Class): Raised when the Necessitation rule is applied invalidly.
+  - `NecessitationError.__init__` (Method): Initializes with necessitation failure details.
+  - `InvalidInferenceError` (Class): Raised on an invalid deduction step.
+  - `InvalidInferenceError.__init__` (Method): Initializes with deduction context.
+  - `FormalisationError` (Class): Raised when code strings cannot be mapped to modal terms.
+  - `FormalisationError.__init__` (Method): Initializes with parse failure information.
+  - `NotAnAxiomError` (Class): Raised when an expression claims to be an axiom but isn't.
+  - `NotAnAxiomError.__init__` (Method): Initializes with the invalid axiom claim.
+  - `AmbiguousModalityError` (Class): Raised when a frame cannot be heuristically inferred.
+  - `AmbiguousModalityError.__init__` (Method): Initializes with ambiguity details.
+  - `ProofFailure` (Class): Raised when the automated prover fails.
+  - `ProofFailure.__init__` (Method): Initializes with failure context.
+  - `ProofFailure.__repr__` (Method): Detailed representation of the proof failure.
+
+## Proposals for Enhancing the Reference and Tutorial Examples
+
+### Enhancing Example Output
+Currently, the tutorial examples in this document rely on silent assertions (e.g., `assert s4.validates(...)`). To provide a better learning experience, the examples should be updated to produce meaningful console output. Instead of just passing silently, we propose replacing assertions with print statements that evaluate to boolean conditions or print formulas directly. For example, changing `assert s4.validates(Implies(Box(p), p))` to `print(f"S4 Reflexivity validation: {s4.validates(Implies(Box(p), p))}")` will output `S4 Reflexivity validation: True`. This provides users with direct, observable feedback when they copy, paste, and run the tutorial scripts locally.
+
+### Expanding Example Explanations
+To elevate the tutorial section from a mere list of code snippets to a comprehensive learning resource, each example should be expanded to include a structured, two-paragraph introduction and explanation.
+- The **first paragraph** should introduce the specific logical concept or system component being demonstrated (e.g., explaining the intuitive meaning behind the Kripke accessibility relations required for S4).
+- The **second paragraph** should explicitly walk through the code, explaining step-by-step how the components interact (e.g., explaining why `evaluate=False` is necessary, or how the `ProofContext` manages active hypotheses under the hood). This deeper context will bridge the gap between abstract modal logic theory and the concrete SymPy API implementation.
