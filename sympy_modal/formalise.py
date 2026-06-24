@@ -67,8 +67,10 @@ class FormalisationInterface:
     def parse_code(self, code_str: str) -> Boolean:
         """Parses a string into a SymPy modal formula."""
         from sympy.parsing.sympy_parser import parse_expr
+        from sympy import Integer, Implies
         try:
-            expr = parse_expr(code_str, local_dict=self._get_local_dict())
+            global_dict = {'Integer': Integer, 'Implies': Implies}
+            expr = parse_expr(code_str, local_dict=self._get_local_dict(), global_dict=global_dict)
             return expr
         except Exception as e:
             raise FormalisationError(f"Failed to parse formula: {e}")
