@@ -536,11 +536,6 @@ def refine_sin_cos(expr, assumptions):
 
 def refine_sec_csc(expr, assumptions):
     """
-    Handler for the sec and csc functions.
-
-    Explanation
-    ===========
-
     Handler for sec and csc functions. The function uses `refine_sin_cos` internally.
 
     Examples
