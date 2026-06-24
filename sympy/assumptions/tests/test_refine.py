@@ -324,28 +324,74 @@ def test_sin_cos():
 
 def test_sec_csc():
     n = Symbol('n')
-
-    assert refine(sec(x + n*pi), Q.integer(n)) == (-1)**n*sec(x)
-    assert refine(csc(x + n*pi), Q.integer(n)) == (-1)**n*csc(x)
-    assert refine(sec(x + n*pi), Q.odd(n)) == -sec(x)
-    assert refine(sec(x + n*pi/2), Q.even(n)) == (-1)**(n/2)*sec(x)
-    assert refine(csc(x + n*pi/2), Q.even(n)) == (-1)**(n/2)*csc(x)
-    assert refine(sec(n*pi/2), Q.even(n)) == (-1)**(n/2)
-
     assert refine(sec(n*pi/2), Q.odd(n)) == zoo
-    assert refine(csc(n*pi/2), Q.even(n)) == zoo
+    assert refine(sec(n*pi), Q.even(n)) == 1
+    assert refine(sec(n*pi), Q.odd(n)) == -1
     assert refine(csc(n*pi), Q.integer(n)) == zoo
+    assert refine(csc(n*pi/2), Q.odd(n) & Q.even((n-1)/2)) == 1
+    assert refine(csc(n*pi/2), Q.odd(n) & Q.odd((n-1)/2)) == -1
+    assert refine(sec(n*pi), Q.integer(n)) == (-1)**n
+    assert refine(csc(n*pi/2), Q.even(n)) == zoo
+    assert refine(sec(n*pi/2), Q.even(n)) == (-1)**(n/2)
+    assert refine(csc(n*pi/2), Q.odd(n)) == (-1)**((n + 3)/2)
+    assert refine(sec(n*pi/2), Q.odd(n)) == zoo
+    assert refine(csc(x + n*pi), Q.integer(n)) == ((-1)**n) * csc(x)
+    assert refine(sec(x + n*pi), Q.integer(n)) == ((-1)**n) * sec(x)
+    assert refine(csc(x + n*pi), Q.even(n)) == csc(x)
+    assert refine(sec(x + n*pi), Q.even(n)) == sec(x)
+    assert refine(csc(x + n*pi), Q.odd(n)) == -csc(x)
+    assert refine(sec(x + n*pi), Q.odd(n)) == -sec(x)
+    assert refine(csc(x - n*pi), Q.odd(n)) == -csc(x)
+    assert refine(sec(x - n*pi), Q.even(n)) == sec(x)
+    assert refine(csc(x + n*pi/2), Q.even(n)) == ((-1)**(n/2)) * csc(x)
+    assert refine(sec(x + n*pi/2), Q.even(n)) == ((-1)**(n/2)) * sec(x)
+    assert refine(csc(x + n*pi/2), Q.odd(n)) == ((-1)**((n + 3)/2)) * sec(x)
+    assert refine(sec(x + n*pi/2), Q.odd(n)) == ((-1)**((n + 1)/2)) * csc(x)
+    assert refine(csc(x - n*pi/2), Q.odd(n)) == ((-1)**((n + 3)/2)) * -sec(x)
+    assert refine(sec(x - n*pi / 2), Q.even(n)) == ((-1)**(n/2)) * sec(x)
+    assert refine(csc(x + y + 2*n*pi), Q.integer(n)) == csc(x + y)
+    assert refine(sec(x + y + 2*n*pi), Q.integer(n)) == sec(x + y)
+    assert refine(csc(x + n*pi), Q.zero(n)) == csc(x)
+    assert refine(csc(x + n*pi), Q.zero(-n)) == csc(x)
+    assert refine(sec(x + n*pi/2), Q.integer(n)) == sec(x + n*pi/2)
+    assert refine(sec(x + y + n*pi/2), Q.integer(n)) == sec(x + y + n*pi/2)
+    m = Symbol('m')
+    assert refine(sec(x + n*pi + m*pi / 2), Q.integer(n) & Q.even(m)) == \
+        (-1)**(n + m / 2) * sec(x)
+    assert refine(sec(x + n*pi + m*pi / 2), Q.integer(n) & Q.odd(m)) == \
+        (-1)**(n + (m + 1)/2) * csc(x)
+    assert refine(sec(x + n*pi + m*pi / 2), Q.integer(n) & Q.integer(m)) == \
+        (-1)**(n) * sec(x + m*pi / 2)
+    assert refine(sec(x + (2*n + 1)*pi + m*pi / 2), \
+        Q.integer(n) & Q.integer(m)) == \
+        - sec(x + m*pi / 2)
+    assert refine(csc(x - (2*n)*pi + m*pi/2), \
+        Q.integer(n) & Q.integer(m)) == \
+        csc(x + m*pi / 2)
+    k = Symbol('k')
+    assert refine(sec(x + n*pi + k*pi/2 + m*pi/2), \
+                  Q.integer(n) & Q.odd(k) & Q.integer(m)) == \
+        (-1)**(n + (k + 1)/2) * csc(x + m*pi/2)
+    assert refine(csc(x + n*pi + k*pi/2 + m*pi/2), \
+                  Q.integer(n) & Q.odd(k) & Q.integer(m)) == \
+        (-1)**(n + (k + 3)/2) * sec(x + m*pi/2)
+    assert refine(sec(x + n*pi/2 + k*pi/2 + m*pi/2), \
+                  Q.odd(n) & Q.odd(k) & Q.integer(m)) == \
+        (-1)**((n + k)/2) * sec(x + m*pi/2)
+
+    assert refine(sec(x), Q.zero(x)) == 1
     assert refine(csc(x), Q.zero(x)) == zoo
 
-    assert refine(sec(x), Q.infinite(x) & Q.extended_real(x)) == \
-        AccumBounds(S.NegativeInfinity, S.Infinity)
-    assert refine(csc(x), Q.infinite(x) & Q.extended_real(x)) == \
-        AccumBounds(S.NegativeInfinity, S.Infinity)
+    assert (refine(csc(x), Q.infinite(x) & Q.extended_real(x)) ==
+        AccumBounds(S.NegativeInfinity, S.Infinity))
+    assert (refine(sec(x), Q.infinite(x) & Q.extended_real(x)) ==
+        AccumBounds(S.NegativeInfinity, S.Infinity))
+    assert refine(csc(x), Q.infinite(x)) == csc(x)
+    assert refine(sec(x), Q.infinite(x)) == sec(x)
 
-    assert refine(sec(x)) == sec(x)
-    assert refine(sec(x + n*pi)) == sec(x + n*pi)
-
-    raises(TypeError, lambda: refine_sec_csc(sin(x), Q.real(x)))
+    raises(TypeError, lambda: refine_sec_csc(tan(x), Q.real(x)))
+    raises(TypeError, lambda: refine_sec_csc(exp(x), Q.real(x)))
+    raises(TypeError, lambda: refine_sec_csc(x, Q.real(x)))
 
 
 def test_floor_ceiling():
