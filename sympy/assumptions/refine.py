@@ -502,7 +502,7 @@ def refine_sin_cos(expr, assumptions):
     ========
 
     >>> from sympy.assumptions.refine import refine_sin_cos
-    >>> from sympy import Symbol, Q, sin, cos, pi
+    >>> from sympy import Q, sin, cos, pi
     >>> from sympy.abc import x, y, n
     >>> refine_sin_cos(cos(n*pi), Q.even(n))
     1
@@ -560,7 +560,7 @@ def refine_tan_cot(expr, assumptions):
     ========
 
     >>> from sympy.assumptions.refine import refine_tan_cot
-    >>> from sympy import Symbol, Q, tan, cot, pi
+    >>> from sympy import Q, tan, cot, pi
     >>> from sympy.abc import x, n
     >>> refine_tan_cot(tan(n*pi), Q.integer(n))
     0
