@@ -340,9 +340,15 @@ def test_tan_cot():
     assert refine(cot(n*pi/2), Q.even(n)) == zoo
     assert refine(cot(n*pi/2), Q.odd(n)) == 0
 
+    assert refine(tan(x + n*pi/2), Q.odd(n)) == -cot(x)
+    assert refine(cot(x + n*pi/2), Q.odd(n)) == -tan(x)
+    assert refine(tan(x + n*pi/2), Q.even(n)) == tan(x)
+    assert refine(cot(x + n*pi/2), Q.even(n)) == cot(x)
+    assert refine(tan(x + n*pi/2 + m*pi/2), Q.odd(n) & Q.even(m)) == -cot(x)
+
     assert refine(tan(n*pi/2), Q.integer(n)) == tan(n*pi/2)
     assert refine(tan(x + n*pi)) == tan(x + n*pi)
-    assert refine(tan(x + n*pi/2), Q.odd(n)) == tan(x + n*pi/2)
+    assert refine(tan(x + n*pi/2), Q.integer(n)) == tan(x + n*pi/2)
     assert refine(tan(x + n*pi/2 + m*pi), Q.integer(m)) == tan(x + n*pi/2)
 
     assert refine(tan(x), Q.infinite(x) & Q.extended_real(x)) == \

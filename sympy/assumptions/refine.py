@@ -569,40 +569,39 @@ def refine_tan_cot(expr, assumptions):
 
     if ask(Q.zero(arg), assumptions):
         return S.Zero if isinstance(expr, tan) else S.ComplexInfinity
-
+    # if C*pi/2 is an integer, append C here
     half_units = []
     rest = []
     terms = arg.args if arg.is_Add else (arg,)
     for term in terms:
-        c = term.coeff(S.Pi)
-        if c and ask(Q.integer(2 * c), assumptions):
-            half_units.append(2 * c)
+        theta = term.coeff(S.Pi)
+        if theta and ask(Q.integer(2 * theta), assumptions):
+            half_units.append(2 * theta)
         else:
             rest.append(term)
-
+    # no simplification is possible otherwise
     if not half_units:
         return expr
 
+    # divide thetas between known and unknown parities
     known = 0
     unknown = 0
-    known_is_even = True
-    for c in half_units:
-        c_is_even = ask(Q.even(c), assumptions)
-        if c_is_even is None:
-            unknown += c
+    all_known_is_even = True
+    for theta in half_units:
+        theta_is_even = ask(Q.even(theta), assumptions)
+        if theta_is_even is None:
+            unknown += theta
         else:
-            known += c
-            known_is_even = (known_is_even == c_is_even)
+            known += theta
+            all_known_is_even = (all_known_is_even == theta_is_even)
 
     if known == 0:
         return expr
 
     rem = Add(*rest) + unknown * S.Pi / 2
-    if known_is_even:
+    if all_known_is_even:
         return expr.func(rem)
-    if rem.is_zero:
-        return S.ComplexInfinity if isinstance(expr, tan) else S.Zero
-    return expr
+    return -cot(rem) if isinstance(expr, tan) else -tan(rem)
 
 
 def refine_Heaviside(expr, assumptions):
