@@ -641,8 +641,8 @@ def _ask_single_fact(key, local_facts):
 
 def _ask_recursive(proposition, assumptions):
     """
-    Answers query by relying only on recursive handlers and `_ask_single_fact`.
-    Meant to be a fast alternative to `satask`.
+    Answers query by relying only on recursive handlers and `_ask_single_fact`
+    and avoiding expensive SAT solver queries.
     """
     if isinstance(proposition, AppliedPredicate):
         key, args = proposition.function, proposition.arguments
