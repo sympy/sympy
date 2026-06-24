@@ -9,6 +9,7 @@ may have specific version requirements.
 TEST_LIST = DOCTEST_LIST = [
     'sympy/printing/pytorch.py',
     'sympy/printing/tests/test_torch.py',
+    'sympy/printing/tests/test_torch_module.py',
     'sympy/utilities/lambdify.py',
     'sympy/utilities/tests/test_lambdify.py',
 ]

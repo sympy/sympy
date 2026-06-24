@@ -96,6 +96,13 @@ replacement for numpy.
     array([ 0.84147096,  0.8411998 ,  0.84092844, ..., -0.05426079,
        -0.05433151, -0.05440211], dtype=float32)
 
+PyTorch can also be used as a lambdify backend:
+
+    >>> f = lambdify(x, expr, "torch")  # doctest: +SKIP
+
+If you need an actual ``torch.nn.Module`` object instead of a plain function,
+use ``sympy.printing.pytorch.torch_nn_module``.
+
 uFuncify
 --------
 
