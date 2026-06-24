@@ -541,10 +541,7 @@ def refine_sec_csc(expr, assumptions):
     Explanation
     ===========
 
-    Since ``sec`` and ``csc`` are the reciprocals of ``cos`` and ``sin``,
-    the simplification is delegated to :func:`refine_sin_cos` and the
-    result is reciprocated. Any ``(-1)**k`` sign factor is kept rather than
-    inverted, since it is a unit under the assumptions that produced it.
+    Handler for sec and csc functions. The function uses `refine_sin_cos` internally.
 
     Examples
     ========
