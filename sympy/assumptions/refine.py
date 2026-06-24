@@ -542,7 +542,7 @@ def refine_sec_csc(expr, assumptions):
     ========
 
     >>> from sympy.assumptions.refine import refine_sec_csc
-    >>> from sympy import Symbol, Q, sec, csc, pi
+    >>> from sympy import Q, sec, csc, pi
     >>> from sympy.abc import x, n
     >>> refine_sec_csc(sec(x + n*pi), Q.integer(n))
     (-1)**n*sec(x)
