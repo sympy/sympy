@@ -3162,7 +3162,7 @@ def latex(expr, **settings):
 
     Examples
     ========
-    >>> from sympy import latex, pi, sin, asin, Integral, Matrix, Rational, log
+    >>> from sympy import latex, pi, asin, Integral, Matrix, Rational
     >>> from sympy.abc import x, y, mu, r, tau
 
     **Basic Usage & Modes**
