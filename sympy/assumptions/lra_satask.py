@@ -23,7 +23,10 @@ def lra_satask(proposition, assumptions=True):
     props = CNF.from_prop(proposition)
     _props = CNF.from_prop(~proposition)
 
-    cnf = CNF.from_prop(assumptions)
+    if isinstance(assumptions, CNF):
+        cnf = assumptions
+    else:
+        cnf = CNF.from_prop(assumptions)
     assumptions = EncodedCNF()
     assumptions.from_cnf(cnf)
 
