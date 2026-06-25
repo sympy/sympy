@@ -1329,28 +1329,40 @@ def multiplexer(conditions):
                 return rule(expr)
     return multiplexer_rl
 
-def alternatives(*rules):
-    """Strategy that makes an AlternativeRule out of multiple possible results."""
+def alternatives(*weighted_rules: tuple[Callable, float]) -> Callable:
+    """
+    Strategy that picks the highest-weighted successful rule (beam search K=1).
+    Each argument is a (rule_fn, weight) pair.
+    """
     def _alternatives(integral):
-        alts = []
+        candidates: list[tuple[float, Rule]] = []   # (weight, rule_result)
         count = 0
-        debug("List of Alternative Rules")
-        for rule in rules:
-            count = count + 1
-            debug("Rule {}: {}".format(count, rule))
+        debug("List of Alternative Rules (beam search K=1)")
 
-            result = rule(integral)
-            if (result and not isinstance(result, DontKnowRule) and
-                result != integral and result not in alts):
-                alts.append(result)
-        if len(alts) == 1:
-            return alts[0]
-        elif alts:
-            doable = [rule for rule in alts if not rule.contains_dont_know()]
-            if doable:
-                return AlternativeRule(*integral, doable)
-            else:
-                return AlternativeRule(*integral, alts)
+        for rule_fn, weight in weighted_rules:
+            count += 1
+            debug("Rule {}: {} (weight={})".format(count, rule_fn, weight))
+            result = rule_fn(integral)
+            if (
+                result
+                and not isinstance(result, DontKnowRule)
+                and result != integral
+                and result not in [r for _, r in candidates]
+            ):
+                candidates.append((weight, result))
+
+        if not candidates:
+            return None
+
+        doable = [(w, r) for w, r in candidates if not r.contains_dont_know()]
+        pool   = doable if doable else candidates
+
+        # K=1: just take the max by weight
+        _, best = max(pool, key=lambda wr: wr[0])
+        debug("Beam search selected: {} (weight={:.1f})".format(
+            type(best).__name__, pool[0][0]))
+        return best
+
     return _alternatives
 
 def constant_rule(integral):
@@ -2677,23 +2689,26 @@ def integral_steps(integrand, symbol, **options):
             null_safe(trig_rule),
             null_safe(hyperbolic_rule),
             null_safe(alternatives(
-                rewrites_rule,
-                substitution_rule,
-                condition(
+                (rewrites_rule, 8.0),
+                (substitution_rule, 9.0),  # U-sub preferred
+                (condition(
                     integral_is_subclass(Mul, Pow),
                     partial_fractions_rule),
-                condition(
+                 6.0),
+                (condition(
                     integral_is_subclass(Mul, Pow),
                     cancel_rule),
-                condition(
-                    integral_is_subclass(Mul, log,
-                    *inverse_trig_functions),
+                 7.0),
+                (condition(
+                    integral_is_subclass(Mul, log, *inverse_trig_functions),
                     parts_rule),
-                condition(
+                 5.0),  # IBP last resort
+                (condition(
                     integral_is_subclass(Mul, Pow),
                     distribute_expand_rule),
-                trig_powers_products_rule,
-                trig_expand_rule
+                 4.0),
+                (trig_powers_products_rule, 6.5),
+                (trig_expand_rule, 3.0),
             )),
             null_safe(condition(integral_is_subclass(Mul, Pow), nested_pow_rule)),
             null_safe(trig_substitution_rule)
