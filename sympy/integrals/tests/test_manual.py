@@ -156,16 +156,20 @@ def test_manualintegrate_trigpowers_even():
 def test_manualintegrate_trigpowers_mixed():
     assert manualintegrate(sin(x)**1.5 * cos(x), x) == \
         0.4*sin(x)**2.5*hyper((1.25, 0), (2.25,), sin(x)**2)
+
     assert manualintegrate(sin(x) * cos(x)**1.5, x) == \
-        sin(x)**2*hyper((-0.25, 1), (2,), sin(x)**2)/2
+        sin(x)**2*cos(x)**0.5*hyper((-0.25, 1), (2,), sin(x)**2)/(2*(cos(x)**2)**0.25)
+
     assert manualintegrate(sin(x)**1.5 * cos(x)**2.5, x) == \
-        0.4*sin(x)**2.5*hyper((-0.75, 1.25), (2.25,), sin(x)**2)
+        0.4*sin(x)**2.5*cos(x)**1.5*hyper((-0.75, 1.25), (2.25,), sin(x)**2)/(cos(x)**2)**0.75
     assert manualintegrate(sin(x)**-1.5 * cos(x)**2.5, x) == \
-        -2.0*hyper((-0.75, -0.25), (0.75,), sin(x)**2)/sin(x)**0.5
+        -2.0*cos(x)**1.5*hyper((-0.75, -0.25), (0.75,), sin(x)**2)/((cos(x)**2)**0.75*sin(x)**0.5)
+
     assert manualintegrate(sin(x)**1.5 * cos(x)**-2.5, x) == \
-        0.4*sin(x)**2.5*hyper((1.25, 1.75), (2.25,), sin(x)**2)
+        0.4*(cos(x)**2)**1.75*sin(x)**2.5*hyper((1.25, 1.75), (2.25,), sin(x)**2)/cos(x)**3.5
+
     assert manualintegrate(sin(x)**-1.5 * cos(x)**-2.5, x) == \
-        -2.0*hyper((-0.25, 1.75), (0.75,), sin(x)**2)/sin(x)**0.5
+        -2.0*(cos(x)**2)**1.75*hyper((-0.25, 1.75), (0.75,), sin(x)**2)/(sin(x)**0.5*cos(x)**3.5)
 
 
 @slow
