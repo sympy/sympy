@@ -108,8 +108,8 @@ class Integral(AddWithLimits):
 
     @property
     def is_number(self):
-        from sympy.core.function import Function, UndefinedFunction
-        return not self.free_symbols and not any(isinstance(f.func, UndefinedFunction) for f in self.atoms(Function))
+        from sympy.core.function import AppliedUndef
+        return not self.free_symbols and not self.atoms(AppliedUndef)
 
     def _eval_is_zero(self):
         # This is a very naive and quick test, not intended to do the integral to
