@@ -90,7 +90,7 @@ def singularities(
 
     See Also
     ========
-    
+
     is_monotonic : Check if the function moves in a single direction.
     sympy.calculus.util.continuous_domain : Find the domain where a function is continuous.
 
@@ -394,13 +394,13 @@ def is_decreasing(
     Boolean
         True if ``expression`` is decreasing (either strictly decreasing or
         constant) in the given ``interval``, False otherwise.
-    
+
     Explanation
     ===========
 
     A function is decreasing on an interval if larger input values always
     produce the smaller output values. Constant functions are therefore
-    considered decreasing. 
+    considered decreasing.
 
     Examples
     ========
