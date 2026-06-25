@@ -6,7 +6,7 @@ from sympy.core.expr import Expr
 from sympy.core.numbers import (I, Rational, nan, pi)
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
-from sympy.functions.elementary.complexes import (Abs, arg, im, re, sign)
+from sympy.functions.elementary.complexes import (Abs, arg, conjugate, im, re, sign)
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (atan, atan2, cos, sin, tan)
@@ -354,3 +354,10 @@ def test_Heaviside():
     assert refine(Heaviside(x, 1), Q.zero(x)) == 1
     assert refine(Heaviside(x, 1), Q.positive(x)) == 1
     assert refine(Heaviside(x, 1), Q.negative(x)) == 0
+
+
+def test_conjugate():
+    x = Symbol('x')
+    assert refine(conjugate(x), Q.real(x)) == x
+    assert refine(conjugate(x), Q.imaginary(x)) == -x
+    assert refine(conjugate(x)) == conjugate(x)
