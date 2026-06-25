@@ -63,8 +63,7 @@ def satask(proposition, assumptions=True, use_known_facts=True, iterations=oo):
     props = CNF.from_prop(proposition)
     _props = CNF.from_prop(~proposition)
 
-    if not isinstance(assumptions, CNF):
-        assumptions = CNF.from_prop(assumptions)
+    assumptions = CNF.from_prop(assumptions)
 
     sat = get_all_relevant_facts(props, assumptions,
         use_known_facts=use_known_facts, iterations=iterations)
