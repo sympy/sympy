@@ -3042,211 +3042,156 @@ def translate(s: str) -> str:
 
 @print_function(LatexPrinter)
 def latex(expr, **settings):
-    r"""Convert the given expression to LaTeX string representation.
+
+    r"""
+    Convert a SymPy expression into its corresponding LaTeX string representation.
+
+    This printer function gives you fine-grained control over how SymPy's abstract 
+    syntax trees translate into typeset mathematics. It provides extensive configuration 
+    for mathematical environments, fractional representations, matrix formatting, and 
+    custom symbol mapping.
 
     Parameters
     ==========
-    full_prec: boolean, optional
-        If set to True, a floating point number is printed with full precision.
-    fold_frac_powers : boolean, optional
-        Emit ``^{p/q}`` instead of ``^{\frac{p}{q}}`` for fractional powers.
-    fold_func_brackets : boolean, optional
-        Fold function brackets where applicable.
-    fold_short_frac : boolean, optional
-        Emit ``p / q`` instead of ``\frac{p}{q}`` when the denominator is
-        simple enough (at most two terms and no powers). The default value is
-        ``True`` for inline mode, ``False`` otherwise.
-    inv_trig_style : string, optional
-        How inverse trig functions should be displayed. Can be one of
-        ``'abbreviated'``, ``'full'``, or ``'power'``. Defaults to
-        ``'abbreviated'``.
-    itex : boolean, optional
-        Specifies if itex-specific syntax is used, including emitting
-        ``$$...$$``.
-    ln_notation : boolean, optional
-        If set to ``True``, ``\ln`` is used instead of default ``\log``.
+
+    **Mode & Environment**
+
+    mode : {'plain', 'inline', 'equation', 'equation*'}, optional
+        Specifies the mathematical environment for the generated code. Defaults to 
+        ``'plain'`` (no delimiters). ``'inline'`` wraps the output in ``$...$``, while 
+        ``'equation'`` uses standard LaTeX block environments.
+    itex : bool, optional
+        If ``True``, enforces itex-specific syntax. Overrides ``mode='equation'`` to 
+        emit ``$$...$$`` instead of ``\begin{equation}``.
+
+    **Fractions, Powers & Roots**
+
+    fold_frac_powers : bool, optional
+        If ``True``, renders fractional powers inline as ``^{p/q}`` instead of 
+        using ``^{\frac{p}{q}}``.
+    fold_short_frac : bool, optional
+        If ``True``, renders simple fractions inline as ``p / q`` rather than 
+        ``\frac{p}{q}``. A denominator is considered simple if it has at most two 
+        terms and no powers. Defaults to ``True`` for inline mode, ``False`` otherwise.
     long_frac_ratio : float or None, optional
-        The allowed ratio of the width of the numerator to the width of the
-        denominator before the printer breaks off long fractions. If ``None``
-        (the default value), long fractions are not broken up.
-    mat_delim : string, optional
-        The delimiter to wrap around matrices. Can be one of ``'['``, ``'('``,
-        or the empty string ``''``. Defaults to ``'['``.
-    mat_str : string, optional
-        Which matrix environment string to emit. ``'smallmatrix'``,
-        ``'matrix'``, ``'array'``, etc. Defaults to ``'smallmatrix'`` for
-        inline mode, ``'matrix'`` for matrices of no more than 10 columns, and
-        ``'array'`` otherwise.
-    mode: string, optional
-        Specifies how the generated code will be delimited. ``mode`` can be one
-        of ``'plain'``, ``'inline'``, ``'equation'`` or ``'equation*'``.  If
-        ``mode`` is set to ``'plain'``, then the resulting code will not be
-        delimited at all (this is the default). If ``mode`` is set to
-        ``'inline'`` then inline LaTeX ``$...$`` will be used. If ``mode`` is
-        set to ``'equation'`` or ``'equation*'``, the resulting code will be
-        enclosed in the ``equation`` or ``equation*`` environment (remember to
-        import ``amsmath`` for ``equation*``), unless the ``itex`` option is
-        set. In the latter case, the ``$$...$$`` syntax is used.
-    mul_symbol : string or None, optional
-        The symbol to use for multiplication. Can be one of ``None``,
-        ``'ldot'``, ``'dot'``, or ``'times'``.
-    order: string, optional
-        Any of the supported monomial orderings (currently ``'lex'``,
-        ``'grlex'``, or ``'grevlex'``), ``'old'``, and ``'none'``. This
-        parameter does nothing for :class:`~.Mul` objects. Setting order to ``'old'``
-        uses the compatibility ordering for :class:`~.Add` defined in Printer. For
-        very large expressions, set the ``order`` keyword to ``'none'`` if
-        speed is a concern.
-    symbol_names : dictionary of strings mapped to symbols, optional
-        Dictionary of symbols and the custom strings they should be emitted as.
-    root_notation : boolean, optional
-        If set to ``False``, exponents of the form 1/n are printed in fractonal
-        form. Default is ``True``, to print exponent in root form.
-    mat_symbol_style : string, optional
-        Can be either ``'plain'`` (default) or ``'bold'``. If set to
-        ``'bold'``, a :class:`~.MatrixSymbol` A will be printed as ``\mathbf{A}``,
-        otherwise as ``A``.
-    imaginary_unit : string, optional
-        String to use for the imaginary unit. Defined options are ``'i'``
-        (default) and ``'j'``. Adding ``r`` or ``t`` in front gives ``\mathrm``
-        or ``\text``, so ``'ri'`` leads to ``\mathrm{i}`` which gives
-        `\mathrm{i}`.
-    gothic_re_im : boolean, optional
-        If set to ``True``, `\Re` and `\Im` is used for ``re`` and ``im``, respectively.
-        The default is ``False`` leading to `\operatorname{re}` and `\operatorname{im}`.
-    decimal_separator : string, optional
-        Specifies what separator to use to separate the whole and fractional parts of a
-        floating point number as in `2.5` for the default, ``period`` or `2{,}5`
-        when ``comma`` is specified. Lists, sets, and tuple are printed with semicolon
-        separating the elements when ``comma`` is chosen. For example, [1; 2; 3] when
-        ``comma`` is chosen and [1,2,3] for when ``period`` is chosen.
-    parenthesize_super : boolean, optional
-        If set to ``False``, superscripted expressions will not be parenthesized when
-        powered. Default is ``True``, which parenthesizes the expression when powered.
-    min: Integer or None, optional
-        Sets the lower bound for the exponent to print floating point numbers in
-        fixed-point format.
-    max: Integer or None, optional
-        Sets the upper bound for the exponent to print floating point numbers in
-        fixed-point format.
-    diff_operator: string, optional
-        String to use for differential operator. Default is ``'d'``, to print in italic
-        form. ``'rd'``, ``'td'`` are shortcuts for ``\mathrm{d}`` and ``\text{d}``.
-    adjoint_style: string, optional
-        String to use for the adjoint symbol. Defined options are ``'dagger'``
-        (default),``'star'``, and ``'hermitian'``.
+        The width ratio of numerator to denominator before the printer breaks up a 
+        long fraction. Defaults to ``None`` (never break up fractions).
+    root_notation : bool, optional
+        If ``True`` (default), formats exponents of 1/n using root notation 
+        (e.g., ``\sqrt``). If ``False``, formats them as fractional powers.
+    parenthesize_super : bool, optional
+        If ``True`` (default), safely wraps superscripted expressions in parentheses 
+        when they are raised to a power.
+
+    **Symbols & Operators**
+
+    mul_symbol : {None, 'ldot', 'dot', 'times'}, optional
+        The LaTeX symbol used for multiplication operations.
+    diff_operator : str, optional
+        The differential operator symbol. Defaults to ``'d'`` (italicized). Use 
+        shortcuts ``'rd'`` and ``'td'`` for ``\mathrm{d}`` and ``\text{d}``.
+    imaginary_unit : str, optional
+        The string representing the imaginary unit. Defaults to ``'i'``. Prefixing 
+        with ``r`` or ``t`` yields ``\mathrm`` or ``\text`` (e.g., ``'ri'`` translates 
+        to ``\mathrm{i}``).
+    adjoint_style : {'dagger', 'star', 'hermitian'}, optional
+        The symbol denoting the adjoint operator. Defaults to ``'dagger'``.
+    decimal_separator : {'period', 'comma'}, optional
+        The separator between whole and fractional parts of floating-point numbers. 
+        If ``'comma'`` is selected, container elements (like lists) automatically 
+        switch to semicolon separators to prevent ambiguity.
+    symbol_names : dict, optional
+        A dictionary mapping specific SymPy Symbols to custom LaTeX strings 
+        (e.g., ``{x: 'x_i'}``).
+
+    **Functions & Algebra**
+
+    inv_trig_style : {'abbreviated', 'full', 'power'}, optional
+        The display convention for inverse trigonometric functions. Defaults to 
+        ``'abbreviated'`` (e.g., ``\operatorname{asin}``).
+    ln_notation : bool, optional
+        If ``True``, enforces ``\ln`` for natural logarithms instead of ``\log``.
+    fold_func_brackets : bool, optional
+        If ``True``, omits unnecessary parentheses around function arguments 
+        (e.g., ``\sin x`` instead of ``\sin{\left(x \right)}``).
+    gothic_re_im : bool, optional
+        If ``True``, uses the gothic ``\Re`` and ``\Im`` for real and imaginary parts. 
+        Defaults to ``False`` (``\operatorname{re}``).
+    order : {'lex', 'grlex', 'grevlex', 'old', 'none'}, optional
+        The monomial sorting order. Set to ``'none'`` for a significant speed boost 
+        when formatting exceptionally large expressions.
+
+    **Matrices**
+
+    mat_delim : {'[', '(', ''}, optional
+        The delimiter bounding matrix contents. Defaults to ``'['``.
+    mat_str : {'smallmatrix', 'matrix', 'array'}, optional
+        The matrix environment block. Defaults to ``'smallmatrix'`` for inline mode, 
+        ``'matrix'`` for <= 10 columns, and ``'array'`` otherwise.
+    mat_symbol_style : {'plain', 'bold'}, optional
+        If ``'bold'``, wraps MatrixSymbol objects in ``\mathbf{}``.
+
+    **Precision & Bounds**
+
+    full_prec : bool, optional
+        If ``True``, prints floating-point numbers at their full precision.
+    min : int or None, optional
+        The lower bound for a float's exponent before it automatically switches from 
+        fixed-point to scientific notation (e.g., switching to ``1.2 \times 10^{-5}``).
+    max : int or None, optional
+        The upper bound for a float's exponent before it automatically switches from 
+        fixed-point to scientific notation.
 
     Notes
     =====
-
-    Not using a print statement for printing, results in double backslashes for
-    latex commands since that's the way Python escapes backslashes in strings.
+    When generating LaTeX strings dynamically outside of a ``print()`` statement, 
+    Python will automatically escape the backslashes, resulting in double 
+    backslashes in the output representation (e.g., ``'\\sqrt'``). Wrapping the 
+    result in ``print()`` resolves these to standard LaTeX commands.
 
     >>> from sympy import latex, Rational
     >>> from sympy.abc import tau
     >>> latex((2*tau)**Rational(7,2))
     '8 \\sqrt{2} \\tau^{\\frac{7}{2}}'
-    >>> print(latex((2*tau)**Rational(7,2)))
-    8 \sqrt{2} \tau^{\frac{7}{2}}
+
+    See Also
+    ========
+    sympy.printing.pretty.pretty : ASCII and Unicode pretty printing.
+    sympy.printing.mathml.mathml : MathML string generation.
+    sympy.printing.printer.Printer : Base class for all SymPy printers.
 
     Examples
     ========
-
     >>> from sympy import latex, pi, sin, asin, Integral, Matrix, Rational, log
     >>> from sympy.abc import x, y, mu, r, tau
 
-    Basic usage:
-
-    >>> print(latex((2*tau)**Rational(7,2)))
-    8 \sqrt{2} \tau^{\frac{7}{2}}
-
-    ``mode`` and ``itex`` options:
-
-    >>> print(latex((2*mu)**Rational(7,2), mode='plain'))
-    8 \sqrt{2} \mu^{\frac{7}{2}}
-    >>> print(latex((2*tau)**Rational(7,2), mode='inline'))
-    $8 \sqrt{2} \tau^{7 / 2}$
+    **Basic Usage & Modes**
+    
+    >>> print(latex((2*mu)**Rational(7,2), mode='inline'))
+    $8 \sqrt{2} \mu^{7 / 2}$
     >>> print(latex((2*mu)**Rational(7,2), mode='equation*'))
     \begin{equation*}8 \sqrt{2} \mu^{\frac{7}{2}}\end{equation*}
-    >>> print(latex((2*mu)**Rational(7,2), mode='equation'))
-    \begin{equation}8 \sqrt{2} \mu^{\frac{7}{2}}\end{equation}
-    >>> print(latex((2*mu)**Rational(7,2), mode='equation', itex=True))
-    $$8 \sqrt{2} \mu^{\frac{7}{2}}$$
-    >>> print(latex((2*mu)**Rational(7,2), mode='plain'))
-    8 \sqrt{2} \mu^{\frac{7}{2}}
-    >>> print(latex((2*tau)**Rational(7,2), mode='inline'))
-    $8 \sqrt{2} \tau^{7 / 2}$
-    >>> print(latex((2*mu)**Rational(7,2), mode='equation*'))
-    \begin{equation*}8 \sqrt{2} \mu^{\frac{7}{2}}\end{equation*}
-    >>> print(latex((2*mu)**Rational(7,2), mode='equation'))
-    \begin{equation}8 \sqrt{2} \mu^{\frac{7}{2}}\end{equation}
-    >>> print(latex((2*mu)**Rational(7,2), mode='equation', itex=True))
-    $$8 \sqrt{2} \mu^{\frac{7}{2}}$$
 
-    Fraction options:
-
+    **Fractions, Powers & Trigonometry**
+    
     >>> print(latex((2*tau)**Rational(7,2), fold_frac_powers=True))
     8 \sqrt{2} \tau^{7/2}
-    >>> print(latex((2*tau)**sin(Rational(7,2))))
-    \left(2 \tau\right)^{\sin{\left(\frac{7}{2} \right)}}
-    >>> print(latex((2*tau)**sin(Rational(7,2)), fold_func_brackets=True))
-    \left(2 \tau\right)^{\sin {\frac{7}{2}}}
-    >>> print(latex(3*x**2/y))
-    \frac{3 x^{2}}{y}
-    >>> print(latex(3*x**2/y, fold_short_frac=True))
-    3 x^{2} / y
-    >>> print(latex(Integral(r, r)/2/pi, long_frac_ratio=2))
-    \frac{\int r\, dr}{2 \pi}
     >>> print(latex(Integral(r, r)/2/pi, long_frac_ratio=0))
     \frac{1}{2 \pi} \int r\, dr
-
-    Multiplication options:
-
-    >>> print(latex((2*tau)**sin(Rational(7,2)), mul_symbol="times"))
-    \left(2 \times \tau\right)^{\sin{\left(\frac{7}{2} \right)}}
-
-    Trig options:
-
-    >>> print(latex(asin(Rational(7,2))))
-    \operatorname{asin}{\left(\frac{7}{2} \right)}
-    >>> print(latex(asin(Rational(7,2)), inv_trig_style="full"))
-    \arcsin{\left(\frac{7}{2} \right)}
     >>> print(latex(asin(Rational(7,2)), inv_trig_style="power"))
     \sin^{-1}{\left(\frac{7}{2} \right)}
 
-    Matrix options:
-
-    >>> print(latex(Matrix(2, 1, [x, y])))
-    \left[\begin{matrix}x\\y\end{matrix}\right]
-    >>> print(latex(Matrix(2, 1, [x, y]), mat_str = "array"))
-    \left[\begin{array}{c}x\\y\end{array}\right]
-    >>> print(latex(Matrix(2, 1, [x, y]), mat_delim="("))
-    \left(\begin{matrix}x\\y\end{matrix}\right)
-
-    Custom printing of symbols:
-
+    **Matrices & Custom Symbols**
+    
+    >>> print(latex(Matrix(2, 1, [x, y]), mat_delim="(", mat_str="array"))
+    \left(\begin{array}{c}x\\y\end{array}\right)
     >>> print(latex(x**2, symbol_names={x: 'x_i'}))
     x_i^{2}
 
-    Logarithms:
-
-    >>> print(latex(log(10)))
-    \log{\left(10 \right)}
-    >>> print(latex(log(10), ln_notation=True))
-    \ln{\left(10 \right)}
-
-    ``latex()`` also supports the builtin container types :class:`list`,
-    :class:`tuple`, and :class:`dict`:
-
+    **Built-in Container Types**
+    
     >>> print(latex([2/x, y], mode='inline'))
     $\left[ 2 / x, \  y\right]$
-
-    Unsupported types are rendered as monospaced plaintext:
-
-    >>> print(latex(int))
-    \mathtt{\text{<class 'int'>}}
-    >>> print(latex("plain % text"))
-    \mathtt{\text{plain \% text}}
 
     See :ref:`printer_method_example` for an example of how to override
     this behavior for your own types by implementing ``_latex``.
@@ -3255,6 +3200,7 @@ def latex(expr, **settings):
         Unsupported types no longer have their ``str`` representation treated as valid latex.
 
     """
+    
     return LatexPrinter(settings).doprint(expr)
 
 
