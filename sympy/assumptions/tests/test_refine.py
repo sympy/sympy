@@ -362,4 +362,3 @@ def test_conjugate():
     assert refine(conjugate(x), Q.imaginary(x)) == -x
     assert refine(conjugate(x)) == conjugate(x)
 
-
