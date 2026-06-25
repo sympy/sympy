@@ -7,10 +7,8 @@ and identifying types of functions.
 
 The differential calculus methods in this module include methods to identify
 the following function types in the given ``Interval``:
-- Increasing
-- Strictly Increasing
-- Decreasing
-- Strictly Decreasing
+- Increasing/Decreasing
+- Strictly Increasing/ Strictly Decreasing
 - Monotonic
 
 """
@@ -53,7 +51,7 @@ def singularities(
         The target function in which singularities need to be found.
     symbol : Symbol
         The symbol over the values of which the singularity in
-        expression in being searched for.
+        expression is being searched for.
 
     Returns
     =======
@@ -74,16 +72,27 @@ def singularities(
     Notes
     =====
 
+    This function detects singularities such as poles and points
+    where logarithmic functions are undefined. 
     This function does not find non-isolated singularities
-    nor does it find branch points of the expression.
+    nor does it find branch points of the expression. 
 
     Currently supported functions are:
         - univariate continuous (real or complex) functions
+
+    In some cases, the function may be singular over an entire interval. 
+    Example: ``0**x`` is undefined for all negative values of  ``x``.
 
     References
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Mathematical_singularity
+
+    See Also
+    ========
+    
+    is_monotonic : Check if the function moves in a single direction.
+    sympy.calculus.util.continuous_domain : Find the domain where a function is continuous.
 
     Examples
     ========
@@ -169,6 +178,7 @@ def monotonicity_helper(
         The range of values in which we are testing, defaults to all reals.
     symbol : Symbol, optional
         The symbol present in expression which gets varied over the given range.
+        If ``None``, the variable is inferred from the expression when possible.
 
     It returns a boolean indicating whether the interval in which
     the function's derivative satisfies given predicate is a superset
@@ -229,6 +239,7 @@ def is_increasing(
         all real numbers).
     symbol : Symbol, optional
         The symbol present in expression which gets varied over the given range.
+        If ``None``, the variable is inferred from the expression when possible.
 
     Returns
     =======
@@ -236,6 +247,13 @@ def is_increasing(
     Boolean
         True if ``expression`` is increasing (either strictly increasing or
         constant) in the given ``interval``, False otherwise.
+
+    Explanation
+    ===========
+
+    A function is increasing on an interval if larger input values never
+    produce the smaller output values. Constant functions are therefore
+    considered increasing.
 
     Examples
     ========
@@ -253,6 +271,21 @@ def is_increasing(
     False
     >>> is_increasing(x**2 + y, Interval(1, 2), x)
     True
+
+    See Also
+    ========
+
+    is_strictly_increasing
+        Check whether a function is strictly increasing.
+
+    is_decreasing
+        Check whether a function is decreasing.
+
+    is_monotonic
+        Check whether a function is monotonic.
+
+    singularities
+        Find singularities of a function.
 
     """
     return monotonicity_helper(expression, lambda x: x >= 0, interval, symbol)
@@ -276,6 +309,7 @@ def is_strictly_increasing(
         all real numbers).
     symbol : Symbol, optional
         The symbol present in expression which gets varied over the given range.
+        If ``None``, the variable is inferred from the expression when possible.
 
     Returns
     =======
@@ -283,6 +317,12 @@ def is_strictly_increasing(
     Boolean
         True if ``expression`` is strictly increasing in the given ``interval``,
         False otherwise.
+
+    Explanation
+    ===========
+
+    A function is strictly increasing on an interval if every larger
+    input produces a strictly larger output.
 
     Examples
     ========
@@ -300,6 +340,29 @@ def is_strictly_increasing(
     False
     >>> is_strictly_increasing(-x**2 + y, Interval(-oo, 0), x)
     False
+
+    Notes
+    =====
+    ``Interval.Ropen(a,b)`` denotes the interval [a,b),
+    including ``a`` but excluding ``b``
+
+    ``Interval.Lopen(a,b)`` denotes the interval (a, b],
+    including ``b`` but excluding ``a``.
+
+    See Also
+    ========
+
+    is_increasing
+        Check whether a function is increasing.
+
+    is_decreasing
+        Check whether a function is decreasing.
+
+    is_strictly_decreasing
+        Check whether a function is strictly decreasing.
+
+    is_monotonic
+        Check whether a function is monotonic.
 
     """
     return monotonicity_helper(expression, lambda x: x > 0, interval, symbol)
@@ -323,6 +386,7 @@ def is_decreasing(
         all real numbers).
     symbol : Symbol, optional
         The symbol present in expression which gets varied over the given range.
+        If ``None``, the variable is inferred from the expression when possible.
 
     Returns
     =======
@@ -330,6 +394,13 @@ def is_decreasing(
     Boolean
         True if ``expression`` is decreasing (either strictly decreasing or
         constant) in the given ``interval``, False otherwise.
+    
+    Explanation
+    ===========
+
+    A function is decreasing on an interval if larger input values always
+    produce the smaller output values. Constant functions are therefore
+    considered decreasing. 
 
     Examples
     ========
@@ -351,6 +422,18 @@ def is_decreasing(
     False
     >>> is_decreasing(-x**2 + y, Interval(-oo, 0), x)
     False
+
+    See Also
+    ========
+
+    is_strictly_decreasing
+        Check whether a function is strictly decreasing.
+
+    is_increasing
+        Check whether a function is increasing.
+
+    is_monotonic
+        Check whether a function is monotonic.
 
     """
     return monotonicity_helper(expression, lambda x: x <= 0, interval, symbol)
@@ -374,6 +457,7 @@ def is_strictly_decreasing(
         all real numbers).
     symbol : Symbol, optional
         The symbol present in expression which gets varied over the given range.
+        If ``None``, the variable is inferred from the expression when possible.
 
     Returns
     =======
@@ -381,6 +465,12 @@ def is_strictly_decreasing(
     Boolean
         True if ``expression`` is strictly decreasing in the given ``interval``,
         False otherwise.
+
+    Explanation
+    ===========
+
+    A function is strictly decreasing on an interval if every larger
+    input produces a strictly smaller output.
 
     Examples
     ========
@@ -398,6 +488,18 @@ def is_strictly_decreasing(
     False
     >>> is_strictly_decreasing(-x**2 + y, Interval(-oo, 0), x)
     False
+
+    See Also
+    ========
+
+    is_decreasing
+        Check whether a function is decreasing.
+
+    is_strictly_increasing
+        Check whether a function is strictly increasing.
+
+    is_monotonic
+        Check whether a function is monotonic.
 
     """
     return monotonicity_helper(expression, lambda x: x < 0, interval, symbol)
@@ -421,6 +523,7 @@ def is_monotonic(
         all real numbers).
     symbol : Symbol, optional
         The symbol present in expression which gets varied over the given range.
+        If ``None``, the variable is inferred from the expression when possible.
 
     Returns
     =======
