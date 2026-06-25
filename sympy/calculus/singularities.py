@@ -80,7 +80,7 @@ def singularities(
     Currently supported functions are:
         - univariate continuous (real or complex) functions
 
-    In some cases, the function may be singular over an entire interval. 
+    In some cases, the function may be singular over an entire interval.
     Example: ``0**x`` is undefined for all negative values of  ``x``.
 
     References
