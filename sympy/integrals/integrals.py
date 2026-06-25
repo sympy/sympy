@@ -109,10 +109,7 @@ class Integral(AddWithLimits):
     @property
     def is_number(self):
         from sympy.core.function import UndefinedFunction
-        if (self.free_symbols == set()) and not isinstance(type(self.args[0]), UndefinedFunction):
-            return True
-        else:
-            return False
+        return not self.free_symbols and not any(isinstance(f.func, UndefinedFunction) for f in self.atoms(Function))
 
     def _eval_is_zero(self):
         # This is a very naive and quick test, not intended to do the integral to
