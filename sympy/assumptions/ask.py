@@ -7,6 +7,7 @@ from sympy.assumptions.cnf import CNF, EncodedCNF, Literal
 from sympy.core import sympify
 from sympy.core.kind import BooleanKind
 from sympy.core.relational import Eq, Ne, Gt, Lt, Ge, Le
+from sympy.logic.boolalg import And
 from sympy.logic.inference import satisfiable
 from sympy.utilities.decorator import memoize_property
 
@@ -537,17 +538,18 @@ def ask(proposition, assumptions=True, context=global_assumptions):
         return res
 
     # direct resolution method, no logic
-    res = key(*args)._eval_ask(assumptions)
+    combined_assumptions = And(assumptions, *context)
+    res = key(*args)._eval_ask(combined_assumptions)
     if res is not None:
         return bool(res)
 
     # using satask (still costly)
-    res = satask(proposition, assumptions=assumptions)
+    res = satask(proposition, assumptions=assump_cnf)
     if res is not None:
         return res
 
     try:
-        res = lra_satask(proposition, assumptions=assumptions)
+        res = lra_satask(proposition, assumptions=assump_cnf)
     except UnhandledInput:
         return None
 
