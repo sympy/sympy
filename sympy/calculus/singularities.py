@@ -73,9 +73,9 @@ def singularities(
     =====
 
     This function detects singularities such as poles and points
-    where logarithmic functions are undefined. 
+    where logarithmic functions are undefined.
     This function does not find non-isolated singularities
-    nor does it find branch points of the expression. 
+    nor does it find branch points of the expression.
 
     Currently supported functions are:
         - univariate continuous (real or complex) functions
