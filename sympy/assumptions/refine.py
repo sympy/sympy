@@ -343,6 +343,28 @@ def refine_im(expr, assumptions):
         return - S.ImaginaryUnit * arg
     return _refine_reim(expr, assumptions)
 
+def refine_conjugate(expr, assumptions):
+    """
+    Handler for complex conjugate.
+
+    Examples
+    ========
+
+    >>> from sympy.assumptions.refine import refine_conjugate
+    >>> from sympy import Q, conjugate
+    >>> from sympy.abc import x
+    >>> refine_conjugate(conjugate(x), Q.real(x))
+    x
+    >>> refine_conjugate(conjugate(x), Q.imaginary(x))
+    -x
+    """
+    arg = expr.args[0]
+    if ask(Q.real(arg), assumptions):
+        return arg
+    if ask(Q.imaginary(arg), assumptions):
+        return -arg
+    return None
+
 def refine_arg(expr, assumptions):
     """
     Handler for complex argument
@@ -617,4 +639,5 @@ handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'Heaviside': refine_Heaviside,
     'floor': refine_floor_ceiling,
     'ceiling' : refine_floor_ceiling,
+    'conjugate': refine_conjugate,
 }
