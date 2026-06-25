@@ -1,11 +1,12 @@
 from __future__ import annotations
 from sympy.polys.matrices import DomainMatrix, DM
+from typing import Sequence
 from sympy.polys.domains import ZZ, QQ
 from sympy import Matrix
 import pytest
 
 
-FFLU_EXAMPLES = [
+FFLU_EXAMPLES: Sequence = [
     (
         'zz_2x3',
         DM([[1, 2, 3], [4, 5, 6]], ZZ),
