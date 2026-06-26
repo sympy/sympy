@@ -253,6 +253,39 @@ def refine_exp(expr, assumptions):
     return (-1)**integer_part * phase
 
 
+def refine_tan(expr, assumptions):
+    """
+    Handler for the tan function.
+
+    Examples
+    ========
+
+    """
+
+    from sympy.functions.elementary.trigonometric import tan
+
+    arg = expr.args[0]
+    if not arg.is_Add:
+        coef = arg.coeff(S.Pi)
+        if coef and ask(Q.integer(coef), assumptions):
+            return S.Zero
+
+    if arg.is_Add:
+        integers = []
+        non_integers = []
+        for i in arg.args:
+            coef = i.coeff(S.Pi)
+            if coef and ask(Q.integer(coef), assumptions):
+                integers.append(i)
+            else:
+                non_integers.append(i)
+        if not integers:
+            return expr
+        else:
+            return tan(Add(*non_integers))
+    return expr
+
+
 def refine_atan2(expr, assumptions):
     """
     Handler for the atan2 function.
@@ -617,4 +650,5 @@ handlers_dict: dict[str, Callable[[Basic, Boolean | bool], Expr]] = {
     'Heaviside': refine_Heaviside,
     'floor': refine_floor_ceiling,
     'ceiling' : refine_floor_ceiling,
+    'tan': refine_tan,
 }
