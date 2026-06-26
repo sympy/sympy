@@ -739,6 +739,11 @@ def _reduce_matrix(A, basic, nonbasic, elim):
         x >= 0 and z <= 1 and (x + y <= 5 or z + y >= 2)
 
     Here y is the only non-atom variable, so only y is removed.
+    >>> from sympy.abc import x, y, z
+    >>> from sympy import symbols
+    >>> from sympy.solvers.solveset import linear_eq_to_matrix
+    >>> from sympy.logic.algorithms.lra_theory import _reduce_matrix
+    >>> s1, s2 = symbols('s1 s2')
     >>> nonbasic, basic = [x, y, z], [s1, s2]
     >>> A, _ = linear_eq_to_matrix([x + y - s1, z + y - s2], nonbasic + basic)
     >>> A, basic, nonbasic = _reduce_matrix(A, basic, nonbasic, {y})
