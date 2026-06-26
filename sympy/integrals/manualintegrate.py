@@ -2665,7 +2665,6 @@ def integral_steps(integrand, symbol, **options):
                         null_safe(heaviside_rule), null_safe(quadratic_denom_rule),
                         null_safe(sqrt_quadratic_rule),
                         null_safe(sqrt_fractional_linear_rule),
-                        null_safe(combine_power_rule),
                         null_safe(trig_cmplx_exp_rule)),
             Derivative: derivative_rule,
             TrigonometricFunction: trig_rule,
@@ -2686,6 +2685,9 @@ def integral_steps(integrand, symbol, **options):
                 condition(
                     integral_is_subclass(Mul, Pow),
                     cancel_rule),
+                condition(
+                    integral_is_subclass(Mul),
+                    combine_power_rule),
                 condition(
                     integral_is_subclass(Mul, log,
                     *inverse_trig_functions),
