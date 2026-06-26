@@ -497,44 +497,8 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     from sympy.assumptions.lra_satask import lra_satask
     from sympy.logic.algorithms.lra_theory import UnhandledInput
 
-    # Cheap path first (normalization + known-facts lookup + direct handler
-    # dispatch). This is the same code AssumptionsWrapper uses internally
-    # via _ask_recursive, so is_eq/is_ge/etc. (called from inside
-    # _eval_ask for Q.eq/Q.ge/...) never trigger a nested satask call.
-    # See issue #29863.
-    res = _ask_recursive(proposition, assumptions, context)
-    if res is not None:
-        return res
+    assumptions = And(assumptions, *context)
 
-    proposition = sympify(proposition)
-    assumptions = sympify(assumptions)
-
-    # using satask (still costly) -- the ONLY place satask is invoked
-    res = satask(proposition, assumptions=assumptions, context=context)
-    if res is not None:
-        return res
-
-    try:
-        res = lra_satask(proposition, assumptions=assumptions, context=context)
-    except UnhandledInput:
-        return None
-
-    return res
-
-
-def _ask_recursive(proposition, assumptions=True, context=global_assumptions):
-    """
-    Cheap evaluation of *proposition*: normalization, single-fact lookup
-    against known_facts, and direct (multiple-dispatch) handler resolution.
-
-    This function deliberately never falls through to ``satask`` or
-    ``lra_satask``. It is the function ``AssumptionsWrapper`` (and
-    therefore ``is_eq``, ``is_ge``, etc. in ``sympy.core.relational``)
-    calls internally, so that those functions cannot re-enter the costly
-    SAT solving path of ``ask()`` while ``ask()`` itself is busy
-    evaluating a ``Q.eq``/``Q.ge``/... proposition via those very
-    functions. See #29863.
-    """
     proposition = sympify(proposition)
     assumptions = sympify(assumptions)
 
@@ -574,12 +538,22 @@ def _ask_recursive(proposition, assumptions=True, context=global_assumptions):
     if res is not None:
         return res
 
-    # direct resolution method, no logic, no SAT solver
+    # direct resolution method, no logic
     res = key(*args)._eval_ask(assumptions)
     if res is not None:
         return bool(res)
 
-    return None
+    # using satask (still costly)
+    res = satask(proposition, assumptions=assumptions)
+    if res is not None:
+        return res
+
+    try:
+        res = lra_satask(proposition, assumptions=assumptions)
+    except UnhandledInput:
+        return None
+
+    return res
 
 
 def _ask_single_fact(key, local_facts):
@@ -669,13 +643,29 @@ def _ask_recursive(proposition, assumptions):
     """
     Answers query by relying only on recursive handlers and `_ask_single_fact`
     and avoiding expensive SAT solver queries.
+
+    This function deliberately never falls through to ``satask`` or
+    ``lra_satask``, and deliberately skips the satisfiability check that
+    ``ask()`` performs -- that check itself requires a SAT call, which would
+    defeat the purpose of this fast path. It is the function
+    ``AssumptionsWrapper`` (and therefore ``is_eq``, ``is_ge``, etc. in
+    ``sympy.core.relational``) calls internally, so that those functions
+    cannot re-enter the costly SAT solving path of ``ask()`` while ``ask()``
+    itself is busy evaluating a ``Q.eq``/``Q.ge``/... proposition via those
+    very functions. See #29863.
     """
+    proposition = sympify(proposition)
+    assumptions = sympify(assumptions)
+
+    proposition = _normalize_expr(proposition)
+    assumptions = _normalize_expr(assumptions)
+
     if isinstance(proposition, AppliedPredicate):
         key, args = proposition.function, proposition.arguments
     else:
         key, args = Q.is_true, (proposition,)
 
-    assump_cnf = CNF.from_prop(assumptions)
+    assump_cnf = CNF.from_prop(And(assumptions, *global_assumptions))
     local_facts = _extract_all_facts(assump_cnf, args)
 
     res = _ask_single_fact(key, local_facts)
@@ -685,6 +675,8 @@ def _ask_recursive(proposition, assumptions):
     res = key(*args)._eval_ask(assumptions)
     if res is not None:
         return bool(res)
+
+    return None
 
 
 from sympy.assumptions.ask_generated import (get_all_known_facts,
