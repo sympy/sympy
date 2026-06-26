@@ -259,7 +259,7 @@ def test_abs():
 def test_imaginary():
     assert satask(Q.imaginary(2*I)) is True
     assert satask(Q.imaginary(x*y), Q.imaginary(x)) is None
-    assert satask(Q.imaginary(x*y), Q.imaginary(x) & Q.real(y)) is True
+    assert satask(Q.imaginary(x*y), Q.imaginary(x) & Q.real(y)) is None # y could be 0
     assert satask(Q.imaginary(x), Q.real(x)) is False
     assert satask(Q.imaginary(1)) is False
     assert satask(Q.imaginary(x*y), Q.real(x) & Q.real(y)) is False
@@ -271,7 +271,7 @@ def test_real():
     assert satask(Q.real(x + y), Q.real(x) & Q.real(y)) is True
     assert satask(Q.real(x*y*z), Q.real(x) & Q.real(y) & Q.real(z)) is True
     assert satask(Q.real(x*y*z), Q.real(x) & Q.real(y)) is None
-    assert satask(Q.real(x*y*z), Q.real(x) & Q.real(y) & Q.imaginary(z)) is False
+    assert satask(Q.real(x*y*z), Q.real(x) & Q.real(y) & Q.imaginary(z)) is None # x or y could be 0
     assert satask(Q.real(x + y + z), Q.real(x) & Q.real(y) & Q.real(z)) is True
     assert satask(Q.real(x + y + z), Q.real(x) & Q.real(y)) is None
 
