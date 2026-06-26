@@ -352,7 +352,7 @@ class LRASolver():
 
         A, _ = linear_eq_to_matrix(A, nonbasic + basic)
         elim = [i for i in nonbasic if i not in atom_vars]
-        A, basic, nonbasic = _simplify_matrix(A, basic, nonbasic, elim)
+        A, basic, nonbasic = _reduce_matrix(A, basic, nonbasic, elim)
         nonbasic = [var_to_lra_var[nb] for nb in nonbasic]
         basic = [var_to_lra_var[b] for b in basic]
         for idx, var in enumerate(nonbasic + basic):
@@ -725,7 +725,7 @@ def _sep_const_terms(expr):
                       lambda t: len(t.free_symbols) == 0,
                       binary=True)
     return Add(*var), Add(*const)
-def _simplify_matrix(A, basic, nonbasic, elim):
+def _reduce_matrix(A, basic, nonbasic, elim):
     """
     Simplifies the matrix by eliminating free variables with Gaussian elimination.
     """
