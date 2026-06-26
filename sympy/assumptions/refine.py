@@ -260,6 +260,14 @@ def refine_tan(expr, assumptions):
     Examples
     ========
 
+    >>>> from sympy import Q, pi, tan, refine
+    >>>> from sympy.abc import x, y
+    >>>> refine(tan(pi*x), Q.integer(x))
+    0
+    >>>> refine(tan(pi*x + y), Q.integer(x))
+    tan(y)
+    >>>> refine(tan(y + 2*pi), True)
+    tan(y)
     """
 
     from sympy.functions.elementary.trigonometric import tan
