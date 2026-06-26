@@ -4,6 +4,7 @@ from sympy.core.numbers import (I, Rational, pi)
 from sympy.core.relational import Ne, Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, symbols)
+from sympy.core.mul import Mul
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.hyperbolic import (asinh, csch, cosh, coth, sech, sinh, tanh)
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -300,8 +301,8 @@ def test_manualintegrate_special():
     assert_is_integral_of(f, F)
     f, F = sqrt(4 + 9*sin(x)**2), 2*elliptic_e(x, Rational(-9, 4))
     assert_is_integral_of(f, F)
-    f = erf(x)*exp(x)*x
-    F = (x*exp(x) - exp(x))*erf(x) - 2*(-sqrt(pi)*exp(1/4)*erf(x - 1/2)/2 + Integral(x*exp(-x**2 + x), x))/sqrt(pi)
+    f = x*exp(x)*erf(x)
+    F = (x*exp(x) - exp(x))*erf(x) - Mul(2, -sqrt(pi)*exp(Rational(1,4))*erf(x - Rational(1,2))*Rational(1,2) + Integral(x*exp(-x**2 + x), x), evaluate=False)/sqrt(pi)
     assert_is_integral_of(f, F)
 
 
