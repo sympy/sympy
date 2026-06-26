@@ -351,7 +351,8 @@ class LRASolver():
             raise UnhandledInput("Nonlinearity is not handled")
 
         A, _ = linear_eq_to_matrix(A, nonbasic + basic)
-        elim = [i for i in nonbasic if i not in atom_vars]
+        # matrix A can be simplified by removing nonbasic, nonatom variables
+        elim = {i for i in nonbasic if i not in atom_vars}
         A, basic, nonbasic = _reduce_matrix(A, basic, nonbasic, elim)
         nonbasic = [var_to_lra_var[nb] for nb in nonbasic]
         basic = [var_to_lra_var[b] for b in basic]
@@ -727,9 +728,7 @@ def _sep_const_terms(expr):
     return Add(*var), Add(*const)
 def _reduce_matrix(A, basic, nonbasic, elim):
     """
-    Simplifies the matrix by eliminating free variables with Gaussian elimination.
     """
-    elim = set(elim)
     if not elim:
         return A, basic, nonbasic
 
