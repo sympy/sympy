@@ -1,215 +1,57 @@
 from __future__ import annotations
 
-from sympy.core.mul import Mul
-from sympy.core.numbers import Number
-from sympy.core.sympify import sympify
-
-
-class ZeroTensor:
-    """Zero tensor carrying a specific tensor shape.
-
-    A ZeroTensor of shape ``(m, n)`` acts as the additive identity for all
-    AlgebraicTensors and PureTensors of the same shape.  ZeroTensors of
-    different shapes belong to different tensor spaces and are not summable.
-    """
-
-    __slots__ = ("_shape",)
-    is_ZeroTensor = True
-
-    def __init__(self, shape):
-        self._shape = tuple(shape)
-
-    @property
-    def shape(self):
-        return self._shape
-
-    @property
-    def tensor_shape(self):
-        return self._shape
-
-    def __neg__(self):
-        return self
-
-    def __add__(self, other):
-        from sympy.tensor.algebraic.algebraic_tensor import AlgebraicTensor
-        return AlgebraicTensor(self, other)
-
-    def __radd__(self, other):
-        from sympy.tensor.algebraic.algebraic_tensor import AlgebraicTensor
-        return AlgebraicTensor(other, self)
-
-    def __sub__(self, other):
-        from sympy.tensor.algebraic.algebraic_tensor import AlgebraicTensor
-        return AlgebraicTensor(self, -other)
-
-    def __rsub__(self, other):
-        from sympy.tensor.algebraic.algebraic_tensor import AlgebraicTensor
-        return AlgebraicTensor(other, -self)
-
-    def __eq__(self, other):
-        if isinstance(other, ZeroTensor):
-            return self._shape == other._shape
-        return NotImplemented
-
-    def __hash__(self):
-        return hash(("ZeroTensor", self._shape))
-
-    def __repr__(self):
-        return f"ZeroTensor{self._shape}"
-
-    def __str__(self):
-        return f"0_{self._shape}"
-
-    def __bool__(self):
-        return False
-
-
-class PureTensor(Mul):
-    """Pure tensor as an unevaluated (non-commutative) tensor product of factors.
-
-    Extends SymPy's non-commutative Mul so that all existing simplification,
-    differentiation, and pattern-matching machinery is available out of the
-    box.  The tensor-product operator is non-commutative: order of factors
-    is always preserved.
-
-    Each factor must carry ``.shape`` (e.g. any ``MatrixExpr`` or a 1-x1
-    wrapper around a non-commutative Symbol).
-    """
-
-    __slots__ = ()
-
-    is_PureTensor = True
-
-    _eval_is_commutative = lambda self: False
-
-    @property
-    def factors(self):
-        """Individual tensor-product factors in left-to-right order."""
-        return self.args
-
-    @property
-    def num_factors(self):
-        return len(self.args)
-
-    @property
-    def tensor_shape(self):
-        """Outer-product shape: (dim_0-of-first, dim_1-of-last)."""
-        shapes = [f.shape for f in self.factors]
-        return (shapes[0][0], shapes[-1][1])
-
-    def __str__(self):
-        return " \u2297 ".join(str(f) for f in self.factors)
-
-    def __repr__(self):
-        return f"PureTensor({', '.join(repr(f) for f in self.factors)})"
-
-    def __new__(cls, *args, evaluate=False):
-        if not args:
-            raise ValueError("PureTensor requires at least one factor")
-
-        processed = []
-        for a in args:
-            a = sympify(a)
-            if isinstance(a, Number):
-                raise TypeError(
-                    f"Scalar numbers are not valid tensor factors "
-                    f"(use a 1x1 MatrixExpr wrapper): {a}"
-                )
-            if not hasattr(a, "shape"):
-                raise TypeError(
-                    f"Tensor factor must have a .shape attribute, "
-                    f"got {type(a).__name__}"
-                )
-            processed.append(a)
-
-        if len(processed) == 1:
-            return processed[0]
-
-        obj = Mul.__new__(cls, *processed, evaluate=False)
-        return obj
-
-    def __neg__(self):
-        """Return Mul(-1, self) as a regular Mul, not a PureTensor."""
-        from sympy.core.singleton import S
-        return Mul(S.NegativeOne, self, evaluate=False)
-
-    def __mul__(self, other):
-        """PureTensor * scalar -> Mul(scalar, PureTensor)."""
-        from sympy.core.singleton import S
-        other = sympify(other)
-        if isinstance(other, Number):
-            if other is S.One:
-                return self
-            if other is S.Zero:
-                return ZeroTensor(self.tensor_shape)
-            return Mul(other, self, evaluate=False)
-        return Mul(self, other)
-
-    def __rmul__(self, other):
-        """scalar * PureTensor -> Mul(scalar, PureTensor)."""
-        from sympy.core.singleton import S
-        if other is S.Zero:
-            return ZeroTensor(self.tensor_shape)
-        if other is S.One:
-            return self
-        other = sympify(other)
-        if isinstance(other, Number):
-            if other is S.Zero:
-                return ZeroTensor(self.tensor_shape)
-            return Mul(other, self, evaluate=False)
-        return Mul(other, self)
-
-    def __add__(self, other):
-        from sympy.tensor.algebraic.algebraic_tensor import AlgebraicTensor
-        return AlgebraicTensor(self, other)
-
-    def __radd__(self, other):
-        from sympy.tensor.algebraic.algebraic_tensor import AlgebraicTensor
-        return AlgebraicTensor(other, self)
-
-    def __sub__(self, other):
-        from sympy.tensor.algebraic.algebraic_tensor import AlgebraicTensor
-        return AlgebraicTensor(self, -other)
-
-    def __rsub__(self, other):
-        from sympy.tensor.algebraic.algebraic_tensor import AlgebraicTensor
-        return AlgebraicTensor(other, -self)
-
-
-def tensor_product(*args):
-    """Convenience constructor for PureTensor.
-
-    >>> from sympy.tensor.algebraic.algebraic_tensor import tensor_product
-    >>> from sympy.matrices.expressions import MatrixSymbol
-    >>> A = MatrixSymbol("A", 2, 3)
-    >>> v = MatrixSymbol("v", 3, 1)
-    >>> tensor_product(A, v)
-    A \u2297 v
-    """
-    return PureTensor(*args)
-
-
-def zero_tensor(shape):
-    """Convenience constructor for ZeroTensor.
-
-    Parameters
-    ----------
-    shape : tuple
-        A pair ``(rows, cols)`` describing the tensor shape.
-
-    Returns
-    -------
-    ZeroTensor
-    """
-    return ZeroTensor(shape)
-
-
-# ---- Heavy imports (after all early-defined classes) ----
-
 from sympy.core.add import Add, add
 from sympy.core.basic import Basic
+from sympy.core.mul import Mul
+from sympy.core.numbers import Number
 from sympy.core.singleton import S
+from sympy.core.sympify import sympify
 
+from sympy.tensor.algebraic.pure_tensor import PureTensor, _factor_shapes
+from sympy.tensor.algebraic.zero_tensor import ZeroTensor, zero_tensor
+
+
+# ---------------------------------------------------------------------------
+# Shape helpers
+# ---------------------------------------------------------------------------
+
+def _normalize_shape(s):
+    """Normalize any shape-like input to a tuple of (rows, cols) tuples.
+
+    ``((3,4), (4,5))``  -> ``((3, 4), (4, 5))``  (unchanged)
+    ``(3, 4)``          -> ``((3, 4),)``          (bare pair wrapped)
+    ``[(3,4)]``         -> ``((3, 4),)``
+    """
+    if not s:
+        return ()
+    if len(s) == 2 and not isinstance(s[0], (tuple, list)):
+        # Bare (m, n) -> ((m, n),)
+        return (tuple(s),)
+    return tuple(tuple(x) for x in s)
+
+
+def _tensor_shape_of(expr):
+    """Return the full tensor shape of *expr* as a tuple of factor shapes.
+
+    Handles PureTensor, ZeroTensor, Mul(coeff, PureTensor), and bare
+    matrix-like objects (whose single-factor shape is wrapped).
+    """
+    if isinstance(expr, PureTensor):
+        return expr.tensor_shape
+    if isinstance(expr, ZeroTensor):
+        return expr.shape
+    if isinstance(expr, Mul) and not isinstance(expr, PureTensor):
+        for f in expr.args:
+            if isinstance(f, PureTensor):
+                return f.tensor_shape
+            if isinstance(f, ZeroTensor):
+                return f.shape
+    if hasattr(expr, "shape"):
+        return (expr.shape,)
+    return None
+
+
+# ---------------------------------------------------------------------------
 
 class ShapeMismatchError(TypeError):
     """Raised when attempting to add tensors of incompatible shapes."""
@@ -228,6 +70,9 @@ class AlgebraicTensor(Basic):
     The flattening logic is kept intentionally simple so that a future
     ``.simplify`` extension can layer noncommutative-polynomial factoring
     on top without fighting against ``Add.flatten`` internals.
+
+    Tensor shapes are full sequences of per-factor shapes, e.g.
+    ``((3, 4), (4, 5))`` for the product ``A_3x4 ⊗ C_4x5``.
     """
 
     __slots__ = ()
@@ -292,6 +137,9 @@ class AlgebraicTensor(Basic):
         Returns
         -------
         (terms : list, shape : tuple | None, zero_term : ZeroTensor | None)
+
+        *shape* is a tuple of per-factor (rows, cols) pairs, e.g.
+        ``((3, 4), (4, 5))``.
         """
         shape = None
         zero_term = None
@@ -302,12 +150,13 @@ class AlgebraicTensor(Basic):
             o = work.pop()
 
             if isinstance(o, ZeroTensor):
+                candidate = o.shape
                 if shape is None:
-                    shape = o.shape
-                elif o.shape != shape:
+                    shape = candidate
+                elif candidate != shape:
                     raise ShapeMismatchError(
                         f"Cannot add tensors of different shapes: "
-                        f"{shape} vs {o.shape}"
+                        f"{shape} vs {candidate}"
                     )
                 zero_term = o
                 continue
@@ -317,28 +166,27 @@ class AlgebraicTensor(Basic):
                 continue
 
             if isinstance(o, PureTensor):
+                candidate = o.tensor_shape
                 if shape is None:
-                    shape = o.tensor_shape
-                elif o.tensor_shape != shape:
+                    shape = candidate
+                elif candidate != shape:
                     raise ShapeMismatchError(
                         f"Cannot add tensors of different shapes: "
-                        f"{shape} vs {o.tensor_shape}"
+                        f"{shape} vs {candidate}"
                     )
                 terms.append(o)
                 continue
 
             if isinstance(o, Mul) and not isinstance(o, PureTensor):
-                # coeff * PureTensor pattern
-                for arg in o.args:
-                    if isinstance(arg, PureTensor):
-                        if shape is None:
-                            shape = arg.tensor_shape
-                        elif arg.tensor_shape != shape:
-                            raise ShapeMismatchError(
-                                f"Cannot add tensors of different shapes: "
-                                f"{shape} vs {arg.tensor_shape}"
-                            )
-                        break
+                candidate = _tensor_shape_of(o)
+                if candidate is not None:
+                    if shape is None:
+                        shape = candidate
+                    elif candidate != shape:
+                        raise ShapeMismatchError(
+                            f"Cannot add tensors of different shapes: "
+                            f"{shape} vs {candidate}"
+                        )
                 terms.append(o)
                 continue
 
@@ -346,28 +194,31 @@ class AlgebraicTensor(Basic):
                 terms.append(o)
                 continue
 
-            # Catch-all: treat as a regular term
+            # Catch-all: bare matrix-like objects or anything else
+            candidate = _tensor_shape_of(o)
+            if candidate is not None:
+                if shape is None:
+                    shape = candidate
+                elif candidate != shape:
+                    raise ShapeMismatchError(
+                        f"Cannot add tensors of different shapes: "
+                        f"{shape} vs {candidate}"
+                    )
             terms.append(o)
 
         return terms, shape, zero_term
 
     @property
     def tensor_shape(self):
-        """Shape shared by every term in this sum."""
+        """Shape shared by every term in this sum.
+
+        Returns a tuple of per-factor (rows, cols) pairs, e.g.
+        ``((3, 4), (4, 5))``.
+        """
         for arg in self.args:
-            if isinstance(arg, ZeroTensor):
-                return arg.shape
-            if isinstance(arg, PureTensor):
-                return arg.tensor_shape
-            if isinstance(arg, Mul) and not isinstance(arg, PureTensor):
-                for f in arg.args:
-                    if isinstance(f, PureTensor):
-                        return f.tensor_shape
-        for arg in self.args:
-            if hasattr(arg, "tensor_shape"):
-                return arg.tensor_shape
-            if hasattr(arg, "shape"):
-                return arg.shape
+            ts = _tensor_shape_of(arg)
+            if ts is not None:
+                return ts
         raise AttributeError("Cannot determine tensor_shape")
 
     @property
@@ -399,6 +250,26 @@ class AlgebraicTensor(Basic):
 
     def __rsub__(self, other):
         return AlgebraicTensor(other, -self)
+
+    def __mul__(self, other):
+        """Multiply each term by a scalar/symbol, or tensor-product with PureTensor."""
+        other = sympify(other)
+        if isinstance(other, Number) or (hasattr(other, 'is_commutative') and
+                other.is_commutative and not isinstance(other, (PureTensor, AlgebraicTensor))):
+            return AlgebraicTensor(*(a * other for a in self.args))
+        if isinstance(other, PureTensor):
+            return AlgebraicTensor(*(PureTensor(other, a) for a in self.args))
+        return Mul(self, other)
+
+    def __rmul__(self, other):
+        """Multiply each term by a scalar/symbol, or tensor-product with PureTensor."""
+        other = sympify(other)
+        if isinstance(other, Number) or (hasattr(other, 'is_commutative') and
+                other.is_commutative and not isinstance(other, (PureTensor, AlgebraicTensor))):
+            return AlgebraicTensor(*(a * other for a in self.args))
+        if isinstance(other, PureTensor):
+            return AlgebraicTensor(*(PureTensor(other, a) for a in self.args))
+        return Mul(other, self)
 
     # ---- Factorization helpers (infrastructure for future .simplify) ----
 
@@ -557,7 +428,20 @@ class AlgebraicTensor(Basic):
         return (left_factors, rest2, right_factors)
 
     def __str__(self):
-        return " + ".join(str(a) for a in self.args)
+        if not self.args:
+            return ""
+        parts = []
+        first = True
+        for a in self.args:
+            s = str(a)
+            if first:
+                parts.append(s)
+                first = False
+            elif s.startswith("-"):
+                parts.append(f"- {s[1:]}")
+            else:
+                parts.append(f"+ {s}")
+        return " ".join(parts)
 
     def __repr__(self):
         return f"AlgebraicTensor({', '.join(repr(a) for a in self.args)})"

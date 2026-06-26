@@ -1,11 +1,9 @@
-from .algebraic_tensor import (
+from sympy.tensor.algebraic.algebraic_tensor import (
     AlgebraicTensor,
-    PureTensor,
     ShapeMismatchError,
-    ZeroTensor,
-    tensor_product,
-    zero_tensor,
 )
+from sympy.tensor.algebraic.pure_tensor import PureTensor, tensor_product
+from sympy.tensor.algebraic.zero_tensor import ZeroTensor, zero_tensor
 
 __all__ = [
     "AlgebraicTensor",
