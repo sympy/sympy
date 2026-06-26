@@ -1,3 +1,17 @@
-from .algebraic_tensor import PureTensor, tensor_product
+from .algebraic_tensor import (
+    AlgebraicTensor,
+    PureTensor,
+    ShapeMismatchError,
+    ZeroTensor,
+    tensor_product,
+    zero_tensor,
+)
 
-__all__ = ["PureTensor", "tensor_product"]
+__all__ = [
+    "AlgebraicTensor",
+    "PureTensor",
+    "ShapeMismatchError",
+    "ZeroTensor",
+    "tensor_product",
+    "zero_tensor",
+]
