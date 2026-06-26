@@ -241,6 +241,16 @@ class PureTensor(Mul):
         from sympy.tensor.algebraic.algebraic_tensor import AlgebraicTensor
         return AlgebraicTensor(other, -self)
 
+    def simplify(self, **kwargs):
+        """Simplify this PureTensor.
+
+        Simplifies the leading coefficient and each tensor factor using
+        SymPy's general :func:`simplify`.  See
+        :func:`sympy.tensor.algebraic.simplify.tensorsimplify` for details.
+        """
+        from sympy.tensor.algebraic.simplify import tensorsimplify
+        return tensorsimplify(self, **kwargs)
+
 
 def tensor_product(*args):
     """Convenience constructor for PureTensor.

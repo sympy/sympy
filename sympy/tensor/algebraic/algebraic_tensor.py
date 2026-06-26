@@ -443,6 +443,16 @@ class AlgebraicTensor(Basic):
                 parts.append(f"+ {s}")
         return " ".join(parts)
 
+    def simplify(self, **kwargs):
+        """Simplify this AlgebraicTensor.
+
+        Combines like terms, extracts common left/right factors, and uses
+        SymPy's simplification machinery on coefficients and middle parts.
+        See :func:`sympy.tensor.algebraic.simplify.tensorsimplify` for details.
+        """
+        from sympy.tensor.algebraic.simplify import tensorsimplify
+        return tensorsimplify(self, **kwargs)
+
     def __repr__(self):
         return f"AlgebraicTensor({', '.join(repr(a) for a in self.args)})"
 

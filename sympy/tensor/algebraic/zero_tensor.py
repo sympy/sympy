@@ -70,6 +70,10 @@ class ZeroTensor:
     def __bool__(self):
         return False
 
+    def simplify(self, **kwargs):
+        """A ZeroTensor is already in simplest form; return self."""
+        return self
+
 
 def zero_tensor(shape):
     """Convenience constructor for ZeroTensor.
