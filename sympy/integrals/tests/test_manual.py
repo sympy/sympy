@@ -304,6 +304,9 @@ def test_manualintegrate_special():
     f = x*exp(x)*erf(x)
     F = (x*exp(x) - exp(x))*erf(x) - Mul(2, -sqrt(pi)*exp(Rational(1,4))*erf(x - Rational(1,2))*Rational(1,2) + Integral(x*exp(-x**2 + x), x), evaluate=False)/sqrt(pi)
     assert_is_integral_of(f, F)
+    f = log(x)*exp(-x**2)
+    F = sqrt(pi)*log(x)*erf(x)/2 - sqrt(pi)*Integral(erf(x)/x, x)/2
+    assert_is_integral_of(f, F)
 
 
 @slow

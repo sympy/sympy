@@ -1698,8 +1698,8 @@ def _parts_rule(integrand, symbol) -> tuple[Expr, Expr, Expr, Expr, Rule] | None
             # Don't pick a non-polynomial algebraic to be differentiated
             if rule == pull_out_algebraic and not u.is_polynomial(symbol):
                 return None
-            # Don't trade one logarithm for another
-            if isinstance(u, log):
+            # Don't trade one logarithm or special error function for another
+            if isinstance(u, (log, *special_error_functions)):
                 rec_dv = 1/dv
                 if (rec_dv.is_polynomial(symbol) and
                     degree(rec_dv, symbol) == 1):
