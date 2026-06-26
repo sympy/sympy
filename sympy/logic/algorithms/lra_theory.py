@@ -253,6 +253,7 @@ class LRASolver():
         s_count = 0
         s_subs = {}
         nonbasic = []
+        atom_vars = set()
 
         if testing_mode:
             # sort to reduce nondeterminism
@@ -328,6 +329,8 @@ class LRASolver():
             else:
                 var = terms[0]
 
+            atom_vars.add(var)
+
             assert var_coeff != 0
 
             equality = prop.function == Q.eq
@@ -348,7 +351,8 @@ class LRASolver():
             raise UnhandledInput("Nonlinearity is not handled")
 
         A, _ = linear_eq_to_matrix(A, nonbasic + basic)
-        A, basic, nonbasic = _simplify_matrix(A, basic, nonbasic)
+        elim = [i for i in nonbasic if i not in atom_vars]
+        A, basic, nonbasic = _simplify_matrix(A, basic, nonbasic, elim)
         nonbasic = [var_to_lra_var[nb] for nb in nonbasic]
         basic = [var_to_lra_var[b] for b in basic]
         for idx, var in enumerate(nonbasic + basic):
@@ -721,10 +725,34 @@ def _sep_const_terms(expr):
                       lambda t: len(t.free_symbols) == 0,
                       binary=True)
     return Add(*var), Add(*const)
-def _simplify_matrix(A, basic, nonbasic):
+def _simplify_matrix(A, basic, nonbasic, elim):
     """
     Simplifies the matrix by eliminating free variables with Gaussian elimination.
     """
+    elim = set(elim)
+    if not elim:
+        return A, basic, nonbasic
+
+    all_var = nonbasic + basic
+    elim_vars = [v for v in nonbasic if v in elim]
+    keep_vars = [v for v in all_var if v not in elim]
+
+    order = elim_vars + basic + [v for v in nonbasic if v not in elim]
+    pos = {v: i for i, v in enumerate(order)}
+    col_of = {v: i for i, v in enumerate(all_var)}
+    A = A[:, [col_of[v] for v in order]]
+
+    B, pivots = A.rref()
+    n_elim = len(elim_vars)
+
+    keep_rows = [r for r, pc in enumerate(pivots) if pc >= n_elim]
+    basic = [order[pivots[r]] for r in keep_rows]
+    basic_set = set(basic)
+    nonbasic = [v for v in keep_vars if v not in basic_set]
+
+    final_order = nonbasic + basic
+    A = -B[keep_rows, [pos[v] for v in final_order]]
+    return A, basic, nonbasic
 
 
 class Boundary:
