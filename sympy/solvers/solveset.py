@@ -1310,7 +1310,7 @@ def _solveset(f, symbol, domain, _check=False):
             if cond_eff is S.true:
                 result += solver(expr, symbol, domain)
                 break
-            if not cond_eff.has(symbol):
+            if not cond_eff.has_free(symbol):
                 solns = solver(expr, symbol, domain)
                 result += ConditionSet(symbol, cond_eff, solns)
             else:
