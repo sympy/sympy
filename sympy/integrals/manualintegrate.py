@@ -2676,25 +2676,14 @@ def integral_steps(integrand, symbol, **options):
         do_one(
             null_safe(trig_rule),
             null_safe(hyperbolic_rule),
-            null_safe(alternatives(
-                rewrites_rule,
-                substitution_rule,
-                condition(
-                    integral_is_subclass(Mul, Pow),
-                    partial_fractions_rule),
-                condition(
-                    integral_is_subclass(Mul, Pow),
-                    cancel_rule),
-                condition(
-                    integral_is_subclass(Mul, log,
-                    *inverse_trig_functions),
-                    parts_rule),
-                condition(
-                    integral_is_subclass(Mul, Pow),
-                    distribute_expand_rule),
-                trig_powers_products_rule,
-                trig_expand_rule
-            )),
+            null_safe(rewrites_rule),
+            null_safe(substitution_rule),
+            null_safe(condition(integral_is_subclass(Mul, Pow), partial_fractions_rule)),
+            null_safe(condition(integral_is_subclass(Mul, Pow), cancel_rule)),
+            null_safe(condition(integral_is_subclass(Mul, log, *inverse_trig_functions), parts_rule)),
+            null_safe(condition(integral_is_subclass(Mul, Pow), distribute_expand_rule)),
+            null_safe(trig_powers_products_rule),
+            null_safe(trig_expand_rule),
             null_safe(condition(integral_is_subclass(Mul, Pow), nested_pow_rule)),
             null_safe(trig_substitution_rule)
         ),
