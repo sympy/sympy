@@ -104,7 +104,6 @@ TODO:
  - Handle non-rational real numbers
  - Handle positive and negative infinity
  - Implement backtracking and theory proposition
- - Simplify matrix by removing unused variables using Gaussian elimination
 
 References
 ==========
@@ -726,15 +725,20 @@ def _sep_const_terms(expr):
                       lambda t: len(t.free_symbols) == 0,
                       binary=True)
     return Add(*var), Add(*const)
+
+
 def _reduce_matrix(A, basic, nonbasic, elim):
     """
     """
     if not elim:
         return A, basic, nonbasic
 
-    order = list(elim) + basic + [v for v in nonbasic if v not in elim]
+    kept_nonbasic = [v for v in nonbasic if v not in elim]
+    # order starts with the variables we want to eliminate
+    # in rref, these variables will become pivots
+    order = list(elim) + basic + kept_nonbasic
     col_of = {v: i for i, v in enumerate(nonbasic + basic)}
-    pos = {v: i for i, v in enumerate(order)}
+    # reorder the matrix for the rref
     A = A[:, [col_of[v] for v in order]]
 
     B, pivots = A.rref()
@@ -742,11 +746,10 @@ def _reduce_matrix(A, basic, nonbasic, elim):
     keep_rows = [r for r, pc in enumerate(pivots) if pc >= len(elim)]
     new_basic = [order[pivots[r]] for r in keep_rows]
     basic_set = set(new_basic)
-    new_nonbasic = [v for v in nonbasic + basic
-                    if v not in elim and v not in basic_set]
+    new_nonbasic = [v for v in kept_nonbasic + basic if v not in basic_set]
 
-    final_order = new_nonbasic + new_basic
-    A = -B[keep_rows, [pos[v] for v in final_order]]
+    order_pos = {v: i for i, v in enumerate(order)}
+    A = -B[keep_rows, [order_pos[v] for v in new_nonbasic + new_basic]]
     return A, new_basic, new_nonbasic
 
 
