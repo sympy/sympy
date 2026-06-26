@@ -348,6 +348,7 @@ class LRASolver():
             raise UnhandledInput("Nonlinearity is not handled")
 
         A, _ = linear_eq_to_matrix(A, nonbasic + basic)
+        A, basic, nonbasic = _simplify_matrix(A, basic, nonbasic)
         nonbasic = [var_to_lra_var[nb] for nb in nonbasic]
         basic = [var_to_lra_var[b] for b in basic]
         for idx, var in enumerate(nonbasic + basic):
@@ -720,6 +721,10 @@ def _sep_const_terms(expr):
                       lambda t: len(t.free_symbols) == 0,
                       binary=True)
     return Add(*var), Add(*const)
+def _simplify_matrix(A, basic, nonbasic):
+    """
+    Simplifies the matrix by eliminating free variables with Gaussian elimination.
+    """
 
 
 class Boundary:
