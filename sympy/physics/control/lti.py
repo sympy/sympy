@@ -6717,11 +6717,8 @@ class DiscreteStateSpace(StateSpaceBase):
         C_str = self.C.__repr__()
         D_str = self.D.__repr__()
 
-        return f"""DiscreteStateSpace(\n{A_str},
-        \n{B_str},
-        \n{C_str},
-        \n{D_str},
-        \nst: {self.sampling_time})"""
+        return (f"DiscreteStateSpace(\n{A_str},\n{B_str},\n"
+                f"{C_str},\n{D_str}, {self.sampling_time})")
 
     def _eval_rewrite_as_DiscreteTransferFunction(self, *args):
         """
