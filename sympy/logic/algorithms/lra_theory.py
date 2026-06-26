@@ -729,6 +729,28 @@ def _sep_const_terms(expr):
 
 def _reduce_matrix(A, basic, nonbasic, elim):
     """
+    Remove every non-atom variable from the matrix A.
+
+    Example
+    =======
+
+    Consider the formula:
+
+        x >= 0 and z <= 1 and (x + y <= 5 or z + y >= 2)
+
+    Here y is the only non-atom variable, so only y is removed.
+    >>> nonbasic, basic = [x, y, z], [s1, s2]
+    >>> A, _ = linear_eq_to_matrix([x + y - s1, z + y - s2], nonbasic + basic)
+    >>> A, basic, nonbasic = _reduce_matrix(A, basic, nonbasic, {y})
+    >>> basic, nonbasic
+    ([s1], [x, z, s2])
+
+    Notice that s2 became nonbasic.
+
+    >>> A
+    Matrix([[1, -1, 1, -1]])
+
+    It is possible for the matrix A to collapse entirely.
     """
     if not elim:
         return A, basic, nonbasic
