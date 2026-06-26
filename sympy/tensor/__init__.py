@@ -9,6 +9,7 @@ from .array import (MutableDenseNDimArray, ImmutableDenseNDimArray,
     MutableSparseNDimArray, ImmutableSparseNDimArray, NDimArray, tensorproduct,
     tensorcontraction, tensordiagonal, derive_by_array, permutedims, Array,
     DenseNDimArray, SparseNDimArray,)
+from . import algebraic
 
 __all__ = [
     'IndexedBase', 'Idx', 'Indexed',
@@ -21,4 +22,6 @@ __all__ = [
     'MutableSparseNDimArray', 'ImmutableSparseNDimArray', 'NDimArray',
     'tensorproduct', 'tensorcontraction', 'tensordiagonal', 'derive_by_array', 'permutedims',
     'Array', 'DenseNDimArray', 'SparseNDimArray',
+
+    'algebraic',
 ]
