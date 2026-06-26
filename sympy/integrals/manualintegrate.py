@@ -1677,8 +1677,9 @@ def _parts_rule(integrand, symbol) -> tuple[Expr, Expr, Expr, Expr, Rule] | None
 
 
     dummy = Dummy("temporary")
-    # we can integrate log(x) and atan(x) by setting dv = 1
-    if isinstance(integrand, (log, *inverse_trig_functions)):
+    # we can integrate log(x), atan(x), and erf by setting dv = 1
+    if isinstance(integrand, (log, *inverse_trig_functions,
+                              *special_error_functions)):
         integrand = dummy * integrand
 
     for index, rule in enumerate(liate_rules):
@@ -2687,7 +2688,8 @@ def integral_steps(integrand, symbol, **options):
                     cancel_rule),
                 condition(
                     integral_is_subclass(Mul, log,
-                    *inverse_trig_functions),
+                                         *inverse_trig_functions,
+                                         *special_error_functions),
                     parts_rule),
                 condition(
                     integral_is_subclass(Mul, Pow),
