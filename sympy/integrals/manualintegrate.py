@@ -1763,6 +1763,8 @@ def parts_rule(integral):
                 return
             _parts_u_cache[cachekey] += 1
 
+        priori_steps = [result]
+
         # Try cyclic integration by parts a few times
         for _ in range(4):
             debug("Cyclic integration {} with v: {}, du: {}, integrand: {}".format(_, v, du, integrand))
@@ -1798,7 +1800,12 @@ def parts_rule(integral):
 
     if steps:
         u, dv, v, du, v_step = steps[0]
-        rule = PartsRule(integrand, symbol, u, dv, v_step, make_second_step(steps[1:], v * du))
+        second_step = make_second_step(steps[1:], v * du)
+        if second_step.contains_dont_know() and (priori_steps != steps):
+            debug("Repeated integration by parts failed because the second step contains a DontKnowRule")
+            debug("Use the first step instead")
+            second_step = make_second_step(priori_steps[1:], v * du)
+        rule = PartsRule(integrand, symbol, u, dv, v_step, second_step)
         if (constant != 1) and rule:
             rule = ConstantTimesRule(constant * integrand, symbol, constant, integrand, rule)
         return rule
