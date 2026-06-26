@@ -294,7 +294,7 @@ def _(expr, assumptions):
             return True
         # if we cannot deduce expr is real,
         # expr is imaginary only if no arg is zero
-        return ask(Q.zero(expr), assumptions)
+        return _ask_recursive(Q.zero(expr), assumptions)
 
 @RealPredicate.register(Pow)
 def _(expr, assumptions):
