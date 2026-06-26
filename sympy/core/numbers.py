@@ -438,7 +438,7 @@ class Number(AtomicExpr):
         return self._as_mpf_val(prec), prec
 
     def __float__(self):
-        return _to_float(self._as_mpf_val(53))
+        return _to_float(self._as_mpf_val(53), False, rnd)
 
     def floor(self):
         raise NotImplementedError('%s needs .floor() method' %
@@ -481,7 +481,7 @@ class Number(AtomicExpr):
     @overload
     def __add__(self, other: Number | int | float) -> Number: ...
     @overload
-    def __add__(self, other: Expr) -> Expr: ...
+    def __add__(self, other: Expr | complex) -> Expr: ...
 
     @_sympifyit('other', NotImplemented)
     def __add__(self, other) -> Expr:
@@ -544,36 +544,6 @@ class Number(AtomicExpr):
     def __ne__(self, other):
         raise NotImplementedError('%s needs .__ne__() method' %
             (self.__class__.__name__))
-
-    def __lt__(self, other):
-        try:
-            other = _sympify(other)
-        except SympifyError:
-            raise TypeError("Invalid comparison %s < %s" % (self, other))
-        raise NotImplementedError('%s needs .__lt__() method' %
-            (self.__class__.__name__))
-
-    def __le__(self, other):
-        try:
-            other = _sympify(other)
-        except SympifyError:
-            raise TypeError("Invalid comparison %s <= %s" % (self, other))
-        raise NotImplementedError('%s needs .__le__() method' %
-            (self.__class__.__name__))
-
-    def __gt__(self, other):
-        try:
-            other = _sympify(other)
-        except SympifyError:
-            raise TypeError("Invalid comparison %s > %s" % (self, other))
-        return _sympify(other).__lt__(self)
-
-    def __ge__(self, other):
-        try:
-            other = _sympify(other)
-        except SympifyError:
-            raise TypeError("Invalid comparison %s >= %s" % (self, other))
-        return _sympify(other).__le__(self)
 
     def __hash__(self):
         return super().__hash__()
@@ -1130,7 +1100,7 @@ class Float(Number):
                 re, im = _mpc_pow((mpfself, fzero), (expt, fzero), prec, rnd)
                 return Float._new(re, prec) + Float._new(im, prec)*S.ImaginaryUnit
 
-    def __abs__(self):
+    def __abs__(self) -> Float:
         return Float._new(_mpf_abs(self._mpf_), self._prec)
 
     def __int__(self):
@@ -1621,7 +1591,7 @@ class Rational(Number):
     def _mpmath_(self, prec, rnd):
         return _make_mpf(_from_rational(self.p, self.q, prec, rnd))
 
-    def __abs__(self):
+    def __abs__(self) -> Rational:
         return Rational(abs(self.p), self.q)
 
     def __int__(self):
@@ -1909,7 +1879,7 @@ class Integer(Rational):
     def __neg__(self):
         return Integer(-self.p)
 
-    def __abs__(self):
+    def __abs__(self) -> Integer:
         if self.p >= 0:
             return self
         else:
@@ -2864,7 +2834,7 @@ class Zero(IntegerConstant, metaclass=Singleton):
         return ()
 
     @staticmethod
-    def __abs__():
+    def __abs__() -> Zero:
         return S.Zero
 
     @staticmethod
@@ -2927,7 +2897,7 @@ class One(IntegerConstant, metaclass=Singleton):
         return ()
 
     @staticmethod
-    def __abs__():
+    def __abs__() -> One:
         return S.One
 
     @staticmethod
@@ -2983,7 +2953,7 @@ class NegativeOne(IntegerConstant, metaclass=Singleton):
         return ()
 
     @staticmethod
-    def __abs__():
+    def __abs__() -> One:
         return S.One
 
     @staticmethod
@@ -3041,7 +3011,7 @@ class Half(RationalConstant, metaclass=Singleton):
         return ()
 
     @staticmethod
-    def __abs__():
+    def __abs__() -> Half:
         return S.Half
 
 
@@ -3157,7 +3127,7 @@ class Infinity(Number, metaclass=Singleton):
             return S.NegativeInfinity
         return Number.__truediv__(self, other)
 
-    def __abs__(self):
+    def __abs__(self) -> Infinity:
         return S.Infinity
 
     def __neg__(self):
@@ -3212,11 +3182,6 @@ class Infinity(Number, metaclass=Singleton):
 
     def __ne__(self, other):
         return other is not S.Infinity and other != float('inf')
-
-    __gt__ = Expr.__gt__
-    __ge__ = Expr.__ge__
-    __lt__ = Expr.__lt__
-    __le__ = Expr.__le__
 
     @_sympifyit('other', NotImplemented)
     def __mod__(self, other):
@@ -3318,7 +3283,7 @@ class NegativeInfinity(Number, metaclass=Singleton):
             return S.Infinity
         return Number.__truediv__(self, other)
 
-    def __abs__(self):
+    def __abs__(self) -> Infinity:
         return S.Infinity
 
     def __neg__(self):
@@ -3378,11 +3343,6 @@ class NegativeInfinity(Number, metaclass=Singleton):
 
     def __ne__(self, other):
         return other is not S.NegativeInfinity and other != float('-inf')
-
-    __gt__ = Expr.__gt__
-    __ge__ = Expr.__ge__
-    __lt__ = Expr.__lt__
-    __le__ = Expr.__le__
 
     @_sympifyit('other', NotImplemented)
     def __mod__(self, other):
@@ -3511,12 +3471,6 @@ class NaN(Number, metaclass=Singleton):
     def __ne__(self, other):
         return other is not S.NaN
 
-    # Expr will _sympify and raise TypeError
-    __gt__ = Expr.__gt__
-    __ge__ = Expr.__ge__
-    __lt__ = Expr.__lt__
-    __le__ = Expr.__le__
-
 nan = S.NaN
 
 @dispatch(NaN, Expr) # type:ignore
@@ -3574,7 +3528,7 @@ class ComplexInfinity(AtomicExpr, metaclass=Singleton):
         return r"\tilde{\infty}"
 
     @staticmethod
-    def __abs__():
+    def __abs__() -> Infinity:
         return S.Infinity
 
     def floor(self):
@@ -3703,7 +3657,7 @@ class Exp1(NumberSymbol, metaclass=Singleton):
         return r"e"
 
     @staticmethod
-    def __abs__():
+    def __abs__() -> Exp1:
         return S.Exp1
 
     def __int__(self):
@@ -3866,7 +3820,7 @@ class Pi(NumberSymbol, metaclass=Singleton):
         return r"\pi"
 
     @staticmethod
-    def __abs__():
+    def __abs__() -> Pi:
         return S.Pi
 
     def __int__(self):
@@ -4180,7 +4134,7 @@ class ImaginaryUnit(AtomicExpr, metaclass=Singleton):
         return printer._settings['imaginary_unit_latex']
 
     @staticmethod
-    def __abs__():
+    def __abs__() -> One:
         return S.One
 
     def _eval_evalf(self, prec):

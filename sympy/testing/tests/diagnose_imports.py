@@ -120,7 +120,7 @@ if __name__ == "__main__":
         Only imports between relevant modules will be checked."""
         return in_module(module, 'sympy')
 
-    sorted_messages = []
+    sorted_messages: list[str] = []
 
     def msg(msg, *args):
         if options.by_process:

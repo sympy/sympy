@@ -14,6 +14,7 @@ from .dimensions import Dimension
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from sympy.core.expr import Expr
     from sympy.physics.units.quantities import Quantity
 
 
@@ -29,7 +30,7 @@ class UnitSystem(_QuantityMapper):
 
     _unit_systems: dict[str, UnitSystem] = {}
 
-    def __init__(self, base_units, units=(), name="", descr="", dimension_system=None, derived_units: dict[Dimension, Quantity]={}):
+    def __init__(self, base_units, units=(), name="", descr="", dimension_system=None, derived_units: dict[Dimension, Expr]={}):
 
         UnitSystem._unit_systems[name] = self
 
@@ -61,7 +62,7 @@ class UnitSystem(_QuantityMapper):
     def __repr__(self):
         return '<UnitSystem: %s>' % repr(self._base_units)
 
-    def extend(self, base, units=(), name="", description="", dimension_system=None, derived_units: dict[Dimension, Quantity]={}):
+    def extend(self, base, units=(), name="", description="", dimension_system=None, derived_units: dict[Dimension, Expr]={}):
         """Extend the current system into a new one.
 
         Take the base and normal units of the current system to merge
@@ -126,7 +127,7 @@ class UnitSystem(_QuantityMapper):
         return self.get_dimension_system().is_consistent
 
     @property
-    def derived_units(self) -> dict[Dimension, Quantity]:
+    def derived_units(self) -> dict[Dimension, Expr]:
         return self._derived_units
 
     def get_dimensional_expr(self, expr):

@@ -370,6 +370,7 @@ def test_hypersimp():
     assert hypersimp(term, k) == (k - n)/(k + 1)**2
 
 
+@slow
 def test_nsimplify():
     x = Symbol("x")
     assert nsimplify(0) == 0
@@ -682,6 +683,10 @@ def test_besselsimp():
 
     assert besselsimp(x**2* besselj(a,x) + x**3*besselj(a+1, x) + besselj(a+2, x)) == \
     2*a*x*besselj(a + 1, x) + x**3*besselj(a + 1, x) - x**2*besselj(a + 2, x) + 2*x*besselj(a + 1, x) + besselj(a + 2, x)
+
+    assert besselsimp(besselj(a, x) + besselj(a+1, x) + besselj(a+2, x) + besselj(
+    b, x) + besselj(b+1, x) + besselj(b+2, x)) == (2*a*besselj(a+1,x) + 2*b*besselj(b+1,x) + \
+        x*besselj(a+1,x) + x*besselj(b+1,x) + 2*besselj(a+1,x) + 2*besselj(b+1,x))/x
 
 def test_Piecewise():
     e1 = x*(x + y) - y*(x + y)

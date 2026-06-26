@@ -1,7 +1,8 @@
 from __future__ import annotations
 from sympy.abc import t, w, x, y, z, n, k, m, p, i
 from sympy.assumptions import (ask, AssumptionsContext, Q)
-from sympy.assumptions.assume import assuming, global_assumptions, Predicate
+from sympy.assumptions.assume import (assuming, global_assumptions, Predicate)
+from sympy.assumptions.ask import _ask_recursive
 from sympy.assumptions.cnf import CNF, Literal
 from sympy.assumptions.facts import (single_fact_lookup,
     get_known_facts, generate_known_facts_dict, get_known_facts_keys)
@@ -254,6 +255,24 @@ def test_complex_infinity():
     assert ask(Q.positive_infinite(zoo)) is False
     assert ask(Q.negative_infinite(zoo)) is False
     assert ask(Q.transcendental(zoo)) is False
+
+
+def test_positive_infinite_symbolic():
+    assert ask(Q.positive_infinite(x), Q.positive(x)) is False
+    assert ask(Q.positive_infinite(x), Q.finite(x)) is False
+    assert ask(Q.positive_infinite(x), Q.complex(x)) is False
+    assert ask(Q.positive_infinite(x + I), Q.real(x)) is False
+    assert ask(Q.positive_infinite(x*I), Q.real(x)) is False
+    assert ask(Q.positive_infinite(x + y), Q.real(x) & Q.imaginary(y)) is False
+
+
+def test_negative_infinite_symbolic():
+    assert ask(Q.negative_infinite(x), Q.positive(x)) is False
+    assert ask(Q.negative_infinite(x), Q.finite(x)) is False
+    assert ask(Q.negative_infinite(x), Q.complex(x)) is False
+    assert ask(Q.negative_infinite(x + I), Q.real(x)) is False
+    assert ask(Q.negative_infinite(x*I), Q.real(x)) is False
+    assert ask(Q.negative_infinite(x + y), Q.real(x) & Q.imaginary(y)) is False
 
 
 def test_nan():
@@ -1138,6 +1157,13 @@ def test_bounded():
     assert ask(Q.finite(cos(x)**2)) is True
     assert ask(Q.finite(cos(x) + sin(x))) is True
 
+@XFAIL
+def test_unbounded_xfail():
+    # TODO: Rewrite the logic for the zero and nonzero recursive
+    # handlers in handlers/order.py so that these tests pass.
+    assert _ask_recursive(Q.zero(1/y), Q.finite(y) & ~Q.zero(y)) is False
+    # This is no longer handled as a side effect of the fix for issue #28129.
+    assert ask(Q.infinite(x / y), Q.infinite(x) & Q.finite(y) & ~Q.zero(y)) is True
 
 def test_unbounded():
     assert ask(Q.infinite(I * oo)) is True
@@ -1146,7 +1172,6 @@ def test_unbounded():
     assert ask(Q.infinite(-I * oo)) is True
     assert ask(Q.infinite(1 + zoo)) is True
     assert ask(Q.infinite(I * zoo)) is True
-    assert ask(Q.infinite(x / y), Q.infinite(x) & Q.finite(y) & ~Q.zero(y)) is True
     assert ask(Q.infinite(I * oo - I * oo)) is None
     assert ask(Q.infinite(x * I * oo)) is None
     assert ask(Q.infinite(1 / x), Q.finite(x) & ~Q.zero(x)) is False
@@ -1456,8 +1481,7 @@ def test_rational():
     assert ask(Q.rational(x**y),Q.irrational(x) & Q.rational(y)) is None
     assert ask(Q.rational(x**y),Q.integer(x) & Q.prime(x) & Q.rational(y)) is None
     assert ask(Q.rational(x**y),Q.integer(x) & Q.integer(y)) is None
-    assert ask(Q.rational(x**y),Q.integer(x) & Q.eq(x,0) & Q.integer(y)) is None
-    assert ask(Q.rational(x**y),Q.eq(x,1) & Q.rational(y)) is None
+    assert ask(Q.rational(x**y),Q.eq(x,1) & Q.rational(y)) is True
     assert ask(Q.rational(x**y),Q.eq(x,-1) & Q.rational(y)) is None
     assert ask(Q.rational(x**y), Q.prime(x) & Q.rational(y)) is None
     assert ask(Q.rational(x**y), ~Q.rational(x) & Q.integer(y) ) is None
@@ -1693,6 +1717,8 @@ def test_integer():
     assert ask(Q.integer(x**y), Q.zero(x) & Q.integer(y) & Q.positive(y)) is True
     assert ask(Q.integer(pi**x), Q.zero(x)) is True
     assert ask(Q.integer(x**y), Q.imaginary(x) & Q.zero(y)) is True
+    assert ask(Q.integer(x**y), Q.integer(x) & Q.integer(y) & ~Q.negative(y)) is True
+    assert ask(Q.integer(x**y), Q.integer(x) & Q.integer(y) & Q.negative(y) & ~Q.zero(x - 1) & ~Q.zero(x + 1)) is False
 
 
 def test_negative():

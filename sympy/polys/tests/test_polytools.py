@@ -82,7 +82,7 @@ from sympy.utilities.iterables import iterable
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from sympy.testing.pytest import (
-    raises, warns_deprecated_sympy, warns, tooslow, XFAIL
+    raises, warns_deprecated_sympy, warns, slow, tooslow, XFAIL
 )
 
 from sympy.abc import a, b, c, d, p, q, t, w, x, y, z, s
@@ -738,6 +738,12 @@ def test_Poly_sub_ground():
 
 def test_Poly_mul_ground():
     assert Poly(x + 1).mul_ground(2) == Poly(2*x + 2)
+
+
+def test_Poly_rep_mul_zero_is_zero():
+    # issue 29715
+    p = Poly(x**4 + y, x, y)
+    assert (p.rep * 0).is_zero is True
 
 
 def test_Poly_quo_ground():
@@ -1614,6 +1620,7 @@ def test_Poly_rat_clear_denoms():
     assert f.rat_clear_denoms(g) == (f, g)
 
 
+@slow
 def test_issue_20427():
     f = Poly(-117968192370600*18**(S(1)/3)/(217603955769048*(24201 +
         253*sqrt(9165))**(S(1)/3) + 2273005839412*sqrt(9165)*(24201 +
@@ -1662,6 +1669,10 @@ def test_Poly_diff():
 
     assert Poly(x**2*y**2 + x*y).diff(x, y) == Poly(4*x*y + 1)
     assert Poly(x**2*y**2 + x*y).diff(y, x) == Poly(4*x*y + 1)
+
+    p = Poly(x**7*y**5 + 2*x**7*y**4 + x**2, x, y, z, modulus=7)
+    assert p.diff() == Poly(2*x, x, y, z, modulus=7)
+    assert p.diff().gcd(p) == Poly(x, x, y, z, modulus=7)
 
 
 def test_issue_9585():
@@ -4298,3 +4309,11 @@ def test_schur_conditions():
 
     assert any(c <= 0 for c in p6.set_domain(QQ).schur_conditions())
     assert any(c <= 0 for c in p6.set_domain(EXRAW).schur_conditions())
+
+
+def test_groebner_reduce_scalar():
+
+    # test for issue https://github.com/sympy/sympy/issues/29828
+    B = groebner([t**2], t, order="lex")
+    assert B.reduce(7) == ([0], 7)
+    assert B.reduce(Integer(7)) == ([0], Integer(7))

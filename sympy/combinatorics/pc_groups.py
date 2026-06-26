@@ -1,4 +1,5 @@
 from __future__ import annotations
+from itertools import pairwise
 from sympy.ntheory.primetest import isprime
 from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy.printing.defaults import DefaultPrinting
@@ -128,10 +129,7 @@ class Collector(DefaultPrinting):
             if re[index[s1]] and (e1 < 0 or e1 > re[index[s1]]-1):
                 return ((s1, e1), )
 
-        for i in range(len(array)-1):
-            s1, e1 = array[i]
-            s2, e2 = array[i+1]
-
+        for (s1, e1), (s2, e2) in pairwise(array):
             if index[s1] > index[s2]:
                 e = 1 if e2 > 0 else -1
                 return ((s1, e1), (s2, e))

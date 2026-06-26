@@ -1,4 +1,5 @@
 from __future__ import annotations
+from itertools import pairwise
 from sympy.core import S, sympify
 from sympy.core.symbol import (Dummy, symbols)
 from sympy.functions import Piecewise, piecewise_fold
@@ -311,7 +312,7 @@ def interpolating_spline(d, x, X, Y):
         raise ValueError("Number of X and Y coordinates must be the same.")
     if len(X) < d + 1:
         raise ValueError("Degree must be less than the number of control points.")
-    if not all(a < b for a, b in zip(X, X[1:])):
+    if not all(a < b for a, b in pairwise(X)):
         raise ValueError("The x-coordinates must be strictly increasing.")
     X = [sympify(i) for i in X]
 

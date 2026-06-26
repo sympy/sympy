@@ -1,6 +1,7 @@
 ### The base class for all series
 from __future__ import annotations
 from collections.abc import Callable
+from itertools import pairwise
 from sympy.calculus.util import continuous_domain
 from sympy.concrete import Sum, Product
 from sympy.core.containers import Tuple
@@ -2307,8 +2308,8 @@ class ImplicitSeries(BaseSeries):
         xsample += jitterx
         ysample += jittery
 
-        xinter = [interval(x1, x2) for x1, x2 in zip(xsample[:-1], xsample[1:])]
-        yinter = [interval(y1, y2) for y1, y2 in zip(ysample[:-1], ysample[1:])]
+        xinter = [interval(x1, x2) for x1, x2 in pairwise(xsample)]
+        yinter = [interval(y1, y2) for y1, y2 in pairwise(ysample)]
         interval_list = [[x, y] for x in xinter for y in yinter]
         plot_list = []
 

@@ -298,6 +298,9 @@ def dmp_mul_ground(f: dmp[Er], c: Er, u: int, K: Domain[Er]) -> dmp[Er]:
     if not u:
         return _dmp(dup_mul_ground(_dup(f), c, K))
 
+    if not c:
+        return dmp_zero(u, K)
+
     v = u - 1
 
     return [ dmp_mul_ground(cf, c, v, K) for cf in f ]

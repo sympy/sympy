@@ -273,6 +273,14 @@ EVALUATED_POWER_EXPRESSION_PAIRS = [
     (r"180^\circ", pi)
 ]
 
+SUPERSCRIPT_IMPLICIT_MUL_PAIRS = [
+    (r"a^{2}bc",    _Mul(_Pow(a, 2), _Mul(b, c))),
+    (r"a^{2}*bc",   _Mul(_Pow(a, 2), _Mul(b, c))),
+    (r"a^{2}*b*c",  _Mul(_Mul(_Pow(a, 2), b), c)),
+    (r"a^{2}b^{3}", _Mul(_Pow(a, 2), _Pow(b, 3))),
+    (r"2^{3}bc",    _Mul(_Pow(2, 3), _Mul(b, c))),
+]
+
 UNEVALUATED_INTEGRAL_EXPRESSION_PAIRS = [
     (r"\int x dx", Integral(_Mul(1, x), x)),
     (r"\int x \, dx", Integral(_Mul(1, x), x)),
@@ -779,6 +787,12 @@ def test_power_expressions():
         if i in expected_failures:
             continue
         assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
+def test_superscript_implicit_multiplication():
+    for latex_str, sympy_expr in SUPERSCRIPT_IMPLICIT_MUL_PAIRS:
+        with evaluate(False):
+            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
 
 def test_integral_expressions():

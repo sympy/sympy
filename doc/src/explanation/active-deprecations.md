@@ -76,6 +76,13 @@ SymPy deprecation warnings.
 
 ## Version 1.15
 
+(deprecated-mechanics-bodyforcelist)=
+### Use .loads instead of .forcelist and .bodies instead of .bodylist
+
+All methods classes in SymPy Physics Mechanics now use the same set of
+attribute names for shared features. ``.bodylist`` and ``.forcelist`` are now
+``.bodies`` and ``.loads``, respectively.
+
 (ndim-array-rank)=
 ### Use .ndim instead of .rank for the number of dimensions of arrays.
 

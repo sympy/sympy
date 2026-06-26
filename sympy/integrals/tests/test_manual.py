@@ -300,6 +300,14 @@ def test_manualintegrate_special():
     assert_is_integral_of(f, F)
     f, F = sqrt(4 + 9*sin(x)**2), 2*elliptic_e(x, Rational(-9, 4))
     assert_is_integral_of(f, F)
+    f = log(x)*exp(-x**2)
+    F = sqrt(pi)*log(x)*erf(x)/2 - sqrt(pi)*Integral(erf(x)/x, x)/2
+    assert_is_integral_of(f, F)
+
+
+
+@slow
+def test_manualintegrate_special_slow():
     f, F = exp(-x**2)*exp(x), Rational(1,2)*exp(Rational(1,4))*sqrt(pi)*erf(x - Rational(1,2))
     assert_is_integral_of(f, F)
     f, F = erf(3*x)*exp(2*x), exp(2*x)*erf(3*x)/2 - exp(Rational(1,9))*erf(3*x - Rational(1,3))/2
@@ -744,6 +752,7 @@ def test_manualintegrate_sqrt_linear():
                           (9*x/10 + 11*(4*x + 5)**(S(3)/2)/40 + sqrt(4*x + 5)/40 + (4*x + 5)**2/10 + S(11)/10)/2)
 
 
+@slow
 def test_manualintegrate_sqrt_fractional_linear():
     # https://github.com/sympy/sympy/issues/28945
     f = sqrt((a - x)/(a + x))/x

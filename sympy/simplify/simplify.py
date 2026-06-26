@@ -16,7 +16,7 @@ from sympy.core.function import (expand_log, count_ops, _mexpand,
 from sympy.core.numbers import Float, I, Integer, pi, Rational, equal_valued
 from sympy.core.relational import Relational
 from sympy.core.rules import Transform
-from sympy.core.sorting import ordered
+from sympy.core.sorting import default_sort_key, ordered
 from sympy.core.sympify import _sympify
 from sympy.core.traversal import bottom_up as _bottom_up, walk as _walk
 from sympy.functions import gamma, exp, sqrt, log, exp_polar, re
@@ -1313,20 +1313,21 @@ def besselsimp(expr):
     def _bessel_simp_recursion(expr):
 
         def _use_recursion(bessel, expr):
+            def _order_key(b):
+               c, base = re(b.args[0]).as_coeff_Add()
+               return (default_sort_key(base), c)
             while True:
                 bessels = expr.find(lambda x: isinstance(x, bessel))
-                try:
-                    for ba in sorted(bessels, key=lambda x: re(x.args[0])):
-                        a, x = ba.args
-                        bap1 = bessel(a+1, x)
-                        bap2 = bessel(a+2, x)
-                        if expr.has(bap1) and expr.has(bap2):
-                            expr = expr.subs(ba, 2*(a+1)/x*bap1 - bap2)
-                            break
-                    else:
-                        return expr
-                except (ValueError, TypeError):
+                for ba in sorted(bessels, key=_order_key):
+                    a, x = ba.args
+                    bap1 = bessel(a+1, x)
+                    bap2 = bessel(a+2, x)
+                    if expr.has(bap1) and expr.has(bap2):
+                        expr = expr.subs(ba, 2*(a+1)/x*bap1 - bap2)
+                        break
+                else:
                     return expr
+
         if expr.has(besselj):
             expr = _use_recursion(besselj, expr)
         if expr.has(bessely):

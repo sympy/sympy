@@ -6,7 +6,7 @@ from sympy.simplify.simplify import simplify
 from sympy.physics.mechanics import (dynamicsymbols, ReferenceFrame, Point,
                                      RigidBody, KanesMethod, inertia, Particle,
                                      dot, find_dynamicsymbols)
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, warns_deprecated_sympy, slow
 
 
 def test_invalid_coordinates():
@@ -41,8 +41,13 @@ def test_one_dof():
     KM = KanesMethod(N, [q], [u], kd)
     KM.kanes_equations(BL, FL)
 
+    assert KM.frame == N
     assert KM.bodies == BL
     assert KM.loads == FL
+    with warns_deprecated_sympy():
+        assert KM.bodylist == BL
+    with warns_deprecated_sympy():
+        assert KM.forcelist == FL
 
     MM = KM.mass_matrix
     forcing = KM.forcing
@@ -444,14 +449,17 @@ def test_implicit_kinematics():
     kinematic_eqs = kinematic_eqs + [(q_att_vec.T * q_att_vec.diff())[0]]
 
     try:
-        KM = KanesMethod(NED, q_ind, u_ind,
-          q_dependent= q_dep,
-          kd_eqs = kinematic_eqs,
-          configuration_constraints = config_cons,
-          velocity_constraints= [],
-          u_dependent= [], #no dependent speeds
-          u_auxiliary = [], # No auxiliary speeds
-          explicit_kinematics = False # implicit kinematics
+        KM = KanesMethod(
+            NED,
+            q_ind,
+            u_ind,
+            q_dependent=q_dep,
+            kd_eqs=kinematic_eqs,
+            configuration_constraints=config_cons,
+            velocity_constraints=[],
+            u_dependent=[],  # no dependent speeds
+            u_auxiliary=[],  # no auxiliary speeds
+            explicit_kinematics=False  # implicit kinematics
         )
     except Exception as e:
         raise e
@@ -527,6 +535,7 @@ def test_implicit_kinematics():
     lhs_candidate = simplify(mass_matrix_kin_implicit * qdot_candidate).subs({q_att_vec[0]: lambda_0_sol})
     assert lhs_candidate == forcing_kin_implicit
 
+@slow
 def test_issue_24887():
     # Spherical pendulum
     g, l, m, c = symbols('g l m c')
