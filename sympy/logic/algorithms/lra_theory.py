@@ -732,26 +732,22 @@ def _reduce_matrix(A, basic, nonbasic, elim):
     if not elim:
         return A, basic, nonbasic
 
-    all_var = nonbasic + basic
-    elim_vars = [v for v in nonbasic if v in elim]
-    keep_vars = [v for v in all_var if v not in elim]
-
-    order = elim_vars + basic + [v for v in nonbasic if v not in elim]
+    order = list(elim) + basic + [v for v in nonbasic if v not in elim]
+    col_of = {v: i for i, v in enumerate(nonbasic + basic)}
     pos = {v: i for i, v in enumerate(order)}
-    col_of = {v: i for i, v in enumerate(all_var)}
     A = A[:, [col_of[v] for v in order]]
 
     B, pivots = A.rref()
-    n_elim = len(elim_vars)
 
-    keep_rows = [r for r, pc in enumerate(pivots) if pc >= n_elim]
-    basic = [order[pivots[r]] for r in keep_rows]
-    basic_set = set(basic)
-    nonbasic = [v for v in keep_vars if v not in basic_set]
+    keep_rows = [r for r, pc in enumerate(pivots) if pc >= len(elim)]
+    new_basic = [order[pivots[r]] for r in keep_rows]
+    basic_set = set(new_basic)
+    new_nonbasic = [v for v in nonbasic + basic
+                    if v not in elim and v not in basic_set]
 
-    final_order = nonbasic + basic
+    final_order = new_nonbasic + new_basic
     A = -B[keep_rows, [pos[v] for v in final_order]]
-    return A, basic, nonbasic
+    return A, new_basic, new_nonbasic
 
 
 class Boundary:
