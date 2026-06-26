@@ -147,6 +147,15 @@ def test_random_problems():
     special_cases.append([x1 + 5*x2 >= -6, 9*x1 - 3*x2 >= -9, 6*x1 + 6*x2 < -10, -3*x1 + 3*x2 < -7])
     special_cases.append([-9*x1 < 7, -5*x1 - 7*x2 < -1, 3*x1 + 7*x2 > 1, -6*x1 - 6*x2 > 9])
     special_cases.append([9*x1 - 6*x2 >= -7, 9*x1 + 4*x2 < -8, -7*x2 <= 1, 10*x2 <= -7])
+    special_cases.append([x1 >= 0, x1 <= 10, x2 >= -5, x2 <= 5, x1 + x2 >= -3, x1 - x2 <= 12])
+    special_cases.append([x1 + x2 <= 20, x1 - x2 >= -10, x1 >= 0])
+    special_cases.append([Eq(x1, 3), x2 >= 0, x2 <= 10])
+    special_cases.append([x1 > 0, x1 < 1, x2 > -1, x2 < 1])
+    special_cases.append([x1 >= -1, x1 <= 5, x2 >= -3, x1 + x2 <= 10, 2*x1 - x2 >= -8, x2 <= 6])
+    special_cases.append([3*x1 - 2*x2 <= 10, x1 >= 0, x2 >= 0, x1 + x2 >= 1])
+    special_cases.append([Eq(2*x1, 4), x2 > -1, x2 < 5])
+    special_cases.append([x1 + x2 + x3 <= 10, x1 >= 0, x2 >= 0, x3 >= 0, x1 - x3 >= -5])
+    special_cases.append([5*x1 - 3*x2 >= -6, x1 <= 4, x2 >= -2, x2 <= 7])
 
     feasible_count = 0
     for i in range(50):
@@ -159,6 +168,8 @@ def test_random_problems():
             constraints = make_random_problem(num_variables=2, num_constraints=4, rational=False, disable_strict=True)
         elif i % 8 == 3:
             constraints = make_random_problem(num_variables=3, num_constraints=12, rational=False)
+        elif i % 8 == 4:
+            constraints = make_random_problem(num_variables=3, num_constraints=4, rational=False)
         else:
             constraints = make_random_problem(num_variables=3, num_constraints=6, rational=False)
 

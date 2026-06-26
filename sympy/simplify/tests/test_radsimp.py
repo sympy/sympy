@@ -445,6 +445,9 @@ def test_fraction():
     assert fraction(m, exact=True) == \
             (Mul(1, 1, evaluate=False), Mul(2, 2, 1, evaluate=False))
 
+    u = Pow(2, -2, evaluate=False)
+    assert fraction(u, exact=True) == (1, Pow(2, 2, evaluate=False))
+
 
 def test_issue_5615():
     aA, Re, a, b, D = symbols('aA Re a b D')

@@ -8,6 +8,7 @@ from sympy.core import sympify
 from sympy.core.kind import BooleanKind
 from sympy.core.relational import Eq, Ne, Gt, Lt, Ge, Le
 from sympy.logic.inference import satisfiable
+from sympy.logic.boolalg import And
 from sympy.utilities.decorator import memoize_property
 
 
@@ -554,7 +555,6 @@ def _ask_recursive(proposition, assumptions=True, context=global_assumptions):
 
     # convert local and global assumptions to CNF
     assump_cnf = CNF.from_prop(assumptions)
-    assump_cnf.extend(context)
 
     # extract the relevant facts from assumptions with respect to args
     local_facts = _extract_all_facts(assump_cnf, args)
@@ -663,6 +663,28 @@ def _ask_single_fact(key, local_facts):
                 return False
 
     return None
+
+
+def _ask_recursive(proposition, assumptions):
+    """
+    Answers query by relying only on recursive handlers and `_ask_single_fact`
+    and avoiding expensive SAT solver queries.
+    """
+    if isinstance(proposition, AppliedPredicate):
+        key, args = proposition.function, proposition.arguments
+    else:
+        key, args = Q.is_true, (proposition,)
+
+    assump_cnf = CNF.from_prop(assumptions)
+    local_facts = _extract_all_facts(assump_cnf, args)
+
+    res = _ask_single_fact(key, local_facts)
+    if res is not None:
+        return res
+
+    res = key(*args)._eval_ask(assumptions)
+    if res is not None:
+        return bool(res)
 
 
 from sympy.assumptions.ask_generated import (get_all_known_facts,
