@@ -262,22 +262,12 @@ def _(expr: ArrayContraction):
 @_array2matrix.register(ArrayDiagonal)
 def _(expr: ArrayDiagonal):
     pexpr = _array_diagonal(_array2matrix(expr.expr), *expr.diagonal_indices)
-    pexpr = identify_hadamard_products(pexpr)
+    if isinstance(pexpr, (ArrayContraction, ArrayDiagonal)):
+        pexpr = identify_hadamard_products(pexpr)
     if isinstance(pexpr, ArrayDiagonal):
         pexpr = _array_diag2contr_diagmatrix(pexpr)
     if expr == pexpr:
         return expr
-    # After the first diag2contr pass the result may still be an ArrayDiagonal
-    # whose inner tensor product contains a DiagMatrix together with trivial
-    # OneArray factors.  Strip those trivial dims first, then retry
-    # _array_diag2contr_diagmatrix so that the newly exposed DiagMatrix pattern
-    # (unwrapping DiagMatrix back to its underlying vector) can be handled.
-    if isinstance(pexpr, ArrayDiagonal):
-        pexpr_stripped, _removed = _remove_trivial_dims(pexpr)
-        if isinstance(pexpr_stripped, ArrayDiagonal) and pexpr_stripped != pexpr:
-            pexpr2 = _array_diag2contr_diagmatrix(pexpr_stripped)
-            if pexpr2 != pexpr_stripped:
-                return _array2matrix(pexpr2)
     return _array2matrix(pexpr)
 
 
@@ -718,53 +708,20 @@ def _array_diag2contr_diagmatrix(expr: ArrayDiagonal):
                 diag_indices[i] = None
                 args[pos2_outer] = OneArray(arg2.shape[pos2_in2])
                 replaced[pos2_outer] = True
-            elif isinstance(arg1, DiagMatrix) and not replaced[pos1_outer]:
-                # arg1 is already a DiagMatrix(v).  Its diagonal is on axis
-                # pos1_inner (k-sized). The complementary axis (pos1_in2) is
-                # also k-sized so neither branch above fired.  We unwrap
-                # DiagMatrix(v) back to the underlying column-vector v (shape
-                # k×1) and re-index the diagonal to use v's row axis (the
-                # non-trivial side). The trivial col of v will be removed by
-                # _remove_trivial_dims in the next pass.
-                v = arg1.args[0]  # underlying column vector, shape (k, 1)
-                # Choose v's axis that is opposite to the diagonalised side:
-                # pos1_inner refers to the axis of DiagMatrix that was in the
-                # diagonal; use the opposite axis of v so that the k-dim
-                # remains in the diagonal while the 1-dim becomes trivial.
-                new_pos1_inner = 1 - pos1_inner
-                args[pos1_outer] = v
-                # Recompute cumulative offsets with the updated args list.
-                cumul_now = list(accumulate([0] + [get_ndim(a) for a in args]))
-                new_abs = cumul_now[pos1_outer] + new_pos1_inner
-                old_abs = abs_pos[0]  # absolute index that belonged to arg1
-                new_diag_tuple = tuple(
-                    new_abs if j == old_abs else j for j in abs_pos
-                )
-                diag_indices[i] = new_diag_tuple
-                replaced[pos1_outer] = True
-                # Recompute mapping after args modification.
-                mapping = _get_mapping_from_sub_ndim_list(
-                    [_get_sub_ndim(a) for a in args]
-                )
-            elif isinstance(arg2, DiagMatrix) and not replaced[pos2_outer]:
-                # Symmetric case: arg2 is already a DiagMatrix(v).
-                v = arg2.args[0]
-                new_pos2_inner = 1 - pos2_inner
-                args[pos2_outer] = v
-                cumul_now = list(accumulate([0] + [get_ndim(a) for a in args]))
-                new_abs = cumul_now[pos2_outer] + new_pos2_inner
-                old_abs = abs_pos[1]  # absolute index that belonged to arg2
-                new_diag_tuple = tuple(
-                    new_abs if j == old_abs else j for j in abs_pos
-                )
-                diag_indices[i] = new_diag_tuple
-                replaced[pos2_outer] = True
-                mapping = _get_mapping_from_sub_ndim_list(
-                    [_get_sub_ndim(a) for a in args]
-                )
-        diag_indices_new = [i for i in diag_indices if i is not None]
         cumul = list(accumulate([0] + [get_ndim(arg) for arg in args]))
         contr_indices2 = [tuple(cumul[a] + b for a, b in i) for i in contr_indices]
+        diag_indices_new = []
+        contracted_axes = [x for ci in contr_indices2 for x in ci]
+        for i, abs_pos in enumerate(diag_indices):
+            if abs_pos is not None:
+                rel_pos = tuple_links[i]
+                new_abs_pos = []
+                for (pos_outer, pos_inner) in rel_pos:
+                    pre_contr_pos = cumul[pos_outer] + pos_inner
+                    shift = sum(1 for c in contracted_axes if c < pre_contr_pos)
+                    new_abs_pos.append(pre_contr_pos - shift)
+                diag_indices_new.append(tuple(new_abs_pos))
+
         tc = _array_contraction(
             _array_tensor_product(*args), *contr_indices2
         )
