@@ -1621,6 +1621,7 @@ def test_imaginary():
     assert ask(Q.imaginary(I*x), Q.real(x)) is True
     assert ask(Q.imaginary(I*x), Q.imaginary(x)) is False
     assert ask(Q.imaginary(I*x), Q.complex(x)) is None
+    assert ask(Q.imaginary(I*x), Q.zero(x)) is False
     assert ask(Q.imaginary(x*y), Q.imaginary(x) & Q.real(y)) is True
     assert ask(Q.imaginary(x*y), Q.real(x) & Q.real(y)) is False
 
@@ -1692,6 +1693,7 @@ def test_integer():
     assert ask(Q.integer(2*x), Q.real(x)) is None
     assert ask(Q.integer(sqrt(2)*x), Q.integer(x)) is None # x can be 0
     assert ask(Q.integer(sqrt(2)*x), Q.irrational(x)) is None
+    assert ask(Q.integer(pi*x), Q.zero(x)) is True
 
     assert ask(Q.integer(x/2), Q.odd(x)) is False
     assert ask(Q.integer(x/2), Q.even(x)) is True
@@ -2056,6 +2058,7 @@ def test_real_basic():
     assert ask(Q.real(I*x), Q.real(x)) is None
     assert ask(Q.real(I*x), Q.imaginary(x)) is True
     assert ask(Q.real(I*x), Q.complex(x)) is None
+    assert ask(Q.real(I*x), Q.zero(x)) is True
 
 
 def test_real_pow():

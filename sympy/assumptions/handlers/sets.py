@@ -584,6 +584,7 @@ def _(expr, assumptions):
     """
     * Real*Imaginary      -> Imaginary
     * Imaginary*Imaginary -> Real
+    * Complex*Zero        -> Real
     """
     if expr.is_number:
         return _Imaginary_number(expr, assumptions)
