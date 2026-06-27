@@ -1430,8 +1430,15 @@ def is_ge(lhs, rhs, assumptions=None):
             diff = lhs - rhs
             if diff is not S.NaN:
                 rv = is_extended_nonnegative(diff, assumptions)
-                if rv is not None:
-                    return rv
+                if rv is True:
+                    return True
+                if rv is False:
+                    _diff = AssumptionsWrapper(diff, assumptions)
+                    if (_diff.is_finite is True
+                            and _lhs.is_finite is not True
+                            and _rhs.is_finite is not True):
+                        return None
+                    return False
 
 
 def is_neq(lhs, rhs, assumptions=None):

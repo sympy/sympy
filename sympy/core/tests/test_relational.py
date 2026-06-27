@@ -2,7 +2,7 @@ from __future__ import annotations
 from sympy.core.logic import fuzzy_and
 from sympy.core.sympify import _sympify
 from sympy.multipledispatch import dispatch
-from sympy.testing.pytest import XFAIL, raises
+from sympy.testing.pytest import XFAIL, raises, slow
 from sympy.assumptions.ask import Q
 from sympy.core.add import Add
 from sympy.core.basic import Basic
@@ -1234,6 +1234,19 @@ def test_is_ge_le():
     assert is_gt(PowTest(3, 9), PowTest(3,2))
     assert is_le(PowTest(3, 2), PowTest(3,9))
     assert is_lt(PowTest(3, 2), PowTest(3,9))
+
+
+@slow
+def test_is_ge_extended_real_infinite_cancellation():
+    a = Symbol('a')
+    assert is_ge(a + 1, a, Q.extended_real(a)) is True
+    assert is_ge(a, a + 1, Q.extended_real(a)) is None
+    assert is_gt(a + 1, a, Q.extended_real(a)) is None
+    assert is_lt(a, a + 1, Q.extended_real(a)) is None
+    assert is_le(a + 1, a, Q.extended_real(a)) is None
+    b = Symbol('b')
+    assert is_gt(b + 1, b, Q.real(b)) is True
+    assert is_ge(b + 1, b, Q.real(b)) is True
 
 
 def test_weak_strict():
