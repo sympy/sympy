@@ -7,8 +7,8 @@ from sympy.core.numbers import Number
 from sympy.core.singleton import S
 from sympy.core.sympify import sympify
 
-from sympy.tensor.algebraic.pure_tensor import PureTensor, _factor_shapes
-from sympy.tensor.algebraic.zero_tensor import ZeroTensor, zero_tensor
+from sympy.tensor.algebraic.algebraic_pure_tensor import AlgebraicPureTensor, _factor_shapes
+from sympy.tensor.algebraic.algebraic_zero_tensor import AlgebraicZeroTensor, algebraic_zero_tensor
 
 
 # ---------------------------------------------------------------------------
@@ -33,18 +33,18 @@ def _normalize_shape(s):
 def _tensor_shape_of(expr):
     """Return the full tensor shape of *expr* as a tuple of factor shapes.
 
-    Handles PureTensor, ZeroTensor, Mul(coeff, PureTensor), and bare
+    Handles AlgebraicPureTensor, AlgebraicZeroTensor, Mul(coeff, AlgebraicPureTensor), and bare
     matrix-like objects (whose single-factor shape is wrapped).
     """
-    if isinstance(expr, PureTensor):
+    if isinstance(expr, AlgebraicPureTensor):
         return expr.tensor_shape
-    if isinstance(expr, ZeroTensor):
+    if isinstance(expr, AlgebraicZeroTensor):
         return expr.shape
-    if isinstance(expr, Mul) and not isinstance(expr, PureTensor):
+    if isinstance(expr, Mul) and not isinstance(expr, AlgebraicPureTensor):
         for f in expr.args:
-            if isinstance(f, PureTensor):
+            if isinstance(f, AlgebraicPureTensor):
                 return f.tensor_shape
-            if isinstance(f, ZeroTensor):
+            if isinstance(f, AlgebraicZeroTensor):
                 return f.shape
     if hasattr(expr, "shape"):
         return (expr.shape,)
@@ -59,14 +59,14 @@ class ShapeMismatchError(TypeError):
 
 
 class AlgebraicTensor(Basic):
-    """Sum of PureTensors (and/or ZeroTensors) sharing the same tensor shape.
+    """Sum of AlgebraicPureTensors (and/or AlgebraicZeroTensors) sharing the same tensor shape.
 
     Built on top of ``Basic`` (not ``Add``) to avoid the is_commutative
     descriptor conflict in ``AssocOp._from_args``, while still exposing
     ``is_Add = True`` so that the wider SymPy ecosystem recognises this
     as an additive expression.
 
-    Shape enforcement and ZeroTensor handling are done in ``__new__``.
+    Shape enforcement and AlgebraicZeroTensor handling are done in ``__new__``.
     The flattening logic is kept intentionally simple so that a future
     ``.simplify`` extension can layer noncommutative-polynomial factoring
     on top without fighting against ``Add.flatten`` internals.
@@ -80,7 +80,7 @@ class AlgebraicTensor(Basic):
     is_AlgebraicTensor = True
     is_Add = True
 
-    identity = None  # no single identity; use ZeroTensor(shape) instead
+    identity = None  # no single identity; use AlgebraicZeroTensor(shape) instead
 
     def __new__(cls, *args, evaluate=True, _sympify=True):
         if not args:
@@ -88,13 +88,13 @@ class AlgebraicTensor(Basic):
 
         if _sympify:
             args = tuple(
-                a if isinstance(a, ZeroTensor) else sympify(a)
+                a if isinstance(a, AlgebraicZeroTensor) else sympify(a)
                 for a in args
             )
 
         if len(args) == 1:
             arg = args[0]
-            if isinstance(arg, (PureTensor, ZeroTensor)):
+            if isinstance(arg, (AlgebraicPureTensor, AlgebraicZeroTensor)):
                 return arg
             if isinstance(arg, AlgebraicTensor):
                 return arg
@@ -117,13 +117,13 @@ class AlgebraicTensor(Basic):
                 return zero_term
             raise ValueError("AlgebraicTensor resulted in zero terms")
 
-        # If a ZeroTensor was provided, always keep it as an anchor.
+        # If an AlgebraicZeroTensor was provided, always keep it as an anchor.
         # Only unwrap to a single term when there is exactly one non-zero
-        # term AND no ZeroTensor was explicitly given.
-        if len(flat) == 1 and zero_term is None and not isinstance(flat[0], ZeroTensor):
+        # term AND no AlgebraicZeroTensor was explicitly given.
+        if len(flat) == 1 and zero_term is None and not isinstance(flat[0], AlgebraicZeroTensor):
             return flat[0]
 
-        # Append ZeroTensor if present (for shape anchoring)
+        # Append AlgebraicZeroTensor if present (for shape anchoring)
         if zero_term is not None:
             flat.append(zero_term)
 
@@ -132,11 +132,11 @@ class AlgebraicTensor(Basic):
 
     @classmethod
     def _flatten_args(cls, args):
-        """Flatten nested AlgebraicTensors, validate shapes, collect ZeroTensors.
+        """Flatten nested AlgebraicTensors, validate shapes, collect AlgebraicZeroTensors.
 
         Returns
         -------
-        (terms : list, shape : tuple | None, zero_term : ZeroTensor | None)
+        (terms : list, shape : tuple | None, zero_term : AlgebraicZeroTensor | None)
 
         *shape* is a tuple of per-factor (rows, cols) pairs, e.g.
         ``((3, 4), (4, 5))``.
@@ -149,7 +149,7 @@ class AlgebraicTensor(Basic):
         while work:
             o = work.pop()
 
-            if isinstance(o, ZeroTensor):
+            if isinstance(o, AlgebraicZeroTensor):
                 candidate = o.shape
                 if shape is None:
                     shape = candidate
@@ -165,7 +165,7 @@ class AlgebraicTensor(Basic):
                 work.extend(o.args)
                 continue
 
-            if isinstance(o, PureTensor):
+            if isinstance(o, AlgebraicPureTensor):
                 candidate = o.tensor_shape
                 if shape is None:
                     shape = candidate
@@ -177,7 +177,7 @@ class AlgebraicTensor(Basic):
                 terms.append(o)
                 continue
 
-            if isinstance(o, Mul) and not isinstance(o, PureTensor):
+            if isinstance(o, Mul) and not isinstance(o, AlgebraicPureTensor):
                 candidate = _tensor_shape_of(o)
                 if candidate is not None:
                     if shape is None:
@@ -226,12 +226,12 @@ class AlgebraicTensor(Basic):
         """Non-zero, non-coefficient terms in this sum."""
         return tuple(
             a for a in self.args
-            if not isinstance(a, Number) and not isinstance(a, ZeroTensor)
+            if not isinstance(a, Number) and not isinstance(a, AlgebraicZeroTensor)
         )
 
     def has_zero_term(self):
-        """Return True if a ZeroTensor anchors this sum."""
-        return any(isinstance(a, ZeroTensor) for a in self.args)
+        """Return True if an AlgebraicZeroTensor anchors this sum."""
+        return any(isinstance(a, AlgebraicZeroTensor) for a in self.args)
 
     # ---- Arithmetic delegation ----
 
@@ -252,29 +252,29 @@ class AlgebraicTensor(Basic):
         return AlgebraicTensor(other, -self)
 
     def __mul__(self, other):
-        """Multiply each term by a scalar/symbol, or tensor-product with PureTensor."""
+        """Multiply each term by a scalar/symbol, or tensor-product with AlgebraicPureTensor."""
         other = sympify(other)
         if isinstance(other, Number) or (hasattr(other, 'is_commutative') and
-                other.is_commutative and not isinstance(other, (PureTensor, AlgebraicTensor))):
+                other.is_commutative and not isinstance(other, (AlgebraicPureTensor, AlgebraicTensor))):
             return AlgebraicTensor(*(a * other for a in self.args))
-        if isinstance(other, PureTensor):
-            return AlgebraicTensor(*(PureTensor(other, a) for a in self.args))
+        if isinstance(other, AlgebraicPureTensor):
+            return AlgebraicTensor(*(AlgebraicPureTensor(other, a) for a in self.args))
         return Mul(self, other)
 
     def __rmul__(self, other):
-        """Multiply each term by a scalar/symbol, or tensor-product with PureTensor."""
+        """Multiply each term by a scalar/symbol, or tensor-product with AlgebraicPureTensor."""
         other = sympify(other)
         if isinstance(other, Number) or (hasattr(other, 'is_commutative') and
-                other.is_commutative and not isinstance(other, (PureTensor, AlgebraicTensor))):
+                other.is_commutative and not isinstance(other, (AlgebraicPureTensor, AlgebraicTensor))):
             return AlgebraicTensor(*(a * other for a in self.args))
-        if isinstance(other, PureTensor):
-            return AlgebraicTensor(*(PureTensor(other, a) for a in self.args))
+        if isinstance(other, AlgebraicPureTensor):
+            return AlgebraicTensor(*(AlgebraicPureTensor(other, a) for a in self.args))
         return Mul(other, self)
 
     # ---- Factorization helpers (infrastructure for future .simplify) ----
 
     def as_common_left(self):
-        """Extract common left factors from all PureTensor terms.
+        """Extract common left factors from all AlgebraicPureTensor terms.
 
         Returns
         -------
@@ -288,18 +288,18 @@ class AlgebraicTensor(Basic):
         """
         pure_terms = [
             a for a in self.args
-            if isinstance(a, PureTensor) or (isinstance(a, Mul) and
-                any(isinstance(f, PureTensor) for f in a.args))
+            if isinstance(a, AlgebraicPureTensor) or (isinstance(a, Mul) and
+                any(isinstance(f, AlgebraicPureTensor) for f in a.args))
         ]
         if not pure_terms:
             return ((), self, ())
 
         def _pure_part(expr):
-            if isinstance(expr, PureTensor):
+            if isinstance(expr, AlgebraicPureTensor):
                 return expr.factors
             if isinstance(expr, Mul):
                 for f in expr.args:
-                    if isinstance(f, PureTensor):
+                    if isinstance(f, AlgebraicPureTensor):
                         return f.factors
             return ()
 
@@ -322,19 +322,19 @@ class AlgebraicTensor(Basic):
         middles = []
         for t, fl in zip(pure_terms, factor_lists):
             mid = fl[common_len:]
-            if isinstance(t, Mul) and not isinstance(t, PureTensor):
+            if isinstance(t, Mul) and not isinstance(t, AlgebraicPureTensor):
                 coeff = S.One
                 for f in t.args:
-                    if isinstance(f, PureTensor):
+                    if isinstance(f, AlgebraicPureTensor):
                         coeff = t / f
                         break
                 if mid:
-                    middles.append(coeff * PureTensor(*mid))
+                    middles.append(coeff * AlgebraicPureTensor(*mid))
                 else:
                     middles.append(coeff)
             else:
                 if mid:
-                    middles.append(PureTensor(*mid))
+                    middles.append(AlgebraicPureTensor(*mid))
                 else:
                     middles.append(S.One)
 
@@ -346,7 +346,7 @@ class AlgebraicTensor(Basic):
         return (left_factors, rest, ())
 
     def as_common_right(self):
-        """Extract common right factors from all PureTensor terms.
+        """Extract common right factors from all AlgebraicPureTensor terms.
 
         Symmetric to :meth:`as_common_left` but for trailing factors.
 
@@ -356,18 +356,18 @@ class AlgebraicTensor(Basic):
         """
         pure_terms = [
             a for a in self.args
-            if isinstance(a, PureTensor) or (isinstance(a, Mul) and
-                any(isinstance(f, PureTensor) for f in a.args))
+            if isinstance(a, AlgebraicPureTensor) or (isinstance(a, Mul) and
+                any(isinstance(f, AlgebraicPureTensor) for f in a.args))
         ]
         if not pure_terms:
             return ((), self, ())
 
         def _pure_part(expr):
-            if isinstance(expr, PureTensor):
+            if isinstance(expr, AlgebraicPureTensor):
                 return expr.factors
             if isinstance(expr, Mul):
                 for f in expr.args:
-                    if isinstance(f, PureTensor):
+                    if isinstance(f, AlgebraicPureTensor):
                         return f.factors
             return ()
 
@@ -390,19 +390,19 @@ class AlgebraicTensor(Basic):
         middles = []
         for t, fl in zip(pure_terms, factor_lists):
             mid = fl[:-common_len] if common_len < len(fl) else ()
-            if isinstance(t, Mul) and not isinstance(t, PureTensor):
+            if isinstance(t, Mul) and not isinstance(t, AlgebraicPureTensor):
                 coeff = S.One
                 for f in t.args:
-                    if isinstance(f, PureTensor):
+                    if isinstance(f, AlgebraicPureTensor):
                         coeff = t / f
                         break
                 if mid:
-                    middles.append(coeff * PureTensor(*mid))
+                    middles.append(coeff * AlgebraicPureTensor(*mid))
                 else:
                     middles.append(coeff)
             else:
                 if mid:
-                    middles.append(PureTensor(*mid))
+                    middles.append(AlgebraicPureTensor(*mid))
                 else:
                     middles.append(S.One)
 
@@ -461,5 +461,5 @@ class AlgebraicTensor(Basic):
 # expressions like (A + B) where A/B involve PureTensor or AlgebraicTensor
 # are routed through AlgebraicTensor.__new__ instead of Add.__new__.
 add.register_handlerclass(
-    (PureTensor, AlgebraicTensor), AlgebraicTensor
+    (AlgebraicPureTensor, AlgebraicTensor), AlgebraicTensor
 )

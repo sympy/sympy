@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 
-class ZeroTensor:
+class AlgebraicZeroTensor:
     """Zero tensor carrying a specific tensor shape.
 
-    A ZeroTensor of shape ``((m0, n0), (m1, n1), ...)`` acts as the additive
-    identity for all AlgebraicTensors and PureTensors with the same sequence
-    of factor shapes.  ZeroTensors with different shape sequences belong to
+    An AlgebraicZeroTensor of shape ``((m0, n0), (m1, n1), ...)`` acts as the additive
+    identity for all AlgebraicTensors and AlgebraicPureTensors with the same sequence
+    of factor shapes.  AlgebraicZeroTensors with different shape sequences belong to
     different tensor spaces and are not summable.
 
     The shape is a tuple of (rows, cols) pairs, one per tensor-product factor.
@@ -15,7 +15,7 @@ class ZeroTensor:
     """
 
     __slots__ = ("_shape",)
-    is_ZeroTensor = True
+    is_AlgebraicZeroTensor = True
 
     def __init__(self, shape):
         # Normalise to a tuple of (rows, cols) tuples.
@@ -54,15 +54,15 @@ class ZeroTensor:
         return AlgebraicTensor(other, -self)
 
     def __eq__(self, other):
-        if isinstance(other, ZeroTensor):
+        if isinstance(other, AlgebraicZeroTensor):
             return self._shape == other._shape
         return NotImplemented
 
     def __hash__(self):
-        return hash(("ZeroTensor", self._shape))
+        return hash(("AlgebraicZeroTensor", self._shape))
 
     def __repr__(self):
-        return f"ZeroTensor{self._shape}"
+        return f"AlgebraicZeroTensor{self._shape}"
 
     def __str__(self):
         return f"0_{self._shape}"
@@ -71,12 +71,12 @@ class ZeroTensor:
         return False
 
     def simplify(self, **kwargs):
-        """A ZeroTensor is already in simplest form; return self."""
+        """An AlgebraicZeroTensor is already in simplest form; return self."""
         return self
 
 
-def zero_tensor(shape):
-    """Convenience constructor for ZeroTensor.
+def algebraic_zero_tensor(shape):
+    """Convenience constructor for AlgebraicZeroTensor.
 
     Parameters
     ----------
@@ -88,6 +88,6 @@ def zero_tensor(shape):
 
     Returns
     -------
-    ZeroTensor
+    AlgebraicZeroTensor
     """
-    return ZeroTensor(shape)
+    return AlgebraicZeroTensor(shape)

@@ -15,7 +15,7 @@ def raises(expected_exc):
         raise AssertionError(f"Expected {expected_exc.__name__} but no exception was raised")
 
 from sympy.matrices.expressions import MatrixSymbol
-from sympy.tensor.algebraic.pure_tensor import PureTensor, tensor_product
+from sympy.tensor.algebraic.algebraic_pure_tensor import AlgebraicPureTensor, algebraic_tensor_product
 
 
 # --- Fixtures ---
@@ -29,14 +29,14 @@ I4 = MatrixSymbol("I4", 4, 4)
 
 
 def test_pure_tensor_single_factor():
-    pt = PureTensor(A)
+    pt = AlgebraicPureTensor(A)
     assert pt is A
 
 
 def test_pure_tensor_construction():
-    pt = PureTensor(A, C)
-    assert isinstance(pt, PureTensor)
-    assert pt.is_PureTensor
+    pt = AlgebraicPureTensor(A, C)
+    assert isinstance(pt, AlgebraicPureTensor)
+    assert pt.is_AlgebraicPureTensor
     assert not pt.is_commutative
     assert pt.num_factors == 2
     assert pt.factors == (A, C)
@@ -44,51 +44,51 @@ def test_pure_tensor_construction():
 
 
 def test_pure_tensor_three_factors():
-    pt = PureTensor(A, I4, C)
+    pt = AlgebraicPureTensor(A, I4, C)
     assert pt.num_factors == 3
     assert pt.factors == (A, I4, C)
     assert pt.tensor_shape == ((3, 4), (4, 4), (4, 5))
 
 
 def test_pure_tensor_shape_chain():
-    pt = PureTensor(A, C)
+    pt = AlgebraicPureTensor(A, C)
     assert pt.tensor_shape == ((3, 4), (4, 5))
-    pt2 = PureTensor(C, D)
+    pt2 = AlgebraicPureTensor(C, D)
     assert pt2.tensor_shape == ((4, 5), (3, 5))
 
 
 def test_pure_tensor_no_args():
     with raises(ValueError):
-        PureTensor()
+        AlgebraicPureTensor()
 
 
 def test_pure_tensor_no_shape():
     from sympy import Symbol
     x = Symbol("x")
     with raises(TypeError):
-        PureTensor(x)
+        AlgebraicPureTensor(x)
 
 
 def test_pure_tensor_number_rejected():
     with raises(TypeError):
-        PureTensor(5)
+        AlgebraicPureTensor(5)
 
 
 def test_pure_tensor_repr():
-    pt = PureTensor(A, C)
+    pt = AlgebraicPureTensor(A, C)
     r = repr(pt)
-    assert "PureTensor" in r
+    assert "AlgebraicPureTensor" in r
     assert "A" in r
     assert "C" in r
 
 
 def test_pure_tensor_str():
-    pt = PureTensor(A, C)
+    pt = AlgebraicPureTensor(A, C)
     assert "A" in str(pt)
     assert "C" in str(pt)
 
 
 def test_tensor_product_convenience():
-    pt = tensor_product(A, C)
-    assert isinstance(pt, PureTensor)
+    pt = algebraic_tensor_product(A, C)
+    assert isinstance(pt, AlgebraicPureTensor)
     assert pt.tensor_shape == ((3, 4), (4, 5))

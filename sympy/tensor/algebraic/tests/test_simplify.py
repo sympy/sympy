@@ -28,8 +28,8 @@ from sympy.tensor.algebraic.algebraic_tensor import (
     AlgebraicTensor,
     ShapeMismatchError,
 )
-from sympy.tensor.algebraic.pure_tensor import PureTensor, tensor_product
-from sympy.tensor.algebraic.zero_tensor import ZeroTensor, zero_tensor
+from sympy.tensor.algebraic.algebraic_pure_tensor import AlgebraicPureTensor, algebraic_tensor_product
+from sympy.tensor.algebraic.algebraic_zero_tensor import AlgebraicZeroTensor, algebraic_zero_tensor
 from sympy.tensor.algebraic.simplify import tensorsimplify
 
 
@@ -45,54 +45,54 @@ J4 = MatrixSymbol("J4", 4, 4)
 
 
 # =========================================================
-# ZeroTensor simplification
+# AlgebraicZeroTensor simplification
 # =========================================================
 
 def test_zerotensor_simplify_returns_self():
-    """ZeroTensor.simplify() returns the same object."""
-    z = ZeroTensor(((3, 4), (4, 5)))
+    """AlgebraicZeroTensor.simplify() returns the same object."""
+    z = AlgebraicZeroTensor(((3, 4), (4, 5)))
     assert z.simplify() is z
 
 
 def test_zerotensor_tensorsimplify():
-    """tensorsimplify on ZeroTensor returns the same object."""
-    z = ZeroTensor(((3, 4),))
+    """tensorsimplify on AlgebraicZeroTensor returns the same object."""
+    z = AlgebraicZeroTensor(((3, 4),))
     assert tensorsimplify(z) is z
 
 
 # =========================================================
-# PureTensor simplification
+# AlgebraicPureTensor simplification
 # =========================================================
 
 def test_puretensor_simplify_no_change():
-    """PureTensor with trivial coefficient and simple factors is unchanged."""
-    pt = PureTensor(A, C)
+    """AlgebraicPureTensor with trivial coefficient and simple factors is unchanged."""
+    pt = AlgebraicPureTensor(A, C)
     result = pt.simplify()
-    assert isinstance(result, PureTensor)
+    assert isinstance(result, AlgebraicPureTensor)
     assert result.factors == pt.factors
 
 
 def test_puretensor_simplify_coefficient():
-    """PureTensor coefficient is simplified."""
-    pt = PureTensor(2 + Rational(1, 2) - Rational(1, 2), A, C)
+    """AlgebraicPureTensor coefficient is simplified."""
+    pt = AlgebraicPureTensor(2 + Rational(1, 2) - Rational(1, 2), A, C)
     result = pt.simplify()
-    assert isinstance(result, PureTensor)
+    assert isinstance(result, AlgebraicPureTensor)
     assert result._get_coeff() == 2
 
 
 def test_puretensor_simplify_zero_coeff_returns_zerotensor():
-    """PureTensor whose coefficient simplifies to zero becomes ZeroTensor."""
-    pt = PureTensor(S.Zero, A, C)
+    """AlgebraicPureTensor whose coefficient simplifies to zero becomes AlgebraicZeroTensor."""
+    pt = AlgebraicPureTensor(S.Zero, A, C)
     result = pt.simplify()
-    assert isinstance(result, ZeroTensor)
+    assert isinstance(result, AlgebraicZeroTensor)
     assert result.shape == ((3, 4), (4, 5))
 
 
 def test_puretensor_simplify_method():
-    """PureTensor.simplify() delegates to tensorsimplify."""
-    pt = PureTensor(A, C)
+    """AlgebraicPureTensor.simplify() delegates to tensorsimplify."""
+    pt = AlgebraicPureTensor(A, C)
     result = pt.simplify()
-    assert isinstance(result, (PureTensor, ZeroTensor))
+    assert isinstance(result, (AlgebraicPureTensor, AlgebraicZeroTensor))
 
 
 # =========================================================
@@ -100,39 +100,39 @@ def test_puretensor_simplify_method():
 # =========================================================
 
 def test_algebraictensor_combine_identical_terms():
-    """Two identical PureTensors with numeric coefficients are combined."""
-    pt = PureTensor(A, C)
+    """Two identical AlgebraicPureTensors with numeric coefficients are combined."""
+    pt = AlgebraicPureTensor(A, C)
     at = AlgebraicTensor(2 * pt, 3 * pt)
     result = at.simplify()
     # The two terms 2*pt and 3*pt share the same factor sequence,
     # so coefficients should add: 2+3 = 5.
-    assert isinstance(result, PureTensor)
+    assert isinstance(result, AlgebraicPureTensor)
     assert result._get_coeff() == 5
     assert result.factors == (A, C)
 
 
 def test_algebraictensor_combine_identical_terms_subtraction():
     """Identical terms with opposite sign cancel."""
-    pt = PureTensor(A, C)
+    pt = AlgebraicPureTensor(A, C)
     at = AlgebraicTensor(3 * pt, -3 * pt)
     result = at.simplify()
-    # All terms cancel; the result should be a ZeroTensor.
-    assert isinstance(result, ZeroTensor)
+    # All terms cancel; the result should be a AlgebraicZeroTensor.
+    assert isinstance(result, AlgebraicZeroTensor)
 
 
 def test_algebraictensor_combine_identical_terms_partial_cancel():
     """Identical terms that partially cancel retain the remainder."""
-    pt = PureTensor(A, C)
+    pt = AlgebraicPureTensor(A, C)
     at = AlgebraicTensor(5 * pt, -2 * pt)
     result = at.simplify()
-    assert isinstance(result, PureTensor)
+    assert isinstance(result, AlgebraicPureTensor)
     assert result._get_coeff() == 3
     assert result.factors == (A, C)
 
 
 def test_algebraictensor_no_combine_different_factors():
     """Terms with different factor sequences are NOT combined."""
-    at = PureTensor(A, C) + PureTensor(B, C)
+    at = AlgebraicPureTensor(A, C) + AlgebraicPureTensor(B, C)
     result = at.simplify()
     # A and B are different factors, so no combining.
     assert isinstance(result, AlgebraicTensor)
@@ -140,10 +140,10 @@ def test_algebraictensor_no_combine_different_factors():
 
 def test_algebraictensor_combine_three_identical():
     """Three identical terms combine their coefficients."""
-    pt = PureTensor(A, C)
+    pt = AlgebraicPureTensor(A, C)
     at = AlgebraicTensor(pt, 2 * pt, 3 * pt)
     result = at.simplify()
-    assert isinstance(result, PureTensor)
+    assert isinstance(result, AlgebraicPureTensor)
     assert result._get_coeff() == 6
     assert result.factors == (A, C)
 
@@ -152,10 +152,10 @@ def test_algebraictensor_combine_with_symbol_coefficients():
     """Terms with symbolic coefficients combine correctly."""
     x = Symbol("x")
     y = Symbol("y")
-    pt = PureTensor(A, C)
+    pt = AlgebraicPureTensor(A, C)
     at = AlgebraicTensor(x * pt, y * pt)
     result = at.simplify()
-    assert isinstance(result, PureTensor)
+    assert isinstance(result, AlgebraicPureTensor)
     coeff = result._get_coeff()
     # The coefficient should be x + y (simplified by SymPy)
     assert coeff == x + y
@@ -164,8 +164,8 @@ def test_algebraictensor_combine_with_symbol_coefficients():
 
 def test_algebraictensor_mixed_like_and_unlike():
     """Mix of identical and different terms: only identical ones combine."""
-    pt_ac = PureTensor(A, C)
-    pt_bc = PureTensor(B, C)
+    pt_ac = AlgebraicPureTensor(A, C)
+    pt_bc = AlgebraicPureTensor(B, C)
     at = AlgebraicTensor(2 * pt_ac, 3 * pt_ac, pt_bc)
     result = at.simplify()
     assert isinstance(result, AlgebraicTensor)
@@ -173,10 +173,10 @@ def test_algebraictensor_mixed_like_and_unlike():
     found_five = False
     found_one = False
     for arg in result.args:
-        if isinstance(arg, PureTensor) and arg.factors == (A, C):
+        if isinstance(arg, AlgebraicPureTensor) and arg.factors == (A, C):
             assert arg._get_coeff() == 5
             found_five = True
-        if isinstance(arg, PureTensor) and arg.factors == (B, C):
+        if isinstance(arg, AlgebraicPureTensor) and arg.factors == (B, C):
             assert arg._get_coeff() == 1
             found_one = True
     assert found_five and found_one
@@ -188,18 +188,18 @@ def test_algebraictensor_mixed_like_and_unlike():
 
 def test_algebraictensor_common_right_factor():
     """Common right factor is extracted, middle simplified."""
-    at = PureTensor(A, I4, C) + PureTensor(B, I4, C)
+    at = AlgebraicPureTensor(A, I4, C) + AlgebraicPureTensor(B, I4, C)
     result = at.simplify()
     # Both terms share I4, C on the right; after extraction the middle is
     # A + B and the right factors are (I4, C).
-    # Result should be PureTensor(AlgebraicTensor(A, B), I4, C) or
+    # Result should be AlgebraicPureTensor(AlgebraicTensor(A, B), I4, C) or
     # an equivalent structure.
     assert result is not None
 
 
 def test_algebraictensor_common_left_factor():
     """Common left factor is extracted, middle simplified."""
-    at = PureTensor(A, I4, C) + PureTensor(A, J4, C)
+    at = AlgebraicPureTensor(A, I4, C) + AlgebraicPureTensor(A, J4, C)
     result = at.simplify()
     # A is common on the left.
     assert result is not None
@@ -207,33 +207,33 @@ def test_algebraictensor_common_left_factor():
 
 def test_algebraictensor_common_both_sides():
     """Both left and right common factors are extracted."""
-    at = PureTensor(A, I4, C) + PureTensor(A, J4, C)
+    at = AlgebraicPureTensor(A, I4, C) + AlgebraicPureTensor(A, J4, C)
     result = at.simplify()
     # Left: A, right: C, middle: I4 + J4
     assert result is not None
 
 
 # =========================================================
-# AlgebraicTensor: ZeroTensor anchor
+# AlgebraicTensor: AlgebraicZeroTensor anchor
 # =========================================================
 
 def test_algebraictensor_with_zerotensor_anchor():
-    """Simplify preserves ZeroTensor anchor when present."""
-    z = ZeroTensor(((3, 4), (4, 5)))
-    pt = PureTensor(A, C)
+    """Simplify preserves AlgebraicZeroTensor anchor when present."""
+    z = AlgebraicZeroTensor(((3, 4), (4, 5)))
+    pt = AlgebraicPureTensor(A, C)
     at = AlgebraicTensor(pt, z)
     result = at.simplify()
     assert result is not None
 
 
 def test_algebraictensor_all_cancel_with_zerotensor():
-    """When all non-zero terms cancel and a ZeroTensor anchor exists,
-    return the ZeroTensor."""
-    z = ZeroTensor(((3, 4), (4, 5)))
-    pt = PureTensor(A, C)
+    """When all non-zero terms cancel and a AlgebraicZeroTensor anchor exists,
+    return the AlgebraicZeroTensor."""
+    z = AlgebraicZeroTensor(((3, 4), (4, 5)))
+    pt = AlgebraicPureTensor(A, C)
     at = AlgebraicTensor(pt, -pt, z)
     result = at.simplify()
-    assert isinstance(result, ZeroTensor)
+    assert isinstance(result, AlgebraicZeroTensor)
     assert result.shape == ((3, 4), (4, 5))
 
 
@@ -243,11 +243,11 @@ def test_algebraictensor_all_cancel_with_zerotensor():
 
 def test_algebraictensor_simplify_coefficient():
     """Numeric coefficients inside the AlgebraicTensor are simplified."""
-    pt = PureTensor(A, C)
+    pt = AlgebraicPureTensor(A, C)
     at = AlgebraicTensor((1 + 1) * pt, (2 + 3) * pt)
     result = at.simplify()
     # 2*pt + 5*pt = 7*pt
-    assert isinstance(result, PureTensor)
+    assert isinstance(result, AlgebraicPureTensor)
     assert result._get_coeff() == 7
 
 
@@ -257,21 +257,21 @@ def test_algebraictensor_simplify_coefficient():
 
 def test_tensorsimplify_dispatch_algebraic():
     """tensorsimplify routes AlgebraicTensor to the right handler."""
-    at = PureTensor(A, I3) + PureTensor(B, I3)
+    at = AlgebraicPureTensor(A, I3) + AlgebraicPureTensor(B, I3)
     result = tensorsimplify(at)
     assert isinstance(result, AlgebraicTensor)
 
 
 def test_tensorsimplify_dispatch_pure():
-    """tensorsimplify routes PureTensor to the right handler."""
-    pt = PureTensor(A, C)
+    """tensorsimplify routes AlgebraicPureTensor to the right handler."""
+    pt = AlgebraicPureTensor(A, C)
     result = tensorsimplify(pt)
-    assert isinstance(result, (PureTensor, MatrixSymbol))
+    assert isinstance(result, (AlgebraicPureTensor, MatrixSymbol))
 
 
 def test_tensorsimplify_dispatch_zerotensor():
-    """tensorsimplify routes ZeroTensor to the right handler."""
-    z = ZeroTensor(((3, 4),))
+    """tensorsimplify routes AlgebraicZeroTensor to the right handler."""
+    z = AlgebraicZeroTensor(((3, 4),))
     result = tensorsimplify(z)
     assert result is z
 
@@ -299,28 +299,28 @@ def test_init_reexport_tensorsimplify():
 # =========================================================
 
 def test_simplify_single_term_algebraictensor_no_zerotensor():
-    """AlgebraicTensor with a single PureTensor and no ZeroTensor unwraps."""
-    pt = PureTensor(A, C)
+    """AlgebraicTensor with a single AlgebraicPureTensor and no AlgebraicZeroTensor unwraps."""
+    pt = AlgebraicPureTensor(A, C)
     at = AlgebraicTensor(pt)
     assert at is pt
-    # simplify on the unwrapped PureTensor is fine.
+    # simplify on the unwrapped AlgebraicPureTensor is fine.
     result = pt.simplify()
-    assert result is pt or (isinstance(result, PureTensor) and result.factors == (A, C))
+    assert result is pt or (isinstance(result, AlgebraicPureTensor) and result.factors == (A, C))
 
 
 def test_simplify_negative_coefficient():
-    """PureTensor with negative coefficient simplifies correctly."""
-    pt = PureTensor(A, C)
+    """AlgebraicPureTensor with negative coefficient simplifies correctly."""
+    pt = AlgebraicPureTensor(A, C)
     neg = -pt
     result = neg.simplify()
-    assert isinstance(result, PureTensor)
+    assert isinstance(result, AlgebraicPureTensor)
     assert result.factors == (A, C)
 
 
 def test_simplify_double_negation_algebraic():
     """Double negation of AlgebraicTensor simplifies to original form."""
-    pt1 = PureTensor(A, C)
-    pt2 = PureTensor(B, C)
+    pt1 = AlgebraicPureTensor(A, C)
+    pt2 = AlgebraicPureTensor(B, C)
     at = pt1 + pt2
     neg = -at
     unneg = -neg
@@ -329,30 +329,30 @@ def test_simplify_double_negation_algebraic():
 
 
 def test_simplify_identical_multi_factor():
-    """Identical three-factor PureTensors combine."""
-    pt = PureTensor(A, I4, C)
+    """Identical three-factor AlgebraicPureTensors combine."""
+    pt = AlgebraicPureTensor(A, I4, C)
     at = AlgebraicTensor(2 * pt, 3 * pt)
     result = at.simplify()
-    assert isinstance(result, PureTensor)
+    assert isinstance(result, AlgebraicPureTensor)
     assert result._get_coeff() == 5
     assert result.factors == (A, I4, C)
 
 
 def test_simplify_cancel_then_common_factor():
     """Terms cancel first, then common factors are extracted."""
-    pt_ac = PureTensor(A, C)
-    pt_bc = PureTensor(B, C)
+    pt_ac = AlgebraicPureTensor(A, C)
+    pt_bc = AlgebraicPureTensor(B, C)
     # 2*AC + 3*AC - 2*AC = 3*AC
     at = AlgebraicTensor(2 * pt_ac, 3 * pt_ac, -2 * pt_ac)
     result = at.simplify()
-    assert isinstance(result, PureTensor)
+    assert isinstance(result, AlgebraicPureTensor)
     assert result._get_coeff() == 3
 
 
 def test_simplify_four_terms_combine_pairs():
     """Four terms where two pairs share factor sequences."""
-    pt_ac = PureTensor(A, C)
-    pt_bc = PureTensor(B, C)
+    pt_ac = AlgebraicPureTensor(A, C)
+    pt_bc = AlgebraicPureTensor(B, C)
     at = AlgebraicTensor(pt_ac, 2 * pt_ac, pt_bc, 4 * pt_bc)
     result = at.simplify()
     assert isinstance(result, AlgebraicTensor)
@@ -360,7 +360,7 @@ def test_simplify_four_terms_combine_pairs():
     found_3ac = False
     found_5bc = False
     for arg in result.args:
-        if isinstance(arg, PureTensor):
+        if isinstance(arg, AlgebraicPureTensor):
             if arg.factors == (A, C):
                 assert arg._get_coeff() == 3
                 found_3ac = True
@@ -373,15 +373,15 @@ def test_simplify_four_terms_combine_pairs():
 def test_simplify_coefficient_symbol_cancellation():
     """Symbol coefficients cancel when opposite."""
     x = Symbol("x")
-    pt = PureTensor(A, C)
+    pt = AlgebraicPureTensor(A, C)
     at = AlgebraicTensor(x * pt, (-x) * pt)
     result = at.simplify()
-    assert isinstance(result, ZeroTensor)
+    assert isinstance(result, AlgebraicZeroTensor)
 
 
 def test_simplify_preserves_tensor_shape():
     """Simplified result preserves the original tensor shape."""
-    at = PureTensor(A, I4, C) + PureTensor(B, I4, C)
+    at = AlgebraicPureTensor(A, I4, C) + AlgebraicPureTensor(B, I4, C)
     orig_shape = at.tensor_shape
     result = at.simplify()
     # The result may be wrapped differently; check it's meaningful.

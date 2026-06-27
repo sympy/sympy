@@ -18,19 +18,19 @@ def _get_sympy_simplify():
 def _tensor_key(expr):
     """Return a hashable key identifying the tensor factor structure of *expr*.
 
-    For a ``PureTensor``, the key is the tuple of ``id(f)`` for each factor,
-    so that two PureTensors with the exact same factor objects share a key.
+    For an ``AlgebraicPureTensor``, the key is the tuple of ``id(f)`` for each factor,
+    so that two AlgebraicPureTensors with the exact same factor objects share a key.
 
-    For ``Mul(coeff, PureTensor)`` the PureTensor part is extracted first.
+    For ``Mul(coeff, AlgebraicPureTensor)`` the AlgebraicPureTensor part is extracted first.
     For anything else (plain matrix, symbol, number) the key is just the
     object identity.
     """
-    from sympy.tensor.algebraic.pure_tensor import PureTensor
-    if isinstance(expr, PureTensor):
+    from sympy.tensor.algebraic.algebraic_pure_tensor import AlgebraicPureTensor
+    if isinstance(expr, AlgebraicPureTensor):
         return ("pt", tuple(id(f) for f in expr.factors))
-    if isinstance(expr, Mul) and not isinstance(expr, PureTensor):
+    if isinstance(expr, Mul) and not isinstance(expr, AlgebraicPureTensor):
         for f in expr.args:
-            if isinstance(f, PureTensor):
+            if isinstance(f, AlgebraicPureTensor):
                 return ("pt", tuple(id(f2) for f2 in f.factors))
     return ("other", id(expr))
 
@@ -38,27 +38,27 @@ def _tensor_key(expr):
 def _extract_coeff_and_pt(expr):
     """Return (coeff, unit_puretensor) from *expr*.
 
-    Returns the fully combined coefficient and a **unit** PureTensor
+    Returns the fully combined coefficient and a **unit** AlgebraicPureTensor
     (coefficient stripped to S.One) so the caller can re-apply a new
     coefficient without doubling up.
 
     For non-tensor expressions return (expr, None).
     """
-    from sympy.tensor.algebraic.pure_tensor import PureTensor
+    from sympy.tensor.algebraic.algebraic_pure_tensor import AlgebraicPureTensor
 
-    if isinstance(expr, PureTensor):
+    if isinstance(expr, AlgebraicPureTensor):
         coeff = expr._get_coeff()
         factors = expr.factors
-        # Build a unit PureTensor (coeff = 1).
+        # Build a unit AlgebraicPureTensor (coeff = 1).
         if len(factors) == 1:
             unit_pt = factors[0]
         else:
-            unit_pt = PureTensor(*factors)
+            unit_pt = AlgebraicPureTensor(*factors)
         return (coeff, unit_pt)
 
-    if isinstance(expr, Mul) and not isinstance(expr, PureTensor):
+    if isinstance(expr, Mul) and not isinstance(expr, AlgebraicPureTensor):
         for f in expr.args:
-            if isinstance(f, PureTensor):
+            if isinstance(f, AlgebraicPureTensor):
                 outer_coeff = Mul(*[a for a in expr.args if a is not f])
                 inner_coeff = f._get_coeff()
                 combined_coeff = outer_coeff * inner_coeff
@@ -66,34 +66,34 @@ def _extract_coeff_and_pt(expr):
                 if len(factors) == 1:
                     unit_pt = factors[0]
                 else:
-                    unit_pt = PureTensor(*factors)
+                    unit_pt = AlgebraicPureTensor(*factors)
                 return (combined_coeff, unit_pt)
 
     return (expr, None)
 
 
 def _make_scaled_pt(coeff, unit_pt):
-    """Construct ``coeff * unit_pt`` as a PureTensor without going through
+    """Construct ``coeff * unit_pt`` as an AlgebraicPureTensor without going through
     SymPy's general dispatch (which would produce MatMul).
 
-    *unit_pt* is either a bare matrix-like object (single-factor PureTensor
-    unwrapped) or a multi-factor PureTensor with coefficient S.One.
+    *unit_pt* is either a bare matrix-like object (single-factor AlgebraicPureTensor
+    unwrapped) or a multi-factor AlgebraicPureTensor with coefficient S.One.
     """
-    from sympy.tensor.algebraic.pure_tensor import PureTensor
+    from sympy.tensor.algebraic.algebraic_pure_tensor import AlgebraicPureTensor
 
     if coeff is S.One:
         return unit_pt
     if coeff is S.Zero:
-        if isinstance(unit_pt, PureTensor):
-            from sympy.tensor.algebraic.zero_tensor import ZeroTensor
-            return ZeroTensor(unit_pt.tensor_shape)
+        if isinstance(unit_pt, AlgebraicPureTensor):
+            from sympy.tensor.algebraic.algebraic_zero_tensor import AlgebraicZeroTensor
+            return AlgebraicZeroTensor(unit_pt.tensor_shape)
         if hasattr(unit_pt, "shape"):
-            from sympy.tensor.algebraic.zero_tensor import ZeroTensor
-            return ZeroTensor((unit_pt.shape,))
+            from sympy.tensor.algebraic.algebraic_zero_tensor import AlgebraicZeroTensor
+            return AlgebraicZeroTensor((unit_pt.shape,))
         return coeff
 
     # Determine the factor list.
-    if isinstance(unit_pt, PureTensor):
+    if isinstance(unit_pt, AlgebraicPureTensor):
         factors = unit_pt.factors
     elif hasattr(unit_pt, "shape"):
         factors = (unit_pt,)
@@ -101,36 +101,36 @@ def _make_scaled_pt(coeff, unit_pt):
         return coeff * unit_pt
 
     if len(factors) == 1:
-        return PureTensor(coeff, factors[0])
-    return PureTensor(coeff, *factors)
+        return AlgebraicPureTensor(coeff, factors[0])
+    return AlgebraicPureTensor(coeff, *factors)
 
 
 def _tensor_multiply_left(factor, expr):
-    """Return ``factor ⊗ expr`` where *expr* is PureTensor, AlgebraicTensor,
+    """Return ``factor ⊗ expr`` where *expr* is AlgebraicPureTensor, AlgebraicTensor,
     or a plain matrix-like object."""
     from sympy.tensor.algebraic.algebraic_tensor import AlgebraicTensor
-    from sympy.tensor.algebraic.pure_tensor import PureTensor
+    from sympy.tensor.algebraic.algebraic_pure_tensor import AlgebraicPureTensor
 
     if isinstance(expr, AlgebraicTensor):
         return AlgebraicTensor(*(factor * a for a in expr.args))
-    if isinstance(expr, PureTensor):
-        return PureTensor(factor, expr)
-    # Plain matrix-like: create a two-factor PureTensor.
-    return PureTensor(factor, expr)
+    if isinstance(expr, AlgebraicPureTensor):
+        return AlgebraicPureTensor(factor, expr)
+    # Plain matrix-like: create a two-factor AlgebraicPureTensor.
+    return AlgebraicPureTensor(factor, expr)
 
 
 def _tensor_multiply_right(expr, factor):
-    """Return ``expr ⊗ factor`` where *expr* is PureTensor, AlgebraicTensor,
+    """Return ``expr ⊗ factor`` where *expr* is AlgebraicPureTensor, AlgebraicTensor,
     or a plain matrix-like object."""
     from sympy.tensor.algebraic.algebraic_tensor import AlgebraicTensor
-    from sympy.tensor.algebraic.pure_tensor import PureTensor
+    from sympy.tensor.algebraic.algebraic_pure_tensor import AlgebraicPureTensor
 
     if isinstance(expr, AlgebraicTensor):
         return AlgebraicTensor(*(a * factor for a in expr.args))
-    if isinstance(expr, PureTensor):
-        return PureTensor(expr, factor)
-    # Plain matrix-like: create a two-factor PureTensor.
-    return PureTensor(expr, factor)
+    if isinstance(expr, AlgebraicPureTensor):
+        return AlgebraicPureTensor(expr, factor)
+    # Plain matrix-like: create a two-factor AlgebraicPureTensor.
+    return AlgebraicPureTensor(expr, factor)
 
 
 # ---------------------------------------------------------------------------
@@ -140,8 +140,8 @@ def _tensor_multiply_right(expr, factor):
 def tensorsimplify(expr, **kwargs):
     """Simplify an algebraic-tensor expression.
 
-    Dispatches to the appropriate handler for ``PureTensor``,
-    ``AlgebraicTensor``, ``ZeroTensor``, or falls back to SymPy's
+    Dispatches to the appropriate handler for ``AlgebraicPureTensor``,
+    ``AlgebraicTensor``, ``AlgebraicZeroTensor``, or falls back to SymPy's
     general :func:`simplify` for everything else.
 
     Parameters
@@ -156,16 +156,16 @@ def tensorsimplify(expr, **kwargs):
     -------
     simplified expression (same type as *expr* when possible)
     """
-    from sympy.tensor.algebraic.pure_tensor import PureTensor
+    from sympy.tensor.algebraic.algebraic_pure_tensor import AlgebraicPureTensor
     from sympy.tensor.algebraic.algebraic_tensor import AlgebraicTensor
-    from sympy.tensor.algebraic.zero_tensor import ZeroTensor
+    from sympy.tensor.algebraic.algebraic_zero_tensor import AlgebraicZeroTensor
 
-    if isinstance(expr, ZeroTensor):
+    if isinstance(expr, AlgebraicZeroTensor):
         return expr
     if isinstance(expr, AlgebraicTensor):
         return _simplify_algebraic_tensor(expr, **kwargs)
-    if isinstance(expr, PureTensor):
-        return _simplify_pure_tensor(expr, **kwargs)
+    if isinstance(expr, AlgebraicPureTensor):
+        return _simplify_algebraic_pure_tensor(expr, **kwargs)
 
     # Non-tensor expression — use SymPy's general simplify.
     _s = _get_sympy_simplify()
@@ -176,8 +176,8 @@ def tensorsimplify(expr, **kwargs):
 # PureTensor simplification
 # ---------------------------------------------------------------------------
 
-def _simplify_pure_tensor(pt, **kwargs):
-    """Simplify a single PureTensor.
+def _simplify_algebraic_pure_tensor(pt, **kwargs):
+    """Simplify a single AlgebraicPureTensor.
 
     Strategy
     --------
@@ -186,8 +186,8 @@ def _simplify_pure_tensor(pt, **kwargs):
        are MatrixExpr containing simplifiable sub-expressions).
     3. Reconstruct the PureTensor with the (possibly changed) pieces.
     """
-    from sympy.tensor.algebraic.pure_tensor import PureTensor
-    from sympy.tensor.algebraic.zero_tensor import ZeroTensor
+    from sympy.tensor.algebraic.algebraic_pure_tensor import AlgebraicPureTensor
+    from sympy.tensor.algebraic.algebraic_zero_tensor import AlgebraicZeroTensor
 
     _s = _get_sympy_simplify()
 
@@ -197,7 +197,7 @@ def _simplify_pure_tensor(pt, **kwargs):
     # Simplify coefficient
     new_coeff = _s(coeff, **kwargs)
     if new_coeff is S.Zero:
-        return ZeroTensor(pt.tensor_shape)
+        return AlgebraicZeroTensor(pt.tensor_shape)
 
     # Simplify individual factors
     new_factors = []
@@ -217,10 +217,10 @@ def _simplify_pure_tensor(pt, **kwargs):
     if new_coeff is S.One:
         if len(new_factors) == 1:
             return new_factors[0]
-        return PureTensor(*new_factors)
+        return AlgebraicPureTensor(*new_factors)
     if len(new_factors) == 1:
-        return PureTensor(new_coeff, new_factors[0])
-    return PureTensor(new_coeff, *new_factors)
+        return AlgebraicPureTensor(new_coeff, new_factors[0])
+    return AlgebraicPureTensor(new_coeff, *new_factors)
 
 
 # ---------------------------------------------------------------------------
@@ -243,32 +243,32 @@ def _simplify_algebraic_tensor(at, **kwargs):
 
     3. **Recurse** on the middle sub-sum and reassemble.
 
-    ZeroTensor anchors and S.Zero terms are handled naturally.
+    AlgebraicZeroTensor anchors and S.Zero terms are handled naturally.
     """
     from sympy.tensor.algebraic.algebraic_tensor import AlgebraicTensor
-    from sympy.tensor.algebraic.pure_tensor import PureTensor
-    from sympy.tensor.algebraic.zero_tensor import ZeroTensor, zero_tensor
+    from sympy.tensor.algebraic.algebraic_pure_tensor import AlgebraicPureTensor
+    from sympy.tensor.algebraic.algebraic_zero_tensor import AlgebraicZeroTensor, algebraic_zero_tensor
 
     _s = _get_sympy_simplify()
 
     args = list(at.args)
     original_shape = at.tensor_shape
 
-    # Strip S.Zero entries but remember ZeroTensor anchors.
+    # Strip S.Zero entries but remember AlgebraicZeroTensor anchors.
     has_zero = False
     real_args = []
     for a in args:
-        if isinstance(a, ZeroTensor):
+        if isinstance(a, AlgebraicZeroTensor):
             has_zero = True
         elif a is not S.Zero:
             real_args.append(a)
 
     if not real_args:
         if has_zero:
-            z = next(a for a in args if isinstance(a, ZeroTensor))
+            z = next(a for a in args if isinstance(a, AlgebraicZeroTensor))
             return z
-        # All terms cancelled and no ZeroTensor anchor — create one.
-        return ZeroTensor(original_shape)
+        # All terms cancelled and no AlgebraicZeroTensor anchor — create one.
+        return algebraic_zero_tensor(original_shape)
 
     # ------------------------------------------------------------------
     # Phase 1: combine like terms
@@ -299,14 +299,14 @@ def _simplify_algebraic_tensor(at, **kwargs):
             combined.append(snt)
 
     if has_zero:
-        combined.append(next(a for a in args if isinstance(a, ZeroTensor)))
+        combined.append(next(a for a in args if isinstance(a, AlgebraicZeroTensor)))
 
-    # Handle empty combined list (all terms cancelled, no ZeroTensor anchor)
+    # Handle empty combined list (all terms cancelled, no AlgebraicZeroTensor anchor)
     if not combined:
-        return ZeroTensor(original_shape)
+        return algebraic_zero_tensor(original_shape)
 
     # Build intermediate AlgebraicTensor for the next phases.
-    if len(combined) == 1 and not isinstance(combined[0], ZeroTensor):
+    if len(combined) == 1 and not isinstance(combined[0], AlgebraicZeroTensor):
         result = combined[0]
     else:
         result = AlgebraicTensor(*combined, _sympify=False)
@@ -321,20 +321,20 @@ def _simplify_algebraic_tensor(at, **kwargs):
 
 
 def _simplify_pure_tensor_in_context(term, **kwargs):
-    """Simplify a term that carries a PureTensor (with or without coeff)."""
-    from sympy.tensor.algebraic.pure_tensor import PureTensor
-    from sympy.tensor.algebraic.zero_tensor import ZeroTensor
+    """Simplify a term that carries an AlgebraicPureTensor (with or without coeff)."""
+    from sympy.tensor.algebraic.algebraic_pure_tensor import AlgebraicPureTensor
+    from sympy.tensor.algebraic.algebraic_zero_tensor import AlgebraicZeroTensor
 
     _s = _get_sympy_simplify()
 
-    if isinstance(term, PureTensor):
+    if isinstance(term, AlgebraicPureTensor):
         return _simplify_pure_tensor(term, **kwargs)
 
-    if isinstance(term, Mul) and not isinstance(term, PureTensor):
+    if isinstance(term, Mul) and not isinstance(term, AlgebraicPureTensor):
         coeff, unit_pt = _extract_coeff_and_pt(term)
         if unit_pt is not None:
-            # unit_pt is a unit PureTensor (coeff stripped) or bare matrix.
-            if isinstance(unit_pt, PureTensor):
+            # unit_pt is a unit AlgebraicPureTensor (coeff stripped) or bare matrix.
+            if isinstance(unit_pt, AlgebraicPureTensor):
                 factors = unit_pt.factors
             elif hasattr(unit_pt, "shape"):
                 factors = (unit_pt,)
@@ -345,13 +345,13 @@ def _simplify_pure_tensor_in_context(term, **kwargs):
             simp_coeff = _s(coeff, **kwargs)
             if simp_coeff is S.Zero:
                 shape = tuple(f.shape for f in factors)
-                return ZeroTensor(shape)
+                return AlgebraicZeroTensor(shape)
             if simp_coeff is S.One:
                 if len(simp_factors) == 1:
                     return simp_factors[0]
-                return PureTensor(*simp_factors)
+                return AlgebraicPureTensor(*simp_factors)
             return _make_scaled_pt(simp_coeff,
-                                   PureTensor(*simp_factors) if len(simp_factors) > 1 else simp_factors[0])
+                                   AlgebraicPureTensor(*simp_factors) if len(simp_factors) > 1 else simp_factors[0])
 
     # Fallback: generic simplify
     return _s(term, **kwargs)
@@ -360,16 +360,16 @@ def _simplify_pure_tensor_in_context(term, **kwargs):
 def _combine_like_terms(group, **kwargs):
     """Combine a list of terms sharing the same factor sequence.
 
-    Each element of *group* is either a PureTensor or Mul(coeff, PureTensor).
+    Each element of *group* is either an AlgebraicPureTensor or Mul(coeff, AlgebraicPureTensor).
     We extract the (fully combined) coefficient from each, sum all coefficients
     into a single SymPy expression, simplify that sum, and return the product
-    of the simplified sum with the unit PureTensor.
+    of the simplified sum with the unit AlgebraicPureTensor.
 
     Returns a list (length 0 when the summed coefficient is zero, or length 1
     with the combined term).
     """
-    from sympy.tensor.algebraic.pure_tensor import PureTensor
-    from sympy.tensor.algebraic.zero_tensor import ZeroTensor
+    from sympy.tensor.algebraic.algebraic_pure_tensor import AlgebraicPureTensor
+    from sympy.tensor.algebraic.algebraic_zero_tensor import AlgebraicZeroTensor
 
     _s = _get_sympy_simplify()
 
@@ -399,8 +399,8 @@ def _combine_like_terms(group, **kwargs):
 def _simplify_with_common_factors(at, **kwargs):
     """Extract common left/right factors, simplify the middle, reassemble."""
     from sympy.tensor.algebraic.algebraic_tensor import AlgebraicTensor
-    from sympy.tensor.algebraic.pure_tensor import PureTensor
-    from sympy.tensor.algebraic.zero_tensor import ZeroTensor
+    from sympy.tensor.algebraic.algebraic_pure_tensor import AlgebraicPureTensor
+    from sympy.tensor.algebraic.algebraic_zero_tensor import AlgebraicZeroTensor
 
     _s = _get_sympy_simplify()
 
@@ -412,7 +412,7 @@ def _simplify_with_common_factors(at, **kwargs):
 
     if isinstance(middle, AlgebraicTensor):
         middle = _simplify_algebraic_tensor(middle, **kwargs)
-    elif isinstance(middle, PureTensor):
+    elif isinstance(middle, AlgebraicPureTensor):
         middle = _simplify_pure_tensor(middle, **kwargs)
     else:
         middle = _s(middle, **kwargs)

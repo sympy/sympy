@@ -3,7 +3,7 @@ from __future__ import annotations
 from sympy.core.singleton import S
 from sympy.matrices.expressions import MatrixSymbol
 from sympy.tensor.algebraic.algebraic_tensor import AlgebraicTensor
-from sympy.tensor.algebraic.pure_tensor import PureTensor
+from sympy.tensor.algebraic.algebraic_pure_tensor import AlgebraicPureTensor
 
 
 # --- Fixtures ---
@@ -15,7 +15,7 @@ I3 = MatrixSymbol("I3", 3, 3)
 
 
 def test_pure_tensor_str_with_coefficient():
-    pt = PureTensor(A, C)
+    pt = AlgebraicPureTensor(A, C)
     scaled = 3 * pt
     s = str(scaled)
     assert "3" in s
@@ -25,7 +25,7 @@ def test_pure_tensor_str_with_coefficient():
 
 
 def test_pure_tensor_str_with_negative_coefficient():
-    pt = PureTensor(A, C)
+    pt = AlgebraicPureTensor(A, C)
     neg = -3 * pt
     s = str(neg)
     assert s.startswith("-")
@@ -35,7 +35,7 @@ def test_pure_tensor_str_with_negative_coefficient():
 
 
 def test_pure_tensor_str_with_negative_one():
-    pt = PureTensor(A, C)
+    pt = AlgebraicPureTensor(A, C)
     neg = -pt
     s = str(neg)
     assert s.startswith("-")
@@ -45,37 +45,37 @@ def test_pure_tensor_str_with_negative_one():
 
 
 def test_pure_tensor_repr_with_coefficient():
-    pt = PureTensor(A, C)
+    pt = AlgebraicPureTensor(A, C)
     scaled = 3 * pt
     r = repr(scaled)
     assert "3" in r
-    assert "PureTensor" in r
+    assert "AlgebraicPureTensor" in r
 
 
 def test_pure_tensor_repr_without_coefficient():
-    pt = PureTensor(A, C)
+    pt = AlgebraicPureTensor(A, C)
     r = repr(pt)
-    assert "PureTensor(A, C)" in r or "PureTensor(A,C)" in r
+    assert "AlgebraicPureTensor(A, C)" in r or "AlgebraicPureTensor(A,C)" in r
 
 
 def test_pure_tensor_str_coefficient_one_omitted():
-    pt = PureTensor(A, C)
+    pt = AlgebraicPureTensor(A, C)
     s = str(pt)
     assert not s.startswith("1")
     assert "*A" not in s.split("\u2297")[0] or s.startswith("A")
 
 
 def test_pure_tensor_double_scaled_str():
-    pt = PureTensor(A, C)
+    pt = AlgebraicPureTensor(A, C)
     result = (2 * pt) * 3
     s = str(result)
     assert "6" in s
-    assert isinstance(result, PureTensor)
+    assert isinstance(result, AlgebraicPureTensor)
 
 
 def test_algebraic_tensor_str_with_coefficients():
-    pt_a = PureTensor(A, C)
-    pt_b = PureTensor(B, C)
+    pt_a = AlgebraicPureTensor(A, C)
+    pt_b = AlgebraicPureTensor(B, C)
     at = AlgebraicTensor(2 * pt_a, 3 * pt_b)
     s = str(at)
     assert "2" in s
@@ -84,8 +84,8 @@ def test_algebraic_tensor_str_with_coefficients():
 
 
 def test_algebraic_tensor_str_with_negative_term():
-    pt_a = PureTensor(A, C)
-    pt_b = PureTensor(B, C)
+    pt_a = AlgebraicPureTensor(A, C)
+    pt_b = AlgebraicPureTensor(B, C)
     at = AlgebraicTensor(2 * pt_a, -3 * pt_b)
     s = str(at)
     assert "-" in s
@@ -93,8 +93,8 @@ def test_algebraic_tensor_str_with_negative_term():
 
 
 def test_linear_combination_str_display():
-    pt_a = PureTensor(A, C)
-    pt_b = PureTensor(B, C)
+    pt_a = AlgebraicPureTensor(A, C)
+    pt_b = AlgebraicPureTensor(B, C)
     combo = 2 * pt_a + 3 * pt_b
     s = str(combo)
     assert isinstance(combo, AlgebraicTensor)
@@ -104,8 +104,8 @@ def test_linear_combination_str_display():
 
 
 def test_linear_combination_subtraction_str():
-    pt_a = PureTensor(A, C)
-    pt_b = PureTensor(B, C)
+    pt_a = AlgebraicPureTensor(A, C)
+    pt_b = AlgebraicPureTensor(B, C)
     combo = 2 * pt_a - 3 * pt_b
     s = str(combo)
     assert isinstance(combo, AlgebraicTensor)
@@ -117,9 +117,9 @@ def test_linear_combination_subtraction_str():
 
 def test_linear_combination_three_terms_str():
     D2 = MatrixSymbol("D2", 3, 4)
-    pt_a = PureTensor(A, C)
-    pt_b = PureTensor(B, C)
-    pt_d = PureTensor(D2, C)
+    pt_a = AlgebraicPureTensor(A, C)
+    pt_b = AlgebraicPureTensor(B, C)
+    pt_d = AlgebraicPureTensor(D2, C)
     combo = pt_a + 2 * pt_b - 3 * pt_d
     s = str(combo)
     assert isinstance(combo, AlgebraicTensor)
@@ -132,12 +132,12 @@ def test_linear_combination_symbol_coefficient_str():
     from sympy import Symbol
     x = Symbol("x")
     y = Symbol("y")
-    pt_a = PureTensor(A, C)
-    pt_b = PureTensor(B, C)
+    pt_a = AlgebraicPureTensor(A, C)
+    pt_b = AlgebraicPureTensor(B, C)
     scaled_a = pt_a * x
     scaled_b = pt_b * y
-    assert isinstance(scaled_a, PureTensor)
-    assert isinstance(scaled_b, PureTensor)
+    assert isinstance(scaled_a, AlgebraicPureTensor)
+    assert isinstance(scaled_b, AlgebraicPureTensor)
     combo = AlgebraicTensor(scaled_a, scaled_b)
     s = str(combo)
     assert isinstance(combo, AlgebraicTensor)
@@ -147,8 +147,8 @@ def test_linear_combination_symbol_coefficient_str():
 
 
 def test_linear_combination_repr():
-    pt_a = PureTensor(A, C)
-    pt_b = PureTensor(B, C)
+    pt_a = AlgebraicPureTensor(A, C)
+    pt_b = AlgebraicPureTensor(B, C)
     combo = 2 * pt_a + 3 * pt_b
     r = repr(combo)
     assert "AlgebraicTensor" in r
@@ -157,8 +157,8 @@ def test_linear_combination_repr():
 
 
 def test_algebraic_tensor_mul_scalar_str():
-    pt_a = PureTensor(A, I3)
-    pt_b = PureTensor(B, I3)
+    pt_a = AlgebraicPureTensor(A, I3)
+    pt_b = AlgebraicPureTensor(B, I3)
     at = pt_a + pt_b
     scaled = at * 5
     s = str(scaled)
@@ -167,8 +167,8 @@ def test_algebraic_tensor_mul_scalar_str():
 
 
 def test_algebraic_tensor_rmul_scalar_str():
-    pt_a = PureTensor(A, I3)
-    pt_b = PureTensor(B, I3)
+    pt_a = AlgebraicPureTensor(A, I3)
+    pt_b = AlgebraicPureTensor(B, I3)
     at = pt_a + pt_b
     scaled = 5 * at
     s = str(scaled)
@@ -177,18 +177,18 @@ def test_algebraic_tensor_rmul_scalar_str():
 
 
 def test_pure_tensor_coeff_preserved_through_add():
-    pt = PureTensor(A, C)
+    pt = AlgebraicPureTensor(A, C)
     scaled = 3 * pt
-    at = AlgebraicTensor(scaled, PureTensor(B, C))
+    at = AlgebraicTensor(scaled, AlgebraicPureTensor(B, C))
     for arg in at.args:
-        if isinstance(arg, PureTensor) and arg.factors == (A, C):
+        if isinstance(arg, AlgebraicPureTensor) and arg.factors == (A, C):
             assert arg._get_coeff() == S(3)
 
 
 def test_linear_combination_with_zerotensor_str():
-    from sympy.tensor.algebraic.zero_tensor import ZeroTensor
-    z = ZeroTensor(((3, 4), (4, 5)))
-    pt = PureTensor(A, C)
+    from sympy.tensor.algebraic.algebraic_zero_tensor import AlgebraicZeroTensor
+    z = AlgebraicZeroTensor(((3, 4), (4, 5)))
+    pt = AlgebraicPureTensor(A, C)
     at = AlgebraicTensor(2 * pt, z)
     s = str(at)
     assert "2" in s

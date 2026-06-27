@@ -5,7 +5,7 @@ from sympy.core.numbers import Number
 from sympy.core.singleton import S
 from sympy.core.sympify import sympify
 
-from sympy.tensor.algebraic.zero_tensor import ZeroTensor
+from sympy.tensor.algebraic.algebraic_zero_tensor import AlgebraicZeroTensor
 
 
 def _factor_shapes(factors):
@@ -16,7 +16,7 @@ def _factor_shapes(factors):
     return tuple(f.shape for f in factors)
 
 
-class PureTensor(Mul):
+class AlgebraicPureTensor(Mul):
     """Pure tensor as an unevaluated (non-commutative) tensor product of factors.
 
     Extends SymPy's non-commutative Mul so that all existing simplification,
@@ -28,13 +28,13 @@ class PureTensor(Mul):
     wrapper around a non-commutative Symbol).
 
     The tensor shape is the full sequence of per-factor shapes, e.g.
-    ``((3, 4), (4, 5))`` for ``PureTensor(A_3x4, C_4x5)``.  No
+    ``((3, 4), (4, 5))`` for ``AlgebraicPureTensor(A_3x4, C_4x5)``.  No
     contraction is performed.
     """
 
     __slots__ = ()
 
-    is_PureTensor = True
+    is_AlgebraicPureTensor = True
 
     _eval_is_commutative = lambda self: False
 
@@ -48,7 +48,7 @@ class PureTensor(Mul):
         if self.args and (self.args[0].is_Number or
                 (hasattr(self.args[0], 'is_commutative') and
                  self.args[0].is_commutative and
-                 not isinstance(self.args[0], PureTensor))):
+                 not isinstance(self.args[0], AlgebraicPureTensor))):
             return self.args[1:]
         return self.args
 
@@ -60,7 +60,7 @@ class PureTensor(Mul):
     def tensor_shape(self):
         """Full tensor shape as a tuple of per-factor (rows, cols) pairs.
 
-        E.g. ``PureTensor(A_3x4, C_4x5).tensor_shape == ((3, 4), (4, 5))``.
+        E.g. ``AlgebraicPureTensor(A_3x4, C_4x5).tensor_shape == ((3, 4), (4, 5))``.
         """
         return _factor_shapes(self.factors)
 
@@ -76,12 +76,12 @@ class PureTensor(Mul):
     def __repr__(self):
         coeff = self._get_coeff()
         if coeff is S.One:
-            return f"PureTensor({', '.join(repr(f) for f in self.factors)})"
-        return f"PureTensor({repr(coeff)}, {', '.join(repr(f) for f in self.factors)})"
+            return f"AlgebraicPureTensor({', '.join(repr(f) for f in self.factors)})"
+        return f"AlgebraicPureTensor({repr(coeff)}, {', '.join(repr(f) for f in self.factors)})"
 
     def __new__(cls, *args, evaluate=False):
         if not args:
-            raise ValueError("PureTensor requires at least one factor")
+            raise ValueError("AlgebraicPureTensor requires at least one factor")
 
         # Separate leading coefficient from tensor factors
         args_list = list(args)
@@ -91,7 +91,7 @@ class PureTensor(Mul):
             coeff = args_list[0]
             args_list = args_list[1:]
         elif args_list and len(args_list) > 1 and hasattr(args_list[0], 'is_commutative') \
-                and args_list[0].is_commutative and not isinstance(args_list[0], PureTensor):
+                and args_list[0].is_commutative and not isinstance(args_list[0], AlgebraicPureTensor):
             coeff = sympify(args_list[0])
             args_list = args_list[1:]
 
@@ -112,11 +112,11 @@ class PureTensor(Mul):
 
         if not processed:
             if coeff is S.Zero:
-                return ZeroTensor(())
-            raise ValueError("PureTensor requires at least one tensor factor")
+                return AlgebraicZeroTensor(())
+            raise ValueError("AlgebraicPureTensor requires at least one tensor factor")
 
         if coeff is S.Zero:
-            return ZeroTensor(_factor_shapes(processed))
+            return AlgebraicZeroTensor(_factor_shapes(processed))
 
         if len(processed) == 1 and coeff is S.One:
             return processed[0]
@@ -128,43 +128,43 @@ class PureTensor(Mul):
         return obj
 
     def __neg__(self):
-        """Return a PureTensor with negated coefficient."""
+        """Return an AlgebraicPureTensor with negated coefficient."""
         coeff = self._get_coeff()
         factors = self.factors
         new_coeff = coeff * S.NegativeOne
         if new_coeff is S.One:
             if len(factors) == 1:
                 return factors[0]
-            return PureTensor(*factors)
+            return AlgebraicPureTensor(*factors)
         if new_coeff is S.NegativeOne:
             if len(factors) == 1:
                 return Mul(S.NegativeOne, factors[0], evaluate=False)
-            return PureTensor(S.NegativeOne, *factors)
-        return PureTensor(new_coeff, *factors)
+            return AlgebraicPureTensor(S.NegativeOne, *factors)
+        return AlgebraicPureTensor(new_coeff, *factors)
 
     def __mul__(self, other):
-        """PureTensor * scalar/symbol -> PureTensor with absorbed coefficient."""
+        """AlgebraicPureTensor * scalar/symbol -> AlgebraicPureTensor with absorbed coefficient."""
         from sympy.core.singleton import S
         other = sympify(other)
         if isinstance(other, Number):
             if other is S.One:
                 return self
             if other is S.Zero:
-                return ZeroTensor(self.tensor_shape)
+                return AlgebraicZeroTensor(self.tensor_shape)
         if isinstance(other, Number) or (hasattr(other, 'is_commutative') and
-                other.is_commutative and not isinstance(other, PureTensor)):
+                other.is_commutative and not isinstance(other, AlgebraicPureTensor)):
             coeff, factors = self._get_coeff(), self.factors
             new_coeff = coeff * other
             if new_coeff is S.One:
                 if len(factors) == 1:
                     return factors[0]
-                return PureTensor(*factors)
+                return AlgebraicPureTensor(*factors)
             if isinstance(new_coeff, Number) and new_coeff is S.Zero:
-                return ZeroTensor(_factor_shapes(factors))
+                return AlgebraicZeroTensor(_factor_shapes(factors))
             if len(factors) == 0:
                 return new_coeff
-            return PureTensor(new_coeff, *factors)
-        if isinstance(other, PureTensor):
+            return AlgebraicPureTensor(new_coeff, *factors)
+        if isinstance(other, AlgebraicPureTensor):
             c1 = self._get_coeff()
             c2 = other._get_coeff()
             combined = c1 * c2
@@ -172,8 +172,8 @@ class PureTensor(Mul):
             if combined is S.One:
                 if len(all_factors) == 1:
                     return all_factors[0]
-                return PureTensor(*all_factors)
-            return PureTensor(combined, *all_factors)
+                return AlgebraicPureTensor(*all_factors)
+            return AlgebraicPureTensor(combined, *all_factors)
         return Mul(self, other)
 
     def _get_coeff(self):
@@ -182,15 +182,15 @@ class PureTensor(Mul):
         if self.args and (self.args[0].is_Number or
                 (hasattr(self.args[0], 'is_commutative') and
                  self.args[0].is_commutative and
-                 not isinstance(self.args[0], PureTensor))):
+                 not isinstance(self.args[0], AlgebraicPureTensor))):
             return self.args[0]
         return S.One
 
     def __rmul__(self, other):
-        """scalar/symbol * PureTensor -> PureTensor with absorbed coefficient."""
+        """scalar/symbol * AlgebraicPureTensor -> AlgebraicPureTensor with absorbed coefficient."""
         from sympy.core.singleton import S
         if other == 0:
-            return ZeroTensor(self.tensor_shape)
+            return AlgebraicZeroTensor(self.tensor_shape)
         if other == 1:
             return self
         other = sympify(other)
@@ -198,22 +198,22 @@ class PureTensor(Mul):
             if other is S.One:
                 return self
             if other is S.Zero:
-                return ZeroTensor(self.tensor_shape)
+                return AlgebraicZeroTensor(self.tensor_shape)
         if isinstance(other, Number) or (hasattr(other, 'is_commutative') and
-                other.is_commutative and not isinstance(other, PureTensor)):
+                other.is_commutative and not isinstance(other, AlgebraicPureTensor)):
             coeff = self._get_coeff()
             factors = self.factors
             new_coeff = other * coeff
             if new_coeff is S.One:
                 if len(factors) == 1:
                     return factors[0]
-                return PureTensor(*factors)
+                return AlgebraicPureTensor(*factors)
             if isinstance(new_coeff, Number) and new_coeff is S.Zero:
-                return ZeroTensor(_factor_shapes(factors))
+                return AlgebraicZeroTensor(_factor_shapes(factors))
             if len(factors) == 0:
                 return new_coeff
-            return PureTensor(new_coeff, *factors)
-        if isinstance(other, PureTensor):
+            return AlgebraicPureTensor(new_coeff, *factors)
+        if isinstance(other, AlgebraicPureTensor):
             c1 = other._get_coeff()
             c2 = self._get_coeff()
             combined = c1 * c2
@@ -221,8 +221,8 @@ class PureTensor(Mul):
             if combined is S.One:
                 if len(all_factors) == 1:
                     return all_factors[0]
-                return PureTensor(*all_factors)
-            return PureTensor(combined, *all_factors)
+                return AlgebraicPureTensor(*all_factors)
+            return AlgebraicPureTensor(combined, *all_factors)
         return Mul(other, self)
 
     def __add__(self, other):
@@ -242,7 +242,7 @@ class PureTensor(Mul):
         return AlgebraicTensor(other, -self)
 
     def simplify(self, **kwargs):
-        """Simplify this PureTensor.
+        """Simplify this AlgebraicPureTensor.
 
         Simplifies the leading coefficient and each tensor factor using
         SymPy's general :func:`simplify`.  See
@@ -252,14 +252,14 @@ class PureTensor(Mul):
         return tensorsimplify(self, **kwargs)
 
 
-def tensor_product(*args):
-    """Convenience constructor for PureTensor.
+def algebraic_tensor_product(*args):
+    """Convenience constructor for AlgebraicPureTensor.
 
-    >>> from sympy.tensor.algebraic.algebraic_tensor import tensor_product
+    >>> from sympy.tensor.algebraic.algebraic_pure_tensor import algebraic_tensor_product
     >>> from sympy.matrices.expressions import MatrixSymbol
     >>> A = MatrixSymbol("A", 2, 3)
     >>> v = MatrixSymbol("v", 3, 1)
-    >>> tensor_product(A, v)
-    A \u2297 v
+    >>> algebraic_tensor_product(A, v)
+    A ⊗ v
     """
-    return PureTensor(*args)
+    return AlgebraicPureTensor(*args)
