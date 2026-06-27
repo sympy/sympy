@@ -589,18 +589,21 @@ def _(expr, assumptions):
     if expr.is_number:
         return _Imaginary_number(expr, assumptions)
     result = False
-    reals = 0
+    nonzero = True
     for arg in expr.args:
-        if _ask_recursive(Q.zero(arg), assumptions):
-            return False
-        elif _ask_recursive(Q.imaginary(arg), assumptions):
+        if _ask_recursive(Q.imaginary(arg), assumptions):
             result = result ^ True
-        elif not _ask_recursive(Q.real(arg), assumptions):
-            break
-    else:
-        if reals == len(expr.args):
-            return False
-        return result
+        elif _ask_recursive(Q.real(arg), assumptions):
+            is_zero = _ask_recursive(Q.zero(arg), assumptions)
+            if is_zero:
+                return False
+            if is_zero is None:
+                nonzero = False
+        else:
+            return None
+    if not result:
+        return False
+    return True if nonzero else None
 
 @ImaginaryPredicate.register(Pow) # type:ignore
 def _(expr, assumptions):
