@@ -89,9 +89,13 @@ def _(expr, assumptions):
     * Integer*Irrational   -> !Integer
     * Odd/Even             -> !Integer
     * Integer*Rational     -> ?
+    * Complex*Zero         -> Integer
     """
     if expr.is_number:
         return _IntegerPredicate_number(expr, assumptions)
+    is_zero = _ask_recursive(Q.zero(expr), assumptions)
+    if is_zero:
+        return True
     _output = True
     for arg in expr.args:
         if not _ask_recursive(Q.integer(arg), assumptions):
@@ -101,7 +105,7 @@ def _(expr, assumptions):
                 if ~(arg.q & 1):
                     return None
             elif _ask_recursive(Q.irrational(arg), assumptions):
-                if _output:
+                if _output and is_zero is False:
                     _output = False
                 else:
                     return
@@ -586,7 +590,9 @@ def _(expr, assumptions):
     result = False
     reals = 0
     for arg in expr.args:
-        if _ask_recursive(Q.imaginary(arg), assumptions):
+        if _ask_recursive(Q.zero(arg), assumptions):
+            return False
+        elif _ask_recursive(Q.imaginary(arg), assumptions):
             result = result ^ True
         elif not _ask_recursive(Q.real(arg), assumptions):
             break

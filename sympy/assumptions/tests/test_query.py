@@ -1690,7 +1690,7 @@ def test_integer():
     assert ask(Q.integer(2*x), Q.prime(x)) is True
     assert ask(Q.integer(2*x), Q.rational(x)) is None
     assert ask(Q.integer(2*x), Q.real(x)) is None
-    assert ask(Q.integer(sqrt(2)*x), Q.integer(x)) is False
+    assert ask(Q.integer(sqrt(2)*x), Q.integer(x)) is None # x can be 0
     assert ask(Q.integer(sqrt(2)*x), Q.irrational(x)) is None
 
     assert ask(Q.integer(x/2), Q.odd(x)) is False
