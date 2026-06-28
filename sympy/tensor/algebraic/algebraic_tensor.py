@@ -15,21 +15,6 @@ from sympy.tensor.algebraic.algebraic_zero_tensor import AlgebraicZeroTensor, al
 # Shape helpers
 # ---------------------------------------------------------------------------
 
-def _normalize_shape(s):
-    """Normalize any shape-like input to a tuple of (rows, cols) tuples.
-
-    ``((3,4), (4,5))``  -> ``((3, 4), (4, 5))``  (unchanged)
-    ``(3, 4)``          -> ``((3, 4),)``          (bare pair wrapped)
-    ``[(3,4)]``         -> ``((3, 4),)``
-    """
-    if not s:
-        return ()
-    if len(s) == 2 and not isinstance(s[0], (tuple, list)):
-        # Bare (m, n) -> ((m, n),)
-        return (tuple(s),)
-    return tuple(tuple(x) for x in s)
-
-
 def _tensor_shape_of(expr):
     """Return the full tensor shape of *expr* as a tuple of factor shapes.
 
@@ -192,9 +177,6 @@ class AlgebraicTensor(Basic):
     as an additive expression.
 
     Shape enforcement and AlgebraicZeroTensor handling are done in ``__new__``.
-    The flattening logic is kept intentionally simple so that a future
-    ``.simplify`` extension can layer noncommutative-polynomial factoring
-    on top without fighting against ``Add.flatten`` internals.
 
     Tensor shapes are full sequences of per-factor shapes, e.g.
     ``((3, 4), (4, 5))`` for the product ``A_3x4 ⊗ C_4x5``.
@@ -476,235 +458,6 @@ class AlgebraicTensor(Basic):
             return AlgebraicTensor(*(other * a for a in self.args))
         return compose_algebraic_tensors(other, self)
 
-    # ---- Factorization helpers (infrastructure for future .simplify) ----
-
-    def as_common_left(self):
-        """Extract common left factors from all AlgebraicPureTensor terms.
-
-        Handles factors wrapped in MatMul with scalar coefficients (e.g. 2*A
-        and 3*A are recognized as sharing the same matrix base A).
-
-        Returns
-        -------
-        (left_factors, rest, right_factors)
-            *left_factors* is a tuple of shared leading matrix bases (with
-            scalar coefficients stripped out).
-            *rest* is an AlgebraicTensor of the middle parts (or a single
-            PureTensor / sum of PureTensors when there is only one term).
-            *right_factors* is always () for left extraction.
-
-        If no common left factors exist, returns ((), self, ()).
-        """
-        from sympy.tensor.algebraic.simplify import _proportionality_ratio, \
-            _matrix_base
-
-        pure_terms = [
-            a for a in self.args
-            if isinstance(a, AlgebraicPureTensor) or (isinstance(a, Mul) and
-                any(isinstance(f, AlgebraicPureTensor) for f in a.args))
-        ]
-        if not pure_terms:
-            return ((), self, ())
-
-        def _pure_part(expr):
-            if isinstance(expr, AlgebraicPureTensor):
-                return expr.factors
-            if isinstance(expr, Mul):
-                for f in expr.args:
-                    if isinstance(f, AlgebraicPureTensor):
-                        return f.factors
-            return ()
-
-        factor_lists = [_pure_part(t) for t in pure_terms]
-        if not factor_lists[0]:
-            return ((), self, ())
-
-        common_len = 0
-        for pos in range(min(len(fl) for fl in factor_lists)):
-            refs = factor_lists[0][pos]
-            if all(_proportionality_ratio(refs, fl[pos]) is not None
-                   for fl in factor_lists[1:]):
-                common_len += 1
-            else:
-                break
-
-        if common_len == 0:
-            return ((), self, ())
-
-        # Extract matrix base (scalar-stripped) for the common left factors
-        left_factors = tuple(_matrix_base(f) for f in factor_lists[0][:common_len])
-
-        def _scalar_from_factor(f):
-            """Extract scalar coefficient from a factor like MatMul(k, M) -> k."""
-            from sympy.core.mul import Mul as _Mul
-            if not isinstance(f, _Mul):
-                return S.One
-            commutative_parts = [a for a in f.args
-                                 if hasattr(a, 'is_commutative') and a.is_commutative]
-            if not commutative_parts:
-                return S.One
-            return Mul(*commutative_parts, evaluate=True)
-
-        # Collect proportionality ratios for each term's common factors
-        middles = []
-        for t, fl in zip(pure_terms, factor_lists):
-            # Accumulate coefficient from scalar parts of common left factors
-            term_coeff = S.One
-            for i in range(common_len):
-                if t is pure_terms[0]:
-                    # Pivot term: extract scalar from its own factors
-                    term_coeff = term_coeff * _scalar_from_factor(fl[i])
-                else:
-                    # Non-pivot: ratio accounts for scalar difference vs pivot base
-                    r = _proportionality_ratio(factor_lists[0][i], fl[i])
-                    if r is not None:
-                        term_coeff = term_coeff / r
-
-            mid = fl[common_len:]
-            # Also extract scalars from non-common factors into the coefficient
-            for f in mid:
-                term_coeff = term_coeff * _scalar_from_factor(f)
-            # Replace mid factors with their base matrices
-            mid = [_matrix_base(f) for f in mid]
-
-            if isinstance(t, Mul) and not isinstance(t, AlgebraicPureTensor):
-                coeff = S.One
-                for f in t.args:
-                    if isinstance(f, AlgebraicPureTensor):
-                        coeff = t / f
-                        break
-                term_coeff = term_coeff * coeff
-
-            if mid:
-                if term_coeff is S.One:
-                    middles.append(AlgebraicPureTensor(*mid))
-                else:
-                    middles.append(term_coeff * AlgebraicPureTensor(*mid))
-            else:
-                middles.append(term_coeff)
-
-        if len(middles) == 1:
-            rest = middles[0]
-        else:
-            rest = AlgebraicTensor(*middles)
-
-        return (left_factors, rest, ())
-
-    def as_common_right(self):
-        """Extract common right factors from all AlgebraicPureTensor terms.
-
-        Symmetric to :meth:`as_common_left` but for trailing factors.
-        Handles factors wrapped in MatMul with scalar coefficients.
-
-        Returns
-        -------
-        (left_factors, rest, right_factors)
-        """
-        from sympy.tensor.algebraic.simplify import _proportionality_ratio, \
-            _matrix_base
-
-        pure_terms = [
-            a for a in self.args
-            if isinstance(a, AlgebraicPureTensor) or (isinstance(a, Mul) and
-                any(isinstance(f, AlgebraicPureTensor) for f in a.args))
-        ]
-        if not pure_terms:
-            return ((), self, ())
-
-        def _pure_part(expr):
-            if isinstance(expr, AlgebraicPureTensor):
-                return expr.factors
-            if isinstance(expr, Mul):
-                for f in expr.args:
-                    if isinstance(f, AlgebraicPureTensor):
-                        return f.factors
-            return ()
-
-        factor_lists = [_pure_part(t) for t in pure_terms]
-        if not factor_lists[0]:
-            return ((), self, ())
-
-        common_len = 0
-        for pos in range(1, min(len(fl) for fl in factor_lists) + 1):
-            refs = factor_lists[0][-pos]
-            if all(_proportionality_ratio(refs, fl[-pos]) is not None
-                   for fl in factor_lists[1:]):
-                common_len += 1
-            else:
-                break
-
-        if common_len == 0:
-            return ((), self, ())
-
-        right_factors = tuple(
-            _matrix_base(f) for f in factor_lists[0][-common_len:])
-
-        def _scalar_from_factor(f):
-            """Extract scalar coefficient from a factor like MatMul(k, M) -> k."""
-            from sympy.core.mul import Mul as _Mul
-            if not isinstance(f, _Mul):
-                return S.One
-            commutative_parts = [a for a in f.args
-                                 if hasattr(a, 'is_commutative') and a.is_commutative]
-            if not commutative_parts:
-                return S.One
-            return Mul(*commutative_parts, evaluate=True)
-
-        middles = []
-        for t, fl in zip(pure_terms, factor_lists):
-            term_coeff = S.One
-            for i in range(common_len):
-                if t is pure_terms[0]:
-                    term_coeff = term_coeff * _scalar_from_factor(fl[-common_len + i])
-                else:
-                    r = _proportionality_ratio(factor_lists[0][-common_len + i],
-                                               fl[-common_len + i])
-                    if r is not None:
-                        term_coeff = term_coeff / r
-
-            mid = fl[:-common_len] if common_len < len(fl) else ()
-            # Also extract scalars from non-common factors into the coefficient
-            for f in mid:
-                term_coeff = term_coeff * _scalar_from_factor(f)
-            mid = [_matrix_base(f) for f in mid]
-
-            if isinstance(t, Mul) and not isinstance(t, AlgebraicPureTensor):
-                coeff = S.One
-                for f in t.args:
-                    if isinstance(f, AlgebraicPureTensor):
-                        coeff = t / f
-                        break
-                term_coeff = term_coeff * coeff
-
-            if mid:
-                if term_coeff is S.One:
-                    middles.append(AlgebraicPureTensor(*mid))
-                else:
-                    middles.append(term_coeff * AlgebraicPureTensor(*mid))
-            else:
-                middles.append(term_coeff)
-
-        if len(middles) == 1:
-            rest = middles[0]
-        else:
-            rest = AlgebraicTensor(*middles)
-
-        return ((), rest, right_factors)
-
-    def as_common_factors(self):
-        """Extract both common left and right factors simultaneously.
-
-        Returns
-        -------
-        (left_factors, middle_expr, right_factors)
-        """
-        left_factors, rest, _ = self.as_common_left()
-        if isinstance(rest, AlgebraicTensor):
-            _, rest2, right_factors = rest.as_common_right()
-        else:
-            rest2, right_factors = rest, ()
-        return (left_factors, rest2, right_factors)
-
     def __str__(self):
         if not self.args:
             return ""
@@ -721,18 +474,16 @@ class AlgebraicTensor(Basic):
                 parts.append(f"+ {s}")
         return " ".join(parts)
 
-    def simplify(self, **kwargs):
-        """Simplify this AlgebraicTensor.
-
-        Combines like terms, extracts common left/right factors, and uses
-        SymPy's simplification machinery on coefficients and middle parts.
-        See :func:`sympy.tensor.algebraic.simplify.tensorsimplify` for details.
-        """
-        from sympy.tensor.algebraic.simplify import tensorsimplify
-        return tensorsimplify(self, **kwargs)
-
     def __repr__(self):
         return f"AlgebraicTensor({', '.join(repr(a) for a in self.args)})"
+
+    def simplify(self):
+        """Simplify this AlgebraicTensor using the tensor simplification pipeline.
+
+        Applies proportionality factoring and per-term simplification.
+        """
+        from sympy.tensor.algebraic.simplify import _simplify_algebraic_tensor
+        return _simplify_algebraic_tensor(self)
 
 
 # Register AlgebraicTensor with the SymPy add dispatcher so that

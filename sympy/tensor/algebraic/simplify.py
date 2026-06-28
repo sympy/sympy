@@ -1,12 +1,9 @@
 from __future__ import annotations
 
-from collections import defaultdict
-
-from sympy.core.add import Add
 from sympy.core.mul import Mul
 from sympy.core.numbers import Number
 from sympy.core.singleton import S
-from sympy.core.sympify import sympify
+from sympy.core.symbol import symbols
 
 
 def _get_sympy_simplify():
@@ -15,174 +12,9 @@ def _get_sympy_simplify():
     return _s
 
 
-def _tensor_key(expr):
-    """Return a hashable key identifying the tensor factor structure of *expr*.
-
-    For an ``AlgebraicPureTensor``, the key is the tuple of ``id(f)`` for each factor,
-    so that two AlgebraicPureTensors with the exact same factor objects share a key.
-
-    For ``Mul(coeff, AlgebraicPureTensor)`` the AlgebraicPureTensor part is extracted first.
-    For anything else (plain matrix, symbol, number) the key is just the
-    object identity.
-    """
-    from sympy.tensor.algebraic.algebraic_pure_tensor import AlgebraicPureTensor
-    if isinstance(expr, AlgebraicPureTensor):
-        return ("pt", tuple(id(f) for f in expr.factors))
-    if isinstance(expr, Mul) and not isinstance(expr, AlgebraicPureTensor):
-        for f in expr.args:
-            if isinstance(f, AlgebraicPureTensor):
-                return ("pt", tuple(id(f2) for f2 in f.factors))
-    return ("other", id(expr))
-
-
-def _extract_coeff_and_pt(expr):
-    """Return (coeff, unit_puretensor) from *expr*.
-
-    Returns the fully combined coefficient and a **unit** AlgebraicPureTensor
-    (coefficient stripped to S.One) so the caller can re-apply a new
-    coefficient without doubling up.
-
-    For non-tensor expressions return (expr, None).
-    """
-    from sympy.tensor.algebraic.algebraic_pure_tensor import AlgebraicPureTensor
-
-    if isinstance(expr, AlgebraicPureTensor):
-        coeff = expr._get_coeff()
-        factors = expr.factors
-        # Build a unit AlgebraicPureTensor (coeff = 1).
-        if len(factors) == 1:
-            unit_pt = factors[0]
-        else:
-            unit_pt = AlgebraicPureTensor(*factors)
-        return (coeff, unit_pt)
-
-    if isinstance(expr, Mul) and not isinstance(expr, AlgebraicPureTensor):
-        for f in expr.args:
-            if isinstance(f, AlgebraicPureTensor):
-                outer_coeff = Mul(*[a for a in expr.args if a is not f])
-                inner_coeff = f._get_coeff()
-                combined_coeff = outer_coeff * inner_coeff
-                factors = f.factors
-                if len(factors) == 1:
-                    unit_pt = factors[0]
-                else:
-                    unit_pt = AlgebraicPureTensor(*factors)
-                return (combined_coeff, unit_pt)
-
-    return (expr, None)
-
-
-def _make_scaled_pt(coeff, unit_pt):
-    """Construct ``coeff * unit_pt`` as an AlgebraicPureTensor without going through
-    SymPy's general dispatch (which would produce MatMul).
-
-    *unit_pt* is either a bare matrix-like object (single-factor AlgebraicPureTensor
-    unwrapped) or a multi-factor AlgebraicPureTensor with coefficient S.One.
-    """
-    from sympy.tensor.algebraic.algebraic_pure_tensor import AlgebraicPureTensor
-
-    if coeff is S.One:
-        return unit_pt
-    if coeff is S.Zero:
-        if isinstance(unit_pt, AlgebraicPureTensor):
-            from sympy.tensor.algebraic.algebraic_zero_tensor import AlgebraicZeroTensor
-            return AlgebraicZeroTensor(unit_pt.tensor_shape)
-        if hasattr(unit_pt, "shape"):
-            from sympy.tensor.algebraic.algebraic_zero_tensor import AlgebraicZeroTensor
-            return AlgebraicZeroTensor((unit_pt.shape,))
-        return coeff
-
-    # Determine the factor list.
-    if isinstance(unit_pt, AlgebraicPureTensor):
-        factors = unit_pt.factors
-    elif hasattr(unit_pt, "shape"):
-        factors = (unit_pt,)
-    else:
-        return coeff * unit_pt
-
-    if len(factors) == 1:
-        return AlgebraicPureTensor(coeff, factors[0])
-    return AlgebraicPureTensor(coeff, *factors)
-
-
-def _tensor_multiply_left(factor, expr):
-    """Return ``factor ⊗ expr`` where *expr* is AlgebraicPureTensor, AlgebraicTensor,
-    a plain matrix-like object, or a number."""
-    from sympy.tensor.algebraic.algebraic_tensor import AlgebraicTensor
-    from sympy.tensor.algebraic.algebraic_pure_tensor import AlgebraicPureTensor
-
-    if isinstance(expr, AlgebraicTensor):
-        return AlgebraicTensor(*(factor * a for a in expr.args))
-    if isinstance(expr, AlgebraicPureTensor):
-        return AlgebraicPureTensor(factor, expr)
-    if isinstance(expr, Number):
-        if expr is S.One:
-            return factor
-        if expr is S.Zero:
-            from sympy.tensor.algebraic.algebraic_zero_tensor import AlgebraicZeroTensor
-            return AlgebraicZeroTensor((factor.shape,))
-        return AlgebraicPureTensor(expr, factor)
-    # Plain matrix-like: create a two-factor AlgebraicPureTensor.
-    return AlgebraicPureTensor(factor, expr)
-
-
-def _tensor_multiply_right(expr, factor):
-    """Return ``expr ⊗ factor`` where *expr* is AlgebraicPureTensor, AlgebraicTensor,
-    a plain matrix-like object, or a number."""
-    from sympy.tensor.algebraic.algebraic_tensor import AlgebraicTensor
-    from sympy.tensor.algebraic.algebraic_pure_tensor import AlgebraicPureTensor
-
-    if isinstance(expr, AlgebraicTensor):
-        return AlgebraicTensor(*(a * factor for a in expr.args))
-    if isinstance(expr, AlgebraicPureTensor):
-        return AlgebraicPureTensor(expr, factor)
-    if isinstance(expr, Number):
-        if expr is S.One:
-            return factor
-        if expr is S.Zero:
-            from sympy.tensor.algebraic.algebraic_zero_tensor import AlgebraicZeroTensor
-            return AlgebraicZeroTensor((factor.shape,))
-        return AlgebraicPureTensor(expr, factor)
-    # Plain matrix-like: create a two-factor AlgebraicPureTensor.
-    return AlgebraicPureTensor(expr, factor)
-
-
 # ---------------------------------------------------------------------------
 # Proportionality checking helpers
 # ---------------------------------------------------------------------------
-
-def _is_true_matrix(expr):
-    """Check if expr is a matrix-like object with shape != (1, 1)."""
-    shape = getattr(expr, 'shape', None)
-    if shape is None:
-        return False
-    return shape != (1, 1)
-
-
-def _is_1x1_matrix(expr):
-    """Check if expr is a 1x1 matrix-like object."""
-    shape = getattr(expr, 'shape', None)
-    if shape is None:
-        return False
-    return shape == (1, 1)
-
-
-def _get_1x1_element(expr):
-    """Extract the single element from a 1x1 matrix expression.
-
-    For MatrixSymbol of shape (1,1), returns the indexed element expr[0,0].
-    For dense Matrix, returns the single entry.
-    Falls back to expr itself if extraction fails.
-    """
-    if hasattr(expr, 'shape') and expr.shape == (1, 1):
-        if hasattr(expr, '__getitem__'):
-            try:
-                elem = expr[0, 0]
-                return elem
-            except (TypeError, IndexError, NotImplementedError):
-                pass
-    return expr
-
 
 def _matrix_proportionality_ratio(m1, m2):
     """Check element-wise proportionality for true matrices (shape != (1,1)).
@@ -194,6 +26,8 @@ def _matrix_proportionality_ratio(m1, m2):
 
     ratio = None
     _s = _get_sympy_simplify()
+    from sympy.solvers.solvers import solve
+    r_symbol = symbols("ratio_symbol")
 
     for i in range(m1.shape[0]):
         for j in range(m1.shape[1]):
@@ -208,7 +42,11 @@ def _matrix_proportionality_ratio(m1, m2):
             if e1_is_zero or e2_is_zero:
                 return None
 
-            r = _s(e1 / e2)
+            r = solve(e1 - r_symbol * e2, r_symbol)
+            if r is None or len(r) == 0:
+                return None
+            r = r[0]
+            r = _s(r)
             if ratio is None:
                 ratio = r
             elif _s(ratio - r) != S.Zero:
@@ -217,91 +55,6 @@ def _matrix_proportionality_ratio(m1, m2):
     if ratio is None:
         return None
     return ratio
-
-
-def _nc_symbol_proportionality_ratio(f1, f2):
-    """Check proportionality for 1x1 matrices wrapping noncommutative symbols.
-
-    Returns a commutative ratio k such that f1 = k * f2, or None.
-    """
-    elem1 = _get_1x1_element(f1)
-    elem2 = _get_1x1_element(f2)
-
-    if elem1 == elem2:
-        return S.One
-
-    _s = _get_sympy_simplify()
-
-    # Try direct division: elem1 / elem2
-    try:
-        ratio = _s(elem1 / elem2)
-        if hasattr(ratio, 'is_commutative') and ratio.is_commutative:
-            return ratio
-        if isinstance(ratio, Number):
-            return ratio
-    except (ZeroDivisionError, TypeError, AttributeError):
-        pass
-
-    # Try the reverse direction
-    try:
-        ratio_inv = _s(elem2 / elem1)
-        if hasattr(ratio_inv, 'is_commutative') and ratio_inv.is_commutative:
-            if ratio_inv != S.Zero:
-                return _s(S.One / ratio_inv)
-        if isinstance(ratio_inv, Number) and ratio_inv != S.Zero:
-            return _s(S.One / ratio_inv)
-    except (ZeroDivisionError, TypeError, AttributeError):
-        pass
-
-    # Try factoring: check if elem1 = k * elem2 by extracting commutative parts
-    try:
-        from sympy.core.mul import Mul as _Mul
-        if isinstance(elem1, _Mul):
-            commutative_part = _Mul(*[a for a in elem1.args if a.is_commutative], evaluate=True)
-            noncomm_part = _Mul(*[a for a in elem1.args if not a.is_commutative], evaluate=True)
-            if noncomm_part == elem2 or _s(noncomm_part - elem2) == S.Zero:
-                return commutative_part
-        if isinstance(elem2, _Mul):
-            commutative_part = _Mul(*[a for a in elem2.args if a.is_commutative], evaluate=True)
-            noncomm_part = _Mul(*[a for a in elem2.args if not a.is_commutative], evaluate=True)
-            if noncomm_part == elem1 or _s(noncomm_part - elem1) == S.Zero:
-                return _s(S.One / commutative_part)
-    except (TypeError, AttributeError):
-        pass
-
-    return None
-
-
-def _matrix_base(factor):
-    """Extract the pure matrix base from a factor, stripping scalar coefficients.
-
-    If *factor* is a Mul/MatMul with a commutative (scalar) coefficient
-    and a single matrix-like part, returns the matrix part.  Otherwise
-    returns *factor* unchanged.
-
-    Examples
-    --------
-    >>> _matrix_base(A)                # A is a MatrixSymbol
-    A
-    >>> _matrix_base(MatMul(2, A))    # MatMul with scalar coeff
-    A
-    """
-    from sympy.core.mul import Mul as _Mul
-    if not isinstance(factor, _Mul):
-        return factor
-
-    commutative_parts = []
-    noncommutative_parts = []
-    for a in factor.args:
-        if hasattr(a, 'is_commutative') and a.is_commutative:
-            commutative_parts.append(a)
-        else:
-            noncommutative_parts.append(a)
-
-    if len(noncommutative_parts) == 1 and commutative_parts:
-        return noncommutative_parts[0]
-    return factor
-
 
 def _proportionality_ratio(factor1, factor2):
     """Check if factor1 and factor2 are proportional.
@@ -317,14 +70,7 @@ def _proportionality_ratio(factor1, factor2):
     if factor1 == factor2:
         return S.One
 
-    if _is_1x1_matrix(factor1) and _is_1x1_matrix(factor2):
-        return _nc_symbol_proportionality_ratio(factor1, factor2)
-
-    if _is_true_matrix(factor1) and _is_true_matrix(factor2):
-        return _matrix_proportionality_ratio(factor1, factor2)
-
-    return None
-
+    return _matrix_proportionality_ratio(factor1, factor2)
 
 # ---------------------------------------------------------------------------
 # Proportionality factoring
@@ -427,7 +173,7 @@ def proportionality_factoring(at):
     Parameters
     ----------
     at : AlgebraicTensor
-        The tensor sum to simplify.
+        The tensor sum to simplify.s
 
     Returns
     -------
@@ -738,31 +484,16 @@ def _simplify_algebraic_tensor(at, **kwargs):
 
     The simplification pipeline:
 
-    0. **Proportionality factoring** (primary tool) -- merges proportional
-       AlgebraicPureTensor terms by combining coefficients or creating linear
-       combinations at non-proportional factor slots.
-
-    1. **Combine like terms** -- group terms that share the same tensor
-       factor sequence and add their coefficients together (using SymPy's
-       ``Add`` / ``simplify`` on the accumulated coefficient).
-
-    2. **Extract common left / right factors** -- use the existing
-       ``as_common_factors`` infrastructure so that the middle sub-sum can
-       be simplified independently.
-
-    3. **Recurse** on the middle sub-sum and reassemble.
+    **Proportionality factoring** -- merges proportional AlgebraicPureTensor
+    terms by combining coefficients or creating linear combinations at
+    non-proportional factor slots.
 
     AlgebraicZeroTensor anchors and S.Zero terms are handled naturally.
     """
     from sympy.tensor.algebraic.algebraic_tensor import AlgebraicTensor
     from sympy.tensor.algebraic.algebraic_pure_tensor import AlgebraicPureTensor
-    from sympy.tensor.algebraic.algebraic_zero_tensor import AlgebraicZeroTensor, algebraic_zero_tensor
 
-    _s = _get_sympy_simplify()
-
-    # ------------------------------------------------------------------
-    # Phase 0: proportionality factoring (primary simplification tool)
-    # ------------------------------------------------------------------
+    # Phase 0: proportionality factoring (only simplification tool)
     result = proportionality_factoring(at)
 
     # If proportionality_factoring returned a non-AlgebraicTensor, simplify it
@@ -771,177 +502,8 @@ def _simplify_algebraic_tensor(at, **kwargs):
             return _simplify_algebraic_pure_tensor(result, **kwargs)
         return result
 
-    # If the result is still an AlgebraicTensor, run the remaining phases
-    args = list(result.args)
-    original_shape = result.tensor_shape
-
-    # Strip S.Zero entries but remember AlgebraicZeroTensor anchors.
-    has_zero = False
-    real_args = []
-    for a in args:
-        if isinstance(a, AlgebraicZeroTensor):
-            has_zero = True
-        elif a is not S.Zero:
-            real_args.append(a)
-
-    if not real_args:
-        if has_zero:
-            z = next(a for a in args if isinstance(a, AlgebraicZeroTensor))
-            return z
-        return algebraic_zero_tensor(original_shape)
-
-    # ------------------------------------------------------------------
-    # Phase 1: combine like terms
-    # ------------------------------------------------------------------
-    grouped = defaultdict(list)
-    non_tensor = []
-
-    for a in real_args:
-        key = _tensor_key(a)
-        if key[0] == "pt":
-            grouped[key].append(a)
-        else:
-            non_tensor.append(a)
-
-    combined = []
-    for key, group in grouped.items():
-        if len(group) == 1:
-            combined.append(_simplify_pure_tensor_in_context(group[0], **kwargs))
-        else:
-            combined.extend(_combine_like_terms(group, **kwargs))
-
-    # Simplify non-tensor entries (plain matrices, numbers, …)
-    for nt in non_tensor:
-        snt = _s(nt, **kwargs)
-        if snt is not S.Zero:
-            combined.append(snt)
-
-    if has_zero:
-        combined.append(next(a for a in args if isinstance(a, AlgebraicZeroTensor)))
-
-    if not combined:
-        return algebraic_zero_tensor(original_shape)
-
-    if len(combined) == 1 and not isinstance(combined[0], AlgebraicZeroTensor):
-        result = combined[0]
-    else:
-        result = AlgebraicTensor(*combined, _sympify=False)
-
-    # ------------------------------------------------------------------
-    # Phase 2 + 3: extract common factors and recurse on the middle
-    # ------------------------------------------------------------------
-    if isinstance(result, AlgebraicTensor):
-        result = _simplify_with_common_factors(result, **kwargs)
-
     return result
 
 
-def _simplify_pure_tensor_in_context(term, **kwargs):
-    """Simplify a term that carries an AlgebraicPureTensor (with or without coeff)."""
-    from sympy.tensor.algebraic.algebraic_pure_tensor import AlgebraicPureTensor
-    from sympy.tensor.algebraic.algebraic_zero_tensor import AlgebraicZeroTensor
-
-    _s = _get_sympy_simplify()
-
-    if isinstance(term, AlgebraicPureTensor):
-        return _simplify_algebraic_pure_tensor(term, **kwargs)
-
-    if isinstance(term, Mul) and not isinstance(term, AlgebraicPureTensor):
-        coeff, unit_pt = _extract_coeff_and_pt(term)
-        if unit_pt is not None:
-            # unit_pt is a unit AlgebraicPureTensor (coeff stripped) or bare matrix.
-            if isinstance(unit_pt, AlgebraicPureTensor):
-                factors = unit_pt.factors
-            elif hasattr(unit_pt, "shape"):
-                factors = (unit_pt,)
-            else:
-                return _s(term, **kwargs)
-
-            simp_factors = tuple(_s(f, **kwargs) for f in factors)
-            simp_coeff = _s(coeff, **kwargs)
-            if simp_coeff is S.Zero:
-                shape = tuple(f.shape for f in factors)
-                return AlgebraicZeroTensor(shape)
-            if simp_coeff is S.One:
-                if len(simp_factors) == 1:
-                    return simp_factors[0]
-                return AlgebraicPureTensor(*simp_factors)
-            return _make_scaled_pt(simp_coeff,
-                                   AlgebraicPureTensor(*simp_factors) if len(simp_factors) > 1 else simp_factors[0])
-
-    # Fallback: generic simplify
-    return _s(term, **kwargs)
 
 
-def _combine_like_terms(group, **kwargs):
-    """Combine a list of terms sharing the same factor sequence.
-
-    Each element of *group* is either an AlgebraicPureTensor or Mul(coeff, AlgebraicPureTensor).
-    We extract the (fully combined) coefficient from each, sum all coefficients
-    into a single SymPy expression, simplify that sum, and return the product
-    of the simplified sum with the unit AlgebraicPureTensor.
-
-    Returns a list (length 0 when the summed coefficient is zero, or length 1
-    with the combined term).
-    """
-    from sympy.tensor.algebraic.algebraic_pure_tensor import AlgebraicPureTensor
-    from sympy.tensor.algebraic.algebraic_zero_tensor import AlgebraicZeroTensor
-
-    _s = _get_sympy_simplify()
-
-    # All terms in the group share the same factor sequence; pick the
-    # representative UNIT PureTensor from the first entry.
-    _, representative_unit_pt = _extract_coeff_and_pt(group[0])
-    assert representative_unit_pt is not None
-
-    coeffs = []
-    for term in group:
-        c, _ = _extract_coeff_and_pt(term)
-        coeffs.append(c)
-
-    # Sum coefficients using SymPy's Add, then simplify.
-    total_coeff = _s(Add(*coeffs), **kwargs)
-
-    if total_coeff is S.Zero:
-        return []  # terms cancel — caller will handle emptiness
-
-    if total_coeff is S.One:
-        return [representative_unit_pt]
-
-    # Use _make_scaled_pt to avoid SymPy dispatch to MatMul.
-    return [_make_scaled_pt(total_coeff, representative_unit_pt)]
-
-
-def _simplify_with_common_factors(at, **kwargs):
-    """Extract common left/right factors, simplify the middle, reassemble."""
-    from sympy.tensor.algebraic.algebraic_tensor import AlgebraicTensor
-    from sympy.tensor.algebraic.algebraic_pure_tensor import AlgebraicPureTensor
-    from sympy.tensor.algebraic.algebraic_zero_tensor import AlgebraicZeroTensor
-
-    _s = _get_sympy_simplify()
-
-    left_factors, middle, right_factors = at.as_common_factors()
-
-    if not left_factors and not right_factors:
-        # Nothing to extract — return as-is (already combined).
-        return at
-
-    if isinstance(middle, AlgebraicTensor):
-        middle = _simplify_algebraic_tensor(middle, **kwargs)
-    elif isinstance(middle, AlgebraicPureTensor):
-        middle = _simplify_algebraic_pure_tensor(middle, **kwargs)
-    else:
-        middle = _s(middle, **kwargs)
-
-    # Reassemble: left_factors ⊗ middle ⊗ right_factors
-    # Use _tensor_multiply_left/right so AlgebraicTensor middle parts
-    # are handled by distributing the factor across all terms.
-    result = middle
-    if left_factors:
-        for f in left_factors:
-            result = _tensor_multiply_left(f, result)
-    if right_factors:
-        for f in right_factors:
-            result = _tensor_multiply_right(result, f)
-
-    return result

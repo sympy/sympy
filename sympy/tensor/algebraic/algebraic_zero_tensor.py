@@ -78,8 +78,8 @@ class AlgebraicZeroTensor:
     def __bool__(self):
         return False
 
-    def simplify(self, **kwargs):
-        """An AlgebraicZeroTensor is already in simplest form; return self."""
+    def simplify(self):
+        """Return self unchanged. A zero tensor is already in simplest form."""
         return self
 
 

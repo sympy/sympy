@@ -7,6 +7,7 @@ from __future__ import annotations
 import sys, os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "..")))
 
+from sympy.matrices import Matrix
 from sympy.matrices.expressions import MatrixSymbol, Transpose, MatAdd
 
 from sympy.tensor.algebraic.algebraic_zero_tensor import AlgebraicZeroTensor, algebraic_zero_tensor
@@ -47,13 +48,31 @@ u = MatrixSymbol("u", 1, 1)
 t_test1 = algebraic_tensor_product(C, 2*C, 13*A, C)
 t_test2 = algebraic_tensor_product(C, C, 7*B, C)
 
-t8 = (t_test1 * t_test2).simplify()
+t8 = (t_test1+t_test2).simplify()
 print(f"  type   : {type(t8).__name__}")
 print(f"  shape  : {t8.tensor_shape}")
 print(f"  str    : {t8}")
 print()
 
-# ---------------------------------------------------------------------------
+
+t_test3 = algebraic_tensor_product(Matrix([[1,0],[0,1]]), A, A)
+t_test4 = algebraic_tensor_product(Matrix([[2,0],[0,2]]), 2*A, A)
+t8 = (t_test3 + t_test4).simplify()
+print(f"  type   : {type(t8).__name__}")
+print(f"  shape  : {t8.tensor_shape}")
+print(f"  str    : {t8}")
+print()
+
+
+t_test5 = algebraic_tensor_product(A, B)
+t_test6 = algebraic_tensor_product(C, C)
+t8 = t_test5*t_test6
+print(f"  type   : {type(t8).__name__}")
+print(f"  shape  : {t8.tensor_shape}")
+print(f"  str    : {t8}")
+print()
+# -----------------------------------------------
+# ----------------------------
 # Nontrivial AlgebraicPureTensors
 # ---------------------------------------------------------------------------
 
@@ -142,7 +161,7 @@ print(f"  str    : {z1}")
 print(f"  bool   : {bool(z1)}")
 print()
 
-z2 = z1 + t1
+z2 = (z1 + t1).simplify()
 print(f"z2 = z1 + t1  (AlgebraicZeroTensor + AlgebraicPureTensor)")
 print(f"  type   : {type(z2).__name__}")
 print(f"  str    : {z2}")
@@ -159,17 +178,4 @@ print()
 # Factorization helpers
 # ---------------------------------------------------------------------------
 
-s4 = AlgebraicPureTensor(A, I4, C) + AlgebraicPureTensor(A, I4, C)
-print(f"s4 = AlgebraicPureTensor(A, I4, C) + AlgebraicPureTensor(A, I4, C)")
-left, mid, right = s4.as_common_factors()
-print(f"  as_common_factors: left={left}, mid={mid}, right={right}")
-print()
-
-# --- Factorization with differing middle factor ---
-J4 = MatrixSymbol("J4", 4, 4)
-s5 = AlgebraicPureTensor(A, I4, C) + AlgebraicPureTensor(A, J4, C)
-print(f"s5 = AlgebraicPureTensor(A, I4, C) + AlgebraicPureTensor(A, J4, C)")
-left, mid, right = s5.as_common_factors()
-print(f"  as_common_factors: left={left}, mid={mid}, right={right}")
-print()
 
