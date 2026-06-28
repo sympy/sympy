@@ -1503,6 +1503,28 @@ class Mul(Expr, AssocOp):
             all(arg.is_polar or arg.is_positive for arg in self.args)
 
     def _eval_is_extended_real(self):
+        # Detect z * conjugate(z) = |z|^2 pattern which is always real.
+        # Pair up factors with their conjugates; if leftover factors are
+        # also real, the whole product is real.
+        remaining = list(self.args)
+        used = set()
+        for i, factor in enumerate(remaining):
+            if i in used:
+                continue
+            conj_factor = factor.conjugate()
+            for j in range(i + 1, len(remaining)):
+                if j not in used and remaining[j] == conj_factor:
+                    used.add(i)
+                    used.add(j)
+                    break
+        if used:
+            leftover = [f for k, f in enumerate(remaining) if k not in used]
+            if not leftover:
+                return True  # e.g. x * conjugate(x) — fully paired
+            from sympy.core.mul import Mul
+            leftover_expr = Mul(*leftover) if len(leftover) > 1 else leftover[0]
+            if leftover_expr.is_extended_real:
+                return True  # e.g. 2 * x * conjugate(x)
         return self._eval_real_imag(True)
 
     def _eval_real_imag(self, real):
@@ -1590,7 +1612,27 @@ class Mul(Expr, AssocOp):
                 return
         if all(x.is_real for x in self.args):
             return False
-
+    def _eval_is_extended_nonnegative(self):
+        # z * conjugate(z) = |z|^2 >= 0 always.
+        remaining = list(self.args)
+        used = set()
+        for i, factor in enumerate(remaining):
+            if i in used:
+                continue
+            for j in range(i + 1, len(remaining)):
+                if j not in used and remaining[j] == factor.conjugate():
+                    used.add(i)
+                    used.add(j)
+                    break
+        if used:
+            leftover = [f for k, f in enumerate(remaining) if k not in used]
+            if not leftover:
+                return True
+            from sympy.core.mul import Mul
+            leftover_expr = Mul(*leftover) if len(leftover) > 1 else leftover[0]
+            if leftover_expr.is_extended_nonnegative:
+                return True
+            
     def _eval_is_extended_positive(self):
         """Return True if self is positive, False if not, and None if it
         cannot be determined.

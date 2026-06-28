@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from typing import TYPE_CHECKING, overload
 
@@ -918,6 +918,18 @@ class conjugate(DefinedFunction):
         return self.args[0].is_algebraic
 
 
+
+    def _eval_is_finite(self):
+        return self.args[0].is_finite
+
+    def _eval_is_infinite(self):
+        return self.args[0].is_infinite
+
+    def _eval_is_real(self):
+        return self.args[0].is_real
+
+    def _eval_is_complex(self):
+        return self.args[0].is_complex
 class transpose(DefinedFunction):
     """
     Linear map transposition.
