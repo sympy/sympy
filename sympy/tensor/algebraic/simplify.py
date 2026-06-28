@@ -399,7 +399,7 @@ def _build_pt(coeff, factors):
         return AlgebraicPureTensor(*factors)
 
     return AlgebraicPureTensor(coeff, *factors)
-
+ 
 
 def proportionality_factoring(at):
     """Simplify an AlgebraicTensor by merging proportional AlgebraicPureTensor terms.
