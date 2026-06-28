@@ -42,6 +42,17 @@ I5 = MatrixSymbol("I5", 5, 5)
 # 1x1 noncommutative matrix
 u = MatrixSymbol("u", 1, 1)
 
+
+
+t_test1 = algebraic_tensor_product(C, 2*C, 13*A, C)
+t_test2 = algebraic_tensor_product(C, C, 7*B, C)
+
+t8 = (t_test1 * t_test2).simplify()
+print(f"  type   : {type(t8).__name__}")
+print(f"  shape  : {t8.tensor_shape}")
+print(f"  str    : {t8}")
+print()
+
 # ---------------------------------------------------------------------------
 # Nontrivial AlgebraicPureTensors
 # ---------------------------------------------------------------------------
@@ -162,13 +173,3 @@ left, mid, right = s5.as_common_factors()
 print(f"  as_common_factors: left={left}, mid={mid}, right={right}")
 print()
 
-
-
-t_test1 = algebraic_tensor_product(C, C, A, C)
-t_test2 = algebraic_tensor_product(C, C, B, C)
-
-t8 = (t_test1 + t_test2)
-print(f"  type   : {type(t8).__name__}")
-print(f"  shape  : {t8.tensor_shape}")
-print(f"  str    : {t8}")
-print()

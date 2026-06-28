@@ -146,17 +146,30 @@ def test_pure_tensor_mul_symbol():
 
 
 def test_pure_tensor_mul_puretensor():
+    """* now performs composition (factor-wise matrix multiplication)."""
+    # A(3,4), C(4,5), E(4,6), F(5,7) — inner dims match for composition
+    E = MatrixSymbol("E", 4, 6)
+    F = MatrixSymbol("F", 5, 7)
     pt1 = AlgebraicPureTensor(A, C)
-    pt2 = AlgebraicPureTensor(C, D)
+    pt2 = AlgebraicPureTensor(E, F)
     result = pt1 * pt2
     assert isinstance(result, AlgebraicPureTensor)
-    assert result.factors == (A, C, C, D)
-    assert result.tensor_shape == ((3, 4), (4, 5), (4, 5), (3, 5))
+    # Composition: (A@E) ⊗ (C@F)
+    assert len(result.factors) == 2
+    assert result.factors[0].shape == (3, 6)
+    assert result.factors[1].shape == (4, 7)
+    assert result.tensor_shape == ((3, 6), (4, 7))
 
 
 def test_pure_tensor_mul_puretensor_with_coefficients():
+    """Composition combines coefficients from both tensors."""
+    E = MatrixSymbol("E", 4, 6)
+    F = MatrixSymbol("F", 5, 7)
     pt1 = 2 * AlgebraicPureTensor(A, C)
-    pt2 = 3 * AlgebraicPureTensor(C, D)
+    pt2 = 3 * AlgebraicPureTensor(E, F)
     result = pt1 * pt2
     assert isinstance(result, AlgebraicPureTensor)
-    assert result.factors == (A, C, C, D)
+    assert result._get_coeff() == 6
+    assert len(result.factors) == 2
+    assert result.factors[0].shape == (3, 6)
+    assert result.factors[1].shape == (4, 7)

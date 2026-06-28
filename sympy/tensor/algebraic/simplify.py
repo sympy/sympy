@@ -107,7 +107,7 @@ def _make_scaled_pt(coeff, unit_pt):
 
 def _tensor_multiply_left(factor, expr):
     """Return ``factor ⊗ expr`` where *expr* is AlgebraicPureTensor, AlgebraicTensor,
-    or a plain matrix-like object."""
+    a plain matrix-like object, or a number."""
     from sympy.tensor.algebraic.algebraic_tensor import AlgebraicTensor
     from sympy.tensor.algebraic.algebraic_pure_tensor import AlgebraicPureTensor
 
@@ -115,13 +115,20 @@ def _tensor_multiply_left(factor, expr):
         return AlgebraicTensor(*(factor * a for a in expr.args))
     if isinstance(expr, AlgebraicPureTensor):
         return AlgebraicPureTensor(factor, expr)
+    if isinstance(expr, Number):
+        if expr is S.One:
+            return factor
+        if expr is S.Zero:
+            from sympy.tensor.algebraic.algebraic_zero_tensor import AlgebraicZeroTensor
+            return AlgebraicZeroTensor((factor.shape,))
+        return AlgebraicPureTensor(expr, factor)
     # Plain matrix-like: create a two-factor AlgebraicPureTensor.
     return AlgebraicPureTensor(factor, expr)
 
 
 def _tensor_multiply_right(expr, factor):
     """Return ``expr ⊗ factor`` where *expr* is AlgebraicPureTensor, AlgebraicTensor,
-    or a plain matrix-like object."""
+    a plain matrix-like object, or a number."""
     from sympy.tensor.algebraic.algebraic_tensor import AlgebraicTensor
     from sympy.tensor.algebraic.algebraic_pure_tensor import AlgebraicPureTensor
 
@@ -129,8 +136,507 @@ def _tensor_multiply_right(expr, factor):
         return AlgebraicTensor(*(a * factor for a in expr.args))
     if isinstance(expr, AlgebraicPureTensor):
         return AlgebraicPureTensor(expr, factor)
+    if isinstance(expr, Number):
+        if expr is S.One:
+            return factor
+        if expr is S.Zero:
+            from sympy.tensor.algebraic.algebraic_zero_tensor import AlgebraicZeroTensor
+            return AlgebraicZeroTensor((factor.shape,))
+        return AlgebraicPureTensor(expr, factor)
     # Plain matrix-like: create a two-factor AlgebraicPureTensor.
     return AlgebraicPureTensor(expr, factor)
+
+
+# ---------------------------------------------------------------------------
+# Proportionality checking helpers
+# ---------------------------------------------------------------------------
+
+def _is_true_matrix(expr):
+    """Check if expr is a matrix-like object with shape != (1, 1)."""
+    shape = getattr(expr, 'shape', None)
+    if shape is None:
+        return False
+    return shape != (1, 1)
+
+
+def _is_1x1_matrix(expr):
+    """Check if expr is a 1x1 matrix-like object."""
+    shape = getattr(expr, 'shape', None)
+    if shape is None:
+        return False
+    return shape == (1, 1)
+
+
+def _get_1x1_element(expr):
+    """Extract the single element from a 1x1 matrix expression.
+
+    For MatrixSymbol of shape (1,1), returns the indexed element expr[0,0].
+    For dense Matrix, returns the single entry.
+    Falls back to expr itself if extraction fails.
+    """
+    if hasattr(expr, 'shape') and expr.shape == (1, 1):
+        if hasattr(expr, '__getitem__'):
+            try:
+                elem = expr[0, 0]
+                return elem
+            except (TypeError, IndexError, NotImplementedError):
+                pass
+    return expr
+
+
+def _matrix_proportionality_ratio(m1, m2):
+    """Check element-wise proportionality for true matrices (shape != (1,1)).
+
+    Returns the commutative ratio k such that m1 = k * m2, or None.
+    """
+    if m1.shape != m2.shape:
+        return None
+
+    ratio = None
+    _s = _get_sympy_simplify()
+
+    for i in range(m1.shape[0]):
+        for j in range(m1.shape[1]):
+            e1 = m1[i, j]
+            e2 = m2[i, j]
+
+            e1_is_zero = (e1 == S.Zero) or (e1.is_zero is True)
+            e2_is_zero = (e2 == S.Zero) or (e2.is_zero is True)
+
+            if e1_is_zero and e2_is_zero:
+                continue
+            if e1_is_zero or e2_is_zero:
+                return None
+
+            r = _s(e1 / e2)
+            if ratio is None:
+                ratio = r
+            elif _s(ratio - r) != S.Zero:
+                return None
+
+    if ratio is None:
+        return None
+    return ratio
+
+
+def _nc_symbol_proportionality_ratio(f1, f2):
+    """Check proportionality for 1x1 matrices wrapping noncommutative symbols.
+
+    Returns a commutative ratio k such that f1 = k * f2, or None.
+    """
+    elem1 = _get_1x1_element(f1)
+    elem2 = _get_1x1_element(f2)
+
+    if elem1 == elem2:
+        return S.One
+
+    _s = _get_sympy_simplify()
+
+    # Try direct division: elem1 / elem2
+    try:
+        ratio = _s(elem1 / elem2)
+        if hasattr(ratio, 'is_commutative') and ratio.is_commutative:
+            return ratio
+        if isinstance(ratio, Number):
+            return ratio
+    except (ZeroDivisionError, TypeError, AttributeError):
+        pass
+
+    # Try the reverse direction
+    try:
+        ratio_inv = _s(elem2 / elem1)
+        if hasattr(ratio_inv, 'is_commutative') and ratio_inv.is_commutative:
+            if ratio_inv != S.Zero:
+                return _s(S.One / ratio_inv)
+        if isinstance(ratio_inv, Number) and ratio_inv != S.Zero:
+            return _s(S.One / ratio_inv)
+    except (ZeroDivisionError, TypeError, AttributeError):
+        pass
+
+    # Try factoring: check if elem1 = k * elem2 by extracting commutative parts
+    try:
+        from sympy.core.mul import Mul as _Mul
+        if isinstance(elem1, _Mul):
+            commutative_part = _Mul(*[a for a in elem1.args if a.is_commutative], evaluate=True)
+            noncomm_part = _Mul(*[a for a in elem1.args if not a.is_commutative], evaluate=True)
+            if noncomm_part == elem2 or _s(noncomm_part - elem2) == S.Zero:
+                return commutative_part
+        if isinstance(elem2, _Mul):
+            commutative_part = _Mul(*[a for a in elem2.args if a.is_commutative], evaluate=True)
+            noncomm_part = _Mul(*[a for a in elem2.args if not a.is_commutative], evaluate=True)
+            if noncomm_part == elem1 or _s(noncomm_part - elem1) == S.Zero:
+                return _s(S.One / commutative_part)
+    except (TypeError, AttributeError):
+        pass
+
+    return None
+
+
+def _matrix_base(factor):
+    """Extract the pure matrix base from a factor, stripping scalar coefficients.
+
+    If *factor* is a Mul/MatMul with a commutative (scalar) coefficient
+    and a single matrix-like part, returns the matrix part.  Otherwise
+    returns *factor* unchanged.
+
+    Examples
+    --------
+    >>> _matrix_base(A)                # A is a MatrixSymbol
+    A
+    >>> _matrix_base(MatMul(2, A))    # MatMul with scalar coeff
+    A
+    """
+    from sympy.core.mul import Mul as _Mul
+    if not isinstance(factor, _Mul):
+        return factor
+
+    commutative_parts = []
+    noncommutative_parts = []
+    for a in factor.args:
+        if hasattr(a, 'is_commutative') and a.is_commutative:
+            commutative_parts.append(a)
+        else:
+            noncommutative_parts.append(a)
+
+    if len(noncommutative_parts) == 1 and commutative_parts:
+        return noncommutative_parts[0]
+    return factor
+
+
+def _proportionality_ratio(factor1, factor2):
+    """Check if factor1 and factor2 are proportional.
+
+    Returns the commutative ratio k such that factor1 = k * factor2,
+    or None if they are not proportional.
+
+    - For true matrices (shape != (1,1)): checks all nonzero elements share
+      the same ratio. Avoids division by zero.
+    - For 1x1 matrices: checks if there is a commutative proportionality
+      constant between the wrapped noncommutative symbols.
+    """
+    if factor1 == factor2:
+        return S.One
+
+    if _is_1x1_matrix(factor1) and _is_1x1_matrix(factor2):
+        return _nc_symbol_proportionality_ratio(factor1, factor2)
+
+    if _is_true_matrix(factor1) and _is_true_matrix(factor2):
+        return _matrix_proportionality_ratio(factor1, factor2)
+
+    return None
+
+
+# ---------------------------------------------------------------------------
+# Proportionality factoring
+# ---------------------------------------------------------------------------
+
+def _extract_pt_and_coeff(term):
+    """Extract (unit_pt, coefficient) from a term.
+
+    Returns (unit_pt, coeff) where unit_pt is either a bare matrix-like object,
+    an AlgebraicPureTensor, or the term itself (when no extraction is possible).
+    coeff is the extracted commutative coefficient (S.One if none).
+
+    Handles:
+    - AlgebraicPureTensor directly
+    - Mul(coeff, AlgebraicPureTensor)
+    - MatMul(coeff, *matrix_factors) with direct matrix factors
+    - Anything else -> (term, S.One)
+    """
+    from sympy.tensor.algebraic.algebraic_pure_tensor import AlgebraicPureTensor
+
+    if isinstance(term, AlgebraicPureTensor):
+        return (term, term._get_coeff())
+
+    if isinstance(term, Mul) and not isinstance(term, AlgebraicPureTensor):
+        # Check for AlgebraicPureTensor in args
+        for f in term.args:
+            if isinstance(f, AlgebraicPureTensor):
+                outer_coeff = Mul(*[a for a in term.args if a is not f])
+                inner_coeff = f._get_coeff()
+                return (f, outer_coeff * inner_coeff)
+
+        # Handle MatMul with direct matrix factors: extract commutative coeff
+        # and matrix-like factors (objects with .shape attribute)
+        matrix_factors = []
+        commutative_parts = []
+        for a in term.args:
+            if isinstance(a, AlgebraicPureTensor):
+                continue  # Already handled above
+            if hasattr(a, 'shape') and a.shape is not None:
+                matrix_factors.append(a)
+            elif hasattr(a, 'is_commutative') and a.is_commutative:
+                commutative_parts.append(a)
+
+        if matrix_factors:
+            coeff = Mul(*commutative_parts, evaluate=True) if commutative_parts else S.One
+            coeff = _get_sympy_simplify()(coeff)
+            return (None, coeff, matrix_factors)
+
+    return (term, S.One)
+
+
+def _build_pt(coeff, factors):
+    """Build an AlgebraicPureTensor from a coefficient and a list of factors.
+
+    Handles special cases: coeff=1 drops coefficient, single factor with
+    coeff=1 unwraps to bare factor, coeff=0 produces AlgebraicZeroTensor.
+    """
+    from sympy.tensor.algebraic.algebraic_pure_tensor import AlgebraicPureTensor
+    from sympy.tensor.algebraic.algebraic_zero_tensor import AlgebraicZeroTensor
+
+    if coeff is S.Zero:
+        if len(factors) > 0 and hasattr(factors[0], 'shape'):
+            return AlgebraicZeroTensor(tuple(f.shape for f in factors))
+        return coeff
+
+    if not factors:
+        return coeff
+
+    if coeff is S.One:
+        if len(factors) == 1:
+            return factors[0]
+        return AlgebraicPureTensor(*factors)
+
+    return AlgebraicPureTensor(coeff, *factors)
+
+
+def proportionality_factoring(at):
+    """Simplify an AlgebraicTensor by merging proportional AlgebraicPureTensor terms.
+
+    Algorithm
+    ---------
+    1. Pick a pivot AlgebraicPureTensor from the sum.
+    2. Compare the pivot with every other AlgebraicPureTensor in the sum.
+    3. For each pair, walk through their tensor factors slot by slot:
+
+       - If ALL factor slots are proportional (each factor of the selected
+         term is a commutative multiple of the corresponding factor of the
+         pivot), extract all ratios, multiply them into the selected term's
+         prefactor, and add the two terms by summing their prefactors.
+
+       - If EXACTLY ONE factor slot is not proportional, gather the ratios
+         from all proportional slots, multiply them into the selected term's
+         prefactor, and create a new combined AlgebraicPureTensor where the
+         non-proportional slot holds the linear combination of the two factors
+         weighted by their respective (accumulated) prefactors.
+
+    4. After a successful merge, reset the pivot to the beginning of the list.
+    5. If the pivot reaches the end without any merge, increment the pivot.
+
+    Parameters
+    ----------
+    at : AlgebraicTensor
+        The tensor sum to simplify.
+
+    Returns
+    -------
+    AlgebraicTensor, AlgebraicPureTensor, AlgebraicZeroTensor, or other
+        The simplified expression.
+    """
+    from sympy.core.add import Add as _Add
+    from sympy.tensor.algebraic.algebraic_tensor import AlgebraicTensor
+    from sympy.tensor.algebraic.algebraic_pure_tensor import AlgebraicPureTensor
+    from sympy.tensor.algebraic.algebraic_zero_tensor import AlgebraicZeroTensor
+
+    _s = _get_sympy_simplify()
+
+    args = list(at.args)
+
+    # Separate AlgebraicPureTensor (and Mul containing one) from other terms
+    tensor_terms = []
+    non_tensor = []
+    has_zero = False
+
+    for a in args:
+        if isinstance(a, AlgebraicZeroTensor):
+            has_zero = True
+            non_tensor.append(a)
+        elif isinstance(a, AlgebraicPureTensor):
+            tensor_terms.append(a)
+        elif isinstance(a, Mul) and not isinstance(a, AlgebraicPureTensor):
+            has_pt = any(isinstance(f, AlgebraicPureTensor) for f in a.args)
+            has_matrix = any(hasattr(f, 'shape') for f in a.args)
+            if has_pt or has_matrix:
+                tensor_terms.append(a)
+            else:
+                non_tensor.append(a)
+        elif a is not S.Zero:
+            non_tensor.append(a)
+
+    if len(tensor_terms) < 2:
+        return at
+
+    # Convert to entries with (coeff, factors) representation
+    entries = []
+    for t in tensor_terms:
+        extracted = _extract_pt_and_coeff(t)
+        if len(extracted) == 3:
+            # MatMul with direct matrix factors: (None, coeff, [factors])
+            _, coeff, factors = extracted
+            entries.append({
+                'coeff': coeff,
+                'factors': factors,
+            })
+        else:
+            pt, coeff = extracted
+            if isinstance(pt, AlgebraicPureTensor):
+                entries.append({
+                    'coeff': coeff,
+                    'factors': list(pt.factors),
+                })
+            elif hasattr(pt, 'shape'):
+                entries.append({
+                    'coeff': coeff,
+                    'factors': [pt],
+                })
+            else:
+                entries.append({
+                    'coeff': coeff,
+                    'factors': [pt],
+                })
+
+    changed = True
+    while changed and len(entries) >= 2:
+        changed = False
+        pivot_idx = 0
+
+        while pivot_idx < len(entries):
+            merged = False
+            pivot = entries[pivot_idx]
+
+            for sel_idx in range(pivot_idx + 1, len(entries)):
+                selected = entries[sel_idx]
+
+                if len(pivot['factors']) != len(selected['factors']):
+                    continue
+
+                # Compare factors slot by slot
+                ratios = []
+                diff_slot = None
+
+                for slot in range(len(pivot['factors'])):
+                    r = _proportionality_ratio(
+                        selected['factors'][slot],
+                        pivot['factors'][slot]
+                    )
+                    if r is not None:
+                        ratios.append(r)
+                    else:
+                        if diff_slot is not None:
+                            ratios = None
+                            break
+                        diff_slot = slot
+                        ratios.append(None)
+
+                if ratios is None:
+                    continue
+
+                # Product of all proportional ratios
+                combined_ratio = S.One
+                for r in ratios:
+                    if r is not None:
+                        combined_ratio = combined_ratio * r
+
+                add_coeff = _s(combined_ratio * selected['coeff'])
+
+                if diff_slot is None:
+                    # All factors proportional -> merge by adding coefficients
+                    new_coeff = _s(pivot['coeff'] + add_coeff)
+
+                    if new_coeff is S.Zero:
+                        entries.pop(sel_idx)
+                        entries.pop(pivot_idx)
+                        pivot_idx = 0
+                        changed = True
+                        merged = True
+                        break
+
+                    pivot['coeff'] = new_coeff
+                    entries.pop(sel_idx)
+                    pivot_idx = 0
+                    changed = True
+                    merged = True
+                    break
+
+                else:
+                    # Exactly one non-proportional slot -> linear combination
+                    new_coeff_pivot = _s(pivot['coeff'])
+                    new_coeff_sel = add_coeff
+
+                    pivot_factor = pivot['factors'][diff_slot]
+                    sel_factor = selected['factors'][diff_slot]
+
+                    combined_factor = _s(
+                        _Add(new_coeff_pivot * pivot_factor,
+                             new_coeff_sel * sel_factor)
+                    )
+
+                    if combined_factor is S.Zero:
+                        entries.pop(sel_idx)
+                        entries.pop(pivot_idx)
+                        pivot_idx = 0
+                        changed = True
+                        merged = True
+                        break
+
+                    new_factors = list(pivot['factors'])
+                    new_factors[diff_slot] = combined_factor
+
+                    result = _build_pt(S.One, new_factors)
+
+                    if isinstance(result, AlgebraicZeroTensor):
+                        entries.pop(sel_idx)
+                        entries.pop(pivot_idx)
+                        pivot_idx = 0
+                        changed = True
+                        merged = True
+                        break
+
+                    new_extracted = _extract_pt_and_coeff(result)
+                    if len(new_extracted) == 3:
+                        _, new_c, new_factors_list = new_extracted
+                    else:
+                        new_pt, new_c = new_extracted
+                        if isinstance(new_pt, AlgebraicPureTensor):
+                            new_factors_list = list(new_pt.factors)
+                        elif hasattr(new_pt, 'shape'):
+                            new_factors_list = [new_pt]
+                        else:
+                            new_factors_list = [new_pt]
+
+                    entries[pivot_idx] = {
+                        'coeff': new_c,
+                        'factors': new_factors_list,
+                    }
+
+                    entries.pop(sel_idx)
+                    pivot_idx = 0
+                    changed = True
+                    merged = True
+                    break
+
+            if not merged:
+                pivot_idx += 1
+
+    # Rebuild terms from entries
+    rebuilt_terms = []
+    for entry in entries:
+        coeff = entry['coeff']
+        factors = entry['factors']
+        term = _build_pt(coeff, factors)
+        rebuilt_terms.append(term)
+
+    all_terms = rebuilt_terms + non_tensor
+
+    if not all_terms:
+        from sympy.tensor.algebraic.algebraic_zero_tensor import algebraic_zero_tensor
+        return algebraic_zero_tensor(at.tensor_shape)
+
+    if len(all_terms) == 1:
+        return all_terms[0]
+
+    return AlgebraicTensor(*all_terms, _sympify=False)
 
 
 # ---------------------------------------------------------------------------
@@ -230,8 +736,11 @@ def _simplify_algebraic_pure_tensor(pt, **kwargs):
 def _simplify_algebraic_tensor(at, **kwargs):
     """Simplify an AlgebraicTensor (sum of same-shape tensor terms).
 
-    The simplification pipeline has three phases that each leverage SymPy's
-    existing simplification machinery:
+    The simplification pipeline:
+
+    0. **Proportionality factoring** (primary tool) -- merges proportional
+       AlgebraicPureTensor terms by combining coefficients or creating linear
+       combinations at non-proportional factor slots.
 
     1. **Combine like terms** -- group terms that share the same tensor
        factor sequence and add their coefficients together (using SymPy's
@@ -251,8 +760,20 @@ def _simplify_algebraic_tensor(at, **kwargs):
 
     _s = _get_sympy_simplify()
 
-    args = list(at.args)
-    original_shape = at.tensor_shape
+    # ------------------------------------------------------------------
+    # Phase 0: proportionality factoring (primary simplification tool)
+    # ------------------------------------------------------------------
+    result = proportionality_factoring(at)
+
+    # If proportionality_factoring returned a non-AlgebraicTensor, simplify it
+    if not isinstance(result, AlgebraicTensor):
+        if isinstance(result, AlgebraicPureTensor):
+            return _simplify_algebraic_pure_tensor(result, **kwargs)
+        return result
+
+    # If the result is still an AlgebraicTensor, run the remaining phases
+    args = list(result.args)
+    original_shape = result.tensor_shape
 
     # Strip S.Zero entries but remember AlgebraicZeroTensor anchors.
     has_zero = False
@@ -267,7 +788,6 @@ def _simplify_algebraic_tensor(at, **kwargs):
         if has_zero:
             z = next(a for a in args if isinstance(a, AlgebraicZeroTensor))
             return z
-        # All terms cancelled and no AlgebraicZeroTensor anchor — create one.
         return algebraic_zero_tensor(original_shape)
 
     # ------------------------------------------------------------------
@@ -286,10 +806,8 @@ def _simplify_algebraic_tensor(at, **kwargs):
     combined = []
     for key, group in grouped.items():
         if len(group) == 1:
-            # Single term — still simplify coefficient / factors
             combined.append(_simplify_pure_tensor_in_context(group[0], **kwargs))
         else:
-            # Multiple terms with same factor structure: sum coefficients.
             combined.extend(_combine_like_terms(group, **kwargs))
 
     # Simplify non-tensor entries (plain matrices, numbers, …)
@@ -301,11 +819,9 @@ def _simplify_algebraic_tensor(at, **kwargs):
     if has_zero:
         combined.append(next(a for a in args if isinstance(a, AlgebraicZeroTensor)))
 
-    # Handle empty combined list (all terms cancelled, no AlgebraicZeroTensor anchor)
     if not combined:
         return algebraic_zero_tensor(original_shape)
 
-    # Build intermediate AlgebraicTensor for the next phases.
     if len(combined) == 1 and not isinstance(combined[0], AlgebraicZeroTensor):
         result = combined[0]
     else:
@@ -328,7 +844,7 @@ def _simplify_pure_tensor_in_context(term, **kwargs):
     _s = _get_sympy_simplify()
 
     if isinstance(term, AlgebraicPureTensor):
-        return _simplify_pure_tensor(term, **kwargs)
+        return _simplify_algebraic_pure_tensor(term, **kwargs)
 
     if isinstance(term, Mul) and not isinstance(term, AlgebraicPureTensor):
         coeff, unit_pt = _extract_coeff_and_pt(term)
@@ -413,7 +929,7 @@ def _simplify_with_common_factors(at, **kwargs):
     if isinstance(middle, AlgebraicTensor):
         middle = _simplify_algebraic_tensor(middle, **kwargs)
     elif isinstance(middle, AlgebraicPureTensor):
-        middle = _simplify_pure_tensor(middle, **kwargs)
+        middle = _simplify_algebraic_pure_tensor(middle, **kwargs)
     else:
         middle = _s(middle, **kwargs)
 

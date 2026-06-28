@@ -130,12 +130,21 @@ def test_algebraictensor_combine_identical_terms_partial_cancel():
     assert result.factors == (A, C)
 
 
-def test_algebraictensor_no_combine_different_factors():
-    """Terms with different factor sequences are NOT combined."""
+def test_algebraictensor_proportionality_merge_one_diff():
+    """Terms with one non-proportional factor slot ARE merged by
+    proportionality_factoring into a single AlgebraicPureTensor with a
+    combined factor at the differing slot."""
     at = AlgebraicPureTensor(A, C) + AlgebraicPureTensor(B, C)
     result = at.simplify()
-    # A and B are different factors, so no combining.
-    assert isinstance(result, AlgebraicTensor)
+    # C is proportional (identical) in both terms. A and B differ.
+    # proportionality_factoring merges into (A+B) ⊗ C.
+    assert isinstance(result, AlgebraicPureTensor)
+    assert result.num_factors == 2
+    # First factor should be A+B (a MatAdd), second factor is C
+    f0, f1 = result.factors
+    assert f1 == C
+    from sympy.matrices.expressions import MatAdd
+    assert isinstance(f0, MatAdd)
 
 
 def test_algebraictensor_combine_three_identical():
@@ -163,23 +172,20 @@ def test_algebraictensor_combine_with_symbol_coefficients():
 
 
 def test_algebraictensor_mixed_like_and_unlike():
-    """Mix of identical and different terms: only identical ones combine."""
+    """Mix of identical and different terms: proportionality_factoring merges
+    all terms that share proportional factors in all but one slot."""
     pt_ac = AlgebraicPureTensor(A, C)
     pt_bc = AlgebraicPureTensor(B, C)
     at = AlgebraicTensor(2 * pt_ac, 3 * pt_ac, pt_bc)
     result = at.simplify()
-    assert isinstance(result, AlgebraicTensor)
-    # There should be a 5*A⊗C term and a B⊗C term.
-    found_five = False
-    found_one = False
-    for arg in result.args:
-        if isinstance(arg, AlgebraicPureTensor) and arg.factors == (A, C):
-            assert arg._get_coeff() == 5
-            found_five = True
-        if isinstance(arg, AlgebraicPureTensor) and arg.factors == (B, C):
-            assert arg._get_coeff() == 1
-            found_one = True
-    assert found_five and found_one
+    # 2*AC + 3*AC + 1*BC = 5*AC + 1*BC
+    # proportionality_factoring merges: C is common, A and B differ at slot 0
+    # Result: (5*A + B) ⊗ C
+    assert isinstance(result, AlgebraicPureTensor)
+    f0, f1 = result.factors
+    assert f1 == C
+    from sympy.matrices.expressions import MatAdd
+    assert isinstance(f0, MatAdd)
 
 
 # =========================================================
@@ -259,7 +265,8 @@ def test_tensorsimplify_dispatch_algebraic():
     """tensorsimplify routes AlgebraicTensor to the right handler."""
     at = AlgebraicPureTensor(A, I3) + AlgebraicPureTensor(B, I3)
     result = tensorsimplify(at)
-    assert isinstance(result, AlgebraicTensor)
+    # proportionality_factoring merges into (A+B) ⊗ I3
+    assert isinstance(result, (AlgebraicTensor, AlgebraicPureTensor))
 
 
 def test_tensorsimplify_dispatch_pure():
@@ -325,7 +332,8 @@ def test_simplify_double_negation_algebraic():
     neg = -at
     unneg = -neg
     result = unneg.simplify()
-    assert isinstance(result, AlgebraicTensor)
+    # proportionality_factoring merges into (A+B) ⊗ C
+    assert isinstance(result, (AlgebraicTensor, AlgebraicPureTensor))
 
 
 def test_simplify_identical_multi_factor():
@@ -350,24 +358,20 @@ def test_simplify_cancel_then_common_factor():
 
 
 def test_simplify_four_terms_combine_pairs():
-    """Four terms where two pairs share factor sequences."""
+    """Four terms where two pairs share factor sequences.
+    proportionality_factoring merges all terms with proportional factors."""
     pt_ac = AlgebraicPureTensor(A, C)
     pt_bc = AlgebraicPureTensor(B, C)
     at = AlgebraicTensor(pt_ac, 2 * pt_ac, pt_bc, 4 * pt_bc)
     result = at.simplify()
-    assert isinstance(result, AlgebraicTensor)
-    # Should have 3*AC and 5*BC.
-    found_3ac = False
-    found_5bc = False
-    for arg in result.args:
-        if isinstance(arg, AlgebraicPureTensor):
-            if arg.factors == (A, C):
-                assert arg._get_coeff() == 3
-                found_3ac = True
-            elif arg.factors == (B, C):
-                assert arg._get_coeff() == 5
-                found_5bc = True
-    assert found_3ac and found_5bc
+    # 1*AC + 2*AC + 1*BC + 4*BC = 3*AC + 5*BC
+    # proportionality_factoring merges C (common), A and B differ at slot 0
+    # Result: (3*A + 5*B) ⊗ C
+    assert isinstance(result, AlgebraicPureTensor)
+    f0, f1 = result.factors
+    assert f1 == C
+    from sympy.matrices.expressions import MatAdd
+    assert isinstance(f0, MatAdd)
 
 
 def test_simplify_coefficient_symbol_cancellation():

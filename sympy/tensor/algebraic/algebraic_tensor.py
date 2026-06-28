@@ -58,6 +58,131 @@ class ShapeMismatchError(TypeError):
     pass
 
 
+def _compose_reassemble(results, tensor_shape):
+    """Reassemble a list of composition results into a single expression.
+
+    Strips AlgebraicZeroTensor anchors, handles cancellation, and wraps
+    back into an AlgebraicTensor if needed.
+    """
+    from sympy.core.singleton import S
+    from sympy.tensor.algebraic.algebraic_zero_tensor import (
+        AlgebraicZeroTensor as _ZT,
+    )
+
+    real = []
+    zero_shape = None
+    for r in results:
+        if isinstance(r, _ZT):
+            zero_shape = r.shape
+        elif r is not S.Zero:
+            real.append(r)
+
+    if not real:
+        if zero_shape:
+            return _ZT(zero_shape)
+        return _ZT(tensor_shape)
+
+    if len(real) == 1:
+        return real[0]
+
+    return AlgebraicTensor(*real, _sympify=False)
+
+
+def compose_algebraic_tensors(left, right):
+    """Compose two algebraic-tensor expressions by linearity.
+
+    Composes *left* and *right* by factor-wise matrix multiplication,
+    extending ``compose_algebraic_pure_tensors`` by linearity to sums.
+
+    Parameters
+    ----------
+    left : AlgebraicTensor, AlgebraicPureTensor, AlgebraicZeroTensor, or matrix
+        The left operand.
+    right : AlgebraicTensor, AlgebraicPureTensor, AlgebraicZeroTensor, or matrix
+        The right operand.
+
+    Returns
+    -------
+    AlgebraicTensor, AlgebraicPureTensor, AlgebraicZeroTensor, or matrix
+        The composition result.
+
+    Raises
+    ------
+    TypeError
+        If either argument is not a recognised tensor or matrix type.
+    ValueError
+        If the factor structures are incompatible for composition.
+    """
+    from sympy.tensor.algebraic.algebraic_pure_tensor import (
+        AlgebraicPureTensor as _PT,
+        compose_algebraic_pure_tensors,
+    )
+    from sympy.tensor.algebraic.algebraic_zero_tensor import (
+        AlgebraicZeroTensor as _ZT,
+    )
+
+    # --- AlgebraicZeroTensor shortcuts ---
+    if isinstance(left, _ZT):
+        return _ZT(left.shape)
+    if isinstance(right, _ZT):
+        return _ZT(right.shape)
+
+    # --- AlgebraicTensor × AlgebraicTensor (check first before single-side) ---
+    if isinstance(left, AlgebraicTensor) and isinstance(right, AlgebraicTensor):
+        results = []
+        for la in left.args:
+            if isinstance(la, _ZT):
+                results.append(la)
+                continue
+            for ra in right.args:
+                if isinstance(ra, _ZT):
+                    results.append(ra)
+                else:
+                    comp = compose_algebraic_pure_tensors(la, ra)
+                    results.append(comp)
+        return _compose_reassemble(results, left.tensor_shape)
+
+    # --- PureTensor / bare matrix × AlgebraicTensor ---
+    if isinstance(right, AlgebraicTensor):
+        if isinstance(left, _PT) or hasattr(left, "shape"):
+            results = []
+            for a in right.args:
+                if isinstance(a, _ZT):
+                    results.append(a)
+                else:
+                    results.append(
+                        compose_algebraic_pure_tensors(left, a)
+                    )
+            return _compose_reassemble(results, right.tensor_shape)
+        raise TypeError(
+            f"Expected AlgebraicTensor, AlgebraicPureTensor, or matrix on "
+            f"the left, got {type(left).__name__}"
+        )
+
+    # --- AlgebraicTensor × PureTensor / bare matrix ---
+    if isinstance(left, AlgebraicTensor):
+        if isinstance(right, _PT) or hasattr(right, "shape"):
+            return left._compose_with_term(right)
+        raise TypeError(
+            f"Expected AlgebraicTensor, AlgebraicPureTensor, or matrix on "
+            f"the right, got {type(right).__name__}"
+        )
+
+    # --- PureTensor / bare matrix × PureTensor / bare matrix ---
+    if isinstance(left, _PT) and isinstance(right, _PT):
+        return compose_algebraic_pure_tensors(left, right)
+    if isinstance(left, _PT) and hasattr(right, "shape"):
+        return compose_algebraic_pure_tensors(left, right)
+    if hasattr(left, "shape") and isinstance(right, _PT):
+        return compose_algebraic_pure_tensors(left, right)
+    if hasattr(left, "shape") and hasattr(right, "shape"):
+        return compose_algebraic_pure_tensors(left, right)
+
+    raise TypeError(
+        f"Cannot compose {type(left).__name__} with {type(right).__name__}"
+    )
+
+
 class AlgebraicTensor(Basic):
     """Sum of AlgebraicPureTensors (and/or AlgebraicZeroTensors) sharing the same tensor shape.
 
@@ -239,6 +364,58 @@ class AlgebraicTensor(Basic):
         """Negate each term in the sum."""
         return AlgebraicTensor(*(-a for a in self.args))
 
+    def _compose_with_term(self, other):
+        """Compose this AlgebraicTensor with a single term (AlgebraicPureTensor or bare matrix).
+
+        Composes each term of self with *other* by factor-wise matrix
+        multiplication.
+
+        Parameters
+        ----------
+        other : AlgebraicPureTensor or bare matrix-like object
+            The right operand.
+
+        Returns
+        -------
+        AlgebraicTensor, AlgebraicPureTensor, or AlgebraicZeroTensor
+            The composition result.
+        """
+        from sympy.core.singleton import S
+        from sympy.tensor.algebraic.algebraic_pure_tensor import (
+            AlgebraicPureTensor as _PT,
+            compose_algebraic_pure_tensors,
+        )
+        from sympy.tensor.algebraic.algebraic_zero_tensor import (
+            AlgebraicZeroTensor as _ZT,
+        )
+
+        results = []
+        for a in self.args:
+            if isinstance(a, _ZT):
+                results.append(a)
+                continue
+
+            if isinstance(a, _PT):
+                comp = compose_algebraic_pure_tensors(a, other)
+                results.append(comp)
+            elif isinstance(a, Mul) and not isinstance(a, _PT):
+                # Mul(coeff, AlgebraicPureTensor) — compose the PureTensor part
+                for f in a.args:
+                    if isinstance(f, _PT):
+                        coeff = Mul(*[x for x in a.args if x is not f])
+                        comp = compose_algebraic_pure_tensors(f, other)
+                        results.append(coeff * comp)
+                        break
+                else:
+                    results.append(a)
+            elif hasattr(a, "shape"):
+                comp = compose_algebraic_pure_tensors(a, other)
+                results.append(comp)
+            else:
+                results.append(a)
+
+        return _compose_reassemble(results, self.tensor_shape)
+
     def __add__(self, other):
         return AlgebraicTensor(self, other)
 
@@ -252,40 +429,75 @@ class AlgebraicTensor(Basic):
         return AlgebraicTensor(other, -self)
 
     def __mul__(self, other):
-        """Multiply each term by a scalar/symbol, or tensor-product with AlgebraicPureTensor."""
+        """Compose or scale this AlgebraicTensor.
+
+        For commutative scalars/symbols the scalar is absorbed as a
+        coefficient into each term.  For AlgebraicPureTensor,
+        AlgebraicTensor, or bare matrices the result is the tensor
+        composition (factor-wise matrix multiplication).
+
+        Parameters
+        ----------
+        other : scalar, AlgebraicPureTensor, AlgebraicTensor, or matrix
+            The right operand.
+
+        Returns
+        -------
+        AlgebraicTensor, AlgebraicPureTensor, AlgebraicZeroTensor, or Mul
+            The scaled/composed result.
+        """
         other = sympify(other)
         if isinstance(other, Number) or (hasattr(other, 'is_commutative') and
                 other.is_commutative and not isinstance(other, (AlgebraicPureTensor, AlgebraicTensor))):
             return AlgebraicTensor(*(a * other for a in self.args))
-        if isinstance(other, AlgebraicPureTensor):
-            return AlgebraicTensor(*(AlgebraicPureTensor(other, a) for a in self.args))
-        return Mul(self, other)
+        return compose_algebraic_tensors(self, other)
 
     def __rmul__(self, other):
-        """Multiply each term by a scalar/symbol, or tensor-product with AlgebraicPureTensor."""
+        """Compose or scale this AlgebraicTensor from the left.
+
+        For commutative scalars/symbols the scalar is absorbed as a
+        coefficient into each term.  For AlgebraicPureTensor,
+        AlgebraicTensor, or bare matrices the result is the tensor
+        composition (factor-wise matrix multiplication).
+
+        Parameters
+        ----------
+        other : scalar, AlgebraicPureTensor, AlgebraicTensor, or matrix
+            The left operand.
+
+        Returns
+        -------
+        AlgebraicTensor, AlgebraicPureTensor, AlgebraicZeroTensor, or Mul
+            The scaled/composed result.
+        """
         other = sympify(other)
         if isinstance(other, Number) or (hasattr(other, 'is_commutative') and
                 other.is_commutative and not isinstance(other, (AlgebraicPureTensor, AlgebraicTensor))):
-            return AlgebraicTensor(*(a * other for a in self.args))
-        if isinstance(other, AlgebraicPureTensor):
-            return AlgebraicTensor(*(AlgebraicPureTensor(other, a) for a in self.args))
-        return Mul(other, self)
+            return AlgebraicTensor(*(other * a for a in self.args))
+        return compose_algebraic_tensors(other, self)
 
     # ---- Factorization helpers (infrastructure for future .simplify) ----
 
     def as_common_left(self):
         """Extract common left factors from all AlgebraicPureTensor terms.
 
+        Handles factors wrapped in MatMul with scalar coefficients (e.g. 2*A
+        and 3*A are recognized as sharing the same matrix base A).
+
         Returns
         -------
         (left_factors, rest, right_factors)
-            *left_factors* is a tuple of shared leading factors.
+            *left_factors* is a tuple of shared leading matrix bases (with
+            scalar coefficients stripped out).
             *rest* is an AlgebraicTensor of the middle parts (or a single
             PureTensor / sum of PureTensors when there is only one term).
             *right_factors* is always () for left extraction.
 
         If no common left factors exist, returns ((), self, ()).
         """
+        from sympy.tensor.algebraic.simplify import _proportionality_ratio, \
+            _matrix_base
+
         pure_terms = [
             a for a in self.args
             if isinstance(a, AlgebraicPureTensor) or (isinstance(a, Mul) and
@@ -310,7 +522,8 @@ class AlgebraicTensor(Basic):
         common_len = 0
         for pos in range(min(len(fl) for fl in factor_lists)):
             refs = factor_lists[0][pos]
-            if all(fl[pos] == refs for fl in factor_lists):
+            if all(_proportionality_ratio(refs, fl[pos]) is not None
+                   for fl in factor_lists[1:]):
                 common_len += 1
             else:
                 break
@@ -318,25 +531,57 @@ class AlgebraicTensor(Basic):
         if common_len == 0:
             return ((), self, ())
 
-        left_factors = factor_lists[0][:common_len]
+        # Extract matrix base (scalar-stripped) for the common left factors
+        left_factors = tuple(_matrix_base(f) for f in factor_lists[0][:common_len])
+
+        def _scalar_from_factor(f):
+            """Extract scalar coefficient from a factor like MatMul(k, M) -> k."""
+            from sympy.core.mul import Mul as _Mul
+            if not isinstance(f, _Mul):
+                return S.One
+            commutative_parts = [a for a in f.args
+                                 if hasattr(a, 'is_commutative') and a.is_commutative]
+            if not commutative_parts:
+                return S.One
+            return Mul(*commutative_parts, evaluate=True)
+
+        # Collect proportionality ratios for each term's common factors
         middles = []
         for t, fl in zip(pure_terms, factor_lists):
+            # Accumulate coefficient from scalar parts of common left factors
+            term_coeff = S.One
+            for i in range(common_len):
+                if t is pure_terms[0]:
+                    # Pivot term: extract scalar from its own factors
+                    term_coeff = term_coeff * _scalar_from_factor(fl[i])
+                else:
+                    # Non-pivot: ratio accounts for scalar difference vs pivot base
+                    r = _proportionality_ratio(factor_lists[0][i], fl[i])
+                    if r is not None:
+                        term_coeff = term_coeff / r
+
             mid = fl[common_len:]
+            # Also extract scalars from non-common factors into the coefficient
+            for f in mid:
+                term_coeff = term_coeff * _scalar_from_factor(f)
+            # Replace mid factors with their base matrices
+            mid = [_matrix_base(f) for f in mid]
+
             if isinstance(t, Mul) and not isinstance(t, AlgebraicPureTensor):
                 coeff = S.One
                 for f in t.args:
                     if isinstance(f, AlgebraicPureTensor):
                         coeff = t / f
                         break
-                if mid:
-                    middles.append(coeff * AlgebraicPureTensor(*mid))
-                else:
-                    middles.append(coeff)
-            else:
-                if mid:
+                term_coeff = term_coeff * coeff
+
+            if mid:
+                if term_coeff is S.One:
                     middles.append(AlgebraicPureTensor(*mid))
                 else:
-                    middles.append(S.One)
+                    middles.append(term_coeff * AlgebraicPureTensor(*mid))
+            else:
+                middles.append(term_coeff)
 
         if len(middles) == 1:
             rest = middles[0]
@@ -349,11 +594,15 @@ class AlgebraicTensor(Basic):
         """Extract common right factors from all AlgebraicPureTensor terms.
 
         Symmetric to :meth:`as_common_left` but for trailing factors.
+        Handles factors wrapped in MatMul with scalar coefficients.
 
         Returns
         -------
         (left_factors, rest, right_factors)
         """
+        from sympy.tensor.algebraic.simplify import _proportionality_ratio, \
+            _matrix_base
+
         pure_terms = [
             a for a in self.args
             if isinstance(a, AlgebraicPureTensor) or (isinstance(a, Mul) and
@@ -378,7 +627,8 @@ class AlgebraicTensor(Basic):
         common_len = 0
         for pos in range(1, min(len(fl) for fl in factor_lists) + 1):
             refs = factor_lists[0][-pos]
-            if all(fl[-pos] == refs for fl in factor_lists):
+            if all(_proportionality_ratio(refs, fl[-pos]) is not None
+                   for fl in factor_lists[1:]):
                 common_len += 1
             else:
                 break
@@ -386,25 +636,53 @@ class AlgebraicTensor(Basic):
         if common_len == 0:
             return ((), self, ())
 
-        right_factors = factor_lists[0][-common_len:]
+        right_factors = tuple(
+            _matrix_base(f) for f in factor_lists[0][-common_len:])
+
+        def _scalar_from_factor(f):
+            """Extract scalar coefficient from a factor like MatMul(k, M) -> k."""
+            from sympy.core.mul import Mul as _Mul
+            if not isinstance(f, _Mul):
+                return S.One
+            commutative_parts = [a for a in f.args
+                                 if hasattr(a, 'is_commutative') and a.is_commutative]
+            if not commutative_parts:
+                return S.One
+            return Mul(*commutative_parts, evaluate=True)
+
         middles = []
         for t, fl in zip(pure_terms, factor_lists):
+            term_coeff = S.One
+            for i in range(common_len):
+                if t is pure_terms[0]:
+                    term_coeff = term_coeff * _scalar_from_factor(fl[-common_len + i])
+                else:
+                    r = _proportionality_ratio(factor_lists[0][-common_len + i],
+                                               fl[-common_len + i])
+                    if r is not None:
+                        term_coeff = term_coeff / r
+
             mid = fl[:-common_len] if common_len < len(fl) else ()
+            # Also extract scalars from non-common factors into the coefficient
+            for f in mid:
+                term_coeff = term_coeff * _scalar_from_factor(f)
+            mid = [_matrix_base(f) for f in mid]
+
             if isinstance(t, Mul) and not isinstance(t, AlgebraicPureTensor):
                 coeff = S.One
                 for f in t.args:
                     if isinstance(f, AlgebraicPureTensor):
                         coeff = t / f
                         break
-                if mid:
-                    middles.append(coeff * AlgebraicPureTensor(*mid))
-                else:
-                    middles.append(coeff)
-            else:
-                if mid:
+                term_coeff = term_coeff * coeff
+
+            if mid:
+                if term_coeff is S.One:
                     middles.append(AlgebraicPureTensor(*mid))
                 else:
-                    middles.append(S.One)
+                    middles.append(term_coeff * AlgebraicPureTensor(*mid))
+            else:
+                middles.append(term_coeff)
 
         if len(middles) == 1:
             rest = middles[0]

@@ -53,6 +53,14 @@ class AlgebraicZeroTensor:
         from sympy.tensor.algebraic.algebraic_tensor import AlgebraicTensor
         return AlgebraicTensor(other, -self)
 
+    def __mul__(self, other):
+        """Composition of a zero tensor returns a zero tensor of the same shape."""
+        return self
+
+    def __rmul__(self, other):
+        """Composition of a zero tensor from the left returns the zero tensor."""
+        return self
+
     def __eq__(self, other):
         if isinstance(other, AlgebraicZeroTensor):
             return self._shape == other._shape

@@ -35,6 +35,9 @@ class AlgebraicPureTensor(Mul):
     __slots__ = ()
 
     is_AlgebraicPureTensor = True
+    is_Mul = False  # Prevent Mul.flatten from unpacking AlgebraicPureTensor
+
+    _op_priority = 11  # Higher than Symbol/Expr so x * pt delegates to pt.__rmul__(x)
 
     _eval_is_commutative = lambda self: False
 
@@ -143,7 +146,23 @@ class AlgebraicPureTensor(Mul):
         return AlgebraicPureTensor(new_coeff, *factors)
 
     def __mul__(self, other):
-        """AlgebraicPureTensor * scalar/symbol -> AlgebraicPureTensor with absorbed coefficient."""
+        """Compose or scale this AlgebraicPureTensor.
+
+        For commutative scalars/symbols the scalar is absorbed as a
+        coefficient.  For AlgebraicPureTensor, AlgebraicTensor, or bare
+        matrices the result is the tensor composition (factor-wise matrix
+        multiplication).
+
+        Parameters
+        ----------
+        other : scalar, AlgebraicPureTensor, AlgebraicTensor, or matrix
+            The right operand.
+
+        Returns
+        -------
+        AlgebraicPureTensor, AlgebraicTensor, AlgebraicZeroTensor, or Mul
+            The scaled/composed result.
+        """
         from sympy.core.singleton import S
         other = sympify(other)
         if isinstance(other, Number):
@@ -164,17 +183,11 @@ class AlgebraicPureTensor(Mul):
             if len(factors) == 0:
                 return new_coeff
             return AlgebraicPureTensor(new_coeff, *factors)
-        if isinstance(other, AlgebraicPureTensor):
-            c1 = self._get_coeff()
-            c2 = other._get_coeff()
-            combined = c1 * c2
-            all_factors = self.factors + other.factors
-            if combined is S.One:
-                if len(all_factors) == 1:
-                    return all_factors[0]
-                return AlgebraicPureTensor(*all_factors)
-            return AlgebraicPureTensor(combined, *all_factors)
-        return Mul(self, other)
+        # Non-commutative operand: use tensor composition.
+        from sympy.tensor.algebraic.algebraic_tensor import (
+            compose_algebraic_tensors,
+        )
+        return compose_algebraic_tensors(self, other)
 
     def _get_coeff(self):
         """Extract the leading coefficient from args, defaulting to S.One."""
@@ -187,7 +200,23 @@ class AlgebraicPureTensor(Mul):
         return S.One
 
     def __rmul__(self, other):
-        """scalar/symbol * AlgebraicPureTensor -> AlgebraicPureTensor with absorbed coefficient."""
+        """Compose or scale this AlgebraicPureTensor from the left.
+
+        For commutative scalars/symbols the scalar is absorbed as a
+        coefficient.  For AlgebraicPureTensor, AlgebraicTensor, or bare
+        matrices the result is the tensor composition (factor-wise matrix
+        multiplication).
+
+        Parameters
+        ----------
+        other : scalar, AlgebraicPureTensor, AlgebraicTensor, or matrix
+            The left operand.
+
+        Returns
+        -------
+        AlgebraicPureTensor, AlgebraicTensor, AlgebraicZeroTensor, or Mul
+            The scaled/composed result.
+        """
         from sympy.core.singleton import S
         if other == 0:
             return AlgebraicZeroTensor(self.tensor_shape)
@@ -213,17 +242,11 @@ class AlgebraicPureTensor(Mul):
             if len(factors) == 0:
                 return new_coeff
             return AlgebraicPureTensor(new_coeff, *factors)
-        if isinstance(other, AlgebraicPureTensor):
-            c1 = other._get_coeff()
-            c2 = self._get_coeff()
-            combined = c1 * c2
-            all_factors = other.factors + self.factors
-            if combined is S.One:
-                if len(all_factors) == 1:
-                    return all_factors[0]
-                return AlgebraicPureTensor(*all_factors)
-            return AlgebraicPureTensor(combined, *all_factors)
-        return Mul(other, self)
+        # Non-commutative operand: use tensor composition.
+        from sympy.tensor.algebraic.algebraic_tensor import (
+            compose_algebraic_tensors,
+        )
+        return compose_algebraic_tensors(other, self)
 
     def __add__(self, other):
         from sympy.tensor.algebraic.algebraic_tensor import AlgebraicTensor
@@ -263,3 +286,96 @@ def algebraic_tensor_product(*args):
     A ⊗ v
     """
     return AlgebraicPureTensor(*args)
+
+
+def compose_algebraic_pure_tensors(left, right):
+    """Compose two AlgebraicPureTensors by matrix-multiplying corresponding factors.
+
+    Given ``left = F1 ⊗ F2 ⊗ … ⊗ Fn`` and ``right = G1 ⊗ G2 ⊗ … ⊗ Gn``,
+    returns ``H1 ⊗ H2 ⊗ … ⊗ Hn`` where each ``Hj = Fj * Gj`` (matrix product).
+
+    For each factor pair ``(Fj, Gj)`` the column dimension of ``Fj`` must equal
+    the row dimension of ``Gj``.  If ``Fj`` has shape ``(a_j, b_j)`` then ``Gj``
+    must have shape ``(b_j, c_j)`` so that ``Hj`` has shape ``(a_j, c_j)``.
+
+    Parameters
+    ----------
+    left : AlgebraicPureTensor
+        The left operand.  A bare matrix-like object (single-factor tensor)
+        is also accepted.
+    right : AlgebraicPureTensor
+        The right operand.  A bare matrix-like object is also accepted.
+
+    Returns
+    -------
+    AlgebraicPureTensor or matrix-like object
+        The composed tensor.  If the result has a single factor and
+        coefficient 1, the bare factor is returned.
+
+    Raises
+    ------
+    TypeError
+        If either argument is not an ``AlgebraicPureTensor`` or a bare
+        matrix-like object with a ``.shape`` attribute.
+    ValueError
+        If the two tensors have a different number of factors, or if any
+        corresponding factor pair has incompatible inner dimensions for
+        matrix multiplication.
+    """
+    # Handle unwrapped single-factor tensors
+    if isinstance(left, AlgebraicPureTensor):
+        left_factors = left.factors
+        left_coeff = left._get_coeff()
+    elif hasattr(left, "shape"):
+        left_factors = (left,)
+        left_coeff = S.One
+    else:
+        raise TypeError(
+            f"Expected AlgebraicPureTensor or a matrix-like object on the left, "
+            f"got {type(left).__name__}"
+        )
+
+    if isinstance(right, AlgebraicPureTensor):
+        right_factors = right.factors
+        right_coeff = right._get_coeff()
+    elif hasattr(right, "shape"):
+        right_factors = (right,)
+        right_coeff = S.One
+    else:
+        raise TypeError(
+            f"Expected AlgebraicPureTensor or a matrix-like object on the right, "
+            f"got {type(right).__name__}"
+        )
+
+    if len(left_factors) != len(right_factors):
+        raise ValueError(
+            f"Cannot compose AlgebraicPureTensors with different numbers of "
+            f"factors: {len(left_factors)} vs {len(right_factors)}"
+        )
+
+    # Combine coefficients from both sides
+    combined_coeff = left_coeff * right_coeff
+
+    composed_factors = []
+    for j, (lf, rf) in enumerate(zip(left_factors, right_factors)):
+        lshape = lf.shape
+        rshape = rf.shape
+        if lshape[1] != rshape[0]:
+            raise ValueError(
+                f"Cannot compose factor {j}: left factor has shape {lshape} "
+                f"but right factor has shape {rshape}; inner dimensions "
+                f"{lshape[1]} and {rshape[0]} do not match"
+            )
+        # Use MatMul for the matrix product of corresponding factors
+        from sympy.matrices.expressions.matexpr import MatMul
+        composed_factors.append(MatMul(lf, rf, evaluate=False))
+
+    if combined_coeff is S.One:
+        if len(composed_factors) == 1:
+            return composed_factors[0]
+        return AlgebraicPureTensor(*composed_factors)
+    if combined_coeff is S.Zero:
+        return AlgebraicZeroTensor(_factor_shapes(composed_factors))
+    if len(composed_factors) == 1:
+        return AlgebraicPureTensor(combined_coeff, composed_factors[0])
+    return AlgebraicPureTensor(combined_coeff, *composed_factors)
