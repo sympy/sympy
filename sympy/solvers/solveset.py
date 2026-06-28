@@ -1293,7 +1293,7 @@ def _solveset(f, symbol, domain, _check=False):
     elif f.is_Piecewise:
         if not domain.is_subset(S.Reals):
             for _, cond in f.args:
-                if cond is True:
+                if cond is S.true:
                     continue
                 rels = cond.atoms(Relational)
                 if any(getattr(r, "rel_op", None) in ("<", "<=", ">", ">=") for r in rels):
