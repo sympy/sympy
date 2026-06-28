@@ -2106,6 +2106,8 @@ def kid_rsa_public_key(a, b, A, B):
 
     """
     M = a*b - 1
+    if M == 0:
+        raise ValueError("a*b must not equal 1")
     e = A*M + a
     d = B*M + b
     n = (e*d - 1)//M
@@ -2128,6 +2130,8 @@ def kid_rsa_private_key(a, b, A, B):
 
     """
     M = a*b - 1
+    if M == 0:
+        raise ValueError("a*b must not equal 1")
     e = A*M + a
     d = B*M + b
     n = (e*d - 1)//M
