@@ -7,8 +7,8 @@ from sympy.assumptions.cnf import CNF, EncodedCNF, Literal
 from sympy.core import sympify
 from sympy.core.kind import BooleanKind
 from sympy.core.relational import Eq, Ne, Gt, Lt, Ge, Le
-from sympy.logic.boolalg import And
 from sympy.logic.inference import satisfiable
+from sympy.logic.boolalg import And
 from sympy.utilities.decorator import memoize_property
 
 

@@ -1,5 +1,4 @@
 from __future__ import annotations
-
 from sympy.assumptions.cnf import CNF, EncodedCNF
 from sympy.assumptions.ask import Q
 from sympy.logic.inference import satisfiable
