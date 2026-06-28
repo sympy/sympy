@@ -521,6 +521,16 @@ def test_evalf_integral():
     assert Integral(sin(x), (x, -pi, pi + eps)).n(2)._prec == 10
 
 
+def test_evalf_nonelementary_integral():
+    # NonElementaryIntegral is an Integral subclass and must evalf the same way
+    # as Integral rather than being returned unevaluated (issue #29833).
+    from sympy.integrals.risch import NonElementaryIntegral
+    e = (x**x).integrate((x, 2, 5))
+    assert isinstance(e, NonElementaryIntegral)
+    assert e.evalf() == Integral(x**x, (x, 2, 5)).evalf()
+    assert abs(e.evalf() - Float('1238.98283781487')) < 1e-9
+
+
 def test_issue_8821_highprec_from_str():
     s = str(pi.evalf(128))
     p = N(s)

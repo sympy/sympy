@@ -1412,6 +1412,7 @@ def _create_evalf_table():
     from sympy.functions.elementary.piecewise import Piecewise
     from sympy.functions.elementary.trigonometric import atan, cos, sin, tan
     from sympy.integrals.integrals import Integral
+    from sympy.integrals.risch import NonElementaryIntegral
     evalf_table = {
         Symbol: evalf_symbol,
         Dummy: evalf_symbol,
@@ -1448,6 +1449,10 @@ def _create_evalf_table():
         ceiling: evalf_ceiling,
 
         Integral: evalf_integral,
+        # NonElementaryIntegral is an Integral subclass; evalf dispatches on the
+        # exact type, so it needs its own entry to be evaluated numerically
+        # instead of being returned unevaluated (see issue #29833).
+        NonElementaryIntegral: evalf_integral,
         Sum: evalf_sum,
         Product: evalf_prod,
         Piecewise: evalf_piecewise,
