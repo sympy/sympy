@@ -3726,7 +3726,6 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                         subs_dict[k] = v
                 for eq in system:
                     eq_subs = eq.subs(subs_dict).expand()
-                    from sympy import Wild
                     W = Wild('W')
                     eq_subs = eq_subs.replace(exp(I*arg(W))*Abs(W), W).expand()
                     if eq_subs.has(unsolved_sym) and eq_subs != 0 and not eq_subs.is_zero:
