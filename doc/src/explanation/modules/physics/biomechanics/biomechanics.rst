@@ -580,19 +580,19 @@ Sensible values for :math:`\tilde{l}^T` fall within the range
    :include-source: True
    :context: close-figs
 
-   >>> import matplotlib.pyplot as plt
-   >>> import numpy as np
+   >>> import matplotlib.pyplot as plt  # doctest: +SKIP
+   >>> import numpy as np  # doctest: +SKIP
    >>> from sympy.physics.biomechanics import TendonForceLengthDeGroote2016
 
    >>> l_T_tilde = me.dynamicsymbols('l_T_tilde')
    >>> fl_T = TendonForceLengthDeGroote2016.with_defaults(l_T_tilde)
    >>> fl_T_callable = sm.lambdify(l_T_tilde, fl_T)
-   >>> l_T_tilde_num = np.linspace(0.95, 1.05)
+   >>> l_T_tilde_num = np.linspace(0.95, 1.05)  # doctest: +SKIP
 
-   >>> fig, ax = plt.subplots()
-   >>> _ = ax.plot(l_T_tilde_num, fl_T_callable(l_T_tilde_num))
-   >>> _ = ax.set_xlabel('Normalized tendon length')
-   >>> _ = ax.set_ylabel('Normalized tendon force-length')
+   >>> fig, ax = plt.subplots()  # doctest: +SKIP
+   >>> _ = ax.plot(l_T_tilde_num, fl_T_callable(l_T_tilde_num))  # doctest: +SKIP
+   >>> _ = ax.set_xlabel('Normalized tendon length')  # doctest: +SKIP
+   >>> _ = ax.set_ylabel('Normalized tendon force-length')  # doctest: +SKIP
 
 When deriving the equations describing the musculotendon dynamics of models with
 elastic tendons, it can be useful to know the inverse of the tendon force-length
@@ -707,19 +707,19 @@ within the range :math:`[0.0, 2.0]`, which we will plot below.
    :include-source: True
    :context: close-figs
 
-   >>> import matplotlib.pyplot as plt
-   >>> import numpy as np
+   >>> import matplotlib.pyplot as plt  # doctest: +SKIP
+   >>> import numpy as np  # doctest: +SKIP
    >>> from sympy.physics.biomechanics import FiberForceLengthPassiveDeGroote2016
 
    >>> l_M_tilde = me.dynamicsymbols('l_M_tilde')
    >>> fl_M_pas = FiberForceLengthPassiveDeGroote2016.with_defaults(l_M_tilde)
    >>> fl_M_pas_callable = sm.lambdify(l_M_tilde, fl_M_pas)
-   >>> l_M_tilde_num = np.linspace(0.0, 2.0)
+   >>> l_M_tilde_num = np.linspace(0.0, 2.0)  # doctest: +SKIP
 
-   >>> fig, ax = plt.subplots()
-   >>> _ = ax.plot(l_M_tilde_num, fl_M_pas_callable(l_M_tilde_num))
-   >>> _ = ax.set_xlabel('Normalized fiber length')
-   >>> _ = ax.set_ylabel('Normalized fiber passive force-length')
+   >>> fig, ax = plt.subplots()  # doctest: +SKIP
+   >>> _ = ax.plot(l_M_tilde_num, fl_M_pas_callable(l_M_tilde_num))  # doctest: +SKIP
+   >>> _ = ax.set_xlabel('Normalized fiber length')  # doctest: +SKIP
+   >>> _ = ax.set_ylabel('Normalized fiber passive force-length')  # doctest: +SKIP
 
 The inverse of the fiber passive force-length characteristic curve is sometimes
 required when formulating musculotendon dynamics. The equation for this curve
@@ -811,19 +811,19 @@ within the range :math:`[0.0, 2.0]`, which we will plot below.
    :include-source: True
    :context: close-figs
 
-   >>> import matplotlib.pyplot as plt
-   >>> import numpy as np
+   >>> import matplotlib.pyplot as plt  # doctest: +SKIP
+   >>> import numpy as np  # doctest: +SKIP
    >>> from sympy.physics.biomechanics import FiberForceLengthActiveDeGroote2016
 
    >>> l_M_tilde = me.dynamicsymbols('l_M_tilde')
    >>> fl_M_act = FiberForceLengthActiveDeGroote2016.with_defaults(l_M_tilde)
    >>> fl_M_act_callable = sm.lambdify(l_M_tilde, fl_M_act)
-   >>> l_M_tilde_num = np.linspace(0.0, 2.0)
+   >>> l_M_tilde_num = np.linspace(0.0, 2.0)  # doctest: +SKIP
 
-   >>> fig, ax = plt.subplots()
-   >>> _ = ax.plot(l_M_tilde_num, fl_M_act_callable(l_M_tilde_num))
-   >>> _ = ax.set_xlabel('Normalized fiber length')
-   >>> _ = ax.set_ylabel('Normalized fiber active force-length')
+   >>> fig, ax = plt.subplots()  # doctest: +SKIP
+   >>> _ = ax.plot(l_M_tilde_num, fl_M_act_callable(l_M_tilde_num))  # doctest: +SKIP
+   >>> _ = ax.set_xlabel('Normalized fiber length')  # doctest: +SKIP
+   >>> _ = ax.set_ylabel('Normalized fiber active force-length')  # doctest: +SKIP
 
 No inverse curve exists for the fiber active force-length characteristic curve
 as it has multiple values of :math:`\tilde{l}^M` for each value of
@@ -908,19 +908,19 @@ Sensible values for :math:`\tilde{v}^M` fall within the range
    :include-source: True
    :context: close-figs
 
-   >>> import matplotlib.pyplot as plt
-   >>> import numpy as np
+   >>> import matplotlib.pyplot as plt  # doctest: +SKIP
+   >>> import numpy as np  # doctest: +SKIP
    >>> from sympy.physics.biomechanics import FiberForceVelocityDeGroote2016
 
    >>> v_M_tilde = me.dynamicsymbols('v_M_tilde')
    >>> fv_M = FiberForceVelocityDeGroote2016.with_defaults(v_M_tilde)
    >>> fv_M_callable = sm.lambdify(v_M_tilde, fv_M)
-   >>> v_M_tilde_num = np.linspace(-1.0, 1.0)
+   >>> v_M_tilde_num = np.linspace(-1.0, 1.0)  # doctest: +SKIP
 
-   >>> fig, ax = plt.subplots()
-   >>> _ = ax.plot(l_M_tilde_num, fv_M_callable(v_M_tilde_num))
-   >>> _ = ax.set_xlabel('Normalized fiber velocity')
-   >>> _ = ax.set_ylabel('Normalized fiber force-velocity')
+   >>> fig, ax = plt.subplots()  # doctest: +SKIP
+   >>> _ = ax.plot(l_M_tilde_num, fv_M_callable(v_M_tilde_num))  # doctest: +SKIP
+   >>> _ = ax.set_xlabel('Normalized fiber velocity')  # doctest: +SKIP
+   >>> _ = ax.set_ylabel('Normalized fiber force-velocity')  # doctest: +SKIP
 
 The inverse of the fiber force-velocity characteristic curve is sometimes
 required when formulating musculotendon dynamics. The equation for this curve
@@ -1406,7 +1406,7 @@ ordinary differential equations is:
    :context: close-figs
    :nofigs:
 
-   >>> eval_eom = sm.lambdify((state, inputs, constants), (dqdt, dudt, dadt))
+   >>> eval_eom = sm.lambdify((state, inputs, constants), (dqdt, dudt, dadt))  # doctest: +SKIP
 
 It will additionally be interesting to numerically evaluate the muscle force,
 so create a function for it too:
@@ -1418,7 +1418,7 @@ so create a function for it too:
    :nofigs:
 
    >>> force = muscle.force.xreplace({q.diff(): u})
-   >>> eval_force = sm.lambdify((state, constants), force)
+   >>> eval_force = sm.lambdify((state, constants), force)  # doctest: +SKIP
 
 To test these functions we need some suitable numerical values. This muscle
 will be able to produce a maximum force of 10 N to lift a mass of 0.5 kg:
@@ -1429,8 +1429,8 @@ will be able to produce a maximum force of 10 N to lift a mass of 0.5 kg:
    :context: close-figs
    :nofigs:
 
-   >>> import numpy as np
-   >>> p_vals = np.array([
+   >>> import numpy as np  # doctest: +SKIP
+   >>> p_vals = np.array([  # doctest: +SKIP
    ...     0.5,  # m [kg]
    ...     9.81,  # g [m/s/s]
    ...     10.0,  # F_M_max [N]
@@ -1454,7 +1454,7 @@ that it produces a non-zero force:
    :context: close-figs
    :nofigs:
 
-   >>> x_vals = np.array([
+   >>> x_vals = np.array([  # doctest: +SKIP
    ...     p_vals[3] + p_vals[4],  # q [m]
    ...     0.0,  # u [m/s]
    ...     0.1,  # a [unitless]
@@ -1469,13 +1469,13 @@ Set the excitation to 1.0 and test the numerical functions:
    :context: close-figs
    :nofigs:
 
-   >>> r_vals = np.array([
+   >>> r_vals = np.array([  # doctest: +SKIP
    ...     1.0,  # e
    ... ])
    ...
-   >>> eval_eom(x_vals, r_vals, p_vals)
+   >>> eval_eom(x_vals, r_vals, p_vals)  # doctest: +SKIP
    (0.0, 7.817106179880225, 92.30769105034035)
-   >>> eval_force(x_vals, p_vals)
+   >>> eval_force(x_vals, p_vals)  # doctest: +SKIP
    -0.9964469100598874
 
 The two functions work so we can now simulate this system to see if and how the
@@ -1486,31 +1486,31 @@ muscle lifts the mass:
    :include-source: True
    :context: close-figs
 
-   >>> def eval_rhs(t, x):
+   >>> def eval_rhs(t, x):  # doctest: +SKIP
    ...
    ...     r = np.array([1.0])
    ...
    ...     return eval_eom(x, r, p_vals)
    ...
-   >>> from scipy.integrate import solve_ivp
-   >>> t0, tf = 0.0, 6.0
-   >>> times = np.linspace(t0, tf, num=601)
-   >>> sol = solve_ivp(eval_rhs,
+   >>> from scipy.integrate import solve_ivp  # doctest: +SKIP
+   >>> t0, tf = 0.0, 6.0  # doctest: +SKIP
+   >>> times = np.linspace(t0, tf, num=601)  # doctest: +SKIP
+   >>> sol = solve_ivp(eval_rhs,  # doctest: +SKIP
    ...                 (t0, tf),
    ...                 x_vals, t_eval=times)
    ...
-   >>> import matplotlib.pyplot as plt
-   >>> fig, axes = plt.subplots(4, 1, sharex=True)
-   >>> _ = axes[0].plot(sol.t, sol.y[0] - p_vals[4], label='length of muscle')
-   >>> _ = axes[0].set_ylabel('Distance [m]')
-   >>> _ = axes[1].plot(sol.t, sol.y[1], label=state[1])
-   >>> _ = axes[1].set_ylabel('Speed [m/s]')
-   >>> _ = axes[2].plot(sol.t, sol.y[2], label=state[2])
-   >>> _ = axes[2].set_ylabel('Activation')
-   >>> _ = axes[3].plot(sol.t, eval_force(sol.y, p_vals).T, label='force')
-   >>> _ = axes[3].set_ylabel('Force [N]')
-   >>> _ = axes[3].set_xlabel('Time [s]')
-   >>> _ = axes[0].legend(), axes[1].legend(), axes[2].legend(), axes[3].legend()
+   >>> import matplotlib.pyplot as plt  # doctest: +SKIP
+   >>> fig, axes = plt.subplots(4, 1, sharex=True)  # doctest: +SKIP
+   >>> _ = axes[0].plot(sol.t, sol.y[0] - p_vals[4], label='length of muscle')  # doctest: +SKIP
+   >>> _ = axes[0].set_ylabel('Distance [m]')  # doctest: +SKIP
+   >>> _ = axes[1].plot(sol.t, sol.y[1], label=state[1])  # doctest: +SKIP
+   >>> _ = axes[1].set_ylabel('Speed [m/s]')  # doctest: +SKIP
+   >>> _ = axes[2].plot(sol.t, sol.y[2], label=state[2])  # doctest: +SKIP
+   >>> _ = axes[2].set_ylabel('Activation')  # doctest: +SKIP
+   >>> _ = axes[3].plot(sol.t, eval_force(sol.y, p_vals).T, label='force')  # doctest: +SKIP
+   >>> _ = axes[3].set_ylabel('Force [N]')  # doctest: +SKIP
+   >>> _ = axes[3].set_xlabel('Time [s]')  # doctest: +SKIP
+   >>> _ = axes[0].legend(), axes[1].legend(), axes[2].legend(), axes[3].legend()  # doctest: +SKIP
 
 The muscle pulls the mass in opposition to gravity and damps out to an
 equilibrium of 5 N.
