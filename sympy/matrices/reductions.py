@@ -369,8 +369,31 @@ def _rref(
         pivots: bool = True,
         normalize_last: bool = True,
     ) -> Tmat | tuple[Tmat, tuple[int]]:
-    """Return reduced row-echelon form of matrix and indices
-    of pivot vars.
+    """Return the reduced row-echelon form (RREF) of the matrix.
+    Parameters
+    ==========
+
+    iszerofunc : callable, optional
+        Function used to decide if an element is zero.
+        Useful for floating-point matrices where exact zero
+        comparisons fail.
+
+    simplify : bool or callable, optional
+        If True, uses sympy.simplify while detecting pivots.
+        A custom simplify function may also be passed.
+
+    pivots : bool, optional
+        If True, also return pivot column indices.
+
+    normalize_last : bool, optional
+        If True (default), normalization is delayed until the
+        end for better performance with symbolic matrices.
+
+    Returns
+    =======
+
+    Matrix or (Matrix, tuple)
+        Reduced row-echelon form, optionally with pivot indices.
 
     Parameters
     ==========
