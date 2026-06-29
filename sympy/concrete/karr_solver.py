@@ -3,7 +3,7 @@ from __future__ import annotations
 from sympy import (
     Expr, Symbol, cancel, solve, S, factorial, harmonic, degree
 )
-from sympy.concrete.karr_field import KarrField, KarrElement
+from sympy.concrete.karr_field import KarrField
 
 def build_karr_field(f: Expr, var: Symbol):
     """Automatically constructs a Karr difference field tower for a given summand."""
@@ -123,7 +123,7 @@ def solve_difference_equation(a: Expr, f: Expr, field: KarrField) -> Expr:
             raise ValueError("No solution exists for this denominator.")
 
         final_P = P_expr.subs(sol)
-        final_P = final_P.subs({c: S.Zero for c in coeff_symbols})
+        final_P = final_P.subs(dict.fromkeys(coeff_symbols, S.Zero))
         return cancel(final_P / Q)
 
     # First, try to solve assuming g is a polynomial (Q = 1)

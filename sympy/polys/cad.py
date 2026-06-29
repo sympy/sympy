@@ -9,8 +9,8 @@ of polynomial inequalities/equalities over the real numbers.
 
 import math
 from sympy import (
-    Symbol, symbols, Poly, discriminant, resultant, S,
-    And, Or, Not, Lt, Le, Gt, Ge, Eq, Ne, primitive, Expr
+    symbols, Poly, discriminant, resultant, S,
+    And, Or, Not, Lt, Le, Gt, Ge, Eq, Ne, primitive
 )
 from sympy.polys.polytools import real_roots
 
@@ -61,7 +61,7 @@ def projection(F, var):
             if p_prim.LC() < 0:
                 prim = -prim
             final_set.add(prim)
-        except Exception:
+        except Exception:  # noqa: BLE001
             final_set.add(expr)
 
     return list(final_set)
@@ -113,7 +113,7 @@ def isolate_algebraic_roots(f, sample_point, variables, var):
     t = symbols('t')
     try:
         minpoly, lincomb, reps = primitive_element(alg_coords, x=t, ex=True)
-    except Exception:
+    except Exception:  # noqa: BLE001
         raise NotImplementedError(f"Could not find primitive element for coordinates: {alg_coords}")
 
     # Compute minimal polynomial of the primitive element
@@ -147,7 +147,7 @@ def isolate_algebraic_roots(f, sample_point, variables, var):
             val = G_t_var.evalf(50, subs={t: theta_num, var: root_num})
             if abs(val) < 1e-40:
                 filtered_roots.append(root)
-        except Exception:
+        except Exception:  # noqa: BLE001
             pass
 
     return sorted(set(filtered_roots))
@@ -195,7 +195,7 @@ def cad(system, variables):
             for f in F[k]:
                 try:
                     level_roots.extend(isolate_algebraic_roots(f, s, variables[:k+1], var))
-                except Exception:
+                except Exception:  # noqa: BLE001
                     pass
             sorted_level_roots = sorted(set(level_roots))
 
@@ -334,7 +334,7 @@ def parse_quantifiers(formula):
         quantifiers_list.append((q_type, curr.variable))
         curr = curr.formula
 
-    all_vars = sorted(list(curr.free_symbols), key=lambda s: s.name)
+    all_vars = sorted(curr.free_symbols, key=lambda s: s.name)
     quantified_vars = [q[1] for q in quantifiers_list]
     free_vars = [v for v in all_vars if v not in quantified_vars]
 
