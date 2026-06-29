@@ -3716,7 +3716,29 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
             unsolved = list(filter(
                 lambda x: x not in solved_symbols, all_symbols))
             for unsolved_sym in unsolved:
-                res[unsolved_sym] = unsolved_sym
+                eqs_with_sym = []
+                subs_dict = {}
+                for k, v in res.items():
+                    if isinstance(v, ImageSet):
+                        vars = v.lamda.variables
+                        subs_dict[k] = v.lamda(*[0 for _ in vars])
+                    elif isinstance(v, Expr):
+                        subs_dict[k] = v
+                for eq in system:
+                    eq_subs = eq.subs(subs_dict).expand()
+                    from sympy import Wild
+                    W = Wild('W')
+                    eq_subs = eq_subs.replace(exp(I*arg(W))*Abs(W), W).expand()
+                    if eq_subs.has(unsolved_sym) and eq_subs != 0 and not eq_subs.is_zero:
+                        eqs_with_sym.append(eq_subs)
+                if eqs_with_sym:
+                    if len(eqs_with_sym) == 1:
+                        cond = Eq(eqs_with_sym[0], 0)
+                    else:
+                        cond = And(*[Eq(e, 0) for e in eqs_with_sym])
+                    res[unsolved_sym] = ConditionSet(unsolved_sym, cond, S.Complexes)
+                else:
+                    res[unsolved_sym] = unsolved_sym
             result_infinite.append(res)
         if res not in result_all_variables:
             result_all_variables.append(res)

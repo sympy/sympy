@@ -3472,8 +3472,8 @@ def test_issue_17580():
 
 def test_issue_17566_actual():
     sys = [2**x + 2**y - 3, 4**x + 9**y - 5]
-    # Not clear this is the correct result, but at least no recursion error
-    assert nonlinsolve(sys, x, y) == FiniteSet((log(3 - 2**y)/log(2), y))
+    # We now correctly return ConditionSet for the constrained unsolved variable
+    assert nonlinsolve(sys, x, y) == FiniteSet((log(3 - 2**y)/log(2), ConditionSet(y, Eq(4**(log(3 - 2**y)/log(2)) + 9**y - 5, 0), S.Complexes)))
 
 
 def test_issue_17565():
@@ -3540,8 +3540,11 @@ def test_issue_22413():
     res =  nonlinsolve((4*y*(2*x + 2*exp(y) + 1)*exp(2*x),
                          4*x*exp(2*x) + 4*y*exp(2*x + y) + 4*exp(2*x + y) + 1),
                         x, y)
-    # First solution is not correct, but the issue was an exception
-    sols = FiniteSet((x, S.Zero), (-exp(y) - S.Half, y))
+    # The solver now correctly returns ConditionSet for constrained unsolved variables instead of wrong free variables
+    sols = FiniteSet(
+        (-exp(y) - S.Half, ConditionSet(y, Eq(4*y*exp(-1)*exp(y)*exp(-2*exp(y)) + 1 - 2*exp(-1)*exp(-2*exp(y)), 0), S.Complexes)),
+        (ConditionSet(x, Eq(4*x*exp(2*x) + 4*exp(2*x) + 1, 0), S.Complexes), S.Zero)
+    )
     assert res == sols
 
 
