@@ -446,7 +446,7 @@ def test_Add_Mul_is_integer():
     nr = Symbol('nr', rational=False)
     nz = Symbol('nz', integer=True, zero=False)
 
-    assert (-nk).is_integer is None
+    assert (-nk).is_integer is False
     assert (-nr).is_integer is False
     assert (2*k).is_integer is True
     assert (-k).is_integer is True
