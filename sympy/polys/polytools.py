@@ -6707,12 +6707,9 @@ def _symbolic_factor(expr, opt, method):
     if isinstance(expr, Expr):
         if hasattr(expr,'_eval_factor'):
             return expr._eval_factor()
-        if expr.is_Function and expr.func.__name__ in {
+        if expr.free_symbols and expr.is_Function and expr.func.__name__ in {
             'sin', 'cos', 'tan', 'cot', 'sec', 'csc',
-            'asin', 'acos', 'atan', 'acot', 'asec', 'acsc',
-            'sinh', 'cosh', 'tanh', 'coth', 'sech', 'csch',
-            'asinh', 'acosh', 'atanh', 'acoth', 'asech', 'acsch',
-            'log'
+            'sinh', 'cosh', 'tanh', 'coth', 'sech', 'csch'
         }:
             return expr.func(*[_symbolic_factor(arg, opt, method) for arg in expr.args])
         coeff, factors = _symbolic_factor_list(together(expr, fraction=opt['fraction']), opt, method)
