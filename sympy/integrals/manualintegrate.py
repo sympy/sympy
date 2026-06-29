@@ -1677,8 +1677,9 @@ def _parts_rule(integrand, symbol) -> tuple[Expr, Expr, Expr, Expr, Rule] | None
 
 
     dummy = Dummy("temporary")
-    # we can integrate log(x) and atan(x) by setting dv = 1
-    if isinstance(integrand, (log, *inverse_trig_functions)):
+    # we can integrate log(x), atan(x), and erf by setting dv = 1
+    if isinstance(integrand, (log, *inverse_trig_functions,
+                              *special_error_functions)):
         integrand = dummy * integrand
 
     for index, rule in enumerate(liate_rules):
@@ -1762,6 +1763,8 @@ def parts_rule(integral):
                 return
             _parts_u_cache[cachekey] += 1
 
+        priori_steps = [result]
+
         # Try cyclic integration by parts a few times
         for _ in range(4):
             debug("Cyclic integration {} with v: {}, du: {}, integrand: {}".format(_, v, du, integrand))
@@ -1797,7 +1800,12 @@ def parts_rule(integral):
 
     if steps:
         u, dv, v, du, v_step = steps[0]
-        rule = PartsRule(integrand, symbol, u, dv, v_step, make_second_step(steps[1:], v * du))
+        second_step = make_second_step(steps[1:], v * du)
+        if second_step.contains_dont_know() and (priori_steps != steps):
+            debug("Repeated integration by parts failed because the second step contains a DontKnowRule")
+            debug("Use the first step instead")
+            second_step = make_second_step(priori_steps[1:], v * du)
+        rule = PartsRule(integrand, symbol, u, dv, v_step, second_step)
         if (constant != 1) and rule:
             rule = ConstantTimesRule(constant * integrand, symbol, constant, integrand, rule)
         return rule
@@ -2687,7 +2695,8 @@ def integral_steps(integrand, symbol, **options):
                     cancel_rule),
                 condition(
                     integral_is_subclass(Mul, log,
-                    *inverse_trig_functions),
+                                         *inverse_trig_functions,
+                                         *special_error_functions),
                     parts_rule),
                 condition(
                     integral_is_subclass(Mul, Pow),
