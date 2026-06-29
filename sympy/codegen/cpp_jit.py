@@ -88,14 +88,14 @@ class CPPJITFunction:
                         flat_inputs.append(args[j][i])
 
             # Allocate ctypes double arrays
-            c_inputs = (ctypes.c_double * len(flat_inputs))(*flat_inputs)
-            c_outputs = (ctypes.c_double * (n * self._num_results))()
+            c_inputs_arr = (ctypes.c_double * len(flat_inputs))(*flat_inputs)
+            c_outputs_arr = (ctypes.c_double * (n * self._num_results))()
 
-            self._lib.eval_vectorized(n, c_inputs, c_outputs)
+            self._lib.eval_vectorized(n, c_inputs_arr, c_outputs_arr)
 
             results = []
             for i in range(n):
-                row = tuple(c_outputs[i * self._num_results + r] for r in range(self._num_results))
+                row = tuple(c_outputs_arr[i * self._num_results + r] for r in range(self._num_results))
                 results.append(row if self._num_results > 1 else row[0])
             return results
         else:
@@ -103,12 +103,12 @@ class CPPJITFunction:
             if len(args) != self._num_args:
                 raise ValueError(f"Expected {self._num_args} arguments, got {len(args)}")
 
-            c_inputs = (ctypes.c_double * self._num_args)(*args)
-            c_outputs = (ctypes.c_double * self._num_results)()
+            c_inputs_val = (ctypes.c_double * self._num_args)(*args)
+            c_outputs_val = (ctypes.c_double * self._num_results)()
 
-            self._lib.eval_single(c_inputs, c_outputs)
+            self._lib.eval_single(c_inputs_val, c_outputs_val)
 
-            res = tuple(c_outputs[r] for r in range(self._num_results))
+            res = tuple(c_outputs_val[r] for r in range(self._num_results))
             return res if self._num_results > 1 else res[0]
 
 

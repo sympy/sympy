@@ -286,14 +286,14 @@ def integrate_algebraic_risch(f: Expr, x: Symbol, y: Symbol, Q_x: Expr) -> Expr:
         # If residues sum to 0, construct divisor
         if cancel(res1 + res2) == S.Zero:
             # Let c = res2. D = P_inf_2 - P_inf_1
-            c = res2
+            res_c = res2
             # For c to be rational, we scale to integers
             # residues are -1 and 1, so c = 1.
             div = Divisor({P_inf_2: 1, P_inf_1: -1})
             torsion = coates_torsion_divisor(div, x, y, Q_x)
             if torsion:
                 m, g = torsion
-                return (c / m) * log(g)
+                return (res_c / m) * log(g)
 
     # Fallback to standard SymPy integrate if algebraic/logarithmic Risch fails
     from sympy import integrate
