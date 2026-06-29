@@ -247,8 +247,8 @@ class DataType:
 default_datatypes = {
     "int": DataType("int", "INTEGER*4", "int", "", "", "i32"),
     "float": DataType("double", "REAL*8", "float", "", "", "f64"),
-    "complex": DataType("double", "COMPLEX*16", "complex", "", "", "float") #FIXME:
-       # complex is only supported in fortran, python, julia, and octave.
+    "complex": DataType("double", "COMPLEX*16", "complex", "", "", "float")
+       # FIXME: complex is only supported in fortran, python, julia, and octave.
        # So to not break c or rust code generation, we stick with double or
        # float, respectively (but actually should raise an exception for
        # explicitly complex variables (x.is_complex==True))
