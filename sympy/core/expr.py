@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, overload, Literal
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Mapping, Sequence
 from functools import reduce
 import re
 
@@ -24,6 +24,7 @@ from sympy.external.mpmath import prec_to_dps, giant_steps as _giant_steps, mpf_
 if TYPE_CHECKING:
     from typing import Any, Hashable
     from typing_extensions import Self
+    from sympy.polys.domains.domain import Domain
     from .numbers import Number
     from sympy.logic.boolalg import Boolean
 
@@ -3835,10 +3836,38 @@ class Expr(Basic, EvalfMixin):
         from sympy.simplify.gammasimp import gammasimp
         return gammasimp(self)
 
-    def factor(self, *gens, **args):
+    def factor(
+        self,
+        *args: Expr | Sequence[Expr],
+        deep: bool = False,
+        fraction: bool = True,
+        expand: bool = True,
+        extension: Expr | bool | Sequence[Expr] | None = None,
+        modulus: int | None = None,
+        gaussian: bool | None = None,
+        symmetric: bool | None = None,
+        domain: Domain | str | None = None,
+        split: bool | None = None,
+        polys: bool | None = None,
+        gens: Expr | Sequence[Expr] = (),
+    ):
         """See the factor() function in sympy.polys.polytools"""
         from sympy.polys.polytools import factor
-        return factor(self, *gens, **args)
+        return factor(
+            self,
+            *args,
+            deep=deep,
+            fraction=fraction,
+            expand=expand,
+            extension=extension,
+            modulus=modulus,
+            gaussian=gaussian,
+            symmetric=symmetric,
+            domain=domain,
+            split=split,
+            polys=polys,
+            gens=gens,
+        )
 
     def cancel(self, *gens, **args):
         """See the cancel function in sympy.polys"""
