@@ -38,7 +38,7 @@ class Point:
 
     """
 
-    def __init__(self, x_cord, z_cord, a_24, mod):
+    def __init__(self, x_cord: int, z_cord: int, a_24: int, mod: int):
         """
         Initial parameters for the Point class.
 
@@ -55,15 +55,17 @@ class Point:
         self.a_24 = a_24
         self.mod = mod
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         """Two points are equal if X/Z of both points are equal
         """
+        if not isinstance(other,Point):
+            raise TypeError("TypeError")
         if self.a_24 != other.a_24 or self.mod != other.mod:
             return False
         return self.x_cord * other.z_cord % self.mod ==\
             other.x_cord * self.z_cord % self.mod
 
-    def add(self, Q, diff):
+    def add(self, Q: Point, diff: Point) -> Point:
         """
         Add two points self and Q where diff = self - Q. Moreover the assumption
         is self.x_cord*Q.x_cord*(self.x_cord - Q.x_cord) != 0. This algorithm
@@ -100,7 +102,7 @@ class Point:
         z_cord = diff.x_cord * subt * subt % self.mod
         return Point(x_cord, z_cord, self.a_24, self.mod)
 
-    def double(self):
+    def double(self) -> Point:
         """
         Doubles a point in an elliptic curve in Montgomery form.
         This algorithm requires 5 multiplications.
@@ -123,7 +125,7 @@ class Point:
         z_cord = diff*(v + self.a_24*diff) % self.mod
         return Point(x_cord, z_cord, self.a_24, self.mod)
 
-    def mont_ladder(self, k):
+    def mont_ladder(self, k: int) -> Point:
         """
         Scalar multiplication of a point in Montgomery form
         using Montgomery Ladder Algorithm.
@@ -158,7 +160,13 @@ class Point:
         return Q
 
 
-def _ecm_one_factor(n, B1=10000, B2=100000, max_curve=200, seed=None):
+def _ecm_one_factor(
+    n: int,
+    B1: int = 10000,
+    B2: int = 100000,
+    max_curve:int = 200,
+    seed: int| None | list[int] = None
+) ->  int | None:
     """Returns one factor of n using
     Lenstra's 2 Stage Elliptic curve Factorization
     with Suyama's Parameterization. Here Montgomery
@@ -211,10 +219,10 @@ def _ecm_one_factor(n, B1=10000, B2=100000, max_curve=200, seed=None):
     randint = _randint(seed)
 
     # When calculating T, if (B1 - 2*D) is negative, it cannot be calculated.
-    D = min(sqrt(B2), B1 // 2 - 1)
+    D = min(int(sqrt(B2)), B1 // 2 - 1)
     sieve.extend(D)
     beta = [0] * D
-    S = [0] * D
+    S: list[Point | None] = [None] * D
     k = 1
     for p in primerange(2, B1 + 1):
         k *= pow(p, int(log(B1, p)))
@@ -241,10 +249,10 @@ def _ecm_one_factor(n, B1=10000, B2=100000, max_curve=200, seed=None):
             # where a = pow(v - u, 3, n)*(3*u + v)*invert(4*u_3*v, n) - 2
             # However, we do not declare a because it is more convenient
             # to use a24 = (a + 2)*invert(4, n) in the calculation.
-            a24 = pow(v - u, 3, n)*(3*u + v)*invert(16*u_3*v, n) % n
+            a24 = int(pow(v - u, 3, n)*(3*u + v)*invert(16*u_3*v, n) % n)
         except ZeroDivisionError:
             #If the invert(16*u_3*v, n) doesn't exist (i.e., g != 1)
-            g = gcd(2*u_3*v, n)
+            g = int(gcd(2*u_3*v, n))
             #If g = n, try another curve
             if g == n:
                 continue
@@ -252,7 +260,7 @@ def _ecm_one_factor(n, B1=10000, B2=100000, max_curve=200, seed=None):
 
         Q = Point(u_3, pow(v, 3, n), a24, n)
         Q = Q.mont_ladder(k)
-        g = gcd(Q.z_cord, n)
+        g = int(gcd(Q.z_cord, n))
 
         #Stage 1 factor
         if g != 1 and g != n:
@@ -265,35 +273,53 @@ def _ecm_one_factor(n, B1=10000, B2=100000, max_curve=200, seed=None):
         S[0] = Q
         Q2 = Q.double()
         S[1] = Q2.add(Q, Q)
-        beta[0] = (S[0].x_cord*S[0].z_cord) % n
-        beta[1] = (S[1].x_cord*S[1].z_cord) % n
+        P = S[0]
+        assert P is not None
+        beta[0] = (P.x_cord * P.z_cord) % n
+        P = S[1]
+        assert P is not None
+        beta[1] = (P.x_cord * P.z_cord) % n
         for d in range(2, D):
-            S[d] = S[d - 1].add(Q2, S[d - 2])
-            beta[d] = (S[d].x_cord*S[d].z_cord) % n
+            P1 = S[d - 1]
+            P2 = S[d - 2]
+            assert P1 is not None and P2 is not None
+            S[d] = P1.add(Q2, P2)
+            P = S[d]
+            assert P is not None
+            beta[d] = (P.x_cord * P.z_cord) % n
         # i.e., S[i] = Q.mont_ladder(2*i + 1)
 
         g = 1
         W = Q.mont_ladder(4*D)
         T = Q.mont_ladder(B1 - 2*D)
         R = Q.mont_ladder(B1 + 2*D)
-        for deltas in deltas_list:
+        for delta_list in deltas_list:
             # R = Q.mont_ladder(r) where r in range(B1 + 2*D, B2 + 2*D, 4*D)
             alpha = (R.x_cord*R.z_cord) % n
-            for delta in deltas:
+            for delta in delta_list:
                 # We want to calculate
                 # f = R.x_cord * S[delta].z_cord - S[delta].x_cord * R.z_cord
-                f = (R.x_cord - S[delta].x_cord)*\
-                    (R.z_cord + S[delta].z_cord) - alpha + beta[delta]
+                P = S[delta]
+                assert P is not None
+                f = (R.x_cord - P.x_cord) * \
+                (R.z_cord + P.z_cord) - alpha + beta[delta]
                 g = (g*f) % n
             T, R = R, R.add(W, T)
-        g = gcd(n, g)
+        g = int(gcd(n, g))
 
         #Stage 2 Factor found
         if g != 1 and g != n:
             return g
+    return None
 
 
-def ecm(n, B1=10000, B2=100000, max_curve=200, seed=1234):
+def ecm(
+    n: int,
+    B1: int = 10000,
+    B2: int = 100000,
+    max_curve: int = 200,
+    seed: int = 1234
+) -> set[int]:
     """Performs factorization using Lenstra's Elliptic curve method.
 
     This function repeatedly calls ``_ecm_one_factor`` to compute the factors
