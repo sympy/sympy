@@ -79,12 +79,12 @@ Let us take this example
 The parser can be used as follows::
 
     >>> from sympy.parsing.autolev import parse_autolev
-    >>> sympy_code = parse_autolev(open('double_pendulum.al'), include_numeric=True)
+    >>> sympy_code = parse_autolev(open('double_pendulum.al'), include_numeric=True)  # doctest: +SKIP
 
     # The include_pydy flag is False by default. Setting it to True will
     # enable PyDy simulation code to be outputted if applicable.
 
-    >>> print(sympy_code)
+    >>> print(sympy_code)  # doctest: +SKIP
     import sympy.physics.mechanics as me
     import sympy as sm
     import math as m

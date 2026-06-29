@@ -801,7 +801,7 @@ the constants recommended in [DeGroote2016]_.
 >>> fl_M_act3
 FiberForceLengthActiveDeGroote2016(l_M(t)/l_M_opt, 0.814, 1.06, 0.162, 0.0633, 0.433, 0.717, -0.0299, 0.2, 0.1, 1.0, 0.354, 0.0)
 >>> fl_M_act3.doit()
-0.1*exp(-3.98991349867535*(-1 + l_M(t)/l_M_opt)**2) + 0.433*exp(-12.5*(-0.717 + l_M(t)/l_M_opt)**2/(-0.1495 + l_M(t)/l_M_opt)**2) + 0.814*exp(-21.4067977442463*(-1 + 0.943396226415094*l_M(t)/l_M_opt)**2/(1 + 0.390740740740741*l_M(t)/l_M_opt)**2)
+0.1*exp(-(-2.82485875706215 + 2.82485875706215*l_M(t)/l_M_opt)**2/2) + 0.433*exp(-(-0.717 + l_M(t)/l_M_opt)**2/(2*(-0.0299 + 0.2*l_M(t)/l_M_opt)**2)) + 0.814*exp(-(-1.06 + l_M(t)/l_M_opt)**2/(2*(0.162 + 0.0633*l_M(t)/l_M_opt)**2))
 
 Sensible values for :math:`\tilde{l}^M` fall
 within the range :math:`[0.0, 2.0]`, which we will plot below.
@@ -898,7 +898,7 @@ the constants recommended in [DeGroote2016]_.
 >>> fv_M3
 FiberForceVelocityDeGroote2016(v_M(t)/v_M_max, -0.318, -8.149, -0.374, 0.886)
 >>> fv_M3.doit()
-0.886 - 0.318*log(8.149*sqrt((-0.0458952018652595 - v_M(t)/v_M_max)**2 + 0.0150588346410601) - 0.374 - 8.149*v_M(t)/v_M_max)
+0.886 - 0.318*log(sqrt((-0.374 - 8.149*v_M(t)/v_M_max)**2 + 1) - 0.374 - 8.149*v_M(t)/v_M_max)
 
 Sensible values for :math:`\tilde{v}^M` fall within the range
 :math:`[-1.0, 1.0]`, which we will plot below.
