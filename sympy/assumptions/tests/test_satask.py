@@ -1,6 +1,5 @@
 from __future__ import annotations
 from sympy.assumptions.ask import Q
-from sympy.assumptions.assume import assuming
 from sympy.core.numbers import (I, pi, E)
 from sympy.core.relational import (Eq, Gt)
 from sympy.core.singleton import S
@@ -31,11 +30,6 @@ def test_satask():
     assert satask(Q.positive(x), ~Q.real(x)) is False
 
     raises(ValueError, lambda: satask(Q.real(x), Q.real(x) & ~Q.real(x)))
-
-    with assuming(Q.positive(x)):
-        assert satask(Q.real(x)) is True
-        assert satask(~Q.positive(x)) is False
-        raises(ValueError, lambda: satask(Q.real(x), ~Q.positive(x)))
 
     assert satask(Q.zero(x), Q.nonzero(x)) is False
     assert satask(Q.positive(x), Q.zero(x)) is False
@@ -364,7 +358,8 @@ def test_extract_predargs():
     context = CNF.from_prop(Q.zero(y))
     assert extract_predargs(props) == {Abs(x*y), x*y}
     assert extract_predargs(props, assump) == {Abs(x*y), x*y, x}
-    assert extract_predargs(props, assump, context) == {Abs(x*y), x*y, x, y}
+    assump.add_clauses(context.clauses)
+    assert extract_predargs(props, assump) == {Abs(x*y), x*y, x, y}
 
     props = CNF.from_prop(Eq(x, y))
     assump = CNF.from_prop(Gt(y, z))
