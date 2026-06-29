@@ -16,7 +16,7 @@ from sympy.functions.special.gamma_functions import uppergamma
 from sympy.functions.special.polynomials import (assoc_laguerre, chebyshevt, chebyshevu, gegenbauer, hermite, jacobi, laguerre, legendre)
 from sympy.functions.special.zeta_functions import polylog
 from sympy.integrals.integrals import (Integral, integrate)
-from sympy.logic.boolalg import And
+from sympy.logic.boolalg import And, Or
 from sympy import factor
 from sympy.integrals.manualintegrate import (manualintegrate, find_substitutions,
     _parts_rule, integral_steps, manual_subs)
@@ -244,7 +244,7 @@ def test_manualintegrate_inversetrig():
 def test_manualintegrate_trig_substitution():
     assert manualintegrate(sqrt(16*x**2 - 9)/x, x) == \
         Piecewise((sqrt(16*x**2 - 9) - 3*acos(3/(4*x)),
-                   And(x < Rational(3, 4), x > Rational(-3, 4))))
+                   Or(x > Rational(3, 4), x < Rational(-3, 4))))
     assert manualintegrate(1/(x**4 * sqrt(25-x**2)), x) == \
         Piecewise((-sqrt(-x**2/25 + 1)/(125*x) -
                    (-x**2/25 + 1)**(3*S.Half)/(15*x**3), And(x < 5, x > -5)))

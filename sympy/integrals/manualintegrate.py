@@ -59,7 +59,7 @@ from sympy.functions.special.polynomials import (chebyshevt, chebyshevu,
     OrthogonalPolynomial)
 from sympy.functions.special.zeta_functions import polylog
 from .integrals import Integral
-from sympy.logic.boolalg import And, Boolean
+from sympy.logic.boolalg import And, Boolean, Or
 from sympy.ntheory.factor_ import primefactors
 from sympy.polys.polytools import degree, factor_list, lcm_list, gcd_list, Poly
 from sympy.simplify.radsimp import fraction
@@ -2411,7 +2411,7 @@ def trig_substitution_rule(integral):
             # b*x**2 - a**2. Assume sin(theta) > 0, 0 < theta < pi
             constant = sqrt(-a)/sqrt(b)
             x_func = constant * sec(theta)
-            restriction = And(symbol > -constant, symbol < constant)
+            restriction = Or(symbol < -constant, symbol > constant)
         if x_func:
             # Manually simplify sqrt(trig(theta)**2) to trig(theta)
             # Valid due to assumed domain restriction
