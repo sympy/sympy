@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from sympy import symbols, And, Lt, Gt, Eq, S
-from sympy.polys.cad import projection, cad, solve_cad
+from sympy import symbols, And, Lt, Gt, Eq, S, Ge, Le
+from sympy.polys.cad import projection, cad, solve_cad, Exists, ForAll, solve_qe
 
 def test_projection():
     x, y = symbols('x y')
@@ -84,4 +84,21 @@ def test_solve_cad_algebraic_lifting():
     # Verify that the coordinates are algebraic roots
     coords = [cell.sample_point for cell in matching_cells]
     assert any(c[0]**2 == 2 and c[1]**2 == c[0] for c in coords)
+
+
+def test_solve_qe():
+    x, y = symbols('x y')
+    # 1. Existential quantifier: Exists(y, x**2 + y**2 < 1)
+    # This should eliminate y and return x**2 - 1 < 0 (equivalent to -1 < x < 1)
+    formula1 = Exists(y, Lt(x**2 + y**2, 1))
+    res1 = solve_qe(formula1)
+    assert res1 == Lt(x**2 - 1, 0)
+    
+    # 2. Universal quantifier: ForAll(y, y**2 >= x)
+    # This should eliminate y and return x <= 0
+    formula2 = ForAll(y, Ge(y**2 - x, 0))
+    res2 = solve_qe(formula2)
+    # The simplifier simplifies Or(Lt(x, 0), Eq(x, 0)) to Le(x, 0)
+    assert res2 == Le(x, 0)
+
 

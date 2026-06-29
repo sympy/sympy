@@ -300,3 +300,189 @@ def solve_cad(formula, variables):
         if evaluate_formula(formula, subs_dict):
             matching_cells.append(cell)
     return matching_cells
+
+
+class Exists:
+    """Represents an existential quantifier: Exists(x, formula)."""
+    def __init__(self, variable, formula):
+        self.variable = variable
+        self.formula = formula
+
+    def __repr__(self):
+        return f"Exists({self.variable}, {self.formula})"
+
+
+class ForAll:
+    """Represents a universal quantifier: ForAll(x, formula)."""
+    def __init__(self, variable, formula):
+        self.variable = variable
+        self.formula = formula
+
+    def __repr__(self):
+        return f"ForAll({self.variable}, {self.formula})"
+
+
+def parse_quantifiers(formula):
+    """Parses nested quantifiers in a formula.
+
+    Returns (quantifiers_list, quantifier_free_formula, free_vars)
+    """
+    quantifiers_list = []
+    curr = formula
+    while isinstance(curr, (Exists, ForAll)):
+        q_type = 'exists' if isinstance(curr, Exists) else 'forall'
+        quantifiers_list.append((q_type, curr.variable))
+        curr = curr.formula
+
+    all_vars = sorted(list(curr.free_symbols), key=lambda s: s.name)
+    quantified_vars = [q[1] for q in quantifiers_list]
+    free_vars = [v for v in all_vars if v not in quantified_vars]
+
+    return quantifiers_list, curr, free_vars
+
+
+def simplify_relations(formula):
+    """Simplifies logical combinations of relations (e.g. Lt(x, 0) | Eq(x, 0) -> Le(x, 0))."""
+    if isinstance(formula, Or):
+        args = list(formula.args)
+        lts = [a for a in args if isinstance(a, Lt)]
+        gts = [a for a in args if isinstance(a, Gt)]
+        eqs = [a for a in args if isinstance(a, Eq)]
+
+        new_args = []
+        combined = set()
+
+        for eq in eqs:
+            matched = False
+            for lt in lts:
+                if lt.lhs == eq.lhs and lt.rhs == eq.rhs:
+                    new_args.append(Le(eq.lhs, eq.rhs))
+                    combined.add(eq)
+                    combined.add(lt)
+                    matched = True
+                    break
+                elif lt.lhs == eq.rhs and lt.rhs == eq.lhs:
+                    new_args.append(Ge(eq.lhs, eq.rhs))
+                    combined.add(eq)
+                    combined.add(lt)
+                    matched = True
+                    break
+            if not matched:
+                for gt in gts:
+                    if gt.lhs == eq.lhs and gt.rhs == eq.rhs:
+                        new_args.append(Ge(eq.lhs, eq.rhs))
+                        combined.add(eq)
+                        combined.add(gt)
+                        matched = True
+                        break
+                    elif gt.lhs == eq.rhs and gt.rhs == eq.lhs:
+                        new_args.append(Le(eq.lhs, eq.rhs))
+                        combined.add(eq)
+                        combined.add(gt)
+                        matched = True
+                        break
+
+        for a in args:
+            if a not in combined:
+                new_args.append(a)
+
+        if len(new_args) == 1:
+            return new_args[0]
+        return Or(*new_args)
+    return formula
+
+
+def solve_qe(formula):
+    """Performs Quantifier Elimination (QE) using Cylindrical Algebraic Decomposition."""
+    quantifiers_list, qf_formula, free_vars = parse_quantifiers(formula)
+
+    if not quantifiers_list:
+        return qf_formula
+
+    quantified_vars = [q[1] for q in quantifiers_list]
+    variables = free_vars + quantified_vars
+
+    polys = extract_polys(qf_formula)
+    cells = cad(polys, variables)
+
+    cell_truth = {}
+    for cell in cells:
+        subs_dict = dict(zip(variables, cell.sample_point))
+        cell_truth[cell.sample_point] = evaluate_formula(qf_formula, subs_dict)
+
+    r = len(variables)
+    k = len(free_vars)
+    for j in range(r, k, -1):
+        q_type, q_var = quantifiers_list[j - k - 1]
+        groups = {}
+        for s_point, val in cell_truth.items():
+            prefix = s_point[:j - 1]
+            groups.setdefault(prefix, []).append(val)
+
+        new_truth = {}
+        for prefix, vals in groups.items():
+            if q_type == 'exists':
+                new_truth[prefix] = any(vals)
+            else:
+                new_truth[prefix] = all(vals)
+        cell_truth = new_truth
+
+    if k == 0:
+        return S.true if cell_truth.get((), False) else S.false
+
+    F = [polys]
+    for i in range(len(variables) - 1, 0, -1):
+        F.append(projection(F[-1], variables[i]))
+    F.reverse()
+
+    F_k = F[k - 1]
+
+    cells_k = cad(F_k, variables[:k])
+
+    true_descriptions = []
+    for cell_k in cells_k:
+        s_k = cell_k.sample_point
+        if cell_truth.get(s_k, False):
+            desc_args = []
+            subs_dict = dict(zip(variables[:k], s_k))
+            for f in F_k:
+                val = f.subs(subs_dict)
+                if val.is_number:
+                    if val.is_zero:
+                        sign = 0
+                    elif val.is_positive:
+                        sign = 1
+                    else:
+                        sign = -1
+                else:
+                    val_num = val.evalf(50)
+                    if abs(val_num) < 1e-40:
+                        sign = 0
+                    elif val_num > 0:
+                        sign = 1
+                    else:
+                        sign = -1
+
+                if sign == 0:
+                    desc_args.append(Eq(f, 0))
+                elif sign > 0:
+                    desc_args.append(Gt(f, 0))
+                else:
+                    desc_args.append(Lt(f, 0))
+
+            if len(desc_args) == 1:
+                true_descriptions.append(desc_args[0])
+            elif len(desc_args) > 1:
+                true_descriptions.append(And(*desc_args))
+            else:
+                true_descriptions.append(S.true)
+
+    if not true_descriptions:
+        return S.false
+
+    if len(true_descriptions) == 1:
+        result_formula = true_descriptions[0]
+    else:
+        result_formula = Or(*true_descriptions)
+
+    return simplify_relations(result_formula)
