@@ -379,11 +379,11 @@ def init_session(console_backend=None, pretty_print=True, order=None,
         that things like 1/2 give Rational(1, 2).
         If False, it will not.
         The default is False.
-    ipython: boolean or None
-        If True, printing will initialize for an IPython console;
-        if False, printing will initialize for a normal console;
-        The default is None, which automatically determines whether we are in
-        an ipython instance or not.
+    console_backend: str or None
+        The interactive console backend to initialize, one of ``'python'``,
+        ``'ipython'`` or ``'bpython'``. The default is None, which
+        automatically selects an IPython console when one is available and a
+        Python console otherwise.
     str_printer: function, optional, default=None
         A custom string printer function. This should mimic
         sympy.printing.sstrrepr().
