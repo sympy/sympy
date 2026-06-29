@@ -7,7 +7,7 @@ from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.kind import NumberKind, UndefinedKind
 from sympy.assumptions.ask_generated import get_all_known_matrix_facts, get_all_known_number_facts
-from sympy.assumptions.assume import global_assumptions, AppliedPredicate
+from sympy.assumptions.assume import AppliedPredicate
 from sympy.assumptions.sathandlers import class_fact_registry
 from sympy.core import oo
 from sympy.logic.inference import satisfiable
@@ -15,8 +15,7 @@ from sympy.assumptions.cnf import CNF, EncodedCNF
 from sympy.matrices.kind import MatrixKind
 
 
-def satask(proposition, assumptions=True, context=global_assumptions,
-        use_known_facts=True, iterations=oo):
+def satask(proposition, assumptions=True, use_known_facts=True, iterations=oo):
     """
     Function to evaluate the proposition with assumptions using SAT algorithm.
 
@@ -37,10 +36,6 @@ def satask(proposition, assumptions=True, context=global_assumptions,
 
     assumptions : Any boolean expression, optional.
         Local assumptions to evaluate the *proposition*.
-
-    context : AssumptionsContext, optional.
-        Default assumptions to evaluate the *proposition*. By default,
-        this is ``sympy.assumptions.global_assumptions`` variable.
 
     use_known_facts : bool, optional.
         If ``True``, facts from ``sympy.assumptions.ask_generated``
@@ -70,15 +65,9 @@ def satask(proposition, assumptions=True, context=global_assumptions,
 
     assumptions = CNF.from_prop(assumptions)
 
-    context_cnf = CNF()
-    if context:
-        context_cnf = context_cnf.extend(context)
-
-    sat = get_all_relevant_facts(props, assumptions, context_cnf,
+    sat = get_all_relevant_facts(props, assumptions,
         use_known_facts=use_known_facts, iterations=iterations)
     sat.add_from_cnf(assumptions)
-    if context:
-        sat.add_from_cnf(context_cnf)
 
     return check_satisfiability(props, _props, sat)
 
@@ -107,7 +96,7 @@ def check_satisfiability(prop, _prop, factbase):
         raise ValueError("Inconsistent assumptions")
 
 
-def extract_predargs(proposition, assumptions=None, context=None):
+def extract_predargs(proposition, assumptions=None):
     """
     Extract every expression in the argument of predicates from *proposition*,
     *assumptions* and *context*.
@@ -118,9 +107,6 @@ def extract_predargs(proposition, assumptions=None, context=None):
     proposition : sympy.assumptions.cnf.CNF
 
     assumptions : sympy.assumptions.cnf.CNF, optional.
-
-    context : sympy.assumptions.cnf.CNF, optional.
-        CNF generated from assumptions context.
 
     Examples
     ========
@@ -141,8 +127,6 @@ def extract_predargs(proposition, assumptions=None, context=None):
     lkeys = set()
     if assumptions:
         lkeys |= assumptions.all_predicates()
-    if context:
-        lkeys |= context.all_predicates()
 
     lkeys = lkeys - {S.true, S.false}
     tmp_keys = None
@@ -267,7 +251,7 @@ def get_relevant_clsfacts(exprs, relevant_facts=None):
     return newexprs - exprs, relevant_facts
 
 
-def get_all_relevant_facts(proposition, assumptions, context,
+def get_all_relevant_facts(proposition, assumptions,
         use_known_facts=True, iterations=oo):
     """
     Extract all relevant facts from *proposition* and *assumptions*.
@@ -284,9 +268,6 @@ def get_all_relevant_facts(proposition, assumptions, context,
 
     assumptions : sympy.assumptions.cnf.CNF
         CNF generated from assumption expression.
-
-    context : sympy.assumptions.cnf.CNF
-        CNF generated from assumptions context.
 
     use_known_facts : bool, optional.
         If ``True``, facts from ``sympy.assumptions.ask_generated``
@@ -310,8 +291,7 @@ def get_all_relevant_facts(proposition, assumptions, context,
     >>> from sympy.abc import x, y
     >>> props = CNF.from_prop(Q.nonzero(x*y))
     >>> assump = CNF.from_prop(Q.nonzero(x))
-    >>> context = CNF.from_prop(Q.nonzero(y))
-    >>> get_all_relevant_facts(props, assump, context) #doctest: +SKIP
+    >>> get_all_relevant_facts(props, assump) #doctest: +SKIP
     <sympy.assumptions.cnf.EncodedCNF at 0x7f09faa6ccd0>
 
     """
@@ -324,7 +304,7 @@ def get_all_relevant_facts(proposition, assumptions, context,
     all_exprs = set()
     while True:
         if i == 0:
-            exprs = extract_predargs(proposition, assumptions, context)
+            exprs = extract_predargs(proposition, assumptions)
         all_exprs |= exprs
         exprs, relevant_facts = get_relevant_clsfacts(exprs, relevant_facts)
         i += 1
