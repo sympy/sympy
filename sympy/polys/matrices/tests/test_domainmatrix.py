@@ -1228,7 +1228,7 @@ def test_DomainMatrix_ground_eigenvects():
     A = DM([[4, 1, 0, 0],
             [-3, QQ(1, 2), 0, 0],
             [0, 0, 2, QQ(3, 2)],
-            [0, 0, 0, 2]], QQ)    
+            [0, 0, 0, 2]], QQ)
     for B in (A, A.to_sparse()):
         V = B.ground_eigenvects()
         assert set(V) == {QQ(2), QQ(5, 2)}
