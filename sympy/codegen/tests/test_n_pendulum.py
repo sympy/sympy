@@ -7,7 +7,7 @@ from sympy.codegen.cpp_jit import cpp_jit
 
 def test_n_pendulum_simulation():
     # Number of segments in级联单摆
-    N = 4
+    N = 5
     
     print("\n" + "="*80)
     print(f"CHAOTIC {N}-SEGMENT PENDULUM DYNAMICS ENGINE & SIMULATION")
@@ -66,7 +66,7 @@ def test_n_pendulum_simulation():
     outputs = list(M) + list(C)
     
     t_start = time.perf_counter()
-    f_jit = cpp_jit(outputs, inputs)
+    f_jit = cpp_jit(outputs, inputs, force_compile=True)
     t_compile = time.perf_counter() - t_start
     print(f"[*] SymPyJIT C++ compilation time: {t_compile:.4f} seconds")
     
@@ -82,7 +82,7 @@ def test_n_pendulum_simulation():
     omega_init = np.zeros(N)
     
     dt = 0.001
-    steps = 50000 # 50,000 physical steps
+    steps = 150000 # 150,000 physical steps
     
     # RK4 Integration Helper
     def rk4_step(func, t_val, w_val, dt):

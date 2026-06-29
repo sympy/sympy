@@ -159,7 +159,7 @@ def generate_cpp_source(expressions: list[Expr] | Expr, symbols: list[Symbol]) -
     return code
 
 
-def cpp_jit(expressions: list[Expr] | Expr, symbols: list[Symbol]) -> CPPJITFunction:
+def cpp_jit(expressions: list[Expr] | Expr, symbols: list[Symbol], force_compile: bool = False) -> CPPJITFunction:
     """Compiles the given SymPy expressions to optimized C++ code and JIT-loads it via ctypes."""
     source_code = generate_cpp_source(expressions, symbols)
 
@@ -175,8 +175,8 @@ def cpp_jit(expressions: list[Expr] | Expr, symbols: list[Symbol]) -> CPPJITFunc
     with open(src_path, "w", encoding="utf-8") as f:
         f.write(source_code)
 
-    # Compile if library does not exist
-    if not os.path.exists(lib_path):
+    # Compile if library does not exist or force_compile is enabled
+    if force_compile or not os.path.exists(lib_path):
         cmd = ["g++", "-O3", "-ffast-math", "-shared", "-fPIC", src_path, "-o", lib_path]
         result = subprocess.run(cmd, capture_output=True, text=True)
         if result.returncode != 0:
