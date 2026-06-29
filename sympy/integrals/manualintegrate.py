@@ -491,9 +491,15 @@ class TrigPowerRule(AtomicRule):
 
         constant_case = x * sin(b)**n * cos(b)**m
 
-        is_integer = n.is_integer and m.is_integer
-        is_number = n.is_number and m.is_number
-        if not is_integer or not is_number:
+        is_either_integer = n.is_integer or m.is_integer
+        is_both_number = n.is_number and m.is_number
+        is_even_with_noninteger = (n.is_even and not m.is_integer) \
+            or (m.is_even and not n.is_integer)
+        if (
+            not is_either_integer
+            or not is_both_number
+            or is_even_with_noninteger
+        ):
             prefactor = cos(a*x+b)**(m - 1) * (cos(a*x+b)**2)**((1 - m)/2) * \
                 sin(a*x+b)**(n + 1) / (n+1)
             hypergeo = hyper(((1 - m)/2, (n + 1)/2), ((n + 3)/2,),
