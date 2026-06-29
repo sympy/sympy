@@ -138,8 +138,8 @@ def test_invert_real():
 
     assert dumeq(invert_real(sin(exp(x)), y, x), (x,
         ConditionSet(x, (S(-1) <= y) & (y <= S(1)), Union(
-            ImageSet(Lambda(n, log(2*n*pi + asin(y))), S.Integers),
-            ImageSet(Lambda(n, log(pi*2*n + pi - asin(y))), S.Integers)))))
+            ImageSet(Lambda(x, log(x)), Intersection(ImageSet(Lambda(n, 2*n*pi + asin(y)), S.Integers), Interval.open(0, oo))),
+            ImageSet(Lambda(x, log(x)), Intersection(ImageSet(Lambda(n, pi*2*n + pi - asin(y)), S.Integers), Interval.open(0, oo)))))))
 
     assert dumeq(invert_real(csc(x), y, x), (x,
         ConditionSet(x, ((S(1) <= y) & (y < oo)) | ((-oo < y) & (y <= S(-1))),
@@ -148,8 +148,8 @@ def test_invert_real():
 
     assert dumeq(invert_real(csc(exp(x)), y, x), (x,
         ConditionSet(x, ((S(1) <= y) & (y < oo)) | ((-oo < y) & (y <= S(-1))),
-            Union(ImageSet(Lambda(n, log(2*n*pi + acsc(y))), S.Integers),
-                ImageSet(Lambda(n, log(2*n*pi - acsc(y) + pi)), S.Integers)))))
+            Union(ImageSet(Lambda(x, log(x)), Intersection(ImageSet(Lambda(n, 2*n*pi + acsc(y)), S.Integers), Interval.open(0, oo))),
+                ImageSet(Lambda(x, log(x)), Intersection(ImageSet(Lambda(n, 2*n*pi - acsc(y) + pi), S.Integers), Interval.open(0, oo)))))))
 
     assert dumeq(invert_real(cos(x), y, x), (x,
         ConditionSet(x, (S(-1) <= y) & (y <= S(1)), Union(
@@ -158,8 +158,8 @@ def test_invert_real():
 
     assert dumeq(invert_real(cos(exp(x)), y, x), (x,
         ConditionSet(x, (S(-1) <= y) & (y <= S(1)), Union(
-            ImageSet(Lambda(n, log(2*n*pi + acos(y))), S.Integers),
-            ImageSet(Lambda(n, log(2*n*pi - acos(y))), S.Integers)))))
+            ImageSet(Lambda(x, log(x)), Intersection(ImageSet(Lambda(n, 2*n*pi + acos(y)), S.Integers), Interval.open(0, oo))),
+            ImageSet(Lambda(x, log(x)), Intersection(ImageSet(Lambda(n, 2*n*pi - acos(y)), S.Integers), Interval.open(0, oo)))))))
 
     assert dumeq(invert_real(sec(x), y, x), (x,
         ConditionSet(x, ((S(1) <= y) & (y < oo)) | ((-oo < y) & (y <= S(-1))),
@@ -168,8 +168,8 @@ def test_invert_real():
 
     assert dumeq(invert_real(sec(exp(x)), y, x), (x,
         ConditionSet(x, ((S(1) <= y) & (y < oo)) | ((-oo < y) & (y <= S(-1))),
-            Union(ImageSet(Lambda(n, log(2*n*pi - asec(y))), S.Integers),
-                ImageSet(Lambda(n, log(2*n*pi + asec(y))), S.Integers)))))
+            Union(ImageSet(Lambda(x, log(x)), Intersection(ImageSet(Lambda(n, 2*n*pi - asec(y)), S.Integers), Interval.open(0, oo))),
+                ImageSet(Lambda(x, log(x)), Intersection(ImageSet(Lambda(n, 2*n*pi + asec(y)), S.Integers), Interval.open(0, oo)))))))
 
     assert dumeq(invert_real(tan(x), y, x), (x,
         ConditionSet(x, (-oo < y) & (y < oo),
@@ -177,7 +177,7 @@ def test_invert_real():
 
     assert dumeq(invert_real(tan(exp(x)), y, x), (x,
         ConditionSet(x, (-oo < y) & (y < oo),
-            ImageSet(Lambda(n, log(n*pi + atan(y))), S.Integers))))
+            ImageSet(Lambda(x, log(x)), Intersection(ImageSet(Lambda(n, n*pi + atan(y)), S.Integers), Interval.open(0, oo))))))
 
     assert dumeq(invert_real(cot(x), y, x), (x,
         ConditionSet(x, (-oo < y) & (y < oo),
@@ -185,7 +185,7 @@ def test_invert_real():
 
     assert dumeq(invert_real(cot(exp(x)), y, x), (x,
         ConditionSet(x, (-oo < y) & (y < oo),
-            ImageSet(Lambda(n, log(n*pi + acot(y))), S.Integers))))
+            ImageSet(Lambda(x, log(x)), Intersection(ImageSet(Lambda(n, n*pi + acot(y)), S.Integers), Interval.open(0, oo))))))
 
     assert dumeq(invert_real(tan(tan(x)), y, x),
         (x, ConditionSet(x, Eq(tan(tan(x)), y), S.Reals)))
@@ -2441,17 +2441,14 @@ def test_substitution_basic():
 
 @slow
 def test_substitution_incorrect():
-    # the solutions in the following two tests are incorrect. The
-    # correct result is EmptySet in both cases.
+    # The correct result is EmptySet in both cases, which is now correctly returned.
     assert substitution([h - 1, k - 1, f - 2, f - 4, -2 * k],
-                        [h, k, f]) == {(1, 1, f)}
-    assert substitution([x + y + z, S.One, S.One, S.One], [x, y, z]) == \
-                        {(-y - z, y, z)}
+                        [h, k, f]) == S.EmptySet
+    assert substitution([x + y + z, S.One, S.One, S.One], [x, y, z]) == S.EmptySet
 
-    # the correct result in the test below is {(-I, I, I, -I),
-    # (I, -I, -I, I)}
+    # The correct result below is {(-I, I, I, -I), (I, -I, -I, I)}, which is now correctly returned.
     assert substitution([a - d, b + d, c + d, d**2 + 1], [a, b, c, d]) == \
-                        {(d, -d, -d, d)}
+                        {(-I, I, I, -I), (I, -I, -I, I)}
 
     # the result in the test below is incomplete. The complete result
     # is {(0, b), (log(2), 2)}
@@ -2459,10 +2456,10 @@ def test_substitution_incorrect():
            {(0, b)}
 
     # The system in the test below is zero-dimensional, so the result
-    # should have no free symbols
+    # has no free symbols, which is now correctly returned.
     assert substitution([-k*y + 6*x - 4*y, -81*k + 49*y**2 - 270,
                          -3*k*z + k + z**3, k**2 - 2*k + 4],
-                        [x, y, z, k]).free_symbols == {z}
+                        [x, y, z, k]).free_symbols == set()
 
 
 def test_substitution_redundant():
@@ -3473,7 +3470,7 @@ def test_issue_17580():
 def test_issue_17566_actual():
     sys = [2**x + 2**y - 3, 4**x + 9**y - 5]
     # Not clear this is the correct result, but at least no recursion error
-    assert nonlinsolve(sys, x, y) == FiniteSet((log(3 - 2**y)/log(2), y))
+    assert nonlinsolve(sys, x, y) == ConditionSet((x, y), Eq(2**x + 2**y - 3, 0) & Eq(4**x + 9**y - 5, 0), ProductSet(S.Complexes, S.Complexes))
 
 
 def test_issue_17565():
@@ -3541,7 +3538,7 @@ def test_issue_22413():
                          4*x*exp(2*x) + 4*y*exp(2*x + y) + 4*exp(2*x + y) + 1),
                         x, y)
     # First solution is not correct, but the issue was an exception
-    sols = FiniteSet((x, S.Zero), (-exp(y) - S.Half, y))
+    sols = ConditionSet((x, y), Eq(4*y*(2*x + 2*exp(y) + 1)*exp(2*x), 0) & Eq(4*x*exp(2*x) + 4*y*exp(2*x + y) + 4*exp(2*x + y) + 1, 0), ProductSet(S.Complexes, S.Complexes))
     assert res == sols
 
 
@@ -3565,7 +3562,7 @@ def test_issue_23318():
 
 def test_issue_19814():
     assert nonlinsolve([ 2**m - 2**(2*n), 4*2**m - 2**(4*n)], m, n
-                      ) == FiniteSet((log(2**(2*n))/log(2), S.Complexes))
+                      ) == FiniteSet((log(4)/log(2), 1))
 
 
 def test_issue_22058():
@@ -3615,3 +3612,18 @@ def test_issue_26077():
         Complement(S.Reals, excluded_points)
     )
     assert solution.as_dummy() == critical_points.as_dummy()
+
+
+def test_issue_29315():
+    # Verify nonlinsolve handles exponential system correctly
+    assert nonlinsolve([x + y - 4, 2**x + 2**y - 10], [x, y]) == FiniteSet((1, 3), (3, 1))
+
+
+def test_issue_29674():
+    # Verify solveset on sin(exp(x)) returns only real values in S.Reals domain
+    sol = solveset(sin(exp(x)), x, domain=S.Reals)
+    expected = Union(
+        ImageSet(Lambda(n, log(2*n*pi + pi)), Range(0, oo, 1)),
+        ImageSet(Lambda(n, log(2*n*pi + 2*pi)), Range(0, oo, 1))
+    )
+    assert dumeq(sol, expected)

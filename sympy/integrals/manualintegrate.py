@@ -2619,7 +2619,11 @@ def integral_steps(integrand, symbol, **options):
         to obtain a result.
 
     """
-    cachekey = integrand.xreplace({symbol: _cache_dummy})
+    simplified_integrand = integrand.replace(
+        lambda p: p.is_Pow and p.base.is_Pow and p.base.exp == -1,
+        lambda p: Pow(p.base.base, -p.exp)
+    )
+    cachekey = simplified_integrand.xreplace({symbol: _cache_dummy})
     if cachekey in _integral_cache:
         if _integral_cache[cachekey] is None:
             # Stop this attempt, because it leads around in a loop

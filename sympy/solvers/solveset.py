@@ -224,6 +224,8 @@ def _invert_real(f, g_ys, symbol):
     n = Dummy('n', real=True)
 
     if isinstance(f, exp) or (f.is_Pow and f.base == S.Exp1):
+        if g_ys.has(ImageSet):
+            g_ys = g_ys & Interval.open(0, S.Infinity)
         return _invert_real(f.exp,
                             imageset(Lambda(n, log(n)), g_ys),
                             symbol)
@@ -3500,7 +3502,8 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
         elif satisfy_exclude:
             delete_soln = True
             rnew = {}
-        _restore_imgset(rnew, original_imageset, newresult)
+        if not delete_soln:
+            _restore_imgset(rnew, original_imageset, newresult)
         return newresult, delete_soln
 
     def _new_order_result(result, eq):
@@ -3603,7 +3606,10 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                             # one symbol's real soln, another symbol may have
                             # corresponding complex soln.
                             if not isinstance(soln, (ImageSet, ConditionSet)):
-                                soln += solveset_complex(eq2, sym)  # might give ValueError with Abs
+                                c_soln = solveset_complex(eq2, sym)
+                                # Only add if it doesn't contain ConditionSet
+                                if not (isinstance(c_soln, ConditionSet) or (isinstance(c_soln, Union) and any(isinstance(arg, ConditionSet) for arg in c_soln.args))):
+                                    soln += c_soln
 
                         if not isinstance(soln, (FiniteSet, ImageSet, ConditionSet, Union)) and soln is not S.EmptySet:
                             raise NotImplementedError(
@@ -3614,15 +3620,25 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                         # If solveset is not able to solve equation `eq2`. Next
                         # time we may get soln using next equation `eq2`
                         continue
+                    has_cond = False
                     if isinstance(soln, ConditionSet):
-                        if soln.base_set in (S.Reals, S.Complexes):
+                        has_cond = True
+                    elif isinstance(soln, Union) and any(isinstance(arg, ConditionSet) for arg in soln.args):
+                        has_cond = True
+
+                    if has_cond:
+                        base_sets = [arg.base_set if isinstance(arg, ConditionSet) else arg for arg in soln.args] if isinstance(soln, Union) else [soln.base_set]
+                        if all(b in (S.Reals, S.Complexes) for b in base_sets):
                             soln = S.EmptySet
                             # don't do `continue` we may get soln
                             # in terms of other symbol(s)
                             not_solvable = True
                             total_conditionst += 1
                         else:
-                            soln = soln.base_set
+                            if isinstance(soln, Union):
+                                soln = Union(*[arg.base_set if isinstance(arg, ConditionSet) else arg for arg in soln.args])
+                            else:
+                                soln = soln.base_set
 
                     if soln is not S.EmptySet:
                         soln, soln_imageset = _extract_main_soln(
@@ -3670,14 +3686,16 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                     if not not_solvable:
                         got_symbol.add(sym)
             # next time use this new soln
-            if newresult:
-                result = newresult
+            result = newresult
         return result, total_solvest_call, total_conditionst
 
     new_result_real, solve_call1, cnd_call1 = _solve_using_known_values(
         old_result, solveset_real)
     new_result_complex, solve_call2, cnd_call2 = _solve_using_known_values(
         old_result, solveset_complex)
+
+    if not new_result_real and not new_result_complex and (cnd_call1 > 0 or cnd_call2 > 0):
+        return _return_conditionset(eqs_in_better_order, all_symbols)
 
     # If total_solveset_call is equal to total_conditionset
     # then solveset failed to solve all of the equations.
