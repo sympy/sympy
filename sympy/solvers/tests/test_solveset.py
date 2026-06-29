@@ -304,7 +304,6 @@ def test_issue_17479():
     # solution set. The next test checks the result for correctness.
 
 
-@XFAIL
 def test_issue_18449():
     x, y, z = symbols("x, y, z")
     f = (x**2 + y**2)**2 + (x**2 + z**2)**2 - 2*(2*x**2 + y**2 + z**2)
@@ -2439,12 +2438,25 @@ def test_substitution_basic():
         {x + 1}, [y, x]) == S.EmptySet
 
 
+def test_substitution_inconsistent():
+    # https://github.com/sympy/sympy/issues/29969
+    # substitution should return EmptySet for inconsistent systems
+    # rather than a non-empty solution that ignores the contradictions.
+    assert substitution([a - 1, a - 2], [a]) == S.EmptySet
+    assert substitution([h - 1, k - 1, f - 2, f - 4, -2*k],
+                        [h, k, f]) == S.EmptySet
+    # a single contradictory constant residual (==1) used to slip through
+    assert substitution([a, a - 1], [a]) == S.EmptySet
+    assert substitution([a - 1, a], [a]) == S.EmptySet
+    # consistent systems are still solved
+    assert substitution([a - 1, a - 1], [a]) == {(1,)}
+    assert substitution([h - 1, k - 1, f - 2], [h, k, f]) == {(1, 1, 2)}
+
+
 @slow
 def test_substitution_incorrect():
-    # the solutions in the following two tests are incorrect. The
-    # correct result is EmptySet in both cases.
-    assert substitution([h - 1, k - 1, f - 2, f - 4, -2 * k],
-                        [h, k, f]) == {(1, 1, f)}
+    # the solution in the following test is incorrect. The
+    # correct result is EmptySet.
     assert substitution([x + y + z, S.One, S.One, S.One], [x, y, z]) == \
                         {(-y - z, y, z)}
 

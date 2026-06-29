@@ -3444,7 +3444,17 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
         u = Dummy('u')
         if n:
             eq = eq.subs(n, 0)
-        satisfy = eq if eq in (True, False) else checksol(u, u, eq, minimal=True)
+        # Use an identity-based check rather than ``eq in (True, False)``.
+        # The latter relies on ``==`` and so wrongly matches the numbers
+        # ``S.One`` and ``S.Zero`` (since ``S.One == True`` and
+        # ``S.Zero == False``), which would let an inconsistent residual such
+        # as ``1`` be accepted as a solution. Genuine booleans are used as is,
+        # everything else (including numeric residuals) is verified with
+        # ``checksol``.
+        if isinstance(eq, bool) or eq is S.true or eq is S.false:
+            satisfy = bool(eq)
+        else:
+            satisfy = checksol(u, u, eq, minimal=True)
         if satisfy is False:
             delete_soln = True
             res = {}
@@ -3500,7 +3510,13 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
         elif satisfy_exclude:
             delete_soln = True
             rnew = {}
-        _restore_imgset(rnew, original_imageset, newresult)
+        # Only restore/append `rnew` when it is being kept. When `delete_soln`
+        # is set, `rnew` has been reset to an empty dict (the solution was
+        # inconsistent or excluded); appending it would introduce a spurious
+        # constraint-free branch that re-solves the remaining equations and
+        # yields invalid solutions for inconsistent systems.
+        if not delete_soln:
+            _restore_imgset(rnew, original_imageset, newresult)
         return newresult, delete_soln
 
     def _new_order_result(result, eq):
