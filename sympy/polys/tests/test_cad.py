@@ -1,4 +1,6 @@
-from sympy import symbols, And, Or, Lt, Le, Gt, Ge, Eq, Ne, S, sqrt
+from __future__ import annotations
+
+from sympy import symbols, And, Lt, Gt, Eq, S
 from sympy.polys.cad import projection, cad, solve_cad
 
 def test_projection():

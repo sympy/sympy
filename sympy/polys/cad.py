@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Cylindrical Algebraic Decomposition (CAD) solver.
 
 This module provides functions to compute the Cylindrical Algebraic
@@ -105,7 +107,7 @@ def isolate_algebraic_roots(f, sample_point, variables, var):
     f_subs = f.subs(subs_dict)
 
     if not alg_coords:
-        return sorted(list(set(real_roots(f_subs))))
+        return sorted(set(real_roots(f_subs)))
 
     from sympy.polys.numberfields import primitive_element
     t = symbols('t')
@@ -148,7 +150,7 @@ def isolate_algebraic_roots(f, sample_point, variables, var):
         except Exception:
             pass
 
-    return sorted(list(set(filtered_roots)))
+    return sorted(set(filtered_roots))
 
 
 def cad(system, variables):
@@ -165,7 +167,7 @@ def cad(system, variables):
     for f in F1:
         if f.has(variables[0]):
             roots_1d.extend(real_roots(f))
-    sorted_roots = sorted(list(set(roots_1d)))
+    sorted_roots = sorted(set(roots_1d))
 
     cells = []
     if not sorted_roots:
@@ -195,7 +197,7 @@ def cad(system, variables):
                     level_roots.extend(isolate_algebraic_roots(f, s, variables[:k+1], var))
                 except Exception:
                     pass
-            sorted_level_roots = sorted(list(set(level_roots)))
+            sorted_level_roots = sorted(set(level_roots))
 
             if not sorted_level_roots:
                 new_cells.append(CADCell(sample_point=s + (S(0),), cell_type=cell.cell_type + ('interval',)))
@@ -294,7 +296,7 @@ def solve_cad(formula, variables):
     cells = cad(polys, variables)
     matching_cells = []
     for cell in cells:
-        subs_dict = {v: val for v, val in zip(variables, cell.sample_point)}
+        subs_dict = dict(zip(variables, cell.sample_point))
         if evaluate_formula(formula, subs_dict):
             matching_cells.append(cell)
     return matching_cells
