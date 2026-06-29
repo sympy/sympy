@@ -3712,18 +3712,19 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
         # Some or all the soln is dependent on 1 symbol.
         # eg. {x: y+2} then final soln {x: y+2, y: y}
         if len(res) < len(all_symbols):
-            solved_symbols = res.keys()
+            solved_symbols = set(res.keys())
             unsolved = list(filter(
                 lambda x: x not in solved_symbols, all_symbols))
-            for unsolved_sym in unsolved:
-                eqs_with_sym = []
-                subs_dict = {}
-                for k, v in res.items():
+            subs_dict = {}
+            for k, v in res.items():
+                if k in solved_symbols:
                     if isinstance(v, ImageSet):
                         vars = v.lamda.variables
                         subs_dict[k] = v.lamda(*[0 for _ in vars])
                     elif isinstance(v, Expr):
                         subs_dict[k] = v
+            for unsolved_sym in unsolved:
+                eqs_with_sym = []
                 for eq in system:
                     eq_subs = eq.subs(subs_dict).expand()
                     W = Wild('W')
