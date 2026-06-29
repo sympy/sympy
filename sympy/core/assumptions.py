@@ -220,6 +220,9 @@ References
 from __future__ import annotations
 
 from sympy.utilities.exceptions import sympy_deprecation_warning
+import threading
+
+_asking_local = threading.local()
 
 from .facts import FactRules, FactKB
 from .sympify import sympify
@@ -504,41 +507,47 @@ def make_property(fact):
     """Create the automagic property corresponding to a fact."""
 
     def getit(self):
-        try:
-            return self._assumptions[fact]
-        except KeyError:
-            if self._assumptions is self.default_assumptions:
-                self._assumptions = self.default_assumptions.copy()
+        from sympy.assumptions.assume import global_assumptions
+        if global_assumptions:
+            val = self._assumptions.get(fact, None)
+            if val is not None:
+                return val
             return _ask(fact, self)
+        else:
+            try:
+                return self._assumptions[fact]
+            except KeyError:
+                if self._assumptions is self.default_assumptions:
+                    self._assumptions = self.default_assumptions.copy()
+                return _ask(fact, self)
 
     getit.func_name = as_property(fact)
     return property(getit)
 
-
 def _ask(fact, obj):
     """
     Find the truth value for a property of an object.
-
-    This function is called when a request is made to see what a fact
-    value is.
-
-    For this we use several techniques:
-
-    First, the fact-evaluation function is tried, if it exists (for
-    example _eval_is_integer). Then we try related facts. For example
-
-        rational   -->   integer
-
-    another example is joined rule:
-
-        integer & !odd  --> even
-
-    so in the latter case if we are looking at what 'even' value is,
-    'integer' and 'odd' facts will be asked.
-
-    In all cases, when we settle on some fact value, its implications are
-    deduced, and the result is cached in ._assumptions.
     """
+    from sympy.assumptions.assume import global_assumptions
+    if global_assumptions:
+        if not hasattr(_asking_local, 'active'):
+            _asking_local.active = set()
+
+        query = (id(obj), fact)
+        if query not in _asking_local.active:
+            _asking_local.active.add(query)
+            try:
+                from sympy.assumptions import ask, Q
+                pred = getattr(Q, fact, None)
+                if pred is not None:
+                    val = ask(pred(obj))
+                    if val is not None:
+                        return val
+            except (ImportError, TypeError, ValueError):
+                pass
+            finally:
+                _asking_local.active.remove(query)
+
     # FactKB which is dict-like and maps facts to their known values:
     assumptions = obj._assumptions
 
