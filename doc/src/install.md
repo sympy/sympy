@@ -21,7 +21,7 @@ that pull from PyPi like hatch, poetry, or uv can also be used.
 
 SymPy is packaged for Conda based installers and [available for download on
 anaconda.org](https://anaconda.org/search?q=sympy). Install either
-[Anaconda](https://www.anaconda.com/products/distribution) or
+[Anaconda](https://www.anaconda.com/download) or
 [Miniconda](https://docs.anaconda.com/miniconda/) and the SymPy distributed
 with Anaconda can be installed with:
 
