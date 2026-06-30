@@ -932,15 +932,15 @@ def evalf_trig(v: Expr, prec: int, options: OPT_DICT) -> TMP_RES:
         return func(re, prec, rnd), None, prec, None
     # Very large
     if xsize >= 10:
-        xprec = prec + xsize
+        xprec = prec + xsize + 20
         re, im, re_acc, im_acc = evalf(arg, xprec, options)
     # Need to repeat in case the argument is very close to a
     # multiple of pi (or pi/2), hitting close to a root
     while 1:
-        y = func(re, prec, rnd)
+        y = func(re, xprec, rnd)
         ysize = fastlog(y)
         gap = -ysize
-        accuracy = (xprec - xsize) - gap
+        accuracy = (prec - xsize) - gap
         if accuracy < prec:
             if options.get('verbose'):
                 print("SIN/COS/TAN", accuracy, "wanted", prec, "gap", gap)
