@@ -1674,7 +1674,7 @@ def _parts_rule(integrand, symbol) -> tuple[Expr, Expr, Expr, Expr, Rule] | None
         # Prefer forms that are easier to integrate,
         # x*exp(-x**2) instead of exp(-x**2)
         # x*sin(x**2) instead of sin(x**2)
-        n_ = Wild('n', exclude=[symbol], properties=[lambda n: n.is_Integer and n > 1])
+        n_ = Wild('n', exclude=[symbol], properties=[lambda n: isinstance(n, Integer) and n > 1])
         rest_ = Wild('rest')
         a_ = Wild('a', exclude=[symbol], properties=[lambda a: not a.is_zero])
         b_ = Wild('b', exclude=[symbol])
