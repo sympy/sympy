@@ -7,7 +7,9 @@ from sympy.core.numbers import Number
 from sympy.core.singleton import S
 from sympy.core.sympify import sympify
 
-from sympy.tensor.algebraic.algebraic_pure_tensor import AlgebraicPureTensor, _factor_shapes
+from sympy.tensor.algebraic.algebraic_pure_tensor import (
+    AlgebraicPureTensor, _factor_shapes, _factor_has_noncommutative
+)
 from sympy.tensor.algebraic.algebraic_zero_tensor import AlgebraicZeroTensor, algebraic_zero_tensor
 
 
@@ -33,6 +35,31 @@ def _tensor_shape_of(expr):
                 return f.shape
     if hasattr(expr, "shape"):
         return (expr.shape,)
+    return None
+
+
+def _commutativity_shape_of(expr):
+    """Return the commutativity_shape of *expr*, or None if not determinable.
+
+    Handles AlgebraicPureTensor, AlgebraicZeroTensor, AlgebraicTensor,
+    Mul(coeff, AlgebraicPureTensor), and bare matrix-like objects.
+    """
+    if isinstance(expr, AlgebraicPureTensor):
+        return expr.commutativity_shape
+    if isinstance(expr, AlgebraicZeroTensor):
+        return tuple(1 for _ in expr.shape)
+    if isinstance(expr, AlgebraicTensor):
+        return expr.commutativity_shape
+    if isinstance(expr, Mul) and not isinstance(expr, AlgebraicPureTensor):
+        for f in expr.args:
+            if isinstance(f, AlgebraicPureTensor):
+                return f.commutativity_shape
+            if isinstance(f, AlgebraicZeroTensor):
+                return tuple(1 for _ in f.shape)
+    if hasattr(expr, "shape"):
+        if _factor_has_noncommutative(expr):
+            return (0,)
+        return (1,)
     return None
 
 
@@ -209,7 +236,7 @@ class AlgebraicTensor(Basic):
                 return arg[0]
 
         # Flatten nested AlgebraicTensors and collect all leaf terms
-        flat, shape, zero_term = cls._flatten_args(args)
+        flat, shape, zero_term, comm_cs = cls._flatten_args(args)
 
         if not flat:
             if zero_term is not None:
@@ -243,13 +270,17 @@ class AlgebraicTensor(Basic):
 
         Returns
         -------
-        (terms : list, shape : tuple | None, zero_term : AlgebraicZeroTensor | None)
+        (terms : list, shape : tuple | None, zero_term : AlgebraicZeroTensor | None,
+         commutativity_shape : tuple | None)
 
         *shape* is a tuple of per-factor (rows, cols) pairs, e.g.
         ``((3, 4), (4, 5))``.
+        *commutativity_shape* is a tuple of binary entries, same length as shape,
+        representing the component-wise AND of all term commutativity_shapes.
         """
         shape = None
         zero_term = None
+        comm_cs = None
         terms = []
 
         work = list(args)
@@ -260,6 +291,7 @@ class AlgebraicTensor(Basic):
                 candidate = o.shape
                 if shape is None:
                     shape = candidate
+                    comm_cs = tuple(1 for _ in shape)
                 elif candidate != shape:
                     raise ShapeMismatchError(
                         f"Cannot add tensors of different shapes: "
@@ -269,6 +301,8 @@ class AlgebraicTensor(Basic):
                 continue
 
             if isinstance(o, AlgebraicTensor):
+                if comm_cs is not None:
+                    comm_cs = tuple(r & c for r, c in zip(comm_cs, o.commutativity_shape))
                 work.extend(o.args)
                 continue
 
@@ -276,11 +310,14 @@ class AlgebraicTensor(Basic):
                 candidate = o.tensor_shape
                 if shape is None:
                     shape = candidate
+                    comm_cs = tuple(1 for _ in shape)
                 elif candidate != shape:
                     raise ShapeMismatchError(
                         f"Cannot add tensors of different shapes: "
                         f"{shape} vs {candidate}"
                     )
+                if comm_cs is not None:
+                    comm_cs = tuple(r & c for r, c in zip(comm_cs, o.commutativity_shape))
                 terms.append(o)
                 continue
 
@@ -289,11 +326,15 @@ class AlgebraicTensor(Basic):
                 if candidate is not None:
                     if shape is None:
                         shape = candidate
+                        comm_cs = tuple(1 for _ in shape)
                     elif candidate != shape:
                         raise ShapeMismatchError(
                             f"Cannot add tensors of different shapes: "
                             f"{shape} vs {candidate}"
                         )
+                cs = _commutativity_shape_of(o)
+                if cs is not None and comm_cs is not None:
+                    comm_cs = tuple(r & c for r, c in zip(comm_cs, cs))
                 terms.append(o)
                 continue
 
@@ -306,14 +347,18 @@ class AlgebraicTensor(Basic):
             if candidate is not None:
                 if shape is None:
                     shape = candidate
+                    comm_cs = tuple(1 for _ in shape)
                 elif candidate != shape:
                     raise ShapeMismatchError(
                         f"Cannot add tensors of different shapes: "
                         f"{shape} vs {candidate}"
                     )
+            cs = _commutativity_shape_of(o)
+            if cs is not None and comm_cs is not None:
+                comm_cs = tuple(r & c for r, c in zip(comm_cs, cs))
             terms.append(o)
 
-        return terms, shape, zero_term
+        return terms, shape, zero_term, comm_cs
 
     @property
     def tensor_shape(self):
@@ -327,6 +372,23 @@ class AlgebraicTensor(Basic):
             if ts is not None:
                 return ts
         raise AttributeError("Cannot determine tensor_shape")
+
+    @property
+    def commutativity_shape(self):
+        """Component-wise AND of commutativity_shape over all terms in this sum.
+
+        For AlgebraicTensor operands, uses their stored commutativity_shape
+        rather than recomputing from individual PureTensor factors.
+        """
+        ts = self.tensor_shape
+        if ts is None:
+            raise AttributeError("Cannot determine commutativity_shape without tensor_shape")
+        result = tuple(1 for _ in ts)
+        for arg in self.args:
+            cs = _commutativity_shape_of(arg)
+            if cs is not None:
+                result = tuple(r & c for r, c in zip(result, cs))
+        return result
 
     @property
     def terms(self):

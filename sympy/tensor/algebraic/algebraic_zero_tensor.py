@@ -34,6 +34,11 @@ class AlgebraicZeroTensor:
     def tensor_shape(self):
         return self._shape
 
+    @property
+    def commutativity_shape(self):
+        """All-1s tuple — a zero tensor is commutative in every slot."""
+        return tuple(1 for _ in self._shape)
+
     def __neg__(self):
         return self
 

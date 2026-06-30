@@ -16,6 +16,19 @@ def _factor_shapes(factors):
     return tuple(f.shape for f in factors)
 
 
+def _factor_has_noncommutative(factor):
+    """Return True if *factor* contains any noncommutative symbol.
+
+    Checks ``factor.free_symbols`` for any symbol with ``is_commutative is False``
+    (e.g., MatrixSymbol or Symbol with commutative=False).  Concrete numeric
+    matrices have empty free_symbols and are considered commutative.
+    """
+    for sym in getattr(factor, 'free_symbols', set()):
+        if getattr(sym, 'is_commutative', True) is False:
+            return True
+    return False
+
+
 class AlgebraicPureTensor(Mul):
     """Pure tensor as an unevaluated (non-commutative) tensor product of factors.
 
@@ -66,6 +79,18 @@ class AlgebraicPureTensor(Mul):
         E.g. ``AlgebraicPureTensor(A_3x4, C_4x5).tensor_shape == ((3, 4), (4, 5))``.
         """
         return _factor_shapes(self.factors)
+
+    @property
+    def commutativity_shape(self):
+        """Tuple of binary entries indicating per-factor commutativity.
+
+        Entry i is 1 if the i-th tensor factor contains no noncommutative symbols,
+        0 otherwise.  Same length as ``tensor_shape``.
+        """
+        return tuple(
+            0 if _factor_has_noncommutative(f) else 1
+            for f in self.factors
+        )
 
     def __str__(self):
         coeff = self._get_coeff()
