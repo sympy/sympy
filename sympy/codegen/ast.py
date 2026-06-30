@@ -604,7 +604,7 @@ class CodeBlock(CodegenAST):
 
     ``left_hand_sides``:
         Tuple of left-hand sides of assignments, in order.
-    ``left_hand_sides``:
+    ``right_hand_sides``:
         Tuple of right-hand sides of assignments, in order.
     ``free_symbols``: Free symbols of the expressions in the right-hand sides
         which do not appear in the left-hand side of an assignment.
