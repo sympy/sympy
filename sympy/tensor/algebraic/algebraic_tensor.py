@@ -485,6 +485,26 @@ class AlgebraicTensor(Basic):
         from sympy.tensor.algebraic.simplify import _simplify_algebraic_tensor
         return _simplify_algebraic_tensor(self)
 
+    def expand(self, deep=True, **hints):
+        """Expand this AlgebraicTensor by expanding each term.
+
+        Each term is expanded individually, and the results are reassembled
+        into a single AlgebraicTensor (flattening any nested sums).
+        """
+        expanded_args = []
+        for a in self.args:
+            if isinstance(a, AlgebraicZeroTensor):
+                expanded_args.append(a)
+            elif hasattr(a, 'expand'):
+                expanded_args.append(a.expand(deep=deep, **hints))
+            else:
+                expanded_args.append(a)
+
+        if expanded_args == list(self.args):
+            return self
+
+        return AlgebraicTensor(*expanded_args)
+
 
 # Register AlgebraicTensor with the SymPy add dispatcher so that
 # expressions like (A + B) where A/B involve PureTensor or AlgebraicTensor

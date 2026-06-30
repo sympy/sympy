@@ -26,16 +26,3 @@ __all__ = [
     "tensorsimplify",
     "proportionality_factoring",
 ]
-
-# Backward compatibility aliases
-PureTensor = AlgebraicPureTensor
-ZeroTensor = AlgebraicZeroTensor
-tensor_product = algebraic_tensor_product
-zero_tensor = algebraic_zero_tensor
-
-__all__.extend([
-    "PureTensor",
-    "ZeroTensor",
-    "tensor_product",
-    "zero_tensor",
-])

@@ -90,13 +90,56 @@ class AlgebraicPureTensor(Mul):
         args_list = list(args)
         coeff = S.One
 
-        if args_list and isinstance(args_list[0], Number):
-            coeff = args_list[0]
-            args_list = args_list[1:]
-        elif args_list and len(args_list) > 1 and hasattr(args_list[0], 'is_commutative') \
-                and args_list[0].is_commutative and not isinstance(args_list[0], AlgebraicPureTensor):
-            coeff = sympify(args_list[0])
-            args_list = args_list[1:]
+        if args_list:
+            first = args_list[0]
+            if isinstance(first, Number):
+                coeff = first
+                args_list = args_list[1:]
+            elif len(args_list) > 1:
+                first_s = sympify(first)
+                if isinstance(first_s, Number) or (
+                    hasattr(first_s, 'is_commutative') and
+                    first_s.is_commutative and
+                    not isinstance(first_s, AlgebraicPureTensor)
+                ):
+                    coeff = first_s
+                    args_list = args_list[1:]
+            elif len(args_list) > 1:
+                first_s = sympify(first)
+                if isinstance(first_s, Number) or (
+                    hasattr(first_s, 'is_commutative') and
+                    first_s.is_commutative and
+                    not isinstance(first_s, AlgebraicPureTensor)
+                ):
+                    coeff = first_s
+                    args_list = args_list[1:]
+            elif len(args_list) > 1:
+                first_s = sympify(first)
+                if isinstance(first_s, Number) or (
+                    hasattr(first_s, 'is_commutative') and
+                    first_s.is_commutative and
+                    not isinstance(first_s, AlgebraicPureTensor)
+                ):
+                    coeff = first_s
+                    args_list = args_list[1:]
+            elif len(args_list) > 1:
+                first_s = sympify(first)
+                if isinstance(first_s, Number) or (
+                    hasattr(first_s, 'is_commutative') and
+                    first_s.is_commutative and
+                    not isinstance(first_s, AlgebraicPureTensor)
+                ):
+                    coeff = first_s
+                    args_list = args_list[1:]
+            elif len(args_list) > 1:
+                first_s = sympify(first)
+                if isinstance(first_s, Number) or (
+                    hasattr(first_s, 'is_commutative') and
+                    first_s.is_commutative and
+                    not isinstance(first_s, AlgebraicPureTensor)
+                ):
+                    coeff = first_s
+                    args_list = args_list[1:]
 
         processed = []
         for a in args_list:
@@ -267,6 +310,57 @@ class AlgebraicPureTensor(Mul):
     def simplify(self):
         from sympy.tensor.algebraic.simplify import _simplify_algebraic_pure_tensor
         return _simplify_algebraic_pure_tensor(self)
+
+    def _eval_expand_mul(self, **hints):
+        from sympy.core.add import Add
+        from sympy.tensor.algebraic.algebraic_tensor import AlgebraicTensor
+        from itertools import product
+
+        deep = hints.pop('deep', True)
+        coeff = self._get_coeff()
+        factors = self.factors
+
+        expanded_factors = []
+        for f in factors:
+            if hasattr(f, 'expand'):
+                expanded_factors.append(f.expand(deep=deep, **hints))
+            else:
+                expanded_factors.append(f)
+
+        add_slots = [i for i, f in enumerate(expanded_factors)
+                     if isinstance(f, Add)]
+
+        if not add_slots:
+            if expanded_factors == list(factors):
+                return self
+            if coeff is S.One:
+                if len(expanded_factors) == 1:
+                    return expanded_factors[0]
+                return AlgebraicPureTensor(*expanded_factors)
+            if not expanded_factors:
+                return coeff
+            return AlgebraicPureTensor(coeff, *expanded_factors)
+
+        choices = []
+        for f in expanded_factors:
+            if isinstance(f, Add):
+                choices.append(f.args)
+            else:
+                choices.append((f,))
+
+        terms = []
+        for combination in product(*choices):
+            if coeff is S.One:
+                if len(combination) == 1:
+                    terms.append(combination[0])
+                else:
+                    terms.append(AlgebraicPureTensor(*combination))
+            else:
+                terms.append(AlgebraicPureTensor(coeff, *combination))
+
+        if len(terms) == 1:
+            return terms[0]
+        return AlgebraicTensor(*terms)
 
 
 def algebraic_tensor_product(*args):

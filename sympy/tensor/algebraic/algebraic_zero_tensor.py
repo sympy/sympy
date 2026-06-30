@@ -38,12 +38,10 @@ class AlgebraicZeroTensor:
         return self
 
     def __add__(self, other):
-        from sympy.tensor.algebraic.algebraic_tensor import AlgebraicTensor
-        return AlgebraicTensor(self, other)
+        return other
 
     def __radd__(self, other):
-        from sympy.tensor.algebraic.algebraic_tensor import AlgebraicTensor
-        return AlgebraicTensor(other, self)
+        return other
 
     def __sub__(self, other):
         from sympy.tensor.algebraic.algebraic_tensor import AlgebraicTensor
@@ -80,6 +78,10 @@ class AlgebraicZeroTensor:
 
     def simplify(self):
         """Return self unchanged. A zero tensor is already in simplest form."""
+        return self
+
+    def expand(self, **kwargs):
+        """Return self unchanged. A zero tensor is already in expanded form."""
         return self
 
 
