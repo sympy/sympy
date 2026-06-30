@@ -1,7 +1,14 @@
 from __future__ import annotations
 
 import time
-import numpy as np
+import shutil
+import pytest
+
+if not shutil.which("g++"):
+    pytest.skip("g++ compiler not found, skipping JIT tests.", allow_module_level=True)
+
+np = pytest.importorskip("numpy")
+
 import sympy as sp
 import os
 from sympy.codegen.cpp_jit import cpp_jit
