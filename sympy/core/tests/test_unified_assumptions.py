@@ -31,13 +31,13 @@ def test_unified_assumptions_compound():
 
 def test_unified_assumptions_cache_coherency():
     x = Symbol('x')
-    
+
     # Pre-cache x.is_positive as None
     assert x.is_positive is None
-    
+
     # Verify that the cache is successfully bypassed and returns True inside assuming context
     with assuming(Q.positive(x)):
         assert x.is_positive is True
-        
+
     # Verify that exiting the context reverts back to None and does not leak the True value
     assert x.is_positive is None

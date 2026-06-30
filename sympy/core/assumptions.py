@@ -508,7 +508,9 @@ def make_property(fact):
 
     def getit(self):
         from sympy.assumptions.assume import global_assumptions
-        if global_assumptions:
+        if not hasattr(_asking_local, 'asking'):
+            _asking_local.asking = 0
+        if global_assumptions and _asking_local.asking == 0:
             val = self._assumptions.get(fact, None)
             if val is not None:
                 return val
@@ -529,13 +531,16 @@ def _ask(fact, obj):
     Find the truth value for a property of an object.
     """
     from sympy.assumptions.assume import global_assumptions
-    if global_assumptions:
+    if not hasattr(_asking_local, 'asking'):
+        _asking_local.asking = 0
+    if global_assumptions and _asking_local.asking == 0:
         if not hasattr(_asking_local, 'active'):
             _asking_local.active = set()
 
         query = (id(obj), fact)
         if query not in _asking_local.active:
             _asking_local.active.add(query)
+            _asking_local.asking += 1
             try:
                 from sympy.assumptions import ask, Q
                 pred = getattr(Q, fact, None)
@@ -546,6 +551,7 @@ def _ask(fact, obj):
             except (ImportError, TypeError, ValueError):
                 pass
             finally:
+                _asking_local.asking -= 1
                 _asking_local.active.remove(query)
 
     # FactKB which is dict-like and maps facts to their known values:
