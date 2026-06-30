@@ -4,7 +4,7 @@ from sympy import Symbol, assuming, Q
 
 def test_unified_assumptions_basic():
     x = Symbol('x')
-    
+
     # 1. Verification of default status (None)
     assert x.is_positive is None
 
