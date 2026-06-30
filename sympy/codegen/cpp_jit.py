@@ -37,7 +37,7 @@ class CPPJITFunction:
             raise ValueError("No arguments provided")
 
         first_arg = args[0]
-        
+
         # Check if numpy is available and first_arg is/contains a numpy array
         try:
             import numpy as np

@@ -256,14 +256,14 @@ def integrate_algebraic_risch(f: Expr, x: Symbol, y: Symbol, Q_x: Expr) -> Expr:
         deg_N = N_x.degree(x) if hasattr(N_x, 'degree') else degree(N_x, x)
         deg_Q = Q_x.degree(x) if hasattr(Q_x, 'degree') else degree(Q_x, x)
         deg_B = max(deg_N - deg_Q + 1, 0)
-        
+
         coeff_symbols = []
         B_expr = S.Zero
         for d in range(deg_B + 1):
             c = Symbol(f"b{d}")
             coeff_symbols.append(c)
             B_expr += c * x**d
-            
+
         eq = cancel(2 * diff(B_expr, x) * Q_x + B_expr * diff(Q_x, x) - N_x)
         eqs = [eq.coeff(x, d) for d in range(degree(eq, x) + 1)]
         sol = solve(eqs, coeff_symbols)

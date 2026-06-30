@@ -25,10 +25,10 @@ def test_place_valuation():
 def test_divisor_arithmetic():
     P1 = Place(S.Zero, S.Zero)
     P2 = Place(S.One, S.Zero)
-    
+
     div1 = Divisor({P1: 1, P2: -1})
     div2 = Divisor({P1: 2, P2: 3})
-    
+
     assert div1 + div2 == Divisor({P1: 3, P2: 2})
     assert div1 - div2 == Divisor({P1: -1, P2: -4})
     assert 3 * div1 == Divisor({P1: 3, P2: -3})
@@ -51,7 +51,7 @@ def test_coates_torsion_divisor():
 
 def test_integrate_algebraic_risch():
     x, y = symbols('x y')
-    
+
     # 1. Purely algebraic differential: (3*x**2 + 1)/(2*y) on y**2 = x**3 + x
     # Integral is y
     Q1 = x**3 + x

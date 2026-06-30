@@ -46,7 +46,7 @@ def test_solve_cad():
     # Solve unit disk: x**2 + y**2 < 1
     formula = Lt(x**2 + y**2, 1)
     matching_cells = solve_cad(formula, [x, y])
-    
+
     # Verify that the cell with sample point (0, 0) is matching
     assert any(cell.sample_point == (0, 0) for cell in matching_cells)
     # Verify that cells far away do not match
@@ -60,11 +60,11 @@ def test_solve_cad_triangle():
     # Solve a standard triangle: x > 0 and y > 0 and x + y < 1
     formula = And(Gt(x, 0), Gt(y, 0), Lt(x + y, 1))
     matching_cells = solve_cad(formula, [x, y])
-    
+
     assert len(matching_cells) > 0
     # The point (1/2, 1/4) should be in the solution
     assert any(cell.sample_point == (S(1)/2, S(1)/4) for cell in matching_cells)
-    
+
     # Check that all matching cells are indeed in the triangle
     for cell in matching_cells:
         sx, sy = cell.sample_point
@@ -79,7 +79,7 @@ def test_solve_cad_algebraic_lifting():
     # Roots: (sqrt(2), 2**(1/4)) and (sqrt(2), -2**(1/4))
     formula = And(Eq(x**2 - 2, 0), Eq(y**2 - x, 0))
     matching_cells = solve_cad(formula, [x, y])
-    
+
     assert len(matching_cells) == 2
     # Verify that the coordinates are algebraic roots
     coords = [cell.sample_point for cell in matching_cells]
@@ -93,12 +93,9 @@ def test_solve_qe():
     formula1 = Exists(y, Lt(x**2 + y**2, 1))
     res1 = solve_qe(formula1)
     assert res1 == Lt(x**2 - 1, 0)
-    
+
     # 2. Universal quantifier: ForAll(y, y**2 >= x)
     # This should eliminate y and return x <= 0
     formula2 = ForAll(y, Ge(y**2 - x, 0))
     res2 = solve_qe(formula2)
-    # The simplifier simplifies Or(Lt(x, 0), Eq(x, 0)) to Le(x, 0)
     assert res2 == Le(x, 0)
-
-
