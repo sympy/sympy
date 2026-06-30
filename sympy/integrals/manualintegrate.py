@@ -1670,7 +1670,34 @@ def _parts_rule(integrand, symbol) -> tuple[Expr, Expr, Expr, Expr, Rule] | None
 
         return pull_out_u_rl
 
-    liate_rules = [pull_out_u(*special_error_functions), pull_out_u(log),
+    def pull_out_dv(*functions) -> Callable[[Expr], tuple[Expr, Expr] | None]:
+        # Prefer forms that are easier to integrate,
+        # x*exp(-x**2) instead of exp(-x**2)
+        # x*sin(x**2) instead of sin(x**2)
+        n_ = Wild('n', exclude=[symbol], properties=[lambda n: n.is_Integer and n > 1])
+        rest_ = Wild('rest')
+        a_ = Wild('a', exclude=[symbol], properties=[lambda a: not a.is_zero])
+        b_ = Wild('b', exclude=[symbol])
+        c_ = Wild('c', exclude=[symbol])
+        dv_pattern = rest_ * symbol**n_
+        inner_pattern = a_ * symbol ** 2 + b_ * symbol + c_
+
+        def pull_out_dv_rl(integrand: Expr) -> tuple[Expr, Expr] | None:
+            if integrand.match(dv_pattern) and any(integrand.has(f) for f in functions):
+                for target in integrand.args:
+                    if not any(isinstance(target, cls) for cls in functions):
+                        continue
+                    inner = target.args[0]
+                    if inner.match(inner_pattern):
+                        dv = target * symbol
+                        u = integrand / dv
+                        return u, dv
+            return None
+
+        return pull_out_dv_rl
+
+    liate_rules = [pull_out_dv(exp), pull_out_dv(sin, cos),
+                   pull_out_u(*special_error_functions), pull_out_u(log),
                    pull_out_u(*inverse_trig_functions), pull_out_algebraic,
                    pull_out_u(sin, cos), pull_out_u(sinh, cosh),
                    pull_out_u(exp)]
@@ -1718,7 +1745,7 @@ def _parts_rule(integrand, symbol) -> tuple[Expr, Expr, Expr, Expr, Rule] | None
 
             # make sure dv is amenable to integration
             accept = False
-            if index < 2:  # log and inverse trig are usually worth trying
+            if index < 5:  # log and inverse trig are usually worth trying
                 accept = True
             elif (rule == pull_out_algebraic and dv.args and
                 all(isinstance(a, (sin, cos, exp))
