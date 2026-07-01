@@ -1175,6 +1175,72 @@ def test_DomainMatrix_charpoly_factor_list():
     ]
 
 
+def test_DomainMatrix_ground_eigenvals():
+    A = DomainMatrix([], (0, 0), ZZ)
+    assert A.ground_eigenvals() == {}
+    assert A.to_sparse().ground_eigenvals() == {}
+
+    A = DomainMatrix.zeros((3, 3), QQ)
+    assert A.ground_eigenvals() == {QQ(0): 3}
+    assert A.to_sparse().ground_eigenvals() == {QQ(0): 3}
+
+    A = DM([[0, 1], [1, 0]], ZZ)
+    assert A.ground_eigenvals() == {ZZ(1): 1, ZZ(-1): 1}
+    assert A.to_sparse().ground_eigenvals() == {ZZ(1): 1, ZZ(-1): 1}
+
+    A = DM([[0, 1], [-1, 0]], QQ)
+    assert A.ground_eigenvals() == {}
+    assert A.to_sparse().ground_eigenvals() == {}
+
+    A = DM([[0, 1], [-1, 0]], QQ_I)
+    assert A.ground_eigenvals() == {QQ_I(0, 1): 1, QQ_I(0, -1): 1}
+
+    A = DM([[4, 1, 0, 0],
+            [-3, QQ(1, 2), 0, 0],
+            [0, 0, 2, QQ(3, 2)],
+            [0, 0, 0, 2]], QQ)
+    assert A.ground_eigenvals() == {QQ(2): 3, QQ(5, 2): 1}
+
+    A = DM([[1, 2]], QQ)
+    raises(DMNonSquareMatrixError, lambda: A.ground_eigenvals())
+
+
+def test_DomainMatrix_ground_eigenvects():
+    A = DomainMatrix([], (0, 0), ZZ)
+    assert A.ground_eigenvects() == []
+    assert A.to_sparse().ground_eigenvects() == []
+
+    A = DomainMatrix.zeros((3, 3), QQ)
+    assert A.ground_eigenvects() == [(QQ(0), 3, DomainMatrix.eye(3, QQ))]
+
+    A = DM([[0, 1], [1, 0]], ZZ)
+    for B in (A, A.to_sparse()):
+        for l, m, V in B.ground_eigenvects():
+            assert l == ZZ(-1) or l == ZZ(1)
+            assert m == 1 and V.shape == (2, m)
+            assert B * V == l * V
+
+    A = DM([[0, 1], [-1, 0]], QQ)
+    assert A.ground_eigenvects() == []
+    assert A.to_sparse().ground_eigenvects() == []
+
+    A = DM([[4, 1, 0, 0],
+            [-3, QQ(1, 2), 0, 0],
+            [0, 0, 2, QQ(3, 2)],
+            [0, 0, 0, 2]], QQ)
+    for B in (A, A.to_sparse()):
+        for l, m, V in B.ground_eigenvects():
+            assert l == QQ(2) or l == QQ(5, 2)
+            assert B * V == l * V
+            if l == QQ(2):
+                assert m == 3 and V.shape == (4, 2) and V.rank() == 2
+            elif l == QQ(5, 2):
+                assert m == 1 and V.shape == (4, 1) and V.rank() == 1
+
+    A = DM([[1, 2]], QQ)
+    raises(DMNonSquareMatrixError, lambda: A.ground_eigenvects())
+
+
 def test_DomainMatrix_eye():
     A = DomainMatrix.eye(3, QQ)
     assert A.rep == SDM.eye((3, 3), QQ)
