@@ -305,6 +305,11 @@ def test_manualintegrate_special():
     assert_is_integral_of(f, F)
 
 
+def test_issue_29910():
+    f = x**2*exp(-x**2)
+    F = -x*exp(-x**2)/2 + sqrt(pi)*erf(x)/4
+    assert_is_integral_of(f, F)
+
 
 @slow
 def test_manualintegrate_special_slow():

@@ -2236,3 +2236,14 @@ def test_issue_15566():
     assert isinstance(result, Piecewise)
 
     assert result.has(erf)
+
+
+@slow
+def test_issue_29910():
+    # integrate(x**2*exp(-x**2)*ln(x), x)
+    f = x**2*exp(-x**2)*log(x)
+    F = -x*hyper((Rational(1, 2), Rational(1, 2)), (Rational(3, 2), Rational(3, 2)), -x**2) \
+        * S.One/2 - x*exp(-x**2)*log(x) * S.One/2 + sqrt(pi)*log(x)*erf(x) * S.One/4 \
+        + sqrt(pi)*erf(x) * S.One/4
+
+    assert integrate(f, x) == F
