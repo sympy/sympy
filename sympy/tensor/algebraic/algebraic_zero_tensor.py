@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+from sympy.core.basic import Atom
 
-class AlgebraicZeroTensor:
+
+class AlgebraicZeroTensor(Atom):
     """Zero tensor carrying a specific tensor shape.
 
     An AlgebraicZeroTensor of shape ``((m0, n0), (m1, n1), ...)`` acts as the additive
@@ -12,40 +14,55 @@ class AlgebraicZeroTensor:
     The shape is a tuple of (rows, cols) pairs, one per tensor-product factor.
     For a single-matrix tensor of shape ``(m, n)`` the canonical form is
     ``((m, n),)`` (a one-element tuple).
+
+    Extends ``Atom`` (a leaf ``Basic`` subclass) to integrate with SymPy's
+    expression system: ``sympify()``, tree traversal (``atoms()``, ``has()``,
+    ``replace()``), the assumptions system (``is_zero``, ``is_commutative``),
+    and generic operations (``subs()``, ``xreplace()``, ``doit()``).
     """
 
-    __slots__ = ("_shape",)
-    is_AlgebraicZeroTensor = True
+    __slots__ = ()
 
-    def __init__(self, shape):
+    is_AlgebraicZeroTensor = True
+    is_zero = True
+    is_commutative = True
+
+    def __new__(cls, shape):
         # Normalise to a tuple of (rows, cols) tuples.
         # Accept: ((3,4), (4,5)), [(3,4)], plain (3,4), [3,4], etc.
         shape = tuple(shape)
         if len(shape) == 2 and not isinstance(shape[0], tuple):
-            # Bare (m, n) or [m, n] → wrap as ((m, n),)
+            # Bare (m, n) or [m, n] -> wrap as ((m, n),)
             shape = (shape,)
-        self._shape = tuple(tuple(s) for s in shape)
+        shape = tuple(tuple(s) for s in shape)
+        obj = Atom.__new__(cls, shape)
+        return obj
 
     @property
     def shape(self):
-        return self._shape
+        """The tensor shape stored in _args[0]."""
+        return self._args[0]
 
     @property
     def tensor_shape(self):
-        return self._shape
+        """Alias for ``shape`` -- the full tensor shape tuple."""
+        return self._args[0]
 
     @property
     def commutativity_shape(self):
-        """All-1s tuple — a zero tensor is commutative in every slot."""
-        return tuple(1 for _ in self._shape)
+        """All-1s tuple -- a zero tensor is commutative in every slot."""
+        return tuple(1 for _ in self._args[0])
 
     def __neg__(self):
+        """Negation of zero is zero."""
         return self
 
     def __add__(self, other):
+        """Additive identity -- return the other operand unchanged."""
         return other
 
     def __radd__(self, other):
+        """Additive identity -- return the other operand unchanged."""
         return other
 
     def __sub__(self, other):
@@ -64,26 +81,14 @@ class AlgebraicZeroTensor:
         """Composition of a zero tensor from the left returns the zero tensor."""
         return self
 
-    def __eq__(self, other):
-        if isinstance(other, AlgebraicZeroTensor):
-            return self._shape == other._shape
-        return NotImplemented
-
-    def __hash__(self):
-        return hash(("AlgebraicZeroTensor", self._shape))
-
     def __repr__(self):
-        return f"AlgebraicZeroTensor{self._shape}"
+        return f"AlgebraicZeroTensor{self._args[0]}"
 
     def __str__(self):
-        return f"0_{self._shape}"
+        return f"0_{self._args[0]}"
 
     def __bool__(self):
         return False
-
-    def simplify(self):
-        """Return self unchanged. A zero tensor is already in simplest form."""
-        return self
 
     def expand(self, **kwargs):
         """Return self unchanged. A zero tensor is already in expanded form."""
@@ -97,8 +102,8 @@ def algebraic_zero_tensor(shape):
     ----------
     shape : tuple of tuples, or a single (rows, cols) pair
         The full tensor shape, e.g. ``((3, 4), (4, 5))`` for a product
-        of a 3×4 matrix and a 4×5 matrix, or ``((3, 4),)`` for a single
-        3×4 factor.  A bare pair ``(3, 4)`` is accepted and wrapped as
+        of a 3x4 matrix and a 4x5 matrix, or ``((3, 4),)`` for a single
+        3x4 factor.  A bare pair ``(3, 4)`` is accepted and wrapped as
         ``((3, 4),)``.
 
     Returns
