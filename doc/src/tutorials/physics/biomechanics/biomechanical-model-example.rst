@@ -457,7 +457,6 @@ degree of freedom.
    ...     ),
    ...     q_dependent=(q2, q3, q4),
    ...     configuration_constraints=holonomic,
-   ...     velocity_constraints=holonomic.diff(me.dynamicsymbols._t),
    ...     u_dependent=(u2, u3, u4),
    ... )
    ...
