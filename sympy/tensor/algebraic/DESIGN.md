@@ -37,7 +37,7 @@ C        →  tensor_shape = ((m, n),)            # single factor C is m×n
 
 ### Shape normalization
 
-`AlgebraicZeroTensor.__init__` normalizes input shapes:
+`AlgebraicZeroTensor.__new__` normalizes input shapes:
 - `(3, 4)` → `((3, 4),)` (bare pair wrapped)
 - `[(3, 4)]` → `((3, 4),)` (list converted to tuple of tuples)
 - `((3, 4), (4, 5))` → unchanged
@@ -79,6 +79,21 @@ factors, destroying the non-commutative tensor-product ordering.
 | `is_commutative = False` | Tensor product is non-commutative |
 | `_op_priority = 11` | Ensures `x * pt` delegates to `pt.__rmul__(x)` for commutative scalars |
 | `_eval_is_commutative = lambda self: False` | Descriptor to enforce non-commutativity |
+
+### `commutativity_shape`
+
+The `commutativity_shape` property returns a tuple of binary entries, one per
+tensor factor. Entry `i` is `1` if the `i`-th factor contains no non-commutative
+symbols (e.g., a concrete numeric matrix), and `0` otherwise (e.g., a
+`MatrixSymbol`). Same length as `tensor_shape`.
+
+```
+AlgebraicPureTensor(A_3x4, C_4x5).commutativity_shape → (0, 0)   # both symbolic
+AlgebraicPureTensor(numeric_3x4, C_4x5).commutativity_shape → (1, 0)
+```
+
+This property is used by `AlgebraicTensor._flatten_args` to compute the
+component-wise AND of all term commutativity shapes.
 
 ### Coefficient storage
 
@@ -133,11 +148,38 @@ The additive identity for tensors of a specific shape. Unlike SymPy's `S.Zero`,
 an `AlgebraicZeroTensor` carries shape information, so `0_((3,4),)` and
 `0_((2,2),)` are different objects.
 
-### Inheritance: plain class (no SymPy base)
+### Inheritance: extends `Atom`
 
-`AlgebraicZeroTensor` does **not** extend `Basic` or `Expr`. It is a lightweight
-Python object with `__slots__ = ("_shape",)`. It is hashable, immutable, and
-acts as a sentinel/anchor inside `AlgebraicTensor` sums.
+`AlgebraicZeroTensor` extends `sympy.core.basic.Atom` (a leaf `Basic` subclass)
+to integrate with SymPy's expression system. This provides:
+
+- **`sympify()` support** — `sympify(z)` returns `z` unchanged.
+- **Tree traversal** — `atoms()`, `has()`, `replace()` work correctly.
+- **Assumptions system** — `is_zero = True`, `is_commutative = True` are
+  recognized by the SymPy assumptions machinery.
+- **Generic operations** — `subs()`, `xreplace()`, `doit()` are inherited.
+
+The shape is stored in a dedicated `_shape` slot (not in `_args`). This is
+required because `Basic` expects `_args` to contain only `Basic` objects —
+storing a plain tuple in `_args` would break `atoms()`, `free_symbols`,
+`has()`, and `count_ops()`.
+
+Key implementation details:
+- `__slots__ = ('_shape',)` — shape lives in its own slot.
+- `Atom.__new__(cls)` is called with **no args**; `_shape` is set afterward.
+- `_hashable_content()` returns `(self._shape,)` for hashing and equality.
+- `__getnewargs__()` returns `(self._shape,)` for pickle reconstruction.
+- `free_symbols` returns `set()` (a zero tensor has no free symbols).
+- `copy()` returns `self` (immutable atom).
+
+### `commutativity_shape`
+
+A zero tensor is commutative in every slot. The `commutativity_shape` property
+returns an all-1s tuple matching the length of the tensor shape:
+
+```
+AlgebraicZeroTensor(((3, 4), (4, 5))).commutativity_shape → (1, 1)
+```
 
 ### Arithmetic operators
 
@@ -218,6 +260,25 @@ expression types:
 - `Mul(coeff, AlgebraicPureTensor)` → inner `AlgebraicPureTensor.tensor_shape`
 - Bare matrix with `.shape` → wrapped as `((m, n),)`
 - Anything else → `None`
+
+### `commutativity_shape`
+
+The `commutativity_shape` property returns the component-wise AND of the
+`commutativity_shape` of every term in the sum. The result is a tuple of
+binary entries, same length as `tensor_shape`.
+
+`_flatten_args` computes this incrementally as it walks the arguments, using
+the `_commutativity_shape_of` helper which handles `AlgebraicPureTensor`,
+`AlgebraicZeroTensor`, `AlgebraicTensor`, `Mul(coeff, AlgebraicPureTensor)`,
+and bare matrix-like objects.
+
+```
+t = AlgebraicTensor(AlgebraicPureTensor(A, C), AlgebraicPureTensor(B, C))
+t.commutativity_shape  →  (0, 0)   # A, B, C are all symbolic
+
+t2 = AlgebraicTensor(AlgebraicPureTensor(numeric, C), AlgebraicPureTensor(B, C))
+t2.commutativity_shape  →  (0, 0)  # slot 0: 1 & 0 = 0, slot 1: 0 & 0 = 0
+```
 
 ### The `_sympify` parameter
 
@@ -477,6 +538,20 @@ than the class you called. Write code that handles all possible return types.
 
 Always compare full `tensor_shape` tuples. Never compare individual factor shapes
 unless you are iterating factor-by-factor (as in composition).
+
+### 7.6.1 `commutativity_shape` convention
+
+All three tensor types expose `commutativity_shape`:
+
+- **`AlgebraicPureTensor`** — per-factor check: `0` if the factor contains any
+  non-commutative symbol, `1` otherwise.
+- **`AlgebraicZeroTensor`** — all-1s tuple (zero is commutative in every slot).
+- **`AlgebraicTensor`** — component-wise AND of all term commutativity shapes.
+
+The `_commutativity_shape_of` helper in `algebraic_tensor.py` extracts the
+commutativity shape from any recognized expression type (including `Mul` wrappers
+and bare matrices). Use this helper when you need to query commutativity from
+an arbitrary tensor expression rather than a known instance.
 
 ### 7.7 Import patterns
 

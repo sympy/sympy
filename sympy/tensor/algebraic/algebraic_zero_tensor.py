@@ -21,7 +21,7 @@ class AlgebraicZeroTensor(Atom):
     and generic operations (``subs()``, ``xreplace()``, ``doit()``).
     """
 
-    __slots__ = ()
+    __slots__ = ('_shape',)
 
     is_AlgebraicZeroTensor = True
     is_zero = True
@@ -35,23 +35,37 @@ class AlgebraicZeroTensor(Atom):
             # Bare (m, n) or [m, n] -> wrap as ((m, n),)
             shape = (shape,)
         shape = tuple(tuple(s) for s in shape)
-        obj = Atom.__new__(cls, shape)
+        obj = Atom.__new__(cls)
+        obj._shape = shape
         return obj
+
+    def _hashable_content(self):
+        """Return content for hashing and equality comparison."""
+        return (self._shape,)
+
+    def __getnewargs__(self):
+        """Return args for pickle reconstruction."""
+        return (self._shape,)
+
+    @property
+    def free_symbols(self):
+        """A zero tensor has no free symbols."""
+        return set()
 
     @property
     def shape(self):
-        """The tensor shape stored in _args[0]."""
-        return self._args[0]
+        """The tensor shape stored in _shape."""
+        return self._shape
 
     @property
     def tensor_shape(self):
         """Alias for ``shape`` -- the full tensor shape tuple."""
-        return self._args[0]
+        return self._shape
 
     @property
     def commutativity_shape(self):
         """All-1s tuple -- a zero tensor is commutative in every slot."""
-        return tuple(1 for _ in self._args[0])
+        return tuple(1 for _ in self._shape)
 
     def __neg__(self):
         """Negation of zero is zero."""
@@ -82,13 +96,16 @@ class AlgebraicZeroTensor(Atom):
         return self
 
     def __repr__(self):
-        return f"AlgebraicZeroTensor{self._args[0]}"
+        return f"AlgebraicZeroTensor{self._shape}"
 
     def __str__(self):
-        return f"0_{self._args[0]}"
+        return f"0_{self._shape}"
 
     def __bool__(self):
         return False
+
+    def copy(self):
+        return self
 
     def expand(self, **kwargs):
         """Return self unchanged. A zero tensor is already in expanded form."""
