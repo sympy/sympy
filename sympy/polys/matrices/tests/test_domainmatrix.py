@@ -1207,34 +1207,35 @@ def test_DomainMatrix_ground_eigenvals():
 
 def test_DomainMatrix_ground_eigenvects():
     A = DomainMatrix([], (0, 0), ZZ)
-    assert A.ground_eigenvects() == {}
-    assert A.to_sparse().ground_eigenvects() == {}
+    assert A.ground_eigenvects() == []
+    assert A.to_sparse().ground_eigenvects() == []
 
     A = DomainMatrix.zeros((3, 3), QQ)
-    assert A.ground_eigenvects() == {QQ(0): DomainMatrix.eye(3, QQ)}
+    assert A.ground_eigenvects() == [(QQ(0), 3, DomainMatrix.eye(3, QQ))]
 
     A = DM([[0, 1], [1, 0]], ZZ)
     for B in (A, A.to_sparse()):
-        V = B.ground_eigenvects()
-        assert set(V) == {ZZ(1), ZZ(-1)}
-        for l, m in ((ZZ(1), 1), (ZZ(-1), 1)):
-            assert V[l].shape == (2, m)
-            assert B * V[l] == l * V[l]
+        for l, m, V in B.ground_eigenvects():
+            assert l == ZZ(-1) or l == ZZ(1)
+            assert m == 1 and V.shape == (2, m)
+            assert B * V == l * V
 
     A = DM([[0, 1], [-1, 0]], QQ)
-    assert A.ground_eigenvects() == {}
-    assert A.to_sparse().ground_eigenvects() == {}
+    assert A.ground_eigenvects() == []
+    assert A.to_sparse().ground_eigenvects() == []
 
     A = DM([[4, 1, 0, 0],
             [-3, QQ(1, 2), 0, 0],
             [0, 0, 2, QQ(3, 2)],
             [0, 0, 0, 2]], QQ)
     for B in (A, A.to_sparse()):
-        V = B.ground_eigenvects()
-        assert set(V) == {QQ(2), QQ(5, 2)}
-        for l, m in ((QQ(2), 2), (QQ(5, 2), 1)):
-            assert V[l].shape == (4, m) and V[l].rank() == m
-            assert B * V[l] == l * V[l]
+        for l, m, V in B.ground_eigenvects():
+            assert l == QQ(2) or l == QQ(5, 2)
+            assert B * V == l * V
+            if l == QQ(2):
+                assert m == 3 and V.shape == (4, 2) and V.rank() == 2
+            elif l == QQ(5, 2):
+                assert m == 1 and V.shape == (4, 1) and V.rank() == 1
 
     A = DM([[1, 2]], QQ)
     raises(DMNonSquareMatrixError, lambda: A.ground_eigenvects())

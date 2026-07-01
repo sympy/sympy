@@ -3791,7 +3791,7 @@ class DomainMatrix:
     def ground_eigenvects(self):
         """
         Return the eigenvalues in the ground domain together with
-        their eigenvectors.
+        their algebraic multiplicites and eigenvectors.
 
         Examples
         ========
@@ -3803,18 +3803,14 @@ class DomainMatrix:
         ...         [0,  0, 1, 2],
         ...         [0,  0, 5, 6]], QQ)
         >>> M.ground_eigenvects()
-        {9: DomainMatrix([[-1/3], [1], [0], [0]], (4, 1), QQ)}
+        [(9, 2, DomainMatrix([[-1/3], [1], [0], [0]], (4, 1), QQ))]
         """
-        p = self.charpoly()
-        _, factors = dup_factor_list(p, self.domain)
-        eigs = {}
-        divide_last = self.domain.is_Field
-        for base, _ in factors:
-            if len(base) == 2:
-                v = -base[1]/base[0]
-                B = self - self.diag([v]*self.shape[0], self.domain)
-                eigs[v] = B.nullspace(divide_last=divide_last).transpose()
-        return eigs
+        eigs = self.ground_eigenvals()
+        result = []
+        for v, m in eigs.items():
+            B = self - self.diag([v]*self.shape[0], self.domain)
+            result.append((v, m, B.nullspace(divide_last=False).transpose()))
+        return result
 
     @classmethod
     def eye(cls, shape, domain):
