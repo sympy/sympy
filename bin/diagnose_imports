@@ -11,7 +11,7 @@ import sys
 this_file = abspath(__file__)
 diagnose_imports_filename = join(
     dirname(this_file),
-    '..', 'sympy', 'utilities', 'tests', 'diagnose_imports.py')
+    '..', 'sympy', 'testing', 'tests', 'diagnose_imports.py')
 diagnose_imports_filename = normpath(diagnose_imports_filename)
 
 process = subprocess.Popen(

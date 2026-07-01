@@ -9,7 +9,6 @@ from __future__ import annotations
 if __name__ == "__main__":
 
     import sys
-    import inspect
     import builtins
 
     import optparse
@@ -38,14 +37,14 @@ if __name__ == "__main__":
             'if it imports a symbol that is already present; ' # see ##DUPLICATE##
             'if it imports a symbol '
             'from somewhere other than the defining module.', # see ##ORIGIN##
-        action='count')
+        action='count', default=0)
     option_group.add_option(
         '--origins',
         help=
             'For each imported symbol in each module, '
             'print the module that defined it. '
             '(This is useful for import refactoring.)',
-        action='count')
+        action='count', default=0)
     option_parser.add_option_group(option_group)
     option_group = optparse.OptionGroup(
         option_parser,
@@ -56,11 +55,11 @@ if __name__ == "__main__":
     option_group.add_option(
         '--by-importer',
         help='Sort output lines by name of importing module.',
-        action='count')
+        action='count', default=0)
     option_group.add_option(
         '--by-origin',
         help='Sort output lines by name of imported module.',
-        action='count')
+        action='count', default=0)
     option_parser.add_option_group(option_group)
     (options, args) = option_parser.parse_args()
     if args:
@@ -100,7 +99,12 @@ if __name__ == "__main__":
         def __hash__(self):
             return hash(self.name)
         def __eq__(self, other):
-            return self.name == other.name and self.value == other.value
+            # Compare the value by identity: ``==`` on SymPy objects does not
+            # return a plain bool (and can raise).  Indirect-import detection
+            # only cares whether it is literally the same object re-exported.
+            return (isinstance(other, Definition)
+                    and self.name == other.name
+                    and self.value is other.value)
         def __ne__(self, other):
             return not (self == other)
         def __repr__(self):
@@ -128,7 +132,7 @@ if __name__ == "__main__":
         else:
             sorted_messages.append(msg % args)
 
-    def tracking_import(module, globals=globals(), locals=[], fromlist=None, level=-1):
+    def tracking_import(module, globals=globals(), locals=[], fromlist=None, level=0):
         """__import__ wrapper - does not change imports at all, but tracks them.
 
         Default order is implemented by doing output directly.
@@ -142,19 +146,19 @@ if __name__ == "__main__":
         question was already imported.
 
         Keeps the semantics of __import__ unchanged."""
-        caller_frame = inspect.getframeinfo(sys._getframe(1))
-        importer_filename = caller_frame.filename
-        importer_module = globals['__name__']
-        if importer_filename == caller_frame.filename:
-            importer_reference = '%s line %s' % (
-                importer_filename, str(caller_frame.lineno))
-        else:
-            importer_reference = importer_filename
+        # Use the frame attributes directly rather than inspect.getframeinfo:
+        # the latter reads the source via linecache, which itself triggers
+        # imports and would recurse infinitely through this very hook.
+        caller_frame = sys._getframe(1)
+        importer_filename = caller_frame.f_code.co_filename
+        importer_module = (globals or {}).get('__name__', importer_filename)
+        importer_reference = '%s line %s' % (
+            importer_filename, caller_frame.f_lineno)
         result = builtin_import(module, globals, locals, fromlist, level)
         importee_module = result.__name__
         # We're only interested if importer and importee are in SymPy
         if relevant(importer_module) and relevant(importee_module):
-            for symbol in result.__dict__.iterkeys():
+            for symbol in result.__dict__.keys():
                 definition = Definition(
                     symbol, result.__dict__[symbol], importer_module)
                 if definition not in symbol_definers:
@@ -177,7 +181,7 @@ if __name__ == "__main__":
                         # That's the normal "please copy over its imports to my namespace"
                         symbol_list = []
                     else:
-                        symbol_list = result.__dict__.iterkeys()
+                        symbol_list = result.__dict__.keys()
                 for symbol in symbol_list:
                     if symbol not in result.__dict__:
                         if options.by_origin:
