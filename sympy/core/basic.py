@@ -1804,7 +1804,7 @@ class Basic(Printable):
     def find(self, query, group=False):
         """
         Find all subexpressions matching a query.
-        
+
         query : type, Basic, or callable
             A type matches subexpressions by ``isinstance``, a ``Basic``
             expression (e.g. with ``Wild`` symbols) matches via ``match()``,
