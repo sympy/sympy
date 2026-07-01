@@ -1605,18 +1605,28 @@ def test_imaginary():
 
     assert ask(Q.imaginary(x + 1), Q.real(x)) is False
     assert ask(Q.imaginary(x + 1), Q.imaginary(x)) is False
-    assert ask(Q.imaginary(x + I), Q.real(x)) is False
-    assert ask(Q.imaginary(x + I), Q.imaginary(x)) is True
-    assert ask(Q.imaginary(x + y), Q.imaginary(x) & Q.imaginary(y)) is True
+    assert ask(Q.imaginary(x + I), Q.real(x)) is None # x = 0
+    assert ask(Q.imaginary(x + I), Q.imaginary(x)) is None # x = -I
+    assert ask(Q.imaginary(x + y), Q.imaginary(x) & Q.imaginary(y)) is None # x + y = 0
     assert ask(Q.imaginary(x + y), Q.real(x) & Q.real(y)) is False
-    assert ask(Q.imaginary(x + y), Q.imaginary(x) & Q.real(y)) is False
+    assert ask(Q.imaginary(x + y), Q.imaginary(x) & Q.real(y)) is None # y = 0
     assert ask(Q.imaginary(x + y), Q.complex(x) & Q.real(y)) is None
     assert ask(
         Q.imaginary(x + y + z), Q.real(x) & Q.real(y) & Q.real(z)) is False
     assert ask(Q.imaginary(x + y + z),
         Q.real(x) & Q.real(y) & Q.imaginary(z)) is None
     assert ask(Q.imaginary(x + y + z),
-        Q.real(x) & Q.imaginary(y) & Q.imaginary(z)) is False
+        Q.real(x) & Q.imaginary(y) & Q.imaginary(z)) is None # x = 0
+
+    assert ask(Q.imaginary(I + x + y + z),
+        Q.real(x) & Q.real(y) & Q.real(z) & Q.zero(x + y + z)) is True
+    assert ask(Q.imaginary(I + x + y),
+        Q.real(x) & Q.real(y) & Q.zero(x + y)) is True
+    assert ask(Q.imaginary(I + x + y),
+        Q.real(x) & Q.real(y) & Q.nonzero(x + y)) is False
+    assert ask(Q.imaginary(x + I*y),
+        Q.real(x) & Q.real(y) & Q.zero(x) & Q.zero(y)) is False
+    assert ask(Q.imaginary(I + x + y), Q.real(x) & Q.real(y)) is None
 
     assert ask(Q.imaginary(I*x), Q.real(x)) is True
     assert ask(Q.imaginary(I*x), Q.imaginary(x)) is False
