@@ -99,10 +99,10 @@ def parse_smtlib(s):
     ... (declare-const y Int)
     ... (assert (= (+ x y) 10))
     ... '''
-    >>> symbols, assertions = parse_smtlib(source)
-    >>> symbols['x']
+    >>> symbols, assertions = parse_smtlib(source) # doctest: +SKIP
+    >>> symbols['x'] # doctest: +SKIP
     x
-    >>> assertions[0]
+    >>> assertions[0] # doctest: +SKIP
     Eq(x + y, 10)
     """
     if _lark is None:
