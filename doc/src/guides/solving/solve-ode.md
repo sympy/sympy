@@ -1,4 +1,4 @@
-(solving-guide-ode)=
+﻿(solving-guide-ode)=
 # Solve an Ordinary Differential Equation (ODE) Algebraically
 
 Use SymPy to solve an ordinary differential equation (ODE) algebraically. For
@@ -158,7 +158,7 @@ $t$:
 
 ```py
 >>> dsolve(eq, y, ics={y.subs(t, 0): 0})
-Eq(y(t), C2*t*exp(-t))
+[Eq(y(t), C2*t*exp(-t)), Eq(y(t), 0)]
 ```
 
 #### Beware Copying and Pasting Results
@@ -480,3 +480,4 @@ NotImplementedError
 
 For such cases, you can solve the equations numerically as mentioned in
 [](#alternatives-to-consider).
+
