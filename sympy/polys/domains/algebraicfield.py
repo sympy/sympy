@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from functools import cached_property
 from sympy.core.add import Add
 from sympy.core.mul import Mul
 from sympy.core.singleton import S
@@ -26,8 +27,13 @@ Alg = ANP[MPQ]
 
 
 @public
-class AlgebraicField(Field[Alg], CharacteristicZero, SimpleDomain[Alg],
-                     ConjugateDomain[Alg], RingExtension[Alg, MPQ]):
+class AlgebraicField(
+    Field[Alg],
+    CharacteristicZero,
+    SimpleDomain[Alg],
+    ConjugateDomain[Alg],
+    RingExtension[Alg, MPQ]
+):
     r"""Algebraic number field :ref:`QQ(a)`
 
     A :ref:`QQ(a)` domain represents an `algebraic number field`_
@@ -339,7 +345,6 @@ class AlgebraicField(Field[Alg], CharacteristicZero, SimpleDomain[Alg],
 
         self._maximal_order = None
         self._discriminant = None
-        self._ext_conjugate = None
         self._nilradicals_mod_p: dict = {}
 
     def new(self, element):
@@ -554,26 +559,27 @@ class AlgebraicField(Field[Alg], CharacteristicZero, SimpleDomain[Alg],
         rad = self._nilradicals_mod_p.get(p)
         return prime_decomp(p, ZK=ZK, dK=dK, radical=rad)
 
-    def conjugate(self, a):
+    @cached_property
+    def conjugate(self):
         """Returns the complex conjugate of ``a``. """
-        conj = self._ext_conjugate
-        if conj is None:
-            try:
-                # the conjugate of ext has the same minpoly as ext
-                z = self.ext.func((self.ext.minpoly, self.ext.conjugate()))
-                conj = self.from_sympy(z)
-            except CoercionFailed:
-                raise CoercionFailed("the algebraic field is not closed under conjugation")
-            self._ext_conjugate = conj
+        try:
+            # the conjugate of ext has the same minpoly as ext
+            z = self.ext.func((self.ext.minpoly, self.ext.conjugate()))
+            conj = self.from_sympy(z)
+        except CoercionFailed:
+            raise CoercionFailed("the algebraic field is not closed under conjugation")
 
         if conj.rep == [1, 0]:
             # conj == ext implies ext is real
-            return a
+            return lambda a: a
 
-        v = self.zero
-        for c in a.rep:
-            v = v * conj + c
-        return v
+        def conjugate(a):
+            v = self.zero
+            for c in a.rep:
+                v = v * conj + c
+            return v
+
+        return conjugate
 
     def galois_group(self, by_name=False, max_tries=30, randomize=False):
         """
