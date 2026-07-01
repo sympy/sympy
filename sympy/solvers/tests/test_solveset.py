@@ -2437,7 +2437,7 @@ def test_substitution_basic():
     assert substitution(
         [x + y], [x], [{y: 1}], [y],
         {x + 1}, [y, x]) == S.EmptySet
-    
+
 def test_substitution_inconsistent():
     # substitution should return EmptySet for inconsistent systems
     # rather than a non-empty solution that ignores the contradictions.
