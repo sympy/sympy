@@ -588,3 +588,8 @@ da1 = da1.simplify()
 da2 = da1 + da1
 print(len(da1.args))
 print(len(da2.args))
+
+
+testoni_100 = C1*da1
+
+print(isinstance(testoni_100, AlgebraicTensor))
