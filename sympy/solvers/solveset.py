@@ -547,6 +547,9 @@ def _invert_complex(f, g_ys, symbol):
         if expo.is_Rational and g_ys == FiniteSet(0):
             if expo.is_positive:
                 return _invert_complex(base, g_ys, symbol)
+        if not base.has(symbol) and base != 0 and base != S.Exp1:
+            return _invert_complex(exp(expo * log(base)), g_ys, symbol)
+
 
     if hasattr(f, 'inverse') and f.inverse() is not None and \
        not isinstance(f, TrigonometricFunction) and \
@@ -1060,6 +1063,8 @@ def _solve_as_poly(f, symbol, domain=S.Complexes):
                 inverter = invert_real if domain.is_subset(S.Reals) else invert_complex
                 lhs, rhs_s = inverter(gen, y, symbol)
                 if lhs == symbol:
+                    if isinstance(gen, exp) or (gen.is_Pow and not gen.base.has(symbol) and gen.base != 0):
+                        poly_solns = [s for s in poly_solns if s != 0]
                     result = Union(*[rhs_s.subs(y, s) for s in poly_solns])
                     if isinstance(result, FiniteSet) and isinstance(gen, Pow
                             ) and gen.base.is_Rational:
@@ -3528,6 +3533,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
         soln_imageset = {}
         total_solvest_call = 0
         total_conditionst = 0
+        failed_symbols = set()
 
         # sort equations so the one with the fewest potential
         # symbols appears first
@@ -3579,6 +3585,8 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                         "nonlinsolve cannot solve equations with Abs in the complex domain"
                     )
                 soln_imageset = {}
+                eq_solved = False
+                failed_syms_for_eq = set()
                 for sym in unsolved_syms:
                     not_solvable = False
                     try:
@@ -3603,16 +3611,20 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                             # one symbol's real soln, another symbol may have
                             # corresponding complex soln.
                             if not isinstance(soln, (ImageSet, ConditionSet)):
-                                soln += solveset_complex(eq2, sym)  # might give ValueError with Abs
+                                try:
+                                    soln += solveset_complex(eq2, sym)  # might give ValueError with Abs
+                                except (ValueError, NotImplementedError):
+                                    pass
 
                         if not isinstance(soln, (FiniteSet, ImageSet, ConditionSet, Union)) and soln is not S.EmptySet:
                             raise NotImplementedError(
                                 f"nonlinsolve cannot handle solution of type {type(soln).__name__} "
                                 f"for symbol {sym}. Got {soln} from equation {eq2}."
                             )
-                    except ValueError:
+                    except (ValueError, NotImplementedError):
                         # If solveset is not able to solve equation `eq2`. Next
                         # time we may get soln using next equation `eq2`
+                        failed_syms_for_eq.add(sym)
                         continue
                     if isinstance(soln, ConditionSet):
                         if soln.base_set in (S.Reals, S.Complexes):
@@ -3621,8 +3633,12 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                             # in terms of other symbol(s)
                             not_solvable = True
                             total_conditionst += 1
+                            failed_syms_for_eq.add(sym)
                         else:
                             soln = soln.base_set
+                            eq_solved = True
+                    else:
+                        eq_solved = True
 
                     if soln is not S.EmptySet:
                         soln, soln_imageset = _extract_main_soln(
@@ -3669,15 +3685,30 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                     # solution got for sym
                     if not not_solvable:
                         got_symbol.add(sym)
+                if not eq_solved and failed_syms_for_eq:
+                    for sym in failed_syms_for_eq:
+                        failed_symbols.add(sym)
             # next time use this new soln
             if newresult:
                 result = newresult
-        return result, total_solvest_call, total_conditionst
+        return result, total_solvest_call, total_conditionst, failed_symbols
 
-    new_result_real, solve_call1, cnd_call1 = _solve_using_known_values(
+    new_result_real, solve_call1, cnd_call1, failed_symbols_real = _solve_using_known_values(
         old_result, solveset_real)
-    new_result_complex, solve_call2, cnd_call2 = _solve_using_known_values(
-        old_result, solveset_complex)
+    try:
+        new_result_complex, solve_call2, cnd_call2, failed_symbols_complex = _solve_using_known_values(
+            old_result, solveset_complex)
+    except NotImplementedError:
+        new_result_complex, solve_call2, cnd_call2, failed_symbols_complex = [], 0, 0, set()
+
+    # Filter out solutions if we failed to solve any equations
+    if failed_symbols_real:
+        new_result_real = []
+    if failed_symbols_complex:
+        new_result_complex = []
+
+    if not new_result_real and not new_result_complex and (failed_symbols_real or failed_symbols_complex):
+        return _return_conditionset(eqs_in_better_order, all_symbols)
 
     # If total_solveset_call is equal to total_conditionset
     # then solveset failed to solve all of the equations.
@@ -3708,15 +3739,19 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
         if not res:
             # means {None : None}
             continue
-        # If length < len(all_symbols) means infinite soln.
-        # Some or all the soln is dependent on 1 symbol.
-        # eg. {x: y+2} then final soln {x: y+2, y: y}
         if len(res) < len(all_symbols):
             solved_symbols = res.keys()
             unsolved = list(filter(
                 lambda x: x not in solved_symbols, all_symbols))
             for unsolved_sym in unsolved:
                 res[unsolved_sym] = unsolved_sym
+            is_infinite = True
+        else:
+            is_infinite = False
+
+
+
+        if is_infinite:
             result_infinite.append(res)
         if res not in result_all_variables:
             result_all_variables.append(res)

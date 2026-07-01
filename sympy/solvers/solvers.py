@@ -1431,6 +1431,11 @@ def _solve(f, *symbols, **flags):
                 if candidate in result:
                     # an unconditional value was already there
                     continue
+                if symbol.is_real:
+                    if candidate.is_real is False:
+                        continue
+                    if candidate.is_number and candidate.evalf().is_real is False:
+                        continue
                 try:
                     v = cond.subs(symbol, candidate)
                     _eval_simplify = getattr(v, '_eval_simplify', None)
@@ -2135,6 +2140,9 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
     solution.)
 
     """
+    from sympy.core.sympify import sympify
+    lhs = sympify(lhs)
+    rhs = sympify(rhs)
     if isinstance(lhs, Eq):
         if rhs:
             raise ValueError(filldedent('''

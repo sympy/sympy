@@ -74,6 +74,8 @@ def euler_equations(L, funcs=(), vars=()):
 
     if not funcs:
         funcs = tuple(L.atoms(Function))
+        if not funcs:
+            raise ValueError('Lagrangian does not contain any Function terms. Please specify functions.')
     else:
         for f in funcs:
             if not isinstance(f, Function):

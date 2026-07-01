@@ -2737,3 +2737,17 @@ def test_solve_maxmin():
     assert solve(system, variables) == [(5 - sqrt(42), 67 - 10*sqrt(42)), (5 + sqrt(42), 10*sqrt(42) + 67)]
     system = [Eq(y, Max(3*x, -(S(1)/3)*x)), Eq(y, -(x**2)+10)]
     assert solve(system, variables) == [(-3, 1), (2, 6)]
+
+
+def test_issue_27233():
+    x = Symbol('x', real=True)
+    y = Symbol('y', real=True)
+    eq1, eq2 = (x**2 - 6*x + y**2 + 9)*log(Abs(x) - Abs(y) - 2), x**2 - y
+    assert solve([eq1, eq2], [x, y]) == []
+
+
+def test_solve_linear_python_int():
+    assert solve_linear(5) == (0, 1)
+    assert solve_linear(x, 5) == (x, 5)
+
+
