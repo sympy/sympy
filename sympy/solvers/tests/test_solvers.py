@@ -2745,3 +2745,9 @@ def test_issue_27233():
     eq1, eq2 = (x**2 - 6*x + y**2 + 9)*log(Abs(x) - Abs(y) - 2), x**2 - y
     assert solve([eq1, eq2], [x, y]) == []
 
+
+def test_solve_linear_python_int():
+    assert solve_linear(5) == (0, 1)
+    assert solve_linear(x, 5) == (x, 5)
+
+

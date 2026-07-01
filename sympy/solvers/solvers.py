@@ -2140,6 +2140,9 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
     solution.)
 
     """
+    from sympy.core.sympify import sympify
+    lhs = sympify(lhs)
+    rhs = sympify(rhs)
     if isinstance(lhs, Eq):
         if rhs:
             raise ValueError(filldedent('''
