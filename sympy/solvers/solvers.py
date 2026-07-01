@@ -1431,13 +1431,18 @@ def _solve(f, *symbols, **flags):
                 if candidate in result:
                     # an unconditional value was already there
                     continue
+                if symbol.is_real:
+                    if candidate.is_real is False:
+                        continue
+                    if candidate.is_number and candidate.evalf().is_real is False:
+                        continue
                 try:
                     v = cond.subs(symbol, candidate)
                     _eval_simplify = getattr(v, '_eval_simplify', None)
                     if _eval_simplify is not None:
                         # unconditionally take the simplification of v
                         v = _eval_simplify(ratio=2, measure=lambda x: 1)
-                except (TypeError, ValueError):
+                except TypeError:
                     # incompatible type with condition(s)
                     continue
                 if v == False:

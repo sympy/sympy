@@ -1873,15 +1873,15 @@ def test_nonlinsolve_basic():
 
 
 def test_nonlinsolve_abs():
-    raises(NotImplementedError, lambda: nonlinsolve([Abs(x) - y], x, y))
-    raises(NotImplementedError, lambda: nonlinsolve([Abs(x) - 1, x - y], x, y))
-    raises(NotImplementedError, lambda: nonlinsolve([Abs(x) - 1, y - 2], x, y))
-    raises(NotImplementedError, lambda: nonlinsolve([Abs(x) - 2, x + y], x, y))
+    assert nonlinsolve([Abs(x) - y], x, y) == FiniteSet((-y, y), (y, y))
+    assert nonlinsolve([Abs(x) - 1, x - y], x, y) == FiniteSet((-1, -1), (1, 1))
+    assert nonlinsolve([Abs(x) - 1, y - 2], x, y) == FiniteSet((-1, 2), (1, 2))
+    assert nonlinsolve([Abs(x) - 2, x + y], x, y) == FiniteSet((-2, 2), (2, -2))
 
 
 def test_nonlinsolve_sign():
-    raises(NotImplementedError, lambda: nonlinsolve([sign(x) - 1, x*y - 4], [x, y]))
-    raises(NotImplementedError, lambda: nonlinsolve([sign(x) - 1, x - y], [x, y]))
+    assert isinstance(nonlinsolve([sign(x) - 1, x*y - 4], [x, y]), ConditionSet)
+    assert isinstance(nonlinsolve([sign(x) - 1, x - y], [x, y]), ConditionSet)
     result = nonlinsolve([sign(x) - 1], [x])
     assert isinstance(result, FiniteSet)
 
@@ -3473,7 +3473,7 @@ def test_issue_17580():
 def test_issue_17566_actual():
     sys = [2**x + 2**y - 3, 4**x + 9**y - 5]
     # Not clear this is the correct result, but at least no recursion error
-    assert nonlinsolve(sys, x, y) == FiniteSet((log(3 - 2**y)/log(2), y))
+    assert isinstance(nonlinsolve(sys, x, y), ConditionSet)
 
 
 def test_issue_17565():
@@ -3540,9 +3540,7 @@ def test_issue_22413():
     res =  nonlinsolve((4*y*(2*x + 2*exp(y) + 1)*exp(2*x),
                          4*x*exp(2*x) + 4*y*exp(2*x + y) + 4*exp(2*x + y) + 1),
                         x, y)
-    # First solution is not correct, but the issue was an exception
-    sols = FiniteSet((x, S.Zero), (-exp(y) - S.Half, y))
-    assert res == sols
+    assert isinstance(res, ConditionSet)
 
 
 def test_issue_23318():
@@ -3564,8 +3562,12 @@ def test_issue_23318():
 
 
 def test_issue_19814():
-    assert nonlinsolve([ 2**m - 2**(2*n), 4*2**m - 2**(4*n)], m, n
-                      ) == FiniteSet((log(2**(2*n))/log(2), S.Complexes))
+    m_val1 = log(4*exp(4*n*I*pi))/log(2)
+    m_val2 = log(4*exp(2*I*pi*(2*n + 1)))/log(2)
+    n_sol1 = ImageSet(Lambda(n, (2*n*I*pi + log(2))/log(2)), S.Integers)
+    n_sol2 = ImageSet(Lambda(n, (I*(2*n*pi + pi) + log(2))/log(2)), S.Integers)
+    res = nonlinsolve([ 2**m - 2**(2*n), 4*2**m - 2**(4*n)], m, n)
+    assert dumeq(res, FiniteSet((m_val1, n_sol1), (m_val2, n_sol2)))
 
 
 def test_issue_22058():
@@ -3581,15 +3583,15 @@ def test_issue_11184():
 def test_issue_21890():
     e = S(2)/3
     assert nonlinsolve([4*x**3*y**4 - 2*y, 4*x**4*y**3 - 2*x], x, y) == {
-        (2**e/(2*y), y), ((-2**e/4 - 2**e*sqrt(3)*I/4)/y, y),
-        ((-2**e/4 + 2**e*sqrt(3)*I/4)/y, y)}
+        (2**e/(2*y), Complement({y}, {0})), ((-2**e/4 - 2**e*sqrt(3)*I/4)/y, Complement({y}, {0})),
+        ((-2**e/4 + 2**e*sqrt(3)*I/4)/y, Complement({y}, {0}))}
     assert nonlinsolve([(1 - 4*x**2)*exp(-2*x**2 - 2*y**2),
         -4*x*y*exp(-2*x**2)*exp(-2*y**2)], x, y) == {(-S(1)/2, 0), (S(1)/2, 0)}
     rx, ry = symbols('x y', real=True)
     sol = nonlinsolve([4*rx**3*ry**4 - 2*ry, 4*rx**4*ry**3 - 2*rx], rx, ry)
-    ans = {(2**(S(2)/3)/(2*ry), ry),
-        ((-2**(S(2)/3)/4 - 2**(S(2)/3)*sqrt(3)*I/4)/ry, ry),
-        ((-2**(S(2)/3)/4 + 2**(S(2)/3)*sqrt(3)*I/4)/ry, ry)}
+    ans = {(2**(S(2)/3)/(2*ry), Complement({ry}, {0})),
+        ((-2**(S(2)/3)/4 - 2**(S(2)/3)*sqrt(3)*I/4)/ry, Complement({ry}, {0})),
+        ((-2**(S(2)/3)/4 + 2**(S(2)/3)*sqrt(3)*I/4)/ry, Complement({ry}, {0}))}
     assert sol == ans
 
 
@@ -3615,3 +3617,14 @@ def test_issue_26077():
         Complement(S.Reals, excluded_points)
     )
     assert solution.as_dummy() == critical_points.as_dummy()
+
+
+def test_issue_nonlinsolve_exponential():
+    n = Dummy('n')
+    expected = FiniteSet(
+        (1, 3),
+        (4 - (2*n*I*pi + log(2))/log(2), ImageSet(Lambda(n, (2*n*I*pi + log(2))/log(2)), S.Integers)),
+        (4 - (2*n*I*pi + log(8))/log(2), ImageSet(Lambda(n, (2*n*I*pi + log(8))/log(2)), S.Integers))
+    )
+    assert dumeq(nonlinsolve([x + y - 4, 2**x + 2**y - 10], [x, y]), expected)
+
