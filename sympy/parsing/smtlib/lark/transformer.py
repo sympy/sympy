@@ -51,7 +51,7 @@ class SMTLibTransformer(Transformer):
             'ext_rotate_left', 'ext_rotate_right', 'str.len', 'str.++',
             'str.at', 'str.contains', 'str.indexof', 'str.replace',
             'str.substr', 'str.prefixof', 'str.suffixof', 'str.to.int',
-            'int.to.str', 'select', 'store', 'div', 'mod'
+            'int.to.str', 'select', 'store', 'div', 'mod', 'const'
         }
 
         self._assertion_stack = []
@@ -80,9 +80,13 @@ class SMTLibTransformer(Transformer):
         return Float(token)
 
     def HEXADECIMAL(self, token):
+        # TODO: Flagged for future BitVector (BV) work.
+        # Currently, bit-width is lost when casting `#x0A` directly to `Integer(10)`.
         return Integer(int(str(token).replace('#x', '0x'), 0))
 
     def BINARY(self, token):
+        # TODO: Flagged for future BitVector (BV) work.
+        # Currently, bit-width is lost when casting `#b1010` directly to `Integer(10)`.
         return Integer(int(str(token).replace('#b', '0b'), 0))
 
     def STRING(self, token):
@@ -139,20 +143,19 @@ class SMTLibTransformer(Transformer):
     def term_spec_constant(self, args):
         return args[0]
 
-    def qual_identifier(self, args):
-        # Can be just symbol
-        if len(args) == 1:
-            return args[0]
-        # Or indexed: ("_", symbol, numerals...)
-        if args[0] == '_':
-            return Function("_")(args[1], *args[2:])
-        # Or as: ("as", symbol, sort) or ("as", ("_", ...), sort)
-        if args[0] == 'as':
-            # SymPy doesn't explicitly track sort for expressions in AST,
-            # so we just return the underlying identifier.
-            if args[1] == '_':
-                return Function("_")(args[2], *args[3:-1])
-            return args[1]
+    def qual_id_simple(self, args):
+        return args[0]
+
+    def qual_id_indexed(self, args):
+        name = f"_{args[0]}_{'_'.join(map(str, args[1:]))}"
+        return Function(name)
+
+    def qual_id_as(self, args):
+        return args[0]
+
+    def qual_id_as_indexed(self, args):
+        name = f"_{args[0]}_{'_'.join(map(str, args[1:-1]))}"
+        return Function(name)
 
     def term_qual_identifier(self, args):
         atom = args[0]
@@ -176,16 +179,17 @@ class SMTLibTransformer(Transformer):
         op_node = args[0]
         params = args[1:]
 
-        # If the operator is an indexed identifier, pass it through directly
-        # as a Function call
-        if isinstance(op_node, (Function, Expr)):
+        # If the operator is an indexed identifier (FunctionClass), pass it through directly
+        if isinstance(op_node, type) and issubclass(op_node, Function):
             return op_node(*params)
+        if isinstance(op_node, Expr):
+            raise UnknownSMTLibCommandError(f"Cannot apply arguments to expression {op_node}")
 
         op = str(op_node)
 
         if op in self._macros:
             macro_args, macro_body = self._macros[op]
-            return macro_body.subs(dict(zip(macro_args, params)))
+            return macro_body.xreplace(dict(zip(macro_args, params)))
 
         if op in self._functions:
             return self._functions[op](*params)
@@ -199,7 +203,10 @@ class SMTLibTransformer(Transformer):
         elif op_lower == 'or':
             return Or(*params)
         elif op_lower == '=>':
-            return Implies(params[0], params[1])
+            result = params[-1]
+            for p in reversed(params[:-1]):
+                result = Implies(p, result)
+            return result
         elif op_lower == 'xor':
             return Xor(*params)
         elif op_lower == '=':
@@ -214,14 +221,19 @@ class SMTLibTransformer(Transformer):
                 for j in range(i + 1, len(params)):
                     exprs.append(Ne(params[i], params[j]))
             return And(*exprs)
-        elif op_lower == '<':
-            return StrictLessThan(params[0], params[1])
-        elif op_lower == '<=':
-            return LessThan(params[0], params[1])
-        elif op_lower == '>':
-            return StrictGreaterThan(params[0], params[1])
-        elif op_lower == '>=':
-            return GreaterThan(params[0], params[1])
+        elif op_lower in ('<', '<=', '>', '>='):
+            if len(params) == 2:
+                if op_lower == '<': return StrictLessThan(params[0], params[1])
+                if op_lower == '<=': return LessThan(params[0], params[1])
+                if op_lower == '>': return StrictGreaterThan(params[0], params[1])
+                if op_lower == '>=': return GreaterThan(params[0], params[1])
+            exprs = []
+            for i in range(len(params) - 1):
+                if op_lower == '<': exprs.append(StrictLessThan(params[i], params[i+1]))
+                elif op_lower == '<=': exprs.append(LessThan(params[i], params[i+1]))
+                elif op_lower == '>': exprs.append(StrictGreaterThan(params[i], params[i+1]))
+                elif op_lower == '>=': exprs.append(GreaterThan(params[i], params[i+1]))
+            return And(*exprs)
         elif op_lower == '+':
             return Add(*params)
         elif op_lower == '-':
@@ -248,9 +260,8 @@ class SMTLibTransformer(Transformer):
     def term_let(self, args):
         bindings = args[:-1]
         term = args[-1]
-        for var, val in bindings:
-            term = term.subs(Symbol(var), val)
-        return term
+        subs_dict = {Symbol(var): val for var, val in bindings}
+        return term.xreplace(subs_dict)
 
     def term_forall(self, args):
         vars_list = args[:-1]
@@ -315,9 +326,7 @@ class SMTLibTransformer(Transformer):
             self._macros[name] = (var_syms, body)
 
     def cmd_define_fun_rec(self, args):
-        # We handle this same as define-fun for now, SymPy will leave
-        # unresolvable recursive invocations as uninterpreted.
-        self.cmd_define_fun(args)
+        raise NotImplementedError("Recursive macros are not supported in SymPy because AST generation evaluates bottom-up.")
 
     def cmd_pop(self, args):
         levels = int(args[0]) if args else 1
@@ -344,3 +353,15 @@ class SMTLibTransformer(Transformer):
 
     def cmd_reset_assertions(self, args):
         self._assertions = []
+
+    def cmd_set_logic(self, args):
+        if args:
+            self._logic = str(args[0])
+
+    def cmd_set_info(self, args):
+        if len(args) >= 2:
+            self._info[str(args[0])] = args[1]
+
+    def cmd_set_option(self, args):
+        if len(args) >= 2:
+            self._options[str(args[0])] = args[1]

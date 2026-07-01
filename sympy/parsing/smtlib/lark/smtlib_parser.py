@@ -51,7 +51,7 @@ class LarkSMTLibParser:
         except _lark.exceptions.LarkError as e:
             line = getattr(e, 'line', 0)
             col = getattr(e, 'column', 0)
-            raise SMTLibSyntaxError("Syntax error", line, col)
+            raise SMTLibSyntaxError(f"Syntax error: {str(e)}", line, col)
 
         if not self.transform_expr:
             return parse_tree
@@ -71,10 +71,44 @@ class LarkSMTLibParser:
 if _lark is not None:
     _lark_smtlib_parser = LarkSMTLibParser()
 
-def parse_smtlib(s: str):
+def parse_smtlib(s):
     """
-    Experimental SMT-LIB parser using Lark.
+    Parses an SMT-LIB formatted string or file and returns the declared symbols and
+    the list of assertions.
+
+    Parameters
+    ==========
+
+    s : str
+        The SMT-LIB formatted string or file path to parse.
+
+    Returns
+    =======
+
+    tuple
+        A tuple ``(symbols, assertions)`` where ``symbols`` is a dictionary
+        mapping symbol names to SymPy symbols, and ``assertions`` is a list
+        of SymPy expressions representing the assertions.
+
+    Examples
+    ========
+
+    >>> from sympy.parsing.smtlib import parse_smtlib
+    >>> source = '''
+    ... (declare-const x Int)
+    ... (declare-const y Int)
+    ... (assert (= (+ x y) 10))
+    ... '''
+    >>> symbols, assertions = parse_smtlib(source)
+    >>> symbols['x']
+    x
+    >>> assertions[0]
+    Eq(x + y, 10)
     """
     if _lark is None:
-        raise ImportError("Lark is probably not installed")
+        raise ImportError("Lark is not installed")
+    if isinstance(s, str) and os.path.exists(s):
+        with open(s, "r", encoding="utf-8") as f:
+            s = f.read()
+
     return _lark_smtlib_parser.doparse(s)

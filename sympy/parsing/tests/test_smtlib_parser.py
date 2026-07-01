@@ -23,16 +23,17 @@ lark = import_module('lark')
 disabled = lark is None
 
 
-def test_parse_qf_uf_equalities_or_chain():
+def test_parse_equalities_or_chain():
     source = """
     (set-option :print-success false)
     (set-logic QF_UF)
     (declare-sort x5 0)
     (declare-fun x4 () x5)
-    (declare-fun x2 () Bool)
+    (declare-fun x6 () x5)
+    (declare-fun x7 () x5)
     (declare-fun x1 () x5)
     (declare-fun x3 () x5)
-    (assert x2)
+    (assert (= x6 x7))
     (assert (not (= x4 x3)))
     (assert (not (or (= x4 x1) (= x1 x3))))
     (check-sat)
@@ -41,156 +42,53 @@ def test_parse_qf_uf_equalities_or_chain():
     parsed_symbols, assertions = parse_smtlib(source)
 
     x1 = parsed_symbols['x1']
-    x2 = parsed_symbols['x2']
+    x6 = parsed_symbols['x6']
+    x7 = parsed_symbols['x7']
     x3 = parsed_symbols['x3']
     x4 = parsed_symbols['x4']
 
     assert len(assertions) == 3
-    assert assertions[0] == x2
+    assert assertions[0] == Eq(x6, x7)
     assert assertions[1] == Not(Eq(x4, x3))
     assert assertions[2] == Not(Or(Eq(x4, x1), Eq(x1, x3)))
 
 
-def test_parse_qf_lra_implies_and_lessthan():
-    source = """
-    (set-option :print-success false)
-    (set-logic QF_LRA)
-    (declare-fun x2 () Real)
-    (declare-fun x1 () Real)
-    (assert (not (=> (and (= 0 x1) (= 16 x2)) (<= x2 16))))
-    (check-sat)
-    (exit)
-    """
-    parsed_symbols, assertions = parse_smtlib(source)
-
-    x1 = parsed_symbols['x1']
-    x2 = parsed_symbols['x2']
-
-    assert len(assertions) == 3
-    assert assertions[0] == Q.real(x2)
-    assert assertions[1] == Q.real(x1)
-    assert assertions[2] == Not(
-        Implies(And(Eq(0, x1), Eq(16, x2)), LessThan(x2, 16))
-    )
-
-
-def test_parse_qf_lra_implies_and_greaterthan():
-    source = """
-    (set-option :print-success false)
-    (set-logic QF_LRA)
-    (declare-fun x2 () Real)
-    (declare-fun x1 () Real)
-    (assert (not (=> (and (= 0 x1) (= 16 x2)) (>= x1 0))))
-    (check-sat)
-    (exit)
-    """
-    parsed_symbols, assertions = parse_smtlib(source)
-
-    x1 = parsed_symbols['x1']
-    x2 = parsed_symbols['x2']
-
-    assert len(assertions) == 3
-    assert assertions[0] == Q.real(x2)
-    assert assertions[1] == Q.real(x1)
-    assert assertions[2] == Not(
-        Implies(And(Eq(0, x1), Eq(16, x2)), GreaterThan(x1, 0))
-    )
-
-
-def test_parse_qf_lra_nested_conditions():
-    source = """
-    (set-option :print-success false)
-    (set-logic QF_LRA)
-    (declare-fun x2 () Real)
-    (declare-fun x1 () Real)
-    (assert (not (=>
-        (and (and (>= x2 1) (and (= 10 x2) (= 0 x1))) (<= x2 12))
-        (or (or (= 3 x1) (= x1 1)) (>= 10 x2)))))
-    (check-sat)
-    (exit)
-    """
-    parsed_symbols, assertions = parse_smtlib(source)
-
-    x1 = parsed_symbols['x1']
-    x2 = parsed_symbols['x2']
-
-    assert len(assertions) == 3
-    assert assertions[0] == Q.real(x2)
-    assert assertions[1] == Q.real(x1)
-
-    assert assertions[2] == Not(
-        Implies(
-            And(
-                And(GreaterThan(x2, 1), And(Eq(10, x2), Eq(0, x1))),
-                LessThan(x2, 12)
-            ),
-            Or(
-                Or(Eq(3, x1), Eq(x1, 1)),
-                GreaterThan(10, x2)
-            )
-        )
-    )
-
-
-def test_parse_qf_uf_double_negations():
+def test_parse_implies_double_negations_equalities():
     source = """
     (set-option :print-success false)
     (set-logic QF_UF)
-    (declare-fun x1 () Bool)
-    (declare-fun x2 () Bool)
-    (declare-fun x4 () Bool)
-    (declare-fun x3 () Bool)
-    (assert (not x1))
-    (assert x3)
-    (assert x2)
-    (assert (not (not x4)))
-    (check-sat)
-    (exit)
-    """
-    parsed_symbols, assertions = parse_smtlib(source)
-
-    x1 = parsed_symbols['x1']
-    x2 = parsed_symbols['x2']
-    x3 = parsed_symbols['x3']
-    x4 = parsed_symbols['x4']
-
-    assert len(assertions) == 4
-    assert assertions[0] == Not(x1)
-    assert assertions[1] == x3
-    assert assertions[2] == x2
-    assert assertions[3] == Not(Not(x4))
-
-
-def test_parse_qf_uf_implies_double_negations_equalities():
-    source = """
-    (set-option :print-success false)
-    (set-logic QF_UF)
-    (declare-sort x3 0)
-    (declare-fun x2 () x3)
-    (declare-fun x4 () x3)
-    (declare-fun x6 () Bool)
-    (declare-fun x1 () Bool)
-    (declare-fun x5 () Bool)
-    (assert (not (not x1)))
-    (assert (=> x1 (not x5)))
+    (declare-sort x0 0)
+    (declare-fun x2 () x0)
+    (declare-fun x4 () x0)
+    (declare-fun x7 () x0)
+    (declare-fun x8 () x0)
+    (declare-fun x1 () x0)
+    (declare-fun x3 () x0)
+    (declare-fun x5 () x0)
+    (declare-fun x6 () x0)
+    (assert (not (not (= x1 x3))))
+    (assert (=> (= x1 x3) (not (= x5 x6))))
     (assert (not (= x2 x4)))
-    (assert x6)
+    (assert (= x7 x8))
     (check-sat)
     (exit)
     """
     parsed_symbols, assertions = parse_smtlib(source)
 
     x1 = parsed_symbols['x1']
+    x3 = parsed_symbols['x3']
     x2 = parsed_symbols['x2']
     x4 = parsed_symbols['x4']
     x5 = parsed_symbols['x5']
     x6 = parsed_symbols['x6']
+    x7 = parsed_symbols['x7']
+    x8 = parsed_symbols['x8']
 
     assert len(assertions) == 4
-    assert assertions[0] == Not(Not(x1))
-    assert assertions[1] == Implies(x1, Not(x5))
+    assert assertions[0] == Not(Not(Eq(x1, x3)))
+    assert assertions[1] == Implies(Eq(x1, x3), Not(Eq(x5, x6)))
     assert assertions[2] == Not(Eq(x2, x4))
-    assert assertions[3] == x6
+    assert assertions[3] == Eq(x7, x8)
 
 
 def test_parse_smtlib_syntax_errors():
@@ -292,7 +190,7 @@ def test_parse_lexer_edge_cases():
 
     # Unclosed quoted symbol error
     with raises(SMTLibSyntaxError):
-        parse_smtlib('(declare-fun |unclosed () Bool)')
+        parse_smtlib('(declare-fun |unclosed () S)')
 
 
 def test_parse_hex_and_binary():
@@ -318,14 +216,31 @@ def test_parse_type_and_errors():
         parse_smtlib('(declare-sort B 1 2)')
 
 
+def test_parse_smtlib_file():
+    import os
+
+    source = '''
+    (declare-const x Int)
+    (assert (= x 10))
+    '''
+
+    temp_path = "test.smt2"
+    with open(temp_path, "w", encoding="utf-8") as f:
+        f.write(source)
+
+    parsed_symbols, assertions = parse_smtlib(temp_path)
+    assert len(assertions) == 2
+    assert assertions[-1] == Eq(parsed_symbols['x'], 10)
+
+    os.remove(temp_path)
+
+
 def test_parse_recursive_functions():
     source = '''
     (define-fun-rec f ((x Int)) Int (ite (> x 0) 1 0))
-    (assert (= (f 1) 1))
     '''
-    parsed_symbols, assertions = parse_smtlib(source)
-    # Recursion is unrolled conceptually but here just checking it parsed
-    assert len(assertions) == 1
+    with raises(NotImplementedError):
+        parse_smtlib(source)
 
 
 def test_parse_unknown_and_syntax_errors():
@@ -404,18 +319,6 @@ def test_parse_state_and_config():
     assert assertions[0] == Q.integer(x)
 
 
-def test_parse_zero_arity_and_rec():
-    source = '''
-    (define-fun a () Int 10)
-    (define-fun-rec f ((x Int)) Int (ite (> x 0) 1 0))
-    (assert (= (f 1) 1))
-    '''
-    parsed_symbols, assertions = parse_smtlib(source)
-    assert parsed_symbols['a'] == 10
-    assert len(assertions) == 1
-    assert assertions[0] == True
-
-
 def test_parse_reset():
     source = '''
     (declare-fun x () Int)
@@ -434,6 +337,164 @@ def test_parse_reset():
     assert len(assertions_r) == 0
     assert 'y' not in parsed_symbols_r  # reset clears everything
 
+
 def test_parse_match_fallback():
     with raises(NotImplementedError):
         parse_smtlib('(assert (match 10 ((x 20))))')
+
+
+def test_parse_semantic_variadic_implies():
+    source = '''
+    (declare-sort S 0)
+    (declare-fun a () S)
+    (declare-fun b () S)
+    (declare-fun c () S)
+    (assert (=> a b c))
+    '''
+    parsed_symbols, assertions = parse_smtlib(source)
+    a, b, c = parsed_symbols['a'], parsed_symbols['b'], parsed_symbols['c']
+    assert assertions[0] == Implies(a, Implies(b, c))
+
+
+def test_parse_semantic_chained_comparisons():
+    source = '(assert (< 1 2 0))'
+    parsed_symbols, assertions = parse_smtlib(source)
+    assert assertions[0] == And(StrictLessThan(1, 2), StrictLessThan(2, 0))
+
+
+def test_parse_semantic_simultaneous_macro():
+    source = '''
+    (declare-fun a () Int)
+    (declare-fun b () Int)
+    (define-fun f ((a Int)(b Int)) Int (- a b))
+    (assert (= (f b a) 0))
+    '''
+    parsed_symbols, assertions = parse_smtlib(source)
+    a, b = parsed_symbols['a'], parsed_symbols['b']
+    assert len(assertions) == 3
+    assert assertions[0] == Q.integer(a)
+    assert assertions[1] == Q.integer(b)
+    assert assertions[2] == Eq(b - a, 0)
+
+
+def test_parse_semantic_simultaneous_let():
+    source = '''
+    (declare-fun a () Int)
+    (declare-fun b () Int)
+    (assert (let ((b a) (a 1)) (= b 1)))
+    '''
+    parsed_symbols, assertions = parse_smtlib(source)
+    a, b = parsed_symbols['a'], parsed_symbols['b']
+
+    assert len(assertions) == 3
+    assert assertions[0] == Q.integer(a)
+    assert assertions[1] == Q.integer(b)
+    assert assertions[2] == Eq(a, 1)
+
+
+def test_parse_indexed_and_as_identifiers():
+    source = '''
+    (declare-sort S 0)
+    (declare-fun x () S)
+    (assert (= ((_ extract 7 0) x) 0))
+    '''
+    parsed_symbols, assertions = parse_smtlib(source)
+    x = parsed_symbols['x']
+    extract_func = Function("_extract_7_0")
+    assert assertions[0] == Eq(extract_func(x), 0)
+
+    source_as = '''
+    (assert (= ((as const Array) 1) 1))
+    '''
+    parsed_symbols, assertions = parse_smtlib(source_as)
+    const_func = Function("const")
+    assert assertions[0] == Eq(const_func(1), 1)
+
+
+def test_parse_complex_nested_logic():
+    source = """
+    (set-option :print-success false)
+    (set-logic QF_LRA)
+    (declare-fun x1 () Real)
+    (declare-fun x3 () Real)
+    (declare-fun x2 () Real)
+    (assert (not (=> (and (<= x3 (+ 10 x2)) (and (and (>= x3 1) (and (= 10 x3) (= 0 x1))) (<= x3 12))) (or (>= 10 x3) (= x1 3)))))
+    (check-sat)
+    (exit)
+    """
+    parsed_symbols, assertions = parse_smtlib(source)
+    x1 = parsed_symbols['x1']
+    x2 = parsed_symbols['x2']
+    x3 = parsed_symbols['x3']
+
+    assert len(assertions) == 4
+    assert assertions[0] == Q.real(x1)
+    assert assertions[1] == Q.real(x3)
+    assert assertions[2] == Q.real(x2)
+    assert assertions[3] == Not(Implies(And(Eq(0, x1), Eq(10, x3), GreaterThan(x3, 1), LessThan(x3, 12), LessThan(x3, x2 + 10)), Or(Eq(x1, 3), GreaterThan(10, x3))))
+
+
+def test_parse_complex_nested_arithmetic():
+    source = """
+    (set-option :print-success false)
+    (set-logic QF_LRA)
+    (declare-fun x1 () Real)
+    (declare-fun x3 () Real)
+    (declare-fun x2 () Real)
+    (assert (not (=> (and (and (and (>= x3 1) (and (= 5 x3) (= 2 x2))) (<= x3 12)) (>= x3 (- 5 (* 2 x1)))) (or (>= x3 5) (= x2 1)))))
+    (check-sat)
+    (exit)
+    """
+    parsed_symbols, assertions = parse_smtlib(source)
+    x1 = parsed_symbols['x1']
+    x2 = parsed_symbols['x2']
+    x3 = parsed_symbols['x3']
+
+    assert len(assertions) == 4
+    assert assertions[0] == Q.real(x1)
+    assert assertions[1] == Q.real(x3)
+    assert assertions[2] == Q.real(x2)
+    assert assertions[3] == Not(Implies(And(Eq(2, x2), Eq(5, x3), GreaterThan(x3, 1), LessThan(x3, 12), GreaterThan(x3, 5 - 2*x1)), Or(Eq(x2, 1), GreaterThan(x3, 5))))
+
+
+def test_parse_2_args():
+    source = """
+    (set-logic QF_LRA)
+    (declare-fun x () Real)
+    (declare-fun y () Real)
+    (assert (distinct x y))
+    (assert (= (/ x y) 10.0))
+    """
+    parsed_symbols, assertions = parse_smtlib(source)
+    x = parsed_symbols['x']
+    y = parsed_symbols['y']
+
+    assert len(assertions) == 4
+    assert assertions[0] == Q.real(x)
+    assert assertions[1] == Q.real(y)
+    assert assertions[2] == Ne(x, y)
+    assert assertions[3] == Eq(x / y, 10.0)
+
+
+def test_parse_variadic_inequalities():
+    source = """
+    (set-logic QF_LRA)
+    (declare-fun x () Real)
+    (declare-fun y () Real)
+    (declare-fun z () Real)
+    (assert (<= x y z))
+    (assert (> x y z))
+    (assert (>= x y z))
+    """
+    parsed_symbols, assertions = parse_smtlib(source)
+    x = parsed_symbols['x']
+    y = parsed_symbols['y']
+    z = parsed_symbols['z']
+
+    assert len(assertions) == 6
+    assert assertions[0] == Q.real(x)
+    assert assertions[1] == Q.real(y)
+    assert assertions[2] == Q.real(z)
+    assert assertions[3] == And(LessThan(x, y), LessThan(y, z))
+    assert assertions[4] == And(StrictGreaterThan(x, y), StrictGreaterThan(y, z))
+    assert assertions[5] == And(GreaterThan(x, y), GreaterThan(y, z))

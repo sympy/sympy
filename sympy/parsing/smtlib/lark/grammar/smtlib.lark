@@ -56,10 +56,10 @@ sort: symbol -> sort_simple
 sorted_var: "(" symbol sort ")"
 var_binding: "(" symbol term ")"
 
-qual_identifier: symbol
-               | "(" "_" symbol numeral+ ")"
-               | "(" "as" symbol sort ")"
-               | "(" "as" "(" "_" symbol numeral+ ")" sort ")"
+qual_identifier: symbol -> qual_id_simple
+               | "(" "_" symbol numeral+ ")" -> qual_id_indexed
+               | "(" "as" symbol sort ")" -> qual_id_as
+               | "(" "as" "(" "_" symbol numeral+ ")" sort ")" -> qual_id_as_indexed
 
 term: spec_constant                       -> term_spec_constant
     | qual_identifier                     -> term_qual_identifier
