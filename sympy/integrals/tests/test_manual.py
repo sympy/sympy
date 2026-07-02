@@ -17,7 +17,6 @@ from sympy.functions.special.polynomials import (assoc_laguerre, chebyshevt, che
 from sympy.functions.special.zeta_functions import polylog
 from sympy.integrals.integrals import (Integral, integrate)
 from sympy.logic.boolalg import And
-from sympy import factor
 from sympy.integrals.manualintegrate import (manualintegrate, find_substitutions,
     _parts_rule, integral_steps, manual_subs)
 from sympy.testing.pytest import raises, slow
@@ -249,9 +248,7 @@ def test_manualintegrate_trig_substitution():
         Piecewise((-sqrt(-x**2/25 + 1)/(125*x) -
                    (-x**2/25 + 1)**(3*S.Half)/(15*x**3), And(x < 5, x > -5)))
     assert manualintegrate(x**7/(49*x**2 + 1)**(3 * S.Half), x) == \
-        ((49*x**2 + 1)**(5*S.Half)/28824005 -
-         (49*x**2 + 1)**(3*S.Half)/5764801 +
-         3*sqrt(49*x**2 + 1)/5764801 + 1/(5764801*sqrt(49*x**2 + 1)))
+        sqrt(49*x**2 + 1)*(x**4/S(12005)- 3*x**2/S(588245) + S(11)/28824005) + 1/(S(5764801)*sqrt(49*x**2 + 1))
 
 def test_manualintegrate_trivial_substitution():
     assert manualintegrate((exp(x) - exp(-x))/x, x) == -Ei(-x) + Ei(x)
@@ -867,8 +864,17 @@ def test_manualintegrate_sqrt_quadratic_reduction():
 
     # Symbolic Verification (General Case)
     term_n5 = f/(a*x**2 + b*x + c)**(S(5)/2)
-    intg_result = manualintegrate(term_n5, x)
-    assert factor(intg_result.diff(x) - term_n5) == 0
+    intg_result = piecewise_fold(manualintegrate(term_n5, x))
+    assert (intg_result.args[0][0].diff(x) - term_n5).cancel() == 0
+    # case delta = 0
+    assert (intg_result.args[1][0].subs(c, b**2/(4*a)).diff(x) - term_n5.subs(c, b**2/(4*a))).cancel() == 0
+
+def test_manualintegrate_sqrt_quadratic_polynomial_reduction_rule():
+    f = (d*x**3 + x)/(3*x**2 + b*x + c)**(S(5)/2)
+    result = piecewise_fold(manualintegrate(f, x))
+    assert (result.args[0][0].diff(x) - f).cancel() == 0
+    # case delta = 0
+    assert (result.args[1][0].subs(c, b**2/12).diff(x) - f.subs(c, b**2/12)).cancel() == 0
 
 def test_mul_pow_derivative():
     assert_is_integral_of(x*sec(x)*tan(x), x*sec(x) - log(tan(x) + sec(x)))
