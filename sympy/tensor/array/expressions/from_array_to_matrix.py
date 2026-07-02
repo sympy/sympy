@@ -660,8 +660,6 @@ def convert_array_to_matrix(expr):
     rec = _array2matrix(expr)
     rec, removed = _remove_trivial_dims(rec)
     return rec
-
-
 def _array_diag2contr_diagmatrix(expr: ArrayDiagonal):
     if isinstance(expr.expr, ArrayTensorProduct):
         args = list(expr.expr.args)
@@ -671,6 +669,7 @@ def _array_diag2contr_diagmatrix(expr: ArrayDiagonal):
         contr_indices = []
         total_ndim = get_ndim(expr)
         replaced = [False for arg in args]
+        contracted_inner_index = [None] * len(args)
         for i, (abs_pos, rel_pos) in enumerate(zip(diag_indices, tuple_links)):
             if len(abs_pos) != 2:
                 continue
@@ -696,6 +695,7 @@ def _array_diag2contr_diagmatrix(expr: ArrayDiagonal):
                 diag_indices[i] = None
                 args[pos1_outer] = OneArray(arg1.shape[pos1_in2])
                 replaced[pos1_outer] = True
+                contracted_inner_index[pos1_outer] = pos1_inner
             elif arg2.shape[pos2_in2] == 1:
                 if arg2.shape[pos2_inner] != 1:
                     darg2 = DiagMatrix(arg2)
@@ -707,7 +707,39 @@ def _array_diag2contr_diagmatrix(expr: ArrayDiagonal):
                 diag_indices[i] = None
                 args[pos2_outer] = OneArray(arg2.shape[pos2_in2])
                 replaced[pos2_outer] = True
-        diag_indices_new = [i for i in diag_indices if i is not None]
+                contracted_inner_index[pos2_outer] = pos2_inner
+
+        # Reconstruct correct diagonal indices for the remaining diagonals
+        contracted_positions = set()
+        for p1, p2 in contr_indices:
+            contracted_positions.add(p1)
+            contracted_positions.add(p2)
+
+        free_dims = []
+        for outer in range(len(args)):
+            for inner in range(get_ndim(args[outer])):
+                if (outer, inner) not in contracted_positions:
+                    free_dims.append((outer, inner))
+
+        diag_indices_new = []
+        for abs_pos in diag_indices:
+            if abs_pos is None:
+                continue
+            mapped_group = []
+            for d in abs_pos:
+                outer, inner = mapping[d]
+                if replaced[outer]:
+                    inner_contr = contracted_inner_index[outer]
+                    if inner == inner_contr:
+                        continue
+                    new_pos = (outer, 0)
+                else:
+                    new_pos = (outer, inner)
+                if new_pos in free_dims:
+                    mapped_group.append(free_dims.index(new_pos))
+            if len(mapped_group) > 1:
+                diag_indices_new.append(tuple(mapped_group))
+
         cumul = list(accumulate([0] + [get_ndim(arg) for arg in args]))
         contr_indices2 = [tuple(cumul[a] + b for a, b in i) for i in contr_indices]
         tc = _array_contraction(
@@ -716,6 +748,8 @@ def _array_diag2contr_diagmatrix(expr: ArrayDiagonal):
         td = _array_diagonal(tc, *diag_indices_new)
         return td
     return expr
+
+
 
 
 def _a2m_mul(*args):
