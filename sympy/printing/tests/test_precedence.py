@@ -9,7 +9,7 @@ from sympy.functions import sin
 from sympy.integrals.integrals import Integral
 from sympy.series.order import Order
 
-from sympy.printing.precedence import precedence, PRECEDENCE
+from sympy.printing.precedence import precedence, PRECEDENCE, precedence_Rational
 
 x, y = symbols("x,y")
 
@@ -127,3 +127,16 @@ def test_custom_function_precedence_comparison():
 
     test_low_precedence()
     test_high_precedence()
+
+def test_precedence_Rational_robustness():
+    """
+    Test that precedence_Rational handles objects without the 'p' attribute,
+    preventing AttributeError as reported in issue #26748.
+    """
+
+    class MockRational:
+        pass
+
+    mock_r = MockRational()
+    # Deve retornar Mul (50) em vez de crashar
+    assert precedence_Rational(mock_r) == PRECEDENCE["Mul"]
