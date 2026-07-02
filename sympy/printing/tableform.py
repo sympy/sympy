@@ -364,4 +364,4 @@ class TableForm:
                 d = [self._headings[0][i]] + d
             s += " & ".join(d) + r" \\" + "\n"
         s += r"\end{tabular}"
-        return s
+        return r"\text{" + s + "}"
