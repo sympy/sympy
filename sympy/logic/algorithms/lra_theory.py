@@ -104,7 +104,6 @@ TODO:
  - Handle non-rational real numbers
  - Handle positive and negative infinity
  - Implement backtracking and theory proposition
- - Simplify matrix by removing unused variables using Gaussian elimination
 
 References
 ==========
@@ -253,6 +252,7 @@ class LRASolver():
         s_count = 0
         s_subs = {}
         nonbasic = []
+        atom_vars = set()
 
         if testing_mode:
             # sort to reduce nondeterminism
@@ -328,6 +328,8 @@ class LRASolver():
             else:
                 var = terms[0]
 
+            atom_vars.add(var)
+
             assert var_coeff != 0
 
             equality = prop.function == Q.eq
@@ -348,6 +350,12 @@ class LRASolver():
             raise UnhandledInput("Nonlinearity is not handled")
 
         A, _ = linear_eq_to_matrix(A, nonbasic + basic)
+        # matrix A is guaranteed to able to be simplified
+        # by removing the original non-atom variables from it
+        # these removed variables will be replaced by linear
+        # equation of existing variables.
+        elim = {i for i in nonbasic if i not in atom_vars}
+        A, basic, nonbasic = _reduce_matrix(A, basic, nonbasic, elim)
         nonbasic = [var_to_lra_var[nb] for nb in nonbasic]
         basic = [var_to_lra_var[b] for b in basic]
         for idx, var in enumerate(nonbasic + basic):
@@ -720,6 +728,60 @@ def _sep_const_terms(expr):
                       lambda t: len(t.free_symbols) == 0,
                       binary=True)
     return Add(*var), Add(*const)
+
+
+def _reduce_matrix(A, basic, nonbasic, elim):
+    """
+    Remove every non-atom variable from the matrix A. This is discussed in
+    Preprocessing part of the paper [1]_ as the "Gaussian Eliminaton".
+
+    Example
+    =======
+
+    Consider the formula:
+
+        x >= 0 and z <= 1 and (x + y <= 5 or z + y >= 2)
+
+    Here y is the only non-atom variable, so only y is removed.
+    >>> from sympy.abc import x, y, z
+    >>> from sympy import symbols
+    >>> from sympy.solvers.solveset import linear_eq_to_matrix
+    >>> from sympy.logic.algorithms.lra_theory import _reduce_matrix
+    >>> s1, s2 = symbols('s1 s2')
+    >>> nonbasic, basic = [x, y, z], [s1, s2]
+    >>> A, _ = linear_eq_to_matrix([x + y - s1, z + y - s2], nonbasic + basic)
+    >>> A, basic, nonbasic = _reduce_matrix(A, basic, nonbasic, {y})
+    >>> basic, nonbasic
+    ([s1], [x, z, s2])
+
+    Notice that s2 became nonbasic.
+
+    >>> A
+    Matrix([[1, -1, 1, -1]])
+
+    It is possible for the matrix A to collapse entirely.
+    """
+    if not elim:
+        return A, basic, nonbasic
+
+    kept_nonbasic = [v for v in nonbasic if v not in elim]
+    # order starts with the variables we want to eliminate
+    # in rref, these variables will become pivots
+    order = list(elim) + basic + kept_nonbasic
+    col_of = {v: i for i, v in enumerate(nonbasic + basic)}
+    # reorder the matrix for the rref
+    A = A[:, [col_of[v] for v in order]]
+
+    B, pivots = A.rref()
+
+    keep_rows = [r for r, pc in enumerate(pivots) if pc >= len(elim)]
+    new_basic = [order[pivots[r]] for r in keep_rows]
+    basic_set = set(new_basic)
+    new_nonbasic = [v for v in kept_nonbasic + basic if v not in basic_set]
+
+    order_pos = {v: i for i, v in enumerate(order)}
+    A = -B[keep_rows, [order_pos[v] for v in new_nonbasic + new_basic]]
+    return A, new_basic, new_nonbasic
 
 
 class Boundary:
