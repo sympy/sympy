@@ -495,6 +495,9 @@ class Domain(Generic[Er]):
     is_Simple: bool = False
     """Boolean flag indicating if the domain is a simple domain."""
 
+    is_ConjugateDomain: bool = False
+    """Boolean flag indicating if the domain supports conjugation."""
+
     is_Composite: bool = False
     """Boolean flag indicating if the domain is a composite domain."""
 
