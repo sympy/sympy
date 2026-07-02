@@ -215,12 +215,14 @@ def test_manualintegrate_inversetrig():
     assert manualintegrate(x*atan(a*x), x) == -a*(x/a**2 - Piecewise((x, Eq(a**2, 0)),
                                             (atan(x/sqrt(a**(-2)))/(a**2*sqrt(a**(-2))), True))/a**2)/2 + x**2*atan(a*x)/2
     # acsc
-    assert manualintegrate(acsc(x), x) == x*acsc(x) + Integral(1/(x*sqrt(1 - 1/x**2)), x)
-    assert manualintegrate(acsc(a*x), x) == x*acsc(a*x) + Integral(1/(x*sqrt(1 - 1/(a**2*x**2))), x)/a
+    assert manualintegrate(acsc(x), x) == x*acsc(x) - log(-1 + 1/(sqrt(1 - 1/x**2) + I/x)) + log(1 + 1/(sqrt(1 - 1/x**2) + I/x))
+    assert manualintegrate(acsc(a*x), x) == (a*x*acsc(a*x) - log(-1 + 1/(sqrt(1 - 1/(a**2*x**2)) + I/(a*x))) +
+                                              log(1 + 1/(sqrt(1 - 1/(a**2*x**2)) + I/(a*x))))/a
     assert manualintegrate(x*acsc(a*x), x) == x**2*acsc(a*x)/2 + Integral(1/sqrt(1 - 1/(a**2*x**2)), x)/(2*a)
     # asec
-    assert manualintegrate(asec(x), x) == x*asec(x) - Integral(1/(x*sqrt(1 - 1/x**2)), x)
-    assert manualintegrate(asec(a*x), x) == x*asec(a*x) - Integral(1/(x*sqrt(1 - 1/(a**2*x**2))), x)/a
+    assert manualintegrate(asec(x), x) == x*asec(x) + log(-1 + 1/(sqrt(1 - 1/x**2) + I/x)) - log(1 + 1/(sqrt(1 - 1/x**2) + I/x))
+    assert manualintegrate(asec(a*x), x) == (a*x*asec(a*x) + log(-1 + 1/(sqrt(1 - 1/(a**2*x**2)) + I/(a*x))) -
+                                        log(1 + 1/(sqrt(1 - 1/(a**2*x**2)) + I/(a*x))))/a
     assert manualintegrate(x*asec(a*x), x) == x**2*asec(a*x)/2 - Integral(1/sqrt(1 - 1/(a**2*x**2)), x)/(2*a)
     # acot
     assert manualintegrate(acot(x), x) == x*acot(x) + log(x**2 + 1)/2
@@ -519,18 +521,20 @@ def test_issue_6746():
     assert manualintegrate(1/((x**a + y**b + 4)*sqrt(a*x**2 + 1)), x) == \
         y**(-b)*Integral(x**(-a)/(y**(-b)*sqrt(a*x**2 + 1) +
         x**(-a)*sqrt(a*x**2 + 1) + 4*x**(-a)*y**(-b)*sqrt(a*x**2 + 1)), x)
-    assert manualintegrate(1/((x**2 + 4)*sqrt(4*x**2 + 1)), x) == \
-        Integral(1/((x**2 + 4)*sqrt(4*x**2 + 1)), x)
+    assert manualintegrate(1/((x**2 + 4)*sqrt(4*x**2 + 1)), x) == -sqrt(15)*(log(-8*sqrt(15) + 31 + (2*x + sqrt(4*x**2 + 1))**(-2)) -\
+                                     log(8*sqrt(15) + 31 + (2*x + sqrt(4*x**2 + 1))**(-2)))/60
     assert manualintegrate(1/(x - a**x + x*b**2), x) == \
         Integral(1/(-a**x + b**2*x + x), x)
 
 
 @slow
 def test_issue_2850():
-    assert manualintegrate(asin(x)*log(x), x) == -x*asin(x) - sqrt(-x**2 + 1) \
-            + (x*asin(x) + sqrt(-x**2 + 1))*log(x) - Integral(sqrt(-x**2 + 1)/x, x)
-    assert manualintegrate(acos(x)*log(x), x) == -x*acos(x) + sqrt(-x**2 + 1) + \
-        (x*acos(x) - sqrt(-x**2 + 1))*log(x) + Integral(sqrt(-x**2 + 1)/x, x)
+    assert manualintegrate(asin(x)*log(x), x) == (-x*asin(x) - (I*x + 3*sqrt(1 - x**2))/2 + (x*asin(x)
+                + sqrt(1 - x**2))*log(x) - log(-1 + 1/(I*x + sqrt(1 - x**2)))
+                + log(1 + 1/(I*x + sqrt(1 - x**2))) - S.Half/(I*x + sqrt(1 - x**2)))
+    assert manualintegrate(acos(x)*log(x), x) == -x*acos(x) + I*x/2 + 3*sqrt(1 - x**2)/2 + \
+    (x*acos(x) - sqrt(1 - x**2))*log(x) + log(-1 + 1/(I*x + sqrt(1 - x**2))) - \
+    log(1 + 1/(I*x + sqrt(1 - x**2))) + S.Half/(I*x + sqrt(1 - x**2))
     assert manualintegrate(atan(x)*log(x), x) == -x*atan(x) + (x*atan(x) - \
             log(x**2 + 1)/2)*log(x) + log(x**2 + 1)/2 + Integral(log(x**2 + 1)/x, x)/2
 
