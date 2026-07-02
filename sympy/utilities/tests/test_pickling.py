@@ -48,7 +48,7 @@ dont_check_attrs = {
 }
 
 
-def check(a, exclude=[], check_attr=True, deprecated=()):
+def check(a, exclude=[], check_attr=True, deprecated=(), check_eq=False):
     """ Check that pickling and copying round-trips.
     """
     # Pickling with protocols 0 and 1 is disabled for Basic instances:
@@ -77,6 +77,9 @@ def check(a, exclude=[], check_attr=True, deprecated=()):
         d1 = dir(a)
         d2 = dir(b)
         assert set(d1) == set(d2)
+
+        if check_eq:
+            assert a == b
 
         if not check_attr:
             continue
@@ -208,9 +211,20 @@ def test_Singletons():
 
 #================== combinatorics ===================
 from sympy.combinatorics.free_groups import FreeGroup
+from sympy.combinatorics.permutations import Permutation
 
 def test_free_group():
     check(FreeGroup("x, y, z"), check_attr=False)
+
+def test_Permutation():
+    #fails with check_attr=True because Permutation uses attributes to cache properties (e.g. _cyclic_form)
+    check(Permutation([0,3,2,1,4]), check_attr=False, check_eq=True)
+
+    p = Permutation(S(2))(0,1)
+    check(p, check_attr=False, check_eq=True)
+
+    p2 = Permutation(p.array_form + [S(4),S(3)])
+    check(p2, check_attr=False, check_eq=True)
 
 #================== functions ===================
 from sympy.functions import (Piecewise, lowergamma, acosh, chebyshevu,
@@ -711,6 +725,33 @@ def test_deprecation_warning():
 def test_issue_18438():
     assert pickle.loads(pickle.dumps(S.Half)) == S.Half
 
+#================= tensor ======================
+import sympy.tensor.tensor as tens
+from sympy.combinatorics.tensor_can import get_symmetric_group_sgs
+
+def test_get_symmetric_group_sgs():
+    base, sgs = get_symmetric_group_sgs(S(3), antisym=True)
+    check(base, check_attr=False, check_eq=True)
+    check(sgs, check_attr=False, check_eq=True)
+
+def test_TensorSymmetry():
+    t = tens.TensorSymmetry.fully_symmetric(-S(3))
+    check(t, check_attr=False, check_eq=True)
+
+def test_TensorHead():
+    R3 = tens.TensorIndexType("R", dim=3)
+    check(R3.epsilon, check_attr=False, check_eq=True)
+
+def test_TensorHead_2():
+    R3 = tens.TensorIndexType("R", dim=3)
+    K = tens.TensorHead("K", [R3,R3,R3])
+    check(K, check_attr=False, check_eq=True)
+
+def test_epsilon():
+    R3 = tens.TensorIndexType("R", dim=3)
+    i, j, k = tens.tensor_indices("i j k", R3)
+
+    check(R3.epsilon(i,j,k), check_attr=False, check_eq=True)
 
 #================= old pickles =================
 def test_unpickle_from_older_versions():
