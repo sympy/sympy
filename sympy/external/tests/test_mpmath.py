@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.external.mpmath import repr_dps
 
 
