@@ -1802,7 +1802,63 @@ class Basic(Printable):
         return (rv, mapping) if map else rv # type: ignore
 
     def find(self, query, group=False):
-        """Find all subexpressions matching a query."""
+        """Find all subexpressions matching a query.
+
+        Parameters
+        ==========
+        
+        query : type, Basic, or callable
+
+            - a class such as ``Pow`` or ``exp``, to match all instances of that class
+            - a specific expression, to match occurrences equal to it
+            - a :class:`~.Wild`-containing pattern
+            - any callable taking one argument and returning a bool, used as a custom
+              test on each subexpression
+
+        group : bool, optional
+
+            Controls the form of the result. With the default value
+            of ``False``, duplicates are discarded and a ``set`` is
+            returned. Setting this to ``True`` keeps track of how
+            often each subexpression was found, returning a ``dict``
+            instead.
+
+        Returns
+        =======
+
+        set or dict
+
+            All distinct subexpressions matching ``query``. This is a
+            plain ``set`` unless ``group=True``, in which case a
+            ``dict`` is returned where each key is a match and the
+            corresponding value is the number of times it appeared in
+            ``self``.
+
+        Examples
+        ========
+
+        >>> from sympy import exp, log
+        >>> from sympy.abc import a, b
+
+        Default behaviour returns a set of unique matches:
+
+        >>> expr = exp(a) + log(b) + exp(a)*log(b)
+        >>> expr.find(exp)
+        {exp(a)}
+
+        With ``group=True``, a dict mapping matches to their counts
+        is returned instead:
+
+        >>> expr.find(log, group=True)
+        {log(b): 2}
+
+        A callable can be used for custom matching, e.g. to find
+        every power in an expression:
+
+        >>> (a**2 + b**3).find(lambda s: s.is_Pow)
+        {a**2, b**3}
+        """
+        
         query = _make_find_query(query)
         results = list(filter(query, _preorder_traversal(self)))
 
