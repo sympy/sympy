@@ -352,6 +352,8 @@ class LRASolver():
         A, _ = linear_eq_to_matrix(A, nonbasic + basic)
         # matrix A is guaranteed to able to be simplified
         # by removing the original non-atom variables from it
+        # these removed variables will be replaced by linear
+        # equation of existing variables.
         elim = {i for i in nonbasic if i not in atom_vars}
         A, basic, nonbasic = _reduce_matrix(A, basic, nonbasic, elim)
         nonbasic = [var_to_lra_var[nb] for nb in nonbasic]
