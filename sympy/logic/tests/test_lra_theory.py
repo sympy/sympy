@@ -12,7 +12,8 @@ from sympy.assumptions.cnf import CNF, EncodedCNF
 from sympy.functions.elementary.trigonometric import cos
 from sympy.external import import_module
 
-from sympy.logic.algorithms.lra_theory import LRASolver, UnhandledInput, LRARational, HANDLE_NEGATION
+from sympy.logic.algorithms.lra_theory import LRASolver, UnhandledInput, LRARational, HANDLE_NEGATION, \
+    _sep_const_terms, _sep_const_coeff
 from sympy.core.random import random, choice, randint
 from sympy.core.sympify import sympify
 from sympy.ntheory.generate import randprime
@@ -79,6 +80,16 @@ def find_rational_assignment(constr, assignment, iter=20):
             eps = eps/2
 
     return None
+
+def substitute_slack(cons, s_subs):
+    expr = cons.lhs - cons.rhs
+    var, const = _sep_const_terms(expr)
+    var, coeff = _sep_const_coeff(var)
+    if var in s_subs:
+        return cons.func(coeff*s_subs[var] + const, 0)
+    if -var in s_subs:
+        return cons.func(-coeff*s_subs[-var] + const, 0)
+    return cons
 
 def boolean_formula_to_encoded_cnf(bf):
     cnf = CNF.from_prop(bf)
@@ -208,6 +219,8 @@ def test_random_problems():
             cons_funcs = [cons.func for cons in constraints]
             assignment = feasible[1]
             assignment = {key.var : value for key, value in assignment.items()}
+            constraints = [substitute_slack(cons, s_subs) for cons in constraints]
+
             if not (StrictLessThan in cons_funcs or StrictGreaterThan in cons_funcs):
                 assignment = {key: value[0] for key, value in assignment.items()}
                 for cons in constraints:
