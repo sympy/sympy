@@ -707,3 +707,10 @@ def test_matexpr_derivative_by_matrix_element():
 
     A = MatrixSymbol(a, a, a)
     assert A.diff(Y[a,a]) == ZeroMatrix(a, a)
+def test_exponentiated_matrix_derivative():
+    m, n, p = symbols('m n p')
+    A = MatrixSymbol('A', m, n)
+    B = MatrixSymbol('B', n, p)
+    C = exp(MatMul(A, B))
+    res = diff(C, A)
+    assert res == PermuteDims(ArrayTensorProduct(exp(A*B)*Identity(m), B), Permutation(3)(1, 2))
