@@ -583,8 +583,12 @@ simbolovi08 = simbolovi0 + simbolovi1 + simbolovi2 + simbolovi3 + simbolovi4 + s
 
 da1 = Dirac*a1 - a1*Dirac
 da1 = da1.expand()
-da1 = da1.simplify()
+da1 = da1.simplify().simplify()
 
+print(D1)
+
+print(da1.args[0].tensor_shape)
+print(da1.args[4])
 da2 = da1 + da1
 print(len(da1.args))
 print(len(da2.args))
