@@ -1733,7 +1733,14 @@ def _meijerint_indefinite_1(f, x):
             place = 0  # Assume we can expand at zero
         else:
             place = None
-        r = hyperexpand(r.subs(t, a*x**b), place=place)
+        if x.is_extended_negative:
+            # The G-function integration formula assumes a positive variable.
+            # Avoid introducing a spurious sign when expanding powers of a
+            # symbol that is known to be negative.
+            xp = Dummy('x', positive=True)
+            r = hyperexpand(r.subs(t, a*xp**b), place=place).subs(xp, x)
+        else:
+            r = hyperexpand(r.subs(t, a*x**b), place=place)
 
         # now substitute back
         # Note: we really do want the powers of x to combine.
