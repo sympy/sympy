@@ -1383,7 +1383,7 @@ def exp_rule(integral):
         return ExpRule(integrand, symbol, E, integrand.args[0])
 
 
-def powsimp_rule(integral):
+def combine_power_rule(integral):
     """
     Strategy that simplifies the exponent of a power.
     exp(a*x**2) * exp(b*x) -> exp((a*x**2 + b*x))
@@ -1393,8 +1393,9 @@ def powsimp_rule(integral):
     a = Wild('a', exclude=[symbol])
     b = Wild('b', exclude=[symbol])
     k = Wild('k', exclude=[symbol])
+    rest = Wild('rest')
 
-    match = integrand.match(k**(a*symbol**2) * k**(b*symbol))
+    match = integrand.match(rest * k**(a*symbol**2) * k**(b*symbol))
 
     if not match:
         return
@@ -2664,7 +2665,6 @@ def integral_steps(integrand, symbol, **options):
                         null_safe(heaviside_rule), null_safe(quadratic_denom_rule),
                         null_safe(sqrt_quadratic_rule),
                         null_safe(sqrt_fractional_linear_rule),
-                        null_safe(powsimp_rule),
                         null_safe(trig_cmplx_exp_rule)),
             Derivative: derivative_rule,
             TrigonometricFunction: trig_rule,
@@ -2685,6 +2685,9 @@ def integral_steps(integrand, symbol, **options):
                 condition(
                     integral_is_subclass(Mul, Pow),
                     cancel_rule),
+                condition(
+                    integral_is_subclass(Mul),
+                    combine_power_rule),
                 condition(
                     integral_is_subclass(Mul, log,
                     *inverse_trig_functions),

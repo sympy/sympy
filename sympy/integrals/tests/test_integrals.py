@@ -2236,3 +2236,10 @@ def test_issue_15566():
     assert isinstance(result, Piecewise)
 
     assert result.has(erf)
+
+def test_issue_29909():
+    f = x*exp(x)*erf(x)
+    F = x*exp(x)*erf(x) - exp(x)*erf(x) + exp(x)*exp(-x**2)/sqrt(pi) + exp(Rational(1, 4))*erf(x - Rational(1, 2))/2
+
+    assert integrate(f, x) == F
+    assert F.diff(x).equals(f)
