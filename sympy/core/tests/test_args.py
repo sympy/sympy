@@ -2230,6 +2230,11 @@ def test_sympy__functions__elementary__exponential__log():
     assert _test_args(log(2))
 
 
+def test_sympy__functions__elementary__exponential__EML():
+    from sympy.functions.elementary.exponential import EML
+    assert _test_args(EML(x, y))
+
+
 @SKIP("abstract class")
 def test_sympy__functions__elementary__hyperbolic__HyperbolicFunction():
     pass
