@@ -92,7 +92,6 @@ from mpmath.libmp import (
     normalize,
     phi_fixed,
     prec_to_dps,
-    repr_dps,
     round_nearest,
     sqrtrem,
     to_float,
@@ -108,6 +107,16 @@ except ImportError:
 
 from mpmath.libmp.libintmath import giant_steps
 from mpmath.matrices.matrices import _matrix
+
+
+def repr_dps(n: int) -> int:
+    # This is how mpmath's repr_dps was implemented in mpmath <= 1.4.0.
+    # Keep a stable version here that is not affected by the mpmath version.
+    dps = prec_to_dps(n)
+    if dps == 15:
+        return 17
+    return dps + 3
+
 
 __all__ = [
     "MPContext",
