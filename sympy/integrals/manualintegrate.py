@@ -818,7 +818,11 @@ class ArctanRule(AtomicRule):
 
     def eval(self) -> Expr:
         a, b, c, x = self.a, self.b, self.c, self.variable
-        return a/b / sqrt(c/b) * atan(x/sqrt(c/b))
+        b_num, b_den = b.as_numer_denom()
+        c_num, c_den = c.as_numer_denom()
+        sqrt_b = sqrt(b_num) / sqrt(b_den)
+        sqrt_c = sqrt(c_num) / sqrt(c_den)
+        return a / (sqrt_b * sqrt_c) * atan(x * sqrt_b / sqrt_c)
 
 
 class OrthogonalPolyRule(AtomicRule, ABC):
@@ -1091,6 +1095,39 @@ class PolylogRule(AtomicRule):
 
     def eval(self) -> Expr:
         return polylog(self.b + 1, self.a * self.variable)
+
+
+class DilogRule(AtomicRule):
+
+    __slots__ = ("a", "b", "c")
+
+    a: Expr
+    b: Expr
+    c: Expr
+
+    def __init__(
+        self, integrand: Expr, variable: Symbol, a: Expr, b: Expr, c: Expr
+    ) -> None:
+        super().__init__(integrand, variable)
+        self.a = a
+        self.b = b
+        self.c = c
+
+    def eval(self) -> Expr:
+        a, b, c, x = self.a, self.b, self.c, self.variable
+        base = a - b*x**c
+        res_general = log(a)*log(x) - polylog(2, b*x**c/a)/c
+        res_c0 = log(a - b) * log(x)
+        res_a0 = log(-b * x**c)**2 / (2 * c)
+        pieces: list[tuple[Expr, Boolean]] = []
+        if not _if_zero_implies_zero(c, base):
+            pieces.append((res_c0, Eq(c, 0)))
+        if not _if_zero_implies_zero(a, base):
+            pieces.append((res_a0, Eq(a, 0)))
+        if not pieces:
+            return res_general
+        pieces.append((res_general, S.true))
+        return Piecewise(*pieces)
 
 
 class UpperGammaRule(AtomicRule):
@@ -1463,6 +1500,7 @@ def special_function_rule(integral):
             (cos, cos(quadratic_pattern, evaluate=False), None, FresnelCRule),
             (Mul, _symbol**e*exp(a*_symbol, evaluate=False), None, UpperGammaRule),
             (Mul, polylog(b, a*_symbol, evaluate=False)/_symbol, None, PolylogRule),
+            (Mul, log(a-b*_symbol**c)/_symbol, lambda *args: len(args) == 3 and not args[2].is_zero, DilogRule),
             (Pow, 1/sqrt(a - d*sin(_symbol, evaluate=False)**2),
                 lambda a, d: a != d, EllipticFRule),
             (Pow, sqrt(a - d*sin(_symbol, evaluate=False)**2),
@@ -2521,9 +2559,61 @@ def substitution_rule(integral):
             return ways[0]
 
 
-partial_fractions_rule = rewriter(
-    lambda integrand, symbol: integrand.is_rational_function(),
-    lambda integrand, symbol: integrand.apart(symbol))
+def partial_fractions_rule(integral):
+    integrand, symbol = integral
+    numer, denom = integrand.as_numer_denom()
+    numer_factors = factor_terms(numer).as_ordered_factors()
+    denom_factors = factor_terms(denom).as_ordered_factors()
+
+    numer_poly_factors = [f for f in numer_factors if f.is_polynomial(symbol)]
+    numer_trans_factors = [f for f in numer_factors if not f.is_polynomial(symbol)]
+    denom_poly_factors = [f for f in denom_factors if f.is_polynomial(symbol)]
+    denom_trans_factors = [f for f in denom_factors if not f.is_polynomial(symbol)]
+
+    denom_poly = Mul(*denom_poly_factors)
+    if not denom_poly.has_xfree({symbol}):
+        return None
+    denom_trans = Mul(*denom_trans_factors)
+    numer_poly = Mul(*numer_poly_factors)
+    numer_trans = Mul(*numer_trans_factors)
+    frac = numer_poly / denom_poly
+    part_frac = frac.apart(symbol)
+
+    if part_frac == frac:
+        return None
+
+    terms = part_frac.args if part_frac.is_Add else [part_frac]
+    trans_factor = numer_trans / denom_trans
+    generic_rewriting = Add(*[trans_factor * term for term in terms])
+    generic_substep = integral_steps(generic_rewriting, symbol)
+    pieces = []
+    if not generic_substep.contains_dont_know():
+        generic_substep = RewriteRule(integrand, symbol, generic_rewriting, generic_substep)
+        denom_factored = (denom_poly * denom_trans).factor()
+        edge_factors_set = set()
+        for term in terms:
+            _, term_denom = term.as_numer_denom()
+            term_denom_factors = factor_list(term_denom)[1]
+            for factor, _ in term_denom_factors:
+                if not factor.has_xfree({symbol}):
+                    if not _if_zero_implies_zero(factor, denom_factored):
+                        edge_factors_set.add(factor)
+        for edge_factor in edge_factors_set:
+            # 1/(x*(x - a)) = 1/a * (1/(x - a) - 1/x) just if a != 0
+            substitutions = solve(edge_factor, dict=True)
+            for substitution in substitutions:
+                subbed_expr = integrand.subs(substitution)
+                (k, v), = substitution.items()
+                condition = Eq(k, v)
+                degenerate_step = integral_steps(subbed_expr, symbol)
+                if degenerate_step:
+                    degenerate_step = RewriteRule(integrand, symbol, subbed_expr, degenerate_step)
+                    pieces.append((degenerate_step, condition))
+        if pieces:
+            pieces.append((generic_substep, S.true))
+            return PiecewiseRule(integrand, symbol, pieces)
+        return generic_substep
+    return None
 
 cancel_rule = rewriter(
     # lambda integrand, symbol: integrand.is_algebraic_expr(),
