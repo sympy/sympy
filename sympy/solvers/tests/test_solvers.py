@@ -2749,5 +2749,3 @@ def test_issue_27233():
 def test_solve_linear_python_int():
     assert solve_linear(5) == (0, 1)
     assert solve_linear(x, 5) == (x, 5)
-
-
