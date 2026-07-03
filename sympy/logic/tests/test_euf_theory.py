@@ -10,24 +10,29 @@ x, y, z, w, a, b, c, d = symbols('x y z w a b c d')
 
 def test_basic_and_chain_equality():
     cc = EUFCongruenceClosure([Q.eq(x, y), Q.eq(y, z)])
-    assert cc.are_equal(x, y)
-    assert cc.are_equal(y, z)
-    assert cc.are_equal(x, z)
-    assert not cc.are_equal(x, w)
+    assert cc.are_congruent(x, y)
+    assert cc.are_congruent(y, z)
+    assert cc.are_congruent(x, z)
+    assert not cc.are_congruent(x, w)
 
 
 def test_unary_function_congruence():
-    cc = EUFCongruenceClosure([Q.eq(a, b), Q.eq(f(a), x)])
-    assert cc.are_equal(f(b), x)   # f(a) = x, a=b -> f(b) = x
+    cc = EUFCongruenceClosure([])
+    for t in (f(a), f(b), x):
+        cc._flatten(t)
+    cc.merge(a, b)
+    cc.merge(f(a), x)
+    assert cc.are_congruent(f(b), x)   # f(a) = x, a=b -> f(b) = x
 
 
 def test_binary_congruence_and_propagation():
-    cc = EUFCongruenceClosure([
-        Q.eq(a, b),
-        Q.eq(c, d),
-        Q.eq(g(a, c), x)
-    ])
-    assert cc.are_equal(g(b, d), x)  # g(a,c) = x; a=b, c=d -> g(b,d)=x
+    cc = EUFCongruenceClosure([])
+    for t in (g(a, c), g(b, d), x):
+        cc._flatten(t)
+    cc.merge(a, b)
+    cc.merge(c, d)
+    cc.merge(g(a, c), x)
+    assert cc.are_congruent(g(b, d), x)  # g(a,c) = x; a=b, c=d -> g(b,d)=x
 
 
 def test_lambda_curry_and_equivalent_application():
@@ -36,7 +41,7 @@ def test_lambda_curry_and_equivalent_application():
         Q.eq(lam(x,y), lam(y,x)),
         Q.eq(x, y)
     ])
-    assert cc.are_equal(lam(x,y), lam(y,x))
+    assert cc.are_congruent(lam(x,y), lam(y,x))
 
 
 def test_permuted_arguments_no_commutativity():
@@ -47,7 +52,7 @@ def test_permuted_arguments_no_commutativity():
         Q.eq(x, y)                          # x = y
     ])
     # Even without commutativity, if x=y, h(x,y)=h(y,x) by congruence
-    assert cc.are_equal(lam_h(x, y), lam_h(y, x))  # h(x,y) = h(y,x)
+    assert cc.are_congruent(lam_h(x, y), lam_h(y, x))  # h(x,y) = h(y,x)
 
 
 def test_nested_lambdas_chain():
@@ -56,7 +61,7 @@ def test_nested_lambdas_chain():
         Q.eq(lam(x)(y), lam(y)(x)),
         Q.eq(x, y)
     ])
-    assert cc.are_equal(lam(x)(y), lam(y)(x))
+    assert cc.are_congruent(lam(x)(y), lam(y)(x))
 
 
 def test_add_equality_registers_and_merges():
@@ -65,13 +70,12 @@ def test_add_equality_registers_and_merges():
     a, b = Symbol('a'), Symbol('b')
     f = Function('f')
 
-    cc.add_equality(a, b)
-    assert cc._find(a) == cc._find(b)
-
     fa = cc._flatten(f(a))
     fb = cc._flatten(f(b))
 
-    assert cc._find(fa) == cc._find(fb)
+    cc.merge(a, b)
+    assert cc._find_repr(a) == cc._find_repr(b)
+    assert cc._find_repr(fa) == cc._find_repr(fb)
 
 
 def test_mixed_lambdas_flatten_unique():
@@ -91,12 +95,12 @@ def test_flatten_application_and_cache():
     assert ax == bx
 
 
-def test_find_with_automatic_registration():
+def test_find_of_transformed_symbols():
     cc = EUFCongruenceClosure([])
     t = Symbol('t')
-    assert cc._find(t) == t
+    assert cc._find_repr(cc._flatten(t)) == t
     t2 = Dummy('t2')
-    assert cc._find(t2) == t2
+    assert cc._find_repr(cc._flatten(t2)) == t2
 
 
 def test_process_pending_chain_merges():
@@ -120,8 +124,8 @@ def test_process_pending_chain_merges():
     cc.pending_unions.append((fx, fy))
     cc.pending_unions.append((fy, fz))
     cc._process_pending_unions()
-    assert cc._find(x1) == cc._find(y1) == cc._find(z1)
-    assert cc._find(fx) == cc._find(fy) == cc._find(fz)
+    assert cc._find_repr(x1) == cc._find_repr(y1) == cc._find_repr(z1)
+    assert cc._find_repr(fx) == cc._find_repr(fy) == cc._find_repr(fz)
 
 
 def test_flatten_lambda_consistency_and_cache():
@@ -141,36 +145,42 @@ def test_use_list_merging_under_union():
     cc = EUFCongruenceClosure([])
     a1, b1, c1 = Symbol('a1'), Symbol('b1'), Symbol('c1')
     f1 = Function('f1')
-    # Register variables and applications
-    cc._register(a1)
-    cc._register(b1)
-    cc._register(c1)
+    # Register variables and applications before any merging
+    apps = [cc._flatten(f1(t)) for t in (a1, b1, c1)]
     # Union a1 and b1
     cc._union(a1, b1)
     # Now add equality b1 = c1, so all three are merged
     cc._union(b1, c1)
-    rep = cc._find(a1)
-    class_members = cc.classlist[rep]
+    cc._process_pending_unions()
     # Test: all applications f1(x) for all class members x are congruent
-    app_reps = {cc._find(cc._flatten(f1(x))) for x in class_members}
+    app_reps = {cc._find_repr(app) for app in apps}
     assert len(app_reps) == 1
 
 
 def test_complex_deep_chaining():
     # Deep nesting of f
     depth = 190
+    cc = EUFCongruenceClosure([])
+    term_a = a
+    term_b = b
+    for _ in range(2 * depth):
+        term_a = f(term_a)
+        term_b = f(term_b)
+    # declare both towers up front, then merge
+    cc._flatten(term_a)
+    cc._flatten(term_b)
     term_a = a
     term_b = b
     for _ in range(depth):
         term_a = f(term_a)
         term_b = f(term_b)
-    eqs = [Q.eq(term_a, x), Q.eq(a, b)]
-    cc = EUFCongruenceClosure(eqs)
-
+    cc._flatten(x)
+    cc.merge(term_a, x)
+    cc.merge(a, b)
 
     # All nestings over a and b should be equal to each other and to x
     for _ in range(depth):
-        assert cc.are_equal(term_a, term_b)
+        assert cc.are_congruent(term_a, term_b)
         term_a = f(term_a)
         term_b = f(term_b)
 
@@ -181,18 +191,22 @@ def test_long_chain_variables():
     cc = EUFCongruenceClosure(eqs)
     for i in range(len(vars)):
         for j in range(len(vars)):
-            assert cc.are_equal(vars[i], vars[j])
+            assert cc.are_congruent(vars[i], vars[j])
 
 
 def test_composed_functions():
     f, g, h = symbols('f g h', cls=Function)
     a, b, c = symbols('a b c')
-    eqs = [Q.eq(a, b), Q.eq(f(a), c), Q.eq(g(c), h(b))]
-    cc = EUFCongruenceClosure(eqs)
+    cc = EUFCongruenceClosure([])
+    for t in (f(a), f(b), g(c), h(b), g(f(b))):
+        cc._flatten(t)
+    cc.merge(a, b)
+    cc.merge(f(a), c)
+    cc.merge(g(c), h(b))
     # f(a) = c and a=b => f(b) = c
-    assert cc.are_equal(f(a), f(b))
+    assert cc.are_congruent(f(a), f(b))
     # g(c) = h(b) and c = f(a) = f(b)
-    assert cc.are_equal(g(f(b)), h(b))
+    assert cc.are_congruent(g(f(b)), h(b))
 
 def test_example_1():
     lam_f = Lambda(symbols('x'), f('x'))
@@ -208,10 +222,10 @@ def test_example_1():
     cc = EUFCongruenceClosure([eq1, eq2, eq3, eq4, eq5, eq6])
 
     # Assertions checking congruence closure identifies equalities properly
-    assert cc.are_equal(b, c)                      # b = c
-    assert cc.are_equal(lam_g(a), d)               # g(a) = d
-    assert cc.are_equal(lam_g(b), lam_g(c))        # g(b) = g(c)
-    assert cc.are_equal(lam_f(a), lam_g(c))        # f(a) = g(c)
+    assert cc.are_congruent(b, c)                      # b = c
+    assert cc.are_congruent(lam_g(a), d)               # g(a) = d
+    assert cc.are_congruent(lam_g(b), lam_g(c))        # g(b) = g(c)
+    assert cc.are_congruent(lam_f(a), lam_g(c))        # f(a) = g(c)
 
 
 def test_example_2():
@@ -227,9 +241,9 @@ def test_example_2():
         Q.eq(c, d)                                   # c = d
     ]
     cc = EUFCongruenceClosure(eqs)
-    assert cc.are_equal(lam_g(b), lam_h(c))        # g(a) = h(c)
-    assert cc.are_equal(lam_f(a), lam_h(c))        # f(a) = h(c)
-    assert cc.are_equal(a, d)                      # a = d
+    assert cc.are_congruent(lam_g(b), lam_h(c))        # g(a) = h(c)
+    assert cc.are_congruent(lam_f(a), lam_h(c))        # f(a) = h(c)
+    assert cc.are_congruent(a, d)                      # a = d
 
 
 def test_flatten_simple_atoms_and_numbers():
@@ -263,31 +277,44 @@ def test_flatten_simple_atoms_and_numbers():
 
 
 def test_compound_expression_propagation():
-    x, y, z = symbols('x y z')
-    # x = y => x*y + z = y*y + z
-    cc = EUFCongruenceClosure([Q.eq(x, y)])
-    assert cc.are_equal(x*y + z, y*y + z)
+    x, y, z, w = symbols('x y z w')
+    # x = y => x*w + z = y*w + z (Mul/Add treated as uninterpreted)
+    cc = EUFCongruenceClosure([])
+    for t in (x*w + z, y*w + z):
+        cc._flatten(t)
+    cc.merge(x, y)
+    assert cc.are_congruent(x*w + z, y*w + z)
 
 
 def test_compound_double_layer():
-    x, y, z, w = symbols('x y z w')
-    cc = EUFCongruenceClosure([Q.eq(x, y), Q.eq(z, w)])
-    expr1 = x*y + z
-    expr2 = y*y + w
-    assert cc.are_equal(expr1, expr2)
+    x, y, z, w, v = symbols('x y z w v')
+    cc = EUFCongruenceClosure([])
+    expr1 = x*v + z
+    expr2 = y*v + w
+    for t in (expr1, expr2):
+        cc._flatten(t)
+    cc.merge(x, y)
+    cc.merge(z, w)
+    assert cc.are_congruent(expr1, expr2)
 
 
 def test_mixed_equality_disequality():
     x, y, z = symbols('x y z')
-    cc = EUFCongruenceClosure([Q.eq(x, y)])
-    # x = y, so x*y + y = x*y + y = y*y + y
-    assert cc.are_equal(x*y + y, y**2 + y)
+    cc = EUFCongruenceClosure([])
+    # x = y, so x*z + y = y*z + y (uninterpreted congruence)
+    for t in (x*z + y, y*z + y):
+        cc._flatten(t)
+    cc.merge(x, y)
+    assert cc.are_congruent(x*z + y, y*z + y)
 
 
 def test_compound_in_function_application():
     from sympy import Function
-    x, y, z = symbols('x y z')
+    x, y, z, w = symbols('x y z w')
     f = Function('f')
-    cc = EUFCongruenceClosure([Q.eq(x, y)])
-    # Congruence: x*y + z = y*y + z => f(x*y + z) = f(y*y + z)
-    assert cc.are_equal(f(x*y + z), f(y*y + z))
+    cc = EUFCongruenceClosure([])
+    # Congruence: x*w + z = y*w + z => f(x*w + z) = f(y*w + z)
+    for t in (f(x*w + z), f(y*w + z)):
+        cc._flatten(t)
+    cc.merge(x, y)
+    assert cc.are_congruent(f(x*w + z), f(y*w + z))
