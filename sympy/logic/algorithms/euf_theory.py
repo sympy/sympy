@@ -41,6 +41,7 @@ Classes
 -------
     EUFCongruenceClosure: Implements the congruence closure algorithm for EUF.
 """
+from __future__ import annotations
 
 from collections import defaultdict, deque
 from sympy.core.symbol import Symbol

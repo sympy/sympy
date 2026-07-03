@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.symbol import symbols, Symbol, Dummy
 from sympy.assumptions.ask import Q
 from sympy.core.numbers import Integer
