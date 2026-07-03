@@ -1814,7 +1814,6 @@ class Basic(Printable):
         group : bool, optional
             If ``True``, return a dict mapping each match to the number
             of times it appears instead of a set of unique matches.
-            
 
         Examples
         ========
@@ -1834,7 +1833,7 @@ class Basic(Printable):
 
         >>> expr.find(lambda e: e.is_Symbol)
         {x, y}
-        
+
         See Also
         ========
 
