@@ -1803,16 +1803,18 @@ class Basic(Printable):
 
     def find(self, query, group=False):
         """
-        Find all subexpressions matching a query.
+        Find all unique subexpressions matching a query.
 
         query : type, Basic, or callable
-            A type matches subexpressions by ``isinstance``, a ``Basic``
-            expression (e.g. with ``Wild`` symbols) matches via ``match()``,
-            and a callable is applied directly to each subexpression.
+            The pattern used to test each node of the expression tree.
+            A type matches subexpressions of that type, a ``Basic`` 
+            expression matches patterns (including ``Wild`` symbols), 
+            and a callable matches when it returns ``True``.
 
         group : bool, optional
             If ``True``, return a dict mapping each match to the number
             of times it appears instead of a set of unique matches.
+            
 
         Examples
         ========
@@ -1832,6 +1834,20 @@ class Basic(Printable):
 
         >>> expr.find(lambda e: e.is_Symbol)
         {x, y}
+        
+        See Also
+        ========
+
+        count : count the number of matching subexpressions
+        has : test whether any matching subexpression exists
+        match : pattern-match the whole expression
+
+        Notes
+        =====
+
+        The search visits every node of the tree, including the
+        expression itself, so ``expr.find(type(expr))`` will include
+        ``expr`` in the result.
         """
         query = _make_find_query(query)
         results = list(filter(query, _preorder_traversal(self)))
