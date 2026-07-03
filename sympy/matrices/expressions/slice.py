@@ -2,19 +2,48 @@ from __future__ import annotations
 from sympy.matrices.expressions.matexpr import MatrixExpr
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
-from sympy.functions.elementary.integers import floor
+from sympy.core.numbers import Integer
+from sympy.functions.elementary.integers import ceiling
+
+
+def _is_concrete_index(x):
+    return isinstance(x, int) or (isinstance(x, Basic) and x.is_Integer)
+
+
+def _slice_length(sl):
+    start, stop, step = sl
+    if all(_is_concrete_index(x) for x in (start, stop, step)):
+        return Integer(len(range(int(start), int(stop), int(step))))
+    length = stop - start
+    return length if step == 1 else ceiling(length / step)
+
 
 def normalize(i, parentsize):
     if isinstance(i, slice):
         i = (i.start, i.stop, i.step)
     if not isinstance(i, (tuple, list, Tuple)):
+        # A single index is not clamped: an out-of-range index is an error,
+        # just like indexing into a Python sequence.
         if (i < 0) == True:
             i += parentsize
-        i = (i, i+1, 1)
+        return (i, i + 1, 1)
     i = list(i)
     if len(i) == 2:
         i.append(1)
     start, stop, step = i
+    # When the slice bounds and the parent dimension are concrete integers,
+    # reuse Python's slice semantics (``slice.indices``) so that slicing a
+    # symbolic matrix agrees with slicing an explicit one, including negative
+    # steps and out-of-range bounds which are clamped rather than raising
+    # (see issue #18411).
+    if _is_concrete_index(parentsize) and all(
+        x is None or _is_concrete_index(x) for x in (start, stop, step)
+    ):
+        return slice(
+            None if start is None else int(start),
+            None if stop is None else int(stop),
+            None if step is None else int(step),
+        ).indices(int(parentsize))
     start = start or 0
     if stop is None:
         stop = parentsize
@@ -70,11 +99,7 @@ class MatrixSlice(MatrixExpr):
 
     @property
     def shape(self):
-        rows = self.rowslice[1] - self.rowslice[0]
-        rows = rows if self.rowslice[2] == 1 else floor(rows/self.rowslice[2])
-        cols = self.colslice[1] - self.colslice[0]
-        cols = cols if self.colslice[2] == 1 else floor(cols/self.colslice[2])
-        return rows, cols
+        return _slice_length(self.rowslice), _slice_length(self.colslice)
 
     def _entry(self, i, j, **kwargs):
         return self.parent._entry(i*self.rowslice[2] + self.rowslice[0],
