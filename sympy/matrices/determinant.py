@@ -303,15 +303,22 @@ def _berkowitz_vector(M):
             Saarbrucken, 2006
     """
 
+    assert M.rows == M.cols
+
     # handle the trivial cases
-    if M.rows == 0 and M.cols == 0:
+    if M.rows == 0:
         return M._new(1, 1, [M.one])
-    elif M.rows == 1 and M.cols == 1:
+    if M.rows == 1:
         return M._new(2, 1, [M.one, -M[0,0]])
 
-    submat, toeplitz = _berkowitz_toeplitz_matrix(M)
-
-    return toeplitz.multiply(_berkowitz_vector(submat), dotprodsimp=None)
+    toeplitz_matrices = []
+    while M.rows > 1:
+        M, toeplitz = _berkowitz_toeplitz_matrix(M)
+        toeplitz_matrices.append(toeplitz)
+    vector = M._new(2, 1, [M.one, -M[0, 0]])
+    for toeplitz in reversed(toeplitz_matrices):
+        vector = toeplitz.multiply(vector, dotprodsimp=None)
+    return vector
 
 
 def _adjugate(M, method="berkowitz"):
@@ -760,37 +767,39 @@ def _det_bareiss(
     # Recursively implemented Bareiss' algorithm as per Deanna Richelle Leggett's
     # thesis https://aquila.usm.edu/cgi/viewcontent.cgi?article=1001&context=masters_theses
     def bareiss(mat: MatrixBase, cumm: Expr = S.One):
-        if mat.rows == 0:
-            return mat.one
-        elif mat.rows == 1:
-            return mat[0, 0]
+        sign = S.One
+        while True:
+            if mat.rows == 0:
+                return sign * mat.one
+            if mat.rows == 1:
+                return sign * mat[0, 0]
 
-        # find a pivot and extract the remaining matrix
-        # With the default iszerofunc, _find_reasonable_pivot slows down
-        # the computation by the factor of 2.5 in one test.
-        # Relevant issues: #10279 and #13877.
-        pivot_pos, pivot_val, _, _ = _find_reasonable_pivot(mat[:, 0].flat(), iszerofunc=iszerofunc)
-        if pivot_pos is None or pivot_val is None:
-            return mat.zero
+            # find a pivot and extract the remaining matrix
+            # With the default iszerofunc, _find_reasonable_pivot slows down
+            # the computation by the factor of 2.5 in one test.
+            # Relevant issues: #10279 and #13877.
+            pivot_pos, pivot_val, _, _ = _find_reasonable_pivot(mat[:, 0].flat(), iszerofunc=iszerofunc)
+            if pivot_pos is None or pivot_val is None:
+                return mat.zero
 
-        # if we have a valid pivot, we'll do a "row swap", so keep the
-        # sign of the det
-        sign = (-1) ** (pivot_pos % 2)
+            # if we have a valid pivot, we'll do a "row swap", so keep the
+            # sign of the det
+            sign *= S.NegativeOne**(pivot_pos % 2)
+            # we want every row but the pivot row and every column
+            rows = [i for i in range(mat.rows) if i != pivot_pos]
+            cols = list(range(mat.cols))
+            tmp_mat = mat.extract(rows, cols)
 
-        # we want every row but the pivot row and every column
-        rows = [i for i in range(mat.rows) if i != pivot_pos]
-        cols = list(range(mat.cols))
-        tmp_mat = mat.extract(rows, cols)
+            def entry(i, j):
+                ret = (pivot_val*tmp_mat[i, j + 1] - mat[pivot_pos, j + 1]*tmp_mat[i, 0]) / cumm
+                if _get_intermediate_simp_bool(True):
+                    return _dotprodsimp(ret)
+                elif not ret.is_Atom:
+                    return cancel(ret)
+                return ret
 
-        def entry(i, j):
-            ret = (pivot_val*tmp_mat[i, j + 1] - mat[pivot_pos, j + 1]*tmp_mat[i, 0]) / cumm
-            if _get_intermediate_simp_bool(True):
-                return _dotprodsimp(ret)
-            elif not ret.is_Atom:
-                return cancel(ret)
-            return ret
-
-        return sign*bareiss(M._new(mat.rows - 1, mat.cols - 1, entry), pivot_val)
+            mat = M._new(mat.rows - 1, mat.cols - 1, entry)
+            cumm = pivot_val
 
     if not M.is_square:
         raise NonSquareMatrixError()
