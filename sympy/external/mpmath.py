@@ -110,7 +110,7 @@ from mpmath.matrices.matrices import _matrix
 
 
 def repr_dps(n: int) -> int:
-    # This is how mpmath's repr_dps was implemented in mpmath <= 1.4.0.
+    # This is how mpmath's repr_dps was implemented in mpmath < 1.5
     # Keep a stable version here that is not affected by the mpmath version.
     dps = prec_to_dps(n)
     if dps == 15:
