@@ -3049,7 +3049,7 @@ def latex(expr, **settings):
     Parameters
     ==========
     full_prec : boolean, optional
-        If set to True, a floating point number is printed with full precision.
+        If set to ``True``, a floating point number is printed with full precision.
     fold_frac_powers : boolean, optional
         Emit ``^{p/q}`` instead of ``^{\frac{p}{q}}`` for fractional powers.
     fold_func_brackets : boolean, optional
@@ -3102,11 +3102,11 @@ def latex(expr, **settings):
     symbol_names : dictionary of strings mapped to symbols, optional
         Dictionary of symbols and the custom strings they should be emitted as.
     root_notation : boolean, optional
-        If set to ``False``, exponents of the form 1/n are printed in fractonal
+        If set to ``False``, exponents of the form ``1/n`` are printed in fractional
         form. Default is ``True``, to print exponent in root form.
     mat_symbol_style : string, optional
         Can be either ``'plain'`` (default) or ``'bold'``. If set to
-        ``'bold'``, a :class:`~.MatrixSymbol` A will be printed as ``\mathbf{A}``,
+        ``'bold'``, a :class:`~.MatrixSymbol` ``A`` will be printed as ``\mathbf{A}``,
         otherwise as ``A``.
     imaginary_unit : string, optional
         String to use for the imaginary unit. Defined options are ``'i'``
@@ -3120,8 +3120,8 @@ def latex(expr, **settings):
         Specifies what separator to use to separate the whole and fractional parts of a
         floating point number as in `2.5` for the default, ``period`` or `2{,}5`
         when ``comma`` is specified. Lists, sets, and tuple are printed with semicolon
-        separating the elements when ``comma`` is chosen. For example, [1; 2; 3] when
-        ``comma`` is chosen and [1,2,3] for when ``period`` is chosen.
+        separating the elements when ``comma`` is chosen. For example, `[1; 2; 3]` when
+        ``comma`` is chosen and `[1,2,3]` for when ``period`` is chosen.
     parenthesize_super : boolean, optional
         If set to ``False``, superscripted expressions will not be parenthesized when
         powered. Default is ``True``, which parenthesizes the expression when powered.
@@ -3136,13 +3136,13 @@ def latex(expr, **settings):
         form. ``'rd'``, ``'td'`` are shortcuts for ``\mathrm{d}`` and ``\text{d}``.
     adjoint_style : string, optional
         String to use for the adjoint symbol. Defined options are ``'dagger'``
-        (default),``'star'``, and ``'hermitian'``.
+        (default), ``'star'``, and ``'hermitian'``.
     open_delim : tuple[string, string], optional
         Strings to use for the left and right delimiters of an open interval.
-        Default is ``('(',')')`` but a french teacher might prefer ``(']','[')``.
+        Default is ``('(', ')')`` but a french teacher might prefer ``(']', '[')``.
     closed_delim : tuple[string, string], optional
         Strings to use for the left and right delimiters of a closed interval.
-        Default is ``('[',']')``.
+        Default is ``('[', ']')``.
 
     Notes
     =====
