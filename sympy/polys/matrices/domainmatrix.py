@@ -3762,6 +3762,56 @@ class DomainMatrix:
         """
         return self.rep.charpoly()
 
+    def ground_eigenvals(self):
+        """
+        Return the eigenvalues in the ground domain together with their
+        algebraic multiplicities.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices import DM
+        >>> from sympy import QQ
+        >>> M = DM([[6, -1, 0, 0],
+        ...         [9, 12, 0, 0],
+        ...         [0,  0, 1, 2],
+        ...         [0,  0, 5, 6]], QQ)
+        >>> M.ground_eigenvals()
+        {9: 2}
+        """
+        p = self.charpoly()
+        _, factors = dup_factor_list(p, self.domain)
+        eigs = {}
+        for base, exp in factors:
+            if len(base) == 2:
+                v = -base[1]/base[0]
+                eigs[v] = exp
+        return eigs
+
+    def ground_eigenvects(self):
+        """
+        Return the eigenvalues in the ground domain together with
+        their algebraic multiplicites and eigenvectors.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices import DM
+        >>> from sympy import QQ
+        >>> M = DM([[6, -1, 0, 0],
+        ...         [9, 12, 0, 0],
+        ...         [0,  0, 1, 2],
+        ...         [0,  0, 5, 6]], QQ)
+        >>> M.ground_eigenvects()
+        [(9, 2, DomainMatrix([[-1/3], [1], [0], [0]], (4, 1), QQ))]
+        """
+        eigs = self.ground_eigenvals()
+        result = []
+        for v, m in eigs.items():
+            B = self - self.diag([v]*self.shape[0], self.domain)
+            result.append((v, m, B.nullspace(divide_last=False).transpose()))
+        return result
+
     @classmethod
     def eye(cls, shape, domain):
         r"""

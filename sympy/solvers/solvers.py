@@ -2135,6 +2135,7 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
     solution.)
 
     """
+    lhs, rhs = _sympify(lhs), _sympify(rhs)
     if isinstance(lhs, Eq):
         if rhs:
             raise ValueError(filldedent('''

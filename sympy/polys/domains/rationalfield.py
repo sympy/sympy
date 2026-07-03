@@ -9,11 +9,12 @@ from sympy.polys.domains.groundtypes import SymPyRational, is_square, sqrtrem
 from sympy.polys.domains.characteristiczero import CharacteristicZero
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.simpledomain import SimpleDomain
+from sympy.polys.domains.conjugatedomain import ConjugateDomain
 from sympy.polys.polyerrors import CoercionFailed
 from sympy.utilities import public
 
 @public
-class RationalField(Field[MPQ], CharacteristicZero, SimpleDomain):
+class RationalField(Field[MPQ], CharacteristicZero, SimpleDomain, ConjugateDomain):
     r"""Abstract base class for the domain :ref:`QQ`.
 
     The :py:class:`RationalField` class represents the field of rational
@@ -197,5 +198,10 @@ class RationalField(Field[MPQ], CharacteristicZero, SimpleDomain):
         if q_rem != 0:
             return None
         return MPQ(p_sqrt, q_sqrt)
+
+    def conjugate(self, a):
+        """Returns the complex conjugate of ``a``."""
+        return a
+
 
 QQ = RationalField()
