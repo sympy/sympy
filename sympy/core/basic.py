@@ -1804,61 +1804,78 @@ class Basic(Printable):
     def find(self, query, group=False):
         """Find all subexpressions matching a query.
 
+        Traverses the expression tree and collects every node that
+        matches ``query``. The query may be given in several forms:
+
+        - a **type** (class), e.g. ``sin`` or ``Integer``, which matches
+          all nodes that are instances of that type;
+        - an **expression**, which matches structurally identical
+          subexpressions; if it contains ``Wild`` symbols, pattern
+          matching is used;
+        - a **callable** (e.g. a lambda), which matches every node for
+          which the callable returns ``True``.
+
         Parameters
         ==========
-        
+
         query : type, Basic, or callable
-
-            - a class such as ``Pow`` or ``exp``, to match all instances of that class
-            - a specific expression, to match occurrences equal to it
-            - a :class:`~.Wild`-containing pattern
-            - any callable taking one argument and returning a bool, used as a custom
-              test on each subexpression
-
+            The pattern used to test each node of the expression tree.
         group : bool, optional
-
-            Controls the form of the result. With the default value
-            of ``False``, duplicates are discarded and a ``set`` is
-            returned. Setting this to ``True`` keeps track of how
-            often each subexpression was found, returning a ``dict``
-            instead.
+            If ``False`` (default), return a set of the unique matching
+            subexpressions. If ``True``, return a dict mapping each
+            matching subexpression to the number of times it occurs
+            in the tree.
 
         Returns
         =======
 
         set or dict
-
-            All distinct subexpressions matching ``query``. This is a
-            plain ``set`` unless ``group=True``, in which case a
-            ``dict`` is returned where each key is a match and the
-            corresponding value is the number of times it appeared in
-            ``self``.
+            The matching subexpressions, or a mapping from each match
+            to its multiplicity when ``group=True``.
 
         Examples
         ========
 
-        >>> from sympy import exp, log
-        >>> from sympy.abc import a, b
+        >>> from sympy import sin, cos, Wild, Function
+        >>> from sympy.abc import x, y
 
-        Default behaviour returns a set of unique matches:
+        Match by type:
 
-        >>> expr = exp(a) + log(b) + exp(a)*log(b)
-        >>> expr.find(exp)
-        {exp(a)}
+        >>> expr = sin(x) + sin(y)*cos(x)
+        >>> expr.find(sin)
+        {sin(x), sin(y)}
 
-        With ``group=True``, a dict mapping matches to their counts
-        is returned instead:
+        Count occurrences with ``group=True``:
 
-        >>> expr.find(log, group=True)
-        {log(b): 2}
+        >>> (sin(x) + sin(x)*cos(x)).find(sin(x), group=True)
+        {sin(x): 2}
 
-        A callable can be used for custom matching, e.g. to find
-        every power in an expression:
+        Match a pattern using ``Wild`` symbols:
 
-        >>> (a**2 + b**3).find(lambda s: s.is_Pow)
-        {a**2, b**3}
+        >>> a = Wild('a')
+        >>> expr.find(sin(a))
+        {sin(x), sin(y)}
+
+        Match with a callable predicate:
+
+        >>> expr.find(lambda e: e.is_Symbol)
+        {x, y}
+
+        See Also
+        ========
+
+        count : count the number of matching subexpressions
+        has : test whether any matching subexpression exists
+        match : pattern-match the whole expression
+
+        Notes
+        =====
+
+        The search visits every node of the tree, including the
+        expression itself, so ``expr.find(type(expr))`` will include
+        ``expr`` in the result.
         """
-        
+  
         query = _make_find_query(query)
         results = list(filter(query, _preorder_traversal(self)))
 
