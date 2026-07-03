@@ -1807,8 +1807,8 @@ class Basic(Printable):
 
         query : type, Basic, or callable
             The pattern used to test each node of the expression tree.
-            A type matches subexpressions of that type, a ``Basic`` 
-            expression matches patterns (including ``Wild`` symbols), 
+            A type matches subexpressions of that type, a ``Basic``
+            expression matches patterns (including ``Wild`` symbols),
             and a callable matches when it returns ``True``.
 
         group : bool, optional
