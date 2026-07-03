@@ -169,6 +169,8 @@ class LatexPrinter(Printer):
         "diff_operator": "d",
         "adjoint_style": "dagger",
         "disable_split_super_sub": False,
+        "open_delim": ("(",")"),
+        "closed_delim": ("[","]"),
     }
 
     def __init__(self, settings=None):
@@ -2320,14 +2322,14 @@ class LatexPrinter(Printer):
 
         else:
             if i.left_open:
-                left = '('
+                left = self._settings['open_delim'][0]
             else:
-                left = '['
+                left = self._settings['closed_delim'][0]
 
             if i.right_open:
-                right = ')'
+                right = self._settings['open_delim'][1]
             else:
-                right = ']'
+                right = self._settings['closed_delim'][1]
 
             return r"\left%s%s, %s\right%s" % \
                    (left, self._print(i.start), self._print(i.end), right)
@@ -3046,8 +3048,8 @@ def latex(expr, **settings):
 
     Parameters
     ==========
-    full_prec: boolean, optional
-        If set to True, a floating point number is printed with full precision.
+    full_prec : boolean, optional
+        If set to ``True``, a floating point number is printed with full precision.
     fold_frac_powers : boolean, optional
         Emit ``^{p/q}`` instead of ``^{\frac{p}{q}}`` for fractional powers.
     fold_func_brackets : boolean, optional
@@ -3077,7 +3079,7 @@ def latex(expr, **settings):
         ``'matrix'``, ``'array'``, etc. Defaults to ``'smallmatrix'`` for
         inline mode, ``'matrix'`` for matrices of no more than 10 columns, and
         ``'array'`` otherwise.
-    mode: string, optional
+    mode : string, optional
         Specifies how the generated code will be delimited. ``mode`` can be one
         of ``'plain'``, ``'inline'``, ``'equation'`` or ``'equation*'``.  If
         ``mode`` is set to ``'plain'``, then the resulting code will not be
@@ -3090,7 +3092,7 @@ def latex(expr, **settings):
     mul_symbol : string or None, optional
         The symbol to use for multiplication. Can be one of ``None``,
         ``'ldot'``, ``'dot'``, or ``'times'``.
-    order: string, optional
+    order : string, optional
         Any of the supported monomial orderings (currently ``'lex'``,
         ``'grlex'``, or ``'grevlex'``), ``'old'``, and ``'none'``. This
         parameter does nothing for :class:`~.Mul` objects. Setting order to ``'old'``
@@ -3100,11 +3102,11 @@ def latex(expr, **settings):
     symbol_names : dictionary of strings mapped to symbols, optional
         Dictionary of symbols and the custom strings they should be emitted as.
     root_notation : boolean, optional
-        If set to ``False``, exponents of the form 1/n are printed in fractonal
+        If set to ``False``, exponents of the form ``1/n`` are printed in fractional
         form. Default is ``True``, to print exponent in root form.
     mat_symbol_style : string, optional
         Can be either ``'plain'`` (default) or ``'bold'``. If set to
-        ``'bold'``, a :class:`~.MatrixSymbol` A will be printed as ``\mathbf{A}``,
+        ``'bold'``, a :class:`~.MatrixSymbol` ``A`` will be printed as ``\mathbf{A}``,
         otherwise as ``A``.
     imaginary_unit : string, optional
         String to use for the imaginary unit. Defined options are ``'i'``
@@ -3118,23 +3120,29 @@ def latex(expr, **settings):
         Specifies what separator to use to separate the whole and fractional parts of a
         floating point number as in `2.5` for the default, ``period`` or `2{,}5`
         when ``comma`` is specified. Lists, sets, and tuple are printed with semicolon
-        separating the elements when ``comma`` is chosen. For example, [1; 2; 3] when
-        ``comma`` is chosen and [1,2,3] for when ``period`` is chosen.
+        separating the elements when ``comma`` is chosen. For example, `[1; 2; 3]` when
+        ``comma`` is chosen and `[1,2,3]` for when ``period`` is chosen.
     parenthesize_super : boolean, optional
         If set to ``False``, superscripted expressions will not be parenthesized when
         powered. Default is ``True``, which parenthesizes the expression when powered.
-    min: Integer or None, optional
+    min : Integer or None, optional
         Sets the lower bound for the exponent to print floating point numbers in
         fixed-point format.
-    max: Integer or None, optional
+    max : Integer or None, optional
         Sets the upper bound for the exponent to print floating point numbers in
         fixed-point format.
-    diff_operator: string, optional
+    diff_operator : string, optional
         String to use for differential operator. Default is ``'d'``, to print in italic
         form. ``'rd'``, ``'td'`` are shortcuts for ``\mathrm{d}`` and ``\text{d}``.
-    adjoint_style: string, optional
+    adjoint_style : string, optional
         String to use for the adjoint symbol. Defined options are ``'dagger'``
-        (default),``'star'``, and ``'hermitian'``.
+        (default), ``'star'``, and ``'hermitian'``.
+    open_delim : tuple[string, string], optional
+        Strings to use for the left and right delimiters of an open interval.
+        Default is ``('(', ')')`` but a french teacher might prefer ``(']', '[')``.
+    closed_delim : tuple[string, string], optional
+        Strings to use for the left and right delimiters of a closed interval.
+        Default is ``('[', ']')``.
 
     Notes
     =====
