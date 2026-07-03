@@ -1836,7 +1836,7 @@ class Basic(Printable):
         Examples
         ========
 
-        >>> from sympy import sin, cos, Wild, Function
+        >>> from sympy import sin, cos, Wild
         >>> from sympy.abc import x, y
 
         Match by type:
