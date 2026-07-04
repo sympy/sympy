@@ -764,7 +764,7 @@ class SDM(dict):
         dom = M.domain
         if dom.is_ConjugateDomain:
             if dom.is_ZZ or dom.is_QQ or dom.is_RR:
-                return M
+                return M.copy()
 
             try:
                 return M.applyfunc(dom.conjugate, dom)

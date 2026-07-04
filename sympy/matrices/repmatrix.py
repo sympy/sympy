@@ -15,7 +15,7 @@ from sympy.core.sympify import _sympify, SympifyError
 from sympy.core.singleton import S
 from sympy.polys.domains import ZZ, QQ, GF, EXRAW
 from sympy.polys.matrices import DomainMatrix
-from sympy.polys.matrices.exceptions import DMNonInvertibleMatrixError
+from sympy.polys.matrices.exceptions import DMNonInvertibleMatrixError, DMDomainError
 from sympy.polys.polyerrors import CoercionFailed, NotInvertible
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import is_sequence
@@ -400,11 +400,19 @@ class RepMatrix(MatrixBase):
 
     def _eval_conjugate(self):
         rep = self._rep
-        domain = rep.domain
-        if domain in (ZZ, QQ):
-            return self.copy()
-        else:
-            return self._fromrep(rep.applyfunc(lambda e: e.conjugate()))
+        try:
+            return self._fromrep(rep.conjugate())
+        except DMDomainError:
+            pass
+        return self._fromrep(rep.convert_to(EXRAW).conjugate())
+
+    def _eval_adjoint(self):
+        rep = self._rep
+        try:
+            return self._fromrep(rep.adjoint())
+        except DMDomainError:
+            pass
+        return self._fromrep(rep.convert_to(EXRAW).adjoint())
 
     def equals(self, other, failing_expression=False):
         """Applies ``equals`` to corresponding elements of the matrices,

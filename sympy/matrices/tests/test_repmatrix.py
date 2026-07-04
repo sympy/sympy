@@ -1,9 +1,10 @@
 from __future__ import annotations
 from sympy.testing.pytest import raises
 from sympy.matrices.exceptions import NonSquareMatrixError, NonInvertibleMatrixError
+from sympy.polys.domains import QQ, QQ_I
 
-from sympy import Matrix, Rational
-
+from sympy import Matrix, Rational, sqrt, I
+from sympy.abc import x
 
 def test_lll():
     A = Matrix([[1, 0, 0, 0, -20160],
@@ -61,3 +62,53 @@ def test_matrix_inv_mod():
         [14, 1, 15, 1],
         [25, 23, 3, 12],
     ])
+
+
+def test_repmatrix_conjugate():
+    A = Matrix([[1, 2 + 3*I], [0, (4 - 5*I)/6]])
+    B = Matrix([[1, 2 - 3*I], [0, (4 + 5*I)/6]])
+    A = A._fromrep(A._rep.convert_to(QQ_I))
+    B = B._fromrep(B._rep.convert_to(QQ_I))
+    AC = A.conjugate()
+    assert AC == B and AC._rep.domain == A._rep.domain
+
+    K = QQ.algebraic_field((-1 + sqrt(-3))/2)
+    A = Matrix([[sqrt(-3) + 3, sqrt(-3)/4]])
+    B = Matrix([[-sqrt(-3) + 3, -sqrt(-3)/4]])
+    A = A._fromrep(A._rep.convert_to(K))
+    B = B._fromrep(B._rep.convert_to(K))
+    AC = A.conjugate()
+    assert AC == B and AC._rep.domain == A._rep.domain
+
+    r = (x**5 - x + 1).as_poly(x).all_roots()[-1]
+    z = r.conjugate()
+    K = QQ.algebraic_field(r)
+    A = Matrix([[1, r/3], [2*r + 5, -r], [0, 4]])
+    B = Matrix([[1, z/3], [2*z + 5, -z], [0, 4]])
+    A = A._fromrep(A._rep.convert_to(K))
+    assert A.conjugate() == B
+
+
+def test_repmatrix_adjoint():    
+    A = Matrix([[1, 2 + 3*I], [0, (4 - 5*I)/6]])
+    B = Matrix([[1, 0], [2 - 3*I, (4 + 5*I)/6]])
+    A = A._fromrep(A._rep.convert_to(QQ_I))
+    B = B._fromrep(B._rep.convert_to(QQ_I))
+    AH = A.adjoint()
+    assert AH == B and AH._rep.domain == A._rep.domain
+
+    K = QQ.algebraic_field((-1 + sqrt(-3))/2)
+    A = Matrix([[sqrt(-3) + 3, sqrt(-3)/4]])
+    B = Matrix([[-sqrt(-3) + 3], [-sqrt(-3)/4]])
+    A = A._fromrep(A._rep.convert_to(K))
+    B = B._fromrep(B._rep.convert_to(K))
+    AH = A.adjoint()
+    assert AH == B and AH._rep.domain == A._rep.domain
+
+    r = (x**5 - x + 1).as_poly(x).all_roots()[-1]
+    z = r.adjoint()
+    K = QQ.algebraic_field(r)
+    A = Matrix([[1, r/3], [2*r + 5, -r], [0, 4]])
+    B = Matrix([[1, 2*z + 5, 0], [z/3, -z, 4]])
+    A = A._fromrep(A._rep.convert_to(K))
+    assert A.adjoint() == B

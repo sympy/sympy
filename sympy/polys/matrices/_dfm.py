@@ -475,7 +475,7 @@ class DFM:
         dom = self.domain
         if dom.is_ConjugateDomain:
             if dom.is_ZZ or dom.is_QQ or dom.is_RR:
-                return self
+                return self.copy()
 
             try:
                 return self.applyfunc(dom.conjugate, dom)

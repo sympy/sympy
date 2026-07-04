@@ -391,6 +391,27 @@ def test_DomainMatrix_transpose():
     assert A.transpose() == AT
 
 
+def test_DomainMatrix_conjugate():
+    A = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+    assert A.conjugate() == A
+
+    A = DomainMatrix([[QQ_I(2, 3)/4, QQ_I(-3, 1)]], (1, 2), QQ_I)    
+    B = DomainMatrix([[QQ_I(2, -3)/4, QQ_I(-3, -1)]], (1, 2), QQ_I)
+    assert A.conjugate() == B
+    assert B.conjugate() == A
+
+
+def test_DomainMatrix_adjoint():
+    A = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+    AT = DomainMatrix([[ZZ(1), ZZ(3)], [ZZ(2), ZZ(4)]], (2, 2), ZZ)
+    assert A.adjoint() == AT
+
+    A = DomainMatrix([[QQ_I(2, 3)/4, QQ_I(-3, 1)]], (1, 2), QQ_I)
+    B = DomainMatrix([[QQ_I(2, -3)/4], [QQ_I(-3, -1)]], (2, 1), QQ_I)
+    assert A.adjoint() == B
+    assert B.adjoint() == A
+
+
 def test_DomainMatrix_is_zero_matrix():
     A = DomainMatrix([[ZZ(1)]], (1, 1), ZZ)
     B = DomainMatrix([[ZZ(0)]], (1, 1), ZZ)
