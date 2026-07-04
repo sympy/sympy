@@ -181,12 +181,12 @@ class EUFCongruenceClosure:
         if len(self.classlist[rep_a]) > len(self.classlist[rep_b]):
             rep_a, rep_b = rep_b, rep_a
         # Move all members of ClassList(rep_a) into ClassList(rep_b)
-        for c in list(self.classlist[rep_a]):
+        for c in self.classlist[rep_a]:
             self.representative_table[c] = rep_b
             self.classlist[rep_b].add(c)
         del self.classlist[rep_a]
         # For each application (func, args, term) in UseList(rep_a)
-        for func, arg_ids, term in list(self.use_list.pop(rep_a, [])):
+        for func, arg_ids, term in self.use_list.pop(rep_a, []):
             rep_args = tuple(self._find_repr(arg) for arg in arg_ids)
             rep_term = self._find_repr(term)
             key = (func, rep_args)
