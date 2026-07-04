@@ -47,7 +47,7 @@ class CyclotomicField(
     >>> print(a)
     1 - zeta7
     """
-    _conductor: int
+    _zeta_order: int
 
     is_CyclotomicField = is_Cyclotomic = True
 
@@ -65,26 +65,26 @@ class CyclotomicField(
 
         super().__init__(QQ, alpha, alias=alias)
 
-        self._conductor = n
+        self._zeta_order = n
 
     @property
-    def conductor(self) -> int:
-        """Return the conductor of the cyclotomic field.
+    def zeta_order(self) -> int:
+        """Return the order of the unity root of the cyclotomic field.
 
         Examples
         ========
 
         >>> from sympy import CyclotomicField
-        >>> CyclotomicField(12).conductor
+        >>> CyclotomicField(12).zeta_order
         12
         """
-        return self._conductor
+        return self._zeta_order
 
     @cached_property
     def conjugate(self):
-        # ext.conjugate() == ext**(conductor - 1)
+        # ext.conjugate() == ext**(order - 1)
         dom = self.dom
-        rep = [dom.one] + [dom.zero] * (self.conductor - 1)
+        rep = [dom.one] + [dom.zero] * (self.zeta_order - 1)
         conj = self.dtype(rep, self.mod.to_list(), dom)
 
         def conjugate(a):
@@ -98,5 +98,5 @@ class CyclotomicField(
     def cyclotomic_field(self, n: int, ss: bool = False, alias: str = "zeta",
                          gen: Expr | None = None, root_index: int = -1
                          ) -> CyclotomicField:
-        return CyclotomicField(int(lcm(n, self.conductor)), ss=ss, alias=alias,
+        return CyclotomicField(int(lcm(n, self.zeta_order)), ss=ss, alias=alias,
                                gen=gen, root_index=root_index)

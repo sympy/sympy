@@ -872,18 +872,18 @@ def test_Domain_cyclotomic_field():
     assert K.is_Cyclotomic and K.is_CyclotomicField
     assert K.ext.minpoly == Poly(cyclotomic_poly(12))
     assert K.dom == QQ
-    assert K.conductor == 12
+    assert K.zeta_order == 12
 
     F = QQ.cyclotomic_field(3)
     assert F.ext.minpoly == Poly(cyclotomic_poly(3))
     assert F.dom == QQ
-    assert F.conductor == 3
+    assert F.zeta_order == 3
 
     E = F.cyclotomic_field(4)
     assert E.is_Cyclotomic and E.is_CyclotomicField
     assert field_isomorphism(E.ext, K.ext) is not None
     assert E.dom == QQ
-    assert E.conductor == 12
+    assert E.zeta_order == 12
 
 
 def test_PolynomialRing_from_FractionField():
