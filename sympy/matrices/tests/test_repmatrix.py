@@ -89,7 +89,7 @@ def test_repmatrix_conjugate():
     assert A.conjugate() == B
 
 
-def test_repmatrix_adjoint():    
+def test_repmatrix_adjoint():
     A = Matrix([[1, 2 + 3*I], [0, (4 - 5*I)/6]])
     B = Matrix([[1, 0], [2 - 3*I, (4 + 5*I)/6]])
     A = A._fromrep(A._rep.convert_to(QQ_I))
