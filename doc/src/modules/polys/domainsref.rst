@@ -285,7 +285,7 @@ QQ<a>
 .. autoclass:: AlgebraicField
    :members:
 
-.. _QQ<zeta_n>:
+.. _QQ(zeta_n):
 
 
 QQ<zeta_n>
