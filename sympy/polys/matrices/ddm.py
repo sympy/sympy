@@ -639,7 +639,12 @@ class DDM(list):
         raise DMDomainError("%s does not support conjugation" % dom)
 
     def adjoint(self):
-        return self.conjugate().transpose()
+        dom = self.domain
+        if not dom.is_EXRAW:
+            return self.conjugate().transpose()
+
+        # handle noncommutative elements
+        return self.applyfunc(lambda x: x.adjoint(), dom).transpose()
 
     def __add__(a, b):
         if not isinstance(b, DDM):

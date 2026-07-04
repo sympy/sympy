@@ -785,7 +785,11 @@ class SDM(dict):
         >>> A.adjoint()
         {1: {0: (2 + 3*I)}}
         """
-        return M.conjugate().transpose()
+        dom = M.domain
+        if not dom.is_EXRAW:
+            return M.conjugate().transpose()
+
+        return M.applyfunc(lambda x: x.adjoint(), dom).transpose()
 
     def __add__(A, B):
         if not isinstance(B, SDM):
