@@ -336,28 +336,19 @@ def test_Lambda_equality():
 
 
 def test_Lambda_curry():
-    """
-    Lambda((x, y), x + y) -> Lambda(x, Lambda(y, x + y))
-    Lambda(x, Lambda(y, x + y)) is already curried.
-    Lambda(x, x**2) should return itself.
-    Lambda((x, (y, z)), x*y*z) -> Lambda(x, Lambda(y, Lambda(z, x*y*z)))
-    Lambda((x, y, z), x*y + z) ==> Lambda(x, Lambda(y, Lambda(z, x*y+z)))
-    """
-    f = Lambda((x, y), x + y)
-    fc = f.curry()
-    assert fc == Lambda(x, Lambda(y, x + y))
-    c = Lambda(x, Lambda(y, x + y))
-    out = c.curry()
-    assert out == c
-    f = Lambda(x, x**2)
-    out = f.curry()
-    assert out == f
-    f = Lambda((x, (y, z)), x*y*z)
-    fc = f.curry()
-    assert fc == Lambda(x, Lambda(y, Lambda(z, x*y*z)))
-    f = Lambda((x, y, z), x*y+z)
-    fc = f.curry()
-    assert fc == Lambda(x, Lambda(y, Lambda(z, x*y+z)))
+    assert Lambda((x, y), x + y).curry() == Lambda(x, Lambda(y, x + y))
+    assert Lambda((x, y, z), x*y + z).curry() == \
+        Lambda(x, Lambda(y, Lambda(z, x*y + z)))
+    assert Lambda(x, x**2).curry() == Lambda(x, x**2)
+    assert Lambda(x, Lambda(y, x + y)).curry() == Lambda(x, Lambda(y, x + y))
+    assert Lambda((x, (y, z)), x*y*z).curry() == \
+        Lambda(x, Lambda(y, Lambda(z, x*y*z)))
+    assert Lambda(((x, y), z), x + y + z).curry() == \
+        Lambda(x, Lambda(y, Lambda(z, x + y + z)))
+    assert Lambda((x), 1).curry() == Lambda(x, 1)
+    assert Lambda((x, (y, (z, t))), 1).curry() == \
+        Lambda(x, Lambda(y, Lambda(z, Lambda(t, 1))))
+    assert Lambda((), 1).curry() == Lambda((), 1)
 
 
 def test_Subs():

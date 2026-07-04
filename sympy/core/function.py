@@ -2101,6 +2101,11 @@ class Lambda(Expr):
 
         return symargmap
 
+    @property
+    def is_identity(self):
+        """Return ``True`` if this ``Lambda`` is an identity function. """
+        return self.signature == self.expr
+
     def curry(self):
         """
         Return a curried Lambda: any multi-variable Lambda becomes a
@@ -2109,41 +2114,33 @@ class Lambda(Expr):
         Examples
         ========
 
-        >>> from sympy import Lambda, symbols
-        >>> x, y = symbols('x y')
+        >>> from sympy import Lambda
+        >>> from sympy.abc import x, y, z
         >>> Lambda((x, y), x + y).curry()
         Lambda(x, Lambda(y, x + y))
-        >>> Lambda(x, x ** 2).curry()
+        >>> Lambda((x, y, z), x*y + z).curry()
+        Lambda(x, Lambda(y, Lambda(z, x*y + z)))
+        >>> Lambda(x, x**2).curry()
         Lambda(x, x**2)
-        >>> from sympy import Tuple
-        >>> Lambda((x, Tuple(y,)), x*y).curry()
-        Lambda(x, Lambda(y, x*y))
-        >>> Lambda((x, (y,)), x*y).curry()
-        Lambda(x, Lambda(y, x*y))
 
-        Currying means every Lambda in the expression binds exactly one variable.
-        If already curried, returns self.
+        Nested tuples in the signature are flattened into their component
+        variables:
+
+        >>> Lambda(((x, y), z), x + y + z).curry()
+        Lambda(x, Lambda(y, Lambda(z, x + y + z)))
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Currying
         """
-        def _flatten_vars(sig):
-            if isinstance(sig, Tuple):
-                return sum([_flatten_vars(a) for a in sig], [])
-            else:
-                return [sig]
-        vars = _flatten_vars(self.signature)
-        e = self.expr
-        # If already curried (one variable per nested lambda), return as is
-        if len(vars) == 1 and isinstance(self.expr, Lambda):
-        # Already Lambda(x, Lambda(y, ...)), so nothing to do
+        variables = self.variables
+        if not variables:
             return self
-        # Nest from the innermost outward
-        for v in reversed(vars):
-            e = Lambda(v, e)
-        return e
-
-    @property
-    def is_identity(self):
-        """Return ``True`` if this ``Lambda`` is an identity function. """
-        return self.signature == self.expr
+        expr = self.expr
+        for v in reversed(variables):
+            expr = Lambda(v, expr)
+        return expr
 
     def _eval_evalf(self, prec):
         return self.func(self.args[0], self.args[1].evalf(n=prec_to_dps(prec)))
