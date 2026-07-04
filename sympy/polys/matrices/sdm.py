@@ -85,7 +85,7 @@ class SDM(dict):
         if not all(0 <= r < m for r in self):
             raise DMBadInputError("Row out of range")
         if not all(0 <= c < n for row in self.values() for c in row):
-            raise DMBadInputError("alumn out of range")
+            raise DMBadInputError("Column out of range")
 
     def getitem(self, i, j):
         try:
