@@ -44,7 +44,7 @@ from sympy.core.function import WildFunction
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.hyperbolic import (HyperbolicFunction, csch,
-    cosh, coth, sech, sinh, tanh, asinh, acosh, atanh)
+    cosh, coth, sech, sinh, tanh, asinh)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
@@ -1206,9 +1206,6 @@ def manual_subs(expr, *args):
 # Stormy Decade"
 
 inverse_trig_functions = (atan, asin, acos, acot, acsc, asec)
-trig_functions = (sin, cos, tan, sec, csc, cot)
-hyperbolic_functions = (sinh, cosh, tanh)
-inverse_hyperbolic_functions = (asinh, acosh, atanh)
 
 
 def find_substitutions(integrand, symbol, u_var):
@@ -1221,19 +1218,17 @@ def find_substitutions(integrand, symbol, u_var):
         debug("substituted: {}, u: {}, u_var: {}".format(substituted, u, u_var))
         substituted = manual_subs(substituted, u, u_var).cancel()
 
-        # if the term is linear, then we can solve for u in terms of the symbol and substitute that in
-        # this is useful for cases like 1/(x**2 + 1) where u = x**2 + 1 and
-        # u_var = u, we can substitute u = x**2 + 1 into the integrand to get
-        # 1/u
+        # if the term is linear, then we can solve for u in terms of the symbol
+        # and substitute that in this is useful for cases like exp(x)/(x+1)
+        # where u = x + 1 and u_var = u
         if (
-            substituted.has_free(symbol) and not
-            substituted.has((*inverse_trig_functions, *trig_functions,
-                             *hyperbolic_functions,
-                             *inverse_hyperbolic_functions)) and
-            u.is_polynomial(symbol) and degree(u, symbol) >= 1
+            substituted.has_free(symbol) and
+            u.is_polynomial(symbol) and degree(u, symbol) == 1
         ):
-            symbol_of_u = solve(Eq(u_var, u), symbol)
-            substituted = manual_subs(substituted, symbol, symbol_of_u[0]).cancel()
+            a = u.coeff(symbol)
+            b = u.subs(symbol, 0)
+            symbol_of_u = (u_var - b)/a
+            substituted = manual_subs(substituted, symbol, symbol_of_u).cancel()
 
         if substituted.has_free(symbol):
             return False
