@@ -1686,7 +1686,7 @@ def _parts_rule(integrand, symbol) -> tuple[Expr, Expr, Expr, Expr, Rule] | None
                         continue
                     inner = target.args[0]
                     if (
-                        inner.is_polynomial(symbol) and
+                        inner.is_polynomial(symbol) and  # type: ignore
                         degree(inner, symbol) == 2
                     ):
                         dv = target * symbol
