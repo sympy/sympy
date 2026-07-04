@@ -1672,24 +1672,23 @@ def _parts_rule(integrand, symbol) -> tuple[Expr, Expr, Expr, Expr, Rule] | None
         return pull_out_u_rl
 
     def pull_out_dv(*functions) -> Callable[[Expr], tuple[Expr, Expr] | None]:
-        # Prefer forms that are easier to integrate,
-        # x*exp(-x**2) instead of exp(-x**2)
-        # x*sin(x**2) instead of sin(x**2)
-        n_ = Wild('n', exclude=[symbol], properties=[lambda n: isinstance(n, Integer) and n > 1])
-        rest_ = Wild('rest')
-        a_ = Wild('a', exclude=[symbol], properties=[lambda a: not a.is_zero])
-        b_ = Wild('b', exclude=[symbol])
-        c_ = Wild('c', exclude=[symbol])
-        dv_pattern = rest_ * symbol**n_
-        inner_pattern = a_ * symbol ** 2 + b_ * symbol + c_
-
+        # Prefer forms that are easier to integrate using special functions
+        # x*exp(-x**2) instead of exp(-x**2) -> erf
+        # x*sin(x**2) instead of sin(x**2) -> Fresnel
         def pull_out_dv_rl(integrand: Expr) -> tuple[Expr, Expr] | None:
-            if integrand.match(dv_pattern) and any(integrand.has(f) for f in functions):
+            power = integrand.as_powers_dict().get(symbol)
+            if (
+                isinstance(power, Integer) and power >= 2 and
+                integrand.has(*functions)
+            ):
                 for target in integrand.args:
                     if not any(isinstance(target, cls) for cls in functions):
                         continue
                     inner = target.args[0]
-                    if inner.match(inner_pattern):
+                    if (
+                        inner.is_polynomial(symbol) and
+                        degree(inner, symbol) == 2
+                    ):
                         dv = target * symbol
                         u = integrand / dv
                         return u, dv
