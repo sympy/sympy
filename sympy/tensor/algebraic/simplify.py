@@ -537,18 +537,61 @@ def _reconstruct_term(key, non_commutative_pt, coeff, comm_cs,
 # Commutative prefactor extraction from non-commutative factors
 # ---------------------------------------------------------------------------
 
+def _normalize_factor_sign(f):
+    """Normalize the sign of a polynomial factor so -(w-z) and (w-z) match.
+
+    Makes polynomial factors monic in sign by flipping the overall sign when
+    the coefficient of the first symbol (in preorder traversal) is negative.
+    """
+    from sympy.core.add import Add as _Add
+    from sympy.core.mul import Mul as _Mul
+    from sympy.core.numbers import Rational
+
+    if isinstance(f, _Mul):
+        if f.args[0].is_number and f.args[0].is_negative:
+            nf = -f
+            if nf != f:
+                return nf
+    elif isinstance(f, _Add):
+        first_sym = None
+        for atom in f.atoms():
+            if getattr(atom, 'is_Symbol', False) and not getattr(atom, 'is_number', True):
+                first_sym = atom
+                break
+        if first_sym is not None:
+            lc = f.coeff(first_sym)
+            if hasattr(lc, 'is_negative') and lc.is_negative:
+                nf = -f
+                if nf != f:
+                    return nf
+    return f
+
+
 def _is_exactly_divisible(entry, candidate):
     """Check if *entry* is exactly divisible by *candidate* with no remainder.
 
     A zero entry is considered trivially divisible.  For nonzero entries we
-    verify that ``entry / candidate`` does not leave ``1/candidate`` anywhere
-    in the resulting expression.
+    verify that ``candidate`` does not appear in the denominator of the
+    simplified quotient ``entry / candidate``.
     """
+    from sympy import cancel as _cancel
+    from sympy.core.sympify import sympify
+
     if entry == S.Zero or (hasattr(entry, 'is_zero') and entry.is_zero is True):
         return True
-    q = entry / candidate
-    inv = 1 / candidate
-    if q.has(inv):
+    # Use sympify to avoid Python float division for numeric operands
+    q = _cancel(sympify(entry) / sympify(candidate))
+    _slocal = _get_sympy_simplify()
+    q = _slocal(q)
+    if q.has(sympify(1) / sympify(candidate)):
+        return False
+    # For numeric entries, check if the result is an integer
+    if q.is_number:
+        denom = q.as_numer_denom()[1]
+        return denom == S.One
+    # For symbolic entries, check if candidate appears in denominator
+    denom = q.as_numer_denom()[1]
+    if denom != S.One and denom.has(candidate):
         return False
     return True
 
@@ -568,7 +611,7 @@ def _extract_commutative_from_factor(factor):
     """
     from sympy.core.mul import Mul
     from sympy.matrices.immutable import ImmutableDenseMatrix
-    from sympy.simplify.radsimp import cancel
+    from sympy import cancel
 
     # --- Mul: separate commutative / non-commutative args ---
     if isinstance(factor, Mul):
@@ -606,17 +649,23 @@ def _extract_commutative_from_factor(factor):
         if not nonzero_entries:
             return (S.One, factor)
 
-        # Collect candidate commutative factors from every nonzero entry
+        # Collect candidate commutative factors from every nonzero entry.
+        # Use factor() to decompose into irreducible factors, then normalize
+        # the sign so that -(w-z) and (w-z) are recognized as the same factor.
+        from sympy import factor as _factor
         candidates = set()
         for entry in nonzero_entries:
-            if isinstance(entry, Mul):
-                for a in entry.args:
-                    if (hasattr(a, 'is_commutative') and a.is_commutative
-                            and a != S.One):
-                        candidates.add(a)
-            elif (hasattr(entry, 'is_commutative') and entry.is_commutative
-                    and entry != S.One):
-                candidates.add(entry)
+            factored = _factor(entry)
+            if isinstance(factored, Mul):
+                fac_args = factored.args
+            else:
+                fac_args = (factored,)
+            for a in fac_args:
+                if hasattr(a, 'is_number') and a.is_number:
+                    continue
+                if (hasattr(a, 'is_commutative') and a.is_commutative
+                        and a != S.One):
+                    candidates.add(_normalize_factor_sign(a))
 
         if not candidates:
             return (S.One, factor)
@@ -631,6 +680,22 @@ def _extract_commutative_from_factor(factor):
                     break
             if ok:
                 surviving.append(cand)
+
+        # For purely numeric entries, also compute the GCD as a candidate
+        if not surviving:
+            from sympy.core.numbers import Integer
+            from sympy.core.intfunc import igcd
+            all_numeric = all(
+                isinstance(e, (int, Integer)) or
+                (hasattr(e, 'is_integer') and e.is_integer is True)
+                for e in nonzero_entries
+            )
+            if all_numeric and len(nonzero_entries) > 0:
+                gcd_val = nonzero_entries[0]
+                for e in nonzero_entries[1:]:
+                    gcd_val = igcd(gcd_val, e)
+                if gcd_val != 1 and gcd_val != -1:
+                    surviving.append(abs(int(gcd_val)))
 
         if not surviving:
             return (S.One, factor)
@@ -667,10 +732,18 @@ def _extract_commutative_prefactors(pt):
     -------
     (extracted_coeff, new_factors_list)
     """
+    from sympy.tensor.algebraic.algebraic_pure_tensor import AlgebraicPureTensor
+
     extracted = S.One
+
+    if isinstance(pt, AlgebraicPureTensor):
+        factors = list(pt.factors)
+    else:
+        factors = [pt]
+
     new_factors = []
 
-    for factor in pt.factors:
+    for factor in factors:
         comm_coeff, new_factor = _extract_commutative_from_factor(factor)
         extracted *= comm_coeff
         new_factors.append(new_factor)
@@ -763,11 +836,6 @@ def _commutativity_simplify(at, **kwargs):
             else:
                 comm_dict[commutative_key] = comm_dict[commutative_key] + prefactor
 
-    for key in comm_dict:
-        value = comm_dict[key]
-        if isinstance(value, AlgebraicTensor):
-            comm_dict[key] = proportionality_factoring(value)
-
     # Extract commutative prefactors from non-commutative subtensors
     if non_commutative_indices:
         for key in comm_dict:
@@ -796,7 +864,12 @@ def _commutativity_simplify(at, **kwargs):
                     old_coeff = value._get_coeff()
                     new_coeff = old_coeff * extr_coeff
                     comm_dict[key] = _build_pt(new_coeff, new_factors)
-
+    
+    
+    for key in comm_dict:
+        value = comm_dict[key]
+        if isinstance(value, AlgebraicTensor):
+            comm_dict[key] = proportionality_factoring(value)
     all_reconstructed = []
 
     for key, value in comm_dict.items():
@@ -882,7 +955,9 @@ def _simplify_algebraic_pure_tensor(pt, **kwargs):
     1. Simplify the leading coefficient with SymPy's ``simplify``.
     2. Attempt to simplify each factor individually (useful when factors
        are MatrixExpr containing simplifiable sub-expressions).
-    3. Reconstruct the PureTensor with the (possibly changed) pieces.
+    3. Extract commutative prefactors from each factor (common divisors
+       across matrix entries) and fold them into the coefficient.
+    4. Reconstruct the PureTensor with the (possibly changed) pieces.
     """
     from sympy.tensor.algebraic.algebraic_pure_tensor import AlgebraicPureTensor
     from sympy.tensor.algebraic.algebraic_zero_tensor import AlgebraicZeroTensor
@@ -897,17 +972,27 @@ def _simplify_algebraic_pure_tensor(pt, **kwargs):
     if new_coeff is S.Zero:
         return AlgebraicZeroTensor(pt.tensor_shape)
 
-    # Simplify individual factors
+      # Simplify individual factors and extract commutative prefactors
     new_factors = []
     changed = new_coeff != coeff
     for f in factors:
         sf = _s(f, **kwargs)
         if sf != f:
             changed = True
+        # Extract commutative prefactors from this factor
+        fc, nf = _extract_commutative_from_factor(sf)
+        if fc is not S.One:
+            new_coeff = _s(new_coeff * fc)
+            changed = True
+        if nf != sf:
+            sf = nf
         new_factors.append(sf)
 
     if not changed:
         return pt
+
+    if new_coeff is S.Zero:
+        return AlgebraicZeroTensor(pt.tensor_shape)
 
     if len(new_factors) == 0:
         return new_coeff

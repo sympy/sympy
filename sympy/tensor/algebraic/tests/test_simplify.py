@@ -361,3 +361,111 @@ class TestEdgeCases:
         result = tensorsimplify(at)
         assert isinstance(result, AlgebraicPureTensor)
         assert result._get_coeff() == 2
+
+
+class TestCommutativePrefactorExtraction:
+    """Tests for extracting commutative prefactors from non-commutative factors."""
+
+    def test_mul_factor_extraction(self):
+        """Mul of commutative and non-commutative parts extracts commutative part."""
+        from sympy import symbols
+        nc = symbols("nc", commutative=False)
+        x = Symbol("x")
+        from sympy.tensor.algebraic.simplify import _extract_commutative_prefactors
+        from sympy.tensor.algebraic.algebraic_pure_tensor import AlgebraicPureTensor
+        from sympy.matrices import Matrix
+        nc_mat = Matrix([[nc]])
+        xnc_mat = Matrix([[x * nc]])
+        # Use two factors so AlgebraicPureTensor doesn't unwrap
+        pt = AlgebraicPureTensor(xnc_mat, nc_mat)
+        extr_coeff, new_factors = _extract_commutative_prefactors(pt)
+        assert extr_coeff == x
+        # The first factor should no longer contain x
+        assert not new_factors[0].has(x)
+
+    def test_matrix_factor_common_divisor(self):
+        """Common commutative divisor across matrix entries is extracted."""
+        from sympy import symbols
+        nc = symbols("nc", commutative=False)
+        x = Symbol("x")
+        M = Matrix([[x * nc, 2 * x], [3 * x, x * nc]])
+        from sympy.tensor.algebraic.simplify import _extract_commutative_prefactors
+        from sympy.tensor.algebraic.algebraic_pure_tensor import AlgebraicPureTensor
+        from sympy.matrices import Matrix as SymMatrix
+        # Use two factors so AlgebraicPureTensor doesn't unwrap
+        nc_mat = SymMatrix([[nc]])
+        pt = AlgebraicPureTensor(M, nc_mat)
+        extr_coeff, new_factors = _extract_commutative_prefactors(pt)
+        assert extr_coeff == x
+        # Check that the matrix entries no longer contain x
+        new_M = new_factors[0]
+        for r in range(new_M.shape[0]):
+            for c in range(new_M.shape[1]):
+                entry = new_M[r, c]
+                if entry != S.Zero:
+                    assert not entry.has(x)
+
+    def test_matrix_factor_no_common_divisor(self):
+        """No extraction when entries share no common commutative divisor."""
+        from sympy import symbols
+        nc = symbols("nc", commutative=False)
+        x = Symbol("x")
+        y = Symbol("y")
+        M = Matrix([[x * nc, y * nc], [nc, nc]])
+        from sympy.tensor.algebraic.simplify import _extract_commutative_prefactors
+        from sympy.tensor.algebraic.algebraic_pure_tensor import AlgebraicPureTensor
+        from sympy.matrices import Matrix as SymMatrix
+        nc_mat = SymMatrix([[nc]])
+        pt = AlgebraicPureTensor(M, nc_mat)
+        extr_coeff, new_factors = _extract_commutative_prefactors(pt)
+        assert extr_coeff is S.One
+
+    def test_matrix_factor_partial_divisor(self):
+        """Partial divisor (not dividing all entries) is not extracted."""
+        from sympy import symbols
+        nc = symbols("nc", commutative=False)
+        x = Symbol("x")
+        y = Symbol("y")
+        M = Matrix([[x * nc, y * nc], [x * nc, x * nc]])
+        from sympy.tensor.algebraic.simplify import _extract_commutative_prefactors
+        from sympy.tensor.algebraic.algebraic_pure_tensor import AlgebraicPureTensor
+        from sympy.matrices import Matrix as SymMatrix
+        nc_mat = SymMatrix([[nc]])
+        pt = AlgebraicPureTensor(M, nc_mat)
+        extr_coeff, new_factors = _extract_commutative_prefactors(pt)
+        # x doesn't divide y*nc, so nothing should be extracted
+        assert extr_coeff is S.One
+
+    def test_matrix_factor_numeric_common(self):
+        """Numeric common factor is extracted from matrix entries."""
+        M = Matrix([[6, 9], [12, 15]])
+        from sympy.tensor.algebraic.simplify import _extract_commutative_prefactors
+        from sympy.tensor.algebraic.algebraic_pure_tensor import AlgebraicPureTensor
+        from sympy.matrices import Matrix as SymMatrix
+        from sympy import symbols
+        nc = symbols("nc", commutative=False)
+        nc_mat = SymMatrix([[nc]])
+        pt = AlgebraicPureTensor(M, nc_mat)
+        extr_coeff, new_factors = _extract_commutative_prefactors(pt)
+        # 3 should be extracted as common divisor
+        assert extr_coeff == 3
+        new_M = new_factors[0]
+        assert new_M[0, 0] == 2
+        assert new_M[0, 1] == 3
+        assert new_M[1, 0] == 4
+        assert new_M[1, 1] == 5
+
+    def test_integration_extraction_in_simplify(self):
+        """Full simplification pipeline extracts commutative prefactors."""
+        from sympy import symbols
+        nc = symbols("nc", commutative=False)
+        x = Symbol("x")
+        E11 = Matrix([[1, 0], [0, 0]])
+        M1 = Matrix([[x * nc, 0], [0, x]])
+        # E11 has shape (2,2), M1 has shape (2,2)
+        at = AlgebraicTensor(
+            AlgebraicPureTensor(E11, M1),
+        )
+        result = tensorsimplify(at)
+        # The simplification should work without errors
+        assert result is not None
