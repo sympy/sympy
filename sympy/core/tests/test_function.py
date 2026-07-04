@@ -335,6 +335,31 @@ def test_Lambda_equality():
     assert Lambda(x, 2*x) != Lambda(y, 2*y)
 
 
+def test_Lambda_curry():
+    """
+    Lambda((x, y), x + y) -> Lambda(x, Lambda(y, x + y))
+    Lambda(x, Lambda(y, x + y)) is already curried.
+    Lambda(x, x**2) should return itself.
+    Lambda((x, (y, z)), x*y*z) -> Lambda(x, Lambda(y, Lambda(z, x*y*z)))
+    Lambda((x, y, z), x*y + z) ==> Lambda(x, Lambda(y, Lambda(z, x*y+z)))
+    """
+    f = Lambda((x, y), x + y)
+    fc = f.curry()
+    assert fc == Lambda(x, Lambda(y, x + y))
+    c = Lambda(x, Lambda(y, x + y))
+    out = c.curry()
+    assert out == c
+    f = Lambda(x, x**2)
+    out = f.curry()
+    assert out == f
+    f = Lambda((x, (y, z)), x*y*z)
+    fc = f.curry()
+    assert fc == Lambda(x, Lambda(y, Lambda(z, x*y*z)))
+    f = Lambda((x, y, z), x*y+z)
+    fc = f.curry()
+    assert fc == Lambda(x, Lambda(y, Lambda(z, x*y+z)))
+
+
 def test_Subs():
     assert Subs(1, (), ()) is S.One
     # check null subs influence on hashing
