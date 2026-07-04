@@ -9,6 +9,7 @@ from operator import add, neg, pos, sub, mul
 from collections import defaultdict
 
 from sympy.external.gmpy import GROUND_TYPES
+from sympy.polys.polyerrors import CoercionFailed
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.iterables import _strongly_connected_components
 
@@ -84,7 +85,7 @@ class SDM(dict):
         if not all(0 <= r < m for r in self):
             raise DMBadInputError("Row out of range")
         if not all(0 <= c < n for row in self.values() for c in row):
-            raise DMBadInputError("Column out of range")
+            raise DMBadInputError("alumn out of range")
 
     def getitem(self, i, j):
         try:
@@ -746,6 +747,45 @@ class SDM(dict):
         """
         MT = sdm_transpose(M)
         return M.new(MT, M.shape[::-1], M.domain)
+
+    def conjugate(M):
+        """
+        Returns the conjugate of a :py:class:`~.SDM` matrix
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices.sdm import SDM
+        >>> from sympy import QQ_I
+        >>> A = SDM({0:{1:QQ_I(2, -3)}, 1:{}}, (2, 2), QQ_I)
+        >>> A.conjugate()
+        {0: {1: (2 + 3*I)}, 1: {}}
+        """
+        dom = M.domain
+        if dom.is_ConjugateDomain:
+            if dom.is_ZZ or dom.is_QQ or dom.is_RR:
+                return M
+
+            try:
+                return M.applyfunc(dom.conjugate, dom)
+            except CoercionFailed:
+                pass
+        raise DMDomainError("%s does not support conjugation" % dom)
+
+    def adjoint(M):
+        """
+        Returns the adjoint of a :py:class:`~.SDM` matrix
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices.sdm import SDM
+        >>> from sympy import QQ_I
+        >>> A = SDM({0:{1:QQ_I(2, -3)}, 1:{}}, (2, 2), QQ_I)
+        >>> A.adjoint()
+        {1: {0: (2 + 3*I)}}
+        """
+        return M.conjugate().transpose()
 
     def __add__(A, B):
         if not isinstance(B, SDM):

@@ -65,6 +65,7 @@ from __future__ import annotations
 from itertools import chain
 
 from sympy.external.gmpy import GROUND_TYPES
+from sympy.polys.polyerrors import CoercionFailed
 from sympy.utilities.decorator import doctest_depends_on
 
 from .exceptions import (
@@ -624,6 +625,21 @@ class DDM(list):
         else:
             ddmT = [[]] * cols
         return DDM(ddmT, (cols, rows), self.domain)
+
+    def conjugate(self):
+        dom = self.domain
+        if dom.is_ConjugateDomain:
+            if dom.is_ZZ or dom.is_QQ or dom.is_RR:
+                return self
+
+            try:
+                return self.applyfunc(dom.conjugate, dom)
+            except CoercionFailed:
+                pass
+        raise DMDomainError("%s does not support conjugation" % dom)
+
+    def adjoint(self):
+        return self.conjugate().transpose()
 
     def __add__(a, b):
         if not isinstance(b, DDM):

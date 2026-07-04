@@ -42,6 +42,7 @@ from __future__ import annotations
 
 from sympy.external.gmpy import GROUND_TYPES
 from sympy.external.importtools import import_module
+from sympy.polys.polyerrors import CoercionFailed
 from sympy.utilities.decorator import doctest_depends_on
 
 from sympy.polys.domains import ZZ, QQ
@@ -468,6 +469,23 @@ class DFM:
     def transpose(self):
         """Transpose a DFM matrix."""
         return self._new(self.rep.transpose(), (self.cols, self.rows), self.domain)
+
+    def conjugate(self):
+        """Return the conjugate of a DFM matrix."""
+        dom = self.domain
+        if dom.is_ConjugateDomain:
+            if dom.is_ZZ or dom.is_QQ or dom.is_RR:
+                return self
+
+            try:
+                return self.applyfunc(dom.conjugate, dom)
+            except CoercionFailed:
+                pass
+        raise DMDomainError("%s does not support conjugation" % dom)
+
+    def adjoint(self):
+        """Return the adjoint of a DFM matrix."""
+        return self.conjugate().transpose()
 
     def hstack(self, *others):
         """Horizontally stack matrices."""
