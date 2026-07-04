@@ -917,19 +917,21 @@ class conjugate(DefinedFunction):
     def _eval_is_algebraic(self):
         return self.args[0].is_algebraic
 
-
-
     def _eval_is_finite(self):
         return self.args[0].is_finite
 
     def _eval_is_infinite(self):
         return self.args[0].is_infinite
 
-    def _eval_is_real(self):
-        return self.args[0].is_real
-
     def _eval_is_complex(self):
         return self.args[0].is_complex
+    
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        # conjugate(f(x)) ~ conjugate(f(x).as_leading_term(x))
+        arg = self.args[0].as_leading_term(x, logx=logx, cdir=cdir)
+        return self.func(arg)
+    
+    
 class transpose(DefinedFunction):
     """
     Linear map transposition.
