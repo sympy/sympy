@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 class CyclotomicField(
     AlgebraicField
 ):
-    r"""Cyclotomic field :ref:`QQ<zeta>`
+    r"""Cyclotomic field :ref:`QQ<zeta_n>`
 
     Parameters
     ==========
