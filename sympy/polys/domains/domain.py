@@ -458,6 +458,12 @@ class Domain(Generic[Er]):
     is_Algebraic: bool = False
     """Alias for :py:attr:`~.Domain.is_AlgebraicField`."""
 
+    is_CyclotomicField: bool = False
+    """Boolean flag indicating if the domain is a :py:class:`~.CyclotomicField`."""
+
+    is_Cyclotomic: bool = False
+    """Alias for :py:attr:`~.Domain.is_CyclotomicField`."""
+
     is_PolynomialRing: bool = False
     """Boolean flag indicating if the domain is a :py:class:`~.PolynomialRing`."""
 

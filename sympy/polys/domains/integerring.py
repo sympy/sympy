@@ -1,6 +1,8 @@
 """Implementation of :class:`IntegerRing` class. """
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from sympy.external.gmpy import MPZ, GROUND_TYPES
 
 from sympy.core.numbers import int_valued
@@ -18,6 +20,10 @@ from sympy.polys.polyerrors import CoercionFailed
 from sympy.utilities import public
 
 import math
+
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
+    from sympy.polys.domains.cyclotomicfield import CyclotomicField
 
 @public
 class IntegerRing(Ring[MPZ], CharacteristicZero, SimpleDomain, ConjugateDomain):
@@ -125,6 +131,12 @@ class IntegerRing(Ring[MPZ], CharacteristicZero, SimpleDomain, ConjugateDomain):
         QQ<sqrt(2)>
         """
         return self.get_field().algebraic_field(*extension, alias=alias)
+
+    def cyclotomic_field(self, n: int, ss: bool = False, alias: str = "zeta",
+                         gen: Expr | None = None, root_index: int = -1
+                         ) -> CyclotomicField:
+        from sympy.polys.domains.cyclotomicfield import CyclotomicField
+        return CyclotomicField(n, ss, alias, gen, root_index)
 
     def from_AlgebraicField(K1, a, K0):
         """Convert a :py:class:`~.ANP` object to :ref:`ZZ`.
