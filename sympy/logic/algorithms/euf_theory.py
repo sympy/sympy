@@ -163,13 +163,6 @@ class EUFCongruenceClosure:
             self.use_list[arg_id].append((func, arg_ids, d))
         return d
 
-    def _const_of(self, term):
-        """
-        Return the constant that replaced the transformed term.
-        If the term was constant to begin with, returns itself.
-        """
-        return self._term_to_const[term]
-
     def _find_repr(self, const):
         """
         Return the unique class representative for const.
@@ -212,7 +205,6 @@ class EUFCongruenceClosure:
         """
         Merge the classes of two already-transformed terms and propagate
         closure.
-        Raises KeyError if a term was not transformed.
 
         Examples
         --------
@@ -225,13 +217,12 @@ class EUFCongruenceClosure:
         >>> cc.are_congruent(x, y)
         True
         """
-        self.pending_unions.append((self._const_of(lhs), self._const_of(rhs)))
+        self.pending_unions.append((self._flatten(lhs), self._flatten(rhs)))
         self._process_pending_unions()
 
     def are_congruent(self, lhs, rhs):
         """
         Query whether two terms are in the same class under the closure.
-        Terms that were never transformed always return False.
 
         Examples
         --------
@@ -248,9 +239,6 @@ class EUFCongruenceClosure:
         >>> cc.are_congruent(x, f(x))
         False
         """
-        try:
-            lhs_id = self._const_of(lhs)
-            rhs_id = self._const_of(rhs)
-        except KeyError:
-            return False
+        lhs_id = self._flatten(lhs)
+        rhs_id = self._flatten(rhs)
         return self._find_repr(lhs_id) == self._find_repr(rhs_id)
