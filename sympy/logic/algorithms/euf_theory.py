@@ -116,7 +116,7 @@ class EUFCongruenceClosure:
     def _flatten(self, expr):
         """
         Curryfy, and flatten the expression.
-        This method MUST be called before any merging. It is a required step.
+        This method should be called before any merging.
 
         Returns
         -------
@@ -131,19 +131,19 @@ class EUFCongruenceClosure:
         elif isinstance(expr, Number) or getattr(expr, "is_Atom", False):
             const = self._new_dummy()
         elif isinstance(expr, AppliedPredicate):
-            arg_ids = tuple(self._flatten(arg) for arg in expr.arguments)
+            arg_ids = tuple(self._find_repr(self._flatten(arg)) for arg in expr.arguments)
             const = self._record_func_eq(expr.function, arg_ids)
         elif isinstance(expr, Lambda):
             lam = expr if len(expr.variables) == 1 else expr.curry()
-            body_id = self._flatten(lam.expr)
+            body_id = self._find_repr(self._flatten(lam.expr))
             lam_key = Lambda(lam.variables[0], body_id)
             if lam_key not in self._lambda_cache:
                 self._lambda_cache[lam_key] = self._new_dummy()
             const = self._lambda_cache[lam_key]
         else:
             func = expr.func
-            func_id = self._flatten(func) if isinstance(func, Basic) else func
-            arg_ids = tuple(self._flatten(arg) for arg in expr.args)
+            func_id = self._find_repr(self._flatten(func)) if isinstance(func, Basic) else func
+            arg_ids = tuple(self._find_repr(self._flatten(arg)) for arg in expr.args)
             const = self._record_func_eq(func_id, arg_ids)
 
         self._term_to_const[expr] = const
