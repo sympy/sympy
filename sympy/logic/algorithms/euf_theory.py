@@ -51,6 +51,7 @@ from sympy.core.numbers import Number
 from sympy.core import Basic
 from sympy.utilities.iterables import numbered_symbols
 from sympy.assumptions.assume import AppliedPredicate
+from sympy.assumptions.ask import Q
 
 
 class EUFUnhandledInput(Exception):
@@ -95,6 +96,8 @@ class EUFCongruenceClosure:
 
         # Transform every term of the input equations first, then merge.
         for eq in equations:
+            if not (isinstance(eq, AppliedPredicate) and eq.function == Q.eq):
+                raise EUFUnhandledInput
             left_id = self._flatten(eq.lhs)
             right_id = self._flatten(eq.rhs)
             self.pending_unions.append((left_id, right_id))
