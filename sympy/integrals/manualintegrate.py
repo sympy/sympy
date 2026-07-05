@@ -41,6 +41,7 @@ from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, Symbol, Wild
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import WildFunction
+from sympy.core.function import count_ops
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.hyperbolic import (HyperbolicFunction, csch,
@@ -2526,7 +2527,10 @@ def substitution_rule(integral):
                         pieces.append((subrule, True))
                         subrule = PiecewiseRule(substituted, symbol, pieces)
 
-            ways.append(URule(integrand, symbol, u_var, u_func, subrule))
+            ways.append((substituted, URule(integrand, symbol, u_var, u_func, subrule)))
+
+        ways.sort(key=lambda w: count_ops(w[0]))
+        ways = [w[1] for w in ways]
 
         if len(ways) > 1:
             return AlternativeRule(integrand, symbol, ways)
