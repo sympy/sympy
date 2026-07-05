@@ -194,8 +194,15 @@ class UnitSystem(_QuantityMapper):
             return factor, dim
         elif isinstance(expr, Function):
             fds = [self._collect_factor_and_dimension(arg) for arg in expr.args]
-            dims = [Dimension(1) if self.get_dimension_system().is_dimensionless(d[1]) else d[1] for d in fds]
-            return (expr.func(*(f[0] for f in fds)), *dims)
+            factor = expr.func(*(f[0] for f in fds))
+            dims = [d[1] for d in fds]
+            if len(dims) == 1:
+                if self.get_dimension_system().is_dimensionless(dims[0]):
+                    return factor, Dimension(1)
+                return factor, dims[0]
+            if all(self.get_dimension_system().is_dimensionless(d) for d in dims):
+                return factor, Dimension(1)
+            return factor, Dimension(expr.func(*[d.name for d in dims]))
         elif isinstance(expr, Dimension):
             return S.One, expr
         else:

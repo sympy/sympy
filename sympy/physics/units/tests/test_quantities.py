@@ -557,6 +557,34 @@ def test_prefixed_property():
     assert kilogram.is_prefixed
     assert pebibyte.is_prefixed
 
+def test_issue_29032():
+    from sympy.functions.elementary.miscellaneous import cbrt
+    q1 = Quantity('q1')
+    SI.set_quantity_dimension(q1, length)
+    SI.set_quantity_scale_factor(q1, 1)
+    q2 = Quantity('q2')
+    SI.set_quantity_dimension(q2, time)
+    SI.set_quantity_scale_factor(q2, 1)
+
+    f = Function('f')
+
+    # _collect_factor_and_dimension must always return a 2-tuple
+    result = SI._collect_factor_and_dimension(f(q1, q2))
+    assert len(result) == 2
+
+    # sqrt/cbrt wrapping a Function with multiple dimensional args
+    # previously raised ValueError: too many values to unpack
+    result = SI._collect_factor_and_dimension(sqrt(f(q1, q2)))
+    assert len(result) == 2
+
+    result = SI._collect_factor_and_dimension(cbrt(f(q1, q2)))
+    assert len(result) == 2
+
+    # Single-arg functions still pass through dimension directly
+    assert SI._collect_factor_and_dimension(Abs(q1)) == (1, length)
+    assert SI._collect_factor_and_dimension(exp(q1/q2)) == (exp(1), Dimension(1))
+
+
 def test_physics_constant():
     from sympy.physics.units import definitions
 
