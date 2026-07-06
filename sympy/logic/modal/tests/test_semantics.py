@@ -31,7 +31,6 @@ def test_semantic_evaluator():
 def test_semantic_next_until():
     from sympy.logic.modal.operators import Next, Until
     p = Symbol('p')
-    q = Symbol('q')
 
     # Model:
     # w1 -> w2 -> w3
