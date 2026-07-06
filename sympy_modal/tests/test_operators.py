@@ -1,7 +1,10 @@
 import pytest
 from sympy.core.symbol import Symbol
 from sympy_modal.types import PredicateVariable, FunctionType, Universe, BoolType
-from sympy_modal.operators import Box, Diamond, ProvabilityBox, ForAllPredicates, ExistsPredicates
+from sympy_modal.operators import (
+    Box, Diamond, ProvabilityBox, ForAllPredicates, ExistsPredicates,
+    AgentBox, CommonKnowledge, Next, Until
+)
 
 def test_box_diamond():
     p = Symbol('p')
@@ -32,3 +35,35 @@ def test_quantifiers():
     assert ex.variable == P
     assert ex.formula == px
     assert ex.is_well_typed()
+
+def test_expressiveness_operators():
+    p = Symbol('p')
+    q = Symbol('q')
+
+    ab = AgentBox('Alice', p)
+    assert ab.agent == 'Alice'
+    assert ab.modality == 'epistemic_Alice'
+
+    ck = CommonKnowledge('GroupA', p)
+    assert ck.group == 'GroupA'
+    assert ck.modality == 'common_knowledge_GroupA'
+
+    nx = Next(p)
+    assert nx.modality == 'temporal_next'
+    assert nx.is_well_typed()
+
+    ut = Until(p, q)
+    assert ut.left == p
+    assert ut.right == q
+    assert ut.is_well_typed()
+def test_agent_box_subs():
+    from sympy.core.symbol import Symbol
+    from sympy_modal.operators import AgentBox
+    p = Symbol('p')
+    q = Symbol('q')
+    ab = AgentBox('Alice', p)
+    # This should not crash and should correctly reconstruct the AST
+    ab_sub = ab.subs(p, q)
+    assert isinstance(ab_sub, AgentBox)
+    assert ab_sub.agent == 'Alice'
+    assert ab_sub.formula == q

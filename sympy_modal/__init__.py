@@ -40,12 +40,14 @@ __all__ = [
 ]
 from sympy_modal.operators import (
     Box, Diamond, ProvabilityBox, AlethicBox, EpistemicBox,
-    DeonticBox, TemporalBox, ForAllPredicates, ExistsPredicates
+    DeonticBox, TemporalBox, ForAllPredicates, ExistsPredicates,
+    AgentBox, CommonKnowledge, Next, Until
 )
 
 __all__.extend([
     "Box", "Diamond", "ProvabilityBox", "AlethicBox", "EpistemicBox",
-    "DeonticBox", "TemporalBox", "ForAllPredicates", "ExistsPredicates"
+    "DeonticBox", "TemporalBox", "ForAllPredicates", "ExistsPredicates",
+    "AgentBox", "CommonKnowledge", "Next", "Until"
 ])
 from sympy_modal.frames import KripkeFrame, Axiom
 
@@ -66,9 +68,16 @@ from sympy_modal.formalise import (
     FormalisationInterface,
     ModalSignature,
     ScopeResolution,
-    QuantifierOrder
+    QuantifierOrder,
+    LLMPromptBuilder
 )
 
 __all__.extend([
-    "FormalisationInterface", "ModalSignature", "ScopeResolution", "QuantifierOrder"
+    "FormalisationInterface", "ModalSignature", "ScopeResolution", "QuantifierOrder", "LLMPromptBuilder"
+])
+
+from sympy_modal.semantics import KripkeModel, SemanticEvaluator
+
+__all__.extend([
+    "KripkeModel", "SemanticEvaluator"
 ])

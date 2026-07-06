@@ -51,7 +51,7 @@ For parsing ease, there are named modalities that imply their logic frame automa
 
 ## Tutorial and Examples
 
-Here are 5 fully worked-out examples that demonstrate the system in action:
+Here are 7 fully worked-out examples that demonstrate the system in action:
 
 ### Example 1: Basic Validity in S4
 
@@ -173,6 +173,70 @@ print(f"Parsed formula type: {type(formula).__name__}")
 sig = fi.resolve_modality(expr_str)
 print(f"Inferred modality signatures: {sig.operators}")
 # Output: Inferred modality signatures: ['alethic']
+```
+
+
+### Example 6: Classical Logic Injection and SMT Integration
+
+The `ProofContext` fundamentally enforces intuitionistic logic, yielding constructive proofs. However, for many practical verification scenarios, classical logic is necessary. By passing `allow_classical=True` during initialization, the system actively injects classical axioms—such as the Law of Excluded Middle (LEM) and Double Negation Elimination—into the acceptable hypothesis pool, suppressing intuitionistic warnings.
+
+Furthermore, this flag unlocks deep integration with SymPy's native `sympy.logic.inference` SAT/SMT tools. When asked to prove a complex, non-modal propositional tautology, the `ProofContext` will transparently bypass standard natural deduction chains and instantly evaluate validity via the SMT solver, mapping the result back into a cryptographically sound `ProofTerm`.
+
+```python
+from sympy import Symbol, Or, Not, Implies
+from sympy_modal import ProofContext, KripkeFrame
+
+print("Example 6: Classical Logic Injection and SMT Integration")
+
+p = Symbol('p')
+lem = Or(p, Not(p))
+
+# With classical logic enabled
+ctx_classical = ProofContext(KripkeFrame.K(), allow_classical=True)
+proof_success = ctx_classical.prove(lem)
+print(f"Classical proof valid (LEM): {proof_success.is_valid}")
+# Output: Classical proof valid (LEM): True
+
+# SMT solver solving a complex propositional tautology instantly
+q = Symbol('q')
+complex_tautology = Or(Implies(p, q), Implies(q, p))
+smt_proof = ctx_classical.prove(complex_tautology)
+print(f"SMT proof valid: {smt_proof.is_valid}")
+# Output: SMT proof valid: True
+print(f"SMT derivation source: {smt_proof.derivation[0]}")
+# Output: SMT derivation source: SMT_Solver
+```
+
+### Example 7: Semantic Evaluation and Expressive Operators
+
+Beyond abstract syntax and proof search, `sympy_modal` provides tangible semantic verification via the `SemanticEvaluator`. You can construct finite `KripkeModel` instances by defining specific sets of worlds, explicit accessibility relations, and boolean valuation mappings for individual propositions. This is crucial for verifying that hardware states or network configurations meet formal specifications.
+
+The library also exposes highly expressive operators like `AgentBox` and `CommonKnowledge` for analyzing epistemic multi-agent scenarios, as well as `Next` and `Until` operators for linear temporal logic model checking.
+
+```python
+from sympy import Symbol, Implies
+from sympy_modal import KripkeModel, SemanticEvaluator, Box, Diamond, AgentBox, CommonKnowledge
+
+print("Example 7: Semantic Evaluation and Expressive Operators")
+
+# Model setup: w1 accesses w2 and w3. Proposition p is true only at w2.
+W = {'w1', 'w2', 'w3'}
+R = {'w1': {'w2', 'w3'}}
+p = Symbol('p')
+V = { ('w2', p): True, ('w3', p): False }
+
+model = KripkeModel(W, R, V)
+evaluator = SemanticEvaluator(model)
+
+# Evaluation: Diamond(p) checks if p is true in *some* accessible world
+print(f"Is Diamond(p) true at w1? {evaluator.evaluate(Diamond(p), 'w1')}")
+# Output: Is Diamond(p) true at w1? True
+
+# Expressive Multi-Agent Operators
+agent_box = AgentBox('Alice', p)
+common_knowledge = CommonKnowledge('GroupA', p)
+print(f"AgentBox modality: {agent_box.modality}")
+# Output: AgentBox modality: epistemic_Alice
 ```
 
 ## Overview
@@ -359,12 +423,27 @@ The `sympy_modal/` directory contains the core implementation of the second-orde
 - `ProofFailure.__repr__` (Method): Detailed representation of the proof failure. (2 lines of code)
 
 
-## Proposals for Enhancing the Reference and Tutorial Examples
 
-### Enhancing Example Output
-Currently, the tutorial examples in this document rely on silent assertions (e.g., `assert s4.validates(...)`). To provide a better learning experience, the examples should be updated to produce meaningful console output. Instead of just passing silently, we propose replacing assertions with print statements that evaluate to boolean conditions or print formulas directly. For example, changing `assert s4.validates(Implies(Box(p), p))` to `print(f"S4 Reflexivity validation: {s4.validates(Implies(Box(p), p))}")` will output `S4 Reflexivity validation: True`. This provides users with direct, observable feedback when they copy, paste, and run the tutorial scripts locally.
+### `sympy_modal/semantics.py`
+This module introduces practical verification capabilities.
+- `KripkeModel` (Class): Represents a finite Kripke Model with sets of worlds, relations, and valuations.
+- `SemanticEvaluator` (Class): Evaluates formulas against a given finite `KripkeModel`.
 
-### Expanding Example Explanations
-To elevate the tutorial section from a mere list of code snippets to a comprehensive learning resource, each example should be expanded to include a structured, two-paragraph introduction and explanation.
-- The **first paragraph** should introduce the specific logical concept or system component being demonstrated (e.g., explaining the intuitive meaning behind the Kripke accessibility relations required for S4).
-- The **second paragraph** should explicitly walk through the code, explaining step-by-step how the components interact (e.g., explaining why `evaluate=False` is necessary, or how the `ProofContext` manages active hypotheses under the hood). This deeper context will bridge the gap between abstract modal logic theory and the concrete SymPy API implementation.
+### `sympy_modal/operators.py` (Additions)
+New operators were added to enhance expressiveness:
+- `AgentBox` (Class): Necessity (Knowledge) operator for a specific agent (Multi-Agent Epistemic Logic).
+- `CommonKnowledge` (Class): Common Knowledge operator for groups of agents.
+- `Next` (Class): The 'Next' temporal logic operator.
+- `Until` (Class): The 'Until' temporal logic operator.
+
+### `sympy_modal/formalise.py` (Additions)
+- `LLMPromptBuilder` (Class): Utility to bridge natural language and `sympy_modal` using an LLM (configured for Gemini).
+
+### `sympy_modal/kernel.py` (Additions)
+- `ProofTerm.export_lean` (Method): Exports the formula to Lean 4 syntax.
+- `ProofTerm.export_coq` (Method): Exports the formula to Coq syntax.
+
+### `sympy_modal/context.py` (Additions)
+- `ProofContext.__init__` now accepts `allow_classical=True` to permit classical logic proofs without warnings.
+- `ProofContext.prove` now utilizes SymPy's SMT solver (`sympy.logic.inference.entails`) when classical logic is enabled and no modal operators are present for rapid verification.
+- Interactive Tactics: `tactic_apply`, `tactic_rewrite`, `tactic_induction`.

@@ -107,6 +107,94 @@ class ForAllPredicates(BooleanFunction):
         return isinstance(self.variable, PredicateVariable) and isinstance(self.formula, Boolean)
 
 
+class AgentBox(Box):
+    """
+    Necessity (Knowledge) operator for a specific agent in Multi-Agent Epistemic Logic (e.g., K_A).
+    """
+    def __new__(cls, agent: Any, arg: Any) -> 'AgentBox':
+        from sympy.core.sympify import sympify
+        agent = sympify(agent)
+        # Must include all parameters in args for SymPy tree reconstruction (subs, etc)
+        obj = BooleanFunction.__new__(cls, agent, arg)
+        obj._modality = f"epistemic_{agent}"
+        return obj
+
+    @property
+    def agent(self) -> Any:
+        # SymPy string sympification creates Symbols, we return the string representation
+        # for backwards compatibility with the manual property access
+        return str(self.args[0])
+
+    # We override the formula property since Box expects it to be self.args[0]
+    @property
+    def formula(self) -> Any:
+        return self.args[1]
+
+    def is_well_typed(self) -> bool:
+        return isinstance(self.args[1], Boolean)
+
+
+class CommonKnowledge(Box):
+    """
+    Common Knowledge operator in Multi-Agent Epistemic Logic (C_G).
+    Represents that a group of agents know P, know they know P, etc.
+    """
+    def __new__(cls, group: Any, arg: Any) -> 'CommonKnowledge':
+        from sympy.core.sympify import sympify
+        group = sympify(group)
+        obj = BooleanFunction.__new__(cls, group, arg)
+        obj._modality = f"common_knowledge_{group}"
+        return obj
+
+    @property
+    def group(self) -> Any:
+        return str(self.args[0])
+
+    @property
+    def formula(self) -> Any:
+        return self.args[1]
+
+    def is_well_typed(self) -> bool:
+        return isinstance(self.args[1], Boolean)
+
+
+class Next(ModalOperator):
+    """
+    'Next' operator (X) for Linear Temporal Logic.
+    """
+    def __new__(cls, arg: Any) -> 'Next':
+        obj = super().__new__(cls, arg)
+        obj._modality = "temporal_next"
+        return obj
+
+    @property
+    def modality(self) -> str:
+        return self._modality
+
+    def is_well_typed(self) -> bool:
+        return isinstance(self.args[0], Boolean)
+
+
+class Until(BooleanFunction):
+    """
+    'Until' operator (U) for Linear Temporal Logic.
+    A U B means A holds until B holds (and B must eventually hold).
+    """
+    def __new__(cls, arg1: Any, arg2: Any) -> 'Until':
+        return super().__new__(cls, arg1, arg2)
+
+    @property
+    def left(self) -> Boolean:
+        return self.args[0]
+
+    @property
+    def right(self) -> Boolean:
+        return self.args[1]
+
+    def is_well_typed(self) -> bool:
+        return isinstance(self.args[0], Boolean) and isinstance(self.args[1], Boolean)
+
+
 class ExistsPredicates(BooleanFunction):
     """
     Second-order existential quantification over a PredicateVariable.

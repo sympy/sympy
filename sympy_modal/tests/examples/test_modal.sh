@@ -20,3 +20,11 @@ echo ""
 echo "Running Example 5:"
 PYTHONPATH=. python sympy_modal/tests/examples/example5.py
 echo ""
+
+echo "Running Example 6:"
+PYTHONPATH=. python sympy_modal/tests/examples/example6.py
+echo ""
+
+echo "Running Example 7:"
+PYTHONPATH=. python sympy_modal/tests/examples/example7.py
+echo ""

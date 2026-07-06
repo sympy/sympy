@@ -67,3 +67,90 @@ def test_context_prove_lob():
     failure = ctx_s4.prove(lob)
     assert isinstance(failure, ProofFailure)
     assert Axiom.Lob in failure.missing_axioms
+def test_classical_logic_opt_in():
+    from sympy.logic.boolalg import Or, Not
+    from sympy_modal.context import ProofContext
+    from sympy_modal.frames import KripkeFrame
+    from sympy.core.symbol import Symbol
+
+    p = Symbol('p')
+    lem = Or(p, Not(p))
+
+    # Normally it should warn
+    ctx = ProofContext(frame=KripkeFrame.K())
+    import warnings
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+        ctx.assume(lem)
+        assert len(w) > 0
+        assert "Law of Excluded Middle" in str(w[-1].message)
+
+    # With allow_classical=True, it shouldn't warn
+    ctx_classical = ProofContext(frame=KripkeFrame.K(), allow_classical=True)
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+        ctx_classical.assume(lem)
+        # Assuming no other warnings happen
+        assert not any("Law of Excluded Middle" in str(warn.message) for warn in w)
+def test_tactic_rewrite():
+    from sympy_modal.context import ProofContext
+    from sympy_modal.frames import KripkeFrame
+    from sympy.core.symbol import Symbol
+    from sympy.logic.boolalg import Implies, Equivalent
+    from sympy_modal.kernel import ProofTerm
+    import pytest
+
+    ctx = ProofContext(frame=KripkeFrame.K())
+    p = Symbol('p')
+    q = Symbol('q')
+
+    pt = ctx.assume(Implies(p, q))
+
+    # Try rewriting without a valid equivalence proof
+    invalid_eq_proof = ProofTerm(Implies(p, q)) # Not an equivalence
+    with pytest.raises(ValueError):
+        ctx.tactic_rewrite(pt, p, q, invalid_eq_proof)
+
+    # Rewrite with a valid equivalence proof
+    valid_eq_proof = ctx.assume(Equivalent(p, q))
+    pt_rewritten = ctx.tactic_rewrite(pt, p, q, valid_eq_proof)
+    assert pt_rewritten.formula == Implies(q, q)
+
+def test_smt_integration():
+    from sympy_modal.context import ProofContext
+    from sympy_modal.frames import KripkeFrame
+    from sympy.core.symbol import Symbol
+    from sympy.logic.boolalg import Implies, And, Or, Not
+
+    # Needs classical logic for SMT integration to trigger on propositional formulas
+    ctx = ProofContext(frame=KripkeFrame.K(), allow_classical=True)
+    p = Symbol('p')
+    q = Symbol('q')
+
+    # A complex tautology that SMT can solve instantly but backward/forward might struggle with
+    # (p -> q) v (q -> p)
+    tautology = Or(Implies(p, q), Implies(q, p))
+    proof = ctx.prove(tautology)
+
+    from sympy_modal.kernel import ProofTerm
+    assert isinstance(proof, ProofTerm)
+    assert proof.derivation[0] == "SMT_Solver"
+    assert proof.formula == tautology
+
+def test_classical_injection():
+    from sympy_modal.context import ProofContext
+    from sympy_modal.frames import KripkeFrame
+    from sympy.core.symbol import Symbol
+    from sympy.logic.boolalg import Implies, And, Or, Not
+
+    ctx = ProofContext(frame=KripkeFrame.K(), allow_classical=True)
+    p = Symbol('p')
+
+    # Try to prove LEM
+    lem = Or(p, Not(p))
+    proof = ctx.prove(lem)
+
+    from sympy_modal.kernel import ProofTerm
+    assert isinstance(proof, ProofTerm)
+    # The SMT solver might pick this up first depending on the implementation details,
+    # but the point is we can prove classical axioms directly if allow_classical=True.

@@ -24,6 +24,63 @@ class ProofTerm:
         # In this implementation, creation of a ProofTerm via TrustedKernel is the certificate.
         return True
 
+    def _ast_to_lean(self, expr: Any) -> str:
+        """Helper to recursively convert SymPy AST to Lean syntax robustly."""
+        from sympy.logic.boolalg import Implies, And, Or, Not
+        from sympy.core.symbol import Symbol
+        from sympy_modal.operators import ModalOperator
+
+        if isinstance(expr, Symbol):
+            return str(expr)
+        elif isinstance(expr, Implies):
+            return f"({self._ast_to_lean(expr.args[0])} -> {self._ast_to_lean(expr.args[1])})"
+        elif isinstance(expr, And):
+            return "(" + " ∧ ".join(self._ast_to_lean(arg) for arg in expr.args) + ")"
+        elif isinstance(expr, Or):
+            return "(" + " ∨ ".join(self._ast_to_lean(arg) for arg in expr.args) + ")"
+        elif isinstance(expr, Not):
+            return f"¬{self._ast_to_lean(expr.args[0])}"
+        elif isinstance(expr, ModalOperator):
+            # Using generic prefix application for Lean since exact syntax depends on the Lean library chosen
+            return f"({expr.__class__.__name__} {self._ast_to_lean(expr.args[0])})"
+        else:
+            return str(expr)
+
+    def export_lean(self) -> str:
+        """
+        Exports the proof term formula to a Lean 4 compatible string representation.
+        """
+        f_str = self._ast_to_lean(self.formula)
+        return f"theorem my_thm : {f_str} := by sorry"
+
+    def _ast_to_coq(self, expr: Any) -> str:
+        """Helper to recursively convert SymPy AST to Coq syntax robustly."""
+        from sympy.logic.boolalg import Implies, And, Or, Not
+        from sympy.core.symbol import Symbol
+        from sympy_modal.operators import ModalOperator
+
+        if isinstance(expr, Symbol):
+            return str(expr)
+        elif isinstance(expr, Implies):
+            return f"({self._ast_to_coq(expr.args[0])} -> {self._ast_to_coq(expr.args[1])})"
+        elif isinstance(expr, And):
+            return "(" + " /\\ ".join(self._ast_to_coq(arg) for arg in expr.args) + ")"
+        elif isinstance(expr, Or):
+            return "(" + " \\/ ".join(self._ast_to_coq(arg) for arg in expr.args) + ")"
+        elif isinstance(expr, Not):
+            return f"~{self._ast_to_coq(expr.args[0])}"
+        elif isinstance(expr, ModalOperator):
+            return f"({expr.__class__.__name__} {self._ast_to_coq(expr.args[0])})"
+        else:
+            return str(expr)
+
+    def export_coq(self) -> str:
+        """
+        Exports the proof term formula to a Coq compatible string representation.
+        """
+        f_str = self._ast_to_coq(self.formula)
+        return f"Theorem my_thm : {f_str}.\nProof.\n  admit.\nQed."
+
 
 class ModusPonens:
     """Rule identifier for Modus Ponens."""
@@ -47,6 +104,28 @@ class TrustedKernel:
         if self.frame.validates(formula):
             return ProofTerm(formula, derivation="axiom", source="axiom")
         raise NotAnAxiomError(f"Formula {formula} is not an axiom in the current frame.")
+
+    def check_smt(self, formula: Boolean, premises: List[ProofTerm]) -> ProofTerm:
+        """
+        Verifies if formula entails from premises using SymPy's SMT solver.
+        """
+        from sympy.logic.inference import entails
+        from sympy_modal.operators import Box, Diamond
+
+        if formula.has(Box, Diamond):
+            raise InvalidInferenceError("SMT solver cannot handle modal operators directly.")
+
+        premise_formulas = [p.formula for p in premises if not p.formula.has(Box, Diamond)]
+
+        if entails(formula, premise_formulas):
+            # Union all hypotheses from the used premises
+            new_hyps = set()
+            for p in premises:
+                if not p.formula.has(Box, Diamond):
+                    new_hyps.update(p.hypotheses)
+            return ProofTerm(formula, derivation=("SMT_Solver", formula), source="derived", hypotheses=list(new_hyps))
+
+        raise InvalidInferenceError(f"Formula {formula} does not entail from premises.")
 
     def verify_rule(self, rule: Any, premises: List[ProofTerm]) -> ProofTerm:
         """
