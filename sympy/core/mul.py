@@ -1503,10 +1503,6 @@ class Mul(Expr, AssocOp):
             all(arg.is_polar or arg.is_positive for arg in self.args)
 
     def _eval_is_extended_real(self):
-    # Detect z * conjugate(z) = |z|^2 pattern which is always real.
-    # We check structurally: if a factor IS a conjugate() instance,
-    # check if its argument appears as another factor.
-    # This avoids calling factor.conjugate() which can cause recursion.
         from sympy.functions.elementary.complexes import conjugate as conj_cls
         remaining = list(self.args)
         used = set()
@@ -1514,8 +1510,10 @@ class Mul(Expr, AssocOp):
             if i in used:
                 continue
             if isinstance(factor, conj_cls):
-                # factor is conjugate(z) — look for z among other factors
                 inner = factor.args[0]
+                # Skip non-commutative symbols — order matters for them
+                if inner.is_commutative is False:
+                    continue
                 for j in range(len(remaining)):
                     if j != i and j not in used and remaining[j] == inner:
                         used.add(i)
@@ -1618,8 +1616,6 @@ class Mul(Expr, AssocOp):
             return False
         
     def _eval_is_extended_nonnegative(self):
-        # z * conjugate(z) = |z|^2 >= 0 always.
-        # Check structurally to avoid recursion.
         from sympy.functions.elementary.complexes import conjugate as conj_cls
         remaining = list(self.args)
         used = set()
@@ -1628,6 +1624,9 @@ class Mul(Expr, AssocOp):
                 continue
             if isinstance(factor, conj_cls):
                 inner = factor.args[0]
+                # Skip non-commutative symbols — order matters for them
+                if inner.is_commutative is False:
+                    continue
                 for j in range(len(remaining)):
                     if j != i and j not in used and remaining[j] == inner:
                         used.add(i)
