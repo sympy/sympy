@@ -1,18 +1,18 @@
 """
 Layer 4 (Context): Proof Context and Search.
 """
+from __future__ import annotations
 
-from typing import List, Dict, Set, Optional, Any, Tuple
+from typing import Any
 import copy
 from enum import Enum
 import warnings
 
 from sympy.logic.boolalg import Boolean, Implies, Or, Not
-from sympy.logic.inference import valid, entails
 from sympy.logic.modal.frames import KripkeFrame, Axiom
 from sympy.logic.modal.kernel import TrustedKernel, ProofTerm, ModusPonens
 from sympy.logic.modal.operators import Box
-from sympy.logic.modal.errors import ProofFailure
+from sympy.logic.modal.errors import ProofFailure, SymPyModalError
 
 class Strategy(Enum):
     Backward = "Backward"
@@ -24,13 +24,13 @@ class ProofContext:
     """
     Stateful proof environment managing hypotheses, orchestrating proof search.
     """
-    def __init__(self, frame: KripkeFrame, axioms: Optional[List[Boolean]] = None, allow_classical: bool = False):
+    def __init__(self, frame: KripkeFrame, axioms: list[Boolean] | None = None, allow_classical: bool = False):
         self.frame = frame
         self.kernel = TrustedKernel(frame)
         self.registered_axioms = axioms if axioms is not None else []
-        self.hypotheses: Set[ProofTerm] = set()
-        self.lemmas: Dict[str, ProofTerm] = {}
-        self._states: List[Tuple[Set[ProofTerm], Dict[str, ProofTerm]]] = []
+        self.hypotheses: set[ProofTerm] = set()
+        self.lemmas: dict[str, ProofTerm] = {}
+        self._states: list[tuple[set[ProofTerm], dict[str, ProofTerm]]] = []
         self.allow_classical = allow_classical
 
         # We attach standard SymPy boolean operators as attributes for convenience if needed,
@@ -45,7 +45,7 @@ class ProofContext:
             # In `check_axiom`, we'll allow these if `allow_classical` is true.
             pass
 
-    def check_classical_axiom(self, formula: Boolean) -> Optional[ProofTerm]:
+    def check_classical_axiom(self, formula: Boolean) -> ProofTerm | None:
         """
         If classical logic is allowed, manually verify and return proof terms for classical axioms.
         """
@@ -201,7 +201,7 @@ class ProofContext:
                     warnings.warn(f"Warning: Double Negation Elimination used: {formula}. "
                                   "Target is intuitionistic logic fragment.")
 
-    def prove(self, formula: Boolean, strategy: Optional[Strategy] = None) -> Any: # Returns ProofTerm | ProofFailure
+    def prove(self, formula: Boolean, strategy: Strategy | None = None) -> Any: # Returns ProofTerm | ProofFailure
         """
         Attempts proof search using the specified strategy.
         """
@@ -213,7 +213,7 @@ class ProofContext:
                 # Check if it entails from our non-modal hypotheses through the trusted kernel
                 pt = self.kernel.check_smt(formula, list(self.hypotheses))
                 return pt
-            except Exception:
+            except SymPyModalError:
                 pass
 
         if self.allow_classical:
@@ -224,7 +224,7 @@ class ProofContext:
         try:
             pt = self.kernel.check_axiom(formula)
             return pt
-        except Exception:
+        except SymPyModalError:
             pass
 
         # Check if formula is already in hypotheses
@@ -260,7 +260,7 @@ class ProofContext:
 
         return ProofFailure(formula, obstacle="Formula not valid in current frame or requires deeper search.", missing_axioms=missing)
 
-    def _forward_chain(self, target: Boolean, depth: int) -> Optional[ProofTerm]:
+    def _forward_chain(self, target: Boolean, depth: int) -> ProofTerm | None:
         if depth == 0:
             return None
 
@@ -289,7 +289,7 @@ class ProofContext:
                             try:
                                 pt = self.apply(ModusPonens, p1, p2)
                                 new_facts.append(pt)
-                            except Exception:
+                            except SymPyModalError:
                                 pass
 
                 # Frame Axioms (T, 4, etc.)
@@ -311,7 +311,7 @@ class ProofContext:
 
         return None
 
-    def _backward_chain(self, target: Boolean, depth: int) -> Optional[ProofTerm]:
+    def _backward_chain(self, target: Boolean, depth: int) -> ProofTerm | None:
         if depth == 0:
             return None
 
@@ -341,12 +341,12 @@ class ProofContext:
                 if ant_proof:
                     try:
                         return self.apply(ModusPonens, h, ant_proof)
-                    except Exception:
+                    except SymPyModalError:
                         pass
 
         return None
 
-    def _modal_induction(self, target: Boolean) -> Optional[ProofTerm]:
+    def _modal_induction(self, target: Boolean) -> ProofTerm | None:
         # Specialized for Löb's theorem structural arguments: Box(Box(p) -> p) -> Box(p)
         if Axiom.Lob in self.frame.axioms:
             if isinstance(target, Box):

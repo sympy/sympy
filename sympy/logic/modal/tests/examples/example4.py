@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy import symbols, Implies
 from sympy.logic.modal import (
     ProofContext, KripkeFrame, PredicateVariable,

@@ -1,3 +1,4 @@
+from __future__ import annotations
 import pytest
 from sympy.logic.modal import ProofContext, KripkeFrame, PredicateVariable
 from sympy.logic.modal import ForAllPredicates, Box, Universe, FunctionType, BoolType

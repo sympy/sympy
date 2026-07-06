@@ -1,4 +1,4 @@
-import pytest
+from __future__ import annotations
 from sympy.logic.modal.formalise import LLMPromptBuilder
 
 def test_llm_prompt_builder_stub():
