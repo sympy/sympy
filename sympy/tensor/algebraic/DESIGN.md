@@ -11,9 +11,10 @@ The module provides three core types plus a simplification pipeline:
 
 | Class | Role |
 |---|---|
-| `AlgebraicPureTensor` | A single tensor-product term (non-commutative Mul of matrix factors, optionally with a commutative coefficient) |
+| `AlgebraicPureTensor` | A single tensor-product term (non-commutative Mul of matrix factors, optionally with a commutative **Number** coefficient) |
+| `ScalarMul` | Scalar multiplication of an `AlgebraicPureTensor` by a symbolic (non-Number) commutative factor; extends `Basic` to avoid `Mul` flattening |
 | `AlgebraicZeroTensor` | The additive identity (zero tensor) for a given tensor shape |
-| `AlgebraicTensor` | A linear combination (sum) of same-shape `AlgebraicPureTensor` terms |
+| `AlgebraicTensor` | A linear combination (sum) of same-shape `AlgebraicPureTensor` / `ScalarMul` terms |
 | `simplify.py` | Proportionality factoring and per-term simplification |
 
 ---
@@ -97,39 +98,53 @@ component-wise AND of all term commutativity shapes.
 
 ### Coefficient storage
 
-A leading commutative coefficient is stored as the **first element of `self.args`**:
+**Number coefficients** (integers, rationals, floats) are stored as the
+**first element of `self.args`**:
 
 ```
 AlgebraicPureTensor(2, A, B).args → (2, A, B)
 AlgebraicPureTensor(A, B).args    → (A, B)          # implicit coefficient S.One
 ```
 
-The `_get_coeff()` method extracts this coefficient (returns `S.One` if absent).
-The `factors` property returns only the tensor-product factors, excluding the
-leading coefficient.
+**Symbolic (non-Number) coefficients** are **not** stored inside `self.args`.
+Instead, the constructor wraps them in a `ScalarMul` object:
+
+```
+AlgebraicPureTensor(x, A, B)  →  ScalarMul(x, AlgebraicPureTensor(A, B))
+```
+
+The `_get_coeff()` method extracts the Number coefficient from args (returns
+`S.One` if absent). The `factors` property returns only the tensor-product
+factors, excluding the leading coefficient.
 
 **Agent rule:** When iterating factors, always use `.factors` (not `.args`) to
 skip the coefficient. When checking for a coefficient, use `._get_coeff()`.
+Never assume `AlgebraicPureTensor(x, ...)` returns an `AlgebraicPureTensor`
+when `x` is a symbolic (non-Number) expression — it returns `ScalarMul`.
 
 ### Constructor behavior (`__new__`)
 
 1. **Empty args** → `ValueError`
 2. **All factors are scalar/zero** → returns `AlgebraicZeroTensor`
 3. **Single factor with coefficient S.One** → returns the bare factor directly
-   (unwraps)
+    (unwraps)
 4. **Coefficient is S.Zero** → returns `AlgebraicZeroTensor(factor_shapes)`
-5. **Multiple factors** → constructs `Mul` subclass instance with `evaluate=False`
+5. **Symbolic (non-Number) coefficient** → constructs inner
+    `AlgebraicPureTensor(*factors)` and wraps with `ScalarMul(coeff, inner)`
+6. **Number coefficient or no coefficient** → constructs `Mul` subclass
+    instance with `evaluate=False`
 
 **Agent rule:** Never assume the result of `AlgebraicPureTensor(...)` is an
 `AlgebraicPureTensor` instance. It may return a bare matrix, an
-`AlgebraicZeroTensor`, or a raw factor. Always check the return type.
+`AlgebraicZeroTensor`, a `ScalarMul`, or a raw factor. Always check the
+return type.
 
 ### Arithmetic operators
 
 | Operation | Behavior |
 |---|---|
-| `__neg__` | Negates the coefficient |
-| `__mul__` | If `other` is commutative: scales coefficient. If non-commutative: calls `compose_algebraic_tensors(self, other)` |
+| `__neg__` | Negates the coefficient; for symbolic coefficients returns `ScalarMul` |
+| `__mul__` | If `other` is commutative: scales coefficient. Resulting coefficient is a Number → stays in `AlgebraicPureTensor`; symbolic → returns `ScalarMul`. If non-commutative: calls `compose_algebraic_tensors(self, other)` |
 | `__rmul__` | Same as `__mul__` but with operands reversed |
 | `__add__` / `__radd__` | Returns `AlgebraicTensor(self, other)` |
 | `__sub__` / `__rsub__` | Returns `AlgebraicTensor(self, -other)` |
@@ -137,10 +152,74 @@ skip the coefficient. When checking for a coefficient, use `._get_coeff()`.
 **Agent rule:** Multiplication (`*`) on tensors is **composition**, not element-wise
 multiplication. For scalars, it behaves as scalar scaling. The dispatch happens
 inside `__mul__` / `__rmul__` based on whether the other operand is commutative.
+When the resulting coefficient is symbolic (non-Number), the return type is
+`ScalarMul`, not `AlgebraicPureTensor`.
 
 ---
 
-## 3. AlgebraicZeroTensor
+## 3. ScalarMul
+
+### Idea
+
+`ScalarMul` represents ``scalar * tensor`` where *scalar* is a commutative SymPy
+expression (typically a Symbol or symbolic expression, **not** a plain `Number`)
+and *tensor* is an `AlgebraicPureTensor`. It exists to avoid SymPy's deprecation
+of `Mul` with non-`Expr` factors: `AlgebraicPureTensor` extends `Mul` but carries
+matrix factors that are not plain `Expr` objects in all contexts.
+
+```
+x * (A ⊗ B)    →  ScalarMul(x, AlgebraicPureTensor(A, B))
+```
+
+### Inheritance: extends `Basic`
+
+`ScalarMul` extends `sympy.core.basic.Basic` (not `Mul`) to prevent SymPy's
+flattening machinery from unpacking the tensor factors.
+
+Key attributes:
+- `is_ScalarMul = True` — type tag
+- `is_commutative = False` — tensor product is non-commutative
+- `is_Mul = False` — prevents `Mul.flatten` from unpacking
+- `is_Add = False`
+- `_op_priority = 12` — higher than `AlgebraicPureTensor` so nesting works
+
+### Key properties
+
+| Property | Description |
+|---|---|
+| `scalar` | The commutative scalar factor (`self.args[0]`) |
+| `tensor` | The `AlgebraicPureTensor` factor (`self.args[1]`) |
+| `factors` | Delegates to inner tensor's `.factors` |
+| `tensor_shape` | Delegates to inner tensor's `.tensor_shape` |
+| `commutativity_shape` | Delegates to inner tensor's `.commutativity_shape` |
+| `_get_coeff()` | Returns `scalar * inner._get_coeff()` (combined coefficient) |
+
+### Constructor behavior (`__new__`)
+
+1. **scalar is S.Zero** → returns `AlgebraicZeroTensor(tensor.tensor_shape)`
+2. **scalar is S.One** → returns the inner tensor directly (unwraps)
+3. **tensor is AlgebraicPureTensor with absorbable Number coefficient** →
+   absorbs scalar into the PureTensor's Number coefficient
+4. **General case** → constructs `Basic.__new__(cls, scalar, tensor)`
+
+**Agent rule:** `ScalarMul(s, t)` may return `AlgebraicZeroTensor`, the bare
+tensor `t`, an `AlgebraicPureTensor`, or a `ScalarMul`. Always check the return
+type.
+
+### Arithmetic operators
+
+| Operation | Behavior |
+|---|---|
+| `__neg__` | Negates the scalar part |
+| `__mul__` | If `other` is commutative: multiplies into scalar. If non-commutative: calls `compose_algebraic_tensors(self, other)` |
+| `__rmul__` | Same as `__mul__` but with operands reversed |
+| `__add__` / `__radd__` | Returns `AlgebraicTensor(self, other)` |
+| `__sub__` / `__rsub__` | Returns `AlgebraicTensor(self, -other)` |
+| `expand()` | Expands the inner tensor, distributes scalar over resulting terms |
+
+---
+
+## 4. AlgebraicZeroTensor
 
 ### Idea
 
@@ -197,7 +276,7 @@ information is critical for type safety.
 
 ---
 
-## 4. AlgebraicTensor
+## 5. AlgebraicTensor
 
 ### Idea
 
@@ -238,7 +317,9 @@ The constructor uses `_flatten_args` to:
 1. **Flatten** nested `AlgebraicTensor` instances (collect all leaf terms)
 2. **Validate** that all terms share the same `tensor_shape`
 3. **Collect** `AlgebraicZeroTensor` as a separate anchor term
-4. **Filter** out `S.Zero` identity numbers
+4. **Handle** `ScalarMul` terms as regular tensor terms (with shape and
+   commutativity checks)
+5. **Filter** out `S.Zero` identity numbers
 
 Return behavior:
 - Single term with no zero anchor → returns the bare term (unwraps)
@@ -257,6 +338,7 @@ Always check the return type.
 expression types:
 - `AlgebraicPureTensor` → `.tensor_shape`
 - `AlgebraicZeroTensor` → `.shape`
+- `ScalarMul` → `.tensor_shape` (delegates to inner tensor)
 - `Mul(coeff, AlgebraicPureTensor)` → inner `AlgebraicPureTensor.tensor_shape`
 - Bare matrix with `.shape` → wrapped as `((m, n),)`
 - Anything else → `None`
@@ -269,8 +351,8 @@ binary entries, same length as `tensor_shape`.
 
 `_flatten_args` computes this incrementally as it walks the arguments, using
 the `_commutativity_shape_of` helper which handles `AlgebraicPureTensor`,
-`AlgebraicZeroTensor`, `AlgebraicTensor`, `Mul(coeff, AlgebraicPureTensor)`,
-and bare matrix-like objects.
+`AlgebraicZeroTensor`, `AlgebraicTensor`, `ScalarMul`, `Mul(coeff,
+AlgebraicPureTensor)`, and bare matrix-like objects.
 
 ```
 t = AlgebraicTensor(AlgebraicPureTensor(A, C), AlgebraicPureTensor(B, C))
@@ -301,7 +383,7 @@ or `AlgebraicPureTensor`). It handles:
 
 ---
 
-## 5. Composition
+## 6. Composition
 
 ### `compose_algebraic_pure_tensors(left, right)`
 
@@ -330,10 +412,15 @@ Extends composition to `AlgebraicTensor` by linearity. Dispatch table:
 |---|---|---|
 | `AlgebraicZeroTensor` | anything | Returns zero of left's shape |
 | anything | `AlgebraicZeroTensor` | Returns zero of right's shape |
+| `ScalarMul` | anything | Compose inner tensor, re-wrap with scalar |
+| anything | `ScalarMul` | Compose with inner tensor, re-wrap with scalar |
 | `AlgebraicTensor` | `AlgebraicTensor` | Pairwise compose all term combinations, reassemble |
-| `AlgebraicTensor` | `PureTensor`/matrix | Calls `left._compose_with_term(right)` |
-| `PureTensor`/matrix | `AlgebraicTensor` | Compose left with each term of right, reassemble |
+| `AlgebraicTensor` | `PureTensor`/`ScalarMul`/matrix | Calls `left._compose_with_term(right)` |
+| `PureTensor`/`ScalarMul`/matrix | `AlgebraicTensor` | Compose left with each term of right, reassemble |
 | `PureTensor` | `PureTensor` | Calls `compose_algebraic_pure_tensors` |
+| `PureTensor` | `ScalarMul` | Compose with inner tensor, wrap result with right's scalar |
+| `ScalarMul` | `PureTensor` | Compose inner tensor with right, wrap with left's scalar |
+| `ScalarMul` | `ScalarMul` | Compose inner tensors, multiply scalars |
 | matrix | matrix | Calls `compose_algebraic_pure_tensors` |
 
 The `_compose_reassemble` helper:
@@ -344,7 +431,7 @@ The `_compose_reassemble` helper:
 
 ---
 
-## 6. Simplification
+## 7. Simplification
 
 ### `tensorsimplify(expr)`
 
@@ -421,7 +508,7 @@ Reconstructs a tensor term from a coefficient and factor list:
 
 ---
 
-## 7. Expansion
+## 8. Expansion
 
 ### `.expand()`
 
@@ -458,9 +545,9 @@ Returns self unchanged (a zero tensor is already in expanded form).
 
 ---
 
-## 8. Implementation Details for Agents
+## 9. Implementation Details for Agents
 
-### 7.1 Type checking
+### 9.1 Type checking
 
 When working with these types, use `isinstance` checks. Do NOT rely on duck
 typing with `.is_AlgebraicPureTensor` etc. as flags, since the inheritance from
@@ -469,6 +556,7 @@ typing with `.is_AlgebraicPureTensor` etc. as flags, since the inheritance from
 ```python
 # Correct:
 if isinstance(x, AlgebraicPureTensor): ...
+if isinstance(x, ScalarMul): ...
 if isinstance(x, AlgebraicZeroTensor): ...
 if isinstance(x, AlgebraicTensor): ...
 
@@ -476,7 +564,7 @@ if isinstance(x, AlgebraicTensor): ...
 if hasattr(x, "shape") and x.shape is not None: ...
 ```
 
-### 7.2 Commutative vs non-commutative dispatch
+### 9.2 Commutative vs non-commutative dispatch
 
 The `__mul__` / `__rmul__` methods dispatch based on whether the other operand
 is commutative:
@@ -493,11 +581,17 @@ isinstance(other, Number) or (
 `AlgebraicPureTensor` explicitly in the commutative check, since it has
 `is_commutative = False` but might match other heuristics.
 
-### 7.3 The `add` dispatcher
+### 9.3 The `add` dispatcher
 
 ```python
 add.register_handlerclass(
     (AlgebraicPureTensor, AlgebraicTensor), AlgebraicTensor
+)
+add.register_handlerclass(
+    (AlgebraicPureTensor, ScalarMul), AlgebraicTensor
+)
+add.register_handlerclass(
+    (AlgebraicTensor, ScalarMul), AlgebraicTensor
 )
 ```
 
@@ -508,52 +602,63 @@ shape enforcement.
 **Agent rule:** If you add a new tensor-like class, register it with the `add`
 dispatcher so that additions involving the new type are handled correctly.
 
-### 7.4 Coefficient handling
+### 9.4 Coefficient handling
 
-Coefficients are always commutative (Numbers or commutative Symbols). They are
-stored as the first element of `args` in `AlgebraicPureTensor`. When manipulating
-terms, always separate the coefficient from the factors:
+Coefficients are always commutative (Numbers or commutative Symbols). **Number**
+coefficients are stored as the first element of `args` in `AlgebraicPureTensor`.
+**Symbolic** (non-Number) coefficients are wrapped in `ScalarMul`. When
+manipulating terms, always separate the coefficient from the factors:
 
 ```python
+# For AlgebraicPureTensor (Number coefficient only):
 coeff = pt._get_coeff()
 factors = pt.factors  # excludes coefficient
+
+# For ScalarMul (symbolic coefficient):
+combined = sm._get_coeff()  # scalar * inner._get_coeff()
+factors = sm.factors  # delegates to inner tensor
 ```
 
-### 7.5 Unwrapping behavior
+### 9.5 Unwrapping behavior
 
-Both `AlgebraicPureTensor.__new__` and `AlgebraicTensor.__new__` unwrap single-term
-results. This means:
+`AlgebraicPureTensor.__new__`, `ScalarMul.__new__`, and `AlgebraicTensor.__new__`
+all unwrap single-term results. This means:
 
 ```python
-AlgebraicPureTensor(A, B)          # might return A⊗B PureTensor, or bare A if B is identity
+AlgebraicPureTensor(A, B)          # returns A⊗B PureTensor
+AlgebraicPureTensor(x, A, B)       # returns ScalarMul(x, A⊗B)  (symbolic coeff)
+AlgebraicPureTensor(2, A, B)       # returns 2*(A⊗B) PureTensor (Number coeff)
 AlgebraicTensor(A⊗B)               # returns A⊗B directly (bare PureTensor)
 AlgebraicTensor(A⊗B, C⊗D)         # returns AlgebraicTensor
 AlgebraicTensor(A⊗B, -A⊗B)        # returns AlgebraicZeroTensor
+ScalarMul(1, pt)                   # returns pt directly (unwraps)
+ScalarMul(0, pt)                   # returns AlgebraicZeroTensor
 ```
 
 **Agent rule:** Always be prepared for constructors to return a different type
 than the class you called. Write code that handles all possible return types.
 
-### 7.6 Shape comparison
+### 9.6 Shape comparison
 
 Always compare full `tensor_shape` tuples. Never compare individual factor shapes
 unless you are iterating factor-by-factor (as in composition).
 
-### 7.6.1 `commutativity_shape` convention
+### 9.6.1 `commutativity_shape` convention
 
-All three tensor types expose `commutativity_shape`:
+All four tensor-related types expose `commutativity_shape`:
 
 - **`AlgebraicPureTensor`** — per-factor check: `0` if the factor contains any
   non-commutative symbol, `1` otherwise.
+- **`ScalarMul`** — delegates to the inner tensor's `commutativity_shape`.
 - **`AlgebraicZeroTensor`** — all-1s tuple (zero is commutative in every slot).
 - **`AlgebraicTensor`** — component-wise AND of all term commutativity shapes.
 
 The `_commutativity_shape_of` helper in `algebraic_tensor.py` extracts the
-commutativity shape from any recognized expression type (including `Mul` wrappers
-and bare matrices). Use this helper when you need to query commutativity from
-an arbitrary tensor expression rather than a known instance.
+commutativity shape from any recognized expression type (including `ScalarMul`,
+`Mul` wrappers, and bare matrices). Use this helper when you need to query
+commutativity from an arbitrary tensor expression rather than a known instance.
 
-### 7.7 Import patterns
+### 9.7 Import patterns
 
 The module avoids circular imports by using lazy imports inside methods. Follow
 this pattern:
@@ -567,13 +672,13 @@ def my_method(self, other):
 Do NOT add top-level imports between the algebraic submodules unless there is no
 circular dependency risk.
 
-### 7.8 MatMul usage
+### 9.8 MatMul usage
 
 When composing factors, always use `MatMul(lf, rf, evaluate=False)`. The
 `evaluate=False` flag prevents SymPy from eagerly evaluating the matrix product,
 which preserves the symbolic structure of the expression.
 
-### 7.9 AlgebraicZeroTensor in sums
+### 9.9 AlgebraicZeroTensor in sums
 
 `AlgebraicZeroTensor` serves as a shape anchor inside `AlgebraicTensor` sums.
 When `AlgebraicTensor.__new__` encounters a zero term, it is kept as an anchor
@@ -585,7 +690,7 @@ at the end during reconstruction.
 `AlgebraicZeroTensor` instances for processing, but preserve them when
 rebuilding the sum.
 
-### 7.11 Testing considerations
+### 9.10 Testing considerations
 
 When writing tests, cover:
 1. Constructor unwrapping behavior (single term, zero coefficient, zero tensor factor, empty)

@@ -2094,6 +2094,101 @@ class LatexPrinter(Printer):
         elements = [self._print(a) for a in expr.args]
         return r' \wedge '.join(elements)
 
+    def _print_AlgebraicZeroTensor(self, expr):
+        shape_parts = [
+            r"\left(%s \times %s\right)" % (self._print(rows), self._print(cols))
+            for rows, cols in expr.shape
+        ]
+        subscript = r" \otimes ".join(shape_parts)
+        return r"0_{%s}" % subscript
+
+    def _print_ScalarMul(self, expr):
+        from sympy.core.add import Add
+        scalar_str = self._print(expr.scalar)
+        if isinstance(expr.scalar, Add):
+            scalar_str = r"\left(%s\right)" % scalar_str
+        tensor_str = self._print(expr.tensor)
+        return r"%s %s" % (scalar_str, tensor_str)
+
+    def _print_AlgebraicPureTensor(self, expr):
+        from sympy.core.singleton import S
+        from sympy.core.add import Add
+        coeff = expr._get_coeff()
+        factors = expr.factors
+        factor_strs = [self._print(f) for f in factors]
+        result = r" \otimes ".join(factor_strs)
+        if coeff is S.One:
+            return result
+        if coeff is S.NegativeOne:
+            return r"-%s" % result
+        coeff_str = self._print(coeff)
+        if isinstance(coeff, Add):
+            coeff_str = r"\left(%s\right)" % coeff_str
+        return r"%s %s" % (coeff_str, result)
+
+    def _print_AlgebraicTensor(self, expr):
+        from sympy.core.add import Add
+        from sympy.core.numbers import Number
+        from sympy.core.singleton import S
+        from sympy.tensor.algebraic.algebraic_zero_tensor import AlgebraicZeroTensor
+        from sympy.tensor.algebraic.algebraic_pure_tensor import AlgebraicPureTensor
+
+        def _coeff_str(c):
+            s = self._print(c)
+            if isinstance(c, Add):
+                s = r"\left(%s\right)" % s
+            return s
+
+        parts = []
+        for arg in expr.args:
+            if isinstance(arg, Number):
+                continue
+            if isinstance(arg, AlgebraicZeroTensor):
+                continue
+            if isinstance(arg, AlgebraicPureTensor):
+                coeff = arg._get_coeff()
+                factor_strs = [self._print(f) for f in arg.factors]
+                body = r" \otimes ".join(factor_strs)
+                neg = coeff.is_negative
+                if neg:
+                    coeff = -coeff
+                if parts:
+                    if neg:
+                        if coeff is S.One:
+                            parts.append(r"- %s" % body)
+                        else:
+                            parts.append(r"- %s %s" % (_coeff_str(coeff), body))
+                    else:
+                        if coeff is S.One:
+                            parts.append(r"+ %s" % body)
+                        else:
+                            parts.append(r"+ %s %s" % (_coeff_str(coeff), body))
+                else:
+                    if neg:
+                        if coeff is S.One:
+                            parts.append(r"-%s" % body)
+                        else:
+                            parts.append(r"-%s %s" % (_coeff_str(coeff), body))
+                    else:
+                        if coeff is S.One:
+                            parts.append(body)
+                        else:
+                            parts.append(r"%s %s" % (_coeff_str(coeff), body))
+            else:
+                s = self._print(arg)
+                if parts:
+                    if s.startswith(r"-"):
+                        parts.append(r"- %s" % s[1:])
+                    else:
+                        parts.append(r"+ %s" % s)
+                else:
+                    parts.append(s)
+        if not parts:
+            return self._print_AlgebraicZeroTensor(
+                AlgebraicZeroTensor(expr.tensor_shape)
+            )
+        return r" ".join(parts)
+
     def _print_Tuple(self, expr):
         return self._print_tuple(expr)
 

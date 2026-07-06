@@ -346,7 +346,8 @@ class TestEdgeCases:
             AlgebraicPureTensor(y, A, B),
         )
         result = tensorsimplify(at)
-        assert isinstance(result, AlgebraicPureTensor)
+        from sympy.tensor.algebraic.scalar_mul import ScalarMul
+        assert isinstance(result, (AlgebraicPureTensor, ScalarMul))
         coeff = result._get_coeff()
         assert coeff == x + y or coeff == y + x
 

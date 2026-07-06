@@ -12,12 +12,14 @@ from sympy.tensor.algebraic.algebraic_zero_tensor import (
     AlgebraicZeroTensor,
     algebraic_zero_tensor,
 )
+from sympy.tensor.algebraic.scalar_mul import ScalarMul
 from sympy.tensor.algebraic.simplify import tensorsimplify, proportionality_factoring
 
 __all__ = [
     "AlgebraicTensor",
     "AlgebraicPureTensor",
     "AlgebraicZeroTensor",
+    "ScalarMul",
     "ShapeMismatchError",
     "algebraic_tensor_product",
     "algebraic_zero_tensor",

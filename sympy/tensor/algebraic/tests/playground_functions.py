@@ -29,6 +29,8 @@ from sympy.tensor.algebraic import (
     ShapeMismatchError,
 )
 
+from sympy.printing.latex import latex
+
 # ---------------------------------------------------------------------------
 # Commutative symbols
 # ---------------------------------------------------------------------------
@@ -584,5 +586,5 @@ simbolovi08 = simbolovi0 + simbolovi1 + simbolovi2 + simbolovi3 + simbolovi4 + s
 da1 = Dirac*a1 - a1*Dirac
 da1 = da1.expand()
 da1 = da1.simplify()
-print(da1.args[1])
+print(da1.args[0]  )
 print(len(da1.args))

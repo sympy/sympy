@@ -58,13 +58,10 @@ class AlgebraicPureTensor(Mul):
     def factors(self):
         """Individual tensor-product factors in left-to-right order.
 
-        Excludes a leading coefficient (Number or commutative symbol) if
-        one is stored as the first arg.
+        Excludes a leading coefficient (Number) if one is stored as
+        the first arg.
         """
-        if self.args and (self.args[0].is_Number or
-                (hasattr(self.args[0], 'is_commutative') and
-                 self.args[0].is_commutative and
-                 not isinstance(self.args[0], AlgebraicPureTensor))):
+        if self.args and self.args[0].is_Number:
             return self.args[1:]
         return self.args
 
@@ -122,47 +119,13 @@ class AlgebraicPureTensor(Mul):
                 args_list = args_list[1:]
             elif len(args_list) > 1:
                 first_s = sympify(first)
-                if isinstance(first_s, Number) or (
-                    hasattr(first_s, 'is_commutative') and
-                    first_s.is_commutative and
-                    not isinstance(first_s, AlgebraicPureTensor)
-                ):
+                if isinstance(first_s, Number):
                     coeff = first_s
                     args_list = args_list[1:]
-            elif len(args_list) > 1:
-                first_s = sympify(first)
-                if isinstance(first_s, Number) or (
-                    hasattr(first_s, 'is_commutative') and
-                    first_s.is_commutative and
-                    not isinstance(first_s, AlgebraicPureTensor)
-                ):
-                    coeff = first_s
-                    args_list = args_list[1:]
-            elif len(args_list) > 1:
-                first_s = sympify(first)
-                if isinstance(first_s, Number) or (
-                    hasattr(first_s, 'is_commutative') and
-                    first_s.is_commutative and
-                    not isinstance(first_s, AlgebraicPureTensor)
-                ):
-                    coeff = first_s
-                    args_list = args_list[1:]
-            elif len(args_list) > 1:
-                first_s = sympify(first)
-                if isinstance(first_s, Number) or (
-                    hasattr(first_s, 'is_commutative') and
-                    first_s.is_commutative and
-                    not isinstance(first_s, AlgebraicPureTensor)
-                ):
-                    coeff = first_s
-                    args_list = args_list[1:]
-            elif len(args_list) > 1:
-                first_s = sympify(first)
-                if isinstance(first_s, Number) or (
-                    hasattr(first_s, 'is_commutative') and
-                    first_s.is_commutative and
-                    not isinstance(first_s, AlgebraicPureTensor)
-                ):
+                elif (hasattr(first_s, 'is_commutative') and
+                        first_s.is_commutative and
+                        not isinstance(first_s, AlgebraicPureTensor)):
+                    # Symbolic coefficient: extract and wrap with ScalarMul later
                     coeff = first_s
                     args_list = args_list[1:]
 
@@ -192,6 +155,12 @@ class AlgebraicPureTensor(Mul):
         if len(processed) == 1 and coeff is S.One:
             return processed[0]
 
+        # For symbolic (non-Number) coefficients, wrap with ScalarMul
+        if coeff is not S.One and not isinstance(coeff, Number):
+            from sympy.tensor.algebraic.scalar_mul import ScalarMul
+            inner = cls.__new__(cls, *processed, evaluate=False)
+            return ScalarMul(coeff, inner)
+
         if coeff is S.One:
             obj = Mul.__new__(cls, *processed, evaluate=False)
         else:
@@ -209,8 +178,14 @@ class AlgebraicPureTensor(Mul):
             return AlgebraicPureTensor(*factors)
         if new_coeff is S.NegativeOne:
             if len(factors) == 1:
-                return Mul(S.NegativeOne, factors[0], evaluate=False)
+                from sympy.tensor.algebraic.scalar_mul import ScalarMul
+                return ScalarMul(S.NegativeOne, factors[0])
             return AlgebraicPureTensor(S.NegativeOne, *factors)
+        # For non-Number coefficients, use ScalarMul
+        if not isinstance(new_coeff, Number):
+            from sympy.tensor.algebraic.scalar_mul import ScalarMul
+            inner = AlgebraicPureTensor(*factors)
+            return ScalarMul(new_coeff, inner)
         return AlgebraicPureTensor(new_coeff, *factors)
 
     def __mul__(self, other):
@@ -228,10 +203,11 @@ class AlgebraicPureTensor(Mul):
 
         Returns
         -------
-        AlgebraicPureTensor, AlgebraicTensor, AlgebraicZeroTensor, or Mul
+        AlgebraicPureTensor, AlgebraicTensor, AlgebraicZeroTensor, or ScalarMul
             The scaled/composed result.
         """
         from sympy.core.singleton import S
+        from sympy.tensor.algebraic.scalar_mul import ScalarMul
         other = sympify(other)
         if isinstance(other, Number):
             if other is S.One:
@@ -246,10 +222,14 @@ class AlgebraicPureTensor(Mul):
                 if len(factors) == 1:
                     return factors[0]
                 return AlgebraicPureTensor(*factors)
-            if isinstance(new_coeff, Number) and new_coeff is S.Zero:
+            if new_coeff is S.Zero:
                 return AlgebraicZeroTensor(_factor_shapes(factors))
             if len(factors) == 0:
                 return new_coeff
+            # For non-Number coefficients, use ScalarMul
+            if not isinstance(new_coeff, Number):
+                inner = AlgebraicPureTensor(*factors)
+                return ScalarMul(new_coeff, inner)
             return AlgebraicPureTensor(new_coeff, *factors)
         # Non-commutative operand: use tensor composition.
         from sympy.tensor.algebraic.algebraic_tensor import (
@@ -259,11 +239,7 @@ class AlgebraicPureTensor(Mul):
 
     def _get_coeff(self):
         """Extract the leading coefficient from args, defaulting to S.One."""
-        from sympy.core.singleton import S
-        if self.args and (self.args[0].is_Number or
-                (hasattr(self.args[0], 'is_commutative') and
-                 self.args[0].is_commutative and
-                 not isinstance(self.args[0], AlgebraicPureTensor))):
+        if self.args and self.args[0].is_Number:
             return self.args[0]
         return S.One
 
@@ -282,10 +258,11 @@ class AlgebraicPureTensor(Mul):
 
         Returns
         -------
-        AlgebraicPureTensor, AlgebraicTensor, AlgebraicZeroTensor, or Mul
+        AlgebraicPureTensor, AlgebraicTensor, AlgebraicZeroTensor, or ScalarMul
             The scaled/composed result.
         """
         from sympy.core.singleton import S
+        from sympy.tensor.algebraic.scalar_mul import ScalarMul
         if other == 0:
             return AlgebraicZeroTensor(self.tensor_shape)
         if other == 1:
@@ -305,10 +282,14 @@ class AlgebraicPureTensor(Mul):
                 if len(factors) == 1:
                     return factors[0]
                 return AlgebraicPureTensor(*factors)
-            if isinstance(new_coeff, Number) and new_coeff is S.Zero:
+            if new_coeff is S.Zero:
                 return AlgebraicZeroTensor(_factor_shapes(factors))
             if len(factors) == 0:
                 return new_coeff
+            # For non-Number coefficients, use ScalarMul
+            if not isinstance(new_coeff, Number):
+                inner = AlgebraicPureTensor(*factors)
+                return ScalarMul(new_coeff, inner)
             return AlgebraicPureTensor(new_coeff, *factors)
         # Non-commutative operand: use tensor composition.
         from sympy.tensor.algebraic.algebraic_tensor import (
@@ -335,6 +316,26 @@ class AlgebraicPureTensor(Mul):
     def simplify(self):
         from sympy.tensor.algebraic.simplify import _simplify_algebraic_pure_tensor
         return _simplify_algebraic_pure_tensor(self)
+
+    def display(self, mode="latex"):
+        """Display this tensor using IPython display or fallback to print.
+
+        Parameters
+        ----------
+        mode : str, default 'latex'
+            'latex' for LaTeX rendering, 'text' for plain text.
+        """
+        try:
+            from IPython.display import display, Latex
+            if mode == "latex":
+                display(Latex(self._repr_latex_()))
+            else:
+                display(self, plain=True)
+        except ImportError:
+            if mode == "latex":
+                print(self._repr_latex_())
+            else:
+                print(self)
 
     def _eval_expand_mul(self, **hints):
         from sympy.core.add import Add
