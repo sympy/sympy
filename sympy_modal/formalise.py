@@ -171,3 +171,56 @@ class FormalisationInterface:
             if isinstance(e, FormalisationError):
                 return e
             return FormalisationError(f"Formalisation failed: {e}")
+
+import json
+try:
+    import requests
+    HAS_REQUESTS = True
+except ImportError:
+    HAS_REQUESTS = False
+
+class LLMPromptBuilder:
+    """
+    Utility to bridge natural language and sympy_modal using Gemini 2.5 Flash via OpenRouter.
+    This generates prompts and interprets results.
+
+    Future Expansion Note:
+    Currently configured for Gemini 2.5 Flash. This class can easily be expanded to support
+    OpenAI (gpt-4) or Anthropic (claude-3) by changing the 'model' parameter when larger
+    budgets are available for more rigorous formalisation tasks.
+    """
+    def __init__(self, api_key: str = ""):
+        self.api_key = api_key
+
+    def formalise_prompt(self, natural_language: str) -> str:
+        return f"""
+        Convert the following natural language specification into a strictly valid sympy_modal Python code string.
+        Use operators like Box, Diamond, Implies, And, Or.
+        Do not include markdown blocks, just the raw code.
+
+        Specification: "{natural_language}"
+        """
+
+    def call_gemini(self, prompt: str) -> str:
+        """
+        Calls Gemini 2.5 Flash via OpenRouter API if requests is available, otherwise returns a stub.
+        """
+        if not HAS_REQUESTS or not self.api_key:
+            return "# LLM API not configured or requests not installed."
+
+        response = requests.post(
+            url="https://openrouter.ai/api/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json",
+            },
+            data=json.dumps({
+                "model": "google/gemini-2.5-flash",
+                "messages": [
+                    {"role": "user", "content": prompt}
+                ]
+            })
+        )
+        if response.status_code == 200:
+            return response.json()['choices'][0]['message']['content'].strip()
+        return f"# API Request failed with status code {response.status_code}"

@@ -58,3 +58,37 @@ def test_kernel_check_term():
 
     assert kernel.check_term(thm, Implies(p, p))
     assert not kernel.check_term(thm, p)
+def test_export_lean_coq():
+    from sympy.core.symbol import Symbol
+    from sympy.logic.boolalg import Implies
+    from sympy_modal.kernel import ProofTerm
+
+    p = Symbol('p')
+    q = Symbol('q')
+    formula = Implies(p, q)
+    pt = ProofTerm(formula)
+
+    lean_export = pt.export_lean()
+    assert "theorem my_thm" in lean_export
+    assert "->" in lean_export or "Implies" not in lean_export
+    assert "sorry" in lean_export
+
+    coq_export = pt.export_coq()
+    assert "Theorem my_thm" in coq_export
+    assert "->" in coq_export or "Implies" not in coq_export
+    assert "admit" in coq_export
+def test_robust_export():
+    from sympy.core.symbol import Symbol
+    from sympy.logic.boolalg import Implies, Not
+    from sympy_modal.kernel import ProofTerm
+
+    # Create a symbol with "Not" in the name to test collision
+    NotASymbol = Symbol('NotASymbol')
+    formula = Implies(Not(NotASymbol), NotASymbol)
+    pt = ProofTerm(formula)
+
+    lean_export = pt.export_lean()
+    assert "¬NotASymbol" in lean_export
+
+    coq_export = pt.export_coq()
+    assert "~NotASymbol" in coq_export
