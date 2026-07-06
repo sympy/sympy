@@ -60,7 +60,21 @@ Translates plain text and natural deductive ideas into rigorous ``sympy.logic.mo
 .. , often leveraging LLM APIs for translation.
 
 * ``FormalisationInterface``: Main entrypoint for string/text parsing.
+
 .. * ``LLMPromptBuilder``: Constructs standardized prompts for LLM conversion tasks.
+
+.. note::
+   The ``LLMPromptBuilder`` functionality for translating natural language to ``sympy.logic.modal``
+   expressions using OpenRouter and Gemini 2.5 Flash has been intentionally commented out of the
+   source code and documentation.
+
+   If you wish to experiment with this feature in the future, you can uncomment it in the following files:
+
+   * ``sympy/logic/modal/formalise.py`` (class definition and API requests)
+   * ``sympy/logic/modal/__init__.py`` (module exports)
+   * ``sympy/__init__.py`` (top-level exports)
+   * ``sympy/logic/modal/tests/test_formalise_bridge.py`` (tests)
+   * ``doc/src/modules/modal.rst`` (this documentation)
 
 
 Examples
